@@ -1,111 +1,62 @@
-# CLAUDE.md - Your AI Collaboration Guide
+# CLAUDE.md — Working in this template repo
 
-**What This File Does:** This is Claude's instruction manual for working with you. It persists across sessions, so you're not starting from zero every time. Think of it as teaching Claude your work style, preferences, and decision-making patterns.
+This repo is a **meta-project**: its product is the reusable kit in
+[`project-trajectory/`](project-trajectory/) that *other* repos copy in to run a
+gated, requirement-traced development process. So work here improves templates
+and scripts, not a downstream application.
 
-**How to Use This Template:** Start minimal. Use this as-is for your first week, then customize based on what Claude actually needs to know about how you work.
-
----
-
-## Project Overview
-
-<!-- What this shows: Tell Claude what you're working on and why. This gives context for all future conversations. -->
-
-**What I'm working on:**
-I'm a project developer focused on the goals in this repository. I use AI to design and test code and analytic scripts.
-
-**Current priorities:**
-- [Priority 1]
-- [Priority 2]
-- [Priority 3]
-
-**Tools and systems I use regularly:**
-- [Tool 1] for [purpose]
-- [Tool 2] for [purpose]
-- [Tool 3] for [purpose]
+> Looking for the agent guide that ships **to** new projects? That's
+> [`project-trajectory/CLAUDE.template.md`](project-trajectory/CLAUDE.template.md).
+> Don't confuse the two: this file governs editing the kit; that one governs
+> using the kit.
 
 ---
 
-## Voice & Tone
+## What we're optimizing for
 
-<!-- What this shows: How Claude should communicate with you. This shapes every response. -->
+The kit exists to make downstream code **maintainable and trustworthy**:
+readable for humans and agents alike, deeply tested, and advanced only through
+explicit approval gates. Every change here should make that easier to achieve in
+a real project — or get out of the way.
 
-**Communication style I prefer:**
-- Concise and direct.
-- Explain the "why" behind recommendations, not just the "what"
-- Assumptions can be made if risk over technical debt is small.  If an assumption is made it can be stated after implimentation.  If implimentation is significant, ask clarifying questions before moving forward.
-- Be honest about limitations and trade-offs
+## Principles for editing the kit
 
-**What I don't want:**
-- Corporate jargon or overly formal language
-- Walls of text without structure
-- Assumptions about my technical level
-- Generic advice without specific implementation steps
+- **Dogfood the philosophy.** The templates preach single-source-of-truth,
+  decompose-don't-paraphrase, and generated-not-hand-maintained. Hold the kit to
+  the same bar: don't restate a rule in five files — state it in
+  [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
+- **Keep scripts stdlib-only and cross-platform.** The kit's own scripts
+  (`trace.py`, `check.py`, `gen_arch_map.py`, `bootstrap.py`) must run on a clean
+  Python 3.8+ with no pip installs, on Windows and POSIX. Tools a *downstream*
+  project needs (ruff, pytest) are theirs to install; the kit must not require
+  them to run its own checks.
+- **Stack-agnostic core, Python-first reference.** The process and ID scheme are
+  language-neutral; concrete harness commands are Python examples clearly marked
+  as "swap for your stack."
+- **Templates must stay copy-ready.** A `*.template.*` file should produce
+  something sensible the moment it's copied and filled — example/placeholder rows
+  end in `-000` so `trace.py` ignores them.
+- **Self-test before claiming done.** After changing a script, actually run it
+  (a temp scaffold is fine) and paste the real output. Never report a green you
+  didn't produce.
+- **Edit conservatively.** This is a foundation many projects inherit; prefer the
+  smallest change that fixes the problem, and flag anything that would force
+  downstream repos to migrate.
 
----
+## Repo map
 
-## Key Preferences
+- [`project-trajectory/PROCESS.md`](project-trajectory/PROCESS.md) — canonical
+  method (roles, gates, IDs, anti-duplication). The source of truth other docs
+  link to.
+- `project-trajectory/*.template.md` + `registries/*.template.*` — the artifact
+  formats copied into a new repo's `docs/`.
+- `project-trajectory/scripts/` — runnable kit scripts (see "stdlib-only" above).
+- `project-trajectory/ci/check.yml` — reference CI that runs the same harness.
+- [`project-trajectory/EXAMPLE.md`](project-trajectory/EXAMPLE.md) — the worked
+  UN→SR→LLR→TC chain; keep it in sync with the registry column headers.
 
-<!-- What this shows: Your work patterns and decision-making style. -->
+## Communication style
 
-**My decision-making patterns:**
-<!--
-**How I like to work with AI:**
-- Break complex tasks into clear steps
-- Show me examples before I commit to an approach
-- Warn me if I'm overcomplicating something
-- Help me think through trade-offs, don't just execute
- -->
-**Context I always want you to consider:**
-<!--
-- [Specific constraint or preference, e.g., "I work with non-technical stakeholders"]
-- [Specific goal, e.g., "I'm building systems that compound over time"]
-- [Specific style, e.g., "I prefer readable code over clever code"]
- -->
----
-
-## Anti-Patterns to Avoid
-
-<!-- What this shows: Your failure modes. This helps Claude help you better. -->
-
-**I tend to over-engineer when:**
-<!--
-- Starting new projects (remind me to start simple)
-- Solving problems I find interesting (ask if simpler version would work first)
-- [Your specific pattern]
- -->
-
-**I get stuck when:**
-<!--
-- Too many options without clear trade-offs
-- Abstract concepts without concrete examples
-- [Your specific pattern]
- -->
-
-**Don't let me:**
-<!--
-- Add features before validating the core works
-- Chase tools instead of building systems
-- [Your specific anti-pattern]
- -->
-
----
-
-## How to Use This Template
-
-<!--
-**Week 1: Use as-is**
-- Don't customize yet
-- Observe where Claude needs more guidance
-- Note what works and what doesn't
- -->
-
-<!--
-**Week 2+: Customize based on evidence**
-- Add sections where you found yourself repeating instructions
-- Remove sections that aren't being used
-- Make it more specific to your actual work patterns
- -->
-
-<!--
-**Pro Tip:** The best CLAUDE.md files evolve based on real usage, not theoretical needs. Start here, then make it yours.
- -->
+Direct and concrete; explain the *why* before the *how*; surface trade-offs and
+uncertainty honestly; ask before anything irreversible. Prefer the simplest
+thing that works and say so when a request looks over-engineered for its need.

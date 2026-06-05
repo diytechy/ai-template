@@ -1,0 +1,9 @@
+# Python tooling artifacts from running/​testing the kit scripts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.ruff_cache/
+
+# Generated reports (downstream repos generate these into docs/test/)
+docs/test/report.md

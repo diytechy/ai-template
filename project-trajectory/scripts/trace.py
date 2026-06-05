@@ -69,7 +69,7 @@ def main():
     un_ids = set()
     un_md = docs / "requirements" / "user-needs.md"
     if un_md.exists():
-        un_ids = {u for u in re.findall(r"UN-\d+", un_md.read_text(encoding="utf-8"))
+        un_ids = {u for u in re.findall(r"\bUN-\d+\b", un_md.read_text(encoding="utf-8"))
                   if not is_example(u)}
 
     sr_ids = {r["SR-ID"] for r in srs}

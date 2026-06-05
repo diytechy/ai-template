@@ -23,6 +23,17 @@ agent only for an independent pre-gate review (see §6).
 A hat only edits artifacts it owns; to change another, file a finding addressed
 to its owner (§5).
 
+**Domain hats (scope-dependent).** The five above are the spine; choose
+additional discipline hats at project setup to match the scope — e.g. **Network
+Engineer**, **Security Engineer**, **Data/ML Engineer**, **Hardware/Mechanical
+Engineer**, **Mechatronics Engineer**, **DBA**, **SRE/Ops**. A domain hat owns
+the slice of `SR-###`/`LLR-###` rows in its area (tag them, e.g. an `Area`
+column or an `SR-NET-###`-style prefix) and brings its own edge-case and
+release-checklist items. Record the **active hats** for this project in
+`status.md`; don't wear a hat the scope doesn't need. Like the others, a domain
+hat is usually the same driver switching context — spawn a separate specialist
+agent only for an independent high-risk review (§6).
+
 ## 2. Identifier scheme
 
 | Prefix | Level | Parent link |
@@ -62,12 +73,19 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or
   Analysis/Inspection); every SR and LLR → ≥1 TC; traceability **0 orphans**;
   harness runs locally + CI. Sign-offs: System Engineer, Test Engineer.
-- **G3 — Implementation.** Format/lint clean; all tests pass; coverage ≥
-  `COVERAGE_THRESHOLD`; every test-verifiable SR **Verified**; every other SR
-  explicitly **Demonstration / Manual / Inspection**. Sign-offs: System
+- **G3 — Implementation.** Format/lint clean; the **full** test tier passes;
+  coverage ≥ `COVERAGE_THRESHOLD`; every test-verifiable SR **Verified**; every
+  other SR explicitly **Demonstration / Manual / Inspection**. Sign-offs: System
   Engineer, Test Engineer.
+- **G-Release — Release readiness** *(per release; skip for a one-off
+  deliverable)*. The **release** test tier passes (incl. slow/hardware tests);
+  the generated **release checklist** (`scripts/gen_release_checklist.py`) is
+  completed and signed; version bumped; changed `Stable` interface versions
+  communicated to counterparts; docs/changelog updated. Sign-offs: Test Engineer,
+  any active domain hats, Human.
 - **G-Final — Acceptance.** Human/end-user exercises the real product (incl.
-  Demonstration/Manual items) and approves.
+  Demonstration/Manual items) and approves. For shipped software this is the
+  human half of G-Release; for a bespoke deliverable it stands alone.
 
 **Constants:** `MAX_ROUNDS = 4` per gate (then escalate to the human);
 `COVERAGE_THRESHOLD = 80%` line coverage (adjust by agreement; record here).
@@ -76,6 +94,16 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
 e.g. a GUI or a real device) · `Manual` (human procedure) · `Analysis` ·
 `Inspection`. Pick the cheapest method that actually establishes the criterion;
 don't claim `Test` for something only a human can confirm.
+
+**Test tiers (run cost vs. confidence).** Running the whole suite every iteration
+gets untenable as a project grows (and CI has time/quota limits), so each
+`TC-###` carries a **`Tier`**: `Smoke` (fast, run every iteration / on every
+push), `Full` (the pre-merge suite, run on PRs), `Release` (slow, hardware,
+manual-adjacent, or long-running — run at `G-Release`). Tiers are cumulative:
+`full` includes smoke, `release` includes both. The harness selects a tier
+(`check.py --tier`) via pytest markers; the `Tier` column is the source of
+truth. Keep at least the critical paths in `Smoke` so the cheap gate still
+catches regressions.
 
 ## 5. Verdict & status protocol
 
@@ -110,7 +138,40 @@ format check · linter (warnings as errors) · unit + integration tests · cover
 coverage + traceability reports as artifacts. Prefer a generated architecture
 map step so `architecture.md` stays current.
 
-A ready reference traceability checker ships with this template:
-`scripts/trace.py` (Python 3, stdlib only) — joins the registries, writes
-`docs/test/report.md`, and exits nonzero on orphans with `--strict`. Call it
-from `scripts/check`. See `EXAMPLE.md` for a complete worked UN→SR→LLR→TC chain.
+Ready reference scripts ship with this template (Python 3.8+, stdlib only — no
+pip needed to run them):
+
+- `scripts/check.py` — the harness itself. Gate-scoped (`--gate G2|G3|all`), runs
+  format · lint · tests · coverage · traceability · arch-map freshness, and exits
+  nonzero on any failure. Wire it to your stack by editing its `STEPS` table; the
+  contract is the gates + exit code, not the specific tools. CI runs the same
+  command (`ci/check.yml`).
+- `scripts/trace.py` — joins the registries, writes `docs/test/report.md`, exits
+  nonzero on orphans with `--strict`. Called by `check.py` at G2/G3.
+- `scripts/gen_arch_map.py` — regenerates the module/function map in
+  `architecture.md` from the source tree (and surfaces `Implements:` back-links);
+  `--check` fails when the doc is stale, so the map can't drift.
+- `scripts/gen_release_checklist.py` — generates the human **release checklist**
+  for `G-Release` from the registries: every Demonstration/Manual/Inspection SR,
+  every Release-tier/manual TC, the UN acceptance intents, and provided
+  interfaces — each a tick-box back-linked to its id. Keep the completed copy as
+  the sign-off record.
+
+**Cross-platform launchers** (so a fresh clone is trivial to run on any OS):
+`scripts/setup.{sh,ps1}` create a venv and install the toolchain;
+`scripts/check.{sh,ps1}` are thin wrappers that forward to `check.py`. Provide
+the pair for every platform the project supports.
+
+`scripts/bootstrap.py` scaffolds all of the above (plus `docs/` and CI) into a new
+repo in one command. See `EXAMPLE.md` for a complete worked UN→SR→LLR→TC chain.
+
+## 8. Cross-project interfaces (only when projects interlink)
+
+When this project provides or consumes a contract shared with another repo,
+record each shared surface once in `requirements/interfaces.csv` as an `IF-###`
+(see `INTERFACES.template.md`): direction, counterpart, contract, the `SR-Refs`
+that realize/rely on it, version, and stability. The owning (`Provides`) side
+holds the authoritative spec; the consuming side links the same `IF-###` and
+pins the version. Every interface is backed by an SR and a contract/fixture test.
+This keeps interlinked projects from silently drifting apart without imposing a
+multi-repo build system. Standalone projects skip this section.

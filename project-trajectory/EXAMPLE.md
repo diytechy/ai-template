@@ -45,10 +45,16 @@ Detail *decomposes* the SR — it doesn't restate it.
 ## 4. Test Cases — `test/test-cases.csv`
 
 ```csv
-TC-ID,Verifies,Level,Method,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,"to_csv over records incl. special-character fields; parse the result back","field={plain,comma,quote,newline}","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
-TC-002,SR-002;LLR-002,Integration,"Abort write_atomic mid-write; assert no file at the final path and the tmp is cleaned; then a normal run succeeds","interrupt={during-write,before-rename}","Satisfies SR-002 AcceptanceCriteria",Yes,Verified
+TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
+TC-001,SR-001;LLR-001,Unit,"to_csv over records incl. special-character fields; parse the result back",Smoke,"field={plain,comma,quote,newline}","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
+TC-002,SR-002;LLR-002,Integration,"Abort write_atomic mid-write; assert no file at the final path and the tmp is cleaned; then a normal run succeeds",Full,"interrupt={during-write,before-rename}","Satisfies SR-002 AcceptanceCriteria",Yes,Verified
 ```
+
+The `Tier` column controls when a test runs: the cheap `to_csv` unit test is
+`Smoke` (every iteration); the slower interruption integration test is `Full`
+(pre-merge). A test needing real hardware or a long soak would be `Release`. Mark
+the test functions to match (`@pytest.mark.smoke` etc.) so `check.py --tier`
+selects them.
 
 Each TC lists the SR **and** the LLR it covers (so both levels are covered by
 one row), expands the requirement's `Permutations`, and **cites** the acceptance

@@ -1,0 +1,8 @@
+# Catch-all first; the more specific rules below override it (last match wins).
+* text=auto eol=lf
+
+# Shell scripts must use LF or they break on Linux/macOS (bad interpreter).
+*.sh text eol=lf
+
+# PowerShell scripts: CRLF for native Windows tooling.
+*.ps1 text eol=crlf
