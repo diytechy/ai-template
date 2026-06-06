@@ -116,6 +116,15 @@ Tag each `TC-###` with a **Tier** (`Smoke`/`Full`/`Release`) so the cheap gate
 can run every iteration and the expensive tests run only at release
 (`check.py --tier`).
 
+**Exercise the input space, not just the happy path.** For any SR with variable
+inputs, list its **dimensions** in `Permutations` (ranges + sets), cover the
+**boundaries** (min/max, empty/zero/one/largest, and just-outside for
+validation), and choose a combination strategy by risk and cost — **full** when
+small or high-risk, **pairwise (all-pairs)** as the default for ≥3 dimensions,
+**boundary-corners** for expensive/hardware paths. `scripts/gen_cases.py` derives
+the values and combinations (and shows the reduction vs. the full product); push
+heavy combinations to the `Release` tier. See PROCESS.md "Dimensional coverage".
+
 Record every gate decision and persona verdict in `docs/status.md` using the
 verdict protocol in `PROCESS.md`. Never report a green result you didn't run —
 paste the actual command output.

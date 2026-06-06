@@ -72,7 +72,10 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   Sign-offs: End User, UX, System Engineer.
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or
   Analysis/Inspection); every SR and LLR → ≥1 TC; traceability **0 orphans**;
-  harness runs locally + CI. Sign-offs: System Engineer, Test Engineer.
+  **every SR with variable inputs has its dimensions enumerated (`Permutations`)
+  and a stated combination strategy, with boundary values covered** (see
+  "Dimensional coverage" below); harness runs locally + CI. Sign-offs: System
+  Engineer, Test Engineer.
 - **G3 — Implementation.** Format/lint clean; the **full** test tier passes;
   coverage ≥ `COVERAGE_THRESHOLD`; every test-verifiable SR **Verified**; every
   other SR explicitly **Demonstration / Manual / Inspection**. Sign-offs: System
@@ -104,6 +107,53 @@ manual-adjacent, or long-running — run at `G-Release`). Tiers are cumulative:
 (`check.py --tier`) via pytest markers; the `Tier` column is the source of
 truth. Keep at least the critical paths in `Smoke` so the cheap gate still
 catches regressions.
+
+**Dimensional coverage (exercise the input space, not just the happy path).** A
+requirement with variable inputs is rarely satisfied by one example test. Treat
+each variable input as a **dimension** and test deliberately, because defects
+cluster in two places: at the **boundaries** of each dimension and in the
+**interactions** between dimensions.
+
+1. **Per dimension — pick the values that matter, not arbitrary ones.**
+   - *Boundary-value analysis (BVA):* for any range, test the **min and the
+     max**, and the **degenerate** boundaries — empty, zero, one, single-element,
+     and the largest allowed. These catch off-by-one, overflow, and empty-input
+     bugs. For inputs with validation, also test **just outside** each bound (the
+     first invalid value) as its own — often error-path — case.
+   - *Equivalence partitioning:* for a set of discrete modes/types, test **one
+     representative per class** (classes that the code treats differently), not
+     every literal value.
+2. **Across dimensions — choose a combination strategy by risk and cost.** The
+   full Cartesian product exercises every interaction but grows as `k**d` and
+   becomes untenable; don't default to it. Decide per requirement:
+   - **Full product** — when the combination count is small (rule of thumb ≤ ~12)
+     **or** the interaction is high-risk (data loss, corruption, security, money)
+     *and* each case is cheap.
+   - **Pairwise (all-pairs)** — the default for ≥3 dimensions: cover every pair of
+     values across every pair of dimensions at least once. Empirically catches the
+     large majority of interaction defects for a small fraction of the cases.
+   - **Boundary-corners** — when even pairwise is too costly or each run is
+     expensive (hardware / integration): all-low, all-high, and each dimension
+     flipped to its other extreme (single-factor sweeps that localize the failing
+     dimension).
+3. **Balance against time/complexity via the tiers.** Cheap pure-core
+   combinations (unit level) can afford full/pairwise and live in `Smoke`/`Full`;
+   expensive integration/hardware combinations use boundary-corners and live in
+   `Release`. Don't run a 4-mode × N-size sweep on every push — push the heavy
+   combinations to the release tier and keep a boundary slice in smoke.
+
+Record each requirement's dimensions in the SR **`Permutations`** column using
+this grammar, so one SR stands in for many near-duplicate rows and the intent is
+machine-readable:
+
+```
+field=set{plain,comma,quote,newline}; size=range[0..2GiB]; enc=set{utf8,utf16}; @pairwise
+```
+
+`scripts/gen_cases.py` reads exactly that grammar and emits the derived value sets
+and the chosen combinations (and shows the reduction vs. the full product) — copy
+its output into `Parameters` cells / parametrized tests. The generated cases are
+the source; do not hand-curate combinations the generator should produce.
 
 ## 5. Verdict & status protocol
 
@@ -156,6 +206,10 @@ pip needed to run them):
   every Release-tier/manual TC, the UN acceptance intents, and provided
   interfaces — each a tick-box back-linked to its id. Keep the completed copy as
   the sign-off record.
+- `scripts/gen_cases.py` — expands an SR's `Permutations` (input dimensions) into
+  boundary-aware test combinations by strategy (full / pairwise / boundaries),
+  and reports the reduction vs. the full product (see "Dimensional coverage" in
+  §4). Use it at G2 to design test cases that exercise the input space.
 
 **Cross-platform launchers** (so a fresh clone is trivial to run on any OS):
 `scripts/setup.{sh,ps1}` create a venv and install the toolchain;

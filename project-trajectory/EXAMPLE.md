@@ -60,6 +60,39 @@ Each TC lists the SR **and** the LLR it covers (so both levels are covered by
 one row), expands the requirement's `Permutations`, and **cites** the acceptance
 criteria by id rather than paraphrasing them.
 
+## 4b. Dimensional coverage — boundaries × combinations
+
+`SR-001` has three variable inputs, so one happy-path test is not enough. Declare
+the dimensions in its `Permutations` cell (note **boundary** values and a
+strategy):
+
+```
+field=set{plain,comma,quote,newline}; size=range[0..2GiB]; enc=set{utf8,utf16}; @pairwise
+```
+
+`field` is an equivalence partition (one representative per special-char class);
+`size` contributes its **boundaries** (empty `0` and the max `2GiB` — the
+classic empty-input / overflow catchers); `enc` is two classes. The full product
+is 4 × 2 × 2 = 16. Feed the cell to the generator:
+
+```
+$ python scripts/gen_cases.py --spec "field=set{plain,comma,quote,newline}; size=range[0..2GiB]; enc=set{utf8,utf16}; @pairwise" --id SR-001
+# Dimensional analysis for SR-001
+  - field (4 values): plain, comma, quote, newline
+  - size (2 values): *0*, *2GiB*   (* = boundary)
+  - enc (2 values): utf8, utf16
+  strategy: pairwise   cases: 8  (full product = 16; 50% reduction)
+```
+
+Eight cases instead of sixteen, yet every value of every dimension is still paired
+with every value of the others — e.g. `quote` is tried at both `0` and `2GiB` and
+in both encodings. TC-001 then **expands** these into its `Parameters` (or a
+parametrized test) instead of sixteen near-duplicate rows. If this were an
+expensive integration path, `--strategy boundaries` would drop it to a handful of
+extreme-corner cases for the `Release` tier; if it were a corruption-risk path,
+`@full` would keep all sixteen. **Match the strategy to risk and run cost; let the
+generator produce the combinations.**
+
 ## 5. Code back-links (in the source)
 
 ```rust

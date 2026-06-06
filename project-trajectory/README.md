@@ -30,6 +30,7 @@ audits.
 | `scripts/trace.py` | **Ready-to-use** traceability checker (Python 3, stdlib only): joins the registries, writes `test/report.md`, exits nonzero on orphans with `--strict`. Called by `check.py`. |
 | `scripts/gen_arch_map.py` | Generates the module/function map in `architecture.md` from the source tree (and surfaces `Implements:` back-links) — the AI/human code map. `--check` mode fails if stale. |
 | `scripts/gen_release_checklist.py` | Generates the human **release checklist** for G-Release from the registries (every Demonstration/Manual/Inspection SR, Release-tier/manual TC, UN acceptance intent, provided interface) as back-linked tick-boxes. |
+| `scripts/gen_cases.py` | Expands an SR's input **dimensions** (`Permutations`) into boundary-aware test combinations — full / **pairwise (all-pairs)** / boundary-corners — so tests exercise the input space without the full Cartesian blow-up. |
 | `scripts/setup.{sh,ps1}` · `scripts/check.{sh,ps1}` | Cross-platform launchers: one-command venv + dependency setup, and a thin wrapper over `check.py`, for Linux/macOS and Windows. |
 | `pytest.ini` | Registers the `smoke`/`full`/`release` test-tier markers the harness selects with `--tier`. |
 | `ci/check.yml` | Reference GitHub Actions workflow → copy to `.github/workflows/check.yml`. Runs the same `check.py`. |

@@ -56,6 +56,7 @@ MAPPING = [
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
+    ("scripts/gen_cases.py", "scripts/gen_cases.py"),
     ("scripts/setup.sh", "scripts/setup.sh"),
     ("scripts/setup.ps1", "scripts/setup.ps1"),
     ("scripts/check.sh", "scripts/check.sh"),

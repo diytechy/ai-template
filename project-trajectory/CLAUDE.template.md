@@ -86,6 +86,11 @@ the design. Concretely:
   shell. Validate schema/shape at the boundary and fail loudly on surprises.
 - **Test the math on known cases.** Every nontrivial calculation gets a test
   with a hand-checked expected value, not just "it runs".
+- **Exercise the input space.** For variable inputs, cover the **boundaries**
+  (min/max, empty, zero, one, largest) and combine dimensions deliberately —
+  pairwise by default, full only when small or high-risk. Let
+  `scripts/gen_cases.py` derive the combinations from the SR's `Permutations`;
+  see PROCESS.md "Dimensional coverage".
 
 ## Communication style
 

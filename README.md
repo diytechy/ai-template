@@ -28,7 +28,9 @@ The kit's headline pieces:
   (traceability), [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   (the AI/human code map),
   [`gen_release_checklist.py`](project-trajectory/scripts/gen_release_checklist.py)
-  (the human release checklist), and
+  (the human release checklist),
+  [`gen_cases.py`](project-trajectory/scripts/gen_cases.py) (boundary-aware,
+  pairwise test-case combinations), and
   [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) (scaffold a new repo).
   Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`) ship for Linux/macOS
   and Windows.
