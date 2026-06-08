@@ -61,6 +61,34 @@ Stable, zero-padded, never reused.
 - **Modularity/dedup**: shared logic in exactly one place; pure cores separated
   from I/O/GUI shells; small functions; one-page-readable architecture.
 
+**Generated code map — route the AST into the agent's working file.** An agent
+edits faster and more safely when a *current* index of the code is in the file it
+already reads, instead of re-deriving the layout each session. So the harness
+generates, by parsing the source (AST), a per-module map between marker comments:
+
+- each module's **one-line summary** (from its module docstring/header),
+- its **internal dependencies** (which in-tree modules it imports) — this makes
+  layering invariants auditable (e.g. "Common must not import Engine") and shows
+  the blast radius of a change,
+- each public symbol's **signature**, summary, and `Implements: SR/LLR` back-links.
+
+Because the map is *harvested from docstrings and `Implements:` comments*,
+commenting for humans (see the agent guide's "Comment for humans — and the map")
+directly improves the map. The reference generator is `scripts/gen_arch_map.py`
+(Python AST, stdlib); each stack ships its own equivalent (e.g. a PowerShell or
+ts-morph version) writing into the **same marker block** — that block is the only
+contract.
+
+**Routing (where the map lands).** `gen_arch_map.py --doc` is repeatable. Put the
+marker pair wherever agents read and the generator keeps it fresh:
+- *Full map in `architecture.md`, the agent guide links to it* — cleanest;
+  one home; the agent takes one hop. Good default for large codebases.
+- *Map embedded directly in `AGENTS.md` / `CLAUDE.md`* — the agent sees it inline
+  with zero hops; cost is that the guide's diff churns whenever the code changes.
+  Good for small/medium codebases where the map fits on a screen.
+Either way the harness regenerates it (`--check` fails the gate if stale), so it
+never rots. Don't hand-maintain a code map.
+
 ## 4. Objectives, gates, and exit criteria
 
 Advance only when criteria pass; **pause for human approval at each gate**.

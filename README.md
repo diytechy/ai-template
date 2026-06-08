@@ -26,7 +26,8 @@ The kit's headline pieces:
   itself): [`check.py`](project-trajectory/scripts/check.py) (the gate- and
   tier-aware harness), [`trace.py`](project-trajectory/scripts/trace.py)
   (traceability), [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
-  (the AI/human code map),
+  (the AST code map — summaries, dependencies, `Implements:` back-links —
+  routed into `architecture.md` and/or `AGENTS.md`/`CLAUDE.md`),
   [`gen_release_checklist.py`](project-trajectory/scripts/gen_release_checklist.py)
   (the human release checklist),
   [`gen_cases.py`](project-trajectory/scripts/gen_cases.py) (boundary-aware,

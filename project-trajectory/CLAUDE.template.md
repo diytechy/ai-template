@@ -45,6 +45,12 @@ gates, and the ID scheme. The short version an agent needs every session:
 - **Releases (if this project ships versioned):** the G-Release gate runs the
   `release` tier and a generated human checklist
   (`scripts/gen_release_checklist.py`) covering every Demonstration/Manual item.
+- **The code map is generated** (`scripts/gen_arch_map.py`, AST): per-module
+  summary, internal dependencies, and public symbols with `Implements:`
+  back-links. It lives in [docs/architecture.md](docs/architecture.md) (and may
+  be embedded here between the `GENERATED MODULE MAP` markers). **Read it to find
+  where a capability lives before searching the tree**; the harness keeps it
+  current, so don't hand-edit it.
 - **Start each session** by reading the *Current State* header of
   [docs/status.md](docs/status.md); end each turn by updating it (active gate,
   what changed, next action awaiting approval).
@@ -74,6 +80,31 @@ the design. Concretely:
   that swallow failure; non-zero exit on failure for anything scriptable.
 - **Automation-safe by default.** Anything interactive needs a non-interactive
   path that never blocks; no destructive default; don't mutate inputs in place.
+
+### Comment for humans — and the map
+
+Comment **generously and deliberately**. The bar isn't "every line"; it's that a
+reader (human or model) never has to reverse-engineer *intent*. The generated
+code map (`scripts/gen_arch_map.py`) **harvests your module docstrings and public
+symbol docstrings**, so good comments pay double — they teach the reader at the
+code *and* populate the index agents read first. Concretely:
+
+- **Every module/file: a header docstring** stating its single responsibility and
+  any invariant it upholds (e.g. "pure core — no I/O"; "must not import Engine").
+  This line becomes the module's summary in the map.
+- **Every public function/type: a docstring** giving its purpose, the *meaning*
+  (and units) of parameters and return, and its failure modes — not a restatement
+  of the signature. Include `Implements: SR-/LLR-` so the back-link lands in the map.
+- **Explain the *why* at every non-obvious point:** why this algorithm/order/
+  constant, which edge case a branch guards, what invariant must hold here, any
+  gotcha or external reference (spec/ticket/URL). Assume the next reader lacks the
+  context you have right now.
+- **Comment the surprising, not the obvious.** Don't narrate self-evident code
+  (`i += 1  # increment i`); do flag anything that would make a careful reader
+  pause. When in doubt on intent-bearing code, err toward more.
+- **A comment is a promise — keep it true.** Update comments in the same edit as
+  the code; a stale comment is a bug. Never leave a comment describing behavior
+  that no longer exists.
 
 ## For analytics / data code specifically
 

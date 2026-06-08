@@ -25,5 +25,9 @@ unit-testable cores are separated from I/O / network / GUI shells; functions sta
 small; each module has a single clear responsibility.
 
 <!-- BEGIN GENERATED MODULE MAP -->
-_(the harness regenerates the public-item map here)_
+_(the harness regenerates the code map here from the source AST: per-module
+summary, internal dependencies, and public symbols with `Implements:` back-links.
+Run `python scripts/gen_arch_map.py`. To also surface it where agents read, add
+the same marker pair to `AGENTS.md`/`CLAUDE.md` and pass `--doc` for each — see
+process.md "Generated code map".)_
 <!-- END GENERATED MODULE MAP -->

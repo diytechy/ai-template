@@ -8,23 +8,34 @@ here so it cannot drift from the code. Swap this script for an equivalent in
 your stack (e.g. `tsc`/ts-morph for TypeScript, `go doc` for Go) — the contract
 is only the marker block it fills.
 
-What it emits per public symbol (top-level, non-underscore) in each package:
-    - module path, symbol name + signature, one-line docstring summary
-    - any `Implements: SR-###, LLR-###` back-links found in the symbol's source
-      (so reviewers and agents can see the requirement coverage inline)
+What it emits, per module (one section each):
+    - the module's one-line **summary** (its module docstring) — so an agent
+      grasps each file's job without opening it;
+    - **internal coupling**: which other in-tree modules it imports (best-effort)
+      — makes layering/dependency invariants visible (e.g. "Common must not
+      import Engine") and tells an agent the blast radius of a change;
+    - each public symbol's **signature**, one-line docstring summary, and any
+      `Implements: SR-###, LLR-###` back-links found near it.
 
-This doubles as the **AI/human code map**: a single screen that tells an agent
-where each capability lives and which requirement it implements, so it edits the
-right place instead of re-deriving the layout.
+This is the **AI/human code map**: a current, greppable index of where each
+capability lives, what it depends on, and which requirement it implements — so an
+agent edits the right place instead of re-deriving the layout. It is harvested
+from your docstrings/headers, which is one more reason to comment for humans
+(see CLAUDE.template.md "Comment for humans — and the map").
+
+Routing: `--doc` is repeatable, so the same generated block can be spliced into
+`docs/architecture.md` AND the agent's primary file (`AGENTS.md` / `CLAUDE.md`) —
+wherever the marker pair lives. Embed it where agents actually read.
 
 Usage:
-    python scripts/gen_arch_map.py [--src SRC ...] [--doc docs/architecture.md] [--check]
+    python scripts/gen_arch_map.py [--src SRC ...] [--doc FILE ...] [--check]
 
     --src     One or more source roots to scan (default: src). Repeatable.
-    --doc     Architecture doc to update in place (default: docs/architecture.md).
-    --check   Do not write; exit 1 if the doc is out of date (use in CI/harness).
+    --doc     File(s) to update in place (default: docs/architecture.md).
+              Repeatable — each must contain the marker pair below.
+    --check   Do not write; exit 1 if any target is out of date (use in CI/harness).
 
-The doc must contain these markers (the template ships with them):
+Each target file must contain these markers (the templates ship with them):
     <!-- BEGIN GENERATED MODULE MAP -->
     <!-- END GENERATED MODULE MAP -->
 """
@@ -77,16 +88,34 @@ def implements(node, source_lines):
     return sorted(ids)
 
 
-def scan_module(path, root):
-    """Return (rel_module, [rows]) for one .py file; rows describe public items."""
+def internal_imports(tree, internal_names):
+    """In-tree modules this file imports (best-effort: relative imports, or an
+    absolute import whose first segment names a scanned module/package)."""
+    found = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            if node.level:  # relative import -> always internal
+                found.add("." * node.level + (node.module or ""))
+            elif node.module and node.module.split(".")[0] in internal_names:
+                found.add(node.module)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.split(".")[0] in internal_names:
+                    found.add(alias.name)
+    return sorted(found)
+
+
+def scan_module(path, root, internal_names):
+    """Return (rel_module, summary, imports, rows) for one .py file."""
     text = path.read_text(encoding="utf-8")
     source_lines = text.splitlines()
+    rel = path.relative_to(root).with_suffix("").as_posix().replace("/__init__", "")
     try:
         tree = ast.parse(text)
     except SyntaxError as exc:  # surface, don't crash the whole run
-        rel = path.relative_to(root).as_posix()
-        return rel, [(":parse-error:", "", str(exc), [])]
-    rel = path.relative_to(root).with_suffix("").as_posix().replace("/__init__", "")
+        return rel, "PARSE ERROR: {}".format(exc), [], []
+    summary = first_line(ast.get_docstring(tree))
+    imports = internal_imports(tree, internal_names)
     rows = []
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -101,18 +130,18 @@ def scan_module(path, root):
             methods = [n.name for n in node.body
                        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
                        and not n.name.startswith("_")]
-            sig = " · ".join(methods)
             rows.append((node.name + " (class)", "", first_line(ast.get_docstring(node)),
                          implements(node, source_lines)))
-            if sig:
-                rows.append(("  methods", "", sig, []))
-    return rel, rows
+            if methods:
+                rows.append(("  methods", "", " · ".join(methods), []))
+    return rel, summary, imports, rows
 
 
-def build_map(src_roots):
-    out = ["| Module | Public item | Summary | Implements |",
-           "|---|---|---|---|"]
-    any_rows = False
+def _module_files(src_roots):
+    """Yield (path, root_parent) for every scanned .py file, with the set of
+    internal module/package names (for coupling detection)."""
+    files = []
+    names = set()
     for root in src_roots:
         root = Path(root)
         if not root.exists():
@@ -120,24 +149,47 @@ def build_map(src_roots):
         for path in sorted(root.rglob("*.py")):
             if any(part.startswith((".", "__pycache__")) for part in path.parts):
                 continue
-            rel, rows = scan_module(path, root.parent if root.name else root)
-            for name, sig, summary, ids in rows:
-                any_rows = True
-                impl = ", ".join(ids) if ids else ""
-                out.append("| `{}` | `{}{}` | {} | {} |".format(
-                    rel, name, sig, summary.replace("|", "\\|"), impl))
-    if not any_rows:
-        out.append("| _(no source scanned)_ | | | |")
-    note = ("_Generated by `scripts/gen_arch_map.py` from the source tree. "
-            "Do not edit by hand; run the check harness to refresh._")
-    return note + "\n\n" + "\n".join(out)
+            files.append((path, root.parent if root.name else root))
+            names.add(path.stem)
+            for part in path.relative_to(root).parts[:-1]:
+                names.add(part)
+    return files, names
 
 
-def splice(doc_text, generated):
+def build_map(src_roots):
+    files, internal_names = _module_files(src_roots)
+    note = ("_Generated by `scripts/gen_arch_map.py` from the source tree (AST). "
+            "Do not edit by hand; run the check harness to refresh. Summaries and "
+            "`Implements:` come from your docstrings/comments._")
+    if not files:
+        return note + "\n\n_(no source scanned)_"
+    sections = [note]
+    for path, root_parent in files:
+        rel, summary, imports, rows = scan_module(path, root_parent, internal_names)
+        if not (summary or imports or rows):
+            continue  # skip empty modules (e.g. bare __init__.py) — no noise
+        sections.append("\n### `{}`".format(rel))
+        if summary:
+            sections.append("_{}_".format(summary.replace("|", "\\|")))
+        if imports:
+            sections.append("Imports (internal): {}".format(
+                ", ".join("`{}`".format(i) for i in imports)))
+        if rows:
+            sections.append("\n| Public item | Summary | Implements |\n|---|---|---|")
+            for name, sig, summ, ids in rows:
+                sections.append("| `{}{}` | {} | {} |".format(
+                    name, sig, summ.replace("|", "\\|"),
+                    ", ".join(ids) if ids else ""))
+        else:
+            sections.append("_(no public items)_")
+    return "\n".join(sections)
+
+
+def splice(doc_text, generated, target):
     if BEGIN not in doc_text or END not in doc_text:
         raise SystemExit(
-            "architecture doc is missing the GENERATED MODULE MAP markers:\n"
-            "  {}\n  {}".format(BEGIN, END))
+            "{} is missing the GENERATED MODULE MAP markers:\n"
+            "  {}\n  {}".format(target, BEGIN, END))
     pre = doc_text.split(BEGIN)[0]
     post = doc_text.split(END)[1]
     return "{}{}\n{}\n{}{}".format(pre, BEGIN, generated, END, post)
@@ -148,34 +200,38 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--src", action="append", default=None,
                     help="source root to scan (repeatable; default: src)")
-    ap.add_argument("--doc", default="docs/architecture.md",
-                    help="architecture doc to update (default: docs/architecture.md)")
+    ap.add_argument("--doc", action="append", default=None,
+                    help="file(s) to update; repeatable (default: docs/architecture.md). "
+                         "Point at AGENTS.md / CLAUDE.md too to route the map there.")
     ap.add_argument("--check", action="store_true",
-                    help="do not write; exit 1 if the doc is stale")
+                    help="do not write; exit 1 if any target is stale")
     args = ap.parse_args()
 
     src_roots = args.src or ["src"]
-    doc = Path(args.doc)
-    if not doc.exists():
-        raise SystemExit("architecture doc not found: {}".format(doc))
-
+    docs = [Path(d) for d in (args.doc or ["docs/architecture.md"])]
     generated = build_map(src_roots)
-    current = doc.read_text(encoding="utf-8")
-    updated = splice(current, generated)
+
+    stale = False
+    for doc in docs:
+        if not doc.exists():
+            raise SystemExit("target file not found: {}".format(doc))
+        current = doc.read_text(encoding="utf-8")
+        updated = splice(current, generated, doc)
+        if args.check:
+            if updated != current:
+                stale = True
+                print("code map STALE in {}: run `python scripts/gen_arch_map.py`"
+                      .format(doc), file=sys.stderr)
+        elif updated != current:
+            doc.write_text(updated, encoding="utf-8")
+            print("code map regenerated -> {}".format(doc))
+        else:
+            print("code map already up to date -> {}".format(doc))
 
     if args.check:
-        if updated != current:
-            print("architecture map is STALE: run `python scripts/gen_arch_map.py`",
-                  file=sys.stderr)
+        if stale:
             sys.exit(1)
-        print("architecture map up to date.")
-        return
-
-    if updated != current:
-        doc.write_text(updated, encoding="utf-8")
-        print("architecture map regenerated -> {}".format(doc))
-    else:
-        print("architecture map already up to date.")
+        print("code map up to date.")
 
 
 if __name__ == "__main__":
