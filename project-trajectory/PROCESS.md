@@ -60,6 +60,31 @@ Stable, zero-padded, never reused.
   hand-written one-page overview above it.
 - **Modularity/dedup**: shared logic in exactly one place; pure cores separated
   from I/O/GUI shells; small functions; one-page-readable architecture.
+- **Thin orchestrators**: an entry point / top-level routine should *compose, not
+  compute* — a short, ordered sequence of well-named calls so that reading it is
+  the high-level flow. Push logic down into the named steps. The flow is
+  generated from the orchestrator (`gen_arch_map.py --flow`, see below), so a
+  routine that inlines logic instead of delegating shows up as a short,
+  uninformative flow — a built-in tripwire.
+
+**Interface contracts live at the code, referenced — not restated.** Every public
+module/function documents its contract once, where it is implemented, as a
+structured block an agent (or human) can read inline and grep:
+
+- *Inputs* — each parameter's type and, where it matters, its **range/enum/units**;
+- *Outputs* — return type/shape;
+- *Config* — config keys it reads and their constraints (+ where they live);
+- *Raises/Errors* — failure modes and what they signal.
+
+Keep it **non-duplicative by referencing IDs**: a constraint that is already a
+requirement (an input range, an accepted set) lives once in the SR — its
+`AcceptanceCriteria` and the `Permutations` dimensions — and the block cites the
+id (`SR-012`) instead of restating the range. The block carries `Implements:
+SR/LLR`, so the *intent* stays in the registry, the *implemented signature* stays
+in the code, and the link is explicit. The code map harvests the symbol's summary
+and back-links, so a reader can find the contract from the map in one hop. (The
+exact tag syntax is the agent guide's job — see `CLAUDE.template.md` "Define the
+interface (contract) at the code".)
 
 **Generated code map — route the AST into the agent's working file.** An agent
 edits faster and more safely when a *current* index of the code is in the file it
@@ -88,6 +113,13 @@ marker pair wherever agents read and the generator keeps it fresh:
   Good for small/medium codebases where the map fits on a screen.
 Either way the harness regenerates it (`--check` fails the gate if stale), so it
 never rots. Don't hand-maintain a code map.
+
+**Generated high-level flow.** `gen_arch_map.py --flow <entry>` emits the ordered
+internal calls of an entry/orchestrator function (each with the callee's summary)
+into a `GENERATED FLOW` marker block — a generated, drift-proof rendering of the
+"Thin orchestrators" rule above. Put the markers in `architecture.md` (and/or the
+agent file) and add `--flow` to the harness's map step. It complements, and does
+not replace, the hand-written flow overview that shows control flow.
 
 ## 4. Objectives, gates, and exit criteria
 

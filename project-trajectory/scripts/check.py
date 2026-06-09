@@ -75,6 +75,8 @@ def steps(coverage, tier):
         ("tests+coverage", "pytest", pytest_cmd, {"G3"}),
         ("traceability", sys.executable,
          [sys.executable, "scripts/trace.py", "--strict"], {"G2", "G3"}),
+        # Add `--doc AGENTS.md` / `--doc CLAUDE.md` to route the map there too, and
+        # `--flow <entry>` to also check the generated high-level flow.
         ("arch-map", sys.executable,
          [sys.executable, "scripts/gen_arch_map.py", "--check",
           "--src", SRC, "--doc", "docs/architecture.md"], {"G3"}),

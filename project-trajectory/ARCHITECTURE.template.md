@@ -13,6 +13,17 @@ the check harness so it cannot drift (see [process.md §3/§7](process.md)).
 
 _Describe the data flow in a few boxes/arrows. Keep it readable at a glance._
 
+### Program flow (generated)
+
+The ordered steps of the entry/orchestrator function, generated from the code by
+`python scripts/gen_arch_map.py --flow <entry>` (wire `--flow` into the harness's
+map step). Keep the orchestrator thin so this reads as the high-level flow; the
+diagram above carries the control flow this list omits.
+
+<!-- BEGIN GENERATED FLOW -->
+_(run `gen_arch_map.py --flow <entry>` to populate — e.g. `--flow run`)_
+<!-- END GENERATED FLOW -->
+
 ## Module responsibilities
 
 | Module | Responsibility | Key public items |

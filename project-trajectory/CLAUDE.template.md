@@ -66,6 +66,11 @@ the design. Concretely:
   decides goes in pure functions (exhaustively unit-tested); side effects live
   in thin shells (Demonstration/integration-tested). This is the single biggest
   lever for testability and clarity.
+- **Entry points orchestrate, they don't compute.** A top-level routine should
+  read as a short, ordered list of well-named step calls — the high-level flow at
+  a glance. Push logic into the steps. `scripts/gen_arch_map.py --flow <entry>`
+  renders that call sequence into the architecture doc; if it comes out short or
+  vague, the routine is doing too much itself.
 - **One fact, one home — in code too.** No copy-paste logic; shared behavior
   lives in exactly one place and is imported.
 - **Intention-revealing names; no cryptic abbreviations.** Comments explain
@@ -105,6 +110,40 @@ code *and* populate the index agents read first. Concretely:
 - **A comment is a promise — keep it true.** Update comments in the same edit as
   the code; a stale comment is a bug. Never leave a comment describing behavior
   that no longer exists.
+
+### Define the interface (contract) at the code
+
+Every public module/function states its **interface contract** once, in its
+docstring/header, so a caller never has to read the body to use it safely. Cover
+four things — and **reference requirement IDs instead of restating constraints**
+that already live in an SR (its `AcceptanceCriteria` + `Permutations` dimensions
+are the single home for input ranges/sets):
+
+- **Inputs** — each parameter's type and, where it matters, its range/enum/units.
+- **Outputs** — the return type/shape.
+- **Config** — config keys read and their constraints (and where they live).
+- **Raises** — failure modes and what each signals.
+
+Use whatever your language's doc convention is; keep the tag names consistent so
+the block is greppable. A reference shape:
+
+```
+"""Back up one source set: hash, dedup, snapshot, write manifest.
+
+Contract:
+  Inputs:  source_path: str  (existing dir; see SR-014)
+           mode: enum{Mirror, HashAddressed}   (dimensions: SR-012)
+  Outputs: BackupResult { copied: int, snapshotted: bool }
+  Config:  compress: bool; hash_frequency_days: int >= 0   [BackupConfig.xml]
+  Raises:  PermissionError if backup_path is unwritable     (SR-017)
+Implements: SR-014, LLR-014
+"""
+```
+
+The contract lives **once** at the code (the implemented signature) and **links**
+to the registry for intent and measurable ranges — readable inline, non-
+duplicative, and surfaced through the generated code map. Update it in the same
+edit as the signature; a wrong contract is worse than none.
 
 ## For analytics / data code specifically
 
