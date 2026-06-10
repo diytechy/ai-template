@@ -156,7 +156,13 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
 **Verification methods:** `Test` (automated) · `Demonstration` (run + observe,
 e.g. a GUI or a real device) · `Manual` (human procedure) · `Analysis` ·
 `Inspection`. Pick the cheapest method that actually establishes the criterion;
-don't claim `Test` for something only a human can confirm.
+don't claim `Test` for something only a human can confirm. The method drives
+what `trace.py` requires: only `Analysis`/`Inspection` SRs are exempt from the
+LLR requirement (they have no code to decompose; `Demonstration`/`Manual` SRs
+still describe implemented behavior, so they keep it), and **every SR needs ≥1
+TC row regardless of method** — for human methods the TC records the procedure
+(`Automated=No`, usually `Tier=Release`), which is how the release checklist
+finds it.
 
 **Test tiers (run cost vs. confidence).** Running the whole suite every iteration
 gets untenable as a project grows (and CI has time/quota limits), so each
@@ -164,9 +170,13 @@ gets untenable as a project grows (and CI has time/quota limits), so each
 push), `Full` (the pre-merge suite, run on PRs), `Release` (slow, hardware,
 manual-adjacent, or long-running — run at `G-Release`). Tiers are cumulative:
 `full` includes smoke, `release` includes both. The harness selects a tier
-(`check.py --tier`) via pytest markers; the `Tier` column is the source of
-truth. Keep at least the critical paths in `Smoke` so the cheap gate still
-catches regressions.
+(`check.py --tier`) via pytest markers, with a safe default: an **unmarked test
+runs in `full` and `release`**, so a forgotten marker can never silently drop a
+test from the pre-merge suite — `smoke` is opt-in, and marking `release` opts a
+test out of pre-merge. The `Tier` column is the source of truth. Keep at least
+the critical paths in `Smoke` so the cheap gate still catches regressions; the
+coverage threshold is enforced at `full`/`release` only (the smoke subset alone
+isn't expected to meet it).
 
 **Dimensional coverage (exercise the input space, not just the happy path).** A
 requirement with variable inputs is rarely satisfied by one example test. Treat
@@ -179,7 +189,9 @@ cluster in two places: at the **boundaries** of each dimension and in the
      max**, and the **degenerate** boundaries — empty, zero, one, single-element,
      and the largest allowed. These catch off-by-one, overflow, and empty-input
      bugs. For inputs with validation, also test **just outside** each bound (the
-     first invalid value) as its own — often error-path — case.
+     first invalid value) as its own — often error-path — case. These invalid
+     cases assert *rejection*, not the SR's acceptance criteria, so design them
+     by hand as their own TCs; `gen_cases.py` combines over the valid space only.
    - *Equivalence partitioning:* for a set of discrete modes/types, test **one
      representative per class** (classes that the code treats differently), not
      every literal value.
@@ -257,7 +269,9 @@ pip needed to run them):
   contract is the gates + exit code, not the specific tools. CI runs the same
   command (`ci/check.yml`).
 - `scripts/trace.py` — joins the registries, writes `docs/test/report.md`, exits
-  nonzero on orphans with `--strict`. Called by `check.py` at G2/G3.
+  nonzero on orphans with `--strict`; `--require-verified` adds the G3 status
+  criterion (every `Verification=Test` SR must be `Verified`). Called by
+  `check.py` at G2/G3 (the G3 run adds `--require-verified`).
 - `scripts/gen_arch_map.py` — regenerates the module/function map in
   `architecture.md` from the source tree (and surfaces `Implements:` back-links);
   `--check` fails when the doc is stale, so the map can't drift.

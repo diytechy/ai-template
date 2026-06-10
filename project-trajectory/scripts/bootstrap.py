@@ -22,17 +22,24 @@ What it creates in the destination:
     docs/requirements/low-level-requirements.csv
     docs/requirements/interfaces.csv           <- registries/interfaces.template.csv
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
-    scripts/trace.py, check.py, gen_arch_map.py, gen_release_checklist.py
+    scripts/trace.py, check.py, gen_arch_map.py, gen_release_checklist.py,
+    scripts/gen_cases.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     pytest.ini                                 (test-tier markers)
+    .gitignore                                 <- gitignore.template
     .github/workflows/check.yml                <- ci/check.yml
     src/, tests/                               (empty, with .gitkeep)
+
+It then runs `gen_arch_map.py` and `trace.py` once in the new repo so the
+scaffold starts green — `check.py` would otherwise fail on the template
+placeholder between the architecture markers.
 
 After running: open CLAUDE.md and docs/status.md, fill the PROJECT BRIEF, then
 start gate G1 (see docs/process.md).
 """
 import argparse
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -62,10 +69,27 @@ MAPPING = [
     ("scripts/check.sh", "scripts/check.sh"),
     ("scripts/check.ps1", "scripts/check.ps1"),
     ("pytest.ini", "pytest.ini"),
+    ("gitignore.template", ".gitignore"),
     ("ci/check.yml", ".github/workflows/check.yml"),
 ]
 
 GITKEEP_DIRS = ["src", "tests"]
+
+
+def initialize_generated_docs(dest):
+    """Run the generators once so the fresh scaffold starts green: the arch-map
+    placeholder would otherwise fail `gen_arch_map.py --check` (and so the
+    harness) until the first manual run."""
+    for rel_cmd in (
+        ["scripts/gen_arch_map.py", "--src", "src", "--doc", "docs/architecture.md"],
+        ["scripts/trace.py"],
+    ):
+        if not (dest / rel_cmd[0]).exists() or not (dest / "docs").exists():
+            continue
+        proc = subprocess.run([sys.executable] + rel_cmd, cwd=str(dest))
+        if proc.returncode != 0:
+            print("WARNING: {} exited {}".format(rel_cmd[0], proc.returncode),
+                  file=sys.stderr)
 
 
 def main():
@@ -125,6 +149,8 @@ def main():
 
     print("\n{} file(s) {}, {} skipped.".format(
         len(created), "to create" if args.dry_run else "created", len(skipped)))
+    if not args.dry_run:
+        initialize_generated_docs(dest)
     if not args.dry_run and created:
         print("Next: fill the PROJECT BRIEF in CLAUDE.md + docs/status.md, then "
               "run gate G1 (docs/process.md).")

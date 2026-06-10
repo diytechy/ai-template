@@ -7,7 +7,7 @@ check harness / CI. It is the generated "traceability matrix" referenced by
 PROCESS.md: it never needs hand-maintaining.
 
 Usage:
-    python scripts/trace.py [--strict] [--docs DIR]
+    python scripts/trace.py [--strict] [--require-verified] [--docs DIR]
 
 Reads (relative to --docs, default "docs"):
     requirements/system-requirements.csv   (cols: SR-ID, UN-Refs, Verification, Status, ...)
@@ -18,15 +18,21 @@ Reads (relative to --docs, default "docs"):
 Writes:
     test/report.md  — counts, the SR->LLR->TC matrix, and the orphan list.
 
-Exit code: 0 normally; with --strict, 1 if any orphan is found (use in gates).
+Exit code: 0 normally; with --strict, 1 if any orphan (or, with
+--require-verified, any status finding) exists — use in gates.
 
-Orphan rules:
-    - SR with no LLR (unless Verification is Analysis/Inspection)
-    - SR with no TC
+Orphan rules (the method rules are stated once, in process.md §4):
+    - SR with no LLR (unless Verification is Analysis/Inspection — those have no
+      code to decompose; Demonstration/Manual SRs still describe behavior the
+      software implements, so they keep the LLR requirement)
+    - SR with no TC (every SR needs ≥1 TC row regardless of method; for human
+      methods the TC records the procedure with Automated=No)
     - LLR with no SR parent, or referencing an unknown SR
     - LLR with no TC
     - TC that verifies nothing, or references an unknown SR/LLR
     - UN with no SR (only when user-needs.md is present)
+--require-verified adds the G3 status criterion:
+    - SR with Verification=Test whose Status is not Verified
 Placeholder example rows (ids ending in "-000") are ignored.
 """
 import argparse
@@ -54,7 +60,10 @@ def is_example(rid):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--strict", action="store_true", help="exit 1 if any orphan")
+    ap.add_argument("--strict", action="store_true",
+                    help="exit 1 if any orphan / status finding")
+    ap.add_argument("--require-verified", action="store_true",
+                    help="G3 criterion: flag Verification=Test SRs not Status=Verified")
     ap.add_argument("--docs", default="docs", help="docs directory (default: docs)")
     args = ap.parse_args()
     docs = Path(args.docs)
@@ -115,6 +124,14 @@ def main():
         if u not in sr_un_refs:
             orphans.append(f"UN {u} has no SR")
 
+    status_findings = []
+    if args.require_verified:
+        for r in srs:
+            if r.get("Verification", "") == "Test" and r.get("Status", "") != "Verified":
+                status_findings.append(
+                    f"SR {r['SR-ID']} is Verification=Test but Status="
+                    f"{r.get('Status', '') or '(blank)'} (G3 requires Verified)")
+
     lines = [
         "# Coverage & Traceability Report",
         "",
@@ -127,6 +144,9 @@ def main():
         f"| Low-level requirements (LLR) | {len(llrs)} |",
         f"| Test cases (TC) | {len(tcs)} |",
         f"| Orphans | {len(orphans)} |",
+    ] + (
+        [f"| Status findings | {len(status_findings)} |"] if args.require_verified else []
+    ) + [
         "",
         "## SR -> LLR -> TC matrix",
         "",
@@ -135,19 +155,25 @@ def main():
     ]
     for r in srs:
         sid = r["SR-ID"]
-        l = " ".join(x["LLR-ID"] for x in llrs if sid in refs(x.get("SR-Refs")))
-        t = " ".join(x["TC-ID"] for x in tcs if sid in refs(x.get("Verifies")))
-        lines.append(f"| {sid} | {l} | {t} | {r.get('Status', '')} |")
+        kids = " ".join(x["LLR-ID"] for x in llrs if sid in refs(x.get("SR-Refs")))
+        tests = " ".join(x["TC-ID"] for x in tcs if sid in refs(x.get("Verifies")))
+        lines.append(f"| {sid} | {kids} | {tests} | {r.get('Status', '')} |")
     lines += ["", "## Orphans", ""]
     lines += ["None. Full coverage."] if not orphans else [f"- {o}" for o in orphans]
+    if args.require_verified:
+        lines += ["", "## Status findings (--require-verified)", ""]
+        lines += (["None. Every Verification=Test SR is Verified."]
+                  if not status_findings else [f"- {s}" for s in status_findings])
 
     out = docs / "test" / "report.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     print(f"Traceability: UN={len(un_ids)} SR={len(srs)} LLR={len(llrs)} "
-          f"TC={len(tcs)} orphans={len(orphans)}. Report -> {out}")
-    if args.strict and orphans:
+          f"TC={len(tcs)} orphans={len(orphans)}"
+          + (f" status-findings={len(status_findings)}" if args.require_verified else "")
+          + f". Report -> {out}")
+    if args.strict and (orphans or status_findings):
         sys.exit(1)
 
 

@@ -19,7 +19,8 @@ any repo and wire the harness to that repo's tooling.
 The kit's headline pieces:
 
 - **A gated process** ([`PROCESS.md`](project-trajectory/PROCESS.md)) — roles as
-  "hats", four approval gates (G1→G2→G3→G-Final), and a verdict protocol.
+  "hats", approval gates (G1→G2→G3→G-Release→G-Final; G-Release only for
+  versioned releases), and a verdict protocol.
 - **A traceability spine** — `UN → SR → LLR → TC` registries joined by a
   generated matrix that must report **zero orphans** before each gate.
 - **Runnable scripts** (stdlib-only Python 3.8+, no pip needed for the kit

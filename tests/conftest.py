@@ -1,0 +1,110 @@
+"""Shared fixtures/helpers for the kit's self-tests.
+
+The kit scripts must stay stdlib-only (downstream repos run them without pip);
+this suite is meta-repo dev tooling, so pytest/ruff are fair game here. The
+tests exercise the scripts the way a downstream user would: bootstrap a real
+scaffold in a temp dir and run the actual commands.
+"""
+
+import importlib.util
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+KIT = Path(__file__).resolve().parent.parent / "project-trajectory"
+SCRIPTS = KIT / "scripts"
+
+
+def load_script(name):
+    """Import a kit script as a module (scripts/ is intentionally not a package)."""
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / (name + ".py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def run_py(args, cwd):
+    """Run `python <args>` in cwd, capturing output."""
+    return subprocess.run(
+        [sys.executable] + [str(a) for a in args],
+        cwd=str(cwd),
+        capture_output=True,
+        text=True,
+    )
+
+
+@pytest.fixture
+def scaffold(tmp_path):
+    """A fresh repo bootstrapped from the kit (the documented quick-start)."""
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", tmp_path], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return tmp_path
+
+
+# --- A minimal but complete downstream project -------------------------------
+# One pure function, one traced UN->SR->LLR->TC chain, one marked smoke test.
+# Used by the harness tests; written ruff-format-clean on purpose.
+
+DEMO_SRC = '''"""Demo pure core for the kit self-test. Pure — no I/O."""
+
+
+def add(a, b):
+    """Add two numbers. Implements: SR-001, LLR-001"""
+    return a + b
+'''
+
+DEMO_TEST_CONFTEST = '''"""Make src/ importable for the tests (no install step needed)."""
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+'''
+
+DEMO_TEST = '''"""Verifies SR-001/LLR-001 (TC-001)."""
+
+import pytest
+from demo import add
+
+
+@pytest.mark.smoke
+def test_add_sr001():
+    assert add(1, 2) == 3
+'''
+
+USER_NEEDS = """# User Needs (UN-###)
+
+| UN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
+|---|---|---|---|---|
+| UN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
+"""
+
+SRS = """SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,UN-001,"The system shall add two numbers.","Realizes UN-001.","add(1,2) == 3",,M,Test,Verified
+"""
+
+LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented
+"""
+
+TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
+"""
+
+
+def make_minimal_project(root):
+    """Fill a scaffold with the demo project + a fully traced registry chain,
+    then refresh the generated arch map so the harness starts from truth."""
+    (root / "src" / "demo.py").write_text(DEMO_SRC, encoding="utf-8")
+    (root / "tests" / "conftest.py").write_text(DEMO_TEST_CONFTEST, encoding="utf-8")
+    (root / "tests" / "test_demo.py").write_text(DEMO_TEST, encoding="utf-8")
+    req = root / "docs" / "requirements"
+    (req / "user-needs.md").write_text(USER_NEEDS, encoding="utf-8")
+    (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")
+    (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
+    (root / "docs" / "test" / "test-cases.csv").write_text(TCS, encoding="utf-8")
+    proc = run_py(["scripts/gen_arch_map.py"], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return root

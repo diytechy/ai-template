@@ -13,7 +13,9 @@ full product.
 Techniques it applies (see process.md "Dimensional test coverage"):
     - Boundary-value analysis: a `range[min..max]` contributes its **min and max**
       (plus any interior/nominal points you list) — the classic off-by-one /
-      overflow catchers.
+      overflow catchers. Note: this tool combines over the *valid* input space;
+      just-outside/invalid values assert rejection, so design those by hand as
+      their own error-path TCs (see process.md "Dimensional coverage").
     - Equivalence partitioning: a `set{...}` contributes one representative per
       class; `bool` is `{true,false}`.
     - Combination strategy:
@@ -48,7 +50,6 @@ Examples:
 import argparse
 import itertools
 import re
-import sys
 
 
 def parse_spec(spec):
@@ -209,8 +210,8 @@ def main():
     elif args.format == "csv":
         # TC rows ready to paste (fill TC-ID / Verifies / Expected).
         print("TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status")
-        for i, c in enumerate(cases, 1):
-            print('TC-xxx,{};,Unit,{} combination,{},"{}",'
+        for c in cases:
+            print('TC-xxx,{},Unit,{} combination,{},"{}",'
                   '"Satisfies {} AcceptanceCriteria",Yes,Draft'.format(
                       args.id or "SR-xxx",
                       strategy, args.tier, param_str(c), args.id or "SR-xxx"))

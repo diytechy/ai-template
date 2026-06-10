@@ -30,5 +30,5 @@ fi
 # ------------------------------------------------------------------------------
 
 echo
-echo "Setup complete. Activate with: . .venv/bin/activate"
-echo "Then run the harness:        ./scripts/check.sh --gate G3"
+echo "Setup complete. Run the harness with: ./scripts/check.sh --gate G3"
+echo "(check.sh uses the venv python directly; activating is optional.)"

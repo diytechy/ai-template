@@ -90,6 +90,8 @@ def main():
            if r.get("IF-ID") and not is_example(r["IF-ID"])]
 
     human_srs = [r for r in srs if r.get("Verification", "") in HUMAN_METHODS]
+    # A blank Automated cell intentionally counts as manual: an unclassified test
+    # must show up on the human checklist rather than silently drop off it.
     manual_tcs = [r for r in tcs
                   if r.get("Tier", "") == "Release"
                   or (r.get("Automated", "").strip().lower() in ("no", "false", ""))]

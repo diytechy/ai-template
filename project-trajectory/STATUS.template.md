@@ -36,7 +36,7 @@ deliverable.
 | G1 — Requirements/UX/Constraints | PENDING | PENDING | PENDING | n/a | PENDING |
 | G2 — Decomposition & Test Coverage | n/a | n/a | PENDING | PENDING | PENDING |
 | G3 — Implementation | n/a | n/a | PENDING | PENDING | PENDING |
-| G-Release — Release readiness | n/a | n/a | PENDING | PENDING | PENDING |
+| G-Release — Release readiness | n/a | n/a | n/a | PENDING | PENDING |
 | G-Final — Acceptance | PENDING | n/a | n/a | (evidence) | PENDING |
 
 ---

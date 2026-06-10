@@ -35,7 +35,7 @@ gates, and the ID scheme. The short version an agent needs every session:
 - **Everything traces:** `UN → SR → LLR → TC`. Intent lives once, as an id, and
   children link to it. The matrix is generated (`scripts/trace.py`) and must
   report **0 orphans** before a gate.
-- **Gates G1→G2→G3→G-Final each pause for human approval.** Don't advance past a
+- **Gates G1→G2→G3→(G-Release)→G-Final each pause for human approval.** Don't advance past a
   gate on your own; record the decision in [docs/status.md](docs/status.md).
 - **The check harness is the bar:** `python scripts/check.py` (or
   `scripts/check.sh` / `scripts/check.ps1`) runs format, lint, tests, coverage,

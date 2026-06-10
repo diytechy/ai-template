@@ -205,6 +205,11 @@ def splice_region(doc_text, begin, end, content, target, required):
             raise SystemExit(
                 "{} is missing markers:\n  {}\n  {}".format(target, begin, end))
         return doc_text
+    # A duplicated marker would make the splice ambiguous (and silently eat the
+    # text between the copies) — refuse rather than corrupt the doc.
+    if doc_text.count(begin) > 1 or doc_text.count(end) > 1:
+        raise SystemExit("{} contains a duplicated marker ({} / {}); keep exactly "
+                         "one pair per file".format(target, begin, end))
     pre = doc_text.split(begin)[0]
     post = doc_text.split(end)[1]
     return "{}{}\n{}\n{}{}".format(pre, begin, content, end, post)
@@ -221,28 +226,44 @@ def _called_name(call):
 
 
 def _all_functions(src_roots):
-    """Map every function name in the source -> (node, one-line summary).
-    Best-effort across modules; first definition of a name wins."""
+    """Map every function name in the source -> list of (module_rel, node,
+    one-line summary), in scan order. A name can be defined in several modules —
+    callers disambiguate (see build_flow)."""
     funcs = {}
     files, _ = _module_files(src_roots)
-    for path, _root_parent in files:
+    for path, root_parent in files:
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except SyntaxError:
             continue
+        rel = (path.relative_to(root_parent).with_suffix("").as_posix()
+               .replace("/__init__", ""))
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                funcs.setdefault(node.name, (node, first_line(ast.get_docstring(node))))
+                funcs.setdefault(node.name, []).append(
+                    (rel, node, first_line(ast.get_docstring(node))))
     return funcs
 
 
 def build_flow(src_roots, entry):
-    """Ordered list of the internal functions the entry orchestrator calls."""
+    """Ordered list of the internal functions the entry orchestrator calls.
+
+    `entry` is a bare function name (`run`) or module-qualified (`module:run`,
+    matching the module path's tail, e.g. `export/io:run` or just `io:run`).
+    A bare name defined in more than one module is an error — qualify it."""
     funcs = _all_functions(src_roots)
-    name = entry.split(":")[-1]
-    if name not in funcs:
+    mod, _, name = entry.rpartition(":")
+    candidates = funcs.get(name, [])
+    if mod:
+        candidates = [c for c in candidates
+                      if c[0] == mod or c[0].endswith("/" + mod)]
+    if not candidates:
         raise SystemExit("flow entry function not found: {}".format(entry))
-    node, summary = funcs[name]
+    if len(candidates) > 1:
+        raise SystemExit(
+            "flow entry {!r} is ambiguous — defined in: {}. Qualify it as "
+            "'module:{}'.".format(name, ", ".join(c[0] for c in candidates), name))
+    _rel, node, summary = candidates[0]
     internal = set(funcs)
     calls = []
     for n in ast.walk(node):
@@ -264,7 +285,7 @@ def build_flow(src_roots, entry):
                      "is its module under --src?)_".format(name))
     else:
         for i, (_l, _c, cn) in enumerate(calls, 1):
-            s = funcs[cn][1]
+            s = funcs[cn][0][2]  # first definition's summary (display only)
             lines.append("{}. `{}`{}".format(i, cn, " — " + s if s else ""))
     return "\n".join(lines)
 

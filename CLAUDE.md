@@ -36,9 +36,10 @@ a real project — or get out of the way.
 - **Templates must stay copy-ready.** A `*.template.*` file should produce
   something sensible the moment it's copied and filled — example/placeholder rows
   end in `-000` so `trace.py` ignores them.
-- **Self-test before claiming done.** After changing a script, actually run it
-  (a temp scaffold is fine) and paste the real output. Never report a green you
-  didn't produce.
+- **Self-test before claiming done.** After changing a script, run
+  `python -m pytest -q` — the suite in `tests/` bootstraps a temp scaffold and
+  exercises every script end-to-end — and paste the real output. Never report a
+  green you didn't produce.
 - **Edit conservatively.** This is a foundation many projects inherit; prefer the
   smallest change that fixes the problem, and flag anything that would force
   downstream repos to migrate.
@@ -53,7 +54,11 @@ a real project — or get out of the way.
 - `project-trajectory/scripts/` — runnable kit scripts (see "stdlib-only" above).
 - `project-trajectory/ci/check.yml` — reference CI that runs the same harness.
 - [`project-trajectory/EXAMPLE.md`](project-trajectory/EXAMPLE.md) — the worked
-  UN→SR→LLR→TC chain; keep it in sync with the registry column headers.
+  UN→SR→LLR→TC chain; keep it in sync with the registry column headers (a test
+  asserts its `Permutations` snippets parse with `gen_cases.py`).
+- `tests/` — the kit's own pytest suite (meta-repo dev tooling; the stdlib-only
+  rule applies to the kit scripts, not to testing them). CI:
+  `.github/workflows/test.yml` runs it on Linux + Windows, Python 3.8 + latest.
 
 ## Communication style
 

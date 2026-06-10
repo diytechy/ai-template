@@ -1,0 +1,31 @@
+# Self-tests for the kit: every script is exercised against a real temp
+# scaffold, so a green run means the documented quick-start actually works —
+# on both OS families and on the oldest Python the kit claims (3.8).
+name: kit-tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.8", "3.x"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      # The kit scripts themselves are stdlib-only; these tools are what the
+      # harness tests drive (the same set scripts/setup installs downstream).
+      - name: Install test tooling
+        run: python -m pip install ruff pytest pytest-cov
+
+      - name: Run kit self-tests
+        run: python -m pytest -q

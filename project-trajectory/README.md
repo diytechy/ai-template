@@ -32,7 +32,8 @@ audits.
 | `scripts/gen_release_checklist.py` | Generates the human **release checklist** for G-Release from the registries (every Demonstration/Manual/Inspection SR, Release-tier/manual TC, UN acceptance intent, provided interface) as back-linked tick-boxes. |
 | `scripts/gen_cases.py` | Expands an SR's input **dimensions** (`Permutations`) into boundary-aware test combinations — full / **pairwise (all-pairs)** / boundary-corners — so tests exercise the input space without the full Cartesian blow-up. |
 | `scripts/setup.{sh,ps1}` · `scripts/check.{sh,ps1}` | Cross-platform launchers: one-command venv + dependency setup, and a thin wrapper over `check.py`, for Linux/macOS and Windows. |
-| `pytest.ini` | Registers the `smoke`/`full`/`release` test-tier markers the harness selects with `--tier`. |
+| `pytest.ini` | Registers the `smoke`/`full`/`release` test-tier markers the harness selects with `--tier` (unmarked tests run in `full`+`release`). |
+| `gitignore.template` | Minimal `.gitignore` for the new repo (venv, tool caches, the regenerated trace report). |
 | `ci/check.yml` | Reference GitHub Actions workflow → copy to `.github/workflows/check.yml`. Runs the same `check.py`. |
 | `EXAMPLE.md` | A fully worked UN→SR→LLR→TC chain to copy the pattern from. |
 
@@ -49,8 +50,9 @@ audits.
 3. **Wire the harness to your stack:** edit `scripts/check.py`'s `STEPS` for your
    toolchain (the reference uses `ruff`/`pytest`); `trace.py` and
    `gen_arch_map.py` are stdlib-only.
-4. The agent runs the gates **G1 → G2 → G3 → G-Final**, pausing for your approval
-   at each, with `python scripts/check.py` as the bar.
+4. The agent runs the gates **G1 → G2 → G3 → G-Release → G-Final** (G-Release
+   only for versioned releases), pausing for your approval at each, with
+   `python scripts/check.py` as the bar.
 
 ## The core ideas (why it produces sustainable code)
 
