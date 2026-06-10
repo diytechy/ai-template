@@ -32,6 +32,13 @@ def test_fresh_scaffold_passes_archmap_check_and_trace(scaffold):
     assert "orphans=0" in proc.stdout
 
 
+def test_scaffold_architecture_has_generated_diagram_block(scaffold):
+    arch = (scaffold / "docs" / "architecture.md").read_text(encoding="utf-8")
+    assert "BEGIN GENERATED DEPENDENCY DIAGRAM" in arch
+    # Empty src at bootstrap time -> the spliced placeholder, not the template's.
+    assert "(no source scanned)" in arch
+
+
 def test_dry_run_writes_nothing(tmp_path):
     proc = run_py(
         [SCRIPTS / "bootstrap.py", "--dest", tmp_path / "repo", "--dry-run"],

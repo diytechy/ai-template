@@ -12,6 +12,10 @@ def test_minimal_project_is_green(scaffold):
     proc = run_py(["scripts/check.py", "--gate", "all", "--tier", "all"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "RESULT: PASS" in proc.stdout
+    # The regenerated architecture doc carries the Mermaid dependency diagram.
+    arch = (scaffold / "docs" / "architecture.md").read_text(encoding="utf-8")
+    assert "```mermaid" in arch
+    assert "src/demo" in arch
 
 
 def test_unmarked_test_runs_in_full_tier(scaffold):

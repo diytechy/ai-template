@@ -50,7 +50,11 @@ gates, and the ID scheme. The short version an agent needs every session:
   back-links. It lives in [docs/architecture.md](docs/architecture.md) (and may
   be embedded here between the `GENERATED MODULE MAP` markers). **Read it to find
   where a capability lives before searching the tree**; the harness keeps it
-  current, so don't hand-edit it.
+  current, so don't hand-edit it. The same script maintains the Mermaid
+  **dependency diagram** in architecture.md.
+- **Diagrams are Mermaid fenced blocks in the docs** — rendered by GitHub and
+  the VS Code preview, no toolchain. Never edit between `GENERATED` markers;
+  never commit exported diagram images (see docs/process.md "Diagrams are text").
 - **Start each session** by reading the *Current State* header of
   [docs/status.md](docs/status.md); end each turn by updating it (active gate,
   what changed, next action awaiting approval).

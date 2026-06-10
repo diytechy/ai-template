@@ -121,6 +121,22 @@ into a `GENERATED FLOW` marker block — a generated, drift-proof rendering of t
 agent file) and add `--flow` to the harness's map step. It complements, and does
 not replace, the hand-written flow overview that shows control flow.
 
+**Diagrams are text (Mermaid); the dependency graph is generated.** Diagrams
+live as ```` ```mermaid ```` fenced blocks inside the Markdown docs — rendered
+natively by GitHub/GitLab/Gitea and the VS Code Markdown preview (offline-
+capable), so no diagram toolchain is required and the diagram source diffs like
+prose. Hand-written diagrams (the one-page flow, sequence diagrams for key
+interactions) follow the same anti-duplication rule as prose: reference IDs,
+don't restate requirements. The module **dependency diagram is generated**:
+`gen_arch_map.py` splices a Mermaid graph of the internal imports into the
+`GENERATED DEPENDENCY DIAGRAM` markers wherever a routed doc carries them
+(`architecture.md` ships with the pair), covered by the same `--check` — so the
+picture of the layering can't drift any more than the map can. Don't commit
+exported diagram images; the text block is the source. If a project genuinely
+needs diagram types beyond Mermaid (PlantUML/C4/BPMN) or has AsciiDoc sources,
+wire a Kroki/PlantUML toolchain as *project* tooling — it is deliberately
+outside the kit's required path.
+
 ## 4. Objectives, gates, and exit criteria
 
 Advance only when criteria pass; **pause for human approval at each gate**.
@@ -273,8 +289,9 @@ pip needed to run them):
   criterion (every `Verification=Test` SR must be `Verified`). Called by
   `check.py` at G2/G3 (the G3 run adds `--require-verified`).
 - `scripts/gen_arch_map.py` — regenerates the module/function map in
-  `architecture.md` from the source tree (and surfaces `Implements:` back-links);
-  `--check` fails when the doc is stale, so the map can't drift.
+  `architecture.md` from the source tree (and surfaces `Implements:` back-links),
+  plus the Mermaid **dependency diagram** between its markers; `--check` fails
+  when the doc is stale, so neither can drift.
 - `scripts/gen_release_checklist.py` — generates the human **release checklist**
   for `G-Release` from the registries: every Demonstration/Manual/Inspection SR,
   every Release-tier/manual TC, the UN acceptance intents, and provided

@@ -1,4 +1,7 @@
-"""gen_arch_map.py: map content, flow entry resolution, and splice safety."""
+"""gen_arch_map.py: map content, flow entry resolution, the Mermaid dependency
+diagram, and splice safety."""
+
+from pathlib import Path
 
 import pytest
 
@@ -63,6 +66,56 @@ def test_flow_ambiguous_bare_name_errors(two_module_src):
 def test_flow_unknown_entry_errors(two_module_src):
     with pytest.raises(SystemExit, match="not found"):
         gen_arch_map.build_flow([two_module_src], "nope")
+
+
+def test_dependency_diagram_renders_absolute_imports(two_module_src):
+    (Path(two_module_src) / "c.py").write_text(
+        '"""Module C — uses B."""\n\nimport b\n', encoding="utf-8"
+    )
+    out = gen_arch_map.build_dependency_diagram([two_module_src])
+    assert "```mermaid" in out and "graph LR" in out
+    assert 'm_src_c["src/c — Module C — uses B."]' in out  # labeled node
+    assert "m_src_c --> m_src_b" in out  # the import edge
+    assert "m_src_a --> " not in out  # a imports nothing
+
+
+def test_dependency_diagram_resolves_relative_imports(tmp_path):
+    pkg = tmp_path / "src" / "pkg"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text('"""Package demo."""\n', encoding="utf-8")
+    (pkg / "util.py").write_text(
+        '"""Util — pure helpers."""\n\n\ndef util():\n    """Helper."""\n',
+        encoding="utf-8",
+    )
+    (pkg / "mod.py").write_text(
+        '"""Mod — uses util."""\n\nfrom .util import util\n\n\n'
+        'def go():\n    """Go."""\n    util()\n',
+        encoding="utf-8",
+    )
+    out = gen_arch_map.build_dependency_diagram([str(tmp_path / "src")])
+    assert "m_src_pkg_mod --> m_src_pkg_util" in out
+    assert "src/pkg/mod" in out  # node labels carry the module path
+
+
+def test_dependency_diagram_from_import_targets_the_submodule(tmp_path):
+    # `from export import io` depends on export/io, not just the package;
+    # `from .util import util` (name shadowing the module) targets the module.
+    src = tmp_path / "src"
+    pkg = src / "export"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text('"""Export package."""\n', encoding="utf-8")
+    (pkg / "io.py").write_text('"""IO shell."""\n', encoding="utf-8")
+    (src / "cli.py").write_text(
+        '"""CLI entry."""\n\nfrom export import io\n', encoding="utf-8"
+    )
+    out = gen_arch_map.build_dependency_diagram([str(src)])
+    assert "m_src_cli --> m_src_export_io" in out
+    assert "m_src_cli --> m_src_export\n" not in out
+
+
+def test_dependency_diagram_empty_src(tmp_path):
+    out = gen_arch_map.build_dependency_diagram([str(tmp_path / "nothing")])
+    assert "(no source scanned)" in out
 
 
 def test_splice_refuses_duplicated_markers():
