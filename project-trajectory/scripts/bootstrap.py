@@ -37,6 +37,7 @@ placeholder between the architecture markers.
 After running: open CLAUDE.md and docs/status.md, fill the PROJECT BRIEF, then
 start gate G1 (see docs/process.md).
 """
+
 import argparse
 import shutil
 import subprocess
@@ -53,10 +54,14 @@ MAPPING = [
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),
     ("registries/user-needs.template.md", "docs/requirements/user-needs.md"),
-    ("registries/system-requirements.template.csv",
-     "docs/requirements/system-requirements.csv"),
-    ("registries/low-level-requirements.template.csv",
-     "docs/requirements/low-level-requirements.csv"),
+    (
+        "registries/system-requirements.template.csv",
+        "docs/requirements/system-requirements.csv",
+    ),
+    (
+        "registries/low-level-requirements.template.csv",
+        "docs/requirements/low-level-requirements.csv",
+    ),
     ("registries/interfaces.template.csv", "docs/requirements/interfaces.csv"),
     ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
     ("scripts/trace.py", "scripts/trace.py"),
@@ -88,18 +93,25 @@ def initialize_generated_docs(dest):
             continue
         proc = subprocess.run([sys.executable] + rel_cmd, cwd=str(dest))
         if proc.returncode != 0:
-            print("WARNING: {} exited {}".format(rel_cmd[0], proc.returncode),
-                  file=sys.stderr)
+            print(
+                "WARNING: {} exited {}".format(rel_cmd[0], proc.returncode),
+                file=sys.stderr,
+            )
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--dest", required=True, help="target repo root")
-    ap.add_argument("--force", action="store_true",
-                    help="overwrite existing files (default: skip them)")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="print what would happen; write nothing")
+    ap.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite existing files (default: skip them)",
+    )
+    ap.add_argument(
+        "--dry-run", action="store_true", help="print what would happen; write nothing"
+    )
     args = ap.parse_args()
 
     dest = Path(args.dest).resolve()
@@ -147,13 +159,18 @@ def main():
     for m in missing:
         print("  WARNING missing template: {}".format(m), file=sys.stderr)
 
-    print("\n{} file(s) {}, {} skipped.".format(
-        len(created), "to create" if args.dry_run else "created", len(skipped)))
+    print(
+        "\n{} file(s) {}, {} skipped.".format(
+            len(created), "to create" if args.dry_run else "created", len(skipped)
+        )
+    )
     if not args.dry_run:
         initialize_generated_docs(dest)
     if not args.dry_run and created:
-        print("Next: fill the PROJECT BRIEF in CLAUDE.md + docs/status.md, then "
-              "run gate G1 (docs/process.md).")
+        print(
+            "Next: fill the PROJECT BRIEF in CLAUDE.md + docs/status.md, then "
+            "run gate G1 (docs/process.md)."
+        )
     if missing:
         sys.exit(1)
 

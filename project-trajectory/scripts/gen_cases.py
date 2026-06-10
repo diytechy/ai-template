@@ -47,6 +47,7 @@ Examples:
     python scripts/gen_cases.py --spec "size=range[0..2GiB]; field=set{plain,comma,quote,newline}; enc=set{utf8,utf16}"
     python scripts/gen_cases.py --spec "mode=set{Mirror,HashAddressed}; compress=bool; count=range[0..1e6]" --format params
 """
+
 import argparse
 import itertools
 import re
@@ -122,9 +123,13 @@ def all_pairs(values):
                 continue
             best_v, best_cov = values[k][0], -1
             for v in values[k]:
-                cov = sum(1 for m in range(n)
-                          if test[m] is not None and m != k
-                          and pair_key(k, v, m, test[m]) in uncovered)
+                cov = sum(
+                    1
+                    for m in range(n)
+                    if test[m] is not None
+                    and m != k
+                    and pair_key(k, v, m, test[m]) in uncovered
+                )
                 if cov > best_cov:
                     best_v, best_cov = v, cov
             test[k] = best_v
@@ -160,20 +165,29 @@ def boundary_corners(dims):
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--spec", required=True, help="dimensional spec (see grammar)")
-    ap.add_argument("--strategy", choices=["full", "pairwise", "boundaries"],
-                    default=None, help="override the spec's @strategy / the default")
+    ap.add_argument(
+        "--strategy",
+        choices=["full", "pairwise", "boundaries"],
+        default=None,
+        help="override the spec's @strategy / the default",
+    )
     ap.add_argument("--format", choices=["table", "params", "csv"], default="table")
-    ap.add_argument("--id", default="", help="requirement id to label rows (e.g. SR-003)")
+    ap.add_argument(
+        "--id", default="", help="requirement id to label rows (e.g. SR-003)"
+    )
     ap.add_argument("--tier", default="Full", help="Tier to stamp on emitted TC rows")
     args = ap.parse_args()
 
     dims, spec_strategy = parse_spec(args.spec)
     names = [d[0] for d in dims]
     values = [d[1] for d in dims]
-    strategy = args.strategy or spec_strategy or ("pairwise" if len(dims) > 2 else "full")
+    strategy = (
+        args.strategy or spec_strategy or ("pairwise" if len(dims) > 2 else "full")
+    )
 
     full_count = 1
     for v in values:
@@ -192,16 +206,21 @@ def main():
         return "; ".join("{}={}".format(n, v) for n, v in zip(names, case))
 
     # Dimensional analysis to stderr-ish header (kept on stdout for capture).
-    print("# Dimensional analysis"
-          + (" for {}".format(args.id) if args.id else ""))
+    print("# Dimensional analysis" + (" for {}".format(args.id) if args.id else ""))
     for name, vals, flags in dims:
-        marked = ", ".join(("*{}*".format(v) if f else v)
-                           for v, f in zip(vals, flags))
-        print("  - {} ({} values): {}".format(name, len(vals), marked)
-              + ("   (* = boundary)" if any(flags) else ""))
-    print("  strategy: {}   cases: {}  (full product = {}; {:.0f}% reduction)".format(
-        strategy, len(cases), full_count,
-        100 * (1 - len(cases) / full_count) if full_count else 0))
+        marked = ", ".join(("*{}*".format(v) if f else v) for v, f in zip(vals, flags))
+        print(
+            "  - {} ({} values): {}".format(name, len(vals), marked)
+            + ("   (* = boundary)" if any(flags) else "")
+        )
+    print(
+        "  strategy: {}   cases: {}  (full product = {}; {:.0f}% reduction)".format(
+            strategy,
+            len(cases),
+            full_count,
+            100 * (1 - len(cases) / full_count) if full_count else 0,
+        )
+    )
     print()
 
     if args.format == "params":
@@ -211,10 +230,16 @@ def main():
         # TC rows ready to paste (fill TC-ID / Verifies / Expected).
         print("TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status")
         for c in cases:
-            print('TC-xxx,{},Unit,{} combination,{},"{}",'
-                  '"Satisfies {} AcceptanceCriteria",Yes,Draft'.format(
-                      args.id or "SR-xxx",
-                      strategy, args.tier, param_str(c), args.id or "SR-xxx"))
+            print(
+                'TC-xxx,{},Unit,{} combination,{},"{}",'
+                '"Satisfies {} AcceptanceCriteria",Yes,Draft'.format(
+                    args.id or "SR-xxx",
+                    strategy,
+                    args.tier,
+                    param_str(c),
+                    args.id or "SR-xxx",
+                )
+            )
     else:
         print("| # | " + " | ".join(names) + " |")
         print("|---|" + "|".join("---" for _ in names) + "|")

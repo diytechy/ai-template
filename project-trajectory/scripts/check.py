@@ -44,6 +44,7 @@ Usage:
     --lenient   Treat missing tools as SKIP instead of failure (local dev only).
     --list      Print the step plan for the gate and exit.
 """
+
 import argparse
 import importlib.util
 import subprocess
@@ -51,8 +52,8 @@ import sys
 import time
 
 COVERAGE_THRESHOLD = 80  # keep in sync with process.md
-SRC = "src"              # source root (edit to match your layout)
-TESTS = "tests"          # test root
+SRC = "src"  # source root (edit to match your layout)
+TESTS = "tests"  # test root
 
 # Tier -> pytest marker expression. Tiers are cumulative, and the safe default
 # is opt-OUT: an unmarked test runs in `full` and `release`, so forgetting a
@@ -70,6 +71,7 @@ TIERS = {
 # cheap gate for the wrong reason.
 COVERAGE_TIERS = ("full", "release", "all")
 
+
 # Each step: name, the third-party module(s) it needs (importable by THIS
 # interpreter; () = stdlib-only), the command, and the set of gates that require
 # it. Edit commands to fit your stack; keep the gate tags.
@@ -77,8 +79,11 @@ def steps(coverage, tier, gate):
     pytest_cmd = [sys.executable, "-m", "pytest", "-q"]
     pytest_needs = ("pytest",)
     if tier in COVERAGE_TIERS:
-        pytest_cmd += ["--cov=" + SRC, "--cov-report=term-missing",
-                       "--cov-fail-under=" + str(coverage)]
+        pytest_cmd += [
+            "--cov=" + SRC,
+            "--cov-report=term-missing",
+            "--cov-fail-under=" + str(coverage),
+        ]
         pytest_needs = ("pytest", "pytest_cov")
     marker = TIERS.get(tier)
     if marker:
@@ -87,18 +92,38 @@ def steps(coverage, tier, gate):
     if gate in ("G3", "all"):  # G3 criterion: test-verifiable SRs are Verified
         trace_cmd.append("--require-verified")
     return [
-        ("format", ("ruff",),
-         [sys.executable, "-m", "ruff", "format", "--check", SRC, TESTS], {"G3"}),
-        ("lint", ("ruff",),
-         [sys.executable, "-m", "ruff", "check", SRC, TESTS], {"G3"}),
+        (
+            "format",
+            ("ruff",),
+            [sys.executable, "-m", "ruff", "format", "--check", SRC, TESTS],
+            {"G3"},
+        ),
+        (
+            "lint",
+            ("ruff",),
+            [sys.executable, "-m", "ruff", "check", SRC, TESTS],
+            {"G3"},
+        ),
         ("tests+coverage", pytest_needs, pytest_cmd, {"G3"}),
         ("traceability", (), trace_cmd, {"G2", "G3"}),
         # Add `--doc AGENTS.md` / `--doc CLAUDE.md` to route the map there too, and
         # `--flow <entry>` to also check the generated high-level flow.
-        ("arch-map", (),
-         [sys.executable, "scripts/gen_arch_map.py", "--check",
-          "--src", SRC, "--doc", "docs/architecture.md"], {"G3"}),
+        (
+            "arch-map",
+            (),
+            [
+                sys.executable,
+                "scripts/gen_arch_map.py",
+                "--check",
+                "--src",
+                SRC,
+                "--doc",
+                "docs/architecture.md",
+            ],
+            {"G3"},
+        ),
     ]
+
 
 GATES = ["G1", "G2", "G3", "all"]
 
@@ -109,7 +134,8 @@ def run_step(name, requires, cmd, lenient):
     if missing:
         status = "SKIP" if lenient else "FAIL"
         return status, "module(s) {} not importable by {} — run scripts/setup".format(
-            ", ".join(missing), sys.executable)
+            ", ".join(missing), sys.executable
+        )
     start = time.time()
     print("\n=== {} : {} ===".format(name, " ".join(cmd)), flush=True)
     proc = subprocess.run(cmd)
@@ -120,24 +146,34 @@ def run_step(name, requires, cmd, lenient):
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--gate", choices=GATES, default="all")
     ap.add_argument("--tier", choices=list(TIERS), default="all")
     ap.add_argument("--coverage", type=int, default=COVERAGE_THRESHOLD)
-    ap.add_argument("--lenient", action="store_true",
-                    help="treat missing tools as SKIP (local dev only)")
+    ap.add_argument(
+        "--lenient",
+        action="store_true",
+        help="treat missing tools as SKIP (local dev only)",
+    )
     ap.add_argument("--list", action="store_true", help="print the plan and exit")
     args = ap.parse_args()
 
-    plan = [s for s in steps(args.coverage, args.tier, args.gate)
-            if args.gate == "all" or args.gate in s[3]]
+    plan = [
+        s
+        for s in steps(args.coverage, args.tier, args.gate)
+        if args.gate == "all" or args.gate in s[3]
+    ]
 
     if args.list:
         print("Plan for gate {} (tier {}):".format(args.gate, args.tier))
         for name, _requires, cmd, gates in plan:
-            print("  - {:16} [{}]  {}".format(name, ",".join(sorted(gates)),
-                                              " ".join(cmd)))
+            print(
+                "  - {:16} [{}]  {}".format(
+                    name, ",".join(sorted(gates)), " ".join(cmd)
+                )
+            )
         return
 
     if not plan:
