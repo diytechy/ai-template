@@ -23,12 +23,12 @@ Edge-case table:
 ## 2. System Requirements — `requirements/system-requirements.csv`
 
 ```csv
-SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,CSV export (RFC-4180),UN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes UN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified
-SR-002,Atomic export write,UN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes UN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented
+SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
+SR-001,CSV export (RFC-4180),UN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes UN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,
+SR-002,Atomic export write,UN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes UN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented,
 ```
 
-Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its UN, and uses `Permutations` so one row covers many cases.
+Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its UN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank here (= in scope for every phase); a phased roadmap tags rows `v1`/`v2`/… so G3 can close per phase (process.md §4 "Phased delivery").
 
 ## 3. Low-Level Requirements — `requirements/low-level-requirements.csv`
 

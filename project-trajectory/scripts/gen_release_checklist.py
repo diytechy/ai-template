@@ -19,9 +19,13 @@ record*: regenerate it per release and keep the ticked copy as the sign-off
 artifact (use --version to file it under docs/releases/).
 
 Usage:
-    python scripts/gen_release_checklist.py [--docs docs] [--version X] [--out PATH]
+    python scripts/gen_release_checklist.py [--docs docs] [--version X]
+                                            [--phase LIST] [--out PATH]
 
     --version  Stamp the checklist and write to docs/releases/checklist-<X>.md.
+    --phase    Phased delivery (process.md §4): include only SRs whose Phase is
+               blank or listed (e.g. v1 or v1,v2), and only the release-tier /
+               manual TCs that verify an in-scope SR (or an LLR under one).
     --out      Explicit output path (overrides the default/--version location).
     default    Writes docs/release-checklist.md.
 """
@@ -79,6 +83,11 @@ def main():
     )
     ap.add_argument("--docs", default="docs")
     ap.add_argument("--version", default=None)
+    ap.add_argument(
+        "--phase",
+        default=None,
+        help="comma-separated phases in scope (blank Phase = every phase)",
+    )
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
     docs = Path(args.docs)
@@ -100,18 +109,53 @@ def main():
         if r.get("IF-ID") and not is_example(r["IF-ID"])
     ]
 
-    human_srs = [r for r in srs if r.get("Verification", "") in HUMAN_METHODS]
+    phases = (
+        {p for p in re.split(r"[;,\s]+", args.phase.strip()) if p}
+        if args.phase
+        else None
+    )
+
+    def in_phase(sr_row):
+        tag = (sr_row.get("Phase") or "").strip()
+        return phases is None or not tag or tag in phases
+
+    in_scope_sr_ids = {r["SR-ID"] for r in srs if in_phase(r)}
+    # An LLR is in scope when any of its parent SRs is, so TC `Verifies` cells
+    # that cite only LLR ids still resolve to the right phase.
+    llrs = [
+        r
+        for r in load_csv(docs / "requirements" / "low-level-requirements.csv")
+        if r.get("LLR-ID") and not is_example(r["LLR-ID"])
+    ]
+    in_scope_ids = set(in_scope_sr_ids)
+    for r in llrs:
+        parents = [p for p in re.split(r"[;,\s]+", r.get("SR-Refs", "")) if p]
+        if any(p in in_scope_sr_ids for p in parents):
+            in_scope_ids.add(r["LLR-ID"])
+
+    def tc_in_scope(tc_row):
+        cited = [x for x in re.split(r"[;,\s]+", tc_row.get("Verifies", "")) if x]
+        return phases is None or any(x in in_scope_ids for x in cited)
+
+    human_srs = [
+        r for r in srs if r.get("Verification", "") in HUMAN_METHODS and in_phase(r)
+    ]
     # A blank Automated cell intentionally counts as manual: an unclassified test
     # must show up on the human checklist rather than silently drop off it.
     manual_tcs = [
         r
         for r in tcs
-        if r.get("Tier", "") == "Release"
-        or (r.get("Automated", "").strip().lower() in ("no", "false", ""))
+        if (
+            r.get("Tier", "") == "Release"
+            or (r.get("Automated", "").strip().lower() in ("no", "false", ""))
+        )
+        and tc_in_scope(r)
     ]
     provided_ifs = [r for r in ifs if r.get("Direction", "") == "Provides"]
 
     stamp = args.version or "(unreleased)"
+    if phases:
+        stamp += " — phase {}".format(args.phase)
     today = datetime.date.today().isoformat()
     L = [
         "# Release Checklist — {}".format(stamp),

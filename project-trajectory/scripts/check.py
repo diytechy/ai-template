@@ -30,7 +30,7 @@ Design choices that keep it honest and CI-friendly:
 
 Usage:
     python scripts/check.py [--gate G1|G2|G3|all] [--tier smoke|full|release|all]
-                            [--coverage N] [--lenient] [--list]
+                            [--coverage N] [--phase LIST] [--lenient] [--list]
 
     --gate      Which gate's checks to run (default: all). G3 (and all) also
                 requires every Verification=Test SR to be Status=Verified
@@ -75,7 +75,7 @@ COVERAGE_TIERS = ("full", "release", "all")
 # Each step: name, the third-party module(s) it needs (importable by THIS
 # interpreter; () = stdlib-only), the command, and the set of gates that require
 # it. Edit commands to fit your stack; keep the gate tags.
-def steps(coverage, tier, gate):
+def steps(coverage, tier, gate, phase=None):
     pytest_cmd = [sys.executable, "-m", "pytest", "-q"]
     pytest_needs = ("pytest",)
     if tier in COVERAGE_TIERS:
@@ -91,6 +91,8 @@ def steps(coverage, tier, gate):
     trace_cmd = [sys.executable, "scripts/trace.py", "--strict"]
     if gate in ("G3", "all"):  # G3 criterion: test-verifiable SRs are Verified
         trace_cmd.append("--require-verified")
+        if phase:  # phased delivery: close G3 for this phase only (process.md §4)
+            trace_cmd += ["--phase", phase]
     return [
         (
             "format",
@@ -162,6 +164,12 @@ def main():
     ap.add_argument("--tier", choices=list(TIERS), default="all")
     ap.add_argument("--coverage", type=int, default=COVERAGE_THRESHOLD)
     ap.add_argument(
+        "--phase",
+        default=None,
+        help="delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the G3 "
+        "Verified criterion to that phase (process.md §4 'Phased delivery')",
+    )
+    ap.add_argument(
         "--lenient",
         action="store_true",
         help="treat missing tools as SKIP (local dev only)",
@@ -171,7 +179,7 @@ def main():
 
     plan = [
         s
-        for s in steps(args.coverage, args.tier, args.gate)
+        for s in steps(args.coverage, args.tier, args.gate, args.phase)
         if args.gate == "all" or args.gate in s[3]
     ]
 

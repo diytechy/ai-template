@@ -170,8 +170,9 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   `check_flows.py`** (see §3 "Design-time runtime flows"); harness runs
   locally + CI. Sign-offs: System Engineer, Test Engineer.
 - **G3 — Implementation.** Format/lint clean; the **full** test tier passes;
-  coverage ≥ `COVERAGE_THRESHOLD`; every test-verifiable SR **Verified**; every
-  other SR explicitly **Demonstration / Manual / Inspection**. Sign-offs: System
+  coverage ≥ `COVERAGE_THRESHOLD`; every **in-scope** test-verifiable SR
+  **Verified** (phase-scoped — see "Phased delivery" below); every other SR
+  explicitly **Demonstration / Manual / Inspection**. Sign-offs: System
   Engineer, Test Engineer.
 - **G-Release — Release readiness** *(per release; skip for a one-off
   deliverable)*. The **release** test tier passes (incl. slow/hardware tests);
@@ -182,6 +183,22 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
 - **G-Final — Acceptance.** Human/end-user exercises the real product (incl.
   Demonstration/Manual items) and approves. For shipped software this is the
   human half of G-Release; for a bespoke deliverable it stands alone.
+
+**Phased delivery (version subsets).** A roadmap that ships v1 before v2/v3
+needs gates that close *per phase* without dishonesty. SRs may carry an
+optional **`Phase`** tag (e.g. `v1`, `v2`; blank = in scope for every phase).
+Semantics:
+- **Traceability is phase-blind.** Every SR keeps its LLR + TC rows from G2 on,
+  whatever its phase — decomposition is cheap and pins the design.
+- **The G3 Verified criterion is phase-scoped.** `check.py --gate G3 --phase v1`
+  (cumulative for later closures: `--phase v1,v2`) requires Verified only for
+  in-scope SRs; out-of-scope SRs are listed in the trace report as
+  **phase-deferred** — an explicit, recorded exemption, never a silent skip.
+- **G-Release is phase-scoped the same way:** `gen_release_checklist.py
+  --phase v1` includes only in-scope human items and the release-tier/manual
+  TCs verifying them.
+- Later phases re-enter at G1/G2 as requirement increments and close their own
+  G3/G-Release with the grown phase list.
 
 **Constants:** `MAX_ROUNDS = 4` per gate (then escalate to the human);
 `COVERAGE_THRESHOLD = 80%` line coverage (adjust by agreement; record here).
@@ -303,8 +320,10 @@ pip needed to run them):
   command (`ci/check.yml`).
 - `scripts/trace.py` — joins the registries, writes `docs/test/report.md`, exits
   nonzero on orphans with `--strict`; `--require-verified` adds the G3 status
-  criterion (every `Verification=Test` SR must be `Verified`). Called by
-  `check.py` at G2/G3 (the G3 run adds `--require-verified`).
+  criterion (every `Verification=Test` SR must be `Verified`); `--phase v1`
+  scopes that criterion for phased delivery (§4), reporting out-of-phase SRs as
+  explicitly deferred. Called by `check.py` at G2/G3 (the G3 run adds
+  `--require-verified`, plus `--phase` when given).
 - `scripts/check_flows.py` — verifies the authored **"Runtime flows"** section
   (§3 "Design-time runtime flows"): present, ≥1 Mermaid diagram, every cited
   SR/LLR id real. Run by `check.py` at G2/G3.

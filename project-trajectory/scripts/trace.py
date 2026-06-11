@@ -7,7 +7,8 @@ check harness / CI. It is the generated "traceability matrix" referenced by
 PROCESS.md: it never needs hand-maintaining.
 
 Usage:
-    python scripts/trace.py [--strict] [--require-verified] [--docs DIR]
+    python scripts/trace.py [--strict] [--require-verified] [--phase LIST]
+                            [--docs DIR]
 
 Reads (relative to --docs, default "docs"):
     requirements/system-requirements.csv   (cols: SR-ID, UN-Refs, Verification, Status, ...)
@@ -33,6 +34,13 @@ Orphan rules (the method rules are stated once, in process.md §4):
     - UN with no SR (only when user-needs.md is present)
 --require-verified adds the G3 status criterion:
     - SR with Verification=Test whose Status is not Verified
+--phase scopes that status criterion to a delivery phase (process.md §4
+"Phased delivery"): SRs may carry an optional `Phase` column (e.g. v1, v2);
+`--phase v1` (or a cumulative list, `--phase v1,v2`) exempts SRs tagged with
+*other* phases from --require-verified and reports them as phase-deferred —
+the exemption is explicit, never silent. A blank/absent Phase means the SR is
+in scope for every phase. Orphan rules are phase-blind: every SR keeps its
+LLR + TC rows regardless of phase.
 Placeholder example rows (ids ending in "-000") are ignored.
 """
 
@@ -68,6 +76,12 @@ def main():
         "--require-verified",
         action="store_true",
         help="G3 criterion: flag Verification=Test SRs not Status=Verified",
+    )
+    ap.add_argument(
+        "--phase",
+        default=None,
+        help="comma-separated phases in scope (e.g. v1 or v1,v2): scopes "
+        "--require-verified to SRs whose Phase is blank or listed",
     )
     ap.add_argument("--docs", default="docs", help="docs directory (default: docs)")
     args = ap.parse_args()
@@ -143,13 +157,26 @@ def main():
         if u not in sr_un_refs:
             orphans.append(f"UN {u} has no SR")
 
+    phases = set(refs(args.phase)) if args.phase else None
+
+    def in_phase(r):
+        """Blank Phase = every phase; otherwise the SR's phase must be listed."""
+        tag = (r.get("Phase") or "").strip()
+        return phases is None or not tag or tag in phases
+
     status_findings = []
+    phase_deferred = []
     if args.require_verified:
         for r in srs:
-            if (
-                r.get("Verification", "") == "Test"
-                and r.get("Status", "") != "Verified"
-            ):
+            if r.get("Verification", "") != "Test":
+                continue
+            if not in_phase(r):
+                phase_deferred.append(
+                    f"SR {r['SR-ID']} (Phase={r.get('Phase', '').strip()}) — "
+                    "status check deferred to its own phase"
+                )
+                continue
+            if r.get("Status", "") != "Verified":
                 status_findings.append(
                     f"SR {r['SR-ID']} is Verification=Test but Status="
                     f"{r.get('Status', '') or '(blank)'} (G3 requires Verified)"
@@ -190,12 +217,16 @@ def main():
     lines += ["", "## Orphans", ""]
     lines += ["None. Full coverage."] if not orphans else [f"- {o}" for o in orphans]
     if args.require_verified:
-        lines += ["", "## Status findings (--require-verified)", ""]
+        scope = f" — phase scope: {args.phase}" if phases else ""
+        lines += ["", f"## Status findings (--require-verified{scope})", ""]
         lines += (
-            ["None. Every Verification=Test SR is Verified."]
+            ["None. Every in-scope Verification=Test SR is Verified."]
             if not status_findings
             else [f"- {s}" for s in status_findings]
         )
+        if phase_deferred:
+            lines += ["", "### Phase-deferred (explicitly out of scope)", ""]
+            lines += [f"- {s}" for s in phase_deferred]
 
     out = docs / "test" / "report.md"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -205,6 +236,7 @@ def main():
         f"Traceability: UN={len(un_ids)} SR={len(srs)} LLR={len(llrs)} "
         f"TC={len(tcs)} orphans={len(orphans)}"
         + (f" status-findings={len(status_findings)}" if args.require_verified else "")
+        + (f" phase-deferred={len(phase_deferred)}" if phases else "")
         + f". Report -> {out}"
     )
     if args.strict and (orphans or status_findings):
