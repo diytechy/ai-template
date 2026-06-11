@@ -66,6 +66,7 @@ MAPPING = [
     ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
     ("scripts/trace.py", "scripts/trace.py"),
     ("scripts/check.py", "scripts/check.py"),
+    ("scripts/check_flows.py", "scripts/check_flows.py"),
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),

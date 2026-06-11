@@ -18,8 +18,41 @@ graph LR
     stage2 --> output([output])
 ```
 
-_Describe the data flow in a few nodes. Keep it readable at a glance; sequence
-diagrams for key interactions go here too (Mermaid `sequenceDiagram`)._
+_Describe the data flow in a few nodes. Keep it readable at a glance._
+
+## Runtime flows (authored at G2)
+
+Hand-written **with the LLRs, before the G2 review** — these diagrams are how a
+human verifies *behavior* (ordering, concurrency, what blocks on what) without
+reverse-engineering it from registry rows. Required from G2 on and checked by
+`python scripts/check_flows.py` (wired into the harness): the section must
+exist, hold at least one Mermaid diagram, and every cited `SR-`/`LLR-` id must
+exist in the registries (so the flows stay traceable as requirements evolve).
+
+Author one sequence diagram per key user-visible scenario, and **always one for
+anything concurrent / asynchronous / non-blocking** — that's where reviewers
+misread CSVs. Participants are planned modules (the LLR `Module` column); cite
+the ids a diagram renders in its title or `Note`s. Replace this example:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User
+    participant UI as ui/shell (LLR-000)
+    participant Worker as core/pipeline (LLR-000)
+    Note over UI,Worker: SR-000 — user acts on item 1 while items 2..N process
+    User->>UI: open first ready item
+    par background
+        Worker->>Worker: process items 2..N
+    and foreground
+        User->>UI: act on item 1
+        UI-->>User: done (never blocked on 2..N)
+    end
+```
+
+_Update a flow in the same change that alters its LLRs — a stale flow diagram
+is a design lie. Sequence diagrams for simpler, synchronous interactions are
+welcome here too._
 
 ### Program flow (generated)
 

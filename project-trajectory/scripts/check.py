@@ -106,6 +106,15 @@ def steps(coverage, tier, gate):
         ),
         ("tests+coverage", pytest_needs, pytest_cmd, {"G3"}),
         ("traceability", (), trace_cmd, {"G2", "G3"}),
+        # Authored runtime-flow diagrams (process.md §3 "Design-time runtime
+        # flows"): required from G2 on, so reviewers verify behavior from the
+        # diagrams, not from registry rows.
+        (
+            "design-flows",
+            (),
+            [sys.executable, "scripts/check_flows.py"],
+            {"G2", "G3"},
+        ),
         # Add `--doc AGENTS.md` / `--doc CLAUDE.md` to route the map there too, and
         # `--flow <entry>` to also check the generated high-level flow.
         (

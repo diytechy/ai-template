@@ -121,6 +121,22 @@ into a `GENERATED FLOW` marker block — a generated, drift-proof rendering of t
 agent file) and add `--flow` to the harness's map step. It complements, and does
 not replace, the hand-written flow overview that shows control flow.
 
+**Design-time runtime flows (authored at G2, checked).** Everything above is
+harvested from code, so none of it exists at G2 — yet G2 is exactly when a
+human reviews the LLRs, and runtime *behavior* (ordering, concurrency,
+background work, what blocks on what) is the thing most easily misread from
+CSV rows. So the Software Engineer hat authors a **"Runtime flows"** section in
+`architecture.md` **with the LLRs, before the G2 review**: one Mermaid
+`sequenceDiagram` per key user-visible scenario, and always one for any
+behavior that is concurrent / asynchronous / non-blocking. Participants are
+the planned modules (the LLR `Module` column); each diagram cites the SR/LLR
+ids it renders. The G2/G3 harness runs `scripts/check_flows.py`, which fails
+when the section is missing, has no diagrams, a diagram cites no SR/LLR id, or
+a cited id doesn't exist in the registries. The human's G2 review starts from
+these diagrams — verify the flow there, then spot-check the rows. Update a
+flow in the same change that alters its LLRs; from G3 on, the generated
+map/flow corroborates these authored diagrams rather than replacing them.
+
 **Diagrams are text (Mermaid); the dependency graph is generated.** Diagrams
 live as ```` ```mermaid ```` fenced blocks inside the Markdown docs — rendered
 natively by GitHub/GitLab/Gitea and the VS Code Markdown preview (offline-
@@ -150,8 +166,9 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   Analysis/Inspection); every SR and LLR → ≥1 TC; traceability **0 orphans**;
   **every SR with variable inputs has its dimensions enumerated (`Permutations`)
   and a stated combination strategy, with boundary values covered** (see
-  "Dimensional coverage" below); harness runs locally + CI. Sign-offs: System
-  Engineer, Test Engineer.
+  "Dimensional coverage" below); **key runtime flows are diagrammed and pass
+  `check_flows.py`** (see §3 "Design-time runtime flows"); harness runs
+  locally + CI. Sign-offs: System Engineer, Test Engineer.
 - **G3 — Implementation.** Format/lint clean; the **full** test tier passes;
   coverage ≥ `COVERAGE_THRESHOLD`; every test-verifiable SR **Verified**; every
   other SR explicitly **Demonstration / Manual / Inspection**. Sign-offs: System
@@ -288,6 +305,9 @@ pip needed to run them):
   nonzero on orphans with `--strict`; `--require-verified` adds the G3 status
   criterion (every `Verification=Test` SR must be `Verified`). Called by
   `check.py` at G2/G3 (the G3 run adds `--require-verified`).
+- `scripts/check_flows.py` — verifies the authored **"Runtime flows"** section
+  (§3 "Design-time runtime flows"): present, ≥1 Mermaid diagram, every cited
+  SR/LLR id real. Run by `check.py` at G2/G3.
 - `scripts/gen_arch_map.py` — regenerates the module/function map in
   `architecture.md` from the source tree (and surfaces `Implements:` back-links),
   plus the Mermaid **dependency diagram** between its markers; `--check` fails

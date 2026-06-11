@@ -47,8 +47,8 @@ a real project — or get out of the way.
 ## Repo map
 
 - [`project-trajectory/PROCESS.md`](project-trajectory/PROCESS.md) — canonical
-  method (roles, gates, IDs, anti-duplication). The source of truth other docs
-  link to.
+  method (roles, gates, IDs, anti-duplication, design-time runtime flows). The
+  source of truth other docs link to.
 - `project-trajectory/*.template.md` + `registries/*.template.*` — the artifact
   formats copied into a new repo's `docs/`.
 - `project-trajectory/scripts/` — runnable kit scripts (see "stdlib-only" above).

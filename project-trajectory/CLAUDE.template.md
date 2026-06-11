@@ -39,9 +39,15 @@ gates, and the ID scheme. The short version an agent needs every session:
   gate on your own; record the decision in [docs/status.md](docs/status.md).
 - **The check harness is the bar:** `python scripts/check.py` (or
   `scripts/check.sh` / `scripts/check.ps1`) runs format, lint, tests, coverage,
-  traceability, and architecture-map freshness. Use `--tier smoke` for the fast
-  every-iteration subset; the full/release tiers run pre-merge and at release.
-  Never report a result you didn't run — paste the real output.
+  traceability, the design-flow check, and architecture-map freshness. Use
+  `--tier smoke` for the fast every-iteration subset; the full/release tiers
+  run pre-merge and at release. Never report a result you didn't run — paste
+  the real output.
+- **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
+  anything concurrent/non-blocking) live as authored Mermaid sequence diagrams
+  in [docs/architecture.md](docs/architecture.md) "Runtime flows", written with
+  the LLRs and kept current with them (`scripts/check_flows.py` enforces
+  presence + real ids; see docs/process.md §3 "Design-time runtime flows").
 - **Releases (if this project ships versioned):** the G-Release gate runs the
   `release` tier and a generated human checklist
   (`scripts/gen_release_checklist.py`) covering every Demonstration/Manual item.
