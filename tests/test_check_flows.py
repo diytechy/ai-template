@@ -44,6 +44,8 @@ def test_real_flow_with_known_ids_passes(scaffold):
     arch_path(scaffold).write_text("# Architecture\n" + FLOWS_OK, encoding="utf-8")
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
+    # Counts distinct ids (SR-001 + LLR-001), not id kinds.
+    assert "2 requirement id(s) cited" in proc.stdout
 
 
 def test_missing_section_fails(scaffold):

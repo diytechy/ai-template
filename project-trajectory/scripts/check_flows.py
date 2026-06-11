@@ -119,8 +119,8 @@ def main():
 
     known = load_ids(Path(args.docs))
     for n, block in enumerate(blocks, 1):
-        cited = ID_RE.findall(block)
-        if not any(kind in ("SR", "LLR") for kind in cited):
+        kinds = {m.group(1) for m in ID_RE.finditer(block)}
+        if not kinds & {"SR", "LLR"}:
             problems.append(
                 f"diagram {n} cites no SR/LLR id - every flow must say which "
                 "requirements it renders"
@@ -136,7 +136,7 @@ def main():
         for p in sorted(set(problems)):
             print(f"check_flows: FAIL - {p}")
         sys.exit(1)
-    cited_total = len(set(ID_RE.findall(section)))
+    cited_total = len({m.group(0) for m in ID_RE.finditer(section)})
     print(
         f"check_flows: OK - {len(blocks)} flow diagram(s), "
         f"{cited_total} requirement id(s) cited, all known."
