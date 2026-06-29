@@ -188,6 +188,24 @@ Mermaid + the full-graph HTML); keep all three as stdlib string-building (no dep
 
 ## Thread 2 — Name the process/product check split
 
+**Status: ✅ landed 2026-06-28.** `check.py` step tuples gained a 5th `layer`
+field (`"process"`/`"product"`); `--list` now renders `[layer] [gates]` (e.g.
+`[process] [G2,G3]`), with the step list grouped product-then-process behind
+section comments. PROCESS.md §7 defines the two layers once (process = kit-owned
+stdlib `trace/check_flows/gen_arch_map`; product = wired `format/lint/tests`),
+which the pre-commit hook and `check.py` already pointed at. EXAMPLE.md gained a
+worked infrastructure SR (DB failover, SRE/Ops + DBA hats, `Verification=
+Demonstration`, optional `Area=Infra/DB`, `Release`-tier procedure TC) plus a
+"What to copy" tie-in. **Deviations from the spec as written:** (1) `layer` was
+**appended** as the 5th tuple element, not inserted, so existing index access
+(`s[2]`=cmd, `s[3]`=gates) and the `cmd_of` test helper stayed untouched — only
+the two unpacking loops changed. (2) The infra example landed in **EXAMPLE.md**
+(new §7), the worked-chain home, rather than PROCESS.md. (3) `test_step_plan_
+wiring` now also asserts the invariant the layer formalizes — process steps have
+`requires=()`, product steps name a tool — and a new `--list` test checks the
+tags render against a scaffold. `pytest -q`: 61 passed, 1 skipped (the
+`sh`-dependent pre-commit e2e, skipped on Windows).
+
 **Goal:** make explicit the boundary you already feel — kit-owned **process
 checks** (stdlib Python, identical everywhere, don't rewrite) vs project-owned
 **product checks** (language-specific, you wire them). Partly a prerequisite for
@@ -265,13 +283,10 @@ spine.
 
 ## Sequencing & session strategy
 
-Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 3 ✅**
-(all 2026-06-28). Thread 2's process/product *concept* already fed 0b; Threads 2
-and 4 remain and are independent. Remaining order:
+Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 2 ✅**,
+**Thread 3 ✅** (all 2026-06-28). Only Thread 4 remains:
 
-1. **Thread 2** (name the process/product layers) — small; formalizes the split
-   0b leaned on.
-2. **Thread 4** (TDD co-headline) — prose/framing; edits README + AGENTS.md +
+1. **Thread 4** (TDD co-headline) — prose/framing; edits README + AGENTS.md +
    PROCESS.md, independent.
 
 Each phase ends green (`pytest -q`, real output) and checks its items off here.

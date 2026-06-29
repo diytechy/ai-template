@@ -333,6 +333,24 @@ format check · linter (warnings as errors) · unit + integration tests · cover
 coverage + traceability reports as artifacts. Prefer a generated architecture
 map step so `architecture.md` stays current.
 
+**Two check layers — process vs. product.** The harness runs two kinds of check,
+and naming the split is what keeps the kit portable across stacks:
+
+- **Process checks are kit-owned and stdlib-only** (`requires=()` in `check.py`):
+  traceability (`trace.py`), design-flow validation (`check_flows.py`), and
+  architecture-map freshness (`gen_arch_map.py`). They are identical in every
+  project and every language — **don't rewrite them.** They are the universal
+  floor the agent-neutral `pre-commit` hook also enforces (`.githooks/pre-commit`,
+  enabled by `scripts/setup.{sh,ps1}`).
+- **Product checks are project-owned and language-specific** (`requires` names a
+  tool — `ruff`/`pytest` in the Python reference): format, lint, and
+  tests+coverage. **You wire these to your stack** in `check.py`'s "EDIT FOR YOUR
+  STACK" block; a non-Python project swaps the commands or drops a step it lacks.
+
+The empty-vs-named `requires` tuple already implies which layer a step is in;
+`check.py --list` makes it explicit, tagging each step `[process]`/`[product]` so
+a newcomer sees at a glance which steps are fixed and which they must localize.
+
 Ready reference scripts ship with this template (Python 3.8+, stdlib only — no
 pip needed to run them):
 

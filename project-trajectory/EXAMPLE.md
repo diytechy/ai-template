@@ -120,6 +120,41 @@ Traceability: UN=2 SR=2 LLR=2 TC=2 orphans=0. Report -> docs/test/report.md
 **Zero orphans**: every UN has an SR, every SR has an LLR + a TC, every LLR has a
 parent + a TC, every TC verifies a known id. That is the bar each gate enforces.
 
+## 7. A different shape — an infrastructure / operational requirement
+
+Not every requirement is a pure function with a unit test. Operational needs —
+databases, networking, deployment — flow through the **same spine**, with three
+differences: a **domain hat** owns the rows, the verification method is
+**Demonstration** or **Manual** (a human runs it and observes), and the rows
+carry an optional **`Area`** tag so the slice is filterable (process.md §1
+"Domain hats"). No new mechanism — just a different fill of the same columns.
+
+Say the **SRE/Ops** hat owns availability and the **DBA** hat owns the data
+store. A reliability need (`UN-020`) becomes an SR verified by demonstration:
+
+```csv
+SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
+SR-101,Database failover under primary loss,UN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes UN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Implemented,,Infra/DB
+```
+
+The trailing **`Area`** column (`Infra/DB`) is an optional tag a project adds so a
+domain hat can filter and own its slice; SRs without it leave it blank. The
+failover *logic* is still real code, so it keeps an LLR (`LLR-101
+reconnect/promote-on-primary-loss`, owned by the same hat) — only
+`Analysis`/`Inspection` SRs skip the LLR. The TC records the **procedure**, not an
+assertion, and is `Automated=No`, so the release checklist
+(`gen_release_checklist.py`) finds it:
+
+```csv
+TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
+TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a write committed just before the kill is readable after",Release,"failure=set{kill,network-loss,disk-full}","Satisfies SR-101 AcceptanceCriteria",No,Verified
+```
+
+`Tier=Release` keeps this slow, environment-heavy test out of the per-push and
+pre-merge runs; it executes at `G-Release`, where the human signs the generated
+checklist. Same registries, same traceability join, same gates — only the
+verification method, the owning hat, and the `Area` tag change.
+
 ---
 
 ### What to copy from this pattern
@@ -131,3 +166,6 @@ parent + a TC, every TC verifies a known id. That is the bar each gate enforces.
 - **Edge cases are first-class requirements** (UN-013 → SR-002), not afterthoughts.
 - Tests **cite** acceptance criteria by id; code **annotates** the ids; the matrix
   is **generated**, never hand-kept.
+- **Operational requirements use the same spine** (§7) — a domain hat owns them,
+  `Verification=Demonstration`/`Manual`, an optional `Area` tag, and a
+  procedure-recording `Release`-tier TC the release checklist finds.

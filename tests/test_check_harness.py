@@ -78,3 +78,33 @@ def test_step_plan_wiring():
     # Tools run via this interpreter (-m), not a bare PATH lookup.
     assert full_pytest[1:3] == ["-m", "pytest"]
     assert cmd_of(full, "lint")[1:3] == ["-m", "ruff"]
+
+    # Each step declares a process/product layer (process.md §7). Process steps
+    # are kit-owned and stdlib-only (requires == ()); product steps name the
+    # tool(s) they need — the layer formalizes that already-implied split.
+    layer_of = {s[0]: s[4] for s in full}
+    assert layer_of["traceability"] == "process"
+    assert layer_of["design-flows"] == "process"
+    assert layer_of["arch-map"] == "process"
+    assert layer_of["format"] == "product"
+    assert layer_of["lint"] == "product"
+    assert layer_of["tests+coverage"] == "product"
+    assert {s[4] for s in full} == {"process", "product"}
+    for name, requires, _cmd, _gates, layer in full:
+        if layer == "process":
+            assert requires == (), name  # stdlib-only, no tool to wire
+        else:
+            assert requires, name  # product steps declare their toolchain
+
+
+def test_list_tags_process_and_product_layers(scaffold):
+    # A newcomer running --list must see which steps are kit-owned (process) and
+    # which they have to localize (product).
+    proc = run_py(["scripts/check.py", "--gate", "all", "--list"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "[process]" in proc.stdout
+    assert "[product]" in proc.stdout
+    # The layer must line up with the step it tags.
+    lines = proc.stdout.splitlines()
+    assert any("traceability" in ln and "[process]" in ln for ln in lines)
+    assert any("format" in ln and "[product]" in ln for ln in lines)

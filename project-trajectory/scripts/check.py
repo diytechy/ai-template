@@ -46,7 +46,10 @@ Usage:
     --coverage  Line-coverage threshold percent (default: 80; see COVERAGE_THRESHOLD).
                 Enforced for the full/release/all tiers, not smoke.
     --lenient   Treat missing tools as SKIP instead of failure (local dev only).
-    --list      Print the step plan for the gate and exit.
+    --list      Print the step plan for the gate and exit; each step is tagged
+                [process] (kit-owned, stdlib, identical everywhere) or [product]
+                (language-specific — you wire it to your stack). See process.md
+                §7 "process vs product checks".
 """
 
 import argparse
@@ -84,8 +87,13 @@ COVERAGE_TIERS = ("full", "release", "all")
 
 
 # Each step: name, the third-party module(s) it needs (importable by THIS
-# interpreter; () = stdlib-only), the command, and the set of gates that require
-# it. Edit commands to fit your stack; keep the gate tags.
+# interpreter; () = stdlib-only), the command, the set of gates that require it,
+# and its layer — "process" (kit-owned, stdlib-only, identical in every project:
+# traceability / design-flows / arch-map) or "product" (language-specific, you
+# wire it to your stack: format / lint / tests). The empty-vs-nonempty `requires`
+# tuple already implies the split; the layer tag formalizes and surfaces it (see
+# process.md §7 "process vs product checks"). Edit commands to fit your stack;
+# keep the gate tags and layers.
 def steps(coverage, tier, gate, phase=None):
     # --- EDIT FOR YOUR STACK: the format/lint/test commands -------------------
     # `pytest_cmd` (assembled here because it varies by tier/coverage) and the
@@ -124,20 +132,24 @@ def steps(coverage, tier, gate, phase=None):
         if phase:  # phased delivery: close G3 for this phase only (process.md §4)
             trace_cmd += ["--phase", phase]
     return [
+        # --- product checks: language-specific, wired to your stack -----------
         (
             "format",
             ("ruff",),
             [sys.executable, "-m", "ruff", "format", "--check", SRC, TESTS],
             {"G3"},
+            "product",
         ),
         (
             "lint",
             ("ruff",),
             [sys.executable, "-m", "ruff", "check", SRC, TESTS],
             {"G3"},
+            "product",
         ),
-        ("tests+coverage", pytest_needs, pytest_cmd, {"G3"}),
-        ("traceability", (), trace_cmd, {"G2", "G3"}),
+        ("tests+coverage", pytest_needs, pytest_cmd, {"G3"}, "product"),
+        # --- process checks: kit-owned, stdlib-only, identical everywhere -----
+        ("traceability", (), trace_cmd, {"G2", "G3"}, "process"),
         # Authored runtime-flow diagrams (process.md §3 "Design-time runtime
         # flows"): required from G2 on, so reviewers verify behavior from the
         # diagrams, not from registry rows.
@@ -146,6 +158,7 @@ def steps(coverage, tier, gate, phase=None):
             (),
             [sys.executable, "scripts/check_flows.py", "--no-placeholders"],
             {"G2", "G3"},
+            "process",
         ),
         # Add `--doc AGENTS.md` / `--doc CLAUDE.md` to route the map there too, and
         # `--flow <entry>` to also check the generated high-level flow.
@@ -163,6 +176,7 @@ def steps(coverage, tier, gate, phase=None):
                 "docs/architecture.md",
             ],
             {"G3"},
+            "process",
         ),
     ]
 
@@ -205,7 +219,11 @@ def main():
         action="store_true",
         help="treat missing tools as SKIP (local dev only)",
     )
-    ap.add_argument("--list", action="store_true", help="print the plan and exit")
+    ap.add_argument(
+        "--list",
+        action="store_true",
+        help="print the plan (with [process]/[product] layer tags) and exit",
+    )
     args = ap.parse_args()
 
     plan = [
@@ -216,10 +234,10 @@ def main():
 
     if args.list:
         print("Plan for gate {} (tier {}):".format(args.gate, args.tier))
-        for name, _requires, cmd, gates in plan:
+        for name, _requires, cmd, gates, layer in plan:
             print(
-                "  - {:16} [{}]  {}".format(
-                    name, ",".join(sorted(gates)), " ".join(cmd)
+                "  - {:16} [{:7}] [{}]  {}".format(
+                    name, layer, ",".join(sorted(gates)), " ".join(cmd)
                 )
             )
         return
@@ -229,7 +247,7 @@ def main():
         return
 
     results = []
-    for name, requires, cmd, _gates in plan:
+    for name, requires, cmd, _gates, _layer in plan:
         status, detail = run_step(name, requires, cmd, args.lenient)
         results.append((name, status, detail))
 
