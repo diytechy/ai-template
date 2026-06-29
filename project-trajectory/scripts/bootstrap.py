@@ -19,7 +19,7 @@ What it creates in the destination:
     docs/status.md                             <- STATUS.template.md
     docs/architecture.md                       <- ARCHITECTURE.template.md
     docs/interfaces.md                         <- INTERFACES.template.md
-    docs/requirements/user-needs.md            <- registries/user-needs.template.md
+    docs/requirements/stakeholder-needs.md     <- registries/stakeholder-needs.template.md
     docs/requirements/system-requirements.csv  <- registries/system-requirements.template.csv
     docs/requirements/low-level-requirements.csv
     docs/requirements/interfaces.csv           <- registries/interfaces.template.csv
@@ -73,7 +73,7 @@ MAPPING = [
     ("STATUS.template.md", "docs/status.md"),
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),
-    ("registries/user-needs.template.md", "docs/requirements/user-needs.md"),
+    ("registries/stakeholder-needs.template.md", "docs/requirements/stakeholder-needs.md"),
     (
         "registries/system-requirements.template.csv",
         "docs/requirements/system-requirements.csv",

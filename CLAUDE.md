@@ -55,7 +55,7 @@ a real project — or get out of the way.
 - `project-trajectory/scripts/` — runnable kit scripts (see "stdlib-only" above).
 - `project-trajectory/ci/check.yml` — reference CI that runs the same harness.
 - [`project-trajectory/EXAMPLE.md`](project-trajectory/EXAMPLE.md) — the worked
-  UN→SR→LLR→TC chain; keep it in sync with the registry column headers (a test
+  SN→SR→LLR→TC chain; keep it in sync with the registry column headers (a test
   asserts its `Permutations` snippets parse with `gen_cases.py`).
 - `tests/` — the kit's own pytest suite (meta-repo dev tooling; the stdlib-only
   rule applies to the kit scripts, not to testing them). CI:

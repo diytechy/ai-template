@@ -21,17 +21,17 @@ audits.
 | `STATUS.template.md` | The live blackboard → copy to `docs/status.md`. |
 | `ARCHITECTURE.template.md` | One-page overview + generated map → copy to `docs/architecture.md`. |
 | `INTERFACES.template.md` | Cross-project contracts (IF-###) → copy to `docs/interfaces.md`. Use only for interlinked projects. |
-| `registries/user-needs.template.md` | UN-### (user needs + edge cases). |
+| `registries/stakeholder-needs.template.md` | SN-### (stakeholder needs + edge cases). |
 | `registries/system-requirements.template.csv` | SR-### with measurable acceptance criteria. |
 | `registries/low-level-requirements.template.csv` | LLR-### ↔ code. |
 | `registries/test-cases.template.csv` | TC-### ↔ requirements. |
 | `registries/interfaces.template.csv` | IF-### ↔ cross-project contracts (paired with `INTERFACES.template.md`). |
 | `scripts/bootstrap.py` | **One command to scaffold a new repo** from this kit (copies templates → `docs/`/`scripts/`/CI, renames, won't clobber). |
 | `scripts/check.py` | **The harness.** Runs format · lint · tests · coverage · traceability · arch-map freshness; gate-scoped; nonzero on failure. Python-first reference — wire to your stack. |
-| `scripts/trace.py` | **Ready-to-use** traceability checker (Python 3, stdlib only): joins the registries, writes `test/report.md` (counts, matrix, a line-reviewable `UN→SR→LLR→TC` text outline, and a small Mermaid `graph LR` colored by orphan/draft state), exits nonzero on orphans (and duplicate/malformed ids) with `--strict`. `--html` also writes a dependency-free collapsible `test/report.html` map that scales to any size. `--phase v1` scopes the G3 Verified criterion for phased roadmaps (out-of-phase SRs reported as explicitly deferred); `--no-placeholders` (G2+) rejects leftover `-000` rows; `--strict-schema` (G3) checks required fields and the closed `Verification`/`Tier` vocabularies. Called by `check.py`. |
+| `scripts/trace.py` | **Ready-to-use** traceability checker (Python 3, stdlib only): joins the registries, writes `test/report.md` (counts, matrix, a line-reviewable `SN→SR→LLR→TC` text outline, and a small Mermaid `graph LR` colored by orphan/draft state), exits nonzero on orphans (and duplicate/malformed ids) with `--strict`. `--html` also writes a dependency-free collapsible `test/report.html` map that scales to any size. `--phase v1` scopes the G3 Verified criterion for phased roadmaps (out-of-phase SRs reported as explicitly deferred); `--no-placeholders` (G2+) rejects leftover `-000` rows; `--strict-schema` (G3) checks required fields and the closed `Verification`/`Tier` vocabularies. Called by `check.py`. |
 | `scripts/check_flows.py` | Verifies the **authored "Runtime flows"** section in `architecture.md` (required from G2): diagrams present, every cited SR/LLR id real — so reviewers verify *behavior* (concurrency, ordering) from sequence diagrams, not CSV rows. Called by `check.py` at G2/G3. |
 | `scripts/gen_arch_map.py` | Generates the **code map** from the source AST — per-module summary, internal dependencies, and public symbols with `Implements:` back-links — plus a Mermaid **dependency diagram** (rendered natively by GitHub/VS Code; no toolchain). Routes into `architecture.md` and/or `AGENTS.md`/`CLAUDE.md` (repeatable `--doc`). `--flow <entry>` also renders an orchestrator's ordered call sequence (the high-level flow); `--check` fails if stale. |
-| `scripts/gen_release_checklist.py` | Generates the human **release checklist** for G-Release from the registries (every Demonstration/Manual/Inspection SR, Release-tier/manual TC, UN acceptance intent, provided interface) as back-linked tick-boxes. |
+| `scripts/gen_release_checklist.py` | Generates the human **release checklist** for G-Release from the registries (every Demonstration/Manual/Inspection SR, Release-tier/manual TC, SN acceptance intent, provided interface) as back-linked tick-boxes. |
 | `scripts/gen_cases.py` | Expands an SR's input **dimensions** (`Permutations`) into boundary-aware test combinations — full / **pairwise (all-pairs)** / boundary-corners — so tests exercise the input space without the full Cartesian blow-up. |
 | `scripts/setup.{sh,ps1}` · `scripts/check.{sh,ps1}` | Cross-platform launchers: one-command venv + dependency setup, and a thin wrapper over `check.py`, for Linux/macOS and Windows. |
 | `hooks/pre-commit` | Agent-neutral **process floor** → copied to `.githooks/pre-commit`; `setup.{sh,ps1}` enable it via `git config core.hooksPath .githooks`. One POSIX hook (works on Git for Windows too) running the fast, always-valid checks: code-map freshness + traceability (+ ruff format on staged files if installed). The full gate bar stays in `check.py`/CI. |
@@ -39,7 +39,7 @@ audits.
 | `pytest.ini` | Registers the `smoke`/`full`/`release` test-tier markers the harness selects with `--tier` (unmarked tests run in `full`+`release`). |
 | `gitignore.template` | Minimal `.gitignore` for the new repo (venv, tool caches, the regenerated trace report + HTML map). |
 | `ci/check.yml` | Reference GitHub Actions workflow → copy to `.github/workflows/check.yml`. Runs the same `check.py`. |
-| `EXAMPLE.md` | A fully worked UN→SR→LLR→TC chain to copy the pattern from. |
+| `EXAMPLE.md` | A fully worked SN→SR→LLR→TC chain to copy the pattern from. |
 
 ## How to use
 
@@ -64,7 +64,7 @@ audits.
 
 ## The core ideas (why it produces sustainable code)
 
-- **Traceability:** `UN → SR → LLR → TC`, joined by a generated matrix that must
+- **Traceability:** `SN → SR → LLR → TC`, joined by a generated matrix that must
   report **zero orphans**. Every line of intent is traceable to a need and a test.
 - **Single source of truth + decomposition (not paraphrase):** facts live once
   and are referenced by ID; children add detail. This is what keeps docs and code
@@ -73,7 +73,7 @@ audits.
   from I/O/GUI shells; one-page architecture, generated so it can't drift.
 - **Testability:** measurable acceptance criteria; tests cite requirement IDs;
   coverage threshold; a harness that runs locally and in CI.
-- **Usability & corner cases:** a standing End-User lens for setup/first-run,
+- **Usability & corner cases:** a standing end-user lens for setup/first-run,
   failure modes, safety, automation/never-block, and honest docs.
 - **Honest gates:** machine-checkable criteria where possible; everything else is
   explicitly classified Demonstration / Manual / Inspection — nothing hand-waved.
@@ -82,5 +82,5 @@ audits.
 
 - `COVERAGE_THRESHOLD` and `MAX_ROUNDS` in `PROCESS.md`.
 - Drop a hat/gate for tiny projects (e.g. skip UX for a library); keep the
-  UN→SR→LLR→TC spine.
+  SN→SR→LLR→TC spine.
 - Scale review depth to risk — don't gate a rename like you'd gate a crypto path.

@@ -14,7 +14,7 @@ agent only for an independent pre-gate review (see §6).
 
 | Hat | Owns (single source of truth) |
 |---|---|
-| End User | `requirements/user-needs.md` (UN-###) + edge-case expectations |
+| Stakeholder | `requirements/stakeholder-needs.md` (SN-###) + edge-case expectations |
 | UX / Docs | documentation quality, quick-reference, usability findings |
 | System Engineer | `requirements/system-requirements.csv` (SR-###); **gatekeeper** |
 | Software Engineer | `requirements/low-level-requirements.csv` (LLR-###) + code + `architecture.md` |
@@ -38,8 +38,8 @@ agent only for an independent high-risk review (§6).
 
 | Prefix | Level | Parent link |
 |---|---|---|
-| `UN-###` | User Need | — |
-| `SR-###` | System Requirement | `UN-Refs` |
+| `SN-###` | Stakeholder Need | — |
+| `SR-###` | System Requirement | `SN-Refs` |
 | `LLR-###` | Low-Level Requirement | `SR-Refs` (+ Module/CodeSymbol) |
 | `TC-###` | Test Case | `Verifies` (SR/LLR) |
 
@@ -68,7 +68,7 @@ Stable, zero-padded, never reused.
   uninformative flow — a built-in tripwire.
 
 **Reviewability — review the source, not the render.** The registries (the
-`UN`/`SR`/`LLR`/`TC` CSVs) are the tracked, line-by-line-reviewable source of
+`SN`/`SR`/`LLR`/`TC` CSVs) are the tracked, line-by-line-reviewable source of
 truth; every other view is *generated* from them. Generated output splits by
 size into two tiers:
 
@@ -77,7 +77,7 @@ size into two tiers:
   diagram, and program flow (`gen_arch_map.py --check` fails a commit that left
   them stale). These you *do* read in diffs.
 - **Large composite artifacts** — the full trace report (`test/report.md`: the
-  counts, matrix, the `UN→SR→LLR→TC` text outline, and the Mermaid graph) and
+  counts, matrix, the `SN→SR→LLR→TC` text outline, and the Mermaid graph) and
   the HTML map (`trace.py --html`) — are regenerated every run, **gitignored**,
   and published by CI as artifacts. Don't diff or review these; review the
   registry change that produced them.
@@ -177,10 +177,10 @@ outside the kit's required path.
 Advance only when criteria pass; **pause for human approval at each gate**.
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
-- **G1 — Requirements, UX & constraints.** UN complete (priority + measurable
-  acceptance intent + edge cases); every SR links ≥1 UN with measurable
+- **G1 — Requirements, UX & constraints.** SN complete (priority + measurable
+  acceptance intent + edge cases); every SR links ≥1 SN with measurable
   acceptance criteria; usability/doc needs + constraints + non-goals captured.
-  Sign-offs: End User, UX, System Engineer.
+  Sign-offs: Stakeholder, UX, System Engineer.
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or
   Analysis/Inspection); every SR and LLR → ≥1 TC; traceability **0 orphans** and
   ids unique/well-formed; **no `-000` placeholder rows or flow citations remain**
@@ -203,7 +203,7 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   completed and signed; version bumped; changed `Stable` interface versions
   communicated to counterparts; docs/changelog updated. Sign-offs: Test Engineer,
   any active domain hats, Human.
-- **G-Final — Acceptance.** Human/end-user exercises the real product (incl.
+- **G-Final — Acceptance.** Human/stakeholder exercises the real product (incl.
   Demonstration/Manual items) and approves. For shipped software this is the
   human half of G-Release; for a bespoke deliverable it stands alone.
 
@@ -361,7 +361,7 @@ pip needed to run them):
   YOUR STACK" block at the top); the contract is the gates + exit code, not the
   specific tools. CI runs the same command (`ci/check.yml`).
 - `scripts/trace.py` — joins the registries, writes `docs/test/report.md` (the
-  counts, the SR→LLR→TC matrix, a line-reviewable `UN→SR→LLR→TC` **text
+  counts, the SR→LLR→TC matrix, a line-reviewable `SN→SR→LLR→TC` **text
   outline**, and a small **Mermaid `graph LR`** colored by orphan/draft state),
   and exits nonzero on orphans with `--strict`. `--html` additionally writes a
   dependency-free, collapsible `docs/test/report.html` map of the full graph that
@@ -386,7 +386,7 @@ pip needed to run them):
   fails on any module that won't parse (the G3 run passes it).
 - `scripts/gen_release_checklist.py` — generates the human **release checklist**
   for `G-Release` from the registries: every Demonstration/Manual/Inspection SR,
-  every Release-tier/manual TC, the UN acceptance intents, and provided
+  every Release-tier/manual TC, the SN acceptance intents, and provided
   interfaces — each a tick-box back-linked to its id. Keep the completed copy as
   the sign-off record.
 - `scripts/gen_cases.py` — expands an SR's `Permutations` (input dimensions) into
@@ -400,7 +400,7 @@ pip needed to run them):
 the pair for every platform the project supports.
 
 `scripts/bootstrap.py` scaffolds all of the above (plus `docs/` and CI) into a new
-repo in one command. See `EXAMPLE.md` for a complete worked UN→SR→LLR→TC chain.
+repo in one command. See `EXAMPLE.md` for a complete worked SN→SR→LLR→TC chain.
 
 ## 8. Cross-project interfaces (only when projects interlink)
 

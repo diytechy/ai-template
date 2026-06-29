@@ -20,7 +20,7 @@ for **end-user usability and corner cases**, not just the happy path.
 - **You are one continuous driver who wears role "hats" in sequence**, keeping
   full context across them. Do NOT spin up a separate sub-agent for every role —
   cold sub-agents re-derive context you already hold and waste budget. The hats:
-  **End User**, **UX/Docs**, **System Engineer (gatekeeper)**, **Software
+  **Stakeholder**, **UX/Docs**, **System Engineer (gatekeeper)**, **Software
   Engineer**, **Test Engineer**. Switch hats explicitly in your notes. At setup,
   add any **domain hats** the scope demands (e.g. Network, Security, Data/ML,
   Hardware/Mechanical, Mechatronics, SRE) — each owns its slice of the
@@ -52,7 +52,7 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
   verdict protocol (copy `PROCESS.md`).
 - `docs/status.md` — live state, gate sign-off table, append-only audit log
   (copy `STATUS.template.md`).
-- `docs/requirements/user-needs.md` — **UN-###** (End User owns).
+- `docs/requirements/stakeholder-needs.md` — **SN-###** (Stakeholder owns).
 - `docs/requirements/system-requirements.csv` — **SR-###** with measurable
   acceptance criteria (System Engineer owns).
 - `docs/requirements/low-level-requirements.csv` — **LLR-###** ↔ code
@@ -72,7 +72,7 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
 
 - **Single source of truth per fact.** Everything else references it **by ID**
   and links to it. If two places would state the same thing, keep one and link.
-- **Decompose, don't paraphrase.** A child (SR under UN, LLR under SR, TC under
+- **Decompose, don't paraphrase.** A child (SR under SN, LLR under SR, TC under
   SR/LLR) adds new detail. If a child would merely restate its parent, link
   instead of duplicating.
 - **The traceability matrix is generated**, never hand-kept: a small script
@@ -89,15 +89,15 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
 
 ## ID scheme
 
-`UN-###` user need → `SR-###` system requirement (links UN) → `LLR-###`
+`SN-###` stakeholder need → `SR-###` system requirement (links SN) → `LLR-###`
 low-level requirement (links SR, names module/symbol) → `TC-###` test case
 (links the SR/LLR it verifies). Zero-padded, stable, never reused.
 
 ## Gates (advance only when criteria pass; PAUSE for human approval at each)
 
-- **G1 — Requirements, UX & constraints.** UN list complete with priorities,
+- **G1 — Requirements, UX & constraints.** SN list complete with priorities,
   measurable acceptance intent, and **edge-case expectations** (see checklist);
-  every SR links ≥1 UN and has measurable acceptance criteria; usability/docs
+  every SR links ≥1 SN and has measurable acceptance criteria; usability/docs
   needs captured; constraints/non-goals explicit. Human approves.
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or marked
   Analysis/Inspection); every SR and LLR has ≥1 TC; traceability reports **0
@@ -110,7 +110,7 @@ low-level requirement (links SR, names module/symbol) → `TC-###` test case
   **release** test tier passes; the generated release checklist
   (`scripts/gen_release_checklist.py`) is completed + signed; version bumped;
   changed `Stable` interface versions communicated. Human approves.
-- **G-Final — Acceptance.** A human/end-user exercises the real product
+- **G-Final — Acceptance.** A human/stakeholder exercises the real product
   (including the Demonstration/Manual items) and signs off.
 
 Tag each `TC-###` with a **Tier** (`Smoke`/`Full`/`Release`) so the cheap gate
@@ -151,7 +151,7 @@ For each, ask "what does the user experience, and is it safe/clear/recoverable?"
 1. Read the PROJECT BRIEF below; restate scope, audience, constraints, and
    **non-goals** in `docs/status.md`.
 2. Scaffold the artifacts and the check harness (empty registries + headers).
-3. Run **G1**: as End User, write UN-### (incl. edge cases); as UX, capture
+3. Run **G1**: as Stakeholder, write SN-### (incl. edge cases); as UX, capture
    usability/doc needs; as System Engineer, derive measurable SR-###. Reconcile,
    then **pause for human approval.**
 4. Proceed gate by gate. Before each gate, do the review (self or independent per

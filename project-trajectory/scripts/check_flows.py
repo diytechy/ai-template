@@ -18,7 +18,7 @@ Failures (exit 1):
     - the doc has no "Runtime flows" heading;
     - the section contains fewer than N (default 1) ```mermaid blocks;
     - a diagram cites no SR/LLR id at all (flows must stay traceable);
-    - a cited SR/LLR/UN/TC id does not exist in the registries.
+    - a cited SR/LLR/SN/TC id does not exist in the registries.
 
 Placeholder ids ending in "-000" (the templates' examples) satisfy the
 "cites an id" rule and are never validated, so a fresh scaffold starts green.
@@ -32,7 +32,7 @@ import re
 import sys
 from pathlib import Path
 
-ID_RE = re.compile(r"\b(SR|LLR|UN|TC)-\d+\b")
+ID_RE = re.compile(r"\b(SR|LLR|SN|TC)-\d+\b")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
 SECTION_TITLE = "runtime flows"
 
@@ -50,11 +50,11 @@ def load_ids(docs):
         "SR": col(docs / "requirements" / "system-requirements.csv", "SR-ID"),
         "LLR": col(docs / "requirements" / "low-level-requirements.csv", "LLR-ID"),
         "TC": col(docs / "test" / "test-cases.csv", "TC-ID"),
-        "UN": set(),
+        "SN": set(),
     }
-    un_md = docs / "requirements" / "user-needs.md"
-    if un_md.exists():
-        known["UN"] = set(re.findall(r"\bUN-\d+\b", un_md.read_text(encoding="utf-8")))
+    sn_md = docs / "requirements" / "stakeholder-needs.md"
+    if sn_md.exists():
+        known["SN"] = set(re.findall(r"\bSN-\d+\b", sn_md.read_text(encoding="utf-8")))
     return known
 
 

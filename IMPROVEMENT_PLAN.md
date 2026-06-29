@@ -270,7 +270,7 @@ is the spine; **TDD is how G3 code gets written**, not a competing claim.
   existing coverage/Verified criteria rather than restating them.
 - **`README.md`:** sharpen the headline from "deep test coverage" to
   **test-driven** development, alongside traceability + gates.
-- Don't imply TDD replaces the UN→SR→LLR→TC discipline; it operates within it.
+- Don't imply TDD replaces the SN→SR→LLR→TC discipline; it operates within it.
 
 **Tests:** none (prose); verify no broken intra-doc links and that
 `AGENTS.template.md` stays within its size budget.
@@ -285,9 +285,9 @@ spine.
 
 **Goal:** make a requirement state **which operational phase of the product's
 lifetime** it governs, so the perennially-neglected non-runtime phases get
-first-class requirements instead of being discovered late. Today UN/SR capture
+first-class requirements instead of being discovered late. Today SN/SR capture
 *what / why / acceptance* but not *when in the lifecycle*; the edge-case
-checklist in `user-needs.template.md` already gestures at it ("First-run setup",
+checklist in `stakeholder-needs.template.md` already gestures at it ("First-run setup",
 "Missing dependency / wrong version") without naming the dimension.
 
 The discriminator is the **process boundary + frequency**, *not* the word
@@ -337,12 +337,12 @@ Optional **Shutdown** / **Upgrade** cover drain, teardown, migration, rollback.
   must use a **distinct name — recommend `Lifecycle`** — and PROCESS.md must say
   so explicitly so nobody overloads `Phase`.
 - **Capture as an optional tag, mirroring `Area`** (the Thread-2 EXAMPLE §7
-  addition): a `Lifecycle` column projects opt into on UN/SR; blank = unspecified
+  addition): a `Lifecycle` column projects opt into on SN/SR; blank = unspecified
   (treat as Runtime). **Decision to make in-thread:** optional tag (recommended —
   no downstream migration, matches `Area`, schema-safe; see Tests) vs. a base
   template column (more discoverable but forces downstream churn). Recommend
   optional + a one-line prompt in the templates.
-- **Prompt for it in the templates:** a short line in `user-needs.template.md`
+- **Prompt for it in the templates:** a short line in `stakeholder-needs.template.md`
   (intro + the edge-case note, observing those rows are mostly Provision/Startup)
   and in `system-requirements.template.csv` guidance.
 - **One worked EXAMPLE.md illustration:** a Provision- or Startup-phase
@@ -368,7 +368,7 @@ optional column).
 
 **Done-when:** PROCESS.md names the lifecycle dimension + the
 `Provision`/`Startup`/`Runtime` vocabulary and discriminator, distinct from
-delivery `Phase`; the UN/SR templates prompt for it; EXAMPLE.md shows a
+delivery `Phase`; the SN/SR templates prompt for it; EXAMPLE.md shows a
 Provision/Startup-phase requirement; `pytest -q` green.
 
 ---
@@ -419,6 +419,26 @@ integrated with (not duplicating) Thread 3's assumption-logging; links verified.
 ---
 
 ## Thread 7 — Name the top requirement tier honestly (User vs Stakeholder Need)
+
+**Status: ✅ landed 2026-06-29.** Implemented the recommended **option 1**: the
+top tier is now **Stakeholder Need (`SN-###`)**, owned by the **Stakeholder** hat
+(end users, operators, or a consuming system's owner — End User folded in as one
+example). One-pass mechanical sweep: `UN-###`→`SN-###`, `UN-Refs`→`SN-Refs`,
+`UN-ID`→`SN-ID`; the registry renamed
+`registries/user-needs.template.md`→`stakeholder-needs.template.md` (bootstrap
+target `docs/requirements/stakeholder-needs.md`); the id regexes in
+`trace.py`/`check_flows.py`/`gen_arch_map.py`, the `Stakeholder` hat across
+`PROCESS.md`/`STATUS.template.md`/`KICKOFF_PROMPT.md`/`AGENTS.template.md`, the
+G-Final acceptor (now "human/stakeholder"), every doc/README/EXAMPLE, and the
+test fixtures (`conftest.py`, `test_trace.py`, `test_registry_checks.py`) updated.
+**Deviations from the spec as written:** (1) kept the literal **"end-user
+usability" lens** prose (KICKOFF lens section, READMEs) — it's the human-usability
+discipline, distinct from the renamed hat and still valid when humans are among
+the stakeholders. (2) **No downstream migration note shipped** — the user
+confirmed the kit is pre-adoption, so the prefix-rename cost was paid now (the
+hinge's "never cheaper than now") and the `sed UN-→SN-` note was unnecessary.
+`pytest -q`: 61 passed, 1 skipped (the `sh`-dependent pre-commit e2e, skipped on
+Windows).
 
 **Goal:** decide whether the top tier — `UN-###`, "User Need," owned by the "End
 User" hat — is mislabeled when the system serves **another system/module** rather
@@ -494,19 +514,20 @@ green.
 ## Sequencing & session strategy
 
 Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 2 ✅**,
-**Thread 3 ✅** (all 2026-06-28). Remaining threads are independent — any order:
+**Thread 3 ✅** (all 2026-06-28), **Thread 7 ✅** (2026-06-29 — the `UN→SN`
+rename). Remaining threads are independent — any order:
 
 1. **Thread 4** (TDD co-headline) — prose/framing; edits README + AGENTS.md +
    PROCESS.md.
-2. **Thread 5** (requirement lifecycle phase) — small; PROCESS.md + UN/SR
+2. **Thread 5** (requirement lifecycle phase) — small; PROCESS.md + SN/SR
    templates + EXAMPLE.md + one schema-tolerance test.
 3. **Thread 6** (requirement consistency review) — prose; PROCESS.md §4/§5 +
    an AGENTS.md clause; pairs naturally with Thread 5 in one "requirements rigor"
    session.
-4. **Thread 7** (User vs Stakeholder Need) — a framed naming decision; cost
-   hinges on downstream adoption. If a prefix rename is chosen it's a wide,
-   Thread-0a-style sweep, so do it **alone** in its own session; resolve the
-   decision before the rename threads (5/6) touch the same registries.
+
+Thread 7 landed first among the late threads (the wide rename is cheapest done
+alone and before 5/6 touch the same registries); the `SN-###` ids it established
+are already reflected in the specs for 5 and 6 above.
 
 Each phase ends green (`pytest -q`, real output) and checks its items off here.
 

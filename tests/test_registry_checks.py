@@ -15,13 +15,13 @@ def report_of(root):
 
 # --- Integrity: duplicate / malformed ids (always on; fail under --strict) -----
 
-DUP_SRS = """SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,UN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Verified
-SR-001,Duplicate,UN-001,"The system shall add again.","r.","dup",,M,Test,Verified
+DUP_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Verified
+SR-001,Duplicate,SN-001,"The system shall add again.","r.","dup",,M,Test,Verified
 """
 
-MALFORMED_SRS = """SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-XX,Addition,UN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Verified
+MALFORMED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-XX,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Verified
 """
 
 

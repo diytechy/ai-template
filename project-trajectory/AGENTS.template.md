@@ -32,10 +32,10 @@ This repo follows a **gated, requirement-traced process**. Read
 [docs/process.md](docs/process.md) once; it is the source of truth for roles,
 gates, and the ID scheme. The short version an agent needs every session:
 
-- **One driver wears role "hats" in sequence** (End User → UX/Docs → System
+- **One driver wears role "hats" in sequence** (Stakeholder → UX/Docs → System
   Engineer → Software Engineer → Test Engineer), keeping context. Spawn a
   separate reviewer only for an independent pre-gate audit of high-risk work.
-- **Everything traces:** `UN → SR → LLR → TC`. Intent lives once, as an id, and
+- **Everything traces:** `SN → SR → LLR → TC`. Intent lives once, as an id, and
   children link to it. The matrix is generated (`scripts/trace.py`) and must
   report **0 orphans** before a gate.
 - **Gates G1→G2→G3→(G-Release)→G-Final each pause for human approval.** Don't advance past a

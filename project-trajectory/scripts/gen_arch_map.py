@@ -80,7 +80,7 @@ BEGIN_FLOW = "<!-- BEGIN GENERATED FLOW -->"
 END_FLOW = "<!-- END GENERATED FLOW -->"
 BEGIN_DIAGRAM = "<!-- BEGIN GENERATED DEPENDENCY DIAGRAM -->"
 END_DIAGRAM = "<!-- END GENERATED DEPENDENCY DIAGRAM -->"
-IMPLEMENTS_RE = re.compile(r"\b(?:SR|LLR|UN|TC)-\d+\b")
+IMPLEMENTS_RE = re.compile(r"\b(?:SR|LLR|SN|TC)-\d+\b")
 
 
 def first_line(text):

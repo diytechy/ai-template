@@ -6,7 +6,7 @@ project/repo — skip it for a standalone deliverable.
 
 It keeps interlinked projects honest without heavy multi-repo machinery: each
 shared contract gets one stable id, one home, and a link back into the same
-`UN→SR→LLR→TC` spine. The registry is `requirements/interfaces.csv`; this page
+`SN→SR→LLR→TC` spine. The registry is `requirements/interfaces.csv`; this page
 is the thin, human-readable index over it.
 
 ---
@@ -22,7 +22,7 @@ each side assumes a slightly different contract and they rot apart silently.
 ## ID scheme & columns
 
 `IF-###` — Cross-Project Interface. Zero-padded, stable, never reused (its own
-namespace, parallel to UN/SR/LLR/TC).
+namespace, parallel to SN/SR/LLR/TC).
 
 | Column | Meaning |
 |---|---|

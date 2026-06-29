@@ -44,7 +44,7 @@ def scaffold(tmp_path):
 
 
 # --- A minimal but complete downstream project -------------------------------
-# One pure function, one traced UN->SR->LLR->TC chain, one marked smoke test.
+# One pure function, one traced SN->SR->LLR->TC chain, one marked smoke test.
 # Used by the harness tests; written ruff-format-clean on purpose.
 
 DEMO_SRC = '''"""Demo pure core for the kit self-test. Pure — no I/O."""
@@ -74,15 +74,15 @@ def test_add_sr001():
     assert add(1, 2) == 3
 '''
 
-USER_NEEDS = """# User Needs (UN-###)
+STAKEHOLDER_NEEDS = """# Stakeholder Needs (SN-###)
 
-| UN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
+| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
 |---|---|---|---|---|
-| UN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
+| SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
 """
 
-SRS = """SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,UN-001,"The system shall add two numbers.","Realizes UN-001.","add(1,2) == 3",,M,Test,Verified
+SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
 """
 
 LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
@@ -101,7 +101,7 @@ def make_minimal_project(root):
     (root / "tests" / "conftest.py").write_text(DEMO_TEST_CONFTEST, encoding="utf-8")
     (root / "tests" / "test_demo.py").write_text(DEMO_TEST, encoding="utf-8")
     req = root / "docs" / "requirements"
-    (req / "user-needs.md").write_text(USER_NEEDS, encoding="utf-8")
+    (req / "stakeholder-needs.md").write_text(STAKEHOLDER_NEEDS, encoding="utf-8")
     (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")
     (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
     (root / "docs" / "test" / "test-cases.csv").write_text(TCS, encoding="utf-8")

@@ -2,9 +2,9 @@
 
 from conftest import make_minimal_project, run_py
 
-ORPHAN_SR = """SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,UN-001,"The system shall add two numbers.","Realizes UN-001.","add(1,2) == 3",,M,Test,Verified
-SR-002,Orphaned,UN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Draft
+ORPHAN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
+SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Draft
 """
 
 
@@ -27,9 +27,9 @@ def test_orphan_sr_fails_strict(scaffold):
     assert "SR SR-002 has no test (TC)" in report
 
 
-PHASED_SRS = """SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
-SR-001,Addition,UN-001,"The system shall add two numbers.","Realizes UN-001.","add(1,2) == 3",,M,Test,Verified,v1
-SR-002,Future thing,UN-001,"The system shall do a v2 thing.","Realizes UN-001 later.","v2 behavior",,S,Test,Draft,v2
+PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,v1
+SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Draft,v2
 """
 
 PHASED_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
@@ -132,10 +132,10 @@ def test_report_has_text_outline_and_mermaid_graph(scaffold):
     # The Mermaid DAG view is present.
     assert "```mermaid" in report
     assert "graph LR" in report
-    # The text outline shows the minimal chain UN-001 -> SR-001 -> LLR-001 -> TC-001,
+    # The text outline shows the minimal chain SN-001 -> SR-001 -> LLR-001 -> TC-001,
     # in nesting order.
     outline = _outline_section(report)
-    positions = [outline.index(i) for i in ("UN-001", "SR-001", "LLR-001", "TC-001")]
+    positions = [outline.index(i) for i in ("SN-001", "SR-001", "LLR-001", "TC-001")]
     assert positions == sorted(positions), outline
 
 

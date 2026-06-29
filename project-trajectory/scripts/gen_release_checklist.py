@@ -9,7 +9,7 @@ their requirement ids, into a tick-box checklist so the release sign-off is
 concrete and traceable instead of a vibe.
 
 It pulls, from `docs/`:
-    - User needs (UN) + their acceptance intent  -> "Does the product meet the need?"
+    - Stakeholder needs (SN) + their acceptance intent -> "Does the product meet the need?"
     - System requirements whose Verification is Demonstration / Manual / Inspection
     - Release-tier test cases, and any non-automated (manual) test cases
     - Provided cross-project interfaces (IF, if present) -> contract still honored?
@@ -50,8 +50,8 @@ def is_example(rid):
     return (rid or "").endswith("-000")
 
 
-def read_user_needs(md_path):
-    """Parse the UN core-needs markdown table -> list of (UN-ID, need, acceptance)."""
+def read_stakeholder_needs(md_path):
+    """Parse the SN core-needs markdown table -> list of (SN-ID, need, acceptance)."""
     if not md_path.exists():
         return []
     rows = []
@@ -63,14 +63,14 @@ def read_user_needs(md_path):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if header is None:
-            if any("UN-ID" in c for c in cells):
+            if any("SN-ID" in c for c in cells):
                 header = cells
                 need_i = next((i for i, c in enumerate(header) if "Need" in c), 1)
                 acc_i = next(
                     (i for i, c in enumerate(header) if "Acceptance" in c), None
                 )
             continue
-        if cells and re.match(r"UN-\d+$", cells[0]) and not is_example(cells[0]):
+        if cells and re.match(r"SN-\d+$", cells[0]) and not is_example(cells[0]):
             need = cells[need_i] if need_i is not None and need_i < len(cells) else ""
             acc = cells[acc_i] if acc_i is not None and acc_i < len(cells) else ""
             rows.append((cells[0], need, acc))
@@ -92,7 +92,7 @@ def main():
     args = ap.parse_args()
     docs = Path(args.docs)
 
-    needs = read_user_needs(docs / "requirements" / "user-needs.md")
+    needs = read_stakeholder_needs(docs / "requirements" / "stakeholder-needs.md")
     srs = [
         r
         for r in load_csv(docs / "requirements" / "system-requirements.csv")
@@ -169,13 +169,13 @@ def main():
         "",
     ]
 
-    L += ["## 1. User needs met (acceptance)", ""]
+    L += ["## 1. Stakeholder needs met (acceptance)", ""]
     if needs:
         for uid, need, acc in needs:
             detail = acc or need or "confirm the need is met"
             L.append("- [ ] **{}** — {} ({})".format(uid, detail, uid))
     else:
-        L.append("- [ ] _(no user needs registered)_")
+        L.append("- [ ] _(no stakeholder needs registered)_")
 
     L += [
         "",
@@ -246,7 +246,7 @@ def main():
     out.write_text("\n".join(L) + "\n", encoding="utf-8")
 
     print(
-        "Release checklist -> {}  (UN={} human-SR={} manual-TC={} IF={})".format(
+        "Release checklist -> {}  (SN={} human-SR={} manual-TC={} IF={})".format(
             out, len(needs), len(human_srs), len(manual_tcs), len(provided_ifs)
         )
     )

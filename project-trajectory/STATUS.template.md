@@ -19,8 +19,9 @@ last) — it is the record, not required reading for every pass.
 ## Scope (restated from the brief)
 
 - **Goal:**
-- **End user(s):**
-- **Active hats:** End User, UX/Docs, System Engineer, Software Engineer, Test
+- **Stakeholders / end user(s):** _(who or what the system serves — humans,
+  operators, or another system, represented by its owner)_
+- **Active hats:** Stakeholder, UX/Docs, System Engineer, Software Engineer, Test
   Engineer _(+ any domain hats this scope needs, e.g. Network / Security / Data /
   Hardware — see process.md §1)_
 - **Supported platforms:** _(Linux / macOS / Windows — drives which setup/check
@@ -34,7 +35,7 @@ last) — it is the record, not required reading for every pass.
 Add columns for any active domain hats. Drop the `G-Release` row for a one-off
 deliverable.
 
-| Gate | End User | UX/Docs | System Eng | Test Eng | Human |
+| Gate | Stakeholder | UX/Docs | System Eng | Test Eng | Human |
 |---|---|---|---|---|---|
 | G1 — Requirements/UX/Constraints | PENDING | PENDING | PENDING | n/a | PENDING |
 | G2 — Decomposition & Test Coverage | n/a | n/a | PENDING | PENDING | PENDING |

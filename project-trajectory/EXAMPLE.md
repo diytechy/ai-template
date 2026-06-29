@@ -1,4 +1,4 @@
-# Worked Example — one full UN → SR → LLR → TC chain
+# Worked Example — one full SN → SR → LLR → TC chain
 
 A concrete pattern to copy. The feature: **"export my records to a CSV I can
 open in a spreadsheet"**, plus one **edge case** (interruption safety). It shows
@@ -8,27 +8,27 @@ as its own requirement**.
 
 ---
 
-## 1. User Need — `requirements/user-needs.md`
+## 1. Stakeholder Need — `requirements/stakeholder-needs.md`
 
-| UN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
+| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
 |---|---|---|---|---|
-| UN-001 | Export my records to a file I can open in a spreadsheet. | The data is useless if I can't get it into Excel/Sheets. | M | A new user clicks/exports and the file opens in a spreadsheet with the right columns and all their rows. |
+| SN-001 | Export my records to a file I can open in a spreadsheet. | The data is useless if I can't get it into Excel/Sheets. | M | A new user clicks/exports and the file opens in a spreadsheet with the right columns and all their rows. |
 
 Edge-case table:
 
-| UN-ID | Scenario | Expected behavior |
+| SN-ID | Scenario | Expected behavior |
 |---|---|---|
-| UN-013 | Export interrupted (crash / power loss / cancel) mid-write | I never end up with a half-written file that looks complete; I can just run it again. |
+| SN-013 | Export interrupted (crash / power loss / cancel) mid-write | I never end up with a half-written file that looks complete; I can just run it again. |
 
 ## 2. System Requirements — `requirements/system-requirements.csv`
 
 ```csv
-SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
-SR-001,CSV export (RFC-4180),UN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes UN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,
-SR-002,Atomic export write,UN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes UN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented,
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
+SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,
+SR-002,Atomic export write,SN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes SN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented,
 ```
 
-Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its UN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank here (= in scope for every phase); a phased roadmap tags rows `v1`/`v2`/… so G3 can close per phase (process.md §4 "Phased delivery").
+Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank here (= in scope for every phase); a phased roadmap tags rows `v1`/`v2`/… so G3 can close per phase (process.md §4 "Phased delivery").
 
 ## 3. Low-Level Requirements — `requirements/low-level-requirements.csv`
 
@@ -114,10 +114,10 @@ honest and greppable.
 Running `python scripts/trace.py --strict` over this chain reports:
 
 ```
-Traceability: UN=2 SR=2 LLR=2 TC=2 orphans=0. Report -> docs/test/report.md
+Traceability: SN=2 SR=2 LLR=2 TC=2 orphans=0. Report -> docs/test/report.md
 ```
 
-**Zero orphans**: every UN has an SR, every SR has an LLR + a TC, every LLR has a
+**Zero orphans**: every SN has an SR, every SR has an LLR + a TC, every LLR has a
 parent + a TC, every TC verifies a known id. That is the bar each gate enforces.
 
 ## 7. A different shape — an infrastructure / operational requirement
@@ -130,11 +130,11 @@ carry an optional **`Area`** tag so the slice is filterable (process.md §1
 "Domain hats"). No new mechanism — just a different fill of the same columns.
 
 Say the **SRE/Ops** hat owns availability and the **DBA** hat owns the data
-store. A reliability need (`UN-020`) becomes an SR verified by demonstration:
+store. A reliability need (`SN-020`) becomes an SR verified by demonstration:
 
 ```csv
-SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
-SR-101,Database failover under primary loss,UN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes UN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Implemented,,Infra/DB
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
+SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Implemented,,Infra/DB
 ```
 
 The trailing **`Area`** column (`Infra/DB`) is an optional tag a project adds so a
@@ -163,7 +163,7 @@ verification method, the owning hat, and the `Area` tag change.
   duplicate rows.
 - **Pure core vs. I/O/GUI shell** — it's the single biggest lever for testability
   and for keeping logic deduplicated and readable.
-- **Edge cases are first-class requirements** (UN-013 → SR-002), not afterthoughts.
+- **Edge cases are first-class requirements** (SN-013 → SR-002), not afterthoughts.
 - Tests **cite** acceptance criteria by id; code **annotates** the ids; the matrix
   is **generated**, never hand-kept.
 - **Operational requirements use the same spine** (§7) — a domain hat owns them,

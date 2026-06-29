@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Traceability join + orphan report for the UN->SR->LLR->TC registries.
+"""Traceability join + orphan report for the SN->SR->LLR->TC registries.
 
 Stack-agnostic reference implementation (Python 3, standard library only — no
 pip installs). Drop it in a new repo as `scripts/trace.py` and wire it into the
@@ -12,14 +12,14 @@ Usage:
                             [--docs DIR]
 
 Reads (relative to --docs, default "docs"):
-    requirements/system-requirements.csv   (cols: SR-ID, UN-Refs, Verification, Status, ...)
+    requirements/system-requirements.csv   (cols: SR-ID, SN-Refs, Verification, Status, ...)
     requirements/low-level-requirements.csv (cols: LLR-ID, SR-Refs, ...)
     test/test-cases.csv                     (cols: TC-ID, Verifies, ...)
-    requirements/user-needs.md              (optional; UN-### ids scraped for UN->SR coverage)
+    requirements/stakeholder-needs.md       (optional; SN-### ids scraped for SN->SR coverage)
 
 Writes:
     test/report.md  — counts, the SR->LLR->TC matrix, the orphan list, and two
-        rendered views of the same join: a line-reviewable UN->SR->LLR->TC text
+        rendered views of the same join: a line-reviewable SN->SR->LLR->TC text
         outline and a small, diff-friendly Mermaid `graph LR` DAG colored by
         orphan/draft state.
     test/report.html (only with --html) — a dependency-free, collapsible
@@ -39,7 +39,7 @@ Orphan rules (the method rules are stated once, in process.md §4):
     - LLR with no SR parent, or referencing an unknown SR
     - LLR with no TC
     - TC that verifies nothing, or references an unknown SR/LLR
-    - UN with no SR (only when user-needs.md is present)
+    - SN with no SR (only when stakeholder-needs.md is present)
 --require-verified adds the G3 status criterion:
     - SR with Verification=Test whose Status is not Verified
 --phase scopes that status criterion to a delivery phase (process.md §4
@@ -61,7 +61,7 @@ claim a gate). Without it, "-000" example rows are ignored so a fresh scaffold
 starts green.
 
 --strict-schema adds data-quality checks over the real (non-placeholder) rows:
-    - required fields are non-empty (SR: SR-ID, Title, UN-Refs, Requirement,
+    - required fields are non-empty (SR: SR-ID, Title, SN-Refs, Requirement,
       AcceptanceCriteria, Priority, Verification, Status; LLR: LLR-ID, SR-Refs,
       Title, Module, CodeSymbol, Detail, Status; TC: TC-ID, Verifies, Level,
       Method, Tier, Expected, Automated, Status);
@@ -107,7 +107,7 @@ REQUIRED_FIELDS = {
     "SR": [
         "SR-ID",
         "Title",
-        "UN-Refs",
+        "SN-Refs",
         "Requirement",
         "AcceptanceCriteria",
         "Priority",
@@ -169,12 +169,12 @@ def placeholder_findings(label, raw_rows):
     ]
 
 
-def scan_un_placeholders(un_md):
-    """Sorted unique '-000' UN ids still present in user-needs.md (if it exists)."""
-    if not un_md.exists():
+def scan_sn_placeholders(sn_md):
+    """Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists)."""
+    if not sn_md.exists():
         return []
-    text = un_md.read_text(encoding="utf-8")
-    return sorted({u for u in re.findall(r"\bUN-\d+\b", text) if is_example(u)})
+    text = sn_md.read_text(encoding="utf-8")
+    return sorted({u for u in re.findall(r"\bSN-\d+\b", text) if is_example(u)})
 
 
 def schema_findings(label, rows):
@@ -235,8 +235,8 @@ def _group(label, children):
     return {"id": label, "status": "", "title": "", "cls": "", "children": children}
 
 
-def build_forest(un_ids, srs, llrs, tcs, orphan_ids):
-    """The UN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for
+def build_forest(sn_ids, srs, llrs, tcs, orphan_ids):
+    """The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for
     rows with no valid parent. Shared by the text outline and the HTML tree."""
 
     def tc_node(t):
@@ -262,12 +262,12 @@ def build_forest(un_ids, srs, llrs, tcs, orphan_ids):
     sr_ids = {s["SR-ID"] for s in srs}
     llr_ids = {lr["LLR-ID"] for lr in llrs}
     roots = []
-    for un in sorted(un_ids):
-        kids = [sr_node(s) for s in srs if un in refs(s.get("UN-Refs"))]
-        roots.append(_node(un, "", "", orphan_ids, kids))
-    rootless_srs = [s for s in srs if not un_ids & set(refs(s.get("UN-Refs")))]
+    for sn in sorted(sn_ids):
+        kids = [sr_node(s) for s in srs if sn in refs(s.get("SN-Refs"))]
+        roots.append(_node(sn, "", "", orphan_ids, kids))
+    rootless_srs = [s for s in srs if not sn_ids & set(refs(s.get("SN-Refs")))]
     if rootless_srs:
-        label = "(SRs with no linked user need)" if un_ids else "(system requirements)"
+        label = "(SRs with no linked stakeholder need)" if sn_ids else "(system requirements)"
         roots.append(_group(label, [sr_node(s) for s in rootless_srs]))
     rootless_llrs = [lr for lr in llrs if not sr_ids & set(refs(lr.get("SR-Refs")))]
     if rootless_llrs:
@@ -329,7 +329,7 @@ def _mermaid_label(rid, title):
     return "{} — {}".format(rid, short).replace('"', "'")
 
 
-def mermaid_graph(un_ids, srs, llrs, tcs, orphan_ids):
+def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids):
     """A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored
     by orphan/draft state via classDef. Kept small/diff-friendly on purpose — the
     HTML view is the one that scales."""
@@ -341,14 +341,14 @@ def mermaid_graph(un_ids, srs, llrs, tcs, orphan_ids):
     def add(rid, label, cls):
         nodes[rid] = (label, cls)
 
-    for un in sorted(un_ids):
-        add(un, un, "orphan" if un in orphan_ids else "")
+    for sn in sorted(sn_ids):
+        add(sn, sn, "orphan" if sn in orphan_ids else "")
     for s in srs:
         sid = s["SR-ID"]
         add(sid, _mermaid_label(sid, _cell(s, "Title")),
             _node_class(sid, _cell(s, "Status"), orphan_ids))  # fmt: skip
-        for u in refs(s.get("UN-Refs")):
-            if u in un_ids:
+        for u in refs(s.get("SN-Refs")):
+            if u in sn_ids:
                 edges.add((u, sid))
     for lr in llrs:
         lid = lr["LLR-ID"]
@@ -485,12 +485,12 @@ def main():
     llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
 
-    un_ids = set()
-    un_md = docs / "requirements" / "user-needs.md"
-    if un_md.exists():
-        un_ids = {
+    sn_ids = set()
+    sn_md = docs / "requirements" / "stakeholder-needs.md"
+    if sn_md.exists():
+        sn_ids = {
             u
-            for u in re.findall(r"\bUN-\d+\b", un_md.read_text(encoding="utf-8"))
+            for u in re.findall(r"\bSN-\d+\b", sn_md.read_text(encoding="utf-8"))
             if not is_example(u)
         }
 
@@ -498,7 +498,7 @@ def main():
     llr_ids = {r["LLR-ID"] for r in llrs}
     llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
     tc_refs = {x for r in tcs for x in refs(r.get("Verifies"))}
-    sr_un_refs = {x for r in srs for x in refs(r.get("UN-Refs"))}
+    sr_sn_refs = {x for r in srs for x in refs(r.get("SN-Refs"))}
 
     # orphan_ids collects the at-fault id for each finding, so the rendered views
     # below (outline/graph/HTML) can flag the same nodes the text list reports.
@@ -515,8 +515,8 @@ def main():
         if sid not in tc_refs:
             orphans.append(f"SR {sid} has no test (TC)")
             orphan_ids.add(sid)
-        for u in refs(r.get("UN-Refs")):
-            if un_ids and u not in un_ids:
+        for u in refs(r.get("SN-Refs")):
+            if sn_ids and u not in sn_ids:
                 orphans.append(f"SR {sid} references unknown {u}")
                 orphan_ids.add(sid)
 
@@ -546,9 +546,9 @@ def main():
                 orphans.append(f"TC {tid} references unknown {x}")
                 orphan_ids.add(tid)
 
-    for u in sorted(un_ids):
-        if u not in sr_un_refs:
-            orphans.append(f"UN {u} has no SR")
+    for u in sorted(sn_ids):
+        if u not in sr_sn_refs:
+            orphans.append(f"SN {u} has no SR")
             orphan_ids.add(u)
 
     phases = set(refs(args.phase)) if args.phase else None
@@ -581,7 +581,7 @@ def main():
     integrity = [f for label in raw for f in integrity_findings(label, raw[label])]
     placeholders = (
         [f for label in raw for f in placeholder_findings(label, raw[label])]
-        + [f"UN placeholder {u} still present" for u in scan_un_placeholders(un_md)]
+        + [f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)]
         if args.no_placeholders
         else []
     )
@@ -599,7 +599,7 @@ def main():
             "",
             "| Metric | Count |",
             "|---|---|",
-            f"| User needs (UN) | {len(un_ids)} |",
+            f"| Stakeholder needs (SN) | {len(sn_ids)} |",
             f"| System requirements (SR) | {len(srs)} |",
             f"| Low-level requirements (LLR) | {len(llrs)} |",
             f"| Test cases (TC) | {len(tcs)} |",
@@ -631,12 +631,12 @@ def main():
         tests = " ".join(x["TC-ID"] for x in tcs if sid in refs(x.get("Verifies")))
         lines.append(f"| {sid} | {kids} | {tests} | {r.get('Status', '')} |")
 
-    forest = build_forest(un_ids, srs, llrs, tcs, orphan_ids)
+    forest = build_forest(sn_ids, srs, llrs, tcs, orphan_ids)
     lines += [
         "",
         "## Traceability outline",
         "",
-        "_`UN -> SR -> LLR -> TC`; `[Status]` and `[orphan]` flags are inline._",
+        "_`SN -> SR -> LLR -> TC`; `[Status]` and `[orphan]` flags are inline._",
         "",
     ]
     lines += outline_lines(forest)
@@ -648,7 +648,7 @@ def main():
         "diff-friendly; run `--html` for the scalable full-graph view._",
         "",
     ]
-    lines += mermaid_graph(un_ids, srs, llrs, tcs, orphan_ids)
+    lines += mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids)
 
     lines += ["", "## Orphans", ""]
     lines += ["None. Full coverage."] if not orphans else [f"- {o}" for o in orphans]
@@ -694,7 +694,7 @@ def main():
         html_out.write_text(html_document(forest), encoding="utf-8")
 
     print(
-        f"Traceability: UN={len(un_ids)} SR={len(srs)} LLR={len(llrs)} "
+        f"Traceability: SN={len(sn_ids)} SR={len(srs)} LLR={len(llrs)} "
         f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"
         + (f" status-findings={len(status_findings)}" if args.require_verified else "")
         + (f" placeholders={len(placeholders)}" if args.no_placeholders else "")
