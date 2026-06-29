@@ -67,6 +67,25 @@ Stable, zero-padded, never reused.
   routine that inlines logic instead of delegating shows up as a short,
   uninformative flow — a built-in tripwire.
 
+**Reviewability — review the source, not the render.** The registries (the
+`UN`/`SR`/`LLR`/`TC` CSVs) are the tracked, line-by-line-reviewable source of
+truth; every other view is *generated* from them. Generated output splits by
+size into two tiers:
+
+- **Small, diff-meaningful blocks** live in tracked files behind `GENERATED`
+  markers and are kept honest by a freshness gate — the code map, dependency
+  diagram, and program flow (`gen_arch_map.py --check` fails a commit that left
+  them stale). These you *do* read in diffs.
+- **Large composite artifacts** — the full trace report (`test/report.md`: the
+  counts, matrix, the `UN→SR→LLR→TC` text outline, and the Mermaid graph) and
+  the HTML map (`trace.py --html`) — are regenerated every run, **gitignored**,
+  and published by CI as artifacts. Don't diff or review these; review the
+  registry change that produced them.
+
+This is the "composite artifacts are ignored from change tracking" rule, named:
+the cost of reviewing a big regenerated file is never paid, because the small
+registry diff already carries the intent.
+
 **Interface contracts live at the code, referenced — not restated.** Every public
 module/function documents its contract once, where it is implemented, as a
 structured block an agent (or human) can read inline and grep:
@@ -323,8 +342,13 @@ pip needed to run them):
   `steps()` function returns (and the `SRC`/`TESTS`/tool names in the "EDIT FOR
   YOUR STACK" block at the top); the contract is the gates + exit code, not the
   specific tools. CI runs the same command (`ci/check.yml`).
-- `scripts/trace.py` — joins the registries, writes `docs/test/report.md`, exits
-  nonzero on orphans with `--strict`. It also always checks **integrity**
+- `scripts/trace.py` — joins the registries, writes `docs/test/report.md` (the
+  counts, the SR→LLR→TC matrix, a line-reviewable `UN→SR→LLR→TC` **text
+  outline**, and a small **Mermaid `graph LR`** colored by orphan/draft state),
+  and exits nonzero on orphans with `--strict`. `--html` additionally writes a
+  dependency-free, collapsible `docs/test/report.html` map of the full graph that
+  scales to any size (a gitignored composite artifact — see "Reviewability" in
+  §3). It also always checks **integrity**
   (duplicate or malformed ids). `--require-verified` adds the G3 status
   criterion (every `Verification=Test` SR must be `Verified`); `--phase v1`
   scopes that criterion for phased delivery (§4), reporting out-of-phase SRs as

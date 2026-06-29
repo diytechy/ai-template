@@ -62,6 +62,7 @@ jobs:
           name: reports-${{ matrix.os }}
           path: |
             docs/test/report.md
+            docs/test/report.html
             docs/release-checklist.md
             docs/releases/
           if-no-files-found: ignore

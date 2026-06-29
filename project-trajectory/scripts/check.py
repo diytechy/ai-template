@@ -109,8 +109,15 @@ def steps(coverage, tier, gate, phase=None):
         pytest_cmd += ["-m", marker]
     # The traceability step only runs at G2/G3, where placeholder rows must be
     # gone, so --no-placeholders is always on here (a fresh scaffold is exempt
-    # only because nothing past G1 runs against it).
-    trace_cmd = [sys.executable, "scripts/trace.py", "--strict", "--no-placeholders"]
+    # only because nothing past G1 runs against it). --html also regenerates the
+    # scalable full-graph view (a gitignored composite artifact) every run.
+    trace_cmd = [
+        sys.executable,
+        "scripts/trace.py",
+        "--strict",
+        "--no-placeholders",
+        "--html",
+    ]
     if gate in ("G3", "all"):  # G3 criterion: test-verifiable SRs are Verified
         trace_cmd.append("--require-verified")
         trace_cmd.append("--strict-schema")  # G3: required fields + valid enums

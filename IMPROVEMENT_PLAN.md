@@ -125,6 +125,23 @@ green.
 
 ## Thread 1 — Generated UN→SR→LLR→TC traceability views
 
+**Status: ✅ landed 2026-06-28.** All three views ship from one join in
+`trace.py`: a line-reviewable text outline and a colored Mermaid `graph LR` go
+into `docs/test/report.md` every run (no flag); `--html` writes the dependency-
+free collapsible `report.html`. Orphan ids are tracked alongside the existing
+findings so the outline/graph/HTML flag the same nodes (orphan outranks draft).
+The harness (`check.py`) and CI now pass `--html` and publish/ignore the
+artifact; the "Reviewability" principle is named once in PROCESS.md §3 and
+referenced from the script, gitignore, HTML header, and §7. **Deviations from
+the spec as written:** (1) the Mermaid is a **single colored DAG**, not
+Area/Phase subgraphs — shared UN/TC nodes straddle those boundaries and a node
+can't live in two Mermaid subgraphs without breaking the graph; the text outline
+and HTML are the scalable views (as the plan's own Risks line states), and the
+DAG keeps its "small, diff-friendly" niche. (2) The **optional** `architecture.md`
+`TRACEABILITY GRAPH` splice was skipped: a *tracked* generated block needs a
+freshness gate, and `trace.py` has no `--check` staleness mode; the gitignored
+report + HTML already carry the data. Both honor "edit conservatively."
+
 **Goal:** a generated, very-traceable rendering of the requirement spine that
 doubles as a gap visualizer. Data already exists in `trace.py`'s join; this is
 rendering. **Decision (2026-06-28): produce three complementary views from the one
@@ -248,15 +265,13 @@ spine.
 
 ## Sequencing & session strategy
 
-Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 3 ✅** (all 2026-06-28).
-Thread 2's process/product *concept* already fed 0b; Threads 1, 2, and 4 are
-independent. Remaining order:
+Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 3 ✅**
+(all 2026-06-28). Thread 2's process/product *concept* already fed 0b; Threads 2
+and 4 remain and are independent. Remaining order:
 
 1. **Thread 2** (name the process/product layers) — small; formalizes the split
    0b leaned on.
-2. **Thread 1** (traceability views: text outline + scoped Mermaid + HTML map) —
-   visible feature, independent.
-3. **Thread 4** (TDD co-headline) — prose/framing; edits README + AGENTS.md +
+2. **Thread 4** (TDD co-headline) — prose/framing; edits README + AGENTS.md +
    PROCESS.md, independent.
 
 Each phase ends green (`pytest -q`, real output) and checks its items off here.

@@ -115,6 +115,67 @@ def test_check_py_passes_phase_to_trace():
     assert "--phase" not in trace_cmd
 
 
+# --- Thread 1: generated traceability views (outline + Mermaid + HTML) ---------
+
+
+def _outline_section(report):
+    """The text-outline block of report.md (between its two view headings)."""
+    start = report.index("## Traceability outline")
+    return report[start : report.index("## Traceability graph")]
+
+
+def test_report_has_text_outline_and_mermaid_graph(scaffold):
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    # The Mermaid DAG view is present.
+    assert "```mermaid" in report
+    assert "graph LR" in report
+    # The text outline shows the minimal chain UN-001 -> SR-001 -> LLR-001 -> TC-001,
+    # in nesting order.
+    outline = _outline_section(report)
+    positions = [outline.index(i) for i in ("UN-001", "SR-001", "LLR-001", "TC-001")]
+    assert positions == sorted(positions), outline
+
+
+def test_orphan_node_flagged_in_outline_and_graph(scaffold):
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        ORPHAN_SR, encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py"], cwd=scaffold)  # views render regardless of exit
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    # Mermaid: the orphan (Draft) SR-002 gets the distinct class.
+    assert "classDef orphan" in report
+    assert "class SR_002 orphan" in report
+    # Outline: the same node carries an inline flag on its own line.
+    sr002 = next(
+        ln
+        for ln in _outline_section(report).splitlines()
+        if ln.strip().startswith("- SR-002")
+    )
+    assert "[orphan]" in sr002
+
+
+def test_html_view_is_self_contained(scaffold):
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--html"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    html_path = scaffold / "docs" / "test" / "report.html"
+    assert html_path.exists()
+    html = html_path.read_text(encoding="utf-8")
+    assert "<!DOCTYPE html>" in html
+    assert "<details" in html  # collapsible tree
+    assert "<script" not in html  # zero JS — self-contained
+
+
+def test_gitignore_ignores_the_html_artifact(scaffold):
+    gitignore = (scaffold / ".gitignore").read_text(encoding="utf-8")
+    assert "docs/test/report.html" in gitignore
+
+
 def test_require_verified_flags_unverified_test_sr(scaffold):
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
