@@ -737,49 +737,59 @@ protocol, is wired into the harness (size gated at `full`, runtime warn at
 
 ## Sequencing & session strategy
 
-Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 2 ✅**,
-**Thread 3 ✅** (all 2026-06-28), **Thread 7 ✅** (2026-06-29 — the `UN→SN`
-rename). Remaining threads are independent — any order:
+**Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
+**7 ✅** (2026-06-29 — the `UN→SN` rename). Remaining work is **four sessions, in
+order** (later sessions depend on earlier ones). The rule: **batch the light,
+file-coherent threads; keep each new-script build solo** — re-establishing
+context per thread is the cost to avoid, and a from-scratch script + test-suite +
+debug loop is the context-heavy case the "wide change" caution (below) is about.
 
-1. **Thread 4** (TDD co-headline) — prose/framing; edits README + AGENTS.md +
-   PROCESS.md.
-2. **Thread 5** (requirement lifecycle phase) — small; PROCESS.md + SN/SR
-   templates + EXAMPLE.md + one schema-tolerance test.
-3. **Thread 6** (requirement consistency review) — prose; PROCESS.md §4/§5 +
-   an AGENTS.md clause; pairs naturally with Thread 5 in one "requirements rigor"
-   session.
-4. **Thread 8** (companion-tooling boundary) — prose; PROCESS.md §3/§7 + README;
-   names the generate-vs-measure and committed-map-vs-query-index splits. Cheap;
-   could ride along with any other doc-touching session.
-5. **Thread 9** (doc navigability & staleness check) — a new stdlib process-layer
-   script + harness wiring + tests; the biggest genuinely-new capability of the
-   late threads, and it makes the "verify no broken links" Done-whens (Threads
-   3/4/6/8) machine-checkable. Do it after or with Thread 8.
-6. **Thread 10** (NFRs first-class + `performance-budgets.csv`) — small-medium;
-   PROCESS.md NFR-consideration checklist + a new integrator-owned coordination
-   registry + EXAMPLE row + optional trace hook. Pairs with Threads 5/6 in the
-   "requirements rigor" session (all touch the requirement spine).
-7. **Thread 11** (perf budget & regression harness) — a stdlib comparator +
-   baseline-as-golden protocol + harness wiring + tests; **depends on Thread 10's**
-   budgets registry. Start the MVP with deterministic size/dependency budgets
-   (gateable), warn-first on noisy runtime metrics.
+> ▶ **NEXT — Session A · Process-doc framing (Threads 4, 6, 8).** Pure prose, no
+> new scripts, no tests. Each edits a *different* section of PROCESS.md (4→G3,
+> 6→§4-5, 8→§3/§7) plus README/AGENTS.md. Batch because **4 and 6 both add an
+> AGENTS.md clause** — one coordinated pass respects the ~12k Gemini cap instead
+> of thrashing it twice.
 
-Thread 7 landed first among the late threads (the wide rename is cheapest done
-alone and before 5/6 touch the same registries); the `SN-###` ids it established
-are already reflected in the specs for 5 and 6 above. Threads 8 and 9 came out of
-a 2026-06-29 survey of the sibling `ai-native-toolkit` (its `/assess` engine) — 8
-names the boundary to that *measurement* half; 9 ports one stdlib-portable
-technique (doc-graph) without taking on its `networkx`/`grimp` dependencies. A
-risk-aware "hotspot" map was considered and **deferred** (see the note above
-Sequencing). Threads 10 and 11 came from the same 2026-06-29 discussion — the
-worry that the spine audits behavior but not **resource cost**: 10 makes NFRs
-first-class and puts quantitative budgets in their own integrator-owned registry
-(a module author often can't know the right budget); 11 is the stdlib comparator
-that tracks them and alerts on absolute breach or regression.
+**Session B · Requirement-capture enrichment (Threads 5, 10).** Both touch the
+SN/SR templates, EXAMPLE.md, and PROCESS §1-2, and each adds an EXAMPLE row. 10
+also adds the new `performance-budgets` registry (so it needs `bootstrap.py`
+MAPPING wiring) + an optional `trace.py` hook; 5 adds its schema-tolerance test.
+One coherent pass over the templates beats two separate re-reads.
 
-Each phase ends green (`pytest -q`, real output) and checks its items off here.
+**Session C · Doc navigability check (Thread 9).** Solo build — new stdlib
+`check_docs.py` + harness step + fixture tests. After A/B so it link-checks
+*finished* docs; it establishes the "add a `check_*` step" pattern Session D
+reuses.
 
-**Phase boundaries are natural session boundaries.** Thread 0a alone is a
-wide rename; pairing it with everything else in one session risks context
-exhaustion mid-rename. Capture is done (this file); implement per-phase in fresh
-session(s) using this doc + the branch as the spec.
+**Session D · Perf budget harness (Thread 11).** Solo build, **last**: it depends
+on Thread 10's registry (Session B) and is the highest-noise / most-complex. New
+stdlib `check_perf.py` + harness step + tests + baseline.
+
+### Session protocol (for a cold session pointed only at this file)
+
+1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
+   own section above is its spec (Goal/Steps/Tests/Risks/Done-when).
+2. **End green:** run `python -m pytest -q` and paste the real output (per
+   `CLAUDE.md`); never report a green you didn't produce.
+3. Add a **`Status: ✅ landed <date>`** block to each finished thread (one-line
+   summary + any deviations from its spec), matching the landed threads above.
+4. **Update this block:** mark the session done (move it out of NEXT) and move the
+   **▶ NEXT** marker to the following session. If a decision a thread left open got
+   resolved, record it in that thread.
+5. Commit — one commit per session (or per thread); branch is
+   `template-review-fixes`.
+
+**Why solo the script builds (the "wide change" caution).** Thread 0a alone was a
+wide rename; pairing a context-heavy change with everything else risks exhaustion
+mid-build. Sessions C and D are each a from-scratch script + test-suite + debug
+loop, so they get their own session; the prose/template batches (A, B) are the
+opposite — cheap, low-risk, and cheaper done together than re-entered per thread.
+
+**Provenance (why the late threads exist).** Thread 7 was done first among the
+late threads (the wide rename is cheapest alone, before B touches the same
+registries); its `SN-###` ids are already reflected in every spec above. Threads
+8/9 came from a 2026-06-29 survey of the sibling `ai-native-toolkit` (its
+`/assess` engine) — 8 names the boundary to that *measurement* half, 9 ports one
+stdlib-portable technique (doc-graph) without its `networkx`/`grimp` deps. Threads
+10/11 came from the same day's resource-cost discussion. A risk-aware "hotspot"
+map was considered and **deferred** (the note just above this Sequencing section).
