@@ -511,6 +511,107 @@ green.
 
 ---
 
+## Thread 8 — Name the companion-tooling boundary (measure vs. generate; map vs. index)
+
+**Why (from a survey of the sibling `ai-native-toolkit`, 2026-06-29):** the kit is
+the **generative** half of codebase legibility — it *builds* the traced spine, the
+committed code map, the gates. A whole **measurement** half exists too (e.g. that
+project's `/assess`: a deterministic, ~zero-token engine scoring an 8-layer
+AI-readiness model with complexity/churn heatmaps and a doc-navigability graph). A
+repo scaffolded from this kit should *score well by construction* — it already
+generates the Layer-0/3/5/6 artifacts such an assessor looks for. Naming the
+boundary stops two recurring confusions: (1) "should the kit also measure?" (no —
+different dependency budget) and (2) "is the generated map a code-search index?"
+(no — it's a *contract*).
+
+- **State the generate-vs-measure split** once (PROCESS.md §7 / README): the kit
+  builds legibility; to *track* it over time, run an **external readiness
+  assessor** as optional downstream tooling. Frame by **category, with `e.g.`
+  examples** — never a hard dependency or endorsement (same stance as
+  `ruff`/`pytest`: the kit names the gate, the project picks the tool).
+- **State the committed-map-vs-query-index distinction** (PROCESS.md §3, by the
+  "Generated code map"): `gen_arch_map.py` is a **committed, diff-reviewable,
+  drift-gated artifact** (part of the source of truth). **Semantic-retrieval tools
+  — LSP-backed code-graph servers, Serena-style MCP indexes — are a different
+  thing**: query-time, not committed, language-server-dependent. They are a
+  legitimate *optional downstream accelerator* for chasing references across a
+  large repo; they **do not replace** the committed map and the kit must **not**
+  hard-wire one (it would break stdlib-only and add a server/LSP dependency).
+- Keep it tight and stack-agnostic; mind the AGENTS.md ~12k cap if it lands there
+  (prefer PROCESS.md + README, link from AGENTS.md).
+
+**Tests:** none (prose). Verify intra-doc links (see Thread 9 — this is exactly
+the check that would automate that step).
+
+**Risks:** naming third-party tools dates the doc / reads as endorsement —
+mitigate by naming the *category* and using `e.g.`; revisit names rarely. Scope
+creep into a tool shoot-out — one paragraph each, not a survey.
+
+**Done-when:** PROCESS.md/README name (a) the generate-vs-measure split with an
+external assessor as optional companion, and (b) the committed-map-vs-query-index
+distinction with semantic-retrieval tools as optional/non-core; no new kit
+dependency introduced.
+
+---
+
+## Thread 9 — Doc navigability & staleness check (stdlib)
+
+**Why:** the kit gates the freshness of *generated* blocks (the code map) but never
+checks that the **hand-written** doc set stays navigable and honest — the gap the
+sibling project's doc-graph fills ("is every doc reachable? is this a *lying map* —
+a frozen doc beside churning code?"). The kit already asks humans to "verify no
+broken intra-doc links" by hand in several gates (Threads 3/4/6 Done-whens, and
+Thread 8 above); this **operationalizes** that into a machine check, extending the
+"the map must stay honest" guarantee from code to docs. Must stay **stdlib-only,
+3.8+, cross-platform** — re-implement the *technique*, never vendor the sibling's
+`networkx`/`grimp` engine.
+
+- **New process-layer check** (Thread 2 taxonomy: kit-owned, stdlib, `requires=()`)
+  — `scripts/check_docs.py` (name TBD). Parse Markdown under `docs/` (+ root
+  `*.md`), extract links, build the link graph, and report:
+  - **broken intra-repo links** (target file/anchor missing) — a hard finding;
+  - **orphan / unreachable docs** (no inbound link, or unreachable from an entry
+    root — `AGENTS.md`/`README`/an optional `docs/index.md` Map-of-Content);
+  - *(optional, git-gated)* **staleness**: a doc untouched while the modules it
+    references churned — degrade gracefully (skip) when git or the link target
+    isn't resolvable, exactly as the sibling does, so a non-git checkout still runs.
+- **Wire into the harness** as a process step (likely G1+ since docs exist early);
+  decide failure vs. warn per finding class (broken links fail; orphans/staleness
+  may warn first). Consider a small **`docs/index.md` Map-of-Content** convention
+  as the reachability root (the kit's doc set is small; the value is for the
+  *downstream* project's growing `docs/`).
+- **Single-source the principle** in PROCESS.md §3 "Reviewability" (the doc map
+  must stay honest like the code map), referenced from the script and harness —
+  don't restate it in five places.
+
+**Tests:** a fixture doc tree with a broken link fails; an orphan doc is reported;
+a clean tree passes; staleness degrades to skip without git. Add to the kit's
+pytest suite; keep the script importable for unit tests like `trace.py`.
+
+**Risks:** Markdown link parsing is fiddly (relative paths, anchors, reference-
+style, images) — start with the high-value 80% (relative file links + anchors),
+document what's out of scope. Over-eager orphan rules annoy on legitimately
+standalone docs — make the entry-root and ignore set configurable. Staleness is a
+heuristic, not truth — keep it warn-only and clearly labeled.
+
+**Done-when:** a stdlib `check_docs` reports broken links + orphans (staleness
+optional/warn), is wired into the harness as a process check, names its principle
+once in PROCESS.md §3, and `pytest -q` is green.
+
+---
+
+**Deferred (considered, deliberately not a thread) — risk-aware ("hotspot") map.**
+Folding a complexity×churn signal into `gen_arch_map.py` (the sibling's heatmap
+idea) was considered and **dropped**: a red "danger" tint in the map invites
+"refactor the red thing" reflexes that can *fight* good design — a legitimately
+complex pure core or a deliberately central thin orchestrator would read as a
+problem to dissolve. The map's job is *legibility and drift-proofing*, not risk
+scoring; risk/hotspot analysis belongs to the external **measurement** companion
+(Thread 8), where a human reads it as advice, not as a tripwire baked into the
+source-of-truth artifact. Revisit only with a design that can't bias decomposition.
+
+---
+
 ## Sequencing & session strategy
 
 Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 2 ✅**,
@@ -524,10 +625,22 @@ rename). Remaining threads are independent — any order:
 3. **Thread 6** (requirement consistency review) — prose; PROCESS.md §4/§5 +
    an AGENTS.md clause; pairs naturally with Thread 5 in one "requirements rigor"
    session.
+4. **Thread 8** (companion-tooling boundary) — prose; PROCESS.md §3/§7 + README;
+   names the generate-vs-measure and committed-map-vs-query-index splits. Cheap;
+   could ride along with any other doc-touching session.
+5. **Thread 9** (doc navigability & staleness check) — a new stdlib process-layer
+   script + harness wiring + tests; the biggest genuinely-new capability of the
+   late threads, and it makes the "verify no broken links" Done-whens (Threads
+   3/4/6/8) machine-checkable. Do it after or with Thread 8.
 
 Thread 7 landed first among the late threads (the wide rename is cheapest done
 alone and before 5/6 touch the same registries); the `SN-###` ids it established
-are already reflected in the specs for 5 and 6 above.
+are already reflected in the specs for 5 and 6 above. Threads 8 and 9 came out of
+a 2026-06-29 survey of the sibling `ai-native-toolkit` (its `/assess` engine) — 8
+names the boundary to that *measurement* half; 9 ports one stdlib-portable
+technique (doc-graph) without taking on its `networkx`/`grimp` dependencies. A
+risk-aware "hotspot" map was considered and **deferred** (see the note above
+Sequencing).
 
 Each phase ends green (`pytest -q`, real output) and checks its items off here.
 
