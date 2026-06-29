@@ -288,16 +288,50 @@ lifetime** it governs, so the perennially-neglected non-runtime phases get
 first-class requirements instead of being discovered late. Today UN/SR capture
 *what / why / acceptance* but not *when in the lifecycle*; the edge-case
 checklist in `user-needs.template.md` already gestures at it ("First-run setup",
-"Missing dependency / wrong version") without naming the dimension. The three
-phases the user named: **get ready** (install, dependency fetch, provisioning),
-**get set** (first-run configuration, credentials, migration, defaults), **go**
-(normal runtime operation).
+"Missing dependency / wrong version") without naming the dimension.
+
+The discriminator is the **process boundary + frequency**, *not* the word
+"setup" (almost everything readies *something*): ask **"at what point in the
+process's lifetime must this hold, and how often?"** That yields three phases
+(the user's "ready / set / go"):
+- **Provision** (ready) — must be true *before the process can execute at all*:
+  install, dependencies/runtime present, infra provisioned.
+- **Startup** (set) — established *once per launch, before it serves*: load +
+  validate config, run migrations, open the initial connection pool, allocate
+  fixed resources, readiness probe.
+- **Runtime** (go) — steady-state serving, *including recurring acquisition*:
+  handle requests, reconnect on drop, lazy / per-request alloc, dynamic config
+  reload.
+
+Optional **Shutdown** / **Upgrade** cover drain, teardown, migration, rollback.
 
 - **Name the dimension once in `PROCESS.md`** (near §1 roles / §2 ids, or a short
-  note in §3) with a **default vocabulary** — `Setup` (ready) · `Config` (set) ·
-  `Runtime` (go) — and state it is an **open, project-named set** (extend with
+  note in §3) with the **default vocabulary `Provision` · `Startup` · `Runtime`**
+  (deliberately avoid the overloaded label "Setup" — that word is what made the
+  boundary ambiguous) and the **process-boundary + frequency discriminator**
+  above. State it is an **open, project-named set** (extend with
   `Shutdown`/`Teardown`, `Upgrade`/`Rollback`, `Recovery` as the scope needs),
   exactly like `Area`/domain hats, **not** a fixed enum.
+- **Disambiguation rule — "setup recurs," so classify by *when / how often*,** not
+  by whether something looks like setup. Opening the connection pool *at boot* is
+  **Startup**; reconnecting *mid-operation* is **Runtime**; a fixed buffer at
+  launch is Startup, per-request alloc is Runtime. **One feature legitimately
+  spans phases** — that's the payoff: a DB capability yields *provision the DB*
+  (Provision) → *open the pool + migrate at boot* (Startup) → *reconnect on drop*
+  (Runtime), and people usually write only the Runtime one.
+- **Configuration straddles Provision↔Startup, and the boundary is
+  application-dependent.** Config is **Provision** when it *must pre-exist* and the
+  app has **no startup mechanism to obtain it**; it is **Startup** when the app
+  *can* obtain/validate it at launch — interactively prompting the user (first-run
+  wizard), erroring with a clear message, or falling back to defaults. So whether
+  "define the config" is a Provision or a Startup requirement depends on the app's
+  own startup capability; capture both the *definition* (where the config lives)
+  and the *launch behavior when it is missing*.
+- **Keep one axis, not two.** Dependencies and config are *subjects*, not phases —
+  a dependency is **required** at Provision but **used** at Runtime; config **must
+  exist** at Provision, is **loaded/validated** at Startup, may be **reloaded** at
+  Runtime. The phase tag on each concrete requirement already places it; a second
+  "kind" axis is the heavy-taxonomy scope-creep this thread avoids.
 - **Avoid the `Phase` collision (critical).** The SR registry's existing `Phase`
   column is *delivery* phase (`v1`/`v2`, §4 "Phased delivery"). The lifecycle tag
   must use a **distinct name — recommend `Lifecycle`** — and PROCESS.md must say
@@ -309,12 +343,13 @@ phases the user named: **get ready** (install, dependency fetch, provisioning),
   template column (more discoverable but forces downstream churn). Recommend
   optional + a one-line prompt in the templates.
 - **Prompt for it in the templates:** a short line in `user-needs.template.md`
-  (intro + the edge-case note, observing those rows are mostly Setup/Config) and
-  in `system-requirements.template.csv` guidance.
-- **One worked EXAMPLE.md illustration:** a Setup/Config-phase requirement (e.g.
-  dependency/version check or first-run config) tagged `Lifecycle=Setup`,
-  ideally reusing the §7 infra slice — *provisioning/migrating* the DB is Setup;
-  *failover* is Runtime — to show one feature spanning phases.
+  (intro + the edge-case note, observing those rows are mostly Provision/Startup)
+  and in `system-requirements.template.csv` guidance.
+- **One worked EXAMPLE.md illustration:** a Provision- or Startup-phase
+  requirement (e.g. a dependency/version check tagged `Lifecycle=Provision`, or
+  first-run config tagged `Lifecycle=Startup`), ideally reusing the §7 infra
+  slice — *provisioning/migrating* the DB is Provision, *opening the pool at boot*
+  is Startup, *failover* is Runtime — to show one feature spanning phases.
 - Optionally one clause in `AGENTS.template.md`'s requirement-authoring guidance
   (mind the ~12k Gemini cap).
 
@@ -331,9 +366,10 @@ optional, project-named tag, not a required enum. Collision with delivery `Phase
 — mitigated by choosing `Lifecycle`. Don't force downstream migration (favor the
 optional column).
 
-**Done-when:** PROCESS.md names the lifecycle dimension + default vocabulary,
-distinct from delivery `Phase`; the UN/SR templates prompt for it; EXAMPLE.md
-shows a Setup-phase requirement; `pytest -q` green.
+**Done-when:** PROCESS.md names the lifecycle dimension + the
+`Provision`/`Startup`/`Runtime` vocabulary and discriminator, distinct from
+delivery `Phase`; the UN/SR templates prompt for it; EXAMPLE.md shows a
+Provision/Startup-phase requirement; `pytest -q` green.
 
 ---
 
