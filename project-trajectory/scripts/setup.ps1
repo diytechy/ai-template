@@ -27,6 +27,21 @@ try {
     elseif (Test-Path "requirements.txt") { & $python -m pip install -r requirements.txt }
     # ---------------------------------------------------------------------------
 
+    # Enable the agent-neutral pre-commit hook (the process floor) if this is a
+    # git repo. Opt-in + reversible: undo with `git config --unset core.hooksPath`.
+    if (Test-Path ".githooks/pre-commit") {
+        try {
+            git rev-parse --is-inside-work-tree 2>$null | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                git config core.hooksPath .githooks
+                Write-Host "Enabled pre-commit hook (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
+            }
+        }
+        catch {
+            # Not a git repo yet (or git missing) — the hook is opt-in; skip quietly.
+        }
+    }
+
     Write-Host ""
     Write-Host "Setup complete. Run the harness with: .\scripts\check.ps1 --gate G3"
     Write-Host "(check.ps1 uses the venv python directly; no activation needed.)"

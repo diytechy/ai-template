@@ -1,0 +1,50 @@
+#!/bin/sh
+# Pre-commit hook — the agent-neutral *process floor*.
+#
+# Runs only the fast, always-valid kit checks so a stale code map, a broken
+# traceability link, or unformatted code never lands in a commit — regardless of
+# which agent (or human) made it. Enforcement lives here (git) and in CI, not in
+# any one agent's hook config, so it holds for Claude, Gemini, Codex, and bare
+# git alike.
+#
+# This is the universal *floor*; the full gate bar (placeholder rejection, schema
+# checks, tests, coverage) is gate-scoped and lives in check.py / CI. Those
+# heavier checks are deliberately NOT here: they would block legitimate
+# early-stage (G0/G1) commits. See process.md §7 (process vs product checks).
+#
+# Enable:  git config core.hooksPath .githooks   (setup.sh / setup.ps1 do this)
+# Disable: git config --unset core.hooksPath
+#
+# One POSIX hook covers every platform: Git for Windows runs hooks through its
+# bundled sh, so this same file works on Windows, Linux, and macOS.
+set -e
+
+# Find a Python 3 interpreter the same way setup.sh does (python3 then python).
+PY=""
+for cand in python3 python; do
+  if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
+done
+if [ -z "$PY" ]; then
+  echo "pre-commit: Python 3 not found on PATH; skipping process checks." >&2
+  exit 0
+fi
+
+# 1. Code map must be fresh — protects the GENERATED regions from hand-edits and
+#    catches a map that has drifted from the source.
+"$PY" scripts/gen_arch_map.py --check
+
+# 2. Traceability: no orphan / duplicate / malformed ids. No --no-placeholders
+#    here on purpose: a leftover -000 row is valid before G2, and this floor must
+#    not block early commits (that check is gate-scoped in check.py).
+"$PY" scripts/trace.py --strict
+
+# 3. Format check on staged Python files — product tooling, so run it only if
+#    ruff is importable by this interpreter (matching check.py's detection); skip
+#    silently otherwise, so a non-Python or not-yet-set-up repo can still commit.
+if "$PY" -c "import importlib.util as u, sys; sys.exit(0 if u.find_spec('ruff') else 1)" >/dev/null 2>&1; then
+  staged=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep '\.py$' || true)
+  if [ -n "$staged" ]; then
+    # shellcheck disable=SC2086  # word-splitting is intended: one arg per file.
+    "$PY" -m ruff format --check $staged
+  fi
+fi

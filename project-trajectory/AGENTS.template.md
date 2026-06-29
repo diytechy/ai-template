@@ -1,4 +1,4 @@
-# CLAUDE.md — Agent & Contributor Guide
+# AGENTS.md — Agent & Contributor Guide
 
 **What this file does:** the standing brief for any agent or human working in
 this repo. It encodes *how we build here* so quality doesn't depend on who (or
@@ -6,9 +6,12 @@ which model) shows up. It is loaded into an agent's context every session —
 keep it short, concrete, and current. Project facts live in `docs/`; this file
 points at them rather than restating them.
 
-> Copy this into a new repo as `CLAUDE.md`, then fill the **Project** section and
-> delete guidance that doesn't apply. Everything below the line is the durable
-> part — change it deliberately, not per-task.
+> Copy this into a new repo as `AGENTS.md` — the cross-tool standard most agents
+> read. Thin `CLAUDE.md` and `GEMINI.md` stubs point back here so Claude Code and
+> Gemini (which prefer their own filenames) land on this guide too; keep the full
+> content here, not in the stubs. Then fill the **Project** section and delete
+> guidance that doesn't apply. Everything below the line is the durable part —
+> change it deliberately, not per-task.
 
 ---
 
@@ -198,5 +201,5 @@ How to collaborate here. Direct and concrete; explain the *why* before the *how*
 ---
 
 > **Customizing:** add a rule here only after you've had to repeat it. Delete
-> rules you don't enforce — an aspirational CLAUDE.md that the harness doesn't
+> rules you don't enforce — an aspirational AGENTS.md that the harness doesn't
 > back up just adds noise. The best version of this file evolves from real usage.

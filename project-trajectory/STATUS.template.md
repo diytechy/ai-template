@@ -12,7 +12,7 @@ last) — it is the record, not required reading for every pass.
 - **Round:** 1
 - **Open items:** _(the few things blocking the current gate, by ID)_
 - **Assumptions (unattended):** _(decisions taken without sign-off while running
-  unattended — each to confirm or revert at the next gate; see CLAUDE.md "Ask,
+  unattended — each to confirm or revert at the next gate; see AGENTS.md "Ask,
   don't assume")_
 - **Next action:** _(what happens next + who must approve)_
 

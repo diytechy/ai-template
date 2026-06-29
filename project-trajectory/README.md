@@ -15,7 +15,8 @@ audits.
 | File | Use |
 |---|---|
 | `KICKOFF_PROMPT.md` | **Paste this into an agent to start.** Fill the PROJECT BRIEF at the bottom first. |
-| `CLAUDE.template.md` | Agent/contributor guide → copy to the new repo's `CLAUDE.md`. Encodes the readability conventions + points at the process. |
+| `AGENTS.template.md` | Agent/contributor guide → copy to the new repo's `AGENTS.md` (the cross-tool standard most agents read). Encodes the readability conventions + points at the process. |
+| `CLAUDE.stub.template.md` · `GEMINI.stub.template.md` | Thin stubs → the new repo's `CLAUDE.md` / `GEMINI.md`; each just points at `AGENTS.md` so Claude Code and Gemini (which prefer their own filename) still land on the full guide. |
 | `PROCESS.md` | The canonical method → copy to `docs/process.md`. Roles, gates, ID scheme, anti-duplication, verdict protocol, review triage, harness contract. |
 | `STATUS.template.md` | The live blackboard → copy to `docs/status.md`. |
 | `ARCHITECTURE.template.md` | One-page overview + generated map → copy to `docs/architecture.md`. |
@@ -33,6 +34,8 @@ audits.
 | `scripts/gen_release_checklist.py` | Generates the human **release checklist** for G-Release from the registries (every Demonstration/Manual/Inspection SR, Release-tier/manual TC, UN acceptance intent, provided interface) as back-linked tick-boxes. |
 | `scripts/gen_cases.py` | Expands an SR's input **dimensions** (`Permutations`) into boundary-aware test combinations — full / **pairwise (all-pairs)** / boundary-corners — so tests exercise the input space without the full Cartesian blow-up. |
 | `scripts/setup.{sh,ps1}` · `scripts/check.{sh,ps1}` | Cross-platform launchers: one-command venv + dependency setup, and a thin wrapper over `check.py`, for Linux/macOS and Windows. |
+| `hooks/pre-commit` | Agent-neutral **process floor** → copied to `.githooks/pre-commit`; `setup.{sh,ps1}` enable it via `git config core.hooksPath .githooks`. One POSIX hook (works on Git for Windows too) running the fast, always-valid checks: code-map freshness + traceability (+ ruff format on staged files if installed). The full gate bar stays in `check.py`/CI. |
+| `agent-hooks/` | **Optional** per-agent hook configs (`claude.settings.json`, `gemini.settings.json`) that mirror the git hook for earlier feedback. Not wired by bootstrap; the git hook + CI are the source of truth (see `agent-hooks/README.md`). |
 | `pytest.ini` | Registers the `smoke`/`full`/`release` test-tier markers the harness selects with `--tier` (unmarked tests run in `full`+`release`). |
 | `gitignore.template` | Minimal `.gitignore` for the new repo (venv, tool caches, the regenerated trace report). |
 | `ci/check.yml` | Reference GitHub Actions workflow → copy to `.github/workflows/check.yml`. Runs the same `check.py`. |
@@ -42,12 +45,13 @@ audits.
 
 1. **Scaffold:** from this kit, run
    `python scripts/bootstrap.py --dest /path/to/new/repo` (add `--dry-run` to
-   preview). This copies the templates into `docs/`, `scripts/`, `CLAUDE.md`, and
-   CI, renaming `*.template.*` to working names.
+   preview). This copies the templates into `docs/`, `scripts/`, `AGENTS.md`
+   (plus `CLAUDE.md`/`GEMINI.md` stubs), and CI, renaming `*.template.*` to
+   working names.
    *(Manual alternative: copy this folder in and rename by hand.)*
    If `python` is absent or Python 2, use `python3` (Linux/macOS) or `py`
    (Windows); the kit needs Python 3.8+.
-2. **Brief:** fill the **PROJECT BRIEF** in the new repo's `CLAUDE.md` and
+2. **Brief:** fill the **PROJECT BRIEF** in the new repo's `AGENTS.md` and
    `docs/status.md`. To drive it conversationally instead, paste
    `KICKOFF_PROMPT.md` (brief filled) into your agent.
 3. **Wire the harness to your stack:** edit the step list `scripts/check.py`'s

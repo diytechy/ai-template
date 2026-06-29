@@ -45,8 +45,9 @@ Create these in the repo (use the companion templates as exact formats). If the
 kit is present, the fastest path is `python scripts/bootstrap.py --dest .` from
 inside it, which lays down everything below; otherwise copy + rename by hand.
 
-- `CLAUDE.md` — the agent/contributor guide with the readability conventions
-  (copy `CLAUDE.template.md`).
+- `AGENTS.md` — the agent/contributor guide with the readability conventions
+  (copy `AGENTS.template.md`; the bootstrap also lays down thin `CLAUDE.md` and
+  `GEMINI.md` stubs that point at it).
 - `docs/process.md` — the method, gates, ID scheme, anti-duplication rules,
   verdict protocol (copy `PROCESS.md`).
 - `docs/status.md` — live state, gate sign-off table, append-only audit log

@@ -6,8 +6,9 @@ gated, requirement-traced development process. So work here improves templates
 and scripts, not a downstream application.
 
 > Looking for the agent guide that ships **to** new projects? That's
-> [`project-trajectory/CLAUDE.template.md`](project-trajectory/CLAUDE.template.md).
-> Don't confuse the two: this file governs editing the kit; that one governs
+> [`project-trajectory/AGENTS.template.md`](project-trajectory/AGENTS.template.md)
+> (scaffolds to `AGENTS.md`, with thin `CLAUDE.md`/`GEMINI.md` stubs pointing at
+> it). Don't confuse the two: this file governs editing the kit; that one governs
 > using the kit.
 
 ---
@@ -67,4 +68,4 @@ uncertainty honestly; ask before anything irreversible. Prefer the simplest
 thing that works and say so when a request looks over-engineered for its need.
 Don't change unrelated code; when you spot a design smell, surface it as a
 separate finding rather than fixing it inline. (The shipped guide states the
-full version — `project-trajectory/CLAUDE.template.md` "Working agreement".)
+full version — `project-trajectory/AGENTS.template.md` "Working agreement".)

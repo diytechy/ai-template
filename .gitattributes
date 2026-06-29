@@ -3,6 +3,9 @@
 
 # Shell scripts must use LF or they break on Linux/macOS (bad interpreter).
 *.sh text eol=lf
+# The git hook is an extensionless sh script — same LF requirement (a CRLF in the
+# shebang breaks `#!/bin/sh`, incl. Git Bash on Windows).
+hooks/pre-commit text eol=lf
 
 # PowerShell scripts: CRLF for native Windows tooling.
 *.ps1 text eol=crlf

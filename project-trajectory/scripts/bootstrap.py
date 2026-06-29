@@ -12,7 +12,9 @@ Run it from inside this kit folder (it locates the templates relative to itself)
     python scripts/bootstrap.py --dest /path/to/your/repo [--force] [--dry-run]
 
 What it creates in the destination:
-    CLAUDE.md                                  <- CLAUDE.template.md
+    AGENTS.md                                  <- AGENTS.template.md  (full agent guide)
+    CLAUDE.md                                  <- CLAUDE.stub.template.md (points to AGENTS.md)
+    GEMINI.md                                  <- GEMINI.stub.template.md (points to AGENTS.md)
     docs/process.md                            <- PROCESS.md
     docs/status.md                             <- STATUS.template.md
     docs/architecture.md                       <- ARCHITECTURE.template.md
@@ -25,10 +27,17 @@ What it creates in the destination:
     scripts/trace.py, check.py, gen_arch_map.py, gen_release_checklist.py,
     scripts/gen_cases.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
+    .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     pytest.ini                                 (test-tier markers)
     .gitignore                                 <- gitignore.template
     .github/workflows/check.yml                <- ci/check.yml
     src/, tests/                               (empty, with .gitkeep)
+
+The agent guide lives once, in `AGENTS.md` (the cross-tool standard). `CLAUDE.md`
+and `GEMINI.md` ship as thin stubs that point back at it, because Claude Code and
+Gemini prefer their own filenames. All three are copied unconditionally — they're
+tiny and cost nothing (same rationale as the interface artifacts), so every
+scaffold works whichever agent shows up.
 
 The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.csv`)
 are always scaffolded but ship **inert**: they hold only `IF-000` placeholder
@@ -41,7 +50,7 @@ It then runs `gen_arch_map.py` and `trace.py` once in the new repo so the
 scaffold starts green — `check.py` would otherwise fail on the template
 placeholder between the architecture markers.
 
-After running: open CLAUDE.md and docs/status.md, fill the PROJECT BRIEF, then
+After running: open AGENTS.md and docs/status.md, fill the PROJECT BRIEF, then
 start gate G1 (see docs/process.md).
 """
 
@@ -55,7 +64,11 @@ KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
 
 # (source relative to KIT, destination relative to --dest)
 MAPPING = [
-    ("CLAUDE.template.md", "CLAUDE.md"),
+    # Agent guide: full content in AGENTS.md, thin stubs for tools that prefer
+    # their own filename. All three copied unconditionally (see module docstring).
+    ("AGENTS.template.md", "AGENTS.md"),
+    ("CLAUDE.stub.template.md", "CLAUDE.md"),
+    ("GEMINI.stub.template.md", "GEMINI.md"),
     ("PROCESS.md", "docs/process.md"),
     ("STATUS.template.md", "docs/status.md"),
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
@@ -81,6 +94,9 @@ MAPPING = [
     ("scripts/setup.ps1", "scripts/setup.ps1"),
     ("scripts/check.sh", "scripts/check.sh"),
     ("scripts/check.ps1", "scripts/check.ps1"),
+    # Agent-neutral enforcement: one POSIX pre-commit hook (opt-in via
+    # `git config core.hooksPath .githooks`, which setup.sh/ps1 set).
+    ("hooks/pre-commit", ".githooks/pre-commit"),
     ("pytest.ini", "pytest.ini"),
     ("gitignore.template", ".gitignore"),
     ("ci/check.yml", ".github/workflows/check.yml"),
@@ -144,7 +160,9 @@ def main():
             continue
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
-        if dst.suffix == ".sh":  # keep the launchers executable on POSIX
+        # Keep the .sh launchers and the git hook executable on POSIX (the hook
+        # has no extension; git only runs it if the executable bit is set).
+        if dst.suffix == ".sh" or dst.parent.name == ".githooks":
             dst.chmod(dst.stat().st_mode | 0o111)
         created.append(dst_rel)
 
@@ -176,7 +194,7 @@ def main():
         initialize_generated_docs(dest)
     if not args.dry_run and created:
         print(
-            "Next: fill the PROJECT BRIEF in CLAUDE.md + docs/status.md, then "
+            "Next: fill the PROJECT BRIEF in AGENTS.md + docs/status.md, then "
             "run gate G1 (docs/process.md)."
         )
     if missing:

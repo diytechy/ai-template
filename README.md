@@ -39,9 +39,10 @@ The kit's headline pieces:
   and Windows.
 - **Cross-project support** — an [`IF-###` interfaces registry](project-trajectory/INTERFACES.template.md)
   for projects that interlink, so shared contracts stay traceable and versioned.
-- **An agent guide template** ([`CLAUDE.template.md`](project-trajectory/CLAUDE.template.md))
+- **An agent guide template** ([`AGENTS.template.md`](project-trajectory/AGENTS.template.md))
   that encodes our readability/maintainability conventions and points agents at
-  the process.
+  the process. It scaffolds to `AGENTS.md` (the cross-tool standard), with thin
+  `CLAUDE.md`/`GEMINI.md` stubs pointing back at it.
 
 ## Quick start — bootstrap a new project
 
@@ -59,11 +60,12 @@ python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --dry-run
 > you to install the Command Line Tools — accept it (or run `xcode-select
 > --install`), which also provides `git`.
 
-This scaffolds `CLAUDE.md`, `docs/` (process, status, architecture, interfaces,
-the registries), `scripts/` (the harness), `.github/workflows/check.yml`, and
-empty `src/`/`tests/`. Then:
+This scaffolds `AGENTS.md` (the agent guide; `CLAUDE.md`/`GEMINI.md` stubs point
+at it), `docs/` (process, status, architecture, interfaces, the registries),
+`scripts/` (the harness), `.github/workflows/check.yml`, and empty
+`src/`/`tests/`. Then:
 
-1. Fill the **PROJECT BRIEF** in the new repo's `CLAUDE.md` and `docs/status.md`.
+1. Fill the **PROJECT BRIEF** in the new repo's `AGENTS.md` and `docs/status.md`.
 2. Install the harness tooling for your stack (the Python reference uses
    `ruff pytest pytest-cov`).
 3. Start **gate G1** — see the new repo's `docs/process.md`.

@@ -83,7 +83,7 @@ id (`SR-012`) instead of restating the range. The block carries `Implements:
 SR/LLR`, so the *intent* stays in the registry, the *implemented signature* stays
 in the code, and the link is explicit. The code map harvests the symbol's summary
 and back-links, so a reader can find the contract from the map in one hop. (The
-exact tag syntax is the agent guide's job — see `CLAUDE.template.md` "Define the
+exact tag syntax is the agent guide's job — see `AGENTS.template.md` "Define the
 interface (contract) at the code".)
 
 **Generated code map — route the AST into the agent's working file.** An agent

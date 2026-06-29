@@ -5,7 +5,9 @@ from conftest import SCRIPTS, run_py
 
 def test_scaffold_contains_expected_files(scaffold):
     for rel in [
+        "AGENTS.md",
         "CLAUDE.md",
+        "GEMINI.md",
         ".gitignore",
         "pytest.ini",
         "docs/process.md",
@@ -20,6 +22,19 @@ def test_scaffold_contains_expected_files(scaffold):
         "tests/.gitkeep",
     ]:
         assert (scaffold / rel).exists(), "missing from scaffold: " + rel
+
+
+def test_agents_guide_is_canonical_and_stubs_point_at_it(scaffold):
+    # AGENTS.md carries the full guide; CLAUDE.md/GEMINI.md are thin stubs that
+    # point back at it (single source of truth — Thread 0a).
+    agents = (scaffold / "AGENTS.md").read_text(encoding="utf-8")
+    assert "How we work here (the process)" in agents  # a full-guide section
+    assert "Working agreement" in agents
+    for stub_name in ("CLAUDE.md", "GEMINI.md"):
+        stub = (scaffold / stub_name).read_text(encoding="utf-8")
+        assert "AGENTS.md" in stub, stub_name + " should point at AGENTS.md"
+        # The stub must not duplicate the full guide.
+        assert "Working agreement" not in stub, stub_name + " duplicates the guide"
 
 
 def test_fresh_scaffold_passes_archmap_check_and_trace(scaffold):

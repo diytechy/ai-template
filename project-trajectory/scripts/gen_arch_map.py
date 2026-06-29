@@ -21,7 +21,7 @@ This is the **AI/human code map**: a current, greppable index of where each
 capability lives, what it depends on, and which requirement it implements — so an
 agent edits the right place instead of re-deriving the layout. It is harvested
 from your docstrings/headers, which is one more reason to comment for humans
-(see CLAUDE.template.md "Comment for humans — and the map").
+(see AGENTS.template.md "Comment for humans — and the map").
 
 Routing: `--doc` is repeatable, so the same generated block can be spliced into
 `docs/architecture.md` AND the agent's primary file (`AGENTS.md` / `CLAUDE.md`) —

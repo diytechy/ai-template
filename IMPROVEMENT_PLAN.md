@@ -31,6 +31,15 @@ support (~12k-char cap). Hooks do **not** standardize: Claude `.claude/settings
 
 ### 0a — `AGENTS.md` as the canonical agent guide
 
+**Status: ✅ landed 2026-06-28.** Deviations from the spec as written: the code
+map was *already* routed at `AGENTS.md` in `gen_arch_map.py`, `check.py`, and
+`ARCHITECTURE.template.md` (a prior thread), so only a stale `gen_arch_map.py`
+docstring line (`CLAUDE.template.md` → `AGENTS.template.md`) needed fixing. The
+optional dogfood (meta-repo `AGENTS.md` stub → its `CLAUDE.md`) was added. The
+renamed guide's own self-references (title, "copy this as", closing note) were
+updated even though the plan said "unchanged content" — leaving them would have
+been incorrect.
+
 - Rename the content home: `project-trajectory/CLAUDE.template.md` →
   `project-trajectory/AGENTS.template.md` (full guide, unchanged content + the
   Thread-3 edits).
@@ -68,6 +77,15 @@ test suite for `CLAUDE.md` and fix references.
 (stubs); no doc calls `CLAUDE.md` the canonical guide; `pytest -q` green.
 
 ### 0b — Agent-neutral enforcement via git hooks
+
+**Status: ✅ landed 2026-06-28.** `hooks/pre-commit` added (interpreter discovery
+matches `setup.sh`; runs `gen_arch_map.py --check`, `trace.py --strict`, and
+ruff-format on staged `.py` only if ruff is importable — detected the same way
+`check.py` does). Wired opt-in in both setup launchers and via bootstrap MAPPING
+(`.githooks/pre-commit`, executable on POSIX). Optional `agent-hooks/`
+(`claude.settings.json`, `gemini.settings.json`) ship with a README caveat. Tests
+in `tests/test_pre_commit_hook.py` cover the underlying checks, copy, and an
+end-to-end `sh` run where a shell is available, plus JSON validity of the extras.
 
 - Add `project-trajectory/hooks/pre-commit` (`#!/bin/sh`; Git-for-Windows runs
   hooks through its bundled sh, so one POSIX hook is cross-platform). It must:

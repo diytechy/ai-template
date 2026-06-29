@@ -29,6 +29,13 @@ elif [ -f requirements.txt ]; then pip install -r requirements.txt
 fi
 # ------------------------------------------------------------------------------
 
+# Enable the agent-neutral pre-commit hook (the process floor) if this is a git
+# repo. Opt-in + reversible: undo with `git config --unset core.hooksPath`.
+if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git config core.hooksPath .githooks
+  echo "Enabled pre-commit hook (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
+fi
+
 echo
 echo "Setup complete. Run the harness with: ./scripts/check.sh --gate G3"
 echo "(check.sh uses the venv python directly; activating is optional.)"
