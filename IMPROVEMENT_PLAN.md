@@ -1,7 +1,7 @@
 # Kit Improvement Plan
 
-Derived from `TEMPLATE_REVIEW.md` (resolved 2026-06-28) plus four follow-on
-design threads and a cross-agent-portability decision. This file is the **spec a
+Derived from `TEMPLATE_REVIEW.md` (resolved 2026-06-28) plus follow-on design
+threads and a cross-agent-portability decision. This file is the **spec a
 fresh session implements from** — each thread is self-contained with Goal /
 Steps / Tests / Risks / Done-when. Keep it updated as threads land (check items
 off; record deviations).
@@ -123,32 +123,49 @@ green.
 
 ---
 
-## Thread 1 — Generated UN→SR→LLR→TC traceability graph
+## Thread 1 — Generated UN→SR→LLR→TC traceability views
 
-**Goal:** a generated, browsable picture of the requirement spine that doubles as
-a gap visualizer. Data already exists in `trace.py`'s join; this is rendering.
+**Goal:** a generated, very-traceable rendering of the requirement spine that
+doubles as a gap visualizer. Data already exists in `trace.py`'s join; this is
+rendering. **Decision (2026-06-28): produce three complementary views from the one
+join** — a line-reviewable text outline, small diff-friendly Mermaid, and a
+scalable HTML map — because no single format is both line-by-line reviewable and
+big-graph-scalable.
 
-- Emit a Mermaid `graph LR` (a DAG, **not** a mindmap — a TC verifies an SR *and*
-  an LLR; an SR has many LLRs) into `docs/test/report.md` (regenerated every run
-  ⇒ fresh at each gate automatically; no staleness check needed). Optionally also
-  splice into `architecture.md` behind a new `TRACEABILITY GRAPH` marker pair.
-- Nodes: UN/SR/LLR/TC; edges follow the existing parent links. **Color by
-  `Status`/orphan state** (Mermaid `classDef`) so a Draft/orphan stands out — the
-  "requirement clarity" payoff. Scale guard: for large graphs, group by `Area`
-  or emit per-phase subgraphs.
-- Optional secondary: `trace.py --html` → a static, **dependency-free**
-  collapsible `<details>` tree (inline CSS, zero JS) for browsing/onboarding.
-  Framed as secondary (HTML doesn't diff/review like the Mermaid block).
+- **Plain-text indented outline (primary, line-reviewable)** into
+  `docs/test/report.md`: a `UN → SR → LLR → TC` tree, status/orphan flags inline.
+  Pure text ⇒ reviews line-by-line and scales to any size; `report.md` is already
+  regenerated each run and gitignored.
+- **Mermaid `graph LR` (diff-friendly, small):** a DAG (**not** a mindmap — a TC
+  verifies an SR *and* an LLR; an SR has many LLRs), **colored by `Status`/orphan
+  state** (`classDef`) so a Draft/orphan stands out. Mermaid-in-markdown does
+  **not** scale (GitHub caps complexity; no pan/zoom), so keep these **scoped**:
+  group by `Area` / per-phase subgraphs. Emit into `report.md`; optionally splice
+  a scoped one into `architecture.md` behind a new `TRACEABILITY GRAPH` marker.
+- **`trace.py --html` (primary *scalable* view):** a static, **dependency-free**
+  collapsible `<details>` tree (inline CSS, zero JS) of the full graph for
+  browse/onboard/audit at any size. It is a generated composite artifact ⇒
+  **gitignored** (add to `gitignore.template`), never the review surface for the
+  data (review the registry CSV diff).
+- **Reviewability principle (state once in PROCESS.md, reference elsewhere):** the
+  **registries are the tracked, line-by-line-reviewable source of truth**;
+  rendered views are generated. Small, diff-meaningful generated blocks live in
+  tracked files behind `GENERATED` markers + a freshness gate (the arch map);
+  **large composite artifacts** (full trace report, HTML map) are regenerated and
+  **gitignored**. This is the "composite artifacts ignored from change tracking"
+  rule, named.
 
-**Tests:** `report.md` contains a ```mermaid graph; the minimal chain renders
-UN-001→SR-001→LLR-001→TC-001 edges; an orphan/Draft node gets the distinct
-class. If `--html`, assert a self-contained file with no `<script>`.
+**Tests:** `report.md` contains a ```mermaid graph **and** the text outline (the
+minimal chain shows UN-001→SR-001→LLR-001→TC-001); an orphan/Draft node gets the
+distinct Mermaid class **and** an inline flag in the outline; `--html` yields a
+self-contained file with no `<script>`; `gitignore.template` ignores the HTML
+artifact.
 
-**Risks:** graph noise on big projects (mitigate via grouping/per-phase);
-keep the Mermaid generation stdlib string-building (no new dep).
+**Risks:** graph noise on big projects (mitigate via the text outline + scoped
+Mermaid + the full-graph HTML); keep all three as stdlib string-building (no dep).
 
-**Done-when:** harness run regenerates the graph; gap states are visually
-distinct; `pytest -q` green.
+**Done-when:** a harness run regenerates all three views; gap states are visually
+*and* textually distinct; the HTML artifact is gitignored; `pytest -q` green.
 
 ---
 
@@ -201,16 +218,46 @@ points at status.md.
 
 ---
 
+## Thread 4 — Make test-driven development a co-headline discipline
+
+**Goal:** elevate TDD from *implied* to an **explicitly stated working
+discipline**. The process is already TDD-shaped — G2 requires a TC for every
+SR/LLR *before* implementation at G3 — but the red→green→refactor loop is nowhere
+named. **Decision (2026-06-28): co-headline it**, keeping requirement
+traceability as the structural spine. Framing must stay consistent: traceability
+is the spine; **TDD is how G3 code gets written**, not a competing claim.
+
+- **`AGENTS.template.md`:** add a tight **test-first loop** — write the TC's
+  failing test first, then the minimal code to pass, then refactor — folded into
+  "How we work here" / "Code we want" without bloating the file (Gemini ~12k cap).
+- **`PROCESS.md` G3:** state implementation proceeds **test-first** (the G2 TCs
+  become failing tests before the code that satisfies them); reference the
+  existing coverage/Verified criteria rather than restating them.
+- **`README.md`:** sharpen the headline from "deep test coverage" to
+  **test-driven** development, alongside traceability + gates.
+- Don't imply TDD replaces the UN→SR→LLR→TC discipline; it operates within it.
+
+**Tests:** none (prose); verify no broken intra-doc links and that
+`AGENTS.template.md` stays within its size budget.
+
+**Done-when:** the test-first loop is stated in `AGENTS.md` + `PROCESS.md` G3 and
+headlined in `README.md`, integrated with (not duplicating) the traceability
+spine.
+
+---
+
 ## Sequencing & session strategy
 
-Dependencies: Thread 2's process/product *concept* feeds 0b; Threads 1 and 3 are
-independent. Recommended order:
+Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 3 ✅** (all 2026-06-28).
+Thread 2's process/product *concept* already fed 0b; Threads 1, 2, and 4 are
+independent. Remaining order:
 
-1. **Thread 0a** (AGENTS pivot) — structural rename; do with fresh context.
-2. **Thread 0b + Thread 2 concept** (git hooks + name the layers).
-3. **Thread 3** (directives) — small; can ride with 0a since it edits the same
-   file.
-4. **Thread 1** (traceability graph) — visible feature, independent.
+1. **Thread 2** (name the process/product layers) — small; formalizes the split
+   0b leaned on.
+2. **Thread 1** (traceability views: text outline + scoped Mermaid + HTML map) —
+   visible feature, independent.
+3. **Thread 4** (TDD co-headline) — prose/framing; edits README + AGENTS.md +
+   PROCESS.md, independent.
 
 Each phase ends green (`pytest -q`, real output) and checks its items off here.
 
