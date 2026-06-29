@@ -25,3 +25,11 @@ How to encode general directives into the claude.md file, the items below would 
 5. I'm always open to ideas on better ways to do things. Please don't hesitate to suggest a better way, or one that has long lasting impact over a tactical change. (as a few examples)
 
 Finally, are there places where hooks would be more appropriate than claud.md directives to ensure execution?
+
+New items:
+
+Emphasize line by line reviewability if not clear already in the template, composite artifacts can be generated but in general should be ignored from repo change tracking.  Note that generating a full requirement map (UN - SR - LLR - TC) as an html artifact would still make it very clear to see all the connections, I don't think markdown can contain that large of a diagram because of the way it is usually rendered.  Are there other alternatives that should be explored so the requirement breakdown is very traceable and easy to review as a separate untracked output?
+
+The main drive / focus of this template should be test driven development, does this need to be emphasized anywhere else in the template?
+
+Does that affect the improvement plan, or should these items be addressed separately?
