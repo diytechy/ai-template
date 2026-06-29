@@ -2,8 +2,8 @@
 
 A reusable starting point for building **maintainable, requirement-traced
 projects** with AI agents and humans working from the same playbook. The goal:
-code and analytics that stay readable and correct over the long run, with **deep
-test coverage** and **explicit approval gates** so you can trust what ships.
+code and analytics that stay readable and correct over the long run, built
+**test-first** with **explicit approval gates** so you can trust what ships.
 
 It is **stack-agnostic** with **Python-first reference scripts** — drop it into
 any repo and wire the harness to that repo's tooling.
@@ -81,12 +81,21 @@ same artifacts and run the gates with you.
 
 - **Traceability** — every line of intent ties back to a stakeholder need and
   forward to a test; orphans are caught mechanically.
+- **Test-driven** — the G2 test case for each requirement is written as a
+  *failing* test before the code that satisfies it (red → green → refactor), so
+  implementation is pulled by the spec, not retrofitted to it.
 - **Single source of truth** — facts live once and are referenced by id, so docs
   and code can't quietly contradict each other.
 - **Modularity & dedup** — pure cores split from I/O shells; shared logic in one
   place; a one-page, generated architecture map that can't drift.
 - **Honest gates** — machine-checkable where possible; everything else is
   explicitly classified, never hand-waved.
+
+> **Scope — generate vs. measure.** This kit *generates* legibility (the traced
+> spine, the committed code map, the gates), so a repo built with it should score
+> well by construction. *Measuring* legibility over time — AI-readiness or
+> complexity/churn dashboards — is a separate, **optional downstream** concern,
+> not a kit dependency (see [`PROCESS.md`](project-trajectory/PROCESS.md) §7).
 
 See [`project-trajectory/README.md`](project-trajectory/README.md) for the full
 tour and the tuning knobs (`COVERAGE_THRESHOLD`, `MAX_ROUNDS`, dropping hats for

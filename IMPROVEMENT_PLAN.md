@@ -255,6 +255,20 @@ points at status.md.
 
 ## Thread 4 — Make test-driven development a co-headline discipline
 
+**Status: ✅ landed 2026-06-29.** TDD co-headlined without displacing the
+traceability spine. `README.md`: the opening headline now reads built
+**test-first** (was "deep test coverage"), and "Why this produces sustainable
+code" gained a **Test-driven** bullet (the G2 TC is a failing test before the
+code — red→green→refactor — so implementation is pulled by the spec, not
+retrofitted). `PROCESS.md` G3 is retitled **Implementation (test-first)** and
+states the loop (each G2 TC becomes a failing test before its code), explicitly
+framed as operating *within* the `SN→SR→LLR→TC` discipline, not instead of it.
+`AGENTS.template.md` gained a tight **Write the test first (TDD)** bullet in "How
+we work here." **Deviation from the spec as written:** the AGENTS bullet leans on
+the adjacent "Everything traces" bullet for the spine framing rather than
+restating it, and three nearby lines were tightened, to keep the file under the
+~12k Gemini cap (11,993 chars after; see Thread 6 note). `pytest -q`: 62 passed.
+
 **Goal:** elevate TDD from *implied* to an **explicitly stated working
 discipline**. The process is already TDD-shaped — G2 requires a TC for every
 SR/LLR *before* implementation at G3 — but the red→green→refactor loop is nowhere
@@ -374,6 +388,23 @@ Provision/Startup-phase requirement; `pytest -q` green.
 ---
 
 ## Thread 6 — Requirement consistency review (contradictions + clarification)
+
+**Status: ✅ landed 2026-06-29.** `PROCESS.md` §4 gained a **Consistency review
+(G1; re-checked at G2)** block owned by the **System Engineer** hat: it reads the
+needs/requirements *against each other* for the conflicts a script can't see
+(contradictory acceptance criteria/limits, mutually exclusive behaviors,
+duplicate/overlapping requirements, ambiguous/underspecified needs, overlapping
+`Area`/hat ownership), explicitly classified **non-machine-checkable**
+(Manual/Analysis — never implying `trace.py` does it; an independent LLM reviewer
+§6 may do a first-pass sweep but the human makes the call), wired to the §5
+findings protocol with **pause-and-ask** for human decisions, integrated as the
+reachable-human flip side of Thread 3's *Assumptions* logging (assume only when
+unattended; solicit clarification when a human is available), with unresolved
+items tracked in `status.md` *Open items* and framed as the **consistency**
+complement to G1 *completeness* (not a restatement). `AGENTS.template.md`'s "Ask,
+don't assume" working-agreement bullet gained a clause to raise a conflict/
+ambiguity as a finding rather than silently resolve it. **No deviations.**
+`pytest -q`: 62 passed.
 
 **Goal:** add an explicit review activity that hunts for **mutual contradictions
 and ambiguities** across needs/requirements and routes them to a human — distinct
@@ -512,6 +543,23 @@ green.
 ---
 
 ## Thread 8 — Name the companion-tooling boundary (measure vs. generate; map vs. index)
+
+**Status: ✅ landed 2026-06-29.** Both boundaries named in `PROCESS.md` (the
+canonical home) with a brief `README.md` echo. §3 (by the generated code map)
+states **the committed map is a contract, not a search index**: `gen_arch_map.py`
+is a committed/diff-reviewable/drift-gated artifact, while query-time
+**semantic-retrieval tools** (LSP code-graph servers, Serena-style MCP indexes)
+are an optional downstream accelerator that **doesn't replace** it and must **not**
+be hard-wired (would break stdlib-only / add a server/LSP dep). §7 states **the
+kit generates legibility; it does not score it**: *measuring* legibility over time
+(AI-readiness, complexity/churn dashboards) runs as an optional **external
+readiness assessor**, the same stance as `ruff`/`pytest` (name the gate; the
+project picks the tool) — "generate here; measure there." `README.md`'s "Why"
+section gained a **Scope — generate vs. measure** note pointing at §7.
+**Deviation from the spec as written:** no `AGENTS.md` change — the thread's
+"prefer PROCESS.md + README, link from AGENTS.md" was taken as PROCESS+README
+only, to protect the ~12k cap already spent by Threads 4/6. No new kit dependency
+introduced. `pytest -q`: 62 passed.
 
 **Why (from a survey of the sibling `ai-native-toolkit`, 2026-06-29):** the kit is
 the **generative** half of codebase legibility — it *builds* the traced spine, the
@@ -738,23 +786,26 @@ protocol, is wired into the harness (size gated at `full`, runtime warn at
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
-**7 ✅** (2026-06-29 — the `UN→SN` rename). Remaining work is **four sessions, in
-order** (later sessions depend on earlier ones). The rule: **batch the light,
-file-coherent threads; keep each new-script build solo** — re-establishing
-context per thread is the cost to avoid, and a from-scratch script + test-suite +
-debug loop is the context-heavy case the "wide change" caution (below) is about.
+**7 ✅**, **4 ✅**, **6 ✅**, **8 ✅** (2026-06-29). Remaining work is **three
+sessions, in order** (later sessions depend on earlier ones). The rule: **batch
+the light, file-coherent threads; keep each new-script build solo** —
+re-establishing context per thread is the cost to avoid, and a from-scratch script
++ test-suite + debug loop is the context-heavy case the "wide change" caution
+(below) is about.
 
-> ▶ **NEXT — Session A · Process-doc framing (Threads 4, 6, 8).** Pure prose, no
-> new scripts, no tests. Each edits a *different* section of PROCESS.md (4→G3,
-> 6→§4-5, 8→§3/§7) plus README/AGENTS.md. Batch because **4 and 6 both add an
-> AGENTS.md clause** — one coordinated pass respects the ~12k Gemini cap instead
-> of thrashing it twice.
+> **Session A ✅ landed 2026-06-29 · Process-doc framing (Threads 4, 6, 8).** Pure
+> prose. 4→PROCESS G3 (Implementation test-first), 6→PROCESS §4 (Consistency
+> review block) + §5 wiring, 8→PROCESS §3 (map-vs-index) + §7 (generate-vs-measure),
+> plus README + AGENTS.md clauses for 4/6. The coordinated AGENTS.md pass landed at
+> 11,993 chars (under the ~12k Gemini cap) by tightening the new bullets and three
+> adjacent lines; Thread 8 stayed out of AGENTS.md to protect that budget.
 
-**Session B · Requirement-capture enrichment (Threads 5, 10).** Both touch the
-SN/SR templates, EXAMPLE.md, and PROCESS §1-2, and each adds an EXAMPLE row. 10
-also adds the new `performance-budgets` registry (so it needs `bootstrap.py`
-MAPPING wiring) + an optional `trace.py` hook; 5 adds its schema-tolerance test.
-One coherent pass over the templates beats two separate re-reads.
+> ▶ **NEXT — Session B · Requirement-capture enrichment (Threads 5, 10).** Both
+> touch the SN/SR templates, EXAMPLE.md, and PROCESS §1-2, and each adds an EXAMPLE
+> row. 10 also adds the new `performance-budgets` registry (so it needs
+> `bootstrap.py` MAPPING wiring) + an optional `trace.py` hook; 5 adds its
+> schema-tolerance test. One coherent pass over the templates beats two separate
+> re-reads.
 
 **Session C · Doc navigability check (Thread 9).** Solo build — new stdlib
 `check_docs.py` + harness step + fixture tests. After A/B so it link-checks

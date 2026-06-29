@@ -38,14 +38,16 @@ gates, and the ID scheme. The short version an agent needs every session:
 - **Everything traces:** `SN → SR → LLR → TC`. Intent lives once, as an id, and
   children link to it. The matrix is generated (`scripts/trace.py`) and must
   report **0 orphans** before a gate.
-- **Gates G1→G2→G3→(G-Release)→G-Final each pause for human approval.** Don't advance past a
-  gate on your own; record the decision in [docs/status.md](docs/status.md).
+- **Write the test first (TDD).** A requirement's G2 test case is a *failing*
+  test before the code that satisfies it: red → green → refactor. This is *how*
+  G3 code gets written — within the traceability spine above, not instead of it.
+- **Gates G1→G2→G3→(G-Release)→G-Final each pause for human approval.** Don't
+  advance a gate yourself; record it in [docs/status.md](docs/status.md).
 - **The check harness is the bar:** `python scripts/check.py` (or
   `scripts/check.sh` / `scripts/check.ps1`) runs format, lint, tests, coverage,
   traceability, the design-flow check, and architecture-map freshness. Use
-  `--tier smoke` for the fast every-iteration subset; the full/release tiers
-  run pre-merge and at release. Never report a result you didn't run — paste
-  the real output.
+  `--tier smoke` for the fast subset; full/release run pre-merge and at release.
+  Never report a result you didn't run — paste the real output.
 - **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
   anything concurrent/non-blocking) live as authored Mermaid sequence diagrams
   in [docs/architecture.md](docs/architecture.md) "Runtime flows", written with
@@ -183,7 +185,9 @@ How to collaborate here. Direct and concrete; explain the *why* before the *how*
   ask before writing code — no silent assumptions. Running unattended, pick the
   most reasonable interpretation, proceed, and **record it** under *Assumptions*
   in [docs/status.md](docs/status.md) (confirm or revert at the next gate) rather
-  than blocking.
+  than blocking. Likewise, raise a **conflict or ambiguity** between requirements
+  as a finding and ask — don't silently resolve it (docs/process.md §4
+  "Consistency review").
 - **Right-size the solution.** The simplest thing that satisfies the requirement;
   no speculative flexibility. But judge "simple" against the whole design — don't
   contort the architecture to reuse a tidy helper. Flag over-engineering either

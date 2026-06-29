@@ -133,6 +133,16 @@ marker pair wherever agents read and the generator keeps it fresh:
 Either way the harness regenerates it (`--check` fails the gate if stale), so it
 never rots. Don't hand-maintain a code map.
 
+**The committed map is a contract, not a search index.** `gen_arch_map.py`
+produces a **committed, diff-reviewable, drift-gated** artifact — part of the
+source of truth, read to learn the code's *intended* shape. Query-time
+**semantic-retrieval tools** (LSP-backed code-graph servers, Serena-style MCP
+indexes) are a *different* thing: not committed, language-server-dependent, and
+rebuilt on demand. They are a legitimate **optional downstream accelerator** for
+chasing references across a large repo, but they **don't replace** the committed
+map, and the kit must **not** hard-wire one — that would break stdlib-only and add
+a server/LSP dependency. Use one if it helps; keep it out of the required path.
+
 **Generated high-level flow.** `gen_arch_map.py --flow <entry>` emits the ordered
 internal calls of an entry/orchestrator function (each with the callee's summary)
 into a `GENERATED FLOW` marker block — a generated, drift-proof rendering of the
@@ -190,7 +200,13 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   **key runtime flows are diagrammed and pass `check_flows.py`** (see §3
   "Design-time runtime flows"); harness runs locally + CI. Sign-offs: System
   Engineer, Test Engineer.
-- **G3 — Implementation.** Format/lint clean; every source module parses
+- **G3 — Implementation (test-first).** Code is written **test-first**: each G2
+  TC becomes a *failing* test before the code that satisfies it, then the minimal
+  code to pass, then refactor (red → green → refactor). TDD is *how* G3 code gets
+  written; the SN→SR→LLR→TC spine is *what* it must satisfy — it operates within
+  the traceability discipline, not instead of it. The exit criteria below
+  (coverage, every in-scope SR Verified) are what that loop drives toward.
+  Format/lint clean; every source module parses
   (`gen_arch_map.py --strict-parse`); the **full** test tier passes; coverage ≥
   `COVERAGE_THRESHOLD`; registry **schema** holds (required fields non-empty,
   `Verification`/`Tier` in vocabulary — `trace.py --strict-schema`); every
@@ -206,6 +222,23 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
 - **G-Final — Acceptance.** Human/stakeholder exercises the real product (incl.
   Demonstration/Manual items) and approves. For shipped software this is the
   human half of G-Release; for a bespoke deliverable it stands alone.
+
+**Consistency review (G1; re-checked at G2).** Separate from the *structural*
+checks `trace.py` runs — orphans, duplicate ids, schema — the **System Engineer**
+hat reads the needs and requirements **against each other** for the conflicts a
+script can't see: contradictory acceptance criteria or limits, mutually exclusive
+behaviors, duplicate or overlapping requirements, ambiguous / underspecified
+needs, and overlapping `Area`/hat ownership. This is the **consistency**
+complement to G1's *completeness* criteria, not a restatement of them, and it is
+**human/LLM judgment, not a machine check** — classify it as a Manual/Analysis
+activity and never imply `trace.py` performs it. (An independent LLM reviewer
+(§6) is well-suited to a first-pass contradiction sweep, but the **human makes the
+call**.) Route each contradiction or ambiguity through the §5 findings protocol to
+its owner; where it needs a human decision, **pause and ask — don't guess**. This
+is the reachable-human flip side of *Assumptions* logging: record an assumption
+only when **unattended**; when a human is available, **solicit clarification**.
+Track unresolved ambiguities in `status.md` *Open items*, and re-run the review at
+G2 when SRs decompose into LLRs.
 
 **Phased delivery (version subsets).** A roadmap that ships v1 before v2/v3
 needs gates that close *per phase* without dishonesty. SRs may carry an
@@ -350,6 +383,16 @@ and naming the split is what keeps the kit portable across stacks:
 The empty-vs-named `requires` tuple already implies which layer a step is in;
 `check.py --list` makes it explicit, tagging each step `[process]`/`[product]` so
 a newcomer sees at a glance which steps are fixed and which they must localize.
+
+**The kit generates legibility; it does not score it.** The harness *builds* the
+traced spine, the committed code map, and the gates, so a repo scaffolded from
+this kit should score well **by construction**. *Measuring* that legibility over
+time (AI-readiness, complexity/churn dashboards, doc-navigability scores) is a
+separate, deliberately **external** concern — run an **external readiness
+assessor** (e.g. a deterministic codebase-scoring tool) as **optional downstream
+tooling**, never a kit dependency. This is the same stance the kit takes on
+`ruff`/`pytest`: it names the gate; the project picks the tool. Generate here;
+measure there.
 
 Ready reference scripts ship with this template (Python 3.8+, stdlib only — no
 pip needed to run them):
