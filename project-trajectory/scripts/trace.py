@@ -8,7 +8,7 @@ PROCESS.md: it never needs hand-maintaining.
 
 Usage:
     python scripts/trace.py [--strict] [--require-verified] [--phase LIST]
-                            [--docs DIR]
+                            [--no-placeholders] [--strict-schema] [--docs DIR]
 
 Reads (relative to --docs, default "docs"):
     requirements/system-requirements.csv   (cols: SR-ID, UN-Refs, Verification, Status, ...)
@@ -41,7 +41,26 @@ Orphan rules (the method rules are stated once, in process.md §4):
 the exemption is explicit, never silent. A blank/absent Phase means the SR is
 in scope for every phase. Orphan rules are phase-blind: every SR keeps its
 LLR + TC rows regardless of phase.
-Placeholder example rows (ids ending in "-000") are ignored.
+
+Always (independent of --strict-schema), structural integrity is checked:
+    - a duplicated SR/LLR/TC id (the join would otherwise silently dedupe it)
+    - a malformed id (not "PREFIX-<digits>")
+These join `--strict`'s failure set like orphans do.
+
+--no-placeholders flags any leftover template example row (id ending "-000") as
+a finding — wire it in from G2 on (a fresh scaffold is exempt only until you
+claim a gate). Without it, "-000" example rows are ignored so a fresh scaffold
+starts green.
+
+--strict-schema adds data-quality checks over the real (non-placeholder) rows:
+    - required fields are non-empty (SR: SR-ID, Title, UN-Refs, Requirement,
+      AcceptanceCriteria, Priority, Verification, Status; LLR: LLR-ID, SR-Refs,
+      Title, Module, CodeSymbol, Detail, Status; TC: TC-ID, Verifies, Level,
+      Method, Tier, Expected, Automated, Status);
+    - the two *closed* vocabularies the method defines (process.md §4) hold:
+      SR Verification in {Test, Demonstration, Manual, Analysis, Inspection},
+      TC Tier in {Smoke, Full, Release}. Priority/Status are deliberately NOT
+      enumerated — the method leaves them open (e.g. Priority S, Status Planned).
 """
 
 import argparse
@@ -67,6 +86,109 @@ def is_example(rid):
     return rid.endswith("-000")
 
 
+# Id syntax per registry (for the always-on integrity check).
+ID_PATTERNS = {
+    "SR": re.compile(r"^SR-\d+$"),
+    "LLR": re.compile(r"^LLR-\d+$"),
+    "TC": re.compile(r"^TC-\d+$"),
+}
+
+# Fields that must be non-empty under --strict-schema. Deliberately omits the
+# optional columns (Rationale, Permutations, Phase, TestRefs, Parameters).
+REQUIRED_FIELDS = {
+    "SR": [
+        "SR-ID",
+        "Title",
+        "UN-Refs",
+        "Requirement",
+        "AcceptanceCriteria",
+        "Priority",
+        "Verification",
+        "Status",
+    ],
+    "LLR": ["LLR-ID", "SR-Refs", "Title", "Module", "CodeSymbol", "Detail", "Status"],
+    "TC": [
+        "TC-ID",
+        "Verifies",
+        "Level",
+        "Method",
+        "Tier",
+        "Expected",
+        "Automated",
+        "Status",
+    ],
+}
+
+# The only *closed* vocabularies the method defines (process.md §4). Priority and
+# Status are intentionally left open, so they are not validated here.
+ENUM_FIELDS = {
+    "SR": {
+        "Verification": {"Test", "Demonstration", "Manual", "Analysis", "Inspection"}
+    },
+    "TC": {"Tier": {"Smoke", "Full", "Release"}},
+}
+
+
+def id_key(label):
+    return label + "-ID"
+
+
+def integrity_findings(label, raw_rows):
+    """Duplicated or malformed ids in one registry (example '-000' rows skipped —
+    those are the placeholder check's job, never an integrity error)."""
+    key, pattern = id_key(label), ID_PATTERNS[label]
+    found, seen = [], set()
+    for r in raw_rows:
+        rid = r.get(key)
+        if not rid or is_example(rid):
+            continue
+        if not pattern.match(rid):
+            found.append(f"{label} id {rid!r} is malformed (expected {label}-<digits>)")
+        elif rid in seen:
+            found.append(f"{label} id {rid} is duplicated")
+        seen.add(rid)
+    return found
+
+
+def placeholder_findings(label, raw_rows):
+    """Leftover template example rows (ids ending '-000') in one registry."""
+    key = id_key(label)
+    return [
+        f"{label} placeholder row {r[key]} still present "
+        "(replace the template example before this gate)"
+        for r in raw_rows
+        if r.get(key) and is_example(r[key])
+    ]
+
+
+def scan_un_placeholders(un_md):
+    """Sorted unique '-000' UN ids still present in user-needs.md (if it exists)."""
+    if not un_md.exists():
+        return []
+    text = un_md.read_text(encoding="utf-8")
+    return sorted({u for u in re.findall(r"\bUN-\d+\b", text) if is_example(u)})
+
+
+def schema_findings(label, rows):
+    """Empty required fields and out-of-vocabulary Verification/Tier values, over
+    the real (non-placeholder) rows of one registry."""
+    key = id_key(label)
+    out = []
+    for r in rows:
+        rid = r[key]
+        for col in REQUIRED_FIELDS[label]:
+            if not (r.get(col) or "").strip():
+                out.append(f"{label} {rid} has empty required field {col}")
+        for col, allowed in ENUM_FIELDS.get(label, {}).items():
+            val = (r.get(col) or "").strip()
+            if val and val not in allowed:
+                out.append(
+                    f"{label} {rid} has {col}={val!r} (allowed: "
+                    f"{', '.join(sorted(allowed))})"
+                )
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
@@ -83,25 +205,31 @@ def main():
         help="comma-separated phases in scope (e.g. v1 or v1,v2): scopes "
         "--require-verified to SRs whose Phase is blank or listed",
     )
+    ap.add_argument(
+        "--no-placeholders",
+        action="store_true",
+        help="flag any leftover '-000' template example row (use from G2 on)",
+    )
+    ap.add_argument(
+        "--strict-schema",
+        action="store_true",
+        help="also require non-empty required fields and valid "
+        "Verification/Tier values on the real rows",
+    )
     ap.add_argument("--docs", default="docs", help="docs directory (default: docs)")
     args = ap.parse_args()
     docs = Path(args.docs)
 
-    srs = [
-        r
-        for r in load_csv(docs / "requirements" / "system-requirements.csv")
-        if r.get("SR-ID") and not is_example(r["SR-ID"])
-    ]
-    llrs = [
-        r
-        for r in load_csv(docs / "requirements" / "low-level-requirements.csv")
-        if r.get("LLR-ID") and not is_example(r["LLR-ID"])
-    ]
-    tcs = [
-        r
-        for r in load_csv(docs / "test" / "test-cases.csv")
-        if r.get("TC-ID") and not is_example(r["TC-ID"])
-    ]
+    raw_srs = load_csv(docs / "requirements" / "system-requirements.csv")
+    raw_llrs = load_csv(docs / "requirements" / "low-level-requirements.csv")
+    raw_tcs = load_csv(docs / "test" / "test-cases.csv")
+
+    # The working sets exclude template example rows (ids ending "-000") so a
+    # fresh scaffold has nothing to orphan; the raw lists above keep them for the
+    # placeholder and integrity checks below.
+    srs = [r for r in raw_srs if r.get("SR-ID") and not is_example(r["SR-ID"])]
+    llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
+    tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
 
     un_ids = set()
     un_md = docs / "requirements" / "user-needs.md"
@@ -182,6 +310,21 @@ def main():
                     f"{r.get('Status', '') or '(blank)'} (G3 requires Verified)"
                 )
 
+    raw = {"SR": raw_srs, "LLR": raw_llrs, "TC": raw_tcs}
+    real = {"SR": srs, "LLR": llrs, "TC": tcs}
+    integrity = [f for label in raw for f in integrity_findings(label, raw[label])]
+    placeholders = (
+        [f for label in raw for f in placeholder_findings(label, raw[label])]
+        + [f"UN placeholder {u} still present" for u in scan_un_placeholders(un_md)]
+        if args.no_placeholders
+        else []
+    )
+    schema = (
+        [f for label in real for f in schema_findings(label, real[label])]
+        if args.strict_schema
+        else []
+    )
+
     lines = (
         [
             "# Coverage & Traceability Report",
@@ -195,12 +338,19 @@ def main():
             f"| Low-level requirements (LLR) | {len(llrs)} |",
             f"| Test cases (TC) | {len(tcs)} |",
             f"| Orphans | {len(orphans)} |",
+            f"| Integrity findings | {len(integrity)} |",
         ]
         + (
             [f"| Status findings | {len(status_findings)} |"]
             if args.require_verified
             else []
         )
+        + (
+            [f"| Placeholder findings | {len(placeholders)} |"]
+            if args.no_placeholders
+            else []
+        )
+        + ([f"| Schema findings | {len(schema)} |"] if args.strict_schema else [])
         + [
             "",
             "## SR -> LLR -> TC matrix",
@@ -216,6 +366,26 @@ def main():
         lines.append(f"| {sid} | {kids} | {tests} | {r.get('Status', '')} |")
     lines += ["", "## Orphans", ""]
     lines += ["None. Full coverage."] if not orphans else [f"- {o}" for o in orphans]
+    lines += ["", "## Integrity", ""]
+    lines += (
+        ["None. Ids are unique and well-formed."]
+        if not integrity
+        else [f"- {f}" for f in integrity]
+    )
+    if args.no_placeholders:
+        lines += ["", "## Placeholders (--no-placeholders)", ""]
+        lines += (
+            ["None. No '-000' template rows remain."]
+            if not placeholders
+            else [f"- {f}" for f in placeholders]
+        )
+    if args.strict_schema:
+        lines += ["", "## Schema findings (--strict-schema)", ""]
+        lines += (
+            ["None. Required fields present; Verification/Tier in vocabulary."]
+            if not schema
+            else [f"- {f}" for f in schema]
+        )
     if args.require_verified:
         scope = f" — phase scope: {args.phase}" if phases else ""
         lines += ["", f"## Status findings (--require-verified{scope})", ""]
@@ -234,12 +404,16 @@ def main():
 
     print(
         f"Traceability: UN={len(un_ids)} SR={len(srs)} LLR={len(llrs)} "
-        f"TC={len(tcs)} orphans={len(orphans)}"
+        f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"
         + (f" status-findings={len(status_findings)}" if args.require_verified else "")
+        + (f" placeholders={len(placeholders)}" if args.no_placeholders else "")
+        + (f" schema-findings={len(schema)}" if args.strict_schema else "")
         + (f" phase-deferred={len(phase_deferred)}" if phases else "")
         + f". Report -> {out}"
     )
-    if args.strict and (orphans or status_findings):
+    if args.strict and (
+        orphans or status_findings or integrity or placeholders or schema
+    ):
         sys.exit(1)
 
 

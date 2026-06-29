@@ -30,6 +30,13 @@ What it creates in the destination:
     .github/workflows/check.yml                <- ci/check.yml
     src/, tests/                               (empty, with .gitkeep)
 
+The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.csv`)
+are always scaffolded but ship **inert**: they hold only `IF-000` placeholder
+rows that nothing reads (`trace.py` doesn't process interfaces), so a standalone
+project can simply ignore them. Fill them in only when this repo shares a
+contract with another (process.md §8). They cost nothing to leave empty, which is
+why bootstrap copies them unconditionally rather than gating them behind a flag.
+
 It then runs `gen_arch_map.py` and `trace.py` once in the new repo so the
 scaffold starts green — `check.py` would otherwise fail on the template
 placeholder between the architecture markers.

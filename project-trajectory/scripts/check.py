@@ -4,8 +4,12 @@
 Stack-agnostic kit, **Python reference implementation**. This is the runnable
 version of the "harness contract" in `process.md §7`: format · lint · tests ·
 coverage · traceability · architecture-map freshness. Wire it to your stack by
-editing the `STEPS` table below (swap `ruff`/`pytest` for your toolchain); the
-contract is the *gates and exit code*, not the specific tools.
+editing the step list the `steps()` function returns below — and the
+`SRC`/`TESTS`/tool names in the "EDIT FOR YOUR STACK" block just under the
+imports (swap `ruff`/`pytest` for your toolchain); the contract is the *gates and
+exit code*, not the specific tools. For a non-Python project, replace the
+format/lint/test commands with your own (or drop the ones you don't have); keep
+the traceability/flows/arch-map steps — they're stdlib-only and stack-agnostic.
 
 Design choices that keep it honest and CI-friendly:
     - **Never a false green.** Any failing required step makes the whole run exit
@@ -51,9 +55,16 @@ import subprocess
 import sys
 import time
 
-COVERAGE_THRESHOLD = 80  # keep in sync with process.md
-SRC = "src"  # source root (edit to match your layout)
+# ============================ EDIT FOR YOUR STACK ============================
+# The stack-specific knobs live here. For a non-Python project: point SRC/TESTS
+# at your layout, then swap the format/lint/tests commands in steps() (search
+# "EDIT FOR YOUR STACK" again) for your toolchain — or drop a step you don't
+# have. The traceability, design-flows, and arch-map steps are stdlib-only and
+# stack-agnostic; keep them as-is.
+SRC = "src"  # source root
 TESTS = "tests"  # test root
+COVERAGE_THRESHOLD = 80  # line-coverage %, enforced at full/release (process.md)
+# ============================================================================
 
 # Tier -> pytest marker expression. Tiers are cumulative, and the safe default
 # is opt-OUT: an unmarked test runs in `full` and `release`, so forgetting a
@@ -76,6 +87,14 @@ COVERAGE_TIERS = ("full", "release", "all")
 # interpreter; () = stdlib-only), the command, and the set of gates that require
 # it. Edit commands to fit your stack; keep the gate tags.
 def steps(coverage, tier, gate, phase=None):
+    # --- EDIT FOR YOUR STACK: the format/lint/test commands -------------------
+    # `pytest_cmd` (assembled here because it varies by tier/coverage) and the
+    # `ruff` format/lint entries in the returned list are the Python-reference
+    # toolchain. Replace them with your stack's equivalents — or drop a step you
+    # don't have — but keep each step's gate tags. Tools run as `python -m <mod>`
+    # via this interpreter, so the launcher's venv python is enough (no PATH/venv
+    # dance). `pytest_needs` lists the modules a step imports, so a missing tool
+    # is reported SKIP(missing) and (outside --lenient) fails rather than passing.
     pytest_cmd = [sys.executable, "-m", "pytest", "-q"]
     pytest_needs = ("pytest",)
     if tier in COVERAGE_TIERS:
@@ -88,9 +107,13 @@ def steps(coverage, tier, gate, phase=None):
     marker = TIERS.get(tier)
     if marker:
         pytest_cmd += ["-m", marker]
-    trace_cmd = [sys.executable, "scripts/trace.py", "--strict"]
+    # The traceability step only runs at G2/G3, where placeholder rows must be
+    # gone, so --no-placeholders is always on here (a fresh scaffold is exempt
+    # only because nothing past G1 runs against it).
+    trace_cmd = [sys.executable, "scripts/trace.py", "--strict", "--no-placeholders"]
     if gate in ("G3", "all"):  # G3 criterion: test-verifiable SRs are Verified
         trace_cmd.append("--require-verified")
+        trace_cmd.append("--strict-schema")  # G3: required fields + valid enums
         if phase:  # phased delivery: close G3 for this phase only (process.md §4)
             trace_cmd += ["--phase", phase]
     return [
@@ -114,7 +137,7 @@ def steps(coverage, tier, gate, phase=None):
         (
             "design-flows",
             (),
-            [sys.executable, "scripts/check_flows.py"],
+            [sys.executable, "scripts/check_flows.py", "--no-placeholders"],
             {"G2", "G3"},
         ),
         # Add `--doc AGENTS.md` / `--doc CLAUDE.md` to route the map there too, and
@@ -126,6 +149,7 @@ def steps(coverage, tier, gate, phase=None):
                 sys.executable,
                 "scripts/gen_arch_map.py",
                 "--check",
+                "--strict-parse",
                 "--src",
                 SRC,
                 "--doc",

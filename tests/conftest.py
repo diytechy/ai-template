@@ -105,6 +105,16 @@ def make_minimal_project(root):
     (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")
     (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
     (root / "docs" / "test" / "test-cases.csv").write_text(TCS, encoding="utf-8")
+    # A G2-complete project replaces the template's placeholder Runtime-flows
+    # citations (SR-000/LLR-000) with its real ids, so the harness's
+    # check_flows --no-placeholders step is satisfied.
+    arch = root / "docs" / "architecture.md"
+    arch.write_text(
+        arch.read_text(encoding="utf-8")
+        .replace("SR-000", "SR-001")
+        .replace("LLR-000", "LLR-001"),
+        encoding="utf-8",
+    )
     proc = run_py(["scripts/gen_arch_map.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     return root

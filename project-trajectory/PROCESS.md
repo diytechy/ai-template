@@ -163,17 +163,21 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   acceptance criteria; usability/doc needs + constraints + non-goals captured.
   Sign-offs: End User, UX, System Engineer.
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or
-  Analysis/Inspection); every SR and LLR → ≥1 TC; traceability **0 orphans**;
-  **every SR with variable inputs has its dimensions enumerated (`Permutations`)
-  and a stated combination strategy, with boundary values covered** (see
-  "Dimensional coverage" below); **key runtime flows are diagrammed and pass
-  `check_flows.py`** (see §3 "Design-time runtime flows"); harness runs
-  locally + CI. Sign-offs: System Engineer, Test Engineer.
-- **G3 — Implementation.** Format/lint clean; the **full** test tier passes;
-  coverage ≥ `COVERAGE_THRESHOLD`; every **in-scope** test-verifiable SR
-  **Verified** (phase-scoped — see "Phased delivery" below); every other SR
-  explicitly **Demonstration / Manual / Inspection**. Sign-offs: System
+  Analysis/Inspection); every SR and LLR → ≥1 TC; traceability **0 orphans** and
+  ids unique/well-formed; **no `-000` placeholder rows or flow citations remain**
+  (`trace.py`/`check_flows.py --no-placeholders`); **every SR with variable
+  inputs has its dimensions enumerated (`Permutations`) and a stated combination
+  strategy, with boundary values covered** (see "Dimensional coverage" below);
+  **key runtime flows are diagrammed and pass `check_flows.py`** (see §3
+  "Design-time runtime flows"); harness runs locally + CI. Sign-offs: System
   Engineer, Test Engineer.
+- **G3 — Implementation.** Format/lint clean; every source module parses
+  (`gen_arch_map.py --strict-parse`); the **full** test tier passes; coverage ≥
+  `COVERAGE_THRESHOLD`; registry **schema** holds (required fields non-empty,
+  `Verification`/`Tier` in vocabulary — `trace.py --strict-schema`); every
+  **in-scope** test-verifiable SR **Verified** (phase-scoped — see "Phased
+  delivery" below); every other SR explicitly **Demonstration / Manual /
+  Inspection**. Sign-offs: System Engineer, Test Engineer.
 - **G-Release — Release readiness** *(per release; skip for a one-off
   deliverable)*. The **release** test tier passes (incl. slow/hardware tests);
   the generated **release checklist** (`scripts/gen_release_checklist.py`) is
@@ -315,22 +319,29 @@ pip needed to run them):
 
 - `scripts/check.py` — the harness itself. Gate-scoped (`--gate G2|G3|all`), runs
   format · lint · tests · coverage · traceability · arch-map freshness, and exits
-  nonzero on any failure. Wire it to your stack by editing its `STEPS` table; the
-  contract is the gates + exit code, not the specific tools. CI runs the same
-  command (`ci/check.yml`).
+  nonzero on any failure. Wire it to your stack by editing the step list its
+  `steps()` function returns (and the `SRC`/`TESTS`/tool names in the "EDIT FOR
+  YOUR STACK" block at the top); the contract is the gates + exit code, not the
+  specific tools. CI runs the same command (`ci/check.yml`).
 - `scripts/trace.py` — joins the registries, writes `docs/test/report.md`, exits
-  nonzero on orphans with `--strict`; `--require-verified` adds the G3 status
+  nonzero on orphans with `--strict`. It also always checks **integrity**
+  (duplicate or malformed ids). `--require-verified` adds the G3 status
   criterion (every `Verification=Test` SR must be `Verified`); `--phase v1`
   scopes that criterion for phased delivery (§4), reporting out-of-phase SRs as
-  explicitly deferred. Called by `check.py` at G2/G3 (the G3 run adds
-  `--require-verified`, plus `--phase` when given).
+  explicitly deferred. `--no-placeholders` rejects any leftover `-000` template
+  row (so a scaffold can't pass a gate unfilled); `--strict-schema` requires the
+  non-empty fields and the two closed vocabularies (`Verification`, `Tier`) the
+  method defines — `Priority`/`Status` are intentionally left open. Called by
+  `check.py` at G2/G3: the G2+ run adds `--no-placeholders`; the G3 run adds
+  `--require-verified` and `--strict-schema` (plus `--phase` when given).
 - `scripts/check_flows.py` — verifies the authored **"Runtime flows"** section
   (§3 "Design-time runtime flows"): present, ≥1 Mermaid diagram, every cited
   SR/LLR id real. Run by `check.py` at G2/G3.
 - `scripts/gen_arch_map.py` — regenerates the module/function map in
   `architecture.md` from the source tree (and surfaces `Implements:` back-links),
   plus the Mermaid **dependency diagram** between its markers; `--check` fails
-  when the doc is stale, so neither can drift.
+  when the doc is stale, so neither can drift. `--strict-parse` additionally
+  fails on any module that won't parse (the G3 run passes it).
 - `scripts/gen_release_checklist.py` — generates the human **release checklist**
   for `G-Release` from the registries: every Demonstration/Manual/Inspection SR,
   every Release-tier/manual TC, the UN acceptance intents, and provided

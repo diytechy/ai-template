@@ -2,6 +2,13 @@
 
 Date: 2026-06-26
 
+> **Resolution — 2026-06-28.** All eight findings were validated against the code
+> and addressed; see the "Resolution" section at the end for the per-finding
+> outcome, severity adjustments, and what was deliberately scoped or declined.
+> The test suite the original review could not run is green: `ruff format
+> --check` + `ruff check` clean, `python -m pytest -q` → **50 passed** (37
+> pre-existing + 13 new).
+
 ## Summary
 
 This repository has a strong foundation for a reusable, requirement-traced project template. The documentation is unusually explicit about gates, traceability, and human approval; the scripts are mostly stdlib-only where promised; and the self-tests exercise real downstream scaffolds, which is exactly the right kind of coverage for a template kit.
@@ -172,3 +179,52 @@ After that, consider adding strict parse behavior for `gen_arch_map.py`, making 
 The test suite could not be run on the reviewed host because `python3`, `git`, and related developer commands were intercepted by `xcode-select` due to missing Apple command-line tools.
 
 Static review was completed against the working tree.
+
+## Resolution (2026-06-28)
+
+Each finding was re-checked against the source before acting. The suite was run
+(the original review could not): `ruff format --check` + `ruff check` clean,
+`python -m pytest -q` → **50 passed**.
+
+### Severity adjustments
+
+- **#1 and #2 were tagged High but describe documented, by-design behavior.** The
+  docs already disclose the Python-reference posture, so these were treated as
+  Low-severity polish, not correctness defects.
+- **#1's launcher recommendation was partly misapplied.** The quick-start command
+  is `bootstrap.py`, which the `setup.sh`/`check.sh` launchers don't run (those
+  are copied *into* the downstream repo). Switching wholesale to `python3` would
+  also break Windows, where it's usually `python`/`py`. Fixed with a concise
+  cross-platform interpreter note instead.
+- **#4's enum suggestion was narrowed.** Only `Verification` and `Tier` are
+  closed vocabularies in process.md §4. `Priority` and `Status` are open in the
+  kit's own fixtures (`Priority=S`, `Status=Planned`), so enforcing enums on them
+  would have forced downstream migration; they are validated for presence only.
+
+### Per-finding outcome
+
+| # | Outcome |
+|---|---|
+| 1 | **Done (doc).** Added a cross-platform interpreter note (`python`/`python3`/`py`, macOS Command Line Tools) to both READMEs. |
+| 2 | **Done.** Added an "EDIT FOR YOUR STACK" banner in `check.py` (knobs) and a marked tool-command block in `steps()`; documented the non-Python path. Also fixed a real drift the review missed: the docs said edit the "`STEPS` table" but the code has a `steps()` function — corrected in `check.py`, `PROCESS.md`, `README.md`. **Declined** forking `check.python.py`/`check.generic.py` (would duplicate ~220 lines and violate the kit's own no-duplication rule). |
+| 3 | **Done.** Opt-in `--no-placeholders` on `trace.py` and `check_flows.py`, wired into the harness from **G2** on. A fresh scaffold still starts green (G0/G1); you can no longer claim G2 with `-000` placeholder rows or flow citations. |
+| 4 | **Done.** `trace.py` now always checks **integrity** (duplicate / malformed ids) under `--strict`, and an opt-in `--strict-schema` (wired into **G3**) validates required fields + the `Verification`/`Tier` vocabularies. |
+| 5 | **Done.** `gen_arch_map.py --strict-parse` fails on any unparseable module (independent of `--check` staleness); the G3 harness run passes it. |
+| 6 | **Done (doc).** Reconciled the wording: `bootstrap.py` now documents that interface artifacts are scaffolded **inert** (placeholder-only, unread by `trace.py`) and standalone projects ignore them — no new flag, since they cost nothing to leave empty. |
+| 7 | **Done.** Replaced the CI `\|\| true` sample with explicit "choose one" install lines that fail loudly. |
+| 8 | **Done (doc).** "Design rules (enforced)" → "(reviewed)", clarifying the generated map/diagram make violations *visible* but enforcement is the reviewer's. |
+
+### Documentation kept in sync (single-source-of-truth)
+
+`PROCESS.md` §4 (G2/G3 criteria) and §7 (script contracts), both READMEs, and the
+relevant script docstrings were updated so the gates honestly state what is now
+machine-enforced.
+
+### Behavior-change note for downstream repos
+
+G2 now mechanically rejects leftover `-000` placeholders, and G3 adds schema +
+strict-parse checks. A repo upgrading the kit may see **new, legitimate**
+failures where required fields are blank, a `Verification`/`Tier` value is
+mistyped, placeholder rows were never replaced, or a module doesn't parse. These
+surface real gaps rather than forcing cosmetic migration; the open `Priority`/
+`Status` vocabularies were deliberately left unenforced to avoid churn.

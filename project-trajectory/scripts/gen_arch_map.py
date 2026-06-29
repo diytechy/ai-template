@@ -42,15 +42,25 @@ GitHub/GitLab and the VS Code Markdown preview render mermaid fences natively,
 so the kit needs no diagram toolchain — and layering violations (e.g. an arrow
 from `common` into `engine`) are visible at a glance.
 
-Usage:
-    python scripts/gen_arch_map.py [--src SRC ...] [--doc FILE ...] [--flow ENTRY] [--check]
+A syntax-broken module is rendered as a `PARSE ERROR` summary rather than
+crashing the run (so the rest of the map still generates). That keeps the error
+*visible*, but `--check` alone would still pass once the PARSE ERROR text is
+written; pass `--strict-parse` to also *fail* on any unparseable module — for a
+non-Python stack where this map is the only parse signal, or to belt-and-braces
+the lint/test steps.
 
-    --src     One or more source roots to scan (default: src). Repeatable.
-    --doc     File(s) to update in place (default: docs/architecture.md).
-              Repeatable — each must contain the MODULE MAP marker pair.
-    --flow    Entry function (e.g. `run` or `module:run`) whose call sequence is
-              spliced into the FLOW markers of any --doc that has them.
-    --check   Do not write; exit 1 if any target is out of date (use in CI/harness).
+Usage:
+    python scripts/gen_arch_map.py [--src SRC ...] [--doc FILE ...] [--flow ENTRY]
+                                   [--check] [--strict-parse]
+
+    --src           One or more source roots to scan (default: src). Repeatable.
+    --doc           File(s) to update in place (default: docs/architecture.md).
+                    Repeatable — each must contain the MODULE MAP marker pair.
+    --flow          Entry function (e.g. `run` or `module:run`) whose call
+                    sequence is spliced into the FLOW markers of any --doc.
+    --check         Do not write; exit 1 if any target is out of date (CI/harness).
+    --strict-parse  Exit 1 if any scanned module fails to parse (independent of
+                    --check staleness).
 
 Marker pairs (the templates ship with them):
     <!-- BEGIN GENERATED MODULE MAP -->  ... <!-- END GENERATED MODULE MAP -->   (required per --doc)
@@ -247,6 +257,26 @@ def build_map(src_roots):
         else:
             sections.append("_(no public items)_")
     return "\n".join(sections)
+
+
+def collect_parse_errors(src_roots):
+    """(rel, message) for every scanned module that fails to parse. Used by
+    --strict-parse to fail the gate, rather than only surfacing the PARSE ERROR
+    text in the map (which `--check` would treat as up to date)."""
+    errs = []
+    files, _ = _module_files(src_roots)
+    for path, root_parent in files:
+        try:
+            ast.parse(path.read_text(encoding="utf-8"))
+        except SyntaxError as exc:
+            rel = (
+                path.relative_to(root_parent)
+                .with_suffix("")
+                .as_posix()
+                .replace("/__init__", "")
+            )
+            errs.append((rel, str(exc)))
+    return errs
 
 
 def _resolve_import(imp, importer_rel, known):
@@ -446,6 +476,11 @@ def main():
         action="store_true",
         help="do not write; exit 1 if any target is stale",
     )
+    ap.add_argument(
+        "--strict-parse",
+        action="store_true",
+        help="exit 1 if any scanned module fails to parse",
+    )
     args = ap.parse_args()
 
     src_roots = args.src or ["src"]
@@ -483,9 +518,20 @@ def main():
         else:
             print("code map already up to date -> {}".format(doc))
 
+    strict_fail = False
+    if args.strict_parse:
+        for rel, msg in collect_parse_errors(src_roots):
+            print(
+                "strict-parse: {} failed to parse — {}".format(rel, msg),
+                file=sys.stderr,
+            )
+            strict_fail = True
+
+    if args.check and stale:
+        sys.exit(1)
+    if strict_fail:
+        sys.exit(1)
     if args.check:
-        if stale:
-            sys.exit(1)
         print("code map up to date.")
 
 

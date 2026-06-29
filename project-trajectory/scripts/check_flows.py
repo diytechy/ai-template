@@ -12,7 +12,7 @@ inferring it from registry rows.
 This checker keeps that section honest (stdlib only, like trace.py):
 
     python scripts/check_flows.py [--doc docs/architecture.md] [--docs docs]
-                                  [--require N]
+                                  [--require N] [--no-placeholders]
 
 Failures (exit 1):
     - the doc has no "Runtime flows" heading;
@@ -22,6 +22,8 @@ Failures (exit 1):
 
 Placeholder ids ending in "-000" (the templates' examples) satisfy the
 "cites an id" rule and are never validated, so a fresh scaffold starts green.
+--no-placeholders (wire it in from G2 on) instead *flags* every cited "-000"
+id, so a real authored flow can't keep citing the template's example ids.
 """
 
 import argparse
@@ -95,6 +97,11 @@ def main():
         metavar="N",
         help="minimum number of flow diagrams (default: 1)",
     )
+    ap.add_argument(
+        "--no-placeholders",
+        action="store_true",
+        help="flag cited '-000' template ids instead of ignoring them (G2 on)",
+    )
     args = ap.parse_args()
 
     doc = Path(args.doc)
@@ -128,7 +135,12 @@ def main():
     for m in ID_RE.finditer(section):
         rid, kind = m.group(0), m.group(1)
         if rid.endswith("-000"):
-            continue  # template placeholder - never validated
+            if args.no_placeholders:
+                problems.append(
+                    f"placeholder id still cited: {rid} (replace the template "
+                    "example flow with real SR/LLR ids before this gate)"
+                )
+            continue  # otherwise a template placeholder - never validated
         if rid not in known[kind]:
             problems.append(f"unknown id cited: {rid}")
 

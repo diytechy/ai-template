@@ -27,7 +27,7 @@ audits.
 | `registries/interfaces.template.csv` | IF-### ↔ cross-project contracts (paired with `INTERFACES.template.md`). |
 | `scripts/bootstrap.py` | **One command to scaffold a new repo** from this kit (copies templates → `docs/`/`scripts/`/CI, renames, won't clobber). |
 | `scripts/check.py` | **The harness.** Runs format · lint · tests · coverage · traceability · arch-map freshness; gate-scoped; nonzero on failure. Python-first reference — wire to your stack. |
-| `scripts/trace.py` | **Ready-to-use** traceability checker (Python 3, stdlib only): joins the registries, writes `test/report.md`, exits nonzero on orphans with `--strict`. `--phase v1` scopes the G3 Verified criterion for phased roadmaps (out-of-phase SRs reported as explicitly deferred). Called by `check.py`. |
+| `scripts/trace.py` | **Ready-to-use** traceability checker (Python 3, stdlib only): joins the registries, writes `test/report.md`, exits nonzero on orphans (and duplicate/malformed ids) with `--strict`. `--phase v1` scopes the G3 Verified criterion for phased roadmaps (out-of-phase SRs reported as explicitly deferred); `--no-placeholders` (G2+) rejects leftover `-000` rows; `--strict-schema` (G3) checks required fields and the closed `Verification`/`Tier` vocabularies. Called by `check.py`. |
 | `scripts/check_flows.py` | Verifies the **authored "Runtime flows"** section in `architecture.md` (required from G2): diagrams present, every cited SR/LLR id real — so reviewers verify *behavior* (concurrency, ordering) from sequence diagrams, not CSV rows. Called by `check.py` at G2/G3. |
 | `scripts/gen_arch_map.py` | Generates the **code map** from the source AST — per-module summary, internal dependencies, and public symbols with `Implements:` back-links — plus a Mermaid **dependency diagram** (rendered natively by GitHub/VS Code; no toolchain). Routes into `architecture.md` and/or `AGENTS.md`/`CLAUDE.md` (repeatable `--doc`). `--flow <entry>` also renders an orchestrator's ordered call sequence (the high-level flow); `--check` fails if stale. |
 | `scripts/gen_release_checklist.py` | Generates the human **release checklist** for G-Release from the registries (every Demonstration/Manual/Inspection SR, Release-tier/manual TC, UN acceptance intent, provided interface) as back-linked tick-boxes. |
@@ -45,12 +45,15 @@ audits.
    preview). This copies the templates into `docs/`, `scripts/`, `CLAUDE.md`, and
    CI, renaming `*.template.*` to working names.
    *(Manual alternative: copy this folder in and rename by hand.)*
+   If `python` is absent or Python 2, use `python3` (Linux/macOS) or `py`
+   (Windows); the kit needs Python 3.8+.
 2. **Brief:** fill the **PROJECT BRIEF** in the new repo's `CLAUDE.md` and
    `docs/status.md`. To drive it conversationally instead, paste
    `KICKOFF_PROMPT.md` (brief filled) into your agent.
-3. **Wire the harness to your stack:** edit `scripts/check.py`'s `STEPS` for your
-   toolchain (the reference uses `ruff`/`pytest`); `trace.py` and
-   `gen_arch_map.py` are stdlib-only.
+3. **Wire the harness to your stack:** edit the step list `scripts/check.py`'s
+   `steps()` returns (and the `SRC`/`TESTS`/tool names in its "EDIT FOR YOUR
+   STACK" block) for your toolchain (the reference uses `ruff`/`pytest`);
+   `trace.py` and `gen_arch_map.py` are stdlib-only.
 4. The agent runs the gates **G1 → G2 → G3 → G-Release → G-Final** (G-Release
    only for versioned releases), pausing for your approval at each, with
    `python scripts/check.py` as the bar.

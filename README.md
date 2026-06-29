@@ -53,6 +53,12 @@ python project-trajectory/scripts/bootstrap.py --dest /path/to/your/new/repo
 python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --dry-run
 ```
 
+> **Which `python`?** The kit needs Python 3.8+. These examples say `python`; if
+> that name is missing or points at Python 2, use `python3` (usual on Linux/macOS)
+> or the `py` launcher (Windows). On a fresh macOS, the first `python3` may prompt
+> you to install the Command Line Tools — accept it (or run `xcode-select
+> --install`), which also provides `git`.
+
 This scaffolds `CLAUDE.md`, `docs/` (process, status, architecture, interfaces,
 the registries), `scripts/` (the harness), `.github/workflows/check.yml`, and
 empty `src/`/`tests/`. Then:

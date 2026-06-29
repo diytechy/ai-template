@@ -118,6 +118,19 @@ def test_dependency_diagram_empty_src(tmp_path):
     assert "(no source scanned)" in out
 
 
+def test_collect_parse_errors_flags_bad_module(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "ok.py").write_text('"""OK."""\n', encoding="utf-8")
+    (src / "bad.py").write_text("def oops(:\n    pass\n", encoding="utf-8")
+    errs = gen_arch_map.collect_parse_errors([str(src)])
+    assert [rel for rel, _ in errs] == ["src/bad"]
+
+
+def test_collect_parse_errors_clean_tree(two_module_src):
+    assert gen_arch_map.collect_parse_errors([two_module_src]) == []
+
+
 def test_splice_refuses_duplicated_markers():
     b, e = gen_arch_map.BEGIN, gen_arch_map.END
     doc = "x\n{b}\nold\n{e}\ny\n{b}\nagain\n{e}\n".format(b=b, e=e)
