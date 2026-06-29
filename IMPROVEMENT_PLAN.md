@@ -418,6 +418,79 @@ integrated with (not duplicating) Thread 3's assumption-logging; links verified.
 
 ---
 
+## Thread 7 — Name the top requirement tier honestly (User vs Stakeholder Need)
+
+**Goal:** decide whether the top tier — `UN-###`, "User Need," owned by the "End
+User" hat — is mislabeled when the system serves **another system/module** rather
+than a human, and pick a term that stays correct across human-facing,
+operator-facing, and system-to-system products. This is a naming/identity
+decision with a real migration cost, so the thread **frames** it; it does not
+pre-decide it.
+
+**Why it's a real gap.** The need that drives a system-to-system feature
+originates from the *consuming system's* owners/integrators — a **stakeholder**,
+where the immediate consumer is a system (e.g. "the billing service needs an
+idempotent charge API so it can safely retry"). The kit already *half*-handles
+this (domain hats in §1; cross-project interfaces `IF-###` in §8), but the top
+tier's **label** still says "user." Standards anchor: **ISO/IEC/IEEE 29148** names
+this tier **Stakeholder Requirements** (StRS), explicitly including users,
+operators, maintainers, regulators, *and interfacing systems* — and the kit's
+`UN→SR→LLR` spine already echoes 29148's `StRS→SyRS→SRS` layering, so "Stakeholder"
+*tightens* an alignment the structure already implies. Keep the word **"Need"**
+(the kit's deliberate plain-language-vs-engineering split: needs at the top,
+requirements below); the change is only **"User" → "Stakeholder."**
+
+**Candidate terms (the decision):**
+1. **Stakeholder Need — `SN-###`** *(recommended).* Standards-aligned; inclusive
+   of non-human consumers *and* non-consumer stakeholders (regulators, auditors,
+   the Security hat). Cost: a wide mechanical prefix rename + "End User" hat →
+   "Stakeholder" hat (End User kept as one example stakeholder) + a one-time
+   downstream migration. Minor wart: `SN` reads close to `SR` (System Requirement).
+2. **Consumer Need — `CN-###`.** More concrete/plain than "stakeholder"; covers
+   human + system consumers; prefix distinct from `SR`. But narrower (misses
+   non-consumer stakeholders) and "consumer" can imply a paying end-customer.
+3. **Keep `UN-###`, broaden the *definition*.** Zero breaking change: redefine
+   "user" as *any consumer — human, operator, or another system (represented by
+   its owner/integrator)*. Defers rather than fixes the mislabel; stretches "user."
+
+**The hinge — downstream adoption.** The term is mostly taste; the **prefix
+rename** is the cost. `UN-###` is embedded in scripts, templates, tests, EXAMPLE,
+and every cross-ref — the same wide-but-mechanical sweep as Thread 0a
+(CLAUDE→AGENTS), *plus* it forces every repo already on `UN-###` to migrate (flag
+per CLAUDE.md). **If the kit is still pre-adoption, do the clean rename now —
+never cheaper than now.** If real downstream repos already depend on `UN-`, take
+option 3 now and schedule the prefix rename for a major version.
+
+**Steps (if a rename is chosen — option 1 or 2):**
+- Grep-and-reconcile sweep of `UN-` / "User Need" / "End User" across
+  `PROCESS.md` (§1 hat, §2 id-scheme row, §3, §4 gate sign-offs, §8), the registry
+  file `registries/user-needs.template.md` (rename + headers), `EXAMPLE.md`,
+  `README.md` / `project-trajectory/README.md`, `KICKOFF_PROMPT.md`,
+  `AGENTS.template.md`.
+- `bootstrap.py` MAPPING (registry filename) and any `trace.py` prefix handling;
+  then update the test suite (grep it for `UN-` / "User Need"). Mitigate the wide
+  churn with the bootstrap file-list + trace tests, exactly as Thread 0a did.
+- Ship a one-line **downstream migration note** (sed `UN-`→`SN-`, rename the
+  needs registry file).
+
+**Steps (if keep-and-broaden — option 3):** one definition sentence in
+`PROCESS.md` §2 + the UN-template intro, and an EXAMPLE row whose stakeholder is a
+*consuming system*. No code/test churn.
+
+**Tests:** rename path — grep the suite for `UN-` / `User Need` and update; the
+bootstrap file-list + trace tests must stay green (`pytest -q`). Keep-and-broaden
+path — prose only; verify links.
+
+**Risks:** identity-level rename forces downstream migration — gate it on
+adoption. `SN`/`SR` visual proximity. Bikeshedding — timebox the term choice.
+
+**Done-when:** the top tier's label + definition stay correct for system-to-system
+scope; the term + prefix decision (and its rationale) are recorded here; if
+renamed, no dangling `UN-` / "User Need" / "End User" remains and `pytest -q` is
+green.
+
+---
+
 ## Sequencing & session strategy
 
 Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 2 ✅**,
@@ -430,6 +503,10 @@ Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 
 3. **Thread 6** (requirement consistency review) — prose; PROCESS.md §4/§5 +
    an AGENTS.md clause; pairs naturally with Thread 5 in one "requirements rigor"
    session.
+4. **Thread 7** (User vs Stakeholder Need) — a framed naming decision; cost
+   hinges on downstream adoption. If a prefix rename is chosen it's a wide,
+   Thread-0a-style sweep, so do it **alone** in its own session; resolve the
+   decision before the rename threads (5/6) touch the same registries.
 
 Each phase ends green (`pytest -q`, real output) and checks its items off here.
 
