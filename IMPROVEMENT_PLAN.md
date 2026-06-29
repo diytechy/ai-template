@@ -281,13 +281,119 @@ spine.
 
 ---
 
+## Thread 5 — Requirement lifecycle phase (ready / set / go)
+
+**Goal:** make a requirement state **which operational phase of the product's
+lifetime** it governs, so the perennially-neglected non-runtime phases get
+first-class requirements instead of being discovered late. Today UN/SR capture
+*what / why / acceptance* but not *when in the lifecycle*; the edge-case
+checklist in `user-needs.template.md` already gestures at it ("First-run setup",
+"Missing dependency / wrong version") without naming the dimension. The three
+phases the user named: **get ready** (install, dependency fetch, provisioning),
+**get set** (first-run configuration, credentials, migration, defaults), **go**
+(normal runtime operation).
+
+- **Name the dimension once in `PROCESS.md`** (near §1 roles / §2 ids, or a short
+  note in §3) with a **default vocabulary** — `Setup` (ready) · `Config` (set) ·
+  `Runtime` (go) — and state it is an **open, project-named set** (extend with
+  `Shutdown`/`Teardown`, `Upgrade`/`Rollback`, `Recovery` as the scope needs),
+  exactly like `Area`/domain hats, **not** a fixed enum.
+- **Avoid the `Phase` collision (critical).** The SR registry's existing `Phase`
+  column is *delivery* phase (`v1`/`v2`, §4 "Phased delivery"). The lifecycle tag
+  must use a **distinct name — recommend `Lifecycle`** — and PROCESS.md must say
+  so explicitly so nobody overloads `Phase`.
+- **Capture as an optional tag, mirroring `Area`** (the Thread-2 EXAMPLE §7
+  addition): a `Lifecycle` column projects opt into on UN/SR; blank = unspecified
+  (treat as Runtime). **Decision to make in-thread:** optional tag (recommended —
+  no downstream migration, matches `Area`, schema-safe; see Tests) vs. a base
+  template column (more discoverable but forces downstream churn). Recommend
+  optional + a one-line prompt in the templates.
+- **Prompt for it in the templates:** a short line in `user-needs.template.md`
+  (intro + the edge-case note, observing those rows are mostly Setup/Config) and
+  in `system-requirements.template.csv` guidance.
+- **One worked EXAMPLE.md illustration:** a Setup/Config-phase requirement (e.g.
+  dependency/version check or first-run config) tagged `Lifecycle=Setup`,
+  ideally reusing the §7 infra slice — *provisioning/migrating* the DB is Setup;
+  *failover* is Runtime — to show one feature spanning phases.
+- Optionally one clause in `AGENTS.template.md`'s requirement-authoring guidance
+  (mind the ~12k Gemini cap).
+
+**Tests:** `trace.py` reads rows with `csv.DictReader` and validates only the
+fixed `REQUIRED_FIELDS` allow-list (which already omits optional columns), so a
+new `Lifecycle` column is schema-safe — add/confirm a test that an SR carrying a
+`Lifecycle` column still passes `trace.py --strict-schema` (the optional-column
+tolerance, made explicit). EXAMPLE.md `Permutations` snippets must still parse
+(`test_gen_cases.test_example_md_specs_parse`). Otherwise prose — verify
+intra-doc links.
+
+**Risks:** scope creep into a heavy lifecycle taxonomy — keep it a light,
+optional, project-named tag, not a required enum. Collision with delivery `Phase`
+— mitigated by choosing `Lifecycle`. Don't force downstream migration (favor the
+optional column).
+
+**Done-when:** PROCESS.md names the lifecycle dimension + default vocabulary,
+distinct from delivery `Phase`; the UN/SR templates prompt for it; EXAMPLE.md
+shows a Setup-phase requirement; `pytest -q` green.
+
+---
+
+## Thread 6 — Requirement consistency review (contradictions + clarification)
+
+**Goal:** add an explicit review activity that hunts for **mutual contradictions
+and ambiguities** across needs/requirements and routes them to a human — distinct
+from the *structural* checks `trace.py` already does. `trace.py` catches
+orphans / duplicate-ids / schema; it **cannot** catch two requirements that
+*conflict* (incompatible limits, mutually exclusive behavior, overlapping
+Area/hat ownership) or a need that is *ambiguous* — that is human/LLM judgment, so
+the kit should name it as a **non-machine-checkable review gate** (honest
+classification, per §4's "classify the rest honestly"), not pretend a script does
+it.
+
+- **Add a consistency-review step to `PROCESS.md` §4 at G1** (and a re-check at G2
+  when SRs decompose), **owned by the System Engineer hat** (already the
+  gatekeeper). What it checks: conflicting acceptance criteria / limits; mutually
+  exclusive behaviors; duplicate or overlapping requirements; ambiguous /
+  underspecified needs; overlapping `Area`/hat ownership.
+- **Wire outcomes to the existing findings protocol (§5):** each contradiction or
+  ambiguity is a finding addressed to the owner; where it needs a human decision,
+  **pause and ask — don't guess.** This is the *reachable-human flip side* of
+  Thread 3's assumption-logging (record an assumption only when **unattended**;
+  when a human is available, **solicit clarification**). Track unresolved
+  ambiguities in `status.md` Open Items (Thread 3's home).
+- **Keep it explicitly non-machine-checkable** — classify as a Manual/Analysis
+  gate activity; do **not** imply `trace.py` performs it. Note that an
+  independent LLM reviewer (§6 review-depth triage) is well-suited to a first-pass
+  contradiction sweep, with the **human making the call**.
+- **Light touch in `AGENTS.template.md`** working-agreement (Thread 3 home) so the
+  agent surfaces contradictions and solicits input rather than silently resolving
+  — one clause, mind the ~12k Gemini cap.
+
+**Tests:** none (prose). Verify intra-doc links and that `AGENTS.template.md`
+stays within its size budget.
+
+**Risks:** turning a judgment activity into checkbox theater — keep it a genuine
+review prompt tied to §5 findings, not a fake automated check. Overlap with G1's
+existing *completeness* criteria — frame this as the **consistency** complement,
+don't restate completeness.
+
+**Done-when:** PROCESS.md §4 names a consistency review at G1/G2 owned by the
+System Engineer, wired to §5 findings and the solicit-human-input directive,
+integrated with (not duplicating) Thread 3's assumption-logging; links verified.
+
+---
+
 ## Sequencing & session strategy
 
 Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 2 ✅**,
-**Thread 3 ✅** (all 2026-06-28). Only Thread 4 remains:
+**Thread 3 ✅** (all 2026-06-28). Remaining threads are independent — any order:
 
 1. **Thread 4** (TDD co-headline) — prose/framing; edits README + AGENTS.md +
-   PROCESS.md, independent.
+   PROCESS.md.
+2. **Thread 5** (requirement lifecycle phase) — small; PROCESS.md + UN/SR
+   templates + EXAMPLE.md + one schema-tolerance test.
+3. **Thread 6** (requirement consistency review) — prose; PROCESS.md §4/§5 +
+   an AGENTS.md clause; pairs naturally with Thread 5 in one "requirements rigor"
+   session.
 
 Each phase ends green (`pytest -q`, real output) and checks its items off here.
 
