@@ -612,6 +612,129 @@ source-of-truth artifact. Revisit only with a design that can't bias decompositi
 
 ---
 
+## Thread 10 — Non-functional requirements first-class (perf/resource budgets in their own registry)
+
+**Why:** the SN→SR→LLR→TC spine is built for **functional** verification; the
+test content audits behavior, not **resource cost**. Non-functional requirements
+(NFRs) — performance, RAM/VRAM, artifact size, reliability, security, etc. — are
+*expressible* as SRs but nothing **prompts** their capture, and quantitative
+budgets often aren't knowable by the requirement author: a module that is part of
+a larger whole is *handed* a slice of a system-level budget by an integrator, and
+the metrics should be **minimized within reason**, not pinned to a number the
+author invents.
+
+**Decision (2026-06-29, with the user):** keep quantitative perf/resource budgets
+in a **separate `performance-budgets.csv`**, owned by a **coordinator/integration
+hat**, so SN→SR→LLR stays functional-focused and an integrator can (re)allocate
+budgets across modules without churning the functional breakdown. This is the
+same pattern `interfaces.csv` (IF-###, §8) uses for cross-repo contracts — a
+coordination registry separate from the spine. The visibility cost the user
+flagged is mitigated by **linking each budget row back** to the SR/LLR/Module it
+bounds (separate, but still traceable).
+
+- **NFR consideration checklist** (a *prompt*, not a mandate — "don't wear a hat
+  the scope doesn't need"): a section in `stakeholder-needs.template.md` (or a
+  sibling note) listing the NFR categories to **consider**, each with an
+  "applies-when" and a home. Anchor on **ISO/IEC 25010** (product-quality model;
+  the 2023 revision added Safety). Candidate set (trim per scope): performance
+  efficiency; reliability/availability/recoverability; **security** (authn/authz,
+  data protection, secrets, audit, dependency-vuln/supply-chain);
+  **observability/operability** (logging/metrics/tracing/health — also the
+  prerequisite for measuring Thread 11's metrics); scalability/capacity;
+  compatibility/interoperability; portability/installability (incl. app size);
+  compliance/legal/licensing; safety (cyber-physical); data integrity/durability.
+  **Note what the kit already covers** so it doesn't double-prompt: maintainability
+  (= core), usability (= the end-user lens), some fault tolerance (= the edge-case
+  table), cross-project contracts (= IF-###).
+- **Three homes by nature** (state this so authors route correctly): *allocation/
+  coordination* NFRs (perf budgets, capacity, availability targets) → the new
+  integrator-owned registry; *behavioral* NFRs (security, observability, safety,
+  data integrity) → ordinary **SRs** with measurable AcceptanceCriteria + honest
+  Verification, owned by a domain hat; *hard external limits* (compliance,
+  supported platforms) → `status.md` constraints.
+- **New `registries/performance-budgets.template.csv`** — columns roughly
+  `PB-ID, Metric, Target(SR/LLR/Module-Refs), Budget, Unit, Tolerance,
+  Direction(lower|higher-better), Tier, Gate(fail|warn), Owner/Area, Notes`. Add a
+  **coordinator/integration hat** to PROCESS.md §1 domain hats as its owner; a
+  module ships provisional self-measured budgets, the integrator sets the real
+  allocation.
+- **Preserve traceability:** `trace.py` (optionally) flags a budget row that
+  references an unknown SR/LLR/Module id and a malformed `PB-` id — separation
+  never means disconnection.
+- **EXAMPLE.md:** one worked budget row (e.g. peak-RAM at a `Permutations` size,
+  plus a **VRAM** row for a GPU module) showing the PB↔SR link.
+
+**Tests:** `trace.py` accepts a `performance-budgets.csv`; if the orphan hook is
+added, a budget referencing an unknown id is flagged and a clean set passes;
+EXAMPLE budget rows parse. Otherwise prose + a small registry template.
+
+**Risks:** a second registry is a second home — keep it strictly for *quantitative
+coordination budgets*; behavioral NFRs stay SRs, or it bloats. The checklist must
+stay a *consideration prompt*, not a mandate, or tiny projects drown in N/A rows.
+PB↔SR drift — the back-link is the tie; the trace hook keeps it honest.
+
+**Done-when:** PROCESS.md names NFRs + the consideration checklist + the
+three-homes routing; a `performance-budgets.template.csv` exists, owned by a
+coordinator hat, traceably linked to the spine; EXAMPLE shows a budget row;
+`pytest -q` green.
+
+---
+
+## Thread 11 — Performance budget & regression harness (stdlib comparator)
+
+**Why:** captured budgets (Thread 10) are inert without a check that **tracks the
+numbers over time and alerts**. Two distinct questions: "**worse than expected**"
+(absolute budget breach) and "**suddenly much worse**" (regression vs. a
+baseline). The work splits cleanly along Thread 2's **process/product** line:
+**measuring** a metric is *product-layer* (you wire `/usr/bin/time`,
+`tracemalloc`, `nvidia-smi` / `torch.cuda.max_memory_allocated`, a size command,
+`pytest-benchmark` / `hyperfine`); **comparing** is *process-layer* (kit-owned,
+**stdlib, metric-agnostic** — arithmetic over JSON). The kit owns the comparator;
+the project owns the meters.
+
+- **`scripts/check_perf.py`** (stdlib): inputs = the project's measured
+  `perf-metrics.json` (product-emitted), the tracked `performance-budgets.csv`
+  (Thread 10), and a committed `perf-baseline.json`. Per metric: **absolute**
+  check (vs Budget, per Direction) and **regression** check (vs baseline ±
+  Tolerance). Emit a **gitignored** `perf-report.md` (current vs baseline vs budget
+  + deltas). Exit nonzero only on hard-gated breaches.
+- **Baseline-as-golden protocol:** accepting a regression = committing a new
+  `perf-baseline.json` **in the same PR** (the diff shows the number move —
+  explicit, reviewed, never silent; same discipline as the coverage threshold and
+  phase-deferred SRs). Ship a `--update-baseline` mode.
+- **Noise discipline — start narrow:** the MVP gates only **deterministic,
+  low-noise metrics** (artifact/binary size, dependency count) — stable enough for
+  a real gate at the `full` tier. Noisy runtime metrics (latency, peak RAM, VRAM,
+  throughput) default **warn-only**, `release` tier, with per-metric tolerance
+  bands and a "same runner / best-of-N" note. **Honest-gate rule** (§4): a metric
+  that can't be a reliable `Test` gate is warn-tracking or `Demonstration`, never a
+  faked binary gate.
+- **Harness wiring (Thread 2 layers):** `check_perf.py` is a **process** step; the
+  project's measurement that produces `perf-metrics.json` is the **product** step.
+  Metrics absent ⇒ skip/warn (like a missing tool). Size gated at `full`, runtime
+  perf warn at `release`; CI publishes `perf-report.md` as an artifact.
+- **Reviewability (§3):** `performance-budgets.csv` = tracked source of truth;
+  `perf-baseline.json` = committed golden (updated deliberately); `perf-report.md`
+  = gitignored composite (add to `gitignore.template`).
+- Optional: `gen_release_checklist.py` lists perf budgets as Release items.
+
+**Tests:** comparator unit tests (stdlib) — absolute breach fails when Gate=fail;
+within-tolerance regression passes; beyond-tolerance regression warns/fails;
+missing metrics skip; `--update-baseline` writes the file. Drive from a fixture
+metrics+budgets+baseline set; keep the script importable like `trace.py`.
+
+**Risks:** perf flakiness ⇒ false alarms erode trust — mitigate with warn-first,
+tolerances, same-runner guidance, start-with-size. Don't build a benchmarking
+framework — that's *product* tooling; the kit only compares numbers. Baseline
+drift if updates aren't reviewed — the PR diff is the control.
+
+**Done-when:** a stdlib `check_perf` compares measured metrics against budgets +
+baseline (absolute + regression, warn-vs-fail per metric) with a baseline-update
+protocol, is wired into the harness (size gated at `full`, runtime warn at
+`release`), names its principle once, and `pytest -q` green.
+
+---
+
 ## Sequencing & session strategy
 
 Landed so far: **Thread 0a ✅**, **Thread 0b ✅**, **Thread 1 ✅**, **Thread 2 ✅**,
@@ -632,6 +755,14 @@ rename). Remaining threads are independent — any order:
    script + harness wiring + tests; the biggest genuinely-new capability of the
    late threads, and it makes the "verify no broken links" Done-whens (Threads
    3/4/6/8) machine-checkable. Do it after or with Thread 8.
+6. **Thread 10** (NFRs first-class + `performance-budgets.csv`) — small-medium;
+   PROCESS.md NFR-consideration checklist + a new integrator-owned coordination
+   registry + EXAMPLE row + optional trace hook. Pairs with Threads 5/6 in the
+   "requirements rigor" session (all touch the requirement spine).
+7. **Thread 11** (perf budget & regression harness) — a stdlib comparator +
+   baseline-as-golden protocol + harness wiring + tests; **depends on Thread 10's**
+   budgets registry. Start the MVP with deterministic size/dependency budgets
+   (gateable), warn-first on noisy runtime metrics.
 
 Thread 7 landed first among the late threads (the wide rename is cheapest done
 alone and before 5/6 touch the same registries); the `SN-###` ids it established
@@ -640,7 +771,11 @@ a 2026-06-29 survey of the sibling `ai-native-toolkit` (its `/assess` engine) �
 names the boundary to that *measurement* half; 9 ports one stdlib-portable
 technique (doc-graph) without taking on its `networkx`/`grimp` dependencies. A
 risk-aware "hotspot" map was considered and **deferred** (see the note above
-Sequencing).
+Sequencing). Threads 10 and 11 came from the same 2026-06-29 discussion — the
+worry that the spine audits behavior but not **resource cost**: 10 makes NFRs
+first-class and puts quantitative budgets in their own integrator-owned registry
+(a module author often can't know the right budget); 11 is the stdlib comparator
+that tracks them and alerts on absolute breach or regression.
 
 Each phase ends green (`pytest -q`, real output) and checks its items off here.
 
