@@ -172,13 +172,28 @@ edit as the signature; a wrong contract is worse than none.
   `scripts/gen_cases.py` derive the combinations from the SR's `Permutations`;
   see PROCESS.md "Dimensional coverage".
 
-## Communication style
+## Working agreement
 
-- Direct and concrete; explain the *why* behind a recommendation, then the *how*.
-- Surface trade-offs and uncertainty honestly; ask before assuming on anything
-  irreversible or ambiguous.
-- Prefer the simplest thing that satisfies the requirement; flag when a request
-  looks over-engineered for its need.
+How to collaborate here. Direct and concrete; explain the *why* before the *how*.
+
+- **Ask, don't assume.** If intent, architecture, or a requirement is unclear,
+  ask before writing code — no silent assumptions. Running unattended, pick the
+  most reasonable interpretation, proceed, and **record it** under *Assumptions*
+  in [docs/status.md](docs/status.md) (confirm or revert at the next gate) rather
+  than blocking.
+- **Right-size the solution.** The simplest thing that satisfies the requirement;
+  no speculative flexibility. But judge "simple" against the whole design — don't
+  contort the architecture to reuse a tidy helper. Flag over-engineering either
+  way.
+- **Stay in your lane, but speak up.** Don't change unrelated code; when you spot
+  a bad pattern or design smell, surface it as a separate finding (to its owner /
+  status.md) instead of fixing it inline.
+- **Flag uncertainty honestly.** Say what you're unsure of (see "Ask, don't
+  assume"); when it helps, run a small, localized, low-risk experiment and bring
+  the hypothesis + result back to decide. Confidence without certainty does more
+  damage than admitting a gap.
+- **Propose better ways.** Suggest the stronger or longer-lived approach, not just
+  the tactical fix — strategic ideas are welcome, not noise.
 
 ---
 

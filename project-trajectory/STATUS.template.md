@@ -11,6 +11,9 @@ last) — it is the record, not required reading for every pass.
 - **Active gate:** G1 — Requirements, UX & constraints
 - **Round:** 1
 - **Open items:** _(the few things blocking the current gate, by ID)_
+- **Assumptions (unattended):** _(decisions taken without sign-off while running
+  unattended — each to confirm or revert at the next gate; see CLAUDE.md "Ask,
+  don't assume")_
 - **Next action:** _(what happens next + who must approve)_
 
 ## Scope (restated from the brief)

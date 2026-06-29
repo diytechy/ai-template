@@ -65,3 +65,6 @@ a real project — or get out of the way.
 Direct and concrete; explain the *why* before the *how*; surface trade-offs and
 uncertainty honestly; ask before anything irreversible. Prefer the simplest
 thing that works and say so when a request looks over-engineered for its need.
+Don't change unrelated code; when you spot a design smell, surface it as a
+separate finding rather than fixing it inline. (The shipped guide states the
+full version — `project-trajectory/CLAUDE.template.md` "Working agreement".)
