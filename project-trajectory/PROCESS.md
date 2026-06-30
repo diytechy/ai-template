@@ -26,7 +26,9 @@ to its owner (§5).
 **Domain hats (scope-dependent).** The five above are the spine; choose
 additional discipline hats at project setup to match the scope — e.g. **Network
 Engineer**, **Security Engineer**, **Data/ML Engineer**, **Hardware/Mechanical
-Engineer**, **Mechatronics Engineer**, **DBA**, **SRE/Ops**. A domain hat owns
+Engineer**, **Mechatronics Engineer**, **DBA**, **SRE/Ops**, and an
+**Integration/Coordination** hat that allocates the cross-module performance and
+resource budgets (`requirements/performance-budgets.csv`, §9). A domain hat owns
 the slice of `SR-###`/`LLR-###` rows in its area (tag them, e.g. an `Area`
 column or an `SR-NET-###`-style prefix) and brings its own edge-case and
 release-checklist items. Record the **active hats** for this project in
@@ -256,6 +258,46 @@ Semantics:
 - Later phases re-enter at G1/G2 as requirement increments and close their own
   G3/G-Release with the grown phase list.
 
+**Lifecycle phase (when in the running product's life a requirement holds).**
+Distinct from the delivery `Phase` above (which is *when we ship it* — v1/v2), a
+requirement also has a **lifecycle phase**: *at what point in the running
+product's lifetime must this hold, and how often?* Naming it stops the perennial
+miss of writing only steady-state requirements and discovering the install/setup
+ones late. Capture it as an **optional `Lifecycle` tag** on an SN/SR (a column or
+inline tag, mirroring `Area`; blank = unspecified, treat as **Runtime**) — use the
+distinct name `Lifecycle`, never overload the delivery `Phase` column. The default
+vocabulary is an **open, project-named set** (extend it per scope like `Area`; it
+is **not** a fixed enum):
+
+- **Provision** (ready) — must hold *before the process can run at all*: install,
+  dependencies/runtime present, infra provisioned.
+- **Startup** (set) — established *once per launch, before it serves*: load +
+  validate config, run migrations, open the initial pool, allocate fixed
+  resources, readiness probe.
+- **Runtime** (go) — steady-state serving, *including recurring acquisition*:
+  handle requests, reconnect on drop, per-request alloc, dynamic config reload.
+
+Optional **Shutdown**/**Teardown**, **Upgrade**/**Rollback**, **Recovery** extend
+the set when the scope needs them.
+
+- **Discriminate by *when / how often*, not by the word "setup"** — almost
+  everything readies *something*. Opening the connection pool *at boot* is Startup;
+  reconnecting *mid-operation* is Runtime; a fixed buffer at launch is Startup,
+  per-request alloc is Runtime. **One capability legitimately spans phases** — that
+  is the payoff: a DB feature yields *provision the DB* (Provision) → *open the
+  pool + migrate at boot* (Startup) → *reconnect on drop* (Runtime), and people
+  usually write only the Runtime one.
+- **Configuration straddles Provision↔Startup, app-dependently.** Config is
+  **Provision** when it *must pre-exist* and the app has no way to obtain it at
+  launch; it is **Startup** when the app *can* obtain/validate it at launch (a
+  first-run wizard, a clear error, or a default fallback). Capture both the
+  *definition* (where the config lives) and the *launch behavior when it is
+  missing*.
+- **Keep one axis.** Dependencies and config are *subjects*, not phases — a
+  dependency is required at Provision but used at Runtime; config must exist at
+  Provision, is loaded at Startup, may reload at Runtime. The `Lifecycle` tag on
+  the concrete requirement already places it; don't add a second "kind" axis.
+
 **Constants:** `MAX_ROUNDS = 4` per gate (then escalate to the human);
 `COVERAGE_THRESHOLD = 80%` line coverage (adjust by agreement; record here).
 
@@ -455,3 +497,56 @@ holds the authoritative spec; the consuming side links the same `IF-###` and
 pins the version. Every interface is backed by an SR and a contract/fixture test.
 This keeps interlinked projects from silently drifting apart without imposing a
 multi-repo build system. Standalone projects skip this section.
+
+## 9. Non-functional requirements & performance budgets
+
+The `SN→SR→LLR→TC` spine verifies **behavior**; on its own it never prompts the
+**cost** of that behavior — performance, memory, artifact size, reliability,
+security. Non-functional requirements (NFRs) are expressible as ordinary SRs, but
+nothing makes you *consider* them, and quantitative budgets often aren't the
+author's to invent: a module that is one part of a larger system is *handed* a
+slice of a system-level budget by an integrator, and most metrics should be
+**minimized within reason**, not pinned to a number the author guessed.
+
+**Consideration checklist (a prompt, not a mandate — don't wear a hat the scope
+doesn't need).** At G1, consider which categories apply and route each to a home
+(anchor: the **ISO/IEC 25010** product-quality model):
+
+- performance efficiency (time, throughput) and resource use (RAM/VRAM, disk);
+- reliability / availability / recoverability;
+- **security** (authn/authz, data protection, secrets, audit, dependency / supply-chain);
+- **observability / operability** (logging, metrics, tracing, health — also the
+  prerequisite for *measuring* any of the budgets below);
+- scalability / capacity; compatibility / interoperability;
+- portability / installability (incl. artifact size); compliance / legal / licensing;
+- safety (cyber-physical); data integrity / durability.
+
+The kit already covers some — **don't double-prompt**: maintainability (= the core
+discipline), usability (= the end-user lens), basic fault tolerance (= the
+edge-case table and the SN edge cases), cross-project contracts (= `IF-###`, §8).
+
+**Three homes — route by nature:**
+
+1. *Allocation / coordination* NFRs (perf budgets, capacity, availability targets)
+   → the **`performance-budgets.csv`** registry below.
+2. *Behavioral* NFRs (security, observability, safety, data integrity) → ordinary
+   **SRs** with measurable `AcceptanceCriteria` + honest `Verification`, owned by a
+   domain hat (Security, SRE/Ops, …).
+3. *Hard external limits* (compliance, supported platforms) → `status.md`
+   constraints.
+
+**The performance-budgets registry (`requirements/performance-budgets.csv`,
+`PB-###`).** Quantitative perf/resource budgets live **separate from the spine**,
+the same way cross-repo contracts do (`IF-###`, §8), so `SN→SR→LLR` stays
+functional-focused and an **Integration/Coordination** hat (§1) can (re)allocate
+budgets across modules without churning the functional breakdown. A module ships
+provisional, self-measured budgets; the integrator sets the real allocation.
+**Separation is not disconnection:** every budget row **back-links** the SR / LLR /
+Module it bounds (its `Refs`), and `trace.py` flags a row whose `Refs` name an
+unknown id or whose `PB-` id is malformed. Columns: `PB-ID, Metric, Refs, Budget,
+Unit, Tolerance, Direction (lower-better | higher-better), Tier, Gate (fail |
+warn), Owner, Notes`. *Comparing* measured numbers against these budgets over time
+(absolute breach vs. regression-from-baseline) is a separate, optional harness
+concern — a stdlib comparator that is metric-agnostic; this section only defines
+the captured budgets. Standalone projects with no resource concerns skip this
+section, exactly like §8.

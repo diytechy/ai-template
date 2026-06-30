@@ -297,6 +297,30 @@ spine.
 
 ## Thread 5 — Requirement lifecycle phase (ready / set / go)
 
+**Status: ✅ landed 2026-06-29.** The lifecycle dimension is named once in
+`PROCESS.md` §4 (immediately after "Phased delivery", so the delivery-`Phase` vs
+lifecycle distinction is adjacent and explicit): the **`Provision`/`Startup`/
+`Runtime`** default vocabulary (open, project-named — extend like `Area`), the
+**when/how-often discriminator** ("setup recurs"), the **one-capability-spans-
+phases** payoff, the **config straddles Provision↔Startup (app-dependently)**
+rule, and **keep one axis** (dependencies/config are *subjects*, not phases).
+Captured as an **optional `Lifecycle` tag mirroring `Area`** — the in-thread
+decision went to *optional, not a base column* (no downstream migration,
+schema-safe). Prompts added to `stakeholder-needs.template.md` (intro lifecycle
+question + a note that the edge-case rows are mostly Provision/Startup) and to the
+`system-requirements.template.csv` `Phase` cell, which now explicitly warns *not*
+to overload `Phase` and points at the `Lifecycle` tag — the exact point of
+confusion. `EXAMPLE.md` §7 tags the failover SR `Lifecycle=Runtime` and adds a
+table showing the **same DB capability spanning Provision/Startup/Runtime** (the
+two usually-missed siblings). New test `test_lifecycle_column_is_schema_safe`
+makes `trace.py`'s optional-column tolerance explicit. **Deviations from the spec
+as written:** (1) landed in **§4** (adjacent to delivery `Phase`) rather than
+§1/§2/§3, because the `Phase` collision is the whole risk and adjacency is the
+clearest disambiguation home; (2) the **optional `AGENTS.md` clause was skipped** —
+`AGENTS.template.md` sits at the ~12k Gemini cap (11,998 chars), so the guidance
+stays single-sourced in PROCESS.md (the call Thread 8 made). `pytest -q`: 69
+passed.
+
 **Goal:** make a requirement state **which operational phase of the product's
 lifetime** it governs, so the perennially-neglected non-runtime phases get
 first-class requirements instead of being discovered late. Today SN/SR capture
@@ -662,6 +686,31 @@ source-of-truth artifact. Revisit only with a design that can't bias decompositi
 
 ## Thread 10 — Non-functional requirements first-class (perf/resource budgets in their own registry)
 
+**Status: ✅ landed 2026-06-29.** NFRs made first-class via a new `PROCESS.md` **§9
+"Non-functional requirements & performance budgets"** (added as a new end section
+parallel to §8, so nothing renumbers): the **consideration checklist** (a prompt,
+not a mandate; anchored on **ISO/IEC 25010**, with a "don't double-prompt — the
+kit already covers maintainability/usability/fault-tolerance/`IF-###`" note), the
+**three-homes routing** (allocation→budgets registry; behavioral→ordinary SRs;
+hard external limits→`status.md` constraints), and the **`performance-budgets.csv`
+(`PB-###`)** registry owned by a new **Integration/Coordination** domain hat
+(added to §1). New `registries/performance-budgets.template.csv` (`PB-ID, Metric,
+Refs, Budget, Unit, Tolerance, Direction, Tier, Gate, Owner, Notes`), wired into
+`bootstrap.py` MAPPING (→ `docs/requirements/performance-budgets.csv`) +
+docstring; optional and inert like `interfaces.csv`. **`trace.py` keeps it
+traceable** (the spec's optional hook): each `PB` row's `Refs` must back-link a
+real SR/LLR/Module and a malformed/duplicate `PB-` id fails like any integrity
+error — but PB is held *out* of the placeholder/schema sweeps so a leftover
+`PB-000` never blocks a gate a project doesn't use. `EXAMPLE.md` gains a new §8
+with two worked rows (peak-RAM linked to the export SR/LLR at its `Permutations`
+boundary, and a **VRAM** row for a GPU module the integrator allocates); READMEs
+updated. **Deviations from the spec as written:** the **optional `AGENTS.md`
+clause was skipped** (same ~12k-cap reason as Threads 5/8); the
+comparator/regression harness is **deliberately out of scope** — it is Thread 11
+(Session D), and §9 ends by pointing at it without building it. New tests:
+`test_perf_budgets.py` (6 cases) + the bootstrap file-list assertion. `pytest -q`:
+69 passed.
+
 **Why:** the SN→SR→LLR→TC spine is built for **functional** verification; the
 test content audits behavior, not **resource cost**. Non-functional requirements
 (NFRs) — performance, RAM/VRAM, artifact size, reliability, security, etc. — are
@@ -786,8 +835,8 @@ protocol, is wired into the harness (size gated at `full`, runtime warn at
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
-**7 ✅**, **4 ✅**, **6 ✅**, **8 ✅** (2026-06-29). Remaining work is **three
-sessions, in order** (later sessions depend on earlier ones). The rule: **batch
+**7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅** (2026-06-29). Remaining
+work is **two sessions, in order** (later depends on earlier). The rule: **batch
 the light, file-coherent threads; keep each new-script build solo** —
 re-establishing context per thread is the cost to avoid, and a from-scratch script
 + test-suite + debug loop is the context-heavy case the "wide change" caution
@@ -800,17 +849,21 @@ re-establishing context per thread is the cost to avoid, and a from-scratch scri
 > 11,993 chars (under the ~12k Gemini cap) by tightening the new bullets and three
 > adjacent lines; Thread 8 stayed out of AGENTS.md to protect that budget.
 
-> ▶ **NEXT — Session B · Requirement-capture enrichment (Threads 5, 10).** Both
-> touch the SN/SR templates, EXAMPLE.md, and PROCESS §1-2, and each adds an EXAMPLE
-> row. 10 also adds the new `performance-budgets` registry (so it needs
-> `bootstrap.py` MAPPING wiring) + an optional `trace.py` hook; 5 adds its
-> schema-tolerance test. One coherent pass over the templates beats two separate
-> re-reads.
+> **Session B ✅ landed 2026-06-29 · Requirement-capture enrichment (Threads 5,
+> 10).** One coherent pass over the SN/SR templates + EXAMPLE + PROCESS: 5 → the
+> `Lifecycle` tag in PROCESS §4 (adjacent to delivery `Phase`) + template prompts +
+> EXAMPLE §7 phase-spanning table; 10 → PROCESS §9 (NFR checklist + three-homes +
+> the `performance-budgets.csv`/`PB-###` registry under a new
+> Integration/Coordination hat) + the registry template + `bootstrap.py` wiring + a
+> `trace.py` back-link hook + EXAMPLE §8. Both optional `AGENTS.md` clauses were
+> skipped to hold the ~12k Gemini cap (single-sourced in PROCESS.md instead). New
+> tests: `test_perf_budgets.py` (6) + `test_lifecycle_column_is_schema_safe` + the
+> bootstrap file-list assertion. `pytest -q`: 69 passed.
 
-**Session C · Doc navigability check (Thread 9).** Solo build — new stdlib
-`check_docs.py` + harness step + fixture tests. After A/B so it link-checks
-*finished* docs; it establishes the "add a `check_*` step" pattern Session D
-reuses.
+> ▶ **NEXT — Session C · Doc navigability check (Thread 9).** Solo build — new
+> stdlib `check_docs.py` + harness step + fixture tests. After A/B so it
+> link-checks *finished* docs; it establishes the "add a `check_*` step" pattern
+> Session D reuses.
 
 **Session D · Perf budget harness (Thread 11).** Solo build, **last**: it depends
 on Thread 10's registry (Session B) and is the highest-noise / most-complex. New

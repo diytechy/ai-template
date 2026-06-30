@@ -133,17 +133,32 @@ Say the **SRE/Ops** hat owns availability and the **DBA** hat owns the data
 store. A reliability need (`SN-020`) becomes an SR verified by demonstration:
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
-SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Implemented,,Infra/DB
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area,Lifecycle
+SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Implemented,,Infra/DB,Runtime
 ```
 
 The trailing **`Area`** column (`Infra/DB`) is an optional tag a project adds so a
 domain hat can filter and own its slice; SRs without it leave it blank. The
-failover *logic* is still real code, so it keeps an LLR (`LLR-101
-reconnect/promote-on-primary-loss`, owned by the same hat) — only
-`Analysis`/`Inspection` SRs skip the LLR. The TC records the **procedure**, not an
-assertion, and is `Automated=No`, so the release checklist
-(`gen_release_checklist.py`) finds it:
+**`Lifecycle`** column (`Runtime`) is the same kind of optional tag for *when in
+the running product's life* the requirement holds (process.md §4 "Lifecycle
+phase").
+
+**One capability spans phases** — this is exactly where the tag earns its keep.
+The same "use a database" feature implies three requirements, not one, and a team
+that writes only the failover SR has silently skipped two:
+
+| Lifecycle | Sibling SR (same DB capability) | Owner |
+|---|---|---|
+| **Provision** | `SR-100` — the DB instance + schema are provisioned before first run | DBA |
+| **Startup** | `SR-102` — open the connection pool and run pending migrations at launch; fail loudly if either fails | DBA / SRE-Ops |
+| **Runtime** | `SR-101` — promote the standby on primary loss (above) | SRE/Ops |
+
+Each is a real SR with its own LLR + TC; tagging them by lifecycle is what makes
+the missing Provision/Startup rows obvious at G1. The failover *logic* is still
+real code, so `SR-101` keeps an LLR (`LLR-101 reconnect/promote-on-primary-loss`,
+owned by the same hat) — only `Analysis`/`Inspection` SRs skip the LLR. The TC
+records the **procedure**, not an assertion, and is `Automated=No`, so the release
+checklist (`gen_release_checklist.py`) finds it:
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
@@ -154,6 +169,29 @@ TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a 
 pre-merge runs; it executes at `G-Release`, where the human signs the generated
 checklist. Same registries, same traceability join, same gates — only the
 verification method, the owning hat, and the `Area` tag change.
+
+## 8. A non-functional budget — `requirements/performance-budgets.csv`
+
+Behavioral SRs say *what* the system does; they don't bound *what it costs*. A
+quantitative budget lives in its own registry (`PB-###`), owned by the
+**Integration/Coordination** hat, and **back-links** the SR / LLR / Module it
+bounds so the separation never loses the thread (process.md §9):
+
+```csv
+PB-ID,Metric,Refs,Budget,Unit,Tolerance,Direction,Tier,Gate,Owner,Notes
+PB-001,Peak RAM exporting the largest input,SR-001;LLR-001,512,MiB,10%,lower-better,Release,warn,Integration,"Measured at the 2GiB size boundary that SR-001's Permutations already enumerate."
+PB-002,Model VRAM at inference,SR-030,8,GiB,5%,lower-better,Release,fail,Integration,"GPU module (hypothetical SR-030): a number the author can't invent, so the integrator sets the allocation."
+```
+
+`PB-001` bounds the *cost* of the CSV export `SR-001` already specifies — same
+feature, different axis — and pins the measurement to a boundary that SR's
+`Permutations` enumerate, so it restates no dimensions. `PB-002` shows a **VRAM**
+budget for a GPU module: a value the module author can't invent, so the integrator
+sets the slice and the module measures against it. `trace.py` checks each row's
+`Refs` resolve to a real SR/LLR/Module and that the `PB-` id is well-formed — a
+budget that drifts off a deleted requirement is caught like any orphan. *Comparing*
+the measured numbers against these budgets over time is a separate harness step;
+the registry here is just the captured, tracked source of truth.
 
 ---
 
@@ -169,3 +207,8 @@ verification method, the owning hat, and the `Area` tag change.
 - **Operational requirements use the same spine** (§7) — a domain hat owns them,
   `Verification=Demonstration`/`Manual`, an optional `Area` tag, and a
   procedure-recording `Release`-tier TC the release checklist finds.
+- **Tag the lifecycle phase** (§7) so the neglected Provision/Startup requirements
+  a capability implies get written, not just its Runtime one.
+- **Quantitative budgets go off the spine** (§8) — `PB-###` in
+  `performance-budgets.csv`, owned by the Integration hat, back-linked to the
+  SR/LLR/Module they bound.

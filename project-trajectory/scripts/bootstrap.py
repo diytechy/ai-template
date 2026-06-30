@@ -23,6 +23,7 @@ What it creates in the destination:
     docs/requirements/system-requirements.csv  <- registries/system-requirements.template.csv
     docs/requirements/low-level-requirements.csv
     docs/requirements/interfaces.csv           <- registries/interfaces.template.csv
+    docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, gen_arch_map.py, gen_release_checklist.py,
     scripts/gen_cases.py
@@ -45,6 +46,12 @@ rows that nothing reads (`trace.py` doesn't process interfaces), so a standalone
 project can simply ignore them. Fill them in only when this repo shares a
 contract with another (process.md §8). They cost nothing to leave empty, which is
 why bootstrap copies them unconditionally rather than gating them behind a flag.
+
+`docs/requirements/performance-budgets.csv` (PB-###, process.md §9) is the same
+kind of optional, always-scaffolded coordination registry for quantitative
+perf/resource budgets. Its `PB-000` placeholder is inert (`trace.py` ignores
+`-000` rows); a project with no resource concerns leaves it untouched. Once it
+carries real rows, `trace.py` keeps their SR/LLR/Module back-links honest.
 
 It then runs `gen_arch_map.py` and `trace.py` once in the new repo so the
 scaffold starts green — `check.py` would otherwise fail on the template
@@ -83,6 +90,10 @@ MAPPING = [
         "docs/requirements/low-level-requirements.csv",
     ),
     ("registries/interfaces.template.csv", "docs/requirements/interfaces.csv"),
+    (
+        "registries/performance-budgets.template.csv",
+        "docs/requirements/performance-budgets.csv",
+    ),
     ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
     ("scripts/trace.py", "scripts/trace.py"),
     ("scripts/check.py", "scripts/check.py"),

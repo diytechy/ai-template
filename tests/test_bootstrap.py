@@ -14,6 +14,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/status.md",
         "docs/architecture.md",
         "docs/requirements/system-requirements.csv",
+        "docs/requirements/performance-budgets.csv",
         "docs/test/test-cases.csv",
         "scripts/check.py",
         "scripts/gen_cases.py",
