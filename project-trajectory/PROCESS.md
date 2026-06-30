@@ -69,6 +69,17 @@ Stable, zero-padded, never reused.
   routine that inlines logic instead of delegating shows up as a short,
   uninformative flow — a built-in tripwire.
 
+**Right-sizing has guardrails — and a name for the calibrated shortcut.**
+"Simplest thing that works" (the agent guide's "Right-size the solution") is
+calibrated, not flimsy: it never trims **validation at trust boundaries**, error
+handling that would **lose or corrupt data**, **security**, **accessibility**, or
+skipping straight to a fix before **understanding the problem** (root cause, not
+symptom). Where a deliberate simplification is still the right call, mark it
+inline with a **`SHORTCUT:`** comment naming the **ceiling** it accepts (e.g. a
+global lock, an O(n²) scan, a naive heuristic) and the **upgrade path** past it —
+so the shortcut is greppable, reviewable, and never silently mistaken for the
+final design. One tag, defined once; not a taxonomy.
+
 **Reviewability — review the source, not the render.** The registries (the
 `SN`/`SR`/`LLR`/`TC` CSVs) are the tracked, line-by-line-reviewable source of
 truth; every other view is *generated* from them. Generated output splits by
@@ -407,6 +418,20 @@ Findings:
 Gate sign-offs live in the **Gate Sign-offs** table; the driver records the gate
 decision and pauses for the human.
 
+**Voice policy — warmth has a layer boundary.** Personality is a human value, not
+a machine one: **human-facing** output (CLI narration, a kickoff greeting, a
+release-checklist intro) may carry warmth and **dry wit at most**;
+**machine/agent-facing** output — this protocol's findings and verdicts,
+subagent prompts, registry cells, commit messages — stays **literal, terse,
+structured: no whimsy**. Levity there costs tokens, reads ambiguously to the
+next agent (irony/understatement is exactly what a parser misreads), and
+erodes the honesty/severity signal this protocol depends on. Default voice is
+**restrained**
+("direct and concrete; dry wit at most; never at the expense of clarity or
+honesty"); a project may expose an optional, named **tone knob** to dial levity
+up or down — never a baked-in persona, since no single tone fits both a
+medical-device repo and a game studio.
+
 ## 6. Review-depth triage (efficiency)
 
 - **High-risk** (security, data loss, crash-safety, money, irreversible, gate
@@ -417,6 +442,21 @@ decision and pauses for the human.
 
 Keep the status file's *Current State / Open Items* header short so a reviewer
 can orient cheaply; the full log lives below and need not be re-read each pass.
+
+**Model/agent tiering — recommend + record, not enforce.** The risk triage above
+is also a **tiering** axis: planning, decomposition, decisions, and high-risk
+review need a **strong model**; mechanical execution, well-specced builds, and
+low-risk/prose work tolerate a **cheaper tier**. Tiering down is **safe
+specifically because of the gates** above — the harness + tests mean a cheaper
+executor can't silently drift past a check, a guarantee an ungated workflow can't
+make. The kit **cannot force** a model choice (a fast-moving, host-specific
+concern); it offers a **recorded-tier-hint** convention instead: any planned
+unit of work (a thread, a phase, a `status.md` task) may carry a **model-tier
+hint** — metadata an agent reads and may act on, guidance like any other
+`AGENTS.md` directive, not a guarantee. Host-specific levers (e.g. a
+strong-model-plans/cheaper-model-executes mode, per-subagent model overrides,
+a model-selection command) are optional, documented per-host examples — name
+the pattern, never a vendor-specific model-selection engine.
 
 ## 7. Harness contract (wire to your stack)
 
@@ -446,6 +486,41 @@ The empty-vs-named `requires` tuple already implies which layer a step is in;
 `check.py --list` makes it explicit, tagging each step `[process]`/`[product]` so
 a newcomer sees at a glance which steps are fixed and which they must localize.
 
+**A third toolchain layer — the developer workstation.** The two layers above
+cover what the *project* needs to pass its own gates. A third, often-conflated
+concern is what a **human** needs to view, render, edit, and run any of it at
+all: a language/runtime, `git`, an **offline** Markdown+Mermaid renderer (e.g.
+VS Code's preview, or `@mermaid-js/mermaid-cli`), and optionally an IDE or a
+domain-specific viewer (CAD/image/publication tooling). "No required tools" was
+always a claim about the **process** layer (stdlib only); it never meant a human
+needs nothing. Naming this third layer resolves the conflation between
+"procurement for the product" and "procurement for developing the product."
+
+**The onboarding ladder — Provision-for-development, applied to the act of
+developing itself.** A fresh contributor's path to a running checkout mirrors
+the §4 lifecycle phases, one level up:
+
+```
+Stage 0           →  dev-setup       →  setup          →  check
+get git + repo        workstation        product deps      run gates
+(pre-clone)           (post-clone)       (venv/tools)       (exists)
+```
+
+`Stage 0` and `dev-setup` provision the **developer workstation** above (rare,
+once per contributor); `setup` provisions the **product toolchain** (recurs per
+clone/CI run); `check` is the **process** floor that already exists. Each rung is
+an optional, readable, **consent-first** helper — never a silent or compiled
+installer — so a contributor (including a non-code one, whose deliverable is
+still a reviewable git change) can go from a bare machine to an editable,
+testable checkout without needing prior git literacy.
+
+**Offline-render principle.** Legibility artifacts (the Mermaid diagrams, the
+trace HTML map, the code map) must render with **local, offline** tooling —
+never a cloud rendering service — the same reason the kit chose
+Mermaid-in-Markdown (§3) in the first place. Point contributors at a local
+renderer; reach for a Kroki/PlantUML *container* only if a project genuinely
+outgrows Mermaid.
+
 **The kit generates legibility; it does not score it.** The harness *builds* the
 traced spine, the committed code map, and the gates, so a repo scaffolded from
 this kit should score well **by construction**. *Measuring* that legibility over
@@ -455,6 +530,18 @@ assessor** (e.g. a deterministic codebase-scoring tool) as **optional downstream
 tooling**, never a kit dependency. This is the same stance the kit takes on
 `ruff`/`pytest`: it names the gate; the project picks the tool. Generate here;
 measure there.
+
+**The kit is a spec; a turnkey agent-runtime harness is a different layer.**
+This kit is a stack-agnostic, stdlib, agent-neutral process **spec** you copy
+into a repo. A **turnkey agent-runtime harness** — e.g. an `npx`/Node-installed
+engine shipping skills/agents/hooks/MCP for one tool, with deterministic
+verification gates, model-tiered subagents, and a project-context layer — is a
+different, installed **product** a downstream shop may run *in addition*. They
+**compose** (a repo scaffolded from this kit can be driven by such a harness)
+but neither depends on the other: a runtime harness is optional, tool-specific,
+downstream tooling, never a kit dependency. Its "back every verdict with a
+deterministic gate" stance is the same one §6 already takes — the philosophical
+fit is real, the dependency isn't.
 
 Ready reference scripts ship with this template (Python 3.8+, stdlib only — no
 pip needed to run them):

@@ -916,8 +916,21 @@ protocol, is wired into the harness (size gated at `full`, runtime warn at
 
 ## Thread 12 — Name the spec-vs-runtime-harness boundary (a turnkey agent harness as optional downstream accelerator)
 
-**Status: ⏳ queued (Session E), added 2026-06-30** from the DonnyClaude/Ponytail
-sibling survey. The same survey→thread move Threads 8/9 made for `ai-native-toolkit`.
+**Status: ✅ landed 2026-06-30** (Session E, the clubbed prose batch). `PROCESS.md`
+§7 gained a **"The kit is a spec; a turnkey agent-runtime harness is a different
+layer"** paragraph, placed right after the Thread-8 generate-vs-measure note (the
+third §7/§8-style boundary, named by **category with `e.g.`** exactly as Thread 8
+mitigates dating the doc) — states the spec/harness split, that they **compose**
+rather than depend on each other, and notes the genuine §6 philosophical fit
+without adopting it as a dependency. `README.md` gained a matching one-line
+**"Scope — spec vs. runtime harness"** echo next to the Thread-8 echo it sits
+beside. **Deviation from the spec as written:** no `AGENTS.template.md` clause —
+the file sits at 11,998/~12,000 chars with effectively zero slack and Session E
+has four other threads (13/17/18, plus 15A's own no-clause call) competing for
+the same budget; reconciling that in one pass (as the Session E note anticipated)
+would mean fragile byte-shaving across unrelated bullets for a 3-4-word pointer
+each, so the call for all of Session E's threads was **PROCESS-only**, per each
+thread's own "else PROCESS-only" fallback. No new dependency introduced.
 
 **Goal:** name, once, the boundary between *this kit* — a stack-agnostic, stdlib,
 agent-neutral process **spec** you copy into a repo — and a *turnkey agent-runtime
@@ -969,7 +982,24 @@ judgment.
 
 ## Thread 13 — Fold in the "lazy senior dev" coding discipline (right-size guardrails + shortcut-comment convention)
 
-**Status: ⏳ queued (Session E), added 2026-06-30** from the Ponytail survey.
+**Status: ✅ landed 2026-06-30** (Session E, the clubbed prose batch). `PROCESS.md`
+§3 gained a **"Right-sizing has guardrails — and a name for the calibrated
+shortcut"** paragraph, placed right after "Thin orchestrators" and before
+"Reviewability" (the existing "named once, referenced elsewhere" home for §3
+principles): the **never-cut guardrail list** (validation at trust boundaries,
+data-loss-preventing error handling, security, accessibility, understand-before-
+you-fix) plus the **`SHORTCUT:`** comment convention (ceiling + upgrade path), a
+**kit-neutral tag** rather than Ponytail's branded marker, exactly as the thread
+required. **Deviations from the spec as written:** (1) `AGENTS.template.md` was
+**left unchanged** — at 11,998/~12,000 chars it has no slack, and Session E
+bundles three threads (13/17/18) each wanting a pointer, so the coordinated cap
+reconciliation landed on PROCESS-only for all three (see Thread 12's note; the
+"else PROCESS-only" branch every one of these threads specs); (2) the optional
+`EXAMPLE.md` code-comment illustration was **skipped** — EXAMPLE.md's §5 code
+back-link sample shows a fully-implemented function, and grafting a deliberate
+shortcut onto it would read as inconsistent with that worked feature, so the
+PROCESS.md prose stands alone (no downstream churn either way). `pytest -q`:
+unaffected (prose only).
 
 **Goal:** grow the kit's single "Right-size the solution" directive into (a) an
 explicit **guardrail list** of what right-sizing must *never* cut, and (b) a named
@@ -1127,10 +1157,29 @@ convention sees real use. Strong model to spec; Sonnet to build against `pytest`
 
 ## Thread 15 — Onboarding & contributor-workspace provisioning (zero-to-running ladder)
 
-**Status: ⏳ queued — Part A prose in Session E, Parts B/C/D build in Session G;
-added 2026-06-30** from the scratch.md "Ensure full provision" notes + the
+**Status: Part A ✅ landed 2026-06-30 (Session E); Parts B/C/D ⏳ queued (Session
+G).** Added 2026-06-30 from the scratch.md "Ensure full provision" notes + the
 start-from-zero / non-code-contributor discussion. **Scope confirmed with the user
-2026-06-30.**
+2026-06-30.** **Part A landed:** `PROCESS.md` §7 (right after the existing "Two
+check layers" bullets, before the generate-vs-measure note) gained three new
+paragraphs — **"A third toolchain layer — the developer workstation"** (names
+process/product/workstation, resolving the "no required tools" conflation);
+**"The onboarding ladder"** (the `Stage 0 → dev-setup → setup → check` diagram,
+explicitly the §4 lifecycle phases applied one level up to the act of developing,
+each rung optional/readable/consent-first, non-code contributors named
+explicitly); and **"Offline-render principle"** (local-only rendering, pointing
+back at §3's Mermaid-in-Markdown choice). `README.md` gained a matching
+**"Onboarding ladder"** echo. **Deviations from the spec as written:** (1) landed
+in **§7** rather than near §1 — the three-layer split is a direct continuation of
+§7's existing process-vs-product toolchain paragraph, so extending it there (vs.
+opening a new location) keeps the toolchain-layers concept single-homed; (2) no
+`AGENTS.template.md` clause, as the thread itself already calls for ("no AGENTS.md
+clause; a README echo is fine") — consistent with Thread 12/13/17/18's same-cap
+call this session. **Parts B/C/D (the actual `onboard.template.*` /
+`dev-setup.template.*` scripts + bootstrap wiring + meta-repo dogfood) are
+unchanged — still queued for Session G**, a solo, multi-platform build per the
+thread's own sessioning. `pytest -q`: unaffected (prose only; Part A ships no
+script).
 
 **Goal:** make a fresh contributor — including a **non-code** one (art/UI, CAD,
 electronics, publications) whose work still lives as reviewable git changes — go
@@ -1287,8 +1336,22 @@ decision); any concrete renderer/diff helper is product-layer and project-owned.
 
 ## Thread 17 — Voice policy + the agent-layer carve-out
 
-**Status: ⏳ queued (Session E, the clubbed prose batch), added 2026-06-30.** Framing
-confirmed with the user 2026-06-30.
+**Status: ✅ landed 2026-06-30** (Session E, the clubbed prose batch). Framing
+confirmed with the user 2026-06-30. `PROCESS.md` §5 gained a **"Voice policy —
+warmth has a layer boundary"** paragraph, placed right after the verdict-protocol
+block it protects: the **human-facing vs. machine/agent-facing split** (findings,
+verdicts, subagent prompts, registry cells, commit messages stay literal/terse/
+no-whimsy), the **restrained default** voice ("direct and concrete; dry wit at
+most; never at the expense of clarity or honesty"), and the **optional, named
+tone knob** — never a baked-in persona. **Deviations from the spec as written:**
+(1) landed in **§5**, not §6 — the thread offered both as a home, and §5 is the
+section the carve-out most directly protects (the findings/verdict format whimsy
+would corrupt); (2) no `AGENTS.template.md` pointer and no `KICKOFF_PROMPT.md`
+tone note — the file's at 11,998/~12,000 chars with three threads (13/17/18)
+competing for the same slack this session, so the coordinated call (Thread 12's
+note) was PROCESS-only across all of them; the optional KICKOFF note was likewise
+skipped to keep the session's footprint to its specced files. `pytest -q`:
+unaffected (prose only).
 
 **Goal:** let a project add warmth/levity to **human-facing** agent output without
 poisoning the **machine/agent-facing** layer — by stating a voice policy with an
@@ -1349,9 +1412,28 @@ AGENTS.md byte budget (a strong-model glance before commit, like Thread 13).
 
 ## Thread 18 — Model/agent-tiering discipline (recommend + record, not enforce)
 
-**Status: ⏳ queued (Session E, the clubbed prose batch), added 2026-06-30.** Honest
+**Status: ✅ landed 2026-06-30** (Session E, the clubbed prose batch). Honest
 framing confirmed with the user 2026-06-30. This **formalizes the per-thread "Model
 tier" convention this very plan has been using ad hoc** since 2026-06-30.
+`PROCESS.md` §6 gained a **"Model/agent tiering — recommend + record, not
+enforce"** paragraph after the existing review-depth-triage bullets: names the
+triage axis as also a **tiering** axis (strong model for planning/decomposition/
+decisions/high-risk; cheaper tier for mechanical/well-specced/low-risk), states
+the **gates-as-backstop** rationale (tiering down is safe specifically because a
+cheap executor can't silently drift past a deterministic check), the
+**recorded-tier-hint** convention generalizing the ad-hoc "Model tier:" lines this
+very plan has used since Thread 12, and **host-specific levers as optional,
+named-by-category examples** (a strong-model-plans/cheaper-model-executes mode,
+per-subagent overrides, a model-selection command) — explicitly **not** a
+model-selection engine. **Deviations from the spec as written:** (1) no
+`AGENTS.template.md` pointer and no `STATUS.template.md`/`KICKOFF_PROMPT.md`
+note — same cap-and-scope call as Threads 13/17 this session (PROCESS-only); (2)
+host levers are named **inline in the §6 paragraph** rather than in a separate
+note by `agent-hooks/README.md` (the thread's other suggested home) — that file
+is specifically about per-agent *hook* configs, a topical mismatch for
+model-selection levers, so keeping it in one self-contained §6 paragraph avoided
+spreading the convention across an unrelated doc. `pytest -q`: unaffected (prose
+only).
 
 **Goal:** bake a model/agent efficiency discipline into the template — classify work
 by kind and route it to an appropriately-tiered model/agent — at the only honest
@@ -1713,14 +1795,15 @@ after the model questions resolve.
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
 **7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
-(2026-06-29). **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
+(2026-06-29); **12 ✅, 13 ✅, 15A ✅, 17 ✅, 18 ✅** (2026-06-30, Session E).
+**Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
 16 (verifying non-code artifacts, a stub) from the start-from-zero discussion;
 17 (voice policy + agent-layer carve-out) + 18 (model/agent-tiering discipline)
 from the voice/efficiency discussion; 19 (multi-module scoping) + 20 (multi-repo
 coordinator, design-first) + 21 (cross-repo tooling, a stub) from the multi-repo
-discussion. **▶ NEXT: Session E.** The rule applied
+discussion. **▶ NEXT: Session F.** The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
@@ -1760,22 +1843,26 @@ thread's **Model tier** line says where the handoff is safe.
 > comparator subsection + §3 committed-golden class; gitignore/CI/EXAMPLE/README +
 > a release-checklist perf section; 15 new tests. `pytest -q`: 97 passed.
 
-> **▶ Session E · NEXT · The prose batch (Threads 12, 13, 15A, 17, 18).** **Clubbed
-> 2026-06-30** (was Sessions E + G + I): all five are PROCESS.md/README prose, and
-> **13/17/18 each want an AGENTS.md pointer competing for the same ~2 bytes under the
-> 12k cap** — so the cap must be reconciled in **one coordinated pass**, the exact
-> rationale Session A used to batch 4/6/8. Per thread: **12** → PROCESS.md §7
-> (spec-vs-runtime-harness boundary; Donny as optional accelerator) + README echo;
-> **13** → right-sizing guardrails + the shortcut-comment convention; **15A** → the
-> three toolchain layers + the `Stage 0 → dev-setup → setup → check` ladder +
-> offline-render principle + README echo (Thread 15's *prose* part; its build is
-> Session G); **17** → voice policy + human-vs-machine carve-out + tone knob; **18** →
-> §6 task→tier mapping + gates-as-backstop + the recorded-tier-hint convention + host
-> levers. No scripts; backstop is `check_docs.py` links + `wc -c AGENTS.template.md`
-> ≤ ~12k. **Model tier: Sonnet-able execution**, with one strong-model glance to
-> reconcile the AGENTS.md cap across 13/17/18 before commit. Larger than Session A
-> (5 threads vs 3) but same-file-coherent and low-risk; the cap reconciliation — not
-> the thread count — is the binding constraint.
+> **Session E ✅ landed 2026-06-30 · The prose batch (Threads 12, 13, 15A, 17,
+> 18).** **Clubbed 2026-06-30** (was Sessions E + G + I): all five are
+> PROCESS.md/README prose. Landed: **12** → PROCESS.md §7 (spec-vs-runtime-harness
+> boundary; a turnkey harness named by category as an optional accelerator) +
+> README echo; **13** → §3 right-sizing guardrails + the `SHORTCUT:` comment
+> convention; **15A** → §7 the three toolchain layers + the `Stage 0 → dev-setup →
+> setup → check` onboarding ladder + the offline-render principle + README echo
+> (Thread 15's *prose* part only; its script build stays queued for Session G);
+> **17** → §5 voice policy (human-vs-machine carve-out + restrained default + tone
+> knob); **18** → §6 the task→tier mapping + gates-as-backstop rationale + the
+> recorded-tier-hint convention + host-lever examples. **Cap reconciliation
+> (the binding constraint, as anticipated): PROCESS-only for all five.**
+> `AGENTS.template.md` sat at 11,998/~12,000 chars with effectively zero slack
+> and three of the five threads (13/17/18) each wanting a pointer; rather than
+> fragile byte-shaving across unrelated bullets for five ~3-4-word pointers, every
+> thread's own "else PROCESS-only" fallback was taken, so `AGENTS.template.md` is
+> **unchanged** this session (still 11,998 chars — verified, not just assumed).
+> No scripts; backstop was `pytest -q` (97 passed, unaffected — prose only) +
+> a manual link check (no `#anchor` links were added; all new file links reuse
+> already-valid relative paths).
 
 > **Session F · Substance gate (Thread 14) — implement A + build C.** Decision made
 > 2026-06-30 (A+C). Implement the **A** G3 no-stub criterion (prose) and **build C**,
@@ -1811,12 +1898,12 @@ thread's **Model tier** line says where the handoff is safe.
 > heavy tooling routed to the **Thread 21 stub**. **Model tier: strong model +
 > human throughout**; only the locked-contract seam-wiring is Sonnet-able.
 
-**Open: Sessions E (next), F, G, H, I.** Threads 0a, 0b, 1–11 landed (on
-`template-review-fixes`, since merged into the current working branch); Threads
-12–15 + 17–20 are specced above and await Sessions E–I — **E = the clubbed prose
-batch (12/13/15A/17/18), F = the Thread-14 decision, G = the Thread-15 build,
-H = multi-module (19), I = multi-repo design (20)**; Threads 16 and 21 are stubs.
-Land them on the current working branch.
+**Open: Sessions F (next), G, H, I.** Threads 0a, 0b, 1–11 landed (on
+`template-review-fixes`, since merged into the current working branch); Session E
+(12, 13, 15A, 17, 18) landed 2026-06-30 on the current working branch. Threads 14,
+15 (Parts B/C/D), 19, 20 await Sessions F–I — **F = the Thread-14 decision/build,
+G = the Thread-15 build, H = multi-module (19), I = multi-repo design (20)**;
+Threads 16 and 21 are stubs.
 
 ### Session protocol (for a cold session pointed only at this file)
 

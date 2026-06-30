@@ -101,6 +101,18 @@ same artifacts and run the gates with you.
 > complexity/churn dashboards — is a separate, **optional downstream** concern,
 > not a kit dependency (see [`PROCESS.md`](project-trajectory/PROCESS.md) §7).
 
+> **Scope — spec vs. runtime harness.** This kit is a portable process *spec*; a
+> turnkey, tool-specific agent-runtime harness (an installed engine with its own
+> gates/subagents) is different, optional, downstream tooling that can run *with*
+> a repo built from this kit — never a dependency of it (see
+> [`PROCESS.md`](project-trajectory/PROCESS.md) §7).
+
+> **Onboarding ladder.** A fresh contributor's path mirrors the lifecycle phases
+> one level up — `Stage 0` (get git + the repo) → `dev-setup` (workstation:
+> runtime, git, an offline Mermaid renderer) → `setup` (product toolchain) →
+> `check` (the gates) — each rung optional, readable, and consent-first (see
+> [`PROCESS.md`](project-trajectory/PROCESS.md) §7).
+
 See [`project-trajectory/README.md`](project-trajectory/README.md) for the full
 tour and the tuning knobs (`COVERAGE_THRESHOLD`, `MAX_ROUNDS`, dropping hats for
 small projects).
