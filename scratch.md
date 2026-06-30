@@ -168,6 +168,27 @@ Setup Dependency flow:
 - Informs user applications and extensions will be installed or updated to view documentation and diagrams in 10 s, press any key to interrupt and review tools before proceeding.
 - If user press key, present user with list of programs and extension intended to installed.  User is given the choice to install all, install only those required for development, or to cancel and close.
 
+Noted during discussion, just to keep my own framing in perspective:
+Before proceeding, let's make sure we're aligned on what the scope of the decision really entails.  I am amicable to "thin-advisory-recommended" but what I'm envisioning is probably still splashing into "full-installer-rejected".  I want the the user to have a simple "download this thing"-> user runs it -> It indicates in cli what it's going to do -> User accepts if they want to proceed -> Tool kicks off window for the user to choose where they want their repo to be saved -> Tool exports repo and then launches the dev tool setup scripts according to the platform.
+
+Some developers are not developing code, they may be developing art / UI elements, they might be developing physical assemblies or electrical circuits.  They may be developing publications / marketing material.  That act of design and iteration for projects using this template would still live as reviewable changes in git, but the contributor needs their focus on their design skills within a domain, I'm trying to avoid forcing non-code developers to have a detailed understanding of repositories and change control when ai agents can commit / push their work for them, but that is predicated on getting the machine / workspace setup very easily and still take advantage of the change management  and reviewability that git offers.  Of course that bubbles up an entirely new question - how would those sort of artifacts be "tested", but it is still possible.  Point is I want onboarding to be trivial - not required reading - but again - there is a balance to all these wants.
+
+→ Resolved (2026-06-30) → IMPROVEMENT_PLAN.md **Thread 15** (queued, Sessions G prose
+  + H build) + **Thread 16** (stub). Untangle "setup" into three named layers
+  (process = stdlib, none required · product = stack tools · developer workstation =
+  new) and a `Stage 0 → dev-setup → setup → check` onboarding ladder (≈ Provision/
+  Startup/Runtime *for development*, Thread 5). Decision = **"guided skeleton"**:
+  readable, consent-first scripts with a native GUI folder picker (no compiled exe,
+  no pipe-to-shell); ensure-git + HTTPS clone (auth delegated to `gh`, never
+  hand-rolled keygen); an **end banner** naming the cloned repo dir + telling a
+  non-code contributor they can point an AI agent at it; then kick off `dev-setup`
+  (tiered `--check`/baseline/full; code vs. domain contributor profiles; offline
+  renderers only). Kit ships the skeleton + scaffolds it; signing / serving it as a
+  Release asset is the downstream project's call. **Parked:** agent auto-selection/
+  install (banner-only for now). **Thread 16:** verifying non-code artifacts (CAD/
+  art/PCB/publication) — already expressible via the §4 Demonstration/Inspection
+  methods; the missing render/diff tooling is product-layer (sketch now, build later).
+
 Other considerations:
 - Donnyclaude (C:\Projects\donnyclaude)
 - Ponytail (C:\Projects\ponytail)

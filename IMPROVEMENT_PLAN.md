@@ -1121,13 +1121,174 @@ convention sees real use. Strong model to spec; Sonnet to build against `pytest`
 
 ---
 
+## Thread 15 — Onboarding & contributor-workspace provisioning (zero-to-running ladder)
+
+**Status: ⏳ queued (Sessions G prose + H build), added 2026-06-30** from the
+scratch.md "Ensure full provision" notes + the start-from-zero / non-code-
+contributor discussion. **Scope confirmed with the user 2026-06-30.**
+
+**Goal:** make a fresh contributor — including a **non-code** one (art/UI, CAD,
+electronics, publications) whose work still lives as reviewable git changes — go
+from a bare machine to an editable, viewable, testable checkout with minimal
+friction and **no required git literacy**. Separate the conflated "setup" concerns
+into an explicit ladder and ship readable, optional, consent-first helpers per rung.
+
+**Why:** the kit generates legibility artifacts (Mermaid diagrams, the HTML trace
+map, the arch map) that are worthless if a contributor can't *render* them, and it
+assumes git + a toolchain a domain contributor may not have. "No required tools"
+was always a statement about the **process-check layer** (stdlib Python), never a
+claim that a human needs nothing. Naming the layers resolves the conflation; the
+guided onboarder serves "start from zero" without forcing change-control knowledge
+on someone whose focus is their domain — an AI agent can drive git for them (see
+the parked follow-on).
+
+**The ladder** (each rung an optional, readable helper; maps to Thread 5's
+lifecycle, applied to the *act of developing*):
+
+```
+Stage 0           →  dev-setup       →  setup          →  check
+get git + repo        workstation        product deps      run gates
+(pre-clone)           (post-clone)       (venv/tools)      (exists)
+≈ Provision-for-dev   ≈ Startup-for-dev                    ≈ Runtime-for-dev
+```
+
+**Decision (recorded): "guided skeleton."** Readable, consent-first scripts (incl. a
+**native GUI folder picker**); the kit ships + scaffolds the skeleton, and a
+downstream project may serve it as a **GitHub Release asset** (manual upload, stable
+download URL) — signing / turnkey packaging is *their* call and cost. **Rejected:** a
+compiled/opaque binary, silent or timeout-default auto-install, and hand-rolled
+SSH-key/account auth (**delegate to `gh`/host CLI**). **Not chosen:** document-only
+(too thin for start-from-zero).
+
+**Three toolchain layers, named once in PROCESS.md** (this resolves the conflation
+the user flagged):
+- **Process toolchain** — none; stdlib Python; the kit's floor. *(exists)*
+- **Product toolchain** — language/stack tools (ruff/pytest reference);
+  `setup.{sh,ps1}`. *(exists)*
+- **Developer workstation** — what a human needs to view/render/edit/run: a runtime,
+  git, an **offline** Markdown+Mermaid renderer, optionally an IDE + a domain viewer.
+  *(new)*
+
+Plus the **offline-render principle:** legibility artifacts must render with
+**local, offline** tooling — never a cloud service (the kit already chose
+Mermaid-in-Markdown for exactly this, §3). Point at a local renderer (VS Code + a
+Mermaid preview extension, or `@mermaid-js/mermaid-cli`); a Kroki/PlantUML
+*container* only if a project outgrows Mermaid (§3 already says so).
+
+**Parts:**
+
+**A — PROCESS.md (prose).** Name the three layers + the onboarding ladder + the
+Provision-for-development framing + the offline-render principle. Single-source;
+mind the 12k AGENTS.md cap (no AGENTS.md clause; a README echo is fine).
+
+**B — Stage-0 onboarder template** `onboard.template.{cmd,command,sh}` (one
+readable entry point per platform). Flow: **print what it will do → user accepts →
+native folder picker** (PowerShell `FolderBrowserDialog` · macOS `osascript 'choose
+folder'` · Linux `zenity`/CLI fallback) **→ ensure git** (winget/choco · brew · apt)
+**→ HTTPS clone** (`gh auth login` only if push access is needed) **→ END BANNER →
+kick off `dev-setup`.**
+- **End banner (required), printed right before the `dev-setup` consent prompt:**
+  prominently shows the **cloned repo directory path** and the line *"If you'd like
+  an AI agent to manage your changes (commits, pushes, reviews) for you, point it at
+  this directory."* Then the prompt that launches `dev-setup`.
+- `bootstrap.py` scaffolds it with the project's clone URL filled in (a templated
+  placeholder). The project may attach the file to a Release (documented option; the
+  kit does **not** run a release CI action).
+
+**C — dev-setup template** `dev-setup.template.{sh,ps1}` (launcher tier, readable,
+with an **EDIT FOR YOUR STACK / DOMAIN** block like `check.py`). Tiers: `--check`
+(**default** — detect + report, install nothing) · *baseline* (runtime + git +
+offline renderer + test-ability) · *full* (+ IDE + extensions; **opt-in**, skipped
+when headless/non-interactive). **Contributor profiles:** a *code* profile (runtime
++ linter + test tools) and a *domain* profile (git + offline renderer + a **domain
+viewer the project fills in** — CAD/KiCad/image/publication). Domain viewers are
+project-customized; the kit can't pre-know them.
+
+**D — Meta-repo dogfood.** A concrete `dev-setup` for *this* repo (python, ruff,
+pytest, a Mermaid-capable viewer) so the kit supports itself; the *template* ships
+only the universal baseline + EDIT slots. A meta-repo release-served onboarder is
+low value — deferred.
+
+**Steps:** PROCESS.md edits (A) + README echo; new template scripts (B, C) +
+`bootstrap.py` MAPPING + docstring; meta-repo dogfood (D); tests.
+
+**Tests:** bootstrap file-list asserts the new templates scaffold; where a shell
+exists, a smoke test that `onboard` is syntactically valid and `dev-setup --check`
+runs and reports (mirroring the existing `sh` pre-commit e2e, skipped where no
+shell). Cross-platform/GUI/auth behavior beyond that is **manually verified per OS**
+(weak automated net — see Model tier). Verify intra-doc links; AGENTS.md ≤ ~12k.
+
+**Risks:** scope creep into a general-purpose installer / IDE-provisioner — keep
+helpers thin, optional, consent-first, readable; the kit owns the *skeleton +
+structure*, **not** signing/distribution or the domain-viewer matrix. Cross-platform
+shell + native pickers are fiddly and weakly testable — manual per-OS verification.
+Unsigned-script OS warnings (SmartScreen/Gatekeeper) are unavoidable without signing
+— document a "download, read, run" expectation; **never pipe-to-shell**. Don't force
+git literacy — the end banner + agent handoff is the non-coder's path.
+
+**Done-when:** PROCESS.md names the three layers + ladder + offline-render
+principle; `onboard.template.*` and `dev-setup.template.*` scaffold via bootstrap,
+consent-first and readable, with the end banner naming the repo dir + agent handoff;
+the meta-repo dogfoods `dev-setup`; no compiled binary, no hand-rolled auth; links
+pass; `pytest -q` green.
+
+**Model tier — decision + cross-platform/auth/GUI design on the strong model; prose
++ wiring Sonnet-able.** Part A (prose) and the bootstrap/README wiring are
+Sonnet-able once specced. Parts B/C touch **install, auth, and credentials with a
+weak automated backstop** (pytest covers `.py`, not deep cross-platform
+`.cmd`/`.command`/`.sh` or GUI pickers) — design and review on the strong model with
+**manual per-OS verification**; don't treat green pytest as proof the
+Windows/macOS/auth paths work. **Sessions:** A is prose (could ride Session E);
+B+C+D are a solo, multi-platform script build — its own session, higher-care than
+the Python `check_*` builds.
+
+**Parked follow-on (not in scope) — agent selection & auto-provisioning.**
+Automatically choosing and installing an AI agent (Claude Code / others) for the
+domain contributor is **parked**: agent tooling is fast-moving, opinionated, and
+tool-specific (the same anti-lock-in logic the kit applies to ruff/IDEs/Serena). For
+now the onboarder's **end banner** simply tells the user they *can* point an agent at
+the repo directory. Revive as its own thread only if a stable, neutral
+agent-provisioning path emerges.
+
+---
+
+## Thread 16 — Verifying non-code artifacts (stub: sketch now, build later)
+
+**Status: ⏳ stub, added 2026-06-30.** A spin-off of the Thread-15
+non-code-contributor discussion; **deliberately not specced to depth** — confirmed
+with the user as a separate, later thread.
+
+**Goal (sketch):** give projects whose deliverables are non-code (art/UI, CAD,
+electronics, publications) a way to *verify* those artifacts within the SN→SR→LLR→TC
+spine. The kit **already** models this at the *method* level — §4's `Demonstration`
+/ `Inspection` / `Manual` methods + "every SR needs ≥1 TC regardless of method
+(human methods record the procedure)" already express "a human or agent reviews the
+rendered output against acceptance criteria." What's missing is **product-layer
+tooling**: render-on-change, visual/image diff, PCB design-rule checks, publication
+lint — none of which the kit should own (stack/domain-specific), but which it should
+**name and route**, the meters-vs-comparator split from Thread 11: the project
+renders/diffs; the kit's gate records the verification.
+
+**Open questions (for when this is specced):** how binary/large artifacts interact
+with "review the source, not the render" (§3) when the *source* is itself binary;
+whether a generated, gitignored "render report" (like the perf/trace composites) is
+the review surface; how an AI agent's visual review is recorded as an honest TC
+verdict (Demonstration, not Test).
+
+**Model tier:** spec on the strong model when revived (a methodology-extension
+decision); any concrete renderer/diff helper is product-layer and project-owned.
+
+---
+
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
 **7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
-(2026-06-29). **Reopened 2026-06-30** with **Threads 12–14** from the
+(2026-06-29). **Reopened 2026-06-30** with **Threads 12–16**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
-8/9 from `ai-native-toolkit`). **▶ NEXT: Session E.** The rule applied
+8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
+16 (verifying non-code artifacts, a stub) from the start-from-zero discussion.
+**▶ NEXT: Session E.** The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
@@ -1184,10 +1345,25 @@ thread's **Model tier** line says where the handoff is safe.
 > decision on the strong model; a convention-only outcome is Sonnet-able; a detector
 > build is Sonnet-executable against `pytest` only after the contract is locked.**
 
-**Open: Sessions E (next) and F.** Threads 0a, 0b, 1–11 landed (on
+> **Session G · Onboarding prose (Thread 15 Part A).** PROCESS.md names the three
+> toolchain layers + the `Stage 0 → dev-setup → setup → check` ladder + the
+> offline-render principle + a README echo. Pure prose, Session-A shape — **could
+> ride Session E** if appetite allows. **Model tier: Sonnet-able** once specced.
+
+> **Session H · Onboarder + dev-setup build (Thread 15 Parts B/C/D).** Solo,
+> **multi-platform, highest-care** of any session: the `onboard.template.*` guided
+> skeleton (consent-first, native folder picker, ensure-git, HTTPS clone, end
+> banner naming the repo dir + agent handoff), the tiered `dev-setup.template.*`
+> with code/domain contributor profiles, bootstrap wiring, and the meta-repo
+> dogfood. **Model tier: strong-model design + manual per-OS verification** (the
+> automated net only reaches a shell smoke test); Sonnet executes the mechanical
+> parts only after the cross-platform/auth/GUI contract is locked. **Thread 16 is a
+> stub — no session until revived.**
+
+**Open: Sessions E (next), F, G, H.** Threads 0a, 0b, 1–11 landed (on
 `template-review-fixes`, since merged into the current working branch); Threads
-12–14 are specced above and await Sessions E/F. Land them on the current working
-branch.
+12–15 are specced above and await Sessions E–H; Thread 16 is a stub. Land them on
+the current working branch.
 
 ### Session protocol (for a cold session pointed only at this file)
 
