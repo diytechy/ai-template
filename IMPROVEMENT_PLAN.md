@@ -1123,9 +1123,10 @@ convention sees real use. Strong model to spec; Sonnet to build against `pytest`
 
 ## Thread 15 — Onboarding & contributor-workspace provisioning (zero-to-running ladder)
 
-**Status: ⏳ queued (Sessions G prose + H build), added 2026-06-30** from the
-scratch.md "Ensure full provision" notes + the start-from-zero / non-code-
-contributor discussion. **Scope confirmed with the user 2026-06-30.**
+**Status: ⏳ queued — Part A prose in Session E, Parts B/C/D build in Session G;
+added 2026-06-30** from the scratch.md "Ensure full provision" notes + the
+start-from-zero / non-code-contributor discussion. **Scope confirmed with the user
+2026-06-30.**
 
 **Goal:** make a fresh contributor — including a **non-code** one (art/UI, CAD,
 electronics, publications) whose work still lives as reviewable git changes — go
@@ -1282,7 +1283,7 @@ decision); any concrete renderer/diff helper is product-layer and project-owned.
 
 ## Thread 17 — Voice policy + the agent-layer carve-out
 
-**Status: ⏳ queued (Session I, prose — batchable), added 2026-06-30.** Framing
+**Status: ⏳ queued (Session E, the clubbed prose batch), added 2026-06-30.** Framing
 confirmed with the user 2026-06-30.
 
 **Goal:** let a project add warmth/levity to **human-facing** agent output without
@@ -1344,7 +1345,7 @@ AGENTS.md byte budget (a strong-model glance before commit, like Thread 13).
 
 ## Thread 18 — Model/agent-tiering discipline (recommend + record, not enforce)
 
-**Status: ⏳ queued (Session I, prose — batchable), added 2026-06-30.** Honest
+**Status: ⏳ queued (Session E, the clubbed prose batch), added 2026-06-30.** Honest
 framing confirmed with the user 2026-06-30. This **formalizes the per-thread "Model
 tier" convention this very plan has been using ad hoc** since 2026-06-30.
 
@@ -1469,29 +1470,32 @@ thread's **Model tier** line says where the handoff is safe.
 > comparator subsection + §3 committed-golden class; gitignore/CI/EXAMPLE/README +
 > a release-checklist perf section; 15 new tests. `pytest -q`: 97 passed.
 
-> **▶ Session E · NEXT · Sibling-survey framing (Threads 12, 13).** Pure prose, the
-> Session-A shape: **12** → PROCESS.md §7 (spec-vs-runtime-harness boundary; Donny as
-> an optional accelerator) + a one-line README echo; **13** → PROCESS.md
-> (right-sizing guardrails + the shortcut-comment convention) with at most a
-> byte-budgeted AGENTS.md pointer. No scripts; backstop is `check_docs.py` links +
-> `wc -c AGENTS.template.md` ≤ ~12k. **Model tier: Sonnet-able execution** once the
-> two specs are read — the single care point is the AGENTS.md cap (Thread 13), worth
-> a strong-model glance before commit.
+> **▶ Session E · NEXT · The prose batch (Threads 12, 13, 15A, 17, 18).** **Clubbed
+> 2026-06-30** (was Sessions E + G + I): all five are PROCESS.md/README prose, and
+> **13/17/18 each want an AGENTS.md pointer competing for the same ~2 bytes under the
+> 12k cap** — so the cap must be reconciled in **one coordinated pass**, the exact
+> rationale Session A used to batch 4/6/8. Per thread: **12** → PROCESS.md §7
+> (spec-vs-runtime-harness boundary; Donny as optional accelerator) + README echo;
+> **13** → right-sizing guardrails + the shortcut-comment convention; **15A** → the
+> three toolchain layers + the `Stage 0 → dev-setup → setup → check` ladder +
+> offline-render principle + README echo (Thread 15's *prose* part; its build is
+> Session G); **17** → voice policy + human-vs-machine carve-out + tone knob; **18** →
+> §6 task→tier mapping + gates-as-backstop + the recorded-tier-hint convention + host
+> levers. No scripts; backstop is `check_docs.py` links + `wc -c AGENTS.template.md`
+> ≤ ~12k. **Model tier: Sonnet-able execution**, with one strong-model glance to
+> reconcile the AGENTS.md cap across 13/17/18 before commit. Larger than Session A
+> (5 threads vs 3) but same-file-coherent and low-risk; the cap reconciliation — not
+> the thread count — is the binding constraint.
 
 > **Session F · Substance gate (Thread 14) — decision-first.** Resolve the A/B/C
 > design choice (strong model + human, like Thread 7) **before** building. If it
-> lands convention-only (A), it folds into a prose pass (could even ride along with
-> Session E); if the optional Python detector (C) is built, it's a solo
-> script + tests session reusing the `check_*` pattern (Sessions C/D). **Model tier:
-> decision on the strong model; a convention-only outcome is Sonnet-able; a detector
-> build is Sonnet-executable against `pytest` only after the contract is locked.**
+> lands convention-only (A), its prose can fold into Session E; if the optional
+> Python detector (C) is built, it's a solo script + tests session reusing the
+> `check_*` pattern (Sessions C/D). **Model tier: decision on the strong model; a
+> convention-only outcome is Sonnet-able; a detector build is Sonnet-executable
+> against `pytest` only after the contract is locked.**
 
-> **Session G · Onboarding prose (Thread 15 Part A).** PROCESS.md names the three
-> toolchain layers + the `Stage 0 → dev-setup → setup → check` ladder + the
-> offline-render principle + a README echo. Pure prose, Session-A shape — **could
-> ride Session E** if appetite allows. **Model tier: Sonnet-able** once specced.
-
-> **Session H · Onboarder + dev-setup build (Thread 15 Parts B/C/D).** Solo,
+> **Session G · Onboarder + dev-setup build (Thread 15 Parts B/C/D).** Solo,
 > **multi-platform, highest-care** of any session: the `onboard.template.*` guided
 > skeleton (consent-first, native folder picker, ensure-git, HTTPS clone, end
 > banner naming the repo dir + agent handoff), the tiered `dev-setup.template.*`
@@ -1501,18 +1505,11 @@ thread's **Model tier** line says where the handoff is safe.
 > parts only after the cross-platform/auth/GUI contract is locked. **Thread 16 is a
 > stub — no session until revived.**
 
-> **Session I · Voice + model-tiering prose (Threads 17, 18).** Pure prose,
-> Session-A shape — **could ride Session E** (all prose, all PROCESS.md,
-> cap-sensitive). 17 → PROCESS.md voice policy + human-vs-machine carve-out + a
-> tone knob; 18 → PROCESS.md §6 task→tier mapping + gates-as-backstop + the
-> recorded-tier-hint convention (the one this plan already dogfoods) + host levers
-> as optional examples. **Model tier: Sonnet-able execution**; strong-model glance
-> only for the AGENTS.md cap if touched.
-
-**Open: Sessions E (next), F, G, H, I.** Threads 0a, 0b, 1–11 landed (on
+**Open: Sessions E (next), F, G.** Threads 0a, 0b, 1–11 landed (on
 `template-review-fixes`, since merged into the current working branch); Threads
-12–15 + 17–18 are specced above and await Sessions E–I; Thread 16 is a stub. Land
-them on the current working branch.
+12–15 + 17–18 are specced above and await Sessions E–G — **E = the clubbed prose
+batch (12/13/15A/17/18), F = the Thread-14 decision, G = the Thread-15 build**;
+Thread 16 is a stub. Land them on the current working branch.
 
 ### Session protocol (for a cold session pointed only at this file)
 
