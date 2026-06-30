@@ -1,0 +1,205 @@
+"""check_docs.py: the hand-written doc set stays navigable — broken intra-repo
+links fail, orphan docs warn (fail only with --strict-orphans), and the
+git-gated staleness pass degrades to a clean skip (process.md §3 "The doc set
+must stay navigable")."""
+
+from conftest import SCRIPTS, load_script, run_py
+
+
+# --- CLI behaviour on a real scaffold ---------------------------------------
+
+
+def test_clean_scaffold_passes(scaffold):
+    # A fresh scaffold has no broken links; its standalone docs are orphan
+    # WARNINGS only, so the harness floor stays green out of the box.
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "check_docs: OK" in proc.stdout
+    assert "0 broken" in proc.stdout
+
+
+def test_broken_file_link_fails(scaffold):
+    (scaffold / "docs" / "guide.md").write_text(
+        "# Guide\n\nSee [the design](design-notes.md).\n", encoding="utf-8"
+    )
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "broken link -> design-notes.md" in proc.stdout
+    assert "target not found" in proc.stdout
+
+
+def test_broken_anchor_fails(scaffold):
+    (scaffold / "docs" / "guide.md").write_text(
+        "# Guide\n\n## Real Section\n\nJump to [nowhere](#ghost-section).\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "broken link -> #ghost-section" in proc.stdout
+    assert "no such anchor in this doc" in proc.stdout
+
+
+def test_valid_anchor_link_passes(scaffold):
+    # A correct same-file anchor (GitHub heading slug) is not a broken link;
+    # the doc is still an orphan warning, but the run is green.
+    (scaffold / "docs" / "guide.md").write_text(
+        "# Guide\n\n## My Section\n\nBack to [it](#my-section).\n", encoding="utf-8"
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "0 broken" in proc.stdout
+
+
+def test_orphan_warns_by_default_and_fails_when_strict(scaffold):
+    # A doc nothing links to is unreachable from the entry roots.
+    (scaffold / "docs" / "lonely.md").write_text(
+        "# Lonely\n\nNo one links here.\n", encoding="utf-8"
+    )
+    warn = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert warn.returncode == 0, warn.stdout + warn.stderr
+    assert "WARN - orphan doc" in warn.stdout
+    assert "docs/lonely.md" in warn.stdout
+
+    strict = run_py(
+        [
+            "scripts/check_docs.py",
+            "--ignore",
+            "docs/test/report.md",
+            "--strict-orphans",
+        ],
+        cwd=scaffold,
+    )
+    assert strict.returncode == 1
+    assert "FAIL - orphan doc" in strict.stdout
+
+
+def test_reachable_doc_is_not_orphan(scaffold):
+    # Linking the new doc from an entry root (AGENTS.md) clears the warning.
+    (scaffold / "docs" / "guide.md").write_text(
+        "# Guide\n\nContent.\n", encoding="utf-8"
+    )
+    agents = scaffold / "AGENTS.md"
+    agents.write_text(
+        agents.read_text(encoding="utf-8") + "\n\nSee [the guide](docs/guide.md).\n",
+        encoding="utf-8",
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "docs/guide.md" not in proc.stdout  # neither broken nor orphaned
+
+
+def test_ignore_drops_doc_from_scan(scaffold):
+    # --ignore removes a doc from the scanned set entirely (the harness uses it
+    # for the generated docs/test/report.md), so its own links aren't checked.
+    (scaffold / "docs" / "generated.md").write_text(
+        "[stale](gone.md)\n", encoding="utf-8"
+    )
+    fails = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert fails.returncode == 1  # the broken link is caught when scanned
+    passes = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/generated.md"], cwd=scaffold
+    )
+    assert passes.returncode == 0, passes.stdout + passes.stderr
+
+
+def test_staleness_skips_without_git(tmp_path):
+    # --stale must degrade gracefully where git isn't available or the tree
+    # isn't a work tree: it skips, it doesn't fail. tmp_path is not a git repo.
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "a.md").write_text("# A\n", encoding="utf-8")
+    proc = run_py(
+        [SCRIPTS / "check_docs.py", "--root", tmp_path, "--stale"], cwd=tmp_path
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "staleness check skipped" in proc.stdout
+
+
+# --- harness wiring ----------------------------------------------------------
+
+
+def test_harness_runs_doc_navigability_at_g1(scaffold):
+    # G1's only step is doc-navigability; a broken link must fail that gate.
+    (scaffold / "docs" / "guide.md").write_text(
+        "# Guide\n\n[missing](nope.md)\n", encoding="utf-8"
+    )
+    proc = run_py(["scripts/check.py", "--gate", "G1"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "doc-navigability" in proc.stdout
+    assert "RESULT: FAIL" in proc.stdout
+
+
+# --- importable units (no subprocess) ---------------------------------------
+
+
+def test_slugify_matches_github_style():
+    check = load_script("check_docs")
+    assert check.slugify("Hello World") == "hello-world"
+    # Removed punctuation leaves the gaps -> the GitHub double hyphen.
+    assert check.slugify("3. Traceability & anti-duplication") == (
+        "3-traceability--anti-duplication"
+    )
+    assert check.slugify("`code` and *emphasis*") == "code-and-emphasis"
+
+
+def test_parse_doc_scope():
+    # Links inside code (inline + fenced) and images are out of scope; external
+    # links are captured here but skipped by the link checker.
+    check = load_script("check_docs")
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "doc.md"
+        p.write_text(
+            "# Title & More\n"
+            "[real](other.md)\n"
+            "![pic](image.png)\n"
+            "[ext](https://example.com)\n"
+            "`[incode](nope.md)`\n"
+            "```\n[fenced](nope.md)\n```\n",
+            encoding="utf-8",
+        )
+        info = check.parse_doc(p)
+    dests = [dest for _, dest in info["links"]]
+    assert "other.md" in dests
+    assert "https://example.com" in dests
+    assert "image.png" not in dests  # image skipped
+    assert "nope.md" not in dests  # inline-code + fenced skipped
+    assert "title--more" in info["anchors"]
+
+
+def test_find_stale_uses_injected_commit_times(tmp_path):
+    # find_stale's git dependency is injected as a path->epoch callable, so the
+    # comparison logic is unit-testable without real commits.
+    check = load_script("check_docs")
+    doc = tmp_path / "guide.md"
+    doc.write_text("Implements [the module](mod.py); see [other](peer.md).\n", "utf-8")
+    (tmp_path / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    (tmp_path / "peer.md").write_text("# Peer\n", encoding="utf-8")
+    parsed = {doc.resolve(): check.parse_doc(doc)}
+    root = tmp_path.resolve()
+
+    times = {doc.resolve(): 100, (tmp_path / "mod.py").resolve(): 200}
+    stale = check.find_stale(parsed, root, lambda p: times.get(p))
+    # The source file changed after the doc -> flagged; the doc-to-doc link is
+    # never a staleness signal (too noisy).
+    assert [s[2] for s in stale] == ["mod.py"]
+
+    times[doc.resolve()] = 300  # doc now newer than everything -> clean
+    assert check.find_stale(parsed, root, lambda p: times.get(p)) == []
+
+
+def test_git_commit_lookup_none_outside_work_tree(tmp_path):
+    check = load_script("check_docs")
+    # A bare temp dir is not a git work tree (and the call also returns None
+    # when git isn't installed) -> staleness is skipped.
+    assert check.git_commit_lookup(tmp_path) is None

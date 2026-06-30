@@ -16,6 +16,8 @@ Reads (relative to --docs, default "docs"):
     requirements/low-level-requirements.csv (cols: LLR-ID, SR-Refs, ...)
     test/test-cases.csv                     (cols: TC-ID, Verifies, ...)
     requirements/stakeholder-needs.md       (optional; SN-### ids scraped for SN->SR coverage)
+    requirements/performance-budgets.csv    (optional; PB-### perf/resource budgets, §9 —
+                                             each row's Refs must back-link a real SR/LLR/Module)
 
 Writes:
     test/report.md  — counts, the SR->LLR->TC matrix, the orphan list, and two
@@ -51,8 +53,12 @@ in scope for every phase. Orphan rules are phase-blind: every SR keeps its
 LLR + TC rows regardless of phase.
 
 Always (independent of --strict-schema), structural integrity is checked:
-    - a duplicated SR/LLR/TC id (the join would otherwise silently dedupe it)
+    - a duplicated SR/LLR/TC/PB id (the join would otherwise silently dedupe it)
     - a malformed id (not "PREFIX-<digits>")
+    - a performance-budget row (PB-###, §9) whose Refs name an unknown
+      SR/LLR/Module, or that back-links nothing — the budgets registry is off the
+      spine but must stay traceable to it (the PB-000 example row is ignored, so
+      the optional registry never blocks a gate a project doesn't use)
 These join `--strict`'s failure set like orphans do.
 
 --no-placeholders flags any leftover template example row (id ending "-000") as
@@ -99,6 +105,7 @@ ID_PATTERNS = {
     "SR": re.compile(r"^SR-\d+$"),
     "LLR": re.compile(r"^LLR-\d+$"),
     "TC": re.compile(r"^TC-\d+$"),
+    "PB": re.compile(r"^PB-\d+$"),  # optional performance-budgets registry (§9)
 }
 
 # Fields that must be non-empty under --strict-schema. Deliberately omits the
@@ -477,6 +484,8 @@ def main():
     raw_srs = load_csv(docs / "requirements" / "system-requirements.csv")
     raw_llrs = load_csv(docs / "requirements" / "low-level-requirements.csv")
     raw_tcs = load_csv(docs / "test" / "test-cases.csv")
+    # Optional, off-spine coordination registry (process.md §9); absent file -> [].
+    raw_pbs = load_csv(docs / "requirements" / "performance-budgets.csv")
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -484,6 +493,7 @@ def main():
     srs = [r for r in raw_srs if r.get("SR-ID") and not is_example(r["SR-ID"])]
     llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
+    pbs = [r for r in raw_pbs if r.get("PB-ID") and not is_example(r["PB-ID"])]
 
     sn_ids = set()
     sn_md = docs / "requirements" / "stakeholder-needs.md"
@@ -551,6 +561,21 @@ def main():
             orphans.append(f"SN {u} has no SR")
             orphan_ids.add(u)
 
+    # Performance budgets (process.md §9) sit off the spine but stay traceable:
+    # each row's Refs must resolve to a real SR/LLR id or an LLR Module path.
+    module_ids = {(lr.get("Module") or "").strip() for lr in llrs}
+    module_ids.discard("")
+    budget_targets = sr_ids | llr_ids | module_ids
+    budget_findings = []
+    for r in pbs:
+        pid = r["PB-ID"]
+        targets = refs(r.get("Refs"))
+        if not targets:
+            budget_findings.append(f"PB {pid} back-links nothing (Refs is empty)")
+        for x in targets:
+            if x not in budget_targets:
+                budget_findings.append(f"PB {pid} references unknown {x}")
+
     phases = set(refs(args.phase)) if args.phase else None
 
     def in_phase(r):
@@ -579,6 +604,10 @@ def main():
     raw = {"SR": raw_srs, "LLR": raw_llrs, "TC": raw_tcs}
     real = {"SR": srs, "LLR": llrs, "TC": tcs}
     integrity = [f for label in raw for f in integrity_findings(label, raw[label])]
+    # PB ids are integrity-checked too, but PB is kept out of the placeholder/
+    # schema sweeps above: the budgets registry is optional (like interfaces.csv),
+    # so a leftover PB-000 must never block a gate the project doesn't use.
+    integrity += integrity_findings("PB", raw_pbs)
     placeholders = (
         [f for label in raw for f in placeholder_findings(label, raw[label])]
         + [f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)]
@@ -617,6 +646,14 @@ def main():
             else []
         )
         + ([f"| Schema findings | {len(schema)} |"] if args.strict_schema else [])
+        + (
+            [
+                f"| Performance budgets (PB) | {len(pbs)} |",
+                f"| Budget findings | {len(budget_findings)} |",
+            ]
+            if pbs
+            else []
+        )
         + [
             "",
             "## SR -> LLR -> TC matrix",
@@ -658,6 +695,13 @@ def main():
         if not integrity
         else [f"- {f}" for f in integrity]
     )
+    if pbs:
+        lines += ["", "## Performance budgets (§9 back-links)", ""]
+        lines += (
+            [f"{len(pbs)} budget row(s); every Refs resolves to a real SR/LLR/Module."]
+            if not budget_findings
+            else [f"- {f}" for f in budget_findings]
+        )
     if args.no_placeholders:
         lines += ["", "## Placeholders (--no-placeholders)", ""]
         lines += (
@@ -700,11 +744,17 @@ def main():
         + (f" placeholders={len(placeholders)}" if args.no_placeholders else "")
         + (f" schema-findings={len(schema)}" if args.strict_schema else "")
         + (f" phase-deferred={len(phase_deferred)}" if phases else "")
+        + (f" budgets={len(pbs)} budget-findings={len(budget_findings)}" if pbs else "")
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
     )
     if args.strict and (
-        orphans or status_findings or integrity or placeholders or schema
+        orphans
+        or status_findings
+        or integrity
+        or placeholders
+        or schema
+        or budget_findings
     ):
         sys.exit(1)
 

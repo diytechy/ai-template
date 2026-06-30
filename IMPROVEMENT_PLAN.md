@@ -233,6 +233,21 @@ extended to assert each step's layer; existing wiring tests unaffected.
 
 ## Thread 3 — Encode the five working-agreement directives
 
+**Status: ✅ landed 2026-06-28** (first wave, with 0a/0b/1/2; Status block recorded
+retroactively 2026-06-29 — this thread predated the per-thread Status-block
+convention). `AGENTS.template.md` carries a dense **"Working agreement"** section
+folding in all five directives: #1 *ask, don't assume — and when unattended, pick
+the most reasonable interpretation, proceed, and record it under **Assumptions**
+in `docs/status.md`* (the home exists: `STATUS.template.md` "Assumptions
+(unattended)"); #2/#4 via the existing Communication style; #3 *stay in your lane —
+don't change unrelated code, surface a design smell as a separate finding*; #5
+*propose the stronger / longer-lived approach*. This repo's own `CLAUDE.md`
+"Communication style" **references** that block ("the shipped guide states the full
+version — `AGENTS.template.md` 'Working agreement'") rather than duplicating it, per
+the thread's single-source intent. Thread 6 later added the consistency-review
+clause to the same "Ask, don't assume" bullet as the reachable-human flip side of
+the assumption-logging. **No deviations.** Prose only (no tests).
+
 **Goal:** fold the user's five general directives into the canonical agent guide
 (now `AGENTS.template.md`), integrated with the existing "Communication style"
 (which already covers #1-partial, #2, #4). Gaps to add: #1's *unattended ⇒ record
@@ -296,6 +311,30 @@ spine.
 ---
 
 ## Thread 5 — Requirement lifecycle phase (ready / set / go)
+
+**Status: ✅ landed 2026-06-29.** The lifecycle dimension is named once in
+`PROCESS.md` §4 (immediately after "Phased delivery", so the delivery-`Phase` vs
+lifecycle distinction is adjacent and explicit): the **`Provision`/`Startup`/
+`Runtime`** default vocabulary (open, project-named — extend like `Area`), the
+**when/how-often discriminator** ("setup recurs"), the **one-capability-spans-
+phases** payoff, the **config straddles Provision↔Startup (app-dependently)**
+rule, and **keep one axis** (dependencies/config are *subjects*, not phases).
+Captured as an **optional `Lifecycle` tag mirroring `Area`** — the in-thread
+decision went to *optional, not a base column* (no downstream migration,
+schema-safe). Prompts added to `stakeholder-needs.template.md` (intro lifecycle
+question + a note that the edge-case rows are mostly Provision/Startup) and to the
+`system-requirements.template.csv` `Phase` cell, which now explicitly warns *not*
+to overload `Phase` and points at the `Lifecycle` tag — the exact point of
+confusion. `EXAMPLE.md` §7 tags the failover SR `Lifecycle=Runtime` and adds a
+table showing the **same DB capability spanning Provision/Startup/Runtime** (the
+two usually-missed siblings). New test `test_lifecycle_column_is_schema_safe`
+makes `trace.py`'s optional-column tolerance explicit. **Deviations from the spec
+as written:** (1) landed in **§4** (adjacent to delivery `Phase`) rather than
+§1/§2/§3, because the `Phase` collision is the whole risk and adjacency is the
+clearest disambiguation home; (2) the **optional `AGENTS.md` clause was skipped** —
+`AGENTS.template.md` sits at the ~12k Gemini cap (11,998 chars), so the guidance
+stays single-sourced in PROCESS.md (the call Thread 8 made). `pytest -q`: 69
+passed.
 
 **Goal:** make a requirement state **which operational phase of the product's
 lifetime** it governs, so the perennially-neglected non-runtime phases get
@@ -604,6 +643,38 @@ dependency introduced.
 
 ## Thread 9 — Doc navigability & staleness check (stdlib)
 
+**Status: ✅ landed 2026-06-29.** New stdlib `scripts/check_docs.py` (process
+layer, `requires=()`) parses the Markdown under `docs/` + root `*.md`, builds the
+link graph, and reports three classes: **broken intra-repo links** (missing
+target file/dir or `#anchor` — hard fail, exit 1), **orphan docs** (unreachable
+from an entry root — warn by default, `--strict-orphans` escalates to fail), and
+**staleness** (`--stale`, git-gated, warn-only: a doc linking a *non-doc* file
+committed more recently than the doc; degrades to a clean skip when git is absent
+or the tree isn't a work tree). Scope is the high-value 80% — inline `[text](dest)`
+links + same-file/`file#frag` anchors against GitHub-style heading slugs (plus
+`{#id}` suffixes and `<a name=…>`); images, reference-style links, and links
+inside fenced/inline code are deliberately out of scope (documented in the
+docstring). Wired into `check.py` as a `doc-navigability` **process** step at
+**{G1,G2,G3}** (G1 now has a real check), passing `--ignore docs/test/report.md`
+so the gitignored generated composite isn't scanned. Principle named once in
+`PROCESS.md` §3 ("The doc set must stay navigable") and listed in §7 (process-check
+list + script reference); `bootstrap.py` MAPPING + docstring ship it; both READMEs
+mention it. New `tests/test_check_docs.py` (13 cases): CLI behavior on a real
+scaffold (clean pass, broken file link, broken/valid anchor, orphan warn-vs-strict,
+reachable-clears-orphan, `--ignore` drop, staleness skip-without-git), harness
+wiring at G1, and importable units (`slugify`, `parse_doc` scope, `find_stale` with
+an injected commit-time lookup, `git_commit_lookup` None outside a work tree).
+**Deviations from the spec as written:** (1) `--ignore` was made *drop-from-scan*
+(not just orphan-suppression) so generated composites are excluded entirely and
+the harness can hold `report.md` out — cleaner than a hardcoded skip; (2) staleness
+compares a doc only against **non-Markdown** linked targets (doc-to-doc freshness
+is too noisy a signal), kept warn-only and clearly heuristic; (3) the `docs/index.md`
+Map-of-Content stays an *optional* reachability root recognized when present, not a
+convention forced on the scaffold (no downstream churn); (4) not added to the
+`pre-commit` hook — Thread 9 says "wire into the harness," and broken-doc-link churn
+is better surfaced at the gate than blocking every early commit. `pytest -q`: **82
+passed** (was 69; +13).
+
 **Why:** the kit gates the freshness of *generated* blocks (the code map) but never
 checks that the **hand-written** doc set stays navigable and honest — the gap the
 sibling project's doc-graph fills ("is every doc reachable? is this a *lying map* —
@@ -661,6 +732,31 @@ source-of-truth artifact. Revisit only with a design that can't bias decompositi
 ---
 
 ## Thread 10 — Non-functional requirements first-class (perf/resource budgets in their own registry)
+
+**Status: ✅ landed 2026-06-29.** NFRs made first-class via a new `PROCESS.md` **§9
+"Non-functional requirements & performance budgets"** (added as a new end section
+parallel to §8, so nothing renumbers): the **consideration checklist** (a prompt,
+not a mandate; anchored on **ISO/IEC 25010**, with a "don't double-prompt — the
+kit already covers maintainability/usability/fault-tolerance/`IF-###`" note), the
+**three-homes routing** (allocation→budgets registry; behavioral→ordinary SRs;
+hard external limits→`status.md` constraints), and the **`performance-budgets.csv`
+(`PB-###`)** registry owned by a new **Integration/Coordination** domain hat
+(added to §1). New `registries/performance-budgets.template.csv` (`PB-ID, Metric,
+Refs, Budget, Unit, Tolerance, Direction, Tier, Gate, Owner, Notes`), wired into
+`bootstrap.py` MAPPING (→ `docs/requirements/performance-budgets.csv`) +
+docstring; optional and inert like `interfaces.csv`. **`trace.py` keeps it
+traceable** (the spec's optional hook): each `PB` row's `Refs` must back-link a
+real SR/LLR/Module and a malformed/duplicate `PB-` id fails like any integrity
+error — but PB is held *out* of the placeholder/schema sweeps so a leftover
+`PB-000` never blocks a gate a project doesn't use. `EXAMPLE.md` gains a new §8
+with two worked rows (peak-RAM linked to the export SR/LLR at its `Permutations`
+boundary, and a **VRAM** row for a GPU module the integrator allocates); READMEs
+updated. **Deviations from the spec as written:** the **optional `AGENTS.md`
+clause was skipped** (same ~12k-cap reason as Threads 5/8); the
+comparator/regression harness is **deliberately out of scope** — it is Thread 11
+(Session D), and §9 ends by pointing at it without building it. New tests:
+`test_perf_budgets.py` (6 cases) + the bootstrap file-list assertion. `pytest -q`:
+69 passed.
 
 **Why:** the SN→SR→LLR→TC spine is built for **functional** verification; the
 test content audits behavior, not **resource cost**. Non-functional requirements
@@ -730,6 +826,41 @@ coordinator hat, traceably linked to the spine; EXAMPLE shows a budget row;
 
 ## Thread 11 — Performance budget & regression harness (stdlib comparator)
 
+**Status: ✅ landed 2026-06-29.** New stdlib, metric-agnostic
+`scripts/check_perf.py` (process layer, `requires=()`) compares a product-emitted
+`docs/test/perf-metrics.json` (`PB-ID → number`) against the
+`performance-budgets.csv` registry and a committed `docs/test/perf-baseline.json`:
+per metric an **absolute** check (vs `Budget`, per `Direction`) and a
+**regression** check (vs baseline outside the `Tolerance` band), writing the
+gitignored composite `docs/test/perf-report.md`. Exit is nonzero **only** on a
+hard-gated breach — a `Gate=fail` row breaching/regressing **within the run tier**
+(cumulative `--tier`, blank row-tier defaults to Full); `Gate=warn` rows only warn,
+and an absent metrics file or budget set **skips** (never a false failure).
+`--update-baseline` rewrites the golden from current metrics (the reviewed,
+in-PR way to accept a move). Wired into `check.py` as a `perf-budgets` **process**
+step at **{G3}**, tier-threaded (`--tier <tier>`), with a comment marking the
+*measurement* that emits `perf-metrics.json` as the project's **product** step.
+PROCESS.md §9 gained the comparator subsection (absolute-vs-regression, the
+process/product split, the three reviewability classes, baseline-as-golden, the
+warn-first honest-gate rule); §3 names the new **committed-golden** class
+(`perf-baseline.json`) and adds `perf-report.md` to the gitignored composites; §7
+lists the script + the process-check line. `gitignore.template` ignores
+`perf-report.md` + `perf-metrics.json` (baseline stays tracked); `bootstrap.py`
+MAPPING/docstring ship it; `ci/check.yml` publishes the report; EXAMPLE §8 points
+at it; both READMEs carry a row. `gen_release_checklist.py` gained a
+**Performance budgets within allocation** section (the warn-tier runtime budgets
+never gate, so the human ticks them at release). New `tests/test_check_perf.py`
+(15 cases): scaffold CLI (no-budgets pass, no-metrics skip, absolute fail-vs-warn,
+within/beyond-tolerance regression, tier scoping, `--update-baseline`), harness
+G3 wiring + `--list` layer tag, the release-checklist section, and importable
+units (`evaluate`, `parse_tolerance`, `in_tier`, `update_baseline`). **Deviations
+from the spec as written:** (1) the metrics↔budget join is by **`PB-ID`** (stable)
+rather than the human `Metric` label; (2) `gen_release_checklist.py` Release-hygiene
+section renumbered 5→6 to seat the new perf section (the conditional-section
+numbering already had gaps, so no churn beyond the one header); (3) no `AGENTS.md`
+clause (the ~12k Gemini cap, single-sourced in PROCESS.md — the call every late
+thread made). `pytest -q`: **97 passed** (was 82; +15).
+
 **Why:** captured budgets (Thread 10) are inert without a check that **tracks the
 numbers over time and alerts**. Two distinct questions: "**worse than expected**"
 (absolute budget breach) and "**suddenly much worse**" (regression vs. a
@@ -786,12 +917,12 @@ protocol, is wired into the harness (size gated at `full`, runtime warn at
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
-**7 ✅**, **4 ✅**, **6 ✅**, **8 ✅** (2026-06-29). Remaining work is **three
-sessions, in order** (later sessions depend on earlier ones). The rule: **batch
-the light, file-coherent threads; keep each new-script build solo** —
-re-establishing context per thread is the cost to avoid, and a from-scratch script
-+ test-suite + debug loop is the context-heavy case the "wide change" caution
-(below) is about.
+**7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
+(2026-06-29). **🎉 All threads landed — the plan is complete.** The rule applied
+throughout: **batch the light, file-coherent threads; keep each new-script build
+solo** — re-establishing context per thread is the cost to avoid, and a
+from-scratch script + test-suite + debug loop is the context-heavy case the "wide
+change" caution (below) is about.
 
 > **Session A ✅ landed 2026-06-29 · Process-doc framing (Threads 4, 6, 8).** Pure
 > prose. 4→PROCESS G3 (Implementation test-first), 6→PROCESS §4 (Consistency
@@ -800,21 +931,32 @@ re-establishing context per thread is the cost to avoid, and a from-scratch scri
 > 11,993 chars (under the ~12k Gemini cap) by tightening the new bullets and three
 > adjacent lines; Thread 8 stayed out of AGENTS.md to protect that budget.
 
-> ▶ **NEXT — Session B · Requirement-capture enrichment (Threads 5, 10).** Both
-> touch the SN/SR templates, EXAMPLE.md, and PROCESS §1-2, and each adds an EXAMPLE
-> row. 10 also adds the new `performance-budgets` registry (so it needs
-> `bootstrap.py` MAPPING wiring) + an optional `trace.py` hook; 5 adds its
-> schema-tolerance test. One coherent pass over the templates beats two separate
-> re-reads.
+> **Session B ✅ landed 2026-06-29 · Requirement-capture enrichment (Threads 5,
+> 10).** One coherent pass over the SN/SR templates + EXAMPLE + PROCESS: 5 → the
+> `Lifecycle` tag in PROCESS §4 (adjacent to delivery `Phase`) + template prompts +
+> EXAMPLE §7 phase-spanning table; 10 → PROCESS §9 (NFR checklist + three-homes +
+> the `performance-budgets.csv`/`PB-###` registry under a new
+> Integration/Coordination hat) + the registry template + `bootstrap.py` wiring + a
+> `trace.py` back-link hook + EXAMPLE §8. Both optional `AGENTS.md` clauses were
+> skipped to hold the ~12k Gemini cap (single-sourced in PROCESS.md instead). New
+> tests: `test_perf_budgets.py` (6) + `test_lifecycle_column_is_schema_safe` + the
+> bootstrap file-list assertion. `pytest -q`: 69 passed.
 
-**Session C · Doc navigability check (Thread 9).** Solo build — new stdlib
-`check_docs.py` + harness step + fixture tests. After A/B so it link-checks
-*finished* docs; it establishes the "add a `check_*` step" pattern Session D
-reuses.
+> **Session C ✅ landed 2026-06-29 · Doc navigability check (Thread 9).** Solo
+> build — new stdlib `check_docs.py` (broken-link fail / orphan warn / git-gated
+> staleness) + a `doc-navigability` process step wired at {G1,G2,G3} + 13 fixture
+> tests. It establishes the "add a `check_*` step" pattern Session D reuses;
+> `pytest -q`: 82 passed.
 
-**Session D · Perf budget harness (Thread 11).** Solo build, **last**: it depends
-on Thread 10's registry (Session B) and is the highest-noise / most-complex. New
-stdlib `check_perf.py` + harness step + tests + baseline.
+> **Session D ✅ landed 2026-06-29 · Perf budget harness (Thread 11).** Solo build,
+> the last and highest-noise. New stdlib `check_perf.py` (absolute + regression
+> comparator, tier-scoped warn-vs-fail, `--update-baseline`) reusing Session C's
+> `check_*`-step pattern; wired as a `perf-budgets` process step at {G3}; PROCESS §9
+> comparator subsection + §3 committed-golden class; gitignore/CI/EXAMPLE/README +
+> a release-checklist perf section; 15 new tests. `pytest -q`: 97 passed.
+
+**The plan is complete — no NEXT session remains.** All 14 threads (0a, 0b, 1–11)
+have landed on `template-review-fixes`.
 
 ### Session protocol (for a cold session pointed only at this file)
 

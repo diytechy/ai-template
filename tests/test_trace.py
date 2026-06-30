@@ -176,6 +176,29 @@ def test_gitignore_ignores_the_html_artifact(scaffold):
     assert "docs/test/report.html" in gitignore
 
 
+# --- Thread 5: the optional Lifecycle tag is a schema-safe extra column ---------
+
+LIFECYCLE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Lifecycle
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,Startup
+"""
+
+
+def test_lifecycle_column_is_schema_safe(scaffold):
+    # An SR carrying an optional Lifecycle column (mirroring Area) must pass even
+    # the strictest schema check: trace.py validates a fixed REQUIRED_FIELDS
+    # allow-list and tolerates unknown extra columns, so no downstream migration
+    # is forced (process.md §4 "Lifecycle phase").
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        LIFECYCLE_SRS, encoding="utf-8"
+    )
+    proc = run_py(
+        ["scripts/trace.py", "--strict", "--strict-schema", "--no-placeholders"],
+        cwd=scaffold,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 def test_require_verified_flags_unverified_test_sr(scaffold):
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"

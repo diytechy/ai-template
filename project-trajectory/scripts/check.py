@@ -3,13 +3,15 @@
 
 Stack-agnostic kit, **Python reference implementation**. This is the runnable
 version of the "harness contract" in `process.md §7`: format · lint · tests ·
-coverage · traceability · architecture-map freshness. Wire it to your stack by
+coverage · traceability · doc-navigability · perf-budgets · architecture-map
+freshness. Wire it to your stack by
 editing the step list the `steps()` function returns below — and the
 `SRC`/`TESTS`/tool names in the "EDIT FOR YOUR STACK" block just under the
 imports (swap `ruff`/`pytest` for your toolchain); the contract is the *gates and
 exit code*, not the specific tools. For a non-Python project, replace the
 format/lint/test commands with your own (or drop the ones you don't have); keep
-the traceability/flows/arch-map steps — they're stdlib-only and stack-agnostic.
+the traceability/flows/doc-navigability/perf-budgets/arch-map steps — they're
+stdlib-only and stack-agnostic.
 
 Design choices that keep it honest and CI-friendly:
     - **Never a false green.** Any failing required step makes the whole run exit
@@ -150,6 +152,34 @@ def steps(coverage, tier, gate, phase=None):
         ("tests+coverage", pytest_needs, pytest_cmd, {"G3"}, "product"),
         # --- process checks: kit-owned, stdlib-only, identical everywhere -----
         ("traceability", (), trace_cmd, {"G2", "G3"}, "process"),
+        # Doc navigability (process.md §3 "Reviewability"): broken intra-repo
+        # links fail; orphans warn. Runs from G1 on (docs exist early). The
+        # generated, gitignored trace report is dropped from the scanned set.
+        (
+            "doc-navigability",
+            (),
+            [
+                sys.executable,
+                "scripts/check_docs.py",
+                "--ignore",
+                "docs/test/report.md",
+            ],
+            {"G1", "G2", "G3"},
+            "process",
+        ),
+        # Performance budgets (process.md §9): the kit-owned *comparator* (stdlib,
+        # metric-agnostic) checks the project's measured perf-metrics.json against
+        # the budgets registry + committed baseline. Tier-threaded so size-class
+        # budgets gate at full and noisy runtime ones warn at release; absent
+        # metrics/budgets skip. The *measurement* that emits perf-metrics.json is
+        # a PRODUCT step you wire to your stack (see EDIT FOR YOUR STACK above).
+        (
+            "perf-budgets",
+            (),
+            [sys.executable, "scripts/check_perf.py", "--tier", tier],
+            {"G3"},
+            "process",
+        ),
         # Authored runtime-flow diagrams (process.md §3 "Design-time runtime
         # flows"): required from G2 on, so reviewers verify behavior from the
         # diagrams, not from registry rows.
