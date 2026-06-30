@@ -13,6 +13,8 @@ It pulls, from `docs/`:
     - System requirements whose Verification is Demonstration / Manual / Inspection
     - Release-tier test cases, and any non-automated (manual) test cases
     - Provided cross-project interfaces (IF, if present) -> contract still honored?
+    - Performance budgets (PB, if present) -> still within allocation? (§9; the
+      warn-tier runtime budgets never fail the gate, so a human confirms them here)
 
 Each line is `- [ ] <ID> — <what to confirm> (refs)`. The output is a *generated
 record*: regenerate it per release and keep the ticked copy as the sign-off
@@ -107,6 +109,13 @@ def main():
         r
         for r in load_csv(docs / "requirements" / "interfaces.csv")
         if r.get("IF-ID") and not is_example(r["IF-ID"])
+    ]
+    # Performance budgets (process.md §9): the warn-tier runtime budgets never
+    # fail the gate, so the release checklist is where a human confirms them.
+    pbs = [
+        r
+        for r in load_csv(docs / "requirements" / "performance-budgets.csv")
+        if r.get("PB-ID") and not is_example(r["PB-ID"])
     ]
 
     phases = (
@@ -223,9 +232,25 @@ def main():
                 )
             )
 
+    if pbs:
+        L += ["", "## 5. Performance budgets within allocation (§9)", ""]
+        for r in pbs:
+            arrow = "≤" if (r.get("Direction") or "").strip() == "lower-better" else "≥"
+            L.append(
+                "- [ ] **{}** — {} {} {}{} ({}; refs {})".format(
+                    r["PB-ID"],
+                    r.get("Metric", "").strip(),
+                    arrow,
+                    r.get("Budget", "").strip(),
+                    r.get("Unit", "").strip(),
+                    r.get("Gate", "").strip() or "warn",
+                    r.get("Refs", "").strip(),
+                )
+            )
+
     L += [
         "",
-        "## 5. Release hygiene",
+        "## 6. Release hygiene",
         "",
         "- [ ] `python scripts/check.py --gate G3 --tier release` is green "
         "(paste the output in the audit log).",
@@ -246,8 +271,8 @@ def main():
     out.write_text("\n".join(L) + "\n", encoding="utf-8")
 
     print(
-        "Release checklist -> {}  (SN={} human-SR={} manual-TC={} IF={})".format(
-            out, len(needs), len(human_srs), len(manual_tcs), len(provided_ifs)
+        "Release checklist -> {}  (SN={} human-SR={} manual-TC={} IF={} PB={})".format(
+            out, len(needs), len(human_srs), len(manual_tcs), len(provided_ifs), len(pbs)
         )
     )
 

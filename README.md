@@ -28,6 +28,8 @@ The kit's headline pieces:
   tier-aware harness), [`trace.py`](project-trajectory/scripts/trace.py)
   (traceability), [`check_docs.py`](project-trajectory/scripts/check_docs.py)
   (doc-navigability: broken-link + orphan-doc checks),
+  [`check_perf.py`](project-trajectory/scripts/check_perf.py)
+  (performance-budget + regression comparator),
   [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   (the AST code map — summaries, dependencies, `Implements:` back-links — plus
   a generated Mermaid dependency diagram, routed into `architecture.md` and/or

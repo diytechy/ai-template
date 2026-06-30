@@ -811,6 +811,41 @@ coordinator hat, traceably linked to the spine; EXAMPLE shows a budget row;
 
 ## Thread 11 — Performance budget & regression harness (stdlib comparator)
 
+**Status: ✅ landed 2026-06-29.** New stdlib, metric-agnostic
+`scripts/check_perf.py` (process layer, `requires=()`) compares a product-emitted
+`docs/test/perf-metrics.json` (`PB-ID → number`) against the
+`performance-budgets.csv` registry and a committed `docs/test/perf-baseline.json`:
+per metric an **absolute** check (vs `Budget`, per `Direction`) and a
+**regression** check (vs baseline outside the `Tolerance` band), writing the
+gitignored composite `docs/test/perf-report.md`. Exit is nonzero **only** on a
+hard-gated breach — a `Gate=fail` row breaching/regressing **within the run tier**
+(cumulative `--tier`, blank row-tier defaults to Full); `Gate=warn` rows only warn,
+and an absent metrics file or budget set **skips** (never a false failure).
+`--update-baseline` rewrites the golden from current metrics (the reviewed,
+in-PR way to accept a move). Wired into `check.py` as a `perf-budgets` **process**
+step at **{G3}**, tier-threaded (`--tier <tier>`), with a comment marking the
+*measurement* that emits `perf-metrics.json` as the project's **product** step.
+PROCESS.md §9 gained the comparator subsection (absolute-vs-regression, the
+process/product split, the three reviewability classes, baseline-as-golden, the
+warn-first honest-gate rule); §3 names the new **committed-golden** class
+(`perf-baseline.json`) and adds `perf-report.md` to the gitignored composites; §7
+lists the script + the process-check line. `gitignore.template` ignores
+`perf-report.md` + `perf-metrics.json` (baseline stays tracked); `bootstrap.py`
+MAPPING/docstring ship it; `ci/check.yml` publishes the report; EXAMPLE §8 points
+at it; both READMEs carry a row. `gen_release_checklist.py` gained a
+**Performance budgets within allocation** section (the warn-tier runtime budgets
+never gate, so the human ticks them at release). New `tests/test_check_perf.py`
+(15 cases): scaffold CLI (no-budgets pass, no-metrics skip, absolute fail-vs-warn,
+within/beyond-tolerance regression, tier scoping, `--update-baseline`), harness
+G3 wiring + `--list` layer tag, the release-checklist section, and importable
+units (`evaluate`, `parse_tolerance`, `in_tier`, `update_baseline`). **Deviations
+from the spec as written:** (1) the metrics↔budget join is by **`PB-ID`** (stable)
+rather than the human `Metric` label; (2) `gen_release_checklist.py` Release-hygiene
+section renumbered 5→6 to seat the new perf section (the conditional-section
+numbering already had gaps, so no churn beyond the one header); (3) no `AGENTS.md`
+clause (the ~12k Gemini cap, single-sourced in PROCESS.md — the call every late
+thread made). `pytest -q`: **97 passed** (was 82; +15).
+
 **Why:** captured budgets (Thread 10) are inert without a check that **tracks the
 numbers over time and alerts**. Two distinct questions: "**worse than expected**"
 (absolute budget breach) and "**suddenly much worse**" (regression vs. a
@@ -867,12 +902,12 @@ protocol, is wired into the harness (size gated at `full`, runtime warn at
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
-**7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅** (2026-06-29).
-**One session remains:** **Session D** (Thread 11). The rule: **batch
-the light, file-coherent threads; keep each new-script build solo** —
-re-establishing context per thread is the cost to avoid, and a from-scratch script
-+ test-suite + debug loop is the context-heavy case the "wide change" caution
-(below) is about.
+**7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
+(2026-06-29). **🎉 All threads landed — the plan is complete.** The rule applied
+throughout: **batch the light, file-coherent threads; keep each new-script build
+solo** — re-establishing context per thread is the cost to avoid, and a
+from-scratch script + test-suite + debug loop is the context-heavy case the "wide
+change" caution (below) is about.
 
 > **Session A ✅ landed 2026-06-29 · Process-doc framing (Threads 4, 6, 8).** Pure
 > prose. 4→PROCESS G3 (Implementation test-first), 6→PROCESS §4 (Consistency
@@ -898,9 +933,15 @@ re-establishing context per thread is the cost to avoid, and a from-scratch scri
 > tests. It establishes the "add a `check_*` step" pattern Session D reuses;
 > `pytest -q`: 82 passed.
 
-> ▶ **NEXT — Session D · Perf budget harness (Thread 11).** Solo build, **last**:
-> it depends on Thread 10's registry (Session B) and is the highest-noise /
-> most-complex. New stdlib `check_perf.py` + harness step + tests + baseline.
+> **Session D ✅ landed 2026-06-29 · Perf budget harness (Thread 11).** Solo build,
+> the last and highest-noise. New stdlib `check_perf.py` (absolute + regression
+> comparator, tier-scoped warn-vs-fail, `--update-baseline`) reusing Session C's
+> `check_*`-step pattern; wired as a `perf-budgets` process step at {G3}; PROCESS §9
+> comparator subsection + §3 committed-golden class; gitignore/CI/EXAMPLE/README +
+> a release-checklist perf section; 15 new tests. `pytest -q`: 97 passed.
+
+**The plan is complete — no NEXT session remains.** All 14 threads (0a, 0b, 1–11)
+have landed on `template-review-fixes`.
 
 ### Session protocol (for a cold session pointed only at this file)
 

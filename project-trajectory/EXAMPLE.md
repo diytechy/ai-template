@@ -190,8 +190,11 @@ budget for a GPU module: a value the module author can't invent, so the integrat
 sets the slice and the module measures against it. `trace.py` checks each row's
 `Refs` resolve to a real SR/LLR/Module and that the `PB-` id is well-formed — a
 budget that drifts off a deleted requirement is caught like any orphan. *Comparing*
-the measured numbers against these budgets over time is a separate harness step;
-the registry here is just the captured, tracked source of truth.
+the measured numbers against these budgets over time is the harness's job:
+`scripts/check_perf.py` (process.md §9) reads a product-emitted `perf-metrics.json`
+and flags both an absolute breach (here `PB-002`'s `Gate=fail` would fail the
+build) and a regression past `Tolerance` versus the committed `perf-baseline.json`.
+The registry here is just the captured, tracked source of truth.
 
 ---
 

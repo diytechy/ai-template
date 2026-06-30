@@ -79,10 +79,15 @@ size into two tiers:
   diagram, and program flow (`gen_arch_map.py --check` fails a commit that left
   them stale). These you *do* read in diffs.
 - **Large composite artifacts** — the full trace report (`test/report.md`: the
-  counts, matrix, the `SN→SR→LLR→TC` text outline, and the Mermaid graph) and
-  the HTML map (`trace.py --html`) — are regenerated every run, **gitignored**,
-  and published by CI as artifacts. Don't diff or review these; review the
-  registry change that produced them.
+  counts, matrix, the `SN→SR→LLR→TC` text outline, and the Mermaid graph), the
+  HTML map (`trace.py --html`), and the **performance report** (`test/perf-report.md`,
+  §9) — are regenerated every run, **gitignored**, and published by CI as
+  artifacts. Don't diff or review these; review the registry change that produced
+  them.
+- **Committed goldens** — a small generated file you *do* commit, and whose diff
+  is reviewed as the record of an accepted change: the **performance baseline**
+  (`test/perf-baseline.json`, §9). Moving a number means committing the new golden
+  in the same PR, so the change is explicit, never silent.
 
 This is the "composite artifacts are ignored from change tracking" rule, named:
 the cost of reviewing a big regenerated file is never paid, because the small
@@ -426,11 +431,12 @@ and naming the split is what keeps the kit portable across stacks:
 
 - **Process checks are kit-owned and stdlib-only** (`requires=()` in `check.py`):
   traceability (`trace.py`), design-flow validation (`check_flows.py`),
-  doc navigability (`check_docs.py`), and architecture-map freshness
-  (`gen_arch_map.py`). They are identical in every project and every language —
-  **don't rewrite them.** They are the universal floor the agent-neutral
-  `pre-commit` hook also enforces (`.githooks/pre-commit`, enabled by
-  `scripts/setup.{sh,ps1}`).
+  doc navigability (`check_docs.py`), perf-budget comparison (`check_perf.py`), and
+  architecture-map freshness (`gen_arch_map.py`). They are identical in every
+  project and every language — **don't rewrite them.** (The perf *comparator* is
+  process; the *measurement* that feeds it is product — see §9.) They are the
+  universal floor the agent-neutral `pre-commit` hook also enforces
+  (`.githooks/pre-commit`, enabled by `scripts/setup.{sh,ps1}`).
 - **Product checks are project-owned and language-specific** (`requires` names a
   tool — `ruff`/`pytest` in the Python reference): format, lint, and
   tests+coverage. **You wire these to your stack** in `check.py`'s "EDIT FOR YOUR
@@ -482,6 +488,12 @@ pip needed to run them):
   navigable"): parses the docs' link graph and fails on broken intra-repo links
   (missing file or `#anchor`), warns on orphan docs (and, with `--stale`,
   git-gated freshness). Stdlib-only; run by `check.py` from G1 on.
+- `scripts/check_perf.py` — the **perf-budget comparator** (§9): compares the
+  product-emitted `perf-metrics.json` against `performance-budgets.csv` and the
+  committed `perf-baseline.json` — absolute breach (vs `Budget`) and regression
+  (vs baseline ± `Tolerance`), warn-vs-fail per the row's `Gate`, tier-scoped —
+  and writes the gitignored `perf-report.md`. `--update-baseline` accepts a move.
+  Stdlib-only, metric-agnostic; run by `check.py` at G3 (absent metrics skip).
 - `scripts/gen_arch_map.py` — regenerates the module/function map in
   `architecture.md` from the source tree (and surfaces `Implements:` back-links),
   plus the Mermaid **dependency diagram** between its markers; `--check` fails
@@ -563,8 +575,35 @@ provisional, self-measured budgets; the integrator sets the real allocation.
 Module it bounds (its `Refs`), and `trace.py` flags a row whose `Refs` name an
 unknown id or whose `PB-` id is malformed. Columns: `PB-ID, Metric, Refs, Budget,
 Unit, Tolerance, Direction (lower-better | higher-better), Tier, Gate (fail |
-warn), Owner, Notes`. *Comparing* measured numbers against these budgets over time
-(absolute breach vs. regression-from-baseline) is a separate, optional harness
-concern — a stdlib comparator that is metric-agnostic; this section only defines
-the captured budgets. Standalone projects with no resource concerns skip this
+warn), Owner, Notes`. Standalone projects with no resource concerns skip this
 section, exactly like §8.
+
+**Tracking the numbers over time — the comparator (`scripts/check_perf.py`).** A
+captured budget is inert until something compares the *measured* number against
+it. That comparison answers two distinct questions per metric: **absolute** —
+"worse than the budget?" (measured vs `Budget`, per `Direction`) — and
+**regression** — "suddenly much worse?" (measured vs a committed baseline, outside
+the `Tolerance` band). The work splits along the §7 **process/product** line:
+*measuring* a metric is **product** work the project wires (`/usr/bin/time`,
+`tracemalloc`, `nvidia-smi`, a size command, `pytest-benchmark`/`hyperfine`),
+emitting a `docs/test/perf-metrics.json` map of `PB-ID → number`; *comparing* is
+**process** work the kit owns — `check_perf.py`, stdlib-only and metric-agnostic
+(arithmetic over JSON). The kit owns the comparator; the project owns the meters.
+
+- **Three artifacts, three reviewability classes (§3):** `performance-budgets.csv`
+  is the tracked source of truth; `perf-baseline.json` is a **committed golden**
+  updated *deliberately*; `perf-report.md` is a **gitignored composite** (current
+  vs baseline vs budget + deltas), regenerated each run and published by CI.
+- **Baseline-as-golden protocol.** Accepting a regression = committing a new
+  `perf-baseline.json` **in the same PR**, so the number move is explicit and
+  reviewed — never silent (the same discipline as the coverage threshold and
+  phase-deferred SRs). `check_perf.py --update-baseline` rewrites it from the
+  current metrics for exactly that purpose.
+- **Warn-first; start with the deterministic metrics (honest-gate rule, §4).** The
+  per-row `Gate` decides fail-vs-warn and `Tier` decides *when* a row is in scope:
+  gate the **low-noise, deterministic** metrics (artifact/binary size, dependency
+  count) at `full`; default **noisy runtime** metrics (latency, peak RAM, VRAM,
+  throughput) to `Gate=warn` at `release`, with tolerance bands and same-runner /
+  best-of-N measurement. A number that can't be a reliable `Test` gate is
+  warn-tracked or `Demonstration`, never faked into a binary gate. A budget with no
+  measurement this run is skipped, like a missing tool — absent metrics never fail.
