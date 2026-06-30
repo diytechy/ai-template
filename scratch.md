@@ -187,6 +187,12 @@ templates/EXAMPLE.md). This is now the live plan in `IMPROVEMENT_PLAN.md`'s
     **composition-scoped/emergent** (held in the coordinator chain, verified by the
     plant repo via Demonstration). No central engine is the *point* of multi-repo;
     wanting one is the monorepo signal (Thread 19).
+    · Rarity emphasis (2026-06-30): multi-repo is for extreme scope only and should be
+    rare. The shipped docs lead with an **escalation ladder** — (1) single-module/one
+    repo [default] → (2) multi-module/one repo [Thread 19] → (3) multi-repo+coordinator
+    [Thread 20, only when modules need independent versioning/ownership/release] —
+    **decided at project creation** (KICKOFF/bootstrap/G1), defaulting to rung 1, and
+    **revisitable** (start single, promote a module to its own repo later).
 - **Other guardrails.** What other AI skills should this template make
   available? What other guardrails belong in `AGENTS.md`?  Note 'AGENTS.md' is already filled to the gemini quota (12 kb), there are some items there the could be consolidated, but the repetition could be beneficial?  That could be handled per project.
   

@@ -1446,7 +1446,11 @@ working multi-module project that de-risks the Thread-20 coordinator.
 - **State the default + the extension** in PROCESS.md: single-module by default; a
   larger project may host several modules in one repo, each a sub-tree tagged by
   `Module`/`Area` (already optional columns — the Thread 5/10 pattern), with its own
-  domain hat(s) where the scope needs them (§1 already allows this).
+  domain hat(s) where the scope needs them (§1 already allows this). State the
+  **escalation ladder's rungs 1–2** (single-module → multi-module-one-repo) here and
+  point at Thread 20 for rung 3 + the rarity / decide-at-creation stance —
+  multi-module is a step taken only when a repo genuinely grows several sub-systems,
+  never a default.
 - **Module-scoped trace + gates:** name the convention for closing a module's own
   G2/G3 within the repo while the repo-level gate covers the whole. **Decide
   in-thread:** purely conventional (filter on the existing `Area`/`Module` column)
@@ -1505,6 +1509,27 @@ kit already has the seams — §8 `IF-###`, the §1 Integration/Coordination hat
 boundary* + naming the coordinator role, not new machinery. But it is genuinely hard
 and uncertain, so this thread is design-first: decisions + a documented model now,
 mechanism later.
+
+**Rarity & the escalation ladder (default low; decide at creation) — the shipped
+docs must lead with this.** Multi-repo is for **extreme-scope** products only and
+should be **rare**; the design doc opens by saying so, not by selling it. State a
+clear ladder with the **default at the lowest rung**, climbed only when scope forces
+it:
+1. **Single module, one repo** — the default for almost every project.
+2. **Multiple modules, one repo** (Thread 19) — when a repo grows several sub-systems
+   but still builds/releases as one.
+3. **Multi-repo + coordinator** (this thread) — **only** when modules genuinely need
+   *independent* versioning / ownership / access / release cadence at a scale one
+   repo can't sustain.
+
+The choice is made **at project creation** (KICKOFF / `bootstrap` / G1) and **defaults
+to rung 1**: a project starts single-repo unless its scope *demonstrably* demands
+higher, and a reviewer should push back on a premature jump. It is **revisitable** —
+start single and **promote a module to its own repo later**, when it proves it needs
+independence (far cheaper than a speculative split). So KICKOFF/bootstrap pose the
+scope question and bias low; "you almost certainly don't need this" is the right tone
+in the shipped docs. (Thread 19 owns stating rungs 1–2; this thread owns rung 3 + the
+rarity stance.)
 
 **Confirmed model (decisions 1–4, 2026-06-30):**
 - **Recursive handoff at the SR tier.** A repo boundary is a *cut in the
@@ -1624,13 +1649,15 @@ are the controls. Cross-repo trace can't be one `trace.py` run — acknowledge i
 (Thread 21), don't fake it. Over-shipping schema nobody uses — smallest set + a
 worked example. Identity drift — opt-in coordinator variant, not a base change.
 
-**Done-when:** a design doc records the confirmed model (SR-tier handoff,
-coordinator-as-Integration-hat, catalog-not-copy interfaces, assemblies-as-config,
-mechanical-aggregation gating, async-text coordination, the
+**Done-when:** a design doc **leads with the rarity stance** (escalation ladder,
+default rung 1, decide-at-creation, revisitable) and records the confirmed model
+(SR-tier handoff, coordinator-as-Integration-hat, catalog-not-copy interfaces,
+assemblies-as-config, mechanical-aggregation gating, async-text coordination, the
 coordination-vs-orchestration line, and the **two requirement scopes** — module vs
-composition, the latter verified by a delegated plant repo); any shipped seam is
-optional, schema-safe, traceable, with tests; the heavy tooling is routed to Thread
-21; `pytest -q` green.
+composition, the latter verified by a delegated plant repo); KICKOFF/bootstrap pose
+the scope question and bias to single-repo; any shipped seam is optional,
+schema-safe, traceable, with tests; the heavy tooling is routed to Thread 21;
+`pytest -q` green.
 
 **Model tier — strong model + human throughout the design; only the mechanical
 seam-wiring is Sonnet-able.** The most judgment-heavy thread in the plan: the design
