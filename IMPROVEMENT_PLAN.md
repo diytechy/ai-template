@@ -1494,7 +1494,8 @@ Thread 21.
 
 **Goal:** name, in a design/architecture doc, how the single-module spine extends
 across **separate repositories** under a **coordinator** — **without becoming a
-multi-repo build/orchestration engine** (the §8 guardrail). Capture the north star;
+multi-repo build/orchestration engine** (the §8 guardrail; see *Coordination vs.
+orchestration* below for the precise line). Capture the north star;
 build only the thinnest enabling seams; route the heavy/automation parts to Thread
 21 stubs.
 
@@ -1538,6 +1539,57 @@ mechanism later.
   assembly/status doc (the STATUS.md pattern across the boundary). No live message
   bus / daemon.
 
+**Coordination vs. orchestration — the line (clarified 2026-06-30).** "Orchestration"
+means two different things; the §8 guardrail rejects one, the coordinator lives in
+the other:
+- **Build/runtime orchestration (rejected):** a *running engine* that checks out N
+  repos, builds them in dependency order, links artifacts, and runs/deploys the
+  whole. Infrastructure the kit refuses to impose (§8).
+- **Requirement/interface/status coordination (all the coordinator is):** a
+  *discipline over text* — trace across the boundary, keep interface contracts
+  consistent + versioned, aggregate each module's *self-reported* gate status. Links,
+  registries, PRs; no engine.
+
+Each module **builds and gates itself** in its own repo (its own `check.py`); the
+coordinator **reads** results and **sequences/triggers** downstream repos — it does
+not build or run anything. The honest edge: actually *running* the assembled product
+needs a run step, but that is **product-layer** (the project's CI/Make/compose — the
+Thread 2 process/product split at larger scale): the coordinator **invokes and
+aggregates** it; the kit ships none of it (Thread 21). **The absence of a central
+build engine is the defining property of choosing multi-repo, not a compromise** — if
+heavy central orchestration is wanted, that is the signal to use a monorepo (one
+build, one `trace.py`): Thread 19's single-repo multi-module instead.
+
+**The integration / "plant" environment is itself a delegated repo (or several), not
+coordinator machinery.** A runtime test / simulation environment — assemble the
+modules' built runnables + a **plant model that virtualizes their external inputs**,
+then execute the assembly (SIL/HIL/E2E) — is a **first-class module the coordinator
+delegates to**, exactly like a functional module: it has its own SN (delegated from a
+coordinator SR), consumes the other modules' published artifacts, and **gates
+itself**. So "deps are green → queue the plant repo to assemble + run" is still
+*sequencing + triggering* (read status, dispatch CI / open a PR, pass version pins),
+never the coordinator building or running anything. ("Plant" is the control-systems
+term — the virtualized physical system; generalize it to *any* environment that mocks
+the composition's external inputs: a test rig, a mock-service harness, a scenario
+generator.) The **artifact transport** between repos (a package registry, OCI image,
+CI artifact — the earlier "maven? local publish?" question) is **product-layer**, the
+project's choice, Thread 21.
+
+**Two requirement scopes — name them (the crux of this nuance).** A multi-repo
+product has requirements at *two* levels, and conflating them is the trap:
+- **Module-scoped** — a module's own SN→SR→LLR→TC, verified **inside the module
+  repo**, scoped to what that module does in isolation.
+- **Composition-scoped (emergent / integration)** — requirements that exist **only
+  for the assembled whole** and that *no single module owns*: end-to-end behavior
+  across A→B→C, closed-loop stability of a controller against its plant, cross-module
+  latency/throughput, disturbance rejection. These live in the **coordinator's**
+  SN→SR chain and are **verified by the integration/plant repo's TCs** (typically
+  `Verification=Demonstration` — run the sim), *not* by any module. The handoff
+  **generalizes the SR-tier rule**: a composition SR delegates to the **plant repo's
+  SN** ("verify the composed product satisfies this"), exactly as a functional SR
+  delegates to a functional module's SN. The plant repo is "the module whose
+  deliverable is a runnable verification of the assembly."
+
 **What this thread writes (thin):**
 - A **design doc** (`project-trajectory/MULTI_REPO.md`, or a PROCESS.md §10)
   capturing the confirmed model, explicitly marked *design — mechanism deferred*.
@@ -1574,7 +1626,9 @@ worked example. Identity drift — opt-in coordinator variant, not a base change
 
 **Done-when:** a design doc records the confirmed model (SR-tier handoff,
 coordinator-as-Integration-hat, catalog-not-copy interfaces, assemblies-as-config,
-mechanical-aggregation gating, async-text coordination); any shipped seam is
+mechanical-aggregation gating, async-text coordination, the
+coordination-vs-orchestration line, and the **two requirement scopes** — module vs
+composition, the latter verified by a delegated plant repo); any shipped seam is
 optional, schema-safe, traceable, with tests; the heavy tooling is routed to Thread
 21; `pytest -q` green.
 
@@ -1609,9 +1663,13 @@ genuinely research-grade and deferred:
 - **Module discovery / suggestion / reuse catalog** — finding existing reusable
   modules/parts for a delegated SR: an agent capability over a catalog, not a kit
   mechanism.
-- **Cross-repo / cross-module E2E testing** — how integration tests spanning repos
-  run and report (which repo owns them; how the coordinator triggers/aggregates) —
-  the "End-to-end testing" scratch note.
+- **Cross-repo / cross-module E2E testing** — likely a **dedicated integration /
+  plant repo** (Thread 20) that consumes the modules' published artifacts, assembles
+  them with a virtualized-input plant model, runs SIL/HIL/E2E, and **gates itself**;
+  the coordinator only sequences/triggers it. Includes the **artifact transport**
+  between repos (registry / OCI / CI artifact — the "maven? local?" question) and
+  where the **composition-scoped** TCs live (the plant repo). The "End-to-end
+  testing" scratch note.
 
 **Open questions when revived:** pull vs. push for trace/status; where cross-repo
 E2E lives + who runs it; how much (if any) repo-creation automation is kit vs. agent

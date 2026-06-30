@@ -177,6 +177,16 @@ templates/EXAMPLE.md). This is now the live plan in `IMPROVEMENT_PLAN.md`'s
     `bootstrap` variant). Heavy tooling (cross-repo trace pull-vs-push, gate
     aggregation, repo creation, module discovery, cross-repo E2E) → **Thread 21
     stub**, research-grade, deferred.
+    · Clarified 2026-06-30 (in Thread 20): "no orchestration engine" = no central
+    *build/runtime* engine; the coordinator only coordinates contracts + aggregates
+    each module's self-reported gate status (each repo builds/gates itself). The
+    integration/**plant** environment (assemble built modules + a plant model that
+    virtualizes external inputs, run SIL/HIL/E2E) is itself a **delegated repo** that
+    gates itself — the coordinator just sequences "deps green → trigger it". And name
+    **two requirement scopes**: module-scoped (verified in the module repo) vs
+    **composition-scoped/emergent** (held in the coordinator chain, verified by the
+    plant repo via Demonstration). No central engine is the *point* of multi-repo;
+    wanting one is the monorepo signal (Thread 19).
 - **Other guardrails.** What other AI skills should this template make
   available? What other guardrails belong in `AGENTS.md`?  Note 'AGENTS.md' is already filled to the gemini quota (12 kb), there are some items there the could be consolidated, but the repetition could be beneficial?  That could be handled per project.
   
