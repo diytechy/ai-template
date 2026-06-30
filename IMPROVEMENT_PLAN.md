@@ -233,6 +233,21 @@ extended to assert each step's layer; existing wiring tests unaffected.
 
 ## Thread 3 — Encode the five working-agreement directives
 
+**Status: ✅ landed 2026-06-28** (first wave, with 0a/0b/1/2; Status block recorded
+retroactively 2026-06-29 — this thread predated the per-thread Status-block
+convention). `AGENTS.template.md` carries a dense **"Working agreement"** section
+folding in all five directives: #1 *ask, don't assume — and when unattended, pick
+the most reasonable interpretation, proceed, and record it under **Assumptions**
+in `docs/status.md`* (the home exists: `STATUS.template.md` "Assumptions
+(unattended)"); #2/#4 via the existing Communication style; #3 *stay in your lane —
+don't change unrelated code, surface a design smell as a separate finding*; #5
+*propose the stronger / longer-lived approach*. This repo's own `CLAUDE.md`
+"Communication style" **references** that block ("the shipped guide states the full
+version — `AGENTS.template.md` 'Working agreement'") rather than duplicating it, per
+the thread's single-source intent. Thread 6 later added the consistency-review
+clause to the same "Ask, don't assume" bullet as the reachable-human flip side of
+the assumption-logging. **No deviations.** Prose only (no tests).
+
 **Goal:** fold the user's five general directives into the canonical agent guide
 (now `AGENTS.template.md`), integrated with the existing "Communication style"
 (which already covers #1-partial, #2, #4). Gaps to add: #1's *unattended ⇒ record
