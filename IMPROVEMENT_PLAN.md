@@ -1027,11 +1027,13 @@ strong-model glance before commit is cheap insurance.
 
 ---
 
-## Thread 14 — "Existence ≠ implementation": a no-stub / substance gate (decide, then build)
+## Thread 14 — "Existence ≠ implementation": a no-stub / substance gate (decided: A+C)
 
-**Status: ⏳ queued (Session F) — decision-first, added 2026-06-30** from the
-DonnyClaude survey. Like Thread 7, this thread **frames a choice and recommends; it
-does not pre-decide a build.**
+**Status: ⏳ queued (Session F) — decision made 2026-06-30: A + C, added
+2026-06-30** from the DonnyClaude survey. Was framed decision-first (like Thread 7);
+the user **selected the hybrid A + C and confirmed the optional Python-reference
+detector is worth shipping**, so the decision is closed and Session F is now an
+implement-+-build session (no longer decision-first).
 
 **Goal:** close the one capability the kit lacks that DonnyClaude has — a check that
 an implementation which satisfies its trace links and a thin test isn't a hollow
@@ -1047,7 +1049,7 @@ checks) is grep/heuristic and JS/React-flavored, which **collides head-on** with
 kit's stdlib-only + stack-agnostic + "generate, don't score" constraints (Thread
 8). **So the design decision *is* the thread.**
 
-**The decision (pick one; recommended hybrid = A + C):**
+**The options considered (decision made — A + C; kept for rationale):**
 1. **A — Convention + gate criterion only (no script).** Add a G3 exit criterion:
    "every in-scope SR's implementing symbol is substantive, not a stub," classified
    **Inspection/Analysis** (human/LLM judgment, per §4 "classify the rest
@@ -1068,29 +1070,32 @@ kit's stdlib-only + stack-agnostic + "generate, don't score" constraints (Thread
    as the perf *meters* are product and the *comparator* is process. A non-Python
    stack swaps or drops the detector.
 
-**Recommendation: A (always-on criterion) + C (optional Python-reference
-detector).** Keeps the kit stdlib + stack-agnostic + honest; gives Python projects
-a concrete tripwire without forcing one on every stack or pretending a heuristic is
-a universal gate. **Reject B-as-required** — a required Python-only heuristic gate
-violates the kit's own boundaries.
+**Decision (confirmed with the user 2026-06-30): A (always-on criterion) + C — and
+ship the Python-reference detector.** Keeps the kit stdlib + stack-agnostic + honest;
+gives Python projects a concrete tripwire without forcing one on every stack or
+pretending a heuristic is a universal gate. The detector is **selected to ship** (the
+user: "probably still good to have"), not merely named as a possibility — but stays
+**optional + product-layer + warn-first** (a Python project opts in; a non-Python
+stack swaps or drops it). **B rejected as required** — a required Python-only
+heuristic gate violates the kit's own boundaries.
 
-**Steps (if A + C):**
+**Steps (A + C):**
 - **PROCESS.md §4 G3:** add the **no-stub / substance** exit criterion, classified
   Inspection/Analysis; reference §6 (reviewer prompt) and §3 (the code map already
   harvests the symbol summaries a reviewer reads). Mind the cap — no AGENTS.md
   clause.
-- **(Optional C) `scripts/`:** an **opt-in, stdlib, Python-reference** AST helper
+- **`scripts/` (C — ships):** an **opt-in, stdlib, Python-reference** AST helper
   listing public symbols with trivial bodies (`pass`, `...`, bare `raise
-  NotImplementedError`, `return None`-only), emitting a report the project may wire
-  as a **product** step (like the perf meter). Clearly product-layer, **warn-first**,
-  outside the required process floor. If built: importable units + a fixture-tree
-  test like `check_docs`/`check_perf`; `pytest -q` green.
+  NotImplementedError`, `return None`-only), emitting a report the project wires as a
+  **product** step (like the perf meter). Clearly product-layer, **warn-first**,
+  outside the required process floor. Importable units + a fixture-tree test like
+  `check_docs`/`check_perf`; `pytest -q` green.
 - **EXAMPLE.md (optional):** show the criterion in the G3 checklist.
 
-**Tests:** Option A — none (prose); links. Option C (if built) — units over a
-fixture module (a stub flagged; a substantive symbol not; a deliberately tiny pure
-function **not** over-flagged), `--list` layer tag = product (or a clearly-optional
-process step); `pytest -q` green.
+**Tests:** A — none (prose); links. C (ships) — units over a fixture module (a stub
+flagged; a substantive symbol not; a deliberately tiny pure function **not**
+over-flagged), the `--list` layer tag (product, or a clearly-optional process step),
+and the warn-first exit behavior; `pytest -q` green.
 
 **Risks:** false positives fighting good design (a tiny pure core flagged) ⇒
 warn-first, advisory, **never a hard fail** — the same restraint as the deferred
@@ -1099,20 +1104,19 @@ violation ⇒ solved by routing the detector to the product layer. Scope creep i
 wiring/linter ⇒ out of scope; the kit names the criterion, the project picks the
 linter (the ruff/pytest stance).
 
-**Done-when:** the decision (A / B / C / hybrid) + rationale recorded here;
-PROCESS.md G3 names the substance criterion, honestly classified; if a detector
-ships, it's optional, product-layer, warn-first, with green tests; no new required
+**Done-when:** the A+C decision + rationale recorded here (done); PROCESS.md G3
+names the substance criterion, honestly classified; the Python-reference detector
+ships — optional, product-layer, warn-first, with green tests; no new required
 dependency; links pass.
 
-**Model tier — decision on the strong model; execution tiered by the outcome.** The
-*design decision* (resolving the stdlib / stack-agnostic tension) is the
-judgment-heavy core: **keep it on the strong model and surface it to the human, like
-Thread 7.** Once decided — if it lands **A (convention-only)**, execution is prose →
-**Sonnet-able** with the link check as backstop; if it includes **C (the optional
-detector)**, that's a from-scratch stdlib script + test suite = a Sessions-C/D-style
-**solo build**, which Sonnet can execute green against `pytest` **only after the
-strong model has locked the detector's contract** (what counts as a stub,
-warn-vs-fail, process-vs-product). Don't hand the open decision to a lower tier.
+**Model tier — decision made (A+C); now execution-tiered.** The design decision is
+closed. The **A** G3-criterion prose is **Sonnet-able** (link check as backstop). The
+**C** Python-reference detector is a from-scratch stdlib script + test suite — a
+Sessions-C/D-style **solo build** — Sonnet-executable green against `pytest` **once a
+strong-model glance locks the detector contract** (what counts as a stub: `pass` /
+`...` / bare `raise NotImplementedError` / `return None`-only; warn-first;
+product-layer, not a required gate). The build is why Session F stays solo, not
+folded into the Session E prose batch.
 
 **Deferred (noted, not in scope): a `shortcut:`/`ponytail:`-tag harvester.** A
 script that harvests Thread 13's shortcut comments into a debt ledger (Donny's
@@ -1688,13 +1692,13 @@ thread's **Model tier** line says where the handoff is safe.
 > (5 threads vs 3) but same-file-coherent and low-risk; the cap reconciliation — not
 > the thread count — is the binding constraint.
 
-> **Session F · Substance gate (Thread 14) — decision-first.** Resolve the A/B/C
-> design choice (strong model + human, like Thread 7) **before** building. If it
-> lands convention-only (A), its prose can fold into Session E; if the optional
-> Python detector (C) is built, it's a solo script + tests session reusing the
-> `check_*` pattern (Sessions C/D). **Model tier: decision on the strong model; a
-> convention-only outcome is Sonnet-able; a detector build is Sonnet-executable
-> against `pytest` only after the contract is locked.**
+> **Session F · Substance gate (Thread 14) — implement A + build C.** Decision made
+> 2026-06-30 (A+C). Implement the **A** G3 no-stub criterion (prose) and **build C**,
+> the optional stdlib Python-reference stub detector (the `check_*` pattern, Sessions
+> C/D) — a solo build because of the script. **Model tier: the A prose is
+> Sonnet-able; the C detector is Sonnet-executable against `pytest` once a
+> strong-model glance locks the detector contract (stub = `pass`/`...`/bare `raise
+> NotImplementedError`/`return None`-only; warn-first; product-layer).**
 
 > **Session G · Onboarder + dev-setup build (Thread 15 Parts B/C/D).** Solo,
 > **multi-platform, highest-care** of any session: the `onboard.template.*` guided

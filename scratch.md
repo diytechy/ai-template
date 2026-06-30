@@ -222,7 +222,8 @@ Other considerations:
     Thread 12 = Donny as an optional runtime-harness accelerator (PROCESS §7, mirrors
     Thread 8); Thread 13 = Ponytail's right-size guardrails + a kit-neutral
     shortcut-comment convention; Thread 14 = no-stub "existence ≠ implementation"
-    substance gate (decision-first, like Thread 7). Dump nothing — the kit's
+    substance gate (decided 2026-06-30: A+C — a G3 criterion + an optional
+    Python-reference stub detector that ships). Dump nothing — the kit's
     rigorous SN→SR→LLR→TC spine is exactly what neither sibling has.
 
 Voice:
