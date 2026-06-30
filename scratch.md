@@ -144,8 +144,8 @@ templates/EXAMPLE.md). This is now the live plan in `IMPROVEMENT_PLAN.md`'s
   Idea: a parent interface could be a set/group/port of sub-interfaces that
   another interface links to.
 - **Notes from previous search related to cross-repo interfacing** AI tools can handle multiple repositories by implementing a centralized management system that allows for easy navigation and integration between different codebases. This can include features such as repository linking, dependency management, and automated updates across repositories. Additionally, AI tools can utilize version control systems to track changes and ensure consistency across multiple repositories.
-- **Cross repo idea** Coordinator does not contain any code or definition that builds into a functional output.  It only defines the interfaces and connections that connect / join two separate modules that are connected in different repositories.  Main contains all individual interface definitions, where an interface could be a physical connection (Nema mounting plate / screw hole pattern / Harness plug), a data interface (MQTT / A signal with required range / resolution / rate - like acceleration), interfaces are published to some domain like maven?  Local publish?  This would quickly grow but it also ensures a single interface definition contract that interfaces from other repos must adhere to?  Not sure how to rectify - on one handle, each branch off the coordinator should define a collection / assembly of modules that connect via there interfaces to define a full product.  Ideally those interfaces are sharable easily across branches (maybe even between projects?).  However, that creates a giant single list of interfaces - the shareability is nice but... is that really sustainable?  The other alternative is that each branch / assembly constructs / maintains interfaces.  The detriment is interface proliferation.  One variant might have an interface that is extremely close but different to another variant, that should have been shared.  How can the coordinator prevent that?  Is it even possible to prevent.  New direction: For each module, each module's interface can be owned or inherited by the component / module it's connecting to.  This can result in proliferation, but usually global databases end up getting proliferated anyways (1 standard to unify 15 standards just becomes 16 standards).  This also relaxes the coordinator roll.  So, the coordinator might need to define a bunch of modules to create an assembly.  Sometimes those components are purchase components (so those purchased components are the interface owner - their interface can't change), but if two new components are needed, the coordinator decides which one gets the be the interface owner, and then just records that interface in it's list that can be PR'd back into the main branch.  This way a growing list of interfaces is retained, but the coordinator is not in charge of the details.  So the entire workflow looks like:
-    - This template repository can be used to instantiate a new coordinator repository.
+- **Cross repo idea** Coordinator does not contain any code or definition that builds into a functional output (apart from assumbly definition noted below).  It only defines the interfaces and connections that connect / join two separate modules that are connected in different repositories.  Main contains all individual interface definitions, where an interface could be a physical connection (Nema mounting plate / screw hole pattern / Harness plug), a data interface (MQTT / A signal with required range / resolution / rate - like acceleration), interfaces are published to some domain like maven?  Local publish?  This would quickly grow but it also ensures a single interface definition contract that interfaces from other repos must adhere to?  Not sure how to rectify - on one handle, each branch off the coordinator should define a collection / assembly of modules that connect via there interfaces to define a full product.  Ideally those interfaces are sharable easily across branches (maybe even between projects?).  However, that creates a giant single list of interfaces - the shareability is nice but... is that really sustainable?  The other alternative is that each branch / assembly constructs / maintains interfaces.  The detriment is interface proliferation.  One variant might have an interface that is extremely close but different to another variant, that should have been shared.  How can the coordinator prevent that?  Is it even possible to prevent.  New direction: For each module, each module's interface can be owned or inherited by the component / module it's connecting to.  This can result in proliferation, but usually global databases end up getting proliferated anyways (1 standard to unify 15 standards just becomes 16 standards).  This also relaxes the coordinator roll.  So, the coordinator might need to define a bunch of modules to create an assembly.  Sometimes those components are purchase components (so those purchased components are the interface owner - their interface can't change), but if two new components are needed, the coordinator decides which one gets the be the interface owner, and then just records that interface in it's list that can be PR'd back into the main branch.  This way a growing list of interfaces is retained, but the coordinator is not in charge of the details.  So the entire workflow looks like:
+    - This template repository can be used to instantiate a new coordinator repository and any module repositories needed by the template.
     - Coordinator defines the requirement breakdown to accomplish the high level task.
     - All SN / SR / LLR / TC are maintained in main based on current scope.
     - Coordinator repository creates first branch from main to maintain an assembly definition of modules used to create a full product, taking only applicable SN / SR / LLR / TC applicable to the branch.
@@ -153,7 +153,7 @@ templates/EXAMPLE.md). This is now the live plan in `IMPROVEMENT_PLAN.md`'s
     - What if a module is a reuse part (like a motor) or a reusable software asset?  Should the coordinator carve out a definition (csv file?) with it's interfaces?  Link to the purchased part?
     - How would coordinator track / suggest potential modules?
     - LLR of branch becomes SN of module?
-    - Coordinator 
+    - Coordinator communicates to agents of module repo using a text document just like STATUS.md maintains changes in repo itself.  
 - **Other guardrails.** What other AI skills should this template make
   available? What other guardrails belong in `AGENTS.md`?  Note 'AGENTS.md' is already filled to the gemini quota (12 kb), there are some items there the could be consolidated, but the repetition could be beneficial?  That could be handled per project.
   
@@ -203,9 +203,29 @@ Other considerations:
     rigorous SN→SR→LLR→TC spine is exactly what neither sibling has.
 
 Voice:
-- How to get more humor into agent's feedback?  How to augment agents "personality" to add a bit of levity or light-heartedness?
+- How to get more humor into agent's feedback?  How to augment agents "personality" to add a bit of levity or light-heartedness?  That applies both to this repo itself but also repos templated from here.  Is there a standard proceedure that all llm agents can work off?  That's nice / encouraging for user, but could that be negative for agent to agent communication?  Any risk there?
+  → Threaded (2026-06-30) → IMPROVEMENT_PLAN.md **Thread 17** (queued, Session I).
+    Real deliverable = the **carve-out**, not the humor: levity is fine on
+    **human-facing** surfaces, banned in the **machine/agent-facing** layer
+    (findings, subagent prompts, §5 verdicts, registries, commits) where it costs
+    tokens, adds parse-ambiguity for the next agent, and erodes the honesty signal.
+    Yes, agent-to-agent risk is real — that's why the carve-out exists. Ship a
+    restrained default + an optional tone dial, **not** a baked-in persona. Standard
+    home = AGENTS.md communication block (single-sourced in PROCESS.md given the cap).
 
-How to force correct model for task? ==>
-/model opusplan
+Token / Agent efficiency:
+How to force correct model for task? That's already been templated to an extent, but how to make sure during agent driven development an appropriate agent is used or spawned for efficiency.  How can that be baked into the template?
+  → Threaded (2026-06-30) → IMPROVEMENT_PLAN.md **Thread 18** (queued, Session I).
+    Honest ceiling: the kit **can't force** a model (host concern, doesn't
+    standardize — the Thread 0b lesson; gates run after the work). So it
+    **recommends + records**: a task→tier mapping extending §6 (planning/decision/
+    high-risk → strong; mechanical/well-specced/prose → cheap), the insight that
+    **gates make tiering-down safe** (a cheap executor can't silently drift), a
+    **recorded model-tier hint** convention (the "Model tier:" line Threads 12–17
+    already dogfood), and host levers (opusplan, subagent overrides) as optional
+    per-host examples. No model-selection engine (that was DonnyClaude's rejected
+    Claude-specific path). The advisor-strategy link below is this pattern, generic.
+
+Maybe for later, not really important:
 https://claude.com/blog/the-advisor-strategy?
 ---

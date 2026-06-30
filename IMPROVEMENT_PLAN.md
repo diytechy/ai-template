@@ -1280,15 +1280,156 @@ decision); any concrete renderer/diff helper is product-layer and project-owned.
 
 ---
 
+## Thread 17 — Voice policy + the agent-layer carve-out
+
+**Status: ⏳ queued (Session I, prose — batchable), added 2026-06-30.** Framing
+confirmed with the user 2026-06-30.
+
+**Goal:** let a project add warmth/levity to **human-facing** agent output without
+poisoning the **machine/agent-facing** layer — by stating a voice policy with an
+explicit carve-out, a restrained default, and an optional project-tunable dial.
+Applies to this repo and repos templated from it.
+
+**Why:** personality is a human value, but agent-driven development runs most of its
+traffic **agent-to-agent** (subagent prompts, `status.md` findings, §5 verdicts,
+registry cells, commit messages). Levity there costs tokens (against the open
+"Agent verbosity" concern + the 12k AGENTS.md cap), introduces **parse ambiguity**
+for the next agent (irony/understatement is exactly what a downstream parser
+mis-reads), and **erodes the honesty/severity signal** the kit's spine depends on.
+The valuable rule is the carve-out, not the humor.
+
+**Decision (recorded):** ship the **carve-out + a restrained default + an optional
+dial**, **not** a baked-in persona — a *template* can't pick a tone that fits a
+medical-device repo and a game studio both. Default voice = "direct and concrete;
+dry wit at most; never at the expense of clarity or honesty."
+
+- **The split:**
+  - **Human-facing** (CLI/chat narration, kickoff greeting, release-checklist
+    intro): warmth + light **dry wit** welcome.
+  - **Machine/agent-facing** (findings, subagent prompts, §5 verdicts, registries,
+    commit messages): literal, terse, structured — **no whimsy.**
+- An **optional, project-tunable tone knob** (a named setting, like
+  `COVERAGE_THRESHOLD` is a named constant) so a project dials levity up/down;
+  default restrained.
+
+**Steps:**
+- **PROCESS.md (single-sourced home):** state the voice policy + the
+  human-vs-machine carve-out once, near §5 (the verdict/findings protocol it
+  protects) or the §6/communication area; name the optional tone knob + restrained
+  default.
+- **AGENTS.template.md** is at the ~12k cap — no new clause unless paid for by
+  tightening; at most a 3–4-word pointer in the existing "Communication style" /
+  working-agreement to the PROCESS.md policy. Prefer the pointer iff ≤ cap, else
+  PROCESS-only.
+- Optionally a one-line tone note in `KICKOFF_PROMPT.md` / the release-checklist
+  intro showing where human-facing warmth is appropriate.
+
+**Tests:** none (prose). Verify intra-doc links (`check_docs.py`); AGENTS.md ≤ ~12k.
+
+**Risks:** undercutting the kit's trustworthy/serious brand — default to restraint,
+levity opt-in. Personality leaking into the machine layer — the carve-out is the
+guard; state it plainly. Don't prescribe a persona (ages badly; wrong for many
+domains). Tension with the "Agent verbosity" goal — resolved by
+human-facing-only + dry-wit-not-padding.
+
+**Done-when:** PROCESS.md names the voice policy + the human-vs-machine carve-out +
+an optional tone knob with a restrained default; AGENTS.md points at it within
+budget or stays unchanged; links pass; no machine-layer artifact invites whimsy.
+
+**Model tier — Sonnet-able end to end** once specced: prose mirroring the kit's
+existing communication-style + single-source patterns; the only care point is the
+AGENTS.md byte budget (a strong-model glance before commit, like Thread 13).
+
+---
+
+## Thread 18 — Model/agent-tiering discipline (recommend + record, not enforce)
+
+**Status: ⏳ queued (Session I, prose — batchable), added 2026-06-30.** Honest
+framing confirmed with the user 2026-06-30. This **formalizes the per-thread "Model
+tier" convention this very plan has been using ad hoc** since 2026-06-30.
+
+**Goal:** bake a model/agent efficiency discipline into the template — classify work
+by kind and route it to an appropriately-tiered model/agent — at the only honest
+level available: **stated discipline + a recorded tier hint**, with host-specific
+enforcement as documented optional examples. The kit **cannot force** a model (a
+host concern that doesn't standardize — the Thread 0b lesson), and tiering can't be
+gate-enforced (gates run *after* the work); say so plainly.
+
+**Why:** agent-driven development wastes budget when a strong model does mechanical
+work or a cheap model attempts judgment-heavy decomposition. The kit already has the
+seeds — **§6 review-depth triage** is a tiering scheme for *review effort*, and the
+per-thread Model-tier notes (added 2026-06-30) are the same idea for *execution*.
+The kit's distinctive enabler: **deterministic gates + tests mean a cheaper executor
+can't silently drift**, so tiering-down is *safe here specifically* in a way it
+isn't in an ungated workflow — that's the insight to centralize.
+
+- **Task-classification → tier mapping**, extending §6 (same risk axis it already
+  triages for review depth): planning / decomposition / decisions / high-risk
+  review → strong model; mechanical execution / well-specced builds / prose /
+  low-risk → cheaper tier.
+- **Gates-as-backstop:** state that tiering-down is safe *because* the harness/gates
+  catch regressions — the reason the kit can recommend a cheap executor where an
+  ungated process couldn't.
+- **Recorded-tier convention (generalize the dogfooded one):** any planned unit of
+  work — a thread, a phase, a `status.md` task — may carry a **model-tier hint** an
+  agent reads. It's metadata, not a hook ⇒ agent-neutral + portable. Promote the
+  ad-hoc "Model tier:" line (Threads 12–17) to a stated convention.
+- **Host levers = optional, documented examples** (the `agent-hooks/` pattern from
+  Thread 0b): Claude Code opusplan (Opus plans / Sonnet executes) + per-subagent
+  model overrides + `/model`; Gemini/Codex equivalents. Named per host, never
+  required — the kit states the policy, the host provides the lever. (Generic form
+  of the "advisor strategy" / opusplan pattern — reference the *pattern*, not a
+  vendor blog as a dependency.)
+- **Honesty (critical):** classify as **guidance + a recorded hint, not
+  enforcement** — an agent/human can ignore a hint, the same status as any AGENTS.md
+  directive (intent, not guarantee; Thread 0b put *enforcement* in the neutral
+  substrate, which isn't available for model choice). **Do not** build a
+  model-selection engine (DonnyClaude's Claude-specific `model-profiles` path —
+  rejected for the same stack-agnostic / agent-neutral reasons as the rest of that
+  survey, Thread 12).
+
+**Steps:**
+- **PROCESS.md §6 (the triage home):** add the task→tier mapping + the
+  gates-as-backstop rationale + the recorded-tier-hint convention, framed as
+  guidance not enforcement.
+- **Document host levers** as optional examples (a short note by §6 or in the
+  `agent-hooks/` README — the existing optional-extras home), clearly per-host and
+  non-required.
+- **AGENTS.template.md:** at most a thin pointer if the cap allows; else
+  PROCESS-only.
+- Optionally note the convention in `STATUS.template.md` (a task may carry a tier
+  hint) and/or `KICKOFF_PROMPT.md`.
+
+**Tests:** none (prose). Verify intra-doc links; AGENTS.md ≤ ~12k.
+
+**Risks:** over-promising "force" — frame honestly as recommend+record.
+Over-engineering into a model-selection engine — rejected; keep to policy + hint +
+host examples. Dating the doc by naming models/tools — name the *pattern* + per-host
+*category* with `e.g.` (the Thread 8 mitigation). Tool-lock — the convention is
+metadata; the levers are optional per host.
+
+**Done-when:** PROCESS.md §6 names the task→tier mapping, the gates-as-backstop
+rationale, and the recorded-tier-hint convention (framed as guidance, not
+enforcement); host levers are documented as optional examples; no model-selection
+engine added; links pass.
+
+**Model tier — Sonnet-able to execute** once specced (prose extending §6 + the
+agent-hooks optional-extras pattern); the dogfood irony — this thread *defines* the
+convention the plan already follows — makes it low-risk. Strong-model glance only
+for the AGENTS.md cap, if touched.
+
+---
+
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
 **7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
-(2026-06-29). **Reopened 2026-06-30** with **Threads 12–16**: 12–14 from the
+(2026-06-29). **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
-16 (verifying non-code artifacts, a stub) from the start-from-zero discussion.
-**▶ NEXT: Session E.** The rule applied
+16 (verifying non-code artifacts, a stub) from the start-from-zero discussion;
+17 (voice policy + agent-layer carve-out) + 18 (model/agent-tiering discipline)
+from the voice/efficiency discussion. **▶ NEXT: Session E.** The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
@@ -1360,10 +1501,18 @@ thread's **Model tier** line says where the handoff is safe.
 > parts only after the cross-platform/auth/GUI contract is locked. **Thread 16 is a
 > stub — no session until revived.**
 
-**Open: Sessions E (next), F, G, H.** Threads 0a, 0b, 1–11 landed (on
+> **Session I · Voice + model-tiering prose (Threads 17, 18).** Pure prose,
+> Session-A shape — **could ride Session E** (all prose, all PROCESS.md,
+> cap-sensitive). 17 → PROCESS.md voice policy + human-vs-machine carve-out + a
+> tone knob; 18 → PROCESS.md §6 task→tier mapping + gates-as-backstop + the
+> recorded-tier-hint convention (the one this plan already dogfoods) + host levers
+> as optional examples. **Model tier: Sonnet-able execution**; strong-model glance
+> only for the AGENTS.md cap if touched.
+
+**Open: Sessions E (next), F, G, H, I.** Threads 0a, 0b, 1–11 landed (on
 `template-review-fixes`, since merged into the current working branch); Threads
-12–15 are specced above and await Sessions E–H; Thread 16 is a stub. Land them on
-the current working branch.
+12–15 + 17–18 are specced above and await Sessions E–I; Thread 16 is a stub. Land
+them on the current working branch.
 
 ### Session protocol (for a cold session pointed only at this file)
 
