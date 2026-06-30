@@ -26,7 +26,7 @@ What it creates in the destination:
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/gen_arch_map.py, gen_release_checklist.py, gen_cases.py
+    scripts/check_stubs.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     pytest.ini                                 (test-tier markers)
@@ -100,6 +100,7 @@ MAPPING = [
     ("scripts/check_flows.py", "scripts/check_flows.py"),
     ("scripts/check_docs.py", "scripts/check_docs.py"),
     ("scripts/check_perf.py", "scripts/check_perf.py"),
+    ("scripts/check_stubs.py", "scripts/check_stubs.py"),
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),

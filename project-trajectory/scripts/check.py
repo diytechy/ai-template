@@ -150,6 +150,14 @@ def steps(coverage, tier, gate, phase=None):
             "product",
         ),
         ("tests+coverage", pytest_needs, pytest_cmd, {"G3"}, "product"),
+        # Optional PRODUCT-layer detector, not wired into the required floor:
+        # `scripts/check_stubs.py` is the Python-reference tripwire for the G3
+        # no-stub / substance criterion (process.md §4). It is warn-first and
+        # language-specific (a stub's shape differs per stack), so — like the perf
+        # *meters* — a project opts in by adding its own step here, e.g.:
+        #   ("no-stubs", (), [sys.executable, "scripts/check_stubs.py"], {"G3"}, "product"),
+        # (add --strict to make found stubs fail the gate). A non-Python stack
+        # swaps or drops it. Left out of the default plan to keep the floor honest.
         # --- process checks: kit-owned, stdlib-only, identical everywhere -----
         ("traceability", (), trace_cmd, {"G2", "G3"}, "process"),
         # Doc navigability (process.md §3 "Reviewability"): broken intra-repo

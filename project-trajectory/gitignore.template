@@ -20,3 +20,7 @@ docs/test/report.html
 # (which is NOT ignored: a regression is accepted by committing its diff).
 docs/test/perf-report.md
 docs/test/perf-metrics.json
+
+# No-stub / substance detector report (process.md §4 G3) — a regenerated
+# composite from scripts/check_stubs.py; review the code, not this list.
+docs/test/stub-report.md

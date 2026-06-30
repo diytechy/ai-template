@@ -243,7 +243,9 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   `Verification`/`Tier` in vocabulary — `trace.py --strict-schema`); every
   **in-scope** test-verifiable SR **Verified** (phase-scoped — see "Phased
   delivery" below); every other SR explicitly **Demonstration / Manual /
-  Inspection**. Sign-offs: System Engineer, Test Engineer.
+  Inspection**; each in-scope SR's implementing symbol is **substantive, not a
+  stub** (Inspection — see "No-stub / substance review" below). Sign-offs: System
+  Engineer, Test Engineer.
 - **G-Release — Release readiness** *(per release; skip for a one-off
   deliverable)*. The **release** test tier passes (incl. slow/hardware tests);
   the generated **release checklist** (`scripts/gen_release_checklist.py`) is
@@ -270,6 +272,27 @@ is the reachable-human flip side of *Assumptions* logging: record an assumption
 only when **unattended**; when a human is available, **solicit clarification**.
 Track unresolved ambiguities in `status.md` *Open items*, and re-run the review at
 G2 when SRs decompose into LLRs.
+
+**No-stub / substance review (G3).** Traceability, coverage, and a green test
+suite confirm an implementation *exists* and *passes*; none of them, on its own,
+confirms it has **substance**. A body that is `pass` / `...` / `raise
+NotImplementedError` / a bare `return None` / a placeholder return satisfies its
+trace links and can even hold a coverage line, yet does nothing. The G3 criterion
+above therefore adds: **every in-scope SR's implementing symbol does real work, not
+a stub.** TDD (G3) mitigates this — a red-first test should fail against a stub —
+but coverage can be met by a test that exercises a stub's trivial path, and
+Demonstration / Manual / Analysis SRs have **no** automated test to fail, so the
+check is named explicitly. It is **Inspection** — human/LLM judgment, classified
+honestly, **never a machine verdict** — so fold the prompt into §6's
+independent-reviewer checklist (a fresh-context reviewer reads the §3 code map,
+which already harvests each public symbol's summary and `Implements:` back-links,
+and confirms the body matches the requirement). The kit ships an **optional,
+Python-reference tripwire** for it — `scripts/check_stubs.py` (§7), which lists
+trivial-bodied public symbols — but, like the perf *meters*, that detector is
+**product-layer and warn-first** (a stub's shape is language-specific; a tiny pure
+function is not an unfinished one), so it informs the Inspection, it does not
+replace it. Same stance as `ruff`/`pytest`: name the criterion; the project picks
+and wires the tool.
 
 **Phased delivery (version subsets).** A roadmap that ships v1 before v2/v3
 needs gates that close *per phase* without dishonesty. SRs may carry an
@@ -581,6 +604,13 @@ pip needed to run them):
   (vs baseline ± `Tolerance`), warn-vs-fail per the row's `Gate`, tier-scoped —
   and writes the gitignored `perf-report.md`. `--update-baseline` accepts a move.
   Stdlib-only, metric-agnostic; run by `check.py` at G3 (absent metrics skip).
+- `scripts/check_stubs.py` — the **no-stub / substance** tripwire (§4 G3): lists
+  public symbols whose body is a stub (`pass` / `...` / `raise NotImplementedError`
+  / bare `return None` / docstring-only), writing the gitignored `stub-report.md`.
+  Stdlib, but **product-layer, not process** — a stub's shape is language-specific,
+  so it ships like the perf *meters*: **opt-in and warn-first** (exit 0 unless
+  `--strict`), **not** wired into `check.py`'s required floor. A Python project runs
+  it to inform the G3 Inspection; a non-Python stack swaps or drops it.
 - `scripts/gen_arch_map.py` — regenerates the module/function map in
   `architecture.md` from the source tree (and surfaces `Implements:` back-links),
   plus the Mermaid **dependency diagram** between its markers; `--check` fails

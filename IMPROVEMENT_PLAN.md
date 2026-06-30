@@ -1059,11 +1059,42 @@ strong-model glance before commit is cheap insurance.
 
 ## Thread 14 — "Existence ≠ implementation": a no-stub / substance gate (decided: A+C)
 
-**Status: ⏳ queued (Session F) — decision made 2026-06-30: A + C, added
-2026-06-30** from the DonnyClaude survey. Was framed decision-first (like Thread 7);
-the user **selected the hybrid A + C and confirmed the optional Python-reference
-detector is worth shipping**, so the decision is closed and Session F is now an
-implement-+-build session (no longer decision-first).
+**Status: ✅ landed 2026-06-30** (Session F). Both halves shipped. **A** —
+`PROCESS.md` §4 G3 gained a clause ("each in-scope SR's implementing symbol is
+**substantive, not a stub**") plus a **"No-stub / substance review (G3)"**
+paragraph parallel to the existing "Consistency review": defines the criterion,
+explains why coverage+TDD don't already cover it (a test can exercise a stub's
+trivial path; Demonstration/Manual/Analysis SRs have no test to fail), classifies
+it **Inspection — human/LLM judgment, never a machine verdict**, folds the prompt
+into §6's independent-reviewer checklist, and points at the §3 code map (it already
+harvests each symbol's summary + `Implements:` back-links the reviewer reads).
+**C** — new stdlib `scripts/check_stubs.py` (AST): lists public functions/methods
+whose body is `pass` / `...` / `raise NotImplementedError` (bare or called) / bare
+`return None` / docstring-only, writes the gitignored composite
+`docs/test/stub-report.md`, and is **warn-first** (exit 0; `--strict` gates).
+Skips private names, private classes, `@abstractmethod`/`@overload`, and never
+flags a value-returning function (the tiny-pure-core false positive). New
+`tests/test_check_stubs.py` (13 cases): fixture-tree CLI (substantive passes; every
+stub shape flagged; warn-first vs `--strict`; tiny-pure not over-flagged;
+private/abstract/overload skipped; `--exclude`; no-src OK), report-gitignored +
+bootstrap-ships-it assertions, and importable units (`stub_kind` per shape,
+`scan_source` scope/skips, line numbers). `pytest -q`: **110 passed** (was 97; +13).
+
+**Deviations from the spec as written:** (1) the detector is **not wired into
+`check.py`'s default `steps()` plan** — it ships standalone (bootstrap MAPPING +
+docstring) with a **commented wiring example** in `check.py`'s product block.
+Rationale: the spec's own "**like the perf meter**" + "**outside the required
+process floor**" point at the perf-*meter* precedent (the meter is a comment, not
+a default step), and a stdlib-but-Python-specific step can't be added as `product`
+without breaking the `test_step_plan_wiring` invariant (`product` ⇒ names a tool)
+or mislabeled `process` (≠ stack-agnostic). So the optional **`--list` layer-tag**
+test the spec floated was replaced by **direct script tests** (units + fixture-tree
++ warn-first/`--strict` exit + bootstrap file-list), which exercise the same
+contract without polluting the floor. (2) EXAMPLE.md had no dedicated "G3
+checklist," so the criterion is shown as a **"Substance, not just existence"**
+bullet in §"What to copy". (3) **No `AGENTS.md` clause** (the ~12k Gemini cap, as
+Threads 5/8/10). `bootstrap.py` had a **pre-existing** over-long `stakeholder-needs`
+MAPPING line (Thread 7's rename); left untouched per "edit conservatively."
 
 **Goal:** close the one capability the kit lacks that DonnyClaude has — a check that
 an implementation which satisfies its trace links and a thin test isn't a hollow
@@ -1795,7 +1826,8 @@ after the model questions resolve.
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
 **7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
-(2026-06-29); **12 ✅, 13 ✅, 15A ✅, 17 ✅, 18 ✅** (2026-06-30, Session E).
+(2026-06-29); **12 ✅, 13 ✅, 15A ✅, 17 ✅, 18 ✅** (2026-06-30, Session E);
+**14 ✅** (2026-06-30, Session F).
 **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
@@ -1803,7 +1835,7 @@ DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 17 (voice policy + agent-layer carve-out) + 18 (model/agent-tiering discipline)
 from the voice/efficiency discussion; 19 (multi-module scoping) + 20 (multi-repo
 coordinator, design-first) + 21 (cross-repo tooling, a stub) from the multi-repo
-discussion. **▶ NEXT: Session F.** The rule applied
+discussion. **▶ NEXT: Session G.** The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
@@ -1864,13 +1896,17 @@ thread's **Model tier** line says where the handoff is safe.
 > a manual link check (no `#anchor` links were added; all new file links reuse
 > already-valid relative paths).
 
-> **Session F · Substance gate (Thread 14) — implement A + build C.** Decision made
-> 2026-06-30 (A+C). Implement the **A** G3 no-stub criterion (prose) and **build C**,
-> the optional stdlib Python-reference stub detector (the `check_*` pattern, Sessions
-> C/D) — a solo build because of the script. **Model tier: the A prose is
-> Sonnet-able; the C detector is Sonnet-executable against `pytest` once a
-> strong-model glance locks the detector contract (stub = `pass`/`...`/bare `raise
-> NotImplementedError`/`return None`-only; warn-first; product-layer).**
+> **Session F ✅ landed 2026-06-30 · Substance gate (Thread 14) — A + C.** Shipped
+> the **A** G3 no-stub criterion (PROCESS.md §4 clause + a "No-stub / substance
+> review" paragraph, classified Inspection, wired to §6/§3) and **built C**, the
+> optional stdlib `scripts/check_stubs.py` AST detector (warn-first; `--strict`
+> gates; gitignored `stub-report.md`) with `tests/test_check_stubs.py` (13 cases).
+> **Key deviation:** the detector is **not** added to `check.py`'s default plan —
+> it ships standalone with a commented wiring example (the perf-*meter* precedent
+> the spec named), which keeps it "outside the required process floor" and preserves
+> the `test_step_plan_wiring` process⇔stdlib / product⇔tool invariant; see the
+> Thread 14 Status block for the full deviation list. `pytest -q`: **110 passed**
+> (was 97; +13). No `AGENTS.md` change (the ~12k cap).
 
 > **Session G · Onboarder + dev-setup build (Thread 15 Parts B/C/D).** Solo,
 > **multi-platform, highest-care** of any session: the `onboard.template.*` guided
@@ -1898,12 +1934,12 @@ thread's **Model tier** line says where the handoff is safe.
 > heavy tooling routed to the **Thread 21 stub**. **Model tier: strong model +
 > human throughout**; only the locked-contract seam-wiring is Sonnet-able.
 
-**Open: Sessions F (next), G, H, I.** Threads 0a, 0b, 1–11 landed (on
+**Open: Sessions G (next), H, I.** Threads 0a, 0b, 1–11 landed (on
 `template-review-fixes`, since merged into the current working branch); Session E
-(12, 13, 15A, 17, 18) landed 2026-06-30 on the current working branch. Threads 14,
-15 (Parts B/C/D), 19, 20 await Sessions F–I — **F = the Thread-14 decision/build,
-G = the Thread-15 build, H = multi-module (19), I = multi-repo design (20)**;
-Threads 16 and 21 are stubs.
+(12, 13, 15A, 17, 18) and Session F (14) landed 2026-06-30 on the current working
+branch. Threads 15 (Parts B/C/D), 19, 20 await Sessions G–I — **G = the Thread-15
+build, H = multi-module (19), I = multi-repo design (20)**; Threads 16 and 21 are
+stubs.
 
 ### Session protocol (for a cold session pointed only at this file)
 

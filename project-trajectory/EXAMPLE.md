@@ -215,3 +215,7 @@ The registry here is just the captured, tracked source of truth.
 - **Quantitative budgets go off the spine** (§8) — `PB-###` in
   `performance-budgets.csv`, owned by the Integration hat, back-linked to the
   SR/LLR/Module they bound.
+- **Substance, not just existence** (G3) — the implementing symbol must do real
+  work, not a `pass`/`...`/`NotImplementedError` stub that still satisfies its
+  trace links. It's an Inspection call; `scripts/check_stubs.py` is the optional,
+  warn-first Python tripwire that surfaces candidates (process.md §4).
