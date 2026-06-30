@@ -157,7 +157,7 @@ templates/EXAMPLE.md). This is now the live plan in `IMPROVEMENT_PLAN.md`'s
 - **Other guardrails.** What other AI skills should this template make
   available? What other guardrails belong in `AGENTS.md`?  Note 'AGENTS.md' is already filled to the gemini quota (12 kb), there are some items there the could be consolidated, but the repetition could be beneficial?  That could be handled per project.
   
-- **Ensure full provision.** Both in this template repositories and repositories created from this template, the repo setup script should contain dependencies for both the main project content, but also for surrounding infrastructure on applicable platforms for development.  That would include python, ruff, git, and - depending on the environment - visual studio - relevant extensions, wsl (windows), ect.  A repo setup script should exist for all applicable platforms (windows / linux / mac) to make development environment readiness as fast as possible (take advantage of choclatey?  Other bundlers?).  Sometimes it may make sense to contain these in a podman container, but care would have to be taken to ensure that doesn't block some testing where other devices need to communicate.  In genera
+- **Ensure full provision.** Both in this template repositories and repositories created from this template, the repo setup script should contain dependencies for both the main project content, but also for surrounding infrastructure on applicable platforms for development.  That would include python, ruff, git, and - depending on the environment - visual studio - relevant extensions, wsl (windows), ect.  A repo setup script should exist for all applicable platforms (windows / linux / mac) to make development environment readiness as fast as possible (take advantage of choclatey?  Other bundlers?).  Sometimes it may make sense to contain these in a podman container, but care would have to be taken to ensure that doesn't block some testing where other devices need to communicate.  Problem: This can be conflated with setup / procurement for the tool itself.  It needs to be a separate development setup script to configure the development environment.  In a way this may appear anathema to this tool's core "no required tools" but since it's development related, there needs to be some baseline for testing.  The kew note is that this template can bootstrap a new project and that project's dependencies / procurement can be customized as it needs, but at the end some toolset is necessary to do the very basic view document / view code / run test suite.  How can that be crafted carefully to ensure this repo supports itself, but doesn't shoehorn in projects it templates into that might have different infra?
 
 If user is checking out repo, they want to do development, but they might not want plugins / extensions?  In most (80% ?) cases users should share environment setup.  This means IDE, extensions, and potentially supporting hardware.
 
@@ -165,12 +165,21 @@ Idea: User starts setup script, it checks for IDE, and informs users it will ins
 
 Setup Dependency flow:
 - Script attempts to detect ide, and if it's detected, determine what extensions will allow for the view of the various artifacts (markdown, mermaid diagrams, ect) and which other programs will be installed (like python, ruff, podman).  Note if IDE is not detected, script chooses visual code. The most important part - The development setup script must be able to be run from any development platform (mac / linux / windows), the only case this would not be true is if the scope of the application m/ module is a runtime environment that is restricted to a single platform (like a powershell 7 script that performs some complex operations - that would only realistically need development in windows and as such only needs a development setup file in batch, no sh file(s) required.)
-- Informs user applications and extensions will be installed or updated to view documentation and diagrams in 10 s, press any key to interupt and review tools before proceeding.
-- If user press key, present user with list of programs and extentioned intended to installed.  User is given the choice to install all, install only those required for development, or to cancel and close.
+- Informs user applications and extensions will be installed or updated to view documentation and diagrams in 10 s, press any key to interrupt and review tools before proceeding.
+- If user press key, present user with list of programs and extension intended to installed.  User is given the choice to install all, install only those required for development, or to cancel and close.
 
 Other considerations:
 - Donnyclaude (C:\Projects\donnyclaude)
-- Ponytail
+- Ponytail (C:\Projects\ponytail)
+  → Surveyed 2026-06-30 → IMPROVEMENT_PLAN.md Threads 12–14 (queued, Sessions E/F).
+    Verdict: **mine ideas, don't vendor/depend** — both are different-layer runtime
+    packages (npm/plugins) that violate the kit's stdlib-only / stack-agnostic /
+    agent-neutral constraints, so neither is a dependency or vendor candidate.
+    Thread 12 = Donny as an optional runtime-harness accelerator (PROCESS §7, mirrors
+    Thread 8); Thread 13 = Ponytail's right-size guardrails + a kit-neutral
+    shortcut-comment convention; Thread 14 = no-stub "existence ≠ implementation"
+    substance gate (decision-first, like Thread 7). Dump nothing — the kit's
+    rigorous SN→SR→LLR→TC spine is exactly what neither sibling has.
 
 Voice:
 - How to get more humor into agent's feedback?  How to augment agents "personality" to add a bit of levity or light-heartedness?

@@ -914,15 +914,227 @@ protocol, is wired into the harness (size gated at `full`, runtime warn at
 
 ---
 
+## Thread 12 — Name the spec-vs-runtime-harness boundary (a turnkey agent harness as optional downstream accelerator)
+
+**Status: ⏳ queued (Session E), added 2026-06-30** from the DonnyClaude/Ponytail
+sibling survey. The same survey→thread move Threads 8/9 made for `ai-native-toolkit`.
+
+**Goal:** name, once, the boundary between *this kit* — a stack-agnostic, stdlib,
+agent-neutral process **spec** you copy into a repo — and a *turnkey agent-runtime
+**harness*** that implements a similar gated/verified process but as an installed,
+tool-specific **product** (e.g. **DonnyClaude**: an `npx` Node engine + skills /
+agents / hooks / MCP for Claude Code, with deterministic verification gates,
+model-tiered subagents, and a `.planning/`-style context layer). This is the third
+of the §7/§8-style boundary notes, alongside Thread 8's *generate-vs-measure*
+(external readiness assessor) and *map-vs-index* (Serena / code-graph): name the
+**category**, mark it **optional**, never hard-wire or endorse.
+
+**Why:** a reader who finds DonnyClaude (or a successor) will ask "should the kit
+bundle that, or depend on it?" Answer once: **no — different layer and dependency
+budget.** The kit is the portable *spec*; a runtime harness is a concrete *product*
+a downstream Claude-Code shop may additionally run. **They compose** (a repo
+scaffolded from this kit can be driven by such a harness); neither is a dependency
+of the other. Recording it in-repo stops the question being re-litigated, and notes
+the genuine philosophical fit — its "never grade your own work, back the verdict
+with a deterministic gate" stance matches §6 — without adopting its weight (the
+kit's stdlib-only + stack-agnostic + agent-neutral rules rule it out *as a
+dependency*).
+
+- **PROCESS.md §7** (by the Thread-8 generate-vs-measure / map-vs-index notes): add
+  a *spec-vs-runtime-harness* boundary. State it by **category with `e.g.`** (an
+  `npx`/Node-installed engine with deterministic gates, model-tiered subagents, a
+  `.planning/` context layer), explicitly **optional, tool-specific, not a kit
+  dependency**; note the §6 fit and the three constraints that keep it external.
+- **README** echo (one line), like Thread 8's "Scope — generate vs. measure" note.
+- **Mind the 12k AGENTS.md cap** — no AGENTS.md clause; single-source in PROCESS.md
+  (the call every late thread made).
+
+**Tests:** none (prose). Verify intra-doc links — now automatic via `check_docs.py`
+(Thread 9).
+
+**Risks:** naming a third-party tool dates the doc / reads as endorsement —
+mitigate by naming the *category* + `e.g.`, exactly as Thread 8; one paragraph, not
+a tool shoot-out.
+
+**Done-when:** PROCESS.md §7 names the spec-vs-runtime-harness boundary with a
+turnkey harness as an optional, non-core downstream accelerator; README echoes it;
+no new dependency; links pass.
+
+**Model tier — Sonnet-able end to end.** Mechanical prose mirroring an existing
+pattern (Thread 8), with a deterministic link check (`check_docs.py`) as the
+backstop. The only strong-model input *is this spec*; execution needs no further
+judgment.
+
+---
+
+## Thread 13 — Fold in the "lazy senior dev" coding discipline (right-size guardrails + shortcut-comment convention)
+
+**Status: ⏳ queued (Session E), added 2026-06-30** from the Ponytail survey.
+
+**Goal:** grow the kit's single "Right-size the solution" directive into (a) an
+explicit **guardrail list** of what right-sizing must *never* cut, and (b) a named
+**intentional-shortcut comment convention** so a deliberate simplification records
+its own ceiling and upgrade path. Both are language-neutral and align with the
+kit's existing minimal/conservative ethos; the source is Ponytail's YAGNI ladder +
+its `ponytail:` shortcut marker.
+
+**Why:** "simplest thing that works" is today one bullet
+(`AGENTS.template.md` "Right-size the solution") and can be misread as
+"flimsiest." Ponytail's real contribution is the **calibration** — never lazy about
+validation at trust boundaries, error handling that prevents data loss, security,
+accessibility, or understanding-the-problem-first (root-cause-not-symptom) — plus a
+one-line marker that turns an undocumented shortcut into a tracked, upgradable
+decision. The marker dovetails with the kit's existing honesty machinery (the
+*Assumptions* log, §4 consistency findings) and is the natural feedstock for a debt
+ledger should one ever be built (a deliberately deferred harvester, noted below).
+
+- **PROCESS.md (single-sourced home — the 12k cap is full):** name the right-sizing
+  **guardrails** once (the "never cut" list), near the §3 modularity/dedup
+  discipline or §6 review triage. State the **shortcut-comment convention**: a
+  deliberate simplification carries a one-line tag naming the **ceiling** (e.g.
+  global lock, O(n²) scan, naive heuristic) **and** the **upgrade path**, so it is
+  greppable and reviewable. Use a **kit-neutral tag** (e.g. `SHORTCUT:` /
+  `# shortcut:`), *not* a Ponytail-branded one — the kit names conventions
+  generically.
+- **AGENTS.template.md** is at **11,998 / ~12,000 chars** — do **not** grow it.
+  Either (i) tighten the existing "Right-size the solution" bullet to add a
+  3–4-word pointer to the PROCESS.md guardrails + the shortcut tag, reclaiming the
+  chars from adjacent lines (the Sessions A/B technique), or (ii) add nothing and
+  rely on the PROCESS.md link. Prefer (i) iff the result stays ≤ the cap; else (ii).
+- **EXAMPLE.md (optional):** one code-comment example showing the tag on a
+  deliberately minimal implementation, if it fits without bloating the worked chain.
+
+**Tests:** none (prose). Verify intra-doc links (`check_docs.py`) **and** that
+`AGENTS.template.md` stays **≤ ~12,000 chars** (`wc -c` — the hard constraint).
+
+**Risks:** the cap — any AGENTS.md addition must be paid for by tightening
+elsewhere or skipped (every late thread hit this). Convention proliferation — one
+tag, defined once, not a taxonomy. Don't import Ponytail's branding / benchmarks /
+plugin packaging — only the language-neutral discipline.
+
+**Done-when:** PROCESS.md names the right-sizing guardrails + the shortcut-comment
+convention once; AGENTS.md either points at them within budget or is deliberately
+left unchanged; EXAMPLE optionally illustrates the tag; links pass; `wc -c
+AGENTS.template.md` ≤ ~12k.
+
+**Model tier — Sonnet drafts the prose; strong model owns the cap juggling.**
+Writing the guardrail/convention text is well within Sonnet. The fiddly judgment is
+the AGENTS.md byte budget — *which* adjacent lines to compress without losing
+meaning — which every late thread treated carefully. Either do that pass on the
+strong model, or let Sonnet draft and **verify the byte count green** before
+commit. No script, so the safety net is only link-check + size; a quick
+strong-model glance before commit is cheap insurance.
+
+---
+
+## Thread 14 — "Existence ≠ implementation": a no-stub / substance gate (decide, then build)
+
+**Status: ⏳ queued (Session F) — decision-first, added 2026-06-30** from the
+DonnyClaude survey. Like Thread 7, this thread **frames a choice and recommends; it
+does not pre-decide a build.**
+
+**Goal:** close the one capability the kit lacks that DonnyClaude has — a check that
+an implementation which satisfies its trace links and a thin test isn't a hollow
+**stub** (a body that is `pass` / `...` / `return None` / `raise
+NotImplementedError`, a handler that only logs, a placeholder return). The kit's
+gates verify *traceability + coverage + tests pass*; **none asserts substance.**
+
+**Why:** TDD (G3) mitigates this — a red-first test should fail against a stub — but
+coverage can be satisfied by a test that exercises a stub's trivial path, and
+Demonstration / Manual / Analysis SRs have **no** automated test to fail.
+DonnyClaude's `verification-patterns.md` ("existence ≠ implementation", wiring
+checks) is grep/heuristic and JS/React-flavored, which **collides head-on** with the
+kit's stdlib-only + stack-agnostic + "generate, don't score" constraints (Thread
+8). **So the design decision *is* the thread.**
+
+**The decision (pick one; recommended hybrid = A + C):**
+1. **A — Convention + gate criterion only (no script).** Add a G3 exit criterion:
+   "every in-scope SR's implementing symbol is substantive, not a stub," classified
+   **Inspection/Analysis** (human/LLM judgment, per §4 "classify the rest
+   honestly"), with a reviewer prompt folded into §6's independent-reviewer
+   checklist. Zero new code; stdlib-clean; stack-agnostic; honest. Cheapest; matches
+   the kit's "name the gate, the project picks the tool" stance.
+2. **B — A light stdlib heuristic *process* check.** A new `check_*.py` flagging
+   trivial-bodied public symbols. **Tension:** one detector can't be stack-agnostic
+   (stub shapes differ per language); it would be Python-reference only — but unlike
+   `gen_arch_map.py` (which every stack re-implements into the *same marker*), a
+   stub detector has no shared artifact, so a *required* Python-only gate is exactly
+   what the kit elsewhere avoids. Higher false-positive risk (a legitimately tiny
+   pure function reads as a stub) ⇒ would need warn-first, like the perf comparator.
+3. **C — Product-layer detector; kit owns only the criterion** (mirrors Thread 11's
+   measure/compare split). The kit defines the G3 *no-stub criterion* in prose
+   (= A), and ships an **optional Python-reference** AST helper (lists public
+   symbols with trivial bodies) as a *product* example the project wires — exactly
+   as the perf *meters* are product and the *comparator* is process. A non-Python
+   stack swaps or drops the detector.
+
+**Recommendation: A (always-on criterion) + C (optional Python-reference
+detector).** Keeps the kit stdlib + stack-agnostic + honest; gives Python projects
+a concrete tripwire without forcing one on every stack or pretending a heuristic is
+a universal gate. **Reject B-as-required** — a required Python-only heuristic gate
+violates the kit's own boundaries.
+
+**Steps (if A + C):**
+- **PROCESS.md §4 G3:** add the **no-stub / substance** exit criterion, classified
+  Inspection/Analysis; reference §6 (reviewer prompt) and §3 (the code map already
+  harvests the symbol summaries a reviewer reads). Mind the cap — no AGENTS.md
+  clause.
+- **(Optional C) `scripts/`:** an **opt-in, stdlib, Python-reference** AST helper
+  listing public symbols with trivial bodies (`pass`, `...`, bare `raise
+  NotImplementedError`, `return None`-only), emitting a report the project may wire
+  as a **product** step (like the perf meter). Clearly product-layer, **warn-first**,
+  outside the required process floor. If built: importable units + a fixture-tree
+  test like `check_docs`/`check_perf`; `pytest -q` green.
+- **EXAMPLE.md (optional):** show the criterion in the G3 checklist.
+
+**Tests:** Option A — none (prose); links. Option C (if built) — units over a
+fixture module (a stub flagged; a substantive symbol not; a deliberately tiny pure
+function **not** over-flagged), `--list` layer tag = product (or a clearly-optional
+process step); `pytest -q` green.
+
+**Risks:** false positives fighting good design (a tiny pure core flagged) ⇒
+warn-first, advisory, **never a hard fail** — the same restraint as the deferred
+"hotspot map" note (above Thread 10) and the perf warn-tier. Stack-agnostic
+violation ⇒ solved by routing the detector to the product layer. Scope creep into a
+wiring/linter ⇒ out of scope; the kit names the criterion, the project picks the
+linter (the ruff/pytest stance).
+
+**Done-when:** the decision (A / B / C / hybrid) + rationale recorded here;
+PROCESS.md G3 names the substance criterion, honestly classified; if a detector
+ships, it's optional, product-layer, warn-first, with green tests; no new required
+dependency; links pass.
+
+**Model tier — decision on the strong model; execution tiered by the outcome.** The
+*design decision* (resolving the stdlib / stack-agnostic tension) is the
+judgment-heavy core: **keep it on the strong model and surface it to the human, like
+Thread 7.** Once decided — if it lands **A (convention-only)**, execution is prose →
+**Sonnet-able** with the link check as backstop; if it includes **C (the optional
+detector)**, that's a from-scratch stdlib script + test suite = a Sessions-C/D-style
+**solo build**, which Sonnet can execute green against `pytest` **only after the
+strong model has locked the detector's contract** (what counts as a stub,
+warn-vs-fail, process-vs-product). Don't hand the open decision to a lower tier.
+
+**Deferred (noted, not in scope): a `shortcut:`/`ponytail:`-tag harvester.** A
+script that harvests Thread 13's shortcut comments into a debt ledger (Donny's
+`/ponytail-debt` idea) is a separate solo script build; queue it only if the
+convention sees real use. Strong model to spec; Sonnet to build against `pytest`.
+
+---
+
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
 **7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
-(2026-06-29). **🎉 All threads landed — the plan is complete.** The rule applied
+(2026-06-29). **Reopened 2026-06-30** with **Threads 12–14** from the
+DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
+8/9 from `ai-native-toolkit`). **▶ NEXT: Session E.** The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
-change" caution (below) is about.
+change" caution (below) is about. **Model-tier rule (new, 2026-06-30):** spec /
+decision work stays on the strong model; once a thread is specced, execute it on a
+lower tier (Sonnet) with `pytest -q` + the process checks as the backstop — each
+thread's **Model tier** line says where the handoff is safe.
 
 > **Session A ✅ landed 2026-06-29 · Process-doc framing (Threads 4, 6, 8).** Pure
 > prose. 4→PROCESS G3 (Implementation test-first), 6→PROCESS §4 (Consistency
@@ -955,8 +1167,27 @@ change" caution (below) is about.
 > comparator subsection + §3 committed-golden class; gitignore/CI/EXAMPLE/README +
 > a release-checklist perf section; 15 new tests. `pytest -q`: 97 passed.
 
-**The plan is complete — no NEXT session remains.** All 14 threads (0a, 0b, 1–11)
-have landed on `template-review-fixes`.
+> **▶ Session E · NEXT · Sibling-survey framing (Threads 12, 13).** Pure prose, the
+> Session-A shape: **12** → PROCESS.md §7 (spec-vs-runtime-harness boundary; Donny as
+> an optional accelerator) + a one-line README echo; **13** → PROCESS.md
+> (right-sizing guardrails + the shortcut-comment convention) with at most a
+> byte-budgeted AGENTS.md pointer. No scripts; backstop is `check_docs.py` links +
+> `wc -c AGENTS.template.md` ≤ ~12k. **Model tier: Sonnet-able execution** once the
+> two specs are read — the single care point is the AGENTS.md cap (Thread 13), worth
+> a strong-model glance before commit.
+
+> **Session F · Substance gate (Thread 14) — decision-first.** Resolve the A/B/C
+> design choice (strong model + human, like Thread 7) **before** building. If it
+> lands convention-only (A), it folds into a prose pass (could even ride along with
+> Session E); if the optional Python detector (C) is built, it's a solo
+> script + tests session reusing the `check_*` pattern (Sessions C/D). **Model tier:
+> decision on the strong model; a convention-only outcome is Sonnet-able; a detector
+> build is Sonnet-executable against `pytest` only after the contract is locked.**
+
+**Open: Sessions E (next) and F.** Threads 0a, 0b, 1–11 landed (on
+`template-review-fixes`, since merged into the current working branch); Threads
+12–14 are specced above and await Sessions E/F. Land them on the current working
+branch.
 
 ### Session protocol (for a cold session pointed only at this file)
 
