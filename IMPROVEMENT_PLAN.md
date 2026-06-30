@@ -1421,6 +1421,205 @@ for the AGENTS.md cap, if touched.
 
 ---
 
+## Thread 19 — Multi-module scoping (single-repo sub-systems)
+
+**Status: ⏳ queued (Session H — near-term; mostly prose + light template),
+added 2026-06-30.** The four multi-repo decisions were confirmed with the user
+2026-06-30 (see Thread 20); this is the **cheaper first rung** of that track.
+
+**Goal:** state explicitly that the kit is **single-module by default**, and
+describe how **one repo** can hold **several modules/sub-systems** without new
+machinery — sub-trees of the SN→SR→LLR→TC spine grouped by `Module`/`Area`, with
+trace + gates scopable to a module and explicit **integration** TCs for the seams.
+
+**Why:** the kit reads as single-module today (the scratch note), but the
+registries already carry `Module`/`Area` columns, the arch map already surfaces
+internal dependencies and makes layering invariants auditable, and `IF-###` (§8)
+already handles contracts between parts. So "multi-module in one repo" is mostly
+*naming and scoping what exists* — not building — and shipping it first gives a
+working multi-module project that de-risks the Thread-20 coordinator.
+
+- **State the default + the extension** in PROCESS.md: single-module by default; a
+  larger project may host several modules in one repo, each a sub-tree tagged by
+  `Module`/`Area` (already optional columns — the Thread 5/10 pattern), with its own
+  domain hat(s) where the scope needs them (§1 already allows this).
+- **Module-scoped trace + gates:** name the convention for closing a module's own
+  G2/G3 within the repo while the repo-level gate covers the whole. **Decide
+  in-thread:** purely conventional (filter on the existing `Area`/`Module` column)
+  vs. a cheap `--area`/`--module` flag on `trace.py`/`check.py` — bias to convention
+  + existing columns unless a flag is cheap and clearly useful.
+- **Integration TCs for the seams:** module boundaries get their own TCs (shared
+  contracts are the §8 `IF-###` fixture tests; intra-repo seams get integration
+  TCs, likely `Tier=Full`/`Release`) so the seam isn't an untested gap.
+- **`IF-###` applies *within* a repo too** (between modules), not only across repos
+  — same contract/owner/version discipline, no cross-repo machinery.
+- PROCESS.md home; no AGENTS.md clause needed (cap-safe).
+
+**Steps:** PROCESS.md edits (default + a multi-module section near §1/§8); an
+optional EXAMPLE.md two-module illustration (intra-repo `IF-###` + an integration
+TC); confirm the trace/check scoping decision; README echo if warranted.
+
+**Tests:** if a scoping flag is added, importable unit tests like the other
+scripts; else confirm the optional-column tolerance covers `Module`/`Area`
+(precedent: Thread 5's `test_lifecycle_column_is_schema_safe`). Verify links;
+AGENTS.md ≤ ~12k.
+
+**Risks:** creep toward the full coordinator — Thread 19 stays *single-repo*;
+cross-repo is Thread 20. Adding flags the kit doesn't need — prefer convention +
+existing columns. Don't imply every project is multi-module — single-module stays
+the default and simplest path.
+
+**Done-when:** PROCESS.md states the single-module default + the single-repo
+multi-module model (sub-trees by `Module`/`Area`, module-scoped gates, integration
+TCs, intra-repo `IF-###`); EXAMPLE optionally shows it; any scoping flag has tests;
+`pytest -q` green.
+
+**Model tier — mostly Sonnet-able prose** once specced; **if** a trace/check
+scoping flag is built, that small slice is a script change (strong-model glance for
+the flag contract, Sonnet to implement against `pytest`). Strong-model glance for
+the AGENTS.md cap only if touched (likely not).
+
+---
+
+## Thread 20 — Multi-repo coordinator model (design-first)
+
+**Status: ⏳ queued (Session I — design-first; the most decision-heavy thread in the
+plan), added 2026-06-30.** Core model **decisions 1–4 confirmed with the user
+2026-06-30**; this thread **documents the model and defers most mechanism** to
+Thread 21.
+
+**Goal:** name, in a design/architecture doc, how the single-module spine extends
+across **separate repositories** under a **coordinator** — **without becoming a
+multi-repo build/orchestration engine** (the §8 guardrail). Capture the north star;
+build only the thinnest enabling seams; route the heavy/automation parts to Thread
+21 stubs.
+
+**Why:** large products span repos (independent versioning, ownership, access). The
+kit already has the seams — §8 `IF-###`, the §1 Integration/Coordination hat, §9
+`PB-###`, and the recursive spine — so multi-repo is mostly *extending them across a
+boundary* + naming the coordinator role, not new machinery. But it is genuinely hard
+and uncertain, so this thread is design-first: decisions + a documented model now,
+mechanism later.
+
+**Confirmed model (decisions 1–4, 2026-06-30):**
+- **Recursive handoff at the SR tier.** A repo boundary is a *cut in the
+  decomposition tree*. The coordinator decomposes SN→SR; an SR it chooses to
+  **delegate** to a module repo is tagged delegated and becomes that module repo's
+  **SN** (its reason-to-exist); the module's SN back-links the coordinator's SR id.
+  *Not* LLR→SN — LLR is code-local; the delegated unit is a sub-system, which is
+  SR-shaped.
+- **Coordinator = the Integration/Coordination hat (§1), elevated to a repo.** It
+  holds the product-level SN→SR→TC chain + an **assembly definition** + an
+  **interface catalog**; it contains **no functional build output** except the
+  assembly definition.
+- **Interface catalog = pointers, not copies (single-source-of-truth).** Each
+  interface's spec lives once in its **owner** — the owning repo's `IF-###`, or, for
+  purchased/external/reused parts no repo builds, a coordinator-held `IF-###` row
+  that *is* the owner of record (linking the datasheet/part). The catalog
+  **references** owner `IF-###` + adds only assembly-level *connection* info.
+  Ownership follows the §8 ICD model; proliferation is accepted (the "16 standards"
+  reality) and managed by owner-of-record, not central control.
+- **Assemblies = configuration, not branches.** A product variant is an
+  `assemblies/<name>/` configuration (module set + pinned versions + which SN/SR/TC
+  apply), **not** a long-lived coordinator branch (branches model change-in-time,
+  diverge, and can't be co-current).
+- **Coordinator gating = mechanical aggregation, judgment escalated.** The
+  coordinator (as agent) runs the *mechanical* cross-module gate — every module
+  passed its own gates + integration tests green + catalog consistent — and surfaces
+  only the *judgment* gates to the human. The human signs the **integration** gate;
+  module agents gate the modules. This is the §6 review-depth triage at the
+  coordinator level; it does **not** remove the human.
+- **Cross-repo communication = async text + PR.** A delegated SR *seeds* the module
+  repo's SN registry; module status flows back as referenced ids in a coordinator
+  assembly/status doc (the STATUS.md pattern across the boundary). No live message
+  bus / daemon.
+
+**What this thread writes (thin):**
+- A **design doc** (`project-trajectory/MULTI_REPO.md`, or a PROCESS.md §10)
+  capturing the confirmed model, explicitly marked *design — mechanism deferred*.
+- The minimal **schema seams** that are cheap + schema-safe (optional, like
+  `Lifecycle`/`Area`): an SR `Delegated`/`ModuleRef` marker; a module SN `ParentRef`
+  (the coordinator SR id); a coordinator `modules.csv` (module repo + delegated
+  SR-refs + version + `Type=owned|external|reused`); the `IF-###` catalog-reference
+  convention. **Decide in-thread** how much to ship now vs. stub — bias to the
+  smallest set that lets a real two-repo example exist.
+- A **coordinator `bootstrap` variant** concept (opt-in): scaffold a coordinator
+  repo (no `src/` build; has assembly + catalog) vs. a module repo (normal kit + a
+  `ParentRef`). Whether `bootstrap.py` grows a `--coordinator` mode now or it's
+  documented + stubbed → decide in-thread (bias to documented + stub; repo
+  creation/automation is Thread 21).
+- Keep multi-repo an **optional layer**: single-module never sees it; single-repo
+  multi-module (Thread 19) never needs it.
+
+**Steps:** the design doc; the cheapest schema seams (optional columns + a
+`modules.csv` template, if shipped); a worked **two-repo EXAMPLE** sketch
+(coordinator SR → module SN; one shared `IF-###` owned by the module; one
+purchased-part interface owned by the coordinator); README/PROCESS cross-links.
+Defer tooling to Thread 21.
+
+**Tests:** if any registry seam ships, schema-safety + back-link tests like
+`IF-###`/`PB-###` (`trace.py` flags a `ModuleRef`/`ParentRef`/catalog row pointing
+at an unknown id; optional columns don't break `--strict-schema`). Else prose;
+verify links; AGENTS.md ≤ ~12k.
+
+**Risks:** scope explosion / becoming a PLM or multi-repo build system — the §8
+guardrail (no build system) + "design-first, mechanism deferred" + "optional layer"
+are the controls. Cross-repo trace can't be one `trace.py` run — acknowledge it
+(Thread 21), don't fake it. Over-shipping schema nobody uses — smallest set + a
+worked example. Identity drift — opt-in coordinator variant, not a base change.
+
+**Done-when:** a design doc records the confirmed model (SR-tier handoff,
+coordinator-as-Integration-hat, catalog-not-copy interfaces, assemblies-as-config,
+mechanical-aggregation gating, async-text coordination); any shipped seam is
+optional, schema-safe, traceable, with tests; the heavy tooling is routed to Thread
+21; `pytest -q` green.
+
+**Model tier — strong model + human throughout the design; only the mechanical
+seam-wiring is Sonnet-able.** The most judgment-heavy thread in the plan: the design
+doc, the schema-seam decisions, and the two-repo example are strong-model +
+human-in-the-loop. Once a specific seam's contract is locked, its registry template
++ `trace.py` back-link wiring + tests are Sonnet-executable against `pytest` (the
+`IF-###`/`PB-###` precedent). **Do not** hand the model decisions to a lower tier.
+
+---
+
+## Thread 21 — Cross-repo tooling & automation (research stubs)
+
+**Status: ⏳ stub (sketch only; each part its own future thread/decision),
+added 2026-06-30.** The heavy/uncertain mechanism deferred from Thread 20.
+
+**Goal (sketch):** the tooling that *operationalizes* Thread 20's model, each part
+genuinely research-grade and deferred:
+- **Cross-repo traceability** — joining SN→SR→LLR→TC across repos (coordinator SR ↔
+  module SN), likely a coordinator-side aggregation reading each module's *exported
+  trace summary* (not one `trace.py` over many checkouts). Decide: **pull** (the
+  coordinator clones/reads) vs. **push** (modules publish a trace artifact it
+  ingests).
+- **Coordinator gate aggregation** — the mechanical "all modules green + integration
+  green + catalog consistent" check (Thread 20's gating model) as an actual stdlib
+  command reading module-published gate/status artifacts, with escalation rules for
+  the judgment gates.
+- **Repo creation** — scaffolding a coordinator + N module repos (`bootstrap
+  --coordinator`, `gh repo create`): agent/host tooling, optional, agent-neutral
+  (the Thread 18 stance — name it, don't bake the automation in).
+- **Module discovery / suggestion / reuse catalog** — finding existing reusable
+  modules/parts for a delegated SR: an agent capability over a catalog, not a kit
+  mechanism.
+- **Cross-repo / cross-module E2E testing** — how integration tests spanning repos
+  run and report (which repo owns them; how the coordinator triggers/aggregates) —
+  the "End-to-end testing" scratch note.
+
+**Open questions when revived:** pull vs. push for trace/status; where cross-repo
+E2E lives + who runs it; how much (if any) repo-creation automation is kit vs. agent
+vs. host; keeping all of it stdlib + agent-neutral + no-multi-repo-build-system.
+
+**Model tier:** each part is decision-first on the strong model + human when
+revived; concrete stdlib tools (aggregators, comparators) are Sonnet-executable
+against `pytest` once a part's contract is locked — the `check_*` shape, but only
+after the model questions resolve.
+
+---
+
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
@@ -1430,7 +1629,9 @@ DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
 16 (verifying non-code artifacts, a stub) from the start-from-zero discussion;
 17 (voice policy + agent-layer carve-out) + 18 (model/agent-tiering discipline)
-from the voice/efficiency discussion. **▶ NEXT: Session E.** The rule applied
+from the voice/efficiency discussion; 19 (multi-module scoping) + 20 (multi-repo
+coordinator, design-first) + 21 (cross-repo tooling, a stub) from the multi-repo
+discussion. **▶ NEXT: Session E.** The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
@@ -1505,11 +1706,28 @@ thread's **Model tier** line says where the handoff is safe.
 > parts only after the cross-platform/auth/GUI contract is locked. **Thread 16 is a
 > stub — no session until revived.**
 
-**Open: Sessions E (next), F, G.** Threads 0a, 0b, 1–11 landed (on
+> **Session H · Multi-module scoping (Thread 19).** Mostly prose + a light template
+> touch: PROCESS.md single-module default + the single-repo multi-module model
+> (sub-trees by `Module`/`Area`, module-scoped gates, integration TCs, intra-repo
+> `IF-###`), an optional EXAMPLE two-module slice, and the trace/check scoping
+> decision (convention vs. a cheap flag). **Model tier: Sonnet-able prose**; if a
+> scoping flag is built, strong-model glance for its contract, Sonnet against
+> `pytest`. The cheaper first rung of the multi-repo track.
+
+> **Session I · Multi-repo coordinator design (Thread 20) — design-first, the most
+> decision-heavy session.** A design doc (`MULTI_REPO.md` or PROCESS §10) recording
+> the confirmed model (SR-tier handoff, coordinator-as-Integration-hat,
+> catalog-not-copy interfaces, assemblies-as-config, mechanical-aggregation gating,
+> async-text coordination) + the thinnest schema seams + a two-repo EXAMPLE sketch;
+> heavy tooling routed to the **Thread 21 stub**. **Model tier: strong model +
+> human throughout**; only the locked-contract seam-wiring is Sonnet-able.
+
+**Open: Sessions E (next), F, G, H, I.** Threads 0a, 0b, 1–11 landed (on
 `template-review-fixes`, since merged into the current working branch); Threads
-12–15 + 17–18 are specced above and await Sessions E–G — **E = the clubbed prose
-batch (12/13/15A/17/18), F = the Thread-14 decision, G = the Thread-15 build**;
-Thread 16 is a stub. Land them on the current working branch.
+12–15 + 17–20 are specced above and await Sessions E–I — **E = the clubbed prose
+batch (12/13/15A/17/18), F = the Thread-14 decision, G = the Thread-15 build,
+H = multi-module (19), I = multi-repo design (20)**; Threads 16 and 21 are stubs.
+Land them on the current working branch.
 
 ### Session protocol (for a cold session pointed only at this file)
 

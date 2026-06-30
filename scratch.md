@@ -154,6 +154,29 @@ templates/EXAMPLE.md). This is now the live plan in `IMPROVEMENT_PLAN.md`'s
     - How would coordinator track / suggest potential modules?
     - LLR of branch becomes SN of module?
     - Coordinator communicates to agents of module repo using a text document just like STATUS.md maintains changes in repo itself.  
+    - Note the coordinate likely needs to actually communicate to modules on the status.  In many ways that opposes the human element of this template, but managing gate flows from multiple modules is not tenable.  Instead, the coordinator should perform the core gating actions a human would do where possible, and only surface them up to the human user in the coordinator context when necessary.
+
+  → Threaded (2026-06-30) → IMPROVEMENT_PLAN.md **Threads 19, 20, 21**. Split the
+    two conflated problems: **multi-module (one repo)** = near-term, mostly naming
+    what exists (Thread 19, Session H — sub-trees by `Module`/`Area`, module-scoped
+    gates, integration TCs, intra-repo `IF-###`); **multi-repo (coordinator)** =
+    design-first (Thread 20, Session I). Four decisions confirmed with the user:
+    (1) stage multi-module first; (2) handoff at the **SR tier** (a delegated SR →
+    module SN, back-linked — not LLR→SN); (3) assemblies as **configuration**, not
+    coordinator branches; (4) coordinator gating = **mechanical aggregation, escalate
+    judgment to the human** (the §6 triage at coordinator level — doesn't remove the
+    human). Key alignments to the kit's existing grain: the coordinator is the §1
+    Integration/Coordination hat elevated to a repo; the interface model is the §8
+    `IF-###` ICD ownership the user re-derived; the interface **catalog references
+    owner `IF-###`, never copies** (single-source-of-truth, dissolves the "giant
+    list" worry); physical interfaces are `IF-###` with an Inspection/Demonstration
+    backing test; communication is **async text + PR** (STATUS.md across the
+    boundary), never a live bus; the §8 "no multi-repo build system" line is the
+    guardrail. Cautions: don't reinvent PLM/SysML/ICD tooling — stay in the
+    legible-text lane; keep multi-repo an **optional layer** (opt-in coordinator
+    `bootstrap` variant). Heavy tooling (cross-repo trace pull-vs-push, gate
+    aggregation, repo creation, module discovery, cross-repo E2E) → **Thread 21
+    stub**, research-grade, deferred.
 - **Other guardrails.** What other AI skills should this template make
   available? What other guardrails belong in `AGENTS.md`?  Note 'AGENTS.md' is already filled to the gemini quota (12 kb), there are some items there the could be consolidated, but the repetition could be beneficial?  That could be handled per project.
   
