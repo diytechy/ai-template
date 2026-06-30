@@ -88,6 +88,19 @@ This is the "composite artifacts are ignored from change tracking" rule, named:
 the cost of reviewing a big regenerated file is never paid, because the small
 registry diff already carries the intent.
 
+**The doc set must stay navigable (the doc map stays honest like the code map).**
+The freshness gate above keeps *generated* blocks honest; the hand-written docs
+need the same guarantee. `scripts/check_docs.py` (stdlib, a process check — §7)
+parses the Markdown under `docs/` plus the root `*.md`, builds the link graph,
+and **fails on broken intra-repo links** (a missing target file or `#anchor`) —
+the machine version of the "verify no broken intra-doc links" step the gates
+otherwise ask a human to do. It also **warns on orphan docs** (no path from an
+entry root — root-level `*.md`, an optional `docs/index.md` Map-of-Content, or a
+configured entry) and, with `--stale` (git-gated), on a doc left frozen beside a
+non-doc file it links that has since changed. Broken links are a hard finding;
+orphans/staleness are warnings, because a young project legitimately has
+standalone docs until it links them. Run by `check.py` from G1 on.
+
 **Interface contracts live at the code, referenced — not restated.** Every public
 module/function documents its contract once, where it is implemented, as a
 structured block an agent (or human) can read inline and grep:
@@ -412,11 +425,12 @@ map step so `architecture.md` stays current.
 and naming the split is what keeps the kit portable across stacks:
 
 - **Process checks are kit-owned and stdlib-only** (`requires=()` in `check.py`):
-  traceability (`trace.py`), design-flow validation (`check_flows.py`), and
-  architecture-map freshness (`gen_arch_map.py`). They are identical in every
-  project and every language — **don't rewrite them.** They are the universal
-  floor the agent-neutral `pre-commit` hook also enforces (`.githooks/pre-commit`,
-  enabled by `scripts/setup.{sh,ps1}`).
+  traceability (`trace.py`), design-flow validation (`check_flows.py`),
+  doc navigability (`check_docs.py`), and architecture-map freshness
+  (`gen_arch_map.py`). They are identical in every project and every language —
+  **don't rewrite them.** They are the universal floor the agent-neutral
+  `pre-commit` hook also enforces (`.githooks/pre-commit`, enabled by
+  `scripts/setup.{sh,ps1}`).
 - **Product checks are project-owned and language-specific** (`requires` names a
   tool — `ruff`/`pytest` in the Python reference): format, lint, and
   tests+coverage. **You wire these to your stack** in `check.py`'s "EDIT FOR YOUR
@@ -464,6 +478,10 @@ pip needed to run them):
 - `scripts/check_flows.py` — verifies the authored **"Runtime flows"** section
   (§3 "Design-time runtime flows"): present, ≥1 Mermaid diagram, every cited
   SR/LLR id real. Run by `check.py` at G2/G3.
+- `scripts/check_docs.py` — **doc navigability** (§3 "The doc set must stay
+  navigable"): parses the docs' link graph and fails on broken intra-repo links
+  (missing file or `#anchor`), warns on orphan docs (and, with `--stale`,
+  git-gated freshness). Stdlib-only; run by `check.py` from G1 on.
 - `scripts/gen_arch_map.py` — regenerates the module/function map in
   `architecture.md` from the source tree (and surfaces `Implements:` back-links),
   plus the Mermaid **dependency diagram** between its markers; `--check` fails

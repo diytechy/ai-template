@@ -628,6 +628,38 @@ dependency introduced.
 
 ## Thread 9 — Doc navigability & staleness check (stdlib)
 
+**Status: ✅ landed 2026-06-29.** New stdlib `scripts/check_docs.py` (process
+layer, `requires=()`) parses the Markdown under `docs/` + root `*.md`, builds the
+link graph, and reports three classes: **broken intra-repo links** (missing
+target file/dir or `#anchor` — hard fail, exit 1), **orphan docs** (unreachable
+from an entry root — warn by default, `--strict-orphans` escalates to fail), and
+**staleness** (`--stale`, git-gated, warn-only: a doc linking a *non-doc* file
+committed more recently than the doc; degrades to a clean skip when git is absent
+or the tree isn't a work tree). Scope is the high-value 80% — inline `[text](dest)`
+links + same-file/`file#frag` anchors against GitHub-style heading slugs (plus
+`{#id}` suffixes and `<a name=…>`); images, reference-style links, and links
+inside fenced/inline code are deliberately out of scope (documented in the
+docstring). Wired into `check.py` as a `doc-navigability` **process** step at
+**{G1,G2,G3}** (G1 now has a real check), passing `--ignore docs/test/report.md`
+so the gitignored generated composite isn't scanned. Principle named once in
+`PROCESS.md` §3 ("The doc set must stay navigable") and listed in §7 (process-check
+list + script reference); `bootstrap.py` MAPPING + docstring ship it; both READMEs
+mention it. New `tests/test_check_docs.py` (13 cases): CLI behavior on a real
+scaffold (clean pass, broken file link, broken/valid anchor, orphan warn-vs-strict,
+reachable-clears-orphan, `--ignore` drop, staleness skip-without-git), harness
+wiring at G1, and importable units (`slugify`, `parse_doc` scope, `find_stale` with
+an injected commit-time lookup, `git_commit_lookup` None outside a work tree).
+**Deviations from the spec as written:** (1) `--ignore` was made *drop-from-scan*
+(not just orphan-suppression) so generated composites are excluded entirely and
+the harness can hold `report.md` out — cleaner than a hardcoded skip; (2) staleness
+compares a doc only against **non-Markdown** linked targets (doc-to-doc freshness
+is too noisy a signal), kept warn-only and clearly heuristic; (3) the `docs/index.md`
+Map-of-Content stays an *optional* reachability root recognized when present, not a
+convention forced on the scaffold (no downstream churn); (4) not added to the
+`pre-commit` hook — Thread 9 says "wire into the harness," and broken-doc-link churn
+is better surfaced at the gate than blocking every early commit. `pytest -q`: **82
+passed** (was 69; +13).
+
 **Why:** the kit gates the freshness of *generated* blocks (the code map) but never
 checks that the **hand-written** doc set stays navigable and honest — the gap the
 sibling project's doc-graph fills ("is every doc reachable? is this a *lying map* —
@@ -835,8 +867,8 @@ protocol, is wired into the harness (size gated at `full`, runtime warn at
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
-**7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅** (2026-06-29). Remaining
-work is **two sessions, in order** (later depends on earlier). The rule: **batch
+**7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅** (2026-06-29).
+**One session remains:** **Session D** (Thread 11). The rule: **batch
 the light, file-coherent threads; keep each new-script build solo** —
 re-establishing context per thread is the cost to avoid, and a from-scratch script
 + test-suite + debug loop is the context-heavy case the "wide change" caution
@@ -860,14 +892,15 @@ re-establishing context per thread is the cost to avoid, and a from-scratch scri
 > tests: `test_perf_budgets.py` (6) + `test_lifecycle_column_is_schema_safe` + the
 > bootstrap file-list assertion. `pytest -q`: 69 passed.
 
-> ▶ **NEXT — Session C · Doc navigability check (Thread 9).** Solo build — new
-> stdlib `check_docs.py` + harness step + fixture tests. After A/B so it
-> link-checks *finished* docs; it establishes the "add a `check_*` step" pattern
-> Session D reuses.
+> **Session C ✅ landed 2026-06-29 · Doc navigability check (Thread 9).** Solo
+> build — new stdlib `check_docs.py` (broken-link fail / orphan warn / git-gated
+> staleness) + a `doc-navigability` process step wired at {G1,G2,G3} + 13 fixture
+> tests. It establishes the "add a `check_*` step" pattern Session D reuses;
+> `pytest -q`: 82 passed.
 
-**Session D · Perf budget harness (Thread 11).** Solo build, **last**: it depends
-on Thread 10's registry (Session B) and is the highest-noise / most-complex. New
-stdlib `check_perf.py` + harness step + tests + baseline.
+> ▶ **NEXT — Session D · Perf budget harness (Thread 11).** Solo build, **last**:
+> it depends on Thread 10's registry (Session B) and is the highest-noise /
+> most-complex. New stdlib `check_perf.py` + harness step + tests + baseline.
 
 ### Session protocol (for a cold session pointed only at this file)
 

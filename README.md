@@ -26,7 +26,9 @@ The kit's headline pieces:
 - **Runnable scripts** (stdlib-only Python 3.8+, no pip needed for the kit
   itself): [`check.py`](project-trajectory/scripts/check.py) (the gate- and
   tier-aware harness), [`trace.py`](project-trajectory/scripts/trace.py)
-  (traceability), [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
+  (traceability), [`check_docs.py`](project-trajectory/scripts/check_docs.py)
+  (doc-navigability: broken-link + orphan-doc checks),
+  [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   (the AST code map — summaries, dependencies, `Implements:` back-links — plus
   a generated Mermaid dependency diagram, routed into `architecture.md` and/or
   `AGENTS.md`/`CLAUDE.md`),
