@@ -1880,15 +1880,29 @@ human-in-the-loop. Once a specific seam's contract is locked, its registry templ
 ## Thread 21 — Cross-repo tooling & automation (research stubs)
 
 **Status: ⏳ stub (sketch only; each part its own future thread/decision),
-added 2026-06-30.** The heavy/uncertain mechanism deferred from Thread 20.
+added 2026-06-30; Session-I hand-off note added 2026-07-01.** The heavy/uncertain
+mechanism deferred from Thread 20.
+
+**Seams already shipped (Session I, build on these — don't re-derive).** Thread 20
+landed the *recorded edges* this thread's tooling consumes, so a reviver starts from
+data, not a blank page: `registries/modules.template.csv` (`MOD-###`, with `Repo` +
+`DelegatedSRs` + `Version` + `Type`), the optional SR **`Delegated`** marker, and the
+module-SN **`ParentRef`**. `trace.py` already validates `DelegatedSRs` *within* the
+coordinator repo (the within-repo half of the join). The design + the honest limit
+live in `MULTI_REPO.md` §6–§7. **This thread builds the cross-boundary half only.**
 
 **Goal (sketch):** the tooling that *operationalizes* Thread 20's model, each part
 genuinely research-grade and deferred:
 - **Cross-repo traceability** — joining SN→SR→LLR→TC across repos (coordinator SR ↔
-  module SN), likely a coordinator-side aggregation reading each module's *exported
-  trace summary* (not one `trace.py` over many checkouts). Decide: **pull** (the
-  coordinator clones/reads) vs. **push** (modules publish a trace artifact it
-  ingests).
+  module SN via `ParentRef`), likely a coordinator-side aggregation reading each
+  module's *exported trace summary* (not one `trace.py` over many checkouts). Decide:
+  **pull** (the coordinator clones/reads) vs. **push** (modules publish a trace
+  artifact it ingests). **The concrete crux (Session I):** a *delegated* coordinator
+  SR has no local LLR/TC, so a plain `trace.py --strict` in the coordinator repo
+  reports it as an **orphan** — the `Delegated` marker records *why*, but only this
+  join *closes* it (reconciling the coordinator SR against the module's returned
+  gate status). Until it exists, a coordinator repo can't be 0-orphan for delegated
+  SRs by machine; that gap is acknowledged, never faked (`MULTI_REPO.md` §6).
 - **Coordinator gate aggregation** — the mechanical "all modules green + integration
   green + catalog consistent" check (Thread 20's gating model) as an actual stdlib
   command reading module-published gate/status artifacts, with escalation rules for
@@ -2061,6 +2075,12 @@ and Session I (20) landed 2026-06-30 on the current working branch. **Threads 16
 
 ### Session protocol (for a cold session pointed only at this file)
 
+0. **If there is no ▶ NEXT marker, stop — don't invent a session.** As of Session I
+   all planned sessions (A–I) have landed; the only remaining threads are **stubs**
+   (16 non-code-artifact verification, 21 cross-repo tooling), which need a human
+   decision to revive and strong-model *design* work, not mechanical execution. Ask
+   the user which stub to revive (and confirm the decisions each stub lists as open)
+   before doing anything.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
    own section above is its spec (Goal/Steps/Tests/Risks/Done-when).
 2. **End green:** run `python -m pytest -q` and paste the real output (per
