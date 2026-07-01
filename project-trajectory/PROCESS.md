@@ -740,10 +740,11 @@ pays:
 3. **Several repos + a coordinator** — only when modules genuinely need *independent*
    versioning, ownership, access, or release cadence at a scale one repo can't
    sustain. A heavier, deliberately **rare** step with its own coordinator role,
-   documented separately (the multi-repo model); you almost certainly don't need it,
-   and a reviewer should push back on a premature jump. It is **revisitable** — start
-   single and promote a module to its own repo *later*, once it proves it needs the
-   independence, which is far cheaper than a speculative split.
+   documented separately in `MULTI_REPO.md` (the multi-repo coordinator model — a
+   *design*, with the heavy cross-repo tooling deferred); you almost certainly don't
+   need it, and a reviewer should push back on a premature jump. It is **revisitable**
+   — start single and promote a module to its own repo *later*, once it proves it
+   needs the independence, which is far cheaper than a speculative split.
 
 **Several modules in one repo — no new machinery, just partition the spine.** A
 multi-module repo is the *same* spine, grouped by columns that already exist: the

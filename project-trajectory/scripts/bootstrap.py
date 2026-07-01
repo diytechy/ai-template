@@ -55,6 +55,15 @@ perf/resource budgets. Its `PB-000` placeholder is inert (`trace.py` ignores
 `-000` rows); a project with no resource concerns leaves it untouched. Once it
 carries real rows, `trace.py` keeps their SR/LLR/Module back-links honest.
 
+This scaffolds a **single-repo** project — the default and almost-always-right
+rung of the scale ladder (process.md §10). The rare multi-repo **coordinator** rung
+(`MULTI_REPO.md`) is intentionally **not** produced here: a coordinator repo drops
+the `src/` build and instead carries a `modules.csv` (MOD-###), the interface
+catalog, and an assembly definition. A `--coordinator` scaffold mode (and the
+cross-repo tooling around it) is a documented concept deferred to the cross-repo
+tooling track, not built into this script — so a project climbing to that rung adds
+those pieces by hand, guided by `MULTI_REPO.md`.
+
 It then runs `gen_arch_map.py` and `trace.py` once in the new repo so the
 scaffold starts green — `check.py` would otherwise fail on the template
 placeholder between the architecture markers.

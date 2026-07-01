@@ -57,6 +57,9 @@ a real project — or get out of the way.
 - [`project-trajectory/EXAMPLE.md`](project-trajectory/EXAMPLE.md) — the worked
   SN→SR→LLR→TC chain; keep it in sync with the registry column headers (a test
   asserts its `Permutations` snippets parse with `gen_cases.py`).
+- [`project-trajectory/MULTI_REPO.md`](project-trajectory/MULTI_REPO.md) — the
+  **design** doc for the rare multi-repo coordinator rung (a reference doc like
+  `EXAMPLE.md`, not scaffolded); the heavy cross-repo tooling is deferred.
 - `tests/` — the kit's own pytest suite (meta-repo dev tooling; the stdlib-only
   rule applies to the kit scripts, not to testing them). CI:
   `.github/workflows/test.yml` runs it on Linux + Windows, Python 3.8 + latest.

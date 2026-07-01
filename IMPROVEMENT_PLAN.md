@@ -1662,10 +1662,48 @@ the AGENTS.md cap only if touched (likely not).
 
 ## Thread 20 — Multi-repo coordinator model (design-first)
 
-**Status: ⏳ queued (Session I — design-first; the most decision-heavy thread in the
-plan), added 2026-06-30.** Core model **decisions 1–4 confirmed with the user
-2026-06-30**; this thread **documents the model and defers most mechanism** to
-Thread 21.
+**Status: ✅ landed 2026-06-30** (Session I — design-first, the most decision-heavy
+thread). The confirmed model is documented and the thinnest schema seams shipped;
+heavy tooling routed to Thread 21. New **`project-trajectory/MULTI_REPO.md`** (a kit
+*reference* doc like `EXAMPLE.md`, marked *design — mechanism deferred*): leads with
+the rarity stance + escalation ladder (default rung 1, decide-at-creation, bias-low,
+revisitable), the coordination-vs-orchestration line, the confirmed model (SR-tier
+handoff, coordinator-as-Integration-hat, catalog-not-copy interfaces,
+assemblies-as-config, mechanical-aggregation gating, async-text coordination), the
+two requirement scopes (module vs composition, the latter verified by a delegated
+**plant** repo), the schema seams, and the Thread-21 deferrals. **Schema seams
+shipped (in-thread decision — the smallest traceable set):** new
+**`registries/modules.template.csv`** (`MOD-###`: `MOD-ID, Module, Repo,
+DelegatedSRs, Version, Type, Owner, Notes`) validated by `trace.py` **within the
+coordinator repo** — each `DelegatedSRs` must resolve to a real coordinator SR and a
+malformed/duplicate `MOD-` id fails (the `PB-###` precedent), but an **empty**
+delegation is allowed for external/reused parts referenced only via the interface
+catalog; held out of the placeholder/schema sweeps like PB. The optional `Delegated`
+(coordinator SR) and `ParentRef` (module SN) markers are documented as **schema-safe
+conventions**, no code (the `Area`/`Lifecycle` tolerance). `EXAMPLE.md` **§10**
+sketches a two-repo `export`/`delivery`/`plant` product (delegated SR→module SN, a
+`modules.csv` incl. an external purchased part, an owned-vs-coordinator-owned
+`IF-###` pair, the composition-scoped SR verified by the plant repo, and the honest
+delegated-SR-orphan limit). `PROCESS.md` §10 rung 3 now names `MULTI_REPO.md`
+(link-safe backtick prose, matching Thread 19's forward-pointer); both READMEs +
+`CLAUDE.md` repo map cross-link it; `KICKOFF_PROMPT.md` poses a **Project scale**
+brief question biased to single-repo; `bootstrap.py`'s docstring documents the
+`--coordinator` variant as a **deferred, not-built** concept. New
+`tests/test_modules_registry.py` (7 cases). **Deviations from the spec as written:**
+(1) the design landed as a separate **`MULTI_REPO.md`**, not PROCESS §11 — §10 rung 3
+already promised "documented separately," and keeping multi-repo an optional layer a
+single-repo project never reads argues against bloating PROCESS.md (the `EXAMPLE.md`
+precedent: a kit reference doc named in prose, not bootstrapped); (2) **`modules.csv`
+is *not* added to the default bootstrap MAPPING** — it is coordinator-only, so
+scaffolding it into every repo would contradict "single-module never sees it"; the
+documented coordinator variant (deferred) places it, and `trace.py` tolerates its
+absence; (3) the `bootstrap --coordinator` mode is **documented + stubbed**, not built
+(bias to documented+stub, per the spec); (4) **no `AGENTS.md` change** (~12k cap).
+`pytest -q`: **124 passed, 1 skipped** (was 117/1; +7).
+
+**Original queued note (for provenance):** Core model **decisions 1–4 confirmed with
+the user 2026-06-30**; this thread **documents the model and defers most mechanism**
+to Thread 21.
 
 **Goal:** name, in a design/architecture doc, how the single-module spine extends
 across **separate repositories** under a **coordinator** — **without becoming a
@@ -1886,7 +1924,7 @@ after the model questions resolve.
 **7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
 (2026-06-29); **12 ✅, 13 ✅, 15A ✅, 17 ✅, 18 ✅** (2026-06-30, Session E);
 **14 ✅** (2026-06-30, Session F); **15 B/C/D ✅** (2026-06-30, Session G);
-**19 ✅** (2026-06-30, Session H).
+**19 ✅** (2026-06-30, Session H); **20 ✅** (2026-06-30, Session I).
 **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
@@ -1894,7 +1932,8 @@ DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 17 (voice policy + agent-layer carve-out) + 18 (model/agent-tiering discipline)
 from the voice/efficiency discussion; 19 (multi-module scoping) + 20 (multi-repo
 coordinator, design-first) + 21 (cross-repo tooling, a stub) from the multi-repo
-discussion. **▶ NEXT: Session I.** The rule applied
+discussion. **▶ ALL PLANNED SESSIONS (A–I) LANDED; only stubs remain (Threads 16,
+21) — no session until revived.** The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
@@ -1998,20 +2037,27 @@ thread's **Model tier** line says where the handoff is safe.
 > **Note for Session I:** §10 is now taken, so the multi-repo doc is **§11 or
 > `MULTI_REPO.md`**. `pytest -q`: **117 passed, 1 skipped** (+1).
 
-> **Session I · Multi-repo coordinator design (Thread 20) — design-first, the most
-> decision-heavy session.** A design doc (`MULTI_REPO.md` or PROCESS §11 — §10 is
-> now Thread 19's multi-module section) recording
-> the confirmed model (SR-tier handoff, coordinator-as-Integration-hat,
-> catalog-not-copy interfaces, assemblies-as-config, mechanical-aggregation gating,
-> async-text coordination) + the thinnest schema seams + a two-repo EXAMPLE sketch;
-> heavy tooling routed to the **Thread 21 stub**. **Model tier: strong model +
-> human throughout**; only the locked-contract seam-wiring is Sonnet-able.
+> **Session I ✅ landed 2026-06-30 · Multi-repo coordinator design (Thread 20) —
+> design-first, the most decision-heavy session.** New **`MULTI_REPO.md`** (a kit
+> reference doc, not PROCESS §11 — see the Thread 20 Status block for that
+> in-thread call) recording the confirmed model (SR-tier handoff,
+> coordinator-as-Integration-hat, catalog-not-copy interfaces, assemblies-as-config,
+> mechanical-aggregation gating, async-text coordination, the two requirement scopes
+> + the delegated plant repo) led by the rarity/ladder stance. Thinnest schema seams
+> shipped: `registries/modules.template.csv` (`MOD-###`) with a `trace.py`
+> within-repo `DelegatedSRs` back-link check (the PB precedent; empty allowed for
+> external parts), plus the schema-safe `Delegated`/`ParentRef` conventions;
+> `EXAMPLE.md` §10 two-repo sketch; `PROCESS.md` §10 / both READMEs / `CLAUDE.md` /
+> `KICKOFF_PROMPT.md` (a scale brief question) / `bootstrap.py` docstring (deferred
+> `--coordinator` stub). Heavy tooling stays in the **Thread 21 stub**. **Built on
+> the strong model** (Opus) throughout the design; `test_modules_registry.py` (7) is
+> the seam-wiring backstop. `pytest -q`: **124 passed, 1 skipped** (+7).
 
-**Open: Session I (next).** Threads 0a, 0b, 1–11 landed (on
+**Open: none — all planned sessions (A–I) landed.** Threads 0a, 0b, 1–11 landed (on
 `template-review-fixes`, since merged into the current working branch); Session E
-(12, 13, 15A, 17, 18), Session F (14), Session G (15 Parts B/C/D), and Session H
-(19) landed 2026-06-30 on the current working branch. Thread 20 awaits Session I —
-**I = multi-repo design (20)**; Threads 16 and 21 are stubs.
+(12, 13, 15A, 17, 18), Session F (14), Session G (15 Parts B/C/D), Session H (19),
+and Session I (20) landed 2026-06-30 on the current working branch. **Threads 16 and
+21 remain stubs** — each its own future thread/decision, no session until revived.
 
 ### Session protocol (for a cold session pointed only at this file)
 

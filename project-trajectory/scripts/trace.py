@@ -18,6 +18,9 @@ Reads (relative to --docs, default "docs"):
     requirements/stakeholder-needs.md       (optional; SN-### ids scraped for SN->SR coverage)
     requirements/performance-budgets.csv    (optional; PB-### perf/resource budgets, §9 —
                                              each row's Refs must back-link a real SR/LLR/Module)
+    requirements/modules.csv                 (optional; MOD-### coordinator module registry,
+                                             MULTI_REPO.md — each row's DelegatedSRs must name a
+                                             real coordinator SR; the multi-repo layer only)
 
 Writes:
     test/report.md  — counts, the SR->LLR->TC matrix, the orphan list, and two
@@ -53,12 +56,17 @@ in scope for every phase. Orphan rules are phase-blind: every SR keeps its
 LLR + TC rows regardless of phase.
 
 Always (independent of --strict-schema), structural integrity is checked:
-    - a duplicated SR/LLR/TC/PB id (the join would otherwise silently dedupe it)
+    - a duplicated SR/LLR/TC/PB/MOD id (the join would otherwise silently dedupe it)
     - a malformed id (not "PREFIX-<digits>")
     - a performance-budget row (PB-###, §9) whose Refs name an unknown
       SR/LLR/Module, or that back-links nothing — the budgets registry is off the
       spine but must stay traceable to it (the PB-000 example row is ignored, so
       the optional registry never blocks a gate a project doesn't use)
+    - a coordinator module row (MOD-###, MULTI_REPO.md — the multi-repo layer)
+      whose DelegatedSRs name an unknown coordinator SR; an external/reused part
+      referenced only via the IF-### catalog may delegate nothing, so an empty
+      back-link is allowed here (unlike PB). The MOD-000 example row is ignored,
+      so the optional registry never blocks a single-repo project's gate
 These join `--strict`'s failure set like orphans do.
 
 --no-placeholders flags any leftover template example row (id ending "-000") as
@@ -106,6 +114,9 @@ ID_PATTERNS = {
     "LLR": re.compile(r"^LLR-\d+$"),
     "TC": re.compile(r"^TC-\d+$"),
     "PB": re.compile(r"^PB-\d+$"),  # optional performance-budgets registry (§9)
+    "MOD": re.compile(
+        r"^MOD-\d+$"
+    ),  # optional coordinator module registry (MULTI_REPO.md)
 }
 
 # Fields that must be non-empty under --strict-schema. Deliberately omits the
@@ -274,7 +285,11 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids):
         roots.append(_node(sn, "", "", orphan_ids, kids))
     rootless_srs = [s for s in srs if not sn_ids & set(refs(s.get("SN-Refs")))]
     if rootless_srs:
-        label = "(SRs with no linked stakeholder need)" if sn_ids else "(system requirements)"
+        label = (
+            "(SRs with no linked stakeholder need)"
+            if sn_ids
+            else "(system requirements)"
+        )
         roots.append(_group(label, [sr_node(s) for s in rootless_srs]))
     rootless_llrs = [lr for lr in llrs if not sr_ids & set(refs(lr.get("SR-Refs")))]
     if rootless_llrs:
@@ -486,6 +501,9 @@ def main():
     raw_tcs = load_csv(docs / "test" / "test-cases.csv")
     # Optional, off-spine coordination registry (process.md §9); absent file -> [].
     raw_pbs = load_csv(docs / "requirements" / "performance-budgets.csv")
+    # Optional coordinator module registry (MULTI_REPO.md, the multi-repo layer);
+    # absent file -> [].
+    raw_mods = load_csv(docs / "requirements" / "modules.csv")
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -494,6 +512,7 @@ def main():
     llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
     pbs = [r for r in raw_pbs if r.get("PB-ID") and not is_example(r["PB-ID"])]
+    mods = [r for r in raw_mods if r.get("MOD-ID") and not is_example(r["MOD-ID"])]
 
     sn_ids = set()
     sn_md = docs / "requirements" / "stakeholder-needs.md"
@@ -576,6 +595,20 @@ def main():
             if x not in budget_targets:
                 budget_findings.append(f"PB {pid} references unknown {x}")
 
+    # Coordinator module registry (MULTI_REPO.md, the multi-repo layer) sits off the
+    # spine like PB, but its DelegatedSRs stay traceable *within* the coordinator
+    # repo: each must name a real coordinator SR (delegation is at the SR tier,
+    # §3.1). The cross-boundary link (a module SN's ParentRef back to this SR) points
+    # into another repo, so no single trace.py run validates it — that reconciliation
+    # is the deferred cross-repo join. An external/reused part referenced only via the
+    # IF-### catalog may delegate nothing, so an empty back-link is allowed here.
+    module_findings = []
+    for r in mods:
+        mid = r["MOD-ID"]
+        for x in refs(r.get("DelegatedSRs")):
+            if x not in sr_ids:
+                module_findings.append(f"MOD {mid} delegates unknown {x}")
+
     phases = set(refs(args.phase)) if args.phase else None
 
     def in_phase(r):
@@ -608,6 +641,10 @@ def main():
     # schema sweeps above: the budgets registry is optional (like interfaces.csv),
     # so a leftover PB-000 must never block a gate the project doesn't use.
     integrity += integrity_findings("PB", raw_pbs)
+    # The coordinator module registry (MOD-###, MULTI_REPO.md) is the same kind of
+    # optional off-spine registry — integrity-checked, but out of the placeholder/
+    # schema sweeps, so a single-repo project's MOD-000 placeholder never blocks it.
+    integrity += integrity_findings("MOD", raw_mods)
     placeholders = (
         [f for label in raw for f in placeholder_findings(label, raw[label])]
         + [f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)]
@@ -652,6 +689,14 @@ def main():
                 f"| Budget findings | {len(budget_findings)} |",
             ]
             if pbs
+            else []
+        )
+        + (
+            [
+                f"| Modules (MOD) | {len(mods)} |",
+                f"| Module findings | {len(module_findings)} |",
+            ]
+            if mods
             else []
         )
         + [
@@ -702,6 +747,13 @@ def main():
             if not budget_findings
             else [f"- {f}" for f in budget_findings]
         )
+    if mods:
+        lines += ["", "## Modules (MULTI_REPO.md delegation back-links)", ""]
+        lines += (
+            [f"{len(mods)} module row(s); every DelegatedSRs resolves to a real SR."]
+            if not module_findings
+            else [f"- {f}" for f in module_findings]
+        )
     if args.no_placeholders:
         lines += ["", "## Placeholders (--no-placeholders)", ""]
         lines += (
@@ -745,6 +797,11 @@ def main():
         + (f" schema-findings={len(schema)}" if args.strict_schema else "")
         + (f" phase-deferred={len(phase_deferred)}" if phases else "")
         + (f" budgets={len(pbs)} budget-findings={len(budget_findings)}" if pbs else "")
+        + (
+            f" modules={len(mods)} module-findings={len(module_findings)}"
+            if mods
+            else ""
+        )
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
     )
@@ -755,6 +812,7 @@ def main():
         or placeholders
         or schema
         or budget_findings
+        or module_findings
     ):
         sys.exit(1)
 

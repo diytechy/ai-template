@@ -27,6 +27,7 @@ audits.
 | `registries/test-cases.template.csv` | TC-### ↔ requirements. |
 | `registries/interfaces.template.csv` | IF-### ↔ cross-project contracts (paired with `INTERFACES.template.md`). |
 | `registries/performance-budgets.template.csv` | PB-### quantitative perf/resource budgets (NFRs), off-spine but back-linked to the SR/LLR/Module they bound; owned by the Integration/Coordination hat (process.md §9). Optional, like interfaces. |
+| `registries/modules.template.csv` | MOD-### coordinator module registry for the **rare** multi-repo rung (`MULTI_REPO.md` §6): one row per delegated module repo, `DelegatedSRs` back-linking the coordinator SRs it fulfils. Coordinator-only — **not** scaffolded by bootstrap; `trace.py` validates it when present. |
 | `scripts/bootstrap.py` | **One command to scaffold a new repo** from this kit (copies templates → `docs/`/`scripts/`/CI, renames, won't clobber). |
 | `scripts/check.py` | **The harness.** Runs format · lint · tests · coverage · traceability · arch-map freshness; gate-scoped; nonzero on failure. Python-first reference — wire to your stack. |
 | `scripts/trace.py` | **Ready-to-use** traceability checker (Python 3, stdlib only): joins the registries, writes `test/report.md` (counts, matrix, a line-reviewable `SN→SR→LLR→TC` text outline, and a small Mermaid `graph LR` colored by orphan/draft state), exits nonzero on orphans (and duplicate/malformed ids) with `--strict`. If an optional `performance-budgets.csv` (PB-###, §9) is present, it also fails when a budget row's `Refs` don't back-link a real SR/LLR/Module. `--html` also writes a dependency-free collapsible `test/report.html` map that scales to any size. `--phase v1` scopes the G3 Verified criterion for phased roadmaps (out-of-phase SRs reported as explicitly deferred); `--no-placeholders` (G2+) rejects leftover `-000` rows; `--strict-schema` (G3) checks required fields and the closed `Verification`/`Tier` vocabularies. Called by `check.py`. |
@@ -45,7 +46,8 @@ audits.
 | `pytest.ini` | Registers the `smoke`/`full`/`release` test-tier markers the harness selects with `--tier` (unmarked tests run in `full`+`release`). |
 | `gitignore.template` | Minimal `.gitignore` for the new repo (venv, tool caches, the regenerated trace report + HTML map). |
 | `ci/check.yml` | Reference GitHub Actions workflow → copy to `.github/workflows/check.yml`. Runs the same `check.py`. |
-| `EXAMPLE.md` | A fully worked SN→SR→LLR→TC chain to copy the pattern from. |
+| `EXAMPLE.md` | A fully worked SN→SR→LLR→TC chain to copy the pattern from (incl. a multi-module §9 and a multi-repo §10 sketch). |
+| `MULTI_REPO.md` | **Design doc** for the rare multi-repo rung: how the spine extends across separate repos under a coordinator (SR-tier delegation, interface catalog, assemblies-as-config, mechanical gate aggregation). A design — the heavy cross-repo tooling is deferred. Reference doc (like `EXAMPLE.md`); not scaffolded. |
 
 ## How to use
 
@@ -93,4 +95,5 @@ audits.
 - Scale *structure* to scope: one module in one repo is the default; a repo can
   host several modules on the same spine (grouped by `Module`/`Area`, with an
   integration TC per seam), and multi-repo under a coordinator is a rare, later
-  step — climb the ladder only when scope forces it (process.md §10).
+  step — climb the ladder only when scope forces it (process.md §10; the
+  coordinator model is `MULTI_REPO.md`, a design with the tooling deferred).

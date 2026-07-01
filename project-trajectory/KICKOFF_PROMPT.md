@@ -173,6 +173,12 @@ For each, ask "what does the user experience, and is it safe/clear/recoverable?"
   Network, Security, Data/ML, Hardware, Mechatronics — or "none")_
 - **Release cadence (one-off deliverable vs. versioned releases):** _(decides
   whether G-Release + the release checklist apply)_
+- **Project scale (default: one module, one repo):** _(bias **low** — pick the
+  lowest rung the scope forces. A repo may hold several modules on one spine
+  (grouped by `Module`/`Area`) if it grows distinct sub-systems; a multi-repo split
+  under a coordinator is **rare**, only for modules that need independent
+  versioning/ownership/release at a scale one repo can't sustain, and is revisitable
+  later — see process.md §10 / `MULTI_REPO.md`. You almost certainly want one repo.)_
 - **Non-goals (explicitly out of scope):**
 - **Starting point (from scratch / existing draft or spec — link it):**
 - **Coverage threshold / quality bar:**

@@ -243,6 +243,79 @@ demands **0 orphans across both modules and the seam**. Filtering the registries
 convention over columns that already exist, never a separate per-module gate
 (process.md §10).
 
+## 10. The next rung — separate repos under a coordinator (design sketch)
+
+> **Rare, and design-only.** This is rung 3 of the escalation ladder (process.md
+> §10) — reached **only** when modules need *independent* versioning / ownership /
+> release cadence at a scale one repo can't sustain. The full model, and the honest
+> limits below, live in `MULTI_REPO.md`; the cross-repo tooling is deferred. Most
+> projects stop at §9.
+
+Say the `delivery` module from §9 grows to need its own release cadence, so it is
+**promoted to its own repo** (revisitable, far cheaper than a speculative split).
+Now a **coordinator** — the Integration/Coordination hat elevated to a repo — holds
+the product-level spine and delegates each sub-system. The coordinator delegates an
+SR at the **SR tier**: the delegated SR becomes the module repo's top-tier **`SN`**,
+which back-links the coordinator SR via a **`ParentRef`**.
+
+The coordinator lists its modules in an optional **`modules.csv`** (`MOD-###`,
+`MULTI_REPO.md` §6) — the multi-repo layer a single-repo project never has:
+
+```csv
+MOD-ID,Module,Repo,DelegatedSRs,Version,Type,Owner,Notes
+MOD-001,export,https://git.example/acme/export,SR-009,v2,owned,Integration,"CSV export, promoted to its own repo."
+MOD-002,delivery,https://git.example/acme/delivery,SR-010,v1,owned,Integration,"Uploads a completed export to the destination."
+MOD-003,plant,https://git.example/acme/plant,SR-011,v1,owned,Integration,"Integration/plant repo: assembles export+delivery and runs the end-to-end demonstration."
+MOD-004,object-store,—,,vendor-2024,external,Integration,"Purchased S3-compatible store; no repo builds it. Referenced via the catalog IF-### (owner of record = coordinator); delegates no functional SR."
+```
+
+`trace.py` keeps `DelegatedSRs` honest **within the coordinator repo**: `SR-009/010/011`
+must be real coordinator SRs, and a malformed `MOD-` id fails — the same back-link
+discipline as `PB-###`. The `external` part `MOD-004` delegates nothing (an empty
+back-link is allowed here — it is referenced only through the interface catalog).
+
+**The SR-tier handoff.** The coordinator's `SR-010` is tagged delegated; in the
+`delivery` **repo** it reappears as that repo's founding `SN`:
+
+| Repo | Row | Delegated / ParentRef |
+|---|---|---|
+| coordinator | `SR-010` — records reach the configured destination and receipt is confirmed | `Delegated=MOD-002` |
+| delivery | `SN-001` — deliver a completed export to the destination and confirm receipt | `ParentRef=SR-010` |
+
+`Delegated` and `ParentRef` are optional, schema-safe columns (like `Area`/`Lifecycle`).
+The `ParentRef` link points **across the boundary** into the coordinator repo, so no
+single `trace.py` run validates it — that reconciliation is the deferred cross-repo
+join (`MULTI_REPO.md` §7).
+
+**Interfaces are pointers, not copies** (process.md §8, applied across repos). Each
+contract's spec lives once in its **owner**; the coordinator's catalog only references
+the owner `IF-###`:
+
+```csv
+IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status
+IF-010,Provides,export,delivery,"RFC-4180 CSV at the agreed path (spec owned by the export repo, per its SR-009).",SR-009,v2,Stable,Verified
+IF-011,Consumes,delivery,object-store,"S3 PutObject API of the purchased store; the coordinator catalog is the owner of record and links the vendor datasheet.",SR-010,vendor-2024,Stable,Verified
+```
+
+`IF-010`'s spec is owned by a repo that **builds** the surface (`export`); `IF-011` is
+a **purchased part no repo builds**, so its owner of record is a **coordinator-held**
+catalog row linking the datasheet.
+
+**Two requirement scopes.** `SR-010` is *module-scoped* — verified inside the delivery
+repo. But "an exported file arrives intact at the destination end-to-end" is
+*composition-scoped*: it exists only for the assembled whole and no single module owns
+it. It is a coordinator SR (`SR-011`, `Verification=Demonstration`) delegated to the
+**plant repo** (`MOD-003`), which assembles export + delivery + a virtualized
+destination and runs the demonstration — "the module whose deliverable is a runnable
+verification of the assembly."
+
+**The honest limit.** A delegated SR (`SR-010`, `SR-011`) has no LLR or TC *in the
+coordinator repo* — its code and tests are across the boundary — so a plain `trace.py
+--strict` there reports it as an orphan. The `Delegated` marker records why; closing it
+against the module's returned status is the **cross-repo trace join**, which one
+`trace.py` run cannot do and the kit does **not** fake (`MULTI_REPO.md` §6–§7). The
+coordinator sequences and reads status; it never builds or runs anything.
+
 ---
 
 ### What to copy from this pattern
@@ -271,3 +344,9 @@ convention over columns that already exist, never a separate per-module gate
   dedicated integration TC; the whole-repo trace gate stays the source of truth
   (process.md §10). Single-module is still the default — scale up only when the
   scope forces it.
+- **Separate repos under a coordinator are the rare top rung** (§10) — delegate an
+  SR to a module repo (it becomes that repo's `SN`, back-linked by `ParentRef`),
+  list modules in the optional `modules.csv`, keep interfaces as pointers to their
+  owner, and verify emergent behavior in a delegated plant repo. It is a *design*
+  (`MULTI_REPO.md`); the cross-repo tooling is deferred. You almost certainly don't
+  need it.

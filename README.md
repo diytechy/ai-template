@@ -115,7 +115,9 @@ same artifacts and run the gates with you.
 > seam); a multi-repo split under a coordinator is a rarer, heavier step taken only
 > when modules need independent versioning or release — scale up the escalation
 > ladder only when the scope forces it (see
-> [`PROCESS.md`](project-trajectory/PROCESS.md) §10).
+> [`PROCESS.md`](project-trajectory/PROCESS.md) §10; the coordinator model is
+> [`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md), a design with the cross-repo
+> tooling deferred).
 
 > **Onboarding ladder.** A fresh contributor's path mirrors the lifecycle phases
 > one level up — `Stage 0` (get git + the repo) → `dev-setup` (workstation:
