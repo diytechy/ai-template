@@ -97,6 +97,33 @@ def test_step_plan_wiring():
             assert requires, name  # product steps declare their toolchain
 
 
+def test_default_gate_comes_from_gate_file(scaffold):
+    # check.py without --gate reads the committed docs/gate (bootstrap writes
+    # G1), so CI enforces the bar the project is actually at — a fresh scaffold
+    # must be green, not red-until-G3 (the day-one false-red regression).
+    gate_file = scaffold / "docs" / "gate"
+    assert gate_file.read_text(encoding="utf-8").strip() == "G1"
+    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "Plan for gate G1" in proc.stdout
+    # And the G1 plan actually passes on the untouched scaffold (the CI path).
+    proc = run_py(["scripts/check.py", "--tier", "smoke", "--lenient"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "RESULT: PASS" in proc.stdout
+
+    # Bumping the gate raises the bar; an explicit --gate always wins; garbage
+    # in the file fails loudly rather than running a silently wrong plan.
+    gate_file.write_text("G2\n", encoding="utf-8")
+    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert "Plan for gate G2" in proc.stdout
+    proc = run_py(["scripts/check.py", "--gate", "G1", "--list"], cwd=scaffold)
+    assert "Plan for gate G1" in proc.stdout
+    gate_file.write_text("banana\n", encoding="utf-8")
+    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "docs/gate" in proc.stdout + proc.stderr
+
+
 def test_list_tags_process_and_product_layers(scaffold):
     # A newcomer running --list must see which steps are kit-owned (process) and
     # which they have to localize (product).

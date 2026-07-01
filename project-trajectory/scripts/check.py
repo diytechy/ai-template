@@ -38,7 +38,12 @@ Usage:
     python scripts/check.py [--gate G1|G2|G3|all] [--tier smoke|full|release|all]
                             [--coverage N] [--phase LIST] [--lenient] [--list]
 
-    --gate      Which gate's checks to run (default: all). G3 (and all) also
+    --gate      Which gate's checks to run. Default: the repo's **active gate**
+                from the one-line `docs/gate` file (bootstrap starts it at G1;
+                closing a gate = the human bumps it in a reviewed commit), else
+                `all` when no gate file exists. This is what keeps a young
+                project's CI green-and-honest: it enforces the bar the project
+                is actually at, not the end-state bar. G3 (and all) also
                 requires every Verification=Test SR to be Status=Verified
                 (trace.py --require-verified).
     --tier      Which test tier to run (default: all). Mark fast critical-path
@@ -59,6 +64,7 @@ import importlib.util
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 # ============================ EDIT FOR YOUR STACK ============================
 # The stack-specific knobs live here. For a non-Python project: point SRC/TESTS
@@ -221,6 +227,27 @@ def steps(coverage, tier, gate, phase=None):
 
 GATES = ["G1", "G2", "G3", "all"]
 
+# The machine-readable active gate (process.md §7). One line, e.g. "G1".
+GATE_FILE = Path("docs/gate")
+
+
+def resolve_gate(explicit):
+    """The gate to run: an explicit --gate wins; else the docs/gate file (the
+    project's recorded active gate); else 'all' (a repo without the file gets
+    the full bar, never a silently weaker one)."""
+    if explicit:
+        return explicit
+    if GATE_FILE.exists():
+        val = GATE_FILE.read_text(encoding="utf-8").strip()
+        if val not in GATES:
+            sys.exit(
+                "check: docs/gate contains {!r}; expected one of {}".format(
+                    val, "|".join(GATES)
+                )
+            )
+        return val
+    return "all"
+
 
 def run_step(name, requires, cmd, lenient):
     """Run one step. Returns (status, detail) where status in PASS/FAIL/SKIP."""
@@ -243,7 +270,12 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    ap.add_argument("--gate", choices=GATES, default="all")
+    ap.add_argument(
+        "--gate",
+        choices=GATES,
+        default=None,
+        help="gate to run (default: the active gate in docs/gate, else all)",
+    )
     ap.add_argument("--tier", choices=list(TIERS), default="all")
     ap.add_argument("--coverage", type=int, default=COVERAGE_THRESHOLD)
     ap.add_argument(
@@ -263,15 +295,16 @@ def main():
         help="print the plan (with [process]/[product] layer tags) and exit",
     )
     args = ap.parse_args()
+    gate = resolve_gate(args.gate)
 
     plan = [
         s
-        for s in steps(args.coverage, args.tier, args.gate, args.phase)
-        if args.gate == "all" or args.gate in s[3]
+        for s in steps(args.coverage, args.tier, gate, args.phase)
+        if gate == "all" or gate in s[3]
     ]
 
     if args.list:
-        print("Plan for gate {} (tier {}):".format(args.gate, args.tier))
+        print("Plan for gate {} (tier {}):".format(gate, args.tier))
         for name, _requires, cmd, gates, layer in plan:
             print(
                 "  - {:16} [{:7}] [{}]  {}".format(
@@ -281,7 +314,7 @@ def main():
         return
 
     if not plan:
-        print("No checks defined for gate {}.".format(args.gate))
+        print("No checks defined for gate {}.".format(gate))
         return
 
     results = []
@@ -290,7 +323,7 @@ def main():
         results.append((name, status, detail))
 
     print("\n" + "=" * 56)
-    print("Check summary (gate {}, tier {}):".format(args.gate, args.tier))
+    print("Check summary (gate {}, tier {}):".format(gate, args.tier))
     for name, status, detail in results:
         print("  {:5} {:16} {}".format(status, name, detail))
     failed = [r for r in results if r[1] == "FAIL"]

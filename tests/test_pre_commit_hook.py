@@ -29,7 +29,7 @@ def test_hook_checks_pass_on_clean_project(scaffold):
     make_minimal_project(scaffold)
     archmap = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
     assert archmap.returncode == 0, archmap.stdout + archmap.stderr
-    trace = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    trace = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     assert trace.returncode == 0, trace.stdout + trace.stderr
 
 
@@ -48,14 +48,29 @@ def test_hook_blocks_stale_generated_block(scaffold):
     assert archmap.returncode != 0, "stale generated block must fail --check"
 
 
-def test_hook_blocks_orphan(scaffold):
-    # An orphaned registry (LLR pointing at a non-existent SR) must fail
-    # trace.py --strict (the hook's traceability gate).
+def test_hook_blocks_duplicate_id_but_not_orphan(scaffold):
+    # The hook's traceability command is --strict-integrity: a duplicated id is
+    # wrong at any stage and must block, but an orphan is a G2+ *gate* criterion
+    # (a mid-G1 registry legitimately has SRs with no LLR/TC) and must NOT block
+    # a commit — the regression that made the hook wedge every G1-stage commit.
     make_minimal_project(scaffold)
     llr = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
-    llr.write_text(LLRS.replace("SR-001", "SR-999"), encoding="utf-8")
-    trace = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert trace.returncode != 0, "orphaned LLR must fail trace --strict"
+    llr.write_text(LLRS + LLRS.splitlines()[1] + "\n", encoding="utf-8")
+    trace = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert trace.returncode != 0, "duplicate LLR id must fail --strict-integrity"
+
+    # Restore, then simulate end-of-G1: an SR exists, its LLR/TC don't yet.
+    llr.write_text(LLRS.splitlines()[0] + "\n", encoding="utf-8")
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n",
+        encoding="utf-8",
+    )
+    strict = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert strict.returncode != 0, "orphans still fail the gate-scoped --strict"
+    floor = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert floor.returncode == 0, (
+        "a G1-stage registry must stay committable: " + floor.stdout + floor.stderr
+    )
 
 
 def test_hook_runs_end_to_end_when_sh_available(scaffold):

@@ -216,6 +216,8 @@ outside the kit's required path.
 ## 4. Objectives, gates, and exit criteria
 
 Advance only when criteria pass; **pause for human approval at each gate**.
+The active gate is recorded machine-readably in the one-line `docs/gate` file;
+closing a gate bumps it in a reviewed commit (§7 "The active gate").
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 - **G1 — Requirements, UX & constraints.** SN complete (priority + measurable
@@ -489,6 +491,15 @@ format check · linter (warnings as errors) · unit + integration tests · cover
 coverage + traceability reports as artifacts. Prefer a generated architecture
 map step so `architecture.md` stays current.
 
+**The active gate is recorded, and CI reads it.** The current gate lives in the
+one-line `docs/gate` file (bootstrap starts it at `G1`). `check.py` defaults
+`--gate` to it and the reference CI passes no explicit gate, so **CI enforces
+the bar the project is actually at** — a fresh G1 scaffold is green, and the bar
+rises when the human closes a gate by bumping `docs/gate` in a reviewed commit
+(the same explicit-diff discipline as the perf baseline). A release tag runs the
+full bar regardless. Without this, CI would apply the end-state G3 bar from day
+one and stay red for months — training everyone to ignore it.
+
 **Two check layers — process vs. product.** The harness runs two kinds of check,
 and naming the split is what keeps the kit portable across stacks:
 
@@ -497,9 +508,13 @@ and naming the split is what keeps the kit portable across stacks:
   doc navigability (`check_docs.py`), perf-budget comparison (`check_perf.py`), and
   architecture-map freshness (`gen_arch_map.py`). They are identical in every
   project and every language — **don't rewrite them.** (The perf *comparator* is
-  process; the *measurement* that feeds it is product — see §9.) They are the
-  universal floor the agent-neutral `pre-commit` hook also enforces
-  (`.githooks/pre-commit`, enabled by `scripts/setup.{sh,ps1}`).
+  process; the *measurement* that feeds it is product — see §9.) The
+  agent-neutral `pre-commit` hook (`.githooks/pre-commit`, enabled by
+  `scripts/setup.{sh,ps1}`) enforces their **always-valid subset** on every
+  commit: map freshness, id integrity (`trace.py --strict-integrity`), and
+  format. Orphan strictness stays gate-scoped in `check.py` — a mid-G1 registry
+  legitimately has SRs not yet decomposed, and the floor must never block a
+  legitimate early-stage commit.
 - **Product checks are project-owned and language-specific** (`requires` names a
   tool — `ruff`/`pytest` in the Python reference): format, lint, and
   tests+coverage. **You wire these to your stack** in `check.py`'s "EDIT FOR YOUR
@@ -569,7 +584,8 @@ fit is real, the dependency isn't.
 Ready reference scripts ship with this template (Python 3.8+, stdlib only — no
 pip needed to run them):
 
-- `scripts/check.py` — the harness itself. Gate-scoped (`--gate G2|G3|all`), runs
+- `scripts/check.py` — the harness itself. Gate-scoped (`--gate G1|G2|G3|all`,
+  defaulting to the `docs/gate` active gate), runs
   format · lint · tests · coverage · traceability · arch-map freshness, and exits
   nonzero on any failure. Wire it to your stack by editing the step list its
   `steps()` function returns (and the `SRC`/`TESTS`/tool names in the "EDIT FOR
@@ -582,7 +598,8 @@ pip needed to run them):
   dependency-free, collapsible `docs/test/report.html` map of the full graph that
   scales to any size (a gitignored composite artifact — see "Reviewability" in
   §3). It also always checks **integrity**
-  (duplicate or malformed ids). `--require-verified` adds the G3 status
+  (duplicate or malformed ids); `--strict-integrity` fails on *only* that class —
+  the always-valid pre-commit floor. `--require-verified` adds the G3 status
   criterion (every `Verification=Test` SR must be `Verified`); `--phase v1`
   scopes that criterion for phased delivery (§4), reporting out-of-phase SRs as
   explicitly deferred. `--no-placeholders` rejects any leftover `-000` template

@@ -16,6 +16,7 @@ What it creates in the destination:
     CLAUDE.md                                  <- CLAUDE.stub.template.md (points to AGENTS.md)
     GEMINI.md                                  <- GEMINI.stub.template.md (points to AGENTS.md)
     docs/process.md                            <- PROCESS.md
+    docs/gate                                  <- gate.template  (active gate: G1)
     docs/status.md                             <- STATUS.template.md
     docs/architecture.md                       <- ARCHITECTURE.template.md
     docs/interfaces.md                         <- INTERFACES.template.md
@@ -88,6 +89,10 @@ MAPPING = [
     ("CLAUDE.stub.template.md", "CLAUDE.md"),
     ("GEMINI.stub.template.md", "GEMINI.md"),
     ("PROCESS.md", "docs/process.md"),
+    # The machine-readable active gate (one line: G1|G2|G3|all). check.py and CI
+    # read it, so a young project's CI enforces the bar it is actually at;
+    # closing a gate = the human bumps this file in a reviewed commit.
+    ("gate.template", "docs/gate"),
     ("STATUS.template.md", "docs/status.md"),
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),

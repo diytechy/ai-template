@@ -11,6 +11,7 @@ def test_scaffold_contains_expected_files(scaffold):
         ".gitignore",
         "pytest.ini",
         "docs/process.md",
+        "docs/gate",
         "docs/status.md",
         "docs/architecture.md",
         "docs/requirements/system-requirements.csv",

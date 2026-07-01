@@ -7,9 +7,9 @@ check harness / CI. It is the generated "traceability matrix" referenced by
 PROCESS.md: it never needs hand-maintaining.
 
 Usage:
-    python scripts/trace.py [--strict] [--require-verified] [--phase LIST]
-                            [--no-placeholders] [--strict-schema] [--html]
-                            [--docs DIR]
+    python scripts/trace.py [--strict] [--strict-integrity] [--require-verified]
+                            [--phase LIST] [--no-placeholders] [--strict-schema]
+                            [--html] [--docs DIR]
 
 Reads (relative to --docs, default "docs"):
     requirements/system-requirements.csv   (cols: SR-ID, SN-Refs, Verification, Status, ...)
@@ -41,6 +41,8 @@ Orphan rules (the method rules are stated once, in process.md §4):
       software implements, so they keep the LLR requirement)
     - SR with no TC (every SR needs ≥1 TC row regardless of method; for human
       methods the TC records the procedure with Automated=No)
+    - SR with no SN link (only when stakeholder-needs.md provides real SN ids —
+      the G1 "every SR links ≥1 SN" criterion, machine-checked)
     - LLR with no SR parent, or referencing an unknown SR
     - LLR with no TC
     - TC that verifies nothing, or references an unknown SR/LLR
@@ -67,7 +69,11 @@ Always (independent of --strict-schema), structural integrity is checked:
       referenced only via the IF-### catalog may delegate nothing, so an empty
       back-link is allowed here (unlike PB). The MOD-000 example row is ignored,
       so the optional registry never blocks a single-repo project's gate
-These join `--strict`'s failure set like orphans do.
+These join `--strict`'s failure set like orphans do. `--strict-integrity` fails
+on *only* this integrity class: it is the always-valid floor the pre-commit hook
+runs on every commit — a duplicated or malformed id is wrong at any stage, while
+orphans are a G2+ *gate* criterion (a mid-G1 registry legitimately has SRs with
+no LLR/TC yet, and must still be committable).
 
 --no-placeholders flags any leftover template example row (id ending "-000") as
 a finding — wire it in from G2 on (a fresh scaffold is exempt only until you
@@ -465,6 +471,12 @@ def main():
         "--strict", action="store_true", help="exit 1 if any orphan / status finding"
     )
     ap.add_argument(
+        "--strict-integrity",
+        action="store_true",
+        help="exit 1 only on integrity findings (duplicate/malformed ids) — the "
+        "always-valid floor the pre-commit hook runs; orphans stay gate-scoped",
+    )
+    ap.add_argument(
         "--require-verified",
         action="store_true",
         help="G3 criterion: flag Verification=Test SRs not Status=Verified",
@@ -544,7 +556,14 @@ def main():
         if sid not in tc_refs:
             orphans.append(f"SR {sid} has no test (TC)")
             orphan_ids.add(sid)
-        for u in refs(r.get("SN-Refs")):
+        sn_parents = refs(r.get("SN-Refs"))
+        # G1's "every SR links >=1 SN", machine-checked — but only when the SN
+        # registry actually provides real ids (a project without a needs file,
+        # or one holding only -000 placeholders, has no SN tier to link yet).
+        if sn_ids and not sn_parents:
+            orphans.append(f"SR {sid} links no SN (every SR needs >=1 SN-Ref)")
+            orphan_ids.add(sid)
+        for u in sn_parents:
             if sn_ids and u not in sn_ids:
                 orphans.append(f"SR {sid} references unknown {u}")
                 orphan_ids.add(sid)
@@ -814,6 +833,8 @@ def main():
         or budget_findings
         or module_findings
     ):
+        sys.exit(1)
+    if args.strict_integrity and integrity:
         sys.exit(1)
 
 

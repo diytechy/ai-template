@@ -64,9 +64,11 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
   cross-project contracts (copy `INTERFACES.template.md` + the registry).
   **Only if this project interlinks with another repo**; otherwise omit.
 - A runnable **check harness** — copy `scripts/check.py` (the reference runs
-  format + lint + tests + coverage + traceability + arch-map freshness) and wire
-  its `STEPS` to this project's stack, plus the CI workflow (`ci/check.yml`) that
-  runs the same command.
+  format + lint + tests + coverage + traceability + doc-navigability + arch-map
+  freshness) and wire the step list its `steps()` function returns to this
+  project's stack, plus the CI workflow (`ci/check.yml`) that runs the same
+  command. The active gate lives in the one-line `docs/gate` file (start: `G1`);
+  `check.py` and CI read it, and closing a gate bumps it in a reviewed commit.
 
 ## Traceability & anti-duplication (non-negotiable)
 
@@ -102,10 +104,12 @@ low-level requirement (links SR, names module/symbol) → `TC-###` test case
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or marked
   Analysis/Inspection); every SR and LLR has ≥1 TC; traceability reports **0
   orphans**; the harness runs locally and in CI. Human approves.
-- **G3 — Implementation.** Build green, lint clean, the **full** test tier
-  passes, coverage ≥ threshold; every test-verifiable SR is **Verified**, and
-  every remaining SR is explicitly classified **Demonstration / Manual /
-  Inspection** (nothing hand-waved). Human approves.
+- **G3 — Implementation (test-first).** Each G2 TC becomes a *failing* test
+  before the code that satisfies it (red → green → refactor). Build green, lint
+  clean, the **full** test tier passes, coverage ≥ threshold; every
+  test-verifiable SR is **Verified**, and every remaining SR is explicitly
+  classified **Demonstration / Manual / Inspection** (nothing hand-waved).
+  Human approves.
 - **G-Release — Release readiness** *(per release; skip for a one-off)*. The
   **release** test tier passes; the generated release checklist
   (`scripts/gen_release_checklist.py`) is completed + signed; version bumped;

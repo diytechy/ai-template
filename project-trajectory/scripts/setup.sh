@@ -5,10 +5,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# Find a Python 3 interpreter.
+# Find a Python 3 interpreter. Probe by running it, not just finding it: on
+# Windows (Git Bash), `python3` can resolve to the Microsoft Store alias, which
+# exists on PATH but doesn't run.
 PY=""
 for cand in python3 python; do
-  if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
+  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+    PY="$cand"; break
+  fi
 done
 [ -n "$PY" ] || { echo "ERROR: Python 3 not found on PATH." >&2; exit 1; }
 echo "Using $($PY --version)"

@@ -8,7 +8,8 @@ last) — it is the record, not required reading for every pass.
 
 ## Current State
 
-- **Active gate:** G1 — Requirements, UX & constraints
+- **Active gate:** G1 — Requirements, UX & constraints _(mirror it in the
+  one-line `docs/gate` file — `check.py`/CI read that; see process.md §7)_
 - **Round:** 1
 - **Open items:** _(the few things blocking the current gate, by ID)_
 - **Assumptions (unattended):** _(decisions taken without sign-off while running

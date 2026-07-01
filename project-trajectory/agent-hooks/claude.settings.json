@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/gen_arch_map.py --check && python scripts/trace.py --strict"
+            "command": "python scripts/gen_arch_map.py --check && python scripts/trace.py --strict-integrity"
           }
         ]
       }

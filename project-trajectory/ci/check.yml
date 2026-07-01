@@ -38,15 +38,20 @@ jobs:
           #   pip install -r requirements.txt  # if you pin deps in a file
 
       # Tier by trigger: cheap smoke on every push, the full suite on PRs, and
-      # the full release tier on a version tag. In CI we do NOT pass --lenient:
-      # a missing required tool must fail, so checks can't be silently skipped.
+      # the full release tier on a version tag. The GATE comes from the repo's
+      # committed `docs/gate` file (check.py reads it), so CI enforces the bar
+      # the project is actually at — a freshly-scaffolded G1 repo is green, and
+      # the bar rises when a human bumps docs/gate in a reviewed commit. A
+      # release tag claims the full bar explicitly. In CI we do NOT pass
+      # --lenient: a missing required tool must fail, so checks can't be
+      # silently skipped.
       - name: Smoke (push)
         if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
-        run: python scripts/check.py --gate G3 --tier smoke
+        run: python scripts/check.py --tier smoke
 
       - name: Full suite (pull request)
         if: github.event_name == 'pull_request'
-        run: python scripts/check.py --gate all --tier full
+        run: python scripts/check.py --tier full
 
       - name: Release suite (tag)
         if: startsWith(github.ref, 'refs/tags/')

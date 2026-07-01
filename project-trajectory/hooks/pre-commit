@@ -1,11 +1,11 @@
 #!/bin/sh
 # Pre-commit hook — the agent-neutral *process floor*.
 #
-# Runs only the fast, always-valid kit checks so a stale code map, a broken
-# traceability link, or unformatted code never lands in a commit — regardless of
-# which agent (or human) made it. Enforcement lives here (git) and in CI, not in
-# any one agent's hook config, so it holds for Claude, Gemini, Codex, and bare
-# git alike.
+# Runs only the fast, always-valid kit checks so a stale code map, a duplicated
+# or malformed requirement id, or unformatted code never lands in a commit —
+# regardless of which agent (or human) made it. Enforcement lives here (git) and
+# in CI, not in any one agent's hook config, so it holds for Claude, Gemini,
+# Codex, and bare git alike.
 #
 # This is the universal *floor*; the full gate bar (placeholder rejection, schema
 # checks, tests, coverage) is gate-scoped and lives in check.py / CI. Those
@@ -20,9 +20,15 @@
 set -e
 
 # Find a Python 3 interpreter the same way setup.sh does (python3 then python).
+# Probe by *running* the candidate, not just finding it: on Windows, `python3`
+# often resolves to the Microsoft Store app-execution alias, which exists on
+# PATH but exits nonzero when Python isn't installed through it — existence
+# alone would wedge every commit on such machines.
 PY=""
 for cand in python3 python; do
-  if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
+  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+    PY="$cand"; break
+  fi
 done
 if [ -z "$PY" ]; then
   echo "pre-commit: Python 3 not found on PATH; skipping process checks." >&2
@@ -33,10 +39,13 @@ fi
 #    catches a map that has drifted from the source.
 "$PY" scripts/gen_arch_map.py --check
 
-# 2. Traceability: no orphan / duplicate / malformed ids. No --no-placeholders
-#    here on purpose: a leftover -000 row is valid before G2, and this floor must
-#    not block early commits (that check is gate-scoped in check.py).
-"$PY" scripts/trace.py --strict
+# 2. Traceability *integrity*: no duplicate / malformed ids — wrong at any
+#    stage, so safe to enforce on every commit. Deliberately NOT the full
+#    --strict orphan check: orphans are a G2+ gate criterion (a mid-G1 registry
+#    legitimately holds SRs with no LLR/TC yet), and --no-placeholders is
+#    likewise gate-scoped in check.py. The floor must never block a legitimate
+#    early-stage commit.
+"$PY" scripts/trace.py --strict-integrity
 
 # 3. Format check on staged Python files — product tooling, so run it only if
 #    ruff is importable by this interpreter (matching check.py's detection); skip

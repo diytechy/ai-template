@@ -27,6 +27,42 @@ def test_orphan_sr_fails_strict(scaffold):
     assert "SR SR-002 has no test (TC)" in report
 
 
+NO_SN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,,"The system shall add two numbers.","Rootless.","add(1,2) == 3",,M,Test,Verified
+"""
+
+
+def test_sr_with_no_sn_link_is_an_orphan(scaffold):
+    # G1's "every SR links >=1 SN" is machine-checked from the orphan sweep (not
+    # only at G3 --strict-schema): an SR with an empty SN-Refs fails --strict
+    # whenever the needs registry provides real SN ids.
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        NO_SN_SR, encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-001 links no SN" in report
+    # ... and the un-referenced SN is reported from its own side too.
+    assert "SN SN-001 has no SR" in report
+
+
+def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
+    # The pre-commit floor: orphans (a gate criterion) pass, a malformed id (an
+    # always-invalid state) fails.
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(ORPHAN_SR, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    srs.write_text(ORPHAN_SR.replace("SR-002", "SR-2x"), encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "malformed" in report
+
+
 PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,v1
 SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Draft,v2
