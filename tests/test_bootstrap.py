@@ -1,6 +1,6 @@
 """Bootstrap must produce a scaffold that is green out of the box."""
 
-from conftest import SCRIPTS, run_py
+from conftest import KIT, SCRIPTS, run_py
 
 
 def test_scaffold_contains_expected_files(scaffold):
@@ -37,6 +37,21 @@ def test_agents_guide_is_canonical_and_stubs_point_at_it(scaffold):
         assert "AGENTS.md" in stub, stub_name + " should point at AGENTS.md"
         # The stub must not duplicate the full guide.
         assert "Working agreement" not in stub, stub_name + " duplicates the guide"
+
+
+def test_agents_template_stays_within_size_budget():
+    # Gemini's AGENTS.md support truncates near ~12k chars, and a downstream
+    # project must still fill the Project section and add its own rules. The
+    # shipped template therefore keeps >=2k of headroom; a kit thread that
+    # grows it past this budget must pay by tightening elsewhere (the file's
+    # own Customizing note states the same rule for downstream editors).
+    size = len((KIT / "AGENTS.template.md").read_bytes())
+    assert size <= 10_000, (
+        "AGENTS.template.md is {} bytes; budget is 10,000 (>=2k headroom under "
+        "the ~12k Gemini cap) — tighten another rule to pay for the growth".format(
+            size
+        )
+    )
 
 
 def test_fresh_scaffold_passes_archmap_check_and_trace(scaffold):
