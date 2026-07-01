@@ -301,6 +301,15 @@ IF-011,Consumes,delivery,object-store,"S3 PutObject API of the purchased store; 
 a **purchased part no repo builds**, so its owner of record is a **coordinator-held**
 catalog row linking the datasheet.
 
+These `IF-###` ids are **owner-local** — each repo has its own `IF-001…`, so the
+coordinator references them by a stable coordinator-level id (`CIF-###`) that also
+records the owner's current version and each consumer's pin. That mapping is what lets
+the coordinator catch **drift**: if the `export` repo ships `IF-010@v3` while `delivery`
+still pins `@v2`, the coordinator flags the stale pin (weighted by `Stability`) and
+sequences `delivery`'s contract-test re-run against v3 — the interface's own §8 fixture
+judges actual compatibility, the human signs a real break. The catalog registry and
+that check are deferred tooling (`MULTI_REPO.md` §3.3, §3.7, §7).
+
 **Two requirement scopes.** `SR-010` is *module-scoped* — verified inside the delivery
 repo. But "an exported file arrives intact at the destination end-to-end" is
 *composition-scoped*: it exists only for the assembled whole and no single module owns

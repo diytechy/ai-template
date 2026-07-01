@@ -1701,6 +1701,20 @@ absence; (3) the `bootstrap --coordinator` mode is **documented + stubbed**, not
 (bias to documented+stub, per the spec); (4) **no `AGENTS.md` change** (~12k cap).
 `pytest -q`: **124 passed, 1 skipped** (was 117/1; +7).
 
+**Refinement (2026-07-01, post-landing — design-only, no code).** Two cross-repo
+interface questions from the next-considerations scratch batch were resolved into the
+design doc: (1) **id namespacing** — each repo owns its local `IF-###` space, so the
+coordinator catalog keys interfaces by a **coordinator-level id (`CIF-###`)** mapping
+to the owner tuple *(repo, IF-id, version)* + consumer pins (chosen over a bare
+qualified pair because it stays stable while its binding varies by assembly — it
+composes with assemblies-as-config); (2) **content/version drift** — the coordinator
+runs a mechanical **version-reconciliation** check (owner-current vs each consumer-pin,
+weighted by §8 `Stability`) and *sequences* the dependent repo's contract-test re-run,
+while the interface's own §8 fixture judges actual compatibility and the human signs a
+real break — the same three-layer split as §3.5 gating. Folded into `MULTI_REPO.md`
+§3.3/§3.7/§6/§7 + `EXAMPLE.md` §10; the catalog **registry + reconciliation tool are
+routed to Thread 21** (deferred mechanism, still design-first — no code this session).
+
 **Original queued note (for provenance):** Core model **decisions 1–4 confirmed with
 the user 2026-06-30**; this thread **documents the model and defers most mechanism**
 to Thread 21.
@@ -1907,6 +1921,15 @@ genuinely research-grade and deferred:
   green + catalog consistent" check (Thread 20's gating model) as an actual stdlib
   command reading module-published gate/status artifacts, with escalation rules for
   the judgment gates.
+- **Interface catalog + compatibility reconciliation** (added 2026-07-01, from the
+  Thread 20 refinement) — the `CIF-###` catalog registry (owner tuple + consumer pins,
+  `MULTI_REPO.md` §3.3) and the mechanical **version-drift check** (§3.7): flag a
+  consumer pinned below the owner's *current* published version (weighted by the §8
+  `Stability` tier), and **sequence the dependent repo's contract-test re-run** when a
+  parent interface changes — the coordinator reconciles versions and triggers; the
+  interface's own §8 fixture judges actual compatibility; the human signs a real break.
+  Reads published versions across repos; never builds. Same **pull-vs-push** decision
+  as the trace join.
 - **Repo creation** — scaffolding a coordinator + N module repos (`bootstrap
   --coordinator`, `gh repo create`): agent/host tooling, optional, agent-neutral
   (the Thread 18 stance — name it, don't bake the automation in).
@@ -1932,6 +1955,89 @@ after the model questions resolve.
 
 ---
 
+## Thread 22 — Cost / economic NFRs (broaden the consideration prompt beyond software quality)
+
+**Status: ⏳ queued (light amendment, low priority), added 2026-07-01** from the
+next-considerations scratch batch.
+
+**Goal:** make **cost / economic** non-functional attributes (unit / BOM cost,
+licensing, cloud spend) a first-class *consideration* at G1, and make explicit that the
+existing `performance-budgets.csv` already carries a quantitative cost budget with **no
+new mechanism**.
+
+**Why:** §9's NFR consideration checklist anchors on **ISO/IEC 25010**, which is a
+*software-quality* model and omits cost entirely — so a mechatronics BOM or a cloud
+bill never gets surfaced at G1, and cost-driven rework is discovered late. The
+*mechanism* already exists: `PB-###` is **metric-agnostic** (a cost budget is
+`Metric=Unit BOM cost, Unit=USD, Direction=lower-better, Gate=warn, Owner=Integration`),
+and `check_perf.py` compares it identically to a RAM budget. The only gap is
+**prompting** — naming cost as a category to weigh, and pointing at the registry that
+already fits it. This is the same "emphasize the non-functional attributes so they
+aren't forgotten" point Thread 10 makes, extended past 25010's software-only scope.
+
+- **Broaden the §9 checklist** to name **cost / economic** (and, for hardware scopes,
+  procurement / supply-chain / safety-of-supply) as a category to *consider* — a
+  prompt, not a mandate — explicitly noting 25010 is software-quality-only, so the
+  systems-engineering NFRs (cost, supply, physical safety) sit **alongside** it.
+- **One worked cost `PB-###` row** in `EXAMPLE.md` §8 (e.g. unit BOM cost,
+  `lower-better`, `Owner=Integration`) showing the registry already carries it — same
+  shape as the RAM/VRAM rows, different metric.
+- **A one-line prompt** in `stakeholder-needs.template.md`'s NFR note ("…performance,
+  memory/size, **cost**, reliability…").
+
+**Tests:** none new — `PB` is metric-agnostic, so a cost row already parses and
+validates (`trace.py` back-links + `check_perf.py` compare); confirm the new EXAMPLE
+cost row's `Refs` resolve and the gen_cases/link checks stay green. Prose + one row.
+
+**Risks:** scope creep into a costing/BOM methodology — keep it a *consideration
+prompt* + "cost is just a `PB` metric," never an ERP/BOM mechanism. Don't imply every
+project needs it: a pure-software project skips it, like the rest of §9's checklist.
+
+**Done-when:** §9 names cost/economic NFRs as a consideration distinct from 25010's
+software-quality set; `EXAMPLE.md` shows a cost budget row; no new mechanism;
+`pytest -q` green.
+
+**Model tier — Sonnet-able prose** once specced (it's a checklist line + one EXAMPLE
+row against the existing registry); strong-model glance only if it touches the
+`AGENTS.md` cap (it should not — single-source in PROCESS.md §9, like Thread 10).
+
+---
+
+## Thread 23 — Documentation / publication composition (operator + technical manuals)
+
+**Status: ⏳ stub (design-first; sketch only, each part its own future decision),
+added 2026-07-01** from the next-considerations scratch batch.
+
+**Goal (sketch):** name whether/how a composite **operator / technical manual** can be
+*generated* from the doc flow — single-repo first, then the hard multi-repo /
+multi-version composition — **without the kit becoming a publishing toolchain**.
+
+**Why:** the kit already generates human artifacts from the registries
+(`gen_release_checklist.py` from SN/SR/TC/IF), so the same **single-source,
+generate-not-hand-maintain** technique could *scaffold* a manual: each SR is a
+documented capability, each SN acceptance-intent a user-facing behavior, each `IF-###`
+an interface doc, each `PB-###` a stated limit. But a full publishing pipeline
+(PDF / DITA / static-site) and cross-repo / cross-version composition is heavyweight
+**product-layer** — the same boundary the kit draws for perf *meters* and the diagram
+render toolchain (§7): name the pattern, don't ship the engine.
+
+**Open questions when revived:**
+- Is an **operator manual still the right artifact**, or is a queryable /
+  agent-navigated documentation surface the better concept for an AI-driven workflow?
+  (The user's own framing — "maybe a completely different concept is needed.")
+- Where does a **multi-repo / multi-version** composite manual live and who assembles
+  it — a neighbor of the Thread 21 plant/coordinator (compose docs the way the plant
+  repo composes runnables), reading each module's *published* doc artifacts?
+- What is the **minimum generate-from-registries scaffold** worth shipping in-kit (a
+  stdlib "manual skeleton from the registries") vs. what stays product-layer?
+- Keep it **stdlib + offline-render (§7) + no vendored publishing engine**.
+
+**Model tier:** decision-first on the strong model + human when revived (the "is a
+manual the right artifact" question is a judgment call); a concrete stdlib scaffolder is
+Sonnet-executable once the contract is locked — the `gen_*` precedent.
+
+---
+
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
@@ -1946,8 +2052,13 @@ DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 17 (voice policy + agent-layer carve-out) + 18 (model/agent-tiering discipline)
 from the voice/efficiency discussion; 19 (multi-module scoping) + 20 (multi-repo
 coordinator, design-first) + 21 (cross-repo tooling, a stub) from the multi-repo
-discussion. **▶ ALL PLANNED SESSIONS (A–I) LANDED; only stubs remain (Threads 16,
-21) — no session until revived.** The rule applied
+discussion. **Added 2026-07-01** (next-considerations scratch batch): **Thread 22**
+(cost/economic NFRs — a light §9 amendment, queued) + **Thread 23** (documentation /
+publication composition, a stub), plus a cross-repo **interface-drift refinement**
+folded into Threads 20/21 (design-only, no code). **▶ ALL PLANNED SESSIONS (A–I)
+LANDED.** Remaining: **Thread 22** (small, queued — schedule when convenient) and the
+**stubs** (16, 21, 23 — each needs a decision to revive). No auto-session; confirm
+with the user before starting. The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
@@ -2067,20 +2178,25 @@ thread's **Model tier** line says where the handoff is safe.
 > the strong model** (Opus) throughout the design; `test_modules_registry.py` (7) is
 > the seam-wiring backstop. `pytest -q`: **124 passed, 1 skipped** (+7).
 
-**Open: none — all planned sessions (A–I) landed.** Threads 0a, 0b, 1–11 landed (on
-`template-review-fixes`, since merged into the current working branch); Session E
-(12, 13, 15A, 17, 18), Session F (14), Session G (15 Parts B/C/D), Session H (19),
-and Session I (20) landed 2026-06-30 on the current working branch. **Threads 16 and
-21 remain stubs** — each its own future thread/decision, no session until revived.
+**Open: all planned sessions (A–I) landed; a small queued thread + stubs remain.**
+Threads 0a, 0b, 1–11 landed (on `template-review-fixes`, since merged into the current
+working branch); Session E (12, 13, 15A, 17, 18), Session F (14), Session G (15 Parts
+B/C/D), Session H (19), and Session I (20) landed 2026-06-30 on the current working
+branch. **Remaining (added 2026-07-01):** **Thread 22** (cost/economic NFRs — a small
+queued §9 amendment, schedulable anytime) and the **stubs 16 / 21 / 23** (non-code
+artifact verification · cross-repo tooling · publication composition — each its own
+future thread/decision, no session until revived).
 
 ### Session protocol (for a cold session pointed only at this file)
 
-0. **If there is no ▶ NEXT marker, stop — don't invent a session.** As of Session I
-   all planned sessions (A–I) have landed; the only remaining threads are **stubs**
-   (16 non-code-artifact verification, 21 cross-repo tooling), which need a human
-   decision to revive and strong-model *design* work, not mechanical execution. Ask
-   the user which stub to revive (and confirm the decisions each stub lists as open)
-   before doing anything.
+0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
+   Session I all planned sessions (A–I) have landed. What remains is **Thread 22**
+   (cost/economic NFRs — a small, self-contained §9 amendment that can be done in one
+   short pass) and the **stubs** (16 non-code-artifact verification · 21 cross-repo
+   tooling · 23 publication composition), which need a human decision to revive and
+   strong-model *design* work, not mechanical execution. Ask the user which to pick up
+   (and confirm the open decisions each lists) before doing anything — Thread 22 is the
+   one truly ready-to-execute item.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
    own section above is its spec (Goal/Steps/Tests/Risks/Done-when).
 2. **End green:** run `python -m pytest -q` and paste the real output (per

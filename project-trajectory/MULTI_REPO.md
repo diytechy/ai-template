@@ -110,6 +110,18 @@ which consumer, at which pinned version). It never copies a spec. Interface
 proliferation is expected (the "there are 16 competing standards" reality) and managed
 by **owner-of-record**, not central control.
 
+**Local id spaces + a coordinator-level handle (no cross-repo id collisions).** Each
+repo owns its **own** `IF-###` space, so `IF-001` in two different module repos are
+*different* interfaces that merely share a string — they would collide the moment the
+coordinator referenced both. The catalog therefore keys each shared interface by a
+**coordinator-level id (`CIF-###`)** that maps to the qualified owner tuple *(owner
+module/repo, owner `IF-###`, owner version)* plus each consumer's **pinned** version.
+Local ids never need to be globally unique; the `CIF-###` is the one stable, global
+handle. Because it is stable while its *binding* can change, it composes with
+assemblies-as-config (§3.4): assembly `edge` may bind `CIF-005` → `sensor-a:IF-003@v2`
+and assembly `cloud` → `sensor-b:IF-007@v1` without renaming anything. (The catalog
+registry and the check in §3.7 are deferred mechanism — §6/§7.)
+
 ### 3.4 Assemblies = configuration, not branches
 
 A product **variant** is a configuration — `assemblies/<name>/` naming the module set,
@@ -134,6 +146,36 @@ A delegated SR **seeds** the module repo's `SN` registry; module status flows ba
 **referenced ids** in a coordinator assembly/status doc (the `status.md` pattern across
 the boundary). No live message bus, no daemon — the same async-text-and-PR discipline
 the kit uses everywhere, applied across the repo boundary.
+
+### 3.7 Interface compatibility across the boundary (version reconciliation)
+
+A repo boundary breaks the single-repo safety net. In one repo a shared contract is
+kept honest by its **fixture/contract test at the seam** (§8), re-run whenever either
+side changes. Across repos, the owner can change an interface's *content* and ship a
+new version while a **consumer in another repo stays pinned to the old one and builds
+green in ignorance** — the drift the coordinator exists to catch. Split the job the
+same way §3.5 splits gating:
+
+- **The coordinator reconciles *versions* (mechanical).** The catalog records, per
+  `CIF-###`, the owner's **current published version** and each consumer's **pinned**
+  version. A consumer pinned below the owner's current version — the owner (parent)
+  moved and the dependent didn't — is a **compatibility finding**, weighted by the §8
+  `Stability` tier (an `Experimental` change is expected; a `Stable` one past a pin is
+  a blocker). This is comparing versions the repos publish as text: no build engine.
+- **The interface's own contract test verifies *compatibility* (already exists).**
+  Whether the new version is actually compatible is answered by the dependent repo
+  running the **owner's published contract/fixture** against it — the §8 test that
+  backs every interface. The coordinator doesn't judge semantics; on a divergence it
+  **sequences** the dependent's re-verification (async text + PR: open a
+  bump-and-re-run in the dependent repo, §3.6) and escalates a genuine break to the
+  human.
+
+So "the parent changed — can every dependent adjust?" becomes a pipeline:
+*coordinator detects the version divergence → triggers each dependent's contract test
+against the new version → human signs any real break.* Same three layers as §3.5
+(mechanical aggregation · existing test · human judgment). The reconciliation tool is
+deferred (§7); the **design decision that makes it buildable** is §3.3's
+coordinator-level id carrying the owner + consumer versions.
 
 ## 4. Two requirement scopes — name them
 
@@ -197,10 +239,12 @@ project never sees them. A coordinator repo adds them by hand (or via the future
   This link points **across the boundary**, so no single `trace.py` run can validate it
   — that reconciliation is the deferred cross-repo join. It is recorded now so the
   future aggregator has the edge to follow.
-- **`IF-###` catalog-reference convention.** The coordinator's catalog rows *reference*
-  owner `IF-###` ids (§3.3); the owner side holds the spec. No new column — the existing
-  `interfaces.csv` shape, used with the counterpart naming the other repo (or, for a
-  purchased part, the coordinator itself as owner of record).
+- **Interface catalog convention (`CIF-###` → owner tuple).** The coordinator keys each
+  shared interface by a coordinator-level id mapping to *(owner repo, owner `IF-###`,
+  version)* + each consumer's pinned version (§3.3), so per-repo `IF-###` spaces never
+  collide. **The catalog registry itself and its §3.7 version-reconciliation check are
+  deferred** (§7): unlike `modules.csv`, they need cross-repo mechanism to be useful, so
+  only the *convention* (local ids + a coordinator handle) is fixed here.
 
 **Honest limit — the coordinator repo's own gate.** Because a delegated SR's LLR and
 tests live in another repo, that SR has **no local LLR or TC**, so a plain `trace.py
@@ -224,6 +268,11 @@ future decision; the model above is what they will operationalize.
 - **Coordinator gate aggregation** — the mechanical "all modules green + integration
   green + catalog consistent" check (§3.5) as an actual stdlib command reading
   module-published gate/status artifacts, with escalation rules for the judgment gates.
+- **Interface catalog + compatibility reconciliation** — the `CIF-###` catalog registry
+  (§3.3) and the §3.7 version-reconciliation check: flag a consumer pinned below the
+  owner's current version (weighted by `Stability`), and sequence the dependent repo's
+  contract-test re-run when the parent interface changes. Reads published versions
+  across repos; never builds. Same **pull-vs-push** question as the trace join.
 - **Repo creation** — scaffolding a coordinator + N module repos (a `bootstrap
   --coordinator` mode, `gh repo create`): agent/host tooling, optional and
   agent-neutral — name the pattern, don't bake the automation in.

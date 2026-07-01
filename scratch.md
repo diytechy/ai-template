@@ -272,6 +272,32 @@ module can be promoted to its own repo later). Heavy tooling (cross-repo
 trace pull-vs-push, gate aggregation, repo creation, module discovery,
 cross-repo E2E) deferred to **Thread 21**, a research-grade stub.
 
+### Next-considerations batch — Threads 22, 23 + Thread 20/21 refinement (2026-07-01)
+
+Three follow-on considerations raised after Threads 19–21 landed, all now threaded:
+
+1. **Cost / economic NFRs** (part cost, BOM, licensing, cloud spend) — the §9 NFR
+   checklist anchors on ISO/IEC 25010, a *software-quality* model that omits cost, so
+   cost-driven rework gets found late. The *mechanism* already exists (`PB-###` is
+   metric-agnostic — a cost budget is just a row), so the gap is only *prompting*. →
+   **Thread 22** (light §9 amendment + one EXAMPLE cost row; no new mechanism; queued).
+2. **Documentation / publication composition** — can an operator/technical manual be
+   *generated* from the registries (the `gen_release_checklist.py` technique), and
+   composed across a multi-repo/multi-version product, without vendoring a publishing
+   toolchain? Plus the open question: is a manual even the right artifact vs. a
+   queryable/agent-navigated surface? → **Thread 23** (design-first stub).
+3. **Cross-repo interface identity + drift** — each repo owns its local `IF-###`
+   space, so ids collide across repos; and worse, an owner can change an interface's
+   *content* while a consumer stays pinned and green in ignorance. Resolved (with the
+   user): a **coordinator-level id (`CIF-###`)** maps to *(owner repo, IF-id, version)*
+   + consumer pins (chosen over a bare qualified pair — composes with
+   assemblies-as-config), and the coordinator runs a **mechanical version-reconciliation
+   check** (owner-current vs each consumer-pin, weighted by `Stability`) that sequences
+   the dependent's contract-test re-run while the interface's own §8 fixture judges
+   real compatibility and the human signs a break. → folded into **MULTI_REPO.md**
+   §3.3/§3.7/§6/§7 + **EXAMPLE.md** §10 (design), with the catalog registry + check
+   routed to **Thread 21** (mechanism).
+
 ## Open — not yet threaded
 
 - **Agent verbosity.** What settings or characteristics would keep an agent
@@ -281,47 +307,6 @@ cross-repo E2E) deferred to **Thread 21**, a research-grade stub.
   It's already filled to the Gemini quota (12 KB); some existing items could
   be consolidated, though the repetition may be worth keeping. Could be
   handled on a per-project basis.
-
-Next set of considerations (raw dump 2026-07-01, reorganized same day):
-
-- **Cost / economic NFRs (part cost, BOM, licensing, cloud spend).** Financial
-  optimization and part-cost minimization are non-functional trade-offs the kit
-  never prompts for. The §9 NFR consideration checklist anchors on ISO/IEC 25010,
-  which is a *software-quality* model and omits cost entirely — yet for a
-  hardware/mechatronics scope (or a cloud bill) cost is a first-class NFR. It's
-  very project-specific, so the kit likely can't *mandate* a method; but *naming*
-  cost as a category to consider — and noting a quantitative cost target is
-  structurally already a `PB-###` row (metric + budget + `lower-better` + Gate,
-  owned by the Integration hat) — would reduce rework. The broader point: make the
-  non-functional attributes that need consideration harder to forget at G1.
-  → **proposed: light amendment to Thread 10** (broaden the §9 checklist past
-  25010's software-only set; note `performance-budgets.csv` already fits cost as a
-  metric). Not a new mechanism. Low priority.
-
-- **Documentation / publication composition (operator + technical manuals).** Can
-  a composite technical/operator manual be *generated* from the doc flow — and, in
-  a complex multi-repo/multi-version product, composed across repos and versions?
-  The kit already generates human docs from the registries
-  (`gen_release_checklist.py` from SN/SR/TC/IF), so the same single-source
-  technique could *scaffold* a manual; but a full publishing toolchain (PDF / DITA
-  / static site) is heavyweight, product-layer, and "don't recreate the world."
-  Open question raised: is an operator manual even the right artifact anymore, or
-  is a different concept (queryable / agent-navigated docs) better? → **proposed:
-  new stub thread (design-first, low priority)** — name the
-  generate-from-registries opportunity + the product-layer boundary; the
-  multi-repo/multi-version composition is the hard half, adjacent to Thread 21.
-
-- **Cross-repo interface-ID namespacing.** A concrete hole in the just-shipped
-  Thread 20 model: each repo owns its own `IF-###` space, so `IF-001` in repo A and
-  `IF-001` in repo B collide as strings when the coordinator references them. User's
-  proposed fix (correct — matches distributed-id practice): each repo keeps its
-  **local** id set; the coordinator references an owner interface either by the
-  qualified pair `(owner-repo, IF-id)` or via a **coordinator-level id** that maps
-  to it, so local ids never need to be globally unique. The coordinator-level-id
-  option composes better with assemblies-as-config (a stable handle whose concrete
-  owner can vary by assembly). → **proposed: fold the *principle* into
-  MULTI_REPO.md §3.3/§6 now** (real gap in freshly-shipped work) + route the catalog
-  *format/tool* that enforces it to **Thread 21**.
 - **Parked, low priority:** the [advisor-strategy
   post](https://claude.com/blog/the-advisor-strategy) — possibly relevant to
   the Thread 18 model-tiering pattern, not yet read closely.
