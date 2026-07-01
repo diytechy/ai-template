@@ -281,6 +281,11 @@ cross-repo E2E) deferred to **Thread 21**, a research-grade stub.
   It's already filled to the Gemini quota (12 KB); some existing items could
   be consolidated, though the repetition may be worth keeping. Could be
   handled on a per-project basis.
+
+- **Next set of considerations**
+   - Financial optimization / part cost minimization.  Do these non-functional related trade-offs need to be reinforced somewhere?  It's extremely project specific what sort of other  aspects need to be considered for "performance" or "cost" related considerations, so there might not be much the template can do here.  But anyway to emphasize the non-functional related attributes that need consideration when building out a project from this template are important to reduce rework.
+   - Documentation / Publications automation from doc flow?  Don't want to recreate the world here, but if there is a very complex multi-repo setup with different versions, how to build a composite technical and operator manual from the content?  Or... are operator manuals even needed anymore?  Maybe completely different concept is needed here, at least to stub out when creating projects from this template.
+   - How to handle interface definitions that have one ID in one place but intercept that same ID from another repo?  Ideally each repo tracks it's own id sets, and the coordinator just links those to a "coordinator" id?
 - **Parked, low priority:** the [advisor-strategy
   post](https://claude.com/blog/the-advisor-strategy) — possibly relevant to
   the Thread 18 model-tiering pattern, not yet read closely.
