@@ -2159,6 +2159,62 @@ once; no dangling §-refs (`check_docs` green); `pytest -q` green.
 **Model tier — strong model** (editorial judgment over the kit's canonical
 doc; the same class as Session I).
 
+## Thread 28 — Agent memory: repo text is the durable layer (boundary note + promote rule)
+
+**Status: ⏳ queued 2026-07-01** from the scratch "Setup agent infrastructure"
+note (feedback given the same day; recommended decisions below await a
+confirm-at-pickup).
+
+**Why:** the note asks whether repos that interact with agents need
+memory-management tooling deployed at dev-setup, whether the onboarder should
+ask about agent use, and whether scope changes the recommendation. The kit has
+already answered most of this **structurally, without naming it**: its
+committed artifacts *are* the agent-memory layer — `status.md`'s *Current
+State* header (cheap context reload, §6), `AGENTS.md` (re-read every session),
+the generated code map (don't re-derive the layout), the registries,
+`docs/gate`. What's genuinely new is the **adversarial half**: an agent's
+*native* memory (auto-memory dirs, MCP memory servers, memory-bank/context
+layers) is a **competing home for facts** — load-bearing knowledge hoarded
+there is unreviewable, invisible to other agents/humans, and silently erodes
+the single-source-of-truth discipline. The fix is a policy, not a tool.
+
+**Recommended decisions (confirm at pickup):**
+1. **Name the boundary once in PROCESS.md §7** (the fourth boundary note,
+   beside generate-vs-measure / map-vs-index / spec-vs-harness): the committed
+   artifacts are the durable, agent-neutral memory layer; **agent-native
+   memory tools are an optional per-host category** (name by category with
+   `e.g.` — native auto-memory, MCP memory servers; Serena-style indexes and
+   `.planning/`-style context layers are *already* named in §3/§7) — never
+   installed, required, or configured by the kit.
+2. **The promote rule:** agent-native memory is legitimate *scratch*; anything
+   durable (a decision, constraint, gotcha) is **promoted** into
+   `status.md`/the registries/`AGENTS.md` — the flip side of the *Assumptions*
+   log, stated once.
+3. **No onboarder/dev-setup prompt or install** — dev-setup provisions the
+   *workstation*, not the agent; extends Thread 15's parked
+   agent-provisioning stance (record as decided, not just parked).
+4. **One `AGENTS.template.md` working-agreement bullet** (~250 bytes: "your
+   memory is not the project's memory — record durable facts in `docs/`, not
+   agent-private memory") — affordable post-Thread 26 (9,702/10,000 budget);
+   the size test is the backstop. This is the one decision with a real cost.
+5. **Scope note, one line:** bigger repo ⇒ the committed layer matters more
+   (keep *Current State* tight) and a query-time index helps more — both
+   already stated; no machinery.
+
+**Tests:** none (prose); `check_docs.py` for links; the AGENTS size-budget
+test if decision 4 lands. **Risks:** naming tools dates the doc (category +
+`e.g.`, the Thread 8 mitigation); scope creep into an agent-config manager
+(out — agent-neutral); don't imply agent memory is *bad* — the rule is only
+about where **durable** facts live.
+
+**Done-when:** PROCESS.md names the boundary + promote rule once; the
+no-install/no-prompt decision is recorded; AGENTS bullet landed-or-declined
+within budget; links + `pytest -q` green.
+
+**Model tier — Sonnet-able end to end** (mirrors the Thread 8/12 boundary-note
+pattern; the AGENTS byte-budget is test-enforced now, so no strong-model cap
+juggling needed).
+
 ---
 
 ## Sequencing & session strategy
@@ -2308,9 +2364,11 @@ B/C/D), Session H (19), and Session I (20) landed 2026-06-30. **Session J landed
 2026-07-01** (from the same-day adversarial review + user decisions): **Threads 24,
 25, 26, and 22** — one commit per thread on `MultiRepoSupport`. **Remaining:
 Thread 27** (PROCESS.md squeeze + core/optional split — queued, decisions confirmed,
-**solo session on the strong model**) and the **stubs 16 / 21 / 23** (non-code
-artifact verification · cross-repo tooling · publication composition — each its own
-future thread/decision, no session until revived). **Next recommended step after
+**solo session on the strong model**), **Thread 28** (agent-memory boundary note +
+promote rule — queued 2026-07-01, light prose, Sonnet-able, decisions recommended
+but unconfirmed), and the **stubs 16 / 21 / 23** (non-code artifact verification ·
+cross-repo tooling · publication composition — each its own future thread/decision,
+no session until revived). **Next recommended step after
 Thread 27: pilot the kit on one real repo** (smallest first) and feed the friction
 back as its own thread — the kit has not yet been used in anger, and one pilot
 will teach more than further prose threads.
@@ -2331,10 +2389,12 @@ will teach more than further prose threads.
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
    Session J (2026-07-01), sessions A–J have landed. What remains is **Thread 27**
    (PROCESS.md squeeze + core/optional split — decisions confirmed with the user, but
-   a wide, editorial, strong-model solo session) and the **stubs** (16 non-code-artifact
-   verification · 21 cross-repo tooling · 23 publication composition), which need a
-   human decision to revive. Ask the user which to pick up (and confirm the open
-   decisions each lists) before doing anything.
+   a wide, editorial, strong-model solo session), **Thread 28** (agent-memory boundary
+   note — light and Sonnet-able, but its recommended decisions await user
+   confirmation), and the **stubs** (16 non-code-artifact verification · 21 cross-repo
+   tooling · 23 publication composition), which need a human decision to revive. Ask
+   the user which to pick up (and confirm the open decisions each lists) before doing
+   anything.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
    own section above is its spec (Goal/Steps/Tests/Risks/Done-when).
 2. **End green:** run `python -m pytest -q` and paste the real output (per

@@ -298,6 +298,18 @@ Three follow-on considerations raised after Threads 19–21 landed, all now thre
    §3.3/§3.7/§6/§7 + **EXAMPLE.md** §10 (design), with the catalog registry + check
    routed to **Thread 21** (mechanism).
 
+4. **Setup agent infrastructure** — if a repo will interact with an agent, does its
+   memory need better management than the default? What tools could dev-setup
+   deploy; should the onboarder ask about agent use; does scope change the answer?
+   Assessed 2026-07-01: the kit's committed artifacts (status.md Current State,
+   AGENTS.md, code map, registries, docs/gate) *are* the durable agent-neutral
+   memory layer — the real gap is the adversarial one: **agent-private memory is a
+   competing home for facts** that erodes single-source-of-truth. Recommended:
+   name the boundary in §7, state a **promote rule** (agent memory = scratch;
+   durable facts go to repo text), **no** dev-setup install or onboarder prompt
+   (the Thread 15 anti-lock-in stance), one optional AGENTS.md bullet (now
+   affordable post-trim). → **Thread 28** (queued; decisions await confirmation).
+
 ## Open — not yet threaded
 
 - **Agent verbosity.** What settings or characteristics would keep an agent
