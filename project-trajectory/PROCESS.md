@@ -724,3 +724,52 @@ emitting a `docs/test/perf-metrics.json` map of `PB-ID → number`; *comparing* 
   best-of-N measurement. A number that can't be a reliable `Test` gate is
   warn-tracked or `Demonstration`, never faked into a binary gate. A budget with no
   measurement this run is skipped, like a missing tool — absent metrics never fail.
+
+## 10. Project scale — one module, several modules, several repos
+
+Everything above (§1–§9) assumes the common case: **one module in one repo**, and
+that is the default. Scale is an **escalation ladder** — climb a rung only when the
+scope genuinely forces it, decide the rung **at project creation**, and bias to the
+lowest one, because each higher rung buys coordination cost a single module never
+pays:
+
+1. **One module, one repo** — the default for almost every project. The whole
+   `SN→SR→LLR→TC` spine, one gate run, one release.
+2. **Several modules, one repo** — when a repo grows distinct sub-systems that still
+   **build and release as one** (this section).
+3. **Several repos + a coordinator** — only when modules genuinely need *independent*
+   versioning, ownership, access, or release cadence at a scale one repo can't
+   sustain. A heavier, deliberately **rare** step with its own coordinator role,
+   documented separately (the multi-repo model); you almost certainly don't need it,
+   and a reviewer should push back on a premature jump. It is **revisitable** — start
+   single and promote a module to its own repo *later*, once it proves it needs the
+   independence, which is far cheaper than a speculative split.
+
+**Several modules in one repo — no new machinery, just partition the spine.** A
+multi-module repo is the *same* spine, grouped by columns that already exist: the
+LLR **`Module`** column and the optional **`Area`** tag on SR/TC (§1 "Domain
+hats"). Each module is a sub-tree of `SN→SR→LLR→TC`; where a module needs its own
+discipline it gets its own **domain hat** owning that slice (§1 already allows
+this). The repo still builds, gates, and releases as a whole.
+
+- **Module-scoped review is a convention over the existing columns, not a new
+  flag.** A module owner reviews their slice by filtering the registries on
+  `Area`/`Module` (a grep or spreadsheet filter); the **repo-level gate stays the
+  source of truth** — `trace.py --strict` still requires **0 orphans across the
+  whole repo, seams included**. The kit deliberately ships **no** `--module`/`--area`
+  filter on `trace.py`/`check.py`: a per-module gate would either hide the
+  cross-module seams (a false "green" masking exactly the integration gaps this
+  method wants first-class) or need real machinery to tell a legitimate seam from an
+  orphan. The whole-repo gate already spans every module; per-module *ownership* is a
+  reading convention, not a gate of its own.
+- **Integration TCs for the seams.** A module boundary is where two parts must
+  agree, so it gets its **own** TCs — not merely each module's internal unit tests.
+  These are integration/system-level, usually `Tier=Full` or `Release` (§4 "Test
+  tiers"), so the seam is a tested contract rather than an untested gap between two
+  individually-green modules.
+- **`IF-###` applies *within* a repo, too.** The interface registry (§8) is not only
+  for separate repos: two modules in one repo that share a contract record it as an
+  `IF-###`, with the counterpart naming the **other module** instead of another
+  repo and both rows living in the one `interfaces.csv`. Same
+  direction/owner/version/stability discipline, same "one contract, one home, backed
+  by a test" rule — applied to the internal seam, with no cross-repo build machinery.

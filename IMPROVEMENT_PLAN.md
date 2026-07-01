@@ -1567,9 +1567,40 @@ for the AGENTS.md cap, if touched.
 
 ## Thread 19 — Multi-module scoping (single-repo sub-systems)
 
-**Status: ⏳ queued (Session H — near-term; mostly prose + light template),
-added 2026-06-30.** The four multi-repo decisions were confirmed with the user
-2026-06-30 (see Thread 20); this is the **cheaper first rung** of that track.
+**Status: ✅ landed 2026-06-30** (Session H). Multi-module scoping shipped as
+prose + a light EXAMPLE slice + a confirming test — **no script change** (the
+in-thread decision). New **PROCESS.md §10 "Project scale — one module, several
+modules, several repos"** (appended after §9 so nothing renumbers — the Thread-10
+precedent): the **escalation ladder** (rung 1 single-module default · rung 2
+several-modules-one-repo · rung 3 multi-repo+coordinator), decide-at-creation,
+bias-low, revisitable, with rungs 1–2 detailed and rung 3 named + pointed forward
+to the multi-repo model (Thread 20/Session I) in **link-safe prose** (no dangling
+link to a not-yet-existing doc); the **several-modules-in-one-repo model**
+(sub-trees grouped by the existing LLR `Module` / optional SR·TC `Area` columns,
+per-module domain hats via §1); **integration TCs for the seams**
+(`Tier=Full`/`Release`); and **`IF-###` applied within a repo** (counterpart names
+the other module; both rows in one `interfaces.csv`). **Scoping decision —
+convention, not a flag:** the kit ships **no** `--module`/`--area` filter on
+`trace.py`/`check.py` — a per-module gate would either hide the cross-module seams
+(a false "green" masking exactly the integration gaps this thread makes
+first-class) or need real seam-vs-orphan machinery; the whole-repo `trace.py
+--strict` 0-orphan gate already spans every module + seam, so per-module *review*
+is a reading convention over columns that already exist. `EXAMPLE.md` gained **§9**
+(a two-module `export`↔`delivery` repo: `Area`-tagged SRs, an intra-repo
+`IF-001`/`IF-002` pair, and an integration `TC-050`) + a "What to copy" bullet;
+both READMEs got a project-scale scope note / tuning knob. New test
+`test_area_column_is_schema_safe` mirrors Thread 5's lifecycle test (an `Area`
+column passes `--strict-schema`), making the convention's schema-safety explicit.
+**Deviations from the spec as written:** (1) the new section landed as **§10** (an
+appended end-section) rather than literally "near §1/§8", to avoid renumbering
+§1–§9 and every `§N` cross-reference (edit-conservatively) — this means Session I's
+multi-repo doc should be **§11 or `MULTI_REPO.md`**, not §10; (2) **no `AGENTS.md`
+change** (already cap-safe per the spec — the guidance stays single-sourced in
+PROCESS.md). `pytest -q`: **117 passed, 1 skipped** (was 116/1; +1).
+
+**Original queued note (for provenance):** near-term; mostly prose + light
+template. The four multi-repo decisions were confirmed with the user 2026-06-30
+(see Thread 20); this is the **cheaper first rung** of that track.
 
 **Goal:** state explicitly that the kit is **single-module by default**, and
 describe how **one repo** can hold **several modules/sub-systems** without new
@@ -1854,7 +1885,8 @@ after the model questions resolve.
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
 **7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
 (2026-06-29); **12 ✅, 13 ✅, 15A ✅, 17 ✅, 18 ✅** (2026-06-30, Session E);
-**14 ✅** (2026-06-30, Session F); **15 B/C/D ✅** (2026-06-30, Session G).
+**14 ✅** (2026-06-30, Session F); **15 B/C/D ✅** (2026-06-30, Session G);
+**19 ✅** (2026-06-30, Session H).
 **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
@@ -1862,7 +1894,7 @@ DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 17 (voice policy + agent-layer carve-out) + 18 (model/agent-tiering discipline)
 from the voice/efficiency discussion; 19 (multi-module scoping) + 20 (multi-repo
 coordinator, design-first) + 21 (cross-repo tooling, a stub) from the multi-repo
-discussion. **▶ NEXT: Session H.** The rule applied
+discussion. **▶ NEXT: Session I.** The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
@@ -1950,28 +1982,36 @@ thread's **Model tier** line says where the handoff is safe.
 > verified per OS**, so a green pytest is not proof those work. `pytest -q`: **116
 > passed, 1 skipped**. **Thread 16 is a stub — no session until revived.**
 
-> **Session H · Multi-module scoping (Thread 19).** Mostly prose + a light template
-> touch: PROCESS.md single-module default + the single-repo multi-module model
-> (sub-trees by `Module`/`Area`, module-scoped gates, integration TCs, intra-repo
-> `IF-###`), an optional EXAMPLE two-module slice, and the trace/check scoping
-> decision (convention vs. a cheap flag). **Model tier: Sonnet-able prose**; if a
-> scoping flag is built, strong-model glance for its contract, Sonnet against
-> `pytest`. The cheaper first rung of the multi-repo track.
+> **Session H ✅ landed 2026-06-30 · Multi-module scoping (Thread 19).** Prose +
+> a light EXAMPLE slice + one confirming test; **no script change**. New PROCESS.md
+> **§10** (appended after §9, no renumbering): the escalation ladder (single-module
+> default → several-modules-one-repo → multi-repo, decide-at-creation/bias-low/
+> revisitable, rung 3 pointed forward to Session I in link-safe prose), the
+> several-modules-in-one-repo model (sub-trees by the existing `Module`/`Area`
+> columns + per-module domain hats), integration TCs for the seams, and `IF-###`
+> *within* a repo. **Scoping decision: convention, not a flag** — no `--module`
+> filter on `trace.py`/`check.py`; a per-module gate would hide the seams or need
+> seam-vs-orphan machinery, and the whole-repo 0-orphan gate already spans them.
+> `EXAMPLE.md` §9 shows a two-module `export`↔`delivery` repo (intra-repo
+> `IF-001`/`IF-002` + integration `TC-050`); both READMEs got a project-scale note.
+> New `test_area_column_is_schema_safe` (mirrors Thread 5's lifecycle test).
+> **Note for Session I:** §10 is now taken, so the multi-repo doc is **§11 or
+> `MULTI_REPO.md`**. `pytest -q`: **117 passed, 1 skipped** (+1).
 
 > **Session I · Multi-repo coordinator design (Thread 20) — design-first, the most
-> decision-heavy session.** A design doc (`MULTI_REPO.md` or PROCESS §10) recording
+> decision-heavy session.** A design doc (`MULTI_REPO.md` or PROCESS §11 — §10 is
+> now Thread 19's multi-module section) recording
 > the confirmed model (SR-tier handoff, coordinator-as-Integration-hat,
 > catalog-not-copy interfaces, assemblies-as-config, mechanical-aggregation gating,
 > async-text coordination) + the thinnest schema seams + a two-repo EXAMPLE sketch;
 > heavy tooling routed to the **Thread 21 stub**. **Model tier: strong model +
 > human throughout**; only the locked-contract seam-wiring is Sonnet-able.
 
-**Open: Sessions H (next), I.** Threads 0a, 0b, 1–11 landed (on
+**Open: Session I (next).** Threads 0a, 0b, 1–11 landed (on
 `template-review-fixes`, since merged into the current working branch); Session E
-(12, 13, 15A, 17, 18), Session F (14), and Session G (15 Parts B/C/D) landed
-2026-06-30 on the current working branch. Threads 19 and 20 await Sessions H–I —
-**H = multi-module (19), I = multi-repo design (20)**; Threads 16 and 21 are
-stubs.
+(12, 13, 15A, 17, 18), Session F (14), Session G (15 Parts B/C/D), and Session H
+(19) landed 2026-06-30 on the current working branch. Thread 20 awaits Session I —
+**I = multi-repo design (20)**; Threads 16 and 21 are stubs.
 
 ### Session protocol (for a cold session pointed only at this file)
 

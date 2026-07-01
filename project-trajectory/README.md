@@ -90,3 +90,7 @@ audits.
 - Drop a hat/gate for tiny projects (e.g. skip UX for a library); keep the
   SN→SR→LLR→TC spine.
 - Scale review depth to risk — don't gate a rename like you'd gate a crypto path.
+- Scale *structure* to scope: one module in one repo is the default; a repo can
+  host several modules on the same spine (grouped by `Module`/`Area`, with an
+  integration TC per seam), and multi-repo under a coordinator is a rare, later
+  step — climb the ladder only when scope forces it (process.md §10).

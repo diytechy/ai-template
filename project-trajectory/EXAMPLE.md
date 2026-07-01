@@ -196,6 +196,53 @@ and flags both an absolute breach (here `PB-002`'s `Gate=fail` would fail the
 build) and a regression past `Tolerance` versus the committed `perf-baseline.json`.
 The registry here is just the captured, tracked source of truth.
 
+## 9. Two modules in one repo — an internal seam
+
+Everything above is **one module**. A larger repo may hold **several** modules on
+the same spine, grouped by the `Module`/`Area` columns, each with an explicit
+contract and an integration test at its seam — no new machinery (process.md §10).
+Say this repo grows a second module, **`delivery`**, that ships a completed export
+to a destination; it consumes the **`export`** module's output. A new stakeholder
+need `SN-030` ("get my export off the box automatically") drives its SR. Tag each
+module's rows with an `Area` so a domain hat can own and filter its slice:
+
+```csv
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
+SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001.","Output parses as CSV; columns match the schema; special-char fields quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,,export
+SR-050,Deliver export to destination,SN-030,"The system shall upload a completed export to the configured destination and confirm receipt.","Realizes SN-030: the file is useless until it reaches the target.","A completed export reaches the destination and receipt is confirmed; a failed upload is retried and surfaced, never silently dropped.","dest=set{local,s3,sftp}",M,Test,Implemented,,delivery
+```
+
+The boundary between the two is a **contract**, so it is an `IF-###` (process.md
+§8) — which applies *within* a repo just as across repos, the counterpart naming
+the other **module** rather than another repo, both rows in the one
+`interfaces.csv`:
+
+```csv
+IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status
+IF-001,Provides,export,delivery,"Writes an RFC-4180 CSV at the agreed path with the documented schema (per SR-001).",SR-001,v1,Stable,Verified
+IF-002,Consumes,delivery,export,"Reads the export file produced per IF-001 v1 before uploading it.",SR-050,v1,Stable,Verified
+```
+
+And the seam gets its **own** integration TC — covered by neither module's internal
+unit tests — so the boundary is a tested contract, not a gap between two green
+modules (process.md §10). It verifies the consuming SR (`SR-050`, the side that
+relies on the contract; `IF-002` links the interface to that SR, and the TC covers
+the SR):
+
+```csv
+TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
+TC-050,SR-050,Integration,"Run export then delivery end-to-end; assert the delivered file matches the RFC-4180 contract IF-001 publishes, and that a forced upload failure is retried and surfaced",Full,"dest=set{local,s3,sftp}","Satisfies SR-050 AcceptanceCriteria",Yes,Verified
+```
+
+Each module's SRs still decompose into their own `Module`-tagged LLRs as usual (§3;
+omitted here to keep the seam in focus), so `SR-050` carries a `delivery`-module LLR
+just as `SR-001` carries its `export` one. `Tier=Full` keeps the cross-module test
+in the pre-merge suite; the whole-repo `python scripts/trace.py --strict` still
+demands **0 orphans across both modules and the seam**. Filtering the registries by
+`Area` (`export` vs `delivery`) is how each hat reviews its own slice — a reading
+convention over columns that already exist, never a separate per-module gate
+(process.md §10).
+
 ---
 
 ### What to copy from this pattern
@@ -219,3 +266,8 @@ The registry here is just the captured, tracked source of truth.
   work, not a `pass`/`...`/`NotImplementedError` stub that still satisfies its
   trace links. It's an Inspection call; `scripts/check_stubs.py` is the optional,
   warn-first Python tripwire that surfaces candidates (process.md §4).
+- **Several modules share one repo and one spine** (§9) — group each module's rows
+  by `Module`/`Area`, record every internal seam as an `IF-###`, and test it with a
+  dedicated integration TC; the whole-repo trace gate stays the source of truth
+  (process.md §10). Single-module is still the default — scale up only when the
+  scope forces it.

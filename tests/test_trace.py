@@ -199,6 +199,28 @@ def test_lifecycle_column_is_schema_safe(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+AREA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Area
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,math
+"""
+
+
+def test_area_column_is_schema_safe(scaffold):
+    # Multi-module scoping groups a module's rows by the optional `Area` tag on
+    # SR/TC (process.md §10). Like `Lifecycle`, `Area` is an extra column outside
+    # REQUIRED_FIELDS, so a module-tagged registry passes the strictest schema
+    # check with no downstream migration — the precedent that makes module-scoped
+    # review a convention over existing columns rather than new machinery.
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        AREA_SRS, encoding="utf-8"
+    )
+    proc = run_py(
+        ["scripts/trace.py", "--strict", "--strict-schema", "--no-placeholders"],
+        cwd=scaffold,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 def test_require_verified_flags_unverified_test_sr(scaffold):
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
