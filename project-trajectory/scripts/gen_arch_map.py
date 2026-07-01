@@ -485,6 +485,20 @@ def main():
 
     src_roots = args.src or ["src"]
     docs = [Path(d) for d in (args.doc or ["docs/architecture.md"])]
+    # An empty scan is legitimate pre-code, but on a repo whose code lives in
+    # another language the map — and its --check freshness gate — would pass
+    # *vacuously* forever while the docs still promise drift-proofing. Say so
+    # loudly rather than let the guarantee silently lapse (see ADOPTING.md).
+    if not _module_files(src_roots)[0]:
+        print(
+            "gen_arch_map: WARNING - no source scanned under {} — the map is "
+            "empty and --check passes vacuously. If this repo's code is in "
+            "another language, port the generator to it (the marker block is "
+            "the contract) or remove the arch-map step; see ADOPTING.md.".format(
+                ", ".join(str(s) for s in src_roots)
+            ),
+            file=sys.stderr,
+        )
     generated = build_map(src_roots)
     diagram = build_dependency_diagram(src_roots)
     flow = build_flow(src_roots, args.flow) if args.flow else None

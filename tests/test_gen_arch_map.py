@@ -145,3 +145,16 @@ def test_splice_replaces_between_markers():
     assert "old" not in out
     assert "new" in out
     assert out.startswith("intro\n") and out.endswith("outro\n")
+
+
+def test_zero_source_scan_warns_loudly(scaffold):
+    # A repo whose code isn't Python (or has none yet) must not get a silently
+    # vacuous map + freshness gate: the run stays green (pre-code repos are
+    # legitimate) but says on stderr that the guarantee is not in force and
+    # points at the porting contract (ADOPTING.md).
+    from conftest import run_py
+
+    proc = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "no source scanned" in proc.stderr
+    assert "ADOPTING.md" in proc.stderr

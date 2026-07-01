@@ -60,6 +60,9 @@ a real project — or get out of the way.
 - [`project-trajectory/MULTI_REPO.md`](project-trajectory/MULTI_REPO.md) — the
   **design** doc for the rare multi-repo coordinator rung (a reference doc like
   `EXAMPLE.md`, not scaffolded); the heavy cross-repo tooling is deferred.
+- [`project-trajectory/ADOPTING.md`](project-trajectory/ADOPTING.md) — the
+  **retrofit** guide for dropping the kit into an existing (possibly
+  non-Python) repo; a reference doc like `EXAMPLE.md`, not scaffolded.
 - `tests/` — the kit's own pytest suite (meta-repo dev tooling; the stdlib-only
   rule applies to the kit scripts, not to testing them). CI:
   `.github/workflows/test.yml` runs it on Linux + Windows, Python 3.8 + latest.

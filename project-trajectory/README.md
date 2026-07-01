@@ -48,6 +48,7 @@ audits.
 | `ci/check.yml` | Reference GitHub Actions workflow → copy to `.github/workflows/check.yml`. Runs the same `check.py`. |
 | `EXAMPLE.md` | A fully worked SN→SR→LLR→TC chain to copy the pattern from (incl. a multi-module §9 and a multi-repo §10 sketch). |
 | `MULTI_REPO.md` | **Design doc** for the rare multi-repo rung: how the spine extends across separate repos under a coordinator (SR-tier delegation, interface catalog, assemblies-as-config, mechanical gate aggregation). A design — the heavy cross-repo tooling is deferred. Reference doc (like `EXAMPLE.md`); not scaffolded. |
+| `ADOPTING.md` | **Retrofit guide** for dropping the kit into an *existing* repo (code, history, CI, non-Python stacks): resolving bootstrap collisions, rewiring product steps, porting-or-explicitly-dropping the Python-reference generators (never a vacuous pass), and backfilling requirements from the boundary outward. Reference doc; not scaffolded. |
 
 ## How to use
 
@@ -56,7 +57,8 @@ audits.
    preview). This copies the templates into `docs/`, `scripts/`, `AGENTS.md`
    (plus `CLAUDE.md`/`GEMINI.md` stubs), and CI, renaming `*.template.*` to
    working names.
-   *(Manual alternative: copy this folder in and rename by hand.)*
+   *(Manual alternative: copy this folder in and rename by hand. Adopting into
+   an **existing** repo — code, CI, a non-Python stack? See `ADOPTING.md`.)*
    If `python` is absent or Python 2, use `python3` (Linux/macOS) or `py`
    (Windows); the kit needs Python 3.8+.
 2. **Brief:** fill the **PROJECT BRIEF** in the new repo's `AGENTS.md` and
