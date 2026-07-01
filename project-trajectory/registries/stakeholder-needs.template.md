@@ -14,9 +14,10 @@ Priority: **M**=Must · **S**=Should · **C**=Could.
 > optional `Lifecycle` value (process.md §4 "Lifecycle phase").
 >
 > **Consider the cost, not just the behavior.** Where the scope warrants it, also
-> capture **non-functional** needs — performance, memory/size, reliability,
-> security, observability — and route each to its home (process.md §9). It's a
-> prompt, not a mandate: skip the categories the scope doesn't need.
+> capture **non-functional** needs — performance, memory/size, **cost** (unit/BOM,
+> licensing, cloud spend), reliability, security, observability — and route each
+> to its home (process.md §9). It's a prompt, not a mandate: skip the categories
+> the scope doesn't need.
 
 ## Core needs
 

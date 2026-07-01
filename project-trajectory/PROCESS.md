@@ -683,7 +683,13 @@ doesn't need).** At G1, consider which categories apply and route each to a home
   prerequisite for *measuring* any of the budgets below);
 - scalability / capacity; compatibility / interoperability;
 - portability / installability (incl. artifact size); compliance / legal / licensing;
-- safety (cyber-physical); data integrity / durability.
+- safety (cyber-physical); data integrity / durability;
+- **cost / economics** (unit/BOM cost, licensing fees, cloud spend; for hardware
+  scopes also procurement / supply-chain). Note 25010 is a *software-quality*
+  model and omits cost entirely — these systems-engineering categories sit
+  **alongside** it, and a quantitative cost budget is just a `PB-###` row
+  (metric-agnostic: `Metric=Unit BOM cost, Unit=USD, Direction=lower-better`),
+  compared by `check_perf.py` like any RAM budget. No new mechanism.
 
 The kit already covers some — **don't double-prompt**: maintainability (= the core
 discipline), usability (= the end-user lens), basic fault tolerance (= the

@@ -181,13 +181,17 @@ bounds so the separation never loses the thread (process.md §9):
 PB-ID,Metric,Refs,Budget,Unit,Tolerance,Direction,Tier,Gate,Owner,Notes
 PB-001,Peak RAM exporting the largest input,SR-001;LLR-001,512,MiB,10%,lower-better,Release,warn,Integration,"Measured at the 2GiB size boundary that SR-001's Permutations already enumerate."
 PB-002,Model VRAM at inference,SR-030,8,GiB,5%,lower-better,Release,fail,Integration,"GPU module (hypothetical SR-030): a number the author can't invent, so the integrator sets the allocation."
+PB-003,Unit BOM cost of the field sensor,SR-040,12,USD,5%,lower-better,Release,warn,Integration,"Cost is a metric like any other (hypothetical hardware SR-040): ISO 25010 omits it, so §9's checklist prompts for it; same registry, same comparator."
 ```
 
 `PB-001` bounds the *cost* of the CSV export `SR-001` already specifies — same
 feature, different axis — and pins the measurement to a boundary that SR's
 `Permutations` enumerate, so it restates no dimensions. `PB-002` shows a **VRAM**
 budget for a GPU module: a value the module author can't invent, so the integrator
-sets the slice and the module measures against it. `trace.py` checks each row's
+sets the slice and the module measures against it. `PB-003` shows an **economic**
+budget — unit BOM cost for a hardware scope — carried by the same registry and
+comparator with no new mechanism: cost is simply a metric ISO 25010's
+software-quality checklist never prompts for, which is why §9 names it. `trace.py` checks each row's
 `Refs` resolve to a real SR/LLR/Module and that the `PB-` id is well-formed — a
 budget that drifts off a deleted requirement is caught like any orphan. *Comparing*
 the measured numbers against these budgets over time is the harness's job:
