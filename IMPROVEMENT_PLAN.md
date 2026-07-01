@@ -6,7 +6,10 @@ fresh session implements from** — each thread is self-contained with Goal /
 Steps / Tests / Risks / Done-when. Keep it updated as threads land (check items
 off; record deviations).
 
-Branch: `template-review-fixes` (the review fixes are already committed here).
+Branch: the current working branch — `MultiRepoSupport` as of 2026-07-01
+(Threads 0–11 landed on `template-review-fixes`, since merged; keep this line
+current when the working branch changes, or a cold session commits to the
+wrong one).
 
 Guiding constraints (from `CLAUDE.md`): kit scripts stay **stdlib-only, Python
 3.8+, cross-platform**; **dogfood single-source-of-truth** (state a fact once,
@@ -1957,8 +1960,15 @@ after the model questions resolve.
 
 ## Thread 22 — Cost / economic NFRs (broaden the consideration prompt beyond software quality)
 
-**Status: ⏳ queued (light amendment, low priority), added 2026-07-01** from the
-next-considerations scratch batch.
+**Status: ✅ landed 2026-07-01** (Session J, the adversarial-review batch). §9's
+consideration checklist gained a **cost / economics** category (unit/BOM,
+licensing, cloud spend; procurement/supply-chain for hardware scopes) with the
+explicit "25010 is software-quality-only, these sit alongside it" note and the
+"a cost budget is just a `PB-###` row, compared by `check_perf.py` like any RAM
+budget — no new mechanism" routing; `EXAMPLE.md` §8 gained a worked
+unit-BOM-cost `PB-003` row (hypothetical hardware SR-040, `lower-better`,
+`Gate=warn`, `Owner=Integration`); the SN template's NFR prompt now names cost.
+**No deviations.** `pytest -q` (affected files): 11 passed.
 
 **Goal:** make **cost / economic** non-functional attributes (unit / BOM cost,
 licensing, cloud spend) a first-class *consideration* at G1, and make explicit that the
@@ -2035,6 +2045,119 @@ render toolchain (§7): name the pattern, don't ship the engine.
 **Model tier:** decision-first on the strong model + human when revived (the "is a
 manual the right artifact" question is a judgment call); a concrete stdlib scaffolder is
 Sonnet-executable once the contract is locked — the `gen_*` precedent.
+
+---
+
+## Thread 24 — Adoption hardening (hook floor · active gate · SR↔SN rule · interpreter probe)
+
+**Status: ✅ landed 2026-07-01** (Session J). Four fixes from the 2026-07-01
+adversarial review, each **empirically confirmed against a fresh scaffold
+before fixing**:
+
+1. **Pre-commit hook no longer blocks G1-stage commits.** `trace.py` gained
+   `--strict-integrity` (fails *only* on duplicate/malformed ids — the
+   always-valid class); the hook and the optional `agent-hooks/` configs use it
+   instead of `--strict`. Previously the hook wedged every commit from the
+   first real SR until G2 decomposition completed (orphans are a *gate*
+   criterion, not a mid-edit invariant) — the exact "never block a legitimate
+   early-stage commit" promise Thread 0b made and the old wiring broke.
+2. **The active gate is machine-readable and CI honors it.** New
+   `gate.template` → `docs/gate` (bootstrap MAPPING; starts at `G1`);
+   `check.py --gate` now defaults to it (explicit flag wins; garbage in the
+   file fails loudly); `ci/check.yml` passes no gate on push/PR (a release tag
+   still runs the full bar). Previously shipped CI ran G3/`all` from day one —
+   red from bootstrap until deep G3 (verified: 3 failing steps on both
+   triggers), training users to ignore it. Closing a gate = bump `docs/gate`
+   in a reviewed commit (PROCESS.md §4/§7; STATUS template mirrors it).
+3. **New orphan rule:** an SR with an empty `SN-Refs` fails `--strict` whenever
+   the needs registry provides real SN ids — G1's "every SR links ≥1 SN",
+   previously unchecked by machine until G3 `--strict-schema`.
+4. **Interpreter probe:** `hooks/pre-commit` + `setup.sh` now *run* each
+   candidate (`"$cand" -c ""`) instead of trusting `command -v` — the Windows
+   Store `python3` alias exists on PATH but doesn't run.
+
+Also reconciled: KICKOFF_PROMPT drift (stale `STEPS` → `steps()`; G3 gained its
+test-first clause; harness description names doc-navigability + `docs/gate`).
+Tests: hook orphan test rewritten to the integrity contract (+ the G1-stage
+regression case), `--strict-integrity` + SR-no-SN trace tests, `docs/gate` in
+the bootstrap file list, and a gate-file resolution test proving a fresh
+scaffold's default (CI) run is green. **No deviations.**
+
+## Thread 25 — Retrofit path (ADOPTING.md + no vacuous arch-map pass)
+
+**Status: ✅ landed 2026-07-01** (Session J). The kit's quick-start was
+new-repo-shaped; adopting into an **existing** repo (code, history, CI, a
+non-Python stack — the review's target case) was undocumented, and on a
+non-Python repo `gen_arch_map.py --check` passed **vacuously** forever (an
+empty map is always "fresh") while the docs still promised drift-proofing.
+Shipped: **`ADOPTING.md`** (a reference doc like `EXAMPLE.md`, not scaffolded) —
+bootstrap-collision resolution (`.gitignore`/CI/pytest.ini merges; the
+`core.hooksPath`-overrides-existing-hooks caveat), product-step rewiring, the
+**port-or-explicitly-drop** rule for the two Python-reference generators (the
+marker block is the porting contract; never leave a vacuous pass), and
+backfill-from-the-boundary requirements guidance (`docs/gate` starts at G1
+honestly; new work gets the full spine; existing code earns rows when touched).
+`gen_arch_map.py` now **warns on stderr when it scans zero source files**
+(still exit 0 — pre-code repos are legitimate), naming the hazard and pointing
+at ADOPTING.md; test added. Kit README + meta `CLAUDE.md` cross-link it.
+**No deviations.**
+
+## Thread 26 — AGENTS.template.md trim (restore cap headroom, enforce the budget)
+
+**Status: ✅ landed 2026-07-01** (Session J; trimming confirmed with the user
+over the alternative of dropping the cap doctrine). The template sat at
+**11,998/~12,000 chars** while telling downstream users to fill the Project
+section and add rules — any real project busted the Gemini cap on first use,
+contradicting the byte-discipline Sessions A–I maintained. Compressed wording
+(not rules) **11,998 → 9,702 bytes**: every rule and every externally
+referenced heading/bullet kept ("Comment for humans — and the map", "Define
+the interface (contract) at the code", "Right-size the solution", "Working
+agreement", …). The freed budget paid for the pointers late threads skipped:
+`docs/gate` in the harness bullet and the §3 right-sizing-guardrails +
+`SHORTCUT:` pointer in the Right-size bullet. **Creep guard** (the user's
+stated worry): the Customizing note now names the budget ("pay for a new rule
+by tightening another"; keep ≥2k headroom) and a new meta-repo test
+(`test_agents_template_stays_within_size_budget`) fails the suite past
+**10,000 bytes**. **No deviations.**
+
+## Thread 27 — PROCESS.md verbosity squeeze + core/optional split (queued; solo session)
+
+**Status: ⏳ queued 2026-07-01; decisions confirmed with the user.** PROCESS.md
+is ~50KB across 10 sections; the user judged much of the prose "highly
+verbose" and asked to (a) **squeeze the repetition so long as quality doesn't
+suffer**, and (b) **split a core minimum profile from an auxiliary doc
+outlining what is genuinely optional** — resolving the review's "no lite mode"
+finding (today "drop a hat for tiny projects" is the only relief, so every
+small adoption re-derives the judgment).
+
+**Goal:** a shorter PROCESS.md every project reads (the load-bearing core:
+roles, ids, §3 discipline, gates, verdict protocol, harness contract), plus an
+auxiliary reference doc (e.g. `PROCESS_OPTIONS.md`, unscaffolded like
+`EXAMPLE.md` — name in-thread) holding the opt-in layers (phased delivery,
+lifecycle tags, §8 interfaces, §9 NFR/perf budgets, §10 scale ladder, the §7
+boundary notes) each with an "applies-when."
+
+**Steps:** inventory §-by-§ (core vs optional vs restated); squeeze first,
+split second; a **minimum-profile table** ("a small project needs exactly:
+…") near the top of the core doc. **Constraint:** `§N` cross-references
+pervade PROCESS.md, both READMEs, AGENTS/EXAMPLE/MULTI_REPO/ADOPTING, script
+docstrings, and tests — either keep section numbering stable or do a full
+grep-and-reconcile sweep (the Thread 0a technique). `check_docs.py` +
+`pytest -q` are the backstops; scaffolded `docs/process.md` must stay a single
+copied file or `bootstrap.py` MAPPING grows a second entry (decide in-thread).
+
+**Risks:** quality loss from over-compression (the user's explicit caveat —
+prefer keeping a rule's *why* over hitting a size target); dangling `§N` refs;
+downstream churn (pre-adoption, so cheap now — the Thread 7 hinge). **This is
+the wide, context-heavy change the sequencing rule says to solo** — do not
+fold it into another session.
+
+**Done-when:** core PROCESS.md reads in one sitting; the optional layers live
+in the auxiliary doc with applies-when lines; a minimum profile is stated
+once; no dangling §-refs (`check_docs` green); `pytest -q` green.
+
+**Model tier — strong model** (editorial judgment over the kit's canonical
+doc; the same class as Session I).
 
 ---
 
@@ -2178,25 +2301,40 @@ thread's **Model tier** line says where the handoff is safe.
 > the strong model** (Opus) throughout the design; `test_modules_registry.py` (7) is
 > the seam-wiring backstop. `pytest -q`: **124 passed, 1 skipped** (+7).
 
-**Open: all planned sessions (A–I) landed; a small queued thread + stubs remain.**
+**Open: sessions A–J landed; one queued thread + the stubs remain.**
 Threads 0a, 0b, 1–11 landed (on `template-review-fixes`, since merged into the current
 working branch); Session E (12, 13, 15A, 17, 18), Session F (14), Session G (15 Parts
-B/C/D), Session H (19), and Session I (20) landed 2026-06-30 on the current working
-branch. **Remaining (added 2026-07-01):** **Thread 22** (cost/economic NFRs — a small
-queued §9 amendment, schedulable anytime) and the **stubs 16 / 21 / 23** (non-code
+B/C/D), Session H (19), and Session I (20) landed 2026-06-30. **Session J landed
+2026-07-01** (from the same-day adversarial review + user decisions): **Threads 24,
+25, 26, and 22** — one commit per thread on `MultiRepoSupport`. **Remaining:
+Thread 27** (PROCESS.md squeeze + core/optional split — queued, decisions confirmed,
+**solo session on the strong model**) and the **stubs 16 / 21 / 23** (non-code
 artifact verification · cross-repo tooling · publication composition — each its own
-future thread/decision, no session until revived).
+future thread/decision, no session until revived). **Next recommended step after
+Thread 27: pilot the kit on one real repo** (smallest first) and feed the friction
+back as its own thread — the kit has not yet been used in anger, and one pilot
+will teach more than further prose threads.
+
+> **Session J ✅ landed 2026-07-01 · Adversarial-review hardening (Threads 24, 25,
+> 26, 22).** Sourced from a same-session adversarial review of the whole kit
+> (findings verified empirically on a fresh scaffold, then fixed): the pre-commit
+> hook's G1-commit wedge (24.1), day-one-red CI (24.2), the unchecked SR→SN edge
+> (24.3), the Windows Store-alias probe (24.4), the missing retrofit path + the
+> vacuous non-Python arch-map pass (25), the AGENTS.md zero-headroom cap
+> contradiction (26), and the queued cost-NFR amendment (22). `pytest -q` after
+> the batch: **129 passed, 1 skipped** (was 124/1; +5 — gate-file resolution,
+> SR-no-SN orphan, `--strict-integrity`, AGENTS size budget, zero-source
+> arch-map warning; the hook orphan test rewritten to the integrity contract).
 
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
-   Session I all planned sessions (A–I) have landed. What remains is **Thread 22**
-   (cost/economic NFRs — a small, self-contained §9 amendment that can be done in one
-   short pass) and the **stubs** (16 non-code-artifact verification · 21 cross-repo
-   tooling · 23 publication composition), which need a human decision to revive and
-   strong-model *design* work, not mechanical execution. Ask the user which to pick up
-   (and confirm the open decisions each lists) before doing anything — Thread 22 is the
-   one truly ready-to-execute item.
+   Session J (2026-07-01), sessions A–J have landed. What remains is **Thread 27**
+   (PROCESS.md squeeze + core/optional split — decisions confirmed with the user, but
+   a wide, editorial, strong-model solo session) and the **stubs** (16 non-code-artifact
+   verification · 21 cross-repo tooling · 23 publication composition), which need a
+   human decision to revive. Ask the user which to pick up (and confirm the open
+   decisions each lists) before doing anything.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
    own section above is its spec (Goal/Steps/Tests/Risks/Done-when).
 2. **End green:** run `python -m pytest -q` and paste the real output (per
@@ -2206,8 +2344,8 @@ future thread/decision, no session until revived).
 4. **Update this block:** mark the session done (move it out of NEXT) and move the
    **▶ NEXT** marker to the following session. If a decision a thread left open got
    resolved, record it in that thread.
-5. Commit — one commit per session (or per thread); branch is
-   `template-review-fixes`.
+5. Commit — one commit per session (or per thread); branch is whatever the
+   header's **Branch:** line names (keep that line current).
 
 **Why solo the script builds (the "wide change" caution).** Thread 0a alone was a
 wide rename; pairing a context-heavy change with everything else risks exhaustion
