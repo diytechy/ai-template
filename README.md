@@ -112,7 +112,9 @@ same artifacts and run the gates with you.
 > **Onboarding ladder.** A fresh contributor's path mirrors the lifecycle phases
 > one level up — `Stage 0` (get git + the repo) → `dev-setup` (workstation:
 > runtime, git, an offline Mermaid renderer) → `setup` (product toolchain) →
-> `check` (the gates) — each rung optional, readable, and consent-first (see
+> `check` (the gates) — each rung optional, readable, and consent-first. The kit
+> scaffolds a per-platform Stage-0 `onboard` script (with a native folder picker
+> and an AI-agent handoff for non-coders) and a tiered `dev-setup` (see
 > [`PROCESS.md`](project-trajectory/PROCESS.md) §7).
 
 See [`project-trajectory/README.md`](project-trajectory/README.md) for the full

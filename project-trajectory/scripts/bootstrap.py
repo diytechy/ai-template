@@ -28,6 +28,8 @@ What it creates in the destination:
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
+    scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
+    scripts/dev-setup.{sh,ps1}                 <- dev-setup.template.* (workstation setup)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     pytest.ini                                 (test-tier markers)
     .gitignore                                 <- gitignore.template
@@ -80,7 +82,10 @@ MAPPING = [
     ("STATUS.template.md", "docs/status.md"),
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),
-    ("registries/stakeholder-needs.template.md", "docs/requirements/stakeholder-needs.md"),
+    (
+        "registries/stakeholder-needs.template.md",
+        "docs/requirements/stakeholder-needs.md",
+    ),
     (
         "registries/system-requirements.template.csv",
         "docs/requirements/system-requirements.csv",
@@ -108,6 +113,16 @@ MAPPING = [
     ("scripts/setup.ps1", "scripts/setup.ps1"),
     ("scripts/check.sh", "scripts/check.sh"),
     ("scripts/check.ps1", "scripts/check.ps1"),
+    # Onboarding-ladder helpers (Thread 15, process.md §7): a Stage-0 onboarder
+    # (one readable entry point per platform) and the developer-workstation
+    # dev-setup. Optional + consent-first; a project fills the onboarder's clone
+    # URL and dev-setup's EDIT-FOR-YOUR-STACK block, and may serve the onboarder
+    # as a Release asset.
+    ("scripts/onboard.template.sh", "scripts/onboard.sh"),
+    ("scripts/onboard.template.command", "scripts/onboard.command"),
+    ("scripts/onboard.template.cmd", "scripts/onboard.cmd"),
+    ("scripts/dev-setup.template.sh", "scripts/dev-setup.sh"),
+    ("scripts/dev-setup.template.ps1", "scripts/dev-setup.ps1"),
     # Agent-neutral enforcement: one POSIX pre-commit hook (opt-in via
     # `git config core.hooksPath .githooks`, which setup.sh/ps1 set).
     ("hooks/pre-commit", ".githooks/pre-commit"),
@@ -174,9 +189,10 @@ def main():
             continue
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
-        # Keep the .sh launchers and the git hook executable on POSIX (the hook
-        # has no extension; git only runs it if the executable bit is set).
-        if dst.suffix == ".sh" or dst.parent.name == ".githooks":
+        # Keep the .sh/.command launchers and the git hook executable on POSIX
+        # (the hook has no extension; git and Finder only run these if the
+        # executable bit is set — .command is macOS's double-clickable shell).
+        if dst.suffix in (".sh", ".command") or dst.parent.name == ".githooks":
             dst.chmod(dst.stat().st_mode | 0o111)
         created.append(dst_rel)
 

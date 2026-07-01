@@ -1188,8 +1188,8 @@ convention sees real use. Strong model to spec; Sonnet to build against `pytest`
 
 ## Thread 15 — Onboarding & contributor-workspace provisioning (zero-to-running ladder)
 
-**Status: Part A ✅ landed 2026-06-30 (Session E); Parts B/C/D ⏳ queued (Session
-G).** Added 2026-06-30 from the scratch.md "Ensure full provision" notes + the
+**Status: ✅ fully landed — Part A 2026-06-30 (Session E); Parts B/C/D 2026-06-30
+(Session G).** Added 2026-06-30 from the scratch.md "Ensure full provision" notes + the
 start-from-zero / non-code-contributor discussion. **Scope confirmed with the user
 2026-06-30.** **Part A landed:** `PROCESS.md` §7 (right after the existing "Two
 check layers" bullets, before the generate-vs-measure note) gained three new
@@ -1206,11 +1206,38 @@ in **§7** rather than near §1 — the three-layer split is a direct continuati
 opening a new location) keeps the toolchain-layers concept single-homed; (2) no
 `AGENTS.template.md` clause, as the thread itself already calls for ("no AGENTS.md
 clause; a README echo is fine") — consistent with Thread 12/13/17/18's same-cap
-call this session. **Parts B/C/D (the actual `onboard.template.*` /
-`dev-setup.template.*` scripts + bootstrap wiring + meta-repo dogfood) are
-unchanged — still queued for Session G**, a solo, multi-platform build per the
-thread's own sessioning. `pytest -q`: unaffected (prose only; Part A ships no
-script).
+call this session.
+
+**Parts B/C/D ✅ landed 2026-06-30 (Session G).** Shipped the build half.
+**B** — three readable Stage-0 onboarders `onboard.template.{sh,command,cmd}`
+(one double-clickable entry point per platform): consent banner → native folder
+picker (zenity · `osascript 'choose folder'` · PowerShell `FolderBrowserDialog`)
+→ ensure-git (apt/dnf/pacman · brew/xcode-select · winget/choco) → HTTPS clone →
+**end banner naming the checkout dir + the "point an AI agent at this directory"
+handoff** → offers `dev-setup --check`. Each carries a `REPO_URL` EDIT slot the
+project fills; none pipes a remote script to a shell; auth is delegated to the
+host CLI (`gh auth login`) per the decision (no hand-rolled SSH/keys). **C** — the
+tiered `dev-setup.template.{sh,ps1}` with an EDIT-FOR-YOUR-STACK/DOMAIN block:
+`--check` (default; detect+report, installs nothing, always exit 0) · `--baseline`
+· `--full` (opt-in, skipped when headless/non-interactive), and `--profile
+code|domain` (the non-code contributor gets git + offline renderer + a
+project-filled domain viewer). **D** — the meta-repo dogfoods it with a concrete
+root `dev-setup.{sh,ps1}` (python, ruff, pytest, a Mermaid renderer). Wired into
+`bootstrap.py` MAPPING + docstring (and the chmod rule now sets +x on `.command`
+too) and both READMEs. **Deviations:** (1) Part D landed as a **lean concrete**
+script (a report-then-`--install` dogfood), not a full filled copy of the tiered
+template — conservative and readable, avoiding ~100 lines of duplicated tier
+machinery at the meta-repo root while still provisioning this repo and pointing
+back at the template; (2) no `AGENTS.md` clause (the ~12k cap, as in Part A). New
+`tests/test_onboard_devsetup.py` (7 cases: bootstrap file-list, posix exec-bit,
+onboarder end-banner/handoff/clone-URL, dev-setup EDIT/tiers/profiles, an `sh`
+smoke test of `dev-setup --check`, `sh -n` syntax of the onboarder, and the
+meta-repo dogfood). **Model tier:** built on the strong model with the automated
+net at the shell-smoke level the thread specifies; the cross-platform GUI/auth
+paths (folder pickers, winget/brew, `gh`) are **manually verified per OS** — a
+green pytest is not proof the Windows/macOS/auth paths work. `pytest -q`: **116
+passed, 1 skipped** (was 110; +6 run, +1 the posix-only exec-bit check skipped on
+Windows).
 
 **Goal:** make a fresh contributor — including a **non-code** one (art/UI, CAD,
 electronics, publications) whose work still lives as reviewable git changes — go
@@ -1827,7 +1854,7 @@ after the model questions resolve.
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
 **7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
 (2026-06-29); **12 ✅, 13 ✅, 15A ✅, 17 ✅, 18 ✅** (2026-06-30, Session E);
-**14 ✅** (2026-06-30, Session F).
+**14 ✅** (2026-06-30, Session F); **15 B/C/D ✅** (2026-06-30, Session G).
 **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
@@ -1835,7 +1862,7 @@ DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 17 (voice policy + agent-layer carve-out) + 18 (model/agent-tiering discipline)
 from the voice/efficiency discussion; 19 (multi-module scoping) + 20 (multi-repo
 coordinator, design-first) + 21 (cross-repo tooling, a stub) from the multi-repo
-discussion. **▶ NEXT: Session G.** The rule applied
+discussion. **▶ NEXT: Session H.** The rule applied
 throughout: **batch the light, file-coherent threads; keep each new-script build
 solo** — re-establishing context per thread is the cost to avoid, and a
 from-scratch script + test-suite + debug loop is the context-heavy case the "wide
@@ -1908,15 +1935,20 @@ thread's **Model tier** line says where the handoff is safe.
 > Thread 14 Status block for the full deviation list. `pytest -q`: **110 passed**
 > (was 97; +13). No `AGENTS.md` change (the ~12k cap).
 
-> **Session G · Onboarder + dev-setup build (Thread 15 Parts B/C/D).** Solo,
-> **multi-platform, highest-care** of any session: the `onboard.template.*` guided
-> skeleton (consent-first, native folder picker, ensure-git, HTTPS clone, end
-> banner naming the repo dir + agent handoff), the tiered `dev-setup.template.*`
-> with code/domain contributor profiles, bootstrap wiring, and the meta-repo
-> dogfood. **Model tier: strong-model design + manual per-OS verification** (the
-> automated net only reaches a shell smoke test); Sonnet executes the mechanical
-> parts only after the cross-platform/auth/GUI contract is locked. **Thread 16 is a
-> stub — no session until revived.**
+> **Session G ✅ landed 2026-06-30 · Onboarder + dev-setup build (Thread 15 Parts
+> B/C/D).** Solo, multi-platform build. Shipped the `onboard.template.{sh,command,
+> cmd}` guided skeleton (consent banner → native folder picker → ensure-git →
+> HTTPS clone → end banner naming the checkout dir + the agent handoff → offers
+> `dev-setup --check`), the tiered `dev-setup.template.{sh,ps1}` (`--check` default
+> / `--baseline` / `--full`, `--profile code|domain`, EDIT-FOR-YOUR-STACK block),
+> bootstrap MAPPING/docstring wiring (+ `.command` exec bit), both READMEs, and the
+> meta-repo dogfood (concrete root `dev-setup.{sh,ps1}`). New
+> `tests/test_onboard_devsetup.py` (7 cases; `sh` smoke + content assertions).
+> Deviation: Part D is a lean concrete dogfood, not a full filled copy of the
+> template. **Model tier honored:** built on the strong model; the automated net is
+> the shell smoke test only — the cross-platform GUI/auth paths are **manually
+> verified per OS**, so a green pytest is not proof those work. `pytest -q`: **116
+> passed, 1 skipped**. **Thread 16 is a stub — no session until revived.**
 
 > **Session H · Multi-module scoping (Thread 19).** Mostly prose + a light template
 > touch: PROCESS.md single-module default + the single-repo multi-module model
@@ -1934,11 +1966,11 @@ thread's **Model tier** line says where the handoff is safe.
 > heavy tooling routed to the **Thread 21 stub**. **Model tier: strong model +
 > human throughout**; only the locked-contract seam-wiring is Sonnet-able.
 
-**Open: Sessions G (next), H, I.** Threads 0a, 0b, 1–11 landed (on
+**Open: Sessions H (next), I.** Threads 0a, 0b, 1–11 landed (on
 `template-review-fixes`, since merged into the current working branch); Session E
-(12, 13, 15A, 17, 18) and Session F (14) landed 2026-06-30 on the current working
-branch. Threads 15 (Parts B/C/D), 19, 20 await Sessions G–I — **G = the Thread-15
-build, H = multi-module (19), I = multi-repo design (20)**; Threads 16 and 21 are
+(12, 13, 15A, 17, 18), Session F (14), and Session G (15 Parts B/C/D) landed
+2026-06-30 on the current working branch. Threads 19 and 20 await Sessions H–I —
+**H = multi-module (19), I = multi-repo design (20)**; Threads 16 and 21 are
 stubs.
 
 ### Session protocol (for a cold session pointed only at this file)
