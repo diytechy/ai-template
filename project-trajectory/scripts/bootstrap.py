@@ -36,6 +36,7 @@ What it creates in the destination:
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     pytest.ini                                 (test-tier markers)
     .gitignore                                 <- gitignore.template
+    .gitattributes                             <- gitattributes.template (eol=lf hook pin)
     .github/workflows/check.yml                <- ci/check.yml
     src/, tests/                               (empty, with .gitkeep)
 
@@ -76,6 +77,15 @@ cross-repo tooling around it) is a documented concept deferred to the cross-repo
 tooling track, not built into this script — so a project climbing to that rung adds
 those pieces by hand, guided by `MULTI_REPO.md`.
 
+It also writes `docs/kit-version` — the kit commit the scaffold was produced
+from (short SHA + ISO date, or `unknown` when the kit isn't a git checkout). That
+stamp makes staleness *detectable*: a later "re-sync from kit HEAD" is a diff
+between the recorded commit and HEAD, not a guess (ADOPTING.md "Re-syncing an
+existing adoption"). **Sync only from a committed kit state**, never a dirty
+working tree — bootstrap refuses to stamp a real SHA when the kit tree is dirty
+(it writes `<sha>-dirty` and warns) so an adoption can't be pinned to an
+unreproducible mid-edit state.
+
 It then runs `gen_arch_map.py` and `trace.py` once in the new repo so the
 scaffold starts green — `check.py` would otherwise fail on the template
 placeholder between the architecture markers.
@@ -91,6 +101,19 @@ import sys
 from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
+
+
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so the
+    non-ASCII characters in the created-file list / dirty-tree WARNING can't
+    raise UnicodeEncodeError on a legacy Windows cp1252 console. Python 3.7+
+    streams expose `.reconfigure`; guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
 
 # (source relative to KIT, destination relative to --dest)
 MAPPING = [
@@ -158,10 +181,47 @@ MAPPING = [
     ("hooks/pre-commit", ".githooks/pre-commit"),
     ("pytest.ini", "pytest.ini"),
     ("gitignore.template", ".gitignore"),
+    # eol=lf pin for the sh-based git hook (a CRLF shebang breaks it under
+    # Windows autocrlf). Skipped if the repo already has a .gitattributes —
+    # merge the .githooks/pre-commit rule in by hand (ADOPTING.md §1).
+    ("gitattributes.template", ".gitattributes"),
     ("ci/check.yml", ".github/workflows/check.yml"),
 ]
 
 GITKEEP_DIRS = ["src", "tests"]
+
+# Per-destination text fixups applied right after a template is copied: strip the
+# "this is a template, copy me" meta-prose that reads wrong once the file *is* the
+# scaffolded doc. Keyed by destination rel-path; each entry is (old, new). Kept to
+# exact, unique strings so a missed match is a no-op, never a wrong edit.
+TEMPLATE_REWRITES = {
+    "docs/process.md": [
+        ("# Development Process (template)", "# Development Process"),
+        (
+            "Canonical method for a gated, requirement-traced project. Copy this "
+            "into a new\nrepo as `docs/process.md`. It is **stack-agnostic**",
+            "Canonical method for a gated, requirement-traced project. It is "
+            "**stack-agnostic**",
+        ),
+    ],
+}
+
+
+def apply_template_rewrites(dst_rel, dst):
+    """Strip copy-me meta-prose from a freshly written scaffold file (see
+    TEMPLATE_REWRITES). Returns the count of substitutions applied."""
+    edits = TEMPLATE_REWRITES.get(dst_rel)
+    if not edits:
+        return 0
+    text = dst.read_text(encoding="utf-8")
+    applied = 0
+    for old, new in edits:
+        if old in text:
+            text = text.replace(old, new, 1)
+            applied += 1
+    if applied:
+        dst.write_text(text, encoding="utf-8")
+    return applied
 
 
 def initialize_generated_docs(dest):
@@ -182,7 +242,67 @@ def initialize_generated_docs(dest):
             )
 
 
+def kit_version():
+    """The kit's committed identity for the version stamp: (label, dirty).
+
+    `label` is `<short-sha> <ISO-date>` from the kit's git checkout, or
+    `"unknown (kit not a git checkout)"` when git or the kit's history isn't
+    available (a tarball copy). `dirty` is True when the kit working tree has
+    uncommitted changes — the caller warns, because an adoption pinned to a
+    dirty tree can't be reproduced or diffed against later (see module docstring
+    / ADOPTING.md 're-sync only from a committed kit state')."""
+    try:
+        sha = subprocess.run(
+            ["git", "-C", str(KIT), "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+        )
+        if sha.returncode != 0 or not sha.stdout.strip():
+            return "unknown (kit not a git checkout)", False
+        short = sha.stdout.strip()
+        date = subprocess.run(
+            ["git", "-C", str(KIT), "show", "-s", "--format=%cs", "HEAD"],
+            capture_output=True,
+            text=True,
+        )
+        # Dirty = any staged/unstaged change anywhere in the kit checkout. We
+        # stamp a real SHA either way (so the scaffold is never blocked), but
+        # mark it `-dirty` and warn: the honest signal is "unreproducible".
+        status = subprocess.run(
+            ["git", "-C", str(KIT), "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+        )
+        dirty = bool(status.stdout.strip())
+        label = "{}{} {}".format(
+            short, "-dirty" if dirty else "", date.stdout.strip()
+        ).strip()
+        return label, dirty
+    except (OSError, ValueError):
+        return "unknown (kit not a git checkout)", False
+
+
+def write_kit_version(dest, dry_run):
+    """Stamp docs/kit-version with the kit commit the scaffold came from, so a
+    later re-sync is diffable against kit HEAD. Returns (label, dirty, wrote)."""
+    label, dirty = kit_version()
+    body = (
+        "# Kit version stamp — the project-trajectory kit commit this repo was\n"
+        "# scaffolded/re-synced from. Bump it when you re-sync from a *committed*\n"
+        "# kit state (never a dirty tree); the delta to kit HEAD is your re-sync\n"
+        "# diff. See ADOPTING.md 'Re-syncing an existing adoption'.\n"
+        "{}\n".format(label)
+    )
+    target = dest / "docs" / "kit-version"
+    if dry_run:
+        return label, dirty, False
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+    return label, dirty, True
+
+
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -219,6 +339,10 @@ def main():
             continue
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
+        # Strip copy-me template meta-prose (e.g. process.md's "(template)" title
+        # and "Copy this into a new repo as docs/process.md") now that the file
+        # *is* the scaffolded doc.
+        apply_template_rewrites(dst_rel, dst)
         # Keep the .sh/.command launchers and the git hook executable on POSIX
         # (the hook has no extension; git and Finder only run these if the
         # executable bit is set — .command is macOS's double-clickable shell).
@@ -250,6 +374,20 @@ def main():
             len(created), "to create" if args.dry_run else "created", len(skipped)
         )
     )
+
+    # docs/kit-version is a generated stamp, not user content, so it is always
+    # (re)written — unlike the copied templates it is meant to be refreshed on
+    # every scaffold/re-sync to record the kit state this run came from.
+    label, dirty, wrote = write_kit_version(dest, args.dry_run)
+    print("  {}: docs/kit-version ({})".format(verb, label))
+    if dirty:
+        print(
+            "WARNING: the kit working tree is DIRTY — this scaffold is stamped "
+            "{} and cannot be reproduced or cleanly diffed later. Re-sync only "
+            "from a committed kit state (commit the kit, then re-run).".format(label),
+            file=sys.stderr,
+        )
+
     if not args.dry_run:
         initialize_generated_docs(dest)
     if not args.dry_run and created:

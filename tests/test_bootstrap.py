@@ -73,6 +73,36 @@ def test_scaffold_architecture_has_generated_diagram_block(scaffold):
     assert "(no source scanned)" in arch
 
 
+def test_scaffold_stamps_kit_version(scaffold):
+    # docs/kit-version records the kit commit the scaffold came from, so a later
+    # re-sync is a diff against kit HEAD, not a guess (ADOPTING.md §6).
+    stamp = scaffold / "docs" / "kit-version"
+    assert stamp.exists(), "bootstrap must write docs/kit-version"
+    text = stamp.read_text(encoding="utf-8")
+    assert "ADOPTING.md" in text  # points the reader at the re-sync guidance
+    # The last non-comment line is the identity: a short SHA (+ optional -dirty
+    # + date) or the explicit unknown marker for a non-git kit copy.
+    ident = [ln for ln in text.splitlines() if ln and not ln.startswith("#")][-1]
+    assert ident.strip(), "kit-version must carry a non-empty identity line"
+
+
+def test_scaffold_pins_hook_line_endings(scaffold):
+    # The sh-based git hook breaks under Windows autocrlf without an eol=lf pin;
+    # the scaffolded .gitattributes must carry that rule (friction from the pilot).
+    ga = scaffold / ".gitattributes"
+    assert ga.exists(), "bootstrap must scaffold .gitattributes"
+    assert ".githooks/pre-commit text eol=lf" in ga.read_text(encoding="utf-8")
+
+
+def test_scaffolded_process_doc_drops_template_meta_prose(scaffold):
+    # Once copied, docs/process.md *is* the process doc — the "(template)" title
+    # and "Copy this into a new repo" meta-prose read wrong and are stripped.
+    proc = (scaffold / "docs" / "process.md").read_text(encoding="utf-8")
+    assert "# Development Process" in proc
+    assert "(template)" not in proc.splitlines()[0]
+    assert "Copy this into a new" not in proc
+
+
 def test_dry_run_writes_nothing(tmp_path):
     proc = run_py(
         [SCRIPTS / "bootstrap.py", "--dest", tmp_path / "repo", "--dry-run"],
