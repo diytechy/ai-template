@@ -216,6 +216,22 @@ range to see exactly which templates/scripts changed before you touch anything.
   cases `Release` so they don't run on unattended CI. Once the column is
   present, `trace.py --strict-schema` will also validate that values are in
   `{Smoke, Full, Release}`, so tighten any free-text entries at the same time.
+- **`Attest` verification kind + binary-asset registry (creative / subjective
+  scopes).** Newer kits add the **`Attest`** `Verification` method (a named
+  human's recorded judgment — playtest, creative review, physical action — for
+  what can't be mechanized) and an optional **`assets.csv`** registry
+  (`ASSET-###`) for unavoidably-binary deliverables. To adopt: overwrite
+  `scripts/trace.py` (it now accepts `Attest` in the vocabulary and reports the
+  "attested vs mechanized" split) and drop in `registries/assets.template.csv →
+  docs/requirements/assets.csv`. Retag any SR you were faking as `Test`/`Manual`
+  but that really rests on human judgment to `Verification=Attest`, and record
+  **who/when** in its TC cell. For binary deliverables (art, music, voice, video):
+  manage them as **git-LFS or out-of-repo pointers** and record provenance
+  (human/AI — for Steam-style AI-content disclosure), license, attribution, and
+  the contract/release link as `ASSET-###` rows — track *about* the asset in text
+  even though the asset itself can't be diffed. Both are opt-in; a scope with no
+  subjective/binary work ignores them (process-options.md "Proportionality
+  doctrine" + "Binary assets").
 
 ### Repos whose `AGENTS.md` already means something else
 

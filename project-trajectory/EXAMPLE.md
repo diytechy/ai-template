@@ -156,7 +156,8 @@ that writes only the failover SR has silently skipped two:
 Each is a real SR with its own LLR + TC; tagging them by lifecycle is what makes
 the missing Provision/Startup rows obvious at G1. The failover *logic* is still
 real code, so `SR-101` keeps an LLR (`LLR-101 reconnect/promote-on-primary-loss`,
-owned by the same hat) — only `Analysis`/`Inspection` SRs skip the LLR. The TC
+owned by the same hat) — only `Analysis`/`Inspection`/`Attest` SRs skip the LLR
+(§7.1 shows an `Attest` one). The TC
 records the **procedure**, not an assertion, and is `Automated=No`, so the release
 checklist (`gen_release_checklist.py`) finds it:
 
@@ -169,6 +170,39 @@ TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a 
 pre-merge runs; it executes at `G-Release`, where the human signs the generated
 checklist. Same registries, same traceability join, same gates — only the
 verification method, the owning hat, and the `Area` tag change.
+
+### 7.1 The honest floor — an `Attest` requirement (human judgment, not a check)
+
+Some acceptance criteria can't be mechanized *at all* — a subjective, mostly
+binary asset judged by a person: does this cutscene land emotionally, does the
+main theme fit the game's mood, did the voice actor deliver the line. For these
+the honest verification method is **`Attest`**: a **named human's recorded
+judgment** (process.md §4 "Verification methods" + the Proportionality doctrine).
+It is trust-based — the box can be checked without the work having happened — so
+the process makes the attestation *explicit, named, and auditable* rather than
+pretending it's a check. An `Attest` SR is **LLR-exempt** (there's no code symbol
+to decompose — the deliverable is the asset itself), but like every SR it still
+needs ≥1 TC, whose cell records **who attested and when**:
+
+```csv
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
+SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Attest,Verified,,Audio
+```
+
+```csv
+TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
+TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"attested-by=A. Rivera (creative lead); attested-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,Verified
+```
+
+`trace.py` accepts `SR-201` as legitimately `Verified` but reports it under
+**"Verification basis (attested vs mechanized)"** — so an audit always sees how
+much of the project rests on trust versus a runnable check. Note the spine here
+stays at **high altitude**: `SN-040 → SR-201` ensures the theme's mood isn't
+missed or silently broken, and it deliberately *doesn't* decompose "is it
+moving?" into finer rows a script still couldn't verify (the doctrine's
+creative-domain stance, process-options.md "Proportionality doctrine"). The
+binary track itself is managed as a pointer + manifest with its provenance and
+license tracked in text (process.md §8 "Binary assets"; §8.1 below).
 
 ## 8. A non-functional budget — `requirements/performance-budgets.csv`
 

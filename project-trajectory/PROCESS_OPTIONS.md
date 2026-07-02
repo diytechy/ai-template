@@ -249,6 +249,64 @@ that buys nothing ignores the file; a leftover `PART-000` never blocks a gate.
   logic — is **explicitly deferred**; add it only when a project demonstrably
   needs it, extending this registry rather than replacing it.
 
+## Binary assets
+
+*Referenced from PROCESS.md §8 "Binary assets".* **Applies when** a project ships
+unavoidably-binary deliverables — game art, music, voice acting, video, rendered
+CAD, publication artwork — the kind of asset that can't be line-diffed or
+mechanically verified.
+
+This is the Proportionality doctrine's *"track about the asset in text"* stance
+(this file, "Proportionality doctrine" (a)) made operational. The asset itself is
+binary; the **record of it** is text, tracked, and reviewable.
+
+- **Manage the binary as a pointer + manifest, not as a blob in the tree.** Store
+  the asset in **git-LFS** or an **out-of-repo store** (an object store, an asset
+  server) and keep, in the repo, a **manifest row** that points at it and pins its
+  identity: the optional `requirements/assets.csv` registry (`ASSET-###`). This
+  keeps the git history diffable and the checkout small while the manifest stays
+  the change-tracked source of truth *about* every asset.
+- **Columns (what to track *about* an un-diffable asset).** `ASSET-ID, Name,
+  Refs, Kind, Provenance, License, Attribution, ContractRef, Location, Hash,
+  Version, Notes`. The load-bearing ones:
+  - **`Provenance`** = `human-made | ai-generated | mixed`. Real-world driver:
+    distribution platforms (e.g. **Steam**) require **AI-content disclosure**, so
+    the provenance of every shipped asset must be recordable and auditable, not
+    guessed at release time.
+  - **`License`** (SPDX id or `proprietary`) and **`Attribution`** (any required
+    credit line) — so a licence obligation can't be lost between acquisition and
+    ship.
+  - **`ContractRef`** links the **voice-actor release** or **commissioned-work
+    agreement** that grants the right to ship the asset — the paperwork a purely
+    binary asset would otherwise carry no trace of.
+  - **`Location`** is the **pointer** (git-LFS path or store URL); **`Hash`**
+    (e.g. `sha256:…`) + **`Version`** make that pointer **verifiable** — you can
+    confirm the bytes on the store match the row even though you can't diff them.
+  - **`Refs`** back-link the SR/LLR the asset realizes, keeping it on the spine's
+    high-altitude thread (usually an `Attest` SR — this file, "Proportionality
+    doctrine" (d)); `trace.py` integrity-checks the `ASSET-` id only, off-spine
+    like `PART-###`.
+- **Registry choice — a sibling registry, not a widened `procurement.csv`.**
+  Procurement (`PART-###`) tracks parts the project **buys** (owner-of-record is
+  an `IF-###` interface row; columns are vendor/cost/status/quantity). A created
+  or commissioned **digital asset** is a different concern — license, provenance,
+  release paperwork — so it gets its own minimal registry rather than overloading
+  procurement's columns with fields that don't apply to a motor, or forcing an
+  asset row to fake a vendor/cost. Same off-spine, integrity-only, optional
+  pattern; different subject.
+- **Deferred product-layer idea — the "asset manifest freshness check."** A
+  natural next step is a tool that verifies each `ASSET-###` row against its store
+  — the pointer resolves, the `Hash` still matches, no manifest row is orphaned
+  from its file and no shipped file is missing a row. This is a **product-layer,
+  project-owned** check (it must reach a git-LFS or object store — outside the
+  kit's stdlib, offline, no-network line), named here and **deliberately
+  deferred**, in the **same family as the Thread-16 CAD/non-code-artifact
+  verification stub** (render-on-change, visual diff, design-rule checks): the kit
+  **names and routes** these, the project **wires** them, the gate **records** the
+  verification (the meters-vs-comparator split, PROCESS.md §9). Until then the
+  manifest is the honest, text-tracked record — an ideal reached for, not a check
+  faked.
+
 ## §9 NFR checklist
 
 *Referenced from PROCESS.md §9.* **Applies when** deciding which non-functional

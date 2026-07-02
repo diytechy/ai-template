@@ -340,14 +340,23 @@ rule, and the config-straddles-Provision↔Startup guidance are in
 
 **Verification methods:** `Test` (automated) · `Demonstration` (run + observe,
 e.g. a GUI or a real device) · `Manual` (human procedure) · `Analysis` ·
-`Inspection`. Pick the cheapest method that actually establishes the criterion;
-don't claim `Test` for something only a human can confirm. The method drives
-what `trace.py` requires: only `Analysis`/`Inspection` SRs are exempt from the
-LLR requirement (they have no code to decompose; `Demonstration`/`Manual` SRs
-still describe implemented behavior, so they keep it), and **every SR needs ≥1
-TC row regardless of method** — for human methods the TC records the procedure
-(`Automated=No`, usually `Tier=Release`), which is how the release checklist
-finds it.
+`Inspection` · `Attest`. Pick the cheapest method that actually establishes the
+criterion; don't claim `Test` for something only a human can confirm.
+**`Attest`** is the honest floor for what can't be mechanized at all (a
+playtest, a creative review, a physical action): a **named human's recorded
+judgment** that the criterion is met. It is **trust-based — the box can be
+checked without the work having happened** (the Proportionality doctrine header);
+the process's job is to make it explicit, named, and auditable, not to pass it
+off as a check. The attesting TC records **who** attested and **when** (in its
+`Parameters`/`Expected` cell, `Automated=No`); `trace.py` accepts an `Attest` SR
+as legitimately Verified **and** reports it under "attested vs mechanized" so an
+audit sees the trust footprint. The method drives what `trace.py` requires: only
+`Analysis`/`Inspection`/`Attest` SRs are exempt from the LLR requirement (they
+have no code to decompose — `Attest` typically covers a subjective/binary asset
+with no code symbol; `Demonstration`/`Manual` SRs still describe implemented
+behavior, so they keep it), and **every SR needs ≥1 TC row regardless of
+method** — for human methods the TC records the procedure (`Automated=No`,
+usually `Tier=Release`), which is how the release checklist finds it.
 
 **Test tiers (run cost vs. confidence).** Running the whole suite every iteration
 gets untenable as a project grows (and CI has time/quota limits), so each
@@ -625,6 +634,17 @@ owner-of-record (MULTI_REPO.md §3.3) — with acquisition facts (vendor, cost,
 status, quantity) in the optional `requirements/procurement.csv` (`PART-###`).
 Minimal by design; full BOM tracking is deferred. See
 [`process-options.md`](process-options.md#8-purchased-parts).
+
+**Binary assets — track *about* the asset in text.** *(opt-in)* When a
+deliverable is unavoidably binary (art, music, voice acting, video), you can't
+diff the asset — but you can, and must, change-track the **facts about it**: its
+**provenance** (human-made / AI-generated / mixed — distribution platforms like
+Steam require AI-content disclosure), **license**, required **attribution**, a
+**contract/release link** (voice-actor release, commission agreement), and a
+**pointer + hash** to the asset in a git-LFS or out-of-repo store. That is the
+optional `requirements/assets.csv` (`ASSET-###`, integrity-checked like
+`PART-###`) — the ideal-not-requirement stance (header) made concrete. See
+[`process-options.md`](process-options.md#binary-assets).
 
 ## 9. Non-functional requirements & performance budgets *(opt-in)*
 

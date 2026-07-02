@@ -27,6 +27,7 @@ What it creates in the destination:
     docs/requirements/interfaces.csv           <- registries/interfaces.template.csv
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
+    docs/requirements/assets.csv               <- registries/assets.template.csv
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py
@@ -67,6 +68,13 @@ names the interface row that is its owner-of-record (MULTI_REPO.md §3.3). Its
 `trace.py` integrity-checks the `PART-` ids (it does not resolve `IF-Ref`, which
 points at the off-spine `IF-###` tier trace.py never reads). Full BOM tracking is
 a deferred extension.
+
+`docs/requirements/assets.csv` (ASSET-###, process-options.md "Binary assets")
+is the same kind of optional, always-scaffolded registry, for unavoidably-binary
+assets (art, music, voice, video) whose provenance/license/attribution/contract
+and a pointer+hash are tracked in text even though the asset itself can't be
+diffed. Its `ASSET-000` placeholder is inert; a project with no binary assets
+leaves it untouched. `trace.py` integrity-checks the `ASSET-` ids only.
 
 This scaffolds a **single-repo** project — the default and almost-always-right
 rung of the scale ladder (process.md §10). The rare multi-repo **coordinator** rung
@@ -151,6 +159,10 @@ MAPPING = [
     (
         "registries/procurement.template.csv",
         "docs/requirements/procurement.csv",
+    ),
+    (
+        "registries/assets.template.csv",
+        "docs/requirements/assets.csv",
     ),
     ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
     ("scripts/trace.py", "scripts/trace.py"),

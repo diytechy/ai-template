@@ -151,6 +151,80 @@ def test_check_py_passes_phase_to_trace():
     assert "--phase" not in trace_cmd
 
 
+# --- WI-1.7: human-attestation verification kind (Attest) ---------------------
+
+# An Attest SR: a named human's recorded judgment, no code to decompose (so
+# LLR-exempt), but it still needs a TC that records who/when attested.
+ATTEST_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
+SR-002,Theme mood fit,SN-001,"The main theme shall match the mood brief.","Subjective; no automated check.","Creative lead records pass against the brief.",,H,Attest,Verified
+"""
+
+ATTEST_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
+TC-002,SR-002,System,creative review of the theme,Release,"attested-by=A. Rivera; attested-on=2026-07-02","Recorded pass judgment for SR-002",No,Verified
+"""
+
+
+def make_attest_project(scaffold):
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "system-requirements.csv").write_text(ATTEST_SRS, encoding="utf-8")
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(
+        ATTEST_TCS, encoding="utf-8"
+    )
+
+
+def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
+    # SR-002 (Attest) has no LLR yet is not an orphan; it still needs its TC.
+    make_attest_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-002 has no LLR" not in report
+    # Drop its TC -> now it is an orphan (every SR needs >=1 TC regardless of method).
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(
+        ATTEST_TCS.replace(
+            'TC-002,SR-002,System,creative review of the theme,Release,'
+            '"attested-by=A. Rivera; attested-on=2026-07-02",'
+            '"Recorded pass judgment for SR-002",No,Verified\n',
+            "",
+        ),
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-002 has no test (TC)" in report
+
+
+def test_attest_verified_accepted_and_surfaced_distinctly(scaffold):
+    # Under --require-verified (G3), an Attest SR marked Verified passes, and the
+    # report surfaces it under "attested vs mechanized" so the trust footprint is
+    # auditable.
+    make_attest_project(scaffold)
+    proc = run_py(
+        ["scripts/trace.py", "--strict", "--require-verified", "--strict-schema"],
+        cwd=scaffold,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "verified-attested=1" in proc.stdout
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "Verification basis (attested vs mechanized)" in report
+    assert "Attested (Attest): 1 — SR-002" in report
+    assert "Verified SRs — attested (human, §4) | 1 |" in report
+    assert "Verified SRs — mechanized | 1 |" in report
+
+
+def test_attest_is_in_verification_vocabulary(scaffold):
+    # --strict-schema must accept Attest (not reject it as out-of-vocabulary).
+    make_attest_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR-002 has Verification=" not in report  # no enum-violation finding
+
+
 # --- Thread 1: generated traceability views (outline + Mermaid + HTML) ---------
 
 
