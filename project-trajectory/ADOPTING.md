@@ -19,7 +19,18 @@ reported as `skipped (exists)` — resolve each by hand:
 
 - **`.gitignore`** — skipped if present; merge `gitignore.template`'s entries in
   (the generated composites under `docs/test/` must be ignored, or they churn
-  every diff).
+  every diff — `report.md`/`report.html`, `perf-report.md`, `perf-metrics.json`,
+  `stub-report.md`). If you'd rather *keep* a composite tracked, drop its ignore
+  line and tell `check_docs.py` to skip it as a scanned doc with
+  `--ignore docs/test/report.md` (repeatable) so it isn't flagged as an orphan.
+- **`.gitattributes`** — skipped if present; merge in the one load-bearing rule
+  `.githooks/pre-commit text eol=lf`. Without it a Windows clone with
+  `core.autocrlf=true` rewrites the extensionless sh hook to CRLF and its
+  `#!/bin/sh` shebang breaks (the pilot hit this). `gitattributes.template` also
+  pins `*.sh`/`*.command` to LF and `*.ps1`/`*.cmd`/`*.bat` to CRLF.
+- **`docs/kit-version`** — always (re)written, not skipped: it stamps the kit
+  commit this scaffold/re-sync came from (see "Re-syncing" below). Commit it, so
+  the next re-sync is a diff, not a guess.
 - **`.github/workflows/check.yml`** — if you have CI already, add the
   `check.py` invocation to it instead of adopting the reference workflow
   wholesale. Keep one definition of "passing": CI runs the same command you run
@@ -66,11 +77,38 @@ Two shipped scripts parse **Python source specifically**:
      task over the AST) writing into the **same marker block**
      (`<!-- BEGIN/END GENERATED MODULE MAP -->` etc.) — the marker block is
      the whole contract; `--check`-style freshness is a string comparison.
+     **PowerShell repos start from the shipped port:** copy
+     `scripts/gen_arch_map.reference.ps1` to `scripts/gen_arch_map.ps1`, edit
+     its `$ModuleGlob` / `$EntryScripts` / `-Flow` default, and drive it with
+     `-Check`. It fills the same three marker blocks from the PowerShell AST, so
+     the pre-commit hook and CI treat it exactly like the Python one. (The
+     kit's `hooks/pre-commit` carries the `gen_arch_map.py --check` line as an
+     **EDIT marker** naming the `pwsh … gen_arch_map.ps1 -Check` swap.)
   2. **Remove the `arch-map` step** from `check.py` and delete the generated
      markers from `architecture.md`, keeping the hand-written overview. Honest,
      just weaker: record the loss in `docs/status.md` constraints.
 - **`check_stubs.py`** is Python-only and already optional/product-layer: swap
   it for your language's equivalent or ignore it.
+- **`check_flows.py`** (the authored "Runtime flows" section, required from G2)
+  reads only the doc and the registries, so it ports as-is — but the diagrams it
+  checks are hand-written. Retrofit it the same three ways you handle any
+  generated block you can't yet fill (mirror the `gen_arch_map` choice above):
+  **author** the section (write the sequence diagrams for the key scenarios and
+  cite their SR/LLR ids), **retitle-and-cite** an equivalent section you already
+  have, or **drop** the flows step from `check.py` and record that in
+  `docs/status.md` constraints. Don't leave the template's `-000` placeholder
+  flow citing example ids — `--no-placeholders` (wired from G2) will flag it.
+
+### Which command is "passing" on a non-Python repo
+
+There is **one** definition of passing, and CI must run it too. On a PowerShell
+repo that is **`scripts/check.ps1`** (the launcher that runs lint + tests +
+`trace.py` + the PowerShell arch-map freshness) — *not* `check.py`, which drives
+the Python toolchain. Wire `.github/workflows/` to invoke the same `check.ps1`
+so local and CI agree (the FileBackup pilot's canonical gate is `check.ps1`; its
+`check.py` is a thin optional shim, not the source of truth). Whatever you pick,
+state it in `AGENTS.md`/`CLAUDE.md` so an agent runs the real gate, not a
+half-gate.
 
 ## 4. Backfill requirements from the boundary, not wholesale
 
@@ -101,3 +139,86 @@ python scripts/trace.py            # writes docs/test/report.md
 The G1 bar is deliberately small (doc navigability). Bump `docs/gate` in a
 reviewed commit as each gate's criteria are genuinely met — CI reads it and
 raises the bar with you (process.md §7 "The active gate").
+
+## 6. Re-syncing an existing adoption (picking up kit updates)
+
+A repo that adopted the kit months ago will drift behind it: new scripts, renamed
+tiers, split docs. Re-syncing is *not* a fresh bootstrap — you must merge kit
+changes into files you've filled in. Do it deliberately.
+
+**Sync only from a committed kit state — never a dirty kit working tree.** Pin
+the re-sync to a specific kit commit and let the tooling stamp it: `bootstrap.py`
+writes `docs/kit-version` (the kit's short SHA + date) and **warns + marks the
+stamp `-dirty`** if the kit tree has uncommitted changes. A dirty stamp is
+unreproducible and can't be diffed later, so commit the kit first. (The pilot's
+kit HEAD moved twice mid-adoption; the stamp is what makes "which kit is this
+repo on?" answerable at all.) With it, a re-sync is a **diff**: compare the SHA
+in your `docs/kit-version` against the kit commit you're moving to, and read that
+range to see exactly which templates/scripts changed before you touch anything.
+
+### What to overwrite vs preserve
+
+- **Overwrite freely (kit-owned, you don't hand-edit these):** the process
+  scripts under `scripts/` (`trace.py`, `check_docs.py`, `check_flows.py`,
+  `check_perf.py`, `gen_arch_map.py`, `gen_*`), `docs/process.md` +
+  `docs/process-options.md`, the pre-commit hook, `pytest.ini` markers. Take the
+  new versions wholesale, then re-apply your local edits — for `check.py` that's
+  only the marked **"EDIT FOR YOUR STACK"** block (`SRC`/`TESTS`, the product
+  step commands). Diff before committing so a kit change to a step you dropped
+  doesn't silently reappear.
+- **Preserve always (yours, kit only seeds them):** every registry CSV and
+  `stakeholder-needs.md`, `docs/status.md`, `docs/architecture.md`'s hand-written
+  overview (regenerate only the marker blocks), `AGENTS.md` project content,
+  `docs/gate`, `.gitignore`/`.gitattributes` (merge new kit lines in by hand).
+  `bootstrap.py` **skips existing files**, so a plain re-run won't clobber these —
+  but don't run it with `--force` against a live repo without a diff pass.
+- **Re-stamp `docs/kit-version`** and commit it as the last step, so the record
+  reflects the state you actually landed on.
+
+### Migration recipes for specific kit changes
+
+- **`process.md` → `process.md` + `process-options.md` split.** Newer kits moved
+  the opt-in layers (phased delivery, lifecycle tags, §8/§9 boundary notes, the
+  multi-repo rung) out of `process.md` into a companion `process-options.md`,
+  keeping `§`-numbering stable. To migrate: drop in **both** new files; anything
+  your repo added *inside* the old monolith (rare — it's kit-owned) moves to
+  whichever file now owns that section. Fix references: a link to
+  `process.md#section-9` may now point into `process-options.md`. Run
+  `check_docs.py` — it fails on exactly these broken intra-repo links.
+- **UN → SN id-tier rename (User Need → Stakeholder Need).** The top tier was
+  renamed. **Keep the id *numbers* — only the prefix changes** (`UN-014` →
+  `SN-014`); renumbering would break every back-link. Recipe: rename the file
+  reference and the prefix in `stakeholder-needs.md` and every `SN-Refs`/`UN-Refs`
+  cell across the SR registry, then rerun `trace.py --strict` (it validates the
+  SN↔SR join and will flag any missed `UN-###`). **Do *not* rewrite audit-log /
+  status.md evidence quotes** that say "UN-014" — those are a historical record
+  of what was decided at the time; rewriting history to match a later rename is
+  dishonest. Leave them, optionally with a one-line "(UN-### = today's SN-###
+  after the Session-K rename)" note where confusion is likely.
+  - *Tooling latitude:* `trace.py` intentionally does **not** accept legacy
+    `UN-Refs` — a lingering `UN-` after you claim the rename is done is a real
+    orphan you want surfaced, not silently bridged, and the migration is a
+    one-time find-replace, not an ongoing compatibility burden. If your repo is
+    mid-rename and wants a transitional deprecation warning, that's a *local*
+    patch to your copy of `trace.py`, not something the kit ships. (Docs-only
+    call, deliberate: a permanent alias would let the old prefix live forever.)
+
+### Repos whose `AGENTS.md` already means something else
+
+The kit's model is **`AGENTS.md` = the agent guide** (with thin `CLAUDE.md`/
+`GEMINI.md` stubs pointing at it). Some repos already use `AGENTS.md` as their
+**project encyclopedia** — the single source for architecture, invariants, and
+history — with `CLAUDE.md` as the thin agent guide. That's the **inverse** of the
+kit layout (the FileBackup pilot is exactly this case), and it's fine: the kit
+cares that *one* file is the durable source of truth and the others point at it,
+not which filename plays which role. When re-syncing such a repo:
+
+- **Don't let bootstrap overwrite your `AGENTS.md`** with the kit's guide
+  template — it's skipped as an existing file, but never `--force` it here.
+- Put the kit's **agent-guide content** (the working agreement, the "how we work"
+  rules, the generated code-map routing) wherever your agent guide actually lives
+  — for the inverse layout that's `CLAUDE.md`. Route `gen_arch_map`'s `--doc`
+  there (and/or into `architecture.md`), not blindly into `AGENTS.md`.
+- Keep the pointer discipline: whichever file is the encyclopedia, the others say
+  "defer to it, don't duplicate." State the mapping once at the top of each file
+  so an agent isn't guessing which `AGENTS.md` convention this repo follows.
