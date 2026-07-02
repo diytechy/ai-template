@@ -1393,6 +1393,17 @@ verdict (Demonstration, not Test).
 **Model tier:** spec on the strong model when revived (a methodology-extension
 decision); any concrete renderer/diff helper is product-layer and project-owned.
 
+**Update (WI-1.7, 2026-07-02):** partially advanced. WI-1.7 landed the
+**`Attest`** verification kind (a named human's recorded judgment — the honest TC
+verdict this stub asked about, made a first-class method) and the `ASSET-###`
+binary-asset provenance registry (tracks provenance/license/hash *about* the
+un-diffable asset in text — the "review the source is binary" open question,
+resolved by reviewing the *record* instead). The **"asset manifest freshness
+check"** (verify each ASSET row against its store) is named as a **deferred
+product-layer idea in this stub's family** (process-options.md "Binary assets").
+Still open: render-on-change / visual-diff / design-rule tooling and the
+gitignored "render report" review surface.
+
 ---
 
 ## Thread 17 — Voice policy + the agent-layer carve-out
@@ -2536,6 +2547,65 @@ continuity (same style as the session log above).
 > **untouched** (9988/10000); `PROCESS.md` **untouched**. `pytest -q`: **137
 > passed, 1 skipped** (unchanged — new assertions added inside the existing
 > `test_step_plan_wiring` function, not as a separate test).
+
+> **WI-1.7 ✅ landed 2026-07-02 · Proportionality doctrine + human-attestation
+> (`Attest`) + binary-asset provenance registry.** Owner-directed
+> (2026-07-02), prompted by planning a creative project (video game: story,
+> music, artwork, voice acting — mostly binary, mostly subjectively verified).
+> Owner's spec: change-trackable assets are an **ideal, not a requirement**;
+> where verification can't be mechanized the honest floor is a recorded human
+> attestation (trust-based — the box can be checked without the work having
+> happened); over-aggressive traceability is itself a failure mode; and for
+> creative/subjective domains the SN→SR→LLR→TC spine's value is at **high
+> altitude** (ensure nothing key is missed/broken), not fine-grained
+> decomposition of subjective work. Three logical commits:
+> 1. **Proportionality doctrine.** Tight core statement in `PROCESS.md` next to
+>    the minimum-profile paragraph (a/b: ideal-not-requirement; attestation is
+>    the honest, trust-based floor) + (c/d) woven into the §3 "Right-sizing"
+>    block as one voice (over-aggressive traceability is a failure mode;
+>    creative domains fly high, descend to LLR/TC only where a mechanized check
+>    earns its keep). Full four-point doctrine in `PROCESS_OPTIONS.md`
+>    ("Proportionality doctrine", applies-always).
+> 2. **`Attest` verification kind.** Added to the closed `Verification`
+>    vocabulary (`trace.py` `ENUM_FIELDS`): a named human's recorded judgment,
+>    not a runnable check. LLR-exempt like Analysis/Inspection (subjective/binary
+>    asset, no code symbol) but keeps the ≥1-TC rule; the TC records who/when
+>    (`Parameters`/`Expected` cell — no schema-breaking new column). `trace.py`
+>    accepts an `Attest` SR as legitimately Verified **and** always reports a
+>    **"Verification basis (attested vs mechanized)"** count + section so an audit
+>    sees the trust footprint. `PROCESS.md` §4 vocabulary expanded; `EXAMPLE.md`
+>    §7.1 shows a worked attested row (game main-theme mood-fit). 3 new trace
+>    tests.
+> 3. **Binary-asset / provenance registry.** New **sibling** registry
+>    `registries/assets.template.csv` (`ASSET-###`) — *not* a widened
+>    `procurement.csv` (procurement = parts you **buy**, owner-of-record an
+>    `IF-###`; assets = created/commissioned digital work with license /
+>    provenance / release paperwork — different subject, would force irrelevant
+>    columns on both). Columns: license, attribution, provenance
+>    (human-made/ai-generated/mixed — real driver: Steam-style AI-content
+>    disclosure), contract/release link, + `Location` pointer/`Hash`/`Version`.
+>    `trace.py` integrity-checks the `ASSET-` id only (off-spine like PART);
+>    bootstrap scaffolds it inert; `PROCESS.md` §8 tight "Binary assets" note +
+>    `PROCESS_OPTIONS.md` "Binary assets" expansion (git-LFS/manifest pointer
+>    model; the **"asset manifest freshness check"** named as a deferred
+>    product-layer idea in the **Thread-16 CAD-stub family**); README row;
+>    `ADOPTING.md` §6 migration recipe. 4 new asset tests.
+>
+> **Tension (doctrine 1 "don't over-constrain" vs. deliverables 2/3 adding
+> machinery), and how resolved:** both new mechanisms are **opt-in and honesty-
+> increasing, not constraint-increasing.** `Attest` doesn't *demand* more
+> decomposition — it gives subjective work an honest home so it **isn't** faked
+> into a `Test`, and it is LLR-exempt (fewer required rows, not more). The asset
+> registry is off-spine, integrity-only, and inert until used. Neither raises the
+> gate bar for a project that doesn't need them; both make the *existing* floor
+> more truthful. The doctrine itself is the guardrail that says when to stop
+> descending — so 2/3 are the doctrine applied, not a contradiction of it.
+> **Byte deltas:** `PROCESS.md` **+3,277** (43,883→47,160 — a genuine new
+> verification kind + doctrine, every clause normative); `PROCESS_OPTIONS.md`
+> **+7,086** (18,458→25,544, the two expansions, per the squeeze); `ADOPTING.md`
+> +1,214; `EXAMPLE.md` +2,432; **`AGENTS.template.md` untouched (9,988/10,000 —
+> 12 B headroom preserved).** `pytest -q`: **144 passed, 1 skipped** (was 137/1;
+> +3 Attest + 4 asset tests). `check_docs` green on repo + fresh scaffold.
 
 ### Session protocol (for a cold session pointed only at this file)
 
