@@ -2452,6 +2452,63 @@ teach more than further prose threads.
 > is scratch" + promote-rule pointer); file now 9,988/10,000 bytes. No deviations.
 > `pytest -q`: **129 passed, 1 skipped** (unchanged — prose only).
 
+### Post-plan work items (WI-1.x)
+
+The 28-thread plan is complete; work items below are **new scope** raised after
+it, each landed as its own commit(s) on the working branch and recorded here for
+continuity (same style as the session log above).
+
+> **WI-1.3 ✅ landed 2026-07-01 · Minimal purchased-parts registry (PART-###).**
+> Optional off-spine procurement registry for parts a project *buys* rather than
+> builds (each row's `IF-Ref` names its owning interface row, MULTI_REPO.md §3.3);
+> `trace.py` integrity-checks the ids, bootstrap scaffolds it inert, prose in
+> PROCESS_OPTIONS.md + one PROCESS.md §8 pointer. Deliberately minimal per owner
+> decision; full-BOM tracking deferred. (Recorded retroactively for a complete
+> WI log.)
+
+> **WI-1.5 ✅ landed 2026-07-01 · Adoption hardening from the FileBackup pilot.**
+> Five friction items from the kit's first real re-sync (branch
+> `kit-resync-2026-07`, used read-only as the PowerShell-adoption reference).
+> Four logical commits:
+> 1. **Kit version stamp + .gitattributes + template meta-prose** (friction 1, 4,
+>    5a). `bootstrap.py` now writes `docs/kit-version` (kit short-SHA + date) so
+>    staleness is detectable and re-sync is a diff, not a guess; it refuses to pin
+>    an unreproducible state (dirty kit tree → `<sha>-dirty` + loud WARNING — the
+>    pilot's kit HEAD moved twice mid-adoption). Scaffolds a `.gitattributes`
+>    pinning `.githooks/pre-commit` to `eol=lf` (a CRLF shebang breaks the sh hook
+>    under Windows autocrlf — pilot hit it). Strips the `(template)` title +
+>    "Copy this into a new repo" prose from the scaffolded `docs/process.md`.
+> 2. **utf-8 console guard + uniform `--root`/`--docs`** (friction 5b, 5c). A
+>    `_utf8_console()` reconfigure guard on the six printing scripts turns a
+>    cp1252 `UnicodeEncodeError` (the pilot hit it printing `§`) into correct
+>    output; trace.py + check_perf.py gain the `--root`/`--docs` pair check_docs
+>    already had (one root flag drives all three process checks).
+> 3. **PowerShell reference port** (friction 3). Ship
+>    `scripts/gen_arch_map.reference.ps1` (generalized from the pilot's working
+>    `gen_arch_map.ps1`) filling the same marker blocks from the PowerShell AST,
+>    `-Check` freshness + zero-source warning; hook carries the port swap as an
+>    EDIT marker; README row. Not bootstrap-scaffolded (a retrofit copies it).
+> 4. **ADOPTING.md** (friction 2, + 3's canonical command, + 5's check_flows and
+>    gitignored-composite notes). New §6 "Re-syncing an existing adoption":
+>    sync-from-committed-state + kit-version diffing, overwrite-vs-preserve, the
+>    process.md-split and UN→SN rename migrations (keep id numbers; don't rewrite
+>    audit-log evidence quotes; trace.py deliberately does **not** bridge legacy
+>    UN-Refs — that's a local patch, not kit scope), and the inverted
+>    AGENTS/CLAUDE-convention case (the pilot's layout). §3 names `check.ps1` as
+>    the one canonical passing command on a PowerShell repo and adds check_flows
+>    retrofit guidance.
+>
+> **Byte budgets:** `AGENTS.template.md` **untouched** (9,988/10,000 — ~12 B
+> headroom; not needed); `PROCESS.md`/`PROCESS_OPTIONS.md` **unchanged** (all new
+> prose went to ADOPTING.md + docstrings, per the squeeze constraint). **Deferred
+> nothing** of the five; **judged not worth doing:** a `trace.py` UN-Refs
+> compatibility shim (the friction log floated it "your call") — a lingering
+> `UN-` after a claimed rename is a real orphan worth surfacing, and the migration
+> is a one-time find-replace, so a permanent alias would only let the dead prefix
+> live forever; recorded as docs-only in ADOPTING.md §6. `pytest -q`: **137
+> passed, 1 skipped** (was 134/1; +3 bootstrap tests — kit-version stamp,
+> .gitattributes hook pin, process.md meta-prose strip).
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
