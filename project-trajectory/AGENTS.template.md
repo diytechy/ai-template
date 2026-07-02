@@ -2,14 +2,13 @@
 
 **What this file does:** the standing brief for any agent or human working in
 this repo — *how we build here*, so quality doesn't depend on who (or which
-model) shows up. It is loaded every session: keep it short, concrete, and
-current. Project facts live in `docs/`; this file points at them.
+model) shows up. It is loaded every session: keep it short and current.
+Project facts live in `docs/`; this file points at them.
 
 > Copy this into a new repo as `AGENTS.md` (the cross-tool standard). Thin
-> `CLAUDE.md`/`GEMINI.md` stubs point back here; keep the full content here,
-> not in the stubs. Fill the **Project** section and delete guidance that
-> doesn't apply. Everything below the line is durable — change it
-> deliberately, not per-task.
+> `CLAUDE.md`/`GEMINI.md` stubs point back here. Fill the **Project** section
+> and delete guidance that doesn't apply. Everything below the line is
+> durable — change it deliberately, not per-task.
 
 ---
 
@@ -31,8 +30,9 @@ This repo follows a **gated, requirement-traced process** — read
 gates, and the ID scheme. The short version an agent needs every session:
 
 - **One driver wears role "hats" in sequence** (Stakeholder → UX/Docs → System
-  Engineer → Software Engineer → Test Engineer). Spawn a separate reviewer only
-  for an independent pre-gate audit of high-risk work.
+  Engineer → Software Engineer → Test Engineer). Spawn subagents deliberately
+  (process.md §6): an independent reviewer for high-risk pre-gate audits; step
+  mechanical subtasks down a tier; give bulk content a fresh-context peer.
 - **Everything traces:** `SN → SR → LLR → TC`. Intent lives once, as an id;
   children link to it. The matrix is generated (`scripts/trace.py`) and must
   report **0 orphans** before a gate.
@@ -76,8 +76,8 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
   lever for testability and clarity.
 - **Entry points orchestrate, they don't compute.** A top-level routine reads
   as a short list of well-named step calls; push logic into the steps.
-  (`gen_arch_map.py --flow <entry>` renders the sequence — short or vague
-  output means the routine does too much itself.)
+  (`gen_arch_map.py --flow <entry>` renders the sequence; vague output means
+  it does too much itself.)
 - **One fact, one home — in code too.** No copy-paste logic; shared behavior
   lives in exactly one place and is imported.
 - **Intention-revealing names; no cryptic abbreviations.** Comments explain
@@ -86,7 +86,7 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
   symbols; test names embed the verified id
   (`test_export_quotes_special_fields_sr001`).
 - **Match the surrounding style.** Read a neighboring file first; mirror its
-  idioms rather than importing your own.
+  idioms.
 - **Fail loudly, never silently.** No bare excepts that swallow failure;
   non-zero exit on failure for anything scriptable.
 - **Automation-safe by default.** Anything interactive needs a non-interactive
@@ -106,9 +106,9 @@ the index agents read first:
   back-link lands in the map.
 - **Explain the *why* at every non-obvious point:** the algorithm/order/
   constant choice, the edge case a branch guards, the invariant that must hold,
-  any gotcha or external reference. Assume the next reader lacks your context.
-- **Comment the surprising, not the obvious** (`i += 1  # increment i` is
-  noise); when in doubt on intent-bearing code, err toward more.
+  any gotcha or external reference.
+- **Comment the surprising, not the obvious**; when in doubt on intent-bearing
+  code, err toward more.
 - **A comment is a promise — keep it true.** Update it in the same edit as the
   code; a stale comment is a bug.
 
@@ -145,10 +145,9 @@ the same edit as the signature — a wrong contract is worse than none.
   `src/` so it can be imported and unit-tested.
 - **Separate data I/O from transforms:** pure transforms unit-tested on small
   fixtures; validate schema/shape at the boundary and fail loudly on surprises.
-- **Test the math on hand-checked cases**, and **exercise the input space**:
-  boundaries (min/max, empty, zero, one, largest) plus deliberate combinations —
-  `scripts/gen_cases.py` derives them from the SR's `Permutations`
-  (process.md "Dimensional coverage").
+- **Test the math on hand-checked cases**, and **exercise the input space** —
+  `scripts/gen_cases.py` derives boundary + combination cases from the SR's
+  `Permutations` (process.md "Dimensional coverage").
 
 ## Working agreement
 
@@ -159,7 +158,9 @@ Direct and concrete; explain the *why* before the *how*.
   interpretation, proceed, and **record it** under *Assumptions* in
   [docs/status.md](docs/status.md) to confirm or revert at the next gate.
   Raise a **conflict or ambiguity** between requirements as a finding — never
-  silently resolve it (process.md §4 "Consistency review").
+  silently resolve it (process.md §4 "Consistency review"). How *eagerly* to
+  ask is the project's **decision dial** (process.md §6): high-risk domains
+  ratify often; low-risk creative work may decide-and-record.
 - **Right-size the solution.** The simplest thing that satisfies the
   requirement; no speculative flexibility — but judge "simple" against the
   whole design, and flag over-engineering either way. (Guardrails on what

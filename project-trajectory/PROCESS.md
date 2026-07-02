@@ -27,8 +27,10 @@ attestation** (§4 `Attest`) is the honest floor — trust-based by nature (the 
 can be checked without the work having happened), so the process's job is to make
 it **explicit, named, and auditable**, never to pass it off as a mechanized
 check. Over-aggressive traceability is itself a failure mode: right-sizing is the
-process working, not a compromise of it (see §3 "Right-sizing"). Full doctrine —
-including the creative/subjective stance — in
+process working, not a compromise of it (see §3 "Right-sizing"). The same
+calibration sets the **decision-surfacing dial** at project setup — how often the
+driver pauses for human ratification (§6). Full doctrine — including the
+creative/subjective stance and the dial — in
 [`process-options.md`](process-options.md#proportionality-doctrine).
 
 ---
@@ -36,7 +38,9 @@ including the creative/subjective stance — in
 ## 1. Roles (hats), not necessarily separate agents
 
 One driver wears these hats in sequence, keeping context. Spawn a *separate*
-agent only for an independent pre-gate review (see §6).
+agent for an independent pre-gate review, to step a mechanical subtask down a
+tier, or to give bulk content a dedicated context (all §6) — never to split the
+hats' shared context.
 
 | Hat | Owns (single source of truth) |
 |---|---|
@@ -470,7 +474,27 @@ hint** — metadata an agent reads and may act on, guidance like any other
 `AGENTS.md` directive, not a guarantee. Host-specific levers (e.g. a
 strong-model-plans/cheaper-model-executes mode, per-subagent model overrides,
 a model-selection command) are optional, documented per-host examples — name
-the pattern, never a vendor-specific model-selection engine.
+the pattern, never a vendor-specific model-selection engine. Tiering is also an
+**in-flight duty**, not just plan-time metadata: mid-session the driver should
+**step down** — hand a mechanical, well-specced subtask to a cheaper-tier
+subagent rather than spend strong-model context on it — and **step sideways** to
+a peer-tier subagent with a fresh, dedicated context when the work would
+otherwise crowd the driver's context (bulk asset/prose generation, a wide file
+sweep; the independent reviewer above is already this pattern). Hosts
+increasingly make these hand-offs automatically; the duty stands wherever the
+lever is manual.
+
+**Decision-surfacing rate — same axis, set at setup.** The risk triage above
+also calibrates **how often the driver pauses for a human decision**. It is a
+project-setup dial, not a constant: a specialized or high-consequence domain
+(safety even as an *ancillary* risk, money, irreversible actions) surfaces
+decisions often — the human ratifies even medium calls; a low-risk domain
+(creative content) where a reverted decision costs little tech debt lets a
+**confident** agent decide autonomously, **provided the decision is recorded**
+in `status.md` (Decisions log / Assumptions) so it stays auditable and
+revertible. The dial never moves the fixed points — gates still pause (§4/§5),
+contradictions still route as findings. Full doctrine: point (e) of the
+[proportionality doctrine](process-options.md#proportionality-doctrine).
 
 ## 7. Harness contract (wire to your stack)
 

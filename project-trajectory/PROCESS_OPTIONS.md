@@ -59,6 +59,22 @@ into a straitjacket. Four points, one voice:
   build-size budget — and stop there. Decomposing a subjective judgment ("is this
   scene moving?") into finer rows a script still can't check adds process weight
   with no verification return; mark it `Attest` and move on.
+- **(e) Decision-surfacing rate is a setup dial, not a constant.** How often the
+  driver pauses for the human to **ratify a decision** is project-specific:
+  calibrate it **at project setup** on the same risk axis as review-depth triage
+  (PROCESS.md §6) and record the setting in `AGENTS.md` (Project section). In
+  specialized or high-consequence domains — where safety is a risk even an
+  *ancillary* one, money, privacy, anything irreversible — surface decisions
+  **often**: bring even medium calls to the human to ratify. In low-risk domains
+  (creative content is the archetype), where a wrong call is cheap to revert and
+  carries little tech debt, a **confident** agent may decide **autonomously** —
+  and the non-negotiable price of that autonomy is that every autonomous
+  decision is **recorded** (a *Decisions log* / *Assumptions* entry in
+  `status.md`: the call, the alternatives passed over, why) so it stays visible,
+  auditable, and cheaply revertible. The dial moves *how often you ask*, never
+  the fixed points: gates still pause for human approval (§4), and a requirement
+  **contradiction** still routes as a finding to its owner — an unrecorded
+  autonomous decision is a *silent* one, which no dial setting permits.
 
 ## Phased delivery
 

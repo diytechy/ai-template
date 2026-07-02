@@ -2740,6 +2740,26 @@ continuity (same style as the session log above).
 > scaffolded process docs reference `skills/README.md` as inline code, not a link,
 > so no broken-link surface downstream (skills source isn't scaffolded).
 
+> **WI-1.10 ✅ landed 2026-07-02 · Decision-surfacing dial + in-flight tier
+> step-down.** Owner-raised emphasis pair. (1) **Decision-surfacing rate is a
+> setup-time, risk-calibrated dial, not a constant**: specialized/high-consequence
+> domains (safety even as an *ancillary* risk) surface decisions often for human
+> ratification; low-risk creative work lets a confident agent decide autonomously
+> *provided every autonomous decision is recorded* (Decisions log/Assumptions).
+> Gates and contradiction-findings stay fixed at every setting. Doctrine point
+> (e) in PROCESS_OPTIONS.md, operational paragraph in PROCESS.md §6, pointer in
+> the PROCESS.md header. (2) **Tiering is an in-flight duty, not just plan-time
+> metadata**: step *down* to a cheaper-tier subagent for mechanical well-specced
+> subtasks; step *sideways* to a fresh-context peer for bulk content — even
+> though hosts increasingly do this automatically. PROCESS.md §6 tiering
+> paragraph extended; §1's "spawn a separate agent **only** for review" relaxed
+> to name the two delegation cases (it contradicted the duty).
+> **Byte deltas:** `AGENTS.template.md` 9,988→9,997 (3 B headroom): the spawn
+> bullet now names all three subagent cases and the ask-don't-assume bullet
+> gained the decision-dial pointer, paid for by trimming redundancy (gen_cases
+> example list, comment/style/intro wording). `PROCESS.md` +1,689
+> (47,605→49,294); `PROCESS_OPTIONS.md` +1,252 (28,479→29,731, doctrine (e)).
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
