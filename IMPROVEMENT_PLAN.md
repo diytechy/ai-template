@@ -1365,6 +1365,17 @@ now the onboarder's **end banner** simply tells the user they *can* point an age
 the repo directory. Revive as its own thread only if a stable, neutral
 agent-provisioning path emerges.
 
+> **✅ Revived + resolved 2026-07-02 as WI-1.9** (Post-plan WI log below). The
+> *auto-install* half stays parked (still opinionated/tool-specific), but the
+> **agent-selection + skills** half is now built: `bootstrap.py --agents
+> claude|gemini|both|none` asks (interactive) which agent the user already has and
+> materializes that agent's neutral skills — anti-lock-in preserved (neutral
+> `skills/` source; `none` default keeps the scaffold agent-neutral). Also
+> resolves the scratch "AGENTS.md budget vs. guardrail coverage / what AI skills
+> should the template make available" open item and the Thread-28-adjacent "should
+> the onboarder ask about agent use" question (answer: at *bootstrap*, not the
+> onboarder — the user has an agent by repo-setup time).
+
 ---
 
 ## Thread 16 — Verifying non-code artifacts (stub: sketch now, build later)
@@ -2659,6 +2670,75 @@ continuity (same style as the session log above).
 > 1 skipped** (unchanged — no code change, so no new tests). `check_docs` green on
 > fresh scaffold (the pytest suite's bootstrap run); the crosswalk uses inline-code
 > standard names, not intra-repo links, so adds no link surface.
+
+> **WI-1.9 ✅ landed 2026-07-02 · Repo-setup agent selection + a portable skills
+> layer.** Owner-directed (2026-07-02): at repo setup the user most likely has an
+> agent configured, so per-repo setup should ask which agent (X / Y / both / none)
+> and fetch skills relevant to the project's scope — bringing that agent's LLM
+> skills into the repo fold while the template stays reusable.
+> **Backlogged stub found + resolved:** the **Thread-15 "Parked follow-on — agent
+> selection & auto-provisioning"** (its ✅-revived note now links here), plus the
+> scratch open item *"AGENTS.md budget vs. guardrail coverage / what AI skills
+> should the template make available"* and the Thread-28-adjacent *"should the
+> onboarder ask about agent use"* question (answered: ask at **bootstrap**, not the
+> onboarder). The auto-*install* half stays parked; the selection+skills half is
+> built. Also grounded in Thread-12's spec-vs-runtime-harness boundary — the kit
+> now ships neutral opt-in skills without becoming a turnkey harness. Four logical
+> commits:
+> 1. **Skills layer source (`project-trajectory/skills/`).** Agent-neutral
+>    `<name>/SKILL.md` files whose frontmatter carries BOTH the agent-facing
+>    `name`/`description` (the shared **Agent-Skills open standard** both Claude
+>    Code and Gemini CLI read — web-verified 2026-07) AND this kit's applicability
+>    schema (`stacks`/`domains`/`phases`/`tags` + a `scope` of `kit`|`this-repo`).
+>    `scripts/gen_skills_index.py` generates `skills/INDEX.csv` (the cheap scan
+>    surface) with `--check` freshness, like `gen_arch_map.py`. `skills/README.md`
+>    is the full contract incl. the **future external-source plug-in** (naming,
+>    frontmatter shape, neutral landing zone, trust/review).
+> 2. **Five skills authored** (bodies grounded in real repo commands, each
+>    verified): *kit*-scope (ship + materialize downstream) — `registry-hygiene`
+>    (trace/check flags, orphan/schema fixes), `downstream-resync` (ADOPTING §6
+>    walk), `gate-advance` (G1→G2→G3 honestly, Attest + attested-vs-mechanized);
+>    *this-repo*-scope (maintain THIS template, dogfooded into `.claude/skills/`,
+>    NOT shipped) — `byte-budget-guard`, `session-protocol`. Split rationale: the
+>    kit ones are generic to any adopted repo; the byte budgets + WI/thread ritual
+>    are this template's own attributes.
+> 3. **Bootstrap agent selection + matcher.** `bootstrap.py --agents
+>    claude|gemini|both|none`; omitted + interactive TTY → **ASK** (agent, then ≤2
+>    scope questions: stack? domain? + advisory binary/hardware?); omitted +
+>    non-interactive → **`none`**, materializing nothing so the historical scaffold
+>    is byte-for-byte unchanged (the CI-safe property, pinned by a test). Selection
+>    materializes the matched *kit*-scope skills into the agent's native dir
+>    (`.claude/skills/…`, `.gemini/skills/…` — straight copy, same standard) + the
+>    agent's hook config copied **inert** as `settings.json.example` (the
+>    less-surprising call: never silently install a `Stop` hook; git+CI stay the
+>    floor) + a dated setup note in `docs/status.md`. Matcher is a **trivial tag
+>    intersection** (`any` always matches) — the metadata convention is the
+>    deliverable, not an engine. AGENTS.md stays canonical whichever agent is
+>    chosen.
+> 4. **Wiring + docs + tests.** README kit-contents rows (`skills/` +
+>    `gen_skills_index.py`), `agent-hooks/README.md` (inert-copy behavior),
+>    `ADOPTING.md` §6 skills re-sync recipe, `CLAUDE.md` repo-map entry, top-level
+>    README quick-start `--agents` example. `conftest.run_py` now closes stdin so
+>    the omitted-flag path is deterministically non-interactive in tests.
+>
+> **agent-hooks decision (wire vs. copy):** *copy inert*, not wire — a scaffold
+> that silently runs commands on every agent `Stop` is the surprising outcome; the
+> example + one-line note preserves the existing "enforcement lives in git+CI"
+> stance while still materializing the file for the chosen agent.
+> **Gemini equivalence (researched):** Gemini CLI adopted the **same Agent-Skills
+> `SKILL.md` standard** (`.gemini/skills/<name>/SKILL.md` workspace skills), so
+> materialization is a straight copy for both — no Claude-only fallback needed; the
+> neutral source stays ready for a future third agent.
+> **Byte deltas:** **`AGENTS.template.md` untouched (9,988/10,000 — 12 B headroom
+> preserved; the skills mention went to PROCESS_OPTIONS + README only, per the
+> constraint).** `PROCESS.md` **+129** (47,476→47,605 — flagged: one-line §7
+> pointer to the new PROCESS_OPTIONS section, the minimum honest cross-ref);
+> `PROCESS_OPTIONS.md` **+2,935** (25,544→28,479, the "Skills layer" section);
+> `README.md` (kit) +1,216; `ADOPTING.md` +697; root `README.md`/`CLAUDE.md` small.
+> `pytest -q`: **156 passed, 1 skipped** (was 144/1; +8 bootstrap agent/skills
+> tests, +4 skills-index tests). `check_docs` green on repo + fresh scaffold; the
+> scaffolded process docs reference `skills/README.md` as inline code, not a link,
+> so no broken-link surface downstream (skills source isn't scaffolded).
 
 ### Session protocol (for a cold session pointed only at this file)
 
