@@ -96,6 +96,25 @@ def test_step_plan_wiring():
         else:
             assert requires, name  # product steps declare their toolchain
 
+    # Process-layer steps must resolve kit scripts via an absolute path so the
+    # commands work even when the repo's scripts directory is capitalised
+    # differently (e.g. "Scripts/" on an NTFS case-preserving system that also
+    # runs on case-sensitive Linux CI).  The path is the second element of the
+    # command list (after sys.executable).
+    import os
+
+    process_steps = [s for s in full if s[4] == "process"]
+    for name, _req, cmd, _gates, _layer in process_steps:
+        script_arg = cmd[1]  # first arg after the interpreter
+        if script_arg.endswith(".py"):
+            assert os.path.isabs(script_arg), (
+                "process step {!r} uses a relative script path {!r}; "
+                "use _SCRIPTS / 'name.py' so it resolves correctly when "
+                "the repo scripts dir is capitalised differently".format(
+                    name, script_arg
+                )
+            )
+
 
 def test_default_gate_comes_from_gate_file(scaffold):
     # check.py without --gate reads the committed docs/gate (bootstrap writes

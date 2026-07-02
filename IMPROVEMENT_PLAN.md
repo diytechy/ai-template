@@ -2509,6 +2509,34 @@ continuity (same style as the session log above).
 > passed, 1 skipped** (was 134/1; +3 bootstrap tests — kit-version stamp,
 > .gitattributes hook pin, process.md meta-prose strip).
 
+> **WI-1.6 ✅ landed 2026-07-01 · Three micro-fixes from the WI-5.2/5.3
+> re-syncs (PictureSorter + Pictures2VideoSlideShow).** One commit.
+> 1. **ADOPTING.md §6 — `gen_release_checklist.py` function rename.** Added a
+>    sub-bullet under the UN→SN recipe noting that overwriting the script also
+>    renames its public function `read_user_needs` → `read_stakeholder_needs`;
+>    downstream tests importing the old name break (PictureSorter was bitten).
+>    Recipe: grep for `read_user_needs` in tests/scripts and update callers.
+> 2. **Bootstrap/scripts path robustness (`check.py` + pre-commit hook).** Kit
+>    scripts referenced sibling scripts as cwd-relative `"scripts/..."` strings,
+>    which break on case-sensitive Linux CI when the repo's existing directory is
+>    `"Scripts/"` (NTFS case-preserving; Pictures2VideoSlideShow was bitten).
+>    `check.py` now resolves all process-layer scripts via
+>    `_SCRIPTS = Path(__file__).resolve().parent` (absolute path, correct
+>    regardless of casing). `hooks/pre-commit` computes `SCRIPTS_DIR` at
+>    runtime by probing `$REPO_ROOT/scripts` then `$REPO_ROOT/Scripts`
+>    (repo root via `$(dirname "$0")/../`). New assertion in
+>    `test_step_plan_wiring` verifies every process-step script arg is absolute.
+> 3. **ADOPTING.md §6 — legacy TC CSVs missing `Tier` column.** Added a
+>    migration recipe: add a `Tier` column with default `Full`; mark
+>    hardware/network/interactive cases `Release`. `trace.py --strict-schema`
+>    (required at G3) validates the column as non-empty and checks values are in
+>    `{Smoke, Full, Release}`. No code change — prose-only recipe.
+>
+> **Byte deltas:** `ADOPTING.md` +861 B (13812→14673); `AGENTS.template.md`
+> **untouched** (9988/10000); `PROCESS.md` **untouched**. `pytest -q`: **137
+> passed, 1 skipped** (unchanged — new assertions added inside the existing
+> `test_step_plan_wiring` function, not as a separate test).
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

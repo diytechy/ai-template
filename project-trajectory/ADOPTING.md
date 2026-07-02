@@ -202,6 +202,20 @@ range to see exactly which templates/scripts changed before you touch anything.
     mid-rename and wants a transitional deprecation warning, that's a *local*
     patch to your copy of `trace.py`, not something the kit ships. (Docs-only
     call, deliberate: a permanent alias would let the old prefix live forever.)
+  - *Downstream test import:* overwriting `scripts/gen_release_checklist.py`
+    from the kit renames its public function `read_user_needs` →
+    `read_stakeholder_needs`. Any downstream test or script that imports
+    `gen_release_checklist.read_user_needs` by the old name will break (the
+    PictureSorter re-sync was bitten by this). Update callers as part of the
+    UN→SN recipe — grep for `read_user_needs` in your tests and scripts.
+- **Legacy TC CSVs missing the `Tier` column.** Older adoptions created
+  `docs/test/test-cases.csv` before the `Tier` column was added to the
+  template. `trace.py --strict-schema` requires `Tier` as a non-empty field
+  (it validates the full TC schema at G3). Migration is mechanical: add a
+  `Tier` column and set a default of `Full`; mark hardware/network/interactive
+  cases `Release` so they don't run on unattended CI. Once the column is
+  present, `trace.py --strict-schema` will also validate that values are in
+  `{Smoke, Full, Release}`, so tighten any free-text entries at the same time.
 
 ### Repos whose `AGENTS.md` already means something else
 

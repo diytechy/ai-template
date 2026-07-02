@@ -66,6 +66,12 @@ import sys
 import time
 from pathlib import Path
 
+# Resolve sibling scripts relative to *this file*, not the cwd. A repo whose
+# existing directory is named "Scripts/" (NTFS case-preserving, POSIX case-
+# sensitive) would break the old "scripts/trace.py" cwd-relative strings on
+# Linux CI even though Windows never notices the mismatch.
+_SCRIPTS = Path(__file__).resolve().parent
+
 
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
@@ -142,7 +148,7 @@ def steps(coverage, tier, gate, phase=None):
     # scalable full-graph view (a gitignored composite artifact) every run.
     trace_cmd = [
         sys.executable,
-        "scripts/trace.py",
+        str(_SCRIPTS / "trace.py"),
         "--strict",
         "--no-placeholders",
         "--html",
@@ -187,7 +193,7 @@ def steps(coverage, tier, gate, phase=None):
             (),
             [
                 sys.executable,
-                "scripts/check_docs.py",
+                str(_SCRIPTS / "check_docs.py"),
                 "--ignore",
                 "docs/test/report.md",
             ],
@@ -203,7 +209,7 @@ def steps(coverage, tier, gate, phase=None):
         (
             "perf-budgets",
             (),
-            [sys.executable, "scripts/check_perf.py", "--tier", tier],
+            [sys.executable, str(_SCRIPTS / "check_perf.py"), "--tier", tier],
             {"G3"},
             "process",
         ),
@@ -213,7 +219,7 @@ def steps(coverage, tier, gate, phase=None):
         (
             "design-flows",
             (),
-            [sys.executable, "scripts/check_flows.py", "--no-placeholders"],
+            [sys.executable, str(_SCRIPTS / "check_flows.py"), "--no-placeholders"],
             {"G2", "G3"},
             "process",
         ),
@@ -224,7 +230,7 @@ def steps(coverage, tier, gate, phase=None):
             (),
             [
                 sys.executable,
-                "scripts/gen_arch_map.py",
+                str(_SCRIPTS / "gen_arch_map.py"),
                 "--check",
                 "--strict-parse",
                 "--src",
