@@ -178,6 +178,29 @@ installer — so a contributor (including a non-code one, whose deliverable is s
 a reviewable git change) can go from a bare machine to an editable, testable
 checkout without needing prior git literacy.
 
+**The evaluator's rungs — README + run launchers.** The ladder above serves the
+*contributor*; a project also has *evaluators* — the stakeholder, a tester, the
+future you — whose path is shorter: understand it, then run it. Two artifacts
+serve that path, both scaffolded by bootstrap:
+
+- **`README.md` is the human front door and exists from day one.** Bootstrap
+  lays down a skeleton (project name filled from the folder; everything else a
+  marked fill-in) and the kickoff agent **builds it out from the project brief**
+  — purpose, how to run it, how to get started. An adopted repo keeps its own
+  README (bootstrap never overwrites); retrofit the run/getting-started pointers
+  into it instead (ADOPTING.md §1).
+- **Root `run.{cmd,sh,command}` launchers — one double-clickable start per
+  platform the project supports** (the PROJECT BRIEF's "Supported platforms"
+  line). Ease of access is a requirement of its own: the launch command may be
+  obvious, and it may be documented in the README, but *recall is still the
+  enemy* — a launcher turns "remember the incantation" into "open the folder and
+  click". Each is a short, readable script with one `RUN_CMD` slot (filled twice:
+  `run.cmd` for Windows, `run.sh` for POSIX; `run.command` delegates to `run.sh`
+  so macOS costs no third copy). They ship **inert** — an unfilled `RUN_CMD`
+  prints guidance and exits nonzero, the same always-scaffolded-inert stance as
+  the optional registries — and a pure library deletes them and describes usage
+  in the README instead.
+
 **Offline-render principle.** Legibility artifacts (the Mermaid diagrams, the
 trace HTML map, the code map) must render with **local, offline** tooling — never a
 cloud rendering service — the same reason the kit chose Mermaid-in-Markdown (§3) in

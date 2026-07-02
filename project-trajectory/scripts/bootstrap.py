@@ -34,6 +34,8 @@ What it creates in the destination:
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1}                 <- dev-setup.template.* (workstation setup)
+    README.md                                  <- README.template.md (human front door; kept if one exists)
+    run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     pytest.ini                                 (test-tier markers)
     .gitignore                                 <- gitignore.template
@@ -60,6 +62,15 @@ non-interactively (CI) without the flag and it defaults to `none`: zero prompts,
 nothing materialized, the historical agent-neutral scaffold unchanged. AGENTS.md
 stays the canonical guide whatever the choice; skills are opt-in accelerators, not
 process gates (skills/README.md).
+
+The README and the root `run.{cmd,sh,command}` launchers (WI-1.12) are the
+**evaluator's rungs** of the §7 onboarding ladder: the README is the human front
+door (bootstrap fills `{{PROJECT_NAME}}` from the destination folder name; the
+kickoff agent builds the rest out from the project brief; an existing README is
+never overwritten), and the launchers give every launchable project a
+double-clickable start per platform so running it never requires recalling a
+command. They ship inert — an unfilled `RUN_CMD` prints guidance and exits
+nonzero — and a pure library simply deletes them.
 
 The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.csv`)
 are always scaffolded but ship **inert**: they hold only `IF-000` placeholder
@@ -381,6 +392,17 @@ MAPPING = [
     ("scripts/onboard.template.cmd", "scripts/onboard.cmd"),
     ("scripts/dev-setup.template.sh", "scripts/dev-setup.sh"),
     ("scripts/dev-setup.template.ps1", "scripts/dev-setup.ps1"),
+    # The evaluator's rungs (WI-1.12): a README skeleton the kickoff agent
+    # builds out from the project brief (never overwritten — an adopted repo
+    # keeps its own README), and root double-clickable product launchers, one
+    # per platform, so running the product never requires recalling a command.
+    # They ship inert (empty RUN_CMD prints guidance); a pure library deletes
+    # them. Root, not scripts/: the double-click use case is "open the checkout
+    # folder and click" — one hop shallower matters for a non-code evaluator.
+    ("README.template.md", "README.md"),
+    ("scripts/run.template.cmd", "run.cmd"),
+    ("scripts/run.template.sh", "run.sh"),
+    ("scripts/run.template.command", "run.command"),
     # Agent-neutral enforcement: one POSIX pre-commit hook (opt-in via
     # `git config core.hooksPath .githooks`, which setup.sh/ps1 set).
     ("hooks/pre-commit", ".githooks/pre-commit"),
@@ -601,6 +623,14 @@ def main():
         # and "Copy this into a new repo as docs/process.md") now that the file
         # *is* the scaffolded doc.
         apply_template_rewrites(dst_rel, dst)
+        # The README skeleton carries the one dynamic placeholder: the project's
+        # name, taken from the destination folder (the kickoff agent fills in
+        # the rest from the project brief).
+        if dst_rel == "README.md":
+            text = dst.read_text(encoding="utf-8")
+            dst.write_text(
+                text.replace("{{PROJECT_NAME}}", dest.name), encoding="utf-8"
+            )
         # Keep the .sh/.command launchers and the git hook executable on POSIX
         # (the hook has no extension; git and Finder only run these if the
         # executable bit is set — .command is macOS's double-clickable shell).

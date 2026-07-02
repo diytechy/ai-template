@@ -48,6 +48,12 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
 - `AGENTS.md` — the agent/contributor guide with the readability conventions
   (copy `AGENTS.template.md`; the bootstrap also lays down thin `CLAUDE.md` and
   `GEMINI.md` stubs that point at it).
+- `README.md` — the **human front door**: bootstrap lays down a skeleton (it
+  never overwrites an existing README) — **build it out from this brief**:
+  purpose, how to run/evaluate, how to get started. Wire the root
+  `run.{cmd,sh,command}` launchers' `RUN_CMD` for every supported platform so
+  running the product never requires recalling a command; delete them only for
+  a pure library.
 - `docs/process.md` — the method, gates, ID scheme, anti-duplication rules,
   verdict protocol (copy `PROCESS.md`).
 - `docs/status.md` — live state, gate sign-off table, append-only audit log

@@ -25,6 +25,10 @@ def test_scaffold_contains_expected_files(scaffold):
         ".github/workflows/check.yml",
         "src/.gitkeep",
         "tests/.gitkeep",
+        "README.md",
+        "run.cmd",
+        "run.sh",
+        "run.command",
     ]:
         assert (scaffold / rel).exists(), "missing from scaffold: " + rel
 
@@ -100,6 +104,45 @@ def test_scaffolded_process_doc_drops_template_meta_prose(scaffold):
     assert "# Development Process" in proc
     assert "(template)" not in proc.splitlines()[0]
     assert "Copy this into a new" not in proc
+
+
+def test_readme_scaffolded_with_project_name(scaffold):
+    # The README skeleton is the human front door (WI-1.12): bootstrap fills
+    # the one dynamic placeholder (project name = destination folder) and the
+    # skeleton points at the launchers + the ladder for the kickoff agent to
+    # build out from the brief.
+    readme = (scaffold / "README.md").read_text(encoding="utf-8")
+    assert "{{PROJECT_NAME}}" not in readme, "placeholder must be filled"
+    assert readme.splitlines()[0] == "# " + scaffold.name
+    assert "run.cmd" in readme  # points at the product launchers
+    assert "onboard" in readme  # points at the onboarding ladder
+
+
+def test_readme_never_overwritten(tmp_path):
+    # Adoption case: an existing README is the project's own front door —
+    # bootstrap must skip it (same default-skip contract as every template).
+    dest = tmp_path / "repo"
+    dest.mkdir(parents=True)
+    (dest / "README.md").write_text("my project's own readme", encoding="utf-8")
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    text = (dest / "README.md").read_text(encoding="utf-8")
+    assert text == "my project's own readme"
+
+
+def test_run_launchers_ship_inert_with_edit_slots(scaffold):
+    # The evaluator's rungs (WI-1.12): root double-clickable launchers, one per
+    # platform, shipped inert (empty RUN_CMD) with a marked EDIT slot. The
+    # macOS .command delegates to run.sh so the POSIX command lives once.
+    cmd = (scaffold / "run.cmd").read_text(encoding="utf-8")
+    assert 'set "RUN_CMD="' in cmd, "run.cmd must ship with an empty RUN_CMD"
+    assert "EDIT FOR YOUR PROJECT" in cmd
+    sh = (scaffold / "run.sh").read_text(encoding="utf-8")
+    assert 'RUN_CMD=""' in sh, "run.sh must ship with an empty RUN_CMD"
+    assert "EDIT FOR YOUR PROJECT" in sh
+    command = (scaffold / "run.command").read_text(encoding="utf-8")
+    assert "./run.sh" in command, ".command must delegate to run.sh"
+    assert "RUN_CMD=" not in command, ".command must not carry a third copy"
 
 
 def test_dry_run_writes_nothing(tmp_path):

@@ -39,6 +39,12 @@ reported as `skipped (exists)` — resolve each by hand:
   tier markers (`smoke`/`full`/`release`) rather than replacing the file.
 - **`src/`, `tests/`** — bootstrap only adds `.gitkeep`s; your layout stays.
   Point the harness at the real roots (`SRC`/`TESTS` in `check.py`).
+- **`README.md`** — skipped if present (the common case). Retrofit the
+  *evaluator's rungs* into your existing README instead: a "Run it" section
+  pointing at the root `run.{cmd,sh,command}` launchers (fill their `RUN_CMD`
+  with your start command — `run.cmd` and `run.sh`; `run.command` delegates)
+  and a getting-started pointer at the `scripts/onboard.* → dev-setup → setup
+  → check` ladder. A pure library deletes the launchers and describes usage.
 - **Pre-commit hook** — `setup.{sh,ps1}` set `git config core.hooksPath
   .githooks`, which **overrides** any existing `.git/hooks` or hook manager
   (husky, pre-commit-framework). If you already have hooks, either call

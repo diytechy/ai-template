@@ -2777,6 +2777,37 @@ continuity (same style as the session log above).
 > harvest-intro wording, "Becomes its summary in the map", "low-risk").
 > `PROCESS.md` +1,015 (49,294→50,309).
 
+> **WI-1.12 ✅ landed 2026-07-02 · The evaluator's rungs: README scaffold + run
+> launchers.** Owner-raised pair, surfaced by the life-tracker adoption review
+> (README existed but pointed at nothing; no way to launch without recalling
+> commands). (1) **`README.template.md` → the scaffold's `README.md`**: the
+> human front door exists from day one — bootstrap fills `{{PROJECT_NAME}}`
+> from the dest folder, never overwrites an existing README (adoption-safe),
+> and the kickoff agent builds the rest out from the PROJECT BRIEF
+> (KICKOFF_PROMPT.md artifacts list gained the bullet). Skeleton links the run
+> launchers, the onboarding ladder, and AGENTS/docs — link-checked by the
+> existing scaffold check_docs test. (2) **Root `run.{cmd,sh,command}` product
+> launchers**: every launchable project gets a double-clickable start per
+> platform — ease of access is a requirement of its own; recall is the enemy
+> even when the command is obvious or documented. Ship **inert** (empty
+> `RUN_CMD` prints guidance, exits nonzero — the always-scaffolded-inert
+> registry stance); `run.command` delegates to `run.sh` so the command lives
+> exactly twice (Windows + POSIX), never three times; a pure library deletes
+> them. **Root, not scripts/** (deliberate): the double-click use case is
+> "open the checkout folder and click" — one hop shallower matters for a
+> non-code evaluator. gitattributes template already pins `*.sh`/`*.command`
+> LF and `*.cmd` CRLF; bootstrap's existing suffix chmod covers the exec bits.
+> Prose: PROCESS.md §7 ladder paragraph gains the evaluator's-rungs sentence;
+> PROCESS_OPTIONS.md §7 boundary notes gain the full expansion; ADOPTING.md §1
+> gains the README-retrofit bullet; kit README two table rows. Tests: +3
+> (name-fill, never-overwrite, inert-launchers) and the expected-files list;
+> 159 pass. **Byte deltas:** `AGENTS.template.md` untouched (9,990); PROCESS.md
+> +525 (50,309→50,834); PROCESS_OPTIONS.md +1,549 (29,731→31,280).
+> *(Also restores the "### Session protocol" heading the WI-1.11 edit
+> accidentally consumed.)*
+
+### Session protocol (for a cold session pointed only at this file)
+
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
    2026-07-01, all 28 planned threads have landed (sessions A–K). What remains are
    the **stubs** (16 non-code-artifact verification · 21 cross-repo tooling · 23

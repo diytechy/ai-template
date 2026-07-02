@@ -568,9 +568,16 @@ provision the developer workstation (rare, per contributor); `setup` provisions
 the product toolchain; `check` is the process floor. Each rung is an optional,
 readable, **consent-first** helper — never a silent or compiled installer — so
 even a non-code contributor can reach an editable checkout without prior git
-literacy. Details and the full rationale for these three §7 boundary notes
-(developer-workstation · onboarding ladder · offline-render) are in
-[`process-options.md`](process-options.md#7-boundary-notes).
+literacy. The ladder serves the *contributor*; the **evaluator's rungs** are the
+repo `README.md` (the human front door — scaffolded by bootstrap, built out from
+the project brief at kickoff, never overwritten on adoption) and the root
+**`run.{cmd,sh,command}` product launchers**: every launchable project ships a
+double-clickable launcher per supported platform, because ease of access is a
+requirement of its own — running the product must never depend on recalling a
+command, however obvious or well-documented. Details and the full rationale for
+these §7 boundary notes
+(developer-workstation · onboarding ladder · evaluator's rungs · offline-render)
+are in [`process-options.md`](process-options.md#7-boundary-notes).
 
 **Offline-render principle.** Legibility artifacts (Mermaid diagrams, the trace
 HTML map, the code map) must render with **local, offline** tooling — never a
