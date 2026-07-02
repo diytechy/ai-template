@@ -32,6 +32,19 @@ import re
 import sys
 from pathlib import Path
 
+
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
+    non-ASCII heading echoed in a finding can't raise UnicodeEncodeError on a
+    legacy Windows cp1252 console. Python 3.7+ streams expose `.reconfigure`;
+    guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
 ID_RE = re.compile(r"\b(SR|LLR|SN|TC)-\d+\b")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
 SECTION_TITLE = "runtime flows"
@@ -83,6 +96,7 @@ def mermaid_blocks(section):
 
 
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--doc",

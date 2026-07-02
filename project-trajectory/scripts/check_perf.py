@@ -39,8 +39,12 @@ discipline as the coverage threshold). `--update-baseline` rewrites
 
 Usage:
     python scripts/check_perf.py [--tier smoke|full|release|all]
+                                 [--root DIR] [--docs DIR]
                                  [--budgets P] [--metrics P] [--baseline P]
                                  [--report P] [--update-baseline]
+
+--root/--docs are the path flags shared with trace.py and check_docs.py: the
+four artifact paths default under <root>/docs unless given explicitly.
 """
 
 import argparse
@@ -48,6 +52,19 @@ import csv
 import json
 import sys
 from pathlib import Path
+
+
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is. Kit
+    scripts print non-ASCII (an em-dash WARNING, `§`/unit glyphs) that a legacy
+    Windows cp1252 console raises UnicodeEncodeError on — wedging the run, not
+    just mojibaking. Python 3.7+ streams expose `.reconfigure`; guard the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
 
 # Cumulative tiers (process.md §4): a row is in scope at run tier R when its own
 # tier is <= R. A blank row tier defaults to Full — evaluated pre-merge and at
@@ -259,14 +276,22 @@ def update_baseline(baseline_path, metrics):
 
 
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument("--tier", default="all", choices=list(TIER_ORDER))
-    ap.add_argument("--budgets", default="docs/requirements/performance-budgets.csv")
-    ap.add_argument("--metrics", default="docs/test/perf-metrics.json")
-    ap.add_argument("--baseline", default="docs/test/perf-baseline.json")
-    ap.add_argument("--report", default="docs/test/perf-report.md")
+    # --root/--docs are the uniform path flags shared with trace.py and
+    # check_docs.py: pass one --root (or --docs) and the four artifact paths
+    # below default under it. Each explicit path flag still wins when given.
+    ap.add_argument("--root", default=".", help="repo root (default: .)")
+    ap.add_argument(
+        "--docs", default=None, help="docs directory (default: <root>/docs)"
+    )
+    ap.add_argument("--budgets", default=None)
+    ap.add_argument("--metrics", default=None)
+    ap.add_argument("--baseline", default=None)
+    ap.add_argument("--report", default=None)
     ap.add_argument(
         "--update-baseline",
         action="store_true",
@@ -275,15 +300,21 @@ def main():
     )
     args = ap.parse_args()
 
-    metrics = load_metrics(Path(args.metrics))
+    docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
+    budgets_path = args.budgets or docs / "requirements" / "performance-budgets.csv"
+    metrics_path = args.metrics or docs / "test" / "perf-metrics.json"
+    baseline_path = args.baseline or docs / "test" / "perf-baseline.json"
+    report_path = args.report or docs / "test" / "perf-report.md"
+
+    metrics = load_metrics(Path(metrics_path))
 
     if args.update_baseline:
         if not metrics:
-            print(f"check_perf: cannot update baseline - no metrics at {args.metrics}")
+            print(f"check_perf: cannot update baseline - no metrics at {metrics_path}")
             sys.exit(1)
-        changes = update_baseline(Path(args.baseline), metrics)
+        changes = update_baseline(Path(baseline_path), metrics)
         print(
-            f"check_perf: baseline updated ({len(changes)} change(s)) -> {args.baseline}"
+            f"check_perf: baseline updated ({len(changes)} change(s)) -> {baseline_path}"
         )
         for pid, old, new in changes:
             print(
@@ -291,21 +322,21 @@ def main():
             )
         return
 
-    budgets = load_budgets(Path(args.budgets))
+    budgets = load_budgets(Path(budgets_path))
     if not budgets:
         print("check_perf: OK - no performance budgets to compare (process.md §9)")
         return
     if metrics is None:
         print(
             f"check_perf: SKIP - {len(budgets)} budget(s) but no metrics at "
-            f"{args.metrics} (wire the product measurement step that emits it)"
+            f"{metrics_path} (wire the product measurement step that emits it)"
         )
         return
 
-    baselines = load_metrics(Path(args.baseline))
+    baselines = load_metrics(Path(baseline_path))
     results = evaluate(budgets, metrics, baselines, args.tier)
 
-    report = Path(args.report)
+    report = Path(report_path)
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(render_report(results, args.tier), encoding="utf-8")
 
@@ -317,7 +348,7 @@ def main():
     skips = [r for r in results if r["status"] == "SKIP"]
     summary = (
         f"{len(results)} in-tier budget(s): {len(fails)} fail, {len(warns)} warn, "
-        f"{len(skips)} skip(no metric) -> {args.report}"
+        f"{len(skips)} skip(no metric) -> {report_path}"
     )
     if fails:
         print(f"check_perf: FAIL - {summary}")

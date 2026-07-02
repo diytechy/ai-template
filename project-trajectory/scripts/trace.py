@@ -9,9 +9,9 @@ PROCESS.md: it never needs hand-maintaining.
 Usage:
     python scripts/trace.py [--strict] [--strict-integrity] [--require-verified]
                             [--phase LIST] [--no-placeholders] [--strict-schema]
-                            [--html] [--docs DIR]
+                            [--html] [--root DIR] [--docs DIR]
 
-Reads (relative to --docs, default "docs"):
+Reads (relative to --docs, default "<root>/docs"; --root defaults to "."):
     requirements/system-requirements.csv   (cols: SR-ID, SN-Refs, Verification, Status, ...)
     requirements/low-level-requirements.csv (cols: LLR-ID, SR-Refs, ...)
     test/test-cases.csv                     (cols: TC-ID, Verifies, ...)
@@ -107,6 +107,18 @@ import csv
 import re
 import sys
 from pathlib import Path
+
+
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is. Kit
+    scripts print non-ASCII (an em-dash WARNING, `§` refs) that a legacy Windows
+    cp1252 console raises UnicodeEncodeError on — wedging the run, not just
+    mojibaking. Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
 
 
 def load_csv(path):
@@ -480,6 +492,7 @@ def html_document(roots):
 
 
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--strict", action="store_true", help="exit 1 if any orphan / status finding"
@@ -518,9 +531,18 @@ def main():
         help="also write test/report.html — a dependency-free collapsible tree "
         "of the full graph (gitignored composite artifact)",
     )
-    ap.add_argument("--docs", default="docs", help="docs directory (default: docs)")
+    # --root/--docs are the uniform path flags across trace.py, check_docs.py,
+    # and check_perf.py: --docs is the docs dir; --root (default ".") is its
+    # parent, so a repo whose docs live elsewhere passes one --root. An explicit
+    # --docs wins; otherwise it is <root>/docs.
+    ap.add_argument("--root", default=".", help="repo root (default: .)")
+    ap.add_argument(
+        "--docs",
+        default=None,
+        help="docs directory (default: <root>/docs)",
+    )
     args = ap.parse_args()
-    docs = Path(args.docs)
+    docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
 
     raw_srs = load_csv(docs / "requirements" / "system-requirements.csv")
     raw_llrs = load_csv(docs / "requirements" / "low-level-requirements.csv")

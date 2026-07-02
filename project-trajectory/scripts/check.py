@@ -66,6 +66,19 @@ import sys
 import time
 from pathlib import Path
 
+
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
+    non-ASCII step name / path / child-process banner can't raise
+    UnicodeEncodeError on a legacy Windows cp1252 console. Python 3.7+ streams
+    expose `.reconfigure`; guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
 # ============================ EDIT FOR YOUR STACK ============================
 # The stack-specific knobs live here. For a non-Python project: point SRC/TESTS
 # at your layout, then swap the format/lint/tests commands in steps() (search
@@ -267,6 +280,7 @@ def run_step(name, requires, cmd, lenient):
 
 
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

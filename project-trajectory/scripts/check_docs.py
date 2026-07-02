@@ -45,6 +45,19 @@ import sys
 from pathlib import Path
 from urllib.parse import unquote
 
+
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
+    non-ASCII doc path or link target in a finding can't raise
+    UnicodeEncodeError on a legacy Windows cp1252 console. Python 3.7+ streams
+    expose `.reconfigure`; guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
 # A fenced code block opens/closes on a line of >=3 backticks or tildes.
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
 # Inline code span: backtick-delimited; stripped so `[x](y)` in code isn't a link.
@@ -297,6 +310,7 @@ def find_stale(parsed, root, lookup):
 
 
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default=".", help="repo root (default: .)")
     ap.add_argument(

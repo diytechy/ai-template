@@ -74,6 +74,19 @@ import re
 import sys
 from pathlib import Path
 
+
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is. Kit
+    scripts print non-ASCII (an em-dash WARNING, `§` refs) that a legacy Windows
+    cp1252 console raises UnicodeEncodeError on — wedging the run, not just
+    mojibaking. Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
 BEGIN = "<!-- BEGIN GENERATED MODULE MAP -->"
 END = "<!-- END GENERATED MODULE MAP -->"
 BEGIN_FLOW = "<!-- BEGIN GENERATED FLOW -->"
@@ -449,6 +462,7 @@ def build_flow(src_roots, entry):
 
 
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
