@@ -451,10 +451,18 @@ def apply_template_rewrites(dst_rel, dst):
     return applied
 
 
-def initialize_generated_docs(dest):
+def initialize_generated_docs(dest, created):
     """Run the generators once so the fresh scaffold starts green: the arch-map
     placeholder would otherwise fail `gen_arch_map.py --check` (and so the
-    harness) until the first manual run."""
+    harness) until the first manual run.
+
+    Gated on this run having *created* docs/architecture.md: a re-sync against
+    an adopted repo must never regenerate an artifact another generator owns —
+    a PowerShell repo's map is written by the gen_arch_map .ps1 port, and
+    running the Python generator over it clobbers the generated block (the
+    FileBackup re-sync hit exactly this)."""
+    if "docs/architecture.md" not in created:
+        return
     for rel_cmd in (
         ["scripts/gen_arch_map.py", "--src", "src", "--doc", "docs/architecture.md"],
         ["scripts/trace.py"],
@@ -689,7 +697,7 @@ def main():
         print("  {}: docs/status.md agent-setup note ({})".format(verb, agent_choice))
 
     if not args.dry_run:
-        initialize_generated_docs(dest)
+        initialize_generated_docs(dest, created)
     if not args.dry_run and created:
         print(
             "Next: fill the PROJECT BRIEF in AGENTS.md + docs/status.md, then "

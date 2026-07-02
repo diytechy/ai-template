@@ -2806,6 +2806,18 @@ continuity (same style as the session log above).
 > *(Also restores the "### Session protocol" heading the WI-1.11 edit
 > accidentally consumed.)*
 
+> **WI-1.13 ✅ landed 2026-07-02 · Re-sync must not regenerate a foreign-owned
+> arch map.** Friction from the 2026-07-02 downstream re-syncs (FileBackup):
+> `initialize_generated_docs` ran unconditionally, so a bootstrap re-run
+> against an **adopted** repo executed the freshly-copied Python
+> `gen_arch_map.py` over an architecture.md whose generated block is owned by
+> a *different* generator (FileBackup's gen_arch_map.ps1 port) — clobbering
+> the ps1-generated dependency diagram with empty Python-AST output. Fix: the
+> initializer is now gated on **this run having created docs/architecture.md**
+> (the fresh-scaffold marker); a re-sync that only adds new registries/
+> launchers touches nothing generated. +1 test (sentinel inside the GENERATED
+> markers survives a re-run); 160 pass.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

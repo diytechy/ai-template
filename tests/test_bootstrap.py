@@ -130,6 +130,26 @@ def test_readme_never_overwritten(tmp_path):
     assert text == "my project's own readme"
 
 
+def test_resync_does_not_regenerate_foreign_arch_map(tmp_path):
+    # Re-sync against an adopted repo whose arch map is owned by a different
+    # generator (e.g. the PowerShell port): bootstrap must not run the Python
+    # generator over it — the generated block would be clobbered (the
+    # FileBackup re-sync hit this). The initializer is gated on this run
+    # having created docs/architecture.md.
+    dest = tmp_path / "repo"
+    (dest / "docs").mkdir(parents=True)
+    sentinel = (
+        "# Arch\n\n<!-- BEGIN GENERATED DEPENDENCY DIAGRAM -->\n"
+        "_written by the ps1 port — SENTINEL_\n"
+        "<!-- END GENERATED DEPENDENCY DIAGRAM -->\n"
+    )
+    (dest / "docs" / "architecture.md").write_text(sentinel, encoding="utf-8")
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    text = (dest / "docs" / "architecture.md").read_text(encoding="utf-8")
+    assert "SENTINEL" in text, "re-sync must not regenerate a pre-existing map"
+
+
 def test_run_launchers_ship_inert_with_edit_slots(scaffold):
     # The evaluator's rungs (WI-1.12): root double-clickable launchers, one per
     # platform, shipped inert (empty RUN_CMD) with a marked EDIT slot. The
