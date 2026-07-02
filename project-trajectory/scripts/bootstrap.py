@@ -47,6 +47,20 @@ Gemini prefer their own filenames. All three are copied unconditionally — they
 tiny and cost nothing (same rationale as the interface artifacts), so every
 scaffold works whichever agent shows up.
 
+Agent selection (`--agents claude|gemini|both|none`, WI-1.9): at repo setup the
+user most likely has an agent configured, so bootstrap can bring that agent's
+**skills** (from the neutral `skills/` source) into the repo fold. The flag drives
+what's *materialized* beyond the always-copied stubs: the matched skills into the
+agent's native dir (`.claude/skills/<name>/SKILL.md`, `.gemini/skills/...`), the
+agent's optional hook config copied **inert** as `settings.json.example` (never a
+silently-installed Stop hook), and a setup note in `docs/status.md`. Run
+interactively without the flag and it ASKS (agent, then up to two scope questions
+— stack? domain? — that drive a trivial tag-intersection skill match). Run
+non-interactively (CI) without the flag and it defaults to `none`: zero prompts,
+nothing materialized, the historical agent-neutral scaffold unchanged. AGENTS.md
+stays the canonical guide whatever the choice; skills are opt-in accelerators, not
+process gates (skills/README.md).
+
 The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.csv`)
 are always scaffolded but ship **inert**: they hold only `IF-000` placeholder
 rows that nothing reads (`trace.py` doesn't process interfaces), so a standalone
@@ -109,6 +123,185 @@ import sys
 from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
+
+# --- Agent selection & the skills layer (WI-1.9) -----------------------------
+# At repo setup the user most likely already has an agent configured, so the
+# scaffold can materialize that agent's stub, its optional hook config, and the
+# skills relevant to the project — without locking the kit to any agent (the
+# `skills/` source stays neutral). See skills/README.md for the full contract.
+AGENT_CHOICES = ("claude", "gemini", "both", "none")
+
+# Per-agent native locations. Both Claude Code and Gemini CLI read the same
+# Agent-Skills `SKILL.md` shape, so materializing a skill is a straight copy into
+# the agent's skills dir; the optional hook config is copied *inert* (as a
+# `settings.json.example`) so the scaffold never silently installs a Stop hook
+# that runs commands — activation stays the user's explicit choice (the
+# agent-hooks/README.md "not wired by bootstrap" stance).
+AGENTS = {
+    "claude": {
+        "skills_dir": ".claude/skills",
+        "hooks_src": "agent-hooks/claude.settings.json",
+        "hooks_dst": ".claude/settings.json.example",
+    },
+    "gemini": {
+        "skills_dir": ".gemini/skills",
+        "hooks_src": "agent-hooks/gemini.settings.json",
+        "hooks_dst": ".gemini/settings.json.example",
+    },
+}
+
+# The closed applicability vocabularies used by the trivial scope matcher. `any`
+# in a skill's list always matches; an answer of "" (skipped question) also
+# matches everything (no filter on that axis).
+STACK_CHOICES = ("python", "go", "rust", "powershell", "any")
+DOMAIN_CHOICES = ("web", "game", "hardware", "data", "any")
+
+
+def selected_agents(choice):
+    """Expand an --agents choice into the concrete agent keys to materialize."""
+    if choice == "both":
+        return ["claude", "gemini"]
+    if choice in ("claude", "gemini"):
+        return [choice]
+    return []  # "none"
+
+
+def parse_skill_frontmatter(text):
+    """Minimal frontmatter parse (name/scope + list fields) for a SKILL.md.
+
+    Kept in sync with gen_skills_index.parse_frontmatter but inlined so bootstrap
+    stays a single stdlib file. Returns a dict; list fields are Python lists."""
+    import re
+
+    m = re.match(r"^---\s*\n(.*?)\n---\s*\n", text, re.DOTALL)
+    if not m:
+        return {}
+    fields = {}
+    for line in m.group(1).splitlines():
+        line = line.rstrip()
+        if not line or line.lstrip().startswith("#") or ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        key, value = key.strip(), value.strip()
+        if value.startswith("[") and value.endswith("]"):
+            fields[key] = [v.strip() for v in value[1:-1].split(",") if v.strip()]
+        else:
+            fields[key] = value
+    return fields
+
+
+def matches_scope(fm, stack, domain, binary_assets):
+    """Trivial tag-intersection matcher: does a skill's applicability fit the
+    declared project scope? `any` in the skill (or a skipped/"" answer) always
+    matches. Deliberately dumb — the metadata convention is the deliverable, not
+    an engine (skills/README.md)."""
+
+    def axis_ok(skill_vals, answer):
+        skill_vals = skill_vals or ["any"]
+        if not answer or "any" in skill_vals:
+            return True
+        return answer in skill_vals
+
+    if not axis_ok(fm.get("stacks"), stack):
+        return False
+    if not axis_ok(fm.get("domains"), domain):
+        return False
+    # A "binary assets / hardware involved?" yes only *adds* the hardware/game
+    # domains to the match; it never filters a skill out, so leave it advisory.
+    return True
+
+
+def select_skills(stack, domain, binary_assets):
+    """The kit-scope skills whose applicability intersects the declared scope.
+
+    Only `scope: kit` skills are materialized downstream — `this-repo` skills
+    maintain *this* template and are meaningless in an adopted product repo
+    (skills/README.md "split rationale"). Returns a list of (name, SKILL.md path).
+    When no scope was declared (all answers blank), every kit skill matches (the
+    safe superset)."""
+    chosen = []
+    skills_dir = KIT / "skills"
+    if not skills_dir.is_dir():
+        return chosen
+    for skill_md in sorted(skills_dir.glob("*/SKILL.md")):
+        fm = parse_skill_frontmatter(skill_md.read_text(encoding="utf-8"))
+        if (fm.get("scope") or "kit").strip() != "kit":
+            continue
+        if matches_scope(fm, stack, domain, binary_assets):
+            chosen.append((skill_md.parent.name, skill_md))
+    return chosen
+
+
+def materialize_agent_layer(dest, agents, skills, dry_run, force):
+    """Copy the selected skills (and the inert hook example) into each chosen
+    agent's native location. Returns a list of created dest-relative paths."""
+    created = []
+    for agent in agents:
+        spec = AGENTS[agent]
+        for name, src in skills:
+            dst_rel = "{}/{}/SKILL.md".format(spec["skills_dir"], name)
+            dst = dest / dst_rel
+            if dst.exists() and not force:
+                continue
+            if not dry_run:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(src, dst)
+            created.append(dst_rel)
+        hooks_src = KIT / spec["hooks_src"]
+        if hooks_src.exists():
+            hooks_dst = dest / spec["hooks_dst"]
+            if not hooks_dst.exists() or force:
+                if not dry_run:
+                    hooks_dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(hooks_src, hooks_dst)
+                created.append(spec["hooks_dst"])
+    return created
+
+
+def record_agent_choice(dest, choice, skills, dry_run):
+    """Append a one-line setup note to docs/status.md recording the agent choice
+    + date + materialized skills, so the scaffolded repo carries the decision
+    (idempotent: skipped if a note already exists)."""
+    import datetime
+
+    # "none" is the historical, agent-neutral default — it materializes nothing,
+    # so it records nothing either: the scaffold stays byte-for-byte unchanged.
+    if choice == "none":
+        return False
+    status = dest / "docs" / "status.md"
+    if not status.exists() or dry_run:
+        return False
+    text = status.read_text(encoding="utf-8")
+    marker = "<!-- agent-setup -->"
+    if marker in text:
+        return False
+    names = ", ".join(n for n, _ in skills) if skills else "none"
+    note = (
+        "\n{} Agent setup ({}): agents=`{}`; skills materialized: {}. "
+        "AGENTS.md remains the canonical, agent-neutral guide "
+        "(skills are opt-in accelerators, not a process gate).\n".format(
+            marker, datetime.date.today().isoformat(), choice, names
+        )
+    )
+    status.write_text(text + note, encoding="utf-8")
+    return True
+
+
+def prompt_choice(prompt, choices, default):
+    """Ask on a TTY; return `default` immediately when stdin isn't interactive
+    (CI-safe: a non-interactive run never blocks and never prompts)."""
+    if not sys.stdin.isatty():
+        return default
+    labels = "/".join(choices)
+    try:
+        ans = (
+            input("{} [{}] (default {}): ".format(prompt, labels, default))
+            .strip()
+            .lower()
+        )
+    except EOFError:
+        return default
+    return ans if ans in choices else default
 
 
 def _utf8_console():
@@ -327,7 +520,60 @@ def main():
     ap.add_argument(
         "--dry-run", action="store_true", help="print what would happen; write nothing"
     )
+    ap.add_argument(
+        "--agents",
+        choices=AGENT_CHOICES,
+        default=None,
+        help="which agent to set up (materialize its skills + inert hook example): "
+        "claude|gemini|both|none. Omitted + interactive TTY -> ASK; omitted + "
+        "non-interactive -> 'none' (CI-safe: preserves the agent-neutral default, "
+        "zero prompts, no skills materialized).",
+    )
+    ap.add_argument(
+        "--stack",
+        choices=STACK_CHOICES,
+        default=None,
+        help="declared primary stack, for skill matching (python|go|rust|"
+        "powershell|any). Omitted + interactive -> ASK; non-interactive -> no "
+        "filter (all kit skills match).",
+    )
+    ap.add_argument(
+        "--domain",
+        choices=DOMAIN_CHOICES,
+        default=None,
+        help="declared primary domain, for skill matching (web|game|hardware|"
+        "data|any). Omitted + interactive -> ASK; non-interactive -> no filter.",
+    )
     args = ap.parse_args()
+
+    # Resolve the agent choice: explicit flag wins; else ASK on an interactive
+    # TTY; else default to "none" — which materializes no skills/hooks and so
+    # preserves the historical (agent-neutral) scaffold exactly (CI-safe).
+    agent_choice = (
+        args.agents
+        if args.agents is not None
+        else prompt_choice(
+            "Preferred agent to set up for this repo?", AGENT_CHOICES, "none"
+        )
+    )
+    agents = selected_agents(agent_choice)
+    # Only ask the (up to) two scope questions when an agent was chosen and the
+    # answers weren't passed as flags — they only drive skill matching. A
+    # non-interactive run never prompts (prompt_choice returns the default).
+    stack = args.stack
+    domain = args.domain
+    if agents:
+        if stack is None:
+            stack = prompt_choice("Primary stack?", STACK_CHOICES, "any")
+        if domain is None:
+            domain = prompt_choice("Primary domain?", DOMAIN_CHOICES, "any")
+        binary_assets = (
+            prompt_choice("Binary assets or hardware involved?", ("yes", "no"), "no")
+            == "yes"
+        )
+        skills = select_skills(stack, domain, binary_assets)
+    else:
+        skills = []
 
     dest = Path(args.dest).resolve()
     if not dest.exists():
@@ -373,6 +619,13 @@ def main():
             keep.write_text("", encoding="utf-8")
             created.append("{}/.gitkeep".format(d))
 
+    # Materialize the chosen agent's layer: its matched skills into the native
+    # skills dir + the inert hook example. "none" (the non-interactive default)
+    # adds nothing, so the historical scaffold is byte-for-byte unchanged.
+    created.extend(
+        materialize_agent_layer(dest, agents, skills, args.dry_run, args.force)
+    )
+
     verb = "would create" if args.dry_run else "created"
     for c in created:
         print("  {}: {}".format(verb, c))
@@ -399,6 +652,11 @@ def main():
             "from a committed kit state (commit the kit, then re-run).".format(label),
             file=sys.stderr,
         )
+
+    # Record the agent choice + date + materialized skills in docs/status.md so
+    # the scaffolded repo carries the setup decision (AGENTS.md stays canonical).
+    if record_agent_choice(dest, agent_choice, skills, args.dry_run):
+        print("  {}: docs/status.md agent-setup note ({})".format(verb, agent_choice))
 
     if not args.dry_run:
         initialize_generated_docs(dest)

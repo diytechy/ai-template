@@ -1,6 +1,6 @@
 """Bootstrap must produce a scaffold that is green out of the box."""
 
-from conftest import KIT, SCRIPTS, run_py
+from conftest import KIT, SCRIPTS, load_script, run_py
 
 
 def test_scaffold_contains_expected_files(scaffold):
@@ -51,9 +51,7 @@ def test_agents_template_stays_within_size_budget():
     size = len((KIT / "AGENTS.template.md").read_bytes())
     assert size <= 10_000, (
         "AGENTS.template.md is {} bytes; budget is 10,000 (>=2k headroom under "
-        "the ~12k Gemini cap) — tighten another rule to pay for the growth".format(
-            size
-        )
+        "the ~12k Gemini cap) — tighten another rule to pay for the growth".format(size)
     )
 
 
@@ -118,3 +116,100 @@ def test_rerun_skips_existing_files(scaffold):
     proc = run_py([SCRIPTS / "bootstrap.py", "--dest", scaffold], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert (scaffold / "CLAUDE.md").read_text(encoding="utf-8") == "customized"
+
+
+# --- Agent selection & the skills layer (WI-1.9) -----------------------------
+
+
+def _bootstrap(tmp_path, *extra):
+    dest = tmp_path / "repo"
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest, *extra], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return dest
+
+
+def test_non_interactive_default_materializes_no_agent_layer(tmp_path):
+    # The property the spec pins: run non-interactively with NO --agents flag and
+    # the scaffold is the historical, agent-neutral one — no .claude/.gemini dirs,
+    # no skills, no setup note. (conftest.run_py closes stdin, so the omitted-flag
+    # path takes its 'none' default exactly as CI would.)
+    dest = _bootstrap(tmp_path)
+    assert not (dest / ".claude").exists(), "default must not materialize .claude"
+    assert not (dest / ".gemini").exists(), "default must not materialize .gemini"
+    status = (dest / "docs" / "status.md").read_text(encoding="utf-8")
+    assert "<!-- agent-setup -->" not in status, "default must add no setup note"
+
+
+def test_explicit_agents_none_matches_default(tmp_path):
+    # --agents none is the same agent-neutral result, just stated explicitly.
+    dest = _bootstrap(tmp_path, "--agents", "none")
+    assert not (dest / ".claude").exists()
+    assert not (dest / ".gemini").exists()
+
+
+def test_agents_claude_materializes_kit_skills_and_inert_hook(tmp_path):
+    dest = _bootstrap(tmp_path, "--agents", "claude")
+    skills = dest / ".claude" / "skills"
+    assert skills.is_dir(), "claude selection must materialize .claude/skills"
+    # Only kit-scope skills ship downstream; the this-repo ones must NOT.
+    names = {p.name for p in skills.iterdir()}
+    assert {"registry-hygiene", "downstream-resync", "gate-advance"} <= names
+    assert "byte-budget-guard" not in names, "this-repo skill must not ship"
+    assert "session-protocol" not in names, "this-repo skill must not ship"
+    # Each materialized skill keeps its neutral SKILL.md verbatim.
+    assert (skills / "registry-hygiene" / "SKILL.md").exists()
+    # The hook config is copied INERT (as an example), never a live settings.json.
+    assert (dest / ".claude" / "settings.json.example").exists()
+    assert not (dest / ".claude" / "settings.json").exists()
+    # Gemini gets nothing for a claude-only selection.
+    assert not (dest / ".gemini").exists()
+    # The choice + date is recorded in status.md.
+    status = (dest / "docs" / "status.md").read_text(encoding="utf-8")
+    assert "<!-- agent-setup -->" in status
+    assert "agents=`claude`" in status
+
+
+def test_agents_both_materializes_for_both(tmp_path):
+    dest = _bootstrap(tmp_path, "--agents", "both")
+    for agent_dir in (".claude", ".gemini"):
+        skills = dest / agent_dir / "skills"
+        assert skills.is_dir(), agent_dir + " must get skills"
+        assert (skills / "gate-advance" / "SKILL.md").exists()
+        assert (dest / agent_dir / "settings.json.example").exists()
+
+
+def test_scaffold_with_agents_still_green(tmp_path):
+    # Materializing the agent layer must not break the out-of-the-box harness.
+    dest = _bootstrap(tmp_path, "--agents", "both")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=dest)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=dest
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_scope_matcher_is_tag_intersection():
+    boot = load_script("bootstrap")
+    # `any` on an axis always matches; a specific value matches only its members.
+    py_only = {"stacks": ["python"], "domains": ["any"]}
+    assert boot.matches_scope(py_only, "python", "any", False)
+    assert not boot.matches_scope(py_only, "go", "any", False)
+    # A skipped answer ("") never filters.
+    assert boot.matches_scope(py_only, "", "web", False)
+    any_skill = {"stacks": ["any"], "domains": ["any"]}
+    assert boot.matches_scope(any_skill, "rust", "hardware", True)
+
+
+def test_select_skills_returns_only_kit_scope():
+    boot = load_script("bootstrap")
+    chosen = {n for n, _ in boot.select_skills("any", "any", False)}
+    assert {"registry-hygiene", "downstream-resync", "gate-advance"} <= chosen
+    assert "byte-budget-guard" not in chosen
+    assert "session-protocol" not in chosen
+
+
+def test_skills_index_is_fresh():
+    # The generated INDEX.csv must match the SKILL.md files (like arch-map --check).
+    proc = run_py([SCRIPTS / "gen_skills_index.py", "--check"], cwd=KIT)
+    assert proc.returncode == 0, proc.stdout + proc.stderr

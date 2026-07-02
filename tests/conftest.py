@@ -26,12 +26,18 @@ def load_script(name):
 
 
 def run_py(args, cwd):
-    """Run `python <args>` in cwd, capturing output."""
+    """Run `python <args>` in cwd, capturing output.
+
+    stdin is closed (DEVNULL) so a script that *would* prompt on a TTY (e.g.
+    bootstrap's agent-selection question) runs non-interactively and takes its
+    default instead of blocking — the CI-safe path the tests must exercise.
+    """
     return subprocess.run(
         [sys.executable] + [str(a) for a in args],
         cwd=str(cwd),
         capture_output=True,
         text=True,
+        stdin=subprocess.DEVNULL,
     )
 
 
