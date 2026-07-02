@@ -102,7 +102,11 @@ ICD model):
 - for a surface some repo **builds**, that repo's `IF-###` is the authoritative spec;
 - for a **purchased / external / reused** part that *no repo builds*, a
   **coordinator-held `IF-###`** row *is* the owner of record — it links the datasheet /
-  part / vendor contract.
+  part / vendor contract. Acquisition state for such a part (vendor, cost, order
+  status, quantity) lives in the optional `procurement.csv` (`PART-###`) registry,
+  each row's `IF-Ref` back-linking this owner `IF-###` (process-options.md
+  "purchased parts"). It is minimal by design — a flat parts list, not a bill of
+  materials; full BOM tracking is a deferred extension.
 
 The coordinator's **catalog references** those owner `IF-###` ids and adds only
 assembly-level **connection** information (which module's provided surface wires to

@@ -21,6 +21,11 @@ Reads (relative to --docs, default "docs"):
     requirements/modules.csv                 (optional; MOD-### coordinator module registry,
                                              MULTI_REPO.md — each row's DelegatedSRs must name a
                                              real coordinator SR; the multi-repo layer only)
+    requirements/procurement.csv             (optional; PART-### purchased/external parts,
+                                             process-options.md — each row's IF-Ref names the
+                                             owning interface row of record (MULTI_REPO.md §3.3);
+                                             integrity-checked only, like a MOD row with no
+                                             DelegatedSRs)
 
 Writes:
     test/report.md  — counts, the SR->LLR->TC matrix, the orphan list, and two
@@ -69,6 +74,12 @@ Always (independent of --strict-schema), structural integrity is checked:
       referenced only via the IF-### catalog may delegate nothing, so an empty
       back-link is allowed here (unlike PB). The MOD-000 example row is ignored,
       so the optional registry never blocks a single-repo project's gate
+    - a purchased/external part row (PART-###, process-options.md) with a
+      malformed/duplicate PART- id. Its IF-Ref names the owning interface row of
+      record (MULTI_REPO.md §3.3) but is NOT resolved here: trace.py never reads
+      interfaces.csv (the IF-### tier is off the joined spine), so PART is
+      integrity-checked only — like a MOD row that delegates nothing. The
+      PART-000 example row is ignored, so the optional registry never blocks a gate
 These join `--strict`'s failure set like orphans do. `--strict-integrity` fails
 on *only* this integrity class: it is the always-valid floor the pre-commit hook
 runs on every commit — a duplicated or malformed id is wrong at any stage, while
@@ -123,6 +134,9 @@ ID_PATTERNS = {
     "MOD": re.compile(
         r"^MOD-\d+$"
     ),  # optional coordinator module registry (MULTI_REPO.md)
+    "PART": re.compile(
+        r"^PART-\d+$"
+    ),  # optional purchased/external parts registry (process-options.md)
 }
 
 # Fields that must be non-empty under --strict-schema. Deliberately omits the
@@ -516,6 +530,10 @@ def main():
     # Optional coordinator module registry (MULTI_REPO.md, the multi-repo layer);
     # absent file -> [].
     raw_mods = load_csv(docs / "requirements" / "modules.csv")
+    # Optional purchased/external parts registry (process-options.md); absent
+    # file -> []. Integrity-checked only (IF-Ref points at the off-spine IF-###
+    # tier, which trace.py does not read).
+    raw_parts = load_csv(docs / "requirements" / "procurement.csv")
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -525,6 +543,7 @@ def main():
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
     pbs = [r for r in raw_pbs if r.get("PB-ID") and not is_example(r["PB-ID"])]
     mods = [r for r in raw_mods if r.get("MOD-ID") and not is_example(r["MOD-ID"])]
+    parts = [r for r in raw_parts if r.get("PART-ID") and not is_example(r["PART-ID"])]
 
     sn_ids = set()
     sn_md = docs / "requirements" / "stakeholder-needs.md"
@@ -664,6 +683,12 @@ def main():
     # optional off-spine registry — integrity-checked, but out of the placeholder/
     # schema sweeps, so a single-repo project's MOD-000 placeholder never blocks it.
     integrity += integrity_findings("MOD", raw_mods)
+    # The purchased/external parts registry (PART-###, process-options.md) is the
+    # same kind of optional off-spine registry — integrity-checked (malformed/
+    # duplicate id), but out of the placeholder/schema sweeps and with no back-link
+    # resolution (its IF-Ref points at the IF-### tier trace.py doesn't read), so a
+    # project that buys nothing keeps its PART-000 placeholder without blocking a gate.
+    integrity += integrity_findings("PART", raw_parts)
     placeholders = (
         [f for label in raw for f in placeholder_findings(label, raw[label])]
         + [f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)]
@@ -718,6 +743,7 @@ def main():
             if mods
             else []
         )
+        + ([f"| Purchased parts (PART) | {len(parts)} |"] if parts else [])
         + [
             "",
             "## SR -> LLR -> TC matrix",
@@ -773,6 +799,12 @@ def main():
             if not module_findings
             else [f"- {f}" for f in module_findings]
         )
+    if parts:
+        lines += ["", "## Purchased parts (process-options.md)", ""]
+        lines += [
+            f"{len(parts)} part row(s); each IF-Ref names its owning interface row "
+            "of record (MULTI_REPO.md §3.3), integrity-checked only."
+        ]
     if args.no_placeholders:
         lines += ["", "## Placeholders (--no-placeholders)", ""]
         lines += (
@@ -821,6 +853,7 @@ def main():
             if mods
             else ""
         )
+        + (f" parts={len(parts)}" if parts else "")
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
     )

@@ -26,6 +26,7 @@ What it creates in the destination:
     docs/requirements/low-level-requirements.csv
     docs/requirements/interfaces.csv           <- registries/interfaces.template.csv
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
+    docs/requirements/procurement.csv          <- registries/procurement.template.csv
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py
@@ -56,6 +57,15 @@ kind of optional, always-scaffolded coordination registry for quantitative
 perf/resource budgets. Its `PB-000` placeholder is inert (`trace.py` ignores
 `-000` rows); a project with no resource concerns leaves it untouched. Once it
 carries real rows, `trace.py` keeps their SR/LLR/Module back-links honest.
+
+`docs/requirements/procurement.csv` (PART-###, process-options.md "purchased
+parts") is the same kind of optional, always-scaffolded registry, for
+purchased/external parts the project buys rather than builds. Each row's `IF-Ref`
+names the interface row that is its owner-of-record (MULTI_REPO.md §3.3). Its
+`PART-000` placeholder is inert; a project that buys nothing leaves it untouched.
+`trace.py` integrity-checks the `PART-` ids (it does not resolve `IF-Ref`, which
+points at the off-spine `IF-###` tier trace.py never reads). Full BOM tracking is
+a deferred extension.
 
 This scaffolds a **single-repo** project — the default and almost-always-right
 rung of the scale ladder (process.md §10). The rare multi-repo **coordinator** rung
@@ -114,6 +124,10 @@ MAPPING = [
     (
         "registries/performance-budgets.template.csv",
         "docs/requirements/performance-budgets.csv",
+    ),
+    (
+        "registries/procurement.template.csv",
+        "docs/requirements/procurement.csv",
     ),
     ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
     ("scripts/trace.py", "scripts/trace.py"),
