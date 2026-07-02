@@ -2607,6 +2607,59 @@ continuity (same style as the session log above).
 > 12 B headroom preserved).** `pytest -q`: **144 passed, 1 skipped** (was 137/1;
 > +3 Attest + 4 asset tests). `check_docs` green on repo + fresh scaffold.
 
+> **WI-1.8 ✅ landed 2026-07-02 · Terminology alignment with systems-engineering
+> standards + standards crosswalk.** Owner-approved (2026-07-02): several kit
+> concepts are light re-derivations of established standards, so using the
+> standard terms buys instant onboarding for humans/tools/LLMs from
+> standards-world and lets definition disputes be settled by citation — but as
+> **alignment + citation only, never incorporation of standard-mandated
+> ceremony** (that process weight is exactly what the Proportionality doctrine
+> warns against; IEEE texts are paywalled, so terminology is aligned, never
+> copied). Two logical commits:
+> 1. **§4 Verification vocabulary → TDIA.** `PROCESS.md` §4 now cites the classic
+>    four methods — `Test`/`Demonstration`/`Inspection`/`Analysis` (`TDIA`, per
+>    MIL-STD-961E / ISO/IEC/IEEE 29148 / INCOSE SE Handbook) — and leans the
+>    definitions on the standard instead of restating them; `Manual` and `Attest`
+>    are framed as the kit's explicit named extensions, with `Attest`'s nearest
+>    standard analog (a witnessed test / QA sign-off record) noted and the
+>    attested-vs-mechanized *reporting* called out as deliberately beyond the
+>    standards. **`Demonstration` was already in the closed vocabulary** (added
+>    pre-WI-1.8), so this deliverable was terminology/citation, not a new kind:
+>    **decided `Demonstration` keeps the LLR requirement** (it runs the system and
+>    describes implemented behavior — the standard reading puts it closer to
+>    `Test` than to the analytic `Analysis`/`Inspection`/`Attest` trio, which are
+>    the only LLR-exempt methods). Purely additive: the closed vocabulary is
+>    unchanged → **zero migration burden** for existing adopters. No `trace.py`
+>    change needed (vocabulary + exemption logic already correct); no new
+>    `EXAMPLE.md` row (SR-002/SR-101/SR-011 already demonstrate `Demonstration`).
+> 2. **Standards crosswalk table → `ADOPTING.md` §7.** Chose `ADOPTING.md` over
+>    `PROCESS_OPTIONS.md`: the crosswalk's audience is standards-fluent adopters
+>    mapping an existing practice onto the kit, which is precisely the retrofit
+>    guide's job; a crosswalk isn't an opt-in *process layer*. Compact table
+>    mapping SN→SR→LLR→TC (IEEE 29148 StRS/SyRS/SRS + DO-178C HLR/LLR),
+>    `trace.py`→RTM, gates→SRR/PDR/CDR/TRR + FCA/PCA (IEEE 15288.2), IF-###→ICD,
+>    PB-###→TPMs, ASSET-###→config items/baselines (IEEE 828 / ISO 10007),
+>    `status.md` risks→risk register (ISO 31000), Verification→TDIA, and the
+>    overall shape→FDA design controls (21 CFR 820.30) / ISO 13485 DHF as a
+>    structural cousin. Framed with the doctrine's spirit (right-sized application
+>    of the ideas, for communication/citation not obligation). Every mapping
+>    **web-verified before writing** (TDIA method set; IEEE 15288.2 review/audit
+>    list; IEEE 29148 StRS/SyRS/SRS levels; IEEE 828 / ISO 10007 CI+baseline;
+>    ISO 31000 risk register) — **no rows dropped**; the two hedged ones (gates
+>    G1–G3 as an *altitude* match not 1:1, and FDA/ISO 13485 as a *structural
+>    cousin* not a compliance claim) carry that hedge in their Notes cell.
+>
+> **Byte deltas:** `PROCESS.md` **+316** (47,160→47,476 — flagged: it grew, but
+> the §4 edit was tightened twice so the citation nets only the standard family +
+> the Demonstration-LLR call + the Attest analog note; a first pass was +535 B,
+> trimmed to +316); `ADOPTING.md` **+3,170** (16,073→19,243, the crosswalk, in the
+> adopting layer only per the constraint); `PROCESS_OPTIONS.md` **untouched**;
+> `EXAMPLE.md` **untouched** (Demonstration already exemplified); **`AGENTS.template.md`
+> untouched (9,988/10,000 — 12 B headroom preserved).** `pytest -q`: **144 passed,
+> 1 skipped** (unchanged — no code change, so no new tests). `check_docs` green on
+> fresh scaffold (the pytest suite's bootstrap run); the crosswalk uses inline-code
+> standard names, not intra-repo links, so adds no link surface.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
