@@ -219,6 +219,49 @@ cheap), and a query-time semantic index (§7 map-vs-index note) can help chase
 references across a large tree — but both are optional, downstream, and orthogonal
 to the promote rule.
 
+## Skills layer
+
+*Referenced from PROCESS.md §7 "boundary notes".* **Applies when** a repo will be
+worked by an AI agent (Claude Code, Gemini CLI, …) and you want that agent to load
+this repo's repeatable procedures as first-class, on-demand **skills**. Skip it for
+a repo with no agent — nothing here is required, and the gates never read a skill.
+
+A **skill** is a small, focused capability — a procedure grounded in this repo's
+actual commands and files — that an agent loads on demand to work faster and more
+correctly. Skills are **opt-in accelerators, not process gates** (the
+Proportionality doctrine applied to tooling): the gates, the traceability spine,
+and the git/CI floor are the bar; a skill only helps an agent clear it. The full
+contract lives in the kit's `skills/README.md`; the shape:
+
+- **Neutral source → per-agent materialization.** The kit ships skills as
+  agent-neutral `skills/<name>/SKILL.md` files. `bootstrap.py --agents
+  claude|gemini|both|none` materializes the selected agent's skills into its native
+  location (Claude Code `.claude/skills/<name>/SKILL.md`; Gemini CLI
+  `.gemini/skills/<name>/SKILL.md`) — both read the same Agent-Skills `SKILL.md`
+  frontmatter, so materialization is a straight copy. `none` (the non-interactive
+  default) materializes nothing, preserving the agent-neutral scaffold; run
+  interactively and bootstrap **asks**. `AGENTS.md` stays the canonical guide
+  whichever agent is chosen.
+- **The optional hook config is copied inert.** The chosen agent's
+  `agent-hooks/*.settings.json` is copied as `settings.json.example`, **never** a
+  live `settings.json` — the scaffold must not silently install a `Stop` hook that
+  runs commands. Enforcement stays in git + CI (`agent-hooks/README.md`); activating
+  the example is the user's explicit choice.
+- **Applicability schema + generated index.** Each `SKILL.md` frontmatter carries
+  `stacks`/`domains`/`phases`/`tags` (+ a `scope` of `kit` or `this-repo`) so a
+  skill's fit is machine-readable. `scripts/gen_skills_index.py` regenerates
+  `skills/INDEX.csv` (one row per skill) as the cheap scan surface, with `--check`
+  as the freshness gate — the same "generated, don't hand-maintain" stance as the
+  code map. At setup bootstrap asks up to three scope questions (stack? domain?
+  binary/hardware?) and selects the `kit`-scope skills whose tags **intersect** the
+  answers — a trivial set-intersection, no engine. The **metadata convention is the
+  deliverable**, so a later tool can match/fetch smarter without redesign.
+- **Future external sources plug in here.** `skills/README.md` documents the
+  contract (naming, the frontmatter shape, the neutral-source landing zone,
+  trust/review) for how a later tool would fetch remote/community skills — they land
+  in the same `skills/` source layout and materialize via the same path, never
+  written straight into an agent dir bypassing the index.
+
 ## §8 purchased parts
 
 *Referenced from PROCESS.md §8.* **Applies when** the product incorporates

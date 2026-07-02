@@ -232,6 +232,15 @@ range to see exactly which templates/scripts changed before you touch anything.
   even though the asset itself can't be diffed. Both are opt-in; a scope with no
   subjective/binary work ignores them (process-options.md "Proportionality
   doctrine" + "Binary assets").
+- **Skills layer (newer kits ship `skills/`).** To bring an agent's skills into an
+  already-adopted repo, re-run `bootstrap.py --agents claude|gemini|both` against
+  it: it materializes the matched `kit`-scope skills into the agent dir
+  (`.claude/skills/…` / `.gemini/skills/…`) and copies the inert hook example,
+  **skipping any skill file that already exists** (your edits are safe; use
+  `--force` only after a diff pass). The `skills/SKILL.md` sources are kit-owned —
+  overwrite freely on re-sync; a skill you customized locally, treat like
+  `check.py` (take the new version, re-apply your delta). Skills are opt-in
+  accelerators, never a gate (process-options.md "Skills layer").
 
 ### Repos whose `AGENTS.md` already means something else
 

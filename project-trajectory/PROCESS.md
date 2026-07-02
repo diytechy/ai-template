@@ -544,7 +544,9 @@ over time is an *external readiness assessor*, optional downstream tooling — t
 `ruff`/`pytest` stance: name the gate, the project picks the tool); **the kit
 is a spec, not a turnkey agent-runtime harness** (an `npx`-installed engine
 shipping skills/agents/hooks/MCP for one tool is a different, optional product
-that *composes* with a scaffolded repo but neither depends on the other); and
+that *composes* with a scaffolded repo but neither depends on the other — though
+the kit *does* ship neutral, opt-in **skills** an agent can materialize at setup,
+`process-options.md` "Skills layer"); and
 **repo text is the durable agent memory layer** — the committed artifacts
 (`status.md`, registries, `AGENTS.md`, the code map) are the agent-neutral,
 reviewable memory; agent-native memory tools (auto-memory, MCP memory servers)

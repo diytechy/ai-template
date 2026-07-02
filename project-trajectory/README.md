@@ -46,7 +46,9 @@ audits.
 | `onboard.template.{sh,command,cmd}` | **Stage-0 onboarder** (one readable, double-clickable entry point per platform) → `scripts/onboard.*`. Consent-first: explains itself, native folder picker, ensures git, HTTPS-clones, then an end banner naming the checkout dir + the "point an AI agent here" handoff, and hands off to `dev-setup`. Fill in your clone URL; optionally serve it as a Release asset. The zero-to-running rung of the onboarding ladder (process.md §7). |
 | `dev-setup.template.{sh,ps1}` | **Developer-workstation** setup → `scripts/dev-setup.*`. Detect-and-report by default (`--check`); `--baseline`/`--full` install consent-first. `--profile code` vs `--profile domain` (non-code contributors) with an EDIT-FOR-YOUR-STACK/DOMAIN block like `check.py`. Provisions what a *human* needs (runtime, git, an **offline** Mermaid renderer) — distinct from `setup.{sh,ps1}` (the product toolchain). |
 | `hooks/pre-commit` | Agent-neutral **process floor** → copied to `.githooks/pre-commit`; `setup.{sh,ps1}` enable it via `git config core.hooksPath .githooks`. One POSIX hook (works on Git for Windows too) running the fast, always-valid checks: code-map freshness + id integrity (`trace.py --strict-integrity`) (+ ruff format on staged files if installed). Orphan strictness is gate-scoped — the hook never blocks a legitimate early-stage commit; the full gate bar stays in `check.py`/CI. |
-| `agent-hooks/` | **Optional** per-agent hook configs (`claude.settings.json`, `gemini.settings.json`) that mirror the git hook for earlier feedback. Not wired by bootstrap; the git hook + CI are the source of truth (see `agent-hooks/README.md`). |
+| `agent-hooks/` | **Optional** per-agent hook configs (`claude.settings.json`, `gemini.settings.json`) that mirror the git hook for earlier feedback. Never wired live by bootstrap — on `--agents`, the chosen agent's config is copied **inert** as `settings.json.example`; the git hook + CI stay the source of truth (see `agent-hooks/README.md`). |
+| `skills/` | **Agent-neutral skills** (opt-in accelerators, not gates): one `<name>/SKILL.md` per skill, frontmatter carrying the agent-facing `name`/`description` **and** an applicability schema (`stacks`/`domains`/`phases`/`tags`/`scope`). `bootstrap.py --agents claude\|gemini\|both` materializes the matched `kit`-scope skills into the agent's native dir (`.claude/skills/…`, `.gemini/skills/…`); a trivial tag-intersection matcher picks them from up-to-three setup questions. `INDEX.csv` is the generated scan surface; `skills/README.md` is the full contract incl. the future external-source plug-in. `this-repo`-scope skills maintain *this* template and don't ship downstream. |
+| `scripts/gen_skills_index.py` | Generates `skills/INDEX.csv` from the `SKILL.md` frontmatter (one row per skill); `--check` fails if stale (like `gen_arch_map.py --check`). Stdlib-only. |
 | `pytest.ini` | Registers the `smoke`/`full`/`release` test-tier markers the harness selects with `--tier` (unmarked tests run in `full`+`release`). |
 | `gitignore.template` | Minimal `.gitignore` for the new repo (venv, tool caches, the regenerated trace report + HTML map). |
 | `ci/check.yml` | Reference GitHub Actions workflow → copy to `.github/workflows/check.yml`. Runs the same `check.py`. |
@@ -65,6 +67,9 @@ audits.
    an **existing** repo — code, CI, a non-Python stack? See `ADOPTING.md`.)*
    If `python` is absent or Python 2, use `python3` (Linux/macOS) or `py`
    (Windows); the kit needs Python 3.8+.
+   *Setting up for an agent? Add `--agents claude|gemini|both` to also
+   materialize that agent's skills (run interactively without the flag and it
+   asks; the default `none` keeps the agent-neutral scaffold — `skills/README.md`).*
 2. **Brief:** fill the **PROJECT BRIEF** in the new repo's `AGENTS.md` and
    `docs/status.md`. To drive it conversationally instead, paste
    `KICKOFF_PROMPT.md` (brief filled) into your agent.

@@ -58,6 +58,13 @@ a real project — or get out of the way.
 - `project-trajectory/*.template.md` + `registries/*.template.*` — the artifact
   formats copied into a new repo's `docs/`.
 - `project-trajectory/scripts/` — runnable kit scripts (see "stdlib-only" above).
+- `project-trajectory/skills/` — agent-neutral **skills** (opt-in accelerators):
+  one `<name>/SKILL.md` with an applicability schema; `scope: kit` skills ship +
+  materialize downstream, `scope: this-repo` ones maintain *this* template and are
+  dogfooded into [`.claude/skills/`](.claude/skills/). `gen_skills_index.py`
+  regenerates `skills/INDEX.csv`; `bootstrap.py --agents` materializes them (see
+  `project-trajectory/skills/README.md`). When you change *this* repo's
+  conventions, update the matching `this-repo` skill too.
 - `project-trajectory/ci/check.yml` — reference CI that runs the same harness.
 - [`project-trajectory/EXAMPLE.md`](project-trajectory/EXAMPLE.md) — the worked
   SN→SR→LLR→TC chain; keep it in sync with the registry column headers (a test

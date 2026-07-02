@@ -58,6 +58,9 @@ python project-trajectory/scripts/bootstrap.py --dest /path/to/your/new/repo
 
 # Preview without writing:
 python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --dry-run
+
+# Setting up for an agent? Also materialize its skills (asks if run interactively):
+python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --agents claude
 ```
 
 > **Which `python`?** The kit needs Python 3.8+. These examples say `python`; if

@@ -18,6 +18,10 @@ The files here let an agent give you *earlier* feedback (e.g. on the agent's
 - `claude.settings.json` → copy/merge into the repo's `.claude/settings.json`.
 - `gemini.settings.json` → copy/merge into the repo's `.gemini/settings.json`.
 
-They are intentionally **not** wired by `bootstrap.py`. Adopt one only if you
-want the extra signal, and **verify the schema against your agent's current
-version** — these mirror the git hook for convenience; they don't replace it.
+They are intentionally **never wired live** by `bootstrap.py`. When you scaffold
+with `--agents claude|gemini|both`, the chosen agent's config is copied **inert**
+as `.claude/settings.json.example` / `.gemini/settings.json.example` — so the
+scaffold never silently installs a `Stop` hook that runs commands. Adopt one only
+if you want the extra signal: rename the example to `settings.json` (merging into
+any existing one), and **verify the schema against your agent's current version** —
+these mirror the git hook for convenience; they don't replace it.
