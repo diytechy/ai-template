@@ -252,3 +252,27 @@ not which filename plays which role. When re-syncing such a repo:
 - Keep the pointer discipline: whichever file is the encyclopedia, the others say
   "defer to it, don't duplicate." State the mapping once at the top of each file
   so an agent isn't guessing which `AGENTS.md` convention this repo follows.
+
+## 7. Standards crosswalk (for people and tools from standards-world)
+
+Most of the kit's vocabulary is a **right-sized application of established
+systems-engineering ideas**, not a new invention. This table maps kit terms to
+their standard equivalents so an adopter (or an LLM) fluent in those standards can
+onboard instantly and settle definition disputes by citation. It is for
+**communication and citation only** — the kit deliberately borrows the *ideas*,
+not any standard's full mandated process (that ceremony is exactly the weight the
+Proportionality doctrine warns against; see `process-options.md`). Where the kit
+honestly deviates, the row says so.
+
+| Kit concept | Standard equivalent | Notes / honest deviation |
+| --- | --- | --- |
+| `SN`→`SR`→`LLR`→`TC` spine | ISO/IEC/IEEE 29148 StRS → SyRS/SRS requirement levels; DO-178C HLR/LLR + trace-to-test | `SN`≈StRS (stakeholder), `SR`≈SyRS/SRS (system/software), `LLR`≈DO-178C low-level requirement/design. The kit collapses the ceremony into four CSV tiers. |
+| `trace.py` output (`report.md` / graph) | Requirements Traceability Matrix (RTM) | Same job — every requirement linked to its verification — generated from the registries, never hand-maintained. |
+| Gates `G1`–`G3` | Technical review gates SRR / PDR / CDR / TRR (IEEE 15288.2) | Rough altitude match, not a 1:1 mapping: `G1`≈requirements agreed (SRR), `G2`≈design/impl reviewed (PDR/CDR), `G3`≈verified (TRR). The kit's gates are lightweight self-reviews, not staffed milestone reviews. |
+| `G-Release` | Functional / Physical Configuration Audit (FCA / PCA, IEEE 15288.2) | Confirms the built product matches its requirements and its declared configuration before release. |
+| `IF-###` interface catalog | Interface Control Document (ICD) | One row per interface of record; the kit's is a CSV catalog, not a standalone controlled document. |
+| `PB-###` performance budgets (§9) | Technical Performance Measures (TPMs) / resource budgets | Same intent — track measurable performance/resource targets against thresholds. |
+| `ASSET-###` + manifest/hash | Configuration items + baselines (IEEE 828 / ISO 10007) | A configuration item with a recorded, hashable baseline; the kit tracks provenance/license/hash in text where the asset itself can't be diffed. |
+| `status.md` risks & assumptions | Risk register (ISO 31000 family) | Same purpose — a living record of identified risks and assumptions; the kit keeps it lightweight and inline, not a separate managed register. |
+| `Verification` column | TDIA methods — Test, Demonstration, Inspection, Analysis (MIL-STD-961E / ISO/IEC/IEEE 29148 / INCOSE SE Handbook) | Direct adoption. Plus the kit's `Manual` and `Attest`; `Attest`'s nearest analog is a witnessed test / QA sign-off, with the attested-vs-mechanized reporting deliberately beyond the standards (process.md §4). |
+| Overall needs → requirements → outputs → verification shape | FDA design controls (21 CFR 820.30) / ISO 13485 Design History File (DHF) | A structural cousin, not a claim of compliance: the same design-input → design-output → verification loop, right-sized for software. |
