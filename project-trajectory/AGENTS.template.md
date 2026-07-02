@@ -170,6 +170,10 @@ Direct and concrete; explain the *why* before the *how*.
   experiment with hypothesis + result beats confident guessing.
 - **Propose better ways.** The stronger or longer-lived approach is welcome,
   not noise.
+- **Repo text is the project's memory; yours is scratch.** Durable facts — a
+  decision, constraint, or gotcha — belong in `docs/` (status, registries,
+  AGENTS.md), not in agent-private memory. Promote them before closing a
+  session (process.md §7 "durable agent memory layer").
 
 ---
 

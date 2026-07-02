@@ -140,6 +140,36 @@ never a kit dependency. Its "back every verdict with a deterministic gate" stanc
 is the same one §6 already takes — the philosophical fit is real, the dependency
 isn't.
 
+**Repo text is the durable agent memory layer.** An agent session starts cold;
+**re-reading `AGENTS.md` + `docs/status.md` + the code map is the context reload**,
+not a custom memory tool. The kit's committed artifacts already form the
+agent-neutral, reviewable memory layer: `status.md` *Current State* (cheap
+context reload, §6), `AGENTS.md` (guide re-read every session), the generated
+code map (layout without re-deriving it), the registries (requirement + interface
+truth), `docs/gate` (current bar). **Agent-native memory tools** — e.g. auto-memory
+dirs, MCP memory servers, `.planning/`-style context layers — are a legitimate and
+optional *scratch* space for a session's working notes; they are **not** the home
+for any load-bearing fact. Why: agent memory is per-session, per-host, and often
+per-tool; it is invisible to other agents and humans, unreviewable, and silently
+erodes the single-source-of-truth discipline the kit is built on.
+
+**The promote rule.** When a working note ripens into something durable — a
+decision, a constraint, a gotcha, an assumption confirmed — **promote it into the
+repo**: record a decision in `status.md` *Open items* or *Decisions log*, add a
+constraint to `status.md`'s constraints block, update `AGENTS.md` if it changes
+how contributors should behave, or amend the relevant registry row. This is the
+flip side of the *Assumptions* log (§4, Thread 3): an unattended assumption is
+logged to `status.md` so a human can confirm or revert it; a confirmed finding is
+committed into the appropriate artifact and drops out of the assumptions list.
+
+**No agent-memory tooling is installed or required.** Dev-setup provisions the
+*workstation* (§7 "Onboarding ladder"), not the agent runtime; the kit does not
+install, scaffold, or depend on any memory tool. A larger repo makes the committed
+layer matter *more* (keep `status.md` *Current State* tight so re-reads stay
+cheap), and a query-time semantic index (§7 map-vs-index note) can help chase
+references across a large tree — but both are optional, downstream, and orthogonal
+to the promote rule.
+
 ## §9 NFR checklist
 
 *Referenced from PROCESS.md §9.* **Applies when** deciding which non-functional

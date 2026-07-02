@@ -501,13 +501,20 @@ HTML map, the code map) must render with **local, offline** tooling — never a
 cloud service (the reason the kit chose Mermaid-in-Markdown, §3). Reach for a
 Kroki/PlantUML *container* only if a project outgrows Mermaid.
 
-**Two more boundary notes (opt-in reading — [`process-options.md`](process-options.md#7-boundary-notes)):**
+**Three more boundary notes (opt-in reading — [`process-options.md`](process-options.md#7-boundary-notes)):**
 **the kit generates legibility, it does not score it** (measuring AI-readiness
 over time is an *external readiness assessor*, optional downstream tooling — the
-`ruff`/`pytest` stance: name the gate, the project picks the tool); and **the kit
+`ruff`/`pytest` stance: name the gate, the project picks the tool); **the kit
 is a spec, not a turnkey agent-runtime harness** (an `npx`-installed engine
 shipping skills/agents/hooks/MCP for one tool is a different, optional product
-that *composes* with a scaffolded repo but neither depends on the other).
+that *composes* with a scaffolded repo but neither depends on the other); and
+**repo text is the durable agent memory layer** — the committed artifacts
+(`status.md`, registries, `AGENTS.md`, the code map) are the agent-neutral,
+reviewable memory; agent-native memory tools (auto-memory, MCP memory servers)
+are *scratch*, never the home for load-bearing facts. Durable facts — a
+decision, constraint, or gotcha — are **promoted** into `status.md` or the
+registries. The kit does not install or require any agent-memory tooling; a
+larger repo simply makes the committed layer matter more.
 
 Ready reference scripts ship with this template (Python 3.8+, stdlib only — no
 pip needed to run them):

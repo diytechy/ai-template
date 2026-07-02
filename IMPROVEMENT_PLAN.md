@@ -2214,9 +2214,15 @@ doc; the same class as Session I).
 
 ## Thread 28 — Agent memory: repo text is the durable layer (boundary note + promote rule)
 
-**Status: ⏳ queued 2026-07-01** from the scratch "Setup agent infrastructure"
-note (feedback given the same day; recommended decisions below await a
-confirm-at-pickup).
+**Status: ✅ landed 2026-07-01.** All five recommended decisions taken as
+specified. PROCESS.md §7's "Two more boundary notes" updated to "Three more
+boundary notes" adding the memory-boundary + promote-rule one-liner and a scope
+note (decisions 1, 2, 5). PROCESS_OPTIONS.md §7 boundary notes gained the full
+expansion ("Repo text is the durable agent memory layer" + promote rule + no
+tooling installed). `AGENTS.template.md` gained one working-agreement bullet
+(~286 bytes; file now 9,988/10,000 bytes — within budget, size test green).
+No-install/no-prompt stance recorded in PROCESS_OPTIONS.md (decision 3). No
+deviations. `pytest -q`: **129 passed, 1 skipped** (unchanged).
 
 **Why:** the note asks whether repos that interact with agents need
 memory-management tooling deployed at dev-setup, whether the onboarder should
@@ -2276,7 +2282,9 @@ juggling needed).
 **7 ✅**, **4 ✅**, **6 ✅**, **8 ✅**, **5 ✅**, **10 ✅**, **9 ✅**, **11 ✅**
 (2026-06-29); **12 ✅, 13 ✅, 15A ✅, 17 ✅, 18 ✅** (2026-06-30, Session E);
 **14 ✅** (2026-06-30, Session F); **15 B/C/D ✅** (2026-06-30, Session G);
-**19 ✅** (2026-06-30, Session H); **20 ✅** (2026-06-30, Session I).
+**19 ✅** (2026-06-30, Session H); **20 ✅** (2026-06-30, Session I);
+**24 ✅, 25 ✅, 26 ✅, 22 ✅** (2026-07-01, Session J); **27 ✅, 28 ✅**
+(2026-07-01, Session K). **All 28 threads complete.**
 **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
@@ -2410,21 +2418,19 @@ thread's **Model tier** line says where the handoff is safe.
 > the strong model** (Opus) throughout the design; `test_modules_registry.py` (7) is
 > the seam-wiring backstop. `pytest -q`: **124 passed, 1 skipped** (+7).
 
-**Open: sessions A–J landed; one queued thread + the stubs remain.**
+**▶ ALL 28 PLANNED THREADS LANDED. Sessions A–K complete.**
 Threads 0a, 0b, 1–11 landed (on `template-review-fixes`, since merged into the current
 working branch); Session E (12, 13, 15A, 17, 18), Session F (14), Session G (15 Parts
 B/C/D), Session H (19), and Session I (20) landed 2026-06-30. **Session J landed
 2026-07-01** (from the same-day adversarial review + user decisions): **Threads 24,
-25, 26, and 22** — one commit per thread on `MultiRepoSupport`. **Remaining:
-Thread 27** (PROCESS.md squeeze + core/optional split — queued, decisions confirmed,
-**solo session on the strong model**), **Thread 28** (agent-memory boundary note +
-promote rule — queued 2026-07-01, light prose, Sonnet-able, decisions recommended
-but unconfirmed), and the **stubs 16 / 21 / 23** (non-code artifact verification ·
-cross-repo tooling · publication composition — each its own future thread/decision,
-no session until revived). **Next recommended step after
-Thread 27: pilot the kit on one real repo** (smallest first) and feed the friction
-back as its own thread — the kit has not yet been used in anger, and one pilot
-will teach more than further prose threads.
+25, 26, and 22** — one commit per thread on `MultiRepoSupport`. **Thread 27**
+(PROCESS.md squeeze + PROCESS_OPTIONS.md split) and **Thread 28** (agent-memory
+boundary note + promote rule) also landed 2026-07-01. **Remaining: stubs 16 / 21 / 23**
+(non-code artifact verification · cross-repo tooling · publication composition —
+each its own future thread/decision, no session until revived). **Next recommended
+step: pilot the kit on one real repo** (smallest first) and feed the friction back
+as its own thread — the kit has not yet been used in anger, and one pilot will
+teach more than further prose threads.
 
 > **Session J ✅ landed 2026-07-01 · Adversarial-review hardening (Threads 24, 25,
 > 26, 22).** Sourced from a same-session adversarial review of the whole kit
@@ -2437,17 +2443,22 @@ will teach more than further prose threads.
 > SR-no-SN orphan, `--strict-integrity`, AGENTS size budget, zero-source
 > arch-map warning; the hook orphan test rewritten to the integrity contract).
 
+> **Session K ✅ landed 2026-07-01 · Agent-memory boundary note (Thread 28).**
+> Pure prose. PROCESS.md §7's two-boundary-note paragraph → three notes, adding
+> "repo text is the durable agent memory layer" (one-liner + scope note).
+> PROCESS_OPTIONS.md §7 gained the full "Repo text is the durable agent memory
+> layer" expansion (promote rule + no-tooling-installed stance). `AGENTS.template.md`
+> gained one working-agreement bullet ("Repo text is the project's memory; yours
+> is scratch" + promote-rule pointer); file now 9,988/10,000 bytes. No deviations.
+> `pytest -q`: **129 passed, 1 skipped** (unchanged — prose only).
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
-   Session J (2026-07-01), sessions A–J have landed. What remains is **Thread 27**
-   (PROCESS.md squeeze + core/optional split — decisions confirmed with the user, but
-   a wide, editorial, strong-model solo session), **Thread 28** (agent-memory boundary
-   note — light and Sonnet-able, but its recommended decisions await user
-   confirmation), and the **stubs** (16 non-code-artifact verification · 21 cross-repo
-   tooling · 23 publication composition), which need a human decision to revive. Ask
-   the user which to pick up (and confirm the open decisions each lists) before doing
-   anything.
+   2026-07-01, all 28 planned threads have landed (sessions A–K). What remains are
+   the **stubs** (16 non-code-artifact verification · 21 cross-repo tooling · 23
+   publication composition), which each need a human decision to revive. Ask the user
+   which to pick up (and confirm the open decisions each lists) before doing anything.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
    own section above is its spec (Goal/Steps/Tests/Risks/Done-when).
 2. **End green:** run `python -m pytest -q` and paste the real output (per
