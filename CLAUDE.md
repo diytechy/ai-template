@@ -48,8 +48,13 @@ a real project — or get out of the way.
 ## Repo map
 
 - [`project-trajectory/PROCESS.md`](project-trajectory/PROCESS.md) — canonical
-  method (roles, gates, IDs, anti-duplication, design-time runtime flows). The
-  source of truth other docs link to.
+  method, **load-bearing core** (roles, gates, IDs, anti-duplication, design-time
+  runtime flows). The source of truth other docs link to. Its companion
+  [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) holds the **opt-in
+  layers** (phased delivery, lifecycle tags, §7 boundary notes, §9 NFR/perf, the
+  rung-2 multi-module detail), each with an *applies-when*. Both are scaffolded
+  (`docs/process.md` + `docs/process-options.md`); keep §-numbering stable when
+  editing — `§N` cross-refs pervade the kit.
 - `project-trajectory/*.template.md` + `registries/*.template.*` — the artifact
   formats copied into a new repo's `docs/`.
 - `project-trajectory/scripts/` — runnable kit scripts (see "stdlib-only" above).

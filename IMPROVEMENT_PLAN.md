@@ -2122,8 +2122,61 @@ by tightening another"; keep ≥2k headroom) and a new meta-repo test
 
 ## Thread 27 — PROCESS.md verbosity squeeze + core/optional split (queued; solo session)
 
-**Status: ⏳ queued 2026-07-01; decisions confirmed with the user.** PROCESS.md
-is ~50KB across 10 sections; the user judged much of the prose "highly
+**Status: ✅ landed 2026-07-01 (solo session).** PROCESS.md compressed
+**51,406 → 42,932 bytes** (−8,474, ~16.5%) with **§-numbering held stable**
+(§1–§10 intact — the safer arm of the plan's "keep numbering stable **or** full
+grep-and-reconcile" constraint, since `§N` refs pervade 41 files), so no external
+cross-ref moved. New companion **`PROCESS_OPTIONS.md`** (14,434 bytes) holds the
+relocated opt-in detail: phased delivery, lifecycle vocabulary, the three §7
+boundary notes (developer-workstation · onboarding ladder · offline-render — plus
+generate-vs-measure and spec-vs-harness), the full §9 25010 NFR checklist, the §9
+perf-comparator guidance, and the rung-2 several-modules-one-repo detail — each
+with an **applies-when** line. In PROCESS.md those sections now carry a tight core
+statement + `*(opt-in)*` marker + a link into the companion; every **normative
+rule and every registry/script contract stayed in the core** (only expanded
+rationale/examples moved). Added a **header block**: a "read §1–§7 for the core"
+orientation line and a **minimum-profile paragraph** ("a standalone one-module
+project needs exactly: …"), resolving the review's "no lite mode" finding.
+In-section prose across §1/§3/§4/§7 was squeezed for wording, not rules
+(every externally referenced bullet/heading kept). AGENTS.template.md was **not
+touched** — Thread 26 already trimmed it to 9,702 bytes; the thread context's
+"~11,998" was the pre-Thread-26 figure, and this thread's scope is PROCESS.md.
+
+**Decisions made in-thread:** (1) **companion is scaffolded** (bootstrap MAPPING
+`PROCESS_OPTIONS.md → docs/process-options.md`), *not* left unscaffolded like
+`EXAMPLE.md`. Reason: the plan links to it with real `[..](..)` markdown links
+(so `check_docs` validates the anchors), and a downstream repo that opts into a
+layer wants the doc present and clickable; the `EXAMPLE.md` "bare inline-code
+reference" convention would have dodged `check_docs` but left dead links. Cost was
+one MAPPING entry (the plan sanctioned deciding this in-thread). (2) Anchor slugs
+match `check_docs.slugify` (drops `§`, spaces→hyphens): e.g. `#7-boundary-notes`,
+`#9-nfr-checklist`, `#10-several-modules-one-repo`.
+
+**Meaning-preservation judgment calls:** §8 (already 11 lines) and the core
+testing blocks (dimensional coverage, gates, verdict protocol §5, review triage
+§6) were kept **in the core** and only lightly reworded — they are load-bearing,
+not optional. The §9 registry column list and the trace/check_perf contract text
+stayed verbatim in the core (scripts + EXAMPLE depend on the exact columns/flags).
+"Reviewability" three-tier list, the code-map routing options, and runtime-flows
+block were reworded but every clause preserved.
+
+**Left open:** **pilot validation on a real repo runs next as its own session.**
+Designated pilot repo: **`C:\Projects\FileBackup`** (decided 2026-07-01). This
+session did **not** touch FileBackup — it only landed the kit change. The pilot
+should scaffold/refresh from the kit and confirm the split reads well and
+`check_docs`/`check.py` stay green against a real `docs/process.md` +
+`docs/process-options.md`.
+
+**Tests:** `pytest -q` → **129 passed, 1 skipped** (the `sh`-dependent pre-commit
+e2e, skipped on Windows). Updated `test_bootstrap.py` to expect
+`docs/process-options.md`; `check_docs` reports 0 broken links on a fresh scaffold
+(the new anchor links resolve). READMEs (kit contents table) + this repo's
+`CLAUDE.md` repo-map updated to name the companion.
+
+---
+
+**Original spec (for reference).** PROCESS.md
+was ~50KB across 10 sections; the user judged much of the prose "highly
 verbose" and asked to (a) **squeeze the repetition so long as quality doesn't
 suffer**, and (b) **split a core minimum profile from an auxiliary doc
 outlining what is genuinely optional** — resolving the review's "no lite mode"

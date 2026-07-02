@@ -17,7 +17,8 @@ audits.
 | `KICKOFF_PROMPT.md` | **Paste this into an agent to start.** Fill the PROJECT BRIEF at the bottom first. |
 | `AGENTS.template.md` | Agent/contributor guide → copy to the new repo's `AGENTS.md` (the cross-tool standard most agents read). Encodes the readability conventions + points at the process. |
 | `CLAUDE.stub.template.md` · `GEMINI.stub.template.md` | Thin stubs → the new repo's `CLAUDE.md` / `GEMINI.md`; each just points at `AGENTS.md` so Claude Code and Gemini (which prefer their own filename) still land on the full guide. |
-| `PROCESS.md` | The canonical method → copy to `docs/process.md`. Roles, gates, ID scheme, anti-duplication, verdict protocol, review triage, harness contract. |
+| `PROCESS.md` | The canonical method's **load-bearing core** → copy to `docs/process.md`. Roles, gates, ID scheme, anti-duplication, verdict protocol, review triage, harness contract; opens with a minimum-profile table. |
+| `PROCESS_OPTIONS.md` | The **opt-in layers** the core doc summarizes → copy to `docs/process-options.md`. Phased delivery, lifecycle tags, the §7 boundary notes, the §9 NFR checklist + perf comparator, and the rung-2 multi-module detail — each with an *applies-when*. |
 | `STATUS.template.md` | The live blackboard → copy to `docs/status.md`. |
 | `ARCHITECTURE.template.md` | One-page overview + generated map → copy to `docs/architecture.md`. |
 | `INTERFACES.template.md` | Cross-project contracts (IF-###) → copy to `docs/interfaces.md`. Use only for interlinked projects. |

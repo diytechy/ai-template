@@ -5,6 +5,20 @@ repo as `docs/process.md`. It is **stack-agnostic** — wire the harness command
 to your project's language/tooling. Other docs reference this file by section
 rather than restating it.
 
+**Read this file top to bottom for the load-bearing core** (§1–§7): roles, ids,
+the §3 discipline, the gates, the verdict protocol, the harness contract. The
+opt-in layers — phased delivery, lifecycle tags, cross-project interfaces (§8),
+NFR/perf budgets (§9), the multi-repo scale ladder (§10), and the §7 boundary
+notes — are summarized here with an **applies-when** and expanded in
+[`process-options.md`](process-options.md); skip any that your scope doesn't hit.
+
+**Minimum profile — a standalone one-module project needs exactly:** the five
+spine hats (§1), the id scheme (§2), the §3 traceability/anti-duplication
+discipline, gates **G1→G2→G3** + G-Final (§4), the verdict protocol (§5),
+review triage (§6), and the harness (§7). Everything else is opt-in: skip §8,
+§9, §10, the `Phase`/`Lifecycle` tags, and every "optional" tripwire until the
+scope forces it. That default is rung 1 of the §10 ladder.
+
 ---
 
 ## 1. Roles (hats), not necessarily separate agents
@@ -23,18 +37,16 @@ agent only for an independent pre-gate review (see §6).
 A hat only edits artifacts it owns; to change another, file a finding addressed
 to its owner (§5).
 
-**Domain hats (scope-dependent).** The five above are the spine; choose
-additional discipline hats at project setup to match the scope — e.g. **Network
-Engineer**, **Security Engineer**, **Data/ML Engineer**, **Hardware/Mechanical
-Engineer**, **Mechatronics Engineer**, **DBA**, **SRE/Ops**, and an
-**Integration/Coordination** hat that allocates the cross-module performance and
-resource budgets (`requirements/performance-budgets.csv`, §9). A domain hat owns
-the slice of `SR-###`/`LLR-###` rows in its area (tag them, e.g. an `Area`
-column or an `SR-NET-###`-style prefix) and brings its own edge-case and
-release-checklist items. Record the **active hats** for this project in
-`status.md`; don't wear a hat the scope doesn't need. Like the others, a domain
-hat is usually the same driver switching context — spawn a separate specialist
-agent only for an independent high-risk review (§6).
+**Domain hats (scope-dependent).** The five above are the spine; add discipline
+hats at setup to match the scope — e.g. **Network**, **Security**, **Data/ML**,
+**Hardware/Mechanical**, **Mechatronics**, **DBA**, **SRE/Ops**, and an
+**Integration/Coordination** hat that allocates cross-module budgets
+(`performance-budgets.csv`, §9). A domain hat owns the `SR`/`LLR` rows in its
+area (tag them, e.g. an `Area` column or `SR-NET-###` prefix) and brings its own
+edge-case and release-checklist items. Record the **active hats** in
+`status.md`; don't wear a hat the scope doesn't need. Like the others, it is
+usually the same driver switching context — spawn a separate specialist agent
+only for an independent high-risk review (§6).
 
 ## 2. Identifier scheme
 
@@ -73,32 +85,29 @@ Stable, zero-padded, never reused.
 "Simplest thing that works" (the agent guide's "Right-size the solution") is
 calibrated, not flimsy: it never trims **validation at trust boundaries**, error
 handling that would **lose or corrupt data**, **security**, **accessibility**, or
-skipping straight to a fix before **understanding the problem** (root cause, not
-symptom). Where a deliberate simplification is still the right call, mark it
-inline with a **`SHORTCUT:`** comment naming the **ceiling** it accepts (e.g. a
-global lock, an O(n²) scan, a naive heuristic) and the **upgrade path** past it —
-so the shortcut is greppable, reviewable, and never silently mistaken for the
-final design. One tag, defined once; not a taxonomy.
+understanding the problem (root cause, not symptom) before fixing it. Where a
+deliberate simplification is still right, mark it inline with a **`SHORTCUT:`**
+comment naming the **ceiling** it accepts (a global lock, an O(n²) scan, a naive
+heuristic) and the **upgrade path** past it — so it is greppable, reviewable, and
+never mistaken for the final design. One tag, defined once; not a taxonomy.
 
 **Reviewability — review the source, not the render.** The registries (the
 `SN`/`SR`/`LLR`/`TC` CSVs) are the tracked, line-by-line-reviewable source of
-truth; every other view is *generated* from them. Generated output splits by
-size into two tiers:
+truth; every other view is *generated* from them. Generated output splits by size:
 
 - **Small, diff-meaningful blocks** live in tracked files behind `GENERATED`
-  markers and are kept honest by a freshness gate — the code map, dependency
-  diagram, and program flow (`gen_arch_map.py --check` fails a commit that left
-  them stale). These you *do* read in diffs.
-- **Large composite artifacts** — the full trace report (`test/report.md`: the
-  counts, matrix, the `SN→SR→LLR→TC` text outline, and the Mermaid graph), the
-  HTML map (`trace.py --html`), and the **performance report** (`test/perf-report.md`,
-  §9) — are regenerated every run, **gitignored**, and published by CI as
-  artifacts. Don't diff or review these; review the registry change that produced
-  them.
-- **Committed goldens** — a small generated file you *do* commit, and whose diff
-  is reviewed as the record of an accepted change: the **performance baseline**
-  (`test/perf-baseline.json`, §9). Moving a number means committing the new golden
-  in the same PR, so the change is explicit, never silent.
+  markers, kept honest by a freshness gate — the code map, dependency diagram,
+  and program flow (`gen_arch_map.py --check` fails a commit that left them
+  stale). These you *do* read in diffs.
+- **Large composite artifacts** — the full trace report (`test/report.md`: counts,
+  matrix, the `SN→SR→LLR→TC` text outline, and the Mermaid graph), the HTML map
+  (`trace.py --html`), and the perf report (`test/perf-report.md`, §9) — are
+  regenerated every run, **gitignored**, and published by CI as artifacts. Don't
+  diff these; review the registry change that produced them.
+- **Committed goldens** — a small generated file you *do* commit and review as the
+  record of an accepted change: the perf baseline (`test/perf-baseline.json`,
+  §9). Moving a number means committing the new golden in the same PR — explicit,
+  never silent.
 
 This is the "composite artifacts are ignored from change tracking" rule, named:
 the cost of reviewing a big regenerated file is never paid, because the small
@@ -106,111 +115,99 @@ registry diff already carries the intent.
 
 **The doc set must stay navigable (the doc map stays honest like the code map).**
 The freshness gate above keeps *generated* blocks honest; the hand-written docs
-need the same guarantee. `scripts/check_docs.py` (stdlib, a process check — §7)
-parses the Markdown under `docs/` plus the root `*.md`, builds the link graph,
-and **fails on broken intra-repo links** (a missing target file or `#anchor`) —
-the machine version of the "verify no broken intra-doc links" step the gates
-otherwise ask a human to do. It also **warns on orphan docs** (no path from an
-entry root — root-level `*.md`, an optional `docs/index.md` Map-of-Content, or a
-configured entry) and, with `--stale` (git-gated), on a doc left frozen beside a
-non-doc file it links that has since changed. Broken links are a hard finding;
-orphans/staleness are warnings, because a young project legitimately has
-standalone docs until it links them. Run by `check.py` from G1 on.
+get the same guarantee. `scripts/check_docs.py` (stdlib, a process check — §7)
+parses the Markdown under `docs/` plus root `*.md`, builds the link graph, and
+**fails on broken intra-repo links** (a missing target file or `#anchor`) — the
+machine version of the "verify no broken intra-doc links" step the gates ask a
+human to do. It also **warns on orphan docs** (no path from an entry root —
+root `*.md`, an optional `docs/index.md` Map-of-Content, or a configured entry)
+and, with `--stale` (git-gated), on a doc left frozen beside a non-doc file it
+links that has changed. Broken links are a hard finding; orphans/staleness are
+warnings (a young project legitimately has standalone docs). Run by `check.py`
+from G1 on.
 
 **Interface contracts live at the code, referenced — not restated.** Every public
 module/function documents its contract once, where it is implemented, as a
-structured block an agent (or human) can read inline and grep:
-
-- *Inputs* — each parameter's type and, where it matters, its **range/enum/units**;
-- *Outputs* — return type/shape;
-- *Config* — config keys it reads and their constraints (+ where they live);
-- *Raises/Errors* — failure modes and what they signal.
-
-Keep it **non-duplicative by referencing IDs**: a constraint that is already a
-requirement (an input range, an accepted set) lives once in the SR — its
-`AcceptanceCriteria` and the `Permutations` dimensions — and the block cites the
-id (`SR-012`) instead of restating the range. The block carries `Implements:
-SR/LLR`, so the *intent* stays in the registry, the *implemented signature* stays
-in the code, and the link is explicit. The code map harvests the symbol's summary
-and back-links, so a reader can find the contract from the map in one hop. (The
-exact tag syntax is the agent guide's job — see `AGENTS.template.md` "Define the
-interface (contract) at the code".)
+structured block a reader can grep inline: *Inputs* (each parameter's type and,
+where it matters, its **range/enum/units**), *Outputs* (return type/shape),
+*Config* (keys it reads + constraints + where they live), *Raises/Errors*
+(failure modes and what they signal). Keep it **non-duplicative by referencing
+IDs**: a constraint already captured as a requirement (an input range, an
+accepted set) lives once in the SR (its `AcceptanceCriteria` and `Permutations`)
+and the block cites the id (`SR-012`) instead of restating it. The block carries
+`Implements: SR/LLR`, so intent stays in the registry, the implemented signature
+stays in code, and the link is explicit; the code map harvests the summary and
+back-links so a reader finds the contract in one hop. (Exact tag syntax is the
+agent guide's job — `AGENTS.template.md` "Define the interface (contract) at the
+code".)
 
 **Generated code map — route the AST into the agent's working file.** An agent
-edits faster and more safely when a *current* index of the code is in the file it
+edits faster and more safely with a *current* index of the code in the file it
 already reads, instead of re-deriving the layout each session. So the harness
-generates, by parsing the source (AST), a per-module map between marker comments:
-
-- each module's **one-line summary** (from its module docstring/header),
-- its **internal dependencies** (which in-tree modules it imports) — this makes
-  layering invariants auditable (e.g. "Common must not import Engine") and shows
-  the blast radius of a change,
-- each public symbol's **signature**, summary, and `Implements: SR/LLR` back-links.
-
-Because the map is *harvested from docstrings and `Implements:` comments*,
-commenting for humans (see the agent guide's "Comment for humans — and the map")
-directly improves the map. The reference generator is `scripts/gen_arch_map.py`
-(Python AST, stdlib); each stack ships its own equivalent (e.g. a PowerShell or
+parses the source (AST) and generates, between marker comments, a per-module map:
+each module's **one-line summary** (from its docstring/header); its **internal
+dependencies** (which in-tree modules it imports) — making layering invariants
+auditable (e.g. "Common must not import Engine") and showing a change's blast
+radius; and each public symbol's **signature**, summary, and `Implements:
+SR/LLR` back-links. Because it is harvested from docstrings and `Implements:`
+comments, commenting for humans (agent guide's "Comment for humans — and the
+map") directly improves the map. Reference generator: `scripts/gen_arch_map.py`
+(Python AST, stdlib); each stack ships its own equivalent (a PowerShell or
 ts-morph version) writing into the **same marker block** — that block is the only
 contract.
 
-**Routing (where the map lands).** `gen_arch_map.py --doc` is repeatable. Put the
-marker pair wherever agents read and the generator keeps it fresh:
-- *Full map in `architecture.md`, the agent guide links to it* — cleanest;
-  one home; the agent takes one hop. Good default for large codebases.
-- *Map embedded directly in `AGENTS.md` / `CLAUDE.md`* — the agent sees it inline
-  with zero hops; cost is that the guide's diff churns whenever the code changes.
-  Good for small/medium codebases where the map fits on a screen.
-Either way the harness regenerates it (`--check` fails the gate if stale), so it
-never rots. Don't hand-maintain a code map.
+**Routing (where the map lands).** `gen_arch_map.py --doc` is repeatable; put the
+marker pair wherever agents read and the generator keeps it fresh — *full map in
+`architecture.md`, the agent guide links to it* (one home, one hop; the default
+for large codebases) or *embedded directly in `AGENTS.md`/`CLAUDE.md`* (zero
+hops, but the guide's diff churns with the code; good when the map fits on a
+screen). Either way `--check` fails the gate if stale, so it never rots. Don't
+hand-maintain a code map.
 
 **The committed map is a contract, not a search index.** `gen_arch_map.py`
 produces a **committed, diff-reviewable, drift-gated** artifact — part of the
 source of truth, read to learn the code's *intended* shape. Query-time
 **semantic-retrieval tools** (LSP-backed code-graph servers, Serena-style MCP
-indexes) are a *different* thing: not committed, language-server-dependent, and
+indexes) are a *different* thing: not committed, language-server-dependent,
 rebuilt on demand. They are a legitimate **optional downstream accelerator** for
 chasing references across a large repo, but they **don't replace** the committed
-map, and the kit must **not** hard-wire one — that would break stdlib-only and add
-a server/LSP dependency. Use one if it helps; keep it out of the required path.
+map and the kit must **not** hard-wire one (it would break stdlib-only and add a
+server/LSP dependency). Use one if it helps; keep it off the required path.
 
-**Generated high-level flow.** `gen_arch_map.py --flow <entry>` emits the ordered
-internal calls of an entry/orchestrator function (each with the callee's summary)
-into a `GENERATED FLOW` marker block — a generated, drift-proof rendering of the
-"Thin orchestrators" rule above. Put the markers in `architecture.md` (and/or the
-agent file) and add `--flow` to the harness's map step. It complements, and does
-not replace, the hand-written flow overview that shows control flow.
+**Generated high-level flow.** `gen_arch_map.py --flow <entry>` emits an
+entry/orchestrator function's ordered internal calls (each with the callee's
+summary) into a `GENERATED FLOW` marker block — a drift-proof rendering of the
+"Thin orchestrators" rule. Put the markers in `architecture.md` (and/or the agent
+file) and add `--flow` to the harness's map step. It complements, not replaces,
+the hand-written flow overview.
 
 **Design-time runtime flows (authored at G2, checked).** Everything above is
-harvested from code, so none of it exists at G2 — yet G2 is exactly when a
-human reviews the LLRs, and runtime *behavior* (ordering, concurrency,
-background work, what blocks on what) is the thing most easily misread from
-CSV rows. So the Software Engineer hat authors a **"Runtime flows"** section in
-`architecture.md` **with the LLRs, before the G2 review**: one Mermaid
-`sequenceDiagram` per key user-visible scenario, and always one for any
-behavior that is concurrent / asynchronous / non-blocking. Participants are
-the planned modules (the LLR `Module` column); each diagram cites the SR/LLR
-ids it renders. The G2/G3 harness runs `scripts/check_flows.py`, which fails
-when the section is missing, has no diagrams, a diagram cites no SR/LLR id, or
-a cited id doesn't exist in the registries. The human's G2 review starts from
-these diagrams — verify the flow there, then spot-check the rows. Update a
-flow in the same change that alters its LLRs; from G3 on, the generated
-map/flow corroborates these authored diagrams rather than replacing them.
+harvested from code, so none of it exists at G2 — yet G2 is when a human reviews
+the LLRs, and runtime *behavior* (ordering, concurrency, background work, what
+blocks on what) is the thing most easily misread from CSV rows. So the Software
+Engineer hat authors a **"Runtime flows"** section in `architecture.md` **with
+the LLRs, before the G2 review**: one Mermaid `sequenceDiagram` per key
+user-visible scenario, and always one for any concurrent / asynchronous /
+non-blocking behavior. Participants are the planned modules (the LLR `Module`
+column); each diagram cites the SR/LLR ids it renders. `scripts/check_flows.py`
+(G2/G3) fails when the section is missing, has no diagrams, a diagram cites no
+SR/LLR id, or a cited id doesn't exist. The human's G2 review starts from these
+diagrams — verify the flow there, then spot-check the rows. Update a flow in the
+same change that alters its LLRs; from G3 on the generated map/flow corroborates
+these authored diagrams rather than replacing them.
 
-**Diagrams are text (Mermaid); the dependency graph is generated.** Diagrams
-live as ```` ```mermaid ```` fenced blocks inside the Markdown docs — rendered
-natively by GitHub/GitLab/Gitea and the VS Code Markdown preview (offline-
-capable), so no diagram toolchain is required and the diagram source diffs like
-prose. Hand-written diagrams (the one-page flow, sequence diagrams for key
-interactions) follow the same anti-duplication rule as prose: reference IDs,
-don't restate requirements. The module **dependency diagram is generated**:
+**Diagrams are text (Mermaid); the dependency graph is generated.** Diagrams live
+as ```` ```mermaid ```` fenced blocks inside the Markdown — rendered natively by
+GitHub/GitLab/Gitea and the VS Code preview (offline-capable), so no diagram
+toolchain is required and the source diffs like prose. Hand-written diagrams (the
+one-page flow, sequence diagrams) follow the same anti-duplication rule: reference
+IDs, don't restate requirements. The module **dependency diagram is generated** —
 `gen_arch_map.py` splices a Mermaid graph of the internal imports into the
 `GENERATED DEPENDENCY DIAGRAM` markers wherever a routed doc carries them
-(`architecture.md` ships with the pair), covered by the same `--check` — so the
-picture of the layering can't drift any more than the map can. Don't commit
-exported diagram images; the text block is the source. If a project genuinely
-needs diagram types beyond Mermaid (PlantUML/C4/BPMN) or has AsciiDoc sources,
-wire a Kroki/PlantUML toolchain as *project* tooling — it is deliberately
+(`architecture.md` ships the pair), covered by the same `--check`, so the layering
+picture can't drift. Don't commit exported diagram images; the text block is the
+source. A project that genuinely outgrows Mermaid (PlantUML/C4/BPMN, AsciiDoc
+sources) wires a Kroki/PlantUML toolchain as *project* tooling — deliberately
 outside the kit's required path.
 
 ## 4. Objectives, gates, and exit criteria
@@ -275,82 +272,43 @@ only when **unattended**; when a human is available, **solicit clarification**.
 Track unresolved ambiguities in `status.md` *Open items*, and re-run the review at
 G2 when SRs decompose into LLRs.
 
-**No-stub / substance review (G3).** Traceability, coverage, and a green test
-suite confirm an implementation *exists* and *passes*; none of them, on its own,
-confirms it has **substance**. A body that is `pass` / `...` / `raise
-NotImplementedError` / a bare `return None` / a placeholder return satisfies its
-trace links and can even hold a coverage line, yet does nothing. The G3 criterion
-above therefore adds: **every in-scope SR's implementing symbol does real work, not
-a stub.** TDD (G3) mitigates this — a red-first test should fail against a stub —
-but coverage can be met by a test that exercises a stub's trivial path, and
-Demonstration / Manual / Analysis SRs have **no** automated test to fail, so the
-check is named explicitly. It is **Inspection** — human/LLM judgment, classified
-honestly, **never a machine verdict** — so fold the prompt into §6's
-independent-reviewer checklist (a fresh-context reviewer reads the §3 code map,
-which already harvests each public symbol's summary and `Implements:` back-links,
-and confirms the body matches the requirement). The kit ships an **optional,
-Python-reference tripwire** for it — `scripts/check_stubs.py` (§7), which lists
-trivial-bodied public symbols — but, like the perf *meters*, that detector is
-**product-layer and warn-first** (a stub's shape is language-specific; a tiny pure
-function is not an unfinished one), so it informs the Inspection, it does not
-replace it. Same stance as `ruff`/`pytest`: name the criterion; the project picks
-and wires the tool.
+**No-stub / substance review (G3).** Traceability, coverage, and a green suite
+confirm an implementation *exists* and *passes*; none confirms it has
+**substance**. A body that is `pass` / `...` / `raise NotImplementedError` / a
+bare `return None` / a placeholder return satisfies its trace links and can even
+hold a coverage line, yet does nothing. So the G3 criterion adds: **every in-scope
+SR's implementing symbol does real work, not a stub.** TDD mitigates this (a
+red-first test should fail against a stub), but coverage can be met by exercising
+a stub's trivial path, and Demonstration/Manual/Analysis SRs have **no** automated
+test to fail — so name it. It is **Inspection** (human/LLM judgment, **never a
+machine verdict**): fold the prompt into §6's independent-reviewer checklist — a
+fresh-context reviewer reads the §3 code map (which harvests each symbol's summary
+and `Implements:` back-links) and confirms the body matches the requirement. The
+kit ships an **optional, Python-reference tripwire**, `scripts/check_stubs.py`
+(§7), listing trivial-bodied public symbols; like the perf *meters* it is
+**product-layer and warn-first** (a stub's shape is language-specific; a tiny
+pure function is not an unfinished one), so it informs the Inspection, not
+replaces it. Same stance as `ruff`/`pytest`: name the criterion; the project wires
+the tool.
 
-**Phased delivery (version subsets).** A roadmap that ships v1 before v2/v3
-needs gates that close *per phase* without dishonesty. SRs may carry an
-optional **`Phase`** tag (e.g. `v1`, `v2`; blank = in scope for every phase).
-Semantics:
-- **Traceability is phase-blind.** Every SR keeps its LLR + TC rows from G2 on,
-  whatever its phase — decomposition is cheap and pins the design.
-- **The G3 Verified criterion is phase-scoped.** `check.py --gate G3 --phase v1`
-  (cumulative for later closures: `--phase v1,v2`) requires Verified only for
-  in-scope SRs; out-of-scope SRs are listed in the trace report as
-  **phase-deferred** — an explicit, recorded exemption, never a silent skip.
-- **G-Release is phase-scoped the same way:** `gen_release_checklist.py
-  --phase v1` includes only in-scope human items and the release-tier/manual
-  TCs verifying them.
-- Later phases re-enter at G1/G2 as requirement increments and close their own
-  G3/G-Release with the grown phase list.
+**Phased delivery (version subsets) — opt-in.** *Applies when* a roadmap ships
+v1 before v2/v3. SRs carry an optional **`Phase`** tag; traceability stays
+phase-blind while the G3 Verified criterion and G-Release scope by phase
+(`check.py --gate G3 --phase v1`), reporting out-of-phase SRs as explicitly
+**phase-deferred**. Full semantics in
+[`process-options.md`](process-options.md#phased-delivery); standalone single-shot
+deliverables skip it.
 
-**Lifecycle phase (when in the running product's life a requirement holds).**
-Distinct from the delivery `Phase` above (which is *when we ship it* — v1/v2), a
-requirement also has a **lifecycle phase**: *at what point in the running
-product's lifetime must this hold, and how often?* Naming it stops the perennial
-miss of writing only steady-state requirements and discovering the install/setup
-ones late. Capture it as an **optional `Lifecycle` tag** on an SN/SR (a column or
-inline tag, mirroring `Area`; blank = unspecified, treat as **Runtime**) — use the
-distinct name `Lifecycle`, never overload the delivery `Phase` column. The default
-vocabulary is an **open, project-named set** (extend it per scope like `Area`; it
-is **not** a fixed enum):
-
-- **Provision** (ready) — must hold *before the process can run at all*: install,
-  dependencies/runtime present, infra provisioned.
-- **Startup** (set) — established *once per launch, before it serves*: load +
-  validate config, run migrations, open the initial pool, allocate fixed
-  resources, readiness probe.
-- **Runtime** (go) — steady-state serving, *including recurring acquisition*:
-  handle requests, reconnect on drop, per-request alloc, dynamic config reload.
-
-Optional **Shutdown**/**Teardown**, **Upgrade**/**Rollback**, **Recovery** extend
-the set when the scope needs them.
-
-- **Discriminate by *when / how often*, not by the word "setup"** — almost
-  everything readies *something*. Opening the connection pool *at boot* is Startup;
-  reconnecting *mid-operation* is Runtime; a fixed buffer at launch is Startup,
-  per-request alloc is Runtime. **One capability legitimately spans phases** — that
-  is the payoff: a DB feature yields *provision the DB* (Provision) → *open the
-  pool + migrate at boot* (Startup) → *reconnect on drop* (Runtime), and people
-  usually write only the Runtime one.
-- **Configuration straddles Provision↔Startup, app-dependently.** Config is
-  **Provision** when it *must pre-exist* and the app has no way to obtain it at
-  launch; it is **Startup** when the app *can* obtain/validate it at launch (a
-  first-run wizard, a clear error, or a default fallback). Capture both the
-  *definition* (where the config lives) and the *launch behavior when it is
-  missing*.
-- **Keep one axis.** Dependencies and config are *subjects*, not phases — a
-  dependency is required at Provision but used at Runtime; config must exist at
-  Provision, is loaded at Startup, may reload at Runtime. The `Lifecycle` tag on
-  the concrete requirement already places it; don't add a second "kind" axis.
+**Lifecycle phase (when in the product's life a requirement holds) — opt-in.**
+*Applies when* install/startup requirements are easy to miss (most non-trivial
+products). Distinct from the delivery `Phase` above, an optional **`Lifecycle`**
+tag (mirroring `Area`; blank = **Runtime**) records *at what point in the running
+product's lifetime must this hold, and how often?* — default vocabulary
+**Provision** (ready) · **Startup** (set) · **Runtime** (go), an open,
+project-named set. Naming it stops the perennial miss of writing only
+steady-state requirements. Full vocabulary, the "discriminate by when/how-often"
+rule, and the config-straddles-Provision↔Startup guidance are in
+[`process-options.md`](process-options.md#lifecycle-phase).
 
 **Constants:** `MAX_ROUNDS = 4` per gate (then escalate to the human);
 `COVERAGE_THRESHOLD = 80%` line coverage (adjust by agreement; record here).
@@ -382,39 +340,33 @@ isn't expected to meet it).
 
 **Dimensional coverage (exercise the input space, not just the happy path).** A
 requirement with variable inputs is rarely satisfied by one example test. Treat
-each variable input as a **dimension** and test deliberately, because defects
-cluster in two places: at the **boundaries** of each dimension and in the
-**interactions** between dimensions.
+each variable input as a **dimension** and test deliberately: defects cluster at
+the **boundaries** of each dimension and in the **interactions** between them.
 
-1. **Per dimension — pick the values that matter, not arbitrary ones.**
-   - *Boundary-value analysis (BVA):* for any range, test the **min and the
-     max**, and the **degenerate** boundaries — empty, zero, one, single-element,
-     and the largest allowed. These catch off-by-one, overflow, and empty-input
-     bugs. For inputs with validation, also test **just outside** each bound (the
-     first invalid value) as its own — often error-path — case. These invalid
-     cases assert *rejection*, not the SR's acceptance criteria, so design them
-     by hand as their own TCs; `gen_cases.py` combines over the valid space only.
-   - *Equivalence partitioning:* for a set of discrete modes/types, test **one
-     representative per class** (classes that the code treats differently), not
-     every literal value.
+1. **Per dimension — pick the values that matter.**
+   - *Boundary-value analysis:* for any range, test **min and max** and the
+     **degenerate** boundaries — empty, zero, one, single-element, largest allowed
+     (catches off-by-one, overflow, empty-input bugs). For validated inputs, also
+     test **just outside** each bound (the first invalid value) as its own,
+     usually error-path, case — these assert *rejection*, not the SR's acceptance
+     criteria, so hand-design them as their own TCs; `gen_cases.py` combines over
+     the valid space only.
+   - *Equivalence partitioning:* for discrete modes/types, test **one
+     representative per class the code treats differently**, not every literal.
 2. **Across dimensions — choose a combination strategy by risk and cost.** The
-   full Cartesian product exercises every interaction but grows as `k**d` and
-   becomes untenable; don't default to it. Decide per requirement:
-   - **Full product** — when the combination count is small (rule of thumb ≤ ~12)
-     **or** the interaction is high-risk (data loss, corruption, security, money)
-     *and* each case is cheap.
-   - **Pairwise (all-pairs)** — the default for ≥3 dimensions: cover every pair of
-     values across every pair of dimensions at least once. Empirically catches the
-     large majority of interaction defects for a small fraction of the cases.
+   full Cartesian product grows as `k**d` and becomes untenable; don't default to
+   it. Per requirement:
+   - **Full product** — combination count small (≤ ~12) **or** the interaction is
+     high-risk (data loss, corruption, security, money) *and* each case is cheap.
+   - **Pairwise (all-pairs)** — the default for ≥3 dimensions: cover every value
+     pair across every dimension pair at least once. Catches the large majority of
+     interaction defects for a fraction of the cases.
    - **Boundary-corners** — when even pairwise is too costly or each run is
      expensive (hardware / integration): all-low, all-high, and each dimension
-     flipped to its other extreme (single-factor sweeps that localize the failing
-     dimension).
-3. **Balance against time/complexity via the tiers.** Cheap pure-core
-   combinations (unit level) can afford full/pairwise and live in `Smoke`/`Full`;
-   expensive integration/hardware combinations use boundary-corners and live in
-   `Release`. Don't run a 4-mode × N-size sweep on every push — push the heavy
-   combinations to the release tier and keep a boundary slice in smoke.
+     flipped to its other extreme (single-factor sweeps that localize the failure).
+3. **Balance via the tiers.** Cheap pure-core combinations afford full/pairwise in
+   `Smoke`/`Full`; expensive integration/hardware combinations use
+   boundary-corners in `Release`. Don't run a 4-mode × N-size sweep on every push.
 
 Record each requirement's dimensions in the SR **`Permutations`** column using
 this grammar, so one SR stands in for many near-duplicate rows and the intent is
@@ -493,12 +445,12 @@ map step so `architecture.md` stays current.
 
 **The active gate is recorded, and CI reads it.** The current gate lives in the
 one-line `docs/gate` file (bootstrap starts it at `G1`). `check.py` defaults
-`--gate` to it and the reference CI passes no explicit gate, so **CI enforces
-the bar the project is actually at** — a fresh G1 scaffold is green, and the bar
-rises when the human closes a gate by bumping `docs/gate` in a reviewed commit
-(the same explicit-diff discipline as the perf baseline). A release tag runs the
-full bar regardless. Without this, CI would apply the end-state G3 bar from day
-one and stay red for months — training everyone to ignore it.
+`--gate` to it and the reference CI passes no explicit gate, so **CI enforces the
+bar the project is actually at** — a fresh G1 scaffold is green, and the bar rises
+when the human closes a gate by bumping `docs/gate` in a reviewed commit (the same
+explicit-diff discipline as the perf baseline). A release tag runs the full bar
+regardless. Without this, CI would apply the end-state G3 bar from day one and
+stay red for months — training everyone to ignore it.
 
 **Two check layers — process vs. product.** The harness runs two kinds of check,
 and naming the split is what keeps the kit portable across stacks:
@@ -525,61 +477,37 @@ The empty-vs-named `requires` tuple already implies which layer a step is in;
 a newcomer sees at a glance which steps are fixed and which they must localize.
 
 **A third toolchain layer — the developer workstation.** The two layers above
-cover what the *project* needs to pass its own gates. A third, often-conflated
-concern is what a **human** needs to view, render, edit, and run any of it at
-all: a language/runtime, `git`, an **offline** Markdown+Mermaid renderer (e.g.
-VS Code's preview, or `@mermaid-js/mermaid-cli`), and optionally an IDE or a
-domain-specific viewer (CAD/image/publication tooling). "No required tools" was
-always a claim about the **process** layer (stdlib only); it never meant a human
-needs nothing. Naming this third layer resolves the conflation between
-"procurement for the product" and "procurement for developing the product."
+cover what the *project* needs to pass its gates; a third, often-conflated
+concern is what a **human** needs to view, render, edit, and run any of it: a
+language/runtime, `git`, an **offline** Markdown+Mermaid renderer (VS Code's
+preview or `@mermaid-js/mermaid-cli`), optionally an IDE or a domain viewer
+(CAD/image/publication). "No required tools" was always a claim about the
+**process** layer (stdlib only); it never meant a human needs nothing.
 
-**The onboarding ladder — Provision-for-development, applied to the act of
-developing itself.** A fresh contributor's path to a running checkout mirrors
-the §4 lifecycle phases, one level up:
+**The onboarding ladder — Provision-for-development.** A fresh contributor's path
+to a running checkout mirrors the §4 lifecycle phases one level up: `Stage 0`
+(get git + repo, pre-clone) → `dev-setup` (workstation, post-clone) → `setup`
+(product deps, per clone/CI) → `check` (run gates). `Stage 0`/`dev-setup`
+provision the developer workstation (rare, per contributor); `setup` provisions
+the product toolchain; `check` is the process floor. Each rung is an optional,
+readable, **consent-first** helper — never a silent or compiled installer — so
+even a non-code contributor can reach an editable checkout without prior git
+literacy. Details and the full rationale for these three §7 boundary notes
+(developer-workstation · onboarding ladder · offline-render) are in
+[`process-options.md`](process-options.md#7-boundary-notes).
 
-```
-Stage 0           →  dev-setup       →  setup          →  check
-get git + repo        workstation        product deps      run gates
-(pre-clone)           (post-clone)       (venv/tools)       (exists)
-```
+**Offline-render principle.** Legibility artifacts (Mermaid diagrams, the trace
+HTML map, the code map) must render with **local, offline** tooling — never a
+cloud service (the reason the kit chose Mermaid-in-Markdown, §3). Reach for a
+Kroki/PlantUML *container* only if a project outgrows Mermaid.
 
-`Stage 0` and `dev-setup` provision the **developer workstation** above (rare,
-once per contributor); `setup` provisions the **product toolchain** (recurs per
-clone/CI run); `check` is the **process** floor that already exists. Each rung is
-an optional, readable, **consent-first** helper — never a silent or compiled
-installer — so a contributor (including a non-code one, whose deliverable is
-still a reviewable git change) can go from a bare machine to an editable,
-testable checkout without needing prior git literacy.
-
-**Offline-render principle.** Legibility artifacts (the Mermaid diagrams, the
-trace HTML map, the code map) must render with **local, offline** tooling —
-never a cloud rendering service — the same reason the kit chose
-Mermaid-in-Markdown (§3) in the first place. Point contributors at a local
-renderer; reach for a Kroki/PlantUML *container* only if a project genuinely
-outgrows Mermaid.
-
-**The kit generates legibility; it does not score it.** The harness *builds* the
-traced spine, the committed code map, and the gates, so a repo scaffolded from
-this kit should score well **by construction**. *Measuring* that legibility over
-time (AI-readiness, complexity/churn dashboards, doc-navigability scores) is a
-separate, deliberately **external** concern — run an **external readiness
-assessor** (e.g. a deterministic codebase-scoring tool) as **optional downstream
-tooling**, never a kit dependency. This is the same stance the kit takes on
-`ruff`/`pytest`: it names the gate; the project picks the tool. Generate here;
-measure there.
-
-**The kit is a spec; a turnkey agent-runtime harness is a different layer.**
-This kit is a stack-agnostic, stdlib, agent-neutral process **spec** you copy
-into a repo. A **turnkey agent-runtime harness** — e.g. an `npx`/Node-installed
-engine shipping skills/agents/hooks/MCP for one tool, with deterministic
-verification gates, model-tiered subagents, and a project-context layer — is a
-different, installed **product** a downstream shop may run *in addition*. They
-**compose** (a repo scaffolded from this kit can be driven by such a harness)
-but neither depends on the other: a runtime harness is optional, tool-specific,
-downstream tooling, never a kit dependency. Its "back every verdict with a
-deterministic gate" stance is the same one §6 already takes — the philosophical
-fit is real, the dependency isn't.
+**Two more boundary notes (opt-in reading — [`process-options.md`](process-options.md#7-boundary-notes)):**
+**the kit generates legibility, it does not score it** (measuring AI-readiness
+over time is an *external readiness assessor*, optional downstream tooling — the
+`ruff`/`pytest` stance: name the gate, the project picks the tool); and **the kit
+is a spec, not a turnkey agent-runtime harness** (an `npx`-installed engine
+shipping skills/agents/hooks/MCP for one tool is a different, optional product
+that *composes* with a scaffolded repo but neither depends on the other).
 
 Ready reference scripts ship with this template (Python 3.8+, stdlib only — no
 pip needed to run them):
@@ -591,23 +519,20 @@ pip needed to run them):
   `steps()` function returns (and the `SRC`/`TESTS`/tool names in the "EDIT FOR
   YOUR STACK" block at the top); the contract is the gates + exit code, not the
   specific tools. CI runs the same command (`ci/check.yml`).
-- `scripts/trace.py` — joins the registries, writes `docs/test/report.md` (the
-  counts, the SR→LLR→TC matrix, a line-reviewable `SN→SR→LLR→TC` **text
-  outline**, and a small **Mermaid `graph LR`** colored by orphan/draft state),
-  and exits nonzero on orphans with `--strict`. `--html` additionally writes a
-  dependency-free, collapsible `docs/test/report.html` map of the full graph that
-  scales to any size (a gitignored composite artifact — see "Reviewability" in
-  §3). It also always checks **integrity**
-  (duplicate or malformed ids); `--strict-integrity` fails on *only* that class —
-  the always-valid pre-commit floor. `--require-verified` adds the G3 status
-  criterion (every `Verification=Test` SR must be `Verified`); `--phase v1`
-  scopes that criterion for phased delivery (§4), reporting out-of-phase SRs as
-  explicitly deferred. `--no-placeholders` rejects any leftover `-000` template
-  row (so a scaffold can't pass a gate unfilled); `--strict-schema` requires the
-  non-empty fields and the two closed vocabularies (`Verification`, `Tier`) the
-  method defines — `Priority`/`Status` are intentionally left open. Called by
-  `check.py` at G2/G3: the G2+ run adds `--no-placeholders`; the G3 run adds
-  `--require-verified` and `--strict-schema` (plus `--phase` when given).
+- `scripts/trace.py` — joins the registries, writes `docs/test/report.md` (counts,
+  the SR→LLR→TC matrix, a line-reviewable `SN→SR→LLR→TC` **text outline**, and a
+  small **Mermaid `graph LR`** colored by orphan/draft state), and exits nonzero
+  on orphans with `--strict`. `--html` also writes a dependency-free collapsible
+  `docs/test/report.html` map that scales to any size (a gitignored composite —
+  §3). It always checks **integrity** (duplicate/malformed ids); `--strict-integrity`
+  fails on *only* that class (the always-valid pre-commit floor).
+  `--require-verified` adds the G3 status criterion (every `Verification=Test` SR
+  must be `Verified`); `--phase v1` scopes it for phased delivery (§4).
+  `--no-placeholders` rejects leftover `-000` rows; `--strict-schema` requires the
+  non-empty fields and the two closed vocabularies (`Verification`, `Tier`) —
+  `Priority`/`Status` stay open. Called by `check.py` at G2/G3 (G2+ adds
+  `--no-placeholders`; G3 adds `--require-verified` and `--strict-schema`, plus
+  `--phase` when given).
 - `scripts/check_flows.py` — verifies the authored **"Runtime flows"** section
   (§3 "Design-time runtime flows"): present, ≥1 Mermaid diagram, every cited
   SR/LLR id real. Run by `check.py` at G2/G3.
@@ -662,138 +587,82 @@ pins the version. Every interface is backed by an SR and a contract/fixture test
 This keeps interlinked projects from silently drifting apart without imposing a
 multi-repo build system. Standalone projects skip this section.
 
-## 9. Non-functional requirements & performance budgets
+## 9. Non-functional requirements & performance budgets *(opt-in)*
 
-The `SN→SR→LLR→TC` spine verifies **behavior**; on its own it never prompts the
-**cost** of that behavior — performance, memory, artifact size, reliability,
-security. Non-functional requirements (NFRs) are expressible as ordinary SRs, but
-nothing makes you *consider* them, and quantitative budgets often aren't the
-author's to invent: a module that is one part of a larger system is *handed* a
-slice of a system-level budget by an integrator, and most metrics should be
-**minimized within reason**, not pinned to a number the author guessed.
+*Applies when* the product has resource, performance, or other quality costs
+worth pinning (RAM/VRAM, latency, artifact size, security, reliability, …).
+Standalone projects with no such concerns skip this section, exactly like §8.
 
-**Consideration checklist (a prompt, not a mandate — don't wear a hat the scope
-doesn't need).** At G1, consider which categories apply and route each to a home
-(anchor: the **ISO/IEC 25010** product-quality model):
+The `SN→SR→LLR→TC` spine verifies **behavior**, never on its own the **cost** of
+that behavior. NFRs are expressible as ordinary SRs, but nothing makes you
+*consider* them, and quantitative budgets often aren't the author's to invent (a
+module is *handed* a slice of a system-level budget by an integrator; most metrics
+should be **minimized within reason**, not guessed at). At G1, run the
+**consideration checklist** — a prompt, not a mandate, anchored on **ISO/IEC
+25010** plus cost/economics — and **route each NFR to one of three homes:**
 
-- performance efficiency (time, throughput) and resource use (RAM/VRAM, disk);
-- reliability / availability / recoverability;
-- **security** (authn/authz, data protection, secrets, audit, dependency / supply-chain);
-- **observability / operability** (logging, metrics, tracing, health — also the
-  prerequisite for *measuring* any of the budgets below);
-- scalability / capacity; compatibility / interoperability;
-- portability / installability (incl. artifact size); compliance / legal / licensing;
-- safety (cyber-physical); data integrity / durability;
-- **cost / economics** (unit/BOM cost, licensing fees, cloud spend; for hardware
-  scopes also procurement / supply-chain). Note 25010 is a *software-quality*
-  model and omits cost entirely — these systems-engineering categories sit
-  **alongside** it, and a quantitative cost budget is just a `PB-###` row
-  (metric-agnostic: `Metric=Unit BOM cost, Unit=USD, Direction=lower-better`),
-  compared by `check_perf.py` like any RAM budget. No new mechanism.
-
-The kit already covers some — **don't double-prompt**: maintainability (= the core
-discipline), usability (= the end-user lens), basic fault tolerance (= the
-edge-case table and the SN edge cases), cross-project contracts (= `IF-###`, §8).
-
-**Three homes — route by nature:**
-
-1. *Allocation / coordination* NFRs (perf budgets, capacity, availability targets)
-   → the **`performance-budgets.csv`** registry below.
+1. *Allocation / coordination* NFRs (perf budgets, capacity, availability) → the
+   **`performance-budgets.csv`** registry below.
 2. *Behavioral* NFRs (security, observability, safety, data integrity) → ordinary
-   **SRs** with measurable `AcceptanceCriteria` + honest `Verification`, owned by a
-   domain hat (Security, SRE/Ops, …).
+   **SRs** with measurable `AcceptanceCriteria` + honest `Verification`, owned by
+   a domain hat.
 3. *Hard external limits* (compliance, supported platforms) → `status.md`
    constraints.
 
+The full 25010-anchored checklist and the "don't double-prompt what the kit
+already covers" list are in
+[`process-options.md`](process-options.md#9-nfr-checklist).
+
 **The performance-budgets registry (`requirements/performance-budgets.csv`,
-`PB-###`).** Quantitative perf/resource budgets live **separate from the spine**,
-the same way cross-repo contracts do (`IF-###`, §8), so `SN→SR→LLR` stays
-functional-focused and an **Integration/Coordination** hat (§1) can (re)allocate
-budgets across modules without churning the functional breakdown. A module ships
-provisional, self-measured budgets; the integrator sets the real allocation.
-**Separation is not disconnection:** every budget row **back-links** the SR / LLR /
-Module it bounds (its `Refs`), and `trace.py` flags a row whose `Refs` name an
-unknown id or whose `PB-` id is malformed. Columns: `PB-ID, Metric, Refs, Budget,
-Unit, Tolerance, Direction (lower-better | higher-better), Tier, Gate (fail |
-warn), Owner, Notes`. Standalone projects with no resource concerns skip this
-section, exactly like §8.
+`PB-###`).** Quantitative budgets live **separate from the spine** (like `IF-###`,
+§8) so `SN→SR→LLR` stays functional-focused and an **Integration/Coordination**
+hat (§1) can (re)allocate them without churning the breakdown. **Separation is not
+disconnection:** every row **back-links** the SR/LLR/Module it bounds (its
+`Refs`), and `trace.py` flags a row whose `Refs` name an unknown id or whose `PB-`
+id is malformed. Columns: `PB-ID, Metric, Refs, Budget, Unit, Tolerance,
+Direction (lower-better | higher-better), Tier, Gate (fail | warn), Owner, Notes`.
 
-**Tracking the numbers over time — the comparator (`scripts/check_perf.py`).** A
-captured budget is inert until something compares the *measured* number against
-it. That comparison answers two distinct questions per metric: **absolute** —
-"worse than the budget?" (measured vs `Budget`, per `Direction`) — and
-**regression** — "suddenly much worse?" (measured vs a committed baseline, outside
-the `Tolerance` band). The work splits along the §7 **process/product** line:
-*measuring* a metric is **product** work the project wires (`/usr/bin/time`,
-`tracemalloc`, `nvidia-smi`, a size command, `pytest-benchmark`/`hyperfine`),
-emitting a `docs/test/perf-metrics.json` map of `PB-ID → number`; *comparing* is
-**process** work the kit owns — `check_perf.py`, stdlib-only and metric-agnostic
-(arithmetic over JSON). The kit owns the comparator; the project owns the meters.
+**The comparator (`scripts/check_perf.py`).** A budget is inert until something
+compares the *measured* number against it — **absolute** (measured vs `Budget`,
+per `Direction`) and **regression** (measured vs a committed baseline outside the
+`Tolerance` band). Split along the §7 process/product line: *measuring* is
+**product** work the project wires (`/usr/bin/time`, `tracemalloc`, `nvidia-smi`,
+a size command), emitting `docs/test/perf-metrics.json` (`PB-ID → number`);
+*comparing* is **process** work the kit owns (`check_perf.py`, stdlib, metric-
+agnostic). Three artifacts map to the §3 reviewability classes:
+`performance-budgets.csv` (tracked truth), `perf-baseline.json` (committed golden
+— accepting a regression = committing a new baseline in the same PR,
+`--update-baseline`), `perf-report.md` (gitignored composite). Warn-first: gate
+low-noise deterministic metrics (size, dep count) at `full`; default noisy runtime
+metrics (latency, RAM, VRAM) to `Gate=warn` at `release`; absent metrics never
+fail. Full guidance in
+[`process-options.md`](process-options.md#9-perf-comparator).
 
-- **Three artifacts, three reviewability classes (§3):** `performance-budgets.csv`
-  is the tracked source of truth; `perf-baseline.json` is a **committed golden**
-  updated *deliberately*; `perf-report.md` is a **gitignored composite** (current
-  vs baseline vs budget + deltas), regenerated each run and published by CI.
-- **Baseline-as-golden protocol.** Accepting a regression = committing a new
-  `perf-baseline.json` **in the same PR**, so the number move is explicit and
-  reviewed — never silent (the same discipline as the coverage threshold and
-  phase-deferred SRs). `check_perf.py --update-baseline` rewrites it from the
-  current metrics for exactly that purpose.
-- **Warn-first; start with the deterministic metrics (honest-gate rule, §4).** The
-  per-row `Gate` decides fail-vs-warn and `Tier` decides *when* a row is in scope:
-  gate the **low-noise, deterministic** metrics (artifact/binary size, dependency
-  count) at `full`; default **noisy runtime** metrics (latency, peak RAM, VRAM,
-  throughput) to `Gate=warn` at `release`, with tolerance bands and same-runner /
-  best-of-N measurement. A number that can't be a reliable `Test` gate is
-  warn-tracked or `Demonstration`, never faked into a binary gate. A budget with no
-  measurement this run is skipped, like a missing tool — absent metrics never fail.
+## 10. Project scale — one module, several modules, several repos *(opt-in past rung 1)*
 
-## 10. Project scale — one module, several modules, several repos
+*Applies when* the scope outgrows one module. Everything above (§1–§9) assumes the
+common case, **one module in one repo** — the default and rung 1. Scale is an
+**escalation ladder**: climb a rung only when the scope forces it, decide the rung
+**at project creation**, and bias to the lowest, because each higher rung buys
+coordination cost a single module never pays.
 
-Everything above (§1–§9) assumes the common case: **one module in one repo**, and
-that is the default. Scale is an **escalation ladder** — climb a rung only when the
-scope genuinely forces it, decide the rung **at project creation**, and bias to the
-lowest one, because each higher rung buys coordination cost a single module never
-pays:
-
-1. **One module, one repo** — the default for almost every project. The whole
-   `SN→SR→LLR→TC` spine, one gate run, one release.
-2. **Several modules, one repo** — when a repo grows distinct sub-systems that still
-   **build and release as one** (this section).
-3. **Several repos + a coordinator** — only when modules genuinely need *independent*
-   versioning, ownership, access, or release cadence at a scale one repo can't
-   sustain. A heavier, deliberately **rare** step with its own coordinator role,
-   documented separately in `MULTI_REPO.md` (the multi-repo coordinator model — a
-   *design*, with the heavy cross-repo tooling deferred); you almost certainly don't
-   need it, and a reviewer should push back on a premature jump. It is **revisitable**
-   — start single and promote a module to its own repo *later*, once it proves it
+1. **One module, one repo** — the default; the whole `SN→SR→LLR→TC` spine, one
+   gate run, one release.
+2. **Several modules, one repo** — distinct sub-systems that still **build and
+   release as one**. No new machinery: partition the same spine by the columns that
+   already exist (the LLR **`Module`** column and the optional **`Area`** tag,
+   §1), give each module its own **domain hat**, add **integration TCs** for the
+   seams, and record shared internal contracts as `IF-###` (§8). The **repo-level
+   gate stays the source of truth** — `trace.py --strict` requires 0 orphans
+   across the whole repo, seams included; the kit ships **no** `--module`/`--area`
+   filter (per-module ownership is a reading convention, not a gate).
+3. **Several repos + a coordinator** — only when modules genuinely need
+   *independent* versioning, ownership, access, or release cadence at a scale one
+   repo can't sustain. A heavier, deliberately **rare** step with its own
+   coordinator role, documented separately in `MULTI_REPO.md` (a *design*, heavy
+   cross-repo tooling deferred); a reviewer should push back on a premature jump.
+   **Revisitable** — promote a module to its own repo *later*, once it proves it
    needs the independence, which is far cheaper than a speculative split.
 
-**Several modules in one repo — no new machinery, just partition the spine.** A
-multi-module repo is the *same* spine, grouped by columns that already exist: the
-LLR **`Module`** column and the optional **`Area`** tag on SR/TC (§1 "Domain
-hats"). Each module is a sub-tree of `SN→SR→LLR→TC`; where a module needs its own
-discipline it gets its own **domain hat** owning that slice (§1 already allows
-this). The repo still builds, gates, and releases as a whole.
-
-- **Module-scoped review is a convention over the existing columns, not a new
-  flag.** A module owner reviews their slice by filtering the registries on
-  `Area`/`Module` (a grep or spreadsheet filter); the **repo-level gate stays the
-  source of truth** — `trace.py --strict` still requires **0 orphans across the
-  whole repo, seams included**. The kit deliberately ships **no** `--module`/`--area`
-  filter on `trace.py`/`check.py`: a per-module gate would either hide the
-  cross-module seams (a false "green" masking exactly the integration gaps this
-  method wants first-class) or need real machinery to tell a legitimate seam from an
-  orphan. The whole-repo gate already spans every module; per-module *ownership* is a
-  reading convention, not a gate of its own.
-- **Integration TCs for the seams.** A module boundary is where two parts must
-  agree, so it gets its **own** TCs — not merely each module's internal unit tests.
-  These are integration/system-level, usually `Tier=Full` or `Release` (§4 "Test
-  tiers"), so the seam is a tested contract rather than an untested gap between two
-  individually-green modules.
-- **`IF-###` applies *within* a repo, too.** The interface registry (§8) is not only
-  for separate repos: two modules in one repo that share a contract record it as an
-  `IF-###`, with the counterpart naming the **other module** instead of another
-  repo and both rows living in the one `interfaces.csv`. Same
-  direction/owner/version/stability discipline, same "one contract, one home, backed
-  by a test" rule — applied to the internal seam, with no cross-repo build machinery.
+Rung 2 details (module-scoped review, seam TCs, in-repo `IF-###`) are expanded in
+[`process-options.md`](process-options.md#10-several-modules-one-repo).
