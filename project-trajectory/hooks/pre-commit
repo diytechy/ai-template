@@ -37,6 +37,12 @@ fi
 
 # 1. Code map must be fresh — protects the GENERATED regions from hand-edits and
 #    catches a map that has drifted from the source.
+#    EDIT FOR A NON-PYTHON STACK: this line drives the *Python* generator. A
+#    PowerShell repo swaps it for the reference port (ship it as
+#    scripts/gen_arch_map.ps1; the kit provides scripts/gen_arch_map.reference.ps1):
+#        pwsh -NoProfile -File scripts/gen_arch_map.ps1 -Check
+#    Any generator that fills the same marker block works — the block is the whole
+#    contract (ADOPTING.md §3). Drop this step only if you also drop the arch-map.
 "$PY" scripts/gen_arch_map.py --check
 
 # 2. Traceability *integrity*: no duplicate / malformed ids — wrong at any
