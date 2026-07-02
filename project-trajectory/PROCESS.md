@@ -19,6 +19,18 @@ review triage (§6), and the harness (§7). Everything else is opt-in: skip §8,
 §9, §10, the `Phase`/`Lifecycle` tags, and every "optional" tripwire until the
 scope forces it. That default is rung 1 of the §10 ladder.
 
+**Proportionality — the process right-sizes itself.** Text-representable,
+change-trackable artifacts are the **ideal** this process reaches for, not an
+entry requirement: track *about* an asset in text even where the asset itself
+can't be diffed. Where verification can't be mechanized, a **recorded human
+attestation** (§4 `Attest`) is the honest floor — trust-based by nature (the box
+can be checked without the work having happened), so the process's job is to make
+it **explicit, named, and auditable**, never to pass it off as a mechanized
+check. Over-aggressive traceability is itself a failure mode: right-sizing is the
+process working, not a compromise of it (see §3 "Right-sizing"). Full doctrine —
+including the creative/subjective stance — in
+[`process-options.md`](process-options.md#proportionality-doctrine).
+
 ---
 
 ## 1. Roles (hats), not necessarily separate agents
@@ -90,6 +102,19 @@ deliberate simplification is still right, mark it inline with a **`SHORTCUT:`**
 comment naming the **ceiling** it accepts (a global lock, an O(n²) scan, a naive
 heuristic) and the **upgrade path** past it — so it is greppable, reviewable, and
 never mistaken for the final design. One tag, defined once; not a taxonomy.
+
+Right-sizing cuts the *other* way too: **over-aggressive traceability is a
+failure mode in its own right.** Traceability founds sustainability, but pushed
+past what the scope earns it becomes an overly complex, overly constrained
+process that bogs development down — so trimming it to fit is the process
+working, not a lapse from it. This bites hardest in **creative / subjective
+domains** (game story, music, artwork, voice acting — mostly binary, mostly
+human-judged): there the spine's value is at **high altitude** — `SN→SR` to
+ensure nothing key is missed or silently broken as work moves forward — and you
+**descend to LLR/TC granularity only where a mechanized check earns its keep**,
+not to decompose inherently subjective work into fine-grained rows a script still
+can't verify. Where the honest floor is a human's judgment, name it `Attest`
+(§4) rather than inflate a subjective call into a false `Test`.
 
 **Reviewability — review the source, not the render.** The registries (the
 `SN`/`SR`/`LLR`/`TC` CSVs) are the tracked, line-by-line-reviewable source of

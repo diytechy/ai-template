@@ -11,6 +11,55 @@ Section headings mirror the core-doc sections that point here.
 
 ---
 
+## Proportionality doctrine
+
+*Referenced from PROCESS.md header ("Proportionality") and §3 "Right-sizing".*
+**Applies always** — this is the philosophy that frames how hard every other
+layer is applied; it is opt-in only in the sense that it tells you when to *not*
+reach for machinery.
+
+The core is the process's own guardrail against turning a sustainability tool
+into a straitjacket. Four points, one voice:
+
+- **(a) The tracked-artifact ideal, not an entry gate.** The whole method is
+  built to perform change management and transparency **where possible**: a
+  text-representable, line-diffable, mechanically-checkable artifact is the
+  **ideal** it reaches for. But some work genuinely can't produce one, and that
+  is not a disqualification. When the artifact itself can't be diffed, **track
+  *about* it in text** — provenance, license, version, a content hash (§8
+  "Binary assets") — so the *record* is change-tracked even when the *asset*
+  isn't. The ideal is a direction, not an admission ticket.
+- **(b) Attestation is the honest floor — and honestly trust-based.** Where
+  verification cannot be mechanized, the floor is a **recorded human
+  attestation**: a named person's recorded judgment that the acceptance
+  criterion is met (a playtest, a creative review, a physical action). Be honest
+  about what this is: **the box can be checked without the work having
+  happened.** Attestation is trust; a mechanized check is proof. The process does
+  **not** pretend they are equivalent — its job is to make the attestation
+  **explicit** (a real verification kind, not a silent "Verified"), **named** (who
+  attested), and **auditable** (when, against which criterion), so a reader can
+  always see how much of the project rests on trust. That is the `Attest`
+  verification kind (§4) and the "attested vs mechanized" split in the trace
+  report.
+- **(c) Over-aggressive traceability is a failure mode.** Traceability founds
+  sustainability — *and* pushed past what a scope earns, it becomes an overly
+  complex, overly constrained process that bogs development down. The balance is
+  the whole game. **Right-sizing the traceability is the process working, not a
+  compromise of it.** A gate that demands fine-grained decomposition of work no
+  script can verify isn't more rigorous; it is theater that trades real velocity
+  for the *appearance* of control. Reach for the lightest structure that keeps
+  key items from being missed or silently broken.
+- **(d) For creative/subjective domains, fly high.** Story, music, artwork,
+  voice acting, level design — mostly binary, mostly subjectively verified. Here
+  the `SN→SR→LLR→TC` spine's value is at **high altitude**: use `SN→SR` to
+  ensure nothing key is **missed or silently broken** as development moves
+  forward (the through-line of a story, the mood targets of a soundtrack, the
+  cast a script needs). **Descend to LLR/TC granularity only where a mechanized
+  check earns its keep** — a save-file schema, an audio-loudness bound, a
+  build-size budget — and stop there. Decomposing a subjective judgment ("is this
+  scene moving?") into finer rows a script still can't check adds process weight
+  with no verification return; mark it `Attest` and move on.
+
 ## Phased delivery
 
 *Referenced from PROCESS.md §4.* **Applies when** a roadmap ships v1 before
