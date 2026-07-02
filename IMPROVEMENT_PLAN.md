@@ -2760,7 +2760,22 @@ continuity (same style as the session log above).
 > example list, comment/style/intro wording). `PROCESS.md` +1,689
 > (47,605→49,294); `PROCESS_OPTIONS.md` +1,252 (28,479→29,731, doctrine (e)).
 
-### Session protocol (for a cold session pointed only at this file)
+> **WI-1.11 ✅ landed 2026-07-02 · Commit cadence named as a rule.** Owner-raised
+> gap: the kit was saturated with *committed-artifact* language (committed
+> goldens/map, reviewed gate commits, a pre-commit floor designed to "never block
+> a legitimate early-stage commit") yet never told the working agent to **commit
+> often** — and every readable-change property the process buys evaporates for
+> work stranded uncommitted. Added: PROCESS.md §3 "Commit cadence" paragraph
+> (reviewable change exists only at commit granularity; small single-purpose
+> commit per green step, never a session-sized batch; the always-valid floor is
+> deliberately cheap *so that* frequent commits stay cheap; a commit is not a
+> release — floor-green + coherent change, not perfection; end sessions with a
+> clean tree or explicitly parked work) + AGENTS template session bullet gains
+> "**Commit early and often** … End sessions with a clean tree."
+> **Byte deltas:** `AGENTS.template.md` 9,997→9,990 (headroom *grew* to 10 B;
+> paid by trimming: Mermaid "no toolchain" aside, reproducibility tautology,
+> harvest-intro wording, "Becomes its summary in the map", "low-risk").
+> `PROCESS.md` +1,015 (49,294→50,309).
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
    2026-07-01, all 28 planned threads have landed (sessions A–K). What remains are

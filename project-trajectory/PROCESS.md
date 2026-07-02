@@ -142,6 +142,21 @@ This is the "composite artifacts are ignored from change tracking" rule, named:
 the cost of reviewing a big regenerated file is never paid, because the small
 registry diff already carries the intent.
 
+**Commit cadence — reviewable change exists only once committed.** Everything
+above buys its value at **commit granularity**: line-diffable registries, the
+drift-gated map, committed goldens — none of it protects work sitting
+uncommitted in a working tree, which can't be diffed, reviewed, reverted, or
+bisected, and can simply be lost. So **commit early and often**: a small,
+single-purpose commit at each green step (one finding closed, one requirement
+decomposed, one registry edit plus its regenerated blocks), never a
+session-sized batch. The pre-commit floor (§7) is deliberately fast and
+**always-valid** *so that* frequent commits stay cheap — that is its design
+intent, not a coincidence. A commit is not a release and not a gate: the bar is
+"floor-green plus a coherent, describable change", never perfection — polish
+arrives as further commits. End every session with a **clean tree**: work
+either committed or explicitly parked as a finding/assumption in `status.md`,
+never silently stranded.
+
 **The doc set must stay navigable (the doc map stays honest like the code map).**
 The freshness gate above keeps *generated* blocks honest; the hand-written docs
 get the same guarantee. `scripts/check_docs.py` (stdlib, a process check — §7)

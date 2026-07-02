@@ -58,11 +58,13 @@ gates, and the ID scheme. The short version an agent needs every session:
   back-links, in [docs/architecture.md](docs/architecture.md). **Read it to
   find where a capability lives before searching the tree**; the harness keeps
   it (and the Mermaid dependency diagram) fresh — never hand-edit it.
-- **Diagrams are Mermaid fenced blocks in the docs** — no toolchain needed.
-  Never edit between `GENERATED` markers; never commit exported diagram images.
+- **Diagrams are Mermaid fenced blocks in the docs.** Never edit between
+  `GENERATED` markers; never commit exported diagram images.
 - **Start each session** with the *Current State* header of
   [docs/status.md](docs/status.md); end each turn by updating it (active gate,
-  what changed, next action awaiting approval).
+  what changed, next action awaiting approval). **Commit early and often** — a
+  small, green commit per logical step; readable change only exists once
+  committed. End sessions with a clean tree.
 
 ## Code we want (readability for humans *and* agents)
 
@@ -96,11 +98,10 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
 
 Comment **generously and deliberately** — the bar is that a reader never has to
 reverse-engineer *intent*. The generated code map **harvests module and
-public-symbol docstrings**, so good comments teach at the code *and* populate
-the index agents read first:
+public-symbol docstrings** into the index agents read first:
 
 - **Every module: a header docstring** — its single responsibility plus any
-  invariant it upholds ("pure core — no I/O"). Becomes its summary in the map.
+  invariant it upholds ("pure core — no I/O").
 - **Every public symbol: a docstring** — purpose, the *meaning* (and units) of
   parameters and return, failure modes; include `Implements: SR-/LLR-` so the
   back-link lands in the map.
@@ -140,7 +141,7 @@ the same edit as the signature — a wrong contract is worse than none.
 ## For analytics / data code specifically
 
 - **Reproducibility is a requirement:** pin random seeds; record data source +
-  version/snapshot; a run must be reproducible from inputs alone.
+  version/snapshot.
 - **Notebooks explore; modules ship.** Promote anything reused or tested into
   `src/` so it can be imported and unit-tested.
 - **Separate data I/O from transforms:** pure transforms unit-tested on small
@@ -167,8 +168,8 @@ Direct and concrete; explain the *why* before the *how*.
   right-sizing must never cut + the `SHORTCUT:` convention: process.md §3.)
 - **Stay in your lane, but speak up.** Don't change unrelated code; surface a
   design smell as a separate finding to its owner instead of fixing it inline.
-- **Flag uncertainty honestly.** Say what you're unsure of; a small, low-risk
-  experiment with hypothesis + result beats confident guessing.
+- **Flag uncertainty honestly.** Say what you're unsure of; a small experiment
+  with hypothesis + result beats confident guessing.
 - **Propose better ways.** The stronger or longer-lived approach is welcome,
   not noise.
 - **Repo text is the project's memory; yours is scratch.** Durable facts — a
