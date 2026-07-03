@@ -2947,6 +2947,39 @@ continuity (same style as the session log above).
 > `pytest -q`: **171 passed, 1 skipped** (was 167/1; +4). `check_docs --root .`:
 > OK, 0 broken.
 
+> **WI-1.17 ✅ landed 2026-07-03 · status.md Open items: scannable bullet
+> format, prescribed by the template.** Fourth finding from Gilbert's adoption:
+> `STATUS.template.md` seeded *Open items* as a one-line prose field ("the few
+> things blocking the current gate, by ID"), and in practice it accreted into a
+> comma-spliced wall of text ("(a) … (b) … (h) …") the human reviewer could not
+> scan. The reviewer's need, from `status.md` alone: see every open item as a
+> bullet, know which need a human decision vs which are in flight, and click
+> through to the artifact each concerns. Fix, one file — the **template carries
+> the format** (a short seeded example, not just prose guidance), per
+> single-source-of-truth:
+> 1. **`STATUS.template.md` Current State**: *Open items* now prescribes one
+>    bullet per item (**hard rule — never inline-enumerated prose**); stable
+>    short ids (OI-1, OI-2, … — never renumbered; closed items removed or
+>    struck through) so humans can cite them from memory; a **Needs `<human>`**
+>    (decision stated per item) vs **In flight** (driver; no approval needed)
+>    split; every bullet ends with a markdown link to the artifact it concerns;
+>    the same bullet discipline applies to any deferrals/decisions lists. Two
+>    seeded example bullets (OI-1 decision-shaped, OI-2 in-flight-shaped) whose
+>    links resolve in a fresh scaffold (`requirements/system-requirements.csv`),
+>    so `check_docs` stays green.
+> 2. **No other doc changed** — PROCESS.md §6 only says keep the header *short*
+>    (compatible; it never described the shape), so there is no second copy of
+>    the format to reconcile: the template is the single source of truth.
+>
+> **Deliberately left out:** a mechanized format check (free-form Markdown —
+> same reason WI-1.14/WI-1.16 kept prose out of the failure sets; the G-gate
+> reviewer owns the blackboard's readability). **Byte deltas:**
+> `STATUS.template.md` 2,082→2,826 (+744 — the seeded example; not a
+> budget-watched file); `PROCESS.md` **untouched (52,064)**;
+> `AGENTS.template.md` **untouched (9,990/10,000)**. `pytest -q`:
+> **171 passed, 1 skipped** (no script change; suite re-run for the
+> template's scaffold/bootstrap/check_docs coverage).
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

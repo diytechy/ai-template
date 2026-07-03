@@ -11,7 +11,18 @@ last) — it is the record, not required reading for every pass.
 - **Active gate:** G1 — Requirements, UX & constraints _(mirror it in the
   one-line `docs/gate` file — `check.py`/CI read that; see process.md §7)_
 - **Round:** 1
-- **Open items:** _(the few things blocking the current gate, by ID)_
+- **Open items:** _(the few things blocking the current gate — **one bullet per
+  item, never inline-enumerated prose**. Give each a stable short id (OI-1,
+  OI-2, … — ids are never renumbered; closed items are removed or struck
+  through) so a human can cite it from memory; end every bullet with a link to
+  the artifact it concerns; keep the two sub-lists below. Any
+  deferrals/decisions list follows the same bullet discipline.)_
+  - **Needs <human>** _(state the decision wanted, per item)_:
+    - OI-1 — decide: keep or drop the legacy export flag →
+      [system-requirements.csv](requirements/system-requirements.csv)
+  - **In flight** _(driver; no approval needed)_:
+    - OI-2 — pinning SR-000's acceptance predicate →
+      [system-requirements.csv](requirements/system-requirements.csv)
 - **Assumptions (unattended):** _(decisions taken without sign-off while running
   unattended — each to confirm or revert at the next gate; see AGENTS.md "Ask,
   don't assume")_
