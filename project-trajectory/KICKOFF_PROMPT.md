@@ -104,7 +104,9 @@ low-level requirement (links SR, names module/symbol) → `TC-###` test case
 ## Gates (advance only when criteria pass; PAUSE for human approval at each)
 
 - **G1 — Requirements, UX & constraints.** SN list complete with priorities,
-  measurable acceptance intent, and **edge-case expectations** (see checklist);
+  measurable acceptance intent, and **edge-case expectations covering each
+  lifecycle phase** — Provision/Startup/Runtime at minimum, an explicit n/a per
+  phase allowed (see checklist);
   every SR links ≥1 SN and has measurable acceptance criteria; usability/docs
   needs captured; constraints/non-goals explicit. Human approves.
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or marked
@@ -142,12 +144,20 @@ paste the actual command output.
 
 ## End-user / edge-case lens (apply throughout, especially G1 and G-Final)
 
-For each, ask "what does the user experience, and is it safe/clear/recoverable?":
+For each, ask "what does the user experience, and is it safe/clear/recoverable?"
+— and sweep **every lifecycle phase**: which phase gets neglected depends on the
+product (tools: Provision/Startup; anything operating in a live environment: the
+Runtime rows). The stakeholder-needs template's edge table seeds each phase;
+record an explicit n/a where one truly doesn't apply.
 - **Setup & first run** — can a non-expert get to first success from the docs
   alone? Is there a quick-reference? Is install/config minimal?
 - **Failure modes** — interruption / power loss / crash mid-operation; invalid or
   corrupt input; resource exhaustion (disk/memory full); missing dependency;
   removed/locked output device; permission/path errors.
+- **Live environment** — the environment changes under the product mid-operation;
+  a third party (another process, a person, a pet) interferes; an intended action
+  is irreversible on an ambiguous target; input degraded but not absent; the task
+  must be abandoned safely partway.
 - **Safety** — source/inputs never mutated unexpectedly; no partial output that
   looks complete; operations reversible or clearly warned.
 - **Automation** — anything interactive must have a non-interactive path that

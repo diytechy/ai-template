@@ -377,8 +377,9 @@ coordinator sequences and reads status; it never builds or runs anything.
 - **Operational requirements use the same spine** (§7) — a domain hat owns them,
   `Verification=Demonstration`/`Manual`, an optional `Area` tag, and a
   procedure-recording `Release`-tier TC the release checklist finds.
-- **Tag the lifecycle phase** (§7) so the neglected Provision/Startup requirements
-  a capability implies get written, not just its Runtime one.
+- **Tag the lifecycle phase** (§7) so the phase your product tends to neglect
+  gets written — Provision/Startup for tools, the Runtime *operating environment*
+  for embodied/service products — not just the one you're already looking at.
 - **Quantitative budgets go off the spine** (§8) — `PB-###` in
   `performance-budgets.csv`, owned by the Integration hat, back-linked to the
   SR/LLR/Module they bound.

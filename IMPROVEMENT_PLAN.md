@@ -2834,7 +2834,17 @@ continuity (same style as the session log above).
 > input; safe partial abandonment), and the one-directional claim is replaced
 > with the symmetric rule (which phase gets neglected depends on the product);
 > (2) PROCESS.md §4 G1 now requires edge cases to cover each lifecycle phase
-> or record an explicit n/a. **Deferred, needs owner decision:** (a)
+> or record an explicit n/a. **r2 (fresh-context review, same day):** the
+> reviewer found three stale restatements of the old bias the r1 sweep
+> missed — EXAMPLE.md's "neglected Provision/Startup" pattern line, the
+> Minimum-profile "skip Lifecycle tags" clause left unreconciled with the new
+> G1 sub-criterion, and KICKOFF_PROMPT.md's edge-case lens (the G1 bullet's
+> own checklist) still stating the old bar — plus the unattended-run seed row
+> narrowed to Startup only. All four fixed in the r2 commit: symmetric
+> wording in EXAMPLE.md, tag-skip ≠ sweep-skip carve-out in the Minimum
+> profile, phase-sweep intro + "Live environment" bullet in the kickoff lens,
+> Startup→Runtime span on the unattended row. **Deferred, needs owner
+> decision:** (a)
 > domain-conditional seed rows in `bootstrap.py` (`domain=hardware` swapping
 > in physical-world scenarios) — cheap but adds a template-content fork to
 > maintain; (b) a mechanized phase-coverage check — the edge table lives in

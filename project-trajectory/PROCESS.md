@@ -17,7 +17,9 @@ spine hats (§1), the id scheme (§2), the §3 traceability/anti-duplication
 discipline, gates **G1→G2→G3** + G-Final (§4), the verdict protocol (§5),
 review triage (§6), and the harness (§7). Everything else is opt-in: skip §8,
 §9, §10, the `Phase`/`Lifecycle` tags, and every "optional" tripwire until the
-scope forces it. That default is rung 1 of the §10 ladder.
+scope forces it. (Skipping the `Lifecycle` *tag* doesn't skip G1's per-phase
+edge-case sweep — an explicit n/a per phase is all the bookkeeping this rung
+owes.) That default is rung 1 of the §10 ladder.
 
 **Proportionality — the process right-sizes itself.** Text-representable,
 change-trackable artifacts are the **ideal** this process reaches for, not an

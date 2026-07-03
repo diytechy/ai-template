@@ -43,7 +43,7 @@ genuinely cannot apply.
 | SN-0xx | Provision | Missing dependency / wrong version | |
 | SN-0xx | Provision | First-run setup & discoverable docs / quick-reference | |
 | SN-0xx | Startup | Invalid / corrupt / missing config at launch | |
-| SN-0xx | Startup | Unattended/automated start (must never block; clear failure) | |
+| SN-0xx | Startup→Runtime | Unattended/automated run (never blocks on a prompt at launch **or mid-run**; clear failure) | |
 | SN-0xx | Runtime | Interruption / power loss / killed mid-operation | |
 | SN-0xx | Runtime | Invalid / corrupt / unsupported input | |
 | SN-0xx | Runtime | Resource exhaustion (disk / memory full) | |
