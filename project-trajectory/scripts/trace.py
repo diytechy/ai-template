@@ -129,7 +129,8 @@ and in the report. A comparative is untestable until it names its predicate —
 identical *in what*, judged *how* ("cannot distinguish source by schema" vs
 "identical field names and dtypes per IF-003"). The predicate heuristic looks
 for pinning markers (i.e./e.g./defined/listed/per/measured/tolerance/golden/
-byte-for-byte/== ...), so it is deliberately a *lint*, not a gate: the G1
+byte-for-byte/byte-identical/bit-identical/== ...), so it is deliberately a
+*lint*, not a gate: the G1
 consistency review (process.md §4) makes the call, and the reviewer either
 pins the predicate or accepts the wording knowingly.
 
@@ -312,6 +313,11 @@ PREDICATE_MARKERS = (
     "predicate",
     "byte-for-byte",
     "bit-for-bit",
+    # Self-pinning comparatives: "byte-identical"/"bit-identical" *name* their
+    # predicate (the comparison basis is raw bytes/bits), exactly like
+    # "byte-for-byte" — the bare comparative "identical" alone still warns.
+    "byte-identical",
+    "bit-identical",
     "golden",
     "==",
     "regex",

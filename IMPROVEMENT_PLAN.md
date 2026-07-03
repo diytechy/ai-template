@@ -2980,6 +2980,29 @@ continuity (same style as the session log above).
 > **171 passed, 1 skipped** (no script change; suite re-run for the
 > template's scaffold/bootstrap/check_docs coverage).
 
+> **WI-1.18 ✅ landed 2026-07-03 · AC advisory: "byte-identical"/"bit-identical"
+> are self-pinning.** Real false positives from Gilbert (the WI-1.16 advisory's
+> first downstream contact): three SRs were flagged although their comparatives
+> name their predicate — "topic names and schema references are byte-identical",
+> "two consecutive runs produce byte-identical files", "two export runs produce
+> byte-identical STL files". "byte-identical"/"bit-identical" state the
+> comparison basis (raw bytes/bits), exactly like the already-recognized
+> "byte-for-byte"/"bit-for-bit" markers. Fix, tests-first:
+> 1. **`trace.py`** — `byte-identical` + `bit-identical` added to
+>    `PREDICATE_MARKERS` (existing heuristic structure unchanged: a cell
+>    containing them is treated as pinned), with a comment naming the
+>    self-pinning rationale; the module docstring's marker enumeration updated.
+> 2. **`PROCESS.md` §4 untouched** — its advisory paragraph enumerates the
+>    *comparative terms*, not the pinning markers, so there is no second marker
+>    list to reconcile (single source: the code).
+> 3. **Tests (3 new, red-first, `tests/test_ac_advisory.py`):**
+>    "byte-identical" cell → no advisory; "bit-identical" cell → no advisory;
+>    bare "identical" still warns (guards WI-1.16's behavior).
+>
+> **Byte deltas:** `PROCESS.md` **untouched (52,064)**; `AGENTS.template.md`
+> **untouched (9,990/10,000)**. `pytest -q`: **174 passed, 1 skipped** (was
+> 171/1; +3). `check_docs --root .`: OK, 0 broken.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

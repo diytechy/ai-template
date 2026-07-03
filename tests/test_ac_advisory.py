@@ -67,6 +67,35 @@ def test_plain_measurable_ac_is_not_flagged(scaffold):
     assert "ac-advisories" not in proc.stdout
 
 
+def test_byte_identical_is_self_pinning_no_advisory(scaffold):
+    # WI-1.18 (Gilbert false positives): "byte-identical" names its predicate —
+    # the comparison basis is raw bytes — exactly like "byte-for-byte".
+    make_minimal_project(scaffold)
+    swap_ac(scaffold, "Two consecutive runs produce byte-identical output files")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "ac-advisories" not in proc.stdout
+
+
+def test_bit_identical_is_self_pinning_no_advisory(scaffold):
+    make_minimal_project(scaffold)
+    swap_ac(scaffold, "Topic names and schema references are bit-identical")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "ac-advisories" not in proc.stdout
+
+
+def test_bare_identical_still_warns(scaffold):
+    # Guard the existing behavior: bare "identical" (no comparison basis
+    # anywhere in the cell) must keep producing the advisory.
+    make_minimal_project(scaffold)
+    swap_ac(scaffold, "Exported files are identical across runs")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARNING" in proc.stdout
+    assert "ac-advisories=1" in proc.stdout
+
+
 def test_advisory_surfaces_at_g1_via_registry_integrity_step(scaffold):
     # The G1 harness run must show the warning (Gilbert's AC passed G1 unseen)
     # while the gate itself stays green — warn, not fail.
