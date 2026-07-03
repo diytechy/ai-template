@@ -2902,6 +2902,51 @@ continuity (same style as the session log above).
 > (9,990/10,000)**. `pytest -q`: **167 passed, 1 skipped** (was 160/1; +7).
 > `check_docs --root .`: OK, 0 broken.
 
+> **WI-1.16 ✅ landed 2026-07-03 · Acceptance-criteria testability: comparative
+> terms must name their predicate (warn-only lint + §4 reviewer rule).** Third
+> finding from Gilbert's adoption: SR-013's AC said a consumer "cannot
+> distinguish source by schema" / "schema-identical" — a comparative with no
+> named predicate — and it sailed through G1, needing a manual pin at G2.
+> Mechanism decision: **both** halves of the proposed fix, split by what each
+> does well — a heuristic can *notice* the wording, only a human can *judge*
+> it, so the lint **warns and never fails** (the honest-classification stance
+> §4's consistency review already takes: never imply `trace.py` performs the
+> judgment). Tests-first:
+> 1. **`trace.py` — `ac_advisories()`**, always-on and warn-only: a
+>    comparative/absolute term in a real SR's `AcceptanceCriteria`
+>    (`identical`, `indistinguishable`, `equivalent`, `interchangeable`,
+>    `same as`, `matches`, `cannot (be) distinguish(ed)`, `no difference`;
+>    word-boundary matched, so "schema-identical" hits and "mismatches"
+>    doesn't) with no pinning marker in the cell (`i.e.`/`e.g.`/`defined`/
+>    `listed`/`per `/`measured`/`tolerance`/`±`/`golden`/`byte-for-byte`/`==`/
+>    `regex`/`checksum`/...) prints `WARNING (advisory): ...` on stdout and
+>    fills a new report section "Acceptance-criteria advisories (warn-only)" +
+>    an `ac-advisories=N` summary suffix. **Never joins any failure set**
+>    (exit 0 under `--strict`/`--strict-integrity`/`--strict-schema`). Via
+>    WI-1.15's G1 `registry-integrity` step the warning now *surfaces at G1* —
+>    exactly where Gilbert's wording slipped through — while the gate stays
+>    green.
+> 2. **`PROCESS.md` §4 consistency review** gains the named rule: every
+>    comparative/absolute term in an acceptance criterion must say identical
+>    *in what*, judged *how*; `trace.py`'s advisory is explicitly a heuristic
+>    lint the reviewer resolves (pin the predicate or accept knowingly).
+> 3. **`registry-hygiene` skill** (kit source + dogfooded copy): "Reading
+>    findings" gains the AC-advisory bullet. Skills INDEX body-only, `--check`
+>    fresh.
+> 4. **Tests (4 new, red-first, `tests/test_ac_advisory.py`):** unpinned
+>    comparative warns loudly but exits 0 under every strict flag; pinned
+>    variant ("i.e. same field names and dtypes") not flagged; the minimal
+>    project's ordinary AC not flagged; `check.py --gate G1` shows the WARNING
+>    while `RESULT: PASS` holds (warn, not fail).
+>
+> **Deliberately left out:** scanning SN acceptance-intent prose (free-form
+> Markdown — same reason WI-1.14 deferred its mechanized phase check) and any
+> fail mode for the lint (a wording heuristic must not gate; §4 owns the
+> judgment). **Byte deltas:** `PROCESS.md` 51,517→52,064 (+547 — the §4 rule,
+> normative; flagged); `AGENTS.template.md` **untouched (9,990/10,000)**.
+> `pytest -q`: **171 passed, 1 skipped** (was 167/1; +4). `check_docs --root .`:
+> OK, 0 broken.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

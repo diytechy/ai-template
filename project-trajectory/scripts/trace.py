@@ -121,6 +121,18 @@ starts green.
       NOT enumerated — the method leaves them open (e.g. Priority S, Status
       Planned).
 
+Always (warn-only, never an exit-code change), acceptance-criteria testability
+is advised on: a comparative/absolute term in an SR's AcceptanceCriteria
+("identical", "indistinguishable", "equivalent", "same as", "matches", ...)
+with no pinned predicate nearby in the cell is flagged as a WARNING on stdout
+and in the report. A comparative is untestable until it names its predicate —
+identical *in what*, judged *how* ("cannot distinguish source by schema" vs
+"identical field names and dtypes per IF-003"). The predicate heuristic looks
+for pinning markers (i.e./e.g./defined/listed/per/measured/tolerance/golden/
+byte-for-byte/== ...), so it is deliberately a *lint*, not a gate: the G1
+consistency review (process.md §4) makes the call, and the reviewer either
+pins the predicate or accepts the wording knowingly.
+
 The report always includes a "Verification basis (attested vs mechanized)"
 count (process.md §4 "Attest"): of the SRs reported Verified, how many rest on a
 runnable check vs a named human's recorded judgment (Verification=Attest). This
@@ -255,6 +267,78 @@ ENUM_FIELDS = {
     },
     "TC": {"Tier": {"Smoke", "Full", "Release"}},
 }
+
+# --- Acceptance-criteria testability advisory (warn-only) --------------------
+# A comparative/absolute claim in an AcceptanceCriteria cell is untestable until
+# it names its predicate: identical *in what*, judged *how*. (Gilbert's SR-013
+# shipped "cannot distinguish source by schema" through G1 and had to be pinned
+# by hand at G2.) Both lists are heuristics — the advisory WARNS and never joins
+# a failure set; the G1 consistency review (process.md §4) makes the call.
+
+# Comparative/absolute terms that demand a predicate. Matched on word
+# boundaries, case-insensitive ("schema-identical" matches "identical";
+# "mismatches" does not match "matches").
+COMPARATIVE_TERMS = (
+    "identical",
+    "indistinguishable",
+    "equivalent",
+    "interchangeable",
+    "same as",
+    "matches",
+    "cannot distinguish",
+    "cannot be distinguished",
+    "no difference",
+)
+_TERM_RES = {
+    t: re.compile(r"(?<!\w)" + re.escape(t).replace(r"\ ", r"\s+") + r"(?!\w)", re.I)
+    for t in COMPARATIVE_TERMS
+}
+
+# Markers that (heuristically) pin a predicate in the same cell: an explicit
+# definition/enumeration, a measurement/tolerance, or an exact-comparison basis.
+PREDICATE_MARKERS = (
+    "i.e.",
+    "e.g.",
+    "namely",
+    "defined",
+    "specified",
+    "listed",
+    "enumerated",
+    "per ",
+    "measured",
+    "within ",
+    "±",
+    "tolerance",
+    "predicate",
+    "byte-for-byte",
+    "bit-for-bit",
+    "golden",
+    "==",
+    "regex",
+    "checksum",
+)
+
+
+def ac_advisories(srs):
+    """Warn-only findings: real SR rows whose AcceptanceCriteria uses a
+    comparative term with no pinning marker anywhere in the cell."""
+    out = []
+    for r in srs:
+        cell = (r.get("AcceptanceCriteria") or "").strip()
+        if not cell:
+            continue
+        low = cell.lower()
+        terms = [t for t, rx in _TERM_RES.items() if rx.search(cell)]
+        if terms and not any(m in low for m in PREDICATE_MARKERS):
+            out.append(
+                "SR {} AcceptanceCriteria uses {} without a named predicate — "
+                "say identical/equivalent *in what*, judged *how* (process.md "
+                "§4 consistency review; heuristic, warn-only)".format(
+                    r["SR-ID"], ", ".join(repr(t) for t in sorted(terms))
+                )
+            )
+    return out
+
 
 # Verification methods whose "Verified" state rests on a recorded human judgment,
 # not a runnable check (process.md §4 "Attest"). --require-verified accepts these
@@ -842,6 +926,9 @@ def main():
         if args.strict_schema
         else []
     )
+    # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
+    # predicate (see the module docstring). Never joins a failure set below.
+    advisories = ac_advisories(srs)
 
     lines = (
         [
@@ -930,6 +1017,15 @@ def main():
         if not integrity
         else [f"- {f}" for f in integrity]
     )
+    # Warn-only advisory section (never a failure): comparative acceptance-
+    # criteria wording that names no predicate. The G1 consistency review
+    # (process.md §4) decides — pin the predicate or accept it knowingly.
+    lines += ["", "## Acceptance-criteria advisories (warn-only)", ""]
+    lines += (
+        ["None. No unpinned comparative terms."]
+        if not advisories
+        else [f"- {f}" for f in advisories]
+    )
     # Attested-vs-mechanized surface (process.md §4 "Attest"): make the project's
     # trust footprint auditable — how much of what is "Verified" rests on a named
     # human's recorded judgment rather than a runnable check.
@@ -1005,6 +1101,9 @@ def main():
         html_out = docs / "test" / "report.html"
         html_out.write_text(html_document(forest), encoding="utf-8")
 
+    # Advisories are loud (stdout, not just the report) but never fail the run.
+    for a in advisories:
+        print(f"WARNING (advisory): {a}")
     print(
         f"Traceability: SN={len(sn_ids)} SR={len(srs)} LLR={len(llrs)} "
         f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"
@@ -1026,6 +1125,7 @@ def main():
         )
         + (f" parts={len(parts)}" if parts else "")
         + (f" assets={len(assets)}" if assets else "")
+        + (f" ac-advisories={len(advisories)}" if advisories else "")
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
     )

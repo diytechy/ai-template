@@ -54,6 +54,11 @@ call `trace.py` directly to iterate on a specific finding.
   Fill the field or correct the value.
 - **placeholder** (`--no-placeholders`) — a template `-000` example row survived;
   delete it once real rows exist.
+- **AC advisory** (`WARNING (advisory)`, warn-only — never fails a run) — an
+  `AcceptanceCriteria` uses a comparative term (identical / indistinguishable /
+  equivalent / "same as" / matches) without naming its predicate. Pin it: say
+  identical *in what*, judged *how* — or accept the wording knowingly at the G1
+  consistency review (process.md §4).
 
 ## Verify the fix
 

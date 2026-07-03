@@ -308,7 +308,14 @@ checks `trace.py` runs — orphans, duplicate ids, schema — the **System Engin
 hat reads the needs and requirements **against each other** for the conflicts a
 script can't see: contradictory acceptance criteria or limits, mutually exclusive
 behaviors, duplicate or overlapping requirements, ambiguous / underspecified
-needs, and overlapping `Area`/hat ownership. This is the **consistency**
+needs, and overlapping `Area`/hat ownership. One recurring ambiguity gets its own
+rule: **every comparative or absolute term in an acceptance criterion must name
+its predicate** — "identical" / "indistinguishable" / "equivalent" / "same as" /
+"matches" is untestable until it says identical *in what*, judged *how* ("cannot
+distinguish source by schema" → "identical field names and dtypes, per the
+IF-### row"). `trace.py` flags unpinned comparatives as **warn-only advisories**
+(a heuristic lint, never a gate failure); the reviewer pins the predicate or
+accepts the wording knowingly. This is the **consistency**
 complement to G1's *completeness* criteria, not a restatement of them, and it is
 **human/LLM judgment, not a machine check** — classify it as a Manual/Analysis
 activity and never imply `trace.py` performs it. (An independent LLM reviewer
