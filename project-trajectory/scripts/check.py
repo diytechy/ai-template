@@ -184,6 +184,21 @@ def steps(coverage, tier, gate, phase=None):
         # (add --strict to make found stubs fail the gate). A non-Python stack
         # swaps or drops it. Left out of the default plan to keep the floor honest.
         # --- process checks: kit-owned, stdlib-only, identical everywhere -----
+        # Registry integrity floor at G1: the traceability step below already
+        # fails on integrity findings via --strict, but it only runs from G2 —
+        # so a structurally broken registry CSV (unquoted commas misaligning
+        # every later column) or a duplicated/malformed id would pass the G1
+        # gate and hide until G2/G3. This runs trace.py's always-valid subset
+        # (duplicate/malformed ids + CSV column structure) at the first gate;
+        # the pre-commit hook runs the same command on every commit. Listed
+        # before traceability so at --gate all the fuller report.md wins.
+        (
+            "registry-integrity",
+            (),
+            [sys.executable, str(_SCRIPTS / "trace.py"), "--strict-integrity"],
+            {"G1"},
+            "process",
+        ),
         ("traceability", (), trace_cmd, {"G2", "G3"}, "process"),
         # Doc navigability (process.md §3 "Reviewability"): broken intra-repo
         # links fail; orphans warn. Runs from G1 on (docs exist early). The

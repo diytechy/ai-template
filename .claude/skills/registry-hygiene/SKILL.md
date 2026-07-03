@@ -17,7 +17,8 @@ the right check for where you are, then read and fix the findings.
 ## Which command, when
 
 ```
-# Always-valid floor (pre-commit, any stage): duplicate/malformed ids only.
+# Always-valid floor (pre-commit + check.py at G1): duplicate/malformed ids
+# and CSV structure (every registry data row parses to the header's column count).
 python scripts/trace.py --strict-integrity
 
 # Full orphan check (aim for orphans=0 before any gate).
@@ -40,8 +41,13 @@ call `trace.py` directly to iterate on a specific finding.
   yet (fine early; a real orphan at G2+), a `Refs`/`SN-Refs`/`SR-Refs` id that
   points at nothing, a TC that verifies no real id. Fix the back-link, don't
   delete the evidence.
-- **integrity** (duplicate/malformed id) — two rows share an id, or an id doesn't
-  match the `PREFIX-###` shape. Renumber the duplicate; fix the malformed id.
+- **integrity** (duplicate/malformed id, or a CSV structure break) — two rows
+  share an id, an id doesn't match the `PREFIX-###` shape, or a data row parses
+  to more/fewer columns than its header (almost always an unquoted comma in a
+  `Permutations` set or free-text cell — quote the cell). Renumber the
+  duplicate; fix the malformed id; quote the offending cell. The structure sweep
+  covers every `*.csv` under `docs/requirements/` and `docs/test/`, including
+  registries `trace.py` never joins (interfaces, project-added ones).
 - **schema** (`--strict-schema`) — a required field is empty, or a
   `Verification`/`Tier` value is outside the closed vocabulary
   (`Test|Demonstration|Inspection|Analysis|Manual|Attest`; `Smoke|Full|Release`).

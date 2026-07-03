@@ -69,6 +69,14 @@ in scope for every phase. Orphan rules are phase-blind: every SR keeps its
 LLR + TC rows regardless of phase.
 
 Always (independent of --strict-schema), structural integrity is checked:
+    - a registry CSV data row whose parsed column count differs from its
+      header's. An unquoted comma (inside a Permutations set like `set{a,b,c}`
+      or a free-text Rationale cell) silently shifts every later column, so the
+      DictReader-based join reads misaligned cells for two gates before
+      --strict-schema would notice. Checked for EVERY *.csv under
+      docs/requirements/ and docs/test/ — spine, off-spine (interfaces,
+      procurement, ...), and project-added registries alike — since the check
+      needs no knowledge of a file's semantics, only its header
     - a duplicated SR/LLR/TC/PB/MOD id (the join would otherwise silently dedupe it)
     - a malformed id (not "PREFIX-<digits>")
     - a performance-budget row (PB-###, §9) whose Refs name an unknown
@@ -154,6 +162,39 @@ def refs(value):
 
 def is_example(rid):
     return rid.endswith("-000")
+
+
+def structure_findings(path, display=None):
+    """Column-count structural check over one registry CSV: every data row must
+    parse (RFC-4180 quoting) to exactly the header's column count. This is the
+    integrity-class guard for the misquoted-cell failure mode (an unquoted comma
+    shifts every later column and the join silently reads the wrong cells), so
+    it fails --strict and --strict-integrity — wrong at any stage, like a
+    duplicated id. Fully blank rows are skipped (a trailing newline is not a
+    finding); '-000' example rows are NOT skipped, because a template row must
+    parse correctly too."""
+    if not path.exists():
+        return []
+    name = display or path.name
+    out = []
+    with path.open(newline="", encoding="utf-8-sig") as f:
+        reader = csv.reader(f)
+        header = next(reader, None)
+        if header is None:
+            return out
+        expected = len(header)
+        for row in reader:
+            if not any(cell.strip() for cell in row):
+                continue
+            if len(row) != expected:
+                rid = (row[0].strip() if row else "") or "(no id)"
+                out.append(
+                    "{}: row {} (line {}) parses to {} column(s); header has "
+                    "{} — quote any cell containing a comma".format(
+                        name, rid, reader.line_num, len(row), expected
+                    )
+                )
+    return out
 
 
 # Id syntax per registry (for the always-on integrity check).
@@ -757,7 +798,19 @@ def main():
 
     raw = {"SR": raw_srs, "LLR": raw_llrs, "TC": raw_tcs}
     real = {"SR": srs, "LLR": llrs, "TC": tcs}
-    integrity = [f for label in raw for f in integrity_findings(label, raw[label])]
+    # CSV structure first (a misaligned row can make every later finding
+    # misleading): every registry CSV — spine, off-spine, and project-added —
+    # must have each data row parse to the header's column count. Swept by
+    # location, not by a known-file list, so a registry this script never joins
+    # (interfaces.csv, a project's own additions) is still guarded.
+    integrity = [
+        f
+        for d in (docs / "requirements", docs / "test")
+        if d.is_dir()
+        for p in sorted(d.glob("*.csv"))
+        for f in structure_findings(p, p.relative_to(docs.parent).as_posix())
+    ]
+    integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
     # PB ids are integrity-checked too, but PB is kept out of the placeholder/
     # schema sweeps above: the budgets registry is optional (like interfaces.csv),
     # so a leftover PB-000 must never block a gate the project doesn't use.

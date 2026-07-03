@@ -2852,6 +2852,56 @@ continuity (same style as the session log above).
 > structure; the honest mechanization would move edge cases into a schema'd
 > CSV, a larger redesign than this fix warrants.
 
+> **WI-1.15 ✅ landed 2026-07-03 · Registry CSV structural integrity (column
+> count vs header) at every gate.** Friction from Gilbert's G2 consistency
+> review (second finding from that adoption, after WI-1.14): 19 of 22 rows of
+> its `system-requirements.csv` carried unquoted commas (inside `Permutations`
+> sets like `set{a,b,c}` and free-text Rationale cells), so a compliant CSV
+> parser saw 14–17 columns against a 13-column header — and `trace.py`'s
+> DictReader join silently read misaligned cells through G1 *and* G2; the
+> defect would only have surfaced at G3 `--strict-schema`. Fix, tests-first:
+> 1. **`trace.py` — new `structure_findings()`**, integrity-class (wrong at any
+>    stage, like a duplicated id): every data row of every registry CSV must
+>    parse (RFC-4180) to exactly the header's column count. Swept **by
+>    location, not by a known-file list** — every `*.csv` under
+>    `docs/requirements/` + `docs/test/` — so off-spine registries the join
+>    never reads (`interfaces.csv`) and project-added ones (Gilbert's CAP) are
+>    guarded too; the check needs a file's header, not its semantics. Findings
+>    are loud and actionable (docs-relative path + row id + line + parsed vs
+>    header column counts + "quote any cell containing a comma") and join the
+>    `--strict` / `--strict-integrity` failure sets, so the pre-commit hook now
+>    blocks the defect class on every commit with no hook change. Blank rows
+>    skipped; `-000` example rows NOT skipped (a template row must parse too);
+>    quoted multi-line cells handled (real csv parse, line numbers from
+>    `reader.line_num`).
+> 2. **`check.py` — new `registry-integrity` process step at {G1}** running
+>    `trace.py --strict-integrity`: G2/G3 already fail on integrity via the
+>    traceability step's `--strict`, but that step only runs from G2, so the
+>    G1 gate previously never executed trace.py at all. Listed before
+>    traceability so a `--gate all` run's fuller report.md wins.
+> 3. **Prose:** PROCESS.md §7 pre-commit-floor and `trace.py`/gate-wiring
+>    bullets updated ("ids + CSV row structure"; "called at every gate");
+>    `registry-hygiene` skill (kit source + dogfooded copy) floor comment and
+>    integrity bullet updated. Skills INDEX unchanged (body-only edit;
+>    `--check` fresh).
+> 4. **Tests (7 new, written red-first):** unquoted-comma row fails
+>    `--strict-integrity` and `--strict` with file/id/counts in the report;
+>    quoted control stays green; short row fails; seeded `interfaces.csv`
+>    violation proves the all-registries sweep; unit test for blank-row skip +
+>    quoted-newline tolerance; harness wiring (G1 plan carries the step,
+>    process-layer, `requires=()`) + end-to-end fresh-scaffold-green /
+>    seeded-violation-red at `--gate G1`.
+>
+> **Downstream note (re-sync):** an adopted repo whose registries carry
+> misquoted cells goes red at its next commit/G1 run after overwriting
+> `trace.py`/`check.py` — intended (that red is exactly Gilbert's silent
+> defect); the fix is quoting the offending cells, no schema change.
+> **Byte deltas:** `PROCESS.md` 51,175→51,517 (+342 — the two §7 accuracy
+> edits + the every-gate wiring sentence; flagged, no paid trim available
+> without losing normative content); `AGENTS.template.md` **untouched
+> (9,990/10,000)**. `pytest -q`: **167 passed, 1 skipped** (was 160/1; +7).
+> `check_docs --root .`: OK, 0 broken.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

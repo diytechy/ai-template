@@ -41,6 +41,115 @@ def test_malformed_id_fails_strict(scaffold):
     assert "is malformed" in report_of(scaffold)
 
 
+# --- Structure: parsed column count must match the header (WI-1.15) ------------
+# The Gilbert G2 finding: unquoted commas inside Permutations sets (set{a,b,c})
+# or free-text Rationale cells silently shift every later column; a compliant
+# parser sees 12 columns against a 10-column header, and nothing failed until
+# G3 --strict-schema. Structure is integrity-class: wrong at any stage.
+
+# Permutations cell `set{a,b}` unquoted -> 11 parsed columns vs the 10-col header.
+UNQUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",set{a,b},M,Test,Verified
+"""
+
+# Same row properly quoted -> exactly 10 columns; the control must stay green.
+QUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3","set{a,b}",M,Test,Verified
+"""
+
+# A short row (trailing cells lost, e.g. a hand-edit that ate the Status cell).
+SHORT_ROW_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M
+"""
+
+
+def test_unquoted_comma_fails_strict_integrity_with_loud_detail(scaffold):
+    make_minimal_project(scaffold)
+    sr_path(scaffold).write_text(UNQUOTED_COMMA_SRS, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    report = report_of(scaffold)
+    # Loud and actionable: file, row id, line, and expected/actual counts.
+    assert "requirements/system-requirements.csv" in report
+    assert "SR-001" in report
+    assert "11 column(s)" in report
+    assert "header has 10" in report
+
+
+def test_unquoted_comma_fails_strict_too(scaffold):
+    make_minimal_project(scaffold)
+    sr_path(scaffold).write_text(UNQUOTED_COMMA_SRS, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_quoted_comma_control_stays_green(scaffold):
+    make_minimal_project(scaffold)
+    sr_path(scaffold).write_text(QUOTED_COMMA_SRS, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_short_row_fails_strict_integrity(scaffold):
+    make_minimal_project(scaffold)
+    sr_path(scaffold).write_text(SHORT_ROW_SRS, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "8 column(s)" in report_of(scaffold)
+
+
+def test_structure_swept_across_all_registry_csvs(scaffold):
+    # The sweep must cover every *.csv under docs/requirements/ + docs/test/ —
+    # including registries trace.py never joins (interfaces.csv) — so a
+    # project-added off-spine registry can't rot silently.
+    make_minimal_project(scaffold)
+    if_csv = scaffold / "docs" / "requirements" / "interfaces.csv"
+    header = if_csv.read_text(encoding="utf-8").splitlines()[0]
+    ncols = len(header.split(","))
+    if_csv.write_text(
+        header + "\n" + ",".join("x" for _ in range(ncols + 2)) + "\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "requirements/interfaces.csv" in report_of(scaffold)
+
+
+def test_structure_ignores_blank_rows_and_quoted_newlines():
+    # Unit level: a trailing blank line is not a finding; a quoted multi-line
+    # cell parses as one row of the right width.
+    trace = load_script("trace")
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as td:
+        p = Path(td) / "x.csv"
+        p.write_text('A,B\n1,"two\nlines"\n\n', encoding="utf-8")
+        assert trace.structure_findings(p, "x.csv") == []
+        p.write_text("A,B\n1,2,3\n", encoding="utf-8")
+        (finding,) = trace.structure_findings(p, "x.csv")
+        assert "x.csv" in finding and "3 column(s)" in finding
+        assert "header has 2" in finding
+
+
+def test_harness_runs_registry_integrity_at_g1(scaffold):
+    # Gate wiring: G1 gets the always-valid integrity floor (the Gilbert defect
+    # class must fail at the FIRST gate, not surface at G3 --strict-schema).
+    check = load_script("check")
+    g1 = [s for s in check.steps(80, "full", "G1") if "G1" in s[3]]
+    (step,) = [s for s in g1 if s[0] == "registry-integrity"]
+    assert step[4] == "process" and step[1] == ()
+    assert "--strict-integrity" in step[2]
+    # End-to-end: a fresh scaffold passes G1; a seeded misquote fails it.
+    proc = run_py(["scripts/check.py", "--gate", "G1", "--lenient"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    make_minimal_project(scaffold)
+    sr_path(scaffold).write_text(UNQUOTED_COMMA_SRS, encoding="utf-8")
+    proc = run_py(["scripts/check.py", "--gate", "G1", "--lenient"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "RESULT: FAIL" in proc.stdout
+
+
 # --- Placeholders: a fresh scaffold is green by default, fails opt-in ----------
 
 

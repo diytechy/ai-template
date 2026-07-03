@@ -543,7 +543,9 @@ and naming the split is what keeps the kit portable across stacks:
   process; the *measurement* that feeds it is product — see §9.) The
   agent-neutral `pre-commit` hook (`.githooks/pre-commit`, enabled by
   `scripts/setup.{sh,ps1}`) enforces their **always-valid subset** on every
-  commit: map freshness, id integrity (`trace.py --strict-integrity`), and
+  commit: map freshness, registry integrity (`trace.py --strict-integrity` —
+  ids + CSV row structure; `check.py` runs the same floor as its G1
+  `registry-integrity` step), and
   format. Orphan strictness stays gate-scoped in `check.py` — a mid-G1 registry
   legitimately has SRs not yet decomposed, and the floor must never block a
   legitimate early-stage commit.
@@ -620,13 +622,16 @@ pip needed to run them):
   small **Mermaid `graph LR`** colored by orphan/draft state), and exits nonzero
   on orphans with `--strict`. `--html` also writes a dependency-free collapsible
   `docs/test/report.html` map that scales to any size (a gitignored composite —
-  §3). It always checks **integrity** (duplicate/malformed ids); `--strict-integrity`
+  §3). It always checks **integrity** (duplicate/malformed ids, and every
+  registry CSV's data rows parsing to the header's column count — an unquoted
+  comma otherwise misaligns every later column silently); `--strict-integrity`
   fails on *only* that class (the always-valid pre-commit floor).
   `--require-verified` adds the G3 status criterion (every `Verification=Test` SR
   must be `Verified`); `--phase v1` scopes it for phased delivery (§4).
   `--no-placeholders` rejects leftover `-000` rows; `--strict-schema` requires the
   non-empty fields and the two closed vocabularies (`Verification`, `Tier`) —
-  `Priority`/`Status` stay open. Called by `check.py` at G2/G3 (G2+ adds
+  `Priority`/`Status` stay open. Called by `check.py` at every gate — at G1 as
+  the `registry-integrity` floor (`--strict-integrity`), then at G2/G3 (G2+ adds
   `--no-placeholders`; G3 adds `--require-verified` and `--strict-schema`, plus
   `--phase` when given).
 - `scripts/check_flows.py` — verifies the authored **"Runtime flows"** section
