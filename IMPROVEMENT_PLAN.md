@@ -2818,6 +2818,30 @@ continuity (same style as the session log above).
 > launchers touches nothing generated. +1 test (sentinel inside the GENERATED
 > markers survives a re-run); 160 pass.
 
+> **WI-1.14 ✅ landed 2026-07-02 · Edge-case seeds must cover the whole
+> lifecycle.** Friction from Gilbert's G1 (first hardware-domain adoption): the
+> stakeholder-needs template's seven seeded edge-case rows were all
+> tool-shaped (missing dependency, unwritable output, first-run), and its
+> prose asserted one direction of neglect ("most of these rows are
+> Provision/Startup — exactly the phases that get neglected"). True for CLIs;
+> inverted for embodied/service products — the driver filled the registry with
+> toolchain failures while the robot-in-environment edge cases (bystander
+> interference, ambiguous irreversible actions, degraded sensors) landed
+> off-spine in a side catalog. Fix, two files: (1) the template's edge table
+> gains a `Lifecycle` column with seeds per phase, including five generic
+> Runtime-environment rows (environment changed mid-operation; third-party
+> interference; irreversible action on ambiguous target; degraded-but-present
+> input; safe partial abandonment), and the one-directional claim is replaced
+> with the symmetric rule (which phase gets neglected depends on the product);
+> (2) PROCESS.md §4 G1 now requires edge cases to cover each lifecycle phase
+> or record an explicit n/a. **Deferred, needs owner decision:** (a)
+> domain-conditional seed rows in `bootstrap.py` (`domain=hardware` swapping
+> in physical-world scenarios) — cheap but adds a template-content fork to
+> maintain; (b) a mechanized phase-coverage check — the edge table lives in
+> free-form Markdown, so parsing it would make a process check depend on prose
+> structure; the honest mechanization would move edge cases into a schema'd
+> CSV, a larger redesign than this fix warrants.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

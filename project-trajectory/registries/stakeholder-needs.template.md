@@ -9,9 +9,10 @@ Priority: **M**=Must · **S**=Should · **C**=Could.
 > **Cover the whole lifecycle, not just steady state.** For each need, ask *when
 > in the running product's life must this hold?* — **Provision** (before it runs:
 > install, dependencies), **Startup** (once per launch: config, migrations), or
-> **Runtime** (steady-state serving). Most authors write only Runtime needs and
+> **Runtime** (steady-state serving). Most authors write only Runtime *needs* and
 > discover the install/first-run ones late; tag the non-runtime ones with an
-> optional `Lifecycle` value (process.md §4 "Lifecycle phase").
+> optional `Lifecycle` value (process.md §4 "Lifecycle phase"). The *edge cases*
+> below invert the bias — see that section's note.
 >
 > **Consider the cost, not just the behavior.** Where the scope warrants it, also
 > capture **non-functional** needs — performance, memory/size, **cost** (unit/BOM,
@@ -28,17 +29,27 @@ Priority: **M**=Must · **S**=Should · **C**=Could.
 ## Edge-case expectations
 
 How the system should behave when things go wrong (the highest-value part — be
-specific; the System Engineer turns each into measurable SRs). Most of these rows
-are **Provision** or **Startup** lifecycle concerns (first-run, missing
-dependency, unwritable output) — exactly the phases that get neglected, so they
-earn first-class SRs.
+specific; the System Engineer turns each into measurable SRs). **Cover every
+lifecycle phase — which phase gets neglected depends on the product.** Tool
+authors under-write **Provision/Startup** rows (first-run, missing dependency);
+authors of products that operate in a live environment — a robot, a server,
+anything with bystanders or concurrent actors — under-write **Runtime** rows,
+because those failures live in the *operating environment*, not the codebase.
+Fill in every phase below or mark it an explicit n/a; delete only rows that
+genuinely cannot apply.
 
-| SN-ID | Scenario | Expected behavior |
-|---|---|---|
-| SN-0xx | Interruption / power loss / killed mid-operation | |
-| SN-0xx | Invalid / corrupt / unsupported input | |
-| SN-0xx | Resource exhaustion (disk / memory full) | |
-| SN-0xx | Missing dependency / wrong version | |
-| SN-0xx | Output target removed / locked / unwritable | |
-| SN-0xx | Unattended/automated run (must never block; clear failure) | |
-| SN-0xx | First-run setup & discoverable docs / quick-reference | |
+| SN-ID | Lifecycle | Scenario | Expected behavior |
+|---|---|---|---|
+| SN-0xx | Provision | Missing dependency / wrong version | |
+| SN-0xx | Provision | First-run setup & discoverable docs / quick-reference | |
+| SN-0xx | Startup | Invalid / corrupt / missing config at launch | |
+| SN-0xx | Startup | Unattended/automated start (must never block; clear failure) | |
+| SN-0xx | Runtime | Interruption / power loss / killed mid-operation | |
+| SN-0xx | Runtime | Invalid / corrupt / unsupported input | |
+| SN-0xx | Runtime | Resource exhaustion (disk / memory full) | |
+| SN-0xx | Runtime | Output target removed / locked / unwritable | |
+| SN-0xx | Runtime | Environment changed under the product mid-operation (file edited mid-run; object moved mid-action) | |
+| SN-0xx | Runtime | A third party interferes during operation (another process takes the lock; a person or pet enters the workspace) | |
+| SN-0xx | Runtime | An intended action is irreversible and its target is ambiguous (delete / overwrite / discard / physical alteration) | |
+| SN-0xx | Runtime | Input degraded but not absent (truncated stream, noisy or dirty sensor, partial data) | |
+| SN-0xx | Runtime | Task must be abandoned safely partway (user stop, shutdown mid-task) | |

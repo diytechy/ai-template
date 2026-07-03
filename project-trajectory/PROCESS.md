@@ -262,9 +262,11 @@ closing a gate bumps it in a reviewed commit (§7 "The active gate").
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 - **G1 — Requirements, UX & constraints.** SN complete (priority + measurable
-  acceptance intent + edge cases); every SR links ≥1 SN with measurable
-  acceptance criteria; usability/doc needs + constraints + non-goals captured.
-  Sign-offs: Stakeholder, UX, System Engineer.
+  acceptance intent + edge cases, the edge cases covering **each lifecycle
+  phase** in the project's vocabulary — Provision/Startup/Runtime at minimum —
+  or recording an explicit n/a per phase; see "Lifecycle phase" below); every
+  SR links ≥1 SN with measurable acceptance criteria; usability/doc needs +
+  constraints + non-goals captured. Sign-offs: Stakeholder, UX, System Engineer.
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or
   Analysis/Inspection); every SR and LLR → ≥1 TC; traceability **0 orphans** and
   ids unique/well-formed; **no `-000` placeholder rows or flow citations remain**
