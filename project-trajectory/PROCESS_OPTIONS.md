@@ -271,9 +271,9 @@ gate closes, or the project's scope is complete. Five steps:
 2. **Scrub** *(anonymous repos only — `docs/commit-identity` non-`inherit`).*
    A separate fresh-context agent walks every commit since divergence —
    diffs, **commit messages**, and any committed session/iteration logs —
-   removing or anonymizing PII via history rewrite, with a deterministic
-   privacy lint (patterned paths, usernames, emails, keys) as its base pass
-   over each commit where one is wired. The rewrite stamps a **`Scrubbed:`**
+   removing or anonymizing PII via history rewrite, with the deterministic
+   privacy lint (`scripts/check_privacy.py --range`, "Commit identity &
+   anonymity" below) as its base pass over the leg's history. The rewrite stamps a **`Scrubbed:`**
    trailer on each rewritten commit so later checks can tell scrubbed history
    from raw. Rewriting is confined to the iteration branch *before* landing —
    never the development branch; step 1 is the net. When the scrub agent
@@ -591,7 +591,8 @@ contract lives in the kit's `skills/README.md`; the shape:
 
 ## Commit identity & anonymity
 
-*Enforced by `.githooks/pre-commit` and applied by `scripts/setup.{sh,ps1}`
+*Enforced by `.githooks/pre-commit` (identity + content lint) and
+`.githooks/pre-push` (review backstop); applied by `scripts/setup.{sh,ps1}`
 (the PROCESS.md §7 process floor).* **Applies when** a repo is pseudonymous or
 public under privacy constraints — commits must (or must not) carry a
 particular identity. A repo without the concern keeps the default and pays
@@ -627,14 +628,67 @@ once, apply per clone, guard mechanically.**
   only moment identity is free to fix. An unattended coordinator should treat a
   violated policy as a preflight failure, not something to notice later.
 
+**Content privacy (anonymous repos).** The author field is the smaller leak
+surface; **content** is the bigger one — an absolute path carrying the OS
+username, the real identity from global git config pasted into a doc, an
+email in a test fixture, a bio detail in a README. Everything below is gated
+on the policy declaring a pattern; `inherit` repos pay zero.
+
+- **Layer 1 — deterministic lint, per commit.** `scripts/check_privacy.py`
+  (stdlib) scans the **staged diff** for the high-confidence classes: home-dir
+  path shapes carrying an OS username, the current account/hostname, emails
+  failing the policy pattern, the global-git-config identity appearing in
+  content, private-key headers and a few universal token shapes. Wired into
+  `.githooks/pre-commit` under the policy gate; blocks with file:line
+  findings. `--repo` sweeps every tracked file as a `check.py` process step at
+  every gate (catching what slipped in before the policy existed or past
+  `--no-verify`); `--range` scans a commit range *as history* — diffs,
+  messages, author lines — for the pre-push floor and the sync scrub's base
+  pass. A documented example line carries the inline `privacy-ok` marker to be
+  exempt — mark false positives instead of training yourself to bypass the
+  hook. Deep secrets scanning stays a named **external** category (gitleaks,
+  trufflehog): product-layer, never rebuilt in the kit.
+- **Layer 2 — LLM review at the push boundary.** Publication is where a leak
+  becomes harmful and effectively unrecallable, so the **judgment** layer sits
+  there — its *primary home* is the sync ritual's scrub step ("Agent iteration
+  branch & sync" above), which is structural and fails closed. The optional
+  backstop for direct-to-dev-branch edits is `.githooks/pre-push`: it reviews
+  the **full outgoing range** — diffs *and* commit messages, so a leak added
+  in one commit and removed in a later one is still caught — via the
+  **`REVIEW_CMD`** slot (the `AGENT_CMD` family: env var, or per clone
+  `git config privacy.reviewcmd`), a fresh-context subagent with a tight brief
+  (hunt PII; APPROVE/BLOCK + findings; verdict appended to `docs/log.md` per
+  PROCESS.md §5 extended with `Model:` + `Role: PRIVACY-REVIEW`). When the
+  policy demands review but the reviewer can't run, the hook **fails closed**
+  — a missing tool is never a pass at the one boundary that matters. Honesty:
+  hooks are per-clone and tool-circumventable, and `git push --no-verify`
+  remains git's own escape hatch for a human; that is why the primary home is
+  the branch structure, not this hook. Cost note: review runs **per push**,
+  never per commit — an LLM call in every commit would tax the commit-often
+  cadence into batching, which is worse for privacy *and* review.
+- **Process rule (agent-driven work).** The driver routes privacy findings
+  like consistency findings (PROCESS.md §5); an unattended coordinator runs
+  the same review before any push step its policy allows and refuses on
+  BLOCK. The reviewer runs under the user's own agent account — the same
+  trust domain as the driver; no third-party service is introduced.
+- **Remediation.** Caught pre-push = the leak exists only in **local**
+  history: rewrite it before it publishes (interactive rebase, or a history
+  filter tool — the `git-filter-repo` category). Already published = **treat
+  as disclosed**: rotate the credential / react to the exposure; a rewrite of
+  published history is cosmetic, since mirrors and caches already have it.
+  Binary assets carry EXIF/author metadata the lint cannot see — strip on
+  ingest ("Binary assets" below).
+
 **The honest boundary.** The guard covers **future commits in clones that ran
-setup** (or otherwise enabled the hook). It cannot (a) fix **existing
+setup** (or otherwise enabled the hooks). It cannot (a) fix **existing
 history** — that is a rewrite, out of scope (ADOPTING.md §6 notes the
-migration); (b) constrain a clone that never enabled the hook and commits with
-other tooling; (c) make a repo anonymous by itself — anonymity also depends on
-the **hosting account** that pushes and on keeping machine-local
-paths/usernames out of **committed text**, which is a content concern this
-identity check deliberately does not scan for.
+migration); (b) constrain a clone that never enabled the hooks and commits or
+pushes with other tooling; (c) make a repo anonymous by itself — anonymity
+also depends on the **hosting account** that pushes and on keeping
+machine-local paths/usernames out of **committed text**, which the content
+lint *patterns for* and the reviewer *judges* but neither can guarantee: the
+lint is patterns, the reviewer is probabilistic, and this is not a DLP
+product. The trust footprint stays visible instead of pretended away.
 
 ## §8 purchased parts
 
@@ -703,6 +757,10 @@ binary; the **record of it** is text, tracked, and reviewable.
     high-altitude thread (usually an `Attest` SR — this file, "Proportionality
     doctrine" (d)); `trace.py` integrity-checks the `ASSET-` id only, off-spine
     like `PART-###`.
+- **Privacy advisory:** binary assets carry **EXIF/author metadata** (camera
+  serials, GPS, creator names) that no text lint can see — on an anonymous
+  repo ("Commit identity & anonymity" above), strip metadata **on ingest**,
+  before the asset reaches the store or the tree.
 - **Registry choice — a sibling registry, not a widened `procurement.csv`.**
   Procurement (`PART-###`) tracks parts the project **buys** (owner-of-record is
   an `IF-###` interface row; columns are vendor/cost/status/quantity). A created

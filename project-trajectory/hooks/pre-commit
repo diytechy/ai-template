@@ -32,6 +32,7 @@ REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 #    held to the policy). `inherit` or no file skips: zero cost for repos that
 #    don't constrain identity.
 POLICY_FILE="$REPO_ROOT/docs/commit-identity"
+policy=""
 if [ -f "$POLICY_FILE" ]; then
   policy=$(grep -v '^[[:space:]]*#' "$POLICY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
   if [ -n "$policy" ] && [ "$policy" != "inherit" ]; then
@@ -102,7 +103,17 @@ fi
 #    early-stage commit.
 "$PY" "$SCRIPTS_DIR/trace.py" --strict-integrity
 
-# 3. Format check on staged Python files — product tooling, so run it only if
+# 3. Content privacy lint (anonymous repos only — same policy gate as step 0,
+#    but for *content*: home-dir paths carrying the OS username, off-policy
+#    emails, the machine's global git identity, key/token shapes in the staged
+#    diff). Deterministic floor only — judgment-layer review lives at the push
+#    boundary and in the sync scrub (process-options.md "Commit identity &
+#    anonymity"). `inherit` repos skip: zero cost.
+if [ -n "$policy" ] && [ "$policy" != "inherit" ]; then
+  "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT"
+fi
+
+# 4. Format check on staged Python files — product tooling, so run it only if
 #    ruff is importable by this interpreter (matching check.py's detection); skip
 #    silently otherwise, so a non-Python or not-yet-set-up repo can still commit.
 if "$PY" -c "import importlib.util as u, sys; sys.exit(0 if u.find_spec('ruff') else 1)" >/dev/null 2>&1; then

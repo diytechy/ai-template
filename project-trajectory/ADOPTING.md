@@ -166,8 +166,9 @@ range to see exactly which templates/scripts changed before you touch anything.
 
 - **Overwrite freely (kit-owned, you don't hand-edit these):** the process
   scripts under `scripts/` (`trace.py`, `check_docs.py`, `check_flows.py`,
-  `check_perf.py`, `gen_arch_map.py`, `gen_*`, `agent_loop.py`),
-  `docs/process.md` + `docs/process-options.md`, the pre-commit hook,
+  `check_perf.py`, `check_privacy.py`, `gen_arch_map.py`, `gen_*`,
+  `agent_loop.py`), `docs/process.md` + `docs/process-options.md`, the git
+  hooks (`.githooks/pre-commit`, `.githooks/pre-push`),
   `pytest.ini` markers. Take the
   new versions wholesale, then re-apply your local edits — for `check.py` that's
   only the marked **"EDIT FOR YOUR STACK"** block (`SRC`/`TESTS`, the product

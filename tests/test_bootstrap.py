@@ -25,7 +25,10 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/requirements/assets.csv",
         "docs/test/test-cases.csv",
         "scripts/check.py",
+        "scripts/check_privacy.py",
         "scripts/gen_cases.py",
+        ".githooks/pre-commit",
+        ".githooks/pre-push",
         ".github/workflows/check.yml",
         "src/.gitkeep",
         "tests/.gitkeep",
@@ -117,7 +120,9 @@ def test_scaffold_pins_hook_line_endings(scaffold):
     # the scaffolded .gitattributes must carry that rule (friction from the pilot).
     ga = scaffold / ".gitattributes"
     assert ga.exists(), "bootstrap must scaffold .gitattributes"
-    assert ".githooks/pre-commit text eol=lf" in ga.read_text(encoding="utf-8")
+    text = ga.read_text(encoding="utf-8")
+    assert ".githooks/pre-commit text eol=lf" in text
+    assert ".githooks/pre-push text eol=lf" in text
 
 
 def test_scaffolded_process_doc_drops_template_meta_prose(scaffold):

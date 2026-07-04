@@ -202,6 +202,19 @@ def steps(coverage, tier, gate, phase=None):
             "process",
         ),
         ("traceability", (), trace_cmd, {"G2", "G3"}, "process"),
+        # Privacy sweep (process-options.md "Commit identity & anonymity"): on
+        # a repo whose docs/commit-identity declares a pattern, every tracked
+        # text file is swept for the deterministic leak classes — catching what
+        # slipped in before the policy existed or past --no-verify. Runs at
+        # every gate (a leak is wrong at any stage); the script itself skips
+        # (exit 0) under the default `inherit`, so unconcerned repos pay zero.
+        (
+            "privacy",
+            (),
+            [sys.executable, str(_SCRIPTS / "check_privacy.py"), "--repo"],
+            {"G1", "G2", "G3"},
+            "process",
+        ),
         # Doc navigability (process.md §3 "Reviewability"): broken intra-repo
         # links fail; orphans warn. Runs from G1 on (docs exist early). The
         # generated, gitignored trace report is dropped from the scanned set.

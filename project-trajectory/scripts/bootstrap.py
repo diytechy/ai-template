@@ -34,7 +34,8 @@ What it creates in the destination:
     docs/requirements/assets.csv               <- registries/assets.template.csv
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py
+    scripts/check_stubs.py, check_privacy.py, gen_arch_map.py,
+    scripts/gen_release_checklist.py, gen_cases.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1}                 <- dev-setup.template.* (workstation setup)
@@ -43,6 +44,7 @@ What it creates in the destination:
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
     scripts/agent_loop.py                      (unattended coordinator engine)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
+    .githooks/pre-push                         <- hooks/pre-push  (anonymous-repo privacy backstop)
     pytest.ini                                 (test-tier markers)
     .gitignore                                 <- gitignore.template
     .gitattributes                             <- gitattributes.template (eol=lf hook pin)
@@ -521,7 +523,7 @@ def apply_gate_policy(dest, level, dry_run):
             "**What this is:** this repo declares the `{level}` gate authority "
             "(`docs/gate-policy`; process.md §4). The kit-owned process doc is "
             "never edited per-repo (a re-sync overwrites it); this register "
-            "amends it (process-options.md \"Gate authority levels\"). Where "
+            'amends it (process-options.md "Gate authority levels"). Where '
             "the two disagree, this file wins — except the fixed points at "
             "the bottom, which nothing overrides.\n\n"
             "## Deviation register\n\n"
@@ -653,6 +655,7 @@ MAPPING = [
     ("scripts/check_docs.py", "scripts/check_docs.py"),
     ("scripts/check_perf.py", "scripts/check_perf.py"),
     ("scripts/check_stubs.py", "scripts/check_stubs.py"),
+    ("scripts/check_privacy.py", "scripts/check_privacy.py"),
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),
@@ -689,9 +692,12 @@ MAPPING = [
     ("scripts/agent-resume.template.cmd", "agent-resume.cmd"),
     ("scripts/agent-resume.template.sh", "agent-resume.sh"),
     ("scripts/agent-resume.template.command", "agent-resume.command"),
-    # Agent-neutral enforcement: one POSIX pre-commit hook (opt-in via
-    # `git config core.hooksPath .githooks`, which setup.sh/ps1 set).
+    # Agent-neutral enforcement: POSIX hooks (opt-in via
+    # `git config core.hooksPath .githooks`, which setup.sh/ps1 set). pre-push
+    # is the anonymous-repo privacy-review backstop (Thread 39) — inert under
+    # the default `inherit` commit-identity policy, like the policy files.
     ("hooks/pre-commit", ".githooks/pre-commit"),
+    ("hooks/pre-push", ".githooks/pre-push"),
     ("pytest.ini", "pytest.ini"),
     ("gitignore.template", ".gitignore"),
     # eol=lf pin for the sh-based git hook (a CRLF shebang breaks it under
