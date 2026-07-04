@@ -2307,7 +2307,7 @@ juggling needed).
 
 ## Thread 29 — Field-report R1: "missing tool ≠ pass" must cover commands, not just Python modules
 
-**Status: ⏸ specced 2026-07-04 — no open questions; ready to build.**
+**Status: ✔ ready to build (Session L) — no open questions.**
 **Source:** field report A2/R1 (High — "the single highest value-to-effort change").
 
 **Why:** `check.py run_step()` guards a step's `requires` tuple by *Python-module
@@ -2347,7 +2347,8 @@ FAIL/SKIP(missing-command); `pytest -q` green.
 
 ## Thread 30 — Field-report R2/A3/A4: declare the product toolchain once (stack profile)
 
-**Status: ⏸ specced 2026-07-04 — awaiting owner answers (Q1, Q2).**
+**Status: ✔ ruled 2026-07-04 (Q1 full profile; Q2 INI) — ready to build
+(Session N).**
 **Source:** field report R2 (High), A3/A4 (Med).
 
 **Why:** the product toolchain is encoded in ~6 places: `check.py` (step
@@ -2401,7 +2402,8 @@ they can delegate or reference; `pytest -q` green.
 
 ## Thread 31 — Field-report R3: a non-Python architecture-map path
 
-**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q3).**
+**Status: ✔ ruled 2026-07-04 (Q3: file-level fallback only; symbol-level
+ports stay contributions) — ready to build (Session O).**
 **Source:** field report A1/R3 (High).
 
 **Why:** the marker-block contract is language-agnostic, but the fillers are
@@ -2449,7 +2451,8 @@ check without porting a generator; `pytest -q` green.
 
 ## Thread 32 — Gate authority as declared policy: the three automation levels
 
-**Status: ⏸ specced 2026-07-04 — awaiting owner answers (Q4, Q5, Q6).**
+**Status: ✔ ruled 2026-07-04 (Q4 confirmed; Q5 G2-close + customization
+note; Q6 → Hybrid routing) — ready (Session M, after Thread 36).**
 **Source:** field report B1/B2/R4 (High) + the owner's automation-levels
 directive (2026-07-04) + NotHomeWrecker's ratified `llm-gate-policy.md` as the
 proven downstream prototype.
@@ -2481,11 +2484,17 @@ first-class, selectable policy instead of every autonomous repo re-inventing it.
   `Needs <human>` Open-items bullet (the WI-1.17 format) plus provisional
   decisions in a Decisions log; at one **ratification point** the human
   reviews the full list + gate evidence in a single sitting and ratifies (or
-  amends); G3→G-Release then run under autonomous rules; post-ratification
-  human-shaped items go to the Blocked register, never a mid-run pause.
-  G-Final stays human. *Recommended ratification point: G2 close* — all
-  requirement/design ambiguity is resolved exactly once, before the expensive
-  autonomous implementation stretch (Q5).
+  amends); G3→G-Release then run under autonomous rules. **Post-ratification
+  questions route by revert-cost (Q6 ruling, 2026-07-04 — Hybrid):** LOW →
+  decide + record in the Decisions log; MEDIUM/HIGH → the Blocked register —
+  never a mid-run pause either way; the mode's value is momentum, the
+  ratifier has accepted bounded risk, and "grind vs pause" is exactly what
+  the revert-cost dial encodes. G-Final stays human. **Ratification point:
+  fixed at G2 close (Q5 ruling)** — all requirement/design ambiguity is
+  resolved exactly once, before the expensive autonomous implementation
+  stretch; one prose line notes an adopting repo *may* relocate it by
+  modifying its own copy (the deviation-register pattern), but the kit does
+  not parameterize it.
 - **`autonomous`:** every gate except G-Final closes on an independent
   fresh-context LLM reviewer's recorded verdict (the NHW §2 mechanism:
   reviewer runs `check.py`/`trace.py` itself; verdict recorded per §5 with
@@ -2560,8 +2569,9 @@ canonical docs + the byte-budget squeeze; same class as Threads 26/27).
 
 ## Thread 33 — Agent-resume entry point + unattended coordinator (protocol · engine · root launchers)
 
-**Status: ⏸ re-specced 2026-07-04 (owner: every repo carries a root resume
-launcher) — awaiting owner answers (Q7). Depends on Threads 32 + 36.**
+**Status: ✔ ruled 2026-07-04 (Q7a/b/c confirmed; Q7d amended → the
+`NEEDS-HUMAN` run-state, one loop for every policy) — ready to build
+(Session P). Depends on Threads 32 + 36 + 40.**
 **Source:** NotHomeWrecker `trigger.cmd`/`trigger.ps1` + kickoff.md
 "Unattended mode" (reviewed 2026-07-04) + owner directive (2026-07-04): a
 root, double-clickable way to "kick off the correct session at the correct
@@ -2589,8 +2599,14 @@ preflights and reports it, as NHW's does.)
   (applies-when: gate-policy `autonomous`, or `single-ratify` after
   ratification): the `docs/run-state` contract (one word, tracked like
   `docs/gate`: `RUNNING` while work remains; `DONE` only at the policy's end
-  state; `BLOCKED` when everything remaining is in the Blocked register; **a
-  wrong DONE is a false green**); optional `docs/run-phase` (the phase the
+  state; `BLOCKED` when everything remaining is in the Blocked register;
+  **`NEEDS-HUMAN`** (Q7d ruling, 2026-07-04) when the next step requires a
+  human act — a gate sign-off under `attended`, the `single-ratify`
+  ratification, a decision the §6 dial requires surfaced — written only
+  *after* the ask is stated as `Needs <human>` Open-items bullets in
+  status.md, so stopping is always interrupt-and-report, never
+  infer-and-continue; **a wrong DONE is a false green**); optional
+  `docs/run-phase` (the phase the
   *next* session should drive — the coordinator's model-tier key, kept
   current in the finishing commit); commit-every-session (the stall guard
   makes an empty session an abort signal — even a Blocked entry is a commit);
@@ -2615,18 +2631,20 @@ preflights and reports it, as NHW's does.)
   case. Hardening over the NHW original: capture the CLI exit code into the
   log, guard `rev-parse` on a zero-commit repo, optional per-session timeout
   so a hung session can't wedge the loop.
-- **(c) Root launchers, policy-aware:** `agent-resume.{cmd,sh,command}`
-  scaffolded like `run.*` (`.command` delegates to `.sh`; all three are thin
-  wrappers over the Python engine). Mode keys off **`docs/gate-policy`**
-  (Thread 32): **`attended`** → boot **one interactive session** at the right
-  tier with the resume prompt (read status.md Current State, work, stop at
-  the next human gate) — the walk-away loop is **refused**, so a double-click
-  can never accidentally launch an unattended run on an attended repo;
-  **`single-ratify` / `autonomous`** → the (b) loop with its guarantees.
-  Ships **inert** until `AGENT_CMD` is filled (guidance + nonzero exit — the
-  WI-1.12 stance); a repo that doesn't want it deletes it. This ties the kit
-  to *a* model chain only as a seeded example: the slot is stack-agnostic in
-  substance, and unused it costs nothing.
+- **(c) Root launchers — one loop for every policy (Q7d ruling,
+  2026-07-04):** `agent-resume.{cmd,sh,command}` scaffolded like `run.*`
+  (`.command` delegates to `.sh`; all three are thin wrappers over the
+  Python engine). The loop runs under **every** gate policy; what differs is
+  where it stops. The driver writes `NEEDS-HUMAN` (see (a)) the moment
+  progress requires a human act, and the coordinator exits printing the
+  pending asks from status.md Current State in its banner — so an `attended`
+  repo's double-click grinds the in-gate work and stops *at* the gate with
+  the sign-off request stated, rather than being refused or, worse, inferring
+  its way past. An `--interactive` flag boots a single hands-on session
+  instead of the loop. Ships **inert** until `AGENT_CMD` is filled (guidance
+  + nonzero exit — the WI-1.12 stance); a repo that doesn't want it deletes
+  it. This ties the kit to *a* model chain only as a seeded example: the
+  slot is stack-agnostic in substance, and unused it costs nothing.
 - **(d) Provenance, not a second artifact:** the PROCESS_OPTIONS layer cites
   NHW's `trigger.ps1` as the field-proven origin; the engine supersedes it
   (no separate reference-only ps1 to keep in sync).
@@ -2652,10 +2670,11 @@ preflights and reports it, as NHW's does.)
 
 **Tests:** engine integration with a fake `AGENT_CMD` — stall guard aborts
 after N no-commit sessions; DONE/BLOCKED exits; phase→model mapping picks the
-declared tier; logs written; `attended` policy refuses the loop and (with a
-fake interactive command) launches exactly one session; launchers in the
-scaffold file list, inert by default; `check_docs` green; no CI dependency on
-any real agent CLI.
+declared tier; logs written; a fake driver that writes `NEEDS-HUMAN` exits
+the loop with the status.md ask surfaced in the exit banner (DONE/BLOCKED
+exit likewise); `--interactive` launches exactly one session; launchers in
+the scaffold file list, inert by default; `check_docs` green; no CI
+dependency on any real agent CLI.
 
 **Risks:** shipping a permission-bypass path needs unmissable consent framing
 (banner + README + the policy refusal above); model-chain coupling — the
@@ -2675,35 +2694,57 @@ edges deserve the tier).
 
 ---
 
-## Thread 34 — Scaffold-generation boundary: config-over-generation + the mechanical scaffold cleanups
+## Thread 34 — Conditional scaffold generation (profile-omitted templates, §N-constant) + the mechanical cleanups
 
-**Status: ⏸ specced 2026-07-04 — awaiting owner answers (Q8; Q1 interacts).**
+**Status: ✔ ruled 2026-07-04 — Q8 overridden to full conditional templating
+(§N-constant; see the amended principle below) — now a solo build
+(Session S).**
 **Source:** the owner's generation question (2026-07-04) + field report
 R5/R6/R7/R8, C1/C2/C3, D2.
 
-**The principle (the direct answer to "should Python generate the artifacts?").**
-Split by **ownership and re-sync fate**, not by file:
-- **Kit-owned, re-sync-overwritten artifacts** (`docs/process.md`,
-  `docs/process-options.md`, the scripts): **never generated per-repo.** They
-  stay byte-identical to the kit and *read declared config* —
-  `docs/gate` (Thread 24), `docs/gate-policy` (Thread 32), `docs/stack.ini`
-  (Thread 30). That is what keeps downstream-resync a clean overwrite; NHW
-  proved the pattern (its process.md is untouched; the deviation register
-  wins). Generating per-repo variants of these would fork the canonical doc
-  and break the re-sync diff.
-- **Scaffold-once, downstream-owned artifacts** (AGENTS.md, README.md,
-  status.md, the registries): **light generation at bootstrap is right** —
-  placeholders (`{{PROJECT_NAME}}`), meta-prose stripping, file selection,
-  section selection — because bootstrap never overwrites them again.
-So: *generation replaces LLM hand-editing exactly where the edit is
-mechanical; judgment-bearing content (the PROJECT BRIEF, requirement rows)
-stays with the kickoff agent; anything that can change after scaffold is
-config, not a generated variant.* Record this rule once (ADOPTING.md §6
-overwrite-vs-preserve is the natural home; CLAUDE.md repo-map sentence).
+**The principle — Q8 ruling (owner, 2026-07-04), superseding the original
+config-over-generation recommendation: full conditional templating.** The
+kit's master templates contain **all permutations**; `bootstrap.py`
+generates each repo's artifacts by **omitting** the sections its declared
+profile doesn't use. The owner's constraint that makes this sound: **§N
+labels stay constant across every variant** — section numbers are literal
+text labels in the master, never renumbered by omission, so a finding citing
+§7 describes the same relationship in every adopted repo, and new sections
+extend the master monotonically. Mechanics that keep it honest:
+- **Omission leaves a resolvable stub:** an omitted numbered section renders
+  as one line ("§9 Non-functional budgets — omitted by this repo's profile;
+  see the kit master"), so cross-references in kept text never dangle and
+  `check_docs` stays green on every permutation.
+- **The profile is recorded in-repo** (`docs/kit-profile`, beside the
+  kit-version stamp): re-sync **regenerates from the recorded profile**
+  instead of raw-copying — the downstream-resync skill/ADOPTING §6 path
+  changes accordingly. Migration risk for existing adopters (one
+  regeneration on their next upgrade) explicitly **accepted by the owner**.
+- **Scaffold-stable vs runtime-changeable:** conditional omission applies to
+  *structural* choices fixed at adoption (interfaces layer, NFR/perf
+  budgets, multi-module ladder, G-Release, lifecycle prompts, stack-specific
+  artifacts, unused gate-authority level expansions). State that can change
+  mid-project (`docs/gate`, `docs/gate-policy`, `docs/stack.ini`) **remains
+  referenced config** — its optional doc *expansions* may still be
+  profile-omitted with stubs, and changing such a policy later means
+  re-running the generator with the updated profile. (This preserves
+  Threads 24/30/32 unchanged.)
+- **Per-permutation test matrix:** the kit suite generates every profile and
+  asserts `check_docs`/trace/harness green, stable §N labels, and stub lines
+  where sections were omitted.
+The scaffold-once/downstream-owned distinction survives where it always
+applied: AGENTS.md, README.md, status.md, and the registries are generated
+once and never overwritten; judgment-bearing content (the PROJECT BRIEF,
+requirement rows) stays with the kickoff agent.
 
-**Steps (the mechanical cleanups the rule sanctions):**
-1. **`kit-only` strip markers (R5/C1):** bootstrap strips regions between
-   `<!-- kit-only -->` … `<!-- /kit-only -->` on copy; migrate copy-me prose
+**Steps (the generator core + the mechanical cleanups — one marker
+machinery):**
+1. **Profile markers (the generator's core; `kit-only` is the degenerate
+   case):** bootstrap strips regions between
+   `<!-- profile: X -->` … `<!-- /profile -->` when the recorded profile
+   doesn't select `X` — emitting the §-stub line instead when the region is
+   a whole numbered section — and `<!-- kit-only -->` … `<!-- /kit-only -->`
+   is simply the profile no repo ever selects (R5/C1). Migrate copy-me prose
    in **every** template into markers (INTERFACES.template.md's "Copy to
    `docs/interfaces.md`" is the confirmed miss; sweep all `*.template.*` +
    PROCESS_OPTIONS). Keep `TEMPLATE_REWRITES` only for in-line rewrites a
@@ -2728,23 +2769,31 @@ overwrite-vs-preserve is the natural home; CLAUDE.md repo-map sentence).
 carries the checklist bullets; default scaffold unchanged byte-for-byte
 (the CI-safe property test extends).
 
-**Risks:** marker-stripping is a new transform over every template — keep it
+**Risks:** marker-stripping is a transform over every template — keep it
 dumb (exact marker lines, no nesting) and tested per template; the
 status.md-checklist coupling to WI-1.17's format (reuse its bullet shape
-verbatim).
+verbatim); under Q8, master readability degrades as markers multiply — keep
+the profile axes **few and boolean**, and the permutation matrix is what
+holds the line (every profile must scaffold green); the downstream-resync
+skill must be updated in the same session (regenerate-from-profile), or
+upgrades silently raw-copy the master.
 
 **Done-when:** no scaffolded doc reads as a template; a non-Python `--stack`
-choice yields no dead Python artifacts + a visible rewiring checklist; a fresh
-scaffold is *fully* green including warnings; the generation-vs-config rule is
-stated once; `pytest -q` green.
+choice yields no dead Python artifacts + a visible rewiring checklist; a
+fresh scaffold is *fully* green including warnings; **every profile
+permutation scaffolds green with stable §N labels and resolvable stubs**;
+`docs/kit-profile` records the choice and re-sync regenerates from it;
+`pytest -q` green.
 
-**Model tier — Sonnet-able once specced** (mechanical, well-tested sweep).
+**Model tier — strong model, solo build (Session S)** — the Q8 ruling turned
+this from a mechanical sweep into the batch's widest build (generator +
+resync regeneration + the per-permutation matrix).
 
 ---
 
 ## Thread 35 — Field-report R9/D1: first-class `Area` column on the SR registry
 
-**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q9: land or defer).**
+**Status: ✔ ruled 2026-07-04 (Q9: land now) — ready (Session L).**
 **Source:** field report D1/R9 (Low).
 
 **Why:** the process assigns SR ownership to domain hats and EXAMPLE.md §7
@@ -2778,8 +2827,9 @@ and trace.py reports it; `pytest -q` green.
 
 ## Thread 36 — status.md is the working surface only: history moves to a pointed-to log
 
-**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q10). Land before/with
-Thread 32 — it relocates the record home Thread 32 writes to.**
+**Status: ✔ ruled 2026-07-04 (Q10: carve + `docs/log.md` as proposed) —
+ready (Session M, first). Land before/with Thread 32 — it relocates the
+record home Thread 32 writes to.**
 **Source:** owner note (2026-07-04).
 
 **Why:** status.md is currently both the blackboard *and* the archive:
@@ -2863,7 +2913,7 @@ files; 36 lands first).
 
 ## Thread 37 — Vision / elevator statement: README-canonical, one searchable tag
 
-**Status: ⏸ specced 2026-07-04, refined same day (owner: README is the
+**Status: ✔ specced 2026-07-04, refined same day (owner: README is the
 canonical home, anchored by a unique searchable tag) — no open questions;
 ready to batch (Session L).**
 **Source:** owner notes (2026-07-04).
@@ -2934,7 +2984,8 @@ worked one; the meta-repo dogfoods it; `pytest -q` + `check_docs` green.
 
 ## Thread 38 — Per-repo commit identity: anonymous vs identified, declared and guarded
 
-**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q11).**
+**Status: ✔ ruled 2026-07-04 (Q11: declared policy + hard guard) — ready
+(Session L).**
 **Source:** owner question (2026-07-04): "how do we ensure commits follow the
 user's preference per repo — anonymous or user-identifiable?"
 
@@ -3008,9 +3059,10 @@ setup + bootstrap + prose + tests).
 
 ## Thread 39 — Anonymous repos: privacy-leak review before publication (lint floor + subagent reviewer)
 
-**Status: ⏸ specced 2026-07-04; re-homed same day by owner ruling (Q12 →
-Thread 40). Depends on Thread 38 (the policy gate); reuses Thread 32's
-verdict conventions; Thread 36's log is the record home.**
+**Status: ✔ ruled 2026-07-04; re-homed same day by owner ruling (Q12 →
+Thread 40; fail-closed residue confirmed) — ready to build (Session Q).
+Depends on Thread 38 (the policy gate); reuses Thread 32's verdict
+conventions; Thread 36's log is the record home.**
 **Source:** owner question (2026-07-04): when the repo's state is anonymous,
 can a hook (or other method) put a subagent review before every commit,
 checking for leakage of personally identifiable or private information?
@@ -3107,9 +3159,10 @@ honestly; `pytest -q` green.
 
 ## Thread 40 — LLM iteration branch: sync protocol (backup → scrub → collate → land) + push authority
 
-**Status: ⏸ specced 2026-07-04 — awaiting owner answers (Q13). Reshapes
-Threads 33 and 39 (both amended same day); depends on Thread 32's levels and
-Thread 36's log home.**
+**Status: ✔ ruled 2026-07-04 (Q13a human-push, sync ≠ stop; Q13b
+`llm/{branch}`; Q13c default-not-restrictive vocabulary; Q13d tracked
+bounded logs) — ready (Session R). Reshapes Threads 33 and 39 (both amended
+same day); depends on Thread 32's levels and Thread 36's log home.**
 **Source:** owner directive (2026-07-04), refining the Q12 ruling: hooks are
 per-clone and tool-circumventable (a user pushing from a different tool may
 never hit them), so anonymity — and history quality — should be
@@ -3119,8 +3172,8 @@ push time.
 
 **The model:**
 - **The agent never commits to the development branch.** All agent work
-  happens on an iteration branch (`{branch}_LLM_Iteration` — name per Q13b).
-  The pre-commit floor + Thread-39 privacy lint run there per commit, cheap
+  happens on an iteration branch (**`llm/{branch}`** — Q13b ruling; slash
+  namespacing groups agent branches in git tooling). The pre-commit floor + Thread-39 privacy lint run there per commit, cheap
   and unchanged; **WI-1.11's commit-often cadence lives on this branch**,
   where granularity is free.
 - **Sync points** — a full block (everything remaining Blocked), a gate
@@ -3142,10 +3195,17 @@ push time.
      `feat(addon):` / `fix(biome):` / `perf(noise):` / `docs:` / `build:`,
      the exact shape of the owner's Terra history; Q13c), each a coherent,
      reviewable, why-and-impact-shaped change. Many tiny green commits in;
-     few subject-shaped commits out.
+     few subject-shaped commits out. **The type list is a default
+     vocabulary, never a restriction** (Q13c ruling): a project
+     renames/extends the types to fit its domain, and nothing lints the
+     exact set.
   5. **Land:** the collated commits go onto the development branch. **The
      human pushes at their leisure (default)** — or the agent does, iff the
-     push policy says so.
+     push policy says so. **Landing is not a stopping point (Q13a ruling):**
+     under an autonomous gate the loop syncs and rolls straight into the
+     next leg — unpushed landed legs accumulate, and the human may push
+     several at once; the run pauses only on `NEEDS-HUMAN` (Thread 33), i.e.
+     when intervention is *required*, never merely because a sync happened.
 - **Push authority is a declared policy** (Q13a): new one-liner
   `docs/push-policy` — `human` (default: **the agent never pushes, even if
   asked mid-session**; it prepares the branch and requests) ·
@@ -3202,13 +3262,40 @@ the Thread-32 class).
 
 ---
 
-## 2026-07-04 batch — open questions for the owner
+## 2026-07-04 batch — decision briefs (all ruled by the owner 2026-07-04)
 
-Answers unblock the threads noted; sessions won't start until the relevant
-question is answered (Session-protocol step 0). **★ = recommendation.** Each
-brief states what the question actually decides, then the live options with
-what each buys and costs — enough context to decide without re-reading the
-thread.
+**Rulings (owner, 2026-07-04).** The briefs below are kept as the *why*; each
+thread's Status line carries the operative form:
+
+- **Q1 ★** full `docs/stack.ini` profile. **Q2 ★** INI. **Q3 ★** file-level
+  fallback only (symbol-level ports stay contributions). **Q4 ★** level names
+  + all four fixed points confirmed.
+- **Q5 ★** G2-close, fixed — plus prose noting an adopting repo *may*
+  relocate it by modifying its own copy (the deviation-register pattern); the
+  kit itself does not parameterize it.
+- **Q6 → Hybrid** (overrides the ★): post-ratification questions route by
+  revert-cost — LOW = decide + record in the Decisions log; MEDIUM/HIGH =
+  Blocked register. Owner's reasoning: one-ratification's whole value is
+  momentum; the ratifier accepted bounded risk, and "grind vs pause" is
+  exactly what the revert-cost dial encodes.
+- **Q7a/b/c ★. Q7d → amended:** no flat refusal — the loop runs under
+  *every* gate policy and stops on a new **`NEEDS-HUMAN`** run-state the
+  driver writes when progress requires a human act, *after* stating the ask
+  as status.md `Needs <human>` bullets (interrupt-and-report, never
+  infer-and-continue; a wrong DONE stays a false green). Thread 33
+  re-specced.
+- **Q8 → Full conditional templating** (overrides the ★), under the owner's
+  §N-constancy caveat: the master templates hold **all permutations**;
+  omission never renumbers (§ labels are literal text); omitted sections
+  leave resolvable one-line stubs; re-sync regenerates from a recorded
+  `docs/kit-profile`; the existing-adopter migration risk is accepted.
+  Thread 34 re-specced (now a solo build — Session S).
+- **Q9 ★. Q10 ★. Q11 ★. Q12 ★** (fail-closed residue confirmed).
+- **Q13a ★ + nuance:** sync ≠ stop — landing never waits for a human push;
+  under autonomous gates the loop rolls straight into the next leg, and the
+  run pauses only on `NEEDS-HUMAN`. **Q13b ★** `llm/{branch}`. **Q13c ★ as a
+  default vocabulary, not a restriction** — the type list is exemplary,
+  extensible per project, never linted. **Q13d ★.**
 
 ### Q1 — How far to take the stack profile *(Thread 30)*
 
@@ -3519,11 +3606,11 @@ warning scrolls by in exactly the unattended case).
 - **Track full unbounded transcripts** — maximal forensics; a 40-iteration
   run can add tens of MB, compounding per leg.
 
-**Proposed sessions (pending ratification):**
-- **Session L** — Threads **29 + 34 + 35 + 37 + 38** (mechanical,
-  file-coherent batch: check.py guard + bootstrap/template sweep + registry
-  column + the vision tag + the commit-identity guard — all small, all in the
-  same bootstrap/hook/template files).
+**Proposed sessions (rulings landed 2026-07-04 — confirm which to start):**
+- **Session L** — Threads **29 + 35 + 37 + 38** (mechanical, file-coherent
+  batch: check.py guard + registry column + the vision tag + the
+  commit-identity guard). *Thread 34 moved out — the Q8 ruling made it a
+  solo build (Session S).*
 - **Session M** — Threads **36 + 32**, solo-class, strong model (the same
   canonical files: STATUS/PROCESS/KICKOFF + the AGENTS byte squeeze; **36
   first** — it moves the record home 32 writes to).
@@ -3537,6 +3624,10 @@ warning scrolls by in exactly the unattended case).
 - **Session Q** — Thread **39** (after L, M, and R; the privacy lint + hook
   backstop — a new-script build with fake-reviewer tests; the scrub-agent
   half is Thread 40 protocol, not script).
+- **Session S** — Thread **34** solo, strong model (after M; the conditional
+  scaffold generator: profile markers across every template +
+  `docs/kit-profile` + resync regeneration + the per-permutation test
+  matrix — the widest build of the batch).
 
 ---
 
@@ -3551,9 +3642,11 @@ warning scrolls by in exactly the unattended case).
 (2026-07-01, Session K). **All 28 threads complete.**
 **Reopened 2026-07-04** with **Threads 29–40** (the downstream-adoption field
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
-specs above,
-**⏸ awaiting the owner's answers to the "2026-07-04 batch — open questions"
-block** before any session starts (proposed grouping: Sessions L–P there).
+specs above.
+**All questions ruled by the owner 2026-07-04** — the batch's decision-briefs
+section records the rulings (Q6 Hybrid and Q8 full-conditional-templating
+override the recommendations; Q7d/Q13a amended Threads 33/40). Proposed
+grouping: Sessions L–S there; confirm with the user which to start.
 **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
@@ -4254,12 +4347,13 @@ continuity (same style as the session log above).
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
    2026-07-04: Threads 0–28 have landed (sessions A–K, plus the WI-1.x items).
-   **Threads 29–40 are specced but ⏸ gated on the owner's answers** to the
-   "2026-07-04 batch — open questions for the owner" block (Threads 29 and 37
-   carry no open question and may be confirmed for pickup directly). The **stubs**
-   (16 non-code-artifact verification · 21 cross-repo tooling · 23 publication
-   composition) still each need a decision to revive. Ask the user which to pick
-   up (and confirm the open decisions each lists) before doing anything.
+   **Threads 29–40 are specced and ruled** (owner rulings 2026-07-04 — the
+   "2026-07-04 batch — decision briefs" section records them; each thread's
+   Status line carries its operative form). Proposed Sessions L/M/N/O/P/Q/R/S
+   are ready to schedule — still confirm with the user which session to
+   start. The **stubs** (16 non-code-artifact verification · 21 cross-repo
+   tooling · 23 publication composition) still each need a decision to
+   revive.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
    own section above is its spec (Goal/Steps/Tests/Risks/Done-when).
 2. **End green:** run `python -m pytest -q` and paste the real output (per
