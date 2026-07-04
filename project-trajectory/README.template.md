@@ -50,3 +50,10 @@ This repo follows a gated, requirement-traced process. The working brief is
 [AGENTS.md](AGENTS.md); the method is [docs/process.md](docs/process.md). Start
 with the code map in [docs/architecture.md](docs/architecture.md) and the
 current state in [docs/status.md](docs/status.md).
+
+**Resuming agent work:** double-click `agent-resume.*` (root) to boot the
+right agent session — or the unattended coordinator loop — under the declared
+gate policy. Inert until its `AGENT_CMD` slot is wired; wiring it (typically
+with the agent's permission-bypass flag) is your explicit consent to
+unattended sessions — see docs/process-options.md "Unattended operation". Not
+using agents? Delete the `agent-resume.*` launchers and this note.

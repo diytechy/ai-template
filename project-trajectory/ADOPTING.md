@@ -166,16 +166,18 @@ range to see exactly which templates/scripts changed before you touch anything.
 
 - **Overwrite freely (kit-owned, you don't hand-edit these):** the process
   scripts under `scripts/` (`trace.py`, `check_docs.py`, `check_flows.py`,
-  `check_perf.py`, `gen_arch_map.py`, `gen_*`), `docs/process.md` +
-  `docs/process-options.md`, the pre-commit hook, `pytest.ini` markers. Take the
+  `check_perf.py`, `gen_arch_map.py`, `gen_*`, `agent_loop.py`),
+  `docs/process.md` + `docs/process-options.md`, the pre-commit hook,
+  `pytest.ini` markers. Take the
   new versions wholesale, then re-apply your local edits — for `check.py` that's
   only the marked **"EDIT FOR YOUR STACK"** block (`SRC`/`TESTS`, the product
   step commands). Diff before committing so a kit change to a step you dropped
   doesn't silently reappear.
 - **Preserve always (yours, kit only seeds them):** every registry CSV and
   `stakeholder-needs.md`, `docs/status.md`, `docs/log.md`,
+  `docs/iteration/` + `docs/iteration_index.md` (session history),
   `docs/architecture.md`'s hand-written overview (regenerate only the marker
-  blocks), `AGENTS.md` project content,
+  blocks), `AGENTS.md` project content, the root launchers' EDIT slots,
   `docs/gate`, `.gitignore`/`.gitattributes` (merge new kit lines in by hand).
   `bootstrap.py` **skips existing files**, so a plain re-run won't clobber these —
   but don't run it with `--force` against a live repo without a diff pass.
@@ -279,6 +281,16 @@ range to see exactly which templates/scripts changed before you touch anything.
   nothing. If you adopt the layer, add `"llm/**"` to your CI push triggers
   (the newer shipped `check.yml` already carries it) so the floor runs on
   agent legs too.
+- **Unattended coordinator (`scripts/agent_loop.py` + root `agent-resume.*`).**
+  Newer kits ship a walk-away resume entry (process-options.md "Unattended
+  operation"): the launchers boot the right agent session at the right tier —
+  or the coordinator loop reading `docs/run-state`/`docs/run-phase` — and ship
+  **inert** until their `AGENT_CMD` slot is wired. To adopt: copy the engine
+  (kit-owned, overwrite freely on later re-syncs) + the three launchers
+  (yours after seeding — like `run.*`), and merge the `out/run-logs/` line
+  into `.gitignore`. The tracked `docs/iteration/` logs + `iteration_index.md`
+  appear on first run; preserve them like `docs/log.md` — they are history. A
+  repo without agent-driven work skips all of it.
 - **Skills layer (newer kits ship `skills/`).** To bring an agent's skills into an
   already-adopted repo, re-run `bootstrap.py --agents claude|gemini|both` against
   it: it materializes the matched `kit`-scope skills into the agent dir

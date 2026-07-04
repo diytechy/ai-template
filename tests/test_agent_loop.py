@@ -1,0 +1,314 @@
+"""The unattended coordinator engine (Thread 33, process-options.md
+"Unattended operation") — exercised end-to-end against a fake agent command,
+so no test depends on any real agent CLI. The fake pops one action per
+invocation from a control dir outside the repo: commit / noop / done /
+blocked / needs-human / limit / sleep."""
+
+import subprocess
+import sys
+
+import pytest
+from conftest import SCRIPTS, run_py
+
+# The fake agent: records every invocation + the model it was handed, then
+# performs the next scripted action in the repo it was launched in (cwd),
+# exactly as a headless driver session would.
+FAKE_AGENT = """
+import argparse, json, pathlib, subprocess, sys, time
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--control", required=True)
+ap.add_argument("--model", default="")
+ap.add_argument("-p", "--prompt", default="")
+args, extra = ap.parse_known_args()
+ctl = pathlib.Path(args.control)
+inv = ctl / "invocations.txt"
+count = len(inv.read_text().splitlines()) if inv.exists() else 0
+with open(str(inv), "a") as fh:
+    fh.write("call\\n")
+with open(str(ctl / "models.txt"), "a") as fh:
+    fh.write(args.model + "\\n")
+actions = []
+if (ctl / "actions.txt").exists():
+    actions = (ctl / "actions.txt").read_text().split()
+action = actions[count] if count < len(actions) else "noop"
+
+
+def commit(msg):
+    pathlib.Path("work.txt").write_text(msg + str(count))
+    subprocess.run(["git", "add", "-A"], check=True)
+    subprocess.run(["git", "commit", "-q", "-m", msg], check=True)
+
+
+if action == "commit":
+    commit("progress")
+    # Healthy prose that *mentions* limits: must never read as a throttle
+    # (the engine gates the limit regex on an error signal).
+    print("session committed progress; noted the usage limit resets 3:45pm")
+elif action in ("done", "blocked", "needs-human"):
+    commit("finishing")
+    pathlib.Path("docs/run-state").write_text(action.upper())
+    print(json.dumps({"result": "ok",
+                      "usage": {"input_tokens": 10, "output_tokens": 5},
+                      "total_cost_usd": 0.12}))
+elif action == "limit":
+    print(json.dumps({"is_error": True,
+                      "result": "You've hit your session limit \\u00b7 resets 3:45pm"}))
+    sys.exit(1)
+elif action == "sleep":
+    time.sleep(8)
+else:
+    print("session ok, nothing to commit")
+sys.exit(0)
+"""
+
+STATUS_MD = """# Project Status
+
+## Current State
+
+- **Active gate:** G1
+- **Open items:**
+  - **Needs <human>**:
+    - OI-1 — decide: approve the demo gate (blocks: G1)
+
+## Scope
+
+- **Goal:** exercise the coordinator.
+"""
+
+
+def _git(repo, *args):
+    proc = subprocess.run(
+        ["git", "-C", str(repo)] + list(args),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return proc.stdout.strip()
+
+
+@pytest.fixture
+def loop_repo(tmp_path):
+    """A minimal git repo (one commit) + a control dir for the fake agent.
+    Returns (repo, control-dir, AGENT_CMD template)."""
+    repo = tmp_path / "repo"
+    (repo / "docs").mkdir(parents=True)
+    (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "loop@example.com")
+    _git(repo, "config", "user.name", "Loop Test")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "initial")
+    ctl = tmp_path / "control"
+    ctl.mkdir()
+    fake = tmp_path / "fake_agent.py"
+    fake.write_text(FAKE_AGENT, encoding="utf-8")
+    template = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
+        sys.executable, fake, ctl
+    )
+    return repo, ctl, template
+
+
+def _loop(repo, template, *extra):
+    return run_py(
+        [
+            SCRIPTS / "agent_loop.py",
+            "--root",
+            repo,
+            "--agent-cmd",
+            template,
+            "--pause",
+            "0",
+            "--model",
+            "default-tier",
+            *extra,
+        ],
+        cwd=repo,
+    )
+
+
+def _invocations(ctl):
+    inv = ctl / "invocations.txt"
+    return len(inv.read_text(encoding="utf-8").splitlines()) if inv.exists() else 0
+
+
+def test_done_exit_writes_logs_and_index(loop_repo):
+    # DONE ends the loop (exit 0), the banner surfaces status.md's pending
+    # asks, and each session left a tracked bounded log + a regenerated index
+    # carrying outcome / commit range / tokens / cost.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("commit done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "run-state=DONE" in proc.stdout
+    assert "OI-1" in proc.stdout, "exit banner must surface the pending asks"
+    assert "CONSENT" in proc.stdout, "the banner must state the consent line"
+    logs = sorted((repo / "docs" / "iteration").glob("*.log"))
+    assert len(logs) == 2
+    meta = logs[1].read_text(encoding="utf-8")
+    assert "# outcome: DONE" in meta
+    assert "# exit-code: 0" in meta
+    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
+    assert "| 001 |" in index and "| 002 |" in index
+    assert "COMMITTED" in index and "DONE" in index
+    assert "10+5" in index and "0.12" in index  # tokens + cost from the JSON
+    assert "never hand-edited" in index
+    # The raw unbounded stream lands in the gitignored out/run-logs/.
+    assert list((repo / "out" / "run-logs").glob("*.log"))
+
+
+def test_blocked_exit(loop_repo):
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("blocked", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 3, proc.stdout + proc.stderr
+    assert "run-state=BLOCKED" in proc.stdout
+    assert "OI-1" in proc.stdout
+
+
+def test_needs_human_exit_surfaces_the_ask(loop_repo):
+    # Q7d: the loop runs under every gate policy; when progress needs a human
+    # act the driver writes NEEDS-HUMAN and the coordinator exits printing the
+    # asks — interrupt-and-report, never infer-and-continue.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("needs-human", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 7, proc.stdout + proc.stderr
+    assert "run-state=NEEDS-HUMAN" in proc.stdout
+    assert "OI-1" in proc.stdout
+
+
+def test_stall_guard_aborts_after_no_commit_sessions(loop_repo):
+    repo, ctl, template = loop_repo  # no actions file -> every session noops
+    proc = _loop(repo, template, "--stall-limit", "2", "--max-iterations", "6")
+    assert proc.returncode == 4, proc.stdout + proc.stderr
+    assert "STALL" in proc.stdout
+    assert _invocations(ctl) == 2, "must stop at the stall limit, not the budget"
+
+
+def test_budget_ceiling(loop_repo):
+    # Commits every session (never stalls, never ends) -> the MaxIterations
+    # budget ceiling is what stops the run.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("commit commit commit", encoding="utf-8")
+    proc = _loop(repo, template, "--max-iterations", "3")
+    assert proc.returncode == 6, proc.stdout + proc.stderr
+    assert "budget" in proc.stdout.lower()
+    assert _invocations(ctl) == 3
+
+
+def test_phase_model_map_picks_the_declared_tier(loop_repo):
+    # docs/run-phase is the coordinator's model-tier key: a mapped phase gets
+    # the strong model, everything else the default.
+    repo, ctl, template = loop_repo
+    (repo / "docs" / "run-phase").write_text("P2\n", encoding="utf-8")
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template, "--model-map", "P0=other,P2=strong-tier")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    models = (ctl / "models.txt").read_text(encoding="utf-8").split()
+    assert models == ["strong-tier"]
+
+
+def test_limit_hit_backs_off_without_counting_stall(loop_repo):
+    # A throttled session must read WAITING, not a stall: with stall-limit 1 a
+    # no-commit session would abort STALL (exit 4); the limit message must
+    # instead exit WAITING (5) naming the reset time, and the index must
+    # record the WAITING outcome.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("limit", encoding="utf-8")
+    proc = _loop(repo, template, "--stall-limit", "1")
+    assert proc.returncode == 5, proc.stdout + proc.stderr
+    assert "WAITING" in proc.stdout
+    assert "3:45pm" in proc.stdout, "banner must name the resume time"
+    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
+    assert "WAITING" in index
+
+
+def test_healthy_transcript_mentioning_limits_is_not_a_throttle(loop_repo):
+    # The limit regex is gated on an error signal (is_error / nonzero exit):
+    # the fake's commit action succeeds (exit 0) while its transcript says
+    # "usage limit resets 3:45pm" — that session must read COMMITTED, never
+    # WAITING.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("commit done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0
+    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
+    assert "WAITING" not in index
+    assert "COMMITTED" in index
+
+
+def test_session_timeout_cannot_wedge_the_loop(loop_repo):
+    # A hung session is cut off at --session-timeout, logged as TIMEOUT, and
+    # counts toward the stall guard (it produced no commit).
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("sleep", encoding="utf-8")
+    proc = _loop(repo, template, "--session-timeout", "2", "--stall-limit", "1")
+    assert proc.returncode == 4, proc.stdout + proc.stderr
+    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
+    assert "TIMEOUT" in index
+
+
+def test_interactive_boots_exactly_one_session(loop_repo):
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("noop noop noop", encoding="utf-8")
+    proc = _loop(repo, template, "--interactive")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert _invocations(ctl) == 1
+    # A hands-on session writes no unattended artifacts.
+    assert not (repo / "docs" / "iteration").exists()
+
+
+def test_unfilled_agent_cmd_is_inert_guidance(loop_repo):
+    repo, _, _ = loop_repo
+    proc = _loop(repo, "")
+    assert proc.returncode == 2
+    assert "AGENT_CMD" in proc.stderr
+
+
+def test_missing_cli_fails_preflight_never_hangs(loop_repo):
+    repo, _, _ = loop_repo
+    proc = _loop(repo, "definitely-missing-agent-xyz --model {model}")
+    assert proc.returncode == 2
+    assert "not found" in proc.stderr
+
+
+def test_commit_identity_violation_blocks_iteration_one(loop_repo):
+    # Thread 38 x 33: an unattended run under the wrong identity is the
+    # wrongly-attributed-history disaster case — preflight refuses to start.
+    repo, ctl, template = loop_repo
+    (repo / "docs" / "commit-identity").write_text(
+        "*@users.noreply.github.com\n", encoding="utf-8"
+    )
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "commit-identity" in proc.stderr
+    assert _invocations(ctl) == 0, "no session may run under a violated policy"
+
+
+def test_zero_commit_repo_is_guarded(tmp_path):
+    # The rev-parse guard: a repo with no commits yet must not crash the loop
+    # (the NHW original assumed HEAD exists).
+    repo = tmp_path / "repo"
+    (repo / "docs").mkdir(parents=True)
+    (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
+    _git_ok = subprocess.run(
+        ["git", "-C", str(repo), "init"], capture_output=True, text=True
+    )
+    assert _git_ok.returncode == 0
+    subprocess.run(["git", "-C", str(repo), "config", "user.email", "l@e.com"])
+    subprocess.run(["git", "-C", str(repo), "config", "user.name", "L"])
+    ctl = tmp_path / "control"
+    ctl.mkdir()
+    fake = tmp_path / "fake_agent.py"
+    fake.write_text(FAKE_AGENT, encoding="utf-8")
+    template = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
+        sys.executable, fake, ctl
+    )
+    (ctl / "actions.txt").write_text("commit done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
+    assert "(root).." in index, "the first commit range starts at (root)"

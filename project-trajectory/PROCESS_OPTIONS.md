@@ -337,6 +337,98 @@ Optionally add the `llm/**` pattern to the CI triggers (the shipped
 `check.yml` does) so the process floor runs remotely on the iteration branch
 too.
 
+## Unattended operation (walk-away runs)
+
+*Referenced from PROCESS.md §4 ("gate authority").* **Applies when** a repo
+wants a coordinator to grind work from a single entry point while nobody
+watches. The loop runs under **every** gate authority level — what differs is
+where it stops: fully walk-away under `autonomous` (or `single-ratify` after
+its ratification point), while an `attended` repo's run grinds the in-gate
+work and stops *at* each human act with the ask stated, rather than being
+refused or, worse, inferring its way past. Generalized from a field adoption's
+proven coordinator (the NotHomeWrecker `trigger.ps1`), which
+`scripts/agent_loop.py` supersedes — the protocol here is agent-neutral repo
+text, so a downstream can build its own coordinator against it.
+
+**The model.** A coordinator loops **fresh headless driver sessions** — repo
+text is the only memory (§7 boundary notes, "Repo text is the durable agent
+memory layer"); each session resumes from `status.md` Current State — until
+the run reaches an end state, a stall guard trips (N consecutive sessions
+without a commit), or an iteration budget ceiling hits. Sessions run on the
+iteration branch where the "Agent iteration branch & sync" layer is in use
+(never the development branch), trigger its sync ritual at the end states, and
+honor `docs/push-policy` — under the default `human` the coordinator never
+pushes, even if asked.
+
+**The `docs/run-state` contract** (one word, tracked like `docs/gate`) is what
+the driver owes the coordinator; update it in the session's final commit:
+
+- **`RUNNING`** while work remains.
+- **`DONE`** only at the declared policy's end state — **a wrong DONE is a
+  false green** (§4 honest-gate rule).
+- **`BLOCKED`** when *everything* remaining sits in the Blocked register
+  ("Gate authority levels" above).
+- **`NEEDS-HUMAN`** when the next step requires a human act — a gate sign-off
+  under `attended`, the `single-ratify` ratification, a decision the §6 dial
+  requires surfaced. Written only **after** the ask is stated as
+  `Needs <human>` Open-items bullets in `status.md`, so stopping is always
+  **interrupt-and-report, never infer-and-continue**; the coordinator exits
+  printing the pending asks in its banner.
+
+**Optional `docs/run-phase`** (one word): the phase the *next* session should
+drive — the coordinator's model-tier key (§6 tiering, mapped per phase), kept
+current in the finishing commit so a tier bump lands on the right sessions.
+
+**Session discipline.**
+
+- **Commit every session** — the stall guard makes an empty session an abort
+  signal; even a Blocked-register entry or a recorded decision is a commit
+  (§3 commit cadence).
+- **No elevation, no interactive tools** — a step that truly needs admin
+  rights or a TTY is a Blocked item, never a prompt nothing will answer.
+- **Keep `status.md` lean across iterations** — each session appends its
+  evidence (verdicts, decisions, session summary) to `log.md` (§5) and leaves
+  `status.md` holding only the resume point + open/blocked items, so the next
+  fresh session's context reload stays cheap.
+- **End-of-run evidence:** `status.md` Current State + Blocked register;
+  verdicts + Decisions in `docs/log.md`; a clean tree.
+
+**Iteration logs are tracked, indexed repo artifacts.** The coordinator writes
+each session's log to `docs/iteration/NNN-<stamp>.log` — size-bounded (head +
+capped tail of the transcript) so forensic detail survives machine death and
+travels with the repo; the raw unbounded stream may additionally go to the
+gitignored `out/run-logs/` for local debugging — and regenerates
+`docs/iteration_index.md`: one row per session (number, date, model/tier,
+phase, outcome, commit range, cost, log link), generated and never
+hand-edited. `docs/log.md` stays the *collated* human-review layer above it.
+On an anonymous repo the logs ride the iteration branch and pass its scrub
+with everything else.
+
+**Limits are handled reactively.** Plan-usage state is not scriptable, so the
+coordinator cannot preflight remaining budget: a limit-hit session returns a
+machine-parseable "…limit · resets <time>" message, and the coordinator backs
+off — sleeps until the reset (bounded) or exits with a WAITING banner naming
+the resume time. **Limit-hit sessions never count toward the stall guard** —
+three throttled sessions are not a stall, and the NHW original misread
+exactly that.
+
+**Consent is unmissable.** Unattended mode passes the agent CLI's
+permission-bypass flag. The human consents by (1) filling the launcher's
+`AGENT_CMD` slot, (2) declaring the gate policy, and (3) running it — and the
+loop banner and README say so plainly. git + CI remain the enforcement floor.
+The coordinator's preflight refuses to start iteration 1 while the
+`docs/commit-identity` policy is violated (an unattended run is the
+wrongly-attributed-history disaster case) or the agent CLI is missing —
+report and nonzero exit, never a hang.
+
+**The shipped engine + launchers.** `scripts/agent_loop.py` (stdlib-only, one
+implementation for every platform, tested in the kit suite against a fake
+agent command) is the loop above; root `agent-resume.{cmd,sh,command}` are its
+double-click wrappers, scaffolded like `run.*` and **inert** until the
+`AGENT_CMD` slot is filled (guidance + nonzero exit). `--interactive` boots a
+single hands-on session at the mapped tier instead of the loop. A repo that
+doesn't want the entry point deletes the launchers; the protocol stands alone.
+
 ## §7 boundary notes
 
 *Referenced from PROCESS.md §7.* These three notes draw lines around what the kit

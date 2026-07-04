@@ -273,7 +273,10 @@ mechanics + the deviation-register pattern:
 [process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
 **Fixed points at every level:** G-Final is the human's; no un-run greens; the
 harness is still the bar (LLM judgment never waives a red check); ratified
-owner decisions are never re-decided by an agent.
+owner decisions are never re-decided by an agent. A coordinator can loop fresh
+driver sessions under any level, stopping where the level requires a human —
+`docs/run-state`:
+[process-options.md "Unattended operation"](process-options.md#unattended-operation-walk-away-runs).
 The active gate is recorded machine-readably in the one-line `docs/gate` file;
 closing a gate bumps it in a reviewed commit (§7 "The active gate").
 Define machine-checkable criteria wherever possible; classify the rest honestly.

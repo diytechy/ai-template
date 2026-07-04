@@ -40,6 +40,8 @@ What it creates in the destination:
     scripts/dev-setup.{sh,ps1}                 <- dev-setup.template.* (workstation setup)
     README.md                                  <- README.template.md (human front door; kept if one exists)
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
+    agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
+    scripts/agent_loop.py                      (unattended coordinator engine)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     pytest.ini                                 (test-tier markers)
     .gitignore                                 <- gitignore.template
@@ -75,6 +77,17 @@ never overwritten), and the launchers give every launchable project a
 double-clickable start per platform so running it never requires recalling a
 command. They ship inert — an unfilled `RUN_CMD` prints guidance and exits
 nonzero — and a pure library simply deletes them.
+
+The root `agent-resume.{cmd,sh,command}` launchers + `scripts/agent_loop.py`
+(Thread 33, process-options.md "Unattended operation") are the *work-resume*
+counterpart of the evaluator's rungs: one double-clickable entry that boots the
+right agent session at the right tier under the declared gate policy — or the
+walk-away coordinator loop. Like `run.*` they ship **inert** (an unfilled
+`AGENT_CMD` prints guidance and exits nonzero) and a repo without agent-driven
+work deletes them. When `--agents` picked an agent, bootstrap **seeds** the
+launcher's `AGENT_CMD`/`AGENT_MODEL` slots with that agent's example command
+(including its permission-bypass flag — the launchers and the loop banner state
+the consent plainly); the slots stay an EDIT block the repo owns.
 
 The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.csv`)
 are always scaffolded but ship **inert**: they hold only `IF-000` placeholder
@@ -293,6 +306,54 @@ def materialize_agent_layer(dest, agents, skills, dry_run, force):
                     shutil.copyfile(hooks_src, hooks_dst)
                 created.append(spec["hooks_dst"])
     return created
+
+
+# Per-agent example commands seeded into the agent-resume launchers' AGENT_CMD
+# EDIT slot when --agents chose that agent (Thread 33; "both" seeds the first).
+# They stay examples the repo owns — including the permission-bypass flag,
+# which the launcher header and the loop banner call out as the consent line.
+AGENT_RESUME_SEEDS = {
+    "claude": {
+        "cmd": "claude -p {prompt} --model {model} --output-format json "
+        "--dangerously-skip-permissions",
+        "interactive": "claude --model {model} {prompt}",
+        "model": "sonnet",
+    },
+    "gemini": {
+        "cmd": "gemini --prompt {prompt} --model {model} --yolo",
+        "interactive": "gemini --model {model} --prompt-interactive {prompt}",
+        "model": "gemini-2.5-pro",
+    },
+}
+
+
+def seed_agent_resume(dest, agents, created, dry_run):
+    """Fill the freshly scaffolded agent-resume launchers' AGENT_CMD/AGENT_MODEL
+    slots with the chosen agent's example command (the RUN_CMD stance: the slot
+    is an EDIT block the repo owns — bootstrap only seeds it, and only on the
+    run that created the file, so a re-sync never clobbers a repo's own slot).
+    Returns True when the slots were seeded."""
+    if dry_run or not agents:
+        return False
+    seed = AGENT_RESUME_SEEDS[agents[0]]
+    seeded = False
+    for rel, empty, fmt in (
+        ("agent-resume.cmd", 'set "{}="', 'set "{}={}"'),
+        ("agent-resume.sh", '{}=""', '{}="{}"'),
+    ):
+        if rel not in created:
+            continue
+        path = dest / rel
+        text = path.read_text(encoding="utf-8")
+        for var, value in (
+            ("AGENT_CMD", seed["cmd"]),
+            ("AGENT_MODEL", seed["model"]),
+            ("AGENT_CMD_INTERACTIVE", seed["interactive"]),
+        ):
+            text = text.replace(empty.format(var), fmt.format(var, value), 1)
+        path.write_text(text, encoding="utf-8")
+        seeded = True
+    return seeded
 
 
 def record_agent_choice(dest, choice, skills, dry_run):
@@ -620,6 +681,14 @@ MAPPING = [
     ("scripts/run.template.cmd", "run.cmd"),
     ("scripts/run.template.sh", "run.sh"),
     ("scripts/run.template.command", "run.command"),
+    # The work-resume counterpart (Thread 33): root agent launchers over the
+    # unattended-coordinator engine. Inert until AGENT_CMD is filled (seeded
+    # when --agents chose an agent); deletable like run.* — see the module
+    # docstring and process-options.md "Unattended operation".
+    ("scripts/agent_loop.py", "scripts/agent_loop.py"),
+    ("scripts/agent-resume.template.cmd", "agent-resume.cmd"),
+    ("scripts/agent-resume.template.sh", "agent-resume.sh"),
+    ("scripts/agent-resume.template.command", "agent-resume.command"),
     # Agent-neutral enforcement: one POSIX pre-commit hook (opt-in via
     # `git config core.hooksPath .githooks`, which setup.sh/ps1 set).
     ("hooks/pre-commit", ".githooks/pre-commit"),
@@ -952,6 +1021,15 @@ def main():
     created.extend(
         materialize_agent_layer(dest, agents, skills, args.dry_run, args.force)
     )
+
+    # Seed the fresh agent-resume launchers' AGENT_CMD slot with the chosen
+    # agent's example command (never on a re-sync that skipped them).
+    if seed_agent_resume(dest, agents, created, args.dry_run):
+        print(
+            "  seeded agent-resume launchers for {} (AGENT_CMD carries the "
+            "permission-bypass flag — filling/keeping it is your consent to "
+            "unattended sessions; see docs/process-options.md).".format(agents[0])
+        )
 
     # A declared non-default gate authority overwrites the scaffolded default
     # and lays down the deviation-register skeleton for the level.

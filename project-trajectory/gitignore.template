@@ -24,3 +24,9 @@ docs/test/perf-metrics.json
 # No-stub / substance detector report (process.md §4 G3) — a regenerated
 # composite from scripts/check_stubs.py; review the code, not this list.
 docs/test/stub-report.md
+
+# Unattended-coordinator raw session streams (scripts/agent_loop.py). The
+# durable record is tracked: docs/iteration/ (size-bounded per-session logs)
+# + docs/iteration_index.md; the raw unbounded stream is local debug only
+# (process-options.md "Unattended operation").
+out/run-logs/

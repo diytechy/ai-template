@@ -33,6 +33,10 @@ def test_scaffold_contains_expected_files(scaffold):
         "run.cmd",
         "run.sh",
         "run.command",
+        "agent-resume.cmd",
+        "agent-resume.sh",
+        "agent-resume.command",
+        "scripts/agent_loop.py",
     ]:
         assert (scaffold / rel).exists(), "missing from scaffold: " + rel
 
@@ -196,6 +200,50 @@ def test_run_launchers_ship_inert_with_edit_slots(scaffold):
     command = (scaffold / "run.command").read_text(encoding="utf-8")
     assert "./run.sh" in command, ".command must delegate to run.sh"
     assert "RUN_CMD=" not in command, ".command must not carry a third copy"
+
+
+def test_agent_resume_launchers_ship_inert_with_edit_slots(scaffold):
+    # The work-resume counterpart of run.* (Thread 33): root agent launchers
+    # over scripts/agent_loop.py, shipped inert (empty AGENT_CMD) with a
+    # marked EDIT slot and an explicit consent note; .command delegates to
+    # .sh so the POSIX slots live once.
+    cmd = (scaffold / "agent-resume.cmd").read_text(encoding="utf-8")
+    assert 'set "AGENT_CMD="' in cmd, "agent-resume.cmd must ship inert"
+    assert "EDIT FOR YOUR PROJECT" in cmd
+    assert "CONSENT" in cmd
+    sh = (scaffold / "agent-resume.sh").read_text(encoding="utf-8")
+    assert 'AGENT_CMD=""' in sh, "agent-resume.sh must ship inert"
+    assert "CONSENT" in sh
+    command = (scaffold / "agent-resume.command").read_text(encoding="utf-8")
+    assert "./agent-resume.sh" in command, ".command must delegate to .sh"
+    assert 'AGENT_CMD=""' not in command, ".command must not carry a third copy"
+    engine = (scaffold / "scripts" / "agent_loop.py").read_text(encoding="utf-8")
+    assert "run-state" in engine  # the engine, not a stub
+
+
+def test_agents_choice_seeds_agent_resume_slots(tmp_path):
+    # --agents claude seeds the launcher EDIT slots with that agent's example
+    # command (the consent line: the seeded AGENT_CMD carries the bypass flag
+    # the launcher header explains). The slots stay repo-owned EDIT blocks.
+    dest = tmp_path / "repo"
+    proc = run_py(
+        [SCRIPTS / "bootstrap.py", "--dest", dest, "--agents", "claude"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    sh = (dest / "agent-resume.sh").read_text(encoding="utf-8")
+    assert 'AGENT_CMD="claude -p {prompt} --model {model}' in sh
+    assert 'AGENT_MODEL="sonnet"' in sh
+    cmd = (dest / "agent-resume.cmd").read_text(encoding="utf-8")
+    assert 'set "AGENT_CMD=claude -p {prompt}' in cmd
+    assert "seeded agent-resume launchers" in proc.stdout
+
+
+def test_default_scaffold_leaves_agent_resume_unseeded(scaffold):
+    # No agent chosen (the CI-safe default) -> the slots stay empty; the
+    # launchers are discoverable but inert.
+    sh = (scaffold / "agent-resume.sh").read_text(encoding="utf-8")
+    assert 'AGENT_CMD=""' in sh
 
 
 def test_dry_run_writes_nothing(tmp_path):
