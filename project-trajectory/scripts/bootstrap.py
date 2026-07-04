@@ -18,6 +18,7 @@ What it creates in the destination:
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
     docs/gate                                  <- gate.template  (active gate: G1)
+    docs/gate-policy                           <- gate-policy.template  (authority: attended)
     docs/commit-identity                       <- commit-identity.template  (policy: inherit)
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
@@ -339,6 +340,127 @@ def prompt_text(prompt, default):
     return ans or default
 
 
+# The three gate-authority levels (Thread 32, process.md §4). The level is
+# chosen before the kit is ported — a one-word docs/gate-policy value; a
+# non-default level also gets the repo-local deviation register that amends
+# the untouched, kit-owned process.md (process-options.md "Gate authority
+# levels" — the NotHomeWrecker-proven pattern).
+GATE_POLICY_CHOICES = ("attended", "single-ratify", "autonomous")
+
+# Per-level deviation rows for the register skeleton: (process.md clause,
+# standard behavior, this repo). The fixed points are appended for every level.
+GATE_POLICY_DEVIATIONS = {
+    "single-ratify": [
+        (
+            "§4 acceptor, G1+G2",
+            "a human approves each gate",
+            "LLM-gate review; every human call queued as a `Needs <human>` "
+            "Open item (+ provisional decision where the driver proceeded)",
+        ),
+        (
+            "§4 ratification point",
+            "per-gate approval",
+            "one human sitting at **G2 close** ratifies/amends the queue; "
+            "ratified decisions move to docs/log.md (relocating the point = "
+            "amending this register)",
+        ),
+        (
+            "§4 acceptor, G3→G-Release",
+            "a human approves each gate",
+            "autonomous rules after ratification (LLM-gate verdicts)",
+        ),
+        (
+            "§4 consistency review 'pause and ask'",
+            "solicit the human",
+            "route by revert-cost: LOW → decide + record (log.md Decisions "
+            "log); MEDIUM/HIGH → the Blocked register; never a mid-run pause",
+        ),
+    ],
+    "autonomous": [
+        (
+            "§4 acceptor, G1→G-Release",
+            "a human approves each gate",
+            "LLM-gate: an independent fresh-context reviewer runs the harness "
+            "itself; verdict recorded in docs/log.md with `Model:` + "
+            "`Role: LLM-GATE`; the driver bumps docs/gate citing it",
+        ),
+        (
+            "mid-run escalation to the human",
+            "escalate and wait",
+            "Blocked register in status.md; continue independent work; all "
+            "blocks surface in the end-of-run report",
+        ),
+        (
+            "ask-the-human / solicit clarification",
+            "pause and ask",
+            "decide + record in the log.md Decisions log; HIGH revert-cost "
+            "gets an independent peer-tier second opinion before execution",
+        ),
+        (
+            "§4 `Attest` (named human judgment)",
+            "a human attests",
+            "LLM-Attest: named *model* judgment, reported honestly as machine "
+            "attestation in the trace report's attested-vs-mechanized split",
+        ),
+    ],
+}
+
+GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides these)
+
+- **G-Final is the human's.**
+- **No un-run greens** — a verdict or test result that wasn't actually
+  executed is a process violation regardless of tier.
+- **The harness is still the bar** — LLM judgment supplements the checks; it
+  never waives a red one.
+- **Ratified owner decisions are never re-decided by an agent** — flag a
+  problematic one as Blocked instead.
+"""
+
+
+def apply_gate_policy(dest, level, dry_run):
+    """Write a non-default gate-authority level: set docs/gate-policy (keeping
+    the template's explanatory header) and scaffold the deviation-register
+    skeleton (docs/gate-policy.md) pre-filled for the level. Returns the list
+    of dest-relative paths written."""
+    if level == "attended" or dry_run:
+        return []
+    header = [
+        ln
+        for ln in (KIT / "gate-policy.template")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if ln.startswith("#")
+    ]
+    policy = dest / "docs" / "gate-policy"
+    policy.parent.mkdir(parents=True, exist_ok=True)
+    policy.write_text("\n".join(header + [level]) + "\n", encoding="utf-8")
+    register = dest / "docs" / "gate-policy.md"
+    written = ["docs/gate-policy"]
+    if not register.exists():
+        rows = "\n".join(
+            "| {} | {} | {} |".format(*row) for row in GATE_POLICY_DEVIATIONS[level]
+        )
+        register.write_text(
+            "# Gate-authority deviation register — `{level}`\n\n"
+            "**Status:** DRAFT — ratify with the owner, then keep in version "
+            "control.\n"
+            "**What this is:** this repo declares the `{level}` gate authority "
+            "(`docs/gate-policy`; process.md §4). The kit-owned process doc is "
+            "never edited per-repo (a re-sync overwrites it); this register "
+            "amends it (process-options.md \"Gate authority levels\"). Where "
+            "the two disagree, this file wins — except the fixed points at "
+            "the bottom, which nothing overrides.\n\n"
+            "## Deviation register\n\n"
+            "| process.md clause | Standard behavior | This repo |\n"
+            "|---|---|---|\n"
+            "{rows}\n\n"
+            "{fixed}".format(level=level, rows=rows, fixed=GATE_POLICY_FIXED_POINTS),
+            encoding="utf-8",
+        )
+        written.append("docs/gate-policy.md")
+    return written
+
+
 def apply_commit_identity(dest, policy, dry_run):
     """Write a declared (non-`inherit`) policy into docs/commit-identity,
     keeping the template's explanatory header. Identity belongs at repo
@@ -383,6 +505,10 @@ MAPPING = [
     # read it, so a young project's CI enforces the bar it is actually at;
     # closing a gate = the human bumps this file in a reviewed commit.
     ("gate.template", "docs/gate"),
+    # The declared gate authority (Thread 32, process.md §4): who accepts a
+    # gate advance. Scaffolds `attended`; --gate-policy sets a non-default
+    # level and pre-fills the deviation-register skeleton for it.
+    ("gate-policy.template", "docs/gate-policy"),
     # The declared commit-identity policy (Thread 38, process-options.md "Commit
     # identity & anonymity"): `inherit` by default; --commit-identity overrides.
     ("commit-identity.template", "docs/commit-identity"),
@@ -625,6 +751,16 @@ def main():
         "data|any). Omitted + interactive -> ASK; non-interactive -> no filter.",
     )
     ap.add_argument(
+        "--gate-policy",
+        choices=GATE_POLICY_CHOICES,
+        default=None,
+        help="declared gate authority for docs/gate-policy (process.md §4): "
+        "attended|single-ratify|autonomous. Omitted + interactive TTY -> ASK; "
+        "non-interactive -> 'attended' (the default level; zero change). A "
+        "non-default level also scaffolds the deviation-register skeleton "
+        "(docs/gate-policy.md) pre-filled for it.",
+    )
+    ap.add_argument(
         "--commit-identity",
         default=None,
         metavar="PATTERN",
@@ -665,6 +801,21 @@ def main():
         skills = select_skills(stack, domain, binary_assets)
     else:
         skills = []
+
+    # Resolve the gate-authority level the same consent-first way: explicit
+    # flag wins; else ASK on an interactive TTY; else 'attended' (CI-safe —
+    # the scaffolded default file already says attended). Selection belongs
+    # before the port: the level shapes how every later gate is run.
+    gate_policy = (
+        args.gate_policy
+        if args.gate_policy is not None
+        else prompt_choice(
+            "Gate authority for this repo? (who accepts a gate advance — "
+            "process.md §4)",
+            GATE_POLICY_CHOICES,
+            "attended",
+        )
+    )
 
     # Resolve the commit-identity policy the same consent-first way: explicit
     # flag wins; else ASK on an interactive TTY; else 'inherit' (CI-safe — the
@@ -737,6 +888,14 @@ def main():
     created.extend(
         materialize_agent_layer(dest, agents, skills, args.dry_run, args.force)
     )
+
+    # A declared non-default gate authority overwrites the scaffolded default
+    # and lays down the deviation-register skeleton for the level.
+    for rel in apply_gate_policy(dest, gate_policy, args.dry_run):
+        if rel not in created:
+            created.append(rel)
+    if gate_policy != "attended":
+        print("  gate-authority level: {}".format(gate_policy))
 
     # A declared (non-inherit) identity policy overwrites the scaffolded
     # default — this is the one moment identity is free to fix (pre-commit).

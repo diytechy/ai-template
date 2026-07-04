@@ -258,7 +258,18 @@ outside the kit's required path.
 
 ## 4. Objectives, gates, and exit criteria
 
-Advance only when criteria pass; **pause for human approval at each gate**.
+Advance only when criteria pass. **Who accepts an advance is the repo's
+declared gate authority** — the one-word `docs/gate-policy` file (tracked like
+`docs/gate`), one of three levels: **`attended`** *(default)* — **pause for
+human approval at each gate**; **`single-ratify`** — LLM-gate review through
+G1+G2 with every human call queued, one human ratification sitting at G2
+close, autonomous rules after; **`autonomous`** — every gate except G-Final
+closes on an independent fresh-context LLM reviewer's recorded verdict. Full
+mechanics + the deviation-register pattern:
+[process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
+**Fixed points at every level:** G-Final is the human's; no un-run greens; the
+harness is still the bar (LLM judgment never waives a red check); ratified
+owner decisions are never re-decided by an agent.
 The active gate is recorded machine-readably in the one-line `docs/gate` file;
 closing a gate bumps it in a reviewed commit (§7 "The active gate").
 Define machine-checkable criteria wherever possible; classify the rest honestly.
@@ -470,7 +481,7 @@ Findings:
 
 Gate sign-offs live in the **Gate Sign-offs** table in `log.md`; the driver
 records the gate decision there, cites it from status.md's *Active gate* line,
-and pauses for the human.
+and requests acceptance per the declared gate authority (§4).
 
 **Voice policy — warmth has a layer boundary.** Personality is a human value, not
 a machine one: **human-facing** output (CLI narration, a kickoff greeting, a
@@ -529,7 +540,7 @@ decisions often — the human ratifies even medium calls; a low-risk domain
 (creative content) where a reverted decision costs little tech debt lets a
 **confident** agent decide autonomously, **provided the decision is recorded**
 (pending → `status.md` Assumptions/Open items; ratified → the `log.md`
-Decisions log, §5) so it stays auditable and revertible. The dial never moves the fixed points — gates still pause (§4/§5),
+Decisions log, §5) so it stays auditable and revertible. The dial never moves the fixed points — gates still close only per the declared gate authority (§4),
 contradictions still route as findings. Full doctrine: point (e) of the
 [proportionality doctrine](process-options.md#proportionality-doctrine).
 

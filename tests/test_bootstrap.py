@@ -13,6 +13,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/process.md",
         "docs/process-options.md",
         "docs/gate",
+        "docs/gate-policy",
         "docs/commit-identity",
         "docs/status.md",
         "docs/log.md",

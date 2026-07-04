@@ -73,7 +73,8 @@ into a straitjacket. Four points, one voice:
   moved to `log.md`'s *Decisions log* once ratified — the call, the alternatives
   passed over, why; PROCESS.md §5) so it stays visible,
   auditable, and cheaply revertible. The dial moves *how often you ask*, never
-  the fixed points: gates still pause for human approval (§4), and a requirement
+  the fixed points: gates still close only per the declared gate authority
+  (§4), and a requirement
   **contradiction** still routes as a finding to its owner — an unrecorded
   autonomous decision is a *silent* one, which no dial setting permits.
 
@@ -142,6 +143,102 @@ the set when the scope needs them.
   dependency is required at Provision but used at Runtime; config must exist at
   Provision, is loaded at Startup, may reload at Runtime. The `Lifecycle` tag on
   the concrete requirement already places it; don't add a second "kind" axis.
+
+## Gate authority levels
+
+*Referenced from PROCESS.md §4.* **Applies when** a repo declares a
+non-default `docs/gate-policy` — i.e. wants gates accepted by something other
+than a per-gate human pause. The default **`attended`** level needs none of
+this section — it is exactly the §4/§5 flow. Generalized
+from a field adoption's ratified deviation register (the NotHomeWrecker
+prototype), which remains this layer's worked reference.
+
+**Selection.** The level is chosen **before the kit is ported** — by the
+owner, with an agent recommendation from the project brief
+(`bootstrap.py --gate-policy`, or interactively at scaffold time;
+KICKOFF_PROMPT.md carries the recommendation step). Calibrate on the §6
+risk axis: safety, money, privacy, or irreversibility ⇒ `attended`; low-risk
+creative/tooling scopes are `autonomous`-eligible. Changing the level later is
+a reviewed commit that edits `docs/gate-policy` and the register below.
+
+**The deviation register (`docs/gate-policy.md`).** The kit-owned process doc
+is never edited per-repo (it is overwritten on re-sync); a non-default level
+lives in a repo-local register that *amends* it: a table of `process.md`
+clause → standard behavior → this repo's behavior, ratified by the owner,
+with the fixed points at the bottom that nothing overrides. Where the two
+disagree, the register wins — except the fixed points. `bootstrap.py`
+scaffolds the skeleton pre-filled for the chosen level.
+
+**Machine surface: none beyond the two files.** `check.py`/`trace.py` behave
+identically at every level — authority is *who accepts*, not what runs. The
+harness is the bar everywhere; a red check is a red check.
+
+### The three levels
+
+- **`attended`** *(default)* — a human approves each gate (G1/G2/G3/G-Release)
+  and G-Final. The standard §4/§5 flow; nothing else in this section applies.
+- **`single-ratify`** — the driver advances through G1+G2 with LLM-gate review
+  (below), **queuing every human call** instead of pausing: each becomes a
+  `Needs <human>` Open-items bullet in `status.md` plus, where the driver had
+  to proceed, a provisional decision. At the **ratification point — fixed at
+  G2 close** — the human reviews the accumulated list + gate evidence in one
+  sitting and ratifies or amends (ratified decisions move to `log.md`'s
+  Decisions log, §5); G3→G-Release then run under `autonomous` rules. G-Final
+  stays human. *Why G2 close:* every requirement/design ambiguity is resolved
+  exactly once, over cheap artifacts (registries and docs, not code), before
+  the expensive autonomous implementation stretch. An adopting repo *may*
+  relocate the ratification point by amending its own register — the kit does
+  not parameterize it. **Post-ratification questions route by revert-cost**,
+  never a mid-run pause (the ratifier accepted bounded risk; momentum is the
+  level's value): LOW → decide + record in the Decisions log; MEDIUM/HIGH →
+  the Blocked register.
+- **`autonomous`** — every gate except G-Final closes on the LLM-gate verdict;
+  mid-run human escalation is replaced by the Blocked register, ask-the-human
+  by the Decisions log (HIGH revert-cost decisions get an independent
+  peer-tier second opinion *before* execution), human `Attest` by LLM-Attest.
+  The reviewer tier is the strong-model floor (§6 tiering) and is never
+  delegated down.
+
+### The LLM-gate verdict protocol
+
+A gate closes only on the verdict of an **independent LLM reviewer**:
+
+- **Fresh context** — a separately spawned agent that did *not* drive the work
+  it reviews; it gets the gate's §4 criteria, the §6 adversarial framing (hunt
+  for defects, stubs, spec drift, untested claims — never rubber-stamp), and
+  pointers to the artifacts, and re-derives its own view.
+- **Runs the harness itself** — the reviewer executes `check.py`/`trace.py`
+  and quotes real output; a verdict citing a run it didn't perform is invalid.
+- **Verdict recorded** in `log.md` per §5, extended with `Model: <model id>`
+  and `Role: LLM-GATE`; the Gate Sign-offs acceptor column reads `LLM-GATE`.
+  APPROVE → the driver bumps `docs/gate`, citing the verdict block (the
+  verdict is the review of record). CHANGES-REQUESTED → findings route to
+  their owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
+
+### The Blocked register (replaces mid-run escalation)
+
+When a finding survives `MAX_ROUNDS`, a call is MEDIUM/HIGH revert-cost after
+ratification, or a step is impossible without the owner (a purchase, an
+account, a physical action): record it under **Blocked** in `status.md` —
+what, why, rounds spent, the driver's best-judgment recommendation — and
+**continue with independent work**. Every Blocked item surfaces prominently
+in the end-of-run report; a block that gates the deliverable itself downgrades
+it honestly (partial + explanation), never silently.
+
+### The Decisions log (replaces ask-the-human)
+
+Where the process says *ask / pause / solicit clarification*, an autonomous
+driver decides and appends to the `log.md` Decisions log (§5): what was
+chosen, why, the alternatives, `Revert cost: LOW|MEDIUM|HIGH`, `Model:`. A
+decision is never a license to expand scope — one that would contradict a
+ratified owner decision is a Blocked item, not a new decision.
+
+### LLM-Attest (replaces human Attest at `autonomous`)
+
+For subjective judgments that must not fake being tests: the TC records
+`Attest` with **which model** attested, when, and the one-line judgment —
+reported in the attested-vs-mechanized split as *machine* attestation, never
+disguised as `Test`. G-Final is where the owner's eyes replace these.
 
 ## §7 boundary notes
 

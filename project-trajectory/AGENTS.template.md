@@ -39,8 +39,9 @@ gates, and the ID scheme. The short version an agent needs every session:
 - **Write the test first (TDD).** A requirement's G2 test case is a *failing*
   test before the code that satisfies it: red → green → refactor. This is *how*
   G3 code gets written — within the traceability spine, not instead of it.
-- **Gates G1→G2→G3→(G-Release)→G-Final each pause for human approval.** Never
-  advance a gate yourself; record it in [docs/status.md](docs/status.md).
+- **Gates G1→G2→G3→(G-Release)→G-Final close per the declared gate authority**
+  (`docs/gate-policy`; default: pause for human approval). Never self-advance
+  a gate; log it in `docs/status.md`.
 - **The check harness is the bar:** `python scripts/check.py` (launchers:
   `scripts/check.{sh,ps1}`) runs format, lint, tests, coverage, traceability,
   flow checks, and map freshness at the repo's active gate (`docs/gate`);
@@ -51,7 +52,7 @@ gates, and the ID scheme. The short version an agent needs every session:
   [docs/architecture.md](docs/architecture.md) "Runtime flows", written with
   the LLRs and kept current with them (`scripts/check_flows.py` enforces;
   process.md §3).
-- **Releases (if this project ships versioned):** G-Release runs the `release`
+- **Releases (if versioned):** G-Release runs the `release`
   tier plus the generated human checklist (`scripts/gen_release_checklist.py`).
 - **The code map is generated** (`scripts/gen_arch_map.py`): per-module
   summary, internal dependencies, and public symbols with `Implements:`
@@ -157,7 +158,7 @@ Direct and concrete; explain the *why* before the *how*.
 - **Ask, don't assume.** Unclear intent, architecture, or requirement → ask
   before writing code. Running unattended: pick the most reasonable
   interpretation, proceed, and **record it** under *Assumptions* in
-  [docs/status.md](docs/status.md) to confirm or revert at the next gate.
+  `docs/status.md` to confirm or revert at the next gate.
   Raise a **conflict or ambiguity** between requirements as a finding — never
   silently resolve it (process.md §4 "Consistency review"). How *eagerly* to
   ask is the project's **decision dial** (process.md §6): high-risk domains

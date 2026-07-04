@@ -110,27 +110,31 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
 low-level requirement (links SR, names module/symbol) → `TC-###` test case
 (links the SR/LLR it verifies). Zero-padded, stable, never reused.
 
-## Gates (advance only when criteria pass; PAUSE for human approval at each)
+## Gates (advance only when criteria pass)
+
+Each gate closes per the repo's **declared gate authority** — the one-word
+`docs/gate-policy` file (default `attended`: pause for human approval at each
+gate; the `single-ratify`/`autonomous` levels and their mechanics:
+`PROCESS.md` §4 + `PROCESS_OPTIONS.md` "Gate authority levels").
 
 - **G1 — Requirements, UX & constraints.** SN list complete with priorities,
   measurable acceptance intent, and **edge-case expectations covering each
   lifecycle phase** — Provision/Startup/Runtime at minimum, an explicit n/a per
   phase allowed (see checklist);
   every SR links ≥1 SN and has measurable acceptance criteria; usability/docs
-  needs captured; constraints/non-goals explicit. Human approves.
+  needs captured; constraints/non-goals explicit.
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or marked
   Analysis/Inspection); every SR and LLR has ≥1 TC; traceability reports **0
-  orphans**; the harness runs locally and in CI. Human approves.
+  orphans**; the harness runs locally and in CI.
 - **G3 — Implementation (test-first).** Each G2 TC becomes a *failing* test
   before the code that satisfies it (red → green → refactor). Build green, lint
   clean, the **full** test tier passes, coverage ≥ threshold; every
   test-verifiable SR is **Verified**, and every remaining SR is explicitly
   classified **Demonstration / Manual / Inspection** (nothing hand-waved).
-  Human approves.
 - **G-Release — Release readiness** *(per release; skip for a one-off)*. The
   **release** test tier passes; the generated release checklist
   (`scripts/gen_release_checklist.py`) is completed + signed; version bumped;
-  changed `Stable` interface versions communicated. Human approves.
+  changed `Stable` interface versions communicated.
 - **G-Final — Acceptance.** A human/stakeholder exercises the real product
   (including the Demonstration/Manual items) and signs off.
 
@@ -180,13 +184,20 @@ record an explicit n/a where one truly doesn't apply.
 
 1. Read the PROJECT BRIEF below; restate scope, audience, constraints, and
    **non-goals** in `docs/status.md`.
-2. Scaffold the artifacts and the check harness (empty registries + headers).
-3. Run **G1**: as Stakeholder, write SN-### (incl. edge cases); as UX, capture
+2. **Recommend a gate-authority level** from the brief, risk-calibrated per the
+   §6 decision-surfacing dial (safety / money / privacy / irreversibility ⇒
+   `attended`; low-risk creative/tooling ⇒ `autonomous`-eligible). Record the
+   recommendation + the owner's choice in `docs/status.md`; the owner sets
+   `docs/gate-policy` (non-default levels get the deviation register —
+   `PROCESS_OPTIONS.md` "Gate authority levels").
+3. Scaffold the artifacts and the check harness (empty registries + headers).
+4. Run **G1**: as Stakeholder, write SN-### (incl. edge cases); as UX, capture
    usability/doc needs; as System Engineer, derive measurable SR-###. Reconcile,
-   then **pause for human approval.**
-4. Proceed gate by gate. Before each gate, do the review (self or independent per
-   the risk triage), drive traceability orphans to zero, and pause for the human.
-5. End every working turn with: current gate, what changed, gate status
+   then **close the gate per the gate authority.**
+5. Proceed gate by gate. Before each gate, do the review (self or independent per
+   the risk triage), drive traceability orphans to zero, and request acceptance
+   per the gate authority.
+6. End every working turn with: current gate, what changed, gate status
    (criteria + sign-offs), and the exact next action awaiting approval.
 
 ---
@@ -203,6 +214,9 @@ record an explicit n/a where one truly doesn't apply.
   Network, Security, Data/ML, Hardware, Mechatronics — or "none")_
 - **Release cadence (one-off deliverable vs. versioned releases):** _(decides
   whether G-Release + the release checklist apply)_
+- **Gate authority (attended / single-ratify / autonomous):** _(who accepts
+  gate advances — see the Gates section; leave blank for the agent's
+  recommendation in "How to start")_
 - **Project scale (default: one module, one repo):** _(bias **low** — pick the
   lowest rung the scope forces. A repo may hold several modules on one spine
   (grouped by `Module`/`Area`) if it grows distinct sub-systems; a multi-repo split

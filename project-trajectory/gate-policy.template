@@ -1,0 +1,12 @@
+# Gate-authority policy (process.md §4; process-options.md "Gate authority
+# levels"). One value on the last line — who approves a gate advance:
+#   attended      — a human approves each gate (the default; standard §4).
+#   single-ratify — LLM-gate review through G1+G2; the human ratifies the
+#                   queued decisions once at G2 close; autonomous rules after.
+#   autonomous    — every gate except G-Final closes on an independent
+#                   fresh-context LLM reviewer's recorded verdict.
+# A non-default level is amended into the repo by the deviation register
+# (docs/gate-policy.md — scaffolded by `bootstrap.py --gate-policy`); the §4
+# fixed points hold at every level. Change this value in a reviewed commit,
+# like docs/gate.
+attended
