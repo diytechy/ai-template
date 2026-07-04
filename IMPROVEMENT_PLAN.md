@@ -3253,6 +3253,20 @@ them, and the copies drift apart silently.
 freshness-gated instead of dropped. (Finance-Auditor dropped it — losing the
 exact anti-drift lever the kit prizes — because drop was the only option.)
 
+**Why this one script is stack-coupled at all (owner asked 2026-07-04):**
+the process layer *does* stay stdlib Python on every adopter — trace /
+check_docs / flows read **kit-owned artifacts** (CSVs, Markdown), which are
+stack-neutral, and they survived a full stack swap byte-for-byte.
+`gen_arch_map.py` is the one process script whose **input is the product's
+source code**: it parses `src/` with Python's `ast` module, which can only
+read *Python*. On a TS repo the script runs fine, sees zero parseable files,
+and fills an empty map that is "fresh" forever (the Thread-25 vacuous pass).
+The implementation language was never the issue — the *parseable* language
+is. Symbol-level parsing of language X needs a parser from X's own ecosystem
+(the FileBackup ps1 port is written *in* PowerShell for the same reason);
+option (b) instead keeps the script Python forever by reading what any
+language can supply — the file tree + a summary-comment convention.
+
 - ★ **Stdlib file-level fallback (`gen_arch_map.py --mode files`)** — *gain:*
   works for every stack forever with zero new runtimes; testable in the kit's
   own suite; the drift gate stays real (file added/removed/renamed or a
