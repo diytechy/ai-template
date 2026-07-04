@@ -42,6 +42,38 @@ try {
         }
     }
 
+    # Apply the repo's commit-identity policy (docs/commit-identity —
+    # process-options.md "Commit identity & anonymity"): when it names an email
+    # pattern and this clone's effective identity doesn't match, ask for
+    # name/email and set them REPO-LOCALLY — never --global. Consent-first:
+    # prompts only when interactive; otherwise warns (the pre-commit hook is
+    # the enforcement — it blocks a mismatched commit either way).
+    if (Test-Path "docs/commit-identity") {
+        $policy = (Get-Content "docs/commit-identity" |
+            Where-Object { $_.Trim() -and -not $_.Trim().StartsWith("#") } |
+            Select-Object -First 1)
+        if ($policy) { $policy = $policy.Trim() }
+        if ($policy -and $policy -ne "inherit") {
+            $email = ""
+            try { $email = (git config user.email 2>$null) } catch {}
+            if (-not ($email -like $policy)) {
+                if (-not [System.Console]::IsInputRedirected) {
+                    Write-Host "This repo's commit-identity policy is '$policy'; this clone's identity is '$(if ($email) { $email } else { "unset" })'."
+                    $ciName = Read-Host "Author name for this repo"
+                    $ciEmail = Read-Host "Author email (must match $policy; GitHub anonymous form: <user>@users.noreply.github.com)"
+                    git config user.name "$ciName"
+                    git config user.email "$ciEmail"
+                    Write-Host "Set repo-local identity for this clone (global config untouched)."
+                }
+                else {
+                    Write-Warning ("commit-identity policy '$policy' unsatisfied (email '$(if ($email) { $email } else { "unset" })'); " +
+                        "rerun scripts/setup interactively or set a repo-local git config user.name/user.email - " +
+                        "the pre-commit hook blocks mismatched commits.")
+                }
+            }
+        }
+    }
+
     Write-Host ""
     Write-Host "Setup complete. Run the harness with: .\scripts\check.ps1 --gate G3"
     Write-Host "(check.ps1 uses the venv python directly; no activation needed.)"

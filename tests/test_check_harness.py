@@ -116,6 +116,31 @@ def test_step_plan_wiring():
             )
 
 
+def test_missing_command_is_designed_failure():
+    # A rewired step ("swap the format/lint/test commands for your toolchain")
+    # names an executable the module guard can't see (npx, cargo, ...). Its
+    # absence must be a designed FAIL with guidance — not a raw
+    # FileNotFoundError traceback — and --lenient downgrades it to SKIP,
+    # exactly like the module guard.
+    import sys
+
+    check = load_script("check")
+    status, detail = check.run_step(
+        "demo", (), ["no-such-tool-t29", "--check"], lenient=False
+    )
+    assert status == "FAIL"
+    assert "no-such-tool-t29" in detail
+    assert "not found" in detail
+    status, detail = check.run_step("demo", (), ["no-such-tool-t29"], lenient=True)
+    assert status == "SKIP"
+    # The reference plan is unaffected: sys.executable is a real path, so the
+    # guard resolves it without a PATH lookup.
+    status, _detail = check.run_step(
+        "noop", (), [sys.executable, "-c", "pass"], lenient=False
+    )
+    assert status == "PASS"
+
+
 def test_default_gate_comes_from_gate_file(scaffold):
     # check.py without --gate reads the committed docs/gate (bootstrap writes
     # G1), so CI enforces the bar the project is actually at — a fresh scaffold

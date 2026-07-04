@@ -301,6 +301,53 @@ contract lives in the kit's `skills/README.md`; the shape:
   in the same `skills/` source layout and materialize via the same path, never
   written straight into an agent dir bypassing the index.
 
+## Commit identity & anonymity
+
+*Enforced by `.githooks/pre-commit` and applied by `scripts/setup.{sh,ps1}`
+(the PROCESS.md §7 process floor).* **Applies when** a repo is pseudonymous or
+public under privacy constraints — commits must (or must not) carry a
+particular identity. A repo without the concern keeps the default and pays
+nothing.
+
+Git stamps author/committer from `user.name`/`user.email` — the machine's
+**global** config unless the repo overrides it — so whichever identity a clone
+happens to carry lands in the history, and fixing attribution after a push is
+a history rewrite. The highest-risk shape is an unattended run committing many
+sessions under the wrong identity before anyone looks. The stance: **declare
+once, apply per clone, guard mechanically.**
+
+- **The policy file `docs/commit-identity`** (one value, tracked, like
+  `docs/gate`): `inherit` — the scaffolded default, no constraint — or an
+  **email glob the commit author must match**, e.g.
+  `*@users.noreply.github.com` (anonymous) or a pinned address (identified).
+  The pattern declares *intent* and is safe to publish in both modes; the
+  identity itself stays in per-clone git config, never committed. Deliberately
+  **repo-wide**: a pseudonymous repo constrains every contributor; per-person
+  freedom = `inherit`. Matching stays a dead-simple glob on the email.
+- **`scripts/setup.{sh,ps1}` applies it** (consent-first): when the policy is
+  non-`inherit` and the clone's effective identity doesn't match, setup prompts
+  for name/email (suggesting the host's noreply form for anonymity) and sets
+  them **repo-locally** — never `--global`. Non-interactive runs warn instead
+  of prompting.
+- **`.githooks/pre-commit` guards it:** the author identity
+  (`git var GIT_AUTHOR_IDENT`) must match the pattern or the commit is
+  **blocked** with the fix spelled out (run scripts/setup · repo-local
+  `git config user.email …` · or set the policy to `inherit`). Integrity-class:
+  wrong at any stage, expensive after a push. `inherit` skips the check.
+- **Set it at repo creation:** `bootstrap.py --commit-identity
+  <pattern|inherit>` (or its interactive ASK) — before the first commit is the
+  only moment identity is free to fix. An unattended coordinator should treat a
+  violated policy as a preflight failure, not something to notice later.
+
+**The honest boundary.** The guard covers **future commits in clones that ran
+setup** (or otherwise enabled the hook). It cannot (a) fix **existing
+history** — that is a rewrite, out of scope (ADOPTING.md §6 notes the
+migration); (b) constrain a clone that never enabled the hook and commits with
+other tooling; (c) make a repo anonymous by itself — anonymity also depends on
+the **hosting account** that pushes and on keeping machine-local
+paths/usernames out of **committed text**, which is a content concern this
+identity check deliberately does not scan for.
+
 ## §8 purchased parts
 
 *Referenced from PROCESS.md §8.* **Applies when** the product incorporates

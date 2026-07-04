@@ -1,6 +1,6 @@
 """trace.py: orphan detection and the --require-verified G3 criterion."""
 
-from conftest import make_minimal_project, run_py
+from conftest import KIT, make_minimal_project, run_py
 
 ORPHAN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
@@ -185,7 +185,7 @@ def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
     # Drop its TC -> now it is an orphan (every SR needs >=1 TC regardless of method).
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
         ATTEST_TCS.replace(
-            'TC-002,SR-002,System,creative review of the theme,Release,'
+            "TC-002,SR-002,System,creative review of the theme,Release,"
             '"attested-by=A. Rivera; attested-on=2026-07-02",'
             '"Recorded pass judgment for SR-002",No,Verified\n',
             "",
@@ -329,6 +329,60 @@ def test_area_column_is_schema_safe(scaffold):
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+# --- Thread 35: Area is a first-class (still optional) SR column ---------------
+
+AREA_MIXED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Area
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,math
+SR-002,Addition report,SN-001,"The system shall report the sum.","Realizes SN-001.","Sum is printed.",,M,Attest,Verified,
+"""
+
+
+def test_shipped_sr_template_carries_area_column():
+    # The shipped header ends with Area so a project records hat ownership
+    # without inventing its own 12th column (the Finance-Auditor field report).
+    header = (
+        (KIT / "registries" / "system-requirements.template.csv")
+        .read_text(encoding="utf-8")
+        .splitlines()[0]
+    )
+    assert header.split(",")[-1] == "Area"
+
+
+def test_area_values_yield_report_section(scaffold):
+    # A registry with real Area values gets a per-Area SR count in the report —
+    # report-only: the run stays green, and blank cells count as untagged.
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "system-requirements.csv").write_text(AREA_MIXED_SRS, encoding="utf-8")
+    (req / "low-level-requirements.csv").write_text(
+        "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
+        'LLR-001,SR-001,Pure adder,src/demo,add,"Two numbers -> sum.",(see TC),Implemented\n',
+        encoding="utf-8",
+    )
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n"
+        'TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2",Sum,Yes,Verified\n'
+        "TC-002,SR-002,Manual,read the report,Full,,Sum printed,No,Verified\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "## SRs by Area (report-only)" in report
+    assert "- math: 1" in report
+    assert "- (no Area): 1" in report
+
+
+def test_no_area_values_no_report_section(scaffold):
+    # The minimal project's registry has no Area column at all: the section must
+    # be absent, not rendered empty (legacy CSVs see zero change).
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SRs by Area" not in report
 
 
 def test_require_verified_flags_unverified_test_sr(scaffold):

@@ -18,6 +18,7 @@ What it creates in the destination:
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
     docs/gate                                  <- gate.template  (active gate: G1)
+    docs/commit-identity                       <- commit-identity.template  (policy: inherit)
     docs/status.md                             <- STATUS.template.md
     docs/architecture.md                       <- ARCHITECTURE.template.md
     docs/interfaces.md                         <- INTERFACES.template.md
@@ -100,6 +101,16 @@ assets (art, music, voice, video) whose provenance/license/attribution/contract
 and a pointer+hash are tracked in text even though the asset itself can't be
 diffed. Its `ASSET-000` placeholder is inert; a project with no binary assets
 leaves it untouched. `trace.py` integrity-checks the `ASSET-` ids only.
+
+`docs/commit-identity` (process-options.md "Commit identity & anonymity")
+declares whether this repo's commits are anonymous or identified: `inherit`
+(the scaffolded default — no constraint) or an email glob the author identity
+must match. `--commit-identity <pattern|inherit>` sets it at scaffold time —
+identity belongs at repo creation, **before the first commit**, the only moment
+it is free to fix; run interactively without the flag and bootstrap ASKS (the
+same consent-first shape as --agents; non-interactive runs keep `inherit`).
+Enforcement lives in scripts/setup.{sh,ps1} (applies a repo-local identity per
+clone) and .githooks/pre-commit (blocks a mismatched commit).
 
 This scaffolds a **single-repo** project — the default and almost-always-right
 rung of the scale ladder (process.md §10). The rare multi-repo **coordinator** rung
@@ -315,6 +326,37 @@ def prompt_choice(prompt, choices, default):
     return ans if ans in choices else default
 
 
+def prompt_text(prompt, default):
+    """Free-text prompt on a TTY; `default` when stdin isn't interactive
+    (same CI-safe contract as prompt_choice, for open-ended answers)."""
+    if not sys.stdin.isatty():
+        return default
+    try:
+        ans = input("{} (default {}): ".format(prompt, default)).strip()
+    except EOFError:
+        return default
+    return ans or default
+
+
+def apply_commit_identity(dest, policy, dry_run):
+    """Write a declared (non-`inherit`) policy into docs/commit-identity,
+    keeping the template's explanatory header. Identity belongs at repo
+    creation, before the first commit — the only moment it is free to fix —
+    so an explicitly passed/answered policy overwrites the scaffolded default."""
+    if dry_run:
+        return
+    header = [
+        ln
+        for ln in (KIT / "commit-identity.template")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if ln.startswith("#")
+    ]
+    target = dest / "docs" / "commit-identity"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(header + [policy]) + "\n", encoding="utf-8")
+
+
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so the
     non-ASCII characters in the created-file list / dirty-tree WARNING can't
@@ -340,6 +382,9 @@ MAPPING = [
     # read it, so a young project's CI enforces the bar it is actually at;
     # closing a gate = the human bumps this file in a reviewed commit.
     ("gate.template", "docs/gate"),
+    # The declared commit-identity policy (Thread 38, process-options.md "Commit
+    # identity & anonymity"): `inherit` by default; --commit-identity overrides.
+    ("commit-identity.template", "docs/commit-identity"),
     ("STATUS.template.md", "docs/status.md"),
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),
@@ -574,6 +619,17 @@ def main():
         help="declared primary domain, for skill matching (web|game|hardware|"
         "data|any). Omitted + interactive -> ASK; non-interactive -> no filter.",
     )
+    ap.add_argument(
+        "--commit-identity",
+        default=None,
+        metavar="PATTERN",
+        help="commit-identity policy for docs/commit-identity: 'inherit' (no "
+        "constraint) or an email glob the author identity must match, e.g. "
+        "'*@users.noreply.github.com' for an anonymous repo. Omitted + "
+        "interactive TTY -> ASK; non-interactive -> 'inherit'. Set it at repo "
+        'creation, before the first commit (process-options.md "Commit '
+        'identity & anonymity").',
+    )
     args = ap.parse_args()
 
     # Resolve the agent choice: explicit flag wins; else ASK on an interactive
@@ -604,6 +660,19 @@ def main():
         skills = select_skills(stack, domain, binary_assets)
     else:
         skills = []
+
+    # Resolve the commit-identity policy the same consent-first way: explicit
+    # flag wins; else ASK on an interactive TTY; else 'inherit' (CI-safe — the
+    # scaffolded default file already says inherit, so nothing extra happens).
+    identity = (
+        args.commit_identity
+        if args.commit_identity is not None
+        else prompt_text(
+            "Commit-identity policy? ('inherit' = no constraint, or an email "
+            "glob like *@users.noreply.github.com for an anonymous repo)",
+            "inherit",
+        )
+    )
 
     dest = Path(args.dest).resolve()
     if not dest.exists():
@@ -663,6 +732,14 @@ def main():
     created.extend(
         materialize_agent_layer(dest, agents, skills, args.dry_run, args.force)
     )
+
+    # A declared (non-inherit) identity policy overwrites the scaffolded
+    # default — this is the one moment identity is free to fix (pre-commit).
+    if identity and identity != "inherit":
+        apply_commit_identity(dest, identity, args.dry_run)
+        if "docs/commit-identity" not in created:
+            created.append("docs/commit-identity")
+        print("  commit-identity policy: {}".format(identity))
 
     verb = "would create" if args.dry_run else "created"
     for c in created:

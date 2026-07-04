@@ -49,8 +49,15 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
   (copy `AGENTS.template.md`; the bootstrap also lays down thin `CLAUDE.md` and
   `GEMINI.md` stubs that point at it).
 - `README.md` — the **human front door**: bootstrap lays down a skeleton (it
-  never overwrites an existing README) — **build it out from this brief**:
-  purpose, how to run/evaluate, how to get started. Wire the root
+  never overwrites an existing README) — **build it out from this brief**,
+  starting with its `## Vision` section: the brief's "Goal / one-line
+  description" seeds the **`PROJECT-VISION:`** statement (1–3 sentences: for
+  whom · what · the one thing that makes it worth building), written **before**
+  needs are derived so G1 can check them against it. That tag is the purpose
+  fact's **only home** — every other doc (the needs registry's top line, the
+  AGENTS.md "What this is" one-liner) points at `README.md#vision` instead of
+  re-authoring a variant. Then: how to run/evaluate, how to get started. Wire
+  the root
   `run.{cmd,sh,command}` launchers' `RUN_CMD` for every supported platform so
   running the product never requires recalling a command; delete them only for
   a pure library.

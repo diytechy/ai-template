@@ -222,6 +222,12 @@ range to see exactly which templates/scripts changed before you touch anything.
   cases `Release` so they don't run on unattended CI. Once the column is
   present, `trace.py --strict-schema` will also validate that values are in
   `{Smoke, Full, Release}`, so tighten any free-text entries at the same time.
+- **`Area` column on the SR registry (owner-hat coverage).** Newer kit
+  templates end the SR header with an optional `Area` column (owner-hat/domain
+  tag, process.md §1); `trace.py` reports per-Area SR counts when it carries
+  values. Adding it to an existing CSV is **optional, not a migration** — the
+  column is outside the required schema, so a legacy registry without it stays
+  green even under `--strict-schema`.
 - **`Attest` verification kind + binary-asset registry (creative / subjective
   scopes).** Newer kits add the **`Attest`** `Verification` method (a named
   human's recorded judgment — playtest, creative review, physical action — for
@@ -238,6 +244,16 @@ range to see exactly which templates/scripts changed before you touch anything.
   even though the asset itself can't be diffed. Both are opt-in; a scope with no
   subjective/binary work ignores them (process-options.md "Proportionality
   doctrine" + "Binary assets").
+- **Commit-identity policy (`docs/commit-identity`).** Newer kits declare
+  per-repo commit identity (process-options.md "Commit identity & anonymity"):
+  a one-value file — `inherit` (no constraint) or an email glob the author
+  must match — applied per clone by `scripts/setup.*` (repo-local git config,
+  never `--global`) and blocked on mismatch by the pre-commit hook. To adopt:
+  overwrite the hook + setup launchers from the kit, add the policy file
+  (`commit-identity.template` → `docs/commit-identity`), set the pattern. The
+  guard covers **future commits in clones that ran setup** only — history
+  already committed under the wrong identity needs a git history rewrite,
+  which is out of the kit's scope; decide that deliberately before publishing.
 - **Skills layer (newer kits ship `skills/`).** To bring an agent's skills into an
   already-adopted repo, re-run `bootstrap.py --agents claude|gemini|both` against
   it: it materializes the matched `kit`-scope skills into the agent dir

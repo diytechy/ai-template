@@ -1,5 +1,10 @@
 # Stakeholder Needs (SN-###)
 
+Every need below serves the [PROJECT-VISION](../../README.md#vision) — the G1
+consistency review checks each row against it: a need serving no part of the
+vision is scope creep (or a missing vision clause); a need contradicting it is
+a finding.
+
 Owned by the **Stakeholder** hat — whoever the system serves: an end user, an
 operator, or **another system** (represented by its owner/integrator).
 Plain-language needs + edge-case expectations. Engineering translations live in

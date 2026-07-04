@@ -2307,7 +2307,15 @@ juggling needed).
 
 ## Thread 29 — Field-report R1: "missing tool ≠ pass" must cover commands, not just Python modules
 
-**Status: ✔ ready to build (Session L) — no open questions.**
+**Status: ✅ landed 2026-07-04 (Session L).** `run_step()` resolves `cmd[0]`
+(`Path.exists()` or `shutil.which`, which honors `PATHEXT`) before executing
+and returns the same lenient-aware SKIP/FAIL as the module guard, with the
+"command {!r} not found — wire your stack's toolchain (see the EDIT FOR YOUR
+STACK block)" detail; the docstring's "Missing tool != pass" bullet now covers
+modules **and** commands. Deviation: PROCESS.md §7 needed no edit — it never
+names the module mechanism specifically (grep confirmed), so the spec's
+conditional clause didn't fire. Tests: `test_missing_command_is_designed_failure`
+(FAIL with detail; `--lenient` → SKIP; `sys.executable` steps unaffected).
 **Source:** field report A2/R1 (High — "the single highest value-to-effort change").
 
 **Why:** `check.py run_step()` guards a step's `requires` tuple by *Python-module
@@ -2810,7 +2818,16 @@ resync regeneration + the per-permutation matrix).
 
 ## Thread 35 — Field-report R9/D1: first-class `Area` column on the SR registry
 
-**Status: ✔ ruled 2026-07-04 (Q9: land now) — ready (Session L).**
+**Status: ✅ landed 2026-07-04 (Session L).** `Area` appended as the SR
+template's last column (guidance cell points at process.md §1 and states the
+report-only stance); `trace.py` counts real SRs per non-blank Area and renders
+an "SRs by Area (report-only)" section with an untagged count — never a
+finding, never an exit-code change; `Area` stays out of `REQUIRED_FIELDS` (the
+Thread-5/H schema-safety tests already pin legacy tolerance). EXAMPLE.md §2
+header synced (blank cells + a note pointing at §7's filled demo); ADOPTING.md
+§6 bullet states adding the column is optional, not a migration. Tests:
+shipped-header pin, per-Area report section, section absent for a no-Area
+registry.
 **Source:** field report D1/R9 (Low).
 
 **Why:** the process assigns SR ownership to domain hats and EXAMPLE.md §7
@@ -2930,9 +2947,18 @@ files; 36 lands first).
 
 ## Thread 37 — Vision / elevator statement: README-canonical, one searchable tag
 
-**Status: ✔ specced 2026-07-04, refined same day (owner: README is the
-canonical home, anchored by a unique searchable tag) — no open questions;
-ready to batch (Session L).**
+**Status: ✅ landed 2026-07-04 (Session L).** README.template.md gained the
+canonical `## Vision` section opening with the **`PROJECT-VISION:`** token
+(1–3-sentence guidance + the pointer rule); stakeholder-needs.template.md
+opens with a real `[PROJECT-VISION](../../README.md#vision)` link carrying the
+G1 lens (scope creep / contradiction), mechanically validated by the scaffold's
+check_docs run; KICKOFF's README bullet seeds the vision from the brief's
+"Goal" line, written before needs are derived, and states the pointer rule
+once; PROCESS.md §4 G1 gained the criterion (**+241 B**, flagged below);
+EXAMPLE.md shows a worked statement above its SN slice; meta-repo dogfood:
+this repo's README.md opens with the token and CLAUDE.md "What we're
+optimizing for" points at it. AGENTS.template.md untouched (9,990 B, 10 B
+headroom preserved). New test: `test_readme_vision_tag_and_needs_pointer`.
 **Source:** owner notes (2026-07-04).
 
 **Why:** nothing in the kit is named Vision. The purpose fact exists as three
@@ -3001,8 +3027,27 @@ worked one; the meta-repo dogfoods it; `pytest -q` + `check_docs` green.
 
 ## Thread 38 — Per-repo commit identity: anonymous vs identified, declared and guarded
 
-**Status: ✔ ruled 2026-07-04 (Q11: declared policy + hard guard) — ready
-(Session L).**
+**Status: ✅ landed 2026-07-04 (Session L).** New `commit-identity.template` →
+`docs/commit-identity` (default `inherit`; explanatory header kept in the
+file). `.githooks/pre-commit` gained a **Python-free** identity guard that runs
+*before* interpreter discovery (a Python-less machine is still held to the
+policy): glob-matches the author email from `git var GIT_AUTHOR_IDENT`, blocks
+with the three-way fix message (setup · repo-local git config · inherit);
+`inherit`/no-file skips at zero cost. `setup.{sh,ps1}` apply the policy
+consent-first: TTY → prompt name/email (suggesting the host noreply form) and
+set **repo-local** config, never `--global`; non-interactive → warn only (the
+hook is the enforcement). `bootstrap.py` scaffolds the file, adds
+`--commit-identity <pattern|inherit>` + an interactive ASK (same consent shape
+as `--agents`; CI default `inherit`), and an explicit non-inherit answer
+overwrites the scaffolded default at creation. PROCESS_OPTIONS.md "Commit
+identity & anonymity" states mechanism + the honest boundary (history /
+hosting account / content leaks — no thread ids in shipped prose); ADOPTING.md
+§6 migration bullet; kit README row. Thread 33's preflight stays with Session
+P as specced. Tests: hook guard end-to-end (sh+git, skip-guarded), scaffold
+default, flag override + kept header, repo-local-only static check on both
+setup scripts. Deviation: setup's *interactive* config application is covered
+by the static + hook tests rather than a TTY-simulation harness (the prompt
+path needs a pty; the enforcement path is fully tested).
 **Source:** owner question (2026-07-04): "how do we ensure commits follow the
 user's preference per repo — anonymous or user-identifiable?"
 
@@ -3624,12 +3669,17 @@ warning scrolls by in exactly the unattended case).
   run can add tens of MB, compounding per leg.
 
 **Proposed sessions (rulings landed 2026-07-04).**
-**▶ NEXT: Session L** — then M → R, then N/O/P/Q/S per the dependencies
+**▶ NEXT: Session M** — then R, then N/O/P/Q/S per the dependencies
 below (N and O are independent and can slot anywhere). Move this marker as
 sessions land (Session-protocol step 4).
-- **Session L** — Threads **29 + 35 + 37 + 38** (mechanical, file-coherent
-  batch: check.py guard + registry column + the vision tag + the
-  commit-identity guard). *Thread 34 moved out — the Q8 ruling made it a
+- **Session L ✅ landed 2026-07-04** — Threads **29 + 35 + 37 + 38**
+  (mechanical, file-coherent batch: check.py guard + registry column + the
+  vision tag + the commit-identity guard; per-thread Status blocks above).
+  Gates: `pytest -q` **183 passed, 1 skipped** (pre-existing, outside the
+  touched files); `check_docs --root .` **0 broken**. Byte deltas:
+  AGENTS.template.md 9,990 → 9,990 (untouched); PROCESS.md 52,064 → 52,305
+  (**+241 B** — the Thread 37 G1 vision criterion, ~2 sentences, flagged per
+  the budget convention). *Thread 34 moved out — the Q8 ruling made it a
   solo build (Session S).*
 - **Session M** — Threads **36 + 32**, solo-class, strong model (the same
   canonical files: STATUS/PROCESS/KICKOFF + the AGENTS byte squeeze; **36
@@ -3665,7 +3715,7 @@ sessions land (Session-protocol step 4).
 (2026-07-01, Session K). **All 28 threads complete.**
 **Reopened 2026-07-04** with **Threads 29–40** (the downstream-adoption field
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
-specs above.
+specs above. **29 ✅, 35 ✅, 37 ✅, 38 ✅** (2026-07-04, Session L).
 **All questions ruled by the owner 2026-07-04** — the batch's decision-briefs
 section records the rulings (Q6 Hybrid and Q8 full-conditional-templating
 override the recommendations; Q7d/Q13a amended Threads 33/40). Proposed

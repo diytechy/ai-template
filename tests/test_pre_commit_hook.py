@@ -99,6 +99,55 @@ def test_hook_runs_end_to_end_when_sh_available(scaffold):
     assert blocked.returncode != 0, blocked.stdout + blocked.stderr
 
 
+def test_hook_commit_identity_guard(scaffold):
+    # Thread 38: under an email-pattern policy the hook blocks a mismatched
+    # author before the commit exists and passes a matching one; `inherit`
+    # (the scaffolded default) skips the check entirely.
+    import pytest
+
+    sh = shutil.which("sh")
+    if not sh or not shutil.which("git"):
+        pytest.skip("needs a POSIX shell and git on PATH")
+    make_minimal_project(scaffold)
+
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=str(scaffold), capture_output=True, text=True
+        )
+
+    assert git("init").returncode == 0
+    git("config", "user.name", "Test User")
+    git("config", "user.email", "someone@example.com")
+
+    def run_hook():
+        return subprocess.run(
+            [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True
+        )
+
+    # The scaffolded default is `inherit`: any identity passes.
+    policy = scaffold / "docs" / "commit-identity"
+    body = [
+        ln
+        for ln in policy.read_text(encoding="utf-8").splitlines()
+        if ln.strip() and not ln.startswith("#")
+    ]
+    assert body == ["inherit"], "scaffold must default to inherit"
+    ok = run_hook()
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+
+    # Pattern policy + mismatched author: a designed block with guidance.
+    policy.write_text("*@users.noreply.github.com\n", encoding="utf-8")
+    blocked = run_hook()
+    assert blocked.returncode != 0, "mismatched author must be blocked"
+    assert "commit-identity" in blocked.stderr
+    assert "inherit" in blocked.stderr  # the opt-out is named in the fix text
+
+    # Matching author: green again.
+    git("config", "user.email", "12345+user@users.noreply.github.com")
+    ok = run_hook()
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+
+
 def test_optional_agent_hook_configs_are_valid_json():
     # The optional extras ship as real JSON the user can drop into .claude/.gemini.
     for name in ("claude.settings.json", "gemini.settings.json"):

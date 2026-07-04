@@ -134,6 +134,11 @@ byte-for-byte/byte-identical/bit-identical/== ...), so it is deliberately a
 consistency review (process.md §4) makes the call, and the reviewer either
 pins the predicate or accepts the wording knowingly.
 
+When the SR registry carries the optional `Area` column (owner-hat/domain tag,
+process.md §1) with real values, the report adds a per-Area SR count section —
+report-only, never an exit-code change; blank cells and registries without the
+column are simply not counted.
+
 The report always includes a "Verification basis (attested vs mechanized)"
 count (process.md §4 "Attest"): of the SRs reported Verified, how many rest on a
 runnable check vs a named human's recorded judgment (Verification=Attest). This
@@ -936,6 +941,15 @@ def main():
     # predicate (see the module docstring). Never joins a failure set below.
     advisories = ac_advisories(srs)
 
+    # Optional Area column (owner-hat/domain tag, process.md §1): count real SRs
+    # per Area so hat coverage is visible. Report-only — never a finding, never
+    # an exit-code change; a registry without the column contributes nothing.
+    area_counts = {}
+    for r in srs:
+        area = (r.get("Area") or "").strip()
+        if area:
+            area_counts[area] = area_counts.get(area, 0) + 1
+
     lines = (
         [
             "# Coverage & Traceability Report",
@@ -1046,6 +1060,19 @@ def main():
         f"- Attested (Attest): {len(attested_verified)}"
         + (f" — {', '.join(attested_verified)}" if attested_verified else ""),
     ]
+    if area_counts:
+        untagged = len(srs) - sum(area_counts.values())
+        lines += [
+            "",
+            "## SRs by Area (report-only)",
+            "",
+            "_Optional owner-hat/domain tag (process.md §1). Counts only — "
+            "never a gate; blank cells are simply untagged._",
+            "",
+        ]
+        lines += [f"- {a}: {n}" for a, n in sorted(area_counts.items())]
+        if untagged:
+            lines.append(f"- (no Area): {untagged}")
     if pbs:
         lines += ["", "## Performance budgets (§9 back-links)", ""]
         lines += (

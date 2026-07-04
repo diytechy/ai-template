@@ -263,7 +263,10 @@ The active gate is recorded machine-readably in the one-line `docs/gate` file;
 closing a gate bumps it in a reviewed commit (§7 "The active gate").
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
-- **G1 — Requirements, UX & constraints.** SN complete (priority + measurable
+- **G1 — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in
+  `README.md#vision` (the purpose fact's canonical home; other docs point at
+  it, never restate it) and the consistency review reads each need against it —
+  human-judged, like the rest of that review. SN complete (priority + measurable
   acceptance intent + edge cases, the edge cases covering **each lifecycle
   phase** in the project's vocabulary — Provision/Startup/Runtime at minimum —
   or recording an explicit n/a per phase; see "Lifecycle phase" below); every

@@ -15,10 +15,12 @@ and scripts, not a downstream application.
 
 ## What we're optimizing for
 
-The kit exists to make downstream code **maintainable and trustworthy**:
-readable for humans and agents alike, deeply tested, and advanced only through
-explicit approval gates. Every change here should make that easier to achieve in
-a real project — or get out of the way.
+The canonical purpose statement is the `PROJECT-VISION:` tag opening the root
+[README.md](README.md) — the same one-home pattern the kit ships downstream.
+In short: the kit exists to make downstream code **maintainable and
+trustworthy** — readable for humans and agents alike, deeply tested, and
+advanced only through explicit approval gates. Every change here should make
+that easier to achieve in a real project — or get out of the way.
 
 ## Principles for editing the kit
 

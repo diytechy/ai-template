@@ -10,6 +10,14 @@ as its own requirement**.
 
 ## 1. Stakeholder Need — `requirements/stakeholder-needs.md`
 
+The needs sit under the project's vision — one tagged statement in the README
+(`README.md#vision`, the canonical home every other doc points at) that G1
+checks each need against. A worked one for this project:
+
+> **PROJECT-VISION:** For spreadsheet-first users who keep their records in
+> this tool: get those records into Excel/Sheets in one click, and never hand
+> them a half-written file.
+
 | SN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
 |---|---|---|---|---|
 | SN-001 | Export my records to a file I can open in a spreadsheet. | The data is useless if I can't get it into Excel/Sheets. | M | A new user clicks/exports and the file opens in a spreadsheet with the right columns and all their rows. |
@@ -23,12 +31,12 @@ Edge-case table:
 ## 2. System Requirements — `requirements/system-requirements.csv`
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
-SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,
-SR-002,Atomic export write,SN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes SN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented,
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
+SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,,
+SR-002,Atomic export write,SN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes SN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented,,
 ```
 
-Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank here (= in scope for every phase); a phased roadmap tags rows `v1`/`v2`/… so G3 can close per phase (process.md §4 "Phased delivery").
+Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank here (= in scope for every phase); a phased roadmap tags rows `v1`/`v2`/… so G3 can close per phase (process.md §4 "Phased delivery"). `Area` (optional owner-hat/domain tag, process.md §1) is blank too — §7 below shows it filled, and trace.py reports per-Area SR counts when it is.
 
 ## 3. Low-Level Requirements — `requirements/low-level-requirements.csv`
 

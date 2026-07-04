@@ -1,9 +1,10 @@
 # ai-template
 
-A reusable starting point for building **maintainable, requirement-traced
-projects** with AI agents and humans working from the same playbook. The goal:
-code and analytics that stay readable and correct over the long run, built
-**test-first** with **explicit approval gates** so you can trust what ships.
+**PROJECT-VISION:** A reusable starting point for building **maintainable,
+requirement-traced projects** with AI agents and humans working from the same
+playbook. The goal: code and analytics that stay readable and correct over the
+long run, built **test-first** with **explicit approval gates** so you can
+trust what ships.
 
 It is **stack-agnostic** with **Python-first reference scripts** — drop it into
 any repo and wire the harness to that repo's tooling.

@@ -19,6 +19,39 @@
 # bundled sh, so this same file works on Windows, Linux, and macOS.
 set -e
 
+# Locate the repo root relative to the hook's own location (.githooks/../),
+# not the cwd (see the scripts/ note below for why cwd-relative paths bite).
+REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+
+# 0. Commit-identity policy (docs/commit-identity — process-options.md "Commit
+#    identity & anonymity"). When the file names an email pattern (anything but
+#    `inherit`), the author identity this commit would carry must match it:
+#    wrong attribution is integrity-class — near-irreversible once pushed — so
+#    a mismatch blocks *before the commit exists*. Runs before interpreter
+#    discovery (it needs no Python, and a Python-less machine must still be
+#    held to the policy). `inherit` or no file skips: zero cost for repos that
+#    don't constrain identity.
+POLICY_FILE="$REPO_ROOT/docs/commit-identity"
+if [ -f "$POLICY_FILE" ]; then
+  policy=$(grep -v '^[[:space:]]*#' "$POLICY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+  if [ -n "$policy" ] && [ "$policy" != "inherit" ]; then
+    ident=$(git var GIT_AUTHOR_IDENT 2>/dev/null || true)
+    email=$(printf '%s' "$ident" | sed -n 's/.*<\(.*\)>.*/\1/p')
+    case "$email" in
+      $policy) ;; # matches the declared pattern
+      *)
+        echo "pre-commit: author email '${email:-unknown}' does not match this repo's" >&2
+        echo "  commit-identity policy '$policy' (docs/commit-identity)." >&2
+        echo "  Fix one of:" >&2
+        echo "    - run scripts/setup (applies a matching repo-local identity), or" >&2
+        echo "    - git config user.name '...' ; git config user.email '...' (repo-local), or" >&2
+        echo "    - set docs/commit-identity to 'inherit' to drop the constraint." >&2
+        exit 1
+        ;;
+    esac
+  fi
+fi
+
 # Find a Python 3 interpreter the same way setup.sh does (python3 then python).
 # Probe by *running* the candidate, not just finding it: on Windows, `python3`
 # often resolves to the Microsoft Store app-execution alias, which exists on
@@ -38,9 +71,8 @@ fi
 # Locate the scripts directory relative to the repo root rather than using a
 # bare "scripts/" cwd-relative string. NTFS is case-preserving: a repo whose
 # existing directory is "Scripts/" keeps that name, and bare "scripts/" fails
-# on case-sensitive Linux CI even though Windows never notices. Resolve from
-# the hook's own location (.githooks/../) and accept either casing.
-REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+# on case-sensitive Linux CI even though Windows never notices. Accept either
+# casing.
 SCRIPTS_DIR=""
 for sd in scripts Scripts; do
   if [ -d "$REPO_ROOT/$sd" ]; then

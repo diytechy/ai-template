@@ -16,9 +16,10 @@ stdlib-only and stack-agnostic.
 Design choices that keep it honest and CI-friendly:
     - **Never a false green.** Any failing required step makes the whole run exit
       nonzero. We print the real command output; we do not summarize it away.
-    - **Missing tool != pass.** If a step's required module isn't importable the
-      step is reported SKIP(missing) and (outside --lenient) fails the run, so CI
-      can't silently skip linting.
+    - **Missing tool != pass.** If a step's required module isn't importable, or
+      its command's executable can't be found (a rewired non-Python toolchain
+      that isn't installed), the step is reported SKIP(missing) and (outside
+      --lenient) fails the run, so CI can't silently skip linting.
     - **One interpreter.** Tools run as `python -m ruff` / `python -m pytest` with
       the same interpreter running this script, so the launchers' venv python is
       enough — no activated venv or PATH entry required.
@@ -61,6 +62,7 @@ Usage:
 
 import argparse
 import importlib.util
+import shutil
 import subprocess
 import sys
 import time
@@ -290,6 +292,18 @@ def run_step(name, requires, cmd, lenient):
         status = "SKIP" if lenient else "FAIL"
         return status, "module(s) {} not importable by {} — run scripts/setup".format(
             ", ".join(missing), sys.executable
+        )
+    # Same guarantee for the command itself: a rewired step ("swap the
+    # format/lint/test commands for your toolchain") names an executable this
+    # interpreter knows nothing about, so the module guard above can't see its
+    # absence. Resolve it the way the OS would (a path, or PATH lookup —
+    # shutil.which honors PATHEXT on Windows) and fail by design instead of
+    # crashing with a raw FileNotFoundError.
+    if not (Path(cmd[0]).exists() or shutil.which(cmd[0])):
+        status = "SKIP" if lenient else "FAIL"
+        return status, (
+            "command {!r} not found — wire your stack's toolchain "
+            "(see the EDIT FOR YOUR STACK block)".format(cmd[0])
         )
     start = time.time()
     print("\n=== {} : {} ===".format(name, " ".join(cmd)), flush=True)

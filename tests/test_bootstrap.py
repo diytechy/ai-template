@@ -13,6 +13,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/process.md",
         "docs/process-options.md",
         "docs/gate",
+        "docs/commit-identity",
         "docs/status.md",
         "docs/architecture.md",
         "docs/requirements/system-requirements.csv",
@@ -118,6 +119,20 @@ def test_readme_scaffolded_with_project_name(scaffold):
     assert "onboard" in readme  # points at the onboarding ladder
 
 
+def test_readme_vision_tag_and_needs_pointer(scaffold):
+    # Thread 37: the README's ## Vision section (anchored by the singleton
+    # PROJECT-VISION: token) is the purpose fact's canonical home; the needs
+    # registry points at it with a real link, so check_docs mechanically keeps
+    # the pointer from dangling (test_clean_scaffold_passes exercises that).
+    readme = (scaffold / "README.md").read_text(encoding="utf-8")
+    assert "## Vision" in readme
+    assert "PROJECT-VISION:" in readme
+    needs = (scaffold / "docs" / "requirements" / "stakeholder-needs.md").read_text(
+        encoding="utf-8"
+    )
+    assert "](../../README.md#vision)" in needs
+
+
 def test_readme_never_overwritten(tmp_path):
     # Adoption case: an existing README is the project's own front door —
     # bootstrap must skip it (same default-skip contract as every template).
@@ -179,6 +194,54 @@ def test_rerun_skips_existing_files(scaffold):
     proc = run_py([SCRIPTS / "bootstrap.py", "--dest", scaffold], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert (scaffold / "CLAUDE.md").read_text(encoding="utf-8") == "customized"
+
+
+# --- Commit-identity policy (Thread 38) ---------------------------------------
+
+
+def _policy_lines(path):
+    return [
+        ln
+        for ln in path.read_text(encoding="utf-8").splitlines()
+        if ln.strip() and not ln.startswith("#")
+    ]
+
+
+def test_commit_identity_defaults_to_inherit(scaffold):
+    # The scaffolded policy is `inherit` — today's unconstrained behavior, so
+    # existing adopters and default scaffolds see zero change.
+    assert _policy_lines(scaffold / "docs" / "commit-identity") == ["inherit"]
+
+
+def test_commit_identity_flag_sets_policy(tmp_path):
+    # --commit-identity pins the policy at repo creation (before the first
+    # commit — the only moment identity is free to fix), keeping the template's
+    # explanatory header above the value.
+    dest = tmp_path / "repo"
+    proc = run_py(
+        [
+            SCRIPTS / "bootstrap.py",
+            "--dest",
+            dest,
+            "--commit-identity",
+            "*@users.noreply.github.com",
+        ],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    policy = dest / "docs" / "commit-identity"
+    assert _policy_lines(policy) == ["*@users.noreply.github.com"]
+    assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
+
+
+def test_setup_scripts_apply_identity_repo_locally_only():
+    # Both setup launchers must source the policy file and must never touch
+    # global git config — the policy is per-clone by design (repo-local
+    # `git config`, the honest boundary in process-options.md).
+    for name in ("setup.sh", "setup.ps1"):
+        text = (KIT / "scripts" / name).read_text(encoding="utf-8")
+        assert "commit-identity" in text, name + " must apply the policy"
+        assert "git config --global" not in text, name + " must stay repo-local"
 
 
 # --- Agent selection & the skills layer (WI-1.9) -----------------------------

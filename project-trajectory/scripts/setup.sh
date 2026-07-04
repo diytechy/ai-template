@@ -40,6 +40,36 @@ if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null
   echo "Enabled pre-commit hook (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
 fi
 
+# Apply the repo's commit-identity policy (docs/commit-identity —
+# process-options.md "Commit identity & anonymity"): when it names an email
+# pattern and this clone's effective identity doesn't match, ask for name/email
+# and set them REPO-LOCALLY — never --global. Consent-first: prompts only on a
+# TTY; a non-interactive run warns and moves on (the pre-commit hook is the
+# enforcement — it blocks a mismatched commit either way).
+if [ -f docs/commit-identity ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  policy=$(grep -v '^[[:space:]]*#' docs/commit-identity | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+  if [ -n "$policy" ] && [ "$policy" != "inherit" ]; then
+    email=$(git config user.email 2>/dev/null || true)
+    case "$email" in
+      $policy) : ;; # already satisfied
+      *)
+        if [ -t 0 ]; then
+          echo "This repo's commit-identity policy is '$policy'; this clone's identity is '${email:-unset}'."
+          printf "Author name for this repo: "; read -r ci_name
+          printf "Author email (must match %s; GitHub anonymous form: <user>@users.noreply.github.com): " "$policy"; read -r ci_email
+          git config user.name "$ci_name"
+          git config user.email "$ci_email"
+          echo "Set repo-local identity for this clone (global config untouched)."
+        else
+          echo "WARNING: commit-identity policy '$policy' unsatisfied (email '${email:-unset}');" >&2
+          echo "  rerun scripts/setup interactively or set a repo-local git config user.name/user.email —" >&2
+          echo "  the pre-commit hook blocks mismatched commits." >&2
+        fi
+        ;;
+    esac
+  fi
+fi
+
 echo
 echo "Setup complete. Run the harness with: ./scripts/check.sh --gate G3"
 echo "(check.sh uses the venv python directly; activating is optional.)"

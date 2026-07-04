@@ -1,12 +1,20 @@
 # {{PROJECT_NAME}}
 
 <!-- Build this README out from the PROJECT BRIEF at kickoff (the kit's
-     KICKOFF_PROMPT.md): one-line purpose, who it serves, what it does, and how
+     KICKOFF_PROMPT.md): the Vision below, who it serves, what it does, and how
      to evaluate it. The README is the human front door — it exists from day
      one and grows with the project. Replace every "fill in", then delete this
      comment. -->
 
-*(fill in: one-line purpose — who this serves and what it does)*
+## Vision
+
+**PROJECT-VISION:** *(fill in: 1–3 sentences max — for whom · what · the one
+thing that makes it worth building. Seeded from the kickoff brief's "Goal"
+line.)*
+
+This is the **canonical home** of the project's purpose. Every other document
+(the needs registry, AGENTS.md's one-liner) *points at this tag* — grep
+`PROJECT-VISION` or link `README.md#vision`; never re-author a variant.
 
 ## Run it
 
