@@ -2911,49 +2911,219 @@ worked one; the meta-repo dogfoods it; `pytest -q` + `check_docs` green.
 ## 2026-07-04 batch — open questions for the owner
 
 Answers unblock the threads noted; sessions won't start until the relevant
-question is answered (Session-protocol step 0).
+question is answered (Session-protocol step 0). **★ = recommendation.** Each
+brief states what the question actually decides, then the live options with
+what each buys and costs — enough context to decide without re-reading the
+thread.
 
-- **Q1 (T30):** Stack profile — go straight to the full `docs/stack.ini`
-  profile (recommended: it's the report's #2-value change and Thread 34's
-  stack-gating wants it), or Phase 1 only (CI/pre-commit delegate to check.py;
-  cheap, keeps ~4 EDIT sites)?
-- **Q2 (T30):** Profile format — INI via `configparser` (recommended:
-  comments, stdlib 3.8) vs JSON?
-- **Q3 (T31):** Arch-map non-Python path — is the stdlib **file-level**
-  fallback (`--mode files`) an acceptable universal bar (recommended), or
-  should a symbol-level JS/TS reference port be built now as well?
-- **Q4 (T32):** Level names `attended` / `single-ratify` / `autonomous` OK?
-  And confirm the fixed points that hold at *every* level: G-Final human, no
-  un-run greens, harness never waived, ratified owner decisions never
-  re-decided.
-- **Q5 (T32):** `single-ratify` ratification point — fixed at **G2 close**
-  (recommended: all requirement/design ambiguity resolved in one sitting,
-  before the expensive autonomous implementation stretch), or configurable?
-- **Q6 (T32):** Post-ratification human-shaped questions under
-  `single-ratify` — Blocked register (recommended: pause-free, NHW-proven) or
-  NHW-style decide+record for low-revert-cost items too?
-- **Q7 (T33, re-specced per the owner's resume-launcher directive):** confirm
-  the four calls: **(a)** scaffold `agent-resume.{cmd,sh,command}` in every
-  repo (inert until `AGENT_CMD` is filled; deletable) vs only when bootstrap
-  `--agents` chose an agent; **(b)** the name — `agent-resume.*` proposed
-  (your "LLM-Agent-Resume.cmd" reads fine too; kit launcher naming is
-  lowercase-short); **(c)** one stdlib-Python coordinator engine
-  (`scripts/agent_loop.py`, pytest-testable, supersedes maintaining
-  PowerShell+POSIX twins; NHW's trigger.ps1 cited as provenance) vs shipping
-  the ps1 as a reference script; **(d)** under an `attended` gate policy the
-  launcher boots one interactive session and *refuses* the walk-away loop —
-  OK?
-- **Q8 (T34):** Confirm the config-over-generation rule as stated (kit-owned
-  files read config, never generated per-repo; scaffold-once files may be
-  generated at bootstrap). This deliberately rejects full conditional
-  templating of PROCESS.md — flag if you want that anyway.
-- **Q9 (T35):** `Area` column — land now (recommended: pre-mass-adoption is
-  the cheap moment, the Thread-7 hinge) or defer?
-- **Q10 (T36):** Confirm the status/history split boundary + the log doc's
-  name (`docs/log.md`): audit log, Gate Sign-offs records, verdict blocks,
-  and the ratified Decisions log move to the log; Open items, the Blocked
-  register, and pending-ratification assumptions/decisions stay in status.md.
-  OK, or a different carve/name?
+### Q1 — How far to take the stack profile *(Thread 30)*
+
+**Decides:** whether the product toolchain (format/lint/test commands, tier
+mapping, src/tests paths) becomes a single declared file. Today it is encoded
+in ~6 places (`check.py`, `setup.sh`, `setup.ps1`, `ci/check.yml`,
+`hooks/pre-commit`, `pytest.ini`); a stack swap must find and rewire all of
+them, and the copies drift apart silently.
+
+- ★ **Full profile (`docs/stack.ini`)** — *gain:* a stack swap becomes editing
+  one file; CI/hook/harness can never drift; bootstrap can seed the profile
+  per `--stack` (a `node` scaffold starts with vitest-shaped commands);
+  Thread 34's rewiring checklist gets one target to name. *Downstream feel:*
+  declare your commands once, everything reads them. *cost:* a new scaffolded
+  file + parsing code the kit maintains forever; one indirection when
+  debugging a failing step; INI values are strings (multi-line commands need
+  care).
+- **Phase 1 only (CI + pre-commit delegate to `check.py`; no new file)** —
+  *gain:* cheap; kills the worst drift (CI's copy vs the harness). *cost:* a
+  stack swap still touches ~4 EDIT sites; tier mapping stays pytest-shaped
+  (A3 unresolved); nothing for bootstrap to tailor.
+- **Status quo (EDIT markers in each file)** — *gain:* zero work; commands
+  stay visible in the file that runs them. *cost:* the field report's
+  #2-ranked adoption pain persists for every non-Python repo.
+
+### Q2 — Profile file format *(Thread 30; moot if Q1 = status quo)*
+
+- ★ **INI (`configparser`)** — *gain:* stdlib on 3.8+; **comments allowed**,
+  so the profile self-documents the way the EDIT blocks it replaces do;
+  forgiving to hand-edit. *cost:* everything is a string and complex quoting
+  is awkward — acceptable here, since the values *are* shell commands.
+- **JSON** — *gain:* precise; trivially machine-written. *cost:* no comments,
+  which kills the guided-EDIT-surface quality; quoting/trailing-comma
+  foot-guns for humans.
+- **TOML — rejected up front:** `tomllib` is Python 3.11+ (breaks the kit's
+  3.8 floor) and write support isn't stdlib at all; a hand-rolled parser
+  violates edit-conservatively.
+
+### Q3 — Non-Python architecture map *(Thread 31)*
+
+**Decides:** what a non-Python repo runs so the committed code map stays
+freshness-gated instead of dropped. (Finance-Auditor dropped it — losing the
+exact anti-drift lever the kit prizes — because drop was the only option.)
+
+- ★ **Stdlib file-level fallback (`gen_arch_map.py --mode files`)** — *gain:*
+  works for every stack forever with zero new runtimes; testable in the kit's
+  own suite; the drift gate stays real (file added/removed/renamed or a
+  summary line changed ⇒ stale map ⇒ blocked commit). *Downstream feel:* keep
+  the arch-map step, change one flag. *cost:* coarser — per-file rows, no
+  symbols or dependency edges; summaries rely on a first-comment-line
+  convention the team must adopt.
+- **JS/TS port now (`gen_arch_map.reference.mjs`)** — *gain:* symbol-level
+  parity for the most common web stack. *cost:* a second-language codebase to
+  maintain; kit CI can't exercise it without node; helps only JS/TS — Go,
+  Rust, etc. still have nothing without the fallback.
+- **Both** — *gain:* universal floor + best-in-class for node. *cost:* most
+  work now, and the `.mjs` risks rotting untested until a real node adopter
+  exercises it (cheaper to accept as a contribution then).
+
+### Q4 — Automation-level names + the fixed points *(Thread 32)*
+
+**Decides:** the vocabulary the policy file, the prose, and the bootstrap
+prompt all use — and whether the non-negotiables are the right set.
+
+- ★ **`attended` / `single-ratify` / `autonomous`** — *gain:* self-describing
+  single words that read naturally both in prose and as a one-word
+  `docs/gate-policy` value; named by *how much human attention*, not by
+  mechanism, so the set can grow. *cost:* new vocabulary to define (once, in
+  §4).
+- **Acceptor-named (`human-gates` / `batch-ratify` / `llm-gates`)** — *gain:*
+  says who signs directly. *cost:* bakes the mechanism into the name
+  (`llm-gates` mislabels any future variant); clumsier in prose.
+- **Fixed points to confirm (hold at *every* level):** G-Final is the
+  human's · no un-run greens · the harness is never waived by LLM judgment ·
+  ratified owner decisions are never re-decided by an agent. These are NHW's
+  ratified floor; removing any one makes the policy unauditable — flag if you
+  want a different set.
+
+### Q5 — Where `single-ratify` ratifies *(Thread 32)*
+
+**Decides:** the one point where the human reviews the accumulated question
+list + gate evidence before the agent runs free.
+
+- ★ **Fixed at G2 close** — *gain:* every requirement + design ambiguity
+  lands in one sitting, reviewed as cheap artifacts (registries and docs, not
+  code); the expensive autonomous stretch (G3 implementation) starts fully
+  specced; simplest to document and teach. *Downstream feel:* one calendar
+  block of reading, then walk away. *cost:* questions arising during G3 get
+  no second batch (they route per Q6); a wrong design runs to completion
+  before you see it (mitigated by the LLM-gates + the harness).
+- **Configurable (`ratify-at: G1|G2|G3`)** — *gain:* per-project flexibility.
+  *cost:* more states to document and test; adds back a setup decision the
+  level exists to remove.
+- **G1 close** — *gain:* earliest human touch. *cost:* design (G2), where the
+  consequential decisions live, would run unratified — largely defeats the
+  review's purpose.
+
+### Q6 — Post-ratification human questions under `single-ratify` *(Thread 32)*
+
+**Decides:** what happens when a genuinely human-shaped question appears
+*after* the one ratification sitting.
+
+- ★ **Blocked register** — *gain:* pause-free, so the level's promise holds;
+  NHW-proven; every block surfaces prominently in the end-of-run report;
+  honest — human calls wait for the human. *cost:* work depending on a
+  blocked item stalls to run-end; the deliverable may arrive partial
+  (honestly labeled, never silently).
+- **Decide + record (NHW full-autonomous style)** — *gain:* maximum
+  throughput, fewest leftovers. *cost:* erodes the level's contract — the
+  human ratified a specific list, then decisions were made beyond it.
+- **Hybrid (decide+record LOW revert-cost; Block MEDIUM/HIGH)** — *gain:*
+  throughput with bounded exposure. *cost:* the revert-cost judgment is the
+  agent's own; requires the Decisions-log discipline anyway.
+
+### Q7 — The resume launcher: four calls *(Thread 33)*
+
+**(a) When is it scaffolded?**
+- ★ **Always, inert** (like `run.*`: an empty `AGENT_CMD` prints guidance and
+  exits nonzero) — *gain:* discoverable in every repo ("there *is* a resume
+  button"); consistent with the launcher precedent; costs nothing unused; any
+  agent CLI can fill the slot, so it stays agent-neutral in substance.
+  *cost:* one more root file in agent-less repos (deletable); the
+  `--agents none` byte-identical-scaffold test gets updated.
+- **Only when bootstrap `--agents` chose an agent** — *gain:* agent-less
+  scaffolds stay minimal; matches the skills-materialization pattern. *cost:*
+  the non-interactive default is `none`, so programmatic scaffolds never get
+  it; retrofitting means re-running bootstrap.
+
+**(b) Name**
+- ★ **`agent-resume.{cmd,sh,command}`** — matches the kit's lowercase-short
+  launcher naming (`run.*`, `onboard.*`) and the AGENTS.md vocabulary.
+- **`LLM-Agent-Resume.cmd`** — maximally explicit; casing and "LLM"
+  vocabulary inconsistent with every other kit artifact.
+- **`resume.*`** — shortest; ambiguous (reads like resuming the *product*).
+
+**(c) The engine**
+- ★ **Stdlib Python `scripts/agent_loop.py`** — *gain:* one implementation
+  for all platforms; pytest-testable against a fake agent command (stall
+  guard, DONE/BLOCKED exits, tier mapping — coverage the ps1 never had); the
+  same substrate as every other kit script. *cost:* a real build effort; a
+  Python process supervising long CLI sessions must handle per-OS
+  console/signal quirks the native ps1 sidesteps.
+- **Ship the generalized `trigger.ps1` as a reference** — *gain:* proven
+  verbatim, near-zero build. *cost:* Windows-only; untestable in the suite; a
+  POSIX twin appears the first time a Linux adopter wants it, and then there
+  are two to keep in sync.
+
+**(d) Behavior under an `attended` gate policy**
+- ★ **Refuse the loop; boot one interactive session at the right tier** —
+  *gain:* a double-click can never bypass the declared policy; still the
+  "grind from a single point" entry. *cost:* an unattended run first requires
+  flipping `docs/gate-policy` in a reviewed commit — which is the point.
+- **Allow with a `--force` flag** — *gain:* convenience. *cost:* the policy
+  file stops being authoritative.
+
+### Q8 — The config-over-generation rule *(Thread 34)*
+
+**Decides:** the kit's standing answer to "should Python scripts generate the
+artifacts per-repo instead of the agent hand-editing them?"
+
+- ★ **Ownership rule** — kit-owned, re-sync-overwritten files (process docs,
+  scripts) are **never** generated per-repo: they read declared config
+  (`docs/gate`, `docs/gate-policy`, `docs/stack.ini`). Scaffold-once,
+  downstream-owned files (AGENTS.md, README, status.md) **may** be lightly
+  generated at bootstrap (placeholders, marker-stripping, file selection).
+  *gain:* re-sync stays a clean overwrite + diff (the kit-version stamp keeps
+  working); the canonical process doc never forks, so every adopted repo
+  reads identically — humans and agents build shared fluency and findings can
+  cite a stable §N anywhere; generation eliminates exactly the mechanical
+  hand-edits. *cost:* process.md stays generic — a repo reads opt-in sections
+  it may not use (mitigated by the applies-when lines + minimum-profile
+  header); behavior lives one indirection away in config files.
+- **Full conditional templating** (generate per-repo process.md/AGENTS
+  variants from profile flags) — *gain:* each repo reads only its own
+  process; shorter docs. *cost:* re-sync must re-run generation with the
+  recorded parameters or it silently clobbers; the stable-§N shared-reference
+  property dies; the kit's test matrix multiplies per flag combination.
+- **Status quo (agent hand-edits each adoption)** — *gain:* none beyond zero
+  kit work. *cost:* the field report's B-class findings — scattered edits,
+  missed duplicated assertions, caught only by independent review.
+
+### Q9 — `Area` column now or later *(Thread 35)*
+
+- ★ **Land now** — *gain:* pre-mass-adoption is the cheap moment (the
+  Thread-7 hinge); an optional column forces zero migration (legacy CSVs
+  still pass); `trace.py` can report hat coverage; ends each project
+  inventing its own 12th column (Finance-Auditor already did). *cost:* one
+  more column of width + one more concept in every new scaffold's SR header.
+- **Defer** — *gain:* minimal header; gather more field evidence. *cost:*
+  adopters keep inventing ad-hoc variants meanwhile (D1 observed exactly
+  this), and a later standardization inherits their migrations.
+
+### Q10 — The status/history split: boundary + name *(Thread 36)*
+
+- ★ **Proposed carve** — audit log, Gate Sign-offs records, verdict blocks,
+  and the *ratified* Decisions log → `docs/log.md`; Open items, the Blocked
+  register, and anything still **awaiting** a human stay in status.md.
+  *gain:* status.md is pure "what next" (your rule, verbatim); the unattended
+  loop's per-session reload stays cheap at iteration 30; the
+  pending-vs-ratified line gives every decision exactly one home. *cost:* two
+  files in the session ritual; sign-off history sits one hop from current
+  gate state.
+- **Keep the Sign-offs table in status.md; move only audit log + notes** —
+  *gain:* gate evidence beside gate state (the current reviewer habit).
+  *cost:* sign-offs and verdicts are exactly what accretes per gate × phase ×
+  review round — the growth the rule targets.
+- **Name:** ★ `docs/log.md` (short; pairs with status.md) ·
+  `docs/history.md` (self-describing; hints narrative) · `docs/audit-log.md`
+  (matches the §6 phrase; longest). Cheap call — pick any.
 
 **Proposed sessions (pending ratification):**
 - **Session L** — Threads **29 + 34 + 35 + 37** (mechanical, file-coherent
