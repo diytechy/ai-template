@@ -1,7 +1,13 @@
 # Kit Improvement Plan
 
 Derived from `TEMPLATE_REVIEW.md` (resolved 2026-06-28) plus follow-on design
-threads and a cross-agent-portability decision. This file is the **spec a
+threads and a cross-agent-portability decision; **extended 2026-07-04** with
+Threads 29–37 from the downstream-adoption field report
+(`kit-adoption-field-report.md`, Finance-Auditor boot), a review of
+NotHomeWrecker's unattended coordinator (`trigger.ps1` + `llm-gate-policy.md`),
+and owner directives (automation levels; the status.md/history split; the
+needs-registry vision block).
+This file is the **spec a
 fresh session implements from** — each thread is self-contained with Goal /
 Steps / Tests / Risks / Done-when. Keep it updated as threads land (check items
 off; record deviations).
@@ -2298,6 +2304,671 @@ juggling needed).
 
 ---
 
+## Thread 29 — Field-report R1: "missing tool ≠ pass" must cover commands, not just Python modules
+
+**Status: ⏸ specced 2026-07-04 — no open questions; ready to build.**
+**Source:** field report A2/R1 (High — "the single highest value-to-effort change").
+
+**Why:** `check.py run_step()` guards a step's `requires` tuple by *Python-module
+importability* (`importlib.util.find_spec`). The default plan launches everything
+via `sys.executable`, so the guard is complete for the Python reference — but the
+documented rewiring path ("swap the format/lint/test commands for your
+toolchain") produces steps like `["npx", "vitest", ...]` whose absence the guard
+cannot see. A missing Node/other toolchain either crashes with a raw
+`FileNotFoundError` traceback or (if someone wraps it) becomes skippable — the
+kit's flagship anti-false-green guarantee silently doesn't hold on any non-Python
+stack. Finance-Auditor re-implemented the guard downstream; promote it upstream.
+
+**Steps:**
+- In `run_step()`, before executing: resolve `cmd[0]`
+  (`Path(cmd[0]).exists() or shutil.which(cmd[0])`); on failure return the same
+  lenient-aware `SKIP`/`FAIL` as the module guard, with a
+  "command {!r} not found — wire your stack's toolchain (see the EDIT FOR YOUR
+  STACK block)" detail. Harmless for the reference plan (`sys.executable` always
+  resolves); stdlib; cross-platform (`shutil.which` honors `PATHEXT`).
+- Update the docstring's "Missing tool != pass" bullet (modules **and**
+  commands) and, if PROCESS.md §7 names the module mechanism specifically,
+  loosen that one clause to match.
+
+**Tests:** a step whose command names a nonexistent binary FAILs with the
+missing-command detail (designed failure, no traceback); `--lenient` → SKIP;
+existing suite green (Python steps unaffected).
+
+**Risks:** effectively none — additive guard; the only behavior change is a
+confusing crash becoming a designed failure.
+
+**Done-when:** a scaffold whose product step names an absent binary reports
+FAIL/SKIP(missing-command); `pytest -q` green.
+
+**Model tier — Sonnet-able** (fully specced; ~6 lines + 2 tests).
+
+---
+
+## Thread 30 — Field-report R2/A3/A4: declare the product toolchain once (stack profile)
+
+**Status: ⏸ specced 2026-07-04 — awaiting owner answers (Q1, Q2).**
+**Source:** field report R2 (High), A3/A4 (Med).
+
+**Why:** the product toolchain is encoded in ~6 places: `check.py` (step
+commands + `SRC`/`TESTS`), `setup.sh`/`setup.ps1` (venv + pip install
+ruff/pytest), `ci/check.yml` ("Install tooling"), `hooks/pre-commit`
+(ruff-format on staged `.py`), `pytest.ini` (tier markers). A stack swap must
+find and rewire all of them, and the copies drift — the exact
+single-source-of-truth failure the kit warns downstream about. Test tiering is
+additionally pytest-marker-shaped with no declared alternative (A3), so
+non-pytest stacks invent one (Finance-Auditor used directory tiers for vitest).
+
+**Design (recommended — confirm Q1):** a small declared profile,
+`docs/stack.ini` (`configparser`: stdlib 3.8+, comments allowed — preferred
+over JSON for a human-edited file), scaffolded with the Python reference
+values so behavior is unchanged out of the box:
+`[paths] src/tests` · `[product] format/lint/test commands` ·
+`[tiers] smoke/full/release` (stack-native tier expressions — pytest `-m` for
+the reference; a directory/pattern for e.g. vitest) · `[coverage] threshold`.
+`check.py steps()` reads it when present; **absent → today's built-ins**
+(zero migration for existing adopters). The launchers/CI/hook reduce to
+pointers: CI's install block and `setup.*` keep their inherently
+stack-specific *install* commands but their EDIT markers point at the profile
+as the one place check *commands* live; `hooks/pre-commit` sources its format
+step from the profile (mechanism decided in-thread — e.g. a
+`check.py --print-step format` helper — falling back to the current
+ruff-iff-importable when no profile exists).
+
+**Phasing (from the report):** Phase 1 = CI/pre-commit delegate to `check.py`
+wherever they duplicate a product command; Phase 2 = the profile file. Phase 1
+alone removes most drift risk but keeps ~4 EDIT sites.
+
+**Tests:** profile-present scaffold runs the profile's commands (`--list`
+shows them); profile-absent behavior byte-identical to today; a malformed
+profile fails loudly (never silently ignored); a non-Python profile naming a
+missing binary hits Thread 29's guard (integration); tier expressions thread
+through to the test step.
+
+**Risks:** a config surface can rot against the docstrings — make the
+scaffolded profile the single documented home and point every EDIT marker at
+it; scope creep into a build system — the profile declares *commands*, it
+never installs anything.
+
+**Done-when:** exactly one scaffolded file declares the product toolchain;
+`check.py --list` reflects it; CI/pre-commit/setup no longer restate a command
+they can delegate or reference; `pytest -q` green.
+
+**Model tier — spec/edge-cases on the strong model; build is a solo session**
+(new parsing + wiring across 6 files = the "wide change" caution).
+
+---
+
+## Thread 31 — Field-report R3: a non-Python architecture-map path
+
+**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q3).**
+**Source:** field report A1/R3 (High).
+
+**Why:** the marker-block contract is language-agnostic, but the fillers are
+Python-AST + the PowerShell reference port only. A TS/JS/Go repo must
+"drop-and-record" the freshness check (ADOPTING.md's port-or-drop rule) —
+losing exactly the anti-drift lever the kit prizes. Finance-Auditor dropped it.
+
+**Options:**
+- **(a) JS/TS reference port** (`gen_arch_map.reference.mjs`, Node-native,
+  heuristic export/import extraction) — the ps1-port precedent; symbol-level
+  fidelity; the kit's pytest suite can only smoke-test it where node exists.
+- **(b) Stack-neutral fallback mode in `gen_arch_map.py` itself** (stdlib):
+  a `--mode files` that fills the marker block from the *source tree* —
+  per-file rows (path + first-comment-line summary, comment prefixes
+  configurable, e.g. `//`,`#`,`--`) instead of symbol-level rows. Real
+  code-derived freshness (file added/removed/renamed or summary drift ⇒ stale
+  map ⇒ blocked commit), coarser granularity, works for every stack forever,
+  fully testable in the kit's own suite.
+- **(c)** both.
+
+**Recommendation: (b) now** — it restores *a* freshness check universally with
+zero new runtimes; per-stack symbol-level ports remain contributed references
+as adopters materialize them (the ps1 precedent). Confirm whether file-level
+granularity is an acceptable fallback bar, or whether (a) should be built now
+too (Q3).
+
+**Steps (for b):** the new mode in `gen_arch_map.py` (default mode unchanged);
+ADOPTING.md's port-or-explicitly-drop rule gains the third option ("or run the
+file-level fallback — never leave a vacuous pass"); hook/`check.py` wiring
+unchanged (same script, new flag); zero-source warning still applies.
+
+**Tests:** files-mode fills the block; `--check` goes stale on file
+add/remove/rename and summary-line change; Python-AST mode byte-identical to
+today; a scaffold wired with `--mode files` passes the arch-map step end to end.
+
+**Risks:** two modes in one script must not blur the contract — the marker
+block + `--check` semantics stay identical; only row granularity differs.
+
+**Done-when:** a non-Python repo keeps a real, gate-wired arch-map freshness
+check without porting a generator; `pytest -q` green.
+
+**Model tier — solo build session** (new mode + tests), spec already strong.
+
+---
+
+## Thread 32 — Gate authority as declared policy: the three automation levels
+
+**Status: ⏸ specced 2026-07-04 — awaiting owner answers (Q4, Q5, Q6).**
+**Source:** field report B1/B2/R4 (High) + the owner's automation-levels
+directive (2026-07-04) + NotHomeWrecker's ratified `llm-gate-policy.md` as the
+proven downstream prototype.
+
+**Why (two halves, one mechanism):**
+1. *The report's half:* gate authority is hard-coded prose restated across 5+
+   files ("pause for human approval" — AGENTS.template.md:42,
+   KICKOFF_PROMPT.md ×3, PROCESS.md §4, PROCESS_OPTIONS.md, README.md, plus
+   per-gate Sign-offs lines), and duplicated *within* files. A legitimate
+   policy override becomes a scattered `MODIFIED-FROM-KIT` patch whose copies
+   get missed — the kit violating its own single-source-of-truth rule.
+2. *The owner's half:* the level of human interaction should be **selected
+   before the kit is ported** — by the user, with an agent recommendation —
+   from three named levels rather than hand-derived per repo.
+
+NotHomeWrecker proved the shape downstream: a repo-local **deviation register**
+(`llm-gate-policy.md`) that amends an *untouched* kit-owned process.md —
+LLM-gate (fresh-context adversarial reviewer that runs the harness itself and
+records a Model:/Role:-stamped verdict), Blocked register instead of mid-run
+escalation, Decisions log instead of ask-the-human, LLM-Attest, a model-tier
+floor, and fixed points nothing overrides. Upstream that pattern as a
+first-class, selectable policy instead of every autonomous repo re-inventing it.
+
+**The three levels** (proposed names — Q4):
+- **`attended`** *(default — the current behavior, unchanged):* a human
+  approves each gate (G1/G2/G3/G-Release) and G-Final.
+- **`single-ratify`** *(new):* the driver advances through G1+G2 with
+  LLM-gate-style review, **queuing every human decision** as a
+  `Needs <human>` Open-items bullet (the WI-1.17 format) plus provisional
+  decisions in a Decisions log; at one **ratification point** the human
+  reviews the full list + gate evidence in a single sitting and ratifies (or
+  amends); G3→G-Release then run under autonomous rules; post-ratification
+  human-shaped items go to the Blocked register, never a mid-run pause.
+  G-Final stays human. *Recommended ratification point: G2 close* — all
+  requirement/design ambiguity is resolved exactly once, before the expensive
+  autonomous implementation stretch (Q5).
+- **`autonomous`:** every gate except G-Final closes on an independent
+  fresh-context LLM reviewer's recorded verdict (the NHW §2 mechanism:
+  reviewer runs `check.py`/`trace.py` itself; verdict recorded per §5 with
+  `Model:` + `Role: LLM-GATE`; reviewer tier never delegated down), with the
+  Blocked register, Decisions log (+ HIGH-revert-cost second opinions), and
+  LLM-Attest.
+
+**Fixed points at every level** (from NHW §8 — these are the floor, confirm
+Q4): G-Final is the human's; no un-run greens; the harness is still the bar
+(LLM judgment never waives a red check); ratified owner decisions are never
+re-decided by an agent.
+
+**Steps:**
+- **`docs/gate-policy`** — one word (`attended|single-ratify|autonomous`),
+  scaffolded `attended`, tracked like `docs/gate`. New `gate-policy.template`.
+- **Define the levels once:** a tight core statement in PROCESS.md §4 (the
+  levels + fixed points, a few lines) with the full mechanics in a new
+  PROCESS_OPTIONS **"Gate authority levels"** layer (LLM-gate verdict
+  protocol, Blocked register, Decisions log, LLM-Attest, the single-ratify
+  ratification protocol) — generalized from NHW's register, which becomes the
+  layer's worked reference.
+- **De-duplication sweep:** every other assertion of gate authority collapses
+  to **one reference per file** — "gates advance per the repo's declared gate
+  authority (`docs/gate-policy`; default: pause for human approval)". Targets:
+  AGENTS.template.md gates bullet (**byte budget: 9,990/10,000 — the edit must
+  be paid for by a trim; run byte-budget-guard**), KICKOFF_PROMPT.md (4 hits →
+  1 + the recommendation step below), README.md:83, PROCESS_OPTIONS.md:75.
+  §4's per-gate *Sign-offs:* lines stay — they define **who signs**, which is
+  the single home; the levels redefine who the acceptor is, not the criteria.
+- **Tripwire test (kit-side):** a meta-repo test asserting the
+  "pause for human approval" phrase (and near-variants) appears at most once
+  per shipped file — so a future edit can't quietly re-scatter the claim (the
+  mechanically-checkable de-dup R4 asks for).
+- **Selection before port:** `bootstrap.py --gate-policy` (flag or
+  interactive ASK; non-interactive default `attended`); non-default levels
+  also scaffold the deviation-register skeleton (`docs/gate-policy.md`,
+  pre-filled for the chosen level with its fixed points). KICKOFF_PROMPT.md
+  gains the **agent-recommendation step**: recommend a level from the PROJECT
+  BRIEF, risk-calibrated per the §6 decision-surfacing dial (safety / money /
+  privacy / irreversibility ⇒ `attended`; low-risk creative/tooling ⇒
+  `autonomous` eligible), and record recommendation + owner's choice in
+  status.md.
+- **Machine surface:** none beyond the file — `check.py`/`trace.py` behavior
+  is identical at every level (authority is *who approves*, not what runs).
+  The Gate Sign-offs record's acceptor column carries `LLM-GATE` verdicts at
+  the autonomous level. **Record home (2026-07-04):** per Thread 36, verdict
+  blocks + the ratified Decisions log are appended to `docs/log.md`;
+  status.md keeps the Blocked register, pending-ratification items, and the
+  pointer — land Thread 36 first (same session).
+
+**Tests:** bootstrap writes `docs/gate-policy` (default `attended`;
+`--gate-policy autonomous` scaffolds the register skeleton); the tripwire
+grep test; AGENTS size-budget test stays green; `check_docs` green (new links
+resolve).
+
+**Risks:** the AGENTS budget (10 B headroom — the trim must fund the edit);
+overreach — the kit must *name* the levels, not become an agent-orchestration
+framework (execution stays Thread 33's reference layer); wording drift between
+PROCESS.md core and the OPTIONS layer — core states, layer expands, nothing
+restates.
+
+**Done-when:** gate authority is asserted in exactly one canonical place and
+referenced everywhere else (tripwire-enforced); a policy override is a
+one-line `docs/gate-policy` change + register skeleton, not a 5-file patch;
+bootstrap/kickoff select + recommend the level before work starts;
+`pytest -q` green.
+
+**Model tier — strong model, solo session** (editorial judgment across the
+canonical docs + the byte-budget squeeze; same class as Threads 26/27).
+
+---
+
+## Thread 33 — Agent-resume entry point + unattended coordinator (protocol · engine · root launchers)
+
+**Status: ⏸ re-specced 2026-07-04 (owner: every repo carries a root resume
+launcher) — awaiting owner answers (Q7). Depends on Threads 32 + 36.**
+**Source:** NotHomeWrecker `trigger.cmd`/`trigger.ps1` + kickoff.md
+"Unattended mode" (reviewed 2026-07-04) + owner directive (2026-07-04): a
+root, double-clickable way to "kick off the correct session at the correct
+tier … an easy way to grind through big items from a single point."
+
+**Why:** NHW's coordinator implements walk-away autonomy: loop fresh headless
+driver sessions (repo text as the only memory), each resuming from
+`status.md`, until `docs/run-state` says DONE/BLOCKED, a stall guard trips
+(N consecutive no-commit sessions), or a MaxIterations budget ceiling hits;
+`docs/run-phase` maps high-risk phases to a stronger model tier. The
+*protocol* is agent-neutral repo text and pairs exactly with Thread 32's
+levels. The owner's directive extends WI-1.12's evaluator's-rungs logic
+("recall is the enemy") from *running the product* to *resuming the work*:
+the repo root offers one entry point that boots the right agent, at the right
+tier, in the right mode. **Because the launcher starts in the repo root, the
+booted session inherits the whole committed context for free** —
+AGENTS.md/CLAUDE.md, `docs/status.md` + `gate` + `gate-policy` + `run-state`,
+materialized skills — the Thread-28 repo-text-is-memory property is exactly
+what makes a dumb launcher sufficient. (The per-machine half — CLI installed,
+authenticated, models available — stays outside the repo; the launcher
+preflights and reports it, as NHW's does.)
+
+**Steps:**
+- **(a) Protocol → PROCESS_OPTIONS "Unattended operation (walk-away runs)"**
+  (applies-when: gate-policy `autonomous`, or `single-ratify` after
+  ratification): the `docs/run-state` contract (one word, tracked like
+  `docs/gate`: `RUNNING` while work remains; `DONE` only at the policy's end
+  state; `BLOCKED` when everything remaining is in the Blocked register; **a
+  wrong DONE is a false green**); optional `docs/run-phase` (the phase the
+  *next* session should drive — the coordinator's model-tier key, kept
+  current in the finishing commit); commit-every-session (the stall guard
+  makes an empty session an abort signal — even a Blocked entry is a commit);
+  no-elevation and no-interactive-tools rules; **keep status.md lean across
+  iterations** — each session appends its evidence (verdicts, decisions,
+  session summary) to the Thread-36 log and leaves status.md holding only the
+  resume point + open/blocked items, so the next fresh session's reload stays
+  cheap; end-of-run evidence (status.md Current State + Blocked register;
+  verdicts + Decisions in `docs/log.md`; clean tree).
+- **(b) One coordinator engine, stdlib Python:** `scripts/agent_loop.py` —
+  port trigger.ps1's proven loop (fresh sessions until DONE/BLOCKED, git-HEAD
+  stall guard, MaxIterations budget ceiling, per-phase model map,
+  per-iteration logs under a gitignored `out/run-logs/`) onto the kit's
+  process-script substrate: **stdlib-only, 3.8+, one implementation for every
+  platform** (instead of maintaining ps1+sh twins), and **testable in the
+  kit's pytest suite against a fake agent command** (a script that commits /
+  writes run-state) — coverage the ps1 original never had. The agent
+  invocation is an **`AGENT_CMD` EDIT slot** (the RUN_CMD stance), seeded
+  from the bootstrap `--agents` choice (e.g. `claude -p <resume prompt>
+  --model <tier>`); a missing CLI → preflight report and nonzero exit, never
+  a hang. Hardening over the NHW original: capture the CLI exit code into the
+  log, guard `rev-parse` on a zero-commit repo, optional per-session timeout
+  so a hung session can't wedge the loop.
+- **(c) Root launchers, policy-aware:** `agent-resume.{cmd,sh,command}`
+  scaffolded like `run.*` (`.command` delegates to `.sh`; all three are thin
+  wrappers over the Python engine). Mode keys off **`docs/gate-policy`**
+  (Thread 32): **`attended`** → boot **one interactive session** at the right
+  tier with the resume prompt (read status.md Current State, work, stop at
+  the next human gate) — the walk-away loop is **refused**, so a double-click
+  can never accidentally launch an unattended run on an attended repo;
+  **`single-ratify` / `autonomous`** → the (b) loop with its guarantees.
+  Ships **inert** until `AGENT_CMD` is filled (guidance + nonzero exit — the
+  WI-1.12 stance); a repo that doesn't want it deletes it. This ties the kit
+  to *a* model chain only as a seeded example: the slot is stack-agnostic in
+  substance, and unused it costs nothing.
+- **(d) Provenance, not a second artifact:** the PROCESS_OPTIONS layer cites
+  NHW's `trigger.ps1` as the field-proven origin; the engine supersedes it
+  (no separate reference-only ps1 to keep in sync).
+- **Consent:** unattended mode passes the agent's permission-bypass flag —
+  the loop banner and README say so plainly; the human consents by filling
+  `AGENT_CMD` *and* declaring a non-attended gate policy *and* running it.
+  git + CI remain the enforcement floor.
+
+**Tests:** engine integration with a fake `AGENT_CMD` — stall guard aborts
+after N no-commit sessions; DONE/BLOCKED exits; phase→model mapping picks the
+declared tier; logs written; `attended` policy refuses the loop and (with a
+fake interactive command) launches exactly one session; launchers in the
+scaffold file list, inert by default; `check_docs` green; no CI dependency on
+any real agent CLI.
+
+**Risks:** shipping a permission-bypass path needs unmissable consent framing
+(banner + README + the policy refusal above); model-chain coupling — the
+`AGENT_CMD` slot is seeded only when an agent was chosen at bootstrap, so the
+kit stays agent-neutral in substance; scope — the engine loops sessions, it
+is **not** a scheduler/orchestrator (no queues, no parallel agents).
+
+**Done-when:** a fresh scaffold (agent chosen) can double-click
+`agent-resume.*` and get the right session at the right tier under the
+declared gate policy; the unattended loop honors run-state / stall / budget
+with pytest-proven behavior; the protocol prose stands alone for a downstream
+that builds its own coordinator; `pytest -q` + `check_docs` green.
+
+**Model tier — strong model, solo build session** (a new script + test suite
+— the "wide change" caution; spec is complete but the loop/timeout/subprocess
+edges deserve the tier).
+
+---
+
+## Thread 34 — Scaffold-generation boundary: config-over-generation + the mechanical scaffold cleanups
+
+**Status: ⏸ specced 2026-07-04 — awaiting owner answers (Q8; Q1 interacts).**
+**Source:** the owner's generation question (2026-07-04) + field report
+R5/R6/R7/R8, C1/C2/C3, D2.
+
+**The principle (the direct answer to "should Python generate the artifacts?").**
+Split by **ownership and re-sync fate**, not by file:
+- **Kit-owned, re-sync-overwritten artifacts** (`docs/process.md`,
+  `docs/process-options.md`, the scripts): **never generated per-repo.** They
+  stay byte-identical to the kit and *read declared config* —
+  `docs/gate` (Thread 24), `docs/gate-policy` (Thread 32), `docs/stack.ini`
+  (Thread 30). That is what keeps downstream-resync a clean overwrite; NHW
+  proved the pattern (its process.md is untouched; the deviation register
+  wins). Generating per-repo variants of these would fork the canonical doc
+  and break the re-sync diff.
+- **Scaffold-once, downstream-owned artifacts** (AGENTS.md, README.md,
+  status.md, the registries): **light generation at bootstrap is right** —
+  placeholders (`{{PROJECT_NAME}}`), meta-prose stripping, file selection,
+  section selection — because bootstrap never overwrites them again.
+So: *generation replaces LLM hand-editing exactly where the edit is
+mechanical; judgment-bearing content (the PROJECT BRIEF, requirement rows)
+stays with the kickoff agent; anything that can change after scaffold is
+config, not a generated variant.* Record this rule once (ADOPTING.md §6
+overwrite-vs-preserve is the natural home; CLAUDE.md repo-map sentence).
+
+**Steps (the mechanical cleanups the rule sanctions):**
+1. **`kit-only` strip markers (R5/C1):** bootstrap strips regions between
+   `<!-- kit-only -->` … `<!-- /kit-only -->` on copy; migrate copy-me prose
+   in **every** template into markers (INTERFACES.template.md's "Copy to
+   `docs/interfaces.md`" is the confirmed miss; sweep all `*.template.*` +
+   PROCESS_OPTIONS). Keep `TEMPLATE_REWRITES` only for in-line rewrites a
+   strip can't express (the "(template)" title). A kit-side test greps the
+   scaffold for leftover marker text and copy-me phrases.
+2. **`--stack` gains `node`** (JS/TS — one label; `js`/`ts` would fragment
+   the vocabulary) in bootstrap + the skills-matcher vocab (D2/R6).
+3. **Stack-gated artifacts (R7/C3):** when the declared stack is explicitly
+   non-Python (`node|go|rust|powershell`), don't copy `pytest.ini`; append the
+   **rewiring checklist as `Needs <human>`/`In flight` Open-items bullets in
+   the scaffolded status.md** (check.py EDIT block / setup.* / CI install
+   step / tier mapping — naming `docs/stack.ini` once Thread 30 lands) so the
+   remaining hand-edits are visible work items, not folklore. Blank/`any` →
+   today's behavior, byte-for-byte.
+4. **Fresh scaffold fully green, warnings included (R8/C2):**
+   README.template.md's Development section gains the one-line
+   `docs/interfaces.md` link ("only if this repo shares contracts…"), killing
+   the orphan-doc warn; add a test asserting `check_docs` on a fresh scaffold
+   reports **zero findings of any class**, not just zero failures.
+
+**Tests:** per-step above, plus: `--stack node` scaffold lacks pytest.ini and
+carries the checklist bullets; default scaffold unchanged byte-for-byte
+(the CI-safe property test extends).
+
+**Risks:** marker-stripping is a new transform over every template — keep it
+dumb (exact marker lines, no nesting) and tested per template; the
+status.md-checklist coupling to WI-1.17's format (reuse its bullet shape
+verbatim).
+
+**Done-when:** no scaffolded doc reads as a template; a non-Python `--stack`
+choice yields no dead Python artifacts + a visible rewiring checklist; a fresh
+scaffold is *fully* green including warnings; the generation-vs-config rule is
+stated once; `pytest -q` green.
+
+**Model tier — Sonnet-able once specced** (mechanical, well-tested sweep).
+
+---
+
+## Thread 35 — Field-report R9/D1: first-class `Area` column on the SR registry
+
+**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q9: land or defer).**
+**Source:** field report D1/R9 (Low).
+
+**Why:** the process assigns SR ownership to domain hats and EXAMPLE.md §7
+already demonstrates an ad-hoc `Area` column, but the shipped SR header
+doesn't carry it — so each project invents its own 12th column
+(Finance-Auditor did) and `trace.py` can't report hat coverage.
+
+**Steps:** append `Area` to `system-requirements.template.csv` (last column —
+minimal downstream diff), guidance cell text ("optional owner-hat/domain tag,
+blank OK — see process.md §1"); `trace.py` keeps it **out of
+`REQUIRED_FIELDS`** (blank cells + legacy CSVs without the column stay green —
+the Thread-5/H schema-safety tests already pin this) but, when the column is
+present with real values, reports a per-Area SR count section (report-only,
+never gating); EXAMPLE.md header-sync check (CLAUDE.md's standing rule);
+one-line ADOPTING.md §6 note (adding the column to an existing CSV is
+optional, not a migration).
+
+**Tests:** template header carries `Area`; a fresh scaffold passes every gate
+untouched; an Area-tagged registry yields the report section; legacy
+no-Area CSV still passes `--strict-schema`.
+
+**Risks:** none structural (optional column); mild schema-bloat concern — this
+is the report's lowest-priority item, hence Q9.
+
+**Done-when:** a project can record hat ownership without inventing a column,
+and trace.py reports it; `pytest -q` green.
+
+**Model tier — Sonnet-able.**
+
+---
+
+## Thread 36 — status.md is the working surface only: history moves to a pointed-to log
+
+**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q10). Land before/with
+Thread 32 — it relocates the record home Thread 32 writes to.**
+**Source:** owner note (2026-07-04).
+
+**Why:** status.md is currently both the blackboard *and* the archive:
+`STATUS.template.md` carries Current State + Open items + Assumptions **and**
+the Gate Sign-offs table, KICKOFF_PROMPT.md names status.md the home of the
+"append-only audit log", and WI-1.7/NotHomeWrecker additionally write verdict
+blocks and Decisions-log entries there. Every session — human or fresh-context
+agent — re-reads the file to find *what to do next*, so history accretion
+taxes exactly the cheap-context-reload property PROCESS.md §6 prizes (and
+Thread 28 named). It bites hardest in Thread 33's unattended loop: dozens of
+fresh sessions each reload status.md and append to it, so by iteration 30 the
+"resume point" is buried in evidence. Owner's rule: **status.md holds only
+what the agent or human must perform next; historical context / report
+history lives in a separate append-only doc that status.md points to.**
+
+**The boundary (recommended — confirm Q10):**
+- **Stays in status.md (actionable):** the Current State header (gate / phase /
+  resume point), Open items (Needs-human + In-flight, WI-1.17 format), the
+  Blocked register (Thread 32's levels), assumptions/decisions **awaiting
+  ratification**, the exact next action.
+- **Moves to `docs/log.md` (append-only history):** the audit log, Gate
+  Sign-offs records + LLM-gate verdict blocks, the Decisions log (ratified /
+  executed — a decision still awaiting a human is an Open item), session
+  summaries / report notes. status.md's header carries the pointer
+  ("History: docs/log.md").
+
+**Steps:**
+- Split `STATUS.template.md`; new `LOG.template.md` → bootstrap MAPPING
+  `docs/log.md`. The history sections move with their **headings preserved
+  verbatim** so downstream greps and the §5 protocol wording survive.
+- **Open-items bullets gain an optional `blocks:` clause** (owner note
+  2026-07-04): each OI bullet may name what it holds up (`blocks: G2` /
+  `blocks: TC-012` / omit when nothing waits on it), complementing the
+  already-landed WI-1.17 **Needs `<human>`** vs **In flight** split — so a
+  reviewer sees at a glance which open items gate progress and which merely
+  accumulate. Seeded in the template's example bullets (the WI-1.17
+  single-source stance: the template carries the format; no second copy).
+- Prose sweep (single-source): PROCESS.md §5 (verdicts "recorded in
+  status.md" → recorded in the log, cited from the status.md gate row) and §6
+  (the tight-header rule generalizes: the *whole file* is the working
+  surface); KICKOFF_PROMPT.md artifacts list (line 59's "append-only audit
+  log" moves to the log doc); the gate-advance + session-protocol skills'
+  sign-off wording (kit source + dogfooded copies); `AGENTS.template.md`
+  session bullet **only if its wording becomes false** — "update status.md"
+  stays true under the split, and headroom is 10 B, so prefer no edit.
+- Thread-32/33 alignment: the verdict blocks, Decisions log, and end-of-run
+  evidence those threads specify are written to the log; status.md keeps the
+  Blocked register and the pointer (their specs updated 2026-07-04).
+- ADOPTING.md §6 migration recipe (optional, proportionate — never forced):
+  create `docs/log.md`, cut the accreted history sections over, leave the
+  pointer; an adopted repo may keep its merged file.
+- `check_docs`: log.md is reachable via the status.md link (no orphan warn);
+  fresh scaffold stays fully green.
+
+**Tests:** bootstrap file list gains `docs/log.md`; scaffolded status.md
+contains no history-section headings (grep); the log template carries the
+Sign-offs/audit headings the prose references; scaffold `check_docs` fully
+green.
+
+**Risks:** a two-file ritual adds a step to every session — keep the rule
+crisp (*act from status.md; append evidence to log.md*); moving the
+Sign-offs table breaks downstream muscle memory — headings preserved verbatim
++ the ADOPTING recipe; don't let the log become a second spec home — it is
+evidence-only, never normative.
+
+**Done-when:** a fresh scaffold's status.md reads as "what next" only, with
+history in a linked append-only log; every kit reference to the old combined
+home is reconciled; `pytest -q` + `check_docs` green.
+
+**Model tier — strong model, same session as Thread 32** (same canonical
+files; 36 lands first).
+
+---
+
+## Thread 37 — Vision / elevator statement: README-canonical, one searchable tag
+
+**Status: ⏸ specced 2026-07-04, refined same day (owner: README is the
+canonical home, anchored by a unique searchable tag) — no open questions;
+ready to batch (Session L).**
+**Source:** owner notes (2026-07-04).
+
+**Why:** nothing in the kit is named Vision. The purpose fact exists as three
+unconnected fill-ins — KICKOFF brief "Goal / one-line description",
+AGENTS.template.md "What this is / one-line purpose", README.template.md
+"*(fill in: one-line purpose…)*" — and the **stakeholder-needs registry, the
+top of the spine, has none**: it opens straight into the Core-needs table.
+A very short vision at the registry top (a) ties the SN rows together — G1's
+consistency review gains a cheap lens: a need serving no part of the vision is
+scope creep or a missing vision clause, a need contradicting it is a finding;
+(b) fixes the **canonical home** for the purpose fact the other three echo
+(today: three homes, no owner — the kit's own single-source smell). Standards
+echo: ISO 29148's StRS purpose/scope + ConOps vision — alignment, not ceremony
+(the WI-1.8 stance).
+
+**The pattern (owner refinement):** the **README carries the vision** — it is
+the first thing a human references — under **one unique, searchable tag**;
+every other document *points at the tag* instead of restating it.
+
+**Steps:**
+- **`README.template.md` is the canonical home:** its purpose fill-in becomes
+  a `## Vision` section whose statement opens with the singleton token
+  **`PROJECT-VISION:`** (bold prefix, no number — a grep for `PROJECT-VISION`
+  can never confuse it with prose uses of "vision"; the heading doubles as a
+  stable `README.md#vision` anchor, which `check_docs` link-validates). 1–3
+  sentences max: *for whom · what · the one thing that makes it worth
+  building*.
+- **`stakeholder-needs.template.md`** gains a one-line top block pointing at
+  the tag — "Every need below serves the `[PROJECT-VISION](../../README.md#vision)`"
+  (written as a **real markdown link in the scaffolded doc**, so the
+  doc-navigability gate mechanically enforces that the pointer never
+  dangles). The G1 lens reads through it: needs are checked against the
+  vision.
+- `KICKOFF_PROMPT.md`: the brief's "Goal / one-line description" **seeds** the
+  README Vision section (written first, then needs are derived against it);
+  the pointer rule stated once — other docs (the AGENTS "What this is" line
+  included) reference the tag, never re-author a variant.
+- `PROCESS.md` §4 G1 completeness gains the criterion (the `PROJECT-VISION`
+  tag exists in README; the consistency review checks needs against it —
+  human-judged, the WI-1.16 honesty stance). Byte cost ~1–2 sentences;
+  flagged.
+- `EXAMPLE.md`: one worked `PROJECT-VISION:` statement above its SN slice
+  (the header-sync rule).
+- `AGENTS.template.md`: **untouched** (10 B headroom; its purpose line already
+  reads correctly as an echo — the pointer rule lives in KICKOFF).
+- **Meta-repo dogfood (owner-confirmed):** this repo's `README.md` opening
+  paragraph gains the `PROJECT-VISION:` token, and `CLAUDE.md` "What we're
+  optimizing for" points at it — one canonical statement here too.
+
+**Tests:** prose-only — scaffold `check_docs` fully green **including the new
+needs→README anchor link** (slug must match `check_docs.slugify`); the
+EXAMPLE `Permutations` parse test unaffected.
+
+**Risks:** vision creep into a mission page — the template guidance caps it at
+three sentences; the anchor path from `docs/requirements/` is `../../README.md`
+— covered by the scaffold link-check test.
+
+**Done-when:** README opens with the tagged vision; the needs registry (and
+any other doc that wants it) points at the tag via a link the gate validates;
+kickoff seeds it from the brief; G1 names the criterion; EXAMPLE shows a
+worked one; the meta-repo dogfoods it; `pytest -q` + `check_docs` green.
+
+**Model tier — Sonnet-able** (prose batch; rides Session L).
+
+---
+
+## 2026-07-04 batch — open questions for the owner
+
+Answers unblock the threads noted; sessions won't start until the relevant
+question is answered (Session-protocol step 0).
+
+- **Q1 (T30):** Stack profile — go straight to the full `docs/stack.ini`
+  profile (recommended: it's the report's #2-value change and Thread 34's
+  stack-gating wants it), or Phase 1 only (CI/pre-commit delegate to check.py;
+  cheap, keeps ~4 EDIT sites)?
+- **Q2 (T30):** Profile format — INI via `configparser` (recommended:
+  comments, stdlib 3.8) vs JSON?
+- **Q3 (T31):** Arch-map non-Python path — is the stdlib **file-level**
+  fallback (`--mode files`) an acceptable universal bar (recommended), or
+  should a symbol-level JS/TS reference port be built now as well?
+- **Q4 (T32):** Level names `attended` / `single-ratify` / `autonomous` OK?
+  And confirm the fixed points that hold at *every* level: G-Final human, no
+  un-run greens, harness never waived, ratified owner decisions never
+  re-decided.
+- **Q5 (T32):** `single-ratify` ratification point — fixed at **G2 close**
+  (recommended: all requirement/design ambiguity resolved in one sitting,
+  before the expensive autonomous implementation stretch), or configurable?
+- **Q6 (T32):** Post-ratification human-shaped questions under
+  `single-ratify` — Blocked register (recommended: pause-free, NHW-proven) or
+  NHW-style decide+record for low-revert-cost items too?
+- **Q7 (T33, re-specced per the owner's resume-launcher directive):** confirm
+  the four calls: **(a)** scaffold `agent-resume.{cmd,sh,command}` in every
+  repo (inert until `AGENT_CMD` is filled; deletable) vs only when bootstrap
+  `--agents` chose an agent; **(b)** the name — `agent-resume.*` proposed
+  (your "LLM-Agent-Resume.cmd" reads fine too; kit launcher naming is
+  lowercase-short); **(c)** one stdlib-Python coordinator engine
+  (`scripts/agent_loop.py`, pytest-testable, supersedes maintaining
+  PowerShell+POSIX twins; NHW's trigger.ps1 cited as provenance) vs shipping
+  the ps1 as a reference script; **(d)** under an `attended` gate policy the
+  launcher boots one interactive session and *refuses* the walk-away loop —
+  OK?
+- **Q8 (T34):** Confirm the config-over-generation rule as stated (kit-owned
+  files read config, never generated per-repo; scaffold-once files may be
+  generated at bootstrap). This deliberately rejects full conditional
+  templating of PROCESS.md — flag if you want that anyway.
+- **Q9 (T35):** `Area` column — land now (recommended: pre-mass-adoption is
+  the cheap moment, the Thread-7 hinge) or defer?
+- **Q10 (T36):** Confirm the status/history split boundary + the log doc's
+  name (`docs/log.md`): audit log, Gate Sign-offs records, verdict blocks,
+  and the ratified Decisions log move to the log; Open items, the Blocked
+  register, and pending-ratification assumptions/decisions stay in status.md.
+  OK, or a different carve/name?
+
+**Proposed sessions (pending ratification):**
+- **Session L** — Threads **29 + 34 + 35 + 37** (mechanical, file-coherent
+  batch: check.py guard + bootstrap/template sweep + registry column + the
+  needs-registry vision block).
+- **Session M** — Threads **36 + 32**, solo-class, strong model (the same
+  canonical files: STATUS/PROCESS/KICKOFF + the AGENTS byte squeeze; **36
+  first** — it moves the record home 32 writes to).
+- **Session N** — Thread **30** solo (new config surface + wiring).
+- **Session O** — Thread **31** solo (new generator mode + tests).
+- **Session P** — Thread **33** solo, strong model (after M; the coordinator
+  engine + root launchers + protocol layer — a new-script build).
+
+---
+
 ## Sequencing & session strategy
 
 **Landed:** **0a ✅**, **0b ✅**, **1 ✅**, **2 ✅**, **3 ✅** (2026-06-28),
@@ -2307,6 +2978,11 @@ juggling needed).
 **19 ✅** (2026-06-30, Session H); **20 ✅** (2026-06-30, Session I);
 **24 ✅, 25 ✅, 26 ✅, 22 ✅** (2026-07-01, Session J); **27 ✅, 28 ✅**
 (2026-07-01, Session K). **All 28 threads complete.**
+**Reopened 2026-07-04** with **Threads 29–37** (the downstream-adoption field
+report + the NotHomeWrecker unattended-coordinator review + owner directives) —
+specs above,
+**⏸ awaiting the owner's answers to the "2026-07-04 batch — open questions"
+block** before any session starts (proposed grouping: Sessions L–P there).
 **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
@@ -3006,10 +3682,13 @@ continuity (same style as the session log above).
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
-   2026-07-01, all 28 planned threads have landed (sessions A–K). What remains are
-   the **stubs** (16 non-code-artifact verification · 21 cross-repo tooling · 23
-   publication composition), which each need a human decision to revive. Ask the user
-   which to pick up (and confirm the open decisions each lists) before doing anything.
+   2026-07-04: Threads 0–28 have landed (sessions A–K, plus the WI-1.x items).
+   **Threads 29–37 are specced but ⏸ gated on the owner's answers** to the
+   "2026-07-04 batch — open questions for the owner" block (Threads 29 and 37
+   carry no open question and may be confirmed for pickup directly). The **stubs**
+   (16 non-code-artifact verification · 21 cross-repo tooling · 23 publication
+   composition) still each need a decision to revive. Ask the user which to pick
+   up (and confirm the open decisions each lists) before doing anything.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
    own section above is its spec (Goal/Steps/Tests/Risks/Done-when).
 2. **End green:** run `python -m pytest -q` and paste the real output (per
