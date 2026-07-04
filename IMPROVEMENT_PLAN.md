@@ -2,11 +2,11 @@
 
 Derived from `TEMPLATE_REVIEW.md` (resolved 2026-06-28) plus follow-on design
 threads and a cross-agent-portability decision; **extended 2026-07-04** with
-Threads 29–37 from the downstream-adoption field report
+Threads 29–38 from the downstream-adoption field report
 (`kit-adoption-field-report.md`, Finance-Auditor boot), a review of
 NotHomeWrecker's unattended coordinator (`trigger.ps1` + `llm-gate-policy.md`),
 and owner directives (automation levels; the status.md/history split; the
-needs-registry vision block).
+vision tag; per-repo commit identity).
 This file is the **spec a
 fresh session implements from** — each thread is self-contained with Goal /
 Steps / Tests / Risks / Done-when. Keep it updated as threads land (check items
@@ -2610,7 +2610,9 @@ preflights and reports it, as NHW's does.)
   invocation is an **`AGENT_CMD` EDIT slot** (the RUN_CMD stance), seeded
   from the bootstrap `--agents` choice (e.g. `claude -p <resume prompt>
   --model <tier>`); a missing CLI → preflight report and nonzero exit, never
-  a hang. Hardening over the NHW original: capture the CLI exit code into the
+  a hang. Preflight also verifies the Thread-38 commit-identity policy before
+  iteration 1 — an unattended run is the wrongly-attributed-history disaster
+  case. Hardening over the NHW original: capture the CLI exit code into the
   log, guard `rev-parse` on a zero-commit repo, optional per-session timeout
   so a hung session can't wedge the loop.
 - **(c) Root launchers, policy-aware:** `agent-resume.{cmd,sh,command}`
@@ -2908,6 +2910,79 @@ worked one; the meta-repo dogfoods it; `pytest -q` + `check_docs` green.
 
 ---
 
+## Thread 38 — Per-repo commit identity: anonymous vs identified, declared and guarded
+
+**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q11).**
+**Source:** owner question (2026-07-04): "how do we ensure commits follow the
+user's preference per repo — anonymous or user-identifiable?"
+
+**Why:** git stamps author/committer from `user.name`/`user.email` — the
+machine's **global** config unless the repo overrides it — and nothing in the
+kit touches identity: whichever identity the machine happens to carry lands
+in the history. The mistake is near-irreversible (fixing attribution after a
+push is a history rewrite), and the highest-risk case is the kit's own
+direction of travel: an unattended loop (Thread 33) committing dozens of
+sessions under the wrong identity before anyone looks. Git's native primitive
+is the right one (repo-local `git config user.name/user.email` overrides
+global, per clone); the kit's job is to **(1) ask once at repo setup, (2)
+record the declared policy in the repo, (3) guard it mechanically** before
+each commit and before an unattended run.
+
+**Design:**
+- **Policy file `docs/commit-identity`** (one line, tracked, like
+  `docs/gate`): `inherit` (default — no constraint, today's behavior) **or an
+  email pattern the author identity must match** — e.g.
+  `*@users.noreply.github.com` (anonymous) or a pinned address (identified).
+  The pattern declares *intent* and is safe to publish in both modes; the
+  identity itself stays in git config (per-clone, never committed).
+- **`setup.{sh,ps1}` applies it** (consent-first, its existing style): when
+  the policy is non-`inherit` and the repo-local identity is
+  unset/mismatched, prompt for name/email (suggesting the host's noreply form
+  for anonymous) and run repo-local `git config user.name` / `user.email` —
+  **never `--global`**.
+- **`hooks/pre-commit` guards it:** compare `git var GIT_AUTHOR_IDENT`
+  against the policy; a mismatch **blocks** (integrity-class — wrong at any
+  stage, expensive after push) with an actionable message (run
+  scripts/setup · or `git config user.email …` · or set the policy to
+  `inherit`). `inherit` skips the check entirely — zero cost for repos that
+  don't care.
+- **Thread 33 preflight:** the coordinator refuses to start iteration 1 while
+  the policy is violated (cross-ref'd in that spec).
+- **`bootstrap.py`:** scaffold the file as `inherit`; optional
+  `--commit-identity <pattern|inherit>` flag + interactive ASK alongside
+  `--agents` — identity belongs at repo creation, **before the first
+  commit**, the only moment it is free to fix.
+- **Prose:** PROCESS_OPTIONS opt-in section "Commit identity & anonymity"
+  (applies-when: pseudonymous/public repos, privacy constraints): the policy
+  file + guard, noreply-email guidance, and the **honest boundary** — the
+  guard covers *future commits in clones that ran setup*; it cannot fix
+  existing history (rewrite out of scope; ADOPTING.md note), and anonymity
+  also depends on the *hosting account* pushing the commits and on keeping
+  machine-local paths/usernames out of committed text (one advisory line;
+  the unattended run logs are already gitignored). `AGENTS.template.md`
+  untouched (budget — enforcement lives below the guide, not restated in it).
+
+**Tests:** hook blocks a mismatched author under a pattern policy and passes
+a matching one; `inherit` passes anything; bootstrap writes the file and
+honors the flag; setup's config application covered where `sh` is available;
+a default scaffold stays green (policy `inherit`).
+
+**Risks:** multi-contributor repos — the policy is deliberately **repo-wide**
+(a pseudonymous repo constrains every contributor; per-person freedom =
+`inherit`); keep matching dead-simple glob, never touch global config; don't
+grow this into a secrets/PII scanner — one advisory line, the guard checks
+identity only.
+
+**Done-when:** a repo can declare anonymous-or-identified once at creation;
+setup applies it per clone; the hook and the unattended preflight block a
+violation before it exists; the limits (history, hosting account, content
+leaks) are stated honestly; `pytest -q` green.
+
+**Model tier — Sonnet-able once Q11 rules** (small and well-bounded: hook +
+setup + bootstrap + prose + tests).
+
+---
+
 ## 2026-07-04 batch — open questions for the owner
 
 Answers unblock the threads noted; sessions won't start until the relevant
@@ -3125,10 +3200,33 @@ artifacts per-repo instead of the agent hand-editing them?"
   `docs/history.md` (self-describing; hints narrative) · `docs/audit-log.md`
   (matches the §6 phrase; longest). Cheap call — pick any.
 
+### Q11 — Commit-identity enforcement posture *(Thread 38)*
+
+**Decides:** how strongly the kit ensures each repo's commits carry the
+identity the user chose for it (anonymous vs identified). Today: not at all —
+whatever git config resolves is what history gets, and after a push the fix
+is a history rewrite.
+
+- ★ **Declared policy + hard guard** — `docs/commit-identity` (default
+  `inherit` = no constraint) holds an email pattern; bootstrap asks at repo
+  creation; setup applies repo-local git config per clone; the pre-commit
+  hook **and** the Thread-33 unattended preflight **block** a mismatch.
+  *gain:* the mistake is caught before it exists — the only cheap moment;
+  zero cost for repos that don't care. *Downstream feel:* one setup question;
+  a fresh clone that forgot gets a clear block + the fix command, not silent
+  leakage. *cost:* one more scaffolded file + hook check; the policy is
+  repo-wide by design (a pseudonymous repo constrains every contributor).
+- **Warn-only** — *gain:* never blocks a commit. *cost:* the warning scrolls
+  by unread in exactly the case that matters most (unattended, nobody
+  watching) — the 40-wrongly-attributed-commits scenario survives.
+- **Prose-only guidance** — *gain:* zero machinery. *cost:* "ensure" becomes
+  "remember"; the failure stays silent and near-irreversible.
+
 **Proposed sessions (pending ratification):**
-- **Session L** — Threads **29 + 34 + 35 + 37** (mechanical, file-coherent
-  batch: check.py guard + bootstrap/template sweep + registry column + the
-  needs-registry vision block).
+- **Session L** — Threads **29 + 34 + 35 + 37 + 38** (mechanical,
+  file-coherent batch: check.py guard + bootstrap/template sweep + registry
+  column + the vision tag + the commit-identity guard — all small, all in the
+  same bootstrap/hook/template files).
 - **Session M** — Threads **36 + 32**, solo-class, strong model (the same
   canonical files: STATUS/PROCESS/KICKOFF + the AGENTS byte squeeze; **36
   first** — it moves the record home 32 writes to).
@@ -3148,7 +3246,7 @@ artifacts per-repo instead of the agent hand-editing them?"
 **19 ✅** (2026-06-30, Session H); **20 ✅** (2026-06-30, Session I);
 **24 ✅, 25 ✅, 26 ✅, 22 ✅** (2026-07-01, Session J); **27 ✅, 28 ✅**
 (2026-07-01, Session K). **All 28 threads complete.**
-**Reopened 2026-07-04** with **Threads 29–37** (the downstream-adoption field
+**Reopened 2026-07-04** with **Threads 29–38** (the downstream-adoption field
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
 specs above,
 **⏸ awaiting the owner's answers to the "2026-07-04 batch — open questions"
@@ -3853,7 +3951,7 @@ continuity (same style as the session log above).
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
    2026-07-04: Threads 0–28 have landed (sessions A–K, plus the WI-1.x items).
-   **Threads 29–37 are specced but ⏸ gated on the owner's answers** to the
+   **Threads 29–38 are specced but ⏸ gated on the owner's answers** to the
    "2026-07-04 batch — open questions for the owner" block (Threads 29 and 37
    carry no open question and may be confirmed for pickup directly). The **stubs**
    (16 non-code-artifact verification · 21 cross-repo tooling · 23 publication
