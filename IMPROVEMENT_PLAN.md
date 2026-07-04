@@ -3195,10 +3195,33 @@ setup + bootstrap + prose + tests).
 
 ## Thread 39 — Anonymous repos: privacy-leak review before publication (lint floor + subagent reviewer)
 
-**Status: ✔ ruled 2026-07-04; re-homed same day by owner ruling (Q12 →
-Thread 40; fail-closed residue confirmed) — ready to build (Session Q).
-Depends on Thread 38 (the policy gate); reuses Thread 32's verdict
-conventions; Thread 36's log is the record home.**
+**Status: ✅ landed 2026-07-04 (Session Q).** (Ruled 2026-07-04; re-homed
+same day by owner ruling — Q12 → Thread 40; fail-closed residue confirmed.)
+Deliverables: `scripts/check_privacy.py` (staged-diff default + `--repo`
+sweep + a **`--range` history mode — a deviation**, added so the pre-push
+floor and the Thread-40 scrub base pass scan diffs *and* commit messages
+*and* author lines of a whole range); pre-commit wiring under the policy
+gate; a `privacy` [process] step in `check.py` at every gate (the script
+self-skips under `inherit`, so it wires unconditionally at zero cost);
+`hooks/pre-push` → `.githooks/pre-push` (deterministic lint over the
+outgoing range **before** the reviewer — another small deviation, so the
+cheap floor never spends the LLM; then the `REVIEW_CMD` slot — env var or
+per-clone `git config privacy.reviewcmd`; approval = exit 0 **and** an
+APPROVE-without-BLOCK token in the output, so an agent CLI that exits 0
+while printing BLOCK still blocks; a missing reviewer **fails closed** per
+Q12; verdict-to-`log.md` is the reviewer's briefed duty, stated, not
+hook-enforced); PROCESS_OPTIONS "Commit identity & anonymity" grew the
+content-privacy layers + process rule + remediation recipe and an honestly
+rewritten boundary paragraph; the §8 Binary-assets EXIF advisory; the sync
+scrub step now names the lint. In-thread allowlist decision: the inline
+`privacy-ok` marker (self-documenting at the site; no config list). Tests:
+`tests/test_check_privacy.py` (every class red/green incl. placeholder and
+RFC-2606 exemptions, removal-never-flags, fresh-scaffold sweep green under
+an anonymous policy) + `tests/test_pre_push_hook.py` (fake
+approve/block/sneaky/mute reviewers, git-config slot, add-then-remove
+history blocks before the reviewer runs, ref deletion inert). The hook
+tolerates a stray CR on its stdin (tr -d). ADOPTING.md's overwrite list
+gained the new script + hooks. PROCESS.md and AGENTS.template.md untouched.
 **Source:** owner question (2026-07-04): when the repo's state is anonymous,
 can a hook (or other method) put a subagent review before every commit,
 checking for leakage of personally identifiable or private information?
@@ -3764,9 +3787,8 @@ warning scrolls by in exactly the unattended case).
   run can add tens of MB, compounding per leg.
 
 **Proposed sessions (rulings landed 2026-07-04).**
-**▶ NEXT: Session Q** — then S (dependencies satisfied by L/M/R; N and O
-are independent and can slot anywhere). Move this marker as sessions land
-(Session-protocol step 4).
+**▶ NEXT: Session S** — then N and O (independent; can slot anywhere). Move
+this marker as sessions land (Session-protocol step 4).
 - **Session L ✅ landed 2026-07-04** — Threads **29 + 35 + 37 + 38**
   (mechanical, file-coherent batch: check.py guard + registry column + the
   vision tag + the commit-identity guard; per-thread Status blocks above).
@@ -3798,6 +3820,13 @@ are independent and can slot anywhere). Move this marker as sessions land
   `check_docs --root .` **0 broken**. Byte deltas: AGENTS.template.md
   9,998 → 9,998 (untouched); PROCESS.md 54,442 → 54,669 (**+227 B** — the §4
   unattended-operation pointer, flagged per the budget convention).
+- **Session Q ✅ landed 2026-07-04** — Thread **39** solo (the privacy lint +
+  the push-boundary review backstop: `check_privacy.py`, pre-commit/check.py
+  wiring, `hooks/pre-push` + `REVIEW_CMD`; Status block above). Gates:
+  `pytest -q` **231 passed, 1 skipped** (the same pre-existing skip);
+  `check_docs --root .` **0 broken**. Byte deltas: AGENTS.template.md
+  9,998 → 9,998 (untouched); PROCESS.md 54,669 → 54,669 (untouched — the
+  whole layer lives in PROCESS_OPTIONS/ADOPTING, per the budget convention).
 - **Session N** — Thread **30** solo (new config surface + wiring).
 - **Session O** — Thread **31** solo (new generator mode + tests).
 - **Session R** — Thread **40** solo, strong model (after M, before P and Q;
@@ -3831,7 +3860,7 @@ are independent and can slot anywhere). Move this marker as sessions land
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
 specs above. **29 ✅, 35 ✅, 37 ✅, 38 ✅** (2026-07-04, Session L);
 **36 ✅, 32 ✅** (2026-07-04, Session M); **40 ✅** (2026-07-04, Session R);
-**33 ✅** (2026-07-04, Session P).
+**33 ✅** (2026-07-04, Session P); **39 ✅** (2026-07-04, Session Q).
 **All questions ruled by the owner 2026-07-04** — the batch's decision-briefs
 section records the rulings (Q6 Hybrid and Q8 full-conditional-templating
 override the recommendations; Q7d/Q13a amended Threads 33/40). Proposed
