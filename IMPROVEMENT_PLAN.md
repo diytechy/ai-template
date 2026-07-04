@@ -2663,6 +2663,23 @@ preflights and reports it, as NHW's does.)
   on the iteration branch (never the development branch), triggers the sync
   ritual at the end states (full block / gate closure / DONE), and honors
   `docs/push-policy` — under the default it never pushes, even if asked.
+- **(g) Limit-aware backoff (verified against Claude Code docs 2026-07-04):**
+  plan-usage state (5-hour window / weekly limit / resets) is **not
+  scriptable** — `/usage` is interactive-TUI-only, there is no `claude usage`
+  subcommand, and headless `/usage` is unconfirmed — so the engine cannot
+  preflight remaining budget and must handle the wall reactively. A
+  limit-hit `-p` run returns `is_error` with a machine-parseable message
+  carrying the reset time ("You've hit your session limit · resets 3:45pm" /
+  "…weekly limit · resets Mon 12:00am"): the engine regex-parses it,
+  **sleeps until reset (bounded) or exits with a WAITING banner naming the
+  resume time**, and — critically — **limit-hit sessions do not count toward
+  the stall guard** (the NHW original would misread three throttled sessions
+  as a stall and abort). Run sessions with `--output-format json`: per-run
+  `usage` tokens + `total_cost_usd` (client-side estimate) feed the (e)
+  iteration-index row, and `--max-budget-usd` is the optional per-session
+  hard-cap knob beside MaxIterations. Tests: fake agent emitting the
+  limit-hit message → engine backs off without incrementing stall, and the
+  index row records the WAITING outcome.
 - **Consent:** unattended mode passes the agent's permission-bypass flag —
   the loop banner and README say so plainly; the human consents by filling
   `AGENT_CMD` *and* declaring a non-attended gate policy *and* running it.
