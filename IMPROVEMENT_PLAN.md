@@ -3606,7 +3606,10 @@ warning scrolls by in exactly the unattended case).
 - **Track full unbounded transcripts** — maximal forensics; a 40-iteration
   run can add tens of MB, compounding per leg.
 
-**Proposed sessions (rulings landed 2026-07-04 — confirm which to start):**
+**Proposed sessions (rulings landed 2026-07-04).**
+**▶ NEXT: Session L** — then M → R, then N/O/P/Q/S per the dependencies
+below (N and O are independent and can slot anywhere). Move this marker as
+sessions land (Session-protocol step 4).
 - **Session L** — Threads **29 + 35 + 37 + 38** (mechanical, file-coherent
   batch: check.py guard + registry column + the vision tag + the
   commit-identity guard). *Thread 34 moved out — the Q8 ruling made it a
@@ -3618,9 +3621,12 @@ warning scrolls by in exactly the unattended case).
 - **Session O** — Thread **31** solo (new generator mode + tests).
 - **Session R** — Thread **40** solo, strong model (after M, before P and Q;
   the branch/sync protocol design — PROCESS_OPTIONS layer + push-policy file;
-  P and Q build against it).
+  P and Q build against it). *Reference material (summarized in the spec;
+  consult for ground truth):* `C:\Projects\NotHomeWrecker\docs\llm-gate-policy.md`.
 - **Session P** — Thread **33** solo, strong model (after M and R; the
   coordinator engine + root launchers + protocol layer — a new-script build).
+  *Reference material:* `C:\Projects\NotHomeWrecker\trigger.ps1` +
+  `docs\kickoff.md` "Unattended mode" (the field-proven loop the engine ports).
 - **Session Q** — Thread **39** (after L, M, and R; the privacy lint + hook
   backstop — a new-script build with fake-reviewer tests; the scrub-agent
   half is Thread 40 protocol, not script).
@@ -4349,9 +4355,9 @@ continuity (same style as the session log above).
    2026-07-04: Threads 0–28 have landed (sessions A–K, plus the WI-1.x items).
    **Threads 29–40 are specced and ruled** (owner rulings 2026-07-04 — the
    "2026-07-04 batch — decision briefs" section records them; each thread's
-   Status line carries its operative form). Proposed Sessions L/M/N/O/P/Q/R/S
-   are ready to schedule — still confirm with the user which session to
-   start. The **stubs** (16 non-code-artifact verification · 21 cross-repo
+   Status line carries its operative form). Sessions L/M/N/O/P/Q/R/S are
+   sequenced by the **▶ NEXT marker** in the sessions block (set 2026-07-04
+   with the owner's rulings) — follow it per steps 1–5. The **stubs** (16 non-code-artifact verification · 21 cross-repo
    tooling · 23 publication composition) still each need a decision to
    revive.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
