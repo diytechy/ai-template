@@ -2,11 +2,11 @@
 
 Derived from `TEMPLATE_REVIEW.md` (resolved 2026-06-28) plus follow-on design
 threads and a cross-agent-portability decision; **extended 2026-07-04** with
-Threads 29–38 from the downstream-adoption field report
+Threads 29–39 from the downstream-adoption field report
 (`kit-adoption-field-report.md`, Finance-Auditor boot), a review of
 NotHomeWrecker's unattended coordinator (`trigger.ps1` + `llm-gate-policy.md`),
 and owner directives (automation levels; the status.md/history split; the
-vision tag; per-repo commit identity).
+vision tag; per-repo commit identity + anonymous-repo privacy review).
 This file is the **spec a
 fresh session implements from** — each thread is self-contained with Goal /
 Steps / Tests / Risks / Done-when. Keep it updated as threads land (check items
@@ -2958,8 +2958,9 @@ each commit and before an unattended run.
   guard covers *future commits in clones that ran setup*; it cannot fix
   existing history (rewrite out of scope; ADOPTING.md note), and anonymity
   also depends on the *hosting account* pushing the commits and on keeping
-  machine-local paths/usernames out of committed text (one advisory line;
-  the unattended run logs are already gitignored). `AGENTS.template.md`
+  machine-local paths/usernames out of committed text (Thread 39 mechanizes
+  that content half for anonymous repos; the unattended run logs are already
+  gitignored). `AGENTS.template.md`
   untouched (budget — enforcement lives below the guide, not restated in it).
 
 **Tests:** hook blocks a mismatched author under a pattern policy and passes
@@ -2980,6 +2981,96 @@ leaks) are stated honestly; `pytest -q` green.
 
 **Model tier — Sonnet-able once Q11 rules** (small and well-bounded: hook +
 setup + bootstrap + prose + tests).
+
+---
+
+## Thread 39 — Anonymous repos: privacy-leak review before publication (lint floor + subagent reviewer)
+
+**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q12). Depends on
+Thread 38 (the policy gate); reuses Thread 32's verdict conventions; Thread
+36's log is the record home.**
+**Source:** owner question (2026-07-04): when the repo's state is anonymous,
+can a hook (or other method) put a subagent review before every commit,
+checking for leakage of personally identifiable or private information?
+
+**Why:** Thread 38 protects the *author field*; **content** is the bigger
+leak surface — absolute paths carrying the OS username, the real identity
+from global git config pasted into a doc, an email in a test fixture, a bio
+detail in a README, EXIF in a committed asset. A leak becomes harmful at
+**publication** (push) and is effectively unrecallable once mirrored/cached,
+so the judgment layer belongs at that boundary. Two honesty constraints shape
+the design: (1) LLM review is probabilistic — it layers *above* a
+deterministic floor and is never sold as a guarantee (the §4
+honest-classification stance, same family as LLM-Attest); (2) an LLM call in
+every commit would tax the WI-1.11 commit-often cadence into disuse — the
+predictable failure mode is people batching commits to dodge the reviewer,
+which is *worse* for privacy and for review.
+
+**Design (everything gated on `docs/commit-identity` declaring anonymous —
+`inherit` repos pay zero):**
+- **Layer 1 — deterministic lint, stdlib, per commit.** New
+  `scripts/check_privacy.py` scans the **staged diff** for high-confidence
+  classes: home-dir/username path shapes (`C:\Users\<x>`, `/home/<x>`,
+  `/Users/<x>`) and the current account/hostname specifically; email
+  addresses failing the policy pattern; the real name/email from **global**
+  git config appearing in content; private-key headers + a few universal
+  token shapes. Wired into `hooks/pre-commit` under the policy gate; blocks
+  with file:line findings. Also a `--repo` sweep mode wired as a
+  policy-gated process step in `check.py` (catches what slipped in before
+  the policy existed or via `--no-verify`) — CI-runnable. Deep secrets
+  scanning stays a named external category (e.g. gitleaks, trufflehog) —
+  product-layer, never rebuilt in the kit (the Thread-8 stance).
+- **Layer 2 — LLM subagent review at the push boundary.** New
+  `hooks/pre-push` (bootstrap MAPPING; `core.hooksPath` already covers any
+  hook in `.githooks/`): when the policy demands review, invoke a declared
+  reviewer slot (**`REVIEW_CMD`**, the Thread-33 `AGENT_CMD` family) over
+  the **full outgoing range the pre-push hook receives** — diffs *and*
+  commit messages, so a leak added in commit 2 and removed in commit 5
+  still gets caught (it ships in history even though the final tree is
+  clean). The reviewer is a fresh-context subagent with a tight brief (hunt
+  PII / identity / private data; APPROVE/BLOCK + findings); the verdict is
+  recorded in `docs/log.md` per §5 extended with `Model:` +
+  `Role: PRIVACY-REVIEW` (the Thread-32 convention). Unavailability
+  behavior per Q12 (recommend fail-closed).
+- **Process rule (agent-driven work):** in an anonymous repo the driver
+  routes privacy findings like consistency findings (§5); the Thread-33
+  coordinator runs the same review before any push step and refuses on
+  BLOCK. `git push --no-verify` remains git's own escape hatch for a human —
+  stated honestly rather than pretended away.
+- **Remediation recipe** (extends Thread 38's PROCESS_OPTIONS "Commit
+  identity & anonymity" section): caught pre-push = rewrite **local**
+  history before it publishes (interactive rebase / a filter tool named by
+  category); already published = treat as disclosed — rotate/react, a
+  rewrite is cosmetic. Binary assets: one advisory line in the §8 assets
+  prose — EXIF/author metadata is out of lint scope; strip on ingest.
+- **What this is not:** a guarantee or a DLP product. The lint is patterns;
+  the reviewer is judgment; both limits are stated where the policy is
+  documented (the attested-vs-mechanized spirit — the trust footprint stays
+  visible).
+
+**Tests:** lint — each detection class red/green on fixture diffs; policy
+`inherit` adds zero hook checks; `--repo` sweep + `check.py` wiring green on
+a fresh scaffold, red on a seeded leak. Pre-push — against fake `REVIEW_CMD`
+approve/block scripts: BLOCK stops the push path, APPROVE proceeds, missing
+reviewer behaves per the Q12 ruling; the outgoing-range assembly covers
+commit messages and intermediate commits. No CI dependency on a real agent
+CLI.
+
+**Risks:** false positives on legitimate content (documented example paths)
+— the lint needs an allowlist affordance (inline `privacy-ok` marker or a
+small config list; decide in-thread) or it trains bypass; push
+latency/cost — one review per batch, tier per §6 triage; the reviewer itself
+sees the private content — it runs under the user's own agent account, the
+same trust domain as the driver (no third-party service is introduced);
+scope creep — the kit ships the floor and names categories, no more.
+
+**Done-when:** an anonymous repo blocks patterned leaks at every commit and
+gets a recorded subagent verdict over the full outgoing history before
+anything publishes; `inherit` repos pay nothing; the limits are stated
+honestly; `pytest -q` green.
+
+**Model tier — spec/edge decisions on the strong model; build Sonnet-able**
+(lint + hook + fake-reviewer tests are well-bounded).
 
 ---
 
@@ -3222,6 +3313,43 @@ is a history rewrite.
 - **Prose-only guidance** — *gain:* zero machinery. *cost:* "ensure" becomes
   "remember"; the failure stays silent and near-irreversible.
 
+### Q12 — Privacy-leak review for anonymous repos: what runs, and when *(Thread 39)*
+
+**Decides:** what stands between a content leak (paths with your username,
+your real identity in a doc, an email in a fixture) and publication when the
+repo is declared anonymous — and at which moment it runs. Context: local
+commits are private; **push is the harm boundary**, and a published leak is
+effectively unrecallable.
+
+- ★ **Two layers: deterministic lint per commit + LLM subagent per push** —
+  the stdlib lint blocks high-confidence leaks in every staged diff at zero
+  latency/cost; the subagent reviews the **full outgoing history** (diffs +
+  commit messages — a leak added-then-removed mid-branch still ships) once
+  per push, verdict recorded with `Model:`/`Role: PRIVACY-REVIEW`. *gain:*
+  commit-often survives (no LLM call per commit); the judgment layer sits
+  exactly where harm begins; one review per batch keeps cost sane.
+  *Downstream feel:* commits stay instant; a push on an anonymous repo takes
+  a review pause and comes back APPROVE or findings. *cost:* a leak caught
+  at push after N commits means rewriting local history before pushing
+  (recipe shipped); new pre-push hook + reviewer-slot machinery.
+- **Subagent before every commit** — *gain:* catches at the cheapest-to-fix
+  moment (amend one commit). *cost:* an LLM call in every commit taxes the
+  commit-often discipline into disuse — the predictable failure mode is
+  batching commits to dodge the reviewer, which is worse for privacy *and*
+  review; cost × dozens in an unattended run; reviewer flakiness blocks
+  constantly.
+- **Lint-only (no LLM layer)** — *gain:* zero cost, fully
+  deterministic/testable. *cost:* only patterned leaks are caught;
+  contextual identity leakage (a bio detail, an identifying project
+  description) sails through.
+
+**Sub-decision (applies to the ★ and per-commit options):** when the
+reviewer *can't run* at push time on an anonymous repo — ★ **fail-closed**
+(the push waits; missing tool ≠ pass, and this is the one boundary that
+matters) vs fail-open-with-warning (never blocks, but the warning scrolls by
+in exactly the unattended case). `git push --no-verify` remains git's own
+escape either way.
+
 **Proposed sessions (pending ratification):**
 - **Session L** — Threads **29 + 34 + 35 + 37 + 38** (mechanical,
   file-coherent batch: check.py guard + bootstrap/template sweep + registry
@@ -3234,6 +3362,8 @@ is a history rewrite.
 - **Session O** — Thread **31** solo (new generator mode + tests).
 - **Session P** — Thread **33** solo, strong model (after M; the coordinator
   engine + root launchers + protocol layer — a new-script build).
+- **Session Q** — Thread **39** (after L and M; the privacy lint + pre-push
+  reviewer wiring — a new-script build with fake-reviewer tests).
 
 ---
 
@@ -3246,7 +3376,7 @@ is a history rewrite.
 **19 ✅** (2026-06-30, Session H); **20 ✅** (2026-06-30, Session I);
 **24 ✅, 25 ✅, 26 ✅, 22 ✅** (2026-07-01, Session J); **27 ✅, 28 ✅**
 (2026-07-01, Session K). **All 28 threads complete.**
-**Reopened 2026-07-04** with **Threads 29–38** (the downstream-adoption field
+**Reopened 2026-07-04** with **Threads 29–39** (the downstream-adoption field
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
 specs above,
 **⏸ awaiting the owner's answers to the "2026-07-04 batch — open questions"
@@ -3951,7 +4081,7 @@ continuity (same style as the session log above).
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
    2026-07-04: Threads 0–28 have landed (sessions A–K, plus the WI-1.x items).
-   **Threads 29–38 are specced but ⏸ gated on the owner's answers** to the
+   **Threads 29–39 are specced but ⏸ gated on the owner's answers** to the
    "2026-07-04 batch — open questions for the owner" block (Threads 29 and 37
    carry no open question and may be confirmed for pickup directly). The **stubs**
    (16 non-code-artifact verification · 21 cross-repo tooling · 23 publication
