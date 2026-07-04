@@ -2,11 +2,12 @@
 
 Derived from `TEMPLATE_REVIEW.md` (resolved 2026-06-28) plus follow-on design
 threads and a cross-agent-portability decision; **extended 2026-07-04** with
-Threads 29–39 from the downstream-adoption field report
+Threads 29–40 from the downstream-adoption field report
 (`kit-adoption-field-report.md`, Finance-Auditor boot), a review of
 NotHomeWrecker's unattended coordinator (`trigger.ps1` + `llm-gate-policy.md`),
 and owner directives (automation levels; the status.md/history split; the
-vision tag; per-repo commit identity + anonymous-repo privacy review).
+vision tag; per-repo commit identity + anonymous-repo privacy review; the
+LLM iteration-branch sync protocol + tracked iteration logs).
 This file is the **spec a
 fresh session implements from** — each thread is self-contained with Goal /
 Steps / Tests / Risks / Done-when. Keep it updated as threads land (check items
@@ -2601,9 +2602,8 @@ preflights and reports it, as NHW's does.)
   verdicts + Decisions in `docs/log.md`; clean tree).
 - **(b) One coordinator engine, stdlib Python:** `scripts/agent_loop.py` —
   port trigger.ps1's proven loop (fresh sessions until DONE/BLOCKED, git-HEAD
-  stall guard, MaxIterations budget ceiling, per-phase model map,
-  per-iteration logs under a gitignored `out/run-logs/`) onto the kit's
-  process-script substrate: **stdlib-only, 3.8+, one implementation for every
+  stall guard, MaxIterations budget ceiling, per-phase model map) onto the
+  kit's process-script substrate: **stdlib-only, 3.8+, one implementation for every
   platform** (instead of maintaining ps1+sh twins), and **testable in the
   kit's pytest suite against a fake agent command** (a script that commits /
   writes run-state) — coverage the ps1 original never had. The agent
@@ -2630,6 +2630,21 @@ preflights and reports it, as NHW's does.)
 - **(d) Provenance, not a second artifact:** the PROCESS_OPTIONS layer cites
   NHW's `trigger.ps1` as the field-proven origin; the engine supersedes it
   (no separate reference-only ps1 to keep in sync).
+- **(e) Iteration logs are tracked, indexed repo artifacts** (owner item 2,
+  2026-07-04 — amends the original gitignored-`out/run-logs` stance; Q13d):
+  the engine writes each session's log to **`docs/iteration/NNN-<stamp>.log`**
+  (size-bounded: head + capped tail of the transcript, cap pinned in-thread;
+  the raw unbounded stream may additionally go to gitignored `out/run-logs/`
+  for local debugging) and regenerates **`docs/iteration_index.md`** — one
+  row per session: number, date, model/tier, phase, outcome, commit range,
+  log link. The index is generated-not-hand-maintained (the kit's standing
+  rule) and gives the quick pointer; `docs/log.md` (Thread 36) stays the
+  *collated* human-review layer above it. On an anonymous repo the logs ride
+  the Thread-40 iteration branch and pass its scrub with everything else.
+- **(f) Thread-40 alignment (2026-07-04):** the coordinator drives sessions
+  on the iteration branch (never the development branch), triggers the sync
+  ritual at the end states (full block / gate closure / DONE), and honors
+  `docs/push-policy` — under the default it never pushes, even if asked.
 - **Consent:** unattended mode passes the agent's permission-bypass flag —
   the loop banner and README say so plainly; the human consents by filling
   `AGENT_CMD` *and* declaring a non-attended gate policy *and* running it.
@@ -2790,6 +2805,13 @@ history lives in a separate append-only doc that status.md points to.**
   executed — a decision still awaiting a human is an Open item), session
   summaries / report notes. status.md's header carries the pointer
   ("History: docs/log.md").
+- **Third tier (owner item 2, 2026-07-04):** raw per-session detail lives in
+  tracked `docs/iteration/` logs with a generated `docs/iteration_index.md`
+  (Thread 33e / Q13d). The architecture reads **status.md → log.md → index +
+  iteration logs** = *now → curated history → forensic detail*; log.md stays
+  compact precisely because the detail has a durable home below it. Citation
+  rule (Thread 40): these files cite stable ids (OI-n, gates, dates), never
+  iteration-branch SHAs, which scrub/collation may rewrite.
 
 **Steps:**
 - Split `STATUS.template.md`; new `LOG.template.md` → bootstrap MAPPING
@@ -2986,12 +3008,21 @@ setup + bootstrap + prose + tests).
 
 ## Thread 39 — Anonymous repos: privacy-leak review before publication (lint floor + subagent reviewer)
 
-**Status: ⏸ specced 2026-07-04 — awaiting owner answer (Q12). Depends on
-Thread 38 (the policy gate); reuses Thread 32's verdict conventions; Thread
-36's log is the record home.**
+**Status: ⏸ specced 2026-07-04; re-homed same day by owner ruling (Q12 →
+Thread 40). Depends on Thread 38 (the policy gate); reuses Thread 32's
+verdict conventions; Thread 36's log is the record home.**
 **Source:** owner question (2026-07-04): when the repo's state is anonymous,
 can a hook (or other method) put a subagent review before every commit,
 checking for leakage of personally identifiable or private information?
+
+**Amendment (2026-07-04, owner ruling):** hooks are per-clone and
+tool-circumventable, so the LLM review's **primary home moves to Thread 40's
+sync ritual** (the scrub step over the iteration branch's history, before
+anything reaches the pushable development branch). Unchanged from this spec:
+the per-commit deterministic lint (Layer 1) and the `--repo`/gate sweep. The
+pre-push hook (Layer 2 below) ships as an **optional backstop** — it still
+catches direct-to-dev-branch edits in clones that ran setup, and its
+coverage limits are stated rather than pretended away.
 
 **Why:** Thread 38 protects the *author field*; **content** is the bigger
 leak surface — absolute paths carrying the OS username, the real identity
@@ -3071,6 +3102,103 @@ honestly; `pytest -q` green.
 
 **Model tier — spec/edge decisions on the strong model; build Sonnet-able**
 (lint + hook + fake-reviewer tests are well-bounded).
+
+---
+
+## Thread 40 — LLM iteration branch: sync protocol (backup → scrub → collate → land) + push authority
+
+**Status: ⏸ specced 2026-07-04 — awaiting owner answers (Q13). Reshapes
+Threads 33 and 39 (both amended same day); depends on Thread 32's levels and
+Thread 36's log home.**
+**Source:** owner directive (2026-07-04), refining the Q12 ruling: hooks are
+per-clone and tool-circumventable (a user pushing from a different tool may
+never hit them), so anonymity — and history quality — should be
+**structural**: the agent iterates on its own branch, and what lands on the
+development branch is scrubbed and curated *by construction*, not filtered at
+push time.
+
+**The model:**
+- **The agent never commits to the development branch.** All agent work
+  happens on an iteration branch (`{branch}_LLM_Iteration` — name per Q13b).
+  The pre-commit floor + Thread-39 privacy lint run there per commit, cheap
+  and unchanged; **WI-1.11's commit-often cadence lives on this branch**,
+  where granularity is free.
+- **Sync points** — a full block (everything remaining Blocked), a gate
+  closure, or project-vision completion (the Thread-32 end states). Each sync
+  runs five steps:
+  1. **Backup:** snapshot the iteration history (dated backup ref/tag) so a
+     failed reintegration can never lose work; retired once the sync lands.
+  2. **Scrub (anonymous repos only):** a separate fresh-context agent walks
+     every commit since divergence — diffs, **commit messages**, and the
+     committed iteration logs (Thread 33) — removing/anonymizing PII via
+     history rewrite, with the Thread-39 lint as its deterministic base pass
+     over each commit. The rewrite can stamp a `Scrubbed:` trailer so later
+     checks can tell scrubbed history from raw (pin in-thread).
+  3. **Optional push of the iteration branch** — only if the push policy
+     allows agent pushes; preserves the granular (scrubbed) history remotely
+     for backup/forensics.
+  4. **Collate:** a separate agent reorganizes the leg's commits into
+     **categorical commits** (Conventional-Commit style with optional scope —
+     `feat(addon):` / `fix(biome):` / `perf(noise):` / `docs:` / `build:`,
+     the exact shape of the owner's Terra history; Q13c), each a coherent,
+     reviewable, why-and-impact-shaped change. Many tiny green commits in;
+     few subject-shaped commits out.
+  5. **Land:** the collated commits go onto the development branch. **The
+     human pushes at their leisure (default)** — or the agent does, iff the
+     push policy says so.
+- **Push authority is a declared policy** (Q13a): new one-liner
+  `docs/push-policy` — `human` (default: **the agent never pushes, even if
+  asked mid-session**; it prepares the branch and requests) ·
+  `agent-iteration` (may push only the scrubbed iteration branch) · `agent`
+  (may push the dev branch after a landed sync). Enforced as a process rule
+  (AGENTS/PROCESS) and honored by the Thread-33 coordinator; hooks can only
+  *assist* (per-clone) — which is exactly why the authority is structural,
+  not hook-based.
+- **Applies-when:** the branch + sync discipline is a general opt-in layer
+  for agent-driven work (curated history is valuable everywhere); the scrub
+  step activates only when `docs/commit-identity` declares anonymous.
+
+**Why this beats the push-time filter (recorded):** (1) a structural model
+cannot be circumvented by pushing with a different tool — the branch the
+user pushes never contained the leak; (2) it solves add-then-strip *by
+construction* (raw history never reaches the published branch), where a
+diff-of-final-tree check would miss it; (3) it reconciles commit-often with
+readable history — the classic feature-branch/curated-integration pattern,
+with agents doing the curation.
+
+**Mechanics to pin in-thread:** landing = rebase/cherry-pick of the collated
+commits (dev history stays linear; no merge bubbles); after landing, the
+iteration branch resets onto the new dev head for the next leg (backup ref
+archived or dropped); **SHA citations** — status.md/log.md cite stable ids
+(OI-n, gate names, dates), never iteration-branch SHAs, since scrub/collation
+rewrites them (one rule line in the Thread-36 templates); optionally add the
+iteration-branch pattern to `ci/check.yml` triggers so the floor runs
+remotely; a conflict during landing is a **Blocked item**, never a silent
+force-through.
+
+**Steps:** PROCESS_OPTIONS layer ("Agent iteration branch & sync": the
+five-step ritual + applies-when); one budgeted pointer each in PROCESS.md
+§3/§7; `push-policy.template` → `docs/push-policy` + bootstrap MAPPING (+
+interactive ASK alongside `--agents`); Thread-33 coordinator alignment
+(iterate on the branch, sync at end states, honor the policy); Thread-39
+alignment (amended); `AGENTS.template.md` one session-bullet clause **iff**
+budget allows, else PROCESS-only (the standing fallback); ADOPTING.md note;
+the gate-advance skill gains the sync step.
+
+**Tests:** mechanize the mechanical: push-policy scaffolded + parsed; the
+coordinator respects it against a fake agent (T33 suite); docs link-check.
+The scrub/collate steps are LLM judgment verified by their recorded §5
+verdicts, not pytest — stated honestly.
+
+**Risks:** history rewriting is sharp — confined to the *iteration* branch
+before landing, never the dev branch, with the step-1 backup as the net;
+ritual weight — this is the heaviest protocol in the kit, so it ships as an
+opt-in layer with a clear applies-when; two histories (granular iteration vs
+curated dev) can confuse — the iteration index (Thread 33) and log.md state
+which is authoritative (dev).
+
+**Model tier — strong model** (protocol design across the canonical docs;
+the Thread-32 class).
 
 ---
 
@@ -3313,42 +3441,69 @@ is a history rewrite.
 - **Prose-only guidance** — *gain:* zero machinery. *cost:* "ensure" becomes
   "remember"; the failure stays silent and near-irreversible.
 
-### Q12 — Privacy-leak review for anonymous repos: what runs, and when *(Thread 39)*
+### Q12 — Privacy-leak review: ★ ruled 2026-07-04 (re-homed structurally); one residue *(Threads 39 → 40)*
 
-**Decides:** what stands between a content leak (paths with your username,
-your real identity in a doc, an email in a fixture) and publication when the
-repo is declared anonymous — and at which moment it runs. Context: local
-commits are private; **push is the harm boundary**, and a published leak is
-effectively unrecallable.
+**Owner ruling:** not per-commit (confirmed — too painful); the
+push-boundary *direction* was right, but hooks are per-clone and
+tool-circumventable — a user pushing with a different tool may never hit
+them, and the agent should not be the pusher by default anyway. So the
+review's primary home moves to **Thread 40's sync ritual**: the agent
+iterates on its own branch; a scrub agent rewrites PII out of the *history*
+(diffs, messages, iteration logs) before anything reaches the development
+branch; the human pushes a branch that never contained the leak. This closes
+the add-then-strip hole structurally. Unchanged: the per-commit
+deterministic lint + the gate/CI sweep; the pre-push hook ships as an
+optional backstop with its limits stated.
 
-- ★ **Two layers: deterministic lint per commit + LLM subagent per push** —
-  the stdlib lint blocks high-confidence leaks in every staged diff at zero
-  latency/cost; the subagent reviews the **full outgoing history** (diffs +
-  commit messages — a leak added-then-removed mid-branch still ships) once
-  per push, verdict recorded with `Model:`/`Role: PRIVACY-REVIEW`. *gain:*
-  commit-often survives (no LLM call per commit); the judgment layer sits
-  exactly where harm begins; one review per batch keeps cost sane.
-  *Downstream feel:* commits stay instant; a push on an anonymous repo takes
-  a review pause and comes back APPROVE or findings. *cost:* a leak caught
-  at push after N commits means rewriting local history before pushing
-  (recipe shipped); new pre-push hook + reviewer-slot machinery.
-- **Subagent before every commit** — *gain:* catches at the cheapest-to-fix
-  moment (amend one commit). *cost:* an LLM call in every commit taxes the
-  commit-often discipline into disuse — the predictable failure mode is
-  batching commits to dodge the reviewer, which is worse for privacy *and*
-  review; cost × dozens in an unattended run; reviewer flakiness blocks
-  constantly.
-- **Lint-only (no LLM layer)** — *gain:* zero cost, fully
-  deterministic/testable. *cost:* only patterned leaks are caught;
-  contextual identity leakage (a bio detail, an identifying project
-  description) sails through.
+**Residue to confirm:** when the scrub/review agent *can't run* at a sync
+point on an anonymous repo — ★ **fail-closed** (the sync waits; nothing
+lands on the pushable branch unscrubbed; missing tool ≠ pass at the one
+boundary that matters) vs **fail-open with warning** (never blocks, but the
+warning scrolls by in exactly the unattended case).
 
-**Sub-decision (applies to the ★ and per-commit options):** when the
-reviewer *can't run* at push time on an anonymous repo — ★ **fail-closed**
-(the push waits; missing tool ≠ pass, and this is the one boundary that
-matters) vs fail-open-with-warning (never blocks, but the warning scrolls by
-in exactly the unattended case). `git push --no-verify` remains git's own
-escape either way.
+### Q13 — The iteration-branch protocol: four calls *(Thread 40)*
+
+**(a) Push authority default**
+- ★ **`human`** — the agent **never pushes, even if asked mid-session**; it
+  prepares the branch and requests. *gain:* publication is a deliberate
+  human act, immune to hook/tool circumvention by construction (your stated
+  preference). *cost:* the human is the bottleneck for every publish —
+  cheap, since pushing is rare and takes seconds.
+- **`agent-iteration`** — the agent may push only the *scrubbed iteration
+  branch* (remote backup + visibility); the dev branch stays human-pushed.
+- **`agent`** — full delegation (the NHW walk-away shape), still gated by
+  the sync ritual.
+
+**(b) Iteration-branch name**
+- **`{branch}_LLM_Iteration`** (your proposal) — explicit and
+  self-describing in a flat branch list.
+- ★ **`llm/{branch}`** — slash namespacing groups every agent branch under
+  one prefix in git tooling/UIs (the conventional shape); otherwise
+  identical. Pure taste — your suffix stands if you prefer it visible
+  without grouping.
+
+**(c) Collated-commit vocabulary**
+- ★ **Conventional Commits with optional scope** (`feat(addon):` /
+  `fix(biome):` / `perf(noise):` / `docs:` / `build:` — verified as exactly
+  your Terra history's shape) — *gain:* why-and-impact at a glance;
+  de-facto standard; machine-parseable for changelogs later. *cost:* one
+  more convention to state (a line in the sync step).
+- **Free-form subject collation** — nothing to learn; loses the at-a-glance
+  category and changelog parseability.
+
+**(d) Iteration logs (your item 2) — tracked how much?**
+- ★ **Tracked, size-bounded logs + a generated index** —
+  `docs/iteration/NNN-<stamp>.log` (head + capped tail per session; cap
+  pinned in-thread) + `docs/iteration_index.md` regenerated per iteration
+  (session, date, model/tier, phase, outcome, commit range, link). *gain:*
+  forensic detail survives machine death and travels with the repo; the
+  index answers "which session did this" at a glance; anonymous repos stay
+  safe because the logs ride the iteration branch through the scrub.
+  *cost:* repo weight grows per session (bounded); one more scrub surface.
+- **Gitignored raw logs (the NHW status quo)** — zero repo weight; detail
+  dies with the machine and there is nothing durable to index.
+- **Track full unbounded transcripts** — maximal forensics; a 40-iteration
+  run can add tens of MB, compounding per leg.
 
 **Proposed sessions (pending ratification):**
 - **Session L** — Threads **29 + 34 + 35 + 37 + 38** (mechanical,
@@ -3360,10 +3515,14 @@ escape either way.
   first** — it moves the record home 32 writes to).
 - **Session N** — Thread **30** solo (new config surface + wiring).
 - **Session O** — Thread **31** solo (new generator mode + tests).
-- **Session P** — Thread **33** solo, strong model (after M; the coordinator
-  engine + root launchers + protocol layer — a new-script build).
-- **Session Q** — Thread **39** (after L and M; the privacy lint + pre-push
-  reviewer wiring — a new-script build with fake-reviewer tests).
+- **Session R** — Thread **40** solo, strong model (after M, before P and Q;
+  the branch/sync protocol design — PROCESS_OPTIONS layer + push-policy file;
+  P and Q build against it).
+- **Session P** — Thread **33** solo, strong model (after M and R; the
+  coordinator engine + root launchers + protocol layer — a new-script build).
+- **Session Q** — Thread **39** (after L, M, and R; the privacy lint + hook
+  backstop — a new-script build with fake-reviewer tests; the scrub-agent
+  half is Thread 40 protocol, not script).
 
 ---
 
@@ -3376,7 +3535,7 @@ escape either way.
 **19 ✅** (2026-06-30, Session H); **20 ✅** (2026-06-30, Session I);
 **24 ✅, 25 ✅, 26 ✅, 22 ✅** (2026-07-01, Session J); **27 ✅, 28 ✅**
 (2026-07-01, Session K). **All 28 threads complete.**
-**Reopened 2026-07-04** with **Threads 29–39** (the downstream-adoption field
+**Reopened 2026-07-04** with **Threads 29–40** (the downstream-adoption field
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
 specs above,
 **⏸ awaiting the owner's answers to the "2026-07-04 batch — open questions"
@@ -4081,7 +4240,7 @@ continuity (same style as the session log above).
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
    2026-07-04: Threads 0–28 have landed (sessions A–K, plus the WI-1.x items).
-   **Threads 29–39 are specced but ⏸ gated on the owner's answers** to the
+   **Threads 29–40 are specced but ⏸ gated on the owner's answers** to the
    "2026-07-04 batch — open questions for the owner" block (Threads 29 and 37
    carry no open question and may be confirmed for pickup directly). The **stubs**
    (16 non-code-artifact verification · 21 cross-repo tooling · 23 publication
