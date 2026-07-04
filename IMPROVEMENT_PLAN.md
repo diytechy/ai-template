@@ -2459,8 +2459,28 @@ check without porting a generator; `pytest -q` green.
 
 ## Thread 32 — Gate authority as declared policy: the three automation levels
 
-**Status: ✔ ruled 2026-07-04 (Q4 confirmed; Q5 G2-close + customization
-note; Q6 → Hybrid routing) — ready (Session M, after Thread 36).**
+**Status: ✅ landed 2026-07-04 (Session M, after Thread 36).** New
+`gate-policy.template` → `docs/gate-policy` (one word, tracked like
+`docs/gate`, scaffolded `attended`); PROCESS.md §4 is the single canonical
+statement (the three Q4-confirmed levels + the four fixed points); new
+PROCESS_OPTIONS **"Gate authority levels"** layer carries the full mechanics —
+selection-before-port, the deviation-register pattern, the LLM-gate verdict
+protocol, Blocked register, Decisions log, LLM-Attest, and the single-ratify
+protocol with ratification **fixed at G2 close** (Q5; relocation = amending
+the repo's own register) and post-ratification routing **by revert-cost per
+the Q6 Hybrid ruling** (LOW → decide+record; MEDIUM/HIGH → Blocked register;
+never a mid-run pause). Record homes per Thread 36 (verdicts + ratified
+decisions → `docs/log.md`). De-dup sweep landed: AGENTS gates bullet
+(byte-funded), KICKOFF 4→1 + the agent-recommendation step + a PROJECT-BRIEF
+field, kit README, PROCESS §5/§6, PROCESS_OPTIONS dial prose.
+`bootstrap.py --gate-policy` (interactive ASK; non-interactive `attended`);
+non-default levels pre-fill the register skeleton (level rows + fixed
+points). New `tests/test_gate_policy.py` incl. the R4 tripwire (the authority
+claim ≤1 per shipped prose file). Deviations: none. Byte deltas:
+AGENTS.template.md 9,990 → 9,998 (gates-bullet edit funded by trims; 2 B
+headroom left); PROCESS.md 52,813 → 53,681 (**+868 B**, the §4 canonical
+statement — flagged). Gates: `pytest -q` 189 passed, 1 skipped; `check_docs`
+0 broken.
 **Source:** field report B1/B2/R4 (High) + the owner's automation-levels
 directive (2026-07-04) + NotHomeWrecker's ratified `llm-gate-policy.md` as the
 proven downstream prototype.
@@ -2861,9 +2881,26 @@ and trace.py reports it; `pytest -q` green.
 
 ## Thread 36 — status.md is the working surface only: history moves to a pointed-to log
 
-**Status: ✔ ruled 2026-07-04 (Q10: carve + `docs/log.md` as proposed) —
-ready (Session M, first). Land before/with Thread 32 — it relocates the
-record home Thread 32 writes to.**
+**Status: ✅ landed 2026-07-04 (Session M, first).** New `LOG.template.md` →
+`docs/log.md` (bootstrap MAPPING + docstring): the Gate Sign-offs table and
+Audit log moved with **headings preserved verbatim**, plus a Decisions log
+(ratified/executed only — pending stays a status.md Open item);
+STATUS.template.md is the pure working surface (Current State / Open items /
+Assumptions / Next action / Scope) with the `History: log.md` header pointer
+and the optional **`blocks:`** clause seeded in the Open-items example bullet
+(WI-1.17 single-source stance). Prose sweep: PROCESS.md §5 states the
+now-vs-history rule once (*act from status.md; append evidence to log.md*)
+and §6 generalizes the tight-header rule to the whole file; KICKOFF artifacts
+list + verdict recording; gate-advance + downstream-resync skills (kit source
++ dogfooded copies); PROCESS_OPTIONS pending-vs-ratified decision homes;
+ADOPTING §6 gained the optional, never-forced migration recipe + `docs/log.md`
+in the preserve-always list. AGENTS.template.md untouched at this thread
+(wording stays true per spec). New test:
+`test_status_is_working_surface_history_lives_in_log`; scaffold file list
+gains `docs/log.md`. Deviations: none. Byte deltas: PROCESS.md 52,305 →
+52,813 (**+508 B**, the §5 rule stated once — flagged); AGENTS.template.md
+9,990 → 9,990. Gates: `pytest -q` 184 passed, 1 skipped; `check_docs` 0
+broken.
 **Source:** owner note (2026-07-04).
 
 **Why:** status.md is currently both the blackboard *and* the archive:
@@ -3669,7 +3706,7 @@ warning scrolls by in exactly the unattended case).
   run can add tens of MB, compounding per leg.
 
 **Proposed sessions (rulings landed 2026-07-04).**
-**▶ NEXT: Session M** — then R, then N/O/P/Q/S per the dependencies
+**▶ NEXT: Session R** — then N/O/P/Q/S per the dependencies
 below (N and O are independent and can slot anywhere). Move this marker as
 sessions land (Session-protocol step 4).
 - **Session L ✅ landed 2026-07-04** — Threads **29 + 35 + 37 + 38**
@@ -3681,9 +3718,13 @@ sessions land (Session-protocol step 4).
   (**+241 B** — the Thread 37 G1 vision criterion, ~2 sentences, flagged per
   the budget convention). *Thread 34 moved out — the Q8 ruling made it a
   solo build (Session S).*
-- **Session M** — Threads **36 + 32**, solo-class, strong model (the same
-  canonical files: STATUS/PROCESS/KICKOFF + the AGENTS byte squeeze; **36
-  first** — it moves the record home 32 writes to).
+- **Session M ✅ landed 2026-07-04** — Threads **36 + 32** (the status/log
+  split, then the gate-authority levels writing to the moved record home;
+  per-thread Status blocks above). Gates: `pytest -q` **189 passed, 1
+  skipped** (the same pre-existing skip); `check_docs --root .` **0 broken**.
+  Byte deltas: AGENTS.template.md 9,990 → 9,998 (Thread 32's gates-bullet
+  edit, funded by trims); PROCESS.md 52,305 → 53,681 (**+1,376 B** across the
+  two threads, flagged per-thread above).
 - **Session N** — Thread **30** solo (new config surface + wiring).
 - **Session O** — Thread **31** solo (new generator mode + tests).
 - **Session R** — Thread **40** solo, strong model (after M, before P and Q;
@@ -3715,7 +3756,8 @@ sessions land (Session-protocol step 4).
 (2026-07-01, Session K). **All 28 threads complete.**
 **Reopened 2026-07-04** with **Threads 29–40** (the downstream-adoption field
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
-specs above. **29 ✅, 35 ✅, 37 ✅, 38 ✅** (2026-07-04, Session L).
+specs above. **29 ✅, 35 ✅, 37 ✅, 38 ✅** (2026-07-04, Session L);
+**36 ✅, 32 ✅** (2026-07-04, Session M).
 **All questions ruled by the owner 2026-07-04** — the batch's decision-briefs
 section records the rulings (Q6 Hybrid and Q8 full-conditional-templating
 override the recommendations; Q7d/Q13a amended Threads 33/40). Proposed
