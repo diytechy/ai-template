@@ -2597,9 +2597,46 @@ canonical docs + the byte-budget squeeze; same class as Threads 26/27).
 
 ## Thread 33 — Agent-resume entry point + unattended coordinator (protocol · engine · root launchers)
 
-**Status: ✔ ruled 2026-07-04 (Q7a/b/c confirmed; Q7d amended → the
-`NEEDS-HUMAN` run-state, one loop for every policy) — ready to build
-(Session P). Depends on Threads 32 + 36 + 40.**
+**Status: ✅ landed 2026-07-04 (Session P).** Delivered: (a) the
+PROCESS_OPTIONS **"Unattended operation (walk-away runs)"** layer (the
+run-state contract with the Q7d `NEEDS-HUMAN` interrupt-and-report;
+optional run-phase; commit-every-session / no-elevation /
+no-interactive-tools / lean-status.md discipline; end-of-run evidence;
+iteration logs + generated index; Thread-40 alignment; the consent framing;
+provenance citing `trigger.ps1` as superseded) + a PROCESS.md §4 pointer;
+(b) stdlib **`scripts/agent_loop.py`** — fresh headless sessions until
+run-state DONE/BLOCKED/NEEDS-HUMAN, git-HEAD stall guard, MaxIterations
+ceiling, `docs/run-phase` → `--model-map` tier pick, per-session
+`--session-timeout`, guarded rev-parse on zero-commit repos, CLI exit code
+captured into the log, limit-aware backoff per (g) with WAITING sessions
+never counting toward the stall guard; preflight blocks a violated
+`docs/commit-identity` before iteration 1, a missing CLI (report, never a
+hang), and a non-git root; (c) root **`agent-resume.{cmd,sh,command}`**
+launchers scaffolded like `run.*`, inert until `AGENT_CMD` is filled, with
+`--interactive` booting one hands-on session; bootstrap `--agents` seeds
+the slots with the chosen agent's example command (permission-bypass flag
+included — consent stated in launcher header, loop banner, and READMEs);
+(e) tracked `docs/iteration/NNN-<stamp>.log` (cap pinned in-session: head
+60 + tail 400 lines, 64 KB ceiling; raw stream additionally to gitignored
+`out/run-logs/`) and `docs/iteration_index.md` regenerated from the logs'
+metadata headers. Wiring: bootstrap MAPPING + docstring, gitignore entry,
+kit README rows, README.template resume note, ADOPTING §6 recipe +
+preserve-list rows. Tests: 14 engine tests against a fake `AGENT_CMD` (no
+real-CLI dependency) + 4 bootstrap launcher/seeding tests.
+**Deviations:** the `AGENT_CMD` EDIT slot lives in the *launchers* (env →
+engine), not in the kit-owned engine file, so a later re-sync overwrite can
+never clobber a repo's wiring (the RUN_CMD stance applied literally); limit
+detection is gated on an error signal (JSON `is_error` / nonzero exit) so a
+healthy transcript merely mentioning limits can't read as a throttle; on a
+limit hit the default is exit-WAITING naming the reset time
+(sleep-until-reset is the opt-in `--wait-on-limit N`) — the spec allowed
+either; distinct exit codes per end state (0 DONE · 2 preflight · 3 BLOCKED
+· 4 stall · 5 WAITING · 6 budget · 7 NEEDS-HUMAN). Residue for Thread 34's
+zero-findings sweep: once a downstream run creates `docs/iteration_index.md`,
+`check_docs` will orphan-warn it (nothing links it; a scaffolded link would
+be a broken link on a fresh repo).
+*(Ruled 2026-07-04: Q7a/b/c confirmed; Q7d amended → the `NEEDS-HUMAN`
+run-state, one loop for every policy. Built on Threads 32 + 36 + 40.)*
 **Source:** NotHomeWrecker `trigger.cmd`/`trigger.ps1` + kickoff.md
 "Unattended mode" (reviewed 2026-07-04) + owner directive (2026-07-04): a
 root, double-clickable way to "kick off the correct session at the correct
@@ -3727,9 +3764,9 @@ warning scrolls by in exactly the unattended case).
   run can add tens of MB, compounding per leg.
 
 **Proposed sessions (rulings landed 2026-07-04).**
-**▶ NEXT: Session P** — then Q/S per the dependencies below (all now
-satisfied by R; N and O are independent and can slot anywhere). Move this
-marker as sessions land (Session-protocol step 4).
+**▶ NEXT: Session Q** — then S (dependencies satisfied by L/M/R; N and O
+are independent and can slot anywhere). Move this marker as sessions land
+(Session-protocol step 4).
 - **Session L ✅ landed 2026-07-04** — Threads **29 + 35 + 37 + 38**
   (mechanical, file-coherent batch: check.py guard + registry column + the
   vision tag + the commit-identity guard; per-thread Status blocks above).
@@ -3754,6 +3791,13 @@ marker as sessions land (Session-protocol step 4).
   push-policy session-bullet clause, funded by two trims); PROCESS.md
   53,681 → 54,442 (**+761 B** — the §3 collated-cadence and §7
   push-authority pointers, flagged per the budget convention).
+- **Session P ✅ landed 2026-07-04** — Thread **33** solo (the unattended
+  coordinator: PROCESS_OPTIONS layer + `agent_loop.py` engine + root
+  `agent-resume.*` launchers + iteration logs/index; Status block above).
+  Gates: `pytest -q` **211 passed, 1 skipped** (the same pre-existing skip);
+  `check_docs --root .` **0 broken**. Byte deltas: AGENTS.template.md
+  9,998 → 9,998 (untouched); PROCESS.md 54,442 → 54,669 (**+227 B** — the §4
+  unattended-operation pointer, flagged per the budget convention).
 - **Session N** — Thread **30** solo (new config surface + wiring).
 - **Session O** — Thread **31** solo (new generator mode + tests).
 - **Session R** — Thread **40** solo, strong model (after M, before P and Q;
@@ -3786,7 +3830,8 @@ marker as sessions land (Session-protocol step 4).
 **Reopened 2026-07-04** with **Threads 29–40** (the downstream-adoption field
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
 specs above. **29 ✅, 35 ✅, 37 ✅, 38 ✅** (2026-07-04, Session L);
-**36 ✅, 32 ✅** (2026-07-04, Session M); **40 ✅** (2026-07-04, Session R).
+**36 ✅, 32 ✅** (2026-07-04, Session M); **40 ✅** (2026-07-04, Session R);
+**33 ✅** (2026-07-04, Session P).
 **All questions ruled by the owner 2026-07-04** — the batch's decision-briefs
 section records the rulings (Q6 Hybrid and Q8 full-conditional-templating
 override the recommendations; Q7d/Q13a amended Threads 33/40). Proposed
