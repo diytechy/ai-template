@@ -33,8 +33,8 @@ checklist.
   `check.py`, take the new version and re-apply only your **"EDIT FOR YOUR STACK"**
   block (`SRC`/`TESTS`, product-step commands).
 - **Preserve always (yours):** every registry CSV, `stakeholder-needs.md`,
-  `docs/status.md`, `docs/architecture.md` hand-written overview (regenerate only
-  the marker blocks), `AGENTS.md` project content, `docs/gate`,
+  `docs/status.md`, `docs/log.md`, `docs/architecture.md` hand-written overview
+  (regenerate only the marker blocks), `AGENTS.md` project content, `docs/gate`,
   `.gitignore`/`.gitattributes` (merge new kit lines by hand). `bootstrap.py`
   **skips existing files**, so a plain re-run won't clobber these — never run
   `--force` against a live repo without a diff pass.

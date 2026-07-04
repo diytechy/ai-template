@@ -1,8 +1,11 @@
 # Project Status — Blackboard
 
-Live coordination for the gated process (see [process.md](process.md)). Keep the
-**Current State** header short and current; append the audit log below (newest
-last) — it is the record, not required reading for every pass.
+The **working surface** for the gated process (see [process.md](process.md)):
+this whole file holds only what the agent or human must perform **next**. Keep
+every section short and current; history — sign-offs, verdicts, ratified
+decisions, session notes — appends to the log this header points at, never here.
+
+- **History:** [log.md](log.md) _(append-only; see process.md §5)_
 
 ---
 
@@ -14,18 +17,20 @@ last) — it is the record, not required reading for every pass.
 - **Open items:** _(the few things blocking the current gate — **one bullet per
   item, never inline-enumerated prose**. Give each a stable short id (OI-1,
   OI-2, … — ids are never renumbered; closed items are removed or struck
-  through) so a human can cite it from memory; end every bullet with a link to
-  the artifact it concerns; keep the two sub-lists below. Any
-  deferrals/decisions list follows the same bullet discipline.)_
+  through) so a human can cite it from memory; add an optional `blocks:` clause
+  naming what the item holds up (a gate, a TC — omit it when nothing waits);
+  end every bullet with a link to the artifact it concerns; keep the two
+  sub-lists below. Any deferrals/decisions list follows the same bullet
+  discipline.)_
   - **Needs <human>** _(state the decision wanted, per item)_:
-    - OI-1 — decide: keep or drop the legacy export flag →
+    - OI-1 — decide: keep or drop the legacy export flag (blocks: G1) →
       [system-requirements.csv](requirements/system-requirements.csv)
   - **In flight** _(driver; no approval needed)_:
     - OI-2 — pinning SR-000's acceptance predicate →
       [system-requirements.csv](requirements/system-requirements.csv)
 - **Assumptions (unattended):** _(decisions taken without sign-off while running
   unattended — each to confirm or revert at the next gate; see AGENTS.md "Ask,
-  don't assume")_
+  don't assume". Once ratified, move the entry to the log's Decisions log.)_
 - **Next action:** _(what happens next + who must approve)_
 
 ## Scope (restated from the brief)
@@ -41,25 +46,3 @@ last) — it is the record, not required reading for every pass.
 - **Constraints:**
 - **Non-goals:**
 - **Definition of done:**
-
-## Gate Sign-offs
-
-Add columns for any active domain hats. Drop the `G-Release` row for a one-off
-deliverable.
-
-| Gate | Stakeholder | UX/Docs | System Eng | Test Eng | Human |
-|---|---|---|---|---|---|
-| G1 — Requirements/UX/Constraints | PENDING | PENDING | PENDING | n/a | PENDING |
-| G2 — Decomposition & Test Coverage | n/a | n/a | PENDING | PENDING | PENDING |
-| G3 — Implementation | n/a | n/a | PENDING | PENDING | PENDING |
-| G-Release — Release readiness | n/a | n/a | n/a | PENDING | PENDING |
-| G-Final — Acceptance | PENDING | n/a | n/a | (evidence) | PENDING |
-
----
-
-## Audit log
-
-<!-- Append verdict blocks here per process.md §5. Newest at the bottom. -->
-
-### DRIVER — G1 — Round 1 — <YYYY-MM-DD>
-Scaffolding created. Starting G1.

@@ -33,9 +33,9 @@ for **end-user usability and corner cases**, not just the happy path.
   an independent reviewer is *fresh context + a skeptical prompt* that counters
   your bias toward approving your own work — instruct it to hunt for defects and
   status/spec drift, not to rubber-stamp.
-- **Keep context cheap to reload.** Maintain a short *Current State / Open Items*
-  header at the top of the status file; append the full audit trail below it and
-  do not require re-reading the whole log each pass.
+- **Keep context cheap to reload.** The status file is the working surface —
+  only what must be done next; append the full audit trail to `docs/log.md`
+  (status.md points at it) and do not require re-reading it each pass.
 - **Triage review depth by risk.** Don't apply heavyweight ceremony to a rename
   or a doc tweak.
 
@@ -63,8 +63,10 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
   a pure library.
 - `docs/process.md` — the method, gates, ID scheme, anti-duplication rules,
   verdict protocol (copy `PROCESS.md`).
-- `docs/status.md` — live state, gate sign-off table, append-only audit log
-  (copy `STATUS.template.md`).
+- `docs/status.md` — the working surface: live state + open items, only what
+  happens next (copy `STATUS.template.md`).
+- `docs/log.md` — the append-only history status.md points at: gate sign-off
+  table, verdicts, ratified decisions (copy `LOG.template.md`).
 - `docs/requirements/stakeholder-needs.md` — **SN-###** (Stakeholder owns).
 - `docs/requirements/system-requirements.csv` — **SR-###** with measurable
   acceptance criteria (System Engineer owns).
@@ -145,9 +147,10 @@ small or high-risk, **pairwise (all-pairs)** as the default for ≥3 dimensions,
 the values and combinations (and shows the reduction vs. the full product); push
 heavy combinations to the `Release` tier. See PROCESS.md "Dimensional coverage".
 
-Record every gate decision and persona verdict in `docs/status.md` using the
-verdict protocol in `PROCESS.md`. Never report a green result you didn't run —
-paste the actual command output.
+Record every gate decision and persona verdict in `docs/log.md` using the
+verdict protocol in `PROCESS.md` (status.md cites the current gate and points
+at the log). Never report a green result you didn't run — paste the actual
+command output.
 
 ## End-user / edge-case lens (apply throughout, especially G1 and G-Final)
 

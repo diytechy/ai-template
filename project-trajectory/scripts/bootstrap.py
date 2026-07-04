@@ -19,7 +19,8 @@ What it creates in the destination:
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
     docs/gate                                  <- gate.template  (active gate: G1)
     docs/commit-identity                       <- commit-identity.template  (policy: inherit)
-    docs/status.md                             <- STATUS.template.md
+    docs/status.md                             <- STATUS.template.md  (working surface)
+    docs/log.md                                <- LOG.template.md  (append-only history)
     docs/architecture.md                       <- ARCHITECTURE.template.md
     docs/interfaces.md                         <- INTERFACES.template.md
     docs/requirements/stakeholder-needs.md     <- registries/stakeholder-needs.template.md
@@ -386,6 +387,10 @@ MAPPING = [
     # identity & anonymity"): `inherit` by default; --commit-identity overrides.
     ("commit-identity.template", "docs/commit-identity"),
     ("STATUS.template.md", "docs/status.md"),
+    # The append-only history status.md points at (Thread 36, process.md §5):
+    # sign-offs, verdicts, and ratified decisions append here, keeping the
+    # per-session status.md reload cheap.
+    ("LOG.template.md", "docs/log.md"),
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),
     (

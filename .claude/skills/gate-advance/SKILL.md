@@ -20,13 +20,14 @@ didn't run. Authority: `docs/process.md` §4 (gates), §5 (verdict protocol), §
 The current gate is the one line in **`docs/gate`** (`G1|G2|G3|all`).
 `scripts/check.py` defaults to that gate and runs only its checks, so CI enforces
 the bar the project is *actually* at. Closing a gate = a human **bumps `docs/gate`
-in a reviewed commit** after the sign-offs in `docs/status.md`.
+in a reviewed commit** after the sign-offs in `docs/log.md` (the append-only
+history `docs/status.md` points at).
 
 ## What each gate takes
 
 - **G1 → G2 (Requirements/UX/Constraints done).** Real SN/SR rows (no `-000`
   placeholders where committed), acceptance criteria measurable, the UX/edge-case
-  lens applied. Sign-offs recorded in `docs/status.md`.
+  lens applied. Sign-offs recorded in `docs/log.md`.
 - **G2 → G3 (Decomposition & Test Coverage).** Every SR decomposes to LLR/TC;
   each requirement's TC exists as a **failing test first** (red → green). The
   harness at G2 runs traceability + `--no-placeholders` + runnable tests + flow
@@ -37,7 +38,7 @@ in a reviewed commit** after the sign-offs in `docs/status.md`.
   test-verifiable SR is `Verified`.
 
 Run the gate bar with `scripts/check.py` (it selects the gate's checks from
-`docs/gate`); paste the real output into the status audit log.
+`docs/gate`); paste the real output into the `docs/log.md` audit log.
 
 ## Honest verification where machines can't (`Attest`)
 

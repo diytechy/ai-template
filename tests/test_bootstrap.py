@@ -15,6 +15,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/gate",
         "docs/commit-identity",
         "docs/status.md",
+        "docs/log.md",
         "docs/architecture.md",
         "docs/requirements/system-requirements.csv",
         "docs/requirements/performance-budgets.csv",
@@ -58,6 +59,21 @@ def test_agents_template_stays_within_size_budget():
         "AGENTS.template.md is {} bytes; budget is 10,000 (>=2k headroom under "
         "the ~12k Gemini cap) — tighten another rule to pay for the growth".format(size)
     )
+
+
+def test_status_is_working_surface_history_lives_in_log(scaffold):
+    # Thread 36: status.md holds only what must be performed next; the history
+    # sections (Gate Sign-offs, Audit log) live in the pointed-to docs/log.md,
+    # headings preserved verbatim so downstream greps and the §5 prose survive.
+    status = (scaffold / "docs" / "status.md").read_text(encoding="utf-8")
+    for heading in ("## Gate Sign-offs", "## Audit log", "## Decisions log"):
+        assert heading not in status, "history section left in status.md: " + heading
+    assert "log.md" in status, "status.md must point at the history log"
+    assert "blocks:" in status, "Open-items format must seed the blocks: clause"
+    log = (scaffold / "docs" / "log.md").read_text(encoding="utf-8")
+    for heading in ("## Gate Sign-offs", "## Audit log", "## Decisions log"):
+        assert heading in log, "log.md must carry the history heading: " + heading
+    assert "G-Final — Acceptance" in log  # the sign-off table moved intact
 
 
 def test_fresh_scaffold_passes_archmap_check_and_trace(scaffold):

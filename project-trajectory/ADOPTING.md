@@ -173,8 +173,9 @@ range to see exactly which templates/scripts changed before you touch anything.
   step commands). Diff before committing so a kit change to a step you dropped
   doesn't silently reappear.
 - **Preserve always (yours, kit only seeds them):** every registry CSV and
-  `stakeholder-needs.md`, `docs/status.md`, `docs/architecture.md`'s hand-written
-  overview (regenerate only the marker blocks), `AGENTS.md` project content,
+  `stakeholder-needs.md`, `docs/status.md`, `docs/log.md`,
+  `docs/architecture.md`'s hand-written overview (regenerate only the marker
+  blocks), `AGENTS.md` project content,
   `docs/gate`, `.gitignore`/`.gitattributes` (merge new kit lines in by hand).
   `bootstrap.py` **skips existing files**, so a plain re-run won't clobber these —
   but don't run it with `--force` against a live repo without a diff pass.
@@ -244,6 +245,17 @@ range to see exactly which templates/scripts changed before you touch anything.
   even though the asset itself can't be diffed. Both are opt-in; a scope with no
   subjective/binary work ignores them (process-options.md "Proportionality
   doctrine" + "Binary assets").
+- **status/log split (`docs/status.md` → `status.md` + `docs/log.md`).** Newer
+  kits split the blackboard: `status.md` is the **working surface** — only what
+  the agent or human must perform next — and `docs/log.md` is the
+  **append-only history** it points at (the Gate Sign-offs table, verdict
+  blocks, ratified decisions, session notes; process.md §5). Migration is
+  **optional and proportionate — never forced**: an adopted repo may keep its
+  merged file. To adopt: copy `LOG.template.md` → `docs/log.md`, cut the
+  accreted history sections over **with their headings preserved verbatim**
+  (downstream greps and the §5 wording rely on them), and leave the
+  `History: docs/log.md` pointer in status.md's header. Don't rewrite the moved
+  entries — they are the historical record.
 - **Commit-identity policy (`docs/commit-identity`).** Newer kits declare
   per-repo commit identity (process-options.md "Commit identity & anonymity"):
   a one-value file — `inherit` (no constraint) or an email glob the author

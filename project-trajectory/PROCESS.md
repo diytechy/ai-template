@@ -453,7 +453,13 @@ the source; do not hand-curate combinations the generator should produce.
 
 ## 5. Verdict & status protocol
 
-Reviews append to `status.md`:
+Two files split *now* from *history*: `status.md` is the **working surface** —
+the whole file holds only what must be performed next (open items, pending
+decisions, the next action) — and `log.md` is the **append-only history** it
+points at (sign-offs, verdicts, ratified decisions, session notes; evidence,
+never normative). Act from status.md; append evidence to log.md.
+
+Reviews append to `log.md`:
 
 ```
 ### <HAT or REVIEWER> — <Gate> — Round <r> — <YYYY-MM-DD>
@@ -462,8 +468,9 @@ Findings:
 - [BLOCKER|MAJOR|MINOR] <ID or area> → <issue> → <suggested change> → @<owner>
 ```
 
-Gate sign-offs live in the **Gate Sign-offs** table; the driver records the gate
-decision and pauses for the human.
+Gate sign-offs live in the **Gate Sign-offs** table in `log.md`; the driver
+records the gate decision there, cites it from status.md's *Active gate* line,
+and pauses for the human.
 
 **Voice policy — warmth has a layer boundary.** Personality is a human value, not
 a machine one: **human-facing** output (CLI narration, a kickoff greeting, a
@@ -487,8 +494,9 @@ medical-device repo and a game studio.
 - **Medium**: self-review against the gate checklist + run the harness.
 - **Low/mechanical** (rename, doc tweak, config): just run the harness.
 
-Keep the status file's *Current State / Open Items* header short so a reviewer
-can orient cheaply; the full log lives below and need not be re-read each pass.
+Keep `status.md` short so a reviewer can orient cheaply — the *whole file* is
+the working surface (§5); the full history lives in `log.md` and need not be
+re-read each pass.
 
 **Model/agent tiering — recommend + record, not enforce.** The risk triage above
 is also a **tiering** axis: planning, decomposition, decisions, and high-risk
@@ -520,8 +528,8 @@ project-setup dial, not a constant: a specialized or high-consequence domain
 decisions often — the human ratifies even medium calls; a low-risk domain
 (creative content) where a reverted decision costs little tech debt lets a
 **confident** agent decide autonomously, **provided the decision is recorded**
-in `status.md` (Decisions log / Assumptions) so it stays auditable and
-revertible. The dial never moves the fixed points — gates still pause (§4/§5),
+(pending → `status.md` Assumptions/Open items; ratified → the `log.md`
+Decisions log, §5) so it stays auditable and revertible. The dial never moves the fixed points — gates still pause (§4/§5),
 contradictions still route as findings. Full doctrine: point (e) of the
 [proportionality doctrine](process-options.md#proportionality-doctrine).
 

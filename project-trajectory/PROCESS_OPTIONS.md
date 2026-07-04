@@ -69,8 +69,9 @@ into a straitjacket. Four points, one voice:
   (creative content is the archetype), where a wrong call is cheap to revert and
   carries little tech debt, a **confident** agent may decide **autonomously** —
   and the non-negotiable price of that autonomy is that every autonomous
-  decision is **recorded** (a *Decisions log* / *Assumptions* entry in
-  `status.md`: the call, the alternatives passed over, why) so it stays visible,
+  decision is **recorded** (an *Assumptions* / Open-items entry in `status.md`,
+  moved to `log.md`'s *Decisions log* once ratified — the call, the alternatives
+  passed over, why; PROCESS.md §5) so it stays visible,
   auditable, and cheaply revertible. The dial moves *how often you ask*, never
   the fixed points: gates still pause for human approval (§4), and a requirement
   **contradiction** still routes as a finding to its owner — an unrecorded
@@ -243,7 +244,8 @@ erodes the single-source-of-truth discipline the kit is built on.
 
 **The promote rule.** When a working note ripens into something durable — a
 decision, a constraint, a gotcha, an assumption confirmed — **promote it into the
-repo**: record a decision in `status.md` *Open items* or *Decisions log*, add a
+repo**: record a decision in `status.md` *Open items* (ratified: `log.md`'s
+*Decisions log*), add a
 constraint to `status.md`'s constraints block, update `AGENTS.md` if it changes
 how contributors should behave, or amend the relevant registry row. This is the
 flip side of the *Assumptions* log (§4, Thread 3): an unattended assumption is
