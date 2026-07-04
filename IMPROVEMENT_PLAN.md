@@ -3258,10 +3258,31 @@ honestly; `pytest -q` green.
 
 ## Thread 40 — LLM iteration branch: sync protocol (backup → scrub → collate → land) + push authority
 
-**Status: ✔ ruled 2026-07-04 (Q13a human-push, sync ≠ stop; Q13b
-`llm/{branch}`; Q13c default-not-restrictive vocabulary; Q13d tracked
-bounded logs) — ready (Session R). Reshapes Threads 33 and 39 (both amended
-same day); depends on Thread 32's levels and Thread 36's log home.**
+**Status: ✅ landed 2026-07-04 (Session R).** New PROCESS_OPTIONS **"Agent
+iteration branch & sync"** layer: the model (agent work on `llm/{branch}`,
+the dev branch curated by construction), the five-step sync ritual
+(backup → scrub → optional push → collate → land) with the Q12 fail-closed
+scrub residue and the Q13a/c rulings stated verbatim (landing ≠ stop; the
+type list a default vocabulary, never linted), the three push-policy levels,
+the why-structural record, and the two-histories/stable-id rule. New
+`push-policy.template` → `docs/push-policy` (scaffolded `human`) + bootstrap
+MAPPING/docstring + `--push-policy` flag with interactive ASK
+(non-interactive `human`). Pointers: PROCESS.md §3 commit-cadence (collated
+categorical commits at sync) + §7 "Push authority" (**+761 B**, flagged);
+AGENTS.template.md session bullet gained "Pushing follows
+`docs/push-policy` (default: the human publishes)" **funded by two trims**
+(the check-launchers parenthetical; the §7 memory-note title quote) —
+9,998 B holds. LOG.template.md header carries the SHA-citation rule;
+`ci/check.yml` triggers on `llm/**`; ADOPTING.md §6 migration recipe;
+gate-advance skill gained the sync-before-bump step (kit source + dogfooded
+copy). Pinned in-thread: backup ref = dated tag
+`backup/llm-<branch>-<YYYYMMDD>`; the scrub rewrite **does** stamp the
+`Scrubbed:` trailer. Threads 33/39 alignment stays spec-side (Sessions P/Q
+build against this layer; none of their code exists yet). Tests:
+`tests/test_push_policy.py` (5: scaffold default / flag set /
+explicit-human / CI trigger / citation rule) + the bootstrap file list.
+Deviations: none. Gates: `pytest -q` 194 passed, 1 skipped; `check_docs`
+0 broken.
 **Source:** owner directive (2026-07-04), refining the Q12 ruling: hooks are
 per-clone and tool-circumventable (a user pushing from a different tool may
 never hit them), so anonymity — and history quality — should be
@@ -3706,9 +3727,9 @@ warning scrolls by in exactly the unattended case).
   run can add tens of MB, compounding per leg.
 
 **Proposed sessions (rulings landed 2026-07-04).**
-**▶ NEXT: Session R** — then N/O/P/Q/S per the dependencies
-below (N and O are independent and can slot anywhere). Move this marker as
-sessions land (Session-protocol step 4).
+**▶ NEXT: Session P** — then Q/S per the dependencies below (all now
+satisfied by R; N and O are independent and can slot anywhere). Move this
+marker as sessions land (Session-protocol step 4).
 - **Session L ✅ landed 2026-07-04** — Threads **29 + 35 + 37 + 38**
   (mechanical, file-coherent batch: check.py guard + registry column + the
   vision tag + the commit-identity guard; per-thread Status blocks above).
@@ -3725,6 +3746,14 @@ sessions land (Session-protocol step 4).
   Byte deltas: AGENTS.template.md 9,990 → 9,998 (Thread 32's gates-bullet
   edit, funded by trims); PROCESS.md 52,305 → 53,681 (**+1,376 B** across the
   two threads, flagged per-thread above).
+- **Session R ✅ landed 2026-07-04** — Thread **40** solo (the iteration
+  branch & sync protocol: PROCESS_OPTIONS layer + `docs/push-policy` +
+  the cross-doc wiring; Status block above). Gates: `pytest -q` **194
+  passed, 1 skipped** (the same pre-existing skip); `check_docs --root .`
+  **0 broken**. Byte deltas: AGENTS.template.md 9,998 → 9,998 (the
+  push-policy session-bullet clause, funded by two trims); PROCESS.md
+  53,681 → 54,442 (**+761 B** — the §3 collated-cadence and §7
+  push-authority pointers, flagged per the budget convention).
 - **Session N** — Thread **30** solo (new config surface + wiring).
 - **Session O** — Thread **31** solo (new generator mode + tests).
 - **Session R** — Thread **40** solo, strong model (after M, before P and Q;
@@ -3757,7 +3786,7 @@ sessions land (Session-protocol step 4).
 **Reopened 2026-07-04** with **Threads 29–40** (the downstream-adoption field
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
 specs above. **29 ✅, 35 ✅, 37 ✅, 38 ✅** (2026-07-04, Session L);
-**36 ✅, 32 ✅** (2026-07-04, Session M).
+**36 ✅, 32 ✅** (2026-07-04, Session M); **40 ✅** (2026-07-04, Session R).
 **All questions ruled by the owner 2026-07-04** — the batch's decision-briefs
 section records the rulings (Q6 Hybrid and Q8 full-conditional-templating
 override the recommendations; Q7d/Q13a amended Threads 33/40). Proposed
