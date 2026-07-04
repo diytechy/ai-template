@@ -40,6 +40,18 @@ history `docs/status.md` points at).
 Run the gate bar with `scripts/check.py` (it selects the gate's checks from
 `docs/gate`); paste the real output into the `docs/log.md` audit log.
 
+## Sync before you bump (iteration-branch repos)
+
+If the repo runs the **agent iteration branch & sync** layer
+(`docs/process-options.md`; agent work rides `llm/<branch>`, the development
+branch is curated), a gate closure is a **sync point**. Run the five-step
+ritual before the gate bump lands: backup ref → scrub (anonymous repos only;
+fail closed if the scrub agent can't run) → optional iteration-branch push per
+`docs/push-policy` → collate into categorical commits → land on the
+development branch. The `docs/gate` bump rides the landed, collated history.
+Landing is not a stopping point — but *pushing* follows `docs/push-policy`
+(default `human`: an agent never pushes; the human publishes at leisure).
+
 ## Honest verification where machines can't (`Attest`)
 
 Some SRs can't be mechanically tested (subjective quality, a binary asset, a

@@ -42,10 +42,9 @@ gates, and the ID scheme. The short version an agent needs every session:
 - **Gates G1→G2→G3→(G-Release)→G-Final close per the declared gate authority**
   (`docs/gate-policy`; default: pause for human approval). Never self-advance
   a gate; log it in `docs/status.md`.
-- **The check harness is the bar:** `python scripts/check.py` (launchers:
-  `scripts/check.{sh,ps1}`) runs format, lint, tests, coverage, traceability,
-  flow checks, and map freshness at the repo's active gate (`docs/gate`);
-  `--tier smoke` is the fast subset. Never report a result you didn't run —
+- **The check harness is the bar:** `python scripts/check.py` runs format,
+  lint, tests, coverage, traceability, flow checks, and map freshness at the
+  repo's active gate (`docs/gate`); `--tier smoke` is the fast subset. Never report a result you didn't run —
   paste the real output.
 - **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
   anything concurrent/non-blocking) are authored Mermaid sequence diagrams in
@@ -65,7 +64,8 @@ gates, and the ID scheme. The short version an agent needs every session:
   [docs/status.md](docs/status.md); end each turn by updating it (active gate,
   what changed, next action awaiting approval). **Commit early and often** — a
   small, green commit per logical step; readable change only exists once
-  committed. End sessions with a clean tree.
+  committed. Pushing follows `docs/push-policy` (default: the human
+  publishes). End sessions with a clean tree.
 
 ## Code we want (readability for humans *and* agents)
 
@@ -176,7 +176,7 @@ Direct and concrete; explain the *why* before the *how*.
 - **Repo text is the project's memory; yours is scratch.** Durable facts — a
   decision, constraint, or gotcha — belong in `docs/` (status, registries,
   AGENTS.md), not in agent-private memory. Promote them before closing a
-  session (process.md §7 "durable agent memory layer").
+  session (process.md §7).
 
 ---
 

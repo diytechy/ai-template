@@ -266,6 +266,19 @@ range to see exactly which templates/scripts changed before you touch anything.
   guard covers **future commits in clones that ran setup** only — history
   already committed under the wrong identity needs a git history rewrite,
   which is out of the kit's scope; decide that deliberately before publishing.
+- **Push policy + agent iteration branch (`docs/push-policy`).** Newer kits
+  declare who may publish (process-options.md "Agent iteration branch &
+  sync"): a one-word file — `human` (default: an agent never pushes, even if
+  asked mid-session; it prepares the branch and requests), `agent-iteration`
+  (only the scrubbed `llm/<branch>` iteration branch), or `agent`. To adopt:
+  copy `push-policy.template` → `docs/push-policy` and pick the value in a
+  reviewed commit. The full iteration-branch discipline (agent work on
+  `llm/<branch>`, history scrubbed and collated into categorical commits
+  before landing on the dev branch) is an **opt-in layer** for agent-driven
+  repos — a repo without agent-driven work keeps the default file and pays
+  nothing. If you adopt the layer, add `"llm/**"` to your CI push triggers
+  (the newer shipped `check.yml` already carries it) so the floor runs on
+  agent legs too.
 - **Skills layer (newer kits ship `skills/`).** To bring an agent's skills into an
   already-adopted repo, re-run `bootstrap.py --agents claude|gemini|both` against
   it: it materializes the matched `kit`-scope skills into the agent dir

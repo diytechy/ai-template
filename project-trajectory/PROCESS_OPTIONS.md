@@ -240,6 +240,103 @@ For subjective judgments that must not fake being tests: the TC records
 reported in the attested-vs-mechanized split as *machine* attestation, never
 disguised as `Test`. G-Final is where the owner's eyes replace these.
 
+## Agent iteration branch & sync
+
+*Referenced from PROCESS.md §3 ("Commit cadence") and §7 ("Push authority").*
+**Applies when** a repo wants agent-driven work to land as curated, reviewable
+history — and, on an anonymous repo (`docs/commit-identity` non-`inherit`),
+wants anonymity to be **structural** rather than filtered at publish time.
+This is the heaviest ritual in the kit: opt in deliberately. A repo without
+agent-driven work skips the whole layer and pays nothing. (The
+`docs/push-policy` file below ships in every scaffold regardless — declared
+push authority is useful even without the branch discipline.)
+
+**The model.** The agent never commits to the development branch. All agent
+work happens on an **iteration branch — `llm/{branch}`** (slash namespacing
+groups every agent branch under one prefix in git tooling): the pre-commit
+floor runs there per commit, cheap and unchanged, and the §3 commit-often
+cadence lives there, where granularity is free. What lands on the development
+branch is scrubbed and curated **by construction** — the branch a human pushes
+never contained the leak or the noise. Hooks cannot carry this guarantee
+(they are per-clone and tool-circumventable: a user pushing with a different
+tool may never hit them); the branch structure can.
+
+**Sync points.** A sync runs when the work reaches an end state: everything
+remaining is Blocked (the Blocked register, "Gate authority levels" above), a
+gate closes, or the project's scope is complete. Five steps:
+
+1. **Backup.** Snapshot the iteration history first — a dated backup ref,
+   e.g. tag `backup/llm-<branch>-<YYYYMMDD>` — so a failed reintegration can
+   never lose work. Retire it once the sync lands.
+2. **Scrub** *(anonymous repos only — `docs/commit-identity` non-`inherit`).*
+   A separate fresh-context agent walks every commit since divergence —
+   diffs, **commit messages**, and any committed session/iteration logs —
+   removing or anonymizing PII via history rewrite, with a deterministic
+   privacy lint (patterned paths, usernames, emails, keys) as its base pass
+   over each commit where one is wired. The rewrite stamps a **`Scrubbed:`**
+   trailer on each rewritten commit so later checks can tell scrubbed history
+   from raw. Rewriting is confined to the iteration branch *before* landing —
+   never the development branch; step 1 is the net. When the scrub agent
+   **can't run** at a sync point, the sync **fails closed**: it waits, and
+   nothing lands unscrubbed — a missing tool is never a pass at the one
+   boundary that matters.
+3. **Optional push of the iteration branch** — only if `docs/push-policy`
+   allows agent pushes; preserves the granular (scrubbed) history remotely
+   for backup and forensics.
+4. **Collate.** A separate agent reorganizes the leg's commits into
+   **categorical commits** — Conventional-Commit style with optional scope
+   (`feat(addon):` / `fix(biome):` / `perf(noise):` / `docs:` / `build:`) —
+   each a coherent, reviewable, why-and-impact-shaped change. Many tiny green
+   commits in; few subject-shaped commits out. **The type list is a default
+   vocabulary, never a restriction:** a project renames or extends the types
+   to fit its domain, and nothing lints the exact set.
+5. **Land.** The collated commits go onto the development branch as a
+   rebase/cherry-pick — dev history stays linear, no merge bubbles; a
+   conflict during landing is a **Blocked item**, never a silent
+   force-through. After landing, the iteration branch resets onto the new dev
+   head for the next leg. The human pushes at their leisure (the default
+   policy) — or the agent does, iff the policy says so. **Landing is not a
+   stopping point:** under an autonomous gate authority the loop syncs and
+   rolls straight into the next leg — unpushed landed legs accumulate, and
+   the human may push several at once; the run pauses only when intervention
+   is *required*, never merely because a sync happened.
+
+**Push authority is a declared policy — `docs/push-policy`** (one word,
+tracked like `docs/gate`; scaffolded `human` in every repo):
+
+- **`human`** *(default)* — the agent **never pushes, even if asked
+  mid-session**; it prepares the branch and requests the push. Publication is
+  a deliberate human act, immune to hook/tool circumvention by construction;
+  the human is a cheap bottleneck, because pushing is rare and takes seconds.
+- **`agent-iteration`** — the agent may push only the *scrubbed iteration
+  branch* (remote backup + visibility); the development branch stays
+  human-pushed.
+- **`agent`** — full delegation: the agent may push the development branch
+  after a landed sync, still gated by the sync ritual.
+
+The policy is a **process rule** honored by agent drivers and any unattended
+coordinator — hooks can only *assist* per-clone, which is exactly why the
+authority is structural, not hook-based. Change the value in a reviewed
+commit, like `docs/gate`.
+
+**Why this beats a push-time filter (recorded).** (1) A structural model
+cannot be circumvented by pushing with a different tool — the branch the user
+pushes never contained the leak. (2) It solves add-then-strip *by
+construction* (raw history never reaches the published branch), where a
+diff-of-final-tree check would miss a leak added in one commit and removed in
+a later one — it still ships in history. (3) It reconciles commit-often with
+readable history — the classic feature-branch / curated-integration pattern,
+with agents doing the curation.
+
+**Two histories, one authority.** The granular iteration branch and the
+curated development branch can confuse a reader: the **development branch is
+authoritative**. Because scrub and collation rewrite iteration SHAs,
+`status.md`/`log.md` entries cite **stable ids** — OI-n, gate names, dates —
+never iteration-branch commit SHAs (the log template states the rule).
+Optionally add the `llm/**` pattern to the CI triggers (the shipped
+`check.yml` does) so the process floor runs remotely on the iteration branch
+too.
+
 ## §7 boundary notes
 
 *Referenced from PROCESS.md §7.* These three notes draw lines around what the kit

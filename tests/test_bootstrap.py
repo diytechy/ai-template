@@ -15,6 +15,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/gate",
         "docs/gate-policy",
         "docs/commit-identity",
+        "docs/push-policy",
         "docs/status.md",
         "docs/log.md",
         "docs/architecture.md",

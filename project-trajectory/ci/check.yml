@@ -8,7 +8,9 @@
 name: check
 on:
   push:
-    branches: [main]
+    # llm/** = the agent iteration branch (process-options.md "Agent iteration
+    # branch & sync"), so the process floor also runs remotely on agent legs.
+    branches: [main, "llm/**"]
     tags: ["v*"]
   pull_request:
 

@@ -5,7 +5,10 @@ gate sign-offs, review verdicts, ratified decisions, and session notes append
 here, **newest last**, and are never rewritten. The working surface — what to
 do *next* — lives in [status.md](status.md), which points here; this file is
 **evidence, never normative**: a rule or requirement belongs in the process
-doc or a registry, not in a log entry.
+doc or a registry, not in a log entry. Entries here and in status.md cite
+**stable ids** (OI-n, gate names, dates), never iteration-branch commit SHAs —
+sync scrub/collation may rewrite those (process-options.md "Agent iteration
+branch & sync").
 
 ---
 

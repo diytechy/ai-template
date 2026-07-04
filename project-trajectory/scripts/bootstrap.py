@@ -20,6 +20,7 @@ What it creates in the destination:
     docs/gate                                  <- gate.template  (active gate: G1)
     docs/gate-policy                           <- gate-policy.template  (authority: attended)
     docs/commit-identity                       <- commit-identity.template  (policy: inherit)
+    docs/push-policy                           <- push-policy.template  (policy: human)
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
     docs/architecture.md                       <- ARCHITECTURE.template.md
@@ -113,6 +114,18 @@ it is free to fix; run interactively without the flag and bootstrap ASKS (the
 same consent-first shape as --agents; non-interactive runs keep `inherit`).
 Enforcement lives in scripts/setup.{sh,ps1} (applies a repo-local identity per
 clone) and .githooks/pre-commit (blocks a mismatched commit).
+
+`docs/push-policy` (process-options.md "Agent iteration branch & sync")
+declares who may publish (`git push`): `human` (the scaffolded default — an
+agent never pushes, even if asked mid-session; it prepares the branch and
+requests), `agent-iteration` (only the scrubbed llm/<branch> iteration
+branch), or `agent` (the development branch after a landed sync).
+`--push-policy` sets it at scaffold time; run interactively without the flag
+and bootstrap ASKS (the same consent-first shape as --gate-policy;
+non-interactive runs keep `human`). It is a process rule honored by agent
+drivers and coordinators, not a hook guarantee — hooks are per-clone and can
+only assist, which is why the authority is declared rather than enforced at
+push time.
 
 This scaffolds a **single-repo** project — the default and almost-always-right
 rung of the scale ladder (process.md §10). The rare multi-repo **coordinator** rung
@@ -461,6 +474,30 @@ def apply_gate_policy(dest, level, dry_run):
     return written
 
 
+# Who may publish (Thread 40, process-options.md "Agent iteration branch &
+# sync"). Declared once at scaffold time like the gate authority; the value is
+# honored by agent drivers/coordinators as a process rule (hooks are per-clone
+# and can only assist).
+PUSH_POLICY_CHOICES = ("human", "agent-iteration", "agent")
+
+
+def apply_push_policy(dest, policy, dry_run):
+    """Write a non-default push policy into docs/push-policy, keeping the
+    template's explanatory header (same shape as apply_commit_identity)."""
+    if policy == "human" or dry_run:
+        return
+    header = [
+        ln
+        for ln in (KIT / "push-policy.template")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if ln.startswith("#")
+    ]
+    target = dest / "docs" / "push-policy"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(header + [policy]) + "\n", encoding="utf-8")
+
+
 def apply_commit_identity(dest, policy, dry_run):
     """Write a declared (non-`inherit`) policy into docs/commit-identity,
     keeping the template's explanatory header. Identity belongs at repo
@@ -512,6 +549,10 @@ MAPPING = [
     # The declared commit-identity policy (Thread 38, process-options.md "Commit
     # identity & anonymity"): `inherit` by default; --commit-identity overrides.
     ("commit-identity.template", "docs/commit-identity"),
+    # The declared push authority (Thread 40, process-options.md "Agent
+    # iteration branch & sync"): who may publish. `human` by default — an
+    # agent never pushes; --push-policy overrides.
+    ("push-policy.template", "docs/push-policy"),
     ("STATUS.template.md", "docs/status.md"),
     # The append-only history status.md points at (Thread 36, process.md §5):
     # sign-offs, verdicts, and ratified decisions append here, keeping the
@@ -761,6 +802,15 @@ def main():
         "(docs/gate-policy.md) pre-filled for it.",
     )
     ap.add_argument(
+        "--push-policy",
+        choices=PUSH_POLICY_CHOICES,
+        default=None,
+        help="declared push authority for docs/push-policy (process-options.md "
+        '"Agent iteration branch & sync"): human|agent-iteration|agent. '
+        "Omitted + interactive TTY -> ASK; non-interactive -> 'human' (the "
+        "default: an agent never pushes; it prepares the branch and requests).",
+    )
+    ap.add_argument(
         "--commit-identity",
         default=None,
         metavar="PATTERN",
@@ -814,6 +864,20 @@ def main():
             "process.md §4)",
             GATE_POLICY_CHOICES,
             "attended",
+        )
+    )
+
+    # Resolve the push authority the same consent-first way: explicit flag
+    # wins; else ASK on an interactive TTY; else 'human' (CI-safe — the
+    # scaffolded default file already says human, so nothing extra happens).
+    push_policy = (
+        args.push_policy
+        if args.push_policy is not None
+        else prompt_choice(
+            "Push policy for this repo? (who may `git push` — "
+            'process-options.md "Agent iteration branch & sync")',
+            PUSH_POLICY_CHOICES,
+            "human",
         )
     )
 
@@ -896,6 +960,14 @@ def main():
             created.append(rel)
     if gate_policy != "attended":
         print("  gate-authority level: {}".format(gate_policy))
+
+    # A declared non-default push authority overwrites the scaffolded default
+    # (the file itself was just copied with `human` on its value line).
+    if push_policy != "human":
+        apply_push_policy(dest, push_policy, args.dry_run)
+        if "docs/push-policy" not in created:
+            created.append("docs/push-policy")
+        print("  push policy: {}".format(push_policy))
 
     # A declared (non-inherit) identity policy overwrites the scaffolded
     # default — this is the one moment identity is free to fix (pre-commit).

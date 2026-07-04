@@ -157,7 +157,11 @@ intent, not a coincidence. A commit is not a release and not a gate: the bar is
 "floor-green plus a coherent, describable change", never perfection — polish
 arrives as further commits. End every session with a **clean tree**: work
 either committed or explicitly parked as a finding/assumption in `status.md`,
-never silently stranded.
+never silently stranded. Agent-driven work can keep this cadence *and* a
+readable history: under the opt-in iteration-branch layer
+([`process-options.md`](process-options.md) "Agent iteration branch & sync")
+the agent commits often on its own `llm/{branch}` and the development branch
+receives each leg **collated into categorical commits** at sync.
 
 **The doc set must stay navigable (the doc map stays honest like the code map).**
 The freshness gate above keeps *generated* blocks honest; the hand-written docs
@@ -560,6 +564,13 @@ when the human closes a gate by bumping `docs/gate` in a reviewed commit (the sa
 explicit-diff discipline as the perf baseline). A release tag runs the full bar
 regardless. Without this, CI would apply the end-state G3 bar from day one and
 stay red for months — training everyone to ignore it.
+
+**Push authority.** Who may *publish* (`git push`) is likewise declared, not
+assumed: the one-line `docs/push-policy` (default **`human`** — an agent never
+pushes, even if asked mid-session; it prepares the branch and requests). A
+process rule honored by agent drivers, not a hook guarantee (hooks are
+per-clone). Levels + the iteration-branch sync ritual:
+[`process-options.md`](process-options.md) "Agent iteration branch & sync".
 
 **Two check layers — process vs. product.** The harness runs two kinds of check,
 and naming the split is what keeps the kit portable across stacks:
