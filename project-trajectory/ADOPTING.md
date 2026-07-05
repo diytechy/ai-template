@@ -114,7 +114,16 @@ Two shipped scripts parse **Python source specifically**:
      the pre-commit hook and CI treat it exactly like the Python one. (The
      kit's `hooks/pre-commit` carries the `gen_arch_map.py --check` line as an
      **EDIT marker** naming the `pwsh … gen_arch_map.ps1 -Check` swap.)
-  2. **Remove the `arch-map` step** from `check.py` and delete the generated
+  2. **Run the stack-neutral fallback** (`gen_arch_map.py --mode files`): the
+     same script fills the same marker block with **one row per source file**
+     (path + first comment line) instead of symbol-level rows. No new runtime,
+     works for any language, and `--check` still trips on a file
+     added/removed/renamed or a summary edit — a real freshness gate, just
+     coarser. Wire it by adding `--mode files` to the `arch-map` step (set your
+     comment token with `--comment-prefix` if it isn't `#`/`//`/`--`). Prefer
+     this over a vacuous pass whenever you haven't ported a symbol-level
+     generator yet.
+  3. **Remove the `arch-map` step** from `check.py` and delete the generated
      markers from `architecture.md`, keeping the hand-written overview. Honest,
      just weaker: record the loss in `docs/status.md` constraints.
 - **`check_stubs.py`** is Python-only and already optional/product-layer: swap

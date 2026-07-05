@@ -49,18 +49,33 @@ written; pass `--strict-parse` to also *fail* on any unparseable module — for 
 non-Python stack where this map is the only parse signal, or to belt-and-braces
 the lint/test steps.
 
+Stack-neutral fallback (`--mode files`): when no parser for your language is
+handy, fill the same MODULE MAP block with **one row per source file** — its
+path plus the first comment line as a summary — instead of symbol-level rows.
+The freshness contract is identical: a file added/removed/renamed, or a
+summary-line edit, refreshes the map and so trips `--check`. Coarser than the
+symbol-level default, but it restores a real drift check for *any* stack without
+porting a generator (see ADOPTING.md). `--comment-prefix` sets the comment
+tokens scanned (default `#`, `//`, `--`). `--flow` and the dependency diagram
+are symbol-mode only (they need a parser).
+
 Usage:
     python scripts/gen_arch_map.py [--src SRC ...] [--doc FILE ...] [--flow ENTRY]
+                                   [--mode symbols|files] [--comment-prefix TOK ...]
                                    [--check] [--strict-parse]
 
-    --src           One or more source roots to scan (default: src). Repeatable.
-    --doc           File(s) to update in place (default: docs/architecture.md).
-                    Repeatable — each must contain the MODULE MAP marker pair.
-    --flow          Entry function (e.g. `run` or `module:run`) whose call
-                    sequence is spliced into the FLOW markers of any --doc.
-    --check         Do not write; exit 1 if any target is out of date (CI/harness).
-    --strict-parse  Exit 1 if any scanned module fails to parse (independent of
-                    --check staleness).
+    --src            One or more source roots to scan (default: src). Repeatable.
+    --doc            File(s) to update in place (default: docs/architecture.md).
+                     Repeatable — each must contain the MODULE MAP marker pair.
+    --flow           Entry function (e.g. `run` or `module:run`) whose call
+                     sequence is spliced into the FLOW markers of any --doc.
+    --mode           `symbols` (default; Python-AST symbol map + diagram/flow) or
+                     `files` (stack-neutral file-level fallback; see above).
+    --comment-prefix Comment token(s) whose first occurrence yields a file's
+                     summary in `--mode files` (repeatable; default `#`,`//`,`--`).
+    --check          Do not write; exit 1 if any target is out of date (CI/harness).
+    --strict-parse   Exit 1 if any scanned module fails to parse (independent of
+                     --check staleness).
 
 Marker pairs (the templates ship with them):
     <!-- BEGIN GENERATED MODULE MAP -->  ... <!-- END GENERATED MODULE MAP -->   (required per --doc)
@@ -94,6 +109,9 @@ END_FLOW = "<!-- END GENERATED FLOW -->"
 BEGIN_DIAGRAM = "<!-- BEGIN GENERATED DEPENDENCY DIAGRAM -->"
 END_DIAGRAM = "<!-- END GENERATED DEPENDENCY DIAGRAM -->"
 IMPLEMENTS_RE = re.compile(r"\b(?:SR|LLR|SN|TC)-\d+\b")
+# Comment tokens the file-level fallback (--mode files) reads a summary from.
+# The three most common line-comment markers; override with --comment-prefix.
+DEFAULT_COMMENT_PREFIXES = ("#", "//", "--")
 
 
 def first_line(text):
@@ -231,6 +249,75 @@ def _module_files(src_roots):
             for part in path.relative_to(root).parts[:-1]:
                 names.add(part)
     return files, names
+
+
+def _source_files(src_roots):
+    """(path, root_parent) for every non-hidden regular file under the roots —
+    language-agnostic (used by --mode files). Same hidden/__pycache__ skip and
+    rel-path base as _module_files, but no extension filter: on a non-Python
+    repo the map must still see the code."""
+    files = []
+    for root in src_roots:
+        root = Path(root)
+        if not root.exists():
+            continue
+        base = root.parent if root.name else root
+        for path in sorted(root.rglob("*")):
+            if not path.is_file():
+                continue
+            if any(part.startswith((".", "__pycache__")) for part in path.parts):
+                continue
+            files.append((path, base))
+    return files
+
+
+def first_comment_summary(text, prefixes):
+    """A file's one-line summary for --mode files: the text of its first comment
+    line. Skips a shebang; strips the comment token (and a trailing block close
+    like `-->`/`*/`). Returns "" when the file opens with code, not a comment —
+    the top-of-file comment is the summary convention, so we don't hunt inline
+    comments deeper down."""
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#!"):
+            continue
+        for pre in prefixes:
+            if line.startswith(pre):
+                body = line[len(pre) :].rstrip()
+                for close in ("-->", "*/"):
+                    if body.endswith(close):
+                        body = body[: -len(close)]
+                return body.strip(" \t*-/")
+        return ""  # first non-empty line is not a comment
+    return ""
+
+
+def build_files_map(src_roots, prefixes):
+    """Stack-neutral MODULE MAP block: one row per source file (path + first
+    comment-line summary), sorted by path. Deterministic, so `--check` trips on
+    any file add/remove/rename or summary edit — the same freshness guarantee as
+    the symbol map, one granularity coarser."""
+    files = _source_files(src_roots)
+    note = (
+        "_Generated by `scripts/gen_arch_map.py --mode files` from the source "
+        "tree (file-level fallback — no language parser). One row per source "
+        "file; the summary is its first comment line. Do not edit by hand; run "
+        "the check harness to refresh._"
+    )
+    if not files:
+        return note + "\n\n_(no source scanned)_"
+    rows = []
+    for path, base in files:
+        rel = path.relative_to(base).as_posix()
+        try:
+            summary = first_comment_summary(path.read_text(encoding="utf-8"), prefixes)
+        except (UnicodeDecodeError, OSError):
+            summary = ""  # binary/unreadable file: list it, no summary
+        rows.append((rel, summary))
+    lines = [note, "", "| Source file | Summary |", "|---|---|"]
+    for rel, summary in sorted(rows):
+        lines.append("| `{}` | {} |".format(rel, summary.replace("|", "\\|")))
+    return "\n".join(lines)
 
 
 def build_map(src_roots):
@@ -486,6 +573,20 @@ def main():
         "the GENERATED FLOW markers (e.g. 'run' or 'mod:run')",
     )
     ap.add_argument(
+        "--mode",
+        choices=("symbols", "files"),
+        default="symbols",
+        help="symbols (default: Python-AST symbol map + diagram/flow) or "
+        "files (stack-neutral one-row-per-file fallback)",
+    )
+    ap.add_argument(
+        "--comment-prefix",
+        action="append",
+        default=None,
+        help="comment token whose first line is a file's summary in --mode "
+        "files (repeatable; default: # // --)",
+    )
+    ap.add_argument(
         "--check",
         action="store_true",
         help="do not write; exit 1 if any target is stale",
@@ -499,23 +600,44 @@ def main():
 
     src_roots = args.src or ["src"]
     docs = [Path(d) for d in (args.doc or ["docs/architecture.md"])]
+    if args.mode == "files" and args.flow:
+        raise SystemExit("--flow needs a parser; it is not available in --mode files")
+
+    if args.mode == "files":
+        prefixes = tuple(args.comment_prefix or DEFAULT_COMMENT_PREFIXES)
+        has_source = bool(_source_files(src_roots))
+    else:
+        has_source = bool(_module_files(src_roots)[0])
     # An empty scan is legitimate pre-code, but on a repo whose code lives in
-    # another language the map — and its --check freshness gate — would pass
-    # *vacuously* forever while the docs still promise drift-proofing. Say so
-    # loudly rather than let the guarantee silently lapse (see ADOPTING.md).
-    if not _module_files(src_roots)[0]:
+    # another language the symbol map — and its --check freshness gate — would
+    # pass *vacuously* forever while the docs still promise drift-proofing. Say
+    # so loudly rather than let the guarantee silently lapse; point at the
+    # stack-neutral fallback and the porting contract (see ADOPTING.md).
+    if not has_source:
+        fallback = (
+            ""
+            if args.mode == "files"
+            else "run this generator with `--mode files` for a stack-neutral "
+            "file-level map, "
+        )
         print(
             "gen_arch_map: WARNING - no source scanned under {} — the map is "
             "empty and --check passes vacuously. If this repo's code is in "
-            "another language, port the generator to it (the marker block is "
+            "another language, {}port the generator to it (the marker block is "
             "the contract) or remove the arch-map step; see ADOPTING.md.".format(
-                ", ".join(str(s) for s in src_roots)
+                ", ".join(str(s) for s in src_roots), fallback
             ),
             file=sys.stderr,
         )
-    generated = build_map(src_roots)
-    diagram = build_dependency_diagram(src_roots)
-    flow = build_flow(src_roots, args.flow) if args.flow else None
+
+    if args.mode == "files":
+        generated = build_files_map(src_roots, prefixes)
+        diagram = None  # diagram/flow are symbol-mode only (need a parser)
+        flow = None
+    else:
+        generated = build_map(src_roots)
+        diagram = build_dependency_diagram(src_roots)
+        flow = build_flow(src_roots, args.flow) if args.flow else None
 
     stale = False
     for doc in docs:
@@ -524,9 +646,10 @@ def main():
         current = doc.read_text(encoding="utf-8")
         updated = splice_region(current, BEGIN, END, generated, doc, required=True)
         # DIAGRAM and FLOW markers are optional per doc — presence opts in.
-        updated = splice_region(
-            updated, BEGIN_DIAGRAM, END_DIAGRAM, diagram, doc, required=False
-        )
+        if diagram is not None:
+            updated = splice_region(
+                updated, BEGIN_DIAGRAM, END_DIAGRAM, diagram, doc, required=False
+            )
         if flow is not None:
             updated = splice_region(
                 updated, BEGIN_FLOW, END_FLOW, flow, doc, required=False

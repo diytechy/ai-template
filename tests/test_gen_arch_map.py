@@ -147,6 +147,95 @@ def test_splice_replaces_between_markers():
     assert out.startswith("intro\n") and out.endswith("outro\n")
 
 
+def test_first_comment_summary_variants():
+    f = gen_arch_map.first_comment_summary
+    p = gen_arch_map.DEFAULT_COMMENT_PREFIXES
+    assert f("#!/usr/bin/env node\n// Real summary.\n", p) == "Real summary."  # shebang skipped
+    assert f("# Top comment\n", p) == "Top comment"
+    assert f("-- SQL module summary\n", p) == "SQL module summary"
+    assert f("/// Rust doc line\n", p) == "Rust doc line"  # extra slash stripped
+    assert f("export const x = 1\n// later\n", p) == ""  # opens with code, not a comment
+    assert f("", p) == ""
+    assert f("<!-- HTML page -->\n", ("<!--",)) == "HTML page"  # block close stripped
+
+
+def test_files_mode_reflects_tree_changes(tmp_path):
+    # The whole point of --mode files: a real freshness check for any stack.
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "a.js").write_text("// Alpha.\n", encoding="utf-8")
+    (src / "b.rb").write_text("# Beta.\n", encoding="utf-8")
+    p = gen_arch_map.DEFAULT_COMMENT_PREFIXES
+    m1 = gen_arch_map.build_files_map([str(src)], p)
+    assert "`src/a.js`" in m1 and "Alpha." in m1
+    assert "`src/b.rb`" in m1 and "Beta." in m1
+    assert "--mode files" in m1  # note names the fallback
+    # rename ⇒ map changes (add/remove behave the same way)
+    (src / "b.rb").rename(src / "c.rb")
+    m2 = gen_arch_map.build_files_map([str(src)], p)
+    assert m2 != m1 and "`src/c.rb`" in m2 and "`src/b.rb`" not in m2
+    # summary edit ⇒ map changes
+    (src / "a.js").write_text("// Alpha renamed.\n", encoding="utf-8")
+    m3 = gen_arch_map.build_files_map([str(src)], p)
+    assert m3 != m2 and "Alpha renamed." in m3
+
+
+def test_files_map_empty_scan(tmp_path):
+    out = gen_arch_map.build_files_map([str(tmp_path / "nothing")], ("#",))
+    assert "(no source scanned)" in out
+
+
+def test_symbols_mode_unaffected_by_files_addition(two_module_src):
+    # Regression guard: the default (symbols) map still emits symbol-level rows,
+    # not file rows — --mode files is strictly additive/opt-in.
+    out = gen_arch_map.build_map([two_module_src])
+    assert "`helper_a()`" in out  # a symbol signature, not a file path
+    assert "--mode files" not in out  # not the fallback note
+
+
+def test_files_mode_end_to_end_and_staleness(scaffold):
+    from conftest import run_py
+
+    src = scaffold / "src"
+    src.mkdir(exist_ok=True)
+    (src / "app.ts").write_text(
+        "// The TS entry point.\nexport const x = 1\n", encoding="utf-8"
+    )
+    proc = run_py(["scripts/gen_arch_map.py", "--mode", "files"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    arch = (scaffold / "docs" / "architecture.md").read_text(encoding="utf-8")
+    assert "src/app.ts" in arch and "The TS entry point." in arch
+    # freshly generated ⇒ --check is green (the arch-map step passes)
+    proc = run_py(["scripts/gen_arch_map.py", "--mode", "files", "--check"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # add a file ⇒ stale ⇒ --check fails (the drift lever works for a TS/Go repo)
+    (src / "util.go").write_text("// Helpers.\npackage util\n", encoding="utf-8")
+    proc = run_py(["scripts/gen_arch_map.py", "--mode", "files", "--check"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "STALE" in proc.stderr
+
+
+def test_files_mode_rejects_flow(scaffold):
+    from conftest import run_py
+
+    proc = run_py(
+        ["scripts/gen_arch_map.py", "--mode", "files", "--flow", "run"], cwd=scaffold
+    )
+    assert proc.returncode != 0
+    assert "flow" in (proc.stdout + proc.stderr).lower()
+
+
+def test_files_mode_zero_source_warns_without_self_reference(scaffold):
+    # In files mode the fallback IS running, so the warning must not tell the
+    # user to switch to the mode they're already in.
+    from conftest import run_py
+
+    proc = run_py(["scripts/gen_arch_map.py", "--mode", "files"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "no source scanned" in proc.stderr
+    assert "--mode files" not in proc.stderr
+
+
 def test_zero_source_scan_warns_loudly(scaffold):
     # A repo whose code isn't Python (or has none yet) must not get a silently
     # vacuous map + freshness gate: the run stays green (pre-code repos are
