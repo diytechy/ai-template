@@ -58,10 +58,22 @@ Usage:
                 [process] (kit-owned, stdlib, identical everywhere) or [product]
                 (language-specific — you wire it to your stack). See process.md
                 §7 "process vs product checks".
+    --run-step  Run just one named step (e.g. `format`) and exit with its
+                status; a missing tool is SKIP (exit 0), a real failure exit 1.
+                The pre-commit hook uses it to source its format check from the
+                declared profile rather than restating the command.
+
+The product toolchain (format/lint/test commands, src/tests paths, tier
+expressions, coverage threshold) is declared ONCE in `docs/stack.ini` when it
+exists — CI, the pre-commit hook, and setup.* delegate there instead of each
+restating a command. Absent that file, the built-in Python-reference defaults
+below apply (identical values), so a profile-less repo is unchanged.
 """
 
 import argparse
+import configparser
 import importlib.util
+import shlex
 import shutil
 import subprocess
 import sys
@@ -88,14 +100,33 @@ def _utf8_console():
 
 
 # ============================ EDIT FOR YOUR STACK ============================
-# The stack-specific knobs live here. For a non-Python project: point SRC/TESTS
-# at your layout, then swap the format/lint/tests commands in steps() (search
-# "EDIT FOR YOUR STACK" again) for your toolchain — or drop a step you don't
-# have. The traceability, design-flows, and arch-map steps are stdlib-only and
-# stack-agnostic; keep them as-is.
-SRC = "src"  # source root
-TESTS = "tests"  # test root
+# PREFER `docs/stack.ini` (Thread 30): declaring the toolchain there keeps CI,
+# the hook, and setup.* reading one source. The constants + built-in command
+# templates below are the FALLBACK used when no profile file exists — a
+# profile-less repo runs exactly these. Keep them and the scaffolded stack.ini
+# in step: the reference profile declares these same values. The traceability,
+# design-flows, and arch-map steps are stdlib-only and stack-agnostic (kept
+# as-is either way).
+SRC = "src"  # source root ([paths] src)
+TESTS = "tests"  # test root ([paths] tests)
 COVERAGE_THRESHOLD = 80  # line-coverage %, enforced at full/release (process.md)
+
+# The declared product toolchain (Thread 30), read at repo root when present.
+PROFILE_FILE = Path("docs/stack.ini")
+
+# Built-in Python-reference commands, used when docs/stack.ini is absent (or for
+# any section/key it doesn't override). {py}/{src}/{tests}/{coverage} expand the
+# same way the profile's do (see load_profile / _expand). The scaffolded
+# stack.ini declares these same strings, so a fresh scaffold and a profile-less
+# repo build byte-identical plans.
+BUILTIN_PRODUCT = {
+    "format": "{py} -m ruff format --check {src} {tests}",
+    "lint": "{py} -m ruff check {src} {tests}",
+    "test": "{py} -m pytest -q",
+}
+BUILTIN_COVERAGE_ARGS = (
+    "--cov={src} --cov-report=term-missing --cov-fail-under={coverage}"
+)
 # ============================================================================
 
 # Tier -> pytest marker expression. Tiers are cumulative, and the safe default
@@ -115,6 +146,63 @@ TIERS = {
 COVERAGE_TIERS = ("full", "release", "all")
 
 
+def load_profile(path=PROFILE_FILE):
+    """Parse the declared product toolchain (docs/stack.ini) if present, else
+    None. A malformed profile fails LOUDLY — never silently ignored — so a typo
+    can't quietly drop the format/lint/test gate. `interpolation=None` keeps the
+    command values literal (a `%` in a command needs no escaping)."""
+    if not path.exists():
+        return None
+    cp = configparser.ConfigParser(interpolation=None)
+    try:
+        cp.read_string(path.read_text(encoding="utf-8"), source=str(path))
+    except configparser.Error as exc:
+        sys.exit("check: {} is malformed: {}".format(path, exc))
+    return cp
+
+
+def _has(profile, section, option):
+    """profile.has_option raises NoSectionError on a missing section; guard it."""
+    return (
+        profile is not None
+        and profile.has_section(section)
+        and profile.has_option(section, option)
+    )
+
+
+def _pget(profile, section, option, fallback):
+    """A profile value if declared, else the built-in fallback (so a partial
+    stack.ini that overrides only [paths] still uses the reference commands)."""
+    return profile.get(section, option) if _has(profile, section, option) else fallback
+
+
+def _expand(template, subs):
+    """Split a command TEMPLATE into argv, THEN substitute {py}/{src}/{tests}/
+    {coverage} per token. Splitting first keeps a Windows interpreter path
+    (spaces, backslashes) intact — substituting into the raw string and then
+    splitting would mangle it."""
+    argv = []
+    for tok in shlex.split(template):
+        for key, val in subs.items():
+            tok = tok.replace("{" + key + "}", val)
+        argv.append(tok)
+    return argv
+
+
+def _requires(argv):
+    """The importable modules a product command needs, derived from its argv so
+    a profile author declares nothing extra: `{py} -m <mod>` needs <mod>, and a
+    pytest `--cov*` flag needs the pytest-cov plugin (loaded by flag, not
+    import). A non-`-m` command (npx, cargo, go) needs no import — its
+    executable's absence is caught by run_step's PATH guard instead."""
+    reqs = []
+    if len(argv) >= 3 and argv[0] == sys.executable and argv[1] == "-m":
+        reqs.append(argv[2])
+    if any(tok.startswith("--cov") for tok in argv):
+        reqs.append("pytest_cov")
+    return tuple(dict.fromkeys(reqs))
+
+
 # Each step: name, the third-party module(s) it needs (importable by THIS
 # interpreter; () = stdlib-only), the command, the set of gates that require it,
 # and its layer — "process" (kit-owned, stdlib-only, identical in every project:
@@ -123,27 +211,34 @@ COVERAGE_TIERS = ("full", "release", "all")
 # tuple already implies the split; the layer tag formalizes and surfaces it (see
 # process.md §7 "process vs product checks"). Edit commands to fit your stack;
 # keep the gate tags and layers.
-def steps(coverage, tier, gate, phase=None):
-    # --- EDIT FOR YOUR STACK: the format/lint/test commands -------------------
-    # `pytest_cmd` (assembled here because it varies by tier/coverage) and the
-    # `ruff` format/lint entries in the returned list are the Python-reference
-    # toolchain. Replace them with your stack's equivalents — or drop a step you
-    # don't have — but keep each step's gate tags. Tools run as `python -m <mod>`
-    # via this interpreter, so the launcher's venv python is enough (no PATH/venv
-    # dance). `pytest_needs` lists the modules a step imports, so a missing tool
-    # is reported SKIP(missing) and (outside --lenient) fails rather than passing.
-    pytest_cmd = [sys.executable, "-m", "pytest", "-q"]
-    pytest_needs = ("pytest",)
+def steps(coverage, tier, gate, phase=None, profile=None):
+    # --- product commands: the declared profile (docs/stack.ini) or the built-in
+    # Python-reference defaults -------------------------------------------------
+    # `profile` is a parsed docs/stack.ini (or None). Every product command flows
+    # through the same _expand path, so an ABSENT profile is byte-identical to
+    # the historical hard-coded plan. Tools run as `{py} -m <mod>` via this
+    # interpreter (the launcher's venv python is enough — no PATH/venv dance);
+    # _requires derives the module a step imports from its argv, so a missing
+    # tool is reported SKIP(missing) and (outside --lenient) fails rather than
+    # passing. EDIT the commands in docs/stack.ini, not here.
+    src = _pget(profile, "paths", "src", SRC)
+    tests = _pget(profile, "paths", "tests", TESTS)
+    subs = {"py": sys.executable, "src": src, "tests": tests, "coverage": str(coverage)}
+    fmt_cmd = _expand(_pget(profile, "product", "format", BUILTIN_PRODUCT["format"]), subs)
+    lint_cmd = _expand(_pget(profile, "product", "lint", BUILTIN_PRODUCT["lint"]), subs)
+    test_cmd = _expand(_pget(profile, "product", "test", BUILTIN_PRODUCT["test"]), subs)
     if tier in COVERAGE_TIERS:
-        pytest_cmd += [
-            "--cov=" + SRC,
-            "--cov-report=term-missing",
-            "--cov-fail-under=" + str(coverage),
-        ]
-        pytest_needs = ("pytest", "pytest_cov")
-    marker = TIERS.get(tier)
-    if marker:
-        pytest_cmd += ["-m", marker]
+        test_cmd += _expand(
+            _pget(profile, "coverage", "args", BUILTIN_COVERAGE_ARGS), subs
+        )
+    # Tier selector appended to the test command: the profile's [tiers] value
+    # (a stack-native expression), else the built-in marker map. Empty = run all.
+    if _has(profile, "tiers", tier):
+        test_cmd += _expand(profile.get("tiers", tier), subs)
+    else:
+        marker = TIERS.get(tier)
+        if marker:
+            test_cmd += ["-m", marker]
     # The traceability step only runs at G2/G3, where placeholder rows must be
     # gone, so --no-placeholders is always on here (a fresh scaffold is exempt
     # only because nothing past G1 runs against it). --html also regenerates the
@@ -161,22 +256,10 @@ def steps(coverage, tier, gate, phase=None):
         if phase:  # phased delivery: close G3 for this phase only (process.md §4)
             trace_cmd += ["--phase", phase]
     return [
-        # --- product checks: language-specific, wired to your stack -----------
-        (
-            "format",
-            ("ruff",),
-            [sys.executable, "-m", "ruff", "format", "--check", SRC, TESTS],
-            {"G3"},
-            "product",
-        ),
-        (
-            "lint",
-            ("ruff",),
-            [sys.executable, "-m", "ruff", "check", SRC, TESTS],
-            {"G3"},
-            "product",
-        ),
-        ("tests+coverage", pytest_needs, pytest_cmd, {"G3"}, "product"),
+        # --- product checks: language-specific, declared in docs/stack.ini -----
+        ("format", _requires(fmt_cmd), fmt_cmd, {"G3"}, "product"),
+        ("lint", _requires(lint_cmd), lint_cmd, {"G3"}, "product"),
+        ("tests+coverage", _requires(test_cmd), test_cmd, {"G3"}, "product"),
         # Optional PRODUCT-layer detector, not wired into the required floor:
         # `scripts/check_stubs.py` is the Python-reference tripwire for the G3
         # no-stub / substance criterion (process.md §4). It is warn-first and
@@ -264,7 +347,7 @@ def steps(coverage, tier, gate, phase=None):
                 "--check",
                 "--strict-parse",
                 "--src",
-                SRC,
+                src,
                 "--doc",
                 "docs/architecture.md",
             ],
@@ -339,7 +422,13 @@ def main():
         help="gate to run (default: the active gate in docs/gate, else all)",
     )
     ap.add_argument("--tier", choices=list(TIERS), default="all")
-    ap.add_argument("--coverage", type=int, default=COVERAGE_THRESHOLD)
+    ap.add_argument(
+        "--coverage",
+        type=int,
+        default=None,
+        help="line-coverage threshold %% (default: docs/stack.ini [coverage] "
+        "threshold, else {})".format(COVERAGE_THRESHOLD),
+    )
     ap.add_argument(
         "--phase",
         default=None,
@@ -356,12 +445,45 @@ def main():
         action="store_true",
         help="print the plan (with [process]/[product] layer tags) and exit",
     )
+    ap.add_argument(
+        "--run-step",
+        metavar="NAME",
+        default=None,
+        help="run just the named step (e.g. 'format') and exit with its status; "
+        "a missing tool is SKIP (exit 0), a real failure exits 1 (the pre-commit "
+        "hook uses this to source its format check from docs/stack.ini)",
+    )
     args = ap.parse_args()
     gate = resolve_gate(args.gate)
+    profile = load_profile()
+
+    # --coverage wins; else the profile's declared threshold; else the built-in.
+    coverage = args.coverage
+    if coverage is None:
+        coverage = COVERAGE_THRESHOLD
+        if _has(profile, "coverage", "threshold"):
+            try:
+                coverage = int(profile.get("coverage", "threshold").strip())
+            except ValueError:
+                sys.exit("check: docs/stack.ini [coverage] threshold must be an integer")
+
+    # Run one named step and exit (the hook's format delegation). Search the
+    # unfiltered plan so a gate-scoped step (format is G3-only) is still found,
+    # and be lenient about a missing tool so a not-yet-set-up repo can commit —
+    # a real failure still exits nonzero.
+    if args.run_step:
+        all_steps = steps(coverage, args.tier, "all", args.phase, profile)
+        match = [s for s in all_steps if s[0] == args.run_step]
+        if not match:
+            sys.exit("check: no step named {!r}".format(args.run_step))
+        name, requires, cmd, _gates, _layer = match[0]
+        status, detail = run_step(name, requires, cmd, lenient=True)
+        print("  {:5} {:16} {}".format(status, name, detail))
+        sys.exit(1 if status == "FAIL" else 0)
 
     plan = [
         s
-        for s in steps(args.coverage, args.tier, gate, args.phase)
+        for s in steps(coverage, args.tier, gate, args.phase, profile)
         if gate == "all" or gate in s[3]
     ]
 

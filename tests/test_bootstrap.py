@@ -10,6 +10,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "GEMINI.md",
         ".gitignore",
         "pytest.ini",
+        "docs/stack.ini",
         "docs/process.md",
         "docs/process-options.md",
         "docs/gate",

@@ -1,0 +1,51 @@
+# docs/stack.ini — the product toolchain, declared ONCE.
+#
+# The single home for the format / lint / test commands, the source & test
+# paths, the test tiers, and the coverage threshold. scripts/check.py reads
+# this file; CI (.github/workflows/check.yml), the pre-commit hook, and
+# scripts/setup.* delegate to it instead of restating a command — so a stack
+# swap becomes editing THIS file, not hunting the same command across six
+# copies (the single-source rule the kit preaches). Delete the file to fall
+# back to check.py's built-in Python-reference defaults (identical to below).
+#
+# Placeholders expanded inside the commands:
+#   {py}          the Python interpreter running check.py, so the venv python is
+#                 enough — no activated venv / PATH entry needed. A non-Python
+#                 stack names its own tool (npx, go, cargo, pwsh) instead.
+#   {src} {tests} the [paths] values below.
+#   {coverage}    the resolved coverage threshold (see [coverage]).
+# A command that runs `{py} -m <module>` auto-declares <module> as a required
+# import, so a missing tool is reported SKIP(missing) and fails the gate rather
+# than silently passing. Any other executable's absence on PATH is the same
+# designed failure (check.py resolves it the way the OS would).
+
+[paths]
+src = src
+tests = tests
+
+[product]
+# Language-specific — swap for your stack (e.g. `npx prettier --check {src}`).
+format = {py} -m ruff format --check {src} {tests}
+lint = {py} -m ruff check {src} {tests}
+# The BASE test command. check.py appends the [coverage] args at the covered
+# tiers and the [tiers] selector below, so keep this just the runner invocation.
+test = {py} -m pytest -q
+
+[tiers]
+# The kit tiers are fixed (smoke | full | release | all); their *expressions*
+# are yours. Each value is a stack-native selector appended to [product] test;
+# empty = run everything. The reference uses pytest markers — a vitest repo
+# might use a path (`tests/smoke`) or a project (`--project smoke`). An UNMARKED
+# pytest test runs in full/release (the safe opt-out default — see pytest.ini).
+smoke = -m smoke
+full = -m "not release"
+release =
+all =
+
+[coverage]
+# Line-coverage threshold %, enforced at the full/release/all tiers only (the
+# smoke subset isn't held to it). `--coverage N` on the check.py CLI overrides.
+threshold = 80
+# Appended to [product] test at the covered tiers; drop/replace for a
+# non-pytest coverage tool.
+args = --cov={src} --cov-report=term-missing --cov-fail-under={coverage}

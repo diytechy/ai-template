@@ -599,8 +599,11 @@ and naming the split is what keeps the kit portable across stacks:
   legitimate early-stage commit.
 - **Product checks are project-owned and language-specific** (`requires` names a
   tool — `ruff`/`pytest` in the Python reference): format, lint, and
-  tests+coverage. **You wire these to your stack** in `check.py`'s "EDIT FOR YOUR
-  STACK" block; a non-Python project swaps the commands or drops a step it lacks.
+  tests+coverage. **You wire these to your stack in one file, `docs/stack.ini`**
+  — the declared home for the format/lint/test commands, `src`/`tests` paths,
+  tier expressions, and coverage threshold (`check.py`'s "EDIT FOR YOUR STACK"
+  block is the identical built-in fallback); a non-Python project swaps the
+  commands or drops a step it lacks.
 
 The empty-vs-named `requires` tuple already implies which layer a step is in;
 `check.py --list` makes it explicit, tagging each step `[process]`/`[product]` so
@@ -661,10 +664,10 @@ pip needed to run them):
 - `scripts/check.py` — the harness itself. Gate-scoped (`--gate G1|G2|G3|all`,
   defaulting to the `docs/gate` active gate), runs
   format · lint · tests · coverage · traceability · arch-map freshness, and exits
-  nonzero on any failure. Wire it to your stack by editing the step list its
-  `steps()` function returns (and the `SRC`/`TESTS`/tool names in the "EDIT FOR
-  YOUR STACK" block at the top); the contract is the gates + exit code, not the
-  specific tools. CI runs the same command (`ci/check.yml`).
+  nonzero on any failure. Wire it to your stack by editing `docs/stack.ini` (the
+  commands/paths/tiers/coverage; its built-in `steps()` fallback is unchanged);
+  the contract is the gates + exit code, not the specific tools. CI runs the
+  same command (`ci/check.yml`).
 - `scripts/trace.py` — joins the registries, writes `docs/test/report.md` (counts,
   the SR→LLR→TC matrix, a line-reviewable `SN→SR→LLR→TC` **text outline**, and a
   small **Mermaid `graph LR`** colored by orphan/draft state), and exits nonzero

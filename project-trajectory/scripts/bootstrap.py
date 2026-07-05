@@ -45,6 +45,7 @@ What it creates in the destination:
     scripts/agent_loop.py                      (unattended coordinator engine)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     .githooks/pre-push                         <- hooks/pre-push  (anonymous-repo privacy backstop)
+    docs/stack.ini                             <- stack.ini.template  (declared product toolchain)
     pytest.ini                                 (test-tier markers; skipped when
                                                 --stack is explicitly non-Python)
     docs/kit-profile                           (generated stamp: stack + omitted axes)
@@ -143,6 +144,15 @@ non-interactive runs keep `human`). It is a process rule honored by agent
 drivers and coordinators, not a hook guarantee — hooks are per-clone and can
 only assist, which is why the authority is declared rather than enforced at
 push time.
+
+`docs/stack.ini` (Thread 30, process.md §7) declares the product toolchain
+**once** — the format/lint/test commands, the `src`/`tests` paths, the test-tier
+expressions, and the coverage threshold. `scripts/check.py` reads it; CI, the
+pre-commit hook, and `scripts/setup.*` delegate to it instead of each restating
+a command, so a stack swap edits one file. It is scaffolded unconditionally with
+the Python-reference values (identical to check.py's built-in fallback, so a
+fresh scaffold's behavior is unchanged); a non-Python scaffold's rewiring
+checklist points here. Deleting the file falls back to the built-ins.
 
 This scaffolds a **single-repo** project — the default and almost-always-right
 rung of the scale ladder (process.md §10). The rare multi-repo **coordinator** rung
@@ -738,8 +748,8 @@ def write_kit_profile(dest, stack, omit, dry_run):
 # template's seeded examples, so the checklist starts at OI-3.
 STACK_NEEDS_HUMAN = (
     "    - OI-3 — decide: the {stack} toolchain commands (format / lint / "
-    "test) for scripts/check.py's EDIT block (blocks: G1) → "
-    "[check.py](../scripts/check.py)\n"
+    "test) in docs/stack.ini's [product] section (blocks: G1) → "
+    "[stack.ini](stack.ini)\n"
 )
 STACK_IN_FLIGHT = (
     "    - OI-4 — rewire scripts/setup.* dependency installs for {stack} → "
@@ -747,8 +757,8 @@ STACK_IN_FLIGHT = (
     "    - OI-5 — rewire the CI install step for {stack} → "
     "[check.yml](../.github/workflows/check.yml)\n"
     "    - OI-6 — map the Smoke/Full/Release test tiers onto the {stack} "
-    "runner (pytest.ini deliberately not scaffolded) → "
-    "[process.md §7](process.md#7-harness-contract-wire-to-your-stack)\n"
+    "runner in docs/stack.ini's [tiers] (pytest.ini deliberately not "
+    "scaffolded) → [stack.ini](stack.ini)\n"
 )
 
 
@@ -896,6 +906,13 @@ MAPPING = [
     # the default `inherit` commit-identity policy, like the policy files.
     ("hooks/pre-commit", ".githooks/pre-commit"),
     ("hooks/pre-push", ".githooks/pre-push"),
+    # The declared product toolchain (Thread 30, process.md §7): the single home
+    # for the format/lint/test commands, src/tests paths, tiers, and coverage
+    # threshold. check.py/CI/hook/setup.* read it. Copied UNCONDITIONALLY (unlike
+    # pytest.ini) with the Python-reference values — it's the one file a stack
+    # swap edits, so every scaffold gets it (a non-Python scaffold's OI checklist
+    # points here). Deleting it falls back to check.py's identical built-ins.
+    ("stack.ini.template", "docs/stack.ini"),
     ("pytest.ini", "pytest.ini"),
     ("gitignore.template", ".gitignore"),
     # eol=lf pin for the sh-based git hook (a CRLF shebang breaks it under

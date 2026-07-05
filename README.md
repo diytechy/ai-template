@@ -77,7 +77,9 @@ at it), `docs/` (process, status, architecture, interfaces, the registries),
 
 1. Fill the **PROJECT BRIEF** in the new repo's `AGENTS.md` and `docs/status.md`.
 2. Install the harness tooling for your stack (the Python reference uses
-   `ruff pytest pytest-cov`).
+   `ruff pytest pytest-cov`). The commands the harness runs — format, lint,
+   test, tiers, coverage — are declared once in the new repo's `docs/stack.ini`;
+   a non-Python stack edits that one file.
 3. Start **gate G1** — see the new repo's `docs/process.md`.
 
 ### Or kick off with an agent

@@ -113,13 +113,21 @@ if [ -n "$policy" ] && [ "$policy" != "inherit" ]; then
   "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT"
 fi
 
-# 4. Format check on staged Python files — product tooling, so run it only if
-#    ruff is importable by this interpreter (matching check.py's detection); skip
-#    silently otherwise, so a non-Python or not-yet-set-up repo can still commit.
-if "$PY" -c "import importlib.util as u, sys; sys.exit(0 if u.find_spec('ruff') else 1)" >/dev/null 2>&1; then
-  staged=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep '\.py$' || true)
-  if [ -n "$staged" ]; then
-    # shellcheck disable=SC2086  # word-splitting is intended: one arg per file.
-    "$PY" -m ruff format --check $staged
+# 4. Format check — the product formatter, sourced from the declared toolchain
+#    (docs/stack.ini) rather than restated here. When the profile exists,
+#    delegate to `check.py --run-step format`: check.py runs the profile's
+#    format command itself (no shell-quoting of the interpreter path), treats a
+#    missing tool as SKIP (exit 0, so a not-yet-set-up repo still commits), and
+#    fails only on a real format violation. When there's no profile, fall back
+#    to the historical staged-.py ruff check, run only if ruff is importable.
+if [ -f "$REPO_ROOT/docs/stack.ini" ]; then
+  "$PY" "$SCRIPTS_DIR/check.py" --run-step format
+else
+  if "$PY" -c "import importlib.util as u, sys; sys.exit(0 if u.find_spec('ruff') else 1)" >/dev/null 2>&1; then
+    staged=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep '\.py$' || true)
+    if [ -n "$staged" ]; then
+      # shellcheck disable=SC2086  # word-splitting is intended: one arg per file.
+      "$PY" -m ruff format --check $staged
+    fi
   fi
 fi

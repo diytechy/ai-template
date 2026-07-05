@@ -48,7 +48,8 @@ reported as `skipped (exists)` — resolve each by hand:
 - **`pytest.ini`** — Python repos with an existing pytest config: merge the
   tier markers (`smoke`/`full`/`release`) rather than replacing the file.
 - **`src/`, `tests/`** — bootstrap only adds `.gitkeep`s; your layout stays.
-  Point the harness at the real roots (`SRC`/`TESTS` in `check.py`).
+  Point the harness at the real roots (`[paths]` `src`/`tests` in
+  `docs/stack.ini`).
 - **`README.md`** — skipped if present (the common case). Retrofit the
   *evaluator's rungs* into your existing README instead: a "Run it" section
   pointing at the root `run.{cmd,sh,command}` launchers (fill their `RUN_CMD`
@@ -66,12 +67,25 @@ reported as `skipped (exists)` — resolve each by hand:
 
 ## 2. Wire the harness to your stack
 
-Edit `scripts/check.py` (`SRC`/`TESTS` + the "EDIT FOR YOUR STACK" block in
-`steps()`):
+Edit **`docs/stack.ini`** — the single declared home for the product toolchain.
+`check.py` reads it; CI, the pre-commit hook, and `setup.*` delegate to it, so a
+stack swap is one file, not six copies. (Delete it to fall back to `check.py`'s
+built-in Python-reference defaults — identical values.)
 
-- **Product steps** (format / lint / tests+coverage) — swap the `ruff`/`pytest`
-  commands for your toolchain (`gradle check`, `npm test`, `cargo clippy`, …)
-  or drop a step you don't have. Keep each step's gate tags.
+- **`[product]`** (format / lint / test) — swap the `ruff`/`pytest` commands for
+  your toolchain (`gradle check`, `npm test`, `cargo clippy`, …). `{py}` is the
+  interpreter running `check.py`; `{src}`/`{tests}` are `[paths]`. A command
+  that runs `{py} -m <mod>` auto-fails on a missing module; any other
+  executable's absence on PATH is the same designed failure. Drop a step you
+  don't have by leaving its command blank.
+- **`[tiers]`** — map smoke/full/release/all onto your runner's selectors (the
+  A3 gap: non-pytest stacks declare their tiers here, e.g. a path or
+  `--project`, instead of inventing an out-of-band scheme). **`[coverage]`** —
+  the threshold and the extra args appended at the covered tiers.
+- **`[paths]`** — point `src`/`tests` at your real roots.
+
+(`scripts/check.py`'s "EDIT FOR YOUR STACK" constants are the same values, used
+only as the fallback when no `docs/stack.ini` exists — prefer the profile.)
 - **Process steps** (traceability, design-flows, doc-navigability,
   perf-budgets) — keep as-is. They are stdlib Python and read only the
   registries and docs, so they work identically for a Java, Kotlin, or Rust
@@ -178,11 +192,11 @@ range to see exactly which templates/scripts changed before you touch anything.
   scripts under `scripts/` (`trace.py`, `check_docs.py`, `check_flows.py`,
   `check_perf.py`, `check_privacy.py`, `gen_arch_map.py`, `gen_*`,
   `agent_loop.py`), the git hooks (`.githooks/pre-commit`,
-  `.githooks/pre-push`), `pytest.ini` markers. Take the
-  new versions wholesale, then re-apply your local edits — for `check.py` that's
-  only the marked **"EDIT FOR YOUR STACK"** block (`SRC`/`TESTS`, the product
-  step commands). Diff before committing so a kit change to a step you dropped
-  doesn't silently reappear.
+  `.githooks/pre-push`), `pytest.ini` markers, **`scripts/check.py`**. These are
+  now safe to take wholesale: your toolchain lives in `docs/stack.ini` (below),
+  not in `check.py`, so a re-sync no longer needs you to re-apply an EDIT block.
+  Diff before committing anyway, so a kit change you disagree with doesn't land
+  unread.
 - **Regenerate, never raw-copy (kit-owned but generated):** `docs/process.md` +
   `docs/process-options.md` are *generated* from the kit masters per the
   recorded `docs/kit-profile` (§1). Raw-copying `PROCESS.md`/
@@ -192,7 +206,9 @@ range to see exactly which templates/scripts changed before you touch anything.
   `bootstrap.py --dest .`** — it re-reads `docs/kit-profile` (explicit
   `--stack`/`--omit` flags override it), regenerates them with the same
   structural choices, and re-stamps `kit-version` + `kit-profile`.
-- **Preserve always (yours, kit only seeds them):** every registry CSV and
+- **Preserve always (yours, kit only seeds them):** `docs/stack.ini` (your
+  declared toolchain — the kit seeds the Python reference once and never
+  re-touches it), every registry CSV and
   `stakeholder-needs.md`, `docs/status.md`, `docs/log.md`,
   `docs/iteration/` + `docs/iteration_index.md` (session history),
   `docs/architecture.md`'s hand-written overview (regenerate only the marker

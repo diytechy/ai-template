@@ -28,7 +28,10 @@ jobs:
         with:
           python-version: "3.x"
 
-      # Edit to your real dependencies. The reference harness uses ruff + pytest
+      # Edit to your real dependencies. This only INSTALLS the tools; what the
+      # harness RUNS (the format/lint/test commands, tiers, coverage) is
+      # declared once in docs/stack.ini and executed by check.py below — so CI
+      # never restates a check command. The reference harness uses ruff + pytest
       # (+ pytest-cov); trace.py and gen_arch_map.py are stdlib-only.
       - name: Install tooling
         run: |

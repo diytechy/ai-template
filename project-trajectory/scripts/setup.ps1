@@ -22,6 +22,9 @@ try {
 
     & $python -m pip install --upgrade pip
     # --- Edit below for your stack --------------------------------------------
+    # This INSTALLS the tools; what the harness RUNS (format/lint/test commands,
+    # tiers, coverage) is declared once in docs/stack.ini — edit there, not in
+    # check.py. Install whatever those commands name.
     & $python -m pip install ruff pytest pytest-cov
     if (Test-Path "pyproject.toml") { & $python -m pip install -e . }
     elseif (Test-Path "requirements.txt") { & $python -m pip install -r requirements.txt }
