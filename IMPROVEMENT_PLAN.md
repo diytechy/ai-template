@@ -4906,6 +4906,16 @@ continuity (same style as the session log above).
 > `test_default_prompt_carries_the_plan_build_cadence`) + the scaffold file-list
 > pin. `pytest -q`: 288 passed, 1 skipped; `check_docs.py --root .`: OK, 0
 > broken.
+> **Review follow-up (owner, same day):** "will a single session still plan
+> *and* implement on small scope?" — mostly yes by design (attended sessions
+> never see the cadence prompt; nothing stops a PLAN session after chunking),
+> but the prompt's "then set run-phase to BUILD" was readable as a terminal
+> act. Tightened in both homes (DEFAULT_PROMPT + the PROCESS_OPTIONS
+> subsection): *the bounce governs who plans, not how much one session does* —
+> only BUILD→PLAN mandates a stop; a PLAN session rolls straight into the
+> first block budget-allowing, so small scope collapses to plan-and-build in
+> one session. BUILD's one-block-per-session stays strict deliberately (the
+> cheap tier must not self-scope; the servo coarsens instead).
 
 ### Session protocol (for a cold session pointed only at this file)
 

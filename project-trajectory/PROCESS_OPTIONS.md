@@ -388,7 +388,12 @@ done-when, a size class, and a §6 tier hint — then sets `run-phase` to `BUILD
 Each **BUILD** session (cheaper tier) executes the next block — and only it —
 and, when it finds the plan exhausted or *wrong* (a §5 finding, never a silent
 rework), sets `run-phase` to `PLAN` and stops; the coordinator's model map does
-the rest: `AGENT_MODEL_MAP="PLAN=<strong-model>,BUILD=<cheap-model>"`. The plan
+the rest: `AGENT_MODEL_MAP="PLAN=<strong-model>,BUILD=<cheap-model>"`. The
+bounce governs **who plans**, never how much one session does: only the
+BUILD→PLAN direction mandates a stop (re-planning belongs on the strong tier);
+a PLAN session that finishes chunking rolls straight into the first block,
+budget allowing — the plan is hot in its context, and on a small scope the
+cadence collapses to plan-and-build in one session. The plan
 file is the **compressed hand-off**: fresh sessions have no chat memory, and a
 block spec is far cheaper to reload than the exploration that produced it — the
 strong tier pays the exploration cost once, every cheap session after reloads
