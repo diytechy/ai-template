@@ -48,6 +48,32 @@ def test_hook_blocks_stale_generated_block(scaffold):
     assert archmap.returncode != 0, "stale generated block must fail --check"
 
 
+def test_hook_arch_map_step_honors_declared_mode(scaffold):
+    # WI-1.26 (Finance-Auditor re-sync field report): the hook's arch-map step
+    # delegates to `check.py --run-step arch-map` (like its format step) so it
+    # honors docs/stack.ini [arch-map]. A files-mode repo would otherwise have
+    # every commit blocked: the hardcoded symbol parser reads a files-mode
+    # architecture.md as stale.
+    make_minimal_project(scaffold)
+    ini = scaffold / "docs" / "stack.ini"
+    ini.write_text(
+        ini.read_text(encoding="utf-8").replace("mode = symbols", "mode = files", 1),
+        encoding="utf-8",
+    )
+    regen = run_py(["scripts/gen_arch_map.py", "--mode", "files"], cwd=scaffold)
+    assert regen.returncode == 0, regen.stdout + regen.stderr
+    # The delegated step (what the hook now runs) agrees with the declared mode…
+    ok = run_py(["scripts/check.py", "--run-step", "arch-map"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    # …where the hook's old hardcoded symbol-mode line reads the same repo as
+    # stale — the every-commit-blocked failure the delegation removes.
+    hard = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
+    assert hard.returncode != 0
+    # And the hook script itself carries the delegation, not the bare call.
+    hook_text = (scaffold / HOOK).read_text(encoding="utf-8")
+    assert "--run-step arch-map" in hook_text
+
+
 def test_hook_blocks_duplicate_id_but_not_orphan(scaffold):
     # The hook's traceability command is --strict-integrity: a duplicated id is
     # wrong at any stage and must block, but an orphan is a G2+ *gate* criterion

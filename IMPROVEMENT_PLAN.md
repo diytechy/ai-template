@@ -4797,6 +4797,24 @@ continuity (same style as the session log above).
 > + comment-prefixes, invalid-mode loud failure, non-Python seed end-to-end
 > through `--run-step arch-map`).
 
+> **WI-1.26 ✅ landed 2026-07-05 · Finance-Auditor re-sync follow-through:
+> hook honors the declared arch-map mode; gate-advance skill names the
+> declared acceptor.** Inspected the adopter's re-sync to `8dad711` (their
+> `check.py` is take-wholesale again, zero deltas). One remaining
+> field-reported delta absorbed: **`hooks/pre-commit` hardcoded symbol-mode
+> `gen_arch_map.py --check`**, so a files-mode repo had every commit read as
+> stale — the hook now delegates to `check.py --run-step arch-map`
+> (mirroring its format delegation; their exact local fix), with the
+> EDIT marker rewritten for the ported-generator swap. Verified end-to-end:
+> a fresh `--stack node` scaffold's hook runs the generator `--mode files`
+> and exits 0. Second, their `gate-advance` skill marker exposed a soft kit
+> gap: the skill still said "human decision" unconditionally while the kit
+> ships declared gate-authority levels (Thread 32) — both copies now name
+> the `docs/gate-policy` acceptor (default attended = human). Their other
+> markers are local specialization, correctly theirs. Tests: +1
+> (`test_hook_arch_map_step_honors_declared_mode` — delegation green in
+> files mode where the old hardcoded line reads the same repo as stale).
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

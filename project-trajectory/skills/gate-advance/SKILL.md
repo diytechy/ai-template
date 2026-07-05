@@ -10,10 +10,13 @@ scope: kit
 
 # Gate advance (move G1 → G2 → G3 honestly)
 
-Advancing a gate is a **human decision recorded in a reviewed commit**, backed by
+Advancing a gate is a **decision recorded in a reviewed commit**, backed by
 a green harness at that gate's bar. Never self-advance; never report a green you
 didn't run. Authority: `docs/process.md` §4 (gates), §5 (verdict protocol), §7
-(the active gate).
+(the active gate). The gate's **acceptor** is whoever `docs/gate-policy`
+declares (default `attended` = a human at every gate; the other levels + the
+deviation register: process-options.md "Gate authority levels") — on a
+non-default repo, read "human" in this skill as that declared acceptor.
 
 ## The active-gate mechanism
 
