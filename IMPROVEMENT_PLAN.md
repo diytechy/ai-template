@@ -2778,9 +2778,37 @@ edges deserve the tier).
 
 ## Thread 34 — Conditional scaffold generation (profile-omitted templates, §N-constant) + the mechanical cleanups
 
-**Status: ✔ ruled 2026-07-04 — Q8 overridden to full conditional templating
-(§N-constant; see the amended principle below) — now a solo build
-(Session S).**
+**Status: ✅ landed 2026-07-04 (Session S).** Conditional scaffold generation
+shipped per the Q8 ruling. Bootstrap now *generates* every Markdown doc from
+marker-carrying masters: `<!-- kit-only -->` regions dropped (all copy-me
+prose migrated — AGENTS/PROCESS/INTERFACES; `TEMPLATE_REWRITES` kept only for
+the "(template)" title), `<!-- profile: axis -->` regions kept or stubbed per
+the resolved profile. Axes kept **few and boolean** per the risk line: `nfr`
+(§9 + its two process-options expansions) and `multi-module` (§10 + the
+rung-2 expansion) — the principle's longer candidate list (interfaces layer,
+G-Release, lifecycle prompts, …) deliberately not marked up yet; extension is
+monotonic, and interfaces stay always-scaffolded per step 4. § headings sit
+*outside* the markers, so an omitted section keeps its literal §N heading plus
+a one-line stub (a deliberate strengthening of the spec's single-line stub:
+anchors resolve, `check_docs` green on every permutation). `--stack` gained
+`node` (bootstrap + skills vocab/frontmatter + regenerated INDEX); an
+explicitly non-Python stack skips pytest.ini and appends the OI-3..OI-6
+rewiring checklist (WI-1.17 bullet shape) to the fresh status.md — the
+tier-mapping bullet does **not** yet name `docs/stack.ini` (Thread 30
+pending). `docs/kit-profile` (beside kit-version, rewritten every run)
+records `stack=`/`omit=`; a re-sync **regenerates from it** (explicit flags
+override) — ADOPTING §1/§6 + the downstream-resync skill carry the
+delete-and-rerun recipe and the accepted one-time migration for older
+adoptions. Fresh scaffold fully green *including warnings*: README.template
+gained the interfaces link **and** a stakeholder-needs link (the second
+orphan the zero-findings bar surfaced). Interactive-UX deviation: the stack
+question is now asked whenever interactive, agent chosen or not (it drives
+the profile, no longer just skill matching). Tests: **21 new** in
+`tests/test_profile.py` — marker-grammar unit + per-template lint (balance +
+known axes), leftover-phrase grep, the 8-permutation matrix (stable §N
+labels, stub counts, zero doc findings, trace green), node gating,
+any==default byte-for-byte, resync regeneration, flag-over-record override,
+unknown-axis rejection, node skill vocab.
 **Source:** the owner's generation question (2026-07-04) + field report
 R5/R6/R7/R8, C1/C2/C3, D2.
 
@@ -3787,7 +3815,7 @@ warning scrolls by in exactly the unattended case).
   run can add tens of MB, compounding per leg.
 
 **Proposed sessions (rulings landed 2026-07-04).**
-**▶ NEXT: Session S** — then N and O (independent; can slot anywhere). Move
+**▶ NEXT: Session N** — then O (independent; can slot anywhere). Move
 this marker as sessions land (Session-protocol step 4).
 - **Session L ✅ landed 2026-07-04** — Threads **29 + 35 + 37 + 38**
   (mechanical, file-coherent batch: check.py guard + registry column + the
@@ -3827,6 +3855,16 @@ this marker as sessions land (Session-protocol step 4).
   `check_docs --root .` **0 broken**. Byte deltas: AGENTS.template.md
   9,998 → 9,998 (untouched); PROCESS.md 54,669 → 54,669 (untouched — the
   whole layer lives in PROCESS_OPTIONS/ADOPTING, per the budget convention).
+- **Session S ✅ landed 2026-07-04** — Thread **34** solo (the conditional
+  scaffold generator: kit-only/profile markers across the masters +
+  `docs/kit-profile` + `--stack node` gating + resync regeneration + the
+  8-permutation matrix; Status block above). Gates: `pytest -q` **252
+  passed, 1 skipped** (the same pre-existing skip); `check_docs --root .`
+  **0 broken**. Byte deltas: AGENTS.template.md 9,998 → 9,998 (the kit-only
+  wrap funded by three trims; the *generated* AGENTS.md sheds ~110 B
+  downstream); PROCESS.md 54,669 → 54,961 (**+292 B** — the kit-only header
+  block + four profile marker lines, all stripped from every scaffold;
+  flagged per the budget convention).
 - **Session N** — Thread **30** solo (new config surface + wiring).
 - **Session O** — Thread **31** solo (new generator mode + tests).
 - **Session R** — Thread **40** solo, strong model (after M, before P and Q;
@@ -3860,7 +3898,8 @@ this marker as sessions land (Session-protocol step 4).
 report + the NotHomeWrecker unattended-coordinator review + owner directives) —
 specs above. **29 ✅, 35 ✅, 37 ✅, 38 ✅** (2026-07-04, Session L);
 **36 ✅, 32 ✅** (2026-07-04, Session M); **40 ✅** (2026-07-04, Session R);
-**33 ✅** (2026-07-04, Session P); **39 ✅** (2026-07-04, Session Q).
+**33 ✅** (2026-07-04, Session P); **39 ✅** (2026-07-04, Session Q);
+**34 ✅** (2026-07-04, Session S).
 **All questions ruled by the owner 2026-07-04** — the batch's decision-briefs
 section records the rulings (Q6 Hybrid and Q8 full-conditional-templating
 override the recommendations; Q7d/Q13a amended Threads 33/40). Proposed
