@@ -3699,8 +3699,30 @@ prose is Sonnet-able.**
 
 ## Thread 43 — dev-setup role profiles: default installs everything, a named role narrows to its slice
 
-**Status: 📋 specced 2026-07-05 (owner direction this session); not scheduled
-— no ▶ NEXT change.** Ruling: **the default installs every role's packages**
+**Status: ✅ landed 2026-07-05.** Both `dev-setup.template.{sh,ps1}`
+generalized from the single `DOMAIN_VIEWER_*` slot to N declared roles over the
+unchanged shared baseline (runtime, git, offline renderer). Default (no
+`--profile`) reports/installs **every** declared role; `--profile <role>`
+narrows to baseline + that role; an unknown role exits 2 naming the declared
+roles. Ships `code` (empty install — the toolchain is setup.*'s job) + `design`
+(example asset-viewer role) so a fresh scaffold's `--check` is green and
+copy-ready. sh uses `eval`-indirection on `<role>_CMDS/_INSTALL`; ps1 uses an
+`[ordered]` role hashtable (cleaner where the language has one). Verified both
+shells: default lists code+design, `--profile design` drops code, bad role
+exits 2 (sh `sh -n` + runs; ps1 `Parser::ParseFile` + `pwsh -File` runs — fixed
+a latent `$label:` scope-parse bug and made the ps1 error exit 2, not
+Write-Error's 1). READMEs (kit + root) + ADOPTING migration note updated.
+**Deviations from spec:** (1) the optional interactive TTY role-selector was
+**not** built — default=all already covers the common case and it kept the
+dual-shell surface small (noted, not in Done-when); (2) the meta-repo dogfood
+`scripts/dev-setup.*` stays single-stack per spec (untouched). Tests: +3
+(`test_onboard_devsetup.py`: default reports every role, `--profile` narrows,
+unknown-profile exit 2) + the existing token test updated `domain`→`design`.
+`pytest -q`: 305 passed, 1 skipped; `check_docs --root . --stale`: 0 broken.
+Byte deltas: AGENTS.template.md / PROCESS.md untouched.
+
+**Source / spec (owner direction this session).** Ruling: **the default installs
+every role's packages**
 (the common case — a fresh clone or solo dev wants the lot); a **named role
 installs only that role's relevant packages** (the opt-down). Heavy per-repo
 customization is expected; the template ships the *structure* so every repo

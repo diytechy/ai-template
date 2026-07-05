@@ -61,6 +61,13 @@ reported as `skipped (exists)` — resolve each by hand:
   (husky, pre-commit-framework). If you already have hooks, either call
   `.githooks/pre-commit` from your existing hook chain or skip the wiring —
   CI remains the enforcement of record.
+- **`scripts/dev-setup.*` roles** — the workstation script declares one
+  **role** per contributor kind over a shared baseline; the default provisions
+  every role, `--profile <role>` narrows to one. Fill the `ROLES` list (sh) /
+  `$Roles` table (ps1) and each role's detect/install slots for your stack.
+  *Upgrading from an earlier kit* (`--profile code|domain`, a single
+  `DOMAIN_VIEWER_*` slot): move that slot's commands into a role entry (e.g.
+  `design`); the default now installs all roles rather than just `code`.
 - Delete what genuinely doesn't apply (e.g. `docs/interfaces.md` for a
   standalone project) — but prefer leaving the inert optional registries in
   place; they cost nothing empty.

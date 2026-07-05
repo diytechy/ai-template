@@ -14,48 +14,60 @@
 # Consent-first and readable by design: the DEFAULT tier only detects and
 # reports; it installs nothing. Nothing here pipes a remote script to a shell.
 #
-# Usage:  sh dev-setup.sh [--check|--baseline|--full] [--profile code|domain]
+# Usage:  sh dev-setup.sh [--check|--baseline|--full] [--profile <role>]
 #   --check     (default) detect + report what's present; install nothing.
-#   --baseline  ensure runtime + git + an offline Mermaid renderer (+ point at
-#               `setup.sh` for the product test toolchain). Asks before each install.
+#   --baseline  ensure runtime + git + an offline Mermaid renderer, plus the
+#               selected role(s)' tools. Asks before each install.
 #   --full      baseline + an IDE and editor extensions. Opt-in, and skipped when
 #               headless / non-interactive (no TTY or $CI set).
-#   --profile code    (default) a code contributor: runtime + linter + test tools.
-#   --profile domain  a non-code contributor (art/UI, CAD, electronics, docs):
-#                     git + offline renderer + a DOMAIN VIEWER you fill in below.
+#   --profile <role>  install only that role's tools (plus the shared baseline) —
+#               the opt-down for a contributor who wants just their slice.
+#               DEFAULT (no --profile): every declared role. Roles: see ROLES below.
 #
 # Windows contributors: use scripts/dev-setup.ps1.
 set -eu
 
-# =================== EDIT FOR YOUR STACK / DOMAIN ===========================
-# The template ships only the universal baseline detectors and EMPTY install
-# slots — fill the commands for your OS/stack. Leave a slot empty to skip its
-# install (detection/reporting still works). Debian/Ubuntu shown for reference;
-# swap apt-get for brew/dnf/pacman as needed.
+# =================== EDIT FOR YOUR STACK / ROLES ===========================
+# The shared BASELINE (runtime, git, offline renderer) is provisioned for every
+# profile — fill its install slots. Then declare one ROLE per contributor kind
+# (code, asset design, CAD, marketing, …); each adds its own tools on top. The
+# DEFAULT installs every role; `--profile <role>` narrows to one. Role names
+# must be [a-z0-9_]. Leave any *_INSTALL empty to skip its install (detection
+# still reports). Debian/Ubuntu shown for reference — swap apt-get for
+# brew/dnf/pacman as needed.
 #
 #   RUNTIME_INSTALL="sudo apt-get install -y python3"
 #   RENDERER_INSTALL="npm install -g @mermaid-js/mermaid-cli"   # or install VS Code + a Mermaid preview extension
 #   IDE_INSTALL="sudo snap install code --classic"
-#   DOMAIN_VIEWER_INSTALL="sudo apt-get install -y inkscape"    # your domain's viewer(s)
 RUNTIME_INSTALL=""
 RENDERER_INSTALL=""
 IDE_INSTALL=""
-DOMAIN_VIEWER_INSTALL=""
-# Space-separated commands that, if present, mean the domain viewer is installed
-# (used by --check for the domain profile), e.g. "inkscape kicad".
-DOMAIN_VIEWER_CMDS=""
+
+# Declared roles (space-separated). For each <role>, set:
+#   <role>_CMDS     detection commands; if ANY is on PATH the role reads present
+#   <role>_INSTALL  the install command (empty = nothing to install here)
+ROLES="code design"
+
+# code — a code contributor. The linter/test toolchain is setup.sh's job, so
+# this usually stays empty (baseline runtime + git is what they need here).
+code_CMDS=""
+code_INSTALL=""
+
+# design — a non-code asset designer (art/UI). Example: an SVG editor.
+design_CMDS="inkscape"
+design_INSTALL=""   # e.g. "sudo apt-get install -y inkscape"
 # ===========================================================================
 
 TIER="check"
-PROFILE="code"
+PROFILE=""   # empty = all declared roles
 while [ $# -gt 0 ]; do
   case "$1" in
-    --check)    TIER="check" ;;
-    --baseline) TIER="baseline" ;;
-    --full)     TIER="full" ;;
-    --profile)  shift; PROFILE="${1:-code}" ;;
+    --check)     TIER="check" ;;
+    --baseline)  TIER="baseline" ;;
+    --full)      TIER="full" ;;
+    --profile)   shift; PROFILE="${1:-}" ;;
     --profile=*) PROFILE="${1#*=}" ;;
-    -h|--help)  sed -n '2,30p' "$0"; exit 0 ;;
+    -h|--help)   sed -n '2,26p' "$0"; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -63,12 +75,27 @@ done
 
 have() { command -v "$1" >/dev/null 2>&1; }
 say()  { printf '%s\n' "$*"; }
+# Indirect lookup of a per-role variable (<role>_CMDS / <role>_INSTALL); the
+# `:-` default keeps `set -u` happy when a slot is left unset.
+role_val() { eval "printf '%s' \"\${$1_$2:-}\""; }
+
+# Resolve which roles this run acts on: the one named by --profile, or all.
+if [ -n "$PROFILE" ]; then
+  ok=0
+  for r in $ROLES; do [ "$r" = "$PROFILE" ] && ok=1; done
+  if [ "$ok" -eq 0 ]; then
+    echo "Unknown --profile '$PROFILE'. Declared roles: $ROLES" >&2
+    exit 2
+  fi
+  SELECTED="$PROFILE"
+else
+  SELECTED="$ROLES"
+fi
 
 # Interactive only when there is a TTY and we are not in CI — so --full never
 # blocks an automated run waiting on a prompt.
 interactive() { [ -t 0 ] && [ -z "${CI:-}" ]; }
 
-# Report one component: name, whether a satisfying command is present, and a hint.
 missing=0
 report() { # <label> <present:0/1> <hint>
   if [ "$2" -eq 1 ]; then
@@ -96,24 +123,32 @@ maybe_install() { # <label> <install-cmd>
 }
 
 renderer_present() { have code || have mmdc || have npx; }
+# A role reads present when any of its detection commands is on PATH, or when it
+# declares none (e.g. `code`, whose toolchain is setup.sh's job).
+role_present() { # <role>
+  cmds=$(role_val "$1" CMDS)
+  [ -z "$cmds" ] && return 0
+  for c in $cmds; do have "$c" && return 0; done
+  return 1
+}
 
-say "dev-setup — profile=$PROFILE tier=$TIER"
+say "dev-setup — profile=${PROFILE:-all} tier=$TIER"
 say "Developer workstation (process.md §7). Product deps are scripts/setup.sh."
 say
 
 # --- Detect + report (every tier does this first) ----------------------------
-if have python3; then RUNTIME=1; elif have python; then RUNTIME=1; else RUNTIME=0; fi
+if have python3 || have python; then RUNTIME=1; else RUNTIME=0; fi
 report "runtime (python3)"          "$RUNTIME"                        "install a Python 3.8+ runtime"
 report "git"                        "$(have git && echo 1 || echo 0)" "install git (needed to make reviewable changes)"
 report "offline Markdown+Mermaid renderer" \
        "$(renderer_present && echo 1 || echo 0)" \
        "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
 
-if [ "$PROFILE" = "domain" ]; then
-  dv=0
-  for c in $DOMAIN_VIEWER_CMDS; do have "$c" && dv=1; done
-  report "domain viewer" "$dv" "fill DOMAIN_VIEWER_CMDS/INSTALL in the EDIT block for your artifacts"
-fi
+for r in $SELECTED; do
+  report "role: $r" "$(role_present "$r" && echo 1 || echo 0)" \
+    "fill ${r}_CMDS/${r}_INSTALL in the EDIT block for this role's tools"
+done
+
 if [ "$TIER" = "full" ]; then
   report "IDE (VS Code 'code')" "$(have code && echo 1 || echo 0)" "install an editor; run again with --full to add extensions"
 fi
@@ -137,9 +172,9 @@ say
 say "Installing the $TIER workstation (asks before each step)…"
 [ "$RUNTIME" -eq 1 ] || maybe_install "runtime" "$RUNTIME_INSTALL"
 renderer_present     || maybe_install "offline Mermaid renderer" "$RENDERER_INSTALL"
-if [ "$PROFILE" = "domain" ]; then
-  maybe_install "domain viewer" "$DOMAIN_VIEWER_INSTALL"
-fi
+for r in $SELECTED; do
+  role_present "$r" || maybe_install "role: $r" "$(role_val "$r" INSTALL)"
+done
 if [ "$TIER" = "full" ]; then
   if interactive; then
     maybe_install "IDE" "$IDE_INSTALL"

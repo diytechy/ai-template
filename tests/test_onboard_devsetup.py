@@ -63,9 +63,50 @@ def test_devsetup_has_edit_block_tiers_and_profiles(scaffold):
     for rel in DEVSETUP:
         text = (scaffold / rel).read_text(encoding="utf-8")
         assert "EDIT FOR YOUR STACK" in text, rel + " missing the EDIT block"
-        # The three tiers and two contributor profiles the spec pins.
-        for token in ("check", "baseline", "full", "code", "domain"):
-            assert token in text, rel + " missing tier/profile: " + token
+        # The three tiers and the two declared example roles the spec pins.
+        for token in ("check", "baseline", "full", "code", "design"):
+            assert token in text, rel + " missing tier/role: " + token
+
+
+def _devsetup_check(scaffold, *extra):
+    sh = _sh()
+    if not sh:
+        import pytest
+
+        pytest.skip("no POSIX shell on PATH")
+    return subprocess.run(
+        [sh, "scripts/dev-setup.sh", "--check", *extra],
+        cwd=str(scaffold),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+
+
+def test_devsetup_default_reports_every_role(scaffold):
+    # No --profile installs/reports every declared role (the owner ruling: the
+    # default does everything; a role is the opt-down).
+    proc = _devsetup_check(scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "profile=all" in proc.stdout
+    assert "role: code" in proc.stdout and "role: design" in proc.stdout
+
+
+def test_devsetup_profile_narrows_to_one_role(scaffold):
+    # --profile <role> narrows to the shared baseline + that role only.
+    proc = _devsetup_check(scaffold, "--profile", "design")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "role: design" in proc.stdout
+    assert "role: code" not in proc.stdout
+
+
+def test_devsetup_unknown_profile_errors(scaffold):
+    # An undeclared role never silently installs nothing: exit 2 naming the
+    # declared roles.
+    proc = _devsetup_check(scaffold, "--profile", "bogus")
+    assert proc.returncode == 2
+    assert "Unknown --profile 'bogus'" in proc.stderr
+    assert "code design" in proc.stderr
 
 
 def test_devsetup_check_runs_and_reports(scaffold):
