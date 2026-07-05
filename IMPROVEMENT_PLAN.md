@@ -3523,6 +3523,158 @@ the Thread-32 class).
 
 ---
 
+## Thread 41 — Tier-conditional guardrails: the kit ships the hook, content by pointer
+
+**Status: 📋 specced 2026-07-05 (owner rulings via AskUserQuestion this
+session); not scheduled — no ▶ NEXT change.** Rulings: (a) sync = **vendored
+verbatim copy + warn-only drift check** (pinned upstream commit; never
+auto-update); (b) scope = **the kit ships only the mechanism** — each repo
+vendors the guardrails content itself from upstream (one staleness hop, no
+license redistribution).
+
+**Source:** owner (2026-07-05), from the review of the sibling **Guardrails
+Kit** repo (`C:\Projects\FableClaudeMDForOpus`, public at
+https://github.com/TheColliny/FableClaudeMDForOpus): a CLAUDE.md core
+(event-phrased routing table + iron rules + hard stops) plus on-demand
+`docs/guardrails/*.md` playbooks that make weaker models operate
+procedurally. Owner intent: those procedures can really help **lower-tier
+models during their implementation turn**; strong tiers shouldn't pay the
+ritual noise.
+
+**Why this shape.** The guardrail docs are *inert unless something routes to
+them*, so they can sit permanently on disk for every tier — only the ~45-line
+always-on core needs to be tier-conditional, and `agent_loop.py` is the single
+point that already knows the launched model (the per-phase model map,
+`docs/run-phase`). Injecting at launch means **zero workspace mutation** (no
+copy-in/remove churn, no dirty tree, no thrash when PLAN/BUILD alternate
+tiers) and no collision with the scaffolded AGENTS.md/CLAUDE.md stubs (the
+upstream kit's own install wants to own CLAUDE.md; we deliberately don't use
+it — the core is vendored as a standalone file instead).
+
+**The model:**
+- **`docs/guardrails/` is a documented optional slot**, filled by the repo
+  itself: a vendoring recipe (ADOPTING-style) copies the upstream docs
+  verbatim plus the CLAUDE.md KIT-CORE block extracted to a standalone
+  `CORE.md`. The kit never redistributes the content (upstream has no
+  LICENSE; pointer-not-copy sidesteps it).
+- **`docs/guardrails-policy`** — one-word declared-policy file, same
+  first-line parse idiom as `gate-policy`/`push-policy`; absent = off (the
+  WI-1.30 optional-file precedent, not scaffolded). Values ≈ `off` /
+  `weak-tiers` / `all`; the exact weak-tier matching rule against the
+  `docs/run-phase` model map is **pinned in-thread at build time**.
+- **Injection at launch:** when the policy matches the session's resolved
+  model, `agent_loop.py` carries the vendored `CORE.md` into the session
+  (`--append-system-prompt` on the Claude CLI; prompt-preamble fallback for
+  agents without the flag). Content comes **only from the local vendored
+  copy — never fetched at launch** (remote text into agent instructions is a
+  supply-chain surface; the pin + reviewed update commit is the control).
+- **Drift check, warn-only:** `docs/guardrails/UPSTREAM` records URL +
+  pinned commit SHA; a stdlib, network-gated check hash-compares the local
+  files against the pinned raw URLs (warns "locally modified") and
+  optionally the default branch (warns "upstream moved"), degrading to a
+  clean skip offline — the `check_docs --stale` degrade precedent. Updating
+  = a human-reviewed wholesale re-copy commit bumping the SHA (upstream's
+  own UPGRADE semantics: whole-file swaps, never paraphrase).
+
+**Steps:** PROCESS_OPTIONS layer ("Tier-conditional guardrails",
+applies-when: unattended loop + mixed-tier model map) with the vendoring
+recipe; `agent_loop.py` injection + policy parse; the drift check (likely a
+small generic `check_vendored.py` — pinned-raw-URL hash compare is useful
+beyond guardrails; pin in-thread); meta-repo dogfood honestly scoped (this
+repo's launchers run the strong tier, so the policy here is `off` — the
+mechanism is exercised by tests, not by our own loop).
+
+**Tests:** policy parse (absent/off/match); a fake weak-tier launch carries
+the core and a strong-tier launch doesn't (the T33 fake-agent suite);
+drift check against a local fixture upstream (file:// or monkeypatched
+urlopen — no network in tests); offline degrade; tampered-copy warns.
+
+**Risks:** scope bleed between the guardrails' in-session procedures and
+PROCESS.md's artifact/gate rules — one boundary sentence in the options
+layer (guardrails govern session mechanics; the process governs artifacts
+and gates); CLI flag drift across agent versions — keep the preamble
+fallback; ceremony noise if a strong model gets injected — that's what the
+policy default `off` and the explicit tier match are for.
+
+**Done-when:** policy declared + parsed; weak-tier launch carries the core,
+strong-tier doesn't; drift check warns on local modification and skips
+cleanly offline; options layer + recipe documented; `pytest -q` +
+`check_docs` green.
+
+**Model tier — strong model** (agent_loop surgery + a new check script; the
+Thread-33 class).
+
+---
+
+## Thread 42 — README SN inventory: authored bullets + coverage check (+ `--stale` wired)
+
+**Status: 📋 specced 2026-07-05 (owner rulings via AskUserQuestion this
+session); not scheduled — no ▶ NEXT change.** Ruling: the **authored-bullets
+variant** (human-voiced terse bullets citing SN ids, mechanically
+coverage-checked), not the generated-registry-dump variant. The `--stale`
+wiring below was approved outright.
+
+**Source:** owner field reports (2026-07-05): downstream READMEs go stale
+because nothing *pulls* on them when requirements move. Extends Thread 37 /
+WI-1.31 (the vision tag made canonical, then mechanically guarded) to the
+rest of the README's claims.
+
+**The model:** a marked README section — `<!-- sn-inventory -->` …
+`<!-- /sn-inventory -->` — of short hand-written bullets, each citing the SN
+ids it summarizes (many-to-one by design):
+
+    - **Clean imports** — bank CSVs load without hand-fixing,
+      duplicates flagged (SN-001, SN-002)
+
+Detail (priority, acceptance, edge cases) stays single-homed in the
+registry; the README holds a clause + ids. The check enforces both
+directions: **every cited id exists** (fail), and **every Must/Should SN is
+cited by some bullet** (fail) — so adding SN-011 without touching the README
+fails the gate, and deleting an SN a bullet cites fails too. Structural rot
+becomes impossible; **wording rot is honestly out of scope** (a bullet's
+prose can lag an SN's acceptance change) and is mopped up by `--stale`, the
+release-checklist attestation, and keeping bullets terse.
+
+**Mechanics:**
+- Check lives beside the WI-1.31 vision check (`check_docs.py` owns the
+  README surface); it reads SN ids with a light scan of the
+  `stakeholder-needs.md` ID column — registry *semantics* stay `trace.py`'s
+  job. Section absent → check silent (**opt-in by presence**).
+- `README.template.md` ships the markers with one placeholder bullet citing
+  `SN-000` — the `-000` placeholder convention keeps a fresh scaffold green
+  and copy-ready; the checker ignores `-000` like `trace.py` does.
+- Priority floor: Must + Should required, Could/Won't optional; the floor is
+  fixed for now (a knob is deferred until someone needs it).
+- **`--stale` wiring:** `check.py`'s doc-navigability step gains `--stale`
+  (warn-only, so the floor stays green), and this repo's own session-gate
+  command (session-protocol skill §3 + the protocol section here) gains it
+  too.
+- `gen_release_checklist.py` gains the attested item "README reviewed
+  against the current SN registry".
+- Meta-repo dogfood: **n/a and stated** — this repo has no SN registry (the
+  spine is deliberately not self-applied, status.md Non-goals); scaffold
+  tests carry the coverage.
+
+**Tests:** fresh scaffold green (placeholder bullet); cited-missing fails;
+uncovered Must fails; Could not required; section-absent silent; `-000`
+ignored; check.py passes `--stale` (step-args assertion); checklist line
+present.
+
+**Risks:** README-churn friction on every SN add — intended (that *is* the
+pull), and the fix is a one-line id append; loose table parsing — malformed
+registries are `trace.py --strict`'s finding, this check degrades
+gracefully; byte creep — PROCESS.md untouched (the convention lives in the
+template comments + this spec; flag if a pointer sentence proves necessary).
+
+**Done-when:** both check directions enforced on scaffolds; template
+copy-ready; `--stale` wired in the harness and this repo's gate command;
+checklist item ships; `pytest -q` + `check_docs` green.
+
+**Model tier — strong model for the check + tests; the template/checklist
+prose is Sonnet-able.**
+
+---
+
 ## 2026-07-04 batch — decision briefs (all ruled by the owner 2026-07-04)
 
 **Rulings (owner, 2026-07-04).** The briefs below are kept as the *why*; each
@@ -4994,7 +5146,9 @@ continuity (same style as the session log above).
    "2026-07-04 batch — decision briefs" section records them; each thread's
    Status line carries its operative form). Sessions L/M/N/O/P/Q/R/S are
    sequenced by the **▶ NEXT marker** in the sessions block (set 2026-07-04
-   with the owner's rulings) — follow it per steps 1–5. The **stubs** (16 non-code-artifact verification · 21 cross-repo
+   with the owner's rulings) — follow it per steps 1–5. **Threads 41–42 are
+   specced and ruled (2026-07-05) but not yet scheduled into a session.** The
+   **stubs** (16 non-code-artifact verification · 21 cross-repo
    tooling · 23 publication composition) still each need a decision to
    revive.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
