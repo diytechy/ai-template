@@ -184,8 +184,10 @@ thing in every adopted repo. The resolved profile is recorded in
 from that record** — re-running bootstrap without `--stack`/`--omit` re-reads
 it, so an upgrade never silently reverts a structural choice (ADOPTING.md §6).
 An explicitly non-Python `--stack` (node|go|rust|powershell) also skips
-`pytest.ini` and appends the harness-rewiring checklist to the fresh
-status.md's Open items, so the remaining hand-edits are visible work items.
+`pytest.ini`, seeds the fresh docs/stack.ini's `[arch-map] mode = files`
+(the stack-neutral map — a Python-AST scan would pass vacuously), and
+appends the harness-rewiring checklist to the fresh status.md's Open items,
+so the remaining hand-edits are visible work items.
 
 It then runs `gen_arch_map.py` and `trace.py` once in the new repo so the
 scaffold starts green — `check.py` would otherwise fail on the template
@@ -196,6 +198,7 @@ start gate G1 (see docs/process.md).
 """
 
 import argparse
+import configparser
 import re
 import shutil
 import subprocess
@@ -765,6 +768,23 @@ STACK_IN_FLIGHT = (
 )
 
 
+def seed_arch_map_mode(dest, stack, created, dry_run):
+    """A non-Python stack starts on the stack-neutral file-level arch map:
+    flip the fresh docs/stack.ini's [arch-map] mode to `files` (only on the
+    run that created the profile — a re-sync never rewrites a repo's own).
+    The Python-AST symbol map would scan nothing and pass vacuously; the
+    files fallback keeps the freshness gate real until a symbol-level
+    generator is ported (ADOPTING.md §3)."""
+    if dry_run or stack not in NON_PYTHON_STACKS or "docs/stack.ini" not in created:
+        return False
+    ini = dest / "docs" / "stack.ini"
+    text = ini.read_text(encoding="utf-8")
+    if "mode = symbols" not in text:
+        return False
+    ini.write_text(text.replace("mode = symbols", "mode = files", 1), encoding="utf-8")
+    return True
+
+
 def append_stack_checklist(dest, stack, dry_run):
     """Insert the rewiring checklist into the freshly scaffolded status.md's
     Open-items sub-lists (Needs <human> / In flight). Only called when this
@@ -969,8 +989,23 @@ def initialize_generated_docs(dest, created):
     FileBackup re-sync hit exactly this)."""
     if "docs/architecture.md" not in created:
         return
+    # Honor the scaffolded profile's arch-map mode: a non-Python scaffold is
+    # seeded `[arch-map] mode = files` (see seed_arch_map_mode), and check.py
+    # will verify freshness in that mode — initializing in symbols mode would
+    # leave the fresh repo stale on day one.
+    arch_cmd = ["scripts/gen_arch_map.py", "--src", "src", "--doc", "docs/architecture.md"]
+    ini = dest / "docs" / "stack.ini"
+    if ini.exists():
+        cp = configparser.ConfigParser(interpolation=None)
+        try:
+            cp.read_string(ini.read_text(encoding="utf-8"))
+        except configparser.Error:
+            pass  # check.py reports a malformed profile loudly; init stays reference-mode
+        else:
+            if cp.has_option("arch-map", "mode") and cp.get("arch-map", "mode") == "files":
+                arch_cmd += ["--mode", "files"]
     for rel_cmd in (
-        ["scripts/gen_arch_map.py", "--src", "src", "--doc", "docs/architecture.md"],
+        arch_cmd,
         ["scripts/trace.py"],
     ):
         if not (dest / rel_cmd[0]).exists() or not (dest / "docs").exists():
@@ -1290,6 +1325,12 @@ def main():
         print(
             "  appended the {} harness-rewiring checklist to docs/status.md "
             "(Open items OI-3..OI-6)".format(stack)
+        )
+    if seed_arch_map_mode(dest, stack, created, args.dry_run):
+        print(
+            "  set docs/stack.ini [arch-map] mode = files (stack-neutral code "
+            "map until a {} symbol-level generator is ported — "
+            "ADOPTING.md §3)".format(stack)
         )
 
     # Materialize the chosen agent's layer: its matched skills into the native

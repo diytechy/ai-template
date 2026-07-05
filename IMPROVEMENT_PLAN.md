@@ -4767,6 +4767,36 @@ continuity (same style as the session log above).
 > (9,976 / 56,230). `pytest -q`: **259 passed, 16 skipped** (assertion
 > updated, count unchanged). `check_docs --root .`: OK, 0 broken.
 
+> **WI-1.25 ✅ landed 2026-07-05 · Downstream field report (TS-repo adoption):
+> run_step Windows exec bug + arch-map mode wired through stack.ini.** Both
+> MODIFIED-FROM-KIT deltas the adopter carried, verified against the kit and
+> absorbed upstream:
+> 1. **`check.py run_step` executed the unresolved argv** — the guard resolved
+>    `cmd[0]` via `shutil.which` (PATHEXT-aware, finds `npx.cmd`), then ran the
+>    bare name; Windows `CreateProcess` applies no PATHEXT, so `npx`/`eslint`
+>    passed the guard and crashed with WinError 2 — the exact raw
+>    `FileNotFoundError` the guard's own comment claims to avoid. The Python
+>    reference commands (`{py} -m ruff`) never exercised the path, which is
+>    why the suite missed it. Fix: run the resolved path
+>    (`subprocess.run([exe] + cmd[1:])`). Regression test runs a bare-name
+>    shim through `--run-step` — a real `.cmd` on Windows CI, a shell script
+>    on POSIX.
+> 2. **Arch-map mode is now declared, not hand-edited:** new
+>    `[arch-map] mode = symbols|files` in `docs/stack.ini` (default `symbols`
+>    = byte-identical historical plan; invalid values fail loudly), plus
+>    optional `comment-prefixes` for the files-mode summary token. `check.py`
+>    builds the step from it — the take-wholesale file stays wholesale.
+>    `bootstrap.py --stack node|go|rust|powershell` seeds `mode = files`
+>    (only on the run that created the profile), and
+>    `initialize_generated_docs` honors the seeded mode so generator and
+>    checker agree — a fresh non-Python scaffold's freshness gate is real and
+>    green on day one, not vacuous-then-stale. `stack.ini.template` documents
+>    the section; ADOPTING.md §3 option 2 now points at the profile key
+>    instead of a check.py hand-edit.
+> Tests: +4 in `test_stack_profile.py` (resolved-path exec, files-mode plan
+> + comment-prefixes, invalid-mode loud failure, non-Python seed end-to-end
+> through `--run-step arch-map`).
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

@@ -255,6 +255,32 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         trace_cmd.append("--strict-schema")  # G3: required fields + valid enums
         if phase:  # phased delivery: close G3 for this phase only (process.md §4)
             trace_cmd += ["--phase", phase]
+    # Arch-map mode from the profile ([arch-map] mode = symbols|files): a
+    # non-Python stack declares `files` for the stack-neutral fallback instead
+    # of hand-editing this take-wholesale file (the downstream delta WI-1.25
+    # absorbed). Invalid values fail loudly, like every other profile error.
+    arch_mode = _pget(profile, "arch-map", "mode", "symbols")
+    if arch_mode not in ("symbols", "files"):
+        sys.exit(
+            "check: docs/stack.ini [arch-map] mode is {!r}; expected "
+            "symbols|files".format(arch_mode)
+        )
+    arch_cmd = [
+        sys.executable,
+        str(_SCRIPTS / "gen_arch_map.py"),
+        "--check",
+        "--strict-parse",
+        "--src",
+        src,
+        "--doc",
+        "docs/architecture.md",
+    ]
+    if arch_mode == "files":
+        arch_cmd += ["--mode", "files"]
+        # Optional: whitespace-separated comment tokens whose first line is a
+        # file's summary (gen_arch_map's default already covers # // --).
+        for tok in _pget(profile, "arch-map", "comment-prefixes", "").split():
+            arch_cmd += ["--comment-prefix", tok]
     return [
         # --- product checks: language-specific, declared in docs/stack.ini -----
         ("format", _requires(fmt_cmd), fmt_cmd, {"G3"}, "product"),
@@ -338,19 +364,12 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ),
         # Add `--doc AGENTS.md` / `--doc CLAUDE.md` to route the map there too, and
         # `--flow <entry>` to also check the generated high-level flow.
+        # The mode (symbols vs the stack-neutral files fallback) comes from
+        # docs/stack.ini [arch-map] — see arch_cmd above.
         (
             "arch-map",
             (),
-            [
-                sys.executable,
-                str(_SCRIPTS / "gen_arch_map.py"),
-                "--check",
-                "--strict-parse",
-                "--src",
-                src,
-                "--doc",
-                "docs/architecture.md",
-            ],
+            arch_cmd,
             {"G3"},
             "process",
         ),
@@ -402,7 +421,8 @@ def run_step(name, requires, cmd, lenient):
     # absence. Resolve it the way the OS would (a path, or PATH lookup —
     # shutil.which honors PATHEXT on Windows) and fail by design instead of
     # crashing with a raw FileNotFoundError.
-    if not (Path(cmd[0]).exists() or shutil.which(cmd[0])):
+    exe = cmd[0] if Path(cmd[0]).exists() else shutil.which(cmd[0])
+    if not exe:
         status = "SKIP" if lenient else "FAIL"
         return status, (
             "command {!r} not found — wire your stack's toolchain "
@@ -410,7 +430,12 @@ def run_step(name, requires, cmd, lenient):
         )
     start = time.time()
     print("\n=== {} : {} ===".format(name, " ".join(cmd)), flush=True)
-    proc = subprocess.run(cmd)
+    # Run the RESOLVED path, not the bare name: Windows CreateProcess applies
+    # no PATHEXT, so a bare `npx`/`eslint` that shutil.which found as npx.cmd
+    # would still crash the exec with WinError 2 — resolving for the guard
+    # but running unresolved was exactly the crash this block claims to
+    # avoid (downstream field report, WI-1.25).
+    proc = subprocess.run([exe] + list(cmd[1:]))
     secs = time.time() - start
     if proc.returncode == 0:
         return "PASS", "{:.1f}s".format(secs)

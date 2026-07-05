@@ -11,9 +11,12 @@ the test step, and a profile naming a missing binary hits the run_step guard.
 
 import configparser
 import importlib.util
+import os
+import subprocess
+import sys
 
 import pytest
-from conftest import KIT, load_script, make_minimal_project, run_py
+from conftest import KIT, SCRIPTS, load_script, make_minimal_project, run_py
 
 check = load_script("check")
 
@@ -193,3 +196,92 @@ def test_run_step_unknown_name_errors(scaffold):
     proc = run_py(["scripts/check.py", "--run-step", "no-such-step"], cwd=scaffold)
     assert proc.returncode != 0
     assert "no step named" in (proc.stdout + proc.stderr)
+
+
+def test_run_step_executes_the_resolved_path(scaffold):
+    # WI-1.25 (downstream field report): run_step resolved cmd[0] with
+    # shutil.which for the guard but executed the UNRESOLVED argv. On Windows,
+    # CreateProcess applies no PATHEXT, so a bare `npx`-style .cmd shim passed
+    # the guard and then crashed the exec with WinError 2 — the exact raw
+    # FileNotFoundError the guard's comment claims to avoid. The step must run
+    # the resolved path; this exercises the real path on Windows CI (a .cmd
+    # shim) and stays a live regression guard on POSIX (a shell script).
+    bindir = scaffold / "toolbin"
+    bindir.mkdir()
+    if os.name == "nt":
+        (bindir / "fake-fmt-wi125.cmd").write_text(
+            "@echo fake formatter ok\r\n@exit /b 0\r\n", encoding="utf-8"
+        )
+    else:
+        tool = bindir / "fake-fmt-wi125"
+        tool.write_text("#!/bin/sh\necho fake formatter ok\nexit 0\n", encoding="utf-8")
+        tool.chmod(0o755)
+    (scaffold / "docs" / "stack.ini").write_text(
+        "[product]\nformat = fake-fmt-wi125\n", encoding="utf-8"
+    )
+    env = dict(os.environ)
+    env["PATH"] = str(bindir) + os.pathsep + env.get("PATH", "")
+    proc = subprocess.run(
+        [sys.executable, "scripts/check.py", "--run-step", "format"],
+        cwd=str(scaffold),
+        capture_output=True,
+        text=True,
+        env=env,
+        stdin=subprocess.DEVNULL,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS" in proc.stdout, proc.stdout
+
+
+# --- [arch-map] mode: the stack-neutral fallback declared in the profile ------
+
+
+def test_arch_map_mode_files_comes_from_the_profile(scaffold):
+    # WI-1.25: a non-Python repo declares the file-level map in stack.ini
+    # instead of hand-editing the take-wholesale check.py (the downstream
+    # MODIFIED-FROM-KIT delta this absorbs).
+    (scaffold / "docs" / "stack.ini").write_text(
+        "[arch-map]\nmode = files\ncomment-prefixes = ;; --\n", encoding="utf-8"
+    )
+    proc = run_py(["scripts/check.py", "--gate", "all", "--list"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    arch_line = next(ln for ln in proc.stdout.splitlines() if "arch-map" in ln)
+    assert "--mode files" in arch_line
+    assert "--comment-prefix ;;" in arch_line
+    # The default (or an explicit symbols) keeps the historical symbol-map plan.
+    (scaffold / "docs" / "stack.ini").write_text(
+        "[arch-map]\nmode = symbols\n", encoding="utf-8"
+    )
+    proc = run_py(["scripts/check.py", "--gate", "all", "--list"], cwd=scaffold)
+    arch_line = next(ln for ln in proc.stdout.splitlines() if "arch-map" in ln)
+    assert "--mode" not in arch_line
+
+
+def test_arch_map_invalid_mode_fails_loudly(scaffold):
+    (scaffold / "docs" / "stack.ini").write_text(
+        "[arch-map]\nmode = banana\n", encoding="utf-8"
+    )
+    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "arch-map" in (proc.stdout + proc.stderr)
+    assert "banana" in (proc.stdout + proc.stderr)
+
+
+def test_non_python_stack_seeds_files_mode_and_starts_fresh(tmp_path):
+    # bootstrap --stack node seeds [arch-map] mode = files in the scaffolded
+    # profile AND initializes architecture.md in that same mode, so the fresh
+    # non-Python repo's freshness gate is real (not vacuous) and green on
+    # day one — generator and checker must agree on the mode.
+    dest = tmp_path / "repo"
+    proc = run_py(
+        [SCRIPTS / "bootstrap.py", "--dest", dest, "--stack", "node"], cwd=tmp_path
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    ini = (dest / "docs" / "stack.ini").read_text(encoding="utf-8")
+    assert "mode = files" in ini
+    assert "mode = symbols" not in ini
+    arch = (dest / "docs" / "architecture.md").read_text(encoding="utf-8")
+    assert "--mode files" in arch  # the generated block's byline names the mode
+    chk = run_py(["scripts/check.py", "--run-step", "arch-map"], cwd=dest)
+    assert chk.returncode == 0, chk.stdout + chk.stderr
+    assert "PASS" in chk.stdout
