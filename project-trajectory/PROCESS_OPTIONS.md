@@ -513,6 +513,13 @@ should, mutating **nothing** in the workspace.
   stale/mistyped allowlist, or an `all except` covering every model — the
   coordinator warns at startup that the guard is inert (it still runs,
   unguarded). A single-tier repo that wants no naming uses `all`.
+  - **Recommended value once you vendor: `all except <your frontier model>`**
+    (e.g. `all except fable`) — guard every tier *but* the strongest, so adding
+    a weaker tier later needs no policy edit. This is a *recommendation*, not the
+    code default: absent stays `off`, because an active default would fire the
+    "core absent" warning every session in the vast majority of repos that never
+    vendor guardrails, and hard-coding a frontier model name into the kit is the
+    very model-name rot the per-repo token avoids. Set it when you opt in.
 - **Injection is local-only.** `scripts/agent_loop.py` prepends the vendored
   core to the session prompt when the policy selects that session's model —
   read from the **local vendored copy, never fetched at launch** (remote text
