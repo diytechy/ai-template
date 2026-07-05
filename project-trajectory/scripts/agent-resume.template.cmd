@@ -20,8 +20,10 @@ REM   set "AGENT_CMD=claude -p {prompt} --model {model} --output-format json --d
 REM Keep agent-resume.sh's slots in sync — it is the POSIX twin;
 REM agent-resume.command delegates to it.
 set "AGENT_CMD="
-REM Default model tier + optional per-phase map read against docs/run-phase,
-REM e.g. set "AGENT_MODEL_MAP=P0=strong-model,P2=strong-model"
+REM Default model tier + optional per-phase map read against docs/run-phase.
+REM The plan/build cadence (process-options.md "Unattended operation") wires
+REM strong-model-plans / cheaper-model-executes here, e.g.:
+REM   set "AGENT_MODEL_MAP=PLAN=<strong-model>,BUILD=<cheap-model>"
 set "AGENT_MODEL="
 set "AGENT_MODEL_MAP="
 REM Optional hands-on template for --interactive (defaults to AGENT_CMD):

@@ -20,6 +20,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/kit-profile",
         "docs/status.md",
         "docs/log.md",
+        "docs/plan.md",
         "docs/architecture.md",
         "docs/requirements/system-requirements.csv",
         "docs/requirements/performance-budgets.csv",
@@ -85,6 +86,25 @@ def test_status_is_working_surface_history_lives_in_log(scaffold):
     for heading in ("## Gate Sign-offs", "## Audit log", "## Decisions log"):
         assert heading in log, "log.md must carry the history heading: " + heading
     assert "G-Final — Acceptance" in log  # the sign-off table moved intact
+
+
+def test_plan_build_cadence_surfaces(scaffold):
+    # WI-1.29: the plan/build cadence's scaffold surfaces. docs/plan.md is the
+    # sequenced block list (PLAN writes, BUILD executes); status.md points at
+    # it (the lean resume surface names, never holds, the plan); the launcher
+    # templates seed the strong-plans/cheap-executes model-map example.
+    plan = (scaffold / "docs" / "plan.md").read_text(encoding="utf-8")
+    assert "Plan/build" in plan  # names the process-options cadence section
+    assert "B-1" in plan  # the example block a fresh repo replaces
+    assert "Done-when" in plan  # every block states an observable done-when
+    assert "run-phase" in plan  # the bounce rule: exhausted/wrong -> PLAN
+    status = (scaffold / "docs" / "status.md").read_text(encoding="utf-8")
+    assert "plan.md" in status, "status.md must point at the work plan"
+    for launcher in ("agent-resume.sh", "agent-resume.cmd"):
+        text = (scaffold / launcher).read_text(encoding="utf-8")
+        assert "PLAN=<strong-model>,BUILD=<cheap-model>" in text, (
+            launcher + " must seed the plan/build model-map example"
+        )
 
 
 def test_fresh_scaffold_passes_archmap_check_and_trace(scaffold):

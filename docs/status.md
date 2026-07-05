@@ -21,9 +21,9 @@ WI-1.x log are this repo's append-only history layer — the `log.md` role).
   applied here: the meta-repo's product is the templates, and its
   requirements live as plan threads (see CLAUDE.md).
 - **Plan state:** Sessions L–S landed 2026-07-04 (Threads 29–40 complete);
-  post-plan WI-1.19–1.28 landed since (latest: **WI-1.28**, 2026-07-05 —
-  `docs/stack.ini` `[step:<name>]` gates, completing check.py's take-wholesale
-  promise; see the plan's WI log).
+  post-plan WI-1.19–1.29 landed since (latest: **WI-1.29**, 2026-07-05 —
+  plan/build cadence: scaffolded `docs/plan.md`, the PLAN⇄BUILD `run-phase`
+  bounce, and the iteration-index sizing servo; see the plan's WI log).
 - **Open items:**
   - **Needs <human>**: _(none)_
   - **In flight:** _(none)_

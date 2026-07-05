@@ -4868,6 +4868,45 @@ continuity (same style as the session log above).
 > the shipped profile has no active `[step:]`). `pytest -q`: 286 passed, 1
 > skipped (was 279 passed pre-WI); `check_docs.py --root .`: OK, 0 broken.
 
+> **WI-1.29 ✅ landed 2026-07-05 · Plan/build cadence: strong-tier PLAN sessions
+> write `docs/plan.md`, cheap-tier BUILD sessions execute it, `run-phase` is the
+> bounce.** Owner-raised (with the NHW tiny-session commit as field evidence):
+> the unattended layer had the §6 tiering *doctrine* (strong plans / cheap
+> executes) and the *mechanism* (`run-phase` + `--model-map`) but no named
+> convention connecting them — and the engine's default prompt said only "work
+> as far as you can," with **no plan artifact downstream at all** (the meta-repo
+> dogfoods IMPROVEMENT_PLAN.md; a scaffolded repo had nothing), so each session
+> invented its own next step and the safe invention was always a too-small one.
+> Landed, per the owner's rulings (plan home = new scaffolded file; implement
+> now): **(1)** `PLAN.template.md` → `docs/plan.md` — sequenced blocks (stable
+> `B-n` ids, scope, observable done-when, size class, §6 tier hint) + the bounce
+> rule + a "notes for the next PLAN session" tail; wired through bootstrap
+> `MAPPING`, the docstring tree, README's scaffold list, and a status.template
+> pointer (status stays the lean resume surface — names the current block, never
+> holds the plan). **(2)** PROCESS_OPTIONS "Unattended operation" gains the
+> **Plan/build cadence** subsection: the bounce protocol, the
+> `AGENT_MODEL_MAP="PLAN=<strong>,BUILD=<cheap>"` wiring, the sizing heuristics
+> (block = one deliverable + tests; deep solo, wide-mechanical solo, cheap prose
+> clubbed; too-small = trivial sessions re-paying context reload, too-big =
+> timeouts/stalls), and the **sizing servo** — PLAN sessions read the recent
+> `iteration_index.md` token/outcome rows before re-chunking, making the
+> existing telemetry load-bearing. Also notes the cadence works attended (a
+> human alternating tiers is the same protocol). **(3)** `agent_loop.py`
+> `DEFAULT_PROMPT` carries the discipline, conditional ("where docs/plan.md
+> exists") like the iteration-branch clause — a repo without the surface is
+> unchanged. **(4)** Launcher templates seed the model-map example naming
+> PLAN/BUILD. **(5)** `docs/plan.md` added to the preserve-always lists
+> (ADOPTING §6 + downstream-resync skill, both copies). **Also fixed en route:**
+> WI-1.28 updated only the dogfooded `.claude/` copy of the downstream-resync
+> skill; the kit-source copy (`project-trajectory/skills/…` — what ships) still
+> said "re-apply your EDIT block". Both copies now match. **Deviations:** none.
+> **Byte deltas:** AGENTS.template.md 9976 → 9976 (untouched); PROCESS.md 56,375
+> → 56,375 (untouched — cadence lives in PROCESS_OPTIONS, the expansion home).
+> Tests: +2 (`test_plan_build_cadence_surfaces`,
+> `test_default_prompt_carries_the_plan_build_cadence`) + the scaffold file-list
+> pin. `pytest -q`: 288 passed, 1 skipped; `check_docs.py --root .`: OK, 0
+> broken.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

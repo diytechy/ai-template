@@ -378,6 +378,43 @@ the driver owes the coordinator; update it in the session's final commit:
 **Optional `docs/run-phase`** (one word): the phase the *next* session should
 drive — the coordinator's model-tier key (§6 tiering, mapped per phase), kept
 current in the finishing commit so a tier bump lands on the right sessions.
+Phase names are free-form; the named convention below is `PLAN`/`BUILD`.
+
+**Plan/build cadence (the bounce).** The §6 tiering doctrine — *strong model
+plans, cheaper model executes, safe because of the gates* — mechanized on
+`run-phase`. A **PLAN** session (strong tier) writes or repairs **`docs/plan.md`**:
+sequenced blocks, each one coherent deliverable + its tests with an observable
+done-when, a size class, and a §6 tier hint — then sets `run-phase` to `BUILD`.
+Each **BUILD** session (cheaper tier) executes the next block — and only it —
+and, when it finds the plan exhausted or *wrong* (a §5 finding, never a silent
+rework), sets `run-phase` to `PLAN` and stops; the coordinator's model map does
+the rest: `AGENT_MODEL_MAP="PLAN=<strong-model>,BUILD=<cheap-model>"`. The plan
+file is the **compressed hand-off**: fresh sessions have no chat memory, and a
+block spec is far cheaper to reload than the exploration that produced it — the
+strong tier pays the exploration cost once, every cheap session after reloads
+only the spec. `status.md` stays the lean resume surface, naming the current
+block; finished blocks are logged and pruned.
+
+**Sizing the blocks** — the judgment the PLAN phase owns; it cannot be
+mechanized, but it can be steered:
+
+- **A block = one coherent deliverable + its tests**, sized for one session.
+  *Deep* work (design, a debug loop) gets a solo block — it exhausts context by
+  reasoning; *wide mechanical* work (a rename, a sweep) gets a solo block for
+  the opposite reason — it exhausts context by breadth; cheap prose/config
+  edits get **clubbed** into one block rather than paying a session's
+  context-reload tax each.
+- **Too small** reads as sessions ending trivially — one small commit, budget
+  barely touched — while each fresh session re-pays the full context reload:
+  merge the next blocks. **Too big** reads as timeouts, stall-guard trips, or a
+  session ending mid-block with no commit: split.
+- **The sizing loop has a sensor**: `iteration_index.md` records tokens, cost,
+  outcome, and commit range per session. A PLAN session reads the recent rows
+  before re-chunking and coarsens or splits against the evidence, not a guess.
+
+The cadence needs no coordinator to be useful — an attended human alternating
+"plan on the strong tier, execute on the cheap one" across hands-on sessions is
+the same protocol with a person as the model map.
 
 **Session discipline.**
 

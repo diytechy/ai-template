@@ -19,8 +19,10 @@
 #   AGENT_CMD="claude -p {prompt} --model {model} --output-format json --dangerously-skip-permissions"
 # Keep agent-resume.cmd's slots in sync — it is the Windows twin.
 AGENT_CMD=""
-# Default model tier + optional per-phase map read against docs/run-phase,
-# e.g. AGENT_MODEL_MAP="P0=strong-model,P2=strong-model"
+# Default model tier + optional per-phase map read against docs/run-phase.
+# The plan/build cadence (process-options.md "Unattended operation") wires
+# strong-model-plans / cheaper-model-executes here, e.g.:
+#   AGENT_MODEL_MAP="PLAN=<strong-model>,BUILD=<cheap-model>"
 AGENT_MODEL=""
 AGENT_MODEL_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):

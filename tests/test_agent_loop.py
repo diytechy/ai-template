@@ -259,6 +259,19 @@ def test_seconds_until_reset_parses_both_clock_formats():
         assert agent_loop.seconds_until_reset(garbage, now=noon) is None
 
 
+def test_default_prompt_carries_the_plan_build_cadence():
+    # WI-1.29: the engine's resume prompt is where the cadence becomes real —
+    # without these instructions a driver session never bounces run-phase
+    # between PLAN and BUILD, and the launcher's model map has nothing to key
+    # on. Conditional ("where docs/plan.md exists"), like the iteration-branch
+    # clause, so a repo without the plan surface is unchanged.
+    prompt = load_script("agent_loop").DEFAULT_PROMPT
+    assert "docs/plan.md" in prompt
+    assert "PLAN" in prompt and "BUILD" in prompt
+    assert "iteration_index.md" in prompt  # the sizing servo's sensor
+    assert "where docs/plan.md exists" in prompt  # stays conditional
+
+
 def test_declared_policy_parsers_agree():
     # One parse rule for the one-word policy files (docs/gate, gate-policy,
     # push-policy, commit-identity, run-state): the FIRST non-empty,

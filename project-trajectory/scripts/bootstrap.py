@@ -23,6 +23,7 @@ What it creates in the destination:
     docs/push-policy                           <- push-policy.template  (policy: human)
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
+    docs/plan.md                               <- PLAN.template.md  (plan/build session blocks)
     docs/architecture.md                       <- ARCHITECTURE.template.md
     docs/interfaces.md                         <- INTERFACES.template.md
     docs/requirements/stakeholder-needs.md     <- registries/stakeholder-needs.template.md
@@ -852,6 +853,11 @@ MAPPING = [
     # sign-offs, verdicts, and ratified decisions append here, keeping the
     # per-session status.md reload cheap.
     ("LOG.template.md", "docs/log.md"),
+    # The sequenced work-plan the plan/build cadence runs on (WI-1.29,
+    # process-options.md "Unattended operation" → Plan/build cadence): PLAN
+    # sessions write blocks here, BUILD sessions execute them; status.md stays
+    # the lean resume surface and points at it.
+    ("PLAN.template.md", "docs/plan.md"),
     ("ARCHITECTURE.template.md", "docs/architecture.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),
     (

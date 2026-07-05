@@ -91,7 +91,7 @@ python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --agents cla
 > --install`), which also provides `git`.
 
 This scaffolds `AGENTS.md` (the agent guide; `CLAUDE.md`/`GEMINI.md` stubs point
-at it), `docs/` (process, status + log, architecture, interfaces, the
+at it), `docs/` (process, status + log + plan, architecture, interfaces, the
 registries, and the declared-policy files `gate`, `gate-policy`, `push-policy`,
 `commit-identity`), `scripts/` (the harness), the root `run.*` /
 `agent-resume.*` launchers (shipped inert until you fill their command slots),

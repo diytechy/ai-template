@@ -6,6 +6,9 @@ every section short and current; history — sign-offs, verdicts, ratified
 decisions, session notes — appends to the log this header points at, never here.
 
 - **History:** [log.md](log.md) _(append-only; see process.md §5)_
+- **Work plan:** [plan.md](plan.md) _(the sequenced session blocks the
+  plan/build cadence executes; the "Next action" below names the current
+  block — see process-options.md "Plan/build cadence")_
 
 ---
 

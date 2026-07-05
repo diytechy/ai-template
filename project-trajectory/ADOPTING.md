@@ -232,7 +232,8 @@ range to see exactly which templates/scripts changed before you touch anything.
 - **Preserve always (yours, kit only seeds them):** `docs/stack.ini` (your
   declared toolchain — the kit seeds the Python reference once and never
   re-touches it), every registry CSV and
-  `stakeholder-needs.md`, `docs/status.md`, `docs/log.md`,
+  `stakeholder-needs.md`, `docs/status.md`, `docs/log.md`, `docs/plan.md`
+  (your work plan — the kit seeds the block-list skeleton once),
   `docs/iteration/` + `docs/iteration_index.md` (session history),
   `docs/architecture.md`'s hand-written overview (regenerate only the marker
   blocks), `AGENTS.md` project content, the root launchers' EDIT slots,

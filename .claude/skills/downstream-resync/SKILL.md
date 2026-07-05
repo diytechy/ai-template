@@ -46,7 +46,8 @@ checklist.
   re-reads `docs/kit-profile`, regenerates them with the same structural
   choices, and refreshes both stamps (ADOPTING.md §6).
 - **Preserve always (yours):** every registry CSV, `stakeholder-needs.md`,
-  `docs/status.md`, `docs/log.md`, `docs/architecture.md` hand-written overview
+  `docs/status.md`, `docs/log.md`, `docs/plan.md` (your work plan — the kit
+  seeds the block-list skeleton once), `docs/architecture.md` hand-written overview
   (regenerate only the marker blocks), `AGENTS.md` project content, `docs/gate`,
   `.gitignore`/`.gitattributes` (merge new kit lines by hand). `bootstrap.py`
   **skips existing files**, so a plain re-run won't clobber these — never run
