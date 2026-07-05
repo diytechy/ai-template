@@ -4739,6 +4739,34 @@ continuity (same style as the session log above).
 > decompose-don't-paraphrase rule. `pytest -q` (whole batch): **259 passed,
 > 16 skipped** (was 256/16; +3). `check_docs --root .`: OK, 0 broken.
 
+> **WI-1.24 ✅ landed 2026-07-04 · Readiness polish: opus seed, skill
+> baseline, meta-repo resume prompt.** The three small items from the
+> post-batch readiness review, owner-approved:
+> 1. **`bootstrap.py` Claude seed `sonnet` → `opus`** (comment states the
+>    rationale: driver sessions carry gate-bearing judgment, §6 tiering —
+>    cheaper phases are `AGENT_MODEL_MAP`'s job, not the loop default);
+>    `test_bootstrap` assertion updated.
+> 2. **`byte-budget-guard` skill baseline re-stamped** (kit + dogfooded
+>    copies): PROCESS.md watched baseline ~47,476 → **56,230 as of
+>    2026-07-04/WI-1.23**, with an instruction to re-stamp both copies when
+>    a flagged growth lands; report-shape example numbers refreshed.
+> 3. **Root launchers gain an `AGENT_PROMPT` slot** (meta-repo resume
+>    prompt): the engine default assumes a scaffolded downstream repo
+>    (`docs/process.md`), so this repo's launchers now name its real
+>    surfaces (CLAUDE.md, plan/WI scope rule, pytest+check_docs gates,
+>    push-policy) — empty slot falls back to the engine default; explicit
+>    flags precede `$@`/`%*` so command-line overrides win. Found + fixed in
+>    verification: `agent-resume.cmd`'s working copy was LF-only (Write
+>    artifact) and cmd.exe misparsed it — exactly the failure
+>    `.gitattributes` documents; normalized to CRLF (committed form was
+>    already correct — index normalizes; fresh checkouts were never broken).
+>    Both launchers now verified end-to-end via `--help` through the full
+>    quoting path.
+>
+> **Byte deltas:** `AGENTS.template.md` + `PROCESS.md` **untouched**
+> (9,976 / 56,230). `pytest -q`: **259 passed, 16 skipped** (assertion
+> updated, count unchanged). `check_docs --root .`: OK, 0 broken.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

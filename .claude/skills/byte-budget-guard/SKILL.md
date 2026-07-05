@@ -20,7 +20,7 @@ mode here. Check before you edit and again before you commit.
 | File | Budget | Enforced by |
 |---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
-| `project-trajectory/PROCESS.md` | **watched** (~47,476 baseline; keep flat) | convention + the WI log's byte-delta report |
+| `project-trajectory/PROCESS.md` | **watched** (baseline **56,230** as of 2026-07-04/WI-1.23; keep flat — re-stamp this number, both skill copies, when a flagged growth lands) | convention + the WI log's byte-delta report |
 
 `PROCESS_OPTIONS.md`, `ADOPTING.md`, and `EXAMPLE.md` are the **expansion homes**:
 push detail there instead of growing the two budgeted files.
@@ -51,8 +51,8 @@ push detail there instead of growing the two budgeted files.
 ## Report shape (paste into the WI/session note)
 
 ```
-Byte deltas: AGENTS.template.md 9988 -> 9988 (untouched, 12 B headroom preserved);
-PROCESS.md 47476 -> 47476 (unchanged).
+Byte deltas: AGENTS.template.md 9976 -> 9976 (untouched, 24 B headroom preserved);
+PROCESS.md 56230 -> 56230 (unchanged).
 ```
 
 If a budgeted file grew, say by how much and where the paid-for tightening (or the

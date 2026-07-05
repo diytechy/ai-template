@@ -240,7 +240,9 @@ def test_agents_choice_seeds_agent_resume_slots(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     sh = (dest / "agent-resume.sh").read_text(encoding="utf-8")
     assert 'AGENT_CMD="claude -p {prompt} --model {model}' in sh
-    assert 'AGENT_MODEL="sonnet"' in sh
+    # Strong tier is the seeded default (driver sessions are gate-bearing);
+    # cheaper phases are the model map's job.
+    assert 'AGENT_MODEL="opus"' in sh
     cmd = (dest / "agent-resume.cmd").read_text(encoding="utf-8")
     assert 'set "AGENT_CMD=claude -p {prompt}' in cmd
     assert "seeded agent-resume launchers" in proc.stdout

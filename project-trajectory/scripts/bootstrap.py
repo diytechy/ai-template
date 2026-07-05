@@ -354,7 +354,10 @@ AGENT_RESUME_SEEDS = {
         "cmd": "claude -p {prompt} --model {model} --output-format json "
         "--dangerously-skip-permissions",
         "interactive": "claude --model {model} {prompt}",
-        "model": "sonnet",
+        # Strong tier by default: driver sessions carry gate-bearing judgment
+        # (process.md §6 tiering) — step phases down via AGENT_MODEL_MAP, not
+        # by seeding the whole loop cheap.
+        "model": "opus",
     },
     "gemini": {
         "cmd": "gemini --prompt {prompt} --model {model} --yolo",
