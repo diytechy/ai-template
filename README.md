@@ -55,7 +55,10 @@ The kit's headline pieces:
   ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)): fresh headless
   sessions resume from `docs/status.md` until `docs/run-state` reaches an end
   state, with a per-phase model map (`docs/run-phase`), reactive rate-limit
-  backoff, a stall guard, and tracked per-session logs in `docs/iteration/`.
+  backoff, a stall guard, tracked per-session logs in `docs/iteration/`, and
+  optional **tier-conditional guardrails** (`docs/guardrails-policy` injects a
+  vendored discipline core into weaker-tier sessions; drift-checked by
+  `check_vendored.py`).
   Consent is explicit and governed by one-word declared-policy files scaffolded
   into `docs/`: `gate-policy` (who advances gates), `push-policy` (who may
   push), and `commit-identity` (author-identity constraint for anonymous
