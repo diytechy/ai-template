@@ -141,6 +141,41 @@ def read_declared(path, default):
     return default
 
 
+# The always-on guardrails core is vendored verbatim as docs/guardrails/core.md
+# (the upstream CLAUDE.md); its BEGIN/END KIT CORE block is what gets injected.
+KIT_CORE_RE = re.compile(
+    r"<!--\s*BEGIN KIT CORE.*?<!--\s*END KIT CORE[^>]*-->", re.S | re.I
+)
+
+
+def guardrails_apply(policy, model):
+    """Whether to inject the guardrails core for a session on `model`, under the
+    one-word docs/guardrails-policy: 'off'/absent -> never; 'all' -> every
+    session; any other value -> a case-insensitive substring match on the model
+    id (name the weaker model, e.g. 'opus', to guard only its sessions while a
+    frontier model plans unguarded). See process-options.md "Tier-conditional
+    guardrails"."""
+    p = (policy or "").strip().lower()
+    if p in ("", "off"):
+        return False
+    if p == "all":
+        return True
+    return p in (model or "").lower()
+
+
+def guardrails_core(root):
+    """The always-on core to prepend to a weak-tier session's prompt, or None.
+    Vendored verbatim as docs/guardrails/core.md; the BEGIN/END KIT CORE block is
+    extracted when present, else the whole file. Absent -> None (the caller warns
+    once and runs without it — guardrails accelerate, they are not a gate)."""
+    try:
+        text = (root / "docs" / "guardrails" / "core.md").read_text(encoding="utf-8")
+    except OSError:
+        return None
+    m = KIT_CORE_RE.search(text)
+    return (m.group(0) if m else text).strip()
+
+
 def split_cmd(template):
     """Split a command template into tokens, quote-aware but with backslash
     escaping disabled so Windows paths survive (shlex's posix escape rules
@@ -333,6 +368,7 @@ def write_session_log(iter_dir, meta, transcript):
         "date",
         "phase",
         "model",
+        "guardrails",
         "outcome",
         "commits",
         "tokens",
@@ -628,6 +664,30 @@ def main():
         phase = read_declared(docs / "run-phase", "")
         return phase, model_map.get(phase, args.model)
 
+    guardrails_policy = read_declared(docs / "guardrails-policy", "off")
+    warned_no_core = []
+
+    def session_prompt(model):
+        """The session prompt, with the vendored guardrails core prepended when
+        docs/guardrails-policy selects this session's model (Thread 41). Returns
+        (prompt, guarded); a selected-but-absent core warns once, then runs
+        without it (guardrails accelerate weak tiers, they never gate a run)."""
+        if not guardrails_apply(guardrails_policy, model):
+            return args.prompt, False
+        core = guardrails_core(root)
+        if core:
+            return core + "\n\n---\n\n" + args.prompt, True
+        if not warned_no_core:
+            warned_no_core.append(True)
+            print(
+                "agent_loop: guardrails-policy={!r} selects model {!r} but "
+                "docs/guardrails/core.md is absent — running without the "
+                "guardrails core (vendor it per process-options.md "
+                '"Tier-conditional guardrails").'.format(guardrails_policy, model),
+                file=sys.stderr,
+            )
+        return args.prompt, False
+
     if args.interactive:
         itemplate = (
             args.interactive_cmd
@@ -640,7 +700,7 @@ def main():
                 phase or "—", model or "—"
             )
         )
-        argv = build_argv(itemplate, model, args.prompt)
+        argv = build_argv(itemplate, model, session_prompt(model)[0])
         proc = subprocess.run(argv, cwd=str(root))
         return proc.returncode
 
@@ -649,6 +709,11 @@ def main():
     print(
         "gate-policy: {} | push-policy: {} (the coordinator never pushes "
         "under 'human')".format(gate_policy, push_policy)
+    )
+    print(
+        "guardrails-policy: {} (docs/guardrails-policy — the vendored core is "
+        "injected per session when the policy selects that session's "
+        "model)".format(guardrails_policy)
     )
     print("agent command: {}".format(template))
     print(
@@ -688,7 +753,8 @@ def main():
                 session, i, args.max_iterations, phase or "—", model or "—"
             )
         )
-        argv = build_argv(template, model, args.prompt)
+        prompt, guarded = session_prompt(model)
+        argv = build_argv(template, model, prompt)
         code, output, timed_out = run_session(argv, root, args.session_timeout)
 
         try:
@@ -735,6 +801,7 @@ def main():
             "date": time.strftime("%Y-%m-%d %H:%M"),
             "phase": phase,
             "model": model,
+            "guardrails": "on" if guarded else "",
             "outcome": outcome,
             "commits": commits,
             "tokens": tokens,

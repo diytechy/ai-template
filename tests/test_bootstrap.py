@@ -29,6 +29,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/test/test-cases.csv",
         "scripts/check.py",
         "scripts/check_privacy.py",
+        "scripts/check_vendored.py",
         "scripts/gen_cases.py",
         ".githooks/pre-commit",
         ".githooks/pre-push",

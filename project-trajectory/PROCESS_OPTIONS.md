@@ -474,6 +474,55 @@ double-click wrappers, scaffolded like `run.*` and **inert** until the
 single hands-on session at the mapped tier instead of the loop. A repo that
 doesn't want the entry point deletes the launchers; the protocol stands alone.
 
+## Tier-conditional guardrails
+
+*Referenced from the "Unattended operation" layer above.* **Applies when** an
+unattended run maps **different model tiers to different phases** (the
+`--model-map` / `docs/run-phase` servo) and you want the weaker tier to operate
+more procedurally — extra plan/verify/reference-sweep discipline — while a
+frontier tier plans unguarded. This is an **accelerator, not a gate**: it never
+blocks a run, and a repo that leaves it off is unchanged.
+
+**The insight.** A set of always-on "guardrail" instructions (an event-phrased
+routing table + a few iron rules) can make a mid-tier model behave closer to a
+frontier one, but the same rules are ritual noise under a frontier model. The
+only thing that must be tier-conditional is that **always-on core**; on-demand
+playbooks can sit permanently on disk for every tier, because a session never
+told to route to them never reads them. So the coordinator — the one place that
+already knows each session's resolved model — injects the core only when it
+should, mutating **nothing** in the workspace.
+
+**The mechanism.**
+- **Content is vendored, not shipped by the kit** (one staleness hop, no
+  third-party redistribution). A repo copies an upstream guardrails set
+  **verbatim** under `docs/guardrails/` — `core.md` is the whole upstream
+  always-on file; its `BEGIN/END KIT CORE` block is what gets injected (the
+  whole file if it carries no such markers). Playbooks (`PLAN.md`, `CODE.md`, …)
+  sit beside it so the core's routing table resolves.
+- **`docs/guardrails-policy`** (one word, same first-line parse as every
+  declared-policy file; absent = `off`, not scaffolded): `off` → never inject;
+  `all` → every session; **any other value → a case-insensitive substring match
+  on the session's model id** — name the weaker model (e.g. `opus`) to guard
+  only its sessions while the frontier tier plans unguarded.
+- **Injection is local-only.** `scripts/agent_loop.py` prepends the vendored
+  core to the session prompt when the policy selects that session's model —
+  read from the **local vendored copy, never fetched at launch** (remote text
+  into an agent's instructions is a supply-chain surface; the pin + a reviewed
+  re-vendor commit are the control). A selected-but-absent core warns once and
+  runs without it. Each session log records `guardrails: on/—` for audit.
+- **Drift is caught, not auto-fixed.** `docs/guardrails/UPSTREAM` pins the raw
+  base URL + commit and maps each vendored file to its upstream path;
+  `scripts/check_vendored.py` hash-compares against the pin and **warns**
+  (network-gated: a clean skip offline, so it never blocks CI). Updating is a
+  human-reviewed re-copy that bumps the commit — never automatic. It is
+  deliberately **not** wired into `check.py` (the gate stays hermetic).
+
+**The boundary.** Guardrails govern *in-session agent mechanics*; the process
+(gates, traceability, the honest-gate rule) governs *artifacts*. A guardrail
+never relaxes a gate, and the honest-gate rule still owns every `run-state`.
+The meta-repo dogfoods the mechanism (tests) but runs the policy **off** — its
+own sessions are frontier-tier, so there is nothing to guard.
+
 ## §7 boundary notes
 
 *Referenced from PROCESS.md §7.* These three notes draw lines around what the kit

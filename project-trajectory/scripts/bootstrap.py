@@ -35,7 +35,7 @@ What it creates in the destination:
     docs/requirements/assets.csv               <- registries/assets.template.csv
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, check_privacy.py, gen_arch_map.py,
+    scripts/check_stubs.py, check_privacy.py, check_vendored.py, gen_arch_map.py,
     scripts/gen_release_checklist.py, gen_cases.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
@@ -684,9 +684,7 @@ def strip_markers(text, omit, where="template"):
                 else:
                     mode = "keep-prof"
             elif s in (KIT_ONLY_CLOSE, PROFILE_CLOSE):
-                raise ValueError(
-                    "{}:{}: close marker without an open".format(where, n)
-                )
+                raise ValueError("{}:{}: close marker without an open".format(where, n))
             else:
                 out.append(line)
         elif s == KIT_ONLY_OPEN or opened:
@@ -893,6 +891,7 @@ MAPPING = [
     ("scripts/check_perf.py", "scripts/check_perf.py"),
     ("scripts/check_stubs.py", "scripts/check_stubs.py"),
     ("scripts/check_privacy.py", "scripts/check_privacy.py"),
+    ("scripts/check_vendored.py", "scripts/check_vendored.py"),
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),
@@ -999,7 +998,13 @@ def initialize_generated_docs(dest, created):
     # seeded `[arch-map] mode = files` (see seed_arch_map_mode), and check.py
     # will verify freshness in that mode — initializing in symbols mode would
     # leave the fresh repo stale on day one.
-    arch_cmd = ["scripts/gen_arch_map.py", "--src", "src", "--doc", "docs/architecture.md"]
+    arch_cmd = [
+        "scripts/gen_arch_map.py",
+        "--src",
+        "src",
+        "--doc",
+        "docs/architecture.md",
+    ]
     ini = dest / "docs" / "stack.ini"
     if ini.exists():
         cp = configparser.ConfigParser(interpolation=None)
@@ -1008,7 +1013,10 @@ def initialize_generated_docs(dest, created):
         except configparser.Error:
             pass  # check.py reports a malformed profile loudly; init stays reference-mode
         else:
-            if cp.has_option("arch-map", "mode") and cp.get("arch-map", "mode") == "files":
+            if (
+                cp.has_option("arch-map", "mode")
+                and cp.get("arch-map", "mode") == "files"
+            ):
                 arch_cmd += ["--mode", "files"]
     for rel_cmd in (
         arch_cmd,

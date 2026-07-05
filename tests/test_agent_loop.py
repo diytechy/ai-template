@@ -29,6 +29,7 @@ with open(str(inv), "a") as fh:
     fh.write("call\\n")
 with open(str(ctl / "models.txt"), "a") as fh:
     fh.write(args.model + "\\n")
+pathlib.Path(str(ctl / "prompt.txt")).write_text(args.prompt, encoding="utf-8")
 actions = []
 if (ctl / "actions.txt").exists():
     actions = (ctl / "actions.txt").read_text().split()
@@ -216,6 +217,90 @@ def test_phase_model_map_picks_the_declared_tier(loop_repo):
     assert models == ["strong-tier"]
 
 
+def _vendor_core(repo, body):
+    gdir = repo / "docs" / "guardrails"
+    gdir.mkdir(parents=True, exist_ok=True)
+    (gdir / "core.md").write_text(body, encoding="utf-8")
+
+
+def test_guardrails_apply_policy_matrix():
+    # off/absent -> never; all -> always; any other value -> substring match on
+    # the model id (name the weaker model to guard only its sessions).
+    al = load_script("agent_loop")
+    assert al.guardrails_apply("", "claude-opus-4-8") is False
+    assert al.guardrails_apply("off", "claude-opus-4-8") is False
+    assert al.guardrails_apply("all", "anything") is True
+    assert al.guardrails_apply("opus", "claude-opus-4-8") is True
+    assert al.guardrails_apply("opus", "claude-fable-5") is False
+
+
+def test_guardrails_off_by_default_injects_nothing(loop_repo):
+    # No docs/guardrails-policy -> the prompt reaches the agent unchanged.
+    repo, ctl, template = loop_repo
+    _vendor_core(repo, "MARKER-CORE do X\n")  # present but policy is off
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "MARKER-CORE" not in (ctl / "prompt.txt").read_text(encoding="utf-8")
+
+
+def test_guardrails_all_injects_only_the_kit_core_block(loop_repo):
+    # policy=all -> the BEGIN/END KIT CORE block (not surrounding upstream prose)
+    # is prepended, and the coordinator's own prompt still follows.
+    repo, ctl, template = loop_repo
+    _vendor_core(
+        repo,
+        "upstream preamble ignored\n"
+        "<!-- BEGIN KIT CORE v1.0 -->\nMARKER-CORE rules.\n<!-- END KIT CORE -->\n"
+        "upstream footer ignored\n",
+    )
+    (repo / "docs" / "guardrails-policy").write_text("all\n", encoding="utf-8")
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    prompt = (ctl / "prompt.txt").read_text(encoding="utf-8")
+    assert "MARKER-CORE rules." in prompt
+    assert "ignored" not in prompt  # only the marked block, not the whole file
+    assert "unattended coordinator" in prompt  # the base prompt still follows
+
+
+def test_guardrails_weak_tier_injects_only_matching_model(loop_repo):
+    # policy=a model substring: the BUILD session (opus) is guarded; a PLAN
+    # session (fable) would not be. Here BUILD runs, so the core is injected.
+    repo, ctl, template = loop_repo
+    _vendor_core(repo, "MARKER-CORE\n")
+    (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
+    (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template, "--model-map", "PLAN=fable-5,BUILD=claude-opus-4-8")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "MARKER-CORE" in (ctl / "prompt.txt").read_text(encoding="utf-8")
+
+
+def test_guardrails_strong_tier_is_not_injected(loop_repo):
+    # Same policy, but the PLAN session runs on the frontier model (fable): no
+    # substring match -> the guardrails core is not injected.
+    repo, ctl, template = loop_repo
+    _vendor_core(repo, "MARKER-CORE\n")
+    (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
+    (repo / "docs" / "run-phase").write_text("PLAN\n", encoding="utf-8")
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template, "--model-map", "PLAN=fable-5,BUILD=claude-opus-4-8")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "MARKER-CORE" not in (ctl / "prompt.txt").read_text(encoding="utf-8")
+
+
+def test_guardrails_selected_but_missing_core_warns_and_runs(loop_repo):
+    # policy selects the model but no vendored core -> warn once, run anyway
+    # (guardrails accelerate weak tiers; they never gate a run).
+    repo, ctl, template = loop_repo
+    (repo / "docs" / "guardrails-policy").write_text("all\n", encoding="utf-8")
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "core.md is absent" in (proc.stdout + proc.stderr)
+
+
 def test_limit_hit_backs_off_without_counting_stall(loop_repo):
     # A throttled session must read WAITING, not a stall: with stall-limit 1 a
     # no-commit session would abort STALL (exit 4); the limit message must
@@ -237,9 +322,7 @@ def test_unparseable_reset_falls_back_and_retries(loop_repo):
     # seconds (capped at the wait ceiling) and retries instead of exiting.
     repo, ctl, template = loop_repo
     (ctl / "actions.txt").write_text("limit-odd done", encoding="utf-8")
-    proc = _loop(
-        repo, template, "--wait-on-limit", "30", "--limit-retry-fallback", "1"
-    )
+    proc = _loop(repo, template, "--wait-on-limit", "30", "--limit-retry-fallback", "1")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "not recognized" in proc.stdout
     assert _invocations(ctl) == 2, "the throttled session must be retried"

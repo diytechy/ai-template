@@ -3525,8 +3525,36 @@ the Thread-32 class).
 
 ## Thread 41 — Tier-conditional guardrails: the kit ships the hook, content by pointer
 
-**Status: 📋 specced 2026-07-05 (owner rulings via AskUserQuestion this
-session); not scheduled — no ▶ NEXT change.** Rulings: (a) sync = **vendored
+**Status: ✅ landed 2026-07-05.** `agent_loop.py` gained `guardrails_apply(policy,
+model)` + `guardrails_core(root)` and a per-session `session_prompt()` that
+prepends the vendored core to the prompt when `docs/guardrails-policy` selects
+the session's resolved model — applied in both the loop and `--interactive`
+paths, from the **local** `docs/guardrails/core.md` only (never fetched at
+launch), extracting its `BEGIN/END KIT CORE` block (whole file if unmarked).
+Policy is one word (absent=`off`): `off`/`all`/a case-insensitive model
+substring (name the weaker model to guard only its sessions). Selected-but-absent
+core warns once and runs on (accelerator, not a gate); each session log records
+`guardrails: on/—`; the coordinator header prints the policy. New
+`check_vendored.py` (stdlib, network-gated, warn-first): hash-compares each
+vendored file against its pinned raw URL in `docs/guardrails/UPSTREAM`, degrades
+to a clean skip offline, `--strict` exits 1; **not** wired into `check.py` (gate
+stays hermetic). New PROCESS_OPTIONS "Tier-conditional guardrails" layer (model,
+policy, vendoring recipe, the in-session-vs-artifacts boundary). bootstrap
+scaffolds `check_vendored.py` (MAPPING + docstring + presence test); kit README
+gains its row. Meta-repo dogfoods the mechanism via tests but runs policy `off`
+(frontier-tier sessions — nothing to guard), stated in the layer. **Deviations
+from spec:** (1) `weak-tiers` as a magic classifier was realized as the more
+explicit **model-substring** policy value (the kit can't rank model names, and
+this needs no taxonomy that would rot as models ship); (2) drift-check reuses a
+generic `check_vendored.py` as the spec anticipated. Tests: +10
+(`test_agent_loop.py` +5: policy matrix, off-default, all-injects-block-only,
+weak-injects / strong-skips, missing-core warns; `test_check_vendored.py` +5:
+match, drift warn + `--strict` fail, offline skip, missing-file warn, no-manifest
+noop). `pytest -q`: 316 passed, 1 skipped; `check_docs --root . --stale`: 0
+broken. Byte deltas: AGENTS.template.md / PROCESS.md untouched (the layer lives
+in PROCESS_OPTIONS + the scripts).
+
+**Rulings:** (a) sync = **vendored
 verbatim copy + warn-only drift check** (pinned upstream commit; never
 auto-update); (b) scope = **the kit ships only the mechanism** — each repo
 vendors the guardrails content itself from upstream (one staleness hop, no
@@ -5271,8 +5299,8 @@ continuity (same style as the session log above).
    "2026-07-04 batch — decision briefs" section records them; each thread's
    Status line carries its operative form). Sessions L/M/N/O/P/Q/R/S are
    sequenced by the **▶ NEXT marker** in the sessions block (set 2026-07-04
-   with the owner's rulings) — follow it per steps 1–5. **Threads 41–43 are
-   specced and ruled (2026-07-05) but not yet scheduled into a session.** The
+   with the owner's rulings) — follow it per steps 1–5. **Threads 41–43 all
+   landed 2026-07-05 (WI-1.33/1.34 + the three thread Status blocks).** The
    **stubs** (16 non-code-artifact verification · 21 cross-repo
    tooling · 23 publication composition) still each need a decision to
    revive.
