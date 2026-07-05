@@ -2450,8 +2450,21 @@ they can delegate or reference; `pytest -q` green.
 
 ## Thread 31 — Field-report R3: a non-Python architecture-map path
 
-**Status: ✔ ruled 2026-07-04 (Q3: file-level fallback only; symbol-level
-ports stay contributions) — ready to build (Session O).**
+**Status: ✅ landed 2026-07-04 (Session O).** Built option (b) as ruled: a
+stack-neutral `--mode files` in `gen_arch_map.py` (default `symbols` mode
+byte-for-byte unchanged). It fills the **same MODULE MAP marker block** with one
+row per source file (`_source_files` scans every non-hidden regular file under
+`--src`, no extension filter) — the summary is the file's first comment line
+(`first_comment_summary`, shebang-skipping, block-close-stripping; comment tokens
+from `--comment-prefix`, default `#`/`//`/`--`). `--check` freshness is identical
+(string compare), so a file added/removed/renamed or a summary edit trips it;
+the zero-scan WARNING is now mode-aware and, in `symbols` mode, points at the new
+fallback. **Deviations:** (1) `--flow` + the dependency diagram stay symbol-mode
+only (they need a parser) — passing `--flow` with `--mode files` errors rather
+than silently no-ops; in files mode the DIAGRAM/FLOW blocks are left untouched.
+(2) ADOPTING.md's port-or-drop rule became **port / run the fallback / remove**
+(three options, the middle one new) — "never leave a vacuous pass" per the spec.
+Gates below.
 **Source:** field report A1/R3 (High).
 
 **Why:** the marker-block contract is language-agnostic, but the fillers are
@@ -3855,8 +3868,11 @@ warning scrolls by in exactly the unattended case).
   run can add tens of MB, compounding per leg.
 
 **Proposed sessions (rulings landed 2026-07-04).**
-**▶ NEXT: Session O** (independent; can slot anywhere). Move
-this marker as sessions land (Session-protocol step 4).
+**▶ ALL PLANNED SESSIONS (L–S) LANDED** (2026-07-04). No ▶ NEXT session —
+per Session-protocol step 0, don't invent one; confirm with the owner before
+starting new work. Remaining open items are the **stubs** (Thread 16
+non-code-artifact verification · Thread 21 cross-repo tooling · Thread 23
+publication composition), each needing a decision to revive.
 - **Session L ✅ landed 2026-07-04** — Threads **29 + 35 + 37 + 38**
   (mechanical, file-coherent batch: check.py guard + registry column + the
   vision tag + the commit-identity guard; per-thread Status blocks above).
@@ -3912,7 +3928,14 @@ this marker as sessions land (Session-protocol step 4).
   pre-existing skip); `check_docs --root .` **0 broken**. Byte deltas:
   AGENTS.template.md 9,998 → 9,998 (untouched); PROCESS.md 54,961 → 55,123
   (**+162 B** — the §7 profile pointer, flagged per the budget convention).
-- **Session O** — Thread **31** solo (new generator mode + tests).
+- **Session O ✅ landed 2026-07-04** — Thread **31** solo (the stack-neutral
+  arch-map fallback: `gen_arch_map.py --mode files` + `--comment-prefix`,
+  ADOPTING.md's third port-or-drop option; per-thread Status block above).
+  Gates: `pytest -q` **271 passed, 1 skipped** (the same pre-existing skip; +19
+  vs Session N's 252/1 — 8 new files-mode tests plus the run re-counts all).
+  `check_docs --root .` **0 broken**. Byte deltas: AGENTS.template.md
+  9,998 → 9,998 (untouched); PROCESS.md 55,123 → 55,123 (untouched — the whole
+  change lives in the script + ADOPTING.md, per the budget convention).
 - **Session R** — Thread **40** solo, strong model (after M, before P and Q;
   the branch/sync protocol design — PROCESS_OPTIONS layer + push-policy file;
   P and Q build against it). *Reference material (summarized in the spec;
@@ -3945,11 +3968,13 @@ report + the NotHomeWrecker unattended-coordinator review + owner directives) �
 specs above. **29 ✅, 35 ✅, 37 ✅, 38 ✅** (2026-07-04, Session L);
 **36 ✅, 32 ✅** (2026-07-04, Session M); **40 ✅** (2026-07-04, Session R);
 **33 ✅** (2026-07-04, Session P); **39 ✅** (2026-07-04, Session Q);
-**34 ✅** (2026-07-04, Session S); **30 ✅** (2026-07-04, Session N).
+**34 ✅** (2026-07-04, Session S); **30 ✅** (2026-07-04, Session N);
+**31 ✅** (2026-07-04, Session O). **All 12 threads (29–40) complete —
+Sessions L–S all landed.**
 **All questions ruled by the owner 2026-07-04** — the batch's decision-briefs
 section records the rulings (Q6 Hybrid and Q8 full-conditional-templating
-override the recommendations; Q7d/Q13a amended Threads 33/40). Proposed
-grouping: Sessions L–S there; confirm with the user which to start.
+override the recommendations; Q7d/Q13a amended Threads 33/40). Remaining open
+items: the **stubs** (16, 21, 23 — each needs a decision to revive).
 **Reopened 2026-06-30** with **Threads 12–18**: 12–14 from the
 DonnyClaude/Ponytail sibling survey (the same survey→thread move that produced
 8/9 from `ai-native-toolkit`); 15 (onboarding/contributor-workspace ladder) +
