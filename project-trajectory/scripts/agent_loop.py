@@ -40,7 +40,10 @@ Rate limits are handled reactively (plan-usage state is not scriptable): a
 session whose output matches the "…limit … resets <time>" message backs off —
 with --wait-on-limit N the loop sleeps until the parsed reset (when <= N
 seconds) and continues; otherwise it exits with a WAITING banner naming the
-resume time.
+resume time. Both am/pm and 24-hour reset clocks parse (the wording is
+region-dependent); a hint in any other format doesn't kill a walk-away run —
+with --wait-on-limit set, the loop sleeps --limit-retry-fallback seconds
+(default 3600, capped at the --wait-on-limit ceiling) and retries.
 
 --interactive boots exactly one hands-on session (stdio attached, no loop,
 no capture) at the mapped tier — the "grind from a single point" entry for a
@@ -117,13 +120,17 @@ DEFAULT_PROMPT = (
 
 def read_declared(path, default):
     """Read a one-word declared-policy file (docs/gate, docs/run-state, …):
-    the last non-empty, non-comment line, or `default` when absent/empty."""
+    the first non-empty, non-comment line — the same rule the git hooks and
+    check_privacy.py apply — or `default` when absent/empty."""
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError:
         return default
-    values = [ln.strip() for ln in lines if ln.strip() and not ln.startswith("#")]
-    return values[-1] if values else default
+    for ln in lines:
+        ln = ln.strip()
+        if ln and not ln.startswith("#"):
+            return ln
+    return default
 
 
 def split_cmd(template):
@@ -247,18 +254,26 @@ def limit_reset_hint(output, data, exit_code):
 
 
 def seconds_until_reset(hint, now=None):
-    """Best-effort seconds until a reset hint like '3:45pm', '10am' or
-    'Mon 12:00am'. None when unparseable — the caller then can't sleep and
-    exits WAITING with the raw hint in the banner."""
+    """Best-effort seconds until a reset hint like '3:45pm', '10am',
+    'Mon 12:00am', '14:30' or 'Tue 09:00' — both am/pm and 24-hour clocks,
+    since the message wording is locale-dependent. None when unparseable —
+    the caller then sleeps the --limit-retry-fallback (when waiting is
+    enabled) or exits WAITING with the raw hint in the banner."""
     if not hint:
         return None
     now = now or datetime.datetime.now()
-    m = re.search(r"(\d{1,2})(?::(\d{2}))?\s*(am|pm)", hint, re.I)
-    if not m:
-        return None
-    hour, minute = int(m.group(1)) % 12, int(m.group(2) or 0)
-    if m.group(3).lower() == "pm":
-        hour += 12
+    m = re.search(r"(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b", hint, re.I)
+    if m:
+        hour, minute = int(m.group(1)) % 12, int(m.group(2) or 0)
+        if m.group(3).lower() == "pm":
+            hour += 12
+    else:
+        m = re.search(r"\b(\d{1,2}):(\d{2})(?::\d{2})?\b", hint)
+        if not m:
+            return None
+        hour, minute = int(m.group(1)), int(m.group(2))
+        if hour > 23 or minute > 59:
+            return None
     target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
     days = re.search(r"\b(mon|tue|wed|thu|fri|sat|sun)", hint, re.I)
     if days:
@@ -566,6 +581,15 @@ def main():
         "<= this many seconds and continue; otherwise (and by default) exit "
         "with a WAITING banner naming the resume time",
     )
+    ap.add_argument(
+        "--limit-retry-fallback",
+        type=int,
+        default=3600,
+        help="with --wait-on-limit: when the reset time can't be parsed "
+        "(am/pm and 24-hour clocks are recognized; other wordings are not), "
+        "sleep this many seconds and retry instead of exiting — capped at "
+        "the --wait-on-limit ceiling (default 3600)",
+    )
     args = ap.parse_args()
 
     root = Path(args.root).resolve()
@@ -720,6 +744,19 @@ def main():
             # it toward the stall guard (three throttled sessions would
             # otherwise misread as a stall and abort, the NHW original's bug).
             wait = seconds_until_reset(reset_hint)
+            if args.wait_on_limit and wait is None:
+                # Unrecognized reset wording (locale/format drift): a bounded
+                # fallback nap keeps the walk-away run alive, capped at the
+                # ceiling the human already consented to waiting.
+                wait = min(args.limit_retry_fallback, args.wait_on_limit)
+                print(
+                    "rate limit hit — reset time {!r} not recognized; "
+                    "sleeping {}s (--limit-retry-fallback) and retrying.".format(
+                        reset_hint, wait
+                    )
+                )
+                time.sleep(wait)
+                continue
             if args.wait_on_limit and wait and wait <= args.wait_on_limit:
                 print(
                     "rate limit hit — sleeping {}s until the reset ({}).".format(

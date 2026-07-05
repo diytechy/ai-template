@@ -366,11 +366,18 @@ GATE_FILE = Path("docs/gate")
 def resolve_gate(explicit):
     """The gate to run: an explicit --gate wins; else the docs/gate file (the
     project's recorded active gate); else 'all' (a repo without the file gets
-    the full bar, never a silently weaker one)."""
+    the full bar, never a silently weaker one). The file is parsed by the
+    declared-policy rule every reader shares (hooks, check_privacy.py,
+    agent_loop.py): the first non-empty, non-comment line."""
     if explicit:
         return explicit
     if GATE_FILE.exists():
-        val = GATE_FILE.read_text(encoding="utf-8").strip()
+        val = ""
+        for ln in GATE_FILE.read_text(encoding="utf-8").splitlines():
+            ln = ln.strip()
+            if ln and not ln.startswith("#"):
+                val = ln
+                break
         if val not in GATES:
             sys.exit(
                 "check: docs/gate contains {!r}; expected one of {}".format(

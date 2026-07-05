@@ -4,11 +4,12 @@ so no test depends on any real agent CLI. The fake pops one action per
 invocation from a control dir outside the repo: commit / noop / done /
 blocked / needs-human / limit / sleep."""
 
+import datetime
 import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, run_py
+from conftest import SCRIPTS, load_script, run_py
 
 # The fake agent: records every invocation + the model it was handed, then
 # performs the next scripted action in the repo it was launched in (cwd),
@@ -54,6 +55,11 @@ elif action in ("done", "blocked", "needs-human"):
 elif action == "limit":
     print(json.dumps({"is_error": True,
                       "result": "You've hit your session limit \\u00b7 resets 3:45pm"}))
+    sys.exit(1)
+elif action == "limit-odd":
+    # A reset wording neither clock parser recognizes (locale/format drift).
+    print(json.dumps({"is_error": True,
+                      "result": "You've hit your session limit \\u00b7 resets in a little while"}))
     sys.exit(1)
 elif action == "sleep":
     time.sleep(8)
@@ -223,6 +229,60 @@ def test_limit_hit_backs_off_without_counting_stall(loop_repo):
     assert "3:45pm" in proc.stdout, "banner must name the resume time"
     index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
     assert "WAITING" in index
+
+
+def test_unparseable_reset_falls_back_and_retries(loop_repo):
+    # A reset wording neither clock format matches must not kill a walk-away
+    # run: with --wait-on-limit set, the loop naps --limit-retry-fallback
+    # seconds (capped at the wait ceiling) and retries instead of exiting.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("limit-odd done", encoding="utf-8")
+    proc = _loop(
+        repo, template, "--wait-on-limit", "30", "--limit-retry-fallback", "1"
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "not recognized" in proc.stdout
+    assert _invocations(ctl) == 2, "the throttled session must be retried"
+
+
+def test_seconds_until_reset_parses_both_clock_formats():
+    # The reset wording is locale-dependent: am/pm and 24-hour clocks must
+    # both parse; anything else returns None (the fallback-nap signal).
+    agent_loop = load_script("agent_loop")
+    noon = datetime.datetime(2026, 7, 4, 12, 0, 0)
+    assert agent_loop.seconds_until_reset("3:45pm", now=noon) == 13500
+    assert agent_loop.seconds_until_reset("14:30", now=noon) == 9000
+    assert agent_loop.seconds_until_reset("resets 14:30:00", now=noon) == 9000
+    # A time already past rolls to tomorrow, never a negative sleep.
+    assert agent_loop.seconds_until_reset("09:00", now=noon) == 75600
+    for garbage in ("in a little while", "99:99", "soon", ""):
+        assert agent_loop.seconds_until_reset(garbage, now=noon) is None
+
+
+def test_declared_policy_parsers_agree():
+    # One parse rule for the one-word policy files (docs/gate, gate-policy,
+    # push-policy, commit-identity, run-state): the FIRST non-empty,
+    # non-comment line — the rule the git hooks (head -n 1 of the non-comment
+    # lines) already enforce. agent_loop and check_privacy must agree, or a
+    # multi-line file would pass one gate and fail another.
+    import tempfile
+    from pathlib import Path
+
+    agent_loop = load_script("agent_loop")
+    check_privacy = load_script("check_privacy")
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        (root / "docs").mkdir()
+        policy = root / "docs" / "commit-identity"
+        policy.write_text(
+            "# comment header, as the shipped templates carry\n"
+            "\n"
+            "first-value\n"
+            "second-value\n",
+            encoding="utf-8",
+        )
+        assert agent_loop.read_declared(policy, "inherit") == "first-value"
+        assert check_privacy.read_policy(root) == "first-value"
 
 
 def test_healthy_transcript_mentioning_limits_is_not_a_throttle(loop_repo):

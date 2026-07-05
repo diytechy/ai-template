@@ -408,7 +408,10 @@ with everything else.
 coordinator cannot preflight remaining budget: a limit-hit session returns a
 machine-parseable "…limit · resets <time>" message, and the coordinator backs
 off — sleeps until the reset (bounded) or exits with a WAITING banner naming
-the resume time. **Limit-hit sessions never count toward the stall guard** —
+the resume time. Both am/pm and 24-hour reset clocks parse (the wording is
+locale-dependent); an unrecognized wording sleeps a bounded fallback
+(`--limit-retry-fallback`, default one hour) rather than killing the run.
+**Limit-hit sessions never count toward the stall guard** —
 three throttled sessions are not a stall, and the NHW original misread
 exactly that.
 

@@ -167,6 +167,14 @@ def test_default_gate_comes_from_gate_file(scaffold):
     assert proc.returncode != 0
     assert "docs/gate" in proc.stdout + proc.stderr
 
+    # Comment lines are tolerated — every declared-policy file shares one
+    # parse rule (first non-empty, non-comment line): a docs/gate annotated
+    # like the sibling gate-policy/push-policy files must still resolve.
+    gate_file.write_text("# active gate (see process.md §7)\nG2\n", encoding="utf-8")
+    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "Plan for gate G2" in proc.stdout
+
 
 def test_list_tags_process_and_product_layers(scaffold):
     # A newcomer running --list must see which steps are kit-owned (process) and
