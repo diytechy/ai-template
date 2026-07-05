@@ -1,7 +1,7 @@
 ---
 name: gate-advance
 description: Use when moving a project honestly from one gate to the next (G1 to G2 to G3) — what each gate requires, how to record human attestation with Attest, and how the attested-vs-mechanized verification split is reported.
-stacks: [python, powershell, go, rust, any]
+stacks: [python, node, powershell, go, rust, any]
 domains: [any]
 phases: [gate, release]
 tags: [gates, g1, g2, g3, attest, verification, sign-off]

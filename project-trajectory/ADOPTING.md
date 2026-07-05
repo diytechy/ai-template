@@ -14,6 +14,9 @@ retro-documented wholesale.
 ## 1. Scaffold into the existing repo
 
 From the kit folder: `python scripts/bootstrap.py --dest /path/to/repo`.
+On a non-Python repo, declare it: `--stack node|go|rust|powershell` skips the
+dead `pytest.ini` and appends the §2 rewiring checklist to `docs/status.md` as
+Open-items bullets, so the remaining hand-edits are visible work items.
 Bootstrap never overwrites an existing file (no `--force`), so collisions are
 reported as `skipped (exists)` — resolve each by hand:
 
@@ -31,6 +34,13 @@ reported as `skipped (exists)` — resolve each by hand:
 - **`docs/kit-version`** — always (re)written, not skipped: it stamps the kit
   commit this scaffold/re-sync came from (see "Re-syncing" below). Commit it, so
   the next re-sync is a diff, not a guess.
+- **`docs/kit-profile`** — always (re)written beside it: the structural choices
+  (`stack=`, `omit=`) the process docs were *generated* with. `docs/process.md`
+  and `docs/process-options.md` are not raw copies of the kit masters —
+  bootstrap strips the masters' `kit-only` regions and keeps or stubs
+  `profile:` regions per this record (an omitted section keeps its § heading
+  plus a one-line stub; § labels never renumber). Commit it: a re-sync
+  regenerates from it (see "Re-syncing" below).
 - **`.github/workflows/check.yml`** — if you have CI already, add the
   `check.py` invocation to it instead of adopting the reference workflow
   wholesale. Keep one definition of "passing": CI runs the same command you run
@@ -167,13 +177,21 @@ range to see exactly which templates/scripts changed before you touch anything.
 - **Overwrite freely (kit-owned, you don't hand-edit these):** the process
   scripts under `scripts/` (`trace.py`, `check_docs.py`, `check_flows.py`,
   `check_perf.py`, `check_privacy.py`, `gen_arch_map.py`, `gen_*`,
-  `agent_loop.py`), `docs/process.md` + `docs/process-options.md`, the git
-  hooks (`.githooks/pre-commit`, `.githooks/pre-push`),
-  `pytest.ini` markers. Take the
+  `agent_loop.py`), the git hooks (`.githooks/pre-commit`,
+  `.githooks/pre-push`), `pytest.ini` markers. Take the
   new versions wholesale, then re-apply your local edits — for `check.py` that's
   only the marked **"EDIT FOR YOUR STACK"** block (`SRC`/`TESTS`, the product
   step commands). Diff before committing so a kit change to a step you dropped
   doesn't silently reappear.
+- **Regenerate, never raw-copy (kit-owned but generated):** `docs/process.md` +
+  `docs/process-options.md` are *generated* from the kit masters per the
+  recorded `docs/kit-profile` (§1). Raw-copying `PROCESS.md`/
+  `PROCESS_OPTIONS.md` over them would ship the masters' `kit-only`/`profile`
+  marker comments, the copy-me meta-prose, and any sections this repo opted
+  out of. To take the new versions: **delete the two files, then re-run
+  `bootstrap.py --dest .`** — it re-reads `docs/kit-profile` (explicit
+  `--stack`/`--omit` flags override it), regenerates them with the same
+  structural choices, and re-stamps `kit-version` + `kit-profile`.
 - **Preserve always (yours, kit only seeds them):** every registry CSV and
   `stakeholder-needs.md`, `docs/status.md`, `docs/log.md`,
   `docs/iteration/` + `docs/iteration_index.md` (session history),
@@ -187,6 +205,18 @@ range to see exactly which templates/scripts changed before you touch anything.
 
 ### Migration recipes for specific kit changes
 
+- **Conditional scaffold generation (`docs/kit-profile`).** Newer kits
+  *generate* `docs/process.md` + `docs/process-options.md` from marker-carrying
+  masters per a recorded profile (`docs/kit-profile`: `stack=` +
+  `omit=nfr,multi-module` axes; omitted sections keep their § heading plus a
+  one-line stub, so labels never renumber and links never dangle). An older
+  adoption has no profile record; its first re-sync is a **one-time
+  regeneration**: delete the two process docs, re-run
+  `bootstrap.py --dest . [--stack …] [--omit …]`, and commit the two
+  regenerated docs plus the new `docs/kit-profile`. With no `--omit` the
+  regenerated docs match the old full copies (minus the copy-me meta-prose the
+  markers now strip); declaring omissions is opt-in and can happen at any
+  later re-sync.
 - **`process.md` → `process.md` + `process-options.md` split.** Newer kits moved
   the opt-in layers (phased delivery, lifecycle tags, §8/§9 boundary notes, the
   multi-repo rung) out of `process.md` into a companion `process-options.md`,

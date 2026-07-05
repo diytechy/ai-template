@@ -1,7 +1,7 @@
 ---
 name: registry-hygiene
 description: Use when the traceability registries (SN/SR/LLR/TC and the off-spine PB/PART/ASSET/MOD) need checking or fixing — run trace.py/check.py with the right flags for the current gate, read the orphan/integrity/schema findings, and correct them.
-stacks: [python, powershell, go, rust, any]
+stacks: [python, node, powershell, go, rust, any]
 domains: [any]
 phases: [dev, gate]
 tags: [traceability, trace, registries, orphans, schema]

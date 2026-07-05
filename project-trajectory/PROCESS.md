@@ -1,9 +1,14 @@
 # Development Process (template)
 
-Canonical method for a gated, requirement-traced project. Copy this into a new
-repo as `docs/process.md`. It is **stack-agnostic** — wire the harness commands
-to your project's language/tooling. Other docs reference this file by section
-rather than restating it.
+<!-- kit-only -->
+Copied into a new repo as `docs/process.md` by `scripts/bootstrap.py`, which
+omits any sections `docs/kit-profile` turns off — § labels never renumber; an
+omitted section keeps its heading plus a one-line stub.
+<!-- /kit-only -->
+Canonical method for a gated, requirement-traced project. It is
+**stack-agnostic** — wire the harness commands to your project's
+language/tooling. Other docs reference this file by section rather than
+restating it.
 
 **Read this file top to bottom for the load-bearing core** (§1–§7): roles, ids,
 the §3 discipline, the gates, the verdict protocol, the harness contract. The
@@ -751,6 +756,7 @@ optional `requirements/assets.csv` (`ASSET-###`, integrity-checked like
 
 ## 9. Non-functional requirements & performance budgets *(opt-in)*
 
+<!-- profile: nfr -->
 *Applies when* the product has resource, performance, or other quality costs
 worth pinning (RAM/VRAM, latency, artifact size, security, reliability, …).
 Standalone projects with no such concerns skip this section, exactly like §8.
@@ -799,9 +805,11 @@ low-noise deterministic metrics (size, dep count) at `full`; default noisy runti
 metrics (latency, RAM, VRAM) to `Gate=warn` at `release`; absent metrics never
 fail. Full guidance in
 [`process-options.md`](process-options.md#9-perf-comparator).
+<!-- /profile -->
 
 ## 10. Project scale — one module, several modules, several repos *(opt-in past rung 1)*
 
+<!-- profile: multi-module -->
 *Applies when* the scope outgrows one module. Everything above (§1–§9) assumes the
 common case, **one module in one repo** — the default and rung 1. Scale is an
 **escalation ladder**: climb a rung only when the scope forces it, decide the rung
@@ -828,3 +836,4 @@ coordination cost a single module never pays.
 
 Rung 2 details (module-scoped review, seam TCs, in-repo `IF-###`) are expanded in
 [`process-options.md`](process-options.md#10-several-modules-one-repo).
+<!-- /profile -->

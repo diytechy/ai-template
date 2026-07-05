@@ -1,8 +1,11 @@
 # Cross-Project Interfaces (IF-###)
 
-Owned by the **System Engineer** hat. Copy to `docs/interfaces.md`. Use this
-**only** when a project provides or consumes a contract shared with another
-project/repo — skip it for a standalone deliverable.
+<!-- kit-only -->
+Copied into a new repo as `docs/interfaces.md` by `scripts/bootstrap.py`.
+<!-- /kit-only -->
+Owned by the **System Engineer** hat. Use this **only** when a project provides
+or consumes a contract shared with another project/repo — skip it for a
+standalone deliverable.
 
 It keeps interlinked projects honest without heavy multi-repo machinery: each
 shared contract gets one stable id, one home, and a link back into the same

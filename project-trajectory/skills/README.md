@@ -49,9 +49,9 @@ scope: this-repo                      # this-repo | kit  (see split below)
 - **`stacks` / `domains` / `phases` / `tags`** are this kit's *applicability
   schema* — the discovery metadata the matcher (below) and `INDEX.csv` use.
   `any` in a list means "applies regardless of that axis". Closed vocabularies:
-  `stacks ∈ {python, go, rust, powershell, any}`, `domains ∈ {web, game,
-  hardware, data, any}`, `phases ∈ {setup, dev, gate, release}`; `tags` is
-  freeform.
+  `stacks ∈ {python, node, go, rust, powershell, any}` (`node` is the one
+  JS/TS label), `domains ∈ {web, game, hardware, data, any}`,
+  `phases ∈ {setup, dev, gate, release}`; `tags` is freeform.
 - **`scope`** is `kit` (generic to any adopted repo — shipped and materialized on
   scaffold) or `this-repo` (maintains *this* template's own attributes — kept in
   the kit as a reference/dogfood source, **not** materialized downstream).

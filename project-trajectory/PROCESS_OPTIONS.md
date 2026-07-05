@@ -784,6 +784,7 @@ binary; the **record of it** is text, tracked, and reviewable.
 
 ## §9 NFR checklist
 
+<!-- profile: nfr -->
 *Referenced from PROCESS.md §9.* **Applies when** deciding which non-functional
 concerns a project must consider at G1.
 
@@ -809,9 +810,11 @@ doesn't need).** At G1, consider which categories apply and route each to a home
 The kit already covers some — **don't double-prompt**: maintainability (= the core
 discipline), usability (= the end-user lens), basic fault tolerance (= the
 edge-case table and the SN edge cases), cross-project contracts (= `IF-###`, §8).
+<!-- /profile -->
 
 ## §9 perf comparator
 
+<!-- profile: nfr -->
 *Referenced from PROCESS.md §9.* **Applies when** a project has captured `PB-###`
 budgets it wants tracked over time.
 
@@ -843,9 +846,11 @@ emitting a `docs/test/perf-metrics.json` map of `PB-ID → number`; *comparing* 
   best-of-N measurement. A number that can't be a reliable `Test` gate is
   warn-tracked or `Demonstration`, never faked into a binary gate. A budget with no
   measurement this run is skipped, like a missing tool — absent metrics never fail.
+<!-- /profile -->
 
 ## §10 several modules, one repo
 
+<!-- profile: multi-module -->
 *Referenced from PROCESS.md §10.* **Applies when** a repo grows distinct
 sub-systems that still build and release as one (rung 2 of the scale ladder).
 
@@ -878,3 +883,4 @@ releases as a whole.
   direction/owner/version/stability discipline, same "one contract, one home,
   backed by a test" rule — applied to the internal seam, with no cross-repo build
   machinery.
+<!-- /profile -->

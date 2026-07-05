@@ -5,9 +5,11 @@ this repo — *how we build here*, so quality doesn't depend on who (or which
 model) shows up. It is loaded every session: keep it short and current.
 Project facts live in `docs/`; this file points at them.
 
-> Copy this into a new repo as `AGENTS.md` (the cross-tool standard). Thin
-> `CLAUDE.md`/`GEMINI.md` stubs point back here. Fill the **Project** section
-> and delete guidance that doesn't apply. Everything below the line is
+<!-- kit-only -->
+> Scaffolds to `AGENTS.md` (the cross-tool standard) via `bootstrap.py`.
+<!-- /kit-only -->
+> Thin `CLAUDE.md`/`GEMINI.md` stubs point back here. Fill the **Project**
+> section, delete guidance that doesn't apply. Everything below the line is
 > durable — change it deliberately, not per-task.
 
 ---
@@ -27,7 +29,7 @@ Project facts live in `docs/`; this file points at them.
 
 This repo follows a **gated, requirement-traced process** — read
 [docs/process.md](docs/process.md) once; it is the source of truth for roles,
-gates, and the ID scheme. The short version an agent needs every session:
+gates, and the ID scheme. The short version needed every session:
 
 - **One driver wears role "hats" in sequence** (Stakeholder → UX/Docs → System
   Engineer → Software Engineer → Test Engineer). Spawn subagents deliberately
@@ -59,7 +61,7 @@ gates, and the ID scheme. The short version an agent needs every session:
   find where a capability lives before searching the tree**; the harness keeps
   it (and the Mermaid dependency diagram) fresh — never hand-edit it.
 - **Diagrams are Mermaid fenced blocks in the docs.** Never edit between
-  `GENERATED` markers; never commit exported diagram images.
+  `GENERATED` markers; never commit exported diagrams.
 - **Start each session** with the *Current State* header of
   [docs/status.md](docs/status.md); end each turn by updating it (active gate,
   what changed, next action awaiting approval). **Commit early and often** — a
@@ -181,7 +183,7 @@ Direct and concrete; explain the *why* before the *how*.
 ---
 
 > **Customizing:** add a rule only after you've had to repeat it — and **pay
-> for it by tightening another**: this file has a hard size budget (Gemini's
-> AGENTS.md support caps near ~12k characters; keep ≥2k of headroom for your
-> project facts). Delete rules you don't enforce — an aspirational AGENTS.md
+> for it by tightening another**: this file has a hard size budget (Gemini
+> caps AGENTS.md near ~12k chars; keep ≥2k headroom for project facts).
+> Delete rules you don't enforce — an aspirational AGENTS.md
 > the harness doesn't back up is just noise.

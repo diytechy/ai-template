@@ -17,8 +17,8 @@ audits.
 | `KICKOFF_PROMPT.md` | **Paste this into an agent to start.** Fill the PROJECT BRIEF at the bottom first. |
 | `AGENTS.template.md` | Agent/contributor guide → copy to the new repo's `AGENTS.md` (the cross-tool standard most agents read). Encodes the readability conventions + points at the process. |
 | `CLAUDE.stub.template.md` · `GEMINI.stub.template.md` | Thin stubs → the new repo's `CLAUDE.md` / `GEMINI.md`; each just points at `AGENTS.md` so Claude Code and Gemini (which prefer their own filename) still land on the full guide. |
-| `PROCESS.md` | The canonical method's **load-bearing core** → copy to `docs/process.md`. Roles, gates, ID scheme, anti-duplication, verdict protocol, review triage, harness contract; opens with a minimum-profile table. |
-| `PROCESS_OPTIONS.md` | The **opt-in layers** the core doc summarizes → copy to `docs/process-options.md`. Phased delivery, lifecycle tags, the §7 boundary notes, the §9 NFR checklist + perf comparator, and the rung-2 multi-module detail — each with an *applies-when*. |
+| `PROCESS.md` | The canonical method's **load-bearing core** — the *master* bootstrap **generates** `docs/process.md` from: `kit-only` regions dropped, `profile:` regions kept or stubbed per `docs/kit-profile` (an omitted section keeps its § heading + a one-line stub; § labels never renumber). Roles, gates, ID scheme, anti-duplication, verdict protocol, review triage, harness contract; opens with a minimum-profile table. |
+| `PROCESS_OPTIONS.md` | The **opt-in layers** the core doc summarizes — the master for `docs/process-options.md`, generated the same profile-gated way. Phased delivery, lifecycle tags, the §7 boundary notes, the §9 NFR checklist + perf comparator, and the rung-2 multi-module detail — each with an *applies-when*. |
 | `STATUS.template.md` | The blackboard's **working surface** (only what happens next) → copy to `docs/status.md`. |
 | `LOG.template.md` | The **append-only history** status.md points at (gate sign-offs, verdicts, ratified decisions — process.md §5) → copy to `docs/log.md`. |
 | `ARCHITECTURE.template.md` | One-page overview + generated map → copy to `docs/architecture.md`. |
@@ -32,7 +32,7 @@ audits.
 | `registries/procurement.template.csv` | PART-### purchased/external parts the project **buys rather than builds** (motors, boards, cameras). Each row's `IF-Ref` names the interface row that is its owner-of-record (`MULTI_REPO.md` §3.3); Status=needed/ordered/on-hand/backordered/obsolete, plus vendor link, cost, quantity. Off-spine and optional like interfaces/PB; `trace.py` integrity-checks the `PART-` ids. Deliberately **minimal** — full BOM tracking (alternates, per-module allocation, roll-ups) is a deferred extension (process-options.md "purchased parts"). |
 | `registries/assets.template.csv` | ASSET-### binary/large-asset provenance registry for unavoidably-binary deliverables (art, music, voice, video). Tracks the facts *about* an un-diffable asset in text: `Provenance` (human-made/ai-generated/mixed — for Steam-style AI-content disclosure), `License`, `Attribution`, `ContractRef` (voice-actor release / commission), and a `Location` pointer + `Hash`/`Version`. Off-spine and optional like procurement/PB; `trace.py` integrity-checks the `ASSET-` ids. The ideal-not-requirement stance made concrete (process-options.md "Binary assets"). |
 | `registries/modules.template.csv` | MOD-### coordinator module registry for the **rare** multi-repo rung (`MULTI_REPO.md` §6): one row per delegated module repo, `DelegatedSRs` back-linking the coordinator SRs it fulfils. Coordinator-only — **not** scaffolded by bootstrap; `trace.py` validates it when present. |
-| `scripts/bootstrap.py` | **One command to scaffold a new repo** from this kit (copies templates → `docs/`/`scripts/`/CI, renames, won't clobber). |
+| `scripts/bootstrap.py` | **One command to scaffold a new repo** from this kit (copies/generates templates → `docs/`/`scripts/`/CI, renames, won't clobber). The Markdown docs are *generated* from the masters per the declared profile (`--stack python\|node\|go\|rust\|powershell\|any`, `--omit nfr,multi-module`), recorded in `docs/kit-profile`; an explicitly non-Python `--stack` skips `pytest.ini` and appends the harness-rewiring checklist to `docs/status.md`. |
 | `scripts/check.py` | **The harness.** Runs format · lint · tests · coverage · traceability · arch-map freshness; gate-scoped (`--gate` defaults to the active gate recorded in `docs/gate`, so CI enforces the bar the project is actually at); nonzero on failure. Python-first reference — wire to your stack. |
 | `scripts/trace.py` | **Ready-to-use** traceability checker (Python 3, stdlib only): joins the registries, writes `test/report.md` (counts, matrix, a line-reviewable `SN→SR→LLR→TC` text outline, and a small Mermaid `graph LR` colored by orphan/draft state), exits nonzero on orphans (and duplicate/malformed ids) with `--strict`. If an optional `performance-budgets.csv` (PB-###, §9) is present, it also fails when a budget row's `Refs` don't back-link a real SR/LLR/Module. `--html` also writes a dependency-free collapsible `test/report.html` map that scales to any size. `--phase v1` scopes the G3 Verified criterion for phased roadmaps (out-of-phase SRs reported as explicitly deferred); `--no-placeholders` (G2+) rejects leftover `-000` rows; `--strict-schema` (G3) checks required fields and the closed `Verification`/`Tier` vocabularies. Called by `check.py`. |
 | `scripts/check_flows.py` | Verifies the **authored "Runtime flows"** section in `architecture.md` (required from G2): diagrams present, every cited SR/LLR id real — so reviewers verify *behavior* (concurrency, ordering) from sequence diagrams, not CSV rows. Called by `check.py` at G2/G3. |
@@ -59,7 +59,7 @@ audits.
 | `agent-hooks/` | **Optional** per-agent hook configs (`claude.settings.json`, `gemini.settings.json`) that mirror the git hook for earlier feedback. Never wired live by bootstrap — on `--agents`, the chosen agent's config is copied **inert** as `settings.json.example`; the git hook + CI stay the source of truth (see `agent-hooks/README.md`). |
 | `skills/` | **Agent-neutral skills** (opt-in accelerators, not gates): one `<name>/SKILL.md` per skill, frontmatter carrying the agent-facing `name`/`description` **and** an applicability schema (`stacks`/`domains`/`phases`/`tags`/`scope`). `bootstrap.py --agents claude\|gemini\|both` materializes the matched `kit`-scope skills into the agent's native dir (`.claude/skills/…`, `.gemini/skills/…`); a trivial tag-intersection matcher picks them from up-to-three setup questions. `INDEX.csv` is the generated scan surface; `skills/README.md` is the full contract incl. the future external-source plug-in. `this-repo`-scope skills maintain *this* template and don't ship downstream. |
 | `scripts/gen_skills_index.py` | Generates `skills/INDEX.csv` from the `SKILL.md` frontmatter (one row per skill); `--check` fails if stale (like `gen_arch_map.py --check`). Stdlib-only. |
-| `pytest.ini` | Registers the `smoke`/`full`/`release` test-tier markers the harness selects with `--tier` (unmarked tests run in `full`+`release`). |
+| `pytest.ini` | Registers the `smoke`/`full`/`release` test-tier markers the harness selects with `--tier` (unmarked tests run in `full`+`release`). Skipped when `--stack` is explicitly non-Python — the scaffolded status.md checklist then tracks the tier remapping. |
 | `gitignore.template` | Minimal `.gitignore` for the new repo (venv, tool caches, the regenerated trace report + HTML map). |
 | `ci/check.yml` | Reference GitHub Actions workflow → copy to `.github/workflows/check.yml`. Runs the same `check.py`. |
 | `EXAMPLE.md` | A fully worked SN→SR→LLR→TC chain to copy the pattern from (incl. a multi-module §9 and a multi-repo §10 sketch). |
@@ -70,11 +70,16 @@ audits.
 
 1. **Scaffold:** from this kit, run
    `python scripts/bootstrap.py --dest /path/to/new/repo` (add `--dry-run` to
-   preview). This copies the templates into `docs/`, `scripts/`, `AGENTS.md`
-   (plus `CLAUDE.md`/`GEMINI.md` stubs), and CI, renaming `*.template.*` to
-   working names.
-   *(Manual alternative: copy this folder in and rename by hand. Adopting into
-   an **existing** repo — code, CI, a non-Python stack? See `ADOPTING.md`.)*
+   preview). This generates the docs and copies the scripts into `docs/`,
+   `scripts/`, `AGENTS.md` (plus `CLAUDE.md`/`GEMINI.md` stubs), and CI,
+   renaming `*.template.*` to working names. Declare a non-Python stack with
+   `--stack node|go|rust|powershell`; opt out of the §9/§10 layers with
+   `--omit nfr,multi-module` (each keeps a one-line stub; recorded in
+   `docs/kit-profile`).
+   *(Manual alternative: copy this folder in and rename by hand — then strip
+   the `kit-only`/`profile` marker regions yourself; bootstrap is the honest
+   path. Adopting into an **existing** repo — code, CI, a non-Python stack?
+   See `ADOPTING.md`.)*
    If `python` is absent or Python 2, use `python3` (Linux/macOS) or `py`
    (Windows); the kit needs Python 3.8+.
    *Setting up for an agent? Add `--agents claude|gemini|both` to also

@@ -45,7 +45,9 @@ What it creates in the destination:
     scripts/agent_loop.py                      (unattended coordinator engine)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     .githooks/pre-push                         <- hooks/pre-push  (anonymous-repo privacy backstop)
-    pytest.ini                                 (test-tier markers)
+    pytest.ini                                 (test-tier markers; skipped when
+                                                --stack is explicitly non-Python)
+    docs/kit-profile                           (generated stamp: stack + omitted axes)
     .gitignore                                 <- gitignore.template
     .gitattributes                             <- gitattributes.template (eol=lf hook pin)
     .github/workflows/check.yml                <- ci/check.yml
@@ -160,6 +162,21 @@ working tree — bootstrap refuses to stamp a real SHA when the kit tree is dirt
 (it writes `<sha>-dirty` and warns) so an adoption can't be pinned to an
 unreproducible mid-edit state.
 
+**Conditional scaffold generation (Thread 34).** The Markdown templates are
+masters holding *all* permutations; bootstrap *generates* each repo's copy by
+stripping `<!-- kit-only -->` regions (the "copy me" meta-prose no scaffold
+keeps) and keeping or stubbing `<!-- profile: axis -->` regions per the
+resolved profile (`--stack`, `--omit`; see PROFILE_AXES). Omission never
+renumbers: § headings stay outside the markers, an omitted section keeps its
+heading plus a one-line resolvable stub, so a finding citing §9 means the same
+thing in every adopted repo. The resolved profile is recorded in
+`docs/kit-profile` (beside the kit-version stamp) and a re-sync **regenerates
+from that record** — re-running bootstrap without `--stack`/`--omit` re-reads
+it, so an upgrade never silently reverts a structural choice (ADOPTING.md §6).
+An explicitly non-Python `--stack` (node|go|rust|powershell) also skips
+`pytest.ini` and appends the harness-rewiring checklist to the fresh
+status.md's Open items, so the remaining hand-edits are visible work items.
+
 It then runs `gen_arch_map.py` and `trace.py` once in the new repo so the
 scaffold starts green — `check.py` would otherwise fail on the template
 placeholder between the architecture markers.
@@ -169,6 +186,7 @@ start gate G1 (see docs/process.md).
 """
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
@@ -204,9 +222,16 @@ AGENTS = {
 
 # The closed applicability vocabularies used by the trivial scope matcher. `any`
 # in a skill's list always matches; an answer of "" (skipped question) also
-# matches everything (no filter on that axis).
-STACK_CHOICES = ("python", "go", "rust", "powershell", "any")
+# matches everything (no filter on that axis). `node` is the one JS/TS label —
+# a js/ts split would fragment the vocabulary (Thread 34, D2/R6).
+STACK_CHOICES = ("python", "node", "go", "rust", "powershell", "any")
 DOMAIN_CHOICES = ("web", "game", "hardware", "data", "any")
+
+# Stacks that are *explicitly* not Python: their scaffold skips the dead Python
+# artifacts (pytest.ini) and gets the harness-rewiring checklist appended to
+# docs/status.md as Open-items bullets instead (Thread 34, R7/C3). Blank/`any`
+# keeps today's Python-reference scaffold byte-for-byte.
+NON_PYTHON_STACKS = ("node", "go", "rust", "powershell")
 
 
 def selected_agents(choice):
@@ -580,6 +605,179 @@ def apply_commit_identity(dest, policy, dry_run):
     target.write_text("\n".join(header + [policy]) + "\n", encoding="utf-8")
 
 
+# --- Conditional scaffold generation (Thread 34, Q8 ruling) -------------------
+# The kit's master templates contain ALL permutations; bootstrap *generates*
+# each repo's docs by omitting the marked regions its declared profile doesn't
+# use. The grammar is deliberately dumb — exact full-line HTML-comment markers,
+# no nesting — and § headings stay OUTSIDE the markers, so section labels are
+# literal text that never renumbers and every anchor resolves in every
+# permutation (a finding citing §9 means the same thing in every adopted repo).
+#
+#   <!-- kit-only -->  ...  <!-- /kit-only -->     dropped from every scaffold
+#       (the degenerate profile no repo selects: "copy me" meta-prose).
+#   <!-- profile: axis -->  ...  <!-- /profile -->  kept unless the axis is
+#       omitted; an omitted region is replaced by a one-line resolvable stub.
+#
+# Axes are FEW AND BOOLEAN by design (the per-permutation test matrix is what
+# holds the scaffold-green line; every new axis doubles it):
+#   nfr           — §9 non-functional/perf budgets + its process-options
+#                   expansions (the registries stay: referenced config).
+#   multi-module  — the §10 scale ladder + its rung-2 expansion.
+PROFILE_AXES = ("nfr", "multi-module")
+
+KIT_ONLY_OPEN = "<!-- kit-only -->"
+KIT_ONLY_CLOSE = "<!-- /kit-only -->"
+PROFILE_CLOSE = "<!-- /profile -->"
+PROFILE_OPEN_RE = re.compile(r"^<!--\s*profile:\s*([\w-]+)\s*-->$")
+
+
+def _profile_open(line):
+    return PROFILE_OPEN_RE.match(line)
+
+
+def profile_stub(axis):
+    """The resolvable one-liner an omitted profile region leaves behind: the
+    section heading above it stays (stable §N label, resolvable anchor); this
+    line says why the body is gone and where it lives."""
+    return (
+        "_Omitted by this repo's profile (`{}=off` in `docs/kit-profile`); the "
+        "kit master retains this section — flip the axis and regenerate "
+        "(ADOPTING.md §6) to opt back in._".format(axis)
+    )
+
+
+def strip_markers(text, omit, where="template"):
+    """Generate a scaffold doc from a master: drop kit-only regions, keep or
+    stub profile regions per `omit`. Raises ValueError on unbalanced or nested
+    markers — the kit's own tests lint every template, so a downstream run
+    should never see that."""
+    out = []
+    mode, axis = "copy", None  # copy | keep-prof | skip-kit | skip-prof
+    for n, line in enumerate(text.splitlines(), 1):
+        s = line.strip()
+        opened = _profile_open(s)
+        if mode == "copy":
+            if s == KIT_ONLY_OPEN:
+                mode = "skip-kit"
+            elif opened:
+                axis = opened.group(1)
+                if axis in omit:
+                    out.append(profile_stub(axis))
+                    mode = "skip-prof"
+                else:
+                    mode = "keep-prof"
+            elif s in (KIT_ONLY_CLOSE, PROFILE_CLOSE):
+                raise ValueError(
+                    "{}:{}: close marker without an open".format(where, n)
+                )
+            else:
+                out.append(line)
+        elif s == KIT_ONLY_OPEN or opened:
+            raise ValueError("{}:{}: nested marker".format(where, n))
+        elif mode == "keep-prof":
+            if s == PROFILE_CLOSE:
+                mode = "copy"
+            elif s == KIT_ONLY_CLOSE:
+                raise ValueError("{}:{}: mismatched close marker".format(where, n))
+            else:
+                out.append(line)
+        elif mode == "skip-kit" and s == KIT_ONLY_CLOSE:
+            mode = "copy"
+        elif mode == "skip-prof" and s == PROFILE_CLOSE:
+            mode = "copy"
+    if mode != "copy":
+        raise ValueError("{}: unclosed {} region".format(where, mode))
+    return "\n".join(out) + ("\n" if text.endswith("\n") else "")
+
+
+def read_kit_profile(dest):
+    """The recorded profile of an existing adoption (docs/kit-profile), or None.
+
+    Re-sync regenerates from THIS record: when --stack/--omit aren't passed and
+    the destination carries a profile, bootstrap re-reads it instead of
+    defaulting — so a re-run never silently reverts a structural choice."""
+    path = dest / "docs" / "kit-profile"
+    if not path.exists():
+        return None
+    profile = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        profile[key.strip()] = value.strip()
+    return profile
+
+
+def write_kit_profile(dest, stack, omit, dry_run):
+    """Record the resolved profile in docs/kit-profile (beside the kit-version
+    stamp). Like kit-version it is a generated record, rewritten every run
+    from the resolved choices — never hand-maintained."""
+    body = (
+        "# Kit profile — the structural scaffold choices this repo was generated\n"
+        "# with. docs/process.md + docs/process-options.md are GENERATED from the\n"
+        "# kit masters by omitting the sections this profile turns off (omitted\n"
+        "# sections keep their heading + a one-line stub; § labels never\n"
+        "# renumber). A re-sync REGENERATES from this file: bootstrap re-reads it\n"
+        "# when --stack/--omit aren't passed. See ADOPTING.md §6.\n"
+        "stack={}\n"
+        "omit={}\n".format(stack, ",".join(sorted(omit)))
+    )
+    if dry_run:
+        return
+    target = dest / "docs" / "kit-profile"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+
+
+# The harness-rewiring checklist appended to a non-Python scaffold's status.md
+# Open items (WI-1.17 bullet shape: stable OI ids, the decision stated, a
+# blocks: clause where something waits, a trailing artifact link). These are
+# the hand-edits a non-Python stack still owes (ADOPTING.md §2); making them
+# visible work items keeps them from becoming folklore. OI-1/OI-2 are the
+# template's seeded examples, so the checklist starts at OI-3.
+STACK_NEEDS_HUMAN = (
+    "    - OI-3 — decide: the {stack} toolchain commands (format / lint / "
+    "test) for scripts/check.py's EDIT block (blocks: G1) → "
+    "[check.py](../scripts/check.py)\n"
+)
+STACK_IN_FLIGHT = (
+    "    - OI-4 — rewire scripts/setup.* dependency installs for {stack} → "
+    "[setup.sh](../scripts/setup.sh)\n"
+    "    - OI-5 — rewire the CI install step for {stack} → "
+    "[check.yml](../.github/workflows/check.yml)\n"
+    "    - OI-6 — map the Smoke/Full/Release test tiers onto the {stack} "
+    "runner (pytest.ini deliberately not scaffolded) → "
+    "[process.md §7](process.md#7-harness-contract-wire-to-your-stack)\n"
+)
+
+
+def append_stack_checklist(dest, stack, dry_run):
+    """Insert the rewiring checklist into the freshly scaffolded status.md's
+    Open-items sub-lists (Needs <human> / In flight). Only called when this
+    run created status.md and the declared stack is explicitly non-Python."""
+    status = dest / "docs" / "status.md"
+    if dry_run or not status.exists():
+        return False
+    text = status.read_text(encoding="utf-8")
+    # Anchor on the template's seeded sub-list heads; insert after each head's
+    # example bullet (the next "  - " line at the outer level closes it).
+    human_anchor = "  - **In flight** _(driver; no approval needed)_:\n"
+    flight_anchor = "- **Assumptions (unattended):**"
+    if human_anchor not in text or flight_anchor not in text:
+        return False
+    text = text.replace(
+        human_anchor, STACK_NEEDS_HUMAN.format(stack=stack) + human_anchor, 1
+    )
+    text = text.replace(
+        flight_anchor,
+        STACK_IN_FLIGHT.format(stack=stack) + flight_anchor,
+        1,
+    )
+    status.write_text(text, encoding="utf-8")
+    return True
+
+
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so the
     non-ASCII characters in the created-file list / dirty-tree WARNING can't
@@ -709,19 +907,15 @@ MAPPING = [
 
 GITKEEP_DIRS = ["src", "tests"]
 
-# Per-destination text fixups applied right after a template is copied: strip the
-# "this is a template, copy me" meta-prose that reads wrong once the file *is* the
-# scaffolded doc. Keyed by destination rel-path; each entry is (old, new). Kept to
-# exact, unique strings so a missed match is a no-op, never a wrong edit.
+# Per-destination text fixups applied right after a template is generated: the
+# in-line rewrites a marker strip can't express (a phrase inside a line that
+# must otherwise survive). Whole-region copy-me prose belongs in kit-only
+# markers instead (Thread 34). Keyed by destination rel-path; each entry is
+# (old, new). Kept to exact, unique strings so a missed match is a no-op,
+# never a wrong edit.
 TEMPLATE_REWRITES = {
     "docs/process.md": [
         ("# Development Process (template)", "# Development Process"),
-        (
-            "Canonical method for a gated, requirement-traced project. Copy this "
-            "into a new\nrepo as `docs/process.md`. It is **stack-agnostic**",
-            "Canonical method for a gated, requirement-traced project. It is "
-            "**stack-agnostic**",
-        ),
     ],
 }
 
@@ -855,9 +1049,21 @@ def main():
         "--stack",
         choices=STACK_CHOICES,
         default=None,
-        help="declared primary stack, for skill matching (python|go|rust|"
-        "powershell|any). Omitted + interactive -> ASK; non-interactive -> no "
-        "filter (all kit skills match).",
+        help="declared primary stack (python|node|go|rust|powershell|any). "
+        "Drives skill matching AND the scaffold profile: an explicitly "
+        "non-Python stack skips pytest.ini and appends the harness-rewiring "
+        "checklist to docs/status.md. Omitted + interactive -> ASK; "
+        "non-interactive -> the recorded docs/kit-profile, else 'any' "
+        "(today's Python-reference scaffold, unchanged).",
+    )
+    ap.add_argument(
+        "--omit",
+        default=None,
+        metavar="AXIS[,AXIS...]",
+        help="profile axes to omit from the generated process docs ({}). An "
+        "omitted section keeps its § heading + a one-line stub, so labels "
+        "never renumber and links never dangle. Omitted flag -> the recorded "
+        "docs/kit-profile, else omit nothing.".format("|".join(PROFILE_AXES)),
     )
     ap.add_argument(
         "--domain",
@@ -898,6 +1104,30 @@ def main():
     )
     args = ap.parse_args()
 
+    dest = Path(args.dest).resolve()
+
+    # Resolve the scaffold profile (Thread 34): explicit flags win; else the
+    # destination's recorded docs/kit-profile (so a re-sync regenerates the
+    # same structural choices instead of silently reverting them); else ASK
+    # for the stack on an interactive TTY / take the do-nothing defaults.
+    recorded = read_kit_profile(dest) or {}
+    stack = args.stack
+    if stack is None:
+        stack = recorded.get("stack") or None
+        if stack not in STACK_CHOICES:
+            stack = None
+    if stack is None:
+        stack = prompt_choice("Primary stack?", STACK_CHOICES, "any")
+    omit_raw = args.omit if args.omit is not None else recorded.get("omit", "")
+    omit = frozenset(a.strip() for a in omit_raw.split(",") if a.strip())
+    unknown = omit - set(PROFILE_AXES)
+    if unknown:
+        ap.error(
+            "--omit: unknown profile axis {} (choose from {})".format(
+                ", ".join(sorted(unknown)), "|".join(PROFILE_AXES)
+            )
+        )
+
     # Resolve the agent choice: explicit flag wins; else ASK on an interactive
     # TTY; else default to "none" — which materializes no skills/hooks and so
     # preserves the historical (agent-neutral) scaffold exactly (CI-safe).
@@ -909,21 +1139,18 @@ def main():
         )
     )
     agents = selected_agents(agent_choice)
-    # Only ask the (up to) two scope questions when an agent was chosen and the
-    # answers weren't passed as flags — they only drive skill matching. A
+    # Only ask the remaining scope question when an agent was chosen and the
+    # answer wasn't passed as a flag — it only drives skill matching. A
     # non-interactive run never prompts (prompt_choice returns the default).
-    stack = args.stack
     domain = args.domain
     if agents:
-        if stack is None:
-            stack = prompt_choice("Primary stack?", STACK_CHOICES, "any")
         if domain is None:
             domain = prompt_choice("Primary domain?", DOMAIN_CHOICES, "any")
         binary_assets = (
             prompt_choice("Binary assets or hardware involved?", ("yes", "no"), "no")
             == "yes"
         )
-        skills = select_skills(stack, domain, binary_assets)
+        skills = select_skills("" if stack == "any" else stack, domain, binary_assets)
     else:
         skills = []
 
@@ -969,7 +1196,6 @@ def main():
         )
     )
 
-    dest = Path(args.dest).resolve()
     if not dest.exists():
         if args.dry_run:
             print("would create destination directory:", dest)
@@ -980,6 +1206,11 @@ def main():
     for src_rel, dst_rel in MAPPING:
         src = KIT / src_rel
         dst = dest / dst_rel
+        # Stack-gated artifacts (Thread 34, R7/C3): an explicitly non-Python
+        # stack gets no dead Python artifacts — the rewiring checklist lands
+        # in docs/status.md instead (append_stack_checklist below).
+        if dst_rel == "pytest.ini" and stack in NON_PYTHON_STACKS:
+            continue
         if not src.exists():
             missing.append(src_rel)
             continue
@@ -990,10 +1221,17 @@ def main():
             created.append(dst_rel)
             continue
         dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(src, dst)
-        # Strip copy-me template meta-prose (e.g. process.md's "(template)" title
-        # and "Copy this into a new repo as docs/process.md") now that the file
-        # *is* the scaffolded doc.
+        if dst.suffix == ".md":
+            # Markdown templates are GENERATED, not copied: drop kit-only
+            # regions, keep or stub profile regions per the resolved profile.
+            dst.write_text(
+                strip_markers(src.read_text(encoding="utf-8"), omit, src_rel),
+                encoding="utf-8",
+            )
+        else:
+            shutil.copyfile(src, dst)
+        # Strip the in-line template meta-prose a marker can't express (the
+        # process doc's "(template)" title) now that the file *is* the doc.
         apply_template_rewrites(dst_rel, dst)
         # The README skeleton carries the one dynamic placeholder: the project's
         # name, taken from the destination folder (the kickoff agent fills in
@@ -1020,6 +1258,19 @@ def main():
             keep.parent.mkdir(parents=True, exist_ok=True)
             keep.write_text("", encoding="utf-8")
             created.append("{}/.gitkeep".format(d))
+
+    # A non-Python stack's remaining hand-edits become visible Open-items
+    # bullets in the fresh status.md (only on the run that created it — a
+    # re-sync must never re-append into a repo's own working surface).
+    if (
+        stack in NON_PYTHON_STACKS
+        and "docs/status.md" in created
+        and append_stack_checklist(dest, stack, args.dry_run)
+    ):
+        print(
+            "  appended the {} harness-rewiring checklist to docs/status.md "
+            "(Open items OI-3..OI-6)".format(stack)
+        )
 
     # Materialize the chosen agent's layer: its matched skills into the native
     # skills dir + the inert hook example. "none" (the non-interactive default)
@@ -1075,11 +1326,17 @@ def main():
         )
     )
 
-    # docs/kit-version is a generated stamp, not user content, so it is always
-    # (re)written — unlike the copied templates it is meant to be refreshed on
-    # every scaffold/re-sync to record the kit state this run came from.
+    # docs/kit-version + docs/kit-profile are generated stamps, not user
+    # content, so they are always (re)written — refreshed on every
+    # scaffold/re-sync to record the kit state + profile this run came from.
     label, dirty, wrote = write_kit_version(dest, args.dry_run)
     print("  {}: docs/kit-version ({})".format(verb, label))
+    write_kit_profile(dest, stack, omit, args.dry_run)
+    print(
+        "  {}: docs/kit-profile (stack={}; omit={})".format(
+            verb, stack, ",".join(sorted(omit)) or "none"
+        )
+    )
     if dirty:
         print(
             "WARNING: the kit working tree is DIRTY — this scaffold is stamped "
