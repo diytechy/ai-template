@@ -4,7 +4,9 @@ Exercised end-to-end where a POSIX shell + git exist (Linux/macOS CI; Git Bash
 on Windows): the hook receives the real stdin ref lines `git push` would send,
 runs the deterministic lint over the outgoing range, and drives the REVIEW_CMD
 reviewer slot with fake approve/block scripts — no CI dependency on a real
-agent CLI. The Q12 ruling is pinned here: a missing reviewer FAILS CLOSED.
+agent CLI. The Q12 ruling is pinned here: a missing reviewer FAILS CLOSED —
+with WI-1.30's one declared opt-down (docs/privacy-review: warn-unwired),
+which softens only the unwired case and is pinned just as hard.
 """
 
 import os
@@ -104,6 +106,64 @@ def test_missing_reviewer_fails_closed(repo):
     assert proc.returncode != 0, "missing reviewer must fail closed"
     assert "REVIEW_CMD" in proc.stderr
     assert "privacy.reviewcmd" in proc.stderr
+
+
+def set_review_policy(root, value):
+    (root / "docs" / "privacy-review").write_text(value + "\n", encoding="utf-8")
+
+
+def test_warn_unwired_optdown_warns_and_proceeds(repo):
+    # WI-1.30 (refining Q12): the adopted-but-not-wired-yet window. With the
+    # tracked opt-down declared and a clean outgoing range, an unwired
+    # reviewer warns — naming what actually guarded the push — and the push
+    # proceeds on the deterministic layer alone.
+    root, base, head = repo
+    set_policy(root, ANON)
+    set_review_policy(root, "warn-unwired")
+    proc = run_hook(root, push_line(head, base))
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARNING" in proc.stderr
+    assert "warn-unwired" in proc.stderr
+    assert "deterministic lint" in proc.stderr
+
+
+def test_warn_unwired_does_not_soften_the_lint_floor(repo):
+    # The opt-down softens ONLY the unwired-reviewer case: a deterministic
+    # finding in the outgoing history still blocks.
+    root, base, head = repo
+    set_policy(root, ANON)
+    set_review_policy(root, "warn-unwired")
+    new_head = commit_file(
+        root, "leak.txt", "creds at C:\\Users\\bobsmith\\secrets\n", "add data"
+    )
+    proc = run_hook(root, push_line(new_head, head))
+    assert proc.returncode != 0, "lint findings must block regardless of opt-down"
+    assert "privacy lint found" in proc.stderr
+
+
+def test_warn_unwired_does_not_soften_a_wired_block(repo, tmp_path):
+    # A WIRED reviewer's BLOCK still blocks under the opt-down — the policy
+    # speaks only to the reviewer being absent, never to its verdict.
+    root, base, head = repo
+    set_policy(root, ANON)
+    set_review_policy(root, "warn-unwired")
+    block = make_reviewer(tmp_path, "block.sh", 'echo "BLOCK: leak"\nexit 1\n')
+    proc = run_hook(root, push_line(head, base), review_cmd=block)
+    assert proc.returncode != 0
+    assert "BLOCKED" in proc.stderr
+
+
+def test_review_policy_typo_stays_fail_closed(repo):
+    # Any value other than the exact word — including a typo — reads as
+    # require: a mistake yields the stricter behavior, never a silent pass.
+    # The fail-closed message names the recorded opt-down as the escape.
+    root, base, head = repo
+    set_policy(root, ANON)
+    set_review_policy(root, "warn-unwried")  # deliberate typo
+    proc = run_hook(root, push_line(head, base))
+    assert proc.returncode != 0
+    assert "FAILING CLOSED" in proc.stderr
+    assert "docs/privacy-review" in proc.stderr
 
 
 def test_approve_proceeds_and_reviewer_sees_full_range(repo, tmp_path):

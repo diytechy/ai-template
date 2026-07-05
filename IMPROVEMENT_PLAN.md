@@ -3823,6 +3823,14 @@ lands on the pushable branch unscrubbed; missing tool ≠ pass at the one
 boundary that matters) vs **fail-open with warning** (never blocks, but the
 warning scrolls by in exactly the unattended case).
 
+> _Refined 2026-07-05 (WI-1.30, owner ruling): fail-closed stays the default,
+> but the pre-push **hook** (not the sync ritual) gains a **declared opt-down**
+> — `docs/privacy-review: warn-unwired` — for the adopted-but-not-wired-yet
+> window. Rationale: under `push-policy: human` the hook's warning reaches a
+> human at a terminal, so the "scrolls by unattended" concern doesn't apply to
+> this surface; the opt-down is tracked repo text, softens only the unwired
+> case, and the deterministic lint stays the blocking floor._
+
 ### Q13 — The iteration-branch protocol: four calls *(Thread 40)*
 
 **(a) Push authority default**
@@ -4916,6 +4924,32 @@ continuity (same style as the session log above).
 > first block budget-allowing, so small scope collapses to plan-and-build in
 > one session. BUILD's one-block-per-session stays strict deliberately (the
 > cheap tier must not self-scope; the servo coarsens instead).
+
+> **WI-1.30 ✅ landed 2026-07-05 · Pre-push privacy review: declared opt-down
+> for the unwired-reviewer window (`docs/privacy-review: warn-unwired`).**
+> Owner-raised adoption friction: an anonymous repo adopted with the *intent*
+> to wire the LLM privacy reviewer later couldn't push at all — the hook
+> failed closed on the unwired slot even with the deterministic lint green
+> (the Q12 residue ruling, chosen when the concern was warnings scrolling by
+> unattended). **Owner ruling 2026-07-05 (AskUserQuestion): declared
+> opt-down** — fail-closed stays the default; a repo may track the one-word
+> `warn-unwired` in `docs/privacy-review` (same first-line parse as every
+> declared-policy file; absent or any other value — including a typo — reads
+> as require, the stricter direction). Under the opt-down an *unwired*
+> reviewer warns (naming what actually guarded the push) and the push
+> proceeds on the deterministic floor. Deliberately narrow: lint findings
+> still block, a wired reviewer's BLOCK still blocks, missing Python still
+> fails closed (the deterministic layer can't run either). Not scaffolded (an
+> optional file, like `docs/run-phase`); the hook's fail-closed message names
+> the escape at the moment it fires. Q12-residue note annotated in the
+> decision record (the "scrolls by unattended" rationale doesn't apply to
+> this surface: under `push-policy: human` the pusher is a human at a
+> terminal). Docs: process-options "Commit identity & anonymity" Layer-2
+> bullet + the hook header. Tests: +4 (`test_pre_push_hook.py` — opt-down
+> warns-and-proceeds, lint floor unsoftened, wired BLOCK unsoftened, typo
+> stays fail-closed). `pytest -q`: 292 passed, 1 skipped; `check_docs.py
+> --root .`: OK, 0 broken. Byte deltas: AGENTS.template.md / PROCESS.md
+> untouched (the knob lives in PROCESS_OPTIONS + the hook).
 
 ### Session protocol (for a cold session pointed only at this file)
 

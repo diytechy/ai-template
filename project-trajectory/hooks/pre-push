@@ -30,6 +30,14 @@
 # When the policy demands review but no reviewer is wired, the push FAILS
 # CLOSED (Q12 ruling): a missing tool is never a pass at the one boundary that
 # matters. `inherit` repos (docs/commit-identity) skip everything: zero cost.
+# Declared opt-down (WI-1.30, refining Q12): a repo adopted with the intent to
+# wire the reviewer later may track `warn-unwired` in docs/privacy-review (one
+# word, same parse as every declared-policy file) — then an UNWIRED reviewer
+# warns and the push proceeds on the deterministic layer alone. A recorded,
+# reviewable decision, never a silent default: absent file or any other value
+# = require (fail closed). It only softens the unwired case — deterministic
+# findings still block, a wired reviewer's BLOCK still blocks, and a missing
+# Python still fails closed (then the deterministic layer can't run either).
 #
 # Enable:  git config core.hooksPath .githooks   (setup.sh / setup.ps1 do this)
 # Disable: git config --unset core.hooksPath
@@ -73,6 +81,15 @@ if [ -z "$reviewer" ]; then
   reviewer=$(git config --get privacy.reviewcmd || true)
 fi
 
+# Declared unwired-reviewer posture (docs/privacy-review, header comment):
+# exactly `warn-unwired` opts the unwired case down to warn-and-proceed; any
+# other value — including a typo — reads as require, the stricter direction.
+review_policy=""
+REVIEW_POLICY_FILE="$REPO_ROOT/docs/privacy-review"
+if [ -f "$REVIEW_POLICY_FILE" ]; then
+  review_policy=$(grep -v '^[[:space:]]*#' "$REVIEW_POLICY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+fi
+
 # stdin: one line per ref being pushed: <local ref> <local sha> <remote ref> <remote sha>
 zero=0000000000000000000000000000000000000000
 status=0
@@ -97,14 +114,26 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     continue
   fi
 
-  # Layer 2 — LLM subagent review over the same range. Fail closed if unwired.
+  # Layer 2 — LLM subagent review over the same range. Unwired: fail closed,
+  # unless the repo tracked the warn-unwired opt-down (header comment).
   if [ -z "$reviewer" ]; then
+    if [ "$review_policy" = "warn-unwired" ]; then
+      echo "pre-push: WARNING — anonymous policy ('$policy') but no LLM privacy" >&2
+      echo "  reviewer is wired; docs/privacy-review declares 'warn-unwired', so" >&2
+      echo "  only the deterministic lint guarded $local_ref ($range)." >&2
+      echo "  Wire one:  export REVIEW_CMD='<agent cmd>'   (or per clone:" >&2
+      echo "             git config privacy.reviewcmd '<agent cmd>')" >&2
+      continue
+    fi
     echo "pre-push: this repo declares an anonymous policy ('$policy'), which" >&2
     echo "  requires a privacy review of the outgoing history, but no reviewer" >&2
     echo "  is wired. FAILING CLOSED (a missing reviewer is never a pass)." >&2
     echo "  Wire one:  export REVIEW_CMD='<agent cmd>'   (or per clone:" >&2
     echo "             git config privacy.reviewcmd '<agent cmd>')" >&2
     echo "  It is invoked as: \$REVIEW_CMD <dump-file>; print APPROVE or BLOCK." >&2
+    echo "  Not set up yet, deliberately? Track the recorded opt-down instead:" >&2
+    echo "    echo warn-unwired > docs/privacy-review   (deterministic lint" >&2
+    echo "  still blocks findings; a wired reviewer's BLOCK still blocks)." >&2
     status=1
     continue
   fi

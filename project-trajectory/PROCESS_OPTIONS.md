@@ -705,7 +705,14 @@ on the policy declaring a pattern; `inherit` repos pay zero.
   (hunt PII; APPROVE/BLOCK + findings; verdict appended to `docs/log.md` per
   PROCESS.md §5 extended with `Model:` + `Role: PRIVACY-REVIEW`). When the
   policy demands review but the reviewer can't run, the hook **fails closed**
-  — a missing tool is never a pass at the one boundary that matters. Honesty:
+  — a missing tool is never a pass at the one boundary that matters. One
+  **declared opt-down** exists for the adopted-but-not-wired-yet window: track
+  the word `warn-unwired` in **`docs/privacy-review`** (one-word declared
+  policy, absent = require) and an *unwired* reviewer warns instead of
+  blocking, leaving the deterministic lint as the floor — a recorded,
+  reviewable decision, never a silent default, and it softens *only* the
+  unwired case (lint findings and a wired reviewer's BLOCK still block; the
+  hook's failure message names this escape at the moment it fires). Honesty:
   hooks are per-clone and tool-circumventable, and `git push --no-verify`
   remains git's own escape hatch for a human; that is why the primary home is
   the branch structure, not this hook. Cost note: review runs **per push**,
