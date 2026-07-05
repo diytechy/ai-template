@@ -7,3 +7,7 @@ __pycache__/
 
 # Generated reports (downstream repos generate these into docs/test/)
 docs/test/report.md
+
+# Raw unattended-session streams (agent_loop.py); the tracked, size-bounded
+# copies live in docs/iteration/
+out/
