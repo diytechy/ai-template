@@ -1,9 +1,9 @@
 # Kit Improvement Plan
 
-Derived from `TEMPLATE_REVIEW.md` (resolved 2026-06-28) plus follow-on design
+Derived from `docs/archive/TEMPLATE_REVIEW.md` (resolved 2026-06-28) plus follow-on design
 threads and a cross-agent-portability decision; **extended 2026-07-04** with
 Threads 29–40 from the downstream-adoption field report
-(`kit-adoption-field-report.md`, Finance-Auditor boot), a review of
+(`docs/archive/kit-adoption-field-report.md`, Finance-Auditor boot), a review of
 NotHomeWrecker's unattended coordinator (`trigger.ps1` + `llm-gate-policy.md`),
 and owner directives (automation levels; the status.md/history split; the
 vision tag; per-repo commit identity + anonymous-repo privacy review; the
@@ -1199,7 +1199,7 @@ convention sees real use. Strong model to spec; Sonnet to build against `pytest`
 ## Thread 15 — Onboarding & contributor-workspace provisioning (zero-to-running ladder)
 
 **Status: ✅ fully landed — Part A 2026-06-30 (Session E); Parts B/C/D 2026-06-30
-(Session G).** Added 2026-06-30 from the scratch.md "Ensure full provision" notes + the
+(Session G).** Added 2026-06-30 from the scratch.md (now `docs/archive/scratch.md`) "Ensure full provision" notes + the
 start-from-zero / non-code-contributor discussion. **Scope confirmed with the user
 2026-06-30.** **Part A landed:** `PROCESS.md` §7 (right after the existing "Two
 check layers" bullets, before the generate-vs-measure note) gained three new
@@ -4670,6 +4670,74 @@ continuity (same style as the session log above).
 > **Byte deltas:** `PROCESS.md` **untouched (52,064)**; `AGENTS.template.md`
 > **untouched (9,990/10,000)**. `pytest -q`: **174 passed, 1 skipped** (was
 > 171/1; +3). `check_docs --root .`: OK, 0 broken.
+
+> _WI-1.19–1.23 below are one 2026-07-04 post-plan batch, built and
+> gate-checked in a single session and committed after owner review
+> (status.md OI-1, closed) as four logical commits — 1.20/1.21 share one
+> (same files, same review)._
+
+> **WI-1.19 ✅ landed 2026-07-04 · Root cleanup + `docs/archive/` + root-README
+> refresh.** Owner-raised: root carried dead working files and the README
+> lagged the Thread 29–40 landings. Moved `TEMPLATE_REVIEW.md`,
+> `kit-adoption-field-report.md`, `scratch.md` → `docs/archive/` (with an
+> index README; all references updated — plan header, Thread 15,
+> `session-protocol` skill kit + dogfooded copies; archive linked from
+> CLAUDE.md's repo map so `check_docs` sees it reachable). Root README gained
+> `check_flows.py`/`check_privacy.py` in the scripts bullet, an **Unattended
+> agent operation** headline bullet, a skills+hooks bullet, and the quick
+> start now names the `run.*`/`agent-resume.*` launchers + policy files.
+
+> **WI-1.20 ✅ landed 2026-07-04 · Locale-tolerant rate-limit backoff.**
+> Owner-raised: `seconds_until_reset` only understood am/pm clocks — 24-hour
+> regions would exit WAITING on every throttle. `agent_loop.py` now parses
+> both clock conventions (`3:45pm` / `14:30` / `Tue 09:00`, bounds-checked),
+> and a new `--limit-retry-fallback N` (default 3600) sleeps-and-retries on an
+> *unrecognized* reset wording instead of exiting — only when
+> `--wait-on-limit` is set (waiting stays consent-gated) and capped at that
+> ceiling. Tests: clock-format unit sweep + an e2e unparseable-throttle
+> retry; PROCESS_OPTIONS "Limits are handled reactively" updated.
+
+> **WI-1.21 ✅ landed 2026-07-04 · One parse rule for declared-policy files.**
+> Found during the 2026-07-04 duplicate-logic review: four readers of the
+> one-word policy files disagreed — `agent_loop.read_declared` took the
+> *last* non-comment line, the git hooks and `check_privacy.read_policy` the
+> *first*, and `check.py resolve_gate` tolerated no comments at all. Rule
+> unified to **first non-empty, non-comment line** (matches the enforcement
+> floor): `read_declared` aligned; `resolve_gate` made comment-tolerant.
+> Tests: cross-parser agreement fixture (`test_declared_policy_parsers_agree`)
+> + a commented-`docs/gate` harness case.
+
+> **WI-1.22 ✅ landed 2026-07-04 · Unattended layer self-applied to this repo.**
+> Owner-directed: apply the template to itself so the repo shows its own
+> structure. Root `agent-resume.{cmd,sh,command}` wired live for Claude
+> (kit seed command, `AGENT_MODEL=opus`, passing `--root .` because the
+> engine's script-relative default would resolve to `project-trajectory/`);
+> `docs/status.md` blackboard + `gate-policy` (attended), `push-policy`
+> (human), `commit-identity` (inherit), `run-state` (RUNNING); `out/`
+> gitignored; CLAUDE.md repo map documents it. **Deliberate boundary** (stated
+> in status.md Non-goals): no SN→TC registries, no `run.*` launchers, no
+> scaffolded `docs/process.md` for the meta-repo.
+
+> **WI-1.23 ✅ landed 2026-07-04 · Working-agreement disciplines from field
+> feedback.** Owner-supplied cross-thread feedback triaged: most principles
+> already covered (often mechanized — gates, Blocked register, Assumptions,
+> decision dial); three genuine gaps adopted. **PROCESS.md §6** gained "Three
+> cheap disciplines the dial never relaxes": verify at peak confidence
+> (wrong-and-confident is the costliest state), sunk work is not an argument,
+> never retry past an unexplained failure (record the rule that would have
+> prevented it, §7). **AGENTS.template.md** carries the headlines — the
+> uncertainty bullet extended ("distrust certainty"), a new sunk-cost/blind-
+> retry bullet, and "ask as one question with a recommended default" — paid
+> for by folding "Propose better ways" into stay-in-your-lane and trimming
+> redundant comment/style prose (motivation text survives in EXAMPLE.md).
+> Not imported (out of kit scope): host-runtime context-frugality mechanics;
+> subagent management already lives in §6 tiering.
+>
+> **Byte deltas:** `AGENTS.template.md` **9,998 → 9,976** (≤10,000; headroom
+> grew 2 → 24); `PROCESS.md` **55,123 → 56,230 (+1,107)** — the §6 doctrine
+> paragraph is the single-source home the AGENTS bullets cite, per the
+> decompose-don't-paraphrase rule. `pytest -q` (whole batch): **259 passed,
+> 16 skipped** (was 256/16; +3). `check_docs --root .`: OK, 0 broken.
 
 ### Session protocol (for a cold session pointed only at this file)
 

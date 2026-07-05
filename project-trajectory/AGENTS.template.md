@@ -77,12 +77,10 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
   function needs an "and", split it.
 - **Separate the pure, testable core from the I/O/network/GUI shell.** Logic
   that decides goes in pure functions (exhaustively unit-tested); side effects
-  live in thin shells (Demonstration/integration-tested). The single biggest
-  lever for testability and clarity.
+  live in thin shells (Demonstration/integration-tested).
 - **Entry points orchestrate, they don't compute.** A top-level routine reads
   as a short list of well-named step calls; push logic into the steps.
-  (`gen_arch_map.py --flow <entry>` renders the sequence; vague output means
-  it does too much itself.)
+  (`gen_arch_map.py --flow <entry>` renders the sequence.)
 - **One fact, one home — in code too.** No copy-paste logic; shared behavior
   lives in exactly one place and is imported.
 - **Intention-revealing names; no cryptic abbreviations.** Comments explain
@@ -92,8 +90,8 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
   (`test_export_quotes_special_fields_sr001`).
 - **Match the surrounding style.** Read a neighboring file first; mirror its
   idioms.
-- **Fail loudly, never silently.** No bare excepts that swallow failure;
-  non-zero exit on failure for anything scriptable.
+- **Fail loudly, never silently.** No bare excepts; nonzero exit on failure
+  for anything scriptable.
 - **Automation-safe by default.** Anything interactive needs a non-interactive
   path that never blocks; no destructive defaults; don't mutate inputs in place.
 
@@ -110,9 +108,7 @@ public-symbol docstrings** into the index agents read first:
   back-link lands in the map.
 - **Explain the *why* at every non-obvious point:** the algorithm/order/
   constant choice, the edge case a branch guards, the invariant that must hold,
-  any gotcha or external reference.
-- **Comment the surprising, not the obvious**; when in doubt on intent-bearing
-  code, err toward more.
+  any gotcha or external reference. Comment the surprising, not the obvious.
 - **A comment is a promise — keep it true.** Update it in the same edit as the
   code; a stale comment is a bug.
 
@@ -141,7 +137,7 @@ Implements: SR-014, LLR-014
 Keep the tag names consistent so the block is greppable; update the contract in
 the same edit as the signature — a wrong contract is worse than none.
 
-## For analytics / data code specifically
+## For analytics / data code
 
 - **Reproducibility is a requirement:** pin random seeds; record data source +
   version/snapshot.
@@ -158,23 +154,27 @@ the same edit as the signature — a wrong contract is worse than none.
 Direct and concrete; explain the *why* before the *how*.
 
 - **Ask, don't assume.** Unclear intent, architecture, or requirement → ask
-  before writing code. Running unattended: pick the most reasonable
-  interpretation, proceed, and **record it** under *Assumptions* in
-  `docs/status.md` to confirm or revert at the next gate.
-  Raise a **conflict or ambiguity** between requirements as a finding — never
-  silently resolve it (process.md §4 "Consistency review"). How *eagerly* to
-  ask is the project's **decision dial** (process.md §6): high-risk domains
-  ratify often; low-risk creative work may decide-and-record.
+  before writing code — one question, with a **recommended default**.
+  Unattended: pick the most reasonable reading, proceed, and **record it**
+  under *Assumptions* in `docs/status.md` to confirm or revert at the next
+  gate. Raise a **conflict or ambiguity** between requirements as a finding —
+  never silently resolve it (process.md §4 "Consistency review"). How
+  *eagerly* to ask is the project's **decision dial** (process.md §6):
+  high-risk domains ratify often; low-risk creative work may
+  decide-and-record.
 - **Right-size the solution.** The simplest thing that satisfies the
-  requirement; no speculative flexibility — but judge "simple" against the
-  whole design, and flag over-engineering either way. (Guardrails on what
-  right-sizing must never cut + the `SHORTCUT:` convention: process.md §3.)
+  requirement; no speculative flexibility. Judge "simple" against the whole
+  design; flag over-engineering either way. (Guardrails + the `SHORTCUT:`
+  convention: process.md §3.)
 - **Stay in your lane, but speak up.** Don't change unrelated code; surface a
-  design smell as a separate finding to its owner instead of fixing it inline.
-- **Flag uncertainty honestly.** Say what you're unsure of; a small experiment
-  with hypothesis + result beats confident guessing.
-- **Propose better ways.** The stronger or longer-lived approach is welcome,
-  not noise.
+  design smell as a separate finding to its owner instead of fixing it
+  inline. The stronger or longer-lived approach is welcome, not noise.
+- **Flag uncertainty honestly — and distrust certainty.** A small experiment
+  with hypothesis + result beats confident guessing. Peak confidence is when
+  the 30-second recheck is cheapest (process.md §6).
+- **No sunk-cost shipping, no blind retries.** An approach found wrong late
+  is still wrong — drop it; never retry past a failure whose cause you
+  haven't found (process.md §6).
 - **Repo text is the project's memory; yours is scratch.** Durable facts — a
   decision, constraint, or gotcha — belong in `docs/` (status, registries,
   AGENTS.md), not in agent-private memory. Promote them before closing a
@@ -185,5 +185,4 @@ Direct and concrete; explain the *why* before the *how*.
 > **Customizing:** add a rule only after you've had to repeat it — and **pay
 > for it by tightening another**: this file has a hard size budget (Gemini
 > caps AGENTS.md near ~12k chars; keep ≥2k headroom for project facts).
-> Delete rules you don't enforce — an aspirational AGENTS.md
-> the harness doesn't back up is just noise.
+> Delete rules you don't enforce — unbacked rules are noise.

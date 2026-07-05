@@ -556,6 +556,22 @@ Decisions log, §5) so it stays auditable and revertible. The dial never moves t
 contradictions still route as findings. Full doctrine: point (e) of the
 [proportionality doctrine](process-options.md#proportionality-doctrine).
 
+**Three cheap disciplines the dial never relaxes.** (1) **Verify at peak
+confidence.** Confidence is data about the agent, not about the world: the
+moment an action feels obviously safe is exactly when the 30-second check —
+re-read the target before overwriting, re-run the failing command, confirm
+the working directory before anything destructive — is cheapest, because
+wrong-and-confident is the most expensive state an agent can act from.
+(2) **Sunk work is not an argument.** An approach discovered wrong after
+hours is as wrong as one discovered wrong in minutes; the effort is spent
+either way. Route the discovery as a finding, record the decision (§5), and
+change course — prior work is tuition paid, never a reason to ship.
+(3) **Never retry past an unexplained failure.** A retry is justified by a
+*cause* (transient network, known flake), not by hope: get the actual error
+text, find the actual cause, and record the rule that would have prevented it
+as a durable fact (§7 — repo text is the durable memory layer). A failure
+retried past without understanding is a landmine re-armed.
+
 ## 7. Harness contract (wire to your stack)
 
 `scripts/check` (and the CI workflow) must run, and fail nonzero on any failure:
