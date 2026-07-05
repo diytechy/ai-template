@@ -149,18 +149,25 @@ KIT_CORE_RE = re.compile(
 
 
 def guardrails_apply(policy, model):
-    """Whether to inject the guardrails core for a session on `model`, under the
-    one-word docs/guardrails-policy: 'off'/absent -> never; 'all' -> every
-    session; any other value -> a case-insensitive substring match on the model
-    id (name the weaker model, e.g. 'opus', to guard only its sessions while a
-    frontier model plans unguarded). See process-options.md "Tier-conditional
-    guardrails"."""
+    """Whether to inject the guardrails core for a session on `model`, under
+    docs/guardrails-policy (case-insensitive). The grammar:
+      - `off` / absent          -> never.
+      - `all`                   -> every session.
+      - `all except <sub> ...`  -> every session EXCEPT models matching a listed
+                                   substring — name your frontier model(s), so a
+                                   newly added weak tier is guarded automatically.
+      - `<sub> [<sub> ...]`     -> an allowlist: guard when the model matches ANY
+                                   listed substring (e.g. `opus sonnet`).
+    See process-options.md "Tier-conditional guardrails"."""
     p = (policy or "").strip().lower()
     if p in ("", "off"):
         return False
-    if p == "all":
-        return True
-    return p in (model or "").lower()
+    m = (model or "").lower()
+    toks = p.split()
+    if toks[0] == "all":
+        excepts = toks[2:] if len(toks) >= 2 and toks[1] == "except" else []
+        return not any(x in m for x in excepts)
+    return any(t in m for t in toks)
 
 
 def guardrails_core(root):
@@ -177,9 +184,9 @@ def guardrails_core(root):
 
 
 def guardrails_inert(policy, models):
-    """True when a *specific* guardrails-policy token (not off/all) matches none
-    of the models a run could use — a stale or mistyped substring, so the guard
-    would silently never fire. off/all are never inert; used only to warn."""
+    """True when a *guarding* policy (not off / bare all) would guard none of the
+    models a run could use — a stale/mistyped allowlist, or an `all except` that
+    excludes every configured model. Used only to warn; off/`all` never inert."""
     p = (policy or "").strip().lower()
     if p in ("", "off", "all"):
         return False
@@ -680,9 +687,9 @@ def main():
     possible_models = {m for m in [args.model, *model_map.values()] if m}
     if guardrails_inert(guardrails_policy, possible_models):
         print(
-            "agent_loop: WARNING - guardrails-policy {!r} matches none of the "
-            "configured models ({}); the guard is inert — fix the token or the "
-            'model map (process-options.md "Tier-conditional guardrails").'.format(
+            "agent_loop: WARNING - guardrails-policy {!r} would guard none of "
+            "the configured models ({}); the guard is inert — fix the token or "
+            'the model map (process-options.md "Tier-conditional guardrails").'.format(
                 guardrails_policy, ", ".join(sorted(possible_models)) or "none"
             ),
             file=sys.stderr,

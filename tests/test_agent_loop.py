@@ -224,14 +224,22 @@ def _vendor_core(repo, body):
 
 
 def test_guardrails_apply_policy_matrix():
-    # off/absent -> never; all -> always; any other value -> substring match on
-    # the model id (name the weaker model to guard only its sessions).
+    # off/absent -> never; all -> always; an allowlist of substrings -> guard on
+    # ANY match; `all except <sub> ...` -> guard everything but the excepted.
     al = load_script("agent_loop")
     assert al.guardrails_apply("", "claude-opus-4-8") is False
     assert al.guardrails_apply("off", "claude-opus-4-8") is False
     assert al.guardrails_apply("all", "anything") is True
+    # single-substring allowlist
     assert al.guardrails_apply("opus", "claude-opus-4-8") is True
     assert al.guardrails_apply("opus", "claude-fable-5") is False
+    # multi-substring allowlist (OR)
+    assert al.guardrails_apply("opus sonnet", "claude-sonnet-5") is True
+    assert al.guardrails_apply("opus sonnet", "claude-fable-5") is False
+    # all-except (denylist): guard everything but the named frontier model(s)
+    assert al.guardrails_apply("all except fable", "claude-opus-4-8") is True
+    assert al.guardrails_apply("all except fable", "claude-fable-5") is False
+    assert al.guardrails_apply("all except fable opus", "claude-opus-4-8") is False
 
 
 def test_guardrails_off_by_default_injects_nothing(loop_repo):
@@ -302,14 +310,18 @@ def test_guardrails_selected_but_missing_core_warns_and_runs(loop_repo):
 
 
 def test_guardrails_inert_helper():
-    # off/all are never inert; a specific token is inert only when it matches
-    # none of the models a run could use (stale/typo'd substring).
+    # off/all are never inert; a guarding policy is inert only when it would
+    # guard none of the models a run could use (stale allowlist, or an
+    # all-except that excludes every configured model).
     al = load_script("agent_loop")
     assert al.guardrails_inert("off", {"claude-opus-4-8"}) is False
     assert al.guardrails_inert("all", set()) is False
     assert al.guardrails_inert("opus", {"claude-opus-4-8", "fable-5"}) is False
     assert al.guardrails_inert("opus", {"fable-5", "sonnet-6"}) is True
     assert al.guardrails_inert("opus", set()) is True
+    # all-except that excludes every configured model guards nothing -> inert
+    assert al.guardrails_inert("all except fable", {"claude-fable-5"}) is True
+    assert al.guardrails_inert("all except fable", {"fable-5", "opus-4-8"}) is False
 
 
 def test_guardrails_inert_policy_warns_at_startup(loop_repo):
@@ -320,7 +332,7 @@ def test_guardrails_inert_policy_warns_at_startup(loop_repo):
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template)  # --model default-tier, no map -> no 'opus'
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "matches none of the configured models" in (proc.stdout + proc.stderr)
+    assert "would guard none of the configured models" in (proc.stdout + proc.stderr)
 
 
 def test_guardrails_matched_policy_does_not_warn(loop_repo):
@@ -331,7 +343,26 @@ def test_guardrails_matched_policy_does_not_warn(loop_repo):
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template, "--model-map", "BUILD=claude-opus-4-8")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "matches none of the configured models" not in (proc.stdout + proc.stderr)
+    assert "would guard none of the configured models" not in (
+        proc.stdout + proc.stderr
+    )
+
+
+def test_guardrails_all_except_guards_non_frontier(loop_repo):
+    # 'all except <frontier>': a session whose model isn't the named frontier is
+    # guarded (a spaced, multi-token policy flows through read_declared intact).
+    repo, ctl, template = loop_repo
+    _vendor_core(repo, "MARKER-CORE\n")
+    (repo / "docs" / "guardrails-policy").write_text(
+        "all except fable\n", encoding="utf-8"
+    )
+    (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(
+        repo, template, "--model-map", "PLAN=claude-fable-5,BUILD=claude-opus-4-8"
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "MARKER-CORE" in (ctl / "prompt.txt").read_text(encoding="utf-8")
 
 
 def test_limit_hit_backs_off_without_counting_stall(loop_repo):

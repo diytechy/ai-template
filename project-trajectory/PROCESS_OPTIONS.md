@@ -499,15 +499,20 @@ should, mutating **nothing** in the workspace.
   always-on file; its `BEGIN/END KIT CORE` block is what gets injected (the
   whole file if it carries no such markers). Playbooks (`PLAN.md`, `CODE.md`, …)
   sit beside it so the core's routing table resolves.
-- **`docs/guardrails-policy`** (one word, same first-line parse as every
-  declared-policy file; absent = `off`, not scaffolded): `off` → never inject;
-  `all` → every session; **any other value → a case-insensitive substring match
-  on the session's model id** — name the weaker model (e.g. `opus`) to guard
-  only its sessions while the frontier tier plans unguarded. The token is
-  necessarily per-repo (it names a model in *this* repo's map, not a shared
-  list); if it matches none of the run's configured models — a stale or
-  mistyped substring — the coordinator warns at startup that the guard is inert
-  (it still runs, unguarded). A single-tier repo that wants no naming uses `all`.
+- **`docs/guardrails-policy`** (same first-line parse as every declared-policy
+  file; absent = `off`, not scaffolded). The value is case-insensitive:
+  - `off` → never inject; `all` → every session.
+  - `<sub> [<sub> …]` — an **allowlist** of model substrings: guard when the
+    model matches any (e.g. `opus sonnet`). Name the weaker tier(s).
+  - `all except <sub> [<sub> …]` — a **denylist**: guard everything *except*
+    models matching a listed substring (e.g. `all except fable`). Name your
+    **frontier** model, and a newly added weak tier is guarded automatically —
+    the more rot-resistant form.
+  The token is necessarily per-repo (it names a model in *this* repo's map, not
+  a shared list); if it would guard none of the run's configured models — a
+  stale/mistyped allowlist, or an `all except` covering every model — the
+  coordinator warns at startup that the guard is inert (it still runs,
+  unguarded). A single-tier repo that wants no naming uses `all`.
 - **Injection is local-only.** `scripts/agent_loop.py` prepends the vendored
   core to the session prompt when the policy selects that session's model —
   read from the **local vendored copy, never fetched at launch** (remote text

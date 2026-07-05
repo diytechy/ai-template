@@ -3563,6 +3563,15 @@ in PROCESS_OPTIONS + the scripts).
 > when unmatched, silent when matched); PROCESS_OPTIONS policy bullet notes it.
 > `pytest -q`: 319 passed, 1 skipped.
 
+> **Follow-up 2026-07-05 (owner-approved): richer policy grammar.**
+> `guardrails-policy` now supports **multiple substrings** (`opus sonnet` — an
+> allowlist, guard on any match) and a **denylist** (`all except fable` — guard
+> everything but the named frontier model, so a newly added weak tier is
+> guarded automatically; the more rot-resistant form). `off`/`all`/single-sub
+> unchanged; `guardrails_inert` + the startup warning generalize (an all-except
+> covering every configured model is also inert). Tests: matrix + inert +
+> all-except integration. `pytest -q`: 321 passed, 1 skipped.
+
 **Rulings:** (a) sync = **vendored
 verbatim copy + warn-only drift check** (pinned upstream commit; never
 auto-update); (b) scope = **the kit ships only the mechanism** — each repo
@@ -3667,6 +3676,18 @@ the README too) — the drift the gate is meant to catch. Tests: +6
 absent-section opt-in, `_registry_needs` priority parse, harness `--stale`
 wiring). `pytest -q`: 302 passed, 1 skipped; `check_docs --root . --stale`: 0
 broken. Byte deltas: AGENTS.template.md / PROCESS.md untouched.
+
+> **Follow-up 2026-07-05 (owner-approved): staleness → `hint` severity.** The
+> `--stale` heuristic is a low-confidence nudge, but it shared the `WARN` tag
+> with orphan docs (a real structural finding), over-weighting it — and on a
+> README that deep-links churning scripts it false-positives constantly (the
+> SN inventory above is the content-aware freshness net now). `check_docs.py`
+> now prints staleness as a distinct lowercase **`hint`** (below `WARN`, never
+> counted toward exit status); kept firing for doc→source maps that have no
+> content check. `--stale` stays wired into the harness + this repo's gate
+> (it's global, not README-only; the hint downgrade de-alarms it). Test:
+> `test_staleness_prints_hint_not_warn` (git-scenario, first integration test
+> of a real stale hit). `pytest -q`: 321 passed, 1 skipped.
 
 **Source:** owner field reports (2026-07-05): downstream READMEs go stale.
 Ruling: the **authored-bullets variant** (human-voiced terse bullets citing SN

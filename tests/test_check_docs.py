@@ -192,6 +192,39 @@ def test_no_root_readme_warns_not_fails(tmp_path):
     assert "tag check skipped" in proc.stdout
 
 
+def test_staleness_prints_hint_not_warn(tmp_path):
+    # Staleness is a low-confidence nudge: printed as `hint` (below WARN), never
+    # a finding. Needs a git repo with a doc committed BEFORE a non-doc it links.
+    import os
+    import subprocess
+
+    repo = tmp_path
+
+    def git(*args, when=None):
+        env = dict(os.environ)
+        if when:
+            env["GIT_AUTHOR_DATE"] = env["GIT_COMMITTER_DATE"] = when
+        subprocess.run(
+            ["git", "-C", str(repo), *args], check=True, env=env, capture_output=True
+        )
+
+    git("init")
+    git("config", "user.email", "t@example.com")
+    git("config", "user.name", "T")
+    (repo / "guide.md").write_text("# Guide\n\nSee [mod](mod.py).\n", encoding="utf-8")
+    git("add", "guide.md")
+    git("commit", "-m", "doc", when="2020-01-01T00:00:00")
+    (repo / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    git("add", "mod.py")
+    git("commit", "-m", "code later", when="2021-01-01T00:00:00")
+
+    proc = run_py([SCRIPTS / "check_docs.py", "--root", repo, "--stale"], cwd=repo)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "hint - possibly stale" in proc.stdout
+    assert "mod.py" in proc.stdout
+    assert "WARN - possibly stale" not in proc.stdout
+
+
 def test_staleness_skips_without_git(tmp_path):
     # --stale must degrade gracefully where git isn't available or the tree
     # isn't a work tree: it skips, it doesn't fail. tmp_path is not a git repo.

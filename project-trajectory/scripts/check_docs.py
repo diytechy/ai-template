@@ -34,10 +34,12 @@ finding classes:
     stakeholder-needs registry, and every Must/Should need in that registry must
     be cited by some bullet — so a requirements change mechanically ages the
     README. A hard finding either way; absent section = silent (opt-in).
-  - **staleness** (`--stale`, git-gated, warn-only): a doc linking a *non-doc*
-    file (source/asset) that was committed more recently than the doc itself —
-    a "lying map" heuristic. Degrades to a clean skip when git is unavailable or
-    the tree isn't a git work tree.
+  - **staleness** (`--stale`, git-gated): a doc linking a *non-doc* file
+    (source/asset) that was committed more recently than the doc itself — a
+    "lying map" heuristic. Printed as a **`hint`**, a severity below `WARN`: it
+    is a low-confidence nudge to look, not a finding (a linked file often
+    changes without invalidating the prose), so it never counts toward the exit
+    status. Degrades to a clean skip when git is unavailable or off a work tree.
 
 Scope (the high-value 80%): inline links `[text](dest)` and same-file/`file#frag`
 anchors against GitHub-style heading slugs (plus `{#custom-id}` suffixes and
@@ -512,7 +514,7 @@ def main():
         else:
             for src, lineno, dest in find_stale(parsed, root, lookup):
                 print(
-                    "check_docs: WARN - possibly stale: {}:{} links {} "
+                    "check_docs: hint - possibly stale: {}:{} links {} "
                     "(changed after the doc)".format(src, lineno, dest)
                 )
 
