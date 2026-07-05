@@ -3554,6 +3554,15 @@ noop). `pytest -q`: 316 passed, 1 skipped; `check_docs --root . --stale`: 0
 broken. Byte deltas: AGENTS.template.md / PROCESS.md untouched (the layer lives
 in PROCESS_OPTIONS + the scripts).
 
+> **Follow-up 2026-07-05 (owner-approved): stale-substring visibility.** Since a
+> policy token is a per-repo model substring, a renamed/typo'd token silently
+> makes the guard inert. `agent_loop.py` now warns at **startup** when a
+> *specific* policy (not off/all) matches none of the run's configured models
+> (`--model` + every `--model-map` value) — `guardrails_inert(policy, models)`,
+> deterministic and independent of run exit. Tests +3 (helper matrix, warns
+> when unmatched, silent when matched); PROCESS_OPTIONS policy bullet notes it.
+> `pytest -q`: 319 passed, 1 skipped.
+
 **Rulings:** (a) sync = **vendored
 verbatim copy + warn-only drift check** (pinned upstream commit; never
 auto-update); (b) scope = **the kit ships only the mechanism** — each repo

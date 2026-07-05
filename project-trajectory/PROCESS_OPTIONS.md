@@ -503,7 +503,11 @@ should, mutating **nothing** in the workspace.
   declared-policy file; absent = `off`, not scaffolded): `off` → never inject;
   `all` → every session; **any other value → a case-insensitive substring match
   on the session's model id** — name the weaker model (e.g. `opus`) to guard
-  only its sessions while the frontier tier plans unguarded.
+  only its sessions while the frontier tier plans unguarded. The token is
+  necessarily per-repo (it names a model in *this* repo's map, not a shared
+  list); if it matches none of the run's configured models — a stale or
+  mistyped substring — the coordinator warns at startup that the guard is inert
+  (it still runs, unguarded). A single-tier repo that wants no naming uses `all`.
 - **Injection is local-only.** `scripts/agent_loop.py` prepends the vendored
   core to the session prompt when the policy selects that session's model —
   read from the **local vendored copy, never fetched at launch** (remote text

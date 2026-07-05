@@ -176,6 +176,16 @@ def guardrails_core(root):
     return (m.group(0) if m else text).strip()
 
 
+def guardrails_inert(policy, models):
+    """True when a *specific* guardrails-policy token (not off/all) matches none
+    of the models a run could use — a stale or mistyped substring, so the guard
+    would silently never fire. off/all are never inert; used only to warn."""
+    p = (policy or "").strip().lower()
+    if p in ("", "off", "all"):
+        return False
+    return not any(guardrails_apply(policy, m) for m in models)
+
+
 def split_cmd(template):
     """Split a command template into tokens, quote-aware but with backslash
     escaping disabled so Windows paths survive (shlex's posix escape rules
@@ -665,6 +675,18 @@ def main():
         return phase, model_map.get(phase, args.model)
 
     guardrails_policy = read_declared(docs / "guardrails-policy", "off")
+    # Surface a stale/typo'd policy token before the run: if it names a substring
+    # that matches none of the models this run could use, the guard is inert.
+    possible_models = {m for m in [args.model, *model_map.values()] if m}
+    if guardrails_inert(guardrails_policy, possible_models):
+        print(
+            "agent_loop: WARNING - guardrails-policy {!r} matches none of the "
+            "configured models ({}); the guard is inert — fix the token or the "
+            'model map (process-options.md "Tier-conditional guardrails").'.format(
+                guardrails_policy, ", ".join(sorted(possible_models)) or "none"
+            ),
+            file=sys.stderr,
+        )
     warned_no_core = []
 
     def session_prompt(model):

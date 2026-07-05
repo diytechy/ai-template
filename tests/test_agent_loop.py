@@ -301,6 +301,39 @@ def test_guardrails_selected_but_missing_core_warns_and_runs(loop_repo):
     assert "core.md is absent" in (proc.stdout + proc.stderr)
 
 
+def test_guardrails_inert_helper():
+    # off/all are never inert; a specific token is inert only when it matches
+    # none of the models a run could use (stale/typo'd substring).
+    al = load_script("agent_loop")
+    assert al.guardrails_inert("off", {"claude-opus-4-8"}) is False
+    assert al.guardrails_inert("all", set()) is False
+    assert al.guardrails_inert("opus", {"claude-opus-4-8", "fable-5"}) is False
+    assert al.guardrails_inert("opus", {"fable-5", "sonnet-6"}) is True
+    assert al.guardrails_inert("opus", set()) is True
+
+
+def test_guardrails_inert_policy_warns_at_startup(loop_repo):
+    # A policy token matching no configured model warns that the guard is inert
+    # (the stale-substring rot), but the run still proceeds.
+    repo, ctl, template = loop_repo
+    (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template)  # --model default-tier, no map -> no 'opus'
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "matches none of the configured models" in (proc.stdout + proc.stderr)
+
+
+def test_guardrails_matched_policy_does_not_warn(loop_repo):
+    # When the token matches a model in the map, no inert warning fires.
+    repo, ctl, template = loop_repo
+    (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
+    (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template, "--model-map", "BUILD=claude-opus-4-8")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "matches none of the configured models" not in (proc.stdout + proc.stderr)
+
+
 def test_limit_hit_backs_off_without_counting_stall(loop_repo):
     # A throttled session must read WAITING, not a stall: with stall-limit 1 a
     # no-commit session would abort STALL (exit 4); the limit message must
