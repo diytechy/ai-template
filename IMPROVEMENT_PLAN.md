@@ -2355,8 +2355,48 @@ FAIL/SKIP(missing-command); `pytest -q` green.
 
 ## Thread 30 — Field-report R2/A3/A4: declare the product toolchain once (stack profile)
 
-**Status: ✔ ruled 2026-07-04 (Q1 full profile; Q2 INI) — ready to build
-(Session N).**
+**Status: ✅ landed 2026-07-04 (Session N).** New `stack.ini.template` →
+`docs/stack.ini` (configparser, `interpolation=None`) with four sections:
+`[paths]` src/tests · `[product]` format/lint/test · `[tiers]`
+smoke/full/release/all (stack-native selectors appended to the test command —
+the A3 gap closed: a non-pytest stack declares its tiers here) · `[coverage]`
+threshold + args. Scaffolded unconditionally with the Python-reference values,
+so behavior is unchanged out of the box. `check.py` reads it at repo root:
+`steps()` gained a `profile=` param; product commands + tier/coverage flow
+through one `_expand` path (shlex-split THEN per-token substitute, so a Windows
+`{py}` path with spaces survives), and `_requires` derives the needed import
+from `{py} -m <mod>` (+ pytest-cov via a `--cov*` flag) so a profile author
+declares nothing extra. **Absent/partial profile → the built-in defaults,
+verified byte-identical** across every gate×tier (unit + an end-to-end
+delete-and-diff `--list`). A **malformed** profile (or non-integer threshold)
+exits nonzero naming the file — never silently ignored. `--coverage` wins over
+the profile threshold. New `check.py --run-step NAME` runs one step lenient
+about a missing tool (SKIP→exit 0) but fails on a real violation (exit 1); the
+pre-commit hook's format step now delegates to `--run-step format` when a
+profile exists (else the historical staged-`.py` ruff fallback). CI/`setup.*`
+EDIT markers now point at `docs/stack.ini` as the one home for check *commands*
+(their install commands stay, inherently stack-specific). Non-Python scaffold's
+OI-3/OI-6 rewiring checklist repointed at `docs/stack.ini`. PROCESS.md §7 +
+ADOPTING §2/§6 + README name it as the single toolchain home; ADOPTING now
+lists `check.py` as overwrite-wholesale (customization moved out) and
+`docs/stack.ini` as preserve-always.
+
+**Deviations from spec:** (1) mechanism is **`--run-step`** not the spec's
+example `--print-step` — check.py runs the format command itself, avoiding
+shell-quoting a Windows interpreter path in the POSIX hook. (2) The hook's
+profile path runs the profile's **whole-tree** format check (its `{src}/{tests}`
+scope) rather than the legacy staged-`.py`-only subset — the single-source
+delegation; a format-clean repo is unaffected, and a missing tool still SKIPs so
+a not-set-up repo commits. (3) **Per-`--stack` command seeding** (a `node`
+scaffold starting with vitest-shaped commands — a Q1 *gain*, not a Done-when)
+was **not** built: the profile ships the Python reference and the OI checklist
+flags editing it; auto-seeding every stack's commands is deferred as
+gold-plating. **Byte deltas:** AGENTS.template.md 9,998 → 9,998 (untouched);
+PROCESS.md 54,961 → 55,123 (**+162 B** — the §7 profile pointer, two swaps,
+flagged per the budget convention); new `stack.ini.template` 2,504 B (a
+scaffolded config file, not a budgeted doc). **Gates:** `pytest -q` **264
+passed, 1 skipped** (the same pre-existing skip; +12 new in
+`tests/test_stack_profile.py`); `check_docs --root .` **0 broken**.
 **Source:** field report R2 (High), A3/A4 (Med).
 
 **Why:** the product toolchain is encoded in ~6 places: `check.py` (step
@@ -3815,7 +3855,7 @@ warning scrolls by in exactly the unattended case).
   run can add tens of MB, compounding per leg.
 
 **Proposed sessions (rulings landed 2026-07-04).**
-**▶ NEXT: Session N** — then O (independent; can slot anywhere). Move
+**▶ NEXT: Session O** (independent; can slot anywhere). Move
 this marker as sessions land (Session-protocol step 4).
 - **Session L ✅ landed 2026-07-04** — Threads **29 + 35 + 37 + 38**
   (mechanical, file-coherent batch: check.py guard + registry column + the
@@ -3865,7 +3905,13 @@ this marker as sessions land (Session-protocol step 4).
   downstream); PROCESS.md 54,669 → 54,961 (**+292 B** — the kit-only header
   block + four profile marker lines, all stripped from every scaffold;
   flagged per the budget convention).
-- **Session N** — Thread **30** solo (new config surface + wiring).
+- **Session N ✅ landed 2026-07-04** — Thread **30** solo (the stack profile:
+  `stack.ini.template` → `docs/stack.ini` + check.py profile reader +
+  `--run-step` hook delegation + CI/setup/§7 repointing; per-thread Status
+  block above). Gates: `pytest -q` **264 passed, 1 skipped** (the same
+  pre-existing skip); `check_docs --root .` **0 broken**. Byte deltas:
+  AGENTS.template.md 9,998 → 9,998 (untouched); PROCESS.md 54,961 → 55,123
+  (**+162 B** — the §7 profile pointer, flagged per the budget convention).
 - **Session O** — Thread **31** solo (new generator mode + tests).
 - **Session R** — Thread **40** solo, strong model (after M, before P and Q;
   the branch/sync protocol design — PROCESS_OPTIONS layer + push-policy file;
@@ -3899,7 +3945,7 @@ report + the NotHomeWrecker unattended-coordinator review + owner directives) �
 specs above. **29 ✅, 35 ✅, 37 ✅, 38 ✅** (2026-07-04, Session L);
 **36 ✅, 32 ✅** (2026-07-04, Session M); **40 ✅** (2026-07-04, Session R);
 **33 ✅** (2026-07-04, Session P); **39 ✅** (2026-07-04, Session Q);
-**34 ✅** (2026-07-04, Session S).
+**34 ✅** (2026-07-04, Session S); **30 ✅** (2026-07-04, Session N).
 **All questions ruled by the owner 2026-07-04** — the batch's decision-briefs
 section records the rulings (Q6 Hybrid and Q8 full-conditional-templating
 override the recommendations; Q7d/Q13a amended Threads 33/40). Proposed
