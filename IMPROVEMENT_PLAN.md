@@ -3675,6 +3675,87 @@ prose is Sonnet-able.**
 
 ---
 
+## Thread 43 — dev-setup role profiles: default installs everything, a named role narrows to its slice
+
+**Status: 📋 specced 2026-07-05 (owner direction this session); not scheduled
+— no ▶ NEXT change.** Ruling: **the default installs every role's packages**
+(the common case — a fresh clone or solo dev wants the lot); a **named role
+installs only that role's relevant packages** (the opt-down). Heavy per-repo
+customization is expected; the template ships the *structure* so every repo
+declares roles the same way.
+
+**Source:** owner (2026-07-05), from downstream field reports: repos with
+multiple contributor kinds (UX asset designer, physical-part/CAD, marketer,
+code) outgrow one generic `--profile code|domain` split.
+
+**Why.** Today the tiered `dev-setup.template.{sh,ps1}` has exactly two
+profiles — `code` (default) and `domain` — over a runtime + git +
+offline-renderer baseline everyone shares, with a **single** role-specific
+install slot (`DOMAIN_VIEWER_CMDS` / `DOMAIN_VIEWER_INSTALL`). That collapses
+every non-code contributor into one "domain" bucket a UX/CAD/marketing mix
+outgrows. Generalizing that one slot to **N declared roles, default = union**
+keeps every current property (consent-first, detect-first, headless-safe) and
+gives multi-contributor repos a consistent, greppable role vocabulary — the
+consistency the owner is after even though the fills are per-repo.
+
+**The model:**
+- **Universal baseline stays unconditional** — runtime, git, the offline
+  Mermaid renderer are detected/installed for every profile (workstation
+  table stakes, not a role's concern; unchanged from today).
+- **Roles are additive on top of the baseline** — the template declares a
+  role list and, per role, a detection-commands list + an install command:
+  exactly today's `DOMAIN_VIEWER_CMDS`/`DOMAIN_VIEWER_INSTALL` shape, lifted
+  from one hardcoded slot to N.
+- **Default (no `--profile`) = every role.** `--check` reports on all;
+  `--baseline`/`--full` install the baseline plus **every** declared role's
+  packages (consent-first, one prompt per install, as today).
+- **`--profile <role>` = baseline + that role only** — the opt-down. An
+  unknown role name errors with the declared list (never silently installs
+  nothing).
+- **Ships `code` pre-filled + one placeholder role** (e.g. `design`,
+  commented and inert like the `-000` registry rows) so a fresh scaffold's
+  `--check` runs green and the fill structure is obvious.
+- **Optional TTY sugar:** when interactive with no `--profile`, offer the
+  role list (Enter = all); silently defaults to all when headless/CI (the
+  existing `interactive()` guard) so no automated run blocks.
+
+**Steps:** generalize both `dev-setup.template.sh` and `.ps1` (the POSIX sh
+needs portable indirection for `<role>_INSTALL` — **pin the exact technique
+at build time**: `eval`-based lookup vs. a case dispatch the project fills,
+choosing the more *readable* per the copy-ready rule); update the two
+contributor-profile mentions in `project-trajectory/README.md` +
+`README.template.md`; ADOPTING.md gains a one-line migration note for repos
+that filled `DOMAIN_VIEWER_*`; the meta-repo dogfood
+(`scripts/dev-setup.{sh,ps1}`) stays single-stack (one implicit `code` role)
+— note it, don't force roles onto a one-stack repo.
+
+**Tests:** `test_onboard_devsetup.py` —
+`test_devsetup_has_edit_block_tiers_and_profiles` updated to the new role
+tokens; default `--check` reports all roles; `--profile <role>` reports
+baseline + that role only; unknown `--profile` exits nonzero naming the
+declared roles; `sh -n` syntax valid; the headless no-TTY path still defaults
+to all and exits 0.
+
+**Risks:** **downstream migration** — this changes the profile vocabulary and
+flips the default from `code`-only to all-roles, so a repo that filled
+`DOMAIN_VIEWER_*` must move it into a role block (mechanical; the ADOPTING
+note covers it) and installs slightly more by default (intended — "all
+relevant packages"). Keep `code` + `design` (the renamed `domain`) as the
+shipped examples so the rename is minimal. POSIX-sh indirection is sharp —
+favor the readable dispatch, lean on `sh -n` + the smoke test. Scope creep
+into a package manager — dev-setup stays detect-and-consent-install per
+component, never a lockfile resolver.
+
+**Done-when:** default installs baseline + every declared role; `--profile
+<role>` narrows to that role; unknown role errors helpfully; the template
+ships copy-ready with `code` + a placeholder role green on a fresh scaffold;
+both READMEs + ADOPTING updated; `pytest -q` + `check_docs` green.
+
+**Model tier — strong model** (dual sh/PowerShell surgery + test updates; the
+Thread-15 class).
+
+---
+
 ## 2026-07-04 batch — decision briefs (all ruled by the owner 2026-07-04)
 
 **Rulings (owner, 2026-07-04).** The briefs below are kept as the *why*; each
@@ -5146,7 +5227,7 @@ continuity (same style as the session log above).
    "2026-07-04 batch — decision briefs" section records them; each thread's
    Status line carries its operative form). Sessions L/M/N/O/P/Q/R/S are
    sequenced by the **▶ NEXT marker** in the sessions block (set 2026-07-04
-   with the owner's rulings) — follow it per steps 1–5. **Threads 41–42 are
+   with the owner's rulings) — follow it per steps 1–5. **Threads 41–43 are
    specced and ruled (2026-07-05) but not yet scheduled into a session.** The
    **stubs** (16 non-code-artifact verification · 21 cross-repo
    tooling · 23 publication composition) still each need a decision to
