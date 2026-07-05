@@ -22,7 +22,7 @@ plan wins.
   Goal/Steps/Tests/Risks/Done-when **is** the spec) or, for new post-plan scope,
   the WI-1.x log. **Do only the scoped work** — no unrelated edits.
 - If a stub is being revived, find and link its earlier backlogged form (search
-  `scratch.md` + the stub threads) so the resolution is traceable.
+  `docs/archive/scratch.md` + the stub threads) so the resolution is traceable.
 
 ## 2. Respect the constraints
 

@@ -29,10 +29,15 @@ The kit's headline pieces:
   tier-aware harness), [`trace.py`](project-trajectory/scripts/trace.py)
   (traceability), [`check_docs.py`](project-trajectory/scripts/check_docs.py)
   (doc-navigability: broken-link + orphan-doc checks),
+  [`check_flows.py`](project-trajectory/scripts/check_flows.py)
+  (the authored runtime-flows section: diagrams present, cited ids real),
   [`check_perf.py`](project-trajectory/scripts/check_perf.py)
   (performance-budget + regression comparator),
   [`check_stubs.py`](project-trajectory/scripts/check_stubs.py)
   (optional, warn-first no-stub/substance detector for the G3 criterion),
+  [`check_privacy.py`](project-trajectory/scripts/check_privacy.py)
+  (privacy-leak lint for anonymous repos; inert under the default `inherit`
+  commit-identity policy),
   [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   (the AST code map — summaries, dependencies, `Implements:` back-links — plus
   a generated Mermaid dependency diagram, routed into `architecture.md` and/or
@@ -44,6 +49,21 @@ The kit's headline pieces:
   [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) (scaffold a new repo).
   Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`) ship for Linux/macOS
   and Windows.
+- **Unattended agent operation** — root `agent-resume.*` launchers boot an
+  agent session at the declared tier, or the walk-away coordinator loop
+  ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)): fresh headless
+  sessions resume from `docs/status.md` until `docs/run-state` reaches an end
+  state, with a per-phase model map (`docs/run-phase`), reactive rate-limit
+  backoff, a stall guard, and tracked per-session logs in `docs/iteration/`.
+  Consent is explicit and governed by one-word declared-policy files scaffolded
+  into `docs/`: `gate-policy` (who advances gates), `push-policy` (who may
+  push), and `commit-identity` (author-identity constraint for anonymous
+  repos, enforced by the git hooks + `check_privacy.py`).
+- **Agent-neutral skills and hooks** — opt-in skills
+  ([`skills/`](project-trajectory/skills/)) materialized per agent by
+  `bootstrap.py --agents`, and git hooks
+  ([`hooks/`](project-trajectory/hooks/)): a fast `pre-commit` process floor
+  and a `pre-push` privacy backstop for anonymous repos.
 - **Cross-project support** — an [`IF-###` interfaces registry](project-trajectory/INTERFACES.template.md)
   for projects that interlink, so shared contracts stay traceable and versioned.
 - **An agent guide template** ([`AGENTS.template.md`](project-trajectory/AGENTS.template.md))
@@ -71,9 +91,11 @@ python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --agents cla
 > --install`), which also provides `git`.
 
 This scaffolds `AGENTS.md` (the agent guide; `CLAUDE.md`/`GEMINI.md` stubs point
-at it), `docs/` (process, status, architecture, interfaces, the registries),
-`scripts/` (the harness), `.github/workflows/check.yml`, and empty
-`src/`/`tests/`. Then:
+at it), `docs/` (process, status + log, architecture, interfaces, the
+registries, and the declared-policy files `gate`, `gate-policy`, `push-policy`,
+`commit-identity`), `scripts/` (the harness), the root `run.*` /
+`agent-resume.*` launchers (shipped inert until you fill their command slots),
+`.github/workflows/check.yml`, and empty `src/`/`tests/`. Then:
 
 1. Fill the **PROJECT BRIEF** in the new repo's `AGENTS.md` and `docs/status.md`.
 2. Install the harness tooling for your stack (the Python reference uses
