@@ -8,13 +8,13 @@
 # (format), pytest (the self-test suite), and an offline Mermaid renderer for the
 # generated diagrams. Consent-first: the default only reports; --install acts.
 #
-# Usage:  sh dev-setup.sh [--check | --install]
+# Usage:  sh scripts/dev-setup.sh [--check | --install]
 #   --check    (default) report what's present; install nothing.
 #   --install  create ./.venv and install ruff + pytest into it (asks first).
 #
-# Windows contributors: use dev-setup.ps1.
+# Windows contributors: use scripts/dev-setup.ps1.
 set -eu
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."  # scripts/ -> the repo root (like the scaffolded layout)
 
 MODE="check"
 case "${1:-}" in
@@ -40,7 +40,7 @@ report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } &&
 
 if [ "$MODE" = "check" ]; then
   echo
-  echo "To install ruff + pytest into ./.venv: sh dev-setup.sh --install"
+  echo "To install ruff + pytest into ./.venv: sh scripts/dev-setup.sh --install"
   exit 0
 fi
 

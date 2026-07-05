@@ -104,9 +104,10 @@ def test_onboarder_sh_is_syntactically_valid(scaffold):
 
 
 def test_meta_repo_dogfoods_dev_setup():
-    # Part D: the kit provisions itself with a concrete dev-setup at the repo
-    # root, an instantiation of the shipped template (points back at it).
-    for name in ("dev-setup.sh", "dev-setup.ps1"):
+    # Part D: the kit provisions itself with a concrete dev-setup in scripts/
+    # (the same layout it scaffolds downstream), an instantiation of the
+    # shipped template (points back at it).
+    for name in DEVSETUP:
         path = REPO_ROOT / name
         assert path.exists(), "meta-repo missing dogfood " + name
         assert "dev-setup.template" in path.read_text(encoding="utf-8")
@@ -117,7 +118,7 @@ def test_meta_repo_dogfoods_dev_setup():
 
         pytest.skip("no POSIX shell on PATH")
     proc = subprocess.run(
-        [sh, "dev-setup.sh", "--check"],
+        [sh, "scripts/dev-setup.sh", "--check"],
         cwd=str(REPO_ROOT),
         capture_output=True,
         text=True,

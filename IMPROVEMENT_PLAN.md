@@ -4951,6 +4951,41 @@ continuity (same style as the session log above).
 > --root .`: OK, 0 broken. Byte deltas: AGENTS.template.md / PROCESS.md
 > untouched (the knob lives in PROCESS_OPTIONS + the hook).
 
+> **WI-1.31 ✅ landed 2026-07-05 · check_docs guards the README
+> `PROJECT-VISION:` tag (Thread 37's mechanizable half).** Owner-raised from
+> downstream field reports (2026-07-05): nothing mechanical checked the tag
+> *existed* — the needs-registry pointer link protects the `#vision` anchor,
+> but delete the tag and the pointer together and no gate fires.
+> `check_docs.py` gains a fourth finding class: the root README must state
+> the singleton `PROJECT-VISION:` tag **exactly once** — zero (the canonical
+> vision statement is missing) or several (a re-authored variant) is a hard
+> FAIL; code spans/fences are stripped first (quoting the convention isn't
+> stating a vision); no root README at all degrades to WARN so bare doc
+> trees stay usable. Runs wherever check_docs runs (check.py's
+> doc-navigability step, G1–G3), mechanizing the §4 G1 criterion's
+> tag-exists half; the needs-vs-vision consistency review stays human-judged
+> (the WI-1.16 honesty stance — no PROCESS.md edit needed, its G1 text
+> already reads correctly). Docs: both READMEs' check_docs descriptions.
+> Tests: +4 (`test_check_docs.py` — missing tag fails, duplicate fails,
+> code-span/fence mention doesn't count, no-README warns not fails).
+> `pytest -q`: 296 passed, 1 skipped; `check_docs.py --root .`: OK, 0
+> broken. Byte deltas: AGENTS.template.md / PROCESS.md untouched.
+
+> **WI-1.32 ✅ landed 2026-07-05 · Meta-repo dev-setup moved to `scripts/`
+> (match the scaffolded layout).** Owner ruling 2026-07-05: this repo's
+> layout should track its own kit definition — the dogfooded
+> `dev-setup.{sh,ps1}` sat at the repo root while bootstrap scaffolds
+> `scripts/dev-setup.*` downstream. Moved (`git mv`) into a new root
+> `scripts/`; both launchers now anchor to the repo root from one level down
+> (`cd "$(dirname "$0")/.."` / `Split-Path $PSScriptRoot -Parent`) so
+> `.venv` still lands at the root, and every usage/cross-reference line says
+> `scripts/…`. The Thread-15 Part-D "root dev-setup" wording earlier in this
+> file is historical log, left as written.
+> `test_meta_repo_dogfoods_dev_setup` now reuses the scaffold's `DEVSETUP`
+> relative paths, so the meta-repo and scaffold layouts can't silently drift
+> apart again. `pytest -q`: 296 passed, 1 skipped (same run as WI-1.31).
+> Byte deltas: no budgeted file touched.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

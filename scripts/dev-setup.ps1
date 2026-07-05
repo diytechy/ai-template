@@ -7,14 +7,15 @@
 # (format), pytest (the self-test suite), and an offline Mermaid renderer for the
 # generated diagrams. Consent-first: the default only reports; -Install acts.
 #
-# Usage:  powershell -ExecutionPolicy Bypass -File dev-setup.ps1 [-Check | -Install]
+# Usage:  powershell -ExecutionPolicy Bypass -File scripts\dev-setup.ps1 [-Check | -Install]
 #   -Check    (default) report what's present; install nothing.
 #   -Install  create .\.venv and install ruff + pytest into it (asks first).
 #
-# Linux/macOS contributors: use dev-setup.sh.
+# Linux/macOS contributors: use scripts/dev-setup.sh.
 param([switch]$Check, [switch]$Install)
 $ErrorActionPreference = "Stop"
-Push-Location $PSScriptRoot
+# scripts/ -> the repo root (like the scaffolded layout), so .venv lands there.
+Push-Location (Split-Path $PSScriptRoot -Parent)
 try {
     function Have($cmd) { [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
     function Report($label, $present, $hint) {
@@ -41,7 +42,7 @@ try {
 
     if (-not $Install) {
         Write-Host ""
-        Write-Host "To install ruff + pytest into .\.venv: dev-setup.ps1 -Install"
+        Write-Host "To install ruff + pytest into .\.venv: scripts\dev-setup.ps1 -Install"
         return
     }
 
