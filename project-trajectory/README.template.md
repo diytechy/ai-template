@@ -16,6 +16,20 @@ This is the **canonical home** of the project's purpose. Every other document
 (the needs registry, AGENTS.md's one-liner) *points at this tag* — grep
 `PROJECT-VISION` or link `README.md#vision`; never re-author a variant.
 
+## What it does
+
+<!-- Each bullet is a short capability that cites the stakeholder-need id(s) it
+     serves. The check_docs SN-inventory gate keeps these honest: every cited id
+     must exist in the needs registry, and every Must/Should need must be cited
+     here — so a requirements change pulls on this list. Detail (priority,
+     acceptance, edge cases) stays in the registry; keep bullets terse. Delete
+     this section (markers included) for a project with no stakeholder-needs
+     registry. -->
+
+<!-- sn-inventory -->
+- **_(capability)_** — _(one line: what a user can do)_ (SN-000)
+<!-- /sn-inventory -->
+
 ## Run it
 
 Double-click the launcher for your platform — no commands to remember:

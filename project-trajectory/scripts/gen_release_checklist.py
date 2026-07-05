@@ -258,6 +258,8 @@ def main():
         "- [ ] Version bumped; any changed `Stable` interface versions "
         "communicated to counterparts.",
         "- [ ] Docs (README / quick-reference) match the shipped behavior.",
+        "- [ ] README `sn-inventory` bullets still reflect the current "
+        "stakeholder needs (wording, not just ids — the gate checks ids).",
         "",
     ]
 
@@ -272,7 +274,12 @@ def main():
 
     print(
         "Release checklist -> {}  (SN={} human-SR={} manual-TC={} IF={} PB={})".format(
-            out, len(needs), len(human_srs), len(manual_tcs), len(provided_ifs), len(pbs)
+            out,
+            len(needs),
+            len(human_srs),
+            len(manual_tcs),
+            len(provided_ifs),
+            len(pbs),
         )
     )
 

@@ -16,8 +16,8 @@ WI-1.x log are this repo's append-only history layer — the `log.md` role).
 ## Current State
 
 - **Bar:** `python -m pytest -q` and
-  `python project-trajectory/scripts/check_docs.py --root .` green before
-  every commit — this repo's gate. The SN→SR→LLR→TC spine is deliberately not
+  `python project-trajectory/scripts/check_docs.py --root . --stale` green
+  before every commit — this repo's gate. The SN→SR→LLR→TC spine is deliberately not
   applied here: the meta-repo's product is the templates, and its
   requirements live as plan threads (see CLAUDE.md).
 - **Plan state:** Sessions L–S landed 2026-07-04 (Threads 29–40 complete);

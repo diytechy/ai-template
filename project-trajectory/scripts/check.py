@@ -261,7 +261,9 @@ def extra_steps(profile, subs):
             )
         cmd = _expand(profile.get(section, "command"), subs)
         gates = set()
-        for tok in profile.get(section, "gates", fallback="G3").replace(",", " ").split():
+        for tok in (
+            profile.get(section, "gates", fallback="G3").replace(",", " ").split()
+        ):
             if tok not in ("G1", "G2", "G3"):
                 sys.exit(
                     "check: docs/stack.ini [{}] gates has {!r}; expected a "
@@ -301,7 +303,9 @@ def steps(coverage, tier, gate, phase=None, profile=None):
     src = _pget(profile, "paths", "src", SRC)
     tests = _pget(profile, "paths", "tests", TESTS)
     subs = {"py": sys.executable, "src": src, "tests": tests, "coverage": str(coverage)}
-    fmt_cmd = _expand(_pget(profile, "product", "format", BUILTIN_PRODUCT["format"]), subs)
+    fmt_cmd = _expand(
+        _pget(profile, "product", "format", BUILTIN_PRODUCT["format"]), subs
+    )
     lint_cmd = _expand(_pget(profile, "product", "lint", BUILTIN_PRODUCT["lint"]), subs)
     test_cmd = _expand(_pget(profile, "product", "test", BUILTIN_PRODUCT["test"]), subs)
     if tier in COVERAGE_TIERS:
@@ -409,8 +413,10 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "process",
         ),
         # Doc navigability (process.md §3 "Reviewability"): broken intra-repo
-        # links fail; orphans warn. Runs from G1 on (docs exist early). The
-        # generated, gitignored trace report is dropped from the scanned set.
+        # links fail; orphans warn; the README vision tag + SN inventory are
+        # checked. Runs from G1 on (docs exist early). --stale adds the
+        # git-gated, warn-only "lying map" heuristic (degrades to a clean skip
+        # off-git). The generated, gitignored trace report is dropped.
         (
             "doc-navigability",
             (),
@@ -419,6 +425,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
                 str(_SCRIPTS / "check_docs.py"),
                 "--ignore",
                 "docs/test/report.md",
+                "--stale",
             ],
             {"G1", "G2", "G3"},
             "process",
@@ -581,7 +588,9 @@ def main():
             try:
                 coverage = int(profile.get("coverage", "threshold").strip())
             except ValueError:
-                sys.exit("check: docs/stack.ini [coverage] threshold must be an integer")
+                sys.exit(
+                    "check: docs/stack.ini [coverage] threshold must be an integer"
+                )
 
     # Run one named step and exit (the hook's format delegation). Search the
     # unfiltered plan so a gate-scoped step (format is G3-only) is still found,

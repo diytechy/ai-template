@@ -4,7 +4,33 @@ must state the `PROJECT-VISION:` tag exactly once (process.md §4 G1's
 mechanizable half), and the git-gated staleness pass degrades to a clean skip
 (process.md §3 "The doc set must stay navigable")."""
 
+import re
+
 from conftest import SCRIPTS, load_script, run_py
+
+
+def _add_must_need(scaffold, sid="SN-005"):
+    """Append a real Must-priority need to the scaffold's SN registry, contiguous
+    with the core-needs table so the priority-column parser sees it."""
+    reg = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
+    out = []
+    for line in reg.read_text(encoding="utf-8").splitlines():
+        out.append(line)
+        if line.startswith("| SN-000 |"):
+            out.append("| {} | Do the thing | matters | M | it works |".format(sid))
+    reg.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
+def _set_inventory(scaffold, body):
+    """Replace the README sn-inventory section body (markers kept)."""
+    r = scaffold / "README.md"
+    text = re.sub(
+        r"<!-- sn-inventory -->.*<!-- /sn-inventory -->",
+        "<!-- sn-inventory -->\n" + body + "\n<!-- /sn-inventory -->",
+        r.read_text(encoding="utf-8"),
+        flags=re.S,
+    )
+    r.write_text(text, encoding="utf-8")
 
 
 # --- CLI behaviour on a real scaffold ---------------------------------------
@@ -179,7 +205,95 @@ def test_staleness_skips_without_git(tmp_path):
     assert "staleness check skipped" in proc.stdout
 
 
+# --- the README SN inventory (opt-in coverage; process.md §4 G1) --------------
+
+
+def test_inventory_clean_scaffold_passes(scaffold):
+    # The template ships the sn-inventory section citing the -000 placeholder,
+    # and the scaffold registry has only SN-000, so both directions are satisfied.
+    assert "<!-- sn-inventory -->" in (scaffold / "README.md").read_text(
+        encoding="utf-8"
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_inventory_uncovered_must_fails(scaffold):
+    # A Must need the README cites nowhere fails: a requirements add pulls on
+    # the README (the whole point of the coverage direction).
+    _add_must_need(scaffold, "SN-005")
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 1
+    assert "SN-005 (Must/Should) is covered by no sn-inventory bullet" in proc.stdout
+
+
+def test_inventory_bad_citation_fails(scaffold):
+    # A bullet citing an id absent from the registry is a broken citation.
+    _set_inventory(scaffold, "- **X** — does x (SN-099)")
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 1
+    assert "cites SN-099, absent from the needs registry" in proc.stdout
+
+
+def test_inventory_absent_section_is_opt_in(scaffold):
+    # No sn-inventory section -> the check is silent even with an uncovered Must
+    # need (opt-in by presence). Removing the markers proves it.
+    _add_must_need(scaffold, "SN-005")
+    r = scaffold / "README.md"
+    r.write_text(
+        re.sub(
+            r"<!-- sn-inventory -->.*<!-- /sn-inventory -->",
+            "",
+            r.read_text(encoding="utf-8"),
+            flags=re.S,
+        ),
+        encoding="utf-8",
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_registry_needs_parses_priority(tmp_path):
+    # -000 excluded from both sets; Could and priority-less (edge-case) rows are
+    # in the existence set but not the Must/Should floor.
+    check = load_script("check_docs")
+    reg = tmp_path / "stakeholder-needs.md"
+    reg.write_text(
+        "# Needs\n\n"
+        "| SN-ID | Need | Priority | Acceptance |\n"
+        "|---|---|---|---|\n"
+        "| SN-000 | example | M | x |\n"
+        "| SN-001 | must | M | x |\n"
+        "| SN-002 | should | S | x |\n"
+        "| SN-003 | could | C | x |\n\n"
+        "## Edge cases\n\n"
+        "| SN-ID | Scenario | Expected |\n"
+        "|---|---|---|\n"
+        "| SN-004 | boom | handled |\n",
+        encoding="utf-8",
+    )
+    all_ids, must_should = check._registry_needs(reg)
+    assert all_ids == {"SN-001", "SN-002", "SN-003", "SN-004"}
+    assert must_should == {"SN-001", "SN-002"}
+
+
 # --- harness wiring ----------------------------------------------------------
+
+
+def test_harness_wires_stale_into_doc_navigability():
+    # check.py passes --stale to the doc-navigability step (warn-only) so the
+    # lying-map heuristic runs inside the harness.
+    src = (SCRIPTS / "check.py").read_text(encoding="utf-8")
+    i = src.index("check_docs.py")
+    assert "--stale" in src[i : i + 200]
 
 
 def test_harness_runs_doc_navigability_at_g1(scaffold):

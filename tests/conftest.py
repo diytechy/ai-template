@@ -121,6 +121,16 @@ def make_minimal_project(root):
         .replace("LLR-000", "LLR-001"),
         encoding="utf-8",
     )
+    # A G1-complete project's README sn-inventory cites its real need (the
+    # coverage gate: every Must/Should SN is cited), replacing the -000 stub.
+    readme = root / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8").replace(
+            "- **_(capability)_** — _(one line: what a user can do)_ (SN-000)",
+            "- **Addition** — add two numbers (SN-001)",
+        ),
+        encoding="utf-8",
+    )
     proc = run_py(["scripts/gen_arch_map.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     return root

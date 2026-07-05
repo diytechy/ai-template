@@ -39,7 +39,7 @@ Run the real checks and paste the real output — never a green you didn't produ
 
 ```
 python -m pytest -q
-python project-trajectory/scripts/check_docs.py --root .
+python project-trajectory/scripts/check_docs.py --root . --stale
 ```
 
 Both must pass before **each** commit. New behavior needs new tests

@@ -14,7 +14,7 @@ Stdlib only, like trace.py / check_flows.py:
     python scripts/check_docs.py [--root .] [--docs docs] [--entry PATH ...]
                                  [--ignore GLOB ...] [--strict-orphans] [--stale]
 
-It scans root-level `*.md` plus everything under `docs/`, then reports four
+It scans root-level `*.md` plus everything under `docs/`, then reports five
 finding classes:
 
   - **broken intra-repo links** (target file/dir or `#anchor` missing) — a hard
@@ -29,6 +29,11 @@ finding classes:
     canonical vision statement is missing) or several (a re-authored variant;
     other docs point at the tag, never restate it) is a hard finding; exit 1.
     No root README at all degrades to a warning (a louder, different problem).
+  - **the SN inventory** (opt-in; process.md §4 G1): when the root README carries
+    an `<!-- sn-inventory -->` section, every SN id it cites must exist in the
+    stakeholder-needs registry, and every Must/Should need in that registry must
+    be cited by some bullet — so a requirements change mechanically ages the
+    README. A hard finding either way; absent section = silent (opt-in).
   - **staleness** (`--stale`, git-gated, warn-only): a doc linking a *non-doc*
     file (source/asset) that was committed more recently than the doc itself —
     a "lying map" heuristic. Degrades to a clean skip when git is unavailable or
@@ -80,6 +85,17 @@ EXTERNAL_RE = re.compile(r"^(?:[A-Za-z][A-Za-z0-9+.\-]*:|//)")
 MD_SUFFIXES = (".md", ".markdown")
 # The singleton tag opening the root README's vision statement (process.md §4 G1).
 VISION_TOKEN = "PROJECT-VISION:"
+# The opt-in README capability inventory: bullets citing the SN id(s) they cover,
+# between these HTML-comment markers (process.md §4 G1).
+SN_INVENTORY_RE = re.compile(
+    r"<!--\s*sn-inventory\s*-->(.*?)<!--\s*/sn-inventory\s*-->", re.S | re.I
+)
+SN_ID_RE = re.compile(r"\bSN-\d+\b")
+
+
+def _is_sn_example(sid):
+    """The `-000` placeholder id the registry tooling ignores (matches trace.py)."""
+    return sid.endswith("-000")
 
 
 def slugify(text):
@@ -260,6 +276,14 @@ def find_orphans(docs, graph, roots, root):
     return sorted(orphans)
 
 
+def _root_readme(docs, root):
+    """The root-level README.md among the scanned docs, or None."""
+    return next(
+        (d for d in docs if d.parent == root and d.name.lower() == "readme.md"),
+        None,
+    )
+
+
 def check_vision(docs, root):
     """The root README must state the vision exactly once (process.md §4 G1).
 
@@ -270,10 +294,7 @@ def check_vision(docs, root):
     (failures, warnings) as printable message strings; no root README at all is
     a warning, not a failure, so bare doc trees stay usable.
     """
-    readme = next(
-        (d for d in docs if d.parent == root and d.name.lower() == "readme.md"),
-        None,
-    )
+    readme = _root_readme(docs, root)
     if readme is None:
         return [], ["no root README.md - {} tag check skipped".format(VISION_TOKEN)]
     lines = blank_fenced(readme.read_text(encoding="utf-8"))
@@ -290,6 +311,75 @@ def check_vision(docs, root):
             "it, never restate it)".format(src, n, VISION_TOKEN)
         ], []
     return [], []
+
+
+def _registry_needs(path):
+    """(all real SN ids, Must/Should SN ids) scraped from the SN markdown registry.
+
+    Existence uses the same whole-file `SN-\\d+` scrape as trace.py; the
+    Must/Should floor reads the Priority column of whichever table declares one
+    (the core-needs table), so edge-case/Could rows don't force README bullets.
+    A registry with no Priority column yields an empty floor (existence still
+    checked) rather than a spurious finding.
+    """
+    text = path.read_text(encoding="utf-8")
+    all_ids = {s for s in SN_ID_RE.findall(text) if not _is_sn_example(s)}
+    must_should = set()
+    prio_col = None
+    for line in blank_fenced(text):
+        if not line.lstrip().startswith("|"):
+            prio_col = None  # a non-table line ends the current table
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        lowered = [c.lower() for c in cells]
+        if "priority" in lowered:
+            prio_col = lowered.index("priority")
+            continue
+        if prio_col is None or prio_col >= len(cells):
+            continue
+        if cells[prio_col].upper() in ("M", "S", "MUST", "SHOULD"):
+            must_should.update(
+                s for s in SN_ID_RE.findall(line) if not _is_sn_example(s)
+            )
+    return all_ids, must_should
+
+
+def check_inventory(docs, root, docs_dir):
+    """The opt-in README SN inventory stays honest (process.md §4 G1).
+
+    When the root README carries an `<!-- sn-inventory -->` section, every SN id
+    it cites must exist in the stakeholder-needs registry, and every Must/Should
+    need in that registry must be cited by some bullet — so a requirements change
+    mechanically ages the README. Absent section -> silent (opt-in by presence).
+    Returns (failures, warnings) as printable message strings.
+    """
+    readme = _root_readme(docs, root)
+    if readme is None:
+        return [], []  # the vision check already reports a missing README
+    m = SN_INVENTORY_RE.search(readme.read_text(encoding="utf-8"))
+    if not m:
+        return [], []  # opt-in: no inventory section, nothing to check
+    src = rel(readme, root)
+    cited = {s for s in SN_ID_RE.findall(m.group(1)) if not _is_sn_example(s)}
+    registry = (root / docs_dir / "requirements" / "stakeholder-needs.md").resolve()
+    if not registry.exists():
+        return [
+            "{}: has an sn-inventory section but no {} to validate against".format(
+                src, rel(registry, root)
+            )
+        ], []
+    all_ids, must_should = _registry_needs(registry)
+    reg = rel(registry, root)
+    fails = []
+    for sid in sorted(cited - all_ids):
+        fails.append(
+            "{}: sn-inventory cites {}, absent from the needs registry".format(src, sid)
+        )
+    for sid in sorted(must_should - cited):
+        fails.append(
+            "{}: {} (Must/Should) is covered by no sn-inventory bullet".format(reg, sid)
+        )
+    return fails, []
 
 
 def git_commit_lookup(root):
@@ -393,6 +483,7 @@ def main():
     roots = entry_roots(root, docs, args.docs, args.entry)
     orphans = find_orphans(docs, graph, roots, root)
     vision_fails, vision_warns = check_vision(docs, root)
+    inv_fails, inv_warns = check_inventory(docs, root, args.docs)
 
     for src, lineno, dest, reason in broken:
         print(
@@ -406,9 +497,9 @@ def main():
                 "FAIL" if args.strict_orphans else "WARN", o
             )
         )
-    for msg in vision_fails:
+    for msg in vision_fails + inv_fails:
         print("check_docs: FAIL - " + msg)
-    for msg in vision_warns:
+    for msg in vision_warns + inv_warns:
         print("check_docs: WARN - " + msg)
 
     if args.stale:
@@ -425,7 +516,8 @@ def main():
                     "(changed after the doc)".format(src, lineno, dest)
                 )
 
-    failed = broken or vision_fails or (args.strict_orphans and orphans)
+    readme_fails = vision_fails + inv_fails
+    failed = broken or readme_fails or (args.strict_orphans and orphans)
     n_links = sum(
         1
         for info in parsed.values()
@@ -435,8 +527,8 @@ def main():
     if failed:
         print(
             "check_docs: FAIL - {} broken link(s), {} orphan(s), "
-            "{} vision finding(s) across {} doc(s).".format(
-                len(broken), len(orphans), len(vision_fails), len(docs)
+            "{} README finding(s) across {} doc(s).".format(
+                len(broken), len(orphans), len(readme_fails), len(docs)
             )
         )
         sys.exit(1)

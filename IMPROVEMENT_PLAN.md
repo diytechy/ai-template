@@ -3608,11 +3608,33 @@ Thread-33 class).
 
 ## Thread 42 — README SN inventory: authored bullets + coverage check (+ `--stale` wired)
 
-**Status: 📋 specced 2026-07-05 (owner rulings via AskUserQuestion this
-session); not scheduled — no ▶ NEXT change.** Ruling: the **authored-bullets
-variant** (human-voiced terse bullets citing SN ids, mechanically
-coverage-checked), not the generated-registry-dump variant. The `--stale`
-wiring below was approved outright.
+**Status: ✅ landed 2026-07-05.** `check_docs.py` gained a fifth finding class
+(`check_inventory`): when the root README carries an opt-in
+`<!-- sn-inventory -->` section, every cited SN id must exist in
+`stakeholder-needs.md` **and** every Must/Should need must be cited by some
+bullet — both hard fails; absent section = silent (opt-in by presence).
+`_registry_needs` reuses trace.py's whole-file `\bSN-\d+\b` scrape for
+existence and reads the Priority column of the core-needs table for the
+Must/Should floor (edge-case/Could rows excluded; `-000` ignored). Template:
+`README.template.md` ships the markers + a placeholder bullet citing `SN-000`
+(inert, copy-ready). `--stale` wired into `check.py`'s doc-navigability step
+(warn-only) and this repo's own gate (`status.md` bar + `session-protocol`
+skill §3). `gen_release_checklist.py` gained the wording-review hygiene item.
+Both READMEs' check_docs descriptions updated. **Deviation from spec:** the
+Must/Should floor is priority-column-parsed (the spec floated a "light ID-column
+scan"); the fuller parse is what the coverage direction actually needs and it
+mirrors `gen_release_checklist.read_stakeholder_needs`. The `make_minimal_project`
+fixture now cites its real `SN-001` (a fully-traced project covers its needs in
+the README too) — the drift the gate is meant to catch. Tests: +6
+(`test_check_docs.py`: clean scaffold, uncovered-Must fails, bad-citation fails,
+absent-section opt-in, `_registry_needs` priority parse, harness `--stale`
+wiring). `pytest -q`: 302 passed, 1 skipped; `check_docs --root . --stale`: 0
+broken. Byte deltas: AGENTS.template.md / PROCESS.md untouched.
+
+**Source:** owner field reports (2026-07-05): downstream READMEs go stale.
+Ruling: the **authored-bullets variant** (human-voiced terse bullets citing SN
+ids, mechanically coverage-checked), not the generated-registry-dump variant.
+The `--stale` wiring below was approved outright.
 
 **Source:** owner field reports (2026-07-05): downstream READMEs go stale
 because nothing *pulls* on them when requirements move. Extends Thread 37 /
