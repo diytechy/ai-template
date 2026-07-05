@@ -1,7 +1,8 @@
 """check_docs.py: the hand-written doc set stays navigable — broken intra-repo
-links fail, orphan docs warn (fail only with --strict-orphans), and the
-git-gated staleness pass degrades to a clean skip (process.md §3 "The doc set
-must stay navigable")."""
+links fail, orphan docs warn (fail only with --strict-orphans), the root README
+must state the `PROJECT-VISION:` tag exactly once (process.md §4 G1's
+mechanizable half), and the git-gated staleness pass degrades to a clean skip
+(process.md §3 "The doc set must stay navigable")."""
 
 from conftest import SCRIPTS, load_script, run_py
 
@@ -108,6 +109,61 @@ def test_ignore_drops_doc_from_scan(scaffold):
         ["scripts/check_docs.py", "--ignore", "docs/generated.md"], cwd=scaffold
     )
     assert passes.returncode == 0, passes.stdout + passes.stderr
+
+
+# --- the PROJECT-VISION tag (process.md §4 G1's mechanizable half) ------------
+
+
+def test_missing_vision_tag_fails(scaffold):
+    # The scaffolded README carries the singleton tag; a README rewritten
+    # without it loses the canonical vision statement and the run goes red.
+    (scaffold / "README.md").write_text("# proj\n\nNo vision here.\n", encoding="utf-8")
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 1
+    assert "missing the PROJECT-VISION: tag" in proc.stdout
+
+
+def test_duplicate_vision_tag_fails(scaffold):
+    # The tag is a singleton: a second statement is a re-authored variant —
+    # other docs must point at the tag, never restate it.
+    readme = scaffold / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8") + "\n**PROJECT-VISION:** again.\n",
+        encoding="utf-8",
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 1
+    assert "2 PROJECT-VISION: tags" in proc.stdout
+
+
+def test_vision_tag_in_code_is_not_a_statement(scaffold):
+    # Quoting the convention in a code span or fence isn't stating a vision:
+    # the scaffold README keeps its one real tag and the run stays green.
+    readme = scaffold / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8")
+        + "\nThe tag is `PROJECT-VISION:`.\n\n```\nPROJECT-VISION: quoted\n```\n",
+        encoding="utf-8",
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_no_root_readme_warns_not_fails(tmp_path):
+    # A bare doc tree with no README stays usable: the vision check degrades to
+    # a warning (missing README is a louder, different problem).
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "a.md").write_text("# A\n", encoding="utf-8")
+    proc = run_py([SCRIPTS / "check_docs.py", "--root", tmp_path], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "tag check skipped" in proc.stdout
 
 
 def test_staleness_skips_without_git(tmp_path):

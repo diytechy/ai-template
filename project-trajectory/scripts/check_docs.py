@@ -14,7 +14,7 @@ Stdlib only, like trace.py / check_flows.py:
     python scripts/check_docs.py [--root .] [--docs docs] [--entry PATH ...]
                                  [--ignore GLOB ...] [--strict-orphans] [--stale]
 
-It scans root-level `*.md` plus everything under `docs/`, then reports three
+It scans root-level `*.md` plus everything under `docs/`, then reports four
 finding classes:
 
   - **broken intra-repo links** (target file/dir or `#anchor` missing) — a hard
@@ -24,6 +24,11 @@ finding classes:
     1 only with `--strict-orphans`. A fresh scaffold legitimately has standalone
     docs (interfaces, stakeholder-needs) until the project links them, so the
     floor is warn, not fail.
+  - **the vision tag** (process.md §4 G1's mechanizable half): the root README
+    must carry the singleton `PROJECT-VISION:` tag exactly once — zero (the
+    canonical vision statement is missing) or several (a re-authored variant;
+    other docs point at the tag, never restate it) is a hard finding; exit 1.
+    No root README at all degrades to a warning (a louder, different problem).
   - **staleness** (`--stale`, git-gated, warn-only): a doc linking a *non-doc*
     file (source/asset) that was committed more recently than the doc itself —
     a "lying map" heuristic. Degrades to a clean skip when git is unavailable or
@@ -73,6 +78,8 @@ HTML_ANCHOR_RE = re.compile(r"""<a\s[^>]*\b(?:name|id)\s*=\s*["']([^"']+)["']"""
 # A URL scheme (http:, mailto:, …) or protocol-relative // marks an external link.
 EXTERNAL_RE = re.compile(r"^(?:[A-Za-z][A-Za-z0-9+.\-]*:|//)")
 MD_SUFFIXES = (".md", ".markdown")
+# The singleton tag opening the root README's vision statement (process.md §4 G1).
+VISION_TOKEN = "PROJECT-VISION:"
 
 
 def slugify(text):
@@ -253,6 +260,38 @@ def find_orphans(docs, graph, roots, root):
     return sorted(orphans)
 
 
+def check_vision(docs, root):
+    """The root README must state the vision exactly once (process.md §4 G1).
+
+    The `PROJECT-VISION:` tag is the purpose fact's canonical home — other docs
+    point at it and never restate it — so a missing tag and a re-authored
+    duplicate are both hard findings. Mentions inside code spans/fences are
+    stripped first (quoting the convention is not stating a vision). Returns
+    (failures, warnings) as printable message strings; no root README at all is
+    a warning, not a failure, so bare doc trees stay usable.
+    """
+    readme = next(
+        (d for d in docs if d.parent == root and d.name.lower() == "readme.md"),
+        None,
+    )
+    if readme is None:
+        return [], ["no root README.md - {} tag check skipped".format(VISION_TOKEN)]
+    lines = blank_fenced(readme.read_text(encoding="utf-8"))
+    n = sum(INLINE_CODE_RE.sub("", line).count(VISION_TOKEN) for line in lines)
+    src = rel(readme, root)
+    if n == 0:
+        return [
+            "{}: missing the {} tag (the canonical vision statement; "
+            "process.md §4 G1)".format(src, VISION_TOKEN)
+        ], []
+    if n > 1:
+        return [
+            "{}: {} {} tags (the tag is a singleton - other docs point at "
+            "it, never restate it)".format(src, n, VISION_TOKEN)
+        ], []
+    return [], []
+
+
 def git_commit_lookup(root):
     """Return a memoized path->last-commit-epoch lookup, or None when git is
     unavailable or `root` isn't inside a git work tree (so --stale degrades to a
@@ -353,6 +392,7 @@ def main():
     broken, graph = check_links(parsed, docs, root)
     roots = entry_roots(root, docs, args.docs, args.entry)
     orphans = find_orphans(docs, graph, roots, root)
+    vision_fails, vision_warns = check_vision(docs, root)
 
     for src, lineno, dest, reason in broken:
         print(
@@ -366,6 +406,10 @@ def main():
                 "FAIL" if args.strict_orphans else "WARN", o
             )
         )
+    for msg in vision_fails:
+        print("check_docs: FAIL - " + msg)
+    for msg in vision_warns:
+        print("check_docs: WARN - " + msg)
 
     if args.stale:
         lookup = git_commit_lookup(root)
@@ -381,7 +425,7 @@ def main():
                     "(changed after the doc)".format(src, lineno, dest)
                 )
 
-    failed = broken or (args.strict_orphans and orphans)
+    failed = broken or vision_fails or (args.strict_orphans and orphans)
     n_links = sum(
         1
         for info in parsed.values()
@@ -390,8 +434,9 @@ def main():
     )
     if failed:
         print(
-            "check_docs: FAIL - {} broken link(s), {} orphan(s) across {} doc(s).".format(
-                len(broken), len(orphans), len(docs)
+            "check_docs: FAIL - {} broken link(s), {} orphan(s), "
+            "{} vision finding(s) across {} doc(s).".format(
+                len(broken), len(orphans), len(vision_fails), len(docs)
             )
         )
         sys.exit(1)

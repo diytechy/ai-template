@@ -28,7 +28,8 @@ The kit's headline pieces:
   itself): [`check.py`](project-trajectory/scripts/check.py) (the gate- and
   tier-aware harness), [`trace.py`](project-trajectory/scripts/trace.py)
   (traceability), [`check_docs.py`](project-trajectory/scripts/check_docs.py)
-  (doc-navigability: broken-link + orphan-doc checks),
+  (doc-navigability: broken-link + orphan-doc checks, plus the README
+  `PROJECT-VISION:` tag guard),
   [`check_flows.py`](project-trajectory/scripts/check_flows.py)
   (the authored runtime-flows section: diagrams present, cited ids real),
   [`check_perf.py`](project-trajectory/scripts/check_perf.py)
