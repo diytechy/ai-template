@@ -20,12 +20,16 @@ WI-1.x log are this repo's append-only history layer — the `log.md` role).
   every commit — this repo's gate. The SN→SR→LLR→TC spine is deliberately not
   applied here: the meta-repo's product is the templates, and its
   requirements live as plan threads (see CLAUDE.md).
-- **Plan state:** Sessions L–S landed 2026-07-04 (Threads 29–40 complete).
+- **Plan state:** Sessions L–S landed 2026-07-04 (Threads 29–40 complete);
+  post-plan WI-1.19–1.28 landed since (latest: **WI-1.28**, 2026-07-05 —
+  `docs/stack.ini` `[step:<name>]` gates, completing check.py's take-wholesale
+  promise; see the plan's WI log).
 - **Open items:**
-  - **Needs <human>**: _(none — ~~OI-1, review + commit the 2026-07-04
-    batch~~ closed 2026-07-04: owner-approved and committed as
-    WI-1.19–1.23; see the plan's WI log)_
+  - **Needs <human>**: _(none)_
   - **In flight:** _(none)_
+  - **Deferred (backlog):** **WI-1.27** — coordinator working-tree stash/
+    rollback on a hard-killed session (owner-deferred 2026-07-05: rely on
+    fresh-session reconciliation; revisit only if pollution is observed).
 - **Next action:** awaiting new scope — it enters the plan as WI-1.x log
   entries (never worked unscoped — see the `session-protocol` skill).
 

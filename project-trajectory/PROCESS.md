@@ -619,7 +619,9 @@ and naming the split is what keeps the kit portable across stacks:
   — the declared home for the format/lint/test commands, `src`/`tests` paths,
   tier expressions, and coverage threshold (`check.py`'s "EDIT FOR YOUR STACK"
   block is the identical built-in fallback); a non-Python project swaps the
-  commands or drops a step it lacks.
+  commands or drops a step it lacks, and adds a domain-specific gate (dup-code,
+  license-lint) as a `[step:<name>]` section there, keeping `check.py`
+  take-wholesale on a re-sync.
 
 The empty-vs-named `requires` tuple already implies which layer a step is in;
 `check.py --list` makes it explicit, tagging each step `[process]`/`[product]` so

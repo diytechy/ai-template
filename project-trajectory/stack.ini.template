@@ -61,3 +61,24 @@ mode = symbols
 # files mode only — whitespace-separated comment tokens whose first line is a
 # file's summary, when yours isn't one of the defaults (# // --):
 # comment-prefixes = # // --
+
+# --- Project-specific gate steps ---------------------------------------------
+# Add gates your DOMAIN needs (duplicate-code, license-lint, capability or
+# dataflow integrity, …) as `[step:<name>]` sections — check.py runs them
+# alongside the built-in plan, so CI and the local harness pick them up with no
+# code change. This is why check.py is take-wholesale on a re-sync: your custom
+# gates live HERE, not hand-edited into the kit script. Each section:
+#   command  (required) the command to run; {py}/{src}/{tests}/{coverage} expand
+#            as above. A `{py} -m <mod>` command auto-fails on a missing module;
+#            any other executable's absence on PATH is the same designed failure.
+#   gates    (optional, default G3) space/comma list of G1|G2|G3 — which gates
+#            require it (check.py --gate GN runs only that gate's steps).
+#   layer    (optional, default product) process|product — the --list tag only.
+# The name may not shadow a built-in step (format, lint, tests+coverage,
+# traceability, …). Example (commented — delete the # to activate):
+# [step:dup-code]
+# command = {py} scripts/check_dupes.py {src}
+# gates = G2 G3
+#
+# [step:license-lint]
+# command = npx license-checker --production --failOn GPL

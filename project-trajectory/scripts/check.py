@@ -4,10 +4,11 @@
 Stack-agnostic kit, **Python reference implementation**. This is the runnable
 version of the "harness contract" in `process.md §7`: format · lint · tests ·
 coverage · traceability · doc-navigability · perf-budgets · architecture-map
-freshness. Wire it to your stack by
-editing the step list the `steps()` function returns below — and the
-`SRC`/`TESTS`/tool names in the "EDIT FOR YOUR STACK" block just under the
-imports (swap `ruff`/`pytest` for your toolchain); the contract is the *gates and
+freshness. Wire it to your stack in ONE declared file, `docs/stack.ini`: swap
+the format/lint/test commands + `src`/`tests` paths (the "EDIT FOR YOUR STACK"
+block just under the imports is the identical built-in fallback), and add any
+project-specific gate as a `[step:<name>]` section (see extra_steps) — so this
+file stays take-wholesale across a kit re-sync. The contract is the *gates and
 exit code*, not the specific tools. For a non-Python project, replace the
 format/lint/test commands with your own (or drop the ones you don't have); keep
 the traceability/flows/doc-navigability/perf-budgets/arch-map steps — they're
@@ -145,6 +146,24 @@ TIERS = {
 # cheap gate for the wrong reason.
 COVERAGE_TIERS = ("full", "release", "all")
 
+# The built-in plan's own step names. A project-declared `[step:<name>]` in
+# docs/stack.ini may not shadow one — that would silently append a second step
+# under a kit name, not replace the kit step. Keep in sync with steps() below.
+BUILTIN_STEP_NAMES = frozenset(
+    {
+        "format",
+        "lint",
+        "tests+coverage",
+        "registry-integrity",
+        "traceability",
+        "privacy",
+        "doc-navigability",
+        "perf-budgets",
+        "design-flows",
+        "arch-map",
+    }
+)
+
 
 def load_profile(path=PROFILE_FILE):
     """Parse the declared product toolchain (docs/stack.ini) if present, else
@@ -201,6 +220,64 @@ def _requires(argv):
     if any(tok.startswith("--cov") for tok in argv):
         reqs.append("pytest_cov")
     return tuple(dict.fromkeys(reqs))
+
+
+def extra_steps(profile, subs):
+    """Project-declared additional gate steps, from `docs/stack.ini`
+    `[step:<name>]` sections — the home for product-specific gates (dup-code,
+    license-lint, capability-integrity, …) so a project extends the plan WITHOUT
+    hand-editing this take-wholesale file. A re-sync then overwrites check.py
+    cleanly; the steps live in the declared profile, like the rest of the
+    toolchain. Each section:
+
+        [step:dup-code]
+        command = {py} scripts/check_dupes.py {src}   # required
+        gates   = G2 G3                                # optional, default G3
+        layer   = product                             # optional, default product
+
+    `{py}/{src}/{tests}/{coverage}` expand as in every other command, and the
+    required-import set is auto-derived from the argv (a `{py} -m <mod>` step
+    declares <mod>; any other executable's absence is caught by run_step's PATH
+    guard) — the author declares nothing extra. Malformed entries fail LOUDLY,
+    never silently dropped, like every other profile error."""
+    if profile is None:
+        return []
+    out = []
+    for section in profile.sections():
+        if not section.startswith("step:"):
+            continue
+        name = section[len("step:") :].strip()
+        if not name:
+            sys.exit("check: docs/stack.ini has a [step:] section with an empty name")
+        if name in BUILTIN_STEP_NAMES:
+            sys.exit(
+                "check: docs/stack.ini [step:{0}] shadows a built-in step name; "
+                "rename it (it would append a second '{0}', not replace the kit "
+                "step)".format(name)
+            )
+        if not profile.has_option(section, "command"):
+            sys.exit(
+                "check: docs/stack.ini [{}] needs a `command =` line".format(section)
+            )
+        cmd = _expand(profile.get(section, "command"), subs)
+        gates = set()
+        for tok in profile.get(section, "gates", fallback="G3").replace(",", " ").split():
+            if tok not in ("G1", "G2", "G3"):
+                sys.exit(
+                    "check: docs/stack.ini [{}] gates has {!r}; expected a "
+                    "space/comma list of G1|G2|G3".format(section, tok)
+                )
+            gates.add(tok)
+        if not gates:
+            gates = {"G3"}
+        layer = profile.get(section, "layer", fallback="product").strip() or "product"
+        if layer not in ("process", "product"):
+            sys.exit(
+                "check: docs/stack.ini [{}] layer is {!r}; expected "
+                "process|product".format(section, layer)
+            )
+        out.append((name, _requires(cmd), cmd, gates, layer))
+    return out
 
 
 # Each step: name, the third-party module(s) it needs (importable by THIS
@@ -286,14 +363,21 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ("format", _requires(fmt_cmd), fmt_cmd, {"G3"}, "product"),
         ("lint", _requires(lint_cmd), lint_cmd, {"G3"}, "product"),
         ("tests+coverage", _requires(test_cmd), test_cmd, {"G3"}, "product"),
+        # --- project-declared product steps: docs/stack.ini [step:<name>] ------
+        # Product-specific gates a project adds (dup-code, license-lint, …) live
+        # in the declared profile, NOT hand-edited into this take-wholesale file
+        # (see extra_steps above). They slot in here with the other product steps.
+        *extra_steps(profile, subs),
         # Optional PRODUCT-layer detector, not wired into the required floor:
         # `scripts/check_stubs.py` is the Python-reference tripwire for the G3
         # no-stub / substance criterion (process.md §4). It is warn-first and
         # language-specific (a stub's shape differs per stack), so — like the perf
-        # *meters* — a project opts in by adding its own step here, e.g.:
-        #   ("no-stubs", (), [sys.executable, "scripts/check_stubs.py"], {"G3"}, "product"),
-        # (add --strict to make found stubs fail the gate). A non-Python stack
-        # swaps or drops it. Left out of the default plan to keep the floor honest.
+        # *meters* — a project opts in. Prefer a docs/stack.ini `[step:no-stubs]`
+        # section (survives re-sync) over hand-editing a step in here, e.g.:
+        #   [step:no-stubs]
+        #   command = {py} scripts/check_stubs.py --strict
+        # (drop --strict to warn instead of fail). A non-Python stack swaps or
+        # drops it. Left out of the default plan to keep the floor honest.
         # --- process checks: kit-owned, stdlib-only, identical everywhere -----
         # Registry integrity floor at G1: the traceability step below already
         # fails on integrity findings via --strict, but it only runs from G2 —

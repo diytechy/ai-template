@@ -83,6 +83,14 @@ built-in Python-reference defaults — identical values.)
   `--project`, instead of inventing an out-of-band scheme). **`[coverage]`** —
   the threshold and the extra args appended at the covered tiers.
 - **`[paths]`** — point `src`/`tests` at your real roots.
+- **`[step:<name>]`** — add a gate your **domain** needs (duplicate-code,
+  license-lint, capability/dataflow integrity, …) as its own section:
+  `command =` (required), `gates =` (space/comma `G1|G2|G3`, default G3),
+  `layer =` (`process|product`, default product). `check.py` runs it alongside
+  the built-in plan, so CI and the local harness pick it up with no code change
+  — and, crucially, your custom gates live **here**, not hand-edited into
+  `check.py`, so the script stays take-wholesale on a re-sync (§6). The name may
+  not shadow a built-in step.
 
 (`scripts/check.py`'s "EDIT FOR YOUR STACK" constants are the same values, used
 only as the fallback when no `docs/stack.ini` exists — prefer the profile.)
@@ -204,9 +212,13 @@ range to see exactly which templates/scripts changed before you touch anything.
   `check_perf.py`, `check_privacy.py`, `gen_arch_map.py`, `gen_*`,
   `agent_loop.py`), the git hooks (`.githooks/pre-commit`,
   `.githooks/pre-push`), `pytest.ini` markers, **`scripts/check.py`**. These are
-  now safe to take wholesale: your toolchain lives in `docs/stack.ini` (below),
-  not in `check.py`, so a re-sync no longer needs you to re-apply an EDIT block.
-  Diff before committing anyway, so a kit change you disagree with doesn't land
+  now safe to take wholesale: your whole toolchain lives in `docs/stack.ini`
+  (below) — the format/lint/test commands **and any project-specific gates, as
+  `[step:<name>]` sections** — not in `check.py`, so a re-sync no longer needs
+  you to re-apply an EDIT block or re-add a custom step. (If you still have a
+  hand-added step inside a pre-`[step:]` `check.py`, move it into a
+  `[step:<name>]` section once, and it survives every re-sync after.) Diff
+  before committing anyway, so a kit change you disagree with doesn't land
   unread.
 - **Regenerate, never raw-copy (kit-owned but generated):** `docs/process.md` +
   `docs/process-options.md` are *generated* from the kit masters per the

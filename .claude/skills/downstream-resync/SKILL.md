@@ -30,9 +30,13 @@ checklist.
 
 - **Overwrite freely (kit-owned):** `scripts/trace.py`, `check_docs.py`,
   `check_flows.py`, `check_perf.py`, `gen_arch_map.py`, `gen_*`, the pre-commit
-  hook, `pytest.ini` markers. For `check.py`, take the new version and re-apply
-  only your **"EDIT FOR YOUR STACK"** block (`SRC`/`TESTS`, product-step
-  commands).
+  hook, `pytest.ini` markers, **`check.py`**. `check.py` is take-wholesale: your
+  whole toolchain — format/lint/test commands, paths, tiers, coverage, arch-map
+  mode, **and any project-specific gates (`[step:<name>]` sections)** — lives in
+  `docs/stack.ini`, so nothing to re-apply. (Only if this repo still carries a
+  hand-added step inside a pre-`[step:]` `check.py`: move it into a
+  `[step:<name>]` section in `docs/stack.ini` this once, then take the kit
+  `check.py` wholesale — it survives every re-sync after.)
 - **Regenerate, never raw-copy (kit-owned but generated):**
   `docs/process.md` + `docs/process-options.md` are *generated* from the kit
   masters per the recorded `docs/kit-profile` — the masters carry

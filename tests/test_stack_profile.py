@@ -159,6 +159,96 @@ def test_profile_missing_binary_hits_the_run_step_guard():
     assert "not found" in detail
 
 
+# --- [step:<name>] project-declared extra gate steps (WI-1.28) ----------------
+
+
+def test_extra_step_joins_the_plan_with_derived_requires():
+    # A domain gate declared in the profile appears in the plan as a product
+    # step; its required-import set is auto-derived from the argv (a `{py} -m
+    # <mod>` step declares <mod>; a bare executable declares nothing).
+    prof = _profile(
+        "[step:dup-code]\ncommand = {py} -m duplo {src}\ngates = G2 G3\n"
+        "[step:license-lint]\ncommand = npx license-checker\n"
+    )
+    plan = check.steps(80, "all", "all", None, prof)
+    dup = next(s for s in plan if s[0] == "dup-code")
+    assert dup[1] == ("duplo",)  # `{py} -m duplo` declares the module
+    assert dup[2][-1] == "src"  # {src} expanded
+    assert sorted(dup[3]) == ["G2", "G3"]
+    assert dup[4] == "product"
+    lic = next(s for s in plan if s[0] == "license-lint")
+    assert lic[1] == ()  # non-`-m` command declares no import (PATH guard covers it)
+    assert sorted(lic[3]) == ["G3"]  # default gate
+
+
+def test_extra_step_is_gate_scoped(scaffold):
+    # A [step:] declared for G2/G3 must not run at G1, and must show at its gates.
+    (scaffold / "docs" / "stack.ini").write_text(
+        "[step:cap-integrity]\ncommand = {py} scripts/check_caps.py\ngates = G2,G3\n",
+        encoding="utf-8",
+    )
+    at_g1 = run_py(["scripts/check.py", "--gate", "G1", "--list"], cwd=scaffold)
+    assert "cap-integrity" not in at_g1.stdout, at_g1.stdout
+    at_g2 = run_py(["scripts/check.py", "--gate", "G2", "--list"], cwd=scaffold)
+    assert at_g2.returncode == 0, at_g2.stdout + at_g2.stderr
+    line = next(ln for ln in at_g2.stdout.splitlines() if "cap-integrity" in ln)
+    assert "[product]" in line and "check_caps.py" in line
+
+
+def test_extra_step_runs_via_run_step(scaffold):
+    # --run-step finds a project step by name (so the hook / CLI can drive one),
+    # and it executes: a trivial command exits 0 -> PASS.
+    (scaffold / "docs" / "stack.ini").write_text(
+        '[step:hello]\ncommand = {py} -c "print(1)"\n', encoding="utf-8"
+    )
+    proc = run_py(["scripts/check.py", "--run-step", "hello"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PASS" in proc.stdout and "hello" in proc.stdout
+
+
+def test_extra_step_shadowing_a_builtin_fails_loudly(scaffold):
+    (scaffold / "docs" / "stack.ini").write_text(
+        "[step:lint]\ncommand = {py} x.py\n", encoding="utf-8"
+    )
+    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "shadows a built-in step" in (proc.stdout + proc.stderr)
+
+
+def test_extra_step_without_command_fails_loudly(scaffold):
+    (scaffold / "docs" / "stack.ini").write_text(
+        "[step:foo]\ngates = G3\n", encoding="utf-8"
+    )
+    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "needs a `command =` line" in (proc.stdout + proc.stderr)
+
+
+def test_extra_step_bad_gate_and_layer_fail_loudly(scaffold):
+    ini = scaffold / "docs" / "stack.ini"
+    ini.write_text("[step:foo]\ncommand = {py} x.py\ngates = G9\n", encoding="utf-8")
+    bad_gate = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert bad_gate.returncode != 0
+    assert "gates" in (bad_gate.stdout + bad_gate.stderr) and "G9" in (
+        bad_gate.stdout + bad_gate.stderr
+    )
+    ini.write_text(
+        "[step:foo]\ncommand = {py} x.py\nlayer = weird\n", encoding="utf-8"
+    )
+    bad_layer = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+    assert bad_layer.returncode != 0
+    assert "layer" in (bad_layer.stdout + bad_layer.stderr)
+
+
+def test_reference_profile_has_no_active_extra_step():
+    # The shipped stack.ini's [step:] example is COMMENTED, so the reference
+    # profile still equals the built-in plan (guards the byte-identity contract
+    # above against a stray uncommented example line).
+    reference = _profile((KIT / "stack.ini.template").read_text(encoding="utf-8"))
+    assert check.extra_steps(reference, {"py": "py", "src": "s", "tests": "t",
+                                         "coverage": "80"}) == []
+
+
 # --- --run-step (the hook's format delegation) --------------------------------
 
 

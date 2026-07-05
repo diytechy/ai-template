@@ -4815,6 +4815,59 @@ continuity (same style as the session log above).
 > (`test_hook_arch_map_step_honors_declared_mode` — delegation green in
 > files mode where the old hardcoded line reads the same repo as stale).
 
+> **WI-1.27 ⏸ deferred (backlog, raised 2026-07-05) · Coordinator working-tree
+> safety on a hard-killed session.** Owner-raised while auditing the unattended
+> layer: `agent_loop.py` treats committed repo text as the only memory and
+> spawns a fresh session per turn, so there is no chat history to lose — but it
+> has **no stash/rollback of the working tree between sessions**. The clean
+> rate-limit path is handled (a throttled session returns the reset message →
+> `WAITING`, never counted as a stall). The unhandled case is a usage limit (or
+> any signal) **hard-killing the CLI mid-edit**, after Write/Edit calls but
+> before the driver's "commit your progress before stopping" step runs: the
+> partial, uncommitted tree is inherited by the next fresh session. Partial
+> mitigations today: the pre-commit gates are a floor against a broken partial
+> being committed as a false green, and a well-behaved fresh session *should*
+> reconcile a dirty tree (behavioral, not enforced). **Owner decision
+> 2026-07-05: deferred — rely on fresh-session reconciliation for now and
+> revisit only if pollution is observed in practice.** Sketch if revived:
+> snapshot HEAD at session start; on a session that ends with a dirty tree and
+> no new commit (a hard-kill signature), either auto-stash the residue to a
+> named ref or reset to HEAD, recording the discard in the iteration log so no
+> silent work loss. Product-layer-adjacent but coordinator-owned; strong-model
+> decision when specced.
+
+> **WI-1.28 ✅ landed 2026-07-05 · Project-specific gate steps declared in
+> `docs/stack.ini` (`[step:<name>]`), completing check.py's take-wholesale
+> promise.** Third field signal in the WI-1.25/1.26 family (a downstream — Gilbert
+> — re-sync flagged this): the Thread-30 profile moved format/lint/test/tiers/
+> coverage/arch-map into `docs/stack.ini`, and ADOPTING §6 then declared
+> `check.py` take-wholesale — but a repo that added its **own** gates (Gilbert's
+> dup-code · license-lint · cap-integrity · dataflow-freshness) had nowhere to
+> put them **but** hand-edits inside the take-wholesale script, so the promise was
+> only half-true and the docs contradicted each other (ADOPTING said take-
+> wholesale; the downstream-resync skill still said "re-apply your EDIT block").
+> Fix — make the profile express the *whole* toolchain: `check.py` now reads
+> `[step:<name>]` sections (`command` required; `gates` default G3; `layer`
+> default product), auto-derives each step's required import from its argv (same
+> rule as the built-in product steps), slots them into the plan with the other
+> product steps, and validates loudly (empty name · built-in-name shadow · missing
+> command · bad gate token · bad layer all `sys.exit`). Gate-scoped via the
+> existing `main()` filter; `--run-step <name>` drives one (hook/CLI). Docs
+> reconciled: stack.ini.template gains a documented **commented** example (kept
+> commented so the reference profile still equals the built-in plan byte-for-
+> byte), ADOPTING §2 + §6 and the downstream-resync skill now say custom gates
+> live in the profile and `check.py` is take-wholesale, and PROCESS.md §7 names
+> the `[step:]` route. **Migration for an existing custom-`check.py` adopter:**
+> move each hand-added step into a `[step:]` section once, then take the kit
+> `check.py` wholesale forever after. **Deviations from the offer:** none.
+> **Byte deltas:** AGENTS.template.md 9976 → 9976 (untouched); PROCESS.md 56,230
+> → 56,375 (+145 B, flagged — one clause in the §7 product-checks bullet naming
+> the `[step:]` route; baseline re-stamped in both byte-budget-guard skill
+> copies). Tests: +7 in `test_stack_profile.py` (plan join + derived requires,
+> gate scoping, `--run-step`, and the four loud-failure guards, plus a guard that
+> the shipped profile has no active `[step:]`). `pytest -q`: 286 passed, 1
+> skipped (was 279 passed pre-WI); `check_docs.py --root .`: OK, 0 broken.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
