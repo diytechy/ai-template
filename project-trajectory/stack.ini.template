@@ -82,3 +82,13 @@ mode = symbols
 #
 # [step:license-lint]
 # command = npx license-checker --production --failOn GPL
+#
+# TS/JS adopters: if you run SOURCES directly (Node native type-stripping, no
+# `tsc` emit) with an esbuild/swc-transpiled test runner (vitest, jest+swc), add
+# a typecheck gate — the test transpiler accepts non-erasable syntax (enums,
+# parameter properties, namespaces) that the production loader REJECTS, so
+# format+lint+tests can all pass while the built module fails to LOAD at runtime.
+# (A project with a real `tsc` emit build already typechecks while building and
+# has no gap — skip this.)
+# [step:typecheck]
+# command = npx --no-install tsc --noEmit
