@@ -34,7 +34,12 @@ Per session the coordinator:
   - reads docs/run-state: DONE / BLOCKED / NEEDS-HUMAN exit the loop, each
     printing the pending asks from docs/status.md Current State;
   - counts a no-commit session toward the stall guard (git HEAD unmoved) —
-    except limit-hit sessions (below), which never count as a stall.
+    except limit-hit sessions (below), which never count as a stall. A session
+    that errored *before it could work* (the CLI reported is_error, or it could
+    not be launched) — and is not a rate limit — is logged as ERROR rather than
+    NO-COMMIT; it still counts toward the guard, but when a whole stall run was
+    ERRORs the abort banner names an unavailable agent, not a work stall (an
+    unsupported model is repointed by hand: --model / the model map).
 
 Rate limits are handled reactively (plan-usage state is not scriptable): a
 session whose output matches the "…limit … resets <time>" message backs off —
@@ -51,7 +56,8 @@ human sitting down. The template comes from --interactive-cmd / the
 AGENT_CMD_INTERACTIVE env var, falling back to AGENT_CMD.
 
 Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
-slot) · 3 BLOCKED · 4 stall abort · 5 WAITING on a rate limit · 6 iteration
+slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
+run — the banner distinguishes them) · 5 WAITING on a rate limit · 6 iteration
 budget exhausted while still RUNNING · 7 NEEDS-HUMAN (act, then re-run).
 
 Preflight refuses to start iteration 1 when: the AGENT_CMD executable is
@@ -763,6 +769,7 @@ def main():
     raw_dir = root / "out" / "run-logs"
     iter_dir = docs / "iteration"
     stall = 0
+    errors = 0  # consecutive ERROR sessions (agent unavailable, not a work stall)
     state = read_declared(docs / "run-state", "RUNNING").upper()
     for i in range(1, args.max_iterations + 1):
         session = "{:03d}".format(next_session_number(iter_dir))
@@ -813,6 +820,23 @@ def main():
             commits = "{}..{}".format(before or "(root)", after or "?")
         state = read_declared(docs / "run-state", "RUNNING").upper()
 
+        # A session that failed *before it could work* — and is not a rate limit
+        # (that wins as WAITING) or a timeout (its own outcome): the CLI reported
+        # an error result (is_error in JSON), or a non-JSON session exited nonzero
+        # — which also covers run_session's OSError sentinel (-1, no JSON) when it
+        # could not launch at all. Distinct from NO-COMMIT (a healthy session that
+        # idled), so a fast-dying walk-away run — model retired, auth expired, CLI
+        # broke — reads as an agent error, not a work stall. Mirrors the error
+        # signal limit_reset_hint already trusts (is_error / nonzero exit), never
+        # a substring scan of the transcript. Reporting only: it still counts
+        # toward the stall guard (no commit), but the abort banner names it
+        # (Thread 45).
+        errored = (
+            not reset_hint
+            and not timed_out
+            and (bool(data.get("is_error")) or (not data and code != 0))
+        )
+
         if reset_hint:
             outcome = "WAITING"
         elif timed_out:
@@ -821,6 +845,8 @@ def main():
             outcome = state
         elif before != after:
             outcome = "COMMITTED"
+        elif errored:
+            outcome = "ERROR"
         else:
             outcome = "NO-COMMIT"
 
@@ -899,7 +925,23 @@ def main():
             stall += 1
         else:
             stall = 0
+        errors = errors + 1 if outcome == "ERROR" else 0
         if stall >= args.stall_limit:
+            if errors >= args.stall_limit:
+                # Every session that tripped the guard errored before working —
+                # an unavailable agent, not a stuck task. Name it so, and point
+                # at the fix (an unsupported model is repointed by hand).
+                stop_banner(
+                    root,
+                    "STALL — agent error",
+                    "{} consecutive session(s) errored before doing work "
+                    "(agent unavailable / CLI or model error) — aborting. Check "
+                    "the AGENT_CMD model + auth and the latest docs/iteration/ "
+                    "log (outcome=ERROR, its exit-code); an unsupported model is "
+                    "fixed by pointing --model / the model map at a live "
+                    "tier.".format(errors),
+                )
+                return EXIT_STALL
             stop_banner(
                 root,
                 "STALL",

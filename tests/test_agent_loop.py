@@ -62,6 +62,16 @@ elif action == "limit-odd":
     print(json.dumps({"is_error": True,
                       "result": "You've hit your session limit \\u00b7 resets in a little while"}))
     sys.exit(1)
+elif action == "error":
+    # An error result that is NOT a rate limit (model retired / auth expired /
+    # CLI broke): is_error, no reset wording -> the engine reads ERROR.
+    print(json.dumps({"is_error": True,
+                      "result": "API error: the model 'retired-x' is not supported"}))
+    sys.exit(1)
+elif action == "error-plain":
+    # A plain-text (no JSON) session that fails: nonzero exit, no is_error flag.
+    print("fatal: could not reach the model endpoint")
+    sys.exit(2)
 elif action == "sleep":
     time.sleep(8)
 else:
@@ -378,6 +388,61 @@ def test_limit_hit_backs_off_without_counting_stall(loop_repo):
     assert "3:45pm" in proc.stdout, "banner must name the resume time"
     index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
     assert "WAITING" in index
+
+
+def test_error_session_reads_error_not_no_commit(loop_repo):
+    # Thread 45: a session the CLI reports as errored (is_error, not a rate
+    # limit) is logged ERROR, distinct from a healthy no-commit session — so the
+    # index tells "agent failed" apart from "ran and idled". The run continues
+    # (one error is under the stall limit) and finishes on the next session.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("error done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
+    assert "ERROR" in index
+    assert "NO-COMMIT" not in index  # the errored session is not mislabeled
+    log = sorted((repo / "docs" / "iteration").glob("*.log"))[0].read_text(
+        encoding="utf-8"
+    )
+    assert "# outcome: ERROR" in log
+
+
+def test_plain_text_nonzero_exit_reads_error(loop_repo):
+    # No JSON, just a nonzero exit (a plain-text agent template that failed) is
+    # also ERROR — the same signal limit_reset_hint trusts, and it covers the
+    # unlaunchable-session sentinel too.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("error-plain done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
+    assert "ERROR" in index
+
+
+def test_all_error_stall_names_an_agent_error(loop_repo):
+    # When every session that trips the stall guard errored before working, the
+    # abort banner names an unavailable agent (not a work stall) and points at
+    # the model/auth fix — the misreport Thread 45 removes.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("error error", encoding="utf-8")
+    proc = _loop(repo, template, "--stall-limit", "2", "--max-iterations", "6")
+    assert proc.returncode == 4, proc.stdout + proc.stderr
+    assert "errored before doing work" in proc.stdout
+    assert "agent error" in proc.stdout.lower()
+    assert _invocations(ctl) == 2, "must stop at the stall limit, not the budget"
+
+
+def test_mixed_no_commit_and_error_stall_stays_generic(loop_repo):
+    # A stall of mixed causes (a healthy idle + an error) is not purely an agent
+    # failure, so it keeps the generic work-stall banner — the agent-error
+    # wording is reserved for an all-ERROR run.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("noop error", encoding="utf-8")
+    proc = _loop(repo, template, "--stall-limit", "2", "--max-iterations", "6")
+    assert proc.returncode == 4, proc.stdout + proc.stderr
+    assert "STALL" in proc.stdout
+    assert "errored before doing work" not in proc.stdout
 
 
 def test_unparseable_reset_falls_back_and_retries(loop_repo):

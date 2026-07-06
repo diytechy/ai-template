@@ -457,6 +457,16 @@ locale-dependent); an unrecognized wording sleeps a bounded fallback
 three throttled sessions are not a stall, and the NHW original misread
 exactly that.
 
+**A failed session is not a work stall.** A session that errored *before it
+could work* — the CLI reported an error result, or it could not be launched (a
+retired model, expired auth, a broken CLI) — is logged with the `ERROR` outcome,
+distinct from `NO-COMMIT` (a healthy session that simply idled). It still counts
+toward the stall guard, but when a whole stall run was `ERROR`s the abort banner
+names an **unavailable agent**, not a stuck task, and points at the fix — an
+unsupported model is repointed by hand (`--model` / the model map). Auto-fallback
+to a substitute model is deliberately **not** done: the human consented to a
+specific tier, and a silent swap could run an unlisted (unguarded) model.
+
 **Consent is unmissable.** Unattended mode passes the agent CLI's
 permission-bypass flag. The human consents by (1) filling the launcher's
 `AGENT_CMD` slot, (2) declaring the gate policy, and (3) running it — and the

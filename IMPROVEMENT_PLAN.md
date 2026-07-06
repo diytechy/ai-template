@@ -3973,8 +3973,34 @@ lint with a downstream-migration edge; the test matrix is the backstop).
 
 ## Thread 45 — Coordinator: a differentiated fail region (session errored ≠ ran-no-commit)
 
-**Status: 🟡 specced 2026-07-05 (owner-approved 2026-07-05), not yet
-scheduled — confirm before starting.** Owner ask: distinguish a session that
+**Status: ✅ landed 2026-07-05.** `agent_loop.py` gained an **`ERROR`** outcome
+between `COMMITTED` and `NO-COMMIT` in the per-session ladder, chosen when a
+session failed *before it could work* and it is not a rate limit (`WAITING`
+wins) or a timeout (`TIMEOUT` wins): the JSON result carries `is_error`, or a
+non-JSON session exited nonzero. A new consecutive-`ERROR` counter (`errors`)
+sits beside the single stall counter — kept single, so a persistently broken
+agent still stops the loop and protects the budget — and picks the abort banner:
+when a whole stall run was `ERROR`s the banner names an **unavailable agent**
+(check the AGENT_CMD model + auth; an unsupported model is repointed by hand via
+`--model` / the model map), otherwise the generic work-stall banner. Reporting
+only: the `ERROR` label flows into the session log + `iteration_index.md` Outcome
+column; exit code is unchanged (both aborts return `EXIT_STALL`). Auto model
+fallback stays **out** (owner decision) — a silent tier swap could run an
+unlisted, unguarded model. Docs: process-options "A failed session is not a work
+stall" note under Unattended operation; the engine docstring (per-session bullet
++ exit-code line); the kit README coordinator row. **Deviation from spec:** the
+detection was generalized past the spec's two named signals (`is_error` +
+OSError sentinel) to *any* non-JSON nonzero exit — it mirrors the error signal
+`limit_reset_hint` already trusts and subsumes the OSError-launch sentinel
+cleanly (no fragile transcript substring match), covering plain-text agent
+templates too. The dedicated exit code the spec floated as an open question was
+**considered and declined** — no clean case; `EXIT_STALL` with a distinguishing
+banner is the honest minimum. Tests: +4 (`test_agent_loop`: is_error→ERROR,
+plain-text nonzero→ERROR, all-ERROR stall names an agent error, mixed
+stall stays generic). `pytest -q`: 333 passed, 1 skipped; `check_docs --root .
+--stale`: OK, 0 broken. Byte deltas: AGENTS.template.md / PROCESS.md untouched.
+
+**Source of scope (retained):** owner ask — distinguish a session that
 **errored before doing any work** from one that **ran and produced no commit**,
 so a walk-away run that died fast doesn't misreport as a work stall.
 Auto-fallback to a substitute model is **out of scope by owner decision** — an
@@ -5519,11 +5545,10 @@ continuity (same style as the session log above).
    sequenced by the **▶ NEXT marker** in the sessions block (set 2026-07-04
    with the owner's rulings) — follow it per steps 1–5. **Threads 41–43 all
    landed 2026-07-05 (WI-1.33/1.34 + the three thread Status blocks).**
-   **Thread 44 ✅ landed 2026-07-05** (always-on secrets floor, split from the
-   identity gate, with a `docs/secrets-scan: off` opt-out). **Thread 45**
-   (coordinator `ERROR` outcome — session-errored ≠ ran-no-commit) remains
-   specced, owner-approved, **not yet scheduled — confirm before starting** (no
-   ▶ NEXT marker). The **stubs** (16 non-code-artifact
+   **Threads 44–45 ✅ landed 2026-07-05** (44: always-on secrets floor, split
+   from the identity gate, with a `docs/secrets-scan: off` opt-out; 45:
+   coordinator `ERROR` outcome — session-errored ≠ ran-no-commit, agent-error
+   abort banner). The **stubs** (16 non-code-artifact
    verification · 21 cross-repo tooling · 23 publication composition) still
    each need a decision to revive.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
