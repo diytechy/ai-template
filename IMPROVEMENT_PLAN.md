@@ -4111,6 +4111,126 @@ fix; the privacy-check review path and the secrets floor are unchanged in shape.
 
 ---
 
+## Thread 47 — Self-adoption: the kit runs its own `SN→SR→LLR→TC` spine (dogfood)
+
+**Status: 📋 PLANNED — spec for a fresh session (unscheduled).** This entry *is*
+the kick-off brief; a new session should read it top-to-bottom, then execute.
+
+**Goal / why.** The kit *ships* the traceability spine + gates but does not yet
+**apply them to itself**. Its own requirements live informally as these
+IMPROVEMENT_PLAN threads, and its ~338 tests aren't traced to any need. Close the
+loop: make the kit a project **built with the kit** — a derived vision,
+stakeholder needs, system requirements, LLRs where they earn their keep, and test
+cases that **point at the existing tests** — with `trace.py`/`check.py` green on
+the meta-repo and CI enforcing it. The kit passing its **own** gates is the
+strongest possible evidence the method works (and it will surface every rough
+edge an adopter hits, from the inside).
+
+**Start-state (already dogfooded — build on it, don't redo).** WI-1.22
+("self-apply the unattended layer to this repo") already gave the meta-repo root
+`docs/gate-policy`, `docs/push-policy`, and now `docs/privacy-check` (Thread 46
+migrated it from `docs/commit-identity`). **Missing** for full self-adoption:
+- `docs/requirements/{stakeholder-needs.md, system-requirements.csv,
+  low-level-requirements.csv, test-cases.csv}` — the kit's **own** registries
+  (distinct instances, *not* the `project-trajectory/registries/*.template.*`
+  files it ships to adopters);
+- `docs/architecture.md` (one-page + generated map over
+  `project-trajectory/scripts/` + authored runtime-flows for bootstrap and the
+  coordinator);
+- `docs/stack.ini` (declare `src = project-trajectory/scripts`, `tests = tests`,
+  the ruff/pytest commands, coverage threshold), `docs/gate` (start G1),
+  `docs/status.md` + `docs/log.md` for the meta-repo;
+- the README `PROJECT-VISION:` tag already exists — reuse it as the kit's own
+  vision (check_docs already enforces it).
+
+**Approach (phased — a realistic first session lands 1–4, G1→G2; 5–6 may be a
+second session).**
+
+1. **Layout decision (do first, record it).** The meta-repo's "product" is
+   `project-trajectory/` (scripts, hooks, templates) + `tests/`. Put the kit's
+   own trace files at **root** `docs/requirements/` and keep them **separate from
+   the shipped templates** in `project-trajectory/registries/`. Add a short note
+   to `CLAUDE.md` distinguishing "the kit's own spine (traces the kit)" from "the
+   templates the kit ships". Point `docs/stack.ini` at
+   `src=project-trajectory/scripts`, `tests=tests`.
+2. **Vision + Stakeholder Needs (`SN`).** Derive from the README `PROJECT-VISION:`
+   tag + `PROCESS.md`. Author `docs/requirements/stakeholder-needs.md` with an SN
+   per stakeholder and their edge cases: **adopting developer** (mechanically-
+   verified traceability; stack-agnostic portability), **AI agent / coordinator**
+   (agent-neutral enforcement; safe, resumable unattended runs), **kit maintainer**
+   (the kit's own changes stay traced/tested), **project evaluator** (gates are
+   honest, never a false green). Include the privacy/secrets need explicitly.
+3. **System Requirements (`SR`).** Decompose SN → measurable SRs, one cluster per
+   shipped capability, each mapping to a script/hook so acceptance is already
+   testable: traceability (`trace.py`), gate harness (`check.py`),
+   doc-navigability (`check_docs.py`), arch-map freshness (`gen_arch_map.py`),
+   secrets floor + privacy gate (`check_privacy.py` + the three hooks), scaffold
+   (`bootstrap.py`), unattended coordinator (`agent_loop.py`), flows/perf/stubs,
+   the declared-policy readers. Acceptance criteria = the behaviors the existing
+   tests already assert.
+4. **`TC` ← existing tests (the core mapping).** Author
+   `docs/requirements/test-cases.csv` with TC rows: `Verifies = SR-###`,
+   `Automated = yes`, `Tier` per the test's speed, and the **pytest node id**
+   (`tests/test_x.py::test_y`) as the automated evidence (Parameters/Expected or
+   an agreed column). **Keep it tractable — proportionality:** map at the
+   *behavior* granularity (roughly one TC per test function, grouped by test file
+   → SR), NOT a new test per row (the tests exist). Seed the rows mechanically:
+   `pytest --collect-only -q` lists every node id; hand-assign `Verifies`. ~338
+   nodes collapse into SR-scoped TC clusters — do not over-explode micro-asserts.
+5. **`LLR` (only where a mechanized check earns it).** Per this file's
+   **Proportionality doctrine (d)**, most SRs trace `SR→TC` directly. Add LLRs
+   **sparingly** for load-bearing internal contracts worth pinning: the shared
+   `_first_declared_line` declared-policy parse (hooks + `agent_loop` +
+   `check_privacy` must agree — there's already a test), the arch-map
+   marker-block contract, the `EXEMPT_EMAILS` / two-axis gating semantics. Do
+   **not** decompose every script into micro-LLRs the tests already cover.
+6. **Wire + walk the gates.** Add `docs/stack.ini`, `docs/gate` (G1, then bump),
+   `docs/architecture.md` (+ `gen_arch_map.py` over `project-trajectory/scripts`,
+   + a "Runtime flows" section for bootstrap and the coordinator loop). Run
+   `trace.py --strict` (zero orphans), then `check.py --gate G2`, then `--gate G3`
+   on the meta-repo; fix orphans and coverage. Extend the meta-repo's CI (today:
+   pytest + check_docs) to run `check.py` on itself. Record gate sign-offs in the
+   meta-repo's `docs/log.md`.
+7. **Reconcile with the thread history.** These threads are the *design history*
+   — don't delete them. Add a back-pointer from each major SR cluster to the
+   thread(s) that motivated it (e.g. SR-privacy ← Threads 38/39/44/46), so the
+   registries become the normative spec while the threads remain the *why*.
+
+**Scope & proportionality (read `PROCESS_OPTIONS.md` "Proportionality doctrine"
+first).** This is a **high-altitude** dogfood: the win is `SN→SR` ensuring
+nothing key is missed + `TC←existing-tests` proving each SR is verified. Resist
+turning tooling behavior into micro-LLRs. Target: an SR for every shipped
+script/hook/policy-file, TCs citing the existing tests, **zero trace orphans**,
+`check.py` green at the chosen gate.
+
+**Complications to expect.**
+- **Meta-repo layout vs. shipped templates** — keep `docs/requirements/`
+  (the kit's own) distinct from `project-trajectory/registries/` (templates);
+  `trace.py`/`check_docs.py` run over the former. `bootstrap.py`'s own tests
+  scaffold into temp dirs, so they won't collide.
+- **The "product" spans Python + `sh` hooks + `md` templates.** `gen_arch_map`
+  covers the Python; `architecture.md`'s prose + runtime-flows cover the hooks
+  and the scaffold contract.
+- **Coverage bar.** Measure current `pytest-cov` over
+  `project-trajectory/scripts`; if it's below the kit default (80%), either add
+  tests or set the meta-repo's threshold **honestly** in its `stack.ini`
+  (recorded, never hand-waved — the kit's own §4 rule).
+- **Chicken-and-egg.** The meta-repo **hand-authors** its registries from the
+  templates; it can't bootstrap itself onto itself. Expected, not a blocker.
+- **Some scripts are the checkers** (`trace.py`, `check.py`) — their SRs are
+  verified by the tests that already run them against fixtures.
+
+**Kick-off note (new session).** Read this thread + README `PROJECT-VISION:` +
+`PROCESS.md` §1–4; run `pytest --collect-only -q` to inventory the tests you'll
+map; author `docs/requirements/stakeholder-needs.md`; grow the spine as a real
+**G1→G2→G3** walk on the meta-repo under its declared `docs/gate-policy`.
+
+**Model tier — strong model for the vision/SN/SR derivation and the LLR
+right-sizing** (judgment-heavy); the `TC` back-mapping is mechanical and
+Sonnet-able once the SR skeleton exists.
+
+---
+
 ## 2026-07-04 batch — decision briefs (all ruled by the owner 2026-07-04)
 
 **Rulings (owner, 2026-07-04).** The briefs below are kept as the *why*; each
