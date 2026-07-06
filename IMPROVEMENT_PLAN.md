@@ -4072,6 +4072,45 @@ exit-code question).
 
 ---
 
+## Thread 46 — Identity→privacy reframe: `docs/privacy-check` toggle + commit-msg gate
+
+**Status: ✅ landed 2026-07-06.** Split *identity* from *privacy* on the second
+axis (Thread 44 kept the secrets floor untouched). The old
+`docs/commit-identity` email **glob** did two jobs at once — the author *pin*
+and the content *allowlist* — so loosening the allowlist to admit a tool's
+`Co-Authored-By <noreply@anthropic.com>` co-author trailer collaterally
+loosened the identity pin. Field trigger: a downstream (Finance-Auditor) repo's
+push blocked on that trailer, and separately, commit **messages** were never
+scanned at commit time (pre-commit runs before the message exists), so trailer
+leaks piled up across 16 commits before pre-push surfaced them.
+
+The reframe:
+- **`docs/commit-identity` (glob) → `docs/privacy-check` (`true`/`false`
+  toggle).** Which account authors is now the user's own git config, not pinned
+  by a repo file. The gate defends *privacy* (no real, contactable person),
+  keeping the Thread-44 secrets floor as the separate always-on axis.
+- **Exempt-email allowlist moved into `check_privacy.py`** (`EXEMPT_EMAILS`,
+  default `*noreply*`; a tight enumerated list ships commented-out). A no-reply
+  address carries no contactable person, so it is exempt — a PII-risk reduction,
+  not an anonymity guarantee. This admits the Claude trailer with no rewrite.
+- **New `--author` mode** (author email must be exempt; wired into pre-commit,
+  replacing the old pure-shell pin — recorded trade: no Python-less floor) and
+  **`--message` mode** feeding a **new `.githooks/commit-msg` hook** that blocks
+  a leaking title/body at the first commit.
+- **Rewired:** pre-commit / commit-msg / pre-push, `bootstrap.py`
+  (`--commit-identity` → `--privacy-check`; `commit-identity.template` →
+  `privacy-check.template`; scaffolds commit-msg), `agent_loop.py` preflight,
+  `setup.{sh,ps1}` (advise, no longer set identity), `check.py`. Docs:
+  process-options "Commit identity & anonymity", both READMEs, CLAUDE.md, and an
+  ADOPTING.md migration recipe (commit-identity → privacy-check). Tests: the
+  5 privacy/hook/bootstrap/agent-loop files reframed + new commit-msg / --author
+  / --message / EXEMPT coverage; `pytest -q`: 338 passed, 1 skipped.
+
+**Model tier — landed.** Authored as an upstream port of the downstream field
+fix; the anonymous-repo review path and the secrets floor are unchanged in shape.
+
+---
+
 ## 2026-07-04 batch — decision briefs (all ruled by the owner 2026-07-04)
 
 **Rulings (owner, 2026-07-04).** The briefs below are kept as the *why*; each

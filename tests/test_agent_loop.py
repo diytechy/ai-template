@@ -486,10 +486,10 @@ def test_default_prompt_carries_the_plan_build_cadence():
 
 def test_declared_policy_parsers_agree():
     # One parse rule for the one-word policy files (docs/gate, gate-policy,
-    # push-policy, commit-identity, run-state): the FIRST non-empty,
-    # non-comment line — the rule the git hooks (head -n 1 of the non-comment
-    # lines) already enforce. agent_loop and check_privacy must agree, or a
-    # multi-line file would pass one gate and fail another.
+    # push-policy, privacy-check, run-state): the FIRST non-empty, non-comment
+    # line — the rule the git hooks (head -n 1 of the non-comment lines) already
+    # enforce. agent_loop and check_privacy must agree, or a multi-line file
+    # would pass one gate and fail another.
     import tempfile
     from pathlib import Path
 
@@ -498,7 +498,7 @@ def test_declared_policy_parsers_agree():
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
         (root / "docs").mkdir()
-        policy = root / "docs" / "commit-identity"
+        policy = root / "docs" / "privacy-check"
         policy.write_text(
             "# comment header, as the shipped templates carry\n"
             "\n"
@@ -506,8 +506,8 @@ def test_declared_policy_parsers_agree():
             "second-value\n",
             encoding="utf-8",
         )
-        assert agent_loop.read_declared(policy, "inherit") == "first-value"
-        assert check_privacy.read_policy(root) == "first-value"
+        assert agent_loop.read_declared(policy, "false") == "first-value"
+        assert check_privacy._first_declared_line(policy) == "first-value"
 
 
 def test_healthy_transcript_mentioning_limits_is_not_a_throttle(loop_repo):
@@ -559,17 +559,22 @@ def test_missing_cli_fails_preflight_never_hangs(loop_repo):
     assert "not found" in proc.stderr
 
 
-def test_commit_identity_violation_blocks_iteration_one(loop_repo):
-    # Thread 38 x 33: an unattended run under the wrong identity is the
-    # wrongly-attributed-history disaster case — preflight refuses to start.
+def test_privacy_check_author_violation_blocks_iteration_one(loop_repo):
+    # Identity->privacy reframe (Thread 38 x 33): an unattended run under a
+    # private (non-exempt) author is the history-leak disaster case — preflight
+    # refuses to start.
     repo, ctl, template = loop_repo
-    (repo / "docs" / "commit-identity").write_text(
-        "*@users.noreply.github.com\n", encoding="utf-8"
+    (repo / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    # A genuinely private author (loop_repo's default loop@example.com is an
+    # exempt RFC 2606 domain, so it would pass).
+    subprocess.run(
+        ["git", "-C", str(repo), "config", "user.email", "real.person@gmail.com"],
+        capture_output=True,
     )
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 2, proc.stdout + proc.stderr
-    assert "commit-identity" in proc.stderr
+    assert "privacy-check author" in proc.stderr
     assert _invocations(ctl) == 0, "no session may run under a violated policy"
 
 

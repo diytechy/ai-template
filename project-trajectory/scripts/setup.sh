@@ -43,33 +43,20 @@ if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null
   echo "Enabled pre-commit hook (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
 fi
 
-# Apply the repo's commit-identity policy (docs/commit-identity —
-# process-options.md "Commit identity & anonymity"): when it names an email
-# pattern and this clone's effective identity doesn't match, ask for name/email
-# and set them REPO-LOCALLY — never --global. Consent-first: prompts only on a
-# TTY; a non-interactive run warns and moves on (the pre-commit hook is the
-# enforcement — it blocks a mismatched commit either way).
-if [ -f docs/commit-identity ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  policy=$(grep -v '^[[:space:]]*#' docs/commit-identity | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
-  if [ -n "$policy" ] && [ "$policy" != "inherit" ]; then
+# Privacy-check advisory (docs/privacy-check — process-options.md "Commit
+# identity & anonymity"). Identity is USER-owned: setup no longer pins or sets an
+# author identity. But when the privacy gate is on, the author email must be in
+# the exempt allowlist (no private/contactable address) or commits are blocked —
+# so warn early if this clone's identity would fail. Advisory only; the hooks are
+# the enforcement. Reuses check_privacy.py --author to single-source the list.
+if [ -f docs/privacy-check ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  privacy=$(grep -v '^[[:space:]]*#' docs/privacy-check | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+  if [ "$privacy" = "true" ] && ! "$PY" scripts/check_privacy.py --author >/dev/null 2>&1; then
     email=$(git config user.email 2>/dev/null || true)
-    case "$email" in
-      $policy) : ;; # already satisfied
-      *)
-        if [ -t 0 ]; then
-          echo "This repo's commit-identity policy is '$policy'; this clone's identity is '${email:-unset}'."
-          printf "Author name for this repo: "; read -r ci_name
-          printf "Author email (must match %s; GitHub anonymous form: <user>@users.noreply.github.com): " "$policy"; read -r ci_email
-          git config user.name "$ci_name"
-          git config user.email "$ci_email"
-          echo "Set repo-local identity for this clone (global config untouched)."
-        else
-          echo "WARNING: commit-identity policy '$policy' unsatisfied (email '${email:-unset}');" >&2
-          echo "  rerun scripts/setup interactively or set a repo-local git config user.name/user.email —" >&2
-          echo "  the pre-commit hook blocks mismatched commits." >&2
-        fi
-        ;;
-    esac
+    echo "WARNING: docs/privacy-check is on, but this clone's git author email" >&2
+    echo "  '${email:-unset}' is not in the exempt allowlist (scripts/check_privacy.py" >&2
+    echo "  EXEMPT_EMAILS), so commits will be blocked. Set a no-reply identity:" >&2
+    echo "    git config user.email <you>@users.noreply.github.com   (repo-local)" >&2
   fi
 fi
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Secrets + privacy-leak lint — the deterministic floor (stdlib only).
 
-Two classes of pattern, two gates (Thread 44):
+Two classes of pattern, two gates (Thread 44; identity->privacy reframe):
 
   * **Secrets floor — always on** (opt-out). Private-key headers and a few
     universal credential shapes (GitHub, Slack, AWS, `sk-…` API keys) have
@@ -12,28 +12,39 @@ Two classes of pattern, two gates (Thread 44):
     default) — the deliberate exit for a repo whose content *is* secret-shaped
     (mark individual lines with `privacy-ok` first; `off` is the last resort).
 
-  * **Identity-leak layer — policy-gated.** Only when `docs/commit-identity`
-    declares an email pattern (anything but `inherit`) is the repo
-    anonymous/pseudonymous, so these classes run under that policy alone:
+  * **Privacy layer — toggle-gated.** Only when `docs/privacy-check` is `true`
+    does the repo run the PII/identity-leak classes. It defends *privacy* (no
+    real, contactable person), not *attribution* (which account authored is the
+    user's own git config, not pinned here):
+      - the commit **author email** must be in the exempt allowlist
+        (EXEMPT_EMAILS below) — a private author blocks (`--author` mode);
       - home-directory path shapes carrying an OS username
         (`C:\\Users\\<x>`, `/home/<x>`, `/Users/<x>`) — placeholder-shaped
         usernames (`<x>`, `$HOME`, `%USERPROFILE%`, "username", ...) are exempt;
       - the current OS account name and hostname appearing anywhere;
-      - email addresses that fail the declared policy pattern (RFC 2606 example
-        domains are exempt — documentation needs examples);
+      - email addresses not in the exempt allowlist (RFC 2606 example domains
+        are always exempt — documentation needs examples);
       - the real name/email from **global** git config appearing in content
-        (only when that global identity is not itself the declared one).
+        (only when that global identity is not itself exempt).
 
-An `inherit` repo with `docs/secrets-scan: off` therefore exits 0 immediately,
-paying nothing; every other repo runs at least the secrets floor.
+A repo with `docs/privacy-check` off and `docs/secrets-scan: off` therefore
+exits 0 immediately, paying nothing; every other repo runs at least the
+secrets floor.
 
 Modes (each runs whichever of the two layers is active):
 
     (default)        scan the **staged diff** (added lines) — wired into
                      `.githooks/pre-commit`, blocks before the commit exists.
+    --author         check the commit **author email** (git var
+                     GIT_AUTHOR_IDENT) against the exempt allowlist — wired into
+                     `.githooks/pre-commit`; a private author blocks. Privacy
+                     layer only (a no-op when docs/privacy-check is off).
+    --message <file> scan a **commit-message file** — wired into
+                     `.githooks/commit-msg`, so a leak in the title/body blocks
+                     at the first commit, not only at push.
     --repo           sweep every tracked text file — wired as a process step in
-                     `check.py` (catches what slipped in before the policy
-                     existed or past `--no-verify`); CI-runnable.
+                     `check.py` (catches what slipped in before the gate was
+                     enabled or past `--no-verify`); CI-runnable.
     --range <spec>   scan a **commit range** the way `git log -p` shows it:
                      added lines, commit messages, and author lines of every
                      commit in the range — so a leak added in one commit and
@@ -98,6 +109,26 @@ EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 EXAMPLE_DOMAINS = ("example.com", "example.org", "example.net")
 EXAMPLE_SUFFIXES = (".example", ".invalid", ".test", ".localhost")
 
+# Exempt-email allowlist for the privacy layer — addresses that may appear as
+# author or in content without flagging. This is the PRIVACY allowlist (not an
+# identity pin): a no-reply / provider-anonymized address carries no contactable
+# person, so it is not a PII leak even if it carries an attribution handle.
+# fnmatch globs, matched case-insensitively; the RFC 2606 example domains above
+# are exempt separately.
+#
+# DEFAULT `*noreply*` — any no-reply-form address. Broad on purpose (privacy, not
+# identity): it also admits handle-bearing forms like GitHub's
+# ID+USERNAME@users.noreply.github.com, so it is a PII-risk reduction, not an
+# anonymity guarantee. For a stricter posture, replace it with the enumerated
+# exact-form list below:
+#     EXEMPT_EMAILS = [
+#         "*@users.noreply.github.com",   # GitHub per-user no-reply
+#         "*@users.noreply.gitlab.com",   # GitLab per-user no-reply
+#         "noreply@anthropic.com",        # Claude / Anthropic co-author trailer
+#         # add other LLM / obscured-service no-reply addresses here
+#     ]
+EXEMPT_EMAILS = ["*noreply*"]
+
 KEY_RE = re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----")
 TOKEN_RES = (
     ("github token", re.compile(r"ghp_[A-Za-z0-9]{36}")),
@@ -136,9 +167,23 @@ def _first_declared_line(path):
     return None
 
 
-def read_policy(root):
-    """The first non-comment line of docs/commit-identity, or 'inherit'."""
-    return _first_declared_line(root / "docs" / "commit-identity") or "inherit"
+def read_privacy_enabled(root):
+    """Whether the privacy layer is on: docs/privacy-check's first non-comment
+    line is `true` (any case). Absent file or any other value → False (off) —
+    the successor to the old commit-identity `inherit` default."""
+    return (
+        _first_declared_line(root / "docs" / "privacy-check") or ""
+    ).lower() == "true"
+
+
+def email_ok(email):
+    """True when an email is exempt from privacy flagging: an RFC 2606 example
+    domain, or a match against any EXEMPT_EMAILS glob (case-insensitive)."""
+    email = email.lower()
+    domain = email.rsplit("@", 1)[-1]
+    if domain in EXAMPLE_DOMAINS or domain.endswith(EXAMPLE_SUFFIXES):
+        return True
+    return any(fnmatch.fnmatchcase(email, pat.lower()) for pat in EXEMPT_EMAILS)
 
 
 def read_secrets_scan(root):
@@ -174,16 +219,15 @@ class Scanner:
     """Compiles the active leak classes for one run.
 
     `secrets_on` gates the always-on credential floor (key/token shapes);
-    `identity_on` gates the anonymity-only classes (home-dir usernames,
-    account/hostname, off-policy emails, the global git identity). At least one
-    is true whenever a Scanner is built — main() exits early otherwise."""
+    `privacy_on` gates the privacy classes (home-dir usernames, account/
+    hostname, non-exempt emails, the global git identity). At least one is true
+    whenever a Scanner is built — main() exits early otherwise."""
 
-    def __init__(self, policy, root, secrets_on=True, identity_on=True):
-        self.policy = policy.lower()
+    def __init__(self, root, secrets_on=True, privacy_on=True):
         self.secrets_on = secrets_on
-        self.identity_on = identity_on
+        self.privacy_on = privacy_on
         self.identity_terms = []  # (label, compiled regex)
-        if not identity_on:
+        if not privacy_on:
             return  # the machine-identity probes are pure cost when unused
 
         def add_term(label, term):
@@ -200,34 +244,27 @@ class Scanner:
         except OSError:
             pass
         # The *global* git identity is the machine's real one; in content it is
-        # a leak — unless it is the declared identity itself (then the email
-        # class already rules, and the name is presumably the public persona).
+        # a leak — unless it is itself exempt (an exempt email is not PII, and
+        # the name is then presumably the public persona).
         rc, email = git(root, "config", "--global", "user.email")
         rc2, name = git(root, "config", "--global", "user.name")
         email, name = email.strip(), name.strip()
-        if rc == 0 and email and not self._email_ok(email):
+        if rc == 0 and email and not email_ok(email):
             add_term("global git email", email)
             if rc2 == 0 and name:
                 add_term("global git name", name)
-
-    def _email_ok(self, email):
-        email = email.lower()
-        domain = email.rsplit("@", 1)[-1]
-        if domain in EXAMPLE_DOMAINS or domain.endswith(EXAMPLE_SUFFIXES):
-            return True
-        return fnmatch.fnmatchcase(email, self.policy)
 
     def scan_line(self, text):
         """Yield (class-label, excerpt) findings for one line of content."""
         if ALLOW_MARKER in text.lower():
             return
-        if self.identity_on:
+        if self.privacy_on:
             for m in HOME_RE.finditer(text):
                 if m.group(1).lower() not in PLACEHOLDER_USERS:
                     yield "home-dir path", m.group(0)
             for m in EMAIL_RE.finditer(text):
-                if not self._email_ok(m.group(0)):
-                    yield "email fails policy", m.group(0)
+                if not email_ok(m.group(0)):
+                    yield "email not in exempt allowlist", m.group(0)
             for label, rx in self.identity_terms:
                 m = rx.search(text)
                 if m:
@@ -332,6 +369,72 @@ def scan_repo(root, scanner):
     return findings
 
 
+def report(findings, what, layers_desc):
+    """Print findings for a scan of `what`; return the process exit code."""
+    if not findings:
+        print("check_privacy: clean ({}; {}).".format(what, layers_desc))
+        return 0
+    for location, label, excerpt in findings:
+        print("{}: [{}] {}".format(location, label, excerpt))
+    print(
+        "check_privacy: {} finding(s) in {} [{}]. Remove/rotate the secret or "
+        "anonymize the content before it lands; a documented example line may "
+        "carry '{}' to be exempt. The always-on secrets floor is opt-out via "
+        'docs/secrets-scan (process-options.md "Commit identity & '
+        'anonymity").'.format(len(findings), what, layers_desc, ALLOW_MARKER)
+    )
+    return 1
+
+
+def check_author(root):
+    """Validate the commit author email against the exempt allowlist — the
+    identity->privacy cross-check. Reads `git var GIT_AUTHOR_IDENT`, the identity
+    the next commit would carry."""
+    rc, ident = git(root, "var", "GIT_AUTHOR_IDENT")
+    if rc != 0 or not ident.strip():
+        print(
+            "check_privacy: could not resolve the commit author identity "
+            "(git var GIT_AUTHOR_IDENT) — is git configured?",
+            file=sys.stderr,
+        )
+        return 2
+    m = re.search(r"<([^>]*)>", ident)
+    email = (m.group(1) if m else "").strip()
+    if email and email_ok(email):
+        print("check_privacy: clean (author {}).".format(email))
+        return 0
+    print(
+        "check_privacy: commit author email {!r} is not in the exempt allowlist "
+        "(EXEMPT_EMAILS); a private identity must not author commits on a "
+        "privacy-checked repo. Set a repo-local no-reply identity, e.g.:\n"
+        "  git config user.email <you>@users.noreply.github.com".format(
+            email or "unset"
+        ),
+        file=sys.stderr,
+    )
+    return 1
+
+
+def scan_message(msg_path, scanner, layers_desc):
+    """Scan a commit-message file (title + body). git's own comment lines
+    (stripped from the final message) are skipped."""
+    try:
+        text = Path(msg_path).read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        print(
+            "check_privacy: cannot read message file {!r}: {}".format(msg_path, exc),
+            file=sys.stderr,
+        )
+        return 2
+    findings = []
+    for n, line in enumerate(text.splitlines(), 1):
+        if line.startswith("#"):
+            continue
+        for label, excerpt in scanner.scan_line(line):
+            findings.append(("commit message:{}".format(n), label, excerpt))
+    return report(findings, "commit message", layers_desc)
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -352,30 +455,55 @@ def main():
         "+ author lines), e.g. origin/main..HEAD or a lone SHA for a "
         "not-yet-published branch's full history",
     )
+    mode.add_argument(
+        "--author",
+        action="store_true",
+        help="check the commit author email (git var GIT_AUTHOR_IDENT) against "
+        "the exempt allowlist; a private author blocks (privacy layer only)",
+    )
+    mode.add_argument(
+        "--message",
+        dest="message_file",
+        default=None,
+        metavar="FILE",
+        help="scan a commit-message file (wired into .githooks/commit-msg)",
+    )
     ap.add_argument(
         "--root", default=".", help="repo root (default: current directory)"
     )
     args = ap.parse_args()
     root = Path(args.root).resolve()
 
-    policy = read_policy(root)
-    identity_on = policy != "inherit"
+    privacy_on = read_privacy_enabled(root)
     secrets_on = read_secrets_scan(root)
-    if not identity_on and not secrets_on:
+    if not privacy_on and not secrets_on:
         print(
-            "check_privacy: commit-identity 'inherit' and docs/secrets-scan "
-            "'off' — nothing to check."
+            "check_privacy: privacy check off (docs/privacy-check) and "
+            "docs/secrets-scan 'off' — nothing to check."
         )
         return 0
 
     layers = []
-    if identity_on:
-        layers.append("identity ({})".format(policy))
+    if privacy_on:
+        layers.append("privacy")
     if secrets_on:
         layers.append("secrets floor")
     layers_desc = " + ".join(layers)
 
-    scanner = Scanner(policy, root, secrets_on=secrets_on, identity_on=identity_on)
+    if args.author:
+        # Author identity is a privacy-layer concern; the secrets floor does not
+        # apply to an email. A no-op when the privacy layer is off.
+        if not privacy_on:
+            print(
+                "check_privacy: privacy check off (docs/privacy-check) — "
+                "author not checked."
+            )
+            return 0
+        return check_author(root)
+
+    scanner = Scanner(root, secrets_on=secrets_on, privacy_on=privacy_on)
+    if args.message_file:
+        return scan_message(args.message_file, scanner, layers_desc)
     if args.repo:
         what = "repo sweep"
         findings = scan_repo(root, scanner)
@@ -403,19 +531,7 @@ def main():
             return 2
         findings = scan_diff_text(out, scanner)
 
-    if not findings:
-        print("check_privacy: clean ({}; {}).".format(what, layers_desc))
-        return 0
-    for location, label, excerpt in findings:
-        print("{}: [{}] {}".format(location, label, excerpt))
-    print(
-        "check_privacy: {} finding(s) in {} [{}]. Remove/rotate the secret or "
-        "anonymize the content before it lands; a documented example line may "
-        "carry '{}' to be exempt. The always-on secrets floor is opt-out via "
-        'docs/secrets-scan (process-options.md "Commit identity & '
-        'anonymity").'.format(len(findings), what, layers_desc, ALLOW_MARKER)
-    )
-    return 1
+    return report(findings, what, layers_desc)
 
 
 if __name__ == "__main__":

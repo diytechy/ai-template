@@ -19,7 +19,7 @@ What it creates in the destination:
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
     docs/gate                                  <- gate.template  (active gate: G1)
     docs/gate-policy                           <- gate-policy.template  (authority: attended)
-    docs/commit-identity                       <- commit-identity.template  (policy: inherit)
+    docs/privacy-check                         <- privacy-check.template  (privacy: off)
     docs/push-policy                           <- push-policy.template  (policy: human)
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
@@ -45,7 +45,8 @@ What it creates in the destination:
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
     scripts/agent_loop.py                      (unattended coordinator engine)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
-    .githooks/pre-push                         <- hooks/pre-push  (anonymous-repo privacy backstop)
+    .githooks/commit-msg                       <- hooks/commit-msg  (commit-message privacy scan)
+    .githooks/pre-push                         <- hooks/pre-push  (privacy-review backstop)
     docs/stack.ini                             <- stack.ini.template  (declared product toolchain)
     pytest.ini                                 (test-tier markers; skipped when
                                                 --stack is explicitly non-Python)
@@ -124,15 +125,16 @@ and a pointer+hash are tracked in text even though the asset itself can't be
 diffed. Its `ASSET-000` placeholder is inert; a project with no binary assets
 leaves it untouched. `trace.py` integrity-checks the `ASSET-` ids only.
 
-`docs/commit-identity` (process-options.md "Commit identity & anonymity")
-declares whether this repo's commits are anonymous or identified: `inherit`
-(the scaffolded default — no constraint) or an email glob the author identity
-must match. `--commit-identity <pattern|inherit>` sets it at scaffold time —
-identity belongs at repo creation, **before the first commit**, the only moment
-it is free to fix; run interactively without the flag and bootstrap ASKS (the
-same consent-first shape as --agents; non-interactive runs keep `inherit`).
-Enforcement lives in scripts/setup.{sh,ps1} (applies a repo-local identity per
-clone) and .githooks/pre-commit (blocks a mismatched commit).
+`docs/privacy-check` (process-options.md "Commit identity & anonymity") toggles
+the privacy gate: `false` (the scaffolded default — off) or `true` to scan the
+commit author email and committed content for PII / identity leaks. Identity
+(which account authors) is the user's own git config, not pinned here; the gate
+defends *privacy*. `--privacy-check <true|false>` sets it at scaffold time; run
+interactively without the flag and bootstrap ASKS (the same consent-first shape
+as --agents; non-interactive runs keep `false`). The always-on secrets floor
+(docs/secrets-scan) runs regardless. Enforcement lives in .githooks/pre-commit
+(author + staged content), .githooks/commit-msg (the message), and
+.githooks/pre-push (the outgoing range + LLM review).
 
 `docs/push-policy` (process-options.md "Agent iteration branch & sync")
 declares who may publish (`git push`): `human` (the scaffolded default — an
@@ -588,7 +590,7 @@ PUSH_POLICY_CHOICES = ("human", "agent-iteration", "agent")
 
 def apply_push_policy(dest, policy, dry_run):
     """Write a non-default push policy into docs/push-policy, keeping the
-    template's explanatory header (same shape as apply_commit_identity)."""
+    template's explanatory header (same shape as apply_privacy_check)."""
     if policy == "human" or dry_run:
         return
     header = [
@@ -603,23 +605,22 @@ def apply_push_policy(dest, policy, dry_run):
     target.write_text("\n".join(header + [policy]) + "\n", encoding="utf-8")
 
 
-def apply_commit_identity(dest, policy, dry_run):
-    """Write a declared (non-`inherit`) policy into docs/commit-identity,
-    keeping the template's explanatory header. Identity belongs at repo
-    creation, before the first commit — the only moment it is free to fix —
-    so an explicitly passed/answered policy overwrites the scaffolded default."""
+def apply_privacy_check(dest, value, dry_run):
+    """Write the privacy-check toggle into docs/privacy-check, keeping the
+    template's explanatory header. Set at repo creation — an explicitly
+    passed/answered `true` overwrites the scaffolded default (`false`)."""
     if dry_run:
         return
     header = [
         ln
-        for ln in (KIT / "commit-identity.template")
+        for ln in (KIT / "privacy-check.template")
         .read_text(encoding="utf-8")
         .splitlines()
         if ln.startswith("#")
     ]
-    target = dest / "docs" / "commit-identity"
+    target = dest / "docs" / "privacy-check"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("\n".join(header + [policy]) + "\n", encoding="utf-8")
+    target.write_text("\n".join(header + [value]) + "\n", encoding="utf-8")
 
 
 # --- Conditional scaffold generation (Thread 34, Q8 ruling) -------------------
@@ -839,9 +840,10 @@ MAPPING = [
     # gate advance. Scaffolds `attended`; --gate-policy sets a non-default
     # level and pre-fills the deviation-register skeleton for it.
     ("gate-policy.template", "docs/gate-policy"),
-    # The declared commit-identity policy (Thread 38, process-options.md "Commit
-    # identity & anonymity"): `inherit` by default; --commit-identity overrides.
-    ("commit-identity.template", "docs/commit-identity"),
+    # The privacy-check toggle (Thread 38 -> identity/privacy reframe,
+    # process-options.md "Commit identity & anonymity"): `false` by default;
+    # --privacy-check overrides.
+    ("privacy-check.template", "docs/privacy-check"),
     # The declared push authority (Thread 40, process-options.md "Agent
     # iteration branch & sync"): who may publish. `human` by default — an
     # agent never pushes; --push-policy overrides.
@@ -929,10 +931,12 @@ MAPPING = [
     ("scripts/agent-resume.template.sh", "agent-resume.sh"),
     ("scripts/agent-resume.template.command", "agent-resume.command"),
     # Agent-neutral enforcement: POSIX hooks (opt-in via
-    # `git config core.hooksPath .githooks`, which setup.sh/ps1 set). pre-push
-    # is the anonymous-repo privacy-review backstop (Thread 39) — inert under
-    # the default `inherit` commit-identity policy, like the policy files.
+    # `git config core.hooksPath .githooks`, which setup.sh/ps1 set). commit-msg
+    # scans the message; pre-push is the privacy-review backstop (Thread 39) —
+    # the identity review is inert under the default `false` privacy-check (the
+    # always-on secrets floor still runs), like the policy files.
     ("hooks/pre-commit", ".githooks/pre-commit"),
+    ("hooks/commit-msg", ".githooks/commit-msg"),
     ("hooks/pre-push", ".githooks/pre-push"),
     # The declared product toolchain (Thread 30, process.md §7): the single home
     # for the format/lint/test commands, src/tests paths, tiers, and coverage
@@ -1161,15 +1165,14 @@ def main():
         "default: an agent never pushes; it prepares the branch and requests).",
     )
     ap.add_argument(
-        "--commit-identity",
+        "--privacy-check",
+        choices=("true", "false"),
         default=None,
-        metavar="PATTERN",
-        help="commit-identity policy for docs/commit-identity: 'inherit' (no "
-        "constraint) or an email glob the author identity must match, e.g. "
-        "'*@users.noreply.github.com' for an anonymous repo. Omitted + "
-        "interactive TTY -> ASK; non-interactive -> 'inherit'. Set it at repo "
-        'creation, before the first commit (process-options.md "Commit '
-        'identity & anonymity").',
+        help="privacy gate for docs/privacy-check: 'true' runs the PII/identity "
+        "leak scan (author email + content must be non-private), 'false' (the "
+        "default) leaves it off. The always-on secrets floor runs regardless. "
+        "Omitted + interactive TTY -> ASK; non-interactive -> 'false' "
+        '(process-options.md "Commit identity & anonymity").',
     )
     args = ap.parse_args()
 
@@ -1252,16 +1255,18 @@ def main():
         )
     )
 
-    # Resolve the commit-identity policy the same consent-first way: explicit
-    # flag wins; else ASK on an interactive TTY; else 'inherit' (CI-safe — the
-    # scaffolded default file already says inherit, so nothing extra happens).
-    identity = (
-        args.commit_identity
-        if args.commit_identity is not None
-        else prompt_text(
-            "Commit-identity policy? ('inherit' = no constraint, or an email "
-            "glob like *@users.noreply.github.com for an anonymous repo)",
-            "inherit",
+    # Resolve the privacy-check toggle the same consent-first way: explicit flag
+    # wins; else ASK on an interactive TTY; else 'false' (CI-safe — the
+    # scaffolded default file already says false, so nothing extra happens).
+    privacy_check = (
+        args.privacy_check
+        if args.privacy_check is not None
+        else prompt_choice(
+            "Enable the privacy gate for this repo? (scan author + content for "
+            'PII / identity leaks — process-options.md "Commit identity & '
+            'anonymity")',
+            ("false", "true"),
+            "false",
         )
     )
 
@@ -1379,13 +1384,13 @@ def main():
             created.append("docs/push-policy")
         print("  push policy: {}".format(push_policy))
 
-    # A declared (non-inherit) identity policy overwrites the scaffolded
-    # default — this is the one moment identity is free to fix (pre-commit).
-    if identity and identity != "inherit":
-        apply_commit_identity(dest, identity, args.dry_run)
-        if "docs/commit-identity" not in created:
-            created.append("docs/commit-identity")
-        print("  commit-identity policy: {}".format(identity))
+    # A `true` privacy-check overwrites the scaffolded default (`false`) — set
+    # at repo creation, the cheap moment.
+    if privacy_check and privacy_check != "false":
+        apply_privacy_check(dest, privacy_check, args.dry_run)
+        if "docs/privacy-check" not in created:
+            created.append("docs/privacy-check")
+        print("  privacy-check: {}".format(privacy_check))
 
     verb = "would create" if args.dry_run else "created"
     for c in created:

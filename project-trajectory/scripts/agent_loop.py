@@ -62,14 +62,13 @@ budget exhausted while still RUNNING · 7 NEEDS-HUMAN (act, then re-run).
 
 Preflight refuses to start iteration 1 when: the AGENT_CMD executable is
 missing (report, never a hang); the working directory is not a git repo; or
-docs/commit-identity is declared (non-`inherit`) and the effective git author
-identity doesn't match it — an unattended run is the wrongly-attributed-
-history disaster case (process-options.md "Commit identity & anonymity").
+docs/privacy-check is enabled and the effective git author email is not in the
+exempt allowlist — an unattended run under a private identity is the
+history-leak disaster case (process-options.md "Commit identity & anonymity").
 """
 
 import argparse
 import datetime
-import fnmatch
 import json
 import os
 import re
@@ -254,15 +253,6 @@ def head_sha(root):
     """Short HEAD sha, or None on a zero-commit repo (guarded rev-parse)."""
     code, out = git(root, "rev-parse", "--short", "HEAD")
     return out if code == 0 and out else None
-
-
-def author_email(root):
-    """The email of the effective git author identity, or None."""
-    code, out = git(root, "var", "GIT_AUTHOR_IDENT")
-    if code != 0:
-        return None
-    m = re.search(r"<([^>]*)>", out)
-    return m.group(1) if m else None
 
 
 def current_state_excerpt(root, max_lines=40):
@@ -506,17 +496,31 @@ def preflight(root, template, args):
             "progress signal.".format(root)
         )
     else:
-        identity = read_declared(root / "docs" / "commit-identity", "inherit")
-        if identity != "inherit":
-            email = author_email(root)
-            if not email or not fnmatch.fnmatch(email.lower(), identity.lower()):
+        enabled = (
+            read_declared(root / "docs" / "privacy-check", "false").lower() == "true"
+        )
+        if enabled:
+            # Single-source the exempt allowlist: let check_privacy.py judge the
+            # author email (it self-skips when the gate is off, so this fails
+            # only on a genuinely private author on a privacy-checked repo).
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(__file__).resolve().parent / "check_privacy.py"),
+                    "--root",
+                    str(root),
+                    "--author",
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if proc.returncode != 0:
                 failures.append(
-                    "commit-identity policy violated: author email {!r} does "
-                    "not match the declared {!r} (docs/commit-identity). An "
-                    "unattended run would commit every session under the "
-                    "wrong identity. Fix: run scripts/setup.* or "
-                    "`git config user.email <matching address>` "
-                    "(repo-local).".format(email, identity)
+                    "privacy-check author identity violated: an unattended run "
+                    "would commit every session under a private identity. "
+                    + (proc.stderr or proc.stdout or "").strip()
                 )
     return failures
 
@@ -756,10 +760,10 @@ def main():
         "AGENT_CMD means unattended edits without prompts — you consented by "
         "wiring it and running this. Ctrl+C is safe; re-running resumes."
     )
-    identity = read_declared(docs / "commit-identity", "inherit")
-    if identity != "inherit" and not (branch or "").startswith("llm/"):
+    privacy_on = read_declared(docs / "privacy-check", "false").lower() == "true"
+    if privacy_on and not (branch or "").startswith("llm/"):
         print(
-            "WARNING: anonymous repo (commit-identity declared) but the "
+            "WARNING: privacy-checked repo (docs/privacy-check) but the "
             "current branch {!r} is not an llm/ iteration branch — see "
             'process-options.md "Agent iteration branch & sync".'.format(
                 branch or "(none)"

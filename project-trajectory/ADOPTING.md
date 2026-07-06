@@ -336,16 +336,23 @@ range to see exactly which templates/scripts changed before you touch anything.
   (downstream greps and the §5 wording rely on them), and leave the
   `History: docs/log.md` pointer in status.md's header. Don't rewrite the moved
   entries — they are the historical record.
-- **Commit-identity policy (`docs/commit-identity`).** Newer kits declare
-  per-repo commit identity (process-options.md "Commit identity & anonymity"):
-  a one-value file — `inherit` (no constraint) or an email glob the author
-  must match — applied per clone by `scripts/setup.*` (repo-local git config,
-  never `--global`) and blocked on mismatch by the pre-commit hook. To adopt:
-  overwrite the hook + setup launchers from the kit, add the policy file
-  (`commit-identity.template` → `docs/commit-identity`), set the pattern. The
-  guard covers **future commits in clones that ran setup** only — history
-  already committed under the wrong identity needs a git history rewrite,
-  which is out of the kit's scope; decide that deliberately before publishing.
+- **Privacy-check toggle (`docs/privacy-check`) — replaces the old
+  `docs/commit-identity` glob.** Newer kits split *identity* from *privacy*
+  (process-options.md "Commit identity & anonymity"): which account authors is
+  the user's own git config (no longer pinned by a repo file), and a one-value
+  toggle `docs/privacy-check` (`true`/`false`) runs the privacy gate — the
+  commit author email and committed content/messages are scanned for PII, with
+  the exempt-email allowlist (`EXEMPT_EMAILS`, default `*noreply*`) in
+  `check_privacy.py`. To adopt: overwrite the hooks (`pre-commit`, the new
+  `commit-msg`, `pre-push`) + `check_privacy.py` + `setup.*` from the kit, and
+  replace `docs/commit-identity` with `privacy-check.template` → `docs/privacy-check`
+  (set `true` if you had a non-`inherit` glob, else `false`). Migrating from an
+  older kit: delete `docs/commit-identity`; the pre-commit author check is now a
+  Python `--author` step, so a Python-less machine no longer enforces identity
+  (deliberate — that pin moved to git config). The guard covers **future commits
+  in clones that ran setup** only — history already committed with a private
+  identity needs a git history rewrite, out of the kit's scope; decide that
+  deliberately before publishing.
 - **Secrets floor (`check_privacy.py`, every repo) — a behavior change to
   expect.** Newer kits run the deterministic secrets floor (private-key headers
   + GitHub/Slack/AWS/`sk-…` shapes) in **all** repos, not just anonymous ones

@@ -244,7 +244,7 @@ disguised as `Test`. G-Final is where the owner's eyes replace these.
 
 *Referenced from PROCESS.md §3 ("Commit cadence") and §7 ("Push authority").*
 **Applies when** a repo wants agent-driven work to land as curated, reviewable
-history — and, on an anonymous repo (`docs/commit-identity` non-`inherit`),
+history — and, on a privacy-checked repo (`docs/privacy-check` = `true`),
 wants anonymity to be **structural** rather than filtered at publish time.
 This is the heaviest ritual in the kit: opt in deliberately. A repo without
 agent-driven work skips the whole layer and pays nothing. (The
@@ -268,7 +268,7 @@ gate closes, or the project's scope is complete. Five steps:
 1. **Backup.** Snapshot the iteration history first — a dated backup ref,
    e.g. tag `backup/llm-<branch>-<YYYYMMDD>` — so a failed reintegration can
    never lose work. Retire it once the sync lands.
-2. **Scrub** *(anonymous repos only — `docs/commit-identity` non-`inherit`).*
+2. **Scrub** *(privacy-checked repos only — `docs/privacy-check` = `true`).*
    A separate fresh-context agent walks every commit since divergence —
    diffs, **commit messages**, and any committed session/iteration logs —
    removing or anonymizing PII via history rewrite, with the deterministic
@@ -471,9 +471,10 @@ specific tier, and a silent swap could run an unlisted (unguarded) model.
 permission-bypass flag. The human consents by (1) filling the launcher's
 `AGENT_CMD` slot, (2) declaring the gate policy, and (3) running it — and the
 loop banner and README say so plainly. git + CI remain the enforcement floor.
-The coordinator's preflight refuses to start iteration 1 while the
-`docs/commit-identity` policy is violated (an unattended run is the
-wrongly-attributed-history disaster case) or the agent CLI is missing —
+The coordinator's preflight refuses to start iteration 1 while
+`docs/privacy-check` is on and the configured git author email is not exempt
+(an unattended run under a private identity is the history-leak disaster case)
+or the agent CLI is missing —
 report and nonzero exit, never a hang.
 
 **The shipped engine + launchers.** `scripts/agent_loop.py` (stdlib-only, one
@@ -711,50 +712,63 @@ contract lives in the kit's `skills/README.md`; the shape:
 
 ## Commit identity & anonymity
 
-*Enforced by `.githooks/pre-commit` (identity + content lint) and
-`.githooks/pre-push` (review backstop); applied by `scripts/setup.{sh,ps1}`
-(the PROCESS.md §7 process floor).* **Applies when** a repo is pseudonymous or
-public under privacy constraints — commits must (or must not) carry a
-particular identity. A repo without the concern keeps the default and pays
-nothing.
+*Enforced by `.githooks/pre-commit` (author + content lint), `.githooks/commit-msg`
+(message lint), and `.githooks/pre-push` (review backstop); advised by
+`scripts/setup.{sh,ps1}` (the PROCESS.md §7 process floor).* **Applies when** a
+repo wants to keep a real, contactable identity out of its published commits. A
+repo without the concern leaves the gate off and pays nothing.
 
-Git stamps author/committer from `user.name`/`user.email` — the machine's
-**global** config unless the repo overrides it — so whichever identity a clone
-happens to carry lands in the history, and fixing attribution after a push is
-a history rewrite. The highest-risk shape is an unattended run committing many
-sessions under the wrong identity before anyone looks. The stance: **declare
-once, apply per clone, guard mechanically.**
+**Identity is not privacy — separate them.** Two concerns hide under "commit
+identity", and conflating them is a design trap:
 
-- **The policy file `docs/commit-identity`** (one value, tracked, like
-  `docs/gate`): `inherit` — the scaffolded default, no constraint — or an
-  **email glob the commit author must match**, e.g.
-  `*@users.noreply.github.com` (anonymous) or a pinned address (identified).
-  The pattern declares *intent* and is safe to publish in both modes; the
-  identity itself stays in per-clone git config, never committed. Deliberately
-  **repo-wide**: a pseudonymous repo constrains every contributor; per-person
-  freedom = `inherit`. Matching stays a dead-simple glob on the email.
-- **`scripts/setup.{sh,ps1}` applies it** (consent-first): when the policy is
-  non-`inherit` and the clone's effective identity doesn't match, setup prompts
-  for name/email (suggesting the host's noreply form for anonymity) and sets
-  them **repo-locally** — never `--global`. Non-interactive runs warn instead
-  of prompting.
-- **`.githooks/pre-commit` guards it:** the author identity
-  (`git var GIT_AUTHOR_IDENT`) must match the pattern or the commit is
-  **blocked** with the fix spelled out (run scripts/setup · repo-local
-  `git config user.email …` · or set the policy to `inherit`). Integrity-class:
-  wrong at any stage, expensive after a push. `inherit` skips the check.
-- **Set it at repo creation:** `bootstrap.py --commit-identity
-  <pattern|inherit>` (or its interactive ASK) — before the first commit is the
-  only moment identity is free to fix. An unattended coordinator should treat a
-  violated policy as a preflight failure, not something to notice later.
+- **Attribution-identity** — *which account* authored a commit. That is the
+  user's own `user.name`/`user.email`; it belongs in **per-clone git config**,
+  not pinned by the repo. A handle or no-reply address attributes a commit
+  without being a route to a person.
+- **Privacy (PII)** — whether a *real, contactable person* leaks into the
+  history: a personal email as author or in content, an absolute path carrying
+  the OS username, the machine's global git identity in a doc, a bio detail.
+  This is what the repo defends.
 
-**Secrets floor (every repo).** Distinct from the identity concern below and
+An earlier design put both on one value — an email **glob** that was at once the
+author *pin* and the content *allowlist* — so loosening the allowlist to admit a
+tool's co-author trailer collaterally loosened the identity pin. The current
+design keeps them apart: **identity stays in git config; the repo runs a privacy
+gate.** Git still stamps author/committer from `user.name`/`user.email` (the
+machine's global config unless the clone overrides it), and fixing attribution
+after a push is a history rewrite — so the gate checks the identity *actually
+configured* rather than pinning one, and the highest-risk shape (an unattended
+run committing many sessions under a private identity) is a preflight failure.
+
+- **The toggle `docs/privacy-check`** (one value, tracked, like `docs/gate`):
+  `true` runs the privacy gate at every boundary below; `false` / absent = off,
+  zero cost (the successor to the old `inherit`). It declares *intent* only and
+  is safe to publish. Set it at repo creation (`bootstrap.py --privacy-check
+  true|false`, the cheap moment) or adopt later. Deliberately **repo-wide** — the
+  gate constrains every contributor equally.
+- **The exempt-email allowlist lives in code**, not the toggle:
+  `scripts/check_privacy.py` holds `EXEMPT_EMAILS` — the addresses that may
+  appear as author or in content without flagging. The shipped default is
+  `*noreply*` (any no-reply-form address: a no-reply mailbox carries no
+  contactable person, so it is not PII — even though it may carry an attribution
+  handle, which makes this a PII-risk *reduction*, not an anonymity *guarantee*).
+  A commented tight enumerated list (`*@users.noreply.github.com`,
+  `noreply@anthropic.com`, …) sits beside it for an exact-match posture. RFC 2606
+  example domains are always exempt.
+- **`scripts/setup.{sh,ps1}` advise, never pin:** setup no longer sets a
+  repo-local identity (that is the user's own git config). When the gate is on
+  and the clone's author email is not exempt, setup **warns** (via
+  `check_privacy.py --author`) that commits will block, pointing at a no-reply
+  fix. Enforcement is the hooks, not setup.
+
+**Secrets floor (every repo).** Distinct from the privacy layer below and
 **not gated on it:** `scripts/check_privacy.py` always scans for private-key
 headers and universal credential shapes (GitHub, Slack, AWS, `sk-…` keys) — the
 security net an ordinary identified project gets too, because a committed key is
-a leak regardless of who authored it. It runs in the same three modes as the
-identity lint (staged diff at pre-commit, `--repo` at every gate, `--range` at
-pre-push), in **all** repos including `inherit`. Opt out with the one word `off`
+a leak regardless of who authored it. It runs in the same modes as the privacy
+lint (staged diff at pre-commit, the commit message at commit-msg, `--repo` at
+every gate, `--range` at pre-push), in **all** repos, privacy-check on or off.
+Opt out with the one word `off`
 in **`docs/secrets-scan`** (one-word declared policy, absent = on) — the
 deliberate exit for a repo whose content *is* secret-shaped; mark individual
 false positives with the inline `privacy-ok` marker first and reserve `off` for
@@ -764,25 +778,31 @@ never rebuilt in the kit. *Adoption note:* a repo that had no scanning starts
 failing on a committed token when it takes this kit version — that is the point,
 and `off` is the escape (ADOPTING.md §6).
 
-**Content privacy (anonymous repos).** The author field is the smaller leak
-surface; **content** is the bigger one — an absolute path carrying the OS
-username, the real identity from global git config pasted into a doc, an
-email in a test fixture, a bio detail in a README. These **identity** classes
-run only when the policy declares a pattern; `inherit` repos pay zero for
-them (the secrets floor above still runs).
+**Content & message privacy (privacy-check on).** The author field is the
+smaller leak surface; **content and commit messages** are the bigger one — an
+absolute path carrying the OS username, the real identity from global git config
+pasted into a doc, an email in a test fixture, a bio detail in a README, an
+address in a commit-message trailer. These **privacy** classes run only when
+`docs/privacy-check` is `true`; a privacy-off repo pays zero for them (the
+secrets floor above still runs).
 
 - **Layer 1 — deterministic lint, per commit.** `scripts/check_privacy.py`
-  (stdlib) scans the **staged diff** for the high-confidence *identity* classes:
-  home-dir path shapes carrying an OS username, the current account/hostname,
-  emails failing the policy pattern, the global-git-config identity appearing in
-  content (the always-on secrets floor above scans alongside them). Wired into
-  `.githooks/pre-commit`; blocks with file:line findings. `--repo` sweeps every
-  tracked file as a `check.py` process step at every gate (catching what slipped
-  in before the policy existed or past `--no-verify`); `--range` scans a commit
-  range *as history* — diffs, messages, author lines — for the pre-push floor
-  and the sync scrub's base pass. A documented example line carries the inline
-  `privacy-ok` marker to be exempt — mark false positives instead of training
-  yourself to bypass the hook.
+  (stdlib) runs the high-confidence *privacy* classes: the commit **author
+  email** must be exempt (`--author`, a private author blocks); home-dir path
+  shapes carrying an OS username, the current account/hostname, **non-exempt
+  emails** (not in `EXEMPT_EMAILS`), and the global-git-config identity in
+  content (the always-on secrets floor above scans alongside). Wired into
+  `.githooks/pre-commit` for the author + **staged diff**, and into
+  `.githooks/commit-msg` (`--message`) for the **commit message** — pre-commit
+  runs before the message exists, so the message went unscanned until push,
+  which let leaks in trailers pile up across commits; the commit-msg hook blocks
+  them at the first commit. `--repo` sweeps every tracked file as a `check.py`
+  process step at every gate (catching what slipped in before the gate was
+  enabled or past `--no-verify`); `--range` scans a commit range *as history* —
+  diffs, messages, author lines — for the pre-push floor and the sync scrub's
+  base pass. A documented example line carries the inline `privacy-ok` marker to
+  be exempt — mark false positives instead of training yourself to bypass the
+  hook.
 - **Layer 2 — LLM review at the push boundary.** Publication is where a leak
   becomes harmful and effectively unrecallable, so the **judgment** layer sits
   there — its *primary home* is the sync ritual's scrub step ("Agent iteration

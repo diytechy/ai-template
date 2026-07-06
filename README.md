@@ -38,8 +38,8 @@ The kit's headline pieces:
   (optional, warn-first no-stub/substance detector for the G3 criterion),
   [`check_privacy.py`](project-trajectory/scripts/check_privacy.py)
   (a deterministic **secrets floor** for committed keys/tokens in every repo,
-  opt-out via `docs/secrets-scan`, plus identity-leak classes gated on an
-  anonymous `commit-identity` policy),
+  opt-out via `docs/secrets-scan`, plus privacy/PII classes — author email,
+  content, and commit messages — gated on the `docs/privacy-check` toggle),
   [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   (the AST code map — summaries, dependencies, `Implements:` back-links — plus
   a generated Mermaid dependency diagram, routed into `architecture.md` and/or
@@ -62,8 +62,8 @@ The kit's headline pieces:
   `check_vendored.py`).
   Consent is explicit and governed by one-word declared-policy files scaffolded
   into `docs/`: `gate-policy` (who advances gates), `push-policy` (who may
-  push), and `commit-identity` (author-identity constraint for anonymous
-  repos, enforced by the git hooks + `check_privacy.py`).
+  push), and `privacy-check` (the PII/identity privacy gate — a `true`/`false`
+  toggle enforced by the git hooks + `check_privacy.py`).
 - **Agent-neutral skills and hooks** — opt-in skills
   ([`skills/`](project-trajectory/skills/)) materialized per agent by
   `bootstrap.py --agents`, and git hooks
@@ -98,7 +98,7 @@ python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --agents cla
 This scaffolds `AGENTS.md` (the agent guide; `CLAUDE.md`/`GEMINI.md` stubs point
 at it), `docs/` (process, status + log + plan, architecture, interfaces, the
 registries, and the declared-policy files `gate`, `gate-policy`, `push-policy`,
-`commit-identity`), `scripts/` (the harness), the root `run.*` /
+`privacy-check`), `scripts/` (the harness), the root `run.*` /
 `agent-resume.*` launchers (shipped inert until you fill their command slots),
 `.github/workflows/check.yml`, and empty `src/`/`tests/`. Then:
 

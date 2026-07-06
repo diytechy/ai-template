@@ -15,7 +15,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/process-options.md",
         "docs/gate",
         "docs/gate-policy",
-        "docs/commit-identity",
+        "docs/privacy-check",
         "docs/push-policy",
         "docs/kit-profile",
         "docs/status.md",
@@ -32,6 +32,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/check_vendored.py",
         "scripts/gen_cases.py",
         ".githooks/pre-commit",
+        ".githooks/commit-msg",
         ".githooks/pre-push",
         ".github/workflows/check.yml",
         "src/.gitkeep",
@@ -292,7 +293,7 @@ def test_rerun_skips_existing_files(scaffold):
     assert (scaffold / "CLAUDE.md").read_text(encoding="utf-8") == "customized"
 
 
-# --- Commit-identity policy (Thread 38) ---------------------------------------
+# --- Privacy-check toggle (Thread 38 -> identity/privacy reframe) --------------
 
 
 def _policy_lines(path):
@@ -303,15 +304,15 @@ def _policy_lines(path):
     ]
 
 
-def test_commit_identity_defaults_to_inherit(scaffold):
-    # The scaffolded policy is `inherit` — today's unconstrained behavior, so
-    # existing adopters and default scaffolds see zero change.
-    assert _policy_lines(scaffold / "docs" / "commit-identity") == ["inherit"]
+def test_privacy_check_defaults_to_false(scaffold):
+    # The scaffolded toggle is `false` — the privacy gate is off by default, so
+    # existing adopters and default scaffolds see zero change (the always-on
+    # secrets floor still runs regardless).
+    assert _policy_lines(scaffold / "docs" / "privacy-check") == ["false"]
 
 
-def test_commit_identity_flag_sets_policy(tmp_path):
-    # --commit-identity pins the policy at repo creation (before the first
-    # commit — the only moment identity is free to fix), keeping the template's
+def test_privacy_check_flag_sets_toggle(tmp_path):
+    # --privacy-check sets the toggle at repo creation, keeping the template's
     # explanatory header above the value.
     dest = tmp_path / "repo"
     proc = run_py(
@@ -319,24 +320,25 @@ def test_commit_identity_flag_sets_policy(tmp_path):
             SCRIPTS / "bootstrap.py",
             "--dest",
             dest,
-            "--commit-identity",
-            "*@users.noreply.github.com",
+            "--privacy-check",
+            "true",
         ],
         cwd=tmp_path,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    policy = dest / "docs" / "commit-identity"
-    assert _policy_lines(policy) == ["*@users.noreply.github.com"]
+    policy = dest / "docs" / "privacy-check"
+    assert _policy_lines(policy) == ["true"]
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
 
 
-def test_setup_scripts_apply_identity_repo_locally_only():
-    # Both setup launchers must source the policy file and must never touch
-    # global git config — the policy is per-clone by design (repo-local
-    # `git config`, the honest boundary in process-options.md).
+def test_setup_scripts_advise_on_privacy_not_pin_identity():
+    # Identity is user-owned: the setup launchers no longer set an author
+    # identity. They read docs/privacy-check and advise (via check_privacy
+    # --author) when a private author would be blocked; they must never touch
+    # global git config.
     for name in ("setup.sh", "setup.ps1"):
         text = (KIT / "scripts" / name).read_text(encoding="utf-8")
-        assert "commit-identity" in text, name + " must apply the policy"
+        assert "privacy-check" in text, name + " must read the privacy toggle"
         assert "git config --global" not in text, name + " must stay repo-local"
 
 

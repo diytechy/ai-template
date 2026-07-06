@@ -23,35 +23,12 @@ set -e
 # not the cwd (see the scripts/ note below for why cwd-relative paths bite).
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
-# 0. Commit-identity policy (docs/commit-identity — process-options.md "Commit
-#    identity & anonymity"). When the file names an email pattern (anything but
-#    `inherit`), the author identity this commit would carry must match it:
-#    wrong attribution is integrity-class — near-irreversible once pushed — so
-#    a mismatch blocks *before the commit exists*. Runs before interpreter
-#    discovery (it needs no Python, and a Python-less machine must still be
-#    held to the policy). `inherit` or no file skips: zero cost for repos that
-#    don't constrain identity.
-POLICY_FILE="$REPO_ROOT/docs/commit-identity"
-policy=""
-if [ -f "$POLICY_FILE" ]; then
-  policy=$(grep -v '^[[:space:]]*#' "$POLICY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
-  if [ -n "$policy" ] && [ "$policy" != "inherit" ]; then
-    ident=$(git var GIT_AUTHOR_IDENT 2>/dev/null || true)
-    email=$(printf '%s' "$ident" | sed -n 's/.*<\(.*\)>.*/\1/p')
-    case "$email" in
-      $policy) ;; # matches the declared pattern
-      *)
-        echo "pre-commit: author email '${email:-unknown}' does not match this repo's" >&2
-        echo "  commit-identity policy '$policy' (docs/commit-identity)." >&2
-        echo "  Fix one of:" >&2
-        echo "    - run scripts/setup (applies a matching repo-local identity), or" >&2
-        echo "    - git config user.name '...' ; git config user.email '...' (repo-local), or" >&2
-        echo "    - set docs/commit-identity to 'inherit' to drop the constraint." >&2
-        exit 1
-        ;;
-    esac
-  fi
-fi
+# Identity is no longer pinned by a repo file — the author-identity check is now
+# the privacy-layer step 3a below (Python, via check_privacy.py --author), run
+# only when docs/privacy-check is `true`. See process-options.md "Commit
+# identity & anonymity". Recorded trade: unlike the old pure-shell pin, a
+# Python-less machine no longer enforces it — deliberate, since that pin moved to
+# the user's own git config and what remains is a privacy check like the rest.
 
 # Find a Python 3 interpreter the same way setup.sh does (python3 then python).
 # Probe by *running* the candidate, not just finding it: on Windows, `python3`
@@ -108,16 +85,21 @@ fi
 #    early-stage commit.
 "$PY" "$SCRIPTS_DIR/trace.py" --strict-integrity
 
-# 3. Content secrets + privacy lint of the staged diff. The always-on SECRETS
-#    FLOOR (private-key headers, key/token shapes) runs in EVERY repo — the
-#    security net a non-anonymous project gets too; opt out with the one word
-#    `off` in docs/secrets-scan. The identity-leak classes (home-dir paths
-#    carrying the OS username, off-policy emails, the machine's global git
-#    identity) run only under a declared docs/commit-identity policy. The script
-#    decides which layers apply and exits 0 fast when both are off (`inherit` +
-#    secrets-scan off): zero cost. Deterministic floor only — judgment-layer
-#    review lives at the push boundary and in the sync scrub (process-options.md
-#    "Commit identity & anonymity").
+# 3. Secrets + privacy lint. The always-on SECRETS FLOOR (private-key headers,
+#    key/token shapes) runs in EVERY repo — the security net a non-anonymous
+#    project gets too; opt out with the one word `off` in docs/secrets-scan. The
+#    PRIVACY layer (author identity, home-dir paths carrying the OS username,
+#    non-exempt emails, the machine's global git identity) runs only when
+#    docs/privacy-check is `true`. The script decides which layers apply and
+#    exits 0 fast when both are off: zero cost. Deterministic floor only —
+#    judgment-layer review lives at the push boundary and in the sync scrub.
+#    3a. Author identity as a PRIVACY check — the commit author email must be in
+#        the exempt allowlist (a no-op when docs/privacy-check is off). Replaces
+#        the old commit-identity pin (integrity) with the privacy property.
+#    3b. Content scan of the staged diff.
+#    The commit *message* is scanned by the separate .githooks/commit-msg hook —
+#    pre-commit runs before the message exists, so it cannot see it here.
+"$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --author
 "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT"
 
 # 4. Format check — the product formatter, sourced from the declared toolchain

@@ -5,8 +5,8 @@ commit ranges in a bootstrapped scaffold, because the lint's whole value is
 what it blocks *and* what it deliberately lets through (placeholders, RFC 2606
 example domains, `privacy-ok`-marked lines). Two layers are pinned separately:
 the always-on **secrets floor** (key/token shapes, every repo — opt out with
-`docs/secrets-scan: off`) and the **identity-leak** classes gated on a declared
-`docs/commit-identity` pattern. An `inherit` repo with the floor opted out must
+`docs/secrets-scan: off`) and the **privacy** classes gated on the
+`docs/privacy-check` toggle. A privacy-off repo with the floor opted out must
 cost zero — that fast-exit keeps the step wireable unconditionally in check.py
 and the pre-commit hook.
 """
@@ -20,7 +20,6 @@ from pathlib import Path
 import pytest
 from conftest import run_py
 
-ANON = "*@users.noreply.github.com"
 SCRIPT = "scripts/check_privacy.py"
 # This kit repo (a git checkout) and its real check_privacy.py, for the
 # meta-repo dogfood — the scaffold copies live at scripts/, the source here does not.
@@ -52,8 +51,8 @@ def run_lint(cwd, *args):
     )
 
 
-def set_policy(root, value):
-    (root / "docs" / "commit-identity").write_text(value + "\n", encoding="utf-8")
+def set_privacy(root, value="true"):
+    (root / "docs" / "privacy-check").write_text(value + "\n", encoding="utf-8")
 
 
 def set_secrets_scan(root, value):
@@ -126,7 +125,7 @@ def test_secrets_off_still_runs_identity_under_policy(scaffold):
     # The opt-out narrows only the secrets floor: under a declared anonymous
     # policy the identity classes still run, and a secret is let through.
     init_repo(scaffold)
-    set_policy(scaffold, ANON)
+    set_privacy(scaffold)
     set_secrets_scan(scaffold, "off")
     stage(scaffold, "notes.md", "data at C:\\Users\\bobsmith\\proj\n")
     proc = run_lint(scaffold)
@@ -167,7 +166,7 @@ def test_secrets_floor_in_repo_and_range_modes_under_inherit(scaffold):
 @needs_git
 def test_staged_home_dir_paths_red_placeholders_and_marker_green(scaffold):
     init_repo(scaffold)
-    set_policy(scaffold, ANON)
+    set_privacy(scaffold)
     stage(scaffold, "notes.md", "data at C:\\Users\\bobsmith\\proj\n")
     proc = run_lint(scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
@@ -196,11 +195,11 @@ def test_staged_home_dir_paths_red_placeholders_and_marker_green(scaffold):
 @needs_git
 def test_staged_email_policy_and_example_domains(scaffold):
     init_repo(scaffold)
-    set_policy(scaffold, ANON)
+    set_privacy(scaffold)
     stage(scaffold, "notes.md", "contact real.person@gmail.com about this\n")
     proc = run_lint(scaffold)
     assert proc.returncode == 1
-    assert "email fails policy" in proc.stdout
+    assert "email not in exempt allowlist" in proc.stdout
 
     # Matching the declared pattern is the point of the policy; RFC 2606
     # example domains are documentation.
@@ -216,7 +215,7 @@ def test_staged_email_policy_and_example_domains(scaffold):
 @needs_git
 def test_staged_current_account_word_boundary(scaffold):
     init_repo(scaffold)
-    set_policy(scaffold, ANON)
+    set_privacy(scaffold)
     stage(scaffold, "notes.md", "session driven by {} yesterday\n".format(FAKE_USER))
     proc = run_lint(scaffold)
     assert proc.returncode == 1
@@ -231,7 +230,7 @@ def test_staged_current_account_word_boundary(scaffold):
 @needs_git
 def test_staged_key_and_token_shapes(scaffold):
     init_repo(scaffold)
-    set_policy(scaffold, ANON)
+    set_privacy(scaffold)
     stage(scaffold, "cfg.txt", "-----BEGIN RSA PRIVATE KEY-----\n")
     proc = run_lint(scaffold)
     assert proc.returncode == 1
@@ -250,7 +249,7 @@ def test_removing_a_leak_is_never_flagged(scaffold):
     init_repo(scaffold)
     stage(scaffold, "notes.md", "data at C:\\Users\\bobsmith\\proj\n")
     assert git(scaffold, "commit", "-m", "seed").returncode == 0
-    set_policy(scaffold, ANON)
+    set_privacy(scaffold)
     stage(scaffold, "notes.md", "clean now\n")
     proc = run_lint(scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -260,7 +259,7 @@ def test_repo_sweep_fresh_scaffold_green_then_seeded_leak_red(scaffold):
     # A fresh scaffold must itself survive an anonymous policy — the kit can't
     # ship content its own lint flags. (No git repo here: the sweep's
     # filesystem-walk fallback is exercised too.)
-    set_policy(scaffold, ANON)
+    set_privacy(scaffold)
     proc = run_lint(scaffold, "--repo")
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
@@ -278,7 +277,7 @@ def test_range_mode_catches_history_and_messages(scaffold):
     # later one ships in *history* even though the final tree is clean — and a
     # commit message is history too.
     init_repo(scaffold)
-    set_policy(scaffold, ANON)
+    set_privacy(scaffold)
     stage(scaffold, "a.txt", "clean line\n")
     assert git(scaffold, "commit", "-m", "base").returncode == 0
     base = git(scaffold, "rev-parse", "HEAD").stdout.strip()
@@ -323,7 +322,7 @@ def test_check_py_wires_privacy_as_process_step(scaffold):
 def test_check_py_gate_red_on_seeded_leak(scaffold):
     # Under a declared policy the same G1 gate goes red on a tracked leak —
     # the CI-side net for what slipped past --no-verify or predates the policy.
-    set_policy(scaffold, ANON)
+    set_privacy(scaffold)
     (scaffold / "docs" / "notes.md").write_text(
         "worked from C:\\Users\\bobsmith\\checkout\n", encoding="utf-8"
     )
@@ -343,10 +342,10 @@ def test_check_py_gate_red_on_seeded_leak(scaffold):
 
 @needs_git
 def test_meta_repo_tree_passes_the_secrets_floor():
-    # Dogfood: this kit repo is `inherit`, so the always-on secrets floor now
-    # applies to it. Its own tracked tree must ship no credential shapes — the
-    # net that would catch a real key ever landing in the kit. Run against the
-    # real repo root, not a scaffold.
+    # Dogfood: this kit repo is privacy-off, so the always-on secrets floor is
+    # what applies to it. Its own tracked tree must ship no credential shapes —
+    # the net that would catch a real key ever landing in the kit. Run against
+    # the real repo root, not a scaffold.
     proc = subprocess.run(
         [sys.executable, str(KIT_SCRIPT), "--root", str(REPO_ROOT), "--repo"],
         cwd=str(REPO_ROOT),
@@ -355,3 +354,72 @@ def test_meta_repo_tree_passes_the_secrets_floor():
         stdin=subprocess.DEVNULL,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+@needs_git
+def test_author_mode_blocks_private_and_passes_exempt(scaffold):
+    # --author checks the commit author email against the exempt allowlist — the
+    # identity->privacy cross-check. A no-op when the privacy layer is off.
+    init_repo(scaffold)  # author 12345+t@users.noreply.github.com (exempt)
+
+    # Privacy off (scaffold default): --author is a no-op regardless of identity.
+    assert run_lint(scaffold, "--author").returncode == 0
+
+    set_privacy(scaffold)  # on
+    assert run_lint(scaffold, "--author").returncode == 0, "exempt author passes"
+
+    # A private author blocks with the allowlist named.
+    git(scaffold, "config", "user.email", "real.person@gmail.com")
+    proc = run_lint(scaffold, "--author")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "exempt allowlist" in proc.stderr
+
+
+@needs_git
+def test_message_mode_scans_a_commit_message_file(scaffold):
+    # --message scans a commit-message file (the commit-msg hook's engine). The
+    # secrets floor scans every repo's message; the privacy layer adds its
+    # classes only when privacy-check is on.
+    init_repo(scaffold)
+    msg = scaffold / "MSG.txt"
+
+    # Secrets floor (always on): a key in the message body blocks.
+    key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"  # split so this line is not a match
+    msg.write_text("add config\n\n" + key, encoding="utf-8")
+    proc = run_lint(scaffold, "--message", "MSG.txt")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "private key header" in proc.stdout
+
+    # Privacy off: a private email in the message is not a secret — passes.
+    msg.write_text("fix\n\nReported-by: real.person@gmail.com\n", encoding="utf-8")
+    assert run_lint(scaffold, "--message", "MSG.txt").returncode == 0
+
+    # Privacy on: the same private email now blocks; the exempt trailer passes.
+    set_privacy(scaffold)
+    proc = run_lint(scaffold, "--message", "MSG.txt")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "email not in exempt allowlist" in proc.stdout
+    msg.write_text(
+        "fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n", encoding="utf-8"
+    )
+    assert run_lint(scaffold, "--message", "MSG.txt").returncode == 0
+
+
+@needs_git
+def test_exempt_emails_default_admits_noreply_forms(scaffold):
+    # The EXEMPT_EMAILS default (*noreply*) admits no-reply forms — a GitHub
+    # per-user address and a tool co-author trailer — while a personal address
+    # still blocks. The identity/privacy reframe's core allowance.
+    init_repo(scaffold)
+    set_privacy(scaffold)
+    stage(
+        scaffold,
+        "notes.md",
+        "from 12345+dev@users.noreply.github.com and noreply@anthropic.com\n",
+    )
+    assert run_lint(scaffold).returncode == 0
+
+    stage(scaffold, "notes.md", "reach me at real.person@gmail.com\n")
+    proc = run_lint(scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "email not in exempt allowlist" in proc.stdout

@@ -45,34 +45,26 @@ try {
         }
     }
 
-    # Apply the repo's commit-identity policy (docs/commit-identity —
-    # process-options.md "Commit identity & anonymity"): when it names an email
-    # pattern and this clone's effective identity doesn't match, ask for
-    # name/email and set them REPO-LOCALLY — never --global. Consent-first:
-    # prompts only when interactive; otherwise warns (the pre-commit hook is
-    # the enforcement — it blocks a mismatched commit either way).
-    if (Test-Path "docs/commit-identity") {
-        $policy = (Get-Content "docs/commit-identity" |
+    # Privacy-check advisory (docs/privacy-check — process-options.md "Commit
+    # identity & anonymity"). Identity is USER-owned: setup no longer pins or
+    # sets an author identity. But when the privacy gate is on, the author email
+    # must be in the exempt allowlist (no private/contactable address) or commits
+    # are blocked — so warn early if this clone's identity would fail. Advisory
+    # only; the hooks are the enforcement. Reuses check_privacy.py --author.
+    if (Test-Path "docs/privacy-check") {
+        $privacy = (Get-Content "docs/privacy-check" |
             Where-Object { $_.Trim() -and -not $_.Trim().StartsWith("#") } |
             Select-Object -First 1)
-        if ($policy) { $policy = $policy.Trim() }
-        if ($policy -and $policy -ne "inherit") {
-            $email = ""
-            try { $email = (git config user.email 2>$null) } catch {}
-            if (-not ($email -like $policy)) {
-                if (-not [System.Console]::IsInputRedirected) {
-                    Write-Host "This repo's commit-identity policy is '$policy'; this clone's identity is '$(if ($email) { $email } else { "unset" })'."
-                    $ciName = Read-Host "Author name for this repo"
-                    $ciEmail = Read-Host "Author email (must match $policy; GitHub anonymous form: <user>@users.noreply.github.com)"
-                    git config user.name "$ciName"
-                    git config user.email "$ciEmail"
-                    Write-Host "Set repo-local identity for this clone (global config untouched)."
-                }
-                else {
-                    Write-Warning ("commit-identity policy '$policy' unsatisfied (email '$(if ($email) { $email } else { "unset" })'); " +
-                        "rerun scripts/setup interactively or set a repo-local git config user.name/user.email - " +
-                        "the pre-commit hook blocks mismatched commits.")
-                }
+        if ($privacy) { $privacy = $privacy.Trim() }
+        if ($privacy -eq "true") {
+            & $python scripts/check_privacy.py --author 2>$null | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                $email = ""
+                try { $email = (git config user.email 2>$null) } catch {}
+                Write-Warning ("docs/privacy-check is on, but this clone's git author email '" +
+                    "$(if ($email) { $email } else { 'unset' })' is not in the exempt allowlist " +
+                    "(scripts/check_privacy.py EXEMPT_EMAILS), so commits will be blocked. Set a " +
+                    "no-reply identity: git config user.email <you>@users.noreply.github.com (repo-local).")
             }
         }
     }

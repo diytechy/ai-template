@@ -29,7 +29,8 @@
 #
 # When the policy demands review but no reviewer is wired, the push FAILS
 # CLOSED (Q12 ruling): a missing tool is never a pass at the one boundary that
-# matters. `inherit` repos (docs/commit-identity) skip everything: zero cost.
+# matters. A privacy-check-off repo skips the review (the secrets floor still
+# guards its outgoing range): zero cost otherwise.
 # Declared opt-down (WI-1.30, refining Q12): a repo adopted with the intent to
 # wire the reviewer later may track `warn-unwired` in docs/privacy-review (one
 # word, same parse as every declared-policy file) — then an UNWIRED reviewer
@@ -45,15 +46,16 @@ set -e
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
-# Policy gate — same parse as pre-commit; `inherit` or no file = not anonymous.
-POLICY_FILE="$REPO_ROOT/docs/commit-identity"
-policy=""
-if [ -f "$POLICY_FILE" ]; then
-  policy=$(grep -v '^[[:space:]]*#' "$POLICY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+# Privacy gate — same parse as pre-commit / commit-msg. Off / absent = not a
+# privacy-checked repo (the secrets-floor-only branch below still guards it).
+PRIVACY_FILE="$REPO_ROOT/docs/privacy-check"
+privacy=""
+if [ -f "$PRIVACY_FILE" ]; then
+  privacy=$(grep -v '^[[:space:]]*#' "$PRIVACY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
 fi
-if [ -z "$policy" ] || [ "$policy" = "inherit" ]; then
-  # Not anonymous: the identity review below does not apply. But the always-on
-  # SECRETS FLOOR (docs/secrets-scan; default on — Thread 44) still guards the
+if [ "$privacy" != "true" ]; then
+  # Privacy check off: the identity review below does not apply. But the
+  # always-on SECRETS FLOOR (docs/secrets-scan; default on — Thread 44) still guards the
   # outgoing history against key/token shapes, the security net every repo
   # gets. Tooling-gated and never fail-closed here: a missing interpreter skips
   # (the pre-commit floor already scanned each commit), it must not block an
@@ -105,8 +107,8 @@ for sd in scripts Scripts; do
   fi
 done
 if [ -z "$PY" ] || [ -z "$SCRIPTS_DIR" ]; then
-  echo "pre-push: this repo declares an anonymous policy ('$policy') but Python 3" >&2
-  echo "  or scripts/ cannot be found, so the privacy review cannot run." >&2
+  echo "pre-push: docs/privacy-check is enabled but Python 3 or scripts/ cannot" >&2
+  echo "  be found, so the privacy review cannot run." >&2
   echo "  FAILING CLOSED — a missing tool is never a pass at the push boundary." >&2
   exit 1
 fi
@@ -154,14 +156,14 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   # unless the repo tracked the warn-unwired opt-down (header comment).
   if [ -z "$reviewer" ]; then
     if [ "$review_policy" = "warn-unwired" ]; then
-      echo "pre-push: WARNING — anonymous policy ('$policy') but no LLM privacy" >&2
+      echo "pre-push: WARNING — privacy-check is enabled but no LLM privacy" >&2
       echo "  reviewer is wired; docs/privacy-review declares 'warn-unwired', so" >&2
       echo "  only the deterministic lint guarded $local_ref ($range)." >&2
       echo "  Wire one:  export REVIEW_CMD='<agent cmd>'   (or per clone:" >&2
       echo "             git config privacy.reviewcmd '<agent cmd>')" >&2
       continue
     fi
-    echo "pre-push: this repo declares an anonymous policy ('$policy'), which" >&2
+    echo "pre-push: docs/privacy-check is enabled, which" >&2
     echo "  requires a privacy review of the outgoing history, but no reviewer" >&2
     echo "  is wired. FAILING CLOSED (a missing reviewer is never a pass)." >&2
     echo "  Wire one:  export REVIEW_CMD='<agent cmd>'   (or per clone:" >&2
@@ -177,7 +179,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   dump=$(mktemp "${TMPDIR:-/tmp}/privacy-review.XXXXXX") || { status=1; continue; }
   {
     echo "PRIVACY REVIEW REQUEST (pre-push; process-options.md 'Commit identity & anonymity')"
-    echo "This repo's commit-identity policy is: $policy"
+    echo "This repo's privacy gate (docs/privacy-check) is: enabled"
     echo "Below is the FULL outgoing history for $local_ref ($range): every commit's"
     echo "message and diff. Hunt for personally identifiable or private information:"
     echo "real names, machine-local paths/usernames/hostnames, off-policy emails,"

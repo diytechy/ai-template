@@ -401,11 +401,12 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ("traceability", (), trace_cmd, {"G2", "G3"}, "process"),
         # Secrets + privacy sweep (process-options.md "Commit identity &
         # anonymity"): every tracked text file is swept for the always-on
-        # secrets floor (key/token shapes, all repos) plus — under a declared
-        # docs/commit-identity pattern — the identity-leak classes, catching
-        # what slipped in before the policy existed or past --no-verify. Runs at
-        # every gate (a leak is wrong at any stage); the script exits 0 fast
-        # only when both layers are off (`inherit` + docs/secrets-scan off).
+        # secrets floor (key/token shapes, all repos) plus — when
+        # docs/privacy-check is `true` — the privacy/identity-leak classes,
+        # catching what slipped in before the gate was enabled or past
+        # --no-verify. Runs at every gate (a leak is wrong at any stage); the
+        # script exits 0 fast only when both layers are off (privacy-check off +
+        # docs/secrets-scan off).
         (
             "privacy",
             (),

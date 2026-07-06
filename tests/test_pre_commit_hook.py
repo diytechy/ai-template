@@ -151,7 +151,9 @@ def test_hook_secrets_floor_blocks_staged_key_under_inherit(scaffold):
     (scaffold / "cfg.txt").write_text(key, encoding="utf-8")
     assert git("add", "cfg.txt").returncode == 0
 
-    blocked = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
+    blocked = subprocess.run(
+        [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True
+    )
     assert blocked.returncode != 0, "a staged private key must block under inherit"
     assert "private key header" in (blocked.stdout + blocked.stderr)
 
@@ -161,10 +163,10 @@ def test_hook_secrets_floor_blocks_staged_key_under_inherit(scaffold):
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
 
-def test_hook_commit_identity_guard(scaffold):
-    # Thread 38: under an email-pattern policy the hook blocks a mismatched
-    # author before the commit exists and passes a matching one; `inherit`
-    # (the scaffolded default) skips the check entirely.
+def test_hook_privacy_author_guard(scaffold):
+    # Identity->privacy reframe: with docs/privacy-check on, the hook's --author
+    # step blocks a private (non-exempt) author before the commit exists and
+    # passes an exempt no-reply one; the scaffolded default (privacy off) skips.
     import pytest
 
     sh = shutil.which("sh")
@@ -179,34 +181,82 @@ def test_hook_commit_identity_guard(scaffold):
 
     assert git("init").returncode == 0
     git("config", "user.name", "Test User")
-    git("config", "user.email", "someone@example.com")
+    git("config", "user.email", "real.person@gmail.com")
 
     def run_hook():
         return subprocess.run(
             [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True
         )
 
-    # The scaffolded default is `inherit`: any identity passes.
-    policy = scaffold / "docs" / "commit-identity"
+    # The scaffolded default is privacy-check false: any identity passes.
+    policy = scaffold / "docs" / "privacy-check"
     body = [
         ln
         for ln in policy.read_text(encoding="utf-8").splitlines()
         if ln.strip() and not ln.startswith("#")
     ]
-    assert body == ["inherit"], "scaffold must default to inherit"
+    assert body == ["false"], "scaffold must default privacy-check to false"
     ok = run_hook()
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
-    # Pattern policy + mismatched author: a designed block with guidance.
-    policy.write_text("*@users.noreply.github.com\n", encoding="utf-8")
+    # privacy-check on + a private (non-exempt) author: a designed block.
+    policy.write_text("true\n", encoding="utf-8")
     blocked = run_hook()
-    assert blocked.returncode != 0, "mismatched author must be blocked"
-    assert "commit-identity" in blocked.stderr
-    assert "inherit" in blocked.stderr  # the opt-out is named in the fix text
+    assert blocked.returncode != 0, "a private author must be blocked"
+    assert "exempt allowlist" in blocked.stderr
 
-    # Matching author: green again.
+    # An exempt no-reply author: green again.
     git("config", "user.email", "12345+user@users.noreply.github.com")
     ok = run_hook()
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+
+
+def test_bootstrap_copies_commit_msg_hook(scaffold):
+    hook = scaffold / ".githooks" / "commit-msg"
+    assert hook.exists(), "bootstrap must copy the commit-msg hook to .githooks/"
+    assert hook.read_text(encoding="utf-8").startswith("#!/bin/sh")
+
+
+def test_commit_msg_hook_scans_message(scaffold):
+    # The pile-up fix: pre-commit runs before the message exists, so the message
+    # goes unscanned until push. The commit-msg hook closes the gap — git passes
+    # the message file as $1 and a nonzero exit aborts the commit. The always-on
+    # secrets floor scans every repo's message; the privacy layer adds its
+    # classes only when docs/privacy-check is `true`.
+    import pytest
+
+    sh = shutil.which("sh")
+    if not sh or not shutil.which("git"):
+        pytest.skip("needs a POSIX shell and git on PATH")
+    make_minimal_project(scaffold)
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    HOOK_CM = ".githooks/commit-msg"
+
+    def run_msg(text):
+        msg = scaffold / "MSG.txt"
+        msg.write_text(text, encoding="utf-8")
+        return subprocess.run(
+            [sh, HOOK_CM, "MSG.txt"], cwd=str(scaffold), capture_output=True, text=True
+        )
+
+    # Secrets floor (always on): a credential in the message body blocks.
+    key = "-----BEGIN RSA " + "PRIVATE KEY-----"  # split so this line is not a match
+    blocked = run_msg("add config\n\n" + key + "\n")
+    assert blocked.returncode != 0, "a secret in the message must block"
+    assert "private key header" in (blocked.stdout + blocked.stderr)
+
+    # Privacy layer off (scaffold default): a private email in the message is a
+    # privacy class, not a secret, so it passes.
+    ok = run_msg("fix\n\nReported-by: real.person@gmail.com\n")
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+
+    # Privacy layer on: the same private email now blocks; the exempt no-reply
+    # co-author trailer passes.
+    (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    blocked = run_msg("fix\n\nReported-by: real.person@gmail.com\n")
+    assert blocked.returncode != 0, "a private email in the message must block when on"
+    assert "exempt allowlist" in (blocked.stdout + blocked.stderr)
+    ok = run_msg("fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n")
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
 

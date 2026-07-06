@@ -1,0 +1,50 @@
+#!/bin/sh
+# commit-msg hook — secrets + privacy scan of the commit MESSAGE (title + body).
+#
+# pre-commit runs before the message exists, so it can only scan the staged
+# diff; the message body is unseen until push (pre-push --range reads history).
+# That gap is how leaks in commit messages — a credential pasted into a body, an
+# email in a trailer — pile up unnoticed across many commits before a push
+# finally surfaces them. This hook closes it: git passes the prepared message
+# file as $1, and a nonzero exit ABORTS the commit, so a leak is caught at the
+# first commit, not the push.
+#
+# The script self-gates: the always-on SECRETS FLOOR scans every repo's message,
+# and the PRIVACY layer adds its classes only when docs/privacy-check is `true`.
+# Both off => it exits 0 fast (zero cost). Enabled by
+# `git config core.hooksPath .githooks` (setup.sh / setup.ps1 already set it).
+#
+# One POSIX hook covers every platform (Git for Windows runs hooks through sh).
+set -e
+
+REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+
+# Find a Python 3 interpreter (same probe as pre-commit: run it, don't just find
+# it — Windows' Store alias resolves on PATH but exits nonzero). No Python =
+# skip, consistent with pre-commit's process-check posture.
+PY=""
+for cand in python3 python; do
+  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+    PY="$cand"; break
+  fi
+done
+if [ -z "$PY" ]; then
+  echo "commit-msg: Python 3 not found on PATH; skipping message scan." >&2
+  exit 0
+fi
+
+# Locate scripts/ relative to the repo root (accept Scripts/ on case-preserving
+# NTFS, same as pre-commit).
+SCRIPTS_DIR=""
+for sd in scripts Scripts; do
+  if [ -d "$REPO_ROOT/$sd" ]; then
+    SCRIPTS_DIR="$REPO_ROOT/$sd"; break
+  fi
+done
+if [ -z "$SCRIPTS_DIR" ]; then
+  echo "commit-msg: cannot find scripts/ dir under $REPO_ROOT; skipping message scan." >&2
+  exit 0
+fi
+
+# Scan the message file git handed us ($1). Nonzero exit aborts the commit.
+"$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --message "$1"
