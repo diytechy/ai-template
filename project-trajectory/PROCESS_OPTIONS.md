@@ -738,26 +738,41 @@ once, apply per clone, guard mechanically.**
   only moment identity is free to fix. An unattended coordinator should treat a
   violated policy as a preflight failure, not something to notice later.
 
+**Secrets floor (every repo).** Distinct from the identity concern below and
+**not gated on it:** `scripts/check_privacy.py` always scans for private-key
+headers and universal credential shapes (GitHub, Slack, AWS, `sk-…` keys) — the
+security net an ordinary identified project gets too, because a committed key is
+a leak regardless of who authored it. It runs in the same three modes as the
+identity lint (staged diff at pre-commit, `--repo` at every gate, `--range` at
+pre-push), in **all** repos including `inherit`. Opt out with the one word `off`
+in **`docs/secrets-scan`** (one-word declared policy, absent = on) — the
+deliberate exit for a repo whose content *is* secret-shaped; mark individual
+false positives with the inline `privacy-ok` marker first and reserve `off` for
+a repo that drowns in them. Still a pattern floor, not a DLP product — deep
+secrets scanning stays the named external category (gitleaks, trufflehog),
+never rebuilt in the kit. *Adoption note:* a repo that had no scanning starts
+failing on a committed token when it takes this kit version — that is the point,
+and `off` is the escape (ADOPTING.md §6).
+
 **Content privacy (anonymous repos).** The author field is the smaller leak
 surface; **content** is the bigger one — an absolute path carrying the OS
 username, the real identity from global git config pasted into a doc, an
-email in a test fixture, a bio detail in a README. Everything below is gated
-on the policy declaring a pattern; `inherit` repos pay zero.
+email in a test fixture, a bio detail in a README. These **identity** classes
+run only when the policy declares a pattern; `inherit` repos pay zero for
+them (the secrets floor above still runs).
 
 - **Layer 1 — deterministic lint, per commit.** `scripts/check_privacy.py`
-  (stdlib) scans the **staged diff** for the high-confidence classes: home-dir
-  path shapes carrying an OS username, the current account/hostname, emails
-  failing the policy pattern, the global-git-config identity appearing in
-  content, private-key headers and a few universal token shapes. Wired into
-  `.githooks/pre-commit` under the policy gate; blocks with file:line
-  findings. `--repo` sweeps every tracked file as a `check.py` process step at
-  every gate (catching what slipped in before the policy existed or past
-  `--no-verify`); `--range` scans a commit range *as history* — diffs,
-  messages, author lines — for the pre-push floor and the sync scrub's base
-  pass. A documented example line carries the inline `privacy-ok` marker to be
-  exempt — mark false positives instead of training yourself to bypass the
-  hook. Deep secrets scanning stays a named **external** category (gitleaks,
-  trufflehog): product-layer, never rebuilt in the kit.
+  (stdlib) scans the **staged diff** for the high-confidence *identity* classes:
+  home-dir path shapes carrying an OS username, the current account/hostname,
+  emails failing the policy pattern, the global-git-config identity appearing in
+  content (the always-on secrets floor above scans alongside them). Wired into
+  `.githooks/pre-commit`; blocks with file:line findings. `--repo` sweeps every
+  tracked file as a `check.py` process step at every gate (catching what slipped
+  in before the policy existed or past `--no-verify`); `--range` scans a commit
+  range *as history* — diffs, messages, author lines — for the pre-push floor
+  and the sync scrub's base pass. A documented example line carries the inline
+  `privacy-ok` marker to be exempt — mark false positives instead of training
+  yourself to bypass the hook.
 - **Layer 2 — LLM review at the push boundary.** Publication is where a leak
   becomes harmful and effectively unrecallable, so the **judgment** layer sits
   there — its *primary home* is the sync ritual's scrub step ("Agent iteration
@@ -911,7 +926,10 @@ doesn't need).** At G1, consider which categories apply and route each to a home
 
 - performance efficiency (time, throughput) and resource use (RAM/VRAM, disk);
 - reliability / availability / recoverability;
-- **security** (authn/authz, data protection, secrets, audit, dependency / supply-chain);
+- **security** (authn/authz, data protection, secrets, audit, dependency /
+  supply-chain) — the kit ships a deterministic **secrets floor** for committed
+  credentials in every repo (see "Secrets floor (every repo)" above); deeper
+  scanning (gitleaks, dependency audit) stays a project-wired external category;
 - **observability / operability** (logging, metrics, tracing, health — also the
   prerequisite for *measuring* any of the perf budgets);
 - scalability / capacity; compatibility / interoperability;

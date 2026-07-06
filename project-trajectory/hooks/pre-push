@@ -52,7 +52,43 @@ if [ -f "$POLICY_FILE" ]; then
   policy=$(grep -v '^[[:space:]]*#' "$POLICY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
 fi
 if [ -z "$policy" ] || [ "$policy" = "inherit" ]; then
-  exit 0
+  # Not anonymous: the identity review below does not apply. But the always-on
+  # SECRETS FLOOR (docs/secrets-scan; default on — Thread 44) still guards the
+  # outgoing history against key/token shapes, the security net every repo
+  # gets. Tooling-gated and never fail-closed here: a missing interpreter skips
+  # (the pre-commit floor already scanned each commit), it must not block an
+  # unconcerned repo's push; `docs/secrets-scan: off` disables it in-script.
+  PY=""
+  for cand in python3 python; do
+    if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+      PY="$cand"; break
+    fi
+  done
+  SCRIPTS_DIR=""
+  for sd in scripts Scripts; do
+    if [ -d "$REPO_ROOT/$sd" ]; then SCRIPTS_DIR="$REPO_ROOT/$sd"; break; fi
+  done
+  if [ -z "$PY" ] || [ -z "$SCRIPTS_DIR" ]; then exit 0; fi
+  zero=0000000000000000000000000000000000000000
+  status=0
+  while read -r local_ref local_sha remote_ref remote_sha; do
+    remote_sha=$(printf '%s' "$remote_sha" | tr -d '\r')
+    [ -z "$local_sha" ] && continue
+    [ "$local_sha" = "$zero" ] && continue
+    if [ "$remote_sha" = "$zero" ]; then
+      range="$local_sha"
+    else
+      range="$remote_sha..$local_sha"
+    fi
+    if ! "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --range "$range"; then
+      echo "pre-push: secrets floor found key/token shapes in the outgoing" >&2
+      echo "  range $local_ref ($range). Rewrite LOCAL history before it" >&2
+      echo "  publishes, or set docs/secrets-scan to 'off' for a deliberate" >&2
+      echo "  fixture (process-options.md \"Commit identity & anonymity\")." >&2
+      status=1
+    fi
+  done
+  exit $status
 fi
 
 # Interpreter + scripts dir discovery (same probes as pre-commit; see there).

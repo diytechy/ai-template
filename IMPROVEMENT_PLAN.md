@@ -3858,6 +3858,194 @@ Thread-15 class).
 
 ---
 
+## Thread 44 — Security floor: an always-on secrets scan, split from the identity gate (opt-out)
+
+**Status: ✅ landed 2026-07-05.** `check_privacy.py` now scans two independently
+gated classes: the always-on **secrets floor** (private-key headers +
+GitHub/Slack/AWS/`sk-…` shapes) runs in every repo including `inherit`, and the
+**identity-leak** classes (home-dir usernames, off-policy emails, account/
+hostname, global-git identity) stay gated on `docs/commit-identity`. Opt out of
+the floor with the one word `off` in **`docs/secrets-scan`** (absent = on; the
+`_first_declared_line` parse is now shared by both policy reads). The script
+exits 0 fast only when *both* layers are off. Wiring: the pre-commit step now
+runs unconditionally (the script decides); `check.py`'s `--repo` step already
+ran unconditionally (comment corrected); the pre-push hook gained a
+self-contained `inherit` branch that runs the secrets floor over the outgoing
+`--range` — **tooling-gated, never fail-closed** (the identity guarantee doesn't
+apply), leaving the anonymous review path byte-for-byte unchanged. Docs:
+process-options gained a "Secrets floor (every repo)" subsection + the §9 NFR
+security bullet pointer; both READMEs' script/hook rows; an ADOPTING.md §6
+migration recipe flagging the behavior change (an `inherit` repo starts scanning
+— that's the point; `off` is the escape). **Deviations / additions beyond the
+spec's Done-when:** (1) kept one file (the spec's recommended conservative
+default), no `check_secrets.py`; (2) added a **meta-repo dogfood** test asserting
+this kit's own tracked tree passes the floor under its `inherit` policy — a real
+net (this repo is `inherit`, so the floor newly applies), the honest form of the
+spec's dogfood claim; (3) `test_pre_commit_hook`'s end-to-end test now `git
+init`s its scaffold, since the now-unconditional step 3 reads the staged diff and
+a pre-commit hook only ever runs inside a git repo. Tests: +8
+(`test_check_privacy`: floor-under-inherit, opt-out, secrets-off-keeps-identity,
+repo+range modes, meta-repo dogfood; `test_pre_commit_hook`: staged-key blocked +
+opt-out; `test_pre_push_hook`: inherit floor blocks + opt-out). `pytest -q`: 329
+passed, 1 skipped; `check_docs --root . --stale`: OK, 0 broken. Byte deltas:
+AGENTS.template.md / PROCESS.md untouched (the knob lives in PROCESS_OPTIONS + the
+hooks + the script).
+
+**Source of scope (retained):** owner ask — give *every* repo a deterministic
+secrets floor, not just anonymous ones, with an explicit opt-out for the rare
+repo that needs an exit.
+
+**Source:** owner review of the security posture (2026-07-05). Privacy
+provisions exist (Threads 38/39/40) but security has no always-on floor. The
+high-confidence secret patterns — private-key headers and the GitHub / Slack /
+AWS / `sk-…` token shapes — already live in `scripts/check_privacy.py`, but the
+**whole lint is gated on `docs/commit-identity` declaring a pattern** (an
+`inherit` repo exits 0 immediately). So an ordinary identified repo — the
+common home-brew case — commits an AWS key with **nothing in the kit flagging
+it**, at any layer. That is an accident of where the patterns landed (the
+docstring frames them as "universal token shapes," unrelated to anonymity),
+not a design decision.
+
+**The split.** Two classes of pattern, two gates:
+- **Secrets floor — always on** (opt-out): private-key headers + the universal
+  token shapes. These have nothing to do with identity; they run regardless of
+  `docs/commit-identity`.
+- **Identity-leak layer — policy-gated as today**: home-dir path shapes carrying
+  an OS username, the current account/hostname, emails failing the declared
+  pattern, the global-git-config identity appearing in content. These only make
+  sense under an anonymity policy and stay gated on it (`inherit` pays zero for
+  *these*, as now).
+
+**Opt-out.** A one-word declared-policy file `docs/secrets-scan` (same
+first-line parse as `docs/gate-policy` / `docs/push-policy` / `docs/privacy-review`):
+absent or any value but `off` reads **on** (the safe default); `off` is the
+deliberate exit for the strange repo that needs it (e.g. a repo whose *content
+is* secret-shaped test fixtures and drowns in false positives — mark lines with
+`privacy-ok` first; `off` is the last resort). The opt-out is a repo decision,
+so it lives in a tracked file, not a flag.
+
+**Mechanics:**
+- **Keep one file** (SSOT for the patterns): broaden `check_privacy.py` rather
+  than fork a `check_secrets.py` — a rename/second-file both cost downstream
+  hook migration and split the pattern list. The docstring's "Honesty boundary"
+  and gating prose get rewritten to describe the two-class split. *(Open
+  spec-time call: if the identity framing of the filename grates, a thin
+  `check_secrets.py` that imports the shared pattern constants is the
+  alternative — but default to the conservative in-place broadening.)*
+- The three existing modes are unchanged in shape (staged diff at pre-commit,
+  `--repo` at gates, `--range` at pre-push) — but the **secrets subset now runs
+  in all of them even under `inherit`**, gated only on `docs/secrets-scan`.
+- The deep-scan boundary is **restated, not moved**: this is the deterministic
+  floor of high-confidence patternable classes; gitleaks / trufflehog stay the
+  named external product-layer category (never rebuilt in the kit).
+- **Meta-repo dogfood — real, not n/a:** this repo is `inherit` (identity not
+  declared), so the secrets floor **newly applies here** and the pre-commit /
+  gate wiring is exercised on the kit itself.
+- Docs: process-options "Commit identity & anonymity" gains a short "Secrets
+  floor (all repos)" note distinguishing it from the identity-gated content
+  privacy; the §9 NFR checklist's **security** bullet points at it.
+
+**Tests:** an `inherit` repo with an AWS/`sk-…`/private-key line in the staged
+diff now **fails** (was silent); the same repo with `docs/secrets-scan: off`
+passes; an identity-only leak (home-dir username) stays **silent** under
+`inherit` (still policy-gated) and still fails under a declared pattern; a
+`privacy-ok` line is still exempt; RFC 2606 example domains still exempt;
+`--repo` and `--range` exercise the secrets subset under `inherit`.
+
+**Risks:** **downstream migration — flag it.** An identified repo that had *no*
+scanning now gets secrets scanning on every commit; a repo carrying a
+committed token that previously passed will start failing (that is the point,
+but it is a behavior change — the ADOPTING resync note must call it out, and
+`docs/secrets-scan: off` is the documented escape). False positives on
+secret-shaped fixtures — the `privacy-ok` marker is the per-line affordance
+before the repo-wide `off`. Scope creep — resist adding entropy heuristics or
+new token vendors here; that is the external-product boundary.
+
+**Done-when:** the secrets subset runs under `inherit`; `docs/secrets-scan:
+off` disables it; the identity layer stays policy-gated and unchanged;
+process-options + the NFR security bullet updated; the ADOPTING migration note
+added; `pytest -q` + `check_docs` green.
+
+**Model tier — strong model** (a gating-logic change in a security-sensitive
+lint with a downstream-migration edge; the test matrix is the backstop).
+
+---
+
+## Thread 45 — Coordinator: a differentiated fail region (session errored ≠ ran-no-commit)
+
+**Status: 🟡 specced 2026-07-05 (owner-approved 2026-07-05), not yet
+scheduled — confirm before starting.** Owner ask: distinguish a session that
+**errored before doing any work** from one that **ran and produced no commit**,
+so a walk-away run that died fast doesn't misreport as a work stall.
+Auto-fallback to a substitute model is **out of scope by owner decision** — an
+unsupported model is handled manually (edit `docs/status.md` / the model map to
+point at a live tier).
+
+**Source:** owner review of `scripts/agent_loop.py` (2026-07-05). Today only
+rate-limit wording gets special detection; every other pre-work failure —
+`OSError` launching the CLI, an auth-expired / model-retired / broken-CLI
+session that returns an error result — logs as `NO-COMMIT` and counts toward
+the stall guard exactly like a healthy session that chose to do nothing. Three
+failures in thirty seconds abort with the generic **STALL** banner ("N
+consecutive sessions without a commit — aborting to protect the budget"),
+which points the human at a *work-stall* diagnosis when the real cause is an
+unavailable agent.
+
+**The change (reporting, not new control flow):**
+- A distinct **`ERROR`** outcome in the session-log metadata + the
+  `iteration_index.md` Outcome column, chosen when the session failed **before
+  work was possible** and it is **not** a rate limit: `run_session` returned an
+  `OSError` (already `-1` with `coordinator: session error:`), **or** the JSON
+  result carries `is_error` with no parseable reset hint. Ordering matters —
+  the existing `WAITING` (rate-limit) branch wins first; `ERROR` is the
+  not-a-limit error case; `NO-COMMIT` stays the *healthy-but-idle* case.
+- The abort banner differentiates: when the runs that tripped the guard were
+  `ERROR`s, the stop banner names it a **session/agent error** (point at the
+  exit code + the latest `docs/iteration/` log, suggest checking the model map
+  / auth / CLI), not a work stall.
+
+**Deliberately minimal (record the deferred knobs):** keep the **single** stall
+counter — a persistently-broken agent still stops the loop and protects the
+budget; only the *label and the banner* differentiate. A separate
+`--error-limit` (abort faster on hard errors than on idle sessions) and any
+declared model-fallback are **deferred** — the owner ruled manual handling
+sufficient for the unsupported-model case, and cross-CLI failure wording is the
+hard, defer-until-seen part (the same reason the rate-limit parser only handles
+observed wordings).
+
+**Mechanics:**
+- The outcome ladder in `main()` (around the current `WAITING / TIMEOUT /
+  END_STATES / COMMITTED / NO-COMMIT` cascade) gains the `ERROR` rung between
+  `TIMEOUT` and the state checks; reuse `limit_reset_hint(...) is None` as the
+  not-a-limit guard and the `parse_json_result` `is_error` / `code` signals
+  already computed.
+- No change to exit codes (an `ERROR` run still flows to the stall path); the
+  differentiation is the log metadata + the banner text. *(If the spec session
+  finds a clean case for a dedicated exit code, raise it as a finding — don't
+  add one silently.)*
+
+**Tests:** an `OSError` launch logs `ERROR`, not `NO-COMMIT`; an `is_error`
+JSON result with no reset hint logs `ERROR`; a healthy zero-commit session
+still logs `NO-COMMIT`; a rate-limit session still logs `WAITING` (unchanged);
+the abort banner text differs when the tripping runs were `ERROR`s.
+
+**Risks:** mislabeling a *healthy* session as `ERROR` (a transcript that merely
+mentions an error) — bind `ERROR` to the same *is-it-actually-an-error* signals
+`limit_reset_hint` already trusts (`is_error` / nonzero exit / `OSError`), never
+a substring scan of the transcript. Low downstream impact — this is
+coordinator-internal reporting, no artifact-format or gate change.
+
+**Done-when:** `ERROR` is a distinct logged outcome bound to real pre-work
+failure signals; the stall/abort banner distinguishes an agent error from a
+work stall; rate-limit and healthy-idle paths unchanged; `pytest -q`
+(`test_agent_loop.py` extended) green.
+
+**Model tier — Sonnet-able once specced** (a localized outcome-ladder edit with
+a tight test matrix; strong model only if the spec session reopens the
+exit-code question).
+
+---
+
 ## 2026-07-04 batch — decision briefs (all ruled by the owner 2026-07-04)
 
 **Rulings (owner, 2026-07-04).** The briefs below are kept as the *why*; each
@@ -5330,10 +5518,14 @@ continuity (same style as the session log above).
    Status line carries its operative form). Sessions L/M/N/O/P/Q/R/S are
    sequenced by the **▶ NEXT marker** in the sessions block (set 2026-07-04
    with the owner's rulings) — follow it per steps 1–5. **Threads 41–43 all
-   landed 2026-07-05 (WI-1.33/1.34 + the three thread Status blocks).** The
-   **stubs** (16 non-code-artifact verification · 21 cross-repo
-   tooling · 23 publication composition) still each need a decision to
-   revive.
+   landed 2026-07-05 (WI-1.33/1.34 + the three thread Status blocks).**
+   **Thread 44 ✅ landed 2026-07-05** (always-on secrets floor, split from the
+   identity gate, with a `docs/secrets-scan: off` opt-out). **Thread 45**
+   (coordinator `ERROR` outcome — session-errored ≠ ran-no-commit) remains
+   specced, owner-approved, **not yet scheduled — confirm before starting** (no
+   ▶ NEXT marker). The **stubs** (16 non-code-artifact
+   verification · 21 cross-repo tooling · 23 publication composition) still
+   each need a decision to revive.
 1. Implement the threads in the **▶ NEXT** session — and only those. Each thread's
    own section above is its spec (Goal/Steps/Tests/Risks/Done-when).
 2. **End green:** run `python -m pytest -q` and paste the real output (per

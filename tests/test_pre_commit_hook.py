@@ -102,12 +102,15 @@ def test_hook_blocks_duplicate_id_but_not_orphan(scaffold):
 def test_hook_runs_end_to_end_when_sh_available(scaffold):
     # Where a POSIX shell exists (Linux/macOS CI; Git Bash on Windows), run the
     # actual hook so its interpreter discovery + command wiring are exercised.
+    # A pre-commit hook only ever runs inside a git repo (its step 3 secrets
+    # floor reads the staged diff), so init one — the realistic footing.
     sh = shutil.which("sh")
-    if not sh:
+    if not sh or not shutil.which("git"):
         import pytest
 
-        pytest.skip("no POSIX shell on PATH")
+        pytest.skip("needs a POSIX shell and git on PATH")
     make_minimal_project(scaffold)
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
     ok = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
@@ -123,6 +126,39 @@ def test_hook_runs_end_to_end_when_sh_available(scaffold):
         [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True
     )
     assert blocked.returncode != 0, blocked.stdout + blocked.stderr
+
+
+def test_hook_secrets_floor_blocks_staged_key_under_inherit(scaffold):
+    # Thread 44: the pre-commit hook now runs the always-on secrets floor for
+    # every repo, so a staged credential is blocked before the commit exists —
+    # even under the scaffolded `inherit` policy — and the opt-out lifts it.
+    import pytest
+
+    sh = shutil.which("sh")
+    if not sh or not shutil.which("git"):
+        pytest.skip("needs a POSIX shell and git on PATH")
+    make_minimal_project(scaffold)
+
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=str(scaffold), capture_output=True, text=True
+        )
+
+    assert git("init").returncode == 0
+    git("config", "user.name", "Test User")
+    git("config", "user.email", "someone@example.com")
+    key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"  # split so this line is not a match
+    (scaffold / "cfg.txt").write_text(key, encoding="utf-8")
+    assert git("add", "cfg.txt").returncode == 0
+
+    blocked = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
+    assert blocked.returncode != 0, "a staged private key must block under inherit"
+    assert "private key header" in (blocked.stdout + blocked.stderr)
+
+    # The opt-out lifts the floor for a repo that needs it.
+    (scaffold / "docs" / "secrets-scan").write_text("off\n", encoding="utf-8")
+    ok = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
 
 
 def test_hook_commit_identity_guard(scaffold):

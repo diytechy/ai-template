@@ -37,8 +37,9 @@ The kit's headline pieces:
   [`check_stubs.py`](project-trajectory/scripts/check_stubs.py)
   (optional, warn-first no-stub/substance detector for the G3 criterion),
   [`check_privacy.py`](project-trajectory/scripts/check_privacy.py)
-  (privacy-leak lint for anonymous repos; inert under the default `inherit`
-  commit-identity policy),
+  (a deterministic **secrets floor** for committed keys/tokens in every repo,
+  opt-out via `docs/secrets-scan`, plus identity-leak classes gated on an
+  anonymous `commit-identity` policy),
   [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   (the AST code map — summaries, dependencies, `Implements:` back-links — plus
   a generated Mermaid dependency diagram, routed into `architecture.md` and/or

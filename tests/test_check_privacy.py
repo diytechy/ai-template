@@ -1,23 +1,31 @@
-"""The deterministic privacy lint (Thread 39, Layer 1).
+"""The deterministic secrets + privacy lint (Thread 39 Layer 1; Thread 44 split).
 
 Every detection class is exercised red/green on real staged diffs / trees /
 commit ranges in a bootstrapped scaffold, because the lint's whole value is
 what it blocks *and* what it deliberately lets through (placeholders, RFC 2606
-example domains, `privacy-ok`-marked lines). The `inherit` default must cost
-zero — that property keeps the step wireable unconditionally in check.py and
-the pre-commit hook.
+example domains, `privacy-ok`-marked lines). Two layers are pinned separately:
+the always-on **secrets floor** (key/token shapes, every repo — opt out with
+`docs/secrets-scan: off`) and the **identity-leak** classes gated on a declared
+`docs/commit-identity` pattern. An `inherit` repo with the floor opted out must
+cost zero — that fast-exit keeps the step wireable unconditionally in check.py
+and the pre-commit hook.
 """
 
 import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 from conftest import run_py
 
 ANON = "*@users.noreply.github.com"
 SCRIPT = "scripts/check_privacy.py"
+# This kit repo (a git checkout) and its real check_privacy.py, for the
+# meta-repo dogfood — the scaffold copies live at scripts/, the source here does not.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+KIT_SCRIPT = REPO_ROOT / "project-trajectory" / "scripts" / "check_privacy.py"
 # A deterministic fake OS account: getpass.getuser() honors LOGNAME/USER/
 # USERNAME (in that order) on every platform, so forcing all three makes the
 # current-account class testable without depending on the machine's real user.
@@ -48,6 +56,10 @@ def set_policy(root, value):
     (root / "docs" / "commit-identity").write_text(value + "\n", encoding="utf-8")
 
 
+def set_secrets_scan(root, value):
+    (root / "docs" / "secrets-scan").write_text(value + "\n", encoding="utf-8")
+
+
 def git(root, *args):
     return subprocess.run(["git", *args], cwd=str(root), capture_output=True, text=True)
 
@@ -68,15 +80,88 @@ def stage(root, rel, text):
 
 
 @needs_git
-def test_inherit_policy_costs_zero(scaffold):
-    # The scaffolded default is inherit: even a blatant staged leak is not this
-    # lint's business — unconcerned repos must pay nothing (the wire-it-
-    # unconditionally property check.py and the hook rely on).
+def test_inherit_skips_identity_classes(scaffold):
+    # The scaffolded default is inherit: the identity-leak classes (home-dir
+    # paths, off-policy emails, the OS account) are not this repo's concern and
+    # stay silent. The always-on secrets floor still runs (covered below), but a
+    # home-dir path is not a secret, so the commit passes.
     init_repo(scaffold)
     stage(scaffold, "notes.md", "built at C:\\Users\\bobsmith\\proj\n")
     proc = run_lint(scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "inherit" in proc.stdout
+    assert "home-dir path" not in proc.stdout
+
+
+@needs_git
+def test_secrets_floor_runs_under_inherit(scaffold):
+    # Thread 44: a committed credential is a leak regardless of who authored it,
+    # so the secrets floor fires even under the default inherit policy — the
+    # security net an ordinary identified repo gets too.
+    init_repo(scaffold)  # no commit-identity policy set: inherit
+    stage(scaffold, "cfg.txt", "-----BEGIN RSA PRIVATE KEY-----\n")  # privacy-ok
+    proc = run_lint(scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "private key header" in proc.stdout
+
+    stage(scaffold, "cfg.txt", "aws = AKIA" + "A" * 16 + "\n")  # privacy-ok
+    proc = run_lint(scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "aws access key id" in proc.stdout
+
+
+@needs_git
+def test_secrets_scan_off_opts_out(scaffold):
+    # The opt-out: `docs/secrets-scan: off` disables the floor for the rare repo
+    # whose content is secret-shaped. Under inherit + off, nothing runs at all.
+    init_repo(scaffold)
+    set_secrets_scan(scaffold, "off")
+    stage(scaffold, "cfg.txt", "-----BEGIN RSA PRIVATE KEY-----\n")  # privacy-ok
+    proc = run_lint(scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "nothing to check" in proc.stdout
+
+
+@needs_git
+def test_secrets_off_still_runs_identity_under_policy(scaffold):
+    # The opt-out narrows only the secrets floor: under a declared anonymous
+    # policy the identity classes still run, and a secret is let through.
+    init_repo(scaffold)
+    set_policy(scaffold, ANON)
+    set_secrets_scan(scaffold, "off")
+    stage(scaffold, "notes.md", "data at C:\\Users\\bobsmith\\proj\n")
+    proc = run_lint(scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "home-dir path" in proc.stdout
+
+    # A secret is let through when the floor is off (notes.md cleaned so the
+    # only staged concern is the key the opt-out disables).
+    stage(scaffold, "notes.md", "clean now\n")
+    stage(scaffold, "cfg.txt", "-----BEGIN RSA PRIVATE KEY-----\n")  # privacy-ok
+    proc = run_lint(scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+@needs_git
+def test_secrets_floor_in_repo_and_range_modes_under_inherit(scaffold):
+    # The floor runs in all three modes even under inherit, not just the staged
+    # diff: the --repo sweep and the --range history scan both catch it.
+    init_repo(scaffold)
+    (scaffold / "seed.txt").write_text("clean\n", encoding="utf-8")
+    git(scaffold, "add", "seed.txt")
+    assert git(scaffold, "commit", "-m", "base").returncode == 0
+    base = git(scaffold, "rev-parse", "HEAD").stdout.strip()
+
+    key = "-----BEGIN RSA PRIVATE KEY-----\n"  # privacy-ok
+    (scaffold / "cfg.txt").write_text(key, encoding="utf-8")
+    git(scaffold, "add", "cfg.txt")  # the sweep reads tracked (indexed) files
+    proc = run_lint(scaffold, "--repo")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "private key header" in proc.stdout
+
+    assert git(scaffold, "commit", "-m", "add cfg").returncode == 0
+    proc = run_lint(scaffold, "--range", base + "..HEAD")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "private key header" in proc.stdout
 
 
 @needs_git
@@ -224,8 +309,9 @@ def test_range_mode_catches_history_and_messages(scaffold):
 
 def test_check_py_wires_privacy_as_process_step(scaffold):
     # The sweep is a [process] step at every gate; on the inherit scaffold the
-    # whole G1 plan still passes (the step self-skips), so wiring it
-    # unconditionally never taxes an unconcerned repo.
+    # whole G1 plan still passes — the secrets floor runs but a fresh scaffold
+    # ships no credential shapes, so wiring it unconditionally never taxes an
+    # unconcerned repo.
     proc = run_py(["scripts/check.py", "--gate", "G1", "--list"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert any("privacy" in ln and "[process]" in ln for ln in proc.stdout.splitlines())
@@ -253,3 +339,19 @@ def test_check_py_gate_red_on_seeded_leak(scaffold):
     assert any("FAIL" in ln and "privacy" in ln for ln in proc.stdout.splitlines()), (
         proc.stdout
     )
+
+
+@needs_git
+def test_meta_repo_tree_passes_the_secrets_floor():
+    # Dogfood: this kit repo is `inherit`, so the always-on secrets floor now
+    # applies to it. Its own tracked tree must ship no credential shapes — the
+    # net that would catch a real key ever landing in the kit. Run against the
+    # real repo root, not a scaffold.
+    proc = subprocess.run(
+        [sys.executable, str(KIT_SCRIPT), "--root", str(REPO_ROOT), "--repo"],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr

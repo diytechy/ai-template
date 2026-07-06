@@ -346,6 +346,19 @@ range to see exactly which templates/scripts changed before you touch anything.
   guard covers **future commits in clones that ran setup** only — history
   already committed under the wrong identity needs a git history rewrite,
   which is out of the kit's scope; decide that deliberately before publishing.
+- **Secrets floor (`check_privacy.py`, every repo) — a behavior change to
+  expect.** Newer kits run the deterministic secrets floor (private-key headers
+  + GitHub/Slack/AWS/`sk-…` shapes) in **all** repos, not just anonymous ones
+  (process-options.md "Secrets floor (every repo)"). Overwriting the hooks +
+  `check_privacy.py` on re-sync therefore starts scanning an `inherit` repo that
+  previously had none: the pre-commit hook blocks a staged commit carrying a
+  credential shape, `check.py` flags a tracked one at every gate, and the
+  pre-push hook scans the outgoing range. **That is the point** — but if the
+  repo legitimately holds secret-shaped content (test fixtures, sample keys),
+  mark those lines with the inline `privacy-ok` marker, and only as a last
+  resort track the one word `off` in `docs/secrets-scan` to disable the floor
+  repo-wide (a reviewed, recorded decision). No new scaffolded file is required;
+  absent `docs/secrets-scan` reads *on*.
 - **Push policy + agent iteration branch (`docs/push-policy`).** Newer kits
   declare who may publish (process-options.md "Agent iteration branch &
   sync"): a one-word file — `human` (default: an agent never pushes, even if

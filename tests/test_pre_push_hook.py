@@ -97,6 +97,29 @@ def test_inherit_policy_is_inert(repo):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+def test_inherit_secrets_floor_blocks_a_key_in_range(repo):
+    # Thread 44: even an inherit repo's push is guarded by the always-on secrets
+    # floor — a key/token shape in the outgoing history blocks, with no reviewer
+    # machinery and no fail-closed (the identity guarantee does not apply here).
+    root, base, head = repo
+    key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"  # split so this source line is not itself a match
+    leaky = commit_file(root, "cfg.txt", key, "add cfg")
+    proc = run_hook(root, push_line(leaky, head))
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "secrets floor" in proc.stderr
+
+
+def test_inherit_secrets_scan_off_lets_it_through(repo):
+    # The opt-out reaches the push boundary: docs/secrets-scan off disables the
+    # floor, so the same key does not block an unconcerned repo's push.
+    root, base, head = repo
+    (root / "docs" / "secrets-scan").write_text("off\n", encoding="utf-8")
+    key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"
+    leaky = commit_file(root, "cfg.txt", key, "add cfg")
+    proc = run_hook(root, push_line(leaky, head))
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 def test_missing_reviewer_fails_closed(repo):
     # The Q12 ruling: under a declared policy a missing reviewer is never a
     # pass at the one boundary that matters — block, with the wiring spelled out.

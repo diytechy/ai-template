@@ -1,23 +1,33 @@
 #!/usr/bin/env python3
-"""Privacy-leak lint for anonymous repos — the deterministic floor (stdlib only).
+"""Secrets + privacy-leak lint — the deterministic floor (stdlib only).
 
-When `docs/commit-identity` declares an email pattern (anything but `inherit`),
-this repo is anonymous/pseudonymous and machine-local identity must stay out of
-**committed content**, not just the author field. This lint scans for the
-high-confidence, patternable leak classes:
+Two classes of pattern, two gates (Thread 44):
 
-    - home-directory path shapes carrying an OS username
-      (`C:\\Users\\<x>`, `/home/<x>`, `/Users/<x>`) — placeholder-shaped
-      usernames (`<x>`, `$HOME`, `%USERPROFILE%`, "username", ...) are exempt;
-    - the current OS account name and hostname appearing anywhere;
-    - email addresses that fail the declared policy pattern (RFC 2606 example
-      domains are exempt — documentation needs examples);
-    - the real name/email from **global** git config appearing in content
-      (only when that global identity is not itself the declared one);
-    - private-key headers and a few universal token shapes (GitHub, Slack,
-      AWS, `sk-…` API keys).
+  * **Secrets floor — always on** (opt-out). Private-key headers and a few
+    universal credential shapes (GitHub, Slack, AWS, `sk-…` API keys) have
+    nothing to do with identity, so they are scanned in **every** repo — the
+    security net an ordinary identified project gets too. Opt out by tracking
+    the one word `off` in `docs/secrets-scan` (same first-line parse as every
+    declared-policy file; absent or any other value reads *on*, the safe
+    default) — the deliberate exit for a repo whose content *is* secret-shaped
+    (mark individual lines with `privacy-ok` first; `off` is the last resort).
 
-Modes (all gated on the policy — `inherit` repos exit 0 immediately, zero cost):
+  * **Identity-leak layer — policy-gated.** Only when `docs/commit-identity`
+    declares an email pattern (anything but `inherit`) is the repo
+    anonymous/pseudonymous, so these classes run under that policy alone:
+      - home-directory path shapes carrying an OS username
+        (`C:\\Users\\<x>`, `/home/<x>`, `/Users/<x>`) — placeholder-shaped
+        usernames (`<x>`, `$HOME`, `%USERPROFILE%`, "username", ...) are exempt;
+      - the current OS account name and hostname appearing anywhere;
+      - email addresses that fail the declared policy pattern (RFC 2606 example
+        domains are exempt — documentation needs examples);
+      - the real name/email from **global** git config appearing in content
+        (only when that global identity is not itself the declared one).
+
+An `inherit` repo with `docs/secrets-scan: off` therefore exits 0 immediately,
+paying nothing; every other repo runs at least the secrets floor.
+
+Modes (each runs whichever of the two layers is active):
 
     (default)        scan the **staged diff** (added lines) — wired into
                      `.githooks/pre-commit`, blocks before the commit exists.
@@ -114,16 +124,28 @@ def _utf8_console():
             pass
 
 
-def read_policy(root):
-    """The first non-comment line of docs/commit-identity, or 'inherit'."""
-    path = root / "docs" / "commit-identity"
+def _first_declared_line(path):
+    """The first non-empty, non-comment line of a declared-policy file, or None
+    (absent/empty) — the parse every reader shares (hooks, agent_loop.py)."""
     if not path.exists():
-        return "inherit"
+        return None
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
         line = line.strip()
         if line and not line.startswith("#"):
             return line
-    return "inherit"
+    return None
+
+
+def read_policy(root):
+    """The first non-comment line of docs/commit-identity, or 'inherit'."""
+    return _first_declared_line(root / "docs" / "commit-identity") or "inherit"
+
+
+def read_secrets_scan(root):
+    """Whether the always-on secrets floor is enabled. `docs/secrets-scan` with
+    the one word `off` opts out; absent or any other value reads on (the safe
+    default) — so an ordinary repo gets the floor without declaring anything."""
+    return (_first_declared_line(root / "docs" / "secrets-scan") or "").lower() != "off"
 
 
 def git(root, *args):
@@ -149,11 +171,20 @@ def _word_re(term):
 
 
 class Scanner:
-    """Compiles the leak classes for one run (policy + machine identity)."""
+    """Compiles the active leak classes for one run.
 
-    def __init__(self, policy, root):
+    `secrets_on` gates the always-on credential floor (key/token shapes);
+    `identity_on` gates the anonymity-only classes (home-dir usernames,
+    account/hostname, off-policy emails, the global git identity). At least one
+    is true whenever a Scanner is built — main() exits early otherwise."""
+
+    def __init__(self, policy, root, secrets_on=True, identity_on=True):
         self.policy = policy.lower()
+        self.secrets_on = secrets_on
+        self.identity_on = identity_on
         self.identity_terms = []  # (label, compiled regex)
+        if not identity_on:
+            return  # the machine-identity probes are pure cost when unused
 
         def add_term(label, term):
             term = (term or "").strip()
@@ -190,23 +221,25 @@ class Scanner:
         """Yield (class-label, excerpt) findings for one line of content."""
         if ALLOW_MARKER in text.lower():
             return
-        for m in HOME_RE.finditer(text):
-            if m.group(1).lower() not in PLACEHOLDER_USERS:
-                yield "home-dir path", m.group(0)
-        for m in EMAIL_RE.finditer(text):
-            if not self._email_ok(m.group(0)):
-                yield "email fails policy", m.group(0)
-        for label, rx in self.identity_terms:
-            m = rx.search(text)
+        if self.identity_on:
+            for m in HOME_RE.finditer(text):
+                if m.group(1).lower() not in PLACEHOLDER_USERS:
+                    yield "home-dir path", m.group(0)
+            for m in EMAIL_RE.finditer(text):
+                if not self._email_ok(m.group(0)):
+                    yield "email fails policy", m.group(0)
+            for label, rx in self.identity_terms:
+                m = rx.search(text)
+                if m:
+                    yield label, m.group(0)
+        if self.secrets_on:
+            m = KEY_RE.search(text)
             if m:
-                yield label, m.group(0)
-        m = KEY_RE.search(text)
-        if m:
-            yield "private key header", m.group(0)
-        for label, rx in TOKEN_RES:
-            m = rx.search(text)
-            if m:
-                yield label, m.group(0)
+                yield "private key header", m.group(0)
+            for label, rx in TOKEN_RES:
+                m = rx.search(text)
+                if m:
+                    yield label, m.group(0)
 
 
 def scan_diff_text(text, scanner):
@@ -326,14 +359,23 @@ def main():
     root = Path(args.root).resolve()
 
     policy = read_policy(root)
-    if policy == "inherit":
+    identity_on = policy != "inherit"
+    secrets_on = read_secrets_scan(root)
+    if not identity_on and not secrets_on:
         print(
-            "check_privacy: policy is 'inherit' (docs/commit-identity) — "
-            "nothing to check."
+            "check_privacy: commit-identity 'inherit' and docs/secrets-scan "
+            "'off' — nothing to check."
         )
         return 0
 
-    scanner = Scanner(policy, root)
+    layers = []
+    if identity_on:
+        layers.append("identity ({})".format(policy))
+    if secrets_on:
+        layers.append("secrets floor")
+    layers_desc = " + ".join(layers)
+
+    scanner = Scanner(policy, root, secrets_on=secrets_on, identity_on=identity_on)
     if args.repo:
         what = "repo sweep"
         findings = scan_repo(root, scanner)
@@ -362,17 +404,16 @@ def main():
         findings = scan_diff_text(out, scanner)
 
     if not findings:
-        print("check_privacy: clean ({}; policy {}).".format(what, policy))
+        print("check_privacy: clean ({}; {}).".format(what, layers_desc))
         return 0
     for location, label, excerpt in findings:
         print("{}: [{}] {}".format(location, label, excerpt))
     print(
-        "check_privacy: {} finding(s) in {} — this repo declares an anonymous/"
-        "identified policy ({}). Remove or anonymize the content; a documented "
-        "example line may carry '{}' to be exempt (process-options.md "
-        '"Commit identity & anonymity").'.format(
-            len(findings), what, policy, ALLOW_MARKER
-        )
+        "check_privacy: {} finding(s) in {} [{}]. Remove/rotate the secret or "
+        "anonymize the content before it lands; a documented example line may "
+        "carry '{}' to be exempt. The always-on secrets floor is opt-out via "
+        'docs/secrets-scan (process-options.md "Commit identity & '
+        'anonymity").'.format(len(findings), what, layers_desc, ALLOW_MARKER)
     )
     return 1
 
