@@ -48,7 +48,7 @@ Run the gate bar with `scripts/check.py` (it selects the gate's checks from
 If the repo runs the **agent iteration branch & sync** layer
 (`docs/process-options.md`; agent work rides `llm/<branch>`, the development
 branch is curated), a gate closure is a **sync point**. Run the five-step
-ritual before the gate bump lands: backup ref → scrub (anonymous repos only;
+ritual before the gate bump lands: backup ref → scrub (privacy-checked repos only;
 fail closed if the scrub agent can't run) → optional iteration-branch push per
 `docs/push-policy` → collate into categorical commits → land on the
 development branch. The `docs/gate` bump rides the landed, collated history.

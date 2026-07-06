@@ -46,7 +46,7 @@ try {
     }
 
     # Privacy-check advisory (docs/privacy-check — process-options.md "Commit
-    # identity & anonymity"). Identity is USER-owned: setup no longer pins or
+    # identity & privacy"). Identity is USER-owned: setup no longer pins or
     # sets an author identity. But when the privacy gate is on, the author email
     # must be in the exempt allowlist (no private/contactable address) or commits
     # are blocked — so warn early if this clone's identity would fail. Advisory

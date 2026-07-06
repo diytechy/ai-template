@@ -84,7 +84,7 @@ that easier to achieve in a real project — or get out of the way.
   + root `agent-resume.{cmd,sh,command}` — the kit's **unattended layer
   self-applied**: the launchers (wired for Claude, strong tier) run
   `project-trajectory/scripts/agent_loop.py --root .`, resuming from
-  `docs/status.md` under the declared policies (attended / human / inherit).
+  `docs/status.md` under the declared policies (attended / human / privacy-off).
   The SN→TC spine and `run.*` launchers are deliberately *not* self-applied —
   the boundary is stated in `docs/status.md` "Non-goals".
 - [`docs/archive/`](docs/archive/README.md) — historical inputs to

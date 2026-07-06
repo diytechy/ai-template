@@ -4107,7 +4107,7 @@ The reframe:
   / --message / EXEMPT coverage; `pytest -q`: 338 passed, 1 skipped.
 
 **Model tier — landed.** Authored as an upstream port of the downstream field
-fix; the anonymous-repo review path and the secrets floor are unchanged in shape.
+fix; the privacy-check review path and the secrets floor are unchanged in shape.
 
 ---
 

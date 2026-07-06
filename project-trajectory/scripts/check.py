@@ -400,7 +400,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ),
         ("traceability", (), trace_cmd, {"G2", "G3"}, "process"),
         # Secrets + privacy sweep (process-options.md "Commit identity &
-        # anonymity"): every tracked text file is swept for the always-on
+        # privacy"): every tracked text file is swept for the always-on
         # secrets floor (key/token shapes, all repos) plus — when
         # docs/privacy-check is `true` — the privacy/identity-leak classes,
         # catching what slipped in before the gate was enabled or past

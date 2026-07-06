@@ -245,7 +245,7 @@ disguised as `Test`. G-Final is where the owner's eyes replace these.
 *Referenced from PROCESS.md §3 ("Commit cadence") and §7 ("Push authority").*
 **Applies when** a repo wants agent-driven work to land as curated, reviewable
 history — and, on a privacy-checked repo (`docs/privacy-check` = `true`),
-wants anonymity to be **structural** rather than filtered at publish time.
+wants privacy to be **structural** rather than filtered at publish time.
 This is the heaviest ritual in the kit: opt in deliberately. A repo without
 agent-driven work skips the whole layer and pays nothing. (The
 `docs/push-policy` file below ships in every scaffold regardless — declared
@@ -273,7 +273,7 @@ gate closes, or the project's scope is complete. Five steps:
    diffs, **commit messages**, and any committed session/iteration logs —
    removing or anonymizing PII via history rewrite, with the deterministic
    privacy lint (`scripts/check_privacy.py --range`, "Commit identity &
-   anonymity" below) as its base pass over the leg's history. The rewrite stamps a **`Scrubbed:`**
+   privacy" below) as its base pass over the leg's history. The rewrite stamps a **`Scrubbed:`**
    trailer on each rewritten commit so later checks can tell scrubbed history
    from raw. Rewriting is confined to the iteration branch *before* landing —
    never the development branch; step 1 is the net. When the scrub agent
@@ -443,7 +443,7 @@ gitignored `out/run-logs/` for local debugging — and regenerates
 `docs/iteration_index.md`: one row per session (number, date, model/tier,
 phase, outcome, commit range, cost, log link), generated and never
 hand-edited. `docs/log.md` stays the *collated* human-review layer above it.
-On an anonymous repo the logs ride the iteration branch and pass its scrub
+On an privacy-checked repo the logs ride the iteration branch and pass its scrub
 with everything else.
 
 **Limits are handled reactively.** Plan-usage state is not scriptable, so the
@@ -710,7 +710,7 @@ contract lives in the kit's `skills/README.md`; the shape:
   in the same `skills/` source layout and materialize via the same path, never
   written straight into an agent dir bypassing the index.
 
-## Commit identity & anonymity
+## Commit identity & privacy
 
 *Enforced by `.githooks/pre-commit` (author + content lint), `.githooks/commit-msg`
 (message lint), and `.githooks/pre-push` (review backstop); advised by
@@ -845,11 +845,14 @@ secrets floor above still runs).
 setup** (or otherwise enabled the hooks). It cannot (a) fix **existing
 history** — that is a rewrite, out of scope (ADOPTING.md §6 notes the
 migration); (b) constrain a clone that never enabled the hooks and commits or
-pushes with other tooling; (c) make a repo anonymous by itself — anonymity
-also depends on the **hosting account** that pushes and on keeping
-machine-local paths/usernames out of **committed text**, which the content
-lint *patterns for* and the reviewer *judges* but neither can guarantee: the
-lint is patterns, the reviewer is probabilistic, and this is not a DLP
+pushes with other tooling; (c) deliver full **anonymity** by itself — that is a
+stricter goal *beyond this gate's scope* (the gate keeps **PII** out, not
+"unlinkable authorship"). Structural anonymity is a posture a repo layers **on
+top** — the tight enumerated `EXEMPT_EMAILS` list, the scrub ritual, and an
+anonymous **hosting account** — and it also depends on keeping machine-local
+paths/usernames out of **committed text**, which the content lint *patterns
+for* and the reviewer *judges* but neither can guarantee: the lint is patterns,
+the reviewer is probabilistic, and this is not a DLP
 product. The trust footprint stays visible instead of pretended away.
 
 ## §8 purchased parts
@@ -920,8 +923,8 @@ binary; the **record of it** is text, tracked, and reviewable.
     doctrine" (d)); `trace.py` integrity-checks the `ASSET-` id only, off-spine
     like `PART-###`.
 - **Privacy advisory:** binary assets carry **EXIF/author metadata** (camera
-  serials, GPS, creator names) that no text lint can see — on an anonymous
-  repo ("Commit identity & anonymity" above), strip metadata **on ingest**,
+  serials, GPS, creator names) that no text lint can see — on a privacy-checked
+  repo ("Commit identity & privacy" above), strip metadata **on ingest**,
   before the asset reaches the store or the tree.
 - **Registry choice — a sibling registry, not a widened `procurement.csv`.**
   Procurement (`PART-###`) tracks parts the project **buys** (owner-of-record is

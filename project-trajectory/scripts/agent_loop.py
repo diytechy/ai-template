@@ -64,7 +64,7 @@ Preflight refuses to start iteration 1 when: the AGENT_CMD executable is
 missing (report, never a hang); the working directory is not a git repo; or
 docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
-history-leak disaster case (process-options.md "Commit identity & anonymity").
+history-leak disaster case (process-options.md "Commit identity & privacy").
 """
 
 import argparse

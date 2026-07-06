@@ -338,7 +338,7 @@ range to see exactly which templates/scripts changed before you touch anything.
   entries — they are the historical record.
 - **Privacy-check toggle (`docs/privacy-check`) — replaces the old
   `docs/commit-identity` glob.** Newer kits split *identity* from *privacy*
-  (process-options.md "Commit identity & anonymity"): which account authors is
+  (process-options.md "Commit identity & privacy"): which account authors is
   the user's own git config (no longer pinned by a repo file), and a one-value
   toggle `docs/privacy-check` (`true`/`false`) runs the privacy gate — the
   commit author email and committed content/messages are scanned for PII, with
@@ -355,9 +355,9 @@ range to see exactly which templates/scripts changed before you touch anything.
   deliberately before publishing.
 - **Secrets floor (`check_privacy.py`, every repo) — a behavior change to
   expect.** Newer kits run the deterministic secrets floor (private-key headers
-  + GitHub/Slack/AWS/`sk-…` shapes) in **all** repos, not just anonymous ones
-  (process-options.md "Secrets floor (every repo)"). Overwriting the hooks +
-  `check_privacy.py` on re-sync therefore starts scanning an `inherit` repo that
+  + GitHub/Slack/AWS/`sk-…` shapes) in **all** repos, not just privacy-checked
+  ones (process-options.md "Secrets floor (every repo)"). Overwriting the hooks +
+  `check_privacy.py` on re-sync therefore starts scanning a privacy-off repo that
   previously had none: the pre-commit hook blocks a staged commit carrying a
   credential shape, `check.py` flags a tracked one at every gate, and the
   pre-push hook scans the outgoing range. **That is the point** — but if the

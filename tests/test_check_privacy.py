@@ -79,8 +79,8 @@ def stage(root, rel, text):
 
 
 @needs_git
-def test_inherit_skips_identity_classes(scaffold):
-    # The scaffolded default is inherit: the identity-leak classes (home-dir
+def test_privacy_off_skips_identity_classes(scaffold):
+    # The scaffolded default is privacy off: the identity-leak classes (home-dir
     # paths, off-policy emails, the OS account) are not this repo's concern and
     # stay silent. The always-on secrets floor still runs (covered below), but a
     # home-dir path is not a secret, so the commit passes.
@@ -92,11 +92,11 @@ def test_inherit_skips_identity_classes(scaffold):
 
 
 @needs_git
-def test_secrets_floor_runs_under_inherit(scaffold):
+def test_secrets_floor_runs_with_privacy_off(scaffold):
     # Thread 44: a committed credential is a leak regardless of who authored it,
-    # so the secrets floor fires even under the default inherit policy — the
-    # security net an ordinary identified repo gets too.
-    init_repo(scaffold)  # no commit-identity policy set: inherit
+    # so the secrets floor fires even with the privacy gate off (the default) —
+    # the security net an ordinary identified repo gets too.
+    init_repo(scaffold)  # no docs/privacy-check set: privacy off
     stage(scaffold, "cfg.txt", "-----BEGIN RSA PRIVATE KEY-----\n")  # privacy-ok
     proc = run_lint(scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
@@ -111,7 +111,7 @@ def test_secrets_floor_runs_under_inherit(scaffold):
 @needs_git
 def test_secrets_scan_off_opts_out(scaffold):
     # The opt-out: `docs/secrets-scan: off` disables the floor for the rare repo
-    # whose content is secret-shaped. Under inherit + off, nothing runs at all.
+    # whose content is secret-shaped. With privacy off + secrets off, nothing runs at all.
     init_repo(scaffold)
     set_secrets_scan(scaffold, "off")
     stage(scaffold, "cfg.txt", "-----BEGIN RSA PRIVATE KEY-----\n")  # privacy-ok
@@ -121,9 +121,9 @@ def test_secrets_scan_off_opts_out(scaffold):
 
 
 @needs_git
-def test_secrets_off_still_runs_identity_under_policy(scaffold):
-    # The opt-out narrows only the secrets floor: under a declared anonymous
-    # policy the identity classes still run, and a secret is let through.
+def test_secrets_off_still_runs_privacy_when_on(scaffold):
+    # The opt-out narrows only the secrets floor: with the privacy gate on the
+    # privacy classes still run, and a secret is let through.
     init_repo(scaffold)
     set_privacy(scaffold)
     set_secrets_scan(scaffold, "off")
@@ -141,8 +141,8 @@ def test_secrets_off_still_runs_identity_under_policy(scaffold):
 
 
 @needs_git
-def test_secrets_floor_in_repo_and_range_modes_under_inherit(scaffold):
-    # The floor runs in all three modes even under inherit, not just the staged
+def test_secrets_floor_in_repo_and_range_modes_with_privacy_off(scaffold):
+    # The floor runs in all three modes even with privacy off, not just the staged
     # diff: the --repo sweep and the --range history scan both catch it.
     init_repo(scaffold)
     (scaffold / "seed.txt").write_text("clean\n", encoding="utf-8")
@@ -256,7 +256,7 @@ def test_removing_a_leak_is_never_flagged(scaffold):
 
 
 def test_repo_sweep_fresh_scaffold_green_then_seeded_leak_red(scaffold):
-    # A fresh scaffold must itself survive an anonymous policy — the kit can't
+    # A fresh scaffold must itself survive the privacy gate — the kit can't
     # ship content its own lint flags. (No git repo here: the sweep's
     # filesystem-walk fallback is exercised too.)
     set_privacy(scaffold)
@@ -307,7 +307,7 @@ def test_range_mode_catches_history_and_messages(scaffold):
 
 
 def test_check_py_wires_privacy_as_process_step(scaffold):
-    # The sweep is a [process] step at every gate; on the inherit scaffold the
+    # The sweep is a [process] step at every gate; on the privacy-off scaffold the
     # whole G1 plan still passes — the secrets floor runs but a fresh scaffold
     # ships no credential shapes, so wiring it unconditionally never taxes an
     # unconcerned repo.

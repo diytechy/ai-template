@@ -128,10 +128,10 @@ def test_hook_runs_end_to_end_when_sh_available(scaffold):
     assert blocked.returncode != 0, blocked.stdout + blocked.stderr
 
 
-def test_hook_secrets_floor_blocks_staged_key_under_inherit(scaffold):
+def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):
     # Thread 44: the pre-commit hook now runs the always-on secrets floor for
     # every repo, so a staged credential is blocked before the commit exists —
-    # even under the scaffolded `inherit` policy — and the opt-out lifts it.
+    # even with the scaffolded privacy gate off — and the opt-out lifts it.
     import pytest
 
     sh = shutil.which("sh")
@@ -154,7 +154,7 @@ def test_hook_secrets_floor_blocks_staged_key_under_inherit(scaffold):
     blocked = subprocess.run(
         [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True
     )
-    assert blocked.returncode != 0, "a staged private key must block under inherit"
+    assert blocked.returncode != 0, "a staged private key must block with privacy off"
     assert "private key header" in (blocked.stdout + blocked.stderr)
 
     # The opt-out lifts the floor for a repo that needs it.

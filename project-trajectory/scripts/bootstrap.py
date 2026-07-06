@@ -125,7 +125,7 @@ and a pointer+hash are tracked in text even though the asset itself can't be
 diffed. Its `ASSET-000` placeholder is inert; a project with no binary assets
 leaves it untouched. `trace.py` integrity-checks the `ASSET-` ids only.
 
-`docs/privacy-check` (process-options.md "Commit identity & anonymity") toggles
+`docs/privacy-check` (process-options.md "Commit identity & privacy") toggles
 the privacy gate: `false` (the scaffolded default — off) or `true` to scan the
 commit author email and committed content for PII / identity leaks. Identity
 (which account authors) is the user's own git config, not pinned here; the gate
@@ -841,7 +841,7 @@ MAPPING = [
     # level and pre-fills the deviation-register skeleton for it.
     ("gate-policy.template", "docs/gate-policy"),
     # The privacy-check toggle (Thread 38 -> identity/privacy reframe,
-    # process-options.md "Commit identity & anonymity"): `false` by default;
+    # process-options.md "Commit identity & privacy"): `false` by default;
     # --privacy-check overrides.
     ("privacy-check.template", "docs/privacy-check"),
     # The declared push authority (Thread 40, process-options.md "Agent
@@ -1172,7 +1172,7 @@ def main():
         "leak scan (author email + content must be non-private), 'false' (the "
         "default) leaves it off. The always-on secrets floor runs regardless. "
         "Omitted + interactive TTY -> ASK; non-interactive -> 'false' "
-        '(process-options.md "Commit identity & anonymity").',
+        '(process-options.md "Commit identity & privacy").',
     )
     args = ap.parse_args()
 
@@ -1264,7 +1264,7 @@ def main():
         else prompt_choice(
             "Enable the privacy gate for this repo? (scan author + content for "
             'PII / identity leaks — process-options.md "Commit identity & '
-            'anonymity")',
+            'privacy")',
             ("false", "true"),
             "false",
         )

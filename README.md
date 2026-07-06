@@ -68,7 +68,7 @@ The kit's headline pieces:
   ([`skills/`](project-trajectory/skills/)) materialized per agent by
   `bootstrap.py --agents`, and git hooks
   ([`hooks/`](project-trajectory/hooks/)): a fast `pre-commit` process floor
-  and a `pre-push` privacy backstop for anonymous repos.
+  and a `pre-push` privacy backstop for privacy-checked repos.
 - **Cross-project support** — an [`IF-###` interfaces registry](project-trajectory/INTERFACES.template.md)
   for projects that interlink, so shared contracts stay traceable and versioned.
 - **An agent guide template** ([`AGENTS.template.md`](project-trajectory/AGENTS.template.md))

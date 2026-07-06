@@ -1,8 +1,0 @@
-# Commit-identity policy (process-options.md "Commit identity & anonymity").
-# One value on the last line: `inherit` (no constraint — whatever identity the
-# clone's git config carries) or a glob the commit author email must match,
-# e.g. *@users.noreply.github.com (anonymous) or a pinned address (identified).
-# The pattern declares intent and is safe to publish; the identity itself stays
-# in per-clone git config. scripts/setup.{sh,ps1} applies it (repo-local
-# `git config`, never --global); .githooks/pre-commit blocks a mismatch.
-inherit

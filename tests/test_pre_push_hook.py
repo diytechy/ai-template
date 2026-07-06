@@ -1,4 +1,4 @@
-"""The anonymous-repo pre-push privacy backstop (Thread 39, Layer 2).
+"""The privacy-check pre-push privacy backstop (Thread 39, Layer 2).
 
 Exercised end-to-end where a POSIX shell + git exist (Linux/macOS CI; Git Bash
 on Windows): the hook receives the real stdin ref lines `git push` would send,
@@ -88,7 +88,7 @@ def make_reviewer(tmp_path, name, body):
     return "sh " + _posix(script)
 
 
-def test_inherit_policy_is_inert(repo):
+def test_privacy_off_is_inert(repo):
     # The scaffolded default: no reviewer wired, a push flows through — the
     # backstop costs unconcerned repos nothing.
     root, base, head = repo
@@ -96,8 +96,8 @@ def test_inherit_policy_is_inert(repo):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-def test_inherit_secrets_floor_blocks_a_key_in_range(repo):
-    # Thread 44: even an inherit repo's push is guarded by the always-on secrets
+def test_secrets_floor_blocks_a_key_in_range(repo):
+    # Thread 44: even a privacy-off repo's push is guarded by the always-on secrets
     # floor — a key/token shape in the outgoing history blocks, with no reviewer
     # machinery and no fail-closed (the identity guarantee does not apply here).
     root, base, head = repo
@@ -110,7 +110,7 @@ def test_inherit_secrets_floor_blocks_a_key_in_range(repo):
     assert "secrets floor" in proc.stderr
 
 
-def test_inherit_secrets_scan_off_lets_it_through(repo):
+def test_secrets_scan_off_lets_it_through(repo):
     # The opt-out reaches the push boundary: docs/secrets-scan off disables the
     # floor, so the same key does not block an unconcerned repo's push.
     root, base, head = repo

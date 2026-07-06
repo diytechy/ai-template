@@ -58,7 +58,7 @@ False-positive affordance: a line containing `privacy-ok` (any case) is skipped
 — mark documented example paths instead of training yourself to bypass the
 hook. This file exempts itself from scanning (it is made of the patterns).
 
-Honesty boundary (process-options.md "Commit identity & anonymity"): this is a
+Honesty boundary (process-options.md "Commit identity & privacy"): this is a
 pattern lint, not a guarantee and not a DLP product. Judgment-layer review is
 the pre-push reviewer / sync scrub; deep secrets scanning is a named external
 category (gitleaks, trufflehog — product-layer, never rebuilt in the kit).
@@ -381,7 +381,7 @@ def report(findings, what, layers_desc):
         "anonymize the content before it lands; a documented example line may "
         "carry '{}' to be exempt. The always-on secrets floor is opt-out via "
         'docs/secrets-scan (process-options.md "Commit identity & '
-        'anonymity").'.format(len(findings), what, layers_desc, ALLOW_MARKER)
+        'privacy").'.format(len(findings), what, layers_desc, ALLOW_MARKER)
     )
     return 1
 
