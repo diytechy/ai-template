@@ -1,6 +1,7 @@
 # Self-tests for the kit: every script is exercised against a real temp
 # scaffold, so a green run means the documented quick-start actually works —
-# on both OS families and on the oldest Python the kit claims (3.8).
+# on all three desktop OS families (Linux, Windows, macOS) and on the oldest
+# Python the kit claims (3.8).
 name: kit-tests
 on:
   push:
@@ -12,8 +13,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python: ["3.8", "3.x"]
+        exclude:
+          # macos-latest is arm64, which has no CPython 3.8 build. The 3.8 floor
+          # is a language/stdlib guarantee (platform-agnostic, already covered on
+          # Linux + Windows); macOS's job is the OS-specific behavior (fcntl.flock,
+          # paths, git worktrees), which doesn't vary by Python version — so macOS
+          # runs on current Python only.
+          - os: macos-latest
+            python: "3.8"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
