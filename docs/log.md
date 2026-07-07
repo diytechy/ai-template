@@ -165,3 +165,30 @@ coverage wiring was harder than the plan sketched — a trace-time `source` filt
 in the child config silently produced empty data files; the fix was to let
 children trace freely and remap paths at combine. **Byte-budgeted files:** none
 touched. No push (`docs/push-policy` = human).
+
+### REVIEW — G3 — Adversarial review + coverage-scoping correction — 2026-07-07
+A fresh-context adversarial reviewer audited the phase-6/7 work before the G3
+ratification. **No BLOCKERs — the gate reproduced green independently and was not
+gamed (every measurement error found was pessimistic).** But it found the DRIVER
+block's "~82%" was not the *product's* coverage, and fixed here:
+- **Report was product+fixtures.** `.coveragerc` had no report scoping, so the
+  agent-loop test fixtures (`fake_agent.py`, ~1061 stmts in temp dirs) folded into
+  the TOTAL, understating the product. Added `[report] omit = */pytest-of-*/*`
+  (runs AFTER the [paths] remap, so it drops the fixtures without touching the
+  remapped script copies).
+- **Uneven measurement.** `test_check_privacy.lint_env` and
+  `test_pre_push_hook.run_hook` built their own subprocess env and bypassed the
+  coverage wiring, so the whole privacy suite ran uninstrumented —
+  `check_privacy.py` read a misleading 52%. Centralized the wiring as
+  `conftest.augment_env` and routed both helpers through it; `check_privacy.py`
+  now reads 91%.
+- **Shipped hardening completeness.** Added `COVERAGE_RCFILE` to check.py's
+  `_step_env` strip list (the only downstream-shipped fix).
+
+**Corrected mechanized figure:** `check.py --gate G3` → **RESULT: PASS**;
+`tests+coverage` → **366 passed, 2 skipped; product coverage 91%** (3273 stmts,
+309 missed — the 14 kit scripts only), an 11-point margin over the 80 floor. This
+supersedes the "~82%" in the DRIVER block above (that figure was product+fixtures,
+measured unevenly). **Residual note:** the CI `gate` job's coverage path runs on
+Linux only and the branch is unmerged, so it is unproven on CI — but the mechanism
+is OS-agnostic and the margin is now wide. G3 human ratification still PENDING.

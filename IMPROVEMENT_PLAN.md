@@ -4116,7 +4116,7 @@ fix; the privacy-check review path and the secrets floor are unchanged in shape.
 **Status: ✅ COMPLETE — landed 2026-07-07 (phases 1–7).** Session 1 (phases 1–2:
 layout + SN), session 2 (phases 3–5: SR→LLR→TC spine, reached G2), session 3
 (phases 6–7: the G3 walk). The meta-repo now **passes its own gates at G3**:
-`check.py --gate G3` → PASS (format · lint · tests+coverage ~82% · traceability
+`check.py --gate G3` → PASS (format · lint · tests+coverage ~91% · traceability
 `--require-verified` · privacy · doc-nav · perf · flows · arch-map), CI runs the
 gate on itself, `docs/gate` = **G3**. Spine: SN=22 SR=36 LLR=33 TC=36, 0 orphans.
 G1+G2 human-ratified 2026-07-07; **G3 ratification pending** (`docs/gate-policy` =

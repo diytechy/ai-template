@@ -19,3 +19,15 @@ parallel = true
 scripts =
     project-trajectory/scripts/
     */scripts/
+
+[report]
+# Scope the report (and so --cov-fail-under) to the PRODUCT only. A child traces
+# freely (no [run] source — see above), so it also records temp-scaffold fixtures
+# it spawns (e.g. agent_loop's fake_agent.py). Those keep their temp path (they are
+# not under a */scripts/ dir, so [paths] does not fold them onto the source tree),
+# while the real script copies are remapped to project-trajectory/scripts/. This
+# omit runs AFTER that remap, so it drops the fixtures without touching the scripts.
+# A [run] omit could not: the script copies live under the same pytest tmp dir.
+omit =
+    */pytest-of-*/*
+    */tmp*/*

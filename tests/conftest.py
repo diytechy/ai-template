@@ -27,22 +27,27 @@ def load_script(name):
     return mod
 
 
-def _subprocess_env():
-    """The env for a run_py child. Normally `None` (inherit — unchanged behavior).
+def augment_env(env):
+    """Add subprocess-coverage wiring to `env` (a dict) when pytest-cov is
+    measuring the parent (it exports `COV_CORE_DATAFILE`); a no-op otherwise.
 
-    When pytest-cov is measuring the parent (it exports `COV_CORE_DATAFILE`), wire
-    the child to record coverage too (IMPROVEMENT_PLAN.md Thread 47 phase 6): most
-    of the suite runs the kit scripts as subprocesses, which coverage does not see
-    unless each child starts it. Point the child at `.coveragerc` +
+    Most of the suite runs the kit scripts as subprocesses, which coverage does
+    not see unless each child starts it (IMPROVEMENT_PLAN.md Thread 47 phase 6).
+    Shared by run_py AND any test that builds its own subprocess env
+    (test_check_privacy.lint_env, test_pre_push_hook.run_hook), so coverage is
+    measured *uniformly* regardless of which helper a test uses — routing only
+    run_py children left the privacy suite invisible and its module reading a
+    misleadingly-low %. Points the child at `.coveragerc` +
     `tests/_cov/sitecustomize.py` (which calls `coverage.process_startup()`) and
-    share pytest-cov's datafile so the parallel data lands in one place for the
-    session-end combine. `.coveragerc`'s [paths] remaps the temp-scaffold script
-    copies back to the source tree.
-    """
+    shares pytest-cov's datafile so the parallel data lands in one place for the
+    session-end combine; `.coveragerc`'s [paths] remaps the temp-scaffold script
+    copies back to the source tree. NB: `tests/_cov` is prepended to PYTHONPATH,
+    so it would shadow any environment-provided `sitecustomize` during a measured
+    run — harmless here (none exists; gated on an active pytest-cov)."""
     datafile = os.environ.get("COV_CORE_DATAFILE")
     if not datafile:
-        return None
-    env = dict(os.environ)
+        return env
+    env = dict(env)
     env["COVERAGE_PROCESS_START"] = str(ROOT / ".coveragerc")
     env["COVERAGE_FILE"] = datafile
     covdir = str(ROOT / "tests" / "_cov")
@@ -63,7 +68,7 @@ def run_py(args, cwd):
         capture_output=True,
         text=True,
         stdin=subprocess.DEVNULL,
-        env=_subprocess_env(),
+        env=augment_env(dict(os.environ)),
     )
 
 

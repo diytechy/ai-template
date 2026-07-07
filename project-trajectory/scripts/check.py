@@ -511,6 +511,7 @@ def resolve_gate(explicit):
 _COVERAGE_ENV_VARS = (
     "COVERAGE_PROCESS_START",
     "COVERAGE_FILE",
+    "COVERAGE_RCFILE",
     "COV_CORE_SOURCE",
     "COV_CORE_CONFIG",
     "COV_CORE_DATAFILE",

@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import run_py
+from conftest import augment_env, run_py
 
 SCRIPT = "scripts/check_privacy.py"
 # This kit repo (a git checkout) and its real check_privacy.py, for the
@@ -37,7 +37,9 @@ def lint_env():
     env = dict(os.environ)
     for var in ("LOGNAME", "USER", "LNAME", "USERNAME"):
         env[var] = FAKE_USER
-    return env
+    # Measure these subprocess runs too when pytest-cov is active (Thread 47
+    # phase 6) — without this the whole privacy suite runs uninstrumented.
+    return augment_env(env)
 
 
 def run_lint(cwd, *args):

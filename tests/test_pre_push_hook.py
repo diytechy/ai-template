@@ -14,6 +14,7 @@ import shutil
 import subprocess
 
 import pytest
+from conftest import augment_env
 
 HOOK = ".githooks/pre-push"
 ZERO = "0" * 40
@@ -70,7 +71,9 @@ def run_hook(root, stdin_text, review_cmd=None):
         input=stdin_text,
         capture_output=True,
         text=True,
-        env=env,
+        # Measure the check_privacy the hook invokes when pytest-cov is active
+        # (Thread 47 phase 6) — the pre-push range scan is otherwise uninstrumented.
+        env=augment_env(env),
     )
 
 

@@ -26,7 +26,7 @@ sign-offs, verdicts) is [log.md](log.md).
   `docs/log.md`.
 - **Plan state:** **Thread 47 complete** — self-adoption phases 1–7 landed
   2026-07-07; meta-repo at **G3** (SN=22 SR=36 LLR=33 TC=36, 0 orphans;
-  `check.py --gate G3` PASS; full-suite coverage ~82%). **Thread 50** (trace.py
+  `check.py --gate G3` PASS; product coverage ~91%). **Thread 50** (trace.py
   SR/LLR citation-coherence check) landed; latest post-plan WI **WI-1.40**.
 - **Open items:**
   - **Needs <human>**: **G3 gate ratification** (`docs/gate-policy` = attended —
