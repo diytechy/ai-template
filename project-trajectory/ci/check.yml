@@ -16,10 +16,19 @@ on:
 
 jobs:
   check:
-    # Add more entries to run the matrix on the platforms you support.
+    # Platforms: keep this list in sync with docs/status.md "Supported platforms".
+    # The kit's own scripts are cross-platform, so the choice is driven by YOUR
+    # project's deps/toolchain. A portable project should "hold its own" on every
+    # OS it claims — uncomment the rows below; a project that can only build on one
+    # platform trims to it. Don't claim CI for an OS your deps can't run on: a red
+    # cell nobody can fix is worse than an honest single-platform matrix.
     strategy:
+      fail-fast: false   # see every platform's result, not just the first failure
       matrix:
-        os: [ubuntu-latest]   # e.g. [ubuntu-latest, macos-latest, windows-latest]
+        os:
+          - ubuntu-latest
+          # - macos-latest      # Apple Silicon (arm64); note: no CPython 3.8 build
+          # - windows-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

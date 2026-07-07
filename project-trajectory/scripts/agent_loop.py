@@ -82,6 +82,7 @@ history-leak disaster case (process-options.md "Commit identity & privacy").
 import argparse
 import atexit
 import datetime
+import errno
 import json
 import os
 import re
@@ -224,6 +225,19 @@ def _take_os_lock(fd):
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
 
 
+# Errnos that mean "this filesystem cannot do advisory locks" (a network / exotic
+# mount — flock returns these) as opposed to "the lock is held" (EWOULDBLOCK /
+# EAGAIN / EACCES). On these we degrade to a warning instead of failing closed;
+# every other error stays a refusal, so an unknown failure never silently drops
+# the guard (fail-safe). Built via getattr so a name absent on a platform is just
+# skipped.
+_UNSUPPORTED_LOCK_ERRNOS = frozenset(
+    getattr(errno, name)
+    for name in ("ENOLCK", "ENOSYS", "EOPNOTSUPP", "ENOTSUP")
+    if hasattr(errno, name)
+)
+
+
 def _read_holder(lock_path):
     """The holder's diagnostic line (pid host stamp) for an error message, or ''
     — best-effort; a mandatory Windows lock may block the read, which is fine."""
@@ -242,7 +256,9 @@ def acquire_lock(lock_path):
     advisory lock the OS grants atomically and releases on exit *or crash*, so a
     dead run never wedges the next one (no pid reasoning, no timer). Cross-host
     on a shared filesystem is best-effort only: flock over NFS is unreliable, so
-    this guards one checkout on one host — the common and important case."""
+    this guards one checkout on one host — the common and important case. A
+    filesystem that cannot lock at all (ENOLCK/ENOTSUP) degrades to a warning and
+    runs unguarded rather than fail-closed on a legitimate run."""
     global _LOCK_FD
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     flags = os.O_RDWR | os.O_CREAT
@@ -251,15 +267,28 @@ def acquire_lock(lock_path):
     fd = os.open(str(lock_path), flags, 0o644)
     try:
         _take_os_lock(fd)
-    except OSError:
-        os.close(fd)
-        return (
-            "another coordinator holds {} — refusing to run two in one worktree "
-            "(held by: {}). It clears itself when that run exits; wait for it, "
-            "or delete the file only if you are sure that run is gone.".format(
-                lock_path, _read_holder(lock_path) or "unknown"
+    except OSError as exc:
+        if os.name != "nt" and exc.errno in _UNSUPPORTED_LOCK_ERRNOS:
+            # This filesystem cannot do advisory locks (a network / exotic mount).
+            # Degrade to a warning and proceed WITHOUT the guard rather than block
+            # a legitimate run: the single-checkout guarantee is only lost on a
+            # mount that never supported it, and the branch guard + git history
+            # still backstop. Keep fd open (diagnostics written below) so the file
+            # still records who is here.
+            print(
+                "agent_loop: WARNING - {} is on a filesystem that does not "
+                "support advisory locks (errno {}); running WITHOUT the "
+                "one-coordinator-per-checkout guard.".format(lock_path, exc.errno),
+                file=sys.stderr,
             )
-        )
+        else:
+            os.close(fd)
+            return (
+                "another coordinator holds {} — refusing to run two in one "
+                "worktree (held by: {}). It clears itself when that run exits; "
+                "wait for it, or delete the file only if you are sure that run "
+                "is gone.".format(lock_path, _read_holder(lock_path) or "unknown")
+            )
     # We hold the lock: overwrite the diagnostics (a crashed predecessor may have
     # left its own). Best-effort — the OS lock, not this content, is the guard.
     try:

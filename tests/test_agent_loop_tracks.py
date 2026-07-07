@@ -16,6 +16,7 @@ the failure mode that would corrupt an unattended parallel run:
     detached HEAD (an unverifiable branch — the wrong-lane guard).
 """
 
+import os
 import shutil
 import subprocess
 import sys
@@ -100,6 +101,36 @@ def test_lock_auto_released_when_holder_dies(tmp_path):
     lock = tmp_path / "out" / "agent-loop.lock"
     assert _probe_acquire(lock, hard_exit=True) == "ACQUIRED"
     assert agent_loop.acquire_lock(lock) is None
+    agent_loop.release_lock(lock)
+
+
+def test_lock_refuses_on_contention_errno(tmp_path, monkeypatch):
+    # A genuine "held" errno (EWOULDBLOCK) must REFUSE — the guard is never
+    # dropped on contention, and an unknown error stays a refusal too (fail-safe).
+    import errno
+
+    def _held(fd):
+        raise OSError(errno.EWOULDBLOCK, "held")
+
+    lock = tmp_path / "out" / "agent-loop.lock"
+    monkeypatch.setattr(agent_loop, "_take_os_lock", _held)
+    err = agent_loop.acquire_lock(lock)
+    assert err and "refusing to run two" in err
+
+
+@pytest.mark.skipif(os.name == "nt", reason="advisory-lock degrade is POSIX-only")
+def test_lock_degrades_on_unsupported_filesystem(tmp_path, monkeypatch, capsys):
+    # A filesystem that cannot lock (ENOLCK) must DEGRADE — warn and proceed, not
+    # fail closed on a legitimate run (Windows local FS always locks, so N/A there).
+    import errno
+
+    def _unsupported(fd):
+        raise OSError(errno.ENOLCK, "no locks available")
+
+    lock = tmp_path / "out" / "agent-loop.lock"
+    monkeypatch.setattr(agent_loop, "_take_os_lock", _unsupported)
+    assert agent_loop.acquire_lock(lock) is None  # proceeds, unguarded
+    assert "without the one-coordinator" in capsys.readouterr().err.lower()
     agent_loop.release_lock(lock)
 
 
