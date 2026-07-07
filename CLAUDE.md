@@ -88,8 +88,9 @@ that easier to achieve in a real project — or get out of the way.
 - **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption, *in progress*):
   [`docs/requirements/stakeholder-needs.md`](docs/requirements/stakeholder-needs.md)
   + `system-requirements.csv` + `low-level-requirements.csv` +
-  `docs/test/test-cases.csv` + `docs/gate` + `docs/stack.ini` + `docs/log.md` —
-  the kit **traced with its own process**, its "product" being
+  `docs/test/test-cases.csv` + [`docs/architecture.md`](docs/architecture.md)
+  (one-page + the G2 Runtime flows) + `docs/gate` + `docs/stack.ini` +
+  `docs/log.md` — the kit **traced with its own process**, its "product" being
   `project-trajectory/scripts` + `tests/`. Keep these **distinct from the
   templates the kit ships** in `project-trajectory/registries/`: those are the
   blank forms an adopter fills; these are the kit's *own, filled* registries.

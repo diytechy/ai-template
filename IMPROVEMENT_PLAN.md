@@ -4113,9 +4113,12 @@ fix; the privacy-check review path and the secrets floor are unchanged in shape.
 
 ## Thread 47 — Self-adoption: the kit runs its own `SN→SR→LLR→TC` spine (dogfood)
 
-**Status: 🔨 IN PROGRESS — phases 1–2 landed 2026-07-07 (session 1); phases 3–7
-pending.** This entry *is* the kick-off brief; a new session reads it top-to-bottom
-and continues from **phase 3**.
+**Status: 🔨 IN PROGRESS — phases 1–2 landed 2026-07-07 (session 1); phases 3–5
+landed 2026-07-07 (session 2), reaching G2; phases 6–7 pending.** This entry *is*
+the kick-off brief; a new session reads it top-to-bottom and continues from
+**phase 6** (full G3 walk: `--tier full` coverage with subprocess instrumentation,
+generated arch-map + `--check`, meta-repo CI wiring; then phase 7 thread
+back-pointers, mostly already seeded in the SR `Rationale` cells).
 
 > **Session 1 (2026-07-07, WI-1.39) — phases 1–2.** Layout laid: `docs/stack.ini`
 > (`src=project-trajectory/scripts`, `tests=tests`; coverage threshold PROVISIONAL
@@ -4132,6 +4135,30 @@ and continues from **phase 3**.
 > `check_docs --root . --stale` OK, 0 broken; `pytest -q` **358 passed, 2 skipped**.
 > `trace.py`: SN=22 SR=0 (22 SN-with-no-SR orphans — a **G2** bar, not gated at G1).
 > **Deviations:** none. **Byte-budgeted files:** none touched.
+
+> **Session 2 (2026-07-07, phases 3–5) — reached G2.** Authored the full
+> `SR → LLR → TC` spine: **35 SR** (one cluster per shipped script/hook/policy,
+> every SN-001..022 cited), **32 LLR** (one design-tier LLR per `Test`-verified
+> SR — the `trace.py` orphan floor), **35 TC** (one per SR, the pytest node path
+> in `Parameters`). SR-033/034/035 are `Inspection`/`Analysis` and LLR-exempt
+> (release-checklist untested; stdlib-only + portability inspected). Authored
+> `docs/architecture.md` with the **G2 Runtime flows** (3 sequence diagrams,
+> 24 SR/LLR ids) that `check_flows.py` requires — see the deviation below.
+> **Gates:** `trace.py --strict --no-placeholders --strict-schema` → `SN=22 SR=35
+> LLR=32 TC=35 orphans=0 integrity=0 placeholders=0 schema-findings=0`;
+> `check.py --gate G2` → **PASS** (traceability · privacy · doc-navigability ·
+> design-flows); `pytest -q` → **358 passed, 2 skipped**; `check_docs --stale` →
+> OK, 0 broken, 0 orphans. `docs/gate` G1 → **G2**; sign-off in `docs/log.md`
+> (Human ratification PENDING under the `attended` gate-policy).
+> **Deviation:** the brief sequenced `docs/architecture.md` into phase 6, but
+> `design-flows` is a **G2** harness step and `check_flows.py` hard-fails without
+> a "Runtime flows" section — which PROCESS.md §3 correctly places at G2 (flows
+> authored *with the LLRs*). The Runtime-flows section was pulled forward to keep
+> G2 honest; only the *generated* module map (`gen_arch_map.py`, a G3 step) stays
+> in phase 6. **Kit-improvement finding:** `test-cases.template.csv` has no
+> test-evidence column, so the concrete test is cited in `Parameters` as
+> `node=…`; an `Evidence`/`Test` column is the cleaner upstream fix (dogfood
+> surface). **Byte-budgeted files:** none touched (CLAUDE.md is not budgeted).
 
 **Goal / why.** The kit *ships* the traceability spine + gates but does not yet
 **apply them to itself**. Its own requirements live informally as these
