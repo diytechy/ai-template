@@ -1,0 +1,40 @@
+#!/bin/sh
+# Pre-commit process floor — the ai-template META-REPO's own copy.
+#
+# WHY THIS EXISTS SEPARATELY: the kit ships project-trajectory/hooks/pre-commit,
+# but that hook locates the harness at $REPO_ROOT/scripts/check.py — the layout
+# it scaffolds DOWNSTREAM. In this meta-repo the harness IS the product, so it
+# lives under project-trajectory/scripts/ (this repo's scripts/ holds only
+# dev-setup). Same floor; only the scripts path differs. Folding this into the
+# onboarding ladder so any non-standard-layout adopter gets it for free without a
+# hand-adapted copy is tracked as IMPROVEMENT_PLAN WI-1.42.
+#
+# Enable:  git config core.hooksPath .githooks
+# Disable: git config --unset core.hooksPath
+set -e
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+SCRIPTS="$ROOT/project-trajectory/scripts"
+
+# Probe for a runnable Python 3 by RUNNING a candidate (not just finding it): on
+# Windows, `python3` can resolve to the Microsoft Store alias, which exists on
+# PATH but exits nonzero. Skip the floor rather than wedge a commit on a
+# Python-less machine — mirrors the shipped hook.
+PY=""
+for cand in python3 python; do
+  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+    PY="$cand"; break
+  fi
+done
+if [ -z "$PY" ]; then
+  echo "pre-commit: no runnable Python 3 on PATH; skipping process floor." >&2
+  exit 0
+fi
+
+# The same fast, always-valid floor as project-trajectory/hooks/pre-commit,
+# pointed at this repo's product location. Each step exits nonzero on a real
+# finding (set -e aborts the commit); a missing tool is a SKIP, not a block.
+"$PY" "$SCRIPTS/check.py"         --run-step arch-map      # 1. generated code map is fresh
+"$PY" "$SCRIPTS/trace.py"         --strict-integrity       # 2. no duplicate / malformed ids
+"$PY" "$SCRIPTS/check_privacy.py" --root "$ROOT" --author  # 3a. author identity (no-op when privacy off)
+"$PY" "$SCRIPTS/check_privacy.py" --root "$ROOT"           # 3b. secrets floor + staged content scan
+"$PY" "$SCRIPTS/check.py"         --run-step format        # 4. formatter (SKIP if the tool is absent)

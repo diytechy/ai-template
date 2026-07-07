@@ -6270,6 +6270,48 @@ continuity (same style as the session log above).
 > `check_docs --root . --stale`: OK, 0 broken. Byte deltas: AGENTS.template.md /
 > PROCESS.md untouched.
 
+> **WI-1.42 ⬜ PROPOSED (2026-07-07) · Arm the process floor from the universal
+> onboarding rung (not only from `setup`).** Surfaced by an adversarial G3
+> review: the meta-repo shipped with its git-hook floor **dormant**
+> (`core.hooksPath` unset, no `.githooks/`), so WI-1.41's docstring edit staled
+> the generated code map and that **slipped past commit** — caught only later at
+> the full `check.py --gate G3` (the arch-map `--check` step). Root cause is a
+> design gap, not a one-off: hook-wiring (`git config core.hooksPath .githooks`)
+> lives **only** in `setup.{sh,ps1}` — the per-clone *product-toolchain* rung. A
+> non-code contributor (who runs only `dev-setup`), and any clone that skips
+> `setup`, never gets the floor — even though wiring it is universal (every
+> committer wants it), zero-dependency, and reversible. **SR-032** doesn't catch
+> this either: it verifies the scripts "run to a green setup," not that the floor
+> is *active* afterward.
+> **Proposed (kit change — keep the two rungs, move the wiring):**
+> 1. Wire `core.hooksPath` in **`dev-setup`'s baseline** (universal, zero-dep,
+>    idempotent); keep `setup.{sh,ps1}` wiring it too so a setup-only clone stays
+>    covered — single-source the one-liner in a shared helper, don't duplicate it.
+> 2. For the **code** profile, `dev-setup --baseline` offers (consent-first) to
+>    chain into `setup`, so a code contributor reaches workstation + toolchain +
+>    floor from one command; a non-code profile does **not** pull the test venv.
+> 3. Tighten **SR-032** acceptance to "…and the process floor is active after
+>    setup," with a TC asserting `core.hooksPath` is set on a fresh scaffold.
+> 4. Generalize the shipped `pre-commit` so a **non-standard layout** (harness not
+>    under `scripts/`) works via an optional scripts-dir override, instead of every
+>    such repo hand-maintaining a copy — this meta-repo's `.githooks/pre-commit`
+>    (added as the interim fix below) is the reference case.
+> **⚠ Downstream impact:** touches kit-owned `setup.template.*`,
+> `dev-setup.template.*`, PROCESS.md §7 + PROCESS_OPTIONS §7 boundary notes, and
+> SR-032/its TC. On the next re-sync an adopter's `dev-setup`/`setup` are
+> overwritten (kit-owned files) and their fresh scaffold begins wiring the floor
+> from `dev-setup`; an adopter who hand-customized those launchers must re-merge.
+> **No git-history or commit-format change** — `core.hooksPath` is local per-clone
+> config, opt-in and reversible (`git config --unset core.hooksPath`); the change
+> is additive (a floor that was absent turns on), not a new rule against existing
+> commits.
+> **Interim — landed this session (the "small" self-adoption fix):** this repo now
+> carries its own layout-adapted `.githooks/pre-commit` (points the floor at
+> `project-trajectory/scripts/`) and `core.hooksPath=.githooks` is set locally, so
+> the meta-repo's floor is finally live (verified: passes clean, blocks a staged
+> stale map). commit-msg/pre-push adaptation is deferred to this WI —
+> `docs/privacy-check` is `false` here, so those hooks are ~no-ops today.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
