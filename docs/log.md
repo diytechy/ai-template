@@ -25,6 +25,21 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-07-07 — SR-011 split; SR-036 added (post-G2 spec review).** The G2
+  review found SR-011 described the *ADOPTING.md §6 re-sync process* ("overwrite
+  kit-owned, preserve project-owned") rather than what `bootstrap.py` mechanically
+  does (idempotent skip-all-existing / `--force` overwrite-all, plus a
+  `docs/kit-version` stamp; it has no kit-vs-project notion — `test_bootstrap.py::
+  test_rerun_skips_existing_files`). Corrected SR-011 to the mechanical
+  idempotency guarantee (Verification=Test, LLR-011 re-scoped to `write_kit_version`)
+  and added **SR-036** for the deliberate, operator-driven re-sync integration
+  (Verification=Inspection, LLR-exempt, TC-036 → ADOPTING.md §6 + the
+  `downstream-resync` skill). Rejected: folding the process nuance into SR-011,
+  which would conflate tool mechanism with human process and make the SR
+  untestable. Spine now SN=22 SR=36 LLR=32 TC=36, orphans=0; the earlier G2
+  DRIVER block's 35/35 counts predate this refinement. Surfaced by the Thread 47
+  dogfood (a requirement that described the process, not the tool).
+
 ## Audit log
 
 <!-- Append verdict blocks here per PROCESS.md §5. Newest at the bottom. -->
