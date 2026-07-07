@@ -121,7 +121,7 @@ _Doc navigability & staleness check: keep the hand-written doc set honest._
 | `reachable(roots, graph)` | Docs reachable from any entry root by following doc->doc links. |  |
 | `find_orphans(docs, graph, roots, root)` | Scanned docs with no path from an entry root (entry roots excepted). |  |
 | `check_vision(docs, root)` | The root README must state the vision exactly once (process.md §4 G1). |  |
-| `check_inventory(docs, root, docs_dir)` | The opt-in README SN inventory stays honest (process.md §4 G1). |  |
+| `check_inventory(docs, root, docs_dir)` | The root README honors the traceability spine (process.md §4 G1). |  |
 | `git_commit_lookup(root)` | Return a memoized path->last-commit-epoch lookup, or None when git is |  |
 | `find_stale(parsed, root, lookup)` | Docs linking a non-doc file committed more recently than the doc itself. |  |
 | `main()` |  |  |
