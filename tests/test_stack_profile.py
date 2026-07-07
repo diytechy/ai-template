@@ -23,7 +23,10 @@ check = load_script("check")
 
 def _plan_sig(plan):
     """A comparable signature for a step plan: name, requires, argv, gates, layer."""
-    return [(n, tuple(req), tuple(cmd), tuple(sorted(g)), lay) for n, req, cmd, g, lay in plan]
+    return [
+        (n, tuple(req), tuple(cmd), tuple(sorted(g)), lay)
+        for n, req, cmd, g, lay in plan
+    ]
 
 
 def _profile(text):
@@ -80,7 +83,9 @@ def test_list_reflects_a_swapped_command(scaffold):
     # The swapped lint command shows in the plan; the untouched format/test steps
     # fall back to the built-in ruff/pytest reference (partial profile merges).
     assert "npx eslint src" in proc.stdout
-    assert any("format" in ln and "ruff format" in ln for ln in proc.stdout.splitlines())
+    assert any(
+        "format" in ln and "ruff format" in ln for ln in proc.stdout.splitlines()
+    )
 
 
 def test_tier_expression_threads_through_to_the_test_step(scaffold):
@@ -94,17 +99,14 @@ def test_tier_expression_threads_through_to_the_test_step(scaffold):
         ["scripts/check.py", "--gate", "G3", "--tier", "full", "--list"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    test_line = next(
-        ln for ln in proc.stdout.splitlines() if "tests+coverage" in ln
-    )
+    test_line = next(ln for ln in proc.stdout.splitlines() if "tests+coverage" in ln)
     assert "npm test" in test_line
     assert "--run smoke-and-full" in test_line
 
 
 def test_coverage_threshold_comes_from_the_profile(scaffold):
     (scaffold / "docs" / "stack.ini").write_text(
-        "[coverage]\nthreshold = 55\n"
-        "args = --cov={src} --cov-fail-under={coverage}\n",
+        "[coverage]\nthreshold = 55\nargs = --cov={src} --cov-fail-under={coverage}\n",
         encoding="utf-8",
     )
     proc = run_py(
@@ -113,8 +115,16 @@ def test_coverage_threshold_comes_from_the_profile(scaffold):
     assert "--cov-fail-under=55" in proc.stdout
     # An explicit --coverage on the CLI still wins over the profile threshold.
     proc = run_py(
-        ["scripts/check.py", "--gate", "G3", "--tier", "full", "--coverage", "90",
-         "--list"],
+        [
+            "scripts/check.py",
+            "--gate",
+            "G3",
+            "--tier",
+            "full",
+            "--coverage",
+            "90",
+            "--list",
+        ],
         cwd=scaffold,
     )
     assert "--cov-fail-under=90" in proc.stdout
@@ -139,8 +149,9 @@ def test_non_integer_coverage_threshold_fails_loudly(scaffold):
     (scaffold / "docs" / "stack.ini").write_text(
         "[coverage]\nthreshold = eighty\n", encoding="utf-8"
     )
-    proc = run_py(["scripts/check.py", "--gate", "G3", "--tier", "full", "--list"],
-                  cwd=scaffold)
+    proc = run_py(
+        ["scripts/check.py", "--gate", "G3", "--tier", "full", "--list"], cwd=scaffold
+    )
     assert proc.returncode != 0
     assert "threshold" in (proc.stdout + proc.stderr)
 
@@ -232,9 +243,7 @@ def test_extra_step_bad_gate_and_layer_fail_loudly(scaffold):
     assert "gates" in (bad_gate.stdout + bad_gate.stderr) and "G9" in (
         bad_gate.stdout + bad_gate.stderr
     )
-    ini.write_text(
-        "[step:foo]\ncommand = {py} x.py\nlayer = weird\n", encoding="utf-8"
-    )
+    ini.write_text("[step:foo]\ncommand = {py} x.py\nlayer = weird\n", encoding="utf-8")
     bad_layer = run_py(["scripts/check.py", "--list"], cwd=scaffold)
     assert bad_layer.returncode != 0
     assert "layer" in (bad_layer.stdout + bad_layer.stderr)
@@ -245,8 +254,12 @@ def test_reference_profile_has_no_active_extra_step():
     # profile still equals the built-in plan (guards the byte-identity contract
     # above against a stray uncommented example line).
     reference = _profile((KIT / "stack.ini.template").read_text(encoding="utf-8"))
-    assert check.extra_steps(reference, {"py": "py", "src": "s", "tests": "t",
-                                         "coverage": "80"}) == []
+    assert (
+        check.extra_steps(
+            reference, {"py": "py", "src": "s", "tests": "t", "coverage": "80"}
+        )
+        == []
+    )
 
 
 # --- --run-step (the hook's format delegation) --------------------------------

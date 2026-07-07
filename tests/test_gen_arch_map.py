@@ -150,11 +150,15 @@ def test_splice_replaces_between_markers():
 def test_first_comment_summary_variants():
     f = gen_arch_map.first_comment_summary
     p = gen_arch_map.DEFAULT_COMMENT_PREFIXES
-    assert f("#!/usr/bin/env node\n// Real summary.\n", p) == "Real summary."  # shebang skipped
+    assert (
+        f("#!/usr/bin/env node\n// Real summary.\n", p) == "Real summary."
+    )  # shebang skipped
     assert f("# Top comment\n", p) == "Top comment"
     assert f("-- SQL module summary\n", p) == "SQL module summary"
     assert f("/// Rust doc line\n", p) == "Rust doc line"  # extra slash stripped
-    assert f("export const x = 1\n// later\n", p) == ""  # opens with code, not a comment
+    assert (
+        f("export const x = 1\n// later\n", p) == ""
+    )  # opens with code, not a comment
     assert f("", p) == ""
     assert f("<!-- HTML page -->\n", ("<!--",)) == "HTML page"  # block close stripped
 
@@ -206,11 +210,15 @@ def test_files_mode_end_to_end_and_staleness(scaffold):
     arch = (scaffold / "docs" / "architecture.md").read_text(encoding="utf-8")
     assert "src/app.ts" in arch and "The TS entry point." in arch
     # freshly generated ⇒ --check is green (the arch-map step passes)
-    proc = run_py(["scripts/gen_arch_map.py", "--mode", "files", "--check"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/gen_arch_map.py", "--mode", "files", "--check"], cwd=scaffold
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # add a file ⇒ stale ⇒ --check fails (the drift lever works for a TS/Go repo)
     (src / "util.go").write_text("// Helpers.\npackage util\n", encoding="utf-8")
-    proc = run_py(["scripts/gen_arch_map.py", "--mode", "files", "--check"], cwd=scaffold)
+    proc = run_py(
+        ["scripts/gen_arch_map.py", "--mode", "files", "--check"], cwd=scaffold
+    )
     assert proc.returncode == 1
     assert "STALE" in proc.stderr
 
