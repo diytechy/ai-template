@@ -29,11 +29,14 @@ finding classes:
     canonical vision statement is missing) or several (a re-authored variant;
     other docs point at the tag, never restate it) is a hard finding; exit 1.
     No root README at all degrades to a warning (a louder, different problem).
-  - **the SN inventory** (opt-in; process.md §4 G1): when the root README carries
-    an `<!-- sn-inventory -->` section, every SN id it cites must exist in the
-    stakeholder-needs registry, and every Must/Should need in that registry must
-    be cited by some bullet — so a requirements change mechanically ages the
-    README. A hard finding either way; absent section = silent (opt-in).
+  - **README need coverage** (**opt-out**; process.md §4 G1): traceability is the
+    kit's core value, so the root README is held to it too — every SN id cited
+    anywhere in it must exist in the stakeholder-needs registry, and every
+    Must/Should need in that registry must be cited somewhere in the README, so a
+    requirements change mechanically ages the README. No delimiter markers: any
+    `SN-###` in the README counts as a citation. A README opts out with an
+    `<!-- sn-inventory: off -->` comment; a repo with no real needs yet (only the
+    `-000` placeholder) is vacuously clean, so a fresh scaffold passes.
   - **staleness** (`--stale`, git-gated): a doc linking a *non-doc* file
     (source/asset) that was committed more recently than the doc itself — a
     "lying map" heuristic. Printed as a **`hint`**, a severity below `WARN`: it
@@ -87,10 +90,13 @@ EXTERNAL_RE = re.compile(r"^(?:[A-Za-z][A-Za-z0-9+.\-]*:|//)")
 MD_SUFFIXES = (".md", ".markdown")
 # The singleton tag opening the root README's vision statement (process.md §4 G1).
 VISION_TOKEN = "PROJECT-VISION:"
-# The opt-in README capability inventory: bullets citing the SN id(s) they cover,
-# between these HTML-comment markers (process.md §4 G1).
-SN_INVENTORY_RE = re.compile(
-    r"<!--\s*sn-inventory\s*-->(.*?)<!--\s*/sn-inventory\s*-->", re.S | re.I
+# README need coverage is ON by default (opt-out); a README disables it with this
+# comment on its own line (process.md §4 G1). Anchored to a whole line so prose
+# that merely *documents* the opt-out (inline, mid-sentence) can't trip it — a
+# real opt-out puts the marker on its own line. Citations are any SN-### in the
+# README — no delimiter markers.
+SN_INVENTORY_OFF_RE = re.compile(
+    r"^[ \t]*<!--\s*sn-inventory:\s*off\s*-->[ \t]*$", re.I | re.M
 )
 SN_ID_RE = re.compile(r"\bSN-\d+\b")
 
@@ -347,39 +353,41 @@ def _registry_needs(path):
 
 
 def check_inventory(docs, root, docs_dir):
-    """The opt-in README SN inventory stays honest (process.md §4 G1).
+    """The root README honors the traceability spine (process.md §4 G1).
 
-    When the root README carries an `<!-- sn-inventory -->` section, every SN id
-    it cites must exist in the stakeholder-needs registry, and every Must/Should
-    need in that registry must be cited by some bullet — so a requirements change
-    mechanically ages the README. Absent section -> silent (opt-in by presence).
-    Returns (failures, warnings) as printable message strings.
+    ON by default (opt-out): every SN id cited anywhere in the README must exist
+    in the stakeholder-needs registry, and every Must/Should need in that registry
+    must be cited somewhere in the README — so a requirements change mechanically
+    ages the README. No delimiter markers: any `SN-###` counts as a citation. A
+    README opts out with an `<!-- sn-inventory: off -->` comment; a repo with no
+    real needs yet (only the `-000` placeholder) is vacuously clean. Returns
+    (failures, warnings) as printable message strings.
     """
     readme = _root_readme(docs, root)
     if readme is None:
         return [], []  # the vision check already reports a missing README
-    m = SN_INVENTORY_RE.search(readme.read_text(encoding="utf-8"))
-    if not m:
-        return [], []  # opt-in: no inventory section, nothing to check
-    src = rel(readme, root)
-    cited = {s for s in SN_ID_RE.findall(m.group(1)) if not _is_sn_example(s)}
+    text = readme.read_text(encoding="utf-8")
+    if SN_INVENTORY_OFF_RE.search(text):
+        return [], []  # explicit opt-out
     registry = (root / docs_dir / "requirements" / "stakeholder-needs.md").resolve()
     if not registry.exists():
-        return [
-            "{}: has an sn-inventory section but no {} to validate against".format(
-                src, rel(registry, root)
-            )
-        ], []
+        return [], []  # no needs to hold the README to (vacuous)
+    src = rel(readme, root)
+    cited = {s for s in SN_ID_RE.findall(text) if not _is_sn_example(s)}
     all_ids, must_should = _registry_needs(registry)
     reg = rel(registry, root)
     fails = []
     for sid in sorted(cited - all_ids):
         fails.append(
-            "{}: sn-inventory cites {}, absent from the needs registry".format(src, sid)
+            "{}: README cites {}, absent from the needs registry "
+            "(fix the id, or opt out with <!-- sn-inventory: off -->)".format(src, sid)
         )
     for sid in sorted(must_should - cited):
         fails.append(
-            "{}: {} (Must/Should) is covered by no sn-inventory bullet".format(reg, sid)
+            "{}: {} (Must/Should) is cited by no README bullet "
+            "(add it to the README, or opt out with <!-- sn-inventory: off -->)".format(
+                reg, sid
+            )
         )
     return fails, []
 

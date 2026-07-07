@@ -152,8 +152,8 @@ def make_minimal_project(root):
         .replace("LLR-000", "LLR-001"),
         encoding="utf-8",
     )
-    # A G1-complete project's README sn-inventory cites its real need (the
-    # coverage gate: every Must/Should SN is cited), replacing the -000 stub.
+    # A G1-complete project's README cites its real need (the opt-out
+    # need-coverage gate: every Must/Should SN is cited), replacing the -000 stub.
     readme = root / "README.md"
     readme.write_text(
         readme.read_text(encoding="utf-8").replace(

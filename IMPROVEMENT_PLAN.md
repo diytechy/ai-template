@@ -6244,6 +6244,32 @@ continuity (same style as the session log above).
 > apart again. `pytest -q`: 296 passed, 1 skipped (same run as WI-1.31).
 > Byte deltas: no budgeted file touched.
 
+> **WI-1.41 ✅ landed 2026-07-07 · README need-coverage guard: opt-in → opt-out,
+> marker-free.** Owner-raised during the Thread 47 self-adoption walk-through:
+> traceability is the kit's core value, so the root README should honor it **by
+> default**, and the `<!-- sn-inventory -->` delimiter markers are needless
+> ceremony. `check_docs.check_inventory` is reworked — it now scans the **whole
+> README** for `SN-###` citations (no markers) and is **ON by default**: every
+> Must/Should need in the registry must be cited somewhere in the README, and
+> every cited id must exist. A README opts out with an `sn-inventory: off` HTML
+> comment **on its own line** (anchored regex, so prose that merely *documents*
+> the opt-out can't trip it — a footgun the change itself surfaced when the
+> template's guidance comment silently opted the scaffold out). A repo with only
+> the `-000` placeholder is vacuously clean, so a fresh scaffold passes.
+> **⚠ Downstream migration (breaking):** an existing adopter with real
+> Must/Should needs whose README does not cite them will now **FAIL check_docs at
+> every gate** on their next re-sync — they must add the citations or the opt-out
+> comment (previously the check was silent unless they added the markers).
+> Meta-repo dogfood: the root README now cites all 12 core needs (SN-001..012) on
+> its existing capability bullets + self-adoption note (no duplicated inventory),
+> and gained a "gates at a glance" quick-reference. Docs: shipped
+> `README.template.md` (marker-free pattern + opt-out note), both READMEs'
+> check_docs descriptions. Tests: `test_check_docs` inventory tests reworked
+> (default-on fails an uncovered Must with no markers; the opt-out comment
+> silences; a bad citation fails). `pytest -q`: **366 passed, 2 skipped**;
+> `check_docs --root . --stale`: OK, 0 broken. Byte deltas: AGENTS.template.md /
+> PROCESS.md untouched.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

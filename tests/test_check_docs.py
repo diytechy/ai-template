@@ -4,8 +4,6 @@ must state the `PROJECT-VISION:` tag exactly once (process.md §4 G1's
 mechanizable half), and the git-gated staleness pass degrades to a clean skip
 (process.md §3 "The doc set must stay navigable")."""
 
-import re
-
 from conftest import SCRIPTS, load_script, run_py
 
 
@@ -21,16 +19,11 @@ def _add_must_need(scaffold, sid="SN-005"):
     reg.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 
-def _set_inventory(scaffold, body):
-    """Replace the README sn-inventory section body (markers kept)."""
+def _append_readme(scaffold, text):
+    """Append a line to the scaffold README (the check scans the whole file, so a
+    citation anywhere counts — no delimiter markers)."""
     r = scaffold / "README.md"
-    text = re.sub(
-        r"<!-- sn-inventory -->.*<!-- /sn-inventory -->",
-        "<!-- sn-inventory -->\n" + body + "\n<!-- /sn-inventory -->",
-        r.read_text(encoding="utf-8"),
-        flags=re.S,
-    )
-    r.write_text(text, encoding="utf-8")
+    r.write_text(r.read_text(encoding="utf-8") + "\n" + text + "\n", encoding="utf-8")
 
 
 # --- CLI behaviour on a real scaffold ---------------------------------------
@@ -238,56 +231,47 @@ def test_staleness_skips_without_git(tmp_path):
     assert "staleness check skipped" in proc.stdout
 
 
-# --- the README SN inventory (opt-in coverage; process.md §4 G1) --------------
+# --- README need coverage (opt-out, marker-free; process.md §4 G1) ------------
 
 
 def test_inventory_clean_scaffold_passes(scaffold):
-    # The template ships the sn-inventory section citing the -000 placeholder,
-    # and the scaffold registry has only SN-000, so both directions are satisfied.
-    assert "<!-- sn-inventory -->" in (scaffold / "README.md").read_text(
-        encoding="utf-8"
-    )
+    # A fresh scaffold has only the -000 placeholder in both the README and the
+    # registry, so both directions are vacuously satisfied (no markers needed).
     proc = run_py(
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-def test_inventory_uncovered_must_fails(scaffold):
-    # A Must need the README cites nowhere fails: a requirements add pulls on
-    # the README (the whole point of the coverage direction).
+def test_inventory_uncovered_must_fails_by_default(scaffold):
+    # ON by default (opt-out): a real Must need the README cites nowhere fails,
+    # with NO sn-inventory markers anywhere — a requirements add pulls on the
+    # README (the coverage direction, now the default).
     _add_must_need(scaffold, "SN-005")
     proc = run_py(
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
     )
     assert proc.returncode == 1
-    assert "SN-005 (Must/Should) is covered by no sn-inventory bullet" in proc.stdout
+    assert "SN-005 (Must/Should) is cited by no README bullet" in proc.stdout
 
 
 def test_inventory_bad_citation_fails(scaffold):
-    # A bullet citing an id absent from the registry is a broken citation.
-    _set_inventory(scaffold, "- **X** — does x (SN-099)")
+    # An SN id cited in the README but absent from the registry is a broken
+    # citation (scanned from the whole file, no markers).
+    _append_readme(scaffold, "- **X** — does x (SN-099)")
     proc = run_py(
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
     )
     assert proc.returncode == 1
-    assert "cites SN-099, absent from the needs registry" in proc.stdout
+    assert "README cites SN-099, absent from the needs registry" in proc.stdout
 
 
-def test_inventory_absent_section_is_opt_in(scaffold):
-    # No sn-inventory section -> the check is silent even with an uncovered Must
-    # need (opt-in by presence). Removing the markers proves it.
+def test_inventory_opt_out_marker_silences(scaffold):
+    # Opt-out: an `<!-- sn-inventory: off -->` comment disables the check even
+    # with an uncovered Must need — the escape hatch for a repo that doesn't want
+    # README-level need tracing.
     _add_must_need(scaffold, "SN-005")
-    r = scaffold / "README.md"
-    r.write_text(
-        re.sub(
-            r"<!-- sn-inventory -->.*<!-- /sn-inventory -->",
-            "",
-            r.read_text(encoding="utf-8"),
-            flags=re.S,
-        ),
-        encoding="utf-8",
-    )
+    _append_readme(scaffold, "<!-- sn-inventory: off -->")
     proc = run_py(
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
     )

@@ -8,7 +8,7 @@ long run, built **test-first** with **explicit approval gates** so you can
 trust what ships.
 
 It is **stack-agnostic** with **Python-first reference scripts** — drop it into
-any repo and wire the harness to that repo's tooling.
+any repo and wire the harness to that repo's tooling (SN-003).
 
 ## What's in here
 
@@ -22,15 +22,17 @@ The kit's headline pieces:
 
 - **A gated process** ([`PROCESS.md`](project-trajectory/PROCESS.md)) — roles as
   "hats", approval gates (G1→G2→G3→G-Release→G-Final; G-Release only for
-  versioned releases), and a verdict protocol.
+  versioned releases), and a verdict protocol; each gate's bar **fails, never
+  silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
-  generated matrix that must report **zero orphans** before each gate.
+  generated matrix that must report **zero orphans** before each gate (SN-002).
 - **Runnable scripts** (stdlib-only Python 3.8+, no pip needed for the kit
-  itself): [`check.py`](project-trajectory/scripts/check.py) (the gate- and
+  itself — SN-011): [`check.py`](project-trajectory/scripts/check.py) (the gate- and
   tier-aware harness), [`trace.py`](project-trajectory/scripts/trace.py)
   (traceability), [`check_docs.py`](project-trajectory/scripts/check_docs.py)
   (doc-navigability: broken-link + orphan-doc checks, plus the README
-  `PROJECT-VISION:` tag + opt-in SN-inventory guards, and `--stale`),
+  `PROJECT-VISION:` tag + the **opt-out** README need-coverage guard, and
+  `--stale` — SN-010),
   [`check_flows.py`](project-trajectory/scripts/check_flows.py)
   (the authored runtime-flows section: diagrams present, cited ids real),
   [`check_perf.py`](project-trajectory/scripts/check_perf.py)
@@ -40,7 +42,8 @@ The kit's headline pieces:
   [`check_privacy.py`](project-trajectory/scripts/check_privacy.py)
   (a deterministic **secrets floor** for committed keys/tokens in every repo,
   opt-out via `docs/secrets-scan`, plus privacy/PII classes — author email,
-  content, and commit messages — gated on the `docs/privacy-check` toggle),
+  content, and commit messages — gated on the `docs/privacy-check` toggle —
+  SN-009),
   [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   (the AST code map — summaries, dependencies, `Implements:` back-links — plus
   a generated Mermaid dependency diagram, routed into `architecture.md` and/or
@@ -49,10 +52,11 @@ The kit's headline pieces:
   (the human release checklist),
   [`gen_cases.py`](project-trajectory/scripts/gen_cases.py) (boundary-aware,
   pairwise test-case combinations), and
-  [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) (scaffold a new repo).
+  [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) (scaffold a new repo —
+  SN-001).
   Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`) ship for Linux/macOS
   and Windows.
-- **Unattended agent operation** — root `agent-resume.*` launchers boot an
+- **Unattended agent operation** (SN-006) — root `agent-resume.*` launchers boot an
   agent session at the declared tier, or the walk-away coordinator loop
   ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)): fresh headless
   sessions resume from `docs/status.md` until `docs/run-state` reaches an end
@@ -65,7 +69,7 @@ The kit's headline pieces:
   into `docs/`: `gate-policy` (who advances gates), `push-policy` (who may
   push), and `privacy-check` (the PII/identity privacy gate — a `true`/`false`
   toggle enforced by the git hooks + `check_privacy.py`).
-- **Agent-neutral skills and hooks** — opt-in skills
+- **Agent-neutral skills and hooks** (SN-005) — opt-in skills
   ([`skills/`](project-trajectory/skills/)) materialized per agent by
   `bootstrap.py --agents`, and git hooks
   ([`hooks/`](project-trajectory/hooks/)): a fast `pre-commit` process floor
@@ -165,32 +169,40 @@ same artifacts and run the gates with you.
 
 This repo eats its own dog food: the kit is developed **using the kit's own
 process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
-[`check.py`](project-trajectory/scripts/check.py). The meta-repo's needs,
-requirements, and tests live under [`docs/requirements/`](docs/requirements/) +
-[`docs/test/`](docs/test/) — distinct from the blank templates the kit *ships* —
-and it currently passes its own gates at **G3** (the gate-walk record is
-[`docs/log.md`](docs/log.md); what each gate requires is in
-[`PROCESS.md`](project-trajectory/PROCESS.md) §4).
+[`check.py`](project-trajectory/scripts/check.py). Every capability above cites
+the [stakeholder need](docs/requirements/stakeholder-needs.md) it realizes, and
+`check_docs.py`'s **opt-out** need-coverage guard keeps that honest — every
+Must/Should need must be cited somewhere in this README, so a requirements change
+mechanically ages it (no delimiter markers; any `SN-###` counts). The two needs
+without a headline bullet are the meta-repo's own: **the kit's own changes stay
+traced and tested** (SN-007 — the suite exercises every script end-to-end against
+a real scaffold) and **the process stays right-sized** (SN-012 — perf, guardrails,
+unattended, and parallel-tracks layers cost a repo that doesn't use them nothing).
 
-The inventory below maps the kit's headline capabilities to the stakeholder needs
-they realize ([`docs/requirements/stakeholder-needs.md`](docs/requirements/stakeholder-needs.md)).
-It is the same **opt-in `sn-inventory` guard the kit ships** (`check_docs.py`):
-when a README carries this section, every id it cites must exist in the needs
-registry, and every Must/Should need must be cited by a bullet — so a requirements
-change that isn't reflected here becomes a mechanical finding at the gate.
+The meta-repo's needs, requirements, and tests live under
+[`docs/requirements/`](docs/requirements/) + [`docs/test/`](docs/test/) —
+distinct from the blank templates the kit *ships* — and it currently passes its
+own gates at **G3** (the gate-walk record is [`docs/log.md`](docs/log.md)).
 
-<!-- sn-inventory -->
-- **Scaffold a gated, traced repo** — `bootstrap.py` drops the whole process into a new or existing repo, wired to its stack (SN-001, SN-003)
-- **Mechanical traceability** — `trace.py` joins `SN→SR→LLR→TC` and reports zero orphans before a gate (SN-002)
-- **Explicit, honest approval gates** — `check.py` enforces each gate's bar and *fails* (never silently skips) a missing check (SN-004, SN-008)
-- **Agent-neutral enforcement** — git hooks + CI run the same harness a human runs (SN-005)
-- **Secrets + privacy floor** — `check_privacy.py` scans every commit's diff, message, and outgoing range (SN-009)
-- **Unattended, resumable operation** — `agent_loop.py` resumes headless from `docs/status.md` (SN-006)
-- **The kit's own changes stay traced and tested** — the suite exercises every script end-to-end against a real scaffold (SN-007)
-- **Navigable, honest documentation** — `check_docs.py` plus generated, drift-checked views (SN-010)
-- **Stdlib-only portability** — runs on a clean Python 3.8+ with no pip installs, cross-platform (SN-011)
-- **Right-sized, opt-in layers** — perf, guardrails, unattended, and parallel-tracks layers cost a repo that doesn't use them nothing (SN-012)
-<!-- /sn-inventory -->
+### The gates at a glance
+
+What each approval gate certifies — the full criteria live in
+[`PROCESS.md`](project-trajectory/PROCESS.md) §4:
+
+- **G1 — Requirements/UX/Constraints.** Needs + requirements are complete,
+  measurable, and consistent with the vision; every requirement links a need;
+  usability/doc needs, constraints, and non-goals are captured.
+- **G2 — Decomposition & test coverage.** Every requirement decomposes to design
+  (LLR) and a test (TC), each TC written **failing-first**; zero trace orphans;
+  no placeholder rows; key runtime flows diagrammed.
+- **G3 — Implementation.** Code is written **test-first** and passes the full
+  harness: format/lint, full test tier, coverage ≥ threshold, schema, every
+  in-scope requirement `Verified`, no stubs.
+- **G-Release — Release readiness** *(per release)*. The release test tier
+  passes; the generated release checklist is completed and signed; version
+  bumped; changelog + interface versions updated.
+- **G-Final — Acceptance.** A human exercises the real product (including
+  manual/demonstration items) and approves.
 
 See [`project-trajectory/README.md`](project-trajectory/README.md) for the full
 tour and the tuning knobs (`COVERAGE_THRESHOLD`, `MAX_ROUNDS`, dropping hats for
