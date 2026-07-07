@@ -99,6 +99,14 @@ Always (independent of --strict-schema), structural integrity is checked:
       integrity-checked only, its provenance/license/hash tracked in text even
       though the asset itself can't be diffed. The ASSET-000 example row is
       ignored, so the optional registry never blocks a gate
+    - a test case (TC) that cites an SR and an LLR together whose LLR does not
+      decompose that SR (the LLR's SR-Refs excludes every SR the same TC cites).
+      The combined `SR;LLR` citation is a convenience so one test discharges both
+      the "SR needs a TC" and "LLR needs a TC" rules, but it must not contradict
+      the SR<->LLR link recorded canonically on the LLR's SR-Refs — an incoherent
+      pairing is wrong at any stage, like a malformed id (IMPROVEMENT_PLAN.md
+      Thread 50). A TC citing only LLRs (no SR) has no SR to contradict and is
+      left to the orphan rules
 These join `--strict`'s failure set like orphans do. `--strict-integrity` fails
 on *only* this integrity class: it is the always-valid floor the pre-commit hook
 runs on every commit — a duplicated or malformed id is wrong at any stage, while
@@ -377,6 +385,46 @@ def integrity_findings(label, raw_rows):
             found.append(f"{label} id {rid} is duplicated")
         seen.add(rid)
     return found
+
+
+def triangle_findings(tcs, llrs):
+    """SR/LLR citation coherence (IMPROVEMENT_PLAN.md Thread 50). A TC may cite an
+    SR and an LLR together so one test discharges both the "SR needs a TC" and
+    "LLR needs a TC" rules; the SR<->LLR relationship itself is recorded
+    canonically on the LLR's SR-Refs. This keeps the derived citation honest: when
+    a TC cites both an SR and an LLR, each cited LLR must descend from one of the
+    SRs the same TC cites (its SR-Refs must intersect them). An incoherent pairing
+    (a TC citing LLR-1 next to SR-2 when LLR-1 decomposes SR-1) is wrong at any
+    stage, so it joins the integrity floor, not the gate-scoped orphan set. A TC
+    that cites only LLRs (no SR) has no SR to contradict — the orphan rules cover
+    it. An LLR with no SR-Refs is already an orphan, so it is not double-reported."""
+    llr_parents = {
+        r["LLR-ID"]: set(refs(r.get("SR-Refs"))) for r in llrs if r.get("LLR-ID")
+    }
+    out = []
+    for r in tcs:
+        tid = r.get("TC-ID")
+        if not tid:
+            continue
+        cited = refs(r.get("Verifies"))
+        cited_srs = {x for x in cited if ID_PATTERNS["SR"].match(x)}
+        if not cited_srs:
+            continue
+        for x in cited:
+            parents = llr_parents.get(x)
+            if parents and not (parents & cited_srs):
+                out.append(
+                    "TC {} cites {} alongside SR {} but {} decomposes {} (its "
+                    "SR-Refs) — an SR/LLR pair in one TC must share the parent "
+                    "link recorded on the LLR".format(
+                        tid,
+                        x,
+                        ", ".join(sorted(cited_srs)),
+                        x,
+                        ", ".join(sorted(parents)),
+                    )
+                )
+    return out
 
 
 def placeholder_findings(label, raw_rows):
@@ -906,6 +954,10 @@ def main():
         for f in structure_findings(p, p.relative_to(docs.parent).as_posix())
     ]
     integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
+    # SR/LLR citation coherence (Thread 50): a TC that cites an SR and an LLR
+    # together must not pair an LLR with an SR it does not decompose. Integrity-
+    # class (wrong at any stage), so it joins the --strict-integrity floor.
+    integrity += triangle_findings(tcs, llrs)
     # PB ids are integrity-checked too, but PB is kept out of the placeholder/
     # schema sweeps above: the budgets registry is optional (like interfaces.csv),
     # so a leftover PB-000 must never block a gate the project doesn't use.

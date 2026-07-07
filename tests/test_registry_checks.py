@@ -150,6 +150,78 @@ def test_harness_runs_registry_integrity_at_g1(scaffold):
     assert "RESULT: FAIL" in proc.stdout
 
 
+# --- Integrity: SR/LLR citation coherence in a TC (Thread 50) ------------------
+# A TC's combined `SR;LLR` citation is a convenience so one test covers both
+# tiers, but it must not contradict the SR<->LLR link the LLR's SR-Refs records.
+# Wrong at any stage -> integrity class (fails --strict-integrity).
+
+_TWO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Verified
+SR-002,Subtraction,SN-001,"The system shall subtract.","r.","sub(3,1) == 2",,M,Test,Verified
+"""
+
+_TWO_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
+LLR-001,SR-001,Pure adder,src/demo,add,"two numbers -> sum",(see TC),Implemented
+LLR-002,SR-002,Pure subtractor,src/demo,sub,"two numbers -> difference",(see TC),Implemented
+"""
+
+# TC-002 cites SR-002 next to LLR-001, but LLR-001 decomposes SR-001 -> incoherent.
+INCOHERENT_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
+TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
+TC-002,SR-002;LLR-001,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Verified
+"""
+
+# Same chain, every LLR paired with its own SR -> coherent.
+COHERENT_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
+TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
+TC-002,SR-002;LLR-002,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Verified
+"""
+
+
+def _write_chain(root, srs, llrs, tcs):
+    req = root / "docs" / "requirements"
+    req.joinpath("system-requirements.csv").write_text(srs, encoding="utf-8")
+    req.joinpath("low-level-requirements.csv").write_text(llrs, encoding="utf-8")
+    (root / "docs" / "test" / "test-cases.csv").write_text(tcs, encoding="utf-8")
+
+
+def test_incoherent_sr_llr_pair_fails_strict_integrity(scaffold):
+    make_minimal_project(scaffold)
+    _write_chain(scaffold, _TWO_SRS, _TWO_LLRS, INCOHERENT_TCS)
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    report = report_of(scaffold)
+    assert "TC-002" in report and "LLR-001" in report and "decomposes" in report
+
+
+def test_incoherent_sr_llr_pair_fails_strict_too(scaffold):
+    make_minimal_project(scaffold)
+    _write_chain(scaffold, _TWO_SRS, _TWO_LLRS, INCOHERENT_TCS)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_coherent_sr_llr_pairs_stay_green(scaffold):
+    make_minimal_project(scaffold)
+    _write_chain(scaffold, _TWO_SRS, _TWO_LLRS, COHERENT_TCS)
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_triangle_findings_unit_ignores_llr_only_and_analytic():
+    # A TC citing only an LLR (no SR) has no SR to contradict; not a finding.
+    trace = load_script("trace")
+    llrs = [{"LLR-ID": "LLR-001", "SR-Refs": "SR-001"}]
+    llr_only = [{"TC-ID": "TC-001", "Verifies": "LLR-001"}]
+    assert trace.triangle_findings(llr_only, llrs) == []
+    # An SR paired with its own LLR is coherent; a mismatched pair is a finding.
+    ok = [{"TC-ID": "TC-001", "Verifies": "SR-001;LLR-001"}]
+    assert trace.triangle_findings(ok, llrs) == []
+    bad = [{"TC-ID": "TC-002", "Verifies": "SR-002;LLR-001"}]
+    (finding,) = trace.triangle_findings(bad, llrs)
+    assert "TC-002" in finding and "LLR-001" in finding
+
+
 # --- Placeholders: a fresh scaffold is green by default, fails opt-in ----------
 
 

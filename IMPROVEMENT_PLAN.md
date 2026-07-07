@@ -4682,6 +4682,18 @@ split are fixed.
 
 ## Thread 50 — `trace.py`: TC triangle-consistency check (SR/LLR citation coherence)
 
+**Status: ✅ landed 2026-07-07.** `trace.py` gained `triangle_findings()`, wired
+into the integrity set (joins `--strict` and the `--strict-integrity` pre-commit
+floor); 4 tests in `tests/test_registry_checks.py` (incoherent pair fails
+integrity + strict, coherent chain green, a unit test over the function). The
+kit's own 35 TCs pass unchanged (coherent by construction); `EXAMPLE.md` and the
+`-000` template rows are coherent/excluded, so a fresh scaffold stays green.
+`pytest -q` → 362 passed, 2 skipped. **Deviation:** none. **Byte-budgeted files:**
+none touched — PROCESS.md's integrity parenthetical is illustrative, and the
+authoritative integrity enumeration is the `trace.py` docstring (which was
+updated), so PROCESS.md stayed flat (56375 B). The spec/rationale below is
+retained as the *why*.
+
 **Status: 📋 SPEC — surfaced by Thread 47 (self-adoption) 2026-07-07; owner
 direction recorded below.** A small, well-scoped change to a shipped kit script.
 
