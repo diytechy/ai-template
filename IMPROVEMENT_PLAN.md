@@ -4131,9 +4131,11 @@ edge an adopter hits, from the inside).
 `docs/gate-policy`, `docs/push-policy`, and now `docs/privacy-check` (Thread 46
 migrated it from `docs/commit-identity`). **Missing** for full self-adoption:
 - `docs/requirements/{stakeholder-needs.md, system-requirements.csv,
-  low-level-requirements.csv, test-cases.csv}` — the kit's **own** registries
-  (distinct instances, *not* the `project-trajectory/registries/*.template.*`
-  files it ships to adopters);
+  low-level-requirements.csv}` **and `docs/test/test-cases.csv`** — the kit's
+  **own** registries (distinct instances, *not* the
+  `project-trajectory/registries/*.template.*` files it ships to adopters). Mind
+  the split: `trace.py` loads SR/LLR/SN from `docs/requirements/` but the TC tier
+  from **`docs/test/`** (`load_csv(docs / "test" / "test-cases.csv")`);
 - `docs/architecture.md` (one-page + generated map over
   `project-trajectory/scripts/` + authored runtime-flows for bootstrap and the
   coordinator);
@@ -4143,13 +4145,15 @@ migrated it from `docs/commit-identity`). **Missing** for full self-adoption:
 - the README `PROJECT-VISION:` tag already exists — reuse it as the kit's own
   vision (check_docs already enforces it).
 
-**Approach (phased — a realistic first session lands 1–4, G1→G2; 5–6 may be a
-second session).**
+**Approach (phased — a realistic first session lands 1–5 to reach G2 [SN→SR→LLR→TC
+authored, zero orphans — LLRs are part of the G2 bar, not deferrable]; 6–7, the
+full G3 walk + CI wiring + thread-history reconcile, may be a second session).**
 
 1. **Layout decision (do first, record it).** The meta-repo's "product" is
    `project-trajectory/` (scripts, hooks, templates) + `tests/`. Put the kit's
-   own trace files at **root** `docs/requirements/` and keep them **separate from
-   the shipped templates** in `project-trajectory/registries/`. Add a short note
+   own trace files at **root** under `docs/requirements/` (SR/LLR/SN) and
+   `docs/test/` (TCs) — the layout `trace.py` expects — and keep them **separate
+   from the shipped templates** in `project-trajectory/registries/`. Add a short note
    to `CLAUDE.md` distinguishing "the kit's own spine (traces the kit)" from "the
    templates the kit ships". Point `docs/stack.ini` at
    `src=project-trajectory/scripts`, `tests=tests`.
@@ -4168,22 +4172,42 @@ second session).**
    (`bootstrap.py`), unattended coordinator (`agent_loop.py`), flows/perf/stubs,
    the declared-policy readers. Acceptance criteria = the behaviors the existing
    tests already assert.
-4. **`TC` ← existing tests (the core mapping).** Author
-   `docs/requirements/test-cases.csv` with TC rows: `Verifies = SR-###`,
-   `Automated = yes`, `Tier` per the test's speed, and the **pytest node id**
-   (`tests/test_x.py::test_y`) as the automated evidence (Parameters/Expected or
-   an agreed column). **Keep it tractable — proportionality:** map at the
-   *behavior* granularity (roughly one TC per test function, grouped by test file
-   → SR), NOT a new test per row (the tests exist). Seed the rows mechanically:
-   `pytest --collect-only -q` lists every node id; hand-assign `Verifies`. ~338
-   nodes collapse into SR-scoped TC clusters — do not over-explode micro-asserts.
-5. **`LLR` (only where a mechanized check earns it).** Per this file's
-   **Proportionality doctrine (d)**, most SRs trace `SR→TC` directly. Add LLRs
-   **sparingly** for load-bearing internal contracts worth pinning: the shared
-   `_first_declared_line` declared-policy parse (hooks + `agent_loop` +
-   `check_privacy` must agree — there's already a test), the arch-map
-   marker-block contract, the `EXEMPT_EMAILS` / two-axis gating semantics. Do
-   **not** decompose every script into micro-LLRs the tests already cover.
+4. **`TC` ← existing tests (the core mapping).** Author **`docs/test/test-cases.csv`**
+   (note the path — the TC registry lives under `docs/test/`, *not*
+   `docs/requirements/`) with TC rows: `Verifies = SR-###`, `Automated = yes`,
+   `Tier` per the test's speed. **Recording the link to the concrete test needs a
+   convention the kit doesn't yet ship:** the TC schema is
+   `TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status` — there
+   is no test-id field. Default to putting the **pytest node id** in `Parameters`
+   (e.g. `node=tests/test_check_privacy.py::test_x`) so `--strict-schema`'s
+   required-field checks stay satisfied; a first-class `Evidence`/`Test` column is
+   the cleaner model but touches the shipped template — **capture that as a
+   kit-improvement finding to upstream into `test-cases.template.csv`** (this is
+   exactly the rough edge the dogfood exists to surface). **Keep it tractable —
+   proportionality:** map at the *behavior* granularity (roughly one TC per test
+   function, grouped by test file → SR), NOT a new test per row (the tests exist).
+   Seed the rows mechanically: `pytest --collect-only -q` lists every node id;
+   hand-assign `Verifies`. ~338 nodes collapse into SR-scoped TC clusters — do not
+   over-explode micro-asserts.
+5. **`LLR` — required for every Test/Demonstration/Manual SR, not optional.**
+   Reconcile the proportionality instinct with `trace.py`'s hard orphan rule
+   ("SR with no LLR"): an SR is LLR-**exempt only** when its `Verification` is
+   `Analysis`, `Inspection`, or `Attest`. The kit's SRs are overwhelmingly
+   `Test`-verified (the 338 automated tests), so **each Test-backed SR needs ≥1
+   LLR** or it orphans at G2 — the "SR→TC direct, LLRs sparingly" shortcut would
+   break this plan's own zero-orphan bar. Resolve it two honest ways, never by
+   faking a method: (a) write **one design-tier LLR per capability SR** — the
+   *design element* that implements it (e.g.
+   `LLR: check_privacy.KEY_RE + scan_line detect PEM headers`), one-per-SR, **not**
+   a micro-LLR per assert; and (b) set `Verification = Inspection`/`Analysis` where
+   the SR is *genuinely* inspected rather than executed — "scripts are stdlib-only
+   / run on 3.8+", "templates are copy-ready", "the process is stack-agnostic" —
+   those are legitimately LLR-exempt. Still add LLRs for the load-bearing
+   cross-script contracts regardless: the shared `_first_declared_line`
+   declared-policy parse (hooks + `agent_loop` + `check_privacy` must agree —
+   already tested), the arch-map marker-block contract, the `EXEMPT_EMAILS` /
+   two-axis gating semantics. Guiding rule stays "no micro-LLRs the tests already
+   cover" — but "one LLR per Test-SR" is the floor trace.py enforces, not a choice.
 6. **Wire + walk the gates.** Add `docs/stack.ini`, `docs/gate` (G1, then bump),
    `docs/architecture.md` (+ `gen_arch_map.py` over `project-trajectory/scripts`,
    + a "Runtime flows" section for bootstrap and the coordinator loop). Run
@@ -4204,17 +4228,26 @@ script/hook/policy-file, TCs citing the existing tests, **zero trace orphans**,
 `check.py` green at the chosen gate.
 
 **Complications to expect.**
-- **Meta-repo layout vs. shipped templates** — keep `docs/requirements/`
-  (the kit's own) distinct from `project-trajectory/registries/` (templates);
-  `trace.py`/`check_docs.py` run over the former. `bootstrap.py`'s own tests
+- **Meta-repo layout vs. shipped templates** — keep the kit's own registries
+  (`docs/requirements/` for SR/LLR/SN + `docs/test/` for TCs) distinct from
+  `project-trajectory/registries/` (the templates it ships); `trace.py` runs over
+  the former pair, `check_docs.py` over the docs. `bootstrap.py`'s own tests
   scaffold into temp dirs, so they won't collide.
 - **The "product" spans Python + `sh` hooks + `md` templates.** `gen_arch_map`
   covers the Python; `architecture.md`'s prose + runtime-flows cover the hooks
   and the scaffold contract.
-- **Coverage bar.** Measure current `pytest-cov` over
-  `project-trajectory/scripts`; if it's below the kit default (80%), either add
-  tests or set the meta-repo's threshold **honestly** in its `stack.ini`
-  (recorded, never hand-waved — the kit's own §4 rule).
+- **Coverage reads ~0 under the current test architecture — plan for it, don't
+  discover it at G3.** `check.py --tier full` enforces `--cov-fail-under=80`, but
+  the meta-tests run every script as a **subprocess** (`conftest.run_py` →
+  `subprocess.run([sys.executable, …])`) and coverage only instruments the
+  *current* process — so `--cov=project-trajectory/scripts` reports near-nothing
+  however thoroughly the scripts are exercised, and there is no
+  `.coveragerc`/`COVERAGE_PROCESS_START` plumbing today. The honest number isn't
+  "low", it's *uninstrumented*. Two exits: wire **subprocess coverage**
+  (`COVERAGE_PROCESS_START` + a `.pth`/sitecustomize, `parallel=true`,
+  `coverage combine`) so the real figure appears, or set the meta-repo's
+  `stack.ini` threshold to what *is* measured with a recorded note of why (the
+  kit's own §4 "never hand-waved" rule). Do **not** silently lower the bar.
 - **Chicken-and-egg.** The meta-repo **hand-authors** its registries from the
   templates; it can't bootstrap itself onto itself. Expected, not a blocker.
 - **Some scripts are the checkers** (`trace.py`, `check.py`) — their SRs are
