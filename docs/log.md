@@ -16,8 +16,8 @@ applying that design to the kit itself.
 
 | Gate | Stakeholder | UX/Docs | System Eng | Test Eng | Human |
 |---|---|---|---|---|---|
-| G1 — Requirements/UX/Constraints | MET 2026-07-07 | MET 2026-07-07 | MET 2026-07-07 | n/a | PENDING (attended) |
-| G2 — Decomposition & Test Coverage | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | PENDING (attended) |
+| G1 — Requirements/UX/Constraints | MET 2026-07-07 | MET 2026-07-07 | MET 2026-07-07 | n/a | ✅ Peter Johnson 2026-07-07 |
+| G2 — Decomposition & Test Coverage | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | ✅ Peter Johnson 2026-07-07 |
 | G3 — Implementation | n/a | n/a | PENDING | PENDING | PENDING |
 
 ## Decisions log
@@ -114,3 +114,21 @@ attestation surface, all fixed this round:
 Spine after fixes: **SN=22 SR=36 LLR=33 TC=36**, orphans=0; `check.py --gate G2`
 → **PASS**; `pytest -q` → **365 passed, 2 skipped**. **G2 human ratification
 remains PENDING** — this review is evidence toward it, not the attestation itself.
+
+### HUMAN RATIFICATION — G1 + G2 — 2026-07-07
+Acceptor: **Peter Johnson** (owner; `docs/gate-policy` = `attended`). Ratifies the
+closure of **G1** (Requirements/UX/Constraints) and **G2** (Decomposition & Test
+Coverage) for the kit's self-adoption spine, on the mechanized bar plus the
+adversarial review above.
+- **Verification basis (trust footprint):** 36/36 SRs `Verified` — **33 Test**
+  (runnable pytest), **2 Inspection** (SR-034 stdlib-only imports; SR-036 the
+  ADOPTING.md §6 re-sync process), **1 Analysis** (SR-035 the CI portability
+  matrix). **0 `Attest`** — nothing rests on a bare, unverifiable human judgment;
+  the three non-Test SRs are re-inspectable/analyzable facts, not trust-only
+  claims. (`trace.py`: mechanized=36, attested=0.)
+- **Bar at ratification:** `trace.py --strict` orphans=0 integrity=0;
+  `check.py --gate G2` → PASS; `pytest -q` → 365 passed, 2 skipped.
+
+`docs/gate` remains **G2** (the active bar CI enforces); **G3** (implementation
+back-links, coverage ≥ threshold, `--require-verified`) is the next milestone —
+Thread 47 phases 6–7. No push (default `docs/push-policy` = human).
