@@ -4349,18 +4349,26 @@ and a commit-vs-gitignore ruling for the bundle.
    each tier index) and a per-tier `index.md` (one-line-per-concept table), so an
    agent navigates top-down — the OKF pattern the kit already approximates with
    AGENTS.md → PROCESS.md → registries.
-5. **Freshness contract.** `gen_okf.py --check` regenerates into memory and diffs
-   the on-disk bundle, nonzero on drift — the `gen_arch_map.py --check` contract.
-   Wire it **opt-in** (run when you want the export), **not** into `check.py`'s
-   required floor.
-6. **Commit-vs-gitignore — a ruling to record.** OKF's value is being *consumed*
-   by external tools, which argues for **committing** the bundle (a consumer
-   pulls it from the repo; CI `--check` keeps it fresh) — at the cost of
-   generated-content diff churn. The kit's default for generated composites is to
-   **gitignore** (trace `report.html`) and upload as a CI artifact.
-   **Recommendation:** gitignore by default + CI-artifact upload (no churn,
-   honest single-source), with a documented opt-in to *commit* for repos that
-   publish their bundle to a catalog. Owner to rule before CI wiring.
+5. **Freshness contract + floor placement (owner leans floor-enforced).**
+   `gen_okf.py --check` regenerates into memory and diffs the on-disk bundle,
+   nonzero on drift — the `gen_arch_map.py --check` contract. To get
+   enforced-sync **without taxing repos that never consume OKF** and **without
+   coupling the gate to an external v0.1 spec**, gate it behind an opt-in
+   **`docs/okf-export` toggle** (default off = skipped, zero cost — the
+   secrets-scan / privacy-check pattern); **once on, `--check` is a required
+   `check.py` step** (CI hard-fails on drift). A blanket-required-on-every-repo
+   variant is possible but carries real risk (see Complications).
+6. **Commit the bundle — ruled (owner).** Commit `docs/okf/` **and** the other
+   generated composites (trace `report.html`/`report.md`, `perf-report.md`) —
+   **for availability, not change control**: a fresh clone / CI has the rendered
+   outputs immediately, no regen step required to view them. Un-ignore them in
+   `gitignore.template`. Three riders keep committed-generated painless: (a) mark
+   them `linguist-generated` + `-diff` in `.gitattributes` so their diffs are
+   suppressed from review (availability, not change-control — literally); (b)
+   **write-if-changed** on generation, so a no-op run never dirties the working
+   tree; (c) keep each under a `--check` step so a committed artifact can never
+   silently rot — committing *enables* the freshness enforcement, it doesn't
+   weaken it. (Owner may revert to gitignore if diff sizes grow.)
 
 **Layer B — the process docs as OKF concepts (optional, secondary).** Makes the
 *whole* repo — process knowledge + requirement graph — one conformant bundle.
@@ -4392,8 +4400,15 @@ new required-gate surface, **zero** runtime deps.
 - **Off-spine tiers.** `IF/PB/PART/ASSET` are integrity-only, not on the joined
   spine — include them as concepts but don't fabricate spine edges trace.py
   doesn't assert.
-- **Freshness vs. commit churn.** The A6 ruling drives whether CI diffs the
-  bundle or just artifacts it — decide before wiring CI.
+- **Floor-requirement risks (why opt-in-then-floor, not blanket-required).**
+  Making `--check` a *blanket* required step taxes **every** repo — even ones
+  that never consume OKF — with bundle generation + committed churn (violates
+  "unused layers pay nothing"); **couples the gate to an external v0.1 spec** (a
+  breaking OKF change blocks gate advancement until you re-target — pinning makes
+  that visible, not absent); must stay **green on a fresh placeholder-registry G1
+  scaffold** (emit a valid empty bundle); and every required check adds
+  per-permutation test-matrix cost. The `docs/okf-export` toggle (A5) puts the
+  enforcement exactly where the value is.
 - **Parallel tracks.** Under the "Parallel tracks" layer the spine stays
   repo-singular, so there is **one** bundle per repo — never per-track bundles.
 
