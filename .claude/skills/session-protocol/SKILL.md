@@ -59,7 +59,9 @@ Both must pass before **each** commit. New behavior needs new tests
 - **Logical commits** — one per deliverable/thread, message
   `WI-<n>: <imperative subject>` then a body explaining the *why* and any
   deviation (see recent `git log`).
-- **No attribution footers.** Do not add `Co-Authored-By` / "Generated with"
-  trailers.
+- **Attribution footers are fine here** — add `Co-Authored-By:` as usual (this
+  repo is not anonymous). Omit them only in a privacy-restricted / anonymous repo,
+  where a tool trailer is itself a leak (process-options.md "Commit identity &
+  privacy").
 - **Do not push** unless explicitly asked; branch is whatever the plan header's
   **Branch:** line names.
