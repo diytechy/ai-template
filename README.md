@@ -161,6 +161,37 @@ same artifacts and run the gates with you.
 > and an AI-agent handoff for non-coders) and a tiered `dev-setup` (see
 > [`PROCESS.md`](project-trajectory/PROCESS.md) §7).
 
+## Built with the kit (self-adoption)
+
+This repo eats its own dog food: the kit is developed **using the kit's own
+process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
+[`check.py`](project-trajectory/scripts/check.py). The meta-repo's needs,
+requirements, and tests live under [`docs/requirements/`](docs/requirements/) +
+[`docs/test/`](docs/test/) — distinct from the blank templates the kit *ships* —
+and it currently passes its own gates at **G3** (the gate-walk record is
+[`docs/log.md`](docs/log.md); what each gate requires is in
+[`PROCESS.md`](project-trajectory/PROCESS.md) §4).
+
+The inventory below maps the kit's headline capabilities to the stakeholder needs
+they realize ([`docs/requirements/stakeholder-needs.md`](docs/requirements/stakeholder-needs.md)).
+It is the same **opt-in `sn-inventory` guard the kit ships** (`check_docs.py`):
+when a README carries this section, every id it cites must exist in the needs
+registry, and every Must/Should need must be cited by a bullet — so a requirements
+change that isn't reflected here becomes a mechanical finding at the gate.
+
+<!-- sn-inventory -->
+- **Scaffold a gated, traced repo** — `bootstrap.py` drops the whole process into a new or existing repo, wired to its stack (SN-001, SN-003)
+- **Mechanical traceability** — `trace.py` joins `SN→SR→LLR→TC` and reports zero orphans before a gate (SN-002)
+- **Explicit, honest approval gates** — `check.py` enforces each gate's bar and *fails* (never silently skips) a missing check (SN-004, SN-008)
+- **Agent-neutral enforcement** — git hooks + CI run the same harness a human runs (SN-005)
+- **Secrets + privacy floor** — `check_privacy.py` scans every commit's diff, message, and outgoing range (SN-009)
+- **Unattended, resumable operation** — `agent_loop.py` resumes headless from `docs/status.md` (SN-006)
+- **The kit's own changes stay traced and tested** — the suite exercises every script end-to-end against a real scaffold (SN-007)
+- **Navigable, honest documentation** — `check_docs.py` plus generated, drift-checked views (SN-010)
+- **Stdlib-only portability** — runs on a clean Python 3.8+ with no pip installs, cross-platform (SN-011)
+- **Right-sized, opt-in layers** — perf, guardrails, unattended, and parallel-tracks layers cost a repo that doesn't use them nothing (SN-012)
+<!-- /sn-inventory -->
+
 See [`project-trajectory/README.md`](project-trajectory/README.md) for the full
 tour and the tuning knobs (`COVERAGE_THRESHOLD`, `MAX_ROUNDS`, dropping hats for
 small projects).
