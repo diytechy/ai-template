@@ -4113,8 +4113,25 @@ fix; the privacy-check review path and the secrets floor are unchanged in shape.
 
 ## Thread 47 — Self-adoption: the kit runs its own `SN→SR→LLR→TC` spine (dogfood)
 
-**Status: 📋 PLANNED — spec for a fresh session (unscheduled).** This entry *is*
-the kick-off brief; a new session should read it top-to-bottom, then execute.
+**Status: 🔨 IN PROGRESS — phases 1–2 landed 2026-07-07 (session 1); phases 3–7
+pending.** This entry *is* the kick-off brief; a new session reads it top-to-bottom
+and continues from **phase 3**.
+
+> **Session 1 (2026-07-07, WI-1.39) — phases 1–2.** Layout laid: `docs/stack.ini`
+> (`src=project-trajectory/scripts`, `tests=tests`; coverage threshold PROVISIONAL
+> pending phase-6 subprocess-coverage), `docs/gate` (G1), the `docs/requirements/`
+> + `docs/test/` registries (headers only), `docs/log.md`. Authored
+> `docs/requirements/stakeholder-needs.md` — **SN-001..022** (12 core needs across
+> the four stakeholders + privacy + proportionality; 10 edge-case rows, several
+> citing the tests that already assert them). Reconciled `CLAUDE.md` +
+> `docs/status.md`: the "SN-spine not self-applied" non-goal is **lifted**. Two
+> dogfood papercuts found + fixed — the meta-repo README lacked the `#vision`
+> anchor the SN template links to (added `<a id="vision">`); the bare `check_docs`
+> gate flags the gitignored `docs/test/report.md` unless `--ignore` is passed
+> (phase-6 `check.py` wiring passes it; deleted for now). **Gates:**
+> `check_docs --root . --stale` OK, 0 broken; `pytest -q` **358 passed, 2 skipped**.
+> `trace.py`: SN=22 SR=0 (22 SN-with-no-SR orphans — a **G2** bar, not gated at G1).
+> **Deviations:** none. **Byte-budgeted files:** none touched.
 
 **Goal / why.** The kit *ships* the traceability spine + gates but does not yet
 **apply them to itself**. Its own requirements live informally as these

@@ -85,8 +85,15 @@ that easier to achieve in a real project — or get out of the way.
   self-applied**: the launchers (wired for Claude, strong tier) run
   `project-trajectory/scripts/agent_loop.py --root .`, resuming from
   `docs/status.md` under the declared policies (attended / human / privacy-off).
-  The SN→TC spine and `run.*` launchers are deliberately *not* self-applied —
-  the boundary is stated in `docs/status.md` "Non-goals".
+- **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption, *in progress*):
+  [`docs/requirements/stakeholder-needs.md`](docs/requirements/stakeholder-needs.md)
+  + `system-requirements.csv` + `low-level-requirements.csv` +
+  `docs/test/test-cases.csv` + `docs/gate` + `docs/stack.ini` + `docs/log.md` —
+  the kit **traced with its own process**, its "product" being
+  `project-trajectory/scripts` + `tests/`. Keep these **distinct from the
+  templates the kit ships** in `project-trajectory/registries/`: those are the
+  blank forms an adopter fills; these are the kit's *own, filled* registries.
+  (`run.*` launchers stay un-self-applied — a meta-repo has no product to launch.)
 - [`docs/archive/`](docs/archive/README.md) — historical inputs to
   `IMPROVEMENT_PLAN.md` (the resolved template review, the adoption field
   report, the mined scratch notes). Not working surfaces; root stays live-only.

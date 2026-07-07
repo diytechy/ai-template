@@ -1,5 +1,6 @@
 # ai-template
 
+<a id="vision"></a>
 **PROJECT-VISION:** A reusable starting point for building **maintainable,
 requirement-traced projects** with AI agents and humans working from the same
 playbook. The goal: code and analytics that stay readable and correct over the
