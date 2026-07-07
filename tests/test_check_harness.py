@@ -18,6 +18,23 @@ def test_minimal_project_is_green(scaffold):
     assert "src/demo" in arch
 
 
+def test_step_env_strips_ambient_coverage_vars(monkeypatch):
+    # check.py must not let a parent coverage session (a CI wrapper, or the kit's
+    # own meta-suite measuring check.py under --cov) corrupt the project's own
+    # `pytest --cov` step: the COVERAGE_*/COV_CORE_* orchestration vars are
+    # stripped from a spawned step's env, while ordinary vars pass through.
+    check = load_script("check")
+    monkeypatch.setenv("COVERAGE_PROCESS_START", "/x/.coveragerc")
+    monkeypatch.setenv("COVERAGE_FILE", "/x/.coverage")
+    monkeypatch.setenv("COV_CORE_DATAFILE", "/x/.coverage")
+    monkeypatch.setenv("KEEP_ME", "yes")
+    env = check._step_env()
+    assert "COVERAGE_PROCESS_START" not in env
+    assert "COVERAGE_FILE" not in env
+    assert "COV_CORE_DATAFILE" not in env
+    assert env.get("KEEP_ME") == "yes"
+
+
 def test_unmarked_test_runs_in_full_tier(scaffold):
     # An unmarked test must run pre-merge (tier full); the old opt-in marker
     # scheme silently deselected it.

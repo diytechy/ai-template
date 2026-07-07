@@ -74,6 +74,7 @@ below apply (identical values), so a profile-less repo is unchanged.
 import argparse
 import configparser
 import importlib.util
+import os
 import shlex
 import shutil
 import subprocess
@@ -500,6 +501,33 @@ def resolve_gate(explicit):
     return "all"
 
 
+# coverage.py orchestration vars that must NOT leak into the steps this harness
+# spawns: the `tests+coverage` step runs the project's own `pytest --cov`, and if
+# a *parent* process is itself running under coverage (a CI that wraps the whole
+# run, or the kit's own meta-suite measuring check.py), the inherited COVERAGE_*
+# / COV_CORE_* would redirect this project's coverage data file and config,
+# corrupting the authoritative run. Stripping them makes check.py's coverage step
+# self-contained. A no-op when no such parent exists.
+_COVERAGE_ENV_VARS = (
+    "COVERAGE_PROCESS_START",
+    "COVERAGE_FILE",
+    "COV_CORE_SOURCE",
+    "COV_CORE_CONFIG",
+    "COV_CORE_DATAFILE",
+    "COV_CORE_BRANCH",
+    "COV_CORE_CONTEXT",
+)
+
+
+def _step_env():
+    """The environment for a spawned step, minus any ambient coverage-orchestration
+    vars (see _COVERAGE_ENV_VARS) so the project's own coverage run is authoritative."""
+    env = dict(os.environ)
+    for var in _COVERAGE_ENV_VARS:
+        env.pop(var, None)
+    return env
+
+
 def run_step(name, requires, cmd, lenient):
     """Run one step. Returns (status, detail) where status in PASS/FAIL/SKIP."""
     missing = [m for m in requires if importlib.util.find_spec(m) is None]
@@ -528,7 +556,7 @@ def run_step(name, requires, cmd, lenient):
     # would still crash the exec with WinError 2 — resolving for the guard
     # but running unresolved was exactly the crash this block claims to
     # avoid (downstream field report, WI-1.25).
-    proc = subprocess.run([exe] + list(cmd[1:]))
+    proc = subprocess.run([exe] + list(cmd[1:]), env=_step_env())
     secs = time.time() - start
     if proc.returncode == 0:
         return "PASS", "{:.1f}s".format(secs)

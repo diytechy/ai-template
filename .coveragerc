@@ -1,0 +1,21 @@
+# Subprocess-aware coverage for the meta-repo self-tests (IMPROVEMENT_PLAN.md
+# Thread 47 phase 6). The suite runs the kit scripts as SUBPROCESSES (bootstrap a
+# temp scaffold, then run the real command in it), so most coverage is produced
+# by child processes running the scaffold's *copied* scripts from a temp dir.
+# tests/conftest.run_py wires each child (COVERAGE_PROCESS_START + the
+# tests/_cov/sitecustomize.py that calls coverage.process_startup()) when
+# pytest-cov is active, sharing pytest-cov's datafile so the parallel data lands
+# in one place for the session-end combine.
+[run]
+parallel = true
+# No `source` here on purpose: a child runs the scaffold's copied script from a
+# temp dir, and `source` is applied at TRACE time against that real temp path, so
+# it would exclude every child entirely. Children trace freely; the REPORT is
+# scoped by the parent's --cov=project-trajectory/scripts (COV_CORE_SOURCE), and
+# the [paths] map below folds each temp-scaffold */scripts/ copy back onto the
+# source tree at combine time.
+
+[paths]
+scripts =
+    project-trajectory/scripts/
+    */scripts/

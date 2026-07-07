@@ -7,13 +7,15 @@ scaffold in a temp dir and run the actual commands.
 """
 
 import importlib.util
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
-KIT = Path(__file__).resolve().parent.parent / "project-trajectory"
+ROOT = Path(__file__).resolve().parent.parent
+KIT = ROOT / "project-trajectory"
 SCRIPTS = KIT / "scripts"
 
 
@@ -23,6 +25,29 @@ def load_script(name):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+def _subprocess_env():
+    """The env for a run_py child. Normally `None` (inherit — unchanged behavior).
+
+    When pytest-cov is measuring the parent (it exports `COV_CORE_DATAFILE`), wire
+    the child to record coverage too (IMPROVEMENT_PLAN.md Thread 47 phase 6): most
+    of the suite runs the kit scripts as subprocesses, which coverage does not see
+    unless each child starts it. Point the child at `.coveragerc` +
+    `tests/_cov/sitecustomize.py` (which calls `coverage.process_startup()`) and
+    share pytest-cov's datafile so the parallel data lands in one place for the
+    session-end combine. `.coveragerc`'s [paths] remaps the temp-scaffold script
+    copies back to the source tree.
+    """
+    datafile = os.environ.get("COV_CORE_DATAFILE")
+    if not datafile:
+        return None
+    env = dict(os.environ)
+    env["COVERAGE_PROCESS_START"] = str(ROOT / ".coveragerc")
+    env["COVERAGE_FILE"] = datafile
+    covdir = str(ROOT / "tests" / "_cov")
+    env["PYTHONPATH"] = covdir + os.pathsep + env.get("PYTHONPATH", "")
+    return env
 
 
 def run_py(args, cwd):
@@ -38,6 +63,7 @@ def run_py(args, cwd):
         capture_output=True,
         text=True,
         stdin=subprocess.DEVNULL,
+        env=_subprocess_env(),
     )
 
 

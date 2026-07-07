@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .coverage
+.coverage.*
 .ruff_cache/
 
 # Generated reports (downstream repos generate these into docs/test/)
