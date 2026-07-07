@@ -19,24 +19,26 @@ sign-offs, verdicts) is [log.md](log.md).
 - **Bar:** `python -m pytest -q` and
   `python project-trajectory/scripts/check_docs.py --root . --stale` green
   before every commit — this repo's standing gate. **The kit's own
-  `SN→SR→LLR→TC` spine is now being self-adopted** (Thread 47): `docs/gate`
-  starts at G1; `trace.py --strict` / `check.py` join the bar as the spine fills
-  (phases 3–6). Design history stays in the plan threads; the gate-walk record
-  is `docs/log.md`.
-- **Plan state:** Sessions L–S landed 2026-07-04 (Threads 29–40 complete);
-  post-plan WI-1.19–1.30 landed since (latest: **WI-1.30**, 2026-07-05 —
-  pre-push privacy review gains the declared `warn-unwired` opt-down for the
-  adopted-but-not-wired-yet window; see the plan's WI log).
+  `SN→SR→LLR→TC` spine is self-adopted** (Thread 47): `docs/gate` is at **G2** —
+  `trace.py --strict` and `check.py --gate G2` now join the bar. Design history
+  stays in the plan threads; the gate-walk record is `docs/log.md`.
+- **Plan state:** Thread 47 phases 1–5 landed 2026-07-07 (self-adoption spine
+  authored, meta-repo at **G2**: SN=22 SR=36 LLR=32 TC=36, 0 orphans); **Thread
+  50** (trace.py SR/LLR citation-coherence integrity check) landed 2026-07-07;
+  latest post-plan WI **WI-1.40**.
 - **Open items:**
-  - **Needs <human>**: _(none)_
+  - **Needs <human>**: **G1+G2 gate ratification** (`docs/gate-policy` =
+    attended — the mechanical bar is met; the maintainer's attested sign-off in
+    `docs/log.md` is outstanding).
   - **In flight:** _(none)_
-  - **Deferred (backlog):** **WI-1.27** — coordinator working-tree stash/
-    rollback on a hard-killed session (owner-deferred 2026-07-05: rely on
-    fresh-session reconciliation; revisit only if pollution is observed).
-- **Next action:** **Thread 47 (self-adoption) in progress** — phase 1 (layout:
-  `docs/stack.ini`, `docs/gate` G1, the `docs/requirements/` + `docs/test/`
-  registries, `docs/log.md`) + phase 2 (Stakeholder Needs) landed; phases 3–5
-  (`SR → LLR → TC` decomposition) are next.
+  - **Deferred (backlog):** **Thread 51** — a first-class TC test-evidence
+    column (surfaced by the Thread 47 dogfood; ruling pending). **WI-1.27** —
+    coordinator working-tree stash/rollback on a hard-killed session
+    (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
+- **Next action:** **Thread 47 phase 6** — the G3 walk: `--tier full` coverage
+  with subprocess instrumentation (the `stack.ini` PROVISIONAL threshold),
+  generated arch-map + `--check`, and meta-repo CI running `check.py` on itself;
+  then phase 7 (thread back-pointers, mostly already seeded in SR `Rationale`).
 
 ## Scope
 
