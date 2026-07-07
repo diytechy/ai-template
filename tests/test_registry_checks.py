@@ -222,6 +222,21 @@ def test_triangle_findings_unit_ignores_llr_only_and_analytic():
     assert "TC-002" in finding and "LLR-001" in finding
 
 
+def test_triangle_findings_unit_multi_parent_and_empty_parent():
+    trace = load_script("trace")
+    # An LLR with multiple SR-Refs: a TC citing ANY one of its parents is coherent
+    # (set-intersection, not equality).
+    multi = [{"LLR-ID": "LLR-009", "SR-Refs": "SR-001;SR-002"}]
+    assert trace.triangle_findings([{"TC-ID": "TC-1", "Verifies": "SR-002;LLR-009"}], multi) == []
+    # Citing a non-parent SR alongside the multi-parent LLR is still incoherent.
+    (f,) = trace.triangle_findings([{"TC-ID": "TC-2", "Verifies": "SR-003;LLR-009"}], multi)
+    assert "LLR-009" in f
+    # An LLR with no SR-Refs is an orphan elsewhere; the coherence check must not
+    # double-report it (the docstring's no-double-report claim).
+    empty = [{"LLR-ID": "LLR-010", "SR-Refs": ""}]
+    assert trace.triangle_findings([{"TC-ID": "TC-3", "Verifies": "SR-001;LLR-010"}], empty) == []
+
+
 # --- Placeholders: a fresh scaffold is green by default, fails opt-in ----------
 
 

@@ -7,6 +7,7 @@ hook script end-to-end to confirm the wiring.
 """
 
 import json
+import os
 import shutil
 import subprocess
 
@@ -126,6 +127,34 @@ def test_hook_runs_end_to_end_when_sh_available(scaffold):
         [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True
     )
     assert blocked.returncode != 0, blocked.stdout + blocked.stderr
+
+
+def test_hook_skips_clearly_when_no_working_python3(scaffold):
+    # SN-013 / SR-021: python3 may resolve on PATH yet exit nonzero (the Windows
+    # Store app-execution alias). The hook probes by *running* a candidate, so it
+    # must skip-or-report clearly, never crash. Shadow python3/python with fakes
+    # that exit nonzero and confirm the hook exits 0 with a clear message.
+    sh = shutil.which("sh")
+    if not sh or not shutil.which("git"):
+        import pytest
+
+        pytest.skip("needs a POSIX shell and git on PATH")
+    make_minimal_project(scaffold)
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    fakebin = scaffold / "fakebin"
+    fakebin.mkdir()
+    for name in ("python3", "python"):
+        cand = fakebin / name
+        cand.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        cand.chmod(0o755)
+    # Prepend the fakes so they shadow any real interpreter; keep the rest of PATH
+    # so sh/git/coreutils stay available.
+    env = dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ.get("PATH", ""))
+    proc = subprocess.run(
+        [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True, env=env
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "not found" in proc.stderr.lower(), proc.stderr
 
 
 def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):

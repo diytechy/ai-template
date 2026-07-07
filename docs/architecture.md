@@ -63,7 +63,7 @@ sequenceDiagram
     end
 ```
 
-### Flow 2 — Scaffold generation and re-sync (SR-009, SR-010, SR-011)
+### Flow 2 — Scaffold generation and re-sync (SR-009, SR-010, SR-011, SR-036)
 
 ```mermaid
 sequenceDiagram
@@ -75,10 +75,11 @@ sequenceDiagram
     alt fresh scaffold
         Boot->>Dest: write mapped kit files (SR-010/LLR-010)
         Dest-->>User: harness runs green out of the box
-    else re-sync onto existing repo
-        Boot->>Dest: overwrite only kit-owned paths (SR-011/LLR-011)
-        Boot->>Boot: preserve project-authored files (idempotent)
-        Dest-->>User: kit updated, own content intact
+    else re-run / re-sync onto existing repo
+        Boot->>Dest: skip every existing file unless --force (SR-011/LLR-011)
+        Boot->>Boot: stamp docs/kit-version so the re-sync is diffable
+        Note over User,Dest: operator merges kit updates per ADOPTING.md section 6 (SR-036)
+        Dest-->>User: own content intact
     end
 ```
 

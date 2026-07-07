@@ -293,6 +293,18 @@ def test_rerun_skips_existing_files(scaffold):
     assert (scaffold / "CLAUDE.md").read_text(encoding="utf-8") == "customized"
 
 
+def test_force_overwrites_existing_files(scaffold):
+    # The --force direction SR-011/TC-011 claim (counterpart to the default skip):
+    # a re-run WITH --force overwrites an existing, even hand-customized, kit file.
+    target = scaffold / "CLAUDE.md"
+    target.write_text("customized", encoding="utf-8")
+    proc = run_py(
+        [SCRIPTS / "bootstrap.py", "--dest", scaffold, "--force"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert target.read_text(encoding="utf-8") != "customized"
+
+
 # --- Privacy-check toggle (Thread 38 -> identity/privacy reframe) --------------
 
 

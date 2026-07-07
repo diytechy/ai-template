@@ -79,7 +79,8 @@ that easier to achieve in a real project — or get out of the way.
   non-Python) repo; a reference doc like `EXAMPLE.md`, not scaffolded.
 - `tests/` — the kit's own pytest suite (meta-repo dev tooling; the stdlib-only
   rule applies to the kit scripts, not to testing them). CI:
-  `.github/workflows/test.yml` runs it on Linux + Windows, Python 3.8 + latest.
+  `.github/workflows/test.yml` runs it on Linux + Windows (Python 3.8 + latest)
+  and macOS (latest).
 - [`docs/status.md`](docs/status.md) + `docs/{gate-policy,push-policy,privacy-check,run-state}`
   + root `agent-resume.{cmd,sh,command}` — the kit's **unattended layer
   self-applied**: the launchers (wired for Claude, strong tier) run

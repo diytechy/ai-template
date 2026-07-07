@@ -89,3 +89,28 @@ phase-4 note): `test-cases.template.csv` has no test-evidence column, so the
 concrete test is cited in `Parameters` as `node=…` — an `Evidence`/`Test` column
 would be the cleaner model. Coverage `--tier full` stays deferred to phase 6
 (subprocess-coverage instrumentation).
+
+### REVIEW — G2 — Adversarial spine review — 2026-07-07
+A fresh-context adversarial reviewer audited the spine + architecture flows + the
+Thread 50 check before signoff. Mechanically clean (0/0/0/0) with all LLR symbols
+resolving and full SN coverage, but it found honesty defects sitting on the
+attestation surface, all fixed this round:
+- **Fixed (major):** `architecture.md` Flow 2 still showed the corrected-away
+  bootstrap "overwrite kit-owned / preserve project-owned" fiction — rewritten to
+  skip-existing/`--force` + `docs/kit-version`, citing **SR-036**. SR-033 was
+  labelled `Inspection` ("no automated test") though
+  `test_check_perf.py::test_release_checklist_lists_perf_budgets` genuinely runs
+  `gen_release_checklist.py` — reclassified to `Test` (+ **LLR-033**, TC-033 →
+  the real node). SR-021 claimed `Verified` for the untested no-`python3` probe
+  path — added `test_hook_skips_clearly_when_no_working_python3` (fake interpreters
+  that exit nonzero, the Store-alias mode).
+- **Fixed (minor):** SR-011 `--force` direction now tested
+  (`test_force_overwrites_existing_files`); SR-006 / SR-035 / SR-017 acceptance
+  criteria reworded to match what's actually tested (FAIL+`--lenient` SKIP, the
+  macOS+3.8 matrix exclusion, the `docs/secrets-scan: off` opt-out); the Thread 50
+  triangle tests deepened (multi-`SR-Refs` intersection + no-double-report).
+  Stale `CLAUDE.md` CI line (Linux+Windows → +macOS) corrected.
+
+Spine after fixes: **SN=22 SR=36 LLR=33 TC=36**, orphans=0; `check.py --gate G2`
+→ **PASS**; `pytest -q` → **365 passed, 2 skipped**. **G2 human ratification
+remains PENDING** — this review is evidence toward it, not the attestation itself.
