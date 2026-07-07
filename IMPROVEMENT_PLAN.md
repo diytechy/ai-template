@@ -4349,15 +4349,17 @@ and a commit-vs-gitignore ruling for the bundle.
    each tier index) and a per-tier `index.md` (one-line-per-concept table), so an
    agent navigates top-down — the OKF pattern the kit already approximates with
    AGENTS.md → PROCESS.md → registries.
-5. **Freshness contract + floor placement (owner leans floor-enforced).**
-   `gen_okf.py --check` regenerates into memory and diffs the on-disk bundle,
-   nonzero on drift — the `gen_arch_map.py --check` contract. To get
-   enforced-sync **without taxing repos that never consume OKF** and **without
-   coupling the gate to an external v0.1 spec**, gate it behind an opt-in
-   **`docs/okf-export` toggle** (default off = skipped, zero cost — the
-   secrets-scan / privacy-check pattern); **once on, `--check` is a required
-   `check.py` step** (CI hard-fails on drift). A blanket-required-on-every-repo
-   variant is possible but carries real risk (see Complications).
+5. **Freshness contract + floor placement — ruled (owner): on by default,
+   opt-out.** `gen_okf.py --check` regenerates into memory and diffs the on-disk
+   bundle, nonzero on drift — the `gen_arch_map.py --check` contract, and a
+   **required `check.py` floor step**. Governed by a `docs/okf-export`
+   declared-policy on the **secrets-scan pattern**: absent / any value = **on**
+   (the agent-dev readability win ships by default), the one word `off` opts out
+   (the escape for a repo where the churn or the external-spec coupling bites —
+   Complications). **Because it is on by default, fresh-scaffold greenness is a
+   hard requirement:** bootstrap scaffolds a valid (empty/placeholder) bundle and
+   `gen_okf --check` passes on a clean scaffold out of the box (mirror
+   `test_fresh_scaffold_passes_archmap_check_and_trace`).
 6. **Commit the bundle — ruled (owner).** Commit `docs/okf/` **and** the other
    generated composites (trace `report.html`/`report.md`, `perf-report.md`) —
    **for availability, not change control**: a fresh clone / CI has the rendered
@@ -4400,15 +4402,15 @@ new required-gate surface, **zero** runtime deps.
 - **Off-spine tiers.** `IF/PB/PART/ASSET` are integrity-only, not on the joined
   spine — include them as concepts but don't fabricate spine edges trace.py
   doesn't assert.
-- **Floor-requirement risks (why opt-in-then-floor, not blanket-required).**
-  Making `--check` a *blanket* required step taxes **every** repo — even ones
-  that never consume OKF — with bundle generation + committed churn (violates
-  "unused layers pay nothing"); **couples the gate to an external v0.1 spec** (a
-  breaking OKF change blocks gate advancement until you re-target — pinning makes
-  that visible, not absent); must stay **green on a fresh placeholder-registry G1
-  scaffold** (emit a valid empty bundle); and every required check adds
-  per-permutation test-matrix cost. The `docs/okf-export` toggle (A5) puts the
-  enforcement exactly where the value is.
+- **Default-on risks (accepted; `docs/okf-export: off` is the escape).** On by
+  default means every repo carries bundle generation + committed churn and — the
+  one to watch — **the gate is coupled to an external v0.1 spec**: a breaking OKF
+  change could block gate advancement until you re-target. Pinning via the
+  `check_vendored` pattern makes that a *visible, human-reviewed* bump, not silent
+  drift. The owner accepts these for the agent-dev readability win and will
+  iterate; `off` is the one-word opt-out where the churn or coupling bites, and
+  the per-permutation matrix must include an `okf-export: off` cell so the skip
+  path stays tested.
 - **Parallel tracks.** Under the "Parallel tracks" layer the spine stays
   repo-singular, so there is **one** bundle per repo — never per-track bundles.
 
@@ -4423,6 +4425,105 @@ stale bundle. Land Layer A; leave Layer B (B2) as a follow-commit.
 **Model tier — mid/strong for the mapping design** (judgment: the `type`
 vocabulary, link topology, the commit-vs-gitignore call); the emitter itself is
 mechanical once the mapping is fixed.
+
+---
+
+## Thread 49 — Documentation-currency hardening: symbol-reference validation + deterministic freshness
+
+**Status: 📋 PLANNED — spec for a fresh session (unscheduled).** Kick-off brief.
+Encapsulates the two anti-rot gaps that link-validation alone leaves open (raised
+alongside Thread 48).
+
+**Goal / why.** `check_docs.py` validates that a markdown link *resolves*; it
+does **not** catch two rot classes: (1) prose that names a code symbol / file /
+flag which no longer exists (the link resolves, the sentence is stale — invisible
+today), and (2) a *generated* artifact that has drifted from its source, because
+the only freshness signal for docs is an **mtime `--stale` hint** that is
+*non-gating* and *unreliable in git* (clones reset mtime; it has fired
+spuriously). Close both so documentation currency is machine-enforced where it
+can be, advisory only where it genuinely must be. This is the general form of the
+lever Thread 48 leans on (generate + `--check` + commit); Thread 49 extends it to
+hand-authored prose and audits the enforcement.
+
+**Start-state (build on it).**
+- `check_docs.py` = intra-repo link *resolution* + the mtime `--stale` hint.
+- `gen_arch_map.py` already **extracts the public symbol inventory** per module
+  (summaries, dependencies, public symbols with `Implements:` backlinks) — that
+  inventory is the **oracle** for item 1; reuse it, don't re-parse the AST.
+- The generator/`--check` pattern is established (`gen_arch_map`,
+  `gen_release_checklist`, `gen_cases`, `gen_skills_index`, Thread 48's
+  `gen_okf`). Item 2 is about which freshness signals *gate*.
+- `check_stubs.py` is the model for a **warn-first, product-layer,
+  language-specific** check that is *not* wired into the required floor — the
+  right shape for the symbol side.
+
+**Item 1 — symbol-reference validation (the real gap).** A check (extend
+`check_docs.py` or a sibling `check_doc_refs.py`) that fails on a documentation
+reference to a code entity that does not exist. The whole design problem is
+**false-positive control** — you cannot flag every backticked token (`off`,
+`type`, shell snippets, other repos' names). Two precise tiers:
+- **Paths/filenames — validated aggressively** (low ambiguity, high value): a
+  backticked token matching a repo-path shape (`*.py`, `scripts/*`, `docs/*`,
+  `.githooks/*`) that does **not** exist on disk is almost always rot → flag it. A
+  renamed/deleted file named in a doc is one of the commonest real rots.
+- **Code symbols — validated via an explicit opt-in convention** (no heuristic
+  storm): only references written in a declared form (e.g. an `Implements:`-style
+  `sym:<module>.<name>` marker, or a dedicated link scheme) are checked against
+  the arch-map inventory. Precise like the kit's other conventions (`privacy-ok`,
+  `Implements:`, the `-000` placeholder rule): you *assert* a symbol exists and
+  the check holds you to it, instead of guessing which words are symbols.
+- **Ships warn-first** (exit 0 unless `--strict`), product-layer like
+  `check_stubs.py`: symbol conventions are language-specific, so it informs the
+  human/LLM review and a non-Python stack degrades gracefully (no arch-map
+  symbols → the symbol tier skips, the path tier still runs).
+
+**Item 2 — deterministic freshness, promoted to a gate (generated content only).**
+The mtime hint is the wrong primitive (unreliable in git) and the wrong severity
+(advisory). The fix is **not** to harden mtime — it is to give *generated*
+artifacts a **deterministic** freshness contract and enforce it:
+- Every generated artifact gets a `--check` that **regenerates-and-diffs** (or
+  compares a **source-content-hash stamp** in its header) — no mtime. Audit the
+  set: `gen_arch_map`/`gen_skills_index` already have it; the trace `report.*` and
+  `perf-report.*` (now **committed** per Thread 48) need one; `gen_okf --check` is
+  Thread 48.
+- Wire these `--check`s as **required `check.py` steps** so a stale *generated*
+  doc fails CI, not merely hints. Committing the artifacts (Thread 48) is what
+  makes this enforceable.
+- **Hand-authored prose stays advisory:** nothing to regenerate-and-diff, so keep
+  a *clearly-labeled* hint and rely on item 1 for the concrete rot prose actually
+  suffers. Do **not** promote the mtime prose hint to a failure — that is the
+  false-positive trap.
+
+**Scope & proportionality.** **Not** a general prose linter. Bound it to (a)
+path/filename existence, (b) opt-in symbol references, (c) deterministic `--check`
+on generated artifacts. Only (c) joins the required floor; the symbol tier is
+warn-first/product-layer. Target: a renamed file or a dangling *asserted* symbol
+is caught; a clone never false-fails on mtime; zero new runtime deps (reuse the
+arch-map extractor).
+
+**Complications to expect.**
+- **False positives are the whole risk.** The path-shape + opt-in-symbol split is
+  the mitigation; resist "validate every backtick."
+- **Non-Python stacks.** The symbol oracle is the arch map, which degrades to
+  files-mode on non-Python (no symbol inventory) → the symbol tier skips, the path
+  tier still runs. Same posture as `check_stubs`.
+- **mtime is not the fix.** Deterministic freshness (regenerate-diff /
+  source-hash) replaces it for generated docs; don't gate on mtime anywhere.
+- **Interaction with Thread 48.** OKF bundles are generated + link-only, so
+  item 2's `--check` covers them and they add no prose-rot surface; item 1 targets
+  the hand-authored docs.
+
+**Kick-off note (new session).** Read this thread + `check_docs.py` +
+`gen_arch_map.py` (the symbol extractor is the oracle). Prototype the
+**path-existence** tier first (cheap, high-value, low-false-positive), then the
+**opt-in symbol** convention; add the deterministic-freshness audit as a separate
+pass. Test against the demo project (`make_minimal_project`): a doc naming a
+deleted `scripts/x.py` fails; a valid asserted symbol passes; a clone (mtime
+reset) never false-fails.
+
+**Model tier — mid for the convention design** (the false-positive boundary is
+the judgment call); mechanical to implement once the reference syntax + the tier
+split are fixed.
 
 ---
 
