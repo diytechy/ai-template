@@ -7,15 +7,15 @@ The load-bearing guarantees a broken edit here would silently violate — each
 the failure mode that would corrupt an unattended parallel run:
 
   - pure helpers: lane path resolution, track-slug validation (no traversal),
-    non-signalling pid liveness, and the per-worktree lockfile (reclaim a dead
-    pid, refuse a live one — the two-writer race guard);
+    and the per-worktree kernel lock (excludes a second process; auto-released
+    when the holder dies, so a crash never wedges the next run);
   - the loop reads the TRACK LANE's run-state and writes the lane's iteration
     logs, not docs/ (a track must never read another lane's contract);
   - single-lane operation (no --track) still uses docs/, unchanged;
-  - preflight refuses --track off its llm/<track> branch (wrong-lane guard).
+  - preflight refuses --track off its llm/<track> branch, and fails closed on a
+    detached HEAD (an unverifiable branch — the wrong-lane guard).
 """
 
-import os
 import shutil
 import subprocess
 import sys
@@ -50,22 +50,55 @@ def test_sanitize_track_rejects_traversal_and_junk(bad):
         agent_loop.sanitize_track(bad)
 
 
-def test_pid_alive_self_true_absurd_false():
-    # Never signals: os.kill on Windows would kill; this must merely observe.
-    assert agent_loop._pid_alive(os.getpid()) is True
-    assert agent_loop._pid_alive(2_000_000_001) is False
+# A probe that takes the lock in a SEPARATE process (the only way to observe the
+# real cross-process kernel-lock contract). With `hard`, it dies without any
+# release/atexit (os._exit) — modelling a crash so the caller can prove the OS
+# auto-released the lock.
+_LOCK_PROBE = """
+import importlib.util, os, sys
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("agent_loop", sys.argv[1])
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+err = m.acquire_lock(Path(sys.argv[2]))
+sys.stdout.write("REFUSED" if err else "ACQUIRED")
+sys.stdout.flush()
+if len(sys.argv) > 3 and sys.argv[3] == "hard":
+    os._exit(0)
+"""
 
 
-def test_lockfile_reclaims_dead_refuses_live(tmp_path):
+def _probe_acquire(lock, hard_exit=False):
+    argv = [
+        sys.executable,
+        "-c",
+        _LOCK_PROBE,
+        str(SCRIPTS / "agent_loop.py"),
+        str(lock),
+    ]
+    if hard_exit:
+        argv.append("hard")
+    return subprocess.run(argv, capture_output=True, text=True).stdout.strip()
+
+
+def test_lock_excludes_a_second_process(tmp_path):
+    # The real contract: one coordinator per checkout. This process holds the
+    # kernel lock; a separate process is refused, then succeeds once it's freed.
     lock = tmp_path / "out" / "agent-loop.lock"
-    assert agent_loop.acquire_lock(lock) is None  # first take
-    err = agent_loop.acquire_lock(lock)  # our own live pid still holds it
-    assert err and "holds" in err
-    agent_loop.release_lock(lock)
-    assert not lock.exists()
-    # a stale lock from a dead pid on this host is reclaimed, not honored
-    lock.parent.mkdir(parents=True, exist_ok=True)
-    lock.write_text("2000000002\n{}\n2020-01-01 00:00:00\n".format(agent_loop._host()))
+    assert agent_loop.acquire_lock(lock) is None
+    try:
+        assert _probe_acquire(lock) == "REFUSED"
+    finally:
+        agent_loop.release_lock(lock)
+    assert _probe_acquire(lock) == "ACQUIRED"
+
+
+def test_lock_auto_released_when_holder_dies(tmp_path):
+    # M4: a holder that crashes without releasing must not wedge the next run —
+    # the OS drops the advisory lock on process death. The probe acquires then
+    # hard-exits (no release/atexit); this process must then acquire cleanly.
+    lock = tmp_path / "out" / "agent-loop.lock"
+    assert _probe_acquire(lock, hard_exit=True) == "ACQUIRED"
     assert agent_loop.acquire_lock(lock) is None
     agent_loop.release_lock(lock)
 
@@ -183,4 +216,19 @@ def test_track_off_its_branch_is_preflight_failure(tmp_path):
 
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT, proc.stdout + proc.stderr
     assert "must run on its own branch" in (proc.stdout + proc.stderr)
+
+
+@needs_git
+def test_track_on_detached_head_fails_closed(tmp_path):
+    # M3: `git branch --show-current` is empty on a detached HEAD. The branch
+    # guard must FAIL CLOSED (it cannot confirm the lane) rather than fall
+    # through and let a track write from an unverifiable checkout.
+    repo, fake = _make_repo(tmp_path, branch="llm/perception")
+    _git(repo, "checkout", "-q", "--detach", "HEAD")
+    lane = repo / "docs" / "tracks" / "perception"
+    proc = _loop(repo, fake, lane / "run-state", "--track", "perception")
+
+    assert proc.returncode == agent_loop.EXIT_PREFLIGHT, proc.stdout + proc.stderr
+    assert "could not be determined" in (proc.stdout + proc.stderr)
+    assert not lane.exists(), "a rejected track must not create its lane"
     assert not lane.exists(), "a rejected track must not create its lane"

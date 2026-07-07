@@ -64,7 +64,8 @@ repo-singular policies (gate, gate-policy, push-policy, privacy-check,
 guardrails-policy) stay at docs/. A track must run on branch llm/<name> in its
 own worktree (preflight enforces it), and a per-worktree lockfile
 (out/agent-loop.lock) stops two coordinators grinding one checkout. NO --track
-= single-lane operation, the exact behavior above with docs/ as the lane.
+= single-lane operation with docs/ as the lane (the same per-worktree lock
+applies there too — one coordinator per checkout).
 
 Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
 slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
@@ -86,6 +87,7 @@ import os
 import re
 import shlex
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -172,53 +174,63 @@ def sanitize_track(name):
 
 def lane_dir(docs, track):
     """The coordination lane for a track: docs/tracks/<track> when a track is
-    named, else docs itself — so single-lane operation is byte-for-byte the
-    prior behavior (the repo-singular policy files always stay at docs/)."""
+    named, else docs itself — so single-lane operation uses docs/ exactly as
+    before (the repo-singular policy files always stay at docs/)."""
     return (docs / "tracks" / track) if track else docs
 
 
-def _pid_alive(pid):
-    """True when process id `pid` is running now, WITHOUT signalling it.
-
-    Never uses os.kill on Windows: there signal 0 is not a liveness probe —
-    os.kill routes non-CTRL signals to TerminateProcess and would *kill* the
-    process. Indeterminate cases fail safe to True (assume alive → we refuse to
-    steal the lock) so a two-writer race is never risked on a guess."""
-    if not pid or pid <= 0:
-        return False
-    if os.name == "nt":
-        import ctypes
-        from ctypes import wintypes
-
-        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-        STILL_ACTIVE = 259
-        kernel32 = ctypes.windll.kernel32
-        handle = kernel32.OpenProcess(
-            PROCESS_QUERY_LIMITED_INFORMATION, False, int(pid)
-        )
-        if not handle:
-            return False  # no such process (or access denied → treat as gone)
-        try:
-            code = wintypes.DWORD()
-            if kernel32.GetExitCodeProcess(handle, ctypes.byref(code)):
-                return code.value == STILL_ACTIVE
-            return True  # couldn't read exit code → assume alive (fail safe)
-        finally:
-            kernel32.CloseHandle(handle)
-    try:
-        os.kill(int(pid), 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    except OSError:
-        return True
-    return True
+# The per-worktree coordinator lock is a kernel ADVISORY lock (fcntl.flock on
+# POSIX, msvcrt.locking on Windows) held on out/agent-loop.lock for this
+# process's lifetime. The OS releases it automatically when the process exits —
+# INCLUDING a crash or SIGKILL — so there is no stale-pid file to reason about
+# and no PID-reuse hazard: the freed lock is simply available to the next run.
+# The pid/host/stamp written into the file are human-readable DIAGNOSTICS only,
+# never the liveness signal. The held descriptor lives in a module global so it
+# (and thus the lock) stays open until release_lock / process exit.
+_LOCK_FD = None
 
 
 def _host():
-    """This machine's name, for the cross-host lock check (best effort)."""
-    return os.environ.get("COMPUTERNAME") or os.environ.get("HOSTNAME") or ""
+    """This machine's name, for the lock file's human-readable diagnostics."""
+    try:
+        return socket.gethostname()
+    except OSError:
+        return ""
+
+
+# On Windows the CRT lock is MANDATORY — it blocks other processes from reading
+# the locked bytes — so we lock a single byte far beyond any real content. The
+# human-readable diagnostics in bytes 0..N stay readable (e.g. git staging this
+# file if a repo forgot to gitignore out/), while two coordinators still contend
+# on the same byte range. POSIX flock is advisory and whole-descriptor, so it
+# needs no offset games.
+_WIN_LOCK_OFFSET = 1 << 40
+
+
+def _take_os_lock(fd):
+    """Take a non-blocking exclusive advisory lock on `fd`, raising OSError when
+    another process already holds it. Platform-split, stdlib only."""
+    if os.name == "nt":
+        import msvcrt
+
+        os.lseek(fd, _WIN_LOCK_OFFSET, os.SEEK_SET)
+        try:
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+        finally:
+            os.lseek(fd, 0, os.SEEK_SET)
+    else:
+        import fcntl
+
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+
+def _read_holder(lock_path):
+    """The holder's diagnostic line (pid host stamp) for an error message, or ''
+    — best-effort; a mandatory Windows lock may block the read, which is fine."""
+    try:
+        return lock_path.read_text(encoding="utf-8").strip().replace("\n", " ")
+    except OSError:
+        return ""
 
 
 def acquire_lock(lock_path):
@@ -226,49 +238,57 @@ def acquire_lock(lock_path):
 
     Prevents two coordinators grinding the same checkout — a double-launch or a
     cron overlap — the one collision the branch guard can't catch (both would
-    sit on the same llm/<track> branch in one worktree). A lock left by a dead
-    pid on THIS host is reclaimed; a live pid, or one we cannot verify (a
-    different host on a shared filesystem), makes us refuse rather than risk a
-    two-writer race — the fail-safe an unattended run needs. Content is
-    `pid\\nhost\\nstamp`; released by release_lock (registered with atexit)."""
+    sit on the same llm/<track> branch in one worktree). The lock is a kernel
+    advisory lock the OS grants atomically and releases on exit *or crash*, so a
+    dead run never wedges the next one (no pid reasoning, no timer). Cross-host
+    on a shared filesystem is best-effort only: flock over NFS is unreliable, so
+    this guards one checkout on one host — the common and important case."""
+    global _LOCK_FD
     lock_path.parent.mkdir(parents=True, exist_ok=True)
-    host = _host()
-    if lock_path.exists():
-        try:
-            prior = lock_path.read_text(encoding="utf-8").splitlines()
-        except OSError:
-            prior = []
-        prior_pid = int(prior[0]) if prior and prior[0].strip().isdigit() else 0
-        prior_host = prior[1].strip() if len(prior) > 1 else ""
-        if prior_host and host and prior_host != host:
-            return (
-                "coordinator lock {} was taken on host {!r} (this is {!r}); "
-                "cannot verify it across hosts — refusing. Delete the lock if "
-                "that run is gone.".format(lock_path, prior_host, host)
+    flags = os.O_RDWR | os.O_CREAT
+    if hasattr(os, "O_BINARY"):
+        flags |= os.O_BINARY  # keep the diagnostic newlines untranslated on Windows
+    fd = os.open(str(lock_path), flags, 0o644)
+    try:
+        _take_os_lock(fd)
+    except OSError:
+        os.close(fd)
+        return (
+            "another coordinator holds {} — refusing to run two in one worktree "
+            "(held by: {}). It clears itself when that run exits; wait for it, "
+            "or delete the file only if you are sure that run is gone.".format(
+                lock_path, _read_holder(lock_path) or "unknown"
             )
-        if _pid_alive(prior_pid):
-            return (
-                "another coordinator (pid {}) holds {} — refusing to run two "
-                "in one worktree. Wait for it, or delete the lock if it is "
-                "stale.".format(prior_pid, lock_path)
-            )
-        # stale lock from a dead pid on this host: fall through and reclaim it.
-    lock_path.write_text(
-        "{}\n{}\n{}\n".format(os.getpid(), host, time.strftime("%Y-%m-%d %H:%M:%S")),
-        encoding="utf-8",
-    )
+        )
+    # We hold the lock: overwrite the diagnostics (a crashed predecessor may have
+    # left its own). Best-effort — the OS lock, not this content, is the guard.
+    try:
+        os.ftruncate(fd, 0)
+        os.write(
+            fd,
+            "{}\n{}\n{}\n".format(
+                os.getpid(), _host(), time.strftime("%Y-%m-%d %H:%M:%S")
+            ).encode("utf-8"),
+        )
+    except OSError:
+        pass
+    _LOCK_FD = fd
     return None
 
 
-def release_lock(lock_path):
-    """Drop the coordinator lock iff this process still owns it (pid match), so
-    a reclaimed-then-exited predecessor never deletes a live successor's lock."""
-    try:
-        prior = lock_path.read_text(encoding="utf-8").splitlines()
-        if prior and prior[0].strip() == str(os.getpid()):
-            lock_path.unlink()
-    except OSError:
-        pass
+def release_lock(lock_path=None):
+    """Drop the coordinator lock: closing the descriptor releases the OS lock.
+    Idempotent, and a no-op if we never held it; the OS would release on exit
+    regardless (the crash path relies on exactly that). `lock_path` is accepted
+    for the atexit call signature but unused — the held descriptor is the
+    authority, so a reclaimed-then-exited predecessor never disturbs a successor."""
+    global _LOCK_FD
+    if _LOCK_FD is not None:
+        try:
+            os.close(_LOCK_FD)
+        except OSError:
+            pass
+        _LOCK_FD = None
 
 
 # The always-on guardrails core is vendored verbatim as docs/guardrails/core.md
@@ -656,7 +676,18 @@ def preflight(root, template, args):
         else:
             code, branch = git(root, "branch", "--show-current")
             expected = "llm/{}".format(track)
-            if code == 0 and branch and branch != expected:
+            if code != 0 or not branch:
+                # Empty/failed = detached HEAD (or git < 2.22). We cannot confirm
+                # the lane, so a track run must fail CLOSED — never fall through
+                # and write from an unverifiable checkout.
+                failures.append(
+                    "track {!r} requires branch {!r}, but this worktree's branch "
+                    "could not be determined (detached HEAD, or git older than "
+                    "2.22). A track drives one llm/<track> iteration branch in "
+                    "one worktree (process-options.md 'Parallel tracks'); check "
+                    "out that branch, or drop --track.".format(track, expected)
+                )
+            elif branch != expected:
                 failures.append(
                     "track {!r} must run on its own branch {!r}, but this "
                     "worktree is on {!r}. A track drives one llm/<track> "

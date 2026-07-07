@@ -1055,8 +1055,9 @@ releases as a whole.
 
 ## Parallel tracks (multi-lane operation)
 
-*Referenced from PROCESS.md §10 and the "Unattended operation" / "Agent
-iteration branch & sync" layers above.* **Applies when** one repo carries
+*Builds on PROCESS.md §10 (several modules, one repo) and the "Unattended
+operation" / "Agent iteration branch & sync" layers above.* **Applies when** one
+repo carries
 **several large deliverables progressing in parallel** and you want more than one
 driver (human or agent, attended or unattended) working at once **without
 thrashing the single coordination blackboard** — the failure the single-driver
@@ -1155,14 +1156,18 @@ file (`run-state`, `run-phase`, the `status.md` resume excerpt, the iteration lo
 + index) under `docs/tracks/<name>/`, leaving the repo-singular policy files at
 `docs/`; the session prompt gains a preamble redirecting the driver to that lane.
 Two guards make concurrent unattended runs safe: a **preflight branch-guard** (a
-`--track` session must be on branch `llm/<track>`, so a lane can never write from
-the wrong checkout) and a **per-worktree lockfile** (`out/agent-loop.lock`, one
-coordinator per checkout — the double-launch / cron-overlap collision the
-branch-guard can't catch; a dead pid's lock is reclaimed, a live or cross-host
-unverifiable one makes the loop refuse rather than risk a two-writer race).
-**No `--track` keeps the single-lane behavior** (with `docs/` itself as the lane);
-its only addition there is the same per-worktree lock, which merely refuses a
-second coordinator in one checkout.
+`--track` session must be on branch `llm/<track>` — an unverifiable branch, e.g. a
+detached HEAD, **fails closed**, so a lane can never write from the wrong
+checkout) and a **per-worktree lock** (`out/agent-loop.lock`, one coordinator per
+checkout — the double-launch / cron-overlap collision the branch-guard can't
+catch). The lock is a **kernel advisory lock** (`flock` / `LockFileEx`) the OS
+grants atomically and releases when the process exits *or crashes*, so a dead run
+never wedges the next one — there is no stale pid file to reason about. Cross-host
+on a shared filesystem is best-effort only (`flock` over NFS is unreliable): the
+lock guards one checkout on one host, the case that matters. **No `--track` keeps
+the single-lane behavior** (with `docs/` itself as the lane); its only addition
+there is the same per-worktree lock, which merely refuses a second coordinator in
+one checkout.
 
 **Throughput caution.** Under `attended` gate authority, every track's human asks
 converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The
