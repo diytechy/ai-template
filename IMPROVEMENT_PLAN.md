@@ -4264,6 +4264,153 @@ Sonnet-able once the SR skeleton exists.
 
 ---
 
+## Thread 48 — Open Knowledge Format (OKF) export: the traceability graph as a portable knowledge bundle
+
+**Status: 📋 PLANNED — spec for a fresh session (unscheduled).** This entry *is*
+the kick-off brief; a new session reads it top-to-bottom, then executes. Two
+layers: **A** = the requirement-graph export (the clear win, do first); **B** =
+the process docs as concepts (optional, secondary).
+
+**Goal / why.** Google's **Open Knowledge Format** (OKF v0.1,
+`GoogleCloudPlatform/knowledge-catalog/okf`) is an open, vendor-neutral spec for
+AI-consumable knowledge: a **directory of markdown files with YAML frontmatter**,
+one file per *concept*, **file-path-as-identity**, normal markdown links forming
+a graph, optional `index.md` (progressive disclosure) and `log.md` (history),
+*minimally opinionated* (only a `type` field is required). The kit is already
+~80% an OKF-shaped thing — markdown docs, an append-only `log.md`, stable
+never-renumbered IDs (a natural file identity), and a real concept graph in
+`SN→SR→LLR→TC`. This thread makes that latent alignment explicit by
+**generating** an OKF bundle from the existing registries, so the kit's
+traceability knowledge is portable into any OKF consumer (Google's static-HTML
+visualizer, a company-wide knowledge catalog, another org's agents) with **no new
+source of truth and no runtime dependency**. It extends the kit's mission —
+"readable for humans and agents alike" — from *process* to *knowledge interop*,
+and is the natural next generated view after Thread 1 (generated traceability
+views) within Thread 8's map-vs-index boundary (this is a generated **map**,
+never hand-maintained).
+
+**The iron constraint (read first).** OKF here is a **generated export, never a
+parallel source of truth.** The reviewed truth stays the CSV registries; the
+bundle is regenerated from them and freshness-checked (`--check`) exactly like
+the arch map. A hand-edited OKF copy of the requirements would reintroduce the
+drift the whole kit exists to prevent. Corollary for **stdlib-only**: *emitting*
+YAML frontmatter is trivial string-formatting (no parser, no dependency); the kit
+must **not** try to *parse/validate arbitrary* OKF (stdlib has no YAML) — it
+emits, and leans on OKF's own reference tooling to consume.
+
+**Start-state (build on it, don't rebuild).**
+- `scripts/trace.py` already **loads every registry and builds the join**
+  (`SN→SR→LLR→TC` + off-spine `IF/PB/PART/ASSET`) and emits a generated
+  HTML/Mermaid view — reuse its load+join, don't re-parse the CSVs.
+- The **generator pattern** is established and stdlib: `gen_arch_map.py`,
+  `gen_release_checklist.py`, `gen_cases.py`, `gen_skills_index.py`, each with a
+  `--check` freshness mode. `gen_okf.py` is one more of these.
+- Stable IDs (`SR-042`, never renumbered — Threads 1/35) map directly onto OKF's
+  "file path is the concept's identity."
+- `docs/log.md` (Thread 36) is already an append-only history — OKF's optional
+  `log.md`, for free.
+- `check_vendored.py` (the guardrails layer, Thread 41) is the exact pattern for
+  pinning an upstream (OKF v0.1) and warning on drift.
+
+**Missing:** `scripts/gen_okf.py`, the emitted `docs/okf/` bundle, the stable
+`type`-name vocabulary, the freshness/CI wiring, bootstrap scaffolding, tests,
+and a commit-vs-gitignore ruling for the bundle.
+
+**Layer A — the requirement graph as an OKF bundle (do this first).**
+
+1. **Bundle layout + identity.** Emit a generated root `docs/okf/`, one
+   subdirectory per tier, one file per concept, path = identity:
+   ```
+   docs/okf/
+     index.md
+     stakeholder-needs/    SN-001.md …   (+ index.md)
+     system-requirements/  SR-001.md …   (+ index.md)
+     low-level-requirements/ LLR-001.md …
+     test-cases/           TC-001.md …
+     interfaces/           IF-001.md …   (off-spine, when present)
+   ```
+2. **Frontmatter mapping (a stable `type` vocabulary — document it once).** Per
+   concept, a YAML frontmatter block written by string-formatting: `type`
+   (required — "Stakeholder Need" / "System Requirement" / "Low-Level
+   Requirement" / "Test Case" / "Interface" / "Performance Budget"), `title` (the
+   row's Title), `description` (the Requirement/Need one-liner), `tags`
+   (Area/Priority/Verification/Status where that column exists), `timestamp`
+   (generation time), `resource` (a stable back-anchor to the CSV row of record).
+   Only fields the registries actually carry; OKF is minimally opinionated, so
+   extra columns ride as tags or body sections.
+3. **Body + the graph (markdown links).** The body carries the human content
+   (AcceptanceCriteria, Rationale, Detail) and **reconstructs the graph as normal
+   markdown links** from trace.py's join: an `SR` links **up** to its `SN`s
+   (`SN-Refs`) and **down** to its `LLR`s and `TC`s (reverse lookups); a `TC`
+   links to what it `Verifies`; an `LLR` to its `SR` parent + `Module`. This is
+   the "weave the wiki in" step — the wiki *is* the browsable graph view of the
+   spine.
+4. **`index.md` progressive disclosure.** A root `index.md` (counts + links to
+   each tier index) and a per-tier `index.md` (one-line-per-concept table), so an
+   agent navigates top-down — the OKF pattern the kit already approximates with
+   AGENTS.md → PROCESS.md → registries.
+5. **Freshness contract.** `gen_okf.py --check` regenerates into memory and diffs
+   the on-disk bundle, nonzero on drift — the `gen_arch_map.py --check` contract.
+   Wire it **opt-in** (run when you want the export), **not** into `check.py`'s
+   required floor.
+6. **Commit-vs-gitignore — a ruling to record.** OKF's value is being *consumed*
+   by external tools, which argues for **committing** the bundle (a consumer
+   pulls it from the repo; CI `--check` keeps it fresh) — at the cost of
+   generated-content diff churn. The kit's default for generated composites is to
+   **gitignore** (trace `report.html`) and upload as a CI artifact.
+   **Recommendation:** gitignore by default + CI-artifact upload (no churn,
+   honest single-source), with a documented opt-in to *commit* for repos that
+   publish their bundle to a catalog. Owner to rule before CI wiring.
+
+**Layer B — the process docs as OKF concepts (optional, secondary).** Makes the
+*whole* repo — process knowledge + requirement graph — one conformant bundle.
+Two shapes:
+- **B2 (recommended, non-intrusive):** `gen_okf.py` also emits `type: Process
+  Guide` concept files that summarize + `resource`-link the real docs
+  (`AGENTS.md`, `PROCESS.md`, `status.md`, `architecture.md`, `interfaces.md`),
+  leaving the sources untouched — single-source-friendly, no byte-budget hit.
+- **B1 (opt-in, intrusive):** add `type:` frontmatter to the source docs
+  themselves so `docs/` is *natively* a bundle. Costs: touches every scaffolded
+  doc template, and **`AGENTS.md` is byte-budget-watched** (Thread 26) —
+  frontmatter eats headroom. Reserve for a repo that specifically wants
+  doc-native OKF.
+Default to **B2**; ship **B1** only behind a flag.
+
+**Scope & proportionality.** A **generated interop view**, opt-in, off the gate
+floor — in the lineage of Thread 1 and Thread 8. Resist building a
+*validator/consumer* (stdlib has no YAML; OKF ships its own tools). Target:
+`gen_okf.py --check` green, a conformant bundle from the demo project, **zero**
+new required-gate surface, **zero** runtime deps.
+
+**Complications to expect.**
+- **v0.1 churn.** OKF is "a starting point, not a finished standard." Pin the
+  targeted spec commit in a `docs/okf/UPSTREAM`-style note and hash-check it via
+  the `check_vendored.py` pattern, so a spec bump is a visible, human-reviewed
+  re-target, never silent drift.
+- **stdlib emit-only.** Emitting frontmatter = string formatting (fine). Never
+  add a YAML dependency to *read* OKF — that is the consumer's job.
+- **Off-spine tiers.** `IF/PB/PART/ASSET` are integrity-only, not on the joined
+  spine — include them as concepts but don't fabricate spine edges trace.py
+  doesn't assert.
+- **Freshness vs. commit churn.** The A6 ruling drives whether CI diffs the
+  bundle or just artifacts it — decide before wiring CI.
+- **Parallel tracks.** Under the "Parallel tracks" layer the spine stays
+  repo-singular, so there is **one** bundle per repo — never per-track bundles.
+
+**Kick-off note (new session).** Read this thread + the OKF v0.1 spec
+(`GoogleCloudPlatform/knowledge-catalog/okf`) + `scripts/trace.py` (reuse its
+load+join). Prototype `gen_okf.py` against the demo project (conftest
+`make_minimal_project`), eyeball the bundle in OKF's static-HTML visualizer, then
+wire `--check` + a test asserting: every emitted file has a `type` frontmatter,
+every markdown link resolves (reuse `check_docs.py`), and `--check` fails on a
+stale bundle. Land Layer A; leave Layer B (B2) as a follow-commit.
+
+**Model tier — mid/strong for the mapping design** (judgment: the `type`
+vocabulary, link topology, the commit-vs-gitignore call); the emitter itself is
+mechanical once the mapping is fixed.
+
+---
+
 ## 2026-07-04 batch — decision briefs (all ruled by the owner 2026-07-04)
 
 **Rulings (owner, 2026-07-04).** The briefs below are kept as the *why*; each
