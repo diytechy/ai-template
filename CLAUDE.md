@@ -86,7 +86,7 @@ that easier to achieve in a real project — or get out of the way.
   self-applied**: the launchers (wired for Claude, strong tier) run
   `project-trajectory/scripts/agent_loop.py --root .`, resuming from
   `docs/status.md` under the declared policies (attended / human / privacy-off).
-- **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption, *in progress*):
+- **The kit's own `SN→SR→LLR→TC` spine** (Thread 47 self-adoption, *at G3*):
   [`docs/requirements/stakeholder-needs.md`](docs/requirements/stakeholder-needs.md)
   + `system-requirements.csv` + `low-level-requirements.csv` +
   `docs/test/test-cases.csv` + [`docs/architecture.md`](docs/architecture.md)

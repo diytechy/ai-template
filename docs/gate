@@ -1,4 +1,4 @@
 # Active gate for the kit's SELF-adoption (IMPROVEMENT_PLAN.md Thread 47).
 # One of: G1 G2 G3 G-Release G-Final. check.py / CI read the first non-comment
 # line; bump it only in a reviewed commit at a recorded gate sign-off (docs/log.md).
-G2
+G3

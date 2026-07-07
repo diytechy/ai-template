@@ -4113,12 +4113,18 @@ fix; the privacy-check review path and the secrets floor are unchanged in shape.
 
 ## Thread 47 — Self-adoption: the kit runs its own `SN→SR→LLR→TC` spine (dogfood)
 
-**Status: 🔨 IN PROGRESS — phases 1–2 landed 2026-07-07 (session 1); phases 3–5
-landed 2026-07-07 (session 2), reaching G2; phases 6–7 pending.** This entry *is*
-the kick-off brief; a new session reads it top-to-bottom and continues from
-**phase 6** (full G3 walk: `--tier full` coverage with subprocess instrumentation,
-generated arch-map + `--check`, meta-repo CI wiring; then phase 7 thread
-back-pointers, mostly already seeded in the SR `Rationale` cells).
+**Status: ✅ COMPLETE — landed 2026-07-07 (phases 1–7).** Session 1 (phases 1–2:
+layout + SN), session 2 (phases 3–5: SR→LLR→TC spine, reached G2), session 3
+(phases 6–7: the G3 walk). The meta-repo now **passes its own gates at G3**:
+`check.py --gate G3` → PASS (format · lint · tests+coverage ~82% · traceability
+`--require-verified` · privacy · doc-nav · perf · flows · arch-map), CI runs the
+gate on itself, `docs/gate` = **G3**. Spine: SN=22 SR=36 LLR=33 TC=36, 0 orphans.
+G1+G2 human-ratified 2026-07-07; **G3 ratification pending** (`docs/gate-policy` =
+attended). Full gate-walk record in `docs/log.md`. The kit is now a project built
+with the kit — the strongest evidence the method works. Dogfood findings it
+surfaced and this thread resolved: **Thread 50** (SR/LLR citation coherence,
+landed) + **Thread 51** (TC evidence column, backlog). The kick-off brief and
+per-phase detail below are retained as the *why*.
 
 > **Session 1 (2026-07-07, WI-1.39) — phases 1–2.** Layout laid: `docs/stack.ini`
 > (`src=project-trajectory/scripts`, `tests=tests`; coverage threshold PROVISIONAL

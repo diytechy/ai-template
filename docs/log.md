@@ -18,7 +18,7 @@ applying that design to the kit itself.
 |---|---|---|---|---|---|
 | G1 — Requirements/UX/Constraints | MET 2026-07-07 | MET 2026-07-07 | MET 2026-07-07 | n/a | ✅ Peter Johnson 2026-07-07 |
 | G2 — Decomposition & Test Coverage | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | ✅ Peter Johnson 2026-07-07 |
-| G3 — Implementation | n/a | n/a | PENDING | PENDING | PENDING |
+| G3 — Implementation | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | PENDING (attended) |
 
 ## Decisions log
 
@@ -132,3 +132,36 @@ adversarial review above.
 `docs/gate` remains **G2** (the active bar CI enforces); **G3** (implementation
 back-links, coverage ≥ threshold, `--require-verified`) is the next milestone —
 Thread 47 phases 6–7. No push (default `docs/push-policy` = human).
+
+### DRIVER — G3 — Round 1 — 2026-07-07 (session 3, phases 6–7)
+Walked the meta-repo to the **G3 (Implementation)** bar. Phase 6:
+- **Subprocess coverage wired for real.** The suite runs the kit scripts as
+  subprocesses (temp scaffold), which `--cov` missed in-process. `conftest.run_py`
+  now starts coverage in each child (`COVERAGE_PROCESS_START` +
+  `tests/_cov/sitecustomize.py`) and `.coveragerc`'s `[paths]` folds each
+  temp-scaffold `*/scripts/` copy back onto the source tree. **Full-suite coverage
+  ~82%**, so `docs/stack.ini`'s 80 is now a REAL enforced floor (was PROVISIONAL).
+- **Generated arch-map** MODULE MAP block added to `docs/architecture.md`
+  (`gen_arch_map --check` freshness, the G3 arch-map step). 3 drifted files
+  `ruff format`ted.
+- **check.py hardened** (`_step_env` strips ambient `COVERAGE_*`/`COV_CORE_*` so a
+  project's own coverage run is authoritative, not corrupted by a parent coverage
+  session) — a genuine robustness fix the dogfood surfaced.
+- **CI** gains a `gate` job running `check.py` on the meta-repo (the phase-6
+  "CI enforces the bar" item).
+Phase 7: thread back-pointers were already seeded in SR `Rationale` (privacy ←
+38/39/44/46, coordinator ← 33/45, tracks ← Parallel tracks, ERROR ← 45,
+coherence ← 50).
+
+**Mechanized verification (the G3 bar):** `check.py --gate G3` → **RESULT: PASS**
+— all 9 steps green: format · lint · **tests+coverage (≥80%, ~82% measured)** ·
+traceability (`--strict --no-placeholders --require-verified --strict-schema`:
+orphans=0, status-findings=0) · privacy · doc-navigability · perf-budgets ·
+design-flows · arch-map (`--check` fresh). `docs/gate` bumped G2 → **G3**.
+
+**Human ratification PENDING** (`docs/gate-policy` = attended): the mechanized G3
+bar is met; the maintainer's attested approval is outstanding. **Deviation:** the
+coverage wiring was harder than the plan sketched — a trace-time `source` filter
+in the child config silently produced empty data files; the fix was to let
+children trace freely and remap paths at combine. **Byte-budgeted files:** none
+touched. No push (`docs/push-policy` = human).
