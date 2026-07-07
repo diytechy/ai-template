@@ -4680,6 +4680,89 @@ split are fixed.
 
 ---
 
+## Thread 50 — `trace.py`: TC triangle-consistency check (SR/LLR citation coherence)
+
+**Status: 📋 SPEC — surfaced by Thread 47 (self-adoption) 2026-07-07; owner
+direction recorded below.** A small, well-scoped change to a shipped kit script.
+
+**The finding.** A `TC`'s `Verifies` cell may cite an SR **and** an LLR at once
+(the `SR-0NN;LLR-0NN` form the kit uses so *one* real test discharges both the
+"SR needs a TC" and "LLR needs a TC" orphan rules — coverage is not transitive,
+[trace.py:762](project-trajectory/scripts/trace.py#L762)/[778](project-trajectory/scripts/trace.py#L778)/[803](project-trajectory/scripts/trace.py#L803)).
+But the SR↔LLR relationship is *also* recorded canonically on the LLR's
+`SR-Refs`. So the combined TC citation **duplicates** that relationship, and
+`trace.py`'s TC validation only checks that each cited id **exists**
+([trace.py:808-817](project-trajectory/scripts/trace.py#L808-L817)) — it never
+checks the pair is coherent. An inconsistent triangle passes clean today:
+`TC-099,SR-005;LLR-001` where `LLR-001` decomposes `SR-001`, not `SR-005`.
+
+**Owner direction (2026-07-07).** Accept the duplication as the smaller evil and
+add a consistency check, rather than the two rejected alternatives: (a) make the
+TC `Verifies` **exclusive** (a single SR *or* LLR) plus a **transitive-coverage**
+rule ("an SR with no direct TC is covered if an LLR of it has a TC") — rejected as
+more confusing and a change to the orphan model; (b) **expand** the TC table to a
+separate SR-level and LLR-level test per behavior — rejected as a giant, low-value
+row explosion (the very thing the proportionality doctrine and the Thread-47 TC
+mapping avoid). The canonical SR↔LLR edge stays the LLR's `SR-Refs`; the TC's
+combined citation is a derived convenience the checker must keep honest.
+
+**The change.** When a TC cites both an SR and an LLR in one `Verifies` cell, the
+LLR's `SR-Refs` **must include that SR**; otherwise it is a finding. This is a
+structural-coherence error, wrong at any stage like a malformed/duplicate id — so
+it belongs in the **integrity class** (joins `--strict-integrity`, the pre-commit
+floor), not the gate-scoped orphan set. Add the check in the TC loop next to the
+existing unknown-ref check; new tests in `tests/test_registry_checks.py` (a
+coherent triangle passes; an incoherent one fails `--strict-integrity`). Update
+`trace.py`'s module docstring (the "Always … integrity" list) and, if the shipped
+`EXAMPLE.md`/templates lean on the combined citation, keep them coherent.
+
+**Done-when.** `--strict-integrity` fails an incoherent SR/LLR pairing and passes
+a coherent one; existing suites stay green; the kit's own registries (35 TC,
+already coherent by construction) still pass. **Model tier — mechanical once the
+rule is fixed** (it is, above).
+
+---
+
+## Thread 51 — `TC` schema: a first-class test-evidence column
+
+**Status: 📋 BACKLOG — surfaced by Thread 47 (self-adoption) 2026-07-07; recorded
+for posterity, not yet ruled.** A change to a **shipped** artifact (adopter-facing),
+so weigh it more carefully than Thread 50.
+
+**The finding.** The `TC` schema
+(`TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status`) has **no
+column for the concrete test that provides the evidence** — the pytest node, the
+demo script, the manual-procedure doc. Thread 47's self-adoption needed to cite
+the real test per TC and had nowhere clean to put it, so it overloaded
+`Parameters` with a `node=tests/test_x.py` string (see the phase-4 note + the 35
+rows in `docs/test/test-cases.csv`). That works but conflates two ideas:
+`Parameters` is meant for the *dimensional inputs* a test exercises (the
+`gen_cases.py` grammar), not a pointer to the test's location.
+
+**Proposal (to be ruled).** Add an `Evidence` (or `Test`) column to
+`registries/test-cases.template.csv` naming the test's location — a path, a node
+id, or a procedure-doc link. Keep `Parameters` for dimensional inputs. Open
+questions the ruling must settle:
+- **Required or optional?** Likely *optional* at G2, *required-non-empty for
+  `Automated=Yes` rows at G3* (a claimed-automated test with no cited location is
+  a soft false-green). If required, it joins `REQUIRED_FIELDS["TC"]` under
+  `--strict-schema`.
+- **Validated how?** Path-existence checking is stack-specific and brittle
+  (pytest node ids aren't filesystem paths); probably **inspection-only** text,
+  like the `Method` cell — not a mechanized resolve.
+- **Migration cost.** Adds a column to a shipped template → every adopter's
+  `test-cases.csv` gains a field; `EXAMPLE.md`, the `bootstrap.py` file lists, and
+  the `trace.py`/`check.py` readers must stay coherent. This is the reason it's
+  backlog, not a quick fix.
+
+**Why lower priority than Thread 50.** Thread 50 keeps an *existing* rule honest
+(a bug-class); this *adds* a field to the shipped schema (an enhancement with
+migration cost). Do Thread 50 first; ruling on Thread 51 can wait until the
+`Parameters`-overload has bitten more than once. **Model tier — mid for the
+required/validated ruling; mechanical to implement once ruled.**
+
+---
+
 ## 2026-07-04 batch — decision briefs (all ruled by the owner 2026-07-04)
 
 **Rulings (owner, 2026-07-04).** The briefs below are kept as the *why*; each
