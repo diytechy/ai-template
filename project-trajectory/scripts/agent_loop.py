@@ -55,6 +55,17 @@ no capture) at the mapped tier — the "grind from a single point" entry for a
 human sitting down. The template comes from --interactive-cmd / the
 AGENT_CMD_INTERACTIVE env var, falling back to AGENT_CMD.
 
+--track <name> drives one parallel development lane (process-options.md
+"Parallel tracks"): every coordination file this loop reads or writes —
+run-state, run-phase, status.md (the resume excerpt), the iteration logs and
+their index — resolves under docs/tracks/<name>/ instead of docs/, and the
+session prompt gains a preamble redirecting the driver to that lane. The
+repo-singular policies (gate, gate-policy, push-policy, privacy-check,
+guardrails-policy) stay at docs/. A track must run on branch llm/<name> in its
+own worktree (preflight enforces it), and a per-worktree lockfile
+(out/agent-loop.lock) stops two coordinators grinding one checkout. NO --track
+= single-lane operation, the exact behavior above with docs/ as the lane.
+
 Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
 slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
 run — the banner distinguishes them) · 5 WAITING on a rate limit · 6 iteration
@@ -68,6 +79,7 @@ history-leak disaster case (process-options.md "Commit identity & privacy").
 """
 
 import argparse
+import atexit
 import datetime
 import json
 import os
@@ -144,6 +156,119 @@ def read_declared(path, default):
         if ln and not ln.startswith("#"):
             return ln
     return default
+
+
+def sanitize_track(name):
+    """A track name becomes a lane directory segment, so restrict it to a safe
+    slug — `--track` can then never traverse the tree. Returns the name or
+    raises ValueError (the preflight and main both surface the message)."""
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name or ""):
+        raise ValueError(
+            "track name {!r} must be a lowercase slug matching "
+            "[a-z0-9][a-z0-9-]* (starts alphanumeric)".format(name)
+        )
+    return name
+
+
+def lane_dir(docs, track):
+    """The coordination lane for a track: docs/tracks/<track> when a track is
+    named, else docs itself — so single-lane operation is byte-for-byte the
+    prior behavior (the repo-singular policy files always stay at docs/)."""
+    return (docs / "tracks" / track) if track else docs
+
+
+def _pid_alive(pid):
+    """True when process id `pid` is running now, WITHOUT signalling it.
+
+    Never uses os.kill on Windows: there signal 0 is not a liveness probe —
+    os.kill routes non-CTRL signals to TerminateProcess and would *kill* the
+    process. Indeterminate cases fail safe to True (assume alive → we refuse to
+    steal the lock) so a two-writer race is never risked on a guess."""
+    if not pid or pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        STILL_ACTIVE = 259
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION, False, int(pid)
+        )
+        if not handle:
+            return False  # no such process (or access denied → treat as gone)
+        try:
+            code = wintypes.DWORD()
+            if kernel32.GetExitCodeProcess(handle, ctypes.byref(code)):
+                return code.value == STILL_ACTIVE
+            return True  # couldn't read exit code → assume alive (fail safe)
+        finally:
+            kernel32.CloseHandle(handle)
+    try:
+        os.kill(int(pid), 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return True
+    return True
+
+
+def _host():
+    """This machine's name, for the cross-host lock check (best effort)."""
+    return os.environ.get("COMPUTERNAME") or os.environ.get("HOSTNAME") or ""
+
+
+def acquire_lock(lock_path):
+    """Take the per-worktree coordinator lock, or return an error string.
+
+    Prevents two coordinators grinding the same checkout — a double-launch or a
+    cron overlap — the one collision the branch guard can't catch (both would
+    sit on the same llm/<track> branch in one worktree). A lock left by a dead
+    pid on THIS host is reclaimed; a live pid, or one we cannot verify (a
+    different host on a shared filesystem), makes us refuse rather than risk a
+    two-writer race — the fail-safe an unattended run needs. Content is
+    `pid\\nhost\\nstamp`; released by release_lock (registered with atexit)."""
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    host = _host()
+    if lock_path.exists():
+        try:
+            prior = lock_path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            prior = []
+        prior_pid = int(prior[0]) if prior and prior[0].strip().isdigit() else 0
+        prior_host = prior[1].strip() if len(prior) > 1 else ""
+        if prior_host and host and prior_host != host:
+            return (
+                "coordinator lock {} was taken on host {!r} (this is {!r}); "
+                "cannot verify it across hosts — refusing. Delete the lock if "
+                "that run is gone.".format(lock_path, prior_host, host)
+            )
+        if _pid_alive(prior_pid):
+            return (
+                "another coordinator (pid {}) holds {} — refusing to run two "
+                "in one worktree. Wait for it, or delete the lock if it is "
+                "stale.".format(prior_pid, lock_path)
+            )
+        # stale lock from a dead pid on this host: fall through and reclaim it.
+    lock_path.write_text(
+        "{}\n{}\n{}\n".format(os.getpid(), host, time.strftime("%Y-%m-%d %H:%M:%S")),
+        encoding="utf-8",
+    )
+    return None
+
+
+def release_lock(lock_path):
+    """Drop the coordinator lock iff this process still owns it (pid match), so
+    a reclaimed-then-exited predecessor never deletes a live successor's lock."""
+    try:
+        prior = lock_path.read_text(encoding="utf-8").splitlines()
+        if prior and prior[0].strip() == str(os.getpid()):
+            lock_path.unlink()
+    except OSError:
+        pass
 
 
 # The always-on guardrails core is vendored verbatim as docs/guardrails/core.md
@@ -255,14 +380,14 @@ def head_sha(root):
     return out if code == 0 and out else None
 
 
-def current_state_excerpt(root, max_lines=40):
-    """The '## Current State' section of docs/status.md — the pending asks a
-    stopping coordinator must surface in its exit banner."""
-    status = root / "docs" / "status.md"
+def current_state_excerpt(status_path, max_lines=40):
+    """The '## Current State' section of a status.md — the root dispatcher's or
+    a track lane's own — the pending asks a stopping coordinator must surface in
+    its exit banner."""
     try:
-        lines = status.read_text(encoding="utf-8").splitlines()
+        lines = status_path.read_text(encoding="utf-8").splitlines()
     except OSError:
-        return "(docs/status.md not found — no asks to surface)"
+        return "({} not found — no asks to surface)".format(status_path)
     section, collecting = [], False
     for ln in lines:
         if ln.startswith("## "):
@@ -273,7 +398,7 @@ def current_state_excerpt(root, max_lines=40):
         if collecting:
             section.append(ln)
     if not section:
-        return "(docs/status.md has no '## Current State' section)"
+        return "({} has no '## Current State' section)".format(status_path)
     section = [ln for ln in section if ln.strip()][:max_lines]
     return "\n".join(section)
 
@@ -522,6 +647,23 @@ def preflight(root, template, args):
                     "would commit every session under a private identity. "
                     + (proc.stderr or proc.stdout or "").strip()
                 )
+    track = getattr(args, "track", None)
+    if track:
+        try:
+            sanitize_track(track)
+        except ValueError as exc:
+            failures.append(str(exc))
+        else:
+            code, branch = git(root, "branch", "--show-current")
+            expected = "llm/{}".format(track)
+            if code == 0 and branch and branch != expected:
+                failures.append(
+                    "track {!r} must run on its own branch {!r}, but this "
+                    "worktree is on {!r}. A track drives one llm/<track> "
+                    "iteration branch in one worktree (process-options.md "
+                    "'Parallel tracks'); `git worktree add` that branch and run "
+                    "there, or drop --track.".format(track, expected, branch)
+                )
     return failures
 
 
@@ -553,14 +695,18 @@ def run_session(argv, root, timeout):
         return -1, "coordinator: session error: {}".format(exc), False
 
 
-def stop_banner(root, label, detail=""):
+def stop_banner(status_path, label, detail=""):
     print("\n=== coordinator stopping: {} ===".format(label))
     if detail:
         print(detail)
-    print("--- pending state (docs/status.md Current State) ---")
-    print(current_state_excerpt(root))
+    print("--- pending state ({} Current State) ---".format(status_path))
+    print(current_state_excerpt(status_path))
     print(
-        "--- end-of-run evidence: docs/status.md | docs/log.md | docs/iteration_index.md ---"
+        "--- end-of-run evidence: {0} | {1} | {2} ---".format(
+            status_path,
+            status_path.parent / "log.md",
+            status_path.parent / "iteration_index.md",
+        )
     )
 
 
@@ -601,6 +747,16 @@ def main():
         default=None,
         help="command template for --interactive; default: the "
         "AGENT_CMD_INTERACTIVE env var, else AGENT_CMD",
+    )
+    ap.add_argument(
+        "--track",
+        default=os.environ.get("AGENT_TRACK", "") or None,
+        help="drive one parallel development lane: every coordination file "
+        "(run-state, run-phase, status.md excerpt, iteration logs + index) "
+        "resolves under docs/tracks/<track>/ and the session must be on branch "
+        "llm/<track> in its own worktree. Omit for single-lane operation "
+        "(default: the AGENT_TRACK env var). See process-options.md "
+        "'Parallel tracks'.",
     )
     ap.add_argument(
         "--max-iterations",
@@ -683,12 +839,38 @@ def main():
             print("  - " + f, file=sys.stderr)
         return EXIT_PREFLIGHT
 
+    # Resolve the coordination lane. --track redirects the per-track files
+    # (run-state, run-phase, status.md, iteration/) under docs/tracks/<track>/;
+    # the repo-singular policy files (gate/gate-policy/push-policy/privacy-check/
+    # guardrails-policy) always stay at docs/. No track = docs/ itself, so
+    # single-lane operation is unchanged (preflight already slug-validated).
+    track = sanitize_track(args.track) if args.track else None
+    lane = lane_dir(docs, track)
+    lane.mkdir(parents=True, exist_ok=True)
+    status_path = lane / "status.md"
+    track_preamble = ""
+    if track:
+        track_preamble = (
+            "You are driving the '{t}' development track. Wherever the "
+            "instructions below say docs/status.md, docs/plan.md, docs/run-state "
+            "or docs/run-phase, use the docs/tracks/{t}/ copy instead — that "
+            "lane is your resume surface and coordinator contract. Append this "
+            "session's evidence to docs/tracks/{t}/log.md. Do NOT write the root "
+            "docs/status.md (the cross-track dispatcher, integrator-only) or any "
+            "other track's lane. The requirement registries "
+            "(docs/requirements/*), docs/gate, and the root docs/log.md gate "
+            "sign-offs are repo-singular and shared: propose registry changes as "
+            "off-spine scope drafts for the integrator to land — never edit "
+            "another lane. Stay on the llm/{t} branch (process-options.md "
+            "'Parallel tracks').\n\n---\n\n"
+        ).format(t=track)
+
     gate_policy = read_declared(docs / "gate-policy", "attended")
     push_policy = read_declared(docs / "push-policy", "human")
     _, branch = git(root, "branch", "--show-current")
 
     def session_model():
-        phase = read_declared(docs / "run-phase", "")
+        phase = read_declared(lane / "run-phase", "")
         return phase, model_map.get(phase, args.model)
 
     guardrails_policy = read_declared(docs / "guardrails-policy", "off")
@@ -707,15 +889,18 @@ def main():
     warned_no_core = []
 
     def session_prompt(model):
-        """The session prompt, with the vendored guardrails core prepended when
-        docs/guardrails-policy selects this session's model (Thread 41). Returns
-        (prompt, guarded); a selected-but-absent core warns once, then runs
-        without it (guardrails accelerate weak tiers, they never gate a run)."""
+        """The session prompt: the track preamble (when --track redirects the
+        driver to a lane) prepended to the base prompt, with the vendored
+        guardrails core prepended ahead of both when docs/guardrails-policy
+        selects this session's model (Thread 41). Returns (prompt, guarded); a
+        selected-but-absent core warns once, then runs without it (guardrails
+        accelerate weak tiers, they never gate a run)."""
+        base = track_preamble + args.prompt
         if not guardrails_apply(guardrails_policy, model):
-            return args.prompt, False
+            return base, False
         core = guardrails_core(root)
         if core:
-            return core + "\n\n---\n\n" + args.prompt, True
+            return core + "\n\n---\n\n" + base, True
         if not warned_no_core:
             warned_no_core.append(True)
             print(
@@ -725,7 +910,17 @@ def main():
                 '"Tier-conditional guardrails").'.format(guardrails_policy, model),
                 file=sys.stderr,
             )
-        return args.prompt, False
+        return base, False
+
+    # One coordinator per worktree (a double-launch or cron overlap is the
+    # collision the branch guard can't catch — same branch, same checkout).
+    # Both the loop and a single interactive session take it; atexit drops it.
+    lock_path = root / "out" / "agent-loop.lock"
+    lock_err = acquire_lock(lock_path)
+    if lock_err:
+        print("agent_loop: {}".format(lock_err), file=sys.stderr)
+        return EXIT_PREFLIGHT
+    atexit.register(release_lock, lock_path)
 
     if args.interactive:
         itemplate = (
@@ -735,8 +930,8 @@ def main():
         )
         phase, model = session_model()
         print(
-            "=== one interactive session | phase={} model={} ===".format(
-                phase or "—", model or "—"
+            "=== one interactive session | track={} phase={} model={} ===".format(
+                track or "—", phase or "—", model or "—"
             )
         )
         argv = build_argv(itemplate, model, session_prompt(model)[0])
@@ -745,6 +940,7 @@ def main():
 
     print("=== unattended coordinator (scripts/agent_loop.py) ===")
     print("repo: {} | branch: {}".format(root, branch or "(none)"))
+    print("track: {} | lane: {}".format(track or "(single-lane)", lane))
     print(
         "gate-policy: {} | push-policy: {} (the coordinator never pushes "
         "under 'human')".format(gate_policy, push_policy)
@@ -771,10 +967,11 @@ def main():
         )
 
     raw_dir = root / "out" / "run-logs"
-    iter_dir = docs / "iteration"
+    iter_dir = lane / "iteration"
+    tag = "{}-".format(track) if track else ""
     stall = 0
     errors = 0  # consecutive ERROR sessions (agent unavailable, not a work stall)
-    state = read_declared(docs / "run-state", "RUNNING").upper()
+    state = read_declared(lane / "run-state", "RUNNING").upper()
     for i in range(1, args.max_iterations + 1):
         session = "{:03d}".format(next_session_number(iter_dir))
         stamp = time.strftime("%Y%m%d-%H%M%S")
@@ -789,8 +986,13 @@ def main():
             )
             return EXIT_PREFLIGHT
         print(
-            "=== session {} ({}/{}) | phase={} model={} ===".format(
-                session, i, args.max_iterations, phase or "—", model or "—"
+            "=== session {} [{}] ({}/{}) | phase={} model={} ===".format(
+                session,
+                track or "single",
+                i,
+                args.max_iterations,
+                phase or "—",
+                model or "—",
             )
         )
         prompt, guarded = session_prompt(model)
@@ -799,7 +1001,7 @@ def main():
 
         try:
             raw_dir.mkdir(parents=True, exist_ok=True)
-            (raw_dir / "{}-{}.log".format(session, stamp)).write_bytes(
+            (raw_dir / "{}{}-{}.log".format(tag, session, stamp)).write_bytes(
                 output.encode("utf-8", "replace")
             )
         except OSError:
@@ -822,7 +1024,7 @@ def main():
         commits = ""
         if before != after:
             commits = "{}..{}".format(before or "(root)", after or "?")
-        state = read_declared(docs / "run-state", "RUNNING").upper()
+        state = read_declared(lane / "run-state", "RUNNING").upper()
 
         # A session that failed *before it could work* — and is not a rate limit
         # (that wins as WAITING) or a timeout (its own outcome): the CLI reported
@@ -868,7 +1070,7 @@ def main():
             "exit-code": code,
         }
         write_session_log(iter_dir, meta, output)
-        regenerate_index(docs)
+        regenerate_index(lane)
         print(
             "session {}: outcome={} commits={}".format(session, outcome, commits or "—")
         )
@@ -900,25 +1102,25 @@ def main():
                 time.sleep(wait)
                 continue
             stop_banner(
-                root,
+                status_path,
                 "WAITING on a rate limit",
                 "resume at: {} (re-run agent-resume.* then)".format(reset_hint),
             )
             return EXIT_WAITING
 
         if outcome == "DONE":
-            stop_banner(root, "run-state=DONE")
+            stop_banner(status_path, "run-state=DONE")
             return EXIT_DONE
         if outcome == "BLOCKED":
             stop_banner(
-                root,
+                status_path,
                 "run-state=BLOCKED",
                 "everything remaining is in the Blocked register.",
             )
             return EXIT_BLOCKED
         if outcome == "NEEDS-HUMAN":
             stop_banner(
-                root,
+                status_path,
                 "run-state=NEEDS-HUMAN",
                 "the next step requires a human act — the asks below; "
                 "re-run agent-resume.* after acting.",
@@ -936,22 +1138,22 @@ def main():
                 # an unavailable agent, not a stuck task. Name it so, and point
                 # at the fix (an unsupported model is repointed by hand).
                 stop_banner(
-                    root,
+                    status_path,
                     "STALL — agent error",
                     "{} consecutive session(s) errored before doing work "
                     "(agent unavailable / CLI or model error) — aborting. Check "
-                    "the AGENT_CMD model + auth and the latest docs/iteration/ "
+                    "the AGENT_CMD model + auth and the latest {} "
                     "log (outcome=ERROR, its exit-code); an unsupported model is "
                     "fixed by pointing --model / the model map at a live "
-                    "tier.".format(errors),
+                    "tier.".format(errors, iter_dir),
                 )
                 return EXIT_STALL
             stop_banner(
-                root,
+                status_path,
                 "STALL",
                 "{} consecutive session(s) without a commit — aborting to "
-                "protect the budget. See the latest docs/iteration/ "
-                "log.".format(stall),
+                "protect the budget. See the latest {} "
+                "log.".format(stall, iter_dir),
             )
             return EXIT_STALL
 
@@ -959,11 +1161,11 @@ def main():
             time.sleep(args.pause)
 
     stop_banner(
-        root,
+        status_path,
         "iteration budget exhausted",
-        "{} session(s) run and docs/run-state is still {} — raise "
+        "{} session(s) run and {} is still {} — raise "
         "--max-iterations deliberately if the run should continue.".format(
-            args.max_iterations, state
+            args.max_iterations, lane / "run-state", state
         ),
     )
     return EXIT_BUDGET

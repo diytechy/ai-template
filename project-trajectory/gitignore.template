@@ -30,3 +30,7 @@ docs/test/stub-report.md
 # + docs/iteration_index.md; the raw unbounded stream is local debug only
 # (process-options.md "Unattended operation").
 out/run-logs/
+# Per-worktree coordinator lock (scripts/agent_loop.py) — a runtime pid file
+# guarding against two coordinators in one checkout; never committed
+# (process-options.md "Parallel tracks").
+out/agent-loop.lock

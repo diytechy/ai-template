@@ -9,6 +9,10 @@ decisions, session notes — appends to the log this header points at, never her
 - **Work plan:** [plan.md](plan.md) _(the sequenced session blocks the
   plan/build cadence executes; the "Next action" below names the current
   block — see process-options.md "Plan/build cadence")_
+- **Parallel tracks?** _(single-lane by default — ignore this line.)_ Under the
+  multi-lane layer (process-options.md "Parallel tracks") this file becomes the
+  **cross-track dispatcher** (a one-row-per-track roll-up, integrator-written)
+  while each track keeps its own `docs/tracks/<track>/status.md`.
 
 ---
 

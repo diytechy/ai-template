@@ -1052,3 +1052,121 @@ releases as a whole.
   backed by a test" rule — applied to the internal seam, with no cross-repo build
   machinery.
 <!-- /profile -->
+
+## Parallel tracks (multi-lane operation)
+
+*Referenced from PROCESS.md §10 and the "Unattended operation" / "Agent
+iteration branch & sync" layers above.* **Applies when** one repo carries
+**several large deliverables progressing in parallel** and you want more than one
+driver (human or agent, attended or unattended) working at once **without
+thrashing the single coordination blackboard** — the failure the single-driver
+model (`status.md`, `run-state`, `run-phase`, `plan.md`, the iteration logs) hits
+the moment two sessions run. A repo with one active line of work skips this layer
+and pays nothing. Generalized from a field adoption (a multi-deliverable robotics
+build) that outgrew one blackboard.
+
+**The unit is a *track*: one lane of work bound to three things.** Each solves a
+different collision class; none is a repo split (worktrees share one object store
+and history):
+
+1. **A git worktree** — `git worktree add ../<repo>-<track> llm/<track>` — so two
+   drivers never share a checkout (the filesystem collision, which no doc
+   convention can fix).
+2. **An iteration branch `llm/<track>`** (the "Agent iteration branch & sync"
+   layer, one branch per track) — the history collision, and it gives the
+   unattended stall guard a **private HEAD** (another track's commits can't mask a
+   stalled one).
+3. **A lane directory `docs/tracks/<track>/`** holding this track's copies of the
+   otherwise-singular coordination files:
+
+   ```
+   docs/tracks/<track>/
+     status.md   plan.md   run-state   run-phase   log.md   iteration/
+   ```
+
+   The lane is selected **by invocation** (a coordinator `--track <name>` flag /
+   `AGENT_TRACK` env), **never a tracked pointer file** — a committed "current
+   track" would differ per branch and reintroduce the churn.
+
+**The root `status.md` becomes a cross-track dispatcher, not a blackboard** — a
+one-screen roll-up: one row per track (name, lane link, one-line state, its queued
+`Needs <human>` asks) plus the cross-track items (repo-wide open items, the
+verification tally, repo-scope decisions). **Only integration sessions write it**,
+so two drivers never hold it open at once. The root `log.md` keeps the gate
+sign-offs (and any repo-scope decision record); each lane's `log.md` holds that
+track's session evidence.
+
+**What stays repo-singular (integrator-owned, never forked into a lane):** the one
+`SN→SR→LLR→TC` requirement spine and every registry, `docs/gate` + `gate-policy` +
+`push-policy` + `privacy-check` + `guardrails-policy`, the root `status.md`/`log.md`,
+`AGENTS.md`, and the generated code map. The spine is **deliberately singular**
+(§10): `trace.py --strict` still demands **0 orphans across the whole repo, seams
+included** — a per-track gate would hide exactly the cross-track seams this method
+wants first-class. Tracks **propose** changes to the singular surfaces; the
+**integrator lands** them.
+
+**The integrator role.** A **sync/integration session** — a human, or an agent leg
+run without `--track` — is the only writer of the root dispatcher and the only
+lander of registry rows and generated artifacts. It runs at sync points (a gate
+close, a track reaching an end state, a periodic roll-up): it lands each track's
+ratified off-spine drafts onto the spine, regenerates the generated docs on the
+landed tree, reconciles the dispatcher, and (under the iteration-branch layer)
+lands each `llm/<track>` leg onto the development branch serially so history stays
+linear.
+
+**Write discipline for the shared spine.**
+
+- **Registry rows land at ratification, through the integrator.** A track grows
+  requirements as an **off-spine scope draft** (a dated `requirements/scope-draft-*`
+  doc); since SN/SR rows need human ratification anyway, registry writes are already
+  serialized through that bottleneck. The discipline just makes it explicit — no
+  track edits the registries directly mid-flight.
+- **Per-track ID blocks** stop concurrent drafts minting colliding ids: reserve
+  `SN`/`SR` hundreds-ranges per track in a small `requirements/id-blocks` note (a
+  convention, not a machine check — `trace.py` integrity still catches a real
+  collision at landing). `LLR`/`TC` stay integrator-allocated sequentially at
+  decomposition (they are created when a draft lands, so they never race);
+  placeholder ids (`LLR-D1`) in a draft become final ids at landing.
+- **Generated artifacts are never text-merged.** A conflict in the code map, trace
+  report, or dataflow diagrams at landing is resolved by **regenerating on the
+  landed tree** (the harness keeps them fresh), never by hand-merging the generated
+  text.
+- **Cross-track contracts are `IF-###` rows** in the one `interfaces.csv` (the §10
+  internal-seam rule): the counterpart names the other track's module, and an
+  integration TC backs the seam. Record a seam **early** — a downstream track builds
+  against the *interface*, not the upstream track's completion.
+
+**Gating stays single-gate; per-track maturity rides `Phase` tags.** Keep **one**
+`docs/gate` for the repo. When tracks are at different maturity, tag their SRs with
+track-scoped delivery **`Phase`** values ("Phased delivery" above) and close with
+`check.py --gate G3 --phase <active set>`: Verified is required only where a track
+has actually built, and everything else is listed **phase-deferred** — the explicit,
+recorded exemption the phased layer was built for, never a silent skip. A per-track
+`docs/gate` is rejected: it would falsify the cross-track seams (§10). An
+eventually-needed-but-not-now analysis (e.g. a fatigue study, a load test) is
+written **now** as an `Analysis`-verified SR at a later `Phase` — visible as
+phase-deferred from day one — while the numbers the design needs today ride `PB-###`
+budget rows; the heavy tooling is product-layer meters wired when that phase opens
+(§9 meters-vs-comparator).
+
+**Unattended safety (the coordinator).** The unattended coordinator
+(`scripts/agent_loop.py`) takes `--track <name>` and resolves **every** per-track
+file (`run-state`, `run-phase`, the `status.md` resume excerpt, the iteration logs
++ index) under `docs/tracks/<name>/`, leaving the repo-singular policy files at
+`docs/`; the session prompt gains a preamble redirecting the driver to that lane.
+Two guards make concurrent unattended runs safe: a **preflight branch-guard** (a
+`--track` session must be on branch `llm/<track>`, so a lane can never write from
+the wrong checkout) and a **per-worktree lockfile** (`out/agent-loop.lock`, one
+coordinator per checkout — the double-launch / cron-overlap collision the
+branch-guard can't catch; a dead pid's lock is reclaimed, a live or cross-host
+unverifiable one makes the loop refuse rather than risk a two-writer race).
+**No `--track` keeps the single-lane behavior** (with `docs/` itself as the lane);
+its only addition there is the same per-worktree lock, which merely refuses a
+second coordinator in one checkout.
+
+**Throughput caution.** Under `attended` gate authority, every track's human asks
+converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The
+dispatcher's job is to aggregate those asks into one review surface, and 2–3
+concurrently *active* lanes is the realistic ceiling while one human ratifies —
+dormant lanes (a lane directory + a "blocked on `IF-…`" note, no worktree) cost
+nothing until their gating decision lands.
