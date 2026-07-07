@@ -4279,6 +4279,115 @@ map; author `docs/requirements/stakeholder-needs.md`; grow the spine as a real
 right-sizing** (judgment-heavy); the `TC` back-mapping is mechanical and
 Sonnet-able once the SR skeleton exists.
 
+### Session 2 kick-off — phases 3–5 (detailed, self-contained)
+
+**Where session 1 (WI-1.39) left off.** `docs/requirements/stakeholder-needs.md`
+holds **SN-001..022** (12 core + 10 edge). `system-requirements.csv`,
+`low-level-requirements.csv`, `docs/test/test-cases.csv` are **header-only**.
+`docs/gate` = **G1**. `trace.py`: SN=22 SR=0 (22 SN-with-no-SR orphans, un-gated
+at G1). **Goal of session 2: author `SR → LLR → TC`, drive orphans to zero, bump
+`docs/gate` to G2, and sign it off in `docs/log.md`.**
+
+**The backbone — capability → script → tests → SR cluster.** Each row is one SR
+cluster (1–3 SRs); its `AcceptanceCriteria` are what its tests already assert;
+its TC cites the test file. (Counts from `pytest --collect-only` 2026-07-07;
+~360 tests total.)
+
+| Area (SR cluster) | Script(s) | Test file(s) — count | SN-Refs (main) |
+|---|---|---|---|
+| Traceability + integrity | `trace.py` | test_trace (20), test_registry_checks (18), test_ac_advisory (7) | SN-002, SN-022 |
+| Off-spine registries (MOD/PART/ASSET) | `trace.py` | test_modules_registry (7), test_procurement (5), test_assets (4) | SN-002 |
+| Gate/tier harness | `check.py` | test_check_harness (8) | SN-004, SN-008, SN-014 |
+| Declared stack profile | `check.py` + stack.ini | test_stack_profile (23) | SN-003 |
+| Conditional scaffold profiles | `bootstrap.py` | test_profile (21) | SN-003, SN-012 |
+| Scaffold generation | `bootstrap.py` | test_bootstrap (33) | SN-001 |
+| Doc navigability | `check_docs.py` | test_check_docs (24) | SN-010 |
+| Runtime-flows check | `check_flows.py` | test_check_flows (6) | SN-010 |
+| Perf comparator + budgets | `check_perf.py` | test_check_perf (15), test_perf_budgets (6) | SN-004 |
+| No-stub detector | `check_stubs.py` | test_check_stubs (13) | SN-008 |
+| Secrets + privacy lint | `check_privacy.py` | test_check_privacy (18) | SN-009 |
+| Git hooks (process floor) | hooks/* + check_privacy | test_pre_commit_hook (11), test_pre_push_hook (16) | SN-005, SN-009, SN-013 |
+| Vendored-doc drift | `check_vendored.py` | test_check_vendored (5) | SN-010 |
+| Arch-map generation | `gen_arch_map.py` | test_gen_arch_map (20) | SN-010, SN-021 |
+| Permutation case gen | `gen_cases.py` | test_gen_cases (5) | SN-002 |
+| Skills index | `gen_skills_index.py` | test_skills_index (4) | SN-012 |
+| Unattended coordinator | `agent_loop.py` | test_agent_loop (32) | SN-006, SN-015, SN-016, SN-019, SN-020 |
+| Parallel tracks | `agent_loop.py` | test_agent_loop_tracks (19) | SN-006, SN-017, SN-018 |
+| Declared-policy readers | shared `_first_declared_line` | test_gate_policy (5), test_push_policy (5) | SN-004 |
+| Onboarding + dev-setup | onboard/dev-setup templates | test_onboard_devsetup (10) | SN-001 |
+| Release checklist | `gen_release_checklist.py` | ⚠ **no dedicated test file** | SN-004 |
+| Portability (Inspection/Analysis) | all scripts | — (inspected, not executed) | SN-003, SN-011 |
+
+**Phase 3 — SRs (`docs/requirements/system-requirements.csv`).** One cluster per
+row above, 1–3 SRs each (**~30–40 total**). Columns
+`SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area`:
+- `SN-Refs` — the need(s) realized (table's last column). **Every SN-001..022
+  must be cited by ≥1 SR** (the G1 coverage rule; `trace.py` flags an SN with no
+  SR). The edge-case needs SN-013..022 are realized by the **coordinator / hooks
+  / trace / arch-map** clusters' *failure-handling* AcceptanceCriteria — make
+  sure each is cited so none orphans.
+- `AcceptanceCriteria` — **the behavior the tests assert** (cite it; don't invent
+  a new bar).
+- `Verification` — **`Test`** for anything a pytest exercises (the vast
+  majority); **`Inspection`** for "scripts are stdlib-only" / "templates are
+  copy-ready"; **`Analysis`** for "the process is stack-agnostic / runs on 3.8+".
+  *Load-bearing:* a `Test`/`Demonstration`/`Manual` SR **requires an LLR**
+  (phase 5); an `Inspection`/`Analysis`/`Attest` SR is **LLR-exempt**.
+- `Area` = the cluster name (enables `Area`-filtered review); `Phase` = blank
+  (all in scope now); `Status` = `Verified` (its tests pass) — keep one
+  convention. Drop a **thread back-pointer** in `Rationale` (phase 7, cheap now):
+  privacy ← Threads 38/39/44/46; coordinator ← 33/45; tracks ← "Parallel tracks".
+
+**Phase 4 — TCs (`docs/test/test-cases.csv`).** **One TC per SR** (proportional —
+NOT one per test function): `TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status`:
+- `Verifies` = the `SR-###` **plus its `LLR-###`** once phase 5 exists
+  (`SR-0xx;LLR-0xx`).
+- `Parameters` = the **pytest node path** citing the test file:
+  `node=tests/test_check_privacy.py` (the whole file is the behavior cluster; add
+  `::test_x` only to pin a single decisive case). *The schema has no test-id
+  column — this is the agreed workaround; **also file the kit-improvement finding
+  to add an `Evidence` column to `test-cases.template.csv`** (surfaced by this
+  dogfood).*
+- `Tier` = `Full` (or `Smoke` for a `@pytest.mark.smoke` test); `Automated` =
+  `Yes`; `Method` = one line ("run the file's suite; all pass").
+
+**Phase 5 — LLRs (`docs/requirements/low-level-requirements.csv`).** **One
+design-tier LLR per `Test`-verified SR** (the `trace.py` orphan floor — not
+optional): `LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status`:
+- `Module` = `project-trajectory/scripts/<script>`; `CodeSymbol` = the key
+  function/class (e.g. `check_privacy.scan_line`, `agent_loop.acquire_lock`,
+  `trace` load+join); `Detail` = the design element in one line; `SR-Refs` = its
+  SR; `TestRefs` = "(see TC-0xx)".
+- **Not** a micro-LLR per assert. Skip LLRs only for `Inspection`/`Analysis` SRs.
+  Add the cross-script contract LLRs the parent plan names
+  (`_first_declared_line` shared parse; arch-map marker-block contract;
+  `EXEMPT_EMAILS` / two-axis gating) if not already an SR's design element.
+
+**Order of operations (keep trace checkable).** (1) Author **all SRs** →
+`trace.py` (SR-with-no-LLR/TC orphans expected, fine at G1). (2) **One LLR per
+Test-SR**. (3) **One TC per SR**. (4) `trace.py --strict` → drive orphans to
+**0** (every SR: SN + LLR-or-exempt + TC; every LLR: SR + TC; every TC verifies a
+real SR/LLR; every SN: ≥1 SR). (5) `trace.py --no-placeholders --strict-schema` →
+no leftover `-000`, required fields non-empty. (6) bump `docs/gate` → **G2**, run
+`check.py --gate G2` — **leave coverage / `--tier full` for phase 6** (the
+subprocess-coverage issue). (7) record the G2 sign-off in `docs/log.md`.
+
+**Done-when (G2).** `trace.py --strict --no-placeholders` = 0 orphans / 0
+integrity; every SN-001..022 cited; `pytest -q` + `check_docs --root . --stale`
+green; `docs/gate` = G2 with a `docs/log.md` sign-off; Thread 47 status updated
+(session-protocol step 4). **~30–40 SR / ~30–40 LLR / ~30–40 TC** is the expected
+size — resist exploding to per-test rows.
+
+**Gotchas.** (a) `gen_release_checklist.py` has **no dedicated test** — give it an
+`Inspection` SR or note the coverage gap honestly; don't fake a TC. (b) The bare
+`check_docs` flags the gitignored `docs/test/report.md` — delete it before the
+gate or pass `--ignore 'docs/test/report.md'` (phase 6's `check.py` passes it).
+(c) Coverage `--cov` under-reports (subprocess) — **phase 6**, not now. (d) Keep
+the meta-repo registries under `docs/requirements/` + `docs/test/`, never the
+shipped `project-trajectory/registries/` templates. **Model tier — strong for
+the SR derivation + Verification-method calls; the TC/LLR back-mapping is
+mechanical once the SR skeleton + this table are in hand.**
+
 ---
 
 ## Thread 48 — Open Knowledge Format (OKF) export: the traceability graph as a portable knowledge bundle
