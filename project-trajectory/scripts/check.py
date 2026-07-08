@@ -163,6 +163,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "design-flows",
         "trajectory",
         "arch-map",
+        "trajectory-map",
     }
 )
 
@@ -479,6 +480,20 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "arch-map",
             (),
             arch_cmd,
+            {"G3"},
+            "process",
+        ),
+        # Trajectory dashboard freshness (process-options.md "Trajectory /
+        # work-items layer"): the generated-artifact freshness gate for
+        # docs/trajectory.html — gen_trajectory.py --check regenerates in memory
+        # and byte-compares, exactly like arch-map. G3 only (like arch-map — the
+        # generated view churns while the plan is still forming). Vacuous on an
+        # absent/placeholder-only registry and silent under docs/trajectory-check
+        # `off`, so a repo without work items pays nothing.
+        (
+            "trajectory-map",
+            (),
+            [sys.executable, str(_SCRIPTS / "gen_trajectory.py"), "--check"],
             {"G3"},
             "process",
         ),

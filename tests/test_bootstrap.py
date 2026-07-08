@@ -33,6 +33,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/check_vendored.py",
         "scripts/check_trajectory.py",
         "scripts/gen_cases.py",
+        "scripts/gen_trajectory.py",
         ".githooks/pre-commit",
         ".githooks/commit-msg",
         ".githooks/pre-push",

@@ -262,6 +262,21 @@ _Generate the skills applicability index from the SKILL.md frontmatter._
 | `render_index(rows)` | Render the rows as CSV text (LF-terminated, stable column order). |  |
 | `main()` |  |  |
 
+### `scripts/gen_trajectory`
+_Generate the offline project-trajectory dashboard (docs/trajectory.html)._
+Imports (internal): `check_trajectory`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `read_sns(root)` | (id, short-label) per stakeholder need — the SN count + icicle roots. |  |
+| `arch_icicle(root)` | SVG icicle (partition) of the SN->SR->LLR->TC spine + (details, descendants). |  |
+| `spine_stats(root)` | Definition-maturity numbers. 'Definition completeness' = SRs marked |  |
+| `project_vision(root)` | One-line vision: the README `PROJECT-VISION:` tag (the kit's canonical |  |
+| `project_name(root)` | The project's display name — the README's first H1, else the folder name. |  |
+| `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
+| `build_html(root, wis)` |  |  |
+| `main()` |  |  |
+
 ### `scripts/trace`
 _Traceability join + orphan report for the SN->SR->LLR->TC registries._
 

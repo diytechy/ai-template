@@ -4783,7 +4783,7 @@ required/validated ruling; mechanical to implement once ruled.**
 
 ## Thread 52 — Trajectory / work-items layer (upstreaming gilbert WB19 · D19-6)
 
-**Status: 🔄 Phase 1 landed 2026-07-07; phases 2–4 remain (SPEC below; Phase-0
+**Status: 🔄 Phases 1–2 landed 2026-07-07; phases 3–4 remain (SPEC below; Phase-0
 decisions baked in).** A **new opt-out kit layer**: a machine-readable work-item
 registry + a generated, fully-offline trajectory dashboard. Bigger than Threads
 48–51 — multi-phase, touches shipped templates, the spine, PROCESS_OPTIONS, and
@@ -4816,6 +4816,36 @@ section is Phase 3). **Gates:** `pytest -q` **384 passed, 2 skipped**;
 shared `_utf8_console` reconfigure guard uncovered); the meta-repo (G3, no
 `work-items.csv` yet) passes the new step vacuously; `check.py --list --gate G3`
 shows `trajectory` at [G2,G3]. **Next: Phase 2** (the offline SVG dashboard).
+
+**Phase 2 landed 2026-07-07 (this session).** The fully-offline dashboard.
+**Deliverables:** `scripts/gen_trajectory.py` renders `docs/trajectory.html` from
+the WI registry + the `SN->SR->LLR->TC` spine, **reusing `check_trajectory.py`'s
+load + validation** (one home for the rules — a sibling import; both ship
+together). Two **plain-SVG** views, **no CDN / no JS layout library** (ruling A):
+(1) the spine **icicle** ported ~as-is from gilbert; (2) a **layered work-item DAG
+computed in Python** — longest-path ranking → deterministic barycentre
+crossing-reduction → coordinate assignment → SVG, with a few lines of inline
+vanilla JS wiring hover/click. Plus a vision header (the README `PROJECT-VISION:`
+tag), definition/execution %-meters, and SN/SR/LLR/TC/WI/track tiles. `--check` is
+a **freshness contract** (regenerate-in-memory + byte-compare, like `gen_arch_map
+--check`), wired as a new **`trajectory-map` process step at {G3}** beside
+`arch-map`; **vacuous** on an absent/placeholder-only registry and silent under the
+opt-out toggle. `bootstrap.py` MAPPING + docstring ship the script; `test_bootstrap`
+file-list; `tests/test_gen_trajectory.py` (10 cases); regenerated
+`docs/architecture.md` (the new script joined the symbol map). **Decision:** kept
+**two steps** — validation (`trajectory`, {G2,G3}) separate from freshness
+(`trajectory-map`, {G3}), mirroring the `traceability` (registry) vs `arch-map`
+(generated view) split, so the churny freshness check doesn't gate at G2. **No
+deviations.** **Verified beyond the unit tests:** byte-identical across re-runs
+(determinism → stable `--check`); the diamond DAG lays out with correct dependency
+ranks + zero node overlaps; adversarial registry text (`</script>`, quotes,
+unicode) is HTML/JSON-escaped — no `<script>` breakout, every embedded JSON blob
+parses; 0 external references in the output. **Byte budgets:** untouched (the
+PROCESS_OPTIONS section is Phase 3). **Gates:** `pytest -q` **393 passed, 2
+skipped**; `check_docs --stale` clean; ruff format+lint clean; `gen_trajectory.py`
+98% covered; the meta-repo passes `trajectory-map` vacuously. **Next: Phase 3**
+(PROCESS_OPTIONS "Trajectory / work-items layer" section + README kit-contents /
+scaffold surface).
 
 **Source (reference implementation).** Built and proven downstream in the
 **gilbert** repo (a kit adopter, synced to kit-version `767487c`): its WB19 thread
@@ -4871,7 +4901,8 @@ exists in `system-requirements.csv` (**warn**, draft SRs are legitimate);
    that **skips vacuously** on a placeholder-only registry and honors the opt-out
    toggle; `tests/test_trajectory.py` (cycle fails, unresolved predecessor fails,
    dangling SR-ref warns, placeholder-only passes, opt-out silences).
-2. **Offline dashboard.** Port the SVG **icicle** ~as-is; **build the plain-SVG
+2. ✅ **Offline dashboard** — **landed 2026-07-07** (see the Phase 2 record above).
+   Port the SVG **icicle** ~as-is; **build the plain-SVG
    layered DAG** (ruling A); vision header + definition/execution %-meters; one
    self-contained `docs/trajectory.html`. Add a `--check` **freshness** contract
    (regenerate-in-memory + byte-compare, like `gen_arch_map --check`) wired into

@@ -37,7 +37,7 @@ What it creates in the destination:
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
-    scripts/gen_arch_map.py, gen_release_checklist.py, gen_cases.py
+    scripts/gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1}                 <- dev-setup.template.* (workstation setup)
@@ -142,6 +142,11 @@ OPT-OUT and vacuous by default: the shipped inert `WI-000` placeholder makes a
 fresh scaffold pass for free, and a repo that never wants the layer sets
 `docs/trajectory-check: off`. It is off-spine (like procurement / assets);
 `trace.py` does not read WI ids — `check_trajectory.py` owns them.
+`scripts/gen_trajectory.py` renders the registry + spine into a self-contained,
+fully-offline `docs/trajectory.html` dashboard — an SVG icicle of the spine and a
+plain-SVG layered DAG of the work items, no CDN; its `--check` is the
+`trajectory-map` freshness gate at G3 (regenerate + byte-compare, like `arch-map`).
+Both are generated *views*, never a source of truth.
 
 `docs/privacy-check` (process-options.md "Commit identity & privacy") toggles
 the privacy gate: `false` (the scaffolded default — off) or `true` to scan the
@@ -949,6 +954,7 @@ MAPPING = [
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),
+    ("scripts/gen_trajectory.py", "scripts/gen_trajectory.py"),
     ("scripts/setup.sh", "scripts/setup.sh"),
     ("scripts/setup.ps1", "scripts/setup.ps1"),
     ("scripts/check.sh", "scripts/check.sh"),
