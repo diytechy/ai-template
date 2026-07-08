@@ -51,7 +51,12 @@ The kit's headline pieces:
   [`gen_release_checklist.py`](project-trajectory/scripts/gen_release_checklist.py)
   (the human release checklist),
   [`gen_cases.py`](project-trajectory/scripts/gen_cases.py) (boundary-aware,
-  pairwise test-case combinations), and
+  pairwise test-case combinations),
+  [`check_trajectory.py`](project-trajectory/scripts/check_trajectory.py) +
+  [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) (the
+  **opt-out** work-items layer — validate the execution DAG and render a
+  fully-offline `docs/trajectory.html` dashboard; process-options.md "Trajectory /
+  work-items layer"), and
   [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) (scaffold a new repo —
   SN-001).
   Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`) ship for Linux/macOS

@@ -722,6 +722,67 @@ contract lives in the kit's `skills/README.md`; the shape:
   in the same `skills/` source layout and materialize via the same path, never
   written straight into an agent dir bypassing the index.
 
+## Trajectory / work-items layer
+
+*Referenced from PROCESS.md §7 (the harness contract + the offline-render
+principle).* **Applies when** a project wants to track **how** its work executes —
+cross-track order, which deliverable gates which, %-complete — as a
+machine-readable registry, and/or a generated dashboard over it. Uniquely in this
+file the layer is **opt-out, not opt-in**: it is on by default but **vacuous**, so
+a repo that never adds a work item pays nothing (see the opt-out below).
+
+**What it adds over the spine.** The `SN→SR→LLR→TC` spine answers *what must be
+true*. It does not carry the **execution "how"**: the order work runs in, where
+independent tracks meet, which task is in flight, how far along the whole is. A
+**work item** (`WI-###`) fills that gap — a unit of *doing*, not of *truth*:
+
+- it **delivers** one or more SRs (`SR-Refs`) — the thread back to the spine;
+- it sits on a **track** — a lane of related work (`scripts`, `docs`, a subsystem);
+- it **depends on** predecessor work items (`Predecessors`) — the edges of a DAG;
+- it moves through a **lifecycle**: `queued → active → done`.
+
+A WI is to an SR what a build step is to a spec: the SR says the adder must be
+correct; the work items say "build the adder (done), wire the harness (active),
+then cut the release (queued)." The prose that argued the work — a plan, a
+whiteboard thread — stays the *why*; `work-items.csv` is the machine-readable
+*how*, the way an SR row is the machine-readable form of the requirement its
+thread argued. The two **coexist**; the registry does not replace the narrative.
+
+**Registry.** `docs/requirements/work-items.csv`, columns
+`WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable`. Off-spine and
+optional like `procurement.csv` / `assets.csv`: `trace.py` does not read `WI-`
+ids — the trajectory tooling owns them. `Status ∈ {queued,active,done}`;
+`SR-Refs` / `Predecessors` are `;`-joined id lists; a `-000` example row ships
+inert (the placeholder rule the whole kit shares).
+
+**Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
+G2. Every `Predecessors` id resolves to a real work item and the graph is
+**acyclic** — both **errors** (a trajectory that depends on itself can never
+start); every `SR-Refs` id exists in the SR registry — a **warning**, since a
+draft SR referenced ahead of its row is legitimate; `WI-###` id shape and
+uniqueness — integrity, like `trace.py`.
+
+**Dashboard** — `gen_trajectory.py` renders `docs/trajectory.html`, a generated
+*view* (never a source of truth — the `gen_arch_map` / `trace.py` idiom). One
+self-contained, **fully-offline** page (the §7 offline-render principle — no CDN,
+no cloud tooling, no JS layout library): a project-vision header, definition- and
+execution-completeness meters, an **SVG icicle** of the `SN→SR→LLR→TC` spine, and
+a **layered SVG DAG** of the work items (ranked by dependency depth,
+done/active/queued shaded), both computed in Python. Its `--check` is the
+`trajectory-map` freshness gate at G3 — regenerate-in-memory and byte-compare,
+exactly like the code map — so the committed dashboard can never silently drift
+from the registry. In `status.md`, the **Next action** then names the next
+`WI-###`(s), and the dashboard shows where they sit in the DAG.
+
+**Opt-out (why a non-adopter pays nothing).** The layer ships **present but
+vacuous**: a fresh scaffold carries only the inert `WI-000` placeholder, so both
+`check_trajectory.py` and `gen_trajectory.py --check` pass **vacuously** (no work
+items → nothing to validate, nothing to render, no `trajectory.html` written). A
+repo that wants the layer gone entirely silences it with the one word `off` in
+`docs/trajectory-check` — the same first-line-parse toggle as `docs/secrets-scan`.
+The cost to a project that ignores the layer is therefore exactly zero, which is
+why it ships opt-out rather than opt-in.
+
 ## Commit identity & privacy
 
 *Enforced by `.githooks/pre-commit` (author + content lint), `.githooks/commit-msg`

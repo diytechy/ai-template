@@ -13,6 +13,10 @@ decisions, session notes — appends to the log this header points at, never her
   multi-lane layer (process-options.md "Parallel tracks") this file becomes the
   **cross-track dispatcher** (a one-row-per-track roll-up, integrator-written)
   while each track keeps its own `docs/tracks/<track>/status.md`.
+- **Work items?** _(off unless you adopted the trajectory layer — ignore this
+  line.)_ With the trajectory/work-items layer (process-options.md "Trajectory /
+  work-items layer") the **Next action** below names the next `WI-###`(s) from
+  `docs/requirements/work-items.csv`, and `docs/trajectory.html` renders the DAG.
 
 ---
 

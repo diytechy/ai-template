@@ -4783,7 +4783,7 @@ required/validated ruling; mechanical to implement once ruled.**
 
 ## Thread 52 — Trajectory / work-items layer (upstreaming gilbert WB19 · D19-6)
 
-**Status: 🔄 Phases 1–2 landed 2026-07-07; phases 3–4 remain (SPEC below; Phase-0
+**Status: 🔄 Phases 1–3 landed 2026-07-07; phase 4 remains (SPEC below; Phase-0
 decisions baked in).** A **new opt-out kit layer**: a machine-readable work-item
 registry + a generated, fully-offline trajectory dashboard. Bigger than Threads
 48–51 — multi-phase, touches shipped templates, the spine, PROCESS_OPTIONS, and
@@ -4847,6 +4847,30 @@ skipped**; `check_docs --stale` clean; ruff format+lint clean; `gen_trajectory.p
 (PROCESS_OPTIONS "Trajectory / work-items layer" section + README kit-contents /
 scaffold surface).
 
+**Phase 3 landed 2026-07-07 (this session).** Process + docs — the layer is now
+documented and discoverable. **Deliverables:** a new **PROCESS_OPTIONS.md
+"Trajectory / work-items layer"** section (placed in the §7 harness cluster after
+"Skills layer", with an *applies-when*): what a work item is, the
+`queued→active→done` lifecycle, how it complements the spine's *what* with the
+execution *how* (a WI is to an SR what a build step is to a spec; the two coexist —
+the CSV doesn't replace the prose), the registry schema, the two gate steps
+(validation + freshness), the offline-SVG render, and the opt-out/vacuous contract.
+The **STATUS.template.md** "Work items?" convention bullet (mirrors the "Parallel
+tracks?" opt-in line — the Next action names the next `WI-###`(s)). **README**
+kit-contents: three rows in `project-trajectory/README.md`
+(`work-items.template.csv`, `check_trajectory.py`, `gen_trajectory.py`) + the root
+`README.md` runnable-scripts entry. **Byte budget respected:** `PROCESS.md`
+(56,375 B) and `AGENTS.template.md` (9,976 B) **byte-for-byte unchanged** — no edit
+needed: §7 already links to `process-options.md` generally, and the section follows
+the "Parallel tracks" precedent (a process-options layer not separately named in
+PROCESS.md). SSOT held — the detail lives once in PROCESS_OPTIONS; the
+READMEs/STATUS point at it, never restate it. **Docs-only** — no script/behavior
+change, so arch-map + ruff were untouched. **No deviations.** **Gates:** `pytest -q`
+**393 passed, 2 skipped**; `check_docs --stale` clean (73 links, 0 broken — the two
+new README links resolve; the README-churn hints clear on commit); byte budgets
+flat. **Next: Phase 4** (dogfood — decompose this plan into a real `work-items.csv`
+by track + generate the kit's own dashboard).
+
 **Source (reference implementation).** Built and proven downstream in the
 **gilbert** repo (a kit adopter, synced to kit-version `767487c`): its WB19 thread
 `docs/whiteboard/19-trajectory-work-items.md` and `scripts/gen_trajectory.py`
@@ -4908,7 +4932,8 @@ exists in `system-requirements.csv` (**warn**, draft SRs are legitimate);
    (regenerate-in-memory + byte-compare, like `gen_arch_map --check`) wired into
    the generated-artifact freshness gate. Tests: deterministic generation; stale
    html trips `--check`.
-3. **Process + docs.** A PROCESS_OPTIONS "Trajectory / work-items layer" section
+3. ✅ **Process + docs** — **landed 2026-07-07** (see the Phase 3 record above).
+   A PROCESS_OPTIONS "Trajectory / work-items layer" section
    (what a WI is, the lifecycle, how it complements the spine's *what* with *how*,
    the offline-SVG render, the opt-out). `status.md` "points at next work items"
    convention. `README.md` kit-contents bullet + scaffold surface. **Byte budget:**
