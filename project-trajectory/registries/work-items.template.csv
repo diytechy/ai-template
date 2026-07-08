@@ -1,0 +1,2 @@
+WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable
+WI-000,EXAMPLE - delete on first real entry,track-name,SR-000,,queued,"How the work executes (the artifact this ships). Track = the lane it runs in; SR-Refs = the requirement id(s) it delivers; Predecessors = the WI id(s) it depends on (the DAG edges; ; -joined); Status = queued|active|done. Execution 'how' atop the spine's 'what' — a view, never a source of truth. This -000 row is inert (check_trajectory.py ignores it), so a fresh scaffold stays vacuously clean."

@@ -191,6 +191,18 @@ _No-stub / substance detector: flag implementations that only *exist* (process.m
 | `render_report(findings, n_files)` |  |  |
 | `main()` |  |  |
 
+### `scripts/check_trajectory`
+_Validate the work-item registry (docs/requirements/work-items.csv) — stdlib only._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `read_trajectory_enabled(root)` | Whether the trajectory check is on. `docs/trajectory-check` with the one |  |
+| `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. |  |
+| `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
+| `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
+| `load_known_srs(root)` | The set of real SR ids from system-requirements.csv (for the SR-ref warn). |  |
+| `main()` |  |  |
+
 ### `scripts/check_vendored`
 _Drift check for vendored third-party docs (stdlib only, network-gated, warn-first)._
 

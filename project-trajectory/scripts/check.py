@@ -161,6 +161,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "doc-navigability",
         "perf-budgets",
         "design-flows",
+        "trajectory",
         "arch-map",
     }
 )
@@ -453,6 +454,20 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "design-flows",
             (),
             [sys.executable, str(_SCRIPTS / "check_flows.py"), "--no-placeholders"],
+            {"G2", "G3"},
+            "process",
+        ),
+        # Work-item trajectory (process-options.md "Trajectory / work-items
+        # layer"): validates the execution DAG in docs/requirements/work-items.csv
+        # — id integrity, resolvable predecessors, an acyclic graph (SR refs warn).
+        # An OPT-OUT layer: an absent or placeholder-only registry passes
+        # vacuously and docs/trajectory-check `off` silences it, so a repo that
+        # never adopts it pays nothing (the docs/secrets-scan floor's posture).
+        # From G2 on, where execution planning has begun.
+        (
+            "trajectory",
+            (),
+            [sys.executable, str(_SCRIPTS / "check_trajectory.py")],
             {"G2", "G3"},
             "process",
         ),

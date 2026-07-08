@@ -29,30 +29,43 @@ sign-offs, verdicts) is [log.md](log.md).
   `check.py --gate G3` PASS; product coverage ~91%). **G3 human-ratified
   2026-07-07** (Peter Johnson, `docs/log.md`; G1+G2+G3 all ratified). **Thread 50**
   (trace.py SR/LLR citation-coherence check) landed; latest post-plan WI **WI-1.42**.
+  **Thread 52 Phase 1 landed 2026-07-07** — the work-items registry +
+  `check_trajectory.py` validator + the opt-out `trajectory` gate step.
 - **Open items:**
   - **Needs <human>**: _(none)_ — **G3 ratified 2026-07-07** (`docs/log.md`); the
     mechanized bar was met and reproduced, the owner signed off on the basis of
     spot checks + four adversarial review passes (findings resolved). Verification
     basis: 36/36 SRs mechanized, 0 attested.
-  - **In flight:** _(none)_
-  - **Queued (next):** **Thread 52** — Trajectory / work-items layer (upstreaming
-    gilbert WB19 · D19-6): a new **opt-out** kit layer — a `work-items.csv` registry
-    + a fully-offline generated trajectory dashboard (SVG icicle + plain-SVG DAG).
-    Phase-0 ruled (Peter 2026-07-07): **(A)** plain-SVG DAG in Python, **(B)**
-    opt-out, **(C)** dogfood by decomposing this plan into work-items by track.
-    **Start at Phase 1.** Full spec: `IMPROVEMENT_PLAN.md` → Thread 52.
+  - **In flight:** **Thread 52** — Trajectory / work-items layer (upstreaming
+    gilbert WB19 · D19-6). **Phase 1 landed 2026-07-07**:
+    `registries/work-items.template.csv` + `scripts/check_trajectory.py` (stdlib
+    validator — acyclic DAG, resolvable predecessors, SR-ref warn, id integrity)
+    + the **opt-out `trajectory` check.py step** ({G2,G3}, vacuous on a
+    placeholder-only/absent registry, `docs/trajectory-check: off` silences it).
+    **Phases 2–4 remain** (offline SVG dashboard · PROCESS_OPTIONS/docs · dogfood
+    reshuffle). Phase-0 rulings (Peter 2026-07-07) stand: **(A)** plain-SVG DAG in
+    Python, **(B)** opt-out, **(C)** dogfood this plan as work-items by track.
+  - **Queued (next):** _(none new — Thread 52 phases 2–4 are the active work; see
+    Next action)_
   - **Deferred (backlog):** **Thread 53** — `check_dupes.py` mechanical
     anti-duplication (upstream gilbert; strong candidate, unscheduled). **Thread 51**
     — a first-class TC test-evidence column (ruling pending). **WI-1.27** —
     coordinator working-tree stash/rollback on a hard-killed session
     (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
-- **Next action:** **Thread 52 Phase 1** — ship `registries/work-items.template.csv`
-  + the stdlib `--check` validator (acyclic DAG + resolvable predecessors/SR-refs) +
-  an opt-out gate step that skips vacuously on a placeholder registry; tests. Read
-  the **Thread 52** spec in `IMPROVEMENT_PLAN.md` (Phase-0 rulings baked in — don't
-  re-litigate). Reference impl: gilbert `scripts/gen_trajectory.py`
-  (`c:\Projects\gilbert`, kit-version 767487c) — **adapt to kit conventions, don't
-  copy**. Other milestones stay optional: **G-Release** walk, or **Thread 48/49**.
+- **Next action:** **Thread 52 Phase 2** — the **offline dashboard**. Port the SVG
+  **icicle** ~as-is from gilbert; **build the plain-SVG layered DAG** (Phase-0 ruling
+  A: topological rank → crossing-reduction → coordinate assignment → SVG with a few
+  lines of inline vanilla JS, **no CDN**); a vision header + definition/execution
+  %-meters; one self-contained `docs/trajectory.html`. Add a `--check` **freshness**
+  contract (regenerate-in-memory + byte-compare, like `gen_arch_map --check`) wired
+  into the generated-artifact freshness gate; the renderer **reuses
+  `check_trajectory.py`'s validation** (single source). Tests: deterministic
+  generation; stale html trips `--check`. Read the **Thread 52** spec in
+  `IMPROVEMENT_PLAN.md` (Phase-0 rulings baked in — don't re-litigate). Reference:
+  gilbert `scripts/gen_trajectory.py` (`c:\Projects\gilbert`, kit-version 767487c) —
+  **adapt, don't copy** (its DAG is CDN Cytoscape; ruling A forbids that — build the
+  SVG DAG in Python). Other milestones stay optional: **G-Release** walk, or
+  **Thread 48/49**.
 
 ## Scope
 

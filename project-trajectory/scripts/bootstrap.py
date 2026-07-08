@@ -33,10 +33,11 @@ What it creates in the destination:
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
     docs/requirements/assets.csv               <- registries/assets.template.csv
+    docs/requirements/work-items.csv           <- registries/work-items.template.csv
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, check_privacy.py, check_vendored.py, gen_arch_map.py,
-    scripts/gen_release_checklist.py, gen_cases.py
+    scripts/check_stubs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
+    scripts/gen_arch_map.py, gen_release_checklist.py, gen_cases.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1}                 <- dev-setup.template.* (workstation setup)
@@ -129,6 +130,18 @@ assets (art, music, voice, video) whose provenance/license/attribution/contract
 and a pointer+hash are tracked in text even though the asset itself can't be
 diffed. Its `ASSET-000` placeholder is inert; a project with no binary assets
 leaves it untouched. `trace.py` integrity-checks the `ASSET-` ids only.
+
+`docs/requirements/work-items.csv` (WI-###, process-options.md "Trajectory /
+work-items layer") is the machine-readable execution registry that complements
+the SN->SR->LLR->TC spine: each row is a work item decomposing *how* work runs —
+it delivers SR(s), sits on a track, and depends on predecessor WIs (the DAG
+edges), moving `queued->active->done`. `scripts/check_trajectory.py` validates it
+(id integrity, resolvable predecessors, an acyclic graph, SR refs that exist)
+as the `trajectory` gate step from G2 on. Like the always-on secrets floor it is
+OPT-OUT and vacuous by default: the shipped inert `WI-000` placeholder makes a
+fresh scaffold pass for free, and a repo that never wants the layer sets
+`docs/trajectory-check: off`. It is off-spine (like procurement / assets);
+`trace.py` does not read WI ids — `check_trajectory.py` owns them.
 
 `docs/privacy-check` (process-options.md "Commit identity & privacy") toggles
 the privacy gate: `false` (the scaffolded default — off) or `true` to scan the
@@ -919,6 +932,10 @@ MAPPING = [
         "registries/assets.template.csv",
         "docs/requirements/assets.csv",
     ),
+    (
+        "registries/work-items.template.csv",
+        "docs/requirements/work-items.csv",
+    ),
     ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
     ("scripts/trace.py", "scripts/trace.py"),
     ("scripts/check.py", "scripts/check.py"),
@@ -928,6 +945,7 @@ MAPPING = [
     ("scripts/check_stubs.py", "scripts/check_stubs.py"),
     ("scripts/check_privacy.py", "scripts/check_privacy.py"),
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
+    ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),

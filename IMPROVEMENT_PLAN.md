@@ -4783,11 +4783,39 @@ required/validated ruling; mechanical to implement once ruled.**
 
 ## Thread 52 — Trajectory / work-items layer (upstreaming gilbert WB19 · D19-6)
 
-**Status: 📋 SPEC — ruled 2026-07-07 (Peter); Phase-0 decisions baked in below,
-ready for a cold session to execute Phase 1 first.** A **new opt-out kit layer**:
-a machine-readable work-item registry + a generated, fully-offline trajectory
-dashboard. Bigger than Threads 48–51 — multi-phase, touches shipped templates, the
-spine, PROCESS_OPTIONS, and (Phase 4) the kit's own plan. **Downstream-migrating.**
+**Status: 🔄 Phase 1 landed 2026-07-07; phases 2–4 remain (SPEC below; Phase-0
+decisions baked in).** A **new opt-out kit layer**: a machine-readable work-item
+registry + a generated, fully-offline trajectory dashboard. Bigger than Threads
+48–51 — multi-phase, touches shipped templates, the spine, PROCESS_OPTIONS, and
+(Phase 4) the kit's own plan. **Downstream-migrating.**
+
+**Phase 1 landed 2026-07-07 (this session).** The registry + validation half,
+fully offline (no JS). **Deliverables:** `registries/work-items.template.csv` (the
+gilbert schema `WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable` + an
+inert `WI-000` example row); `scripts/check_trajectory.py` — a stdlib validator:
+WI-id shape + uniqueness, resolvable predecessors (**error**), an acyclic graph
+(**error**), existing SR-refs (**warn**, draft SRs are legit); wired as a
+**built-in `trajectory` `check.py` step** ({G2,G3}, process layer) that skips
+vacuously on an absent/placeholder-only registry and honors a `docs/trajectory-check:
+off` opt-out; `bootstrap.py` MAPPING + docstring (ships the template + script);
+`tests/test_bootstrap.py` file-list; `tests/test_trajectory.py` (13 cases: absent
++ placeholder vacuous, opt-out silences, valid DAG, two-node cycle, self-loop,
+unresolved predecessor, duplicate/malformed id, SR-ref warn/quiet, messy rows).
+Regenerated `docs/architecture.md` (the new script joined the meta-repo symbol
+map). **Decisions taken** (the spec left them open — "decide by size"): **(1)** a
+standalone `check_trajectory.py` in the `check_*` validator family, *not* growing
+`gen_trajectory.py --check` now — Phase 2's renderer reuses its validation, so each
+phase ships a whole artifact rather than a half-built generator; **(2)** a
+**built-in `check.py` step**, *not* a `[step:trajectory]` in the `stack.ini`
+template — this is a kit opt-out *layer* (the `docs/secrets-scan` posture), so it
+ships identically everywhere via take-wholesale `check.py`, never a per-repo profile
+line. **No deviations** from the spec's validation semantics. **Byte budgets:**
+untouched (no `AGENTS.template.md` / `PROCESS.md` edits — the PROCESS_OPTIONS
+section is Phase 3). **Gates:** `pytest -q` **384 passed, 2 skipped**;
+`check_docs.py --root . --stale` clean; `check_trajectory.py` 98% covered (only the
+shared `_utf8_console` reconfigure guard uncovered); the meta-repo (G3, no
+`work-items.csv` yet) passes the new step vacuously; `check.py --list --gate G3`
+shows `trajectory` at [G2,G3]. **Next: Phase 2** (the offline SVG dashboard).
 
 **Source (reference implementation).** Built and proven downstream in the
 **gilbert** repo (a kit adopter, synced to kit-version `767487c`): its WB19 thread
@@ -4834,7 +4862,8 @@ exists in `system-requirements.csv` (**warn**, draft SRs are legitimate);
 `WI-###` id shape + uniqueness (integrity, like `trace.py`).
 
 **Phases (separate commits; end each green — `pytest -q` + `check_docs`):**
-1. **Registry + validation (fully offline, no JS).** Ship
+1. ✅ **Registry + validation (fully offline, no JS)** — **landed 2026-07-07** (see
+   the Phase 1 record above). Ship
    `registries/work-items.template.csv` (+ `bootstrap.py` MAPPING + `test_bootstrap`
    file lists); port the validation half as `gen_trajectory.py --check` (or a
    `check_trajectory.py` — decide by size); wire an **opt-out** gate step
