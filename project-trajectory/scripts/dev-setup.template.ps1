@@ -102,6 +102,9 @@ Report "runtime (python)" $runtime "install a Python 3.8+ runtime"
 Report "git" (Have "git") "install git (needed to make reviewable changes)"
 Report "offline Markdown+Mermaid renderer" (RendererPresent) `
     "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
+$hooksPath = (git config --get core.hooksPath 2>$null)
+Report "pre-commit floor (core.hooksPath)" ($hooksPath -eq ".githooks") `
+    "run -Baseline (or: git config core.hooksPath .githooks)"
 
 foreach ($r in $selected) {
     Report "role: $r" (RolePresent $r) "fill `$Roles['$r'] Cmds/Install in the EDIT block for this role's tools"
@@ -134,6 +137,26 @@ if ($tier -eq "full") {
     else { Write-Host "  - IDE: headless/non-interactive; skipped (opt-in, -Full only)." }
 }
 
+# Wire the agent-neutral pre-commit process floor (core.hooksPath) — universal,
+# zero-dependency, reversible (process.md §7 / IMPROVEMENT_PLAN.md WI-1.42).
+# setup.ps1 wires it too (idempotent); doing it here protects a dev-setup-only
+# onboarding. Skipped cleanly outside a git repo or before the hook is scaffolded.
+if (Test-Path ".githooks/pre-commit") {
+    $null = git rev-parse --is-inside-work-tree 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        git config core.hooksPath .githooks
+        Write-Host "Enabled the pre-commit process floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
+    }
+}
+
+# A code contributor needs the product toolchain too (setup.ps1). Offer to chain
+# into it so onboarding is one command; a non-code role is not asked (WI-1.42).
+if (($selected -contains "code") -and (Interactive)) {
+    $ans = Read-Host "Run scripts/setup.ps1 now for the product toolchain (venv + test tools)? [y/N]"
+    if ($ans -match '^[Yy]') { & (Join-Path "scripts" "setup.ps1") }
+}
+
 Write-Host ""
-Write-Host "Done. Next: run scripts/setup.ps1 for the product toolchain, then"
+Write-Host "Done. Workstation ready; the pre-commit floor is wired."
+Write-Host "If you skipped it above, run scripts/setup.ps1 for the product toolchain, then"
 Write-Host ".\scripts\check.ps1 --gate G3 to run the gates."

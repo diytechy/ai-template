@@ -83,6 +83,20 @@ def _devsetup_check(scaffold, *extra):
     )
 
 
+def test_devsetup_wires_the_process_floor_and_offers_setup_chain(scaffold):
+    # WI-1.42: the pre-commit floor (core.hooksPath) is wired from the universal
+    # dev-setup rung — not only from setup.* — and a code contributor is offered
+    # the chain into setup for the product toolchain. Content on both launchers,
+    # plus the --check report line (stdin closed -> non-interactive -> no prompt).
+    for rel in DEVSETUP:
+        text = (scaffold / rel).read_text(encoding="utf-8")
+        assert "core.hooksPath .githooks" in text, rel + " does not wire the floor"
+        assert "pre-commit floor" in text, rel + " missing the floor report"
+        assert "Run scripts/setup" in text, rel + " missing the code-profile chain"
+    proc = _devsetup_check(scaffold)
+    assert "pre-commit floor (core.hooksPath)" in proc.stdout, proc.stdout
+
+
 def test_devsetup_default_reports_every_role(scaffold):
     # No --profile installs/reports every declared role (the owner ruling: the
     # default does everything; a role is the opt-down).

@@ -143,6 +143,9 @@ report "git"                        "$(have git && echo 1 || echo 0)" "install g
 report "offline Markdown+Mermaid renderer" \
        "$(renderer_present && echo 1 || echo 0)" \
        "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
+report "pre-commit floor (core.hooksPath)" \
+       "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" \
+       "run --baseline (or: git config core.hooksPath .githooks)"
 
 for r in $SELECTED; do
   report "role: $r" "$(role_present "$r" && echo 1 || echo 0)" \
@@ -183,6 +186,31 @@ if [ "$TIER" = "full" ]; then
   fi
 fi
 
+# Wire the agent-neutral pre-commit process floor (core.hooksPath) — universal,
+# zero-dependency, reversible, so every committer gets it from the rung they
+# actually run. setup.sh wires it too (idempotent); doing it here means a
+# contributor who onboards via dev-setup is protected without waiting to run setup
+# (process.md §7 / IMPROVEMENT_PLAN.md WI-1.42). Skipped cleanly outside a git repo
+# or before the hook is scaffolded.
+if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git config core.hooksPath .githooks
+  say "Enabled the pre-commit process floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
+fi
+
+# A code contributor needs the product toolchain too (setup.sh: venv + linters +
+# tests). Offer to chain into it so onboarding is one command; a non-code role
+# (e.g. an asset designer) is not asked (WI-1.42).
+case " $SELECTED " in
+  *" code "*)
+    if interactive; then
+      printf 'Run scripts/setup.sh now for the product toolchain (venv + test tools)? [y/N] '
+      read -r ans
+      case "$ans" in [Yy]*) sh scripts/setup.sh ;; *) say "  - skipped setup.sh (run it when ready)" ;; esac
+    fi
+    ;;
+esac
+
 say
-say "Done. Next: run scripts/setup.sh for the product toolchain, then"
+say "Done. Workstation ready; the pre-commit floor is wired."
+say "If you skipped it above, run scripts/setup.sh for the product toolchain, then"
 say "./scripts/check.sh --gate G3 to run the gates."
