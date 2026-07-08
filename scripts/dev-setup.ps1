@@ -9,7 +9,8 @@
 #
 # Usage:  powershell -ExecutionPolicy Bypass -File scripts\dev-setup.ps1 [-Check | -Install]
 #   -Check    (default) report what's present; install nothing.
-#   -Install  create .\.venv and install ruff + pytest into it (asks first).
+#   -Install  create .\.venv (ruff + pytest, asks first) AND wire the pre-commit
+#             process floor (core.hooksPath=.githooks; local + reversible).
 #
 # Linux/macOS contributors: use scripts/dev-setup.sh.
 param([switch]$Check, [switch]$Install)
@@ -39,6 +40,9 @@ try {
     Report "pytest (self-tests)" (HasModule "pytest") "pip install pytest (or run -Install)"
     Report "offline Mermaid renderer" ((Have "code") -or (Have "mmdc") -or (Have "npx")) `
         "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
+    $hooksPath = (git config --get core.hooksPath 2>$null)
+    Report "pre-commit floor (core.hooksPath)" ($hooksPath -eq ".githooks") `
+        "run -Install, or: git config core.hooksPath .githooks"
 
     if (-not $Install) {
         Write-Host ""
@@ -48,6 +52,16 @@ try {
 
     # --- -Install: consent-first venv + dev tools ----------------------------
     if (-not $py) { Write-Error "Python 3 not found on PATH; install it first."; exit 1 }
+
+    # Wire the agent-neutral pre-commit floor (setup.ps1 wires it downstream; this
+    # meta-repo folds it into dev-setup — IMPROVEMENT_PLAN WI-1.42). Independent of
+    # the venv install, so it happens even if that's declined. Reversible
+    # (git config --unset core.hooksPath); idempotent.
+    $null = git rev-parse --is-inside-work-tree 2>$null
+    if ((Test-Path ".githooks/pre-commit") -and ($LASTEXITCODE -eq 0)) {
+        git config core.hooksPath .githooks
+        Write-Host "Enabled pre-commit floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
+    }
     Write-Host ""
     $ans = Read-Host "Create .\.venv and install ruff + pytest into it? [y/N]"
     if ($ans -notmatch '^[Yy]') { Write-Host "Cancelled."; return }

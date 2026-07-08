@@ -10,7 +10,8 @@
 #
 # Usage:  sh scripts/dev-setup.sh [--check | --install]
 #   --check    (default) report what's present; install nothing.
-#   --install  create ./.venv and install ruff + pytest into it (asks first).
+#   --install  create ./.venv (ruff + pytest, asks first) AND wire the pre-commit
+#              process floor (core.hooksPath=.githooks; local + reversible).
 #
 # Windows contributors: use scripts/dev-setup.ps1.
 set -eu
@@ -37,6 +38,7 @@ report "git"               "$(have git && echo 1 || echo 0)" "install git"
 report "ruff (format/lint)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("ruff") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install ruff (or run --install)"
 report "pytest (self-tests)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("pytest") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest (or run --install)"
 report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } && echo 1 || echo 0)" "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
+report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" "run --install, or: git config core.hooksPath .githooks"
 
 if [ "$MODE" = "check" ]; then
   echo
@@ -46,6 +48,15 @@ fi
 
 # --- --install: consent-first venv + dev tools -------------------------------
 [ -n "$PY" ] || { echo "Python 3 not found on PATH; install it first." >&2; exit 1; }
+
+# Wire the agent-neutral pre-commit floor (the process-floor rung setup.sh wires
+# downstream; this meta-repo folds it into dev-setup — IMPROVEMENT_PLAN WI-1.42).
+# Independent of the venv install below, so it happens even if that's declined.
+# Local + reversible (git config --unset core.hooksPath); idempotent.
+if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git config core.hooksPath .githooks
+  echo "Enabled pre-commit floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
+fi
 echo
 printf 'Create ./.venv and install ruff + pytest into it? [y/N] '
 read -r ans

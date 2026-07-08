@@ -192,3 +192,17 @@ supersedes the "~82%" in the DRIVER block above (that figure was product+fixture
 measured unevenly). **Residual note:** the CI `gate` job's coverage path runs on
 Linux only and the branch is unmerged, so it is unproven on CI — but the mechanism
 is OS-agnostic and the margin is now wide. G3 human ratification still PENDING.
+
+### REVIEW — G3 — Post-WI-1.41 coverage + arch-map regen — 2026-07-07
+A second adversarial review (after WI-1.41) found `check.py --gate G3` actually
+**FAILing**: WI-1.41 reworked `check_docs.check_inventory`'s docstring but did not
+regenerate the code map, so the arch-map `--check` step (SN-021) reported
+`docs/architecture.md` STALE. Regenerated (one line) and independently reproduced
+**RESULT: PASS** (all 9 steps) from the committed state. The check_docs rework also
+added one uncovered branch, so product coverage is now **3273 stmts / 310 missed
+(90.53%)** — still 91%, still an 11-point margin over the 80 floor; this supersedes
+the "309 missed" above by append (that figure was correct when measured, pre-WI-1.41).
+Same review found the git-hook floor **dormant** here (no `.githooks/`,
+`core.hooksPath` unset); WI-1.42 (interim) added a layout-adapted `.githooks/pre-commit`
+and wired `core.hooksPath`, and `scripts/dev-setup.{sh,ps1}` now wire it on `--install`.
+G3 human ratification still PENDING.

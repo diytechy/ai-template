@@ -15,16 +15,22 @@ set -e
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SCRIPTS="$ROOT/project-trajectory/scripts"
 
-# Probe for a runnable Python 3 by RUNNING a candidate (not just finding it): on
-# Windows, `python3` can resolve to the Microsoft Store alias, which exists on
-# PATH but exits nonzero. Skip the floor rather than wedge a commit on a
-# Python-less machine — mirrors the shipped hook.
+# Interpreter resolution — prefer the project venv (dev-setup --install creates
+# ./.venv with ruff), so the format step actually RUNS instead of SKIP-on-missing-
+# tool; fall back to a PATH python otherwise. Probe by RUNNING a candidate (not
+# just finding it): on Windows `python3` can resolve to the Microsoft Store alias,
+# which is on PATH but exits nonzero. Never wedge a commit for lack of a runtime —
+# skip the floor. (This venv preference is the one intentional divergence from the
+# shipped hook; the floor STEPS still match — tests/test_meta_repo_hook.py.)
 PY=""
-for cand in python3 python; do
-  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
-    PY="$cand"; break
-  fi
+for venvpy in "$ROOT/.venv/bin/python" "$ROOT/.venv/Scripts/python.exe"; do
+  if [ -x "$venvpy" ] && "$venvpy" -c "" >/dev/null 2>&1; then PY="$venvpy"; break; fi
 done
+if [ -z "$PY" ]; then
+  for cand in python3 python; do
+    if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then PY="$cand"; break; fi
+  done
+fi
 if [ -z "$PY" ]; then
   echo "pre-commit: no runnable Python 3 on PATH; skipping process floor." >&2
   exit 0
