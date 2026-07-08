@@ -19,9 +19,12 @@
 # bundled sh, so this same file works on Windows, Linux, and macOS.
 set -e
 
-# Locate the repo root relative to the hook's own location (.githooks/../),
-# not the cwd (see the scripts/ note below for why cwd-relative paths bite).
-REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+# Locate the repo root. `git rev-parse --show-toplevel` is authoritative and works
+# regardless of where this hook file physically lives — so a repo whose harness is
+# elsewhere can DELEGATE to this one shipped hook (see KIT_SCRIPTS_DIR below,
+# IMPROVEMENT_PLAN.md WI-1.42). Fall back to the hook's own location (.githooks/../)
+# if rev-parse is unavailable.
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
 # Identity is no longer pinned by a repo file — the author-identity check is now
 # the privacy-layer step 3a below (Python, via check_privacy.py --author), run
@@ -30,35 +33,51 @@ REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 # Python-less machine no longer enforces it — deliberate, since that pin moved to
 # the user's own git config and what remains is a privacy check like the rest.
 
-# Find a Python 3 interpreter the same way setup.sh does (python3 then python).
-# Probe by *running* the candidate, not just finding it: on Windows, `python3`
-# often resolves to the Microsoft Store app-execution alias, which exists on
-# PATH but exits nonzero when Python isn't installed through it — existence
-# alone would wedge every commit on such machines.
+# Find a Python 3 interpreter. Prefer the project venv (setup.sh creates ./.venv
+# with the toolchain), so tool-backed steps like format actually RUN instead of
+# SKIP-on-missing-tool; fall back to a PATH python. Probe by *running* the
+# candidate, not just finding it: on Windows, `python3` often resolves to the
+# Microsoft Store app-execution alias, which exists on PATH but exits nonzero when
+# Python isn't installed through it — existence alone would wedge every commit.
 PY=""
-for cand in python3 python; do
-  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
-    PY="$cand"; break
-  fi
+for venvpy in "$REPO_ROOT/.venv/bin/python" "$REPO_ROOT/.venv/Scripts/python.exe"; do
+  if [ -x "$venvpy" ] && "$venvpy" -c "" >/dev/null 2>&1; then PY="$venvpy"; break; fi
 done
+if [ -z "$PY" ]; then
+  for cand in python3 python; do
+    if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+      PY="$cand"; break
+    fi
+  done
+fi
 if [ -z "$PY" ]; then
   echo "pre-commit: Python 3 not found on PATH; skipping process checks." >&2
   exit 0
 fi
 
-# Locate the scripts directory relative to the repo root rather than using a
-# bare "scripts/" cwd-relative string. NTFS is case-preserving: a repo whose
-# existing directory is "Scripts/" keeps that name, and bare "scripts/" fails
-# on case-sensitive Linux CI even though Windows never notices. Accept either
-# casing.
+# Locate the scripts directory. Default layout is scripts/ (what bootstrap
+# scaffolds). A repo whose harness lives elsewhere sets KIT_SCRIPTS_DIR (relative
+# to the repo root, or absolute) so this one shipped hook fits ANY layout — e.g.
+# the kit's own meta-repo, where the harness is under project-trajectory/scripts/
+# and .githooks/pre-commit is a two-line wrapper that sets the var and delegates
+# here (WI-1.42). NTFS is case-preserving: a repo whose dir is "Scripts/" keeps
+# that name and bare "scripts/" fails on case-sensitive Linux CI — accept either.
 SCRIPTS_DIR=""
-for sd in scripts Scripts; do
-  if [ -d "$REPO_ROOT/$sd" ]; then
-    SCRIPTS_DIR="$REPO_ROOT/$sd"; break
-  fi
-done
+if [ -n "${KIT_SCRIPTS_DIR:-}" ]; then
+  case "$KIT_SCRIPTS_DIR" in
+    /*) SCRIPTS_DIR="$KIT_SCRIPTS_DIR" ;;
+    *)  SCRIPTS_DIR="$REPO_ROOT/$KIT_SCRIPTS_DIR" ;;
+  esac
+fi
 if [ -z "$SCRIPTS_DIR" ]; then
-  echo "pre-commit: cannot find scripts/ dir under $REPO_ROOT; skipping process checks." >&2
+  for sd in scripts Scripts; do
+    if [ -d "$REPO_ROOT/$sd" ]; then
+      SCRIPTS_DIR="$REPO_ROOT/$sd"; break
+    fi
+  done
+fi
+if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
+  echo "pre-commit: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/) under $REPO_ROOT; skipping process checks." >&2
   exit 0
 fi
 

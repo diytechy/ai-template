@@ -129,6 +129,41 @@ def test_hook_runs_end_to_end_when_sh_available(scaffold):
     assert blocked.returncode != 0, blocked.stdout + blocked.stderr
 
 
+def test_hook_honors_kit_scripts_dir_override(scaffold):
+    # WI-1.42: a repo whose harness is not at scripts/ (e.g. the kit's own
+    # meta-repo, under project-trajectory/scripts/) points the shipped hook via
+    # KIT_SCRIPTS_DIR, so one hook fits any layout. Positive: an explicit override
+    # to the real dir runs green (the override branch produces a working
+    # SCRIPTS_DIR); negative: a bogus override skips CLEARLY (a wrong override must
+    # never silently pass as if the tree were clean).
+    sh = shutil.which("sh")
+    if not sh or not shutil.which("git"):
+        import pytest
+
+        pytest.skip("needs a POSIX shell and git on PATH")
+    make_minimal_project(scaffold)
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+
+    ok = subprocess.run(
+        [sh, HOOK],
+        cwd=str(scaffold),
+        capture_output=True,
+        text=True,
+        env=dict(os.environ, KIT_SCRIPTS_DIR="scripts"),
+    )
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+
+    bad = subprocess.run(
+        [sh, HOOK],
+        cwd=str(scaffold),
+        capture_output=True,
+        text=True,
+        env=dict(os.environ, KIT_SCRIPTS_DIR="nope-not-here"),
+    )
+    assert bad.returncode == 0, bad.stdout + bad.stderr  # skip, not crash
+    assert "cannot find" in bad.stderr.lower(), bad.stderr
+
+
 def test_hook_skips_clearly_when_no_working_python3(scaffold):
     # SN-013 / SR-021: python3 may resolve on PATH yet exit nonzero (the Windows
     # Store app-execution alias). The hook probes by *running* a candidate, so it

@@ -1,46 +1,14 @@
 #!/bin/sh
-# Pre-commit process floor — the ai-template META-REPO's own copy.
-#
-# WHY THIS EXISTS SEPARATELY: the kit ships project-trajectory/hooks/pre-commit,
-# but that hook locates the harness at $REPO_ROOT/scripts/check.py — the layout
-# it scaffolds DOWNSTREAM. In this meta-repo the harness IS the product, so it
-# lives under project-trajectory/scripts/ (this repo's scripts/ holds only
-# dev-setup). Same floor; only the scripts path differs. Folding this into the
-# onboarding ladder so any non-standard-layout adopter gets it for free without a
-# hand-adapted copy is tracked as IMPROVEMENT_PLAN WI-1.42.
+# Pre-commit floor for THIS repo (the ai-template meta-repo) — a thin WRAPPER, not
+# a copy. The kit's harness lives under project-trajectory/scripts/ (this repo's
+# scripts/ holds only dev-setup), so point the shipped floor there via
+# KIT_SCRIPTS_DIR and delegate to it. The floor logic AND the venv-preference now
+# live once in project-trajectory/hooks/pre-commit, so there is nothing here to
+# drift from the shipped hook (IMPROVEMENT_PLAN.md WI-1.42; was a hand copy).
 #
 # Enable:  git config core.hooksPath .githooks
 # Disable: git config --unset core.hooksPath
-set -e
-ROOT=$(cd "$(dirname "$0")/.." && pwd)
-SCRIPTS="$ROOT/project-trajectory/scripts"
-
-# Interpreter resolution — prefer the project venv (dev-setup --install creates
-# ./.venv with ruff), so the format step actually RUNS instead of SKIP-on-missing-
-# tool; fall back to a PATH python otherwise. Probe by RUNNING a candidate (not
-# just finding it): on Windows `python3` can resolve to the Microsoft Store alias,
-# which is on PATH but exits nonzero. Never wedge a commit for lack of a runtime —
-# skip the floor. (This venv preference is the one intentional divergence from the
-# shipped hook; the floor STEPS still match — tests/test_meta_repo_hook.py.)
-PY=""
-for venvpy in "$ROOT/.venv/bin/python" "$ROOT/.venv/Scripts/python.exe"; do
-  if [ -x "$venvpy" ] && "$venvpy" -c "" >/dev/null 2>&1; then PY="$venvpy"; break; fi
-done
-if [ -z "$PY" ]; then
-  for cand in python3 python; do
-    if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then PY="$cand"; break; fi
-  done
-fi
-if [ -z "$PY" ]; then
-  echo "pre-commit: no runnable Python 3 on PATH; skipping process floor." >&2
-  exit 0
-fi
-
-# The same fast, always-valid floor as project-trajectory/hooks/pre-commit,
-# pointed at this repo's product location. Each step exits nonzero on a real
-# finding (set -e aborts the commit); a missing tool is a SKIP, not a block.
-"$PY" "$SCRIPTS/check.py"         --run-step arch-map      # 1. generated code map is fresh
-"$PY" "$SCRIPTS/trace.py"         --strict-integrity       # 2. no duplicate / malformed ids
-"$PY" "$SCRIPTS/check_privacy.py" --root "$ROOT" --author  # 3a. author identity (no-op when privacy off)
-"$PY" "$SCRIPTS/check_privacy.py" --root "$ROOT"           # 3b. secrets floor + staged content scan
-"$PY" "$SCRIPTS/check.py"         --run-step format        # 4. formatter (SKIP if the tool is absent)
+KIT_SCRIPTS_DIR=project-trajectory/scripts
+export KIT_SCRIPTS_DIR
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || ROOT=$(cd "$(dirname "$0")/.." && pwd)
+exec sh "$ROOT/project-trajectory/hooks/pre-commit" "$@"
