@@ -21,50 +21,42 @@ sign-offs, verdicts) is [log.md](log.md).
   before every commit — this repo's standing gate. **The kit's own
   `SN→SR→LLR→TC` spine is self-adopted** (Thread 47): `docs/gate` is at **G3** —
   `check.py --gate G3` (format · lint · tests+coverage ≥80% · traceability ·
-  privacy · doc-nav · perf · flows · arch-map) is the full bar, and CI's `gate`
-  job runs it. Design history stays in the plan threads; the gate-walk record is
+  privacy · doc-nav · perf · flows · trajectory · arch-map · trajectory-map) is
+  the full bar, and CI's `gate` job runs it. The `trajectory` + `trajectory-map`
+  steps now run on **real data** — the meta-repo dogfoods its own trajectory layer
+  (Thread 52 P4). Design history stays in the plan threads; the gate-walk record is
   `docs/log.md`.
 - **Plan state:** **Thread 47 complete** — self-adoption phases 1–7 landed
   2026-07-07; meta-repo at **G3** (SN=22 SR=36 LLR=33 TC=36, 0 orphans;
   `check.py --gate G3` PASS; product coverage ~91%). **G3 human-ratified
   2026-07-07** (Peter Johnson, `docs/log.md`; G1+G2+G3 all ratified). **Thread 50**
   (trace.py SR/LLR citation-coherence check) landed; latest post-plan WI **WI-1.42**.
-  **Thread 52 Phase 1 landed 2026-07-07** — the work-items registry +
-  `check_trajectory.py` validator + the opt-out `trajectory` gate step.
+  **Thread 52 COMPLETE 2026-07-08** (all 4 phases) — the opt-out trajectory/
+  work-items layer: `work-items.csv` registry + `check_trajectory.py` +
+  `gen_trajectory.py` (offline SVG dashboard) + PROCESS_OPTIONS/README docs.
+  **Dogfooded (P4):** the meta-repo carries its own 37-WI
+  `docs/requirements/work-items.csv` + generated `docs/trajectory.html`
+  (Execution 86%, Definition 100%), gate-green on real data.
 - **Open items:**
   - **Needs <human>**: _(none)_ — **G3 ratified 2026-07-07** (`docs/log.md`); the
     mechanized bar was met and reproduced, the owner signed off on the basis of
     spot checks + four adversarial review passes (findings resolved). Verification
     basis: 36/36 SRs mechanized, 0 attested.
-  - **In flight:** **Thread 52** — Trajectory / work-items layer (upstreaming
-    gilbert WB19 · D19-6). **Phases 1–3 landed 2026-07-07**: **P1** the
-    `work-items.csv` registry + `check_trajectory.py` validator + the opt-out
-    `trajectory` gate step; **P2** `gen_trajectory.py` → a fully-offline
-    `docs/trajectory.html` (SVG icicle + **plain-SVG layered DAG in Python**, no
-    CDN) + the `trajectory-map` freshness gate ({G3}); **P3** the PROCESS_OPTIONS
-    "Trajectory / work-items layer" section + STATUS convention + README
-    kit-contents (PROCESS.md/AGENTS byte-flat). **Phase 4 remains** — dogfood:
-    decompose this plan into a real `work-items.csv` by track + generate the kit's
-    own dashboard. Phase-0 rulings (Peter 2026-07-07) stand.
-  - **Queued (next):** _(none new — Thread 52 phases 2–4 are the active work; see
-    Next action)_
+  - **In flight:** _(none)_ — **Thread 52 landed complete 2026-07-08** (commits
+    `07fd10f`/`6fa3236`/`49a5cf8` + P4; on `MultiRepoSupport`, not pushed).
+  - **Queued (next):** _(none scheduled)_
   - **Deferred (backlog):** **Thread 53** — `check_dupes.py` mechanical
     anti-duplication (upstream gilbert; strong candidate, unscheduled). **Thread 51**
     — a first-class TC test-evidence column (ruling pending). **WI-1.27** —
     coordinator working-tree stash/rollback on a hard-killed session
     (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
-- **Next action:** **Thread 52 Phase 4** — **dogfood the layer (ruling C).** Author
-  `docs/requirements/work-items.csv` for the kit itself: map the landed Threads +
-  `WI-1.x` into `WI-###` rows organized **by track** (e.g. `scripts`,
-  `docs/process`, `self-adoption`, `unattended`) with predecessors + SR-refs;
-  reconcile with the existing Thread/`WI-1.x` numbering (**map, don't renumber
-  blindly** — likely coexist: the CSV is the machine-readable execution registry
-  beside the prose plan). Then generate the kit's own `docs/trajectory.html` and let
-  the `trajectory` + `trajectory-map` gate steps go green on **real** data (vacuous
-  today). Owner accepts this is a deep reshuffle — stage it LAST, now that the
-  tooling (P1–P3) validates it. Read the **Thread 52** spec in `IMPROVEMENT_PLAN.md`
-  (Phase-0 ruling C). Other milestones stay optional: **G-Release** walk, or
-  **Thread 48/49**.
+- **Next action:** _(none scheduled — **Thread 52 complete**; the kit's trajectory
+  layer is built, documented, and dogfooded on real data.)_ Optional next
+  milestones, owner's pick: a **G-Release** walk; **rule Thread 51** (TC
+  test-evidence column) or **schedule Thread 53** (`check_dupes.py`); or review the
+  kit's own [`docs/trajectory.html`](trajectory.html) and refine the 37-WI
+  `docs/requirements/work-items.csv` mapping (granularity/edges are a first honest
+  pass — see the Thread 52 Phase 4 record in `IMPROVEMENT_PLAN.md`).
 
 ## Scope
 

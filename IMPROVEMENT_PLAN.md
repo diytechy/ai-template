@@ -4783,8 +4783,9 @@ required/validated ruling; mechanical to implement once ruled.**
 
 ## Thread 52 — Trajectory / work-items layer (upstreaming gilbert WB19 · D19-6)
 
-**Status: 🔄 Phases 1–3 landed 2026-07-07; phase 4 remains (SPEC below; Phase-0
-decisions baked in).** A **new opt-out kit layer**: a machine-readable work-item
+**Status: ✅ COMPLETE — all 4 phases landed (P1–P3 2026-07-07, P4 2026-07-08);
+the layer is built, documented, and dogfooded on real data. Records below.** A
+**new opt-out kit layer**: a machine-readable work-item
 registry + a generated, fully-offline trajectory dashboard. Bigger than Threads
 48–51 — multi-phase, touches shipped templates, the spine, PROCESS_OPTIONS, and
 (Phase 4) the kit's own plan. **Downstream-migrating.**
@@ -4871,6 +4872,35 @@ new README links resolve; the README-churn hints clear on commit); byte budgets
 flat. **Next: Phase 4** (dogfood — decompose this plan into a real `work-items.csv`
 by track + generate the kit's own dashboard).
 
+**Phase 4 landed 2026-07-08 (this session) — Thread 52 COMPLETE.** The dogfood:
+the kit now runs its own trajectory layer on real data. **Deliverables:**
+`docs/requirements/work-items.csv` — **37 work items** mapping the kit's landed
+history into a real DAG across four tracks (`scripts`, `docs`, `unattended`,
+`self-adoption`), covering **all 36 SRs** (every SR delivered by a WI, none
+dangling), with `active` = the trajectory P4 dogfood (this work) and `queued` =
+the deferred/backlog threads (48/49/51/53). Generated the kit's own
+`docs/trajectory.html` (≈114 KB, fully offline): the icicle shows the real spine
+(22 SN / 36 SR / 33 LLR / 36 TC), the DAG lays out **37 nodes across 10 dependency
+ranks** (foundation → frontier) with **zero node overlaps**; **Execution 86 %**
+(32/37 done), **Definition 100 %** (36/36 SRs Verified). **Mapping approach**
+(ruling C, "map, don't renumber blindly"): coherent-deliverable granularity — one
+WI per thread or tight cluster, each naming its source thread(s)/`WI-1.x` in the
+Deliverable column — rather than a 1:1 blow-up of all 54 threads + 42 `WI-1.x`
+(~96 arbitrary nodes); the CSV is the machine-readable execution registry that
+**coexists** with the prose plan (an SR row vs the thread that argued it). **Gate
+now green on REAL data:** `trajectory` (validation) + `trajectory-map` (freshness)
+were vacuous before — they now validate the 37-WI registry and byte-check the
+committed dashboard. `trace.py` unaffected (WI is off-spine, SN=22 SR=36 LLR=33
+TC=36 orphans=0); `check_docs` does not touch the `.html`; arch-map + ruff untouched
+(no script change). `CLAUDE.md` repo-map now names the self-adopted
+`work-items.csv` + `trajectory.html`. **No deviations** from the spec; the mapping
+granularity is a documented **first honest pass**, open to owner refinement.
+**Verified:** deterministic (byte-identical regen → stable `--check`); every DAG
+edge resolves; the full spine renders in the icicle. **Gates:** `pytest -q`
+**393 passed, 2 skipped**; `check_docs --stale` clean; `check_trajectory` +
+`gen_trajectory --check` green on the meta-repo. **Thread 52 done** — the
+trajectory/work-items layer ships and the kit demonstrates it on itself.
+
 **Source (reference implementation).** Built and proven downstream in the
 **gilbert** repo (a kit adopter, synced to kit-version `767487c`): its WB19 thread
 `docs/whiteboard/19-trajectory-work-items.md` and `scripts/gen_trajectory.py`
@@ -4938,7 +4968,8 @@ exists in `system-requirements.csv` (**warn**, draft SRs are legitimate);
    the offline-SVG render, the opt-out). `status.md` "points at next work items"
    convention. `README.md` kit-contents bullet + scaffold surface. **Byte budget:**
    keep PROCESS.md flat — detail goes to PROCESS_OPTIONS (§7 already links there).
-4. **Dogfood reshuffle (ruling C).** Author `docs/requirements/work-items.csv` for
+4. ✅ **Dogfood reshuffle (ruling C)** — **landed 2026-07-08** (see the Phase 4
+   record above). Author `docs/requirements/work-items.csv` for
    the kit itself: map landed Threads + `WI-1.x` into `WI-###` rows with tracks
    (e.g. `scripts`, `docs/process`, `self-adoption`, `unattended`) + predecessors +
    SR-refs; generate the kit's own `docs/trajectory.html`; the gate goes green on

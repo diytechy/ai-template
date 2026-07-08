@@ -91,7 +91,11 @@ that easier to achieve in a real project — or get out of the way.
   + `system-requirements.csv` + `low-level-requirements.csv` +
   `docs/test/test-cases.csv` + [`docs/architecture.md`](docs/architecture.md)
   (one-page + the G2 Runtime flows) + `docs/gate` + `docs/stack.ini` +
-  `docs/log.md` — the kit **traced with its own process**, its "product" being
+  `docs/log.md` + `docs/requirements/work-items.csv` + `docs/trajectory.html`
+  (the **Thread 52 trajectory layer, dogfooded** — the kit's own work-item DAG +
+  its generated, freshness-gated dashboard; regenerate with
+  `python project-trajectory/scripts/gen_trajectory.py` after editing the registry
+  or the spine) — the kit **traced with its own process**, its "product" being
   `project-trajectory/scripts` + `tests/`. Keep these **distinct from the
   templates the kit ships** in `project-trajectory/registries/`: those are the
   blank forms an adopter fills; these are the kit's *own, filled* registries.
