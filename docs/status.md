@@ -39,10 +39,11 @@ sign-offs, verdicts) is [log.md](log.md).
     column (surfaced by the Thread 47 dogfood; ruling pending). **WI-1.27** —
     coordinator working-tree stash/rollback on a hard-killed session
     (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
-- **Next action:** _(none queued)_ — Thread 47 done and **G3 ratified**. Optional
-  next milestones: land **WI-1.42** (onboarding-floor redesign), a **G-Release**
-  walk if/when the kit cuts a tagged release; otherwise pick up **Thread 48/49/51**
-  from the plan.
+- **Next action:** _(none queued)_ — Thread 47 done, **G3 ratified**, **WI-1.42
+  landed** (onboarding-floor redesign: dev-setup wires the pre-commit floor;
+  shipped hook generalized via `KIT_SCRIPTS_DIR`; SR-032 tightened). Optional next
+  milestones: a **G-Release** walk if/when the kit cuts a tagged release; otherwise
+  pick up **Thread 48/49/51** from the plan.
 
 ## Scope
 

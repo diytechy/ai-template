@@ -586,6 +586,18 @@ installer — so a contributor (including a non-code one, whose deliverable is s
 a reviewable git change) can go from a bare machine to an editable, testable
 checkout without needing prior git literacy.
 
+**The pre-commit floor is wired from `dev-setup`, not only `setup`** (WI-1.42).
+Enabling the git-hook process floor (`git config core.hooksPath .githooks`) is
+universal (every committer wants it, including a non-code one), zero-dependency,
+and reversible — so `dev-setup --baseline` wires it, and `setup` wires it too
+(idempotent), meaning a contributor is protected from the rung they actually run
+rather than only if they reach `setup`. A code contributor's `dev-setup` also
+offers to chain into `setup` for the product toolchain, so onboarding is one
+command; a non-code role is not asked. The shipped `hooks/pre-commit` finds the
+harness at `scripts/` by default; a repo whose harness lives elsewhere (the kit's
+own meta-repo, under `project-trajectory/scripts/`) points it there with
+`KIT_SCRIPTS_DIR` and a two-line wrapper, so one shipped hook fits any layout.
+
 **The evaluator's rungs — README + run launchers.** The ladder above serves the
 *contributor*; a project also has *evaluators* — the stakeholder, a tester, the
 future you — whose path is shorter: understand it, then run it. Two artifacts

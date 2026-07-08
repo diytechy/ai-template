@@ -6270,7 +6270,7 @@ continuity (same style as the session log above).
 > `check_docs --root . --stale`: OK, 0 broken. Byte deltas: AGENTS.template.md /
 > PROCESS.md untouched.
 
-> **WI-1.42 ⬜ PROPOSED (2026-07-07) · Arm the process floor from the universal
+> **WI-1.42 ✅ landed 2026-07-07 · Arm the process floor from the universal
 > onboarding rung (not only from `setup`).** Surfaced by an adversarial G3
 > review: the meta-repo shipped with its git-hook floor **dormant**
 > (`core.hooksPath` unset, no `.githooks/`), so WI-1.41's docstring edit staled
@@ -6311,6 +6311,34 @@ continuity (same style as the session log above).
 > the meta-repo's floor is finally live (verified: passes clean, blocks a staged
 > stale map). commit-msg/pre-push adaptation is deferred to this WI —
 > `docs/privacy-check` is `false` here, so those hooks are ~no-ops today.
+>
+> **Landed 2026-07-07 (this session, 3 commits).** All items done:
+> **(4)** `hooks/pre-commit` generalized — `REPO_ROOT` via `git rev-parse` (so a
+> wrapper can delegate), an optional `KIT_SCRIPTS_DIR` override (relative or
+> absolute; a bad value skips clearly, never a silent pass), and the venv-preference
+> moved here so it is single-sourced for every repo. The meta-repo's
+> `.githooks/pre-commit` is now a 14-line WRAPPER (was a 46-line hand copy),
+> delegating with `KIT_SCRIPTS_DIR=project-trajectory/scripts` — retiring
+> adversarial findings #2 (hand-copy drift) and #3 (venv-preference) for good.
+> **(1)** `dev-setup.template.{sh,ps1}` now wire `core.hooksPath` from `--baseline`
+> and report floor status on `--check`. **(2)** a code-profile `dev-setup` offers to
+> chain into `setup`; a non-code role is not asked. **(3)** SR-032 + LLR-032 + TC-032
+> tightened to assert dev-setup wires the floor (spine stays 0-orphan/0-schema);
+> `test_onboard_devsetup` gains a floor+chain test; `test_pre_commit_hook` gains an
+> override test. **(5)** the boundary-note detail went to **PROCESS_OPTIONS §7**
+> (PROCESS.md §7 already links there), so the **byte-budgeted PROCESS.md /
+> AGENTS.template.md are untouched**.
+> **Deviation from spec:** item 1's "single-source the wiring in a shared helper"
+> was NOT done as a new scaffolded file — the wiring is a 3-line idempotent
+> `git config`, so duplicating it across `setup` + `dev-setup` beats adding scaffold
+> surface + a bootstrap MAPPING entry for a trivially-stable command.
+> **⚠ Downstream:** a re-sync overwrites `hooks/pre-commit` + `dev-setup.template.*`
+> (kit-owned); a standard `scripts/` layout is behavior-identical (override unset)
+> plus the venv-preference + rev-parse robustness; an adopter who hand-customized
+> `dev-setup` re-merges. `core.hooksPath` stays local/opt-in/reversible.
+> `check.py --gate G3` → **PASS** (9/9); `pytest -q` **371 passed, 2 skipped**;
+> coverage **90.56%** (3273/309); trace SN=22 SR=36 LLR=33 TC=36, 0 orphans.
+> Byte-budgeted files untouched.
 
 ### Session protocol (for a cold session pointed only at this file)
 
