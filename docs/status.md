@@ -26,20 +26,23 @@ sign-offs, verdicts) is [log.md](log.md).
   `docs/log.md`.
 - **Plan state:** **Thread 47 complete** — self-adoption phases 1–7 landed
   2026-07-07; meta-repo at **G3** (SN=22 SR=36 LLR=33 TC=36, 0 orphans;
-  `check.py --gate G3` PASS; product coverage ~91%). **Thread 50** (trace.py
-  SR/LLR citation-coherence check) landed; latest post-plan WI **WI-1.40**.
+  `check.py --gate G3` PASS; product coverage ~91%). **G3 human-ratified
+  2026-07-07** (Peter Johnson, `docs/log.md`; G1+G2+G3 all ratified). **Thread 50**
+  (trace.py SR/LLR citation-coherence check) landed; latest post-plan WI **WI-1.42**.
 - **Open items:**
-  - **Needs <human>**: **G3 gate ratification** (`docs/gate-policy` = attended —
-    the mechanized G3 bar is met; the maintainer's attested sign-off in
-    `docs/log.md` is outstanding; G1+G2 already ratified 2026-07-07).
+  - **Needs <human>**: _(none)_ — **G3 ratified 2026-07-07** (`docs/log.md`); the
+    mechanized bar was met and reproduced, the owner signed off on the basis of
+    spot checks + four adversarial review passes (findings resolved). Verification
+    basis: 36/36 SRs mechanized, 0 attested.
   - **In flight:** _(none)_
   - **Deferred (backlog):** **Thread 51** — a first-class TC test-evidence
     column (surfaced by the Thread 47 dogfood; ruling pending). **WI-1.27** —
     coordinator working-tree stash/rollback on a hard-killed session
     (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
-- **Next action:** _(none queued)_ — Thread 47 is done. Optional next milestones:
-  the **G3 human ratification**, then a **G-Release** walk if/when the kit cuts a
-  tagged release; otherwise pick up **Thread 48/49/51** from the plan.
+- **Next action:** _(none queued)_ — Thread 47 done and **G3 ratified**. Optional
+  next milestones: land **WI-1.42** (onboarding-floor redesign), a **G-Release**
+  walk if/when the kit cuts a tagged release; otherwise pick up **Thread 48/49/51**
+  from the plan.
 
 ## Scope
 

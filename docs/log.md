@@ -18,7 +18,7 @@ applying that design to the kit itself.
 |---|---|---|---|---|---|
 | G1 — Requirements/UX/Constraints | MET 2026-07-07 | MET 2026-07-07 | MET 2026-07-07 | n/a | ✅ Peter Johnson 2026-07-07 |
 | G2 — Decomposition & Test Coverage | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | ✅ Peter Johnson 2026-07-07 |
-| G3 — Implementation | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | PENDING (attended) |
+| G3 — Implementation | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | ✅ Peter Johnson 2026-07-07 |
 
 ## Decisions log
 
@@ -206,3 +206,34 @@ Same review found the git-hook floor **dormant** here (no `.githooks/`,
 `core.hooksPath` unset); WI-1.42 (interim) added a layout-adapted `.githooks/pre-commit`
 and wired `core.hooksPath`, and `scripts/dev-setup.{sh,ps1}` now wire it on `--install`.
 G3 human ratification still PENDING.
+
+### RATIFICATION — G3 — Human sign-off (attended) — 2026-07-07
+**Peter Johnson (owner/maintainer) ratifies G3.** `docs/gate-policy` = attended,
+so the mechanized G3 bar requires a named human's sign-off; recorded here. This
+resolves the sign-off outstanding since the DRIVER G3 walk (`docs/gate` was bumped
+to **G3** during Thread 47; this is the deferred human ratification, not a bump).
+
+**Basis of ratification (stated honestly):**
+- **Mechanized bar reproduced independently.** `check.py --gate G3` → **RESULT:
+  PASS** — all 9 steps (format · lint · tests+coverage · traceability · privacy ·
+  doc-nav · perf · flows · arch-map), reproduced from committed HEAD (`pytest`:
+  368 passed, 2 skipped; product coverage **90.53%** ≥ 80 floor; trace SN=22 SR=36
+  LLR=33 TC=36, 0 orphans / integrity / schema / placeholder findings).
+- **Four adversarial review passes, findings resolved** (see the REVIEW entries
+  above): (1) a STALE arch-map that had G3 *actually FAILing* — regenerated;
+  (2) the git-hook floor dormant — armed (`.githooks/pre-commit` + dev-setup
+  wiring, WI-1.42 interim); (3) `.venv/` unignored — fixed; (4) came back clean
+  save one LOW-severity doc-framing note.
+- **Owner spot checks + the recorded review feedback** — ratified on that basis,
+  **not** an exhaustive independent human re-derivation. The trust rests on the
+  reproduced mechanized bar plus the review trail, sign-off by the named owner.
+
+**Verification basis (attested vs mechanized — trace.py §4):** of 36 Verified SRs,
+**36 mechanized, 0 attested** (33 Test · 1 Analysis · 2 Inspection — none rest on a
+human `Attest`). The trust footprint is fully mechanical; nothing hidden behind an
+attestation.
+
+**Residual (disclosed, not blockers):** the CI `gate` job's coverage path is
+Linux-only and this branch is unmerged (mechanism is OS-agnostic); the kit-level
+onboarding-floor redesign stays tracked as **WI-1.42 (PROPOSED)**. No push
+(`docs/push-policy` = human). **G3 is RATIFIED.**
