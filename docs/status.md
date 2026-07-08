@@ -50,13 +50,16 @@ sign-offs, verdicts) is [log.md](log.md).
     — a first-class TC test-evidence column (ruling pending). **WI-1.27** —
     coordinator working-tree stash/rollback on a hard-killed session
     (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
-- **Next action:** _(none scheduled — **Thread 52 complete**; the kit's trajectory
-  layer is built, documented, and dogfooded on real data.)_ Optional next
-  milestones, owner's pick: a **G-Release** walk; **rule Thread 51** (TC
-  test-evidence column) or **schedule Thread 53** (`check_dupes.py`); or review the
-  kit's own [`docs/trajectory.html`](trajectory.html) and refine the 37-WI
-  `docs/requirements/work-items.csv` mapping (granularity/edges are a first honest
-  pass — see the Thread 52 Phase 4 record in `IMPROVEMENT_PLAN.md`).
+- **Next action:** **Triage the Thread 52 adversarial review** —
+  [`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md) (8 verified findings F1–F8, with
+  full context, repro commands, deeper-change threads, and suggested sequencing).
+  Headlines: **F1 (HIGH)** — the trajectory layer's own code (`check_trajectory.py`,
+  `gen_trajectory.py`) is the *only* product code untraced in the self-adopted
+  spine, and `trace.py` structurally can't see it; **F2 (MEDIUM)** —
+  `trajectory.html` staleness is caught only in CI, not by the pre-commit hook.
+  **F1 needs an owner call** on re-attesting the G3 spine before an agent adds
+  `SR-037/038`. Optional milestones after triage: **G-Release** walk; rule
+  **Thread 51** / schedule **Thread 53**; refine the 37-WI mapping (F3).
 
 ## Scope
 
