@@ -35,15 +35,24 @@ sign-offs, verdicts) is [log.md](log.md).
     spot checks + four adversarial review passes (findings resolved). Verification
     basis: 36/36 SRs mechanized, 0 attested.
   - **In flight:** _(none)_
-  - **Deferred (backlog):** **Thread 51** — a first-class TC test-evidence
-    column (surfaced by the Thread 47 dogfood; ruling pending). **WI-1.27** —
+  - **Queued (next):** **Thread 52** — Trajectory / work-items layer (upstreaming
+    gilbert WB19 · D19-6): a new **opt-out** kit layer — a `work-items.csv` registry
+    + a fully-offline generated trajectory dashboard (SVG icicle + plain-SVG DAG).
+    Phase-0 ruled (Peter 2026-07-07): **(A)** plain-SVG DAG in Python, **(B)**
+    opt-out, **(C)** dogfood by decomposing this plan into work-items by track.
+    **Start at Phase 1.** Full spec: `IMPROVEMENT_PLAN.md` → Thread 52.
+  - **Deferred (backlog):** **Thread 53** — `check_dupes.py` mechanical
+    anti-duplication (upstream gilbert; strong candidate, unscheduled). **Thread 51**
+    — a first-class TC test-evidence column (ruling pending). **WI-1.27** —
     coordinator working-tree stash/rollback on a hard-killed session
     (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
-- **Next action:** _(none queued)_ — Thread 47 done, **G3 ratified**, **WI-1.42
-  landed** (onboarding-floor redesign: dev-setup wires the pre-commit floor;
-  shipped hook generalized via `KIT_SCRIPTS_DIR`; SR-032 tightened). Optional next
-  milestones: a **G-Release** walk if/when the kit cuts a tagged release; otherwise
-  pick up **Thread 48/49/51** from the plan.
+- **Next action:** **Thread 52 Phase 1** — ship `registries/work-items.template.csv`
+  + the stdlib `--check` validator (acyclic DAG + resolvable predecessors/SR-refs) +
+  an opt-out gate step that skips vacuously on a placeholder registry; tests. Read
+  the **Thread 52** spec in `IMPROVEMENT_PLAN.md` (Phase-0 rulings baked in — don't
+  re-litigate). Reference impl: gilbert `scripts/gen_trajectory.py`
+  (`c:\Projects\gilbert`, kit-version 767487c) — **adapt to kit conventions, don't
+  copy**. Other milestones stay optional: **G-Release** walk, or **Thread 48/49**.
 
 ## Scope
 

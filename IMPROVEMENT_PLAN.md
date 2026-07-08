@@ -4781,6 +4781,133 @@ required/validated ruling; mechanical to implement once ruled.**
 
 ---
 
+## Thread 52 — Trajectory / work-items layer (upstreaming gilbert WB19 · D19-6)
+
+**Status: 📋 SPEC — ruled 2026-07-07 (Peter); Phase-0 decisions baked in below,
+ready for a cold session to execute Phase 1 first.** A **new opt-out kit layer**:
+a machine-readable work-item registry + a generated, fully-offline trajectory
+dashboard. Bigger than Threads 48–51 — multi-phase, touches shipped templates, the
+spine, PROCESS_OPTIONS, and (Phase 4) the kit's own plan. **Downstream-migrating.**
+
+**Source (reference implementation).** Built and proven downstream in the
+**gilbert** repo (a kit adopter, synced to kit-version `767487c`): its WB19 thread
+`docs/whiteboard/19-trajectory-work-items.md` and `scripts/gen_trajectory.py`
+(719 lines, stdlib-only) → `docs/trajectory.html`. gilbert flagged **D19-6
+"upstream"** as open; this thread is that upstreaming. The repo is on the owner's
+machine at `c:\Projects\gilbert` — consult it as the reference, but **adapt to
+current kit conventions** (arg style, `rel()`/`blank_fenced` helpers, `--check`
+exit semantics); gilbert is `767487c`-old, so diff, don't copy verbatim.
+
+**The gap it fills.** The spine answers *what must be true* (SN→SR→LLR→TC). No kit
+artifact carries **execution "how"** — cross-track order, which deliverable gates
+which, where tracks meet, %-complete. A **work item** (`WI-###`) decomposes how
+work executes: it delivers SR(s), sits on a **track**, depends on **predecessor**
+WIs (the DAG edges), and moves `queued→active→done`. The dashboard is a *view*
+(text is truth; `trace.py`/`gen_arch_map` idiom) — never a source of truth.
+
+**Phase-0 rulings (Peter, 2026-07-07) — do NOT re-litigate:**
+- **(A) DAG render = plain SVG computed in Python.** No Cytoscape/ELK/CDN — the
+  kit's offline-render principle forbids cloud-loaded legibility (gilbert's CDN
+  version is out). Implement a **layered-DAG layout in stdlib**: topological rank →
+  node ordering to reduce edge crossings → coordinate assignment → emit SVG with
+  hover/click via a few lines of inline vanilla JS (CSP-safe, no libs). The
+  SN→SR→LLR→TC **icicle** view is already plain SVG in gilbert — port ~as-is.
+- **(B) Opt-out positioning** (mirrors WI-1.41 README-coverage). On by default; a
+  fresh scaffold with only a `-000` placeholder WI is **vacuously clean**; a repo
+  that never wants it opts out with a toggle (`docs/trajectory-check: off`, like
+  `docs/secrets-scan`). Costs a non-user nothing but ships present.
+- **(C) The kit dogfoods it** (Phase 4) — decompose THIS `IMPROVEMENT_PLAN.md`'s
+  Threads/`WI-1.x` into a real `docs/requirements/work-items.csv` organized **by
+  track**, so the kit's own history demonstrates the DAG. Owner accepts this is a
+  deep reshuffle; stage it LAST, once the tooling validates it. Reconcile with the
+  existing `WI-1.x`/Thread numbering (map, don't renumber blindly).
+
+**Registry schema** (gilbert's, adopt as-is): `work-items.csv` columns
+`WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable`. `Status ∈
+{queued,active,done}`; `Predecessors`/`SR-Refs` are `;`-joined id lists;
+a `-000` placeholder row ships in the template.
+
+**Validation (`--check`, the Phase-1 core — pure stdlib):** every `Predecessors`
+id resolves to a real WI (**error**); the WI graph is **acyclic** (a cycle is an
+**error** — a trajectory that depends on itself can't start); every `SR-Refs` id
+exists in `system-requirements.csv` (**warn**, draft SRs are legitimate);
+`WI-###` id shape + uniqueness (integrity, like `trace.py`).
+
+**Phases (separate commits; end each green — `pytest -q` + `check_docs`):**
+1. **Registry + validation (fully offline, no JS).** Ship
+   `registries/work-items.template.csv` (+ `bootstrap.py` MAPPING + `test_bootstrap`
+   file lists); port the validation half as `gen_trajectory.py --check` (or a
+   `check_trajectory.py` — decide by size); wire an **opt-out** gate step
+   (`[step:trajectory]` in the `stack.ini` template, or a built-in check.py step)
+   that **skips vacuously** on a placeholder-only registry and honors the opt-out
+   toggle; `tests/test_trajectory.py` (cycle fails, unresolved predecessor fails,
+   dangling SR-ref warns, placeholder-only passes, opt-out silences).
+2. **Offline dashboard.** Port the SVG **icicle** ~as-is; **build the plain-SVG
+   layered DAG** (ruling A); vision header + definition/execution %-meters; one
+   self-contained `docs/trajectory.html`. Add a `--check` **freshness** contract
+   (regenerate-in-memory + byte-compare, like `gen_arch_map --check`) wired into
+   the generated-artifact freshness gate. Tests: deterministic generation; stale
+   html trips `--check`.
+3. **Process + docs.** A PROCESS_OPTIONS "Trajectory / work-items layer" section
+   (what a WI is, the lifecycle, how it complements the spine's *what* with *how*,
+   the offline-SVG render, the opt-out). `status.md` "points at next work items"
+   convention. `README.md` kit-contents bullet + scaffold surface. **Byte budget:**
+   keep PROCESS.md flat — detail goes to PROCESS_OPTIONS (§7 already links there).
+4. **Dogfood reshuffle (ruling C).** Author `docs/requirements/work-items.csv` for
+   the kit itself: map landed Threads + `WI-1.x` into `WI-###` rows with tracks
+   (e.g. `scripts`, `docs/process`, `self-adoption`, `unattended`) + predecessors +
+   SR-refs; generate the kit's own `docs/trajectory.html`; the gate goes green on
+   real data. Validates the layer end-to-end and demonstrates the capability.
+
+**Risks / watch-items.**
+- **WI-registry vs the kit's existing WI/Thread log** — the subtle one. Decide
+  whether `work-items.csv` *replaces* or *coexists with* the prose log; likely
+  coexist: the CSV is the machine-readable execution registry, the prose thread
+  stays as the "why" (like an SR row vs the thread that argued it).
+- **Layered-SVG layout** (Phase 2) is the real build; crossing-reduction is
+  heuristic — keep it **deterministic** (stable output, so `--check` is byte-stable;
+  sort everything, no clocks/time-hashes). Both SVG views must regenerate identically.
+- **Opt-out semantics** must match WI-1.41 exactly (vacuous on placeholder; explicit
+  toggle) so a fresh scaffold stays green.
+
+**Done-when.** `work-items.template.csv` ships; the generator validates (acyclic +
+refs) and renders a fully-offline `docs/trajectory.html` (SVG icicle + SVG DAG, no
+CDN); the opt-out gate step is green on a placeholder scaffold and on the kit's own
+migrated registry; PROCESS_OPTIONS documents the layer; PROCESS.md /
+AGENTS.template.md byte budgets untouched; `check.py --gate G3` PASS; (Phase 4) the
+kit's own plan is represented as `work-items.csv`. **Model tier — high** (new layout
+algorithm + shipped-template migration + the dogfood reshuffle).
+
+**Scope guard.** ONLY the trajectory/work-items layer. gilbert's other new scripts
+are a SEPARATE triage — `check_dupes.py` is **Thread 53** below; `check_licenses.py`
+is a maybe-reference (Python-packaging-specific); `check_caps.py`/`check_dataflows.py`
+demonstrate patterns the kit already has (`trace.py` integrity / `gen_arch_map
+--check` freshness); `fetch_vendor`/`diag_*`/`live_view` are gilbert-domain
+(robotics). None of those are in Thread 52.
+
+---
+
+## Thread 53 — `check_dupes.py`: mechanical anti-duplication for code (upstream gilbert)
+
+**Status: 📋 BACKLOG — surfaced 2026-07-07 (adopter review of gilbert); not yet
+scheduled.** The kit **preaches** "one fact, one home — in code too" (the AGENTS
+working agreement) but has **no mechanical enforcement** of *code* duplication —
+only doc/registry single-sourcing. gilbert's `scripts/check_dupes.py` (stdlib only)
+tokenizes sources and flags any window of ≥ `MIN_TOKENS` significant tokens
+appearing at >1 location (comments/blank/indentation excluded; exact-token, so fast
++ deterministic; renamed-identifier near-dupes are out of scope).
+
+**Why it fits the kit.** Generic, stdlib-only, stack-adaptable (the tokenizer is
+per-language — Python reference, "swap for your stack" like the rest of the
+harness), and it closes a real gap between what the kit preaches and what it
+mechanically checks. **Proposal (to be ruled):** ship as an **opt-in** reference
+`[step:dupes]` at G2+ with a tunable `MIN_TOKENS` and a per-repo allowlist for
+legitimate repetition; adapt gilbert's implementation to kit conventions; tests.
+**Not bundled with Thread 52** (different concern). **Model tier — mid** (the
+detector exists; the ruling is threshold/allowlist policy + stack-agnostic framing).
+
+---
+
 ## 2026-07-04 batch — decision briefs (all ruled by the owner 2026-07-04)
 
 **Rulings (owner, 2026-07-04).** The briefs below are kept as the *why*; each
