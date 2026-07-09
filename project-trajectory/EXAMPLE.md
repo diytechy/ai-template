@@ -304,20 +304,20 @@ the product-level spine and delegates each sub-system. The coordinator delegates
 SR at the **SR tier**: the delegated SR becomes the module repo's top-tier **`SN`**,
 which back-links the coordinator SR via a **`ParentRef`**.
 
-The coordinator lists its modules in an optional **`modules.csv`** (`MOD-###`,
+The coordinator lists its delegated repos in an optional **`repos.csv`** (`REPO-###`,
 `MULTI_REPO.md` §6) — the multi-repo layer a single-repo project never has:
 
 ```csv
-MOD-ID,Module,Repo,DelegatedSRs,Version,Type,Owner,Notes
-MOD-001,export,https://git.example/acme/export,SR-009,v2,owned,Integration,"CSV export, promoted to its own repo."
-MOD-002,delivery,https://git.example/acme/delivery,SR-010,v1,owned,Integration,"Uploads a completed export to the destination."
-MOD-003,plant,https://git.example/acme/plant,SR-011,v1,owned,Integration,"Integration/plant repo: assembles export+delivery and runs the end-to-end demonstration."
-MOD-004,object-store,—,,vendor-2024,external,Integration,"Purchased S3-compatible store; no repo builds it. Referenced via the catalog IF-### (owner of record = coordinator); delegates no functional SR."
+REPO-ID,Name,Repo,DelegatedSRs,Version,Type,Owner,Notes
+REPO-001,export,https://git.example/acme/export,SR-009,v2,owned,Integration,"CSV export, promoted to its own repo."
+REPO-002,delivery,https://git.example/acme/delivery,SR-010,v1,owned,Integration,"Uploads a completed export to the destination."
+REPO-003,plant,https://git.example/acme/plant,SR-011,v1,owned,Integration,"Integration/plant repo: assembles export+delivery and runs the end-to-end demonstration."
+REPO-004,object-store,—,,vendor-2024,external,Integration,"Purchased S3-compatible store; no repo builds it. Referenced via the catalog IF-### (owner of record = coordinator); delegates no functional SR."
 ```
 
 `trace.py` keeps `DelegatedSRs` honest **within the coordinator repo**: `SR-009/010/011`
-must be real coordinator SRs, and a malformed `MOD-` id fails — the same back-link
-discipline as `PB-###`. The `external` part `MOD-004` delegates nothing (an empty
+must be real coordinator SRs, and a malformed `REPO-` id fails — the same back-link
+discipline as `PB-###`. The `external` part `REPO-004` delegates nothing (an empty
 back-link is allowed here — it is referenced only through the interface catalog).
 
 **The SR-tier handoff.** The coordinator's `SR-010` is tagged delegated; in the
@@ -325,7 +325,7 @@ back-link is allowed here — it is referenced only through the interface catalo
 
 | Repo | Row | Delegated / ParentRef |
 |---|---|---|
-| coordinator | `SR-010` — records reach the configured destination and receipt is confirmed | `Delegated=MOD-002` |
+| coordinator | `SR-010` — records reach the configured destination and receipt is confirmed | `Delegated=REPO-002` |
 | delivery | `SN-001` — deliver a completed export to the destination and confirm receipt | `ParentRef=SR-010` |
 
 `Delegated` and `ParentRef` are optional, schema-safe columns (like `Area`/`Lifecycle`).
@@ -360,7 +360,7 @@ that check are deferred tooling (`MULTI_REPO.md` §3.3, §3.7, §7).
 repo. But "an exported file arrives intact at the destination end-to-end" is
 *composition-scoped*: it exists only for the assembled whole and no single module owns
 it. It is a coordinator SR (`SR-011`, `Verification=Demonstration`) delegated to the
-**plant repo** (`MOD-003`), which assembles export + delivery + a virtualized
+**plant repo** (`REPO-003`), which assembles export + delivery + a virtualized
 destination and runs the demonstration — "the module whose deliverable is a runnable
 verification of the assembly."
 
@@ -402,7 +402,7 @@ coordinator sequences and reads status; it never builds or runs anything.
   scope forces it.
 - **Separate repos under a coordinator are the rare top rung** (§10) — delegate an
   SR to a module repo (it becomes that repo's `SN`, back-linked by `ParentRef`),
-  list modules in the optional `modules.csv`, keep interfaces as pointers to their
+  list delegated repos in the optional `repos.csv`, keep interfaces as pointers to their
   owner, and verify emergent behavior in a delegated plant repo. It is a *design*
   (`MULTI_REPO.md`); the cross-repo tooling is deferred. You almost certainly don't
   need it.

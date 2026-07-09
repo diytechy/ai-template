@@ -4,7 +4,7 @@
 > extending the single-repo spine across separate repositories under a
 > **coordinator**. The confirmed decisions below are stable enough to build a real
 > two-repo project by hand and to ship the thin schema seams described in
-> "Schema seams" (an optional `modules.csv`, a `Delegated` SR marker, a module-SN
+> "Schema seams" (an optional `repos.csv`, a `Delegated` SR marker, a module-SN
 > `ParentRef`, and the `IF-###` catalog-reference convention). The heavier
 > automation — a cross-repo trace join, coordinator gate aggregation, repo-creation
 > scaffolding, artifact transport — is **not built**; it is routed to the
@@ -224,18 +224,20 @@ These are optional and schema-safe, the same way `Area`/`Lifecycle` (`PROCESS.md
 project never sees them. A coordinator repo adds them by hand (or via the future coordinator
 `bootstrap` variant — deferred).
 
-- **Coordinator `modules.csv` (`MOD-###`).** The coordinator's module registry:
-  `MOD-ID, Module, Repo, DelegatedSRs, Version, Type (owned | external | reused),
+- **Coordinator `repos.csv` (`REPO-###`).** The coordinator's repo-delegation
+  registry (formerly `modules.csv`/`MOD-###` — a delegated *repo* was never a
+  component; the legacy file + ids are still read):
+  `REPO-ID, Name, Repo, DelegatedSRs, Version, Type (owned | external | reused),
   Owner, Notes`. `DelegatedSRs` back-links the coordinator `SR` ids delegated to that
   module (§3.1). `trace.py` keeps it honest **within the coordinator repo**: a
-  malformed/duplicate `MOD-` id fails, and a `DelegatedSRs` value that names an SR the
+  malformed/duplicate `REPO-` id fails, and a `DelegatedSRs` value that names an SR the
   coordinator doesn't have fails — the `PB-###` back-link precedent (§9), applied to
   delegation. An `external`/`reused` part referenced only through the interface catalog
   may leave `DelegatedSRs` blank (unlike `PB`, an empty back-link is allowed here,
   because such a part fulfills no delegated *functional* SR). Optional and inert like
   `interfaces.csv`: absent file, no effect.
 - **`Delegated` marker on a coordinator `SR`.** An optional column recording that an SR
-  is delegated to a module repo (value: the `MOD-` id or module name). It signals, when
+  is delegated to a module repo (value: the `REPO-` id or repo name). It signals, when
   reading the coordinator's SR registry, that this SR's decomposition and verification
   live **across the boundary** — not as a missing local LLR.
 - **`ParentRef` on a module repo's `SN`.** An optional column (or inline annotation) on
@@ -247,7 +249,7 @@ project never sees them. A coordinator repo adds them by hand (or via the future
   shared interface by a coordinator-level id mapping to *(owner repo, owner `IF-###`,
   version)* + each consumer's pinned version (§3.3), so per-repo `IF-###` spaces never
   collide. **The catalog registry itself and its §3.7 version-reconciliation check are
-  deferred** (§7): unlike `modules.csv`, they need cross-repo mechanism to be useful, so
+  deferred** (§7): unlike `repos.csv`, they need cross-repo mechanism to be useful, so
   only the *convention* (local ids + a coordinator handle) is fixed here.
 
 **Honest limit — the coordinator repo's own gate.** Because a delegated SR's LLR and

@@ -18,9 +18,11 @@ Reads (relative to --docs, default "<root>/docs"; --root defaults to "."):
     requirements/stakeholder-needs.md       (optional; SN-### ids scraped for SN->SR coverage)
     requirements/performance-budgets.csv    (optional; PB-### perf/resource budgets, §9 —
                                              each row's Refs must back-link a real SR/LLR/Module)
-    requirements/modules.csv                 (optional; MOD-### coordinator module registry,
-                                             MULTI_REPO.md — each row's DelegatedSRs must name a
-                                             real coordinator SR; the multi-repo layer only)
+    requirements/repos.csv                   (optional; REPO-### coordinator repo-delegation
+                                             registry, MULTI_REPO.md — each row's DelegatedSRs
+                                             must name a real coordinator SR; the multi-repo
+                                             layer only. The legacy modules.csv / MOD-### form
+                                             is still read)
     requirements/procurement.csv             (optional; PART-### purchased/external parts,
                                              process-options.md — each row's IF-Ref names the
                                              owning interface row of record (MULTI_REPO.md §3.3);
@@ -83,14 +85,15 @@ Always (independent of --strict-schema), structural integrity is checked:
       docs/requirements/ and docs/test/ — spine, off-spine (interfaces,
       procurement, ...), and project-added registries alike — since the check
       needs no knowledge of a file's semantics, only its header
-    - a duplicated SR/LLR/TC/PB/MOD id (the join would otherwise silently dedupe it)
+    - a duplicated SR/LLR/TC/PB/REPO/CMP id (the join would otherwise silently dedupe it)
     - a malformed id (not "PREFIX-<digits>")
     - a performance-budget row (PB-###, §9) whose Refs name an unknown
       SR/LLR/Module, or that back-links nothing — the budgets registry is off the
       spine but must stay traceable to it (the PB-000 example row is ignored, so
       the optional registry never blocks a gate a project doesn't use)
-    - a coordinator module row (MOD-###, MULTI_REPO.md — the multi-repo layer)
-      whose DelegatedSRs name an unknown coordinator SR; an external/reused part
+    - a coordinator repo-delegation row (REPO-###, MULTI_REPO.md — the multi-repo
+      layer; legacy MOD-###/modules.csv still read) whose DelegatedSRs name an
+      unknown coordinator SR; an external/reused part
       referenced only via the IF-### catalog may delegate nothing, so an empty
       back-link is allowed here (unlike PB). The MOD-000 example row is ignored,
       so the optional registry never blocks a single-repo project's gate
@@ -235,9 +238,12 @@ ID_PATTERNS = {
     "LLR": re.compile(r"^LLR-\d+$"),
     "TC": re.compile(r"^TC-\d+$"),
     "PB": re.compile(r"^PB-\d+$"),  # optional performance-budgets registry (§9)
+    "REPO": re.compile(
+        r"^REPO-\d+$"
+    ),  # optional coordinator repo-delegation registry (MULTI_REPO.md)
     "MOD": re.compile(
         r"^MOD-\d+$"
-    ),  # optional coordinator module registry (MULTI_REPO.md)
+    ),  # legacy name for REPO (pre-rename modules.csv rows, still read)
     "PART": re.compile(
         r"^PART-\d+$"
     ),  # optional purchased/external parts registry (process-options.md)
@@ -777,8 +783,11 @@ def main():
     raw_tcs = load_csv(docs / "test" / "test-cases.csv")
     # Optional, off-spine coordination registry (process.md §9); absent file -> [].
     raw_pbs = load_csv(docs / "requirements" / "performance-budgets.csv")
-    # Optional coordinator module registry (MULTI_REPO.md, the multi-repo layer);
-    # absent file -> [].
+    # Optional coordinator repo-delegation registry (REPO-###, MULTI_REPO.md, the
+    # multi-repo layer). Formerly MOD-### in modules.csv — a delegated *repo* was
+    # never a component, so the id freed "module" for other uses; the legacy
+    # file + ids are still read (never breaking). Absent files -> [].
+    raw_repos = load_csv(docs / "requirements" / "repos.csv")
     raw_mods = load_csv(docs / "requirements" / "modules.csv")
     # Optional purchased/external parts registry (process-options.md); absent
     # file -> []. Integrity-checked only (IF-Ref points at the off-spine IF-###
@@ -803,7 +812,12 @@ def main():
     llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
     pbs = [r for r in raw_pbs if r.get("PB-ID") and not is_example(r["PB-ID"])]
-    mods = [r for r in raw_mods if r.get("MOD-ID") and not is_example(r["MOD-ID"])]
+    def _repo_id(r):
+        return r.get("REPO-ID") or r.get("MOD-ID")
+
+    mods = [
+        r for r in raw_repos + raw_mods if _repo_id(r) and not is_example(_repo_id(r))
+    ]
     parts = [r for r in raw_parts if r.get("PART-ID") and not is_example(r["PART-ID"])]
     assets = [
         r for r in raw_assets if r.get("ASSET-ID") and not is_example(r["ASSET-ID"])
@@ -908,10 +922,12 @@ def main():
     # IF-### catalog may delegate nothing, so an empty back-link is allowed here.
     module_findings = []
     for r in mods:
-        mid = r["MOD-ID"]
+        mid = _repo_id(r)
         for x in refs(r.get("DelegatedSRs")):
             if x not in sr_ids:
-                module_findings.append(f"MOD {mid} delegates unknown {x}")
+                module_findings.append(
+                    f"{mid.split('-')[0]} {mid} delegates unknown {x}"
+                )
 
     # Component registry (CMP-###, process-options.md "Component layer") sits off
     # the spine like PART/ASSET, but its two structural cells stay traceable:
@@ -1005,9 +1021,11 @@ def main():
     # schema sweeps above: the budgets registry is optional (like interfaces.csv),
     # so a leftover PB-000 must never block a gate the project doesn't use.
     integrity += integrity_findings("PB", raw_pbs)
-    # The coordinator module registry (MOD-###, MULTI_REPO.md) is the same kind of
-    # optional off-spine registry — integrity-checked, but out of the placeholder/
-    # schema sweeps, so a single-repo project's MOD-000 placeholder never blocks it.
+    # The coordinator repo-delegation registry (REPO-###, MULTI_REPO.md) is the
+    # same kind of optional off-spine registry — integrity-checked, but out of the
+    # placeholder/schema sweeps, so a REPO-000 placeholder never blocks it. The
+    # legacy modules.csv (MOD-###) rows are integrity-checked under their own key.
+    integrity += integrity_findings("REPO", raw_repos)
     integrity += integrity_findings("MOD", raw_mods)
     # The purchased/external parts registry (PART-###, process-options.md) is the
     # same kind of optional off-spine registry — integrity-checked (malformed/
@@ -1088,8 +1106,8 @@ def main():
         )
         + (
             [
-                f"| Modules (MOD) | {len(mods)} |",
-                f"| Module findings | {len(module_findings)} |",
+                f"| Delegated repos (REPO) | {len(mods)} |",
+                f"| Delegation findings | {len(module_findings)} |",
             ]
             if mods
             else []
@@ -1189,9 +1207,12 @@ def main():
             else [f"- {f}" for f in budget_findings]
         )
     if mods:
-        lines += ["", "## Modules (MULTI_REPO.md delegation back-links)", ""]
+        lines += ["", "## Delegated repos (MULTI_REPO.md delegation back-links)", ""]
         lines += (
-            [f"{len(mods)} module row(s); every DelegatedSRs resolves to a real SR."]
+            [
+                f"{len(mods)} delegated-repo row(s); every DelegatedSRs resolves "
+                "to a real SR."
+            ]
             if not module_findings
             else [f"- {f}" for f in module_findings]
         )
@@ -1270,7 +1291,7 @@ def main():
         + (f" phase-deferred={len(phase_deferred)}" if phases else "")
         + (f" budgets={len(pbs)} budget-findings={len(budget_findings)}" if pbs else "")
         + (
-            f" modules={len(mods)} module-findings={len(module_findings)}"
+            f" repos={len(mods)} delegation-findings={len(module_findings)}"
             if mods
             else ""
         )
