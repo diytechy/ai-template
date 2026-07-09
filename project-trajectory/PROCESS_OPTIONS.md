@@ -737,8 +737,14 @@ independent tracks meet, which task is in flight, how far along the whole is. A
 **work item** (`WI-###`) fills that gap — a unit of *doing*, not of *truth*:
 
 - it **delivers** one or more SRs (`SR-Refs`) — the thread back to the spine;
-- it sits on a **track** — a lane of related work (`scripts`, `docs`, a subsystem);
-- it **depends on** predecessor work items (`Predecessors`) — the edges of a DAG;
+- it belongs to a **workstream** — a mutable grouping category of related work
+  (`scripts`, `docs`, a subsystem). *Not* a "track": that word names only the
+  parallel-execution lane (this file, "Parallel tracks") — the legacy `Track`
+  header is still read;
+- it **depends on** predecessor work items (`Predecessors`) — the edges of a DAG.
+  A bare id is a **hard** edge (a real technical blocker: drives readiness,
+  ranking, and the acyclicity rule); a `~`-prefixed id (`~WI-013`) is a **soft**
+  edge (advisory ordering — must resolve, never blocks, dashed in the render);
 - it moves through a **lifecycle**: `queued → active → done`.
 
 A WI is to an SR what a build step is to a spec: the SR says the adder must be
@@ -749,16 +755,17 @@ whiteboard thread — stays the *why*; `work-items.csv` is the machine-readable
 thread argued. The two **coexist**; the registry does not replace the narrative.
 
 **Registry.** `docs/requirements/work-items.csv`, columns
-`WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable`. Off-spine and
+`WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable`. Off-spine and
 optional like `procurement.csv` / `assets.csv`: `trace.py` does not read `WI-`
 ids — the trajectory tooling owns them. `Status ∈ {queued,active,done}`;
 `SR-Refs` / `Predecessors` are `;`-joined id lists; a `-000` example row ships
 inert (the placeholder rule the whole kit shares).
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
-G2. Every `Predecessors` id resolves to a real work item and the graph is
-**acyclic** — both **errors** (a trajectory that depends on itself can never
-start); every `SR-Refs` id exists in the SR registry — a **warning**, since a
+G2. Every `Predecessors` id (hard or soft) resolves to a real work item and the
+graph is **acyclic over its hard edges** — both **errors** (a trajectory that
+depends on itself can never start); a cycle that closes only through soft
+edges is a **warning** (conflicting ordering hints, not a blocker); every `SR-Refs` id exists in the SR registry — a **warning**, since a
 draft SR referenced ahead of its row is legitimate; `WI-###` id shape and
 uniqueness — integrity, like `trace.py`.
 
@@ -1019,6 +1026,42 @@ binary; the **record of it** is text, tracked, and reviewable.
   verification (the meters-vs-comparator split, PROCESS.md §9). Until then the
   manifest is the honest, text-tracked record — an ideal reached for, not a check
   faked.
+
+## Component layer
+
+*Referenced from the registry templates (`components.template.csv`).* **Applies
+when** a project wants a durable home for **set-grained knowledge and lifecycle**
+— a subsystem, an assembly ("the left arm"), a software package group — that no
+finer tier can hold: an `IF-###` is one seam, a workstream is mutable by design,
+an LLR *is* the WHAT being rewritten. The registry is optional and off-spine
+(procurement/assets posture): a scaffold ships only the inert `CMP-000` row, and
+a repo that never names a component pays nothing.
+
+**The row is deliberately slim** —
+`CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes` — and
+holds **only what a tag can't**: the knowledge refs (`;`-joined skill names,
+`docs/knowledge/` labels, URLs), the lifecycle
+(`State ∈ planned|built|verified|has-gap|deprecated`, with `SupersededBy` naming
+the successor so identity survives a rewrite), nesting (`PartOf`), and an
+optional `DetailDoc`. `Category` is an open value set (`software`, `physical`,
+…).
+
+**Structure is derived, never restated.** Membership lives on the **primitive**
+rows: LLR / IF / ASSET / PART each carry a `Component` cell (`;`-joined CMP ids
+— tag at the *finest* enclosing CMP; coarser membership derives through
+`PartOf`). From those tags everything else is a **view**: an interface with both
+endpoints inside a CMP is *internal*; with one endpoint inside it is the CMP's
+*boundary* — "the component **is** its interface set" as a derived
+characterization, never an authored list. A CMP row therefore has **no**
+`Realises`/`Interfaces`/`Assets` columns, and a one-member CMP with no internal
+IFs is legal.
+
+**What the kit checks** (`trace.py`, when real CMP rows exist): `CMP-` id
+integrity; `PartOf`/`SupersededBy` resolve to real CMP ids; and every primitive
+`Component` tag resolves to a real CMP row (the membership join — checked on the
+registries `trace.py` reads: LLR/PART/ASSET). Deeper mechanization — e.g.
+flagging a cross-component import with no declared IF — is a routed, later
+check; until then the boundary discipline is gate-attested.
 
 ## §9 NFR checklist
 

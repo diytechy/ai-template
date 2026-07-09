@@ -61,7 +61,7 @@ namespace, parallel to SN/SR/LLR/TC).
 ## Worked snippet
 
 ```csv
-IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status
+IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status,Component
 IF-001,Provides,billing-api,reporting-etl,"GET /v1/invoices returns the documented JSON schema (see docs/openapi.yaml#/Invoice).",SR-014,v1,Stable,Verified
 IF-002,Consumes,reporting-etl,billing-api,"Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json).",SR-031,v1,Stable,Verified
 ```

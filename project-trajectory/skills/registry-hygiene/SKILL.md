@@ -1,6 +1,6 @@
 ---
 name: registry-hygiene
-description: Use when the traceability registries (SN/SR/LLR/TC and the off-spine PB/PART/ASSET/MOD) need checking or fixing — run trace.py/check.py with the right flags for the current gate, read the orphan/integrity/schema findings, and correct them.
+description: Use when the traceability registries (SN/SR/LLR/TC and the off-spine PB/PART/ASSET/MOD/CMP) need checking or fixing — run trace.py/check.py with the right flags for the current gate, read the orphan/integrity/schema findings, and correct them.
 stacks: [python, node, powershell, go, rust, any]
 domains: [any]
 phases: [dev, gate]
@@ -10,7 +10,7 @@ scope: kit
 
 # Registry hygiene (any repo built from this kit)
 
-Keep the `SN → SR → LLR → TC` spine (and the off-spine `PB`/`PART`/`ASSET`/`MOD`
+Keep the `SN → SR → LLR → TC` spine (and the off-spine `PB`/`PART`/`ASSET`/`MOD`/`CMP`
 registries) clean: zero orphans, no duplicate/malformed ids, valid schema. Run
 the right check for where you are, then read and fix the findings.
 
@@ -64,5 +64,7 @@ call `trace.py` directly to iterate on a specific finding.
 
 Re-run the same command; it must print `orphans=0` (and exit 0). `trace.py`
 regenerates `docs/test/report.md` — the readable matrix — so review that too.
-Off-spine registries (PB/PART/ASSET/MOD) are **integrity-checked only**; a valid
+Off-spine registries (PB/PART/ASSET/MOD/CMP) are **integrity-checked only** plus
+their declared joins (PB Refs, MOD DelegatedSRs, CMP PartOf/SupersededBy + the
+primitives' Component tags); a valid
 inert `-000` placeholder there never blocks a gate.

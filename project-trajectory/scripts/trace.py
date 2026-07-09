@@ -30,6 +30,12 @@ Reads (relative to --docs, default "<root>/docs"; --root defaults to "."):
                                              process-options.md "Binary assets" — provenance,
                                              license, attribution, contract link + a pointer/hash;
                                              integrity-checked only, like PART)
+    requirements/components.csv              (optional; CMP-### domain-neutral components,
+                                             process-options.md "Component layer" — the
+                                             set-grained knowledge + lifecycle home; PartOf/
+                                             SupersededBy must name real CMP ids, and a
+                                             `Component` tag on an LLR/PART/ASSET row must
+                                             resolve to a real CMP row)
 
 Writes:
     test/report.md  — counts, the SR->LLR->TC matrix, the orphan list, and two
@@ -238,6 +244,9 @@ ID_PATTERNS = {
     "ASSET": re.compile(
         r"^ASSET-\d+$"
     ),  # optional binary/large-asset provenance registry (process-options.md)
+    "CMP": re.compile(
+        r"^CMP-\d+$"
+    ),  # optional domain-neutral component registry (process-options.md)
 }
 
 # Fields that must be non-empty under --strict-schema. Deliberately omits the
@@ -781,6 +790,11 @@ def main():
     # asset's provenance/license/hash is what matters, tracked in text even when
     # the binary itself can't be diffed).
     raw_assets = load_csv(docs / "requirements" / "assets.csv")
+    # Optional domain-neutral component registry (CMP-###, process-options.md
+    # "Component layer"): the set-grained knowledge + lifecycle home. Structure
+    # is derived — membership is a `Component` tag on the primitive rows
+    # (LLR/IF/ASSET/PART), never restated on the CMP row; absent file -> [].
+    raw_cmps = load_csv(docs / "requirements" / "components.csv")
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -794,6 +808,7 @@ def main():
     assets = [
         r for r in raw_assets if r.get("ASSET-ID") and not is_example(r["ASSET-ID"])
     ]
+    cmps = [r for r in raw_cmps if r.get("CMP-ID") and not is_example(r["CMP-ID"])]
 
     sn_ids = set()
     sn_md = docs / "requirements" / "stakeholder-needs.md"
@@ -898,6 +913,34 @@ def main():
             if x not in sr_ids:
                 module_findings.append(f"MOD {mid} delegates unknown {x}")
 
+    # Component registry (CMP-###, process-options.md "Component layer") sits off
+    # the spine like PART/ASSET, but its two structural cells stay traceable:
+    # PartOf (nesting — tag primitives at the finest CMP, coarser membership
+    # derives) and SupersededBy (lifecycle identity across a rewrite) must name
+    # real CMP ids. And the membership join is checked from the primitive side:
+    # a `Component` tag on an LLR/PART/ASSET row must resolve to a real CMP row
+    # (IF rows carry the tag too, but the IF tier is off trace.py's read set).
+    cmp_ids = {r["CMP-ID"] for r in cmps}
+    component_findings = []
+    for r in cmps:
+        cid = r["CMP-ID"]
+        for col in ("PartOf", "SupersededBy"):
+            for x in refs(r.get(col)):
+                if x not in cmp_ids:
+                    component_findings.append(f"CMP {cid} {col} references unknown {x}")
+    if cmp_ids:
+        for label, rows_, key in (
+            ("LLR", llrs, "LLR-ID"),
+            ("PART", parts, "PART-ID"),
+            ("ASSET", assets, "ASSET-ID"),
+        ):
+            for r in rows_:
+                for x in refs(r.get("Component")):
+                    if x not in cmp_ids:
+                        component_findings.append(
+                            f"{label} {r[key]} Component tag references unknown {x}"
+                        )
+
     phases = set(refs(args.phase)) if args.phase else None
 
     def in_phase(r):
@@ -978,6 +1021,11 @@ def main():
     # project with no binary assets keeps its ASSET-000 placeholder without
     # blocking a gate.
     integrity += integrity_findings("ASSET", raw_assets)
+    # The component registry (CMP-###, process-options.md "Component layer") is
+    # the same optional off-spine kind — integrity-checked (malformed/duplicate
+    # id), out of the placeholder/schema sweeps, so a CMP-000 placeholder never
+    # blocks a gate; its PartOf/SupersededBy/membership joins are checked above.
+    integrity += integrity_findings("CMP", raw_cmps)
     placeholders = (
         [f for label in raw for f in placeholder_findings(label, raw[label])]
         + [f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)]
@@ -1048,6 +1096,14 @@ def main():
         )
         + ([f"| Purchased parts (PART) | {len(parts)} |"] if parts else [])
         + ([f"| Binary assets (ASSET) | {len(assets)} |"] if assets else [])
+        + (
+            [
+                f"| Components (CMP) | {len(cmps)} |",
+                f"| Component findings | {len(component_findings)} |",
+            ]
+            if cmps
+            else []
+        )
         + [
             "",
             "## SR -> LLR -> TC matrix",
@@ -1151,6 +1207,16 @@ def main():
             f"{len(assets)} asset row(s); provenance/license/hash tracked in text "
             "(the ideal-not-requirement stance), integrity-checked only."
         ]
+    if cmps:
+        lines += ["", "## Components (process-options.md component layer)", ""]
+        lines += (
+            [
+                f"{len(cmps)} component row(s); PartOf/SupersededBy resolve and "
+                "every primitive `Component` tag names a real CMP row."
+            ]
+            if not component_findings
+            else [f"- {f}" for f in component_findings]
+        )
     if args.no_placeholders:
         lines += ["", "## Placeholders (--no-placeholders)", ""]
         lines += (
@@ -1210,6 +1276,11 @@ def main():
         )
         + (f" parts={len(parts)}" if parts else "")
         + (f" assets={len(assets)}" if assets else "")
+        + (
+            f" components={len(cmps)} component-findings={len(component_findings)}"
+            if cmps
+            else ""
+        )
         + (f" ac-advisories={len(advisories)}" if advisories else "")
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
@@ -1222,6 +1293,7 @@ def main():
         or schema
         or budget_findings
         or module_findings
+        or component_findings
     ):
         sys.exit(1)
     if args.strict_integrity and integrity:

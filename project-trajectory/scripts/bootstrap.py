@@ -33,6 +33,7 @@ What it creates in the destination:
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
     docs/requirements/assets.csv               <- registries/assets.template.csv
+    docs/requirements/components.csv           <- registries/components.template.csv
     docs/requirements/work-items.csv           <- registries/work-items.template.csv
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
@@ -936,6 +937,10 @@ MAPPING = [
     (
         "registries/assets.template.csv",
         "docs/requirements/assets.csv",
+    ),
+    (
+        "registries/components.template.csv",
+        "docs/requirements/components.csv",
     ),
     (
         "registries/work-items.template.csv",
