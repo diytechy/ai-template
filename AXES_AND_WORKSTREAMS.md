@@ -2,8 +2,11 @@
 
 **Author:** Claude (Opus 4.8), design note from a working session ·
 **Date:** 2026-07-08 (last updated 2026-07-09) · **Branch:** `MultiRepoSupport` (not pushed) ·
-**Status:** **OPEN — a ruling-in-progress (iteration 7). Expect more passes before
-implementation.** Nothing here is built; no registry or script has been touched.
+**Status:** **OPEN — a ruling-in-progress (iteration 8, in progress). RESUME POINT.**
+Nothing here is built; no registry or script has been touched. **Gating decision on
+resume:** confirm the component model — one domain-neutral `CMP-###` vs the
+distributed-only alternative ("Iteration 8"). The consolidated open-items list is at the
+top of §12.
 
 ## Provenance
 
@@ -697,6 +700,36 @@ implementation.
 
 ## 12. Open questions for the next iteration
 
+**Consolidated current state (as of iter 8) — start here on resume.** Much is settled
+(see the Iterations changelog + §3b/§4/§5/§9); what remains:
+
+- **THE GATE — the component model.** One domain-neutral **`CMP-###`** (knowledge-set +
+  lifecycle home; structure *derived* from IF+ASSET+PART; SWB/HWB retired) vs the
+  distributed-only alternative. Owner leans `CMP`. Sub-Qs: the CMP column set; how
+  `Component` tags are assigned (authored vs inferred); multi-membership; and whether the
+  **IF-boundary discipline is enforceable** (the model bets on boundaries being declared
+  as IFs). *Everything below hangs off this — decide it first.* See "Iteration 8".
+- **Schema bundle** (downstream-migrating; decide together; **sequence after F1**): typed
+  `IF` contracts + a code-link-resolves check (#4); hard/soft predecessor `kind` (#5,
+  §5b); unify the edge vocabulary + extract the shared graph engine (#8); the drift-check
+  = F1 / Thread-49 (#9).
+- **Build / tooling:** cyclic-graph rendering for the physical view (#11); the routed CAD
+  extractor (material / mass-props as derived-from-ASSET views — "Iteration 8").
+- **Mechanicals:** `PROJECT_STATE.html` migration + git-derived as-of (#10); bootstrap /
+  downstream-resync scaffolding (#7); `MOD → REPO` kit rename (#13).
+- **Dynamic layer** — its own note, iterate separately:
+  [`AGENT_ROLES.md`](AGENT_ROLES.md) (reviewer count/independence; loop-vs-judgment
+  mechanics; feedback→roadmap path; parallel-tracks composition).
+- **External couplings that gate the above:** **F1 first** (tracing the trajectory
+  layer's own code touches the G3-ratified spine — land before schema changes); **F3**
+  (schema/edge-semantics + dogfood-DAG cleanup, decided with the bundle) — both in
+  [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md).
+
+*Resolved along the way:* workstream ≠ SN (a mutable category, #2); knowledge home =
+`docs/knowledge/`, layered by grain (#6); roles-layer split out (#12); `LLR.Module`
+dropped, naming (#1 partial). The numbered items below are the detailed history (the
+Q-numbers memory references); several are now folded into the buckets above.
+
 1. **The `swBlock` / component registry — its exact schema.** A **sibling** registry
    (not a widened `MOD-###`), decided across iters 3–7: light CSV row + optional
    md-frontmatter detail doc, **not ini** (§3a); **owns `Realises`** (many LLRs, M:N,
@@ -823,3 +856,8 @@ knowledge labels).
 - [`project-trajectory/PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) —
   "Trajectory / work-items layer" (the `Track` prose) and "Parallel tracks" (the
   *other*, execution-lane meaning of "track").
+- `c:\Projects\gilbert` (`docs/requirements/interfaces.csv`, `docs/interfaces.md`) — the
+  **empirical basis** for "IF = boundary contracts": gilbert's only real IFs are 3 HAL
+  surfaces (joint / clock / camera), no pure software-to-software IF, and no component
+  registry — the gap that motivated the iter-8 IF-centric reframe. Its `IF-001` (joint)
+  is the worked mechatronic-seam example (software topics + physical actuator limits).
