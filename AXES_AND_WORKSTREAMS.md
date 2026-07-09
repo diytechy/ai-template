@@ -87,6 +87,16 @@ inherits the framing instead of re-deriving it.
   **Knowledge** refs now sit on **swBlocks, parts, *and* assets**, one or many, M:N (§3b,
   §4). Q1's "retire/derive `LLR.Module`" is resolved (dropped); Q13 rename done. Still
   OPEN.
+- **Iteration 8 — IN PROGRESS** (owner still thinking). Owner floated **trashing
+  SWB/HWB** and deriving everything from **IF + ASSET + PART**; the counter is that
+  **knowledge-for-*sets*** has no home there → a component survives, **slimmed to a
+  domain-neutral `CMP-###`** (`id, Name, Category, Knowledge, State` + a `Component` tag
+  on the primitives), structure **derived** from IF+ASSET+PART, SWB/HWB split retired.
+  Owner **leans this way**. Also: **knowledge is layered by grain** (type→ASSET/PART,
+  boundary→IF, impl→LLR, **set→CMP**); **mass/inertia/material are extractable from
+  many CAD formats** via a **routed** tool (kit records, never parses CAD); **diagnosis
+  walks IF → affected LLRs/assemblies → root**. See the "Iteration 8" section. OPEN —
+  §3/§9's SWB/HWB split is under reconsideration.
 
 > How to read: §1 the conflation (unchanged, still true). §2 the three-axis reframe
 > + the `swBlock↔LLR` link. §3 the swBlock as centre of gravity (+ §3a content format,
@@ -178,6 +188,10 @@ category over swBlocks / parts (never restates their definition).
 *Naming: the unit is a `swBlock` (software) or a part/assembly (physical); "component"
 is the generic term — see §2, §9. "swBlock" below stands in for either where the point
 is general.*
+
+*⚠ **Under reconsideration (iter 8):** the SWB/HWB split likely collapses to one
+domain-neutral `CMP-###`, with structure derived from IF+ASSET+PART and the component
+existing only as the knowledge-set + lifecycle home. See "Iteration 8".*
 
 Put the durable material on the durable noun. A swBlock/part row carries:
 
@@ -608,6 +622,9 @@ sibling note for the pipeline and the coordinator breakup.*
 
 ## 9. Naming ruling (updated iter 6)
 
+*⚠ **Iter 8 may supersede this:** SWB/HWB may collapse to one `CMP-###` (domain-neutral
+component) — see "Iteration 8". The ruling below stands until that's confirmed.*
+
 - **`swBlock`** — the **software** decomposition unit. Chosen over "Module" (collides
   with `MOD-###` = a delegated repo) and "Processor" (reads as a CPU). The **physical**
   unit is a **part / assembly**. "Module / component" stays the generic term for either.
@@ -720,6 +737,59 @@ implementation.
 13. **Renames** — the note's "module" → swBlock / part / component rename is **done
     (iter 7)**; **`MOD-### → REPO-###`** in the *kit* remains a mechanical follow-up
     (downstream-migrating), sequenced after the schema settles.
+
+---
+
+## Iteration 8 (in progress) — the knowledge-grain question
+
+**Status: the owner is mid-thought; this is a live capture, not a ruling.** It
+supersedes the iter-6/7 SWB/HWB split *if* the leaning below is confirmed.
+
+**The reframe (owner leans here).** Drop SWB/HWB as *structural* registries — their
+structure (dependency DAG, assembly, kinematics) **derives from IF + ASSET + PART**.
+Keep **one domain-neutral component, `CMP-###`** (`id, Name, Category, Knowledge,
+State`), whose *only* job is to be the **durable, identified, set-grained home for
+knowledge + lifecycle** — the thing an IF (too fine), a workstream (too mutable), or a
+bare label (no lifecycle) cannot be. Membership is a `Component` tag on the
+IF/ASSET/PART rows; the CMP row holds only what a tag can't.
+
+**Knowledge is layered by grain** (this salvages the owner's "put knowledge on
+LLRs/types/IFs" idea — it's right, just not a *replacement* for the set level):
+
+| Grain | Home | Example |
+|---|---|---|
+| generic / by-type | `ASSET`/`PART` category (**derived**) | aluminium → galvanic + fatigue |
+| boundary | `IF` | this interface needs special timing handling |
+| implementation | `LLR` | this algorithm's numerical-stability caveat |
+| **set / subsystem** | **`CMP`** | the perception pipeline's low-light strategy |
+
+The floated *distributed-only* variant (a software block = an LLR carrying knowledge;
+hardware knowledge keyed by asset/part *type*) is **leaner but re-creates the
+knowledge-for-sets gap**: an LLR is finer than a component, and type-keyed knowledge is
+*generic*, so **set-specific** knowledge ("*this* subsystem/assembly") goes homeless.
+That is why it doesn't sit right — keep knowledge *layered*, with `CMP` holding the set
+grain.
+
+**CAD extraction (owner's question).** Geometry, **mass, inertia, and material are
+extractable from many CAD formats.** Robotics formats (**URDF/SDF**) *declare* mass +
+inertia tensor + material — a plain (even stdlib-XML) read; native CAD and **STEP
+AP242** carry material and compute mass-props; **STL/mesh** carry geometry only (mass
+computed from geometry + density). The heavy cases need a CAD kernel = an **external
+tool**, so keep the extractor **project-owned (route + record)**, not in the kit core.
+Consequence: `Material` / mass-props are **derivable from the ASSET** (a *view*), not
+necessarily authored — which *strengthens* "structure derives from ASSET + IF" (one
+routed extraction yields body + mass + inertia for the plant / kinematic model).
+
+**Diagnosis navigates the grain** (owner's workflow): a problem → **probe the affected
+`IF`** (seam) → **branch to the LLR software + the assemblies that mate** → root further
+— surfacing boundary-, then implementation-, then set-knowledge as you descend,
+*instead of ingesting the whole system*. The diagnosis walk *is* a walk down the
+knowledge layers.
+
+**Open (owner not done):** the owner's next concern was cut off mid-sentence — more to
+come. Pending: CMP vs distributed-only; whether a primitive may belong to multiple
+CMPs; how `Component` tags get assigned (authored vs inferred from packages / shared
+knowledge labels).
 
 ---
 
