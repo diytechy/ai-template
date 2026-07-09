@@ -2,7 +2,7 @@
 
 **Author:** Claude (Opus 4.8), design note from a working session ·
 **Date:** 2026-07-08 (last updated 2026-07-09) · **Branch:** `MultiRepoSupport` (not pushed) ·
-**Status:** **OPEN — a ruling-in-progress (iteration 5). Expect more passes before
+**Status:** **OPEN — a ruling-in-progress (iteration 6). Expect more passes before
 implementation.** Nothing here is built; no registry or script has been touched.
 
 ## Provenance
@@ -67,6 +67,18 @@ inherits the framing instead of re-deriving it.
   coordinator / planner / implementer / reviewer pipeline, mapped to `agent_loop.py` +
   the integrator role, with the coordinator split along the **loop-vs-judgment** seam.
   Still OPEN.
+- **Iteration 6** (this revision) — rulings + a refactor. **Naming:** software unit =
+  **`swBlock`** (not Module/Processor); physical = **part/assembly**; **`MOD-### →
+  REPO-###`** (§9). **Direction flip:** the swBlock **owns `Realises`** (many LLRs;
+  instancing deferred) — `LLR.Module` was too narrow (§2). **Workstream ≠ SN** — a
+  mutable grouping *category* on swBlocks + assemblies (Q2 resolved, §5). **WI** names
+  the swBlock(s)/part(s) it **affects + the gap** (§5). **Hard vs soft predecessors**
+  expanded (§5b). **Design-order DAG** is the kit's scope — *parented by the interface
+  owner*, derivable from `IF.Direction`, with the kit's-own-scripts example; physical
+  assembly time/material/energy/sim is **solution-space** (§7a). **Knowledge packs** →
+  `docs/knowledge/<label>.md` (§4). **`PROJECT_STATE.html`** as-of line visible on open.
+  **Refactor:** the coordinator/roles dynamic layer **split out** to
+  [`AGENT_ROLES.md`](AGENT_ROLES.md). Still OPEN.
 
 > How to read: §1 the conflation (unchanged, still true). §2 the three-axis reframe
 > + the `LLR.Module` hinge. §3 the module as centre of gravity (+ §3a content format,
@@ -76,9 +88,10 @@ inherits the framing instead of re-deriving it.
 > contract + consuming work (+ assembly = a graph, not a fatter asset). §8 concrete
 > tech (Elysia) + software tooling. **Cross-cutting** (after §8): the shared structure
 > — one edge vocabulary, routed resolvers (+ not-every-graph-is-a-DAG, the 4-bar;
-> domain-neutral containers). **The artifact** + **Operating the model** (the dynamic
-> layer). §9 naming. §10 cautions + staging. §11 provisional decision. §12 open
-> questions.
+> domain-neutral containers). **The artifact** (`PROJECT_STATE.html`); the dynamic layer
+> (coordinator/roles) is now the sibling [`AGENT_ROLES.md`](AGENT_ROLES.md). §9 naming
+> (swBlock / part; MOD→REPO). §10 cautions. §11 decision. §12 open questions. *(The unit
+> is now a `swBlock`; §5b adds hard-vs-soft predecessors.)*
 
 ---
 
@@ -127,14 +140,25 @@ column).
 modules (§3–4). Folding functional into WHAT is what keeps the model from growing a
 redundant fourth hierarchy.
 
-**Precision on "module" today.** The component the owner means — a thing with
-expectations, interfaces, knowledge, and a lifecycle — **has no registry yet.** It
-exists only as the free-text `LLR.Module` string. The existing
+**Naming (iter 6, see §9).** The software decomposition unit is a **`swBlock`** — not
+"module" (`MOD-###` already means a delegated repo), not "Processor" (reads as a CPU).
+The physical unit is a **part / assembly**. Below, "module" is the *generic* word for
+either; a global rename is a mechanical follow-up, not done inline.
+
+**Precision on the unit today, and the direction flip (iter 6).** The `swBlock` — a
+thing with expectations, interfaces, knowledge, and a lifecycle — **has no registry
+yet**; it exists only as the free-text `LLR.Module` string, and the existing
 [`modules.csv` (`MOD-###`)](project-trajectory/registries/modules.template.csv) is a
-*different* thing: the **multi-repo coordinator** registry where a "module" is a
-whole delegated repo. So "make the module the centre of gravity" means **promoting
-`LLR.Module` to a first-class component registry** — and deciding whether to
-generalise `MOD-###` or add a new registry beside it (open question §12).
+*different* thing (a delegated **repo** — itself to be renamed, e.g. `REPO-###`, §9).
+Two rulings:
+
+- **Flip the direction.** `LLR.Module` (one module per LLR) is too narrow — a swBlock
+  realises **many** LLRs and may be **instanced**. So the **swBlock owns `Realises`** (a
+  *list* of LLR ids; many-to-many); `LLR.Module` becomes a derived hint or retires. An
+  **LLR** is "a decomposed need — an outcome fed elsewhere"; a swBlock **satisfies ≥1**
+  of them. (Instancing — one swBlock *type*, many instances — is a real case: the
+  swBlock is the type, instances are refs; deferred until one appears.)
+- **Stand up a sibling** component registry (the Q12.1 lean), not a widened `MOD-###`.
 
 The SSOT rule that ties all of this together **without duplication**: *each fact has
 exactly one home; everything else references it by id; the dashboard is a generated
@@ -146,7 +170,10 @@ references its module + predecessors (never restates the module's definition).
 
 ## 3. The module is the centre of gravity
 
-Put the durable material on the durable noun. A module row carries:
+*Naming: the unit is a `swBlock` (software) or a part/assembly (physical); "module"
+here is the generic term — see §2, §9.*
+
+Put the durable material on the durable noun. A swBlock/part row carries:
 
 - **Expectations / definition** — what it must satisfy, expressed as **references**
   to the `SR / LLR / TC` it realises (never restated). This is also where the
@@ -258,11 +285,13 @@ per-repo. A knowledge pack is essentially:
 > **{ applicable skills } + { external resource refs } + { internal domain notes }**,
 > attached to a module.
 
-So do **not** invent a parallel system. Give the module row a `Category` tag and a
-`KnowledgePack` cell listing *applicable skill names + external URLs*. Promote
-knowledge packs to their own registry **only if** the same pack is shared across
-many modules (a reference list first; a registry only when reuse forces it — the
-same YAGNI staging as everywhere in this note).
+So do **not** invent a parallel system. **Reusable** agent knowledge stays a *skill*
+(`project-trajectory/skills/`); **project-specific** domain knowledge lives in
+**`docs/knowledge/<label>.md`** (iter 6), each file labelled by topic — the *core
+solution context* for anything that relates to it. A swBlock/part row carries a
+`Category` tag + a `Knowledge` cell listing the **labels** it depends on (skill names +
+`docs/knowledge/` labels + external URLs). No registry needed — labelled docs
+referenced by label; promote to a registry only if reuse ever forces it.
 
 **A knowledge pack has two halves — derived + authored.** The *authored* half is the
 skills + refs above. The **derived** half is a *view* computed from the part's own
@@ -294,17 +323,20 @@ the workstream or the module?":
 
 - **Module** = durable *noun*. Owns *what it must become* (expectations → SR/LLR/TC,
   interfaces, knowledge, state). Survives across iterations.
-- **Workstream** = semi-durable *campaign*. Owns *scope + why-now + the dependency
-  chain*: "advance module M toward goal G, in chain C." Thin — points at module(s) +
-  a DAG slot. It is the reason you are back here.
+- **Workstream** = a **mutable grouping category** (a column on swBlocks + assemblies),
+  bounding deliverables that share dependencies — e.g. a *perception* workstream over
+  the camera-input→depth swBlock. **Not an SN** (Q12.2 resolved); project-defined, and
+  *how* it's derived is deliberately loose. It puts the roadmap into focus; it is not a
+  heavyweight registry.
 - **Session** = transient *verb*. Owns *evidence* — one sitting → an iteration log
   (already exists in the kit).
 
-So neither the workstream nor the session owns the definition — **the module does.**
-The workstream owns timing; the session owns proof. Keeping the workstream thin is
-what makes re-opening cheap: "work on M — its row tells you everything." A
-"work item" as it exists today is really the *intersection*: (workstream intent) ×
-(target module) × (DAG slot).
+So neither the workstream nor the session owns the definition — **the swBlock/part
+does.** Keeping the workstream a thin category is what makes re-opening cheap. A **work
+item** names **what swBlock(s)/part(s) it affects and the gap it closes** (+
+predecessors + status) — the *intersection* of (a workstream grouping) × (target
+component) × (a DAG slot); its detail is written by the planner *into the component*,
+not restated on the WI.
 
 ### 5a. Temporal scope: the roadmap is prospective; the past is git
 
@@ -319,6 +351,28 @@ This is also the clean fix for [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md) **F3
 dogfood DAG encoding narrative/ordering as fake edges): if history isn't stored in the
 living DAG, there are no narrative edges to be wrong. And it feeds the artifact below —
 the dashboard's *as-of* date is the latest source commit (git), not a wall clock.
+
+### 5b. Hard vs soft predecessors
+
+A predecessor edge makes one of two different claims, and today they wear one column:
+
+- **Hard = *blocks*.** A must be *done* before B can be *built*; remove A and B breaks
+  (a real technical dependency). Hard edges drive **readiness** (B is workable only when
+  all its hard preds are done), the **acyclicity requirement** (a hard cycle is
+  unstartable → ERROR), and **parallelism** (only hard edges constrain what runs at
+  once).
+- **Soft = *orders*.** B is *conventionally* after A — narrative coherence, review
+  ergonomics, resource contention — but could proceed without it. Soft edges are
+  **advisory**: presentation order + a suggested path; ignored for readiness, relaxable,
+  and a soft cycle is a hint conflict, not an error.
+
+This is F3 made precise: the dogfood DAG mixes them, so a soft "reads-well-after" edge
+masquerades as a hard block and a reader (or scheduler) infers a constraint that isn't
+there. F3's own case — `WI-014` (check_flows) after `WI-013` (check_docs) are
+independent (*soft*), while `WI-031` (gen_trajectory) after `WI-030` (check_trajectory)
+is a real import (*hard*). Model it as one `kind` on the edge (default `hard`; `soft`
+advisory, dashed in the render). Downstream-migrating — decide with the other schema
+changes (§10).
 
 ---
 
@@ -374,6 +428,37 @@ sibling of module composition (`Contains`) + interfaces (`IF`)**: parts + connec
 exactly as modules + interfaces. It is also where kinematics / CG / inertia and the
 build sequence get *derived* — see "Cross-cutting" (after §8) for why the kit owns
 that graph's **structure** but **routes out** those numeric resolvers.
+
+### 7a. What the kit tracks: the design-order DAG (not the physical assembly)
+
+Scope ruling (iter 6): the kit needs only the **design-order DAG** — *what to design
+next, across all design phases* — **parented by the interface owner**. It does **not**
+model physical assembly direction, and the mate's time / material / energy above is
+**solution-space** — optional annotation, routed out, never resolved in-kit. The kit
+supports agent-assisted (sometimes agent-automated) *design*; the actual mechanism
+solution, simulation, and loop-back belong to the solution space.
+
+**The order is largely *derivable*, not hand-authored.** `IF-###` already carries
+`Direction` (Provides / Consumes): the **provider** of an interface is designed before
+its **consumers**. So "parented by the interface owner" = the provider parents the
+consumer, and the design-order edges fall out of the interface registry —
+generated-not-hand-maintained.
+
+**Worked example — the kit's own scripts** (already the predecessor chain in
+`work-items.csv`):
+
+- `trace.py` (WI-006) + `check.py` (WI-008) — the join engine + the harness contract;
+  everyone builds against them → designed **first**.
+- the `check_*` validators *consume* `check.py`'s step interface → **after** WI-008.
+- `check_trajectory` (WI-030) *provides* the WI-registry validation interface → before
+  its consumer.
+- `gen_trajectory` (WI-031) *consumes* `check_trajectory` (a literal `import` — a
+  **hard** dep, §5b) → designed **last**.
+
+So `WI-006 → WI-008 → WI-030 → WI-031` *is* "design the interface owner before its
+consumers." A physical part is identical: the part that **provides** a mating datum
+(the chassis / ground link) is designed first; parts that **consume** it design against
+that interface, after.
 
 ---
 
@@ -476,8 +561,10 @@ structure abstracts; the kit stays out of the physics.
 
 ## The artifact — `PROJECT_STATE.html` (evolving `trajectory.html`)
 
-One self-contained HTML at the **repo root**, with a clearly-dated header (*"state as
-of commit `abc123` · 2026-07-09"*), presenting the whole model in four views:
+One self-contained HTML at the **repo root** — a single kit-generated file with **all
+diagrams inside it** — and an **"as-of" line generated into the page, visible the moment
+it opens** (*"state as of commit `abc123` · 2026-07-09"*) so a reader instantly sees how
+fresh or stale the view is. It presents the whole model in four views:
 
 | View | Axis | Source |
 |---|---|---|
@@ -502,45 +589,33 @@ migration call (open question §12).
 
 ---
 
-## Operating the model — the dynamic layer (coordinator + roles)
+## Operating the model — the dynamic layer (moved out, iter 6)
 
-*A different layer from everything above: this is **process / orchestration**, not the
-static structure. Much of it already exists — `agent_loop.py` (the coordinator),
-`run-phase` (PLAN | BUILD), the **integrator** role (only writer of the dispatcher). It
-may later spin out to its own note (like `MULTI_REPO.md`); recorded here so the static
-model and the roles that write it stay aligned.*
-
-The pipeline — **coordinator → planner → implementer → reviewer(s) → coordinator** —
-maps cleanly onto the static model because **each role writes exactly one home:**
-
-| Role | Writes | Existing kit anchor |
-|---|---|---|
-| **Coordinator** | the **roadmap DAG** (creates / reprioritises WIs from feedback) | `agent_loop.py` + integrator |
-| **Planner** | the **module definition + knowledge pack** (research, detail); updates the WI with what it added | PLAN phase |
-| **Implementer** | the **code** | BUILD phase |
-| **Reviewer(s)** | **test evidence** — executes the TCs → feedback | the gate / TCs |
-
-**Should the coordinator be broken up? Yes — along the loop-vs-judgment seam.** The
-*mechanical loop* (dispatch an agent, collect its typed outcome) stays dumb and
-deterministic — `agent_loop.py` as-is. *Roadmap maintenance* (deciding what WIs to
-create / reprioritise from test / reviewer / human feedback) is **judgment**, and
-belongs to a distinct step — which the kit already calls the **integrator** (the only
-writer of the dispatcher). Don't put judgment inside the loop. So the "breakup" is not
-new machinery; it is *naming the seam that already exists*: **loop = orchestration,
-integrator = roadmap judgment.**
+*The coordinator / planner / implementer / reviewer pipeline and the loop-vs-judgment
+seam now live in their own sibling note — [`AGENT_ROLES.md`](AGENT_ROLES.md) — because
+that is **process / orchestration**, a different concern from the static structure here
+(the owner's call). The only tie-point that matters here: **each role writes exactly one
+static home** — coordinator → the roadmap DAG, planner → the swBlock definition +
+knowledge pack (+ the WI), implementer → the code, reviewer → test evidence. See the
+sibling note for the pipeline and the coordinator breakup.*
 
 ---
 
-## 9. Naming ruling (provisional)
+## 9. Naming ruling (updated iter 6)
 
-- **Workstream** — preferred for the *when/campaign* thing. "A durable line of effort
-  on a problem." No collision.
-- **Domain** — acceptable but leans "area of the system," risking confusion with the
-  module/category lens.
-- **Track** — **retire from the WI layer.** Leave "track" to mean *only* the
-  parallel-execution lane.
-- **Module** — the decomposition unit (physical or software). "Component" is a fine
-  synonym; pick one and hold it.
+- **`swBlock`** — the **software** decomposition unit. Chosen over "Module" (collides
+  with `MOD-###` = a delegated repo) and "Processor" (reads as a CPU). The **physical**
+  unit is a **part / assembly**. "Module / component" stays the generic term for either.
+- **`REPO-###`** (proposed) — **rename `MOD-###`**, the multi-repo delegation registry,
+  since it is a delegated *repo*, not a component. This frees "module" from the collision.
+- **Workstream** — a **mutable grouping category** on swBlocks + assemblies (not a
+  campaign entity, not an SN). Bounds deliverables with shared dependencies; project-
+  defined.
+- **Track** — **retire from the WI layer.** "Track" means *only* the parallel-execution
+  lane.
+
+*A global rename of "module" → swBlock / part / component across this note is a
+mechanical follow-up, deferred to keep this pass reviewable.*
 
 ---
 
@@ -604,22 +679,25 @@ implementation.
    module (component-level, with knowledge/state) is not the multi-repo `MOD-###`
    (repo-level delegation). Decide whether to widen MOD or stand up a sibling — and
    what `LLR.Module` references once it does.
-   *Resolved so far (iter 3):* the **format** is settled — a light CSV row + an
-   optional md-frontmatter detail doc, **not ini** (§3a) — and **geometry needs no
-   new axis** (`ASSET` + `IF`, §3b). Lean is a **sibling** component registry (reuse
-   the row+link idiom; don't overload the multi-repo `MOD-###`); the widen-vs-sibling
-   call and the `LLR.Module` retarget remain open.
-2. **Is a Workstream genuinely distinct from an SN, or a 1:1 roll-up?** If
-   workstreams map 1:1 to needs, the registry is redundant; a `Workstream` column
-   referencing an SN suffices. Test against 3–4 real "re-opened problem" cases.
+   *Resolved (iter 3 + 6):* the **format** is a light CSV row + optional md-frontmatter
+   detail doc, **not ini** (§3a); **geometry needs no new axis** (`ASSET` + `IF`, §3b);
+   the unit is named **`swBlock`** and **owns `Realises`** (many LLRs — the direction
+   flip, §2); a **sibling** registry (not a widened `MOD-###`, itself renamed
+   `REPO-###`, §9). Still open: the exact `swBlock` schema + retiring/deriving
+   `LLR.Module`, and **instancing** (type vs instance, deferred).
+2. **Is a Workstream distinct from an SN?** **RESOLVED (iter 6): yes** — a workstream is
+   a *mutable grouping category* on swBlocks + assemblies (bounds shared-dependency
+   deliverables), never an SN (§2, §5). No registry; a category column.
 3. **`consumes` + duration/energy on work** — the physical-timeline gap (§7). What is
    the minimal schema, and does it stay vacuous for software repos?
 4. **Typed `IF-###` contracts** (§8) — let a seam link a machine-checkable spec;
    which formats, and is there a check?
-5. **Hard-vs-soft predecessor edges (F3)** — same schema ruling; decide with #3.
-6. **Where does the knowledge pack physically live** — a module cell of refs, a link
-   into `docs/log.md`/threads, or a per-module note? Must stay single-sourced (no
-   paraphrasing skills or threads).
+5. **Hard-vs-soft predecessor edges (F3)** — **expanded (iter 6) in §5b**: a `kind` on
+   the edge (default `hard` = blocks; `soft` = advisory). Still a downstream-migrating
+   schema call; decide with #3.
+6. **Where does the knowledge pack live** — **RESOLVED (iter 6):** `docs/knowledge/
+   <label>.md` (project domain knowledge) + `skills/` (reusable), referenced by label
+   from the swBlock/part row (§4). Single-sourced; no registry.
 7. **Migration ergonomics** — what `bootstrap.py` scaffolds and whether
    `downstream-resync` needs a step (downstream-migrating — §10).
 8. **Unify the edge vocabulary?** One uniform `from-id, to-id, type` relationship form
@@ -635,10 +713,13 @@ implementation.
 11. **Cyclic-graph rendering** — the How-physical view needs a general graph layout
     (loops), not the layered-DAG renderer. A stdlib force-free layout, or route
     rendering out for the physical view only?
-12. **Does the roles pipeline belong in this note or its own?** The dynamic layer
-    (coordinator / planner / implementer / reviewer; the loop-vs-judgment split) is
-    already ~half-built in `agent_loop.py` + PROCESS.md roles. Formalise it here, or
-    spin out a sibling note.
+12. **Does the roles pipeline belong in this note or its own?** **RESOLVED (iter 6): its
+    own** — split to [`AGENT_ROLES.md`](AGENT_ROLES.md) (the owner's call); its open
+    questions live there now.
+13. **Renames (iter 6)** — `MOD-### → REPO-###`, and the global "module" → swBlock /
+    part across the docs, are mechanical follow-ups; sequence after the schema settles
+    (both downstream-migrating). Plus **swBlock instancing** (type vs instance),
+    deferred until a real case.
 
 ---
 
@@ -657,16 +738,18 @@ implementation.
   (`IF-###`) · [`procurement.template.csv`](project-trajectory/registries/procurement.template.csv)
   (`PART-###`) · [`assets.template.csv`](project-trajectory/registries/assets.template.csv)
   (`ASSET-###` — geometry/binary artifacts, §3b) — the physical-axis registries.
-- [`project-trajectory/skills/`](project-trajectory/skills/) — the knowledge-pack
-  substrate (§4). · `docs/stack.ini` — where a framework like Elysia is declared (§8).
+- [`project-trajectory/skills/`](project-trajectory/skills/) — reusable knowledge (§4);
+  **`docs/knowledge/<label>.md`** — project-specific knowledge packs (iter 6, §4). ·
+  `docs/stack.ini` — where a framework like Elysia is declared (§8).
 - [`project-trajectory/scripts/gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   — the generated + `--check`ed code map: the drift-guard idiom §3c applies to
   software modules, and it is the **How-SW** view of the artifact. `trace.py` +
   `check_trajectory.py` are the two **existing typed-graph instances** the
   Cross-cutting section would factor from.
-- [`project-trajectory/scripts/agent_loop.py`](project-trajectory/scripts/agent_loop.py)
-  — the coordinator behind "Operating the model"; `docs/run-phase` (PLAN | BUILD) + the
-  integrator role (`tracks-README`) are its existing anchors.
+- [`AGENT_ROLES.md`](AGENT_ROLES.md) — the **sibling note** for the dynamic layer
+  (coordinator / planner / implementer / reviewer; the loop-vs-judgment seam), split out
+  in iter 6. Its anchors: [`agent_loop.py`](project-trajectory/scripts/agent_loop.py),
+  `docs/run-phase` (PLAN | BUILD), the integrator role (`tracks-README`).
 - [`project-trajectory/PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) —
   "Trajectory / work-items layer" (the `Track` prose) and "Parallel tracks" (the
   *other*, execution-lane meaning of "track").
