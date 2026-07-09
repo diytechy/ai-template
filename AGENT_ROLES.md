@@ -2,10 +2,11 @@
 
 **Author:** Claude (Opus 4.8 / Fable 5), design note from a working session ·
 **Date:** 2026-07-09 (last updated 2026-07-09) · **Branch:** `MultiRepoSupport` (not pushed) ·
-**Status:** **RATIFIED (iteration 2, owner rulings 2026-07-09) — design settled, nothing
-built.** The four open questions are answered (see "Rulings"); what remains is build
-sequencing (§ "Remaining open"). One point held for owner confirmation: dropping the
-floated 24-hour coordinator self-reboot, given the by-construction resolution below.
+**Status:** **RATIFIED (iterations 2–3, owner rulings 2026-07-09) — design settled,
+nothing built.** The four open questions are answered (R1–R5) plus provider diversity
+(R6); what remains is build sequencing (§ "Remaining open"). One point held for owner
+confirmation: dropping the floated 24-hour coordinator self-reboot, given the
+by-construction resolution below.
 
 ## Provenance
 
@@ -167,11 +168,51 @@ window. Guard cheaply:
   per-track **ID blocks** keep lane drafts from minting colliding ids on the way to
   the integrator.
 
+### R6 — Provider diversity: neutral at every seam but one (verified in code)
+
+Verified against `agent_loop.py` + the launchers (2026-07-09):
+
+- **The invocation is a provider-neutral command template** — `AGENT_CMD` is any CLI
+  with `{model}`/`{prompt}` placeholders, substituted per token, never through a shell.
+  Nothing in the loop is Claude-specific; the meta-repo's launcher merely wires
+  `claude`. (The loop itself was ported from a pre-Claude PowerShell coordinator.)
+- **Outcome detection doesn't trust the provider:** truth = git (HEAD moved =
+  COMMITTED) + `docs/run-state` (session-written). The JSON parse is best-effort by
+  design — a plain-text CLI degrades cleanly (`ERROR` = nonzero exit without JSON,
+  handled explicitly); `is_error`/usage/cost and the rate-limit reset wording are
+  Claude Code niceties other CLIs simply won't populate.
+- **The committed context is already agent-neutral** — the `AGENTS.md` standard
+  (Thread 0) with thin `CLAUDE.md`/`GEMINI.md` stubs; any provider's session inherits
+  the same guide.
+- **The one gap: a run has ONE command template.** `AGENT_MODEL_MAP` varies only the
+  `{model}` token inside it — per-phase *provider* switching isn't native (different
+  providers are different binaries).
+
+Two routes, both compatible with R1's dual review:
+
+1. **Today, zero kit change — the dispatcher convention:** point `AGENT_CMD` at a thin
+   project wrapper (`scripts/agent-dispatch.*`) that switches CLI on a **namespaced
+   model token** (`claude:opus`, `gemini:2.5-pro`). The existing per-phase model map
+   then routes providers for free, and `run-phase` keys are free-form so two reviewer
+   phases just work: `AGENT_MODEL_MAP="BUILD=claude:opus,REVIEW-A=claude:opus,
+   REVIEW-B=gemini:2.5-pro"`. Guardrails substring-matching survives namespaced tokens.
+2. **Kit build call — `AGENT_CMD_MAP`:** a per-phase command-template map alongside the
+   model map (same `parse_model_map` machinery, ~15 lines) makes provider routing
+   first-class without a wrapper. Precedent: `AGENT_CMD_INTERACTIVE` is already a
+   second template slot.
+
+**Ruling (owner, 2026-07-09): cross-provider is the *recommended* `review-policy: 2`
+configuration.** Two samples of one model have correlated blind spots; a different
+model family is the less-correlated second draw — the entire point of paying for a
+second review. The dispatcher convention is the now-answer; `AGENT_CMD_MAP` lands with
+the review-policy wiring (dual review is its first consumer).
+
 ## Remaining open (build calls, not design gates)
 
 1. **`docs/review-policy` build** — wire the declared file + the reviewer dispatch
-   (REVIEW-phase sessions) into the loop/skills; exact vocabulary confirmed as
-   `0|1|2`. Sequenced with the dynamic-layer build, after the AXES schema bundle.
+   (`REVIEW-A`/`REVIEW-B` phases) + **`AGENT_CMD_MAP`** (first-class cross-provider
+   routing, R6) into the loop/skills; exact vocabulary confirmed as `0|1|2`.
+   Sequenced with the dynamic-layer build, after the AXES schema bundle.
 2. **`status.md` size guard** — add the warn-only preflight threshold, or rely on the
    integrator-prunes charter alone? (Cheap either way.)
 3. **`--prompt-map`** — deferred until the zero-code role convention shows drift.
