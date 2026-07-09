@@ -32,12 +32,21 @@ inherits the framing instead of re-deriving it.
   the workstream stays thin. "Knowledge packs" turn out to be ~80% the existing
   **skills layer**. Mating two modules is reframed as **work that consumes parts**
   (a BOM/BOP gap). Still OPEN.
+- **Iteration 3** (this revision) — settled the **module-content format** (§3): a
+  light **CSV row is primary** (the traceable graph), with an **optional
+  markdown-frontmatter detail doc** for the heavy ones (`DetailDoc` empty ⇒ light
+  module, no file). **Not ini** — ini is for config (`stack.ini`); md-frontmatter is
+  the kit's existing heavy-per-entity format (skills). Polarity rule: machine truth
+  in the row, prose in the doc, never both. And showed **geometry fits with no new
+  axis** (§3a): the artifact → `ASSET-###`, the mating constraint → `IF-###`, the
+  narrative → the detail doc. Still OPEN.
 
 > How to read: §1 the conflation (unchanged, still true). §2 the three-axis reframe
-> + the `LLR.Module` hinge. §3 the module as centre of gravity. §4 knowledge packs
-> ≈ skills. §5 where work-definition lives. §6 larger change → module lifecycle. §7
-> mating = contract + consuming work. §8 concrete tech (Elysia) + software tooling.
-> §9 naming. §10 cautions + staging. §11 provisional decision. §12 open questions.
+> + the `LLR.Module` hinge. §3 the module as centre of gravity (+ §3a its content
+> format & geometry). §4 knowledge packs ≈ skills. §5 where work-definition lives.
+> §6 larger change → module lifecycle. §7 mating = contract + consuming work. §8
+> concrete tech (Elysia) + software tooling. §9 naming. §10 cautions + staging. §11
+> provisional decision. §12 open questions.
 
 ---
 
@@ -126,6 +135,66 @@ hierarchy depth. (This matches the existing `MOD-###` flatness.)
 *Issues update the module's definition; new learning updates its knowledge pack;
 everything stays central to the module when work is performed on it.* That
 centrality is the whole point.
+
+### 3a. Module content: a light row + an *optional* detail doc (not ini)
+
+A module is *both* a row and a document, and the light/heavy tension is the signal
+not to force it to be one or the other:
+
+- **The CSV row is primary** — the light, machine-joinable, traceable fields (id,
+  name, category, state, `Realises` (SR/LLR/TC refs), `Interfaces` (IF refs),
+  `Assets` (ASSET refs), `Skills`, `PartOf`, `DetailDoc`, `Notes`). `LLR.Module`
+  resolves here, and `trace.py` validates it cheaply, stdlib.
+- **An optional detail doc holds the heavy prose** — `docs/modules/<MOD-id>.md`,
+  markdown-with-frontmatter (the **skills** format). Linked by the row's `DetailDoc`
+  cell. **A light module is just a row (`DetailDoc` empty); a heavy one adds the
+  doc.** You never pay for a file a light module doesn't need.
+
+**Not ini.** ini is a *config* format (flat `key=value`) — right for `stack.ini`,
+wrong for prose/lists/rationale. md-frontmatter is the kit's existing heavy-per-
+entity format; reuse it rather than invent a fourth pattern. **Polarity rule (kills
+the "where do I look?" confusion):** machine truth in the row, human prose in the
+doc, never the same fact in both; the generated dashboard splices them into one
+panel at read time.
+
+Do **not** flip to file-primary-with-generated-index (the skills polarity,
+`SKILL.md` + `gen_skills_index.py`): that reintroduces a whole file *per light
+module*, the exact tax being avoided. Row-primary is the answer to the light/heavy
+tension. Also note most modules need **no** doc — reusable knowledge is a *skill*
+(already a file), so the module often just lists `Skills` refs; the doc is only for
+content *specific* to this module.
+
+```
+# component registry (MOD row) — light module: no DetailDoc
+MOD-018, Mounting bracket, physical, built, LLR-030, IF-007, ASSET-004, , MOD-002, ,
+# heavy module: same shape, DetailDoc -> docs/modules/MOD-012.md
+```
+
+### 3b. Where geometry lives (no new axis)
+
+"Geometry" is three different things, each already homed:
+
+- **The artifact** (STEP/native model, dimensioned drawing) → an **`ASSET-###`** row
+  ([assets.csv](project-trajectory/registries/assets.template.csv)): the blob lives
+  in git-LFS / a PLM store (`Location`), pinned by `Hash`+`Version` so it is
+  verifiable though un-diffable — the *"track about the asset in text"* doctrine.
+  Kind = `cad`/`drawing`/`model`; `Refs` back-links the LLR it realises.
+- **The mating constraint** (bolt pattern, datum faces, fit/clearance) → an
+  **`IF-###`** Contract ([interfaces.csv](project-trajectory/registries/interfaces.template.csv)):
+  the seam "in one testable line," linking the drawing. Verified by a TC with
+  `Method = Inspection`/`Demonstration` (CMM report, fit check).
+- **The narrative** (GD&T rationale, assembly notes, revisions) → the module's
+  **detail doc** (§3a), only if heavy.
+
+The **module row references the first two** (`Assets` → the CAD, `Interfaces` → the
+seam). This closes §7's assembly loop: `ASSET` (shape) + `IF` (what must line up) +
+`PART` (fasteners consumed) + an assembly WI (`predecessors=[both modules],
+consumes=[PART], satisfies=IF`). The light/heavy gradient holds: a stock screw is a
+`PART` + datasheet (no ASSET); a bespoke part is an `ASSET` whose blob stays
+out-of-tree. **SSOT nuance (defer):** pick *one* authoritative direction for the
+asset↔module link — lean on the existing `ASSET.Refs → LLR` and discover a module's
+geometry through the `LLR.Module` join; add a direct `Assets` cell only if the join
+proves annoying.
 
 ---
 
@@ -321,6 +390,11 @@ implementation.
    module (component-level, with knowledge/state) is not the multi-repo `MOD-###`
    (repo-level delegation). Decide whether to widen MOD or stand up a sibling — and
    what `LLR.Module` references once it does.
+   *Resolved so far (iter 3):* the **format** is settled — a light CSV row + an
+   optional md-frontmatter detail doc, **not ini** (§3a) — and **geometry needs no
+   new axis** (`ASSET` + `IF`, §3b). Lean is a **sibling** component registry (reuse
+   the row+link idiom; don't overload the multi-repo `MOD-###`); the widen-vs-sibling
+   call and the `LLR.Module` retarget remain open.
 2. **Is a Workstream genuinely distinct from an SN, or a 1:1 roll-up?** If
    workstreams map 1:1 to needs, the registry is redundant; a `Workstream` column
    referencing an SN suffices. Test against 3–4 real "re-opened problem" cases.
@@ -350,7 +424,8 @@ implementation.
   (multi-repo `MOD-###`) ·
   [`interfaces.template.csv`](project-trajectory/registries/interfaces.template.csv)
   (`IF-###`) · [`procurement.template.csv`](project-trajectory/registries/procurement.template.csv)
-  (`PART-###`) — the physical-axis registries.
+  (`PART-###`) · [`assets.template.csv`](project-trajectory/registries/assets.template.csv)
+  (`ASSET-###` — geometry/binary artifacts, §3b) — the physical-axis registries.
 - [`project-trajectory/skills/`](project-trajectory/skills/) — the knowledge-pack
   substrate (§4). · `docs/stack.ini` — where a framework like Elysia is declared (§8).
 - [`project-trajectory/PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) —
