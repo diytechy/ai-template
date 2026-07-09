@@ -6583,6 +6583,32 @@ continuity (same style as the session log above).
 > coverage **90.56%** (3273/309); trace SN=22 SR=36 LLR=33 TC=36, 0 orphans.
 > Byte-budgeted files untouched.
 
+> **WI-1.43 ✅ landed 2026-07-09 · Trace the trajectory layer in the self-adopted
+> spine (THREAD_52_REVIEW F1, HIGH).** Thread 52 left `check_trajectory.py` +
+> `gen_trajectory.py` the only product scripts with no SR/LLR/TC — tested (~98%)
+> but untraced, invisible to `trace.py` (it checks declared-row coherence, not
+> symbol coverage). Owner authorized the spine change and scoped the SRs
+> (2026-07-09, need-level not code-descriptive): **SR-037** work-item registry
+> validation (LLR-034 → `load_wis`/`validate`; TC-037 → `tests/test_trajectory.py`)
+> and **SR-038** offline project-state view — single self-contained HTML,
+> definition + execution completeness, the SN→SR→LLR→TC hierarchy, the roadmap
+> DAG, **usable on mobile viewports** (LLR-035 →
+> `build_html`/`spine_stats`/`arch_icicle`/`dag_svg`; TC-038 →
+> `tests/test_gen_trajectory.py` + new `test_mobile_responsive_shell` asserting
+> the responsive markers, so the mobile criterion is mechanized, not hoped).
+> **Future scope deliberately not claimed:** the HOW view + root
+> `PROJECT_STATE.html` + git-derived as-of stamp are roadmapped as **WI-039**
+> (queued) per the ratified AXES_AND_WORKSTREAMS.md spec — Verified rows state
+> only what is true today. **WI-038** (done) records the fix in the dogfood
+> registry; dashboard regenerated. Also removed a stray "how" line accidentally
+> saved into `low-level-requirements.csv`.
+> **Deviation from spec:** none (the review's suggested local fix + the owner's
+> scope ruling; the review's "deeper thread" — a mechanical untraced-code check —
+> stays open, Thread 49-adjacent).
+> `check.py --gate G3` → **PASS** (11/11); `pytest -q` **394 passed, 2 skipped**;
+> trace **SN=22 SR=38 LLR=35 TC=38**, 0 orphans/integrity/schema. Byte-budgeted
+> files untouched. **G3 re-attestation pending owner sign-off** (`docs/log.md`).
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

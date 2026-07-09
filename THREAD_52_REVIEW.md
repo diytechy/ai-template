@@ -59,6 +59,16 @@ Nothing here has been fixed; every item is verified against the tree.
 
 ## F1 — HIGH · The trajectory layer's own code is untraced in the self-adopted spine
 
+> **RESOLVED 2026-07-09 (WI-1.43 / WI-038):** SR-037/038 + LLR-034/035 + TC-037/038
+> landed, owner-scoped — SR-038 written at need level (single offline HTML,
+> definition + execution completeness, the SN→SR→LLR→TC hierarchy, the roadmap DAG,
+> mobile viewports — the mobile criterion mechanized by a new
+> `test_mobile_responsive_shell`); the HOW-view / root `PROJECT_STATE.html`
+> evolution is deliberately *not* claimed — roadmapped as WI-039.
+> `check.py --gate G3` re-run → PASS; **owner re-attestation pending in
+> `docs/log.md`**. The "deeper thread" below (a mechanical untraced-code check)
+> stays open — Thread 49-adjacent, sequenced with the AXES schema bundle.
+
 **What.** The meta-repo's premise (Thread 47) is *"the kit traced with its own
 process, its product being `project-trajectory/scripts` + `tests/`."* Every other
 product script has a full `SN→SR→LLR→TC` chain — `LLR-001..033` each map an

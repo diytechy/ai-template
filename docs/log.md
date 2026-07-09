@@ -237,3 +237,29 @@ attestation.
 Linux-only and this branch is unmerged (mechanism is OS-agnostic); the kit-level
 onboarding-floor redesign stays tracked as **WI-1.42 (PROPOSED)**. No push
 (`docs/push-policy` = human). **G3 is RATIFIED.**
+
+---
+
+## 2026-07-09 — SPINE CHANGE (WI-1.43 / WI-038 · THREAD_52_REVIEW F1): SR-037/038 added; G3 re-run PASS; re-attestation pending
+
+**What changed (owner-authorized in-session, scope ruled by the owner):** the
+trajectory layer's own code — the only untraced product scripts (F1, HIGH) — is now
+on the spine. **SR-037** (work-item registry validation → `check_trajectory.py`,
+LLR-034, TC-037 → `tests/test_trajectory.py`) and **SR-038** (offline project-state
+view: single self-contained HTML, definition + execution completeness, the
+SN→SR→LLR→TC hierarchy, the roadmap DAG, **usable on mobile viewports** →
+`gen_trajectory.py`, LLR-035, TC-038 → `tests/test_gen_trajectory.py` + the new
+`test_mobile_responsive_shell` mechanizing the mobile criterion). Future scope
+(HOW view, root `PROJECT_STATE.html`, git-derived as-of) deliberately **not**
+claimed — roadmapped as **WI-039**; Verified rows state only what is true today.
+WI-038 (done) records the fix in the dogfood registry; the dashboard was
+regenerated.
+
+**Mechanized bar re-run (this session):** `check.py --gate G3` → **RESULT: PASS**
+(11/11 steps incl. trajectory + trajectory-map); `pytest -q` **394 passed, 2
+skipped**; trace **SN=22 SR=38 LLR=35 TC=38, 0 orphans / integrity / schema**.
+Verification basis now: of 38 Verified SRs, **38 mechanized, 0 attested**
+(35 Test · 1 Analysis · 2 Inspection).
+
+**G3 re-attestation:** ⏳ **pending owner sign-off** — the 2026-07-07 ratification
+predates SR-037/038; the owner authorized this spine change and re-attests here.

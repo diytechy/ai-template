@@ -27,10 +27,11 @@ sign-offs, verdicts) is [log.md](log.md).
   (Thread 52 P4). Design history stays in the plan threads; the gate-walk record is
   `docs/log.md`.
 - **Plan state:** **Thread 47 complete** — self-adoption phases 1–7 landed
-  2026-07-07; meta-repo at **G3** (SN=22 SR=36 LLR=33 TC=36, 0 orphans;
+  2026-07-07; meta-repo at **G3** (SN=22 SR=38 LLR=35 TC=38, 0 orphans;
   `check.py --gate G3` PASS; product coverage ~91%). **G3 human-ratified
-  2026-07-07** (Peter Johnson, `docs/log.md`; G1+G2+G3 all ratified). **Thread 50**
-  (trace.py SR/LLR citation-coherence check) landed; latest post-plan WI **WI-1.42**.
+  2026-07-07** (Peter Johnson, `docs/log.md`); **the 2026-07-09 SR-037/038 spine
+  change (F1 fix, WI-1.43) awaits re-attestation** — see log.md. **Thread 50**
+  (trace.py SR/LLR citation-coherence check) landed; latest post-plan WI **WI-1.43**.
   **Thread 52 COMPLETE 2026-07-08** (all 4 phases) — the opt-out trajectory/
   work-items layer: `work-items.csv` registry + `check_trajectory.py` +
   `gen_trajectory.py` (offline SVG dashboard) + PROCESS_OPTIONS/README docs.
@@ -38,10 +39,10 @@ sign-offs, verdicts) is [log.md](log.md).
   `docs/requirements/work-items.csv` + generated `docs/trajectory.html`
   (Execution 86%, Definition 100%), gate-green on real data.
 - **Open items:**
-  - **Needs <human>**: _(none)_ — **G3 ratified 2026-07-07** (`docs/log.md`); the
-    mechanized bar was met and reproduced, the owner signed off on the basis of
-    spot checks + four adversarial review passes (findings resolved). Verification
-    basis: 36/36 SRs mechanized, 0 attested.
+  - **Needs <human>**: **G3 re-attestation for the SR-037/038 spine change**
+    (WI-1.43, the F1 fix — owner authorized the change 2026-07-09; the mechanized
+    bar was re-run and PASSes; a one-line sign-off in `docs/log.md` closes it).
+    Verification basis: 38/38 SRs mechanized, 0 attested.
   - **In flight:** _(none)_ — **Thread 52 landed complete 2026-07-08** (commits
     `07fd10f`/`6fa3236`/`49a5cf8` + P4; on `MultiRepoSupport`, not pushed).
   - **Queued (next):** _(none scheduled)_
@@ -50,16 +51,18 @@ sign-offs, verdicts) is [log.md](log.md).
     — a first-class TC test-evidence column (ruling pending). **WI-1.27** —
     coordinator working-tree stash/rollback on a hard-killed session
     (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
-- **Next action:** **Triage the Thread 52 adversarial review** —
-  [`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md) (8 verified findings F1–F8, with
-  full context, repro commands, deeper-change threads, and suggested sequencing).
-  Headlines: **F1 (HIGH)** — the trajectory layer's own code (`check_trajectory.py`,
-  `gen_trajectory.py`) is the *only* product code untraced in the self-adopted
-  spine, and `trace.py` structurally can't see it; **F2 (MEDIUM)** —
-  `trajectory.html` staleness is caught only in CI, not by the pre-commit hook.
-  **F1 needs an owner call** on re-attesting the G3 spine before an agent adds
-  `SR-037/038`. Optional milestones after triage: **G-Release** walk; rule
-  **Thread 51** / schedule **Thread 53**; refine the 37-WI mapping (F3).
+- **Next action:** **F1 is RESOLVED (WI-1.43, 2026-07-09)** — SR-037/038 +
+  LLR-034/035 + TC-037/038 landed, G3 re-run PASS; **owner re-attestation pending**
+  (`docs/log.md`). Then, per the ratified design notes
+  ([`AXES_AND_WORKSTREAMS.md`](../AXES_AND_WORKSTREAMS.md) iter-9 +
+  [`AGENT_ROLES.md`](../AGENT_ROLES.md)): the **one-bump schema bundle** (CMP
+  registry + `Component` tags + `Track`→`Workstream` + hard/soft `kind` +
+  `MOD→REPO` + resync scaffolding — F3's dogfood-DAG cleanup rides along).
+  Remaining review findings: **F2 (MEDIUM)** — `trajectory.html` staleness
+  caught only in CI, not the pre-commit hook — and F4–F8 (see
+  [`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md)). Push decision outstanding
+  (`MultiRepoSupport` is local-only). Optional milestones: **G-Release** walk;
+  rule **Thread 51** / schedule **Thread 53**.
 
 ## Scope
 

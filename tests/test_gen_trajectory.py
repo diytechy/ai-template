@@ -95,6 +95,18 @@ def test_generates_self_contained_dashboard(tmp_path):
     assert "<script src" not in low and "cdn" not in low
 
 
+def test_mobile_responsive_shell(tmp_path):
+    """SR-038: the dashboard is usable on mobile viewports — the responsive
+    shell markers must be present in the generated HTML (viewport meta,
+    narrow-viewport single-column collapse, scrolling panels)."""
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert '<meta name="viewport" content="width=device-width' in text
+    assert "@media (max-width:760px)" in text  # layout collapses to one column
+    assert "overflow:auto" in text  # wide SVGs scroll inside their panel
+
+
 def test_generation_is_deterministic(tmp_path):
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
