@@ -2,11 +2,11 @@
 
 **Author:** Claude (Opus 4.8), design note from a working session ·
 **Date:** 2026-07-08 (last updated 2026-07-09) · **Branch:** `MultiRepoSupport` (not pushed) ·
-**Status:** **OPEN — a ruling-in-progress (iteration 8, in progress). RESUME POINT.**
-Nothing here is built; no registry or script has been touched. **Gating decision on
-resume:** confirm the component model — one domain-neutral `CMP-###` vs the
-distributed-only alternative ("Iteration 8"). The consolidated open-items list is at the
-top of §12.
+**Status:** **RATIFIED (iteration 9, owner ratification 2026-07-09) — design settled,
+nothing built.** The gate is closed: the component model is one domain-neutral
+**`CMP-###`** — see "Iteration 9 — the ratified component model". No registry or script
+has been touched. **Next steps: land F1, then the one-bump schema bundle** — the
+consolidated list is at the top of §12.
 
 ## Provenance
 
@@ -90,7 +90,7 @@ inherits the framing instead of re-deriving it.
   **Knowledge** refs now sit on **swBlocks, parts, *and* assets**, one or many, M:N (§3b,
   §4). Q1's "retire/derive `LLR.Module`" is resolved (dropped); Q13 rename done. Still
   OPEN.
-- **Iteration 8 — IN PROGRESS** (owner still thinking). Owner floated **trashing
+- **Iteration 8** (captured mid-thought; **confirmed by iteration 9**). Owner floated **trashing
   SWB/HWB** and deriving everything from **IF + ASSET + PART**; the counter is that
   **knowledge-for-*sets*** has no home there → a component survives, **slimmed to a
   domain-neutral `CMP-###`** (`id, Name, Category, Knowledge, State` + a `Component` tag
@@ -98,8 +98,24 @@ inherits the framing instead of re-deriving it.
   Owner **leans this way**. Also: **knowledge is layered by grain** (type→ASSET/PART,
   boundary→IF, impl→LLR, **set→CMP**); **mass/inertia/material are extractable from
   many CAD formats** via a **routed** tool (kit records, never parses CAD); **diagnosis
-  walks IF → affected LLRs/assemblies → root**. See the "Iteration 8" section. OPEN —
-  §3/§9's SWB/HWB split is under reconsideration.
+  walks IF → affected LLRs/assemblies → root**. See the "Iteration 8" section. Confirmed
+  — §3/§9's SWB/HWB split is retired (iteration 9).
+- **Iteration 9 — RATIFIED** (owner, 2026-07-09). The gate is closed: **`CMP-###`
+  confirmed** over distributed-only, on **two independent grounds** — set-grained
+  knowledge (iter 8) *and* lifecycle/supersession (§6's durable identity also needs the
+  set-grained noun). Locked in the same ruling: **membership = a `Component` list-tag on
+  the primitives** (LLR *included* — gilbert shows a software CMP has no members via IF
+  alone — plus IF/ASSET/PART; the CMP row stays slim); `LLR.Module`/`CodeSymbol` **stay**
+  as the code link (they hold source paths/symbols — Thread 49's check target — not
+  component names); **a CMP is a graph cut** — internal vs **boundary** IFs *derive* from
+  membership; **nesting via `PartOf`** on the CMP row (tag primitives at the finest
+  grain); **instancing ruled minimally** (left/right arm = two CMP rows sharing
+  `Knowledge` + `ASSET` refs; occurrence/serial tracking = solution-space); a mechatronic
+  seam may be **several IF rows** (protocol / electrical / mechanical, split by TC
+  `Method`); tags **authored, machine-suggested**; enforceability = **cross-CMP edge with
+  no declared IF is a finding**. Columns: `CMP-ID, Name, Category, Knowledge, State,
+  SupersededBy, PartOf, DetailDoc, Notes`. Full statement: "Iteration 9 — the ratified
+  component model". §3/§9's SWB/HWB machinery is **retired**.
 
 > How to read: §1 the conflation (unchanged, still true). §2 the three-axis reframe
 > + the `swBlock↔LLR` link. §3 the swBlock as centre of gravity (+ §3a content format,
@@ -112,7 +128,9 @@ inherits the framing instead of re-deriving it.
 > domain-neutral containers). **The artifact** (`PROJECT_STATE.html`); the dynamic layer
 > (coordinator/roles) is now the sibling [`AGENT_ROLES.md`](AGENT_ROLES.md). §9 naming
 > (swBlock / part; MOD→REPO). §10 cautions. §11 decision. §12 open questions. *(iter 7:
-> "module"→swBlock rename applied; `LLR.Module` dropped; §5b hard-vs-soft predecessors.)*
+> "module"→swBlock rename applied; `LLR.Module` dropped; §5b hard-vs-soft predecessors.
+> iter 9: SWB/HWB retired — "Iteration 9 — the ratified component model" supersedes §3's
+> registry mechanics and §9's unit naming; read "swBlock/part" as a `CMP` `Category`.)*
 
 ---
 
@@ -192,9 +210,10 @@ category over swBlocks / parts (never restates their definition).
 is the generic term — see §2, §9. "swBlock" below stands in for either where the point
 is general.*
 
-*⚠ **Under reconsideration (iter 8):** the SWB/HWB split likely collapses to one
-domain-neutral `CMP-###`, with structure derived from IF+ASSET+PART and the component
-existing only as the knowledge-set + lifecycle home. See "Iteration 8".*
+*⚠ **Superseded (iter 9, ratified):** the SWB/HWB split is retired — one domain-neutral
+`CMP-###`, structure derived from IF+ASSET+PART (+ LLR `Component` tags). §3's
+centre-of-gravity and light-row/heavy-doc reasoning carries over to the CMP row; for the
+registry mechanics read "Iteration 9 — the ratified component model".*
 
 Put the durable material on the durable noun. A swBlock/part row carries:
 
@@ -625,8 +644,10 @@ sibling note for the pipeline and the coordinator breakup.*
 
 ## 9. Naming ruling (updated iter 6)
 
-*⚠ **Iter 8 may supersede this:** SWB/HWB may collapse to one `CMP-###` (domain-neutral
-component) — see "Iteration 8". The ruling below stands until that's confirmed.*
+*⚠ **Superseded (iter 9, ratified):** SWB/HWB collapsed to one domain-neutral `CMP-###`;
+"swBlock" / "part" survive only as informal words for a CMP's `Category`. Still standing
+from below: `MOD-### → REPO-###` (mechanical follow-up) and retiring "track" from the WI
+layer.*
 
 - **`swBlock`** — the **software** decomposition unit. Chosen over "Module" (collides
   with `MOD-###` = a delegated repo) and "Processor" (reads as a CPU). The **physical**
@@ -693,49 +714,53 @@ connection, realises), **share the graph *structure*** — one edge vocabulary +
 stdlib traversal/render core — but **route out the domain resolvers** (kinematics /
 mass / geometry are external tools the kit records, not implements).
 
-**Status: provisional — not ratified, not built.** More passes expected before
-implementation.
+**Status: RATIFIED (iteration 9, 2026-07-09) — not built.** Read this section's
+"swBlock / part" through the iter-9 lens: one `CMP-###` with a `Category`, and the
+WHAT↔HOW hinge carried by the primitives' `Component` tags rather than
+`swBlock.Realises`.
 
 ---
 
 ## 12. Open questions for the next iteration
 
-**Consolidated current state (as of iter 8) — start here on resume.** Much is settled
-(see the Iterations changelog + §3b/§4/§5/§9); what remains:
+**Consolidated current state (as of iter 9 — RATIFIED) — start here on resume.** The
+component model is **decided** ("Iteration 9 — the ratified component model"); what
+remains is sequencing + build:
 
-- **THE GATE — the component model.** One domain-neutral **`CMP-###`** (knowledge-set +
-  lifecycle home; structure *derived* from IF+ASSET+PART; SWB/HWB retired) vs the
-  distributed-only alternative. Owner leans `CMP`. Sub-Qs: the CMP column set; how
-  `Component` tags are assigned (authored vs inferred); multi-membership; and whether the
-  **IF-boundary discipline is enforceable** (the model bets on boundaries being declared
-  as IFs). *Everything below hangs off this — decide it first.* See "Iteration 8".
-- **Schema bundle** (downstream-migrating; decide together; **sequence after F1**): typed
-  `IF` contracts + a code-link-resolves check (#4); hard/soft predecessor `kind` (#5,
-  §5b); unify the edge vocabulary + extract the shared graph engine (#8); the drift-check
-  = F1 / Thread-49 (#9).
-- **Build / tooling:** cyclic-graph rendering for the physical view (#11); the routed CAD
-  extractor (material / mass-props as derived-from-ASSET views — "Iteration 8").
-- **Mechanicals:** `PROJECT_STATE.html` migration + git-derived as-of (#10); bootstrap /
-  downstream-resync scaffolding (#7); `MOD → REPO` kit rename (#13).
+- **F1 first** (unchanged): trace the trajectory layer's own code (SR-037/038) — it
+  touches the G3-ratified spine, so land it before any schema change and re-attest once.
+- **The one-bump schema bundle** (downstream-migrating; ship as a single kit version
+  bump adopters resync through once): the `CMP` template registry + `Component` tag
+  columns on LLR/IF/ASSET/PART + WI `Track` → `Workstream` + hard/soft `kind` on
+  `Predecessors` (F3, §5b) + `MOD-### → REPO-###` (#13) + bootstrap /
+  downstream-resync scaffolding (#7). The dogfood-DAG cleanup (F3) rides along.
+- **Deferred, gated on real need:** `consumes`/effort (#3); the typed-IF contract
+  *check* (#4 — the `Contract` cell already links a spec, nothing is blocked today);
+  shared graph-engine extraction (#8 — wait for the second consumer); cyclic-graph
+  renderer (#11); the routed CAD extractor (iter 8); the cross-CMP-edge-without-IF
+  check (needs tags to exist first — see the ratified-model section).
+- **`PROJECT_STATE.html`** (#10): worthwhile, not gating — ride the bundle or follow it.
 - **Dynamic layer** — its own note, iterate separately:
   [`AGENT_ROLES.md`](AGENT_ROLES.md) (reviewer count/independence; loop-vs-judgment
-  mechanics; feedback→roadmap path; parallel-tracks composition).
-- **External couplings that gate the above:** **F1 first** (tracing the trajectory
-  layer's own code touches the G3-ratified spine — land before schema changes); **F3**
-  (schema/edge-semantics + dogfood-DAG cleanup, decided with the bundle) — both in
-  [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md).
+  mechanics; feedback→roadmap path; parallel-tracks composition). **Owner judgment
+  still needed there.**
+- **External couplings:** **F1** and **F3** as above — both in
+  [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md). And **push the branch** — the review +
+  nine iterations of design notes are local-only.
 
-*Resolved along the way:* workstream ≠ SN (a mutable category, #2); knowledge home =
-`docs/knowledge/`, layered by grain (#6); roles-layer split out (#12); `LLR.Module`
-dropped, naming (#1 partial). The numbered items below are the detailed history (the
-Q-numbers memory references); several are now folded into the buckets above.
+*Resolved along the way:* the component model = `CMP-###` (iter 9 — THE GATE, closed);
+workstream ≠ SN (a mutable category, #2); knowledge home = `docs/knowledge/`, layered
+by grain (#6); roles-layer split out (#12); `LLR.Module`-as-component-link dropped,
+naming (#1). The numbered items below are the detailed history (the Q-numbers memory
+references); several are now folded into the buckets above.
 
 1. **The `swBlock` / component registry — its exact schema.** A **sibling** registry
    (not a widened `MOD-###`), decided across iters 3–7: light CSV row + optional
    md-frontmatter detail doc, **not ini** (§3a); **owns `Realises`** (many LLRs, M:N,
    §2); geometry via `ASSET` + `IF` (§3b); **`LLR.Module` dropped entirely** (iter 7).
-   *Still open:* the column set + **id scheme** (swBlock `SWB-` / part `PRT-`?), and
-   **instancing** (type vs instance) — deferred until a real case.
+   *Resolved (iter 9):* the column set + id scheme = **`CMP-###`** (see the
+   ratified-model section); instancing ruled minimally (left/right = two CMP rows
+   sharing `Knowledge` + `ASSET` refs; occurrence tracking routed out).
 2. **Is a Workstream distinct from an SN?** **RESOLVED (iter 6): yes** — a workstream is
    a *mutable grouping category* on swBlocks + assemblies (bounds shared-dependency
    deliverables), never an SN (§2, §5). No registry; a category column.
@@ -773,10 +798,10 @@ Q-numbers memory references); several are now folded into the buckets above.
 
 ---
 
-## Iteration 8 (in progress) — the knowledge-grain question
+## Iteration 8 — the knowledge-grain question (confirmed by iteration 9)
 
-**Status: the owner is mid-thought; this is a live capture, not a ruling.** It
-supersedes the iter-6/7 SWB/HWB split *if* the leaning below is confirmed.
+**Status: confirmed — iteration 9 ratified the leaning below.** It supersedes the
+iter-6/7 SWB/HWB split.
 
 **The reframe (owner leans here).** Drop SWB/HWB as *structural* registries — their
 structure (dependency DAG, assembly, kinematics) **derives from IF + ASSET + PART**.
@@ -819,10 +844,83 @@ routed extraction yields body + mass + inertia for the plant / kinematic model).
 *instead of ingesting the whole system*. The diagnosis walk *is* a walk down the
 knowledge layers.
 
-**Open (owner not done):** the owner's next concern was cut off mid-sentence — more to
-come. Pending: CMP vs distributed-only; whether a primitive may belong to multiple
-CMPs; how `Component` tags get assigned (authored vs inferred from packages / shared
-knowledge labels).
+**Resolved by iteration 9:** the cut-off thought arrived as the interface-set reframe
+(a CMP is a graph cut over the connection graph). CMP confirmed over distributed-only;
+multi-membership allowed for genuinely shared primitives (but nesting goes through
+`PartOf`, not multi-tagging); tags are authored, machine-suggested.
+
+---
+
+## Iteration 9 — the ratified component model (RATIFIED 2026-07-09)
+
+**The owner ratified `CMP-###`** — one domain-neutral component registry; the SWB/HWB
+split is retired. The full ruling in one place:
+
+**Why CMP wins (two independent grounds).** (1) Set-grained knowledge has no other home
+(iter 8: an LLR is finer than a subsystem; type-keyed knowledge is generic — "*this*
+pipeline's low-light strategy" goes homeless). (2) **Lifecycle/supersession also need
+the set-grained noun** — §6's durable identity across an SR rewrite (`deprecated /
+superseded-by`) fits neither an IF (too fine), a workstream (mutable by design), nor an
+LLR (it *is* the WHAT being rewritten). Even with knowledge solved another way, CMP
+would be re-invented for supersession.
+
+**The row.** `CMP-ID, Name, Category, Knowledge, State, SupersededBy, PartOf,
+DetailDoc, Notes`. `State` keeps §6's enum (`planned│built│verified│has-gap│deprecated`);
+`SupersededBy` is its own column so the enum stays clean; §3a's light-row/heavy-doc
+pattern survives (`DetailDoc` empty ⇒ no file — a light CMP costs one CSV row). **No
+`Realises` / `Interfaces` / `Assets` columns** — structure is derived, never restated.
+
+**Membership: the primitives own the tag.** A `Component` list-cell (semicolon form,
+like existing `Refs` cells) on **LLR, IF, ASSET, and PART** rows. LLRs are included
+because a software CMP has no members via IF alone (gilbert: zero software↔software
+IFs). One uniform SSOT rule: *every primitive names its component(s); the CMP row holds
+only what a tag can't.* This does not re-reverse iter 6's `Realises` flip — that flip
+fixed `LLR.Module`'s single-string narrowness, and the kit's own spine shows the column
+was never a component link anyway: `LLR.Module` + `CodeSymbol` hold **source paths /
+symbols** (the Thread-49 / F1 check target) and **stay unchanged** as the code link.
+
+**A CMP is a graph cut — its interface set is derived.** With membership tagged, every
+IF classifies mechanically: both endpoints inside → **internal** (motor↔frame↔plate↔axle
+— the arm's private wiring); one endpoint inside → **boundary** (arm↔shoulder — what the
+component exposes). Authored fact: membership. Derived view: the interface set. A CMP
+row never lists its IFs. **Guardrail:** "the component is its interface set" is the
+*characterization*, not the membership rule — a one-member CMP with no internal IFs (a
+lone bracket, a single package) stays legal.
+
+**Nesting: `PartOf` on the CMP row.** Tag each primitive with its *finest* enclosing
+CMP once; coarser membership derives through the CMP tree (multi-tagging is not the
+nesting mechanism — coarse sets must not drift from fine ones). The owner's
+grow-or-shrink versatility is the cut drawn at any tree level, and the iter-8 diagnosis
+walk picks its grain by walking that tree.
+
+**Instancing — the deferred case arrived; ruled minimally.** Left arm / right arm =
+**two CMP rows sharing `Knowledge` labels and `ASSET` refs**; a shared PART is
+multi-tagged (`CMP-arm-L;CMP-arm-R`) with its existing `Quantity` covering procurement.
+Which serial-numbered motor sits in which arm is occurrence/manufacturing tracking —
+solution-space, routed out (like kinematics). Real type/instance machinery stays
+deferred.
+
+**Seams: one contract per IF row; a mechatronic seam may be several rows.** Protocol
+(topic + schema), electrical (connector, power), and mechanical (bolt pattern,
+envelope) contracts verify differently — `Test` TC vs `Inspection` TC — so the TC
+`Method` column is the cleaving line. gilbert's `IF-001` blends them today; splitting
+is allowed, never forced.
+
+**Tags: authored truth, machine-suggested.** Membership is a design decision. A script
+may *propose* tags — for software, the `LLR.Module` path prefix ≈ package ≈ CMP
+(gilbert's ten `src/gilbert_*` packages map 1:1) — and a coverage check flags untagged
+primitives at the rung that opts in. Same family as F1 / Thread-49; never the source of
+truth.
+
+**Enforceability: a cross-CMP edge with no declared IF is a finding.** One rule, both
+worlds: software mechanized via the import graph (`gen_arch_map` machinery joined with
+tags + the IF registry); physical attested (`Inspection`). Until the check exists the
+discipline is gate-attested — tolerable because real IF counts run small (gilbert: 3).
+
+**The system view falls out.** A robot definition = the CMP graph — CMPs as nodes,
+boundary IFs as edges, optionally one root CMP via `PartOf`. That *is* the
+**How-physical view** of `PROJECT_STATE.html`; no new registry, and software CMPs join
+the same graph through the HAL-style seams they program to.
 
 ---
 
