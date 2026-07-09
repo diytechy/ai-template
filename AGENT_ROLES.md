@@ -4,9 +4,9 @@
 **Date:** 2026-07-09 (last updated 2026-07-09) · **Branch:** `MultiRepoSupport` (not pushed) ·
 **Status:** **RATIFIED (iterations 2–3, owner rulings 2026-07-09) — design settled,
 nothing built.** The four open questions are answered (R1–R5) plus provider diversity
-(R6); what remains is build sequencing (§ "Remaining open"). One point held for owner
-confirmation: dropping the floated 24-hour coordinator self-reboot, given the
-by-construction resolution below.
+(R6); what remains is build sequencing (§ "Remaining open"). The floated 24-hour
+coordinator self-reboot is **dropped** (owner-confirmed 2026-07-09 — R3's
+by-construction resolution: every session is already a fresh context).
 
 ## Provenance
 
@@ -123,8 +123,8 @@ by the existing architecture, not by a timer: the coordinator is **stdlib Python
 no LLM state**, and every LLM actor is a **bounded fresh session** that inherits state
 from files (`status.md`, `log.md`, the registries), never from a conversation. The
 "reboot" happens **between every session**; a 100-session run accumulates zero LLM
-context. The floated 24-hour self-reboot is therefore unnecessary *(held for owner
-confirmation)*.
+context. The floated 24-hour self-reboot is therefore unnecessary — **dropped
+(owner-confirmed 2026-07-09)**.
 
 The **real** analogue of the concern is `status.md` growth: every session inherits the
 resume surface, so a bloated status file is the file-world version of a full context
@@ -216,7 +216,6 @@ the review-policy wiring (dual review is its first consumer).
 2. **`status.md` size guard** — add the warn-only preflight threshold, or rely on the
    integrator-prunes charter alone? (Cheap either way.)
 3. **`--prompt-map`** — deferred until the zero-code role convention shows drift.
-4. **Owner confirmation:** drop the 24-hour coordinator self-reboot (R3's resolution).
 
 ## Cross-links
 
