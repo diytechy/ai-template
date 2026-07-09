@@ -2,7 +2,7 @@
 
 **Author:** Claude (Opus 4.8), design note from a working session ·
 **Date:** 2026-07-08 (last updated 2026-07-09) · **Branch:** `MultiRepoSupport` (not pushed) ·
-**Status:** **OPEN — a ruling-in-progress (iteration 6). Expect more passes before
+**Status:** **OPEN — a ruling-in-progress (iteration 7). Expect more passes before
 implementation.** Nothing here is built; no registry or script has been touched.
 
 ## Provenance
@@ -79,19 +79,27 @@ inherits the framing instead of re-deriving it.
   `docs/knowledge/<label>.md` (§4). **`PROJECT_STATE.html`** as-of line visible on open.
   **Refactor:** the coordinator/roles dynamic layer **split out** to
   [`AGENT_ROLES.md`](AGENT_ROLES.md). Still OPEN.
+- **Iteration 7** (this revision) — cleanup + refinements. **Renamed** "module" →
+  **`swBlock`** / part / component throughout the body (the deferred iter-6 follow-up;
+  the historical changelog is left as-is). **`LLR.Module` dropped entirely** — the
+  swBlock↔LLR link is now **many-to-many both ways** (a swBlock realises ≥1 LLR; an LLR
+  may be realised by several swBlocks), carried solely by `swBlock.Realises` (§2).
+  **Knowledge** refs now sit on **swBlocks, parts, *and* assets**, one or many, M:N (§3b,
+  §4). Q1's "retire/derive `LLR.Module`" is resolved (dropped); Q13 rename done. Still
+  OPEN.
 
 > How to read: §1 the conflation (unchanged, still true). §2 the three-axis reframe
-> + the `LLR.Module` hinge. §3 the module as centre of gravity (+ §3a content format,
-> §3b geometry, §3c keeping software modules in sync). §4 knowledge packs ≈ skills
+> + the `swBlock↔LLR` link. §3 the swBlock as centre of gravity (+ §3a content format,
+> §3b geometry, §3c keeping swBlocks in sync). §4 knowledge packs ≈ skills
 > (+ the derived half). §5 where work-definition lives (+ §5a temporal scope: roadmap
-> is prospective, past = git). §6 larger change → module lifecycle. §7 mating =
+> is prospective, past = git). §6 larger change → swBlock lifecycle. §7 mating =
 > contract + consuming work (+ assembly = a graph, not a fatter asset). §8 concrete
 > tech (Elysia) + software tooling. **Cross-cutting** (after §8): the shared structure
 > — one edge vocabulary, routed resolvers (+ not-every-graph-is-a-DAG, the 4-bar;
 > domain-neutral containers). **The artifact** (`PROJECT_STATE.html`); the dynamic layer
 > (coordinator/roles) is now the sibling [`AGENT_ROLES.md`](AGENT_ROLES.md). §9 naming
-> (swBlock / part; MOD→REPO). §10 cautions. §11 decision. §12 open questions. *(The unit
-> is now a `swBlock`; §5b adds hard-vs-soft predecessors.)*
+> (swBlock / part; MOD→REPO). §10 cautions. §11 decision. §12 open questions. *(iter 7:
+> "module"→swBlock rename applied; `LLR.Module` dropped; §5b hard-vs-soft predecessors.)*
 
 ---
 
@@ -113,120 +121,116 @@ as a DAG cluster-order seed + display label + a count tile. It carries no
 dependency semantics and no worktree reality.
 
 So the `work-items.csv` "Track" **is not a track** — it is a grouping, and (per §2)
-that grouping is best expressed as *which module the work advances*. Reusing the
+that grouping is best expressed as *which swBlock the work advances*. Reusing the
 execution-lane word for it is the root cause of the how/when conflation.
 
 ---
 
-## 2. The reframe: three axes, joined by `LLR.Module`
+## 2. The reframe: three axes, joined by the swBlock↔LLR link
 
 The owner's *what / how / when* frame is right once you see that **"how" was hiding
 two things, and one of them was already built.** `SR → LLR` **is** the functional
 decomposition — each SR/LLR is a function the system must perform. So there is no
-functional-decomposition axis to add; it is the WHAT. That leaves **Modules** as the
-*physical / implementation* decomposition, and `LLR.Module` as the hinge between
-them (function → the component that implements it — a many-to-many mapping in one
-column).
+functional-decomposition axis to add; it is the WHAT. That leaves the **swBlock** (and
+its physical sibling, the **part / assembly**) as the *implementation* decomposition,
+linked to the spine by **`swBlock.Realises`** — the swBlock names the LLRs it satisfies.
 
-| Axis | Home today | Nature |
+| Axis | Home | Nature |
 |---|---|---|
 | **WHAT** — incl. the functional decomposition | `SN → SR → LLR → TC` | durable truth |
 | **WHY** | README `PROJECT-VISION` (top) → SR rationale (mid) → LLR/impl intent (implicit) | durable, **distributed**, reference-not-restate |
-| **HOW** — physical / impl decomposition | **Modules** — today only the free-text `LLR.Module` string (no general registry; see below) | durable |
-| **WHEN** | **Workstream → Session**; plus the parallel-execution *tracks* | semi-durable → transient |
+| **HOW** — implementation decomposition | **swBlock** (software) / **part / assembly** (physical) — a new component registry (§3) | durable |
+| **WHEN** | **Workstream** (a grouping category) + **Session**; plus the parallel-execution *tracks* | mutable / transient |
 
 "Electrical power vs mechanical engineering," "software vs hardware" — these are
 **not** a third decomposition tree. They are a **category + knowledge lens** over
-modules (§3–4). Folding functional into WHAT is what keeps the model from growing a
-redundant fourth hierarchy.
+swBlocks / parts (§3–4). Folding functional into WHAT is what keeps the model from
+growing a redundant fourth hierarchy.
 
-**Naming (iter 6, see §9).** The software decomposition unit is a **`swBlock`** — not
-"module" (`MOD-###` already means a delegated repo), not "Processor" (reads as a CPU).
-The physical unit is a **part / assembly**. Below, "module" is the *generic* word for
-either; a global rename is a mechanical follow-up, not done inline.
+**Naming (§9).** The software decomposition unit is a **`swBlock`** — not "module"
+(`MOD-###` already means a delegated repo), not "Processor" (reads as a CPU). The
+physical unit is a **part / assembly**; "component" is the generic word for either.
 
-**Precision on the unit today, and the direction flip (iter 6).** The `swBlock` — a
-thing with expectations, interfaces, knowledge, and a lifecycle — **has no registry
-yet**; it exists only as the free-text `LLR.Module` string, and the existing
+**The swBlock↔LLR link is many-to-many, and `LLR.Module` is dropped.** An **LLR** is "a
+decomposed need — an outcome fed elsewhere." A swBlock **realises ≥1** LLR, and an LLR
+may be realised by **several** swBlocks (it depends on the functionality). A single
+`LLR.Module` string can express neither direction, so it is **dropped entirely**; the
+authoritative link is **`swBlock.Realises`** (a *list* of LLR ids). (A swBlock may also
+be **instanced** — one *type*, many instances; the swBlock is the type, instances are
+refs; deferred until a real case appears.)
+
+**The unit has no registry yet** — it existed only as that free-text `LLR.Module` string
+(now retired), and the existing
 [`modules.csv` (`MOD-###`)](project-trajectory/registries/modules.template.csv) is a
-*different* thing (a delegated **repo** — itself to be renamed, e.g. `REPO-###`, §9).
-Two rulings:
-
-- **Flip the direction.** `LLR.Module` (one module per LLR) is too narrow — a swBlock
-  realises **many** LLRs and may be **instanced**. So the **swBlock owns `Realises`** (a
-  *list* of LLR ids; many-to-many); `LLR.Module` becomes a derived hint or retires. An
-  **LLR** is "a decomposed need — an outcome fed elsewhere"; a swBlock **satisfies ≥1**
-  of them. (Instancing — one swBlock *type*, many instances — is a real case: the
-  swBlock is the type, instances are refs; deferred until one appears.)
-- **Stand up a sibling** component registry (the Q12.1 lean), not a widened `MOD-###`.
+*different* thing (a delegated **repo**, to be renamed `REPO-###`, §9). So the step is a
+**new sibling** component registry (the Q12.1 lean), not a widened `MOD-###`.
 
 The SSOT rule that ties all of this together **without duplication**: *each fact has
 exactly one home; everything else references it by id; the dashboard is a generated
-**view** that joins them* — the `trace.py` / "a view, never a source of truth"
-idiom. A module references its SR/LLR/TC (never restates them); a workstream
-references its module + predecessors (never restates the module's definition).
+**view** that joins them* — the `trace.py` / "a view, never a source of truth" idiom. A
+swBlock references its SR/LLR/TC (never restates them); a workstream is just a grouping
+category over swBlocks / parts (never restates their definition).
 
 ---
 
-## 3. The module is the centre of gravity
+## 3. The swBlock is the centre of gravity
 
-*Naming: the unit is a `swBlock` (software) or a part/assembly (physical); "module"
-here is the generic term — see §2, §9.*
+*Naming: the unit is a `swBlock` (software) or a part/assembly (physical); "component"
+is the generic term — see §2, §9. "swBlock" below stands in for either where the point
+is general.*
 
 Put the durable material on the durable noun. A swBlock/part row carries:
 
-- **Expectations / definition** — what it must satisfy, expressed as **references**
-  to the `SR / LLR / TC` it realises (never restated). This is also where the
-  module says *how it breaks down*, so a workstream can just say "work on M."
-- **Interfaces** — the `IF-###` seams by which it mates with other modules (§7).
-- **Category** — a tag/lens (`software` │ `physical` │ …). Just a tag, **no
-  registry** (as the owner noted); it points at the relevant knowledge (§4).
-- **Knowledge pack(s)** — durable pointers to domain expertise + external resources
-  + applicable agent skills (§4).
+- **Expectations / definition** — what it must satisfy, expressed as **references** to
+  the `SR / LLR / TC` it realises via `Realises` (never restated). This is also where the
+  swBlock says *how it breaks down*, so a workstream can just say "work on M."
+- **Interfaces** — the `IF-###` seams by which it mates with other swBlocks / parts (§7).
+- **Category** — a tag/lens (`software` │ `physical` │ …). Just a tag, **no registry**;
+  it points at the relevant knowledge (§4).
+- **Knowledge** — one or more `docs/knowledge/<label>` refs + skills (§4).
 - **State / lifecycle** — `planned │ built │ verified │ has-gap │ deprecated │
   superseded-by:<id>` (§6).
 
-**Keep modules flat + composable, not rigidly levelled.** The owner is right that
-"module → parts → sub-parts" gets arbitrary. Model composition with a
-`Contains` / `PartOf` link and let a module slot in anywhere, rather than mandating
+**Keep components flat + composable, not rigidly levelled.** The owner is right that
+"component → sub-component → …" gets arbitrary. Model composition with a
+`Contains` / `PartOf` link and let a component slot in anywhere, rather than mandating
 hierarchy depth. (This matches the existing `MOD-###` flatness.)
 
-*Issues update the module's definition; new learning updates its knowledge pack;
-everything stays central to the module when work is performed on it.* That
-centrality is the whole point.
+*Issues update the swBlock's definition; new learning updates its knowledge; everything
+stays central to the swBlock when work is performed on it.* That centrality is the whole
+point.
 
-### 3a. Module content: a light row + an *optional* detail doc (not ini)
+### 3a. swBlock content: a light row + an *optional* detail doc (not ini)
 
-A module is *both* a row and a document, and the light/heavy tension is the signal
-not to force it to be one or the other:
+A swBlock is *both* a row and a document, and the light/heavy tension is the signal not
+to force it to be one or the other:
 
-- **The CSV row is primary** — the light, machine-joinable, traceable fields (id,
-  name, category, state, `Realises` (SR/LLR/TC refs), `Interfaces` (IF refs),
-  `Assets` (ASSET refs), `Skills`, `PartOf`, `DetailDoc`, `Notes`). `LLR.Module`
-  resolves here, and `trace.py` validates it cheaply, stdlib.
-- **An optional detail doc holds the heavy prose** — `docs/modules/<MOD-id>.md`,
-  markdown-with-frontmatter (the **skills** format). Linked by the row's `DetailDoc`
-  cell. **A light module is just a row (`DetailDoc` empty); a heavy one adds the
-  doc.** You never pay for a file a light module doesn't need.
+- **The CSV row is primary** — the light, machine-joinable, traceable fields (id, name,
+  category, state, `Realises` (LLR refs — a *list*), `Interfaces` (IF refs), `Assets`
+  (ASSET refs), `Knowledge` (labels), `PartOf`, `DetailDoc`, `Notes`). `Realises`
+  resolves to real LLRs here, and `trace.py` validates it cheaply, stdlib.
+- **An optional detail doc holds the heavy prose** — `docs/swblocks/<id>.md` (a physical
+  part gets its own dir), markdown-with-frontmatter (the **skills** format). Linked by
+  the row's `DetailDoc` cell. **A light swBlock is just a row (`DetailDoc` empty); a
+  heavy one adds the doc.** You never pay for a file a light swBlock doesn't need.
 
-**Not ini.** ini is a *config* format (flat `key=value`) — right for `stack.ini`,
-wrong for prose/lists/rationale. md-frontmatter is the kit's existing heavy-per-
-entity format; reuse it rather than invent a fourth pattern. **Polarity rule (kills
-the "where do I look?" confusion):** machine truth in the row, human prose in the
-doc, never the same fact in both; the generated dashboard splices them into one
-panel at read time.
+**Not ini.** ini is a *config* format (flat `key=value`) — right for `stack.ini`, wrong
+for prose/lists/rationale. md-frontmatter is the kit's existing heavy-per-entity format;
+reuse it rather than invent a fourth pattern. **Polarity rule (kills the "where do I
+look?" confusion):** machine truth in the row, human prose in the doc, never the same
+fact in both; the generated dashboard splices them into one panel at read time.
 
-Do **not** flip to file-primary-with-generated-index (the skills polarity,
-`SKILL.md` + `gen_skills_index.py`): that reintroduces a whole file *per light
-module*, the exact tax being avoided. Row-primary is the answer to the light/heavy
-tension. Also note most modules need **no** doc — reusable knowledge is a *skill*
-(already a file), so the module often just lists `Skills` refs; the doc is only for
-content *specific* to this module.
+Do **not** flip to file-primary-with-generated-index (the skills polarity, `SKILL.md` +
+`gen_skills_index.py`): that reintroduces a whole file *per light swBlock*, the exact tax
+being avoided. Row-primary is the answer to the light/heavy tension. Also note most
+swBlocks need **no** doc — reusable knowledge is a *skill* (already a file), so the
+swBlock often just lists `Knowledge` refs; the doc is only for content *specific* to it.
 
 ```
-# component registry (MOD row) — light module: no DetailDoc
-MOD-018, Mounting bracket, physical, built, LLR-030, IF-007, ASSET-004, , MOD-002, ,
-# heavy module: same shape, DetailDoc -> docs/modules/MOD-012.md
+# component registry — a swBlock (software) row; light: no DetailDoc
+SWB-007, HTTP boundary, software, verified, LLR-014;LLR-021, IF-003, , skill-elysia, SWB-002, ,
+# heavy swBlock: same shape, DetailDoc -> docs/swblocks/SWB-012.md
+# physical parts share the registry (Category=physical); the id scheme (SWB- / PRT-) is Q13
 ```
 
 ### 3b. Where geometry lives (no new axis)
@@ -242,34 +246,34 @@ MOD-018, Mounting bracket, physical, built, LLR-030, IF-007, ASSET-004, , MOD-00
   **`IF-###`** Contract ([interfaces.csv](project-trajectory/registries/interfaces.template.csv)):
   the seam "in one testable line," linking the drawing. Verified by a TC with
   `Method = Inspection`/`Demonstration` (CMM report, fit check).
-- **The narrative** (GD&T rationale, assembly notes, revisions) → the module's
-  **detail doc** (§3a), only if heavy.
+- **The narrative** (GD&T rationale, assembly notes, revisions) → the part's **detail
+  doc** (§3a), only if heavy.
 
-The **module row references the first two** (`Assets` → the CAD, `Interfaces` → the
-seam). This closes §7's assembly loop: `ASSET` (shape) + `IF` (what must line up) +
-`PART` (fasteners consumed) + an assembly WI (`predecessors=[both modules],
+The **component (part) row references the first two** (`Assets` → the CAD, `Interfaces`
+→ the seam). This closes §7's assembly loop: `ASSET` (shape) + `IF` (what must line up) +
+`PART` (fasteners consumed) + an assembly WI (`predecessors=[both parts],
 consumes=[PART], satisfies=IF`). The light/heavy gradient holds: a stock screw is a
-`PART` + datasheet (no ASSET); a bespoke part is an `ASSET` whose blob stays
-out-of-tree. **SSOT nuance (defer):** pick *one* authoritative direction for the
-asset↔module link — lean on the existing `ASSET.Refs → LLR` and discover a module's
-geometry through the `LLR.Module` join; add a direct `Assets` cell only if the join
-proves annoying.
+`PART` + datasheet (no ASSET); a bespoke part is an `ASSET` whose blob stays out-of-tree.
+**SSOT nuance:** with `LLR.Module` dropped, the direct **component `Assets` cell** is the
+authoritative asset↔component link and `ASSET.Refs` is the back-link. And an **ASSET row
+also carries `Knowledge`** refs (one or more `docs/knowledge/` labels), exactly like a
+swBlock/part — §4.
 
-### 3c. Keeping a software module in sync with the code (the verifiability boundary)
+### 3c. Keeping a swBlock in sync with the code (the verifiability boundary)
 
-The module ↔ asset split is partly the split between **"mechanically verifiable
-against source"** and **"only attestable."** A **physical** asset can't be diffed —
-you can't mechanically verify a weld — so it is *attested / inspected* (the `ASSET`
-"track about it in text" doctrine + an `Inspection`/`Attest` TC). A **software**
-module *can* be verified against its source. So keep it current the way the kit keeps
-its own code map current — **generated / checked, never hand-authored:**
+The swBlock ↔ asset split is partly the split between **"mechanically verifiable against
+source"** and **"only attestable."** A **physical** asset can't be diffed — you can't
+mechanically verify a weld — so it is *attested / inspected* (the `ASSET` "track about it
+in text" doctrine + an `Inspection`/`Attest` TC). A **swBlock** *can* be verified against
+its source. So keep it current the way the kit keeps its own code map current —
+**generated / checked, never hand-authored:**
 
-- A software module's **code-facing fields are *references to source*** (a path, a
-  module, the symbols it comprises); a stdlib check verifies they *resolve in the
-  actual code* — the `gen_arch_map.py --check` idiom. This is exactly
+- A swBlock's **code-facing fields are *references to source*** (a path, a code module,
+  the symbols it comprises); a stdlib check verifies they *resolve in the actual code* —
+  the `gen_arch_map.py --check` idiom. This is exactly
   [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md) **F1** (untraced-code / symbol coverage)
-  and **Thread 49** (symbol-reference validation): the module-drift guard is a check
-  the review already asked for, now given a home.
+  and **Thread 49** (symbol-reference validation): the swBlock-drift guard is a check the
+  review already asked for, now given a home.
 - Keep authored prose minimal — prose rots; the *sync-able* part is the references,
   and references get gated. Drift is prevented by *deriving / checking*, never by
   discipline.
@@ -283,15 +287,16 @@ The kit already ships the mechanism: [`project-trajectory/skills/`](project-traj
 per-repo. A knowledge pack is essentially:
 
 > **{ applicable skills } + { external resource refs } + { internal domain notes }**,
-> attached to a module.
+> attached to a swBlock, part, or asset.
 
 So do **not** invent a parallel system. **Reusable** agent knowledge stays a *skill*
 (`project-trajectory/skills/`); **project-specific** domain knowledge lives in
-**`docs/knowledge/<label>.md`** (iter 6), each file labelled by topic — the *core
-solution context* for anything that relates to it. A swBlock/part row carries a
-`Category` tag + a `Knowledge` cell listing the **labels** it depends on (skill names +
-`docs/knowledge/` labels + external URLs). No registry needed — labelled docs
-referenced by label; promote to a registry only if reuse ever forces it.
+**`docs/knowledge/<label>.md`**, each file labelled by topic — the *core solution
+context* for anything that relates to it. A swBlock / part **and an `ASSET`** row each
+carry a `Knowledge` cell listing **one or more labels** (skill names + `docs/knowledge/`
+labels + external URLs); the relationship is **many-to-many** — a component may cite
+several packs, and a pack is shared by many components. No registry needed — labelled
+docs referenced by label; promote to a registry only if reuse ever forces it.
 
 **A knowledge pack has two halves — derived + authored.** The *authored* half is the
 skills + refs above. The **derived** half is a *view* computed from the part's own
@@ -301,28 +306,28 @@ hand-authoring. Being a *view* (never a source of truth), the derived half stays
 for free and is never restated — the same idiom as the generated dashboard.
 
 **The loop this closes** (the owner's exact scenario — a gap found in an already-
-`verified` module):
+`verified` swBlock):
 
-1. A TC gap surfaces on module M → open a **workstream** targeting M.
-2. M's row already carries its knowledge pack → **no rediscovery** of the base.
+1. A TC gap surfaces on swBlock M → open a **workstream** grouping targeting M.
+2. M's row already carries its knowledge refs → **no rediscovery** of the base.
 3. The work tightens the constraint → new/updated **LLR + TC** (the WHAT changes,
-   referenced by M's expectations).
+   referenced by M's `Realises`).
 4. M's state flips `verified → has-gap → verified`; new learning **appends to the
-   pack**.
-5. The workstream schedules the fix in the DAG; the session logs the evidence.
+   `docs/knowledge/` pack**.
+5. The work item schedules the fix in the DAG; the session logs the evidence.
 
-The knowledge survives on the durable module, so iteration **rejoins** it instead of
+The knowledge survives on the durable swBlock, so iteration **rejoins** it instead of
 relearning it.
 
 ---
 
-## 5. Where the definition of work lives (module vs workstream vs session)
+## 5. Where the definition of work lives (swBlock vs workstream vs session)
 
 Split by **durability** — this is the answer to "should session definition belong to
-the workstream or the module?":
+the workstream or the swBlock?":
 
-- **Module** = durable *noun*. Owns *what it must become* (expectations → SR/LLR/TC,
-  interfaces, knowledge, state). Survives across iterations.
+- **swBlock / part** = durable *noun*. Owns *what it must become* (expectations →
+  SR/LLR/TC, interfaces, knowledge, state). Survives across iterations.
 - **Workstream** = a **mutable grouping category** (a column on swBlocks + assemblies),
   bounding deliverables that share dependencies — e.g. a *perception* workstream over
   the camera-input→depth swBlock. **Not an SN** (Q12.2 resolved); project-defined, and
@@ -376,24 +381,24 @@ changes (§10).
 
 ---
 
-## 6. A larger change → the module lifecycle is the stable identity
+## 6. A larger change → the swBlock lifecycle is the stable identity
 
 The ladder:
 
-- **Tune** → new workstream, same module definition, maybe a new TC.
-- **Extend / constrain** → update the module's expectations → new/changed SR/LLR/TC
-  → workstream(s); the pack grows.
-- **New approach entirely** → **supersede**: mark M `deprecated`,
-  `superseded-by: M'`; M' carries the knowledge pack forward; interfaces re-point.
+- **Tune** → new workstream, same swBlock definition, maybe a new TC.
+- **Extend / constrain** → update the swBlock's expectations → new/changed SR/LLR/TC
+  → work item(s); the knowledge grows.
+- **New approach entirely** → **supersede**: mark M `deprecated`, `superseded-by: M'`;
+  M' carries the knowledge forward; interfaces re-point.
 
-The key move: make the **module id the durable identity across a rewrite**, not the
+The key move: make the **swBlock id the durable identity across a rewrite**, not the
 SRs. Iteration 1 worried that a "new approach" changes the SRs and loses the
-through-line — anchoring identity on the *module* (which survives the SR rewrite)
-fixes exactly that. The module is what iteration returns to.
+through-line — anchoring identity on the *swBlock* (which survives the SR rewrite) fixes
+exactly that. The swBlock is what iteration returns to.
 
 ---
 
-## 7. Mating two modules = a *contract* plus *work that consumes resources*
+## 7. Mating two swBlocks / parts = a *contract* plus *work that consumes resources*
 
 What the registries give you today, and the precise gap:
 
@@ -416,7 +421,7 @@ and an effort/duration field on work.** That is the classic **Bill of Materials 
 Bill of Process** split — and the procurement template already flags "per-module
 allocation, roll-ups" as a *deliberately deferred* BOM extension. This is that
 extension. In software the same shape degenerates to "integration WI,
-predecessors = both modules, cost = dev-time," which the DAG already handles — which
+predecessors = both swBlocks, cost = dev-time," which the DAG already handles — which
 is why a software-only repo never felt the gap.
 
 **An assembly is a *graph*, not a fatter asset.** When parts compose into an assembly,
@@ -424,8 +429,8 @@ don't grow the `ASSET` row to hold the tree — that repeats the ASSET≠PART ov
 mistake. `ASSET` stays a **flat artifact manifest** (one binary + its hash); the
 assembly *structure* — which part `connects-to` which via which joint, which assembly
 `contains` which sub-assembly — lives in **edges**. That edge graph is the **physical
-sibling of module composition (`Contains`) + interfaces (`IF`)**: parts + connections,
-exactly as modules + interfaces. It is also where kinematics / CG / inertia and the
+sibling of component composition (`Contains`) + interfaces (`IF`)**: parts + connections,
+exactly as components + interfaces. It is also where kinematics / CG / inertia and the
 build sequence get *derived* — see "Cross-cutting" (after §8) for why the kit owns
 that graph's **structure** but **routes out** those numeric resolvers.
 
@@ -464,13 +469,13 @@ that interface, after.
 
 ## 8. Concrete tech (Elysia.js) and other software tooling
 
-**Elysia is a dependency/technology, not a module** — it is the substrate that
-software-category modules are built *on*. It is handled by two things that already
+**Elysia is a dependency/technology, not a swBlock** — it is the substrate that
+software-category swBlocks are built *on*. It is handled by two things that already
 exist:
 
 1. **`docs/stack.ini`** — the declared toolchain ("one-file stack rewiring"). Elysia
    + its version live here.
-2. **A knowledge pack / skill** — "when working on an HTTP-boundary module, use
+2. **A knowledge pack / skill** — "when working on an HTTP-boundary swBlock, use
    Elysia's Eden end-to-end types + plugin lifecycle; here are the docs." Exactly the
    outside-resource-plus-skill pointer from §4.
 
@@ -506,10 +511,10 @@ Nearly every relationship in the whole model is one of ~four edges:
 
 | Edge | Software instance | Physical instance | Resolves to (stdlib) |
 |---|---|---|---|
-| `contains` / part-of | module composition | assembly → sub-assembly → part | tree / roll-up order |
+| `contains` / part-of | swBlock composition | assembly → sub-assembly → part | tree / roll-up order |
 | `depends-on` / step | WI DAG, workstream iterations | assembly sequence, parametric steps | topological order = schedule / build order |
 | `connects-to` / mates | `IF-###` interface | physical joint (+ consumes `PART`) | seam contract |
-| `realises` / derived-from | `LLR.Module`, `TC→LLR` | `ASSET→LLR` | the trace join / verification |
+| `realises` / derived-from | `swBlock.Realises`, `TC→LLR` | `ASSET→LLR` | the trace join / verification |
 
 Recording these in **one uniform edge form** (`from-id, to-id, type`) — even though
 the *nodes* live in different registries — is the reuse win, and the shared core
@@ -538,7 +543,7 @@ project-owned / external tools and only **records** the verdict at the gate. Sam
 here.
 
 **The container abstracts across physical domains — keep it domain-neutral.** A
-physical module is a *bounded container*; hydraulics, pneumatics, aerodynamics,
+physical component is a *bounded container*; hydraulics, pneumatics, aerodynamics,
 electrical, magnetic are just more property-and-port kinds on that container. The kit
 must **not** solve any of them (the bloat trap) — it only needs its interfaces to be
 **typed ports** (mechanical / electrical / fluid / …) and its properties an **open
@@ -569,7 +574,7 @@ fresh or stale the view is. It presents the whole model in four views:
 | View | Axis | Source |
 |---|---|---|
 | **What** — SN breakdown | WHAT | the `SN→SR→LLR→TC` spine (today's icicle) |
-| **How — physical** (if any) | HOW | the module/assembly **graph** (new; may be cyclic — see the 4-bar) |
+| **How — physical** (if any) | HOW | the part/assembly **graph** (new; may be cyclic — see the 4-bar) |
 | **How — SW architecture** | HOW | the code map (`gen_arch_map.py`) |
 | **When — roadmap** | WHEN | the *prospective* WI DAG (§5a) |
 
@@ -614,8 +619,8 @@ sibling note for the pipeline and the coordinator breakup.*
 - **Track** — **retire from the WI layer.** "Track" means *only* the parallel-execution
   lane.
 
-*A global rename of "module" → swBlock / part / component across this note is a
-mechanical follow-up, deferred to keep this pass reviewable.*
+*The "module" → swBlock / part / component rename across this note was applied in iter 7.
+`MOD-### → REPO-###` in the kit remains a mechanical follow-up (Q13).*
 
 ---
 
@@ -623,7 +628,7 @@ mechanical follow-up, deferred to keep this pass reviewable.*
 
 - **The core stays lean; the physical machinery is opt-in.** This model is elegant
   but hardware-flavoured (supersession, BOM/BOP, energy, assembly ops). Keep it
-  **layered**: a pure-software repo sees only `Modules + Interfaces + Skills`; a
+  **layered**: a pure-software repo sees only `swBlocks + Interfaces + Skills`; a
   hardware repo opts into `PART-consumption + assembly-ops + energy/time`. `MOD /
   ASSET / PART` are *already* opt-in "rung-3" layers — extend in that spirit.
 - **Own the graph, route the resolvers.** The shared-structure insight (Cross-cutting,
@@ -633,9 +638,9 @@ mechanical follow-up, deferred to keep this pass reviewable.*
   that keeps it from reinventing a CAD / PLM engine.
 - **This meta-repo cannot dogfood the physical half.** It is software and stdlib-only
   — the same limitation that stopped it dogfooding the README SN-inventory. The
-  unifying *idea* (one module unit for both worlds) is the value; the physical parts
+  unifying *idea* (one component unit for both worlds) is the value; the physical parts
   ship untested-by-us and must be exercised by a real hardware adopter.
-- **Downstream-migrating.** A new component-module registry + a renamed WI column is
+- **Downstream-migrating.** A new component registry + a renamed WI column is
   inherited by every adopter — exactly the class of change
   [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md) **F3** says to decide *before* adoption
   spreads. F3's "hard-vs-soft predecessor edges" is the same schema conversation;
@@ -645,9 +650,9 @@ mechanical follow-up, deferred to keep this pass reviewable.*
   **sequence F1 first** so the ratified spine is not re-attested twice.
 - **Staging (recommended):**
   - **Now (cheap, non-migrating):** retire "track" from the WI layer; document the
-    three-axis model + the module-as-centre-of-gravity framing.
-  - **Next:** promote `LLR.Module` to a first-class **component registry** (with
-    category + knowledge-pack refs + state) — the highest-leverage single step.
+    three-axis model + the swBlock-as-centre-of-gravity framing.
+  - **Next:** stand up the **swBlock / component registry** (`Realises` + interfaces +
+    category + knowledge refs + state; `LLR.Module` dropped) — the highest-leverage step.
   - **Later, gated on real need:** the `consumes`/effort fields (physical timelines),
     typed `IF-###` contracts, workstream registry. Don't build speculatively (YAGNI;
     the kit's "smallest change that works").
@@ -657,11 +662,11 @@ mechanical follow-up, deferred to keep this pass reviewable.*
 ## 11. Provisional decision
 
 Adopt: **three axes (WHAT incl. functional decomposition · WHY distributed · HOW =
-Modules · WHEN = Workstream→Session), each its own source of truth, joined by
-id-references (`LLR.Module` is the WHAT↔HOW hinge), surfaced by generated views —
-never by restating one axis inside another.** Make the **module the centre of
-gravity**: durable expectations + interfaces + category + knowledge pack + lifecycle;
-keep the workstream thin. Reuse the **skills layer** as the knowledge-pack substrate.
+swBlocks / parts · WHEN = Workstream + Session), each its own source of truth, joined by
+id-references (`swBlock.Realises` is the WHAT↔HOW hinge), surfaced by generated views —
+never by restating one axis inside another.** Make the **swBlock the centre of
+gravity**: durable expectations + interfaces + category + knowledge + lifecycle; keep
+the workstream a thin grouping category. Reuse the **skills layer** as the knowledge-pack substrate.
 Treat **mating as work that consumes parts** and keep that (and all physical
 machinery) an opt-in layer. Where relationships recur (composition, dependency,
 connection, realises), **share the graph *structure*** — one edge vocabulary + a
@@ -675,16 +680,12 @@ implementation.
 
 ## 12. Open questions for the next iteration
 
-1. **Generalise `MOD-###`, or add a new component registry?** The centre-of-gravity
-   module (component-level, with knowledge/state) is not the multi-repo `MOD-###`
-   (repo-level delegation). Decide whether to widen MOD or stand up a sibling — and
-   what `LLR.Module` references once it does.
-   *Resolved (iter 3 + 6):* the **format** is a light CSV row + optional md-frontmatter
-   detail doc, **not ini** (§3a); **geometry needs no new axis** (`ASSET` + `IF`, §3b);
-   the unit is named **`swBlock`** and **owns `Realises`** (many LLRs — the direction
-   flip, §2); a **sibling** registry (not a widened `MOD-###`, itself renamed
-   `REPO-###`, §9). Still open: the exact `swBlock` schema + retiring/deriving
-   `LLR.Module`, and **instancing** (type vs instance, deferred).
+1. **The `swBlock` / component registry — its exact schema.** A **sibling** registry
+   (not a widened `MOD-###`), decided across iters 3–7: light CSV row + optional
+   md-frontmatter detail doc, **not ini** (§3a); **owns `Realises`** (many LLRs, M:N,
+   §2); geometry via `ASSET` + `IF` (§3b); **`LLR.Module` dropped entirely** (iter 7).
+   *Still open:* the column set + **id scheme** (swBlock `SWB-` / part `PRT-`?), and
+   **instancing** (type vs instance) — deferred until a real case.
 2. **Is a Workstream distinct from an SN?** **RESOLVED (iter 6): yes** — a workstream is
    a *mutable grouping category* on swBlocks + assemblies (bounds shared-dependency
    deliverables), never an SN (§2, §5). No registry; a category column.
@@ -704,9 +705,9 @@ implementation.
    across registries (Cross-cutting) — worth doing at design time even before a second
    graph consumer exists? And when the assembly graph lands, extract the shared core
    from `check_trajectory` rather than copy it.
-9. **The software-module drift check (§3c)** — is the source-symbol check that keeps a
-   software module current the *same* mechanism as F1's untraced-code / Thread 49's
-   symbol-reference validation? If so, build it once, serve both.
+9. **The swBlock drift check (§3c)** — is the source-symbol check that keeps a swBlock
+   current the *same* mechanism as F1's untraced-code / Thread 49's symbol-reference
+   validation? If so, build it once, serve both.
 10. **`PROJECT_STATE.html` migration** — rename `docs/trajectory.html` → root
     `PROJECT_STATE.html`, or keep both? Confirm the git-derived "as-of" stamp survives
     the deterministic `--check`.
@@ -716,10 +717,9 @@ implementation.
 12. **Does the roles pipeline belong in this note or its own?** **RESOLVED (iter 6): its
     own** — split to [`AGENT_ROLES.md`](AGENT_ROLES.md) (the owner's call); its open
     questions live there now.
-13. **Renames (iter 6)** — `MOD-### → REPO-###`, and the global "module" → swBlock /
-    part across the docs, are mechanical follow-ups; sequence after the schema settles
-    (both downstream-migrating). Plus **swBlock instancing** (type vs instance),
-    deferred until a real case.
+13. **Renames** — the note's "module" → swBlock / part / component rename is **done
+    (iter 7)**; **`MOD-### → REPO-###`** in the *kit* remains a mechanical follow-up
+    (downstream-migrating), sequenced after the schema settles.
 
 ---
 
@@ -743,7 +743,7 @@ implementation.
   `docs/stack.ini` — where a framework like Elysia is declared (§8).
 - [`project-trajectory/scripts/gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   — the generated + `--check`ed code map: the drift-guard idiom §3c applies to
-  software modules, and it is the **How-SW** view of the artifact. `trace.py` +
+  swBlocks, and it is the **How-SW** view of the artifact. `trace.py` +
   `check_trajectory.py` are the two **existing typed-graph instances** the
   Cross-cutting section would factor from.
 - [`AGENT_ROLES.md`](AGENT_ROLES.md) — the **sibling note** for the dynamic layer
