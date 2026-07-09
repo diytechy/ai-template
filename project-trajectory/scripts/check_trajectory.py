@@ -2,8 +2,9 @@
 """Validate the work-item registry (docs/requirements/work-items.csv) — stdlib only.
 
 The `SN->SR->LLR->TC` spine answers *what must be true*. A **work item**
-(`WI-###`) decomposes *how the work executes*: it delivers SR(s), runs on a
-**track**, and depends on **predecessor** work items (the DAG edges), moving
+(`WI-###`) decomposes *how the work executes*: it delivers SR(s), belongs to a
+**workstream** (a mutable grouping category — the legacy `Track` header is still
+read), and depends on **predecessor** work items (the DAG edges), moving
 `queued -> active -> done`. This is the validation half of the trajectory layer;
 the offline dashboard that renders the same registry is generated separately (a
 *view*, never a source of truth — the `trace.py` / `gen_arch_map.py` idiom).
@@ -12,8 +13,13 @@ Checks (integrity, in the spirit of `trace.py`):
   - `WI-###` id shape + uniqueness — a malformed or duplicated id is an ERROR.
   - every `Predecessors` id resolves to a real work item — an ERROR (a DAG edge
     to a work item that does not exist).
-  - the work-item graph is ACYCLIC — a cycle is an ERROR (a trajectory that
-    depends on itself can never start).
+  - the work-item graph is ACYCLIC over its **hard** edges — a cycle is an
+    ERROR (a trajectory that depends on itself can never start).
+  - a predecessor may be marked **soft** with a `~` prefix (`~WI-013`): an
+    advisory-ordering hint, not a blocker. A soft edge must still resolve
+    (ERROR if not), but it is excluded from the cycle rule — a cycle that
+    exists only through soft edges is a WARN (conflicting hints), never an
+    error — and it never constrains readiness.
   - every `SR-Refs` id exists in `system-requirements.csv` — a WARN, not a
     failure (a draft SR referenced ahead of its registry row is legitimate).
 
@@ -114,17 +120,48 @@ def load_wis(rows):
         seen.add(wid)
         if wid.endswith("-000"):
             continue  # inert template example row (like trace.py)
+        # A `~` prefix marks a soft (advisory-ordering) predecessor edge; the
+        # bare id is a hard (blocking) edge — see the module docstring.
+        preds, soft = [], []
+        for p in _split_refs(r.get("Predecessors", "")):
+            if p.startswith("~"):
+                soft.append(p[1:])
+            else:
+                preds.append(p)
         wis.append(
             {
                 "id": wid,
                 "title": (r.get("Title") or "").strip(),
-                "track": (r.get("Track") or "").strip() or "other",
+                "workstream": (r.get("Workstream") or r.get("Track") or "").strip()
+                or "other",
                 "srs": _split_refs(r.get("SR-Refs", "")),
-                "preds": _split_refs(r.get("Predecessors", "")),
+                "preds": preds,
+                "soft": soft,
                 "status": (r.get("Status") or "queued").strip().lower(),
             }
         )
     return wis, integrity
+
+
+def _cycles(wis, pred_map):
+    """Cycle strings found by DFS colouring over `pred_map` ([] = acyclic)."""
+    WHITE, GREY, BLACK = 0, 1, 2
+    colour = {w["id"]: WHITE for w in wis}
+    found = []
+
+    def visit(node, stack):
+        colour[node] = GREY
+        for p in pred_map[node]:
+            if colour[p] == GREY:
+                found.append(" -> ".join(stack[stack.index(p) :] + [p]))
+            elif colour[p] == WHITE:
+                visit(p, stack + [p])
+        colour[node] = BLACK
+
+    for w in wis:
+        if colour[w["id"]] == WHITE:
+            visit(w["id"], [w["id"]])
+    return found
 
 
 def validate(wis, known_srs):
@@ -132,12 +169,15 @@ def validate(wis, known_srs):
 
     Dangling `SR-Refs` are WARNED on stderr (a draft SR referenced ahead of its
     row is legitimate), never failed — and only when the SR registry is
-    non-empty, so a repo without SRs yet does not spuriously warn."""
+    non-empty, so a repo without SRs yet does not spuriously warn. Soft (`~`)
+    predecessors must resolve like hard ones, but only **hard** edges are
+    subject to the acyclicity ERROR — a cycle that needs a soft edge to close
+    is a WARN (conflicting ordering hints), never a failure."""
     ids = {w["id"] for w in wis}
     errors = []
 
     for w in wis:
-        for p in w["preds"]:
+        for p in w["preds"] + w["soft"]:
             if p not in ids:
                 errors.append(
                     "{}: predecessor {!r} is not a work item".format(w["id"], p)
@@ -150,24 +190,22 @@ def validate(wis, known_srs):
                     file=sys.stderr,
                 )
 
-    # Cycle detection (DFS colouring). A cycle makes the trajectory unstartable.
-    WHITE, GREY, BLACK = 0, 1, 2
-    colour = {w["id"]: WHITE for w in wis}
-    pred_map = {w["id"]: [p for p in w["preds"] if p in ids] for w in wis}
+    # A hard cycle makes the trajectory unstartable -> ERROR.
+    hard_map = {w["id"]: [p for p in w["preds"] if p in ids] for w in wis}
+    for cyc in _cycles(wis, hard_map):
+        errors.append("dependency cycle: {}".format(cyc))
 
-    def visit(node, stack):
-        colour[node] = GREY
-        for p in pred_map[node]:
-            if colour[p] == GREY:
-                cyc = " -> ".join(stack[stack.index(p) :] + [p])
-                errors.append("dependency cycle: {}".format(cyc))
-            elif colour[p] == WHITE:
-                visit(p, stack + [p])
-        colour[node] = BLACK
-
-    for w in wis:
-        if colour[w["id"]] == WHITE:
-            visit(w["id"], [w["id"]])
+    # A cycle that only closes through soft edges is a hint conflict -> WARN.
+    if not any(e.startswith("dependency cycle") for e in errors):
+        both_map = {
+            w["id"]: [p for p in w["preds"] + w["soft"] if p in ids] for w in wis
+        }
+        for cyc in _cycles(wis, both_map):
+            print(
+                "check_trajectory: WARN - soft-edge cycle (advisory ordering "
+                "hints conflict; not a blocker): {}".format(cyc),
+                file=sys.stderr,
+            )
     return errors
 
 

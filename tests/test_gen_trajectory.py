@@ -11,7 +11,7 @@ import re
 
 from conftest import SCRIPTS, run_py
 
-WI_HEADER = "WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable\n"
+WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
 
 # A small but branching spine, so the icicle exercises multi-child subtrees and
 # the taller-cell label path; SR-001 Verified + SR-002 Draft -> 50% definition.
@@ -36,11 +36,13 @@ TC-002,LLR-001,Unit,call add,Smoke,"a=2",ok,Yes,Verified
 TC-003,LLR-002,Unit,call add,Full,"a=3",ok,Yes,Verified
 TC-004,SR-002;LLR-003,Unit,call sub,Full,"a=4",ok,No,Draft
 """
-# A diamond DAG: WI-001 -> {WI-002, WI-003} -> WI-004.
+# A diamond DAG: WI-001 -> {WI-002, WI-003} -> WI-004; WI-003 also carries a
+# soft (advisory, ~-prefixed) edge after WI-002 — dashed in the render, never
+# a rank constraint.
 GOOD_WIS = (
     "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
     "WI-002,Harness,scripts,SR-001,WI-001,active,harness green\n"
-    "WI-003,Subtraction,scripts,SR-002,WI-001,queued,the subber\n"
+    "WI-003,Subtraction,scripts,SR-002,WI-001;~WI-002,queued,the subber\n"
     "WI-004,Release,docs,SR-002,WI-002;WI-003,queued,shipped\n"
 )
 
@@ -93,6 +95,10 @@ def test_generates_self_contained_dashboard(tmp_path):
     low = text.lower()
     assert "http://" not in low and "https://" not in low
     assert "<script src" not in low and "cdn" not in low
+    # workstream tile (the renamed Track column) + the soft edge rendered dashed
+    assert "Workstreams" in text
+    assert 'class="edge soft"' in text
+    assert "stroke-dasharray" in text
 
 
 def test_mobile_responsive_shell(tmp_path):
@@ -128,6 +134,8 @@ def test_dag_layers_by_dependency_rank(tmp_path):
     # the root sits left of its successors; the sink sits right of them.
     assert xs["WI-001"] < xs["WI-002"] < xs["WI-004"]
     assert xs["WI-001"] < xs["WI-003"] < xs["WI-004"]
+    # WI-003's soft (~WI-002) edge is advisory: it must NOT deepen WI-003's rank
+    assert xs["WI-002"] == xs["WI-003"]
 
 
 def test_renders_without_readme_uses_fallbacks(tmp_path):

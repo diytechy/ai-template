@@ -1,4 +1,4 @@
-WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable
+WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable
 WI-001,Cross-agent portability (AGENTS.md standard + stubs),docs,,,done,"Thread 0 - the agent guide standardized on AGENTS.md with CLAUDE/GEMINI stubs; foundational."
 WI-002,Process core: roles - gates - IDs - anti-duplication,docs,,WI-001,done,"Threads 3-7,13 - PROCESS.md load-bearing core."
 WI-003,Byte-budget discipline + core/optional split,docs,,WI-002,done,"Threads 26,27 - PROCESS.md squeeze; the PROCESS_OPTIONS opt-in split."
@@ -12,7 +12,7 @@ WI-010,bootstrap.py - scaffolder (green - idempotent - profiles),scripts,SR-009;
 WI-011,ADOPTING.md section 6 - deliberate re-sync,scripts,SR-036,WI-010,done,"Thread 25 - diff-and-merge kit upgrade, never a clobber."
 WI-012,gen_arch_map.py - code map + --check freshness,scripts,SR-023,WI-008,done,"Thread 8 - a generated, drift-proof code map."
 WI-013,check_docs.py - doc navigability + vision/SN,scripts,SR-012,WI-008,done,"Threads 9,37,42 - links, PROJECT-VISION tag, SN inventory."
-WI-014,check_flows.py - runtime-flows check,scripts,SR-013,WI-013,done,"authored runtime-flow conformance from G2."
+WI-014,check_flows.py - runtime-flows check,scripts,SR-013,~WI-013,done,"authored runtime-flow conformance from G2."
 WI-015,gen_cases.py - permutation case generation,scripts,SR-024,WI-006,done,"dimensional test-case expansion (full/pairwise/boundaries)."
 WI-016,check_stubs.py - no-stub / substance detector,scripts,SR-016,WI-008,done,"Thread 14 - the G3 substance tripwire."
 WI-017,check_perf.py + PB-### - perf comparator + budgets,scripts,SR-014;SR-015,WI-008,done,"Threads 10,11 - NFR budgets + regression comparator."

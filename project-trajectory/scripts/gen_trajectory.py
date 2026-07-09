@@ -44,8 +44,10 @@ import check_trajectory as ct
 
 OUT_HTML = "docs/trajectory.html"
 
-# Track render order + display labels; unknown tracks fall through in file order.
-TRACK_LABELS = {
+# Workstream render order + display labels (the mutable grouping category on a
+# work item; legacy `Track` header still read); unknown ones fall through in
+# file order.
+WORKSTREAM_LABELS = {
     "self-adoption": "Self-adoption",
     "scripts": "Scripts / harness",
     "docs": "Docs / process",
@@ -387,10 +389,11 @@ def _reorder(order, r, neigh_map, adj_layer):
 def _dag_layout(wis):
     """Return (positions, ranks, order) for the work items.
 
-    Stages (Sugiyama-lite, deterministic): rank by longest path; seed each rank's
-    order by (track, id) to keep tracks clustered; run a fixed number of barycentre
-    sweeps (down then up) to reduce edge crossings; assign coordinates, centring
-    each rank vertically against the tallest one."""
+    Stages (Sugiyama-lite, deterministic): rank by longest path over **hard**
+    edges (soft edges are advisory — they never constrain rank); seed each rank's
+    order by (workstream, id) to keep workstreams clustered; run a fixed number of
+    barycentre sweeps (down then up) to reduce edge crossings; assign coordinates,
+    centring each rank vertically against the tallest one."""
     ids = {w["id"] for w in wis}
     by_id = {w["id"]: w for w in wis}
     pred_map = {w["id"]: [p for p in w["preds"] if p in ids] for w in wis}
@@ -405,7 +408,7 @@ def _dag_layout(wis):
     for r in range(nranks):
         order[r] = sorted(
             (nid for nid in ids if rank[nid] == r),
-            key=lambda n: (by_id[n]["track"], n),
+            key=lambda n: (by_id[n]["workstream"], n),
         )
     for _ in range(4):
         for r in range(1, nranks):
@@ -437,21 +440,25 @@ def dag_svg(wis):
     def esc(s):
         return html.escape(str(s), quote=True)
 
-    # Edges first (drawn under the nodes). A predecessor sits in a lower rank, so
-    # every edge runs left->right; a horizontal control offset softens it.
+    # Edges first (drawn under the nodes). A hard predecessor sits in a lower
+    # rank, so hard edges run left->right; a horizontal control offset softens
+    # them. Soft (advisory) edges render dashed and may run backwards — they
+    # never constrained the ranking.
     edges = []
     for w in wis:
-        for p in w["preds"]:
+        for p, cls in [(p, "edge") for p in w["preds"]] + [
+            (p, "edge soft") for p in w["soft"]
+        ]:
             if p not in ids:
                 continue
             x1, y1 = pos[p][0] + DAG_COL_W, pos[p][1] + DAG_ROW_H / 2
             x2, y2 = pos[w["id"]][0], pos[w["id"]][1] + DAG_ROW_H / 2
             dx = max((x2 - x1) * 0.4, 12)
             edges.append(
-                '<path class="edge" data-src="{}" data-tgt="{}" '
+                '<path class="{}" data-src="{}" data-tgt="{}" '
                 'd="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
                 'marker-end="url(#arrow)"></path>'.format(
-                    esc(p), esc(w["id"]), x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2
+                    cls, esc(p), esc(w["id"]), x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2
                 )
             )
 
@@ -480,13 +487,14 @@ def dag_svg(wis):
                 st, esc(w["id"]), x, y, DAG_COL_W, DAG_ROW_H, STATUS_FILL[st], label
             )
         )
-        track = TRACK_LABELS.get(w["track"], w["track"])
+        ws = WORKSTREAM_LABELS.get(w["workstream"], w["workstream"])
         details[w["id"]] = {
             "status": st,
             "title": title,
-            "body": "Track: {}".format(track),
+            "body": "Workstream: {}".format(ws),
             "meta": "Delivers: {} · After: {}".format(
-                ", ".join(w["srs"]) or "—", ", ".join(w["preds"]) or "—"
+                ", ".join(w["srs"]) or "—",
+                ", ".join(w["preds"] + ["~" + p for p in w["soft"]]) or "—",
             ),
         }
 
@@ -590,6 +598,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   #dag .wi.queued text { fill:#0f172a; }
   #dag .wi.hl rect { stroke:#f59e0b; stroke-width:2.5; }
   #dag .edge { fill:none; stroke:var(--border); stroke-width:1.4; }
+  #dag .edge.soft { stroke-dasharray:5 4; opacity:.75; }
   #dag .edge.hl { stroke:#f59e0b; stroke-width:2; }
   #dag .arrowhead { fill:var(--border); }
   .detail { background:var(--surface); border:1px solid var(--border);
@@ -645,7 +654,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <div class="tile"><b>$llr_total</b><span>LLR</span></div>
         <div class="tile"><b>$tc_total</b><span>TC</span></div>
         <div class="tile"><b>$wi_total</b><span>Work items</span></div>
-        <div class="tile"><b>$tracks</b><span>Tracks</span></div>
+        <div class="tile"><b>$workstreams</b><span>Workstreams</span></div>
       </div>
     </section>
 
@@ -678,14 +687,16 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       <h2>Work-item trajectory</h2>
       <p class="cap">The dependency DAG from <code>docs/requirements/work-items.csv</code>,
       laid out left→right by <strong>dependency rank</strong> (a work item sits one
-      column past its deepest predecessor). Edges are predecessor links; cross-track
-      edges are the seams. <strong>Hover</strong> a work item to highlight its
-      neighbourhood; <strong>click</strong> for its detail. Plain SVG — no libraries,
-      fully offline.</p>
+      column past its deepest hard predecessor). <strong>Solid edges block</strong>
+      (hard dependencies); <strong>dashed edges are advisory ordering</strong> (soft,
+      <code>~</code>-prefixed — they never gate readiness). Cross-workstream edges are
+      the seams. <strong>Hover</strong> a work item to highlight its neighbourhood;
+      <strong>click</strong> for its detail. Plain SVG — no libraries, fully
+      offline.</p>
       <div class="layout">
         <div id="dag" class="view">$dag_svg</div>
         <aside id="dag-detail" class="detail"><p class="hint">Click a work item to read its
-          detail — track, status, the SRs it delivers, its predecessors.</p></aside>
+          detail — workstream, status, the SRs it delivers, its predecessors.</p></aside>
       </div>
       <div class="legend">
         <span><i style="background:var(--done)"></i>done</span>
@@ -778,7 +789,7 @@ def build_html(root, wis):
     done = sum(1 for w in wis if w["status"] == "done")
     active = sum(1 for w in wis if w["status"] == "active")
     stats = spine_stats(root)
-    tracks = len({w["track"] for w in wis})
+    workstreams = len({w["workstream"] for w in wis})
     arch, arch_details, arch_desc = arch_icicle(root)
     dag, wi_details = dag_svg(wis)
 
@@ -795,7 +806,7 @@ def build_html(root, wis):
         sr_total=stats["sr_total"],
         llr_total=stats["llr_total"],
         tc_total=stats["tc_total"],
-        tracks=tracks,
+        workstreams=workstreams,
         wi_pct=round(100 * done / total) if total else 0,
         wi_done=done,
         wi_total=total,

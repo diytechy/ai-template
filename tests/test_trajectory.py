@@ -10,7 +10,8 @@ minimal temp registry (no full scaffold needed — the validator reads plain CSV
 
 from conftest import SCRIPTS, run_py
 
-WI_HEADER = "WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable\n"
+WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
+LEGACY_HEADER = "WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable\n"
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,Verification,Status\n"
@@ -138,6 +139,56 @@ def test_malformed_id_fails(tmp_path):
     proc = run_traj(tmp_path)
     assert proc.returncode == 1
     assert "malformed work-item id" in proc.stderr
+
+
+# --- soft (~) predecessor edges: advisory ordering, never a blocker --------------
+
+
+def test_soft_predecessor_must_still_resolve(tmp_path):
+    # A soft edge names a WI that must exist — advisory ordering to a phantom
+    # node is a data error like any dangling predecessor.
+    write_wis(tmp_path, "WI-001,A,t,,~WI-099,queued,d\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 1
+    assert "predecessor 'WI-099' is not a work item" in proc.stderr
+
+
+def test_soft_only_cycle_warns_but_passes(tmp_path):
+    # A cycle that closes only through soft edges is a hint conflict (WARN),
+    # not an unstartable trajectory (the hard-edge acyclicity rule).
+    write_wis(
+        tmp_path,
+        "WI-001,A,t,,~WI-002,queued,d\nWI-002,B,t,,~WI-001,queued,d\n",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "soft-edge cycle" in proc.stderr
+
+
+def test_mixed_hard_soft_graph_passes(tmp_path):
+    # A hard diamond with one soft ordering hint stays clean.
+    write_wis(
+        tmp_path,
+        "WI-001,Root,scripts,,,done,d\n"
+        "WI-002,Mid,scripts,,WI-001,active,d\n"
+        "WI-003,Leaf,docs,,WI-001;~WI-002,queued,d\n",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "acyclic" in proc.stdout
+
+
+def test_legacy_track_header_still_read(tmp_path):
+    # A pre-rename registry (Track column) validates unchanged — the rename is
+    # downstream-migrating but never breaking.
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "work-items.csv").write_text(
+        LEGACY_HEADER + "WI-001,A,old-lane,,,done,d\n", encoding="utf-8"
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "1 work item(s)" in proc.stdout
 
 
 # --- SR refs: warn (not fail) when the SR registry is present -------------------
