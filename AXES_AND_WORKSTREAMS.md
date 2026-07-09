@@ -1,8 +1,8 @@
 # Axes & Workstreams — how to organize *what* / *why* / *how* / *when* without duplication
 
 **Author:** Claude (Opus 4.8), design note from a working session ·
-**Date:** 2026-07-08 · **Branch:** `MultiRepoSupport` (not pushed) ·
-**Status:** **OPEN — a ruling-in-progress (iteration 2). Expect more passes before
+**Date:** 2026-07-08 (last updated 2026-07-09) · **Branch:** `MultiRepoSupport` (not pushed) ·
+**Status:** **OPEN — a ruling-in-progress (iteration 4). Expect more passes before
 implementation.** Nothing here is built; no registry or script has been touched.
 
 ## Provenance
@@ -40,12 +40,26 @@ inherits the framing instead of re-deriving it.
   in the row, prose in the doc, never both. And showed **geometry fits with no new
   axis** (§3a): the artifact → `ASSET-###`, the mating constraint → `IF-###`, the
   narrative → the detail doc. Still OPEN.
+- **Iteration 4** (this revision) — three more boundaries. **(a)** An *assembly* is a
+  **relationship graph**, not a fatter asset (§7): `ASSET` stays a flat artifact
+  manifest; composition + connection **edges** carry the tree (the physical sibling of
+  module composition + interfaces). **(b)** Software modules stay in sync by being
+  **checked against source** — code-facing fields are references a freshness check
+  validates (the `gen_arch_map.py` idiom; F1 / Thread 49), so module↔asset is partly
+  the **mechanically-verifiable vs only-attestable** split (§3c). **(c)** The big one:
+  parametric models, workstreams, and physical assemblies are the **same typed
+  relationship graph** — **share the structure** (one edge vocabulary + a stdlib
+  graph/traversal/render core) but **route out the resolvers** (kinematics /
+  mass-properties / geometry are external, not the kit's job). See "Cross-cutting"
+  after §8. Still OPEN.
 
 > How to read: §1 the conflation (unchanged, still true). §2 the three-axis reframe
-> + the `LLR.Module` hinge. §3 the module as centre of gravity (+ §3a its content
-> format & geometry). §4 knowledge packs ≈ skills. §5 where work-definition lives.
-> §6 larger change → module lifecycle. §7 mating = contract + consuming work. §8
-> concrete tech (Elysia) + software tooling. §9 naming. §10 cautions + staging. §11
+> + the `LLR.Module` hinge. §3 the module as centre of gravity (+ §3a content format,
+> §3b geometry, §3c keeping software modules in sync). §4 knowledge packs ≈ skills.
+> §5 where work-definition lives. §6 larger change → module lifecycle. §7 mating =
+> contract + consuming work (+ assembly = a graph, not a fatter asset). §8 concrete
+> tech (Elysia) + software tooling. **Cross-cutting** (after §8): the shared structure
+> — one edge vocabulary, routed resolvers. §9 naming. §10 cautions + staging. §11
 > provisional decision. §12 open questions.
 
 ---
@@ -196,6 +210,25 @@ asset↔module link — lean on the existing `ASSET.Refs → LLR` and discover a
 geometry through the `LLR.Module` join; add a direct `Assets` cell only if the join
 proves annoying.
 
+### 3c. Keeping a software module in sync with the code (the verifiability boundary)
+
+The module ↔ asset split is partly the split between **"mechanically verifiable
+against source"** and **"only attestable."** A **physical** asset can't be diffed —
+you can't mechanically verify a weld — so it is *attested / inspected* (the `ASSET`
+"track about it in text" doctrine + an `Inspection`/`Attest` TC). A **software**
+module *can* be verified against its source. So keep it current the way the kit keeps
+its own code map current — **generated / checked, never hand-authored:**
+
+- A software module's **code-facing fields are *references to source*** (a path, a
+  module, the symbols it comprises); a stdlib check verifies they *resolve in the
+  actual code* — the `gen_arch_map.py --check` idiom. This is exactly
+  [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md) **F1** (untraced-code / symbol coverage)
+  and **Thread 49** (symbol-reference validation): the module-drift guard is a check
+  the review already asked for, now given a home.
+- Keep authored prose minimal — prose rots; the *sync-able* part is the references,
+  and references get gated. Drift is prevented by *deriving / checking*, never by
+  discipline.
+
 ---
 
 ## 4. "Knowledge packs" are ~80% the skills layer you already have
@@ -293,6 +326,16 @@ extension. In software the same shape degenerates to "integration WI,
 predecessors = both modules, cost = dev-time," which the DAG already handles — which
 is why a software-only repo never felt the gap.
 
+**An assembly is a *graph*, not a fatter asset.** When parts compose into an assembly,
+don't grow the `ASSET` row to hold the tree — that repeats the ASSET≠PART overloading
+mistake. `ASSET` stays a **flat artifact manifest** (one binary + its hash); the
+assembly *structure* — which part `connects-to` which via which joint, which assembly
+`contains` which sub-assembly — lives in **edges**. That edge graph is the **physical
+sibling of module composition (`Contains`) + interfaces (`IF`)**: parts + connections,
+exactly as modules + interfaces. It is also where kinematics / CG / inertia and the
+build sequence get *derived* — see "Cross-cutting" (after §8) for why the kit owns
+that graph's **structure** but **routes out** those numeric resolvers.
+
 ---
 
 ## 8. Concrete tech (Elysia.js) and other software tooling
@@ -325,6 +368,52 @@ No new axis. A framework is a stack choice taught by a skill — the case that
 
 ---
 
+## Cross-cutting — the shared structure: one edge vocabulary, routed resolvers
+
+The deepest observation in this thread: **parametric CAD models, workstreams, and
+physical assemblies are the same abstract object** — a *typed graph of entities
+related by edges, traversed to derive properties*. Not speculative: the kit **already
+contains two instances** — the work-item dependency DAG (`check_trajectory` validates
+it, `gen_trajectory` ranks + renders it) and the `SN→SR→LLR→TC` join (`trace.py`). The
+reuse is real, but it lives at one layer and **stops hard at the next.**
+
+**Reusable — a small typed-edge vocabulary + a stdlib graph core (the kit's job).**
+Nearly every relationship in the whole model is one of ~four edges:
+
+| Edge | Software instance | Physical instance | Resolves to (stdlib) |
+|---|---|---|---|
+| `contains` / part-of | module composition | assembly → sub-assembly → part | tree / roll-up order |
+| `depends-on` / step | WI DAG, workstream iterations | assembly sequence, parametric steps | topological order = schedule / build order |
+| `connects-to` / mates | `IF-###` interface | physical joint (+ consumes `PART`) | seam contract |
+| `realises` / derived-from | `LLR.Module`, `TC→LLR` | `ASSET→LLR` | the trace join / verification |
+
+Recording these in **one uniform edge form** (`from-id, to-id, type`) — even though
+the *nodes* live in different registries — is the reuse win, and the shared core
+(resolve endpoints, check acyclicity where required, emit topological order, feed the
+generic SVG renderer) is ~the 80 lines already in `check_trajectory` + `gen_trajectory`.
+
+**Not reusable — the resolvers (the kit *routes*, never implements).** Topological
+*ordering* is cheap and shared. But **kinematics** (constraint-solving DOF),
+**mass-properties** (CG / inertia through the assembly transform tree), and
+**parametric geometry** (re-evaluating features through a CAD kernel) are
+numeric-geometry domains that blow past the stdlib-only / offline line. The kit
+already has this stance — it *names and routes* CAD verification, perf, and LFS to
+project-owned / external tools and only **records** the verdict at the gate. Same
+here.
+
+**Recommendation on reuse:**
+- **Unify the edge vocabulary now** (cheap, design-time): one relationship
+  representation across registries — pure SSOT, the kit's own instinct.
+- **Extract the shared graph engine when the second consumer is real** (deferred):
+  today `check_trajectory` is the only graph validator; when an assembly graph
+  arrives, factor the common core out rather than copy it. YAGNI until then.
+- **Draw a bright line at the resolver layer:** the kit owns *structure + traversal +
+  validation + render*; it routes kinematics / mass / geometry to external tools and
+  records their verdicts. That line is what stops this becoming a PLM / CAD engine
+  masquerading as a stdlib kit.
+
+---
+
 ## 9. Naming ruling (provisional)
 
 - **Workstream** — preferred for the *when/campaign* thing. "A durable line of effort
@@ -345,6 +434,11 @@ No new axis. A framework is a stack choice taught by a skill — the case that
   **layered**: a pure-software repo sees only `Modules + Interfaces + Skills`; a
   hardware repo opts into `PART-consumption + assembly-ops + energy/time`. `MOD /
   ASSET / PART` are *already* opt-in "rung-3" layers — extend in that spirit.
+- **Own the graph, route the resolvers.** The shared-structure insight (Cross-cutting,
+  after §8) is *structural* reuse only. Do **not** build a general graph-resolver
+  framework: kinematics, mass-properties, and parametric geometry are external tools
+  the kit *routes and records*, never implements — the same stdlib-only / offline line
+  that keeps it from reinventing a CAD / PLM engine.
 - **This meta-repo cannot dogfood the physical half.** It is software and stdlib-only
   — the same limitation that stopped it dogfooding the README SN-inventory. The
   unifying *idea* (one module unit for both worlds) is the value; the physical parts
@@ -377,7 +471,10 @@ never by restating one axis inside another.** Make the **module the centre of
 gravity**: durable expectations + interfaces + category + knowledge pack + lifecycle;
 keep the workstream thin. Reuse the **skills layer** as the knowledge-pack substrate.
 Treat **mating as work that consumes parts** and keep that (and all physical
-machinery) an opt-in layer.
+machinery) an opt-in layer. Where relationships recur (composition, dependency,
+connection, realises), **share the graph *structure*** — one edge vocabulary + a
+stdlib traversal/render core — but **route out the domain resolvers** (kinematics /
+mass / geometry are external tools the kit records, not implements).
 
 **Status: provisional — not ratified, not built.** More passes expected before
 implementation.
@@ -408,6 +505,13 @@ implementation.
    paraphrasing skills or threads).
 7. **Migration ergonomics** — what `bootstrap.py` scaffolds and whether
    `downstream-resync` needs a step (downstream-migrating — §10).
+8. **Unify the edge vocabulary?** One uniform `from-id, to-id, type` relationship form
+   across registries (Cross-cutting) — worth doing at design time even before a second
+   graph consumer exists? And when the assembly graph lands, extract the shared core
+   from `check_trajectory` rather than copy it.
+9. **The software-module drift check (§3c)** — is the source-symbol check that keeps a
+   software module current the *same* mechanism as F1's untraced-code / Thread 49's
+   symbol-reference validation? If so, build it once, serve both.
 
 ---
 
@@ -428,6 +532,10 @@ implementation.
   (`ASSET-###` — geometry/binary artifacts, §3b) — the physical-axis registries.
 - [`project-trajectory/skills/`](project-trajectory/skills/) — the knowledge-pack
   substrate (§4). · `docs/stack.ini` — where a framework like Elysia is declared (§8).
+- [`project-trajectory/scripts/gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
+  — the generated + `--check`ed code map: the drift-guard idiom §3c applies to
+  software modules. `trace.py` + `check_trajectory.py` are the two **existing
+  typed-graph instances** the Cross-cutting section would factor from.
 - [`project-trajectory/PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) —
   "Trajectory / work-items layer" (the `Track` prose) and "Parallel tracks" (the
   *other*, execution-lane meaning of "track").
