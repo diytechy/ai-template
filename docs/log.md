@@ -261,5 +261,7 @@ skipped**; trace **SN=22 SR=38 LLR=35 TC=38, 0 orphans / integrity / schema**.
 Verification basis now: of 38 Verified SRs, **38 mechanized, 0 attested**
 (35 Test · 1 Analysis · 2 Inspection).
 
-**G3 re-attestation:** ⏳ **pending owner sign-off** — the 2026-07-07 ratification
-predates SR-037/038; the owner authorized this spine change and re-attests here.
+**G3 re-attestation:** ✅ **re-attested 2026-07-09 — Peter Johnson (owner)**, given
+in-session in direct response to the re-attestation request ("Looks good, you can
+implement"), over the SR-037/038 spine change with the mechanized bar re-run above
+(G3 PASS 11/11; SN=22 SR=38 LLR=35 TC=38, 0 orphans; 38/38 SRs mechanized).

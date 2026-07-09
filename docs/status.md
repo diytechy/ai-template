@@ -39,9 +39,8 @@ sign-offs, verdicts) is [log.md](log.md).
   `docs/requirements/work-items.csv` + generated `docs/trajectory.html`
   (Execution 86%, Definition 100%), gate-green on real data.
 - **Open items:**
-  - **Needs <human>**: **G3 re-attestation for the SR-037/038 spine change**
-    (WI-1.43, the F1 fix — owner authorized the change 2026-07-09; the mechanized
-    bar was re-run and PASSes; a one-line sign-off in `docs/log.md` closes it).
+  - **Needs <human>**: _(none)_ — **G3 re-attested 2026-07-09** over the
+    SR-037/038 spine change (Peter Johnson, `docs/log.md`; F1 fully closed).
     Verification basis: 38/38 SRs mechanized, 0 attested.
   - **In flight:** _(none)_ — **Thread 52 landed complete 2026-07-08** (commits
     `07fd10f`/`6fa3236`/`49a5cf8` + P4; on `MultiRepoSupport`, not pushed).
