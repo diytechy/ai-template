@@ -2,7 +2,7 @@
 
 **Author:** Claude (Opus 4.8), design note from a working session ·
 **Date:** 2026-07-08 (last updated 2026-07-09) · **Branch:** `MultiRepoSupport` (not pushed) ·
-**Status:** **OPEN — a ruling-in-progress (iteration 4). Expect more passes before
+**Status:** **OPEN — a ruling-in-progress (iteration 5). Expect more passes before
 implementation.** Nothing here is built; no registry or script has been touched.
 
 ## Provenance
@@ -52,15 +52,33 @@ inherits the framing instead of re-deriving it.
   graph/traversal/render core) but **route out the resolvers** (kinematics /
   mass-properties / geometry are external, not the kit's job). See "Cross-cutting"
   after §8. Still OPEN.
+- **Iteration 5** (this revision) — situating tweaks; mostly de-dup + placement.
+  **(a)** The DAG is the **prospective roadmap**; "where we were" is derivable from
+  **git**, so done work leaves the living DAG (§5a) — also F3's fix. **(b)** Refined
+  the shared-graph claim: **not every graph is a DAG** — a **4-bar linkage** is a
+  *cyclic* connection loop; `depends-on`/`contains` are acyclic, `connects-to` is
+  general (Cross-cutting). **(c)** Knowledge packs gain a **derived** half (computed
+  from a part's material / mates-to / forces) alongside the authored half (§4).
+  **(d)** Physical containers are **domain-neutral** (hydraulic / electrical / aero …)
+  — typed ports + open properties, resolvers stay routed (Cross-cutting). **(e)** New
+  artifact spec: **`PROJECT_STATE.html`** at root — 4 views unifying `gen_trajectory` +
+  `gen_arch_map`, with a **git-derived** "as-of" date (a wall-clock date would break
+  the deterministic freshness gate). **(f)** New **dynamic-layer** section: the
+  coordinator / planner / implementer / reviewer pipeline, mapped to `agent_loop.py` +
+  the integrator role, with the coordinator split along the **loop-vs-judgment** seam.
+  Still OPEN.
 
 > How to read: §1 the conflation (unchanged, still true). §2 the three-axis reframe
 > + the `LLR.Module` hinge. §3 the module as centre of gravity (+ §3a content format,
-> §3b geometry, §3c keeping software modules in sync). §4 knowledge packs ≈ skills.
-> §5 where work-definition lives. §6 larger change → module lifecycle. §7 mating =
+> §3b geometry, §3c keeping software modules in sync). §4 knowledge packs ≈ skills
+> (+ the derived half). §5 where work-definition lives (+ §5a temporal scope: roadmap
+> is prospective, past = git). §6 larger change → module lifecycle. §7 mating =
 > contract + consuming work (+ assembly = a graph, not a fatter asset). §8 concrete
 > tech (Elysia) + software tooling. **Cross-cutting** (after §8): the shared structure
-> — one edge vocabulary, routed resolvers. §9 naming. §10 cautions + staging. §11
-> provisional decision. §12 open questions.
+> — one edge vocabulary, routed resolvers (+ not-every-graph-is-a-DAG, the 4-bar;
+> domain-neutral containers). **The artifact** + **Operating the model** (the dynamic
+> layer). §9 naming. §10 cautions + staging. §11 provisional decision. §12 open
+> questions.
 
 ---
 
@@ -246,6 +264,13 @@ knowledge packs to their own registry **only if** the same pack is shared across
 many modules (a reference list first; a registry only when reuse forces it — the
 same YAGNI staging as everywhere in this note).
 
+**A knowledge pack has two halves — derived + authored.** The *authored* half is the
+skills + refs above. The **derived** half is a *view* computed from the part's own
+data + its edges — material + `connects-to` + load. *"Aluminium, bolted to steel,
+500 N"* surfaces galvanic-corrosion / bolt-torque / fatigue considerations with no
+hand-authoring. Being a *view* (never a source of truth), the derived half stays fresh
+for free and is never restated — the same idiom as the generated dashboard.
+
 **The loop this closes** (the owner's exact scenario — a gap found in an already-
 `verified` module):
 
@@ -280,6 +305,20 @@ The workstream owns timing; the session owns proof. Keeping the workstream thin 
 what makes re-opening cheap: "work on M — its row tells you everything." A
 "work item" as it exists today is really the *intersection*: (workstream intent) ×
 (target module) × (DAG slot).
+
+### 5a. Temporal scope: the roadmap is prospective; the past is git
+
+The dependency DAG is the **living roadmap** — the *not-yet-processed* work, still
+breathing and free to change. It is **not** an archive of history. **"Where we were"
+is derivable from commit history**, so a node's evidence-of-completion lives in git,
+not as accumulating prose in the registry. Done work therefore *leaves* the living DAG
+(kept only while still a predecessor of live work); the full past can always be
+reconstructed from git if wanted.
+
+This is also the clean fix for [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md) **F3** (the
+dogfood DAG encoding narrative/ordering as fake edges): if history isn't stored in the
+living DAG, there are no narrative edges to be wrong. And it feeds the artifact below —
+the dashboard's *as-of* date is the latest source commit (git), not a wall clock.
 
 ---
 
@@ -392,6 +431,18 @@ the *nodes* live in different registries — is the reuse win, and the shared co
 (resolve endpoints, check acyclicity where required, emit topological order, feed the
 generic SVG renderer) is ~the 80 lines already in `check_trajectory` + `gen_trajectory`.
 
+**But not every graph is a DAG — edge *type* decides.** `depends-on` and `contains`
+are acyclic (the roadmap, the build order, the part tree); `connects-to` is **general
+— it has loops.** The clean test is a **4-bar linkage**, which is *three* graphs at
+once: **composition** (mechanism ⊃ 4 links + 4 pins) is a *tree*; **connection**
+(ground–crank–coupler–rocker–ground) is a **cyclic loop** — that closed loop *is* the
+mechanism; and the **build process** (mount ground → pin each link → close the loop)
+is a *DAG*. So "assembly as a DAG" holds for the *build sequence*, not the *connection
+topology*. The stdlib core checks acyclicity only where the edge type requires it, and
+a cyclic connection graph needs a **general graph layout**, not the layered-DAG
+renderer `gen_trajectory` uses today. The loop's *kinematics* (DOF, motion) is a
+routed-out resolver — never computed in-kit.
+
 **Not reusable — the resolvers (the kit *routes*, never implements).** Topological
 *ordering* is cheap and shared. But **kinematics** (constraint-solving DOF),
 **mass-properties** (CG / inertia through the assembly transform tree), and
@@ -400,6 +451,15 @@ numeric-geometry domains that blow past the stdlib-only / offline line. The kit
 already has this stance — it *names and routes* CAD verification, perf, and LFS to
 project-owned / external tools and only **records** the verdict at the gate. Same
 here.
+
+**The container abstracts across physical domains — keep it domain-neutral.** A
+physical module is a *bounded container*; hydraulics, pneumatics, aerodynamics,
+electrical, magnetic are just more property-and-port kinds on that container. The kit
+must **not** solve any of them (the bloat trap) — it only needs its interfaces to be
+**typed ports** (mechanical / electrical / fluid / …) and its properties an **open
+key-value set**, not a fixed mechanical schema. Then every domain's physics (CFD / FEA
+/ circuit-sim / magnetics) is a routed resolver behind the same bright line. The
+structure abstracts; the kit stays out of the physics.
 
 **Recommendation on reuse:**
 - **Unify the edge vocabulary now** (cheap, design-time): one relationship
@@ -411,6 +471,63 @@ here.
   validation + render*; it routes kinematics / mass / geometry to external tools and
   records their verdicts. That line is what stops this becoming a PLM / CAD engine
   masquerading as a stdlib kit.
+
+---
+
+## The artifact — `PROJECT_STATE.html` (evolving `trajectory.html`)
+
+One self-contained HTML at the **repo root**, with a clearly-dated header (*"state as
+of commit `abc123` · 2026-07-09"*), presenting the whole model in four views:
+
+| View | Axis | Source |
+|---|---|---|
+| **What** — SN breakdown | WHAT | the `SN→SR→LLR→TC` spine (today's icicle) |
+| **How — physical** (if any) | HOW | the module/assembly **graph** (new; may be cyclic — see the 4-bar) |
+| **How — SW architecture** | HOW | the code map (`gen_arch_map.py`) |
+| **When — roadmap** | WHEN | the *prospective* WI DAG (§5a) |
+
+So it mostly **unifies existing generators** (`gen_trajectory` = What + When,
+`gen_arch_map` = How-SW) and adds one new **How-physical** graph view. Two constraints
+carry over from the design:
+
+- **The "last generated" date must stay deterministic.** `gen_trajectory` is clock-free
+  *on purpose* so `--check` can byte-compare. Derive the stamp from the **latest commit
+  touching the sources** (git), not `now()` — meaningful, byte-stable, and it *is*
+  §5a's "the past is git."
+- **The How-physical view renders a *general* graph** (loops allowed), not the
+  layered-DAG layout — see Cross-cutting.
+
+Rename `docs/trajectory.html` → root `PROJECT_STATE.html`, or keep both, is a small
+migration call (open question §12).
+
+---
+
+## Operating the model — the dynamic layer (coordinator + roles)
+
+*A different layer from everything above: this is **process / orchestration**, not the
+static structure. Much of it already exists — `agent_loop.py` (the coordinator),
+`run-phase` (PLAN | BUILD), the **integrator** role (only writer of the dispatcher). It
+may later spin out to its own note (like `MULTI_REPO.md`); recorded here so the static
+model and the roles that write it stay aligned.*
+
+The pipeline — **coordinator → planner → implementer → reviewer(s) → coordinator** —
+maps cleanly onto the static model because **each role writes exactly one home:**
+
+| Role | Writes | Existing kit anchor |
+|---|---|---|
+| **Coordinator** | the **roadmap DAG** (creates / reprioritises WIs from feedback) | `agent_loop.py` + integrator |
+| **Planner** | the **module definition + knowledge pack** (research, detail); updates the WI with what it added | PLAN phase |
+| **Implementer** | the **code** | BUILD phase |
+| **Reviewer(s)** | **test evidence** — executes the TCs → feedback | the gate / TCs |
+
+**Should the coordinator be broken up? Yes — along the loop-vs-judgment seam.** The
+*mechanical loop* (dispatch an agent, collect its typed outcome) stays dumb and
+deterministic — `agent_loop.py` as-is. *Roadmap maintenance* (deciding what WIs to
+create / reprioritise from test / reviewer / human feedback) is **judgment**, and
+belongs to a distinct step — which the kit already calls the **integrator** (the only
+writer of the dispatcher). Don't put judgment inside the loop. So the "breakup" is not
+new machinery; it is *naming the seam that already exists*: **loop = orchestration,
+integrator = roadmap judgment.**
 
 ---
 
@@ -512,6 +629,16 @@ implementation.
 9. **The software-module drift check (§3c)** — is the source-symbol check that keeps a
    software module current the *same* mechanism as F1's untraced-code / Thread 49's
    symbol-reference validation? If so, build it once, serve both.
+10. **`PROJECT_STATE.html` migration** — rename `docs/trajectory.html` → root
+    `PROJECT_STATE.html`, or keep both? Confirm the git-derived "as-of" stamp survives
+    the deterministic `--check`.
+11. **Cyclic-graph rendering** — the How-physical view needs a general graph layout
+    (loops), not the layered-DAG renderer. A stdlib force-free layout, or route
+    rendering out for the physical view only?
+12. **Does the roles pipeline belong in this note or its own?** The dynamic layer
+    (coordinator / planner / implementer / reviewer; the loop-vs-judgment split) is
+    already ~half-built in `agent_loop.py` + PROCESS.md roles. Formalise it here, or
+    spin out a sibling note.
 
 ---
 
@@ -534,8 +661,12 @@ implementation.
   substrate (§4). · `docs/stack.ini` — where a framework like Elysia is declared (§8).
 - [`project-trajectory/scripts/gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
   — the generated + `--check`ed code map: the drift-guard idiom §3c applies to
-  software modules. `trace.py` + `check_trajectory.py` are the two **existing
-  typed-graph instances** the Cross-cutting section would factor from.
+  software modules, and it is the **How-SW** view of the artifact. `trace.py` +
+  `check_trajectory.py` are the two **existing typed-graph instances** the
+  Cross-cutting section would factor from.
+- [`project-trajectory/scripts/agent_loop.py`](project-trajectory/scripts/agent_loop.py)
+  — the coordinator behind "Operating the model"; `docs/run-phase` (PLAN | BUILD) + the
+  integrator role (`tracks-README`) are its existing anchors.
 - [`project-trajectory/PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) —
   "Trajectory / work-items layer" (the `Track` prose) and "Parallel tracks" (the
   *other*, execution-lane meaning of "track").
