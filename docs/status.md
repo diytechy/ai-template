@@ -83,13 +83,17 @@ sign-offs, verdicts) is [log.md](log.md).
   dynamic-layer build, [`AGENT_ROLES.md`](../AGENT_ROLES.md) "Remaining open":
   `docs/review-policy` + `REVIEW-A`/`REVIEW-B` dispatch + `AGENT_CMD_MAP`, the
   status-size guard micro-call, `--prompt-map` deferred); **blocked on an owner
-  ruling** = WI-036 (Thread 51 TC-evidence column, 3 questions listed
-  in-thread), WI-037 (Thread 53 `check_dupes`, threshold/allowlist policy).
+  ruling** = WI-037 (Thread 53 `check_dupes`, threshold/allowlist policy —
+  clarified 2026-07-09: MIN_TOKENS = source-lexer tokens, a copy-paste
+  detector, nothing to do with LLM usage). **WI-036 (Thread 51) RULED and
+  LANDED 2026-07-09** (WI-1.47): the TC `Evidence` column — required for
+  `Automated=Yes` at G3 strict-schema; the meta-repo's 38 rows migrated off
+  the `node=`-in-`Parameters` workaround.
   Now open, in rough order: **owner data-pass on the 42-WI DAG edges** (demote
   remaining narrative edges to `~`; F3's data half); **WI-042** or **WI-039**
   (both unblocked); **push decision outstanding** (`MultiRepoSupport` is
-  local-only). Optional milestones: **G-Release** walk; rule **Thread 51** /
-  **Thread 53** to unblock WI-036/037.
+  local-only). Optional milestones: **G-Release** walk; rule **Thread 53** to
+  unblock WI-037.
 
 ## Scope
 

@@ -132,6 +132,13 @@ starts green.
       AcceptanceCriteria, Priority, Verification, Status; LLR: LLR-ID, SR-Refs,
       Title, Module, CodeSymbol, Detail, Status; TC: TC-ID, Verifies, Level,
       Method, Tier, Expected, Automated, Status);
+    - a TC claiming Automated=Yes cites its Evidence (Thread 51, owner-ruled
+      2026-07-09): the `Evidence` column names the concrete test — a pytest
+      node, a script path, or a procedure-doc link. Inspection-only text, never
+      a mechanized resolve (node ids aren't filesystem paths). Conditional, not
+      a flat required field: Automated=No/blank rows may leave it empty, and
+      `Parameters` stays reserved for dimensional inputs (the gen_cases
+      grammar), which the pre-Evidence `node=` overload was polluting;
     - the two *closed* vocabularies the method defines (process.md §4) hold:
       SR Verification in {Test, Demonstration, Manual, Analysis, Inspection,
       Attest}, TC Tier in {Smoke, Full, Release}. Priority/Status are deliberately
@@ -477,6 +484,19 @@ def schema_findings(label, rows):
                 out.append(
                     f"{label} {rid} has {col}={val!r} (allowed: "
                     f"{', '.join(sorted(allowed))})"
+                )
+        # Thread 51 (owner-ruled 2026-07-09): a TC claiming Automated=Yes must
+        # cite its Evidence (pytest node / path / procedure link) — a
+        # claimed-automated test with no cited location is a soft false-green.
+        # Conditional on the claim, so it can't live in REQUIRED_FIELDS; a
+        # legacy CSV without the column reads as empty and is flagged the same
+        # way (the ADOPTING §6 migration adds the column).
+        if label == "TC" and (r.get("Automated") or "").strip().lower() == "yes":
+            if not (r.get("Evidence") or "").strip():
+                out.append(
+                    f"TC {rid} is Automated=Yes but cites no Evidence "
+                    "(name the test: a pytest node, script path, or "
+                    "procedure-doc link)"
                 )
     return out
 

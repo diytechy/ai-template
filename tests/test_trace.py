@@ -160,9 +160,9 @@ SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","a
 SR-002,Theme mood fit,SN-001,"The main theme shall match the mood brief.","Subjective; no automated check.","Creative lead records pass against the brief.",,H,Attest,Verified
 """
 
-ATTEST_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
-TC-002,SR-002,System,creative review of the theme,Release,"attested-by=A. Rivera; attested-on=2026-07-02","Recorded pass judgment for SR-002",No,Verified
+ATTEST_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Verified
+TC-002,SR-002,System,creative review of the theme,Release,"attested-by=A. Rivera; attested-on=2026-07-02","Recorded pass judgment for SR-002",No,,Verified
 """
 
 
@@ -187,7 +187,7 @@ def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
         ATTEST_TCS.replace(
             "TC-002,SR-002,System,creative review of the theme,Release,"
             '"attested-by=A. Rivera; attested-on=2026-07-02",'
-            '"Recorded pass judgment for SR-002",No,Verified\n',
+            '"Recorded pass judgment for SR-002",No,,Verified\n',
             "",
         ),
         encoding="utf-8",
@@ -348,6 +348,18 @@ def test_shipped_sr_template_carries_area_column():
         .splitlines()[0]
     )
     assert header.split(",")[-1] == "Area"
+
+
+def test_shipped_tc_template_carries_evidence_column():
+    # Thread 51: the shipped TC header carries Evidence (between Automated and
+    # Status) so the concrete test location has a first-class home and stops
+    # overloading Parameters (which stays dimensional, the gen_cases grammar).
+    header = (
+        (KIT / "registries" / "test-cases.template.csv")
+        .read_text(encoding="utf-8")
+        .splitlines()[0]
+    )
+    assert header.split(",")[-3:] == ["Automated", "Evidence", "Status"]
 
 
 def test_area_values_yield_report_section(scaffold):

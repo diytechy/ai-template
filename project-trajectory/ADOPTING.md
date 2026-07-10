@@ -267,6 +267,17 @@ range to see exactly which templates/scripts changed before you touch anything.
   registry is renamed **`repos.csv` / `REPO-###`** (formerly
   `modules.csv`/`MOD-###`); the legacy file + ids are still read, and both may
   coexist mid-migration.
+- **The TC `Evidence` column (2026-07, Thread 51).** `test-cases.csv` gains an
+  **`Evidence`** column (between `Automated` and `Status`) naming the concrete
+  test — a pytest node, a script path, or a procedure-doc link
+  (inspection-only text, never mechanically resolved). Optional in general,
+  but from G3 `--strict-schema` **requires it non-empty on `Automated=Yes`
+  rows** — a claimed-automated test with no cited location is a soft
+  false-green; a legacy CSV without the column reads as empty and is flagged
+  the same way, so migration is: add the header cell, then move any test
+  pointers you had squeezed into `Parameters` (the old `node=…` workaround)
+  into `Evidence`, restoring `Parameters` to dimensional inputs only. Below
+  G3 a legacy file keeps passing untouched.
 - **Conditional scaffold generation (`docs/kit-profile`).** Newer kits
   *generate* `docs/process.md` + `docs/process-options.md` from marker-carrying
   masters per a recorded profile (`docs/kit-profile`: `stack=` +

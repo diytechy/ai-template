@@ -325,6 +325,61 @@ def test_strict_schema_leaves_priority_and_status_open(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+def tc_path(root):
+    return root / "docs" / "test" / "test-cases.csv"
+
+
+def test_strict_schema_requires_evidence_on_automated_yes(scaffold):
+    # Thread 51 (owner-ruled 2026-07-09): a TC claiming Automated=Yes with no
+    # cited Evidence is a soft false-green -> a --strict-schema (G3) finding.
+    # Plain --strict stays green (the chain is structurally fine).
+    make_minimal_project(scaffold)
+    csv = tc_path(scaffold)
+    csv.write_text(
+        csv.read_text(encoding="utf-8").replace(
+            ",Yes,tests/test_demo.py::test_add_sr001,", ",Yes,,"
+        ),
+        encoding="utf-8",
+    )
+    assert run_py(["scripts/trace.py", "--strict"], cwd=scaffold).returncode == 0
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "Automated=Yes but cites no Evidence" in report_of(scaffold)
+
+
+def test_strict_schema_evidence_optional_when_not_automated(scaffold):
+    # The rule is conditional on the claim: an Automated=No row (a manual
+    # procedure whose record may live elsewhere) may leave Evidence empty.
+    make_minimal_project(scaffold)
+    csv = tc_path(scaffold)
+    csv.write_text(
+        csv.read_text(encoding="utf-8").replace(
+            ",Yes,tests/test_demo.py::test_add_sr001,", ",No,,"
+        ),
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_strict_schema_flags_legacy_tc_header_without_evidence(scaffold):
+    # A pre-Thread-51 CSV has no Evidence column at all: its Automated=Yes rows
+    # read as empty and are flagged the same way at G3 — the deliberate
+    # migration nudge (ADOPTING section 6 adds the column). Below G3 (no
+    # --strict-schema) the legacy file keeps passing untouched.
+    make_minimal_project(scaffold)
+    tc_path(scaffold).write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n"
+        'TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2",'
+        '"Satisfies SR-001 AcceptanceCriteria",Yes,Verified\n',
+        encoding="utf-8",
+    )
+    assert run_py(["scripts/trace.py", "--strict"], cwd=scaffold).returncode == 0
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "Automated=Yes but cites no Evidence" in report_of(scaffold)
+
+
 # --- Harness wiring -----------------------------------------------------------
 
 

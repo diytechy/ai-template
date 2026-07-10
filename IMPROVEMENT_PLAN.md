@@ -4743,9 +4743,19 @@ rule is fixed** (it is, above).
 
 ## Thread 51 — `TC` schema: a first-class test-evidence column
 
-**Status: 📋 BACKLOG — surfaced by Thread 47 (self-adoption) 2026-07-07; recorded
-for posterity, not yet ruled.** A change to a **shipped** artifact (adopter-facing),
-so weigh it more carefully than Thread 50.
+**Status: ✅ RULED (owner, 2026-07-09) + landed same day (WI-1.47 / WI-036).**
+Owner ruling (in-session): proceed with the column; updating existing rows (and
+shipped artifacts) is fine — invalid items are simply updated, new tests built
+where required, and git history is the safety net if the old form is ever
+needed. Operative form = the in-thread proposal's defaults: column name
+**`Evidence`**, placed `…,Automated,Evidence,Status`; **optional in general,
+required-non-empty for `Automated=Yes` rows under `--strict-schema`** (G3,
+where a claimed-automated test with no cited location is a soft false-green) —
+a conditional rule in `schema_findings`, not a flat `REQUIRED_FIELDS` entry;
+**inspection-only text** (a pytest node / path / procedure-doc link — never a
+mechanized resolve; node ids aren't filesystem paths); `Parameters` returns to
+dimensional inputs only. Migration: ADOPTING §6 recipe line; the meta-repo's
+own 38 rows moved their `node=` overload out of `Parameters` into `Evidence`.
 
 **The finding.** The `TC` schema
 (`TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status`) has **no
@@ -6699,6 +6709,34 @@ continuity (same style as the session log above).
 > **Byte-budgeted files untouched** (PROCESS.md / AGENTS.template.md unmodified).
 > `check.py --gate G3` → **PASS** (11/11); `pytest -q` **415 passed, 2 skipped**;
 > trace SN=22 SR=38 LLR=35 TC=38, 0 orphans.
+
+> **WI-1.47 ✅ landed 2026-07-09 · TC `Evidence` column (Thread 51, owner-ruled
+> same day / WI-036).** The TC schema gains **`Evidence`** (between `Automated`
+> and `Status`): the concrete test that provides the proof — a pytest node, a
+> script path, or a procedure-doc link. **Inspection-only text** (node ids
+> aren't filesystem paths — never mechanically resolved). **Optional in
+> general; required-non-empty for `Automated=Yes` rows under `--strict-schema`
+> (G3)** — a claimed-automated test with no cited location is a soft
+> false-green. Implemented as a **conditional rule in `schema_findings`**, not
+> a flat `REQUIRED_FIELDS` entry, so `Automated=No` rows stay free; a legacy
+> CSV without the column reads as empty and is flagged the same way at G3 (the
+> deliberate migration nudge; below G3 a legacy file passes untouched).
+> `Parameters` returns to dimensional inputs only (the `gen_cases` grammar) —
+> the meta-repo's own **38 rows migrated** their `node=` overload into
+> `Evidence` (the Thread 47 workaround this thread existed to fix), and the
+> spine re-passed `--strict --require-verified --strict-schema` clean.
+> Deliverables: template header (+ a coherent TC-000 example), the trace.py
+> conditional check + docstring, EXAMPLE.md's four TC snippets (unit node /
+> Release procedure-doc / Attest sign-off record / seam test) + an `Evidence`
+> explainer paragraph, conftest + ATTEST fixtures, **4 new tests** (Yes+empty
+> fails G3, No+empty passes, legacy header flagged at G3 only, template header
+> pinned), ADOPTING §6 migration recipe. **Attestation who/when stays in
+> `Parameters`/`Expected`** (PROCESS.md §4 convention, byte-budget-flat) —
+> Evidence points at the sign-off record; noted, not changed.
+> **Deviation from spec:** none (the in-thread proposal's defaults, as ruled).
+> `pytest -q` **419 passed, 2 skipped**; `check.py --gate G3` → **PASS**
+> (11/11); trace SN=22 SR=38 LLR=35 TC=38, 0 orphans/schema-findings.
+> Byte-budgeted files untouched.
 
 ### Session protocol (for a cold session pointed only at this file)
 
