@@ -32,16 +32,16 @@ Nothing here has been fixed; every item is verified against the tree.
     generated `docs/trajectory.html`.
   - `daee60c` — SR-035 macOS+3.8 rationale clarification (+ dashboard regen).
 - **Key files:**
-  [`project-trajectory/scripts/check_trajectory.py`](project-trajectory/scripts/check_trajectory.py),
-  [`project-trajectory/scripts/gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py),
-  [`project-trajectory/scripts/check.py`](project-trajectory/scripts/check.py) (the two new steps),
-  [`project-trajectory/registries/work-items.template.csv`](project-trajectory/registries/work-items.template.csv),
-  [`docs/requirements/work-items.csv`](docs/requirements/work-items.csv) (the dogfood data),
+  [`project-trajectory/scripts/check_trajectory.py`](../../project-trajectory/scripts/check_trajectory.py),
+  [`project-trajectory/scripts/gen_trajectory.py`](../../project-trajectory/scripts/gen_trajectory.py),
+  [`project-trajectory/scripts/check.py`](../../project-trajectory/scripts/check.py) (the two new steps),
+  [`project-trajectory/registries/work-items.template.csv`](../../project-trajectory/registries/work-items.template.csv),
+  [`docs/requirements/work-items.csv`](../../docs/requirements/work-items.csv) (the dogfood data),
   `docs/trajectory.html` (generated; since WI-1.52 the root
-  [`PROJECT_STATE.html`](PROJECT_STATE.html)),
-  [`project-trajectory/PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) ("Trajectory / work-items layer"),
-  [`tests/test_trajectory.py`](tests/test_trajectory.py),
-  [`tests/test_gen_trajectory.py`](tests/test_gen_trajectory.py).
+  [`PROJECT_STATE.html`](../../PROJECT_STATE.html)),
+  [`project-trajectory/PROCESS_OPTIONS.md`](../../project-trajectory/PROCESS_OPTIONS.md) ("Trajectory / work-items layer"),
+  [`tests/test_trajectory.py`](../../tests/test_trajectory.py),
+  [`tests/test_gen_trajectory.py`](../../tests/test_gen_trajectory.py).
 
 ## Severity index
 
@@ -135,7 +135,7 @@ re-attestation in `docs/log.md`. Then reconcile with the "Deeper thread" above.
 > floor when regeneration is one stdlib command and the step is vacuous for a
 > repo that never adopted the layer; checks needing the product toolchain or
 > gate context (tests, perf, flows) stay in check.py / CI. Cross-cutting
-> question 2 below is thereby settled. The shipped [`hooks/pre-commit`](project-trajectory/hooks/pre-commit)
+> question 2 below is thereby settled. The shipped [`hooks/pre-commit`](../../project-trajectory/hooks/pre-commit)
 runs `check.py --run-step arch-map` (code-map freshness), `trace.py
 --strict-integrity`, and the privacy scan — but **not** `trajectory-map`. The
 `trajectory.html` freshness gate lives only in `check.py --gate G3` (CI).
@@ -177,7 +177,7 @@ hook, guarded like arch-map (missing-tool → skip). One line + a comment.
 
 ## F3 — MEDIUM · The dogfood DAG encodes narrative, not true dependencies
 
-**What.** Several predecessor edges in [`docs/requirements/work-items.csv`](docs/requirements/work-items.csv)
+**What.** Several predecessor edges in [`docs/requirements/work-items.csv`](../../docs/requirements/work-items.csv)
 are "reads well left-to-right," not "blocks build." SR-refs on meta-work are
 representative-not-exhaustive.
 
@@ -269,7 +269,7 @@ any future `gen_trajectory` refactor rather than as its own change.
 > wires `ct`) plus a self-heal test exercising the fallback with `scripts/` off
 > the path.
 
-**What.** [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) does
+**What.** [`gen_trajectory.py`](../../project-trajectory/scripts/gen_trajectory.py) does
 `import check_trajectory as ct` — the **first** kit script to import a sibling. It
 resolves only because the script's own directory is `sys.path[0]` when run as a
 script/subprocess.
@@ -322,7 +322,7 @@ does not claim §7 points back.
 > *"on but vacuous until you track work items"* and states the layer is opt-out
 > (on by default, costing nothing until a work item exists) — no longer "off."
 
-[`STATUS.template.md`](project-trajectory/STATUS.template.md)'s "Work items?"
+[`STATUS.template.md`](../../project-trajectory/STATUS.template.md)'s "Work items?"
 bullet says *"off unless you adopted the trajectory layer."* The layer is
 **opt-out** (on-by-default but vacuous), not "off" — every other description in the
 kit is careful about that distinction. Reword to "*ignore unless you are tracking

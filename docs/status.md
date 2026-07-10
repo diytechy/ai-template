@@ -45,12 +45,13 @@ sign-offs, verdicts) is [log.md](log.md).
     2. **Push decision** — `MultiRepoSupport` is local-only (~40 commits).
     3. **F3 data-pass** on the 44-WI DAG edges (demote narrative edges to
        `~`) — owner's mapping call, unchanged.
-  - **In flight:** _(none)_ — the queue is empty. The three
-    [`REVIEW_GRIND_*.md`](../REVIEW_GRIND_A.md) reports (7 method/risk +
-    4 process/trace + 9 full-repo; **no HIGH**) are all RESOLVED in **WI-1.53**
-    — spine SN-Refs (B1) + the OKF count (B2), text-boundary/encoding
-    hardening, per-script correctness, harness shadow-guard + `KIT_SCRIPTS_DIR`
-    in every hook + parser-drift reconcile, and the docs/nits.
+  - **In flight:** _(none)_ — the queue is empty. The three adversarial
+    review reports (7 method/risk + 4 process/trace + 9 full-repo; **no
+    HIGH**) are all RESOLVED in **WI-1.53** — spine SN-Refs (B1) + the OKF
+    count (B2), text-boundary/encoding hardening, per-script correctness,
+    harness shadow-guard + `KIT_SCRIPTS_DIR` in every hook + parser-drift
+    reconcile, and the docs/nits. Fully triaged; archived to
+    [`docs/archive/`](archive/README.md) (`REVIEW_GRIND_A/B/FULL.md`).
   - **Recently landed:** **OKF Layer B2** (process docs as `Process Guide`
     concepts — WI-1.54, 2026-07-10; extended SR-042 + LLR-039, rides the
     re-attestation).
@@ -58,12 +59,16 @@ sign-offs, verdicts) is [log.md](log.md).
     (owner-deferred 2026-07-05); OKF **Layer B1** (intrusive doc-frontmatter,
     behind a future flag); the **Q1 rider ruling** (a warn-first `--untraced`
     tier — recommendation recorded in WI-1.50's entry); the committed-composites
-    freshness design (deferred with reasoning, WI-1.50).
-- **Next action:** **owner sitting** — read the three `REVIEW_GRIND_*.md`
-  reports, triage their findings (file/fix/dismiss), re-attest G3 per
-  [log.md](log.md), and rule on push. After that the frontier is genuinely
-  open: G-Release walk, the F3 edge data-pass, or new scope (which needs a
-  plan/WI entry first).
+    freshness design (deferred with reasoning, WI-1.50); the AXES §12
+    residual items — `consumes`/effort schema, a typed-IF contract check,
+    edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
+    rendering (all gated on real need; see
+    [`docs/archive/AXES_AND_WORKSTREAMS.md`](archive/AXES_AND_WORKSTREAMS.md) §12).
+- **Next action:** the review reports are triaged and the batch is closed —
+  what remains is the **owner sitting**: re-attest G3 per [log.md](log.md),
+  and rule on push. After that the frontier is genuinely open: G-Release
+  walk, the F3 edge data-pass, or new scope (which needs a plan/WI entry
+  first).
 
 ## Scope
 

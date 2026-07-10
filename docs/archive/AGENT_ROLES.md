@@ -20,7 +20,7 @@ with process.
 A lot of this **already exists** in the kit and is *situated against it*, not
 reinvented:
 
-- [`agent_loop.py`](project-trajectory/scripts/agent_loop.py) — the unattended
+- [`agent_loop.py`](../../project-trajectory/scripts/agent_loop.py) — the unattended
   **coordinator** (headless resume, typed outcomes, parallel tracks). Stdlib Python —
   it holds a stall counter and a session number, **no LLM state**; sessions write
   `run-state`/`run-phase`, the loop only dispatches and reads evidence.
@@ -29,7 +29,7 @@ reinvented:
 - `docs/run-state` — the coordinator contract (`RUNNING | DONE | BLOCKED | NEEDS-HUMAN`).
 - `docs/gate-policy` — `attended | single-ratify | autonomous`; the `autonomous` level
   already names "an independent fresh-context LLM reviewer's recorded verdict."
-- The **integrator** role ([`tracks-README.template.md`](project-trajectory/tracks-README.template.md))
+- The **integrator** role ([`tracks-README.template.md`](../../project-trajectory/tracks-README.template.md))
   — "a sync session, human or an agent leg run without `--track`"; the only writer of
   the root dispatcher; lands registry changes proposed by lanes.
 
@@ -221,8 +221,8 @@ the review-policy wiring (dual review is its first consumer).
 
 - [`AXES_AND_WORKSTREAMS.md`](AXES_AND_WORKSTREAMS.md) — the static structure this
   operates on (CMPs, the roadmap DAG, knowledge packs; ratified iteration 9).
-- [`project-trajectory/scripts/agent_loop.py`](project-trajectory/scripts/agent_loop.py)
+- [`project-trajectory/scripts/agent_loop.py`](../../project-trajectory/scripts/agent_loop.py)
   · `docs/run-phase` · `docs/run-state` · `docs/gate-policy` · the integrator role in
-  [`tracks-README.template.md`](project-trajectory/tracks-README.template.md).
+  [`tracks-README.template.md`](../../project-trajectory/tracks-README.template.md).
 - [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md) — the review lineage these notes descend
   from, and R1's empirical basis (judgment findings on a green branch).

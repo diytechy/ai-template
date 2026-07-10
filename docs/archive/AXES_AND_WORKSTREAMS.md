@@ -138,16 +138,16 @@ inherits the framing instead of re-deriving it.
 
 The word **track** means two things that have nothing to do with each other:
 
-**(a) An execution lane.** In [`tracks-README.template.md`](project-trajectory/tracks-README.template.md)
-and the "Parallel tracks" layer of [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md),
+**(a) An execution lane.** In [`tracks-README.template.md`](../../project-trajectory/tracks-README.template.md)
+and the "Parallel tracks" layer of [`PROCESS_OPTIONS.md`](../../project-trajectory/PROCESS_OPTIONS.md),
 a track is a *worktree + `llm/<track>` branch + `docs/tracks/<track>/` lane* — a
 **when / who-runs-it-in-parallel** concurrency device. Transient, chosen by
 invocation, never committed.
 
 **(b) A grouping label on a work item.** In
-[`docs/requirements/work-items.csv`](docs/requirements/work-items.csv) the `Track`
+[`docs/requirements/work-items.csv`](../../docs/requirements/work-items.csv) the `Track`
 column holds `docs` / `scripts` / `unattended` / `self-adoption`, and
-[`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) uses it *only*
+[`gen_trajectory.py`](../../project-trajectory/scripts/gen_trajectory.py) uses it *only*
 as a DAG cluster-order seed + display label + a count tile. It carries no
 dependency semantics and no worktree reality.
 
@@ -192,7 +192,7 @@ refs; deferred until a real case appears.)
 
 **The unit has no registry yet** — it existed only as that free-text `LLR.Module` string
 (now retired), and the existing
-[`repos.csv` (`REPO-###`, formerly `MOD-###`)](project-trajectory/registries/repos.template.csv) is a
+[`repos.csv` (`REPO-###`, formerly `MOD-###`)](../../project-trajectory/registries/repos.template.csv) is a
 *different* thing (a delegated **repo**, to be renamed `REPO-###`, §9). So the step is a
 **new sibling** component registry (the Q12.1 lean), not a widened `MOD-###`.
 
@@ -274,12 +274,12 @@ SWB-007, HTTP boundary, software, verified, LLR-014;LLR-021, IF-003, , skill-ely
 "Geometry" is three different things, each already homed:
 
 - **The artifact** (STEP/native model, dimensioned drawing) → an **`ASSET-###`** row
-  ([assets.csv](project-trajectory/registries/assets.template.csv)): the blob lives
+  ([assets.csv](../../project-trajectory/registries/assets.template.csv)): the blob lives
   in git-LFS / a PLM store (`Location`), pinned by `Hash`+`Version` so it is
   verifiable though un-diffable — the *"track about the asset in text"* doctrine.
   Kind = `cad`/`drawing`/`model`; `Refs` back-links the LLR it realises.
 - **The mating constraint** (bolt pattern, datum faces, fit/clearance) → an
-  **`IF-###`** Contract ([interfaces.csv](project-trajectory/registries/interfaces.template.csv)):
+  **`IF-###`** Contract ([interfaces.csv](../../project-trajectory/registries/interfaces.template.csv)):
   the seam "in one testable line," linking the drawing. Verified by a TC with
   `Method = Inspection`/`Demonstration` (CMM report, fit check).
 - **The narrative** (GD&T rationale, assembly notes, revisions) → the part's **detail
@@ -318,7 +318,7 @@ its source. So keep it current the way the kit keeps its own code map current �
 
 ## 4. "Knowledge packs" are ~80% the skills layer you already have
 
-The kit already ships the mechanism: [`project-trajectory/skills/`](project-trajectory/skills/)
+The kit already ships the mechanism: [`project-trajectory/skills/`](../../project-trajectory/skills/)
 — agent-neutral `SKILL.md` files with an applicability schema, materialised
 per-repo. A knowledge pack is essentially:
 
@@ -438,10 +438,10 @@ exactly that. The swBlock is what iteration returns to.
 
 What the registries give you today, and the precise gap:
 
-- **The static contract exists.** [`interfaces.csv`](project-trajectory/registries/interfaces.template.csv)
+- **The static contract exists.** [`interfaces.csv`](../../project-trajectory/registries/interfaces.template.csv)
   `IF-###` has `Direction, Contract (one testable line, may link a spec), Version,
   Stability` — the seam's *what*.
-- **The consumed material exists.** [`procurement.csv`](project-trajectory/registries/procurement.template.csv)
+- **The consumed material exists.** [`procurement.csv`](../../project-trajectory/registries/procurement.template.csv)
   `PART-###` has `Cost, Quantity`, links an `IF-Ref`. A weld filler or screws are
   PART rows.
 - **The gap is the assembly *operation*.** Nothing models the *act* of mating —
@@ -931,29 +931,29 @@ the same graph through the HAL-style seams they program to.
 - [`THREAD_52_REVIEW.md`](THREAD_52_REVIEW.md) — the review that surfaced this; **F3**
   (schema/edge-semantics) and **F1** (trace the layer's own code) are the two
   findings this note is coupled to.
-- [`docs/requirements/work-items.csv`](docs/requirements/work-items.csv) — the `Track`
-  column to retire; [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py)
-  / [`check_trajectory.py`](project-trajectory/scripts/check_trajectory.py) — the view
+- [`docs/requirements/work-items.csv`](../../docs/requirements/work-items.csv) — the `Track`
+  column to retire; [`gen_trajectory.py`](../../project-trajectory/scripts/gen_trajectory.py)
+  / [`check_trajectory.py`](../../project-trajectory/scripts/check_trajectory.py) — the view
   + validator that follow.
-- [`project-trajectory/registries/repos.template.csv`](project-trajectory/registries/repos.template.csv)
+- [`project-trajectory/registries/repos.template.csv`](../../project-trajectory/registries/repos.template.csv)
   (multi-repo `REPO-###`, formerly `MOD-###`) ·
-  [`interfaces.template.csv`](project-trajectory/registries/interfaces.template.csv)
-  (`IF-###`) · [`procurement.template.csv`](project-trajectory/registries/procurement.template.csv)
-  (`PART-###`) · [`assets.template.csv`](project-trajectory/registries/assets.template.csv)
+  [`interfaces.template.csv`](../../project-trajectory/registries/interfaces.template.csv)
+  (`IF-###`) · [`procurement.template.csv`](../../project-trajectory/registries/procurement.template.csv)
+  (`PART-###`) · [`assets.template.csv`](../../project-trajectory/registries/assets.template.csv)
   (`ASSET-###` — geometry/binary artifacts, §3b) — the physical-axis registries.
-- [`project-trajectory/skills/`](project-trajectory/skills/) — reusable knowledge (§4);
+- [`project-trajectory/skills/`](../../project-trajectory/skills/) — reusable knowledge (§4);
   **`docs/knowledge/<label>.md`** — project-specific knowledge packs (iter 6, §4). ·
   `docs/stack.ini` — where a framework like Elysia is declared (§8).
-- [`project-trajectory/scripts/gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
+- [`project-trajectory/scripts/gen_arch_map.py`](../../project-trajectory/scripts/gen_arch_map.py)
   — the generated + `--check`ed code map: the drift-guard idiom §3c applies to
   swBlocks, and it is the **How-SW** view of the artifact. `trace.py` +
   `check_trajectory.py` are the two **existing typed-graph instances** the
   Cross-cutting section would factor from.
 - [`AGENT_ROLES.md`](AGENT_ROLES.md) — the **sibling note** for the dynamic layer
   (coordinator / planner / implementer / reviewer; the loop-vs-judgment seam), split out
-  in iter 6. Its anchors: [`agent_loop.py`](project-trajectory/scripts/agent_loop.py),
+  in iter 6. Its anchors: [`agent_loop.py`](../../project-trajectory/scripts/agent_loop.py),
   `docs/run-phase` (PLAN | BUILD), the integrator role (`tracks-README`).
-- [`project-trajectory/PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) —
+- [`project-trajectory/PROCESS_OPTIONS.md`](../../project-trajectory/PROCESS_OPTIONS.md) —
   "Trajectory / work-items layer" (the `Track` prose) and "Parallel tracks" (the
   *other*, execution-lane meaning of "track").
 - `c:\Projects\gilbert` (`docs/requirements/interfaces.csv`, `docs/interfaces.md`) — the
