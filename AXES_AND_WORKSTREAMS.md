@@ -2,11 +2,11 @@
 
 **Author:** Claude (Opus 4.8), design note from a working session ·
 **Date:** 2026-07-08 (last updated 2026-07-09) · **Branch:** `MultiRepoSupport` (not pushed) ·
-**Status:** **RATIFIED (iteration 9, owner ratification 2026-07-09) — design settled,
-nothing built.** The gate is closed: the component model is one domain-neutral
-**`CMP-###`** — see "Iteration 9 — the ratified component model". No registry or script
-has been touched. **Next steps: land F1, then the one-bump schema bundle** — the
-consolidated list is at the top of §12.
+**Status:** **RATIFIED (iteration 9, owner ratification 2026-07-09) — and the core is
+now BUILT.** The component model is one domain-neutral **`CMP-###`** — see "Iteration 9
+— the ratified component model". **Built 2026-07-09: F1 closed (WI-1.43, re-attested)
+and the one-bump schema bundle landed (WI-1.44)** — the remaining open items are at the
+top of §12.
 
 ## Provenance
 
@@ -192,7 +192,7 @@ refs; deferred until a real case appears.)
 
 **The unit has no registry yet** — it existed only as that free-text `LLR.Module` string
 (now retired), and the existing
-[`modules.csv` (`MOD-###`)](project-trajectory/registries/modules.template.csv) is a
+[`repos.csv` (`REPO-###`, formerly `MOD-###`)](project-trajectory/registries/repos.template.csv) is a
 *different* thing (a delegated **repo**, to be renamed `REPO-###`, §9). So the step is a
 **new sibling** component registry (the Q12.1 lean), not a widened `MOD-###`.
 
@@ -727,13 +727,15 @@ WHAT↔HOW hinge carried by the primitives' `Component` tags rather than
 component model is **decided** ("Iteration 9 — the ratified component model"); what
 remains is sequencing + build:
 
-- **F1 first** (unchanged): trace the trajectory layer's own code (SR-037/038) — it
-  touches the G3-ratified spine, so land it before any schema change and re-attest once.
-- **The one-bump schema bundle** (downstream-migrating; ship as a single kit version
-  bump adopters resync through once): the `CMP` template registry + `Component` tag
-  columns on LLR/IF/ASSET/PART + WI `Track` → `Workstream` + hard/soft `kind` on
-  `Predecessors` (F3, §5b) + `MOD-### → REPO-###` (#13) + bootstrap /
-  downstream-resync scaffolding (#7). The dogfood-DAG cleanup (F3) rides along.
+- **F1 — ✅ CLOSED (WI-1.43, 2026-07-09):** SR-037/038 + LLR-034/035 + TC-037/038
+  landed; G3 re-run PASS and **owner re-attested** (`docs/log.md`).
+- **The one-bump schema bundle — ✅ LANDED (WI-1.44, 2026-07-09):** the `CMP`
+  template registry + `Component` tag columns on LLR/IF/ASSET/PART + WI `Track` →
+  `Workstream` + hard/soft `~` edge kind on `Predecessors` (F3's schema half, §5b) +
+  `MOD-### → REPO-###` (#13) + bootstrap scaffolding + the ADOPTING §6 migration
+  recipe (#7) — all never-breaking (legacy headers/files/ids still read). F3's
+  known false edge demoted to soft; the full dogfood-DAG data pass remains the
+  owner's review item.
 - **Deferred, gated on real need:** `consumes`/effort (#3); the typed-IF contract
   *check* (#4 — the `Contract` cell already links a spec, nothing is blocked today);
   shared graph-engine extraction (#8 — wait for the second consumer); cyclic-graph
@@ -933,8 +935,8 @@ the same graph through the HAL-style seams they program to.
   column to retire; [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py)
   / [`check_trajectory.py`](project-trajectory/scripts/check_trajectory.py) — the view
   + validator that follow.
-- [`project-trajectory/registries/modules.template.csv`](project-trajectory/registries/modules.template.csv)
-  (multi-repo `MOD-###`) ·
+- [`project-trajectory/registries/repos.template.csv`](project-trajectory/registries/repos.template.csv)
+  (multi-repo `REPO-###`, formerly `MOD-###`) ·
   [`interfaces.template.csv`](project-trajectory/registries/interfaces.template.csv)
   (`IF-###`) · [`procurement.template.csv`](project-trajectory/registries/procurement.template.csv)
   (`PART-###`) · [`assets.template.csv`](project-trajectory/registries/assets.template.csv)

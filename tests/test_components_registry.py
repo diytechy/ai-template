@@ -9,7 +9,9 @@ CMP id fails --strict, and a leftover CMP-000 placeholder never blocks a gate.
 
 from conftest import make_minimal_project, run_py
 
-CMP_HEADER = "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
+CMP_HEADER = (
+    "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
+)
 ROW = "{cid},arm,physical,docs/knowledge/arm,{state},{sup},{partof},,note\n"
 
 

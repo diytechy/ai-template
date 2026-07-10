@@ -252,6 +252,21 @@ range to see exactly which templates/scripts changed before you touch anything.
 
 ### Migration recipes for specific kit changes
 
+- **The component/workstream schema bundle (2026-07).** Four coupled, **never
+  breaking** registry changes land together: **(a)** the work-items `Track`
+  column is renamed **`Workstream`** (a mutable grouping category — "track" now
+  means only the parallel-execution lane); the legacy header is still read, so
+  migration is renaming one header cell whenever convenient. **(b)**
+  `Predecessors` gains an edge kind: a bare id is a **hard** (blocking) edge, a
+  `~`-prefixed id (`~WI-013`) a **soft** advisory-ordering edge — audit your DAG
+  and demote narrative "reads-well-after" edges to `~`. **(c)** A new optional
+  **`components.csv`** (`CMP-###`, process-options.md "Component layer") is
+  scaffolded, and the LLR/IF/ASSET/PART templates gain an optional `Component`
+  tag column; existing files without the column stay valid (header-driven) —
+  adopt by adding the column where you name components. **(d)** The multi-repo
+  registry is renamed **`repos.csv` / `REPO-###`** (formerly
+  `modules.csv`/`MOD-###`); the legacy file + ids are still read, and both may
+  coexist mid-migration.
 - **Conditional scaffold generation (`docs/kit-profile`).** Newer kits
   *generate* `docs/process.md` + `docs/process-options.md` from marker-carrying
   masters per a recorded profile (`docs/kit-profile`: `stack=` +

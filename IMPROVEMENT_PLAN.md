@@ -6609,6 +6609,35 @@ continuity (same style as the session log above).
 > trace **SN=22 SR=38 LLR=35 TC=38**, 0 orphans/integrity/schema. Byte-budgeted
 > files untouched. **G3 re-attestation pending owner sign-off** (`docs/log.md`).
 
+> **WI-1.44 ✅ landed 2026-07-09 · The component/workstream schema bundle (the
+> AXES_AND_WORKSTREAMS.md iter-9 ratified design, one migration event).** Owner
+> authorized in-session ("you can implement"). Four coupled, never-breaking
+> registry changes, three logical commits: **(1) `Track` → `Workstream`** on
+> work-items (the "track" overload killed: the word now means only the
+> parallel-execution lane; legacy header still read) **+ hard/soft predecessor
+> edges** — bare id = hard (blocks: readiness, ranking, acyclicity ERROR),
+> `~id` = soft (advisory: must resolve, soft-only cycles WARN, dashed in the
+> dashboard render, never a rank constraint). F3's known false edge
+> (WI-014→WI-013) demoted to soft in the dogfood registry; the full 39-edge
+> data pass remains the owner's review item. **(2) The CMP component layer:**
+> new optional off-spine `components.template.csv`
+> (`CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes`),
+> scaffolded by bootstrap; LLR/IF/ASSET/PART templates gain an optional
+> `Component` tag cell (structure derived from membership tags, never restated
+> on the CMP row); `trace.py` integrity-checks `CMP-` ids and resolves the
+> joins (PartOf/SupersededBy + primitive tags) under `--strict`;
+> PROCESS_OPTIONS gains the "Component layer" section. **(3) `MOD-###` →
+> `REPO-###`** (`repos.template.csv`; a delegated repo was never a component):
+> `trace.py` reads `repos.csv` and the legacy `modules.csv` (coexistence
+> allowed); MULTI_REPO/EXAMPLE/README/skill renamed with legacy notes. Plus an
+> ADOPTING.md §6 migration recipe for the whole bundle.
+> **Deviation from spec:** none vs the ratified notes; the deferred-on-need
+> items (consumes/effort, typed-IF check, graph-engine extraction, cyclic
+> renderer, CAD extractor, cross-CMP-import check) stay deferred as ratified.
+> `check.py --gate G3` → **PASS** (11/11); `pytest -q` **408 passed, 2
+> skipped**; trace SN=22 SR=38 LLR=35 TC=38, 0 orphans. Byte-budgeted files
+> untouched (PROCESS.md / AGENTS.template.md unmodified).
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

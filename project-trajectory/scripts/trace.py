@@ -812,6 +812,7 @@ def main():
     llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
     pbs = [r for r in raw_pbs if r.get("PB-ID") and not is_example(r["PB-ID"])]
+
     def _repo_id(r):
         return r.get("REPO-ID") or r.get("MOD-ID")
 

@@ -50,18 +50,21 @@ sign-offs, verdicts) is [log.md](log.md).
     — a first-class TC test-evidence column (ruling pending). **WI-1.27** —
     coordinator working-tree stash/rollback on a hard-killed session
     (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
-- **Next action:** **F1 is RESOLVED (WI-1.43, 2026-07-09)** — SR-037/038 +
-  LLR-034/035 + TC-037/038 landed, G3 re-run PASS; **owner re-attestation pending**
-  (`docs/log.md`). Then, per the ratified design notes
-  ([`AXES_AND_WORKSTREAMS.md`](../AXES_AND_WORKSTREAMS.md) iter-9 +
-  [`AGENT_ROLES.md`](../AGENT_ROLES.md)): the **one-bump schema bundle** (CMP
-  registry + `Component` tags + `Track`→`Workstream` + hard/soft `kind` +
-  `MOD→REPO` + resync scaffolding — F3's dogfood-DAG cleanup rides along).
-  Remaining review findings: **F2 (MEDIUM)** — `trajectory.html` staleness
-  caught only in CI, not the pre-commit hook — and F4–F8 (see
-  [`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md)). Push decision outstanding
-  (`MultiRepoSupport` is local-only). Optional milestones: **G-Release** walk;
-  rule **Thread 51** / schedule **Thread 53**.
+- **Next action:** **F1 CLOSED** (WI-1.43 + owner re-attestation 2026-07-09,
+  `docs/log.md`) and the **schema bundle LANDED (WI-1.44, 2026-07-09)** — the
+  [`AXES_AND_WORKSTREAMS.md`](../AXES_AND_WORKSTREAMS.md) iter-9 ratified design
+  as one migration event: `Track`→`Workstream` + hard/soft (`~`) predecessor
+  edges (F3's schema half), the CMP-### component layer (+ `Component` tags),
+  `MOD-###`→`REPO-###` (all never-breaking; ADOPTING §6 has the recipe). Now
+  open, in rough order: **owner data-pass on the 39-WI DAG edges** (demote
+  remaining narrative edges to `~`; F3's data half); **F2 (MEDIUM)** —
+  `trajectory.html` staleness caught only in CI, not the pre-commit hook — and
+  F4–F8 ([`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md)); **WI-039**
+  (`PROJECT_STATE.html`, queued); the dynamic-layer build calls
+  ([`AGENT_ROLES.md`](../AGENT_ROLES.md): `docs/review-policy` + `AGENT_CMD_MAP`,
+  status-size guard). **Push decision outstanding** (`MultiRepoSupport` is
+  local-only). Optional milestones: **G-Release** walk; rule **Thread 51** /
+  schedule **Thread 53**.
 
 ## Scope
 
