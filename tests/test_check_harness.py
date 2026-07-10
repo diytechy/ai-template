@@ -1,7 +1,29 @@
 """check.py end-to-end: the documented flow must be green on a minimal project,
 and the tier/coverage wiring must not silently skip tests."""
 
-from conftest import load_script, make_minimal_project, run_py
+import os
+
+from conftest import augment_env, load_script, make_minimal_project, run_py
+
+
+def test_subprocess_coverage_wiring_survives_pytest_cov_7():
+    # pytest-cov < 7 exported COV_CORE_DATAFILE and augment_env keyed on it;
+    # pytest-cov 7 dropped the whole COV_CORE_* env contract, so keying on it
+    # alone silently unwires every child and the harness coverage floor reads
+    # a fraction of reality (observed: 29% vs the 80 floor on a fresh
+    # toolchain). Under an active coverage run, augment_env must still wire.
+    import pytest
+
+    import coverage
+
+    if os.environ.get("COV_CORE_DATAFILE"):
+        pytest.skip("legacy pytest-cov env contract active; nothing to prove")
+    if coverage.Coverage.current() is None:
+        pytest.skip("not a coverage-measured run")
+    env = augment_env(dict(os.environ))
+    assert "COVERAGE_PROCESS_START" in env, (
+        "augment_env did not wire the child under an active coverage session"
+    )
 
 
 def test_minimal_project_is_green(scaffold):
