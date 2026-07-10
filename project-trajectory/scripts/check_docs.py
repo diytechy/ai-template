@@ -402,6 +402,8 @@ def git_commit_lookup(root):
         ["git", "-C", str(root), "rev-parse", "--is-inside-work-tree"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
     )
     if probe.returncode != 0 or probe.stdout.strip() != "true":
         return None
@@ -414,6 +416,8 @@ def git_commit_lookup(root):
             ["git", "-C", str(root), "log", "-1", "--format=%ct", "--", str(path)],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         val = int(out.stdout.strip()) if out.stdout.strip().isdigit() else None
         cache[path] = val

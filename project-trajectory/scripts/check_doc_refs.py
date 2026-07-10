@@ -75,14 +75,50 @@ def is_path_shaped(token):
     token = token.strip()
     if not token or "://" in token or any(c in token for c in "*{}<>$ "):
         return False
+    # `::` is a pytest node id (tests/x.py::test_name — the kit's sanctioned
+    # Evidence form, a real file plus a selector), and `;`/`,` join a list of
+    # paths; none is a single filesystem path, so they are out of the path
+    # tier's scope (REVIEW_GRIND_A A2 — false-positive control is the point).
+    if "::" in token or ";" in token or "," in token:
+        return False
     if "/" not in token:
         return False
     return token.rstrip("/").endswith(PATH_EXTS) or token.startswith(PATH_PREFIXES)
 
 
+def _generated_prefixes(root):
+    """Directory prefixes marked `linguist-generated` in .gitattributes (e.g.
+    `docs/okf/`), so the tool never lints its own generated output — the same
+    "don't lint generated" stance the GENERATED marker-block skip already
+    encodes for inline blocks (REVIEW_GRIND_A A2)."""
+    ga = root / ".gitattributes"
+    prefixes = []
+    if not ga.exists():
+        return prefixes
+    for line in ga.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "linguist-generated" not in line:
+            continue
+        glob = line.split()[0]
+        # `docs/okf/**` / `docs/okf/*` -> `docs/okf/`
+        prefix = glob.rstrip("*").rstrip("/")
+        if prefix:
+            prefixes.append(prefix + "/")
+    return prefixes
+
+
 def doc_files(root):
     seen = sorted(root.glob("*.md")) + sorted((root / "docs").rglob("*.md"))
-    return [p for p in seen if p.is_file()]
+    skip = _generated_prefixes(root)
+    out = []
+    for p in seen:
+        if not p.is_file():
+            continue
+        rel = p.relative_to(root).as_posix()
+        if any(rel.startswith(pre) for pre in skip):
+            continue  # generated tree — its freshness is the generator's --check
+        out.append(p)
+    return out
 
 
 def load_symbol_oracle(arch_path):
@@ -147,7 +183,20 @@ def findings_for(doc, root, oracle):
     return out
 
 
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
+    non-ASCII path / title / registry cell can't raise UnicodeEncodeError on a
+    legacy Windows cp1252 console (REVIEW_GRIND_FULL C5; verbatim across the
+    kit). Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

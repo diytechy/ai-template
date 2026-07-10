@@ -873,6 +873,8 @@ def _asof(root):
             + [str(p) for p in sources],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
         )
     except OSError:
@@ -1083,7 +1085,11 @@ def main():
         print("gen_trajectory: already up to date -> {}".format(OUT_HTML))
     else:
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(generated, encoding="utf-8")
+        # newline="\n" via open() (write_text(newline=) is 3.10+, floor is 3.8):
+        # LF on every OS, so byte-stability doesn't rest on a downstream
+        # .gitattributes eol=lf rule surviving (REVIEW_GRIND_FULL C7).
+        with out.open("w", encoding="utf-8", newline="\n") as fh:
+            fh.write(generated)
         print("gen_trajectory: wrote {}".format(OUT_HTML))
     return 0
 

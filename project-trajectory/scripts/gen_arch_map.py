@@ -664,7 +664,11 @@ def main():
                     file=sys.stderr,
                 )
         elif updated != current:
-            doc.write_text(updated, encoding="utf-8")
+            # newline="\n" via open() (write_text(newline=) is 3.10+, floor is
+            # 3.8): LF on every OS so the generated block stays byte-stable
+            # regardless of a downstream .gitattributes rule (REVIEW_GRIND_FULL C7).
+            with doc.open("w", encoding="utf-8", newline="\n") as fh:
+                fh.write(updated)
             print("code map regenerated -> {}".format(doc))
         else:
             print("code map already up to date -> {}".format(doc))

@@ -51,6 +51,7 @@ Examples:
 import argparse
 import itertools
 import re
+import sys
 
 
 def parse_spec(spec):
@@ -164,7 +165,20 @@ def boundary_corners(dims):
     return out
 
 
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
+    non-ASCII path / title / registry cell can't raise UnicodeEncodeError on a
+    legacy Windows cp1252 console (REVIEW_GRIND_FULL C5; verbatim across the
+    kit). Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

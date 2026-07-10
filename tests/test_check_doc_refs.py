@@ -85,6 +85,35 @@ def test_unknown_module_is_flagged(tmp_path):
     assert "not in the module map" in proc.stderr
 
 
+def test_node_ids_and_joined_lists_are_not_path_flagged(tmp_path):
+    # A2: a pytest node id (the sanctioned Evidence form) and a ;-joined path
+    # list are not single filesystem paths — the path tier must not flag them.
+    make_repo(
+        tmp_path,
+        "Evidence `tests/real.py::test_it` and `tests/real.py;scripts/real.py`.\n",
+    )
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_generated_linguist_tree_is_not_linted(tmp_path):
+    # A2: a dir marked linguist-generated in .gitattributes (e.g. docs/okf/) is
+    # the generator's output — never hand-authored prose — so it is skipped,
+    # even when it names a path that doesn't exist here.
+    make_repo(tmp_path, "clean root doc\n")
+    (tmp_path / ".gitattributes").write_text(
+        "docs/okf/** linguist-generated=true -diff\n", encoding="utf-8"
+    )
+    gen = tmp_path / "docs" / "okf"
+    gen.mkdir(parents=True)
+    (gen / "SR-001.md").write_text(
+        "**Evidence.** `tests/gone.py::test_x`\nalso `scripts/gone.py`\n",
+        encoding="utf-8",
+    )
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 def test_symbol_tier_skips_without_inventory(tmp_path):
     # A files-mode / non-Python stack has no symbol inventory: the sym: tier
     # skips with a note, and the path tier still runs.

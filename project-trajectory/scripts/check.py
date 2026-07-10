@@ -529,7 +529,9 @@ def resolve_gate(explicit):
         return explicit
     if GATE_FILE.exists():
         val = ""
-        for ln in GATE_FILE.read_text(encoding="utf-8").splitlines():
+        for ln in GATE_FILE.read_text(
+            encoding="utf-8", errors="replace"
+        ).splitlines():  # errors="replace": degrade a stray byte, don't crash (C8)
             ln = ln.strip()
             if ln and not ln.startswith("#"):
                 val = ln

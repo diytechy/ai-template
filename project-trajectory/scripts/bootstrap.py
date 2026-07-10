@@ -1121,6 +1121,8 @@ def kit_version():
             ["git", "-C", str(KIT), "rev-parse", "--short", "HEAD"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         if sha.returncode != 0 or not sha.stdout.strip():
             return "unknown (kit not a git checkout)", False
@@ -1129,6 +1131,8 @@ def kit_version():
             ["git", "-C", str(KIT), "show", "-s", "--format=%cs", "HEAD"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         # Dirty = any staged/unstaged change anywhere in the kit checkout. We
         # stamp a real SHA either way (so the scaffold is never blocked), but
@@ -1137,6 +1141,8 @@ def kit_version():
             ["git", "-C", str(KIT), "status", "--porcelain"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         dirty = bool(status.stdout.strip())
         label = "{}{} {}".format(

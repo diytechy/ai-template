@@ -443,6 +443,8 @@ def git(root, *args):
         ["git", "-C", str(root)] + list(args),
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         stdin=subprocess.DEVNULL,
     )
     return proc.returncode, (proc.stdout or "").strip()
@@ -763,6 +765,7 @@ def run_session(argv, root, timeout):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            encoding="utf-8",
             errors="replace",
             timeout=timeout or None,
         )
