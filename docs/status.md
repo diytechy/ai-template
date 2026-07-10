@@ -42,7 +42,7 @@ sign-offs, verdicts) is [log.md](log.md).
   **Thread 52 COMPLETE 2026-07-08** (all 4 phases) — the opt-out trajectory/
   work-items layer: `work-items.csv` registry + `check_trajectory.py` +
   `gen_trajectory.py` (offline SVG dashboard) + PROCESS_OPTIONS/README docs.
-  **Dogfooded (P4):** the meta-repo carries its own 41-WI
+  **Dogfooded (P4):** the meta-repo carries its own 42-WI
   `docs/requirements/work-items.csv` + generated `docs/trajectory.html`
   (Execution 85%, Definition 100%), gate-green on real data. The **ratified
   design notes** behind WI-1.44 sit at root:
@@ -74,14 +74,22 @@ sign-offs, verdicts) is [log.md](log.md).
   **WI-1.46 landed F4–F8 2026-07-09**: iterative `_cycles` + `_dag_ranks` (no
   more `RecursionError` on a deep DAG; the icicle is bounded-by-construction and
   documented), the guarded sibling import + `conftest.load_script` shim (F5(a)),
-  and the F6/F7 doc-wording nits; F8 closed by ruling (no code). Now open, in
-  rough order: **owner data-pass on the 41-WI DAG edges** (demote remaining
-  narrative edges to `~`; F3's data half); **WI-039**
-  (`PROJECT_STATE.html`, queued); the dynamic-layer build calls
-  ([`AGENT_ROLES.md`](../AGENT_ROLES.md): `docs/review-policy` + `AGENT_CMD_MAP`,
-  status-size guard). **Push decision outstanding** (`MultiRepoSupport` is
+  and the F6/F7 doc-wording nits; F8 closed by ruling (no code). **The queued
+  backlog is now ingest-audited (2026-07-09)** — every queued WI row names its
+  spec-of-record and readiness state: **ingest-ready now** = WI-034 (Thread 48
+  OKF export, rulings recorded in-thread), WI-035 (Thread 49 doc-currency +
+  the F1 deeper-thread rider), WI-039 (`PROJECT_STATE.html`, AXES ratified spec
+  — one Q10 migration micro-call to confirm at ingest), **WI-042** (the
+  dynamic-layer build, [`AGENT_ROLES.md`](../AGENT_ROLES.md) "Remaining open":
+  `docs/review-policy` + `REVIEW-A`/`REVIEW-B` dispatch + `AGENT_CMD_MAP`, the
+  status-size guard micro-call, `--prompt-map` deferred); **blocked on an owner
+  ruling** = WI-036 (Thread 51 TC-evidence column, 3 questions listed
+  in-thread), WI-037 (Thread 53 `check_dupes`, threshold/allowlist policy).
+  Now open, in rough order: **owner data-pass on the 42-WI DAG edges** (demote
+  remaining narrative edges to `~`; F3's data half); **WI-042** or **WI-039**
+  (both unblocked); **push decision outstanding** (`MultiRepoSupport` is
   local-only). Optional milestones: **G-Release** walk; rule **Thread 51** /
-  schedule **Thread 53**.
+  **Thread 53** to unblock WI-036/037.
 
 ## Scope
 
