@@ -68,10 +68,12 @@ working surface.
     rendering (all gated on real need; see
     [`docs/archive/AXES_AND_WORKSTREAMS.md`](archive/AXES_AND_WORKSTREAMS.md) §12).
 - **Next action:** the **owner sitting** — re-attest G3 per [log.md](log.md),
-  rule on push (~46 commits), rule on the Phase 2 sibling-repo target, and
-  review the Phases 1–4 batch. After that the frontier is open: G-Release walk,
-  the F3 edge data-pass, the working-surface SSOT restructure, or new scope
-  (which needs a plan/WI entry first).
+  rule on push (~48 commits), rule on the Phase 2 sibling-repo target, and
+  review the Phases 1–5 batch. After that the frontier is open: G-Release walk,
+  the F3 edge data-pass, the **working-surface SSOT + architecture-connectivity
+  restructure** (proposed plan for review:
+  [specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md)),
+  or new scope (which needs a plan/WI entry first).
 
 ## Scope
 
