@@ -363,3 +363,46 @@ status↔registry SSOT rules) remains a separate, unstarted effort. Residual, no
 touched: shipped/meta files still cite `IMPROVEMENT_PLAN.md WI-1.42 / Thread 50`
 as design provenance (`trace.py`, `dev-setup.*`, `skills/README.md`, two test
 comments) — valid pointers into the archive, left for a later pass.
+
+## 2026-07-10 — README registry map · change-intake flow · fresh-Mac toolchain honesty (WI-050…052; NO spine change)
+
+**Owner-directed session** (no pre-scoped plan): answer the standing questions
+about the registries (why `CMP-###` exists; whether `IF-###` acts on
+components), give the registry/artifact model one discoverable home, then
+verify the double-click onboarding rung on a genuinely fresh Mac — which
+surfaced four real defects, each fixed failing-first where testable.
+
+- **WI-050 (b4fbc4d)** — root README: "The registries & trace artifacts — one
+  map" (Mermaid spine + off-spine chart; per-tier purpose rows; the CMP
+  rationale + derived-interface rule stated with links instead of re-derivation
+  from the archive); script table deduped to prose (SN-001/009/010 rehomed —
+  the kit README is the one per-script home). PROCESS.md §5: **"Change intake —
+  routing a problem to the spine"** — the defect-routing Mermaid flow the owner
+  asked for (coverage gap vs requirement gap → IF/CMP/PART scoping → WI →
+  gates), previously alive only in archived AXES §4 prose.
+- **WI-051 (d9d434e)** — dev-setup honesty on a fresh Mac: `real()` CLT-
+  placeholder probe (meta + template), pytest-cov in the install/report set,
+  venv-first probing, and the new `dev-setup.template.command` double-click
+  rung (bootstrap-scaffolded, exec bit, uname-guarded) — verified live on the
+  owner's machine (dialog → CLT install → honest all-[ok] report). SR-032's
+  text already covers it: **no re-attestation impact**.
+- **WI-052 (6004004)** — pytest-cov 7 removed the `COV_CORE_*` env contract;
+  the subprocess-coverage wiring keyed on it and silently unwired every child
+  (floor read **29%** vs 80). `coverage.Coverage.current()` detection restores
+  **91%**; also heals the ubuntu CI `check` job on fresh installs.
+
+**Byte deltas:** `AGENTS.template.md` 9,978 → 9,978 (untouched);
+`PROCESS.md` 56,375 → **57,966** (**+1,591, flagged**: the change-intake
+subsection — owner-requested core, not an opt-in layer; baseline re-stamped in
+all three `byte-budget-guard` copies, kept byte-identical).
+
+**Mechanized bar (this session):** `check.py --gate G3` → **RESULT: PASS
+(12/12)**, coverage **91%** vs the 80 floor; `pytest -q` **476 passed,
+1 skipped** (the new coverage-wiring test skips outside a measured run; 477
+pass under `--cov`); `check_docs --stale` **0 broken**.
+
+**No SR/LLR/TC text touched** — this batch adds nothing to the pending G3
+re-attestation. Residual noted for the restructure effort: the root README's
+"Why this produces sustainable code" and Quick-start still paraphrase the kit
+README's "core ideas" / "How to use" (stable prose, left deliberately; the
+load-bearing per-script duplication is what WI-050 removed).

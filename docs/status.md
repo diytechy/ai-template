@@ -36,7 +36,7 @@ working surface.
   [work-items.csv](requirements/work-items.csv). **`IMPROVEMENT_PLAN.md` is now
   archived** ([archive/IMPROVEMENT_PLAN.md](archive/IMPROVEMENT_PLAN.md)) — the
   live homes are this file, `work-items.csv`, and `log.md`. Dogfood registry:
-  **48 WIs, 47 done + WI-033 active**; the dashboard is the root
+  **51 WIs, 50 done + WI-033 active**; the dashboard is the root
   [`PROJECT_STATE.html`](../PROJECT_STATE.html).
 - **Open items:**
   - **Needs <human> (the run is paused on these):**
@@ -53,7 +53,12 @@ working surface.
        [`docs/archive/INTEGRATION_PLAN.md`](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the Phases 1–4 batch** (owner-directed, review deferred).
   - **In flight:** _(none)_ — the queue is empty.
-  - **Recently landed:** the **ClaudeGuardChecks integration Phases 1–5**
+  - **Recently landed:** the **2026-07-10 late batch (WI-050…052, no spine
+    change)** — the root-README registry/artifact map + the PROCESS.md §5
+    **change-intake flow** (the defect-routing chart), the fresh-Mac dev-setup
+    honesty fixes + `dev-setup.template.command` rung, and the pytest-cov 7
+    subprocess-coverage re-wire (29%→91%; also heals the CI `check` job). Before
+    it, the **ClaudeGuardChecks integration Phases 1–5**
     (WI-045…049, 2026-07-10; SR-034 promoted + new SR-043 ride the
     re-attestation; its spec-of-record `INTEGRATION_PLAN.md` copied into
     `docs/archive/` so no citation points outside this repo) and, before it,
