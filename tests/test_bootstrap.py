@@ -31,6 +31,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/requirements/work-items.csv",
         "docs/test/test-cases.csv",
         "scripts/check.py",
+        "scripts/check_doc_refs.py",
         "scripts/check_dupes.py",
         "scripts/check_privacy.py",
         "scripts/check_vendored.py",

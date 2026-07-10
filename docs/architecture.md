@@ -107,6 +107,17 @@ _The check harness — one command that runs every quality gate locally and in C
 | `run_step(name, requires, cmd, lenient)` | Run one step. Returns (status, detail) where status in PASS/FAIL/SKIP. |  |
 | `main()` |  |  |
 
+### `scripts/check_doc_refs`
+_Doc reference validation — prose that names dead files or symbols (Thread 49)._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `is_path_shaped(token)` |  |  |
+| `doc_files(root)` |  |  |
+| `load_symbol_oracle(arch_path)` | {module-tail: {symbols}} parsed from the generated module map, or {}. |  |
+| `findings_for(doc, root, oracle)` |  |  |
+| `main()` |  |  |
+
 ### `scripts/check_docs`
 _Doc navigability & staleness check: keep the hand-written doc set honest._
 

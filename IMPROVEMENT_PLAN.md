@@ -6792,6 +6792,47 @@ continuity (same style as the session log above).
 > the commit); trace SN=22 SR=40 LLR=37 TC=40, 0 orphans. Byte-budgeted files
 > untouched.
 
+> **WI-1.50 ✅ landed 2026-07-10 · Doc-currency hardening (Thread 49 /
+> WI-035).** New `scripts/check_doc_refs.py` — the two rot classes link
+> resolution can't see. **Path tier (aggressive, shape-bounded):** a backticked
+> token with a separator + a known extension or top-level prefix must exist on
+> disk; URLs/globs/`{placeholder}` shapes skipped; **generated marker blocks
+> skipped** (their freshness is the generator's `--check`; their tokens —
+> module names like `src/demo` — aren't disk paths: a real false-positive
+> class the tests caught); a `path-ok` line is exempt (the `privacy-ok`
+> idiom). **Symbol tier (opt-in convention):** only `sym:<module>.<name>` is
+> validated, against the module map parsed from `architecture.md` (the
+> committed arch-map artifact is the oracle — no AST re-parse); no inventory →
+> the tier skips cleanly (files-mode/non-Python degrades). **Warn-first,
+> product-layer** (`--strict` gates; `[step:doc-refs]` opt-in; NOT the
+> required floor). 7 tests; bootstrap MAPPING + README rows; **SR-041 +
+> LLR-038 + TC-041** (batched re-attestation ask).
+> **Item-2 freshness audit (recorded, no code):** every generated artifact now
+> carries a deterministic `--check` (arch-map, skills INDEX, trajectory
+> validation + trajectory-map, OKF next in WI-1.51); the mtime `--stale`
+> signal already ships as a labeled *hint*, never a finding — the thread's
+> "don't promote mtime" rule holds. The ruled commit-the-composites rider
+> (trace `report.*`, `perf-report.md`) is **deliberately deferred**: those
+> reports legitimately vary with the flag set that produced them, so a
+> byte-compare freshness contract is ill-defined without first canonicalizing
+> "the committed variant" — a design pass of its own, recorded here rather
+> than done badly.
+> **Q1 rider evaluation (THREAD_52_REVIEW cross-cutting #1, the F1 deeper
+> thread):** recommend a warn-first `--untraced` tier — cross-check the
+> arch-map's public-symbol inventory against the spine's `LLR.CodeSymbol`
+> cells (both artifacts exist; ~40 lines in trace.py or a sibling) so a
+> product symbol no LLR names is *surfaced*, not silently untraced; ship
+> warn-first for the same false-positive reasons as the symbol tier
+> (helpers/private API don't need LLRs). Filed as a recommendation for owner
+> ruling — not built (it changes what "traced" demands of every adopter).
+> **Dogfood observation (honest):** run over the meta-repo the path tier emits
+> ~187 warnings — this repo's docs name *downstream* paths (`scripts/trace.py`
+> = the scaffolded repo's file). The meta-repo is the pathological case for
+> the path tier and does not wire `[step:doc-refs]`; a downstream repo names
+> its own paths, which is the case the tier is built for.
+> `pytest -q` + `check_docs` green (output in the commit); trace SN=22 SR=41
+> LLR=38 TC=41, 0 orphans. Byte-budgeted files untouched.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

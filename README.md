@@ -42,6 +42,10 @@ The kit's headline pieces:
   [`check_dupes.py`](project-trajectory/scripts/check_dupes.py)
   (optional copy-paste detector — "one fact, one home, in code too" made
   mechanical; opt in via a `[step:dupes]` profile line),
+  [`check_doc_refs.py`](project-trajectory/scripts/check_doc_refs.py)
+  (optional, warn-first prose-rot detector: a backticked repo path that no
+  longer exists, or an asserted `sym:module.name` missing from the generated
+  module map),
   [`check_privacy.py`](project-trajectory/scripts/check_privacy.py)
   (a deterministic **secrets floor** for committed keys/tokens in every repo,
   opt-out via `docs/secrets-scan`, plus privacy/PII classes — author email,
