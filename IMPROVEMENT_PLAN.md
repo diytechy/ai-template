@@ -6852,7 +6852,7 @@ continuity (same style as the session log above).
 > vacuous, so a fresh scaffold is green out of the box (the ruled requirement,
 > met without scaffolding a placeholder bundle — recorded deviation from the
 > ruling's letter, honoring its intent by the cheaper mechanism).
-> **The meta-repo commits its own 148-file bundle** (the ruled
+> **The meta-repo commits its own 151-file bundle** (the ruled
 > commit-for-availability posture) with `linguist-generated -diff` riders in
 > both `.gitattributes` (template + meta); `make_minimal_project` gains the
 > same "start from truth" gen_okf call the arch map already had; ADOPTING §6
