@@ -37,16 +37,23 @@ sign-offs, verdicts) is [log.md](log.md).
   [`PROJECT_STATE.html`](../PROJECT_STATE.html).
 - **Open items:**
   - **Needs <human> (the run is paused on these):**
-    1. **G3 re-attestation over the 2026-07-10 spine change** — SR-039…042
-       added, SR-038/LLR-035/TC-038 extended ([log.md](log.md) has the entry;
-       *mandatory*: a Verified SR's text changed). Three adversarial review
-       reports (diff ×2 split charters + full-repo) are being produced as
-       input for the same sitting — read them first.
-    2. **Push decision** — `MultiRepoSupport` is local-only (~30 commits).
-    3. **F3 data-pass** on the 42-WI DAG edges (demote narrative edges to
+    1. **Triage the three adversarial review reports** (landed 2026-07-10,
+       committed): [`REVIEW_GRIND_A.md`](../REVIEW_GRIND_A.md) (method/risk,
+       7 findings), [`REVIEW_GRIND_B.md`](../REVIEW_GRIND_B.md) (process/trace,
+       4), [`REVIEW_GRIND_FULL.md`](../REVIEW_GRIND_FULL.md) (full-repo, 9).
+       **No HIGH; 20 findings total (9 MEDIUM / 7 LOW / 4 nit).** File/fix/
+       dismiss each; a cleanup WI is the natural home for the confirmed set.
+    2. **G3 re-attestation over the 2026-07-10 spine change** — SR-039…042
+       added, SR-038/LLR-035/TC-038 extended ([log.md](log.md); *mandatory*:
+       a Verified SR's text changed). **⚠ Fix B1 first, or accept it
+       explicitly:** SR-039/041/042 mis-route their `SN-Refs` (none cite
+       SN-012's opt-in property they assert; SR-041 omits SN-010) — a
+       spine-honesty defect that should ride this re-attestation, not survive it.
+    3. **Push decision** — `MultiRepoSupport` is local-only (~34 commits).
+    4. **F3 data-pass** on the 42-WI DAG edges (demote narrative edges to
        `~`) — owner's mapping call, unchanged.
-  - **In flight:** _(none)_ — the queue is empty; three review agents are
-    producing reports (root `REVIEW_GRIND_*.md` when done).
+  - **In flight:** _(none)_ — the queue is empty; the three review reports are
+    committed at root and awaiting owner triage.
   - **Deferred (backlog):** **WI-1.27** coordinator stash/rollback
     (owner-deferred 2026-07-05); OKF **Layer B2** (process-docs as concepts,
     the spec's follow-commit); the **Q1 rider ruling** (a warn-first
