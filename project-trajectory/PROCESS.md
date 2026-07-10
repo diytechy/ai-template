@@ -509,6 +509,40 @@ honesty"); a project may expose an optional, named **tone knob** to dial levity
 up or down — never a baked-in persona, since no single tone fits both a
 medical-device repo and a game studio.
 
+### Change intake — routing a problem to the spine
+
+An inbound problem (bug, review finding, field report) routes by **which
+registry row it contradicts** — that classification, not the fix, is step 1:
+
+```mermaid
+flowchart TD
+  P["problem identified"] --> C{"which row does it contradict?"}
+  C -->|"an existing SR/LLR is violated"| TG["coverage gap:\nno TC caught it"]
+  C -->|"no row speaks to it"| RG["requirement gap:\nnew/changed SN -> SR -> LLR\n(walk G1/G2 for that slice)"]
+  TG --> T1["write the failing TC first"]
+  RG --> S{"scope the solution"}
+  S -->|"new seam"| I2["IF-### row\n+ a TC per contract"]
+  S -->|"new subsystem/part"| C2["CMP-### / PART-### rows\n+ Component tags"]
+  S -->|"code only"| L2["LLR rows on the\nexisting modules"]
+  I2 --> W["WI-### into the DAG"]
+  C2 --> W
+  L2 --> W
+  T1 --> W
+  W --> G["implement test-first; gates re-run"]
+  G --> V["touched CMP State:\nhas-gap -> verified"]
+```
+
+- **Coverage gap** — the requirement was right and untested: the fix *starts*
+  as a failing TC against the existing SR/LLR, never code-first.
+- **Requirement gap** — no row speaks to it: walk the G1/G2 bar for that slice
+  only; the new rows then scope the solution (each new interface, component, or
+  purchased part lands as its own registry row, so the next reader finds the
+  decision where the ids live).
+- Off-spine effects ride along: a touched `CMP-###` walks
+  `verified → has-gap → verified` (its `Knowledge` cell keeps what was
+  learned), and the work schedules as `WI-###` rows — never as prose
+  accumulating on the working surface.
+
 ## 6. Review-depth triage (efficiency)
 
 - **High-risk** (security, data loss, crash-safety, money, irreversible, gate

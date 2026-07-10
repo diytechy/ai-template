@@ -28,26 +28,19 @@ any repo and wire the harness to that repo's tooling (SN-003).
   generated matrix that must report **zero orphans** before each gate (SN-002).
 - **Runnable scripts** — stdlib-only Python 3.8+, no pip needed for the kit
   itself (SN-011). Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`)
-  ship for Linux/macOS and Windows. Full detail:
-  [`project-trajectory/README.md`](project-trajectory/README.md).
-
-  | Script | Purpose |
-  |---|---|
-  | [`check.py`](project-trajectory/scripts/check.py) | Gate- and tier-aware harness |
-  | [`trace.py`](project-trajectory/scripts/trace.py) | Traceability matrix (join + orphan check) |
-  | [`check_docs.py`](project-trajectory/scripts/check_docs.py) | Doc navigability: broken links, orphan docs, `PROJECT-VISION` tag, opt-out README need-coverage, `--stale` (SN-010) |
-  | [`check_flows.py`](project-trajectory/scripts/check_flows.py) | Runtime-flow diagrams present, cited ids real |
-  | [`check_perf.py`](project-trajectory/scripts/check_perf.py) | Performance-budget + regression comparator |
-  | [`check_stubs.py`](project-trajectory/scripts/check_stubs.py) | Optional, warn-first: no-stub/substance detector (G3) |
-  | [`check_dupes.py`](project-trajectory/scripts/check_dupes.py) | Optional: copy-paste detector (opt in via `[step:dupes]`) |
-  | [`check_doc_refs.py`](project-trajectory/scripts/check_doc_refs.py) | Optional, warn-first: prose-rot detector (dead paths, broken `sym:module.name` refs) |
-  | [`check_privacy.py`](project-trajectory/scripts/check_privacy.py) | Secrets floor for every repo, opt-out via `docs/secrets-scan`; PII/identity classes gated on `docs/privacy-check` (SN-009) |
-  | [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py) | AST code map + Mermaid dependency diagram, routed into `architecture.md`/`AGENTS.md`/`CLAUDE.md` |
-  | [`gen_release_checklist.py`](project-trajectory/scripts/gen_release_checklist.py) | Generated human release checklist |
-  | [`gen_cases.py`](project-trajectory/scripts/gen_cases.py) | Boundary-aware, pairwise test-case combinations |
-  | [`check_trajectory.py`](project-trajectory/scripts/check_trajectory.py) + [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) | Opt-out work-items layer: validates the execution DAG, renders the offline root `PROJECT_STATE.html` dashboard |
-  | [`gen_okf.py`](project-trajectory/scripts/gen_okf.py) | Traceability graph as an Open Knowledge Format bundle (opt-out via `docs/okf-export`); the kit's own is [docs/okf/index.md](docs/okf/index.md) |
-  | [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) | Scaffold a new repo (SN-001) |
+  ship for Linux/macOS and Windows. The **authoritative per-script table**
+  (one home, one row per script) is the kit README:
+  [`project-trajectory/README.md`](project-trajectory/README.md). Headliners:
+  [`check.py`](project-trajectory/scripts/check.py) (the gate- and tier-aware
+  harness) and [`trace.py`](project-trajectory/scripts/trace.py) (the
+  traceability join) anchor the floor;
+  [`check_docs.py`](project-trajectory/scripts/check_docs.py) keeps the docs
+  navigable and this README need-cited (SN-010);
+  [`check_privacy.py`](project-trajectory/scripts/check_privacy.py) gives every
+  repo a secrets floor plus the opt-in PII/identity gate (SN-009); and
+  [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) scaffolds a new
+  repo in one command (SN-001). The generated views these produce are listed
+  under "The registries & trace artifacts" below.
 
 - **Unattended agent operation** (SN-006):
   - Root `agent-resume.*` launchers boot an agent session at the declared
@@ -69,14 +62,98 @@ any repo and wire the harness to that repo's tooling (SN-003).
     agent by `bootstrap.py --agents`.
   - Git hooks ([`hooks/`](project-trajectory/hooks/)): a fast `pre-commit`
     process floor and a `pre-push` privacy backstop for privacy-checked repos.
-- **Cross-project support** — an
-  [`IF-###` interfaces registry](project-trajectory/INTERFACES.template.md)
-  for projects that interlink, so shared contracts stay traceable and versioned.
 - **An agent guide template**
   ([`AGENTS.template.md`](project-trajectory/AGENTS.template.md)) that encodes
   our readability/maintainability conventions and points agents at the
   process. It scaffolds to `AGENTS.md` (the cross-tool standard), with thin
   `CLAUDE.md`/`GEMINI.md` stubs pointing back at it.
+
+## The registries & trace artifacts — one map
+
+The process stores every durable fact as **one registry row**, referenced
+everywhere else by id ([`PROCESS.md`](project-trajectory/PROCESS.md) §2–§3);
+anything visual or navigable is a **generated view** of those rows, never a
+second home for them. Four registries form the required **spine**; the rest are
+optional layers a project adopts only when its scope earns them. How an
+ambiguously-reported problem routes *into* these tiers — coverage gap vs.
+requirement gap, then scoping via new IF/CMP/PART rows — is the
+**change-intake flow**, charted in
+[`PROCESS.md`](project-trajectory/PROCESS.md) §5.
+
+```mermaid
+graph LR
+  subgraph spine["The spine — joined by trace.py; zero orphans to pass a gate"]
+    SN["SN-### need"] --> SR["SR-### requirement"]
+    SR --> LLR["LLR-### design"]
+    LLR --> TC["TC-### test"]
+  end
+  subgraph off["Off-spine layers — optional; id-integrity-checked when present"]
+    WI["WI-### work item"]
+    IF["IF-### interface"]
+    PB["PB-### perf budget"]
+    PART["PART-### purchased part"]
+    ASSET["ASSET-### binary asset"]
+    CMP["CMP-### component"]
+    REPO["REPO-### delegated repo"]
+  end
+  WI -- "SR-Refs" --> SR
+  IF -- "SR-Refs" --> SR
+  PB -- "Refs" --> SR
+  REPO -- "DelegatedSRs" --> SR
+  PART -- "IF-Ref" --> IF
+  ASSET -- "Refs" --> LLR
+  LLR -. "Component tag" .-> CMP
+  IF -. "Component tag" .-> CMP
+  ASSET -. "Component tag" .-> CMP
+  PART -. "Component tag" .-> CMP
+```
+
+### The spine — required, every project
+
+| Registry | Ids | What it does |
+|---|---|---|
+| [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.md) | `SN-###` | Why the project exists — one need per row, in the stakeholder's words. The root every other row must trace back to. |
+| [`system-requirements`](project-trajectory/registries/system-requirements.template.csv) | `SR-###` | One testable *shall*-statement per row, with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
+| [`low-level-requirements`](project-trajectory/registries/low-level-requirements.template.csv) | `LLR-###` | The design decomposition — pins an SR onto real code (`Module` + `CodeSymbol`). Adds detail; never paraphrases its parent. |
+| [`test-cases`](project-trajectory/registries/test-cases.template.csv) | `TC-###` | Verifies SR/LLR ids, classified by `Method` (Test / Demonstration / Inspection / Attest) and `Tier`; written failing-first at G2. |
+
+[`trace.py`](project-trajectory/scripts/trace.py) joins the four tiers into the
+traceability matrix (`docs/test/report.md`; `--html` adds a collapsible map) and
+fails the gate on any orphan, duplicate, or malformed id (SN-002).
+
+### Off-spine registries — optional layers
+
+Each lives off the joined spine (an absent or placeholder-only file costs
+nothing) but back-links into it, so `trace.py` / `check_trajectory.py`
+integrity-check the ids the moment real rows exist.
+
+| Registry | Ids | What it does — and why it exists |
+|---|---|---|
+| [`interfaces`](project-trajectory/registries/interfaces.template.csv) | `IF-###` | One **directed seam** per row — this side ↔ a counterpart, the shared contract in one testable line, versioned. Endpoints are **primitives** (a repo or module, a physical mating surface) — never components; a component's interface set is *derived*, below. Every interface is backed by an SR and a contract test ([`PROCESS.md`](project-trajectory/PROCESS.md) §8). |
+| [`performance-budgets`](project-trajectory/registries/performance-budgets.template.csv) | `PB-###` | Quantitative NFR budgets (latency, RAM, artifact size) that behavior tests can't express; `check_perf.py` compares emitted metrics against budget + baseline (§9). |
+| [`procurement`](project-trajectory/registries/procurement.template.csv) | `PART-###` | Parts the project **buys rather than builds** (motor, board, camera): vendor, cost, status, quantity. The owning `IF-###` row is each part's owner-of-record. |
+| [`assets`](project-trajectory/registries/assets.template.csv) | `ASSET-###` | The facts *about* an un-diffable binary (art, music, CAD, voice): provenance (AI-content disclosure), license, attribution, contract link, location + hash. |
+| [`components`](project-trajectory/registries/components.template.csv) | `CMP-###` | The durable **set-grained** home for knowledge + lifecycle — a subsystem, "the left arm", a package group. It exists because no finer tier can hold either: an IF is one seam, a workstream is mutable by design, and an LLR *is* the thing a rewrite replaces — while `State`/`SupersededBy` carry identity across the rewrite. **Structure is derived, never authored**: membership is a `Component` tag on LLR/IF/ASSET/PART rows; an IF with both endpoints inside a CMP is *internal*, with one endpoint inside it is that CMP's *boundary*. (Ratified design: [`AXES_AND_WORKSTREAMS.md`](docs/archive/AXES_AND_WORKSTREAMS.md); live spec: [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Component layer".) |
+| [`work-items`](project-trajectory/registries/work-items.template.csv) | `WI-###` | The execution DAG — *when/how* atop the spine's *what*: each WI delivers SRs, belongs to a workstream, and depends on predecessors (a bare id blocks; a `~`-prefixed id only orders). Validated by `check_trajectory.py`; rendered into `PROJECT_STATE.html`. |
+| [`repos`](project-trajectory/registries/repos.template.csv) | `REPO-###` | Coordinator-only, for the rare multi-repo rung: one row per delegated repo plus the coordinator SRs it fulfils ([`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md) §6). |
+
+*(Under the parallel-tracks layer,
+[`id-blocks`](project-trajectory/registries/id-blocks.template.md) additionally
+reserves per-track `SN`/`SR` hundreds-blocks so concurrent drafts never mint the
+same id.)*
+
+### The generated trace artifacts — views, never sources of truth
+
+Each is regenerated from the registries or source and freshness-gated
+(`--check` byte-compares), so it cannot drift from what it depicts:
+
+| Artifact | Generator | Shows |
+|---|---|---|
+| `docs/test/report.md` / `.html` | `trace.py` | The traceability matrix: counts, the `SN→SR→LLR→TC` outline, orphans and draft rows colored. |
+| `docs/architecture.md` code map | `gen_arch_map.py` | Per-module summary, Mermaid dependency diagram, `Implements:` back-links — beneath the hand-written one-page overview and the authored runtime flows `check_flows.py` verifies. |
+| root `PROJECT_STATE.html` | `gen_trajectory.py` | The offline dashboard: spine icicle, WI DAG, module map, definition/execution meters, a git-derived as-of stamp. |
+| `docs/okf/` | `gen_okf.py` | The same graph exported as an Open Knowledge Format bundle. |
+| `docs/release-checklist.md` | `gen_release_checklist.py` | Every human-verified item (Demonstration / Manual / Inspection SRs, Release-tier TCs) as back-linked tick-boxes for G-Release. |
 
 ## Quick start — bootstrap a new project
 
