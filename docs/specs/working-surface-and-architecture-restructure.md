@@ -164,6 +164,22 @@ file (`stack.ini`) is a hub node many modules Consume.
   spine; plus a warn that each `Active` IF id is **cited by ≥1 TC** (the rung-2
   seam-TC rule, finally checkable).
 
+**Ruling (owner, 2026-07-10) — the layer is opt-out, not opt-in.** By default a
+contract IF must define how the software architecture connects: the
+inventory-coverage warn above runs even when `interfaces.csv` has no real rows,
+so a multi-module arch-map with an empty IF registry reads **"connectivity
+undeclared"** instead of passing vacuously — the How-SW panel stays a bare list
+exactly when the seams are undeclared, and the organized graph is earned by
+declaring them. A repo with genuinely nothing to declare silences the layer
+with the one-word `docs/interfaces-check` = `off` (the
+`trajectory-check`/`okf-export` idiom); a single-module inventory is vacuous.
+Knock-ons: the views-checker's "vacuous without an `interfaces.csv`" clause
+inverts (vacuous only under the off-switch or one module); PROCESS.md §8's
+"only when projects interlink" framing widens to *the seam registry* —
+cross-project **and** intra-repo (§8 is in the byte-watched core; flag the
+delta when it lands); and default-on strengthens the **one-new-SR**
+recommendation for the spine cut below.
+
 **Steps.**
 - `trace.py`: `IF-###` id integrity (closes the SR-002 gap — trace never read
   the IF tier), `SR-Refs` resolution, and an endpoint↔`LLR.Module` join.
@@ -179,7 +195,8 @@ file (`stack.ini`) is a hub node many modules Consume.
   the existing `Implements:` tag** (closing the enforcement-audit gap #2).
 - Template + docs: `interfaces.template.csv` explainer row; PROCESS_OPTIONS
   "Intra-repo interfaces & the architecture graph" subsection building on §8;
-  ADOPTING §6 note. All opt-in / never-breaking.
+  ADOPTING §6 note. All never-breaking; the layer itself is **opt-out,
+  default-on** per the ruling above (scaffold ships `docs/interfaces-check`).
 
 **Spine impact.** Extends **SR-005** (off-spine registries — `IF` joins
 PB/PART/ASSET/REPO) and **SR-038** (the dashboard gains the graph clause), or
@@ -302,5 +319,9 @@ halves — it can ride the same re-attestation or ship on its own.
 - **Campaign vs. increments:** land the spine-touchers (S1 + S5 + S6 + S7) as one
   re-attested campaign (recommended), or ship S1/S2/S4/S7 first and defer the
   architecture half?
-- **WI ids:** this series is `S0…S7` here; on ingest they become `WI-050…`
-  registry rows with this doc's `#anchors` as their `SpecRef`.
+- **WI ids:** this series is `S0…S7` here; on ingest they become `WI-053…`
+  registry rows with this doc's `#anchors` as their `SpecRef` (`WI-050…052`
+  were consumed by the 2026-07-10 late batch).
+- ✅ **Ruled (owner, 2026-07-10):** the S5 interface layer is **opt-out,
+  default-on** — see the ruling block in S5. Still open from that half: the
+  spine cut (extend SR-005 + SR-038 vs one new SR; the ruling leans new-SR).
