@@ -18,7 +18,7 @@ any repo and wire the harness to that repo's tooling (SN-003).
 | [`project-trajectory/README.md`](project-trajectory/README.md) | Full contents + rationale for the kit. |
 | [`CLAUDE.md`](CLAUDE.md) | Guide for working **in this template repo** (developing the templates themselves). |
 
-The kit's headline pieces:
+## The kit's headline pieces
 
 - **A gated process** ([`PROCESS.md`](project-trajectory/PROCESS.md)) — roles as
   "hats", approval gates (G1→G2→G3→G-Release→G-Final; G-Release only for
@@ -26,74 +26,56 @@ The kit's headline pieces:
   silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
   generated matrix that must report **zero orphans** before each gate (SN-002).
-- **Runnable scripts** (stdlib-only Python 3.8+, no pip needed for the kit
-  itself — SN-011): [`check.py`](project-trajectory/scripts/check.py) (the gate- and
-  tier-aware harness), [`trace.py`](project-trajectory/scripts/trace.py)
-  (traceability), [`check_docs.py`](project-trajectory/scripts/check_docs.py)
-  (doc-navigability: broken-link + orphan-doc checks, plus the README
-  `PROJECT-VISION:` tag + the **opt-out** README need-coverage guard, and
-  `--stale` — SN-010),
-  [`check_flows.py`](project-trajectory/scripts/check_flows.py)
-  (the authored runtime-flows section: diagrams present, cited ids real),
-  [`check_perf.py`](project-trajectory/scripts/check_perf.py)
-  (performance-budget + regression comparator),
-  [`check_stubs.py`](project-trajectory/scripts/check_stubs.py)
-  (optional, warn-first no-stub/substance detector for the G3 criterion),
-  [`check_dupes.py`](project-trajectory/scripts/check_dupes.py)
-  (optional copy-paste detector — "one fact, one home, in code too" made
-  mechanical; opt in via a `[step:dupes]` profile line),
-  [`check_doc_refs.py`](project-trajectory/scripts/check_doc_refs.py)
-  (optional, warn-first prose-rot detector: a backticked repo path that no
-  longer exists, or an asserted `sym:module.name` missing from the generated
-  module map),
-  [`check_privacy.py`](project-trajectory/scripts/check_privacy.py)
-  (a deterministic **secrets floor** for committed keys/tokens in every repo,
-  opt-out via `docs/secrets-scan`, plus privacy/PII classes — author email,
-  content, and commit messages — gated on the `docs/privacy-check` toggle —
-  SN-009),
-  [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py)
-  (the AST code map — summaries, dependencies, `Implements:` back-links — plus
-  a generated Mermaid dependency diagram, routed into `architecture.md` and/or
-  `AGENTS.md`/`CLAUDE.md`),
-  [`gen_release_checklist.py`](project-trajectory/scripts/gen_release_checklist.py)
-  (the human release checklist),
-  [`gen_cases.py`](project-trajectory/scripts/gen_cases.py) (boundary-aware,
-  pairwise test-case combinations),
-  [`check_trajectory.py`](project-trajectory/scripts/check_trajectory.py) +
-  [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) (the
-  **opt-out** work-items layer — validate the execution DAG and render a
-  fully-offline root `PROJECT_STATE.html` dashboard; process-options.md "Trajectory /
-  work-items layer"),
-  [`gen_okf.py`](project-trajectory/scripts/gen_okf.py) (the traceability graph
-  exported as an Open Knowledge Format bundle — the kit's own is
-  [docs/okf/index.md](docs/okf/index.md); opt-out via `docs/okf-export`), and
-  [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) (scaffold a new repo —
-  SN-001).
-  Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`) ship for Linux/macOS
-  and Windows.
-- **Unattended agent operation** (SN-006) — root `agent-resume.*` launchers boot an
-  agent session at the declared tier, or the walk-away coordinator loop
-  ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)): fresh headless
-  sessions resume from `docs/status.md` until `docs/run-state` reaches an end
-  state, with a per-phase model map (`docs/run-phase`), reactive rate-limit
-  backoff, a stall guard, tracked per-session logs in `docs/iteration/`, and
-  optional **tier-conditional guardrails** (`docs/guardrails-policy` injects a
-  vendored discipline core into weaker-tier sessions; drift-checked by
-  `check_vendored.py`).
-  Consent is explicit and governed by one-word declared-policy files scaffolded
-  into `docs/`: `gate-policy` (who advances gates), `push-policy` (who may
-  push), and `privacy-check` (the PII/identity privacy gate — a `true`/`false`
-  toggle enforced by the git hooks + `check_privacy.py`).
-- **Agent-neutral skills and hooks** (SN-005) — opt-in skills
-  ([`skills/`](project-trajectory/skills/)) materialized per agent by
-  `bootstrap.py --agents`, and git hooks
-  ([`hooks/`](project-trajectory/hooks/)): a fast `pre-commit` process floor
-  and a `pre-push` privacy backstop for privacy-checked repos.
-- **Cross-project support** — an [`IF-###` interfaces registry](project-trajectory/INTERFACES.template.md)
+- **Runnable scripts** — stdlib-only Python 3.8+, no pip needed for the kit
+  itself (SN-011). Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`)
+  ship for Linux/macOS and Windows. Full detail:
+  [`project-trajectory/README.md`](project-trajectory/README.md).
+
+  | Script | Purpose |
+  |---|---|
+  | [`check.py`](project-trajectory/scripts/check.py) | Gate- and tier-aware harness |
+  | [`trace.py`](project-trajectory/scripts/trace.py) | Traceability matrix (join + orphan check) |
+  | [`check_docs.py`](project-trajectory/scripts/check_docs.py) | Doc navigability: broken links, orphan docs, `PROJECT-VISION` tag, opt-out README need-coverage, `--stale` (SN-010) |
+  | [`check_flows.py`](project-trajectory/scripts/check_flows.py) | Runtime-flow diagrams present, cited ids real |
+  | [`check_perf.py`](project-trajectory/scripts/check_perf.py) | Performance-budget + regression comparator |
+  | [`check_stubs.py`](project-trajectory/scripts/check_stubs.py) | Optional, warn-first: no-stub/substance detector (G3) |
+  | [`check_dupes.py`](project-trajectory/scripts/check_dupes.py) | Optional: copy-paste detector (opt in via `[step:dupes]`) |
+  | [`check_doc_refs.py`](project-trajectory/scripts/check_doc_refs.py) | Optional, warn-first: prose-rot detector (dead paths, broken `sym:module.name` refs) |
+  | [`check_privacy.py`](project-trajectory/scripts/check_privacy.py) | Secrets floor for every repo, opt-out via `docs/secrets-scan`; PII/identity classes gated on `docs/privacy-check` (SN-009) |
+  | [`gen_arch_map.py`](project-trajectory/scripts/gen_arch_map.py) | AST code map + Mermaid dependency diagram, routed into `architecture.md`/`AGENTS.md`/`CLAUDE.md` |
+  | [`gen_release_checklist.py`](project-trajectory/scripts/gen_release_checklist.py) | Generated human release checklist |
+  | [`gen_cases.py`](project-trajectory/scripts/gen_cases.py) | Boundary-aware, pairwise test-case combinations |
+  | [`check_trajectory.py`](project-trajectory/scripts/check_trajectory.py) + [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) | Opt-out work-items layer: validates the execution DAG, renders the offline root `PROJECT_STATE.html` dashboard |
+  | [`gen_okf.py`](project-trajectory/scripts/gen_okf.py) | Traceability graph as an Open Knowledge Format bundle (opt-out via `docs/okf-export`); the kit's own is [docs/okf/index.md](docs/okf/index.md) |
+  | [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) | Scaffold a new repo (SN-001) |
+
+- **Unattended agent operation** (SN-006):
+  - Root `agent-resume.*` launchers boot an agent session at the declared
+    tier, or the walk-away coordinator loop
+    ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)).
+  - Fresh headless sessions resume from `docs/status.md` until
+    `docs/run-state` reaches an end state.
+  - A per-phase model map (`docs/run-phase`), reactive rate-limit backoff, a
+    stall guard, and tracked per-session logs in `docs/iteration/`.
+  - Optional **tier-conditional guardrails** — `docs/guardrails-policy`
+    injects a vendored discipline core into weaker-tier sessions, drift-checked
+    by `check_vendored.py`.
+  - Consent is explicit via one-word declared-policy files scaffolded into
+    `docs/`: `gate-policy` (who advances gates), `push-policy` (who may push),
+    and `privacy-check` (the PII/identity gate, enforced by the git hooks +
+    `check_privacy.py`).
+- **Agent-neutral skills and hooks** (SN-005):
+  - Opt-in skills ([`skills/`](project-trajectory/skills/)), materialized per
+    agent by `bootstrap.py --agents`.
+  - Git hooks ([`hooks/`](project-trajectory/hooks/)): a fast `pre-commit`
+    process floor and a `pre-push` privacy backstop for privacy-checked repos.
+- **Cross-project support** — an
+  [`IF-###` interfaces registry](project-trajectory/INTERFACES.template.md)
   for projects that interlink, so shared contracts stay traceable and versioned.
-- **An agent guide template** ([`AGENTS.template.md`](project-trajectory/AGENTS.template.md))
-  that encodes our readability/maintainability conventions and points agents at
-  the process. It scaffolds to `AGENTS.md` (the cross-tool standard), with thin
+- **An agent guide template**
+  ([`AGENTS.template.md`](project-trajectory/AGENTS.template.md)) that encodes
+  our readability/maintainability conventions and points agents at the
+  process. It scaffolds to `AGENTS.md` (the cross-tool standard), with thin
   `CLAUDE.md`/`GEMINI.md` stubs pointing back at it.
 
 ## Quick start — bootstrap a new project
@@ -109,24 +91,27 @@ python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --dry-run
 python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --agents claude
 ```
 
-> **Which `python`?** The kit needs Python 3.8+. These examples say `python`; if
-> that name is missing or points at Python 2, use `python3` (usual on Linux/macOS)
-> or the `py` launcher (Windows). On a fresh macOS, the first `python3` may prompt
-> you to install the Command Line Tools — accept it (or run `xcode-select
-> --install`), which also provides `git`.
+> **Which `python`?** Needs 3.8+. If `python` is missing or points at Python 2,
+> use `python3` (Linux/macOS) or the `py` launcher (Windows). On a fresh macOS,
+> the first `python3` may prompt to install the Command Line Tools — accept it
+> (or run `xcode-select --install`), which also provides `git`.
 
-This scaffolds `AGENTS.md` (the agent guide; `CLAUDE.md`/`GEMINI.md` stubs point
-at it), `docs/` (process, status + log + plan, architecture, interfaces, the
-registries, and the declared-policy files `gate`, `gate-policy`, `push-policy`,
-`privacy-check`), `scripts/` (the harness), the root `run.*` /
-`agent-resume.*` launchers (shipped inert until you fill their command slots),
-`.github/workflows/check.yml`, and empty `src/`/`tests/`. Then:
+This scaffolds:
+- `AGENTS.md` (the agent guide; `CLAUDE.md`/`GEMINI.md` stubs point at it)
+- `docs/` — process, status + log + plan, architecture, interfaces, the
+  registries, and the declared-policy files (`gate`, `gate-policy`,
+  `push-policy`, `privacy-check`)
+- `scripts/` — the harness
+- root `run.*` / `agent-resume.*` launchers (shipped inert until you fill
+  their command slots)
+- `.github/workflows/check.yml`, and empty `src/`/`tests/`
+
+Then:
 
 1. Fill the **PROJECT BRIEF** in the new repo's `AGENTS.md` and `docs/status.md`.
-2. Install the harness tooling for your stack (the Python reference uses
-   `ruff pytest pytest-cov`). The commands the harness runs — format, lint,
-   test, tiers, coverage — are declared once in the new repo's `docs/stack.ini`;
-   a non-Python stack edits that one file.
+2. Install the harness tooling for your stack (Python reference: `ruff pytest
+   pytest-cov`). Commands are declared once in `docs/stack.ini` — a
+   non-Python stack edits that one file.
 3. Start **gate G1** — see the new repo's `docs/process.md`.
 
 ### Or kick off with an agent
@@ -150,58 +135,57 @@ same artifacts and run the gates with you.
 - **Honest gates** — machine-checkable where possible; everything else is
   explicitly classified, never hand-waved.
 
-> **Scope — generate vs. measure.** This kit *generates* legibility (the traced
-> spine, the committed code map, the gates), so a repo built with it should score
-> well by construction. *Measuring* legibility over time — AI-readiness or
-> complexity/churn dashboards — is a separate, **optional downstream** concern,
-> not a kit dependency (see [`PROCESS.md`](project-trajectory/PROCESS.md) §7).
+> **Generate vs. measure.** This kit *generates* legibility (traced spine,
+> committed code map, gates). *Measuring* legibility over time — AI-readiness
+> or complexity/churn dashboards — is a separate, optional, downstream concern
+> ([`PROCESS.md`](project-trajectory/PROCESS.md) §7).
 
-> **Scope — spec vs. runtime harness.** This kit is a portable process *spec*; a
-> turnkey, tool-specific agent-runtime harness (an installed engine with its own
-> gates/subagents) is different, optional, downstream tooling that can run *with*
-> a repo built from this kit — never a dependency of it (see
-> [`PROCESS.md`](project-trajectory/PROCESS.md) §7).
+> **Spec vs. runtime harness.** This kit is a portable process *spec*. A
+> turnkey, tool-specific agent-runtime harness (an installed engine with its
+> own gates/subagents) is different, optional, downstream tooling that can run
+> *with* a repo built from this kit — never a dependency of it
+> ([`PROCESS.md`](project-trajectory/PROCESS.md) §7).
 
-> **Scope — project scale.** **One module in one repo is the default.** A larger
-> repo can host several modules on the same spine (sub-trees grouped by
-> `Module`/`Area`, module-scoped review by convention, an integration TC at each
-> seam); a multi-repo split under a coordinator is a rarer, heavier step taken only
-> when modules need independent versioning or release — scale up the escalation
-> ladder only when the scope forces it (see
-> [`PROCESS.md`](project-trajectory/PROCESS.md) §10; the coordinator model is
-> [`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md), a design with the cross-repo
-> tooling deferred).
+> **Project scale.** One module in one repo is the default. A larger repo can
+> host several modules on the same spine (grouped by `Module`/`Area`,
+> module-scoped review, an integration TC at each seam); a multi-repo split
+> under a coordinator is a rarer, heavier step, taken only when modules need
+> independent versioning/release
+> ([`PROCESS.md`](project-trajectory/PROCESS.md) §10; coordinator design:
+> [`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md)).
 
-> **Onboarding ladder.** A fresh contributor's path mirrors the lifecycle phases
-> one level up — `Stage 0` (get git + the repo) → `dev-setup` (workstation:
-> runtime, git, an offline Mermaid renderer) → `setup` (product toolchain) →
-> `check` (the gates) — each rung optional, readable, and consent-first. The kit
-> scaffolds a per-platform Stage-0 `onboard` script (with a native folder picker
-> and an AI-agent handoff for non-coders) and a tiered `dev-setup` (see
-> [`PROCESS.md`](project-trajectory/PROCESS.md) §7).
+> **Onboarding ladder.** `Stage 0` (get git + the repo) → `dev-setup`
+> (workstation: runtime, git, an offline Mermaid renderer) → `setup` (product
+> toolchain) → `check` (the gates) — each rung optional, readable, and
+> consent-first. The kit scaffolds a per-platform Stage-0 `onboard` script
+> (native folder picker + an AI-agent handoff for non-coders) and a tiered
+> `dev-setup` ([`PROCESS.md`](project-trajectory/PROCESS.md) §7).
 
 ## Built with the kit (self-adoption)
 
 This repo eats its own dog food: the kit is developed **using the kit's own
 process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
-[`check.py`](project-trajectory/scripts/check.py). Every capability above cites
-the [stakeholder need](docs/requirements/stakeholder-needs.md) it realizes, and
-`check_docs.py`'s **opt-out** need-coverage guard keeps that honest — every
-Must/Should need must be cited somewhere in this README, so a requirements change
-mechanically ages it (no delimiter markers; any `SN-###` counts). The two needs
-without a headline bullet are the meta-repo's own: **the kit's own changes stay
-traced and tested** (SN-007 — the suite exercises every script end-to-end against
-a real scaffold) and **the process stays right-sized** (SN-012 — perf, guardrails,
-unattended, and parallel-tracks layers cost a repo that doesn't use them nothing).
+[`check.py`](project-trajectory/scripts/check.py).
 
-The meta-repo's needs, requirements, and tests live under
-[`docs/requirements/`](docs/requirements/) + [`docs/test/`](docs/test/) —
-distinct from the blank templates the kit *ships* — and it currently passes its
-own gates at **G3** (the gate-walk record is [`docs/log.md`](docs/log.md)).
+- Every capability above cites the
+  [stakeholder need](docs/requirements/stakeholder-needs.md) it realizes;
+  `check_docs.py`'s **opt-out** need-coverage guard keeps that honest — every
+  Must/Should need must be cited somewhere in this README, so a requirements
+  change mechanically ages it (no delimiter markers; any `SN-###` counts).
+- Two needs have no headline bullet of their own — the meta-repo's own:
+  **SN-007**, the kit's own changes stay traced and tested (the suite
+  exercises every script end-to-end against a real scaffold), and **SN-012**,
+  the process stays right-sized (perf, guardrails, unattended, and
+  parallel-tracks layers cost a repo that doesn't use them nothing).
+- The meta-repo's needs, requirements, and tests live under
+  [`docs/requirements/`](docs/requirements/) + [`docs/test/`](docs/test/) —
+  distinct from the blank templates the kit *ships*.
+- It currently passes its own gates at **G3** (gate-walk record:
+  [`docs/log.md`](docs/log.md)).
 
 ### The gates at a glance
 
-What each approval gate certifies — the full criteria live in
+What each approval gate certifies — full criteria in
 [`PROCESS.md`](project-trajectory/PROCESS.md) §4:
 
 - **G1 — Requirements/UX/Constraints.** Needs + requirements are complete,
