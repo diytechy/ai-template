@@ -52,3 +52,4 @@ resource: "generated"
 | [SR-040](SR-040.md) | Per-phase routing and review dial |
 | [SR-041](SR-041.md) | Doc reference validation |
 | [SR-042](SR-042.md) | OKF knowledge-bundle export |
+| [SR-043](SR-043.md) | Subagent spawn gate |

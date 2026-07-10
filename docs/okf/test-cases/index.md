@@ -52,3 +52,4 @@ resource: "generated"
 | [TC-040](TC-040.md) | Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the… |
 | [TC-041](TC-041.md) | Run the doc-refs suite; a dangling path warns then gates under --strict, non-path backtic… |
 | [TC-042](TC-042.md) | Run the gen-okf suite; typed linked concepts generate, Process Guide concepts emit for pr… |
+| [TC-043](TC-043.md) | Run the subagent-gate suite; a Task/Agent spawn under deny is refused (permissionDecision… |

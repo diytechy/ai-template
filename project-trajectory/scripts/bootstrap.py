@@ -39,7 +39,7 @@ What it creates in the destination:
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
-    scripts/gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
+    scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1}                 <- dev-setup.template.* (workstation setup)
@@ -963,6 +963,7 @@ MAPPING = [
     ("scripts/check_privacy.py", "scripts/check_privacy.py"),
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
+    ("scripts/subagent_gate.py", "scripts/subagent_gate.py"),
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),

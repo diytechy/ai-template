@@ -49,3 +49,4 @@ resource: "generated"
 | [LLR-037](LLR-037.md) | Per-phase cmd map + size tripwire |
 | [LLR-038](LLR-038.md) | Path + sym: reference checker |
 | [LLR-039](LLR-039.md) | OKF bundle emitter |
+| [LLR-040](LLR-040.md) | Subagent spawn gate |

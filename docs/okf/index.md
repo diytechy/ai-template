@@ -13,7 +13,7 @@ Generated from the spine registries and the process docs
 Spec pin: [UPSTREAM.md](UPSTREAM.md).
 
 - [stakeholder-needs](stakeholder-needs/index.md) — 22 concept(s)
-- [system-requirements](system-requirements/index.md) — 42 concept(s)
-- [low-level-requirements](low-level-requirements/index.md) — 39 concept(s)
-- [test-cases](test-cases/index.md) — 42 concept(s)
+- [system-requirements](system-requirements/index.md) — 43 concept(s)
+- [low-level-requirements](low-level-requirements/index.md) — 40 concept(s)
+- [test-cases](test-cases/index.md) — 43 concept(s)
 - [process-guides](process-guides/index.md) — 3 concept(s)

@@ -318,6 +318,17 @@ Imports (internal): `check_trajectory`
 | `build_html(root, wis)` |  |  |
 | `main()` |  |  |
 
+### `scripts/subagent_gate`
+_Subagent spawn gate — deny-by-default fan-out control for unattended runs._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `read_declared(path)` | First non-comment, non-blank line lowercased, or "" — the same |  |
+| `decide(tool_name, policy, override)` | Pure decision core for one tool call. | LLR-040, SR-043 |
+| `emit(decision, reason)` | Map a decision to PreToolUse stdout + an exit code, returning the code. |  |
+| `log_decision(root, tool_name, decision, reason)` | Append one tab-separated decision to docs/subagent-gate.log (best-effort; |  |
+| `main(argv)` | Read the PreToolUse payload on stdin, decide, emit, log. Fails OPEN on any | LLR-040, SR-043 |
+
 ### `scripts/trace`
 _Traceability join + orphan report for the SN->SR->LLR->TC registries._
 

@@ -36,6 +36,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/check_privacy.py",
         "scripts/check_vendored.py",
         "scripts/check_trajectory.py",
+        "scripts/subagent_gate.py",
         "scripts/gen_cases.py",
         "scripts/gen_trajectory.py",
         "scripts/gen_okf.py",

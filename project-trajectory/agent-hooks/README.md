@@ -25,3 +25,12 @@ scaffold never silently installs a `Stop` hook that runs commands. Adopt one onl
 if you want the extra signal: rename the example to `settings.json` (merging into
 any existing one), and **verify the schema against your agent's current version** —
 these mirror the git hook for convenience; they don't replace it.
+
+`claude.settings.json` also carries a **`PreToolUse` subagent-spawn gate**
+(`scripts/subagent_gate.py`) for unattended runs — deny-by-default fan-out with
+the override held by the launcher, not the model (process-options.md
+"Tier-conditional guardrails" neighbours it; policy in `docs/subagent-gate`,
+absent = off, so it is a vacuous allow until you opt in). It is **Claude-only**
+here: Gemini's hook model differs and Codex has none, so the gemini config omits
+it. Like every hook, it is *supervision, not security* — a model that can edit
+files can remove it.
