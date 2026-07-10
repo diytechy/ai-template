@@ -29,22 +29,29 @@ sign-offs, verdicts) is [log.md](log.md).
 - **Plan state:** **Thread 47 complete** — self-adoption phases 1–7 landed
   2026-07-07; meta-repo at **G3** (SN=22 SR=38 LLR=35 TC=38, 0 orphans;
   `check.py --gate G3` PASS; product coverage ~91%). **G3 human-ratified
-  2026-07-07** (Peter Johnson, `docs/log.md`); **the 2026-07-09 SR-037/038 spine
-  change (F1 fix, WI-1.43) awaits re-attestation** — see log.md. **Thread 50**
-  (trace.py SR/LLR citation-coherence check) landed; latest post-plan WI **WI-1.43**.
+  2026-07-07 and re-attested 2026-07-09** over the SR-037/038 spine change
+  (Peter Johnson, `docs/log.md`). **Thread 50**
+  (trace.py SR/LLR citation-coherence check) landed; latest post-plan WI
+  **WI-1.44** (the AXES schema bundle: Workstream + `~` soft edges + the CMP-###
+  component layer + MOD→REPO — see the plan entry + ADOPTING §6 recipe).
   **Thread 52 COMPLETE 2026-07-08** (all 4 phases) — the opt-out trajectory/
   work-items layer: `work-items.csv` registry + `check_trajectory.py` +
   `gen_trajectory.py` (offline SVG dashboard) + PROCESS_OPTIONS/README docs.
-  **Dogfooded (P4):** the meta-repo carries its own 37-WI
+  **Dogfooded (P4):** the meta-repo carries its own 39-WI
   `docs/requirements/work-items.csv` + generated `docs/trajectory.html`
-  (Execution 86%, Definition 100%), gate-green on real data.
+  (Execution 85%, Definition 100%), gate-green on real data. The **ratified
+  design notes** behind WI-1.44 sit at root:
+  [`AXES_AND_WORKSTREAMS.md`](../AXES_AND_WORKSTREAMS.md) (static structure,
+  iter-9) + [`AGENT_ROLES.md`](../AGENT_ROLES.md) (dynamic layer, R1–R6).
 - **Open items:**
   - **Needs <human>**: _(none)_ — **G3 re-attested 2026-07-09** over the
     SR-037/038 spine change (Peter Johnson, `docs/log.md`; F1 fully closed).
     Verification basis: 38/38 SRs mechanized, 0 attested.
-  - **In flight:** _(none)_ — **Thread 52 landed complete 2026-07-08** (commits
-    `07fd10f`/`6fa3236`/`49a5cf8` + P4; on `MultiRepoSupport`, not pushed).
-  - **Queued (next):** _(none scheduled)_
+  - **In flight:** _(none)_ — **WI-1.43 (F1) + WI-1.44 (schema bundle) landed
+    complete 2026-07-09** (on `MultiRepoSupport`, **not pushed** — push decision
+    is the owner's, see Next action).
+  - **Queued (next):** the Next-action list below (owner DAG data-pass, F2,
+    WI-039, the AGENT_ROLES build calls).
   - **Deferred (backlog):** **Thread 53** — `check_dupes.py` mechanical
     anti-duplication (upstream gilbert; strong candidate, unscheduled). **Thread 51**
     — a first-class TC test-evidence column (ruling pending). **WI-1.27** —
