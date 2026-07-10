@@ -43,7 +43,7 @@ sign-offs, verdicts) is [log.md](log.md).
        adversarial reviews are **fully triaged** — all 20 findings fixed
        (WI-1.53), so re-attestation now covers a reviewed, corrected spine.
     2. **Push decision** — `MultiRepoSupport` is local-only (~40 commits).
-    3. **F3 data-pass** on the 43-WI DAG edges (demote narrative edges to
+    3. **F3 data-pass** on the 44-WI DAG edges (demote narrative edges to
        `~`) — owner's mapping call, unchanged.
   - **In flight:** _(none)_ — the queue is empty. The three
     [`REVIEW_GRIND_*.md`](../REVIEW_GRIND_A.md) reports (7 method/risk +
@@ -51,11 +51,14 @@ sign-offs, verdicts) is [log.md](log.md).
     — spine SN-Refs (B1) + the OKF count (B2), text-boundary/encoding
     hardening, per-script correctness, harness shadow-guard + `KIT_SCRIPTS_DIR`
     in every hook + parser-drift reconcile, and the docs/nits.
+  - **Recently landed:** **OKF Layer B2** (process docs as `Process Guide`
+    concepts — WI-1.54, 2026-07-10; extended SR-042 + LLR-039, rides the
+    re-attestation).
   - **Deferred (backlog):** **WI-1.27** coordinator stash/rollback
-    (owner-deferred 2026-07-05); OKF **Layer B2** (process-docs as concepts,
-    the spec's follow-commit); the **Q1 rider ruling** (a warn-first
-    `--untraced` tier — recommendation recorded in WI-1.50's entry); the
-    committed-composites freshness design (deferred with reasoning, WI-1.50).
+    (owner-deferred 2026-07-05); OKF **Layer B1** (intrusive doc-frontmatter,
+    behind a future flag); the **Q1 rider ruling** (a warn-first `--untraced`
+    tier — recommendation recorded in WI-1.50's entry); the committed-composites
+    freshness design (deferred with reasoning, WI-1.50).
 - **Next action:** **owner sitting** — read the three `REVIEW_GRIND_*.md`
   reports, triage their findings (file/fix/dismiss), re-attest G3 per
   [log.md](log.md), and rule on push. After that the frontier is genuinely

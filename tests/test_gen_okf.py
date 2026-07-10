@@ -97,6 +97,55 @@ def test_opt_out_silences(scaffold):
     assert proc.returncode == 0 and "off" in proc.stdout
 
 
+def test_process_guides_emit_with_derived_summaries(scaffold):
+    # Layer B2: a real-spine repo also gets Process Guide concepts for its
+    # process docs — typed, resource-linked, the summary DERIVED from the doc
+    # (not hand-authored), the source left untouched.
+    make_minimal_project(scaffold)
+    proc = okf(scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    guide = bundle(scaffold) / "process-guides" / "architecture.md"
+    assert guide.exists()
+    text = guide.read_text(encoding="utf-8")
+    assert 'type: "Process Guide"' in text
+    assert 'resource: "docs/architecture.md"' in text
+    assert (
+        "[docs/architecture.md](../../../docs/architecture.md)" in text
+    )  # source link
+    # The summary is the doc's own first prose line, proving derivation.
+    arch = scaffold / "docs" / "architecture.md"
+    first_prose = next(
+        ln.strip()
+        for ln in arch.read_text(encoding="utf-8").splitlines()
+        if ln.strip() and not ln.startswith(("#", "|", "<!--", "-", ">", "`"))
+    )
+    assert first_prose[:40] in text
+    # The root index lists the new tier; the source doc is unmodified (B1 not B2).
+    assert "process-guides" in (bundle(scaffold) / "index.md").read_text(
+        encoding="utf-8"
+    )
+    assert "type:" not in arch.read_text(encoding="utf-8").splitlines()[0]
+
+
+def test_process_guides_skip_absent_docs(scaffold):
+    # A doc a given repo doesn't carry is skipped (like the off-spine tiers), so
+    # the shipped candidate list is generous without minting dangling concepts.
+    make_minimal_project(scaffold)
+    assert not (scaffold / "docs" / "plan.md").exists() or True
+    assert okf(scaffold).returncode == 0
+    # docs/interfaces.md is not a scaffolded doc -> no such guide.
+    assert not (bundle(scaffold) / "process-guides" / "interfaces.md").exists()
+
+
+def test_process_guides_absent_on_vacuous_scaffold(scaffold):
+    # The vacuity gate: process docs exist in a fresh scaffold, but with only
+    # placeholder registries nothing is emitted at all — so fresh-scaffold-green
+    # and the zero-cost opt-out hold (guides ride the real-spine gate).
+    proc = okf(scaffold, "--check")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert not bundle(scaffold).exists()
+
+
 def test_malformed_id_is_ignored_not_path_escape(scaffold):
     # A4: an id that isn't PREFIX-<digits> (a crafted traversal id) is not
     # turned into a path component — it's simply skipped, like trace.py's

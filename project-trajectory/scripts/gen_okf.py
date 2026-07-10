@@ -36,6 +36,24 @@ from pathlib import Path
 OUT_DIR = "docs/okf"
 POLICY = "docs/okf-export"
 
+# Layer B2 (Thread 48): the key process docs summarized as `Process Guide`
+# concepts, so the WHOLE repo — process knowledge + the requirement graph — is
+# one OKF bundle. (relpath, concept-id slug, friendly-title fallback). A doc
+# absent in a given repo is skipped, so the shipped list can be generous; the
+# meta-repo, whose process masters live under project-trajectory/, gets the
+# subset it actually carries. The summary is DERIVED from each doc (never
+# hand-authored), and the source doc is left untouched (that mutation is the
+# opt-in Layer B1, deferred). Guides emit only alongside a real spine (added
+# after emit()'s vacuity gate), so a fresh scaffold stays vacuously clean.
+PROCESS_GUIDE_DOCS = [
+    ("AGENTS.md", "agents", "Agent guide"),
+    ("docs/process.md", "process", "Process"),
+    ("docs/process-options.md", "process-options", "Process options"),
+    ("docs/architecture.md", "architecture", "Architecture"),
+    ("docs/status.md", "status", "Status blackboard"),
+    ("docs/plan.md", "plan", "Plan"),
+]
+
 UPSTREAM = """# Upstream pin — Open Knowledge Format
 
 This bundle targets **OKF v0.1** (`GoogleCloudPlatform/knowledge-catalog`,
@@ -157,6 +175,57 @@ def links(label, ids, target_dir):
             "[{0}](../{1}/{0}.md)".format(i, target_dir) for i in sorted(set(ids))
         )
     ]
+
+
+def _strip_md_links(text):
+    """Reduce inline markdown links/images to their visible text. A derived
+    summary is prose, not navigation — and a relative link valid in the source
+    doc would dangle once transplanted into docs/okf/ (check_docs would flag
+    it), so links must not survive into a Process Guide."""
+    text = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", text)  # inline [t](u)/![a](u)
+    text = re.sub(r"!?\[([^\]]*)\]\[[^\]]*\]", r"\1", text)  # reference [t][ref]
+    return text
+
+
+def _doc_title_and_summary(path):
+    """(title, one-line summary) DERIVED from a markdown doc — its first heading
+    and its first prose paragraph — so a Process Guide concept regenerates from
+    the source and can't drift (Layer B2; never hand-authored). Frontmatter,
+    HTML comments, tables, quotes, fences and list markers are skipped; inline
+    links are reduced to their text so nothing dangles in the bundle."""
+    title, para, started, in_fm = "", [], False, False
+    for i, raw in enumerate(
+        path.read_text(encoding="utf-8", errors="replace").splitlines()
+    ):
+        ln = raw.strip()
+        if i == 0 and ln == "---":
+            in_fm = True
+            continue
+        if in_fm:
+            if ln == "---":
+                in_fm = False
+            continue
+        if not ln or ln.startswith("<!--"):
+            if started:
+                break
+            continue
+        if ln.startswith("#"):
+            if not title:
+                title = ln.lstrip("# ").strip()
+            if started:
+                break
+            continue
+        if ln.startswith(("|", ">", "```", "- ", "* ", "1.")):
+            if started:
+                break
+            continue
+        para.append(ln)
+        started = True
+    title = _strip_md_links(title)
+    summary = _strip_md_links(" ".join(" ".join(para).split()))
+    if len(summary) > 240:
+        summary = summary[:239].rstrip() + "…"
+    return title, summary
 
 
 def emit(root):
@@ -323,6 +392,35 @@ def emit(root):
             entries.append((cid, (r.get("Name") or "").strip()))
         add_tier("interfaces", entries)
 
+    # Layer B2: the process docs as `Process Guide` concepts (derived summary +
+    # a resource pointer back to the untouched source). From a concept file at
+    # docs/okf/process-guides/, three `../` reach the repo root, then the doc.
+    guides = []
+    for rel, slug, friendly in PROCESS_GUIDE_DOCS:
+        doc = root / rel
+        if not doc.exists():
+            continue
+        title, summary = _doc_title_and_summary(doc)
+        title = title or friendly
+        desc = summary or title
+        out["process-guides/{}.md".format(slug)] = concept(
+            "process-guides",
+            slug,
+            "Process Guide",
+            title,
+            desc,
+            [],
+            rel,
+            [
+                "**Summary.** {}".format(desc),
+                "",
+                "**Source (unmodified).** [{0}](../../../{0}).".format(rel),
+            ],
+        )
+        guides.append((slug, title))
+    if guides:
+        add_tier("process-guides", guides)
+
     for dirname, tier_entries in tiers:
         lines = [
             "# {} — index".format(dirname),
@@ -351,10 +449,11 @@ def emit(root):
         )
 
     root_lines = [
-        "# Knowledge bundle — the traceability graph",
+        "# Knowledge bundle — the traceability graph + process guides",
         "",
-        "Generated from the spine registries (`scripts/gen_okf.py`); the CSVs",
-        "stay the source of truth. Spec pin: [UPSTREAM.md](UPSTREAM.md).",
+        "Generated from the spine registries and the process docs",
+        "(`scripts/gen_okf.py`); the CSVs and docs stay the source of truth.",
+        "Spec pin: [UPSTREAM.md](UPSTREAM.md).",
         "",
     ]
     for dirname, tier_entries in tiers:

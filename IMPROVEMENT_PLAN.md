@@ -4425,9 +4425,12 @@ mechanical once the SR skeleton + this table are in hand.**
 
 ## Thread 48 — Open Knowledge Format (OKF) export: the traceability graph as a portable knowledge bundle
 
-**Status: ✅ Layer A landed 2026-07-10 (WI-1.51 — `gen_okf.py` + committed
-`docs/okf/` bundle + the `okf` gate/hook step).** Layer B2 (the process docs
-as OKF concepts) remains the spec's **optional follow-commit** — not built. The
+**Status: ✅ Layers A + B2 landed 2026-07-10 (WI-1.51 + WI-1.54).** Layer A =
+`gen_okf.py` + committed `docs/okf/` bundle + the `okf` gate/hook step. **Layer
+B2** = the process docs as `Process Guide` concepts (WI-1.54, owner-ruled to
+extend SR-042 + LLR-039): derived summaries + a resource pointer to the
+untouched source, emitted alongside a real spine. **B1** (intrusive `type:`
+frontmatter in the source docs) stays deferred behind a future flag. The
 kick-off brief below is retained as the *why*. Two
 layers: **A** = the requirement-graph export (the clear win, do first); **B** =
 the process docs as concepts (optional, secondary).
@@ -6934,6 +6937,30 @@ continuity (same style as the session log above).
 > The three reports carry RESOLVED banners. `pytest -q` + `check_docs` green
 > (final totals in the commit); `check.py --gate G3` PASS; trace SN=22 SR=42
 > LLR=39 TC=42, 0 orphans. Byte-budgeted files untouched.
+
+> **WI-1.54 ✅ landed 2026-07-10 · OKF Layer B2 — process docs as `Process
+> Guide` concepts (Thread 48).** Completes the OKF export: `gen_okf.py` now
+> also emits a `process-guides/` tier — one `type: Process Guide` concept per
+> present process doc (`AGENTS.md`, `docs/process.md`, `docs/process-options.md`,
+> `docs/architecture.md`, `docs/status.md`, `docs/plan.md`; absent ones skipped
+> like the off-spine tiers), each a **derived** title+summary (the doc's first
+> heading + first prose paragraph, inline links stripped so nothing dangles in
+> the bundle) plus a `resource:` pointer to the **unmodified** source. Two
+> design invariants held: summaries are derived, never hand-authored (they
+> regenerate from the source, so `--check` catches drift); and the tier emits
+> **only after the spine vacuity gate**, so a fresh scaffold stays vacuously
+> clean and the `docs/okf-export: off` opt-out still costs nothing. B1 (mutating
+> the source docs with frontmatter) stays deferred. **Owner ruling:** extend
+> SR-042 + LLR-039 (+ TC-042) rather than mint a new SR — rides the pending
+> re-attestation; also corrected SR-042's rationale prose, which still said
+> "Realizes SN-004 and SN-010" after the B1 SN-Refs re-route (now SN-010;SN-012).
+> Deliverables: `PROCESS_GUIDE_DOCS` + `_doc_title_and_summary` + `_strip_md_links`
+> + the tier in `emit()`; 3 tests (derived summary + source-unmodified,
+> skip-absent, vacuous-scaffold); the meta bundle regenerated (151→155 files:
+> +agents/architecture/status guides + the tier index). **Deviation:** none.
+> `check.py --gate G3` PASS; `pytest -q` green (totals in the commit); trace
+> SN=22 SR=42 LLR=39 TC=42, 0 orphans. Byte-budgeted files untouched (no source
+> doc mutated — that is B1).
 
 ### Session protocol (for a cold session pointed only at this file)
 
