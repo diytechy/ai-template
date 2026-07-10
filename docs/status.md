@@ -28,7 +28,7 @@ working surface.
   gate-walk record: [log.md](log.md).
 - **Plan state:** meta-repo at **G3**, spine **SN=22 SR=43 LLR=40 TC=43, 0
   orphans**, 43/43 SRs mechanized. Latest batch: the **ClaudeGuardChecks
-  integration, Phases 1–4** (WI-045…048, owner-directed, review deferred) —
+  integration, Phases 1–5** (WI-045…049, owner-directed, review deferred) —
   the working-agreement distill, the guardrails reference-upstream pointer, the
   enforcement-audit discipline + `stdlib-only` promoted to a test (SR-034), and
   the subagent spawn gate (**SR-043**). The prior 2026-07-10 grind
@@ -49,12 +49,15 @@ working surface.
        `~`) — owner's mapping call, unchanged.
     4. **Phase 2 sibling-repo ruling** — enrich the guardrails upstream
        (`FableClaudeMDForOpus`) in place vs. a new curated repo, then execute
-       the deferred content enrichment (ClaudeGuardChecks `INTEGRATION_PLAN.md`).
+       the deferred content enrichment (spec:
+       [`docs/archive/INTEGRATION_PLAN.md`](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the Phases 1–4 batch** (owner-directed, review deferred).
   - **In flight:** _(none)_ — the queue is empty.
-  - **Recently landed:** the **ClaudeGuardChecks integration Phases 1–4**
-    (WI-045…048, 2026-07-10; SR-034 promoted + new SR-043 ride the
-    re-attestation) and, before it, **OKF Layer B2** (WI-1.54).
+  - **Recently landed:** the **ClaudeGuardChecks integration Phases 1–5**
+    (WI-045…049, 2026-07-10; SR-034 promoted + new SR-043 ride the
+    re-attestation; its spec-of-record `INTEGRATION_PLAN.md` copied into
+    `docs/archive/` so no citation points outside this repo) and, before it,
+    **OKF Layer B2** (WI-1.54).
   - **Deferred (backlog):** **WI-1.27** coordinator stash/rollback
     (owner-deferred 2026-07-05); OKF **Layer B1** (intrusive doc-frontmatter,
     behind a future flag); the **Q1 rider ruling** (a warn-first `--untraced`

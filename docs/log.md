@@ -311,9 +311,10 @@ now covers a **reviewed, corrected** spine, not the as-first-written one.
 ## 2026-07-10 — SPINE CHANGE (ClaudeGuardChecks integration, Phases 1–4): SR-043 added; SR-034 Inspection→Analysis; G3 re-run PASS; RE-ATTESTATION still PENDING
 
 Owner-directed batch (review deferred) integrating the reviewed findings from
-`C:\Projects\ClaudeGuardChecks` — spec of record: its `INTEGRATION_PLAN.md`.
-Records live here + in `work-items.csv` (WI-045…048), **not** in
-`IMPROVEMENT_PLAN.md`, which this session archives (below).
+the ClaudeGuardChecks reference checkout. Spec of record, copied in-repo so a
+fresh checkout resolves it: [`docs/archive/INTEGRATION_PLAN.md`](archive/INTEGRATION_PLAN.md)
+(no file links point outside this repo). Records live here + in `work-items.csv`
+(WI-045…049), **not** in `IMPROVEMENT_PLAN.md`, which this session archives (below).
 
 - **Phase 1 (docs, b443c9d)** — three sharp working-agreement framings distilled
   into `AGENTS.template.md` (the contradiction is the deliverable; scope is a

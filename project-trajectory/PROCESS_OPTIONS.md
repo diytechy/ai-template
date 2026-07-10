@@ -400,6 +400,19 @@ strong tier pays the exploration cost once, every cheap session after reloads
 only the spec. `status.md` stays the lean resume surface, naming the current
 block; finished blocks are logged and pruned.
 
+**Per-phase effort (a sibling knob to the model map).** Just as `AGENT_MODEL_MAP`
+routes a *model* per phase, reasoning *effort* can be tiered per phase — a
+grep-and-summarize phase is not a crash-debug phase. Two cautions, both
+evidenced (effortmining, ~450 pre-registered runs on `claude-opus-4-8`): **(1)
+cheap is not free** — at low effort a model does not merely skim, it
+*fabricates* (an invented ticket id in the published runs), so route hard work
+*up* a tier, never down to save tokens on a task that will hallucinate; **(2)**
+the knob that actually bites is **agent-frontmatter effort**, not a prompt-level
+cue (a subagent inherits its frontmatter `effort`; `/effort`-style prose in the
+task is ignored) — so per-phase effort is set the same way per-phase models are
+(a phase-specific agent file / command template), and kept **thin and
+replaceable**, since native per-spawn effort will likely obsolete the workaround.
+
 **Sizing the blocks** — the judgment the PLAN phase owns; it cannot be
 mechanized, but it can be steered:
 
