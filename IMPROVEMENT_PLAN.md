@@ -4425,8 +4425,10 @@ mechanical once the SR skeleton + this table are in hand.**
 
 ## Thread 48 — Open Knowledge Format (OKF) export: the traceability graph as a portable knowledge bundle
 
-**Status: 📋 PLANNED — spec for a fresh session (unscheduled).** This entry *is*
-the kick-off brief; a new session reads it top-to-bottom, then executes. Two
+**Status: ✅ Layer A landed 2026-07-10 (WI-1.51 — `gen_okf.py` + committed
+`docs/okf/` bundle + the `okf` gate/hook step).** Layer B2 (the process docs
+as OKF concepts) remains the spec's **optional follow-commit** — not built. The
+kick-off brief below is retained as the *why*. Two
 layers: **A** = the requirement-graph export (the clear win, do first); **B** =
 the process docs as concepts (optional, secondary).
 
@@ -4589,7 +4591,12 @@ mechanical once the mapping is fixed.
 
 ## Thread 49 — Documentation-currency hardening: symbol-reference validation + deterministic freshness
 
-**Status: 📋 PLANNED — spec for a fresh session (unscheduled).** Kick-off brief.
+**Status: ✅ landed 2026-07-10 (WI-1.50 — `check_doc_refs.py`: the path +
+`sym:` tiers, warn-first).** Two riders remain **open, filed not built**: the
+Q1 mechanical untraced-code check (a warn-first `--untraced` tier — needs an
+owner ruling, it changes what "traced" demands of adopters) and the
+committed-composites freshness design (deferred with reasoning in the WI-1.50
+entry). Kick-off brief below retained as the *why*.
 Encapsulates the two anti-rot gaps that link-validation alone leaves open (raised
 alongside Thread 48).
 
