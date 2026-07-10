@@ -100,6 +100,10 @@ that easier to achieve in a real project — or get out of the way.
   templates the kit ships** in `project-trajectory/registries/`: those are the
   blank forms an adopter fills; these are the kit's *own, filled* registries.
   (`run.*` launchers stay un-self-applied — a meta-repo has no product to launch.)
+- [`docs/enforcement-audit.md`](docs/enforcement-audit.md) — the kit's worked
+  **enforcement audit** (dogfooding the `PROCESS_OPTIONS.md` discipline): each
+  process/working-agreement rule mapped to its strongest enforcer
+  (Harness/Test/Reviewer/Prose), with the honest gaps recorded.
 - [`docs/archive/`](docs/archive/README.md) — historical inputs to
   `IMPROVEMENT_PLAN.md` (the resolved template review, the adoption field
   report, the mined scratch notes). Not working surfaces; root stays live-only.

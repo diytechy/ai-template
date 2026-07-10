@@ -43,7 +43,7 @@ resource: "generated"
 | [TC-031](TC-031.md) | Run the gate-policy and push-policy suites; each reader returns the first declared line. |
 | [TC-032](TC-032.md) | Run the onboard/dev-setup suite; the scaffolded scripts run to a green setup and dev-setu… |
 | [TC-033](TC-033.md) | Run gen_release_checklist.py over a warn-tier PB budget; assert the generated checklist l… |
-| [TC-034](TC-034.md) | Inspect that no kit script imports a third-party package (stdlib-only). |
+| [TC-034](TC-034.md) | Run the stdlib-only suite; an AST scan asserts every kit script's top-level imports resol… |
 | [TC-035](TC-035.md) | Analyze the CI matrix result across Linux/Windows/macOS x Python 3.8/latest. |
 | [TC-036](TC-036.md) | Inspect a re-sync done per ADOPTING.md section 6 against the docs/kit-version diff — kit-… |
 | [TC-037](TC-037.md) | Run the trajectory-validator suite; a well-formed registry passes, and a malformed WI id,… |

@@ -440,7 +440,9 @@ dispatch stays the **zero-code convention**: the previous session sets
 `run-phase` and names "review WI-x" in `status.md`; the loop surfaces the dial
 in its banner but never enforces it — the harness pass is the entry ticket,
 the recorded verdict is the value. A reviewer is **independent** (no shared
-transcript with the implementer; input = the diff + the WI + the TCs) and
+transcript with the implementer; input = the diff + the WI + the TCs), treats
+the implementation report as a set of **claims** and re-runs the checks it
+asserts rather than trusting them (believe nothing unobserved), and
 fixes directly only what lies within the WI's own declared scope — anything
 else is *filed as a finding* for the integrator. Related tripwire: the
 coordinator warns (never blocks) when a lane's `status.md` outgrows one screen
@@ -596,6 +598,37 @@ this kit; the pin + a reviewed re-vendor commit are the supply-chain control.)
 never relaxes a gate, and the honest-gate rule still owns every `run-state`.
 The meta-repo dogfoods the mechanism (tests) but runs the policy **off** — its
 own sessions are frontier-tier, so there is nothing to guard.
+
+## Enforcement audit — which file enforces this rule tomorrow?
+
+**Applies when** your working agreement or process has grown past what one
+reader holds in their head and you want to know which rules actually bind.
+Written rules decay — context resets, the next model is weaker, goodwill can't
+be assumed — so this audit asks one question of every behavioral rule: *which
+file enforces it tomorrow, when nobody is being careful?* Each rule is
+classified by the **strongest** mechanism that holds it up:
+
+- **Harness** — a deterministic check at a lifecycle event (a git hook, a
+  `check.py`/`trace.py` step, CI). The script decides; the rule cannot be
+  forgotten. Strongest, and the default home for anything mechanizable.
+- **Test** — a regression net (`tests/`): a bar checkable only by executing
+  against a fixture. The enforcer for behaviors that are outcome, not syntax.
+- **Reviewer** — delegated to an independent reviewer charter (the reviewer
+  dial above), which gains a perspective a hook can't: judgment on method,
+  risk, and prose.
+- **Prose** — kept in the always-loaded guide because it shapes every decision
+  and no mechanism can capture the judgment (e.g. "ask one good question").
+  Only as strong as compliance — so reserved for what genuinely can't be
+  mechanized, never a hiding place for a rule that *could* be a check.
+
+The bar is **honesty**: a rule with no enforcer is either rewritten into one of
+the classes above or flagged plainly as unbacked — **zero unenforceable rules
+without a stated reason**. Recording the result as a short table in `docs/`
+(one row per rule → its primary enforcer + the file) turns "we have rules" into
+"here is where each one bites," and surfaces the gaps worth closing — an
+Inspection that should be a Test, a guide rule no hook backs. (The meta-repo
+dogfoods this over its own working agreement; a live example finding it caught
+was the stdlib-only rule, promoted from an Inspection to a real test.)
 
 ## §7 boundary notes
 
