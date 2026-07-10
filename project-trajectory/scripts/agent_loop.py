@@ -940,8 +940,9 @@ def main():
             exe = argv[0]
             if not (shutil.which(exe) or Path(exe).exists()):
                 failures.append(
-                    "cmd-map [{}]: agent CLI not found: {!r} is not on "
-                    "PATH.".format(ph, exe)
+                    "cmd-map [{}]: agent CLI not found: {!r} is not on PATH.".format(
+                        ph, exe
+                    )
                 )
         except (ValueError, IndexError) as exc:
             failures.append("cmd-map [{}]: cannot parse template: {}".format(ph, exc))
@@ -1059,8 +1060,7 @@ def main():
         itemplate = (
             args.interactive_cmd
             if args.interactive_cmd is not None
-            else os.environ.get("AGENT_CMD_INTERACTIVE", "")
-            or session_template(phase)
+            else os.environ.get("AGENT_CMD_INTERACTIVE", "") or session_template(phase)
         )
         print(
             "=== one interactive session | track={} phase={} model={} ===".format(
@@ -1078,9 +1078,7 @@ def main():
         "gate-policy: {} | push-policy: {} (the coordinator never pushes "
         "under 'human') | review-policy: {} (docs/review-policy — the "
         "reviewer dial; surfaced here, enforced by the integrator "
-        "convention, never by the loop)".format(
-            gate_policy, push_policy, review_policy
-        )
+        "convention, never by the loop)".format(gate_policy, push_policy, review_policy)
     )
     print(
         "guardrails-policy: {} (docs/guardrails-policy — the vendored core is "

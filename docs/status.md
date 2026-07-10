@@ -19,81 +19,44 @@ sign-offs, verdicts) is [log.md](log.md).
 - **Bar:** `python -m pytest -q` and
   `python project-trajectory/scripts/check_docs.py --root . --stale` green
   before every commit — this repo's standing gate. **The kit's own
-  `SN→SR→LLR→TC` spine is self-adopted** (Thread 47): `docs/gate` is at **G3** —
-  `check.py --gate G3` (format · lint · tests+coverage ≥80% · traceability ·
-  privacy · doc-nav · perf · flows · trajectory · arch-map · trajectory-map) is
-  the full bar, and CI's `gate` job runs it. The `trajectory` + `trajectory-map`
-  steps now run on **real data** — the meta-repo dogfoods its own trajectory layer
-  (Thread 52 P4). Design history stays in the plan threads; the gate-walk record is
-  `docs/log.md`.
-- **Plan state:** **Thread 47 complete** — self-adoption phases 1–7 landed
-  2026-07-07; meta-repo at **G3** (SN=22 SR=38 LLR=35 TC=38, 0 orphans;
-  `check.py --gate G3` PASS; product coverage ~91%). **G3 human-ratified
-  2026-07-07 and re-attested 2026-07-09** over the SR-037/038 spine change
-  (Peter Johnson, `docs/log.md`). **Thread 50**
-  (trace.py SR/LLR citation-coherence check) landed; latest post-plan WIs
-  **WI-1.44** (the AXES schema bundle: Workstream + `~` soft edges + the CMP-###
-  component layer + MOD→REPO — see the plan entry + ADOPTING §6 recipe) and
-  **WI-1.45** (review F2: the shipped pre-commit hook now runs the
-  `trajectory-map` freshness step — stale dashboards block at commit, not
-  first in CI) and **WI-1.46** (review F4–F8 closure: iterative graph walks,
-  the guarded sibling import, and the doc-wording nits — the review is now
-  fully resolved).
-  **Thread 52 COMPLETE 2026-07-08** (all 4 phases) — the opt-out trajectory/
-  work-items layer: `work-items.csv` registry + `check_trajectory.py` +
-  `gen_trajectory.py` (offline SVG dashboard) + PROCESS_OPTIONS/README docs.
-  **Dogfooded (P4):** the meta-repo carries its own 42-WI
-  `docs/requirements/work-items.csv` + generated `docs/trajectory.html`
-  (Execution 85%, Definition 100%), gate-green on real data. The **ratified
-  design notes** behind WI-1.44 sit at root:
-  [`AXES_AND_WORKSTREAMS.md`](../AXES_AND_WORKSTREAMS.md) (static structure,
-  iter-9) + [`AGENT_ROLES.md`](../AGENT_ROLES.md) (dynamic layer, R1–R6).
+  `SN→SR→LLR→TC` spine is self-adopted** (Thread 47): `docs/gate` is at **G3**
+  — `check.py --gate G3` (12 steps; the `okf` freshness step joined 2026-07-10)
+  is the full bar and CI's `gate` job runs it, on **real data** (the meta-repo
+  dogfoods its own trajectory + OKF layers). Design history: the plan threads;
+  gate-walk record: [log.md](log.md).
+- **Plan state:** meta-repo at **G3**, spine **SN=22 SR=42 LLR=39 TC=42, 0
+  orphans**, 42/42 SRs mechanized. **The 2026-07-10 grind landed the entire
+  queued backlog** (owner-authorized, review deferred): WI-1.47 `Evidence`
+  column (Thread 51) · WI-1.48 `check_dupes` (Thread 53) · WI-1.49 the
+  dynamic layer (`AGENT_CMD_MAP` + `docs/review-policy` + size guard) ·
+  WI-1.50 `check_doc_refs` (Thread 49) · WI-1.51 OKF export (Thread 48) ·
+  WI-1.52 root `PROJECT_STATE.html` (WI-039). Details: the WI-1.x log in
+  [IMPROVEMENT_PLAN.md](../IMPROVEMENT_PLAN.md); spine change:
+  [log.md](log.md) 2026-07-10. Dogfood registry: **42 WIs, 41 done + WI-033
+  active**; the dashboard is now the root
+  [`PROJECT_STATE.html`](../PROJECT_STATE.html).
 - **Open items:**
-  - **Needs <human>**: _(none)_ — **G3 re-attested 2026-07-09** over the
-    SR-037/038 spine change (Peter Johnson, `docs/log.md`; F1 fully closed).
-    Verification basis: 38/38 SRs mechanized, 0 attested.
-  - **In flight:** _(none)_ — **WI-1.43 (F1) + WI-1.44 (schema bundle) +
-    WI-1.45 (F2 hook step) + WI-1.46 (F4–F8 closure) landed complete
-    2026-07-09** (on `MultiRepoSupport`, **not pushed** — push decision is the
-    owner's, see Next action). **THREAD_52_REVIEW.md is now fully resolved
-    (F1–F8).**
-  - **Queued (next):** the Next-action list below (owner DAG data-pass,
-    WI-039, the AGENT_ROLES build calls).
-  - **Deferred (backlog):** **Thread 53** — `check_dupes.py` mechanical
-    anti-duplication (upstream gilbert; strong candidate, unscheduled). **Thread 51**
-    — a first-class TC test-evidence column (ruling pending). **WI-1.27** —
-    coordinator working-tree stash/rollback on a hard-killed session
-    (owner-deferred 2026-07-05: rely on fresh-session reconciliation).
-- **Next action:** **F1 CLOSED** (WI-1.43 + owner re-attestation 2026-07-09,
-  `docs/log.md`) and the **schema bundle LANDED (WI-1.44, 2026-07-09)** — the
-  [`AXES_AND_WORKSTREAMS.md`](../AXES_AND_WORKSTREAMS.md) iter-9 ratified design
-  as one migration event: `Track`→`Workstream` + hard/soft (`~`) predecessor
-  edges (F3's schema half), the CMP-### component layer (+ `Component` tags),
-  `MOD-###`→`REPO-###` (all never-breaking; ADOPTING §6 has the recipe). **The
-  adversarial Thread-52 review is now fully closed** — F1/F2 earlier, and
-  **WI-1.46 landed F4–F8 2026-07-09**: iterative `_cycles` + `_dag_ranks` (no
-  more `RecursionError` on a deep DAG; the icicle is bounded-by-construction and
-  documented), the guarded sibling import + `conftest.load_script` shim (F5(a)),
-  and the F6/F7 doc-wording nits; F8 closed by ruling (no code). **The queued
-  backlog is now ingest-audited (2026-07-09)** — every queued WI row names its
-  spec-of-record and readiness state: **ingest-ready now** = WI-034 (Thread 48
-  OKF export, rulings recorded in-thread), WI-035 (Thread 49 doc-currency +
-  the F1 deeper-thread rider), WI-039 (`PROJECT_STATE.html`, AXES ratified spec
-  — one Q10 migration micro-call to confirm at ingest), **WI-042** (the
-  dynamic-layer build, [`AGENT_ROLES.md`](../AGENT_ROLES.md) "Remaining open":
-  `docs/review-policy` + `REVIEW-A`/`REVIEW-B` dispatch + `AGENT_CMD_MAP`, the
-  status-size guard micro-call, `--prompt-map` deferred); **blocked on an owner
-  ruling** = WI-037 (Thread 53 `check_dupes`, threshold/allowlist policy —
-  clarified 2026-07-09: MIN_TOKENS = source-lexer tokens, a copy-paste
-  detector, nothing to do with LLM usage). **WI-036 (Thread 51) RULED and
-  LANDED 2026-07-09** (WI-1.47): the TC `Evidence` column — required for
-  `Automated=Yes` at G3 strict-schema; the meta-repo's 38 rows migrated off
-  the `node=`-in-`Parameters` workaround.
-  Now open, in rough order: **owner data-pass on the 42-WI DAG edges** (demote
-  remaining narrative edges to `~`; F3's data half); **WI-042** or **WI-039**
-  (both unblocked); **push decision outstanding** (`MultiRepoSupport` is
-  local-only). Optional milestones: **G-Release** walk; rule **Thread 53** to
-  unblock WI-037.
+  - **Needs <human> (the run is paused on these):**
+    1. **G3 re-attestation over the 2026-07-10 spine change** — SR-039…042
+       added, SR-038/LLR-035/TC-038 extended ([log.md](log.md) has the entry;
+       *mandatory*: a Verified SR's text changed). Three adversarial review
+       reports (diff ×2 split charters + full-repo) are being produced as
+       input for the same sitting — read them first.
+    2. **Push decision** — `MultiRepoSupport` is local-only (~30 commits).
+    3. **F3 data-pass** on the 42-WI DAG edges (demote narrative edges to
+       `~`) — owner's mapping call, unchanged.
+  - **In flight:** _(none)_ — the queue is empty; three review agents are
+    producing reports (root `REVIEW_GRIND_*.md` when done).
+  - **Deferred (backlog):** **WI-1.27** coordinator stash/rollback
+    (owner-deferred 2026-07-05); OKF **Layer B2** (process-docs as concepts,
+    the spec's follow-commit); the **Q1 rider ruling** (a warn-first
+    `--untraced` tier — recommendation recorded in WI-1.50's entry); the
+    committed-composites freshness design (deferred with reasoning, WI-1.50).
+- **Next action:** **owner sitting** — read the three `REVIEW_GRIND_*.md`
+  reports, triage their findings (file/fix/dismiss), re-attest G3 per
+  [log.md](log.md), and rule on push. After that the frontier is genuinely
+  open: G-Release walk, the F3 edge data-pass, or new scope (which needs a
+  plan/WI entry first).
 
 ## Scope
 

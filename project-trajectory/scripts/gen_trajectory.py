@@ -878,7 +878,9 @@ def _asof(root):
     except OSError:
         return ""
     stamp = (proc.stdout or "").strip()
-    return "state as of commit {}".format(stamp) if proc.returncode == 0 and stamp else ""
+    return (
+        "state as of commit {}".format(stamp) if proc.returncode == 0 and stamp else ""
+    )
 
 
 def sw_modules(root):

@@ -265,3 +265,38 @@ Verification basis now: of 38 Verified SRs, **38 mechanized, 0 attested**
 in-session in direct response to the re-attestation request ("Looks good, you can
 implement"), over the SR-037/038 spine change with the mechanized bar re-run above
 (G3 PASS 11/11; SN=22 SR=38 LLR=35 TC=38, 0 orphans; 38/38 SRs mechanized).
+
+## 2026-07-10 — SPINE CHANGE (the WI-1.48…1.52 grind batch): SR-039…042 added; SR-038/LLR-035/TC-038 extended; G3 re-run; RE-ATTESTATION PENDING
+
+**What changed (owner-authorized in-session: "grind through all the queued WI, I
+will review at a later point" — R4 registry-change path, review deferred by the
+owner's own instruction):** four new SRs for four new product capabilities, each
+with its LLR + TC, plus one Verified SR's text extended to newly-true claims:
+
+- **SR-039** duplicate-code lint → `check_dupes.py`, LLR-036, TC-039 (WI-1.48).
+- **SR-040** per-phase routing + review dial → `agent_loop.py`
+  (`session_template`/`status_size_warning`), LLR-037, TC-040 (WI-1.49).
+- **SR-041** doc reference validation → `check_doc_refs.py`, LLR-038, TC-041
+  (WI-1.50).
+- **SR-042** OKF knowledge-bundle export → `gen_okf.py`, LLR-039, TC-042
+  (WI-1.51).
+- **SR-038 extended** (WI-1.52): the root `PROJECT_STATE.html`, the How-SW
+  module-map view, the optional CMP table, the git-derived as-of stamp
+  (excluded from the `--check` compare) — superseding WI-1.43's "not claimed"
+  scope note; LLR-035 + TC-038 texts updated to match.
+
+Also in the batch, non-spine: the TC `Evidence` column (WI-1.47, ruled earlier
+the same day) predates this entry's grind but rides the same re-attestation.
+
+**Mechanized bar re-run (this session):** `check.py --gate G3` → **RESULT: PASS
+(12/12** — the `okf` step joined the gate this batch; the first run caught a real
+format FAIL on 6 not-yet-ruff-clean new files, fixed and re-run**)**;
+`pytest -q` **445 passed, 2 skipped**; trace **SN=22 SR=42 LLR=39 TC=42,
+0 orphans / integrity / schema**. Verification basis: of 42 Verified SRs,
+**42 mechanized, 0 attested** (39 Test · 1 Analysis · 2 Inspection).
+
+**G3 re-attestation:** ⏳ **PENDING the owner** — required (not merely
+recommended): a Verified SR's text changed (SR-038) and four SRs were added to
+the ratified spine. The ask is recorded as the `Needs <human>` item in
+`docs/status.md`; three adversarial review reports (diff method/risk, diff
+process/trace, full-repo) are queued as review input for the same sitting.

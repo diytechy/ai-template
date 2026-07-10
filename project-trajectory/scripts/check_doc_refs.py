@@ -37,12 +37,33 @@ from pathlib import Path
 # extension or a conventional top-level prefix — the bounded rule that keeps
 # `off`, `type`, shell snippets and other repos' names out of scope.
 PATH_EXTS = (
-    ".py", ".md", ".csv", ".ini", ".yml", ".yaml", ".sh", ".ps1", ".cmd",
-    ".command", ".json", ".html", ".toml", ".cfg", ".txt",
+    ".py",
+    ".md",
+    ".csv",
+    ".ini",
+    ".yml",
+    ".yaml",
+    ".sh",
+    ".ps1",
+    ".cmd",
+    ".command",
+    ".json",
+    ".html",
+    ".toml",
+    ".cfg",
+    ".txt",
 )
 PATH_PREFIXES = (
-    "scripts/", "docs/", "src/", "tests/", ".githooks/", ".github/",
-    "registries/", "skills/", "ci/", "hooks/",
+    "scripts/",
+    "docs/",
+    "src/",
+    "tests/",
+    ".githooks/",
+    ".github/",
+    "registries/",
+    "skills/",
+    "ci/",
+    "hooks/",
 )
 BACKTICK = re.compile(r"`([^`\n]+)`")
 SYM = re.compile(r"\bsym:([A-Za-z_][\w.]*)\.(\w+)\b")
@@ -100,7 +121,10 @@ def findings_for(doc, root, oracle):
         if "path-ok" in line:
             continue  # deliberate example naming a path that isn't here
         for token in BACKTICK.findall(line):
-            if is_path_shaped(token) and not (root / token.strip().rstrip("/")).exists():
+            if (
+                is_path_shaped(token)
+                and not (root / token.strip().rstrip("/")).exists()
+            ):
                 out.append(
                     "{}:{}: `{}` does not exist in the repo".format(rel, n, token)
                 )
@@ -111,8 +135,9 @@ def findings_for(doc, root, oracle):
             known = oracle.get(tail)
             if known is None:
                 out.append(
-                    "{}:{}: sym:{}.{} — module {!r} is not in the module "
-                    "map".format(rel, n, mod, name, tail)
+                    "{}:{}: sym:{}.{} — module {!r} is not in the module map".format(
+                        rel, n, mod, name, tail
+                    )
                 )
             elif name not in known:
                 out.append(

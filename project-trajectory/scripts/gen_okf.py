@@ -131,7 +131,9 @@ def concept(rel_dir, cid, ctype, title, description, tags, resource, body_lines)
             ("resource", resource),
         ]
     )
-    return head + "\n# {} — {}\n\n{}\n".format(cid, title or ctype, "\n".join(body_lines))
+    return head + "\n# {} — {}\n\n{}\n".format(
+        cid, title or ctype, "\n".join(body_lines)
+    )
 
 
 def links(label, ids, target_dir):
@@ -184,8 +186,13 @@ def emit(root):
             body.append("\n**Acceptance intent.** {}".format(r["acceptance"]))
         body += links("Realized by", sr_of_sn.get(cid, []), "system-requirements")
         out["stakeholder-needs/{}.md".format(cid)] = concept(
-            "stakeholder-needs", cid, "Stakeholder Need", r["need"][:80],
-            r["need"], [], "docs/requirements/stakeholder-needs.md ({})".format(cid),
+            "stakeholder-needs",
+            cid,
+            "Stakeholder Need",
+            r["need"][:80],
+            r["need"],
+            [],
+            "docs/requirements/stakeholder-needs.md ({})".format(cid),
             body,
         )
         entries.append((cid, r["need"]))
@@ -205,15 +212,19 @@ def emit(root):
         body += links("Decomposed by", llr_of_sr.get(cid, []), "low-level-requirements")
         body += links("Verified by", tc_of.get(cid, []), "test-cases")
         out["system-requirements/{}.md".format(cid)] = concept(
-            "system-requirements", cid, "System Requirement",
-            (r.get("Title") or "").strip(), (r.get("Requirement") or "").strip(),
+            "system-requirements",
+            cid,
+            "System Requirement",
+            (r.get("Title") or "").strip(),
+            (r.get("Requirement") or "").strip(),
             [
                 (r.get("Priority") or "").strip(),
                 (r.get("Verification") or "").strip(),
                 (r.get("Status") or "").strip(),
                 (r.get("Area") or "").strip(),
             ],
-            "docs/requirements/system-requirements.csv ({})".format(cid), body,
+            "docs/requirements/system-requirements.csv ({})".format(cid),
+            body,
         )
         entries.append((cid, (r.get("Title") or "").strip()))
     add_tier("system-requirements", entries)
@@ -226,13 +237,19 @@ def emit(root):
         sym = (r.get("CodeSymbol") or "").strip()
         if mod or sym:
             body.append("\n**Code.** `{}` — `{}`".format(mod, sym))
-        body += links("Decomposes", split_refs(r.get("SR-Refs", "")), "system-requirements")
+        body += links(
+            "Decomposes", split_refs(r.get("SR-Refs", "")), "system-requirements"
+        )
         body += links("Verified by", tc_of.get(cid, []), "test-cases")
         out["low-level-requirements/{}.md".format(cid)] = concept(
-            "low-level-requirements", cid, "Low-Level Requirement",
-            (r.get("Title") or "").strip(), (r.get("Detail") or "").strip(),
+            "low-level-requirements",
+            cid,
+            "Low-Level Requirement",
+            (r.get("Title") or "").strip(),
+            (r.get("Detail") or "").strip(),
             [(r.get("Status") or "").strip()],
-            "docs/requirements/low-level-requirements.csv ({})".format(cid), body,
+            "docs/requirements/low-level-requirements.csv ({})".format(cid),
+            body,
         )
         entries.append((cid, (r.get("Title") or "").strip()))
     add_tier("low-level-requirements", entries)
@@ -249,14 +266,19 @@ def emit(root):
             body.append("\n**Evidence.** `{}`".format(ev))
         ups = split_refs(r.get("Verifies", ""))
         body += links(
-            "Verifies (SR)", [u for u in ups if u.startswith("SR-")], "system-requirements"
+            "Verifies (SR)",
+            [u for u in ups if u.startswith("SR-")],
+            "system-requirements",
         )
         body += links(
-            "Verifies (LLR)", [u for u in ups if u.startswith("LLR-")],
+            "Verifies (LLR)",
+            [u for u in ups if u.startswith("LLR-")],
             "low-level-requirements",
         )
         out["test-cases/{}.md".format(cid)] = concept(
-            "test-cases", cid, "Test Case",
+            "test-cases",
+            cid,
+            "Test Case",
             "verifies {}".format((r.get("Verifies") or "").strip()),
             (r.get("Method") or "").strip(),
             [
@@ -265,7 +287,8 @@ def emit(root):
                 "Automated={}".format((r.get("Automated") or "").strip() or "?"),
                 (r.get("Status") or "").strip(),
             ],
-            "docs/test/test-cases.csv ({})".format(cid), body,
+            "docs/test/test-cases.csv ({})".format(cid),
+            body,
         )
         entries.append((cid, (r.get("Method") or "").strip()))
     add_tier("test-cases", entries)
@@ -276,8 +299,12 @@ def emit(root):
             cid = r["IF-ID"].strip()
             desc = (r.get("Contract") or r.get("Description") or "").strip()
             out["interfaces/{}.md".format(cid)] = concept(
-                "interfaces", cid, "Interface", (r.get("Name") or "").strip(),
-                desc, [(r.get("Status") or "").strip()],
+                "interfaces",
+                cid,
+                "Interface",
+                (r.get("Name") or "").strip(),
+                desc,
+                [(r.get("Status") or "").strip()],
                 "docs/requirements/interfaces.csv ({})".format(cid),
                 ["**Contract.** {}".format(desc)],
             )
@@ -296,10 +323,20 @@ def emit(root):
             if len(one) > 90:
                 one = one[:89] + "…"
             lines.append("| [{0}]({0}.md) | {1} |".format(cid, one.replace("|", "\\|")))
-        out["{}/index.md".format(dirname)] = fm(
-            [("type", "Index"), ("title", dirname), ("description", "tier index"),
-             ("tags", []), ("resource", "generated")]
-        ) + "\n" + "\n".join(lines) + "\n"
+        out["{}/index.md".format(dirname)] = (
+            fm(
+                [
+                    ("type", "Index"),
+                    ("title", dirname),
+                    ("description", "tier index"),
+                    ("tags", []),
+                    ("resource", "generated"),
+                ]
+            )
+            + "\n"
+            + "\n".join(lines)
+            + "\n"
+        )
 
     root_lines = [
         "# Knowledge bundle — the traceability graph",
@@ -312,11 +349,20 @@ def emit(root):
         root_lines.append(
             "- [{0}]({0}/index.md) — {1} concept(s)".format(dirname, len(tier_entries))
         )
-    out["index.md"] = fm(
-        [("type", "Index"), ("title", "traceability bundle"),
-         ("description", "the SN->SR->LLR->TC graph as OKF concepts"),
-         ("tags", []), ("resource", "generated")]
-    ) + "\n" + "\n".join(root_lines) + "\n"
+    out["index.md"] = (
+        fm(
+            [
+                ("type", "Index"),
+                ("title", "traceability bundle"),
+                ("description", "the SN->SR->LLR->TC graph as OKF concepts"),
+                ("tags", []),
+                ("resource", "generated"),
+            ]
+        )
+        + "\n"
+        + "\n".join(root_lines)
+        + "\n"
+    )
     return out
 
 

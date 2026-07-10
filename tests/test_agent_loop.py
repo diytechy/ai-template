@@ -254,9 +254,7 @@ def test_cmd_map_broken_entry_fails_preflight(loop_repo):
     # contract), not at the first review session mid-run.
     repo, ctl, template = loop_repo
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
-    proc = _loop(
-        repo, template, "--cmd-map", "REVIEW-B=no-such-cli-xyz -p {prompt}"
-    )
+    proc = _loop(repo, template, "--cmd-map", "REVIEW-B=no-such-cli-xyz -p {prompt}")
     assert proc.returncode == 2, proc.stdout + proc.stderr
     assert "cmd-map [REVIEW-B]" in proc.stderr
     assert _invocations(ctl) == 0

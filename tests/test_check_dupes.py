@@ -13,7 +13,7 @@ from conftest import SCRIPTS, run_py
 
 # A helper long enough (~40 significant tokens) that copy-pasting it across two
 # files trips the default 30-token window.
-HELPER = '''def load_rows(path, sep):
+HELPER = """def load_rows(path, sep):
     rows = []
     with open(path, encoding="utf-8") as handle:
         for line in handle:
@@ -21,15 +21,15 @@ HELPER = '''def load_rows(path, sep):
             if cells and cells[0]:
                 rows.append(tuple(cells))
     return rows
-'''
+"""
 
-UNIQUE_A = '''def alpha_only(items):
+UNIQUE_A = """def alpha_only(items):
     return [i for i in items if str(i).isalpha()]
-'''
+"""
 
-UNIQUE_B = '''def digits_only(items):
+UNIQUE_B = """def digits_only(items):
     return [i for i in items if str(i).isdigit()]
-'''
+"""
 
 
 def write_src(root, files):
