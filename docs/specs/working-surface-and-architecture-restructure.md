@@ -1,19 +1,20 @@
 # Working-surface SSOT + architecture-connectivity restructure — PLAN
 
 **Status:** 🟡 **PROPOSED — for owner review.** Not ratified, not scheduled, no
-code written. This is the spec-of-record for a future `S0…S6` work-item series.
+code written. This is the spec-of-record for a future `S0…S7` work-item series.
 It deliberately lives in `docs/specs/` and is the **first inhabitant** of that
 directory — dogfooding the `SpecRef` convention it defines (S1).
 
 **Provenance:** consolidates the owner's 2026-07-10 direction on status.md ↔
 work-items.csv single-source-of-truth, the ratified AXES component/interface
-model (`docs/archive/AXES_AND_WORKSTREAMS.md`), and the "software architecture
-shows no connections" discussion. Sequenced **after** the pending G3
-re-attestation, because S1/S5/S6 touch the spine.
+model (`docs/archive/AXES_AND_WORKSTREAMS.md`), the "software architecture shows
+no connections" discussion, and the cross-agent skill-drift finding (`.claude`
+vs `.agents` vs the neutral source). Sequenced **after** the pending G3
+re-attestation, because S1/S5/S6/S7 touch the spine.
 
 ---
 
-## Why (the four problems)
+## Why (the five problems)
 
 1. **status.md and work-items.csv compete.** Both carry work descriptions;
    they drift (status.md already went stale on WI counts twice this month).
@@ -27,6 +28,12 @@ re-attestation, because S1/S5/S6 touch the spine.
    panel lists modules with no edges, because the kit's real seams (subprocess
    calls, file-mediated dataflow) are never declared as interfaces — the `IF-###`
    tier exists in the templates but the meta-repo has zero rows.
+5. **Per-agent skill copies drift.** The one neutral source
+   (`project-trajectory/skills/`) is fanned out by verbatim copy into per-agent
+   dirs (`.claude/skills/`, `.agents/skills/`, `.gemini/skills/`), but the copy
+   is write-once and unchecked, so they rot — the `session-protocol` skill went
+   **three ways** in one session (source + `.claude` updated, `.agents` left on
+   the pre-archive text, `.claude` separately hand-gaining a `--stale` flag).
 
 ## The target model — the SSOT rules
 
@@ -199,6 +206,70 @@ Regen map/dashboard/OKF; full gate.
 **Spine impact.** Data + docstrings; no SR text change beyond S5's.
 **Done-when.** How-SW renders the real graph; every module is an IF endpoint.
 
+## S7 — Cross-agent skill sync (checked fan-out from one source)
+
+**Goal.** Keep the per-agent skill copies in lockstep with the one neutral
+source, so a cross-agent repo (Claude + Codex + Gemini in the same tree) does
+not drift — the intra-agent-compatibility seam. Format is **not** the problem:
+all locations use the same Anthropic Agent Skills `SKILL.md` with the kit's
+neutral frontmatter (`name/scope/stacks/domains/phases/tags`), so `.claude/
+skills/`, `.agents/skills/` (Codex's AGENTS.md-mirror location) and `.gemini/
+skills/` are just different **directories holding byte-identical files**, needed
+only because agent skill *locations* don't standardize (same reason the kit
+keeps separate hook configs). This is a **fan-out/sync** problem, not a compat
+one.
+
+**Current state (the drift is live and now tracked).** `materialize_agent_layer`
+does a verbatim `shutil.copyfile` but is **write-once** (`if dst.exists() and not
+force: continue`), so re-runs never refresh. `bootstrap` targets only
+`.claude`/`.gemini`; `.agents/skills/` was created by Codex outside the kit and
+committed (5 skills, no `INDEX.csv`/`README`) — its `session-protocol` copy is
+already stale vs source.
+
+**Steps.**
+- Add **`.agents/skills/`** as a first-class `bootstrap` target (a `codex`/
+  `agents` entry in the `AGENTS` dict, `skills_dir=".agents/skills"`), so a fresh
+  checkout populates it from the same source instead of an agent doing it by hand.
+- Make materialization a **refresh**, not write-once — a `--sync` mode (or force-
+  overwrite the skills subtree) so "edit source → re-materialize" is one command;
+  keep write-once for the other scaffolded files (never clobber project content).
+- Add a **drift check** — `check_skills_sync` (or `gen_skills_index --check`
+  extended): every `<agent>/skills/<name>/SKILL.md` is byte-identical to
+  `project-trajectory/skills/<name>/SKILL.md`. Warn-first; wired into the
+  pre-commit floor + gate like arch-map/okf freshness; vacuous when a repo has no
+  per-agent dirs.
+- State the tenability constraint: **skill frontmatter stays agent-neutral.**
+  Verbatim fan-out holds only while no skill needs an agent-specific field; the
+  day one does, materialization gains a per-agent transform (map/strip fields) —
+  deferred until a real need earns it.
+- Docs: PROCESS_OPTIONS "Skills layer" note + `skills/README.md`; record the
+  tracking convention (below).
+
+**Tests.** a hand-edited (drifted) copy fails the sync check; a re-materialize
+brings every target byte-identical to source; a repo with no per-agent dirs is
+vacuous; `bootstrap --agents codex` populates `.agents/skills/` matching source.
+
+**Spine impact.** Closest existing SR is **SR-025** (skills index generation);
+extend it to cover the checked per-agent fan-out, **or** mint one new SR (an
+S0-style ruling — recommendation: extend SR-025, same "generated, not
+hand-maintained" property). → **re-attestation** if the SR text changes.
+
+**Ruling — track vs. regenerate the copies.** Interim owner decision
+(2026-07-10): **tracked** (committed `.agents/` for now), matching how
+`.claude/skills/` is handled, *may move to gitignore + regenerate-on-setup*
+after iteration. Whichever wins must apply to **all** per-agent dirs
+consistently (today `.claude` is tracked, `.agents` newly tracked, and a
+regenerate model would gitignore both). The drift check keeps the tracked model
+honest; a regenerate model leans on `setup` + the check instead.
+
+**Risk.** The frontmatter-dialect boundary above; and a re-materialize that
+force-overwrites must touch **only** the skills subtree, never project-authored
+files.
+
+**Done-when.** An out-of-sync per-agent copy fails the check; `bootstrap
+--agents` populates `.agents/` from source; the meta-repo's three targets are
+byte-identical to source (the current `session-protocol` drift resolved).
+
 ---
 
 ## Sequencing & spine bundling
@@ -208,20 +279,28 @@ S0 rulings ─▶ S1 mechanize ─▶ S2 meta compliance
 S3 dissolve IMPROVEMENT_PLAN  ✅ done
 S4 codename discipline        (docs; any time)
 S5 arch mechanize ─▶ S6 meta authoring (dogfood)
+S7 cross-agent skill sync     (SR-025; independent of the SSOT/arch halves)
 ```
 
-**Bundle the spine-touchers.** S1 (SR-037), S5 (SR-005/SR-038 or a new SR), and
-the already-filed TC-034→Test upgrade all edit the spine. Landing **S1 + S5 + S6
-together before the next re-attestation** means **one owner sitting** covers
-them all, instead of three. That is the strongest argument for doing the SSOT
-and architecture work as one campaign rather than separate threads.
+**Bundle the spine-touchers.** S1 (SR-037), S5 (SR-005/SR-038 or a new SR), S7
+(SR-025 or a new SR), and the already-filed TC-034→Test upgrade all edit the
+spine. Landing the spine-touching phases **together before the next
+re-attestation** means **one owner sitting** covers them all, instead of several.
+That is the strongest argument for doing this as one campaign rather than
+separate threads. S7 is independent of the SSOT (S1–S2) and architecture (S5–S6)
+halves — it can ride the same re-attestation or ship on its own.
 
 ## Consolidated open rulings (for this review)
 
 - The five **S0** micro-decisions above (defaults noted).
 - **S5 spine cut:** extend SR-005 + SR-038, or mint one new SR for the interface
   layer? (Recommendation: one new SR — a cleaner seam than stretching two.)
-- **Campaign vs. increments:** land S1+S5+S6 as one re-attested campaign
-  (recommended), or ship S1/S2/S4 first and defer the architecture half?
-- **WI ids:** this series is `S0…S6` here; on ingest they become `WI-050…`
+- **S7 spine cut:** extend SR-025, or a new SR for the checked skill fan-out?
+  (Recommendation: extend SR-025.)
+- **S7 tracking:** confirm tracked (interim) vs. gitignore + regenerate, applied
+  uniformly to `.claude`/`.agents`/`.gemini`.
+- **Campaign vs. increments:** land the spine-touchers (S1 + S5 + S6 + S7) as one
+  re-attested campaign (recommended), or ship S1/S2/S4/S7 first and defer the
+  architecture half?
+- **WI ids:** this series is `S0…S7` here; on ingest they become `WI-050…`
   registry rows with this doc's `#anchors` as their `SpecRef`.
