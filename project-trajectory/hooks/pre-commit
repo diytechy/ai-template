@@ -110,6 +110,12 @@ fi
 #     "Trajectory / work-items layer").
 "$PY" "$SCRIPTS_DIR/check.py" --run-step trajectory-map
 
+# 1c. OKF knowledge bundle must be fresh — the same floor rule as 1b (one
+#     stdlib command regenerates; vacuous for a non-adopter: placeholder-only
+#     registries emit nothing, and `off` in docs/okf-export silences). A
+#     registry edit stales docs/okf/ exactly like it stales the dashboard.
+"$PY" "$SCRIPTS_DIR/check.py" --run-step okf
+
 # 2. Traceability *integrity*: no duplicate / malformed ids — wrong at any
 #    stage, so safe to enforce on every commit. Deliberately NOT the full
 #    --strict orphan check: orphans are a G2+ gate criterion (a mid-G1 registry

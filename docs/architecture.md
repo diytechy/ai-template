@@ -264,6 +264,23 @@ _Generate test-case combinations from a requirement's input dimensions._
 | `boundary_corners(dims)` | All-low, all-high, and each dimension flipped to its other extreme. |  |
 | `main()` |  |  |
 
+### `scripts/gen_okf`
+_OKF export — the traceability graph as a portable knowledge bundle (Thread 48)._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `read_rows(path)` |  |  |
+| `split_refs(cell)` |  |  |
+| `real_rows(rows, key, prefix)` |  |  |
+| `sn_rows(root)` |  |  |
+| `read_enabled(root)` |  |  |
+| `fm(pairs)` | A YAML frontmatter block; JSON string scalars are valid YAML, so quoting |  |
+| `concept(rel_dir, cid, ctype, title, description, tags, resource, body_lines)` |  |  |
+| `links(label, ids, target_dir)` |  |  |
+| `emit(root)` | {relpath-under-docs/okf: content} for the whole bundle, or {} when the |  |
+| `on_disk(out_root)` |  |  |
+| `main()` |  |  |
+
 ### `scripts/gen_release_checklist`
 _Generate the human release checklist from the registries._
 

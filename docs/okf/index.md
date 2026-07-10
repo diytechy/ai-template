@@ -1,0 +1,17 @@
+---
+type: "Index"
+title: "traceability bundle"
+description: "the SN->SR->LLR->TC graph as OKF concepts"
+tags: []
+resource: "generated"
+---
+
+# Knowledge bundle — the traceability graph
+
+Generated from the spine registries (`scripts/gen_okf.py`); the CSVs
+stay the source of truth. Spec pin: [UPSTREAM.md](UPSTREAM.md).
+
+- [stakeholder-needs](stakeholder-needs/index.md) — 22 concept(s)
+- [system-requirements](system-requirements/index.md) — 42 concept(s)
+- [low-level-requirements](low-level-requirements/index.md) — 39 concept(s)
+- [test-cases](test-cases/index.md) — 42 concept(s)

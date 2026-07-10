@@ -173,4 +173,8 @@ def make_minimal_project(root):
     )
     proc = run_py(["scripts/gen_arch_map.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
+    # Same "start from truth" for the OKF bundle: with real registry rows the
+    # on-by-default export exists and is fresh (its hook/G3 --check passes).
+    proc = run_py(["scripts/gen_okf.py"], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
     return root

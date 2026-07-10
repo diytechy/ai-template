@@ -6833,6 +6833,39 @@ continuity (same style as the session log above).
 > `pytest -q` + `check_docs` green (output in the commit); trace SN=22 SR=41
 > LLR=38 TC=41, 0 orphans. Byte-budgeted files untouched.
 
+> **WI-1.51 ✅ landed 2026-07-10 · OKF export, Layer A (Thread 48 / WI-034).**
+> `scripts/gen_okf.py` emits `docs/okf/` — one frontmatter-typed markdown
+> concept per real SN/SR/LLR/TC row (+ IF when a registry exists), the graph
+> reconstructed as relative markdown links (up/down from locally built reverse
+> maps), per-tier + root `index.md` (progressive disclosure), and an
+> `UPSTREAM.md` pinning OKF v0.1 (re-target = visible human-reviewed bump).
+> The iron constraint held: a **generated export, never a parallel source of
+> truth** — `--check` regenerates in memory and byte-compares the whole
+> bundle (an extra hand-added file is stale; the write mode prunes it),
+> **deterministic by construction** — the spec's optional `timestamp` field is
+> deliberately omitted (recorded deviation: a wall clock would break the
+> byte-stable freshness gate). Frontmatter is emit-only string formatting
+> (JSON string scalars are valid YAML — no parser, no dependency). Wired as
+> the **`okf` G3 step and a pre-commit hook step 1c** (the WI-1.45 floor rule
+> applied: one stdlib command, vacuous for non-adopters); on-by-default with
+> the `docs/okf-export: off` one-word opt-out; placeholder-only registries
+> vacuous, so a fresh scaffold is green out of the box (the ruled requirement,
+> met without scaffolding a placeholder bundle — recorded deviation from the
+> ruling's letter, honoring its intent by the cheaper mechanism).
+> **The meta-repo commits its own 148-file bundle** (the ruled
+> commit-for-availability posture) with `linguist-generated -diff` riders in
+> both `.gitattributes` (template + meta); `make_minimal_project` gains the
+> same "start from truth" gen_okf call the arch map already had; ADOPTING §6
+> gains the resync recipe (regen once or opt out).
+> **Deviation from spec:** "reuse trace.py's load+join" became ~35 lines of
+> duplicated small loaders — the F5 ruling (duplicate small/stable, ONE
+> sanctioned sibling import) postdates the Thread 48 brief and wins; gen_okf
+> needs only loaders, not the graph core. **Layer B2** (process-docs as
+> concepts) stays the spec's follow-commit — not claimed.
+> **Spine: SR-042 + LLR-039 + TC-042** (batched re-attestation ask). 6 tests.
+> `pytest -q` + `check_docs` green (output in the commit); trace SN=22 SR=42
+> LLR=39 TC=42, 0 orphans. Byte-budgeted files untouched.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

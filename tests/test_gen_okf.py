@@ -1,0 +1,109 @@
+"""gen_okf.py — the OKF knowledge-bundle export (Thread 48).
+
+The bundle is a generated view, never a parallel source of truth: what matters
+is that it is deterministic (byte-stable --check), complete (one concept per
+real registry row, frontmatter typed, graph links resolving), self-pruning
+(a deleted row's file goes away; a stray hand-added file reads as stale), and
+free for non-adopters (placeholder-only registries are vacuous; docs/okf-export
+`off` silences). Exercised over the conftest minimal project.
+"""
+
+from conftest import SCRIPTS, make_minimal_project, run_py
+
+
+def okf(root, *args):
+    return run_py([SCRIPTS / "gen_okf.py", *args], cwd=root)
+
+
+def bundle(root):
+    return root / "docs" / "okf"
+
+
+def test_bundle_generates_typed_linked_concepts(scaffold):
+    make_minimal_project(scaffold)
+    proc = okf(scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    sr = (bundle(scaffold) / "system-requirements" / "SR-001.md").read_text(
+        encoding="utf-8"
+    )
+    assert sr.startswith("---\n")
+    assert 'type: "System Requirement"' in sr
+    assert 'resource: "docs/requirements/system-requirements.csv (SR-001)"' in sr
+    # The graph as markdown links: up to the SN, down to LLR and TC.
+    assert "[SN-001](../stakeholder-needs/SN-001.md)" in sr
+    assert "[LLR-001](../low-level-requirements/LLR-001.md)" in sr
+    assert "[TC-001](../test-cases/TC-001.md)" in sr
+    # Progressive disclosure + the spec pin.
+    index = (bundle(scaffold) / "index.md").read_text(encoding="utf-8")
+    assert "[system-requirements](system-requirements/index.md)" in index
+    assert (bundle(scaffold) / "UPSTREAM.md").exists()
+    # No wall-clock anywhere: determinism is the freshness gate's foundation.
+    assert "timestamp" not in sr
+
+
+def test_generation_is_deterministic_and_check_gates_staleness(scaffold):
+    make_minimal_project(scaffold)
+    assert okf(scaffold).returncode == 0
+    sr_file = bundle(scaffold) / "system-requirements" / "SR-001.md"
+    first = sr_file.read_bytes()
+    again = okf(scaffold)
+    assert again.returncode == 0 and "already up to date" in again.stdout
+    assert sr_file.read_bytes() == first
+    assert okf(scaffold, "--check").returncode == 0
+    # Edit a registry without regenerating -> stale, named actionably.
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace("Addition", "Summation"),
+        encoding="utf-8",
+    )
+    stale = okf(scaffold, "--check")
+    assert stale.returncode == 1 and "STALE" in stale.stderr
+    assert okf(scaffold).returncode == 0
+    assert okf(scaffold, "--check").returncode == 0
+
+
+def test_write_mode_prunes_and_check_flags_extras(scaffold):
+    # A hand-added file inside the generated bundle is drift: --check flags it,
+    # the write mode prunes it (the bundle is never hand-maintained).
+    make_minimal_project(scaffold)
+    assert okf(scaffold).returncode == 0
+    stray = bundle(scaffold) / "hand-edited.md"
+    stray.write_text("not generated\n", encoding="utf-8")
+    assert okf(scaffold, "--check").returncode == 1
+    assert okf(scaffold).returncode == 0
+    assert not stray.exists()
+
+
+def test_placeholder_only_scaffold_is_vacuous(scaffold):
+    # The fresh scaffold carries only -000 rows: nothing is emitted and --check
+    # passes out of the box (the ruled fresh-scaffold-green requirement).
+    proc = okf(scaffold, "--check")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "vacuously clean" in proc.stdout
+    assert not bundle(scaffold).exists()
+
+
+def test_opt_out_silences(scaffold):
+    # `off` short-circuits before any generation or comparison — even a stale
+    # (here: registry-edited) bundle no longer gates, and nothing is written.
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace("Addition", "Summation"),
+        encoding="utf-8",
+    )
+    (scaffold / "docs" / "okf-export").write_text("off\n", encoding="utf-8")
+    proc = okf(scaffold, "--check")
+    assert proc.returncode == 0 and "off" in proc.stdout
+
+
+def test_okf_step_wired_at_g3(scaffold):
+    # The harness carries the freshness gate like arch-map/trajectory-map.
+    from conftest import load_script
+
+    check = load_script("check")
+    allg = check.steps(80, "full", "all")
+    cmd = next(s[2] for s in allg if s[0] == "okf")
+    assert any("gen_okf.py" in str(t) for t in cmd) and "--check" in cmd
+    gates = next(s[3] for s in allg if s[0] == "okf")
+    assert gates == {"G3"}

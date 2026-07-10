@@ -63,7 +63,10 @@ The kit's headline pieces:
   [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) (the
   **opt-out** work-items layer — validate the execution DAG and render a
   fully-offline `docs/trajectory.html` dashboard; process-options.md "Trajectory /
-  work-items layer"), and
+  work-items layer"),
+  [`gen_okf.py`](project-trajectory/scripts/gen_okf.py) (the traceability graph
+  exported as an Open Knowledge Format bundle — the kit's own is
+  [docs/okf/index.md](docs/okf/index.md); opt-out via `docs/okf-export`), and
   [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) (scaffold a new repo —
   SN-001).
   Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`) ship for Linux/macOS

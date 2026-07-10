@@ -497,6 +497,19 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             {"G3"},
             "process",
         ),
+        # OKF knowledge-bundle freshness (Thread 48): docs/okf/ is a generated
+        # export of the spine registries (never a parallel source of truth) —
+        # gen_okf.py --check regenerates in memory and byte-compares like
+        # arch-map/trajectory-map. On by default, opt-out via the one word
+        # `off` in docs/okf-export; vacuous on placeholder-only/absent
+        # registries, so a fresh scaffold and a non-adopter pay nothing.
+        (
+            "okf",
+            (),
+            [sys.executable, str(_SCRIPTS / "gen_okf.py"), "--check"],
+            {"G3"},
+            "process",
+        ),
     ]
 
 

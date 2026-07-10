@@ -15,3 +15,7 @@ hooks/pre-commit text eol=lf
 # Windows batch (onboard.cmd) — CRLF, like .ps1: LF can misparse labels/`goto`.
 *.cmd text eol=crlf
 *.bat text eol=crlf
+
+# Generated OKF bundle: committed for availability, not change control
+# (Thread 48) - diffs suppressed from review.
+docs/okf/** linguist-generated=true -diff
