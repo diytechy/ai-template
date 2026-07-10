@@ -571,6 +571,26 @@ should, mutating **nothing** in the workspace.
   human-reviewed re-copy that bumps the commit — never automatic. It is
   deliberately **not** wired into `check.py` (the gate stays hermetic).
 
+**A reference upstream.** A worked example of a vendorable set is the Guardrails
+Kit ([`TheColliny/FableClaudeMDForOpus`](https://github.com/TheColliny/FableClaudeMDForOpus)):
+an event-phrased routing table + iron rules delimited by `BEGIN/END KIT CORE`
+markers (in its `CLAUDE.md`) with `docs/guardrails/{PLAN,CODE,DEBUG,VERIFY,
+EFFICIENCY,SESSION,TRAPS}.md` playbooks beside it — the exact core-plus-playbooks
+shape this layer injects. To adopt it, vendor that `CLAUDE.md` as
+`docs/guardrails/core.md` (the markers travel with it, so only that block is
+injected) and the playbooks unchanged, then pin the source so drift is caught:
+
+```
+# docs/guardrails/UPSTREAM
+base = https://raw.githubusercontent.com/TheColliny/FableClaudeMDForOpus/<commit>
+docs/guardrails/core.md = CLAUDE.md
+docs/guardrails/PLAN.md = docs/guardrails/PLAN.md
+```
+
+and set the recommended `guardrails-policy: all except <your frontier model>`.
+(It is agent-behavior *content*, adapted independently — never redistributed by
+this kit; the pin + a reviewed re-vendor commit are the supply-chain control.)
+
 **The boundary.** Guardrails govern *in-session agent mechanics*; the process
 (gates, traceability, the honest-gate rule) governs *artifacts*. A guardrail
 never relaxes a gate, and the honest-gate rule still owns every `run-state`.
