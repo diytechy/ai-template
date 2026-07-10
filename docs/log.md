@@ -346,3 +346,19 @@ SR joined the spine (SR-043). Recorded as the `Needs <human>` item in
 `docs/status.md`. Deviation recorded: SR-043 was written script-then-test (not
 strict failing-first) on an existing G3 repo; TC-043 exercises real code plus a
 positive control.
+
+**`IMPROVEMENT_PLAN.md` archived (this session, owner-directed).** The kit's
+design-history file moved to `docs/archive/` — its deferred backlog was already
+mirrored in `status.md`, so no open work was lost. Go-forward records now split
+per the ratified SSOT direction: **next → `status.md`**, **work items →
+`work-items.csv`**, **session/gate record → this log**; the `session-protocol`
+skill's authority (both tracked copies) was re-pointed to those live homes, and
+`status.md`/`CLAUDE.md`/`docs/archive/README.md` updated. Four root-relative
+`trace.py#L…` links inside the plan were re-based `../../` for its new depth
+(`check_docs --stale` → 0 broken). **Surfaced for review:** this crosses from
+"move the file" into enacting part of the working-surface SSOT restructure; the
+fuller restructure (relocating the backlog, a `SpecRef` column, mechanizing the
+status↔registry SSOT rules) remains a separate, unstarted effort. Residual, not
+touched: shipped/meta files still cite `IMPROVEMENT_PLAN.md WI-1.42 / Thread 50`
+as design provenance (`trace.py`, `dev-setup.*`, `skills/README.md`, two test
+comments) — valid pointers into the archive, left for a later pass.

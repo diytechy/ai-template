@@ -4716,11 +4716,11 @@ direction recorded below.** A small, well-scoped change to a shipped kit script.
 **The finding.** A `TC`'s `Verifies` cell may cite an SR **and** an LLR at once
 (the `SR-0NN;LLR-0NN` form the kit uses so *one* real test discharges both the
 "SR needs a TC" and "LLR needs a TC" orphan rules — coverage is not transitive,
-[trace.py:762](project-trajectory/scripts/trace.py#L762)/[778](project-trajectory/scripts/trace.py#L778)/[803](project-trajectory/scripts/trace.py#L803)).
+[trace.py:762](../../project-trajectory/scripts/trace.py#L762)/[778](../../project-trajectory/scripts/trace.py#L778)/[803](../../project-trajectory/scripts/trace.py#L803)).
 But the SR↔LLR relationship is *also* recorded canonically on the LLR's
 `SR-Refs`. So the combined TC citation **duplicates** that relationship, and
 `trace.py`'s TC validation only checks that each cited id **exists**
-([trace.py:808-817](project-trajectory/scripts/trace.py#L808-L817)) — it never
+([trace.py:808-817](../../project-trajectory/scripts/trace.py#L808-L817)) — it never
 checks the pair is coherent. An inconsistent triangle passes clean today:
 `TC-099,SR-005;LLR-001` where `LLR-001` decomposes `SR-001`, not `SR-005`.
 
