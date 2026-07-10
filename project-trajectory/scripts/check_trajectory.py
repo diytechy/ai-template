@@ -144,23 +144,40 @@ def load_wis(rows):
 
 
 def _cycles(wis, pred_map):
-    """Cycle strings found by DFS colouring over `pred_map` ([] = acyclic)."""
+    """Cycle strings found by DFS colouring over `pred_map` ([] = acyclic).
+
+    Iterative (explicit stack), not recursive: a work-item registry may encode an
+    arbitrarily long dependency chain, and a recursive DFS would raise a raw
+    ``RecursionError`` past CPython's ~1000-frame limit — the kit fails on bad
+    data with a clear message, never an uncaught traceback (THREAD_52_REVIEW.md
+    F4). ``stack`` holds ``[node, next-pred-index]`` frames and ``path`` mirrors
+    their nodes, so a back-edge to a GREY (on-path) node reconstructs the cycle
+    exactly as the former recursion did."""
     WHITE, GREY, BLACK = 0, 1, 2
     colour = {w["id"]: WHITE for w in wis}
     found = []
-
-    def visit(node, stack):
-        colour[node] = GREY
-        for p in pred_map[node]:
-            if colour[p] == GREY:
-                found.append(" -> ".join(stack[stack.index(p) :] + [p]))
-            elif colour[p] == WHITE:
-                visit(p, stack + [p])
-        colour[node] = BLACK
-
     for w in wis:
-        if colour[w["id"]] == WHITE:
-            visit(w["id"], [w["id"]])
+        if colour[w["id"]] != WHITE:
+            continue
+        stack = [[w["id"], 0]]
+        path = [w["id"]]
+        colour[w["id"]] = GREY
+        while stack:
+            node, i = stack[-1]
+            preds = pred_map[node]
+            if i < len(preds):
+                stack[-1][1] += 1
+                p = preds[i]
+                if colour[p] == GREY:
+                    found.append(" -> ".join(path[path.index(p) :] + [p]))
+                elif colour[p] == WHITE:
+                    colour[p] = GREY
+                    stack.append([p, 0])
+                    path.append(p)
+            else:
+                colour[node] = BLACK
+                stack.pop()
+                path.pop()
     return found
 
 

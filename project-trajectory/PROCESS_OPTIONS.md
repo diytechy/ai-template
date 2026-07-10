@@ -724,7 +724,7 @@ contract lives in the kit's `skills/README.md`; the shape:
 
 ## Trajectory / work-items layer
 
-*Referenced from PROCESS.md §7 (the harness contract + the offline-render
+*Builds on PROCESS.md §7 (the harness contract + the offline-render
 principle).* **Applies when** a project wants to track **how** its work executes —
 cross-track order, which deliverable gates which, %-complete — as a
 machine-readable registry, and/or a generated dashboard over it. Uniquely in this

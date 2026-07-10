@@ -6666,6 +6666,40 @@ continuity (same style as the session log above).
 > **409 passed, 2 skipped**; trace SN=22 SR=38 LLR=35 TC=38, 0 orphans.
 > Byte-budgeted files untouched.
 
+> **WI-1.46 ✅ landed 2026-07-09 · THREAD_52_REVIEW F4–F8 closure (owner rulings
+> 2026-07-09).** Closes the adversarial Thread-52 review (F1/F2 landed earlier).
+> **F4 (recursion).** The two walks over the **unbounded** work-item dependency
+> graph are now iterative (explicit stack): `check_trajectory._cycles` (cycle
+> DFS) and `gen_trajectory._dag_ranks` (longest-path layering). A chain deeper
+> than CPython's ~1000-frame limit now validates / ranks on its merits instead of
+> a raw `RecursionError`; `_dag_ranks` carries an `on_path` guard so a stray
+> back-edge (a cycle that slipped validation) degrades to no-constraint rather
+> than spinning — termination guaranteed on *any* input. The icicle walks
+> (`arch_icicle.wt/collect/draw`) were left recursive **by analysis, not
+> omission**: `link()` only connects a tier to the next (SN→SR→LLR→TC), capping
+> tree depth at 4, so they cannot deep-recurse — documented at the call site,
+> keeping the gilbert port faithful. Tests: a 3000-deep acyclic chain validates
+> clean, the same closed into a cycle reports "dependency cycle" cleanly, a
+> 5000-deep chain ranks in-process, a 1500-deep chain renders end-to-end — each
+> asserting no `RecursionError`. **F5 (sibling import), ruled (a).**
+> `gen_trajectory`'s `import check_trajectory` is kept (SSOT for the ~200-line
+> graph core) but **guarded** (falls back to adding its own dir to `sys.path`),
+> the convention stated in its comment; `conftest.load_script` now puts
+> `scripts/` on `sys.path` so the next in-process test of a sibling-importer
+> resolves; two tests pin it (the trap → `ct` wired; the fallback exercised with
+> `scripts/` off the path). **F6/F7 (nits).** PROCESS_OPTIONS opener softened to
+> "Builds on §7 …" (no longer claims §7 names the layer back); STATUS.template
+> "Work items?" bullet reworded to opt-out ("on but vacuous until you track work
+> items"). **F8.** Accepted as-is by ruling (the G2-validation / G3-freshness
+> double-check stands) — no code. All five marked RESOLVED in
+> THREAD_52_REVIEW.md; WI-041 → done + dashboard regenerated.
+> **Deviation from spec:** the icicle was documented-as-safe rather than
+> rewritten — depth is bounded by construction, and a rewrite would needlessly
+> diverge from the gilbert port (recorded under F4's RESOLVED note).
+> **Byte-budgeted files untouched** (PROCESS.md / AGENTS.template.md unmodified).
+> `check.py --gate G3` → **PASS** (11/11); `pytest -q` **415 passed, 2 skipped**;
+> trace SN=22 SR=38 LLR=35 TC=38, 0 orphans.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

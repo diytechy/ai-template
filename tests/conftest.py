@@ -20,7 +20,16 @@ SCRIPTS = KIT / "scripts"
 
 
 def load_script(name):
-    """Import a kit script as a module (scripts/ is intentionally not a package)."""
+    """Import a kit script as a module (scripts/ is intentionally not a package).
+
+    scripts/ is put on sys.path first so a script that imports a sibling — e.g.
+    gen_trajectory's sanctioned `import check_trajectory` — resolves in-process
+    too. Run as a subprocess the sibling resolves via sys.path[0], but
+    importlib.exec_module does not add scripts/ itself, so the next author writing
+    an in-process test of a sibling-importing script would otherwise hit a bare
+    ImportError (THREAD_52_REVIEW.md F5)."""
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
     spec = importlib.util.spec_from_file_location(name, SCRIPTS / (name + ".py"))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

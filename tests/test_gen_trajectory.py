@@ -9,7 +9,7 @@ show. Each is pinned by running the real script over a minimal temp project.
 
 import re
 
-from conftest import SCRIPTS, run_py
+from conftest import SCRIPTS, load_script, run_py
 
 WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
 
@@ -202,3 +202,74 @@ def test_cycle_refuses_to_render(tmp_path):
     proc = gen(tmp_path)
     assert proc.returncode == 1 and "cycle" in proc.stderr
     assert not (tmp_path / "docs" / "trajectory.html").exists()
+
+
+# --- F5: the sanctioned sibling import loads in-process too ---------------------
+
+
+def test_load_script_resolves_sibling_import_in_process():
+    # gen_trajectory imports its sibling check_trajectory. Loading it the
+    # in-process way (importlib via the suite's load_script — the first script to
+    # need it) must resolve that import, not raise a bare ImportError: the trap
+    # the next in-process test author would otherwise fall into (F5).
+    gt = load_script("gen_trajectory")
+    assert gt.ct is not None
+    assert hasattr(gt.ct, "validate")  # the sibling is genuinely wired
+
+
+def test_gen_trajectory_self_heals_sibling_import(monkeypatch):
+    # The guarded import's OWN fallback (independent of the conftest shim): with
+    # scripts/ off sys.path and the sibling not yet imported — the downstream
+    # cherry-pick / import-from-elsewhere case — the module must still add its own
+    # directory and resolve check_trajectory rather than raise ImportError (F5).
+    import importlib.util
+    import sys
+
+    monkeypatch.delitem(sys.modules, "check_trajectory", raising=False)
+    monkeypatch.delitem(sys.modules, "gen_trajectory", raising=False)
+    monkeypatch.setattr(sys, "path", [p for p in sys.path if p != str(SCRIPTS)])
+    spec = importlib.util.spec_from_file_location(
+        "gen_trajectory", SCRIPTS / "gen_trajectory.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)  # exercises the except-branch; must not raise
+    assert mod.ct is not None
+
+
+# --- F4: the layout recursion is iterative — correct + crash-proof --------------
+
+
+def test_dag_ranks_longest_path_and_deep_chain():
+    # (a) correctness on a diamond: a node's rank is one past its DEEPEST
+    # predecessor. (b) a chain far deeper than the recursion limit ranks by pure
+    # iteration — the former recursive longest-path raised RecursionError.
+    gt = load_script("gen_trajectory")
+    wis = [{"id": i} for i in ("A", "B", "C", "D")]
+    pred = {"A": [], "B": ["A"], "C": ["A"], "D": ["B", "C"]}
+    assert gt._dag_ranks(wis, pred) == {"A": 0, "B": 1, "C": 1, "D": 2}
+    # deepest-first orientation (node k depends on k+1) so the walk descends the
+    # full chain from wis[0] — the shape that overflowed the old recursion.
+    n = 5000
+    chain = [{"id": str(k)} for k in range(n)]
+    cpred = {str(k): ([str(k + 1)] if k < n - 1 else []) for k in range(n)}
+    cranks = gt._dag_ranks(chain, cpred)
+    assert cranks["0"] == n - 1  # one past a 4999-long predecessor path
+    assert cranks[str(n - 1)] == 0  # the source
+
+
+def test_deep_chain_renders_without_recursionerror(tmp_path):
+    # End-to-end (validate -> layout -> HTML) over a chain deeper than the
+    # recursion limit completes and writes the dashboard.
+    n = 1500
+    body = "".join(
+        "WI-{:04d},step,scripts,SR-001,{},queued,d\n".format(
+            k, "WI-{:04d}".format(k + 1) if k < n else ""
+        )
+        for k in range(1, n + 1)
+    )
+    make_repo(tmp_path, body)
+    proc = gen(tmp_path)
+    assert "RecursionError" not in proc.stderr, proc.stderr
+    assert proc.returncode == 0, (proc.stdout + proc.stderr)[:2000]
+    text = html_of(tmp_path)
+    assert "WI-0001" in text and "WI-{:04d}".format(n) in text

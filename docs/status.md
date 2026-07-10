@@ -36,7 +36,9 @@ sign-offs, verdicts) is [log.md](log.md).
   component layer + MOD→REPO — see the plan entry + ADOPTING §6 recipe) and
   **WI-1.45** (review F2: the shipped pre-commit hook now runs the
   `trajectory-map` freshness step — stale dashboards block at commit, not
-  first in CI).
+  first in CI) and **WI-1.46** (review F4–F8 closure: iterative graph walks,
+  the guarded sibling import, and the doc-wording nits — the review is now
+  fully resolved).
   **Thread 52 COMPLETE 2026-07-08** (all 4 phases) — the opt-out trajectory/
   work-items layer: `work-items.csv` registry + `check_trajectory.py` +
   `gen_trajectory.py` (offline SVG dashboard) + PROCESS_OPTIONS/README docs.
@@ -51,9 +53,11 @@ sign-offs, verdicts) is [log.md](log.md).
     SR-037/038 spine change (Peter Johnson, `docs/log.md`; F1 fully closed).
     Verification basis: 38/38 SRs mechanized, 0 attested.
   - **In flight:** _(none)_ — **WI-1.43 (F1) + WI-1.44 (schema bundle) +
-    WI-1.45 (F2 hook step) landed complete 2026-07-09** (on `MultiRepoSupport`,
-    **not pushed** — push decision is the owner's, see Next action).
-  - **Queued (next):** the Next-action list below (owner DAG data-pass, F2,
+    WI-1.45 (F2 hook step) + WI-1.46 (F4–F8 closure) landed complete
+    2026-07-09** (on `MultiRepoSupport`, **not pushed** — push decision is the
+    owner's, see Next action). **THREAD_52_REVIEW.md is now fully resolved
+    (F1–F8).**
+  - **Queued (next):** the Next-action list below (owner DAG data-pass,
     WI-039, the AGENT_ROLES build calls).
   - **Deferred (backlog):** **Thread 53** — `check_dupes.py` mechanical
     anti-duplication (upstream gilbert; strong candidate, unscheduled). **Thread 51**
@@ -65,22 +69,14 @@ sign-offs, verdicts) is [log.md](log.md).
   [`AXES_AND_WORKSTREAMS.md`](../AXES_AND_WORKSTREAMS.md) iter-9 ratified design
   as one migration event: `Track`→`Workstream` + hard/soft (`~`) predecessor
   edges (F3's schema half), the CMP-### component layer (+ `Component` tags),
-  `MOD-###`→`REPO-###` (all never-breaking; ADOPTING §6 has the recipe). Now
-  open, in rough order: **owner data-pass on the 41-WI DAG edges** (demote
-  remaining narrative edges to `~`; F3's data half); **WI-041 — the F4–F8
-  closure, RULED and queued** ([`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md);
-  F2 resolved 2026-07-09, WI-1.45; owner rulings recorded 2026-07-09 under each
-  finding). Dispositions — sized for a standard (e.g. Opus) session, specs are
-  the findings themselves: **F4** depth-guard/iterative hardening of the
-  recursive walks in `gen_trajectory` + `check_trajectory` with a
-  clean-failure test on a pathologically deep chain (note the `arch_icicle`
-  port — flag the hardening for gilbert upstream); **F5 ruled (a)** — keep the
-  sibling import, guarded, + `conftest.load_script` shim + in-process
-  `load_script("gen_trajectory")` regression test + the convention stated once
-  as the import's comment; **F6 ruled soften** — reword the PROCESS_OPTIONS
-  opener to the "Builds on §7…" style (PROCESS.md stays byte-flat); **F7**
-  reword the STATUS.template "Work items?" bullet to opt-out language; **F8
-  ruled accepted-as-is** — record only, no code. Then: **WI-039**
+  `MOD-###`→`REPO-###` (all never-breaking; ADOPTING §6 has the recipe). **The
+  adversarial Thread-52 review is now fully closed** — F1/F2 earlier, and
+  **WI-1.46 landed F4–F8 2026-07-09**: iterative `_cycles` + `_dag_ranks` (no
+  more `RecursionError` on a deep DAG; the icicle is bounded-by-construction and
+  documented), the guarded sibling import + `conftest.load_script` shim (F5(a)),
+  and the F6/F7 doc-wording nits; F8 closed by ruling (no code). Now open, in
+  rough order: **owner data-pass on the 41-WI DAG edges** (demote remaining
+  narrative edges to `~`; F3's data half); **WI-039**
   (`PROJECT_STATE.html`, queued); the dynamic-layer build calls
   ([`AGENT_ROLES.md`](../AGENT_ROLES.md): `docs/review-policy` + `AGENT_CMD_MAP`,
   status-size guard). **Push decision outstanding** (`MultiRepoSupport` is

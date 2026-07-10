@@ -234,3 +234,37 @@ def test_comment_only_toggle_reads_on(tmp_path):
     proc = run_traj(tmp_path)
     assert proc.returncode == 1  # the cycle is caught: comment-only != off
     assert "dependency cycle" in proc.stderr
+
+
+# --- F4: deep graphs fail on their merits, never with RecursionError -----------
+
+
+def _chain(n, closed=False):
+    """A chain WI-0001 -> WI-0002 -> ... -> WI-{n}, each depending on the NEXT so
+    a DFS from the first row descends the whole depth (what crashed the former
+    recursive walk). `closed` makes WI-{n} point back at WI-0001 -> one long
+    cycle."""
+    rows = []
+    for k in range(1, n + 1):
+        pred = "WI-{:04d}".format(k + 1) if k < n else ("WI-0001" if closed else "")
+        rows.append("WI-{:04d},step,scripts,,{},queued,d".format(k, pred))
+    return "\n".join(rows) + "\n"
+
+
+def test_deep_acyclic_chain_validates_without_recursionerror(tmp_path):
+    # A dependency chain far deeper than CPython's ~1000-frame limit is acyclic,
+    # so it must validate clean — the old recursive cycle-DFS raised RecursionError.
+    write_wis(tmp_path, _chain(3000))
+    proc = run_traj(tmp_path)
+    assert "RecursionError" not in proc.stderr, proc.stderr
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_deep_cycle_reported_cleanly_not_recursionerror(tmp_path):
+    # The same depth closed into one long cycle is reported as a dependency cycle
+    # (clean exit 1), not crashed with a raw traceback.
+    write_wis(tmp_path, _chain(3000, closed=True))
+    proc = run_traj(tmp_path)
+    assert "RecursionError" not in proc.stderr, proc.stderr
+    assert proc.returncode == 1
+    assert "dependency cycle" in proc.stderr

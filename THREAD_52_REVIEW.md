@@ -212,6 +212,19 @@ in the plan/status, but the artifact itself carries no such disclaimer.
 
 ## F4 — LOW · Unbounded recursion on pathological input
 
+> **RESOLVED 2026-07-09 (WI-1.46 / WI-041).** The two walks over the **unbounded**
+> WI dependency graph are now iterative (explicit stack): `check_trajectory._cycles`
+> and `gen_trajectory._dag_ranks` — a chain deeper than CPython's ~1000-frame limit
+> validates / ranks on its merits instead of raising `RecursionError`, pinned by
+> deep-chain tests (a 3000-deep acyclic chain passes; the same closed into a cycle
+> reports "dependency cycle" cleanly; a 5000-deep chain ranks in-process). The
+> icicle walks (`arch_icicle.wt/collect/draw`) were left recursive **by analysis,
+> not omission**: `link()` only connects a tier to the next (SN→SR→LLR→TC), so the
+> tree's depth is capped at 4 by construction and cannot deep-recurse on any input
+> — documented at the call site, and kept a faithful port of the gilbert icicle
+> (the "consider for gilbert too" note applies only if that port is ever used on a
+> deeper tree there).
+
 **What.** `gen_trajectory._dag_ranks.r` (rank), `arch_icicle.wt/collect/draw`, and
 `check_trajectory.validate.visit` (cycle DFS) all recurse over the graph/tree with
 no depth guard or iterative fallback.
@@ -246,6 +259,14 @@ any future `gen_trajectory` refactor rather than as its own change.
 > in-process `load_script("gen_trajectory")` regression test (the trap becomes
 > the test), the convention stated once as the guarded import's comment.
 > Queued as part of the F4–F8 closure WI (status.md).
+>
+> **RESOLVED 2026-07-09 (WI-1.46 / WI-041).** All four landed: the import is now
+> `try: import check_trajectory … except ImportError: sys.path.insert(this dir)`
+> with the convention stated in its comment; `conftest.load_script` puts
+> `scripts/` on `sys.path` so any future in-process test of a sibling-importer
+> resolves; and two tests pin it — the trap itself (`load_script("gen_trajectory")`
+> wires `ct`) plus a self-heal test exercising the fallback with `scripts/` off
+> the path.
 
 **What.** [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) does
 `import check_trajectory as ct` — the **first** kit script to import a sibling. It
@@ -281,6 +302,10 @@ for future multi-script features.
 > **RULED 2026-07-09 (owner): soften the phrasing** to the "Parallel tracks"
 > style ("Builds on PROCESS.md §7 …") — PROCESS.md stays byte-flat. Queued with
 > the F4–F8 closure WI.
+>
+> **RESOLVED 2026-07-09 (WI-1.46 / WI-041):** the opener now reads *"Builds on
+> PROCESS.md §7 …"* (the existing "Builds on §10" precedent), which no longer
+> claims §7 names the layer back. PROCESS.md untouched.
 
 The new PROCESS_OPTIONS section opens `*Referenced from PROCESS.md §7 (the harness
 contract + the offline-render principle).*` — but §7 does **not** name the
@@ -291,6 +316,10 @@ the phrasing to the "Parallel tracks" style (*"Builds on PROCESS.md §7 …"*), 
 does not claim §7 points back.
 
 ## F7 — nit · STATUS template wording: "off" vs opt-out
+
+> **RESOLVED 2026-07-09 (WI-1.46 / WI-041):** the "Work items?" bullet now reads
+> *"on but vacuous until you track work items"* and states the layer is opt-out
+> (on by default, costing nothing until a work item exists) — no longer "off."
 
 [`STATUS.template.md`](project-trajectory/STATUS.template.md)'s "Work items?"
 bullet says *"off unless you adopted the trajectory layer."* The layer is

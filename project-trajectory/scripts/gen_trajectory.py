@@ -37,10 +37,22 @@ import string
 import sys
 from pathlib import Path
 
-# Single source of truth for loading + validating the WI registry (Phase 1).
-# Both scripts always ship together (bootstrap MAPPING), and running this file
-# puts its own directory on sys.path[0], so the sibling import resolves.
-import check_trajectory as ct
+# Single source of truth for loading + validating the WI registry (Phase 1):
+# importing the sibling — rather than duplicating its ~200-line graph core —
+# keeps the `trajectory` gate step and this renderer from ever disagreeing on
+# what a valid registry is. This is the kit's ONE sanctioned sibling import,
+# allowed *because* the two scripts always ship and re-sync together (bootstrap
+# MAPPING); a small, stable helper is still inlined rather than imported (the
+# bootstrap.py precedent). Run as a script/subprocess, the sibling resolves via
+# sys.path[0] (this file's own directory); loaded another way — an in-process
+# test through importlib, a downstream tool importing the module — that entry is
+# absent, so fall back to adding this file's directory explicitly. See
+# THREAD_52_REVIEW.md F5.
+try:
+    import check_trajectory as ct
+except ImportError:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import check_trajectory as ct
 
 OUT_HTML = "docs/trajectory.html"
 
@@ -189,6 +201,15 @@ def arch_icicle(root):
         if parent:
             link(parent, tid)
 
+    # The next three walks (wt/collect/draw) recurse over `kids`, and unlike the
+    # work-item DAG this tree's depth is capped at 4 by construction: `link()` is
+    # only ever called SN->SR, SR->LLR, LLR->TC, SR->TC (see the tiers above), so
+    # no input — pathological or not — can deepen it past the SN->SR->LLR->TC
+    # spine. They therefore need no iterative rewrite or depth guard, unlike
+    # `_dag_ranks` / `check_trajectory._cycles` which walk the unbounded WI chain
+    # (THREAD_52_REVIEW.md F4). Kept recursive so this block stays a faithful port
+    # of the proven gilbert icicle; if that port is ever hardened upstream (for a
+    # deeper tree there), mirror it — here it is provably safe.
     weight = {}
 
     def wt(nid):
@@ -353,22 +374,36 @@ STATUS_FILL = {"done": "#059669", "active": "#d97706", "queued": "#94a3b8"}
 
 def _dag_ranks(wis, pred_map):
     """Longest-path layering: a node's rank is one past its deepest predecessor
-    (a source is rank 0). The graph is validated acyclic before we get here, so
-    the memoised recursion terminates."""
-    rank = {}
+    (a source is rank 0). The graph is validated acyclic before we get here.
 
-    def r(n):
-        if n in rank:
-            return rank[n]
-        rank[n] = 0  # guard (acyclic guaranteed; belt-and-suspenders)
-        best = -1
-        for p in pred_map[n]:
-            best = max(best, r(p))
-        rank[n] = best + 1 if pred_map[n] else 0
-        return rank[n]
-
+    Iterative post-order (explicit stack), not recursion: a deep dependency chain
+    would blow CPython's ~1000-frame limit and raise ``RecursionError`` instead of
+    a rendered dashboard (THREAD_52_REVIEW.md F4). ``on_path`` tracks the nodes on
+    the current DFS branch; in a DAG no predecessor is ever on the path, so the
+    guard is inert for valid input, and a stray back-edge (a cycle that slipped
+    past validation) degrades to no constraint rather than spinning — the same
+    belt-and-suspenders the former recursion's placeholder gave, but termination
+    is now guaranteed on *any* input."""
+    rank, on_path = {}, set()
     for w in wis:
-        r(w["id"])
+        if w["id"] in rank:
+            continue
+        stack = [w["id"]]
+        while stack:
+            n = stack[-1]
+            if n in rank:
+                on_path.discard(n)
+                stack.pop()
+                continue
+            on_path.add(n)
+            pending = [p for p in pred_map[n] if p not in rank and p not in on_path]
+            if pending:
+                stack.extend(pending)
+            else:
+                ready = [rank[p] for p in pred_map[n] if p in rank]
+                rank[n] = 1 + max(ready, default=-1)
+                on_path.discard(n)
+                stack.pop()
     return rank
 
 
