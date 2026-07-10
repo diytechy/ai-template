@@ -778,7 +778,9 @@ a **layered SVG DAG** of the work items (ranked by dependency depth,
 done/active/queued shaded), both computed in Python. Its `--check` is the
 `trajectory-map` freshness gate at G3 — regenerate-in-memory and byte-compare,
 exactly like the code map — so the committed dashboard can never silently drift
-from the registry. In `status.md`, the **Next action** then names the next
+from the registry; the shipped pre-commit hook runs the same step at every
+commit (vacuous for a non-adopter), so a registry edit that stales the
+dashboard is caught locally, not first in CI. In `status.md`, the **Next action** then names the next
 `WI-###`(s), and the dashboard shows where they sit in the DAG.
 
 **Opt-out (why a non-adopter pays nothing).** The layer ships **present but

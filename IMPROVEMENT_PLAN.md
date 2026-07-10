@@ -6638,6 +6638,34 @@ continuity (same style as the session log above).
 > skipped**; trace SN=22 SR=38 LLR=35 TC=38, 0 orphans. Byte-budgeted files
 > untouched (PROCESS.md / AGENTS.template.md unmodified).
 
+> **WI-1.45 ✅ landed 2026-07-09 · Trajectory-dashboard freshness at commit
+> (THREAD_52_REVIEW F2, MEDIUM).** The shipped `hooks/pre-commit` gains step 1b:
+> `check.py --run-step trajectory-map`, delegated exactly like the arch-map step
+> (the WI-1.26 idiom) — so a registry or README-vision edit that stales
+> `docs/trajectory.html` blocks at commit instead of surfacing first in CI (the
+> F2 failure that actually bit during the SR-035 session). Vacuous for a
+> non-adopter (absent/placeholder-only `work-items.csv` passes;
+> `docs/trajectory-check: off` silences); the review's latency question
+> measured: **~0.2 s per commit** on the meta-repo's real 40-WI registry. The
+> deeper hook-vs-CI question (review cross-cutting #2) is settled and **stated
+> once, in the hook's step-1b comment**: a generated artifact's freshness check
+> joins the floor when regeneration is one stdlib command and the step is
+> vacuous for a repo that never adopted the layer; checks needing the product
+> toolchain or gate context (tests, perf, flows) stay in check.py / CI.
+> Deliverables: the hook step + rule comment; `test_hook_trajectory_map_step`
+> (vacuous → blocks-on-stale → regen-green → `off` opt-out → hook text carries
+> the step); a one-line PROCESS_OPTIONS truth-up; WI-040 dogfood row
+> (hard edges WI-022 + WI-031 only — no narrative edges, per F3) + regenerated
+> dashboard; F2 marked RESOLVED in THREAD_52_REVIEW.md.
+> **Deviation from spec:** none (the review's suggested local fix, verbatim).
+> **⚠ Downstream:** a re-sync overwrites `hooks/pre-commit` (kit-owned). A
+> mixed-state repo that re-syncs only the hook against a pre-Thread-52
+> `check.py` fails clearly (`check: no step named 'trajectory-map'`) — ADOPTING
+> §6 re-syncs the kit-owned set together; same class as WI-1.26's delegation.
+> `check.py --gate G3` → **PASS** (11/11, incl. the new step); `pytest -q`
+> **409 passed, 2 skipped**; trace SN=22 SR=38 LLR=35 TC=38, 0 orphans.
+> Byte-budgeted files untouched.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

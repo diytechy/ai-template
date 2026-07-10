@@ -96,6 +96,20 @@ fi
 #    contract (ADOPTING.md §3). Drop this step only if you also drop the arch-map.
 "$PY" "$SCRIPTS_DIR/check.py" --run-step arch-map
 
+# 1b. Trajectory dashboard must be fresh — the same generated-artifact contract
+#     as the code map, staled far more often: docs/trajectory.html reads all four
+#     spine registries plus the README vision tag, so an ordinary requirement
+#     edit stales it, and CI-only checking makes that a push-long feedback loop
+#     (THREAD_52_REVIEW.md F2). The floor rule, stated once here: a generated
+#     artifact's freshness check joins this hook when regenerating is one stdlib
+#     command and the step is vacuous for a repo that never adopted the layer
+#     (arch-map, trajectory-map); checks needing the product toolchain or gate
+#     context (tests, perf, flows) stay in check.py / CI. Vacuous and fast here:
+#     an absent or placeholder-only work-items.csv passes, and the one word
+#     `off` in docs/trajectory-check silences it (process-options.md
+#     "Trajectory / work-items layer").
+"$PY" "$SCRIPTS_DIR/check.py" --run-step trajectory-map
+
 # 2. Traceability *integrity*: no duplicate / malformed ids — wrong at any
 #    stage, so safe to enforce on every commit. Deliberately NOT the full
 #    --strict orphan check: orphans are a G2+ gate criterion (a mid-G1 registry

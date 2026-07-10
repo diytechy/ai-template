@@ -124,7 +124,17 @@ re-attestation in `docs/log.md`. Then reconcile with the "Deeper thread" above.
 
 ## F2 — MEDIUM · Dashboard staleness is caught only in CI, not at commit
 
-**What.** The shipped [`hooks/pre-commit`](project-trajectory/hooks/pre-commit)
+> **RESOLVED 2026-07-09 (WI-1.45 / WI-040):** the shipped `hooks/pre-commit` now
+> runs `check.py --run-step trajectory-map` as step 1b, delegated exactly like
+> arch-map — vacuous for a non-adopter (absent/placeholder registry passes,
+> `docs/trajectory-check: off` silences), and measured at ~0.2 s per commit on
+> the meta-repo's real 39-WI registry (the "acceptable latency?" question:
+> yes). The deeper hook-vs-CI question is answered and **stated once, in the
+> hook's step-1b comment**: a generated artifact's freshness check joins the
+> floor when regeneration is one stdlib command and the step is vacuous for a
+> repo that never adopted the layer; checks needing the product toolchain or
+> gate context (tests, perf, flows) stay in check.py / CI. Cross-cutting
+> question 2 below is thereby settled. The shipped [`hooks/pre-commit`](project-trajectory/hooks/pre-commit)
 runs `check.py --run-step arch-map` (code-map freshness), `trace.py
 --strict-integrity`, and the privacy scan — but **not** `trajectory-map`. The
 `trajectory.html` freshness gate lives only in `check.py --gate G3` (CI).

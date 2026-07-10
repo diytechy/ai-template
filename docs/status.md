@@ -31,13 +31,16 @@ sign-offs, verdicts) is [log.md](log.md).
   `check.py --gate G3` PASS; product coverage ~91%). **G3 human-ratified
   2026-07-07 and re-attested 2026-07-09** over the SR-037/038 spine change
   (Peter Johnson, `docs/log.md`). **Thread 50**
-  (trace.py SR/LLR citation-coherence check) landed; latest post-plan WI
+  (trace.py SR/LLR citation-coherence check) landed; latest post-plan WIs
   **WI-1.44** (the AXES schema bundle: Workstream + `~` soft edges + the CMP-###
-  component layer + MOD→REPO — see the plan entry + ADOPTING §6 recipe).
+  component layer + MOD→REPO — see the plan entry + ADOPTING §6 recipe) and
+  **WI-1.45** (review F2: the shipped pre-commit hook now runs the
+  `trajectory-map` freshness step — stale dashboards block at commit, not
+  first in CI).
   **Thread 52 COMPLETE 2026-07-08** (all 4 phases) — the opt-out trajectory/
   work-items layer: `work-items.csv` registry + `check_trajectory.py` +
   `gen_trajectory.py` (offline SVG dashboard) + PROCESS_OPTIONS/README docs.
-  **Dogfooded (P4):** the meta-repo carries its own 39-WI
+  **Dogfooded (P4):** the meta-repo carries its own 40-WI
   `docs/requirements/work-items.csv` + generated `docs/trajectory.html`
   (Execution 85%, Definition 100%), gate-green on real data. The **ratified
   design notes** behind WI-1.44 sit at root:
@@ -47,9 +50,9 @@ sign-offs, verdicts) is [log.md](log.md).
   - **Needs <human>**: _(none)_ — **G3 re-attested 2026-07-09** over the
     SR-037/038 spine change (Peter Johnson, `docs/log.md`; F1 fully closed).
     Verification basis: 38/38 SRs mechanized, 0 attested.
-  - **In flight:** _(none)_ — **WI-1.43 (F1) + WI-1.44 (schema bundle) landed
-    complete 2026-07-09** (on `MultiRepoSupport`, **not pushed** — push decision
-    is the owner's, see Next action).
+  - **In flight:** _(none)_ — **WI-1.43 (F1) + WI-1.44 (schema bundle) +
+    WI-1.45 (F2 hook step) landed complete 2026-07-09** (on `MultiRepoSupport`,
+    **not pushed** — push decision is the owner's, see Next action).
   - **Queued (next):** the Next-action list below (owner DAG data-pass, F2,
     WI-039, the AGENT_ROLES build calls).
   - **Deferred (backlog):** **Thread 53** — `check_dupes.py` mechanical
@@ -63,10 +66,10 @@ sign-offs, verdicts) is [log.md](log.md).
   as one migration event: `Track`→`Workstream` + hard/soft (`~`) predecessor
   edges (F3's schema half), the CMP-### component layer (+ `Component` tags),
   `MOD-###`→`REPO-###` (all never-breaking; ADOPTING §6 has the recipe). Now
-  open, in rough order: **owner data-pass on the 39-WI DAG edges** (demote
-  remaining narrative edges to `~`; F3's data half); **F2 (MEDIUM)** —
-  `trajectory.html` staleness caught only in CI, not the pre-commit hook — and
-  F4–F8 ([`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md)); **WI-039**
+  open, in rough order: **owner data-pass on the 40-WI DAG edges** (demote
+  remaining narrative edges to `~`; F3's data half); **F4–F8**
+  ([`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md); F2 resolved 2026-07-09,
+  WI-1.45); **WI-039**
   (`PROJECT_STATE.html`, queued); the dynamic-layer build calls
   ([`AGENT_ROLES.md`](../AGENT_ROLES.md): `docs/review-policy` + `AGENT_CMD_MAP`,
   status-size guard). **Push decision outstanding** (`MultiRepoSupport` is

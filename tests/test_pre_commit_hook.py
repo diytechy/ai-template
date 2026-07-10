@@ -75,6 +75,45 @@ def test_hook_arch_map_step_honors_declared_mode(scaffold):
     assert "--run-step arch-map" in hook_text
 
 
+def test_hook_trajectory_map_step(scaffold):
+    # THREAD_52_REVIEW.md F2: the hook runs the trajectory-dashboard freshness
+    # step (delegated, like arch-map) so a registry edit that stales
+    # docs/trajectory.html is caught at commit, not first in CI. The floor rule:
+    # vacuous for a repo that never adopted the layer; with real work items a
+    # missing/stale dashboard blocks, actionably; regenerating turns it green.
+    make_minimal_project(scaffold)
+    # Non-adopter: the scaffolded placeholder-only registry passes vacuously.
+    ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    # Adopter with a real work item and no generated dashboard: blocked.
+    wi = scaffold / "docs" / "requirements" / "work-items.csv"
+    wi.write_text(
+        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
+        'WI-001,Real work,core,,,queued,"a real row"\n',
+        encoding="utf-8",
+    )
+    stale = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
+    assert stale.returncode != 0, "a missing dashboard over real WIs must block"
+    assert "STALE" in (stale.stdout + stale.stderr)
+    # Regenerate: the same step goes green.
+    regen = run_py(["scripts/gen_trajectory.py"], cwd=scaffold)
+    assert regen.returncode == 0, regen.stdout + regen.stderr
+    ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    # The opt-out stays free: `off` silences the step even with a stale dashboard.
+    wi.write_text(
+        wi.read_text(encoding="utf-8")
+        + 'WI-002,More work,core,,WI-001,queued,"stales the dashboard"\n',
+        encoding="utf-8",
+    )
+    (scaffold / "docs" / "trajectory-check").write_text("off\n", encoding="utf-8")
+    ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    # And the hook script itself carries the delegated step.
+    hook_text = (scaffold / HOOK).read_text(encoding="utf-8")
+    assert "--run-step trajectory-map" in hook_text
+
+
 def test_hook_blocks_duplicate_id_but_not_orphan(scaffold):
     # The hook's traceability command is --strict-integrity: a duplicated id is
     # wrong at any stage and must block, but an orphan is a G2+ *gate* criterion
