@@ -21,6 +21,10 @@ REPO_ROOT = KIT.parent  # the meta-repo root (this kit dogfoods dev-setup here)
 
 ONBOARD = ["scripts/onboard.sh", "scripts/onboard.command", "scripts/onboard.cmd"]
 DEVSETUP = ["scripts/dev-setup.sh", "scripts/dev-setup.ps1"]
+# macOS's double-clickable wrapper (Finder opens a bare .sh in an editor, it
+# doesn't execute it) — asserted separately from DEVSETUP because it is a thin
+# delegator, not an instantiation of the template's EDIT block.
+DEVSETUP_COMMAND = "scripts/dev-setup.command"
 
 
 def _sh():
@@ -156,6 +160,50 @@ def test_onboarder_sh_is_syntactically_valid(scaffold):
             [sh, "-n", rel], cwd=str(scaffold), capture_output=True, text=True
         )
         assert proc.returncode == 0, rel + ": " + proc.stderr
+
+
+def test_bootstrap_scaffolds_devsetup_command(scaffold):
+    # The fresh-Mac rung: /usr/bin/{python3,git} ship as Command Line Tools
+    # placeholders that satisfy `command -v` but only pop Apple's installer when
+    # run, so the double-clickable wrapper must probe the real toolchain
+    # (xcode-select -p), offer the one-time install, and otherwise delegate to
+    # dev-setup.sh (the command lives once, there).
+    path = scaffold / DEVSETUP_COMMAND
+    assert path.exists(), "missing from scaffold: " + DEVSETUP_COMMAND
+    text = path.read_text(encoding="utf-8")
+    assert "xcode-select -p" in text, "missing the real-toolchain probe"
+    assert "xcode-select --install" in text, "missing the CLT install kick-off"
+    assert "dev-setup.sh" in text, "must delegate to the shared POSIX script"
+    if os.name == "posix":
+        assert os.access(path, os.X_OK), DEVSETUP_COMMAND + " must be executable"
+
+
+def test_devsetup_command_is_syntactically_valid(scaffold):
+    sh = _sh()
+    if not sh:
+        import pytest
+
+        pytest.skip("no POSIX shell on PATH")
+    proc = subprocess.run(
+        [sh, "-n", DEVSETUP_COMMAND], cwd=str(scaffold), capture_output=True, text=True
+    )
+    assert proc.returncode == 0, DEVSETUP_COMMAND + ": " + proc.stderr
+
+
+def test_devsetup_sees_through_macos_clt_placeholders(scaffold):
+    # The false positive found on a real fresh Mac: `command -v python3`
+    # succeeds against the placeholder, so detection must gate /usr/bin tools
+    # on the toolchain actually being present.
+    text = (scaffold / "scripts/dev-setup.sh").read_text(encoding="utf-8")
+    assert "xcode-select -p" in text, "runtime/git detection trusts command -v alone"
+
+
+def test_meta_repo_dogfoods_devsetup_command():
+    path = REPO_ROOT / DEVSETUP_COMMAND
+    assert path.exists(), "meta-repo missing dogfood " + DEVSETUP_COMMAND
+    text = path.read_text(encoding="utf-8")
+    assert "xcode-select -p" in text
+    assert os.name != "posix" or os.access(path, os.X_OK)
 
 
 def test_meta_repo_dogfoods_dev_setup():

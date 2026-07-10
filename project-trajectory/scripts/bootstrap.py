@@ -42,7 +42,7 @@ What it creates in the destination:
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
-    scripts/dev-setup.{sh,ps1}                 <- dev-setup.template.* (workstation setup)
+    scripts/dev-setup.{sh,ps1,command}         <- dev-setup.template.* (workstation setup)
     README.md                                  <- README.template.md (human front door; kept if one exists)
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
@@ -983,6 +983,7 @@ MAPPING = [
     ("scripts/onboard.template.cmd", "scripts/onboard.cmd"),
     ("scripts/dev-setup.template.sh", "scripts/dev-setup.sh"),
     ("scripts/dev-setup.template.ps1", "scripts/dev-setup.ps1"),
+    ("scripts/dev-setup.template.command", "scripts/dev-setup.command"),
     # The evaluator's rungs (WI-1.12): a README skeleton the kickoff agent
     # builds out from the project brief (never overwritten — an adopted repo
     # keeps its own README), and root double-clickable product launchers, one

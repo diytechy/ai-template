@@ -5,13 +5,15 @@
 # The kit ships project-trajectory/scripts/dev-setup.template.{sh,ps1} with EMPTY
 # install slots for downstream repos to fill. This is that template *filled in*
 # for the meta-repo's own stack, so the kit provisions itself: Python 3.8+, ruff
-# (format), pytest (the self-test suite), and an offline Mermaid renderer for the
-# generated diagrams. Consent-first: the default only reports; --install acts.
+# (format), pytest + pytest-cov (the self-test suite and the harness's coverage
+# step), and an offline Mermaid renderer for the generated diagrams.
+# Consent-first: the default only reports; --install acts.
 #
 # Usage:  sh scripts/dev-setup.sh [--check | --install]
 #   --check    (default) report what's present; install nothing.
-#   --install  create ./.venv (ruff + pytest, asks first) AND wire the pre-commit
-#              process floor (core.hooksPath=.githooks; local + reversible).
+#   --install  create ./.venv (ruff + pytest + pytest-cov, asks first) AND wire
+#              the pre-commit process floor (core.hooksPath=.githooks; local +
+#              reversible).
 #
 # Windows contributors: use scripts/dev-setup.ps1.
 set -eu
@@ -26,23 +28,37 @@ case "${1:-}" in
 esac
 
 have() { command -v "$1" >/dev/null 2>&1; }
+# have() alone lies on a fresh Mac: /usr/bin/python3 and /usr/bin/git are
+# Command Line Tools placeholders that satisfy `command -v` but only pop
+# Apple's installer when run. real() trusts /usr/bin/<tool> on Darwin only
+# once the toolchain is actually present (xcode-select -p).
+real() {
+  have "$1" || return 1
+  [ "$(uname)" = "Darwin" ] || return 0
+  [ "$(command -v "$1")" = "/usr/bin/$1" ] || return 0
+  xcode-select -p >/dev/null 2>&1
+}
 report() { # <label> <present:0/1> <hint>
   if [ "$2" -eq 1 ]; then echo "  [ok]      $1"; else echo "  [missing] $1  — $3"; fi
 }
 
-if have python3; then PY=python3; elif have python; then PY=python; else PY=""; fi
+# Prefer the project venv --install creates, so the report reflects what the
+# harness will actually import; fall back to the ambient interpreter.
+if [ -x .venv/bin/python ]; then PY=.venv/bin/python
+elif real python3; then PY=python3; elif real python; then PY=python; else PY=""; fi
 echo "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
 echo
-report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "install Python 3.8+"
-report "git"               "$(have git && echo 1 || echo 0)" "install git"
+report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "install Python 3.8+ (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
+report "git"               "$(real git && echo 1 || echo 0)" "install git (macOS: xcode-select --install)"
 report "ruff (format/lint)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("ruff") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install ruff (or run --install)"
 report "pytest (self-tests)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("pytest") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest (or run --install)"
+report "pytest-cov (harness coverage step)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("pytest_cov") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest-cov (or run --install)"
 report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } && echo 1 || echo 0)" "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
 report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" "run --install, or: git config core.hooksPath .githooks"
 
 if [ "$MODE" = "check" ]; then
   echo
-  echo "To install ruff + pytest into ./.venv: sh scripts/dev-setup.sh --install"
+  echo "To install ruff + pytest + pytest-cov into ./.venv: sh scripts/dev-setup.sh --install"
   exit 0
 fi
 
@@ -58,7 +74,7 @@ if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null
   echo "Enabled pre-commit floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
 fi
 echo
-printf 'Create ./.venv and install ruff + pytest into it? [y/N] '
+printf 'Create ./.venv and install ruff + pytest + pytest-cov into it? [y/N] '
 read -r ans
 case "$ans" in
   [Yy]*) ;;
@@ -68,6 +84,6 @@ esac
 # shellcheck disable=SC1091
 . .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install ruff pytest
+python -m pip install ruff pytest pytest-cov
 echo
 echo "Done. Run the self-tests with: python -m pytest -q"

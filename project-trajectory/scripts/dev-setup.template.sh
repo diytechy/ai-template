@@ -74,6 +74,16 @@ while [ $# -gt 0 ]; do
 done
 
 have() { command -v "$1" >/dev/null 2>&1; }
+# have() alone lies on a fresh Mac: /usr/bin/python3 and /usr/bin/git are
+# Command Line Tools placeholders that satisfy `command -v` but only pop
+# Apple's installer when run. real() trusts /usr/bin/<tool> on Darwin only
+# once the toolchain is actually present (xcode-select -p).
+real() {
+  have "$1" || return 1
+  [ "$(uname)" = "Darwin" ] || return 0
+  [ "$(command -v "$1")" = "/usr/bin/$1" ] || return 0
+  xcode-select -p >/dev/null 2>&1
+}
 say()  { printf '%s\n' "$*"; }
 # Indirect lookup of a per-role variable (<role>_CMDS / <role>_INSTALL); the
 # `:-` default keeps `set -u` happy when a slot is left unset.
@@ -137,9 +147,9 @@ say "Developer workstation (process.md §7). Product deps are scripts/setup.sh."
 say
 
 # --- Detect + report (every tier does this first) ----------------------------
-if have python3 || have python; then RUNTIME=1; else RUNTIME=0; fi
-report "runtime (python3)"          "$RUNTIME"                        "install a Python 3.8+ runtime"
-report "git"                        "$(have git && echo 1 || echo 0)" "install git (needed to make reviewable changes)"
+if real python3 || real python; then RUNTIME=1; else RUNTIME=0; fi
+report "runtime (python3)"          "$RUNTIME"                        "install a Python 3.8+ runtime (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
+report "git"                        "$(real git && echo 1 || echo 0)" "install git — needed to make reviewable changes (macOS: xcode-select --install)"
 report "offline Markdown+Mermaid renderer" \
        "$(renderer_present && echo 1 || echo 0)" \
        "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
