@@ -307,3 +307,42 @@ triaged before re-attestation. Spine-relevant: **B1** re-routed SR-039/041/042
 `SN-Refs` to the needs their text states (SR-041→SN-010; SR-039/042 +SN-012) —
 SN coverage only widened, trace stays 0 orphans. So the pending re-attestation
 now covers a **reviewed, corrected** spine, not the as-first-written one.
+
+## 2026-07-10 — SPINE CHANGE (ClaudeGuardChecks integration, Phases 1–4): SR-043 added; SR-034 Inspection→Analysis; G3 re-run PASS; RE-ATTESTATION still PENDING
+
+Owner-directed batch (review deferred) integrating the reviewed findings from
+`C:\Projects\ClaudeGuardChecks` — spec of record: its `INTEGRATION_PLAN.md`.
+Records live here + in `work-items.csv` (WI-045…048), **not** in
+`IMPROVEMENT_PLAN.md`, which this session archives (below).
+
+- **Phase 1 (docs, b443c9d)** — three sharp working-agreement framings distilled
+  into `AGENTS.template.md` (the contradiction is the deliverable; scope is a
+  promise; every line is a liability), byte-neutral (9976→9978). No spine change.
+- **Phase 2 (docs, 379ed76)** — named `TheColliny/FableClaudeMDForOpus` as the
+  reference vendorable upstream for the guardrails layer (worked `UPSTREAM` pin).
+  The upstream's own content enrichment is **deferred** pending the owner's
+  target-repo ruling (it edits a published external repo). No spine change.
+- **Phase 3 (e6afac7)** — the **enforcement-audit** discipline (PROCESS_OPTIONS +
+  `docs/enforcement-audit.md` dogfood) and **SR-034/TC-034 promoted
+  Inspection→Analysis**, mechanized by `tests/test_stdlib_only.py`. Reviewer
+  charter gained the claims-verification line. Finding filed: the `Implements:`
+  back-link convention is unenforced (Prose gap; not built).
+- **Phase 4 (73b5bd0)** — **SR-043**, a Claude `PreToolUse` subagent-spawn gate
+  for unattended runs (`scripts/subagent_gate.py`; deny-by-default, launcher-held
+  override, fail-open) — the one code adoption, adapted from stop-subagent-fanout
+  (MIT). Materialized Claude-only; the agent-neutral floor is untouched.
+
+**Mechanized bar (this session):** `check.py --gate G3` → **RESULT: PASS
+(12/12)** (`tests+coverage` 610.9 s, the 80 % coverage floor enforced);
+`pytest -q` **470 passed, 2 skipped**; trace **SN=22 SR=43 LLR=40 TC=43,
+0 orphans / integrity / schema**. Verification basis: of 43 Verified SRs,
+**43 mechanized, 0 attested** (40 Test · 2 Analysis · 1 Inspection) — SR-034
+moved Inspection→Analysis and SR-043 is a new Test; the sole remaining
+Inspection is SR-036 (deliberate re-sync process).
+
+**G3 re-attestation:** ⏳ **still PENDING the owner** — this batch *widens* the
+already-pending re-attestation: a Verified SR's text changed (SR-034) and a new
+SR joined the spine (SR-043). Recorded as the `Needs <human>` item in
+`docs/status.md`. Deviation recorded: SR-043 was written script-then-test (not
+strict failing-first) on an existing G3 repo; TC-043 exercises real code plus a
+positive control.

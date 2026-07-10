@@ -89,14 +89,18 @@ def test_hook_allows_when_off(tmp_path):
     _write_policy(tmp_path, "off")
     proc = run_hook({"tool_name": "Task"}, tmp_path)
     assert proc.returncode == 0
-    assert json.loads(proc.stdout)["hookSpecificOutput"]["permissionDecision"] == "allow"
+    assert (
+        json.loads(proc.stdout)["hookSpecificOutput"]["permissionDecision"] == "allow"
+    )
 
 
 def test_hook_override_allows_under_deny(tmp_path):
     _write_policy(tmp_path, "deny")
     proc = run_hook({"tool_name": "Task"}, tmp_path, {"SUBAGENT_GATE": "allow"})
     assert proc.returncode == 0
-    assert json.loads(proc.stdout)["hookSpecificOutput"]["permissionDecision"] == "allow"
+    assert (
+        json.loads(proc.stdout)["hookSpecificOutput"]["permissionDecision"] == "allow"
+    )
 
 
 def test_hook_defers_non_spawn_tool_silently(tmp_path):

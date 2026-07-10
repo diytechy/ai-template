@@ -39,7 +39,17 @@ def stdlib_top_level_names():
             names.add(entry[:-3])
         elif os.path.isdir(path) and os.path.exists(os.path.join(path, "__init__.py")):
             names.add(entry)
-    names |= {"fcntl", "msvcrt", "winreg", "termios", "grp", "pwd", "posix", "nt", "_winapi"}
+    names |= {
+        "fcntl",
+        "msvcrt",
+        "winreg",
+        "termios",
+        "grp",
+        "pwd",
+        "posix",
+        "nt",
+        "_winapi",
+    }
     return names
 
 
@@ -77,8 +87,8 @@ def test_no_kit_script_imports_third_party():
         found = third_party_imports(path.read_text(encoding="utf-8"), entry, allowed)
         if found:
             offenders[entry] = found
-    assert not offenders, "third-party imports found (kit must stay stdlib-only): {}".format(
-        offenders
+    assert not offenders, (
+        "third-party imports found (kit must stay stdlib-only): {}".format(offenders)
     )
 
 
@@ -86,6 +96,8 @@ def test_detector_flags_a_third_party_import():
     """Positive control: the scan actually catches a third-party import, so a
     green above is a real pass, not a vacuous one."""
     allowed = stdlib_top_level_names() | local_script_stems()
-    src = "import os\nimport requests\nfrom numpy import array\nimport check_trajectory\n"
+    src = (
+        "import os\nimport requests\nfrom numpy import array\nimport check_trajectory\n"
+    )
     found = third_party_imports(src, "<synthetic>", allowed)
     assert found == ["numpy", "requests"]  # os + the local sibling are not flagged
