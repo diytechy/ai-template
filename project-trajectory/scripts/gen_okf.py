@@ -83,6 +83,9 @@ def real_rows(rows, key, prefix):
 
 
 def sn_rows(root):
+    # Kept byte-for-byte in sync with gen_trajectory._sn_rows (small stable
+    # helper duplicated per the F5 rule; they once drifted — REVIEW_GRIND_FULL
+    # C6). Change both together: skip `-000`, id-sort.
     md = root / "docs/requirements/stakeholder-needs.md"
     rows = []
     if not md.exists():

@@ -91,6 +91,40 @@ def make_reviewer(tmp_path, name, body):
     return "sh " + _posix(script)
 
 
+def test_pre_push_honors_kit_scripts_dir(repo):
+    # C4: the harness-elsewhere layout (KIT_SCRIPTS_DIR, WI-1.42) must reach the
+    # secrets floor at the push boundary too — not just pre-commit. Relocate the
+    # harness and point the env var at it: a key in the outgoing range still
+    # blocks (scripts found via the override); without the var, scripts/ is
+    # absent at the root so the floor can't run and the push would slip through.
+    root, base, _head = repo
+    shutil.move(str(root / "scripts"), str(root / "harness_scripts"))
+    key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"  # split so this line isn't a match
+    keyed = commit_file(root, "leak.txt", key, "add config")
+
+    def run(with_override):
+        env = dict(os.environ)
+        for var in ("LOGNAME", "USER", "LNAME", "USERNAME"):
+            env[var] = FAKE_USER
+        env.pop("REVIEW_CMD", None)
+        if with_override:
+            env["KIT_SCRIPTS_DIR"] = "harness_scripts"
+        return subprocess.run(
+            [shutil.which("sh"), HOOK, "origin", "https://example.invalid/r.git"],
+            cwd=str(root),
+            input=push_line(keyed, base),
+            capture_output=True,
+            text=True,
+            env=augment_env(env),
+        )
+
+    blocked = run(with_override=True)
+    assert blocked.returncode != 0, blocked.stdout + blocked.stderr
+    assert "secrets floor" in blocked.stderr
+    slipped = run(with_override=False)  # harness unfindable -> floor skips, exit 0
+    assert slipped.returncode == 0, slipped.stdout + slipped.stderr
+
+
 def test_privacy_off_is_inert(repo):
     # The scaffolded default: no reviewer wired, a push flows through — the
     # backstop costs unconcerned repos nothing.

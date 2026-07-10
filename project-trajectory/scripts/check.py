@@ -164,6 +164,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "trajectory",
         "arch-map",
         "trajectory-map",
+        "okf",
     }
 )
 
@@ -198,13 +199,25 @@ def _pget(profile, section, option, fallback):
     return profile.get(section, option) if _has(profile, section, option) else fallback
 
 
+def _split_template(template):
+    """Whitespace-split a command template WITHOUT posix backslash-escaping, so a
+    Windows path value in a stack.ini command (`.venv\\Scripts\\eslint`) keeps
+    its separators — a bare shlex.split (posix escaping) would eat them to
+    `.venvScriptseslint`. Same tokenizer agent_loop.split_cmd uses; kept a small
+    duplicated helper per the F5 rule (REVIEW_GRIND_FULL C2)."""
+    lex = shlex.shlex(template, posix=True)
+    lex.whitespace_split = True
+    lex.escape = ""
+    return list(lex)
+
+
 def _expand(template, subs):
     """Split a command TEMPLATE into argv, THEN substitute {py}/{src}/{tests}/
     {coverage} per token. Splitting first keeps a Windows interpreter path
     (spaces, backslashes) intact — substituting into the raw string and then
     splitting would mangle it."""
     argv = []
-    for tok in shlex.split(template):
+    for tok in _split_template(template):
         for key, val in subs.items():
             tok = tok.replace("{" + key + "}", val)
         argv.append(tok)

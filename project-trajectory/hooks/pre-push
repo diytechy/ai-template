@@ -44,7 +44,26 @@
 # Disable: git config --unset core.hooksPath
 set -e
 
-REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+# Authoritative repo root (works when this shipped hook is DELEGATED from a
+# wrapper elsewhere), with the .githooks/../ fallback — same as pre-commit.
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+
+# Locate the kit scripts dir honoring KIT_SCRIPTS_DIR (env / delegating wrapper)
+# before the default scripts/ | Scripts/ — the harness-elsewhere layout
+# (WI-1.42) that pre-commit already supports; pre-push/commit-msg must too, or a
+# privacy-checked repo with that layout fails its push closed for the wrong
+# reason (REVIEW_GRIND_FULL C4). Echoes the found dir, or empty.
+find_scripts_dir() {
+  if [ -n "${KIT_SCRIPTS_DIR:-}" ]; then
+    case "$KIT_SCRIPTS_DIR" in
+      /*) [ -d "$KIT_SCRIPTS_DIR" ] && { printf '%s' "$KIT_SCRIPTS_DIR"; return; } ;;
+      *)  [ -d "$REPO_ROOT/$KIT_SCRIPTS_DIR" ] && { printf '%s' "$REPO_ROOT/$KIT_SCRIPTS_DIR"; return; } ;;
+    esac
+  fi
+  for sd in scripts Scripts; do
+    if [ -d "$REPO_ROOT/$sd" ]; then printf '%s' "$REPO_ROOT/$sd"; return; fi
+  done
+}
 
 # Privacy gate — same parse as pre-commit / commit-msg. Off / absent = not a
 # privacy-checked repo (the secrets-floor-only branch below still guards it).
@@ -66,10 +85,7 @@ if [ "$privacy" != "true" ]; then
       PY="$cand"; break
     fi
   done
-  SCRIPTS_DIR=""
-  for sd in scripts Scripts; do
-    if [ -d "$REPO_ROOT/$sd" ]; then SCRIPTS_DIR="$REPO_ROOT/$sd"; break; fi
-  done
+  SCRIPTS_DIR=$(find_scripts_dir)
   if [ -z "$PY" ] || [ -z "$SCRIPTS_DIR" ]; then exit 0; fi
   zero=0000000000000000000000000000000000000000
   status=0
@@ -100,12 +116,7 @@ for cand in python3 python; do
     PY="$cand"; break
   fi
 done
-SCRIPTS_DIR=""
-for sd in scripts Scripts; do
-  if [ -d "$REPO_ROOT/$sd" ]; then
-    SCRIPTS_DIR="$REPO_ROOT/$sd"; break
-  fi
-done
+SCRIPTS_DIR=$(find_scripts_dir)
 if [ -z "$PY" ] || [ -z "$SCRIPTS_DIR" ]; then
   echo "pre-push: docs/privacy-check is enabled but Python 3 or scripts/ cannot" >&2
   echo "  be found, so the privacy review cannot run." >&2

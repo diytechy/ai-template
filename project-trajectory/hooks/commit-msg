@@ -17,7 +17,9 @@
 # One POSIX hook covers every platform (Git for Windows runs hooks through sh).
 set -e
 
-REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+# Authoritative repo root (works when delegated from a wrapper elsewhere), with
+# the .githooks/../ fallback — same as pre-commit.
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
 # Find a Python 3 interpreter (same probe as pre-commit: run it, don't just find
 # it — Windows' Store alias resolves on PATH but exits nonzero). No Python =
@@ -33,16 +35,27 @@ if [ -z "$PY" ]; then
   exit 0
 fi
 
-# Locate scripts/ relative to the repo root (accept Scripts/ on case-preserving
-# NTFS, same as pre-commit).
+# Locate the kit scripts dir honoring KIT_SCRIPTS_DIR (env / delegating wrapper)
+# before the default scripts/ | Scripts/ — the harness-elsewhere layout WI-1.42
+# gave pre-commit; the message scan must honor it too, or a repo with that
+# layout silently never scans commit messages (REVIEW_GRIND_FULL C4).
 SCRIPTS_DIR=""
-for sd in scripts Scripts; do
-  if [ -d "$REPO_ROOT/$sd" ]; then
-    SCRIPTS_DIR="$REPO_ROOT/$sd"; break
-  fi
-done
-if [ -z "$SCRIPTS_DIR" ]; then
-  echo "commit-msg: cannot find scripts/ dir under $REPO_ROOT; skipping message scan." >&2
+if [ -n "${KIT_SCRIPTS_DIR:-}" ]; then
+  case "$KIT_SCRIPTS_DIR" in
+    /*) SCRIPTS_DIR="$KIT_SCRIPTS_DIR" ;;
+    *)  SCRIPTS_DIR="$REPO_ROOT/$KIT_SCRIPTS_DIR" ;;
+  esac
+fi
+if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
+  SCRIPTS_DIR=""
+  for sd in scripts Scripts; do
+    if [ -d "$REPO_ROOT/$sd" ]; then
+      SCRIPTS_DIR="$REPO_ROOT/$sd"; break
+    fi
+  done
+fi
+if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
+  echo "commit-msg: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/) under $REPO_ROOT; skipping message scan." >&2
   exit 0
 fi
 

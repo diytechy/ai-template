@@ -91,14 +91,20 @@ WORKSTREAM_LABELS = {
 
 
 def _sn_rows(root):
-    """Full stakeholder-need rows (id, need, why, acceptance) from the md table."""
+    """Full stakeholder-need rows (id, need, why, acceptance) from the md table,
+    the `-000` placeholder skipped and the rows id-sorted for determinism.
+
+    Kept byte-for-byte in sync with gen_okf.sn_rows (a small stable helper
+    duplicated per the F5 rule, not shared) — the two once drifted (one kept
+    `-000`, one didn't), which rendered a phantom SN-000 root in the icicle
+    (REVIEW_GRIND_FULL C6). Change both together."""
     md = root / "docs/requirements/stakeholder-needs.md"
     rows = []
     if not md.exists():
         return rows
     for line in md.read_text(encoding="utf-8").splitlines():
         m = re.match(r"\|\s*(SN-\d+)\s*\|(.*)", line)
-        if not m:
+        if not m or m.group(1).endswith("-000"):
             continue
         cells = [re.sub(r"\*\*|`", "", c).strip() for c in m.group(2).split("|")]
         rows.append(
@@ -109,7 +115,7 @@ def _sn_rows(root):
                 "acceptance": cells[3] if len(cells) > 3 else "",
             }
         )
-    return rows
+    return sorted(rows, key=lambda r: r["id"])
 
 
 def read_sns(root):

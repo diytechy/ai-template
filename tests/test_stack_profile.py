@@ -217,13 +217,40 @@ def test_extra_step_runs_via_run_step(scaffold):
     assert "PASS" in proc.stdout and "hello" in proc.stdout
 
 
-def test_extra_step_shadowing_a_builtin_fails_loudly(scaffold):
-    (scaffold / "docs" / "stack.ini").write_text(
-        "[step:lint]\ncommand = {py} x.py\n", encoding="utf-8"
+def test_every_builtin_step_name_is_guarded_against_shadowing(scaffold):
+    # REVIEW_GRIND_FULL C1: the shadow guard must protect EVERY built-in step
+    # name, not one hardcoded example — `okf` was a real step missing from
+    # BUILTIN_STEP_NAMES, so a downstream [step:okf] silently duplicated. Iterate
+    # the guard set AND the actual plan so the two can never drift apart again.
+    check = load_script("check")
+    plan_names = {s[0] for s in check.steps(80, "full", "all")}
+    assert plan_names <= check.BUILTIN_STEP_NAMES, (
+        "steps() emits names absent from BUILTIN_STEP_NAMES (shadow-guard hole): "
+        + str(sorted(plan_names - check.BUILTIN_STEP_NAMES))
     )
-    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
-    assert proc.returncode != 0
-    assert "shadows a built-in step" in (proc.stdout + proc.stderr)
+    ini = scaffold / "docs" / "stack.ini"
+    for name in sorted(check.BUILTIN_STEP_NAMES):
+        ini.write_text(
+            "[step:{}]\ncommand = {{py}} x.py\n".format(name), encoding="utf-8"
+        )
+        proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+        assert proc.returncode != 0, "[step:{}] must be rejected".format(name)
+        assert "shadows a built-in step" in (proc.stdout + proc.stderr)
+
+
+def test_stack_ini_command_preserves_windows_backslash_path(scaffold):
+    # C2: a native Windows path in a stack.ini command value must survive the
+    # split intact — a posix-escaping shlex.split would eat the backslashes to
+    # `.venvScriptseslint`, so run_step's PATH probe would never resolve it.
+    check = load_script("check")
+    ini = scaffold / "docs" / "stack.ini"
+    ini.write_text(
+        "[product]\nlint = .venv\\Scripts\\eslint --fix {src}\n", encoding="utf-8"
+    )
+    profile = check.load_profile(ini)
+    raw = check._pget(profile, "product", "lint", check.BUILTIN_PRODUCT["lint"])
+    argv = check._expand(raw, {"src": "src", "py": "python"})
+    assert argv[0] == ".venv\\Scripts\\eslint", argv
 
 
 def test_extra_step_without_command_fails_loudly(scaffold):
