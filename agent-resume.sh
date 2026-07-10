@@ -21,6 +21,10 @@ AGENT_CMD="claude -p {prompt} --model {model} --output-format json --dangerously
 # Kit work is gate-bearing template design — default to the strong tier.
 AGENT_MODEL="opus"
 AGENT_MODEL_MAP=""
+# Optional per-phase COMMAND template map (cross-provider routing; pairs
+# with the docs/review-policy reviewer dial), e.g.:
+#   AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt} --model {model}"
+AGENT_CMD_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):
 AGENT_CMD_INTERACTIVE="claude --model {model} {prompt}"
 # Meta-repo resume prompt: the engine's default prompt assumes a scaffolded
@@ -37,7 +41,7 @@ if [ -z "$AGENT_CMD" ]; then
   echo "sessions; see project-trajectory/PROCESS_OPTIONS.md 'Unattended operation'." >&2
   exit 1
 fi
-export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_CMD_INTERACTIVE
+export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
 PY="$(command -v python3 || command -v python)" || {
   echo "agent-resume.sh: python3 not found." >&2; exit 1;
 }

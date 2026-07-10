@@ -21,6 +21,7 @@ What it creates in the destination:
     docs/gate-policy                           <- gate-policy.template  (authority: attended)
     docs/privacy-check                         <- privacy-check.template  (privacy: off)
     docs/push-policy                           <- push-policy.template  (policy: human)
+    docs/review-policy                         <- review-policy.template  (reviewers: 1)
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
     docs/plan.md                               <- PLAN.template.md  (plan/build session blocks)
@@ -893,6 +894,10 @@ MAPPING = [
     # gate advance. Scaffolds `attended`; --gate-policy sets a non-default
     # level and pre-fills the deviation-register skeleton for it.
     ("gate-policy.template", "docs/gate-policy"),
+    # The reviewer dial (AGENT_ROLES R1, process-options.md "Unattended
+    # operation"): how many independent fresh-context review verdicts a WI
+    # gets (0|1|2). Default `1`; floors above the dial live in the file.
+    ("review-policy.template", "docs/review-policy"),
     # The privacy-check toggle (Thread 38 -> identity/privacy reframe,
     # process-options.md "Commit identity & privacy"): `false` by default;
     # --privacy-check overrides.

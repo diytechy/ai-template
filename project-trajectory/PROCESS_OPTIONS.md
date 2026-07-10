@@ -421,6 +421,33 @@ The cadence needs no coordinator to be useful — an attended human alternating
 "plan on the strong tier, execute on the cheap one" across hands-on sessions is
 the same protocol with a person as the model map.
 
+**The reviewer dial + cross-provider routing (`docs/review-policy` +
+`AGENT_CMD_MAP`).** `docs/review-policy` declares how many independent
+fresh-context review verdicts a completed work item gets before the integrator
+accepts it — **`0 | 1 | 2`, default `1`** (the file's comment block carries the
+full semantics). Floors sit *above* the dial: a gate advance under
+`gate-policy: autonomous` always needs ≥1 recorded verdict, and a WI touching
+the spine registries recommends `2`. Two reviewers split **charters**, never
+duplicate coverage — A = method/risk/corner cases, B = process/trace/prose —
+because two samples of one model share blind spots; for the same reason
+**cross-provider is the recommended `2` pairing**, and `AGENT_CMD_MAP` (or
+`--cmd-map`) makes it first-class: a per-phase *command-template* map in the
+`--model-map` syntax (`AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt}"`), matched
+against `docs/run-phase` — whose keys are free-form, so `REVIEW-A`/`REVIEW-B`
+phases just work — falling back to the single `AGENT_CMD`. (A template that
+itself needs `,`/`;` routes through a thin dispatcher wrapper instead.) Review
+dispatch stays the **zero-code convention**: the previous session sets
+`run-phase` and names "review WI-x" in `status.md`; the loop surfaces the dial
+in its banner but never enforces it — the harness pass is the entry ticket,
+the recorded verdict is the value. A reviewer is **independent** (no shared
+transcript with the implementer; input = the diff + the WI + the TCs) and
+fixes directly only what lies within the WI's own declared scope — anything
+else is *filed as a finding* for the integrator. Related tripwire: the
+coordinator warns (never blocks) when a lane's `status.md` outgrows one screen
+(`AGENT_STATUS_WARN_BYTES`, default 8192, `0` silences) — every session
+inherits that resume surface, so pruning it is the integrator's charter,
+with evidence living in `log.md` and the iteration logs.
+
 **Session discipline.**
 
 - **Commit every session** — the stall guard makes an empty session an abort

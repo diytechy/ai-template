@@ -17,6 +17,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/gate-policy",
         "docs/privacy-check",
         "docs/push-policy",
+        "docs/review-policy",
         "docs/kit-profile",
         "docs/status.md",
         "docs/log.md",

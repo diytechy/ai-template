@@ -24,7 +24,12 @@ this every run.
 Per session the coordinator:
   - reads docs/run-phase (optional) and picks the model: --model-map
     "PHASE=model,PHASE=model" (or AGENT_MODEL_MAP), falling back to --model /
-    AGENT_MODEL;
+    AGENT_MODEL — and the COMMAND template the same way: --cmd-map /
+    AGENT_CMD_MAP maps a phase to a whole template (first-class cross-provider
+    routing; REVIEW-A/REVIEW-B keys are free-form), falling back to AGENT_CMD.
+    docs/review-policy (the reviewer dial, 0|1|2) is surfaced in the banner;
+    the loop never enforces it — review dispatch is the run-phase + status.md
+    convention (AGENT_ROLES R1/R2);
   - runs one fresh headless session (stdin closed; optional
     --session-timeout so a hung session can't wedge the loop);
   - writes the raw transcript to gitignored out/run-logs/ and a size-bounded
@@ -396,6 +401,26 @@ def build_argv(template, model, prompt):
     if not saw_prompt:
         argv.append(prompt)
     return argv
+
+
+def status_size_warning(status_path, limit):
+    """A warn-only message when the resume surface outgrew one screen, or None.
+
+    Every session inherits the lane's status.md; a bloated one is the
+    file-world analogue of a full context window (AGENT_ROLES R3). Advisory
+    only — the integrator's prune charter is the fix; limit <= 0 disables."""
+    try:
+        size = status_path.stat().st_size
+    except OSError:
+        return None  # no surface yet — nothing to warn about
+    if limit <= 0 or size <= limit:
+        return None
+    return (
+        "{} is {} bytes (> {}): every session inherits this resume surface — "
+        "prune it to one screen (the integrator charter; evidence belongs in "
+        "log.md / the iteration logs). AGENT_STATUS_WARN_BYTES tunes or "
+        "silences (0) this warning.".format(status_path, size, limit)
+    )
 
 
 def parse_model_map(spec):
@@ -842,6 +867,18 @@ def main():
         "against docs/run-phase (default: AGENT_MODEL_MAP env var)",
     )
     ap.add_argument(
+        "--cmd-map",
+        default=os.environ.get("AGENT_CMD_MAP", ""),
+        help='per-phase agent COMMAND template map "REVIEW-B=gemini -p '
+        '{prompt},BUILD=claude -p {prompt} --model {model}" matched against '
+        "docs/run-phase, falling back to the single AGENT_CMD template — "
+        "first-class cross-provider routing (AGENT_ROLES R6; cross-provider "
+        "dual review is the recommended review-policy 2 pairing). Same "
+        "syntax/parser as --model-map, so a template must not itself contain "
+        "',' or ';' — for one that does, use a thin dispatcher wrapper "
+        "instead (default: AGENT_CMD_MAP env var)",
+    )
+    ap.add_argument(
         "--prompt",
         default=DEFAULT_PROMPT,
         help="resume prompt passed to each session (default: the kit's "
@@ -888,11 +925,26 @@ def main():
     )
     try:
         model_map = parse_model_map(args.model_map)
+        cmd_map = parse_model_map(args.cmd_map)  # same "KEY=value" syntax
     except ValueError as exc:
         print("agent_loop: {}".format(exc), file=sys.stderr)
         return EXIT_PREFLIGHT
 
     failures = preflight(root, template, args)
+    # Every per-phase template must be as launchable as the default one — a
+    # broken REVIEW-B entry must fail before iteration 1, not at the first
+    # review session mid-run (the preflight contract).
+    for ph, tmpl in sorted(cmd_map.items()):
+        try:
+            argv = build_argv(tmpl, "model", "prompt")
+            exe = argv[0]
+            if not (shutil.which(exe) or Path(exe).exists()):
+                failures.append(
+                    "cmd-map [{}]: agent CLI not found: {!r} is not on "
+                    "PATH.".format(ph, exe)
+                )
+        except (ValueError, IndexError) as exc:
+            failures.append("cmd-map [{}]: cannot parse template: {}".format(ph, exc))
     if failures:
         print("agent_loop: preflight failed —", file=sys.stderr)
         for f in failures:
@@ -927,11 +979,28 @@ def main():
 
     gate_policy = read_declared(docs / "gate-policy", "attended")
     push_policy = read_declared(docs / "push-policy", "human")
+    review_policy = read_declared(docs / "review-policy", "1")
     _, branch = git(root, "branch", "--show-current")
+
+    # The resume-surface size preflight (AGENT_ROLES R3, warn-only): every
+    # session inherits the lane's status.md, so a bloated one is the file-world
+    # version of a full context window. The integrator's charter is to prune it
+    # to one screen; this is the cheap tripwire, never a gate.
+    warn = status_size_warning(
+        lane / "status.md", int(os.environ.get("AGENT_STATUS_WARN_BYTES", "8192"))
+    )
+    if warn:
+        print("agent_loop: WARNING - " + warn, file=sys.stderr)
 
     def session_model():
         phase = read_declared(lane / "run-phase", "")
         return phase, model_map.get(phase, args.model)
+
+    def session_template(phase):
+        """The per-phase command template (AGENT_CMD_MAP), else AGENT_CMD —
+        run-phase keys are free-form, so REVIEW-A/REVIEW-B route providers
+        without any loop change (AGENT_ROLES R6)."""
+        return cmd_map.get(phase, template)
 
     guardrails_policy = read_declared(docs / "guardrails-policy", "off")
     # Surface a stale/typo'd policy token before the run: if it names a substring
@@ -983,12 +1052,16 @@ def main():
     atexit.register(release_lock, lock_path)
 
     if args.interactive:
+        phase, model = session_model()
+        # Explicit interactive template wins; then the per-phase map; then the
+        # default — so a REVIEW-phase interactive sitting uses the same
+        # provider routing the unattended leg would.
         itemplate = (
             args.interactive_cmd
             if args.interactive_cmd is not None
-            else os.environ.get("AGENT_CMD_INTERACTIVE", "") or template
+            else os.environ.get("AGENT_CMD_INTERACTIVE", "")
+            or session_template(phase)
         )
-        phase, model = session_model()
         print(
             "=== one interactive session | track={} phase={} model={} ===".format(
                 track or "—", phase or "—", model or "—"
@@ -1003,7 +1076,11 @@ def main():
     print("track: {} | lane: {}".format(track or "(single-lane)", lane))
     print(
         "gate-policy: {} | push-policy: {} (the coordinator never pushes "
-        "under 'human')".format(gate_policy, push_policy)
+        "under 'human') | review-policy: {} (docs/review-policy — the "
+        "reviewer dial; surfaced here, enforced by the integrator "
+        "convention, never by the loop)".format(
+            gate_policy, push_policy, review_policy
+        )
     )
     print(
         "guardrails-policy: {} (docs/guardrails-policy — the vendored core is "
@@ -1011,6 +1088,8 @@ def main():
         "model)".format(guardrails_policy)
     )
     print("agent command: {}".format(template))
+    for ph in sorted(cmd_map):
+        print("  cmd-map [{}]: {}".format(ph, cmd_map[ph]))
     print(
         "CONSENT: sessions run headless; a permission-bypass flag in "
         "AGENT_CMD means unattended edits without prompts — you consented by "
@@ -1037,11 +1116,12 @@ def main():
         stamp = time.strftime("%Y%m%d-%H%M%S")
         before = head_sha(root)
         phase, model = session_model()
-        if not model and "{model}" in template:
+        tmpl = session_template(phase)
+        if not model and "{model}" in tmpl:
             print(
-                "agent_loop: AGENT_CMD carries a {model} placeholder but no "
-                "model is configured for this phase (--model / --model-map / "
-                "AGENT_MODEL).",
+                "agent_loop: the session's command template carries a {model} "
+                "placeholder but no model is configured for this phase "
+                "(--model / --model-map / AGENT_MODEL).",
                 file=sys.stderr,
             )
             return EXIT_PREFLIGHT
@@ -1056,7 +1136,7 @@ def main():
             )
         )
         prompt, guarded = session_prompt(model)
-        argv = build_argv(template, model, prompt)
+        argv = build_argv(tmpl, model, prompt)
         code, output, timed_out = run_session(argv, root, args.session_timeout)
 
         try:

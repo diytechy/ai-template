@@ -47,6 +47,7 @@ _Unattended coordinator: loop fresh agent driver sessions until done._
 | `guardrails_inert(policy, models)` | True when a *guarding* policy (not off / bare all) would guard none of the |  |
 | `split_cmd(template)` | Split a command template into tokens, quote-aware but with backslash |  |
 | `build_argv(template, model, prompt)` | Substitute {model}/{prompt} per token (never through a shell, so the |  |
+| `status_size_warning(status_path, limit)` | A warn-only message when the resume surface outgrew one screen, or None. |  |
 | `parse_model_map(spec)` | "P0=model-a,G3=model-b" -> {"P0": "model-a", "G3": "model-b"}. |  |
 | `git(root, *args)` | Run git in the repo; returns (returncode, stdout-stripped). |  |
 | `head_sha(root)` | Short HEAD sha, or None on a zero-commit repo (guarded rev-parse). |  |

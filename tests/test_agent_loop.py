@@ -227,6 +227,85 @@ def test_phase_model_map_picks_the_declared_tier(loop_repo):
     assert models == ["strong-tier"]
 
 
+def test_phase_cmd_map_routes_the_command_template(loop_repo, tmp_path):
+    # AGENT_ROLES R6 / WI-042: --cmd-map (AGENT_CMD_MAP) maps a run-phase to a
+    # whole COMMAND template — first-class cross-provider routing — falling
+    # back to AGENT_CMD. A REVIEW-B phase must invoke the second "provider"
+    # (a second fake CLI with its own control dir) and never the default one.
+    repo, ctl, template = loop_repo
+    ctl_b = tmp_path / "control-b"
+    ctl_b.mkdir()
+    fake_b = tmp_path / "fake_agent_b.py"
+    fake_b.write_text(FAKE_AGENT, encoding="utf-8")
+    template_b = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
+        sys.executable, fake_b, ctl_b
+    )
+    (repo / "docs" / "run-phase").write_text("REVIEW-B\n", encoding="utf-8")
+    (ctl_b / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template, "--cmd-map", "REVIEW-B={}".format(template_b))
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert _invocations(ctl_b) == 1, "the mapped phase must use its template"
+    assert _invocations(ctl) == 0, "the default template must not fire"
+    assert "cmd-map [REVIEW-B]" in proc.stdout  # surfaced in the banner
+
+
+def test_cmd_map_broken_entry_fails_preflight(loop_repo):
+    # A broken REVIEW-B entry must fail before iteration 1 (the preflight
+    # contract), not at the first review session mid-run.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(
+        repo, template, "--cmd-map", "REVIEW-B=no-such-cli-xyz -p {prompt}"
+    )
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "cmd-map [REVIEW-B]" in proc.stderr
+    assert _invocations(ctl) == 0
+
+
+def test_review_policy_surfaced_in_banner(loop_repo):
+    # WI-042: docs/review-policy (the reviewer dial) is surfaced at run start —
+    # and only surfaced: the loop never enforces it (R2's zero-code convention).
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    (repo / "docs" / "review-policy").write_text(
+        "# reviewer dial\n2\n", encoding="utf-8"
+    )
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "review-policy: 2" in proc.stdout
+
+
+def test_status_size_guard_warns_only(loop_repo):
+    # AGENT_ROLES R3: a bloated resume surface draws a warn-only preflight
+    # tripwire (every session inherits it); the run itself proceeds untouched.
+    repo, ctl, template = loop_repo
+    (repo / "docs" / "status.md").write_text(
+        STATUS_MD + ("filler line — evidence that belongs in log.md\n" * 400),
+        encoding="utf-8",
+    )
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr  # warn, never block
+    assert "prune it to one screen" in proc.stderr
+
+
+def test_status_size_warning_helper_edges():
+    # The helper is pure: absent file and limit<=0 (AGENT_STATUS_WARN_BYTES=0)
+    # both disable; an oversized file names the size and the charter.
+    from pathlib import Path
+
+    loop = load_script("agent_loop")
+    assert loop.status_size_warning(Path("no/such/status.md"), 8192) is None
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as td:
+        p = Path(td) / "status.md"
+        p.write_text("x" * 9000, encoding="utf-8")
+        assert loop.status_size_warning(p, 0) is None  # 0 disables
+        msg = loop.status_size_warning(p, 8192)
+        assert msg and "9000" in msg and "one screen" in msg
+
+
 def _vendor_core(repo, body):
     gdir = repo / "docs" / "guardrails"
     gdir.mkdir(parents=True, exist_ok=True)

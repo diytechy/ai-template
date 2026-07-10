@@ -23,6 +23,10 @@ REM Default model tier + optional per-phase map read against docs/run-phase.
 REM Kit work is gate-bearing template design — default to the strong tier.
 set "AGENT_MODEL=opus"
 set "AGENT_MODEL_MAP="
+REM Optional per-phase COMMAND template map (cross-provider routing; pairs
+REM with the docs/review-policy reviewer dial), e.g.:
+REM   set "AGENT_CMD_MAP=REVIEW-B=gemini -p {prompt} --model {model}"
+set "AGENT_CMD_MAP="
 REM Optional hands-on template for --interactive (defaults to AGENT_CMD):
 set "AGENT_CMD_INTERACTIVE=claude --model {model} {prompt}"
 REM Meta-repo resume prompt: the engine's default prompt assumes a scaffolded

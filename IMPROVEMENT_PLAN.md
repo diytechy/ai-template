@@ -6762,6 +6762,36 @@ continuity (same style as the session log above).
 > `pytest -q` + `check_docs` green (output in the commit); trace SN=22 SR=39
 > LLR=36 TC=39, 0 orphans. Byte-budgeted files untouched.
 
+> **WI-1.49 ✅ landed 2026-07-10 · The dynamic-layer build (WI-042 —
+> AGENT_ROLES R1/R3/R6 build calls; design was ratified 2026-07-09, this is
+> the wiring).** **(1) `AGENT_CMD_MAP` / `--cmd-map`:** a per-phase agent
+> *command-template* map in the `--model-map` syntax (parse_model_map reused),
+> matched against `docs/run-phase` (keys free-form, so `REVIEW-A`/`REVIEW-B`
+> just work), falling back to `AGENT_CMD` — first-class cross-provider
+> routing; every map entry is **preflighted** (parse + executable) so a broken
+> REVIEW-B entry fails before iteration 1, not mid-run; the `{model}` guard
+> and the interactive path use the per-phase template too. Recorded limit: a
+> template containing `,`/`;` needs the dispatcher-wrapper convention (same
+> parser as the model map — documented at the flag). **(2)
+> `docs/review-policy`** scaffolded (new `review-policy.template`, bootstrap
+> MAPPING + docstring; default `1`; the file's comment block carries the R1
+> semantics — 0|1|2, floors above the dial, split charters, cross-provider =
+> the recommended `2` pairing); the loop **surfaces it in the banner and never
+> enforces it** (R2's zero-code dispatch convention stands). **(3) The
+> status-size guard micro-call resolved to the cheap warn-only preflight**
+> (`status_size_warning`, pure/testable; `AGENT_STATUS_WARN_BYTES` default
+> 8192, `0` silences) — plus the integrator prune charter it points at.
+> `--prompt-map` stays **deferred until role drift** (as ratified). Docs: a
+> PROCESS_OPTIONS "reviewer dial + cross-provider routing" block (the shipped
+> operative statement — AGENT_ROLES.md stays meta-repo design history);
+> launcher templates + the meta launchers gain the `AGENT_CMD_MAP` slot.
+> **Spine: SR-040 + LLR-037 + TC-040**; 6 new tests (routing, preflight
+> failure, banner, warn-not-block, helper edges, scaffold file). **New-SR
+> question resolved yes** (a coordinator capability, not a restatement) — joins
+> the batched re-attestation ask. `pytest -q` + `check_docs` green (output in
+> the commit); trace SN=22 SR=40 LLR=37 TC=40, 0 orphans. Byte-budgeted files
+> untouched.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of
