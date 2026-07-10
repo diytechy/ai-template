@@ -302,7 +302,7 @@ _Generate the skills applicability index from the SKILL.md frontmatter._
 | `main()` |  |  |
 
 ### `scripts/gen_trajectory`
-_Generate the offline project-trajectory dashboard (docs/trajectory.html)._
+_Generate the offline project-state dashboard (root `PROJECT_STATE.html`)._
 Imports (internal): `check_trajectory`
 
 | Public item | Summary | Implements |
@@ -313,6 +313,8 @@ Imports (internal): `check_trajectory`
 | `project_vision(root)` | One-line vision: the README `PROJECT-VISION:` tag (the kit's canonical |  |
 | `project_name(root)` | The project's display name — the README's first H1, else the folder name. |  |
 | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
+| `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
+| `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
 | `build_html(root, wis)` |  |  |
 | `main()` |  |  |
 

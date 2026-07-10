@@ -97,7 +97,7 @@ fi
 "$PY" "$SCRIPTS_DIR/check.py" --run-step arch-map
 
 # 1b. Trajectory dashboard must be fresh — the same generated-artifact contract
-#     as the code map, staled far more often: docs/trajectory.html reads all four
+#     as the code map, staled far more often: PROJECT_STATE.html reads all four
 #     spine registries plus the README vision tag, so an ordinary requirement
 #     edit stales it, and CI-only checking makes that a push-long feedback loop
 #     (THREAD_52_REVIEW.md F2). The floor rule, stated once here: a generated

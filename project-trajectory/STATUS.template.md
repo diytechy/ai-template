@@ -18,7 +18,7 @@ decisions, session notes — appends to the log this header points at, never her
   default, costing nothing until a work item exists); once you use it
   (process-options.md "Trajectory / work-items layer") the **Next action** below
   names the next `WI-###`(s) from `docs/requirements/work-items.csv`, and
-  `docs/trajectory.html` renders the DAG.
+  the root `PROJECT_STATE.html` renders the DAG (+ the What/How views).
 
 ---
 

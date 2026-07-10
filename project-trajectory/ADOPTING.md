@@ -267,6 +267,14 @@ range to see exactly which templates/scripts changed before you touch anything.
   registry is renamed **`repos.csv` / `REPO-###`** (formerly
   `modules.csv`/`MOD-###`); the legacy file + ids are still read, and both may
   coexist mid-migration.
+- **`docs/trajectory.html` → root `PROJECT_STATE.html` (2026-07, WI-039).**
+  The trajectory dashboard evolved into the unified project-state artifact at
+  the repo **root** (adds the How-SW module-map view, the optional CMP table,
+  and a git-derived as-of stamp that `--check` ignores). Migration: after the
+  re-sync, delete your committed `docs/trajectory.html`, run
+  `python scripts/gen_trajectory.py`, and commit the new root file — the
+  `trajectory-map` gate/hook step name is unchanged and now checks the new
+  path automatically.
 - **The OKF knowledge bundle (2026-07, Thread 48).** Newer kits export the
   spine registries as a generated `docs/okf/` bundle, **on by default** with a
   pre-commit + G3 freshness gate. After a re-sync, either run

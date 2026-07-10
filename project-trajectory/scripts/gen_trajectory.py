@@ -1,27 +1,35 @@
 #!/usr/bin/env python3
-"""Generate the offline project-trajectory dashboard (docs/trajectory.html).
+"""Generate the offline project-state dashboard (root `PROJECT_STATE.html`).
 
 A *view*, never a source of truth (the `gen_arch_map.py` / `trace.py` idiom): it
-only renders `docs/requirements/work-items.csv` + the `SN->SR->LLR->TC` spine.
-The registry loading and validation are **reused from `check_trajectory.py`** (one
-home for the rules); this script adds the rendering. It emits one self-contained
-HTML file with a vision header, definition + execution %-meters, and two views:
+only renders `docs/requirements/work-items.csv` + the `SN->SR->LLR->TC` spine +
+the committed code map. The registry loading and validation are **reused from
+`check_trajectory.py`** (one home for the rules); this script adds the rendering.
+One self-contained HTML file — a vision header, a git-derived **as-of stamp**
+visible on open (never `now()`; excluded from the freshness compare, see
+ASOF_RE), definition + execution %-meters, and the model's views (WI-039, the
+ratified AXES artifact spec — formerly `docs/trajectory.html`):
 
-  1. **Architecture decomposition** — an SVG *icicle* of the SN->SR->LLR->TC spine
-     (block height leaf-proportional; hover highlights a subtree, click reads the
-     full text). Plain SVG generated here — no library.
-  2. **Work-item trajectory** — the WI dependency DAG as a **layered SVG** computed
-     in Python (topological rank -> crossing-reduced ordering -> coordinates ->
-     SVG), done/active/queued shading, hover highlights a node's neighbourhood,
-     click reads its detail. **No CDN / no JS layout library** — the kit's
-     offline-render principle (Thread 52 ruling A); the only script is a few lines
-     of inline vanilla JS wiring hover/click onto the pre-rendered SVG.
+  1. **What** — an SVG *icicle* of the SN->SR->LLR->TC spine (block height
+     leaf-proportional; hover highlights a subtree, click reads the full text).
+     Plain SVG generated here — no library.
+  2. **When** — the WI dependency DAG as a **layered SVG** computed in Python
+     (topological rank -> crossing-reduced ordering -> coordinates -> SVG),
+     done/active/queued shading, hover/click detail. **No CDN / no JS layout
+     library** — the kit's offline-render principle (Thread 52 ruling A).
+  3. **How (SW)** — the module map parsed from `docs/architecture.md`'s
+     generated block (a view of the committed code-map artifact; omitted when
+     there is no symbol inventory, e.g. files-mode).
+  4. **How (physical)** — the `CMP-###` component table when the optional
+     component layer carries real rows (the graph rendering is deferred-on-need
+     per the AXES ratification); omitted otherwise.
 
-Deterministic by construction (sorted inputs, fixed layout passes, no clocks), so
-the `--check` freshness gate is byte-stable — like `gen_arch_map.py --check`.
+Deterministic by construction (sorted inputs, fixed layout passes, no clocks;
+the as-of stamp derives from the last source-touching *commit*), so the
+`--check` freshness gate is byte-stable — like `gen_arch_map.py --check`.
 
 Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check]
-  (default)  regenerate docs/trajectory.html when the sources changed.
+  (default)  regenerate PROJECT_STATE.html when the sources changed.
   --check    validate + verify freshness without writing; nonzero exit if the
              registry is invalid or the committed HTML is stale.
 An absent or placeholder-only registry renders nothing and passes vacuously (the
@@ -34,6 +42,7 @@ import html
 import json
 import re
 import string
+import subprocess
 import sys
 from pathlib import Path
 
@@ -54,7 +63,17 @@ except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import check_trajectory as ct
 
-OUT_HTML = "docs/trajectory.html"
+# The unified project-state artifact at the repo ROOT (WI-039, the ratified
+# AXES spec): what was docs/trajectory.html, plus the How-SW view and the
+# git-derived as-of stamp. One self-contained file, all diagrams inside.
+OUT_HTML = "PROJECT_STATE.html"
+
+# The one line the --check byte-compare ignores: the as-of stamp derives from
+# the last commit touching the sources, so the artifact committed alongside a
+# source edit is legitimately one commit behind on that line alone — gating on
+# it would force a follow-up regen commit after every source commit. Content
+# freshness stays byte-exact; the stamp is informational.
+ASOF_RE = re.compile(r'<p class="asof">.*?</p>', re.S)
 
 # Workstream render order + display labels (the mutable grouping category on a
 # work item; legacy `Track` header still read); unknown ones fall through in
@@ -550,7 +569,7 @@ def dag_svg(wis):
 HTML_TEMPLATE = string.Template("""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>$project — Project Trajectory</title>
+<title>$project — Project State</title>
 <style>
   :root {
     color-scheme: light dark;
@@ -579,6 +598,11 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .hero { padding:2.25rem 0 1.5rem; }
   .hero h1 { font-size:1.05rem; text-transform:uppercase; letter-spacing:.08em;
              color:var(--muted); margin:0 0 .6rem; font-weight:600; }
+  .asof { color:var(--muted); font-size:.85rem; margin:.4rem 0 0; }
+  table.swmap { border-collapse:collapse; width:100%; font-size:.9rem; }
+  table.swmap th, table.swmap td { text-align:left; padding:.45rem .6rem;
+    border-bottom:1px solid var(--border); vertical-align:top; }
+  table.swmap .sub { color:var(--muted); font-size:.85em; }
   .vision { font-size:1.4rem; line-height:1.4; font-weight:600;
             letter-spacing:-.02em; margin:0; max-width:60ch; }
   .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
@@ -660,13 +684,14 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
 </style></head><body>
   <header class="top"><div class="top-inner">
     <span class="mark">$project<span class="dot">.</span></span>
-    <span class="top-sub">Project Trajectory</span>
+    <span class="top-sub">Project State</span>
   </div></header>
 
   <div class="wrap">
     <section class="hero">
       <h1>Vision</h1>
       <p class="vision">$vision</p>
+      <p class="asof">$asof</p>
 
       <div class="cards">
         <div class="card">
@@ -694,8 +719,9 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     </section>
 
     <nav class="tabs">
-      <button class="active" data-tab="arch">Architecture (SR breakdown)</button>
-      <button data-tab="dag">Trajectory (DAG)</button>
+      <button class="active" data-tab="arch">What (SR breakdown)</button>
+      <button data-tab="dag">When (roadmap DAG)</button>
+      $extra_tabs
     </nav>
 
     <section id="arch" class="panel active">
@@ -739,6 +765,8 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <span><i style="background:var(--queued)"></i>queued</span>
       </div>
     </section>
+
+    $extra_panels
 
     <footer>Generated by <code>scripts/gen_trajectory.py</code> from
       <code>work-items.csv</code> + the <code>SN→SR→LLR→TC</code> spine — a view,
@@ -819,6 +847,137 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
 """)
 
 
+def _asof(root):
+    """'state as of commit <sha> · <date>' from the last commit touching the
+    sources, or '' (no git / no commits). Git-derived, never now() — a wall
+    clock would make every regeneration a byte change; this changes only when
+    a source-touching commit lands, and --check ignores the line (ASOF_RE)."""
+    sources = [
+        p
+        for p in (
+            root / "docs" / "requirements" / "stakeholder-needs.md",
+            root / "docs" / "requirements" / "system-requirements.csv",
+            root / "docs" / "requirements" / "low-level-requirements.csv",
+            root / "docs" / "requirements" / "work-items.csv",
+            root / "docs" / "test" / "test-cases.csv",
+            root / "docs" / "architecture.md",
+            root / "README.md",
+        )
+        if p.exists()
+    ]
+    if not sources:
+        return ""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), "log", "-1", "--format=%h · %as", "--"]
+            + [str(p) for p in sources],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+    except OSError:
+        return ""
+    stamp = (proc.stdout or "").strip()
+    return "state as of commit {}".format(stamp) if proc.returncode == 0 and stamp else ""
+
+
+def sw_modules(root):
+    """[(module, summary, [public symbols])] parsed from architecture.md's
+    GENERATED MODULE MAP block — the committed arch-map artifact is the
+    How-SW source (a view of a view; no AST re-parse). Empty on a files-mode
+    map or a missing doc, and the panel is then omitted."""
+    md = root / "docs" / "architecture.md"
+    mods, current, inside = [], None, False
+    if not md.exists():
+        return mods
+    for line in md.read_text(encoding="utf-8").splitlines():
+        if "BEGIN GENERATED MODULE MAP" in line:
+            inside = True
+            continue
+        if "END GENERATED" in line:
+            inside = False
+            current = None
+            continue
+        if not inside:
+            continue
+        m = re.match(r"^### `([^`]+)`", line)
+        if m:
+            current = {"name": m.group(1), "summary": "", "symbols": []}
+            mods.append(current)
+            continue
+        if current is None:
+            continue
+        s = re.match(r"^\| `(\w+)[(`]", line)
+        if s:
+            current["symbols"].append(s.group(1))
+            continue
+        t = re.match(r"^_(.+)_$", line.strip())
+        if t and not current["summary"]:
+            current["summary"] = t.group(1)
+    return [m for m in mods if m["symbols"]]
+
+
+def cmp_rows(root):
+    """Real CMP-### component rows (the optional physical/component layer)."""
+    rows = ct.read_rows(root / "docs" / "requirements" / "components.csv")
+    return [
+        r
+        for r in rows
+        if (r.get("CMP-ID") or "").strip().startswith("CMP-")
+        and not (r.get("CMP-ID") or "").strip().endswith("-000")
+    ]
+
+
+def _sw_panel(mods):
+    tab = '<button data-tab="sw">How (SW architecture)</button>'
+    rows = []
+    for m in mods:
+        syms = ", ".join(m["symbols"][:8]) + ("…" if len(m["symbols"]) > 8 else "")
+        rows.append(
+            "<tr><td><code>{}</code></td><td>{}</td><td>{}<br>"
+            '<span class="sub"><code>{}</code></span></td></tr>'.format(
+                html.escape(m["name"]),
+                len(m["symbols"]),
+                html.escape(m["summary"]),
+                html.escape(syms),
+            )
+        )
+    panel = (
+        '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
+        '<p class="cap">The module map from <code>docs/architecture.md</code> — a view '
+        "of the generated code map (its <code>--check</code> keeps it honest against "
+        "the AST), unified here so one artifact answers What, How and When.</p>\n"
+        '<div style="overflow:auto"><table class="swmap"><thead><tr>'
+        "<th>Module</th><th>Public</th><th>Summary · symbols</th></tr></thead>"
+        "<tbody>{}</tbody></table></div>\n</section>".format("".join(rows))
+    )
+    return tab, panel
+
+
+def _cmp_panel(rows):
+    tab = '<button data-tab="cmp">How (physical)</button>'
+    body = []
+    for r in rows:
+        body.append(
+            "<tr>{}</tr>".format(
+                "".join(
+                    "<td>{}</td>".format(html.escape((r.get(k) or "").strip()))
+                    for k in ("CMP-ID", "Name", "Category", "State", "PartOf")
+                )
+            )
+        )
+    panel = (
+        '<section id="cmp" class="panel">\n<h2>Components (How — physical)</h2>\n'
+        '<p class="cap">The <code>CMP-###</code> component registry (membership derives '
+        "from <code>Component</code> tags on the primitives; the graph view is "
+        "deferred-on-need — this table is the honest current rendering).</p>\n"
+        '<div style="overflow:auto"><table class="swmap"><thead><tr>'
+        "<th>CMP</th><th>Name</th><th>Category</th><th>State</th><th>PartOf</th>"
+        "</tr></thead><tbody>{}</tbody></table></div>\n</section>".format("".join(body))
+    )
+    return tab, panel
+
+
 def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
@@ -827,12 +986,26 @@ def build_html(root, wis):
     workstreams = len({w["workstream"] for w in wis})
     arch, arch_details, arch_desc = arch_icicle(root)
     dag, wi_details = dag_svg(wis)
+    extra_tabs, extra_panels = [], []
+    mods = sw_modules(root)
+    if mods:
+        tab, panel = _sw_panel(mods)
+        extra_tabs.append(tab)
+        extra_panels.append(panel)
+    cmps = cmp_rows(root)
+    if cmps:
+        tab, panel = _cmp_panel(cmps)
+        extra_tabs.append(tab)
+        extra_panels.append(panel)
 
     # </ -> <\/ so a stray "</script>" inside requirement text can't close the tag.
     def j(o):
         return json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
 
     return HTML_TEMPLATE.substitute(
+        asof=html.escape(_asof(root)),
+        extra_tabs="\n      ".join(extra_tabs),
+        extra_panels="\n\n    ".join(extra_panels),
         project=html.escape(project_name(root)),
         vision=html.escape(project_vision(root)),
         def_pct=stats["def_pct"],
@@ -892,14 +1065,16 @@ def main():
     out = root / OUT_HTML
     if args.check:
         current = out.read_text(encoding="utf-8") if out.exists() else None
-        if current != generated:
+        # The as-of stamp is excluded from the freshness compare (see ASOF_RE):
+        # content gates byte-exact, the stamp is informational.
+        if current is None or ASOF_RE.sub("", current) != ASOF_RE.sub("", generated):
             print(
-                "trajectory dashboard STALE in {}: run `python "
+                "project-state dashboard STALE in {}: run `python "
                 "scripts/gen_trajectory.py`".format(OUT_HTML),
                 file=sys.stderr,
             )
             return 1
-        print("trajectory dashboard up to date.")
+        print("project-state dashboard up to date.")
         return 0
 
     if out.exists() and out.read_text(encoding="utf-8") == generated:

@@ -1,6 +1,6 @@
 """gen_trajectory.py — the offline trajectory dashboard (Thread 52 phase 2).
 
-The generator renders docs/trajectory.html from work-items.csv + the spine as a
+The generator renders the root PROJECT_STATE.html from work-items.csv + the spine as a
 *view* (a design principle: text is truth). What matters is that it is fully
 offline (no CDN), deterministic (so the --check freshness gate is byte-stable),
 refuses to render an invalid registry, and stays vacuous when there is nothing to
@@ -70,7 +70,7 @@ def gen(root, *args):
 
 
 def html_of(root):
-    return (root / "docs" / "trajectory.html").read_text(encoding="utf-8")
+    return (root / "PROJECT_STATE.html").read_text(encoding="utf-8")
 
 
 # --- renders a self-contained, offline dashboard -------------------------------
@@ -80,7 +80,7 @@ def test_generates_self_contained_dashboard(tmp_path):
     make_repo(tmp_path)
     proc = gen(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert (tmp_path / "docs" / "trajectory.html").exists()
+    assert (tmp_path / "PROJECT_STATE.html").exists()
     text = html_of(tmp_path)
     # both views present
     assert 'id="ice"' in text and 'id="dag"' in text
@@ -116,11 +116,11 @@ def test_mobile_responsive_shell(tmp_path):
 def test_generation_is_deterministic(tmp_path):
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
-    first = (tmp_path / "docs" / "trajectory.html").read_bytes()
+    first = (tmp_path / "PROJECT_STATE.html").read_bytes()
     second = gen(tmp_path)
     assert second.returncode == 0
     assert "already up to date" in second.stdout  # unchanged -> not rewritten
-    assert (tmp_path / "docs" / "trajectory.html").read_bytes() == first
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
 
 
 def test_dag_layers_by_dependency_rank(tmp_path):
@@ -143,7 +143,7 @@ def test_renders_without_readme_uses_fallbacks(tmp_path):
     make_repo(tmp_path, readme=False)
     proc = gen(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert (tmp_path / "docs" / "trajectory.html").exists()
+    assert (tmp_path / "PROJECT_STATE.html").exists()
 
 
 # --- the --check freshness gate ------------------------------------------------
@@ -182,7 +182,7 @@ def test_placeholder_only_renders_nothing(tmp_path):
     make_repo(tmp_path, "WI-000,EXAMPLE - delete,track,SR-000,,queued,demo\n")
     proc = gen(tmp_path)
     assert proc.returncode == 0
-    assert not (tmp_path / "docs" / "trajectory.html").exists()
+    assert not (tmp_path / "PROJECT_STATE.html").exists()
     assert gen(tmp_path, "--check").returncode == 0  # vacuously fresh
 
 
@@ -191,7 +191,78 @@ def test_opt_out_silences(tmp_path):
     (tmp_path / "docs" / "trajectory-check").write_text("off\n", encoding="utf-8")
     proc = gen(tmp_path, "--check")
     assert proc.returncode == 0 and "off" in proc.stdout
-    assert not (tmp_path / "docs" / "trajectory.html").exists()
+    assert not (tmp_path / "PROJECT_STATE.html").exists()
+
+
+def test_asof_stamp_from_git_and_excluded_from_check(tmp_path):
+    # WI-039: the as-of line derives from the last source-touching COMMIT
+    # (never now(), so generation stays deterministic), is visible in the
+    # shell, and is excluded from the --check byte-compare — a stamp-only
+    # difference (the artifact committed one commit behind its sources' last
+    # touch) must not read as stale.
+    import subprocess
+
+    make_repo(tmp_path)
+
+    def git(*args):
+        return subprocess.run(
+            ["git", "-C", str(tmp_path), *args], capture_output=True, text=True
+        )
+
+    git("init")
+    git("config", "user.email", "t@example.com")
+    git("config", "user.name", "T")
+    git("add", "-A")
+    git("commit", "-q", "-m", "sources")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'class="asof">state as of commit ' in text
+    # Simulate the artifact carrying a previous stamp: content equal, stamp not.
+    (tmp_path / "PROJECT_STATE.html").write_text(
+        re.sub(
+            r'(class="asof">state as of commit )[0-9a-f]+',
+            r"\g<1>0000000",
+            text,
+        ),
+        encoding="utf-8",
+    )
+    proc = gen(tmp_path, "--check")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_no_git_means_no_stamp_and_stays_deterministic(tmp_path):
+    # Outside a git repo the stamp is simply absent — no crash, no wall clock.
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    assert 'class="asof"></p>' in html_of(tmp_path)
+
+
+ARCH_MD = """# Architecture
+
+<!-- BEGIN GENERATED MODULE MAP -->
+### `src/m`
+_Demo module._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `add(a, b)` | Adds. |  |
+| `sub(a, b)` | Subtracts. |  |
+<!-- END GENERATED MODULE MAP -->
+"""
+
+
+def test_how_sw_view_renders_from_the_module_map(tmp_path):
+    # WI-039: with a committed symbol-mode module map, PROJECT_STATE gains the
+    # How (SW architecture) view — a view of the code-map view; without one
+    # (files-mode / absent) the tab is simply omitted.
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    assert "How (SW architecture)" not in html_of(tmp_path)
+    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'data-tab="sw"' in text and "How (SW architecture)" in text
+    assert "src/m" in text and "add" in text
 
 
 def test_cycle_refuses_to_render(tmp_path):
@@ -201,7 +272,7 @@ def test_cycle_refuses_to_render(tmp_path):
     )
     proc = gen(tmp_path)
     assert proc.returncode == 1 and "cycle" in proc.stderr
-    assert not (tmp_path / "docs" / "trajectory.html").exists()
+    assert not (tmp_path / "PROJECT_STATE.html").exists()
 
 
 # --- F5: the sanctioned sibling import loads in-process too ---------------------

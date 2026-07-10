@@ -47,7 +47,7 @@ resource: "generated"
 | [TC-035](TC-035.md) | Analyze the CI matrix result across Linux/Windows/macOS x Python 3.8/latest. |
 | [TC-036](TC-036.md) | Inspect a re-sync done per ADOPTING.md section 6 against the docs/kit-version diff — kit-… |
 | [TC-037](TC-037.md) | Run the trajectory-validator suite; a well-formed registry passes, and a malformed WI id,… |
-| [TC-038](TC-038.md) | Run the dashboard suite; the generated HTML is one offline file (no external hosts/CDN) c… |
+| [TC-038](TC-038.md) | Run the dashboard suite; the generated root HTML is one offline file (no external hosts/C… |
 | [TC-039](TC-039.md) | Run the check-dupes suite; a seeded copy-pasted helper fails naming both file:line locati… |
 | [TC-040](TC-040.md) | Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the… |
 | [TC-041](TC-041.md) | Run the doc-refs suite; a dangling path warns then gates under --strict, non-path backtic… |

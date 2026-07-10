@@ -6866,6 +6866,35 @@ continuity (same style as the session log above).
 > `pytest -q` + `check_docs` green (output in the commit); trace SN=22 SR=42
 > LLR=39 TC=42, 0 orphans. Byte-budgeted files untouched.
 
+> **WI-1.52 ✅ landed 2026-07-10 · `PROJECT_STATE.html` — the unified
+> project-state artifact (WI-039, the ratified AXES spec).**
+> `gen_trajectory.py` now emits the **repo-root `PROJECT_STATE.html`**
+> (replacing `docs/trajectory.html` — the Q10 micro-call confirmed to the
+> working default). Views: **What** (the SN→SR→LLR→TC icicle) · **When** (the
+> WI DAG) · **How-SW** — the module map parsed from `architecture.md`'s
+> generated block (a view of the committed code-map view; omitted when there
+> is no symbol inventory, so files-mode degrades) · **How-physical** — the
+> `CMP-###` table when the component layer carries real rows (the *graph*
+> rendering stays deferred-on-need per the AXES ratification; the meta-repo is
+> SW-only, so its artifact carries three views). **As-of stamp** visible on
+> open: derived from the last commit touching the sources (`git log -1 -- …`),
+> never `now()` — and **excluded from the `--check` byte-compare** (`ASOF_RE`).
+> That exclusion is this WI's one design decision beyond the ratified note:
+> the stamp is legitimately one commit behind the sources on the commit that
+> edits them, so gating on it would force a follow-up regen commit after
+> every source commit — content gates byte-exact, the stamp is informational
+> (recorded refinement of AXES §"the artifact", honoring its intent: visible,
+> git-derived, deterministic). Migration swept: hook 1b comment, check.py,
+> bootstrap docstring, STATUS.template, PROCESS_OPTIONS, both READMEs,
+> CLAUDE.md, ADOPTING §6 recipe (delete old file, regen, commit); tests
+> re-pathed + 3 new (stamp-in-git + stamp-only-diff passes `--check`; no-git
+> = no stamp; How-SW renders from a module map and is omitted without one).
+> **Spine: SR-038/LLR-035/TC-038 extended** to the now-true claims (the
+> WI-1.43 "not claimed" scope note superseded) — **this is the WI that makes
+> the batch re-attestation mandatory**, not just recommended (a Verified SR's
+> text changed). `pytest -q` + `check_docs` green (output in the commit);
+> trace SN=22 SR=42 LLR=39 TC=42, 0 orphans. Byte-budgeted files untouched.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

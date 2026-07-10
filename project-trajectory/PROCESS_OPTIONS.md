@@ -796,7 +796,8 @@ edges is a **warning** (conflicting ordering hints, not a blocker); every `SR-Re
 draft SR referenced ahead of its row is legitimate; `WI-###` id shape and
 uniqueness — integrity, like `trace.py`.
 
-**Dashboard** — `gen_trajectory.py` renders `docs/trajectory.html`, a generated
+**Dashboard** — `gen_trajectory.py` renders the root `PROJECT_STATE.html` (the
+unified project-state artifact; formerly `docs/trajectory.html`), a generated
 *view* (never a source of truth — the `gen_arch_map` / `trace.py` idiom). One
 self-contained, **fully-offline** page (the §7 offline-render principle — no CDN,
 no cloud tooling, no JS layout library): a project-vision header, definition- and
@@ -813,7 +814,7 @@ dashboard is caught locally, not first in CI. In `status.md`, the **Next action*
 **Opt-out (why a non-adopter pays nothing).** The layer ships **present but
 vacuous**: a fresh scaffold carries only the inert `WI-000` placeholder, so both
 `check_trajectory.py` and `gen_trajectory.py --check` pass **vacuously** (no work
-items → nothing to validate, nothing to render, no `trajectory.html` written). A
+items → nothing to validate, nothing to render, no `PROJECT_STATE.html` written). A
 repo that wants the layer gone entirely silences it with the one word `off` in
 `docs/trajectory-check` — the same first-line-parse toggle as `docs/secrets-scan`.
 The cost to a project that ignores the layer is therefore exactly zero, which is

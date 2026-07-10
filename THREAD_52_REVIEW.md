@@ -37,7 +37,8 @@ Nothing here has been fixed; every item is verified against the tree.
   [`project-trajectory/scripts/check.py`](project-trajectory/scripts/check.py) (the two new steps),
   [`project-trajectory/registries/work-items.template.csv`](project-trajectory/registries/work-items.template.csv),
   [`docs/requirements/work-items.csv`](docs/requirements/work-items.csv) (the dogfood data),
-  [`docs/trajectory.html`](docs/trajectory.html) (generated),
+  `docs/trajectory.html` (generated; since WI-1.52 the root
+  [`PROJECT_STATE.html`](PROJECT_STATE.html)),
   [`project-trajectory/PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) ("Trajectory / work-items layer"),
   [`tests/test_trajectory.py`](tests/test_trajectory.py),
   [`tests/test_gen_trajectory.py`](tests/test_gen_trajectory.py).

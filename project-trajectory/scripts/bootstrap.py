@@ -145,7 +145,7 @@ fresh scaffold pass for free, and a repo that never wants the layer sets
 `docs/trajectory-check: off`. It is off-spine (like procurement / assets);
 `trace.py` does not read WI ids — `check_trajectory.py` owns them.
 `scripts/gen_trajectory.py` renders the registry + spine into a self-contained,
-fully-offline `docs/trajectory.html` dashboard — an SVG icicle of the spine and a
+fully-offline root `PROJECT_STATE.html` dashboard — an SVG icicle of the spine and a
 plain-SVG layered DAG of the work items, no CDN; its `--check` is the
 `trajectory-map` freshness gate at G3 (regenerate + byte-compare, like `arch-map`).
 Both are generated *views*, never a source of truth.

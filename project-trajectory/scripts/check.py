@@ -485,7 +485,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ),
         # Trajectory dashboard freshness (process-options.md "Trajectory /
         # work-items layer"): the generated-artifact freshness gate for
-        # docs/trajectory.html — gen_trajectory.py --check regenerates in memory
+        # the root PROJECT_STATE.html — gen_trajectory.py --check regenerates in memory
         # and byte-compares, exactly like arch-map. G3 only (like arch-map — the
         # generated view churns while the plan is still forming). Vacuous on an
         # absent/placeholder-only registry and silent under docs/trajectory-check

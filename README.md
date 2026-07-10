@@ -62,7 +62,7 @@ The kit's headline pieces:
   [`check_trajectory.py`](project-trajectory/scripts/check_trajectory.py) +
   [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) (the
   **opt-out** work-items layer — validate the execution DAG and render a
-  fully-offline `docs/trajectory.html` dashboard; process-options.md "Trajectory /
+  fully-offline root `PROJECT_STATE.html` dashboard; process-options.md "Trajectory /
   work-items layer"),
   [`gen_okf.py`](project-trajectory/scripts/gen_okf.py) (the traceability graph
   exported as an Open Knowledge Format bundle — the kit's own is
