@@ -642,6 +642,11 @@ def main():
     stale = False
     for doc in docs:
         if not doc.exists():
+            # Missing-target posture (REVIEW_GRIND_FULL C9): arch-map's target is
+            # a HAND-AUTHORED doc that must already exist (it holds prose around
+            # the generated block), so its absence is a hard error — unlike the
+            # fully-generated gen_okf / gen_trajectory outputs, whose --check
+            # treats a missing file as stale/vacuous and (re)creates it.
             raise SystemExit("target file not found: {}".format(doc))
         current = doc.read_text(encoding="utf-8")
         updated = splice_region(current, BEGIN, END, generated, doc, required=True)

@@ -1048,7 +1048,10 @@ def main():
     ap.add_argument(
         "--check",
         action="store_true",
-        help="validate + verify freshness without writing (nonzero on stale/invalid)",
+        help="validate + verify freshness without writing (nonzero on "
+        "stale/invalid). Missing-target posture (C9): a fully-generated "
+        "output, so a missing file reads as stale — unlike arch-map, whose "
+        "hand-authored target must exist",
     )
     args = ap.parse_args()
     root = Path(args.root).resolve()

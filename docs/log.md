@@ -300,3 +300,10 @@ recommended): a Verified SR's text changed (SR-038) and four SRs were added to
 the ratified spine. The ask is recorded as the `Needs <human>` item in
 `docs/status.md`; three adversarial review reports (diff method/risk, diff
 process/trace, full-repo) are queued as review input for the same sitting.
+
+**Addendum (same day, review triage — WI-1.53):** three fresh-context adversarial
+reviews of this batch (`REVIEW_GRIND_A/B/FULL`; 20 findings, no HIGH) landed fully
+triaged before re-attestation. Spine-relevant: **B1** re-routed SR-039/041/042
+`SN-Refs` to the needs their text states (SR-041→SN-010; SR-039/042 +SN-012) —
+SN coverage only widened, trace stays 0 orphans. So the pending re-attestation
+now covers a **reviewed, corrected** spine, not the as-first-written one.

@@ -1,5 +1,10 @@
 # Grind Review A — Adversarial Correctness (Reviewer A)
 
+> **RESOLVED 2026-07-10 (review triage, WI-1.53).** All 7 findings fixed:
+> A1/A3/A4/A5/A6/A7 in triage commit 3/5 (script correctness); A2 in commit
+> 2/5 (text-boundary). Each has a regression test. See IMPROVEMENT_PLAN.md
+> WI-1.53 + the per-batch commit messages.
+
 **Reviewer:** Claude (Opus 4.8), REVIEWER A — method / risk / corner-case
 charter (bugs, unsound methods, failure modes, robustness). · **Date:**
 2026-07-10 · **Branch:** `MultiRepoSupport` (not pushed).

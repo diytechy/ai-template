@@ -281,7 +281,10 @@ range to see exactly which templates/scripts changed before you touch anything.
   `python scripts/gen_okf.py` once and commit the bundle (it stays fresh via
   the hook from then on), or opt out with the one word `off` in
   `docs/okf-export` — a repo with placeholder-only registries needs neither
-  (vacuous).
+  (vacuous). **Re-sync `check.py` together with the hook:** the hook's new
+  step 1c runs `check.py --run-step okf`, so an older `check.py` with no `okf`
+  step fails every commit with `check: no step named 'okf'` — the same
+  re-sync-the-kit-owned-set-together caveat the `trajectory-map` step carries.
 - **The TC `Evidence` column (2026-07, Thread 51).** `test-cases.csv` gains an
   **`Evidence`** column (between `Automated` and `Status`) naming the concrete
   test — a pytest node, a script path, or a procedure-doc link

@@ -6895,6 +6895,39 @@ continuity (same style as the session log above).
 > text changed). `pytest -q` + `check_docs` green (output in the commit);
 > trace SN=22 SR=42 LLR=39 TC=42, 0 orphans. Byte-budgeted files untouched.
 
+> **WI-1.53 ✅ landed 2026-07-10 · Grind review triage — all 20 findings
+> resolved (REVIEW_GRIND_A/B/FULL).** The three adversarial reports on the
+> 2026-07-10 grind (7 method/risk + 4 process/trace + 9 full-repo; no HIGH)
+> were fixed in five focused commits, each finding with a regression test where
+> testable:
+> **1/5 spine (B1, B2):** re-routed SR-039/041/042 `SN-Refs` to the needs their
+> text states (SR-041→SN-010 the doc-honesty need, not SN-004 gate-progression;
+> SR-039/042 +SN-012 the opt-in need that names OKF export) — rode the pending
+> re-attestation; corrected the OKF count 148→151.
+> **2/5 text-boundary (C3, C5, C7, C8, A2):** every `text=True` capture decodes
+> UTF-8 with replacement (cleared the shipped `Â·` mojibake + a latent Windows
+> crash); `_utf8_console` added to the 6 scripts that lacked it; generators
+> write LF via `open(newline=)`; `resolve_gate` reads with `errors="replace"`;
+> `check_doc_refs` stops false-flagging node-ids/`;`-lists and skips
+> `linguist-generated` trees.
+> **3/5 script correctness (A1, A3, A4, A5, A6, A7):** `check_dupes` survives
+> un-tokenizable source and splits distinct same-offset blocks; the weekly-reset
+> date math advances by weeks; `gen_okf` validates ids before pathing and prunes
+> emptied dirs; `AGENT_STATUS_WARN_BYTES` parses defensively.
+> **4/5 harness + drift (C1, C2, C4, C6):** `okf` joined `BUILTIN_STEP_NAMES`
+> (+ a guard test that iterates the set so it can't drift); `check.py._expand`
+> uses the non-escaping tokenizer so Windows stack.ini paths survive; `pre-push`
+> and `commit-msg` honor `KIT_SCRIPTS_DIR`; the drifted SN-table parser was
+> reconciled (skip `-000`, sort) with sync notes.
+> **5/5 docs/nits (B3, B4, C9):** trimmed `review-policy.template` to value
+> meanings (floors/charter live in PROCESS_OPTIONS); added the OKF re-sync
+> caveat to ADOPTING §6; documented the `--check` missing-target posture.
+> **F5 held:** C2 and C6 were fixed by reconciling/duplicating small stable
+> helpers, not new cross-script imports (one sanctioned sibling import stands).
+> The three reports carry RESOLVED banners. `pytest -q` + `check_docs` green
+> (final totals in the commit); `check.py --gate G3` PASS; trace SN=22 SR=42
+> LLR=39 TC=42, 0 orphans. Byte-budgeted files untouched.
+
 ### Session protocol (for a cold session pointed only at this file)
 
 0. **If there is no ▶ NEXT session marker, don't invent one — confirm first.** As of

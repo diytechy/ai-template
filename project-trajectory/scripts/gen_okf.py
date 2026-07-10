@@ -410,7 +410,9 @@ def main():
         "--check",
         action="store_true",
         help="regenerate in memory and compare the on-disk bundle (nonzero on "
-        "stale/extra/missing files); never writes",
+        "stale/extra/missing files); never writes. Missing-target posture "
+        "(C9): a fully-generated output, so a missing bundle reads as "
+        "stale/vacuous — unlike arch-map, whose hand-authored target must exist",
     )
     args = ap.parse_args()
     root = Path(args.root).resolve()

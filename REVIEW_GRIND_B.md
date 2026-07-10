@@ -1,5 +1,10 @@
 # Grind Review B — Process / Traceability / Prose (WI-1.47…1.52 batch)
 
+> **RESOLVED 2026-07-10 (review triage, WI-1.53).** All 4 findings fixed:
+> B1 (spine SN-Refs) + B2 (OKF count) in triage commit 1/5 — B1 rode the
+> pending re-attestation as recommended; B3 (template trim) + B4 (ADOPTING
+> caveat) in commit 5/5. See IMPROVEMENT_PLAN.md WI-1.53.
+
 **Reviewer:** Claude (Opus 4.8) — REVIEWER B (process/trace/prose charter), fresh
 context, no shared transcript with the implementer · **Date:** 2026-07-10 ·
 **Branch:** `MultiRepoSupport` (not pushed).

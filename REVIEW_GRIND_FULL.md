@@ -1,5 +1,10 @@
 # Full-repo adversarial review — kit product code
 
+> **RESOLVED 2026-07-10 (review triage, WI-1.53).** All 9 findings fixed:
+> C3/C5/C7/C8 in triage commit 2/5 (text-boundary); C1/C2/C4/C6 in commit
+> 4/5 (harness + drift); C9 in commit 5/5 (docstring posture notes). New
+> regression tests for C1/C2/C4. See IMPROVEMENT_PLAN.md WI-1.53.
+
 **Reviewer:** Reviewer C (whole-repo, cross-script) · **Date:** 2026-07-10 ·
 **HEAD:** `33b40e302ae75495c850703aab7f9037dc9f4a70` · **Branch:** `MultiRepoSupport`
 

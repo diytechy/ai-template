@@ -1,20 +1,11 @@
 # Review policy (process-options.md "Unattended operation" — the reviewer
 # dial). One value on the last line — how many independent fresh-context
 # review verdicts a completed work item gets before the integrator accepts it:
-#   0 — no mechanized review leg (harness gates only; attended repos where the
-#       human reads every diff anyway).
-#   1 — one reviewer session (the default): fresh context, no shared
-#       transcript with the implementer; input = the diff + the WI + the TCs;
-#       output = a recorded verdict (review doc / docs/log.md).
-#   2 — two reviewers with SPLIT charters, never duplicated coverage:
-#       A = method / risk / corner cases (adversarial correctness),
-#       B = process / trace / prose (SSOT, traceability, TC text, doc
-#       honesty). Cross-provider is the recommended pairing (decorrelated
-#       blind spots) — route via AGENT_CMD_MAP / the dispatcher convention.
-# Floors above the dial: a gate advance under gate-policy `autonomous` always
-# needs >=1 recorded verdict; a WI touching the spine registries recommends 2.
-# The dial is read by the integrator and the run-phase convention
-# (REVIEW-A / REVIEW-B sessions via AGENT_MODEL_MAP / AGENT_CMD_MAP keys);
-# the coordinator loop surfaces it at run start but never enforces it — the
-# harness pass is the entry ticket, the review is the judgment.
+#   0 — no mechanized review leg (harness gates only).
+#   1 — one reviewer session (the default).
+#   2 — two reviewers with SPLIT charters (cross-provider recommended).
+# The floors above the dial, the A/B charter split, and how sessions are
+# dispatched (the REVIEW-A/REVIEW-B run-phase convention + AGENT_CMD_MAP) are
+# owned by process-options.md "Unattended operation" — stated once there, not
+# restated here (the gate-policy / push-policy templates keep the same shape).
 1
