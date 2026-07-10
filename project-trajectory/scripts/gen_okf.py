@@ -64,11 +64,20 @@ def split_refs(cell):
     return [t for t in re.split(r"[;,\s]+", (cell or "").strip()) if t]
 
 
+ID_RE = re.compile(r"^[A-Z]+-\d+$")  # PREFIX-<digits>, the kit-wide id shape
+
+
 def real_rows(rows, key, prefix):
+    """Real (non-placeholder) rows whose id is well-formed. The id becomes a
+    path component in emit(), so it must match the kit's `PREFIX-<digits>`
+    shape (trace.py's integrity rule) — a crafted id with `/`..`..` would
+    otherwise escape docs/okf/ on write. trace.py --strict-integrity is the
+    floor that blocks such an id from committing; this is defense-in-depth for
+    the standalone run (REVIEW_GRIND_A A4)."""
     out = []
     for r in rows:
         rid = (r.get(key) or "").strip()
-        if rid.startswith(prefix) and not rid.endswith("-000"):
+        if rid.startswith(prefix) and not rid.endswith("-000") and ID_RE.match(rid):
             out.append(r)
     return sorted(out, key=lambda r: r[key].strip())
 
@@ -440,6 +449,13 @@ def main():
     for rel in set(current) - set(expected):
         (out_root / rel).unlink()
         pruned += 1
+    # Remove now-empty tier directories left by the prune (e.g. interfaces/
+    # after the last IF row goes), so a deleted tier leaves no cruft behind
+    # (REVIEW_GRIND_A A7).
+    if pruned:
+        for d in sorted(out_root.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+            if d.is_dir() and not any(d.iterdir()):
+                d.rmdir()
     if wrote or pruned:
         print(
             "gen_okf: wrote {} / pruned {} -> {} ({} file(s) total).".format(

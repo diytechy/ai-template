@@ -97,6 +97,40 @@ def test_opt_out_silences(scaffold):
     assert proc.returncode == 0 and "off" in proc.stdout
 
 
+def test_malformed_id_is_ignored_not_path_escape(scaffold):
+    # A4: an id that isn't PREFIX-<digits> (a crafted traversal id) is not
+    # turned into a path component — it's simply skipped, like trace.py's
+    # integrity rule. The real rows still export.
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8")
+        + 'SR-/../../evil,Bad,SN-001,"x",R,"y",,M,Test,Verified\n',
+        encoding="utf-8",
+    )
+    proc = okf(scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (bundle(scaffold) / "system-requirements" / "SR-001.md").exists()
+    assert not (scaffold / "docs" / "evil.md").exists()
+
+
+def test_prune_removes_emptied_tier_directory(scaffold):
+    # A7: deleting the last row of a tier leaves no empty directory behind.
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "interfaces.csv").write_text(
+        "IF-ID,Name,Contract,Status\nIF-001,Seam,contract text,Verified\n",
+        encoding="utf-8",
+    )
+    assert okf(scaffold).returncode == 0
+    assert (bundle(scaffold) / "interfaces").is_dir()
+    (req / "interfaces.csv").write_text(
+        "IF-ID,Name,Contract,Status\n", encoding="utf-8"
+    )
+    assert okf(scaffold).returncode == 0
+    assert not (bundle(scaffold) / "interfaces").exists()
+
+
 def test_okf_step_wired_at_g3(scaffold):
     # The harness carries the freshness gate like arch-map/trajectory-map.
     from conftest import load_script

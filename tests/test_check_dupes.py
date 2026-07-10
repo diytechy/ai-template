@@ -94,6 +94,28 @@ def test_allowlist_suppresses_recorded_pair(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+def test_untokenizable_file_warns_and_skips_not_crash(tmp_path):
+    # A1: a lint surfaces bad input, never crashes on it — an unterminated
+    # string/bracket file is warned and skipped, and the clean file still passes.
+    write_src(tmp_path, {"good.py": UNIQUE_A})
+    (tmp_path / "src" / "broken.py").write_text('x = (1, 2\ns = "', encoding="utf-8")
+    proc = dupes(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "could not tokenize" in proc.stderr and "broken.py" in proc.stderr
+
+
+def test_distinct_same_offset_blocks_report_separately(tmp_path):
+    # A6: two separate duplicated regions that share a line offset (identical
+    # blocks at the same position in both files, with a gap between them) must
+    # report as two findings, not one merged/inflated block.
+    gap = "\n".join("z{} = {}".format(i, i) for i in range(6)) + "\n"
+    body = UNIQUE_A + HELPER + gap + HELPER
+    write_src(tmp_path, {"a.py": body, "b.py": body.replace("alpha_only", "beta_only")})
+    proc = dupes(tmp_path)
+    assert proc.returncode == 1
+    assert proc.stderr.count("duplicate block") >= 2
+
+
 def test_repetition_inside_one_block_does_not_self_report(tmp_path):
     # A window repeated only *within* one physical block (same file, same
     # location) must not report against itself.

@@ -539,8 +539,15 @@ def seconds_until_reset(hint, now=None):
         )
         ahead = (wanted - target.weekday()) % 7
         target += datetime.timedelta(days=ahead)
-    while target <= now:
-        target += datetime.timedelta(days=1)
+        # A named weekday is a weekly reset: if that day/time has already passed
+        # today (ahead == 0, time in the past), the true reset is next week's
+        # same weekday — advance by whole weeks, not one day (which would land
+        # on a different weekday; REVIEW_GRIND_A A3).
+        while target <= now:
+            target += datetime.timedelta(days=7)
+    else:
+        while target <= now:
+            target += datetime.timedelta(days=1)
     return int((target - now).total_seconds())
 
 
@@ -990,9 +997,13 @@ def main():
     # session inherits the lane's status.md, so a bloated one is the file-world
     # version of a full context window. The integrator's charter is to prune it
     # to one screen; this is the cheap tripwire, never a gate.
-    warn = status_size_warning(
-        lane / "status.md", int(os.environ.get("AGENT_STATUS_WARN_BYTES", "8192"))
-    )
+    # A misconfigured AGENT_STATUS_WARN_BYTES must never crash the run this
+    # warning exists to help — fall back to the default (REVIEW_GRIND_A A5).
+    try:
+        warn_bytes = int(os.environ.get("AGENT_STATUS_WARN_BYTES", "8192"))
+    except ValueError:
+        warn_bytes = 8192
+    warn = status_size_warning(lane / "status.md", warn_bytes)
     if warn:
         print("agent_loop: WARNING - " + warn, file=sys.stderr)
 

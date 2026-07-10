@@ -143,7 +143,7 @@ _Duplicate-code lint — copy-paste blocks violate one-fact-one-home (Thread 53)
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `significant_tokens(path)` | (kind, text, line) for each significant token in the file, in order. |  |
+| `significant_tokens(path)` | (kind, text, line) for each significant token in the file, or None when |  |
 | `find_duplicates(files, min_tokens)` | Duplicated blocks across the given files. |  |
 | `read_allowlist(path)` | Substring patterns (one per line, # comments and blanks skipped), or []. |  |
 | `main(argv)` |  |  |
@@ -271,7 +271,7 @@ _OKF export — the traceability graph as a portable knowledge bundle (Thread 48
 |---|---|---|
 | `read_rows(path)` |  |  |
 | `split_refs(cell)` |  |  |
-| `real_rows(rows, key, prefix)` |  |  |
+| `real_rows(rows, key, prefix)` | Real (non-placeholder) rows whose id is well-formed. The id becomes a |  |
 | `sn_rows(root)` |  |  |
 | `read_enabled(root)` |  |  |
 | `fm(pairs)` | A YAML frontmatter block; JSON string scalars are valid YAML, so quoting |  |

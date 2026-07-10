@@ -55,13 +55,25 @@ _INSIGNIFICANT = {
 
 
 def significant_tokens(path):
-    """(kind, text, line) for each significant token in the file, in order."""
-    with open(path, "rb") as handle:
-        return [
-            (tok.type, tok.string, tok.start[0])
-            for tok in tokenize.tokenize(handle.readline)
-            if tok.type not in _INSIGNIFICANT
-        ]
+    """(kind, text, line) for each significant token in the file, or None when
+    the file can't be tokenized (unterminated string/bracket, bad coding
+    cookie, non-UTF-8). A lint surfaces bad input, never crashes on it — the
+    kit's own convention (gen_arch_map catches SyntaxError; REVIEW_GRIND_A A1)."""
+    try:
+        with open(path, "rb") as handle:
+            return [
+                (tok.type, tok.string, tok.start[0])
+                for tok in tokenize.tokenize(handle.readline)
+                if tok.type not in _INSIGNIFICANT
+            ]
+    except (tokenize.TokenError, SyntaxError, UnicodeDecodeError) as exc:
+        print(
+            "check_dupes: WARN - {}: could not tokenize ({}); skipped".format(
+                Path(path).as_posix(), exc
+            ),
+            file=sys.stderr,
+        )
+        return None
 
 
 def _windows(tokens, min_tokens):
@@ -84,7 +96,10 @@ def find_duplicates(files, min_tokens):
     # by offset merges the sliding-window hits into a single finding.
     pairs = {}
     for path in files:
-        for window, line in _windows(significant_tokens(path), min_tokens):
+        toks = significant_tokens(path)
+        if toks is None:
+            continue  # un-tokenizable file — warned, skipped (A1)
+        for window, line in _windows(toks, min_tokens):
             if window in seen:
                 first_file, first_line = seen[window]
                 if (first_file, first_line) == (path, line):
@@ -98,12 +113,31 @@ def find_duplicates(files, min_tokens):
     findings = []
     for (file_a, file_b), by_offset in pairs.items():
         for hits in by_offset.values():
-            line_a, line_b = min(hits)
-            # Window count approximates extent: N overlapping windows span
-            # roughly min_tokens + N - 1 tokens.
-            length = min_tokens + len(hits) - 1
-            findings.append(((file_a, line_a), (file_b, line_b), length))
+            # Two *distinct* duplicated regions that share a line offset must
+            # report separately, not merge into one inflated finding: split the
+            # group into contiguous runs where the window start-lines are
+            # adjacent (a gap > 1 line is a second block; REVIEW_GRIND_A A6).
+            for run in _contiguous_runs(sorted(hits)):
+                line_a, line_b = run[0]
+                # Window count approximates extent: N overlapping windows span
+                # roughly min_tokens + N - 1 tokens.
+                length = min_tokens + len(run) - 1
+                findings.append(((file_a, line_a), (file_b, line_b), length))
     return sorted(findings)
+
+
+def _contiguous_runs(hits):
+    """Split hits (sorted (line_a, line_b) pairs of one offset group) where the
+    line_a values jump by more than 1 — the boundary between two separate
+    duplicated blocks that happen to share a line offset."""
+    run = []
+    for pair in hits:
+        if run and pair[0] - run[-1][0] > 1:
+            yield run
+            run = []
+        run.append(pair)
+    if run:
+        yield run
 
 
 def read_allowlist(path):

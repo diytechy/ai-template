@@ -287,6 +287,22 @@ def test_status_size_guard_warns_only(loop_repo):
     assert "prune it to one screen" in proc.stderr
 
 
+def test_seconds_until_reset_weekly_same_weekday():
+    # A3: a named-weekday reset that already passed today is NEXT week's same
+    # weekday (+~6 days), not tomorrow (+1 day, a different weekday).
+    import datetime
+
+    loop = load_script("agent_loop")
+    now = datetime.datetime(2026, 7, 13, 15, 0)  # a Monday, 3pm
+    secs = loop.seconds_until_reset("weekly limit resets Mon 12:00am", now)
+    target = now + datetime.timedelta(seconds=secs)
+    assert target.weekday() == 0  # Monday, not Tuesday
+    assert 6 * 86400 < secs <= 7 * 86400  # ~6 days out, not ~9 hours
+    # A future weekday this week is still this week (unchanged behavior).
+    secs2 = loop.seconds_until_reset("resets Tue 12:00am", now)
+    assert (now + datetime.timedelta(seconds=secs2)).weekday() == 1
+
+
 def test_status_size_warning_helper_edges():
     # The helper is pure: absent file and limit<=0 (AGENT_STATUS_WARN_BYTES=0)
     # both disable; an oversized file names the size and the charter.
