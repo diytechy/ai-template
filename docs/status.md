@@ -40,7 +40,7 @@ sign-offs, verdicts) is [log.md](log.md).
   **Thread 52 COMPLETE 2026-07-08** (all 4 phases) — the opt-out trajectory/
   work-items layer: `work-items.csv` registry + `check_trajectory.py` +
   `gen_trajectory.py` (offline SVG dashboard) + PROCESS_OPTIONS/README docs.
-  **Dogfooded (P4):** the meta-repo carries its own 40-WI
+  **Dogfooded (P4):** the meta-repo carries its own 41-WI
   `docs/requirements/work-items.csv` + generated `docs/trajectory.html`
   (Execution 85%, Definition 100%), gate-green on real data. The **ratified
   design notes** behind WI-1.44 sit at root:
@@ -66,10 +66,21 @@ sign-offs, verdicts) is [log.md](log.md).
   as one migration event: `Track`→`Workstream` + hard/soft (`~`) predecessor
   edges (F3's schema half), the CMP-### component layer (+ `Component` tags),
   `MOD-###`→`REPO-###` (all never-breaking; ADOPTING §6 has the recipe). Now
-  open, in rough order: **owner data-pass on the 40-WI DAG edges** (demote
-  remaining narrative edges to `~`; F3's data half); **F4–F8**
-  ([`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md); F2 resolved 2026-07-09,
-  WI-1.45); **WI-039**
+  open, in rough order: **owner data-pass on the 41-WI DAG edges** (demote
+  remaining narrative edges to `~`; F3's data half); **WI-041 — the F4–F8
+  closure, RULED and queued** ([`THREAD_52_REVIEW.md`](../THREAD_52_REVIEW.md);
+  F2 resolved 2026-07-09, WI-1.45; owner rulings recorded 2026-07-09 under each
+  finding). Dispositions — sized for a standard (e.g. Opus) session, specs are
+  the findings themselves: **F4** depth-guard/iterative hardening of the
+  recursive walks in `gen_trajectory` + `check_trajectory` with a
+  clean-failure test on a pathologically deep chain (note the `arch_icicle`
+  port — flag the hardening for gilbert upstream); **F5 ruled (a)** — keep the
+  sibling import, guarded, + `conftest.load_script` shim + in-process
+  `load_script("gen_trajectory")` regression test + the convention stated once
+  as the import's comment; **F6 ruled soften** — reword the PROCESS_OPTIONS
+  opener to the "Builds on §7…" style (PROCESS.md stays byte-flat); **F7**
+  reword the STATUS.template "Work items?" bullet to opt-out language; **F8
+  ruled accepted-as-is** — record only, no code. Then: **WI-039**
   (`PROJECT_STATE.html`, queued); the dynamic-layer build calls
   ([`AGENT_ROLES.md`](../AGENT_ROLES.md): `docs/review-policy` + `AGENT_CMD_MAP`,
   status-size guard). **Push decision outstanding** (`MultiRepoSupport` is

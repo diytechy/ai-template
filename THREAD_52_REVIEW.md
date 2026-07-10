@@ -234,6 +234,19 @@ any future `gen_trajectory` refactor rather than as its own change.
 
 ## F5 — LOW · Sibling import is a latent trap for the next test author
 
+> **RULED 2026-07-09 (owner): option (a) — keep the import.** The kit's de facto
+> rule, scoped from its own precedents: *duplicate small, stable helpers*
+> (bootstrap's inlined helper; WI-1.42's 3-line git-config wiring;
+> `check_trajectory`'s own `_first_declared_line` copy) — *import a large,
+> evolving core, guarded* (the ~200-line validation surface here, which WI-1.44's
+> soft-edge change already evolved once; inlining would have made that a
+> two-place edit with split-brain risk). Also consistent with the deferred
+> shared-graph-engine extraction (AXES Q8), which depends on sibling imports.
+> Scope: guarded import in `gen_trajectory`, a `conftest.load_script` shim, an
+> in-process `load_script("gen_trajectory")` regression test (the trap becomes
+> the test), the convention stated once as the guarded import's comment.
+> Queued as part of the F4–F8 closure WI (status.md).
+
 **What.** [`gen_trajectory.py`](project-trajectory/scripts/gen_trajectory.py) does
 `import check_trajectory as ct` — the **first** kit script to import a sibling. It
 resolves only because the script's own directory is `sys.path[0]` when run as a
@@ -265,6 +278,10 @@ for future multi-script features.
 
 ## F6 — nit · PROCESS_OPTIONS "Referenced from §7" is aspirational
 
+> **RULED 2026-07-09 (owner): soften the phrasing** to the "Parallel tracks"
+> style ("Builds on PROCESS.md §7 …") — PROCESS.md stays byte-flat. Queued with
+> the F4–F8 closure WI.
+
 The new PROCESS_OPTIONS section opens `*Referenced from PROCESS.md §7 (the harness
 contract + the offline-render principle).*` — but §7 does **not** name the
 trajectory layer (unlike "Skills layer," which §7's boundary-notes list *does*
@@ -282,6 +299,10 @@ kit is careful about that distinction. Reword to "*ignore unless you are trackin
 work items*" or similar.
 
 ## F8 — nit · Registry validated twice at G3
+
+> **RULED 2026-07-09 (owner): accepted as-is** — the duplication is cheap and
+> the G2-validation / G3-freshness gate split stays as designed; do not collapse
+> the steps. Closed by ruling, no code change.
 
 At G3 both `trajectory` (runs `check_trajectory.py`) and `trajectory-map` (runs
 `gen_trajectory.py --check`, which re-validates before rendering to protect the
