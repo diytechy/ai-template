@@ -5015,8 +5015,11 @@ demonstrate patterns the kit already has (`trace.py` integrity / `gen_arch_map
 
 ## Thread 53 — `check_dupes.py`: mechanical anti-duplication for code (upstream gilbert)
 
-**Status: 📋 BACKLOG — surfaced 2026-07-07 (adopter review of gilbert); not yet
-scheduled.** The kit **preaches** "one fact, one home — in code too" (the AGENTS
+**Status: ✅ RULED (owner, 2026-07-10 — delegated to the recommended defaults
+in-session: opt-in `[step:dupes]` profile step, `--min-tokens` default 30,
+`docs/dupes-allow` substring allowlist) + landed same day (WI-1.48 / WI-037).**
+Clarified for the ruling: MIN_TOKENS counts *source-lexer* tokens (a
+copy-paste window), nothing to do with LLM usage. The kit **preaches** "one fact, one home — in code too" (the AGENTS
 working agreement) but has **no mechanical enforcement** of *code* duplication —
 only doc/registry single-sourcing. gilbert's `scripts/check_dupes.py` (stdlib only)
 tokenizes sources and flags any window of ≥ `MIN_TOKENS` significant tokens
@@ -6737,6 +6740,27 @@ continuity (same style as the session log above).
 > `pytest -q` **419 passed, 2 skipped**; `check.py --gate G3` → **PASS**
 > (11/11); trace SN=22 SR=38 LLR=35 TC=38, 0 orphans/schema-findings.
 > Byte-budgeted files untouched.
+
+> **WI-1.48 ✅ landed 2026-07-10 · `check_dupes.py` — mechanical
+> anti-duplication (Thread 53, owner-ruled same day / WI-037).** Adapted from
+> the proven gilbert detector, kit conventions applied: `scripts/check_dupes.py`
+> (stdlib `tokenize`; a window of ≥ `--min-tokens` [default 30] consecutive
+> significant tokens at >1 location = one merged finding naming both
+> `file:line`s), **opt-in product-layer** via a `[step:dupes]` stack-profile
+> line (never the required floor — the tokenizer is the Python reference,
+> "swap for your stack"), plus a kit addition over the original: a
+> `docs/dupes-allow` allowlist (substring vs the POSIX-normalized,
+> line-number-free `a.py == b.py` pair, so an allow survives file growth and
+> OS separators). Ships via bootstrap MAPPING; README kit-contents rows (both);
+> 5 tests. **Spine: SR-039 + LLR-036 + TC-039** (new product script = traced,
+> the F1 lesson) — part of this grind's batched re-attestation ask.
+> **Recorded dogfood finding, deliberately not silenced:** at the default 30
+> the kit's own scripts show real duplicates (`gen_release_checklist.py:41 ==
+> trace.py:190`; several internal `gen_trajectory` pairs, its icicle loaders) —
+> left un-allowlisted for owner triage (fix vs record) rather than
+> self-allowlisted; the meta-repo does not wire `[step:dupes]` yet.
+> `pytest -q` + `check_docs` green (output in the commit); trace SN=22 SR=39
+> LLR=36 TC=39, 0 orphans. Byte-budgeted files untouched.
 
 ### Session protocol (for a cold session pointed only at this file)
 

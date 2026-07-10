@@ -39,6 +39,9 @@ The kit's headline pieces:
   (performance-budget + regression comparator),
   [`check_stubs.py`](project-trajectory/scripts/check_stubs.py)
   (optional, warn-first no-stub/substance detector for the G3 criterion),
+  [`check_dupes.py`](project-trajectory/scripts/check_dupes.py)
+  (optional copy-paste detector — "one fact, one home, in code too" made
+  mechanical; opt in via a `[step:dupes]` profile line),
   [`check_privacy.py`](project-trajectory/scripts/check_privacy.py)
   (a deterministic **secrets floor** for committed keys/tokens in every repo,
   opt-out via `docs/secrets-scan`, plus privacy/PII classes — author email,

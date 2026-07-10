@@ -126,6 +126,16 @@ _Doc navigability & staleness check: keep the hand-written doc set honest._
 | `find_stale(parsed, root, lookup)` | Docs linking a non-doc file committed more recently than the doc itself. |  |
 | `main()` |  |  |
 
+### `scripts/check_dupes`
+_Duplicate-code lint — copy-paste blocks violate one-fact-one-home (Thread 53)._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `significant_tokens(path)` | (kind, text, line) for each significant token in the file, in order. |  |
+| `find_duplicates(files, min_tokens)` | Duplicated blocks across the given files. |  |
+| `read_allowlist(path)` | Substring patterns (one per line, # comments and blanks skipped), or []. |  |
+| `main(argv)` |  |  |
+
 ### `scripts/check_flows`
 _Design-time runtime-flow check: the G2 reviewer reads diagrams, not CSV rows._
 
