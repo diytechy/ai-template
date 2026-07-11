@@ -700,3 +700,93 @@ only — nothing new rides the pending re-attestation beyond S5's chain.**
 --check` + `gen_okf --check` **up to date**; `check.py --gate G3` **12/12 PASS**.
 Spine **SN=23 SR=44 LLR=42 TC=44, 0 orphans**; **interfaces=43,
 interface-findings=0, 0 connectivity warns**.
+
+## 2026-07-11 — SPINE CHANGE (working-surface campaign S7, WI-058): SR-025 extended to the checked per-agent skill fan-out; RE-ATTESTATION PENDING
+
+**Session.** Closed the campaign's cross-agent slice: the per-agent skill copies
+are now a **checked, one-command-refreshable fan-out** of the one neutral
+`project-trajectory/skills/` source, so `.claude`/`.agents`/`.gemini` can't
+silently drift. Fixes the write-once `materialize_agent_layer` defect and the
+live three-way `session-protocol` drift. **Independent of the SSOT/arch halves;
+rides the same pending re-attestation** (the campaign ruling).
+
+**What shipped.**
+- **`.agents/skills/` is a first-class bootstrap target.** New `codex` entry in
+  `bootstrap.AGENTS` (`skills_dir=".agents/skills"`, no hook config —
+  `hooks_src`/`hooks_dst` are now optional); `--agents codex` materializes the
+  matched **kit-scope** skills into `.agents/skills/` byte-identical to source
+  (this-repo skills still excluded, same rule as claude/gemini). `both` keeps its
+  historical claude+gemini meaning.
+- **Refresh, not write-once.** `bootstrap.py --sync` (new
+  `sync_agent_skills`) force-overwrites **only** each existing
+  `<agent>/skills/<name>/` subtree from source, byte-exact (read/write bytes so
+  CRLF can't false-refresh). A focused early-exit mode — it does **not** run the
+  full scaffold, so refreshing the meta repo's own copies doesn't re-stamp
+  kit-version or re-run generators. Every other scaffolded file stays write-once
+  (never clobbers project content); a file outside a skill subtree is never
+  touched.
+- **Drift gate.** `gen_skills_index.py --check-agents` (new `check_agent_sync`)
+  byte-compares every per-agent copy to source. Wired as the **`skills-sync`
+  check.py step (G3)** + a **pre-commit floor step (1f)**, the arch-map/OKF
+  freshness idiom. **Severity: hard-fail** (a drifted copy fails with a
+  one-command fix — reconciling the spec's "warn-first" prose with its binding
+  Done-when "an out-of-sync copy fails the check"; the Done-when wins, and
+  hard-fail matches the established freshness gates). **Vacuous** when there is no
+  neutral source or no per-agent dir.
+- **Docs.** PROCESS_OPTIONS "Skills layer" + `skills/README.md` gained the
+  checked-fan-out subsection and the **tenability constraint** (verbatim fan-out
+  holds only while frontmatter stays agent-neutral; the day a skill needs an
+  agent-specific field, materialization gains a per-agent transform and tracking
+  flips to gitignore + regenerate-on-setup — the recorded revisit trigger).
+  ADOPTING §6 gained the `re-sync check.py+hook together` caveat (mirrors `okf`).
+
+**Judgment calls.**
+1. **Drift-check home = extend `gen_skills_index.py` (kept KIT-only), not a new
+   script.** It already owns the skills layer + a `--check`. It needs the neutral
+   `skills/` source, which only the kit repo hosts — a scaffold has no source to
+   drift from — so it is **not** scaffolded downstream. To keep the shipped hook's
+   `--run-step skills-sync` honest without a `check: no step named` break, the
+   check.py step's command is **real when `gen_skills_index.py` sits beside
+   check.py (this kit), else a vacuous `python -c pass` no-op** (downstream). This
+   is more conservative than scaffolding a permanently-dead generator + gate step
+   into every downstream repo, and honest: downstream there is genuinely nothing
+   to check. Never-breaking; no scaffold-surface change.
+2. **Missing-skill decision: a source skill absent from a per-agent dir does NOT
+   warn.** Subset materialization is legitimate (a scope-matched downstream
+   carries only some skills), so the check compares only skills that a per-agent
+   dir already holds. An **orphan** (a copy whose skill no longer exists in
+   source) is surfaced as a non-failing WARN, not a hard fail — `--sync` can't fix
+   it (the fix is a manual removal).
+3. **Meta drift resolved by advancing the SOURCE, not reverting `.claude`.** The
+   three-way `session-protocol` drift was: source lagged on the check_docs command
+   (`--root .`), while `.claude` had already hand-gained the correct `--stale`
+   (the meta repo's actual standing gate) and `.agents` sat on the pre-archive
+   body. Fix: advance `project-trajectory/skills/session-protocol/SKILL.md` to
+   `--stale` (the true gate) — which made `.claude` **already byte-identical** (its
+   only diff) — then `--sync` refreshed `.agents/session-protocol`. All 10
+   per-agent copies now byte-identical to source; committed (the tracked+drift
+   ruling).
+
+**Deviations.** (a) The drift check hard-fails where the S7 prose said
+"warn-first" — reconciled per the binding Done-when (call #above). (b) Advanced
+the source skill body (`--stale`) rather than reverting `.claude` — a one-word
+SSOT correction to the true gate, documented above. No other deviations.
+
+**Byte deltas.** `AGENTS.template.md` **untouched (9,978)**; `PROCESS.md`
+**untouched (58,297)**. No byte-budgeted file changed (the S7 docs landed in
+PROCESS_OPTIONS / skills-README / ADOPTING).
+
+**Spine.** **SR-025 text extended** (Verified) to cover the checked per-agent
+fan-out (same "generated, not hand-maintained" property; SN-Refs unchanged);
+**+LLR-043** (`gen_skills_index.check_agent_sync` drift check) **+TC-045**
+(`tests/test_skills_sync.py`). This is a **Verified-SR text change + 2 new
+spine rows → rides the pending G3 re-attestation** (with SR-037/SR-038/
+SR-039…044/SN-023, one owner sitting — the campaign ruling).
+
+**Mechanized bar.** `pytest -q` **519 passed, 3 skipped** (+13: 12 skills-sync +
+1 hook-step); `check_docs.py --root . --stale` **0 broken**; `trace --strict
+--require-verified --strict-schema` **SN=23 SR=44 LLR=43 TC=45 orphans=0
+integrity=0 schema=0 interfaces=43 interface-findings=0**; `check_trajectory
+--strict` clean (64 WIs, 58 done); `gen_arch_map`/`gen_trajectory`/`gen_okf`
+`--check` **up to date**; `check.py --gate G3` **13/13 PASS** (the new
+`skills-sync` step). Spine **SN=23 SR=44 LLR=43 TC=45, 0 orphans**.

@@ -261,7 +261,7 @@ Regen map/dashboard/OKF; full gate.
 **Spine impact.** Data + docstrings; no SR text change beyond S5's.
 **Done-when.** How-SW renders the real graph; every module is an IF endpoint.
 
-## S7 — Cross-agent skill sync (checked fan-out from one source)
+## S7 — Cross-agent skill sync (checked fan-out from one source) — ✅ DONE (2026-07-11)
 
 **Goal.** Keep the per-agent skill copies in lockstep with the one neutral
 source, so a cross-agent repo (Claude + Codex + Gemini in the same tree) does

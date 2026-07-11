@@ -52,3 +52,4 @@ resource: "generated"
 | [LLR-040](LLR-040.md) | Subagent spawn gate |
 | [LLR-041](LLR-041.md) | IF-tier integrity in trace.py |
 | [LLR-042](LLR-042.md) | Architecture-connectivity views and coverage warns |
+| [LLR-043](LLR-043.md) | Cross-agent skill fan-out drift check |

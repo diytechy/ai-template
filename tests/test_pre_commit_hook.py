@@ -114,6 +114,18 @@ def test_hook_trajectory_map_step(scaffold):
     assert "--run-step trajectory-map" in hook_text
 
 
+def test_hook_skills_sync_step(scaffold):
+    # S7: the hook runs the cross-agent skill-sync freshness step (delegated to
+    # check.py, like arch-map/okf). In a scaffold the kit-only gen_skills_index
+    # isn't beside check.py, so the step is a vacuous no-op that still passes —
+    # never `check: no step named` — and the shipped hook carries the line.
+    make_minimal_project(scaffold)
+    ok = run_py(["scripts/check.py", "--run-step", "skills-sync"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    hook_text = (KIT / "hooks" / "pre-commit").read_text(encoding="utf-8")
+    assert "--run-step skills-sync" in hook_text
+
+
 def test_hook_trajectory_step_is_the_ra_floor(scaffold):
     # S1: the hook runs `check.py --run-step trajectory` (the SSOT floor). It is
     # WARN-FIRST (gate=all): only R-A (Deliverable non-empty iff done) is a hard

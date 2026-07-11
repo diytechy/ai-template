@@ -136,6 +136,15 @@ fi
 #     silent no-op outside a git checkout and when the registry is untouched.
 "$PY" "$SCRIPTS_DIR/check_trajectory.py" --root "$REPO_ROOT" --staged || true
 
+# 1f. Cross-agent skill copies must match the neutral source — the same
+#     generated-artifact floor rule as 1b/1c (arch-map/okf): a per-agent skill
+#     copy (.claude/.gemini/.agents skills/) that drifts from the one
+#     project-trajectory/skills/ source is caught at commit, with a one-command
+#     fix (bootstrap.py --sync). Delegates to `check.py --run-step skills-sync`.
+#     Vacuous for a repo with no neutral source or no per-agent dir (a scaffold:
+#     the kit-only gen_skills_index isn't beside check.py, so the step no-ops).
+"$PY" "$SCRIPTS_DIR/check.py" --run-step skills-sync
+
 # 2. Traceability *integrity*: no duplicate / malformed ids — wrong at any
 #    stage, so safe to enforce on every commit. Deliberately NOT the full
 #    --strict orphan check: orphans are a G2+ gate criterion (a mid-G1 registry

@@ -34,7 +34,7 @@ resource: "generated"
 | [SR-022](SR-022.md) | Vendored-doc drift |
 | [SR-023](SR-023.md) | Arch-map generation |
 | [SR-024](SR-024.md) | Permutation case generation |
-| [SR-025](SR-025.md) | Skills index generation |
+| [SR-025](SR-025.md) | Skills index + checked per-agent fan-out |
 | [SR-026](SR-026.md) | Coordinator resumes headless |
 | [SR-027](SR-027.md) | Coordinator preflight |
 | [SR-028](SR-028.md) | Coordinator typed outcomes |

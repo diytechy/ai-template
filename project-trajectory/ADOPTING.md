@@ -226,7 +226,14 @@ range to see exactly which templates/scripts changed before you touch anything.
   hand-added step inside a pre-`[step:]` `check.py`, move it into a
   `[step:<name>]` section once, and it survives every re-sync after.) Diff
   before committing anyway, so a kit change you disagree with doesn't land
-  unread.
+  unread. **Cross-agent skill sync (2026-07, S7):** the hook gains a
+  `check.py --run-step skills-sync` step, so **re-sync `check.py` together with
+  the hook** (an older `check.py` with no `skills-sync` step fails every commit
+  with `check: no step named 'skills-sync'` — the same kit-owned-set-together
+  caveat as `okf`/`trajectory-map`). The step is vacuous unless the repo hosts
+  the neutral `skills/` source and per-agent skill dirs; if you keep per-agent
+  copies (`.claude`/`.gemini`/`.agents` `skills/`), refresh them from source with
+  `bootstrap.py --dest . --sync` and commit — a drifted copy is a gate finding.
 - **Regenerate, never raw-copy (kit-owned but generated):** `docs/process.md` +
   `docs/process-options.md` are *generated* from the kit masters per the
   recorded `docs/kit-profile` (§1). Raw-copying `PROCESS.md`/
@@ -447,13 +454,16 @@ range to see exactly which templates/scripts changed before you touch anything.
   appear on first run; preserve them like `docs/log.md` — they are history. A
   repo without agent-driven work skips all of it.
 - **Skills layer (newer kits ship `skills/`).** To bring an agent's skills into an
-  already-adopted repo, re-run `bootstrap.py --agents claude|gemini|both` against
-  it: it materializes the matched `kit`-scope skills into the agent dir
-  (`.claude/skills/…` / `.gemini/skills/…`) and copies the inert hook example,
-  **skipping any skill file that already exists** (your edits are safe; use
-  `--force` only after a diff pass). The `skills/SKILL.md` sources are kit-owned —
-  overwrite freely on re-sync; a skill you customized locally, treat like
-  `check.py` (take the new version, re-apply your delta). Skills are opt-in
+  already-adopted repo, re-run `bootstrap.py --agents claude|gemini|codex|both`
+  against it: it materializes the matched `kit`-scope skills into the agent dir
+  (`.claude/skills/…` / `.gemini/skills/…` / `.agents/skills/…` for Codex) and
+  copies the inert hook example, **skipping any skill file that already exists**
+  (your edits are safe; use `--force` only after a diff pass). The `skills/SKILL.md`
+  sources are kit-owned — overwrite freely on re-sync; a skill you customized
+  locally, treat like `check.py` (take the new version, re-apply your delta). To
+  refresh the per-agent copies from source after a kit skill changes, run
+  `bootstrap.py --dest . --sync` (force-overwrites only the `<agent>/skills/…`
+  subtrees; the `skills-sync` gate flags a drifted copy — S7). Skills are opt-in
   accelerators, never a gate (process-options.md "Skills layer").
 
 ### Repos whose `AGENTS.md` already means something else

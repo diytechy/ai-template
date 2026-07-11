@@ -167,6 +167,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "arch-map",
         "trajectory-map",
         "okf",
+        "skills-sync",
     }
 )
 
@@ -390,6 +391,20 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # file's summary (gen_arch_map's default already covers # // --).
         for tok in _pget(profile, "arch-map", "comment-prefixes", "").split():
             arch_cmd += ["--comment-prefix", tok]
+    # Cross-agent skill-sync drift gate (S7): byte-compare each per-agent skill
+    # copy (.claude/.gemini/.agents) to the ONE neutral source. gen_skills_index
+    # is a KIT-only script (it needs the neutral skills/ source, which only the
+    # kit repo hosts — a scaffold has no source to drift from), so downstream it
+    # isn't beside check.py; the step then runs a vacuous no-op so the hook's
+    # `--run-step skills-sync` still resolves (never `no step named`) and passes
+    # for free. Where the generator IS present (this kit's own repo) it runs the
+    # real byte-identity check, deriving source + per-agent dirs itself.
+    skills_gen = _SCRIPTS / "gen_skills_index.py"
+    skills_sync_cmd = (
+        [sys.executable, str(skills_gen), "--check-agents"]
+        if skills_gen.exists()
+        else [sys.executable, "-c", "pass"]  # kit-only generator absent: vacuous
+    )
     return [
         # --- product checks: language-specific, declared in docs/stack.ini -----
         ("format", _requires(fmt_cmd), fmt_cmd, {"G3"}, "product"),
@@ -535,6 +550,20 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "okf",
             (),
             [sys.executable, str(_SCRIPTS / "gen_okf.py"), "--check"],
+            {"G3"},
+            "process",
+        ),
+        # Cross-agent skill-sync freshness (S7): every per-agent skill copy
+        # (.claude/.gemini/.agents) must stay byte-identical to the ONE neutral
+        # source — the same generated-artifact gate as arch-map/trajectory-map/
+        # okf. A drifted copy fails with a one-command fix (bootstrap.py --sync).
+        # Vacuous when a repo has no neutral source or no per-agent dir (a
+        # scaffold: the generator isn't beside check.py, so skills_sync_cmd is a
+        # no-op). G3 only, like the other generated-artifact freshness gates.
+        (
+            "skills-sync",
+            (),
+            skills_sync_cmd,
             {"G3"},
             "process",
         ),

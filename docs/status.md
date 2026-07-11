@@ -24,7 +24,7 @@ working surface.
   `SN→SR→LLR→TC` spine is self-adopted: `docs/gate` is at **G3**;
   `check.py --gate G3` (12 steps) is the full bar and CI runs it on real data
   (the meta-repo dogfoods its own trajectory + OKF layers).
-- **Plan state:** meta-repo at **G3**, spine **SN=23 SR=44 LLR=42 TC=44, 0
+- **Plan state:** meta-repo at **G3**, spine **SN=23 SR=44 LLR=43 TC=45, 0
   orphans**. The dashboard is the root
   [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session history: [log.md](log.md).
 - **Open items:**
@@ -32,9 +32,11 @@ working surface.
     1. **G3 re-attestation** — one sitting covers the accumulated spine changes
        still awaiting sign-off: `SR-034` text (Inspection→Analysis), the added
        `SR-039…SR-043`, the extended `SR-038`, the **`SR-037` text change** (the
-       SSOT coherence + SpecRef rules), and now **`SN-023` + `SR-044`** (the
-       declared-interface connectivity layer, new SN→SR). *Mandatory*: Verified
-       SR text changed and new SN/SRs joined the spine ([log.md](log.md)).
+       SSOT coherence + SpecRef rules), **`SN-023` + `SR-044`** (the
+       declared-interface connectivity layer, new SN→SR), and now the **`SR-025`
+       text change** (extended to the checked per-agent skill fan-out; +LLR-043/
+       TC-045). *Mandatory*: Verified SR text changed and new SN/SRs joined the
+       spine ([log.md](log.md)).
     2. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
     3. **WI-DAG edge data-pass** — demote the narrative predecessor edges in
        `work-items.csv` to soft `~` edges (which edges are real technical
@@ -52,9 +54,10 @@ working surface.
     architecture-connectivity-mechanize and meta-repo interface-authoring slices
     landed (see [log.md](log.md) — the kit's own `IF-###` seams now declare its
     real architecture, so the How-SW panel renders the graph and the
-    connectivity coverage is clean); the spine-touchers bundle into the pending
-    re-attestation (the campaign ruling). Remaining:
-    - **WI-058** — cross-agent skill sync (checked fan-out from one source).
+    connectivity coverage is clean); the cross-agent skill fan-out is now a
+    checked, one-command-refreshable copy of the one neutral source (the
+    `.claude`/`.agents` drift resolved); the spine-touchers bundle into the
+    pending re-attestation (the campaign ruling). Remaining:
     - **WI-059** — heterogeneous implementer/reviewer scheduling (sequenced
       last, detachable).
   - **Deferred (backlog — first-class `deferred` WI rows, each with its
@@ -73,9 +76,9 @@ working surface.
       extensions (`consumes`/effort schema, a typed-IF contract check,
       edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
       rendering — all deferred-on-need).
-- **Next action:** continue the campaign — **WI-058** (cross-agent skill sync:
-  checked fan-out from the one neutral source), then **WI-059**. The owner sitting
-  (the re-attestation, push ruling, sibling-repo target, batch review) follows the
+- **Next action:** finish the campaign — **WI-059** (heterogeneous implementer/
+  reviewer scheduling; sequenced last, detachable). The owner sitting (the
+  re-attestation, push ruling, sibling-repo target, batch review) follows the
   campaign close. After that: the G-Release walk, the WI-DAG edge data-pass, or new
   scope (which needs a plan/WI entry first).
 

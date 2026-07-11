@@ -813,6 +813,26 @@ contract lives in the kit's `skills/README.md`; the shape:
   binary/hardware?) and selects the `kit`-scope skills whose tags **intersect** the
   answers — a trivial set-intersection, no engine. The **metadata convention is the
   deliverable**, so a later tool can match/fetch smarter without redesign.
+- **The per-agent copies are a checked, generated fan-out (S7).** `.claude/skills/`,
+  `.gemini/skills/`, and `.agents/skills/` (Codex, `--agents codex`) are just
+  different directories holding **byte-identical** copies of the one neutral
+  `skills/` source — needed only because agent skill *locations* don't
+  standardize. Materialization stays write-once (never clobbers project content);
+  `bootstrap.py --sync` is the deliberate refresh that force-overwrites **only**
+  each `<agent>/skills/<name>/` subtree from source (edit source → re-materialize
+  in one command). `gen_skills_index.py --check-agents` is the **drift gate** —
+  every per-agent copy byte-identical to source — wired into the pre-commit floor
+  + G3 like the arch-map/OKF freshness steps: a drifted copy **fails** with a
+  one-command fix, and it is vacuous for a repo with no neutral source or no
+  per-agent dir. Only skills that a per-agent dir already carries are compared, so
+  a scope-matched subset is fine. The copies are **tracked + gated** (the kit's
+  idiom for committed generated artifacts — a fresh clone has working skills
+  before setup runs). **Tenability constraint:** this verbatim fan-out holds only
+  while **skill frontmatter stays agent-neutral**. The day a skill needs an
+  agent-specific field, materialization gains a per-agent transform (map/strip
+  fields) and the tracking model flips to **gitignore + regenerate-on-setup** —
+  tracking *transformed* artifacts invites the hand-edits the kit exists to
+  prevent. Deferred until a real need earns it.
 - **Future external sources plug in here.** `skills/README.md` documents the
   contract (naming, the frontmatter shape, the neutral-source landing zone,
   trust/review) for how a later tool would fetch remote/community skills — they land

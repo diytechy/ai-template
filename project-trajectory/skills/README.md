@@ -61,15 +61,38 @@ scope: this-repo                      # this-repo | kit  (see split below)
 Bootstrap materializes each **selected** skill into the chosen agent's native
 skills location, copying the neutral `SKILL.md` verbatim:
 
-| Agent | Native location |
-|---|---|
-| Claude Code | `.claude/skills/<name>/SKILL.md` |
-| Gemini CLI | `.gemini/skills/<name>/SKILL.md` (workspace skill) |
+| Agent | Native location | Selector |
+|---|---|---|
+| Claude Code | `.claude/skills/<name>/SKILL.md` | `--agents claude` |
+| Gemini CLI | `.gemini/skills/<name>/SKILL.md` (workspace skill) | `--agents gemini` |
+| Codex | `.agents/skills/<name>/SKILL.md` (its AGENTS.md-mirror dir) | `--agents codex` |
 
-Both agents adopted the **same Agent-Skills standard**, so materialization is a
+All three adopted the **same Agent-Skills standard**, so materialization is a
 straight copy into the agent-specific directory — no per-agent rewrite. If a
 future agent has *no* skills equivalent, it simply gets none (its stub +
 `AGENTS.md` still stand); the neutral source stays ready for when it does.
+
+### Checked fan-out: one source, many copies, no drift (S7)
+
+The per-agent dirs hold **byte-identical** copies of the one neutral source —
+they differ only because agent skill *locations* don't standardize (the same
+reason the kit keeps separate hook configs). To stop them rotting:
+
+- **Refresh is one command.** Materialization is write-once (never clobbers
+  project content); `bootstrap.py --sync` force-overwrites **only** each
+  `<agent>/skills/<name>/` subtree from source — "edit source → re-materialize".
+- **Drift is gated.** `gen_skills_index.py --check-agents` byte-compares every
+  per-agent copy to source and **fails** on a divergence (with the `--sync` fix),
+  wired into the pre-commit floor + G3 like the arch-map/OKF freshness gates.
+  Vacuous for a repo with no neutral source or no per-agent dir; only skills a
+  per-agent dir already carries are compared, so a scope-matched subset is fine.
+- **Tracked + gated.** The copies are committed (a fresh clone has working skills
+  before setup runs), the kit's idiom for committed generated artifacts.
+- **Tenability constraint:** verbatim fan-out holds only while **skill
+  frontmatter stays agent-neutral**. The day a skill needs an agent-specific
+  field, materialization gains a per-agent transform and the tracking model flips
+  to gitignore + regenerate-on-setup (tracking *transformed* artifacts invites
+  the hand-edits the kit exists to prevent). Deferred until a real need earns it.
 
 ## The generated index
 
