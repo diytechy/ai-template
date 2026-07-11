@@ -50,6 +50,8 @@ anchors against GitHub-style heading slugs (plus `{#custom-id}` suffixes and
 (`[t][ref]`), images (`![alt](src)` — skipped, not existence-checked), and links
 inside fenced/inline code (stripped before parsing). Anchors are only validated
 against Markdown targets the script can parse.
+
+Contracts: IF-002, IF-030 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

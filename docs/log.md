@@ -613,3 +613,90 @@ clean (64 WIs, 56 done); `gen_trajectory --check` + `gen_okf --check` + arch-map
 **up to date**; `check.py --gate G3` **12/12 PASS** (first run caught an
 unformatted diff → `ruff format` → re-run). Spine **SN=23 SR=44 LLR=42 TC=44,
 0 orphans**.
+
+## 2026-07-11 — WI-057 (S6): the kit's own interface registry — the connectivity dogfood
+
+**Session.** Authored `docs/requirements/interfaces.csv` — **43 `IF-###` seams**
+describing the kit's real architecture — plus a `Contracts: IF-###` line in the
+module docstring of every one of the 20 scripts. This closes the S5 driver: the
+meta repo's lone *"connectivity undeclared"* warn. **Data + docstrings only — no
+kit-script behavior changed.**
+
+**The 43 rows (species).**
+- **20 Provides-CLI rows**, one per arch-map script — the downstream
+  compatibility surface, now formal. The 12 gate-step scripts (`trace`,
+  `check_docs`, `check_flows`, `check_perf`, `check_privacy`, `check_stubs`,
+  `check_dupes`, `check_doc_refs`, `check_trajectory`, `gen_arch_map`,
+  `gen_trajectory`, `gen_okf`) `Provides → scripts/check`, so the How-SW graph
+  shows the real **`check.py` hub** (12 arrows in); the other 8 provide to the
+  downstream adopter / `git` / the `agent CLI` / an output file.
+- **19 file-mediated Consumes rows** over the shared-contract hubs
+  (`docs/stack.ini`, `docs/architecture.md`, `docs/requirements/work-items.csv`,
+  the spine registries, `docs/status.md`, the source tree, the policy files) —
+  each row gives its module its consumes-credit.
+- **4 subprocess/external seams**: `pre-commit → check` (freshness floor),
+  `pre-commit → trace` (`--strict-integrity`), `pre-push → check_privacy`
+  (`--range`), `agent_loop → agent CLI` (headless session driver).
+- `scripts/gen_cases` carries the **`source` Notes valve** (it consumes only its
+  `--spec` argv and produces cases) — the one honest source in the set.
+
+**End state — zero connectivity warns.** Every one of the 20 arch-map modules is
+now a declared IF endpoint with **both** a Provides and a Consumes seam (or the
+source valve). `check_trajectory --strict` → **clean, 0 warns** (inventory
+coverage + docstring-citation + seam-TC all satisfied); `trace --strict` →
+**interfaces=43 interface-findings=0, 0 endpoint advisories**. Regenerated
+`docs/architecture.md` (20 `Contracts (interfaces):` lines harvested into the
+MODULE MAP), root `PROJECT_STATE.html` (the **How-SW panel now renders the
+43-edge module/file/external graph**), and `docs/okf` (which now emits an
+`IF-###` concept per seam; bundle 155 → **207 files**).
+
+**Judgment calls.**
+1. **43 rows, above the ~30-35 guide.** Full 20-module *bidirectional* coverage
+   is the honest floor — every module needs a Provides **and** a Consumes credit,
+   ~2 rows/module. Every row is a real seam (no boilerplate); the count is
+   coverage, not padding.
+2. **`ThisProject` is always a script (or a hook in the LLR `Module` set),** so
+   the `trace` endpoint advisory (ThisProject-vs-LLR-Module) never fires — 0
+   advisories — and every `ThisProject` normalizes into the arch-map inventory.
+3. **All seams `Status=Stable`.** These are shipped, pinned contracts (the
+   never-break-downstream surface), not in-development seams — `Stable` is the
+   accurate label. It also makes the **Active-seam-TC citation rule vacuous** (no
+   `Active` row), so it warns on nothing.
+
+**Remaining-warn honesty — a surfaced S5 tension (not silenced).** The
+Active-seam-TC rule is *not exercised* by the meta dogfood, and there is a
+concrete reason beyond "these are stable": `check_trajectory`'s seam-TC scan
+reads the TC **`Verifies`** column for `IF-###` tokens (per
+`tests/test_trajectory.py::test_seam_tc_citation_warn`), but `trace.py`'s TC
+orphan check flags **any** `Verifies` token that is not an `SN/SR/LLR/TC` id as
+*"references unknown"*. So marking a seam `Active` and citing it the documented
+way (`Verifies=SR-044;IF-009`) would **pass** `check_trajectory` yet **fail**
+`trace --strict` — the two S5 checks are in tension for an Active seam. Surfaced
+as a finding, **not fixed inline** (this WI is data + docstrings, "no kit-script
+behavior changes"; and the working agreement is to surface a smell, not fix it
+in an unrelated change). Because the kit's seams are genuinely `Stable`, the
+tension is moot here. **Recommended follow-up** (a new WI or an S5 rider): teach
+`trace.py` to treat an `IF-###` token in a TC `Verifies` cell as an off-spine
+seam citation resolved against the IF registry, not a spine orphan — then an
+adopter can mark a seam `Active` and cite it without tripping the integrity
+floor.
+
+**`Implements:` tags — skipped (deliverable #3 was optional).** Seeding
+`Implements: SR-/LLR-` on the `CodeSymbol` functions would touch ~40 functions
+across all 20 files with per-symbol accuracy risk and no mechanical oracle —
+broad for a data-authoring WI. Deferred to a focused pass; the arch-map
+`Implements` column stays empty except `subagent_gate`'s existing tags.
+
+**Byte deltas.** `AGENTS.template.md` **untouched (9,978)**; `PROCESS.md`
+**untouched (58,297)**. No byte-budgeted file changed.
+
+**Spine note.** No new SN/SR/LLR/TC rows; the interface layer's spine cut landed
+in S5 (SN-023 + SR-044 + LLR-041/042 + TC-044). WI-057 is **data + docstrings
+only — nothing new rides the pending re-attestation beyond S5's chain.**
+
+**Mechanized bar.** `pytest -q` **506 passed, 3 skipped**;
+`check_docs.py --root . --stale` **0 broken**; `check_trajectory --strict` clean
+(64 WIs, 57 done, graph acyclic); `gen_arch_map --check` + `gen_trajectory
+--check` + `gen_okf --check` **up to date**; `check.py --gate G3` **12/12 PASS**.
+Spine **SN=23 SR=44 LLR=42 TC=44, 0 orphans**; **interfaces=43,
+interface-findings=0, 0 connectivity warns**.

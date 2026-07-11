@@ -24,6 +24,8 @@ passes vacuously, so a fresh scaffold and a non-adopter pay nothing.
 
 Usage:  python scripts/gen_okf.py [--root .] [--check]
 Exit codes: 0 clean / vacuous / opted-out, 1 stale bundle under --check.
+
+Contracts: IF-012, IF-033 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

@@ -232,6 +232,8 @@ placeholder between the architecture markers.
 
 After running: open AGENTS.md and docs/status.md, fill the PROJECT BRIEF, then
 start gate G1 (see docs/process.md).
+
+Contracts: IF-014, IF-039 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

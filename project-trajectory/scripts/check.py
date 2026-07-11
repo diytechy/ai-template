@@ -69,6 +69,8 @@ expressions, coverage threshold) is declared ONCE in `docs/stack.ini` when it
 exists — CI, the pre-commit hook, and setup.* delegate there instead of each
 restating a command. Absent that file, the built-in Python-reference defaults
 below apply (identical values), so a profile-less repo is unchanged.
+
+Contracts: IF-013, IF-022, IF-040 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

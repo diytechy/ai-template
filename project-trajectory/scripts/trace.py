@@ -188,6 +188,8 @@ runnable check vs a named human's recorded judgment (Verification=Attest). This
 keeps the project's trust footprint auditable — attestation is honest but
 trust-based (the box can be checked without the work having happened), so the
 report never lets it hide inside a bare "Verified".
+
+Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

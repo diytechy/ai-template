@@ -26,6 +26,8 @@ unless --strict; NOT wired into check.py's required floor. Opt in per repo:
     command = {py} scripts/check_doc_refs.py --strict
 
 Scan surface = root *.md + docs/**/*.md (the check_docs surface). Stdlib only.
+
+Contracts: IF-008, IF-028 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

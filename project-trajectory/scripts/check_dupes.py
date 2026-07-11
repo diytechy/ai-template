@@ -21,6 +21,8 @@ holds one substring per line (# comments fine), matched against the finding's
 line-number-free form ("a.py == b.py"), so an allowed pair stays allowed as the
 files grow. Exit: 0 clean (or all findings allowlisted); 1 with one line per
 duplicated block naming both file:line locations and the block length.
+
+Contracts: IF-007, IF-027 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 from __future__ import annotations

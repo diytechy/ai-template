@@ -24,6 +24,8 @@ Placeholder ids ending in "-000" (the templates' examples) satisfy the
 "cites an id" rule and are never validated, so a fresh scaffold starts green.
 --no-placeholders (wire it in from G2 on) instead *flags* every cited "-000"
 id, so a real authored flow can't keep citing the template's example ids.
+
+Contracts: IF-003, IF-029 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

@@ -245,7 +245,7 @@ one new SR — an S0-style ruling. → **re-attestation.**
 joins bound the rot to that one column; CLI contracts are already pinned by the
 never-break-downstream rule.
 
-## S6 — Meta-repo authoring (the dogfood)
+## S6 — Meta-repo authoring (the dogfood) — ✅ DONE (2026-07-11)
 
 **Goal.** Write the kit's own interfaces so its architecture view shows the real
 system (check.py as the hub; hooks + agent_loop feeding it; stack.ini + the

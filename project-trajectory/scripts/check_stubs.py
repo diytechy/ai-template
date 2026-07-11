@@ -42,6 +42,8 @@ WARN line per finding on stdout.
 Usage:
     python scripts/check_stubs.py [--src src] [--report docs/test/stub-report.md]
                                   [--exclude GLOB ...] [--strict]
+
+Contracts: IF-006, IF-026 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

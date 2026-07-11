@@ -82,6 +82,8 @@ missing (report, never a hang); the working directory is not a git repo; or
 docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
+
+Contracts: IF-015, IF-037, IF-041 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

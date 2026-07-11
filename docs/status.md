@@ -48,16 +48,12 @@ working surface.
   - **In flight — the working-surface + architecture-connectivity campaign**
     (spec:
     [specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
-    fully ruled). The SSOT-mechanize, meta-compliance and
-    architecture-connectivity-mechanize slices landed (see [log.md](log.md)); the
-    spine-touchers bundle into the pending re-attestation (the campaign ruling).
-    Remaining:
-    - **WI-057** — meta-repo interface authoring: write the kit's own `IF-###`
-      seams so its architecture view shows the real system. **Driver:** the
-      connectivity layer is now live and the meta repo emits one
-      *"connectivity undeclared"* warn (20 arch-map modules, zero IF rows) at the
-      hook and G3 — expected and non-blocking; WI-057 authors the rows that
-      resolve it.
+    fully ruled). The SSOT-mechanize, meta-compliance,
+    architecture-connectivity-mechanize and meta-repo interface-authoring slices
+    landed (see [log.md](log.md) — the kit's own `IF-###` seams now declare its
+    real architecture, so the How-SW panel renders the graph and the
+    connectivity coverage is clean); the spine-touchers bundle into the pending
+    re-attestation (the campaign ruling). Remaining:
     - **WI-058** — cross-agent skill sync (checked fan-out from one source).
     - **WI-059** — heterogeneous implementer/reviewer scheduling (sequenced
       last, detachable).
@@ -77,12 +73,11 @@ working surface.
       extensions (`consumes`/effort schema, a typed-IF contract check,
       edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
       rendering — all deferred-on-need).
-- **Next action:** continue the campaign — **WI-057** (author the meta repo's own
-  `IF-###` seams, resolving the live *"connectivity undeclared"* warn), then
-  **WI-058**, **WI-059**. The owner sitting (the re-attestation, push ruling,
-  sibling-repo target, batch review) follows the campaign close. After that: the
-  G-Release walk, the WI-DAG edge data-pass, or new scope (which needs a plan/WI
-  entry first).
+- **Next action:** continue the campaign — **WI-058** (cross-agent skill sync:
+  checked fan-out from the one neutral source), then **WI-059**. The owner sitting
+  (the re-attestation, push ruling, sibling-repo target, batch review) follows the
+  campaign close. After that: the G-Release walk, the WI-DAG edge data-pass, or new
+  scope (which needs a plan/WI entry first).
 
 ## Scope
 

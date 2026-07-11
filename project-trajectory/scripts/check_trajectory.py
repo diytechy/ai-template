@@ -66,6 +66,8 @@ token in that module's IF row Notes (below).
 
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
+
+Contracts: IF-009, IF-023 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
