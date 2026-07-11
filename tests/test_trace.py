@@ -225,6 +225,57 @@ def test_attest_is_in_verification_vocabulary(scaffold):
     assert "SR-002 has Verification=" not in report  # no enum-violation finding
 
 
+# --- WI-068: the Critique verification value ----------------------------------
+
+# A Critique SR: subjective acceptance judged by an independent critical eye
+# against a rubric. Unlike Attest, its artifact is PRODUCED BY CODE (only the
+# acceptance is perceptual), so it is NOT LLR-exempt.
+CRITIQUE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
+SR-002,Render realism,SN-001,"The rendered scene shall look realistic.","Subjective; judged by a critic against a rubric.","Critic judges the render against docs/rubrics/render.md anchors.",,S,Critique,Verified
+"""
+
+CRITIQUE_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Verified
+TC-002,SR-002,System,critique the render against the rubric,Release,"rubric=docs/rubrics/render.md; artifact=render.png","Critic APPROVE per the rubric anchors",No,,Verified
+"""
+
+
+def make_critique_project(scaffold):
+    # SR-002 is Critique with NO LLR (the minimal chain keeps only LLR-001).
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "system-requirements.csv").write_text(CRITIQUE_SRS, encoding="utf-8")
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(
+        CRITIQUE_TCS, encoding="utf-8"
+    )
+
+
+def test_critique_verification_value(scaffold):
+    make_critique_project(scaffold)
+    # 1) Critique is in the closed Verification vocabulary: --strict-schema does
+    #    not flag it as out-of-vocabulary.
+    proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR-002 has Verification=" not in report
+    # 2) A Critique SR is NOT LLR-exempt (unlike Attest): SR-002 has no LLR, so it
+    #    is an orphan (the artifact is produced by code — only acceptance is
+    #    subjective).
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-002 has no LLR" in report
+    # 3) An unknown Verification value is still rejected.
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        CRITIQUE_SRS.replace(",Critique,", ",Perceptual,"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "Perceptual" in report  # the out-of-vocabulary finding
+
+
 # --- Thread 1: generated traceability views (outline + Mermaid + HTML) ---------
 
 

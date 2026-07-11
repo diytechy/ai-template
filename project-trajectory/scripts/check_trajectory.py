@@ -41,7 +41,11 @@ work-items layer"). status.md is **forward-only** (what happens next) and the WI
     target (`path` or `path#anchor`; the path part must exist).
 R-B…R-E are **WARN by default, ERROR under `--strict`** (wired at G2+). If
 `status.md` is absent, R-B/R-C/R-D are vacuous (a repo may not use a status
-blackboard). `--staged` adds the warn-first **no-validation-delta** check.
+blackboard). `--staged` adds the warn-first **no-validation-delta** checks: the
+follow-up-on-a-done-SR ratchet, and the **critique-loop ratchet** (WI-068) — a WI
+closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
+verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
+tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor).
 
 **Opt-out and vacuous by default** — the posture of the always-on
 `docs/secrets-scan` floor. The check is on unless `docs/trajectory-check` reads
@@ -702,6 +706,108 @@ def staged_findings(root):
     ]
 
 
+# The critique-loop ratchet (WI-068). A `Verification=Critique` SR and its latest
+# CRITIQUE verdict file (docs/reviews/NNN-CRITIQUE.md, the S8 verdict format).
+RUBRICS_DIR = "docs/rubrics/"
+REVIEWS_DIR = "docs/reviews"
+CRITIQUE_VERDICT_RE = re.compile(
+    r"^\s*VERDICT:\s*(APPROVE|CHANGES-REQUESTED)\s*(?:findings\s*=\s*(\d+))?",
+    re.I | re.M,
+)
+
+
+def _load_critique_srs(root):
+    """SR ids whose Verification is `Critique` (system-requirements.csv). Empty
+    makes the critique ratchet vacuous — a repo with no perceptual SR pays
+    nothing."""
+    out = set()
+    for r in read_rows(root / SR_CSV):
+        sid = (r.get("SR-ID") or "").strip()
+        if (
+            sid
+            and not sid.endswith("-000")
+            and (r.get("Verification") or "").strip() == "Critique"
+        ):
+            out.add(sid)
+    return out
+
+
+def _latest_critique_verdict(root):
+    """`(verdict, findings)` of the highest-numbered `docs/reviews/*-CRITIQUE.md`,
+    or `(None, 0)`. The verdict file is not WI-tagged, so 'latest overall' is the
+    honest proxy for 'the in-scope critique' (a recorded gap — the loop critiques
+    one scope at a time, so the newest verdict is the live one in practice)."""
+    d = root / REVIEWS_DIR
+    if not d.is_dir():
+        return None, 0
+    files = sorted(d.glob("*-CRITIQUE.md"))
+    if not files:
+        return None, 0
+    try:
+        text = files[-1].read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None, 0
+    m = CRITIQUE_VERDICT_RE.search(text)
+    if not m:
+        return None, 0
+    return m.group(1).upper(), int(m.group(2) or 0)
+
+
+def critique_ratchet_findings(root):
+    """The lax-TC ratchet for the critique loop (WI-068; warn-first, the same
+    no-validation-delta idea as `staged_findings`). When a staged commit **closes**
+    a WI whose `SR-Refs` include a `Verification=Critique` SR, the latest CRITIQUE
+    verdict is CHANGES-REQUESTED with findings, yet the staged set touches **neither**
+    the TC registry, the tests dir, **nor** a `docs/rubrics/` file, the fix landed in
+    the artifact but not the validation chain — so the same 'shipped it because
+    nothing judged it' can recur. Returns warning strings ([] when not applicable).
+    Any missing git context makes it a silent no-op, like `staged_findings`."""
+    critique_srs = _load_critique_srs(root)
+    if not critique_srs:
+        return []
+    verdict, findings = _latest_critique_verdict(root)
+    if verdict != "CHANGES-REQUESTED" or findings <= 0:
+        return []
+    staged = _git(root, ["diff", "--cached", "--name-only"])
+    if staged is None:
+        return []
+    staged_names = set(staged.splitlines())
+    if WI_CSV not in staged_names:
+        return []  # no WI close staged here
+    head_text = _git(root, ["show", "HEAD:" + WI_CSV])
+    if head_text is None:
+        return []
+    cur_map = _wi_status_map(read_rows(root / WI_CSV))
+    head_map = _wi_status_map(list(csv.DictReader(head_text.splitlines())))
+
+    closing = []
+    for wid, c in cur_map.items():
+        was = head_map.get(wid, {}).get("status")
+        if c["status"] == "done" and was != "done":
+            shared = sorted(sr for sr in c["srs"] if sr in critique_srs)
+            if shared:
+                closing.append((wid, shared))
+    if not closing:
+        return []
+
+    tests_prefix = _tests_dir(root).rstrip("/") + "/"
+    chain_touched = any(
+        f == TC_CSV or f.startswith(tests_prefix) or f.startswith(RUBRICS_DIR)
+        for f in staged_names
+    )
+    if chain_touched:
+        return []
+    return [
+        "{}: closes on Critique-verified {} while the latest CRITIQUE verdict is "
+        "CHANGES-REQUESTED ({} finding(s)), but the change set touches neither {}, "
+        "{}, nor {} — harden the TC or add a rubric anchor (the fix must land in "
+        "the chain, not just the artifact)".format(
+            wid, ";".join(shared), findings, TC_CSV, tests_prefix, RUBRICS_DIR
+        )
+        for wid, shared in closing
+    ]
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -730,9 +836,11 @@ def main():
         return 0
 
     # --staged is the commit-time no-validation-delta warn only: never blocks,
-    # never re-runs the full validation (the trajectory step already did).
+    # never re-runs the full validation (the trajectory step already did). Two
+    # warns: the follow-up-on-a-done-SR ratchet, and the critique-loop ratchet
+    # (a WI closing under a CHANGES-REQUESTED critique without hardening the chain).
     if args.staged:
-        for w in staged_findings(root):
+        for w in staged_findings(root) + critique_ratchet_findings(root):
             print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
         return 0
 

@@ -34,3 +34,4 @@ resource: "generated"
 | [SN-021](SN-021.md) | Runtime |
 | [SN-022](SN-022.md) | Runtime |
 | [SN-023](SN-023.md) | A reviewer can see the project's progress and how its parts connect from one dashboard-li… |
+| [SN-024](SN-024.md) | Subjective/perceptual acceptance — a realistic-looking render, an artifact comparison wit… |

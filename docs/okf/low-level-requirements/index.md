@@ -58,3 +58,4 @@ resource: "generated"
 | [LLR-045](LLR-045.md) | Loop-side reviewer dispatch + managed routing |
 | [LLR-046](LLR-046.md) | Substance scorer + tripwires + scoreboard |
 | [LLR-047](LLR-047.md) | Run capability menu reader |
+| [LLR-048](LLR-048.md) | Critique loop dispatch + lax-TC ratchet |

@@ -53,6 +53,10 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `parse_model_map(spec)` | "P0=model-a,G3=model-b" -> {"P0": "model-a", "G3": "model-b"}. |  |
 | `phase_tier(phase, tier_map)` | The routing tier for a run-phase: the declared --tier-map / AGENT_TIER_MAP |  |
 | `reviewer_prompt(prompt_templates, phase, verdict_path)` | The redacted reviewer prompt for a review phase: the per-phase prompt-map |  |
+| `load_critique_srs(docs)` | The SR ids whose Verification is `Critique` (docs/requirements/ |  |
+| `build_scope_srs(root, docs, commit_range)` | The SR ids the WIs named in `commit_range`'s commit subjects deliver — the |  |
+| `critique_brief(root, docs, scope_srs)` | The redacted critique brief: for each in-scope Critique SR, its intent (the |  |
+| `critique_prompt(prompt_templates, verdict_path, brief)` | The redacted critique prompt: the CRITIQUE prompt-map template (a FILE the |  |
 | `git(root, *args)` | Run git in the repo; returns (returncode, stdout-stripped). |  |
 | `head_sha(root)` | Short HEAD sha, or None on a zero-commit repo (guarded rev-parse). |  |
 | `current_state_excerpt(status_path, max_lines)` | The '## Current State' section of a status.md — the root dispatcher's or |  |
@@ -261,6 +265,7 @@ Contracts (interfaces): IF-009, IF-023
 | `interface_findings(root)` | Architecture-connectivity coverage warns (S5/WI-056; process.md §8), all |  |
 | `ssot_findings(wis, root)` | The status.md ↔ work-items.csv coherence findings (R-A…R-E) + the |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
+| `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |
 | `main()` |  |  |
 
 ### `scripts/check_vendored`

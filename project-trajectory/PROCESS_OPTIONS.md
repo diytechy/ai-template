@@ -614,6 +614,63 @@ double-click wrappers, scaffolded like `run.*` and **inert** until the
 single hands-on session at the mapped tier instead of the loop. A repo that
 doesn't want the entry point deletes the launchers; the protocol stands alone.
 
+## Critique verification & the critique loop
+
+*Referenced from the "Unattended operation" layer above.* **Applies when** a
+requirement's acceptance is **subjective** — "a realistic-looking render", an
+artifact comparison with no crisp measurable interface. The implementer session
+cannot judge its own output (a real project shipped awkward render artifacts
+because "the agent didn't know how to judge it, it just shipped it"), and the
+original TC may have been lax. `Critique` gives another agent a **different hat**:
+an independent critical eye that says *where and why* something isn't good enough
+and drives rework toward a written bar. Built on the S8 chassis (fresh sessions,
+redacted prompts, verdict files, `gate-policy`-keyed escalation).
+
+- **`Critique` is a first-class Verification value** (PROCESS.md §4). A perceptual
+  TC declares `Verification=Critique`; its `Method` names the critique procedure and
+  its `Parameters` name a **rubric** (`docs/rubrics/<name>.md`) plus the **artifact
+  recipe** (the command/steps that produce the render/output under judgment). The
+  `CRITIQUE` leg is its mechanization; human **`Attest`** stays a distinct, unmixed
+  value — that separation is the point of the ruling.
+- **The rubric derives from the SN/SR intent, never the TC** — the inversion that
+  catches a lax TC instead of inheriting it. A rubric carries **numbered good
+  (`G#`) and bad (`B#`) anchors** — definite, citable entries, TC-style. The
+  reference **builds over time**: a critique finding that names a new failure mode
+  is added as a new `B#` anchor at rework, so the next round judges against the
+  **accumulated** reference, and every verdict **cites anchor ids** (what makes
+  rounds comparable across sessions). See [`docs/rubrics/`](rubrics/README.md).
+- **Redaction by construction.** The critic gets the rubric + the SN/SR intent +
+  the artifact recipe and **never the implementer's self-assessment** (`status.md`,
+  `log.md`, the session transcript) — the same rule the reviewer prompt follows.
+  It ships as an embedded `CRITIQUE_PROMPT`, overridable per phase with a
+  prompt-template **file** via `--prompt-map`/`AGENT_PROMPT_MAP` under the
+  `CRITIQUE` key. The critic is provider-heterogeneous from the implementer when
+  available (`agent_route`), strong-tier by default.
+- **The optimization loop, bounded.** BUILD → CRITIQUE → rework, iterating until
+  `APPROVE` or the budget (`AGENT_CRITIQUE_MAX`, default **3**, env-overridable
+  like the S8 knobs) trips the `gate-policy` page-the-human path. The trigger is a
+  committing build whose WI touches a `Critique` SR (read straight off the spine);
+  absent an enable-list or any `Critique` SR, nothing changes.
+- **The lax-TC ratchet.** A `CRITIQUE` round that returned CHANGES-REQUESTED and
+  then closes the WI with **no change to the validation chain — the TC prose, the
+  test logic, or the rubric file** — trips the warn-first no-validation-delta check
+  (`check_trajectory --staged`): the fix must land in the chain, not just the
+  artifact. This is the specific mechanism that stops "shipped it because nothing
+  judged it" from recurring.
+- **The arbiter split.** Working default: **the critic gates iteration; the human
+  owns acceptance.** A critic `APPROVE` ends rework; gate closure still carries the
+  human `Attest` (the strong-model floor and the attested-vs-mechanized split
+  stand). Under `gate-policy: autonomous` the critic verdict closes
+  iteration-level acceptance and the recorded-verdict rules govern the gate as they
+  do today. (This does not contradict the S8 "no LLM-judge tiebreaker" ruling —
+  that ruled out an LLM arbitrating between *reviewers' scores*; here the quality
+  itself is perceptual and an LLM eye is the only mechanizable instrument.)
+- **The multimodal caveat.** Image-capable CLIs read local renders/screenshots
+  natively from the recipe's paths; **capability varies per model** — note it in
+  the registry `Notes`, and a text-only model runs a **degraded text-proxy
+  critique** (it judges the description/output text and says so). Honest
+  degradation, never a silent pass.
+
 ## Tier-conditional guardrails
 
 *Referenced from the "Unattended operation" layer above.* **Applies when** an

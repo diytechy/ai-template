@@ -38,8 +38,10 @@ working surface.
        TC-045), and now the **new `SR-045`** under `SN-006`/`SN-016` (the S8
        heterogeneous implementer/reviewer scheduling layer; +LLR-044/045/046 +
        TC-046 + IF-044…047), and now the **new `SR-046`** under `SN-001` (the
-       run capability menu / launcher surface; +LLR-047 + TC-047). *Mandatory*:
-       Verified SR text changed and new SN/SRs joined the spine
+       run capability menu / launcher surface; +LLR-047 + TC-047), and now the
+       **new `SN-024` + `SR-047`** under `SN-024`/`SN-006` (the subjective-quality
+       critique loop / `Critique` verification value; +LLR-048 + TC-048).
+       *Mandatory*: Verified SR text changed and new SN/SRs joined the spine
        ([log.md](log.md)).
     2. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
     3. **WI-DAG edge data-pass** — demote the narrative predecessor edges in
@@ -54,15 +56,15 @@ working surface.
   - **In flight — the capability-expansion campaign** (spec:
     [specs/capability-expansion.md](specs/capability-expansion.md), fully
     ruled + scheduled 2026-07-11, bundled with the pending re-attestation):
-    - **WI-068** — `Critique` verification value + the subjective-quality
-      critique loop (rubric anchors build a citable good/bad reference).
     - **WI-069** — pair-row agent registry (Family/Env columns, version-less
       resolution, per-pair cooldown; extends the routing SR).
     - **WI-070** — `PROJECT_STATE.html` OKF knowledge tab (the bundle's
       first real consumer; extends the dashboard SR).
-    **Next up: WI-068.** The run capability menu just landed (`stack.ini
-    [run]` + `run_menu.py`; the launcher surface's first SR, SR-046). The prior
-    working-surface + architecture campaign
+    **Next up: WI-069** (the C3 pair-row agent registry). The C2 critique loop
+    just landed (the `Critique` verification value + the subjective-quality
+    critique loop: rubric-anchored independent critique sessions, the lax-TC
+    ratchet, spine +SN-024/SR-047/LLR-048/TC-048 riding the re-attestation). The
+    prior working-surface + architecture campaign
     is closed and archived
     ([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md));
     all spine-touchers bundle into the one pending re-attestation.
@@ -87,7 +89,7 @@ working surface.
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
 - **Next action:** execute the capability-expansion campaign in order —
-  **WI-068** next (the run capability menu just landed), then WI-069, WI-070.
+  **WI-069** next (the C2 critique loop just landed), then WI-070.
   The **owner sitting** follows
   the campaign close: one G3 re-attestation over every accumulated spine
   change (both campaigns), the push ruling, the sibling-repo target, and the

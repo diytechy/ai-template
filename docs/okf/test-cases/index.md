@@ -58,3 +58,4 @@ resource: "generated"
 | [TC-045](TC-045.md) | Run the skills-sync suite: a hand-edited per-agent copy fails gen_skills_index --check-ag… |
 | [TC-046](TC-046.md) | Run the heterogeneous-scheduling suite: agent_route selection honors enable-list order, t… |
 | [TC-047](TC-047.md) | Run the run-menu suite: --list prints name<TAB>desc for each declared capability in decla… |
+| [TC-048](TC-048.md) | Run the critique-loop suite: the loop schedules CRITIQUE exactly when a committing build'… |

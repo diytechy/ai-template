@@ -61,6 +61,12 @@ any repo and wire the harness to that repo's tooling (SN-003).
     the enable-list, behavior is unchanged (see
     [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Unattended
     operation").
+  - Optional **subjective-quality critique loop** — a `Verification=Critique`
+    requirement's perceptual acceptance is judged by a fresh, provider-
+    heterogeneous **critic** against a written [`docs/rubrics/`](project-trajectory/rubrics/README.template.md)
+    rubric (numbered good/bad anchors, derived from the SN/SR intent, never the
+    authoring session), iterating rework toward the bar and escalating on budget
+    exhaustion; a lax-TC ratchet keeps the fix landing in the chain (SN-024).
   - Optional **tier-conditional guardrails** — `docs/guardrails-policy`
     injects a vendored discipline core into weaker-tier sessions, drift-checked
     by `check_vendored.py`.

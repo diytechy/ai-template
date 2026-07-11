@@ -88,6 +88,7 @@ Contracts: IF-015, IF-037, IF-041 — the interface seams this module declares (
 
 import argparse
 import atexit
+import csv
 import datetime
 import errno
 import json
@@ -192,6 +193,42 @@ REVIEWER_PROMPT = (
     "stop. Do not edit the code you are reviewing."
 )
 
+# The embedded CRITIQUE prompt (WI-068; process-options.md "Critique verification
+# & the critique loop"). Ships as the default for the CRITIQUE phase; a repo
+# overrides it with a prompt-template FILE via --prompt-map/AGENT_PROMPT_MAP under
+# the key `CRITIQUE`. Redacted BY CONSTRUCTION like the reviewer prompt: the critic
+# gets the RUBRIC + the SN/SR intent + the artifact recipe — and NEVER the
+# implementer's self-assessment (status.md / log.md / session notes). `{brief}` is
+# slotted with the rubric+intent+recipe block; `{verdict}` with the verdict path.
+CRITIQUE_PROMPT = (
+    "You are an INDEPENDENT critic launched by the unattended coordinator "
+    "(scripts/agent_loop.py) — a fresh context that did NOT produce this artifact, "
+    "wearing a DIFFERENT hat from the implementer. Your job is subjective-quality "
+    "judgment: say WHERE and WHY the artifact is or is not good enough, judged "
+    "ONLY against the WRITTEN RUBRIC below — never a fresh opinion of your own, and "
+    "never a lax test case. Do NOT read or trust the implementer's session notes, "
+    "docs/status.md, docs/log.md, or any self-assessment (a leaked self-assessment "
+    "collapses a critic's finding rate). Produce the artifact yourself from the "
+    "recipe below (agent CLIs read local images/renders natively; if your model "
+    "cannot, judge the text/description proxy and SAY SO), inspect it, and score it "
+    "against the rubric's numbered anchors.\n\n"
+    "--- RUBRIC + SN/SR INTENT + ARTIFACT RECIPE (the only context you get) ---\n"
+    "{brief}\n"
+    "--- END ---\n\n"
+    "Write your verdict to {verdict} in the log.md block format: one "
+    "`- [BLOCKER|MAJOR|MINOR] <rubric-anchor> -> where/why it fails -> the concrete "
+    "change -> @owner` line per finding, each CITING a rubric anchor id (B1/G2/…) "
+    "and locating the region/aspect of the artifact it fails on. A finding that "
+    "names a NEW failure mode must propose it as a new `B#` anchor for the rubric "
+    "(the accumulation rule). You MAY add `- [TC-HARDEN] ...` lines proposing "
+    "measurable sub-criteria — these route through change-intake (process.md §5); "
+    "you NEVER edit the spine or the artifact yourself. Then exactly one machine "
+    "line:\n"
+    "    VERDICT: APPROVE|CHANGES-REQUESTED findings=N\n"
+    "Commit that verdict file (a critique is a recorded verdict — its one home) and "
+    "stop."
+)
+
 # The review-phase names the loop schedules (AGENT_ROLES: run-phase in {PLAN,
 # BUILD, REVIEW-A, REVIEW-B, INTEGRATE}). A committing non-review session
 # triggers a review round; these phases are the round.
@@ -208,6 +245,9 @@ DEFAULT_PHASE_TIER = {
     "REVIEW-A": "medium",
     "REVIEW-B": "medium",
     "DESIGN-CHECK": "strong",
+    # Perceptual judgment is exactly where model capability + multimodal support
+    # matter (WI-068), so a critic routes strong by default (tier-up-never-down).
+    "CRITIQUE": "strong",
 }
 
 # A model whose session fails to start / stalls goes on cooldown this long (its
@@ -216,8 +256,14 @@ DEFAULT_PHASE_TIER = {
 DEFAULT_COOLDOWN_SECONDS = 900
 
 # Phases that are NOT build work, so a commit in them never triggers a review
-# round (a reviewer's own commit, a planner, an integrator, a design-check).
-NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {"PLAN", "INTEGRATE", "DESIGN-CHECK"}
+# round (a reviewer's own commit, a planner, an integrator, a design-check, a
+# critic writing its verdict).
+NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {
+    "PLAN",
+    "INTEGRATE",
+    "DESIGN-CHECK",
+    "CRITIQUE",
+}
 
 
 def read_declared(path, default):
@@ -523,6 +569,129 @@ def reviewer_prompt(prompt_templates, phase, verdict_path):
     construction)."""
     base = prompt_templates.get(phase, REVIEWER_PROMPT)
     return base.replace("{verdict}", str(verdict_path))
+
+
+# --- the critique loop (WI-068) ------------------------------------------------
+# A `Verification=Critique` requirement's subjective acceptance is adjudicated by a
+# fresh, provider-heterogeneous critic against a written rubric, never the authoring
+# session. All of this is gated on managed mode + a real Critique SR, so a repo with
+# neither pays nothing (never-breaking).
+_SPLIT_RE = re.compile(r"[;,\s]+")
+# A rubric path token as it appears in a TC's Parameters/Method cell.
+RUBRIC_PATH_RE = re.compile(r"docs/rubrics/[\w./\-]+\.md")
+
+
+def _read_csv_rows(path):
+    """CSV rows of `path` as dicts, or [] (absent/unreadable). errors=replace so a
+    stray byte degrades, never crashes (the declared-reader idiom)."""
+    try:
+        text = Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    return list(csv.DictReader(text.splitlines()))
+
+
+def _refs(cell):
+    return [t for t in _SPLIT_RE.split((cell or "").strip()) if t]
+
+
+def load_critique_srs(docs):
+    """The SR ids whose Verification is `Critique` (docs/requirements/
+    system-requirements.csv). Empty — absent file, or no such row — makes the whole
+    critique layer vacuous, exactly like an absent enable-list makes routing off."""
+    out = set()
+    for r in _read_csv_rows(Path(docs) / "requirements" / "system-requirements.csv"):
+        sid = (r.get("SR-ID") or "").strip()
+        if (
+            sid
+            and not sid.endswith("-000")
+            and (r.get("Verification") or "").strip() == "Critique"
+        ):
+            out.add(sid)
+    return out
+
+
+def build_scope_srs(root, docs, commit_range):
+    """The SR ids the WIs named in `commit_range`'s commit subjects deliver — the
+    honest 'which WI did this build touch' signal (the `WI-<n>: <subject>` commit
+    convention § the loop already relies on), joined through
+    docs/requirements/work-items.csv. Empty when there is no range, no WI-tagged
+    subject, or no work-items.csv (the layer is then vacuous — recorded gap)."""
+    if not commit_range or ".." not in commit_range:
+        return set()
+    code, subjects = git(root, "log", "--format=%s", commit_range)
+    if code != 0:
+        return set()
+    wi_ids = set(re.findall(r"WI-\d+", subjects))
+    if not wi_ids:
+        return set()
+    srs = set()
+    for r in _read_csv_rows(Path(docs) / "requirements" / "work-items.csv"):
+        if (r.get("WI-ID") or "").strip() in wi_ids:
+            srs.update(_refs(r.get("SR-Refs")))
+    return srs
+
+
+def critique_brief(root, docs, scope_srs):
+    """The redacted critique brief: for each in-scope Critique SR, its intent (the
+    Requirement/Rationale/AcceptanceCriteria — the SN/SR intent, never the TC), the
+    verifying TC's artifact recipe (its Parameters cell), and the full text of every
+    rubric the TC names. Carries rubric + intent + recipe and NOTHING from the
+    implementer's session — redaction by construction."""
+    docs = Path(docs)
+    sr_by_id = {
+        (r.get("SR-ID") or "").strip(): r
+        for r in _read_csv_rows(docs / "requirements" / "system-requirements.csv")
+    }
+    tcs = _read_csv_rows(docs / "test" / "test-cases.csv")
+    lines, rubric_paths = [], set()
+    for sid in sorted(scope_srs):
+        r = sr_by_id.get(sid)
+        if not r:
+            continue
+        lines.append("### {} — {}".format(sid, (r.get("Title") or "").strip()))
+        lines.append(
+            "Intent (requirement): {}".format((r.get("Requirement") or "").strip())
+        )
+        if (r.get("Rationale") or "").strip():
+            lines.append(
+                "Intent (rationale / SN link): {}".format(r["Rationale"].strip())
+            )
+        if (r.get("AcceptanceCriteria") or "").strip():
+            lines.append(
+                "Acceptance intent: {}".format(r["AcceptanceCriteria"].strip())
+            )
+        for t in tcs:
+            if sid in _refs(t.get("Verifies")):
+                params = (t.get("Parameters") or "").strip()
+                if params:
+                    lines.append(
+                        "Artifact recipe ({}): {}".format(
+                            (t.get("TC-ID") or "").strip(), params
+                        )
+                    )
+                for cell in (params, t.get("Method") or ""):
+                    rubric_paths.update(RUBRIC_PATH_RE.findall(cell.replace("\\", "/")))
+        lines.append("")
+    for rp in sorted(rubric_paths):
+        try:
+            body = (
+                (Path(root) / rp).read_text(encoding="utf-8", errors="replace").strip()
+            )
+        except OSError:
+            body = "(rubric file {} is missing — write it from the SN/SR intent above)".format(
+                rp
+            )
+        lines += ["### Rubric: {}".format(rp), body, ""]
+    return "\n".join(lines).strip()
+
+
+def critique_prompt(prompt_templates, verdict_path, brief):
+    """The redacted critique prompt: the CRITIQUE prompt-map template (a FILE the
+    operator wired) if present, else the embedded CRITIQUE_PROMPT — with {verdict}
+    and {brief} resolved. Never carries the implementer's self-assessment."""
+    base = prompt_templates.get("CRITIQUE", CRITIQUE_PROMPT)
+    return base.replace("{verdict}", str(verdict_path)).replace("{brief}", brief)
 
 
 def git(root, *args):
@@ -1342,12 +1511,32 @@ def main():
     impl_tier_override = None  # escalation raised the BUILD tier
     impl_exclude = set()  # providers to avoid for the next BUILD (after a swap)
 
+    # --- critique-loop state (WI-068; vacuous when no Critique SR exists) ------
+    critique_srs = load_critique_srs(docs) if managed else set()
+    critique_queue = []  # ["CRITIQUE"] when a critique round is scheduled
+    critique_scope = set()  # the in-scope Critique SR ids for the current loop
+    critique_rounds = 0  # consecutive CHANGES-REQUESTED critique rounds this scope
+    try:
+        critique_max = int(os.environ.get("AGENT_CRITIQUE_MAX", "3"))
+    except ValueError:
+        critique_max = 3
+    if critique_max < 1:  # a budget is >= 1; a bad value falls back (S8-knob idiom)
+        critique_max = 3
+    if managed and critique_srs:
+        print(
+            "critique: {} Critique-verified SR(s) present -> a build touching one "
+            "schedules a rubric-anchored CRITIQUE round (budget {} per scope)".format(
+                len(critique_srs), critique_max
+            )
+        )
+
     for i in range(1, args.max_iterations + 1):
         session = "{:03d}".format(next_session_number(iter_dir))
         stamp = time.strftime("%Y%m%d-%H%M%S")
         before = head_sha(root)
         now = time.time()
         is_review = False
+        is_critique = False
         verdict_path = None
         route_id = None  # the selected registry id (managed mode)
         route_provider = None
@@ -1355,6 +1544,11 @@ def main():
             if review_queue:
                 phase = review_queue[0]
                 is_review = True
+            elif critique_queue:
+                # Reviews (if any) drain first; then the perceptual critique runs
+                # before the next build (WI-068).
+                phase = "CRITIQUE"
+                is_critique = True
             else:
                 phase = read_declared(lane / "run-phase", "")
             tier = phase_tier(phase, tier_map)
@@ -1367,6 +1561,12 @@ def main():
                 for _ph, _v, prov, _mid in round_verdicts:
                     if prov:
                         exclude.add(prov)  # REVIEW-B differs from REVIEW-A too
+            elif is_critique:
+                # A critic wears a different hat: prefer a different provider from
+                # the implementer (fresh context is the invariant; degraded legal).
+                prefer_different = True
+                if last_impl_provider:
+                    exclude.add(last_impl_provider)
             elif phase == "BUILD" or phase == "":
                 if impl_tier_override:
                     tier = impl_tier_override
@@ -1405,6 +1605,11 @@ def main():
                 verdict_path = lane / "reviews" / "{}-{}.md".format(session, phase)
                 verdict_path.parent.mkdir(parents=True, exist_ok=True)
                 body = reviewer_prompt(prompt_templates, phase, verdict_path)
+            elif is_critique:
+                verdict_path = lane / "reviews" / "{}-CRITIQUE.md".format(session)
+                verdict_path.parent.mkdir(parents=True, exist_ok=True)
+                brief = critique_brief(root, docs, critique_scope)
+                body = critique_prompt(prompt_templates, verdict_path, brief)
             elif phase in prompt_templates:
                 body = prompt_templates[phase]
             else:
@@ -1618,28 +1823,115 @@ def main():
                     if last_impl_provider:
                         impl_exclude = {last_impl_provider}
                     swapped = True
+                    critique_queue = []  # the artifact will change; re-critique later
                     (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
                 elif decision["action"] == "tier-up":
                     impl_tier_override = "strong"
                     at_top_tier = True
+                    critique_queue = []
                     (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
                 elif merged == "CHANGES-REQUESTED":
+                    critique_queue = []
                     (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
+        elif managed and is_critique:
+            # The perceptual arbiter (WI-068): read the critic's verdict, iterate
+            # BUILD<->CRITIQUE until APPROVE or the budget trips S8 escalation.
+            if verdict_path and Path(verdict_path).exists():
+                v = score_reviews.parse_verdict(
+                    Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
+                    model=route_provider,
+                )
+                critique_queue = []  # this round consumed
+                merged = (v.verdict or "").upper()
+                print(
+                    "critique [{}]: verdict={} findings={} scope={} ({})".format(
+                        route_id,
+                        merged or "?",
+                        len(v.findings),
+                        ",".join(sorted(critique_scope)) or "—",
+                        verdict_path,
+                    )
+                )
+                if merged == "CHANGES-REQUESTED":
+                    critique_rounds += 1
+                    if critique_rounds >= critique_max:
+                        # Budget exhausted -> the S8 page-the-human semantics, keyed
+                        # to docs/gate-policy (same failure_action the review round
+                        # uses). The critic gates iteration; the human owns final
+                        # acceptance via Attest at gate closure.
+                        fa = agent_route.failure_action(gate_policy)
+                        print(
+                            "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
+                            "{} -> page-human: {}".format(
+                                fa["mode"], critique_rounds, critique_max, fa["note"]
+                            )
+                        )
+                        critique_rounds = 0
+                        critique_scope = set()
+                        if fa["mode"] == "attended":
+                            (lane / "run-state").write_text(
+                                "NEEDS-HUMAN\n", encoding="utf-8"
+                            )
+                            stop_banner(
+                                status_path,
+                                "PAGE-HUMAN — critique budget exhausted",
+                                "the critique loop hit its {}-round budget still "
+                                "CHANGES-REQUESTED | {}".format(
+                                    critique_max, fa["note"]
+                                ),
+                            )
+                            return EXIT_NEEDS_HUMAN
+                        if fa.get("design_check"):
+                            (lane / "run-phase").write_text(
+                                "DESIGN-CHECK\n", encoding="utf-8"
+                            )
+                    else:
+                        # Rework: back to BUILD; a re-critique schedules after the
+                        # reworked build commits.
+                        (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
+                else:  # APPROVE (or no parseable request) -> the critique loop ends
+                    critique_rounds = 0
+                    critique_scope = set()
+            else:
+                # No verdict written (errored/stalled): cool + re-critique next pass
+                # (the stall guard backstops a critic that never writes one).
+                agent_route.cool(cooldowns, route_id, now, cooldown_seconds)
+                print(
+                    "critique: {} wrote no verdict ({}); cooled, re-critiquing".format(
+                        route_id, outcome
+                    )
+                )
         elif managed and not is_review:
             if outcome in ("ERROR", "TIMEOUT"):
                 agent_route.cool(cooldowns, route_id, now, cooldown_seconds)
-            elif (
-                outcome == "COMMITTED" and rp_int >= 1 and phase not in NON_BUILD_PHASES
-            ):
+            elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
                 last_impl_provider = route_provider
                 impl_range = commits
-                round_verdicts = []
-                review_queue = ["REVIEW-A"] + (["REVIEW-B"] if rp_int >= 2 else [])
-                print(
-                    "dispatch: review-policy {} -> scheduling review round {}".format(
-                        rp_int, review_queue
+                # The review round follows the reviewer dial (S8).
+                if rp_int >= 1:
+                    round_verdicts = []
+                    review_queue = ["REVIEW-A"] + (["REVIEW-B"] if rp_int >= 2 else [])
+                    print(
+                        "dispatch: review-policy {} -> scheduling review round "
+                        "{}".format(rp_int, review_queue)
                     )
-                )
+                # The critique round is INDEPENDENT of the review dial (WI-068): it
+                # fires only when this build's WI touches a Critique-verified SR.
+                # Vacuous when no Critique SR exists, so a non-adopter pays nothing.
+                if critique_srs:
+                    in_scope = build_scope_srs(root, docs, commits) & critique_srs
+                    if in_scope:
+                        # A NEW scope starts a fresh budget; a rework of the SAME
+                        # scope (a CHANGES-REQUESTED loop) preserves the count, so
+                        # the budget actually bounds the loop.
+                        if in_scope != critique_scope:
+                            critique_rounds = 0
+                        critique_scope = in_scope
+                        critique_queue = ["CRITIQUE"]
+                        print(
+                            "dispatch: build touches Critique SR(s) {} -> scheduling "
+                            "CRITIQUE round".format(",".join(sorted(in_scope)))
+                        )
 
         if outcome == "WAITING":
             # A throttled session is not progress *or* a stall — never count

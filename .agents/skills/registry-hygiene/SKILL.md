@@ -50,7 +50,8 @@ call `trace.py` directly to iterate on a specific finding.
   registries `trace.py` never joins (interfaces, project-added ones).
 - **schema** (`--strict-schema`) — a required field is empty, or a
   `Verification`/`Tier` value is outside the closed vocabulary
-  (`Test|Demonstration|Inspection|Analysis|Manual|Attest`; `Smoke|Full|Release`).
+  (`Test|Demonstration|Inspection|Analysis|Manual|Attest|Critique`;
+  `Smoke|Full|Release`).
   Fill the field or correct the value.
 - **placeholder** (`--no-placeholders`) — a template `-000` example row survived;
   delete it once real rows exist.

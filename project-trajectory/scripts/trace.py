@@ -66,7 +66,11 @@ Orphan rules (the method rules are stated once, in process.md §4):
       have no code to decompose; Demonstration/Manual SRs still describe behavior
       the software implements, so they keep the LLR requirement. Attest is the
       human-attestation kind — a named person's recorded judgment, often over a
-      subjective/binary asset with no code symbol, so it is LLR-exempt too)
+      subjective/binary asset with no code symbol, so it is LLR-exempt too.
+      Critique is NOT LLR-exempt: the artifact it judges is *produced by code*
+      (a render/generation pipeline) and only its acceptance is subjective, so a
+      Critique SR keeps the LLR like Demonstration/Manual — a genuinely code-less
+      subjective requirement is an Attest, not a Critique)
     - SR with no TC (every SR needs ≥1 TC row regardless of method; for human
       methods the TC records the procedure with Automated=No)
     - SR with no SN link (only when stakeholder-needs.md provides real SN ids —
@@ -160,9 +164,9 @@ starts green.
       grammar), which the pre-Evidence `node=` overload was polluting;
     - the two *closed* vocabularies the method defines (process.md §4) hold:
       SR Verification in {Test, Demonstration, Manual, Analysis, Inspection,
-      Attest}, TC Tier in {Smoke, Full, Release}. Priority/Status are deliberately
-      NOT enumerated — the method leaves them open (e.g. Priority S, Status
-      Planned).
+      Attest, Critique}, TC Tier in {Smoke, Full, Release}. Priority/Status are
+      deliberately NOT enumerated — the method leaves them open (e.g. Priority S,
+      Status Planned).
 
 Always (warn-only, never an exit-code change), acceptance-criteria testability
 is advised on: a comparative/absolute term in an SR's AcceptanceCriteria
@@ -323,6 +327,7 @@ ENUM_FIELDS = {
             "Analysis",
             "Inspection",
             "Attest",
+            "Critique",
         }
     },
     "TC": {"Tier": {"Smoke", "Full", "Release"}},

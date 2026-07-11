@@ -67,7 +67,7 @@ runs any major capability without recalling commands) → re-attestation rider.
 2. ✅ One new SR (a different need than dev-setup's SR-032).
 3. ✅ All three launchers delegate to Python (`run_menu.py`).
 
-## C2 — subjective-quality critique loop (the perceptual arbiter)
+## C2 — subjective-quality critique loop (the perceptual arbiter) — ✅ DONE (2026-07-11)
 
 **Owner intent.** Some acceptance is subjective — "a realistic looking
 rendered scene", artifact comparisons with no crisp measurable interface. The

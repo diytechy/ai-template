@@ -396,8 +396,8 @@ rule, and the config-straddles-Provision↔Startup guidance are in
 
 **Verification methods:** the classic four — `Test` · `Demonstration` ·
 `Inspection` · `Analysis` (`TDIA`, per MIL-STD-961E / ISO/IEC/IEEE 29148 / INCOSE
-SE Handbook) — plus two the kit names: `Manual` (a human procedure that isn't
-`Attest`) and `Attest`. Definitions follow the standard rather than being restated
+SE Handbook) — plus three the kit names: `Manual` (a human procedure that isn't
+`Attest`), `Attest`, and `Critique`. Definitions follow the standard rather than being restated
 here; pick the cheapest method that actually establishes the criterion, and don't
 claim `Test` for something only a human can confirm. **`Attest`** is the kit's
 honest extension (nearest standard analog: a witnessed test / QA sign-off record,
@@ -408,12 +408,17 @@ can be checked without the work having happened** (Proportionality doctrine); th
 process's job is to make it explicit, named, and auditable, not pass it off as a
 check. Its TC records **who** attested and **when** (`Parameters`/`Expected` cell,
 `Automated=No`); `trace.py` accepts an `Attest` SR as Verified **and** reports it
-under "attested vs mechanized" so an audit sees the trust footprint. Method drives
+under "attested vs mechanized" so an audit sees the trust footprint. **`Critique`**
+is the mechanized sibling for *subjective* acceptance: an independent critical eye
+(an LLM one, deliberately separated from human `Attest`) judges a **code-produced**
+artifact against a **written rubric** (`docs/rubrics/`) — never the authoring
+session (process-options.md "Critique verification & the critique loop"). Method drives
 what `trace.py` requires: only `Analysis`/`Inspection`/`Attest` SRs are LLR-exempt
 (no code to decompose — `Attest` typically covers a subjective/binary asset with no
 code symbol). `Demonstration` (observe functional behavior, no instrumented
-pass/fail) and `Manual` still run the system, so **they keep the LLR** — the
-standard reading puts `Demonstration` closer to `Test`. **Every SR needs ≥1 TC row
+pass/fail), `Manual`, and `Critique` still exercise code the system runs, so **they
+keep the LLR** — the standard reading puts `Demonstration` closer to `Test`, and a
+`Critique` artifact is produced by a real pipeline (only its acceptance is perceptual). **Every SR needs ≥1 TC row
 regardless of method** — for human methods the TC records the procedure
 (`Automated=No`, usually `Tier=Release`), which is how the release checklist finds it.
 

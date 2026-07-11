@@ -37,6 +37,7 @@ What it creates in the destination:
     docs/requirements/components.csv           <- registries/components.template.csv
     docs/requirements/work-items.csv           <- registries/work-items.template.csv
     docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
+    docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
@@ -1048,6 +1049,14 @@ MAPPING = [
     # ignores the WI-000 row), so a fresh scaffold stays vacuously clean.
     ("specs/README.template.md", "docs/specs/README.md"),
     ("specs/WI-000.template.md", "docs/specs/WI-000.md"),
+    # Critique rubrics (process-options.md "Critique verification & the critique
+    # loop", WI-068): the judgment reference a Verification=Critique requirement is
+    # scored against — written from the SN/SR intent (not the possibly-lax TC),
+    # carrying numbered good/bad anchors that accumulate at rework. A README
+    # explaining the convention + an inert rubric-000 example. Nothing gates on the
+    # -000 file, so a fresh scaffold that never uses Critique carries it for free.
+    ("rubrics/README.template.md", "docs/rubrics/README.md"),
+    ("rubrics/rubric-000.template.md", "docs/rubrics/rubric-000.md"),
     ("scripts/trace.py", "scripts/trace.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),

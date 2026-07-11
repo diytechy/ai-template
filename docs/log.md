@@ -1055,3 +1055,103 @@ LLR=47 TC=47, 0 orphans**; 49 declared interface seams.
 mechanized spine under SN-001 → it rides the **one pending G3 re-attestation**
 with the rest of the accumulated changes (status.md Needs-\<human> #1).
 *Mandatory*: a new test-verifiable SR joined the spine.
+
+## 2026-07-11 — WI-068 (capability-expansion C2): the `Critique` verification value + the subjective-quality critique loop — SPINE CHANGE (SN-024 + SR-047 added); RE-ATTESTATION PENDING
+
+**What shipped.** Subjective/perceptual acceptance — "a realistic-looking
+render", an artifact comparison with no crisp measurable interface — becomes a
+first-class, mechanizable thing: **`Critique`** joins the Verification vocabulary
+(owner ruling #4 — LLM-provisioned feedback that runs autonomously, deliberately
+separated from human `Attest`), and the S8 coordinator gains a **CRITIQUE
+run-phase** that gives another agent a *different hat* to judge a code-produced
+artifact against a **written rubric**, driving bounded rework. Spec:
+[specs/capability-expansion.md](specs/capability-expansion.md) C2 (now ✅ DONE).
+
+**Deliverables.**
+- **`Critique` in the Verification vocabulary** — `trace.py` `ENUM_FIELDS`
+  (accepts `Critique`, still rejects unknowns) + the `registry-hygiene` skill
+  (all 3 tracked copies) + PROCESS.md §4. **LLR-exemption decision:** a `Critique`
+  SR is **NOT** LLR-exempt (unlike `Analysis`/`Inspection`/`Attest`) — its artifact
+  is *produced by code* (a render/generation pipeline) and only its acceptance is
+  perceptual, so it keeps its LLR like `Demonstration`/`Manual`; a genuinely
+  code-less subjective requirement is an `Attest`, not a `Critique`. Stated once in
+  PROCESS.md §4 and the trace.py orphan-rule docstring; mechanized by
+  `test_trace.py::test_critique_verification_value`.
+- **The rubric convention — `docs/rubrics/`** (scaffolded via bootstrap): a README
+  (a rubric is derived from the SN/SR intent, **not** the possibly-lax TC; that
+  inversion is what catches a lax TC) + an inert `rubric-000.md` showing the shape
+  — an intent statement + **numbered good (`G#`) / bad (`B#`) anchors** (definite,
+  citable, TC-style) — plus the **accumulation rule** (a critique finding naming a
+  new failure mode is added as a new `B#` at rework, so later rounds judge against
+  the accumulated reference; verdicts cite anchor ids). `MAPPING` + `test_bootstrap`
+  lists + kit README + bootstrap docstring updated.
+- **The CRITIQUE run-phase in `agent_loop` managed mode.** A committing build
+  whose **commit-subject WI ids** (`build_scope_srs`, joined through
+  `work-items.csv`) deliver a `Critique` SR (read off `system-requirements.csv`)
+  schedules a **fresh, provider-heterogeneous CRITIQUE session before the next
+  build** — strong tier by default, `agent_route.select` preferring a different
+  provider from the implementer. The prompt is an embedded `CRITIQUE_PROMPT`
+  (overridable via the existing `--prompt-map` under the `CRITIQUE` key) slotting a
+  **redacted `critique_brief`**: the rubric text + the SN/SR intent + the TC
+  `Parameters` artifact recipe, and **never** the implementer's self-assessment.
+  Verdict = `docs/reviews/NNN-CRITIQUE.md` (the S8 `VERDICT: …` machine line +
+  anchor-citing findings + optional `[TC-HARDEN]` proposals). Iteration:
+  CHANGES-REQUESTED → rework BUILD → re-CRITIQUE, bounded by **`AGENT_CRITIQUE_MAX`**
+  (default 3, env-overridable) → then `agent_route.failure_action(gate-policy)` pages
+  the human (attended → NEEDS-HUMAN). **Absent the enable-list or any `Critique` SR,
+  byte-for-byte today's behavior.**
+- **The lax-TC ratchet** (`check_trajectory --staged`, warn-first): a WI closing on
+  a `Critique` SR while the latest `docs/reviews/*-CRITIQUE.md` verdict is
+  CHANGES-REQUESTED, without the staged change touching the TC registry, the tests
+  dir, **or** a `docs/rubrics/` file → warn (harden the TC or add an anchor — the fix
+  must land in the chain, not just the artifact).
+- Spine: **SN-024** (subjective acceptance adjudicated by an independent critical
+  eye against a written rubric, never the authoring session) + **SR-047**
+  (Verification=Test, Verified) under SN-024/SN-006 + **LLR-048** + **TC-048**
+  (Automated=Yes, Evidence = real pytest nodes).
+- Docs: PROCESS_OPTIONS "Critique verification & the critique loop" subsection (the
+  model stated once — rubric anchors, redaction, budget, the arbiter split: the
+  critic gates iteration / the human owns acceptance via `Attest` at gate closure /
+  autonomous per gate-policy; the multimodal caveat — image-capable CLIs read
+  artifact paths natively, capability noted per-model in the registry `Notes`,
+  degraded = text-proxy critique). PROCESS.md §4: the minimal vocabulary addition
+  only. Root README: an SN-024 need bullet.
+
+**Judgment calls.**
+- **LLR-exemption:** decided NOT-exempt (reasoning above) — the sound default the
+  spec itself flagged; a Critique SR without implementing code should be an
+  `Attest`.
+- **Trigger mechanics:** the honest "which WI did this build touch" signal is the
+  **`WI-<n>:` commit-subject convention** (which the loop already relies on) joined
+  through `work-items.csv` `SR-Refs`. **Recorded gap:** absent WI-tagged commits or
+  a `work-items.csv`, the critique layer is vacuous (a downstream repo not using the
+  trajectory layer gets no critique) — the closest honest version; a per-WI marker
+  in the verdict file was not added.
+- **Ratchet shape:** the verdict file is not WI-tagged, so the ratchet reads the
+  **latest** `*-CRITIQUE.md` overall as the honest proxy for "the in-scope critique"
+  (the loop critiques one scope at a time, so the newest verdict is the live one).
+  Recorded as a gap in the code comment.
+- **Critique tier = strong by default** (perceptual judgment + multimodal support
+  are exactly where model capability matters; tier-up-never-down).
+- **Budget counting:** a *new* scope resets `AGENT_CRITIQUE_MAX`; a rework of the
+  *same* scope preserves the count so the budget actually bounds the loop (a
+  re-scheduled critique after a rework build does not reset it).
+
+**Byte deltas.** `AGENTS.template.md` **9978 → 9978** (untouched). `PROCESS.md`
+**58,380 → 58,853 (+473 B)**, flagged: the §4 vocabulary gains the `Critique`
+definition + the non-LLR-exempt clause (the minimal factual add; the full model
+lives in PROCESS_OPTIONS, not the budgeted core). Baseline re-stamped to **58,853
+(WI-068)** in the `byte-budget-guard` skill (all 3 tracked copies, byte-identical).
+
+**Mechanized bar.** `pytest -q` **584 passed, 3 skipped** (+9 over WI-067's 575:
+6 `test_agent_loop_critique.py` + 1 `test_trace.py` critique vocab/exemption + 2
+`test_trajectory.py` ratchet); `check_docs.py --root . --stale` **0 broken** (1
+orphan warn = the pre-existing `docs/test/report.md`); `gen_arch_map` / `gen_okf` /
+`gen_trajectory` `--check` **up to date**; `check.py --gate G3` **13/13 PASS**.
+Spine now **SN=24 SR=47 LLR=48 TC=48, 0 orphans**; 49 declared interface seams.
+
+**Re-attestation rider.** New **SN-024** (a new stakeholder need) + **SR-047**
+(Verification=Test, Verified) join the mechanized spine → they ride the **one
+pending G3 re-attestation** with the rest of the accumulated changes (status.md
+Needs-\<human> #1). *Mandatory*: a new SN and a new test-verifiable SR joined the
+spine.

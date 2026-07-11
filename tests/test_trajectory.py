@@ -516,6 +516,79 @@ def test_staged_is_a_no_op_outside_git(tmp_path):
     assert "validation chain" not in proc.stderr
 
 
+# --- WI-068: the critique-loop ratchet (--staged, warn-first) ------------------
+
+CRITIQUE_SR_ROW = (
+    'SR-050,Render realism,SN-001,"The render shall look realistic.",'
+    '"Subjective.","Judged against docs/rubrics/render.md.",,S,Critique,Verified\n'
+)
+
+
+def _init_critique_close_repo(tmp_path, verdict="CHANGES-REQUESTED findings=2"):
+    """A git repo with a Verification=Critique SR-050, a committed CRITIQUE verdict
+    file, and WI-050 (on SR-050) closed queued->done in the working tree."""
+    git = shutil.which("git")
+    if not git:
+        pytest.skip("needs git on PATH")
+
+    def run_git(*a):
+        return subprocess.run(
+            [git, "-C", str(tmp_path), *a], capture_output=True, text=True
+        )
+
+    run_git("init")
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "system-requirements.csv").write_text(SR_HEADER + CRITIQUE_SR_ROW, "utf-8")
+    reviews = tmp_path / "docs" / "reviews"
+    reviews.mkdir(parents=True, exist_ok=True)
+    (reviews / "001-CRITIQUE.md").write_text(
+        "- [MAJOR] render.png -> B1 seam artifact at the mesh join -> reseat -> @owner\n"
+        "VERDICT: " + verdict + "\n",
+        encoding="utf-8",
+    )
+    write_wis_sr(
+        tmp_path, "WI-050,Render,scripts,SR-050,,active,,docs/specs/WI-050.md\n"
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "init")
+    # Close WI-050 (the Critique WI) in the working tree.
+    write_wis_sr(tmp_path, "WI-050,Render,scripts,SR-050,,done,shipped the render,\n")
+    return run_git
+
+
+def test_critique_ratchet_warns_and_holds(tmp_path):
+    # Closing a Critique WI while the latest CRITIQUE verdict is CHANGES-REQUESTED,
+    # touching neither the TC registry, the tests dir, nor a docs/rubrics/ file ->
+    # warn (the fix landed in the artifact, not the chain).
+    run_git = _init_critique_close_repo(tmp_path)
+    run_git("add", "docs/requirements/work-items.csv")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "latest CRITIQUE verdict is CHANGES-REQUESTED" in proc.stderr
+    assert "WI-050" in proc.stderr
+    # Add a rubric anchor (touch docs/rubrics/) -> the chain changed -> HOLDS.
+    (tmp_path / "docs" / "rubrics").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "rubrics" / "render.md").write_text(
+        "# render\n- B2 a newly-found failure mode\n", encoding="utf-8"
+    )
+    run_git("add", "docs/requirements/work-items.csv", "docs/rubrics/render.md")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "latest CRITIQUE verdict" not in proc.stderr
+
+
+def test_critique_ratchet_silent_when_verdict_approves(tmp_path):
+    # The latest CRITIQUE verdict is APPROVE -> no warn even with no chain delta.
+    run_git = _init_critique_close_repo(tmp_path, verdict="APPROVE findings=0")
+    run_git("add", "docs/requirements/work-items.csv")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "latest CRITIQUE verdict" not in proc.stderr
+
+
 # --- WI-056: architecture-connectivity coverage (warn-first, opt-out default-on)
 # The views-checker runs at the same `trajectory` step; every finding is a WARN
 # (never an exit-code change, even under --strict) and the meta driver is the
