@@ -53,3 +53,7 @@ resource: "generated"
 | [IF-041](IF-041.md) |  |
 | [IF-042](IF-042.md) |  |
 | [IF-043](IF-043.md) |  |
+| [IF-044](IF-044.md) |  |
+| [IF-045](IF-045.md) |  |
+| [IF-046](IF-046.md) |  |
+| [IF-047](IF-047.md) |  |

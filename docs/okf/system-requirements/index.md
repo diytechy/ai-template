@@ -54,3 +54,4 @@ resource: "generated"
 | [SR-042](SR-042.md) | OKF knowledge-bundle export |
 | [SR-043](SR-043.md) | Subagent spawn gate |
 | [SR-044](SR-044.md) | Declared-interface connectivity |
+| [SR-045](SR-045.md) | Heterogeneous implementer/reviewer scheduling |

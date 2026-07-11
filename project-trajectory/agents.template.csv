@@ -1,0 +1,5 @@
+Id,Provider,Model,Version,Tier,CmdTemplate,Notes
+ANTHROPIC-OPUS-4.8,ANTHROPIC,opus,4.8,strong,claude -p {prompt} --model {model} --output-format json,frontier tier; add your permission-bypass flag to run unattended
+OPENAI-GPT-5.2,OPENAI,gpt-5.2,5.2,strong,codex exec --json {prompt},third-party providers via the codex model_providers config
+GOOGLE-GEMINI-3-PRO,GOOGLE,gemini-3-pro,3-pro,medium,gemini -p {prompt} --output-format json,the CLI with documented exit codes
+AGENTS-EXAMPLE-000,EXAMPLE,example,0,weak,your-cli -p {prompt},placeholder row (ends in -000, ignored) - copy a real row above and edit

@@ -328,10 +328,11 @@ files.
 --agents` populates `.agents/` from source; the meta-repo's three targets are
 byte-identical to source (the current `session-protocol` drift resolved).
 
-## S8 — Heterogeneous implementer/reviewer scheduling *(✅ RULED 2026-07-10)*
+## S8 — Heterogeneous implementer/reviewer scheduling *(✅ DONE 2026-07-11)*
 
-**Status: ✅ RULED (owner, 2026-07-10), research-backed** — proposed and ruled
-the same day; the rulings block closes this section. Provenance: owner direction (separately scheduled
+**Status: ✅ DONE (2026-07-11; WI-059).** Ruled 2026-07-10 (research-backed) and
+landed 2026-07-11 — see the ticked Done-when checklist below; the rulings block
+closes this section. Provenance: owner direction (separately scheduled
 implementer/reviewer sessions; per-job model complexity; cross-**provider**
 selection by problem type or review-feedback strength; the provider/model
 catalog question) + three research passes condensed in
@@ -445,15 +446,20 @@ judge-bias literature, not a measured code-review result — run a cheap in-kit
 A/B once the loop ships.
 
 **Done-when.**
-- [ ] `--prompt-map` + loop-side reviewer dispatch land test-first;
-      `review-policy` `0|1|2` is enforced by the loop.
-- [ ] `docs/agents.csv` registry + routing composition land, defaulting to
-      today's behavior when absent.
-- [ ] The substance scorer lands with the tripwires; the scoreboard file is
-      documented.
-- [ ] PROCESS_OPTIONS "Unattended operation" gains the routing/escalation
-      subsection; the redacted-reviewer prompt template ships.
-- [ ] The root README's unattended-operation bullet gains the
+- [x] `--prompt-map` + loop-side reviewer dispatch land test-first;
+      `review-policy` `0|1|2` is enforced by the loop. *(agent_loop managed
+      mode, gated on `docs/agents-enabled`; `AGENT_PROMPT_MAP` preflighted;
+      tests in test_agent_loop_review.py.)*
+- [x] `docs/agents.csv` registry + routing composition land, defaulting to
+      today's behavior when absent. *(agent_route.py; enable-list is the
+      consent surface + on-switch; absent = legacy behavior byte-for-byte.)*
+- [x] The substance scorer lands with the tripwires; the scoreboard file is
+      documented. *(score_reviews.py; `docs/reviews/scoreboard.txt`; the four
+      tripwires are non-scored gates.)*
+- [x] PROCESS_OPTIONS "Unattended operation" gains the routing/escalation
+      subsection; the redacted-reviewer prompt template ships. *(embedded
+      `REVIEWER_PROMPT` default, `--prompt-map` file override.)*
+- [x] The root README's unattended-operation bullet gains the
       iteration-review summary for context (separate fresh reviewer sessions,
       enable-list provider selection, win-stay/lose-shift — no rotation, the
       degraded-availability rule), pointing at the PROCESS_OPTIONS detail —

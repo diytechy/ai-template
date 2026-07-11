@@ -196,8 +196,12 @@ harness is the bar everywhere; a red check is a red check.
   mid-run human escalation is replaced by the Blocked register, ask-the-human
   by the Decisions log (HIGH revert-cost decisions get an independent
   peer-tier second opinion *before* execution), human `Attest` by LLM-Attest.
-  The reviewer tier is the strong-model floor (§6 tiering) and is never
-  delegated down.
+  The **gate-closure** reviewer tier is the strong-model floor (§6 tiering) and
+  is never delegated down. (This floor governs a **gate advance** only. The
+  cheaper *iteration-loop* reviewers the coordinator schedules between builds
+  are deliberately cheap-but-heterogeneous — see "Unattended operation" ->
+  the routing/escalation subsection; a weak-but-different-family review is a
+  useful uncorrelated draw, where a weak *gate* verdict is not.)
 
 ### The LLM-gate verdict protocol
 
@@ -466,6 +470,85 @@ coordinator warns (never blocks) when a lane's `status.md` outgrows one screen
 (`AGENT_STATUS_WARN_BYTES`, default 8192, `0` silences) — every session
 inherits that resume surface, so pruning it is the integrator's charter,
 with evidence living in `log.md` and the iteration logs.
+
+**Heterogeneous scheduling — model routing, reviewer dispatch, and the
+escalation policy (`docs/agents.csv` + `docs/agents-enabled`; WI-059).** The
+reviewer dial above is *surfaced* by default; when a repo opts into managed
+routing the loop *enforces* it — a committing build schedules the reviewer
+round(s) before the next build. This is the S8 layer, and it stays stdlib,
+consent-explicit (no silent model swap), and never-breaking: **absent the
+enable-list, the loop keeps exactly today's single `AGENT_CMD`/`AGENT_MODEL`
+behavior**, so a fresh scaffold pays nothing.
+
+- **A model registry, not a catalog — `docs/agents.csv`.** One row per usable
+  model, keyed `[PROVIDER]-[MODEL_NAME]-[VERSION]` (`ANTHROPIC-OPUS-4.8`,
+  `OPENAI-GPT-5.2`) — released names are immutable, so these ids are *more*
+  durable than sequential `###` ids. The id is a **join key, never parsed**:
+  `Provider`/`Model`/`Version` are their own columns (machine truth), plus
+  `Tier (strong|medium|weak)`, a `CmdTemplate` with `{model}`/`{prompt}` slots,
+  and `Notes`; the id charset is uppercase + digits + hyphen + dot (dated
+  snapshots and `-PREVIEW` tags are valid versions). The kit ships example rows
+  for the verified headless shapes (`claude -p` / `codex exec` / `gemini -p`)
+  and **vendors no model catalog** — richer data is a documented pointer to the
+  maintained community registries (models.dev `api.json`; LiteLLM's
+  model-prices JSON), never a copy.
+- **Routing = an enable-list + availability.** `docs/agents-enabled` lists, in
+  **preference order**, the registry ids this repo may use — the consent
+  surface, and the switch that turns managed routing on (it is deliberately
+  *not* scaffolded; absence = routing off). Per session the loop selects from
+  that pool by the phase's tier (`AGENT_TIER_MAP`/`--tier-map`, else the
+  built-in phase->tier defaults — iteration reviewers default to a cheaper tier)
+  plus the heterogeneity rules; a model whose session fails to start or stalls
+  goes on **cooldown** (the rate-limit backoff, generalized per-model,
+  `AGENT_COOLDOWN_SECONDS`) and is retried; when no enabled model of the
+  preferred tier is available the loop walks the **next tier up — never a weaker
+  one**, and pages rather than silently downgrade. **Every selection and
+  cooldown is logged before launch** (consent = the enabled set + these declared
+  rules).
+- **Reviewer independence (the evidence-backed core).** Reviewers are fresh
+  sessions, **two providers, at least one differing from the implementer's —
+  *preferred, not required*.** The reviewer prompt gets the diff + the
+  requirement surface and **never the implementer's self-assessment** (leaking
+  it collapses finding rates several-fold); it ships as an embedded **redacted
+  reviewer prompt**, overridable per phase with a prompt-template **file** via
+  `--prompt-map`/`AGENT_PROMPT_MAP` (each entry preflighted like
+  `AGENT_CMD_MAP`). **No debate rounds** — independent parallel reviews,
+  mechanically merged (CHANGES-REQUESTED if any reviewer requests changes).
+  **Degraded availability is ruled legal:** when only one provider responds,
+  two independent *same-provider* sessions review — fresh context is the
+  invariant, provider diversity best-effort (the scorer already weights
+  cross-family corroboration above same-family). Verdicts are **repo files**
+  (`docs/reviews/NNN-<PHASE>.md`) in the `log.md` block format plus one machine
+  line: `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`.
+- **The substance scorer (`scripts/score_reviews.py`) is advisory.** It scores a
+  verdict block by confirmed-finding rate, cross-reviewer corroboration
+  (cross-family weighted up), anchored-finding precision (anchors must resolve;
+  capped), and actionability. **Severity hygiene and the anti-gaming tripwires
+  are gates, never scores; length never scores positively.** The tripwires
+  (finding-cap pinning / count gaming, near-duplicate review text, an
+  implementer diff touching a review or policy path, mass finding-rejection) are
+  **non-scored hard stops** that page the human. The scoreboard is one small
+  decayed-tally text file (`docs/reviews/scoreboard.txt`: per-provider substance
+  + the round history) — the declared policy picks, nothing auto-optimizes.
+- **A fixed escalation policy, not a learned router** (per-project sample sizes
+  are far too small for a bandit): **win-stay/lose-shift** — the higher-substance
+  provider becomes the next round's primary feedback source only on a **margin
+  >= 2**; the implementer's provider **swaps after 2 consecutive failed review
+  gates**; the tier rises **only after the swap also fails**; and the loop
+  **pages the human** on 2 top-tier failures (the shared-failure regime — the
+  spec is wrong, not the model), on opposite verdicts twice running, or on any
+  tripwire. The constants ship as legible **per-repo-overridable defaults**
+  (`AGENT_ROUTE_MARGIN`, `AGENT_ROUTE_SWAP_AFTER`, `AGENT_ROUTE_PAGE_TOP_TIER_FAILS`)
+  — calibration values, not spine facts.
+- **Failure semantics follow `docs/gate-policy`.** On a page-the-human condition
+  the causing WI **and its hard-edge dependents pause** in every mode; the mode
+  decides what happens around that — **attended:** start nothing new, let
+  in-flight sessions close out, then the loop stops `NEEDS-HUMAN` and alerts;
+  **single-ratify:** keep working non-dependent WIs to completion, surface the
+  block for ratification; **autonomous:** schedule a fresh **design-check
+  session** (different provider, strong tier) to rule grind-through vs. genuine
+  redesign, document every assumption, and continue — a redesign verdict
+  re-enters the change-intake flow (process.md §5).
 
 **Session discipline.**
 

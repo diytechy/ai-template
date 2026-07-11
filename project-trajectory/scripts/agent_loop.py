@@ -101,6 +101,18 @@ import sys
 import time
 from pathlib import Path
 
+# Sibling scripts (the S8 routing/scoring half). Run as a subprocess the loop's
+# own dir is sys.path[0] so a plain import resolves; the guard covers an
+# in-process import (a test) whose sys.path doesn't yet carry scripts/ — the
+# same sanctioned-sibling-import idiom gen_trajectory uses (THREAD_52_REVIEW F5).
+try:
+    import agent_route
+    import score_reviews
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import agent_route
+    import score_reviews
+
 # Size bounds for the tracked per-session log (the Q13d "size-bounded" cap):
 # the head shows how the session started, the capped tail how it ended — the
 # part that explains the outcome. The raw unbounded stream goes to the
@@ -151,6 +163,61 @@ DEFAULT_PROMPT = (
     "NEEDS-HUMAN when the next step requires a human act (state the ask as a "
     "'Needs <human>' Open item in status.md first)."
 )
+
+# The redacted reviewer prompt (S8). Ships as the embedded default for the
+# REVIEW-A/REVIEW-B phases; a repo overrides it per phase with a prompt-template
+# FILE via --prompt-map / AGENT_PROMPT_MAP. Redacted BY CONSTRUCTION: the
+# reviewer gets the diff + the requirement surface and NEVER the implementer's
+# self-assessment (leaking it collapses finding rates several-fold). No debate
+# rounds — independent parallel reviews, mechanically merged. `{verdict}` is
+# substituted with the repo path the reviewer must write its verdict to.
+REVIEWER_PROMPT = (
+    "You are an INDEPENDENT reviewer launched by the unattended coordinator "
+    "(scripts/agent_loop.py) — a fresh context that did NOT write this code. "
+    "Assume the implementer was careful but missed something, and hunt for it. "
+    "Review ONLY (1) the diff of the work under review — run `git log` / `git "
+    "diff` yourself to see it — and (2) the requirement surface it must satisfy: "
+    "AGENTS.md, docs/process.md, the docs/requirements registries, and the "
+    "docs/specs spec-of-record for the open work item. Do NOT read or trust the "
+    "implementer's own session notes or self-assessment — a leaked "
+    "self-assessment collapses review finding-rates several-fold. Run the "
+    "harness yourself (python scripts/check.py, scripts/trace.py) and quote real "
+    "output; believe nothing you did not observe. This is an INDEPENDENT parallel "
+    "review — do not debate another reviewer. Write your verdict to {verdict} in "
+    "the log.md block format: one `- [BLOCKER|MAJOR|MINOR] <file:line> -> issue "
+    "-> the concrete change -> @owner` line per finding, then exactly one machine "
+    "line:\n"
+    "    VERDICT: APPROVE|CHANGES-REQUESTED findings=N\n"
+    "Commit that verdict file (a review is a recorded verdict — its one home) and "
+    "stop. Do not edit the code you are reviewing."
+)
+
+# The review-phase names the loop schedules (AGENT_ROLES: run-phase in {PLAN,
+# BUILD, REVIEW-A, REVIEW-B, INTEGRATE}). A committing non-review session
+# triggers a review round; these phases are the round.
+REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")
+
+# Default phase -> tier when routing from docs/agents.csv (AGENT_TIER_MAP /
+# --tier-map override per phase). Iteration reviewers are cheap-but-heterogeneous
+# (the strong-model floor is a GATE-closure rule, not an iteration-loop one), the
+# strong tier plans and design-checks, and an unknown phase routes UP — never a
+# weaker tier (cheap is not free).
+DEFAULT_PHASE_TIER = {
+    "PLAN": "strong",
+    "BUILD": "medium",
+    "REVIEW-A": "medium",
+    "REVIEW-B": "medium",
+    "DESIGN-CHECK": "strong",
+}
+
+# A model whose session fails to start / stalls goes on cooldown this long (its
+# limit is probably exhausted) — the generalized rate-limit backoff, per-model.
+# AGENT_COOLDOWN_SECONDS overrides; a bad value falls back to this default.
+DEFAULT_COOLDOWN_SECONDS = 900
+
+# Phases that are NOT build work, so a commit in them never triggers a review
+# round (a reviewer's own commit, a planner, an integrator, a design-check).
+NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {"PLAN", "INTEGRATE", "DESIGN-CHECK"}
 
 
 def read_declared(path, default):
@@ -437,6 +504,25 @@ def parse_model_map(spec):
         phase, _, model = pair.partition("=")
         mapping[phase.strip()] = model.strip()
     return mapping
+
+
+def phase_tier(phase, tier_map):
+    """The routing tier for a run-phase: the declared --tier-map / AGENT_TIER_MAP
+    value, else DEFAULT_PHASE_TIER, else `strong` (route an unknown phase UP —
+    cheap is not free)."""
+    if phase in (tier_map or {}):
+        return tier_map[phase]
+    return DEFAULT_PHASE_TIER.get(phase, "strong")
+
+
+def reviewer_prompt(prompt_templates, phase, verdict_path):
+    """The redacted reviewer prompt for a review phase: the per-phase prompt-map
+    template (a FILE the operator wired) if present, else the embedded
+    REVIEWER_PROMPT — with {verdict} resolved to the path the reviewer must
+    write. Never carries the implementer's self-assessment (redaction by
+    construction)."""
+    base = prompt_templates.get(phase, REVIEWER_PROMPT)
+    return base.replace("{verdict}", str(verdict_path))
 
 
 def git(root, *args):
@@ -891,6 +977,25 @@ def main():
         "instead (default: AGENT_CMD_MAP env var)",
     )
     ap.add_argument(
+        "--prompt-map",
+        default=os.environ.get("AGENT_PROMPT_MAP", ""),
+        help='per-phase prompt-template map "REVIEW-A=docs/prompts/review.md" '
+        "(same KEY=value syntax as --model-map); each value is a FILE path whose "
+        "content is that phase's prompt. Reviewer phases (REVIEW-A/REVIEW-B) fall "
+        "back to the embedded redacted reviewer prompt when unmapped; a {verdict} "
+        "slot in a reviewer template is filled with the verdict-file path. Every "
+        "referenced file is preflighted before iteration 1 (default: "
+        "AGENT_PROMPT_MAP env var)",
+    )
+    ap.add_argument(
+        "--tier-map",
+        default=os.environ.get("AGENT_TIER_MAP", ""),
+        help='per-phase tier map "BUILD=medium,PLAN=strong" (strong|medium|weak) '
+        "used by the docs/agents.csv router when the enable-list is present; "
+        "falls back to the built-in phase->tier defaults (default: AGENT_TIER_MAP "
+        "env var)",
+    )
+    ap.add_argument(
         "--prompt",
         default=DEFAULT_PROMPT,
         help="resume prompt passed to each session (default: the kit's "
@@ -938,9 +1043,20 @@ def main():
     try:
         model_map = parse_model_map(args.model_map)
         cmd_map = parse_model_map(args.cmd_map)  # same "KEY=value" syntax
+        prompt_map = parse_model_map(args.prompt_map)  # phase -> prompt-template FILE
+        tier_map = parse_model_map(args.tier_map)  # phase -> tier
     except ValueError as exc:
         print("agent_loop: {}".format(exc), file=sys.stderr)
         return EXIT_PREFLIGHT
+
+    # The S8 routing layer (process-options.md "Unattended operation" ->
+    # routing/escalation). The enable-list's PRESENCE turns managed routing +
+    # loop-side reviewer dispatch on; ABSENT files keep exactly today's single
+    # AGENT_CMD/AGENT_MODEL behavior, so a fresh scaffold pays nothing (no silent
+    # model swap — consent = the enabled set + the declared rules).
+    registry, reg_errors = agent_route.load_registry(docs / "agents.csv")
+    enabled = agent_route.load_enabled(docs / "agents-enabled")
+    managed = bool(enabled)
 
     failures = preflight(root, template, args)
     # Every per-phase template must be as launchable as the default one — a
@@ -958,6 +1074,59 @@ def main():
                 )
         except (ValueError, IndexError) as exc:
             failures.append("cmd-map [{}]: cannot parse template: {}".format(ph, exc))
+
+    # Every --prompt-map entry names a prompt-template FILE that must exist and
+    # be readable before iteration 1 (the preflight contract — a broken reviewer
+    # prompt must fail up front, never mid-run). Read them once, here.
+    prompt_templates = {}
+    for ph, rel in sorted(prompt_map.items()):
+        p = Path(rel)
+        if not p.is_absolute():
+            p = root / rel
+        try:
+            prompt_templates[ph] = p.read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            failures.append("prompt-map [{}]: cannot read {}: {}".format(ph, p, exc))
+
+    # Managed routing preflight (only when the enable-list opts in): the registry
+    # must parse, every enabled id must resolve to a real registry row, each
+    # row's CmdTemplate executable must be launchable, and any --tier-map value
+    # must be a valid tier — all up front, like cmd-map.
+    if managed:
+        for e in reg_errors:
+            failures.append("agents.csv: {}".format(e))
+        for mid in enabled:
+            m = registry.get(mid)
+            if m is None:
+                failures.append(
+                    "agents-enabled: {!r} is not a row in docs/agents.csv".format(mid)
+                )
+                continue
+            try:
+                exe = build_argv(m.cmd_template, "model", "prompt")[0]
+                if not (shutil.which(exe) or Path(exe).exists()):
+                    failures.append(
+                        "agents.csv [{}]: CmdTemplate CLI {!r} is not on PATH.".format(
+                            mid, exe
+                        )
+                    )
+            except (ValueError, IndexError) as exc:
+                failures.append(
+                    "agents.csv [{}]: cannot parse CmdTemplate: {}".format(mid, exc)
+                )
+        for ph, tier in sorted(tier_map.items()):
+            if tier not in agent_route.TIER_ORDER:
+                failures.append(
+                    "tier-map [{}]: {!r} is not one of {}".format(
+                        ph, tier, "|".join(agent_route.TIER_ORDER)
+                    )
+                )
+    elif reg_errors:
+        # A malformed registry in a repo NOT using routing is only a warning —
+        # the layer is off, so it changes nothing (never-breaking).
+        for e in reg_errors:
+            print("agent_loop: WARNING - agents.csv: {}".format(e), file=sys.stderr)
+
     if failures:
         print("agent_loop: preflight failed —", file=sys.stderr)
         for f in failures:
@@ -1034,14 +1203,16 @@ def main():
         )
     warned_no_core = []
 
-    def session_prompt(model):
+    def session_prompt(model, body=None):
         """The session prompt: the track preamble (when --track redirects the
         driver to a lane) prepended to the base prompt, with the vendored
         guardrails core prepended ahead of both when docs/guardrails-policy
-        selects this session's model (Thread 41). Returns (prompt, guarded); a
-        selected-but-absent core warns once, then runs without it (guardrails
-        accelerate weak tiers, they never gate a run)."""
-        base = track_preamble + args.prompt
+        selects this session's model (Thread 41). `body` overrides the default
+        resume prompt (a --prompt-map template, or a redacted reviewer prompt).
+        Returns (prompt, guarded); a selected-but-absent core warns once, then
+        runs without it (guardrails accelerate weak tiers, they never gate a
+        run)."""
+        base = track_preamble + (args.prompt if body is None else body)
         if not guardrails_apply(guardrails_policy, model):
             return base, False
         core = guardrails_core(root)
@@ -1092,10 +1263,26 @@ def main():
     print("track: {} | lane: {}".format(track or "(single-lane)", lane))
     print(
         "gate-policy: {} | push-policy: {} (the coordinator never pushes "
-        "under 'human') | review-policy: {} (docs/review-policy — the "
-        "reviewer dial; surfaced here, enforced by the integrator "
-        "convention, never by the loop)".format(gate_policy, push_policy, review_policy)
+        "under 'human') | review-policy: {} (docs/review-policy — the reviewer "
+        "dial: {})".format(
+            gate_policy,
+            push_policy,
+            review_policy,
+            "LOOP-ENFORCED (managed routing on) — a committing build schedules "
+            "the reviewer round(s)"
+            if managed
+            else "surfaced here, enforced by the integrator convention, never "
+            "by the loop",
+        )
     )
+    if managed:
+        print(
+            "routing: docs/agents-enabled present -> managed model selection from "
+            "{} enabled of {} registry models (tier + heterogeneity + cooldown + "
+            "tier-up-never-down); every selection logged before launch".format(
+                len(enabled), len(registry)
+            )
+        )
     print(
         "guardrails-policy: {} (docs/guardrails-policy — the vendored core is "
         "injected per session when the policy selects that session's "
@@ -1104,6 +1291,8 @@ def main():
     print("agent command: {}".format(template))
     for ph in sorted(cmd_map):
         print("  cmd-map [{}]: {}".format(ph, cmd_map[ph]))
+    for ph in sorted(prompt_map):
+        print("  prompt-map [{}]: {}".format(ph, prompt_map[ph]))
     print(
         "CONSENT: sessions run headless; a permission-bypass flag in "
         "AGENT_CMD means unattended edits without prompts — you consented by "
@@ -1125,12 +1314,106 @@ def main():
     stall = 0
     errors = 0  # consecutive ERROR sessions (agent unavailable, not a work stall)
     state = read_declared(lane / "run-state", "RUNNING").upper()
+
+    # --- managed-routing / reviewer-dispatch state (S8; all no-ops when the
+    # enable-list is absent, so the legacy path is byte-for-byte unchanged) ----
+    try:
+        rp_int = int(review_policy)
+    except ValueError:
+        rp_int = 1
+    rp_int = max(0, min(2, rp_int))
+    try:
+        cooldown_seconds = int(
+            os.environ.get("AGENT_COOLDOWN_SECONDS", DEFAULT_COOLDOWN_SECONDS)
+        )
+    except ValueError:
+        cooldown_seconds = DEFAULT_COOLDOWN_SECONDS
+    route_constants = agent_route.load_constants()
+    scoreboard = lane / "reviews" / "scoreboard.txt"
+    cooldowns = {}  # model id -> epoch it is available again (per-model backoff)
+    review_queue = []  # the pending review phases for the current round
+    round_verdicts = []  # (phase, Verdict, provider, model_id) collected this round
+    rounds = []  # accumulated round dicts the escalation policy reads
+    last_impl_provider = None  # the provider of the build under review
+    last_impl_tier = "medium"  # the tier that build ran at
+    impl_range = None  # the build's commit range (for the tripwire diff)
+    swapped = False  # an implementer-provider swap has been applied
+    at_top_tier = False  # the implementer tier has been raised to the top
+    impl_tier_override = None  # escalation raised the BUILD tier
+    impl_exclude = set()  # providers to avoid for the next BUILD (after a swap)
+
     for i in range(1, args.max_iterations + 1):
         session = "{:03d}".format(next_session_number(iter_dir))
         stamp = time.strftime("%Y%m%d-%H%M%S")
         before = head_sha(root)
-        phase, model = session_model()
-        tmpl = session_template(phase)
+        now = time.time()
+        is_review = False
+        verdict_path = None
+        route_id = None  # the selected registry id (managed mode)
+        route_provider = None
+        if managed:
+            if review_queue:
+                phase = review_queue[0]
+                is_review = True
+            else:
+                phase = read_declared(lane / "run-phase", "")
+            tier = phase_tier(phase, tier_map)
+            exclude = set()
+            prefer_different = False
+            if is_review:
+                prefer_different = True
+                if last_impl_provider:
+                    exclude.add(last_impl_provider)
+                for _ph, _v, prov, _mid in round_verdicts:
+                    if prov:
+                        exclude.add(prov)  # REVIEW-B differs from REVIEW-A too
+            elif phase == "BUILD" or phase == "":
+                if impl_tier_override:
+                    tier = impl_tier_override
+                if impl_exclude:
+                    exclude = set(impl_exclude)
+                    prefer_different = True
+            elif phase == "DESIGN-CHECK":
+                # The autonomous page-the-human path: a fresh strong-tier session
+                # from a DIFFERENT provider rules grind-through vs redesign.
+                prefer_different = True
+                if last_impl_provider:
+                    exclude.add(last_impl_provider)
+            route_id, reason = agent_route.select(
+                enabled, registry, tier, now, cooldowns, exclude, prefer_different
+            )
+            # Log the routing decision BEFORE launch (the no-silent-swap rule).
+            print("route [{}]: {}".format(phase or "—", reason))
+            if route_id is None:
+                # Every enabled model at the preferred tier-or-stronger is cooling
+                # down or none is enabled: page rather than drop to a weaker tier.
+                (lane / "run-state").write_text("NEEDS-HUMAN\n", encoding="utf-8")
+                stop_banner(
+                    status_path,
+                    "NEEDS-HUMAN — no routable model",
+                    reason + " (add/enable a model of this tier, or wait for a "
+                    "cooldown; the loop never silently drops to a weaker tier).",
+                )
+                return EXIT_NEEDS_HUMAN
+            m = registry[route_id]
+            model = m.model or route_id
+            route_provider = m.provider
+            tmpl = m.cmd_template or template
+            if not is_review and (phase == "BUILD" or phase == ""):
+                last_impl_tier = tier
+            if is_review:
+                verdict_path = lane / "reviews" / "{}-{}.md".format(session, phase)
+                verdict_path.parent.mkdir(parents=True, exist_ok=True)
+                body = reviewer_prompt(prompt_templates, phase, verdict_path)
+            elif phase in prompt_templates:
+                body = prompt_templates[phase]
+            else:
+                body = None
+            prompt, guarded = session_prompt(model, body=body)
+        else:
+            phase, model = session_model()
+            tmpl = session_template(phase)
+            prompt, guarded = session_prompt(model)
         if not model and "{model}" in tmpl:
             print(
                 "agent_loop: the session's command template carries a {model} "
@@ -1149,7 +1432,6 @@ def main():
                 model or "—",
             )
         )
-        prompt, guarded = session_prompt(model)
         argv = build_argv(tmpl, model, prompt)
         code, output, timed_out = run_session(argv, root, args.session_timeout)
 
@@ -1228,6 +1510,136 @@ def main():
         print(
             "session {}: outcome={} commits={}".format(session, outcome, commits or "—")
         )
+
+        # --- managed routing / reviewer dispatch bookkeeping (S8) -------------
+        # All of this is gated on managed mode; the legacy path never enters it.
+        if managed and outcome == "WAITING":
+            # Generalize the rate-limit backoff PER-MODEL: cool this model and
+            # re-route to another available one next iteration. select() pages if
+            # none is left rather than dropping to a weaker tier (no silent swap).
+            wait = seconds_until_reset(reset_hint) or cooldown_seconds
+            agent_route.cool(cooldowns, route_id, now, wait)
+            print(
+                "route: {} rate-limited; cooled ~{}s, re-routing".format(
+                    route_id, int(wait)
+                )
+            )
+            continue
+        if managed and is_review:
+            if verdict_path and Path(verdict_path).exists():
+                v = score_reviews.parse_verdict(
+                    Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
+                    model=route_provider,
+                )
+                round_verdicts.append((phase, v, route_provider, route_id))
+                if review_queue:
+                    review_queue.pop(0)
+            else:
+                # No verdict file (errored, stalled, or the session simply did not
+                # write one): cool the model and re-route the same review phase.
+                agent_route.cool(cooldowns, route_id, now, cooldown_seconds)
+                print(
+                    "route: {} review [{}] wrote no verdict ({}); cooled, "
+                    "re-routing".format(route_id, phase, outcome)
+                )
+            if not review_queue and round_verdicts:
+                verdicts = [v for (_ph, v, _p, _m) in round_verdicts]
+                merged, contradiction = score_reviews.merge_verdict(verdicts)
+                provider_substance = {}
+                subs = []
+                for j, (_ph, rv, rprov, _mid) in enumerate(round_verdicts):
+                    peer = (
+                        round_verdicts[1 - j][1] if len(round_verdicts) == 2 else None
+                    )
+                    provs = (
+                        (rprov, round_verdicts[1 - j][2])
+                        if len(round_verdicts) == 2
+                        else None
+                    )
+                    s = score_reviews.substance(rv, root, other=peer, providers=provs)
+                    subs.append((rprov, s))
+                    if rprov:
+                        provider_substance[rprov] = s
+                margin = abs(subs[0][1] - subs[1][1]) if len(subs) == 2 else 0.0
+                primary = None
+                if len(subs) == 2:
+                    primary = subs[0][0] if subs[0][1] >= subs[1][1] else subs[1][0]
+                changed = []
+                if impl_range and ".." in impl_range:
+                    _rc, diff_out = git(root, "diff", "--name-only", impl_range)
+                    changed = [ln for ln in diff_out.splitlines() if ln.strip()]
+                fired = score_reviews.fired_tripwires(verdicts, changed_paths=changed)
+                round_info = {
+                    "verdict": merged or "",
+                    "tier": last_impl_tier,
+                    "margin": margin,
+                    "primary": primary,
+                    "tripwire": bool(fired),
+                    "contradiction": contradiction,
+                }
+                rounds.append(round_info)
+                try:
+                    score_reviews.record_round(
+                        scoreboard, round_info, provider_substance
+                    )
+                except OSError:
+                    pass
+                print(
+                    "review round: merged={} margin={:.2f} tripwires={} "
+                    "(advisory scoreboard {})".format(
+                        merged, margin, ",".join(fired) or "none", scoreboard
+                    )
+                )
+                decision = agent_route.escalate(
+                    rounds, route_constants, swapped, at_top_tier
+                )
+                print(
+                    "escalate: {} — {}".format(decision["action"], decision["reason"])
+                )
+                round_verdicts = []
+                if decision["action"] == "page-human":
+                    fa = agent_route.failure_action(gate_policy)
+                    print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
+                    if fa["mode"] == "attended":
+                        (lane / "run-state").write_text(
+                            "NEEDS-HUMAN\n", encoding="utf-8"
+                        )
+                        stop_banner(
+                            status_path,
+                            "PAGE-HUMAN — review escalation",
+                            decision["reason"] + " | " + fa["note"],
+                        )
+                        return EXIT_NEEDS_HUMAN
+                    if fa.get("design_check"):
+                        (lane / "run-phase").write_text(
+                            "DESIGN-CHECK\n", encoding="utf-8"
+                        )
+                elif decision["action"] == "swap-implementer":
+                    if last_impl_provider:
+                        impl_exclude = {last_impl_provider}
+                    swapped = True
+                    (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
+                elif decision["action"] == "tier-up":
+                    impl_tier_override = "strong"
+                    at_top_tier = True
+                    (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
+                elif merged == "CHANGES-REQUESTED":
+                    (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
+        elif managed and not is_review:
+            if outcome in ("ERROR", "TIMEOUT"):
+                agent_route.cool(cooldowns, route_id, now, cooldown_seconds)
+            elif (
+                outcome == "COMMITTED" and rp_int >= 1 and phase not in NON_BUILD_PHASES
+            ):
+                last_impl_provider = route_provider
+                impl_range = commits
+                round_verdicts = []
+                review_queue = ["REVIEW-A"] + (["REVIEW-B"] if rp_int >= 2 else [])
+                print(
+                    "dispatch: review-policy {} -> scheduling review round {}".format(
+                        rp_int, review_queue
+                    )
+                )
 
         if outcome == "WAITING":
             # A throttled session is not progress *or* a stall — never count

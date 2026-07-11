@@ -41,6 +41,8 @@ What it creates in the destination:
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
+    scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
+    docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1,command}         <- dev-setup.template.* (workstation setup)
@@ -974,6 +976,14 @@ MAPPING = [
     # operation"): how many independent fresh-context review verdicts a WI
     # gets (0|1|2). Default `1`; floors above the dial live in the file.
     ("review-policy.template", "docs/review-policy"),
+    # The model REGISTRY the coordinator's router reads (WI-059, S8): one row per
+    # usable model keyed [PROVIDER]-[MODEL_NAME]-[VERSION], with example rows for
+    # the verified headless shapes. Present but INERT until docs/agents-enabled
+    # (the ordered enable-list / consent surface, deliberately NOT scaffolded) is
+    # created — routing then selects from that pool (process-options.md
+    # "Unattended operation" -> routing/escalation). Absent both files = today's
+    # single AGENT_CMD/AGENT_MODEL behavior.
+    ("agents.template.csv", "docs/agents.csv"),
     # The privacy-check toggle (Thread 38 -> identity/privacy reframe,
     # process-options.md "Commit identity & privacy"): `false` by default;
     # --privacy-check overrides.
@@ -1052,6 +1062,13 @@ MAPPING = [
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),
     ("scripts/gen_trajectory.py", "scripts/gen_trajectory.py"),
     ("scripts/gen_okf.py", "scripts/gen_okf.py"),
+    # The S8 routing/scoring half of the unattended coordinator (WI-059): the
+    # model-registry router + fixed escalation policy, and the substance scorer.
+    # agent_loop imports them as siblings when the docs/agents-enabled enable-list
+    # opts routing in; absent, they are inert (process-options.md "Unattended
+    # operation" -> routing/escalation).
+    ("scripts/agent_route.py", "scripts/agent_route.py"),
+    ("scripts/score_reviews.py", "scripts/score_reviews.py"),
     ("scripts/setup.sh", "scripts/setup.sh"),
     ("scripts/setup.ps1", "scripts/setup.ps1"),
     ("scripts/check.sh", "scripts/check.sh"),

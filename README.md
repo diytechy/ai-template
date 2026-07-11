@@ -52,6 +52,15 @@ any repo and wire the harness to that repo's tooling (SN-003).
     `docs/run-state` reaches an end state.
   - A per-phase model map (`docs/run-phase`), reactive rate-limit backoff, a
     stall guard, and tracked per-session logs in `docs/iteration/`.
+  - Optional **heterogeneous scheduling** — when `docs/agents-enabled` opts in,
+    a committing build schedules separate fresh **reviewer** sessions (redacted
+    of the implementer's self-assessment), with the model chosen from the
+    `docs/agents.csv` enable-list by tier + provider heterogeneity + cooldown,
+    a mechanical substance scorer, and a fixed **win-stay/lose-shift**
+    escalation policy (degraded availability — one provider — is legal); absent
+    the enable-list, behavior is unchanged (see
+    [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Unattended
+    operation").
   - Optional **tier-conditional guardrails** — `docs/guardrails-policy`
     injects a vendored discipline core into weaker-tier sessions, drift-checked
     by `check_vendored.py`.

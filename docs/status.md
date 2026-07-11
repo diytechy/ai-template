@@ -33,10 +33,12 @@ working surface.
        still awaiting sign-off: `SR-034` text (Inspection→Analysis), the added
        `SR-039…SR-043`, the extended `SR-038`, the **`SR-037` text change** (the
        SSOT coherence + SpecRef rules), **`SN-023` + `SR-044`** (the
-       declared-interface connectivity layer, new SN→SR), and now the **`SR-025`
+       declared-interface connectivity layer, new SN→SR), the **`SR-025`
        text change** (extended to the checked per-agent skill fan-out; +LLR-043/
-       TC-045). *Mandatory*: Verified SR text changed and new SN/SRs joined the
-       spine ([log.md](log.md)).
+       TC-045), and now the **new `SR-045`** under `SN-006`/`SN-016` (the S8
+       heterogeneous implementer/reviewer scheduling layer; +LLR-044/045/046 +
+       TC-046 + IF-044…047). *Mandatory*: Verified SR text changed and new SN/SRs
+       joined the spine ([log.md](log.md)).
     2. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
     3. **WI-DAG edge data-pass** — demote the narrative predecessor edges in
        `work-items.csv` to soft `~` edges (which edges are real technical
@@ -47,19 +49,15 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
-  - **In flight — the working-surface + architecture-connectivity campaign**
-    (spec:
+  - **Campaign complete — owner sitting next.** The working-surface +
+    architecture-connectivity campaign (spec:
     [specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
-    fully ruled). The SSOT-mechanize, meta-compliance,
-    architecture-connectivity-mechanize and meta-repo interface-authoring slices
-    landed (see [log.md](log.md) — the kit's own `IF-###` seams now declare its
-    real architecture, so the How-SW panel renders the graph and the
-    connectivity coverage is clean); the cross-agent skill fan-out is now a
-    checked, one-command-refreshable copy of the one neutral source (the
-    `.claude`/`.agents` drift resolved); the spine-touchers bundle into the
-    pending re-attestation (the campaign ruling). Remaining:
-    - **WI-059** — heterogeneous implementer/reviewer scheduling (sequenced
-      last, detachable).
+    fully ruled) has landed all its slices, S8 included (heterogeneous
+    implementer/reviewer scheduling; the loop now routes models from
+    `docs/agents.csv` + `docs/agents-enabled` and dispatches redacted reviewer
+    sessions per `docs/review-policy`, absent-files = today's behavior). The
+    spine-touchers bundle into the pending re-attestation (the campaign ruling);
+    the coordinating session handles the spec archival + final status.
   - **Deferred (backlog — first-class `deferred` WI rows, each with its
     reason):**
     - **WI-060** — coordinator working-tree stash/rollback between sessions
@@ -76,10 +74,11 @@ working surface.
       extensions (`consumes`/effort schema, a typed-IF contract check,
       edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
       rendering — all deferred-on-need).
-- **Next action:** finish the campaign — **WI-059** (heterogeneous implementer/
-  reviewer scheduling; sequenced last, detachable). The owner sitting (the
-  re-attestation, push ruling, sibling-repo target, batch review) follows the
-  campaign close. After that: the G-Release walk, the WI-DAG edge data-pass, or new
+- **Next action:** the **owner sitting** — the campaign is complete. That
+  sitting covers the G3 re-attestation (now also over the new `SR-045`), the
+  push ruling (~50 commits local), the sibling-repo target, and the deferred
+  batch review. The coordinating session archives the campaign spec + writes the
+  final status. After that: the G-Release walk, the WI-DAG edge data-pass, or new
   scope (which needs a plan/WI entry first).
 
 ## Scope

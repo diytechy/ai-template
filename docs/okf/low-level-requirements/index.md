@@ -53,3 +53,6 @@ resource: "generated"
 | [LLR-041](LLR-041.md) | IF-tier integrity in trace.py |
 | [LLR-042](LLR-042.md) | Architecture-connectivity views and coverage warns |
 | [LLR-043](LLR-043.md) | Cross-agent skill fan-out drift check |
+| [LLR-044](LLR-044.md) | Model routing + fixed escalation policy |
+| [LLR-045](LLR-045.md) | Loop-side reviewer dispatch + managed routing |
+| [LLR-046](LLR-046.md) | Substance scorer + tripwires + scoreboard |

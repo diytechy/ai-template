@@ -790,3 +790,104 @@ integrity=0 schema=0 interfaces=43 interface-findings=0**; `check_trajectory
 --strict` clean (64 WIs, 58 done); `gen_arch_map`/`gen_trajectory`/`gen_okf`
 `--check` **up to date**; `check.py --gate G3` **13/13 PASS** (the new
 `skills-sync` step). Spine **SN=23 SR=44 LLR=43 TC=45, 0 orphans**.
+
+## 2026-07-11 — WI-059 (S8): heterogeneous implementer/reviewer scheduling — the campaign's last slice
+
+**Summary.** Landed S8, the final slice of the working-surface +
+architecture-connectivity campaign
+([specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md#s8--heterogeneous-implementerreviewer-scheduling--done-2026-07-11)):
+the unattended coordinator now schedules separate implementer and reviewer
+sessions across tiers **and providers**, with next-round routing a **declared,
+legible** policy informed by a mechanical (advisory) review-substance scorer.
+Everything stays stdlib, consent-explicit (no silent model swap), and
+**never-breaking** — the whole layer is gated on the presence of the
+`docs/agents-enabled` enable-list, so an absent enable-list reproduces today's
+single `AGENT_CMD`/`AGENT_MODEL` behavior byte-for-byte (the 38 legacy
+`agent_loop` tests are unchanged and green).
+
+**Deliverables (per the S8 Done-when — all ticked).**
+1. **Loop-side reviewer dispatch + `--prompt-map` (test-first).** In managed mode
+   a committing non-review session schedules `REVIEW-A` (and `REVIEW-B` under
+   `docs/review-policy: 2`) before the next build — `review-policy 0|1|2` is now
+   **loop-enforced**, not just surfaced. Reviewer verdicts are **repo files**
+   (`docs/reviews/NNN-<phase>.md`, log.md block + one machine line
+   `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`), merged **mechanically, no
+   debate**. `--prompt-map`/`AGENT_PROMPT_MAP` = per-phase prompt-template FILES
+   (parse_model_map reuse; each preflighted). The reviewer prompt is **redacted
+   by construction** — diff + requirements, never the implementer's
+   self-assessment (a test asserts the driver resume prompt never reaches a
+   reviewer).
+2. **`docs/agents.csv` registry + enable-list routing** (`scripts/agent_route.py`,
+   new). One row per usable model, `[PROVIDER]-[MODEL_NAME]-[VERSION]` id (a join
+   key, **never parsed**; `Provider`/`Model`/`Version`/`Tier`/`CmdTemplate` are
+   the columns). Selection = enable-list preference order + phase tier + reviewer
+   heterogeneity (two providers, ≥1 differing — *preferred*; **degraded
+   same-provider legal**) + per-model **cooldown** (the rate-limit backoff
+   generalized) + **tier-up-never-down**; every selection logged before launch.
+   No vendored catalog (pointer to models.dev / LiteLLM).
+3. **The substance scorer** (`scripts/score_reviews.py`, new): anchored precision,
+   actionability, cross-reviewer corroboration (cross-family weighted up),
+   optional confirmed-finding rate; **length never scores positively**. Severity
+   hygiene + four **tripwires** (finding-count/cap gaming, near-duplicate review
+   text, an implementer diff touching a review/policy path, mass finding-rejection)
+   are **non-scored gates**. Scoreboard = one decayed-tally text file
+   (`docs/reviews/scoreboard.txt`); **advisory** — the declared policy picks.
+   **Fixed escalation** (win-stay/lose-shift): margin ≥ 2, implementer-provider
+   swap after 2 failed gates, tier rise only after the swap fails, **page-human**
+   on the shared-failure regime / contradictory verdicts / any tripwire, with
+   **`docs/gate-policy`-keyed failure semantics** (attended stops NEEDS-HUMAN;
+   single-ratify surfaces + continues; autonomous schedules a strong-tier
+   different-provider design-check).
+4. **Docs.** PROCESS_OPTIONS "Unattended operation" gained the
+   routing/escalation subsection; the "reviewer tier never delegated down"
+   wording **narrowed to gate-closure** reviews (iteration reviewers are
+   cheap-but-heterogeneous); the root README unattended bullet gained the
+   one-sentence iteration-review summary pointing at the detail.
+5. **Spine.** New **SR-045** under `SN-006`/`SN-016` + **LLR-044/045/046**
+   (router / loop dispatch / scorer) + **TC-046** + **IF-044…047** (the two new
+   scripts' Provides-CLI + Consumes seams; `Contracts:` docstrings harvested into
+   the arch map). Rides the pending G3 re-attestation.
+
+**Judgment calls.**
+- **Verdict-file home = `docs/reviews/`** (`NNN-<phase>.md` per round, alongside
+  the advisory `scoreboard.txt`) — a repo-text-as-memory surface, the loop reads
+  it back at the round boundary.
+- **Scoreboard format** = a small line-oriented text file: `provider <P>
+  substance=<f> rounds=<n>` (decayed, DECAY=0.7) + `round <n> verdict=… tier=…
+  margin=… primary=… tripwire=… contradiction=…` (the history the escalation
+  policy reads). Documented in `score_reviews.py` + PROCESS_OPTIONS.
+- **Prompt-template shape** = an **embedded default** `REVIEWER_PROMPT` constant
+  in `agent_loop.py` (no new scaffold file), overridable per phase with a
+  `--prompt-map` FILE; `{verdict}` is slotted with the verdict path.
+- **Constants + knobs** = per-repo-overridable env defaults `AGENT_ROUTE_MARGIN`
+  (2), `AGENT_ROUTE_SWAP_AFTER` (2), `AGENT_ROUTE_PAGE_TOP_TIER_FAILS` (2),
+  `AGENT_COOLDOWN_SECONDS` (900), `AGENT_TIER_MAP` (phase→tier; iteration
+  reviewers default to a cheaper tier) — calibration values, not spine facts.
+- **`docs/agents.csv` is scaffolded** (via `agents.template.csv`, example rows
+  for the verified `claude -p` / `codex exec` / `gemini -p` shapes) — present but
+  **inert**; **`docs/agents-enabled` is NOT scaffolded** (the consent surface +
+  on-switch; absence = routing off = today's behavior).
+
+**Deviations.** None from the S8 rulings. Confirmed-finding rate is scored only
+when a follow-up diff is supplied (the loop passes none inline, so it is left
+out of substance rather than faked to 0) — per the spec. The spec's
+"cheap in-kit A/B" is FUTURE work, not built (scoreboard stays advisory).
+
+**Byte deltas.** `AGENTS.template.md` **untouched (9,978)**; `PROCESS.md`
+**untouched (58,297)** — the §5 change-intake flow is **linked, not edited**.
+
+**Mechanized bar.** `pytest -q` **561 passed, 3 skipped** (+3 over the 558
+pre-WI-059 total: the S8 route/scorer/loop suites are
+`tests/test_agent_route.py` + `tests/test_score_reviews.py` +
+`tests/test_agent_loop_review.py`); `check_docs.py --root . --stale` **0
+broken**; `trace.py --strict --require-verified --strict-schema` **SN=23 SR=45
+LLR=46 TC=46 orphans=0 integrity=0 status-findings=0 placeholders=0
+schema-findings=0 interfaces=47 interface-findings=0**; `check_trajectory
+--strict` clean; `gen_arch_map`/`gen_trajectory`/`gen_okf` `--check` **up to
+date**; `check.py --gate G3` **13/13 PASS**. Spine now **SN=23 SR=45 LLR=46
+TC=46, 0 orphans**.
+
+**Re-attestation rider.** The new **SR-045** (Verification=Test, Verified) joins
+the pending G3 re-attestation — one owner sitting now covers SR-034/SR-037/
+SR-038/SR-039…044/SR-025 **and SR-045** + the new `SN`-hung SR. The campaign is
+complete; the coordinating session handles the spec archival + final status.

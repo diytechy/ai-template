@@ -55,3 +55,4 @@ resource: "generated"
 | [TC-043](TC-043.md) | Run the subagent-gate suite; a Task/Agent spawn under deny is refused (permissionDecision… |
 | [TC-044](TC-044.md) | Run the interface-connectivity suite: trace.py flags a malformed/duplicate IF id and an e… |
 | [TC-045](TC-045.md) | Run the skills-sync suite: a hand-edited per-agent copy fails gen_skills_index --check-ag… |
+| [TC-046](TC-046.md) | Run the heterogeneous-scheduling suite: agent_route selection honors enable-list order, t… |
