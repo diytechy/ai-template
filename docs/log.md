@@ -989,7 +989,7 @@ passthrough, `--list` = a stable `name<TAB>desc` machine listing (the agent
 surface). An absent/empty `[run]` section prints the same "no launch command
 wired yet" guidance and exits 1. The launch command now lives in exactly one
 place (spec:
-[specs/capability-expansion.md](specs/capability-expansion.md), C1).
+[archive/specs/capability-expansion.2026-07-11.md](archive/specs/capability-expansion.2026-07-11.md), C1).
 
 **Deliverables.**
 - `scripts/run_menu.py` (new, stdlib): a configparser `[run]` reader
@@ -1065,7 +1065,7 @@ first-class, mechanizable thing: **`Critique`** joins the Verification vocabular
 separated from human `Attest`), and the S8 coordinator gains a **CRITIQUE
 run-phase** that gives another agent a *different hat* to judge a code-produced
 artifact against a **written rubric**, driving bounded rework. Spec:
-[specs/capability-expansion.md](specs/capability-expansion.md) C2 (now ✅ DONE).
+[archive/specs/capability-expansion.2026-07-11.md](archive/specs/capability-expansion.2026-07-11.md) C2 (now ✅ DONE).
 
 **Deliverables.**
 - **`Critique` in the Verification vocabulary** — `trace.py` `ENUM_FIELDS`
@@ -1357,3 +1357,24 @@ done (C1 run menu · C2 critique loop · C3 pair-row registry · C4 OKF knowledg
 tab). The spec is **not** archived here — the coordinating session closes the
 campaign (spec archival + WI reconciliation belong to that close, per the S8
 campaign-close precedent).
+
+## 2026-07-11 — Campaign close (coordinating session): capability-expansion spec archived; NO spine change
+
+**Session.** The capability-expansion campaign is closed — all four slices
+landed (the run capability menu, the `Critique` verification value + critique
+loop, the pair-row agent registry, the OKF knowledge tab). The spec moved
+`docs/specs/` → [archive/specs/capability-expansion.2026-07-11.md](archive/specs/capability-expansion.2026-07-11.md)
+per the spec lifecycle (close date appended, an ARCHIVED banner naming the
+attributed WIs WI-067…WI-070), with every in-repo citation re-pointed (this
+log ×2, `status.md`) and its one internal relative link re-based for the new
+depth; `docs/archive/README.md`'s `specs/` row extended. `status.md` returns
+to an empty in-flight lane; next action = the owner sitting.
+
+Also recorded here: the WI-070 close-out commit was performed by this
+coordinating session after the implementing session's final gate run was
+interrupted — the full bar was re-run from scratch first (pytest 603/3,
+`check_docs` 0 broken, G3 13/13 PASS) so the commit rode a verified green,
+not an assumed one.
+
+**No SR/LLR/TC text touched** — docs moves + working-surface tidy only;
+the re-attestation list is unchanged from the WI-070 entry above.

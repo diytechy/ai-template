@@ -58,17 +58,15 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
-  - **Capability-expansion campaign — complete** (spec:
-    [specs/capability-expansion.md](specs/capability-expansion.md), fully
-    ruled + scheduled 2026-07-11): all four slices have landed on
-    `MultiRepoSupport` — C1 run-capability menu · C2 subjective-quality critique
-    loop · C3 pair-row agent registry · C4 the OKF knowledge tab (the dashboard
-    is now the bundle's first real consumer). **The coordinating session closes
-    the campaign** — archiving the spec belongs to that close, not to the final
-    slice. Every spine-toucher bundles into the one pending G3 re-attestation
-    above. The prior working-surface + architecture campaign is likewise closed
-    and archived
+  - **In flight:** _(none)_ — both 2026-07-11 campaigns are **closed and
+    archived**: the capability-expansion campaign (run-capability menu ·
+    subjective-quality critique loop · pair-row agent registry · the OKF
+    knowledge tab — the dashboard is now the bundle's first real consumer;
+    spec:
+    [archive/specs/capability-expansion.2026-07-11.md](archive/specs/capability-expansion.2026-07-11.md))
+    and the prior working-surface + architecture campaign
     ([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md)).
+    Every spine-toucher bundles into the one pending G3 re-attestation above.
   - **Deferred (backlog — first-class `deferred` WI rows, each with its
     reason):**
     - **WI-060** — coordinator working-tree stash/rollback between sessions
@@ -89,12 +87,11 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-- **Next action:** the capability-expansion campaign is complete (all four
-  slices landed); the coordinating session closes it. Then the **owner sitting**:
-  one G3 re-attestation over every accumulated spine change (both campaigns), the
-  push ruling, the sibling-repo target, and the deferred batch review. After
-  that: the G-Release walk, the WI-DAG edge data-pass, or new scope (which needs
-  a plan/WI entry first).
+- **Next action:** the **owner sitting** — one G3 re-attestation over every
+  accumulated spine change (both 2026-07-11 campaigns), the push ruling, the
+  sibling-repo target, and the deferred batch review. After that: the
+  G-Release walk, the WI-DAG edge data-pass, or new scope (which needs a
+  plan/WI entry first).
 
 ## Scope
 

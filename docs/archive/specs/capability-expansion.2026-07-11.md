@@ -1,5 +1,11 @@
 # Capability expansion — run menu · critique loop · registry robustness · OKF tab — PLAN
 
+> **ARCHIVED 2026-07-11 — campaign complete.** This was the spec-of-record for
+> work items **WI-067, WI-068, WI-069, WI-070** (all `done`; deliverables in
+> `docs/requirements/work-items.csv`, session record in `docs/log.md`).
+> Archived per the spec lifecycle: close date appended to the filename,
+> attributed WIs named here.
+
 **Status:** 🟢 **RULED + SCHEDULED (owner, 2026-07-11) — all 17 rulings
 settled; ingested as WI-067…WI-070, one campaign bundled with the pending G3
 re-attestation.** Key rulings:
@@ -10,7 +16,7 @@ their described defaults**; **C3 = the pair-row registry** ("pairs now,
 factor later" — see its ruling block); **#17 = one campaign** — WI-067 (C1) ·
 WI-068 (C2) · WI-069 (C3) · WI-070 (C4), spine touches bundling into the
 **pending G3 re-attestation** (the campaign ruling,
-[archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](../archive/specs/working-surface-and-architecture-restructure.2026-07-11.md)).
+[archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](working-surface-and-architecture-restructure.2026-07-11.md)).
 
 **Provenance:** owner direction 2026-07-11 (four items, verbatim intent
 restated per section); two same-day web-research passes (an OKF-visualizer
