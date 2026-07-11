@@ -3,9 +3,9 @@
 **Status:** 🟢 **RULED — every open decision settled by the owner
 (2026-07-10; see "Consolidated rulings").** Not yet scheduled, no code written;
 ingests as `WI-053…` when the campaign is scheduled, bundled with the pending
-G3 re-attestation (the campaign ruling). **Exception: S8** (heterogeneous
-implementer/reviewer scheduling, added 2026-07-10) is 🟡 **PROPOSED** and
-awaits its own rulings — see its section. This is the spec-of-record for the
+G3 re-attestation (the campaign ruling). **S8** (heterogeneous
+implementer/reviewer scheduling) was added and ruled the same day — see its
+rulings block. This is the spec-of-record for the
 `S0…S8` work-item series. It deliberately lives in `docs/specs/` and is the
 **first inhabitant** of that directory — dogfooding the `SpecRef` convention it
 defines (S1).
@@ -328,10 +328,10 @@ files.
 --agents` populates `.agents/` from source; the meta-repo's three targets are
 byte-identical to source (the current `session-protocol` drift resolved).
 
-## S8 — Heterogeneous implementer/reviewer scheduling *(🟡 PROPOSED — for owner review)*
+## S8 — Heterogeneous implementer/reviewer scheduling *(✅ RULED 2026-07-10)*
 
-**Status: PROPOSED, research-backed (2026-07-10)** — unlike S0…S7 above, S8 is
-not yet ruled. Provenance: owner direction (separately scheduled
+**Status: ✅ RULED (owner, 2026-07-10), research-backed** — proposed and ruled
+the same day; the rulings block closes this section. Provenance: owner direction (separately scheduled
 implementer/reviewer sessions; per-job model complexity; cross-**provider**
 selection by problem type or review-feedback strength; the provider/model
 catalog question) + three research passes condensed in
@@ -353,18 +353,32 @@ stdlib, consent-explicit (no silent swaps), never-breaking.
   `REVIEW-A` (`= 2` also `REVIEW-B`) before the next BUILD — plus
   `--prompt-map`/`AGENT_PROMPT_MAP` (per-phase prompt templates), the one
   AGENT_ROLES build-call still open.
-- **A provider registry, not a model catalog.** `AGENT-###` rows
-  (`docs/agents.csv`): `Provider, CmdTemplate` (`{model}`/`{prompt}` slots)`,
-  Strong, Medium, Weak, Notes` — **three tier aliases per row**, aliases over
-  dated ids wherever the CLI resolves them (aliases rot at CLI-flag pace, not
-  model-release pace). Ships example rows for the verified headless shapes
-  (`claude -p` / `codex exec` / `gemini -p`, all JSON-capable). **No vendored
-  model catalog** — richer data is a documented pointer to the maintained
-  registries (models.dev `api.json`; LiteLLM's model-prices JSON); a
-  `check_vendored`-style pinned snapshot is deferred until a real consumer
-  exists.
-- **Routing = composition of declared maps:** (role → `AGENT-###`) ×
-  (phase → tier column) → concrete command. Absent files default to today's
+- **A model registry, not a model catalog** (`docs/agents.csv`; ruled shape).
+  One row per usable **model**, keyed **`[PROVIDER]-[MODEL_NAME]-[VERSION]`**
+  (`ANTHROPIC-OPUS-4.8`, `OPENAI-GPT-5.2`, `GOOGLE-GEMINI-3-PRO`) — released
+  model names are immutable, so these ids are *more* durable than sequential
+  `###` ids (unlike iterating repo artifacts). `Provider`/`Model`/`Version`
+  stay separate columns (machine truth; the id is the join key, never parsed
+  — model names contain hyphens), plus `Tier (strong|medium|weak)`,
+  `CmdTemplate` (`{model}`/`{prompt}` slots), `Notes`; id charset uppercase +
+  digits + hyphen + dot (dated snapshots and `-PREVIEW` tags are valid
+  versions — verified against Anthropic/OpenAI/Google/Meta/Mistral/DeepSeek
+  naming). Ships example rows for the verified headless shapes (`claude -p` /
+  `codex exec` / `gemini -p`, all JSON-capable). **No vendored model catalog**
+  — richer data is a documented pointer to the maintained registries
+  (models.dev `api.json`; LiteLLM's model-prices JSON); a `check_vendored`-
+  style pinned snapshot is deferred until a real consumer exists.
+- **Routing = an enable-list + availability, not per-role maps** (ruled).
+  `docs/agents-enabled` lists, in preference order, the registry ids this
+  repo may use — the consent surface. Per session the loop selects from that
+  **enabled pool** by the phase's tier plus the heterogeneity rules
+  (reviewers: two providers, ≥1 ≠ implementer's); a model whose session
+  fails to start or stalls out goes on **cooldown** (its limit is probably
+  exhausted — the existing rate-limit backoff, generalized per-model) and is
+  retried later; when no enabled model of the preferred tier is available,
+  the **next tier up** is selected — never a weaker one. Every selection and
+  cooldown is logged before launch (the no-silent-swap rule: consent = the
+  enabled set + these declared rules). Absent files default to today's
   `AGENT_CMD`/`AGENT_MODEL` — a fresh scaffold pays nothing.
 - **Reviewer independence (the evidence-backed core):** reviewers are fresh
   sessions, **two providers, ≥ 1 differing from the implementer's**; the
@@ -393,6 +407,18 @@ stdlib, consent-explicit (no silent swaps), never-breaking.
   model), on opposite verdicts twice running, or on any tripwire (finding-cap
   pinning, near-duplicate review text, implementer diffs touching
   review/policy paths, mass finding-rejection).
+- **Failure semantics follow `docs/gate-policy`** (ruled). On a page-the-human
+  condition the causing WI **and its hard-edge dependents pause** in every
+  mode; what happens next is the declared mode's call — **attended:** start
+  nothing new, let in-flight sessions close out, then alert the user;
+  **single-ratify:** keep working non-dependent WIs to completion, surface
+  the block for ratification; **autonomous:** autonomous means autonomous —
+  schedule a fresh **design-check session** (different provider, strong tier)
+  to rule grind-through vs. genuine redesign, document every
+  assumption/decision, and continue; a redesign verdict re-enters the
+  change-intake flow (process.md §5). The escalation constants (margin ≥ 2,
+  the 2-round streaks) ship as legible per-repo-overridable defaults —
+  calibration values, not spine facts.
 - **Existing doctrine preserved.** Every routing decision is *written* (a
   declared file + the iteration log) before the session launches — the
   no-silent-swap rule; the **gate-closure review keeps the strong-model
@@ -422,12 +448,16 @@ A/B once the loop ships.
 - [ ] PROCESS_OPTIONS "Unattended operation" gains the routing/escalation
       subsection; the redacted-reviewer prompt template ships.
 
-**Open rulings (S8):** registry home/shape (`docs/agents.csv` vs. a
-`stack.ini`-style block); routing-policy home (declared file vs. registry
-columns); scorer as its own script vs. folded into the loop; the
-gate-vs-iteration reviewer-floor wording change; whether an opt-in
-third-provider LLM-judge tiebreaker ships in v1 (recommendation: defer —
-mechanical scoring only); the SR cut (new vs. extend).
+**Rulings (owner, 2026-07-10) — all eight settled:** registry =
+`docs/agents.csv` with `[PROVIDER]-[MODEL_NAME]-[VERSION]` ids (model bullet
+above); routing = the enable-list + cooldown + tier-up-never-down selection
+(bullet above); the scorer ships as **its own script**; the strong-model
+reviewer floor narrows to **gate-closure** reviews (iteration reviewers
+cheap-but-heterogeneous); **no LLM-judge tiebreaker** — "the math is
+arbitrating; we don't need another LLM to do that; none of it will be
+perfect"; spine cut = **one new SR under SN-006**; S8 **rides the campaign**,
+sequenced last and detachable; failure semantics keyed to `gate-policy`
+(bullet above), with the escalation constants as overridable defaults.
 
 ---
 
@@ -439,8 +469,8 @@ S3 dissolve IMPROVEMENT_PLAN  ✅ done
 S4 codename discipline        (docs; any time)
 S5 arch mechanize ─▶ S6 meta authoring (dogfood)
 S7 cross-agent skill sync     (SR-025; independent of the SSOT/arch halves)
-S8 heterogeneous impl/review  (🟡 PROPOSED; independent — extends the
-                               unattended layer; may ride the same campaign)
+S8 heterogeneous impl/review  (ruled; independent — extends the unattended
+                               layer; rides the campaign, sequenced last)
 ```
 
 **Bundle the spine-touchers.** S1 (SR-037), S5 (SR-005/SR-038 or a new SR), S7
@@ -479,6 +509,10 @@ halves — it can ride the same re-attestation or ship on its own.
 - ✅ **S7 tracking: tracked + drift check** (confirmed from interim), uniform
   across `.claude`/`.agents`/`.gemini`, with the revisit trigger recorded — see
   the ruling paragraph in S7.
+- ✅ **S8 (added + ruled 2026-07-10):** `[PROVIDER]-[MODEL_NAME]-[VERSION]`
+  registry ids, enable-list + cooldown + tier-up routing, own-script scorer,
+  gate-only reviewer floor, no LLM judge, one new SR under SN-006, rides the
+  campaign, `gate-policy`-keyed failure semantics — see the S8 rulings block.
 
 - ✅ **S0 #5: allow both** — a per-WI file or a shared campaign doc with
   `#anchor` — plus the **Done-when checklist** convention in the scaffolded

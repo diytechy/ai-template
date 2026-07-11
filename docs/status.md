@@ -76,9 +76,9 @@ working surface.
   rule on push (~48 commits), rule on the Phase 2 sibling-repo target, and
   review the Phases 1–5 batch. After that the frontier is open: G-Release walk,
   the F3 edge data-pass, the **working-surface SSOT + architecture-connectivity
-  restructure** (**S0–S7 fully ruled 2026-07-10** — ready to schedule as one
-  campaign bundled with the re-attestation; its **S8**
-  heterogeneous-implementer/reviewer addition is 🟡 PROPOSED, rulings pending:
+  restructure** (**S0–S8 fully ruled 2026-07-10**, including the S8
+  heterogeneous-implementer/reviewer addition — ready to schedule as one
+  campaign bundled with the re-attestation:
   [specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md)),
   or new scope (which needs a plan/WI entry first).
 
