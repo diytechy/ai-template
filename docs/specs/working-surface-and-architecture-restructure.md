@@ -3,8 +3,10 @@
 **Status:** 🟢 **RULED — every open decision settled by the owner
 (2026-07-10; see "Consolidated rulings").** Not yet scheduled, no code written;
 ingests as `WI-053…` when the campaign is scheduled, bundled with the pending
-G3 re-attestation (the campaign ruling). This is the spec-of-record for the
-`S0…S7` work-item series. It deliberately lives in `docs/specs/` and is the
+G3 re-attestation (the campaign ruling). **Exception: S8** (heterogeneous
+implementer/reviewer scheduling, added 2026-07-10) is 🟡 **PROPOSED** and
+awaits its own rulings — see its section. This is the spec-of-record for the
+`S0…S8` work-item series. It deliberately lives in `docs/specs/` and is the
 **first inhabitant** of that directory — dogfooding the `SpecRef` convention it
 defines (S1).
 
@@ -326,6 +328,107 @@ files.
 --agents` populates `.agents/` from source; the meta-repo's three targets are
 byte-identical to source (the current `session-protocol` drift resolved).
 
+## S8 — Heterogeneous implementer/reviewer scheduling *(🟡 PROPOSED — for owner review)*
+
+**Status: PROPOSED, research-backed (2026-07-10)** — unlike S0…S7 above, S8 is
+not yet ruled. Provenance: owner direction (separately scheduled
+implementer/reviewer sessions; per-job model complexity; cross-**provider**
+selection by problem type or review-feedback strength; the provider/model
+catalog question) + three research passes condensed in
+[`AGENT_ROUTING_RESEARCH.md`](../archive/AGENT_ROUTING_RESEARCH.md). Builds on
+the **ratified** `AGENT_ROLES.md` pipeline (`run-phase ∈ {PLAN, BUILD,
+REVIEW-A, REVIEW-B, INTEGRATE}`); of its build-calls, `AGENT_CMD_MAP`
+(per-phase whole-command routing), `docs/review-policy`, and the status-size
+guard have landed — `--prompt-map` and loop-side reviewer dispatch have not.
+
+**Goal.** The coordinator schedules separate implementer and reviewer sessions
+across tiers **and providers**; next-round routing is a **declared, legible
+policy** informed by mechanically scored review substance; everything stays
+stdlib, consent-explicit (no silent swaps), never-breaking.
+
+**The model.**
+
+- **Roles ride `run-phase`** (ratified). New build: loop-side reviewer
+  dispatch — after a BUILD session, `docs/review-policy ≥ 1` schedules
+  `REVIEW-A` (`= 2` also `REVIEW-B`) before the next BUILD — plus
+  `--prompt-map`/`AGENT_PROMPT_MAP` (per-phase prompt templates), the one
+  AGENT_ROLES build-call still open.
+- **A provider registry, not a model catalog.** `AGENT-###` rows
+  (`docs/agents.csv`): `Provider, CmdTemplate` (`{model}`/`{prompt}` slots)`,
+  Strong, Medium, Weak, Notes` — **three tier aliases per row**, aliases over
+  dated ids wherever the CLI resolves them (aliases rot at CLI-flag pace, not
+  model-release pace). Ships example rows for the verified headless shapes
+  (`claude -p` / `codex exec` / `gemini -p`, all JSON-capable). **No vendored
+  model catalog** — richer data is a documented pointer to the maintained
+  registries (models.dev `api.json`; LiteLLM's model-prices JSON); a
+  `check_vendored`-style pinned snapshot is deferred until a real consumer
+  exists.
+- **Routing = composition of declared maps:** (role → `AGENT-###`) ×
+  (phase → tier column) → concrete command. Absent files default to today's
+  `AGENT_CMD`/`AGENT_MODEL` — a fresh scaffold pays nothing.
+- **Reviewer independence (the evidence-backed core):** reviewers are fresh
+  sessions, **two providers, ≥ 1 differing from the implementer's**; the
+  reviewer prompt gets the diff + requirements and **never the implementer's
+  self-assessment** (leaking it collapses finding rates 3–4×); **no debate
+  rounds** — independent parallel reviews, mechanical merge. Verdicts are
+  **repo files** in the log.md block format plus one machine line
+  (`VERDICT: APPROVE|CHANGES-REQUESTED findings=N`) — exit codes are not
+  portable across CLIs; verdict files are, and they fit repo-text-as-memory.
+- **The substance scorer** (new stdlib script — the genuinely novel piece:
+  review-substance-as-routing-signal has **no published precedent**; keep it
+  conservative). Scores a verdict block by **confirmed-finding rate** (a later
+  commit touches ± 10 lines of the finding's anchor — change-triggering is the
+  canonical usefulness measure), **cross-reviewer corroboration**
+  (cross-family matches weighted up), **anchored-finding precision** (anchors
+  must resolve; capped), and **actionability rate**. Severity hygiene and the
+  anti-gaming tripwires are **gates, never scores**; length never scores
+  positively. Scoreboard = one small decayed-tally text file.
+- **Fixed escalation policy, not a learned router** (per-project sample sizes
+  are far too small for bandits): **win-stay/lose-shift** — the
+  higher-substance provider becomes the next round's primary feedback source
+  only on a **margin ≥ 2**; the implementer's provider swaps after
+  **2 consecutive** failed review gates (a cheap test for idiosyncratic
+  failure); tier rises only after the swap also fails; **page the human** on 2
+  top-tier failures (the shared-failure regime — the spec is wrong, not the
+  model), on opposite verdicts twice running, or on any tripwire (finding-cap
+  pinning, near-duplicate review text, implementer diffs touching
+  review/policy paths, mass finding-rejection).
+- **Existing doctrine preserved.** Every routing decision is *written* (a
+  declared file + the iteration log) before the session launches — the
+  no-silent-swap rule; the **gate-closure review keeps the strong-model
+  floor** — cheap-but-heterogeneous applies to *iteration-loop* reviewers only
+  (this narrows the current "reviewer tier never delegated down" wording to
+  gate reviews — a PROCESS_OPTIONS text change to rule on).
+
+**Spine impact.** One new SR under SN-006 (unattended operation) for
+role-scheduled, registry-routed sessions + the scorer — or extend the loop's
+existing SR (an S0-style ruling). Rides the campaign re-attestation if
+ingested with S1–S7.
+
+**Risk.** The routing signal is novel and gameable — the tripwires and
+margin/streak thresholds are the defense, and the scoreboard stays
+**advisory** (the declared policy picks; nothing auto-optimizes). "A
+same-provider reviewer is softer on same-provider code" is an inference from
+judge-bias literature, not a measured code-review result — run a cheap in-kit
+A/B once the loop ships.
+
+**Done-when.**
+- [ ] `--prompt-map` + loop-side reviewer dispatch land test-first;
+      `review-policy` `0|1|2` is enforced by the loop.
+- [ ] `docs/agents.csv` registry + routing composition land, defaulting to
+      today's behavior when absent.
+- [ ] The substance scorer lands with the tripwires; the scoreboard file is
+      documented.
+- [ ] PROCESS_OPTIONS "Unattended operation" gains the routing/escalation
+      subsection; the redacted-reviewer prompt template ships.
+
+**Open rulings (S8):** registry home/shape (`docs/agents.csv` vs. a
+`stack.ini`-style block); routing-policy home (declared file vs. registry
+columns); scorer as its own script vs. folded into the loop; the
+gate-vs-iteration reviewer-floor wording change; whether an opt-in
+third-provider LLM-judge tiebreaker ships in v1 (recommendation: defer —
+mechanical scoring only); the SR cut (new vs. extend).
+
 ---
 
 ## Sequencing & spine bundling
@@ -336,6 +439,8 @@ S3 dissolve IMPROVEMENT_PLAN  ✅ done
 S4 codename discipline        (docs; any time)
 S5 arch mechanize ─▶ S6 meta authoring (dogfood)
 S7 cross-agent skill sync     (SR-025; independent of the SSOT/arch halves)
+S8 heterogeneous impl/review  (🟡 PROPOSED; independent — extends the
+                               unattended layer; may ride the same campaign)
 ```
 
 **Bundle the spine-touchers.** S1 (SR-037), S5 (SR-005/SR-038 or a new SR), S7
