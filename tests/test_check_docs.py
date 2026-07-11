@@ -324,6 +324,63 @@ def test_harness_runs_doc_navigability_at_g1(scaffold):
     assert "RESULT: FAIL" in proc.stdout
 
 
+# --- the generated OKF bundle is dropped from discovery (WI-066) -------------
+
+
+def test_okf_bundle_dropped_from_doc_scan(scaffold):
+    # WI-066: docs/okf/ is a fully-generated tree whose own gen_okf.py --check
+    # owns freshness, so check_docs never lints it — no okf file is counted,
+    # orphaned or link-checked. A genuinely-broken NON-okf link is still caught,
+    # and a link INTO the bundle still resolves (the files stay on disk).
+    from conftest import make_minimal_project
+
+    make_minimal_project(scaffold)
+    assert run_py([SCRIPTS / "gen_okf.py"], cwd=scaffold).returncode == 0
+    assert (scaffold / "docs" / "okf" / "index.md").exists()  # bundle really on disk
+
+    agents = scaffold / "AGENTS.md"
+    agents.write_text(
+        agents.read_text(encoding="utf-8")
+        + "\n\nSee [the OKF bundle](docs/okf/index.md).\n",
+        encoding="utf-8",
+    )
+    (scaffold / "docs" / "guide.md").write_text(
+        "# Guide\n\nSee [gone](nowhere.md).\n", encoding="utf-8"
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 1  # the real broken link fails the run
+    assert "broken link -> nowhere.md" in proc.stdout
+    # the entire bundle is out of the scan: never counted, orphaned or reported,
+    # and the link into it resolved (no broken-link finding for it)
+    assert "docs/okf/" not in proc.stdout
+
+
+def test_okf_bundle_adds_zero_scanned_docs(scaffold):
+    # The doc count must not grow when the ~large bundle appears: generating it
+    # adds zero scanned docs (proving the whole tree is excluded, not just
+    # orphan-suppressed).
+    import re
+
+    from conftest import make_minimal_project
+
+    make_minimal_project(scaffold)
+    before = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert before.returncode == 0, before.stdout + before.stderr
+    assert run_py([SCRIPTS / "gen_okf.py"], cwd=scaffold).returncode == 0
+    after = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert after.returncode == 0, after.stdout + after.stderr
+    n_before = int(re.search(r"OK - (\d+) doc", before.stdout).group(1))
+    n_after = int(re.search(r"OK - (\d+) doc", after.stdout).group(1))
+    assert n_after == n_before
+    assert "docs/okf" not in after.stdout
+
+
 # --- importable units (no subprocess) ---------------------------------------
 
 

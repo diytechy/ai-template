@@ -919,3 +919,60 @@ push ruling, sibling-repo target, batch review).
 **No SR/LLR/TC text touched** — registry data (one deferred row) + docs moves
 only; nothing new rides the re-attestation beyond what the campaign entries
 recorded.
+
+## 2026-07-11 — WI-066: OKF self-identification banner + doc-graph exclusion
+
+**Session.** A one-WI session resolving the **2026-07-11 OKF audit** (owner
+ruling recorded in
+[archive/specs/WI-066.2026-07-11.md](archive/specs/WI-066.2026-07-11.md)):
+~210 of the 218 generated `docs/okf/` files carried no in-body signal that they
+are generated reference copies — only the subtle `resource:` frontmatter line —
+and `check_docs.py` counted the whole bundle in its doc graph, so 218 of its 219
+orphan warnings were okf files, drowning the one real orphan.
+
+**Deliverables.**
+1. **`gen_okf.py` banner.** A new `banner(source)` helper emits one
+   source-slotted blockquote — `> **GENERATED — a reference copy, not the source
+   of truth.** Derived from <source> by scripts/gen_okf.py; edit the
+   registry/doc, then rerun it (docs/okf-export: off silences the layer).` —
+   immediately after the frontmatter of every concept file, tier index, root
+   index and process guide, and first in the frontmatter-less `UPSTREAM.md`.
+   Concept files slot their exact `resource:` string, tier indexes their
+   registry, process guides their summarized source doc; the root index and
+   `UPSTREAM.md` **absorbed** their pre-existing routing sentences so the message
+   is stated once per file. No clock — `--check` stays byte-stable.
+2. **`check_docs.py` exclusion.** `collect_docs` drops `docs/okf/` from doc
+   discovery (doc count, link graph, orphan detection) via the
+   gen_arch_map/gen_trajectory/check_doc_refs "never lint generated output"
+   idiom, using an `OKF_DIR = "docs/okf"` constant matching gen_okf's `OUT_DIR`.
+   Links **into** the bundle still resolve (the files stay on disk as targets).
+3. **Regenerated** the 218-file meta bundle, `docs/architecture.md` (the new
+   `banner()` public function added one MODULE MAP row), and root
+   `PROJECT_STATE.html`.
+
+**Owner-ruling provenance.** The 2026-07-11 OKF audit + ruling — (a) banner,
+(b) exclusion, and *nothing else* (no default flip, no `.ignore`, no `rg`
+change) — is archived in the per-WI spec above.
+
+**Orphan delta.** `check_docs --root . --stale` orphan warnings **219 → 1** (the
+pre-existing `docs/test/report.md`, deliberately out of scope); doc count
+243 → 25 (the bundle no longer counted).
+
+**Spine.** **No SR/LLR/TC text changed.** The banner is presentation within
+SR-042's "one typed markdown concept per real row" (files stay frontmatter-typed,
+graph links resolve, regeneration byte-identical); the exclusion is scan-scope
+within SR-012's broken-link / vision claim (links into the bundle still resolve).
+Verified neither AcceptanceCriteria contradicts. Nothing new rides the pending
+G3 re-attestation.
+
+**Byte deltas.** No budgeted file touched — `AGENTS.template.md` and `PROCESS.md`
+are **untouched**; the change is scripts + generated output + the meta
+registry/spec/log.
+
+**Mechanized bar.** `pytest -q` **564 passed, 3 skipped** (+3 over the 561
+pre-WI-066 total: the banner test in `tests/test_gen_okf.py` +
+`test_okf_bundle_dropped_from_doc_scan` / `test_okf_bundle_adds_zero_scanned_docs`
+in `tests/test_check_docs.py`); `check_docs.py --root . --stale` **0 broken**
+(1 orphan warn); `gen_okf` / `gen_arch_map` / `gen_trajectory` `--check` **up to
+date**; `check.py --gate G3` **13/13 PASS**. Spine unchanged at **SN=23 SR=45
+LLR=46 TC=46, 0 orphans**.

@@ -5,6 +5,7 @@ description: "The **working surface** for developing the kit itself \u2014 the s
 tags: []
 resource: "docs/status.md"
 ---
+> **GENERATED — a reference copy, not the source of truth.** Derived from docs/status.md by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
 
 # status — Meta-Repo Status — Blackboard
 

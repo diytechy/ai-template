@@ -319,6 +319,7 @@ Contracts (interfaces): IF-012, IF-033
 | `sn_rows(root)` |  |  |
 | `read_enabled(root)` |  |  |
 | `fm(pairs)` | A YAML frontmatter block; JSON string scalars are valid YAML, so quoting |  |
+| `banner(source)` | The one-line GENERATED provenance blockquote every emitted file carries, |  |
 | `concept(rel_dir, cid, ctype, title, description, tags, resource, body_lines)` |  |  |
 | `links(label, ids, target_dir)` |  |  |
 | `emit(root)` | {relpath-under-docs/okf: content} for the whole bundle, or {} when the |  |

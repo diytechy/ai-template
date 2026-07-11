@@ -5,6 +5,7 @@ description: "One page over the kit's **own** product: the reusable process kit 
 tags: []
 resource: "docs/architecture.md"
 ---
+> **GENERATED — a reference copy, not the source of truth.** Derived from docs/architecture.md by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
 
 # architecture — Architecture — the kit meta-repo (self-adoption)
 

@@ -90,6 +90,11 @@ HTML_ANCHOR_RE = re.compile(r"""<a\s[^>]*\b(?:name|id)\s*=\s*["']([^"']+)["']"""
 # A URL scheme (http:, mailto:, …) or protocol-relative // marks an external link.
 EXTERNAL_RE = re.compile(r"^(?:[A-Za-z][A-Za-z0-9+.\-]*:|//)")
 MD_SUFFIXES = (".md", ".markdown")
+# The gen_okf.py knowledge bundle: a fully-generated tree gated by its own
+# `gen_okf.py --check`. Dropped from doc discovery below so this tool never lints
+# generated output (the gen_arch_map/gen_trajectory/check_doc_refs idiom); the
+# path constant matches gen_okf's own OUT_DIR.
+OKF_DIR = "docs/okf"
 # The singleton tag opening the root README's vision statement (process.md §4 G1).
 VISION_TOKEN = "PROJECT-VISION:"
 # README need coverage is ON by default (opt-out); a README disables it with this
@@ -180,10 +185,14 @@ def parse_doc(path):
 def collect_docs(root, docs_dir, ignore=()):
     """Root-level *.md plus every *.md under docs/, de-duplicated and resolved.
 
+    The gen_okf.py bundle under `docs/okf/` is dropped unconditionally: it is a
+    fully-generated tree whose freshness `gen_okf.py --check` owns, so the doc set
+    never lints its own generated output (the gen_arch_map/gen_trajectory idiom).
+
     Paths matching an `ignore` glob (repo-relative POSIX) are dropped entirely —
     not parsed, not orphan-reported — so generated composites (the gitignored
-    `docs/test/report.md`) don't show up as findings. They still resolve as link
-    *targets*, since the file is on disk.
+    `docs/test/report.md`) don't show up as findings. Both the bundle and ignored
+    files still resolve as link *targets*, since the file is on disk.
     """
     found = {}
     for p in sorted(root.glob("*.md")):
@@ -195,6 +204,9 @@ def collect_docs(root, docs_dir, ignore=()):
     docs = []
     for p in found:
         relpath = rel(p, root)
+        # Never lint generated output: gen_okf.py --check owns docs/okf/ freshness.
+        if relpath == OKF_DIR or relpath.startswith(OKF_DIR + "/"):
+            continue
         if any(Path(relpath).match(g) for g in ignore):
             continue
         docs.append(p)
