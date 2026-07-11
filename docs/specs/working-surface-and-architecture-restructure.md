@@ -1,9 +1,12 @@
 # Working-surface SSOT + architecture-connectivity restructure — PLAN
 
-**Status:** 🟡 **PROPOSED — for owner review.** Not ratified, not scheduled, no
-code written. This is the spec-of-record for a future `S0…S7` work-item series.
-It deliberately lives in `docs/specs/` and is the **first inhabitant** of that
-directory — dogfooding the `SpecRef` convention it defines (S1).
+**Status:** 🟢 **RULED — every open decision settled by the owner
+(2026-07-10; see "Consolidated rulings").** Not yet scheduled, no code written;
+ingests as `WI-053…` when the campaign is scheduled, bundled with the pending
+G3 re-attestation (the campaign ruling). This is the spec-of-record for the
+`S0…S7` work-item series. It deliberately lives in `docs/specs/` and is the
+**first inhabitant** of that directory — dogfooding the `SpecRef` convention it
+defines (S1).
 
 **Provenance:** consolidates the owner's 2026-07-10 direction on status.md ↔
 work-items.csv single-source-of-truth, the ratified AXES component/interface
@@ -91,9 +94,16 @@ Open micro-decisions; each has a working default so S1 can proceed if unruled.
    just the code). Warn-first; mechanics shaped in S1.
 3. **R-D = the bare id token only** (default confirmed).
 4. **`deferred` becomes a first-class status** (default confirmed).
-5. **Open** — pends the sessions↔WI cardinality framing (many-to-many in
-   practice: a WI spans sittings, one sitting may close several WIs; the
-   default "allow both" fits that, owner still to rule).
+5. ✅ **Allow both** (ruled 2026-07-10): one file per standalone WI, or a
+   shared campaign doc with `#anchor` for a series. (Sessions↔WIs is
+   many-to-many — a WI spans sittings, one sitting may close several WIs — so
+   the spec is the cross-session memory either way.) Plus the **Done-when
+   checklist** convention: the scaffolded per-WI spec template carries a
+   Done-when list and sessions tick items as they land, so a half-complete
+   WI's frontier is the **first unticked box**, not prose discipline (ticks
+   are transient working state — the spec archives at close). A shared
+   campaign doc archives, date-stamped and WI-attributed, when its **last**
+   open WI closes.
 
 ## S1 — Mechanize the SSOT
 
@@ -116,6 +126,8 @@ Open micro-decisions; each has a working default so S1 can proceed if unruled.
   SR) shaped here.
 - Scaffold `docs/specs/` (a `README.md` + a `WI-000.md` example) in
   `bootstrap.py`; document the layer in PROCESS_OPTIONS "Trajectory / work-items".
+  The `WI-000.md` example ships the **Done-when checklist** (S0 ruling #5) —
+  the frontier of a half-complete WI is its first unticked box.
 
 **Tests.** open WI with a Deliverable fails R-A; a `done` id in status.md fails
 R-D; an open WI with an empty/dangling SpecRef fails R-E; a compliant registry +
@@ -363,10 +375,10 @@ halves — it can ride the same re-attestation or ship on its own.
   across `.claude`/`.agents`/`.gemini`, with the revisit trigger recorded — see
   the ruling paragraph in S7.
 
-**Still open:**
+- ✅ **S0 #5: allow both** — a per-WI file or a shared campaign doc with
+  `#anchor` — plus the **Done-when checklist** convention in the scaffolded
+  spec template (see the S0 rulings block).
 
-- **S0 #5 (SpecRef granularity)** — the last one. Recommendation on the table:
-  **allow both** (one file per standalone WI; a shared campaign doc with
-  `#anchor` for a series), plus the **Done-when checklist** convention in the
-  scaffolded per-WI spec template so a half-complete WI's frontier is the first
-  unticked box, not prose discipline (S1 scaffold step).
+**Still open:** none — the spec is **fully ruled**. Next step: schedule the
+campaign (S1 + S5 + S6 + S7, bundled with the pending G3 re-attestation per
+the campaign ruling).
