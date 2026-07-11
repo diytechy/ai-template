@@ -63,3 +63,4 @@ WI-061,OKF source-doc frontmatter mutation (behind a flag),scripts,,WI-034,defer
 WI-062,check_doc_refs warn-first untraced-path tier,scripts,,WI-035,deferred,,docs/log.md#2026-07-10--spine-change-the-wi-148152-grind-batch-sr-039042-added-sr-038llr-035tc-038-extended-g3-re-run-re-attestation-pending
 WI-063,Committed-composite artifact freshness gating,scripts,,WI-035,deferred,,docs/log.md#2026-07-10--spine-change-the-wi-148152-grind-batch-sr-039042-added-sr-038llr-035tc-038-extended-g3-re-run-re-attestation-pending
 WI-064,AXES component/interface residual schema and graph extensions,scripts,,,deferred,,docs/archive/AXES_AND_WORKSTREAMS.md#12-open-questions-for-the-next-iteration
+WI-065,Active-seam TC citation - reconcile trace Verifies vocabulary,scripts,SR-044,WI-056,deferred,,docs/specs/WI-065.md

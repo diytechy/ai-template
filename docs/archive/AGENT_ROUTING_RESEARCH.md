@@ -2,7 +2,7 @@
 
 **Provenance:** three research passes run 2026-07-10 (owner-directed) as input
 to the proposed **S8** phase of
-[`../specs/working-surface-and-architecture-restructure.md`](../specs/working-surface-and-architecture-restructure.md):
+[`specs/working-surface-and-architecture-restructure.2026-07-11.md`](specs/working-surface-and-architecture-restructure.2026-07-11.md):
 a read-only seam map of this repo's unattended layer, a literature pass on
 review-quality scoring / model routing, and a July-2026 ecosystem survey.
 Condensed here; an input document, not a working surface. Web claims carry

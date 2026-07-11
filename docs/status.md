@@ -22,10 +22,10 @@ working surface.
   `python project-trajectory/scripts/check_docs.py --root . --stale` green
   before every commit — this repo's standing gate. The kit's own
   `SN→SR→LLR→TC` spine is self-adopted: `docs/gate` is at **G3**;
-  `check.py --gate G3` (12 steps) is the full bar and CI runs it on real data
+  `check.py --gate G3` (13 steps) is the full bar and CI runs it on real data
   (the meta-repo dogfoods its own trajectory + OKF layers).
-- **Plan state:** meta-repo at **G3**, spine **SN=23 SR=44 LLR=43 TC=45, 0
-  orphans**. The dashboard is the root
+- **Plan state:** meta-repo at **G3**, spine **SN=23 SR=45 LLR=46 TC=46, 0
+  orphans**, 47 declared interface seams. The dashboard is the root
   [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session history: [log.md](log.md).
 - **Open items:**
   - **Needs \<human> (the run is paused on these):**
@@ -50,14 +50,14 @@ working surface.
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
   - **Campaign complete — owner sitting next.** The working-surface +
-    architecture-connectivity campaign (spec:
-    [specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
-    fully ruled) has landed all its slices, S8 included (heterogeneous
-    implementer/reviewer scheduling; the loop now routes models from
+    architecture-connectivity campaign landed all its slices, heterogeneous
+    implementer/reviewer scheduling included (the loop now routes models from
     `docs/agents.csv` + `docs/agents-enabled` and dispatches redacted reviewer
-    sessions per `docs/review-policy`, absent-files = today's behavior). The
-    spine-touchers bundle into the pending re-attestation (the campaign ruling);
-    the coordinating session handles the spec archival + final status.
+    sessions per `docs/review-policy`; absent files = today's behavior). Its
+    spec is archived, close-dated and WI-attributed:
+    [archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md).
+    The spine-touchers bundle into the pending re-attestation (the campaign
+    ruling).
   - **Deferred (backlog — first-class `deferred` WI rows, each with its
     reason):**
     - **WI-060** — coordinator working-tree stash/rollback between sessions
@@ -74,12 +74,15 @@ working surface.
       extensions (`consumes`/effort schema, a typed-IF contract check,
       edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
       rendering — all deferred-on-need).
+    - **WI-065** — reconcile the `Verifies` vocabulary between `trace.py` and
+      the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
+      deferred until a seam actually needs `Active` status — every current
+      seam is `Stable`).
 - **Next action:** the **owner sitting** — the campaign is complete. That
   sitting covers the G3 re-attestation (now also over the new `SR-045`), the
   push ruling (~50 commits local), the sibling-repo target, and the deferred
-  batch review. The coordinating session archives the campaign spec + writes the
-  final status. After that: the G-Release walk, the WI-DAG edge data-pass, or new
-  scope (which needs a plan/WI entry first).
+  batch review. After that: the G-Release walk, the WI-DAG edge data-pass, or
+  new scope (which needs a plan/WI entry first).
 
 ## Scope
 

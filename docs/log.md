@@ -410,7 +410,7 @@ load-bearing per-script duplication is what WI-050 removed).
 ## 2026-07-10 — SPINE CHANGE (working-surface SSOT campaign S1+S2, WI-053/WI-054): SR-037 text extended; RE-ATTESTATION still PENDING
 
 **Campaign** (spec:
-[specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
+[archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md),
 fully ruled): mechanize the status.md↔work-items.csv single-source-of-truth so
 the model holds without discipline (S1), then bring the kit's own working
 surface into that shape (S2). Two commits on `MultiRepoSupport`.
@@ -472,7 +472,7 @@ one-liner remains outstanding.
 ## 2026-07-10 — DOCS (working-surface SSOT campaign S4, WI-055): codename-discipline rule
 
 **Campaign slice** (spec:
-[specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
+[archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md),
 S4). Docs only — the writing/review rule that keeps session-local labels off the
 durable surfaces. One commit on `MultiRepoSupport`.
 
@@ -511,7 +511,7 @@ date**; `check_docs.py --root . --stale` **0 broken**; `pytest -q` **490 passed,
 ## 2026-07-11 — SPINE CHANGE (working-surface campaign S5, WI-056): SN-023 + SR-044 added; architecture-connectivity mechanized; RE-ATTESTATION PENDING
 
 **Campaign slice** (spec:
-[specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
+[archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md),
 S5). The architecture view now shows how modules connect, from declared `IF-###`
 seams — the seam the AXES ratification sanctioned. One session on
 `MultiRepoSupport`; the spine cut rides the pending G3 re-attestation.
@@ -795,7 +795,7 @@ integrity=0 schema=0 interfaces=43 interface-findings=0**; `check_trajectory
 
 **Summary.** Landed S8, the final slice of the working-surface +
 architecture-connectivity campaign
-([specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md#s8--heterogeneous-implementerreviewer-scheduling--done-2026-07-11)):
+([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md#s8--heterogeneous-implementerreviewer-scheduling--done-2026-07-11)):
 the unattended coordinator now schedules separate implementer and reviewer
 sessions across tiers **and providers**, with next-round routing a **declared,
 legible** policy informed by a mechanical (advisory) review-substance scorer.
@@ -891,3 +891,31 @@ TC=46, 0 orphans**.
 the pending G3 re-attestation — one owner sitting now covers SR-034/SR-037/
 SR-038/SR-039…044/SR-025 **and SR-045** + the new `SN`-hung SR. The campaign is
 complete; the coordinating session handles the spec archival + final status.
+
+## 2026-07-11 — Campaign close (coordinating session): spec archived; WI-065 filed; NO spine change
+
+**Session.** The working-surface + architecture-connectivity campaign is
+closed. The campaign spec moved
+`docs/specs/` → [archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md)
+per the S0 #2 ruling — close date appended, an ARCHIVED banner naming the
+attributed WIs (WI-053…WI-059) — with every in-repo citation re-pointed (this
+log ×4, `status.md`, `AGENT_ROUTING_RESEARCH.md`, the SR-045 Rationale cell)
+and `docs/archive/README.md` gaining a `specs/` inventory row.
+
+**WI-065 filed (deferred).** The WI-057 session surfaced a real tension it
+correctly did not fix inline: `check_trajectory`'s seam-TC-citation scan reads
+the TC `Verifies` column for `IF-###` tokens, but `trace.py`'s orphan check
+flags unknown `Verifies` tokens — so an `Active` seam cited the documented way
+fails `trace --strict`. Now a first-class `deferred` row with a live per-WI
+spec ([specs/WI-065.md](specs/WI-065.md), Done-when checklist included —
+dogfooding the S0 #5 convention), parked until a seam actually needs `Active`
+status (all 47 current seams are `Stable`).
+
+**status.md** counts refreshed (13-step G3; SN=23 SR=45 LLR=46 TC=46; 47
+seams); the campaign block now points at the archived spec; next action = the
+owner sitting (re-attestation over the campaign's accumulated spine changes,
+push ruling, sibling-repo target, batch review).
+
+**No SR/LLR/TC text touched** — registry data (one deferred row) + docs moves
+only; nothing new rides the re-attestation beyond what the campaign entries
+recorded.

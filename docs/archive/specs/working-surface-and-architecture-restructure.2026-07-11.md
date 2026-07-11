@@ -1,5 +1,12 @@
 # Working-surface SSOT + architecture-connectivity restructure — PLAN
 
+> **ARCHIVED 2026-07-11 — campaign complete.** This was the spec-of-record for
+> work items **WI-053, WI-054, WI-055, WI-056, WI-057, WI-058, WI-059** (all
+> `done`; deliverables in `docs/requirements/work-items.csv`, session record in
+> `docs/log.md`). Archived per the S0 #2 ruling: close date appended to the
+> filename, attributed WIs named here. The deferred backlog rows it spawned
+> (WI-060…WI-065) carry their own live SpecRefs.
+
 **Status:** 🟢 **RULED — every open decision settled by the owner
 (2026-07-10; see "Consolidated rulings").** Not yet scheduled, no code written;
 ingests as `WI-053…` when the campaign is scheduled, bundled with the pending
@@ -336,7 +343,7 @@ closes this section. Provenance: owner direction (separately scheduled
 implementer/reviewer sessions; per-job model complexity; cross-**provider**
 selection by problem type or review-feedback strength; the provider/model
 catalog question) + three research passes condensed in
-[`AGENT_ROUTING_RESEARCH.md`](../archive/AGENT_ROUTING_RESEARCH.md). Builds on
+[`AGENT_ROUTING_RESEARCH.md`](../AGENT_ROUTING_RESEARCH.md). Builds on
 the **ratified** `AGENT_ROLES.md` pipeline (`run-phase ∈ {PLAN, BUILD,
 REVIEW-A, REVIEW-B, INTEGRATE}`); of its build-calls, `AGENT_CMD_MAP`
 (per-phase whole-command routing), `docs/review-policy`, and the status-size
