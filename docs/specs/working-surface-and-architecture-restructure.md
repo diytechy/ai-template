@@ -75,6 +75,26 @@ Open micro-decisions; each has a working default so S1 can proceed if unruled.
    `#anchor` (this plan is one shared doc for S0–S6)? *(default: allow both; a
    `doc#anchor` is a valid SpecRef.)*
 
+**Rulings (owner, 2026-07-10) — four of five settled:**
+
+1. **R-A fails the commit** (stricter than the default). A commit is the agent
+   **handoff point** — a fresh session launches from repo text alone, so an
+   incoherent WI state (an open WI with a filled Deliverable) launches the next
+   session into the wrong work item. The pre-commit floor enforces R-A as a
+   **fail**, not a warn.
+2. **Archive, don't delete.** At close the spec moves to `docs/archive/specs/`
+   with the **close date appended** and must **name the WI it was attributed
+   to** (future context). Corollary check (new, S1): a spec that forced design
+   iteration means there was a gap somewhere — so a **rework WI that changes no
+   part of the validation chain warns**: if neither TC prose nor actual test
+   logic changed, the same failure recurs (the fix must land in the chain, not
+   just the code). Warn-first; mechanics shaped in S1.
+3. **R-D = the bare id token only** (default confirmed).
+4. **`deferred` becomes a first-class status** (default confirmed).
+5. **Open** — pends the sessions↔WI cardinality framing (many-to-many in
+   practice: a WI spans sittings, one sitting may close several WIs; the
+   default "allow both" fits that, owner still to rule).
+
 ## S1 — Mechanize the SSOT
 
 **Goal.** Turn R-A…R-E into checks so the model holds without discipline.
@@ -90,6 +110,10 @@ Open micro-decisions; each has a working default so S1 can proceed if unruled.
   (R-D), every open WI has a resolvable `SpecRef` (R-E). Warn-first; `--strict`
   (G2+) gates. Vacuous on a placeholder-only registry.
 - `SpecRef` path resolution rides `check_doc_refs.py`'s path tier.
+- Add the **no-validation-delta warn** (S0 ruling #2's corollary): a WI
+  addressing a prior failure that changes neither TC prose nor test code
+  warns — warn-first, exact trigger (re-opened WI vs. follow-up WI on the same
+  SR) shaped here.
 - Scaffold `docs/specs/` (a `README.md` + a `WI-000.md` example) in
   `bootstrap.py`; document the layer in PROCESS_OPTIONS "Trajectory / work-items".
 
@@ -307,21 +331,34 @@ That is the strongest argument for doing this as one campaign rather than
 separate threads. S7 is independent of the SSOT (S1–S2) and architecture (S5–S6)
 halves — it can ride the same re-attestation or ship on its own.
 
-## Consolidated open rulings (for this review)
+## Consolidated rulings (owner, 2026-07-10)
 
-- The five **S0** micro-decisions above (defaults noted).
-- **S5 spine cut:** extend SR-005 + SR-038, or mint one new SR for the interface
-  layer? (Recommendation: one new SR — a cleaner seam than stretching two.)
-- **S7 spine cut:** extend SR-025, or a new SR for the checked skill fan-out?
-  (Recommendation: extend SR-025.)
-- **S7 tracking:** confirm tracked (interim) vs. gitignore + regenerate, applied
-  uniformly to `.claude`/`.agents`/`.gemini`.
-- **Campaign vs. increments:** land the spine-touchers (S1 + S5 + S6 + S7) as one
-  re-attested campaign (recommended), or ship S1/S2/S4/S7 first and defer the
-  architecture half?
+**Ruled:**
+
+- ✅ **S0 #1–#4** — see the S0 rulings block (R-A **fails the commit** — the
+  agent-handoff argument; spec **archived with date + WI attribution** at close
+  plus the no-validation-delta warn; R-D id-token-only; `deferred` added).
+- ✅ **S5 posture:** the interface layer is **opt-out, default-on** — see the
+  ruling block in S5.
+- ✅ **S5 spine cut: one new SR**, hung from an **SN stating the
+  single-dashboard intent** — reviewing the project's progress *and
+  relationships* from one dashboard-like file (root `PROJECT_STATE.html`) —
+  and propagating outward (SN → SR → LLR/TC). At ingest, check whether an
+  existing SN already states that intent (SR-038's parent); mint the SN if not.
+- ✅ **S7 spine cut:** extend **SR-025** (the checked per-agent fan-out is the
+  same "generated, not hand-maintained" property).
+- ✅ **Campaign, not increments:** land the spine-touchers (S1 + S5 + S6 + S7)
+  as **one re-attested campaign**. Generalized (owner): *campaign* is good
+  semantics for **any** batch of spine-touching work headed for a
+  re-attestation — batch them so one owner sitting covers each; candidate
+  PROCESS_OPTIONS language when this series lands.
 - **WI ids:** this series is `S0…S7` here; on ingest they become `WI-053…`
   registry rows with this doc's `#anchors` as their `SpecRef` (`WI-050…052`
   were consumed by the 2026-07-10 late batch).
-- ✅ **Ruled (owner, 2026-07-10):** the S5 interface layer is **opt-out,
-  default-on** — see the ruling block in S5. Still open from that half: the
-  spine cut (extend SR-005 + SR-038 vs one new SR; the ruling leans new-SR).
+
+**Still open:**
+
+- **S0 #5 (SpecRef granularity)** — pends the sessions↔WI cardinality framing
+  (see the S0 block).
+- **S7 tracking:** tracked (interim ruling stands) vs. gitignore + regenerate,
+  applied uniformly to `.claude`/`.agents`/`.gemini`.
