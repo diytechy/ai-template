@@ -81,8 +81,13 @@ working surface.
 - **Next action:** the **owner sitting** — the campaign is complete. That
   sitting covers the G3 re-attestation (now also over the new `SR-045`), the
   push ruling (~50 commits local), the sibling-repo target, and the deferred
-  batch review. After that: the G-Release walk, the WI-DAG edge data-pass, or
-  new scope (which needs a plan/WI entry first).
+  batch review. **Awaiting rulings:** the **capability-expansion spec**
+  ([specs/capability-expansion.md](specs/capability-expansion.md), PROPOSED
+  2026-07-11 — run capability menu · subjective-quality critique loop ·
+  agent-registry robustness · OKF knowledge tab; 17 open rulings, every one
+  with a working default; ingests as `WI-067…` when scheduled). After that:
+  the G-Release walk, the WI-DAG edge data-pass, or new scope (which needs a
+  plan/WI entry first).
 
 ## Scope
 
