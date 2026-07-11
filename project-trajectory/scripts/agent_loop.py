@@ -1018,9 +1018,14 @@ def preflight(root, template, args):
     return failures
 
 
-def run_session(argv, root, timeout):
+def run_session(argv, root, timeout, env=None):
     """One fresh headless driver session. Returns (exit_code, output,
-    timed_out). stdin is closed so a CLI that would wait on it can't hang."""
+    timed_out). stdin is closed so a CLI that would wait on it can't hang.
+
+    `env` is the merged environment for a pair row that declares one (the
+    registry `Env` column, already merged over os.environ by the caller); None
+    means inherit the ambient environment exactly — today's call, byte for
+    byte."""
     try:
         proc = subprocess.run(
             argv,
@@ -1032,6 +1037,7 @@ def run_session(argv, root, timeout):
             encoding="utf-8",
             errors="replace",
             timeout=timeout or None,
+            env=env,
         )
         return proc.returncode, proc.stdout or "", False
     except subprocess.TimeoutExpired as exc:
@@ -1224,8 +1230,16 @@ def main():
     # AGENT_CMD/AGENT_MODEL behavior, so a fresh scaffold pays nothing (no silent
     # model swap — consent = the enabled set + the declared rules).
     registry, reg_errors = agent_route.load_registry(docs / "agents.csv")
-    enabled = agent_route.load_enabled(docs / "agents-enabled")
-    managed = bool(enabled)
+    raw_enabled = agent_route.load_enabled(docs / "agents-enabled")
+    # The enable-list's PRESENCE (not its resolvability) turns managed routing on
+    # — an unresolvable token must fail preflight, not silently fall to legacy.
+    managed = bool(raw_enabled)
+    # Version-less tokens resolve to concrete pair-row ids (exact-id, else newest
+    # in the Family-Model line); unresolvable tokens become preflight failures.
+    tag_rank = agent_route.load_tag_rank(docs / "agents.csv")
+    enabled, enable_errors = agent_route.resolve_enabled(
+        raw_enabled, registry, tag_rank
+    )
 
     failures = preflight(root, template, args)
     # Every per-phase template must be as launchable as the default one — a
@@ -1264,13 +1278,10 @@ def main():
     if managed:
         for e in reg_errors:
             failures.append("agents.csv: {}".format(e))
+        for e in enable_errors:
+            failures.append("agents-enabled: {}".format(e))
         for mid in enabled:
-            m = registry.get(mid)
-            if m is None:
-                failures.append(
-                    "agents-enabled: {!r} is not a row in docs/agents.csv".format(mid)
-                )
-                continue
+            m = registry[mid]  # resolve_enabled guarantees the id is in the registry
             try:
                 exe = build_argv(m.cmd_template, "model", "prompt")[0]
                 if not (shutil.which(exe) or Path(exe).exists()):
@@ -1503,13 +1514,13 @@ def main():
     review_queue = []  # the pending review phases for the current round
     round_verdicts = []  # (phase, Verdict, provider, model_id) collected this round
     rounds = []  # accumulated round dicts the escalation policy reads
-    last_impl_provider = None  # the provider of the build under review
+    last_impl_family = None  # the FAMILY of the build under review (heterogeneity key)
     last_impl_tier = "medium"  # the tier that build ran at
     impl_range = None  # the build's commit range (for the tripwire diff)
-    swapped = False  # an implementer-provider swap has been applied
+    swapped = False  # an implementer-family swap has been applied
     at_top_tier = False  # the implementer tier has been raised to the top
     impl_tier_override = None  # escalation raised the BUILD tier
-    impl_exclude = set()  # providers to avoid for the next BUILD (after a swap)
+    impl_exclude = set()  # families to avoid for the next BUILD (after a swap)
 
     # --- critique-loop state (WI-068; vacuous when no Critique SR exists) ------
     critique_srs = load_critique_srs(docs) if managed else set()
@@ -1539,7 +1550,12 @@ def main():
         is_critique = False
         verdict_path = None
         route_id = None  # the selected registry id (managed mode)
-        route_provider = None
+        route_family = None  # the selected pair row's Family (identity, not route)
+        # The launch environment: None = inherit the ambient env (today's exact
+        # call); a pair row's Env is merged over os.environ below. This is how a
+        # router (ANTHROPIC_BASE_URL), a second account (CLAUDE_CONFIG_DIR /
+        # CODEX_HOME), or an API key (GEMINI_API_KEY) is selected declaratively.
+        session_env = None
         if managed:
             if review_queue:
                 phase = review_queue[0]
@@ -1556,17 +1572,17 @@ def main():
             prefer_different = False
             if is_review:
                 prefer_different = True
-                if last_impl_provider:
-                    exclude.add(last_impl_provider)
-                for _ph, _v, prov, _mid in round_verdicts:
-                    if prov:
-                        exclude.add(prov)  # REVIEW-B differs from REVIEW-A too
+                if last_impl_family:
+                    exclude.add(last_impl_family)
+                for _ph, _v, fam, _mid in round_verdicts:
+                    if fam:
+                        exclude.add(fam)  # REVIEW-B differs from REVIEW-A too
             elif is_critique:
-                # A critic wears a different hat: prefer a different provider from
+                # A critic wears a different hat: prefer a different FAMILY from
                 # the implementer (fresh context is the invariant; degraded legal).
                 prefer_different = True
-                if last_impl_provider:
-                    exclude.add(last_impl_provider)
+                if last_impl_family:
+                    exclude.add(last_impl_family)
             elif phase == "BUILD" or phase == "":
                 if impl_tier_override:
                     tier = impl_tier_override
@@ -1575,10 +1591,10 @@ def main():
                     prefer_different = True
             elif phase == "DESIGN-CHECK":
                 # The autonomous page-the-human path: a fresh strong-tier session
-                # from a DIFFERENT provider rules grind-through vs redesign.
+                # from a DIFFERENT family rules grind-through vs redesign.
                 prefer_different = True
-                if last_impl_provider:
-                    exclude.add(last_impl_provider)
+                if last_impl_family:
+                    exclude.add(last_impl_family)
             route_id, reason = agent_route.select(
                 enabled, registry, tier, now, cooldowns, exclude, prefer_different
             )
@@ -1597,8 +1613,13 @@ def main():
                 return EXIT_NEEDS_HUMAN
             m = registry[route_id]
             model = m.model or route_id
-            route_provider = m.provider
+            route_family = m.family
             tmpl = m.cmd_template or template
+            row_env = agent_route.parse_env(m.env)
+            if row_env:
+                # Only a declared Env changes the launch env — an empty Env keeps
+                # the inherited environment exactly (session_env stays None).
+                session_env = {**os.environ, **row_env}
             if not is_review and (phase == "BUILD" or phase == ""):
                 last_impl_tier = tier
             if is_review:
@@ -1638,7 +1659,9 @@ def main():
             )
         )
         argv = build_argv(tmpl, model, prompt)
-        code, output, timed_out = run_session(argv, root, args.session_timeout)
+        code, output, timed_out = run_session(
+            argv, root, args.session_timeout, env=session_env
+        )
 
         try:
             raw_dir.mkdir(parents=True, exist_ok=True)
@@ -1734,9 +1757,9 @@ def main():
             if verdict_path and Path(verdict_path).exists():
                 v = score_reviews.parse_verdict(
                     Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
-                    model=route_provider,
+                    model=route_family,
                 )
-                round_verdicts.append((phase, v, route_provider, route_id))
+                round_verdicts.append((phase, v, route_family, route_id))
                 if review_queue:
                     review_queue.pop(0)
             else:
@@ -1750,21 +1773,24 @@ def main():
             if not review_queue and round_verdicts:
                 verdicts = [v for (_ph, v, _p, _m) in round_verdicts]
                 merged, contradiction = score_reviews.merge_verdict(verdicts)
-                provider_substance = {}
+                # Substance/corroboration key on Family (who trained it), so a
+                # cross-family overlap outweighs a same-family one; the scoreboard
+                # tallies by that same Family key.
+                family_substance = {}
                 subs = []
-                for j, (_ph, rv, rprov, _mid) in enumerate(round_verdicts):
+                for j, (_ph, rv, rfam, _mid) in enumerate(round_verdicts):
                     peer = (
                         round_verdicts[1 - j][1] if len(round_verdicts) == 2 else None
                     )
-                    provs = (
-                        (rprov, round_verdicts[1 - j][2])
+                    fams = (
+                        (rfam, round_verdicts[1 - j][2])
                         if len(round_verdicts) == 2
                         else None
                     )
-                    s = score_reviews.substance(rv, root, other=peer, providers=provs)
-                    subs.append((rprov, s))
-                    if rprov:
-                        provider_substance[rprov] = s
+                    s = score_reviews.substance(rv, root, other=peer, providers=fams)
+                    subs.append((rfam, s))
+                    if rfam:
+                        family_substance[rfam] = s
                 margin = abs(subs[0][1] - subs[1][1]) if len(subs) == 2 else 0.0
                 primary = None
                 if len(subs) == 2:
@@ -1784,9 +1810,7 @@ def main():
                 }
                 rounds.append(round_info)
                 try:
-                    score_reviews.record_round(
-                        scoreboard, round_info, provider_substance
-                    )
+                    score_reviews.record_round(scoreboard, round_info, family_substance)
                 except OSError:
                     pass
                 print(
@@ -1820,8 +1844,8 @@ def main():
                             "DESIGN-CHECK\n", encoding="utf-8"
                         )
                 elif decision["action"] == "swap-implementer":
-                    if last_impl_provider:
-                        impl_exclude = {last_impl_provider}
+                    if last_impl_family:
+                        impl_exclude = {last_impl_family}
                     swapped = True
                     critique_queue = []  # the artifact will change; re-critique later
                     (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
@@ -1839,7 +1863,7 @@ def main():
             if verdict_path and Path(verdict_path).exists():
                 v = score_reviews.parse_verdict(
                     Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
-                    model=route_provider,
+                    model=route_family,
                 )
                 critique_queue = []  # this round consumed
                 merged = (v.verdict or "").upper()
@@ -1905,7 +1929,7 @@ def main():
             if outcome in ("ERROR", "TIMEOUT"):
                 agent_route.cool(cooldowns, route_id, now, cooldown_seconds)
             elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
-                last_impl_provider = route_provider
+                last_impl_family = route_family
                 impl_range = commits
                 # The review round follows the reviewer dial (S8).
                 if rp_int >= 1:

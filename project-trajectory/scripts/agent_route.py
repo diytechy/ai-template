@@ -4,30 +4,52 @@ selector and the fixed escalation policy (process-options.md "Unattended
 operation" -> the routing/escalation subsection). Stdlib only, Python 3.8+.
 
 This is the declared, legible half of heterogeneous implementer/reviewer
-scheduling (AGENT_ROLES R6; the S8 rulings). It is **config, not a catalog**:
+scheduling (AGENT_ROLES R6; the S8 rulings). It is **config, not a catalog**,
+and its registry is the **pair-row model** (capability-expansion.md C3, "pairs
+now, factor later"): identity vs access, one row per (model x route) pair.
 
-  - `docs/agents.csv` is the model REGISTRY — one row per usable model, keyed
-    `[PROVIDER]-[MODEL_NAME]-[VERSION]` (`ANTHROPIC-OPUS-4.8`, `OPENAI-GPT-5.2`).
-    The id is a join key, **never parsed** — Provider/Model/Version stay
-    separate columns (machine truth); the id charset is uppercase + digits +
-    hyphen + dot so dated snapshots and `-PREVIEW` tags are valid versions.
-    Columns: `Id,Provider,Model,Version,Tier,CmdTemplate,Notes` with
-    `Tier in {strong,medium,weak}` and a `CmdTemplate` carrying `{model}`/
-    `{prompt}` slots. No vendored catalog: richer data lives in the maintained
-    community registries (models.dev `api.json`; LiteLLM's model-prices JSON) —
-    a documented pointer, not a copy.
-  - `docs/agents-enabled` is the ENABLE-LIST — the ids this repo may use, in
-    **preference order**, one per line (`#` comments allowed). It is the
-    consent surface: routing selects only from this pool, and its **presence**
-    is what turns on managed routing at all. Absent enable-list -> the loop
-    keeps today's single `AGENT_CMD`/`AGENT_MODEL` behavior, so a fresh
-    scaffold pays nothing (no silent model swap: consent = the enabled set +
-    these declared rules).
+  - `docs/agents.csv` is the model REGISTRY. Columns:
+    `Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes`.
+      * IDENTITY = `Family` (who trained it — the heterogeneity + scorer
+        corroboration key), `Model` (the provider's line identity, INCLUDING
+        `-pro`/`-flash`-style tokens), `Version` (the *comparable* token only:
+        a dotted numeric like `4.8`, a date stamp, or a maturity tag — moving
+        vendor aliases never live here).
+      * ACCESS = `CmdTemplate` (`{model}`/`{prompt}` slots) + `Env`
+        (`KEY=value;KEY2=value2`, merged over the inherited environment at
+        launch; **empty Env = the ambient environment = today's behavior**).
+      * `Tier in {strong,medium,weak}`. **One row = one (model x route) pair** —
+        the table itself IS the allow matrix (no `Serves` patterns). A second
+        account or a router service is a *second pair row* (distinct id, same
+        Family, its own Env) — so its cooldown is independent by construction.
+    The id is a join key, **never parsed** — the columns are the machine truth;
+    the id charset is uppercase + digits + hyphen + dot so dated snapshots and
+    `-PREVIEW` tags are valid. `Provider` is retired: a legacy registry with a
+    `Provider` column and no `Family` reads Provider as Family (never-breaking).
+    No vendored catalog: richer data lives in the maintained community
+    registries (models.dev `api.json`; LiteLLM's model-prices JSON) — a
+    documented pointer, not a copy.
+  - `docs/agents-enabled` is the ENABLE-LIST — the ids (or version-less tokens)
+    this repo may use, in **preference order**, one per line (`#` comments
+    allowed). It is the consent surface: routing selects only from this pool,
+    and its **presence** is what turns on managed routing at all. Absent
+    enable-list -> the loop keeps today's single `AGENT_CMD`/`AGENT_MODEL`
+    behavior, so a fresh scaffold pays nothing (no silent model swap: consent =
+    the enabled set + these declared rules). A token that exactly matches a row
+    Id resolves to it; otherwise it resolves over rows whose normalized
+    `Family`-`Model` matches (intra-line only — the `-PRO` correction), newest
+    version winning (see `resolve_token`).
+
+The recorded revisit trigger (the "factor later" half): once one route's
+command/env text repeats across enough pair rows that editing it is
+error-prone, factor the route definitions into a named-preset file the pair
+rows reference — the rows stay the explicit allow matrix, only the text gets
+deduplicated.
 
 Selection composes the phase's tier with the heterogeneity rules: reviewers
-prefer two providers, at least one differing from the implementer's — *preferred
-not required* (degraded availability is legal: one responding provider reviews
-with two independent same-provider sessions; fresh context is the invariant).
+prefer two families, at least one differing from the implementer's — *preferred
+not required* (degraded availability is legal: one responding family reviews
+with two independent same-family sessions; fresh context is the invariant).
 A model whose session fails to start or stalls goes on **cooldown** (its limit
 is probably exhausted) and is retried later; when no enabled model of the
 preferred tier is available, selection walks the **next tier up — never a
@@ -35,7 +57,7 @@ weaker one**.
 
 The escalation policy is **fixed and declared, not a learned router**
 (per-project sample sizes are far too small for a bandit): win-stay/lose-shift
-with a margin, an implementer-provider swap after consecutive failed review
+with a margin, an implementer-family swap after consecutive failed review
 gates, a tier rise only after the swap also fails, and paging the human on the
 shared-failure regime, contradictory verdicts, or any tripwire. The constants
 ship as legible per-repo-overridable defaults (calibration values, not spine
@@ -58,11 +80,29 @@ TIER_ORDER = ("weak", "medium", "strong")
 
 # Registry id charset: uppercase + digits + hyphen + dot, starting alphanumeric.
 # Deliberately permissive on internal structure — the id is a join key, never
-# parsed for its Provider/Model/Version (those are their own columns), and model
+# parsed for its Family/Model/Version (those are their own columns), and model
 # names carry hyphens and dotted/dated version tags.
 ID_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]*$")
 
-REGISTRY_FIELDS = ("Id", "Provider", "Model", "Version", "Tier", "CmdTemplate", "Notes")
+REGISTRY_FIELDS = (
+    "Id",
+    "Family",
+    "Model",
+    "Version",
+    "Tier",
+    "CmdTemplate",
+    "Env",
+    "Notes",
+)
+
+# The maturity vocabulary + its DEFAULT rank (higher = preferred): GA/untagged
+# beats preview beats beta beats exp (a fixed set with a per-registry override —
+# a `# tag-rank: ga>preview>beta>exp` comment line in agents.csv, or the
+# AGENT_TAG_RANK env knob; see load_tag_rank). `preview`/`exp` rows are SKIPPED
+# in version-less resolution unless explicitly named or the only candidate.
+DEFAULT_TAG_RANK = {"ga": 3, "preview": 2, "beta": 1, "exp": 0}
+_SKIP_MATURITY = frozenset(("preview", "exp"))
+_MATURITY_TOKENS = ("preview", "beta", "exp", "ga")
 
 # Escalation calibration — legible per-repo-overridable defaults, NOT spine
 # facts. Override per repo through the environment (the coordinator passes its
@@ -70,7 +110,7 @@ REGISTRY_FIELDS = ("Id", "Provider", "Model", "Version", "Tier", "CmdTemplate", 
 # walk-away run.
 DEFAULT_CONSTANTS = {
     "margin": 2,  # win-stay/lose-shift: swap the primary feedback source only on >= this
-    "swap_after": 2,  # consecutive failed review gates before the implementer provider swaps
+    "swap_after": 2,  # consecutive failed review gates before the implementer family swaps
     "page_top_tier_fails": 2,  # top-tier failed gates before paging the human (shared-failure regime)
 }
 _CONST_ENV = {
@@ -81,18 +121,32 @@ _CONST_ENV = {
 
 
 class Model:
-    """One registry row. The id is opaque (a join key); Provider/Model/Version/
-    Tier/CmdTemplate are the machine truth."""
+    """One registry row = one (model x route) pair. The id is opaque (a join
+    key); Family/Model/Version (identity) + Tier + CmdTemplate/Env (access) are
+    the machine truth. `family` is the heterogeneity/corroboration key (a legacy
+    `Provider` column is read into it)."""
 
-    __slots__ = ("id", "provider", "model", "version", "tier", "cmd_template", "notes")
+    __slots__ = (
+        "id",
+        "family",
+        "model",
+        "version",
+        "tier",
+        "cmd_template",
+        "env",
+        "notes",
+    )
 
-    def __init__(self, id, provider, model, version, tier, cmd_template, notes):
+    def __init__(
+        self, id, family, model, version, tier, cmd_template, env="", notes=""
+    ):
         self.id = id
-        self.provider = provider
+        self.family = family
         self.model = model
         self.version = version
         self.tier = tier
         self.cmd_template = cmd_template
+        self.env = env
         self.notes = notes
 
 
@@ -124,18 +178,32 @@ def load_registry(path):
         return {}, []
     header = [h.strip() for h in rows[0]]
     # Map the columns we need by name so column order is not load-bearing.
-    idx = {name: header.index(name) for name in REGISTRY_FIELDS if name in header}
-    for need in ("Id", "Provider", "Model", "Version", "Tier", "CmdTemplate"):
+    # `Provider` is accepted as the legacy alias for `Family` (never-breaking).
+    idx = {
+        name: header.index(name)
+        for name in REGISTRY_FIELDS + ("Provider",)
+        if name in header
+    }
+    # Identity's Family key: the Family column, or a legacy Provider column.
+    fam_key = (
+        "Family" if "Family" in idx else ("Provider" if "Provider" in idx else None)
+    )
+    for need in ("Id", "Model", "Version", "Tier", "CmdTemplate"):
         if need not in idx:
             errors.append(
                 "{}: header is missing the {!r} column".format(path.name, need)
             )
+    if fam_key is None:
+        errors.append(
+            "{}: header is missing the 'Family' column (legacy 'Provider' also "
+            "accepted)".format(path.name)
+        )
     if errors:
         return {}, errors
 
     def cell(row, name):
-        i = idx[name]
-        return row[i].strip() if i < len(row) else ""
+        i = idx.get(name)
+        return row[i].strip() if (i is not None and i < len(row)) else ""
 
     for row in rows[1:]:
         if not any(c.strip() for c in row):
@@ -166,14 +234,150 @@ def load_registry(path):
         tmpl = cell(row, "CmdTemplate")
         models[mid] = Model(
             id=mid,
-            provider=cell(row, "Provider"),
+            family=cell(row, fam_key),
             model=cell(row, "Model"),
             version=cell(row, "Version"),
             tier=tier,
             cmd_template=tmpl,
-            notes=cell(row, "Notes") if "Notes" in idx else "",
+            env=cell(row, "Env"),
+            notes=cell(row, "Notes"),
         )
     return models, errors
+
+
+def parse_env(spec):
+    """Parse an `Env` cell (`KEY=value;KEY2=value2`) into a dict, to be merged
+    over the inherited environment at launch. Lenient by construction — an entry
+    without `=` or an empty key is skipped rather than crashing a walk-away run
+    (a value may contain `=` but not `;`, the row separator)."""
+    out = {}
+    for part in (spec or "").split(";"):
+        part = part.strip()
+        if not part or "=" not in part:
+            continue
+        key, _, val = part.partition("=")
+        key = key.strip()
+        if key:
+            out[key] = val.strip()
+    return out
+
+
+def parse_tag_rank(spec):
+    """Parse a `ga>preview>beta>exp` ordering into {tag: rank} (higher = earlier
+    = preferred). Empty/unparseable -> DEFAULT_TAG_RANK."""
+    toks = [t for t in re.split(r"[>,\s]+", (spec or "").strip().lower()) if t]
+    if not toks:
+        return dict(DEFAULT_TAG_RANK)
+    return {tok: len(toks) - 1 - i for i, tok in enumerate(toks)}
+
+
+def load_tag_rank(path, env=None):
+    """The maturity rank vocabulary for version-less resolution: the
+    AGENT_TAG_RANK env knob wins, else a `# tag-rank: ...` comment line in the
+    registry file, else DEFAULT_TAG_RANK. Deterministic and offline."""
+    env = os.environ if env is None else env
+    if env.get("AGENT_TAG_RANK"):
+        return parse_tag_rank(env["AGENT_TAG_RANK"])
+    try:
+        text = Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return dict(DEFAULT_TAG_RANK)
+    for ln in text.splitlines():
+        m = re.match(r"\s*#\s*tag-rank\s*:\s*(.+)$", ln, re.I)
+        if m:
+            return parse_tag_rank(m.group(1))
+    return dict(DEFAULT_TAG_RANK)
+
+
+def _maturity_of(model):
+    """The maturity tag of a registry row (`preview`/`beta`/`exp`/`ga`), read
+    from its Version (the ruled home) or Model line — GA/untagged is the
+    default. Tokenized so a numeric/date version reads GA, never a substring
+    hit."""
+    toks = set(
+        re.split(r"[^a-z0-9]+", "{} {}".format(model.version, model.model).lower())
+    )
+    for tag in _MATURITY_TOKENS:
+        if tag in toks:
+            return tag
+    return "ga"
+
+
+_DATE_RE = re.compile(r"(?:^|[^0-9])(\d{8}|\d{4}-\d{2}-\d{2})(?:[^0-9]|$)")
+
+
+def _version_key(model, tag_rank):
+    """The comparison key for version-less resolution: (dotted-numeric tuple,
+    maturity rank, date stamp) — numeric dominates, maturity breaks a numeric
+    tie, the date stamp is the final tiebreak. A pure date carries no numeric
+    (so numeric always dominates a date-kind mix), and a maturity tag alone
+    sorts by rank."""
+    v = (model.version or "").strip()
+    dm = _DATE_RE.search(" " + v + " ")
+    date = int(dm.group(1).replace("-", "")) if dm else 0
+    numeric = ()
+    if not (dm and dm.group(1).replace("-", "") == re.sub(r"[^0-9]", "", v)):
+        nm = re.match(r"(\d+(?:\.\d+)*)", v)
+        if nm:
+            numeric = tuple(int(p) for p in nm.group(1).split("."))
+    rank = tag_rank.get(_maturity_of(model), tag_rank.get("ga", 3))
+    return (numeric, rank, date)
+
+
+def resolve_token(token, registry, tag_rank=None):
+    """Resolve one enable-list token to a registry id, or (None, reason).
+
+    An exact id wins outright. Otherwise the token resolves over rows whose
+    normalized `Family`-`Model` (column-keyed, uppercased — the id is NEVER
+    parsed) equals it: this stays INTRA-line (the `-PRO` correction — resolution
+    never crosses a model line). `preview`/`exp` rows are skipped unless named
+    or the only candidates; the survivor is the newest by `_version_key`, and
+    among equal-key pairs (one model line, several routes) REGISTRY ROW ORDER
+    decides. "Newest" is computed only over rows present in the registry —
+    deterministic and offline."""
+    tag_rank = tag_rank or DEFAULT_TAG_RANK
+    t = (token or "").strip()
+    if t in registry:
+        return t, "exact id"
+    tu = t.upper()
+    cands = [
+        mid
+        for mid, m in registry.items()
+        if "{}-{}".format(m.family, m.model).upper() == tu
+    ]
+    if not cands:
+        return None, "no exact id and no Family-Model match"
+    non_skipped = [
+        mid for mid in cands if _maturity_of(registry[mid]) not in _SKIP_MATURITY
+    ]
+    pool = set(non_skipped or cands)
+    best, best_key = None, None
+    for mid in registry:  # registry insertion order breaks equal-key ties (first wins)
+        if mid not in pool:
+            continue
+        key = _version_key(registry[mid], tag_rank)
+        if best is None or key > best_key:
+            best, best_key = mid, key
+    return best, "resolved {!r} -> {} (newest of {})".format(t, best, "|".join(cands))
+
+
+def resolve_enabled(enabled, registry, tag_rank=None):
+    """Resolve the ordered enable-list to concrete registry ids, preserving
+    preference order and de-duplicating. Returns (ids, errors); an unresolvable
+    token becomes an error string (surfaced in the managed preflight)."""
+    resolved, errors, seen = [], [], set()
+    for tok in enabled:
+        rid, reason = resolve_token(tok, registry, tag_rank)
+        if rid is None:
+            errors.append(
+                "{!r} is not a row in docs/agents.csv and does not resolve to "
+                "one ({})".format(tok, reason)
+            )
+            continue
+        if rid not in seen:
+            seen.add(rid)
+            resolved.append(rid)
+    return resolved, errors
 
 
 def load_enabled(path):
@@ -212,7 +416,7 @@ def select(
     tier,
     now=0.0,
     cooldowns=None,
-    exclude_providers=(),
+    exclude_families=(),
     prefer_different=False,
 ):
     """Pick a model id from the enabled pool, or None. Returns (id, reason) — the
@@ -222,13 +426,15 @@ def select(
       - Only enabled ids that exist in the registry and are not cooling down.
       - Walk from `tier` UP to strong; never select a weaker tier than asked.
       - Within a tier the enable-list order is the preference order.
-      - When prefer_different, prefer an id whose provider is not in
-        exclude_providers; if none qualifies, fall back to any available one
-        (degraded availability is legal — same-provider review is allowed, it
-        just earns a weaker corroboration signal).
+      - When prefer_different, prefer an id whose FAMILY (who trained it — never
+        the route it is reached by) is not in exclude_families; if none
+        qualifies, fall back to any available one (degraded availability is
+        legal — same-family review is allowed, it just earns a weaker
+        corroboration signal). A router-fronted row shares its native sibling's
+        Family, so it is NOT diverse from it.
     """
     cooldowns = cooldowns or {}
-    exclude = set(exclude_providers or ())
+    exclude = set(exclude_families or ())
     if tier not in TIER_ORDER:
         return None, "unknown tier {!r} (expected {})".format(
             tier, "|".join(TIER_ORDER)
@@ -247,16 +453,16 @@ def select(
             continue
         bumped = " (tier bumped up from {})".format(tier) if ti != start else ""
         if prefer_different:
-            different = [m for m in avail if registry[m].provider not in exclude]
+            different = [m for m in avail if registry[m].family not in exclude]
             if different:
                 return different[0], "selected {} [{}]{}".format(
                     different[0], this_tier, bumped
                 )
-            # Degraded: only same-provider models are available. Legal — fresh
-            # context is the invariant, provider diversity is best-effort.
+            # Degraded: only same-family models are available. Legal — fresh
+            # context is the invariant, family diversity is best-effort.
             return avail[0], (
-                "selected {} [{}]{} — DEGRADED: no different-provider model "
-                "available, same-provider review (weaker corroboration)".format(
+                "selected {} [{}]{} — DEGRADED: no different-family model "
+                "available, same-family review (weaker corroboration)".format(
                     avail[0], this_tier, bumped
                 )
             )
@@ -304,7 +510,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False):
       verdict          -> APPROVE | CHANGES-REQUESTED  (the merged round result)
       tier             -> the implementer tier this round ran at (weak/medium/strong)
       margin           -> substance margin between the two reviewers this round
-      primary          -> the higher-substance provider this round (for win-stay)
+      primary          -> the higher-substance family this round (for win-stay)
       contradiction    -> True when the two reviewers gave opposite verdicts
       tripwire         -> True when any anti-gaming tripwire fired
     `swapped`/`at_top_tier` are the coordinator's applied-so-far state.
@@ -359,7 +565,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False):
         if not swapped:
             return {
                 "action": "swap-implementer",
-                "reason": "{} consecutive failed review gates — swap the implementer provider (cheap test for idiosyncratic failure)".format(
+                "reason": "{} consecutive failed review gates — swap the implementer family (cheap test for idiosyncratic failure)".format(
                     consecutive
                 ),
                 "next_primary": None,
@@ -367,7 +573,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False):
         if not at_top_tier:
             return {
                 "action": "tier-up",
-                "reason": "the provider swap also failed — raise the tier (only now, never before the swap)",
+                "reason": "the family swap also failed — raise the tier (only now, never before the swap)",
                 "next_primary": None,
             }
         return {
@@ -377,7 +583,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False):
         }
 
     # A clean approve, or a single failure still inside the streak budget: keep
-    # going. The higher-substance provider becomes next round's primary feedback
+    # going. The higher-substance family becomes next round's primary feedback
     # source only when this round's margin cleared the bar (win-stay).
     next_primary = last.get("primary") if last.get("margin", 0) >= c["margin"] else None
     return {
@@ -416,7 +622,7 @@ def failure_action(gate_policy):
             "pause_wi": True,
             "keep_nondependent": True,
             "design_check": True,
-            "note": "autonomous: schedule a fresh strong-tier, different-provider design-check session to rule grind-through vs redesign, document every assumption, and continue (redesign re-enters process.md 5)",
+            "note": "autonomous: schedule a fresh strong-tier, different-family design-check session to rule grind-through vs redesign, document every assumption, and continue (redesign re-enters process.md 5)",
         }
     return {
         "mode": "attended",
@@ -452,34 +658,36 @@ def main(argv=None):
         "--exclude",
         action="append",
         default=[],
-        help="a provider to prefer against (repeatable); implies --prefer-different",
+        help="a family to prefer against (repeatable); implies --prefer-different",
     )
     args = ap.parse_args(argv)
 
     registry, errors = load_registry(args.registry)
     for e in errors:
         print("agent_route: {}".format(e), file=sys.stderr)
-    enabled = load_enabled(args.enabled)
+    tag_rank = load_tag_rank(args.registry)
+    raw_enabled = load_enabled(args.enabled)
+    # Resolve version-less tokens to concrete ids (exact-id/newest-in-line).
+    enabled, enable_errors = resolve_enabled(raw_enabled, registry, tag_rank)
+    for e in enable_errors:
+        print("agent_route: agents-enabled: {}".format(e), file=sys.stderr)
 
     if args.list:
-        if not enabled:
+        if not raw_enabled:
             print(
                 "(no enable-list — routing off; today's AGENT_CMD/AGENT_MODEL behavior)"
             )
         for mid in enabled:
-            m = registry.get(mid)
-            if m:
-                print("{:32} {:7} {}".format(m.id, m.tier, m.provider))
-            else:
-                print("{:32} {:7} (NOT in registry)".format(mid, "?"))
-        return 1 if errors else 0
+            m = registry[mid]
+            print("{:32} {:7} {}".format(m.id, m.tier, m.family))
+        return 1 if (errors or enable_errors) else 0
 
     if args.select:
         chosen, reason = select(
             enabled,
             registry,
             args.tier,
-            exclude_providers=args.exclude,
+            exclude_families=args.exclude,
             prefer_different=bool(args.exclude),
         )
         print(reason)
@@ -488,10 +696,10 @@ def main(argv=None):
     # Default: a terse status line.
     print(
         "registry={} models, enabled={} (routing {})".format(
-            len(registry), len(enabled), "on" if enabled else "off"
+            len(registry), len(enabled), "on" if raw_enabled else "off"
         )
     )
-    return 1 if errors else 0
+    return 1 if (errors or enable_errors) else 0
 
 
 if __name__ == "__main__":

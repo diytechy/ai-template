@@ -1155,3 +1155,108 @@ Spine now **SN=24 SR=47 LLR=48 TC=48, 0 orphans**; 49 declared interface seams.
 pending G3 re-attestation** with the rest of the accumulated changes (status.md
 Needs-\<human> #1). *Mandatory*: a new SN and a new test-verifiable SR joined the
 spine.
+
+## 2026-07-11 — WI-069 (capability-expansion C3): the pair-row agent registry — SPINE CHANGE (SR-045 text extended); RE-ATTESTATION PENDING
+
+**What shipped.** The **pair-row registry** ("pairs now, factor later"), the C3
+slice. `docs/agents.csv` becomes `Id,Family,Model,Version,Tier,CmdTemplate,Env,
+Notes` — **one row = one (model × route) pair**, the table itself the allow
+matrix. The semantic cleanup is **identity vs access**: `Family`/`Model`/
+`Version` = identity (Family = who trained it, the heterogeneity + scorer
+corroboration key; Model = the line identity incl. `-pro`/`-flash`; Version = the
+*comparable* token only), `CmdTemplate`/`Env` = access. `Provider` is **retired**
+— a legacy `Provider` column with no `Family` reads Provider as Family
+(never-breaking). Absent the new columns/tokens, every existing behavior is
+byte-identical.
+
+**Deliverables.**
+- **`agent_route.py`:** `Family` column (legacy `Provider` fallback) + `Env`
+  parsed by new `parse_env` (`KEY=value;KEY2=value2`, lenient). New
+  `resolve_token`/`resolve_enabled`: a version-less enable-list token resolves to
+  the newest pair in its `Family-Model` line — **exact-id first**, else the
+  column-keyed `Family-Model` match (intra-line only, the `-PRO` correction),
+  newest by **dotted-numeric tuple → maturity rank → date stamp**, `preview`/
+  `exp` skipped unless named/only, **equal-key route pairs by registry row
+  order**. `load_tag_rank`/`parse_tag_rank` hold the `ga>preview>beta>exp`
+  vocabulary (per-registry override: a `# tag-rank:` comment line in `agents.csv`
+  or the `AGENT_TAG_RANK` env knob). `select()`'s prefer-different/exclude keyed
+  on **Family** (`exclude_families`).
+- **`agent_loop.py`:** `run_session` gains an `env` param; a selected pair row's
+  `Env` is merged `{**os.environ, **row_env}` and passed **only when the row
+  declares Env** (else `session_env` stays `None` = today's exact call). All
+  phases (BUILD/REVIEW-A/REVIEW-B/CRITIQUE) inherit it through the shared launch
+  path. The enable-list is resolved up front (`managed = bool(raw_enabled)` so an
+  unresolvable token fails preflight, never silently drops to legacy); the
+  implementer/reviewer exclude sets and the scoreboard key re-keyed to Family.
+- **`score_reviews.py`:** corroboration documented + re-keyed on **Family**
+  (legacy Provider = the fallback); the CLI gains `--family` (preferred over the
+  retained legacy `--provider`).
+- **`agents.template.csv`:** new header + compliant rows (Gemini `Model=gemini-3-
+  pro`, `Version=3`; a `# tag-rank:` directive; commented `-ACCT2` second-account
+  + router pair examples with their `Env`); the registry explainer rewritten.
+- **Docs:** PROCESS_OPTIONS routing subsection rewritten once (pair-row
+  semantics, identity-vs-access, version-less resolution, account/router rows,
+  the recorded revisit trigger, and the two research safety notes — pin LiteLLM
+  off the malicious PyPI builds `1.82.7`/`1.82.8`; Gemini OAuth multi-account
+  refresh race → API keys or serialize). `project-trajectory/README.md`
+  kit-contents entry updated; the `IF-044`/`IF-045` seam descriptions refreshed
+  to the pair-row scheme (accuracy, not a status change). **No PROCESS.md
+  change.**
+- **Spine:** `SR-045` Requirement + AcceptanceCriteria extended (pair-row
+  identity/access, Family-keyed heterogeneity, version-less newest resolution,
+  per-pair `Env`); `LLR-044`/`LLR-045` text extended. No new SN/SR.
+- **Tests:** `test_agent_route.py` +11 (Family fallback / Env parse, resolver
+  ordering incl. numeric-beats-date + preview-skip + tag-rank override +
+  multi-route registry order, exact-id precedence, unresolvable token, `-ACCT2`
+  independent cooldown, router-not-diverse-from-native, CLI version-less
+  resolution); `test_agent_loop_env.py` +2 (Env merge into the launch; empty Env
+  = ambient, no injected var). The existing legacy `Provider`-header registry
+  tests prove byte-identical selection.
+
+**Judgment calls.**
+- **Column contract (ruling 8).** Model carries the full line identity
+  (`gemini-3-pro`, `gpt-5.2`, `opus`); Version is the extracted comparable token
+  (`3`, `5.2`, `4.8`). Where the line name already embeds the number
+  (`gemini-3-pro`), version-less resolution within `(Family, Model)` degenerates
+  to maturity/date tiebreaking — correct per the `-PRO` correction (a newer
+  generation is a *new line*, a new enable-list entry, never a silent version
+  bump). The clean iterating case is `opus` (Model has no number, Version
+  iterates 4.8→4.9→…).
+- **Tag-rank override home.** A `# tag-rank: ga>preview>beta>exp` comment line in
+  `agents.csv` (parsed by `load_tag_rank`), overridable by `AGENT_TAG_RANK`; the
+  default equals the built-in `DEFAULT_TAG_RANK`. The **skip set** stays fixed at
+  `{preview, exp}`; the override tunes the *tiebreak* rank only. Documented in
+  the template + PROCESS_OPTIONS.
+- **Registry-row-order tiebreak (vs the spec block's "enable-list order").** A
+  version-less token is *one* enable-list entry, so enable-list order can't
+  order the several *registry* rows it matches — **registry row order decides**
+  (implemented, documented). `select()`'s enable-list-order preference is a
+  separate, unchanged layer (ordering the resolved pool).
+- **Env merge semantics.** `subprocess.run(..., env={**os.environ, **row_env})`
+  **only when the row declares Env** (row wins on a key collision); an empty Env
+  passes `env=None` — byte-identical to today's call (verified by
+  `test_empty_env_inherits_the_ambient_environment`). The interactive leg is
+  unchanged (it never routes through the registry, so it carries no pair `Env`).
+- **score_reviews scope.** The module already spoke "cross-family"; the honest
+  re-key lives at the loop call site (it now passes `route_family`). Kept the
+  function param name `providers` (API/scoreboard-format stability) and added the
+  self-describing `--family` CLI alias rather than churn the on-disk format.
+
+**Byte deltas.** `AGENTS.template.md` **9978 → 9978** and `PROCESS.md` **58,853 →
+58,853** — **both untouched** (verified: `git diff --stat` empty). The routing
+expansion landed in `PROCESS_OPTIONS.md`, not the budgeted core.
+
+**Mechanized bar.** `pytest -q` **597 passed, 3 skipped** (+13 over WI-068's 584:
+11 `test_agent_route.py` + 2 `test_agent_loop_env.py`); `check_docs.py --root .
+--stale` **0 broken** (1 pre-existing orphan warn; only `hint`-level staleness on
+an archived doc); `check_trajectory --strict` **clean**; `gen_arch_map`
+(`--src project-trajectory/scripts`, the new public functions) / `gen_okf` (SR-045
++ LLR-044/045 concepts) / `gen_trajectory` regenerated; `check.py --gate G3`
+**13/13 PASS**. Spine unchanged in shape (**SN=24 SR=47 LLR=48 TC=48, 0
+orphans**); SR-045/LLR-044/LLR-045 text extended.
+
+**Re-attestation rider.** `SR-045` is a **Verified** SR whose **Requirement +
+AcceptanceCriteria text changed** (pair-row identity/access split, Family-keyed
+heterogeneity, version-less newest resolution, per-pair `Env`) → it rides the
+**one pending G3 re-attestation** with the rest of the accumulated spine changes
+(status.md Needs-\<human> #1). *Mandatory*: a Verified SR's text changed.

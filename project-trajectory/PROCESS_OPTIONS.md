@@ -480,25 +480,69 @@ consent-explicit (no silent model swap), and never-breaking: **absent the
 enable-list, the loop keeps exactly today's single `AGENT_CMD`/`AGENT_MODEL`
 behavior**, so a fresh scaffold pays nothing.
 
-- **A model registry, not a catalog — `docs/agents.csv`.** One row per usable
-  model, keyed `[PROVIDER]-[MODEL_NAME]-[VERSION]` (`ANTHROPIC-OPUS-4.8`,
-  `OPENAI-GPT-5.2`) — released names are immutable, so these ids are *more*
-  durable than sequential `###` ids. The id is a **join key, never parsed**:
-  `Provider`/`Model`/`Version` are their own columns (machine truth), plus
-  `Tier (strong|medium|weak)`, a `CmdTemplate` with `{model}`/`{prompt}` slots,
-  and `Notes`; the id charset is uppercase + digits + hyphen + dot (dated
-  snapshots and `-PREVIEW` tags are valid versions). The kit ships example rows
-  for the verified headless shapes (`claude -p` / `codex exec` / `gemini -p`)
-  and **vendors no model catalog** — richer data is a documented pointer to the
-  maintained community registries (models.dev `api.json`; LiteLLM's
-  model-prices JSON), never a copy.
+- **A model registry, not a catalog — `docs/agents.csv`, the pair-row model.**
+  Columns `Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes`, and **one row =
+  one (model × route) pair** — this model, reached this way ("pairs now, factor
+  later"). The split is **identity vs access**:
+    - *Identity* — **`Family`** (who trained it — the heterogeneity + scorer
+      corroboration key, *never* how the model is reached), **`Model`** (the
+      provider's line identity, INCLUDING `-pro`/`-flash`/`-codex` tokens — those
+      are a separately-billed *model line*, not a maturity tag), **`Version`**
+      (the *comparable* token only: a dotted numeric like `4.8`, a date stamp, or
+      a maturity tag — moving vendor aliases like `chat-latest` never live here).
+    - *Access* — **`CmdTemplate`** (`{model}`/`{prompt}` slots) + **`Env`**
+      (`KEY=value;KEY2=value2`, merged over the inherited environment at launch;
+      **an empty `Env` = the ambient environment = today's behavior**). `Env` is
+      the declarative fix for every env-only selector — `CLAUDE_CONFIG_DIR`,
+      `CODEX_HOME`, `ANTHROPIC_BASE_URL`, `GEMINI_API_KEY` — which a bare
+      `CmdTemplate` (launched `argv`-only, no shell) can't carry.
+  The table itself **is the allow matrix** — a (model × route) pair is usable iff
+  its row was written, keeping consent explicit (no `Serves` patterns that would
+  silently allow a future model). The `Id` is a free-form unique **join key,
+  never parsed** (charset: uppercase + digits + hyphen + dot). **`Provider` is
+  retired** in favor of `Family`; a legacy registry with a `Provider` column and
+  no `Family` reads Provider as Family — never-breaking. Cooldown stays **per row
+  id = per access path**, so an account outage or router failure cools only that
+  path. The kit ships example rows for the verified headless shapes (`claude -p`
+  / `codex exec` / `gemini -p`) and **vendors no model catalog** — richer data is
+  a documented pointer to the maintained community registries (models.dev
+  `api.json`; LiteLLM's model-prices JSON), never a copy.
+- **Account rows and router rows are just more pairs.** A **second paid plan**
+  with one provider = a **second pair row** with a distinct id (suffix style,
+  `…-ACCT2`), the *same* `Family`, and its own `Env` account selector — so its
+  quota pool cools independently by construction. A **third-party router** = a
+  pair row whose `Env` points its CLI at the router (`ANTHROPIC_BASE_URL`); it
+  shares the native model's `Family`, so it is **not** a diverse reviewer from
+  its native sibling (a router is access, not identity). Two safety notes carried
+  from the research: **pin LiteLLM away from the known-malicious PyPI builds
+  `1.82.7`/`1.82.8`**; and **Gemini OAuth accounts share one credentials file and
+  race on token refresh** — multi-account Gemini must use API keys or be
+  serialized (Claude/Codex config dirs are token-isolated and concurrent-safe).
+  *The recorded revisit trigger (the "factor later" half):* once one route's
+  command/env text repeats across enough pair rows that editing it is
+  error-prone, factor the route definitions into a named-preset file the pair
+  rows reference — the rows stay the explicit allow matrix, only the text gets
+  deduplicated.
+- **Version-less resolution (newest-in-line, offline & deterministic).** An
+  `agents-enabled` token that exactly matches a row `Id` resolves to it;
+  otherwise it resolves over rows whose normalized `Family`-`Model` matches
+  (column-keyed — the id is never parsed) — **intra-line only** (it never crosses
+  a model line, keeping the "different model vs. newer version" trap closed).
+  Among those: newest by **dotted-numeric tuple**, then a **maturity-rank
+  tiebreak** (GA/untagged > `preview` > `beta` > `exp`, a fixed vocabulary with a
+  per-registry override — a `# tag-rank: …` comment line in `agents.csv` or the
+  `AGENT_TAG_RANK` env knob), then a **date-stamp** final tiebreak; `preview`/
+  `exp` rows are skipped unless explicitly named or the only candidate, and
+  equal-key route pairs fall to **registry row order**. "Newest" is computed only
+  over rows present in the registry — no network, fully deterministic.
 - **Routing = an enable-list + availability.** `docs/agents-enabled` lists, in
-  **preference order**, the registry ids this repo may use — the consent
-  surface, and the switch that turns managed routing on (it is deliberately
-  *not* scaffolded; absence = routing off). Per session the loop selects from
-  that pool by the phase's tier (`AGENT_TIER_MAP`/`--tier-map`, else the
-  built-in phase->tier defaults — iteration reviewers default to a cheaper tier)
-  plus the heterogeneity rules; a model whose session fails to start or stalls
+  **preference order**, the registry ids (or version-less `Family-Model` tokens,
+  resolved above) this repo may use — the consent surface, and the switch that
+  turns managed routing on (it is deliberately *not* scaffolded; absence =
+  routing off). Per session the loop selects from that pool by the phase's tier
+  (`AGENT_TIER_MAP`/`--tier-map`, else the built-in phase->tier defaults —
+  iteration reviewers default to a cheaper tier) plus the **family**-heterogeneity
+  rules; a model whose session fails to start or stalls
   goes on **cooldown** (the rate-limit backoff, generalized per-model,
   `AGENT_COOLDOWN_SECONDS`) and is retried; when no enabled model of the
   preferred tier is available the loop walks the **next tier up — never a weaker
@@ -506,17 +550,18 @@ behavior**, so a fresh scaffold pays nothing.
   cooldown is logged before launch** (consent = the enabled set + these declared
   rules).
 - **Reviewer independence (the evidence-backed core).** Reviewers are fresh
-  sessions, **two providers, at least one differing from the implementer's —
-  *preferred, not required*.** The reviewer prompt gets the diff + the
+  sessions, **two families, at least one differing from the implementer's —
+  *preferred, not required*** (family = who trained the model, so a router-fronted
+  row is not diverse from its native sibling). The reviewer prompt gets the diff + the
   requirement surface and **never the implementer's self-assessment** (leaking
   it collapses finding rates several-fold); it ships as an embedded **redacted
   reviewer prompt**, overridable per phase with a prompt-template **file** via
   `--prompt-map`/`AGENT_PROMPT_MAP` (each entry preflighted like
   `AGENT_CMD_MAP`). **No debate rounds** — independent parallel reviews,
   mechanically merged (CHANGES-REQUESTED if any reviewer requests changes).
-  **Degraded availability is ruled legal:** when only one provider responds,
-  two independent *same-provider* sessions review — fresh context is the
-  invariant, provider diversity best-effort (the scorer already weights
+  **Degraded availability is ruled legal:** when only one family responds,
+  two independent *same-family* sessions review — fresh context is the
+  invariant, family diversity best-effort (the scorer already weights
   cross-family corroboration above same-family). Verdicts are **repo files**
   (`docs/reviews/NNN-<PHASE>.md`) in the `log.md` block format plus one machine
   line: `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`.
@@ -532,8 +577,8 @@ behavior**, so a fresh scaffold pays nothing.
   + the round history) — the declared policy picks, nothing auto-optimizes.
 - **A fixed escalation policy, not a learned router** (per-project sample sizes
   are far too small for a bandit): **win-stay/lose-shift** — the higher-substance
-  provider becomes the next round's primary feedback source only on a **margin
-  >= 2**; the implementer's provider **swaps after 2 consecutive failed review
+  family becomes the next round's primary feedback source only on a **margin
+  >= 2**; the implementer's family **swaps after 2 consecutive failed review
   gates**; the tier rises **only after the swap also fails**; and the loop
   **pages the human** on 2 top-tier failures (the shared-failure regime — the
   spec is wrong, not the model), on opposite verdicts twice running, or on any

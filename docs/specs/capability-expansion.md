@@ -158,7 +158,7 @@ multimodal support varies per CLI (declared per-model, degraded honestly).
    *(default confirmed)*.
 7. ✅ Rubric home = `docs/rubrics/` files *(default confirmed)*.
 
-## C3 — agent registry robustness: version-less ids, multi-login, routers
+## C3 — agent registry robustness: version-less ids, multi-login, routers — ✅ DONE (2026-07-11)
 
 **Owner intent.** (a) An enable-list entry without a version should resolve to
 the **newest** registry version, preferring a final tag designation (like

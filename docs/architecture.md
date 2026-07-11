@@ -69,7 +69,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `regenerate_index(docs_dir)` | Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata |  |
 | `next_session_number(iter_dir)` | Next NNN, continuing across coordinator restarts. |  |
 | `preflight(root, template, args)` | Refuse to start iteration 1 on a broken footing. Returns the list of |  |
-| `run_session(argv, root, timeout)` | One fresh headless driver session. Returns (exit_code, output, |  |
+| `run_session(argv, root, timeout, env)` | One fresh headless driver session. Returns (exit_code, output, |  |
 | `stop_banner(status_path, label, detail)` |  |  |
 | `main()` |  |  |
 
@@ -79,12 +79,17 @@ Contracts (interfaces): IF-044, IF-045
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `Model (class)` | One registry row. The id is opaque (a join key); Provider/Model/Version/ |  |
+| `Model (class)` | One registry row = one (model x route) pair. The id is opaque (a join |  |
 | `load_registry(path)` | Parse docs/agents.csv into {id: Model}, plus a list of error strings for |  |
+| `parse_env(spec)` | Parse an `Env` cell (`KEY=value;KEY2=value2`) into a dict, to be merged |  |
+| `parse_tag_rank(spec)` | Parse a `ga>preview>beta>exp` ordering into {tag: rank} (higher = earlier |  |
+| `load_tag_rank(path, env)` | The maturity rank vocabulary for version-less resolution: the |  |
+| `resolve_token(token, registry, tag_rank)` | Resolve one enable-list token to a registry id, or (None, reason). |  |
+| `resolve_enabled(enabled, registry, tag_rank)` | Resolve the ordered enable-list to concrete registry ids, preserving |  |
 | `load_enabled(path)` | The ordered enable-list (docs/agents-enabled): every non-empty, non-# |  |
 | `available(cooldowns, model_id, now)` | True when `model_id` is not cooling down. `cooldowns` maps id -> the epoch |  |
 | `cool(cooldowns, model_id, now, seconds)` | Put `model_id` on cooldown until now+seconds (its limit is probably |  |
-| `select(enabled, registry, tier, now, cooldowns, exclude_providers, prefer_different)` | Pick a model id from the enabled pool, or None. Returns (id, reason) — the |  |
+| `select(enabled, registry, tier, now, cooldowns, exclude_families, prefer_different)` | Pick a model id from the enabled pool, or None. Returns (id, reason) — the |  |
 | `load_constants(env)` | The escalation constants: the per-repo-overridable defaults, each read from |  |
 | `escalate(rounds, constants, swapped, at_top_tier)` | The fixed win-stay/lose-shift decision after a review round. |  |
 | `failure_action(gate_policy)` | What a page-the-human escalation does, keyed to docs/gate-policy (ruled). |  |

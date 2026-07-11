@@ -37,7 +37,10 @@ working surface.
        text change** (extended to the checked per-agent skill fan-out; +LLR-043/
        TC-045), and now the **new `SR-045`** under `SN-006`/`SN-016` (the S8
        heterogeneous implementer/reviewer scheduling layer; +LLR-044/045/046 +
-       TC-046 + IF-044…047), and now the **new `SR-046`** under `SN-001` (the
+       TC-046 + IF-044…047), **its text since extended by the pair-row registry
+       slice** (pair-row identity/access split, Family-keyed heterogeneity,
+       version-less newest resolution, per-pair `Env`; +LLR-044/045 text), and
+       now the **new `SR-046`** under `SN-001` (the
        run capability menu / launcher surface; +LLR-047 + TC-047), and now the
        **new `SN-024` + `SR-047`** under `SN-024`/`SN-006` (the subjective-quality
        critique loop / `Critique` verification value; +LLR-048 + TC-048).
@@ -56,14 +59,13 @@ working surface.
   - **In flight — the capability-expansion campaign** (spec:
     [specs/capability-expansion.md](specs/capability-expansion.md), fully
     ruled + scheduled 2026-07-11, bundled with the pending re-attestation):
-    - **WI-069** — pair-row agent registry (Family/Env columns, version-less
-      resolution, per-pair cooldown; extends the routing SR).
     - **WI-070** — `PROJECT_STATE.html` OKF knowledge tab (the bundle's
       first real consumer; extends the dashboard SR).
-    **Next up: WI-069** (the C3 pair-row agent registry). The C2 critique loop
-    just landed (the `Critique` verification value + the subjective-quality
-    critique loop: rubric-anchored independent critique sessions, the lax-TC
-    ratchet, spine +SN-024/SR-047/LLR-048/TC-048 riding the re-attestation). The
+    **Next up: WI-070** (the C4 OKF knowledge tab). The C3 pair-row agent
+    registry just landed (Family/Model/Version identity vs CmdTemplate/Env
+    access, one row = one model×route pair; version-less newest-in-line
+    resolution; Family-keyed heterogeneity; per-pair Env merged into the launch;
+    account/router rows; SR-045 text extended, riding the re-attestation). The
     prior working-surface + architecture campaign
     is closed and archived
     ([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md));
@@ -89,8 +91,8 @@ working surface.
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
 - **Next action:** execute the capability-expansion campaign in order —
-  **WI-069** next (the C2 critique loop just landed), then WI-070.
-  The **owner sitting** follows
+  **WI-070** next (the C3 pair-row registry just landed), the campaign's last
+  slice. The **owner sitting** follows
   the campaign close: one G3 re-attestation over every accumulated spine
   change (both campaigns), the push ruling, the sibling-repo target, and the
   deferred batch review. After that: the G-Release walk, the WI-DAG edge

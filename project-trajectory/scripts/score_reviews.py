@@ -21,8 +21,10 @@ Scored components (mechanical, each in [0,1]):
   - **actionability rate** — the fraction of findings carrying a concrete change
     clause (issue -> change), the change-triggering usefulness measure.
   - **cross-reviewer corroboration** — when two reviewers overlap on an anchor it
-    is a strong precision signal; a **cross-family** match (different provider)
-    weighs above a same-family one (the popularity-trap correction).
+    is a strong precision signal; a **cross-family** match (a different `Family`
+    — who trained the model, NOT the route it was reached by; a legacy
+    `Provider` label is the fallback) weighs above a same-family one (the
+    popularity-trap correction: two samples of one model share blind spots).
   - **confirmed-finding rate** — a later commit touching +/- 10 lines of a
     finding's anchor is the canonical usefulness proof; scored only when that
     follow-up diff is supplied, else left out (never faked to 0-as-signal).
@@ -64,8 +66,10 @@ SEVERITIES = ("BLOCKER", "MAJOR", "MINOR")
 
 # Scoreboard decay: recent rounds weigh more (substance' = substance*DECAY + new).
 SCOREBOARD_DECAY = 0.7
-# Corroboration: a cross-family (different-provider) overlap weighs above a
-# same-family one — two samples of one model share blind spots.
+# Corroboration: a cross-FAMILY overlap weighs above a same-family one — two
+# samples of one model line share blind spots. The label the caller supplies is
+# the model's `Family` (who trained it, never the route); a legacy `Provider`
+# label is the fallback, so the weighting is unchanged on a legacy registry.
 CROSS_FAMILY_WEIGHT = 1.0
 SAME_FAMILY_WEIGHT = 0.5
 # Two anchors "match" when they name the same path within this many lines.
@@ -224,8 +228,11 @@ def _norm_anchor(f):
 def corroboration(v_a, v_b, providers=None):
     """Cross-reviewer overlap in [0,1]: the fraction of reviewer A's anchored
     findings that reviewer B also raises (same path within ANCHOR_LINE_WINDOW
-    lines), weighted UP when the two are different-provider (cross-family). One
-    reviewer -> 0.0 (no corroboration signal available)."""
+    lines), weighted UP when the two are a different FAMILY (cross-family). One
+    reviewer -> 0.0 (no corroboration signal available). `providers` is the pair
+    of Family labels (who trained each model — a router-fronted row shares its
+    native sibling's Family, so it is NOT cross-family; a legacy Provider label
+    is the fallback)."""
     if v_b is None:
         return 0.0
     a_anchored = [f for f in v_a.findings if f.path is not None]
@@ -467,7 +474,17 @@ def main(argv=None):
     )
     ap.add_argument("--root", default=".", help="repo root for anchor resolution")
     ap.add_argument(
-        "--provider", action="append", default=[], help="provider per --verdict"
+        "--family",
+        action="append",
+        default=[],
+        help="the Family (who trained the model — the corroboration key) per "
+        "--verdict; preferred over --provider",
+    )
+    ap.add_argument(
+        "--provider",
+        action="append",
+        default=[],
+        help="legacy alias for --family (the corroboration key falls back to it)",
     )
     ap.add_argument("--tier", default="", help="the implementer tier this round ran at")
     ap.add_argument(
@@ -480,6 +497,8 @@ def main(argv=None):
 
     if not args.verdict:
         ap.error("at least one --verdict is required")
+    # The corroboration key is Family; --provider is the legacy fallback.
+    labels = args.family or args.provider
     verdicts = []
     for i, vp in enumerate(args.verdict):
         try:
@@ -487,10 +506,10 @@ def main(argv=None):
         except OSError as exc:
             print("score_reviews: cannot read {}: {}".format(vp, exc), file=sys.stderr)
             return 2
-        prov = args.provider[i] if i < len(args.provider) else None
-        verdicts.append(parse_verdict(text, model=prov))
+        fam = labels[i] if i < len(labels) else None
+        verdicts.append(parse_verdict(text, model=fam))
 
-    providers = args.provider if args.provider else [None, None]
+    providers = labels if labels else [None, None]
     subs = {}
     for i, v in enumerate(verdicts):
         peer = verdicts[1 - i] if len(verdicts) > 1 else None
@@ -500,8 +519,8 @@ def main(argv=None):
             other=peer,
             providers=(providers[i], providers[1 - i]) if len(verdicts) > 1 else None,
         )
-        prov = args.provider[i] if i < len(args.provider) else "?{}".format(i)
-        subs[prov] = s
+        fam = labels[i] if i < len(labels) else "?{}".format(i)
+        subs[fam] = s
         print(
             "verdict[{}] {} substance={:.3f} findings={} (precision={:.2f} action={:.2f})".format(
                 i,
