@@ -57,3 +57,4 @@ resource: "generated"
 | [LLR-044](LLR-044.md) | Model routing + fixed escalation policy |
 | [LLR-045](LLR-045.md) | Loop-side reviewer dispatch + managed routing |
 | [LLR-046](LLR-046.md) | Substance scorer + tripwires + scoreboard |
+| [LLR-047](LLR-047.md) | Run capability menu reader |

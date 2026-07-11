@@ -794,12 +794,21 @@ serve that path, both scaffolded by bootstrap:
   line). Ease of access is a requirement of its own: the launch command may be
   obvious, and it may be documented in the README, but *recall is still the
   enemy* — a launcher turns "remember the incantation" into "open the folder and
-  click". Each is a short, readable script with one `RUN_CMD` slot (filled twice:
-  `run.cmd` for Windows, `run.sh` for POSIX; `run.command` delegates to `run.sh`
-  so macOS costs no third copy). They ship **inert** — an unfilled `RUN_CMD`
-  prints guidance and exits nonzero, the same always-scaffolded-inert stance as
-  the optional registries — and a pure library deletes them and describes usage
-  in the README instead.
+  click". A project rarely has just one thing to run — *serve the app and open
+  its page* versus *build the ISO and launch the burner* — so the launchers
+  present a **capability menu**. Capabilities are declared **once**, in
+  `docs/stack.ini`'s `[run]` section: one `<name> = <command>` line per
+  capability plus an optional `<name>.desc = <one line>`, each command a full
+  shell line (a multi-step capability lives in a project script named here once).
+  Each launcher is a thin delegate to `scripts/run_menu.py`, which reads that
+  section — no args = a numbered interactive menu, `run.sh <name>` = a direct
+  launch (exit code passed through), `run_menu.py --list` = a stable
+  `name<TAB>desc` machine listing (the agent surface). The launch command lives
+  in exactly one place (the duplicated `RUN_CMD` is retired); `run.command`
+  delegates to `run.sh` so macOS costs no extra copy. They ship **inert** — an
+  absent or empty `[run]` section prints guidance and exits nonzero, the same
+  always-scaffolded-inert stance as the optional registries — and a pure library
+  deletes them and describes usage in the README instead.
 
 **Offline-render principle.** Legibility artifacts (the Mermaid diagrams, the
 trace HTML map, the code map) must render with **local, offline** tooling — never a

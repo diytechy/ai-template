@@ -47,6 +47,7 @@ What it creates in the destination:
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1,command}         <- dev-setup.template.* (workstation setup)
     README.md                                  <- README.template.md (human front door; kept if one exists)
+    scripts/run_menu.py                        (capability-menu reader the run.* launchers delegate to)
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
     scripts/agent_loop.py                      (unattended coordinator engine)
@@ -102,8 +103,10 @@ door (bootstrap fills `{{PROJECT_NAME}}` from the destination folder name; the
 kickoff agent builds the rest out from the project brief; an existing README is
 never overwritten), and the launchers give every launchable project a
 double-clickable start per platform so running it never requires recalling a
-command. They ship inert — an unfilled `RUN_CMD` prints guidance and exits
-nonzero — and a pure library simply deletes them.
+command — presenting the capabilities declared in `docs/stack.ini`'s `[run]`
+section (via `scripts/run_menu.py`), so the launch commands live once. They ship
+inert — an absent/empty `[run]` section prints guidance and exits nonzero — and
+a pure library simply deletes them.
 
 The root `agent-resume.{cmd,sh,command}` launchers + `scripts/agent_loop.py`
 (Thread 33, process-options.md "Unattended operation") are the *work-resume*
@@ -1088,10 +1091,17 @@ MAPPING = [
     # builds out from the project brief (never overwritten — an adopted repo
     # keeps its own README), and root double-clickable product launchers, one
     # per platform, so running the product never requires recalling a command.
-    # They ship inert (empty RUN_CMD prints guidance); a pure library deletes
+    # They delegate to scripts/run_menu.py (capabilities declared in the
+    # docs/stack.ini [run] section) and ship inert (an absent/empty [run] section
+    # prints guidance); a pure library deletes
     # them. Root, not scripts/: the double-click use case is "open the checkout
     # folder and click" — one hop shallower matters for a non-code evaluator.
     ("README.template.md", "README.md"),
+    # The capability-menu reader the launchers delegate to (WI-067): reads the
+    # docs/stack.ini [run] section and presents a menu / launches by name /
+    # lists for an agent, so the launch commands live once in stack.ini instead
+    # of duplicated across the platform launchers.
+    ("scripts/run_menu.py", "scripts/run_menu.py"),
     ("scripts/run.template.cmd", "run.cmd"),
     ("scripts/run.template.sh", "run.sh"),
     ("scripts/run.template.command", "run.command"),

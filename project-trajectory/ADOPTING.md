@@ -52,8 +52,9 @@ reported as `skipped (exists)` — resolve each by hand:
   `docs/stack.ini`).
 - **`README.md`** — skipped if present (the common case). Retrofit the
   *evaluator's rungs* into your existing README instead: a "Run it" section
-  pointing at the root `run.{cmd,sh,command}` launchers (fill their `RUN_CMD`
-  with your start command — `run.cmd` and `run.sh`; `run.command` delegates)
+  pointing at the root `run.{cmd,sh,command}` launchers (declare your
+  capabilities in `docs/stack.ini`'s `[run]` section — one `<name> = <command>`
+  line each — and the launchers present them; see §6)
   and a getting-started pointer at the `scripts/onboard.* → dev-setup → setup
   → check` ladder. A pure library deletes the launchers and describes usage.
 - **Pre-commit hook** — `setup.{sh,ps1}` set `git config core.hooksPath
@@ -453,6 +454,18 @@ range to see exactly which templates/scripts changed before you touch anything.
   into `.gitignore`. The tracked `docs/iteration/` logs + `iteration_index.md`
   appear on first run; preserve them like `docs/log.md` — they are history. A
   repo without agent-driven work skips all of it.
+- **Run launchers become a capability menu (`scripts/run_menu.py` + `[run]`).**
+  Newer kits retire the hard-wired, duplicated `RUN_CMD` in `run.cmd`/`run.sh`:
+  the launchers are now thin delegates to `scripts/run_menu.py`, which reads a
+  **`[run]` section** in `docs/stack.ini` (one `<name> = <command>` line per
+  capability + optional `<name>.desc`) and presents a menu / launches by name /
+  `--list`s for an agent (process-options.md §7 "the evaluator's rungs").
+  **Never forced — your edited launchers keep working:** a re-sync never
+  clobbers a `run.cmd`/`run.sh` you filled with a `RUN_CMD` (bootstrap skips
+  existing files; only *new* scaffolds get the delegates). To adopt: copy
+  `scripts/run_menu.py` from the kit, overwrite the three `run.*` launchers with
+  the delegate versions, and move your old `RUN_CMD` value into a `[run]` line
+  (e.g. `serve = <your old command>`). A pure library still just deletes them.
 - **Skills layer (newer kits ship `skills/`).** To bring an agent's skills into an
   already-adopted repo, re-run `bootstrap.py --agents claude|gemini|codex|both`
   against it: it materializes the matched `kit`-scope skills into the agent dir

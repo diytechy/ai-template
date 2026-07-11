@@ -58,3 +58,5 @@ resource: "generated"
 | [IF-045](IF-045.md) |  |
 | [IF-046](IF-046.md) |  |
 | [IF-047](IF-047.md) |  |
+| [IF-048](IF-048.md) |  |
+| [IF-049](IF-049.md) |  |

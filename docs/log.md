@@ -976,3 +976,82 @@ in `tests/test_check_docs.py`); `check_docs.py --root . --stale` **0 broken**
 (1 orphan warn); `gen_okf` / `gen_arch_map` / `gen_trajectory` `--check` **up to
 date**; `check.py --gate G3` **13/13 PASS**. Spine unchanged at **SN=23 SR=45
 LLR=46 TC=46, 0 orphans**.
+
+## 2026-07-11 — WI-067 (capability-expansion C1): the run capability menu — SPINE CHANGE (SR-046 added); RE-ATTESTATION PENDING
+
+**What shipped.** The root `run.*` launchers stop hard-wiring one duplicated
+`RUN_CMD` and become **thin delegates** to a new stdlib
+**`scripts/run_menu.py`**, which reads a **`[run]` section** in `docs/stack.ini`
+(one `<name> = <command>` line per capability + optional `<name>.desc`) and
+presents the major capabilities an evaluator runs — no args = a numbered
+interactive menu, `run_menu.py <name>` = direct launch with exit-code
+passthrough, `--list` = a stable `name<TAB>desc` machine listing (the agent
+surface). An absent/empty `[run]` section prints the same "no launch command
+wired yet" guidance and exits 1. The launch command now lives in exactly one
+place (spec:
+[specs/capability-expansion.md](specs/capability-expansion.md), C1).
+
+**Deliverables.**
+- `scripts/run_menu.py` (new, stdlib): a configparser `[run]` reader
+  (`interpolation=None`, case-preserving `optionxform`, declaration order kept;
+  a `.desc` attaches to its command, an orphan/empty command dropped); menu /
+  direct / `--list`; the `_utf8_console` guard like the sibling scripts.
+- `stack.ini.template` gains a commented `[run]` example block (serve/iso); the
+  meta repo's own `docs/stack.ini` gets **no** `[run]` section — the "no `run.*`
+  product launchers" self-application non-goal stands.
+- `run.template.{sh,cmd,command}` rewritten as delegates to
+  `python scripts/run_menu.py "$@"` (reusing the agent-resume launchers'
+  python-probe idiom); `.command` still hops to `run.sh`. The `RUN_CMD`
+  duplication is retired; the "pure library → delete them" guidance kept.
+- Spine: **SR-046** (Run capability menu) under **SN-001** + **LLR-047**
+  (`run_menu.py`) + **TC-047** (Automated=Yes, Evidence `tests/test_run_menu.py`).
+- Off-spine: the meta's own connectivity dogfood — **IF-048** (Provides →
+  `run.* launchers`) + **IF-049** (Consumes ← `docs/stack.ini`) declare
+  run_menu's seams + a `Contracts:` docstring line, so the new module stays a
+  first-class arch-map endpoint (zero connectivity warns, like every sibling
+  script).
+- Docs: PROCESS.md §7 rung prose (the launcher now presents declared
+  capabilities), PROCESS_OPTIONS.md §7 boundary-notes bullet (the menu
+  mechanics, single-sourced there), the kit README per-script table
+  (`run_menu.py` row + the `run.template` row), ADOPTING §6 migration note
+  (existing `RUN_CMD` launchers keep working — re-sync never clobbers; new
+  scaffolds get delegates), bootstrap `MAPPING` + docstring, root README
+  launcher line.
+- Tests: `tests/test_run_menu.py` (11 cases: `--list` stable format, direct
+  launch + arg passthrough, exit-code passthrough, menu from piped stdin, no
+  hang on closed stdin, quit, absent/empty `[run]` guidance, `--list` empty,
+  shell-quoting sanity); `test_bootstrap.py` updated (scaffold ships
+  `scripts/run_menu.py`; launchers delegate with no `RUN_CMD`).
+
+**Judgment calls.**
+- **`shell=True`** in `run_menu.launch`: the value is the user's own declared
+  shell line from their own `docs/stack.ini` (the same trust boundary as the
+  `RUN_CMD` it replaced — the user edits their own file), and a capability is
+  deliberately a full shell command (pipes, `&&`, redirects) so a project script
+  owns multi-step launches. Reasoning recorded in the module docstring + at the
+  call site.
+- **`--list` format = `name<TAB>desc`**, one capability per line, declaration
+  order, desc empty (trailing tab) when none. An empty `[run]` under `--list`
+  prints nothing + exit 0 (a machine surface reads zero lines, not guidance
+  prose on stdout); the launch/menu paths keep guidance + exit 1.
+- **SR-046 hung from SN-001** (not a new SN): the launcher surface is part of
+  what the kit scaffolds to make an adopted product runnable — the evaluator's-
+  rungs / onboarding family SR-032 sits in. One new SR, per the C1 ruling.
+
+**Byte deltas.** `AGENTS.template.md` **9978 → 9978** (untouched). `PROCESS.md`
+**58,297 → 58,380 (+83 B)**, flagged: the §7 evaluator's-rungs sentence now
+names the `docs/stack.ini [run]` capability set — the minimal factual add for the
+new surface; the menu mechanics live in PROCESS_OPTIONS §7, not the budgeted
+core. Baseline re-stamped to **58,380 (WI-067)** in the `byte-budget-guard` skill
+(all 3 tracked copies, byte-identical).
+
+**Mechanized bar.** `pytest -q` **575 passed, 3 skipped** (+11 over WI-066's 564:
+the 11 `tests/test_run_menu.py` cases); `check_docs.py --root . --stale` **0
+broken** (1 orphan warn); `gen_arch_map` / `gen_okf` / `gen_trajectory` `--check`
+**up to date**; `check.py --gate G3` **13/13 PASS**. Spine now **SN=23 SR=46
+LLR=47 TC=47, 0 orphans**; 49 declared interface seams.
+
+**Re-attestation rider.** New **SR-046** (Verification=Test, Verified) joins the
+mechanized spine under SN-001 → it rides the **one pending G3 re-attestation**
+with the rest of the accumulated changes (status.md Needs-\<human> #1).
+*Mandatory*: a new test-verifiable SR joined the spine.

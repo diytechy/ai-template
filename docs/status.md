@@ -24,8 +24,8 @@ working surface.
   `SN→SR→LLR→TC` spine is self-adopted: `docs/gate` is at **G3**;
   `check.py --gate G3` (13 steps) is the full bar and CI runs it on real data
   (the meta-repo dogfoods its own trajectory + OKF layers).
-- **Plan state:** meta-repo at **G3**, spine **SN=23 SR=45 LLR=46 TC=46, 0
-  orphans**, 47 declared interface seams. The dashboard is the root
+- **Plan state:** meta-repo at **G3**, spine **SN=23 SR=46 LLR=47 TC=47, 0
+  orphans**, 49 declared interface seams. The dashboard is the root
   [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session history: [log.md](log.md).
 - **Open items:**
   - **Needs \<human> (the run is paused on these):**
@@ -37,8 +37,10 @@ working surface.
        text change** (extended to the checked per-agent skill fan-out; +LLR-043/
        TC-045), and now the **new `SR-045`** under `SN-006`/`SN-016` (the S8
        heterogeneous implementer/reviewer scheduling layer; +LLR-044/045/046 +
-       TC-046 + IF-044…047). *Mandatory*: Verified SR text changed and new SN/SRs
-       joined the spine ([log.md](log.md)).
+       TC-046 + IF-044…047), and now the **new `SR-046`** under `SN-001` (the
+       run capability menu / launcher surface; +LLR-047 + TC-047). *Mandatory*:
+       Verified SR text changed and new SN/SRs joined the spine
+       ([log.md](log.md)).
     2. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
     3. **WI-DAG edge data-pass** — demote the narrative predecessor edges in
        `work-items.csv` to soft `~` edges (which edges are real technical
@@ -52,15 +54,15 @@ working surface.
   - **In flight — the capability-expansion campaign** (spec:
     [specs/capability-expansion.md](specs/capability-expansion.md), fully
     ruled + scheduled 2026-07-11, bundled with the pending re-attestation):
-    - **WI-067** — run capability menu (`stack.ini [run]` + `run_menu.py`;
-      the launcher surface gets its first SR).
     - **WI-068** — `Critique` verification value + the subjective-quality
       critique loop (rubric anchors build a citable good/bad reference).
     - **WI-069** — pair-row agent registry (Family/Env columns, version-less
       resolution, per-pair cooldown; extends the routing SR).
     - **WI-070** — `PROJECT_STATE.html` OKF knowledge tab (the bundle's
       first real consumer; extends the dashboard SR).
-    **Next up: WI-067.** The prior working-surface + architecture campaign
+    **Next up: WI-068.** The run capability menu just landed (`stack.ini
+    [run]` + `run_menu.py`; the launcher surface's first SR, SR-046). The prior
+    working-surface + architecture campaign
     is closed and archived
     ([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md));
     all spine-touchers bundle into the one pending re-attestation.
@@ -85,7 +87,8 @@ working surface.
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
 - **Next action:** execute the capability-expansion campaign in order —
-  **WI-067** next, then WI-068, WI-069, WI-070. The **owner sitting** follows
+  **WI-068** next (the run capability menu just landed), then WI-069, WI-070.
+  The **owner sitting** follows
   the campaign close: one G3 re-attestation over every accumulated spine
   change (both campaigns), the push ruling, the sibling-repo target, and the
   deferred batch review. After that: the G-Release walk, the WI-DAG edge

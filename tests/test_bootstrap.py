@@ -45,6 +45,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/gen_cases.py",
         "scripts/gen_trajectory.py",
         "scripts/gen_okf.py",
+        "scripts/run_menu.py",
         ".githooks/pre-commit",
         ".githooks/commit-msg",
         ".githooks/pre-push",
@@ -230,19 +231,25 @@ def test_resync_does_not_regenerate_foreign_arch_map(tmp_path):
     assert "SENTINEL" in text, "re-sync must not regenerate a pre-existing map"
 
 
-def test_run_launchers_ship_inert_with_edit_slots(scaffold):
-    # The evaluator's rungs (WI-1.12): root double-clickable launchers, one per
-    # platform, shipped inert (empty RUN_CMD) with a marked EDIT slot. The
-    # macOS .command delegates to run.sh so the POSIX command lives once.
+def test_run_launchers_delegate_to_run_menu(scaffold):
+    # The evaluator's rungs (WI-067): the root launchers are thin delegates to
+    # scripts/run_menu.py, which reads the docs/stack.ini [run] section — the
+    # duplicated RUN_CMD is retired, so the launch commands live in one place.
+    # A fresh scaffold ships an inert [run]-less stack.ini (guidance + exit 1).
+    assert (scaffold / "scripts" / "run_menu.py").exists()
     cmd = (scaffold / "run.cmd").read_text(encoding="utf-8")
-    assert 'set "RUN_CMD="' in cmd, "run.cmd must ship with an empty RUN_CMD"
-    assert "EDIT FOR YOUR PROJECT" in cmd
+    assert "run_menu.py" in cmd, "run.cmd must delegate to run_menu.py"
+    assert "RUN_CMD" not in cmd, "the duplicated RUN_CMD must be gone"
     sh = (scaffold / "run.sh").read_text(encoding="utf-8")
-    assert 'RUN_CMD=""' in sh, "run.sh must ship with an empty RUN_CMD"
-    assert "EDIT FOR YOUR PROJECT" in sh
+    assert "run_menu.py" in sh, "run.sh must delegate to run_menu.py"
+    assert "RUN_CMD" not in sh, "the duplicated RUN_CMD must be gone"
     command = (scaffold / "run.command").read_text(encoding="utf-8")
     assert "./run.sh" in command, ".command must delegate to run.sh"
-    assert "RUN_CMD=" not in command, ".command must not carry a third copy"
+    assert "RUN_CMD" not in command, ".command must not carry a third copy"
+    # The shipped stack.ini has no active [run] section (commented examples
+    # only), so the launcher degrades to guidance rather than launching nothing.
+    ini = (scaffold / "docs" / "stack.ini").read_text(encoding="utf-8")
+    assert "\n[run]" not in ini, "a fresh scaffold ships the [run] examples commented"
 
 
 def test_agent_resume_launchers_ship_inert_with_edit_slots(scaffold):

@@ -190,8 +190,9 @@ This scaffolds:
   registries, and the declared-policy files (`gate`, `gate-policy`,
   `push-policy`, `privacy-check`)
 - `scripts/` — the harness
-- root `run.*` / `agent-resume.*` launchers (shipped inert until you fill
-  their command slots)
+- root `run.*` / `agent-resume.*` launchers (shipped inert until you wire them —
+  a `[run]` section in `docs/stack.ini` for `run.*`, `AGENT_CMD` for
+  `agent-resume.*`)
 - `.github/workflows/check.yml`, and empty `src/`/`tests/`
 
 Then:

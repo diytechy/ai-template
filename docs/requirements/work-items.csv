@@ -64,7 +64,7 @@ WI-062,check_doc_refs warn-first untraced-path tier,scripts,,WI-035,deferred,,do
 WI-063,Committed-composite artifact freshness gating,scripts,,WI-035,deferred,,docs/log.md#2026-07-10--spine-change-the-wi-148152-grind-batch-sr-039042-added-sr-038llr-035tc-038-extended-g3-re-run-re-attestation-pending
 WI-064,AXES component/interface residual schema and graph extensions,scripts,,,deferred,,docs/archive/AXES_AND_WORKSTREAMS.md#12-open-questions-for-the-next-iteration
 WI-065,Active-seam TC citation - reconcile trace Verifies vocabulary,scripts,SR-044,WI-056,deferred,,docs/specs/WI-065.md
-WI-067,run capability menu - stack.ini [run] + run_menu.py,scripts,,WI-010,queued,,docs/specs/capability-expansion.md#c1--run-becomes-a-capability-menu
+WI-067,run capability menu - stack.ini [run] + run_menu.py,scripts,SR-046,WI-010,done,"stack.ini gains a [run] section (declared once) read by a new stdlib scripts/run_menu.py - numbered menu / direct launch with exit passthrough / --list agent surface; the run.* launchers become thin delegates and the duplicated RUN_CMD is retired. New SR-046 (+LLR-047/TC-047) formalizes the launcher surface.",
 WI-068,Critique verification + subjective-quality critique loop,unattended,,WI-059,queued,,docs/specs/capability-expansion.md#c2--subjective-quality-critique-loop-the-perceptual-arbiter
 WI-069,Pair-row agent registry - Family/Env + version-less resolution,unattended,SR-045,WI-059,queued,,docs/specs/capability-expansion.md#c3--agent-registry-robustness-version-less-ids-multi-login-routers
 WI-070,PROJECT_STATE.html OKF knowledge tab - the first real consumer,scripts,SR-038;SR-042,WI-034;WI-039,queued,,docs/specs/capability-expansion.md#c4--project_statehtml-gains-an-okf-knowledge-tab-the-first-real-consumer

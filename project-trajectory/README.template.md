@@ -39,10 +39,11 @@ Double-click the launcher for your platform — no commands to remember:
 | Linux | [run.sh](run.sh) |
 | macOS | [run.command](run.command) |
 
-Each is a short, readable script that starts the product from the repo root.
-The underlying command lives in the launcher's `RUN_CMD` slot — document it
-here too once wired: *(fill in: the launch command and what to expect)*. For a
-pure library, delete the launchers and this section and describe usage instead.
+Each is a short, readable delegate to `scripts/run_menu.py`, which presents the
+capabilities declared in `docs/stack.ini`'s `[run]` section (no args = a menu;
+`run.sh <name>` = launch one directly). Declare them there and document the main
+ones here too: *(fill in: each capability and what to expect)*. For a pure
+library, delete the launchers and this section and describe usage instead.
 
 ## Getting started (contributors)
 

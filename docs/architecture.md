@@ -368,6 +368,18 @@ Contracts (interfaces): IF-011, IF-024
 | `build_html(root, wis)` |  |  |
 | `main()` |  |  |
 
+### `scripts/run_menu`
+_The run capability menu — one launcher that presents every major capability._
+Contracts (interfaces): IF-048, IF-049
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `load_capabilities(path)` | Parse the `[run]` section of a stack.ini into an ordered list of |  |
+| `launch(command, extra)` | Run a capability's shell line, returning its exit code (passthrough). |  |
+| `direct(capabilities, name, extra)` | Launch the named capability, or report the valid names and exit 2. |  |
+| `interactive_menu(capabilities)` | Present the numbered menu, read a pick from stdin, launch it. |  |
+| `main(argv)` |  |  |
+
 ### `scripts/score_reviews`
 _The substance scorer — score a review verdict block by how USEFUL it is, not_
 Contracts (interfaces): IF-046, IF-047

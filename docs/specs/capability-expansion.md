@@ -20,7 +20,7 @@ dispatch, verdict files) and the 2026-07-11 OKF audit + WI-066 banner ruling.
 
 ---
 
-## C1 — `run.*` becomes a capability menu
+## C1 — `run.*` becomes a capability menu — ✅ DONE (2026-07-11)
 
 **Owner intent.** The root `run` file should present the user with all major
 capabilities of the system — e.g. *run the docker image and open its pages* vs
