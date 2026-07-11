@@ -406,3 +406,65 @@ re-attestation. Residual noted for the restructure effort: the root README's
 "Why this produces sustainable code" and Quick-start still paraphrase the kit
 README's "core ideas" / "How to use" (stable prose, left deliberately; the
 load-bearing per-script duplication is what WI-050 removed).
+
+## 2026-07-10 — SPINE CHANGE (working-surface SSOT campaign S1+S2, WI-053/WI-054): SR-037 text extended; RE-ATTESTATION still PENDING
+
+**Campaign** (spec:
+[specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
+fully ruled): mechanize the status.md↔work-items.csv single-source-of-truth so
+the model holds without discipline (S1), then bring the kit's own working
+surface into that shape (S2). Two commits on `MultiRepoSupport`.
+
+- **WI-053 (S1) — mechanize the SSOT.** `SpecRef` column on the work-items
+  template + the meta CSV (a legacy CSV without it reads empty — never-breaking);
+  `deferred` first-class status. `check_trajectory.py` cross-reads
+  `work-items.csv` + `docs/status.md` (utf-8/replace): **R-A** (Deliverable
+  non-empty iff `done`) is a hard ERROR at every run — the pre-commit floor,
+  because a commit is the agent handoff point; **R-B…R-E** (open WIs named in
+  status.md, no done id there, every open WI's `SpecRef` resolves) warn plain and
+  gate under `--strict` at G2+. `--staged` adds the warn-first no-validation-delta
+  check. `pre-commit` gains the trajectory floor (`check.py --run-step
+  trajectory`) + the staged step; `check.py` wires `--strict` into the trajectory
+  step at G2/G3 (deliberately **excluding `all`** so the hook's `--run-step`
+  path, resolved at gate=all, stays warn-first). `bootstrap` scaffolds
+  `docs/specs/` (a README + a `WI-000.md` Done-when example). PROCESS_OPTIONS
+  gains the SSOT model + the campaign ruling; the kit README + `check_trajectory`
+  Contents rows updated. **Spine:** `SR-037` Requirement/Rationale/Acceptance
+  extended to cover the status coherence + SpecRef rules, with `LLR-034`/`TC-037`
+  kept coherent (TC Evidence still `tests/test_trajectory.py`). *(commit d4a849b)*
+- **WI-054 (S2) — meta-repo compliance.** Closed the stale-active **WI-033**
+  (the dogfood registry + dashboard it described shipped with WI-030…032 long
+  ago — leaving it `active` with a filled Deliverable is exactly the R-A
+  incoherence S1 adds; **the fix rode the WI-053 commit** because R-A now fails
+  the commit and the registry had to be coherent to land the code). Backfilled a
+  resolvable `SpecRef` (this spec's real `#anchor` slugs) on every open campaign
+  WI (WI-055…WI-059); moved the status.md "Deferred (backlog)" bullets into
+  first-class `deferred` rows **WI-060…WI-064** with archive/log SpecRefs; rewrote
+  status.md to the forward-only shape — **no `done` WI id token, no session-local
+  codename** (the S4 rule written clean now: e.g. "F3" → "WI-DAG edge data-pass";
+  "the grind"/"Phases 1–5" → plain descriptions). Dropped the "Recently landed"
+  narrative (log.md holds history). Regenerated `PROJECT_STATE.html` + `docs/okf`.
+
+**Deviations from spec.** (1) WI-033's close rode the WI-053 commit rather than
+WI-054's, because R-A makes an incoherent registry un-committable — noted in that
+commit body. (2) The no-validation-delta warn is implemented as a real,
+git-backed `--staged` mode (warn-only, silent no-op outside a git checkout) wired
+as a dedicated pre-commit line; it does not run at gate time (no staging there).
+Nothing deferred — the warn fires and is tested. (3) `check_doc_refs` was left
+untouched: R-E resolves the SpecRef path part inside `check_trajectory`, and
+deeper anchor validation rides the existing (opt-in, unwired-in-meta) path tier —
+no minimal addition was needed.
+
+**Byte deltas:** `AGENTS.template.md` **untouched** (9,978); `PROCESS.md`
+**untouched** (57,966) — neither byte-budgeted file was edited. PROCESS_OPTIONS.md
+(not budgeted) grew by the SSOT-model subsection.
+
+**Mechanized bar:** `check_trajectory.py --root . --strict` **clean** (64 work
+items, 54 done); `pytest -q` **490 passed, 3 skipped**; `check_docs --stale`
+**0 broken**; `check.py --gate G3` **PASS (12/12)**.
+
+**RE-ATTESTATION (pending, mandatory).** `SR-037` is a Verification=Test,
+Status=Verified requirement whose **text changed** this session; its extension
+**rides the already-pending G3 re-attestation** (alongside the SR-034 text change
+and the added SR-039…043 / extended SR-038). No new SR was added; the owner
+one-liner remains outstanding.

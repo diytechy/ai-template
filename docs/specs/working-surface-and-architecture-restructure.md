@@ -107,7 +107,7 @@ Open micro-decisions; each has a working default so S1 can proceed if unruled.
    campaign doc archives, date-stamped and WI-attributed, when its **last**
    open WI closes.
 
-## S1 — Mechanize the SSOT
+## S1 — Mechanize the SSOT — ✅ DONE (2026-07-10)
 
 **Goal.** Turn R-A…R-E into checks so the model holds without discipline.
 
@@ -141,7 +141,7 @@ grows to cover the status↔registry coherence rules → **re-attestation**.
 **Done-when.** A non-compliant meta state fails `check_trajectory --strict`; the
 scaffold ships the `SpecRef` column + `docs/specs/`.
 
-## S2 — Meta-repo compliance
+## S2 — Meta-repo compliance — ✅ DONE (2026-07-10)
 
 **Goal.** Bring the kit's *own* status.md + work-items.csv into the new shape,
 so it dogfoods the rules S1 added.

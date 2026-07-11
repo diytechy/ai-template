@@ -1,11 +1,11 @@
 # Meta-Repo Status — Blackboard
 
 The **working surface** for developing the kit itself — the same `status.md`
-pattern the kit scaffolds downstream, self-applied. Only what happens **next**
-lives here; the **WI registry** is
-[work-items.csv](requirements/work-items.csv) and the **session/gate record** is
-[log.md](log.md). The kit's per-thread **design history** (thread `Status:`
-blocks + the WI-1.x log) is archived at
+pattern the kit scaffolds downstream, self-applied. This file is **forward-only**:
+only what happens **next** lives here. The **WI registry** is
+[work-items.csv](requirements/work-items.csv) (each WI's backward-looking
+`Deliverable` records what shipped) and the **session/gate record** is
+[log.md](log.md). The kit's per-thread **design history** is archived at
 [archive/IMPROVEMENT_PLAN.md](archive/IMPROVEMENT_PLAN.md) — context, not a
 working surface.
 
@@ -20,71 +20,63 @@ working surface.
 
 - **Bar:** `python -m pytest -q` and
   `python project-trajectory/scripts/check_docs.py --root . --stale` green
-  before every commit — this repo's standing gate. **The kit's own
-  `SN→SR→LLR→TC` spine is self-adopted** (Thread 47): `docs/gate` is at **G3**
-  — `check.py --gate G3` (12 steps; the `okf` freshness step joined 2026-07-10)
-  is the full bar and CI's `gate` job runs it, on **real data** (the meta-repo
-  dogfoods its own trajectory + OKF layers). Design history: the plan threads;
-  gate-walk record: [log.md](log.md).
+  before every commit — this repo's standing gate. The kit's own
+  `SN→SR→LLR→TC` spine is self-adopted: `docs/gate` is at **G3**;
+  `check.py --gate G3` (12 steps) is the full bar and CI runs it on real data
+  (the meta-repo dogfoods its own trajectory + OKF layers).
 - **Plan state:** meta-repo at **G3**, spine **SN=22 SR=43 LLR=40 TC=43, 0
-  orphans**, 43/43 SRs mechanized. Latest batch: the **ClaudeGuardChecks
-  integration, Phases 1–5** (WI-045…049, owner-directed, review deferred) —
-  the working-agreement distill, the guardrails reference-upstream pointer, the
-  enforcement-audit discipline + `stdlib-only` promoted to a test (SR-034), and
-  the subagent spawn gate (**SR-043**). The prior 2026-07-10 grind
-  (WI-1.47…1.54) + its triage are in [log.md](log.md) and
-  [work-items.csv](requirements/work-items.csv). **`IMPROVEMENT_PLAN.md` is now
-  archived** ([archive/IMPROVEMENT_PLAN.md](archive/IMPROVEMENT_PLAN.md)) — the
-  live homes are this file, `work-items.csv`, and `log.md`. Dogfood registry:
-  **51 WIs, 50 done + WI-033 active**; the dashboard is the root
-  [`PROJECT_STATE.html`](../PROJECT_STATE.html).
+  orphans**. The dashboard is the root
+  [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session history: [log.md](log.md).
 - **Open items:**
-  - **Needs <human> (the run is paused on these):**
-    1. **G3 re-attestation** — one sitting now covers the 2026-07-10 grind
-       (SR-039…042 added, SR-038 extended, the B1 SN-Refs correction) **and**
-       this batch (SR-034 text Inspection→Analysis; new **SR-043**). *Mandatory*:
-       a Verified SR's text changed and a new SR joined the spine ([log.md](log.md)).
-    2. **Push decision** — `MultiRepoSupport` is local-only (~46 commits).
-    3. **F3 data-pass** on the 48-WI DAG edges (demote narrative edges to
-       `~`) — owner's mapping call, unchanged.
-    4. **Phase 2 sibling-repo ruling** — enrich the guardrails upstream
+  - **Needs \<human> (the run is paused on these):**
+    1. **G3 re-attestation** — one sitting covers the accumulated spine changes
+       still awaiting sign-off: `SR-034` text (Inspection→Analysis), the added
+       `SR-039…SR-043`, the extended `SR-038`, and now the **`SR-037` text
+       change** (the SSOT coherence + SpecRef rules). *Mandatory*: Verified SR
+       text changed and new SRs joined the spine ([log.md](log.md)).
+    2. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
+    3. **WI-DAG edge data-pass** — demote the narrative predecessor edges in
+       `work-items.csv` to soft `~` edges (which edges are real technical
+       blockers vs. authored ordering is the owner's mapping call).
+    4. **Sibling-repo ruling** — enrich the guardrails upstream
        (`FableClaudeMDForOpus`) in place vs. a new curated repo, then execute
        the deferred content enrichment (spec:
-       [`docs/archive/INTEGRATION_PLAN.md`](archive/INTEGRATION_PLAN.md) Phase 2).
-    5. **Review the Phases 1–4 batch** (owner-directed, review deferred).
-  - **In flight:** the **working-surface SSOT + architecture-connectivity
-    campaign** — ingested 2026-07-10 as **WI-053…WI-059** (spec:
+       [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
+    5. **Review the owner-directed guardrails-integration batch** (built with
+       review deferred; see [log.md](log.md)).
+  - **In flight — the working-surface + architecture-connectivity campaign**
+    (spec:
     [specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
-    fully ruled): WI-053 SSOT mechanize → WI-054 meta compliance; WI-055
-    codename rule; WI-056 IF-tier mechanize → WI-057 meta interface authoring;
-    WI-058 cross-agent skill sync; WI-059 heterogeneous scheduling (sequenced
-    last, detachable). Spine-touchers bundle into the pending re-attestation
-    (the campaign ruling). **Next up: WI-053.**
-  - **Recently landed:** the **2026-07-10 late batch (WI-050…052, no spine
-    change)** — the root-README registry/artifact map + the PROCESS.md §5
-    **change-intake flow** (the defect-routing chart), the fresh-Mac dev-setup
-    honesty fixes + `dev-setup.template.command` rung, and the pytest-cov 7
-    subprocess-coverage re-wire (29%→91%; also heals the CI `check` job). Before
-    it, the **ClaudeGuardChecks integration Phases 1–5**
-    (WI-045…049, 2026-07-10; SR-034 promoted + new SR-043 ride the
-    re-attestation; its spec-of-record `INTEGRATION_PLAN.md` copied into
-    `docs/archive/` so no citation points outside this repo) and, before it,
-    **OKF Layer B2** (WI-1.54).
-  - **Deferred (backlog):** **WI-1.27** coordinator stash/rollback
-    (owner-deferred 2026-07-05); OKF **Layer B1** (intrusive doc-frontmatter,
-    behind a future flag); the **Q1 rider ruling** (a warn-first `--untraced`
-    tier — recommendation recorded in WI-1.50's entry); the committed-composites
-    freshness design (deferred with reasoning, WI-1.50); the AXES §12
-    residual items — `consumes`/effort schema, a typed-IF contract check,
-    edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
-    rendering (all gated on real need; see
-    [`docs/archive/AXES_AND_WORKSTREAMS.md`](archive/AXES_AND_WORKSTREAMS.md) §12).
-- **Next action:** execute the campaign in order — **WI-053** (SSOT
-  mechanize) is next; then WI-054/055, WI-056→057, WI-058, WI-059. The owner
-  sitting (re-attestation now also covering the campaign's spine touches, push
-  ruling, Phase 2 sibling-repo target, batch review) follows the campaign
-  close. After that: G-Release walk, the F3 edge data-pass, or new scope
-  (which needs a plan/WI entry first).
+    fully ruled). The SSOT-mechanize and meta-compliance slices landed this
+    session (see [log.md](log.md)); the spine-touchers bundle into the pending
+    re-attestation (the campaign ruling). Remaining:
+    - **WI-055** — codename discipline (durable-reference rule; docs).
+    - **WI-056** → **WI-057** — architecture-connectivity: mechanize the
+      `IF-###` interface tier + graph views, then author the kit's own seams.
+    - **WI-058** — cross-agent skill sync (checked fan-out from one source).
+    - **WI-059** — heterogeneous implementer/reviewer scheduling (sequenced
+      last, detachable).
+  - **Deferred (backlog — first-class `deferred` WI rows, each with its
+    reason):**
+    - **WI-060** — coordinator working-tree stash/rollback between sessions
+      (owner-deferred 2026-07-05; the clean-exit path has no inter-session
+      residue handling yet).
+    - **WI-061** — OKF source-doc frontmatter mutation behind a flag
+      (intrusive to the source docs; parked until a real consumer earns it).
+    - **WI-062** — `check_doc_refs` warn-first untraced-path tier (the
+      recommendation is recorded; the meta-repo is a pathological case, so it
+      stays filed until it earns wiring).
+    - **WI-063** — committed-composite artifact freshness gating (deferred with
+      reasoning: the gitignored composites carry no `--check`).
+    - **WI-064** — the AXES component/interface residual schema and graph
+      extensions (`consumes`/effort schema, a typed-IF contract check,
+      edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
+      rendering — all deferred-on-need).
+- **Next action:** execute the campaign in order — **WI-055** (codename
+  discipline) next, then **WI-056** → **WI-057**, **WI-058**, **WI-059**. The
+  owner sitting (the re-attestation, push ruling, sibling-repo target, batch
+  review) follows the campaign close. After that: the G-Release walk, the
+  WI-DAG edge data-pass, or new scope (which needs a plan/WI entry first).
 
 ## Scope
 
