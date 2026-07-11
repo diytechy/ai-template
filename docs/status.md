@@ -52,7 +52,14 @@ working surface.
        the deferred content enrichment (spec:
        [`docs/archive/INTEGRATION_PLAN.md`](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the Phases 1–4 batch** (owner-directed, review deferred).
-  - **In flight:** _(none)_ — the queue is empty.
+  - **In flight:** the **working-surface SSOT + architecture-connectivity
+    campaign** — ingested 2026-07-10 as **WI-053…WI-059** (spec:
+    [specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
+    fully ruled): WI-053 SSOT mechanize → WI-054 meta compliance; WI-055
+    codename rule; WI-056 IF-tier mechanize → WI-057 meta interface authoring;
+    WI-058 cross-agent skill sync; WI-059 heterogeneous scheduling (sequenced
+    last, detachable). Spine-touchers bundle into the pending re-attestation
+    (the campaign ruling). **Next up: WI-053.**
   - **Recently landed:** the **2026-07-10 late batch (WI-050…052, no spine
     change)** — the root-README registry/artifact map + the PROCESS.md §5
     **change-intake flow** (the defect-routing chart), the fresh-Mac dev-setup
@@ -72,15 +79,12 @@ working surface.
     edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
     rendering (all gated on real need; see
     [`docs/archive/AXES_AND_WORKSTREAMS.md`](archive/AXES_AND_WORKSTREAMS.md) §12).
-- **Next action:** the **owner sitting** — re-attest G3 per [log.md](log.md),
-  rule on push (~48 commits), rule on the Phase 2 sibling-repo target, and
-  review the Phases 1–5 batch. After that the frontier is open: G-Release walk,
-  the F3 edge data-pass, the **working-surface SSOT + architecture-connectivity
-  restructure** (**S0–S8 fully ruled 2026-07-10**, including the S8
-  heterogeneous-implementer/reviewer addition — ready to schedule as one
-  campaign bundled with the re-attestation:
-  [specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md)),
-  or new scope (which needs a plan/WI entry first).
+- **Next action:** execute the campaign in order — **WI-053** (SSOT
+  mechanize) is next; then WI-054/055, WI-056→057, WI-058, WI-059. The owner
+  sitting (re-attestation now also covering the campaign's spine touches, push
+  ruling, Phase 2 sibling-repo target, batch review) follows the campaign
+  close. After that: G-Release walk, the F3 edge data-pass, or new scope
+  (which needs a plan/WI entry first).
 
 ## Scope
 
