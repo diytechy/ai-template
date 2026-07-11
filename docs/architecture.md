@@ -219,10 +219,14 @@ _Validate the work-item registry (docs/requirements/work-items.csv) — stdlib o
 | Public item | Summary | Implements |
 |---|---|---|
 | `read_trajectory_enabled(root)` | Whether the trajectory check is on. `docs/trajectory-check` with the one |  |
+| `read_interfaces_check_enabled(root)` | Whether the architecture-connectivity coverage warns are on (S5/WI-056). |  |
 | `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. |  |
 | `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
 | `load_known_srs(root)` | The set of real SR ids from system-requirements.csv (for the SR-ref warn). |  |
+| `load_ifs(rows)` | Real (non-`-000`) IF-### interface rows as dicts. Lenient — `trace.py` owns |  |
+| `arch_inventory(root)` | `(module_names, {module: {IF ids}})` parsed from `docs/architecture.md`'s |  |
+| `interface_findings(root)` | Architecture-connectivity coverage warns (S5/WI-056; process.md §8), all |  |
 | `ssot_findings(wis, root)` | The status.md ↔ work-items.csv coherence findings (R-A…R-E) + the |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `main()` |  |  |
@@ -241,16 +245,18 @@ _Generate the module/function map for `architecture.md` from the source tree._
 
 | Public item | Summary | Implements |
 |---|---|---|
+| `load_interfaces(path)` | The rows of an `interfaces.csv` (IF-### seam registry) as dicts, or [] when |  |
 | `first_line(text)` | First non-empty line of a docstring, trimmed. |  |
 | `signature(node)` | Render a function/method signature from its AST args (names only). |  |
 | `implements(node, source_lines)` | Collect requirement ids annotated near a symbol (docstring + the few |  |
+| `module_contracts(tree, source_lines)` | The IF-### seam ids this module declares via a `Contracts: IF-###, ...` |  |
 | `internal_imports(tree, internal_names)` | In-tree modules this file imports (best-effort: relative imports, or an |  |
-| `scan_module(path, root, internal_names)` | Return (rel_module, summary, imports, rows) for one .py file. |  |
+| `scan_module(path, root, internal_names)` | Return (rel_module, summary, imports, contracts, rows) for one .py file. |  |
 | `first_comment_summary(text, prefixes)` | A file's one-line summary for --mode files: the text of its first comment |  |
 | `build_files_map(src_roots, prefixes)` | Stack-neutral MODULE MAP block: one row per source file (path + first |  |
 | `build_map(src_roots)` |  |  |
 | `collect_parse_errors(src_roots)` | (rel, message) for every scanned module that fails to parse. Used by |  |
-| `build_dependency_diagram(src_roots)` | Mermaid `graph LR` of the internal-import graph — the imports the module |  |
+| `build_dependency_diagram(src_roots, if_rows)` | Mermaid `graph LR` of the internal-import graph — the imports the module |  |
 | `splice_region(doc_text, begin, end, content, target, required)` | Replace the text between begin/end markers. If the markers are absent: |  |
 | `build_flow(src_roots, entry)` | Ordered list of the internal functions the entry orchestrator calls. |  |
 | `main()` |  |  |
@@ -315,6 +321,7 @@ Imports (internal): `check_trajectory`
 | `project_vision(root)` | One-line vision: the README `PROJECT-VISION:` tag (the kit's canonical |  |
 | `project_name(root)` | The project's display name — the README's first H1, else the folder name. |  |
 | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
+| `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
 | `build_html(root, wis)` |  |  |
@@ -344,6 +351,7 @@ _Traceability join + orphan report for the SN->SR->LLR->TC registries._
 | `id_key(label)` |  |  |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
 | `triangle_findings(tcs, llrs)` | SR/LLR citation coherence (IMPROVEMENT_PLAN.md Thread 50). A TC may cite an | LLR-1, SR-1, SR-2 |
+| `interface_findings(ifs, sr_ids, module_ids)` | The IF-### seam tier's back-link checks (process.md §8), closing the gap |  |
 | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |
 | `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |

@@ -32,3 +32,4 @@ resource: "generated"
 | [SN-020](SN-020.md) | Runtime |
 | [SN-021](SN-021.md) | Runtime |
 | [SN-022](SN-022.md) | Runtime |
+| [SN-023](SN-023.md) | A reviewer can see the project's progress and how its parts connect from one dashboard-li… |

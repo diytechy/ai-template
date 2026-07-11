@@ -296,6 +296,19 @@ range to see exactly which templates/scripts changed before you touch anything.
   pointers you had squeezed into `Parameters` (the old `node=…` workaround)
   into `Evidence`, restoring `Parameters` to dimensional inputs only. Below
   G3 a legacy file keeps passing untouched.
+- **Architecture-connectivity coverage (2026-07, WI-056).** `trace.py` now reads
+  the `IF-###` interface tier (id/SR-Refs integrity, closing the SR-002-era gap),
+  `interfaces.template.csv` gains a `Notes` column (legacy rows read it empty),
+  and `check_trajectory.py` runs a warn-first **connectivity coverage** over the
+  arch-map inventory. It is **opt-out, default-on** (the `docs/trajectory-check`
+  posture — no file is scaffolded; absence reads on), so after a re-sync a
+  **multi-module** repo with no declared seams starts warning "connectivity
+  undeclared" at the hook and G3. That never fails a gate — the warns only nudge.
+  To act on them, declare `IF-###` rows (process.md §8; use a `source`/`sink`
+  first-word `Notes` marker for a deliberate pure source/sink) and regenerate the
+  arch-map + `PROJECT_STATE.html`; to silence the whole layer, put the one word
+  `off` in `docs/interfaces-check`. A single-module repo is vacuous and needs
+  nothing.
 - **Conditional scaffold generation (`docs/kit-profile`).** Newer kits
   *generate* `docs/process.md` + `docs/process-options.md` from marker-carrying
   masters per a recorded profile (`docs/kit-profile`: `stack=` +

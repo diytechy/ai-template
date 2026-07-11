@@ -109,9 +109,30 @@ END_FLOW = "<!-- END GENERATED FLOW -->"
 BEGIN_DIAGRAM = "<!-- BEGIN GENERATED DEPENDENCY DIAGRAM -->"
 END_DIAGRAM = "<!-- END GENERATED DEPENDENCY DIAGRAM -->"
 IMPLEMENTS_RE = re.compile(r"\b(?:SR|LLR|SN|TC)-\d+\b")
+# Interface-seam ids a module declares via a `Contracts: IF-###, ...` line
+# (process.md §8) — harvested like Implements, but module-level (WI-056).
+CONTRACTS_RE = re.compile(r"\bIF-\d+\b")
+IF_ID_RE = re.compile(r"IF-\d+")
+# Source-file extensions stripped when normalizing a module path, so a diagram
+# node (`scripts/check`) and an IF endpoint written with the full repo path
+# (`project-trajectory/scripts/check.py`) collapse to one key. Kept in sync with
+# trace.py / check_trajectory (a small stable helper duplicated per the F5 rule).
+_MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
 # Comment tokens the file-level fallback (--mode files) reads a summary from.
 # The three most common line-comment markers; override with --comment-prefix.
 DEFAULT_COMMENT_PREFIXES = ("#", "//", "--")
+
+
+def load_interfaces(path):
+    """The rows of an `interfaces.csv` (IF-### seam registry) as dicts, or [] when
+    the file is absent — an unused/absent registry adds no IF edges (vacuous)."""
+    import csv
+
+    p = Path(path)
+    if not p.exists():
+        return []
+    with p.open(newline="", encoding="utf-8-sig") as f:
+        return list(csv.DictReader(f))
 
 
 def first_line(text):
@@ -152,6 +173,38 @@ def implements(node, source_lines):
     return sorted(ids)
 
 
+def module_contracts(tree, source_lines):
+    """The IF-### seam ids this module declares via a `Contracts: IF-###, ...`
+    line in its module docstring or a top-of-file comment (WI-056). Restricted to
+    lines carrying the word `Contracts`, so an IF id merely mentioned in prose is
+    not mistaken for a declaration."""
+    ids = set()
+    doc = ast.get_docstring(tree) or ""
+    for line in doc.splitlines():
+        if "Contracts" in line:
+            ids.update(CONTRACTS_RE.findall(line))
+    for line in source_lines[:8]:
+        if "Contracts" in line and line.lstrip().startswith("#"):
+            ids.update(CONTRACTS_RE.findall(line))
+    return sorted(ids)
+
+
+def _norm_module(path):
+    """A module path reduced to a naming-convention-neutral key (strip a leading
+    `project-trajectory/`, any source extension, `/__init__`) so an IF endpoint
+    and a diagram node match regardless of which form the author used."""
+    p = (path or "").strip().replace("\\", "/")
+    if p.startswith("project-trajectory/"):
+        p = p[len("project-trajectory/") :]
+    for ext in _MODULE_EXTS:
+        if p.endswith(ext):
+            p = p[: -len(ext)]
+            break
+    if p.endswith("/__init__"):
+        p = p[: -len("/__init__")]
+    return p
+
+
 def internal_imports(tree, internal_names):
     """In-tree modules this file imports (best-effort: relative imports, or an
     absolute import whose first segment names a scanned module/package).
@@ -187,16 +240,17 @@ def internal_imports(tree, internal_names):
 
 
 def scan_module(path, root, internal_names):
-    """Return (rel_module, summary, imports, rows) for one .py file."""
+    """Return (rel_module, summary, imports, contracts, rows) for one .py file."""
     text = path.read_text(encoding="utf-8")
     source_lines = text.splitlines()
     rel = path.relative_to(root).with_suffix("").as_posix().replace("/__init__", "")
     try:
         tree = ast.parse(text)
     except SyntaxError as exc:  # surface, don't crash the whole run
-        return rel, "PARSE ERROR: {}".format(exc), [], []
+        return rel, "PARSE ERROR: {}".format(exc), [], [], []
     summary = first_line(ast.get_docstring(tree))
     imports = internal_imports(tree, internal_names)
+    contracts = module_contracts(tree, source_lines)
     rows = []
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -229,7 +283,7 @@ def scan_module(path, root, internal_names):
             )
             if methods:
                 rows.append(("  methods", "", " · ".join(methods), []))
-    return rel, summary, imports, rows
+    return rel, summary, imports, contracts, rows
 
 
 def _module_files(src_roots):
@@ -331,8 +385,10 @@ def build_map(src_roots):
         return note + "\n\n_(no source scanned)_"
     sections = [note]
     for path, root_parent in files:
-        rel, summary, imports, rows = scan_module(path, root_parent, internal_names)
-        if not (summary or imports or rows):
+        rel, summary, imports, contracts, rows = scan_module(
+            path, root_parent, internal_names
+        )
+        if not (summary or imports or contracts or rows):
             continue  # skip empty modules (e.g. bare __init__.py) — no noise
         sections.append("\n### `{}`".format(rel))
         if summary:
@@ -343,6 +399,11 @@ def build_map(src_roots):
                     ", ".join("`{}`".format(i) for i in imports)
                 )
             )
+        # Declared interface seams (process.md §8), harvested from the module's
+        # `Contracts: IF-###` docstring line — the arch-map is the oracle
+        # check_trajectory reads for the docstring-vs-registry coverage warn.
+        if contracts:
+            sections.append("Contracts (interfaces): {}".format(", ".join(contracts)))
         if rows:
             sections.append("\n| Public item | Summary | Implements |\n|---|---|---|")
             for name, sig, summ, ids in rows:
@@ -402,20 +463,29 @@ def _resolve_import(imp, importer_rel, known):
     return None
 
 
-def build_dependency_diagram(src_roots):
+def build_dependency_diagram(src_roots, if_rows=None):
     """Mermaid `graph LR` of the internal-import graph — the imports the module
-    map lists, as a picture. Plain text out; rendering is the viewer's job."""
+    map lists, as a picture. Plain text out; rendering is the viewer's job.
+
+    When declared interface seams are supplied (`if_rows`, from
+    `interfaces.csv`), module<->module seams are merged in as **distinctly styled**
+    dotted, labeled edges (`A -. IF-003 .-> B`) so they read apart from the solid
+    import arrows; a seam to a file or external actor is a How-SW dashboard node
+    (gen_trajectory), not a code-import edge, so it is skipped here."""
     files, internal_names = _module_files(src_roots)
     note = (
         "_Generated by `scripts/gen_arch_map.py` from the source tree (AST): "
-        "each arrow is an internal import. Do not edit by hand; run the check "
+        "each solid arrow is an internal import; a dotted labeled arrow is a "
+        "declared IF-### interface seam. Do not edit by hand; run the check "
         "harness to refresh._"
     )
     if not files:
         return note + "\n\n_(no source scanned)_"
     mods = []
     for path, root_parent in files:
-        rel, summary, imports, _rows = scan_module(path, root_parent, internal_names)
+        rel, summary, imports, _contracts, _rows = scan_module(
+            path, root_parent, internal_names
+        )
         mods.append((rel, summary, imports))
     known = [m[0] for m in mods]
 
@@ -439,6 +509,26 @@ def build_dependency_diagram(src_roots):
                 edges.add((node_id(rel), node_id(target)))
     for src_id, dst_id in sorted(edges):
         lines.append("    {} --> {}".format(src_id, dst_id))
+    # Declared interface seams (process.md §8): module<->module IF rows as dotted,
+    # labeled edges, distinct from the solid import arrows. Deterministic (sorted).
+    known_norm = {_norm_module(k): node_id(k) for k in known}
+    if_edges = set()
+    for r in if_rows or []:
+        iid = (r.get("IF-ID") or "").strip()
+        if not IF_ID_RE.fullmatch(iid) or iid.endswith("-000"):
+            continue
+        a = known_norm.get(_norm_module(r.get("ThisProject", "")))
+        b = known_norm.get(_norm_module(r.get("Counterpart", "")))
+        if not a or not b or a == b:
+            continue  # a seam to a file/external is a dashboard node, not drawn here
+        src_n, dst_n = (
+            (b, a)
+            if (r.get("Direction") or "").strip().lower() == "consumes"
+            else (a, b)
+        )
+        if_edges.add((src_n, dst_n, iid))
+    for src_n, dst_n, iid in sorted(if_edges):
+        lines.append("    {} -. {} .-> {}".format(src_n, iid, dst_n))
     lines.append("```")
     return "\n".join(lines)
 
@@ -587,6 +677,13 @@ def main():
         "files (repeatable; default: # // --)",
     )
     ap.add_argument(
+        "--interfaces",
+        default="docs/requirements/interfaces.csv",
+        help="the IF-### interface-seam registry whose module<->module rows are "
+        "merged into the dependency diagram as distinctly-styled edges (process.md "
+        "§8); absent file = no IF edges (symbol mode only)",
+    )
+    ap.add_argument(
         "--check",
         action="store_true",
         help="do not write; exit 1 if any target is stale",
@@ -636,7 +733,7 @@ def main():
         flow = None
     else:
         generated = build_map(src_roots)
-        diagram = build_dependency_diagram(src_roots)
+        diagram = build_dependency_diagram(src_roots, load_interfaces(args.interfaces))
         flow = build_flow(src_roots, args.flow) if args.flow else None
 
     stale = False

@@ -415,3 +415,101 @@ def test_require_verified_flags_unverified_test_sr(scaffold):
     assert "status-findings=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "G3 requires Verified" in report
+
+
+# --- WI-056: the IF-### interface-seam tier (process.md §8) ---------------------
+# trace.py now reads the interface catalog (the SR-002-era gap): IF id integrity,
+# the SR-Refs back-link (a --strict finding, like PB's), and a warn-only endpoint
+# advisory. The full architecture-connectivity coverage lives in check_trajectory.
+
+IF_HEADER = (
+    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+    "Stability,Status,Component,Notes\n"
+)
+
+
+def _write_ifs(scaffold, body):
+    (scaffold / "docs" / "requirements" / "interfaces.csv").write_text(
+        IF_HEADER + body, encoding="utf-8"
+    )
+
+
+def _report(scaffold):
+    return (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+
+
+def test_if_tier_integrity(scaffold):
+    make_minimal_project(scaffold)
+    # A clean seam: SR-Refs resolves (SR-001), ThisProject matches LLR Module.
+    _write_ifs(
+        scaffold,
+        'IF-001,Provides,src/demo,downstream adopter,"cli --help exits 0",'
+        "SR-001,v1,Stable,Active,,\n",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "interfaces=1 interface-findings=0" in proc.stdout
+
+    # Empty SR-Refs -> a --strict finding (every seam links the spine, PB idiom).
+    _write_ifs(scaffold, 'IF-001,Provides,src/demo,git,"pushes",,v1,Stable,Active,,\n')
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "IF IF-001 links no SR" in _report(scaffold)
+
+    # Unresolvable SR-Ref -> a finding naming the missing id.
+    _write_ifs(
+        scaffold, 'IF-001,Provides,src/demo,git,"pushes",SR-999,v1,Stable,Active,,\n'
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "IF IF-001 references unknown SR-999" in _report(scaffold)
+
+    # A malformed IF id joins the always-on integrity floor (--strict-integrity).
+    _write_ifs(
+        scaffold, 'IF-1x,Provides,src/demo,git,"pushes",SR-001,v1,Stable,Active,,\n'
+    )
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "malformed" in _report(scaffold)
+
+
+def test_if_endpoint_advisory_is_warn_only(scaffold):
+    # A ThisProject matching no LLR Module is a warn-only advisory (the LLR Module
+    # inventory is partial + differently named), never a failure.
+    make_minimal_project(scaffold)
+    _write_ifs(
+        scaffold, 'IF-001,Provides,src/nowhere,git,"x",SR-001,v1,Stable,Active,,\n'
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "matches no LLR Module" in proc.stdout
+    assert "endpoint advisories" in _report(scaffold).lower()
+
+
+def test_if_placeholder_and_absent_are_free(scaffold):
+    # The scaffold ships an inert IF-000 placeholder: no interface section, green.
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "interfaces=" not in proc.stdout  # only the -000 placeholder
+    # A truly absent registry is equally free.
+    (scaffold / "docs" / "requirements" / "interfaces.csv").unlink()
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_legacy_interfaces_csv_without_notes_column_parses(scaffold):
+    # A pre-WI-056 interfaces.csv (no Notes column) reads the missing cell as
+    # empty and never crashes — never-breaking.
+    make_minimal_project(scaffold)
+    legacy = (
+        "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+        "Stability,Status,Component\n"
+    )
+    (scaffold / "docs" / "requirements" / "interfaces.csv").write_text(
+        legacy + 'IF-001,Provides,src/demo,git,"x",SR-001,v1,Stable,Active,\n',
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "interfaces=1 interface-findings=0" in proc.stdout

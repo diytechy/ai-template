@@ -24,16 +24,17 @@ working surface.
   `SN→SR→LLR→TC` spine is self-adopted: `docs/gate` is at **G3**;
   `check.py --gate G3` (12 steps) is the full bar and CI runs it on real data
   (the meta-repo dogfoods its own trajectory + OKF layers).
-- **Plan state:** meta-repo at **G3**, spine **SN=22 SR=43 LLR=40 TC=43, 0
+- **Plan state:** meta-repo at **G3**, spine **SN=23 SR=44 LLR=42 TC=44, 0
   orphans**. The dashboard is the root
   [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session history: [log.md](log.md).
 - **Open items:**
   - **Needs \<human> (the run is paused on these):**
     1. **G3 re-attestation** — one sitting covers the accumulated spine changes
        still awaiting sign-off: `SR-034` text (Inspection→Analysis), the added
-       `SR-039…SR-043`, the extended `SR-038`, and now the **`SR-037` text
-       change** (the SSOT coherence + SpecRef rules). *Mandatory*: Verified SR
-       text changed and new SRs joined the spine ([log.md](log.md)).
+       `SR-039…SR-043`, the extended `SR-038`, the **`SR-037` text change** (the
+       SSOT coherence + SpecRef rules), and now **`SN-023` + `SR-044`** (the
+       declared-interface connectivity layer, new SN→SR). *Mandatory*: Verified
+       SR text changed and new SN/SRs joined the spine ([log.md](log.md)).
     2. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
     3. **WI-DAG edge data-pass** — demote the narrative predecessor edges in
        `work-items.csv` to soft `~` edges (which edges are real technical
@@ -47,11 +48,16 @@ working surface.
   - **In flight — the working-surface + architecture-connectivity campaign**
     (spec:
     [specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
-    fully ruled). The SSOT-mechanize and meta-compliance slices landed this
-    session (see [log.md](log.md)); the spine-touchers bundle into the pending
-    re-attestation (the campaign ruling). Remaining:
-    - **WI-056** → **WI-057** — architecture-connectivity: mechanize the
-      `IF-###` interface tier + graph views, then author the kit's own seams.
+    fully ruled). The SSOT-mechanize, meta-compliance and
+    architecture-connectivity-mechanize slices landed (see [log.md](log.md)); the
+    spine-touchers bundle into the pending re-attestation (the campaign ruling).
+    Remaining:
+    - **WI-057** — meta-repo interface authoring: write the kit's own `IF-###`
+      seams so its architecture view shows the real system. **Driver:** the
+      connectivity layer is now live and the meta repo emits one
+      *"connectivity undeclared"* warn (20 arch-map modules, zero IF rows) at the
+      hook and G3 — expected and non-blocking; WI-057 authors the rows that
+      resolve it.
     - **WI-058** — cross-agent skill sync (checked fan-out from one source).
     - **WI-059** — heterogeneous implementer/reviewer scheduling (sequenced
       last, detachable).
@@ -71,12 +77,12 @@ working surface.
       extensions (`consumes`/effort schema, a typed-IF contract check,
       edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
       rendering — all deferred-on-need).
-- **Next action:** execute the campaign in order — **WI-056** (architecture-
-  connectivity: mechanize the `IF-###` interface tier + graph views) next, then
-  **WI-057**, **WI-058**, **WI-059**. The owner sitting (the re-attestation,
-  push ruling, sibling-repo target, batch review) follows the campaign close.
-  After that: the G-Release walk, the WI-DAG edge data-pass, or new scope
-  (which needs a plan/WI entry first).
+- **Next action:** continue the campaign — **WI-057** (author the meta repo's own
+  `IF-###` seams, resolving the live *"connectivity undeclared"* warn), then
+  **WI-058**, **WI-059**. The owner sitting (the re-attestation, push ruling,
+  sibling-repo target, batch review) follows the campaign close. After that: the
+  G-Release walk, the WI-DAG edge data-pass, or new scope (which needs a plan/WI
+  entry first).
 
 ## Scope
 

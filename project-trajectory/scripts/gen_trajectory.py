@@ -572,6 +572,137 @@ def dag_svg(wis):
     return svg, details
 
 
+# --- the How-SW interface graph (WI-056), reusing the WI-DAG layouter -----------
+
+SW_NODE_FILL = {"module": "#0891b2", "file": "#7c3aed", "external": "#64748b"}
+SW_COL_W = 168
+SW_COL_GAP = 64
+SW_ROW_H = 40
+SW_ROW_GAP = 20
+SW_PAD = 16
+
+
+def _sw_node(raw, module_norm):
+    """Classify an IF endpoint string into (kind, node-key, display). A module is
+    an arch-map inventory member (matched via the normalized name); a file is a
+    path-shaped counterpart (a shared-contract hub like docs/stack.ini); anything
+    else (downstream adopter / git / agent CLI) is an external actor."""
+    norm = ct._norm_module(raw)
+    if norm in module_norm:
+        return "module", "mod:" + norm, module_norm[norm]
+    s = (raw or "").strip()
+    if ("/" in s or re.search(r"\.\w{1,5}$", s)) and " " not in s:
+        return "file", "file:" + s, s
+    return "external", "ext:" + s, s
+
+
+def sw_graph(root, mods):
+    """The How-SW interface graph as one plain SVG string, or None when no IF
+    seams are declared (the panel then keeps the bare module table — the organized
+    graph is *earned* by declaring seams). Nodes are the arch-map modules plus the
+    files / external actors the seams reference; edges are producer->consumer
+    IF-### seams labeled by id. Reuses the WI-DAG layouter (`_dag_ranks`
+    longest-path + `_reorder` barycentre sweeps), so producers sit left of
+    consumers and crossings are reduced. Byte-deterministic: sorted inputs, fixed
+    passes, no clocks — the `--check` freshness compare stays stable."""
+    ifs = ct.load_ifs(ct.read_rows(root / ct.IF_CSV))
+    if not ifs or not mods:
+        return None
+    module_norm = {ct._norm_module(m["name"]): m["name"] for m in mods}
+    nodes, edges = {}, []
+    for r in ifs:
+        tk, tkey, tdisp = _sw_node(r["this"], module_norm)
+        ck, ckey, cdisp = _sw_node(r["counterpart"], module_norm)
+        nodes.setdefault(tkey, {"display": tdisp, "kind": tk})
+        nodes.setdefault(ckey, {"display": cdisp, "kind": ck})
+        # Consumes flips the arrow so it always runs producer -> consumer.
+        edges.append((ckey, tkey, r["id"]) if r["direction"] == "consumes"
+                     else (tkey, ckey, r["id"]))  # fmt: skip
+    if not nodes:
+        return None
+
+    node_ids = sorted(nodes)
+    node_list = [{"id": k} for k in node_ids]
+    pred_map = {k: [] for k in node_ids}
+    succ_map = {k: [] for k in node_ids}
+    for s, d, _iid in edges:
+        pred_map[d].append(s)
+        succ_map[s].append(d)
+    rank = _dag_ranks(node_list, pred_map)
+    nranks = (max(rank.values()) + 1) if rank else 0
+    order = {r: sorted(k for k in node_ids if rank[k] == r) for r in range(nranks)}
+    for _ in range(4):
+        for r in range(1, nranks):
+            _reorder(order, r, pred_map, order[r - 1])
+        for r in range(nranks - 2, -1, -1):
+            _reorder(order, r, succ_map, order[r + 1])
+
+    max_rows = max((len(order[r]) for r in order), default=0)
+    content_h = max_rows * SW_ROW_H + max(max_rows - 1, 0) * SW_ROW_GAP
+    pos = {}
+    for r in range(nranks):
+        layer = order[r]
+        n = len(layer)
+        layer_h = n * SW_ROW_H + max(n - 1, 0) * SW_ROW_GAP
+        y0 = SW_PAD + (content_h - layer_h) / 2
+        x = SW_PAD + r * (SW_COL_W + SW_COL_GAP)
+        for i, k in enumerate(layer):
+            pos[k] = (x, y0 + i * (SW_ROW_H + SW_ROW_GAP))
+    width = SW_PAD * 2 + nranks * SW_COL_W + max(nranks - 1, 0) * SW_COL_GAP
+    height = SW_PAD * 2 + content_h
+
+    def esc(s):
+        return html.escape(str(s), quote=True)
+
+    edge_svg = []
+    for s, d, iid in sorted(edges):
+        x1, y1 = pos[s][0] + SW_COL_W, pos[s][1] + SW_ROW_H / 2
+        x2, y2 = pos[d][0], pos[d][1] + SW_ROW_H / 2
+        dx = max((x2 - x1) * 0.4, 12)
+        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+        edge_svg.append(
+            '<path d="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
+            'fill="none" stroke="#94a3b8" stroke-width="1.3" '
+            'marker-end="url(#swarrow)"></path>'
+            '<text x="{:.1f}" y="{:.1f}" text-anchor="middle" fill="#64748b" '
+            'font-size="9">{}</text>'.format(
+                x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2, mx, my - 2, esc(iid)
+            )
+        )
+    node_svg = []
+    for k in node_ids:
+        x, y = pos[k]
+        info = nodes[k]
+        disp = info["display"]
+        short = disp if len(disp) <= 22 else disp[:21] + "…"
+        node_svg.append(
+            '<g><rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
+            'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
+            'dominant-baseline="central" fill="#fff" font-size="10">{}</text>'
+            "</g>".format(
+                x,
+                y,
+                SW_COL_W,
+                SW_ROW_H,
+                SW_NODE_FILL[info["kind"]],
+                x + SW_COL_W / 2,
+                y + SW_ROW_H / 2,
+                esc(short),
+            )  # fmt: skip
+        )
+    defs = (
+        '<defs><marker id="swarrow" viewBox="0 0 10 10" refX="9" refY="5" '
+        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+        '<path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"></path></marker></defs>'
+    )
+    return (
+        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
+        'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}</svg>'.format(
+            width, height, width, defs, "".join(edge_svg), "".join(node_svg)
+        )
+    )
+
+
 HTML_TEMPLATE = string.Template("""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -938,7 +1069,7 @@ def cmp_rows(root):
     ]
 
 
-def _sw_panel(mods):
+def _sw_panel(mods, graph=None):
     tab = '<button data-tab="sw">How (SW architecture)</button>'
     rows = []
     for m in mods:
@@ -952,12 +1083,26 @@ def _sw_panel(mods):
                 html.escape(syms),
             )
         )
+    # The declared-seam graph is *earned* by IF-### rows: present it above the
+    # symbol table when seams exist, else the panel stays a bare module list
+    # (WI-056). None -> "" keeps the no-seam render byte-identical to before.
+    graph_block = ""
+    if graph:
+        graph_block = (
+            '<p class="cap">Declared <code>IF-###</code> interface seams '
+            "(process.md §8): each arrow is a directed seam "
+            "(producer&nbsp;→&nbsp;consumer) labeled by id; module, file "
+            "(shared-contract hub) and external-actor nodes are styled distinctly. "
+            'A module with no seam is a "connectivity undeclared" gap.</p>\n'
+            '<div class="view">{}</div>\n'.format(graph)
+        )
     panel = (
         '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
-        '<p class="cap">The module map from <code>docs/architecture.md</code> — a view '
-        "of the generated code map (its <code>--check</code> keeps it honest against "
-        "the AST), unified here so one artifact answers What, How and When.</p>\n"
-        '<div style="overflow:auto"><table class="swmap"><thead><tr>'
+        + graph_block
+        + '<p class="cap">The module map from <code>docs/architecture.md</code> — a '
+        "view of the generated code map (its <code>--check</code> keeps it honest "
+        "against the AST), unified here so one artifact answers What, How and "
+        'When.</p>\n<div style="overflow:auto"><table class="swmap"><thead><tr>'
         "<th>Module</th><th>Public</th><th>Summary · symbols</th></tr></thead>"
         "<tbody>{}</tbody></table></div>\n</section>".format("".join(rows))
     )
@@ -999,7 +1144,7 @@ def build_html(root, wis):
     extra_tabs, extra_panels = [], []
     mods = sw_modules(root)
     if mods:
-        tab, panel = _sw_panel(mods)
+        tab, panel = _sw_panel(mods, sw_graph(root, mods))
         extra_tabs.append(tab)
         extra_panels.append(panel)
     cmps = cmp_rows(root)

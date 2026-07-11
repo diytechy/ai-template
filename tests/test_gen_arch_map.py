@@ -255,3 +255,58 @@ def test_zero_source_scan_warns_loudly(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "no source scanned" in proc.stderr
     assert "ADOPTING.md" in proc.stderr
+
+
+# --- WI-056: Contracts: docstring harvest + declared IF edges in the diagram ----
+
+
+def test_contracts_and_if_edges(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "a.py").write_text(
+        '"""Module A. Contracts: IF-003, IF-004"""\n\n\ndef run():\n    """go"""\n',
+        encoding="utf-8",
+    )
+    (src / "b.py").write_text(
+        '"""Module B."""\n\n\ndef go():\n    """g"""\n', encoding="utf-8"
+    )
+    out = gen_arch_map.build_map([str(src)])
+    # The Contracts: docstring line is harvested into the module map (the oracle
+    # check_trajectory reads for the docstring-vs-registry coverage warn).
+    assert "Contracts (interfaces): IF-003, IF-004" in out
+
+    # A module<->module IF row becomes a dotted, labeled edge, distinct from the
+    # solid import arrows.
+    if_rows = [
+        {
+            "IF-ID": "IF-003",
+            "Direction": "Provides",
+            "ThisProject": "src/a",
+            "Counterpart": "src/b",
+        }
+    ]
+    diag = gen_arch_map.build_dependency_diagram([str(src)], if_rows)
+    assert "-. IF-003 .->" in diag
+
+    # A seam to a file / external actor is a How-SW dashboard node, not a code
+    # edge — it is skipped here.
+    ext = [
+        {
+            "IF-ID": "IF-005",
+            "Direction": "Provides",
+            "ThisProject": "src/a",
+            "Counterpart": "downstream adopter",
+        }
+    ]
+    assert "IF-005" not in gen_arch_map.build_dependency_diagram([str(src)], ext)
+
+
+def test_if_edges_absent_registry_is_vacuous(tmp_path):
+    # No IF rows -> the diagram is exactly the import graph (never-breaking).
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "a.py").write_text(
+        '"""A."""\n\n\ndef run():\n    """go"""\n', encoding="utf-8"
+    )
+    assert "-. " not in gen_arch_map.build_dependency_diagram([str(src)], [])
+    assert "-. " not in gen_arch_map.build_dependency_diagram([str(src)], None)

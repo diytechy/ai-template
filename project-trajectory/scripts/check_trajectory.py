@@ -51,6 +51,19 @@ that never adopts the layer both stay green for free — WI is an off-spine
 optional registry, like procurement / assets, whose placeholder never blocks a
 gate (`trace.py` does not read WI ids at all).
 
+**Architecture-connectivity coverage** (S5/WI-056; process.md §8). This step is
+also the views-checker for the interface layer: every module in the arch-map
+inventory (`docs/architecture.md`'s generated block) should appear as ≥1 IF-###
+endpoint, each Active seam should be cited by a TC, and a `Contracts: IF-###`
+docstring citation should match the registry. All **warn-first** (they never
+change the exit code, at any gate) and printed at the hook. The ruled posture is
+**opt-out, default-on**: the coverage warn fires even when `interfaces.csv` is
+empty or absent — a multi-module arch-map with no declared seams reads
+"connectivity undeclared" instead of passing vacuously. It is silenced only by
+the one word `off` in `docs/interfaces-check`, or a ≤1-module inventory (nothing
+to connect). The honesty valve for a deliberate source/sink is a `source`/`sink`
+token in that module's IF row Notes (below).
+
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
 """
@@ -66,7 +79,14 @@ from pathlib import Path
 WI_CSV = "docs/requirements/work-items.csv"
 SR_CSV = "docs/requirements/system-requirements.csv"
 TC_CSV = "docs/test/test-cases.csv"
+IF_CSV = "docs/requirements/interfaces.csv"
 STATUS_MD = "docs/status.md"
+ARCH_MD = "docs/architecture.md"
+
+# An IF-### interface-seam id token (process.md §8). Matched word-bounded so a
+# `Contracts: IF-003, IF-004` docstring line (harvested into the arch-map) or an
+# id cell yields each id cleanly.
+IF_ID_RE = re.compile(r"IF-\d+")
 
 # A well-formed work-item id: `WI-` then digits (`WI-001`). The `-000` example
 # row matches this shape but is inert (skipped from the graph — see load_wis).
@@ -114,6 +134,18 @@ def read_trajectory_enabled(root):
     `docs/secrets-scan`."""
     return (
         _first_declared_line(root / "docs" / "trajectory-check") or ""
+    ).lower() != "off"
+
+
+def read_interfaces_check_enabled(root):
+    """Whether the architecture-connectivity coverage warns are on (S5/WI-056).
+    `docs/interfaces-check` with the one word `off` opts out; absent or any other
+    value reads on — the ruled opt-out, default-on posture (same shape as
+    `docs/trajectory-check`). Default-on means the coverage warn fires even with
+    an empty/absent `interfaces.csv`; the off-switch or a ≤1-module inventory is
+    the only silence."""
+    return (
+        _first_declared_line(root / "docs" / "interfaces-check") or ""
     ).lower() != "off"
 
 
@@ -271,6 +303,187 @@ def load_known_srs(root):
         for r in read_rows(root / SR_CSV)
         if (r.get("SR-ID") or "").startswith("SR-")
     }
+
+
+# Source-file extensions stripped when normalizing a module path, so the arch-map
+# name (`scripts/check`) and an IF endpoint written with the full repo path
+# (`project-trajectory/scripts/check.py`) collapse to one key. Kept in sync with
+# trace.py._MODULE_EXTS (a small stable helper duplicated per the F5 convention —
+# check_trajectory must stay import-free of the joined-spine engine).
+_MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+
+
+def _norm_module(path):
+    """A module path reduced to a naming-convention-neutral key: strip a leading
+    `project-trajectory/`, any source extension, and `/__init__`."""
+    p = (path or "").strip().replace("\\", "/")
+    if p.startswith("project-trajectory/"):
+        p = p[len("project-trajectory/") :]
+    for ext in _MODULE_EXTS:
+        if p.endswith(ext):
+            p = p[: -len(ext)]
+            break
+    if p.endswith("/__init__"):
+        p = p[: -len("/__init__")]
+    return p
+
+
+def load_ifs(rows):
+    """Real (non-`-000`) IF-### interface rows as dicts. Lenient — `trace.py` owns
+    IF integrity (malformed ids, SR-Ref resolution); this loader only feeds the
+    warn-first coverage views, so a malformed id is simply skipped here."""
+    out = []
+    for r in rows:
+        iid = (r.get("IF-ID") or "").strip()
+        if not IF_ID_RE.fullmatch(iid) or iid.endswith("-000"):
+            continue
+        out.append(
+            {
+                "id": iid,
+                "direction": (r.get("Direction") or "").strip().lower(),
+                "this": (r.get("ThisProject") or "").strip(),
+                "counterpart": (r.get("Counterpart") or "").strip(),
+                "status": (r.get("Status") or "").strip().lower(),
+                "notes": (r.get("Notes") or "").strip().lower(),
+            }
+        )
+    return out
+
+
+def arch_inventory(root):
+    """`(module_names, {module: {IF ids}})` parsed from `docs/architecture.md`'s
+    generated MODULE MAP block — the committed arch-map artifact (the same block
+    `gen_trajectory.sw_modules` reads for the How-SW view, and `gen_arch_map`
+    writes). `module_names` are the ``### `name``` headers; the IF map harvests
+    the `Contracts (interfaces): IF-###, ...` line `gen_arch_map` emits from a
+    module's `Contracts:` docstring. A small stable parser duplicated per the F5
+    convention (sw_modules also collects symbols; this one collects the Contracts
+    citations) — keep the header grammar in sync. Empty when the doc/block is
+    absent, so the coverage layer is vacuous pre-arch-map."""
+    md = root / ARCH_MD
+    if not md.exists():
+        return set(), {}
+    names, contracts, current, inside = [], {}, None, False
+    for line in md.read_text(encoding="utf-8", errors="replace").splitlines():
+        if "BEGIN GENERATED MODULE MAP" in line:
+            inside = True
+            continue
+        if "END GENERATED" in line:
+            inside = False
+            current = None
+            continue
+        if not inside:
+            continue
+        m = re.match(r"^### `([^`]+)`", line)
+        if m:
+            current = m.group(1)
+            names.append(current)
+        elif current and line.strip().startswith("Contracts (interfaces):"):
+            contracts.setdefault(current, set()).update(IF_ID_RE.findall(line))
+    return set(names), contracts
+
+
+def interface_findings(root):
+    """Architecture-connectivity coverage warns (S5/WI-056; process.md §8), all
+    warn-first — the caller prints them and they never change the exit code, at
+    any gate. Returns the warn strings ([] when opted out or vacuous).
+
+    Ruled opt-out, default-on: fires even with an empty/absent `interfaces.csv`
+    (a multi-module arch-map with no declared seams reads "connectivity
+    undeclared"); silenced only by `docs/interfaces-check: off` or a ≤1-module
+    inventory (nothing to connect)."""
+    if not read_interfaces_check_enabled(root):
+        return []
+    inventory, declared_contracts = arch_inventory(root)
+    if len(inventory) <= 1:
+        return []  # nothing to connect (or no arch-map yet) — vacuous
+    ifs = load_ifs(read_rows(root / IF_CSV))
+    out = []
+    if not ifs:
+        return [
+            "connectivity undeclared: the {}-module architecture declares no "
+            "interfaces — add IF-### rows to {}, or set docs/interfaces-check: "
+            "off".format(len(inventory), IF_CSV)
+        ]
+
+    inv_norm = {_norm_module(m): m for m in inventory}
+    inv_norm.pop("", None)
+    endpoints, provides, consumes = set(), set(), set()
+    sources, sinks = set(), set()
+    for r in ifs:
+        this_n, cp_n = _norm_module(r["this"]), _norm_module(r["counterpart"])
+        for n in (this_n, cp_n):
+            if n in inv_norm:
+                endpoints.add(n)
+        # The honesty valve: a `source`/`sink` FIRST word in Notes marks
+        # ThisProject a deliberate source (consumes nothing) / sink (provides
+        # nothing), so it doesn't breed a boilerplate opposite-direction row.
+        marker = r["notes"].split()
+        first = marker[0].rstrip(":;,.") if marker else ""
+        if first == "source":
+            sources.add(this_n)
+        elif first == "sink":
+            sinks.add(this_n)
+        # Producer -> consumer roles: Consumes flips the endpoints so the
+        # producing/consuming credit lands on the right module either way.
+        producer, consumer = (
+            (cp_n, this_n) if r["direction"] == "consumes" else (this_n, cp_n)
+        )
+        if producer in inv_norm:
+            provides.add(producer)
+        if consumer in inv_norm:
+            consumes.add(consumer)
+
+    for n in sorted(inv_norm):
+        module = inv_norm[n]
+        if n not in endpoints:
+            out.append(
+                "connectivity undeclared: module {!r} is in the arch-map but no "
+                "IF-### row names it".format(module)
+            )
+            continue
+        if n not in consumes and n not in sources:
+            out.append(
+                "module {!r} declares no Consumes seam (mark it `source` in its "
+                "IF row Notes if it deliberately consumes nothing)".format(module)
+            )
+        if n not in provides and n not in sinks:
+            out.append(
+                "module {!r} declares no Provides seam (mark it `sink` in its IF "
+                "row Notes if it deliberately provides nothing)".format(module)
+            )
+
+    # Seam-TC citation: each Active IF id should be cited by >=1 TC (the rung-2
+    # seam-TC rule, finally checkable now that trace reads the IF tier).
+    tc_cited = set()
+    for r in read_rows(root / TC_CSV):
+        tc_cited.update(IF_ID_RE.findall(r.get("Verifies", "") or ""))
+    for r in ifs:
+        if r["status"] == "active" and r["id"] not in tc_cited:
+            out.append(
+                "IF {} is Active but cited by no TC (a seam should carry a "
+                "contract/fixture test)".format(r["id"])
+            )
+
+    # Docstring citation: a `Contracts: IF-###` a script declares (harvested into
+    # the arch-map) must exist in the registry; and, once the convention is in
+    # use, a registry IF whose module declares no matching citation warns too.
+    registry_ids = {r["id"] for r in ifs}
+    for module, ids in sorted(declared_contracts.items()):
+        for iid in sorted(ids - registry_ids):
+            out.append(
+                "module {!r} docstring declares Contracts: {} but no such IF-### "
+                "row exists".format(module, iid)
+            )
+    if declared_contracts:  # reverse direction only "where sensible" — once opted in
+        all_declared = set().union(*declared_contracts.values())
+        for r in ifs:
+            if r["id"] not in all_declared:
+                out.append(
+                    "IF {} is in the registry but no script declares it via a "
+                    "Contracts: docstring line".format(r["id"])
+                )
+    return out
 
 
 def _read_status_tokens(root):
@@ -520,6 +733,13 @@ def main():
         for w in staged_findings(root):
             print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
         return 0
+
+    # Architecture-connectivity coverage (S5/WI-056; process.md §8) — warn-first,
+    # never an exit-code change (even under --strict). Runs before the WI vacuity
+    # return so a repo with modules + seams but no work items is still covered;
+    # vacuous under docs/interfaces-check: off or a ≤1-module arch-map.
+    for w in interface_findings(root):
+        print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     wis, integrity = load_wis(read_rows(root / WI_CSV))
     if not wis and not integrity:

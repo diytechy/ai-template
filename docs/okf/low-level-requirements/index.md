@@ -50,3 +50,5 @@ resource: "generated"
 | [LLR-038](LLR-038.md) | Path + sym: reference checker |
 | [LLR-039](LLR-039.md) | OKF bundle emitter |
 | [LLR-040](LLR-040.md) | Subagent spawn gate |
+| [LLR-041](LLR-041.md) | IF-tier integrity in trace.py |
+| [LLR-042](LLR-042.md) | Architecture-connectivity views and coverage warns |

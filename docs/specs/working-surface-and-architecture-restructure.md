@@ -181,7 +181,7 @@ only if a real pattern earns it (naive `[A-Z]\d+` would false-positive on `G3`,
 **Spine impact.** None (docs). **Done-when.** The rule is documented and on the
 reviewer's checklist.
 
-## S5 — Architecture-connectivity mechanize
+## S5 — Architecture-connectivity mechanize — ✅ DONE (2026-07-11)
 
 **Goal.** Make the architecture view show how modules connect, from declared
 `IF-###` interfaces — the seam the AXES ratification already sanctioned ("a

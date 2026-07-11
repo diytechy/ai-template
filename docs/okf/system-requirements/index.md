@@ -53,3 +53,4 @@ resource: "generated"
 | [SR-041](SR-041.md) | Doc reference validation |
 | [SR-042](SR-042.md) | OKF knowledge-bundle export |
 | [SR-043](SR-043.md) | Subagent spawn gate |
+| [SR-044](SR-044.md) | Declared-interface connectivity |

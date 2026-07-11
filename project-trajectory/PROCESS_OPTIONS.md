@@ -1186,6 +1186,58 @@ binary; the **record of it** is text, tracked, and reviewable.
   manifest is the honest, text-tracked record — an ideal reached for, not a check
   faked.
 
+## Intra-repo interfaces & the architecture graph
+
+*Builds on PROCESS.md §8 (the seam registry).* **Applies when** a repo has more
+than one module and wants its architecture view to show **how the modules
+connect** — the seam the AXES ratification sanctioned ("a cross-component edge
+without a declared interface is a finding"). §8 records a shared surface once as
+an `IF-###`; the same registry serves an **intra-repo** seam (module→module,
+module→file, module→external-actor) exactly as it serves a cross-project one — one
+`interfaces.csv`, two uses.
+
+**The model — one row per directed seam.** `ThisProject` = the module path;
+`Counterpart` = another module, a **file path** (giving module→file→module
+dataflow, so a shared file like `docs/stack.ini` is a hub node many modules
+Consume), or an **external actor** (`downstream adopter`, `git`, `agent CLI`);
+`Direction` = Provides/Consumes; `Contract` = one testable line (CLI flags + exit
+codes, or the file schema); `SR-Refs` links the spine so every seam is
+transitively TC-covered. `trace.py` integrity-checks the tier (id shape, the
+SR-Refs back-link under `--strict`, a best-effort `ThisProject`↔`LLR.Module`
+advisory) — WI-056 closed the SR-002-era gap where trace never read the IF tier.
+
+**Opt-out, default-on (ruled).** By default a contract IF must define how the
+architecture connects, so the **coverage warn runs even when `interfaces.csv` is
+empty or absent**: a multi-module arch-map with no declared seams reads
+**"connectivity undeclared"** instead of passing vacuously, and the How-SW panel
+stays a bare module list — the organized graph is *earned* by declaring seams.
+`check_trajectory.py` runs this at the hook and the gate, **all warn-first** (it
+never changes an exit code). A repo with genuinely nothing to declare silences it
+with the one word `off` in `docs/interfaces-check` (the
+`trajectory-check`/`okf-export` idiom — no file is scaffolded; absence reads on);
+a single-module inventory is vacuous. The warns: every arch-map module is a
+declared IF endpoint; each `Active` seam is cited by ≥1 TC; a `Contracts: IF-###`
+docstring line (harvested into the arch-map like `Implements:`) matches the
+registry.
+
+**The honesty valve.** A pure **source** (produces output, consumes nothing) or
+**sink** (consumes, produces nothing) would otherwise breed a boilerplate
+opposite-direction row. Mark it instead: make the `Notes` cell of one of that
+module's IF rows **begin** with the word `source` or `sink`, and the
+missing-direction warn for `ThisProject` is suppressed.
+
+**The graph.** When real seams exist, `gen_trajectory.py`'s How-SW panel renders
+them as a directed graph (module / file / external-actor nodes, IF-labeled edges,
+reusing the WI-DAG layouter) above the symbol table, and `gen_arch_map.py` merges
+module↔module seams into the dependency diagram as distinctly-styled dotted edges.
+
+**Risk — the maintenance surface.** A fully-declared repo is ~30–35 hand-authored
+IF rows whose `Contract` text has **no mechanical oracle** (a renamed flag the row
+misses). The joins bound the rot to that one column; CLI contracts are already
+pinned by the never-break-downstream rule. Declare seams because the connectivity
+view earns its keep, not for completeness — and lean on the source/sink valve so a
+pure sink doesn't cost a row.
+
 ## Component layer
 
 *Referenced from the registry templates (`components.template.csv`).* **Applies

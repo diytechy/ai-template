@@ -39,8 +39,10 @@ any repo and wire the harness to that repo's tooling (SN-003).
   [`check_privacy.py`](project-trajectory/scripts/check_privacy.py) gives every
   repo a secrets floor plus the opt-in PII/identity gate (SN-009); and
   [`bootstrap.py`](project-trajectory/scripts/bootstrap.py) scaffolds a new
-  repo in one command (SN-001). The generated views these produce are listed
-  under "The registries & trace artifacts" below.
+  repo in one command (SN-001). The generated views these produce — including the
+  single root `PROJECT_STATE.html` that shows progress **and** how the parts
+  connect (the declared `IF-###` interface graph, SN-023) — are listed under
+  "The registries & trace artifacts" below.
 
 - **Unattended agent operation** (SN-006):
   - Root `agent-resume.*` launchers boot an agent session at the declared

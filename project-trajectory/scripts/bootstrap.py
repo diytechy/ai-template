@@ -106,11 +106,19 @@ launcher's `AGENT_CMD`/`AGENT_MODEL` slots with that agent's example command
 the consent plainly); the slots stay an EDIT block the repo owns.
 
 The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.csv`)
-are always scaffolded but ship **inert**: they hold only `IF-000` placeholder
-rows that nothing reads (`trace.py` doesn't process interfaces), so a standalone
-project can simply ignore them. Fill them in only when this repo shares a
-contract with another (process.md §8). They cost nothing to leave empty, which is
-why bootstrap copies them unconditionally rather than gating them behind a flag.
+are always scaffolded but ship **inert**: they hold only the `IF-000` placeholder
+row (ignored, like every `-000`), so a single-module project can simply leave
+them empty. Fill in `IF-###` rows when this repo declares a contract — with
+another repo **or between its own modules** (process.md §8). `trace.py`
+integrity-checks the seam registry (id shape, SR-Refs back-link, WI-056) and
+`check_trajectory.py` runs the **architecture-connectivity coverage** over the
+arch-map inventory. That coverage is **opt-out, default-on** (the
+`docs/secrets-scan` / `docs/trajectory-check` posture — absence reads on): a
+multi-module arch-map with no declared seams warns "connectivity undeclared"
+rather than passing vacuously, so like those layers there is no file to scaffold —
+silence it with the one word `off` in `docs/interfaces-check`, or a single-module
+inventory. They cost nothing to leave empty, which is why bootstrap copies them
+unconditionally rather than gating them behind a flag.
 
 `docs/requirements/performance-budgets.csv` (PB-###, process.md §9) is the same
 kind of optional, always-scaffolded coordination registry for quantitative

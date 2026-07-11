@@ -22,12 +22,12 @@ audits.
 | `STATUS.template.md` | The blackboard's **working surface** (only what happens next) → copy to `docs/status.md`. |
 | `LOG.template.md` | The **append-only history** status.md points at (gate sign-offs, verdicts, ratified decisions — process.md §5) → copy to `docs/log.md`. |
 | `ARCHITECTURE.template.md` | One-page overview + generated map → copy to `docs/architecture.md`. |
-| `INTERFACES.template.md` | Cross-project contracts (IF-###) → copy to `docs/interfaces.md`. Use only for interlinked projects. |
+| `INTERFACES.template.md` | Interface-seam contracts (IF-###) → copy to `docs/interfaces.md`. Cross-project **and** intra-repo (module↔module/file/external). |
 | `registries/stakeholder-needs.template.md` | SN-### (stakeholder needs + edge cases). |
 | `registries/system-requirements.template.csv` | SR-### with measurable acceptance criteria. |
 | `registries/low-level-requirements.template.csv` | LLR-### ↔ code. |
 | `registries/test-cases.template.csv` | TC-### ↔ requirements. |
-| `registries/interfaces.template.csv` | IF-### ↔ cross-project contracts (paired with `INTERFACES.template.md`). |
+| `registries/interfaces.template.csv` | IF-### ↔ directed interface seams — cross-project or intra-repo (module→module/file/external). `trace.py` integrity-checks the tier and `check_trajectory.py` runs the opt-out/default-on architecture-connectivity coverage (process-options.md "Intra-repo interfaces & the architecture graph"). |
 | `registries/performance-budgets.template.csv` | PB-### quantitative perf/resource budgets (NFRs), off-spine but back-linked to the SR/LLR/Module they bound; owned by the Integration/Coordination hat (process.md §9). Optional, like interfaces. |
 | `registries/procurement.template.csv` | PART-### purchased/external parts the project **buys rather than builds** (motors, boards, cameras). Each row's `IF-Ref` names the interface row that is its owner-of-record (`MULTI_REPO.md` §3.3); Status=needed/ordered/on-hand/backordered/obsolete, plus vendor link, cost, quantity. Off-spine and optional like interfaces/PB; `trace.py` integrity-checks the `PART-` ids. Deliberately **minimal** — full BOM tracking (alternates, per-module allocation, roll-ups) is a deferred extension (process-options.md "purchased parts"). |
 | `registries/assets.template.csv` | ASSET-### binary/large-asset provenance registry for unavoidably-binary deliverables (art, music, voice, video). Tracks the facts *about* an un-diffable asset in text: `Provenance` (human-made/ai-generated/mixed — for Steam-style AI-content disclosure), `License`, `Attribution`, `ContractRef` (voice-actor release / commission), and a `Location` pointer + `Hash`/`Version`. Off-spine and optional like procurement/PB; `trace.py` integrity-checks the `ASSET-` ids. The ideal-not-requirement stance made concrete (process-options.md "Binary assets"). |

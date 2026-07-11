@@ -514,3 +514,157 @@ def test_staged_is_a_no_op_outside_git(tmp_path):
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "validation chain" not in proc.stderr
+
+
+# --- WI-056: architecture-connectivity coverage (warn-first, opt-out default-on)
+# The views-checker runs at the same `trajectory` step; every finding is a WARN
+# (never an exit-code change, even under --strict) and the meta driver is the
+# "connectivity undeclared" warn a multi-module arch-map with no seams emits.
+
+ARCH_2MOD = """# Arch
+<!-- BEGIN GENERATED MODULE MAP -->
+### `scripts/mod_a`
+_A._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `run()` | go |  |
+
+### `scripts/mod_b`
+_B._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `go()` | g |  |
+<!-- END GENERATED MODULE MAP -->
+"""
+
+ARCH_1MOD = """# Arch
+<!-- BEGIN GENERATED MODULE MAP -->
+### `scripts/mod_a`
+_A._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `run()` | go |  |
+<!-- END GENERATED MODULE MAP -->
+"""
+
+IF_HDR = (
+    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+    "Stability,Status,Component,Notes\n"
+)
+
+
+def write_arch(root, text):
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "architecture.md").write_text(text, encoding="utf-8")
+
+
+def write_ifs(root, body):
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "interfaces.csv").write_text(IF_HDR + body, encoding="utf-8")
+
+
+def test_interface_coverage_warns(tmp_path):
+    # Multi-module arch-map with NO interfaces.csv -> "connectivity undeclared"
+    # (the ruled opt-out, default-on posture), and the exit code is still 0.
+    write_arch(tmp_path, ARCH_2MOD)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "connectivity undeclared" in proc.stderr
+
+
+def test_interface_check_off_silences(tmp_path):
+    write_arch(tmp_path, ARCH_2MOD)
+    (tmp_path / "docs" / "interfaces-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "connectivity undeclared" not in proc.stderr
+
+
+def test_single_module_inventory_is_vacuous(tmp_path):
+    # <=1 module: nothing to connect, so the coverage layer stays silent.
+    write_arch(tmp_path, ARCH_1MOD)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "connectivity undeclared" not in proc.stderr
+
+
+def test_uncovered_direction_warns(tmp_path):
+    # One Provides seam a->b: a has no Consumes, b has no Provides -> both
+    # missing-direction warns fire (exit 0).
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "declares no Consumes seam" in proc.stderr  # mod_a
+    assert "declares no Provides seam" in proc.stderr  # mod_b
+
+
+def test_source_sink_marker_suppresses_direction_warn(tmp_path):
+    # mod_a marked source (consumes nothing), mod_b marked sink (provides nothing)
+    # -> both missing-direction warns suppressed by the honesty valve.
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,source\n'
+        'IF-002,Consumes,scripts/mod_b,docs/stack.ini,"reads",SR-001,v1,Stable,Active,,sink\n',
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "declares no Consumes seam" not in proc.stderr
+    assert "declares no Provides seam" not in proc.stderr
+
+
+def test_seam_tc_citation_warn(tmp_path):
+    # A symmetric pair covers both directions, so only the Active-seam-TC warn
+    # fires; a TC that cites IF-001 suppresses its warn, IF-002 still warns.
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,Stable,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,Stable,Active,,\n',
+    )
+    (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Verified\n",
+        encoding="utf-8",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "declares no Consumes seam" not in proc.stderr  # symmetric -> covered
+    assert "IF IF-001 is Active but cited by no TC" not in proc.stderr
+    assert "IF IF-002 is Active but cited by no TC" in proc.stderr
+
+
+def test_contracts_docstring_citation_warns(tmp_path):
+    # A module's `Contracts (interfaces):` arch-map line names IF-003 (absent from
+    # the registry) -> forward warn; and once the convention is in use, a registry
+    # IF declared by no module warns in reverse.
+    arch = ARCH_2MOD.replace("_A._\n", "_A._\nContracts (interfaces): IF-003\n")
+    write_arch(tmp_path, arch)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,Stable,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,Stable,Active,,\n',
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "declares Contracts: IF-003 but no such IF-### row" in proc.stderr
+    assert "no script declares it via a Contracts" in proc.stderr
+
+
+def test_interface_warns_never_fail_strict(tmp_path):
+    # Even under --strict, the connectivity warns never change the exit code
+    # (they are warns, not the R-B..R-E coherence rules --strict promotes). With
+    # no work-items registry the run is vacuously clean once the warns are printed.
+    write_arch(tmp_path, ARCH_2MOD)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "connectivity undeclared" in proc.stderr

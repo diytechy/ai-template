@@ -53,3 +53,4 @@ resource: "generated"
 | [TC-041](TC-041.md) | Run the doc-refs suite; a dangling path warns then gates under --strict, non-path backtic… |
 | [TC-042](TC-042.md) | Run the gen-okf suite; typed linked concepts generate, Process Guide concepts emit for pr… |
 | [TC-043](TC-043.md) | Run the subagent-gate suite; a Task/Agent spawn under deny is refused (permissionDecision… |
+| [TC-044](TC-044.md) | Run the interface-connectivity suite: trace.py flags a malformed/duplicate IF id and an e… |

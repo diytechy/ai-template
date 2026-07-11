@@ -507,3 +507,109 @@ touched; this slice adds nothing to the pending G3 re-attestation.
 items, 55 done); `gen_trajectory.py --check` + `gen_okf.py --check` **up to
 date**; `check_docs.py --root . --stale` **0 broken**; `pytest -q` **490 passed,
 3 skipped**.
+
+## 2026-07-11 — SPINE CHANGE (working-surface campaign S5, WI-056): SN-023 + SR-044 added; architecture-connectivity mechanized; RE-ATTESTATION PENDING
+
+**Campaign slice** (spec:
+[specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
+S5). The architecture view now shows how modules connect, from declared `IF-###`
+seams — the seam the AXES ratification sanctioned. One session on
+`MultiRepoSupport`; the spine cut rides the pending G3 re-attestation.
+
+- **WI-056 (S5) — architecture-connectivity mechanize.**
+  - **`trace.py` reads the IF tier** (closing the SR-002-era gap where it never
+    did): `IF-###` id shape/duplication joins the always-on integrity floor;
+    each real row's `SR-Refs` must resolve to a real SR (empty or unknown = a
+    `--strict` finding, the PB back-link idiom, so every seam links the spine and
+    stays transitively TC-covered); and a best-effort `ThisProject`↔`LLR.Module`
+    endpoint check is a **warn-only advisory** (the LLR-Module set is a partial,
+    differently-named inventory — `scripts/check` vs
+    `project-trajectory/scripts/check.py` — so both sides are normalized and the
+    authoritative coverage lives in `check_trajectory`). Absent `interfaces.csv`
+    / a leftover `IF-000` = vacuous.
+  - **`check_trajectory.py` runs the connectivity coverage** at the same
+    `trajectory` step (hook + gate), **all warn-first — never an exit-code
+    change, even under `--strict`**. Ruled **opt-out, default-on**: the coverage
+    warn fires even with an empty/absent `interfaces.csv`, so a multi-module
+    arch-map with no seams reads **"connectivity undeclared"** instead of passing
+    vacuously; silenced only by the one word `off` in `docs/interfaces-check`
+    (the `trajectory-check` idiom — no file scaffolded, absence reads on) or a
+    ≤1-module inventory. Per-module warns: a module that is not an IF endpoint;
+    a covered module missing the Provides or Consumes direction (the **honesty
+    valve** — begin that module's IF-row `Notes` with `source`/`sink` to
+    suppress it); an `Active` seam cited by no TC; a `Contracts: IF-###`
+    docstring id absent from the registry (and the reverse, once the convention
+    is in use). The arch-map is the oracle (`arch_inventory` parses
+    `architecture.md`'s generated block for module names + harvested `Contracts`
+    lines), the same view `check_doc_refs` uses for its symbol oracle.
+  - **`gen_trajectory.py` — the How-SW panel becomes a real graph** when seams
+    exist: module / file / external-actor nodes, IF-labeled directed edges,
+    **reusing the WI-DAG layouter** (`_dag_ranks` longest-path + barycentre
+    sweeps), byte-deterministic, with the symbol table kept beneath it. No IF
+    rows → the panel stays today's bare module table (the graph is *earned* by
+    declaring seams; the no-seam render is byte-identical to before).
+  - **`gen_arch_map.py`** merges module↔module `IF-###` seams into the Mermaid
+    dependency diagram as distinctly-styled dotted, labeled edges, and harvests a
+    `Contracts: IF-###` module-docstring line exactly like the existing
+    `Implements:` harvest (emitted as a `Contracts (interfaces):` map line — the
+    oracle above).
+  - **Template + docs.** `interfaces.template.csv` gains a `Notes` column
+    (legacy rows read it empty — never-breaking) and its explainer row is
+    rewritten to the model (ThisProject module → Counterpart module/file/external
+    actor; the source/sink valve). `bootstrap.py` interface paragraph updated
+    (trace now reads the tier; the opt-out/default-on posture, no file to
+    scaffold). PROCESS_OPTIONS gains **"Intra-repo interfaces & the architecture
+    graph"** (building on §8: the model, the opt-out, the honesty valve, the
+    graph, the ~30-row maintenance-surface risk). ADOPTING §6 gains a re-sync
+    recipe. **PROCESS.md §8** widened from "Cross-project interfaces (only when
+    projects interlink)" to **"Interface seams — cross-project and intra-repo"**.
+  - **Spine (one new SR, ruled).** No existing SN stated the single-dashboard
+    intent (SR-038's parents SN-010/SN-021 are about doc-navigability/freshness),
+    so minted **SN-023** ("progress **and** how the parts connect from one
+    dashboard-like file", Priority S, cited in the root README per the SN
+    need-coverage gate). Hung the new **SR-044** (declared-interface
+    connectivity: trace integrity + coverage warns + graph render) from
+    SN-023;SN-002. Decomposed into **LLR-041** (trace IF integrity) + **LLR-042**
+    (connectivity views/warns/graph) and **TC-044** (`Automated=Yes`). SR-005 and
+    SR-038 text were **left unchanged** — the ruling chose one new SR over
+    extending them, and coherence did not demand it.
+
+- **Judgment calls.** (1) **No `docs/interfaces-check` file scaffolded** — the
+  `trajectory-check`/`okf-export` precedent is absence-reads-on, so "bootstrap
+  ships it" is satisfied by the reader, not a MAPPING entry (scaffold surface
+  unchanged → no `test_bootstrap` / kit-README file-list churn). (2) **Empty
+  registry emits one aggregate warn** ("the N-module architecture declares no
+  interfaces"), not N per-module warns — the per-module warns start once some
+  seams exist. (3) **Source/sink marker = the first word of `Notes`** (not any
+  occurrence), so "the source of truth is X" is not a false marker; keyed to
+  `ThisProject`. (4) **Two LLRs** (trace-integrity vs views) rather than one, the
+  honest two-subsystem decomposition; one TC covers both. (5) The trace endpoint
+  join stays a **warn-only advisory** because two module-naming conventions
+  coexist and the LLR-Module inventory is partial.
+
+**Byte deltas:** `AGENTS.template.md` **untouched** (9,978); `PROCESS.md`
+**57,966 → 58,297 (+331 B, flagged)** — the §8 widening (cross-project → seam
+registry, cross-project **and** intra-repo). Baseline re-stamped to 58,297 in the
+`byte-budget-guard` skill (source + `.claude` + `.agents` copies).
+`PROCESS_OPTIONS.md` / `ADOPTING.md` (not budgeted) grew by the new section +
+recipe.
+
+**Re-attestation rider.** New spine rows **SN-023 + SR-044 + LLR-041/042 +
+TC-044** join the pending re-attestation batch (`SR-034`/`SR-037`/`SR-038`
+/`SR-039…043` from the prior slices). No existing Verified-SR *text* changed in
+this slice (SR-044 is new; SR-005/SR-038 untouched), so the re-attestation adds a
+new SN→SR chain rather than re-opening one.
+
+**Meta dogfood — the WI-057 driver.** The meta repo now emits exactly **one**
+`connectivity undeclared` warn at the hook and G3: *"the 20-module architecture
+declares no interfaces"* (20 arch-map modules, zero IF rows). Expected and
+non-blocking — WI-057 authors the `IF-###` rows that resolve it (the real
+`check.py` hub, hooks/agent_loop feeding it, `stack.ini` + registries as
+shared-contract nodes).
+
+**Mechanized bar:** `pytest -q` **506 passed, 3 skipped**;
+`check_docs.py --root . --stale` **0 broken**; `check_trajectory --strict`
+clean (64 WIs, 56 done); `gen_trajectory --check` + `gen_okf --check` + arch-map
+**up to date**; `check.py --gate G3` **12/12 PASS** (first run caught an
+unformatted diff → `ruff format` → re-run). Spine **SN=23 SR=44 LLR=42 TC=44,
+0 orphans**.

@@ -344,3 +344,44 @@ def test_deep_chain_renders_without_recursionerror(tmp_path):
     assert proc.returncode == 0, (proc.stdout + proc.stderr)[:2000]
     text = html_of(tmp_path)
     assert "WI-0001" in text and "WI-{:04d}".format(n) in text
+
+
+# --- WI-056: the How-SW panel becomes a real interface graph --------------------
+
+IF_HDR = (
+    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+    "Stability,Status,Component,Notes\n"
+)
+
+
+def test_how_sw_graph_renders_seams(tmp_path):
+    # With a committed module map AND declared seams, the How-SW panel gains the
+    # interface graph (module + file + external nodes, IF-labeled edges); the
+    # render is byte-deterministic so --check stays stable.
+    make_repo(tmp_path)
+    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    (tmp_path / "docs" / "requirements" / "interfaces.csv").write_text(
+        IF_HDR
+        + 'IF-001,Provides,src/m,downstream adopter,"cli",SR-001,v1,Stable,Active,,\n'
+        + 'IF-002,Consumes,src/m,docs/stack.ini,"reads",SR-001,v1,Stable,Active,,\n',
+        encoding="utf-8",
+    )
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert "How (SW architecture)" in text
+    assert "IF-001" in text and "swarrow" in text  # a labeled edge + the marker
+    assert "downstream adopter" in text and "stack.ini" in text  # ext + file nodes
+    first = text
+    assert gen(tmp_path).returncode == 0
+    assert html_of(tmp_path) == first  # deterministic
+
+
+def test_how_sw_stays_a_table_without_seams(tmp_path):
+    # No IF rows -> the panel keeps the bare module table (graph earned by seams);
+    # no graph marker leaks into the render.
+    make_repo(tmp_path)
+    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert "How (SW architecture)" in text
+    assert "swarrow" not in text

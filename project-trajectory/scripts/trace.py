@@ -38,6 +38,15 @@ Reads (relative to --docs, default "<root>/docs"; --root defaults to "."):
                                              SupersededBy must name real CMP ids, and a
                                              `Component` tag on an LLR/PART/ASSET row must
                                              resolve to a real CMP row)
+    requirements/interfaces.csv              (optional; IF-### directed interface seams,
+                                             process.md 8 — one row per directed seam
+                                             (ThisProject module -> Counterpart module/file/
+                                             external actor); each row's SR-Refs must resolve
+                                             to a real SR, and ThisProject is best-effort
+                                             joined to the LLR Module inventory. The seam
+                                             registry is off the joined spine but must stay
+                                             traceable to it (WI-056 closed the SR-002-era gap
+                                             where trace.py never read the IF tier))
 
 Writes:
     test/report.md  — counts, the SR->LLR->TC matrix, the orphan list, and two
@@ -85,7 +94,7 @@ Always (independent of --strict-schema), structural integrity is checked:
       docs/requirements/ and docs/test/ — spine, off-spine (interfaces,
       procurement, ...), and project-added registries alike — since the check
       needs no knowledge of a file's semantics, only its header
-    - a duplicated SR/LLR/TC/PB/REPO/CMP id (the join would otherwise silently dedupe it)
+    - a duplicated SR/LLR/TC/PB/REPO/CMP/IF id (the join would otherwise silently dedupe it)
     - a malformed id (not "PREFIX-<digits>")
     - a performance-budget row (PB-###, §9) whose Refs name an unknown
       SR/LLR/Module, or that back-links nothing — the budgets registry is off the
@@ -99,10 +108,20 @@ Always (independent of --strict-schema), structural integrity is checked:
       so the optional registry never blocks a single-repo project's gate
     - a purchased/external part row (PART-###, process-options.md) with a
       malformed/duplicate PART- id. Its IF-Ref names the owning interface row of
-      record (MULTI_REPO.md §3.3) but is NOT resolved here: trace.py never reads
-      interfaces.csv (the IF-### tier is off the joined spine), so PART is
-      integrity-checked only — like a MOD row that delegates nothing. The
-      PART-000 example row is ignored, so the optional registry never blocks a gate
+      record (MULTI_REPO.md §3.3) but is NOT resolved here (the interface tier is
+      checked in its own pass, below), so PART is integrity-checked only — like a
+      MOD row that delegates nothing. The PART-000 example row is ignored, so the
+      optional registry never blocks a gate
+    - an interface seam row (IF-###, process.md §8 — the intra-repo/cross-project
+      interface catalog) with a malformed/duplicate IF- id (the always-on floor),
+      whose SR-Refs is empty or names an unknown SR (a --strict finding, like PB's
+      back-links: every seam links the spine so it stays transitively TC-covered),
+      or whose ThisProject endpoint resolves to no LLR Module after normalization
+      (a warn-only advisory — the LLR Module set is a partial, differently-named
+      inventory, so the full module-coverage check lives in check_trajectory
+      against the arch-map). WI-056 closed the SR-002-era gap (trace.py never read
+      the IF tier); the IF-000 example row is ignored, so the optional registry
+      never blocks a gate
     - a binary/large-asset provenance row (ASSET-###, process-options.md "Binary
       assets") with a malformed/duplicate ASSET- id. Off the spine like PART:
       integrity-checked only, its provenance/license/hash tracked in text even
@@ -260,6 +279,9 @@ ID_PATTERNS = {
     "CMP": re.compile(
         r"^CMP-\d+$"
     ),  # optional domain-neutral component registry (process-options.md)
+    "IF": re.compile(
+        r"^IF-\d+$"
+    ),  # optional intra-repo/cross-project interface registry (process.md §8)
 }
 
 # Fields that must be non-empty under --strict-schema. Deliberately omits the
@@ -447,6 +469,61 @@ def triangle_findings(tcs, llrs):
                     )
                 )
     return out
+
+
+# Source-file extensions stripped when normalizing a module path so the two
+# module-naming conventions in play align: an LLR `Module` cell carries the full
+# repo path with extension (`project-trajectory/scripts/check.py`) while the
+# arch-map / an IF `ThisProject` endpoint may use the shorter map form
+# (`scripts/check`). Normalization strips a leading `project-trajectory/` segment
+# and any one of these tails so both collapse to the same key.
+_MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+
+
+def _norm_module(path):
+    """A module path reduced to a naming-convention-neutral key (see _MODULE_EXTS):
+    strip a leading `project-trajectory/`, any source extension, and `/__init__`."""
+    p = (path or "").strip().replace("\\", "/")
+    if p.startswith("project-trajectory/"):
+        p = p[len("project-trajectory/") :]
+    for ext in _MODULE_EXTS:
+        if p.endswith(ext):
+            p = p[: -len(ext)]
+            break
+    if p.endswith("/__init__"):
+        p = p[: -len("/__init__")]
+    return p
+
+
+def interface_findings(ifs, sr_ids, module_ids):
+    """The IF-### seam tier's back-link checks (process.md §8), closing the gap
+    where trace.py never read the interface catalog (WI-056). Returns
+    ``(findings, advisories)``: *findings* join the --strict failure set like PB's
+    back-links (an IF row's SR-Refs is empty or names an unknown SR — every seam
+    links the spine so it stays transitively TC-covered); *advisories* are
+    warn-only (an IF row's ThisProject endpoint resolves to no LLR Module after
+    normalization). The endpoint join is best-effort: the LLR Module set is a
+    partial, differently-named inventory, so the authoritative module-coverage
+    check lives in check_trajectory against the full arch-map."""
+    findings, advisories = [], []
+    norm_modules = {_norm_module(m) for m in module_ids}
+    norm_modules.discard("")
+    for r in ifs:
+        iid = r["IF-ID"]
+        srrefs = refs(r.get("SR-Refs"))
+        if not srrefs:
+            findings.append(f"IF {iid} links no SR (SR-Refs is empty)")
+        for x in srrefs:
+            if x not in sr_ids:
+                findings.append(f"IF {iid} references unknown {x}")
+        endpoint = (r.get("ThisProject") or "").strip()
+        if norm_modules and endpoint and _norm_module(endpoint) not in norm_modules:
+            advisories.append(
+                f"IF {iid} ThisProject={endpoint!r} matches no LLR Module "
+                "(best-effort join; a module with no LLR is legitimate — "
+                "check_trajectory's arch-map coverage is the full check)"
+            )
+    return findings, advisories
 
 
 def placeholder_findings(label, raw_rows):
@@ -824,6 +901,11 @@ def main():
     # is derived — membership is a `Component` tag on the primitive rows
     # (LLR/IF/ASSET/PART), never restated on the CMP row; absent file -> [].
     raw_cmps = load_csv(docs / "requirements" / "components.csv")
+    # Optional interface-seam registry (IF-###, process.md §8): one row per
+    # directed seam (ThisProject module -> Counterpart module/file/external). Off
+    # the joined spine like PART/ASSET, but its SR-Refs back-link and its endpoint
+    # join keep it traceable (WI-056 closed the SR-002-era gap). Absent file -> [].
+    raw_ifs = load_csv(docs / "requirements" / "interfaces.csv")
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -844,6 +926,7 @@ def main():
         r for r in raw_assets if r.get("ASSET-ID") and not is_example(r["ASSET-ID"])
     ]
     cmps = [r for r in raw_cmps if r.get("CMP-ID") and not is_example(r["CMP-ID"])]
+    ifs = [r for r in raw_ifs if r.get("IF-ID") and not is_example(r["IF-ID"])]
 
     sn_ids = set()
     sn_md = docs / "requirements" / "stakeholder-needs.md"
@@ -978,6 +1061,13 @@ def main():
                             f"{label} {r[key]} Component tag references unknown {x}"
                         )
 
+    # Interface seams (IF-###, process.md §8): SR-Refs back-links join the
+    # --strict failure set like PB's; the ThisProject-vs-LLR-Module endpoint join
+    # is a warn-only advisory (module_ids reused from the PB back-link check above).
+    interface_backlink_findings, interface_advisories = interface_findings(
+        ifs, sr_ids, module_ids
+    )
+
     phases = set(refs(args.phase)) if args.phase else None
 
     def in_phase(r):
@@ -1065,6 +1155,11 @@ def main():
     # id), out of the placeholder/schema sweeps, so a CMP-000 placeholder never
     # blocks a gate; its PartOf/SupersededBy/membership joins are checked above.
     integrity += integrity_findings("CMP", raw_cmps)
+    # The interface-seam registry (IF-###, process.md §8) is the same optional
+    # off-spine kind — integrity-checked (malformed/duplicate id), out of the
+    # placeholder/schema sweeps, so an IF-000 placeholder never blocks a gate; its
+    # SR-Refs back-link and endpoint join are checked below.
+    integrity += integrity_findings("IF", raw_ifs)
     placeholders = (
         [f for label in raw for f in placeholder_findings(label, raw[label])]
         + [f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)]
@@ -1141,6 +1236,14 @@ def main():
                 f"| Component findings | {len(component_findings)} |",
             ]
             if cmps
+            else []
+        )
+        + (
+            [
+                f"| Interface seams (IF) | {len(ifs)} |",
+                f"| Interface findings | {len(interface_backlink_findings)} |",
+            ]
+            if ifs
             else []
         )
         + [
@@ -1259,6 +1362,16 @@ def main():
             if not component_findings
             else [f"- {f}" for f in component_findings]
         )
+    if ifs:
+        lines += ["", "## Interface seams (process.md §8 back-links)", ""]
+        lines += (
+            [f"{len(ifs)} interface-seam row(s); every SR-Refs resolves to a real SR."]
+            if not interface_backlink_findings
+            else [f"- {f}" for f in interface_backlink_findings]
+        )
+        if interface_advisories:
+            lines += ["", "### Interface endpoint advisories (warn-only)", ""]
+            lines += [f"- {a}" for a in interface_advisories]
     if args.no_placeholders:
         lines += ["", "## Placeholders (--no-placeholders)", ""]
         lines += (
@@ -1297,6 +1410,8 @@ def main():
     # Advisories are loud (stdout, not just the report) but never fail the run.
     for a in advisories:
         print(f"WARNING (advisory): {a}")
+    for a in interface_advisories:
+        print(f"WARNING (advisory): {a}")
     print(
         f"Traceability: SN={len(sn_ids)} SR={len(srs)} LLR={len(llrs)} "
         f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"
@@ -1323,6 +1438,12 @@ def main():
             if cmps
             else ""
         )
+        + (
+            f" interfaces={len(ifs)} "
+            f"interface-findings={len(interface_backlink_findings)}"
+            if ifs
+            else ""
+        )
         + (f" ac-advisories={len(advisories)}" if advisories else "")
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
@@ -1336,6 +1457,7 @@ def main():
         or budget_findings
         or module_findings
         or component_findings
+        or interface_backlink_findings
     ):
         sys.exit(1)
     if args.strict_integrity and integrity:

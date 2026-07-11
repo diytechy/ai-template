@@ -780,16 +780,21 @@ the pair for every platform the project supports.
 `scripts/bootstrap.py` scaffolds all of the above (plus `docs/` and CI) into a new
 repo in one command. See `EXAMPLE.md` for a complete worked SN→SR→LLR→TC chain.
 
-## 8. Cross-project interfaces (only when projects interlink)
+## 8. Interface seams — cross-project and intra-repo
 
-When this project provides or consumes a contract shared with another repo,
-record each shared surface once in `requirements/interfaces.csv` as an `IF-###`
-(see `INTERFACES.template.md`): direction, counterpart, contract, the `SR-Refs`
-that realize/rely on it, version, and stability. The owning (`Provides`) side
-holds the authoritative spec; the consuming side links the same `IF-###` and
-pins the version. Every interface is backed by an SR and a contract/fixture test.
-This keeps interlinked projects from silently drifting apart without imposing a
-multi-repo build system. Standalone projects skip this section.
+When this project provides or consumes a contract — shared with another repo, or
+between its **own modules** — record each directed seam once in
+`requirements/interfaces.csv` as an `IF-###` (see `INTERFACES.template.md`):
+direction, counterpart (another module, a file, or an external actor), contract,
+the `SR-Refs` that realize/rely on it, version, and stability. The owning
+(`Provides`) side holds the authoritative spec; the consuming side links the same
+`IF-###` and pins the version. Every interface is backed by an SR and a
+contract/fixture test. This keeps interlinked projects — and a repo's own modules
+— from silently drifting apart without imposing a build system. Single-module
+standalone projects skip this section; a multi-repo or multi-module repo declares
+its seams the same way, and the architecture-connectivity coverage over them is
+**opt-out/default-on** (process-options.md "Intra-repo interfaces & the
+architecture graph").
 
 A **purchased/external part** the product buys rather than builds (a motor, board,
 camera) is owned the same way — a repo/coordinator-held `IF-###` is its
