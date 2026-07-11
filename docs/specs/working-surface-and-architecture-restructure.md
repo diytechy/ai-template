@@ -295,13 +295,16 @@ extend it to cover the checked per-agent fan-out, **or** mint one new SR (an
 S0-style ruling — recommendation: extend SR-025, same "generated, not
 hand-maintained" property). → **re-attestation** if the SR text changes.
 
-**Ruling — track vs. regenerate the copies.** Interim owner decision
-(2026-07-10): **tracked** (committed `.agents/` for now), matching how
-`.claude/skills/` is handled, *may move to gitignore + regenerate-on-setup*
-after iteration. Whichever wins must apply to **all** per-agent dirs
-consistently (today `.claude` is tracked, `.agents` newly tracked, and a
-regenerate model would gitignore both). The drift check keeps the tracked model
-honest; a regenerate model leans on `setup` + the check instead.
+**Ruling — track vs. regenerate the copies. ✅ CONFIRMED (owner, 2026-07-10):
+tracked + drift check**, applied uniformly to **all** per-agent dirs
+(`.claude`/`.agents`/`.gemini`). Rationale: while the copies are byte-identical,
+tracked-plus-freshness-gate is the kit's own idiom for committed generated
+artifacts (arch map, `PROJECT_STATE.html`, OKF), and a fresh clone has working
+skills before setup ever runs. **Revisit trigger, recorded:** the day a skill
+needs an agent-specific frontmatter field, fan-out gains the per-agent
+transform and the model flips to gitignore + regenerate-on-setup — tracking
+*transformed* artifacts invites hand-edits, the rot class the kit exists to
+prevent.
 
 **Risk.** The frontmatter-dialect boundary above; and a re-materialize that
 force-overwrites must touch **only** the skills subtree, never project-authored
@@ -356,9 +359,14 @@ halves — it can ride the same re-attestation or ship on its own.
   registry rows with this doc's `#anchors` as their `SpecRef` (`WI-050…052`
   were consumed by the 2026-07-10 late batch).
 
+- ✅ **S7 tracking: tracked + drift check** (confirmed from interim), uniform
+  across `.claude`/`.agents`/`.gemini`, with the revisit trigger recorded — see
+  the ruling paragraph in S7.
+
 **Still open:**
 
-- **S0 #5 (SpecRef granularity)** — pends the sessions↔WI cardinality framing
-  (see the S0 block).
-- **S7 tracking:** tracked (interim ruling stands) vs. gitignore + regenerate,
-  applied uniformly to `.claude`/`.agents`/`.gemini`.
+- **S0 #5 (SpecRef granularity)** — the last one. Recommendation on the table:
+  **allow both** (one file per standalone WI; a shared campaign doc with
+  `#anchor` for a series), plus the **Done-when checklist** convention in the
+  scaffolded per-WI spec template so a half-complete WI's frontier is the first
+  unticked box, not prose discipline (S1 scaffold step).
