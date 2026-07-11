@@ -1,14 +1,15 @@
 # Capability expansion — run menu · critique loop · registry robustness · OKF tab — PLAN
 
-**Status:** 🟢 **RULED (owner, 2026-07-11) — rulings 1–16 settled the same
-day they were drafted; only #17 (scheduling) remains open.** Key rulings:
+**Status:** 🟢 **RULED + SCHEDULED (owner, 2026-07-11) — all 17 rulings
+settled; ingested as WI-067…WI-070, one campaign bundled with the pending G3
+re-attestation.** Key rulings:
 **#4 `Critique` becomes a first-class Verification value** (owner: it leans
 into LLM-provisioned feedback and can work autonomously — albeit possibly
 poorly — and it *separates critique from attestation*); **C1/C2/C4 locked on
 their described defaults**; **C3 = the pair-row registry** ("pairs now,
-factor later" — see its ruling block). No code written; ingests as `WI-067…`
-when scheduled. The spine-touching sections bundle into the **pending G3
-re-attestation** if scheduled before the owner sitting (the campaign ruling,
+factor later" — see its ruling block); **#17 = one campaign** — WI-067 (C1) ·
+WI-068 (C2) · WI-069 (C3) · WI-070 (C4), spine touches bundling into the
+**pending G3 re-attestation** (the campaign ruling,
 [archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](../archive/specs/working-surface-and-architecture-restructure.2026-07-11.md)).
 
 **Provenance:** owner direction 2026-07-11 (four items, verbatim intent
@@ -82,11 +83,22 @@ of "good enough"?
 prompts, verdict files, escalation keyed to `docs/gate-policy`):
 
 - **Perceptual TCs.** A TC whose acceptance is subjective declares it: its
-  `Method` names the critique procedure and its `Parameters` name a **rubric**
+  `Verification` is **`Critique`** (ruling #4), its `Method` names the
+  critique procedure and its `Parameters` name a **rubric**
   (`docs/rubrics/<name>.md`) plus the **artifact recipe** (the command/steps
   that produce the screenshot/render/output under judgment). The rubric
   derives from the **SN/SR intent, not the TC** — that inversion is what
   catches a lax TC instead of inheriting it.
+- **Rubric anchors (owner note, 2026-07-11).** A rubric carries explicit
+  **"good" and "bad" anchors** in the same notes — definite, citable entries
+  describing what constitutes good (and known-bad patterns, e.g. seam
+  artifacts, impossible shadows, floating geometry) — *the same way test
+  cases are called out*: each anchor is a numbered, referenceable line, and
+  the reference **builds over time** — a critique finding that names a new
+  failure mode is added to the rubric's bad-anchors at rework, so the next
+  round judges against the accumulated reference, not a fresh opinion.
+  Verdicts cite anchor ids, which is also what makes critique rounds
+  comparable across sessions.
 - **The CRITIQUE run-phase.** A fresh session, provider-heterogeneous from the
   implementer when available (`agent_route` reused), receives: the rubric, the
   artifact paths (agent CLIs read local images natively; capability varies per
@@ -334,9 +346,7 @@ LLM critique from human attestation · C3: 8–13 via the **pair-row registry**
 ruling, "pairs now, factor later", with the revisit trigger recorded in the
 C3 model block · C4: 14–16 defaults). See each section's ruling block.
 
-**Still open — the one remaining ruling:**
-
-17. **Scheduling.** Land as one campaign bundled with the pending G3
-    re-attestation sitting, or after the owner sitting closes the current
-    batch. The spec is otherwise fully ruled — ready to ingest as `WI-067…`
-    on the word.
+17. ✅ **Scheduling (owner, 2026-07-11): one campaign, bundled with the
+    pending G3 re-attestation** — ingested as **WI-067…WI-070** the same day.
+    The owner's rubric-anchors note (see C2) rode the same ruling. **The spec
+    is fully ruled; nothing remains open.**

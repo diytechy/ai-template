@@ -49,15 +49,21 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
-  - **Campaign complete — owner sitting next.** The working-surface +
-    architecture-connectivity campaign landed all its slices, heterogeneous
-    implementer/reviewer scheduling included (the loop now routes models from
-    `docs/agents.csv` + `docs/agents-enabled` and dispatches redacted reviewer
-    sessions per `docs/review-policy`; absent files = today's behavior). Its
-    spec is archived, close-dated and WI-attributed:
-    [archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md).
-    The spine-touchers bundle into the pending re-attestation (the campaign
-    ruling).
+  - **In flight — the capability-expansion campaign** (spec:
+    [specs/capability-expansion.md](specs/capability-expansion.md), fully
+    ruled + scheduled 2026-07-11, bundled with the pending re-attestation):
+    - **WI-067** — run capability menu (`stack.ini [run]` + `run_menu.py`;
+      the launcher surface gets its first SR).
+    - **WI-068** — `Critique` verification value + the subjective-quality
+      critique loop (rubric anchors build a citable good/bad reference).
+    - **WI-069** — pair-row agent registry (Family/Env columns, version-less
+      resolution, per-pair cooldown; extends the routing SR).
+    - **WI-070** — `PROJECT_STATE.html` OKF knowledge tab (the bundle's
+      first real consumer; extends the dashboard SR).
+    **Next up: WI-067.** The prior working-surface + architecture campaign
+    is closed and archived
+    ([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md));
+    all spine-touchers bundle into the one pending re-attestation.
   - **Deferred (backlog — first-class `deferred` WI rows, each with its
     reason):**
     - **WI-060** — coordinator working-tree stash/rollback between sessions
@@ -78,16 +84,12 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-- **Next action:** the **owner sitting** — the campaign is complete. That
-  sitting covers the G3 re-attestation (now also over the new `SR-045`), the
-  push ruling (~50 commits local), the sibling-repo target, and the deferred
-  batch review. **Ready to schedule:** the **capability-expansion spec**
-  ([specs/capability-expansion.md](specs/capability-expansion.md), **RULED
-  2026-07-11** — run capability menu · `Critique` verification + critique
-  loop · pair-row agent registry · OKF knowledge tab; only scheduling ruling
-  #17 is open; ingests as `WI-067…` on the word). After that: the G-Release
-  walk, the WI-DAG edge data-pass, or new scope (which needs a plan/WI entry
-  first).
+- **Next action:** execute the capability-expansion campaign in order —
+  **WI-067** next, then WI-068, WI-069, WI-070. The **owner sitting** follows
+  the campaign close: one G3 re-attestation over every accumulated spine
+  change (both campaigns), the push ruling, the sibling-repo target, and the
+  deferred batch review. After that: the G-Release walk, the WI-DAG edge
+  data-pass, or new scope (which needs a plan/WI entry first).
 
 ## Scope
 
