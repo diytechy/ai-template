@@ -1,10 +1,14 @@
 # Capability expansion — run menu · critique loop · registry robustness · OKF tab — PLAN
 
-**Status:** 🟡 **PROPOSED — drafted 2026-07-11 from owner direction; every
-section carries a working default and its open rulings.** No code written;
-ingests as `WI-067…` when scheduled. The spine-touching sections bundle into
-the **pending G3 re-attestation** if scheduled before the owner sitting (the
-campaign ruling,
+**Status:** 🟢 **RULED (owner, 2026-07-11) — rulings 1–16 settled the same
+day they were drafted; only #17 (scheduling) remains open.** Key rulings:
+**#4 `Critique` becomes a first-class Verification value** (owner: it leans
+into LLM-provisioned feedback and can work autonomously — albeit possibly
+poorly — and it *separates critique from attestation*); **C1/C2/C4 locked on
+their described defaults**; **C3 = the pair-row registry** ("pairs now,
+factor later" — see its ruling block). No code written; ingests as `WI-067…`
+when scheduled. The spine-touching sections bundle into the **pending G3
+re-attestation** if scheduled before the owner sitting (the campaign ruling,
 [archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](../archive/specs/working-surface-and-architecture-restructure.2026-07-11.md)).
 
 **Provenance:** owner direction 2026-07-11 (four items, verbatim intent
@@ -57,13 +61,10 @@ quoting; scaffold ships the delegates.
 **Spine impact.** One new SR formalizing the launcher surface (the evaluator
 runs any major capability without recalling commands) → re-attestation rider.
 
-**Open rulings.**
-1. Capability home: `stack.ini [run]` *(default)* vs a separate `docs/run.ini`.
-2. New SR *(default — a different need than dev-setup's SR-032)* vs extending
-   SR-032.
-3. All three launchers delegate to Python *(default — Python ≥3.8 is already
-   the kit floor; an interactive menu in raw `.cmd` batch is not worth owning)*
-   vs shell-native menus.
+**Rulings (owner, 2026-07-11): C1 locked on its defaults.**
+1. ✅ Capability home = `stack.ini [run]`.
+2. ✅ One new SR (a different need than dev-setup's SR-032).
+3. ✅ All three launchers delegate to Python (`run_menu.py`).
 
 ## C2 — subjective-quality critique loop (the perceptual arbiter)
 
@@ -120,23 +121,30 @@ prompts, verdict files, escalation keyed to `docs/gate-policy`):
 **Spine impact.** One new SN (*subjective/perceptual acceptance is adjudicated
 by an independent critical eye against a written rubric — never by the
 authoring session*) + one new SR (the critique loop) → re-attestation rider.
+**Per ruling #4** the Verification vocabulary also gains **`Critique`**
+(trace.py's vocabulary check + the PROCESS.md §4 verification-methods text —
+byte-budgeted; keep the delta minimal and flag it). A `Critique` TC's
+Evidence = the verdict file + artifact path; `Attest` stays reserved for
+human attestation — the separation is the point of the ruling.
 
 **Risks.** The rubric becomes the quality ceiling (a vague rubric yields a
 vague critic — the TC-hardening channel is the repair path); critic sycophancy
 (defended by fresh context + provider heterogeneity + no self-assessment);
 multimodal support varies per CLI (declared per-model, degraded honestly).
 
-**Open rulings.**
-4. Verification vocabulary: **no new value** *(default — the critic is an
-   instrument under `Attest`; Evidence = verdict file + artifact path)* vs a
-   first-class `Critique` method (touches trace's vocabulary + byte-budgeted
-   PROCESS.md text).
-5. Trigger: the CRITIQUE leg fires when a WI touches a perceptual TC
-   *(default)* vs riding the `docs/review-policy` dial.
-6. Iteration budget default (3) and where it's declared (env-overridable
-   constant like the S8 escalation knobs — default).
-7. Rubric home: `docs/rubrics/` files *(default — reusable across TCs)* vs
-   inline TC cells.
+**Rulings (owner, 2026-07-11).**
+4. ✅ **`Critique` is a first-class Verification value** — the owner
+   overrode the instrument-under-`Attest` default: it leans into
+   LLM-provisioned feedback, can work autonomously (albeit possibly
+   poorly), and **separates critique from attestation**. A perceptual TC
+   declares `Verification=Critique`; the CRITIQUE leg is its mechanization;
+   human `Attest` remains a distinct, unmixed value.
+5. ✅ Trigger = a WI touching a `Critique` TC *(default confirmed — ruling
+   #4 makes the marker first-class, so the trigger reads straight off the
+   spine)*.
+6. ✅ Iteration budget 3, env-overridable like the S8 escalation knobs
+   *(default confirmed)*.
+7. ✅ Rubric home = `docs/rubrics/` files *(default confirmed)*.
 
 ## C3 — agent registry robustness: version-less ids, multi-login, routers
 
@@ -179,32 +187,45 @@ facts:
   file and race on refresh** — multi-account Gemini must use API keys or be
   serialized.
 
-**Model (working defaults, shaped by the findings):**
+**Model — ✅ RULED (owner, 2026-07-11): the pair-row registry ("pairs now,
+factor later").** The semantic cleanup that dissolves the Provider muddle:
 
-- **Version-less resolution:** an enable-list token naming `PROVIDER-MODEL`
-  with no version resolves over the registry rows whose **`Provider`+`Model`
-  columns** match (column-keyed — the id stays a never-parsed join key):
-  primary = dotted-numeric tuple compare, tiebreak = maturity rank
-  (GA/untagged > `preview` > `beta` > `exp`, a fixed vocabulary with a
-  per-registry override), final tiebreak = date stamp. Preview/exp rows are
-  skipped unless explicitly named or the only candidate. "Newest" is computed
-  **only over rows present in `agents.csv`** — deterministic and offline.
-- **Multi-login:** a second account = a second registry row with a distinct id
-  and its own `CmdTemplate`, enabled by a new **optional `Env` column**
-  (`KEY=value;KEY2=value2`, merged over the inherited environment at launch) —
-  the declarative fix for every env-only selector (accounts AND router base
-  URLs). Per-id cooldown already gives each account its own quota pool
-  (correct by construction). Flag-based selection (Codex `--profile` for
-  *config*, `-c` overrides) keeps working inline with zero change.
-- **Routers as providers:** confirmed — one router = one `Provider` row set
-  (`OPENROUTER-…`), its CmdTemplate carrying the base-url selection (via `Env`
-  for Claude; via `-c model_provider=…` + `wire_api="responses"` for Codex;
-  Gemini-through-router is fragile — treat unsupported). **False-diversity
-  fix:** a new optional **`Family` column** (training lineage: `ANTHROPIC`,
-  `OPENAI`, `GOOGLE`, …; **absent/blank = `Provider`**, so today's registries
-  behave identically). Reviewer heterogeneity and the scorer's cross-family
-  corroboration re-key on `Family`; `Provider` stays the invocation truth
-  (cooldown, launch, accounts).
+- **Family / Model / Version** = *identity* — who trained it, the line, the
+  comparable version token. Reviewer heterogeneity and the scorer's
+  cross-family corroboration key on **Family**, never on how a model is
+  reached.
+- **Route** = *access* — a CLI command plus its environment. **No router =
+  the ambient default environment** (a plain CmdTemplate with an empty
+  `Env`, exactly today's behavior); a second account or a router service =
+  a different CmdTemplate/`Env`.
+- **A registry row = one (model × route) pair** — this model, reached this
+  way. The owner's constraint "only certain routers may query certain
+  models" **is the table itself**: a pair is allowed iff its row was
+  written, keeping consent explicit (no `Serves` patterns that would
+  silently allow future models). The per-route `{model}` slug problem
+  disappears too — each pair row carries its own slug.
+- Columns: `Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes` — `Provider`
+  is retired in favor of `Family` (legacy registries: a `Provider` column is
+  read as `Family` when `Family` is absent — never-breaking). `Env` =
+  `KEY=value;KEY2=value2`, merged over the inherited environment at launch
+  (the declarative fix for every env-only selector: `CLAUDE_CONFIG_DIR`,
+  `CODEX_HOME`, `ANTHROPIC_BASE_URL`, `GEMINI_API_KEY`).
+- **Cooldown stays per row id = per access path** — an account outage or
+  router failure cools only that path; the same model via another route
+  stays selectable. Two accounts = two quota pools, correct by construction.
+- **Version-less resolution** operates over pairs **within one
+  `(Family, Model)` line** (column-keyed; the id stays a never-parsed join
+  key): dotted-numeric tuple first, maturity rank on ties (GA/untagged >
+  `preview` > `beta` > `exp`, fixed vocabulary with per-registry override),
+  date stamp last; preview/exp skipped unless explicitly named or the only
+  candidate; among surviving pairs, `docs/agents-enabled` order picks the
+  route. "Newest" is computed only over rows present in `agents.csv` —
+  deterministic and offline.
+- **The recorded revisit trigger (the "factor later" half):** the day one
+  route's command/env text is repeated across enough pair rows that editing
+  it is error-prone, factor the route definitions into a named-preset file
+  that pair rows *reference* — the pair rows remain the explicit allow
+  matrix; only the command/env text gets deduplicated.
 
 **Steps.** Column-keyed resolver in `agent_route.py` + the `Env` merge in the
 loop's launch path + `Family` re-key of `select()`/scorer + template column
@@ -218,23 +239,21 @@ versions (`1.82.7`/`1.82.8`); Gemini OAuth concurrency caveat stated.
 router semantics) → re-attestation rider. All additive, never-breaking (new
 columns optional; absent files/columns = today's behavior).
 
-**Open rulings.**
-8. Pin the `Model`/`Version` column contract as above *(prerequisite to all
-   of C3 — the shipped example rows violate it today)*.
-9. Ordering direction when numeric and maturity conflict: numeric-newest-wins
-   with preview demoted on ties *(default)* vs stable-always-wins (is
-   `3.1-preview` newer than `3-GA`?); confirm the tag vocabulary + override.
-10. Confirm resolution is intra-`(Provider, Model)` only — the `-PRO`
-    correction (preference for "final designations" = GA-over-preview, not
+**Rulings (owner, 2026-07-11): C3 = the pair-row registry, all six settled
+by it.**
+8. ✅ The `Model`/`Version` column contract is pinned as above (the shipped
+   example rows get fixed at build).
+9. ✅ Numeric-newest-wins, maturity demoted to the tiebreak, fixed vocabulary
+   with per-registry override *(default confirmed)*.
+10. ✅ Resolution is intra-`(Family, Model)` only — the `-PRO` correction
+    stands (preference for "final designations" = GA-over-preview, never
     pro-over-plain).
-11. The **`Env` column** *(default — declarative, resync-friendly)* vs
-    wrapper executables for env-only selectors.
-12. Second-account id convention: an `Account` column with an id suffix
-    (e.g. `…-ACCT2`) *(default)* vs a provider-suffix (`ANTHROPIC2-…`) —
-    either way `Provider`/`Family` stay identical across the account rows and
-    ids stay distinct (independent cooldown).
-13. The **`Family` column** + re-keying heterogeneity/scorer from provider to
-    family *(default: yes, with absent = Provider fallback)*.
+11. ✅ The `Env` column *(pair rows carry it; wrappers not required)*.
+12. ✅ Second account = a second pair row with a distinct id (suffix style,
+    e.g. `…-ACCT2`); Family identical across account rows; independent
+    cooldown by construction.
+13. ✅ `Family` replaces `Provider` as the diversity key (legacy `Provider`
+    read as `Family` fallback); routes are not identity.
 
 ## C4 — PROJECT_STATE.html gains an OKF knowledge tab (the first real consumer)
 
@@ -283,15 +302,14 @@ ride the re-attestation.
 regen-order note; tests (tab renders from a real bundle, omitted without one,
 byte-deterministic, link-out targets exist, mobile shell holds); docs.
 
-**Open rulings.**
-14. Consume `docs/okf/` as the tab's input *(default — the owner's stated
-    intent, and it makes the bundle load-bearing)* vs re-deriving from the
-    CSVs and merely linking the bundle (weaker consumer story, one less
-    coupling).
-15. Body embedding: middle path *(default)* vs embed-all vs link-only.
-16. If the owner wants the organic "graph-view feel" later: a fixed-seed
-    force layout **computed in Python** stays deterministic and lib-free — a
-    follow-up, not this WI *(default: layered layout now)*.
+**Rulings (owner, 2026-07-11): C4 locked on its defaults.**
+14. ✅ The tab consumes `docs/okf/` (the bundle becomes load-bearing — the
+    first real consumer).
+15. ✅ Body embedding = the middle path (descriptions embedded, full bodies
+    linked out to the committed bundle).
+16. ✅ Layered deterministic layout now; a fixed-seed Python force layout
+    stays the recorded lib-free follow-up if the organic feel is wanted
+    later.
 
 ---
 
@@ -308,12 +326,17 @@ All four touch the spine (C1 new SR · C2 new SN+SR · C3 SR-045 text · C4
 SR-038/042 text) — per the campaign ruling they should land as **one campaign
 riding the pending G3 re-attestation sitting**, so the owner still signs once.
 
-## Consolidated open rulings
+## Consolidated rulings (owner, 2026-07-11)
 
-Rulings 1–16 above (C1: 1–3 · C2: 4–7 · C3: 8–13 · C4: 14–16), plus:
+**Rulings 1–16 are settled** (C1: 1–3 defaults · C2: 4–7 with **#4 overriding
+the default — `Critique` is a first-class Verification value**, separating
+LLM critique from human attestation · C3: 8–13 via the **pair-row registry**
+ruling, "pairs now, factor later", with the revisit trigger recorded in the
+C3 model block · C4: 14–16 defaults). See each section's ruling block.
 
-17. **Schedule as one campaign now** (bundling with the pending
-    re-attestation sitting) vs after the owner sitting closes the current
-    batch. Every section carries a working default, so an unruled item does
-    not block scheduling — rulings can land per-section like the S0–S8
-    precedent.
+**Still open — the one remaining ruling:**
+
+17. **Scheduling.** Land as one campaign bundled with the pending G3
+    re-attestation sitting, or after the owner sitting closes the current
+    batch. The spec is otherwise fully ruled — ready to ingest as `WI-067…`
+    on the word.
