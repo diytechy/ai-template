@@ -362,6 +362,16 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "check: docs/stack.ini [arch-map] mode is {!r}; expected "
             "symbols|files".format(arch_mode)
         )
+    # The trajectory validator gains --strict at G2/G3 — the gates promote the
+    # status↔registry coherence rules R-B…R-E from WARN to ERROR (R-A always
+    # fails). "all" is deliberately EXCLUDED so the pre-commit floor, which runs
+    # this step via `--run-step trajectory` (resolved at gate="all"), stays
+    # warn-first: a plain commit must not block on status.md/SpecRef drift, only
+    # on the R-A handoff-incoherence rule (process-options.md "Trajectory /
+    # work-items layer").
+    traj_cmd = [sys.executable, str(_SCRIPTS / "check_trajectory.py")]
+    if gate in ("G2", "G3"):
+        traj_cmd.append("--strict")
     arch_cmd = [
         sys.executable,
         str(_SCRIPTS / "gen_arch_map.py"),
@@ -473,7 +483,10 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ),
         # Work-item trajectory (process-options.md "Trajectory / work-items
         # layer"): validates the execution DAG in docs/requirements/work-items.csv
-        # — id integrity, resolvable predecessors, an acyclic graph (SR refs warn).
+        # — id integrity, resolvable predecessors, an acyclic graph (SR refs warn)
+        # — plus the status.md↔registry SSOT rules (R-A Deliverable-iff-done, a
+        # hard error always; R-B…R-E status coherence + SpecRef resolution, warn
+        # here and ERROR under --strict, added at G2/G3 via traj_cmd above).
         # An OPT-OUT layer: an absent or placeholder-only registry passes
         # vacuously and docs/trajectory-check `off` silences it, so a repo that
         # never adopts it pays nothing (the docs/secrets-scan floor's posture).
@@ -481,7 +494,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         (
             "trajectory",
             (),
-            [sys.executable, str(_SCRIPTS / "check_trajectory.py")],
+            traj_cmd,
             {"G2", "G3"},
             "process",
         ),

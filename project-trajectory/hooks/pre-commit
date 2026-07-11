@@ -116,6 +116,26 @@ fi
 #     registry edit stales docs/okf/ exactly like it stales the dashboard.
 "$PY" "$SCRIPTS_DIR/check.py" --run-step okf
 
+# 1d. Work-item registry coherence — the status.md ↔ work-items.csv SSOT floor
+#     (process-options.md "Trajectory / work-items layer"). Delegates to
+#     `check.py --run-step trajectory` (the arch-map/trajectory-map idiom), which
+#     resolves this step at gate=all, i.e. WARN-FIRST: only the R-A rule (a WI's
+#     Deliverable is non-empty iff Status=done) is a hard ERROR here, because a
+#     commit is the agent handoff point — an incoherent WI state launches the
+#     next session into the wrong work item. The softer status.md/SpecRef rules
+#     (R-B…R-E) warn at commit and gate only at G2+ (check.py adds --strict
+#     there). Vacuous for a non-adopter (placeholder-only/absent registry) and
+#     silenced by the one word `off` in docs/trajectory-check.
+"$PY" "$SCRIPTS_DIR/check.py" --run-step trajectory
+
+# 1e. No-validation-delta warn (warn-first, never blocks): when this commit
+#     closes a WI that is a follow-up on an SR a previously-done WI already
+#     delivered, yet touches neither the TC registry nor a test file, the fix
+#     landed in the code but not the validation chain — so the same failure can
+#     recur. Reads the staged diff (git is available in the hook context); a
+#     silent no-op outside a git checkout and when the registry is untouched.
+"$PY" "$SCRIPTS_DIR/check_trajectory.py" --root "$REPO_ROOT" --staged || true
+
 # 2. Traceability *integrity*: no duplicate / malformed ids — wrong at any
 #    stage, so safe to enforce on every commit. Deliberately NOT the full
 #    --strict orphan check: orphans are a G2+ gate criterion (a mid-G1 registry

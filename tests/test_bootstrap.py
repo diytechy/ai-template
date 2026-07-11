@@ -29,6 +29,8 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/requirements/assets.csv",
         "docs/requirements/components.csv",
         "docs/requirements/work-items.csv",
+        "docs/specs/README.md",
+        "docs/specs/WI-000.md",
         "docs/test/test-cases.csv",
         "scripts/check.py",
         "scripts/check_doc_refs.py",

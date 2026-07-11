@@ -223,6 +223,8 @@ _Validate the work-item registry (docs/requirements/work-items.csv) — stdlib o
 | `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
 | `load_known_srs(root)` | The set of real SR ids from system-requirements.csv (for the SR-ref warn). |  |
+| `ssot_findings(wis, root)` | The status.md ↔ work-items.csv coherence findings (R-A…R-E) + the |  |
+| `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `main()` |  |  |
 
 ### `scripts/check_vendored`

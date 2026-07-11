@@ -36,6 +36,7 @@ What it creates in the destination:
     docs/requirements/assets.csv               <- registries/assets.template.csv
     docs/requirements/components.csv           <- registries/components.template.csv
     docs/requirements/work-items.csv           <- registries/work-items.template.csv
+    docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
@@ -952,6 +953,13 @@ MAPPING = [
         "docs/requirements/work-items.csv",
     ),
     ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
+    # Specs-of-record (process-options.md "Trajectory / work-items layer"): the
+    # per-WI spec directory the work-items.csv `SpecRef` column points at (rule
+    # R-E). A README explaining the layer + an inert WI-000 example carrying the
+    # Done-when checklist. Nothing gates on the -000 file (check_trajectory
+    # ignores the WI-000 row), so a fresh scaffold stays vacuously clean.
+    ("specs/README.template.md", "docs/specs/README.md"),
+    ("specs/WI-000.template.md", "docs/specs/WI-000.md"),
     ("scripts/trace.py", "scripts/trace.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),

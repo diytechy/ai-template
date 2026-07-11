@@ -848,11 +848,14 @@ whiteboard thread — stays the *why*; `work-items.csv` is the machine-readable
 thread argued. The two **coexist**; the registry does not replace the narrative.
 
 **Registry.** `docs/requirements/work-items.csv`, columns
-`WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable`. Off-spine and
-optional like `procurement.csv` / `assets.csv`: `trace.py` does not read `WI-`
-ids — the trajectory tooling owns them. `Status ∈ {queued,active,done}`;
-`SR-Refs` / `Predecessors` are `;`-joined id lists; a `-000` example row ships
-inert (the placeholder rule the whole kit shares).
+`WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef`.
+Off-spine and optional like `procurement.csv` / `assets.csv`: `trace.py` does not
+read `WI-` ids — the trajectory tooling owns them. `Status ∈
+{queued,active,done,deferred}` — `deferred` is a first-class *queued-but-not-next*
+state carrying a recorded reason (a distinct DAG state, not "next"); an unknown
+status lints. `SR-Refs` / `Predecessors` are `;`-joined id lists; a `-000` example
+row ships inert (the placeholder rule the whole kit shares). A legacy CSV without
+the `SpecRef` column reads it as empty — never-breaking.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
 G2. Every `Predecessors` id (hard or soft) resolves to a real work item and the
@@ -861,6 +864,51 @@ depends on itself can never start); a cycle that closes only through soft
 edges is a **warning** (conflicting ordering hints, not a blocker); every `SR-Refs` id exists in the SR registry — a **warning**, since a
 draft SR referenced ahead of its row is legitimate; `WI-###` id shape and
 uniqueness — integrity, like `trace.py`.
+
+**The SSOT model (status.md ↔ registry).** `status.md` and `work-items.csv` used
+to compete — both carried work descriptions, and they drifted. The model splits
+them: **`status.md` is forward-only** (what happens next) and **the WI
+`Deliverable` is backward-only** (what shipped). The bridge is a per-WI
+**`SpecRef`** that lives while the WI is open and clears at close.
+`check_trajectory.py` mechanizes five rules by cross-reading both files (warn-first
+at the commit floor; `--strict` gates R-B…R-E at G2+):
+
+- **R-A** — a WI's `Deliverable` is non-empty **iff** `Status = done`; an open WI
+  (queued/active/deferred) has an **empty** Deliverable. A **hard error at every
+  run** (no flag): a commit is the agent handoff point, so an incoherent WI state
+  launches the next session into the wrong item. This is the pre-commit floor.
+- **R-B** — every **open** WI id appears as a token in `status.md` (its lane); a
+  `deferred` WI additionally carries its **reason** there.
+- **R-C** — `status.md` names at least one **open** WI id (the next/active work).
+- **R-D** — a **`done`** WI id must **not** appear in `status.md` (bare id token) —
+  closed work leaves the working surface; history lives in `log.md`.
+- **R-E** — every **open** WI has a non-empty **`SpecRef`** resolving to an
+  in-repo target (`docs/specs/WI-###.md` or a `doc#anchor`; the path part must
+  exist). Deeper anchor/path validation rides `check_doc_refs.py`'s path tier.
+
+If `status.md` is absent, R-B/R-C/R-D are vacuous (a repo may keep no status
+blackboard); a placeholder-only/absent registry stays vacuous for all of them.
+
+**Spec-of-record (`SpecRef` + `docs/specs/`).** A queued WI whose only description
+is its title is not implementable, and nothing used to check that an open WI named
+a reachable spec. `SpecRef` fixes that: a spec-of-record lives in
+[`docs/specs/`](specs/README.md) (a per-WI `WI-###.md`, or a shared
+**campaign** doc addressed by `#anchor`) while the WI is open, and is **archived at
+close** to `docs/archive/specs/` with the close date appended and the WI it was
+attributed to noted (git keeps the history; the `Deliverable` + `log.md` carry the
+summary). Every spec ships a **Done-when checklist**, so a half-complete WI's
+frontier is its **first unticked box**, not prose discipline (ticks are transient
+working state). A shared campaign doc archives when its **last** open WI closes.
+
+**No-validation-delta warn.** A rework WI that addresses a prior failure but
+changes neither the TC prose (`docs/test/test-cases.csv`) nor the test logic
+(files under the declared tests dir) warns (`--staged`, warn-first): the same
+failure can recur because the fix landed in the code, not the validation chain.
+
+**Campaign ruling.** Any batch of spine-touching work headed for the same
+re-attestation should land as **one campaign** — batch the changes so a **single
+owner sitting** covers each re-attestation, rather than paying for several. A
+campaign's spec is one shared `docs/specs/` doc with a `#anchor` per WI.
 
 **Dashboard** — `gen_trajectory.py` renders the root `PROJECT_STATE.html` (the
 unified project-state artifact; formerly `docs/trajectory.html`), a generated

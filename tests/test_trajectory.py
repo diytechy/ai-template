@@ -8,9 +8,18 @@ check entirely. Each is pinned red/green by running the real script over a
 minimal temp registry (no full scaffold needed — the validator reads plain CSVs).
 """
 
+import shutil
+import subprocess
+
+import pytest
+
 from conftest import SCRIPTS, run_py
 
 WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
+# The header with the SpecRef column (S1) — used by the SSOT-rule tests.
+SR_WI_HEADER = (
+    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef\n"
+)
 LEGACY_HEADER = "WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable\n"
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
@@ -41,8 +50,29 @@ def write_srs(root, *sr_ids):
     (req / "system-requirements.csv").write_text(SR_HEADER + rows, encoding="utf-8")
 
 
-def run_traj(root):
-    return run_py([SCRIPTS / "check_trajectory.py", "--root", root], cwd=root)
+def run_traj(root, *extra):
+    return run_py([SCRIPTS / "check_trajectory.py", "--root", root, *extra], cwd=root)
+
+
+def write_wis_sr(root, body):
+    """Write work-items.csv with the SpecRef-column header + `body`."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "work-items.csv").write_text(SR_WI_HEADER + body, encoding="utf-8")
+    return root
+
+
+def write_status(root, text):
+    """Write docs/status.md (the forward-only working surface)."""
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "status.md").write_text(text, encoding="utf-8")
+
+
+def write_spec(root, rel):
+    """Create an in-repo spec file so a SpecRef resolves (R-E)."""
+    p = root / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("# spec\n", encoding="utf-8")
 
 
 # --- vacuous / opt-out: the layer costs a non-adopter nothing ------------------
@@ -81,20 +111,21 @@ def test_opt_out_silences_even_a_broken_registry(tmp_path):
 
 
 def test_valid_graph_passes(tmp_path):
-    # A small acyclic DAG with mixed statuses. No SR registry is written, so the
+    # A small acyclic DAG with mixed statuses. Open rows carry an EMPTY
+    # Deliverable (R-A: filled only at close). No SR registry is written, so the
     # SR-ref warn is suppressed (the known_srs-empty guard) and it still passes.
     write_wis(
         tmp_path,
         "WI-001,Root,scripts,SR-001,,done,d\n"
-        "WI-002,Mid,scripts,SR-001,WI-001,active,d\n"
-        "WI-003,Leaf,docs,SR-002,WI-001;WI-002,queued,d\n",
+        "WI-002,Mid,scripts,SR-001,WI-001,active,\n"
+        "WI-003,Leaf,docs,SR-002,WI-001;WI-002,queued,\n",
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "3 work item(s)" in proc.stdout
     assert "1 done" in proc.stdout
     assert "acyclic" in proc.stdout
-    assert "WARN" not in proc.stderr  # no SR registry -> no dangling-ref warn
+    assert "not in the SR registry" not in proc.stderr  # no SR -> no dangling warn
 
 
 # --- hard errors (exit 1) -------------------------------------------------------
@@ -158,7 +189,7 @@ def test_soft_only_cycle_warns_but_passes(tmp_path):
     # not an unstartable trajectory (the hard-edge acyclicity rule).
     write_wis(
         tmp_path,
-        "WI-001,A,t,,~WI-002,queued,d\nWI-002,B,t,,~WI-001,queued,d\n",
+        "WI-001,A,t,,~WI-002,queued,\nWI-002,B,t,,~WI-001,queued,\n",
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -170,8 +201,8 @@ def test_mixed_hard_soft_graph_passes(tmp_path):
     write_wis(
         tmp_path,
         "WI-001,Root,scripts,,,done,d\n"
-        "WI-002,Mid,scripts,,WI-001,active,d\n"
-        "WI-003,Leaf,docs,,WI-001;~WI-002,queued,d\n",
+        "WI-002,Mid,scripts,,WI-001,active,\n"
+        "WI-003,Leaf,docs,,WI-001;~WI-002,queued,\n",
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -197,7 +228,7 @@ def test_legacy_track_header_still_read(tmp_path):
 def test_dangling_sr_ref_warns_but_passes(tmp_path):
     # The SR registry exists (SR-001) but a WI cites SR-999: a WARN on stderr, a
     # clean exit — a draft SR referenced ahead of its row is legitimate.
-    write_wis(tmp_path, "WI-001,A,scripts,SR-999,,queued,d\n")
+    write_wis(tmp_path, "WI-001,A,scripts,SR-999,,queued,\n")
     write_srs(tmp_path, "SR-001")
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -247,7 +278,9 @@ def _chain(n, closed=False):
     rows = []
     for k in range(1, n + 1):
         pred = "WI-{:04d}".format(k + 1) if k < n else ("WI-0001" if closed else "")
-        rows.append("WI-{:04d},step,scripts,,{},queued,d".format(k, pred))
+        # `done,d` keeps every row SSOT-compliant (R-A: Deliverable iff done), so
+        # the deep-graph behavior under test is isolated from the coherence rules.
+        rows.append("WI-{:04d},step,scripts,,{},done,d".format(k, pred))
     return "\n".join(rows) + "\n"
 
 
@@ -268,3 +301,216 @@ def test_deep_cycle_reported_cleanly_not_recursionerror(tmp_path):
     assert "RecursionError" not in proc.stderr, proc.stderr
     assert proc.returncode == 1
     assert "dependency cycle" in proc.stderr
+
+
+# --- S1: the status.md <-> registry SSOT rules ---------------------------------
+# R-A is a hard error at every run (the pre-commit floor); R-B..R-E warn plain
+# and gate under --strict; the vocabulary gains `deferred`.
+
+
+def test_ra_open_wi_with_deliverable_fails_plain(tmp_path):
+    # R-A: an open WI's Deliverable is filled only at close — a filled one on an
+    # open row is an incoherent handoff, a hard error even without --strict.
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,queued,shipped it,\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "R-A" in proc.stderr and "Deliverable is non-empty" in proc.stderr
+
+
+def test_ra_done_wi_with_empty_deliverable_fails_plain(tmp_path):
+    # R-A: a done WI must record what shipped — an empty Deliverable is a hard
+    # error, the mirror of the open case.
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,done,,\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "R-A" in proc.stderr and "Deliverable is empty" in proc.stderr
+
+
+def test_deferred_status_is_first_class(tmp_path):
+    # `deferred` is a known open state: empty Deliverable + a resolvable SpecRef
+    # passes clean, with no unknown-status lint.
+    write_spec(tmp_path, "docs/specs/WI-001.md")
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,deferred,,docs/specs/WI-001.md\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "clean" in proc.stdout
+    assert "unknown status" not in proc.stderr
+
+
+def test_unknown_status_warns_plain_fails_strict(tmp_path):
+    # An out-of-vocabulary status lints (warn-first; ERROR under --strict).
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,blocked,,\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "unknown status" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "unknown status" in strict.stderr
+
+
+def test_rd_done_id_in_status_warns_plain_fails_strict(tmp_path):
+    # R-D: a done WI id must not linger on the forward-only status.md — warn
+    # plain, ERROR under --strict. WI-002 (open) keeps status.md R-B/R-C clean.
+    write_spec(tmp_path, "docs/specs/WI-002.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,First,scripts,,,done,d,\n"
+        "WI-002,Next,scripts,,WI-001,active,,docs/specs/WI-002.md\n",
+    )
+    write_status(tmp_path, "Next: WI-002. Superseded WI-001 (leaked done id).\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "R-D WI-001" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "R-D WI-001" in strict.stderr
+
+
+def test_re_empty_specref_warns_plain_fails_strict(tmp_path):
+    # R-E: an open WI must name a SpecRef — warn plain, ERROR under --strict.
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,active,,\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "R-E WI-001" in plain.stderr and "no SpecRef" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "R-E WI-001" in strict.stderr
+
+
+def test_re_dangling_specref_warns_plain_fails_strict(tmp_path):
+    # R-E: a SpecRef whose path part does not exist in the repo is dangling.
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,active,,docs/specs/WI-999.md#gone\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "does not resolve" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "R-E WI-001" in strict.stderr
+
+
+def test_specref_with_anchor_resolves(tmp_path):
+    # A `path#anchor` SpecRef resolves on the path part alone (anchor ignored by
+    # R-E; deeper validation rides check_doc_refs).
+    write_spec(tmp_path, "docs/specs/campaign.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,A,scripts,,,queued,,docs/specs/campaign.md#s1--first-slice\n",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_compliant_registry_and_status_passes_strict(tmp_path):
+    # The whole model, coherent: a done row with a Deliverable and no SpecRef, an
+    # open row with an empty Deliverable + resolvable SpecRef, status.md naming
+    # the open WI and never the done one -> --strict is fully green.
+    write_spec(tmp_path, "docs/specs/WI-002.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Done thing,scripts,SR-001,,done,shipped it,\n"
+        "WI-002,Next thing,scripts,SR-002,WI-001,active,,docs/specs/WI-002.md\n",
+    )
+    write_srs(tmp_path, "SR-001", "SR-002")
+    write_status(tmp_path, "## Next action\n- WI-002 — build the next thing.\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "clean" in proc.stdout
+
+
+def test_absent_status_md_is_vacuous_for_rbcd_under_strict(tmp_path):
+    # No status.md: R-B/R-C/R-D cannot apply (a repo may keep no blackboard), so
+    # a registry that is otherwise coherent passes even under --strict.
+    write_spec(tmp_path, "docs/specs/WI-001.md")
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,active,,docs/specs/WI-001.md\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    for rule in ("R-B", "R-C", "R-D"):
+        assert rule not in proc.stderr
+
+
+def test_placeholder_only_stays_vacuous_under_strict(tmp_path):
+    # The opt-out promise holds under --strict too: a fresh scaffold's inert
+    # WI-000 row triggers no SSOT finding.
+    write_wis(tmp_path, PLACEHOLDER_ROW)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "vacuously clean" in proc.stdout
+
+
+def test_legacy_csv_without_specref_column_still_parses(tmp_path):
+    # A pre-S1 registry (no SpecRef column) reads the missing cell as empty and
+    # never crashes: a done-only legacy registry validates clean; an open legacy
+    # row simply draws the warn-first R-E notice (DictReader -> None -> "").
+    write_wis(tmp_path, "WI-001,A,scripts,,,done,d\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "1 work item(s)" in proc.stdout
+    write_wis(tmp_path, "WI-001,A,scripts,,,active,\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "R-E WI-001" in proc.stderr  # missing column -> warn, never a crash
+
+
+# --- S1: the no-validation-delta warn (--staged) -------------------------------
+
+
+def _init_followup_repo(root):
+    """A git repo whose HEAD has WI-001 done (delivered SR-001) and WI-002 open,
+    with WI-002 then closed as a follow-up on the same SR in the working tree.
+    Returns the git runner; the caller stages the pieces under test."""
+    git = shutil.which("git")
+    if not git:
+        pytest.skip("needs git on PATH")
+
+    def run_git(*a):
+        return subprocess.run(
+            [git, "-C", str(root), *a], capture_output=True, text=True
+        )
+
+    run_git("init")
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    write_wis_sr(
+        root,
+        "WI-001,First,scripts,SR-001,,done,delivered SR-001,\n"
+        "WI-002,Follow-up,scripts,SR-001,WI-001,active,,docs/specs/WI-002.md\n",
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "init")
+    # Close WI-002 in the working tree (a follow-up on SR-001, already delivered).
+    write_wis_sr(
+        root,
+        "WI-001,First,scripts,SR-001,,done,delivered SR-001,\n"
+        "WI-002,Follow-up,scripts,SR-001,WI-001,done,patched the code,\n",
+    )
+    return run_git
+
+
+def test_staged_no_validation_delta_warns(tmp_path):
+    # Closing a follow-up WI on an already-delivered SR while touching neither the
+    # TC registry nor a test file warns: the fix did not land in the chain.
+    run_git = _init_followup_repo(tmp_path)
+    run_git("add", "docs/requirements/work-items.csv")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "validation chain did not change" in proc.stderr
+    assert "WI-002" in proc.stderr
+
+
+def test_staged_no_warn_when_a_test_changes(tmp_path):
+    # The same close, but a test file is also staged -> the chain changed, no warn.
+    run_git = _init_followup_repo(tmp_path)
+    (tmp_path / "tests").mkdir(exist_ok=True)
+    (tmp_path / "tests" / "test_fix.py").write_text("# covers the fix\n", "utf-8")
+    run_git("add", "docs/requirements/work-items.csv", "tests/test_fix.py")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "validation chain did not change" not in proc.stderr
+
+
+def test_staged_is_a_no_op_outside_git(tmp_path):
+    # No git repo -> --staged is a silent no-op (warn-first, never a crash).
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,active,,docs/specs/WI-001.md\n")
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "validation chain" not in proc.stderr
