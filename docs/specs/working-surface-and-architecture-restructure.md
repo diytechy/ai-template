@@ -381,10 +381,16 @@ stdlib, consent-explicit (no silent swaps), never-breaking.
   enabled set + these declared rules). Absent files default to today's
   `AGENT_CMD`/`AGENT_MODEL` — a fresh scaffold pays nothing.
 - **Reviewer independence (the evidence-backed core):** reviewers are fresh
-  sessions, **two providers, ≥ 1 differing from the implementer's**; the
-  reviewer prompt gets the diff + requirements and **never the implementer's
-  self-assessment** (leaking it collapses finding rates 3–4×); **no debate
-  rounds** — independent parallel reviews, mechanical merge. Verdicts are
+  sessions, **two providers, ≥ 1 differing from the implementer's** —
+  *preferred, not required*; the reviewer prompt gets the diff + requirements
+  and **never the implementer's self-assessment** (leaking it collapses
+  finding rates 3–4×); **no debate rounds** — independent parallel reviews,
+  mechanical merge. **Degraded availability (ruled):** when only one provider
+  is responding, review with what's available — two independent
+  **same-provider** sessions are legal. Fresh-context independence is the
+  invariant; provider diversity is best-effort (the scorer already weights
+  cross-family corroboration above same-family, so a same-provider round
+  simply earns a weaker corroboration signal). Verdicts are
   **repo files** in the log.md block format plus one machine line
   (`VERDICT: APPROVE|CHANGES-REQUESTED findings=N`) — exit codes are not
   portable across CLIs; verdict files are, and they fit repo-text-as-memory.
@@ -447,6 +453,11 @@ A/B once the loop ships.
       documented.
 - [ ] PROCESS_OPTIONS "Unattended operation" gains the routing/escalation
       subsection; the redacted-reviewer prompt template ships.
+- [ ] The root README's unattended-operation bullet gains the
+      iteration-review summary for context (separate fresh reviewer sessions,
+      enable-list provider selection, win-stay/lose-shift — no rotation, the
+      degraded-availability rule), pointing at the PROCESS_OPTIONS detail —
+      the context lands where readers start.
 
 **Rulings (owner, 2026-07-10) — all eight settled:** registry =
 `docs/agents.csv` with `[PROVIDER]-[MODEL_NAME]-[VERSION]` ids (model bullet
@@ -457,7 +468,10 @@ cheap-but-heterogeneous); **no LLM-judge tiebreaker** — "the math is
 arbitrating; we don't need another LLM to do that; none of it will be
 perfect"; spine cut = **one new SR under SN-006**; S8 **rides the campaign**,
 sequenced last and detachable; failure semantics keyed to `gate-policy`
-(bullet above), with the escalation constants as overridable defaults.
+(bullet above), with the escalation constants as overridable defaults;
+**degraded availability** — a single responding provider reviews with what's
+available, incl. two independent same-provider sessions (fresh context is the
+invariant, diversity best-effort).
 
 ---
 
