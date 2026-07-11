@@ -23,6 +23,13 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
   4. **How (physical)** — the `CMP-###` component table when the optional
      component layer carries real rows (the graph rendering is deferred-on-need
      per the AXES ratification); omitted otherwise.
+  5. **Knowledge** — the committed `docs/okf/` OKF bundle as a typed concept
+     graph (the dashboard is the bundle's first real *consumer*, WI-070): nodes
+     fill-keyed by OKF `type`, directed spine edges from the link lists, laid out
+     by the same Python layouter; the detail panel embeds each concept's
+     description and links out to its `docs/okf/<tier>/<id>.md` for the full body
+     (the middle-path embedding). Omitted when there is no bundle, so a
+     bundle-less repo renders byte-identically to before this view existed.
 
 Deterministic by construction (sorted inputs, fixed layout passes, no clocks;
 the as-of stamp derives from the last source-touching *commit*), so the
@@ -1135,6 +1142,320 @@ def _cmp_panel(rows):
     return tab, panel
 
 
+# --- the Knowledge tab: the committed OKF bundle as a concept graph (WI-070) ----
+#
+# The dashboard becomes docs/okf's *first real consumer* (the 2026-07-11 OKF
+# audit found the bundle had none). A view of a view: gen_okf.py emits the
+# bundle from the spine, this reads it back and renders it. The small
+# frontmatter/link loader below is DUPLICATED here rather than imported from
+# gen_okf per the F5 small-loader rule — the sanctioned sibling import is
+# reserved for the large evolving check_trajectory graph core, not for a stable
+# parser a downstream cherry-pick would drag a second module in for.
+OKF_DIR = "docs/okf"
+
+# Tier precedence orients every link upstream -> downstream, so the concept
+# graph is a DAG the WI-DAG layouter can rank (SN -> SR -> LLR -> TC). Interfaces
+# and process guides carry no spine links in the bundle, so their rank is
+# immaterial — they render as isolated rank-0 nodes (an honest picture of what
+# the bundle actually links).
+OKF_TIER_ORDER = {
+    "stakeholder-needs": 0,
+    "system-requirements": 1,
+    "low-level-requirements": 2,
+    "test-cases": 3,
+    "interfaces": 4,
+    "process-guides": 5,
+}
+
+# Node fill keyed by the OKF `type` (the icicle tier palette, extended for the
+# two off-spine concept kinds the bundle also carries).
+OKF_TYPE_FILL = {
+    "Stakeholder Need": "#6366f1",
+    "System Requirement": "#0891b2",
+    "Low-Level Requirement": "#64748b",
+    "Test Case": "#059669",
+    "Interface": "#7c3aed",
+    "Process Guide": "#d97706",
+}
+
+KN_COL_W = 150
+KN_COL_GAP = 60
+KN_ROW_H = 30
+KN_ROW_GAP = 12
+KN_PAD = 16
+
+
+def _okf_frontmatter(text):
+    """Parse an OKF concept file's frontmatter — the subset gen_okf emits, whose
+    scalars are JSON strings (valid YAML). Returns {type,title,description,
+    resource} present, or None when the block is missing/unterminated so the
+    caller skips the file with a warn rather than crashing the dashboard."""
+    lines = text.split("\n")
+    if not lines or lines[0].strip() != "---":
+        return None
+    fm = {}
+    for ln in lines[1:]:
+        if ln.strip() == "---":
+            return fm
+        m = re.match(r"(\w+):\s*(.*)$", ln)
+        if not m:
+            continue
+        key, val = m.group(1), m.group(2).strip()
+        if key in ("type", "title", "description", "resource"):
+            try:
+                fm[key] = json.loads(val)  # JSONDecodeError is a ValueError
+            except ValueError:
+                fm[key] = val.strip('"')
+    return None  # no closing fence -> malformed
+
+
+def _okf_nodes(root):
+    """Walk docs/okf/<tier>/*.md -> (nodes, sorted-edges), or ({}, []) with no
+    bundle. Nodes are frontmatter-typed; edges are the SN->SR->LLR->TC spine
+    links parsed from the '- Label: [id](href)' lists, oriented upstream->
+    downstream by tier. index.md / UPSTREAM.md are not concepts; the GENERATED
+    banner (a '>' blockquote, never a '- ' list line) is never read as content;
+    a malformed file is skipped with a stderr warn (a hand-broken bundle can
+    never crash generation)."""
+    base = root / OKF_DIR
+    if not base.is_dir():
+        return {}, []
+    nodes, raw_links = {}, {}
+    for tier_dir in sorted(p for p in base.iterdir() if p.is_dir()):
+        tier = tier_dir.name
+        for f in sorted(tier_dir.glob("*.md")):
+            if f.name in ("index.md", "UPSTREAM.md"):
+                continue
+            cid = f.stem
+            try:
+                text = f.read_text(encoding="utf-8")
+                fm = _okf_frontmatter(text)
+            except OSError:
+                fm, text = None, ""
+            if not fm or not fm.get("type"):
+                print(
+                    "gen_trajectory: skipping malformed OKF concept {} (no "
+                    "frontmatter/type).".format(f.relative_to(root).as_posix()),
+                    file=sys.stderr,
+                )
+                continue
+            nodes[cid] = {
+                "type": fm.get("type", ""),
+                "title": fm.get("title", ""),
+                "description": fm.get("description", ""),
+                "resource": fm.get("resource", ""),
+                "tier": tier,
+                "href": "{}/{}/{}.md".format(OKF_DIR, tier, cid),
+            }
+            targets = set()
+            for ln in text.split("\n"):
+                if ln.lstrip().startswith("- "):  # a link-list line only
+                    for m in re.finditer(r"\[([^\]]+)\]\(", ln):
+                        targets.add(m.group(1).strip())
+            raw_links[cid] = targets
+    edges = set()
+    for cid, targets in raw_links.items():
+        a = OKF_TIER_ORDER.get(nodes[cid]["tier"], 99)
+        for tid in targets:
+            if tid == cid or tid not in nodes:  # self / non-concept text -> drop
+                continue
+            b = OKF_TIER_ORDER.get(nodes[tid]["tier"], 99)
+            if a < b:
+                edges.add((cid, tid))
+            elif b < a:
+                edges.add((tid, cid))
+    return nodes, sorted(edges)
+
+
+def know_graph(root):
+    """The OKF concept graph as (svg, details), or None when there is no bundle
+    (the tab is then omitted -> a bundle-less repo renders byte-identically).
+    Nodes typed + fill-keyed by OKF `type`; directed spine edges from the link
+    lists; laid out server-side by the WI-DAG layouter (`_dag_ranks` longest-path
+    + `_reorder` barycentre sweeps), so producers sit left of consumers and the
+    render is byte-deterministic — no new `--check` exclusion. The detail dict
+    embeds each concept's description and its docs/okf/<tier>/<id>.md link-out
+    (the middle-path body embedding)."""
+    nodes, edges = _okf_nodes(root)
+    if not nodes:
+        return None
+    node_ids = sorted(nodes)
+    node_list = [{"id": k} for k in node_ids]
+    pred_map = {k: [] for k in node_ids}
+    succ_map = {k: [] for k in node_ids}
+    for s, d in edges:
+        pred_map[d].append(s)
+        succ_map[s].append(d)
+    rank = _dag_ranks(node_list, pred_map)
+    nranks = (max(rank.values()) + 1) if rank else 0
+    order = {r: sorted(k for k in node_ids if rank[k] == r) for r in range(nranks)}
+    for _ in range(4):
+        for r in range(1, nranks):
+            _reorder(order, r, pred_map, order[r - 1])
+        for r in range(nranks - 2, -1, -1):
+            _reorder(order, r, succ_map, order[r + 1])
+
+    max_rows = max((len(order[r]) for r in order), default=0)
+    content_h = max_rows * KN_ROW_H + max(max_rows - 1, 0) * KN_ROW_GAP
+    pos = {}
+    for r in range(nranks):
+        layer = order[r]
+        n = len(layer)
+        layer_h = n * KN_ROW_H + max(n - 1, 0) * KN_ROW_GAP
+        y0 = KN_PAD + (content_h - layer_h) / 2
+        x = KN_PAD + r * (KN_COL_W + KN_COL_GAP)
+        for i, k in enumerate(layer):
+            pos[k] = (x, y0 + i * (KN_ROW_H + KN_ROW_GAP))
+    width = KN_PAD * 2 + nranks * KN_COL_W + max(nranks - 1, 0) * KN_COL_GAP
+    height = KN_PAD * 2 + content_h
+
+    def esc(s):
+        return html.escape(str(s), quote=True)
+
+    edge_svg = []
+    for s, d in edges:
+        x1, y1 = pos[s][0] + KN_COL_W, pos[s][1] + KN_ROW_H / 2
+        x2, y2 = pos[d][0], pos[d][1] + KN_ROW_H / 2
+        dx = max((x2 - x1) * 0.4, 12)
+        edge_svg.append(
+            '<path class="kedge" data-src="{}" data-tgt="{}" '
+            'd="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
+            'marker-end="url(#knowarrow)"></path>'.format(
+                esc(s), esc(d), x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2
+            )
+        )
+    node_svg, details = [], {}
+    for k in node_ids:
+        x, y = pos[k]
+        info = nodes[k]
+        fill = OKF_TYPE_FILL.get(info["type"], "#64748b")
+        short = k if len(k) <= 20 else k[:19] + "…"
+        node_svg.append(
+            '<g class="knode" data-id="{}" tabindex="0">'
+            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
+            'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
+            'dominant-baseline="central">{}</text></g>'.format(
+                esc(k),
+                x,
+                y,
+                KN_COL_W,
+                KN_ROW_H,
+                fill,
+                x + KN_COL_W / 2,
+                y + KN_ROW_H / 2,
+                esc(short),
+            )  # fmt: skip
+        )
+        details[k] = {
+            "type": info["type"],
+            "title": info["title"],
+            "description": info["description"],
+            "resource": info["resource"],
+            "href": info["href"],
+            "fill": fill,
+        }
+    defs = (
+        '<defs><marker id="knowarrow" viewBox="0 0 10 10" refX="9" refY="5" '
+        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+        '<path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"></path></marker></defs>'
+    )
+    svg = (
+        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
+        'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}</svg>'.format(
+            width, height, width, defs, "".join(edge_svg), "".join(node_svg)
+        )
+    )
+    return svg, details
+
+
+def _know_panel(svg, details):
+    """The Knowledge tab + panel — a fully self-contained block (its style, the
+    embedded detail data, and the interaction JS all live inside the panel), so
+    when there is no bundle and the panel is not appended the artifact is
+    byte-identical to before this view existed (the vacuity guarantee)."""
+    tab = '<button data-tab="know">Knowledge (OKF)</button>'
+    # </ -> <\/ so a stray "</script>" inside description text can't close the tag
+    # (the build_html j() guard, applied locally because this data is embedded in
+    # the panel's own inline script rather than the shared one).
+    dj = json.dumps(details, ensure_ascii=False).replace("</", "<\\/")
+    legend = "".join(
+        '<span><i style="background:{}"></i>{}</span>'.format(c, html.escape(t))
+        for t, c in OKF_TYPE_FILL.items()
+    )
+    style = (
+        "<style>"
+        "#knowgraph .knode rect{stroke:rgba(15,23,42,.15);stroke-width:1;"
+        "cursor:pointer;transition:opacity .1s ease;}"
+        "#knowgraph .knode text{fill:#fff;font-size:9px;pointer-events:none;}"
+        "#knowgraph .knode.dim,#knowgraph .kedge.dim{opacity:.15;}"
+        "#knowgraph .knode.hl rect{stroke:#f59e0b;stroke-width:2.5;}"
+        "#knowgraph .kedge{fill:none;stroke:#94a3b8;stroke-width:1.2;}"
+        "#knowgraph .kedge.hl{stroke:#f59e0b;stroke-width:2;}"
+        "#know-detail .body{overflow-wrap:anywhere;}"
+        "</style>"
+    )
+    script = (
+        "<script>(function(){\n"
+        "  const D = " + dj + ";\n"
+        "  const g = document.getElementById('knowgraph'); if(!g) return;\n"
+        "  const box = document.getElementById('know-detail');\n"
+        "  const nodes = [...g.querySelectorAll('.knode')];\n"
+        "  const edges = [...g.querySelectorAll('.kedge')];\n"
+        "  const esc = s => { const d=document.createElement('div');"
+        " d.textContent = s==null?'':s; return d.innerHTML; };\n"
+        "  function hover(id){\n"
+        "    const near = new Set([id]);\n"
+        "    for(const e of edges){ const s=e.getAttribute('data-src'),"
+        " t=e.getAttribute('data-tgt');\n"
+        "      if(s===id) near.add(t); if(t===id) near.add(s); }\n"
+        "    for(const n of nodes){ const nid=n.getAttribute('data-id');\n"
+        "      n.classList.toggle('dim', !near.has(nid));"
+        " n.classList.toggle('hl', nid===id); }\n"
+        "    for(const e of edges){ const inc = e.getAttribute('data-src')===id"
+        " || e.getAttribute('data-tgt')===id;\n"
+        "      e.classList.toggle('dim', !inc); e.classList.toggle('hl', inc); }\n"
+        "  }\n"
+        "  function show(id){\n"
+        "    const d = D[id];\n"
+        "    if(!d){ box.innerHTML = '<p class=\"hint\">No detail.</p>'; return; }\n"
+        '    box.innerHTML = \'<span class="badge" style="background:\''
+        "+(d.fill||'#64748b')+'\">'+esc(d.type)+'</span>'\n"
+        "      + '<h3>'+esc(id)+(d.title?' — '+esc(d.title):'')+'</h3>'\n"
+        "      + '<p class=\"body\">'+esc(d.description)+'</p>'\n"
+        "      + '<p class=\"meta\">Full concept: <a href=\"'+esc(d.href)+'\">'"
+        "+esc(d.href)+'</a>'\n"
+        "      + (d.resource?'<br>Source: '+esc(d.resource):'')+'</p>';\n"
+        "  }\n"
+        "  for(const n of nodes){ const id=n.getAttribute('data-id');\n"
+        "    n.addEventListener('mouseover', () => hover(id));\n"
+        "    n.addEventListener('click', () => show(id));\n"
+        "    n.addEventListener('focus', () => { hover(id); show(id); }); }\n"
+        "  g.addEventListener('mouseleave', () => { for(const n of nodes)"
+        " n.classList.remove('dim','hl'); for(const e of edges)"
+        " e.classList.remove('dim','hl'); });\n"
+        "})();</script>"
+    )
+    panel = (
+        '<section id="know" class="panel">\n'
+        "<h2>Knowledge graph (OKF concepts)</h2>\n"
+        '<p class="cap">The committed <code>docs/okf/</code> knowledge bundle as a '
+        "typed concept graph — the dashboard is the bundle's first real "
+        "<strong>consumer</strong>. Node fill keys the OKF <code>type</code>; "
+        "directed edges are the <code>SN→SR→LLR→TC</code> spine links. "
+        "<strong>Hover</strong> to highlight a concept's neighbourhood; "
+        "<strong>click</strong> to read its description and open the full concept "
+        "file. A view — the registries are the source of truth.</p>\n" + style + "\n"
+        '<div class="layout">\n'
+        '<div id="knowgraph" class="view">' + svg + "</div>\n"
+        '<aside id="know-detail" class="detail"><p class="hint">Hover a concept to '
+        "highlight its neighbourhood; click to read its description and open the "
+        "full concept file in <code>docs/okf/</code>.</p></aside>\n"
+        "</div>\n"
+        '<div class="legend">' + legend + "</div>\n" + script + "\n</section>"
+    )
+    return tab, panel
+
+
 def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
@@ -1152,6 +1473,11 @@ def build_html(root, wis):
     cmps = cmp_rows(root)
     if cmps:
         tab, panel = _cmp_panel(cmps)
+        extra_tabs.append(tab)
+        extra_panels.append(panel)
+    know = know_graph(root)  # the OKF bundle's first real consumer (WI-070)
+    if know:
+        tab, panel = _know_panel(*know)
         extra_tabs.append(tab)
         extra_panels.append(panel)
 

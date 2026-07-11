@@ -96,25 +96,33 @@ fi
 #    contract (ADOPTING.md §3). Drop this step only if you also drop the arch-map.
 "$PY" "$SCRIPTS_DIR/check.py" --run-step arch-map
 
-# 1b. Trajectory dashboard must be fresh — the same generated-artifact contract
+# 1b. OKF knowledge bundle must be fresh — the same generated-artifact floor
+#     rule as step 1c below (one stdlib command regenerates; vacuous for a
+#     non-adopter: placeholder-only registries emit nothing, and `off` in
+#     docs/okf-export silences). A registry edit stales docs/okf/ exactly like it
+#     stales the dashboard. ORDER MATTERS: this runs BEFORE the dashboard step
+#     because the dashboard now *consumes* the bundle (its Knowledge tab, WI-070),
+#     so the correct regen order is arch-map -> okf -> trajectory. With `set -e`
+#     the hook stops at the first stale artifact, so reporting okf first names the
+#     root cause — regenerating a stale bundle then re-runs the dashboard on fresh
+#     input, instead of the reverse (a dashboard regen over a stale bundle that
+#     would only stale again once okf is fixed).
+"$PY" "$SCRIPTS_DIR/check.py" --run-step okf
+
+# 1c. Trajectory dashboard must be fresh — the same generated-artifact contract
 #     as the code map, staled far more often: PROJECT_STATE.html reads all four
-#     spine registries plus the README vision tag, so an ordinary requirement
-#     edit stales it, and CI-only checking makes that a push-long feedback loop
+#     spine registries plus the README vision tag AND the committed docs/okf/
+#     bundle (the Knowledge tab, WI-070), so an ordinary requirement edit stales
+#     it, and CI-only checking makes that a push-long feedback loop
 #     (THREAD_52_REVIEW.md F2). The floor rule, stated once here: a generated
 #     artifact's freshness check joins this hook when regenerating is one stdlib
 #     command and the step is vacuous for a repo that never adopted the layer
-#     (arch-map, trajectory-map); checks needing the product toolchain or gate
-#     context (tests, perf, flows) stay in check.py / CI. Vacuous and fast here:
-#     an absent or placeholder-only work-items.csv passes, and the one word
+#     (arch-map, okf, trajectory-map); checks needing the product toolchain or
+#     gate context (tests, perf, flows) stay in check.py / CI. Vacuous and fast
+#     here: an absent or placeholder-only work-items.csv passes, and the one word
 #     `off` in docs/trajectory-check silences it (process-options.md
 #     "Trajectory / work-items layer").
 "$PY" "$SCRIPTS_DIR/check.py" --run-step trajectory-map
-
-# 1c. OKF knowledge bundle must be fresh — the same floor rule as 1b (one
-#     stdlib command regenerates; vacuous for a non-adopter: placeholder-only
-#     registries emit nothing, and `off` in docs/okf-export silences). A
-#     registry edit stales docs/okf/ exactly like it stales the dashboard.
-"$PY" "$SCRIPTS_DIR/check.py" --run-step okf
 
 # 1d. Work-item registry coherence — the status.md ↔ work-items.csv SSOT floor
 #     (process-options.md "Trajectory / work-items layer"). Delegates to

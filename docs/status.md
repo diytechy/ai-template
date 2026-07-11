@@ -31,7 +31,9 @@ working surface.
   - **Needs \<human> (the run is paused on these):**
     1. **G3 re-attestation** — one sitting covers the accumulated spine changes
        still awaiting sign-off: `SR-034` text (Inspection→Analysis), the added
-       `SR-039…SR-043`, the extended `SR-038`, the **`SR-037` text change** (the
+       `SR-039…SR-043`, the extended `SR-038` (now also the OKF Knowledge tab
+       consuming `docs/okf`, C4; `SR-042` Rationale gained the consumer note),
+       the **`SR-037` text change** (the
        SSOT coherence + SpecRef rules), **`SN-023` + `SR-044`** (the
        declared-interface connectivity layer, new SN→SR), the **`SR-025`
        text change** (extended to the checked per-agent skill fan-out; +LLR-043/
@@ -56,20 +58,17 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
-  - **In flight — the capability-expansion campaign** (spec:
+  - **Capability-expansion campaign — complete** (spec:
     [specs/capability-expansion.md](specs/capability-expansion.md), fully
-    ruled + scheduled 2026-07-11, bundled with the pending re-attestation):
-    - **WI-070** — `PROJECT_STATE.html` OKF knowledge tab (the bundle's
-      first real consumer; extends the dashboard SR).
-    **Next up: WI-070** (the C4 OKF knowledge tab). The C3 pair-row agent
-    registry just landed (Family/Model/Version identity vs CmdTemplate/Env
-    access, one row = one model×route pair; version-less newest-in-line
-    resolution; Family-keyed heterogeneity; per-pair Env merged into the launch;
-    account/router rows; SR-045 text extended, riding the re-attestation). The
-    prior working-surface + architecture campaign
-    is closed and archived
-    ([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md));
-    all spine-touchers bundle into the one pending re-attestation.
+    ruled + scheduled 2026-07-11): all four slices have landed on
+    `MultiRepoSupport` — C1 run-capability menu · C2 subjective-quality critique
+    loop · C3 pair-row agent registry · C4 the OKF knowledge tab (the dashboard
+    is now the bundle's first real consumer). **The coordinating session closes
+    the campaign** — archiving the spec belongs to that close, not to the final
+    slice. Every spine-toucher bundles into the one pending G3 re-attestation
+    above. The prior working-surface + architecture campaign is likewise closed
+    and archived
+    ([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md)).
   - **Deferred (backlog — first-class `deferred` WI rows, each with its
     reason):**
     - **WI-060** — coordinator working-tree stash/rollback between sessions
@@ -90,13 +89,12 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-- **Next action:** execute the capability-expansion campaign in order —
-  **WI-070** next (the C3 pair-row registry just landed), the campaign's last
-  slice. The **owner sitting** follows
-  the campaign close: one G3 re-attestation over every accumulated spine
-  change (both campaigns), the push ruling, the sibling-repo target, and the
-  deferred batch review. After that: the G-Release walk, the WI-DAG edge
-  data-pass, or new scope (which needs a plan/WI entry first).
+- **Next action:** the capability-expansion campaign is complete (all four
+  slices landed); the coordinating session closes it. Then the **owner sitting**:
+  one G3 re-attestation over every accumulated spine change (both campaigns), the
+  push ruling, the sibling-repo target, and the deferred batch review. After
+  that: the G-Release walk, the WI-DAG edge data-pass, or new scope (which needs
+  a plan/WI entry first).
 
 ## Scope
 

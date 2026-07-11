@@ -8,8 +8,9 @@ show. Each is pinned by running the real script over a minimal temp project.
 """
 
 import re
+import shutil
 
-from conftest import SCRIPTS, load_script, run_py
+from conftest import ROOT, SCRIPTS, load_script, run_py
 
 WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
 
@@ -385,3 +386,113 @@ def test_how_sw_stays_a_table_without_seams(tmp_path):
     text = html_of(tmp_path)
     assert "How (SW architecture)" in text
     assert "swarrow" not in text
+
+
+# --- WI-070: the Knowledge tab consumes the committed OKF bundle ----------------
+
+
+def gen_okf(root):
+    return run_py([SCRIPTS / "gen_okf.py", "--root", root], cwd=root)
+
+
+def with_bundle(root):
+    """make_repo + the OKF bundle the Knowledge tab consumes (gen_okf over the
+    same registries), so the dashboard has a real docs/okf/ to render."""
+    make_repo(root)
+    assert gen_okf(root).returncode == 0
+    assert (root / "docs" / "okf" / "system-requirements" / "SR-001.md").exists()
+    return root
+
+
+def test_knowledge_tab_renders_from_bundle(tmp_path):
+    # C4: with a committed docs/okf/ bundle the dashboard gains the Knowledge tab
+    # — typed concept nodes, directed spine edges, each concept's DESCRIPTION
+    # embedded and a link-OUT to its docs/okf/<tier>/<id>.md full body (the
+    # middle-path embedding, ruling #15).
+    with_bundle(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'data-tab="know"' in text and 'id="know"' in text
+    # typed nodes + the type legend (fill keyed by OKF type)
+    assert 'class="knode"' in text and "knowarrow" in text
+    assert "System Requirement" in text and "Stakeholder Need" in text
+    # a directed spine edge exists (SN-001 -> SR-001 both present as nodes)
+    assert 'data-id="SN-001"' in text and 'data-id="SR-001"' in text
+    assert "kedge" in text
+    # the description is embedded in the detail data...
+    assert "Shall add." in text
+    # ...and the link-out points at a file that actually exists beside the HTML.
+    href = "docs/okf/system-requirements/SR-001.md"
+    assert href in text
+    assert (tmp_path / href).exists()
+    # the GENERATED banner line is bundle plumbing, never rendered as content.
+    assert "a reference copy, not the source of truth" not in text
+    # the responsive shell still holds with the extra tab present.
+    assert '<meta name="viewport" content="width=device-width' in text
+    assert "@media (max-width:760px)" in text
+
+
+def test_knowledge_tab_omitted_and_byte_identical_without_bundle(tmp_path):
+    # The vacuity guarantee: with no docs/okf/ the tab is omitted and the artifact
+    # is byte-for-byte what it was before this view existed. Proven by round-trip:
+    # render bundle-less, add the bundle (tab appears), remove it, re-render ==
+    # the original bytes exactly.
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    without = (tmp_path / "PROJECT_STATE.html").read_bytes()
+    assert b'data-tab="know"' not in without
+
+    assert gen_okf(tmp_path).returncode == 0
+    assert gen(tmp_path).returncode == 0
+    assert b'data-tab="know"' in (tmp_path / "PROJECT_STATE.html").read_bytes()
+
+    shutil.rmtree(tmp_path / "docs" / "okf")
+    assert gen(tmp_path).returncode == 0
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == without
+
+
+def test_knowledge_tab_is_byte_deterministic(tmp_path):
+    with_bundle(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    first = (tmp_path / "PROJECT_STATE.html").read_bytes()
+    again = gen(tmp_path)
+    assert again.returncode == 0 and "already up to date" in again.stdout
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
+
+
+def test_check_stays_stable_through_regen_with_bundle(tmp_path):
+    # No new --check exclusion: layout is computed from the sorted bundle at
+    # generation time, so a fresh render passes --check.
+    with_bundle(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    fresh = gen(tmp_path, "--check")
+    assert fresh.returncode == 0 and "up to date" in fresh.stdout
+
+
+def test_malformed_okf_concept_is_skipped_with_warn(tmp_path):
+    # A hand-broken bundle file must never crash the dashboard: it is skipped
+    # with a stderr warn and the rest of the graph still renders.
+    with_bundle(tmp_path)
+    (tmp_path / "docs" / "okf" / "system-requirements" / "SR-001.md").write_text(
+        "not a valid concept — no frontmatter\n", encoding="utf-8"
+    )
+    proc = gen(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "skipping malformed OKF concept" in proc.stderr
+    text = html_of(tmp_path)
+    assert 'data-tab="know"' in text  # still renders
+    assert 'data-id="SR-002"' in text  # the surviving concept is still a node
+
+
+def test_meta_okf_bundle_renders_the_knowledge_graph():
+    # Smoke test over the real meta-repo bundle (~219 concepts): the graph builds,
+    # is typed, and every sampled link-out resolves to a committed file.
+    gt = load_script("gen_trajectory")
+    kg = gt.know_graph(ROOT)
+    assert kg is not None
+    svg, details = kg
+    assert len(details) > 200
+    assert details["SR-038"]["type"] == "System Requirement"
+    assert "knowarrow" in svg
+    for cid in ("SN-001", "SR-038", "TC-038"):
+        assert (ROOT / details[cid]["href"]).exists()

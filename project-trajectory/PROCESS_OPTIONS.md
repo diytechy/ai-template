@@ -1154,6 +1154,21 @@ commit (vacuous for a non-adopter), so a registry edit that stales the
 dashboard is caught locally, not first in CI. In `status.md`, the **Next action** then names the next
 `WI-###`(s), and the dashboard shows where they sit in the DAG.
 
+**Knowledge tab (consumes the OKF bundle).** When a committed `docs/okf/` bundle
+exists, `gen_trajectory.py` gains a **Knowledge** tab: the OKF concepts as a typed
+graph (nodes fill-keyed by `type`, directed `SN→SR→LLR→TC` edges parsed from the
+bundle's link lists), laid out by the same Python layouter as the WI DAG. This
+makes the dashboard the bundle's **first real consumer** — the middle-path
+embedding (ruling): the detail panel embeds each concept's one-line
+**description** and **links out** to its `docs/okf/<tier>/<id>.md` for the full
+body (which sits beside the artifact). It stays a *view* — the registries are the
+truth and the bundle is itself generated — so the load stays deterministic (no new
+`--check` exclusion). **Omitted without a bundle**, so a bundle-less repo renders
+byte-identically to before the tab existed. Because the dashboard now reads the
+bundle, the regen order is **arch-map → okf → trajectory** (a stale bundle would
+bake stale knowledge into the dashboard); the pre-commit hook reports `okf`
+freshness *before* the dashboard's for the same reason.
+
 **Opt-out (why a non-adopter pays nothing).** The layer ships **present but
 vacuous**: a fresh scaffold carries only the inert `WI-000` placeholder, so both
 `check_trajectory.py` and `gen_trajectory.py --check` pass **vacuously** (no work

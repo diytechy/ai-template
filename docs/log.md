@@ -1260,3 +1260,100 @@ AcceptanceCriteria text changed** (pair-row identity/access split, Family-keyed
 heterogeneity, version-less newest resolution, per-pair `Env`) → it rides the
 **one pending G3 re-attestation** with the rest of the accumulated spine changes
 (status.md Needs-\<human> #1). *Mandatory*: a Verified SR's text changed.
+
+## 2026-07-11 — WI-070 (capability-expansion C4): the OKF knowledge tab — the dashboard becomes the bundle's first real consumer — SPINE CHANGE (SR-038 + SR-042 text extended); RE-ATTESTATION PENDING
+
+**What shipped.** The **C4** slice and the capability-expansion campaign's last:
+`PROJECT_STATE.html` gains a **Knowledge tab** that consumes the committed
+`docs/okf/` OKF bundle, making the dashboard the bundle's **first real
+consumer** — the gap the 2026-07-11 OKF audit named. Layered deterministic
+render, no vendored JS graph lib (the CDN-bound Google visualizer and every
+vendored option were disqualified by the research pass; rulings 14–16).
+
+**Deliverables.**
+- **`gen_trajectory.py` OKF loader** (`_okf_frontmatter`/`_okf_nodes`) —
+  DUPLICATED per the F5 small-loader rule, **not** a `gen_okf` import (the
+  sanctioned sibling import stays reserved for the large `check_trajectory`
+  graph core). Walks `docs/okf/<tier>/*.md`, parses the JSON-scalar frontmatter
+  (`type`/`title`/`description`/`resource`) + the `- Label: [id](href)` link
+  lists into typed nodes + tier-oriented spine edges. Skips `index.md`/
+  `UPSTREAM.md`; never reads the GENERATED banner (a `>` blockquote, never a
+  `- ` list line) as content; a malformed file is skipped with a stderr warn.
+- **The Knowledge tab** (`know_graph`/`_know_panel`) — the concept graph laid out
+  server-side by the WI-DAG layouter (`_dag_ranks` longest-path + `_reorder`
+  barycentre, the `sw_graph` pattern), nodes fill-keyed by OKF `type`;
+  hover-highlight + click-to-detail reusing the vanilla-JS idiom. Middle-path
+  embedding (ruling #15): the detail panel embeds each concept's `description`
+  and **links out** to `docs/okf/<tier>/<id>.md` for the full body (a relative
+  link — the bundle sits beside the artifact).
+- **Vacuity + byte-identity** — the tab, its scoped `<style>`, its embedded data
+  and its interaction JS are **all inside the conditional panel**, so with no
+  bundle the panel is not appended and the artifact is byte-for-byte what it was
+  before this view existed. `HTML_TEMPLATE` is untouched → no `--check`
+  exclusion added (the as-of stamp stays the only excluded line).
+- **Pre-commit hook reordered** — `okf` freshness now runs at **step 1b**,
+  before the dashboard's `trajectory-map` at **1c**, because the dashboard now
+  consumes the bundle; with `set -e` the hook reports the root cause (a stale
+  bundle) first. Documented once in the hook comment + ADOPTING §6.
+- **Docs** — PROCESS_OPTIONS "Trajectory / work-items" gains a Knowledge-tab
+  paragraph (consumes the bundle, middle-path embedding, omitted without one,
+  regen order arch-map → okf → trajectory); the kit `README` gen_trajectory /
+  gen_okf rows and the root `README` generated-views rows updated. **No
+  PROCESS.md change.**
+- **Spine** — `SR-038` Requirement + AcceptanceCriteria (the knowledge-tab
+  clause, rendered-with-a-bundle / omitted-without), `SR-042` Rationale (the
+  consumer note — resolves the audit's no-consumer finding), `LLR-035`
+  (CodeSymbol `know_graph`, Detail) and `TC-038` (Method) extended. No new SN/SR.
+- **Tests** — `test_gen_trajectory.py` +6: renders-from-bundle (typed nodes,
+  spine edges, embedded description, link-out target exists), omitted +
+  byte-identical without a bundle (round-trip), byte-deterministic double-gen,
+  `--check` stable through regen, malformed-concept-skipped-with-warn, and a
+  meta-bundle smoke test over the real `docs/okf/` (~219 concepts, link-outs
+  resolve). The banner-never-rendered + mobile-shell assertions ride the
+  renders-from-bundle test.
+
+**Judgment calls.**
+- **Loader tolerances.** A file with no opening/closing `---` fence, or with a
+  fence but no `type`, is treated as malformed → skipped with a stderr warn
+  (`skipping malformed OKF concept …`), never a crash; `index.md`/`UPSTREAM.md`
+  are skipped by name (not concepts); edges are parsed **only** from `- ` list
+  lines and only kept when the target id is a known node, so the GENERATED
+  banner blockquote and the process-guide `[docs/…](…)` source link contribute
+  no spurious edges.
+- **Edge orientation.** Links are oriented **upstream → downstream by tier**
+  (`OKF_TIER_ORDER`), so the concept graph is a DAG the layouter can rank
+  (SN→SR→LLR→TC) regardless of which file declared the link; interfaces and
+  process guides carry no spine links in the bundle, so they render as isolated
+  rank-0 nodes — an honest picture of what the bundle actually links.
+- **Hook order (the judged reorder).** okf-before-dashboard is correct because
+  the dashboard reads the bundle: reporting a stale dashboard first would send
+  the author to regenerate it over a still-stale bundle. One-line move + comment.
+- **Size.** The middle path embeds each concept's description; on the 219-concept
+  meta bundle that is +180 KB (below the embed-all-bodies ~+250 KB alternative,
+  above link-only). A downstream repo with fewer concepts pays proportionally
+  less; a bundle-less repo pays nothing (byte-identical).
+
+**Byte deltas.** `AGENTS.template.md` **9978 → 9978** and `PROCESS.md` **58,853 →
+58,853** — **both untouched** (the budgeted core). `PROJECT_STATE.html`
+**214,667 → 394,909 B** (+180,242, the embedded 219-concept bundle). The OKF
+bundle stayed 227 files (4 concept files re-emitted for the SR-038/SR-042/
+LLR-035/TC-038 text; no add/prune).
+
+**Mechanized bar.** `pytest -q` **603 passed, 3 skipped** (+6 over WI-069's 597);
+`check_docs.py --root . --stale` **0 broken** (1 pre-existing orphan warn; only
+`hint`-level staleness on archived docs); `check_trajectory --strict` clean;
+arch-map / okf / trajectory regenerated **in order** (arch-map → okf →
+trajectory); `check.py --gate G3` **13/13 PASS**. Spine unchanged in shape
+(**SN=24 SR=47 LLR=48 TC=48, 0 orphans**); SR-038/SR-042/LLR-035/TC-038 text
+extended.
+
+**Re-attestation rider.** `SR-038` (Requirement + AcceptanceCriteria) and
+`SR-042` (Rationale) are **Verified** SRs whose **text changed** → they ride the
+**one pending G3 re-attestation** with the rest of the accumulated spine changes
+(status.md Needs-\<human> #1). *Mandatory*: a Verified SR's text changed.
+
+**Campaign close.** With C4 landed, all four capability-expansion slices are
+done (C1 run menu · C2 critique loop · C3 pair-row registry · C4 OKF knowledge
+tab). The spec is **not** archived here — the coordinating session closes the
+campaign (spec archival + WI reconciliation belong to that close, per the S8
+campaign-close precedent).

@@ -267,7 +267,7 @@ by it.**
 13. ✅ `Family` replaces `Provider` as the diversity key (legacy `Provider`
     read as `Family` fallback); routes are not identity.
 
-## C4 — PROJECT_STATE.html gains an OKF knowledge tab (the first real consumer)
+## C4 — PROJECT_STATE.html gains an OKF knowledge tab (the first real consumer) — ✅ DONE (2026-07-11)
 
 **Owner intent.** The main HTML output should also consume the OKF artifacts
 and show a visualizer on a separate tab — reusing an existing source if one

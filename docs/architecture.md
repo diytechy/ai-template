@@ -375,6 +375,7 @@ Contracts (interfaces): IF-011, IF-024
 | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
+| `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
 | `build_html(root, wis)` |  |  |
 | `main()` |  |  |
 
