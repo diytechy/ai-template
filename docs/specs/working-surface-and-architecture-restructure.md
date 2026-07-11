@@ -162,7 +162,7 @@ the `session-protocol` skill re-pointed to the live homes (`status.md` +
 `work-items.csv` + `log.md`). Recorded here as **superseded** so the series
 reads honestly. (Commit `da438f1`.)
 
-## S4 — Codename discipline
+## S4 — Codename discipline — ✅ DONE (2026-07-10)
 
 **Goal.** Stop session-local labels ("F2", "B1", "Q1", "the grind") from
 becoming durable references nobody can resolve later.

@@ -468,3 +468,42 @@ Status=Verified requirement whose **text changed** this session; its extension
 **rides the already-pending G3 re-attestation** (alongside the SR-034 text change
 and the added SR-039…043 / extended SR-038). No new SR was added; the owner
 one-liner remains outstanding.
+
+## 2026-07-10 — DOCS (working-surface SSOT campaign S4, WI-055): codename-discipline rule
+
+**Campaign slice** (spec:
+[specs/working-surface-and-architecture-restructure.md](specs/working-surface-and-architecture-restructure.md),
+S4). Docs only — the writing/review rule that keeps session-local labels off the
+durable surfaces. One commit on `MultiRepoSupport`.
+
+- **WI-055 (S4) — codename discipline.** Stated the rule **once** in
+  PROCESS_OPTIONS "Trajectory / work-items" (a new *Codename discipline (durable
+  references)* paragraph beside the SSOT material S1 added): every durable
+  reference in a registry or spec is a `WI-`/`SR-`/`LLR-`/`TC-` id or an in-repo
+  path, never a session-local codename — codenames (finding labels, phase
+  nicknames, "the grind"-style shorthand) may live in a `log.md` session entry
+  but not in `work-items.csv`, the SR/LLR/TC registries, or `docs/specs/` (a
+  codename resolves only by spelunking archived docs; an id/path resolves
+  mechanically). Added the matching one-line item to the **reviewer-B
+  (process/trace) charter** in the reviewer-dial section: a session-local
+  codename in a durable cell is a finding. The **mechanical lint stays
+  deferred** — a naive `[A-Z]\d+` shape would false-positive on `G3`/`SR-###`,
+  so it remains a writing rule + review item until a real pattern earns a narrow
+  lint (stated in one sentence where the rule lives). Marked spec S4 ✅ DONE;
+  closed WI-055 to `done` (Deliverable filled, `SpecRef` cleared per the S1
+  model); dropped WI-055 from status.md and advanced **Next action → WI-056**
+  (no `done` id left on the working surface — R-D). Regenerated
+  `PROJECT_STATE.html`; `docs/okf` unchanged (the bundle carries the spine +
+  process guides, not WI rows).
+
+**No spine change — docs only, no re-attestation impact.** No SN/SR/LLR/TC text
+touched; this slice adds nothing to the pending G3 re-attestation.
+
+**Byte deltas:** `AGENTS.template.md` **untouched** (9,978); `PROCESS.md`
+**untouched** (57,966) — neither byte-budgeted file was edited. `PROCESS_OPTIONS.md`
+(not budgeted) grew by the codename-discipline paragraph + the reviewer-B line.
+
+**Mechanized bar:** `check_trajectory.py --root . --strict` **clean** (64 work
+items, 55 done); `gen_trajectory.py --check` + `gen_okf.py --check` **up to
+date**; `check_docs.py --root . --stale` **0 broken**; `pytest -q` **490 passed,
+3 skipped**.

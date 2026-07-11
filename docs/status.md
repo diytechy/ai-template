@@ -50,7 +50,6 @@ working surface.
     fully ruled). The SSOT-mechanize and meta-compliance slices landed this
     session (see [log.md](log.md)); the spine-touchers bundle into the pending
     re-attestation (the campaign ruling). Remaining:
-    - **WI-055** — codename discipline (durable-reference rule; docs).
     - **WI-056** → **WI-057** — architecture-connectivity: mechanize the
       `IF-###` interface tier + graph views, then author the kit's own seams.
     - **WI-058** — cross-agent skill sync (checked fan-out from one source).
@@ -72,11 +71,12 @@ working surface.
       extensions (`consumes`/effort schema, a typed-IF contract check,
       edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
       rendering — all deferred-on-need).
-- **Next action:** execute the campaign in order — **WI-055** (codename
-  discipline) next, then **WI-056** → **WI-057**, **WI-058**, **WI-059**. The
-  owner sitting (the re-attestation, push ruling, sibling-repo target, batch
-  review) follows the campaign close. After that: the G-Release walk, the
-  WI-DAG edge data-pass, or new scope (which needs a plan/WI entry first).
+- **Next action:** execute the campaign in order — **WI-056** (architecture-
+  connectivity: mechanize the `IF-###` interface tier + graph views) next, then
+  **WI-057**, **WI-058**, **WI-059**. The owner sitting (the re-attestation,
+  push ruling, sibling-repo target, batch review) follows the campaign close.
+  After that: the G-Release walk, the WI-DAG edge data-pass, or new scope
+  (which needs a plan/WI entry first).
 
 ## Scope
 

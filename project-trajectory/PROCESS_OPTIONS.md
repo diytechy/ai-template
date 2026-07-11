@@ -457,7 +457,11 @@ transcript with the implementer; input = the diff + the WI + the TCs), treats
 the implementation report as a set of **claims** and re-runs the checks it
 asserts rather than trusting them (believe nothing unobserved), and
 fixes directly only what lies within the WI's own declared scope — anything
-else is *filed as a finding* for the integrator. Related tripwire: the
+else is *filed as a finding* for the integrator. Reviewer B's process/trace
+charter includes one codename check: a **session-local codename in a durable
+cell** — a `work-items.csv`/SR/LLR/TC row or a `docs/specs/` file, as opposed to
+a `log.md` entry — is filed as a finding (the codename-discipline rule stated
+under "Trajectory / work-items"). Related tripwire: the
 coordinator warns (never blocks) when a lane's `status.md` outgrows one screen
 (`AGENT_STATUS_WARN_BYTES`, default 8192, `0` silences) — every session
 inherits that resume surface, so pruning it is the integrator's charter,
@@ -904,6 +908,17 @@ working state). A shared campaign doc archives when its **last** open WI closes.
 changes neither the TC prose (`docs/test/test-cases.csv`) nor the test logic
 (files under the declared tests dir) warns (`--staged`, warn-first): the same
 failure can recur because the fix landed in the code, not the validation chain.
+
+**Codename discipline (durable references).** Every durable reference in a
+registry or spec is a `WI-`/`SR-`/`LLR-`/`TC-` id or an in-repo path — **never a
+session-local codename**. Review-finding labels, phase nicknames, and
+"the grind"-style shorthand belong in a `log.md` session entry (ephemeral
+narrative), but not in `work-items.csv`, the SR/LLR/TC registries, or
+`docs/specs/`: a codename resolves only by spelunking archived docs, while an id
+or path resolves mechanically. This stays a **writing rule + reviewer-B
+checklist item**, not a mechanical lint — a naive `[A-Z]\d+`-shaped matcher
+would false-positive on `G3`, `SR-###`, and the like, so a narrow lint waits
+until a real recurring pattern earns it.
 
 **Campaign ruling.** Any batch of spine-touching work headed for the same
 re-attestation should land as **one campaign** — batch the changes so a **single
