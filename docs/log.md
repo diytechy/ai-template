@@ -2472,3 +2472,39 @@ status findings; **51** IF seams, interface-findings=0; 24 modules → 5 compone
 --stale` OK, 0 broken; `check_trajectory --strict` clean (0 connectivity warns);
 `derive_gate --check` value-OK (G3, legacy — WI-096 migrates); arch-map + OKF +
 dashboard regenerated fresh.
+
+## 2026-07-12 — WI-093 (derived-gate campaign): the [phase]-[g*] archetype + phase-drop detector
+
+**Session (branch `derived-gate-model`).** `check_trajectory.py` learns the phase
+archetype (spec §7/§9.3). No spine change — validator + reader behavior only.
+
+- **Archetype.** A phase's pre-dev batch is a first-class WI whose **Title**
+  carries a `[<phase>]-[g<N>]` tag (`[v2]-[g1]` = requirement structuring,
+  `[v2]-[g2]` = decomposition + TCs). `phase_anchors()` parses them from Titles
+  and warns on a **duplicate** `(phase, gate)` and on a `-g2` anchor that omits its
+  `-g1` as a predecessor. The WI id stays `WI-###`; the archetype is a Title
+  marker, so nothing in the id scheme changes.
+- **Phase-drop detector (§9.3).** `read_derived_phases()` parses the per-phase
+  levels from `docs/gate`'s `# basis:` line — the **hybrid cache** (no recompute;
+  a shared format contract with `derive_gate.basis_line`). For each phase with a
+  **done** `[phase]-[gN]` anchor (its recorded closed level), if the current
+  derived level fell **below** N — new or reopened content entered — it warns to
+  **open a new phase-gate WI**. The committed anchor is where phase identity +
+  membership live (a git-history walk is rebase-sensitive and carries no
+  membership, §9.3).
+- **All WARN-FIRST** — never an exit-code change at any gate (the
+  connectivity-coverage precedent). **Vacuous** on a single-phase repo with no
+  anchors (the meta) or a legacy `docs/gate` with no basis line. So the meta's own
+  `check_trajectory --strict` stays clean, 0 new warns.
+- **`derive_gate._per_phase` now reports the RAW per-phase min** (unfloored, can
+  read `G0`), so a phase's drop below G1 is visible in the cached basis for the
+  detector to read. The runnable repo value stays floored to G1 (unchanged).
+
+**No re-attestation impact.** No SN/SR/LLR/TC rows added or changed.
+
+**Byte deltas.** `AGENTS.template.md` **untouched** (9,978); `PROCESS.md`
+**untouched** (58,297). No byte-budgeted file changed.
+
+**Checks.** `pytest -q -n auto` **664 passed, 3 skipped**; `check_docs.py --root .
+--stale` OK, 0 broken; `check_trajectory --strict` clean (0 phase/connectivity
+warns on the meta); arch-map + dashboard regenerated fresh.

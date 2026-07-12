@@ -125,8 +125,10 @@ working surface.
      gate computed from artifact states, cached to `docs/gate` with a `--check` rot
      guard; the meta reads G3), and **`check.py` now consuming the derived gate**
      (a `derived-gate` freshness step at every gate + the pre-commit floor;
-     derive_gate traced into the meta spine as SR-049). Remaining slices down the
-     spec §10 DAG: **WI-093** phase + `[phase]-[g*]` · **WI-094** ratification
+     derive_gate traced into the meta spine as SR-049), and the **phase archetype
+     + phase-drop detector** in `check_trajectory` (the `[phase]-[g*]` anchor + the
+     "open a new phase-gate WI" warn, all warn-first, vacuous on the single-phase
+     meta). Remaining slices down the spec §10 DAG: **WI-094** ratification
      workflow · **WI-095** process-doc rewrite · **WI-096** migration + dogfood
      (regenerate the meta `docs/gate` to the derived form; prove derived == G3;
      ADOPTING recipe). Runs under today's monolithic gate; once it lands, phase

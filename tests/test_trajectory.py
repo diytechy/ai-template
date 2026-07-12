@@ -13,7 +13,7 @@ import subprocess
 
 import pytest
 
-from conftest import SCRIPTS, run_py
+from conftest import SCRIPTS, load_script, run_py
 
 WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
 # The header with the SpecRef column (S1) — used by the SSOT-rule tests.
@@ -889,3 +889,107 @@ def test_absent_inventory_top_view_is_vacuous(tmp_path):
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "How-SW top view" not in proc.stderr
+
+
+# --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
+# The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3): a phase's
+# pre-dev batch is a WI whose Title carries a `[<phase>]-[g<N>]` tag; the derived
+# gate dropping below a phase's closed anchor level warns to open a new phase-gate
+# WI. All warn-first; the logic is unit-tested via load_script.
+
+
+def _wis(ct, rows):
+    return ct.load_wis(rows)[0]
+
+
+def test_phase_anchors_parse_and_duplicate_warn():
+    ct = load_script("check_trajectory")
+    wis = _wis(
+        ct,
+        [
+            {
+                "WI-ID": "WI-201",
+                "Title": "[v2]-[g1] structure v2 reqs",
+                "Status": "done",
+            },
+            {
+                "WI-ID": "WI-202",
+                "Title": "[v2]-[g2] decompose v2",
+                "Predecessors": "WI-201",
+                "Status": "queued",
+            },
+            {
+                "WI-ID": "WI-203",
+                "Title": "[v2]-[g2] a duplicate g2",
+                "Status": "queued",
+            },
+            {"WI-ID": "WI-204", "Title": "an ordinary WI", "Status": "queued"},
+        ],
+    )
+    anchors, warns = ct.phase_anchors(wis)
+    assert ("v2", 1) in anchors and ("v2", 2) in anchors
+    assert anchors[("v2", 2)]["id"] == "WI-202"  # first wins
+    assert any("duplicate phase-gate anchor [v2]-[g2]" in w for w in warns)
+
+
+def test_phase_anchor_g2_without_g1_predecessor_warns():
+    ct = load_script("check_trajectory")
+    wis = _wis(
+        ct,
+        [
+            {"WI-ID": "WI-201", "Title": "[v3]-[g1] x", "Status": "done"},
+            {"WI-ID": "WI-202", "Title": "[v3]-[g2] y", "Status": "queued"},  # no pred
+        ],
+    )
+    _, warns = ct.phase_anchors(wis)
+    assert any("does not list its [v3]-[g1]" in w for w in warns)
+
+
+def _write_gate(root, per_phase, value="G1"):
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "gate").write_text(
+        "# header\n# basis: SN=1 SR=3 LLR=3 TC=3 drafts=0 computed={} "
+        "per-phase={}\n# computed 2026-07-12 (as-of x)\n{}\n".format(
+            value, per_phase, value
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_read_derived_phases_parses_basis(tmp_path):
+    ct = load_script("check_trajectory")
+    _write_gate(tmp_path, "v1=G3;v2=G0")
+    assert ct.read_derived_phases(tmp_path) == {"v1": 3, "v2": 0}
+    # A legacy hand-set gate with no basis line yields no phase data (vacuous).
+    (tmp_path / "docs" / "gate").write_text("# legacy\nG3\n", encoding="utf-8")
+    assert ct.read_derived_phases(tmp_path) == {}
+
+
+def test_phase_drop_detector_warns(tmp_path):
+    ct = load_script("check_trajectory")
+    # v2 closed at [g2] (done) but the derived level for v2 is now G0 (a reopen).
+    _write_gate(tmp_path, "v1=G3;v2=G0")
+    wis = _wis(
+        ct,
+        [
+            {"WI-ID": "WI-210", "Title": "[v2]-[g1] x", "Status": "done"},
+            {
+                "WI-ID": "WI-211",
+                "Title": "[v2]-[g2] y",
+                "Predecessors": "WI-210",
+                "Status": "done",
+            },
+        ],
+    )
+    warns = ct.phase_findings(tmp_path, wis)
+    assert any("phase 'v2' dropped to G0" in w and "[v2]-[g2]" in w for w in warns)
+    # Back at G2: no drop warn (the phase re-cleared its anchor level).
+    _write_gate(tmp_path, "v1=G3;v2=G2", value="G2")
+    assert ct.phase_findings(tmp_path, wis) == []
+
+
+def test_phase_findings_vacuous_without_anchors(tmp_path):
+    ct = load_script("check_trajectory")
+    _write_gate(tmp_path, "v1=G0")  # a phase at G0 but NO anchor records a close
+    wis = _wis(ct, [{"WI-ID": "WI-220", "Title": "ordinary", "Status": "queued"}])
+    assert ct.phase_findings(tmp_path, wis) == []

@@ -81,6 +81,16 @@ tag on an LLR row joins its `Module` → `CMP-###`; nesting via the CMP registry
 modules — or no arch-map inventory — passes trivially (the bound, not the
 registry, is the rule), so a small or non-adopting repo is never broken.
 
+**Phase archetype + phase-drop detector** (WI-093; derived-gate model §7/§9.3).
+A phase's pre-dev batch is a first-class WI whose Title carries a `[<phase>]-[g<N>]`
+tag (`[v2]-[g1]` = requirement structuring, `[v2]-[g2]` = decomposition + TCs).
+This step recognizes those anchors and, reading the derived per-phase levels from
+`docs/gate`'s `# basis:` line, warns when a phase's derived gate has **dropped
+below** the level its own closed `[phase]-[gN]` anchor recorded — the signal that
+new or reopened content entered and a new phase-gate WI is due. All **warn-first**
+(never an exit-code change, at any gate); vacuous on a single-phase repo with no
+anchors (the meta case) or a legacy `docs/gate` with no basis line.
+
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
 
@@ -702,6 +712,101 @@ def component_findings(root):
     ]
 
 
+# --- the [phase]-[g*] archetype + phase-drop detector (WI-093) -----------------
+# The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3) structures a
+# phase's pre-dev work as a first-class WI whose Title carries a `[<phase>]-[g<N>]`
+# tag (g1 = requirement structuring, g2 = decomposition + TCs). The derived gate
+# DROPPING below a phase's last-closed level is the signal that new/reopened
+# content entered and a new phase-gate WI is due; the committed anchor is where
+# phase identity + membership live (a git-history walk is rebase-sensitive and
+# carries no membership, §9.3). Both checks are WARN-FIRST — like the connectivity
+# coverage, they never change the exit code, at any gate.
+GATE_FILE = "docs/gate"
+PHASE_ANCHOR_RE = re.compile(r"^\[([^\]]+)\]-\[g([12])\]")
+_GATE_LEVEL = {"G0": 0, "G1": 1, "G2": 2, "G3": 3}
+_PER_PHASE_RE = re.compile(r"per-phase=(\S+)")
+
+
+def read_derived_phases(root):
+    """`{phase-label: gate-level-int}` parsed from the `# basis:` line of the
+    generated docs/gate (derive_gate.py's hybrid cache — read the committed value,
+    never recompute here). Empty when docs/gate is absent or a legacy hand-set gate
+    with no basis line, so the drop detector is then vacuous. The basis format is
+    derive_gate.basis_line's `per-phase=<label>=G<n>;...` (a shared contract)."""
+    path = root / GATE_FILE
+    if not path.exists():
+        return {}
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        s = line.strip()
+        if s.startswith("# basis:"):
+            m = _PER_PHASE_RE.search(s)
+            if not m or m.group(1) == "(none)":
+                return {}
+            out = {}
+            for pair in m.group(1).split(";"):
+                if "=" in pair:
+                    label, gate = pair.rsplit("=", 1)
+                    if gate in _GATE_LEVEL:
+                        out[label] = _GATE_LEVEL[gate]
+            return out
+    return {}
+
+
+def phase_anchors(wis):
+    """`({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs
+    parsed from Titles. A duplicate (phase, gate) anchor, and a `-g2` whose
+    predecessors omit its `-g1`, are warned (advisory only)."""
+    anchors, warns = {}, []
+    for w in wis:
+        m = PHASE_ANCHOR_RE.match(w["title"])
+        if not m:
+            continue
+        key = (m.group(1), int(m.group(2)))
+        if key in anchors:
+            warns.append(
+                "duplicate phase-gate anchor [{}]-[g{}] ({} and {})".format(
+                    key[0], key[1], anchors[key]["id"], w["id"]
+                )
+            )
+            continue
+        anchors[key] = w
+    for (phase, gate), w in anchors.items():
+        if gate == 2 and (phase, 1) in anchors:
+            g1 = anchors[(phase, 1)]["id"]
+            if g1 not in (w["preds"] + w["soft"]):
+                warns.append(
+                    "phase-gate anchor {} ([{}]-[g2]) does not list its "
+                    "[{}]-[g1] ({}) as a predecessor".format(w["id"], phase, phase, g1)
+                )
+    return anchors, warns
+
+
+def phase_findings(root, wis):
+    """The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the
+    warn strings ([] when vacuous — no anchors and no per-phase drop data, the
+    single-phase meta case). The drop detector reads the derived per-phase levels
+    from docs/gate's basis: for each phase with a **done** `[phase]-[gN]` anchor
+    (its recorded closed level), if the current derived level for that phase is
+    below N, new/reopened content dropped it — warn to open a new phase-gate WI."""
+    anchors, warns = phase_anchors(wis)
+    derived = read_derived_phases(root)
+    closed = {}  # phase -> highest gN whose [phase]-[gN] anchor is done
+    for (phase, gate), w in anchors.items():
+        if w["status"] == "done":
+            closed[phase] = max(closed.get(phase, 0), gate)
+    for phase, level in sorted(closed.items()):
+        cur = derived.get(phase)
+        if cur is not None and cur < level:
+            warns.append(
+                "phase {!r} dropped to G{} but its closed [{}]-[g{}] anchor recorded "
+                "level G{} — new or reopened content entered; open a new "
+                "[{}]-[g*] work item to structure it (derived-gate model §9.3)".format(
+                    phase, cur, phase, level, level, phase
+                )
+            )
+    return warns
+
+
 def _read_status_tokens(root):
     """`(text, {WI ids named in status.md})`, or `(None, set())` when status.md
     is absent (R-B/R-C/R-D are then vacuous — a repo may keep no status
@@ -1089,6 +1194,12 @@ def main():
             "registry; vacuously clean)."
         )
         return 0
+
+    # Phase archetype + phase-drop detector (WI-093) — WARN-FIRST, never an
+    # exit-code change (like the connectivity coverage). Vacuous on a single-phase
+    # repo with no `[phase]-[g*]` anchors (the meta case).
+    for w in phase_findings(root, wis):
+        print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     errors = comp_errors + integrity + validate(wis, load_known_srs(root))
     # The SSOT coherence layer: R-A is always an error; R-B…R-E + the

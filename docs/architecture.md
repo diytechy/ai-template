@@ -276,6 +276,9 @@ Contracts (interfaces): IF-009, IF-023
 | `module_components(root)` | `{normalized module key: set(real-looking CMP ids)}` from the LLR |  |
 | `component_top_view(root)` | The How-SW containment derivation (WI-073), shared by the right-sizing |  |
 | `component_findings(root)` | The How-SW top-view right-sizing finding(s) (WI-073/FB5; process-options.md |  |
+| `read_derived_phases(root)` | `{phase-label: gate-level-int}` parsed from the `# basis:` line of the |  |
+| `phase_anchors(wis)` | `({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs |  |
+| `phase_findings(root, wis)` | The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the |  |
 | `ssot_findings(wis, root)` | The status.md ↔ work-items.csv coherence findings (R-A…R-E) + the |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |

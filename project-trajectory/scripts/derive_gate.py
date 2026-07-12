@@ -226,9 +226,11 @@ def compute(docs):
 
 def _per_phase(srs, sr_g, llrs, tcs):
     """`{phase-label: gate-name}` — the SRs grouped by their optional `Phase` column
-    (blank => "(default)"), each phase's gate the min over its SRs and the LLR/TC
-    that decompose/verify them. Reporting-only here; the phase-drop detector and
-    the `[phase]-[g*]` archetype live in check_trajectory (WI-093)."""
+    (blank => "(default)"), each phase's gate the **raw** min over its SRs and the
+    LLR/TC that decompose/verify them (NOT floored to G1, unlike the runnable repo
+    value): a phase carrying a draft reads `G0`, so check_trajectory's phase-drop
+    detector (WI-093) can see a phase fall below its closed `[phase]-[g*]` level.
+    The `[phase]-[g*]` archetype + the drop warning live in check_trajectory."""
     llr_by_sr = {}
     for r in llrs:
         for s in refs(r.get("SR-Refs")):
@@ -245,7 +247,7 @@ def _per_phase(srs, sr_g, llrs, tcs):
         gates = [sr_g[sid]] + llr_by_sr.get(sid, []) + tc_by_ref.get(sid, [])
         phases.setdefault(label, []).extend(gates)
     return {
-        label: GATE_NAMES[max(G1, min(gs))] if gs else GATE_NAMES[G1]
+        label: GATE_NAMES[min(gs)] if gs else GATE_NAMES[G1]
         for label, gs in sorted(phases.items())
     }
 
