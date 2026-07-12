@@ -2265,3 +2265,51 @@ phase v3+ runs on the derived gate. No code change yet — ratification + regist
 
 **Checks.** `check_trajectory --strict` clean (96 WIs); `gen_trajectory --check`
 fresh after regen; `check_docs --stale` OK, 0 broken links.
+
+## 2026-07-12 — WI-089 (derived-gate campaign): the Draft artifact state + decomposition exemption
+
+**Session (branch `derived-gate-model`).** First build slice of the derived-gate
+campaign (spec §10.1) — the foundation the rest of the campaign needs. `trace.py`
+gains a first-class `Draft` artifact state so a requirement can be **drafted in
+the live spine before it is decomposed**, retiring the `-000`/off-spine
+workaround.
+
+**What changed (code + tests only — no spine/process change yet).**
+- **`trace.py`** — new `is_draft(row)` keys on the open-vocab `Status` value
+  `Draft`. The orphan pass exempts Draft rows from the **child-completeness**
+  rules *only*: a Draft SR needs no LLR/TC, a Draft LLR needs no TC. Everything
+  else still bites — a Draft SR still links an SN (parent linkage), ids stay
+  unique/well-formed (integrity floor), and a Draft SR is skipped by
+  `--require-verified` (it is pre-ratification, below G1, so it makes no Verified
+  claim). Draft rows are surfaced **auditable**, not silent: a metrics-table
+  count, a `## Draft artifacts (decomposition-exempt)` report section listing
+  them, and a `drafts=N` stdout token. The module docstring's Orphan-rules block
+  documents the exemption and points at the design spec.
+- **Fixture migration.** Three existing test fixtures used `Status=Draft`
+  *casually* to mean "an in-progress orphan" — which the new semantics would make
+  green. Migrated so they still exercise what they test: `ORPHAN_SR` SR-002
+  Draft→**Planned** (a genuine ratified orphan), `PHASED_SRS` SR-002
+  Draft→**Implemented** (so `--require-verified` phase scoping is the axis under
+  test). No behavior lost.
+- **New tests** (`tests/test_trace.py`): a Draft SR exempt from decomposition
+  (and flagged again once ratified to Planned); a Draft LLR exempt from the no-TC
+  rule; a Draft SR exempt from `--require-verified`; a Draft SR still orphaning on
+  a missing SN link and still failing the integrity floor on a malformed id.
+
+**Judgment call — the exemption is scoped to child-completeness, not
+parent-linkage.** The spec (§3) calls this "exempt from the *child-completeness*
+rule." So a Draft SR must still link its SN (drafted alongside it in the
+`[phase]-[g1]` batch); only the requirement to *have children yet* is lifted.
+Draft SN maturity (section-as-state) is WI-090's job — `trace.py`'s SN scrape is
+unchanged here, so a Draft SN's id still resolves an SR's SN-Ref.
+
+**No re-attestation impact.** No SR/SN/LLR/TC rows added or changed; this is a
+`trace.py` behavior addition (like adding a check), under today's monolithic
+gate. The campaign's spine reconciliation is WI-096.
+
+**Byte deltas.** `AGENTS.template.md` **untouched** (9,978); `PROCESS.md`
+**untouched** (58,297). No byte-budgeted file changed.
+
+**Checks.** `pytest -q -n auto` **642 passed, 3 skipped**; `check_docs.py --root
+. --stale` OK, 0 broken; trace self-run clean. Full `check.py --gate G3` runs at
+campaign close (the campaign gate cadence, PROCESS_OPTIONS "Campaign ruling").

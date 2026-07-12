@@ -447,6 +447,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `load_csv(path)` |  |  |
 | `refs(value)` | Split a multi-ref cell (';', ',' or whitespace separated) into ids. |  |
 | `is_example(rid)` |  |  |
+| `is_draft(row)` | A row in the pre-ratification `Draft` state (derived-gate model §3): exempt |  |
 | `structure_findings(path, display)` | Column-count structural check over one registry CSV: every data row must |  |
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
 | `id_key(label)` |  |  |

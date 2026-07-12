@@ -79,8 +79,17 @@ Orphan rules (the method rules are stated once, in process.md §4):
     - LLR with no TC
     - TC that verifies nothing, or references an unknown SR/LLR
     - SN with no SR (only when stakeholder-needs.md is present)
+Draft exemption (derived-gate model, docs/specs/derived-gate-model.md §3): a row
+whose Status is `Draft` is exempt from the *child-completeness* rules above — a
+Draft SR needs no LLR/TC and a Draft LLR needs no TC — so a requirement can be
+drafted in the live spine before it is decomposed (retiring the -000/off-spine
+workaround). Parent-linkage and integrity rules still apply (a Draft SR still
+links an SN; ids stay unique/well-formed), and a Draft SR is exempt from the
+--require-verified criterion below (it is pre-ratification, below G1). Status is
+open-vocabulary; `Draft` is the one value the orphan pass acts on (the ladder is
+Draft -> Planned -> Verified).
 --require-verified adds the G3 status criterion:
-    - SR with Verification=Test whose Status is not Verified
+    - SR with Verification=Test whose Status is not Verified (Draft SRs exempt)
 --phase scopes that status criterion to a delivery phase (process.md §4
 "Phased delivery"): SRs may carry an optional `Phase` column (e.g. v1, v2);
 `--phase v1` (or a cumulative list, `--phase v1,v2`) exempts SRs tagged with
@@ -229,6 +238,15 @@ def refs(value):
 
 def is_example(rid):
     return rid.endswith("-000")
+
+
+def is_draft(row):
+    """A row in the pre-ratification `Draft` state (derived-gate model §3): exempt
+    from the child-completeness orphan rules (a Draft SR needs no LLR/TC, a Draft
+    LLR needs no TC) and from the --require-verified criterion, so a requirement
+    lives in the live spine while it is being drafted. Status is open-vocabulary;
+    `Draft` is the one value the orphan/status passes act on."""
+    return (row.get("Status") or "").strip().lower() == "draft"
 
 
 def structure_findings(path, display=None):
@@ -956,14 +974,19 @@ def main():
     orphan_ids = set()
     for r in srs:
         sid = r["SR-ID"]
+        # A Draft SR is being drafted requirement-first (derived-gate model §3):
+        # exempt from the child-completeness rules (no LLR / no TC) so it lives in
+        # the live spine without orphaning. Its SN linkage and every integrity
+        # rule still apply.
+        draft = is_draft(r)
         analytic = r.get("Verification", "") in ("Analysis", "Inspection", "Attest")
-        if not analytic and sid not in llr_sr_refs:
+        if not draft and not analytic and sid not in llr_sr_refs:
             orphans.append(
                 f"SR {sid} has no LLR (and Verification not in "
                 "Analysis/Inspection/Attest)"
             )
             orphan_ids.add(sid)
-        if sid not in tc_refs:
+        if not draft and sid not in tc_refs:
             orphans.append(f"SR {sid} has no test (TC)")
             orphan_ids.add(sid)
         sn_parents = refs(r.get("SN-Refs"))
@@ -988,7 +1011,9 @@ def main():
             if p not in sr_ids:
                 orphans.append(f"LLR {lid} references unknown {p}")
                 orphan_ids.add(lid)
-        if lid not in tc_refs:
+        # A Draft LLR is exempt from the child-completeness (no TC) rule, like a
+        # Draft SR — its SR parent + id integrity still apply (derived-gate §3).
+        if not is_draft(r) and lid not in tc_refs:
             orphans.append(f"LLR {lid} has no test (TC)")
             orphan_ids.add(lid)
 
@@ -1104,6 +1129,11 @@ def main():
         for r in srs:
             if r.get("Verification", "") != "Test":
                 continue
+            # A Draft SR is pre-ratification (below G1, derived-gate §3): it makes
+            # no Verified claim yet, so the G3 criterion does not apply. Surfaced
+            # in the draft count so the exemption stays auditable.
+            if is_draft(r):
+                continue
             if not in_phase(r):
                 phase_deferred.append(
                     f"SR {r['SR-ID']} (Phase={r.get('Phase', '').strip()}) — "
@@ -1182,6 +1212,15 @@ def main():
     # predicate (see the module docstring). Never joins a failure set below.
     advisories = ac_advisories(srs)
 
+    # Draft artifacts (derived-gate model §3): the rows exempted from the
+    # child-completeness orphan rules + the --require-verified criterion. Listed
+    # so the exemption stays auditable (the whole point of the model is that a
+    # Draft row lives in the live spine while being drafted, not silently).
+    draft_srs = [r for r in srs if is_draft(r)]
+    draft_llrs = [r for r in llrs if is_draft(r)]
+    draft_tcs = [r for r in tcs if is_draft(r)]
+    n_draft = len(draft_srs) + len(draft_llrs) + len(draft_tcs)
+
     # Optional Area column (owner-hat/domain tag, process.md §1): count real SRs
     # per Area so hat coverage is visible. Report-only — never a finding, never
     # an exit-code change; a registry without the column contributes nothing.
@@ -1208,6 +1247,11 @@ def main():
             f"| Verified SRs — mechanized | {len(mechanized_verified)} |",
             f"| Verified SRs — attested (human, §4) | {len(attested_verified)} |",
         ]
+        + (
+            [f"| Draft artifacts (decomposition-exempt) | {n_draft} |"]
+            if n_draft
+            else []
+        )
         + (
             [f"| Status findings | {len(status_findings)} |"]
             if args.require_verified
@@ -1317,6 +1361,24 @@ def main():
         f"- Attested (Attest): {len(attested_verified)}"
         + (f" — {', '.join(attested_verified)}" if attested_verified else ""),
     ]
+    if n_draft:
+        lines += ["", "## Draft artifacts (decomposition-exempt)", ""]
+        lines += [
+            "_`Draft` rows are exempt from the child-completeness orphan rules and "
+            "the G3 Verified criterion (derived-gate model §3): a requirement lives "
+            "in the live spine while it is drafted. Listed so the exemption is "
+            "auditable._",
+            "",
+        ]
+        lines += [
+            f"- {r[id_key(label)]} — {_cell(r, 'Title') or _cell(r, 'Method')}"
+            for label, rows_ in (
+                ("SR", draft_srs),
+                ("LLR", draft_llrs),
+                ("TC", draft_tcs),
+            )
+            for r in rows_
+        ]
     if area_counts:
         untagged = len(srs) - sum(area_counts.values())
         lines += [
@@ -1429,6 +1491,7 @@ def main():
             else ""
         )
         + (f" status-findings={len(status_findings)}" if args.require_verified else "")
+        + (f" drafts={n_draft}" if n_draft else "")
         + (f" placeholders={len(placeholders)}" if args.no_placeholders else "")
         + (f" schema-findings={len(schema)}" if args.strict_schema else "")
         + (f" phase-deferred={len(phase_deferred)}" if phases else "")

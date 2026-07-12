@@ -2,9 +2,12 @@
 
 from conftest import KIT, make_minimal_project, run_py
 
+# SR-002 is a genuine (ratified, non-Draft) orphan: Status=Planned, so the
+# derived-gate Draft exemption (WI-089) does NOT apply and the decomposition
+# rules still fire. A Draft SR would be exempt — see the WI-089 section below.
 ORPHAN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
-SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Draft
+SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Planned
 """
 
 
@@ -63,9 +66,12 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
     assert "malformed" in report
 
 
+# SR-002 is Status=Implemented (ratified + built, not yet Verified) so the phase
+# scoping of --require-verified is what the tests exercise — a Draft SR would be
+# exempt from --require-verified entirely (WI-089), which is a different axis.
 PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,v1
-SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Draft,v2
+SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Implemented,v2
 """
 
 PHASED_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
@@ -308,7 +314,7 @@ def test_orphan_node_flagged_in_outline_and_graph(scaffold):
     proc = run_py(["scripts/trace.py"], cwd=scaffold)  # views render regardless of exit
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    # Mermaid: the orphan (Draft) SR-002 gets the distinct class.
+    # Mermaid: the orphan (Planned) SR-002 gets the distinct class.
     assert "classDef orphan" in report
     assert "class SR_002 orphan" in report
     # Outline: the same node carries an inline flag on its own line.
@@ -564,3 +570,125 @@ def test_legacy_interfaces_csv_without_notes_column_parses(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "interfaces=1 interface-findings=0" in proc.stdout
+
+
+# --- WI-089: the Draft artifact state + decomposition exemption ---------------
+# The derived-gate model (docs/specs/derived-gate-model.md §3) lets a requirement
+# be drafted in the LIVE spine before it is decomposed: a `Draft` SR/LLR is exempt
+# from the child-completeness orphan rules and the --require-verified criterion,
+# retiring the -000/off-spine workaround. Parent-linkage + integrity still apply.
+
+# SR-002 is Draft with NO LLR and NO TC (undecomposed), but it links SN-001. It
+# must NOT orphan. SR-001 keeps the fully-traced happy chain.
+DRAFT_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
+SR-002,Drafted requirement,SN-001,"The system shall do a not-yet-decomposed thing.","Being drafted requirement-first.","some measurable outcome",,M,Test,Draft
+"""
+
+
+def test_draft_sr_is_exempt_from_decomposition(scaffold):
+    # A Draft SR with no LLR/TC lives in the live spine without orphaning.
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(DRAFT_SR, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "orphans=0" in proc.stdout
+    assert "drafts=1" in proc.stdout
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-002 has no LLR" not in report
+    assert "SR SR-002 has no test (TC)" not in report
+    assert "## Draft artifacts (decomposition-exempt)" in report
+    assert "SR-002 — Drafted requirement" in report
+    # Ratify it (Draft -> Planned) and the decomposition rules fire again.
+    srs.write_text(
+        DRAFT_SR.replace(",M,Test,Draft", ",M,Test,Planned"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-002 has no LLR" in report
+    assert "SR SR-002 has no test (TC)" in report
+
+
+# A Draft LLR decomposing SR-001 but with no TC: exempt from the "no TC" rule.
+DRAFT_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented
+LLR-002,SR-001,Draft sub-part,src/demo,addfast,"A not-yet-tested decomposition.",(see TC),Draft
+"""
+
+
+def test_draft_llr_is_exempt_from_tc_rule(scaffold):
+    make_minimal_project(scaffold)
+    llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
+    llrs.write_text(DRAFT_LLRS, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "LLR LLR-002 has no test (TC)" not in report
+    # Mark it Implemented and the missing TC is an orphan again.
+    llrs.write_text(
+        DRAFT_LLRS.replace("(see TC),Draft", "(see TC),Implemented"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "LLR LLR-002 has no test (TC)" in report
+
+
+# SR-002 is fully decomposed (LLR-002 + TC-002) so ONLY the status axis varies:
+# Draft -> exempt from --require-verified; Implemented -> flagged.
+RV_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
+SR-002,Drafted requirement,SN-001,"The system shall do a drafted thing.","Being drafted.","some measurable outcome",,M,Test,Draft
+"""
+RV_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented
+LLR-002,SR-002,Draft sub-part,src/demo,addfast,"A drafted decomposition.",(see TC),Draft
+"""
+RV_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Verified
+TC-002,SR-002;LLR-002,Unit,drafted test,Full,,"Satisfies SR-002 AcceptanceCriteria",No,,Draft
+"""
+
+
+def test_draft_sr_is_exempt_from_require_verified(scaffold):
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "system-requirements.csv").write_text(RV_SRS, encoding="utf-8")
+    (req / "low-level-requirements.csv").write_text(RV_LLRS, encoding="utf-8")
+    srs = req / "system-requirements.csv"
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(RV_TCS, encoding="utf-8")
+    # Draft SR-002 is pre-ratification: --require-verified does not flag it.
+    proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "status-findings=0" in proc.stdout
+    # Ratifying it to Implemented (Verification=Test, not yet Verified) flags it.
+    srs.write_text(
+        RV_SRS.replace(",M,Test,Draft", ",M,Test,Implemented"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "status-findings=1" in proc.stdout
+
+
+def test_draft_sr_still_needs_sn_and_stays_integral(scaffold):
+    # The Draft exemption is scoped to child-completeness: parent-linkage (the SN
+    # link) and id integrity still apply to a Draft row.
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    # A Draft SR with an empty SN-Refs still orphans (SN linkage is not exempt).
+    srs.write_text(
+        DRAFT_SR.replace(
+            "SR-002,Drafted requirement,SN-001,", "SR-002,Drafted requirement,,"
+        ),
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "SR SR-002 links no SN" in _report(scaffold)
+    # A malformed Draft id still fails the always-on integrity floor.
+    srs.write_text(DRAFT_SR.replace("SR-002", "SR-2x"), encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "malformed" in _report(scaffold)
