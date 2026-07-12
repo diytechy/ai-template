@@ -2,9 +2,8 @@
 
 The derivation is the trust root of the whole model, so every per-artifact rule,
 the min-aggregation, the draft drop, and the --check rot guard get a red->green
-test here. The meta-repo smoke test proves the dogfood: the derived gate reads G3,
-byte-for-byte with today's declared docs/gate (docs/specs/derived-gate-model.md
-§11 done-when).
+test here. The meta-repo smoke test proves the dogfood follows the live artifact
+state, including an honest gate drop while a new phase carries Draft scope.
 """
 
 from conftest import ROOT, SCRIPTS, load_script, make_minimal_project, run_py
@@ -43,13 +42,15 @@ def _derive(scaffold):
 
 
 # --- the meta-repo dogfood ----------------------------------------------------
-def test_meta_repo_derives_g3():
-    # The whole campaign's north star: the meta's derived gate equals its declared
-    # G3 (every artifact Verified / ratified). Run against the real meta root.
+def test_meta_repo_derived_gate_matches_live_phase_state():
+    # The meta may legitimately re-enter below G3 when a new phase carries Draft
+    # artifacts. Assert the live dogfood state without erasing the closed phase's
+    # high-water mark: v2 is open at G0 while the default phase remains G3.
     proc = run_py([SCRIPTS / "derive_gate.py", "--print", "--root", ROOT], cwd=ROOT)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "derived gate: G3" in proc.stdout
-    assert "drafts=0 computed=G3" in proc.stdout
+    assert "derived gate: G1" in proc.stdout
+    assert "per-phase=(default)=G3;v2=G0" in proc.stdout
+    assert "drafts=1 computed=G0" in proc.stdout
 
 
 # --- per-artifact gate rules --------------------------------------------------

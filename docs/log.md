@@ -2625,3 +2625,17 @@ in this WI.
 **Checks (campaign close).** `pytest -q -n auto` **665 passed, 3 skipped**;
 `check_docs.py --root . --stale` OK, 0 broken; the full `check.py --gate G3` gate
 bar run on the migrated meta (see the run recorded in this session).
+## 2026-07-12 — WI-087 G1 Draft batch: dashboard visual redesign
+
+- **Summary:** reconciled the root `PROJECT_STATE_REDESIGN_PLAN.md` into the live
+  WI-087 spec and drafted `SR-050` (Phase v2) for the professional hierarchical
+  What/When/How diagrams. WI-087 is active and points at the updated spec.
+- **Gate effect:** `derive_gate.py` honestly dropped the repo to runnable G1
+  (`drafts=1`, `v2=G0`) while the default phase remains G3; regenerated
+  `docs/gate`, OKF, and `PROJECT_STATE.html`.
+- **Deviation/finding:** the meta-smoke test assumed the repo could never re-enter
+  below G3. Updated it to assert live per-phase state, matching the landed
+  requirement-first lifecycle.
+- **Verification:** `python -m pytest -q -n auto` — **634 passed, 34 skipped**;
+  `check_docs.py --root . --stale` — **OK**, 32 docs / 203 links / 0 broken.
+- **Budgets:** no budget-watched file changed.

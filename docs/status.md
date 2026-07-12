@@ -142,12 +142,15 @@ working surface.
      owner **G3 re-attestation** over the SR-049 spine cut (Needs \<human> above).
      Phase v3+ now uses the derived gate: draft new SN/SR in the live spine, and
      the derived gate follows.
-  2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
+  2. **Dashboard visual redesign is active at G1 — WI-087**
+     ([spec](specs/WI-087.md)): `SR-050` is drafted in Phase v2 and the derived
+     gate honestly reads G1 / v2=G0. The owner directed implementation; the next
+     commit records attended Draft→Planned ratification, then G2 decomposition
+     and implementation follow the root redesign plan. **WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
-     each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer
-     consistency sweep flags contradictions), **STOP and page the owner to sign
-     off** (§4 G1 review, [log.md](log.md)), then G2→G3 under
-     `check.py --gate G3 --phase v1`.
+     remains separate/deferred Process-tab scope and is not absorbed by this
+     campaign. After WI-087 ratification, proceed G2→G3 while preserving the
+     already-closed phase bar.
   3. **The rest of the backlog needs no new SR — proceed at G3:** WI-078
      (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then WI-079.
   Remaining owner item: the **push decision** above.
