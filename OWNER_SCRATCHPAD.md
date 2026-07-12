@@ -44,3 +44,4 @@ On resync, we should also stress to odopters to recheck if there are updated / n
 
 Does the readme show the config options for the repo and the opt-in vs opt-out options?
 
+Related now that we have the gate rederivation complete, is that readme and other documentation up-to-date?
