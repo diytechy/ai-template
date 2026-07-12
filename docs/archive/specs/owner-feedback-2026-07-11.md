@@ -1,5 +1,11 @@
 # Owner-feedback batch — gate cadence · campaign language · owner scratchpad · archive scan-scope · How-SW containment — PLAN
 
+> **ARCHIVED 2026-07-11 — batch complete.** This was the spec-of-record for
+> work items **WI-071, WI-072, WI-073** (all `done`; deliverables in
+> `docs/requirements/work-items.csv`, session record in `docs/log.md`). The
+> close date is already the basename's date (drafted and closed the same
+> day), so no second date suffix is appended.
+
 **Status:** 🟢 **RULED BY DIRECTION (owner, 2026-07-11)** — five feedback
 items; FB3/FB5 are explicit directives, FB1/FB2/FB4 are answered questions
 whose adopted mechanism is recorded here (working defaults flagged where the

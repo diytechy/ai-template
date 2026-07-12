@@ -1382,7 +1382,7 @@ the re-attestation list is unchanged from the WI-070 entry above.
 ## 2026-07-11 — WI-071: campaign gate cadence documented + campaign vocabulary in the README (docs only)
 
 **Session.** FB1 (gate cadence) + FB2 (campaign language) of the owner-feedback
-batch (spec: [specs/owner-feedback-2026-07-11.md](specs/owner-feedback-2026-07-11.md);
+batch (spec: [archive/specs/owner-feedback-2026-07-11.md](archive/specs/owner-feedback-2026-07-11.md);
 FB1/FB2 marked ✅ DONE). This slice **dogfoods FB1's own ruling** — it ends at
 the **commit bar**, not the full gate; the coordinating close runs
 `check.py --gate G3` once for the whole batch.
@@ -1430,7 +1430,7 @@ is **deferred to the campaign close** per the cadence just documented.
 
 **Session.** FB3 (owner scratchpad) + FB4 (archive scan-scope) of the
 owner-feedback batch (spec:
-[specs/owner-feedback-2026-07-11.md](specs/owner-feedback-2026-07-11.md);
+[archive/specs/owner-feedback-2026-07-11.md](archive/specs/owner-feedback-2026-07-11.md);
 FB3/FB4 marked ✅ DONE). Per FB1's ruling this slice ends at the **commit bar**,
 not the full gate; the coordinating close runs `check.py --gate G3` once.
 
@@ -1620,3 +1620,22 @@ off-switch, ≤10 vacuous, absent-inventory vacuous] + 6 new `test_gen_trajector
 nested renders inside parent, meta smoke]). `check_docs.py --root . --stale` →
 **0 broken** (1 pre-existing out-of-scope orphan warn). The full `check.py --gate
 G3` is **deferred to the coordinating close** per FB1's cadence.
+
+## 2026-07-11 — Batch close (coordinating session): owner-feedback spec archived; the batch's ONE full gate
+
+**Session.** The owner-feedback batch is closed — FB1/FB2 (WI-071), FB3/FB4
+(WI-072), FB5 (WI-073) all landed at the commit bar per the cadence FB1
+itself documented. The spec moved
+`docs/specs/` → [archive/specs/owner-feedback-2026-07-11.md](archive/specs/owner-feedback-2026-07-11.md)
+(the basename already carries the close date — drafted and closed the same
+day — so no second suffix; the ARCHIVED banner names WI-071…WI-073), with
+every citation re-pointed (this log ×2, `status.md`) and the archive README
+`specs/` row extended. `status.md` returns to an empty in-flight lane.
+
+**The one full gate** (the new cadence's close obligation) runs in this
+session over the whole batch — result recorded in this entry's commit and
+the coordinating summary.
+
+**No SR/LLR/TC text touched by the close** — the batch's spine changes
+(SR-048/LLR-049/TC-049, the SR-038 clarification) are recorded in the WI-073
+entry above and ride the one pending re-attestation.

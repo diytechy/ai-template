@@ -64,19 +64,16 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
-  - **The owner-feedback batch is complete** (spec:
-    [specs/owner-feedback-2026-07-11.md](specs/owner-feedback-2026-07-11.md),
-    ruled by direction 2026-07-11; per its own gate-cadence ruling these
-    sessions ended at the commit bar). All three slices landed — FB1/FB2 (the
-    campaign gate cadence + campaign language), FB3/FB4 (the owner scratchpad +
-    check_docs scan-scope), and FB5 (the How-SW ≤10 containment + right-sizing
-    rule + the meta's own components.csv). The batch now awaits the
-    **coordinating close**: the one full `check.py --gate G3` over the whole
-    batch and the owner sitting. Both prior 2026-07-11 campaigns are closed and
-    archived
-    ([archive/specs/capability-expansion.2026-07-11.md](archive/specs/capability-expansion.2026-07-11.md) ·
-    [archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md));
-    every spine-toucher bundles into the one pending G3 re-attestation above.
+  - **In flight:** _(none)_ — all three 2026-07-11 batches are **closed and
+    archived**: the owner-feedback batch (the campaign gate cadence · the
+    owner scratchpad + check_docs scan-scope · the ≤10-item How-SW
+    containment;
+    [archive/specs/owner-feedback-2026-07-11.md](archive/specs/owner-feedback-2026-07-11.md)),
+    the capability-expansion campaign
+    ([archive/specs/capability-expansion.2026-07-11.md](archive/specs/capability-expansion.2026-07-11.md)),
+    and the working-surface + architecture campaign
+    ([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md)).
+    Every spine-toucher bundles into the one pending G3 re-attestation above.
   - **Deferred (backlog — first-class `deferred` WI rows, each with its
     reason):**
     - **WI-060** — coordinator working-tree stash/rollback between sessions
@@ -97,13 +94,11 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-- **Next action:** the owner-feedback batch is complete — run the
-  **coordinating close** (one full `check.py --gate G3` over the batch). Then the
-  **owner sitting**: one G3 re-attestation over every accumulated spine change
-  (now incl. `SR-048`/`LLR-049`/`TC-049` and the `SR-038` clarification), the
-  push ruling, the sibling-repo target, and the deferred batch review. After
-  that: the G-Release walk, the WI-DAG edge data-pass, or new scope (which needs
-  a plan/WI entry first).
+- **Next action:** the **owner sitting** — one G3 re-attestation over every
+  accumulated spine change (now incl. `SR-048`/`LLR-049`/`TC-049` and the
+  `SR-038` clarification), the push ruling, the sibling-repo target, and the
+  deferred batch review. After that: the G-Release walk, the WI-DAG edge
+  data-pass, or new scope (which needs a plan/WI entry first).
 
 ## Scope
 
