@@ -1,0 +1,8 @@
+# Run phase (process-options.md "Unattended operation") — the coordinator reads
+# this to route the next session's tier/template (docs/agents.csv + the tier map)
+# and to decide whether a committing session triggers a review round. One value
+# on the last line; the keys are free-form (BUILD / PLAN / REVIEW-A / REVIEW-B /
+# DESIGN-CHECK / CRITIQUE / INTEGRATE). Seeded BUILD: the backlog is specced and
+# sequenced (docs/status.md Next action), so the loop builds; the coordinator
+# rewrites this file itself as it advances (a stall drops to PLAN to re-chunk).
+BUILD

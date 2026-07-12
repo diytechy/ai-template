@@ -1,0 +1,6 @@
+Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes
+# The ai-template META-repo's own routing registry (WI-107). One row = one (model x route) PAIR. Single-provider BY DESIGN: all three are Family=ANTHROPIC, so a review round runs in the documented degraded-legal same-family mode (fresh context is the invariant; family diversity is best-effort). Add a cross-provider row only when that CLI is actually installed, never speculatively. CmdTemplate carries --dangerously-skip-permissions because this repo IS the unattended run - consent is explicit (docs/agents-enabled + the launcher CONSENT banner). Env empty = the ambient environment = today's call.
+# tag-rank: ga>preview>beta>exp
+ANTHROPIC-OPUS,ANTHROPIC,opus,4.8,strong,claude -p {prompt} --model {model} --output-format json --dangerously-skip-permissions,,gate-bearing kit work (PLAN/BUILD/DESIGN-CHECK/CRITIQUE); the launcher's historical default tier
+ANTHROPIC-SONNET,ANTHROPIC,sonnet,5,medium,claude -p {prompt} --model {model} --output-format json --dangerously-skip-permissions,,iteration reviews ride medium (REVIEW-A/REVIEW-B); tier-up-never-down keeps gate work at strong
+ANTHROPIC-HAIKU,ANTHROPIC,haiku,4.5,weak,claude -p {prompt} --model {model} --output-format json --dangerously-skip-permissions,,weak-tier floor; the tier guardrails would guard once a core is vendored (docs/guardrails-policy)

@@ -34,6 +34,17 @@ working surface.
   uncontained). The
   dashboard is the root [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session
   history: [log.md](log.md).
+- **Unattended layer (enabled 2026-07-12):** the kit's walk-away loop is now
+  wired for a managed, consent-explicit run — `docs/gate-policy` =
+  **`single-ratify`** (one human attest per phase batch; register
+  [gate-policy.md](gate-policy.md)), managed routing ON via `docs/agents-enabled`
+  (3 `ANTHROPIC` pair rows in `docs/agents.csv`: opus/strong · sonnet/medium ·
+  haiku/weak — same-family reviews are the documented degraded-legal mode),
+  `docs/run-phase` = `BUILD`, `docs/guardrails-policy` = `off` (no core vendored
+  here — reason in the file), and the `agent-resume.*` twins'
+  `AGENT_MODEL_MAP`/`AGENT_TIER_MAP` (`BUILD=strong`) filled. Config layer only —
+  no spine change, **derived gate stays G3**. Routing verified: BUILD→opus,
+  reviews→sonnet, enable-list resolves 3/3.
 - **Open items:**
   - **Needs \<human> (the run is paused on these):**
     1. **Push decision** — `MultiRepoSupport` is local-only (~48 commits); the
@@ -44,7 +55,14 @@ working surface.
        met (derived gate reads G3; all-mechanized: 46 Test · 2 Analysis · 1
        Inspection · 0 Attest); the owner's attested sign-off over the SR-049 spine
        cut + the gate-model change is outstanding. See [log.md](log.md).
-    *(Former items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
+    3. **Single-ratify enablement review (the single attest)** — moving
+       `docs/gate-policy` from `attended` to `single-ratify` (the unattended
+       layer's gate authority) is, by the policy file's own rule, a change whose
+       landing commit *is* the reviewed commit the owner accepts. Review that
+       enablement commit; until then [gate-policy.md](gate-policy.md) stands
+       DRAFT. (Config only — it governs WHO makes a ratifying commit, not what
+       the derived gate computes; the gate stays G3.)
+    *(Earlier items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
     the already-made sibling-repo ruling, and the guardrails-batch review;
     see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed
     as backlog WI-078…082 below.)*
@@ -181,24 +199,16 @@ working surface.
      owner **G3 re-attestation** over the SR-049 spine cut (Needs \<human> above).
      Phase v3+ now uses the derived gate: draft new SN/SR in the live spine, and
      the derived gate follows.
-  2. **Bring in WI-107 first (owner-directed 2026-07-12) — unattended
-     enablement, single attest.** Wire the managed-routing consent layer (seed
-     `docs/agents.csv` + `docs/agents-enabled` + `docs/run-phase` +
-     `docs/guardrails-policy`; fill the launchers'
-     `AGENT_MODEL_MAP`/`AGENT_CMD_MAP`) and move `docs/gate-policy` to
-     **`single-ratify`** with its deviation register, in a reviewed commit.
-     Spec: [specs/WI-107.md](specs/WI-107.md). Its micro-fix opener has landed
-     (the launcher twins' archived `IMPROVEMENT_PLAN.md` scope refs are retired;
-     the predicate/dup-malformed/hook-count fixes shipped), so this edits the
-     twins' routing slots directly. Config layer only — no spine change, so the
-     derived gate stays G3.
-  3. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
+     *(The unattended-enablement step landed 2026-07-12 — the managed-routing
+     consent layer + `single-ratify` gate authority; see the Unattended-layer
+     bullet under Current State and its single-attest item in Needs \<human>.)*
+  2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer
      consistency sweep flags contradictions), **STOP and page the owner to sign
      off** (§4 G1 review, [log.md](log.md)), then G2→G3 under
      `check.py --gate G3 --phase v1`.
-  4. **The rest of the backlog needs no new SR — proceed at G3:** WI-104 (pin
+  3. **The rest of the backlog needs no new SR — proceed at G3:** WI-104 (pin
      the dev toolchain) then WI-105 (the coverage-plumbing fix, verified on the
      pinned toolchain — the review's ranked-first defect), then WI-078
      (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then WI-079 and

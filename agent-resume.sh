@@ -19,13 +19,25 @@
 # session (no {prompt} = the resume prompt is appended).
 # Keep agent-resume.cmd's slots in sync — it is the Windows twin.
 AGENT_CMD="claude -p {prompt} --model {model} --output-format json --dangerously-skip-permissions"
-# Default model tier + optional per-phase map read against docs/run-phase.
-# Kit work is gate-bearing template design — default to the strong tier.
+# Default model tier + per-phase map read against docs/run-phase. Kit work is
+# gate-bearing template design — default to the strong tier. With managed routing
+# ON (docs/agents-enabled present) the docs/agents.csv registry + AGENT_TIER_MAP
+# below drive selection; these env maps are the declared FALLBACK (an absent
+# enable-list = this legacy path). Values kept coherent: strong plans/builds,
+# reviews ride medium.
 AGENT_MODEL="opus"
-AGENT_MODEL_MAP=""
+AGENT_MODEL_MAP="PLAN=opus,BUILD=opus,REVIEW-A=sonnet,REVIEW-B=sonnet,DESIGN-CHECK=opus,CRITIQUE=opus"
+# Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|weak).
+# BUILD pinned strong for gate-bearing work (tier-up-never-down lets reviews ride
+# medium safely); relaxing BUILD to medium is a later, deliberate dial turn at a
+# ratification sitting. Unlisted phases use the built-in defaults (PLAN /
+# DESIGN-CHECK / CRITIQUE strong, REVIEW-A / REVIEW-B medium).
+AGENT_TIER_MAP="BUILD=strong"
 # Optional per-phase COMMAND template map (cross-provider routing; pairs
 # with the docs/review-policy reviewer dial), e.g.:
 #   AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt} --model {model}"
+# Empty here: single-provider (every docs/agents.csv row is Family=ANTHROPIC), so
+# every phase uses AGENT_CMD; add a row + entry when a cross-provider CLI exists.
 AGENT_CMD_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):
 AGENT_CMD_INTERACTIVE="claude --model {model} {prompt}"
@@ -43,7 +55,7 @@ if [ -z "$AGENT_CMD" ]; then
   echo "sessions; see project-trajectory/PROCESS_OPTIONS.md 'Unattended operation'." >&2
   exit 1
 fi
-export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
+export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_TIER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
 PY="$(command -v python3 || command -v python)" || {
   echo "agent-resume.sh: python3 not found." >&2; exit 1;
 }

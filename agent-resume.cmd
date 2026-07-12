@@ -20,13 +20,25 @@ REM session (no {prompt} = the resume prompt is appended).
 REM Keep agent-resume.sh's slots in sync — it is the POSIX twin;
 REM agent-resume.command delegates to it.
 set "AGENT_CMD=claude -p {prompt} --model {model} --output-format json --dangerously-skip-permissions"
-REM Default model tier + optional per-phase map read against docs/run-phase.
-REM Kit work is gate-bearing template design — default to the strong tier.
+REM Default model tier + per-phase map read against docs/run-phase. Kit work is
+REM gate-bearing template design — default to the strong tier. With managed
+REM routing ON (docs/agents-enabled present) the docs/agents.csv registry +
+REM AGENT_TIER_MAP below drive selection; these env maps are the declared
+REM FALLBACK (an absent enable-list = this legacy path). Values kept coherent:
+REM strong plans/builds, reviews ride medium.
 set "AGENT_MODEL=opus"
-set "AGENT_MODEL_MAP="
+set "AGENT_MODEL_MAP=PLAN=opus,BUILD=opus,REVIEW-A=sonnet,REVIEW-B=sonnet,DESIGN-CHECK=opus,CRITIQUE=opus"
+REM Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|weak).
+REM BUILD pinned strong for gate-bearing work (tier-up-never-down lets reviews
+REM ride medium safely); relaxing BUILD to medium is a later, deliberate dial
+REM turn at a ratification sitting. Unlisted phases use the built-in defaults
+REM (PLAN / DESIGN-CHECK / CRITIQUE strong, REVIEW-A / REVIEW-B medium).
+set "AGENT_TIER_MAP=BUILD=strong"
 REM Optional per-phase COMMAND template map (cross-provider routing; pairs
 REM with the docs/review-policy reviewer dial), e.g.:
 REM   set "AGENT_CMD_MAP=REVIEW-B=gemini -p {prompt} --model {model}"
+REM Empty here: single-provider (every docs/agents.csv row is Family=ANTHROPIC),
+REM so every phase uses AGENT_CMD; add a row + entry when a cross-provider CLI exists.
 set "AGENT_CMD_MAP="
 REM Optional hands-on template for --interactive (defaults to AGENT_CMD):
 set "AGENT_CMD_INTERACTIVE=claude --model {model} {prompt}"

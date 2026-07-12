@@ -2695,3 +2695,67 @@ unchanged.
 **Checks (commit bar).** `pytest -q -n auto` **669 passed, 1 skipped**;
 `check_docs.py --root . --stale` exit 0. Not filed: L5/L6/L8 (owner taste / N/A,
 per the review).
+
+## 2026-07-12 — WI-107: unattended enablement (managed routing + single-ratify)
+
+**Session (branch `derived-gate-model`; config layer only — NO spine change, no
+byte-budgeted file touched; derived gate stays G3).** Owner-directed ("the kit
+has solidified — get this repo building unattended, configured for a single
+attest"). The main event of the WI-106 sitting: the kit's own walk-away loop,
+self-applied, wired for a managed, consent-explicit run.
+
+**Gate authority.** `docs/gate-policy` `attended` → **`single-ratify`** with the
+deviation register `docs/gate-policy.md` (the `bootstrap.py --gate-policy
+single-ratify` shape + a meta-context note). Per the policy file's own rule the
+value is hand-set and changes only in a reviewed commit — **this landing commit
+is that review** (the single attest), filed as a `Needs <human>` item in
+status.md; the register stands DRAFT until the owner accepts.
+
+**Managed routing (the consent layer).** `docs/agents.csv` seeded with 3
+`ANTHROPIC` pair rows — `ANTHROPIC-OPUS` (strong), `ANTHROPIC-SONNET` (medium),
+`ANTHROPIC-HAIKU` (weak); `CmdTemplate` = the launcher's
+`claude … --dangerously-skip-permissions` (this repo IS the unattended run —
+consent is explicit), `Env` ambient. **Single-provider by design:** all three
+share `Family=ANTHROPIC`, so a review round runs the documented degraded-legal
+same-family mode (fresh context is the invariant); a cross-provider row is added
+only when that CLI is actually installed, never speculatively.
+`docs/agents-enabled` lists the 3 ids in preference order — its **presence**
+turns managed routing ON (absent = byte-for-byte the legacy single-model path).
+`docs/run-phase`=`BUILD`. `docs/guardrails-policy`=`off` with the reason
+recorded: guarding needs the vendored `docs/guardrails/core.md`, owner-ruled to
+live upstream and not built here, so a guarding token would draw the every-run
+no-core warning; flip to `haiku` once the core is vendored.
+
+**Launcher twins.** `agent-resume.sh`/`.cmd` `AGENT_MODEL_MAP`
+(PLAN/BUILD/DESIGN-CHECK/CRITIQUE=opus, REVIEW-A/B=sonnet) + a new
+`AGENT_TIER_MAP=BUILD=strong` slot (filled + exported); `AGENT_CMD_MAP` left
+empty (single-provider). BUILD pinned strong for gate-bearing work
+(tier-up-never-down lets reviews ride medium safely); relaxing BUILD to medium is
+a later, deliberate dial turn at a ratification sitting. Slot values are
+byte-identical across the twins.
+
+**Verification (environment-independent, on the real config files).** Driving
+`agent_route` against `docs/agents.csv` + `docs/agents-enabled`: `load_registry`
+→ 3 rows, 0 errors; `resolve_enabled` → 3 ids, 0 errors; `select()` per phase —
+BUILD/PLAN/CRITIQUE → `ANTHROPIC-OPUS` (opus, strong), REVIEW-A/REVIEW-B →
+`ANTHROPIC-SONNET` (sonnet, medium, "DEGRADED — same-family");
+`guardrails_apply('off',…)`=False and `guardrails_inert('off',…)`=False (no
+warning); the coordinator banner reads "routing: docs/agents-enabled present ->
+managed model selection from 3 enabled of 3 registry models". The one preflight
+check gated by this sandbox is the `CmdTemplate` CLI (`claude`) on PATH — not
+resolvable in this non-interactive shell, resolvable wherever Claude Code is
+installed (the deployment machine); an environment fact, not a config defect.
+(The real `agent_loop.py --track` path additionally guards on an `llm/<track>`
+branch, unrelated to the config.)
+
+**Checks.** Gate bar `check.py --gate G3 --jobs 0` → **RESULT: PASS** (all 14
+steps; `tests+coverage` 670 passed, coverage 90.87% ≥ 80). Commit bar
+`pytest -q -n auto` green; `check_docs --stale` exit 0. No spine rows changed —
+the routing/guardrails/gate-authority capabilities are already SR-traced kit
+behavior (SR-026…031/043/045, WI-024/025/026/042/059/069), and this WI merely
+*declares* the meta-repo's use of them (the WI-075 "dev tooling, no SR change"
+precedent).
+
+**Needs owner.** The single-ratify enablement review (the single attest) — the
+third `Needs <human>` item now in status.md, alongside the standing push decision
+and the derived-gate-campaign G3 re-attestation.
