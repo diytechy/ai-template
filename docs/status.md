@@ -64,26 +64,9 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
-    6. **Rule on the deep-review deferred items** — the 2026-07-12 full-repo
-       review ([archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md),
-       archived with its confident fixes landed) left these to the owner (its
-       §1 has each with reasons):
-       - **F5 duplication census/bound** — the small-helper duplication rule
-         now covers ~22 copies of `_utf8_console`; accept-and-census it, wire
-         `[step:dupes]` over a `docs/dupes-allow` allowlist, or allow one
-         shared helper module and amend the rule.
-       - **`[step:dupes]` wiring** — follows whichever way the F5 ruling goes.
-       - **Archive-anchor comment policy** — script comments citing
-         `docs/archive/` review docs dangle in every downstream scaffold;
-         strip, expand in place, or accept.
-       - **Decomposition campaign** — approve (or not) a plan/WI for splitting
-         the ~1,015/~640/~390-line `main()`s of `agent_loop.py` / `trace.py` /
-         `bootstrap.py` (the `parse_model_map` rename folds in).
-       - **`Links.rtf` at the root** — owner content in an opaque format on
-         the live-only root; convert to markdown or archive it.
-       - *(Note, no ruling needed:* `AGENTS.template.md` sits 22 bytes under
-         its 10,000-byte hard budget — the next durable rule added there
-         forces a compensating cut.)
+       *(The 2026-07-12 deep-review deferred items are **ruled** as of
+       2026-07-12 — filed as backlog WI-078…082 below; no longer a pending
+       decision. See [log.md](log.md).)*
   - **In flight:** _(none)_ — all four 2026-07-11 batches are **closed and
     archived**: the campaign-binning · parallel-tests · resume-hardening
     batch (the `Campaign` grouping column + the campaign-binned When-view
@@ -117,10 +100,47 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
+    - **WI-078** — wire `[step:dupes]` + a `docs/dupes-allow` census (the F5
+      bound). Owner-ruled 2026-07-12 (deep-review option (b)): gate *new*
+      duplication over an allowlist that **is** the census; keep every script
+      independently copy-able (reject the shared helper module). The allowlist
+      machinery already exists in `check_dupes.py` — only the `stack.ini` step
+      and the populated allowlist remain. Ready; scheduled behind the owner
+      sitting. Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §1
+      M2/M6.
+    - **WI-079** — strip archive-anchor citations on scaffold. Owner-ruled
+      2026-07-12: `bootstrap.py` drops the trailing `(REVIEW_*/THREAD_*)`
+      provenance suffixes as it copies scripts downstream — provenance stays
+      here, downstream gets the copy-ready comment. Lowest-value of the batch;
+      accept-and-document is the recorded fallback if the transform isn't cheap.
+      Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §1
+      M7.
+    - **WI-080** — decompose `agent_loop.py:main()` (~1,015 lines / ~500-line
+      loop body) behind unit-testable seams. Owner-ruled 2026-07-12: approved as
+      its own `main-decomposition` campaign, **test-seams-first** and
+      behavior-preserving; the highest-value / highest-risk item, sequenced
+      after the owner sitting. Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
+      H1.
+    - **WI-081** — decompose `trace.py:main()` (~640 lines; extract
+      `render_report`). Follow-on to WI-080 (soft edge), same shape / less
+      urgent (most-copied artifact, so its churn ships widest); the
+      `parse_model_map`→`parse_map` rename (L3) folds into whichever refactor
+      lands first. Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
+      M1/L3.
+    - **WI-082** — decompose `bootstrap.py:main()` (~390 lines). Owner-ruled
+      2026-07-12: left deferred **indefinitely** — milder (honest sequential
+      scaffolding), lowest urgency of the three. Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
+      M5.
 - **Next action:** the **owner sitting** — one G3 re-attestation over every
   accumulated spine change, the push ruling, the sibling-repo target, and the
   deferred batch review. After that: the G-Release walk, the WI-DAG edge
-  data-pass, or new scope (which needs a plan/WI entry first).
+  data-pass, or the newly-ruled deep-review backlog (WI-078 dupes-gate first,
+  then the `main-decomposition` campaign WI-080…082).
 
 ## Scope
 

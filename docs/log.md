@@ -1984,3 +1984,50 @@ four rulings plus `Links.rtf` and the `AGENTS.template.md` 22-byte-headroom
 note — so nothing awaits a decision outside the working surface. Citations
 re-pointed (this log's WI entry link + the WI registry Deliverable path); no
 code, spine, or template change.
+
+## 2026-07-12 — Owner rulings on the deep-review deferred items (WI-078…082 filed; Links.rtf archived)
+
+**Session (owner-directed).** The owner ruled the four deep-review deferred
+items ([archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md)
+§1/§3) and directed `Links.rtf` to the archive. The rulings are now first-class
+backlog rows (the WI-054 idiom — `deferred` WIs, not prose bullets), so
+status.md Open items no longer carries a pending-decision block for the review.
+
+**Rulings.**
+- **F5 census/bound + `[step:dupes]` (M6/M2) → WI-078.** Option (b): wire the
+  detector over a `docs/dupes-allow` allowlist that **is** the census; reject
+  the shared `_kitcommon.py` (it would break the per-script copy-readiness the
+  kit sells, forcing downstream migration). `check_dupes.py` already carries the
+  allowlist machinery (`--allowlist`, `read_allowlist`, line-number-free
+  matching) — only the `stack.ini` step and the populated allowlist remain.
+- **Archive-anchor comments (M7) → WI-079.** Strip the trailing
+  `(REVIEW_*/THREAD_*)` provenance suffixes in `bootstrap.py`'s copy path —
+  provenance stays in the meta-repo, downstream gets the copy-ready comment (the
+  suffix is redundant there since it can't resolve without `docs/archive/`).
+  Accept-and-document is the recorded fallback if the transform isn't cheap.
+- **`main()` decomposition (H1/M1/M5) → WI-080/081/082, campaign
+  `main-decomposition`.** Approved: `agent_loop.py` first (WI-080),
+  test-seams-first and behavior-preserving — the extraction *creates* the unit
+  seams the ~500-line loop lacks today; `trace.py` follow-on (WI-081, soft
+  `~WI-080`, `render_report` extraction, `parse_map` rename folds in);
+  `bootstrap.py` left deferred **indefinitely** (WI-082, mild). Highest
+  value/risk of the batch, sequenced after the owner sitting.
+- **`Links.rtf` (L1) → archived.** `git mv Links.rtf docs/archive/`; the archive
+  README gains a provenance-only row (not opened or converted — owner content).
+  The root is live-only again.
+- **AGENTS.template.md 22-byte headroom (L2).** No ruling — a mechanized
+  tripwire (`byte-budget-guard`); dropped from the working surface.
+
+**No spine change; nothing rides the pending G3 re-attestation** — backlog
+filings + one archive move.
+
+**Checks.** `check_trajectory.py --root . --strict` → clean (82 WIs, 71 done,
+graph acyclic); `gen_trajectory.py --check` → up to date after regen (the When
+view gains WI-078…082 + the `main-decomposition` container); `check_docs.py
+--root . --stale` → OK, 0 broken links (the docs/test/report.md orphan +
+README script-freshness hints are pre-existing). `pytest -q` → **639 passed,
+1 skipped in 86.75s** (serial — this venv has no pytest-xdist; the declared
+`-n auto` command applies wherever xdist is installed).
+
+**No commit yet** — edits sit in the working tree pending the owner's
+go-ahead (this repo commits only when asked).
