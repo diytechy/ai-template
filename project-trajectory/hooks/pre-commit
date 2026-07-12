@@ -119,12 +119,19 @@ fi
 #                        --strict orphan check: orphans are a G2+ gate criterion
 #                        (a mid-G1 registry legitimately has SRs with no LLR/TC
 #                        yet); the floor must never block an early-stage commit.
+#      - derived-gate    docs/gate is GENERATED from artifact states by
+#                        derive_gate.py (docs/specs/derived-gate-model.md); --check
+#                        fails if a ratify/reopen moved the gate but the cache did
+#                        not. A legacy hand-set gate (no `# basis:` line) is
+#                        compared value-only, so a not-yet-migrated repo is green.
+#                        Regenerate with `python scripts/derive_gate.py`.
 #      - skills-sync     per-agent skill copies byte-match the ONE neutral
 #                        source; one-command fix (bootstrap.py --sync); a no-op
 #                        where the kit-only generator isn't beside check.py.
 #    When a step reports STALE, regenerate in dependency order — arch-map ->
-#    okf -> trajectory (the dashboard consumes the other two) — then re-commit.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,trajectory,registry-integrity,skills-sync
+#    okf -> trajectory (the dashboard consumes the other two); the gate marker via
+#    derive_gate.py — then re-commit.
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

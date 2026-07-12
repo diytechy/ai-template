@@ -25,9 +25,11 @@ working surface.
   `check.py --gate G3` (13 steps) is the full bar and CI runs it on real data
   (the meta-repo dogfoods its own trajectory + OKF layers).
 - **Plan state:** meta-repo at **G3** (re-attested 2026-07-12, all-mechanized;
-  new scope opens as **phase v2**), spine **SN=24 SR=48 LLR=49 TC=49, 0
-  orphans**, 49 declared interface seams, 5 declared components (the meta's own
-  How-SW top view is now 23 modules → 5 top-level components, 0 uncontained). The
+  the in-flight derived-gate campaign adds **SR-049**, a mechanized Test SR, which
+  **rides a pending re-attestation** at campaign close), spine **SN=24 SR=49
+  LLR=50 TC=50, 0 orphans**, 51 declared interface seams, 5 declared components
+  (the meta's own How-SW top view is now 24 modules → 5 top-level components, 0
+  uncontained). The
   dashboard is the root [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session
   history: [log.md](log.md).
 - **Open items:**
@@ -119,14 +121,16 @@ working surface.
   1. **Derived-gate campaign — RATIFIED, in flight (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the foundation slices have landed — the `Draft` artifact state + exemption in
-     `trace.py`, SN section-as-state maturity, and **`scripts/derive_gate.py`**
-     (the gate computed from artifact states, cached to `docs/gate` with a
-     `--check` rot guard; the meta reads G3). Remaining slices down the spec §10
-     DAG: **WI-092** check.py consumes the derived gate · **WI-093** phase +
-     `[phase]-[g*]` · **WI-094** ratification workflow · **WI-095** process-doc
-     rewrite · **WI-096** migration + dogfood (migrate the meta `docs/gate`, add
-     derive_gate's own SR/IF rows — the one interim connectivity warn). Runs under
-     today's monolithic gate; once it lands, phase v3+ uses the derived gate.
+     `trace.py`, SN section-as-state maturity, **`scripts/derive_gate.py`** (the
+     gate computed from artifact states, cached to `docs/gate` with a `--check` rot
+     guard; the meta reads G3), and **`check.py` now consuming the derived gate**
+     (a `derived-gate` freshness step at every gate + the pre-commit floor;
+     derive_gate traced into the meta spine as SR-049). Remaining slices down the
+     spec §10 DAG: **WI-093** phase + `[phase]-[g*]` · **WI-094** ratification
+     workflow · **WI-095** process-doc rewrite · **WI-096** migration + dogfood
+     (regenerate the meta `docs/gate` to the derived form; prove derived == G3;
+     ADOPTING recipe). Runs under today's monolithic gate; once it lands, phase
+     v3+ uses the derived gate.
   2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer

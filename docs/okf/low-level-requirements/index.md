@@ -60,3 +60,4 @@ resource: "generated"
 | [LLR-047](LLR-047.md) | Run capability menu reader |
 | [LLR-048](LLR-048.md) | Critique loop dispatch + lax-TC ratchet |
 | [LLR-049](LLR-049.md) | How-SW top-view containment rule + render |
+| [LLR-050](LLR-050.md) | Derived-gate computation + hybrid cache |

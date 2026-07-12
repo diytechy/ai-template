@@ -59,3 +59,4 @@ resource: "generated"
 | [SR-046](SR-046.md) | Run capability menu |
 | [SR-047](SR-047.md) | Subjective-quality critique loop |
 | [SR-048](SR-048.md) | How-SW top view bounded and containerized |
+| [SR-049](SR-049.md) | Derived gate from artifact states |

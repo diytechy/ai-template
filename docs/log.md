@@ -2413,3 +2413,62 @@ coverage is warn-first at every gate); `check_trajectory --strict` stays clean.
 **Checks.** `pytest -q -n auto` **658 passed, 3 skipped**; `check_docs.py --root
 . --stale` OK, 0 broken; `check_trajectory --strict` clean (1 warn-only
 connectivity note); arch-map + dashboard regenerated fresh.
+
+## 2026-07-12 — SPINE CHANGE (WI-092, derived-gate campaign): check.py consumes the derived gate; SR-049 added; RE-ATTESTATION rides the campaign
+
+**Session (branch `derived-gate-model`).** `check.py` now consumes the derived
+gate (spec §5/§10.4), and — to keep the meta's own dogfood green — `derive_gate.py`
+is traced into the meta spine.
+
+**check.py integration (the light part).** `resolve_gate()` reads `docs/gate`'s
+first non-comment line **unchanged** — the value is simply *derived* by
+`derive_gate.py` now (it sits on that same line, with the `# basis:` derivation in
+comments above), so no read change was needed; the docstring records the shift. A
+new **`derived-gate`** process step (`derive_gate.py --check`) runs at **every gate
+G1/G2/G3** (the gate value is check.py's own input, so its cache must be fresh
+whenever check.py runs) and joins the **pre-commit** batched freshness floor
+(`--run-steps …,derived-gate,…`; the shipped `project-trajectory/hooks/pre-commit`,
+which the meta's thin `.githooks/pre-commit` wrapper delegates to). A **legacy**
+hand-set gate (no `# basis:` line) is compared value-only, so the meta + fresh
+scaffolds stay green until WI-096 migrates. `conftest.make_minimal_project`
+regenerates `docs/gate` via derive_gate (a full G3 chain advances the derived gate
+off the scaffolded G1).
+
+**Spine change (deviation — pulled forward from WI-096).** Adding `derive_gate.py`
+as a *traced product script* means the meta's own invariants (every arch-map
+module contained in a component; every module a declared IF endpoint — WI-073 /
+WI-057) go **red** the moment the module enters the arch-map, and one of them
+(`component_top_view` uncontained == []) is a hard **test** (`test_gen_trajectory
+::test_meta_component_top_view_smoke`), not just a warn. So the meta-spine tracing
+of derive_gate could not wait for WI-096 without leaving the meta's own suite red
+for four commits. Traced now:
+- **SR-049** (derived gate from artifact states; SN-004 mechanical-gate + SN-008
+  honest-gate; Test/Verified) + **LLR-050** (Module `…/derive_gate.py`, Component
+  **CMP-001** Traceability core, alongside trace/check/check_trajectory) + **TC-050**
+  (`tests/test_derive_gate.py`).
+- **IF-050** Provides `derive_gate → check` (the `docs/gate` marker) + **IF-051**
+  Consumes `derive_gate ← system-requirements.csv` (the states) + the `Contracts:
+  IF-050, IF-051` docstring line. derive_gate is now contained **and** a declared
+  endpoint: `trace --strict …` → interfaces=51 interface-findings=0, 0 orphans; the
+  interim connectivity warn is gone.
+
+What stays for **WI-096**: regenerate the meta's own `docs/gate` to the derived
+form (basis line), prove derived == declared G3 byte-for-byte, and the ADOPTING
+migration recipe.
+
+**RE-ATTESTATION.** SR-049 is a new Verified Test SR on the ratified spine, so it
+**rides a pending G3 re-attestation** at campaign close (still all-mechanized: 46
+Test · 2 Analysis · 1 Inspection · 0 Attest). Recorded as the campaign's
+re-attestation rider in `docs/status.md`.
+
+**Meta spine:** SN=24 **SR=49 LLR=50 TC=50**, 0 orphans / integrity / schema /
+status findings; **51** IF seams, interface-findings=0; 24 modules → 5 components,
+0 uncontained.
+
+**Byte deltas.** `AGENTS.template.md` **untouched** (9,978); `PROCESS.md`
+**untouched** (58,297). No byte-budgeted file changed.
+
+**Checks.** `pytest -q -n auto` **659 passed, 3 skipped**; `check_docs.py --root .
+--stale` OK, 0 broken; `check_trajectory --strict` clean (0 connectivity warns);
+`derive_gate --check` value-OK (G3, legacy — WI-096 migrates); arch-map + OKF +
+dashboard regenerated fresh.

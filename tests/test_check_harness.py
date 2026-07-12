@@ -190,19 +190,50 @@ def test_missing_command_is_designed_failure():
 def test_run_steps_batch_passes_on_clean_project(scaffold):
     # The pre-commit hook's batched floor: several independent steps in one
     # interpreter spawn, run concurrently, each reported. Green on a fully
-    # traced, freshly mapped project.
+    # traced, freshly mapped project. Mirrors the shipped hook's batch (which
+    # now includes derived-gate, the docs/gate freshness guard).
     make_minimal_project(scaffold)
     proc = run_py(
         [
             "scripts/check.py",
             "--run-steps",
-            "arch-map,okf,trajectory-map,trajectory,registry-integrity,skills-sync",
+            "arch-map,okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync",
         ],
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    for name in ("arch-map", "okf", "trajectory-map", "registry-integrity"):
+    for name in (
+        "arch-map",
+        "okf",
+        "trajectory-map",
+        "registry-integrity",
+        "derived-gate",
+    ):
         assert name in proc.stdout
+
+
+def test_derived_gate_step_wired_at_every_gate_and_runs(scaffold):
+    # check.py consumes the derived gate (docs/specs/derived-gate-model.md §5):
+    # the derived-gate freshness step is a process-layer step at every gate.
+    check = load_script("check")
+    for gate in ("G1", "G2", "G3"):
+        plan = [s for s in check.steps(80, "full", gate) if gate in s[3]]
+        match = [s for s in plan if s[0] == "derived-gate"]
+        assert match, "derived-gate missing at {}".format(gate)
+        assert match[0][4] == "process" and match[0][1] == ()  # stdlib, no tool
+    # End-to-end: on a G3-complete project (docs/gate regenerated to G3) the step
+    # passes; un-verifying an SR without regenerating docs/gate makes it FAIL.
+    make_minimal_project(scaffold)
+    ok = run_py(["scripts/check.py", "--run-step", "derived-gate"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    sr = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    sr.write_text(
+        sr.read_text(encoding="utf-8").replace(",Test,Verified", ",Test,Implemented"),
+        encoding="utf-8",
+    )
+    bad = run_py(["scripts/check.py", "--run-step", "derived-gate"], cwd=scaffold)
+    assert bad.returncode != 0
+    assert "STALE" in bad.stdout + bad.stderr
 
 
 def test_run_steps_reports_every_failure(scaffold):

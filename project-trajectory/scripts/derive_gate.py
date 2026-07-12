@@ -56,8 +56,7 @@ Small CSV/heading loaders below are duplicated from trace.py per the kit's
 independently-copyable-script convention (the F5 rule) — derive_gate.py stays a
 self-contained drop-in, never importing the joined-spine engine.
 
-Contracts: (interface rows for this module are authored with the spine migration,
-docs/specs/derived-gate-model.md §10.8.)
+Contracts: IF-050, IF-051 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse

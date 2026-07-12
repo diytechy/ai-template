@@ -293,6 +293,7 @@ Contracts (interfaces): IF-016, IF-036
 
 ### `scripts/derive_gate`
 _Derive the active gate from artifact states — the hybrid, cached gate._
+Contracts (interfaces): IF-050, IF-051
 
 | Public item | Summary | Implements |
 |---|---|---|

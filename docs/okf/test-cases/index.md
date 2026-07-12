@@ -60,3 +60,4 @@ resource: "generated"
 | [TC-047](TC-047.md) | Run the run-menu suite: --list prints name<TAB>desc for each declared capability in decla… |
 | [TC-048](TC-048.md) | Run the critique-loop suite: the loop schedules CRITIQUE exactly when a committing build'… |
 | [TC-049](TC-049.md) | Run the top-view suite: an inventory over 10 modules with no containing CMPs warns plain … |
+| [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache |
