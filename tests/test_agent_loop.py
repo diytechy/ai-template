@@ -695,3 +695,54 @@ def test_zero_commit_repo_is_guarded(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
     assert "(root).." in index, "the first commit range starts at (root)"
+
+
+def test_dirty_tree_at_start_injects_reconcile_and_logs(loop_repo):
+    # WI-076: a non-empty working tree at loop start is residue from an
+    # interrupted session. The loop logs one line and prepends the reconcile note
+    # to the FIRST session's prompt — surface only: it never stashes or cleans.
+    repo, ctl, template = loop_repo
+    (repo / "leftover.txt").write_text("residue\n", encoding="utf-8")  # untracked
+    proc = _loop(repo, template, "--max-iterations", "1")  # a single noop session
+    assert "uncommitted path(s)" in proc.stderr
+    assert "likely an interrupted session" in proc.stderr
+    prompt = (ctl / "prompt.txt").read_text(encoding="utf-8")
+    assert "reconcile them against the open work item" in prompt
+    # surface only — the loop neither committed nor cleaned the residue
+    assert (repo / "leftover.txt").read_text(encoding="utf-8") == "residue\n"
+    assert "leftover.txt" in _git(repo, "status", "--porcelain")
+
+
+def test_clean_tree_prompt_is_byte_identical(loop_repo):
+    # WI-076: a clean tree at loop start injects nothing — the composed prompt is
+    # byte-for-byte the default resume prompt, and no dirty-tree line is logged.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    prompt = (ctl / "prompt.txt").read_text(encoding="utf-8")
+    assert prompt == load_script("agent_loop").DEFAULT_PROMPT
+    assert "uncommitted path(s)" not in proc.stderr
+
+
+def test_working_tree_dirty_counts_renames_and_untracked(tmp_path):
+    # WI-076: porcelain parsing counts each uncommitted path once — a rename is a
+    # single entry (not two), an untracked file a single '?? path' entry — and a
+    # clean tree is empty. Exercised against a real repo (the encoding-safe
+    # git() reader).
+    loop = load_script("agent_loop")
+    repo = tmp_path / "r"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "a@b.com")
+    _git(repo, "config", "user.name", "A")
+    (repo / "a.txt").write_text("hi\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    assert loop.working_tree_dirty(repo) == []  # clean
+    (repo / "b.txt").write_text("new\n", encoding="utf-8")  # untracked
+    assert len(loop.working_tree_dirty(repo)) == 1
+    _git(repo, "add", "-A")
+    _git(repo, "mv", "a.txt", "c.txt")  # a staged rename
+    lines = loop.working_tree_dirty(repo)
+    assert len(lines) == 2, lines  # the rename is ONE entry (+ b.txt), not three

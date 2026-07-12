@@ -1805,3 +1805,100 @@ orphan warn + pre-existing README stale hints, all warn-only). `ruff format` /
 `ruff check` (the gate interpreter, `C:/Python38`) clean. The full `check.py
 --gate G3` is **deferred to the coordinating close** per the batch cadence.
 **Next up: WI-076** (dirty-tree resume hardening — the batch's last slice).
+
+## 2026-07-11 — WI-076 (campaign-binning batch, slice 3): dirty-tree resume hardening — detect + surface + stale-lock recheck — no spine change
+
+**Session.** WI-076 (P3, the batch's **last** slice) landed at the **commit
+bar** — the batch's one full `check.py --gate G3` runs at the coordinating
+close, not here. Owner question: an interrupted agent session can leave
+working-tree residue; on resume, will the next session notice and recover?
+Answer (recorded in the spec): the *logical* layer is interruption-safe (progress
+= commits; an uncommitted interruption leaves the WI open + named in status.md +
+blocked from a confused mixed commit by the hook floor), but **noticing was not
+mechanized** — the preflight checked command/CLI/git/privacy/locks, not tree
+cleanliness. This slice mechanizes the noticing (the **thin slice** — detect +
+surface, never auto-stash; full stash/rollback stays deferred as **WI-060**).
+
+**Deliverables.**
+- **Detect + surface at the loop (`agent_loop.py`).** New `working_tree_dirty(root)`
+  helper — `git status --porcelain` through the encoding-safe `git()` reader
+  (text, `errors=replace`, like the siblings), returning the porcelain lines
+  (one per uncommitted path; a rename is a single `R  old -> new` entry, an
+  untracked file a single `?? path` entry). New module constant
+  `RESUME_RECONCILE_NOTE` (the injected text, kept in **ONE place**). At loop
+  start the coordinator (a) logs one stderr line — `working tree carries N
+  uncommitted path(s) — likely an interrupted session` — and (b) prepends the
+  reconcile note (+ `--- ` separator) to the **first** session's composed prompt,
+  routed through the existing `session_prompt()` composition point (`resume_reconcile`
+  closure var) so guardrails-core / track-preamble / reviewer-body composition is
+  unchanged. **Surface only — never stash, clean, or block.**
+- **Protocol text.** The `session-protocol` skill (neutral source
+  `project-trajectory/skills/session-protocol/SKILL.md`) gains a "**Check `git
+  status` first**" bullet in §1 Read-before-doing (reconcile residue against the
+  open WI's spec/Done-when before new work). `bootstrap.py --dest . --sync`
+  fanned it out **byte-identical** to `.claude/skills/` + `.agents/skills/`
+  (skills-sync gate green). `PROCESS_OPTIONS.md` "Unattended operation" gains one
+  sentence (the loop surfaces a dirty tree into the first session's prompt;
+  stash/rollback deliberately not automated — the judgment belongs to the session).
+
+**Scope choice — ONCE at loop start, NOT per-iteration (the honest call).** The
+spec floated "at loop start *and* each session launch." Chose **once-at-start**,
+after reasoning it out: the coordinator writes its own **tracked** bookkeeping
+between sessions — `docs/iteration/NNN-<stamp>.log` + the regenerated
+`iteration_index.md` (only `out/` is gitignored) — *after* each session, to be
+committed by the *next* session. So in a healthy run the tree is legitimately
+non-empty before every iteration ≥ 2 (a one-session-lagging log + index), and a
+per-iteration check would **false-positive every pass** on the loop's own
+artifacts — worse, it would tell the session to "reconcile interrupted-session
+residue" about the coordinator's own logs. The only point where the tree purely
+reflects the **outside world** is *before iteration 1* — a fresh coordinator
+resuming a repo someone left dirty, which is exactly the interruption-recovery
+signal WI-076 targets (a killed session ⇒ a fresh `agent-resume.*` ⇒ a fresh
+`main()` ⇒ loop start). The snapshot is taken **before `acquire_lock`** so the
+coordinator's own `out/agent-loop.lock` never counts as residue (in a scaffold
+`out/` is gitignored so it would not anyway; taking it first is correct
+regardless of a repo's `.gitignore` hygiene — and it is what makes the
+clean-tree test byte-exact).
+
+**Stale-lock recheck — SAFE, no fix needed (verify + report).** Read the WI-025
+lane-lock code: the per-worktree lock is a **kernel advisory lock** (`fcntl.flock`
+on POSIX, `msvcrt.locking` on Windows) held on an open descriptor for the
+process's lifetime. The OS releases it automatically on process exit **including
+a crash or SIGKILL**, so a killed holder **cannot wedge** the next run — there is
+no stale-pid file to reason about and no PID-reuse hazard (the pid/host/stamp in
+the file are human-readable diagnostics only, never the liveness signal). The
+killed-holder case is **already covered** by `test_lock_auto_released_when_holder_dies`
+(a subprocess probe acquires the lock then `os._exit(0)` — no release/atexit,
+modelling a crash — after which the parent acquires cleanly). Per the spec's
+"add the missing test only if cheap," none was added (it already exists);
+recorded here.
+
+**Spine decision — NO spine change.** The reconcile injection is **prompt
+composition inside the existing session contract** — no new coordinator
+capability, no new requirement. Verified the adjacent SRs honestly:
+**SR-026/027/028** (the unattended-loop / run-state / resume claims) are not
+extended — surfacing a pre-existing tree state to the session it already launches
+adds no promise they must now cover. **Does NOT ride the pending re-attestation.**
+
+**Tests (+3, `tests/test_agent_loop.py`).** `test_dirty_tree_at_start_injects_reconcile_and_logs`
+(dirty tree ⇒ the stderr log line + the reconcile note in the composed prompt;
+surface-only — the residue is neither committed nor cleaned by the loop);
+`test_clean_tree_prompt_is_byte_identical` (clean tree ⇒ prompt is byte-for-byte
+`DEFAULT_PROMPT`, no dirty line logged); `test_working_tree_dirty_counts_renames_and_untracked`
+(porcelain parse: a rename is one entry not two, an untracked one entry, clean is
+empty). The existing skills-sync test covers the byte-identical fan-out (green).
+
+**Byte deltas.** Byte-budgeted files (`AGENTS.template.md`, `PROCESS.md`)
+**untouched** (verified — not in the diff). `agent_loop.py` +67/−4 lines.
+`PROCESS_OPTIONS.md` +4/−1 lines. `PROJECT_STATE.html` 385,716 → 385,712 B
+(**−4**; the WI-076 node flips queued→done). No `docs/okf` / arch-map churn.
+
+**Gates (commit bar).** `pytest -q -n auto` **602 passed / 34 skipped** in 52.4 s
+(**0 failed**; the 34 skips are all the pre-push/pre-commit **hook shell tests**
+— `needs a POSIX shell and git on PATH` — an environmental platform gate under
+this PowerShell-invoked run, unrelated to WI-076; the 3 new tests all pass).
+`check_docs.py --root . --stale` → **0 broken** (the same pre-existing orphan +
+README stale hints, warn-only). `ruff format` / `ruff check` (the gate
+interpreter, `C:/Python38`) clean. The full `check.py --gate G3` is **deferred to
+the coordinating close** per the batch cadence — **all three batch slices
+(WI-074/075/076) are now done at the commit bar, awaiting that close.**

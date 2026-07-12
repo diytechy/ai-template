@@ -165,6 +165,18 @@ DEFAULT_PROMPT = (
     "'Needs <human>' Open item in status.md first)."
 )
 
+# The dirty-tree resume note (WI-076; process-options.md "Unattended
+# operation"). Prepended to the FIRST session's prompt when the loop starts on a
+# non-empty working tree — residue from a prior interrupted run/session. SURFACE
+# only: the loop never stashes, cleans, or blocks (that judgment stays deferred
+# as WI-060); the reconcile decision belongs to the session. Kept in ONE place.
+RESUME_RECONCILE_NOTE = (
+    "The working tree carries uncommitted changes, likely from an interrupted "
+    "session. Before starting new work, reconcile them against the open work "
+    "item's spec / Done-when: verify and commit what is complete, discard what "
+    "is not part of the scoped work, and record which you did in the log."
+)
+
 # The redacted reviewer prompt (S8). Ships as the embedded default for the
 # REVIEW-A/REVIEW-B phases; a repo overrides it per phase with a prompt-template
 # FILE via --prompt-map / AGENT_PROMPT_MAP. Redacted BY CONSTRUCTION: the
@@ -711,6 +723,19 @@ def head_sha(root):
     """Short HEAD sha, or None on a zero-commit repo (guarded rev-parse)."""
     code, out = git(root, "rev-parse", "--short", "HEAD")
     return out if code == 0 and out else None
+
+
+def working_tree_dirty(root):
+    """The `git status --porcelain` lines — one per uncommitted path (a rename is
+    a single 'R  old -> new' entry, an untracked file a single '?? path' entry),
+    or [] on a clean tree or a non-repo. Read through git() (text,
+    errors=replace) so an odd byte in a path degrades rather than crashes (the
+    sibling encoding-safe idiom). Used once at loop start to surface
+    interrupted-session residue (WI-076)."""
+    code, out = git(root, "status", "--porcelain")
+    if code != 0:
+        return []
+    return [ln for ln in out.splitlines() if ln.strip()]
 
 
 def current_state_excerpt(status_path, max_lines=40):
@@ -1382,6 +1407,11 @@ def main():
             file=sys.stderr,
         )
     warned_no_core = []
+    # WI-076: set to the reconcile note (+ separator) for the FIRST session only
+    # when the loop starts on a dirty tree; "" otherwise, so every other session's
+    # prompt is byte-for-byte today's. The interactive path (early return above)
+    # leaves this "" — a human at the keyboard already sees the tree.
+    resume_reconcile = ""
 
     def session_prompt(model, body=None):
         """The session prompt: the track preamble (when --track redirects the
@@ -1389,10 +1419,13 @@ def main():
         guardrails core prepended ahead of both when docs/guardrails-policy
         selects this session's model (Thread 41). `body` overrides the default
         resume prompt (a --prompt-map template, or a redacted reviewer prompt).
-        Returns (prompt, guarded); a selected-but-absent core warns once, then
-        runs without it (guardrails accelerate weak tiers, they never gate a
-        run)."""
-        base = track_preamble + (args.prompt if body is None else body)
+        A loop-start dirty tree adds the WI-076 reconcile note ahead of the
+        preamble for the first session (resume_reconcile). Returns (prompt,
+        guarded); a selected-but-absent core warns once, then runs without it
+        (guardrails accelerate weak tiers, they never gate a run)."""
+        base = (
+            resume_reconcile + track_preamble + (args.prompt if body is None else body)
+        )
         if not guardrails_apply(guardrails_policy, model):
             return base, False
         core = guardrails_core(root)
@@ -1408,6 +1441,13 @@ def main():
                 file=sys.stderr,
             )
         return base, False
+
+    # WI-076: snapshot the working tree BEFORE the coordinator creates its own
+    # out/agent-loop.lock (and, later, docs/iteration/*.log) — so the check sees
+    # genuine interrupted-session residue, never our own artifacts. In a scaffold
+    # out/ is gitignored, so the lock would not show anyway; taking the snapshot
+    # first is correct regardless of a repo's .gitignore hygiene.
+    start_dirty = working_tree_dirty(root)
 
     # One coordinator per worktree (a double-launch or cron overlap is the
     # collision the branch guard can't catch — same branch, same checkout).
@@ -1541,7 +1581,30 @@ def main():
             )
         )
 
+    # --- WI-076: surface the loop-start dirty tree (ONCE) --------------------
+    # start_dirty was snapshotted before the lock (above). A non-empty tree here
+    # is residue from a prior interrupted run/session: a fresh coordinator has
+    # not yet written this run's own docs/iteration bookkeeping (the tracked,
+    # one-session-lagging *.log + index a committing session picks up), so the
+    # tree purely reflects the outside world. Per-iteration re-checking would
+    # false-positive every pass on exactly that lagging bookkeeping, so
+    # once-at-start is the honest scope. Surface only — one log line + a reconcile
+    # note into the first session's prompt (below) — never stash/clean/block
+    # (that judgment stays deferred as WI-060).
+    if start_dirty:
+        print(
+            "agent_loop: working tree carries {} uncommitted path(s) — likely "
+            "an interrupted session".format(len(start_dirty)),
+            file=sys.stderr,
+        )
+
     for i in range(1, args.max_iterations + 1):
+        # Inject the reconcile note into the first session's prompt only (see the
+        # once-at-start rationale above); every later session's prompt is
+        # unchanged from today.
+        resume_reconcile = (
+            RESUME_RECONCILE_NOTE + "\n\n---\n\n" if (i == 1 and start_dirty) else ""
+        )
         session = "{:03d}".format(next_session_number(iter_dir))
         stamp = time.strftime("%Y%m%d-%H%M%S")
         before = head_sha(root)

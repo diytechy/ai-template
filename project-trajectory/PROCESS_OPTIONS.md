@@ -362,7 +362,10 @@ without a commit), or an iteration budget ceiling hits. Sessions run on the
 iteration branch where the "Agent iteration branch & sync" layer is in use
 (never the development branch), trigger its sync ritual at the end states, and
 honor `docs/push-policy` — under the default `human` the coordinator never
-pushes, even if asked.
+pushes, even if asked. At loop start the coordinator **surfaces a dirty working
+tree** (residue from an interrupted session) into the first session's prompt as
+a reconcile instruction, with a one-line log; stash/rollback is deliberately
+*not* automated — that judgment belongs to the session.
 
 **The `docs/run-state` contract** (one word, tracked like `docs/gate`) is what
 the driver owes the coordinator; update it in the session's final commit:

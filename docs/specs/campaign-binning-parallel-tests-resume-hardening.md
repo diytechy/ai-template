@@ -79,7 +79,7 @@ long pole. The shape is embarrassingly parallel (every test isolated in
 command; SR-035 cross-OS CI claim unchanged — CI inherits the stack.ini
 command). Record measured before/after times in log.md.
 
-## P3 — Dirty-tree resume hardening (the interruption-safety recheck)
+## P3 — Dirty-tree resume hardening (the interruption-safety recheck) — ✅ DONE (2026-07-11)
 
 **Owner question.** An interrupted agent session can leave working-tree
 artifacts; on agent-resume, will the next session notice the in-flight work

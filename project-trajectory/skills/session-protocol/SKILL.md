@@ -26,6 +26,11 @@ kit's design history — the old thread specs and the WI-1.x log — is archived
   archived plan. **Do only the scoped work** — no unrelated edits.
 - If a stub is being revived, find and link its earlier backlogged form (search
   `docs/archive/scratch.md` + the stub threads) so the resolution is traceable.
+- **Check `git status` first.** Residue in the working tree is from an
+  interrupted session; reconcile it against the open WI's spec / Done-when
+  *before* new work — verify-and-commit what is complete, discard what is not
+  part of the scope, and record which in the log. (The unattended loop surfaces
+  this into the session prompt; the judgment is yours — it never auto-stashes.)
 
 ## 2. Respect the constraints
 
