@@ -1,9 +1,8 @@
 # Design spec — Derived gate model (replace the monolithic declared gate)
 
-**Status: DESIGN — core model RATIFIED (owner G1, 2026-07-12); the phase-anchor
-resolution (§9.3) awaits a final nod.** Branch: `derived-gate-model`. Registered
-as **WI-088** (campaign `derived-gate`). This doc is the spec-of-record; the
-implementation WIs in §10 file once the phase point is confirmed.
+**Status: RATIFIED (owner G1, 2026-07-12).** Branch: `derived-gate-model`.
+Registered as **WI-088** (campaign `derived-gate`, design done). This doc is the
+spec-of-record; the implementation is filed as **WI-089…096** (§10).
 
 Owner direction (2026-07-12): **replace** the monolithic gate (not opt-in);
 **hybrid** derivation via a fast check script that caches the last-computed state
@@ -20,9 +19,9 @@ correctly** to derive the gate and drive the right checks.
    `Status` is the sign-off for the artifacts it touches; **an agent may make
    that commit** on a human's behalf, with the `docs/gate-policy` level governing
    *who may* (attended / single-ratify / autonomous). (§6.)
-3. **Phase — resolved, pending a final nod:** the derived-gate **drop** is the
-   *detector*; the committed `[phase]-[g*]` work item is the *anchor* of phase
-   identity + membership (§9.3).
+3. **Phase — ratified:** the derived-gate **drop** is the *detector*; the
+   committed `[phase]-[g*]` work item is the *anchor* of phase identity +
+   membership (§9.3).
 4. **SN maturity — decided: section-as-state** (§4 option (a)).
 
 ---

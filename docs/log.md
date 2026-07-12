@@ -2243,3 +2243,25 @@ spine change yet — design + registration only.
 
 **Checks.** `check_trajectory --strict` clean (88 WIs); `gen_trajectory --check`
 fresh after regen; `check_docs --stale` OK, 0 broken links.
+
+## 2026-07-12 — WI-088 RATIFIED: derived-gate design signed off; WI-089…096 filed
+
+**Session (owner-directed; branch `derived-gate-model`).** The owner ratified the
+derived-gate design — **this commit is the sign-off**, dogfooding the model's own
+"ratification = a reviewed commit" rule. Final direction: the phase **anchoring**
+method (the derived-gate *drop* is the detector; the committed `[phase]-[g*]` WI
+is the anchor of identity + membership — pure git-history derivation is
+rebase-sensitive and carries no membership).
+
+**Recorded.** `docs/specs/derived-gate-model.md` → **RATIFIED** (its Ratification
+section holds the four G1 decisions). WI-088 (design) closed **done**; the §10
+implementation campaign filed as **WI-089…096** (campaign `derived-gate`, SpecRef
+the design doc): WI-089 (queued) artifact-state model + `Draft`-exemption in
+`trace.py` (the foundation); WI-090 SN maturity · WI-091 `derive_gate.py` ·
+WI-092 check.py integration · WI-093 phase + `[phase]-[g*]` · WI-094 ratification
+workflow · WI-095 process-doc rewrite · WI-096 migration + dogfood (deferred
+behind WI-089). The campaign builds under today's monolithic gate; once it lands,
+phase v3+ runs on the derived gate. No code change yet — ratification + registry.
+
+**Checks.** `check_trajectory --strict` clean (96 WIs); `gen_trajectory --check`
+fresh after regen; `check_docs --stale` OK, 0 broken links.

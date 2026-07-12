@@ -112,15 +112,20 @@ working surface.
       scaffolding), lowest urgency of the three. Spec:
       [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
       M5.
+    - **Derived-gate campaign (WI-090…096, deferred behind WI-089;** spec
+      [specs/derived-gate-model.md](specs/derived-gate-model.md) §10**):** WI-090
+      SN maturity (section-as-state), WI-091 `derive_gate.py` (compute + cache +
+      `--check`), WI-092 check.py integration, WI-093 phase + `[phase]-[g*]`,
+      WI-094 ratification workflow, WI-095 process-doc rewrite, WI-096 migration +
+      dogfood.
 - **Next action — phase v2 (new scope; branch `derived-gate-model` for the gate
   redesign).** A resume session picks up here:
-  1. **WI-088 — derived-gate-model (this branch).** Design spec drafted
-     ([specs/derived-gate-model.md](specs/derived-gate-model.md)): **replace** the
-     monolithic gate with a derived one — hybrid cached compute (with a compute
-     date), reuse `Status`+`Draft` (no new column), parallel-requirement /
-     series-dev, derived phase. **Awaiting owner ratification of the DESIGN (G1)**
-     before its implementation WIs (spec §10) are filed — a larger G1 sign-off
-     than a single SR.
+  1. **Derived-gate campaign — RATIFIED (this branch).** The design
+     ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified;
+     build starts with **WI-089** — the artifact-state model + the `Draft`
+     exemption in `trace.py` (the foundation the rest needs) — then WI-090…096
+     down the spec §10 DAG. The campaign runs under today's monolithic gate; once
+     it lands, phase v3+ uses the derived gate.
   2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer
