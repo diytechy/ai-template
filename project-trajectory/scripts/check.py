@@ -42,9 +42,10 @@ Usage:
                             [--jobs N] [--run-step NAME] [--run-steps A,B,...]
 
     --gate      Which gate's checks to run. Default: the repo's **active gate**
-                from the one-line `docs/gate` file (bootstrap starts it at G1;
-                closing a gate = the human bumps it in a reviewed commit), else
-                `all` when no gate file exists. This is what keeps a young
+                from `docs/gate` (bootstrap starts it at G1). The value is now
+                DERIVED from the artifact states by derive_gate.py (not hand-set);
+                closing a gate = ratifying artifacts in a reviewed commit +
+                regenerating. Else `all` when no gate file exists. This keeps a young
                 project's CI green-and-honest: it enforces the bar the project
                 is actually at, not the end-state bar. G3 (and all) also
                 requires every Verification=Test SR to be Status=Verified

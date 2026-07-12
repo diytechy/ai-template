@@ -170,6 +170,58 @@ def test_check_legacy_gate_compares_value_only(scaffold):
     assert "STALE" in bad.stdout + bad.stderr
 
 
+def test_requirement_first_lifecycle_end_to_end(scaffold):
+    # The full derived-gate lifecycle on a fixture (spec §11 done-when): draft a
+    # requirement in the LIVE spine (the gate drops), then ratify -> decompose ->
+    # verify (the gate climbs back), with trace.py clean throughout.
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    srs = req / "system-requirements.csv"
+    llrs = req / "low-level-requirements.csv"
+    tcs = scaffold / "docs" / "test" / "test-cases.csv"
+
+    # 1) Requirement-first: a Draft SR-002 with no LLR/TC. trace stays clean (the
+    #    draft is exempt), and the derived gate drops to G1 (raw G0 in the basis).
+    srs.write_text(
+        SRS_H + _sr("SR-001") + _sr("SR-002", status="Draft"), encoding="utf-8"
+    )
+    trace = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert trace.returncode == 0, trace.stdout + trace.stderr
+    r = _derive(scaffold)
+    assert r["raw"] == GATE.G0 and r["gate"] == "G1"
+
+    # 2) Ratify + decompose: Draft->Planned, add LLR-002 + TC-002 (not Verified).
+    #    The derived gate rises to G2.
+    srs.write_text(
+        SRS_H + _sr("SR-001") + _sr("SR-002", status="Planned"), encoding="utf-8"
+    )
+    llrs.write_text(
+        LLRS_H
+        + 'LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Verified\n'
+        + 'LLR-002,SR-002,Part,src/demo,two,"d",(see TC),Implemented\n',
+        encoding="utf-8",
+    )
+    tcs.write_text(
+        TCS_H
+        + 'TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Verified\n'
+        + 'TC-002,SR-002;LLR-002,Unit,m,Full,,"e",Yes,tests/test_demo.py::t2,Implemented\n',
+        encoding="utf-8",
+    )
+    assert _derive(scaffold)["gate"] == "G2"
+
+    # 3) Verify: SR-002 + its TC reach Verified. The derived gate returns to G3.
+    srs.write_text(
+        SRS_H + _sr("SR-001") + _sr("SR-002", status="Verified"), encoding="utf-8"
+    )
+    tcs.write_text(
+        TCS_H
+        + 'TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Verified\n'
+        + 'TC-002,SR-002;LLR-002,Unit,m,Full,,"e",Yes,tests/test_demo.py::t2,Verified\n',
+        encoding="utf-8",
+    )
+    assert _derive(scaffold)["gate"] == "G3"
+
+
 def test_draft_sn_drops_the_gate(scaffold):
     # A Draft SN (section-as-state) sits at G0 and drops the derived gate too.
     make_minimal_project(scaffold)

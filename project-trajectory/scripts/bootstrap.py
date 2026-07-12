@@ -610,7 +610,8 @@ GATE_POLICY_DEVIATIONS = {
             "a human approves each gate",
             "LLM-gate: an independent fresh-context reviewer runs the harness "
             "itself; verdict recorded in docs/log.md with `Model:` + "
-            "`Role: LLM-GATE`; the driver bumps docs/gate citing it",
+            "`Role: LLM-GATE`; the driver makes the ratifying Status-change "
+            "commit + regenerates docs/gate (derive_gate.py) citing it",
         ),
         (
             "mid-run escalation to the human",
@@ -969,9 +970,12 @@ MAPPING = [
     ("GEMINI.stub.template.md", "GEMINI.md"),
     ("PROCESS.md", "docs/process.md"),
     ("PROCESS_OPTIONS.md", "docs/process-options.md"),
-    # The machine-readable active gate (one line: G1|G2|G3|all). check.py and CI
-    # read it, so a young project's CI enforces the bar it is actually at;
-    # closing a gate = the human bumps this file in a reviewed commit.
+    # The machine-readable active gate (first non-comment line: G1|G2|G3).
+    # check.py and CI read it, so a young project's CI enforces the bar it is
+    # actually at. It is DERIVED from the artifact states by derive_gate.py (not
+    # hand-set); closing a gate = ratifying artifacts in a reviewed commit +
+    # regenerating. The scaffold ships a legacy one-liner (accepted value-only);
+    # `python scripts/derive_gate.py` migrates it to the generated form.
     ("gate.template", "docs/gate"),
     # The declared gate authority (Thread 32, process.md §4): who accepts a
     # gate advance. Scaffolds `attended`; --gate-policy sets a non-default

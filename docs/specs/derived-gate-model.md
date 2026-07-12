@@ -205,13 +205,21 @@ drops, and the batch review sees it alongside the new work.
 8. **Migration + dogfood** — ADOPTING recipe; migrate the meta's own spine and
    prove the derived gate reads `G3` byte-for-byte against today's declared one.
 
-## 11. Done-when (the campaign)
+## 11. Done-when (the campaign) — LANDED 2026-07-12 (WI-089…096)
 
-- [ ] This design ratified by the owner (G1).
-- [ ] `docs/gate` is generated from artifact states; `--check` guards rot; the
-      meta's derived gate equals its current declared `G3`.
-- [ ] Draft artifacts live in the live spine without orphaning; requirement-first
-      batching works end-to-end on a fixture.
-- [ ] `[phase]-[g*]` batches pre-dev work; constituent WIs run G2→G3 after.
-- [ ] The monolithic hand-set gate is retired; PROCESS/ADOPTING/skills updated;
-      downstream migration recipe shipped.
+- [x] This design ratified by the owner (G1). *(WI-088, 2026-07-12.)*
+- [x] `docs/gate` is generated from artifact states (`derive_gate.py`, WI-091);
+      `--check` guards rot; the meta's derived gate reads **`G3`**, matching its
+      declared gate (WI-096 migration — the meta `docs/gate` is now the generated
+      form, full `--check` basis-compared).
+- [x] Draft artifacts live in the live spine without orphaning (WI-089 trace
+      exemption + WI-090 SN section-as-state); requirement-first drafting +
+      ratify-to-climb is fixture-tested (`test_derive_gate.py`,
+      `test_trace.py`).
+- [x] `[phase]-[g*]` archetype + the phase-drop detector land in
+      `check_trajectory` (WI-093); the parallel-pre-dev / series-dev workflow is
+      documented (process-options.md "Derived gate model").
+- [x] The monolithic hand-set gate is retired (`derive_gate.py` is the authority,
+      `check.py` consumes it, WI-092); PROCESS/PROCESS_OPTIONS/`gate-advance`
+      skill/gate-policy updated (WI-094/095); the downstream migration recipe
+      ships in ADOPTING §5/§6 (WI-096).
