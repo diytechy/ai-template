@@ -741,3 +741,133 @@ def test_interface_warns_never_fail_strict(tmp_path):
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "connectivity undeclared" in proc.stderr
+
+
+# --- WI-073/FB5: the How-SW top-view right-sizing rule -------------------------
+# The software-architecture top view is bounded at 10 items (top-level CMP
+# components that contain a module + uncontained modules); over the bound is a
+# finding — WARN plain, ERROR under --strict (G2+). Opt-out docs/components-check;
+# vacuous below the bound or with no arch-map inventory (the bound is the rule).
+
+CMP_HDR = "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
+TAGGED_LLR_HDR = (
+    "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component\n"
+)
+
+
+def _arch_n(n):
+    """A generated MODULE MAP block of n modules scripts/mod_0..mod_{n-1}."""
+    body = "".join(
+        "### `scripts/mod_{i}`\n_M{i}._\n\n| Public item | Summary | Implements |\n"
+        "|---|---|---|\n| `f{i}()` | go |  |\n\n".format(i=i)
+        for i in range(n)
+    )
+    return (
+        "# Arch\n<!-- BEGIN GENERATED MODULE MAP -->\n"
+        + body
+        + "<!-- END GENERATED MODULE MAP -->\n"
+    )
+
+
+def write_cmps(root, body):
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "components.csv").write_text(CMP_HDR + body, encoding="utf-8")
+
+
+def write_tagged_llrs(root, pairs):
+    """`pairs` = [(module, CMP-id)]; writes an LLR csv (Component column) so a
+    module joins its CMP through its LLR's Component tag (the AXES membership)."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    body = "".join(
+        "LLR-{:03d},SR-001,T,{},f,d,(see TC),Verified,{}\n".format(i + 1, mod, cmp)
+        for i, (mod, cmp) in enumerate(pairs)
+    )
+    (req / "low-level-requirements.csv").write_text(
+        TAGGED_LLR_HDR + body, encoding="utf-8"
+    )
+
+
+def test_top_view_over_bound_warns_plain_fails_strict(tmp_path):
+    # 12 modules, no CMP rows -> 12 uncontained top items > 10.
+    write_arch(tmp_path, _arch_n(12))
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "How-SW top view has 12 items" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "How-SW top view has 12 items" in strict.stderr
+
+
+def test_declaring_components_below_bound_clears_it(tmp_path):
+    # 3 components containing all 12 modules -> top view = 3 <= 10.
+    write_arch(tmp_path, _arch_n(12))
+    write_cmps(
+        tmp_path,
+        "CMP-001,A,software,,built,,,,\n"
+        "CMP-002,B,software,,built,,,,\n"
+        "CMP-003,C,software,,built,,,,\n",
+    )
+    write_tagged_llrs(
+        tmp_path,
+        [("scripts/mod_{}".format(i), "CMP-00{}".format(i % 3 + 1)) for i in range(12)],
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr
+
+
+def test_nested_cmp_counts_only_at_top_level_root(tmp_path):
+    # CMP-003 nests under CMP-001 (PartOf); its members count under CMP-001, so
+    # the roots are {CMP-001, CMP-002} = 2 top items, well under the bound.
+    write_arch(tmp_path, _arch_n(12))
+    write_cmps(
+        tmp_path,
+        "CMP-001,Core,software,,built,,,,\n"
+        "CMP-002,Other,software,,built,,,,\n"
+        "CMP-003,Nested,software,,built,,CMP-001,,\n",
+    )
+    pairs = []
+    for i in range(12):
+        cmp = "CMP-001" if i < 4 else ("CMP-003" if i < 8 else "CMP-002")
+        pairs.append(("scripts/mod_{}".format(i), cmp))
+    write_tagged_llrs(tmp_path, pairs)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr
+
+
+def test_uncontained_modules_count_toward_the_bound(tmp_path):
+    # One component holding a single module leaves 11 uncontained -> 1 + 11 = 12.
+    write_arch(tmp_path, _arch_n(12))
+    write_cmps(tmp_path, "CMP-001,Only,software,,built,,,,\n")
+    write_tagged_llrs(tmp_path, [("scripts/mod_0", "CMP-001")])
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "1 top-level component(s) + 11 uncontained module(s)" in strict.stderr
+
+
+def test_top_view_off_switch_silences(tmp_path):
+    write_arch(tmp_path, _arch_n(12))
+    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr
+
+
+def test_ten_module_inventory_is_vacuous(tmp_path):
+    # Exactly at the bound with no CMP rows -> passes trivially (the bound, not
+    # the registry, is the rule).
+    write_arch(tmp_path, _arch_n(10))
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr
+
+
+def test_absent_inventory_top_view_is_vacuous(tmp_path):
+    # No architecture.md at all -> nothing to bound (pre-arch-map / files-mode).
+    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "How-SW top view" not in proc.stderr

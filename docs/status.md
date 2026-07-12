@@ -24,9 +24,11 @@ working surface.
   `SN→SR→LLR→TC` spine is self-adopted: `docs/gate` is at **G3**;
   `check.py --gate G3` (13 steps) is the full bar and CI runs it on real data
   (the meta-repo dogfoods its own trajectory + OKF layers).
-- **Plan state:** meta-repo at **G3**, spine **SN=23 SR=46 LLR=47 TC=47, 0
-  orphans**, 49 declared interface seams. The dashboard is the root
-  [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session history: [log.md](log.md).
+- **Plan state:** meta-repo at **G3**, spine **SN=24 SR=48 LLR=49 TC=49, 0
+  orphans**, 49 declared interface seams, 5 declared components (the meta's own
+  How-SW top view is now 23 modules → 5 top-level components, 0 uncontained). The
+  dashboard is the root [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session
+  history: [log.md](log.md).
 - **Open items:**
   - **Needs \<human> (the run is paused on these):**
     1. **G3 re-attestation** — one sitting covers the accumulated spine changes
@@ -45,7 +47,11 @@ working surface.
        now the **new `SR-046`** under `SN-001` (the
        run capability menu / launcher surface; +LLR-047 + TC-047), and now the
        **new `SN-024` + `SR-047`** under `SN-024`/`SN-006` (the subjective-quality
-       critique loop / `Critique` verification value; +LLR-048 + TC-048).
+       critique loop / `Critique` verification value; +LLR-048 + TC-048), and now
+       the **new `SR-048`** under `SN-023`/`SN-012` (the How-SW top-view bound +
+       containerized render / right-sizing rule; +LLR-049 + TC-049) with its
+       sibling **`SR-038` text since clarified** (the How-SW view containerizes
+       when a CMP layer contains modules; the non-software component table).
        *Mandatory*: Verified SR text changed and new SN/SRs joined the spine
        ([log.md](log.md)).
     2. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
@@ -58,13 +64,15 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
-  - **In flight — the owner-feedback batch** (spec:
+  - **The owner-feedback batch is complete** (spec:
     [specs/owner-feedback-2026-07-11.md](specs/owner-feedback-2026-07-11.md),
     ruled by direction 2026-07-11; per its own gate-cadence ruling these
-    sessions end at the commit bar, full gate once at close):
-    - **WI-073** — How-SW top view ≤10 items via CMP containerization +
-      the right-sizing finding; meta authors its own components.csv.
-    **Next up: WI-073.** Both prior 2026-07-11 campaigns are closed and
+    sessions ended at the commit bar). All three slices landed — FB1/FB2 (the
+    campaign gate cadence + campaign language), FB3/FB4 (the owner scratchpad +
+    check_docs scan-scope), and FB5 (the How-SW ≤10 containment + right-sizing
+    rule + the meta's own components.csv). The batch now awaits the
+    **coordinating close**: the one full `check.py --gate G3` over the whole
+    batch and the owner sitting. Both prior 2026-07-11 campaigns are closed and
     archived
     ([archive/specs/capability-expansion.2026-07-11.md](archive/specs/capability-expansion.2026-07-11.md) ·
     [archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md));
@@ -89,12 +97,13 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-- **Next action:** execute the owner-feedback batch in order — **WI-073**
-  next — commit-bar cadence, one full gate at the batch
-  close. Then the **owner sitting**: one G3 re-attestation over every
-  accumulated spine change, the push ruling, the sibling-repo target, and the
-  deferred batch review. After that: the G-Release walk, the WI-DAG edge
-  data-pass, or new scope (which needs a plan/WI entry first).
+- **Next action:** the owner-feedback batch is complete — run the
+  **coordinating close** (one full `check.py --gate G3` over the batch). Then the
+  **owner sitting**: one G3 re-attestation over every accumulated spine change
+  (now incl. `SR-048`/`LLR-049`/`TC-049` and the `SR-038` clarification), the
+  push ruling, the sibling-repo target, and the deferred batch review. After
+  that: the G-Release walk, the WI-DAG edge data-pass, or new scope (which needs
+  a plan/WI entry first).
 
 ## Scope
 

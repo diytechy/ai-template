@@ -496,3 +496,173 @@ def test_meta_okf_bundle_renders_the_knowledge_graph():
     assert "knowarrow" in svg
     for cid in ("SN-001", "SR-038", "TC-038"):
         assert (ROOT / details[cid]["href"]).exists()
+
+
+# --- WI-073/FB5: the containerized How-SW top view -----------------------------
+
+CONT_ARCH = """# Architecture
+<!-- BEGIN GENERATED MODULE MAP -->
+### `scripts/mod_a`
+_Module A._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `run(x)` | Runs. |  |
+
+### `scripts/mod_b`
+_Module B._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `go()` | Go. |  |
+
+### `scripts/mod_c`
+_Module C._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `gen()` | Gen. |  |
+
+### `scripts/mod_d`
+_Module D._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `emit()` | Emit. |  |
+<!-- END GENERATED MODULE MAP -->
+"""
+
+CONT_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
+LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Verified,CMP-001
+LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Verified,CMP-001
+LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Verified,CMP-002
+LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Verified,CMP-002
+"""
+
+CONT_CMPS = (
+    "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
+    "CMP-001,Core,software,,built,,,,\n"
+    "CMP-002,Gen,software,,built,,,,\n"
+)
+
+# Two seams a->c and b->c both cross CMP-001 -> CMP-002 (must aggregate to ONE
+# deduplicated edge); IF-003 is intra-CMP-001, IF-004 a boundary to a file hub.
+CONT_IFS = (
+    IF_HDR
+    + "IF-001,Provides,scripts/mod_a,scripts/mod_c,call,SR-001,v1,Stable,Active,,\n"
+    + "IF-002,Provides,scripts/mod_b,scripts/mod_c,call,SR-001,v1,Stable,Active,,\n"
+    + "IF-003,Provides,scripts/mod_a,scripts/mod_b,call,SR-001,v1,Stable,Active,,\n"
+    + "IF-004,Consumes,scripts/mod_a,docs/stack.ini,reads,SR-001,v1,Stable,Active,,\n"
+)
+
+
+def containerize(root):
+    """make_repo + a 4-module arch-map, two software components tagging them via
+    LLR Component tags, and the cross/intra/boundary seams."""
+    make_repo(root)
+    req = root / "docs" / "requirements"
+    (req / "low-level-requirements.csv").write_text(CONT_LLRS, encoding="utf-8")
+    (req / "components.csv").write_text(CONT_CMPS, encoding="utf-8")
+    (req / "interfaces.csv").write_text(CONT_IFS, encoding="utf-8")
+    (root / "docs" / "architecture.md").write_text(CONT_ARCH, encoding="utf-8")
+    return root
+
+
+def sw_section(root):
+    return html_of(root).split('id="sw"', 1)[1].split("</section>", 1)[0]
+
+
+def test_how_sw_containerizes_when_components_contain_modules(tmp_path):
+    # With a CMP layer that contains modules, the How-SW panel becomes the
+    # containerized <details> top view (≤10 items), not the flat table/graph.
+    containerize(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    assert 'class="cmptree"' in sw
+    assert sw.count('<details class="cmpbox">') == 2  # two top-level components
+    assert "Top view: 2 item" in sw
+    # members are revealed inside the expansion; intra + boundary seams surface.
+    assert "scripts/mod_a" in sw and "scripts/mod_c" in sw
+    assert "IF-003" in sw  # intra-component seam
+    assert "IF-004" in sw and "stack.ini" in sw  # boundary seam to a file hub
+
+
+def test_boundary_aggregation_dedupes_cross_component_edges(tmp_path):
+    # IF-001 and IF-002 both cross CMP-001 -> CMP-002; at the top level they
+    # aggregate to ONE deduplicated component-to-component edge naming both ids.
+    containerize(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    xs = re.search(r'<ul class="xseams">(.*?)</ul>', sw, re.S).group(1)
+    assert len(re.findall(r"<li>", xs)) == 1
+    assert "IF-001, IF-002" in xs
+
+
+def test_no_cmp_renders_flat_view_byte_identical(tmp_path):
+    # The vacuity guarantee: render flat (no CMP layer), add the containment
+    # (panel changes), remove it, re-render == the original flat bytes exactly.
+    make_repo(tmp_path)
+    (tmp_path / "docs" / "architecture.md").write_text(CONT_ARCH, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    flat = (tmp_path / "PROJECT_STATE.html").read_bytes()
+    assert b'class="cmptree"' not in flat
+
+    req = tmp_path / "docs" / "requirements"
+    (req / "low-level-requirements.csv").write_text(CONT_LLRS, encoding="utf-8")
+    (req / "components.csv").write_text(CONT_CMPS, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    assert b'class="cmptree"' in (tmp_path / "PROJECT_STATE.html").read_bytes()
+
+    (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
+    (req / "components.csv").unlink()
+    assert gen(tmp_path).returncode == 0
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == flat
+
+
+def test_containerized_view_is_deterministic_and_check_stable(tmp_path):
+    # Built from sorted inputs, no clocks -> a second render is byte-identical and
+    # --check passes (no new freshness exclusion).
+    containerize(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    first = (tmp_path / "PROJECT_STATE.html").read_bytes()
+    again = gen(tmp_path)
+    assert again.returncode == 0 and "already up to date" in again.stdout
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
+    assert gen(tmp_path, "--check").returncode == 0
+
+
+def test_nested_components_render_inside_their_parent(tmp_path):
+    # A CMP with PartOf renders as a nested <details> inside its parent, and only
+    # the top-level root is a first-view item.
+    containerize(tmp_path)
+    req = tmp_path / "docs" / "requirements"
+    (req / "components.csv").write_text(
+        CONT_CMPS + "CMP-003,Sub,software,,built,,CMP-001,,\n", encoding="utf-8"
+    )
+    (req / "low-level-requirements.csv").write_text(
+        CONT_LLRS.replace(
+            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Verified,CMP-001",
+            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Verified,CMP-003",
+        ),
+        encoding="utf-8",
+    )
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    # Still two top-level items (CMP-001 with CMP-003 nested inside, and CMP-002).
+    assert "Top view: 2 item" in sw
+    assert "CMP-003" in sw  # the nested child is rendered (inside CMP-001)
+
+
+def test_meta_component_top_view_smoke():
+    # Over the real meta repo: 5 right-sized software components, 0 uncontained,
+    # within the bound, and sw_containment renders the containerized panel.
+    ct = load_script("check_trajectory")
+    v = ct.component_top_view(ROOT)
+    assert v["count"] <= ct.TOP_VIEW_MAX
+    assert v["uncontained"] == []
+    assert len(v["top_roots"]) == 5
+    gt = load_script("gen_trajectory")
+    cont = gt.sw_containment(ROOT, gt.sw_modules(ROOT))
+    assert cont is not None
+    tab, panel = cont
+    assert 'data-tab="sw"' in tab and 'class="cmptree"' in panel

@@ -58,3 +58,4 @@ resource: "generated"
 | [SR-045](SR-045.md) | Heterogeneous implementer/reviewer scheduling |
 | [SR-046](SR-046.md) | Run capability menu |
 | [SR-047](SR-047.md) | Subjective-quality critique loop |
+| [SR-048](SR-048.md) | How-SW top view bounded and containerized |

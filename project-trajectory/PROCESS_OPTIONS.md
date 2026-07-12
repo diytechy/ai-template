@@ -1524,6 +1524,27 @@ registries `trace.py` reads: LLR/PART/ASSET). Deeper mechanization — e.g.
 flagging a cross-component import with no declared IF — is a routed, later
 check; until then the boundary discipline is gate-attested.
 
+**The How-SW top view is bounded** (WI-073/FB5). The software-architecture panel
+of `PROJECT_STATE.html` shows at most **ten** first-view items — the **top-level**
+components (a CMP with no `PartOf` that contains an arch-map module) plus any
+**uncontained** module (one with no `Component`-tagged LLR). Exceeding the bound
+is a `check_trajectory.py` finding — **WARN** at the plain/hook run, **ERROR
+under `--strict` (G2+)** — so an unreadable module map drives *right-sizing of the
+component designations* instead of being tolerated. In the render, software items
+are **containerized** into the component they belong to; expanding a component
+reveals its members (and nested components) and the seams internal to it, while
+interface seams that cross a component boundary aggregate to **one** deduplicated
+component-to-component edge at the top level. Membership is the same
+`Component`-tag join (`LLR.Module → CMP-###`); nesting via `PartOf` counts a
+module only at its top-level root. The rule is **opt-out, default-on** like the
+connectivity coverage — silence it with the one word `off` in
+`docs/components-check` (no scaffolded file; absence reads on) — and **vacuous**
+below the bound: a repo with ≤10 modules, or no arch-map inventory, passes
+trivially (the bound, not the registry, is the rule), so a small or non-adopting
+repo is never broken while a 20-module repo is *supposed* to feel it. (A CMP's
+`Category` routes the render: `software` components fill the containerized How-SW
+top view, other categories the How-physical table.)
+
 ## §9 NFR checklist
 
 <!-- profile: nfr -->

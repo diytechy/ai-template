@@ -94,7 +94,7 @@ to be formed.
   "nothing links to it" are noise there by definition.
 - `OWNER_SCRATCHPAD.md` is fully exempt (FB3).
 
-## FB5 — How-SW top view: ≤10 items, containerized by component (owner directive)
+## FB5 — How-SW top view: ≤10 items, containerized by component (owner directive) — ✅ DONE (2026-07-11)
 
 **Owner directive.** In the software-architecture diagram on
 `PROJECT_STATE.html`, the **first view must show at most 10 items**. To

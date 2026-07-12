@@ -1505,3 +1505,118 @@ tests [scratchpad-exempt, archive-broken-link-fails, archive-not-orphan-but-live
 stale hints). Spine unchanged at **SN=24 SR=47 LLR=48 TC=48, 0 orphans** (49
 interface seams). The full `check.py --gate G3` is **deferred to the campaign
 close** per FB1's cadence.
+
+## 2026-07-11 — WI-073 (owner-feedback FB5): How-SW top view ≤10 items via CMP containerization + the right-sizing rule — SPINE CHANGE (SR-048 added; SR-038 clarified); RE-ATTESTATION PENDING
+
+**Owner directive (FB5).** In the software-architecture diagram on
+`PROJECT_STATE.html` the first view must show **at most 10 items**; software items
+that belong to a component are **containerized** into it (a component may contain
+components), and exceeding the bound is a **failure** that drives right-sizing of
+the component designations. Spec: `docs/specs/owner-feedback-2026-07-11.md#fb5`.
+
+**What shipped.**
+- **`check_trajectory.py` — the right-sizing rule.** New `component_top_view()` is
+  the **one home** for the AXES membership join: `arch_inventory` modules ×
+  `load_cmps` CMP rows × `module_components` (the `Component` tag on an LLR joins
+  `LLR.Module → CMP-###`); `_cmp_roots` resolves `PartOf` up to the top-level
+  root(s), cycle-guarded. `component_findings()` bounds the top view at
+  `TOP_VIEW_MAX = 10` (top-level components that contain a module + uncontained
+  modules) — **WARN plain, ERROR under `--strict` (G2+)**, printed before the WI
+  vacuity return so a big arch-map with no CMPs trips even with no work items.
+  Opt-out `docs/components-check` (the `interfaces-check` reader; **no scaffolded
+  file, absence = on** — confirmed matching the interfaces-check precedent);
+  **vacuous** at ≤10 modules or with no arch-map inventory (the bound, not the
+  registry, is the rule).
+- **`gen_trajectory.py` — the containerized render.** `sw_containment()` imports
+  the same `ct.component_top_view` derivation (so the render and the rule can
+  never disagree on the count) and renders the How-SW panel as a native
+  **`<details>` tree** (no JS → deterministic, offline, byte-stable through
+  `--check`): top-level components + uncontained modules as the first view, each
+  component expanding to its member modules, nested child components, and the
+  seams internal to it. IF seams crossing a component boundary **aggregate to one
+  deduplicated component-to-component edge** at the top level (the module-level
+  ids listed on the one edge); intra/boundary seams live in the expansion. When no
+  CMP contains a module the panel keeps today's flat graph/table **byte-identical**
+  (proven by a round-trip test). `build_html` routes `Category=software` CMPs to
+  the containerized How-SW view and non-software CMPs to the How-physical table, so
+  a domain-neutral CMP lands in the tab matching its category.
+- **Meta dogfood.** Authored `docs/requirements/components.csv` — **5 right-sized
+  software components**: `CMP-001` Traceability core (trace/check/check_trajectory,
+  3 modules), `CMP-002` Generators (gen_arch_map/gen_trajectory/gen_okf/
+  gen_release_checklist/gen_skills_index/gen_cases, 6), `CMP-003` Quality checkers
+  (check_docs/check_doc_refs/check_dupes/check_flows/check_perf/check_stubs/
+  check_vendored, 7), `CMP-004` Unattended loop & floor (agent_loop/agent_route/
+  score_reviews/subagent_gate/check_privacy, 5), `CMP-005` Scaffold & onboarding
+  (bootstrap/run_menu, 2). Added the `Component` column + a tag to **all 48 meta
+  LLR rows** (hooks → CMP-004, onboard → CMP-005 for completeness even though they
+  are not arch-map modules). **Result: the meta How-SW top view drops from 23
+  modules to 5 components, 0 uncontained** (`trace components=5
+  component-findings=0`; `check_trajectory --strict` green with the new rule).
+
+**Component cut — why this cut.** Grouped by role along the real architecture (the
+same shape `architecture.md` already narrates: checkers/generators, the floor, the
+declared config): the join+harness core; the `--check`-gated generators; the
+quality lints; the autonomous coordinator + its safety floor; and the
+zero-to-running scaffold surface. Kept flat (5 top-level, no nesting in the meta
+data — nesting is exercised by tests) because the real architecture has no deep
+subsystem tree; every arch-map module lands in exactly one component, so nothing is
+uncontained.
+
+**Judgment calls.**
+- **Edge aggregation** is at the *top-level root*: an IF between two modules in
+  different top-level components → one deduped root→root edge; same-root → intra
+  (shown in the expansion); a file/external counterpart → a boundary seam of the
+  module's component. Aggregation dedups on `(rootA, rootB)` with the contributing
+  IF ids collected — one edge per crossing pair (regression test: IF-001 + IF-002
+  both crossing CMP-001→CMP-002 render as ONE edge naming both).
+- **Expansion mechanism** = native HTML `<details>` (the spec sanctioned a
+  `<details>`-style approach): zero JS, so it stays deterministic and byte-stable
+  through `--check` without touching the existing vanilla-JS icicle/DAG/Knowledge
+  interaction code. Nested components render as nested `<details>` inside the
+  parent.
+- **`SR-038` decision — minimal clarify, not silent, not over-touch.** The new
+  render introduces one genuine contradiction with SR-038's text ("the component
+  table when CMP rows exist" is now false for a software-only CMP set, which routes
+  to the containerized How-SW view). Made the **minimal** edit: "the software
+  module-map view … (containerized into its components when a CMP layer contains
+  modules, else the flat module map), the **non-software** component table when
+  non-software CMP rows exist". Left the rest of SR-038 alone (its acceptance
+  criteria never named the CMP table and its testable claims still hold). Rides the
+  pending re-attestation (SR-038 was already pending from WI-070).
+- **`Category` routing of `_cmp_panel`.** Filtering the How-physical table to
+  non-software CMPs is a behavior change to `build_html`, but it is the honest cut
+  (CMP is domain-neutral) and non-breaking: no test asserted software CMPs in the
+  physical table, and a physical-CMP or no-CMP repo is unaffected.
+
+**Spine.** +`SR-048` under `SN-023`/`SN-012` (the architecture view stays legible —
+the top view is bounded at 10 via declared composition, and exceeding it is a
+finding that drives component right-sizing) + `LLR-049` (check_trajectory,
+`Component=CMP-001`) + `TC-049` (Automated=Yes; Evidence = test_trajectory.py +
+test_gen_trajectory.py). `SR-038` text minimally clarified. Spine now **SN=24
+SR=48 LLR=49 TC=49, 0 orphans, 0 integrity, 0 schema, 0 status findings**;
+`components=5`, `interfaces=49`. **Rides the one pending G3 re-attestation**
+(SR-038 text changed + SR-048/LLR-049/TC-049 joined the spine).
+
+**Docs.** `PROCESS_OPTIONS.md` "Component layer" gained "The How-SW top view is
+bounded" (the ≤10 rule + the containerized render + the `docs/components-check`
+switch + the `Category` routing), stated once. `components.template.csv`'s CMP-000
+explainer gained the top-view note pointing at that section. `AGENTS.template.md`
+and `PROCESS.md` **untouched** (not in scope — verified below).
+
+**Regenerated (view artifacts).** `gen_arch_map` (the new public functions in
+check_trajectory/gen_trajectory entered the module map) → `gen_okf` (spine change;
+230 files) → `PROJECT_STATE.html` (the containerized How-SW panel; the WI-073
+close). All three `--check` up to date; `trace --strict-integrity` 0.
+
+**Byte deltas (budgeted files).** `AGENTS.template.md` **untouched (9,978)**;
+`PROCESS.md` **untouched**. The rule + render narrative expanded
+`PROCESS_OPTIONS.md` (not budgeted) per the push-expansion rule.
+
+**Mechanized bar (commit bar).** `pytest -q` → **622 passed, 3 skipped**
+(0 failures; +13 over the 609 baseline — 7 new `test_trajectory.py` [over-bound
+warn/strict, declaring-components-clears, nested-counts-at-root, uncontained-count,
+off-switch, ≤10 vacuous, absent-inventory vacuous] + 6 new `test_gen_trajectory.py`
+[containerizes, boundary-dedupe, no-CMP flat byte-identical, deterministic+--check,
+nested renders inside parent, meta smoke]). `check_docs.py --root . --stale` →
+**0 broken** (1 pre-existing out-of-scope orphan warn). The full `check.py --gate
+G3` is **deferred to the coordinating close** per FB1's cadence.

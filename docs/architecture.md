@@ -261,6 +261,7 @@ Contracts (interfaces): IF-009, IF-023
 |---|---|---|
 | `read_trajectory_enabled(root)` | Whether the trajectory check is on. `docs/trajectory-check` with the one |  |
 | `read_interfaces_check_enabled(root)` | Whether the architecture-connectivity coverage warns are on (S5/WI-056). |  |
+| `read_components_check_enabled(root)` | Whether the How-SW top-view right-sizing rule is on (WI-073/FB5). |  |
 | `read_rows(path)` | The CSV rows of `path` as dicts, or [] when the file is absent. |  |
 | `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
@@ -268,6 +269,10 @@ Contracts (interfaces): IF-009, IF-023
 | `load_ifs(rows)` | Real (non-`-000`) IF-### interface rows as dicts. Lenient — `trace.py` owns |  |
 | `arch_inventory(root)` | `(module_names, {module: {IF ids}})` parsed from `docs/architecture.md`'s |  |
 | `interface_findings(root)` | Architecture-connectivity coverage warns (S5/WI-056; process.md §8), all |  |
+| `load_cmps(rows)` | Real (non-`-000`) CMP-### component rows as dicts (id, name, category, |  |
+| `module_components(root)` | `{normalized module key: set(real-looking CMP ids)}` from the LLR |  |
+| `component_top_view(root)` | The How-SW containment derivation (WI-073), shared by the right-sizing |  |
+| `component_findings(root)` | The How-SW top-view right-sizing finding(s) (WI-073/FB5; process-options.md |  |
 | `ssot_findings(wis, root)` | The status.md ↔ work-items.csv coherence findings (R-A…R-E) + the |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |
@@ -373,6 +378,7 @@ Contracts (interfaces): IF-011, IF-024
 | `project_name(root)` | The project's display name — the README's first H1, else the folder name. |  |
 | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
 | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
+| `sw_containment(root, mods)` | The containerized How-SW top view (WI-073), or None when no `CMP-###` |  |
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |

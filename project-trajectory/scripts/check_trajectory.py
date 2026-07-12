@@ -68,6 +68,19 @@ the one word `off` in `docs/interfaces-check`, or a ≤1-module inventory (nothi
 to connect). The honesty valve for a deliberate source/sink is a `source`/`sink`
 token in that module's IF row Notes (below).
 
+**How-SW top-view right-sizing** (WI-073/FB5; process-options.md "Component
+layer"). The software-architecture diagram's *first view* must show at most
+``TOP_VIEW_MAX`` (10) items: top-level components (a `CMP-###` with no `PartOf`
+that contains ≥1 arch-map module) plus **uncontained** modules (a module with no
+`Component`-tagged LLR). Exceeding the bound is a **finding** — WARN at the
+plain/hook run, **ERROR under `--strict` (G2+)** — that drives right-sizing of
+the component designations. Membership derives from the AXES join: a `Component`
+tag on an LLR row joins its `Module` → `CMP-###`; nesting via the CMP registry's
+`PartOf` (a module counts only at its top-level root). Opt-out is the one word
+`off` in `docs/components-check` (the `interfaces-check` idiom); a repo with ≤10
+modules — or no arch-map inventory — passes trivially (the bound, not the
+registry, is the rule), so a small or non-adopting repo is never broken.
+
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
 
@@ -86,13 +99,24 @@ WI_CSV = "docs/requirements/work-items.csv"
 SR_CSV = "docs/requirements/system-requirements.csv"
 TC_CSV = "docs/test/test-cases.csv"
 IF_CSV = "docs/requirements/interfaces.csv"
+LLR_CSV = "docs/requirements/low-level-requirements.csv"
+CMP_CSV = "docs/requirements/components.csv"
 STATUS_MD = "docs/status.md"
 ARCH_MD = "docs/architecture.md"
+
+# The How-SW top view is bounded at this many items (top-level components +
+# uncontained modules); exceeding it drives right-sizing of the component
+# designations (WI-073, FB5 — warn plain, error --strict).
+TOP_VIEW_MAX = 10
 
 # An IF-### interface-seam id token (process.md §8). Matched word-bounded so a
 # `Contracts: IF-003, IF-004` docstring line (harvested into the arch-map) or an
 # id cell yields each id cleanly.
 IF_ID_RE = re.compile(r"IF-\d+")
+# A CMP-### component id token (process-options.md "Component layer"). trace.py
+# owns CMP integrity; this loader is lenient (skips a malformed id) — it only
+# feeds the warn-first top-view coverage.
+CMP_ID_RE = re.compile(r"^CMP-\d+$")
 
 # A well-formed work-item id: `WI-` then digits (`WI-001`). The `-000` example
 # row matches this shape but is inert (skipped from the graph — see load_wis).
@@ -152,6 +176,17 @@ def read_interfaces_check_enabled(root):
     the only silence."""
     return (
         _first_declared_line(root / "docs" / "interfaces-check") or ""
+    ).lower() != "off"
+
+
+def read_components_check_enabled(root):
+    """Whether the How-SW top-view right-sizing rule is on (WI-073/FB5).
+    `docs/components-check` with the one word `off` opts out; absent or any other
+    value reads on — the ruled opt-out, default-on posture (same shape as
+    `docs/interfaces-check`). Like that reader there is no scaffolded file:
+    absence reads on, so a repo that never declares anything is still bounded."""
+    return (
+        _first_declared_line(root / "docs" / "components-check") or ""
     ).lower() != "off"
 
 
@@ -490,6 +525,176 @@ def interface_findings(root):
                     "Contracts: docstring line".format(r["id"])
                 )
     return out
+
+
+# --- the How-SW top-view right-sizing rule (WI-073/FB5) ------------------------
+# The software-architecture diagram's first view is bounded at TOP_VIEW_MAX
+# items = top-level components (a CMP with no PartOf that contains ≥1 arch-map
+# module) + uncontained modules. Membership derives from the AXES join: a
+# `Component` tag on an LLR joins LLR.Module → CMP-###; CMP nesting via PartOf.
+# The derivation below is the ONE home for that join — gen_trajectory imports it
+# (`ct.component_top_view`) so the render and this rule can never disagree on the
+# count. Small stable loaders duplicated per the F5 convention (no sibling import
+# into check_trajectory).
+
+
+def load_cmps(rows):
+    """Real (non-`-000`) CMP-### component rows as dicts (id, name, category,
+    partof). Lenient — `trace.py` owns CMP integrity; a malformed id is skipped
+    here, since this only feeds the warn-first top-view coverage."""
+    out = []
+    for r in rows:
+        cid = (r.get("CMP-ID") or "").strip()
+        if not CMP_ID_RE.match(cid) or cid.endswith("-000"):
+            continue
+        out.append(
+            {
+                "id": cid,
+                "name": (r.get("Name") or "").strip(),
+                "category": (r.get("Category") or "").strip(),
+                "partof": [p for p in _split_refs(r.get("PartOf", "")) if p],
+            }
+        )
+    return out
+
+
+def _cmp_roots(cmps):
+    """`{cmp id: set(top-level root ids)}` — walk `PartOf` upward to the root(s)
+    (a CMP with no real PartOf is its own root). A PartOf parent that names no
+    real CMP is ignored (trace.py flags it separately). Cycle-guarded (a `seen`
+    frontier), so a pathological PartOf cycle degrades to the CMP itself rather
+    than looping."""
+    by_id = {c["id"]: c for c in cmps}
+    roots = {}
+    for c in cmps:
+        seen, frontier, out = set(), [c["id"]], set()
+        while frontier:
+            n = frontier.pop()
+            if n in seen:
+                continue
+            seen.add(n)
+            parents = [p for p in by_id.get(n, {}).get("partof", []) if p in by_id]
+            if parents:
+                frontier.extend(parents)
+            else:
+                out.add(n)
+        roots[c["id"]] = out or {c["id"]}
+    return roots
+
+
+def module_components(root):
+    """`{normalized module key: set(real-looking CMP ids)}` from the LLR
+    `Component` tags joined on `LLR.Module` — the AXES membership rule (a module
+    belongs to the CMP(s) its LLRs are tagged with). Empty when the LLR registry
+    has no `Component` column (legacy) or no tags, so it costs a non-adopter
+    nothing. The tag set is left unfiltered against the CMP registry here; the
+    caller intersects with the real ids (a phantom tag is trace.py's finding)."""
+    out = {}
+    for r in read_rows(root / LLR_CSV):
+        lid = (r.get("LLR-ID") or "").strip()
+        if not lid.startswith("LLR-") or lid.endswith("-000"):
+            continue
+        tags = {t for t in _split_refs(r.get("Component", "")) if t.startswith("CMP-")}
+        if not tags:
+            continue
+        key = _norm_module(r.get("Module", ""))
+        if key:
+            out.setdefault(key, set()).update(tags)
+    return out
+
+
+def component_top_view(root):
+    """The How-SW containment derivation (WI-073), shared by the right-sizing
+    rule and the dashboard render so the item count and the picture never
+    disagree. Returns a dict:
+      inventory    `{norm: display}` arch-map modules (empty pre-arch-map)
+      cmps         `[cmp dict]` real CMP rows
+      by_id        `{cmp id: cmp dict}`
+      children_of  `{cmp id: sorted[child cmp ids]}` (PartOf inverted)
+      roots_of     `{cmp id: set(top-level root ids)}` (PartOf resolved up)
+      module_cmps  `{norm: set(finest real CMP ids tagged on its LLRs)}`
+      module_roots `{norm: set(top-level root ids)}` (derived, real modules only)
+      top_roots    sorted `[cmp id]` top-level roots containing ≥1 module
+      uncontained  sorted `[norm]` inventory modules with no membership
+      count        `len(top_roots) + len(uncontained)`
+    """
+    names = arch_inventory(root)[0]
+    inventory = {}
+    for m in names:
+        n = _norm_module(m)
+        if n:
+            inventory.setdefault(n, m)
+    cmps = load_cmps(read_rows(root / CMP_CSV))
+    by_id = {c["id"]: c for c in cmps}
+    cmp_ids = set(by_id)
+    roots_of = _cmp_roots(cmps)
+    children_of = {c["id"]: [] for c in cmps}
+    for c in cmps:
+        for p in c["partof"]:
+            if p in by_id:
+                children_of[p].append(c["id"])
+    for cid in children_of:
+        children_of[cid] = sorted(children_of[cid])
+
+    raw = module_components(root)
+    module_cmps, module_roots = {}, {}
+    top_roots, uncontained = set(), []
+    for n in sorted(inventory):
+        tags = raw.get(n, set()) & cmp_ids
+        module_cmps[n] = tags
+        if not tags:
+            uncontained.append(n)
+            module_roots[n] = set()
+            continue
+        r = set()
+        for c in tags:
+            r |= roots_of[c]
+        module_roots[n] = r
+        top_roots |= r
+    return {
+        "inventory": inventory,
+        "cmps": cmps,
+        "by_id": by_id,
+        "children_of": children_of,
+        "roots_of": roots_of,
+        "module_cmps": module_cmps,
+        "module_roots": module_roots,
+        "top_roots": sorted(top_roots),
+        "uncontained": uncontained,
+        "count": len(top_roots) + len(uncontained),
+    }
+
+
+def component_findings(root):
+    """The How-SW top-view right-sizing finding(s) (WI-073/FB5; process-options.md
+    "Component layer"). Returns the finding strings ([] when opted out, vacuous,
+    or within the bound). The caller prints them WARN plain and promotes them to
+    ERROR under `--strict` (G2+).
+
+    Opt-out via `docs/components-check: off`; vacuous when the arch-map inventory
+    has ≤ TOP_VIEW_MAX modules (a small or pre-arch-map repo can never exceed the
+    bound — the bound, not the registry, is the rule). Only when the inventory
+    itself is larger than the bound do the declared components decide: a
+    right-sized handful of top-level CMPs brings the top view back under it."""
+    if not read_components_check_enabled(root):
+        return []
+    view = component_top_view(root)
+    if len(view["inventory"]) <= TOP_VIEW_MAX:
+        return []
+    if view["count"] <= TOP_VIEW_MAX:
+        return []
+    return [
+        "How-SW top view has {} items ({} top-level component(s) + {} uncontained "
+        "module(s)) — exceeds the bound of {}; declare CMP-### components in {} to "
+        "contain modules (nest with PartOf), or set docs/components-check: "
+        "off".format(
+            view["count"],
+            len(view["top_roots"]),
+            len(view["uncontained"]),
+            TOP_VIEW_MAX,
+            CMP_CSV,
+        )
+    ]
 
 
 def _read_status_tokens(root):
@@ -851,15 +1056,36 @@ def main():
     for w in interface_findings(root):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
+    # How-SW top-view right-sizing (WI-073/FB5) — WARN plain, ERROR under --strict
+    # (G2+). Runs before the WI vacuity return too (the bound is a property of the
+    # arch-map inventory + the component registry, independent of work items), so
+    # a repo with a big arch-map and no CMP rows still trips even with no WIs.
+    comp_errors = []
+    for msg in component_findings(root):
+        if args.strict:
+            comp_errors.append(msg)
+        else:
+            print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
+
     wis, integrity = load_wis(read_rows(root / WI_CSV))
     if not wis and not integrity:
+        if comp_errors:
+            for e in comp_errors:
+                print("check_trajectory: ERROR - {}".format(e), file=sys.stderr)
+            print(
+                "check_trajectory: {} architecture finding(s).".format(
+                    len(comp_errors)
+                ),
+                file=sys.stderr,
+            )
+            return 1
         print(
             "check_trajectory: clean (no work items — placeholder-only or absent "
             "registry; vacuously clean)."
         )
         return 0
 
-    errors = integrity + validate(wis, load_known_srs(root))
+    errors = comp_errors + integrity + validate(wis, load_known_srs(root))
     # The SSOT coherence layer: R-A is always an error; R-B…R-E + the
     # unknown-status lint are WARN unless --strict promotes them.
     for rule, hard, msg in ssot_findings(wis, root):
