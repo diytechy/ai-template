@@ -115,7 +115,9 @@ working surface.
       `render_report`). Follow-on to WI-080 (soft edge), same shape / less
       urgent (most-copied artifact, so its churn ships widest); the
       `parse_model_map`→`parse_map` rename (L3) folds into whichever refactor
-      lands first. Spec:
+      lands first — as does the second review's M8 (index-dict the quadratic
+      report joins; [repo-review-2026-07-12b.md](repo-review-2026-07-12b.md)).
+      Spec:
       [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
       M1/L3.
     - **WI-082** — decompose `bootstrap.py:main()` (~390 lines). Owner-ruled
@@ -125,6 +127,40 @@ working surface.
       M5.
     - _(The derived-gate campaign's remaining slices are no longer deferred — the
       campaign is in flight; the live slice list is in **Next action** below.)_
+  - **Queued (deep-review-b remediation, filed 2026-07-12 — awaiting owner
+    triage/sequencing; findings + risk notes:
+    [repo-review-2026-07-12b.md](repo-review-2026-07-12b.md)):**
+    - **WI-097** — LICENSE decision + file (**needs the owner**: which license,
+      and whether the kit is headed public; the report's H3).
+    - **WI-098** — thin history-provenance comments in the kit masters (H4;
+      soft-edged after WI-079's strip-at-scaffold).
+    - **WI-099** — mechanize the trace↔derive_gate rule-set sync promise with a
+      meta test (M1 — closes the one found path to a silent gate/trace
+      disagreement; cheap, high leverage).
+    - **WI-100** — root-anchor `check.py`'s `docs/gate`/`docs/stack.ini` reads
+      or fail loudly off-root (M2).
+    - **WI-101** — state the Status-casing rule once + near-miss hint in the
+      finding text (M3).
+    - **WI-102** — gen_trajectory hygiene: one module-level `_esc` (now defined
+      6×) + SVG node `<title>` labels (M4/L7; one regeneration, `--check` keeps
+      it honest).
+    - **WI-103** — PROCESS_OPTIONS byte budget + applies-when index table (M5;
+      any doc *split* additionally needs an owner taste ruling).
+    - **WI-104** — pin the dev toolchain (`requirements-dev.txt`; CI +
+      dev-setup consume) (M6).
+    - **WI-105** — coverage plumbing hardening: combine race + debris loop +
+      the ~9-point subprocess-coverage loss observed live (M9/L1; hard-edged
+      behind WI-104 so the fix is verified on one known toolchain). **Ranked
+      first by the review** — the only item that makes the gate itself flaky.
+    - **WI-106** — micro-fix batch: the hook's stale "six checks" count,
+      word-bounded predicate markers, the dup-malformed finding text, and
+      retiring the agent-resume launchers' archived-`IMPROVEMENT_PLAN.md`
+      scope references (M7/L2/L4/L9 — the safe low-risk knock-outs;
+      L9 owner-directed 2026-07-12).
+    - _(Not filed, deliberately: L5 commit-subject length — accept, or it needs
+      a commit-msg check to be a backed rule; L6 template-cell manuals — an
+      owner taste ruling on a deliberate design, medium churn to shipped
+      templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
 - **Next action — phase v2 (new scope; branch `derived-gate-model`).** A resume
   session picks up here:
   1. **Derived-gate campaign — LANDED (this branch).** The design
@@ -142,14 +178,28 @@ working surface.
      owner **G3 re-attestation** over the SR-049 spine cut (Needs \<human> above).
      Phase v3+ now uses the derived gate: draft new SN/SR in the live spine, and
      the derived gate follows.
-  2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
+  2. **Bring in WI-107 first (owner-directed 2026-07-12) — unattended
+     enablement, single attest.** Wire the managed-routing consent layer (seed
+     `docs/agents.csv` + `docs/agents-enabled` + `docs/run-phase` +
+     `docs/guardrails-policy`; fill the launchers'
+     `AGENT_MODEL_MAP`/`AGENT_CMD_MAP`) and move `docs/gate-policy` to
+     **`single-ratify`** with its deviation register, in a reviewed commit.
+     Spec: [specs/WI-107.md](specs/WI-107.md). Soft-edged after **WI-106**
+     (both edit the launcher twins; WI-106 first retires their archived
+     `IMPROVEMENT_PLAN.md` scope refs — run it as the opener of the same
+     sitting). Config layer only — no spine change, so the derived gate stays
+     G3.
+  3. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer
      consistency sweep flags contradictions), **STOP and page the owner to sign
      off** (§4 G1 review, [log.md](log.md)), then G2→G3 under
      `check.py --gate G3 --phase v1`.
-  3. **The rest of the backlog needs no new SR — proceed at G3:** WI-078
-     (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then WI-079.
+  4. **The rest of the backlog needs no new SR — proceed at G3:** WI-104 (pin
+     the dev toolchain) then WI-105 (the coverage-plumbing fix, verified on the
+     pinned toolchain — the review's ranked-first defect), then WI-078
+     (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then WI-079 and
+     the remaining deep-review-b queue.
   Remaining owner item: the **push decision** above.
 
 ## Scope
