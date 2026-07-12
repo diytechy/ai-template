@@ -2639,3 +2639,15 @@ bar run on the migrated meta (see the run recorded in this session).
 - **Verification:** `python -m pytest -q -n auto` — **634 passed, 34 skipped**;
   `check_docs.py --root . --stale` — **OK**, 32 docs / 203 links / 0 broken.
 - **Budgets:** no budget-watched file changed.
+
+## 2026-07-12 — WI-087 / SR-050 attended G1 ratification
+
+- **Decision:** owner Peter Johnson explicitly directed “commit for traceability
+  ... and implement” after reviewing the reconciled redesign plan. Recorded that
+  attended approval as the reviewed `SR-050 Status: Draft → Planned` commit.
+- **Gate effect:** v2 advances from G0 to G1; the closed default phase remains
+  G3. `docs/gate` is regenerated, never hand-edited.
+- **Scope ratified:** readable complete What flow; Phase→Workstream→WI drill with
+  Campaign alternate grouping and a non-calendar delivery frontier; and
+  Component→Module drill over declared IF seams, with inherited parent edges.
+- **Budgets:** no budget-watched file changed.

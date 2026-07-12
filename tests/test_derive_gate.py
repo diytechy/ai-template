@@ -43,14 +43,14 @@ def _derive(scaffold):
 
 # --- the meta-repo dogfood ----------------------------------------------------
 def test_meta_repo_derived_gate_matches_live_phase_state():
-    # The meta may legitimately re-enter below G3 when a new phase carries Draft
-    # artifacts. Assert the live dogfood state without erasing the closed phase's
-    # high-water mark: v2 is open at G0 while the default phase remains G3.
+    # The meta may legitimately re-enter below G3 for a new phase. Assert the
+    # live dogfood state without erasing the closed phase's high-water mark: v2
+    # is ratified at G1 while the default phase remains G3.
     proc = run_py([SCRIPTS / "derive_gate.py", "--print", "--root", ROOT], cwd=ROOT)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "derived gate: G1" in proc.stdout
-    assert "per-phase=(default)=G3;v2=G0" in proc.stdout
-    assert "drafts=1 computed=G0" in proc.stdout
+    assert "per-phase=(default)=G3;v2=G1" in proc.stdout
+    assert "drafts=0 computed=G1" in proc.stdout
 
 
 # --- per-artifact gate rules --------------------------------------------------
