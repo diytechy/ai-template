@@ -2029,5 +2029,62 @@ README script-freshness hints are pre-existing). `pytest -q` → **639 passed,
 1 skipped in 86.75s** (serial — this venv has no pytest-xdist; the declared
 `-n auto` command applies wherever xdist is installed).
 
-**No commit yet** — edits sit in the working tree pending the owner's
-go-ahead (this repo commits only when asked).
+**Committed** as `74787c2` (single commit, owner-approved right after this
+entry was written).
+
+## 2026-07-12 — Reconcile the stale "Needs \<human>" items 3–5 (edge sweep · sibling-repo already-ruled · guardrails review)
+
+**Session (owner-directed).** The owner asked to verify items 3–5 of status.md
+"Needs \<human>" (suspecting drift), rule item 3, and run the item-5 review.
+Findings confirmed the drift: item 4's ruling was already made and item 5 was
+~90% covered by the 2026-07-12 deep review.
+
+**Item 3 — WI-DAG soft-edge sweep (owner ruled "move with your recommendation").**
+The hard/soft edge *policy* already ships
+([process-options](../project-trajectory/PROCESS_OPTIONS.md) "Trajectory /
+work-items", ~L1070: hard = real technical blocker; soft = advisory ordering),
+so this was purely the deferred data pass (the "full 39-edge pass" from
+THREAD_52_REVIEW F3, now 77 edges). Applied the test to the multi-predecessor
+rows and demoted four edges to soft (`~`):
+- **WI-032 ← ~WI-003** (trajectory-P3-docs ← byte-budget-discipline) — a
+  standing constraint, not a build input. *High confidence.*
+- **WI-074 ← ~WI-073** (campaign-column ← How-SW-containment) — reuses the
+  `sw_containment` render *pattern*; independent code. *Owner's call, my lean.*
+- **WI-047 ← ~WI-028** (enforcement-audit ← self-adoption-spine) — the real
+  driver is the stdlib mechanization (WI-020, kept hard); the spine is context.
+  *Owner's call, my lean.*
+- **WI-048 ← ~WI-025** (subagent-gate ← parallel-tracks) — the gate rides the
+  coordinator (WI-024, kept hard), not the parallel-lane model. *Owner's call.*
+Instructive non-demotion: **WI-043**'s five-predecessor review-triage fan-in
+*looks* narrative but stays **hard** — a review genuinely cannot complete before
+the reviewed work exists (it *is* a real blocker). Single-predecessor chain
+edges left hard (a full 77-edge audit is inert — every WI is done, so hard/soft
+only affects dashboard rendering, never readiness). Soft edges now: 6
+(`~WI-003/013/025/028/073/080`).
+
+**Item 4 — sibling-repo ruling was already made.** INTEGRATION_PLAN.md header
+(L6–8) records the enrichment as "owner-ruled to be done in
+`TheColliny/FableClaudeMDForOpus`"; the ai-template side is done (WI-046). Only
+external execution remains — reframed in status.md from a paused "Needs
+\<human>" decision to an **External follow-up** pointer (tracked upstream, pulled
+via `check_vendored.py`).
+
+**Item 5 — focused PROCESS_OPTIONS review: clean, no findings.** The three
+guardrails paragraphs the deep review only *sampled* — Tier-conditional
+guardrails (L722), Enforcement audit (L807), Per-phase effort (L410) — read in
+full: accurate, honest, internally consistent, and consistent with item 4 (the
+vendoring section correctly lists no `JUDGMENT.md` in the upstream, matching the
+still-pending Phase 2). The deep-review coverage + this pass close the batch
+review.
+
+**status.md reconciled.** "Needs \<human>" shrinks 5→2 (only G3 re-attestation +
+the push ruling genuinely remain); the External-follow-up pointer added; Next
+action trimmed. Forward-only preserved — the resolutions live here, not there.
+
+**No spine change; nothing rides the pending G3 re-attestation.** Data + docs +
+one dashboard regen.
+
+**Checks.** `check_trajectory.py --root . --strict` → clean (82 WIs, 6 soft
+edges, acyclic); `gen_trajectory.py --check` → up to date after regen;
+`check_docs.py --root . --stale` → OK, 0 broken links; `pytest -q` → **639
+passed, 1 skipped in 89.65s** (serial; no xdist in this venv).

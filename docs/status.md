@@ -55,18 +55,16 @@ working surface.
        *Mandatory*: Verified SR text changed and new SN/SRs joined the spine
        ([log.md](log.md)).
     2. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
-    3. **WI-DAG edge data-pass** — demote the narrative predecessor edges in
-       `work-items.csv` to soft `~` edges (which edges are real technical
-       blockers vs. authored ordering is the owner's mapping call).
-    4. **Sibling-repo ruling** — enrich the guardrails upstream
-       (`FableClaudeMDForOpus`) in place vs. a new curated repo, then execute
-       the deferred content enrichment (spec:
-       [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
-    5. **Review the owner-directed guardrails-integration batch** (built with
-       review deferred; see [log.md](log.md)).
-       *(The 2026-07-12 deep-review deferred items are **ruled** as of
-       2026-07-12 — filed as backlog WI-078…082 below; no longer a pending
-       decision. See [log.md](log.md).)*
+    *(Former items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
+    the already-made sibling-repo ruling, and the guardrails-batch review;
+    see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed
+    as backlog WI-078…082 below.)*
+  - **External follow-up (tracked upstream, not this repo's work):** the
+    guardrails content enrichment (`JUDGMENT.md` playbook + CONTEXT-class rules
+    + the `Verified:` greppable claim vocabulary) is **owner-ruled to live in
+    `TheColliny/FableClaudeMDForOpus`** and pulled downstream via the vendoring
+    layer (`check_vendored.py`); nothing to build in this kit repo. Rationale:
+    [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2.
   - **In flight:** _(none)_ — all four 2026-07-11 batches are **closed and
     archived**: the campaign-binning · parallel-tests · resume-hardening
     batch (the `Campaign` grouping column + the campaign-binned When-view
@@ -137,10 +135,9 @@ working surface.
       [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
       M5.
 - **Next action:** the **owner sitting** — one G3 re-attestation over every
-  accumulated spine change, the push ruling, the sibling-repo target, and the
-  deferred batch review. After that: the G-Release walk, the WI-DAG edge
-  data-pass, or the newly-ruled deep-review backlog (WI-078 dupes-gate first,
-  then the `main-decomposition` campaign WI-080…082).
+  accumulated spine change + the push ruling. After that: the G-Release walk or
+  the newly-ruled deep-review backlog (WI-078 dupes-gate first, then the
+  `main-decomposition` campaign WI-080…082).
 
 ## Scope
 
