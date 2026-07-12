@@ -302,6 +302,45 @@ def test_registry_needs_parses_priority(tmp_path):
     assert must_should == {"SN-001", "SN-002"}
 
 
+def test_registry_needs_exempts_draft_section_from_must_floor(tmp_path):
+    # SN maturity is section-as-state (derived-gate §4a): a Must need under a
+    # "draft" heading is unratified, so it stays out of the Must/Should README
+    # floor (existence still holds) until its row is moved up to a ratified section.
+    check = load_script("check_docs")
+    reg = tmp_path / "stakeholder-needs.md"
+    reg.write_text(
+        "# Needs\n\n## Core needs\n\n"
+        "| SN-ID | Need | Priority | Acceptance |\n"
+        "|---|---|---|---|\n"
+        "| SN-001 | ratified must | M | x |\n\n"
+        "## Draft needs (unratified)\n\n"
+        "| SN-ID | Need | Priority | Acceptance |\n"
+        "|---|---|---|---|\n"
+        "| SN-050 | drafted must | M | x |\n",
+        encoding="utf-8",
+    )
+    all_ids, must_should = check._registry_needs(reg)
+    assert all_ids == {"SN-001", "SN-050"}  # the draft SN still exists
+    assert must_should == {"SN-001"}  # ... but is exempt from the README floor
+
+
+def test_inventory_draft_must_need_not_required_in_readme(scaffold):
+    # End-to-end: a Must need drafted under a "## Draft needs" heading does NOT
+    # force a README citation (it is unratified); the check stays green.
+    reg = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
+    reg.write_text(
+        reg.read_text(encoding="utf-8") + "\n## Draft needs (unratified)\n\n"
+        "| SN-ID | Need | Priority | Acceptance |\n"
+        "|---|---|---|---|\n"
+        "| SN-050 | drafted must | M | x |\n",
+        encoding="utf-8",
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 # --- harness wiring ----------------------------------------------------------
 
 

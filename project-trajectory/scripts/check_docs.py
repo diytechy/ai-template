@@ -34,7 +34,9 @@ finding classes:
     kit's core value, so the root README is held to it too — every SN id cited
     anywhere in it must exist in the stakeholder-needs registry, and every
     Must/Should need in that registry must be cited somewhere in the README, so a
-    requirements change mechanically ages the README. No delimiter markers: any
+    requirements change mechanically ages the README. Draft/unratified needs (under
+    a "draft" heading — SN maturity is section-as-state, §4a) are exempt from that
+    floor until ratified. No delimiter markers: any
     `SN-###` in the README counts as a citation. A README opts out with an
     `<!-- sn-inventory: off -->` comment; a repo with no real needs yet (only the
     `-000` placeholder) is vacuously clean, so a fresh scaffold passes.
@@ -388,8 +390,19 @@ def _registry_needs(path):
     all_ids = {s for s in SN_ID_RE.findall(text) if not _is_sn_example(s)}
     must_should = set()
     prio_col = None
+    in_draft = False
     for line in blank_fenced(text):
-        if not line.lstrip().startswith("|"):
+        stripped = line.lstrip()
+        heading = re.match(r"#{1,6}\s+(.*)", stripped)
+        if heading:
+            # SN maturity is section-as-state (derived-gate model §4a): a heading
+            # whose text contains "draft" marks its needs unratified (G0), so they
+            # are exempt from the Must/Should README-coverage floor below (existence
+            # still holds — a draft SN the README cites must still be a real id).
+            in_draft = "draft" in heading.group(1).lower()
+            prio_col = None
+            continue
+        if not stripped.startswith("|"):
             prio_col = None  # a non-table line ends the current table
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
@@ -399,7 +412,7 @@ def _registry_needs(path):
             continue
         if prio_col is None or prio_col >= len(cells):
             continue
-        if cells[prio_col].upper() in ("M", "S", "MUST", "SHOULD"):
+        if not in_draft and cells[prio_col].upper() in ("M", "S", "MUST", "SHOULD"):
             must_should.update(
                 s for s in SN_ID_RE.findall(line) if not _is_sn_example(s)
             )

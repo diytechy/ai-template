@@ -2313,3 +2313,44 @@ gate. The campaign's spine reconciliation is WI-096.
 **Checks.** `pytest -q -n auto` **642 passed, 3 skipped**; `check_docs.py --root
 . --stale` OK, 0 broken; trace self-run clean. Full `check.py --gate G3` runs at
 campaign close (the campaign gate cadence, PROCESS_OPTIONS "Campaign ruling").
+
+## 2026-07-12 — WI-090 (derived-gate campaign): SN maturity via section-as-state
+
+**Session (branch `derived-gate-model`).** Second build slice (spec §10.2, the §4a
+decision): stakeholder needs get a maturity state without a new column —
+**section-as-state**. A stakeholder-needs.md heading whose text contains `draft`
+(e.g. `## Draft needs (unratified)`) marks the SNs under it **Draft** (unratified,
+G0); SNs under any other heading are **Ratified** (G1). Ratifying = moving a
+need's row up into *Core needs* / *Edge-case expectations* in a reviewed commit
+(git-derived date). The SN analogue of the `Status=Draft` bit on SR/LLR/TC rows.
+
+**What changed (code + template + tests — no spine change).**
+- **`trace.py`** — `sn_draft_ids(text)` line-scans headings and returns the SN
+  ids under any `draft` heading (`-000` excluded). Draft SNs are exempt from the
+  `SN with no SR` orphan rule, join the `drafts=N` count + the `## Draft
+  artifacts` report section, and render with the draft class in the outline/DAG
+  (`build_forest`/`mermaid_graph` gained a default-empty `sn_draft` param — a
+  legacy caller is byte-identical).
+- **`check_docs.py`** — `_registry_needs` exempts draft-section SNs from the
+  Must/Should README-coverage floor (existence still holds), so a *drafted* Must
+  need doesn't force a README bullet before it is ratified.
+- **`stakeholder-needs.template.md`** — a "Maturity is section-as-state" note + a
+  `## Draft needs (unratified)` section. A fresh scaffold stays vacuous (no SN ids
+  under the draft heading).
+
+**Judgment call — heading-text match on the single word "draft".** The rule is
+deliberately loose (any heading containing "draft", case-insensitive) so
+`## Draft needs`, `## Draft (unratified)`, `## DRAFT items` all work, and the
+top-level `# Stakeholder Needs` / `## Core needs` / `## Edge-case expectations`
+headings never match. Body prose containing "draft" is not a heading, so it never
+flips the section state.
+
+**No re-attestation impact.** No SR/SN/LLR/TC rows added or changed (the meta's
+own needs are all ratified — no draft section); this is reader + template
+behavior under today's monolithic gate.
+
+**Byte deltas.** `AGENTS.template.md` **untouched** (9,978); `PROCESS.md`
+**untouched** (58,297). No byte-budgeted file changed.
+
+**Checks.** `pytest -q -n auto` **646 passed, 3 skipped**; `check_docs.py --root
+. --stale` OK, 0 broken; trace self-run clean.

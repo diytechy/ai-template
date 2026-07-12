@@ -692,3 +692,57 @@ def test_draft_sr_still_needs_sn_and_stays_integral(scaffold):
     proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     assert proc.returncode == 1
     assert "malformed" in _report(scaffold)
+
+
+# --- WI-090: SN maturity via section-as-state ---------------------------------
+# An SN under a heading whose text contains "draft" is unratified (G0) and exempt
+# from the "every SN needs an SR" rule; SNs under any other heading are ratified.
+
+DRAFT_SN_MD = """# Stakeholder Needs (SN-###)
+
+## Core needs
+
+| SN-ID | Need | Why | Priority | Acceptance intent |
+|---|---|---|---|---|
+| SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
+
+## Draft needs (unratified)
+
+| SN-ID | Need | Why | Priority | Acceptance intent |
+|---|---|---|---|---|
+| SN-002 | A not-yet-decomposed need. | Being drafted. | S | TBD. |
+"""
+
+
+def test_draft_sn_is_exempt_from_sr_rule(scaffold):
+    make_minimal_project(scaffold)
+    sn = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
+    sn.write_text(DRAFT_SN_MD, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "drafts=1" in proc.stdout
+    report = _report(scaffold)
+    assert "SN SN-002 has no SR" not in report
+    assert "SN-002 (SN, unratified section)" in report
+    # The DAG flags the draft SN like a Status=Draft row.
+    assert "class SN_002 draft" in report
+    # Ratify SN-002 by moving its row under a non-draft heading -> the SN-with-no-SR
+    # rule fires again (it now claims to be a real need with no decomposition).
+    ratified = DRAFT_SN_MD.replace("## Draft needs (unratified)", "## More core needs")
+    sn.write_text(ratified, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "SN SN-002 has no SR" in _report(scaffold)
+
+
+def test_sn_draft_ids_reader():
+    from conftest import load_script
+
+    trace = load_script("trace")
+    assert trace.sn_draft_ids(DRAFT_SN_MD) == {"SN-002"}
+    # A -000 placeholder in a draft section is excluded (like every other scan).
+    assert trace.sn_draft_ids("## Draft needs\nSN-000 SN-005\n") == {"SN-005"}
+    # No draft heading -> nothing is draft (the ratified default).
+    assert trace.sn_draft_ids("# Needs\n\n## Core\nSN-001\n") == set()
+    # The "draft" match is on the heading text, case-insensitive, not the body.
+    assert trace.sn_draft_ids("## DRAFT items\nSN-009\n") == {"SN-009"}

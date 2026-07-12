@@ -456,10 +456,11 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `interface_findings(ifs, sr_ids, module_ids)` | The IF-### seam tier's back-link checks (process.md §8), closing the gap |  |
 | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |
 | `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |
+| `sn_draft_ids(text)` | The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state): |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
-| `build_forest(sn_ids, srs, llrs, tcs, orphan_ids)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
+| `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
 | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |
-| `mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids)` | A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored |  |
+| `mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored |  |
 | `html_document(roots)` | A dependency-free, collapsible <details> tree of the full graph — inline |  |
 | `main()` |  |  |
 <!-- END GENERATED MODULE MAP -->

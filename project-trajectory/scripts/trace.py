@@ -15,7 +15,10 @@ Reads (relative to --docs, default "<root>/docs"; --root defaults to "."):
     requirements/system-requirements.csv   (cols: SR-ID, SN-Refs, Verification, Status, ...)
     requirements/low-level-requirements.csv (cols: LLR-ID, SR-Refs, ...)
     test/test-cases.csv                     (cols: TC-ID, Verifies, ...)
-    requirements/stakeholder-needs.md       (optional; SN-### ids scraped for SN->SR coverage)
+    requirements/stakeholder-needs.md       (optional; SN-### ids scraped for SN->SR coverage.
+                                             SN maturity is section-as-state: SNs under a heading
+                                             containing "draft" are unratified/Draft (§4a) and
+                                             exempt from the SN-with-no-SR orphan rule)
     requirements/performance-budgets.csv    (optional; PB-### perf/resource budgets, §9 —
                                              each row's Refs must back-link a real SR/LLR/Module)
     requirements/repos.csv                   (optional; REPO-### coordinator repo-delegation
@@ -78,16 +81,20 @@ Orphan rules (the method rules are stated once, in process.md §4):
     - LLR with no SR parent, or referencing an unknown SR
     - LLR with no TC
     - TC that verifies nothing, or references an unknown SR/LLR
-    - SN with no SR (only when stakeholder-needs.md is present)
-Draft exemption (derived-gate model, docs/specs/derived-gate-model.md §3): a row
-whose Status is `Draft` is exempt from the *child-completeness* rules above — a
-Draft SR needs no LLR/TC and a Draft LLR needs no TC — so a requirement can be
-drafted in the live spine before it is decomposed (retiring the -000/off-spine
-workaround). Parent-linkage and integrity rules still apply (a Draft SR still
-links an SN; ids stay unique/well-formed), and a Draft SR is exempt from the
---require-verified criterion below (it is pre-ratification, below G1). Status is
-open-vocabulary; `Draft` is the one value the orphan pass acts on (the ladder is
-Draft -> Planned -> Verified).
+    - SN with no SR (only when stakeholder-needs.md is present; a Draft SN — see
+      below — is exempt)
+Draft exemption (derived-gate model, docs/specs/derived-gate-model.md §3): an
+artifact in the pre-ratification `Draft` state is exempt from the
+*child-completeness* rules above — a Draft SR needs no LLR/TC, a Draft LLR needs
+no TC, and a Draft SN needs no SR — so a requirement can be drafted in the live
+spine before it is decomposed (retiring the -000/off-spine workaround). SR/LLR/TC
+maturity is the open-vocabulary `Status` value `Draft` (the ladder is Draft ->
+Planned -> Verified); SN maturity is **section-as-state** (§4a): an SN under a
+stakeholder-needs.md heading whose text contains "draft" (e.g. `## Draft needs
+(unratified)`) is Draft, all other SNs ratified. Parent-linkage and integrity
+rules still apply (a Draft SR still links an SN; ids stay unique/well-formed), and
+a Draft SR is exempt from the --require-verified criterion below (it is
+pre-ratification, below G1).
 --require-verified adds the G3 status criterion:
     - SR with Verification=Test whose Status is not Verified (Draft SRs exempt)
 --phase scopes that status criterion to a delivery phase (process.md §4
@@ -570,6 +577,34 @@ def scan_sn_placeholders(sn_md):
     return sorted({u for u in re.findall(r"\bSN-\d+\b", text) if is_example(u)})
 
 
+# SN maturity lives in section-as-state (derived-gate model §4a): a stakeholder-
+# needs.md heading whose text contains "draft" (case-insensitive, e.g. `## Draft
+# needs (unratified)`) marks the SNs under it as Draft (unratified, G0); SNs under
+# any other heading are ratified (G1). No new column — the state IS the section,
+# and the ratification date is git-derived (the commit that moved the row out of
+# the draft section). This is the SN analogue of the `Status=Draft` bit on
+# SR/LLR/TC rows.
+_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
+
+
+def sn_draft_ids(text):
+    """The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state):
+    every SN-### that appears under a heading whose text contains "draft". `-000`
+    placeholders are excluded. Line-scanned, tracking the current heading — an SN
+    under a draft heading is Draft until the next heading changes the section."""
+    draft, in_draft = set(), False
+    for line in text.splitlines():
+        m = _HEADING_RE.match(line)
+        if m:
+            in_draft = "draft" in m.group(1).lower()
+            continue
+        if in_draft:
+            for u in re.findall(r"\bSN-\d+\b", line):
+                if not is_example(u):
+                    draft.add(u)
+    return draft
+
+
 def schema_findings(label, rows):
     """Empty required fields and out-of-vocabulary Verification/Tier values, over
     the real (non-placeholder) rows of one registry."""
@@ -641,9 +676,11 @@ def _group(label, children):
     return {"id": label, "status": "", "title": "", "cls": "", "children": children}
 
 
-def build_forest(sn_ids, srs, llrs, tcs, orphan_ids):
+def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for
-    rows with no valid parent. Shared by the text outline and the HTML tree."""
+    rows with no valid parent. Shared by the text outline and the HTML tree.
+    `sn_draft` (section-as-state, §4a) labels those SNs `Draft` so the views flag
+    them like a `Status=Draft` SR/LLR/TC row."""
 
     def tc_node(t):
         return _node(t["TC-ID"], _cell(t, "Status"), _cell(t, "Method"), orphan_ids)
@@ -670,7 +707,7 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids):
     roots = []
     for sn in sorted(sn_ids):
         kids = [sr_node(s) for s in srs if sn in refs(s.get("SN-Refs"))]
-        roots.append(_node(sn, "", "", orphan_ids, kids))
+        roots.append(_node(sn, "Draft" if sn in sn_draft else "", "", orphan_ids, kids))
     rootless_srs = [s for s in srs if not sn_ids & set(refs(s.get("SN-Refs")))]
     if rootless_srs:
         label = (
@@ -739,10 +776,10 @@ def _mermaid_label(rid, title):
     return "{} — {}".format(rid, short).replace('"', "'")
 
 
-def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids):
+def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored
     by orphan/draft state via classDef. Kept small/diff-friendly on purpose — the
-    HTML view is the one that scales."""
+    HTML view is the one that scales. `sn_draft` colors unratified SNs (§4a)."""
     sr_ids = {s["SR-ID"] for s in srs}
     llr_ids = {lr["LLR-ID"] for lr in llrs}
     nodes = {}  # rid -> (label, cls); dict insertion order keeps output stable
@@ -752,7 +789,11 @@ def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids):
         nodes[rid] = (label, cls)
 
     for sn in sorted(sn_ids):
-        add(sn, sn, "orphan" if sn in orphan_ids else "")
+        add(
+            sn,
+            sn,
+            "orphan" if sn in orphan_ids else ("draft" if sn in sn_draft else ""),
+        )
     for s in srs:
         sid = s["SR-ID"]
         add(sid, _mermaid_label(sid, _cell(s, "Title")),
@@ -954,13 +995,14 @@ def main():
     ifs = [r for r in raw_ifs if r.get("IF-ID") and not is_example(r["IF-ID"])]
 
     sn_ids = set()
+    sn_draft = set()
     sn_md = docs / "requirements" / "stakeholder-needs.md"
     if sn_md.exists():
-        sn_ids = {
-            u
-            for u in re.findall(r"\bSN-\d+\b", sn_md.read_text(encoding="utf-8"))
-            if not is_example(u)
-        }
+        sn_text = sn_md.read_text(encoding="utf-8")
+        sn_ids = {u for u in re.findall(r"\bSN-\d+\b", sn_text) if not is_example(u)}
+        # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
+        # are unratified (G0) and exempt from the "SN with no SR" child rule below.
+        sn_draft = sn_draft_ids(sn_text)
 
     sr_ids = {r["SR-ID"] for r in srs}
     llr_ids = {r["LLR-ID"] for r in llrs}
@@ -1030,7 +1072,9 @@ def main():
                 orphan_ids.add(tid)
 
     for u in sorted(sn_ids):
-        if u not in sr_sn_refs:
+        # A Draft SN (section-as-state, §4a) is being drafted requirement-first and
+        # is exempt from the child-completeness rule, like a Draft SR.
+        if u not in sr_sn_refs and u not in sn_draft:
             orphans.append(f"SN {u} has no SR")
             orphan_ids.add(u)
 
@@ -1219,7 +1263,7 @@ def main():
     draft_srs = [r for r in srs if is_draft(r)]
     draft_llrs = [r for r in llrs if is_draft(r)]
     draft_tcs = [r for r in tcs if is_draft(r)]
-    n_draft = len(draft_srs) + len(draft_llrs) + len(draft_tcs)
+    n_draft = len(draft_srs) + len(draft_llrs) + len(draft_tcs) + len(sn_draft)
 
     # Optional Area column (owner-hat/domain tag, process.md §1): count real SRs
     # per Area so hat coverage is visible. Report-only — never a finding, never
@@ -1311,7 +1355,7 @@ def main():
         tests = " ".join(x["TC-ID"] for x in tcs if sid in refs(x.get("Verifies")))
         lines.append(f"| {sid} | {kids} | {tests} | {r.get('Status', '')} |")
 
-    forest = build_forest(sn_ids, srs, llrs, tcs, orphan_ids)
+    forest = build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)
     lines += [
         "",
         "## Traceability outline",
@@ -1328,7 +1372,7 @@ def main():
         "diff-friendly; run `--html` for the scalable full-graph view._",
         "",
     ]
-    lines += mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids)
+    lines += mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)
 
     lines += ["", "## Orphans", ""]
     lines += ["None. Full coverage."] if not orphans else [f"- {o}" for o in orphans]
@@ -1370,6 +1414,7 @@ def main():
             "auditable._",
             "",
         ]
+        lines += [f"- {u} (SN, unratified section)" for u in sorted(sn_draft)]
         lines += [
             f"- {r[id_key(label)]} — {_cell(r, 'Title') or _cell(r, 'Method')}"
             for label, rows_ in (

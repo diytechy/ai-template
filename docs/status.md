@@ -112,19 +112,19 @@ working surface.
       scaffolding), lowest urgency of the three. Spec:
       [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
       M5.
-    - _(The derived-gate campaign WI-090…096 is no longer deferred — it is in
-      flight; the live slice list is in **Next action** below.)_
+    - _(The derived-gate campaign's remaining slices are no longer deferred — the
+      campaign is in flight; the live slice list is in **Next action** below.)_
 - **Next action — phase v2 (new scope; branch `derived-gate-model` for the gate
   redesign).** A resume session picks up here:
   1. **Derived-gate campaign — RATIFIED, in flight (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
-     the foundation slice (artifact-state + the `Draft` exemption in `trace.py`)
-     has landed. Remaining slices down the spec §10 DAG: **WI-090** SN maturity
-     (section-as-state) · **WI-091** `derive_gate.py` (compute + cache `docs/gate`
-     + `--check`) · **WI-092** check.py integration · **WI-093** phase +
-     `[phase]-[g*]` · **WI-094** ratification workflow · **WI-095** process-doc
-     rewrite · **WI-096** migration + dogfood. Runs under today's monolithic gate;
-     once it lands, phase v3+ uses the derived gate.
+     the foundation slices have landed — the `Draft` artifact state + exemption in
+     `trace.py`, and SN section-as-state maturity. Remaining slices down the spec
+     §10 DAG: **WI-091** `derive_gate.py` (compute + cache `docs/gate` + `--check`)
+     · **WI-092** check.py integration · **WI-093** phase + `[phase]-[g*]` ·
+     **WI-094** ratification workflow · **WI-095** process-doc rewrite · **WI-096**
+     migration + dogfood. Runs under today's monolithic gate; once it lands, phase
+     v3+ uses the derived gate.
   2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer
