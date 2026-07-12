@@ -197,6 +197,12 @@ The G1 bar is deliberately small (doc navigability). Bump `docs/gate` in a
 reviewed commit as each gate's criteria are genuinely met — CI reads it and
 raises the bar with you (process.md §7 "The active gate").
 
+**Weigh the opt-in layers now** — they cost nothing until enabled, and adoption
+is the cheapest moment to decide: the unattended coordinator, the reviewer dial,
+and the **vendored guardrails / efficiency packages** (process-options.md
+"Tier-conditional guardrails" names worked examples — a behavior package and a
+token-efficiency package). Re-check the same list at every re-sync (§6).
+
 ## 6. Re-syncing an existing adoption (picking up kit updates)
 
 A repo that adopted the kit months ago will drift behind it: new scripts, renamed
@@ -212,6 +218,11 @@ kit HEAD moved twice mid-adoption; the stamp is what makes "which kit is this
 repo on?" answerable at all.) With it, a re-sync is a **diff**: compare the SHA
 in your `docs/kit-version` against the kit commit you're moving to, and read that
 range to see exactly which templates/scripts changed before you touch anything.
+
+**Re-weigh the opt-in layers while you're here.** A re-sync is the natural moment
+to reconsider vendoring or extending a guardrails / efficiency package
+(process-options.md "Tier-conditional guardrails") as the kit and the agent
+ecosystem move — the same decision adoption raised (§5).
 
 ### What to overwrite vs preserve
 

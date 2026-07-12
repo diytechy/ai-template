@@ -2088,3 +2088,31 @@ one dashboard regen.
 edges, acyclic); `gen_trajectory.py --check` → up to date after regen;
 `check_docs.py --root . --stale` → OK, 0 broken links; `pytest -q` → **639
 passed, 1 skipped in 89.65s** (serial; no xdist in this venv).
+
+## 2026-07-12 — WI-083: efficiency-package pointer (RDXmin) + adoption/re-sync emphasis
+
+**Session (owner-directed).** After assessing `JayPokale/RDXmin` (a
+token-efficiency agent tool), the owner directed a "see also" pointer emphasized
+at adoption + re-sync. RDXmin's two mechanisms — a YAGNI output-ladder ruleset
+and a `PostToolUse` scrub/elide/dedup tool-output compressor — are already
+covered philosophically (the working agreement + the vendored guardrails
+`EFFICIENCY` playbook) or out of kit scope (a runtime cost tool), so nothing was
+imported; instead one pointer naming it as a separately-vendorable efficiency
+package.
+
+**Deliverable.** PROCESS_OPTIONS "Tier-conditional guardrails" gains a "related
+opt-in — efficiency packages" note (RDXmin the worked example, orthogonal to the
+guardrails core); ADOPTING §5 (first green run) + §6 (re-sync) gain "weigh the
+opt-in layers" callouts pointing at it. Single-sourced (content in
+PROCESS_OPTIONS; ADOPTING points) — no duplication. No spine change; nothing
+rides the pending G3 re-attestation.
+
+**Checks.** `check_trajectory --strict` clean (83 WIs, 72 done); `gen_okf
+--check` up to date (the note is deep in PROCESS_OPTIONS, not its first-heading
+summary, so the OKF process-guide is unchanged); `gen_trajectory --check` fresh
+after regen; `check_docs --stale` OK, 0 broken links; `pytest -q` → **639
+passed, 1 skipped in 89.10s**.
+
+**Byte deltas.** Byte-budgeted files (`AGENTS.template.md`, `PROCESS.md`)
+untouched — the additions land in the unbudgeted `PROCESS_OPTIONS.md` +
+`ADOPTING.md`.

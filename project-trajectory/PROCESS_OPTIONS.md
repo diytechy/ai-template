@@ -798,6 +798,14 @@ and set the recommended `guardrails-policy: all except <your frontier model>`.
 (It is agent-behavior *content*, adapted independently — never redistributed by
 this kit; the pin + a reviewed re-vendor commit are the supply-chain control.)
 
+**A related opt-in — efficiency packages.** The same vendor-and-pin discipline
+suits *token-efficiency* agent packages (orthogonal to the guardrails core: they
+shape output verbosity and tool-output cost, not tier-conditional routing) — a
+worked example is [`JayPokale/RDXmin`](https://github.com/JayPokale/RDXmin) (a
+YAGNI output-ladder ruleset + a `PostToolUse` scrub/elide/dedup tool-output
+compressor). Vendor one, or fold its ideas into your own package; **weigh it at
+kit adoption and at each re-sync** (the adoption guide flags both moments).
+
 **The boundary.** Guardrails govern *in-session agent mechanics*; the process
 (gates, traceability, the honest-gate rule) governs *artifacts*. A guardrail
 never relaxes a gate, and the honest-gate rule still owns every `run-state`.
