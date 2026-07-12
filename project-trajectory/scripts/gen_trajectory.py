@@ -1112,6 +1112,7 @@ def sw_containment(root, mods):
         )
 
     tab = '<button data-tab="sw">How (SW architecture)</button>'
+    start_level = "component" if len(view["top_roots"]) > 3 else "module"
     tree = "".join(render_cmp(r, seam_block(r)) for r in view["top_roots"])
     unc = "".join(
         '<div class="uncontained"><code>{}</code> '
@@ -1138,7 +1139,7 @@ def sw_containment(root, mods):
         "component(s) + {} uncontained module(s); bounded at {} "
         '(process-options.md "Component layer"). Software items are '
         "<strong>containerized</strong> into the component they belong to; "
-        "<strong>expand</strong> a component to reveal its members and internal "
+        "<strong>drill into</strong> a component to reveal its members and internal "
         "seams.</p>".format(
             view["count"],
             len(view["top_roots"]),
@@ -1152,7 +1153,8 @@ def sw_containment(root, mods):
         + "\n"
         + summary_line
         + cross_html
-        + '<div class="cmptree">'
+        + '<div class="cmptree" data-hierarchy="component-module" data-start-level="{}" '
+        'aria-label="Component to module software hierarchy">'.format(start_level)
         + tree
         + unc
         + "</div>\n</section>"
@@ -1317,7 +1319,7 @@ def campaign_containment(wis):
         "bounded by construction (one re-attestation sitting), so there is no "
         "right-sizing bound here.</p>".format(len(by_camp), len(campaignless))
     )
-    return (
+    shell = (
         CAMPAIGN_STYLE
         + summary_line
         + cross_html
@@ -1325,6 +1327,151 @@ def campaign_containment(wis):
         + tree
         + standalone
         + "</div>"
+    )
+    return shell
+
+
+PHASE_TAG_RE = re.compile(r"\[([^\]]+)\]-\[g[0-3]\]", re.I)
+
+
+def wi_phase_sets(root, wis):
+    """Derive WI phase sets from SR rows and explicit [phase]-[gN] anchors."""
+    sr_phase = {
+        (r.get("SR-ID") or "").strip(): (r.get("Phase") or "").strip()
+        for r in ct.read_rows(root / ct.SR_CSV)
+        if (r.get("SR-ID") or "").startswith("SR-")
+    }
+    out = {}
+    for w in wis:
+        phases = {sr_phase[s] for s in w["srs"] if sr_phase.get(s)}
+        match = PHASE_TAG_RE.search(w["title"])
+        if match:
+            phases.add(match.group(1))
+        out[w["id"]] = tuple(sorted(phases))
+    return out
+
+
+def when_hierarchy(root, wis):
+    """Phase→workstream WI hierarchy with lifecycle frontier and Campaign mode."""
+    phase_sets = wi_phase_sets(root, wis)
+    groups, parked = {}, []
+    for w in wis:
+        if w["status"] == "deferred":
+            parked.append(w)
+            continue
+        phases = phase_sets[w["id"]]
+        phase = (
+            phases[0] if len(phases) == 1 else ("Cross-phase" if phases else "Unphased")
+        )
+        groups.setdefault(phase, {}).setdefault(w["workstream"], []).append(w)
+    if not any(phase_sets.values()) and not parked:
+        return campaign_containment(wis)
+    if not groups:
+        return campaign_containment(wis)
+
+    def esc(value):
+        return html.escape(str(value), quote=True)
+
+    def row(w):
+        phases = phase_sets[w["id"]]
+        badges = "".join(
+            '<span class="phasebadge">{}</span>'.format(esc(p)) for p in phases
+        )
+        if not badges:
+            badges = '<span class="phasebadge muted">Unphased</span>'
+        campaign = (
+            '<span class="campbadge">{}</span>'.format(esc(w["campaign"]))
+            if w.get("campaign")
+            else ""
+        )
+        after = ", ".join(w["preds"] + ["~" + p for p in w["soft"]]) or "—"
+        return (
+            '<tr class="wrow {}" data-wi="{}"><td><code>{}</code></td><td>{}<div>{}{}</div></td>'
+            '<td><span class="statusbadge {}">{}</span></td><td class="sub"><code>{}</code></td></tr>'
+        ).format(
+            esc(w["status"]),
+            esc(w["id"]),
+            esc(w["id"]),
+            esc(w["title"]),
+            badges,
+            campaign,
+            esc(w["status"]),
+            esc(w["status"]),
+            esc(after),
+        )
+
+    def table(items):
+        return (
+            '<table class="witable"><thead><tr><th>WI</th><th>Work item</th><th>Status</th><th>After</th></tr></thead>'
+            "<tbody>{}</tbody></table>"
+        ).format("".join(row(w) for w in sorted(items, key=lambda x: x["id"])))
+
+    phase_order = sorted(groups, key=lambda p: (p in ("Cross-phase", "Unphased"), p))
+    active_phases = {
+        phase
+        for phase, streams in groups.items()
+        if any(w["status"] == "active" for items in streams.values() for w in items)
+    }
+    frontier = next(iter(sorted(active_phases)), phase_order[-1] if phase_order else "")
+    blocks = []
+    for phase in phase_order:
+        streams = groups[phase]
+        total = sum(len(v) for v in streams.values())
+        is_current = phase == frontier
+        stream_html = []
+        for name in sorted(streams):
+            items = streams[name]
+            stream_html.append(
+                '<details class="streambox"{}><summary><span>{}</span><span class="sub">{} item(s)</span></summary>{}</details>'.format(
+                    " open"
+                    if is_current and any(w["status"] == "active" for w in items)
+                    else "",
+                    esc(WORKSTREAM_LABELS.get(name, name)),
+                    len(items),
+                    table(items),
+                )
+            )
+        blocks.append(
+            '<details class="phasebox{}"{} data-phase="{}"><summary><span class="phase-title">{}</span>'
+            '<span class="sub">{} workstream(s) · {} item(s){}</span></summary><div class="phasebody">{}</div></details>'.format(
+                " current" if is_current else "",
+                " open" if is_current else "",
+                esc(phase),
+                esc(phase),
+                len(streams),
+                total,
+                " · current delivery frontier" if is_current else "",
+                "".join(stream_html),
+            )
+        )
+    parked_html = (
+        '<details class="parked"><summary>Parked / deferred <span class="sub">· {} item(s)</span></summary>{}</details>'.format(
+            len(parked), table(parked)
+        )
+        if parked
+        else ""
+    )
+    campaign = campaign_containment(wis)
+    alternate = (
+        '<details class="campaign-alt"><summary>Alternate grouping · Campaign</summary>{}</details>'.format(
+            campaign
+        )
+        if campaign
+        else ""
+    )
+    shell = (
+        CAMPAIGN_STYLE
+        + "<style>#dag .frontier{border-left:3px solid var(--active);padding-left:.8rem}"
+        "#dag .phasebox,#dag .streambox,#dag .parked,#dag .campaign-alt{border:1px solid var(--border);border-radius:12px;margin:.55rem 0;background:var(--surface)}"
+        "#dag .phasebox.current{border-color:var(--active);box-shadow:0 0 0 2px color-mix(in srgb,var(--active) 18%,transparent)}"
+        "#dag .phasebox>summary,#dag .streambox>summary,#dag .parked>summary,#dag .campaign-alt>summary{cursor:pointer;display:flex;justify-content:space-between;gap:1rem;padding:.7rem .85rem;font-weight:650}"
+        "#dag .phasebody,#dag .streambox table,#dag .parked table,#dag .campaign-alt>div{margin:.2rem .85rem .8rem}"
+        "#dag .phasebadge,#dag .campbadge,#dag .statusbadge{display:inline-block;border-radius:999px;padding:.05rem .42rem;margin:.18rem .25rem 0 0;font-size:.7rem;border:1px solid var(--border)}"
+        "#dag .campbadge{border-style:dashed}.statusbadge.active{color:#b45309}.statusbadge.done{color:#047857}.statusbadge.deferred{color:var(--muted)}"
+        '</style><div class="whenhier"><p class="cap"><strong>Phase → Workstream → WI.</strong> The highlighted block marks the <strong>NOW · delivery frontier</strong> from phase/lifecycle state — not calendar time. Campaign remains an alternate grouping.</p>'
+    )
+    return shell + '<div class="frontier" data-frontier="{}">{}{}</div>{}</div>'.format(
+        esc(frontier), "".join(blocks), parked_html, alternate
     )
 
 
@@ -2079,7 +2226,7 @@ def build_html(root, wis):
     # DAG into collapsed campaign containers (the WHEN-axis FB5 mirror); with no
     # campaign values this returns None and the flat SVG DAG renders unchanged, so
     # a campaign-less registry stays byte-identical.
-    dag_view = campaign_containment(wis) or dag
+    dag_view = when_hierarchy(root, wis) or dag
     extra_tabs, extra_panels = [], []
     mods = sw_modules(root)
     if mods:

@@ -636,6 +636,28 @@ def test_boundary_aggregation_dedupes_cross_component_edges(tmp_path):
     assert "IF-001, IF-002" in xs
 
 
+def test_software_hierarchy_threshold_and_boundary_union(tmp_path):
+    containerize(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    assert 'class="cmptree" data-hierarchy="component-module"' in sw
+    assert 'data-start-level="module"' in sw
+    assert "IF-001, IF-002" in sw
+    req = tmp_path / "docs" / "requirements"
+    (req / "components.csv").write_text(
+        CONT_CMPS
+        + "CMP-003,Aux,software,,built,,,,\n"
+        + "CMP-004,Edge,software,,built,,,,\n",
+        encoding="utf-8",
+    )
+    llrs = CONT_LLRS.replace("Verified,CMP-001", "Verified,CMP-003", 1).replace(
+        "Verified,CMP-002", "Verified,CMP-004", 1
+    )
+    (req / "low-level-requirements.csv").write_text(llrs, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    assert 'data-start-level="component"' in sw_section(tmp_path)
+
+
 def test_no_cmp_renders_flat_view_byte_identical(tmp_path):
     # The vacuity guarantee: render flat (no CMP layer), add the containment
     # (panel changes), remove it, re-render == the original flat bytes exactly.
@@ -834,3 +856,37 @@ def test_meta_campaign_binning_smoke():
         "campaign-binning-batch-2026-07-11",
     ):
         assert slug in view
+
+
+def test_when_hierarchy_thresholds_and_phase_sets(tmp_path):
+    body = (
+        "WI-001,A,scripts,SR-001,,done,d\n"
+        "WI-002,B,docs,SR-002,WI-001,active,\n"
+        "WI-003,[v3]-[g1] anchor,docs,,WI-002,queued,\n"
+        "WI-004,Mixed,scripts,SR-001;SR-002,WI-002,queued,\n"
+        "WI-005,Parked,docs,,WI-002,deferred,\n"
+        "WI-006,Operational,scripts,,WI-002,queued,\n"
+    )
+    make_repo(tmp_path, body)
+    sr = tmp_path / "docs" / "requirements" / "system-requirements.csv"
+    sr.write_text(
+        sr.read_text(encoding="utf-8")
+        .replace("Status\n", "Status,Phase\n")
+        .replace("Verified\n", "Verified,v1\n")
+        .replace("Draft\n", "Draft,v2\n"),
+        encoding="utf-8",
+    )
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'class="whenhier"' in text
+    for phase in ("v1", "v2", "v3", "Cross-phase", "Unphased"):
+        assert 'data-phase="{}"'.format(phase) in text
+    assert "NOW · delivery frontier" in text and 'class="parked"' in text
+
+
+def test_when_aggregate_edges_frontier_and_routes(tmp_path):
+    make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert "Binned by campaign" in text
+    assert "WI-001→WI-003" in text or "WI-001" in text
