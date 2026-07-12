@@ -130,12 +130,13 @@ working surface.
      "open a new phase-gate WI" warn, all warn-first, vacuous on the single-phase
      meta), and the **ratification workflow** (the `gate-advance` skill +
      `gate-policy`: ratification is now a reviewed `Status`-change commit, and
-     `docs/gate` is generated). Remaining slices down the spec §10 DAG: **WI-095**
-     process-doc rewrite (PROCESS.md §4/§7, PROCESS_OPTIONS phased-delivery, the
-     parallel/series workflow) · **WI-096** migration + dogfood (regenerate the
-     meta `docs/gate` to the derived form; prove derived == G3; ADOPTING recipe).
-     Runs under today's monolithic gate; once it lands, phase v3+ uses the derived
-     gate.
+     `docs/gate` is generated), and the **process-doc rewrite** (PROCESS_OPTIONS
+     "Derived gate model" section + reconciled Phased-delivery; PROCESS.md §4/§7
+     minimal mechanism edits, **+785 B flagged**, baseline re-stamped 59,638).
+     Remaining: **WI-096** migration + dogfood — regenerate the meta `docs/gate` to
+     the derived form, prove derived == G3, migrate `gate.template`, the ADOPTING
+     recipe, and retire the last hand-set-gate references. Runs under today's
+     monolithic gate; once it lands, phase v3+ uses the derived gate.
   2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer

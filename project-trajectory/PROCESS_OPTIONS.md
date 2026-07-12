@@ -78,10 +78,100 @@ into a straitjacket. Four points, one voice:
   **contradiction** still routes as a finding to its owner — an unrecorded
   autonomous decision is a *silent* one, which no dial setting permits.
 
+## Derived gate model
+
+*Referenced from PROCESS.md §4/§7.* The gate is **computed from the artifact
+states, not declared** — SSOT applied to the gate itself. This section is the
+working summary; the kit's full design + rationale is its own ratified design
+spec (`docs/specs/derived-gate-model.md` in the kit's meta-repo — not shipped
+downstream).
+
+**The gate is derived.** `docs/gate` is a **generated** file:
+`scripts/derive_gate.py` computes the active gate from the spine and caches it (a
+`# basis:` derivation + a compute date, then the value on the first non-comment
+line, so `check.py`'s `resolve_gate()` reads it unchanged). **The repo is at gate
+G iff every in-scope SN/SR/LLR/TC meets G's bar.** You never hand-edit the line;
+you ratify artifacts and regenerate (`python scripts/derive_gate.py`). The
+`derived-gate` step (`derive_gate.py --check`, a pre-commit floor + every gate)
+guards the cache against rot — a ratification that moved the states but not the
+cache fails loudly. **Hybrid:** the cache means the gate is known on checkout with
+no recompute; a legacy hand-set `docs/gate` with no `# basis:` line is accepted
+**value-only** until a one-time `derive_gate.py` migration (so an adopter upgrades
+without a red day).
+
+**Artifact states (no new column).** Maturity is read from existing structure,
+gated by one `Draft` bit:
+
+- **SR / LLR / TC** — the open-vocab `Status` gains a leading **`Draft`**:
+  `Draft` → `Planned`/… → `Verified`. Per-artifact gate: an SR is **G0** while
+  `Draft`, **G1** once ratified (Status past `Draft`), **G2** once decomposed (its
+  LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
+  TC), **G3** once `Verified`. An LLR/TC caps only when `Draft`; once present its
+  own Status doesn't gate G3 — the SR's `Verified` drives that, matching
+  `trace.py --require-verified` (which checks SRs, not LLR/TC status), so a repo
+  whose LLRs read `Implemented` still reaches G3.
+- **SN** — maturity is **section-as-state**: an SN under a stakeholder-needs.md
+  heading whose text contains **"draft"** (`## Draft needs (unratified)`) is Draft
+  (G0); SNs under any other heading are ratified (G1). No new column — the section
+  *is* the state.
+
+The **ratification date is git-derived** — the commit that moved the `Status` (or
+the SN section). No new field.
+
+**Draft artifacts live in the live spine.** A `Draft` SR/LLR/TC and a Draft SN are
+**exempt from the child-completeness orphan rules** (`trace.py`): a Draft SR needs
+no LLR/TC, a Draft LLR no TC, a Draft SN no SR — so a requirement is **drafted in
+the live registry before it is decomposed**. This **retires the `-000` /
+off-spine workaround** for requirement-first work. Parent-linkage + integrity
+still apply (a Draft SR still links an SN; ids stay unique/well-formed), and a
+Draft SR is skipped by the G3 Verified criterion (it is pre-ratification).
+
+**Ratification = a reviewed Status-change commit.** Closing a gate is no longer a
+marker bump: the acceptor **marks a batch of artifacts ratified** (`Draft`→
+`Planned`, or an SN section move) **in a reviewed commit** — that commit *is* the
+sign-off, and the gate derives from it (`gate-advance` skill). It composes with
+the gate-authority levels (below): `attended` ratifies each batch; `single-ratify`
+ratifies the batch once at its `[phase]-[g2]` close (one review per phase gate);
+`autonomous` on a fresh-context reviewer's recorded verdict. An agent may make the
+ratifying commit, governed by the level.
+
+**Phase = a derived detector + a committed anchor.** The derived gate **dropping
+below a phase's last-closed level** — new or reopened content entered — is the
+*signal* that a new phase is due; `check_trajectory` warns "open a `[phase]-[g*]`"
+(warn-first). But phase **identity + membership** live in a committed
+**`[phase]-[g*]` work item** — a WI whose Title carries the `[<phase>]-[g<N>]` tag
+— not a git-history walk (which a rebase/squash moves and which carries no
+membership). `[phase]-[g1]` is the requirement-structuring batch; `[phase]-[g2]`
+the decomposition + TC batch; its predecessor is the prior phase's close.
+
+**Parallel for pre-dev, series for dev.** A phase's requirement work is a **batch,
+in parallel** — draft + ratify all the new/reopened SN/SR together, which is
+exactly where "this also modifies SR-12" and other conflicts surface in one review
+— then each work item runs **G2 → G3 in series** (the per-WI vertical slice):
+
+```
+Phase N:  [phase-N-g1]  draft+ratify ALL new/reopened SN/SR   (parallel, batch review)
+              │
+          [phase-N-g2]  decompose to LLR/TC, all Planned      (parallel, batch review)
+              │
+          WI-a ─ G2→G3 ─┐
+          WI-b ─ G2→G3 ─┤  (series, per-WI vertical slices)
+          WI-c ─ G2→G3 ─┘
+```
+
+A reopen during a later phase's g1 revs the phase: the affected verified artifact
+returns to `Draft`/`Planned`, the derived gate for that phase drops, and the batch
+review sees it alongside the new work. Within a phase the derived gate only rises
+(draft → ratify → decompose → verify), so a **drop from a closed level is an
+unambiguous boundary** — the detection is robust; the committed anchor just makes
+membership legible and durable.
+
 ## Phased delivery
 
 *Referenced from PROCESS.md §4.* **Applies when** a roadmap ships v1 before
-v2/v3; a single-shot deliverable skips it.
+v2/v3; a single-shot deliverable skips it. Builds on the **Derived gate model**
+above (phase is the time-bucket that captures leak-in; campaign stays a *named*
+new-work set — they diverge exactly when other work is pulled in).
 
 A roadmap that ships v1 before v2/v3 needs gates that close *per phase* without
 dishonesty. SRs may carry an optional **`Phase`** tag (e.g. `v1`, `v2`; blank =
@@ -98,15 +188,17 @@ in scope for every phase). Semantics:
   them.
 - Later phases re-enter at G1/G2 as requirement increments and close their own
   G3/G-Release with the grown phase list.
-- **A project already at G3 that takes on new scope holds its gate.** `docs/gate`
-  stays at the high-water mark — the marker only advances (§7 "the active
-  gate"); "re-enter at G1" is *per-increment via the `Phase` tag*, never a
-  rewind of the marker (rewinding would discard the closed gate's attestation).
-  And because traceability is phase-blind, a new-phase SR must reach
-  **G2-completeness (LLR + TC)** to sit in the live spine — a
-  requirements-only draft stays a `-000` placeholder row or off-spine until it
-  does; only *Verified* and *G-Release* defer by phase. Close the shipped set
-  with `check.py --gate G3 --phase <shipped>`; the new phase's SRs read
+- **A project already at G3 that takes on new scope: the derived gate handles it.**
+  New scope enters as **`Draft` SN/SR in the live spine** — the `-000` / off-spine
+  placeholder workaround is **retired** by the derived gate model above. The new
+  drafts sit at G0, so the derived **per-phase** gate for the new phase drops (the
+  `[phase]-[g*]` signal) while the shipped phase stays at its level; the shipped
+  set still closes at G3 with `check.py --gate G3 --phase <shipped>` (per-phase
+  scoping, not a marker rewind — rewinding would discard the closed phase's
+  attestation). Traceability is phase-blind, so a new-phase SR still reaches
+  **G2-completeness (LLR + TC)** before it is *Verified* — but it no longer waits
+  off-spine to be *drafted*: it is a live `Draft` row from the start. Only
+  *Verified* and *G-Release* defer by phase; the new phase's SRs read
   phase-deferred until their own G3.
 
 ## Lifecycle phase
@@ -225,9 +317,11 @@ A gate closes only on the verdict of an **independent LLM reviewer**:
   and quotes real output; a verdict citing a run it didn't perform is invalid.
 - **Verdict recorded** in `log.md` per §5, extended with `Model: <model id>`
   and `Role: LLM-GATE`; the Gate Sign-offs acceptor column reads `LLM-GATE`.
-  APPROVE → the driver bumps `docs/gate`, citing the verdict block (the
-  verdict is the review of record). CHANGES-REQUESTED → findings route to
-  their owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
+  APPROVE → the driver makes the **ratifying Status-change commit** (and
+  regenerates `docs/gate` via `derive_gate.py`), citing the verdict block (the
+  verdict is the review of record — this is the `autonomous` ratification the
+  "Derived gate model" describes). CHANGES-REQUESTED → findings route to their
+  owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
 
 ### The Blocked register (replaces mid-run escalation)
 

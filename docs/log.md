@@ -2541,3 +2541,44 @@ WI-095).
 
 **Checks.** `pytest -q -n auto` **664 passed, 3 skipped**; `check_docs.py --root .
 --stale` OK, 0 broken; `gen_skills_index --check-agents` clean.
+
+## 2026-07-12 — WI-095 (derived-gate campaign): process-doc rewrite; PROCESS.md +785 B (flagged)
+
+**Session (branch `derived-gate-model`).** The process docs now describe the
+derived gate (spec §10.7). Docs only — no spine change.
+
+- **PROCESS_OPTIONS.md** — a new **"Derived gate model"** section (the working
+  summary): the gate is computed from artifact states + cached; the
+  `Draft`→`Planned`→`Verified` + SN section-as-state ladder; **Draft artifacts
+  live in the live spine** (retiring the `-000`/off-spine workaround); ratification
+  = a reviewed `Status`-change commit composing with the gate-authority levels;
+  phase = a derived **drop detector** + a committed `[phase]-[g*]` anchor; the
+  **parallel-pre-dev / series-dev** workflow with the picture. **"Phased
+  delivery"** reconciled: the "already at G3 takes on new scope" bullet now enters
+  scope as `Draft` SN/SR in the live spine (the `-000`/off-spine language retired),
+  the derived per-phase gate drops, and `--phase` still closes the shipped set;
+  the section "Builds on" the new model. The `autonomous` gate step's "driver
+  bumps `docs/gate`" → "makes the ratifying `Status`-change commit + regenerates
+  `docs/gate`".
+- **PROCESS.md** (core, byte-budgeted) — minimal mechanism edits: §4's active-gate
+  line + §7's active-gate paragraph rewritten to derived + ratification, and
+  `derive_gate.py` added to §7's process-check list.
+
+**Byte deltas (FLAGGED).** `PROCESS.md` **58,853 → 59,638 (+785 B)** — the
+derived-gate mechanism is *core* (not an opt-in layer), so §4/§7 must state it; the
+bulk went to unbudgeted `PROCESS_OPTIONS.md`. Baseline **re-stamped 59,638** in the
+`byte-budget-guard` skill (source + `.claude` + `.agents`, re-synced byte-identical
+via `bootstrap --sync`). (Prior WI logs in this campaign quoted a stale "58,297"
+figure; the true pre-campaign baseline was **58,853**, unchanged until this WI.)
+`AGENTS.template.md` **untouched** (9,978).
+
+**Deviation caught + fixed.** The PROCESS_OPTIONS "Derived gate model" section
+first linked `[derived-gate-model.md](specs/derived-gate-model.md)` — but the
+design spec is a **meta-only** artifact, not shipped downstream, so the scaffolded
+`docs/process-options.md` link broke doc-navigability (32 scaffold/profile tests
+red). The meta's own `check_docs` does **not** scan `project-trajectory/*.md`, so
+only the scaffold tests caught it — the reminder that shipped-doc links are
+validated downstream. Changed to a **non-link** prose reference.
+
+**Checks.** `pytest -q -n auto` **664 passed, 3 skipped**; `check_docs.py --root .
+--stale` OK, 0 broken; `gen_skills_index --check-agents` clean.
