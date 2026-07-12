@@ -2214,3 +2214,32 @@ history. Offered a complementary process note (the reopen-a-confirmed-item case)
 
 **Checks.** `check_trajectory --strict` clean (87 WIs); `gen_trajectory --check`
 fresh after regen; `check_docs --stale` OK, 0 broken links.
+
+## 2026-07-12 — WI-088: derived-gate-model DESIGN spec drafted (branch `derived-gate-model`)
+
+**Session (owner-directed; branch `derived-gate-model`).** The owner directed a
+**replacement** of the monolithic declared gate with a **derived** one, and a
+design spec for it.
+
+**Design.** `docs/specs/derived-gate-model.md`: the repo (and each phase) gate is
+**derived** from artifact states, not the hand-set `docs/gate` line. Owner
+constraints honored — (1) **hybrid**: a fast check script computes the gate and
+caches it to `docs/gate` with a compute date (known on checkout; `--check` guards
+rot); (2) **no new column**: reuse the open-vocab `Status` (prepend `Draft`:
+Draft→Planned→Verified), ratification date git-derived; (3) SN maturity needs a
+home (§4 open decision — section-as-state recommended). **Parallel** requirement
+structuring per phase (G0→G2 as a batch, surfacing conflicts) then **series** dev
+(G2→G3 per WI); phase **derived** from gate trajectory (backward movement revs
+it); the pre-dev batch is a first-class `[phase]-[g*]` work item; ratification
+becomes a Status-change-in-a-reviewed-commit (composes with
+attended/single-ratify/autonomous). The **draft-exemption** from `trace.py`'s
+orphan rule is the biggest change — and it retires the `-000`/off-spine
+workaround. §10 breaks the campaign into 8 implementation WIs, filed **only after
+the design is ratified**.
+
+**Status.** WI-088 queued (campaign `derived-gate`), SpecRef the design doc;
+awaiting owner ratification of the DESIGN at G1 before implementation. No code or
+spine change yet — design + registration only.
+
+**Checks.** `check_trajectory --strict` clean (88 WIs); `gen_trajectory --check`
+fresh after regen; `check_docs --stale` OK, 0 broken links.

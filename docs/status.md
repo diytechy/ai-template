@@ -112,20 +112,23 @@ working surface.
       scaffolding), lowest urgency of the three. Spec:
       [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
       M5.
-- **Next action — open phase v2 (new scope; `docs/gate` stays G3).** A resume
-  session picks up here:
-  1. **Phase-v2 requirement drafting → the G1 sign-off gate.** Two new-SR WIs
-     re-enter at G1: **WI-085** ([spec](specs/WI-085.md) — the process-explainer
-     tab) and **WI-087** ([spec](specs/WI-087.md) — the tiered, phase-aware When
-     & How drill-down views). Draft each a new `SR` (under `SN-021`/`SN-010`,
-     `Phase=v2`, measurable acceptance criteria; the reviewer consistency sweep
-     flags contradictions against existing SRs), then **STOP and page the owner
-     to sign off** on the new requirement artifacts (the §4 G1 review, recorded
-     in [log.md](log.md)). On sign-off: G2 (LLR + TC) → G3 (implement), closing
-     with `check.py --gate G3 --phase v1` so v2 reads phase-deferred.
-  2. **The rest of the backlog needs no new SR — proceed at G3** (complete slice
-     per WI, held gate): WI-078 (dupes-gate) first, then the
-     `main-decomposition` campaign (WI-080 → WI-081), then WI-079.
+- **Next action — phase v2 (new scope; branch `derived-gate-model` for the gate
+  redesign).** A resume session picks up here:
+  1. **WI-088 — derived-gate-model (this branch).** Design spec drafted
+     ([specs/derived-gate-model.md](specs/derived-gate-model.md)): **replace** the
+     monolithic gate with a derived one — hybrid cached compute (with a compute
+     date), reuse `Status`+`Draft` (no new column), parallel-requirement /
+     series-dev, derived phase. **Awaiting owner ratification of the DESIGN (G1)**
+     before its implementation WIs (spec §10) are filed — a larger G1 sign-off
+     than a single SR.
+  2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
+     ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
+     each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer
+     consistency sweep flags contradictions), **STOP and page the owner to sign
+     off** (§4 G1 review, [log.md](log.md)), then G2→G3 under
+     `check.py --gate G3 --phase v1`.
+  3. **The rest of the backlog needs no new SR — proceed at G3:** WI-078
+     (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then WI-079.
   Remaining owner item: the **push decision** above.
 
 ## Scope
