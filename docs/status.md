@@ -64,6 +64,12 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
+    6. **Rule on the deep-review deferred items** — the 2026-07-12 full-repo
+       review ([repo-review-2026-07-12.md](repo-review-2026-07-12.md)) fixed
+       the confident findings and left four rulings to the owner: the F5
+       duplication census/bound, wiring `[step:dupes]`, the archive-anchor
+       comment policy, and the `agent_loop.py` decomposition campaign (its §1
+       has each with reasons).
   - **In flight:** _(none)_ — all four 2026-07-11 batches are **closed and
     archived**: the campaign-binning · parallel-tests · resume-hardening
     batch (the `Campaign` grouping column + the campaign-binned When-view
