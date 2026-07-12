@@ -848,8 +848,9 @@ def sw_containment(root, mods):
             m = mod_by_norm.get(n)
             if not m:
                 out.append(
-                    "<tr><td><code>{}</code></td><td>—</td>"
-                    "<td>—</td></tr>".format(esc(inv.get(n, n)))
+                    "<tr><td><code>{}</code></td><td>—</td><td>—</td></tr>".format(
+                        esc(inv.get(n, n))
+                    )
                 )
                 continue
             syms = ", ".join(m["symbols"][:8]) + ("…" if len(m["symbols"]) > 8 else "")
@@ -912,7 +913,7 @@ def sw_containment(root, mods):
         for n in view["uncontained"]
     )
     xlines = "".join(
-        '<li><code>{}</code> → <code>{}</code> '
+        "<li><code>{}</code> → <code>{}</code> "
         '<span class="sub">({})</span></li>'.format(
             esc(label_key(a)), esc(label_key(b)), esc(", ".join(sorted(iids)))
         )
@@ -1710,16 +1711,16 @@ def build_html(root, wis):
         # WI-073: when a CMP layer contains modules, the How-SW panel becomes the
         # containerized top view (≤ ct.TOP_VIEW_MAX items, expandable); otherwise
         # it keeps today's flat graph/table (byte-identical for a no-CMP repo).
-        tab, panel = sw_containment(root, mods) or _sw_panel(
-            mods, sw_graph(root, mods)
-        )
+        tab, panel = sw_containment(root, mods) or _sw_panel(mods, sw_graph(root, mods))
         extra_tabs.append(tab)
         extra_panels.append(panel)
     # The How-physical CMP table holds the *non-software* components; software
     # components live in the containerized How-SW view above (WI-073), so a
     # domain-neutral CMP row lands in the tab that matches its Category.
     physical = [
-        r for r in cmp_rows(root) if (r.get("Category") or "").strip().lower() != "software"
+        r
+        for r in cmp_rows(root)
+        if (r.get("Category") or "").strip().lower() != "software"
     ]
     if physical:
         tab, panel = _cmp_panel(physical)

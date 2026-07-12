@@ -1639,3 +1639,15 @@ the coordinating summary.
 **No SR/LLR/TC text touched by the close** — the batch's spine changes
 (SR-048/LLR-049/TC-049, the SR-038 clarification) are recorded in the WI-073
 entry above and ride the one pending re-attestation.
+
+**Correction (same session, honest record).** The close entry above was
+committed while the batch's full gate had actually returned **FAIL** — the
+`format` step: WI-073 left `gen_trajectory.py` un-ruff-formatted, and the
+commit floor never caught it because the hook's Python lacks ruff (the hook
+SKIPs format; the gate's declared `{py}` toolchain runs it — the gap is
+precisely why the cadence keeps ONE full gate at batch close). Fixed with the
+gate's own interpreter (`ruff format`, 1 file), lint clean, and the full bar
+re-run from scratch: `pytest -q` **622 passed / 3 skipped**, `check_docs`
+**0 broken**, `check.py --gate G3` **RESULT: PASS (13/13)**. The FB1 cadence
+worked as designed — the close gate caught what the commit bar structurally
+cannot.
