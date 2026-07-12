@@ -106,3 +106,4 @@ WI-104,Pin the dev toolchain (requirements-dev; CI + dev-setup consume) (M6),scr
 WI-105,Coverage plumbing hardening - combine race + debris + lost subprocess data (M9/L1),scripts,,WI-104,queued,,docs/repo-review-2026-07-12b.md#medium,deep-review-2026-07-12b
 WI-106,Micro-fix batch - hook step count + predicate word-bounds + dup-malformed message + retire launcher IMPROVEMENT_PLAN.md refs (M7/L2/L4/L9),scripts,,,queued,,docs/repo-review-2026-07-12b.md#medium,deep-review-2026-07-12b
 WI-107,Unattended enablement - routing maps + agents registry + run-phase + guardrails-policy + single-ratify gate authority,unattended,,~WI-106,queued,,docs/specs/WI-107.md,
+WI-108,Flaky test_hook_honors_kit_scripts_dir_override under max parallel+coverage,scripts,,WI-092,deferred,,docs/specs/WI-108.md,derived-gate

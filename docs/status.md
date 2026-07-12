@@ -125,8 +125,16 @@ working surface.
       scaffolding), lowest urgency of the three. Spec:
       [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
       M5.
-    - _(The derived-gate campaign's remaining slices are no longer deferred — the
-      campaign is in flight; the live slice list is in **Next action** below.)_
+    - **WI-108** — flaky `test_hook_honors_kit_scripts_dir_override` under max
+      parallel + coverage: a subprocess-heavy hook-integration test that failed 1×
+      in 8 full-suite gate runs and was **unreproducible** in 6 targeted re-runs
+      (incl. oversubscription) — the derived-gate feature is not implicated (its
+      own tests are deterministic). Deferred until it recurs often enough to
+      reproduce (and therefore verify a fix against); the candidate hardening
+      (xdist `loadgroup` grouping of the hook tests) is recorded, not applied
+      blind. Spec: [specs/WI-108.md](specs/WI-108.md).
+    - _(The derived-gate campaign landed 2026-07-12; its one open item is the
+      owner G3 re-attestation, in **Needs \<human>** above.)_
   - **Queued (deep-review-b remediation, filed 2026-07-12 — awaiting owner
     triage/sequencing; findings + risk notes:
     [repo-review-2026-07-12b.md](repo-review-2026-07-12b.md)):**

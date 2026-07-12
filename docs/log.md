@@ -2625,3 +2625,31 @@ in this WI.
 **Checks (campaign close).** `pytest -q -n auto` **665 passed, 3 skipped**;
 `check_docs.py --root . --stale` OK, 0 broken; the full `check.py --gate G3` gate
 bar run on the migrated meta (see the run recorded in this session).
+
+## 2026-07-12 — WI-108 filed (deferred): flaky hook test under max parallel + coverage
+
+**Session note (branch `derived-gate-model`; no spine/code change).** During the
+derived-gate campaign close, `test_hook_honors_kit_scripts_dir_override` failed
+**once** in the full `check.py --gate G3` bar (the `tests+coverage` step). A
+targeted diagnostic ran the full suite **6 more times** — 4× `-n auto`, 2×
+oversubscribed `-n 32` to amplify contention — and it did **not** reproduce
+(0/6; the target test never appeared in a failure). Net across everything: **1
+failure in 8 full-suite runs (~12%), unforce-able even under oversubscription**;
+run times swung 143–238 s (heavy, uneven subprocess contention on the box).
+
+Assessment: a genuine low-rate, non-reproducible flake in a subprocess-heavy
+hook-integration test (hook → `check.py --run-steps` → 7 parallel steps, plus the
+fixture's own spawns), **not** a defect in the derived-gate feature (deterministic
+in isolation, every own-test green). The campaign marginally raised that test's
+load (hook batch 6→7 parallel steps; one extra `derive_gate` spawn), a plausible
+nudge but unproven and unreproducible. Because I can't reproduce it, I can't
+verify any fix — so a blind fix would be an unverifiable change to the declared
+`stack.ini` command / shipped hook. Filed instead as **WI-108 (deferred)**, spec
+[specs/WI-108.md](specs/WI-108.md), with the candidate hardening (xdist
+`loadgroup` grouping of the hook tests) recorded for when it recurs enough to
+reproduce. **Correction to the campaign-close note:** the missing traceback was
+my own `| tail -25` on the gate command discarding it, not a capture defect in
+`check.py` (CI keeps full output).
+
+Filed as a **new** WI-108 (WI-097…107 were taken by the concurrent deep-review-b
+batch, commit e6fd76a) to avoid clobbering. `check_trajectory --strict` clean.
