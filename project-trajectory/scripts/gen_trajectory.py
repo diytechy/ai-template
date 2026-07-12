@@ -953,6 +953,174 @@ def sw_containment(root, mods):
     return tab, panel
 
 
+# --- the campaign-binned When view (WI-074) ------------------------------------
+#
+# The WHEN-axis mirror of the HOW-axis FB5 containment above: work items sharing a
+# `Campaign` grouping tag containerize into a collapsed <details> box (expandable
+# to their member rows), campaign-crossing predecessor edges aggregate to one
+# deduplicated container-to-container edge (contributing WI edges listed), and a
+# campaign-less WI renders flat. Reuses the sw_containment idiom (native
+# <details>, boundary-aggregated edges, sorted-input determinism -> byte-stable
+# through --check). When NO work item carries a campaign this returns None and
+# the caller keeps today's flat SVG DAG, so a campaign-less registry renders
+# byte-identically. There is deliberately NO right-sizing bound here (the FB5
+# asymmetry): a campaign is bounded by construction — one re-attestation sitting's
+# worth of WIs — so binning is presentation only, no new gate.
+
+CAMPAIGN_STYLE = (
+    "<style>"
+    "#dag .camptree{margin-top:.2rem;}"
+    "#dag details.campbox{border:1px solid var(--border);border-radius:10px;"
+    "margin:.45rem 0;background:var(--surface);box-shadow:var(--shadow);}"
+    "#dag details.campbox>summary{cursor:pointer;font-weight:600;padding:.55rem .8rem;"
+    "list-style-position:inside;}"
+    "#dag details.campbox>summary .sub{font-weight:400;color:var(--muted);}"
+    "#dag .campbody{padding:.1rem .85rem .6rem;}"
+    "#dag table.witable{border-collapse:collapse;width:100%;font-size:.85rem;"
+    "margin:.3rem 0;}"
+    "#dag table.witable th,#dag table.witable td{text-align:left;padding:.35rem .5rem;"
+    "border-bottom:1px solid var(--border);vertical-align:top;}"
+    "#dag table.witable .sub{color:var(--muted);}"
+    "#dag .st{display:inline-block;width:.62rem;height:.62rem;border-radius:50%;"
+    "vertical-align:-1px;margin-right:.35rem;}"
+    "#dag ul.xcamp{margin:.2rem 0 .7rem;padding-left:1.3rem;font-size:.9rem;}"
+    "#dag ul.xcamp li{margin:.1rem 0;}"
+    "#dag .standalone{margin-top:.6rem;}"
+    "</style>"
+)
+
+
+def campaign_containment(wis):
+    """The campaign-binned When view (WI-074), or None when no work item carries a
+    `Campaign` value (the caller then keeps today's flat SVG DAG, byte-identical).
+    Returns the HTML string that fills the `dag` panel's view.
+
+    Campaign members collapse into a native `<details>` container (expand to a
+    member table); campaign-less WIs render flat below the containers; predecessor
+    edges whose endpoints fall in two different top-level items (campaign or a
+    standalone WI) aggregate to one deduplicated container-to-container edge at the
+    top level, listing the contributing WI edges. Deterministic (sorted inputs, no
+    clocks), so the `--check` freshness compare stays byte-stable."""
+    by_camp = {}
+    campaignless = []
+    for w in wis:
+        if w.get("campaign"):
+            by_camp.setdefault(w["campaign"], []).append(w)
+        else:
+            campaignless.append(w)
+    if not by_camp:
+        return None
+
+    ids = {w["id"] for w in wis}
+
+    def esc(s):
+        return html.escape(str(s), quote=True)
+
+    # A top-level item key: the campaign slug when tagged, else `WI:<id>` (a
+    # campaign-less WI is its own top-level item — the sw_containment "uncontained"
+    # analogue). label() unwraps the `WI:` sentinel back to the bare id.
+    key_of = {w["id"]: (w["campaign"] or "WI:" + w["id"]) for w in wis}
+
+    def label(k):
+        return k[len("WI:") :] if k.startswith("WI:") else k
+
+    def st_of(w):
+        return w["status"] if w["status"] in STATUS_FILL else "queued"
+
+    def wi_row(w):
+        st = st_of(w)
+        delivers = ", ".join(w["srs"]) or "—"
+        after = ", ".join(w["preds"] + ["~" + p for p in w["soft"]]) or "—"
+        return (
+            "<tr><td><code>{}</code></td><td>{}</td>"
+            '<td><span class="st" style="background:{}"></span>{}</td>'
+            '<td><code>{}</code></td><td class="sub"><code>{}</code></td></tr>'.format(
+                esc(w["id"]),
+                esc(w["title"]),
+                STATUS_FILL[st],
+                esc(st),
+                esc(delivers),
+                esc(after),
+            )
+        )
+
+    def wi_table(members):
+        rows = "".join(wi_row(w) for w in sorted(members, key=lambda w: w["id"]))
+        return (
+            '<table class="witable"><thead><tr><th>WI</th><th>Title</th>'
+            "<th>Status</th><th>Delivers</th><th>After</th></tr></thead>"
+            "<tbody>{}</tbody></table>".format(rows)
+        )
+
+    # Cross-boundary predecessor edges -> aggregate to one edge per crossing pair,
+    # deduplicating the contributing WI edges (the FB5 boundary-aggregation idiom).
+    cross = {}
+    for w in wis:
+        kw = key_of[w["id"]]
+        for p in w["preds"] + w["soft"]:
+            if p not in ids:
+                continue
+            kp = key_of[p]
+            if kp != kw:
+                cross.setdefault((kp, kw), set()).add((p, w["id"]))
+
+    tree = ""
+    for slug in sorted(by_camp):
+        members = by_camp[slug]
+        head = '<code>{}</code> <span class="sub">· {} item(s)</span>'.format(
+            esc(slug), len(members)
+        )
+        tree += (
+            '<details class="campbox"><summary>{}</summary>'
+            '<div class="campbody">{}</div></details>'.format(head, wi_table(members))
+        )
+
+    standalone = ""
+    if campaignless:
+        standalone = (
+            '<div class="standalone"><p class="sub" style="margin:.5rem 0 .2rem">'
+            "Standalone work items — no campaign:</p>{}</div>".format(
+                wi_table(campaignless)
+            )
+        )
+
+    xlines = "".join(
+        "<li><code>{}</code> → <code>{}</code> "
+        '<span class="sub">({})</span></li>'.format(
+            esc(label(a)),
+            esc(label(b)),
+            esc(", ".join("{}→{}".format(p, w) for p, w in sorted(edges))),
+        )
+        for (a, b), edges in sorted(cross.items())
+    )
+    cross_html = (
+        '<p class="cap">Cross-campaign dependency edges — aggregated to the '
+        "boundary (one edge per crossing pair; per-WI predecessors live in each "
+        'member row\'s <em>After</em> column):</p><ul class="xcamp">{}</ul>'.format(
+            xlines
+        )
+        if xlines
+        else ""
+    )
+    summary_line = (
+        '<p class="cap"><strong>Binned by campaign: {} campaign(s) + {} standalone '
+        "work item(s).</strong> Work items sharing a <code>Campaign</code> tag are "
+        "<strong>containerized</strong>; <strong>expand</strong> a campaign to "
+        "reveal its members and the requirements they deliver. A campaign is "
+        "bounded by construction (one re-attestation sitting), so there is no "
+        "right-sizing bound here.</p>".format(len(by_camp), len(campaignless))
+    )
+    return (
+        CAMPAIGN_STYLE
+        + summary_line
+        + cross_html
+        + '<div class="camptree">'
+        + tree
+        + standalone
+        + "</div>"
+    )
+
+
 HTML_TEMPLATE = string.Template("""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1705,6 +1873,11 @@ def build_html(root, wis):
     workstreams = len({w["workstream"] for w in wis})
     arch, arch_details, arch_desc = arch_icicle(root)
     dag, wi_details = dag_svg(wis)
+    # WI-074: when any work item carries a Campaign tag, the When view bins the
+    # DAG into collapsed campaign containers (the WHEN-axis FB5 mirror); with no
+    # campaign values this returns None and the flat SVG DAG renders unchanged, so
+    # a campaign-less registry stays byte-identical.
+    dag_view = campaign_containment(wis) or dag
     extra_tabs, extra_panels = [], []
     mods = sw_modules(root)
     if mods:
@@ -1756,7 +1929,7 @@ def build_html(root, wis):
         arch_svg=arch,
         arch_details=j(arch_details),
         arch_desc=j(arch_desc),
-        dag_svg=dag,
+        dag_svg=dag_view,
         wi_details=j(wi_details),
     )
 

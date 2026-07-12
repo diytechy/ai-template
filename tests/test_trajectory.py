@@ -451,6 +451,24 @@ def test_legacy_csv_without_specref_column_still_parses(tmp_path):
     assert "R-E WI-001" in proc.stderr  # missing column -> warn, never a crash
 
 
+def test_campaign_column_is_read_and_never_validated(tmp_path):
+    # WI-074: the optional Campaign grouping tag is read (like Workstream, no
+    # vocabulary rule) and never breaks validation — a registry carrying it, with
+    # arbitrary slug values, validates exactly as one without it.
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    hdr = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,Campaign\n"
+    (req / "work-items.csv").write_text(
+        hdr
+        + "WI-001,A,scripts,,,done,d,my-campaign-2026\n"
+        + "WI-002,B,scripts,,WI-001,done,d,anything-goes-here\n",
+        encoding="utf-8",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "2 work item(s)" in proc.stdout
+
+
 # --- S1: the no-validation-delta warn (--staged) -------------------------------
 
 

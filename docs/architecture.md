@@ -379,6 +379,7 @@ Contracts (interfaces): IF-011, IF-024
 | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
 | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
 | `sw_containment(root, mods)` | The containerized How-SW top view (WI-073), or None when no `CMP-###` |  |
+| `campaign_containment(wis)` | The campaign-binned When view (WI-074), or None when no work item carries a |  |
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |

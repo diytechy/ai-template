@@ -1158,7 +1158,12 @@ selection ("run only the relevant tests") is **rejected**: a missed transitive
 dependency passes silently and the coverage floor breaks, so the sanctioned
 cheap per-commit layer for a slow suite is the declared **smoke** tier
 (`stack.ini [tiers]` — `pytest -m smoke` per commit, full tier at gates), not a
-guessed subset.
+guessed subset. The optional **`Campaign`** column on `work-items.csv` (a
+grouping tag in the `Workstream` precedent — mutable, not id-checked; empty =
+standalone) records a WI's campaign durably once its `SpecRef` clears at close,
+and the When-view dashboard **bins the WI DAG** into collapsed campaign
+containers by it — the WHEN-axis mirror of the How-SW component containment (no
+right-sizing bound, since a campaign is bounded by construction).
 
 **Dashboard** — `gen_trajectory.py` renders the root `PROJECT_STATE.html` (the
 unified project-state artifact; formerly `docs/trajectory.html`), a generated

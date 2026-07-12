@@ -69,14 +69,15 @@ working surface.
     [specs/campaign-binning-parallel-tests-resume-hardening.md](specs/campaign-binning-parallel-tests-resume-hardening.md),
     ruled by direction 2026-07-11; commit-bar cadence, one full gate at
     close):
-    - **WI-074** — `Campaign` grouping column + the When-view DAG binned by
-      campaign (the FB5 containerization symmetry).
     - **WI-075** — pytest-xdist parallel execution (meta opts in; template
       opt-in commented; subprocess-coverage verified, times recorded).
     - **WI-076** — dirty-tree resume hardening: detect + inject the
       reconcile instruction, protocol text, stale-lock recheck (full
       stash/rollback stays deferred as WI-060).
-    **Next up: WI-074.** All three prior 2026-07-11 batches are **closed and
+    **Next up: WI-075.** The `Campaign` column + When-view binning landed
+    (commit-bar cadence); the When-view now bins the WI DAG into collapsed
+    campaign containers by the new `Campaign` grouping tag. All three prior
+    2026-07-11 batches are **closed and
     archived**: the owner-feedback batch (the campaign gate cadence · the
     owner scratchpad + check_docs scan-scope · the ≤10-item How-SW
     containment;
@@ -106,8 +107,8 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-- **Next action:** execute the batch in order — **WI-074**, then WI-075,
-  WI-076 — commit-bar cadence, one full gate at the close. Then the **owner
+- **Next action:** continue the batch in order — **WI-075**, then WI-076 —
+  commit-bar cadence, one full gate at the close. Then the **owner
   sitting**: one G3 re-attestation over every accumulated spine change, the
   push ruling, the sibling-repo target, and the deferred batch review. After
   that: the G-Release walk, the WI-DAG edge data-pass, or new scope (which

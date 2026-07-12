@@ -1651,3 +1651,67 @@ re-run from scratch: `pytest -q` **622 passed / 3 skipped**, `check_docs`
 **0 broken**, `check.py --gate G3` **RESULT: PASS (13/13)**. The FB1 cadence
 worked as designed — the close gate caught what the commit bar structurally
 cannot.
+
+## 2026-07-11 — WI-074 (campaign-binning batch, slice 1): the `Campaign` column + the When-view binned by it
+
+**Session.** WI-074 (P1 of the campaign-binning · parallel-tests ·
+resume-hardening batch) landed at the **commit bar** — the batch's one full
+`check.py --gate G3` runs at the coordinating close, not here. Owner-directed:
+give a WI's campaign membership a **queryable, durable home** (after `SpecRef`
+clears at close it lived only in the archived spec banner + log narrative) and
+**bin the roadmap DAG** like the software architecture (the FB5 symmetry —
+WHEN-axis binning = campaign, HOW-axis binning = CMP).
+
+**Deliverables.**
+- **`Campaign` column** on `work-items.template.csv` (with an explainer in the
+  inert `WI-000` row) + the meta registry. `check_trajectory.load_wis` reads it
+  as a `campaign` field — a mutable grouping tag in the **`Workstream`
+  precedent**, NOT id-checked (no vocabulary rule); empty = standalone; a legacy
+  CSV without the column reads `""` (never-breaking). No validation was added.
+- **When-view binning** — new `gen_trajectory.campaign_containment(wis)` mirrors
+  `sw_containment` (the FB5 idiom): work items sharing a `Campaign` tag collapse
+  into a native `<details>` container (member table: WI/Title/Status/Delivers/
+  After), campaign-crossing predecessor edges **aggregate to one deduplicated
+  container-to-container edge** (contributing WI edges listed), and campaign-less
+  WIs render **flat** below the containers. It returns `None` when no WI carries a
+  campaign, so `$dag_svg` falls back to today's flat SVG DAG and a campaign-less
+  registry renders **byte-identically**. **Deliberately no right-sizing bound**
+  (the FB5 asymmetry): a campaign is bounded by construction (one re-attestation
+  sitting each), so binning is presentation only — no new gate.
+- **Meta backfill (honest).** WI-053…059 → `working-surface-restructure-2026-07-11`
+  (7), WI-067…070 → `capability-expansion-2026-07-11` (4), WI-071…073 →
+  `owner-feedback-2026-07-11` (3), WI-074…076 → `campaign-binning-batch-2026-07-11`
+  (3). All other rows stay empty — no retroactive invention. The meta When-view
+  now renders **4 campaign containers + 59 standalone WIs** (was a 76-node flat
+  SVG DAG).
+- **Docs.** One sentence in the PROCESS_OPTIONS "Campaign ruling" paragraph (the
+  column exists, the DAG bins by it, no right-sizing bound) + the template
+  explainer row.
+
+**Spine decision — NO spine change.** Verified against SR-037/SR-038: SR-037
+enumerates *checks*, not columns, and the `Campaign` tag adds no check (the
+`Workstream` precedent, also read-not-validated and unmentioned there). The
+binned render sits inside SR-038's existing **"prospective roadmap DAG"** claim;
+its AcceptanceCriteria ("the roadmap DAG render from the registries") stays
+literally true and TC-038 (which only asserts "Satisfies SR-038
+AcceptanceCriteria") is not invalidated — no assertion requires the DAG be SVG.
+The asymmetry with SR-038's How-SW containerization clause is principled: that
+clause exists because WI-073 minted the SR-048 right-sizing *rule* (a mechanized
+gate); campaigns deliberately mint no SR and no right-sizing rule, so
+presentation-only binning needs no requirement clause. **This does NOT ride the
+pending re-attestation.**
+
+**Byte deltas.** Byte-budgeted files (`AGENTS.template.md`, `PROCESS.md`)
+**untouched** (verified — empty diff). `PROJECT_STATE.html` 393,503 → 385,720 B
+(**−7,783**; the compact `<details>` tree replaced the 76-node SVG DAG).
+`docs/architecture.md` +1 line (the new `campaign_containment` public symbol);
+`docs/okf` bundle unchanged (it doesn't read `work-items.csv`; `--check` clean).
+
+**Gates (commit bar).** `pytest -q` **629 passed / 3 skipped** (+7 over the 622
+baseline: 6 new `test_gen_trajectory.py` [containerize, flat-outside-container,
+no-campaign byte-identical, boundary-dedupe, deterministic+--check, meta smoke] +
+1 `test_trajectory.py` [Campaign never-breaking]). `check_docs.py --root .
+--stale` → **0 broken** (1 pre-existing out-of-scope orphan warn).
+`gen_arch_map --check`, `gen_okf --check`, `gen_trajectory --check` all clean.
+`ruff format`/`ruff check` (the gate interpreter) clean. The full `check.py
+--gate G3` is **deferred to the coordinating close** per the batch cadence.

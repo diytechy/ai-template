@@ -7,7 +7,7 @@ the **commit bar**; the coordinating close runs the one full gate.
 
 ---
 
-## P1 — `Campaign` column + When-view binning (owner-directed)
+## P1 — `Campaign` column + When-view binning (owner-directed) — ✅ DONE (2026-07-11)
 
 **Owner intent.** Add campaign details to work-item history so the WI DAG
 can be **binned like the software architecture** (the FB5 symmetry: WHEN-axis

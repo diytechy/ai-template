@@ -48,7 +48,7 @@ GOOD_WIS = (
 )
 
 
-def make_repo(root, wis_body=GOOD_WIS, readme=True):
+def make_repo(root, wis_body=GOOD_WIS, readme=True, header=WI_HEADER):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True)
     (root / "docs" / "test").mkdir(parents=True)
@@ -56,7 +56,7 @@ def make_repo(root, wis_body=GOOD_WIS, readme=True):
     (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")
     (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
     (root / "docs" / "test" / "test-cases.csv").write_text(TCS, encoding="utf-8")
-    (req / "work-items.csv").write_text(WI_HEADER + wis_body, encoding="utf-8")
+    (req / "work-items.csv").write_text(header + wis_body, encoding="utf-8")
     if readme:
         (root / "README.md").write_text(
             '# demoproj\n\n<a id="vision"></a>\n'
@@ -666,3 +666,128 @@ def test_meta_component_top_view_smoke():
     assert cont is not None
     tab, panel = cont
     assert 'data-tab="sw"' in tab and 'class="cmptree"' in panel
+
+
+# --- WI-074: the campaign-binned When view -------------------------------------
+# The WHEN-axis mirror of FB5: work items sharing a Campaign tag containerize into
+# a collapsed <details> box, campaign-crossing predecessor edges aggregate to one
+# deduplicated container edge, campaign-less WIs render flat, and a registry with
+# no Campaign values renders byte-identically to today (the flat SVG DAG).
+
+CAMP_HEADER = (
+    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,Campaign\n"
+)
+# alpha = {WI-001, WI-002}, beta = {WI-003}, WI-004 standalone (no campaign).
+CAMP_WIS = (
+    "WI-001,Root,scripts,SR-001,,done,the adder,alpha-camp\n"
+    "WI-002,Mid,scripts,SR-001,WI-001,active,harness,alpha-camp\n"
+    "WI-003,Sub,scripts,SR-002,WI-001,queued,the subber,beta-camp\n"
+    "WI-004,Release,docs,SR-002,WI-002;WI-003,queued,shipped,\n"
+)
+
+
+def dag_view(root):
+    """The `dag` panel's view div content (the campaign tree or the flat SVG)."""
+    return html_of(root).split('id="dag" class="view">', 1)[1].split("</div>", 1)[0]
+
+
+def test_campaign_binning_containerizes_members(tmp_path):
+    # With campaign-tagged WIs the When panel becomes the containerized <details>
+    # tree: one collapsed box per campaign, members revealed inside, standalone
+    # WIs flat below.
+    make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'class="camptree"' in text
+    assert text.count('<details class="campbox">') == 2  # alpha + beta
+    assert "alpha-camp" in text and "beta-camp" in text
+    assert "Binned by campaign: 2 campaign(s) + 1 standalone" in text
+    # a member row surfaces the WI, its title, and the requirement it delivers
+    view = dag_view(tmp_path)
+    assert "WI-002" in view and "Mid" in view and "SR-001" in view
+
+
+def test_campaign_less_wi_renders_flat_outside_any_container(tmp_path):
+    # A campaign-less WI is NOT wrapped in a campbox — it renders flat in the
+    # standalone section.
+    make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert "Standalone work items" in text
+    # Within the camptree region, WI-004 lives in the standalone section, never
+    # inside a campaign container (the campboxes precede the standalone marker).
+    tree_region = text.split('class="camptree"', 1)[1]
+    containers, standalone = tree_region.split('class="standalone"', 1)
+    assert "WI-004" in standalone  # the campaign-less WI renders flat
+    assert "WI-004" not in containers  # ...and not inside any campaign container
+    assert "WI-001" in containers and "WI-003" in containers  # members are binned
+
+
+def test_no_campaign_values_render_byte_identical(tmp_path):
+    # The vacuity guarantee: an all-empty Campaign column (or none at all) renders
+    # byte-for-byte what it did before the column existed. Proven by round-trip:
+    # render column-less (flat SVG), add campaigns (tree appears), strip them back
+    # to an all-empty column, re-render == the original bytes exactly.
+    plain_body = "".join(row.rsplit(",", 1)[0] + "\n" for row in CAMP_WIS.splitlines())
+    make_repo(tmp_path, plain_body)  # default WI_HEADER, no Campaign column
+    assert gen(tmp_path).returncode == 0
+    flat = (tmp_path / "PROJECT_STATE.html").read_bytes()
+    assert b'class="camptree"' not in flat
+
+    wi = tmp_path / "docs" / "requirements" / "work-items.csv"
+    wi.write_text(CAMP_HEADER + CAMP_WIS, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    assert b'class="camptree"' in (tmp_path / "PROJECT_STATE.html").read_bytes()
+
+    # all-empty Campaign column (present but no values) == column-absent behavior.
+    empty_col = "".join(row + ",\n" for row in plain_body.splitlines())
+    wi.write_text(CAMP_HEADER + empty_col, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == flat
+
+
+def test_campaign_boundary_edges_dedupe(tmp_path):
+    # Two predecessor edges alpha->beta (WI-003 depends on WI-001 AND WI-002, both
+    # in alpha) aggregate to ONE deduplicated container edge naming both WI edges.
+    body = (
+        "WI-001,A1,scripts,SR-001,,done,d,alpha-camp\n"
+        "WI-002,A2,scripts,SR-001,,done,d,alpha-camp\n"
+        "WI-003,B1,scripts,SR-001,WI-001;WI-002,queued,d,beta-camp\n"
+    )
+    make_repo(tmp_path, body, header=CAMP_HEADER)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    xs = re.search(r'<ul class="xcamp">(.*?)</ul>', text, re.S).group(1)
+    assert len(re.findall(r"<li>", xs)) == 1  # one crossing pair -> one edge
+    assert "WI-001→WI-003" in xs and "WI-002→WI-003" in xs  # both contributors
+
+
+def test_campaign_view_is_deterministic_and_check_stable(tmp_path):
+    # Built from sorted inputs, no clocks -> a second render is byte-identical and
+    # --check passes (no new freshness exclusion).
+    make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)
+    assert gen(tmp_path).returncode == 0
+    first = (tmp_path / "PROJECT_STATE.html").read_bytes()
+    again = gen(tmp_path)
+    assert again.returncode == 0 and "already up to date" in again.stdout
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
+    assert gen(tmp_path, "--check").returncode == 0
+
+
+def test_meta_campaign_binning_smoke():
+    # Over the real meta repo: the four backfilled campaigns each render as a
+    # collapsed container in the When view.
+    ct = load_script("check_trajectory")
+    gt = load_script("gen_trajectory")
+    wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
+    assert not integrity
+    view = gt.campaign_containment(wis)
+    assert view is not None
+    assert view.count('<details class="campbox">') == 4
+    for slug in (
+        "working-surface-restructure-2026-07-11",
+        "capability-expansion-2026-07-11",
+        "owner-feedback-2026-07-11",
+        "campaign-binning-batch-2026-07-11",
+    ):
+        assert slug in view
