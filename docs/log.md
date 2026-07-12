@@ -2640,6 +2640,22 @@ bar run on the migrated meta (see the run recorded in this session).
   `check_docs.py --root . --stale` — **OK**, 32 docs / 203 links / 0 broken.
 - **Budgets:** no budget-watched file changed.
 
+## 2026-07-12 — WI-087 implementation complete; critique pending
+
+- **Delivered:** complete multi-parent What flow with uniform cards/tier
+  containers/arrows; Phase→Workstream→WI When hierarchy with honest lifecycle
+  frontier, Cross-phase/Unphased and parked deferred work plus Campaign fallback;
+  and thresholded Component→Module How-SW hierarchy over declared IF seams.
+- **Mechanized evidence:** TC-052…054 Verified; focused suites and full suite
+  green. LLR-051…053 are Verified.
+- **Honest blocker:** TC-051 is an independent visual Critique. The implementing
+  context did not self-approve it; SR-050 remains Planned and WI-087 remains
+  active pending `docs/reviews/WI-087-CRITIQUE.md` APPROVE.
+- **Deviations:** breadcrumb navigation uses semantic nested `<details>` as the
+  deterministic keyboard/static drill surface; exact calendar time, inferred
+  imports, and cyclic architecture rendering remain out of scope.
+- **Budgets:** no budget-watched file changed.
+
 ## 2026-07-12 — WI-087 G2 decomposition
 
 - **Decomposition:** added LLR-051 (complete What flow), LLR-052 (phase-aware

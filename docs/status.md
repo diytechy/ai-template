@@ -146,8 +146,10 @@ working surface.
      ([spec](specs/WI-087.md)): `SR-050` is drafted in Phase v2 and the derived
      gate honestly reads G1 / v2=G0. The owner directed implementation; the next
      attended Draft→Planned ratification is recorded; LLR-051…053 and
-     TC-051…054 now define the G2 decomposition, and implementation follows the
-     root redesign plan. **WI-085**
+     TC-051…054 define the G2 decomposition. Implementation and mechanized
+     TC-052…054 are complete; **next is the independent TC-051 visual critique**
+     using `docs/rubrics/WI-087-dashboard-visuals.md`. SR-050/WI-087 stay open
+     until that reviewer records APPROVE. **WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      remains separate/deferred Process-tab scope and is not absorbed by this
      campaign. After WI-087 ratification, proceed G2→G3 while preserving the
