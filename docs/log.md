@@ -1425,3 +1425,83 @@ this session). `check_docs.py --root . --stale` → **0 broken** (1 pre-existing
 `gen_trajectory.py` regenerated `PROJECT_STATE.html` after the WI-071 registry
 close; `gen_okf --check` up to date (227 files). The full `check.py --gate G3`
 is **deferred to the campaign close** per the cadence just documented.
+
+## 2026-07-11 — WI-072: OWNER_SCRATCHPAD.md + check_docs scan-scope (archive, scratchpad) — docs/scripts only, NO spine change
+
+**Session.** FB3 (owner scratchpad) + FB4 (archive scan-scope) of the
+owner-feedback batch (spec:
+[specs/owner-feedback-2026-07-11.md](specs/owner-feedback-2026-07-11.md);
+FB3/FB4 marked ✅ DONE). Per FB1's ruling this slice ends at the **commit bar**,
+not the full gate; the coordinating close runs `check.py --gate G3` once.
+
+**Deliverables.**
+1. **The owner scratchpad (FB3).** Root `OWNER_SCRATCHPAD.md` (meta) +
+   `project-trajectory/OWNER_SCRATCHPAD.template.md`, **byte-identical (651 B
+   each)**, scaffolded to a downstream root via a new `bootstrap.py` MAPPING
+   entry (beside the README front door). The file opens with a loud header block —
+   *for the human owner only; LLM agents must not read, index, summarize, cite,
+   or act on it; nothing here is a requirement, ruling, or working surface (those
+   are `docs/status.md`, the registries, `docs/log.md`); notes may be stale,
+   contradictory, augmented, or half-formed; the always-on secrets floor still
+   scans it, so it is not a secrets-safe zone* — then an empty notes area (an `---`
+   and a placeholder comment).
+2. **check_docs exempts the scratchpad entirely (FB3).** `collect_docs` drops
+   root `OWNER_SCRATCHPAD.md` from doc discovery via the **WI-066 okf-exclusion
+   idiom** (`SCRATCHPAD` constant beside `OKF_DIR`): its links, orphanhood, and
+   staleness never gate — free-form owner notes must never block a commit — but it
+   still resolves as a link *target* and the secrets floor still scans it.
+3. **check_docs archive scan-scope (FB4).** `docs/archive/` files **KEEP
+   broken-link validation** (a dead link in the design history still misleads a
+   reader) but are **DROPPED from orphan warnings and stale-mtime hints** (a frozen
+   doc's orphanhood/staleness is noise by definition). Implemented narrowly: an
+   `ARCHIVE_DIR` constant + one `_in_archive()` helper, filtered in `find_orphans`
+   and `find_stale`; the rationale stated once at the constant.
+4. **Agent-side ignore.** The meta `CLAUDE.md` (not budgeted) gained a one-liner
+   callout ("`OWNER_SCRATCHPAD.md` is owner-only — never read, cite, or act on
+   it"). A reinforcement note also landed in `PROCESS_OPTIONS.md` §7 (the
+   memory/scratch discussion — the owner scratchpad framed as the human
+   counterpart to agent scratch) and a **kit README Contents row**. The file's
+   own loud header is the primary defense.
+
+**AGENTS.template.md decision.** **Untouched — 9,978 → 9,978 bytes (22 B headroom
+preserved).** The file offered only 22 B of headroom; a meaningful "don't read
+the scratchpad" line (~50–70 B) would have required manufacturing an equal
+tightening in the crisp, universally-inherited working agreement purely to fund a
+niche, file-specific instruction — no clean net-≤22-B fold exists without diluting
+a durable rule (the WI-045 fold worked because it folded genuinely-redundant
+framings; there is none to fold here). Per the spec's stated fallback, the line
+went to `PROCESS_OPTIONS.md` (scaffolds to `docs/process-options.md`, so downstream
+agents still get it) + the meta `CLAUDE.md`, and the file's own header remains the
+primary defense.
+
+**Spine (SR-012) decision — NO text change.** SR-012's claim (check_docs fails on
+a broken intra-repo link / missing PROJECT-VISION tag, checks freshness under
+`--stale`) is unchanged and untouched. Both new behaviors are **scan-scope within
+that existing claim** — exactly the **WI-066 precedent** (the okf exclusion was
+recorded as "scan-scope within SR-012", no spine edit): the scratchpad exemption
+and the archive orphan/stale drop change *which files* the orphan/staleness
+heuristics survey, not what a broken link or a missing vision tag means. Verified
+SR-012's AcceptanceCriteria is not contradicted (broken links still fail, incl. in
+the archive). Nothing new rides the pending G3 re-attestation.
+
+**Meta run (before → after).** `check_docs --root . --stale`: **stale hints
+27 → 0** — every one of the 27 pre-existing hints was on an archived doc
+(`AGENT_ROLES.md`, `AXES_AND_WORKSTREAMS.md`, `IMPROVEMENT_PLAN.md`,
+`THREAD_52_REVIEW.md`), so all vanish; **orphan warnings 1 → 1** (the pre-existing
+`docs/test/report.md`, deliberately out of scope — not an archive doc); 27 docs,
+182 links, 0 broken. `PROJECT_STATE.html` regenerated after the WI-072 registry
+close; `gen_okf`/`gen_arch_map` `--check` up to date.
+
+**Byte deltas (budgeted files).** `AGENTS.template.md` **untouched (9,978)**;
+`PROCESS.md` **untouched**. The FB3 reinforcement expanded `PROCESS_OPTIONS.md`
+(not budgeted), per the push-expansion rule.
+
+**Mechanized bar (commit bar).** `pytest -q` → **609 passed, 3 skipped**
+(0 failures; +6 over the 603 real-pass baseline — 5 new `test_check_docs.py`
+tests [scratchpad-exempt, archive-broken-link-fails, archive-not-orphan-but-live-is,
+`find_stale`-skips-archive unit, archive-stale-suppressed end-to-end] + 1
+`test_bootstrap.py` [scaffolds-owner-scratchpad, byte-identity to template]).
+`check_docs.py --root . --stale` → **0 broken** (1 out-of-scope orphan warn, 0
+stale hints). Spine unchanged at **SN=24 SR=47 LLR=48 TC=48, 0 orphans** (49
+interface seams). The full `check.py --gate G3` is **deferred to the campaign
+close** per FB1's cadence.

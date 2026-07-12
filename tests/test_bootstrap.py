@@ -55,6 +55,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "src/.gitkeep",
         "tests/.gitkeep",
         "README.md",
+        "OWNER_SCRATCHPAD.md",
         "run.cmd",
         "run.sh",
         "run.command",
@@ -199,6 +200,20 @@ def test_readme_vision_tag_and_needs_pointer(scaffold):
         encoding="utf-8"
     )
     assert "](../../README.md#vision)" in needs
+
+
+def test_scaffolds_owner_scratchpad(scaffold):
+    # FB3: the owner scratchpad ships at the root with a loud agents-ignore header
+    # and the secrets-floor caveat. It carries no placeholders, so the scaffolded
+    # copy is content-identical to the kit template.
+    pad = scaffold / "OWNER_SCRATCHPAD.md"
+    assert pad.exists(), "bootstrap must scaffold OWNER_SCRATCHPAD.md"
+    text = pad.read_text(encoding="utf-8")
+    assert "For the human owner only" in text
+    assert "do **NOT** read" in text  # the agents-ignore instruction
+    assert "secrets floor still scans this file" in text  # not a secrets-safe zone
+    template = (KIT / "OWNER_SCRATCHPAD.template.md").read_text(encoding="utf-8")
+    assert text == template, "scaffolded scratchpad must match the kit template"
 
 
 def test_readme_never_overwritten(tmp_path):

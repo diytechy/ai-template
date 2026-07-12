@@ -970,6 +970,17 @@ cheap), and a query-time semantic index (§7 map-vs-index note) can help chase
 references across a large tree — but both are optional, downstream, and orthogonal
 to the promote rule.
 
+**The owner scratchpad is human scratch, not a working surface.** Bootstrap
+scaffolds a root `OWNER_SCRATCHPAD.md` — the human owner's counterpart to the
+agent scratch above: free-form notes that may be old, contradictory, augmented, or
+half-formed. **LLM agents must not read, index, summarize, cite, or act on it**;
+its own loud header says so and is the primary defense (the meta repo's `CLAUDE.md`
+carries the same one-liner). Nothing there is a requirement, ruling, or working
+surface — those stay `docs/status.md`, the registries, and `docs/log.md`.
+`check_docs.py` exempts the file entirely (links, orphans, stale hints — owner
+notes never gate a commit); the always-on secrets floor still scans it, so it is
+not a secrets-safe zone. A repo that doesn't want it just deletes it.
+
 ## Skills layer
 
 *Referenced from PROCESS.md §7 "boundary notes".* **Applies when** a repo will be

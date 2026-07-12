@@ -381,6 +381,124 @@ def test_okf_bundle_adds_zero_scanned_docs(scaffold):
     assert "docs/okf" not in after.stdout
 
 
+# --- the owner scratchpad is exempt entirely (FB3) ---------------------------
+
+
+def test_scratchpad_exempt_from_scan(scaffold):
+    # FB3: OWNER_SCRATCHPAD.md holds free-form owner notes and is dropped from doc
+    # discovery entirely — a broken link in it never gates, and it is never
+    # counted, orphaned, or link-checked. The scaffold ships it at the root.
+    pad = scaffold / "OWNER_SCRATCHPAD.md"
+    assert pad.exists(), "bootstrap must scaffold OWNER_SCRATCHPAD.md"
+    pad.write_text(
+        pad.read_text(encoding="utf-8") + "\nSee [gone](nowhere-owner.md).\n",
+        encoding="utf-8",
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "OWNER_SCRATCHPAD.md" not in proc.stdout
+    assert "nowhere-owner.md" not in proc.stdout  # its broken link is never checked
+
+
+# --- the archive keeps link validation but drops orphan/stale noise (FB4) ----
+
+
+def test_archive_broken_link_still_fails(scaffold):
+    # FB4: a dead link in the frozen history still misleads a reader, so archived
+    # docs KEEP broken-link validation (only orphan/stale noise is dropped).
+    arch = scaffold / "docs" / "archive" / "old-note.md"
+    arch.parent.mkdir(parents=True, exist_ok=True)
+    arch.write_text("# Old\n\nSee [the design](design-gone.md).\n", encoding="utf-8")
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 1
+    assert "broken link -> design-gone.md" in proc.stdout
+
+
+def test_archive_doc_not_orphaned_but_live_doc_is(scaffold):
+    # FB4: an archived doc nothing links to is frozen context, not an orphan; a
+    # live doc nothing links to still warns (the orphan floor is unchanged there).
+    (scaffold / "docs" / "archive").mkdir(parents=True, exist_ok=True)
+    (scaffold / "docs" / "archive" / "frozen.md").write_text(
+        "# Frozen\n\nNo one links here.\n", encoding="utf-8"
+    )
+    (scaffold / "docs" / "live-lonely.md").write_text(
+        "# Lonely\n\nNo one links here either.\n", encoding="utf-8"
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "orphan doc" in proc.stdout and "docs/live-lonely.md" in proc.stdout
+    assert "docs/archive/frozen.md" not in proc.stdout  # frozen: orphanhood is noise
+
+
+def test_find_stale_skips_archive_docs(tmp_path):
+    # FB4 (unit): find_stale drops archived docs — an archived doc older than a
+    # non-doc it links is not a staleness signal, while a live doc still is.
+    check = load_script("check_docs")
+    root = tmp_path.resolve()
+    (tmp_path / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    live = tmp_path / "docs" / "guide.md"
+    arch = tmp_path / "docs" / "archive" / "hist.md"
+    live.parent.mkdir(parents=True, exist_ok=True)
+    arch.parent.mkdir(parents=True, exist_ok=True)
+    live.write_text("See [mod](../mod.py).\n", encoding="utf-8")
+    arch.write_text("See [mod](../../mod.py).\n", encoding="utf-8")
+    parsed = {
+        live.resolve(): check.parse_doc(live),
+        arch.resolve(): check.parse_doc(arch),
+    }
+    mod = (tmp_path / "mod.py").resolve()
+    # Both docs predate the linked source -> both would flag, but the archived one
+    # is skipped: only the live doc is reported stale.
+    times = {live.resolve(): 100, arch.resolve(): 100, mod: 200}
+    flagged = [s[0] for s in check.find_stale(parsed, root, lambda p: times.get(p))]
+    assert flagged == ["docs/guide.md"]
+
+
+def test_archive_stale_hint_suppressed_but_live_still_hinted(tmp_path):
+    # FB4 end-to-end (standing in for the meta tree's own --stale run): an archived
+    # doc older than a non-doc it links yields NO stale hint, while a live doc in
+    # the same repo still does. Needs a git repo with docs committed before code.
+    import os
+    import subprocess
+
+    repo = tmp_path
+
+    def git(*args, when=None):
+        env = dict(os.environ)
+        if when:
+            env["GIT_AUTHOR_DATE"] = env["GIT_COMMITTER_DATE"] = when
+        subprocess.run(
+            ["git", "-C", str(repo), *args], check=True, env=env, capture_output=True
+        )
+
+    git("init")
+    git("config", "user.email", "t@example.com")
+    git("config", "user.name", "T")
+    (repo / "docs" / "archive").mkdir(parents=True)
+    (repo / "docs" / "archive" / "hist.md").write_text(
+        "# History\n\nSee [mod](../../mod.py).\n", encoding="utf-8"
+    )
+    (repo / "docs" / "guide.md").write_text(
+        "# Guide\n\nSee [mod](../mod.py).\n", encoding="utf-8"
+    )
+    git("add", "-A")
+    git("commit", "-m", "docs", when="2020-01-01T00:00:00")
+    (repo / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    git("add", "mod.py")
+    git("commit", "-m", "code later", when="2021-01-01T00:00:00")
+
+    proc = run_py([SCRIPTS / "check_docs.py", "--root", repo, "--stale"], cwd=repo)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "hint - possibly stale: docs/guide.md" in proc.stdout
+    assert "docs/archive/hist.md" not in proc.stdout  # frozen: staleness is noise
+
+
 # --- importable units (no subprocess) ---------------------------------------
 
 

@@ -54,7 +54,7 @@ process material naming the campaign convention (batch spine-touching work so
 one owner sitting re-attests it all), pointing at PROCESS_OPTIONS — the term
 is load-bearing vocabulary now and readers start at the README. Docs only.
 
-## FB3 — `OWNER_SCRATCHPAD.md` (owner directive)
+## FB3 — `OWNER_SCRATCHPAD.md` (owner directive) — ✅ DONE (2026-07-11)
 
 A root **`OWNER_SCRATCHPAD.md`** in this repo AND scaffolded to templated
 repos (an `OWNER_SCRATCHPAD.template.md` in bootstrap's MAPPING), with
@@ -80,7 +80,7 @@ to be formed.
   a PROCESS_OPTIONS line suffice — record the decision either way. The meta
   repo's `CLAUDE.md` (not budgeted) gets the one-liner.
 
-## FB4 — check_docs and the archive (answered question)
+## FB4 — check_docs and the archive (answered question) — ✅ DONE (2026-07-11)
 
 **Owner question.** Should check_docs ignore the archive?
 

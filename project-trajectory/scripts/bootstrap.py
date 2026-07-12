@@ -48,6 +48,7 @@ What it creates in the destination:
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
     scripts/dev-setup.{sh,ps1,command}         <- dev-setup.template.* (workstation setup)
     README.md                                  <- README.template.md (human front door; kept if one exists)
+    OWNER_SCRATCHPAD.md                        <- OWNER_SCRATCHPAD.template.md (owner-only notes; agents ignore)
     scripts/run_menu.py                        (capability-menu reader the run.* launchers delegate to)
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
@@ -1106,6 +1107,12 @@ MAPPING = [
     # them. Root, not scripts/: the double-click use case is "open the checkout
     # folder and click" — one hop shallower matters for a non-code evaluator.
     ("README.template.md", "README.md"),
+    # The owner's private scratchpad (FB3, owner-feedback-2026-07-11): a root
+    # file for the human owner to keep free-form notes. Its loud header tells LLM
+    # agents not to read/cite/act on it, and check_docs.py exempts it entirely
+    # (links, orphans, stale hints) — owner notes never gate. Always scaffolded
+    # like the README front door; a repo that doesn't want it just deletes it.
+    ("OWNER_SCRATCHPAD.template.md", "OWNER_SCRATCHPAD.md"),
     # The capability-menu reader the launchers delegate to (WI-067): reads the
     # docs/stack.ini [run] section and presents a menu / launches by name /
     # lists for an agent, so the launch commands live once in stack.ini instead

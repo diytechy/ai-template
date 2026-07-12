@@ -11,6 +11,10 @@ and scripts, not a downstream application.
 > it). Don't confuse the two: this file governs editing the kit; that one governs
 > using the kit.
 
+> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
+> holds the human owner's free-form notes; the working surfaces are
+> `docs/status.md`, the registries, and `docs/log.md`.
+
 ---
 
 ## What we're optimizing for
