@@ -23,7 +23,8 @@ finding classes:
     `docs/index.md` Map-of-Content, or a `--entry`) — a warning by default; exit
     1 only with `--strict-orphans`. A fresh scaffold legitimately has standalone
     docs (interfaces, stakeholder-needs) until the project links them, so the
-    floor is warn, not fail.
+    floor is warn, not fail. Docs under `docs/archive/` (frozen history) are
+    exempt — orphanhood is noise there, though their links are still validated.
   - **the vision tag** (process.md §4 G1's mechanizable half): the root README
     must carry the singleton `PROJECT-VISION:` tag exactly once — zero (the
     canonical vision statement is missing) or several (a re-authored variant;
@@ -33,7 +34,9 @@ finding classes:
     kit's core value, so the root README is held to it too — every SN id cited
     anywhere in it must exist in the stakeholder-needs registry, and every
     Must/Should need in that registry must be cited somewhere in the README, so a
-    requirements change mechanically ages the README. No delimiter markers: any
+    requirements change mechanically ages the README. Draft/unratified needs (under
+    a "draft" heading — SN maturity is section-as-state, §4a) are exempt from that
+    floor until ratified. No delimiter markers: any
     `SN-###` in the README counts as a citation. A README opts out with an
     `<!-- sn-inventory: off -->` comment; a repo with no real needs yet (only the
     `-000` placeholder) is vacuously clean, so a fresh scaffold passes.
@@ -43,6 +46,12 @@ finding classes:
     is a low-confidence nudge to look, not a finding (a linked file often
     changes without invalidating the prose), so it never counts toward the exit
     status. Degrades to a clean skip when git is unavailable or off a work tree.
+    Docs under `docs/archive/` (frozen history) are exempt — staleness is noise
+    there.
+
+The root `OWNER_SCRATCHPAD.md` is exempt from all of the above: it holds the
+human owner's free-form private notes and is dropped from doc discovery entirely
+(agents must not read or act on it; its own header says so).
 
 Scope (the high-value 80%): inline links `[text](dest)` and same-file/`file#frag`
 anchors against GitHub-style heading slugs (plus `{#custom-id}` suffixes and
@@ -50,6 +59,8 @@ anchors against GitHub-style heading slugs (plus `{#custom-id}` suffixes and
 (`[t][ref]`), images (`![alt](src)` — skipped, not existence-checked), and links
 inside fenced/inline code (stripped before parsing). Anchors are only validated
 against Markdown targets the script can parse.
+
+Contracts: IF-002, IF-030 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -88,6 +99,25 @@ HTML_ANCHOR_RE = re.compile(r"""<a\s[^>]*\b(?:name|id)\s*=\s*["']([^"']+)["']"""
 # A URL scheme (http:, mailto:, …) or protocol-relative // marks an external link.
 EXTERNAL_RE = re.compile(r"^(?:[A-Za-z][A-Za-z0-9+.\-]*:|//)")
 MD_SUFFIXES = (".md", ".markdown")
+# The gen_okf.py knowledge bundle: a fully-generated tree gated by its own
+# `gen_okf.py --check`. Dropped from doc discovery below so this tool never lints
+# generated output (the gen_arch_map/gen_trajectory/check_doc_refs idiom); the
+# path constant matches gen_okf's own OUT_DIR.
+OKF_DIR = "docs/okf"
+# The root owner scratchpad: free-form notes the human owner keeps, off-limits to
+# agents (its own loud header says so). Dropped from doc discovery entirely — its
+# links, orphanhood, and staleness never gate a commit (owner notes aren't a
+# working surface) — via the same "never lint this file" idiom as OKF_DIR. It
+# still resolves as a link *target* (the file is on disk) and the always-on
+# secrets floor still scans it.
+SCRATCHPAD = "OWNER_SCRATCHPAD.md"
+# The design-history archive: frozen context. Archived docs KEEP broken-link
+# validation (a dead link in the history still misleads a future reader, and the
+# archival flow re-bases links once at archive time), but are DROPPED from orphan
+# warnings and stale-mtime hints — "nothing links here" and "older than a file it
+# links" are noise by definition for a doc that is deliberately frozen. Hardcoded
+# like OKF_DIR (the archive lives under docs/ by convention, regardless of --docs).
+ARCHIVE_DIR = "docs/archive"
 # The singleton tag opening the root README's vision statement (process.md §4 G1).
 VISION_TOKEN = "PROJECT-VISION:"
 # README need coverage is ON by default (opt-out); a README disables it with this
@@ -104,6 +134,12 @@ SN_ID_RE = re.compile(r"\bSN-\d+\b")
 def _is_sn_example(sid):
     """The `-000` placeholder id the registry tooling ignores (matches trace.py)."""
     return sid.endswith("-000")
+
+
+def _in_archive(relpath):
+    """True for a doc under docs/archive/ — orphan/stale-exempt (links still
+    checked), the frozen-history scan-scope (ARCHIVE_DIR)."""
+    return relpath == ARCHIVE_DIR or relpath.startswith(ARCHIVE_DIR + "/")
 
 
 def slugify(text):
@@ -178,10 +214,16 @@ def parse_doc(path):
 def collect_docs(root, docs_dir, ignore=()):
     """Root-level *.md plus every *.md under docs/, de-duplicated and resolved.
 
+    The gen_okf.py bundle under `docs/okf/` is dropped unconditionally: it is a
+    fully-generated tree whose freshness `gen_okf.py --check` owns, so the doc set
+    never lints its own generated output (the gen_arch_map/gen_trajectory idiom).
+    The root `OWNER_SCRATCHPAD.md` is dropped the same way: free-form owner notes
+    never gate (SCRATCHPAD).
+
     Paths matching an `ignore` glob (repo-relative POSIX) are dropped entirely —
     not parsed, not orphan-reported — so generated composites (the gitignored
-    `docs/test/report.md`) don't show up as findings. They still resolve as link
-    *targets*, since the file is on disk.
+    `docs/test/report.md`) don't show up as findings. Both the bundle and ignored
+    files still resolve as link *targets*, since the file is on disk.
     """
     found = {}
     for p in sorted(root.glob("*.md")):
@@ -193,6 +235,12 @@ def collect_docs(root, docs_dir, ignore=()):
     docs = []
     for p in found:
         relpath = rel(p, root)
+        # Never lint generated output: gen_okf.py --check owns docs/okf/ freshness.
+        if relpath == OKF_DIR or relpath.startswith(OKF_DIR + "/"):
+            continue
+        # Owner-only free-form notes never gate: drop the scratchpad entirely.
+        if relpath == SCRATCHPAD:
+            continue
         if any(Path(relpath).match(g) for g in ignore):
             continue
         docs.append(p)
@@ -278,9 +326,17 @@ def reachable(roots, graph):
 
 
 def find_orphans(docs, graph, roots, root):
-    """Scanned docs with no path from an entry root (entry roots excepted)."""
+    """Scanned docs with no path from an entry root (entry roots excepted).
+
+    Archived docs (docs/archive/) are dropped from the orphan list: orphanhood is
+    noise for frozen history (their links are still validated). See _in_archive.
+    """
     reached = reachable(roots, graph)
-    orphans = [rel(d, root) for d in docs if d not in roots and d not in reached]
+    orphans = [
+        rel(d, root)
+        for d in docs
+        if d not in roots and d not in reached and not _in_archive(rel(d, root))
+    ]
     return sorted(orphans)
 
 
@@ -334,8 +390,19 @@ def _registry_needs(path):
     all_ids = {s for s in SN_ID_RE.findall(text) if not _is_sn_example(s)}
     must_should = set()
     prio_col = None
+    in_draft = False
     for line in blank_fenced(text):
-        if not line.lstrip().startswith("|"):
+        stripped = line.lstrip()
+        heading = re.match(r"#{1,6}\s+(.*)", stripped)
+        if heading:
+            # SN maturity is section-as-state (derived-gate model §4a): a heading
+            # whose text contains "draft" marks its needs unratified (G0), so they
+            # are exempt from the Must/Should README-coverage floor below (existence
+            # still holds — a draft SN the README cites must still be a real id).
+            in_draft = "draft" in heading.group(1).lower()
+            prio_col = None
+            continue
+        if not stripped.startswith("|"):
             prio_col = None  # a non-table line ends the current table
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
@@ -345,7 +412,7 @@ def _registry_needs(path):
             continue
         if prio_col is None or prio_col >= len(cells):
             continue
-        if cells[prio_col].upper() in ("M", "S", "MUST", "SHOULD"):
+        if not in_draft and cells[prio_col].upper() in ("M", "S", "MUST", "SHOULD"):
             must_should.update(
                 s for s in SN_ID_RE.findall(line) if not _is_sn_example(s)
             )
@@ -430,10 +497,14 @@ def find_stale(parsed, root, lookup):
     """Docs linking a non-doc file committed more recently than the doc itself.
 
     `lookup` is path->epoch (injectable for tests). Doc-to-doc links are skipped
-    (too noisy a signal); unresolvable/untracked targets degrade to skip.
+    (too noisy a signal); unresolvable/untracked targets degrade to skip. Archived
+    docs (docs/archive/) are skipped entirely: staleness is noise for deliberately
+    frozen history (_in_archive, the FB4 scan-scope).
     """
     stale = []
     for d, info in parsed.items():
+        if _in_archive(rel(d, root)):
+            continue
         d_time = lookup(d)
         if d_time is None:
             continue

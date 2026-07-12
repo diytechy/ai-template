@@ -14,3 +14,6 @@ docs/test/report.html
 # Raw unattended-session streams (agent_loop.py); the tracked, size-bounded
 # copies live in docs/iteration/
 out/
+
+# macOS Finder metadata (appears anywhere you browse the tree in Finder)
+.DS_Store

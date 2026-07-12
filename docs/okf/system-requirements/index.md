@@ -5,6 +5,7 @@ description: "tier index"
 tags: []
 resource: "generated"
 ---
+> **GENERATED — a reference copy, not the source of truth.** Derived from docs/requirements/system-requirements.csv by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
 
 # system-requirements — index
 
@@ -34,7 +35,7 @@ resource: "generated"
 | [SR-022](SR-022.md) | Vendored-doc drift |
 | [SR-023](SR-023.md) | Arch-map generation |
 | [SR-024](SR-024.md) | Permutation case generation |
-| [SR-025](SR-025.md) | Skills index generation |
+| [SR-025](SR-025.md) | Skills index + checked per-agent fan-out |
 | [SR-026](SR-026.md) | Coordinator resumes headless |
 | [SR-027](SR-027.md) | Coordinator preflight |
 | [SR-028](SR-028.md) | Coordinator typed outcomes |
@@ -52,3 +53,10 @@ resource: "generated"
 | [SR-040](SR-040.md) | Per-phase routing and review dial |
 | [SR-041](SR-041.md) | Doc reference validation |
 | [SR-042](SR-042.md) | OKF knowledge-bundle export |
+| [SR-043](SR-043.md) | Subagent spawn gate |
+| [SR-044](SR-044.md) | Declared-interface connectivity |
+| [SR-045](SR-045.md) | Heterogeneous implementer/reviewer scheduling |
+| [SR-046](SR-046.md) | Run capability menu |
+| [SR-047](SR-047.md) | Subjective-quality critique loop |
+| [SR-048](SR-048.md) | How-SW top view bounded and containerized |
+| [SR-049](SR-049.md) | Derived gate from artifact states |

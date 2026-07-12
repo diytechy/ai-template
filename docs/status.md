@@ -1,11 +1,13 @@
 # Meta-Repo Status — Blackboard
 
 The **working surface** for developing the kit itself — the same `status.md`
-pattern the kit scaffolds downstream, self-applied. Only what happens **next**
-lives here; the spec/backlog and per-thread design history live in
-[IMPROVEMENT_PLAN.md](../IMPROVEMENT_PLAN.md) (its thread `Status:` blocks and
-WI-1.x log). The **gate-walk** record for the kit's self-adoption (Thread 47 —
-sign-offs, verdicts) is [log.md](log.md).
+pattern the kit scaffolds downstream, self-applied. This file is **forward-only**:
+only what happens **next** lives here. The **WI registry** is
+[work-items.csv](requirements/work-items.csv) (each WI's backward-looking
+`Deliverable` records what shipped) and the **session/gate record** is
+[log.md](log.md). The kit's per-thread **design history** is archived at
+[archive/IMPROVEMENT_PLAN.md](archive/IMPROVEMENT_PLAN.md) — context, not a
+working surface.
 
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) — this repo
@@ -18,57 +20,137 @@ sign-offs, verdicts) is [log.md](log.md).
 
 - **Bar:** `python -m pytest -q` and
   `python project-trajectory/scripts/check_docs.py --root . --stale` green
-  before every commit — this repo's standing gate. **The kit's own
-  `SN→SR→LLR→TC` spine is self-adopted** (Thread 47): `docs/gate` is at **G3**
-  — `check.py --gate G3` (12 steps; the `okf` freshness step joined 2026-07-10)
-  is the full bar and CI's `gate` job runs it, on **real data** (the meta-repo
-  dogfoods its own trajectory + OKF layers). Design history: the plan threads;
-  gate-walk record: [log.md](log.md).
-- **Plan state:** meta-repo at **G3**, spine **SN=22 SR=42 LLR=39 TC=42, 0
-  orphans**, 42/42 SRs mechanized. **The 2026-07-10 grind landed the entire
-  queued backlog** (owner-authorized, review deferred): WI-1.47 `Evidence`
-  column (Thread 51) · WI-1.48 `check_dupes` (Thread 53) · WI-1.49 the
-  dynamic layer (`AGENT_CMD_MAP` + `docs/review-policy` + size guard) ·
-  WI-1.50 `check_doc_refs` (Thread 49) · WI-1.51 OKF export (Thread 48) ·
-  WI-1.52 root `PROJECT_STATE.html` (WI-039). Details: the WI-1.x log in
-  [IMPROVEMENT_PLAN.md](../IMPROVEMENT_PLAN.md); spine change:
-  [log.md](log.md) 2026-07-10. Dogfood registry: **42 WIs, 41 done + WI-033
-  active**; the dashboard is now the root
-  [`PROJECT_STATE.html`](../PROJECT_STATE.html).
+  before every commit — this repo's standing gate. The kit's own
+  `SN→SR→LLR→TC` spine is self-adopted: `docs/gate` is at **G3** — now **derived**
+  from the artifact states (`scripts/derive_gate.py`), not hand-set;
+  `check.py --gate G3` is the full bar (incl. the new `derived-gate` freshness
+  step) and CI runs it on real data (the meta-repo dogfoods its own trajectory +
+  OKF + derived-gate layers).
+- **Plan state:** meta-repo at **G3** (re-attested 2026-07-12, all-mechanized;
+  the derived-gate campaign added **SR-049**, a mechanized Test SR, which
+  **rides a pending re-attestation** — Needs \<human> above), spine **SN=24 SR=49
+  LLR=50 TC=50, 0 orphans**, 51 declared interface seams, 5 declared components
+  (the meta's own How-SW top view is now 24 modules → 5 top-level components, 0
+  uncontained). The
+  dashboard is the root [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session
+  history: [log.md](log.md).
 - **Open items:**
-  - **Needs <human> (the run is paused on these):**
-    1. **G3 re-attestation over the 2026-07-10 spine change** — SR-039…042
-       added, SR-038/LLR-035/TC-038 extended, and the B1 SN-Refs correction
-       ([log.md](log.md); *mandatory*: a Verified SR's text changed). The three
-       adversarial reviews are **fully triaged** — all 20 findings fixed
-       (WI-1.53), so re-attestation now covers a reviewed, corrected spine.
-    2. **Push decision** — `MultiRepoSupport` is local-only (~40 commits).
-    3. **F3 data-pass** on the 44-WI DAG edges (demote narrative edges to
-       `~`) — owner's mapping call, unchanged.
-  - **In flight:** _(none)_ — the queue is empty. The three adversarial
-    review reports (7 method/risk + 4 process/trace + 9 full-repo; **no
-    HIGH**) are all RESOLVED in **WI-1.53** — spine SN-Refs (B1) + the OKF
-    count (B2), text-boundary/encoding hardening, per-script correctness,
-    harness shadow-guard + `KIT_SCRIPTS_DIR` in every hook + parser-drift
-    reconcile, and the docs/nits. Fully triaged; archived to
-    [`docs/archive/`](archive/README.md) (`REVIEW_GRIND_A/B/FULL.md`).
-  - **Recently landed:** **OKF Layer B2** (process docs as `Process Guide`
-    concepts — WI-1.54, 2026-07-10; extended SR-042 + LLR-039, rides the
-    re-attestation).
-  - **Deferred (backlog):** **WI-1.27** coordinator stash/rollback
-    (owner-deferred 2026-07-05); OKF **Layer B1** (intrusive doc-frontmatter,
-    behind a future flag); the **Q1 rider ruling** (a warn-first `--untraced`
-    tier — recommendation recorded in WI-1.50's entry); the committed-composites
-    freshness design (deferred with reasoning, WI-1.50); the AXES §12
-    residual items — `consumes`/effort schema, a typed-IF contract check,
-    edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
-    rendering (all gated on real need; see
-    [`docs/archive/AXES_AND_WORKSTREAMS.md`](archive/AXES_AND_WORKSTREAMS.md) §12).
-- **Next action:** the review reports are triaged and the batch is closed —
-  what remains is the **owner sitting**: re-attest G3 per [log.md](log.md),
-  and rule on push. After that the frontier is genuinely open: G-Release
-  walk, the F3 edge data-pass, or new scope (which needs a plan/WI entry
-  first).
+  - **Needs \<human> (the run is paused on these):**
+    1. **Push decision** — `MultiRepoSupport` is local-only (~48 commits); the
+       `derived-gate-model` branch adds the derived-gate campaign on top.
+    2. **G3 re-attestation** — the derived-gate campaign added **SR-049** (derived
+       gate from artifact states; a new Verified `Test` SR) to the ratified spine,
+       and the meta's `docs/gate` is now the **derived** G3. The mechanized bar is
+       met (derived gate reads G3; all-mechanized: 46 Test · 2 Analysis · 1
+       Inspection · 0 Attest); the owner's attested sign-off over the SR-049 spine
+       cut + the gate-model change is outstanding. See [log.md](log.md).
+    *(Former items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
+    the already-made sibling-repo ruling, and the guardrails-batch review;
+    see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed
+    as backlog WI-078…082 below.)*
+  - **External follow-up (tracked upstream, not this repo's work):** the
+    guardrails content enrichment (`JUDGMENT.md` playbook + CONTEXT-class rules
+    + the `Verified:` greppable claim vocabulary) is **owner-ruled to live in
+    `TheColliny/FableClaudeMDForOpus`** and pulled downstream via the vendoring
+    layer (`check_vendored.py`); nothing to build in this kit repo. Rationale:
+    [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2.
+  - **In flight:** _(none)_ — all four 2026-07-11 batches are **closed and
+    archived**: the campaign-binning · parallel-tests · resume-hardening
+    batch (the `Campaign` grouping column + the campaign-binned When-view
+    DAG · pytest-xdist parallel execution, ~6× plain and ~4.6× at the gate ·
+    the dirty-tree reconcile surface at loop start, stale-lock verified safe;
+    [archive/specs/campaign-binning-parallel-tests-resume-hardening.2026-07-11.md](archive/specs/campaign-binning-parallel-tests-resume-hardening.2026-07-11.md)),
+    the owner-feedback batch
+    ([archive/specs/owner-feedback-2026-07-11.md](archive/specs/owner-feedback-2026-07-11.md)),
+    the capability-expansion campaign
+    ([archive/specs/capability-expansion.2026-07-11.md](archive/specs/capability-expansion.2026-07-11.md)),
+    and the working-surface + architecture campaign
+    ([archive/specs/working-surface-and-architecture-restructure.2026-07-11.md](archive/specs/working-surface-and-architecture-restructure.2026-07-11.md)).
+    Every spine-toucher bundles into the one pending G3 re-attestation above.
+  - **Deferred (backlog — first-class `deferred` WI rows, each with its
+    reason):**
+    - **WI-060** — coordinator working-tree stash/rollback between sessions
+      (owner-deferred 2026-07-05; the clean-exit path has no inter-session
+      residue handling yet).
+    - **WI-061** — OKF source-doc frontmatter mutation behind a flag
+      (intrusive to the source docs; parked until a real consumer earns it).
+    - **WI-062** — `check_doc_refs` warn-first untraced-path tier (the
+      recommendation is recorded; the meta-repo is a pathological case, so it
+      stays filed until it earns wiring).
+    - **WI-063** — committed-composite artifact freshness gating (deferred with
+      reasoning: the gitignored composites carry no `--check`).
+    - **WI-064** — the AXES component/interface residual schema and graph
+      extensions (`consumes`/effort schema, a typed-IF contract check,
+      edge-vocabulary unification, the swBlock/CMP drift check, cyclic-graph
+      rendering — all deferred-on-need).
+    - **WI-065** — reconcile the `Verifies` vocabulary between `trace.py` and
+      the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
+      deferred until a seam actually needs `Active` status — every current
+      seam is `Stable`).
+    - **WI-078** — wire `[step:dupes]` + a `docs/dupes-allow` census (the F5
+      bound). Owner-ruled 2026-07-12 (deep-review option (b)): gate *new*
+      duplication over an allowlist that **is** the census; keep every script
+      independently copy-able (reject the shared helper module). The allowlist
+      machinery already exists in `check_dupes.py` — only the `stack.ini` step
+      and the populated allowlist remain. Ready; scheduled behind the owner
+      sitting. Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §1
+      M2/M6.
+    - **WI-079** — strip archive-anchor citations on scaffold. Owner-ruled
+      2026-07-12: `bootstrap.py` drops the trailing `(REVIEW_*/THREAD_*)`
+      provenance suffixes as it copies scripts downstream — provenance stays
+      here, downstream gets the copy-ready comment. Lowest-value of the batch;
+      accept-and-document is the recorded fallback if the transform isn't cheap.
+      Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §1
+      M7.
+    - **WI-080** — decompose `agent_loop.py:main()` (~1,015 lines / ~500-line
+      loop body) behind unit-testable seams. Owner-ruled 2026-07-12: approved as
+      its own `main-decomposition` campaign, **test-seams-first** and
+      behavior-preserving; the highest-value / highest-risk item, sequenced
+      after the owner sitting. Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
+      H1.
+    - **WI-081** — decompose `trace.py:main()` (~640 lines; extract
+      `render_report`). Follow-on to WI-080 (soft edge), same shape / less
+      urgent (most-copied artifact, so its churn ships widest); the
+      `parse_model_map`→`parse_map` rename (L3) folds into whichever refactor
+      lands first. Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
+      M1/L3.
+    - **WI-082** — decompose `bootstrap.py:main()` (~390 lines). Owner-ruled
+      2026-07-12: left deferred **indefinitely** — milder (honest sequential
+      scaffolding), lowest urgency of the three. Spec:
+      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
+      M5.
+    - _(The derived-gate campaign's remaining slices are no longer deferred — the
+      campaign is in flight; the live slice list is in **Next action** below.)_
+- **Next action — phase v2 (new scope; branch `derived-gate-model`).** A resume
+  session picks up here:
+  1. **Derived-gate campaign — LANDED (this branch).** The design
+     ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
+     the whole 8-slice campaign has shipped: the `Draft` artifact state + trace
+     exemption, SN section-as-state maturity, `scripts/derive_gate.py` (the gate
+     computed from artifact states + cached to `docs/gate` with a `--check` rot
+     guard), `check.py` consuming the derived gate (the `derived-gate` freshness
+     step + pre-commit floor), the `[phase]-[g*]` archetype + phase-drop detector,
+     the ratification workflow (`gate-advance` skill + `gate-policy`; ratification
+     = a reviewed `Status`-change commit), the process-doc rewrite (PROCESS_OPTIONS
+     "Derived gate model" + PROCESS.md §4/§7, **+785 B flagged**, baseline 59,638),
+     and the migration + dogfood (the meta's own `docs/gate` is now the **derived**
+     G3; `derive_gate --check` full-basis-passes). The **one open item** is the
+     owner **G3 re-attestation** over the SR-049 spine cut (Needs \<human> above).
+     Phase v3+ now uses the derived gate: draft new SN/SR in the live spine, and
+     the derived gate follows.
+  2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
+     ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
+     each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer
+     consistency sweep flags contradictions), **STOP and page the owner to sign
+     off** (§4 G1 review, [log.md](log.md)), then G2→G3 under
+     `check.py --gate G3 --phase v1`.
+  3. **The rest of the backlog needs no new SR — proceed at G3:** WI-078
+     (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then WI-079.
+  Remaining owner item: the **push decision** above.
 
 ## Scope
 

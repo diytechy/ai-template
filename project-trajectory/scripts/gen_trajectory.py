@@ -23,6 +23,13 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
   4. **How (physical)** — the `CMP-###` component table when the optional
      component layer carries real rows (the graph rendering is deferred-on-need
      per the AXES ratification); omitted otherwise.
+  5. **Knowledge** — the committed `docs/okf/` OKF bundle as a typed concept
+     graph (the dashboard is the bundle's first real *consumer*, WI-070): nodes
+     fill-keyed by OKF `type`, directed spine edges from the link lists, laid out
+     by the same Python layouter; the detail panel embeds each concept's
+     description and links out to its `docs/okf/<tier>/<id>.md` for the full body
+     (the middle-path embedding). Omitted when there is no bundle, so a
+     bundle-less repo renders byte-identically to before this view existed.
 
 Deterministic by construction (sorted inputs, fixed layout passes, no clocks;
 the as-of stamp derives from the last source-touching *commit*), so the
@@ -35,6 +42,8 @@ Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check]
 An absent or placeholder-only registry renders nothing and passes vacuously (the
 opt-out layer stays free for a repo that never adopts it).
 Exit codes: 0 clean / vacuous / opted-out, 1 invalid registry or stale HTML.
+
+Contracts: IF-011, IF-024 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -446,30 +455,24 @@ def _reorder(order, r, neigh_map, adj_layer):
     order[r] = sorted(order[r], key=lambda n: (bary(n), n))
 
 
-def _dag_layout(wis):
-    """Return (positions, ranks, order) for the work items.
+def _layered_layout(node_list, pred_map, succ_map, seed_key, geometry):
+    """The shared Sugiyama-lite pipeline behind every layered view (the WI DAG,
+    the How-SW seam graph, the OKF knowledge graph — each once carried its own
+    copy of this block; deduplicated by the 2026-07-12 review, H3).
 
-    Stages (Sugiyama-lite, deterministic): rank by longest path over **hard**
-    edges (soft edges are advisory — they never constrain rank); seed each rank's
-    order by (workstream, id) to keep workstreams clustered; run a fixed number of
-    barycentre sweeps (down then up) to reduce edge crossings; assign coordinates,
-    centring each rank vertically against the tallest one."""
-    ids = {w["id"] for w in wis}
-    by_id = {w["id"]: w for w in wis}
-    pred_map = {w["id"]: [p for p in w["preds"] if p in ids] for w in wis}
-    succ_map = {w["id"]: [] for w in wis}
-    for w in wis:
-        for p in pred_map[w["id"]]:
-            succ_map[p].append(w["id"])
-
-    rank = _dag_ranks(wis, pred_map)
+    Stages (deterministic): rank by longest path over `pred_map`
+    (`_dag_ranks`); seed each rank's order by `seed_key`; run a fixed number of
+    barycentre sweeps (down then up, `_reorder`) to reduce edge crossings;
+    assign coordinates, centring each rank vertically against the tallest one.
+    `geometry` is (col_w, col_gap, row_h, row_gap, pad). Returns
+    (positions, width, height)."""
+    col_w, col_gap, row_h, row_gap, pad = geometry
+    ids = [n["id"] for n in node_list]
+    rank = _dag_ranks(node_list, pred_map)
     nranks = (max(rank.values()) + 1) if rank else 0
     order = {}
     for r in range(nranks):
-        order[r] = sorted(
-            (nid for nid in ids if rank[nid] == r),
-            key=lambda n: (by_id[n]["workstream"], n),
-        )
+        order[r] = sorted((nid for nid in ids if rank[nid] == r), key=seed_key)
     for _ in range(4):
         for r in range(1, nranks):
             _reorder(order, r, pred_map, order[r - 1])
@@ -477,19 +480,40 @@ def _dag_layout(wis):
             _reorder(order, r, succ_map, order[r + 1])
 
     max_rows = max((len(order[r]) for r in order), default=0)
-    content_h = max_rows * DAG_ROW_H + max(max_rows - 1, 0) * DAG_ROW_GAP
+    content_h = max_rows * row_h + max(max_rows - 1, 0) * row_gap
     pos = {}
     for r in range(nranks):
         layer = order[r]
         n = len(layer)
-        layer_h = n * DAG_ROW_H + max(n - 1, 0) * DAG_ROW_GAP
-        y0 = DAG_PAD + (content_h - layer_h) / 2
-        x = DAG_PAD + r * (DAG_COL_W + DAG_COL_GAP)
+        layer_h = n * row_h + max(n - 1, 0) * row_gap
+        y0 = pad + (content_h - layer_h) / 2
+        x = pad + r * (col_w + col_gap)
         for i, nid in enumerate(layer):
-            pos[nid] = (x, y0 + i * (DAG_ROW_H + DAG_ROW_GAP))
-    width = DAG_PAD * 2 + nranks * DAG_COL_W + max(nranks - 1, 0) * DAG_COL_GAP
-    height = DAG_PAD * 2 + content_h
+            pos[nid] = (x, y0 + i * (row_h + row_gap))
+    width = pad * 2 + nranks * col_w + max(nranks - 1, 0) * col_gap
+    height = pad * 2 + content_h
     return pos, width, height
+
+
+def _dag_layout(wis):
+    """(positions, width, height) for the work items: the shared layered
+    pipeline, with hard edges only (soft edges are advisory — they never
+    constrain rank) and each rank's order seeded by (workstream, id) to keep
+    workstreams clustered."""
+    ids = {w["id"] for w in wis}
+    by_id = {w["id"]: w for w in wis}
+    pred_map = {w["id"]: [p for p in w["preds"] if p in ids] for w in wis}
+    succ_map = {w["id"]: [] for w in wis}
+    for w in wis:
+        for p in pred_map[w["id"]]:
+            succ_map[p].append(w["id"])
+    return _layered_layout(
+        wis,
+        pred_map,
+        succ_map,
+        lambda n: (by_id[n]["workstream"], n),
+        (DAG_COL_W, DAG_COL_GAP, DAG_ROW_H, DAG_ROW_GAP, DAG_PAD),
+    )
 
 
 def dag_svg(wis):
@@ -570,6 +594,531 @@ def dag_svg(wis):
         )
     )
     return svg, details
+
+
+# --- the How-SW interface graph (WI-056), reusing the WI-DAG layouter -----------
+
+SW_NODE_FILL = {"module": "#0891b2", "file": "#7c3aed", "external": "#64748b"}
+SW_COL_W = 168
+SW_COL_GAP = 64
+SW_ROW_H = 40
+SW_ROW_GAP = 20
+SW_PAD = 16
+
+
+def _sw_node(raw, module_norm):
+    """Classify an IF endpoint string into (kind, node-key, display). A module is
+    an arch-map inventory member (matched via the normalized name); a file is a
+    path-shaped counterpart (a shared-contract hub like docs/stack.ini); anything
+    else (downstream adopter / git / agent CLI) is an external actor."""
+    norm = ct._norm_module(raw)
+    if norm in module_norm:
+        return "module", "mod:" + norm, module_norm[norm]
+    s = (raw or "").strip()
+    if ("/" in s or re.search(r"\.\w{1,5}$", s)) and " " not in s:
+        return "file", "file:" + s, s
+    return "external", "ext:" + s, s
+
+
+def sw_graph(root, mods):
+    """The How-SW interface graph as one plain SVG string, or None when no IF
+    seams are declared (the panel then keeps the bare module table — the organized
+    graph is *earned* by declaring seams). Nodes are the arch-map modules plus the
+    files / external actors the seams reference; edges are producer->consumer
+    IF-### seams labeled by id. Reuses the shared layered pipeline
+    (`_layered_layout`), so producers sit left of consumers and crossings are
+    reduced. Byte-deterministic: sorted inputs, fixed
+    passes, no clocks — the `--check` freshness compare stays stable."""
+    ifs = ct.load_ifs(ct.read_rows(root / ct.IF_CSV))
+    if not ifs or not mods:
+        return None
+    module_norm = {ct._norm_module(m["name"]): m["name"] for m in mods}
+    nodes, edges = {}, []
+    for r in ifs:
+        tk, tkey, tdisp = _sw_node(r["this"], module_norm)
+        ck, ckey, cdisp = _sw_node(r["counterpart"], module_norm)
+        nodes.setdefault(tkey, {"display": tdisp, "kind": tk})
+        nodes.setdefault(ckey, {"display": cdisp, "kind": ck})
+        # Consumes flips the arrow so it always runs producer -> consumer.
+        edges.append((ckey, tkey, r["id"]) if r["direction"] == "consumes"
+                     else (tkey, ckey, r["id"]))  # fmt: skip
+    if not nodes:
+        return None
+
+    node_ids = sorted(nodes)
+    node_list = [{"id": k} for k in node_ids]
+    pred_map = {k: [] for k in node_ids}
+    succ_map = {k: [] for k in node_ids}
+    for s, d, _iid in edges:
+        pred_map[d].append(s)
+        succ_map[s].append(d)
+    pos, width, height = _layered_layout(
+        node_list,
+        pred_map,
+        succ_map,
+        lambda k: k,
+        (SW_COL_W, SW_COL_GAP, SW_ROW_H, SW_ROW_GAP, SW_PAD),
+    )
+
+    def esc(s):
+        return html.escape(str(s), quote=True)
+
+    edge_svg = []
+    for s, d, iid in sorted(edges):
+        x1, y1 = pos[s][0] + SW_COL_W, pos[s][1] + SW_ROW_H / 2
+        x2, y2 = pos[d][0], pos[d][1] + SW_ROW_H / 2
+        dx = max((x2 - x1) * 0.4, 12)
+        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+        edge_svg.append(
+            '<path d="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
+            'fill="none" stroke="#94a3b8" stroke-width="1.3" '
+            'marker-end="url(#swarrow)"></path>'
+            '<text x="{:.1f}" y="{:.1f}" text-anchor="middle" fill="#64748b" '
+            'font-size="9">{}</text>'.format(
+                x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2, mx, my - 2, esc(iid)
+            )
+        )
+    node_svg = []
+    for k in node_ids:
+        x, y = pos[k]
+        info = nodes[k]
+        disp = info["display"]
+        short = disp if len(disp) <= 22 else disp[:21] + "…"
+        node_svg.append(
+            '<g><rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
+            'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
+            'dominant-baseline="central" fill="#fff" font-size="10">{}</text>'
+            "</g>".format(
+                x,
+                y,
+                SW_COL_W,
+                SW_ROW_H,
+                SW_NODE_FILL[info["kind"]],
+                x + SW_COL_W / 2,
+                y + SW_ROW_H / 2,
+                esc(short),
+            )  # fmt: skip
+        )
+    defs = (
+        '<defs><marker id="swarrow" viewBox="0 0 10 10" refX="9" refY="5" '
+        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+        '<path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"></path></marker></defs>'
+    )
+    return (
+        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
+        'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}</svg>'.format(
+            width, height, width, defs, "".join(edge_svg), "".join(node_svg)
+        )
+    )
+
+
+# --- the containerized How-SW top view (WI-073/FB5) -----------------------------
+#
+# The software-architecture diagram's first view must show at most
+# ct.TOP_VIEW_MAX items — top-level components (a CMP with no PartOf that contains
+# a module) + uncontained modules — so a large module set stays legible. The
+# containment derivation is imported from the sibling (`ct.component_top_view`),
+# the ONE home for the module→CMP join, so this render and the right-sizing rule
+# can never disagree on the count. Rendered as a native `<details>` tree (no JS —
+# deterministic, offline, byte-stable through --check); IF seams aggregate to the
+# container boundary at the top level (one deduped component-to-component edge per
+# crossing pair), and intra-component seams appear only in a component's
+# expansion. When no CMP contains a module the caller keeps today's flat panel,
+# so a repo without a component layer renders byte-identically.
+
+SW_CONTAINMENT_STYLE = (
+    "<style>"
+    "#sw .cmptree{margin-top:.4rem;}"
+    "#sw details.cmpbox{border:1px solid var(--border);border-radius:10px;"
+    "margin:.45rem 0;background:var(--surface);box-shadow:var(--shadow);}"
+    "#sw details.cmpbox>summary{cursor:pointer;font-weight:600;padding:.6rem .8rem;"
+    "list-style-position:inside;}"
+    "#sw details.cmpbox>summary .sub{font-weight:400;color:var(--muted);}"
+    "#sw .cmpbody{padding:.1rem .85rem .7rem;}"
+    "#sw details.cmpbox details.cmpbox{margin-left:.7rem;}"
+    "#sw .uncontained{padding:.5rem .8rem;border:1px dashed var(--border);"
+    "border-radius:10px;margin:.35rem 0;}"
+    "#sw ul.xseams,#sw ul.cmpseams{margin:.2rem 0 .7rem;padding-left:1.3rem;"
+    "font-size:.9rem;}"
+    "#sw ul.xseams li,#sw ul.cmpseams li{margin:.1rem 0;}"
+    "#sw table.swmap{margin:.35rem 0;}"
+    "</style>"
+)
+
+
+def sw_containment(root, mods):
+    """The containerized How-SW top view (WI-073), or None when no `CMP-###`
+    component contains an arch-map module (the caller then keeps today's flat
+    panel, byte-identical). Returns `(tab, panel)`.
+
+    The top view is a native `<details>` tree of the top-level components plus the
+    uncontained modules; each component expands to its member modules, its nested
+    child components, and the interface seams internal to it. IF seams whose
+    endpoints fall in two different top-level items render once as an aggregated
+    component-to-component edge at the top level. Deterministic (sorted inputs, no
+    clocks), so the `--check` freshness compare stays byte-stable."""
+    view = ct.component_top_view(root)
+    if not view["top_roots"]:
+        return None
+
+    by_id = view["by_id"]
+    children_of = view["children_of"]
+    module_cmps = view["module_cmps"]
+    module_roots = view["module_roots"]
+    inv = view["inventory"]  # {norm: display}
+    mod_by_norm = {ct._norm_module(m["name"]): m for m in mods}
+
+    def esc(s):
+        return html.escape(str(s), quote=True)
+
+    # A module's DIRECT container(s) = the finest CMP(s) its LLRs tag; a coarser
+    # ancestor contains it through PartOf (rendered as the nested tree).
+    direct = {cid: [] for cid in by_id}
+    for norm, tags in module_cmps.items():
+        for cid in tags:
+            direct[cid].append(norm)
+    for cid in direct:
+        direct[cid] = sorted(direct[cid])
+
+    def subtree_modules(cid):
+        """Every module in `cid` and its PartOf-descendants (cycle-guarded)."""
+        seen, frontier, out = set(), [cid], set()
+        while frontier:
+            n = frontier.pop()
+            if n in seen:
+                continue
+            seen.add(n)
+            out.update(direct.get(n, []))
+            frontier.extend(children_of.get(n, []))
+        return out
+
+    def item_keys(norm):
+        """The top-level item key(s) a module falls under: its top-level CMP
+        root(s) when contained, else its own `mod:` key when it is an uncontained
+        inventory module, else empty (a file/external endpoint is not a top item)."""
+        if module_roots.get(norm):
+            return set(module_roots[norm])
+        if norm in inv:
+            return {"mod:" + norm}
+        return set()
+
+    # Classify every declared seam into: cross-component edges (deduped to the
+    # boundary), per-component intra seams, and per-component boundary seams
+    # (to a file/external hub).
+    cross, intra, boundary = {}, {}, {}
+    for r in ct.load_ifs(ct.read_rows(root / ct.IF_CSV)):
+        tk, tkey, tdisp = _sw_node(r["this"], inv)
+        ck, ckey, cdisp = _sw_node(r["counterpart"], inv)
+        if r["direction"] == "consumes":  # flip so producer -> consumer
+            (pk, pkey, pdisp), (nk, nkey, ndisp) = (ck, ckey, cdisp), (tk, tkey, tdisp)
+        else:
+            (pk, pkey, pdisp), (nk, nkey, ndisp) = (tk, tkey, tdisp), (ck, ckey, cdisp)
+        iid = r["id"]
+        pnorm = pkey.split(":", 1)[1] if pk == "module" else None
+        nnorm = nkey.split(":", 1)[1] if nk == "module" else None
+        pkeys = item_keys(pnorm) if pnorm else set()
+        nkeys = item_keys(nnorm) if nnorm else set()
+        if pkeys and nkeys:
+            for a in sorted(pkeys):
+                for b in sorted(nkeys):
+                    if a == b:
+                        if a.startswith("CMP-"):
+                            intra.setdefault(a, set()).add((iid, pdisp, ndisp))
+                    else:
+                        cross.setdefault((a, b), set()).add(iid)
+        else:  # one endpoint is a file/external hub -> a boundary seam
+            mnorm = (
+                pnorm
+                if module_roots.get(pnorm)
+                else (nnorm if module_roots.get(nnorm) else None)
+            )
+            if mnorm:
+                for a in module_roots[mnorm]:
+                    boundary.setdefault(a, set()).add((iid, pdisp, ndisp))
+
+    def label_key(k):
+        if k.startswith("CMP-"):
+            nm = by_id.get(k, {}).get("name", "")
+            return "{} — {}".format(k, nm) if nm else k
+        return k.split(":", 1)[1]
+
+    def mod_rows(norms):
+        out = []
+        for n in norms:
+            m = mod_by_norm.get(n)
+            if not m:
+                out.append(
+                    "<tr><td><code>{}</code></td><td>—</td><td>—</td></tr>".format(
+                        esc(inv.get(n, n))
+                    )
+                )
+                continue
+            syms = ", ".join(m["symbols"][:8]) + ("…" if len(m["symbols"]) > 8 else "")
+            out.append(
+                "<tr><td><code>{}</code></td><td>{}</td><td>{}<br>"
+                '<span class="sub"><code>{}</code></span></td></tr>'.format(
+                    esc(m["name"]), len(m["symbols"]), esc(m["summary"]), esc(syms)
+                )
+            )
+        return "".join(out)
+
+    def module_table(norms):
+        if not norms:
+            return ""
+        return (
+            '<table class="swmap"><thead><tr><th>Module</th><th>Public</th>'
+            "<th>Summary · symbols</th></tr></thead><tbody>{}</tbody>"
+            "</table>".format(mod_rows(norms))
+        )
+
+    def seam_block(cid):
+        items = []
+        for iid, a, b in sorted(intra.get(cid, set())):
+            items.append(
+                "<li><code>{}</code>: {} → {}</li>".format(esc(iid), esc(a), esc(b))
+            )
+        for iid, a, b in sorted(boundary.get(cid, set())):
+            items.append(
+                '<li><code>{}</code>: {} → {} <span class="sub">(boundary)</span>'
+                "</li>".format(esc(iid), esc(a), esc(b))
+            )
+        if not items:
+            return ""
+        return (
+            '<p class="sub" style="margin:.5rem 0 .1rem">Seams within this '
+            'component:</p><ul class="cmpseams">{}</ul>'.format("".join(items))
+        )
+
+    def render_cmp(cid, seams):
+        kids = [c for c in children_of.get(cid, []) if subtree_modules(c)]
+        body = "".join(render_cmp(c, "") for c in kids)
+        body += module_table(direct.get(cid, []))
+        body += seams
+        nm = by_id.get(cid, {}).get("name", "")
+        n = len(subtree_modules(cid))
+        head = '<code>{}</code>{} <span class="sub">· {} module(s)</span>'.format(
+            esc(cid), " — " + esc(nm) if nm else "", n
+        )
+        return (
+            '<details class="cmpbox"><summary>{}</summary>'
+            '<div class="cmpbody">{}</div></details>'.format(head, body)
+        )
+
+    tab = '<button data-tab="sw">How (SW architecture)</button>'
+    tree = "".join(render_cmp(r, seam_block(r)) for r in view["top_roots"])
+    unc = "".join(
+        '<div class="uncontained"><code>{}</code> '
+        '<span class="sub">— uncontained: no Component tag on its LLR(s)</span>'
+        "</div>".format(esc(inv.get(n, n)))
+        for n in view["uncontained"]
+    )
+    xlines = "".join(
+        "<li><code>{}</code> → <code>{}</code> "
+        '<span class="sub">({})</span></li>'.format(
+            esc(label_key(a)), esc(label_key(b)), esc(", ".join(sorted(iids)))
+        )
+        for (a, b), iids in sorted(cross.items())
+    )
+    cross_html = (
+        '<p class="cap">Cross-component seams — aggregated to the boundary (one '
+        "edge per crossing pair; the module-level seams live inside each "
+        'component):</p><ul class="xseams">{}</ul>'.format(xlines)
+        if xlines
+        else ""
+    )
+    summary_line = (
+        '<p class="cap"><strong>Top view: {} item(s)</strong> — {} top-level '
+        "component(s) + {} uncontained module(s); bounded at {} "
+        '(process-options.md "Component layer"). Software items are '
+        "<strong>containerized</strong> into the component they belong to; "
+        "<strong>expand</strong> a component to reveal its members and internal "
+        "seams.</p>".format(
+            view["count"],
+            len(view["top_roots"]),
+            len(view["uncontained"]),
+            ct.TOP_VIEW_MAX,
+        )
+    )
+    panel = (
+        '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
+        + SW_CONTAINMENT_STYLE
+        + "\n"
+        + summary_line
+        + cross_html
+        + '<div class="cmptree">'
+        + tree
+        + unc
+        + "</div>\n</section>"
+    )
+    return tab, panel
+
+
+# --- the campaign-binned When view (WI-074) ------------------------------------
+#
+# The WHEN-axis mirror of the HOW-axis FB5 containment above: work items sharing a
+# `Campaign` grouping tag containerize into a collapsed <details> box (expandable
+# to their member rows), campaign-crossing predecessor edges aggregate to one
+# deduplicated container-to-container edge (contributing WI edges listed), and a
+# campaign-less WI renders flat. Reuses the sw_containment idiom (native
+# <details>, boundary-aggregated edges, sorted-input determinism -> byte-stable
+# through --check). When NO work item carries a campaign this returns None and
+# the caller keeps today's flat SVG DAG, so a campaign-less registry renders
+# byte-identically. There is deliberately NO right-sizing bound here (the FB5
+# asymmetry): a campaign is bounded by construction — one re-attestation sitting's
+# worth of WIs — so binning is presentation only, no new gate.
+
+CAMPAIGN_STYLE = (
+    "<style>"
+    "#dag .camptree{margin-top:.2rem;}"
+    "#dag details.campbox{border:1px solid var(--border);border-radius:10px;"
+    "margin:.45rem 0;background:var(--surface);box-shadow:var(--shadow);}"
+    "#dag details.campbox>summary{cursor:pointer;font-weight:600;padding:.55rem .8rem;"
+    "list-style-position:inside;}"
+    "#dag details.campbox>summary .sub{font-weight:400;color:var(--muted);}"
+    "#dag .campbody{padding:.1rem .85rem .6rem;}"
+    "#dag table.witable{border-collapse:collapse;width:100%;font-size:.85rem;"
+    "margin:.3rem 0;}"
+    "#dag table.witable th,#dag table.witable td{text-align:left;padding:.35rem .5rem;"
+    "border-bottom:1px solid var(--border);vertical-align:top;}"
+    "#dag table.witable .sub{color:var(--muted);}"
+    "#dag .st{display:inline-block;width:.62rem;height:.62rem;border-radius:50%;"
+    "vertical-align:-1px;margin-right:.35rem;}"
+    "#dag ul.xcamp{margin:.2rem 0 .7rem;padding-left:1.3rem;font-size:.9rem;}"
+    "#dag ul.xcamp li{margin:.1rem 0;}"
+    "#dag .standalone{margin-top:.6rem;}"
+    "</style>"
+)
+
+
+def campaign_containment(wis):
+    """The campaign-binned When view (WI-074), or None when no work item carries a
+    `Campaign` value (the caller then keeps today's flat SVG DAG, byte-identical).
+    Returns the HTML string that fills the `dag` panel's view.
+
+    Campaign members collapse into a native `<details>` container (expand to a
+    member table); campaign-less WIs render flat below the containers; predecessor
+    edges whose endpoints fall in two different top-level items (campaign or a
+    standalone WI) aggregate to one deduplicated container-to-container edge at the
+    top level, listing the contributing WI edges. Deterministic (sorted inputs, no
+    clocks), so the `--check` freshness compare stays byte-stable."""
+    by_camp = {}
+    campaignless = []
+    for w in wis:
+        if w.get("campaign"):
+            by_camp.setdefault(w["campaign"], []).append(w)
+        else:
+            campaignless.append(w)
+    if not by_camp:
+        return None
+
+    ids = {w["id"] for w in wis}
+
+    def esc(s):
+        return html.escape(str(s), quote=True)
+
+    # A top-level item key: the campaign slug when tagged, else `WI:<id>` (a
+    # campaign-less WI is its own top-level item — the sw_containment "uncontained"
+    # analogue). label() unwraps the `WI:` sentinel back to the bare id.
+    key_of = {w["id"]: (w["campaign"] or "WI:" + w["id"]) for w in wis}
+
+    def label(k):
+        return k[len("WI:") :] if k.startswith("WI:") else k
+
+    def st_of(w):
+        return w["status"] if w["status"] in STATUS_FILL else "queued"
+
+    def wi_row(w):
+        st = st_of(w)
+        delivers = ", ".join(w["srs"]) or "—"
+        after = ", ".join(w["preds"] + ["~" + p for p in w["soft"]]) or "—"
+        return (
+            "<tr><td><code>{}</code></td><td>{}</td>"
+            '<td><span class="st" style="background:{}"></span>{}</td>'
+            '<td><code>{}</code></td><td class="sub"><code>{}</code></td></tr>'.format(
+                esc(w["id"]),
+                esc(w["title"]),
+                STATUS_FILL[st],
+                esc(st),
+                esc(delivers),
+                esc(after),
+            )
+        )
+
+    def wi_table(members):
+        rows = "".join(wi_row(w) for w in sorted(members, key=lambda w: w["id"]))
+        return (
+            '<table class="witable"><thead><tr><th>WI</th><th>Title</th>'
+            "<th>Status</th><th>Delivers</th><th>After</th></tr></thead>"
+            "<tbody>{}</tbody></table>".format(rows)
+        )
+
+    # Cross-boundary predecessor edges -> aggregate to one edge per crossing pair,
+    # deduplicating the contributing WI edges (the FB5 boundary-aggregation idiom).
+    cross = {}
+    for w in wis:
+        kw = key_of[w["id"]]
+        for p in w["preds"] + w["soft"]:
+            if p not in ids:
+                continue
+            kp = key_of[p]
+            if kp != kw:
+                cross.setdefault((kp, kw), set()).add((p, w["id"]))
+
+    tree = ""
+    for slug in sorted(by_camp):
+        members = by_camp[slug]
+        head = '<code>{}</code> <span class="sub">· {} item(s)</span>'.format(
+            esc(slug), len(members)
+        )
+        tree += (
+            '<details class="campbox"><summary>{}</summary>'
+            '<div class="campbody">{}</div></details>'.format(head, wi_table(members))
+        )
+
+    standalone = ""
+    if campaignless:
+        standalone = (
+            '<div class="standalone"><p class="sub" style="margin:.5rem 0 .2rem">'
+            "Standalone work items — no campaign:</p>{}</div>".format(
+                wi_table(campaignless)
+            )
+        )
+
+    xlines = "".join(
+        "<li><code>{}</code> → <code>{}</code> "
+        '<span class="sub">({})</span></li>'.format(
+            esc(label(a)),
+            esc(label(b)),
+            esc(", ".join("{}→{}".format(p, w) for p, w in sorted(edges))),
+        )
+        for (a, b), edges in sorted(cross.items())
+    )
+    cross_html = (
+        '<p class="cap">Cross-campaign dependency edges — aggregated to the '
+        "boundary (one edge per crossing pair; per-WI predecessors live in each "
+        'member row\'s <em>After</em> column):</p><ul class="xcamp">{}</ul>'.format(
+            xlines
+        )
+        if xlines
+        else ""
+    )
+    summary_line = (
+        '<p class="cap"><strong>Binned by campaign: {} campaign(s) + {} standalone '
+        "work item(s).</strong> Work items sharing a <code>Campaign</code> tag are "
+        "<strong>containerized</strong>; <strong>expand</strong> a campaign to "
+        "reveal its members and the requirements they deliver. A campaign is "
+        "bounded by construction (one re-attestation sitting), so there is no "
+        "right-sizing bound here.</p>".format(len(by_camp), len(campaignless))
+    )
+    return (
+        CAMPAIGN_STYLE
+        + summary_line
+        + cross_html
+        + '<div class="camptree">'
+        + tree
+        + standalone
+        + "</div>"
+    )
 
 
 HTML_TEMPLATE = string.Template("""<!doctype html>
@@ -761,7 +1310,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       <strong>click</strong> for its detail. Plain SVG — no libraries, fully
       offline.</p>
       <div class="layout">
-        <div id="dag" class="view">$dag_svg</div>
+        <div id="dag-view" class="view">$dag_svg</div>
         <aside id="dag-detail" class="detail"><p class="hint">Click a work item to read its
           detail — workstream, status, the SRs it delivers, its predecessors.</p></aside>
       </div>
@@ -938,7 +1487,7 @@ def cmp_rows(root):
     ]
 
 
-def _sw_panel(mods):
+def _sw_panel(mods, graph=None):
     tab = '<button data-tab="sw">How (SW architecture)</button>'
     rows = []
     for m in mods:
@@ -952,12 +1501,26 @@ def _sw_panel(mods):
                 html.escape(syms),
             )
         )
+    # The declared-seam graph is *earned* by IF-### rows: present it above the
+    # symbol table when seams exist, else the panel stays a bare module list
+    # (WI-056). None -> "" keeps the no-seam render byte-identical to before.
+    graph_block = ""
+    if graph:
+        graph_block = (
+            '<p class="cap">Declared <code>IF-###</code> interface seams '
+            "(process.md §8): each arrow is a directed seam "
+            "(producer&nbsp;→&nbsp;consumer) labeled by id; module, file "
+            "(shared-contract hub) and external-actor nodes are styled distinctly. "
+            'A module with no seam is a "connectivity undeclared" gap.</p>\n'
+            '<div class="view">{}</div>\n'.format(graph)
+        )
     panel = (
         '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
-        '<p class="cap">The module map from <code>docs/architecture.md</code> — a view '
-        "of the generated code map (its <code>--check</code> keeps it honest against "
-        "the AST), unified here so one artifact answers What, How and When.</p>\n"
-        '<div style="overflow:auto"><table class="swmap"><thead><tr>'
+        + graph_block
+        + '<p class="cap">The module map from <code>docs/architecture.md</code> — a '
+        "view of the generated code map (its <code>--check</code> keeps it honest "
+        "against the AST), unified here so one artifact answers What, How and "
+        'When.</p>\n<div style="overflow:auto"><table class="swmap"><thead><tr>'
         "<th>Module</th><th>Public</th><th>Summary · symbols</th></tr></thead>"
         "<tbody>{}</tbody></table></div>\n</section>".format("".join(rows))
     )
@@ -988,6 +1551,305 @@ def _cmp_panel(rows):
     return tab, panel
 
 
+# --- the Knowledge tab: the committed OKF bundle as a concept graph (WI-070) ----
+#
+# The dashboard becomes docs/okf's *first real consumer* (the 2026-07-11 OKF
+# audit found the bundle had none). A view of a view: gen_okf.py emits the
+# bundle from the spine, this reads it back and renders it. The small
+# frontmatter/link loader below is DUPLICATED here rather than imported from
+# gen_okf per the F5 small-loader rule — the sanctioned sibling import is
+# reserved for the large evolving check_trajectory graph core, not for a stable
+# parser a downstream cherry-pick would drag a second module in for.
+OKF_DIR = "docs/okf"
+
+# Tier precedence orients every link upstream -> downstream, so the concept
+# graph is a DAG the WI-DAG layouter can rank (SN -> SR -> LLR -> TC). Interfaces
+# and process guides carry no spine links in the bundle, so their rank is
+# immaterial — they render as isolated rank-0 nodes (an honest picture of what
+# the bundle actually links).
+OKF_TIER_ORDER = {
+    "stakeholder-needs": 0,
+    "system-requirements": 1,
+    "low-level-requirements": 2,
+    "test-cases": 3,
+    "interfaces": 4,
+    "process-guides": 5,
+}
+
+# Node fill keyed by the OKF `type` (the icicle tier palette, extended for the
+# two off-spine concept kinds the bundle also carries).
+OKF_TYPE_FILL = {
+    "Stakeholder Need": "#6366f1",
+    "System Requirement": "#0891b2",
+    "Low-Level Requirement": "#64748b",
+    "Test Case": "#059669",
+    "Interface": "#7c3aed",
+    "Process Guide": "#d97706",
+}
+
+KN_COL_W = 150
+KN_COL_GAP = 60
+KN_ROW_H = 30
+KN_ROW_GAP = 12
+KN_PAD = 16
+
+
+def _okf_frontmatter(text):
+    """Parse an OKF concept file's frontmatter — the subset gen_okf emits, whose
+    scalars are JSON strings (valid YAML). Returns {type,title,description,
+    resource} present, or None when the block is missing/unterminated so the
+    caller skips the file with a warn rather than crashing the dashboard."""
+    lines = text.split("\n")
+    if not lines or lines[0].strip() != "---":
+        return None
+    fm = {}
+    for ln in lines[1:]:
+        if ln.strip() == "---":
+            return fm
+        m = re.match(r"(\w+):\s*(.*)$", ln)
+        if not m:
+            continue
+        key, val = m.group(1), m.group(2).strip()
+        if key in ("type", "title", "description", "resource"):
+            try:
+                fm[key] = json.loads(val)  # JSONDecodeError is a ValueError
+            except ValueError:
+                fm[key] = val.strip('"')
+    return None  # no closing fence -> malformed
+
+
+def _okf_nodes(root):
+    """Walk docs/okf/<tier>/*.md -> (nodes, sorted-edges), or ({}, []) with no
+    bundle. Nodes are frontmatter-typed; edges are the SN->SR->LLR->TC spine
+    links parsed from the '- Label: [id](href)' lists, oriented upstream->
+    downstream by tier. index.md / UPSTREAM.md are not concepts; the GENERATED
+    banner (a '>' blockquote, never a '- ' list line) is never read as content;
+    a malformed file is skipped with a stderr warn (a hand-broken bundle can
+    never crash generation)."""
+    base = root / OKF_DIR
+    if not base.is_dir():
+        return {}, []
+    nodes, raw_links = {}, {}
+    for tier_dir in sorted(p for p in base.iterdir() if p.is_dir()):
+        tier = tier_dir.name
+        for f in sorted(tier_dir.glob("*.md")):
+            if f.name in ("index.md", "UPSTREAM.md"):
+                continue
+            cid = f.stem
+            try:
+                text = f.read_text(encoding="utf-8")
+                fm = _okf_frontmatter(text)
+            except OSError:
+                fm, text = None, ""
+            if not fm or not fm.get("type"):
+                print(
+                    "gen_trajectory: skipping malformed OKF concept {} (no "
+                    "frontmatter/type).".format(f.relative_to(root).as_posix()),
+                    file=sys.stderr,
+                )
+                continue
+            nodes[cid] = {
+                "type": fm.get("type", ""),
+                "title": fm.get("title", ""),
+                "description": fm.get("description", ""),
+                "resource": fm.get("resource", ""),
+                "tier": tier,
+                "href": "{}/{}/{}.md".format(OKF_DIR, tier, cid),
+            }
+            targets = set()
+            for ln in text.split("\n"):
+                if ln.lstrip().startswith("- "):  # a link-list line only
+                    for m in re.finditer(r"\[([^\]]+)\]\(", ln):
+                        targets.add(m.group(1).strip())
+            raw_links[cid] = targets
+    edges = set()
+    for cid, targets in raw_links.items():
+        a = OKF_TIER_ORDER.get(nodes[cid]["tier"], 99)
+        for tid in targets:
+            if tid == cid or tid not in nodes:  # self / non-concept text -> drop
+                continue
+            b = OKF_TIER_ORDER.get(nodes[tid]["tier"], 99)
+            if a < b:
+                edges.add((cid, tid))
+            elif b < a:
+                edges.add((tid, cid))
+    return nodes, sorted(edges)
+
+
+def know_graph(root):
+    """The OKF concept graph as (svg, details), or None when there is no bundle
+    (the tab is then omitted -> a bundle-less repo renders byte-identically).
+    Nodes typed + fill-keyed by OKF `type`; directed spine edges from the link
+    lists; laid out server-side by the shared layered pipeline
+    (`_layered_layout`), so producers sit left of consumers and the
+    render is byte-deterministic — no new `--check` exclusion. The detail dict
+    embeds each concept's description and its docs/okf/<tier>/<id>.md link-out
+    (the middle-path body embedding)."""
+    nodes, edges = _okf_nodes(root)
+    if not nodes:
+        return None
+    node_ids = sorted(nodes)
+    node_list = [{"id": k} for k in node_ids]
+    pred_map = {k: [] for k in node_ids}
+    succ_map = {k: [] for k in node_ids}
+    for s, d in edges:
+        pred_map[d].append(s)
+        succ_map[s].append(d)
+    pos, width, height = _layered_layout(
+        node_list,
+        pred_map,
+        succ_map,
+        lambda k: k,
+        (KN_COL_W, KN_COL_GAP, KN_ROW_H, KN_ROW_GAP, KN_PAD),
+    )
+
+    def esc(s):
+        return html.escape(str(s), quote=True)
+
+    edge_svg = []
+    for s, d in edges:
+        x1, y1 = pos[s][0] + KN_COL_W, pos[s][1] + KN_ROW_H / 2
+        x2, y2 = pos[d][0], pos[d][1] + KN_ROW_H / 2
+        dx = max((x2 - x1) * 0.4, 12)
+        edge_svg.append(
+            '<path class="kedge" data-src="{}" data-tgt="{}" '
+            'd="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
+            'marker-end="url(#knowarrow)"></path>'.format(
+                esc(s), esc(d), x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2
+            )
+        )
+    node_svg, details = [], {}
+    for k in node_ids:
+        x, y = pos[k]
+        info = nodes[k]
+        fill = OKF_TYPE_FILL.get(info["type"], "#64748b")
+        short = k if len(k) <= 20 else k[:19] + "…"
+        node_svg.append(
+            '<g class="knode" data-id="{}" tabindex="0">'
+            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
+            'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
+            'dominant-baseline="central">{}</text></g>'.format(
+                esc(k),
+                x,
+                y,
+                KN_COL_W,
+                KN_ROW_H,
+                fill,
+                x + KN_COL_W / 2,
+                y + KN_ROW_H / 2,
+                esc(short),
+            )  # fmt: skip
+        )
+        details[k] = {
+            "type": info["type"],
+            "title": info["title"],
+            "description": info["description"],
+            "resource": info["resource"],
+            "href": info["href"],
+            "fill": fill,
+        }
+    defs = (
+        '<defs><marker id="knowarrow" viewBox="0 0 10 10" refX="9" refY="5" '
+        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+        '<path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"></path></marker></defs>'
+    )
+    svg = (
+        '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
+        'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}</svg>'.format(
+            width, height, width, defs, "".join(edge_svg), "".join(node_svg)
+        )
+    )
+    return svg, details
+
+
+def _know_panel(svg, details):
+    """The Knowledge tab + panel — a fully self-contained block (its style, the
+    embedded detail data, and the interaction JS all live inside the panel), so
+    when there is no bundle and the panel is not appended the artifact is
+    byte-identical to before this view existed (the vacuity guarantee)."""
+    tab = '<button data-tab="know">Knowledge (OKF)</button>'
+    # </ -> <\/ so a stray "</script>" inside description text can't close the tag
+    # (the build_html j() guard, applied locally because this data is embedded in
+    # the panel's own inline script rather than the shared one).
+    dj = json.dumps(details, ensure_ascii=False).replace("</", "<\\/")
+    legend = "".join(
+        '<span><i style="background:{}"></i>{}</span>'.format(c, html.escape(t))
+        for t, c in OKF_TYPE_FILL.items()
+    )
+    style = (
+        "<style>"
+        "#knowgraph .knode rect{stroke:rgba(15,23,42,.15);stroke-width:1;"
+        "cursor:pointer;transition:opacity .1s ease;}"
+        "#knowgraph .knode text{fill:#fff;font-size:9px;pointer-events:none;}"
+        "#knowgraph .knode.dim,#knowgraph .kedge.dim{opacity:.15;}"
+        "#knowgraph .knode.hl rect{stroke:#f59e0b;stroke-width:2.5;}"
+        "#knowgraph .kedge{fill:none;stroke:#94a3b8;stroke-width:1.2;}"
+        "#knowgraph .kedge.hl{stroke:#f59e0b;stroke-width:2;}"
+        "#know-detail .body{overflow-wrap:anywhere;}"
+        "</style>"
+    )
+    script = (
+        "<script>(function(){\n"
+        "  const D = " + dj + ";\n"
+        "  const g = document.getElementById('knowgraph'); if(!g) return;\n"
+        "  const box = document.getElementById('know-detail');\n"
+        "  const nodes = [...g.querySelectorAll('.knode')];\n"
+        "  const edges = [...g.querySelectorAll('.kedge')];\n"
+        "  const esc = s => { const d=document.createElement('div');"
+        " d.textContent = s==null?'':s; return d.innerHTML; };\n"
+        "  function hover(id){\n"
+        "    const near = new Set([id]);\n"
+        "    for(const e of edges){ const s=e.getAttribute('data-src'),"
+        " t=e.getAttribute('data-tgt');\n"
+        "      if(s===id) near.add(t); if(t===id) near.add(s); }\n"
+        "    for(const n of nodes){ const nid=n.getAttribute('data-id');\n"
+        "      n.classList.toggle('dim', !near.has(nid));"
+        " n.classList.toggle('hl', nid===id); }\n"
+        "    for(const e of edges){ const inc = e.getAttribute('data-src')===id"
+        " || e.getAttribute('data-tgt')===id;\n"
+        "      e.classList.toggle('dim', !inc); e.classList.toggle('hl', inc); }\n"
+        "  }\n"
+        "  function show(id){\n"
+        "    const d = D[id];\n"
+        "    if(!d){ box.innerHTML = '<p class=\"hint\">No detail.</p>'; return; }\n"
+        '    box.innerHTML = \'<span class="badge" style="background:\''
+        "+(d.fill||'#64748b')+'\">'+esc(d.type)+'</span>'\n"
+        "      + '<h3>'+esc(id)+(d.title?' — '+esc(d.title):'')+'</h3>'\n"
+        "      + '<p class=\"body\">'+esc(d.description)+'</p>'\n"
+        "      + '<p class=\"meta\">Full concept: <a href=\"'+esc(d.href)+'\">'"
+        "+esc(d.href)+'</a>'\n"
+        "      + (d.resource?'<br>Source: '+esc(d.resource):'')+'</p>';\n"
+        "  }\n"
+        "  for(const n of nodes){ const id=n.getAttribute('data-id');\n"
+        "    n.addEventListener('mouseover', () => hover(id));\n"
+        "    n.addEventListener('click', () => show(id));\n"
+        "    n.addEventListener('focus', () => { hover(id); show(id); }); }\n"
+        "  g.addEventListener('mouseleave', () => { for(const n of nodes)"
+        " n.classList.remove('dim','hl'); for(const e of edges)"
+        " e.classList.remove('dim','hl'); });\n"
+        "})();</script>"
+    )
+    panel = (
+        '<section id="know" class="panel">\n'
+        "<h2>Knowledge graph (OKF concepts)</h2>\n"
+        '<p class="cap">The committed <code>docs/okf/</code> knowledge bundle as a '
+        "typed concept graph — the dashboard is the bundle's first real "
+        "<strong>consumer</strong>. Node fill keys the OKF <code>type</code>; "
+        "directed edges are the <code>SN→SR→LLR→TC</code> spine links. "
+        "<strong>Hover</strong> to highlight a concept's neighbourhood; "
+        "<strong>click</strong> to read its description and open the full concept "
+        "file. A view — the registries are the source of truth.</p>\n" + style + "\n"
+        '<div class="layout">\n'
+        '<div id="knowgraph" class="view">' + svg + "</div>\n"
+        '<aside id="know-detail" class="detail"><p class="hint">Hover a concept to '
+        "highlight its neighbourhood; click to read its description and open the "
+        "full concept file in <code>docs/okf/</code>.</p></aside>\n"
+        "</div>\n"
+        '<div class="legend">' + legend + "</div>\n" + script + "\n</section>"
+    )
+    return tab, panel
+
+
 def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
@@ -996,15 +1858,35 @@ def build_html(root, wis):
     workstreams = len({w["workstream"] for w in wis})
     arch, arch_details, arch_desc = arch_icicle(root)
     dag, wi_details = dag_svg(wis)
+    # WI-074: when any work item carries a Campaign tag, the When view bins the
+    # DAG into collapsed campaign containers (the WHEN-axis FB5 mirror); with no
+    # campaign values this returns None and the flat SVG DAG renders unchanged, so
+    # a campaign-less registry stays byte-identical.
+    dag_view = campaign_containment(wis) or dag
     extra_tabs, extra_panels = [], []
     mods = sw_modules(root)
     if mods:
-        tab, panel = _sw_panel(mods)
+        # WI-073: when a CMP layer contains modules, the How-SW panel becomes the
+        # containerized top view (≤ ct.TOP_VIEW_MAX items, expandable); otherwise
+        # it keeps today's flat graph/table (byte-identical for a no-CMP repo).
+        tab, panel = sw_containment(root, mods) or _sw_panel(mods, sw_graph(root, mods))
         extra_tabs.append(tab)
         extra_panels.append(panel)
-    cmps = cmp_rows(root)
-    if cmps:
-        tab, panel = _cmp_panel(cmps)
+    # The How-physical CMP table holds the *non-software* components; software
+    # components live in the containerized How-SW view above (WI-073), so a
+    # domain-neutral CMP row lands in the tab that matches its Category.
+    physical = [
+        r
+        for r in cmp_rows(root)
+        if (r.get("Category") or "").strip().lower() != "software"
+    ]
+    if physical:
+        tab, panel = _cmp_panel(physical)
+        extra_tabs.append(tab)
+        extra_panels.append(panel)
+    know = know_graph(root)  # the OKF bundle's first real consumer (WI-070)
+    if know:
+        tab, panel = _know_panel(*know)
         extra_tabs.append(tab)
         extra_panels.append(panel)
 
@@ -1032,7 +1914,7 @@ def build_html(root, wis):
         arch_svg=arch,
         arch_details=j(arch_details),
         arch_desc=j(arch_desc),
-        dag_svg=dag,
+        dag_svg=dag_view,
         wi_details=j(wi_details),
     )
 

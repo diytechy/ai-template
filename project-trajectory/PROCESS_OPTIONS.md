@@ -78,10 +78,100 @@ into a straitjacket. Four points, one voice:
   **contradiction** still routes as a finding to its owner — an unrecorded
   autonomous decision is a *silent* one, which no dial setting permits.
 
+## Derived gate model
+
+*Referenced from PROCESS.md §4/§7.* The gate is **computed from the artifact
+states, not declared** — SSOT applied to the gate itself. This section is the
+working summary; the kit's full design + rationale is its own ratified design
+spec (`docs/specs/derived-gate-model.md` in the kit's meta-repo — not shipped
+downstream).
+
+**The gate is derived.** `docs/gate` is a **generated** file:
+`scripts/derive_gate.py` computes the active gate from the spine and caches it (a
+`# basis:` derivation + a compute date, then the value on the first non-comment
+line, so `check.py`'s `resolve_gate()` reads it unchanged). **The repo is at gate
+G iff every in-scope SN/SR/LLR/TC meets G's bar.** You never hand-edit the line;
+you ratify artifacts and regenerate (`python scripts/derive_gate.py`). The
+`derived-gate` step (`derive_gate.py --check`, a pre-commit floor + every gate)
+guards the cache against rot — a ratification that moved the states but not the
+cache fails loudly. **Hybrid:** the cache means the gate is known on checkout with
+no recompute; a legacy hand-set `docs/gate` with no `# basis:` line is accepted
+**value-only** until a one-time `derive_gate.py` migration (so an adopter upgrades
+without a red day).
+
+**Artifact states (no new column).** Maturity is read from existing structure,
+gated by one `Draft` bit:
+
+- **SR / LLR / TC** — the open-vocab `Status` gains a leading **`Draft`**:
+  `Draft` → `Planned`/… → `Verified`. Per-artifact gate: an SR is **G0** while
+  `Draft`, **G1** once ratified (Status past `Draft`), **G2** once decomposed (its
+  LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
+  TC), **G3** once `Verified`. An LLR/TC caps only when `Draft`; once present its
+  own Status doesn't gate G3 — the SR's `Verified` drives that, matching
+  `trace.py --require-verified` (which checks SRs, not LLR/TC status), so a repo
+  whose LLRs read `Implemented` still reaches G3.
+- **SN** — maturity is **section-as-state**: an SN under a stakeholder-needs.md
+  heading whose text contains **"draft"** (`## Draft needs (unratified)`) is Draft
+  (G0); SNs under any other heading are ratified (G1). No new column — the section
+  *is* the state.
+
+The **ratification date is git-derived** — the commit that moved the `Status` (or
+the SN section). No new field.
+
+**Draft artifacts live in the live spine.** A `Draft` SR/LLR/TC and a Draft SN are
+**exempt from the child-completeness orphan rules** (`trace.py`): a Draft SR needs
+no LLR/TC, a Draft LLR no TC, a Draft SN no SR — so a requirement is **drafted in
+the live registry before it is decomposed**. This **retires the `-000` /
+off-spine workaround** for requirement-first work. Parent-linkage + integrity
+still apply (a Draft SR still links an SN; ids stay unique/well-formed), and a
+Draft SR is skipped by the G3 Verified criterion (it is pre-ratification).
+
+**Ratification = a reviewed Status-change commit.** Closing a gate is no longer a
+marker bump: the acceptor **marks a batch of artifacts ratified** (`Draft`→
+`Planned`, or an SN section move) **in a reviewed commit** — that commit *is* the
+sign-off, and the gate derives from it (`gate-advance` skill). It composes with
+the gate-authority levels (below): `attended` ratifies each batch; `single-ratify`
+ratifies the batch once at its `[phase]-[g2]` close (one review per phase gate);
+`autonomous` on a fresh-context reviewer's recorded verdict. An agent may make the
+ratifying commit, governed by the level.
+
+**Phase = a derived detector + a committed anchor.** The derived gate **dropping
+below a phase's last-closed level** — new or reopened content entered — is the
+*signal* that a new phase is due; `check_trajectory` warns "open a `[phase]-[g*]`"
+(warn-first). But phase **identity + membership** live in a committed
+**`[phase]-[g*]` work item** — a WI whose Title carries the `[<phase>]-[g<N>]` tag
+— not a git-history walk (which a rebase/squash moves and which carries no
+membership). `[phase]-[g1]` is the requirement-structuring batch; `[phase]-[g2]`
+the decomposition + TC batch; its predecessor is the prior phase's close.
+
+**Parallel for pre-dev, series for dev.** A phase's requirement work is a **batch,
+in parallel** — draft + ratify all the new/reopened SN/SR together, which is
+exactly where "this also modifies SR-12" and other conflicts surface in one review
+— then each work item runs **G2 → G3 in series** (the per-WI vertical slice):
+
+```
+Phase N:  [phase-N-g1]  draft+ratify ALL new/reopened SN/SR   (parallel, batch review)
+              │
+          [phase-N-g2]  decompose to LLR/TC, all Planned      (parallel, batch review)
+              │
+          WI-a ─ G2→G3 ─┐
+          WI-b ─ G2→G3 ─┤  (series, per-WI vertical slices)
+          WI-c ─ G2→G3 ─┘
+```
+
+A reopen during a later phase's g1 revs the phase: the affected verified artifact
+returns to `Draft`/`Planned`, the derived gate for that phase drops, and the batch
+review sees it alongside the new work. Within a phase the derived gate only rises
+(draft → ratify → decompose → verify), so a **drop from a closed level is an
+unambiguous boundary** — the detection is robust; the committed anchor just makes
+membership legible and durable.
+
 ## Phased delivery
 
 *Referenced from PROCESS.md §4.* **Applies when** a roadmap ships v1 before
-v2/v3; a single-shot deliverable skips it.
+v2/v3; a single-shot deliverable skips it. Builds on the **Derived gate model**
+above (phase is the time-bucket that captures leak-in; campaign stays a *named*
+new-work set — they diverge exactly when other work is pulled in).
 
 A roadmap that ships v1 before v2/v3 needs gates that close *per phase* without
 dishonesty. SRs may carry an optional **`Phase`** tag (e.g. `v1`, `v2`; blank =
@@ -98,6 +188,18 @@ in scope for every phase). Semantics:
   them.
 - Later phases re-enter at G1/G2 as requirement increments and close their own
   G3/G-Release with the grown phase list.
+- **A project already at G3 that takes on new scope: the derived gate handles it.**
+  New scope enters as **`Draft` SN/SR in the live spine** — the `-000` / off-spine
+  placeholder workaround is **retired** by the derived gate model above. The new
+  drafts sit at G0, so the derived **per-phase** gate for the new phase drops (the
+  `[phase]-[g*]` signal) while the shipped phase stays at its level; the shipped
+  set still closes at G3 with `check.py --gate G3 --phase <shipped>` (per-phase
+  scoping, not a marker rewind — rewinding would discard the closed phase's
+  attestation). Traceability is phase-blind, so a new-phase SR still reaches
+  **G2-completeness (LLR + TC)** before it is *Verified* — but it no longer waits
+  off-spine to be *drafted*: it is a live `Draft` row from the start. Only
+  *Verified* and *G-Release* defer by phase; the new phase's SRs read
+  phase-deferred until their own G3.
 
 ## Lifecycle phase
 
@@ -196,8 +298,12 @@ harness is the bar everywhere; a red check is a red check.
   mid-run human escalation is replaced by the Blocked register, ask-the-human
   by the Decisions log (HIGH revert-cost decisions get an independent
   peer-tier second opinion *before* execution), human `Attest` by LLM-Attest.
-  The reviewer tier is the strong-model floor (§6 tiering) and is never
-  delegated down.
+  The **gate-closure** reviewer tier is the strong-model floor (§6 tiering) and
+  is never delegated down. (This floor governs a **gate advance** only. The
+  cheaper *iteration-loop* reviewers the coordinator schedules between builds
+  are deliberately cheap-but-heterogeneous — see "Unattended operation" ->
+  the routing/escalation subsection; a weak-but-different-family review is a
+  useful uncorrelated draw, where a weak *gate* verdict is not.)
 
 ### The LLM-gate verdict protocol
 
@@ -211,9 +317,11 @@ A gate closes only on the verdict of an **independent LLM reviewer**:
   and quotes real output; a verdict citing a run it didn't perform is invalid.
 - **Verdict recorded** in `log.md` per §5, extended with `Model: <model id>`
   and `Role: LLM-GATE`; the Gate Sign-offs acceptor column reads `LLM-GATE`.
-  APPROVE → the driver bumps `docs/gate`, citing the verdict block (the
-  verdict is the review of record). CHANGES-REQUESTED → findings route to
-  their owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
+  APPROVE → the driver makes the **ratifying Status-change commit** (and
+  regenerates `docs/gate` via `derive_gate.py`), citing the verdict block (the
+  verdict is the review of record — this is the `autonomous` ratification the
+  "Derived gate model" describes). CHANGES-REQUESTED → findings route to their
+  owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
 
 ### The Blocked register (replaces mid-run escalation)
 
@@ -358,7 +466,10 @@ without a commit), or an iteration budget ceiling hits. Sessions run on the
 iteration branch where the "Agent iteration branch & sync" layer is in use
 (never the development branch), trigger its sync ritual at the end states, and
 honor `docs/push-policy` — under the default `human` the coordinator never
-pushes, even if asked.
+pushes, even if asked. At loop start the coordinator **surfaces a dirty working
+tree** (residue from an interrupted session) into the first session's prompt as
+a reconcile instruction, with a one-line log; stash/rollback is deliberately
+*not* automated — that judgment belongs to the session.
 
 **The `docs/run-state` contract** (one word, tracked like `docs/gate`) is what
 the driver owes the coordinator; update it in the session's final commit:
@@ -400,6 +511,19 @@ strong tier pays the exploration cost once, every cheap session after reloads
 only the spec. `status.md` stays the lean resume surface, naming the current
 block; finished blocks are logged and pruned.
 
+**Per-phase effort (a sibling knob to the model map).** Just as `AGENT_MODEL_MAP`
+routes a *model* per phase, reasoning *effort* can be tiered per phase — a
+grep-and-summarize phase is not a crash-debug phase. Two cautions, both
+evidenced (effortmining, ~450 pre-registered runs on `claude-opus-4-8`): **(1)
+cheap is not free** — at low effort a model does not merely skim, it
+*fabricates* (an invented ticket id in the published runs), so route hard work
+*up* a tier, never down to save tokens on a task that will hallucinate; **(2)**
+the knob that actually bites is **agent-frontmatter effort**, not a prompt-level
+cue (a subagent inherits its frontmatter `effort`; `/effort`-style prose in the
+task is ignored) — so per-phase effort is set the same way per-phase models are
+(a phase-specific agent file / command template), and kept **thin and
+replaceable**, since native per-spawn effort will likely obsolete the workaround.
+
 **Sizing the blocks** — the judgment the PLAN phase owns; it cannot be
 mechanized, but it can be steered:
 
@@ -440,13 +564,143 @@ dispatch stays the **zero-code convention**: the previous session sets
 `run-phase` and names "review WI-x" in `status.md`; the loop surfaces the dial
 in its banner but never enforces it — the harness pass is the entry ticket,
 the recorded verdict is the value. A reviewer is **independent** (no shared
-transcript with the implementer; input = the diff + the WI + the TCs) and
+transcript with the implementer; input = the diff + the WI + the TCs), treats
+the implementation report as a set of **claims** and re-runs the checks it
+asserts rather than trusting them (believe nothing unobserved), and
 fixes directly only what lies within the WI's own declared scope — anything
-else is *filed as a finding* for the integrator. Related tripwire: the
+else is *filed as a finding* for the integrator. Reviewer B's process/trace
+charter includes one codename check: a **session-local codename in a durable
+cell** — a `work-items.csv`/SR/LLR/TC row or a `docs/specs/` file, as opposed to
+a `log.md` entry — is filed as a finding (the codename-discipline rule stated
+under "Trajectory / work-items"). Related tripwire: the
 coordinator warns (never blocks) when a lane's `status.md` outgrows one screen
 (`AGENT_STATUS_WARN_BYTES`, default 8192, `0` silences) — every session
 inherits that resume surface, so pruning it is the integrator's charter,
 with evidence living in `log.md` and the iteration logs.
+
+**Heterogeneous scheduling — model routing, reviewer dispatch, and the
+escalation policy (`docs/agents.csv` + `docs/agents-enabled`; WI-059).** The
+reviewer dial above is *surfaced* by default; when a repo opts into managed
+routing the loop *enforces* it — a committing build schedules the reviewer
+round(s) before the next build. This is the S8 layer, and it stays stdlib,
+consent-explicit (no silent model swap), and never-breaking: **absent the
+enable-list, the loop keeps exactly today's single `AGENT_CMD`/`AGENT_MODEL`
+behavior**, so a fresh scaffold pays nothing.
+
+- **A model registry, not a catalog — `docs/agents.csv`, the pair-row model.**
+  Columns `Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes`, and **one row =
+  one (model × route) pair** — this model, reached this way ("pairs now, factor
+  later"). The split is **identity vs access**:
+    - *Identity* — **`Family`** (who trained it — the heterogeneity + scorer
+      corroboration key, *never* how the model is reached), **`Model`** (the
+      provider's line identity, INCLUDING `-pro`/`-flash`/`-codex` tokens — those
+      are a separately-billed *model line*, not a maturity tag), **`Version`**
+      (the *comparable* token only: a dotted numeric like `4.8`, a date stamp, or
+      a maturity tag — moving vendor aliases like `chat-latest` never live here).
+    - *Access* — **`CmdTemplate`** (`{model}`/`{prompt}` slots) + **`Env`**
+      (`KEY=value;KEY2=value2`, merged over the inherited environment at launch;
+      **an empty `Env` = the ambient environment = today's behavior**). `Env` is
+      the declarative fix for every env-only selector — `CLAUDE_CONFIG_DIR`,
+      `CODEX_HOME`, `ANTHROPIC_BASE_URL`, `GEMINI_API_KEY` — which a bare
+      `CmdTemplate` (launched `argv`-only, no shell) can't carry.
+  The table itself **is the allow matrix** — a (model × route) pair is usable iff
+  its row was written, keeping consent explicit (no `Serves` patterns that would
+  silently allow a future model). The `Id` is a free-form unique **join key,
+  never parsed** (charset: uppercase + digits + hyphen + dot). **`Provider` is
+  retired** in favor of `Family`; a legacy registry with a `Provider` column and
+  no `Family` reads Provider as Family — never-breaking. Cooldown stays **per row
+  id = per access path**, so an account outage or router failure cools only that
+  path. The kit ships example rows for the verified headless shapes (`claude -p`
+  / `codex exec` / `gemini -p`) and **vendors no model catalog** — richer data is
+  a documented pointer to the maintained community registries (models.dev
+  `api.json`; LiteLLM's model-prices JSON), never a copy.
+- **Account rows and router rows are just more pairs.** A **second paid plan**
+  with one provider = a **second pair row** with a distinct id (suffix style,
+  `…-ACCT2`), the *same* `Family`, and its own `Env` account selector — so its
+  quota pool cools independently by construction. A **third-party router** = a
+  pair row whose `Env` points its CLI at the router (`ANTHROPIC_BASE_URL`); it
+  shares the native model's `Family`, so it is **not** a diverse reviewer from
+  its native sibling (a router is access, not identity). Two safety notes carried
+  from the research: **pin LiteLLM away from the known-malicious PyPI builds
+  `1.82.7`/`1.82.8`**; and **Gemini OAuth accounts share one credentials file and
+  race on token refresh** — multi-account Gemini must use API keys or be
+  serialized (Claude/Codex config dirs are token-isolated and concurrent-safe).
+  *The recorded revisit trigger (the "factor later" half):* once one route's
+  command/env text repeats across enough pair rows that editing it is
+  error-prone, factor the route definitions into a named-preset file the pair
+  rows reference — the rows stay the explicit allow matrix, only the text gets
+  deduplicated.
+- **Version-less resolution (newest-in-line, offline & deterministic).** An
+  `agents-enabled` token that exactly matches a row `Id` resolves to it;
+  otherwise it resolves over rows whose normalized `Family`-`Model` matches
+  (column-keyed — the id is never parsed) — **intra-line only** (it never crosses
+  a model line, keeping the "different model vs. newer version" trap closed).
+  Among those: newest by **dotted-numeric tuple**, then a **maturity-rank
+  tiebreak** (GA/untagged > `preview` > `beta` > `exp`, a fixed vocabulary with a
+  per-registry override — a `# tag-rank: …` comment line in `agents.csv` or the
+  `AGENT_TAG_RANK` env knob), then a **date-stamp** final tiebreak; `preview`/
+  `exp` rows are skipped unless explicitly named or the only candidate, and
+  equal-key route pairs fall to **registry row order**. "Newest" is computed only
+  over rows present in the registry — no network, fully deterministic.
+- **Routing = an enable-list + availability.** `docs/agents-enabled` lists, in
+  **preference order**, the registry ids (or version-less `Family-Model` tokens,
+  resolved above) this repo may use — the consent surface, and the switch that
+  turns managed routing on (it is deliberately *not* scaffolded; absence =
+  routing off). Per session the loop selects from that pool by the phase's tier
+  (`AGENT_TIER_MAP`/`--tier-map`, else the built-in phase->tier defaults —
+  iteration reviewers default to a cheaper tier) plus the **family**-heterogeneity
+  rules; a model whose session fails to start or stalls
+  goes on **cooldown** (the rate-limit backoff, generalized per-model,
+  `AGENT_COOLDOWN_SECONDS`) and is retried; when no enabled model of the
+  preferred tier is available the loop walks the **next tier up — never a weaker
+  one**, and pages rather than silently downgrade. **Every selection and
+  cooldown is logged before launch** (consent = the enabled set + these declared
+  rules).
+- **Reviewer independence (the evidence-backed core).** Reviewers are fresh
+  sessions, **two families, at least one differing from the implementer's —
+  *preferred, not required*** (family = who trained the model, so a router-fronted
+  row is not diverse from its native sibling). The reviewer prompt gets the diff + the
+  requirement surface and **never the implementer's self-assessment** (leaking
+  it collapses finding rates several-fold); it ships as an embedded **redacted
+  reviewer prompt**, overridable per phase with a prompt-template **file** via
+  `--prompt-map`/`AGENT_PROMPT_MAP` (each entry preflighted like
+  `AGENT_CMD_MAP`). **No debate rounds** — independent parallel reviews,
+  mechanically merged (CHANGES-REQUESTED if any reviewer requests changes).
+  **Degraded availability is ruled legal:** when only one family responds,
+  two independent *same-family* sessions review — fresh context is the
+  invariant, family diversity best-effort (the scorer already weights
+  cross-family corroboration above same-family). Verdicts are **repo files**
+  (`docs/reviews/NNN-<PHASE>.md`) in the `log.md` block format plus one machine
+  line: `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`.
+- **The substance scorer (`scripts/score_reviews.py`) is advisory.** It scores a
+  verdict block by confirmed-finding rate, cross-reviewer corroboration
+  (cross-family weighted up), anchored-finding precision (anchors must resolve;
+  capped), and actionability. **Severity hygiene and the anti-gaming tripwires
+  are gates, never scores; length never scores positively.** The tripwires
+  (finding-cap pinning / count gaming, near-duplicate review text, an
+  implementer diff touching a review or policy path, mass finding-rejection) are
+  **non-scored hard stops** that page the human. The scoreboard is one small
+  decayed-tally text file (`docs/reviews/scoreboard.txt`: per-provider substance
+  + the round history) — the declared policy picks, nothing auto-optimizes.
+- **A fixed escalation policy, not a learned router** (per-project sample sizes
+  are far too small for a bandit): **win-stay/lose-shift** — the higher-substance
+  family becomes the next round's primary feedback source only on a **margin
+  >= 2**; the implementer's family **swaps after 2 consecutive failed review
+  gates**; the tier rises **only after the swap also fails**; and the loop
+  **pages the human** on 2 top-tier failures (the shared-failure regime — the
+  spec is wrong, not the model), on opposite verdicts twice running, or on any
+  tripwire. The constants ship as legible **per-repo-overridable defaults**
+  (`AGENT_ROUTE_MARGIN`, `AGENT_ROUTE_SWAP_AFTER`, `AGENT_ROUTE_PAGE_TOP_TIER_FAILS`)
+  — calibration values, not spine facts.
+- **Failure semantics follow `docs/gate-policy`.** On a page-the-human condition
+  the causing WI **and its hard-edge dependents pause** in every mode; the mode
+  decides what happens around that — **attended:** start nothing new, let
+  in-flight sessions close out, then the loop stops `NEEDS-HUMAN` and alerts;
+  **single-ratify:** keep working non-dependent WIs to completion, surface the
+  block for ratification; **autonomous:** schedule a fresh **design-check
+  session** (different provider, strong tier) to rule grind-through vs. genuine
+  redesign, document every assumption, and continue — a redesign verdict
+  re-enters the change-intake flow (process.md §5).
 
 **Session discipline.**
 
@@ -512,6 +766,63 @@ double-click wrappers, scaffolded like `run.*` and **inert** until the
 single hands-on session at the mapped tier instead of the loop. A repo that
 doesn't want the entry point deletes the launchers; the protocol stands alone.
 
+## Critique verification & the critique loop
+
+*Referenced from the "Unattended operation" layer above.* **Applies when** a
+requirement's acceptance is **subjective** — "a realistic-looking render", an
+artifact comparison with no crisp measurable interface. The implementer session
+cannot judge its own output (a real project shipped awkward render artifacts
+because "the agent didn't know how to judge it, it just shipped it"), and the
+original TC may have been lax. `Critique` gives another agent a **different hat**:
+an independent critical eye that says *where and why* something isn't good enough
+and drives rework toward a written bar. Built on the S8 chassis (fresh sessions,
+redacted prompts, verdict files, `gate-policy`-keyed escalation).
+
+- **`Critique` is a first-class Verification value** (PROCESS.md §4). A perceptual
+  TC declares `Verification=Critique`; its `Method` names the critique procedure and
+  its `Parameters` name a **rubric** (`docs/rubrics/<name>.md`) plus the **artifact
+  recipe** (the command/steps that produce the render/output under judgment). The
+  `CRITIQUE` leg is its mechanization; human **`Attest`** stays a distinct, unmixed
+  value — that separation is the point of the ruling.
+- **The rubric derives from the SN/SR intent, never the TC** — the inversion that
+  catches a lax TC instead of inheriting it. A rubric carries **numbered good
+  (`G#`) and bad (`B#`) anchors** — definite, citable entries, TC-style. The
+  reference **builds over time**: a critique finding that names a new failure mode
+  is added as a new `B#` anchor at rework, so the next round judges against the
+  **accumulated** reference, and every verdict **cites anchor ids** (what makes
+  rounds comparable across sessions). See [`docs/rubrics/`](rubrics/README.md).
+- **Redaction by construction.** The critic gets the rubric + the SN/SR intent +
+  the artifact recipe and **never the implementer's self-assessment** (`status.md`,
+  `log.md`, the session transcript) — the same rule the reviewer prompt follows.
+  It ships as an embedded `CRITIQUE_PROMPT`, overridable per phase with a
+  prompt-template **file** via `--prompt-map`/`AGENT_PROMPT_MAP` under the
+  `CRITIQUE` key. The critic is provider-heterogeneous from the implementer when
+  available (`agent_route`), strong-tier by default.
+- **The optimization loop, bounded.** BUILD → CRITIQUE → rework, iterating until
+  `APPROVE` or the budget (`AGENT_CRITIQUE_MAX`, default **3**, env-overridable
+  like the S8 knobs) trips the `gate-policy` page-the-human path. The trigger is a
+  committing build whose WI touches a `Critique` SR (read straight off the spine);
+  absent an enable-list or any `Critique` SR, nothing changes.
+- **The lax-TC ratchet.** A `CRITIQUE` round that returned CHANGES-REQUESTED and
+  then closes the WI with **no change to the validation chain — the TC prose, the
+  test logic, or the rubric file** — trips the warn-first no-validation-delta check
+  (`check_trajectory --staged`): the fix must land in the chain, not just the
+  artifact. This is the specific mechanism that stops "shipped it because nothing
+  judged it" from recurring.
+- **The arbiter split.** Working default: **the critic gates iteration; the human
+  owns acceptance.** A critic `APPROVE` ends rework; gate closure still carries the
+  human `Attest` (the strong-model floor and the attested-vs-mechanized split
+  stand). Under `gate-policy: autonomous` the critic verdict closes
+  iteration-level acceptance and the recorded-verdict rules govern the gate as they
+  do today. (This does not contradict the S8 "no LLM-judge tiebreaker" ruling —
+  that ruled out an LLM arbitrating between *reviewers' scores*; here the quality
+  itself is perceptual and an LLM eye is the only mechanizable instrument.)
+- **The multimodal caveat.** Image-capable CLIs read local renders/screenshots
+  natively from the recipe's paths; **capability varies per model** — note it in
+  the registry `Notes`, and a text-only model runs a **degraded text-proxy
+  critique** (it judges the description/output text and says so). Honest
+  degradation, never a silent pass.
+
 ## Tier-conditional guardrails
 
 *Referenced from the "Unattended operation" layer above.* **Applies when** an
@@ -571,11 +882,70 @@ should, mutating **nothing** in the workspace.
   human-reviewed re-copy that bumps the commit — never automatic. It is
   deliberately **not** wired into `check.py` (the gate stays hermetic).
 
+**A reference upstream.** A worked example of a vendorable set is the Guardrails
+Kit ([`TheColliny/FableClaudeMDForOpus`](https://github.com/TheColliny/FableClaudeMDForOpus)):
+an event-phrased routing table + iron rules delimited by `BEGIN/END KIT CORE`
+markers (in its `CLAUDE.md`) with `docs/guardrails/{PLAN,CODE,DEBUG,VERIFY,
+EFFICIENCY,SESSION,TRAPS}.md` playbooks beside it — the exact core-plus-playbooks
+shape this layer injects. To adopt it, vendor that `CLAUDE.md` as
+`docs/guardrails/core.md` (the markers travel with it, so only that block is
+injected) and the playbooks unchanged, then pin the source so drift is caught:
+
+```
+# docs/guardrails/UPSTREAM
+base = https://raw.githubusercontent.com/TheColliny/FableClaudeMDForOpus/<commit>
+docs/guardrails/core.md = CLAUDE.md
+docs/guardrails/PLAN.md = docs/guardrails/PLAN.md
+```
+
+and set the recommended `guardrails-policy: all except <your frontier model>`.
+(It is agent-behavior *content*, adapted independently — never redistributed by
+this kit; the pin + a reviewed re-vendor commit are the supply-chain control.)
+
+**A related opt-in — efficiency packages.** The same vendor-and-pin discipline
+suits *token-efficiency* agent packages (orthogonal to the guardrails core: they
+shape output verbosity and tool-output cost, not tier-conditional routing) — a
+worked example is [`JayPokale/RDXmin`](https://github.com/JayPokale/RDXmin) (a
+YAGNI output-ladder ruleset + a `PostToolUse` scrub/elide/dedup tool-output
+compressor). Vendor one, or fold its ideas into your own package; **weigh it at
+kit adoption and at each re-sync** (the adoption guide flags both moments).
+
 **The boundary.** Guardrails govern *in-session agent mechanics*; the process
 (gates, traceability, the honest-gate rule) governs *artifacts*. A guardrail
 never relaxes a gate, and the honest-gate rule still owns every `run-state`.
 The meta-repo dogfoods the mechanism (tests) but runs the policy **off** — its
 own sessions are frontier-tier, so there is nothing to guard.
+
+## Enforcement audit — which file enforces this rule tomorrow?
+
+**Applies when** your working agreement or process has grown past what one
+reader holds in their head and you want to know which rules actually bind.
+Written rules decay — context resets, the next model is weaker, goodwill can't
+be assumed — so this audit asks one question of every behavioral rule: *which
+file enforces it tomorrow, when nobody is being careful?* Each rule is
+classified by the **strongest** mechanism that holds it up:
+
+- **Harness** — a deterministic check at a lifecycle event (a git hook, a
+  `check.py`/`trace.py` step, CI). The script decides; the rule cannot be
+  forgotten. Strongest, and the default home for anything mechanizable.
+- **Test** — a regression net (`tests/`): a bar checkable only by executing
+  against a fixture. The enforcer for behaviors that are outcome, not syntax.
+- **Reviewer** — delegated to an independent reviewer charter (the reviewer
+  dial above), which gains a perspective a hook can't: judgment on method,
+  risk, and prose.
+- **Prose** — kept in the always-loaded guide because it shapes every decision
+  and no mechanism can capture the judgment (e.g. "ask one good question").
+  Only as strong as compliance — so reserved for what genuinely can't be
+  mechanized, never a hiding place for a rule that *could* be a check.
+
+The bar is **honesty**: a rule with no enforcer is either rewritten into one of
+the classes above or flagged plainly as unbacked — **zero unenforceable rules
+without a stated reason**. Recording the result as a short table in `docs/`
+(one row per rule → its primary enforcer + the file) turns "we have rules" into
+"here is where each one bites," and surfaces the gaps worth closing — an
+Inspection that should be a Test, a guide rule no hook backs. (The meta-repo
+dogfoods this over its own working agreement; a live example finding it caught
+was the stdlib-only rule, promoted from an Inspection to a real test.)
 
 ## §7 boundary notes
 
@@ -641,12 +1011,21 @@ serve that path, both scaffolded by bootstrap:
   line). Ease of access is a requirement of its own: the launch command may be
   obvious, and it may be documented in the README, but *recall is still the
   enemy* — a launcher turns "remember the incantation" into "open the folder and
-  click". Each is a short, readable script with one `RUN_CMD` slot (filled twice:
-  `run.cmd` for Windows, `run.sh` for POSIX; `run.command` delegates to `run.sh`
-  so macOS costs no third copy). They ship **inert** — an unfilled `RUN_CMD`
-  prints guidance and exits nonzero, the same always-scaffolded-inert stance as
-  the optional registries — and a pure library deletes them and describes usage
-  in the README instead.
+  click". A project rarely has just one thing to run — *serve the app and open
+  its page* versus *build the ISO and launch the burner* — so the launchers
+  present a **capability menu**. Capabilities are declared **once**, in
+  `docs/stack.ini`'s `[run]` section: one `<name> = <command>` line per
+  capability plus an optional `<name>.desc = <one line>`, each command a full
+  shell line (a multi-step capability lives in a project script named here once).
+  Each launcher is a thin delegate to `scripts/run_menu.py`, which reads that
+  section — no args = a numbered interactive menu, `run.sh <name>` = a direct
+  launch (exit code passed through), `run_menu.py --list` = a stable
+  `name<TAB>desc` machine listing (the agent surface). The launch command lives
+  in exactly one place (the duplicated `RUN_CMD` is retired); `run.command`
+  delegates to `run.sh` so macOS costs no extra copy. They ship **inert** — an
+  absent or empty `[run]` section prints guidance and exits nonzero, the same
+  always-scaffolded-inert stance as the optional registries — and a pure library
+  deletes them and describes usage in the README instead.
 
 **Offline-render principle.** Legibility artifacts (the Mermaid diagrams, the
 trace HTML map, the code map) must render with **local, offline** tooling — never a
@@ -706,6 +1085,17 @@ cheap), and a query-time semantic index (§7 map-vs-index note) can help chase
 references across a large tree — but both are optional, downstream, and orthogonal
 to the promote rule.
 
+**The owner scratchpad is human scratch, not a working surface.** Bootstrap
+scaffolds a root `OWNER_SCRATCHPAD.md` — the human owner's counterpart to the
+agent scratch above: free-form notes that may be old, contradictory, augmented, or
+half-formed. **LLM agents must not read, index, summarize, cite, or act on it**;
+its own loud header says so and is the primary defense (the meta repo's `CLAUDE.md`
+carries the same one-liner). Nothing there is a requirement, ruling, or working
+surface — those stay `docs/status.md`, the registries, and `docs/log.md`.
+`check_docs.py` exempts the file entirely (links, orphans, stale hints — owner
+notes never gate a commit); the always-on secrets floor still scans it, so it is
+not a secrets-safe zone. A repo that doesn't want it just deletes it.
+
 ## Skills layer
 
 *Referenced from PROCESS.md §7 "boundary notes".* **Applies when** a repo will be
@@ -743,6 +1133,26 @@ contract lives in the kit's `skills/README.md`; the shape:
   binary/hardware?) and selects the `kit`-scope skills whose tags **intersect** the
   answers — a trivial set-intersection, no engine. The **metadata convention is the
   deliverable**, so a later tool can match/fetch smarter without redesign.
+- **The per-agent copies are a checked, generated fan-out (S7).** `.claude/skills/`,
+  `.gemini/skills/`, and `.agents/skills/` (Codex, `--agents codex`) are just
+  different directories holding **byte-identical** copies of the one neutral
+  `skills/` source — needed only because agent skill *locations* don't
+  standardize. Materialization stays write-once (never clobbers project content);
+  `bootstrap.py --sync` is the deliberate refresh that force-overwrites **only**
+  each `<agent>/skills/<name>/` subtree from source (edit source → re-materialize
+  in one command). `gen_skills_index.py --check-agents` is the **drift gate** —
+  every per-agent copy byte-identical to source — wired into the pre-commit floor
+  + G3 like the arch-map/OKF freshness steps: a drifted copy **fails** with a
+  one-command fix, and it is vacuous for a repo with no neutral source or no
+  per-agent dir. Only skills that a per-agent dir already carries are compared, so
+  a scope-matched subset is fine. The copies are **tracked + gated** (the kit's
+  idiom for committed generated artifacts — a fresh clone has working skills
+  before setup runs). **Tenability constraint:** this verbatim fan-out holds only
+  while **skill frontmatter stays agent-neutral**. The day a skill needs an
+  agent-specific field, materialization gains a per-agent transform (map/strip
+  fields) and the tracking model flips to **gitignore + regenerate-on-setup** —
+  tracking *transformed* artifacts invites the hand-edits the kit exists to
+  prevent. Deferred until a real need earns it.
 - **Future external sources plug in here.** `skills/README.md` documents the
   contract (naming, the frontmatter shape, the neutral-source landing zone,
   trust/review) for how a later tool would fetch remote/community skills — they land
@@ -782,11 +1192,14 @@ whiteboard thread — stays the *why*; `work-items.csv` is the machine-readable
 thread argued. The two **coexist**; the registry does not replace the narrative.
 
 **Registry.** `docs/requirements/work-items.csv`, columns
-`WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable`. Off-spine and
-optional like `procurement.csv` / `assets.csv`: `trace.py` does not read `WI-`
-ids — the trajectory tooling owns them. `Status ∈ {queued,active,done}`;
-`SR-Refs` / `Predecessors` are `;`-joined id lists; a `-000` example row ships
-inert (the placeholder rule the whole kit shares).
+`WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef`.
+Off-spine and optional like `procurement.csv` / `assets.csv`: `trace.py` does not
+read `WI-` ids — the trajectory tooling owns them. `Status ∈
+{queued,active,done,deferred}` — `deferred` is a first-class *queued-but-not-next*
+state carrying a recorded reason (a distinct DAG state, not "next"); an unknown
+status lints. `SR-Refs` / `Predecessors` are `;`-joined id lists; a `-000` example
+row ships inert (the placeholder rule the whole kit shares). A legacy CSV without
+the `SpecRef` column reads it as empty — never-breaking.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
 G2. Every `Predecessors` id (hard or soft) resolves to a real work item and the
@@ -795,6 +1208,93 @@ depends on itself can never start); a cycle that closes only through soft
 edges is a **warning** (conflicting ordering hints, not a blocker); every `SR-Refs` id exists in the SR registry — a **warning**, since a
 draft SR referenced ahead of its row is legitimate; `WI-###` id shape and
 uniqueness — integrity, like `trace.py`.
+
+**The SSOT model (status.md ↔ registry).** `status.md` and `work-items.csv` used
+to compete — both carried work descriptions, and they drifted. The model splits
+them: **`status.md` is forward-only** (what happens next) and **the WI
+`Deliverable` is backward-only** (what shipped). The bridge is a per-WI
+**`SpecRef`** that lives while the WI is open and clears at close.
+`check_trajectory.py` mechanizes five rules by cross-reading both files (warn-first
+at the commit floor; `--strict` gates R-B…R-E at G2+):
+
+- **R-A** — a WI's `Deliverable` is non-empty **iff** `Status = done`; an open WI
+  (queued/active/deferred) has an **empty** Deliverable. A **hard error at every
+  run** (no flag): a commit is the agent handoff point, so an incoherent WI state
+  launches the next session into the wrong item. This is the pre-commit floor.
+- **R-B** — every **open** WI id appears as a token in `status.md` (its lane); a
+  `deferred` WI additionally carries its **reason** there.
+- **R-C** — `status.md` names at least one **open** WI id (the next/active work).
+- **R-D** — a **`done`** WI id must **not** appear in `status.md` (bare id token) —
+  closed work leaves the working surface; history lives in `log.md`.
+- **R-E** — every **open** WI has a non-empty **`SpecRef`** resolving to an
+  in-repo target (`docs/specs/WI-###.md` or a `doc#anchor`; the path part must
+  exist). Deeper anchor/path validation rides `check_doc_refs.py`'s path tier.
+
+If `status.md` is absent, R-B/R-C/R-D are vacuous (a repo may keep no status
+blackboard); a placeholder-only/absent registry stays vacuous for all of them.
+
+**Spec-of-record (`SpecRef` + `docs/specs/`).** A queued WI whose only description
+is its title is not implementable, and nothing used to check that an open WI named
+a reachable spec. `SpecRef` fixes that: a spec-of-record lives in
+[`docs/specs/`](specs/README.md) (a per-WI `WI-###.md`, or a shared
+**campaign** doc addressed by `#anchor`) while the WI is open, and is **archived at
+close** to `docs/archive/specs/` with the close date appended and the WI it was
+attributed to noted (git keeps the history; the `Deliverable` + `log.md` carry the
+summary). Every spec ships a **Done-when checklist**, so a half-complete WI's
+frontier is its **first unticked box**, not prose discipline (ticks are transient
+working state). A shared campaign doc archives when its **last** open WI closes.
+
+**No-validation-delta warn.** A rework WI that addresses a prior failure but
+changes neither the TC prose (`docs/test/test-cases.csv`) nor the test logic
+(files under the declared tests dir) warns (`--staged`, warn-first): the same
+failure can recur because the fix landed in the code, not the validation chain.
+
+**Codename discipline (durable references).** Every durable reference in a
+registry or spec is a `WI-`/`SR-`/`LLR-`/`TC-` id or an in-repo path — **never a
+session-local codename**. Review-finding labels, phase nicknames, and
+"the grind"-style shorthand belong in a `log.md` session entry (ephemeral
+narrative), but not in `work-items.csv`, the SR/LLR/TC registries, or
+`docs/specs/`: a codename resolves only by spelunking archived docs, while an id
+or path resolves mechanically. This stays a **writing rule + reviewer-B
+checklist item**, not a mechanical lint — a naive `[A-Z]\d+`-shaped matcher
+would false-positive on `G3`, `SR-###`, and the like, so a narrow lint waits
+until a real recurring pattern earns it.
+
+**Campaign ruling.** Any batch of spine-touching work headed for the same
+re-attestation should land as **one campaign** — batch the changes so a **single
+owner sitting** covers each re-attestation, rather than paying for several. A
+campaign's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
+cadence:** mid-campaign WI sessions end at the **commit bar** (the pre-commit
+hook floor + the project's test command + `check_docs --stale`), not the full
+gate; the full `check.py --gate <gate>` runs **once at campaign close** (the
+coordinating close), and CI runs the gate job on every push regardless — a
+mid-campaign regression is still caught by the per-commit suite run. Test-impact
+selection ("run only the relevant tests") is **rejected**: a missed transitive
+dependency passes silently and the coverage floor breaks, so the sanctioned
+cheap per-commit layer for a slow suite is the declared **smoke** tier
+(`stack.ini [tiers]` — `pytest -m smoke` per commit, full tier at gates), not a
+guessed subset. The optional **`Campaign`** column on `work-items.csv` (a
+grouping tag in the `Workstream` precedent — mutable, not id-checked; empty =
+standalone) records a WI's campaign durably once its `SpecRef` clears at close,
+and the When-view dashboard **bins the WI DAG** into collapsed campaign
+containers by it — the WHEN-axis mirror of the How-SW component containment (no
+right-sizing bound, since a campaign is bounded by construction).
+
+**Parallel test execution.** Running the suite across cores is a **`docs/stack.ini`
+concern**, not a process rule: append `-n auto` to `[product] test` and the harness,
+gate, and CI all parallelize with [pytest-xdist](https://pytest.dev). It is the
+right lever for a slow suite because test-impact selection is **rejected** (above),
+so the sanctioned speed-ups are the **smoke** tier per commit and **parallel
+execution** at the gate. The kit's **template** ships the plain command with the
+`-n auto` line **commented** — opting in is a knowing act, since a suite with
+order-dependent or shared-mutable-state tests may not be xdist-safe (each xdist
+worker is a separate process; only filesystem writes to shared, non-`tmp_path`
+paths race — env vars and cwd are per-worker). A suite whose parallel wall time
+still disappoints has one recorded, **not-yet-built** fallback lever: a
+**session-scoped shared-scaffold fixture** (bootstrap one scaffold per worker
+instead of per test). The kit's own meta-suite opts in (24 workers: ~377 s → ~65 s
+plain, ~726 s → ~157 s with coverage; subprocess coverage holds per-worker,
+combined total unchanged at ~91%).
 
 **Dashboard** — `gen_trajectory.py` renders the root `PROJECT_STATE.html` (the
 unified project-state artifact; formerly `docs/trajectory.html`), a generated
@@ -810,6 +1310,21 @@ from the registry; the shipped pre-commit hook runs the same step at every
 commit (vacuous for a non-adopter), so a registry edit that stales the
 dashboard is caught locally, not first in CI. In `status.md`, the **Next action** then names the next
 `WI-###`(s), and the dashboard shows where they sit in the DAG.
+
+**Knowledge tab (consumes the OKF bundle).** When a committed `docs/okf/` bundle
+exists, `gen_trajectory.py` gains a **Knowledge** tab: the OKF concepts as a typed
+graph (nodes fill-keyed by `type`, directed `SN→SR→LLR→TC` edges parsed from the
+bundle's link lists), laid out by the same Python layouter as the WI DAG. This
+makes the dashboard the bundle's **first real consumer** — the middle-path
+embedding (ruling): the detail panel embeds each concept's one-line
+**description** and **links out** to its `docs/okf/<tier>/<id>.md` for the full
+body (which sits beside the artifact). It stays a *view* — the registries are the
+truth and the bundle is itself generated — so the load stays deterministic (no new
+`--check` exclusion). **Omitted without a bundle**, so a bundle-less repo renders
+byte-identically to before the tab existed. Because the dashboard now reads the
+bundle, the regen order is **arch-map → okf → trajectory** (a stale bundle would
+bake stale knowledge into the dashboard); the pre-commit hook reports `okf`
+freshness *before* the dashboard's for the same reason.
 
 **Opt-out (why a non-adopter pays nothing).** The layer ships **present but
 vacuous**: a fresh scaffold carries only the inert `WI-000` placeholder, so both
@@ -1057,6 +1572,58 @@ binary; the **record of it** is text, tracked, and reviewable.
   manifest is the honest, text-tracked record — an ideal reached for, not a check
   faked.
 
+## Intra-repo interfaces & the architecture graph
+
+*Builds on PROCESS.md §8 (the seam registry).* **Applies when** a repo has more
+than one module and wants its architecture view to show **how the modules
+connect** — the seam the AXES ratification sanctioned ("a cross-component edge
+without a declared interface is a finding"). §8 records a shared surface once as
+an `IF-###`; the same registry serves an **intra-repo** seam (module→module,
+module→file, module→external-actor) exactly as it serves a cross-project one — one
+`interfaces.csv`, two uses.
+
+**The model — one row per directed seam.** `ThisProject` = the module path;
+`Counterpart` = another module, a **file path** (giving module→file→module
+dataflow, so a shared file like `docs/stack.ini` is a hub node many modules
+Consume), or an **external actor** (`downstream adopter`, `git`, `agent CLI`);
+`Direction` = Provides/Consumes; `Contract` = one testable line (CLI flags + exit
+codes, or the file schema); `SR-Refs` links the spine so every seam is
+transitively TC-covered. `trace.py` integrity-checks the tier (id shape, the
+SR-Refs back-link under `--strict`, a best-effort `ThisProject`↔`LLR.Module`
+advisory) — WI-056 closed the SR-002-era gap where trace never read the IF tier.
+
+**Opt-out, default-on (ruled).** By default a contract IF must define how the
+architecture connects, so the **coverage warn runs even when `interfaces.csv` is
+empty or absent**: a multi-module arch-map with no declared seams reads
+**"connectivity undeclared"** instead of passing vacuously, and the How-SW panel
+stays a bare module list — the organized graph is *earned* by declaring seams.
+`check_trajectory.py` runs this at the hook and the gate, **all warn-first** (it
+never changes an exit code). A repo with genuinely nothing to declare silences it
+with the one word `off` in `docs/interfaces-check` (the
+`trajectory-check`/`okf-export` idiom — no file is scaffolded; absence reads on);
+a single-module inventory is vacuous. The warns: every arch-map module is a
+declared IF endpoint; each `Active` seam is cited by ≥1 TC; a `Contracts: IF-###`
+docstring line (harvested into the arch-map like `Implements:`) matches the
+registry.
+
+**The honesty valve.** A pure **source** (produces output, consumes nothing) or
+**sink** (consumes, produces nothing) would otherwise breed a boilerplate
+opposite-direction row. Mark it instead: make the `Notes` cell of one of that
+module's IF rows **begin** with the word `source` or `sink`, and the
+missing-direction warn for `ThisProject` is suppressed.
+
+**The graph.** When real seams exist, `gen_trajectory.py`'s How-SW panel renders
+them as a directed graph (module / file / external-actor nodes, IF-labeled edges,
+reusing the WI-DAG layouter) above the symbol table, and `gen_arch_map.py` merges
+module↔module seams into the dependency diagram as distinctly-styled dotted edges.
+
+**Risk — the maintenance surface.** A fully-declared repo is ~30–35 hand-authored
+IF rows whose `Contract` text has **no mechanical oracle** (a renamed flag the row
+misses). The joins bound the rot to that one column; CLI contracts are already
+pinned by the never-break-downstream rule. Declare seams because the connectivity
+view earns its keep, not for completeness — and lean on the source/sink valve so a
+pure sink doesn't cost a row.
+
 ## Component layer
 
 *Referenced from the registry templates (`components.template.csv`).* **Applies
@@ -1092,6 +1659,27 @@ integrity; `PartOf`/`SupersededBy` resolve to real CMP ids; and every primitive
 registries `trace.py` reads: LLR/PART/ASSET). Deeper mechanization — e.g.
 flagging a cross-component import with no declared IF — is a routed, later
 check; until then the boundary discipline is gate-attested.
+
+**The How-SW top view is bounded** (WI-073/FB5). The software-architecture panel
+of `PROJECT_STATE.html` shows at most **ten** first-view items — the **top-level**
+components (a CMP with no `PartOf` that contains an arch-map module) plus any
+**uncontained** module (one with no `Component`-tagged LLR). Exceeding the bound
+is a `check_trajectory.py` finding — **WARN** at the plain/hook run, **ERROR
+under `--strict` (G2+)** — so an unreadable module map drives *right-sizing of the
+component designations* instead of being tolerated. In the render, software items
+are **containerized** into the component they belong to; expanding a component
+reveals its members (and nested components) and the seams internal to it, while
+interface seams that cross a component boundary aggregate to **one** deduplicated
+component-to-component edge at the top level. Membership is the same
+`Component`-tag join (`LLR.Module → CMP-###`); nesting via `PartOf` counts a
+module only at its top-level root. The rule is **opt-out, default-on** like the
+connectivity coverage — silence it with the one word `off` in
+`docs/components-check` (no scaffolded file; absence reads on) — and **vacuous**
+below the bound: a repo with ≤10 modules, or no arch-map inventory, passes
+trivially (the bound, not the registry, is the rule), so a small or non-adopting
+repo is never broken while a 20-module repo is *supposed* to feel it. (A CMP's
+`Category` routes the render: `software` components fill the containerized How-SW
+top view, other categories the How-physical table.)
 
 ## §9 NFR checklist
 

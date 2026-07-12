@@ -180,6 +180,51 @@ def test_prune_removes_emptied_tier_directory(scaffold):
     assert not (bundle(scaffold) / "interfaces").exists()
 
 
+def test_generated_banner_on_every_file_type(scaffold):
+    # WI-066: every emitted file self-identifies as a generated reference copy
+    # with a one-line, source-slotted GENERATED banner immediately after the
+    # frontmatter (or first, in the frontmatter-less UPSTREAM.md).
+    make_minimal_project(scaffold)
+    assert okf(scaffold).returncode == 0
+    b = bundle(scaffold)
+    lead = "> **GENERATED — a reference copy, not the source of truth.**"
+
+    # A concept file: banner right after the frontmatter, naming its exact source.
+    sr = (b / "system-requirements" / "SR-001.md").read_text(encoding="utf-8")
+    lines = sr.splitlines()
+    close = lines.index("---", 1)  # the closing frontmatter fence
+    assert lines[close + 1].startswith(lead)
+    assert "docs/requirements/system-requirements.csv (SR-001)" in lines[close + 1]
+    assert "docs/okf-export: off silences the layer" in lines[close + 1]
+    assert lines[close + 2] == ""  # blank line before the heading
+    assert lines[close + 3].startswith("# SR-001")
+
+    # A tier index names its tier's registry.
+    idx = (b / "system-requirements" / "index.md").read_text(encoding="utf-8")
+    head = idx.split("\n# ")[0]
+    assert lead in head
+    assert "docs/requirements/system-requirements.csv" in head
+
+    # The root index states it exactly once (the old routing prose is absorbed).
+    root = (b / "index.md").read_text(encoding="utf-8")
+    assert root.count(lead) == 1
+    assert "the spine registries and the process docs" in root
+    assert "Generated from the spine registries" not in root
+
+    # A process guide names the summarized source doc.
+    guide = (b / "process-guides" / "architecture.md").read_text(encoding="utf-8")
+    assert "Derived from docs/architecture.md by scripts/gen_okf.py" in guide
+
+    # UPSTREAM has no frontmatter: the banner is its first line, stated once.
+    up = (b / "UPSTREAM.md").read_text(encoding="utf-8")
+    assert up.splitlines()[0].startswith(lead)
+    assert up.count(lead) == 1
+
+    # The banner introduces no clock, and the bundle stays byte-stable under --check.
+    assert "timestamp" not in sr
+    assert okf(scaffold, "--check").returncode == 0
+
+
 def test_okf_step_wired_at_g3(scaffold):
     # The harness carries the freshness gate like arch-map/trajectory-map.
     from conftest import load_script

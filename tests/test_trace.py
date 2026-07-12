@@ -2,9 +2,12 @@
 
 from conftest import KIT, make_minimal_project, run_py
 
+# SR-002 is a genuine (ratified, non-Draft) orphan: Status=Planned, so the
+# derived-gate Draft exemption (WI-089) does NOT apply and the decomposition
+# rules still fire. A Draft SR would be exempt — see the WI-089 section below.
 ORPHAN_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
-SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Draft
+SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Planned
 """
 
 
@@ -63,9 +66,12 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
     assert "malformed" in report
 
 
+# SR-002 is Status=Implemented (ratified + built, not yet Verified) so the phase
+# scoping of --require-verified is what the tests exercise — a Draft SR would be
+# exempt from --require-verified entirely (WI-089), which is a different axis.
 PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,v1
-SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Draft,v2
+SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Implemented,v2
 """
 
 PHASED_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
@@ -225,6 +231,57 @@ def test_attest_is_in_verification_vocabulary(scaffold):
     assert "SR-002 has Verification=" not in report  # no enum-violation finding
 
 
+# --- WI-068: the Critique verification value ----------------------------------
+
+# A Critique SR: subjective acceptance judged by an independent critical eye
+# against a rubric. Unlike Attest, its artifact is PRODUCED BY CODE (only the
+# acceptance is perceptual), so it is NOT LLR-exempt.
+CRITIQUE_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
+SR-002,Render realism,SN-001,"The rendered scene shall look realistic.","Subjective; judged by a critic against a rubric.","Critic judges the render against docs/rubrics/render.md anchors.",,S,Critique,Verified
+"""
+
+CRITIQUE_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Verified
+TC-002,SR-002,System,critique the render against the rubric,Release,"rubric=docs/rubrics/render.md; artifact=render.png","Critic APPROVE per the rubric anchors",No,,Verified
+"""
+
+
+def make_critique_project(scaffold):
+    # SR-002 is Critique with NO LLR (the minimal chain keeps only LLR-001).
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "system-requirements.csv").write_text(CRITIQUE_SRS, encoding="utf-8")
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(
+        CRITIQUE_TCS, encoding="utf-8"
+    )
+
+
+def test_critique_verification_value(scaffold):
+    make_critique_project(scaffold)
+    # 1) Critique is in the closed Verification vocabulary: --strict-schema does
+    #    not flag it as out-of-vocabulary.
+    proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR-002 has Verification=" not in report
+    # 2) A Critique SR is NOT LLR-exempt (unlike Attest): SR-002 has no LLR, so it
+    #    is an orphan (the artifact is produced by code — only acceptance is
+    #    subjective).
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-002 has no LLR" in report
+    # 3) An unknown Verification value is still rejected.
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        CRITIQUE_SRS.replace(",Critique,", ",Perceptual,"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "Perceptual" in report  # the out-of-vocabulary finding
+
+
 # --- Thread 1: generated traceability views (outline + Mermaid + HTML) ---------
 
 
@@ -257,7 +314,7 @@ def test_orphan_node_flagged_in_outline_and_graph(scaffold):
     proc = run_py(["scripts/trace.py"], cwd=scaffold)  # views render regardless of exit
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    # Mermaid: the orphan (Draft) SR-002 gets the distinct class.
+    # Mermaid: the orphan (Planned) SR-002 gets the distinct class.
     assert "classDef orphan" in report
     assert "class SR_002 orphan" in report
     # Outline: the same node carries an inline flag on its own line.
@@ -415,3 +472,277 @@ def test_require_verified_flags_unverified_test_sr(scaffold):
     assert "status-findings=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "G3 requires Verified" in report
+
+
+# --- WI-056: the IF-### interface-seam tier (process.md §8) ---------------------
+# trace.py now reads the interface catalog (the SR-002-era gap): IF id integrity,
+# the SR-Refs back-link (a --strict finding, like PB's), and a warn-only endpoint
+# advisory. The full architecture-connectivity coverage lives in check_trajectory.
+
+IF_HEADER = (
+    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+    "Stability,Status,Component,Notes\n"
+)
+
+
+def _write_ifs(scaffold, body):
+    (scaffold / "docs" / "requirements" / "interfaces.csv").write_text(
+        IF_HEADER + body, encoding="utf-8"
+    )
+
+
+def _report(scaffold):
+    return (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+
+
+def test_if_tier_integrity(scaffold):
+    make_minimal_project(scaffold)
+    # A clean seam: SR-Refs resolves (SR-001), ThisProject matches LLR Module.
+    _write_ifs(
+        scaffold,
+        'IF-001,Provides,src/demo,downstream adopter,"cli --help exits 0",'
+        "SR-001,v1,Stable,Active,,\n",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "interfaces=1 interface-findings=0" in proc.stdout
+
+    # Empty SR-Refs -> a --strict finding (every seam links the spine, PB idiom).
+    _write_ifs(scaffold, 'IF-001,Provides,src/demo,git,"pushes",,v1,Stable,Active,,\n')
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "IF IF-001 links no SR" in _report(scaffold)
+
+    # Unresolvable SR-Ref -> a finding naming the missing id.
+    _write_ifs(
+        scaffold, 'IF-001,Provides,src/demo,git,"pushes",SR-999,v1,Stable,Active,,\n'
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "IF IF-001 references unknown SR-999" in _report(scaffold)
+
+    # A malformed IF id joins the always-on integrity floor (--strict-integrity).
+    _write_ifs(
+        scaffold, 'IF-1x,Provides,src/demo,git,"pushes",SR-001,v1,Stable,Active,,\n'
+    )
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "malformed" in _report(scaffold)
+
+
+def test_if_endpoint_advisory_is_warn_only(scaffold):
+    # A ThisProject matching no LLR Module is a warn-only advisory (the LLR Module
+    # inventory is partial + differently named), never a failure.
+    make_minimal_project(scaffold)
+    _write_ifs(
+        scaffold, 'IF-001,Provides,src/nowhere,git,"x",SR-001,v1,Stable,Active,,\n'
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "matches no LLR Module" in proc.stdout
+    assert "endpoint advisories" in _report(scaffold).lower()
+
+
+def test_if_placeholder_and_absent_are_free(scaffold):
+    # The scaffold ships an inert IF-000 placeholder: no interface section, green.
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "interfaces=" not in proc.stdout  # only the -000 placeholder
+    # A truly absent registry is equally free.
+    (scaffold / "docs" / "requirements" / "interfaces.csv").unlink()
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_legacy_interfaces_csv_without_notes_column_parses(scaffold):
+    # A pre-WI-056 interfaces.csv (no Notes column) reads the missing cell as
+    # empty and never crashes — never-breaking.
+    make_minimal_project(scaffold)
+    legacy = (
+        "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+        "Stability,Status,Component\n"
+    )
+    (scaffold / "docs" / "requirements" / "interfaces.csv").write_text(
+        legacy + 'IF-001,Provides,src/demo,git,"x",SR-001,v1,Stable,Active,\n',
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "interfaces=1 interface-findings=0" in proc.stdout
+
+
+# --- WI-089: the Draft artifact state + decomposition exemption ---------------
+# The derived-gate model (docs/specs/derived-gate-model.md §3) lets a requirement
+# be drafted in the LIVE spine before it is decomposed: a `Draft` SR/LLR is exempt
+# from the child-completeness orphan rules and the --require-verified criterion,
+# retiring the -000/off-spine workaround. Parent-linkage + integrity still apply.
+
+# SR-002 is Draft with NO LLR and NO TC (undecomposed), but it links SN-001. It
+# must NOT orphan. SR-001 keeps the fully-traced happy chain.
+DRAFT_SR = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
+SR-002,Drafted requirement,SN-001,"The system shall do a not-yet-decomposed thing.","Being drafted requirement-first.","some measurable outcome",,M,Test,Draft
+"""
+
+
+def test_draft_sr_is_exempt_from_decomposition(scaffold):
+    # A Draft SR with no LLR/TC lives in the live spine without orphaning.
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(DRAFT_SR, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "orphans=0" in proc.stdout
+    assert "drafts=1" in proc.stdout
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-002 has no LLR" not in report
+    assert "SR SR-002 has no test (TC)" not in report
+    assert "## Draft artifacts (decomposition-exempt)" in report
+    assert "SR-002 — Drafted requirement" in report
+    # Ratify it (Draft -> Planned) and the decomposition rules fire again.
+    srs.write_text(
+        DRAFT_SR.replace(",M,Test,Draft", ",M,Test,Planned"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-002 has no LLR" in report
+    assert "SR SR-002 has no test (TC)" in report
+
+
+# A Draft LLR decomposing SR-001 but with no TC: exempt from the "no TC" rule.
+DRAFT_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented
+LLR-002,SR-001,Draft sub-part,src/demo,addfast,"A not-yet-tested decomposition.",(see TC),Draft
+"""
+
+
+def test_draft_llr_is_exempt_from_tc_rule(scaffold):
+    make_minimal_project(scaffold)
+    llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
+    llrs.write_text(DRAFT_LLRS, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "LLR LLR-002 has no test (TC)" not in report
+    # Mark it Implemented and the missing TC is an orphan again.
+    llrs.write_text(
+        DRAFT_LLRS.replace("(see TC),Draft", "(see TC),Implemented"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "LLR LLR-002 has no test (TC)" in report
+
+
+# SR-002 is fully decomposed (LLR-002 + TC-002) so ONLY the status axis varies:
+# Draft -> exempt from --require-verified; Implemented -> flagged.
+RV_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
+SR-002,Drafted requirement,SN-001,"The system shall do a drafted thing.","Being drafted.","some measurable outcome",,M,Test,Draft
+"""
+RV_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented
+LLR-002,SR-002,Draft sub-part,src/demo,addfast,"A drafted decomposition.",(see TC),Draft
+"""
+RV_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Verified
+TC-002,SR-002;LLR-002,Unit,drafted test,Full,,"Satisfies SR-002 AcceptanceCriteria",No,,Draft
+"""
+
+
+def test_draft_sr_is_exempt_from_require_verified(scaffold):
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "system-requirements.csv").write_text(RV_SRS, encoding="utf-8")
+    (req / "low-level-requirements.csv").write_text(RV_LLRS, encoding="utf-8")
+    srs = req / "system-requirements.csv"
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(RV_TCS, encoding="utf-8")
+    # Draft SR-002 is pre-ratification: --require-verified does not flag it.
+    proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "status-findings=0" in proc.stdout
+    # Ratifying it to Implemented (Verification=Test, not yet Verified) flags it.
+    srs.write_text(
+        RV_SRS.replace(",M,Test,Draft", ",M,Test,Implemented"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "status-findings=1" in proc.stdout
+
+
+def test_draft_sr_still_needs_sn_and_stays_integral(scaffold):
+    # The Draft exemption is scoped to child-completeness: parent-linkage (the SN
+    # link) and id integrity still apply to a Draft row.
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    # A Draft SR with an empty SN-Refs still orphans (SN linkage is not exempt).
+    srs.write_text(
+        DRAFT_SR.replace(
+            "SR-002,Drafted requirement,SN-001,", "SR-002,Drafted requirement,,"
+        ),
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "SR SR-002 links no SN" in _report(scaffold)
+    # A malformed Draft id still fails the always-on integrity floor.
+    srs.write_text(DRAFT_SR.replace("SR-002", "SR-2x"), encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "malformed" in _report(scaffold)
+
+
+# --- WI-090: SN maturity via section-as-state ---------------------------------
+# An SN under a heading whose text contains "draft" is unratified (G0) and exempt
+# from the "every SN needs an SR" rule; SNs under any other heading are ratified.
+
+DRAFT_SN_MD = """# Stakeholder Needs (SN-###)
+
+## Core needs
+
+| SN-ID | Need | Why | Priority | Acceptance intent |
+|---|---|---|---|---|
+| SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
+
+## Draft needs (unratified)
+
+| SN-ID | Need | Why | Priority | Acceptance intent |
+|---|---|---|---|---|
+| SN-002 | A not-yet-decomposed need. | Being drafted. | S | TBD. |
+"""
+
+
+def test_draft_sn_is_exempt_from_sr_rule(scaffold):
+    make_minimal_project(scaffold)
+    sn = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
+    sn.write_text(DRAFT_SN_MD, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "drafts=1" in proc.stdout
+    report = _report(scaffold)
+    assert "SN SN-002 has no SR" not in report
+    assert "SN-002 (SN, unratified section)" in report
+    # The DAG flags the draft SN like a Status=Draft row.
+    assert "class SN_002 draft" in report
+    # Ratify SN-002 by moving its row under a non-draft heading -> the SN-with-no-SR
+    # rule fires again (it now claims to be a real need with no decomposition).
+    ratified = DRAFT_SN_MD.replace("## Draft needs (unratified)", "## More core needs")
+    sn.write_text(ratified, encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1
+    assert "SN SN-002 has no SR" in _report(scaffold)
+
+
+def test_sn_draft_ids_reader():
+    from conftest import load_script
+
+    trace = load_script("trace")
+    assert trace.sn_draft_ids(DRAFT_SN_MD) == {"SN-002"}
+    # A -000 placeholder in a draft section is excluded (like every other scan).
+    assert trace.sn_draft_ids("## Draft needs\nSN-000 SN-005\n") == {"SN-005"}
+    # No draft heading -> nothing is draft (the ratified default).
+    assert trace.sn_draft_ids("# Needs\n\n## Core\nSN-001\n") == set()
+    # The "draft" match is on the heading text, case-insensitive, not the body.
+    assert trace.sn_draft_ids("## DRAFT items\nSN-009\n") == {"SN-009"}

@@ -1,7 +1,36 @@
 """check.py end-to-end: the documented flow must be green on a minimal project,
 and the tier/coverage wiring must not silently skip tests."""
 
-from conftest import load_script, make_minimal_project, run_py
+import os
+
+from conftest import (
+    DEMO_SRC,
+    SRS,
+    augment_env,
+    load_script,
+    make_minimal_project,
+    run_py,
+)
+
+
+def test_subprocess_coverage_wiring_survives_pytest_cov_7():
+    # pytest-cov < 7 exported COV_CORE_DATAFILE and augment_env keyed on it;
+    # pytest-cov 7 dropped the whole COV_CORE_* env contract, so keying on it
+    # alone silently unwires every child and the harness coverage floor reads
+    # a fraction of reality (observed: 29% vs the 80 floor on a fresh
+    # toolchain). Under an active coverage run, augment_env must still wire.
+    import pytest
+
+    import coverage
+
+    if os.environ.get("COV_CORE_DATAFILE"):
+        pytest.skip("legacy pytest-cov env contract active; nothing to prove")
+    if coverage.Coverage.current() is None:
+        pytest.skip("not a coverage-measured run")
+    env = augment_env(dict(os.environ))
+    assert "COVERAGE_PROCESS_START" in env, (
+        "augment_env did not wire the child under an active coverage session"
+    )
 
 
 def test_minimal_project_is_green(scaffold):
@@ -156,6 +185,119 @@ def test_missing_command_is_designed_failure():
         "noop", (), [sys.executable, "-c", "pass"], lenient=False
     )
     assert status == "PASS"
+
+
+def test_run_steps_batch_passes_on_clean_project(scaffold):
+    # The pre-commit hook's batched floor: several independent steps in one
+    # interpreter spawn, run concurrently, each reported. Green on a fully
+    # traced, freshly mapped project. Mirrors the shipped hook's batch (which
+    # now includes derived-gate, the docs/gate freshness guard).
+    make_minimal_project(scaffold)
+    proc = run_py(
+        [
+            "scripts/check.py",
+            "--run-steps",
+            "arch-map,okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync",
+        ],
+        cwd=scaffold,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    for name in (
+        "arch-map",
+        "okf",
+        "trajectory-map",
+        "registry-integrity",
+        "derived-gate",
+    ):
+        assert name in proc.stdout
+
+
+def test_derived_gate_step_wired_at_every_gate_and_runs(scaffold):
+    # check.py consumes the derived gate (docs/specs/derived-gate-model.md §5):
+    # the derived-gate freshness step is a process-layer step at every gate.
+    check = load_script("check")
+    for gate in ("G1", "G2", "G3"):
+        plan = [s for s in check.steps(80, "full", gate) if gate in s[3]]
+        match = [s for s in plan if s[0] == "derived-gate"]
+        assert match, "derived-gate missing at {}".format(gate)
+        assert match[0][4] == "process" and match[0][1] == ()  # stdlib, no tool
+    # End-to-end: on a G3-complete project (docs/gate regenerated to G3) the step
+    # passes; un-verifying an SR without regenerating docs/gate makes it FAIL.
+    make_minimal_project(scaffold)
+    ok = run_py(["scripts/check.py", "--run-step", "derived-gate"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    sr = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    sr.write_text(
+        sr.read_text(encoding="utf-8").replace(",Test,Verified", ",Test,Implemented"),
+        encoding="utf-8",
+    )
+    bad = run_py(["scripts/check.py", "--run-step", "derived-gate"], cwd=scaffold)
+    assert bad.returncode != 0
+    assert "STALE" in bad.stdout + bad.stderr
+
+
+def test_run_steps_reports_every_failure(scaffold):
+    # Unlike a `set -e` chain of single --run-step calls (which stops at the
+    # first stale artifact), the batch names ALL failures in one pass: stale
+    # the code map AND duplicate a registry id, and both steps must FAIL in
+    # the same run.
+    make_minimal_project(scaffold)
+    (scaffold / "src" / "demo.py").write_text(
+        DEMO_SRC + "\n\ndef extra():\n    return 0\n", encoding="utf-8"
+    )
+    sr = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    sr.write_text(
+        sr.read_text(encoding="utf-8") + SRS.splitlines()[1] + "\n", encoding="utf-8"
+    )
+    proc = run_py(
+        ["scripts/check.py", "--run-steps", "arch-map,registry-integrity"],
+        cwd=scaffold,
+    )
+    assert proc.returncode != 0
+    lines = proc.stdout.splitlines()
+    assert any("FAIL" in ln and "arch-map" in ln for ln in lines), proc.stdout
+    assert any("FAIL" in ln and "registry-integrity" in ln for ln in lines), proc.stdout
+
+
+def test_run_steps_unknown_name_fails_loudly(scaffold):
+    proc = run_py(["scripts/check.py", "--run-steps", "arch-map,nope"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "nope" in proc.stdout + proc.stderr
+
+
+def test_jobs_parallel_plan_matches_sequential(scaffold):
+    # --jobs 0 runs the plan's steps concurrently with captured (never
+    # interleaved) output; the result set and exit semantics must match the
+    # sequential default. Smoke tier keeps the test cheap.
+    make_minimal_project(scaffold)
+    par = run_py(
+        ["scripts/check.py", "--gate", "all", "--tier", "smoke", "--jobs", "0"],
+        cwd=scaffold,
+    )
+    assert par.returncode == 0, par.stdout + par.stderr
+    assert "RESULT: PASS" in par.stdout
+    # Every step of the sequential plan is present in the parallel summary.
+    seq = run_py(
+        ["scripts/check.py", "--gate", "all", "--tier", "smoke", "--list"],
+        cwd=scaffold,
+    )
+    for ln in seq.stdout.splitlines():
+        if ln.strip().startswith("- "):
+            name = ln.strip().split()[1]
+            assert name in par.stdout, name
+    # And a failure still fails the parallel run (never a false green).
+    (scaffold / "tests" / "test_broken.py").write_text(
+        '"""Deliberately failing test."""\n\n\n'
+        "import pytest\n\n\n"
+        "@pytest.mark.smoke\ndef test_broken():\n    assert False\n",
+        encoding="utf-8",
+    )
+    bad = run_py(
+        ["scripts/check.py", "--gate", "all", "--tier", "smoke", "--jobs", "0"],
+        cwd=scaffold,
+    )
+    assert bad.returncode != 0
+    assert "RESULT: FAIL" in bad.stdout
 
 
 def test_default_gate_comes_from_gate_file(scaffold):

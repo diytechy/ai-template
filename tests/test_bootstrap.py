@@ -18,6 +18,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/privacy-check",
         "docs/push-policy",
         "docs/review-policy",
+        "docs/agents.csv",
         "docs/kit-profile",
         "docs/status.md",
         "docs/log.md",
@@ -29,16 +30,25 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/requirements/assets.csv",
         "docs/requirements/components.csv",
         "docs/requirements/work-items.csv",
+        "docs/specs/README.md",
+        "docs/specs/WI-000.md",
+        "docs/rubrics/README.md",
+        "docs/rubrics/rubric-000.md",
         "docs/test/test-cases.csv",
         "scripts/check.py",
+        "scripts/derive_gate.py",
         "scripts/check_doc_refs.py",
         "scripts/check_dupes.py",
         "scripts/check_privacy.py",
         "scripts/check_vendored.py",
         "scripts/check_trajectory.py",
+        "scripts/subagent_gate.py",
+        "scripts/agent_route.py",
+        "scripts/score_reviews.py",
         "scripts/gen_cases.py",
         "scripts/gen_trajectory.py",
         "scripts/gen_okf.py",
+        "scripts/run_menu.py",
         ".githooks/pre-commit",
         ".githooks/commit-msg",
         ".githooks/pre-push",
@@ -46,6 +56,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "src/.gitkeep",
         "tests/.gitkeep",
         "README.md",
+        "OWNER_SCRATCHPAD.md",
         "run.cmd",
         "run.sh",
         "run.command",
@@ -192,6 +203,20 @@ def test_readme_vision_tag_and_needs_pointer(scaffold):
     assert "](../../README.md#vision)" in needs
 
 
+def test_scaffolds_owner_scratchpad(scaffold):
+    # FB3: the owner scratchpad ships at the root with a loud agents-ignore header
+    # and the secrets-floor caveat. It carries no placeholders, so the scaffolded
+    # copy is content-identical to the kit template.
+    pad = scaffold / "OWNER_SCRATCHPAD.md"
+    assert pad.exists(), "bootstrap must scaffold OWNER_SCRATCHPAD.md"
+    text = pad.read_text(encoding="utf-8")
+    assert "For the human owner only" in text
+    assert "do **NOT** read" in text  # the agents-ignore instruction
+    assert "secrets floor still scans this file" in text  # not a secrets-safe zone
+    template = (KIT / "OWNER_SCRATCHPAD.template.md").read_text(encoding="utf-8")
+    assert text == template, "scaffolded scratchpad must match the kit template"
+
+
 def test_readme_never_overwritten(tmp_path):
     # Adoption case: an existing README is the project's own front door —
     # bootstrap must skip it (same default-skip contract as every template).
@@ -224,19 +249,25 @@ def test_resync_does_not_regenerate_foreign_arch_map(tmp_path):
     assert "SENTINEL" in text, "re-sync must not regenerate a pre-existing map"
 
 
-def test_run_launchers_ship_inert_with_edit_slots(scaffold):
-    # The evaluator's rungs (WI-1.12): root double-clickable launchers, one per
-    # platform, shipped inert (empty RUN_CMD) with a marked EDIT slot. The
-    # macOS .command delegates to run.sh so the POSIX command lives once.
+def test_run_launchers_delegate_to_run_menu(scaffold):
+    # The evaluator's rungs (WI-067): the root launchers are thin delegates to
+    # scripts/run_menu.py, which reads the docs/stack.ini [run] section — the
+    # duplicated RUN_CMD is retired, so the launch commands live in one place.
+    # A fresh scaffold ships an inert [run]-less stack.ini (guidance + exit 1).
+    assert (scaffold / "scripts" / "run_menu.py").exists()
     cmd = (scaffold / "run.cmd").read_text(encoding="utf-8")
-    assert 'set "RUN_CMD="' in cmd, "run.cmd must ship with an empty RUN_CMD"
-    assert "EDIT FOR YOUR PROJECT" in cmd
+    assert "run_menu.py" in cmd, "run.cmd must delegate to run_menu.py"
+    assert "RUN_CMD" not in cmd, "the duplicated RUN_CMD must be gone"
     sh = (scaffold / "run.sh").read_text(encoding="utf-8")
-    assert 'RUN_CMD=""' in sh, "run.sh must ship with an empty RUN_CMD"
-    assert "EDIT FOR YOUR PROJECT" in sh
+    assert "run_menu.py" in sh, "run.sh must delegate to run_menu.py"
+    assert "RUN_CMD" not in sh, "the duplicated RUN_CMD must be gone"
     command = (scaffold / "run.command").read_text(encoding="utf-8")
     assert "./run.sh" in command, ".command must delegate to run.sh"
-    assert "RUN_CMD=" not in command, ".command must not carry a third copy"
+    assert "RUN_CMD" not in command, ".command must not carry a third copy"
+    # The shipped stack.ini has no active [run] section (commented examples
+    # only), so the launcher degrades to guidance rather than launching nothing.
+    ini = (scaffold / "docs" / "stack.ini").read_text(encoding="utf-8")
+    assert "\n[run]" not in ini, "a fresh scaffold ships the [run] examples commented"
 
 
 def test_agent_resume_launchers_ship_inert_with_edit_slots(scaffold):

@@ -5,6 +5,7 @@ description: "tier index"
 tags: []
 resource: "generated"
 ---
+> **GENERATED — a reference copy, not the source of truth.** Derived from docs/requirements/stakeholder-needs.md by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
 
 # stakeholder-needs — index
 
@@ -32,3 +33,5 @@ resource: "generated"
 | [SN-020](SN-020.md) | Runtime |
 | [SN-021](SN-021.md) | Runtime |
 | [SN-022](SN-022.md) | Runtime |
+| [SN-023](SN-023.md) | A reviewer can see the project's progress and how its parts connect from one dashboard-li… |
+| [SN-024](SN-024.md) | Subjective/perceptual acceptance — a realistic-looking render, an artifact comparison wit… |

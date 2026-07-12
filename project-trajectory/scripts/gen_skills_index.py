@@ -20,6 +20,8 @@ Usage:
     --check   Exit nonzero (and print a diff-style note) if INDEX.csv is stale,
               like `gen_arch_map.py --check`. Use in CI / a gate.
     default   (Re)write skills/INDEX.csv from the SKILL.md files.
+
+Contracts: IF-019, IF-035 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -46,7 +48,67 @@ def _utf8_console():
             pass
 
 
+# The per-agent skill dirs the kit fans the neutral source out to (S7). Mirrors
+# the `skills_dir` values in bootstrap.AGENTS — kept a small duplicated constant
+# (gen_skills_index must not import bootstrap; both stay single stdlib files, the
+# F5 rule). `.agents/` is Codex's AGENTS.md-mirror location.
+AGENT_SKILLS_DIRS = (".claude/skills", ".gemini/skills", ".agents/skills")
+
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+
+
+def _skill_files(skill_dir):
+    """Sorted POSIX-relative paths of every file under a skill dir."""
+    return sorted(
+        p.relative_to(skill_dir).as_posix() for p in skill_dir.rglob("*") if p.is_file()
+    )
+
+
+def check_agent_sync(source, root):
+    """Verify every per-agent skill copy under `root` is byte-identical to its
+    neutral `source` skill (S7 checked fan-out). Returns (drifts, orphans,
+    checked): `drifts` a list of hard-failing drift descriptions, `orphans` a
+    list of non-failing warnings (a per-agent copy whose skill no longer exists
+    in source), `checked` the number of per-agent skills compared.
+
+    Vacuous (empty) when `source` is absent or no per-agent skills dir exists.
+    Only skills that EXIST in a per-agent dir are compared — a subset dir is
+    legitimate (a scope-matched downstream materializes only some skills), so a
+    source skill MISSING from a per-agent dir is NOT reported. Byte comparison
+    reads bytes (a CRLF vs LF difference must neither false-drift nor false-pass;
+    the tracked copies are byte-identical as committed)."""
+    drifts, orphans, checked = [], [], 0
+    if not source.is_dir():
+        return drifts, orphans, checked
+    for rel_dir in AGENT_SKILLS_DIRS:
+        agent_skills = root / rel_dir
+        if not agent_skills.is_dir():
+            continue
+        for name_dir in sorted(p for p in agent_skills.iterdir() if p.is_dir()):
+            src_skill = source / name_dir.name
+            if not (src_skill / "SKILL.md").exists():
+                # A copy with no source can't be verified or fixed by --sync;
+                # surface it (a removed skill left behind) but don't hard-fail —
+                # the fix is a manual removal, not a re-materialize.
+                orphans.append("{}/{}: no source skill".format(rel_dir, name_dir.name))
+                continue
+            checked += 1
+            src_files, dst_files = _skill_files(src_skill), _skill_files(name_dir)
+            if src_files != dst_files:
+                drifts.append(
+                    "{}/{}: file set differs from source (source={}, copy={})".format(
+                        rel_dir, name_dir.name, src_files, dst_files
+                    )
+                )
+                continue
+            for rel in src_files:
+                if (src_skill / rel).read_bytes() != (name_dir / rel).read_bytes():
+                    drifts.append(
+                        "{}/{}/{}: bytes differ from source".format(
+                            rel_dir, name_dir.name, rel
+                        )
+                    )
+    return drifts, orphans, checked
 
 
 def parse_frontmatter(text):
@@ -127,7 +189,58 @@ def main():
         action="store_true",
         help="exit nonzero if INDEX.csv is stale (for CI/gates)",
     )
+    ap.add_argument(
+        "--check-agents",
+        action="store_true",
+        help="S7 drift gate: exit nonzero if any per-agent skill copy "
+        "(.claude/.gemini/.agents) has drifted from the neutral source. Vacuous "
+        "when there is no source or no per-agent dir; fix drift with "
+        "`bootstrap.py --sync`. Wired into the pre-commit floor + G3 like "
+        "gen_arch_map --check.",
+    )
+    ap.add_argument(
+        "--source",
+        default=None,
+        help="neutral skills source for --check-agents (default: the kit's "
+        "skills/ beside this script, e.g. project-trajectory/skills)",
+    )
+    ap.add_argument(
+        "--root",
+        default=".",
+        help="repo root scanned for per-agent skill dirs by --check-agents "
+        "(default: the current directory)",
+    )
     args = ap.parse_args()
+
+    if args.check_agents:
+        source = (
+            Path(args.source)
+            if args.source
+            else Path(__file__).resolve().parent.parent / "skills"
+        )
+        drifts, orphans, checked = check_agent_sync(source, Path(args.root))
+        for o in orphans:
+            print("gen_skills_index: WARN orphan copy - {}".format(o), file=sys.stderr)
+        if drifts:
+            print(
+                "gen_skills_index: STALE - per-agent skill copy(ies) drifted from "
+                "{}:".format(source),
+                file=sys.stderr,
+            )
+            for d in drifts:
+                print("  - {}".format(d), file=sys.stderr)
+            print(
+                "  run `python project-trajectory/scripts/bootstrap.py "
+                "--dest . --sync` to refresh the copies from source.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        print(
+            "gen_skills_index: OK - {} per-agent skill copy(ies) match source.".format(
+                checked
+            )
+        )
+        return
 
     skills_dir = Path(args.skills)
     if not skills_dir.is_dir():

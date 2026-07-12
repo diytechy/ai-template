@@ -49,25 +49,22 @@ gates, and the ID scheme. The short version needed every session:
   repo's active gate (`docs/gate`); `--tier smoke` is the fast subset. Never report a result you didn't run —
   paste the real output.
 - **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
-  anything concurrent/non-blocking) are authored Mermaid sequence diagrams in
-  [docs/architecture.md](docs/architecture.md) "Runtime flows", written with
-  the LLRs and kept current with them (`scripts/check_flows.py` enforces;
-  process.md §3).
-- **Releases (if versioned):** G-Release runs the `release`
-  tier plus the generated human checklist (`scripts/gen_release_checklist.py`).
+  concurrent/non-blocking ones) are authored Mermaid sequence diagrams in
+  [docs/architecture.md](docs/architecture.md) "Runtime flows", kept current
+  with the LLRs (`scripts/check_flows.py` enforces; §3).
+- **Releases (if versioned):** G-Release runs the `release` tier plus the
+  generated checklist (`scripts/gen_release_checklist.py`).
 - **The code map is generated** (`scripts/gen_arch_map.py`): per-module
   summary, internal dependencies, and public symbols with `Implements:`
   back-links, in [docs/architecture.md](docs/architecture.md). **Read it to
   find where a capability lives before searching the tree**; the harness keeps
-  it (and the Mermaid dependency diagram) fresh — never hand-edit it.
-- **Diagrams are Mermaid fenced blocks in the docs.** Never edit between
-  `GENERATED` markers; never commit exported diagrams.
+  it (and the Mermaid dependency diagram) fresh — never hand-edit it or
+  between `GENERATED` markers, and never commit exported diagrams.
 - **Start each session** with the *Current State* header of
   [docs/status.md](docs/status.md); end each turn by updating it (active gate,
   what changed, next action awaiting approval). **Commit early and often** — a
-  small, green commit per logical step; readable change only exists once
-  committed. Pushing follows `docs/push-policy` (default: the human
-  publishes). End sessions with a clean tree.
+  small, green commit per logical step. Pushing follows `docs/push-policy`
+  (default: the human publishes). End sessions with a clean tree.
 
 ## Code we want (readability for humans *and* agents)
 
@@ -157,18 +154,20 @@ Direct and concrete; explain the *why* before the *how*.
   before writing code — one question, with a **recommended default**.
   Unattended: pick the most reasonable reading, proceed, and **record it**
   under *Assumptions* in `docs/status.md` to confirm or revert at the next
-  gate. Raise a **conflict or ambiguity** between requirements as a finding —
-  never silently resolve it (process.md §4 "Consistency review"). How
+  gate. When reality contradicts the plan, **the contradiction is the
+  deliverable**: raise the conflict as a finding — never silently resolve,
+  average, or route around it (process.md §4 "Consistency review"). How
   *eagerly* to ask is the project's **decision dial** (process.md §6):
   high-risk domains ratify often; low-risk creative work may
   decide-and-record.
 - **Right-size the solution.** The simplest thing that satisfies the
-  requirement; no speculative flexibility. Judge "simple" against the whole
-  design; flag over-engineering either way. (Guardrails + the `SHORTCUT:`
-  convention: process.md §3.)
-- **Stay in your lane, but speak up.** Don't change unrelated code; surface a
-  design smell as a separate finding to its owner instead of fixing it
-  inline. The stronger or longer-lived approach is welcome, not noise.
+  requirement; no speculative flexibility — **every line is a liability**, so
+  before adding, ask what you can delete. Judge "simple" against the whole
+  design; flag over-engineering either way. (`SHORTCUT:` convention: §3.)
+- **Scope is a promise; stay in your lane.** Don't change unrelated code — the
+  silent extra is what destroys trust; surface a design smell as a separate
+  finding to its owner, not an inline fix. A stronger, longer-lived approach is
+  welcome, not noise.
 - **Flag uncertainty honestly — and distrust certainty.** A small experiment
   with hypothesis + result beats confident guessing. Peak confidence is when
   the 30-second recheck is cheapest (process.md §6).
@@ -182,7 +181,7 @@ Direct and concrete; explain the *why* before the *how*.
 
 ---
 
-> **Customizing:** add a rule only after you've had to repeat it — and **pay
-> for it by tightening another**: this file has a hard size budget (Gemini
-> caps AGENTS.md near ~12k chars; keep ≥2k headroom for project facts).
-> Delete rules you don't enforce — unbacked rules are noise.
+> **Customizing:** add a rule only after you've had to repeat it, and **pay for
+> it by tightening another** — this file has a hard byte budget (keep ≥2k
+> headroom under Gemini's ~12k AGENTS.md cap for project facts). Delete rules
+> you don't enforce — unbacked rules are noise.

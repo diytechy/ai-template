@@ -1,0 +1,64 @@
+---
+type: "Index"
+title: "interfaces"
+description: "tier index"
+tags: []
+resource: "generated"
+---
+> **GENERATED — a reference copy, not the source of truth.** Derived from docs/requirements/interfaces.csv by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
+
+# interfaces — index
+
+| id | summary |
+|---|---|
+| [IF-001](IF-001.md) |  |
+| [IF-002](IF-002.md) |  |
+| [IF-003](IF-003.md) |  |
+| [IF-004](IF-004.md) |  |
+| [IF-005](IF-005.md) |  |
+| [IF-006](IF-006.md) |  |
+| [IF-007](IF-007.md) |  |
+| [IF-008](IF-008.md) |  |
+| [IF-009](IF-009.md) |  |
+| [IF-010](IF-010.md) |  |
+| [IF-011](IF-011.md) |  |
+| [IF-012](IF-012.md) |  |
+| [IF-013](IF-013.md) |  |
+| [IF-014](IF-014.md) |  |
+| [IF-015](IF-015.md) |  |
+| [IF-016](IF-016.md) |  |
+| [IF-017](IF-017.md) |  |
+| [IF-018](IF-018.md) |  |
+| [IF-019](IF-019.md) |  |
+| [IF-020](IF-020.md) |  |
+| [IF-021](IF-021.md) |  |
+| [IF-022](IF-022.md) |  |
+| [IF-023](IF-023.md) |  |
+| [IF-024](IF-024.md) |  |
+| [IF-025](IF-025.md) |  |
+| [IF-026](IF-026.md) |  |
+| [IF-027](IF-027.md) |  |
+| [IF-028](IF-028.md) |  |
+| [IF-029](IF-029.md) |  |
+| [IF-030](IF-030.md) |  |
+| [IF-031](IF-031.md) |  |
+| [IF-032](IF-032.md) |  |
+| [IF-033](IF-033.md) |  |
+| [IF-034](IF-034.md) |  |
+| [IF-035](IF-035.md) |  |
+| [IF-036](IF-036.md) |  |
+| [IF-037](IF-037.md) |  |
+| [IF-038](IF-038.md) |  |
+| [IF-039](IF-039.md) |  |
+| [IF-040](IF-040.md) |  |
+| [IF-041](IF-041.md) |  |
+| [IF-042](IF-042.md) |  |
+| [IF-043](IF-043.md) |  |
+| [IF-044](IF-044.md) |  |
+| [IF-045](IF-045.md) |  |
+| [IF-046](IF-046.md) |  |
+| [IF-047](IF-047.md) |  |
+| [IF-048](IF-048.md) |  |
+| [IF-049](IF-049.md) |  |
+| [IF-050](IF-050.md) |  |
+| [IF-051](IF-051.md) |  |

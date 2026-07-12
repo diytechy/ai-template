@@ -70,9 +70,10 @@ def test_hook_arch_map_step_honors_declared_mode(scaffold):
     # stale — the every-commit-blocked failure the delegation removes.
     hard = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
     assert hard.returncode != 0
-    # And the hook script itself carries the delegation, not the bare call.
+    # And the hook script itself carries the delegation (the batched floor),
+    # not the bare call.
     hook_text = (scaffold / HOOK).read_text(encoding="utf-8")
-    assert "--run-step arch-map" in hook_text
+    assert "--run-steps" in hook_text and "arch-map" in hook_text
 
 
 def test_hook_trajectory_map_step(scaffold):
@@ -109,9 +110,54 @@ def test_hook_trajectory_map_step(scaffold):
     (scaffold / "docs" / "trajectory-check").write_text("off\n", encoding="utf-8")
     ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
-    # And the hook script itself carries the delegated step.
+    # And the hook script itself carries the delegated step (batched).
     hook_text = (scaffold / HOOK).read_text(encoding="utf-8")
-    assert "--run-step trajectory-map" in hook_text
+    assert "--run-steps" in hook_text and "trajectory-map" in hook_text
+
+
+def test_hook_skills_sync_step(scaffold):
+    # S7: the hook runs the cross-agent skill-sync freshness step (delegated to
+    # check.py, like arch-map/okf). In a scaffold the kit-only gen_skills_index
+    # isn't beside check.py, so the step is a vacuous no-op that still passes —
+    # never `check: no step named` — and the shipped hook carries the line.
+    make_minimal_project(scaffold)
+    ok = run_py(["scripts/check.py", "--run-step", "skills-sync"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    hook_text = (KIT / "hooks" / "pre-commit").read_text(encoding="utf-8")
+    assert "--run-steps" in hook_text and "skills-sync" in hook_text
+
+
+def test_hook_trajectory_step_is_the_ra_floor(scaffold):
+    # S1: the hook runs `check.py --run-step trajectory` (the SSOT floor). It is
+    # WARN-FIRST (gate=all): only R-A (Deliverable non-empty iff done) is a hard
+    # error at commit — an incoherent WI handoff must block; the softer status.md
+    # / SpecRef rules (R-B..R-E) warn here and gate only at G2+ (--strict).
+    make_minimal_project(scaffold)
+    wi = scaffold / "docs" / "requirements" / "work-items.csv"
+    header = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef\n"
+    # Non-adopter: the scaffolded placeholder-only registry passes vacuously.
+    ok = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    # R-A violation: an open WI carrying a filled Deliverable -> the step blocks.
+    wi.write_text(header + "WI-001,Real,core,,,queued,already filled,\n", "utf-8")
+    blocked = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
+    assert blocked.returncode != 0, "an open WI with a Deliverable must block (R-A)"
+    assert "R-A" in (blocked.stdout + blocked.stderr)
+    # A dangling SpecRef alone (R-E) is warn-first at the hook -> does NOT block.
+    wi.write_text(header + "WI-001,Real,core,,,queued,,docs/specs/WI-404.md\n", "utf-8")
+    warn = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
+    assert warn.returncode == 0, "R-E must warn, not block, at the commit floor"
+    # Coherent open row (empty Deliverable + resolvable SpecRef) -> green.
+    (scaffold / "docs" / "specs").mkdir(parents=True, exist_ok=True)
+    (scaffold / "docs" / "specs" / "WI-001.md").write_text("# spec\n", "utf-8")
+    wi.write_text(header + "WI-001,Real,core,,,queued,,docs/specs/WI-001.md\n", "utf-8")
+    ok = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    # The shipped hook script carries both the floor step (batched) and the
+    # staged warn.
+    hook_text = (KIT / "hooks" / "pre-commit").read_text(encoding="utf-8")
+    assert "--run-steps" in hook_text and "trajectory" in hook_text
+    assert "check_trajectory.py" in hook_text and "--staged" in hook_text
 
 
 def test_hook_blocks_duplicate_id_but_not_orphan(scaffold):

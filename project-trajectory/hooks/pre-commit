@@ -81,48 +81,65 @@ if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
   exit 0
 fi
 
-# 1. Code map must be fresh — protects the GENERATED regions from hand-edits and
-#    catches a map that has drifted from the source. Delegates to
-#    `check.py --run-step arch-map` (mirroring step 4's format delegation) so
-#    the hook honors the declared docs/stack.ini [arch-map] mode — a
-#    files-mode repo must not have every commit read as stale by the
-#    hardcoded symbol parser (Finance-Auditor re-sync field report, WI-1.26).
-#    EDIT FOR A PORTED GENERATOR: a repo that swapped in its own symbol-level
-#    generator (e.g. the PowerShell reference port, shipped as
-#    scripts/gen_arch_map.ps1 from scripts/gen_arch_map.reference.ps1)
-#    replaces this line with its own freshness check:
-#        pwsh -NoProfile -File scripts/gen_arch_map.ps1 -Check
-#    Any generator that fills the same marker block works — the block is the whole
-#    contract (ADOPTING.md §3). Drop this step only if you also drop the arch-map.
-"$PY" "$SCRIPTS_DIR/check.py" --run-step arch-map
+# 1. The batched freshness/integrity floor — ONE interpreter spawn running six
+#    independent checks concurrently (`check.py --run-steps`), where this hook
+#    once chained six separate `--run-step`/script calls. Faster on every
+#    commit, and it reports EVERY stale artifact in one pass (the old `set -e`
+#    chain stopped at the first, hiding the rest until the next attempt). The
+#    delegation keeps each step honoring the declared docs/stack.ini profile —
+#    e.g. [arch-map] mode, so a files-mode repo is never read as stale by the
+#    symbol parser (Finance-Auditor re-sync field report, WI-1.26). The steps:
+#      - arch-map        code map fresh: protects the GENERATED regions from
+#                        hand-edits and catches drift from the source. EDIT FOR
+#                        A PORTED GENERATOR: a repo that swapped in its own
+#                        symbol-level generator (e.g. the PowerShell reference
+#                        port, scripts/gen_arch_map.ps1) replaces this step with
+#                        its own freshness check — any generator that fills the
+#                        same marker block works (ADOPTING.md §3).
+#      - okf             knowledge bundle fresh: a registry edit stales docs/okf/
+#                        exactly like the dashboard; vacuous for a non-adopter,
+#                        `off` in docs/okf-export silences.
+#      - trajectory-map  PROJECT_STATE.html fresh: reads all four spine
+#                        registries + the README vision tag + the okf bundle
+#                        (WI-070), so an ordinary requirement edit stales it,
+#                        and CI-only checking makes that a push-long feedback
+#                        loop (THREAD_52_REVIEW.md F2). The floor rule, stated
+#                        once here: a generated artifact's freshness check joins
+#                        this hook when regenerating is one stdlib command and
+#                        the step is vacuous for a non-adopter; checks needing
+#                        the product toolchain or gate context (tests, perf,
+#                        flows) stay in check.py / CI.
+#      - trajectory      the status.md <-> work-items.csv SSOT floor, WARN-FIRST
+#                        at gate=all: only R-A (Deliverable non-empty iff done)
+#                        is a hard ERROR here — a commit is the agent handoff
+#                        point, so an incoherent WI state launches the next
+#                        session wrong; R-B…R-E warn at commit, gate at G2+.
+#      - registry-integrity  trace.py --strict-integrity: no duplicate/malformed
+#                        ids — wrong at any stage. Deliberately NOT the full
+#                        --strict orphan check: orphans are a G2+ gate criterion
+#                        (a mid-G1 registry legitimately has SRs with no LLR/TC
+#                        yet); the floor must never block an early-stage commit.
+#      - derived-gate    docs/gate is GENERATED from artifact states by
+#                        derive_gate.py (docs/specs/derived-gate-model.md); --check
+#                        fails if a ratify/reopen moved the gate but the cache did
+#                        not. A legacy hand-set gate (no `# basis:` line) is
+#                        compared value-only, so a not-yet-migrated repo is green.
+#                        Regenerate with `python scripts/derive_gate.py`.
+#      - skills-sync     per-agent skill copies byte-match the ONE neutral
+#                        source; one-command fix (bootstrap.py --sync); a no-op
+#                        where the kit-only generator isn't beside check.py.
+#    When a step reports STALE, regenerate in dependency order — arch-map ->
+#    okf -> trajectory (the dashboard consumes the other two); the gate marker via
+#    derive_gate.py — then re-commit.
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync
 
-# 1b. Trajectory dashboard must be fresh — the same generated-artifact contract
-#     as the code map, staled far more often: PROJECT_STATE.html reads all four
-#     spine registries plus the README vision tag, so an ordinary requirement
-#     edit stales it, and CI-only checking makes that a push-long feedback loop
-#     (THREAD_52_REVIEW.md F2). The floor rule, stated once here: a generated
-#     artifact's freshness check joins this hook when regenerating is one stdlib
-#     command and the step is vacuous for a repo that never adopted the layer
-#     (arch-map, trajectory-map); checks needing the product toolchain or gate
-#     context (tests, perf, flows) stay in check.py / CI. Vacuous and fast here:
-#     an absent or placeholder-only work-items.csv passes, and the one word
-#     `off` in docs/trajectory-check silences it (process-options.md
-#     "Trajectory / work-items layer").
-"$PY" "$SCRIPTS_DIR/check.py" --run-step trajectory-map
-
-# 1c. OKF knowledge bundle must be fresh — the same floor rule as 1b (one
-#     stdlib command regenerates; vacuous for a non-adopter: placeholder-only
-#     registries emit nothing, and `off` in docs/okf-export silences). A
-#     registry edit stales docs/okf/ exactly like it stales the dashboard.
-"$PY" "$SCRIPTS_DIR/check.py" --run-step okf
-
-# 2. Traceability *integrity*: no duplicate / malformed ids — wrong at any
-#    stage, so safe to enforce on every commit. Deliberately NOT the full
-#    --strict orphan check: orphans are a G2+ gate criterion (a mid-G1 registry
-#    legitimately holds SRs with no LLR/TC yet), and --no-placeholders is
-#    likewise gate-scoped in check.py. The floor must never block a legitimate
-#    early-stage commit.
-"$PY" "$SCRIPTS_DIR/trace.py" --strict-integrity
+# 2. No-validation-delta warn (warn-first, never blocks): when this commit
+#    closes a WI that is a follow-up on an SR a previously-done WI already
+#    delivered, yet touches neither the TC registry nor a test file, the fix
+#    landed in the code but not the validation chain — so the same failure can
+#    recur. Reads the staged diff (git is available in the hook context); a
+#    silent no-op outside a git checkout and when the registry is untouched.
+"$PY" "$SCRIPTS_DIR/check_trajectory.py" --root "$REPO_ROOT" --staged || true
 
 # 3. Secrets + privacy lint. The always-on SECRETS FLOOR (private-key headers,
 #    key/token shapes) runs in EVERY repo — the security net an ordinary

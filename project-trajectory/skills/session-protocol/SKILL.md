@@ -10,19 +10,27 @@ scope: this-repo
 
 # Session protocol (this template repo)
 
-How a WI/thread session runs here. The authority is
-`IMPROVEMENT_PLAN.md` — its **"Session protocol"** and **"Post-plan work items
-log (WI-1.x)"** sections. This skill is the fast path; when they disagree, the
-plan wins.
+How a WI/thread session runs here. The live homes: **`docs/status.md`** (what's
+next), **`docs/requirements/work-items.csv`** (the WI registry), and
+**`docs/log.md`** (the session/gate record). This skill is the fast path; the
+process masters (`PROCESS.md` / `PROCESS_OPTIONS.md`) win when they disagree. The
+kit's design history — the old thread specs and the WI-1.x log — is archived at
+`docs/archive/IMPROVEMENT_PLAN.md` (context, not a working surface).
 
 ## 1. Read before doing
 
 - Read `CLAUDE.md` (governs editing the kit) and `AGENTS.md` (the pointer stub).
-- Open `IMPROVEMENT_PLAN.md`. Find the relevant thread section (its
-  Goal/Steps/Tests/Risks/Done-when **is** the spec) or, for new post-plan scope,
-  the WI-1.x log. **Do only the scoped work** — no unrelated edits.
+- Read `docs/status.md` (the working surface — what's next) and the scoped WI's
+  row in `docs/requirements/work-items.csv`. The spec-of-record for a WI is what
+  its row points at (an SR and/or a plan doc); older landed work is in the
+  archived plan. **Do only the scoped work** — no unrelated edits.
 - If a stub is being revived, find and link its earlier backlogged form (search
   `docs/archive/scratch.md` + the stub threads) so the resolution is traceable.
+- **Check `git status` first.** Residue in the working tree is from an
+  interrupted session; reconcile it against the open WI's spec / Done-when
+  *before* new work — verify-and-commit what is complete, discard what is not
+  part of the scope, and record which in the log. (The unattended loop surfaces
+  this into the session prompt; the judgment is yours — it never auto-stashes.)
 
 ## 2. Respect the constraints
 
@@ -38,21 +46,28 @@ plan wins.
 Run the real checks and paste the real output — never a green you didn't produce:
 
 ```
-python -m pytest -q
-python project-trajectory/scripts/check_docs.py --root .
+python -m pytest -q -n auto
+python project-trajectory/scripts/check_docs.py --root . --stale
 ```
 
-Both must pass before **each** commit. New behavior needs new tests
+Both must pass before **each** commit — this is the **commit bar**. `-n auto`
+is the declared stack.ini command (WI-075-verified: ~70 s vs ~340 s serial —
+running it serially wastes ~4.5 minutes per commit). The full
+`check.py --gate <gate>` is the **gate bar**: it belongs to gate advancement,
+campaign close, and CI, not to each mid-campaign slice; `--jobs 0` runs its
+independent steps concurrently. A per-WI slice inside a
+campaign ends here, at the commit bar (PROCESS_OPTIONS.md, "Campaign ruling").
+New behavior needs new tests
 (`tests/`); update `test_bootstrap.py` file lists and `README.md` kit-contents /
 `bootstrap.py` `MAPPING` when the scaffold surface changes.
 
 ## 4. Record the work
 
-- Add a `Status: ✅ landed <date>` block to a finished thread, or a WI-1.x log
-  entry, matching the style already in `IMPROVEMENT_PLAN.md`: one-line summary,
+- Set the WI's row in `docs/requirements/work-items.csv` to `done` with its
+  deliverable, and add a session entry to `docs/log.md`: one-line summary,
   deliverables, **deviations from spec**, **byte deltas on budgeted files**, and
-  the `pytest -q` totals.
-- Move the ▶ NEXT session marker if the plan uses one; don't invent one.
+  the `pytest -q` totals (match the style already there).
+- Update `docs/status.md` to point at what's next; don't leave a stale "next".
 
 ## 5. Commit in this repo's style
 

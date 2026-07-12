@@ -5,6 +5,7 @@ description: "tier index"
 tags: []
 resource: "generated"
 ---
+> **GENERATED — a reference copy, not the source of truth.** Derived from docs/test/test-cases.csv by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
 
 # test-cases — index
 
@@ -43,7 +44,7 @@ resource: "generated"
 | [TC-031](TC-031.md) | Run the gate-policy and push-policy suites; each reader returns the first declared line. |
 | [TC-032](TC-032.md) | Run the onboard/dev-setup suite; the scaffolded scripts run to a green setup and dev-setu… |
 | [TC-033](TC-033.md) | Run gen_release_checklist.py over a warn-tier PB budget; assert the generated checklist l… |
-| [TC-034](TC-034.md) | Inspect that no kit script imports a third-party package (stdlib-only). |
+| [TC-034](TC-034.md) | Run the stdlib-only suite; an AST scan asserts every kit script's top-level imports resol… |
 | [TC-035](TC-035.md) | Analyze the CI matrix result across Linux/Windows/macOS x Python 3.8/latest. |
 | [TC-036](TC-036.md) | Inspect a re-sync done per ADOPTING.md section 6 against the docs/kit-version diff — kit-… |
 | [TC-037](TC-037.md) | Run the trajectory-validator suite; a well-formed registry passes, and a malformed WI id,… |
@@ -52,3 +53,11 @@ resource: "generated"
 | [TC-040](TC-040.md) | Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the… |
 | [TC-041](TC-041.md) | Run the doc-refs suite; a dangling path warns then gates under --strict, non-path backtic… |
 | [TC-042](TC-042.md) | Run the gen-okf suite; typed linked concepts generate, Process Guide concepts emit for pr… |
+| [TC-043](TC-043.md) | Run the subagent-gate suite; a Task/Agent spawn under deny is refused (permissionDecision… |
+| [TC-044](TC-044.md) | Run the interface-connectivity suite: trace.py flags a malformed/duplicate IF id and an e… |
+| [TC-045](TC-045.md) | Run the skills-sync suite: a hand-edited per-agent copy fails gen_skills_index --check-ag… |
+| [TC-046](TC-046.md) | Run the heterogeneous-scheduling suite: agent_route selection honors enable-list order, t… |
+| [TC-047](TC-047.md) | Run the run-menu suite: --list prints name<TAB>desc for each declared capability in decla… |
+| [TC-048](TC-048.md) | Run the critique-loop suite: the loop schedules CRITIQUE exactly when a committing build'… |
+| [TC-049](TC-049.md) | Run the top-view suite: an inventory over 10 modules with no containing CMPs warns plain … |
+| [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache |

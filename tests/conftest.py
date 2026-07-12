@@ -36,9 +36,32 @@ def load_script(name):
     return mod
 
 
+def _active_cov_datafile():
+    """The measuring session's coverage datafile, or None when unmeasured.
+
+    pytest-cov < 7 exported it as COV_CORE_DATAFILE; 7.0 removed the whole
+    COV_CORE_* env contract, so fall back to asking the in-process coverage
+    object pytest-cov drives (Coverage.current()) for its configured path.
+    Keying on the env var alone silently unwired every child under pytest-cov 7
+    and the coverage floor read a fraction of reality."""
+    datafile = os.environ.get("COV_CORE_DATAFILE")
+    if datafile:
+        return datafile
+    try:
+        import coverage
+    except ImportError:  # plain pytest without pytest-cov: unmeasured run
+        return None
+    cov = coverage.Coverage.current()
+    if cov is None:
+        return None
+    datafile = getattr(cov.config, "data_file", None)
+    # Children run in temp cwds, so a rootdir-relative path must be anchored.
+    return str(Path(datafile).resolve()) if datafile else None
+
+
 def augment_env(env):
     """Add subprocess-coverage wiring to `env` (a dict) when pytest-cov is
-    measuring the parent (it exports `COV_CORE_DATAFILE`); a no-op otherwise.
+    measuring the parent (see `_active_cov_datafile`); a no-op otherwise.
 
     Most of the suite runs the kit scripts as subprocesses, which coverage does
     not see unless each child starts it (IMPROVEMENT_PLAN.md Thread 47 phase 6).
@@ -53,7 +76,7 @@ def augment_env(env):
     copies back to the source tree. NB: `tests/_cov` is prepended to PYTHONPATH,
     so it would shadow any environment-provided `sitecustomize` during a measured
     run — harmless here (none exists; gated on an active pytest-cov)."""
-    datafile = os.environ.get("COV_CORE_DATAFILE")
+    datafile = _active_cov_datafile()
     if not datafile:
         return env
     env = dict(env)
@@ -176,5 +199,11 @@ def make_minimal_project(root):
     # Same "start from truth" for the OKF bundle: with real registry rows the
     # on-by-default export exists and is fresh (its hook/G3 --check passes).
     proc = run_py(["scripts/gen_okf.py"], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # The derived gate (docs/specs/derived-gate-model.md): this is a full G3 chain,
+    # so docs/gate is regenerated from the artifact states — the scaffold shipped
+    # the fresh-repo G1, and ratifying artifacts up to a G3-complete spine is what
+    # advances the derived gate. Keeps the derived-gate freshness step green.
+    proc = run_py(["scripts/derive_gate.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     return root

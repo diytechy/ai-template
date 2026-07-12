@@ -3,8 +3,8 @@
 
 Stack-agnostic kit, **Python reference implementation**. This is the runnable
 version of the "harness contract" in `process.md §7`: format · lint · tests ·
-coverage · traceability · doc-navigability · perf-budgets · architecture-map
-freshness. Wire it to your stack in ONE declared file, `docs/stack.ini`: swap
+coverage · derived-gate freshness · traceability · doc-navigability · perf-budgets
+· architecture-map freshness. Wire it to your stack in ONE declared file, `docs/stack.ini`: swap
 the format/lint/test commands + `src`/`tests` paths (the "EDIT FOR YOUR STACK"
 block just under the imports is the identical built-in fallback), and add any
 project-specific gate as a `[step:<name>]` section (see extra_steps) — so this
@@ -39,11 +39,13 @@ Design choices that keep it honest and CI-friendly:
 Usage:
     python scripts/check.py [--gate G1|G2|G3|all] [--tier smoke|full|release|all]
                             [--coverage N] [--phase LIST] [--lenient] [--list]
+                            [--jobs N] [--run-step NAME] [--run-steps A,B,...]
 
     --gate      Which gate's checks to run. Default: the repo's **active gate**
-                from the one-line `docs/gate` file (bootstrap starts it at G1;
-                closing a gate = the human bumps it in a reviewed commit), else
-                `all` when no gate file exists. This is what keeps a young
+                from `docs/gate` (bootstrap starts it at G1). The value is now
+                DERIVED from the artifact states by derive_gate.py (not hand-set);
+                closing a gate = ratifying artifacts in a reviewed commit +
+                regenerating. Else `all` when no gate file exists. This keeps a young
                 project's CI green-and-honest: it enforces the bar the project
                 is actually at, not the end-state bar. G3 (and all) also
                 requires every Verification=Test SR to be Status=Verified
@@ -63,12 +65,26 @@ Usage:
                 status; a missing tool is SKIP (exit 0), a real failure exit 1.
                 The pre-commit hook uses it to source its format check from the
                 declared profile rather than restating the command.
+    --run-steps Run several named steps concurrently with --run-step's lenient
+                semantics, reporting EVERY step's result (exit 1 if any FAILs) —
+                the pre-commit hook's batched freshness/integrity floor, one
+                interpreter spawn instead of a chain that stops at the first
+                stale artifact.
+    --jobs      Run the plan's steps on N concurrent workers (0 = one per
+                step; default 1 = sequential, streamed output, byte-identical
+                to the historical behavior). Parallel-safe by construction:
+                steps are read-only or write disjoint artifacts, and the two
+                trace.py steps that share docs/test/report.md run chained in
+                one lane. Output is captured per step and printed whole, so
+                nothing interleaves.
 
 The product toolchain (format/lint/test commands, src/tests paths, tier
 expressions, coverage threshold) is declared ONCE in `docs/stack.ini` when it
 exists — CI, the pre-commit hook, and setup.* delegate there instead of each
 restating a command. Absent that file, the built-in Python-reference defaults
 below apply (identical values), so a profile-less repo is unchanged.
+
+Contracts: IF-013, IF-022, IF-040 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -155,6 +171,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "format",
         "lint",
         "tests+coverage",
+        "derived-gate",
         "registry-integrity",
         "traceability",
         "privacy",
@@ -165,6 +182,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "arch-map",
         "trajectory-map",
         "okf",
+        "skills-sync",
     }
 )
 
@@ -362,6 +380,16 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "check: docs/stack.ini [arch-map] mode is {!r}; expected "
             "symbols|files".format(arch_mode)
         )
+    # The trajectory validator gains --strict at G2/G3 — the gates promote the
+    # status↔registry coherence rules R-B…R-E from WARN to ERROR (R-A always
+    # fails). "all" is deliberately EXCLUDED so the pre-commit floor, which runs
+    # this step via `--run-step trajectory` (resolved at gate="all"), stays
+    # warn-first: a plain commit must not block on status.md/SpecRef drift, only
+    # on the R-A handoff-incoherence rule (process-options.md "Trajectory /
+    # work-items layer").
+    traj_cmd = [sys.executable, str(_SCRIPTS / "check_trajectory.py")]
+    if gate in ("G2", "G3"):
+        traj_cmd.append("--strict")
     arch_cmd = [
         sys.executable,
         str(_SCRIPTS / "gen_arch_map.py"),
@@ -378,6 +406,20 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # file's summary (gen_arch_map's default already covers # // --).
         for tok in _pget(profile, "arch-map", "comment-prefixes", "").split():
             arch_cmd += ["--comment-prefix", tok]
+    # Cross-agent skill-sync drift gate (S7): byte-compare each per-agent skill
+    # copy (.claude/.gemini/.agents) to the ONE neutral source. gen_skills_index
+    # is a KIT-only script (it needs the neutral skills/ source, which only the
+    # kit repo hosts — a scaffold has no source to drift from), so downstream it
+    # isn't beside check.py; the step then runs a vacuous no-op so the hook's
+    # `--run-step skills-sync` still resolves (never `no step named`) and passes
+    # for free. Where the generator IS present (this kit's own repo) it runs the
+    # real byte-identity check, deriving source + per-agent dirs itself.
+    skills_gen = _SCRIPTS / "gen_skills_index.py"
+    skills_sync_cmd = (
+        [sys.executable, str(skills_gen), "--check-agents"]
+        if skills_gen.exists()
+        else [sys.executable, "-c", "pass"]  # kit-only generator absent: vacuous
+    )
     return [
         # --- product checks: language-specific, declared in docs/stack.ini -----
         ("format", _requires(fmt_cmd), fmt_cmd, {"G3"}, "product"),
@@ -412,6 +454,21 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             (),
             [sys.executable, str(_SCRIPTS / "trace.py"), "--strict-integrity"],
             {"G1"},
+            "process",
+        ),
+        # Derived-gate freshness (docs/specs/derived-gate-model.md §5): docs/gate is
+        # now GENERATED from artifact states by derive_gate.py, not hand-set —
+        # `--check` recomputes and fails if the cache drifted (the arch-map/OKF/
+        # dashboard freshness idiom, applied to the gate marker itself). Runs at
+        # every gate: resolve_gate reads the cached value to pick the plan, so the
+        # cache must be fresh whenever check.py runs, and this catches a stale one
+        # (a legacy hand-set gate with no `# basis:` line is compared value-only,
+        # so a not-yet-migrated repo stays green — the smooth-transition path).
+        (
+            "derived-gate",
+            (),
+            [sys.executable, str(_SCRIPTS / "derive_gate.py"), "--check"],
+            {"G1", "G2", "G3"},
             "process",
         ),
         ("traceability", (), trace_cmd, {"G2", "G3"}, "process"),
@@ -473,7 +530,10 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ),
         # Work-item trajectory (process-options.md "Trajectory / work-items
         # layer"): validates the execution DAG in docs/requirements/work-items.csv
-        # — id integrity, resolvable predecessors, an acyclic graph (SR refs warn).
+        # — id integrity, resolvable predecessors, an acyclic graph (SR refs warn)
+        # — plus the status.md↔registry SSOT rules (R-A Deliverable-iff-done, a
+        # hard error always; R-B…R-E status coherence + SpecRef resolution, warn
+        # here and ERROR under --strict, added at G2/G3 via traj_cmd above).
         # An OPT-OUT layer: an absent or placeholder-only registry passes
         # vacuously and docs/trajectory-check `off` silences it, so a repo that
         # never adopts it pays nothing (the docs/secrets-scan floor's posture).
@@ -481,7 +541,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         (
             "trajectory",
             (),
-            [sys.executable, str(_SCRIPTS / "check_trajectory.py")],
+            traj_cmd,
             {"G2", "G3"},
             "process",
         ),
@@ -523,6 +583,20 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             {"G3"},
             "process",
         ),
+        # Cross-agent skill-sync freshness (S7): every per-agent skill copy
+        # (.claude/.gemini/.agents) must stay byte-identical to the ONE neutral
+        # source — the same generated-artifact gate as arch-map/trajectory-map/
+        # okf. A drifted copy fails with a one-command fix (bootstrap.py --sync).
+        # Vacuous when a repo has no neutral source or no per-agent dir (a
+        # scaffold: the generator isn't beside check.py, so skills_sync_cmd is a
+        # no-op). G3 only, like the other generated-artifact freshness gates.
+        (
+            "skills-sync",
+            (),
+            skills_sync_cmd,
+            {"G3"},
+            "process",
+        ),
     ]
 
 
@@ -534,10 +608,14 @@ GATE_FILE = Path("docs/gate")
 
 def resolve_gate(explicit):
     """The gate to run: an explicit --gate wins; else the docs/gate file (the
-    project's recorded active gate); else 'all' (a repo without the file gets
-    the full bar, never a silently weaker one). The file is parsed by the
-    declared-policy rule every reader shares (hooks, check_privacy.py,
-    agent_loop.py): the first non-empty, non-comment line."""
+    project's active gate); else 'all' (a repo without the file gets the full bar,
+    never a silently weaker one). The file is parsed by the declared-policy rule
+    every reader shares (hooks, check_privacy.py, agent_loop.py): the first
+    non-empty, non-comment line — which is now DERIVED by derive_gate.py from the
+    artifact states (docs/specs/derived-gate-model.md), not hand-set. The read is
+    unchanged (the derived value sits on that same first non-comment line, with the
+    derivation basis in `#` comments above it); the `derived-gate` step guards the
+    cache against drift, so a --gate resolved here is a fresh computed value."""
     if explicit:
         return explicit
     if GATE_FILE.exists():
@@ -587,39 +665,130 @@ def _step_env():
     return env
 
 
-def run_step(name, requires, cmd, lenient):
-    """Run one step. Returns (status, detail) where status in PASS/FAIL/SKIP."""
+def _step_guard(requires, cmd, lenient):
+    """The missing-tool guards shared by both step runners. Returns
+    ((status, detail), None) when the step must not run, else (None, exe) with
+    the RESOLVED executable to exec.
+
+    Module guard: a `{py} -m <mod>` step whose module this interpreter can't
+    import. Command guard: a rewired step ("swap the format/lint/test commands
+    for your toolchain") names an executable the module guard can't see —
+    resolve it the way the OS would (a path, or PATH lookup — shutil.which
+    honors PATHEXT on Windows) and fail by design instead of crashing with a
+    raw FileNotFoundError. The resolved path (not the bare name) is what gets
+    exec'd: Windows CreateProcess applies no PATHEXT, so a bare `npx` that
+    shutil.which found as npx.cmd would still crash with WinError 2
+    (downstream field report, WI-1.25)."""
     missing = [m for m in requires if importlib.util.find_spec(m) is None]
     if missing:
         status = "SKIP" if lenient else "FAIL"
-        return status, "module(s) {} not importable by {} — run scripts/setup".format(
+        detail = "module(s) {} not importable by {} — run scripts/setup".format(
             ", ".join(missing), sys.executable
         )
-    # Same guarantee for the command itself: a rewired step ("swap the
-    # format/lint/test commands for your toolchain") names an executable this
-    # interpreter knows nothing about, so the module guard above can't see its
-    # absence. Resolve it the way the OS would (a path, or PATH lookup —
-    # shutil.which honors PATHEXT on Windows) and fail by design instead of
-    # crashing with a raw FileNotFoundError.
+        return (status, detail), None
     exe = cmd[0] if Path(cmd[0]).exists() else shutil.which(cmd[0])
     if not exe:
         status = "SKIP" if lenient else "FAIL"
-        return status, (
+        detail = (
             "command {!r} not found — wire your stack's toolchain "
             "(see the EDIT FOR YOUR STACK block)".format(cmd[0])
         )
+        return (status, detail), None
+    return None, exe
+
+
+def run_step(name, requires, cmd, lenient):
+    """Run one step, streaming its output live (the sequential path).
+    Returns (status, detail) where status in PASS/FAIL/SKIP."""
+    guard, exe = _step_guard(requires, cmd, lenient)
+    if guard:
+        return guard
     start = time.time()
     print("\n=== {} : {} ===".format(name, " ".join(cmd)), flush=True)
-    # Run the RESOLVED path, not the bare name: Windows CreateProcess applies
-    # no PATHEXT, so a bare `npx`/`eslint` that shutil.which found as npx.cmd
-    # would still crash the exec with WinError 2 — resolving for the guard
-    # but running unresolved was exactly the crash this block claims to
-    # avoid (downstream field report, WI-1.25).
     proc = subprocess.run([exe] + list(cmd[1:]), env=_step_env())
     secs = time.time() - start
     if proc.returncode == 0:
         return "PASS", "{:.1f}s".format(secs)
     return "FAIL", "exit {} ({:.1f}s)".format(proc.returncode, secs)
+
+
+def run_step_captured(name, requires, cmd, lenient):
+    """run_step with the child's output captured instead of streamed — the
+    parallel path, where concurrent children writing one console would
+    interleave. Returns (status, detail, output)."""
+    guard, exe = _step_guard(requires, cmd, lenient)
+    if guard:
+        return guard[0], guard[1], ""
+    start = time.time()
+    proc = subprocess.run(
+        [exe] + list(cmd[1:]),
+        env=_step_env(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    secs = time.time() - start
+    out = proc.stdout or ""
+    if proc.returncode == 0:
+        return "PASS", "{:.1f}s".format(secs), out
+    return "FAIL", "exit {} ({:.1f}s)".format(proc.returncode, secs), out
+
+
+# Steps that rewrite the same generated artifact must never run concurrently:
+# BOTH trace.py invocations — registry-integrity's --strict-integrity floor and
+# the full traceability join — rewrite docs/test/report.md on every run, so a
+# parallel plan chains them in one lane. Every other step is read-only (the
+# --check freshness gates, the lints, privacy) or writes a distinct target
+# (tests+coverage: the coverage data files), so it parallelizes freely.
+_SHARED_OUTPUT_LANES = {
+    "registry-integrity": "trace-report",
+    "traceability": "trace-report",
+}
+
+
+def run_plan(plan, lenient, jobs):
+    """Execute the plan's steps; returns [(name, status, detail)] in plan order.
+
+    jobs == 1 streams each step's output live, one at a time — byte-identical
+    to the historical behavior, and the default. jobs > 1 runs the steps
+    concurrently in *lanes* (see _SHARED_OUTPUT_LANES), capturing each step's
+    output and printing it whole under a lock when the step finishes, so
+    output never interleaves; the summary and exit semantics are unchanged
+    (never a false green — an unexpected runner exception propagates)."""
+    if jobs <= 1 or len(plan) <= 1:
+        return [
+            (name, *run_step(name, requires, cmd, lenient))
+            for name, requires, cmd, _gates, _layer in plan
+        ]
+    import concurrent.futures
+    import threading
+
+    lanes = {}
+    for idx, step in enumerate(plan):
+        lanes.setdefault(_SHARED_OUTPUT_LANES.get(step[0], step[0]), []).append(
+            (idx, step)
+        )
+    lock = threading.Lock()
+    results = {}
+
+    def run_lane(lane_steps):
+        for idx, (name, requires, cmd, _gates, _layer) in lane_steps:
+            status, detail, output = run_step_captured(name, requires, cmd, lenient)
+            with lock:
+                print("\n=== {} : {} ===".format(name, " ".join(cmd)), flush=True)
+                if output:
+                    print(output, end="" if output.endswith("\n") else "\n", flush=True)
+                print("  {:5} {:16} {}".format(status, name, detail), flush=True)
+                results[idx] = (name, status, detail)
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(jobs, len(lanes))
+    ) as pool:
+        for future in [pool.submit(run_lane, ls) for ls in lanes.values()]:
+            future.result()  # propagate, never swallow, a runner failure
+    return [results[i] for i in sorted(results)]
 
 
 def main():
@@ -665,6 +834,26 @@ def main():
         "a missing tool is SKIP (exit 0), a real failure exits 1 (the pre-commit "
         "hook uses this to source its format check from docs/stack.ini)",
     )
+    ap.add_argument(
+        "--run-steps",
+        metavar="NAMES",
+        default=None,
+        help="run the named steps (comma-separated, e.g. 'arch-map,okf') "
+        "concurrently with the same lenient semantics as --run-step, reporting "
+        "every step's result — so a commit with several stale artifacts names "
+        "them all in one pass (the pre-commit hook's batched floor); exits 1 "
+        "if any step FAILs",
+    )
+    ap.add_argument(
+        "--jobs",
+        type=int,
+        default=None,
+        metavar="N",
+        help="run the plan's steps concurrently on N workers (0 = one per "
+        "step); every step is read-only or writes a distinct artifact, except "
+        "the two trace.py steps, which share a lane. Default 1: sequential, "
+        "with each step's output streamed live exactly as before",
+    )
     args = ap.parse_args()
     gate = resolve_gate(args.gate)
     profile = load_profile()
@@ -695,6 +884,27 @@ def main():
         print("  {:5} {:16} {}".format(status, name, detail))
         sys.exit(1 if status == "FAIL" else 0)
 
+    # The batch form of --run-step (the hook's floor in ONE interpreter spawn):
+    # resolve each name from the full plan, run them concurrently (they are
+    # independent freshness/integrity checks), and — unlike a `set -e` chain of
+    # single steps — report EVERY failure, so a commit with several stale
+    # artifacts names them all at once instead of one per attempt. Same lenient
+    # semantics as --run-step (a missing tool is SKIP, exit 0).
+    if args.run_steps:
+        names = [t.strip() for t in args.run_steps.split(",") if t.strip()]
+        if not names:
+            sys.exit("check: --run-steps got no step names")
+        all_steps = steps(coverage, args.tier, "all", args.phase, profile)
+        by_name = {s[0]: s for s in all_steps}
+        unknown = [n for n in names if n not in by_name]
+        if unknown:
+            sys.exit("check: no step named {}".format(", ".join(map(repr, unknown))))
+        jobs = args.jobs if args.jobs is not None else 0
+        results = run_plan(
+            [by_name[n] for n in names], lenient=True, jobs=jobs or len(names)
+        )
+        sys.exit(1 if any(status == "FAIL" for _n, status, _d in results) else 0)
+
     plan = [
         s
         for s in steps(coverage, args.tier, gate, args.phase, profile)
@@ -715,10 +925,10 @@ def main():
         print("No checks defined for gate {}.".format(gate))
         return
 
-    results = []
-    for name, requires, cmd, _gates, _layer in plan:
-        status, detail = run_step(name, requires, cmd, args.lenient)
-        results.append((name, status, detail))
+    jobs = args.jobs if args.jobs is not None else 1
+    if jobs == 0:
+        jobs = len(plan)
+    results = run_plan(plan, args.lenient, jobs)
 
     print("\n" + "=" * 56)
     print("Check summary (gate {}, tier {}):".format(gate, args.tier))

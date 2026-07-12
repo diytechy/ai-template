@@ -56,11 +56,11 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
   needs are derived so G1 can check them against it. That tag is the purpose
   fact's **only home** — every other doc (the needs registry's top line, the
   AGENTS.md "What this is" one-liner) points at `README.md#vision` instead of
-  re-authoring a variant. Then: how to run/evaluate, how to get started. Wire
-  the root
-  `run.{cmd,sh,command}` launchers' `RUN_CMD` for every supported platform so
-  running the product never requires recalling a command; delete them only for
-  a pure library.
+  re-authoring a variant. Then: how to run/evaluate, how to get started.
+  Declare the product's runnable capabilities once in `docs/stack.ini`'s `[run]`
+  section (one `<name> = <command>` line each) — the root `run.{cmd,sh,command}`
+  launchers present them, so running the product never requires recalling a
+  command; delete them only for a pure library.
 - `docs/process.md` — the method, gates, ID scheme, anti-duplication rules,
   verdict protocol (copy `PROCESS.md`).
 - `docs/status.md` — the working surface: live state + open items, only what

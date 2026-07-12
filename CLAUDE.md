@@ -11,6 +11,10 @@ and scripts, not a downstream application.
 > it). Don't confuse the two: this file governs editing the kit; that one governs
 > using the kit.
 
+> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
+> holds the human owner's free-form notes; the working surfaces are
+> `docs/status.md`, the registries, and `docs/log.md`.
+
 ---
 
 ## What we're optimizing for
@@ -40,9 +44,10 @@ that easier to achieve in a real project — or get out of the way.
   something sensible the moment it's copied and filled — example/placeholder rows
   end in `-000` so `trace.py` ignores them.
 - **Self-test before claiming done.** After changing a script, run
-  `python -m pytest -q` — the suite in `tests/` bootstraps a temp scaffold and
-  exercises every script end-to-end — and paste the real output. Never report a
-  green you didn't produce.
+  `python -m pytest -q -n auto` — the suite in `tests/` bootstraps a temp
+  scaffold and exercises every script end-to-end (`-n auto` is the declared
+  stack.ini command; ~70 s vs ~340 s serial) — and paste the real output. Never
+  report a green you didn't produce.
 - **Edit conservatively.** This is a foundation many projects inherit; prefer the
   smallest change that fixes the problem, and flag anything that would force
   downstream repos to migrate.
@@ -100,9 +105,15 @@ that easier to achieve in a real project — or get out of the way.
   templates the kit ships** in `project-trajectory/registries/`: those are the
   blank forms an adopter fills; these are the kit's *own, filled* registries.
   (`run.*` launchers stay un-self-applied — a meta-repo has no product to launch.)
-- [`docs/archive/`](docs/archive/README.md) — historical inputs to
-  `IMPROVEMENT_PLAN.md` (the resolved template review, the adoption field
-  report, the mined scratch notes). Not working surfaces; root stays live-only.
+- [`docs/enforcement-audit.md`](docs/enforcement-audit.md) — the kit's worked
+  **enforcement audit** (dogfooding the `PROCESS_OPTIONS.md` discipline): each
+  process/working-agreement rule mapped to its strongest enforcer
+  (Harness/Test/Reviewer/Prose), with the honest gaps recorded.
+- [`docs/archive/`](docs/archive/README.md) — the kit's **design history**:
+  `IMPROVEMENT_PLAN.md` (the thread specs + WI-1.x log, archived once the live
+  homes — `status.md` + `work-items.csv` + `log.md` — superseded it) and its own
+  historical inputs (the resolved template review, the adoption field report, the
+  mined scratch notes). Not working surfaces; root stays live-only.
 
 ## Communication style
 

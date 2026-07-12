@@ -36,14 +36,20 @@ What it creates in the destination:
     docs/requirements/assets.csv               <- registries/assets.template.csv
     docs/requirements/components.csv           <- registries/components.template.csv
     docs/requirements/work-items.csv           <- registries/work-items.template.csv
+    docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
+    docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
-    scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+    scripts/trace.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
-    scripts/gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
+    scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
+    scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
+    docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
-    scripts/dev-setup.{sh,ps1}                 <- dev-setup.template.* (workstation setup)
+    scripts/dev-setup.{sh,ps1,command}         <- dev-setup.template.* (workstation setup)
     README.md                                  <- README.template.md (human front door; kept if one exists)
+    OWNER_SCRATCHPAD.md                        <- OWNER_SCRATCHPAD.template.md (owner-only notes; agents ignore)
+    scripts/run_menu.py                        (capability-menu reader the run.* launchers delegate to)
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
     scripts/agent_loop.py                      (unattended coordinator engine)
@@ -70,11 +76,12 @@ Gemini prefer their own filenames. All three are copied unconditionally — they
 tiny and cost nothing (same rationale as the interface artifacts), so every
 scaffold works whichever agent shows up.
 
-Agent selection (`--agents claude|gemini|both|none`, WI-1.9): at repo setup the
-user most likely has an agent configured, so bootstrap can bring that agent's
-**skills** (from the neutral `skills/` source) into the repo fold. The flag drives
-what's *materialized* beyond the always-copied stubs: the matched skills into the
-agent's native dir (`.claude/skills/<name>/SKILL.md`, `.gemini/skills/...`), the
+Agent selection (`--agents claude|gemini|codex|both|none`, WI-1.9 + S7): at repo
+setup the user most likely has an agent configured, so bootstrap can bring that
+agent's **skills** (from the neutral `skills/` source) into the repo fold. The
+flag drives what's *materialized* beyond the always-copied stubs: the matched
+skills into the agent's native dir (`.claude/skills/<name>/SKILL.md`,
+`.gemini/skills/...`, `.agents/skills/...` for codex), the
 agent's optional hook config copied **inert** as `settings.json.example` (never a
 silently-installed Stop hook), and a setup note in `docs/status.md`. Run
 interactively without the flag and it ASKS (agent, then up to two scope questions
@@ -84,14 +91,24 @@ nothing materialized, the historical agent-neutral scaffold unchanged. AGENTS.md
 stays the canonical guide whatever the choice; skills are opt-in accelerators, not
 process gates (skills/README.md).
 
+The per-agent skill copies are a **checked fan-out of the one neutral source**
+(S7): materialization is write-once (never clobbers project content), and
+`--sync` is the deliberate refresh that force-overwrites each existing per-agent
+skills subtree from `skills/` so "edit source → re-materialize" is one command.
+`gen_skills_index.py --check-agents` is the drift gate (byte-identity of every
+per-agent copy to source), wired into the pre-commit floor + G3 like the arch-map
+/ OKF freshness steps and vacuous when a repo has no per-agent skills dir.
+
 The README and the root `run.{cmd,sh,command}` launchers (WI-1.12) are the
 **evaluator's rungs** of the §7 onboarding ladder: the README is the human front
 door (bootstrap fills `{{PROJECT_NAME}}` from the destination folder name; the
 kickoff agent builds the rest out from the project brief; an existing README is
 never overwritten), and the launchers give every launchable project a
 double-clickable start per platform so running it never requires recalling a
-command. They ship inert — an unfilled `RUN_CMD` prints guidance and exits
-nonzero — and a pure library simply deletes them.
+command — presenting the capabilities declared in `docs/stack.ini`'s `[run]`
+section (via `scripts/run_menu.py`), so the launch commands live once. They ship
+inert — an absent/empty `[run]` section prints guidance and exits nonzero — and
+a pure library simply deletes them.
 
 The root `agent-resume.{cmd,sh,command}` launchers + `scripts/agent_loop.py`
 (Thread 33, process-options.md "Unattended operation") are the *work-resume*
@@ -105,11 +122,19 @@ launcher's `AGENT_CMD`/`AGENT_MODEL` slots with that agent's example command
 the consent plainly); the slots stay an EDIT block the repo owns.
 
 The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.csv`)
-are always scaffolded but ship **inert**: they hold only `IF-000` placeholder
-rows that nothing reads (`trace.py` doesn't process interfaces), so a standalone
-project can simply ignore them. Fill them in only when this repo shares a
-contract with another (process.md §8). They cost nothing to leave empty, which is
-why bootstrap copies them unconditionally rather than gating them behind a flag.
+are always scaffolded but ship **inert**: they hold only the `IF-000` placeholder
+row (ignored, like every `-000`), so a single-module project can simply leave
+them empty. Fill in `IF-###` rows when this repo declares a contract — with
+another repo **or between its own modules** (process.md §8). `trace.py`
+integrity-checks the seam registry (id shape, SR-Refs back-link, WI-056) and
+`check_trajectory.py` runs the **architecture-connectivity coverage** over the
+arch-map inventory. That coverage is **opt-out, default-on** (the
+`docs/secrets-scan` / `docs/trajectory-check` posture — absence reads on): a
+multi-module arch-map with no declared seams warns "connectivity undeclared"
+rather than passing vacuously, so like those layers there is no file to scaffold —
+silence it with the one word `off` in `docs/interfaces-check`, or a single-module
+inventory. They cost nothing to leave empty, which is why bootstrap copies them
+unconditionally rather than gating them behind a flag.
 
 `docs/requirements/performance-budgets.csv` (PB-###, process.md §9) is the same
 kind of optional, always-scaffolded coordination registry for quantitative
@@ -223,6 +248,8 @@ placeholder between the architecture markers.
 
 After running: open AGENTS.md and docs/status.md, fill the PROJECT BRIEF, then
 start gate G1 (see docs/process.md).
+
+Contracts: IF-014, IF-039 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -240,14 +267,18 @@ KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
 # scaffold can materialize that agent's stub, its optional hook config, and the
 # skills relevant to the project — without locking the kit to any agent (the
 # `skills/` source stays neutral). See skills/README.md for the full contract.
-AGENT_CHOICES = ("claude", "gemini", "both", "none")
+AGENT_CHOICES = ("claude", "gemini", "codex", "both", "none")
 
-# Per-agent native locations. Both Claude Code and Gemini CLI read the same
-# Agent-Skills `SKILL.md` shape, so materializing a skill is a straight copy into
-# the agent's skills dir; the optional hook config is copied *inert* (as a
+# Per-agent native skill locations. Claude Code, Gemini CLI, and Codex all read
+# the same Agent-Skills `SKILL.md` shape (Codex mirrors the AGENTS.md convention
+# under `.agents/`), so materializing a skill is a straight copy into the agent's
+# skills dir — the locations differ only because agent skill *dirs* don't
+# standardize (S7). The optional hook config is copied *inert* (as a
 # `settings.json.example`) so the scaffold never silently installs a Stop hook
 # that runs commands — activation stays the user's explicit choice (the
-# agent-hooks/README.md "not wired by bootstrap" stance).
+# agent-hooks/README.md "not wired by bootstrap" stance). `hooks_src`/`hooks_dst`
+# are OPTIONAL: an agent with no shipped hook config (codex today) just gets its
+# skills fanned out.
 AGENTS = {
     "claude": {
         "skills_dir": ".claude/skills",
@@ -258,6 +289,9 @@ AGENTS = {
         "skills_dir": ".gemini/skills",
         "hooks_src": "agent-hooks/gemini.settings.json",
         "hooks_dst": ".gemini/settings.json.example",
+    },
+    "codex": {
+        "skills_dir": ".agents/skills",
     },
 }
 
@@ -276,10 +310,14 @@ NON_PYTHON_STACKS = ("node", "go", "rust", "powershell")
 
 
 def selected_agents(choice):
-    """Expand an --agents choice into the concrete agent keys to materialize."""
+    """Expand an --agents choice into the concrete agent keys to materialize.
+
+    `both` stays claude+gemini (its historical meaning — an explicit `codex`
+    selection is how a repo populates `.agents/skills`); `none` materializes
+    nothing."""
     if choice == "both":
         return ["claude", "gemini"]
-    if choice in ("claude", "gemini"):
+    if choice in AGENTS:
         return [choice]
     return []  # "none"
 
@@ -365,6 +403,10 @@ def materialize_agent_layer(dest, agents, skills, dry_run, force):
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(src, dst)
             created.append(dst_rel)
+        # The inert hook example is optional — an agent with no shipped hook
+        # config (codex) declares no `hooks_src` and simply gets its skills.
+        if not spec.get("hooks_src"):
+            continue
         hooks_src = KIT / spec["hooks_src"]
         if hooks_src.exists():
             hooks_dst = dest / spec["hooks_dst"]
@@ -374,6 +416,47 @@ def materialize_agent_layer(dest, agents, skills, dry_run, force):
                     shutil.copyfile(hooks_src, hooks_dst)
                 created.append(spec["hooks_dst"])
     return created
+
+
+def sync_agent_skills(dest, dry_run):
+    """Force-refresh each per-agent skill copy from the ONE neutral source, so a
+    "edit source → re-materialize" is one command (`bootstrap.py --sync`).
+
+    The kit fans `project-trajectory/skills/<name>/` out to `.claude/skills/`,
+    `.gemini/skills/`, and `.agents/skills/` as byte-identical copies (S7,
+    tracked + drift-checked). Materialization is otherwise write-once so it never
+    clobbers project content; this refresh is the deliberate exception — but it
+    touches ONLY the `<agent>/skills/<name>/` subtree of a per-agent dir that
+    ALREADY exists (a subset dir stays a subset; creating a per-agent dir is
+    `--agents`' job), and only the skills that dir already carries. A file
+    outside `<agent>/skills/<name>/` is never read or written, so a project's own
+    settings/hook files are safe. Byte-exact (read/write bytes — CRLF must not
+    false-refresh). Returns the list of refreshed dest-relative file paths."""
+    source = KIT / "skills"
+    refreshed = []
+    if not source.is_dir():
+        return refreshed
+    for spec in AGENTS.values():
+        agent_skills = dest / spec["skills_dir"]
+        if not agent_skills.is_dir():
+            continue
+        for name_dir in sorted(p for p in agent_skills.iterdir() if p.is_dir()):
+            src_skill = source / name_dir.name
+            if not (src_skill / "SKILL.md").exists():
+                continue  # a copy with no source (orphan) — the drift check flags it
+            for src_file in sorted(f for f in src_skill.rglob("*") if f.is_file()):
+                rel = src_file.relative_to(src_skill)
+                dst_file = name_dir / rel
+                data = src_file.read_bytes()
+                if dst_file.exists() and dst_file.read_bytes() == data:
+                    continue
+                refreshed.append(
+                    (Path(spec["skills_dir"]) / name_dir.name / rel).as_posix()
+                )
+                if not dry_run:
+                    dst_file.parent.mkdir(parents=True, exist_ok=True)
+                    dst_file.write_bytes(data)
+    return refreshed
 
 
 # Per-agent example commands seeded into the agent-resume launchers' AGENT_CMD
@@ -404,7 +487,7 @@ def seed_agent_resume(dest, agents, created, dry_run):
     is an EDIT block the repo owns — bootstrap only seeds it, and only on the
     run that created the file, so a re-sync never clobbers a repo's own slot).
     Returns True when the slots were seeded."""
-    if dry_run or not agents:
+    if dry_run or not agents or agents[0] not in AGENT_RESUME_SEEDS:
         return False
     seed = AGENT_RESUME_SEEDS[agents[0]]
     seeded = False
@@ -527,7 +610,8 @@ GATE_POLICY_DEVIATIONS = {
             "a human approves each gate",
             "LLM-gate: an independent fresh-context reviewer runs the harness "
             "itself; verdict recorded in docs/log.md with `Model:` + "
-            "`Role: LLM-GATE`; the driver bumps docs/gate citing it",
+            "`Role: LLM-GATE`; the driver makes the ratifying Status-change "
+            "commit + regenerates docs/gate (derive_gate.py) citing it",
         ),
         (
             "mid-run escalation to the human",
@@ -886,9 +970,12 @@ MAPPING = [
     ("GEMINI.stub.template.md", "GEMINI.md"),
     ("PROCESS.md", "docs/process.md"),
     ("PROCESS_OPTIONS.md", "docs/process-options.md"),
-    # The machine-readable active gate (one line: G1|G2|G3|all). check.py and CI
-    # read it, so a young project's CI enforces the bar it is actually at;
-    # closing a gate = the human bumps this file in a reviewed commit.
+    # The machine-readable active gate (first non-comment line: G1|G2|G3).
+    # check.py and CI read it, so a young project's CI enforces the bar it is
+    # actually at. It is DERIVED from the artifact states by derive_gate.py (not
+    # hand-set); closing a gate = ratifying artifacts in a reviewed commit +
+    # regenerating. The scaffold ships a legacy one-liner (accepted value-only);
+    # `python scripts/derive_gate.py` migrates it to the generated form.
     ("gate.template", "docs/gate"),
     # The declared gate authority (Thread 32, process.md §4): who accepts a
     # gate advance. Scaffolds `attended`; --gate-policy sets a non-default
@@ -898,6 +985,14 @@ MAPPING = [
     # operation"): how many independent fresh-context review verdicts a WI
     # gets (0|1|2). Default `1`; floors above the dial live in the file.
     ("review-policy.template", "docs/review-policy"),
+    # The model REGISTRY the coordinator's router reads (WI-059, S8): one row per
+    # usable model keyed [PROVIDER]-[MODEL_NAME]-[VERSION], with example rows for
+    # the verified headless shapes. Present but INERT until docs/agents-enabled
+    # (the ordered enable-list / consent surface, deliberately NOT scaffolded) is
+    # created — routing then selects from that pool (process-options.md
+    # "Unattended operation" -> routing/escalation). Absent both files = today's
+    # single AGENT_CMD/AGENT_MODEL behavior.
+    ("agents.template.csv", "docs/agents.csv"),
     # The privacy-check toggle (Thread 38 -> identity/privacy reframe,
     # process-options.md "Commit identity & privacy"): `false` by default;
     # --privacy-check overrides.
@@ -952,7 +1047,23 @@ MAPPING = [
         "docs/requirements/work-items.csv",
     ),
     ("registries/test-cases.template.csv", "docs/test/test-cases.csv"),
+    # Specs-of-record (process-options.md "Trajectory / work-items layer"): the
+    # per-WI spec directory the work-items.csv `SpecRef` column points at (rule
+    # R-E). A README explaining the layer + an inert WI-000 example carrying the
+    # Done-when checklist. Nothing gates on the -000 file (check_trajectory
+    # ignores the WI-000 row), so a fresh scaffold stays vacuously clean.
+    ("specs/README.template.md", "docs/specs/README.md"),
+    ("specs/WI-000.template.md", "docs/specs/WI-000.md"),
+    # Critique rubrics (process-options.md "Critique verification & the critique
+    # loop", WI-068): the judgment reference a Verification=Critique requirement is
+    # scored against — written from the SN/SR intent (not the possibly-lax TC),
+    # carrying numbered good/bad anchors that accumulate at rework. A README
+    # explaining the convention + an inert rubric-000 example. Nothing gates on the
+    # -000 file, so a fresh scaffold that never uses Critique carries it for free.
+    ("rubrics/README.template.md", "docs/rubrics/README.md"),
+    ("rubrics/rubric-000.template.md", "docs/rubrics/rubric-000.md"),
     ("scripts/trace.py", "scripts/trace.py"),
+    ("scripts/derive_gate.py", "scripts/derive_gate.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),
     ("scripts/check_docs.py", "scripts/check_docs.py"),
@@ -963,11 +1074,19 @@ MAPPING = [
     ("scripts/check_privacy.py", "scripts/check_privacy.py"),
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
+    ("scripts/subagent_gate.py", "scripts/subagent_gate.py"),
     ("scripts/gen_arch_map.py", "scripts/gen_arch_map.py"),
     ("scripts/gen_release_checklist.py", "scripts/gen_release_checklist.py"),
     ("scripts/gen_cases.py", "scripts/gen_cases.py"),
     ("scripts/gen_trajectory.py", "scripts/gen_trajectory.py"),
     ("scripts/gen_okf.py", "scripts/gen_okf.py"),
+    # The S8 routing/scoring half of the unattended coordinator (WI-059): the
+    # model-registry router + fixed escalation policy, and the substance scorer.
+    # agent_loop imports them as siblings when the docs/agents-enabled enable-list
+    # opts routing in; absent, they are inert (process-options.md "Unattended
+    # operation" -> routing/escalation).
+    ("scripts/agent_route.py", "scripts/agent_route.py"),
+    ("scripts/score_reviews.py", "scripts/score_reviews.py"),
     ("scripts/setup.sh", "scripts/setup.sh"),
     ("scripts/setup.ps1", "scripts/setup.ps1"),
     ("scripts/check.sh", "scripts/check.sh"),
@@ -982,14 +1101,28 @@ MAPPING = [
     ("scripts/onboard.template.cmd", "scripts/onboard.cmd"),
     ("scripts/dev-setup.template.sh", "scripts/dev-setup.sh"),
     ("scripts/dev-setup.template.ps1", "scripts/dev-setup.ps1"),
+    ("scripts/dev-setup.template.command", "scripts/dev-setup.command"),
     # The evaluator's rungs (WI-1.12): a README skeleton the kickoff agent
     # builds out from the project brief (never overwritten — an adopted repo
     # keeps its own README), and root double-clickable product launchers, one
     # per platform, so running the product never requires recalling a command.
-    # They ship inert (empty RUN_CMD prints guidance); a pure library deletes
+    # They delegate to scripts/run_menu.py (capabilities declared in the
+    # docs/stack.ini [run] section) and ship inert (an absent/empty [run] section
+    # prints guidance); a pure library deletes
     # them. Root, not scripts/: the double-click use case is "open the checkout
     # folder and click" — one hop shallower matters for a non-code evaluator.
     ("README.template.md", "README.md"),
+    # The owner's private scratchpad (FB3, owner-feedback-2026-07-11): a root
+    # file for the human owner to keep free-form notes. Its loud header tells LLM
+    # agents not to read/cite/act on it, and check_docs.py exempts it entirely
+    # (links, orphans, stale hints) — owner notes never gate. Always scaffolded
+    # like the README front door; a repo that doesn't want it just deletes it.
+    ("OWNER_SCRATCHPAD.template.md", "OWNER_SCRATCHPAD.md"),
+    # The capability-menu reader the launchers delegate to (WI-067): reads the
+    # docs/stack.ini [run] section and presents a menu / launches by name /
+    # lists for an agent, so the launch commands live once in stack.ini instead
+    # of duplicated across the platform launchers.
+    ("scripts/run_menu.py", "scripts/run_menu.py"),
     ("scripts/run.template.cmd", "run.cmd"),
     ("scripts/run.template.sh", "run.sh"),
     ("scripts/run.template.command", "run.command"),
@@ -1187,6 +1320,16 @@ def main():
         "--dry-run", action="store_true", help="print what would happen; write nothing"
     )
     ap.add_argument(
+        "--sync",
+        action="store_true",
+        help="refresh mode (S7): force-overwrite each existing per-agent skills "
+        "subtree (.claude/.gemini/.agents) from the neutral project-trajectory/"
+        "skills/ source so the copies are byte-identical again — 'edit source → "
+        "re-materialize' in one command. Touches ONLY <agent>/skills/<name>/; "
+        "every other scaffolded file stays write-once. Does not run the full "
+        "scaffold. Vacuous when a repo has no per-agent skills dir.",
+    )
+    ap.add_argument(
         "--agents",
         choices=AGENT_CHOICES,
         default=None,
@@ -1262,6 +1405,22 @@ def main():
     args = ap.parse_args()
 
     dest = Path(args.dest).resolve()
+
+    # --sync (S7): a FOCUSED refresh of the per-agent skill copies, nothing else.
+    # Kept separate from the full scaffold pass so re-materializing the skills in
+    # an existing repo (e.g. this kit's own .claude/.agents) doesn't re-stamp
+    # kit-version, re-run the generators, or touch any other file.
+    if args.sync:
+        refreshed = sync_agent_skills(dest, args.dry_run)
+        verb = "would refresh" if args.dry_run else "refreshed"
+        for rel in refreshed:
+            print("  {}: {}".format(verb, rel))
+        print(
+            "\n{} per-agent skill file(s) {} from the neutral source.".format(
+                len(refreshed), "to refresh" if args.dry_run else "refreshed"
+            )
+        )
+        return
 
     # Resolve the scaffold profile (Thread 34): explicit flags win; else the
     # destination's recorded docs/kit-profile (so a re-sync regenerates the

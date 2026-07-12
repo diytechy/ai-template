@@ -11,6 +11,14 @@ Plain-language needs + edge-case expectations. Engineering translations live in
 `system-requirements.csv` (referenced by `SN-Refs`); do not restate them here.
 Priority: **M**=Must · **S**=Should · **C**=Could.
 
+> **Maturity is section-as-state** (derived-gate model, process.md §4). A need
+> under a heading whose text contains **"draft"** (the *Draft needs (unratified)*
+> section below) is a **Draft** need — G0, still being drafted — and is exempt
+> from the "every SN needs an SR" rule so it can live in the live spine before it
+> is decomposed. Ratifying a need = **moving its row up** into *Core needs* /
+> *Edge-case expectations* in a reviewed commit (that commit is the sign-off; its
+> date is the ratification date). No status column — the section IS the state.
+
 > **Cover the whole lifecycle, not just steady state.** For each need, ask *when
 > in the running product's life must this hold?* — **Provision** (before it runs:
 > install, dependencies), **Startup** (once per launch: config, migrations), or
@@ -58,3 +66,16 @@ genuinely cannot apply.
 | SN-0xx | Runtime | An intended action is irreversible and its target is ambiguous (delete / overwrite / discard / physical alteration) | |
 | SN-0xx | Runtime | Input degraded but not absent (truncated stream, noisy or dirty sensor, partial data) | |
 | SN-0xx | Runtime | Task must be abandoned safely partway (user stop, shutdown mid-task) | |
+
+## Draft needs (unratified)
+
+Needs still being drafted (derived-gate model §4a). A row here is **Draft** (G0):
+`trace.py` exempts it from the "every SN needs an SR" rule, so it can sit in the
+live registry before its `SR` decomposition exists. **Ratify** a need by moving
+its row up into *Core needs* / *Edge-case expectations* in a reviewed commit — do
+not leave real needs parked here. Empty is the normal steady state; delete this
+section's example row (or the whole section) once nothing is in draft.
+
+| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent (how we'd know it's met) |
+|---|---|---|---|---|
+| _(none — draft new needs here, then ratify them upward)_ | | | | |

@@ -5,15 +5,15 @@ description: "the SN->SR->LLR->TC graph as OKF concepts"
 tags: []
 resource: "generated"
 ---
+> **GENERATED — a reference copy, not the source of truth.** Derived from the spine registries and the process docs by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
 
 # Knowledge bundle — the traceability graph + process guides
 
-Generated from the spine registries and the process docs
-(`scripts/gen_okf.py`); the CSVs and docs stay the source of truth.
 Spec pin: [UPSTREAM.md](UPSTREAM.md).
 
-- [stakeholder-needs](stakeholder-needs/index.md) — 22 concept(s)
-- [system-requirements](system-requirements/index.md) — 42 concept(s)
-- [low-level-requirements](low-level-requirements/index.md) — 39 concept(s)
-- [test-cases](test-cases/index.md) — 42 concept(s)
+- [stakeholder-needs](stakeholder-needs/index.md) — 24 concept(s)
+- [system-requirements](system-requirements/index.md) — 49 concept(s)
+- [low-level-requirements](low-level-requirements/index.md) — 50 concept(s)
+- [test-cases](test-cases/index.md) — 50 concept(s)
+- [interfaces](interfaces/index.md) — 51 concept(s)
 - [process-guides](process-guides/index.md) — 3 concept(s)

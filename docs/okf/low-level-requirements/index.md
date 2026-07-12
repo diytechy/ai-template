@@ -5,6 +5,7 @@ description: "tier index"
 tags: []
 resource: "generated"
 ---
+> **GENERATED — a reference copy, not the source of truth.** Derived from docs/requirements/low-level-requirements.csv by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
 
 # low-level-requirements — index
 
@@ -49,3 +50,14 @@ resource: "generated"
 | [LLR-037](LLR-037.md) | Per-phase cmd map + size tripwire |
 | [LLR-038](LLR-038.md) | Path + sym: reference checker |
 | [LLR-039](LLR-039.md) | OKF bundle emitter |
+| [LLR-040](LLR-040.md) | Subagent spawn gate |
+| [LLR-041](LLR-041.md) | IF-tier integrity in trace.py |
+| [LLR-042](LLR-042.md) | Architecture-connectivity views and coverage warns |
+| [LLR-043](LLR-043.md) | Cross-agent skill fan-out drift check |
+| [LLR-044](LLR-044.md) | Model routing + fixed escalation policy |
+| [LLR-045](LLR-045.md) | Loop-side reviewer dispatch + managed routing |
+| [LLR-046](LLR-046.md) | Substance scorer + tripwires + scoreboard |
+| [LLR-047](LLR-047.md) | Run capability menu reader |
+| [LLR-048](LLR-048.md) | Critique loop dispatch + lax-TC ratchet |
+| [LLR-049](LLR-049.md) | How-SW top-view containment rule + render |
+| [LLR-050](LLR-050.md) | Derived-gate computation + hybrid cache |

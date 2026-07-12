@@ -15,7 +15,10 @@ Reads (relative to --docs, default "<root>/docs"; --root defaults to "."):
     requirements/system-requirements.csv   (cols: SR-ID, SN-Refs, Verification, Status, ...)
     requirements/low-level-requirements.csv (cols: LLR-ID, SR-Refs, ...)
     test/test-cases.csv                     (cols: TC-ID, Verifies, ...)
-    requirements/stakeholder-needs.md       (optional; SN-### ids scraped for SN->SR coverage)
+    requirements/stakeholder-needs.md       (optional; SN-### ids scraped for SN->SR coverage.
+                                             SN maturity is section-as-state: SNs under a heading
+                                             containing "draft" are unratified/Draft (§4a) and
+                                             exempt from the SN-with-no-SR orphan rule)
     requirements/performance-budgets.csv    (optional; PB-### perf/resource budgets, §9 —
                                              each row's Refs must back-link a real SR/LLR/Module)
     requirements/repos.csv                   (optional; REPO-### coordinator repo-delegation
@@ -38,6 +41,15 @@ Reads (relative to --docs, default "<root>/docs"; --root defaults to "."):
                                              SupersededBy must name real CMP ids, and a
                                              `Component` tag on an LLR/PART/ASSET row must
                                              resolve to a real CMP row)
+    requirements/interfaces.csv              (optional; IF-### directed interface seams,
+                                             process.md 8 — one row per directed seam
+                                             (ThisProject module -> Counterpart module/file/
+                                             external actor); each row's SR-Refs must resolve
+                                             to a real SR, and ThisProject is best-effort
+                                             joined to the LLR Module inventory. The seam
+                                             registry is off the joined spine but must stay
+                                             traceable to it (WI-056 closed the SR-002-era gap
+                                             where trace.py never read the IF tier))
 
 Writes:
     test/report.md  — counts, the SR->LLR->TC matrix, the orphan list, and two
@@ -57,7 +69,11 @@ Orphan rules (the method rules are stated once, in process.md §4):
       have no code to decompose; Demonstration/Manual SRs still describe behavior
       the software implements, so they keep the LLR requirement. Attest is the
       human-attestation kind — a named person's recorded judgment, often over a
-      subjective/binary asset with no code symbol, so it is LLR-exempt too)
+      subjective/binary asset with no code symbol, so it is LLR-exempt too.
+      Critique is NOT LLR-exempt: the artifact it judges is *produced by code*
+      (a render/generation pipeline) and only its acceptance is subjective, so a
+      Critique SR keeps the LLR like Demonstration/Manual — a genuinely code-less
+      subjective requirement is an Attest, not a Critique)
     - SR with no TC (every SR needs ≥1 TC row regardless of method; for human
       methods the TC records the procedure with Automated=No)
     - SR with no SN link (only when stakeholder-needs.md provides real SN ids —
@@ -65,9 +81,22 @@ Orphan rules (the method rules are stated once, in process.md §4):
     - LLR with no SR parent, or referencing an unknown SR
     - LLR with no TC
     - TC that verifies nothing, or references an unknown SR/LLR
-    - SN with no SR (only when stakeholder-needs.md is present)
+    - SN with no SR (only when stakeholder-needs.md is present; a Draft SN — see
+      below — is exempt)
+Draft exemption (derived-gate model, docs/specs/derived-gate-model.md §3): an
+artifact in the pre-ratification `Draft` state is exempt from the
+*child-completeness* rules above — a Draft SR needs no LLR/TC, a Draft LLR needs
+no TC, and a Draft SN needs no SR — so a requirement can be drafted in the live
+spine before it is decomposed (retiring the -000/off-spine workaround). SR/LLR/TC
+maturity is the open-vocabulary `Status` value `Draft` (the ladder is Draft ->
+Planned -> Verified); SN maturity is **section-as-state** (§4a): an SN under a
+stakeholder-needs.md heading whose text contains "draft" (e.g. `## Draft needs
+(unratified)`) is Draft, all other SNs ratified. Parent-linkage and integrity
+rules still apply (a Draft SR still links an SN; ids stay unique/well-formed), and
+a Draft SR is exempt from the --require-verified criterion below (it is
+pre-ratification, below G1).
 --require-verified adds the G3 status criterion:
-    - SR with Verification=Test whose Status is not Verified
+    - SR with Verification=Test whose Status is not Verified (Draft SRs exempt)
 --phase scopes that status criterion to a delivery phase (process.md §4
 "Phased delivery"): SRs may carry an optional `Phase` column (e.g. v1, v2);
 `--phase v1` (or a cumulative list, `--phase v1,v2`) exempts SRs tagged with
@@ -85,7 +114,7 @@ Always (independent of --strict-schema), structural integrity is checked:
       docs/requirements/ and docs/test/ — spine, off-spine (interfaces,
       procurement, ...), and project-added registries alike — since the check
       needs no knowledge of a file's semantics, only its header
-    - a duplicated SR/LLR/TC/PB/REPO/CMP id (the join would otherwise silently dedupe it)
+    - a duplicated SR/LLR/TC/PB/REPO/CMP/IF id (the join would otherwise silently dedupe it)
     - a malformed id (not "PREFIX-<digits>")
     - a performance-budget row (PB-###, §9) whose Refs name an unknown
       SR/LLR/Module, or that back-links nothing — the budgets registry is off the
@@ -99,10 +128,20 @@ Always (independent of --strict-schema), structural integrity is checked:
       so the optional registry never blocks a single-repo project's gate
     - a purchased/external part row (PART-###, process-options.md) with a
       malformed/duplicate PART- id. Its IF-Ref names the owning interface row of
-      record (MULTI_REPO.md §3.3) but is NOT resolved here: trace.py never reads
-      interfaces.csv (the IF-### tier is off the joined spine), so PART is
-      integrity-checked only — like a MOD row that delegates nothing. The
-      PART-000 example row is ignored, so the optional registry never blocks a gate
+      record (MULTI_REPO.md §3.3) but is NOT resolved here (the interface tier is
+      checked in its own pass, below), so PART is integrity-checked only — like a
+      MOD row that delegates nothing. The PART-000 example row is ignored, so the
+      optional registry never blocks a gate
+    - an interface seam row (IF-###, process.md §8 — the intra-repo/cross-project
+      interface catalog) with a malformed/duplicate IF- id (the always-on floor),
+      whose SR-Refs is empty or names an unknown SR (a --strict finding, like PB's
+      back-links: every seam links the spine so it stays transitively TC-covered),
+      or whose ThisProject endpoint resolves to no LLR Module after normalization
+      (a warn-only advisory — the LLR Module set is a partial, differently-named
+      inventory, so the full module-coverage check lives in check_trajectory
+      against the arch-map). WI-056 closed the SR-002-era gap (trace.py never read
+      the IF tier); the IF-000 example row is ignored, so the optional registry
+      never blocks a gate
     - a binary/large-asset provenance row (ASSET-###, process-options.md "Binary
       assets") with a malformed/duplicate ASSET- id. Off the spine like PART:
       integrity-checked only, its provenance/license/hash tracked in text even
@@ -141,9 +180,9 @@ starts green.
       grammar), which the pre-Evidence `node=` overload was polluting;
     - the two *closed* vocabularies the method defines (process.md §4) hold:
       SR Verification in {Test, Demonstration, Manual, Analysis, Inspection,
-      Attest}, TC Tier in {Smoke, Full, Release}. Priority/Status are deliberately
-      NOT enumerated — the method leaves them open (e.g. Priority S, Status
-      Planned).
+      Attest, Critique}, TC Tier in {Smoke, Full, Release}. Priority/Status are
+      deliberately NOT enumerated — the method leaves them open (e.g. Priority S,
+      Status Planned).
 
 Always (warn-only, never an exit-code change), acceptance-criteria testability
 is advised on: a comparative/absolute term in an SR's AcceptanceCriteria
@@ -169,6 +208,8 @@ runnable check vs a named human's recorded judgment (Verification=Attest). This
 keeps the project's trust footprint auditable — attestation is honest but
 trust-based (the box can be checked without the work having happened), so the
 report never lets it hide inside a bare "Verified".
+
+Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -204,6 +245,15 @@ def refs(value):
 
 def is_example(rid):
     return rid.endswith("-000")
+
+
+def is_draft(row):
+    """A row in the pre-ratification `Draft` state (derived-gate model §3): exempt
+    from the child-completeness orphan rules (a Draft SR needs no LLR/TC, a Draft
+    LLR needs no TC) and from the --require-verified criterion, so a requirement
+    lives in the live spine while it is being drafted. Status is open-vocabulary;
+    `Draft` is the one value the orphan/status passes act on."""
+    return (row.get("Status") or "").strip().lower() == "draft"
 
 
 def structure_findings(path, display=None):
@@ -260,6 +310,9 @@ ID_PATTERNS = {
     "CMP": re.compile(
         r"^CMP-\d+$"
     ),  # optional domain-neutral component registry (process-options.md)
+    "IF": re.compile(
+        r"^IF-\d+$"
+    ),  # optional intra-repo/cross-project interface registry (process.md §8)
 }
 
 # Fields that must be non-empty under --strict-schema. Deliberately omits the
@@ -299,6 +352,7 @@ ENUM_FIELDS = {
             "Analysis",
             "Inspection",
             "Attest",
+            "Critique",
         }
     },
     "TC": {"Tier": {"Smoke", "Full", "Release"}},
@@ -449,6 +503,61 @@ def triangle_findings(tcs, llrs):
     return out
 
 
+# Source-file extensions stripped when normalizing a module path so the two
+# module-naming conventions in play align: an LLR `Module` cell carries the full
+# repo path with extension (`project-trajectory/scripts/check.py`) while the
+# arch-map / an IF `ThisProject` endpoint may use the shorter map form
+# (`scripts/check`). Normalization strips a leading `project-trajectory/` segment
+# and any one of these tails so both collapse to the same key.
+_MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+
+
+def _norm_module(path):
+    """A module path reduced to a naming-convention-neutral key (see _MODULE_EXTS):
+    strip a leading `project-trajectory/`, any source extension, and `/__init__`."""
+    p = (path or "").strip().replace("\\", "/")
+    if p.startswith("project-trajectory/"):
+        p = p[len("project-trajectory/") :]
+    for ext in _MODULE_EXTS:
+        if p.endswith(ext):
+            p = p[: -len(ext)]
+            break
+    if p.endswith("/__init__"):
+        p = p[: -len("/__init__")]
+    return p
+
+
+def interface_findings(ifs, sr_ids, module_ids):
+    """The IF-### seam tier's back-link checks (process.md §8), closing the gap
+    where trace.py never read the interface catalog (WI-056). Returns
+    ``(findings, advisories)``: *findings* join the --strict failure set like PB's
+    back-links (an IF row's SR-Refs is empty or names an unknown SR — every seam
+    links the spine so it stays transitively TC-covered); *advisories* are
+    warn-only (an IF row's ThisProject endpoint resolves to no LLR Module after
+    normalization). The endpoint join is best-effort: the LLR Module set is a
+    partial, differently-named inventory, so the authoritative module-coverage
+    check lives in check_trajectory against the full arch-map."""
+    findings, advisories = [], []
+    norm_modules = {_norm_module(m) for m in module_ids}
+    norm_modules.discard("")
+    for r in ifs:
+        iid = r["IF-ID"]
+        srrefs = refs(r.get("SR-Refs"))
+        if not srrefs:
+            findings.append(f"IF {iid} links no SR (SR-Refs is empty)")
+        for x in srrefs:
+            if x not in sr_ids:
+                findings.append(f"IF {iid} references unknown {x}")
+        endpoint = (r.get("ThisProject") or "").strip()
+        if norm_modules and endpoint and _norm_module(endpoint) not in norm_modules:
+            advisories.append(
+                f"IF {iid} ThisProject={endpoint!r} matches no LLR Module "
+                "(best-effort join; a module with no LLR is legitimate — "
+                "check_trajectory's arch-map coverage is the full check)"
+            )
+    return findings, advisories
+
+
 def placeholder_findings(label, raw_rows):
     """Leftover template example rows (ids ending '-000') in one registry."""
     key = id_key(label)
@@ -466,6 +575,34 @@ def scan_sn_placeholders(sn_md):
         return []
     text = sn_md.read_text(encoding="utf-8")
     return sorted({u for u in re.findall(r"\bSN-\d+\b", text) if is_example(u)})
+
+
+# SN maturity lives in section-as-state (derived-gate model §4a): a stakeholder-
+# needs.md heading whose text contains "draft" (case-insensitive, e.g. `## Draft
+# needs (unratified)`) marks the SNs under it as Draft (unratified, G0); SNs under
+# any other heading are ratified (G1). No new column — the state IS the section,
+# and the ratification date is git-derived (the commit that moved the row out of
+# the draft section). This is the SN analogue of the `Status=Draft` bit on
+# SR/LLR/TC rows.
+_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
+
+
+def sn_draft_ids(text):
+    """The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state):
+    every SN-### that appears under a heading whose text contains "draft". `-000`
+    placeholders are excluded. Line-scanned, tracking the current heading — an SN
+    under a draft heading is Draft until the next heading changes the section."""
+    draft, in_draft = set(), False
+    for line in text.splitlines():
+        m = _HEADING_RE.match(line)
+        if m:
+            in_draft = "draft" in m.group(1).lower()
+            continue
+        if in_draft:
+            for u in re.findall(r"\bSN-\d+\b", line):
+                if not is_example(u):
+                    draft.add(u)
+    return draft
 
 
 def schema_findings(label, rows):
@@ -539,9 +676,11 @@ def _group(label, children):
     return {"id": label, "status": "", "title": "", "cls": "", "children": children}
 
 
-def build_forest(sn_ids, srs, llrs, tcs, orphan_ids):
+def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for
-    rows with no valid parent. Shared by the text outline and the HTML tree."""
+    rows with no valid parent. Shared by the text outline and the HTML tree.
+    `sn_draft` (section-as-state, §4a) labels those SNs `Draft` so the views flag
+    them like a `Status=Draft` SR/LLR/TC row."""
 
     def tc_node(t):
         return _node(t["TC-ID"], _cell(t, "Status"), _cell(t, "Method"), orphan_ids)
@@ -568,7 +707,7 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids):
     roots = []
     for sn in sorted(sn_ids):
         kids = [sr_node(s) for s in srs if sn in refs(s.get("SN-Refs"))]
-        roots.append(_node(sn, "", "", orphan_ids, kids))
+        roots.append(_node(sn, "Draft" if sn in sn_draft else "", "", orphan_ids, kids))
     rootless_srs = [s for s in srs if not sn_ids & set(refs(s.get("SN-Refs")))]
     if rootless_srs:
         label = (
@@ -637,10 +776,10 @@ def _mermaid_label(rid, title):
     return "{} — {}".format(rid, short).replace('"', "'")
 
 
-def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids):
+def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored
     by orphan/draft state via classDef. Kept small/diff-friendly on purpose — the
-    HTML view is the one that scales."""
+    HTML view is the one that scales. `sn_draft` colors unratified SNs (§4a)."""
     sr_ids = {s["SR-ID"] for s in srs}
     llr_ids = {lr["LLR-ID"] for lr in llrs}
     nodes = {}  # rid -> (label, cls); dict insertion order keeps output stable
@@ -650,7 +789,11 @@ def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids):
         nodes[rid] = (label, cls)
 
     for sn in sorted(sn_ids):
-        add(sn, sn, "orphan" if sn in orphan_ids else "")
+        add(
+            sn,
+            sn,
+            "orphan" if sn in orphan_ids else ("draft" if sn in sn_draft else ""),
+        )
     for s in srs:
         sid = s["SR-ID"]
         add(sid, _mermaid_label(sid, _cell(s, "Title")),
@@ -824,6 +967,11 @@ def main():
     # is derived — membership is a `Component` tag on the primitive rows
     # (LLR/IF/ASSET/PART), never restated on the CMP row; absent file -> [].
     raw_cmps = load_csv(docs / "requirements" / "components.csv")
+    # Optional interface-seam registry (IF-###, process.md §8): one row per
+    # directed seam (ThisProject module -> Counterpart module/file/external). Off
+    # the joined spine like PART/ASSET, but its SR-Refs back-link and its endpoint
+    # join keep it traceable (WI-056 closed the SR-002-era gap). Absent file -> [].
+    raw_ifs = load_csv(docs / "requirements" / "interfaces.csv")
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -844,15 +992,17 @@ def main():
         r for r in raw_assets if r.get("ASSET-ID") and not is_example(r["ASSET-ID"])
     ]
     cmps = [r for r in raw_cmps if r.get("CMP-ID") and not is_example(r["CMP-ID"])]
+    ifs = [r for r in raw_ifs if r.get("IF-ID") and not is_example(r["IF-ID"])]
 
     sn_ids = set()
+    sn_draft = set()
     sn_md = docs / "requirements" / "stakeholder-needs.md"
     if sn_md.exists():
-        sn_ids = {
-            u
-            for u in re.findall(r"\bSN-\d+\b", sn_md.read_text(encoding="utf-8"))
-            if not is_example(u)
-        }
+        sn_text = sn_md.read_text(encoding="utf-8")
+        sn_ids = {u for u in re.findall(r"\bSN-\d+\b", sn_text) if not is_example(u)}
+        # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
+        # are unratified (G0) and exempt from the "SN with no SR" child rule below.
+        sn_draft = sn_draft_ids(sn_text)
 
     sr_ids = {r["SR-ID"] for r in srs}
     llr_ids = {r["LLR-ID"] for r in llrs}
@@ -866,14 +1016,19 @@ def main():
     orphan_ids = set()
     for r in srs:
         sid = r["SR-ID"]
+        # A Draft SR is being drafted requirement-first (derived-gate model §3):
+        # exempt from the child-completeness rules (no LLR / no TC) so it lives in
+        # the live spine without orphaning. Its SN linkage and every integrity
+        # rule still apply.
+        draft = is_draft(r)
         analytic = r.get("Verification", "") in ("Analysis", "Inspection", "Attest")
-        if not analytic and sid not in llr_sr_refs:
+        if not draft and not analytic and sid not in llr_sr_refs:
             orphans.append(
                 f"SR {sid} has no LLR (and Verification not in "
                 "Analysis/Inspection/Attest)"
             )
             orphan_ids.add(sid)
-        if sid not in tc_refs:
+        if not draft and sid not in tc_refs:
             orphans.append(f"SR {sid} has no test (TC)")
             orphan_ids.add(sid)
         sn_parents = refs(r.get("SN-Refs"))
@@ -898,7 +1053,9 @@ def main():
             if p not in sr_ids:
                 orphans.append(f"LLR {lid} references unknown {p}")
                 orphan_ids.add(lid)
-        if lid not in tc_refs:
+        # A Draft LLR is exempt from the child-completeness (no TC) rule, like a
+        # Draft SR — its SR parent + id integrity still apply (derived-gate §3).
+        if not is_draft(r) and lid not in tc_refs:
             orphans.append(f"LLR {lid} has no test (TC)")
             orphan_ids.add(lid)
 
@@ -915,7 +1072,9 @@ def main():
                 orphan_ids.add(tid)
 
     for u in sorted(sn_ids):
-        if u not in sr_sn_refs:
+        # A Draft SN (section-as-state, §4a) is being drafted requirement-first and
+        # is exempt from the child-completeness rule, like a Draft SR.
+        if u not in sr_sn_refs and u not in sn_draft:
             orphans.append(f"SN {u} has no SR")
             orphan_ids.add(u)
 
@@ -978,6 +1137,13 @@ def main():
                             f"{label} {r[key]} Component tag references unknown {x}"
                         )
 
+    # Interface seams (IF-###, process.md §8): SR-Refs back-links join the
+    # --strict failure set like PB's; the ThisProject-vs-LLR-Module endpoint join
+    # is a warn-only advisory (module_ids reused from the PB back-link check above).
+    interface_backlink_findings, interface_advisories = interface_findings(
+        ifs, sr_ids, module_ids
+    )
+
     phases = set(refs(args.phase)) if args.phase else None
 
     def in_phase(r):
@@ -1006,6 +1172,11 @@ def main():
     if args.require_verified:
         for r in srs:
             if r.get("Verification", "") != "Test":
+                continue
+            # A Draft SR is pre-ratification (below G1, derived-gate §3): it makes
+            # no Verified claim yet, so the G3 criterion does not apply. Surfaced
+            # in the draft count so the exemption stays auditable.
+            if is_draft(r):
                 continue
             if not in_phase(r):
                 phase_deferred.append(
@@ -1065,6 +1236,11 @@ def main():
     # id), out of the placeholder/schema sweeps, so a CMP-000 placeholder never
     # blocks a gate; its PartOf/SupersededBy/membership joins are checked above.
     integrity += integrity_findings("CMP", raw_cmps)
+    # The interface-seam registry (IF-###, process.md §8) is the same optional
+    # off-spine kind — integrity-checked (malformed/duplicate id), out of the
+    # placeholder/schema sweeps, so an IF-000 placeholder never blocks a gate; its
+    # SR-Refs back-link and endpoint join are checked below.
+    integrity += integrity_findings("IF", raw_ifs)
     placeholders = (
         [f for label in raw for f in placeholder_findings(label, raw[label])]
         + [f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)]
@@ -1079,6 +1255,15 @@ def main():
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
     # predicate (see the module docstring). Never joins a failure set below.
     advisories = ac_advisories(srs)
+
+    # Draft artifacts (derived-gate model §3): the rows exempted from the
+    # child-completeness orphan rules + the --require-verified criterion. Listed
+    # so the exemption stays auditable (the whole point of the model is that a
+    # Draft row lives in the live spine while being drafted, not silently).
+    draft_srs = [r for r in srs if is_draft(r)]
+    draft_llrs = [r for r in llrs if is_draft(r)]
+    draft_tcs = [r for r in tcs if is_draft(r)]
+    n_draft = len(draft_srs) + len(draft_llrs) + len(draft_tcs) + len(sn_draft)
 
     # Optional Area column (owner-hat/domain tag, process.md §1): count real SRs
     # per Area so hat coverage is visible. Report-only — never a finding, never
@@ -1106,6 +1291,11 @@ def main():
             f"| Verified SRs — mechanized | {len(mechanized_verified)} |",
             f"| Verified SRs — attested (human, §4) | {len(attested_verified)} |",
         ]
+        + (
+            [f"| Draft artifacts (decomposition-exempt) | {n_draft} |"]
+            if n_draft
+            else []
+        )
         + (
             [f"| Status findings | {len(status_findings)} |"]
             if args.require_verified
@@ -1143,6 +1333,14 @@ def main():
             if cmps
             else []
         )
+        + (
+            [
+                f"| Interface seams (IF) | {len(ifs)} |",
+                f"| Interface findings | {len(interface_backlink_findings)} |",
+            ]
+            if ifs
+            else []
+        )
         + [
             "",
             "## SR -> LLR -> TC matrix",
@@ -1157,7 +1355,7 @@ def main():
         tests = " ".join(x["TC-ID"] for x in tcs if sid in refs(x.get("Verifies")))
         lines.append(f"| {sid} | {kids} | {tests} | {r.get('Status', '')} |")
 
-    forest = build_forest(sn_ids, srs, llrs, tcs, orphan_ids)
+    forest = build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)
     lines += [
         "",
         "## Traceability outline",
@@ -1174,7 +1372,7 @@ def main():
         "diff-friendly; run `--html` for the scalable full-graph view._",
         "",
     ]
-    lines += mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids)
+    lines += mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)
 
     lines += ["", "## Orphans", ""]
     lines += ["None. Full coverage."] if not orphans else [f"- {o}" for o in orphans]
@@ -1207,6 +1405,25 @@ def main():
         f"- Attested (Attest): {len(attested_verified)}"
         + (f" — {', '.join(attested_verified)}" if attested_verified else ""),
     ]
+    if n_draft:
+        lines += ["", "## Draft artifacts (decomposition-exempt)", ""]
+        lines += [
+            "_`Draft` rows are exempt from the child-completeness orphan rules and "
+            "the G3 Verified criterion (derived-gate model §3): a requirement lives "
+            "in the live spine while it is drafted. Listed so the exemption is "
+            "auditable._",
+            "",
+        ]
+        lines += [f"- {u} (SN, unratified section)" for u in sorted(sn_draft)]
+        lines += [
+            f"- {r[id_key(label)]} — {_cell(r, 'Title') or _cell(r, 'Method')}"
+            for label, rows_ in (
+                ("SR", draft_srs),
+                ("LLR", draft_llrs),
+                ("TC", draft_tcs),
+            )
+            for r in rows_
+        ]
     if area_counts:
         untagged = len(srs) - sum(area_counts.values())
         lines += [
@@ -1259,6 +1476,16 @@ def main():
             if not component_findings
             else [f"- {f}" for f in component_findings]
         )
+    if ifs:
+        lines += ["", "## Interface seams (process.md §8 back-links)", ""]
+        lines += (
+            [f"{len(ifs)} interface-seam row(s); every SR-Refs resolves to a real SR."]
+            if not interface_backlink_findings
+            else [f"- {f}" for f in interface_backlink_findings]
+        )
+        if interface_advisories:
+            lines += ["", "### Interface endpoint advisories (warn-only)", ""]
+            lines += [f"- {a}" for a in interface_advisories]
     if args.no_placeholders:
         lines += ["", "## Placeholders (--no-placeholders)", ""]
         lines += (
@@ -1297,6 +1524,8 @@ def main():
     # Advisories are loud (stdout, not just the report) but never fail the run.
     for a in advisories:
         print(f"WARNING (advisory): {a}")
+    for a in interface_advisories:
+        print(f"WARNING (advisory): {a}")
     print(
         f"Traceability: SN={len(sn_ids)} SR={len(srs)} LLR={len(llrs)} "
         f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"
@@ -1307,6 +1536,7 @@ def main():
             else ""
         )
         + (f" status-findings={len(status_findings)}" if args.require_verified else "")
+        + (f" drafts={n_draft}" if n_draft else "")
         + (f" placeholders={len(placeholders)}" if args.no_placeholders else "")
         + (f" schema-findings={len(schema)}" if args.strict_schema else "")
         + (f" phase-deferred={len(phase_deferred)}" if phases else "")
@@ -1323,6 +1553,12 @@ def main():
             if cmps
             else ""
         )
+        + (
+            f" interfaces={len(ifs)} "
+            f"interface-findings={len(interface_backlink_findings)}"
+            if ifs
+            else ""
+        )
         + (f" ac-advisories={len(advisories)}" if advisories else "")
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
@@ -1336,6 +1572,7 @@ def main():
         or budget_findings
         or module_findings
         or component_findings
+        or interface_backlink_findings
     ):
         sys.exit(1)
     if args.strict_integrity and integrity:

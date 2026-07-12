@@ -30,6 +30,12 @@ lint = {py} -m ruff check {src} {tests}
 # The BASE test command. check.py appends the [coverage] args at the covered
 # tiers and the [tiers] selector below, so keep this just the runner invocation.
 test = {py} -m pytest -q
+# Parallel execution is an OPT-IN: appending `-n auto` runs the suite across all
+# cores via pytest-xdist (a big win on a slow suite), but a suite with
+# order-dependent or shared-state tests may not be xdist-safe — so opting in is a
+# knowing act. When your suite is isolated (each test in tmp_path, no shared
+# mutable files), uncomment the line below and add pytest-xdist to your dev-setup:
+# test = {py} -m pytest -q -n auto
 
 [tiers]
 # The kit tiers are fixed (smoke | full | release | all); their *expressions*
@@ -61,6 +67,23 @@ mode = symbols
 # files mode only — whitespace-separated comment tokens whose first line is a
 # file's summary, when yours isn't one of the defaults (# // --):
 # comment-prefixes = # // --
+
+# --- Run capabilities (the launcher menu) ------------------------------------
+# The root run.cmd / run.sh / run.command launchers read this [run] section
+# (via scripts/run_menu.py) and present the major capabilities an evaluator
+# runs — so starting the product never means recalling a command (process.md §7,
+# "the evaluator's rungs"). No args = a numbered menu; `run.sh <name>` = launch
+# one directly; `run_menu.py --list` = the machine listing for an agent.
+# Declare one `<name> = <command>` line per capability plus an optional
+# `<name>.desc = <one line>`; each command is a full SHELL line, so a multi-step
+# capability lives in a project script named here once. An absent/empty [run]
+# section degrades to guidance + exit 1 (a pure library deletes the run.*
+# launchers). Uncomment and edit:
+# [run]
+# serve = docker compose up -d && python -m webbrowser http://localhost:8080
+# serve.desc = start the app and open its page
+# iso = ./build_iso.sh
+# iso.desc = build the bootable ISO and launch the burner
 
 # --- Project-specific gate steps ---------------------------------------------
 # Add gates your DOMAIN needs (duplicate-code, license-lint, capability or

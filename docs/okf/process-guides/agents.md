@@ -5,6 +5,7 @@ description: "The contributor guide for **this meta-repo** is `CLAUDE.md` \u2014
 tags: []
 resource: "AGENTS.md"
 ---
+> **GENERATED — a reference copy, not the source of truth.** Derived from AGENTS.md by scripts/gen_okf.py; edit the registry/doc, then rerun it (docs/okf-export: off silences the layer).
 
 # agents — AGENTS.md
 

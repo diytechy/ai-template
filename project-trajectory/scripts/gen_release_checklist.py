@@ -30,6 +30,8 @@ Usage:
                manual TCs that verify an in-scope SR (or an LLR under one).
     --out      Explicit output path (overrides the default/--version location).
     default    Writes docs/release-checklist.md.
+
+Contracts: IF-018, IF-034 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
