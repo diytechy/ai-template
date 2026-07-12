@@ -455,30 +455,24 @@ def _reorder(order, r, neigh_map, adj_layer):
     order[r] = sorted(order[r], key=lambda n: (bary(n), n))
 
 
-def _dag_layout(wis):
-    """Return (positions, ranks, order) for the work items.
+def _layered_layout(node_list, pred_map, succ_map, seed_key, geometry):
+    """The shared Sugiyama-lite pipeline behind every layered view (the WI DAG,
+    the How-SW seam graph, the OKF knowledge graph — each once carried its own
+    copy of this block; deduplicated by the 2026-07-12 review, H3).
 
-    Stages (Sugiyama-lite, deterministic): rank by longest path over **hard**
-    edges (soft edges are advisory — they never constrain rank); seed each rank's
-    order by (workstream, id) to keep workstreams clustered; run a fixed number of
-    barycentre sweeps (down then up) to reduce edge crossings; assign coordinates,
-    centring each rank vertically against the tallest one."""
-    ids = {w["id"] for w in wis}
-    by_id = {w["id"]: w for w in wis}
-    pred_map = {w["id"]: [p for p in w["preds"] if p in ids] for w in wis}
-    succ_map = {w["id"]: [] for w in wis}
-    for w in wis:
-        for p in pred_map[w["id"]]:
-            succ_map[p].append(w["id"])
-
-    rank = _dag_ranks(wis, pred_map)
+    Stages (deterministic): rank by longest path over `pred_map`
+    (`_dag_ranks`); seed each rank's order by `seed_key`; run a fixed number of
+    barycentre sweeps (down then up, `_reorder`) to reduce edge crossings;
+    assign coordinates, centring each rank vertically against the tallest one.
+    `geometry` is (col_w, col_gap, row_h, row_gap, pad). Returns
+    (positions, width, height)."""
+    col_w, col_gap, row_h, row_gap, pad = geometry
+    ids = [n["id"] for n in node_list]
+    rank = _dag_ranks(node_list, pred_map)
     nranks = (max(rank.values()) + 1) if rank else 0
     order = {}
     for r in range(nranks):
-        order[r] = sorted(
-            (nid for nid in ids if rank[nid] == r),
-            key=lambda n: (by_id[n]["workstream"], n),
-        )
+        order[r] = sorted((nid for nid in ids if rank[nid] == r), key=seed_key)
     for _ in range(4):
         for r in range(1, nranks):
             _reorder(order, r, pred_map, order[r - 1])
@@ -486,19 +480,40 @@ def _dag_layout(wis):
             _reorder(order, r, succ_map, order[r + 1])
 
     max_rows = max((len(order[r]) for r in order), default=0)
-    content_h = max_rows * DAG_ROW_H + max(max_rows - 1, 0) * DAG_ROW_GAP
+    content_h = max_rows * row_h + max(max_rows - 1, 0) * row_gap
     pos = {}
     for r in range(nranks):
         layer = order[r]
         n = len(layer)
-        layer_h = n * DAG_ROW_H + max(n - 1, 0) * DAG_ROW_GAP
-        y0 = DAG_PAD + (content_h - layer_h) / 2
-        x = DAG_PAD + r * (DAG_COL_W + DAG_COL_GAP)
+        layer_h = n * row_h + max(n - 1, 0) * row_gap
+        y0 = pad + (content_h - layer_h) / 2
+        x = pad + r * (col_w + col_gap)
         for i, nid in enumerate(layer):
-            pos[nid] = (x, y0 + i * (DAG_ROW_H + DAG_ROW_GAP))
-    width = DAG_PAD * 2 + nranks * DAG_COL_W + max(nranks - 1, 0) * DAG_COL_GAP
-    height = DAG_PAD * 2 + content_h
+            pos[nid] = (x, y0 + i * (row_h + row_gap))
+    width = pad * 2 + nranks * col_w + max(nranks - 1, 0) * col_gap
+    height = pad * 2 + content_h
     return pos, width, height
+
+
+def _dag_layout(wis):
+    """(positions, width, height) for the work items: the shared layered
+    pipeline, with hard edges only (soft edges are advisory — they never
+    constrain rank) and each rank's order seeded by (workstream, id) to keep
+    workstreams clustered."""
+    ids = {w["id"] for w in wis}
+    by_id = {w["id"]: w for w in wis}
+    pred_map = {w["id"]: [p for p in w["preds"] if p in ids] for w in wis}
+    succ_map = {w["id"]: [] for w in wis}
+    for w in wis:
+        for p in pred_map[w["id"]]:
+            succ_map[p].append(w["id"])
+    return _layered_layout(
+        wis,
+        pred_map,
+        succ_map,
+        lambda n: (by_id[n]["workstream"], n),
+        (DAG_COL_W, DAG_COL_GAP, DAG_ROW_H, DAG_ROW_GAP, DAG_PAD),
+    )
 
 
 def dag_svg(wis):
@@ -610,9 +625,9 @@ def sw_graph(root, mods):
     seams are declared (the panel then keeps the bare module table — the organized
     graph is *earned* by declaring seams). Nodes are the arch-map modules plus the
     files / external actors the seams reference; edges are producer->consumer
-    IF-### seams labeled by id. Reuses the WI-DAG layouter (`_dag_ranks`
-    longest-path + `_reorder` barycentre sweeps), so producers sit left of
-    consumers and crossings are reduced. Byte-deterministic: sorted inputs, fixed
+    IF-### seams labeled by id. Reuses the shared layered pipeline
+    (`_layered_layout`), so producers sit left of consumers and crossings are
+    reduced. Byte-deterministic: sorted inputs, fixed
     passes, no clocks — the `--check` freshness compare stays stable."""
     ifs = ct.load_ifs(ct.read_rows(root / ct.IF_CSV))
     if not ifs or not mods:
@@ -637,28 +652,13 @@ def sw_graph(root, mods):
     for s, d, _iid in edges:
         pred_map[d].append(s)
         succ_map[s].append(d)
-    rank = _dag_ranks(node_list, pred_map)
-    nranks = (max(rank.values()) + 1) if rank else 0
-    order = {r: sorted(k for k in node_ids if rank[k] == r) for r in range(nranks)}
-    for _ in range(4):
-        for r in range(1, nranks):
-            _reorder(order, r, pred_map, order[r - 1])
-        for r in range(nranks - 2, -1, -1):
-            _reorder(order, r, succ_map, order[r + 1])
-
-    max_rows = max((len(order[r]) for r in order), default=0)
-    content_h = max_rows * SW_ROW_H + max(max_rows - 1, 0) * SW_ROW_GAP
-    pos = {}
-    for r in range(nranks):
-        layer = order[r]
-        n = len(layer)
-        layer_h = n * SW_ROW_H + max(n - 1, 0) * SW_ROW_GAP
-        y0 = SW_PAD + (content_h - layer_h) / 2
-        x = SW_PAD + r * (SW_COL_W + SW_COL_GAP)
-        for i, k in enumerate(layer):
-            pos[k] = (x, y0 + i * (SW_ROW_H + SW_ROW_GAP))
-    width = SW_PAD * 2 + nranks * SW_COL_W + max(nranks - 1, 0) * SW_COL_GAP
-    height = SW_PAD * 2 + content_h
+    pos, width, height = _layered_layout(
+        node_list,
+        pred_map,
+        succ_map,
+        lambda k: k,
+        (SW_COL_W, SW_COL_GAP, SW_ROW_H, SW_ROW_GAP, SW_PAD),
+    )
 
     def esc(s):
         return html.escape(str(s), quote=True)
@@ -1310,7 +1310,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       <strong>click</strong> for its detail. Plain SVG — no libraries, fully
       offline.</p>
       <div class="layout">
-        <div id="dag" class="view">$dag_svg</div>
+        <div id="dag-view" class="view">$dag_svg</div>
         <aside id="dag-detail" class="detail"><p class="hint">Click a work item to read its
           detail — workstream, status, the SRs it delivers, its predecessors.</p></aside>
       </div>
@@ -1680,8 +1680,8 @@ def know_graph(root):
     """The OKF concept graph as (svg, details), or None when there is no bundle
     (the tab is then omitted -> a bundle-less repo renders byte-identically).
     Nodes typed + fill-keyed by OKF `type`; directed spine edges from the link
-    lists; laid out server-side by the WI-DAG layouter (`_dag_ranks` longest-path
-    + `_reorder` barycentre sweeps), so producers sit left of consumers and the
+    lists; laid out server-side by the shared layered pipeline
+    (`_layered_layout`), so producers sit left of consumers and the
     render is byte-deterministic — no new `--check` exclusion. The detail dict
     embeds each concept's description and its docs/okf/<tier>/<id>.md link-out
     (the middle-path body embedding)."""
@@ -1695,28 +1695,13 @@ def know_graph(root):
     for s, d in edges:
         pred_map[d].append(s)
         succ_map[s].append(d)
-    rank = _dag_ranks(node_list, pred_map)
-    nranks = (max(rank.values()) + 1) if rank else 0
-    order = {r: sorted(k for k in node_ids if rank[k] == r) for r in range(nranks)}
-    for _ in range(4):
-        for r in range(1, nranks):
-            _reorder(order, r, pred_map, order[r - 1])
-        for r in range(nranks - 2, -1, -1):
-            _reorder(order, r, succ_map, order[r + 1])
-
-    max_rows = max((len(order[r]) for r in order), default=0)
-    content_h = max_rows * KN_ROW_H + max(max_rows - 1, 0) * KN_ROW_GAP
-    pos = {}
-    for r in range(nranks):
-        layer = order[r]
-        n = len(layer)
-        layer_h = n * KN_ROW_H + max(n - 1, 0) * KN_ROW_GAP
-        y0 = KN_PAD + (content_h - layer_h) / 2
-        x = KN_PAD + r * (KN_COL_W + KN_COL_GAP)
-        for i, k in enumerate(layer):
-            pos[k] = (x, y0 + i * (KN_ROW_H + KN_ROW_GAP))
-    width = KN_PAD * 2 + nranks * KN_COL_W + max(nranks - 1, 0) * KN_COL_GAP
-    height = KN_PAD * 2 + content_h
+    pos, width, height = _layered_layout(
+        node_list,
+        pred_map,
+        succ_map,
+        lambda k: k,
+        (KN_COL_W, KN_COL_GAP, KN_ROW_H, KN_ROW_GAP, KN_PAD),
+    )
 
     def esc(s):
         return html.escape(str(s), quote=True)

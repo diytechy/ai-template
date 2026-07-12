@@ -8,6 +8,7 @@
 # The git hooks are extensionless sh scripts — LF required on every
 # platform (a CRLF shebang breaks `#!/bin/sh`).
 .githooks/pre-commit text eol=lf
+.githooks/commit-msg text eol=lf
 .githooks/pre-push text eol=lf
 
 # Shell + macOS double-clickable launchers are sh scripts — same LF requirement.

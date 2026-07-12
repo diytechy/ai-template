@@ -44,9 +44,10 @@ that easier to achieve in a real project — or get out of the way.
   something sensible the moment it's copied and filled — example/placeholder rows
   end in `-000` so `trace.py` ignores them.
 - **Self-test before claiming done.** After changing a script, run
-  `python -m pytest -q` — the suite in `tests/` bootstraps a temp scaffold and
-  exercises every script end-to-end — and paste the real output. Never report a
-  green you didn't produce.
+  `python -m pytest -q -n auto` — the suite in `tests/` bootstraps a temp
+  scaffold and exercises every script end-to-end (`-n auto` is the declared
+  stack.ini command; ~70 s vs ~340 s serial) — and paste the real output. Never
+  report a green you didn't produce.
 - **Edit conservatively.** This is a foundation many projects inherit; prefer the
   smallest change that fixes the problem, and flag anything that would force
   downstream repos to migrate.

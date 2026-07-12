@@ -70,9 +70,10 @@ def test_hook_arch_map_step_honors_declared_mode(scaffold):
     # stale — the every-commit-blocked failure the delegation removes.
     hard = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
     assert hard.returncode != 0
-    # And the hook script itself carries the delegation, not the bare call.
+    # And the hook script itself carries the delegation (the batched floor),
+    # not the bare call.
     hook_text = (scaffold / HOOK).read_text(encoding="utf-8")
-    assert "--run-step arch-map" in hook_text
+    assert "--run-steps" in hook_text and "arch-map" in hook_text
 
 
 def test_hook_trajectory_map_step(scaffold):
@@ -109,9 +110,9 @@ def test_hook_trajectory_map_step(scaffold):
     (scaffold / "docs" / "trajectory-check").write_text("off\n", encoding="utf-8")
     ok = run_py(["scripts/check.py", "--run-step", "trajectory-map"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
-    # And the hook script itself carries the delegated step.
+    # And the hook script itself carries the delegated step (batched).
     hook_text = (scaffold / HOOK).read_text(encoding="utf-8")
-    assert "--run-step trajectory-map" in hook_text
+    assert "--run-steps" in hook_text and "trajectory-map" in hook_text
 
 
 def test_hook_skills_sync_step(scaffold):
@@ -123,7 +124,7 @@ def test_hook_skills_sync_step(scaffold):
     ok = run_py(["scripts/check.py", "--run-step", "skills-sync"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     hook_text = (KIT / "hooks" / "pre-commit").read_text(encoding="utf-8")
-    assert "--run-step skills-sync" in hook_text
+    assert "--run-steps" in hook_text and "skills-sync" in hook_text
 
 
 def test_hook_trajectory_step_is_the_ra_floor(scaffold):
@@ -152,9 +153,10 @@ def test_hook_trajectory_step_is_the_ra_floor(scaffold):
     wi.write_text(header + "WI-001,Real,core,,,queued,,docs/specs/WI-001.md\n", "utf-8")
     ok = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
-    # The shipped hook script carries both the floor step and the staged warn.
+    # The shipped hook script carries both the floor step (batched) and the
+    # staged warn.
     hook_text = (KIT / "hooks" / "pre-commit").read_text(encoding="utf-8")
-    assert "--run-step trajectory" in hook_text
+    assert "--run-steps" in hook_text and "trajectory" in hook_text
     assert "check_trajectory.py" in hook_text and "--staged" in hook_text
 
 

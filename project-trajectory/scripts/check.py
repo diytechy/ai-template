@@ -39,6 +39,7 @@ Design choices that keep it honest and CI-friendly:
 Usage:
     python scripts/check.py [--gate G1|G2|G3|all] [--tier smoke|full|release|all]
                             [--coverage N] [--phase LIST] [--lenient] [--list]
+                            [--jobs N] [--run-step NAME] [--run-steps A,B,...]
 
     --gate      Which gate's checks to run. Default: the repo's **active gate**
                 from the one-line `docs/gate` file (bootstrap starts it at G1;
@@ -63,6 +64,18 @@ Usage:
                 status; a missing tool is SKIP (exit 0), a real failure exit 1.
                 The pre-commit hook uses it to source its format check from the
                 declared profile rather than restating the command.
+    --run-steps Run several named steps concurrently with --run-step's lenient
+                semantics, reporting EVERY step's result (exit 1 if any FAILs) —
+                the pre-commit hook's batched freshness/integrity floor, one
+                interpreter spawn instead of a chain that stops at the first
+                stale artifact.
+    --jobs      Run the plan's steps on N concurrent workers (0 = one per
+                step; default 1 = sequential, streamed output, byte-identical
+                to the historical behavior). Parallel-safe by construction:
+                steps are read-only or write disjoint artifacts, and the two
+                trace.py steps that share docs/test/report.md run chained in
+                one lane. Output is captured per step and printed whole, so
+                nothing interleaves.
 
 The product toolchain (format/lint/test commands, src/tests paths, tier
 expressions, coverage threshold) is declared ONCE in `docs/stack.ini` when it
@@ -631,39 +644,130 @@ def _step_env():
     return env
 
 
-def run_step(name, requires, cmd, lenient):
-    """Run one step. Returns (status, detail) where status in PASS/FAIL/SKIP."""
+def _step_guard(requires, cmd, lenient):
+    """The missing-tool guards shared by both step runners. Returns
+    ((status, detail), None) when the step must not run, else (None, exe) with
+    the RESOLVED executable to exec.
+
+    Module guard: a `{py} -m <mod>` step whose module this interpreter can't
+    import. Command guard: a rewired step ("swap the format/lint/test commands
+    for your toolchain") names an executable the module guard can't see —
+    resolve it the way the OS would (a path, or PATH lookup — shutil.which
+    honors PATHEXT on Windows) and fail by design instead of crashing with a
+    raw FileNotFoundError. The resolved path (not the bare name) is what gets
+    exec'd: Windows CreateProcess applies no PATHEXT, so a bare `npx` that
+    shutil.which found as npx.cmd would still crash with WinError 2
+    (downstream field report, WI-1.25)."""
     missing = [m for m in requires if importlib.util.find_spec(m) is None]
     if missing:
         status = "SKIP" if lenient else "FAIL"
-        return status, "module(s) {} not importable by {} — run scripts/setup".format(
+        detail = "module(s) {} not importable by {} — run scripts/setup".format(
             ", ".join(missing), sys.executable
         )
-    # Same guarantee for the command itself: a rewired step ("swap the
-    # format/lint/test commands for your toolchain") names an executable this
-    # interpreter knows nothing about, so the module guard above can't see its
-    # absence. Resolve it the way the OS would (a path, or PATH lookup —
-    # shutil.which honors PATHEXT on Windows) and fail by design instead of
-    # crashing with a raw FileNotFoundError.
+        return (status, detail), None
     exe = cmd[0] if Path(cmd[0]).exists() else shutil.which(cmd[0])
     if not exe:
         status = "SKIP" if lenient else "FAIL"
-        return status, (
+        detail = (
             "command {!r} not found — wire your stack's toolchain "
             "(see the EDIT FOR YOUR STACK block)".format(cmd[0])
         )
+        return (status, detail), None
+    return None, exe
+
+
+def run_step(name, requires, cmd, lenient):
+    """Run one step, streaming its output live (the sequential path).
+    Returns (status, detail) where status in PASS/FAIL/SKIP."""
+    guard, exe = _step_guard(requires, cmd, lenient)
+    if guard:
+        return guard
     start = time.time()
     print("\n=== {} : {} ===".format(name, " ".join(cmd)), flush=True)
-    # Run the RESOLVED path, not the bare name: Windows CreateProcess applies
-    # no PATHEXT, so a bare `npx`/`eslint` that shutil.which found as npx.cmd
-    # would still crash the exec with WinError 2 — resolving for the guard
-    # but running unresolved was exactly the crash this block claims to
-    # avoid (downstream field report, WI-1.25).
     proc = subprocess.run([exe] + list(cmd[1:]), env=_step_env())
     secs = time.time() - start
     if proc.returncode == 0:
         return "PASS", "{:.1f}s".format(secs)
     return "FAIL", "exit {} ({:.1f}s)".format(proc.returncode, secs)
+
+
+def run_step_captured(name, requires, cmd, lenient):
+    """run_step with the child's output captured instead of streamed — the
+    parallel path, where concurrent children writing one console would
+    interleave. Returns (status, detail, output)."""
+    guard, exe = _step_guard(requires, cmd, lenient)
+    if guard:
+        return guard[0], guard[1], ""
+    start = time.time()
+    proc = subprocess.run(
+        [exe] + list(cmd[1:]),
+        env=_step_env(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    secs = time.time() - start
+    out = proc.stdout or ""
+    if proc.returncode == 0:
+        return "PASS", "{:.1f}s".format(secs), out
+    return "FAIL", "exit {} ({:.1f}s)".format(proc.returncode, secs), out
+
+
+# Steps that rewrite the same generated artifact must never run concurrently:
+# BOTH trace.py invocations — registry-integrity's --strict-integrity floor and
+# the full traceability join — rewrite docs/test/report.md on every run, so a
+# parallel plan chains them in one lane. Every other step is read-only (the
+# --check freshness gates, the lints, privacy) or writes a distinct target
+# (tests+coverage: the coverage data files), so it parallelizes freely.
+_SHARED_OUTPUT_LANES = {
+    "registry-integrity": "trace-report",
+    "traceability": "trace-report",
+}
+
+
+def run_plan(plan, lenient, jobs):
+    """Execute the plan's steps; returns [(name, status, detail)] in plan order.
+
+    jobs == 1 streams each step's output live, one at a time — byte-identical
+    to the historical behavior, and the default. jobs > 1 runs the steps
+    concurrently in *lanes* (see _SHARED_OUTPUT_LANES), capturing each step's
+    output and printing it whole under a lock when the step finishes, so
+    output never interleaves; the summary and exit semantics are unchanged
+    (never a false green — an unexpected runner exception propagates)."""
+    if jobs <= 1 or len(plan) <= 1:
+        return [
+            (name, *run_step(name, requires, cmd, lenient))
+            for name, requires, cmd, _gates, _layer in plan
+        ]
+    import concurrent.futures
+    import threading
+
+    lanes = {}
+    for idx, step in enumerate(plan):
+        lanes.setdefault(_SHARED_OUTPUT_LANES.get(step[0], step[0]), []).append(
+            (idx, step)
+        )
+    lock = threading.Lock()
+    results = {}
+
+    def run_lane(lane_steps):
+        for idx, (name, requires, cmd, _gates, _layer) in lane_steps:
+            status, detail, output = run_step_captured(name, requires, cmd, lenient)
+            with lock:
+                print("\n=== {} : {} ===".format(name, " ".join(cmd)), flush=True)
+                if output:
+                    print(output, end="" if output.endswith("\n") else "\n", flush=True)
+                print("  {:5} {:16} {}".format(status, name, detail), flush=True)
+                results[idx] = (name, status, detail)
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(jobs, len(lanes))
+    ) as pool:
+        for future in [pool.submit(run_lane, ls) for ls in lanes.values()]:
+            future.result()  # propagate, never swallow, a runner failure
+    return [results[i] for i in sorted(results)]
 
 
 def main():
@@ -709,6 +813,26 @@ def main():
         "a missing tool is SKIP (exit 0), a real failure exits 1 (the pre-commit "
         "hook uses this to source its format check from docs/stack.ini)",
     )
+    ap.add_argument(
+        "--run-steps",
+        metavar="NAMES",
+        default=None,
+        help="run the named steps (comma-separated, e.g. 'arch-map,okf') "
+        "concurrently with the same lenient semantics as --run-step, reporting "
+        "every step's result — so a commit with several stale artifacts names "
+        "them all in one pass (the pre-commit hook's batched floor); exits 1 "
+        "if any step FAILs",
+    )
+    ap.add_argument(
+        "--jobs",
+        type=int,
+        default=None,
+        metavar="N",
+        help="run the plan's steps concurrently on N workers (0 = one per "
+        "step); every step is read-only or writes a distinct artifact, except "
+        "the two trace.py steps, which share a lane. Default 1: sequential, "
+        "with each step's output streamed live exactly as before",
+    )
     args = ap.parse_args()
     gate = resolve_gate(args.gate)
     profile = load_profile()
@@ -739,6 +863,27 @@ def main():
         print("  {:5} {:16} {}".format(status, name, detail))
         sys.exit(1 if status == "FAIL" else 0)
 
+    # The batch form of --run-step (the hook's floor in ONE interpreter spawn):
+    # resolve each name from the full plan, run them concurrently (they are
+    # independent freshness/integrity checks), and — unlike a `set -e` chain of
+    # single steps — report EVERY failure, so a commit with several stale
+    # artifacts names them all at once instead of one per attempt. Same lenient
+    # semantics as --run-step (a missing tool is SKIP, exit 0).
+    if args.run_steps:
+        names = [t.strip() for t in args.run_steps.split(",") if t.strip()]
+        if not names:
+            sys.exit("check: --run-steps got no step names")
+        all_steps = steps(coverage, args.tier, "all", args.phase, profile)
+        by_name = {s[0]: s for s in all_steps}
+        unknown = [n for n in names if n not in by_name]
+        if unknown:
+            sys.exit("check: no step named {}".format(", ".join(map(repr, unknown))))
+        jobs = args.jobs if args.jobs is not None else 0
+        results = run_plan(
+            [by_name[n] for n in names], lenient=True, jobs=jobs or len(names)
+        )
+        sys.exit(1 if any(status == "FAIL" for _n, status, _d in results) else 0)
+
     plan = [
         s
         for s in steps(coverage, args.tier, gate, args.phase, profile)
@@ -759,10 +904,10 @@ def main():
         print("No checks defined for gate {}.".format(gate))
         return
 
-    results = []
-    for name, requires, cmd, _gates, _layer in plan:
-        status, detail = run_step(name, requires, cmd, args.lenient)
-        results.append((name, status, detail))
+    jobs = args.jobs if args.jobs is not None else 1
+    if jobs == 0:
+        jobs = len(plan)
+    results = run_plan(plan, args.lenient, jobs)
 
     print("\n" + "=" * 56)
     print("Check summary (gate {}, tier {}):".format(gate, args.tier))

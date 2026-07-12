@@ -297,7 +297,7 @@ Measured this session (Windows, warm cache):
 | Commit bar test run (`pytest -q` serial, as the protocol instructed) | 338 s | ~70 s with `-n auto` (already verified by WI-075) — **protocol text fixed** (H2) |
 | Pre-commit hook (10 sequential interpreter chains) | ~3.3 s | one batched `check.py --run-steps …` call, steps in parallel (H4) |
 | `check.py` gate run, non-test process steps | ~8-10 s serial (each step 0.1-1.6 s + spawn) | bounded by the slowest step with `--jobs 0` (H4) |
-| Full `--gate G3` bar | dominated by tests+coverage (~157 s parallel) | light steps now overlap it under `--jobs` |
+| Full `--gate G3` bar | tests+coverage (~130 s) + ~10 s of serial steps | measured after the fix: `--jobs 0` → RESULT: PASS with total wall = the tests step (129.9 s); all 12 other steps overlapped it |
 
 Changes shipped (details in the fix commit):
 

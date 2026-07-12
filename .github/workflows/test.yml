@@ -60,5 +60,8 @@ jobs:
       # a missing xdist would fail the tests+coverage step rather than skip.
       - name: Install harness tooling
         run: python -m pip install ruff pytest pytest-cov pytest-xdist
+      # --jobs 0 runs the gate's independent steps concurrently (output is
+      # captured per step and printed whole, so the log never interleaves);
+      # the light process checks overlap the long tests+coverage step.
       - name: Run the kit's own gate (docs/gate)
-        run: python project-trajectory/scripts/check.py
+        run: python project-trajectory/scripts/check.py --jobs 0

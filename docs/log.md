@@ -1918,3 +1918,58 @@ rides this entry's commit.
 **No SR/LLR/TC text touched by the batch or the close** — all three slices
 verified no-spine-change honestly (recorded in their entries above); nothing
 new rides the pending re-attestation.
+
+## 2026-07-12 — WI-077: owner-directed deep review + confident fixes + parallel harness steps (deep-review-2026-07-12)
+
+**Session.** Owner-directed full-repo review (logs/archive out of scope), the
+report committed first ([repo-review-2026-07-12.md](repo-review-2026-07-12.md),
+commit `9cba199`), then the confident fixes in this entry's commit. **No
+critical findings**; four owner rulings queued in status.md Open items #6 (F5
+duplication census/bound · wiring `[step:dupes]` · the archive-anchor comment
+policy · the `agent_loop`/`trace`/`bootstrap` `main()` decomposition campaign).
+
+**Fixes (the review's H2/H3/H4/M3/M4).**
+- **H4 — parallel harness steps.** `check.py --jobs N` (0 = auto) runs the gate
+  plan's steps concurrently in *lanes* (`registry-integrity` + `traceability`
+  share one — both trace.py runs rewrite `docs/test/report.md`; every other
+  step is read-only or writes a disjoint artifact), each step's output captured
+  and printed whole (never interleaved); the sequential `--jobs 1` default
+  keeps downstream behavior byte-identical. `--run-steps A,B,…` is the batch
+  form of `--run-step` (lenient, parallel, reports **every** failure).
+  `hooks/pre-commit`'s six chained `--run-step`/script calls collapsed to one
+  batched call — faster on every commit, and a commit with several stale
+  artifacts now names them **all in one pass** (supersedes the `set -e`
+  okf-before-dashboard first-failure ordering). CI's gate job runs `--jobs 0`.
+- **H2 — commit-bar speed.** The session-protocol skill (source + both fan-out
+  copies, byte-identical, `--check-agents` green) and `CLAUDE.md` now state
+  `python -m pytest -q -n auto` — the declared stack.ini command (~70 s vs
+  ~340 s serial; the largest per-commit win available).
+- **H3 — gen_trajectory dedup.** The rank→order→barycentre→coordinates block
+  the WI-DAG / How-SW / Knowledge views each carried (~100 significant tokens
+  × 3 per `check_dupes.py`) extracted into one `_layered_layout()`; verified
+  **byte-identical** (`gen_trajectory.py --check` green *before* any regen).
+- **M3 — valid HTML.** The dashboard's inner When-view `<div id="dag">`
+  duplicated its section's id; renamed `dag-view` (zero behavior change —
+  `getElementById('dag')` already resolved the section by document order).
+- **M4 — .gitattributes.** The meta root-anchored `hooks/pre-commit` pattern
+  matched **nothing** (hooks live at `.githooks/` + `project-trajectory/hooks/`;
+  only the `*` catch-all saved them) — replaced with the real paths;
+  `gitattributes.template` gains the shipped-but-unlisted `.githooks/commit-msg`.
+
+**Spine decision — NO spine change.** `--jobs`/`--run-steps` preserve SR-006's
+claim exactly (the active gate's required steps run; a missing tool fails,
+never silently passes) — concurrency is execution mechanics, not requirement
+surface (the WI-075 dev-tooling precedent). Verified SR-007/SR-008 untouched
+(profile reading/validation unchanged). **Nothing rides the pending
+re-attestation.**
+
+**Tests (+4, `tests/test_check_harness.py`).** Batch green on a clean scaffold;
+batch reports **every** failure (stale arch-map + duplicated SR id in one run);
+unknown step name fails loudly; `--jobs 0` plan matches the sequential plan's
+step set and still fails on a failing test (never a false green). Hook +
+gen_trajectory test anchors updated to the batched call / `dag-view`.
+
+**Byte deltas.** Byte-budgeted files (`AGENTS.template.md` 9,978 B,
+`PROCESS.md` 58,853 B) **untouched**. `check.py` +171/−36 lines;
+`gen_trajectory.py` −44 net (the dedup); `hooks/pre-commit` −34 net.
+`PROJECT_STATE.html` regenerated (WI-077 node + arch-map symbol updates).

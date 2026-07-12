@@ -138,7 +138,9 @@ Contracts (interfaces): IF-013, IF-022, IF-040
 | `extra_steps(profile, subs)` | Project-declared additional gate steps, from `docs/stack.ini` |  |
 | `steps(coverage, tier, gate, phase, profile)` |  |  |
 | `resolve_gate(explicit)` | The gate to run: an explicit --gate wins; else the docs/gate file (the |  |
-| `run_step(name, requires, cmd, lenient)` | Run one step. Returns (status, detail) where status in PASS/FAIL/SKIP. |  |
+| `run_step(name, requires, cmd, lenient)` | Run one step, streaming its output live (the sequential path). |  |
+| `run_step_captured(name, requires, cmd, lenient)` | run_step with the child's output captured instead of streamed — the |  |
+| `run_plan(plan, lenient, jobs)` | Execute the plan's steps; returns [(name, status, detail)] in plan order. |  |
 | `main()` |  |  |
 
 ### `scripts/check_doc_refs`

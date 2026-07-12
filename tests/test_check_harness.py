@@ -3,7 +3,14 @@ and the tier/coverage wiring must not silently skip tests."""
 
 import os
 
-from conftest import augment_env, load_script, make_minimal_project, run_py
+from conftest import (
+    DEMO_SRC,
+    SRS,
+    augment_env,
+    load_script,
+    make_minimal_project,
+    run_py,
+)
 
 
 def test_subprocess_coverage_wiring_survives_pytest_cov_7():
@@ -178,6 +185,88 @@ def test_missing_command_is_designed_failure():
         "noop", (), [sys.executable, "-c", "pass"], lenient=False
     )
     assert status == "PASS"
+
+
+def test_run_steps_batch_passes_on_clean_project(scaffold):
+    # The pre-commit hook's batched floor: several independent steps in one
+    # interpreter spawn, run concurrently, each reported. Green on a fully
+    # traced, freshly mapped project.
+    make_minimal_project(scaffold)
+    proc = run_py(
+        [
+            "scripts/check.py",
+            "--run-steps",
+            "arch-map,okf,trajectory-map,trajectory,registry-integrity,skills-sync",
+        ],
+        cwd=scaffold,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    for name in ("arch-map", "okf", "trajectory-map", "registry-integrity"):
+        assert name in proc.stdout
+
+
+def test_run_steps_reports_every_failure(scaffold):
+    # Unlike a `set -e` chain of single --run-step calls (which stops at the
+    # first stale artifact), the batch names ALL failures in one pass: stale
+    # the code map AND duplicate a registry id, and both steps must FAIL in
+    # the same run.
+    make_minimal_project(scaffold)
+    (scaffold / "src" / "demo.py").write_text(
+        DEMO_SRC + "\n\ndef extra():\n    return 0\n", encoding="utf-8"
+    )
+    sr = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    sr.write_text(
+        sr.read_text(encoding="utf-8") + SRS.splitlines()[1] + "\n", encoding="utf-8"
+    )
+    proc = run_py(
+        ["scripts/check.py", "--run-steps", "arch-map,registry-integrity"],
+        cwd=scaffold,
+    )
+    assert proc.returncode != 0
+    lines = proc.stdout.splitlines()
+    assert any("FAIL" in ln and "arch-map" in ln for ln in lines), proc.stdout
+    assert any("FAIL" in ln and "registry-integrity" in ln for ln in lines), proc.stdout
+
+
+def test_run_steps_unknown_name_fails_loudly(scaffold):
+    proc = run_py(["scripts/check.py", "--run-steps", "arch-map,nope"], cwd=scaffold)
+    assert proc.returncode != 0
+    assert "nope" in proc.stdout + proc.stderr
+
+
+def test_jobs_parallel_plan_matches_sequential(scaffold):
+    # --jobs 0 runs the plan's steps concurrently with captured (never
+    # interleaved) output; the result set and exit semantics must match the
+    # sequential default. Smoke tier keeps the test cheap.
+    make_minimal_project(scaffold)
+    par = run_py(
+        ["scripts/check.py", "--gate", "all", "--tier", "smoke", "--jobs", "0"],
+        cwd=scaffold,
+    )
+    assert par.returncode == 0, par.stdout + par.stderr
+    assert "RESULT: PASS" in par.stdout
+    # Every step of the sequential plan is present in the parallel summary.
+    seq = run_py(
+        ["scripts/check.py", "--gate", "all", "--tier", "smoke", "--list"],
+        cwd=scaffold,
+    )
+    for ln in seq.stdout.splitlines():
+        if ln.strip().startswith("- "):
+            name = ln.strip().split()[1]
+            assert name in par.stdout, name
+    # And a failure still fails the parallel run (never a false green).
+    (scaffold / "tests" / "test_broken.py").write_text(
+        '"""Deliberately failing test."""\n\n\n'
+        "import pytest\n\n\n"
+        "@pytest.mark.smoke\ndef test_broken():\n    assert False\n",
+        encoding="utf-8",
+    )
+    bad = run_py(
+        ["scripts/check.py", "--gate", "all", "--tier", "smoke", "--jobs", "0"],
+        cwd=scaffold,
+    )
+    assert bad.returncode != 0
+    assert "RESULT: FAIL" in bad.stdout
 
 
 def test_default_gate_comes_from_gate_file(scaffold):

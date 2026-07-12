@@ -6,9 +6,13 @@
 # macOS double-clickable onboarder (onboard.command) is an sh script — same LF
 # requirement (a CRLF shebang breaks the interpreter).
 *.command text eol=lf
-# The git hook is an extensionless sh script — same LF requirement (a CRLF in the
-# shebang breaks `#!/bin/sh`, incl. Git Bash on Windows).
-hooks/pre-commit text eol=lf
+# The git hooks are extensionless sh scripts — same LF requirement (a CRLF in
+# the shebang breaks `#!/bin/sh`, incl. Git Bash on Windows). This repo's live
+# hooks are the .githooks/ wrappers plus the shipped project-trajectory/hooks/
+# sources; a slash-containing pattern is root-anchored, so the old bare
+# `hooks/pre-commit` line matched nothing (review 2026-07-12 M4).
+.githooks/* text eol=lf
+project-trajectory/hooks/* text eol=lf
 
 # PowerShell scripts: CRLF for native Windows tooling.
 *.ps1 text eol=crlf

@@ -127,7 +127,11 @@ def test_generation_is_deterministic(tmp_path):
 def test_dag_layers_by_dependency_rank(tmp_path):
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
-    dag = html_of(tmp_path).split('id="dag" class="view"', 1)[1].split("</svg>", 1)[0]
+    dag = (
+        html_of(tmp_path)
+        .split('id="dag-view" class="view"', 1)[1]
+        .split("</svg>", 1)[0]
+    )
     xs = {
         m.group(1): float(m.group(2))
         for m in re.finditer(r'data-id="(WI-\d+)"[^>]*><rect x="([\d.]+)"', dag)
@@ -688,7 +692,9 @@ CAMP_WIS = (
 
 def dag_view(root):
     """The `dag` panel's view div content (the campaign tree or the flat SVG)."""
-    return html_of(root).split('id="dag" class="view">', 1)[1].split("</div>", 1)[0]
+    return (
+        html_of(root).split('id="dag-view" class="view">', 1)[1].split("</div>", 1)[0]
+    )
 
 
 def test_campaign_binning_containerizes_members(tmp_path):
@@ -775,15 +781,18 @@ def test_campaign_view_is_deterministic_and_check_stable(tmp_path):
 
 
 def test_meta_campaign_binning_smoke():
-    # Over the real meta repo: the four backfilled campaigns each render as a
-    # collapsed container in the When view.
+    # Over the real meta repo: every campaign tag in the registry renders as a
+    # collapsed container in the When view, and the known campaigns are present.
+    # The count is derived, not pinned: a new campaign row must not break an
+    # unrelated smoke test (it did once — the 2026-07-12 deep-review campaign).
     ct = load_script("check_trajectory")
     gt = load_script("gen_trajectory")
     wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
     assert not integrity
     view = gt.campaign_containment(wis)
     assert view is not None
-    assert view.count('<details class="campbox">') == 4
+    campaigns = {w["campaign"] for w in wis if w["campaign"]}
+    assert view.count('<details class="campbox">') == len(campaigns)
     for slug in (
         "working-surface-restructure-2026-07-11",
         "capability-expansion-2026-07-11",
