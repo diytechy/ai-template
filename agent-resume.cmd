@@ -5,9 +5,10 @@ REM session at the right tier, or the unattended coordinator loop, from the
 REM repo root (project-trajectory/PROCESS_OPTIONS.md "Unattended operation
 REM (walk-away runs)"). This is the kit's own launcher applied to the kit
 REM repo itself: the booted session inherits the committed context —
-REM CLAUDE.md, AGENTS.md, IMPROVEMENT_PLAN.md, docs/status.md,
-REM docs/gate-policy + run-state. Read it first; it only exports the slots
-REM below and runs the coordinator engine.
+REM CLAUDE.md, AGENTS.md, docs/status.md, docs/requirements/work-items.csv,
+REM docs/log.md, docs/gate-policy + run-state (the live working surfaces;
+REM IMPROVEMENT_PLAN.md is archived history, not a working surface). Read it
+REM first; it only exports the slots below and runs the coordinator engine.
 REM
 REM CONSENT: the unattended loop runs the agent CLI headless; the permission-
 REM bypass flag in AGENT_CMD means sessions edit without prompts. You consent
@@ -33,7 +34,7 @@ REM Meta-repo resume prompt: the engine's default prompt assumes a scaffolded
 REM downstream repo (docs/process.md etc.); this one names THIS repo's actual
 REM surfaces. Empty = fall back to the engine default. Keep agent-resume.sh's
 REM copy in sync.
-set "AGENT_PROMPT=You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in IMPROVEMENT_PLAN.md - a thread or a WI-1.x entry - per the session-protocol skill; new scope needs a WI entry first. Gates before every commit: python -m pytest -q and python project-trajectory/scripts/check_docs.py --root . - paste the real output; never report a green you didn't produce. Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items and the plan's WI log; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first."
+set "AGENT_PROMPT=You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. Gates before every commit: python -m pytest -q and python project-trajectory/scripts/check_docs.py --root . - paste the real output; never report a green you didn't produce. Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first."
 REM ----------------------------------------------------------------------------
 
 cd /d "%~dp0"

@@ -81,9 +81,9 @@ if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
   exit 0
 fi
 
-# 1. The batched freshness/integrity floor — ONE interpreter spawn running six
-#    independent checks concurrently (`check.py --run-steps`), where this hook
-#    once chained six separate `--run-step`/script calls. Faster on every
+# 1. The batched freshness/integrity floor — ONE interpreter spawn running the
+#    independent floor checks concurrently (`check.py --run-steps`), where this
+#    hook once chained a separate `--run-step`/script call per check. Faster on every
 #    commit, and it reports EVERY stale artifact in one pass (the old `set -e`
 #    chain stopped at the first, hiding the rest until the next attempt). The
 #    delegation keeps each step honoring the declared docs/stack.ini profile —

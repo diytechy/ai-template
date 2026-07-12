@@ -4,8 +4,10 @@
 # (project-trajectory/PROCESS_OPTIONS.md "Unattended operation (walk-away
 # runs)"). This is the kit's own launcher applied to the kit repo itself: the
 # booted session inherits the committed context — CLAUDE.md, AGENTS.md,
-# IMPROVEMENT_PLAN.md, docs/status.md, docs/gate-policy + run-state. Read it
-# first; it only exports the slots below and runs the coordinator engine.
+# docs/status.md, docs/requirements/work-items.csv, docs/log.md, docs/gate-policy
+# + run-state (the live working surfaces; IMPROVEMENT_PLAN.md is archived
+# history, not a working surface). Read it first; it only exports the slots
+# below and runs the coordinator engine.
 # macOS: agent-resume.command is the double-clickable Finder wrapper.
 #
 # CONSENT: the unattended loop runs the agent CLI headless; the permission-
@@ -30,7 +32,7 @@ AGENT_CMD_INTERACTIVE="claude --model {model} {prompt}"
 # Meta-repo resume prompt: the engine's default prompt assumes a scaffolded
 # downstream repo (docs/process.md etc.); this one names THIS repo's actual
 # surfaces. Empty = fall back to the engine default.
-AGENT_PROMPT="You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in IMPROVEMENT_PLAN.md - a thread or a WI-1.x entry - per the session-protocol skill; new scope needs a WI entry first. Gates before every commit: python -m pytest -q and python project-trajectory/scripts/check_docs.py --root . - paste the real output; never report a green you didn't produce. Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items and the plan's WI log; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first."
+AGENT_PROMPT="You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. Gates before every commit: python -m pytest -q and python project-trajectory/scripts/check_docs.py --root . - paste the real output; never report a green you didn't produce. Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first."
 # ------------------------------------------------------------------------------
 
 cd "$(dirname "$0")" || exit 1

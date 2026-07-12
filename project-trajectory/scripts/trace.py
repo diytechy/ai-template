@@ -386,18 +386,20 @@ _TERM_RES = {
 
 # Markers that (heuristically) pin a predicate in the same cell: an explicit
 # definition/enumeration, a measurement/tolerance, or an exact-comparison basis.
-PREDICATE_MARKERS = (
-    "i.e.",
-    "e.g.",
+# Word markers match on a WORD BOUNDARY, so "per"/"within" pin "as per the list"
+# / "within 1 ULP" but NOT "proper"/"wrapper"/"notwithstanding" — a bare
+# substring silently over-suppressed the advisory (warn-only, so this only
+# sharpens lint quality). Symbol/abbreviation markers carry their own boundaries
+# and match literally.
+_PREDICATE_WORDS = (
     "namely",
     "defined",
     "specified",
     "listed",
     "enumerated",
-    "per ",
+    "per",
     "measured",
-    "within ",
-    "±",
+    "within",
     "tolerance",
     "predicate",
     "byte-for-byte",
@@ -408,9 +410,16 @@ PREDICATE_MARKERS = (
     "byte-identical",
     "bit-identical",
     "golden",
-    "==",
     "regex",
     "checksum",
+)
+_PREDICATE_SYMBOLS = ("i.e.", "e.g.", "±", "==")
+_PREDICATE_RE = re.compile(
+    "|".join(
+        [r"\b" + re.escape(w) + r"\b" for w in _PREDICATE_WORDS]
+        + [re.escape(s) for s in _PREDICATE_SYMBOLS]
+    ),
+    re.IGNORECASE,
 )
 
 
@@ -422,9 +431,8 @@ def ac_advisories(srs):
         cell = (r.get("AcceptanceCriteria") or "").strip()
         if not cell:
             continue
-        low = cell.lower()
         terms = [t for t, rx in _TERM_RES.items() if rx.search(cell)]
-        if terms and not any(m in low for m in PREDICATE_MARKERS):
+        if terms and not _PREDICATE_RE.search(cell):
             out.append(
                 "SR {} AcceptanceCriteria uses {} without a named predicate — "
                 "say identical/equivalent *in what*, judged *how* (process.md "
@@ -455,10 +463,14 @@ def integrity_findings(label, raw_rows):
         rid = r.get(key)
         if not rid or is_example(rid):
             continue
-        if not pattern.match(rid):
-            found.append(f"{label} id {rid!r} is malformed (expected {label}-<digits>)")
-        elif rid in seen:
+        # Duplication is checked FIRST so a repeated id reports "duplicated" even
+        # when it is also malformed — otherwise a malformed id seen twice
+        # re-reported "malformed" and never "duplicated" (both are integrity
+        # failures, but the second occurrence's fact is that it repeats).
+        if rid in seen:
             found.append(f"{label} id {rid} is duplicated")
+        elif not pattern.match(rid):
+            found.append(f"{label} id {rid!r} is malformed (expected {label}-<digits>)")
         seen.add(rid)
     return found
 

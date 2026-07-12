@@ -2653,3 +2653,45 @@ my own `| tail -25` on the gate command discarding it, not a capture defect in
 
 Filed as a **new** WI-108 (WI-097…107 were taken by the concurrent deep-review-b
 batch, commit e6fd76a) to avoid clobbering. `check_trajectory --strict` clean.
+
+## 2026-07-12 — WI-106: deep-review-b micro-fix batch (M7/L2/L4/L9)
+
+**Session (branch `derived-gate-model`; no spine change, no byte-budgeted file
+touched).** The four safe knock-outs from the deep-review-b Medium/Low queue —
+the opener of the WI-107 enablement sitting (both touch the launcher twins).
+
+- **M7 — hooks/pre-commit stale count.** The step-1 comment claimed "six
+  independent checks"; the batched `check.py --run-steps` call runs seven
+  (arch-map, okf, trajectory-map, trajectory, registry-integrity, derived-gate,
+  skills-sync). Reworded numberless ("the independent floor checks … a separate
+  `--run-step`/script call per check") — numbers in prose age, the named list
+  below it does not.
+- **L2 — predicate markers word-bounded.** `trace.py`'s `PREDICATE_MARKERS`
+  substring scan pinned a comparative AcceptanceCriteria whenever a word *merely
+  containing* a marker appeared (`"per "` matched "proper"/"wrapper"/"developer";
+  `"within "` similar) — a silent false-negative in the warn-only advisory. Split
+  into `_PREDICATE_WORDS` (matched on a `\b` word boundary via a compiled
+  `_PREDICATE_RE`) and `_PREDICATE_SYMBOLS` (`i.e.`/`e.g.`/`±`/`==`, literal). "as
+  per the list" / "within 1 ULP" still pin; "proper"/"notwithstanding" no longer
+  do.
+- **L4 — duplicate-vs-malformed order.** `integrity_findings` added a malformed
+  id to `seen` and re-checked malformed first, so a malformed id appearing twice
+  reported "malformed" twice and never "duplicated". Now checks `rid in seen`
+  first → the repeat reports "duplicated"; the well-formed-duplicate path is
+  unchanged.
+- **L9 — launcher scope refs.** The meta root `agent-resume.sh`/`.cmd` twins'
+  baked-in `AGENT_PROMPT` scoped sessions to the archived `IMPROVEMENT_PLAN.md`;
+  rewritten to scope work to `docs/requirements/work-items.csv` + `docs/status.md`
+  Next action and log to `docs/log.md` (per the session-protocol skill). The
+  header context list swapped `IMPROVEMENT_PLAN.md` for the live surfaces (flagged
+  as archived history). `agent-resume.command` (the delegating wrapper) and the
+  shipped `agent-resume.template.*` were already clean.
+
+**Tests.** `test_trace.py::test_predicate_markers_are_word_bounded` (pin/suppress
+boundaries) + `::test_duplicate_of_malformed_id_reports_duplicated`. Existing
+integrity anchors (well-formed-dup → "duplicated", single-malformed → "malformed")
+unchanged.
+
+**Checks (commit bar).** `pytest -q -n auto` **669 passed, 1 skipped**;
+`check_docs.py --root . --stale` exit 0. Not filed: L5/L6/L8 (owner taste / N/A,
+per the review).

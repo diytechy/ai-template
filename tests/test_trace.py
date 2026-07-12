@@ -746,3 +746,40 @@ def test_sn_draft_ids_reader():
     assert trace.sn_draft_ids("# Needs\n\n## Core\nSN-001\n") == set()
     # The "draft" match is on the heading text, case-insensitive, not the body.
     assert trace.sn_draft_ids("## DRAFT items\nSN-009\n") == {"SN-009"}
+
+
+def test_predicate_markers_are_word_bounded():
+    # WI-106 L2: a pinning marker must match on a WORD BOUNDARY. "per"/"within"
+    # pin a comparative AC, but a word merely CONTAINING them ("proper",
+    # "wrapper") must not silently suppress the warn-only advisory.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def warns(ac):
+        found = trace.ac_advisories([{"SR-ID": "SR-101", "AcceptanceCriteria": ac}])
+        return bool(found)
+
+    # A genuine pinning marker (word or symbol) suppresses the advisory...
+    assert not warns("output identical, as per the enumerated list")
+    assert not warns("identical: output == expected")
+    # ...but the same comparative with only an incidental substring now warns
+    # (the boundary-blind substring used to pin "identical" via "proper").
+    assert warns("identical in the proper format")
+    assert warns("the wrapper output is identical")
+    # A bare comparative with no marker at all still warns (unchanged baseline).
+    assert warns("indistinguishable from the reference")
+
+
+def test_duplicate_of_malformed_id_reports_duplicated():
+    # WI-106 L4: a malformed id appearing twice must report "duplicated" for its
+    # second occurrence, not "malformed" a second time.
+    from conftest import load_script
+
+    trace = load_script("trace")
+    found = trace.integrity_findings("SR", [{"SR-ID": "SR-bad"}, {"SR-ID": "SR-bad"}])
+    assert any("malformed" in f for f in found), found
+    assert any("duplicated" in f for f in found), found
+    # A well-formed duplicate still reports only "duplicated" (no regression).
+    dup = trace.integrity_findings("SR", [{"SR-ID": "SR-001"}, {"SR-ID": "SR-001"}])
+    assert dup == ["SR id SR-001 is duplicated"], dup

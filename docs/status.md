@@ -160,11 +160,6 @@ working surface.
       the ~9-point subprocess-coverage loss observed live (M9/L1; hard-edged
       behind WI-104 so the fix is verified on one known toolchain). **Ranked
       first by the review** — the only item that makes the gate itself flaky.
-    - **WI-106** — micro-fix batch: the hook's stale "six checks" count,
-      word-bounded predicate markers, the dup-malformed finding text, and
-      retiring the agent-resume launchers' archived-`IMPROVEMENT_PLAN.md`
-      scope references (M7/L2/L4/L9 — the safe low-risk knock-outs;
-      L9 owner-directed 2026-07-12).
     - _(Not filed, deliberately: L5 commit-subject length — accept, or it needs
       a commit-msg check to be a backed rule; L6 template-cell manuals — an
       owner taste ruling on a deliberate design, medium churn to shipped
@@ -192,11 +187,11 @@ working surface.
      `docs/guardrails-policy`; fill the launchers'
      `AGENT_MODEL_MAP`/`AGENT_CMD_MAP`) and move `docs/gate-policy` to
      **`single-ratify`** with its deviation register, in a reviewed commit.
-     Spec: [specs/WI-107.md](specs/WI-107.md). Soft-edged after **WI-106**
-     (both edit the launcher twins; WI-106 first retires their archived
-     `IMPROVEMENT_PLAN.md` scope refs — run it as the opener of the same
-     sitting). Config layer only — no spine change, so the derived gate stays
-     G3.
+     Spec: [specs/WI-107.md](specs/WI-107.md). Its micro-fix opener has landed
+     (the launcher twins' archived `IMPROVEMENT_PLAN.md` scope refs are retired;
+     the predicate/dup-malformed/hook-count fixes shipped), so this edits the
+     twins' routing slots directly. Config layer only — no spine change, so the
+     derived gate stays G3.
   3. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer
