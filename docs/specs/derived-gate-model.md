@@ -1,14 +1,29 @@
 # Design spec — Derived gate model (replace the monolithic declared gate)
 
-**Status: DESIGN, awaiting owner ratification (G1).** Branch: `derived-gate-model`.
-Registered as **WI-088** (campaign `derived-gate`). This doc is the spec-of-record;
-the implementation WIs in §10 are filed **only after this design is ratified**.
+**Status: DESIGN — core model RATIFIED (owner G1, 2026-07-12); the phase-anchor
+resolution (§9.3) awaits a final nod.** Branch: `derived-gate-model`. Registered
+as **WI-088** (campaign `derived-gate`). This doc is the spec-of-record; the
+implementation WIs in §10 file once the phase point is confirmed.
 
 Owner direction (2026-07-12): **replace** the monolithic gate (not opt-in);
 **hybrid** derivation via a fast check script that caches the last-computed state
 (with a compute date) so the gate is known on checkout; **no new column** on
 SR/LLR/TC (reuse the open-vocabulary `Status`); **audit the artifact attributes
 correctly** to derive the gate and drive the right checks.
+
+## Ratification (owner G1 — 2026-07-12)
+
+1. **Derivation rules — ratified.** `Status` is the *"needs
+   decomposition-checking"* flag; the **level of decomposition** (ratified → has
+   its LLR/TC → `Verified`) derives the per-artifact gate. (§3.)
+2. **Ratification = a reviewed commit — ratified.** The commit that moves a
+   `Status` is the sign-off for the artifacts it touches; **an agent may make
+   that commit** on a human's behalf, with the `docs/gate-policy` level governing
+   *who may* (attended / single-ratify / autonomous). (§6.)
+3. **Phase — resolved, pending a final nod:** the derived-gate **drop** is the
+   *detector*; the committed `[phase]-[g*]` work item is the *anchor* of phase
+   identity + membership (§9.3).
+4. **SN maturity — decided: section-as-state** (§4 option (a)).
 
 ---
 
@@ -33,9 +48,11 @@ human bumps. Two failures keep recurring:
   (G0→G1→G2) is structured as a **batch, in parallel** — which is exactly where
   conflicts and "this also modifies SR-12" become visible — then each work item
   runs **G2→G3 in series** (the vertical-slice channeling WIs already do).
-- **Phase is derived from gate trajectory.** Forward movement keeps the phase;
-  **backward movement** (an artifact returns to draft — a reopen) opens a new
-  phase. Phase = the time-bucket that captures *leak-in*; campaign stays a
+- **Phase is derived from gate trajectory, anchored in a committed WI.** The
+  derived gate **dropping** — a reopen, or new draft content entering below the
+  last closed level — is the *detector* that a new phase is due; the
+  `[phase]-[g*]` work item is the committed *anchor* of its identity + membership
+  (§9.3). Phase = the time-bucket that captures *leak-in*; campaign stays a
   *named* new-work set (they diverge exactly when other work is pulled in).
 - **The pre-dev batch is a first-class work item:** `[phase]-[g1]` / `[phase]-[g2]`.
 
@@ -79,8 +96,9 @@ SN is a markdown table with no `Status` column. Options (pick at G1):
   (`id,gate,state,who,date`) covering SN *and* recording human ratification for
   the whole spine in one auditable place.
 
-**Recommendation: (a)** for SN (least schema churn, git-derived date), with (c)
-reconsidered only if per-artifact *human* attribution beyond git-author is wanted.
+**Decided (owner G1, 2026-07-12): (a) section-as-state** for SN (least schema
+churn, git-derived date); (c) revisitable only if per-artifact *human* attribution
+beyond git-author is later wanted.
 
 ## 5. The derived gate — the hybrid check script
 
@@ -152,9 +170,21 @@ drops, and the batch review sees it alongside the new work.
    repo also runs the derive script. Mitigation: the derive step is fast and the
    cache means the gate is still a readable one-liner; a fresh scaffold derives
    trivially (all draft ⇒ G0/G1).
-3. **In-scope / phase membership.** Deriving phase vs. tagging it: artifacts need
-   *some* phase association to scope the min. Likely the `[phase]-[g*]` WI's
-   contains-set supplies it; confirm at G1.
+3. **Phase = derived detector + committed anchor (resolved).** The *signal* to
+   open a phase is derived — the repo's derived gate **dropping below the last
+   closed phase's level** means new content entered (added or reopened), so a
+   check warns "open a `[phase]-[g*]`". But phase **identity and membership** live
+   in the committed `[phase]-[g*]` work item, not a pure git-history walk, for two
+   reasons: (i) **membership** — knowing a phase *started* isn't knowing which
+   artifacts are *in* it; the anchor names its members, versus attributing
+   "below-bar-since-the-boundary" by replaying history; (ii) **stability** — a
+   rebase/squash rewrites history, so a purely history-derived boundary moves,
+   while a committed anchor doesn't. Within a phase the derived gate only rises
+   (draft → ratify → decompose → verify), so a drop from a closed level is an
+   *unambiguous* boundary — the detection is robust; the anchor just makes
+   membership legible and durable. *(Fully-derived with no anchor stays possible
+   as a purist variant — pure SSOT, at the cost of rebase-sensitivity and a full
+   history walk; not recommended.)*
 4. **Cache rot.** The compute date + `--check` + a pre-commit freshness step
    bound it (the generated-artifact discipline the kit already runs).
 5. **Migration.** Existing repos seed initial states (current `Verified` rows ⇒
