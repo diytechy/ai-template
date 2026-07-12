@@ -64,7 +64,19 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
-  - **In flight:** _(none)_ — all three 2026-07-11 batches are **closed and
+  - **In flight — the campaign-binning · parallel-tests · resume-hardening
+    batch** (spec:
+    [specs/campaign-binning-parallel-tests-resume-hardening.md](specs/campaign-binning-parallel-tests-resume-hardening.md),
+    ruled by direction 2026-07-11; commit-bar cadence, one full gate at
+    close):
+    - **WI-074** — `Campaign` grouping column + the When-view DAG binned by
+      campaign (the FB5 containerization symmetry).
+    - **WI-075** — pytest-xdist parallel execution (meta opts in; template
+      opt-in commented; subprocess-coverage verified, times recorded).
+    - **WI-076** — dirty-tree resume hardening: detect + inject the
+      reconcile instruction, protocol text, stale-lock recheck (full
+      stash/rollback stays deferred as WI-060).
+    **Next up: WI-074.** All three prior 2026-07-11 batches are **closed and
     archived**: the owner-feedback batch (the campaign gate cadence · the
     owner scratchpad + check_docs scan-scope · the ≤10-item How-SW
     containment;
@@ -94,11 +106,12 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-- **Next action:** the **owner sitting** — one G3 re-attestation over every
-  accumulated spine change (now incl. `SR-048`/`LLR-049`/`TC-049` and the
-  `SR-038` clarification), the push ruling, the sibling-repo target, and the
-  deferred batch review. After that: the G-Release walk, the WI-DAG edge
-  data-pass, or new scope (which needs a plan/WI entry first).
+- **Next action:** execute the batch in order — **WI-074**, then WI-075,
+  WI-076 — commit-bar cadence, one full gate at the close. Then the **owner
+  sitting**: one G3 re-attestation over every accumulated spine change, the
+  push ruling, the sibling-repo target, and the deferred batch review. After
+  that: the G-Release walk, the WI-DAG edge data-pass, or new scope (which
+  needs a plan/WI entry first).
 
 ## Scope
 
