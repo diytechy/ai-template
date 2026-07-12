@@ -1378,3 +1378,50 @@ not an assumed one.
 
 **No SR/LLR/TC text touched** — docs moves + working-surface tidy only;
 the re-attestation list is unchanged from the WI-070 entry above.
+
+## 2026-07-11 — WI-071: campaign gate cadence documented + campaign vocabulary in the README (docs only)
+
+**Session.** FB1 (gate cadence) + FB2 (campaign language) of the owner-feedback
+batch (spec: [specs/owner-feedback-2026-07-11.md](specs/owner-feedback-2026-07-11.md);
+FB1/FB2 marked ✅ DONE). This slice **dogfoods FB1's own ruling** — it ends at
+the **commit bar**, not the full gate; the coordinating close runs
+`check.py --gate G3` once for the whole batch.
+
+**Deliverables.**
+- **The cadence, stated once** — `PROCESS_OPTIONS.md` "Campaign ruling" paragraph
+  extended with the gate cadence: mid-campaign WI slices end at the commit bar
+  (hook floor + the project's test command + `check_docs --stale`); the full
+  `check.py --gate <gate>` runs **once at campaign close** and CI runs it on every
+  push regardless; test-impact selection ("only relevant tests") is **rejected**
+  in favor of the declared `stack.ini [tiers]` **smoke** tier for slow suites.
+  This is the one home for the rule.
+- **session-protocol skill** — "End green (gates)" now distinguishes the **commit
+  bar** from the **gate bar** (gate advancement / campaign close / CI), pointing
+  at PROCESS_OPTIONS "Campaign ruling". Edited the **neutral source**
+  (`project-trajectory/skills/session-protocol/SKILL.md`), then
+  `bootstrap.py --dest . --sync` refreshed both fan-out copies (`.claude/`,
+  `.agents/`) — verified **byte-identical** (SHA-256 match ×3; the skills-sync
+  gate stays green).
+- **Root README** — one sentence added to the registry map adopting the
+  **campaign** vocabulary (batch spine-touching work → one owner sitting
+  re-attests it all, the gate cadence riding the same convention), linking the
+  PROCESS_OPTIONS home; no mechanics duplicated.
+- **Kit README** — the existing one-off "shared campaign doc" mention (line ~36,
+  spec-of-record file layout) checked and left as-is: consistent with the
+  documented cadence, no contradiction.
+
+**Docs only — no spine change, no re-attestation impact.** No SR/LLR/TC row
+touched; the pending G3 re-attestation list is unchanged.
+
+**Byte deltas (budgeted files).** `AGENTS.template.md` and `PROCESS.md`
+**untouched** (0 delta) — the cadence expansion landed in `PROCESS_OPTIONS.md`
+(not budgeted), per the push-expansion rule.
+
+**Mechanized bar (commit bar).** `pytest -q` → **572 passed, 34 skipped**
+(0 failures; same 606 total as the WI-070 entry's 603/3 — the elevated skip
+count is environmental, optional-tool-gated tests, and no test logic changed
+this session). `check_docs.py --root . --stale` → **0 broken** (1 pre-existing
+`docs/test/report.md` orphan warn + hint-level staleness on archived docs only).
+`gen_trajectory.py` regenerated `PROJECT_STATE.html` after the WI-071 registry
+close; `gen_okf --check` up to date (227 files). The full `check.py --gate G3`
+is **deferred to the campaign close** per the cadence just documented.

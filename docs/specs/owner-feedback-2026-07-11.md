@@ -8,7 +8,7 @@ ride the one pending G3 re-attestation (the campaign ruling).
 
 ---
 
-## FB1 — Gate cadence: stop running the full gate per slice
+## FB1 — Gate cadence: stop running the full gate per slice — ✅ DONE (2026-07-11)
 
 **Owner question.** The full G3 gate appears to run after every change during
 iteration — expected? Is there a better mechanism to defer gate checks until
@@ -42,7 +42,7 @@ paragraph); update the `session-protocol` skill (source + fan-out copies stay
 byte-identical — the skills-sync gate) so sessions know which bar applies.
 Docs only.
 
-## FB2 — "campaign" adoption in the documentation
+## FB2 — "campaign" adoption in the documentation — ✅ DONE (2026-07-11)
 
 **Owner question.** Is the language "campaign" adopted into the
 documentation / README?

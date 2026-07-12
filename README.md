@@ -159,6 +159,10 @@ integrity-check the ids the moment real rows exist.
 reserves per-track `SN`/`SR` hundreds-blocks so concurrent drafts never mint the
 same id.)*
 
+*(Spine-touching work batches as a **campaign** so one owner sitting re-attests
+the whole batch, with the gate cadence riding the same convention — see
+[`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Campaign ruling".)*
+
 ### The generated trace artifacts — views, never sources of truth
 
 Each is regenerated from the registries or source and freshness-gated

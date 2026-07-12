@@ -45,7 +45,11 @@ python -m pytest -q
 python project-trajectory/scripts/check_docs.py --root . --stale
 ```
 
-Both must pass before **each** commit. New behavior needs new tests
+Both must pass before **each** commit — this is the **commit bar**. The full
+`check.py --gate <gate>` is the **gate bar**: it belongs to gate advancement,
+campaign close, and CI, not to each mid-campaign slice. A per-WI slice inside a
+campaign ends here, at the commit bar (PROCESS_OPTIONS.md, "Campaign ruling").
+New behavior needs new tests
 (`tests/`); update `test_bootstrap.py` file lists and `README.md` kit-contents /
 `bootstrap.py` `MAPPING` when the scaffold surface changes.
 

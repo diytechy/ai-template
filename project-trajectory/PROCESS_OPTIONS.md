@@ -1137,7 +1137,17 @@ until a real recurring pattern earns it.
 **Campaign ruling.** Any batch of spine-touching work headed for the same
 re-attestation should land as **one campaign** — batch the changes so a **single
 owner sitting** covers each re-attestation, rather than paying for several. A
-campaign's spec is one shared `docs/specs/` doc with a `#anchor` per WI.
+campaign's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
+cadence:** mid-campaign WI sessions end at the **commit bar** (the pre-commit
+hook floor + the project's test command + `check_docs --stale`), not the full
+gate; the full `check.py --gate <gate>` runs **once at campaign close** (the
+coordinating close), and CI runs the gate job on every push regardless — a
+mid-campaign regression is still caught by the per-commit suite run. Test-impact
+selection ("run only the relevant tests") is **rejected**: a missed transitive
+dependency passes silently and the coverage floor breaks, so the sanctioned
+cheap per-commit layer for a slow suite is the declared **smoke** tier
+(`stack.ini [tiers]` — `pytest -m smoke` per commit, full tier at gates), not a
+guessed subset.
 
 **Dashboard** — `gen_trajectory.py` renders the root `PROJECT_STATE.html` (the
 unified project-state artifact; formerly `docs/trajectory.html`), a generated
