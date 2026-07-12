@@ -124,6 +124,40 @@ def test_generation_is_deterministic(tmp_path):
     assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
 
 
+def test_trace_flow_preserves_all_parents(tmp_path):
+    make_repo(tmp_path)
+    sn = tmp_path / "docs" / "requirements" / "stakeholder-needs.md"
+    sn.write_text(
+        sn.read_text(encoding="utf-8") + "| SN-002 | Safe. | Safety. | M | safe. |\n",
+        encoding="utf-8",
+    )
+    sr = tmp_path / "docs" / "requirements" / "system-requirements.csv"
+    sr.write_text(
+        sr.read_text(encoding="utf-8").replace(
+            "SR-002,Core sub,SN-001,", "SR-002,Core sub,SN-001;SN-002,"
+        ),
+        encoding="utf-8",
+    )
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'class="traceflow"' in text
+    assert 'data-src="SN-001" data-tgt="SR-002"' in text
+    assert 'data-src="SN-002" data-tgt="SR-002"' in text
+    assert 'data-src="LLR-003" data-tgt="TC-004"' in text
+    assert 'data-src="SR-002" data-tgt="TC-004"' in text
+
+
+def test_trace_flow_geometry_and_draft_metadata(tmp_path):
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert text.count('class="trace-lane"') == 4
+    assert 'class="cell sr draft"' in text
+    assert 'aria-label="SR SR-002 Draft"' in text
+    assert "Parents: SN-001" in text and "Children: LLR-003, TC-004" in text
+    assert 'height="54" rx="8"' in text
+
+
 def test_dag_layers_by_dependency_rank(tmp_path):
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0

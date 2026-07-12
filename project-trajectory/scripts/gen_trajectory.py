@@ -328,6 +328,213 @@ def arch_icicle(root):
     return svg, details, desc
 
 
+TRACE_CARD_W, TRACE_CARD_H, TRACE_COL_GAP, TRACE_ROW_GAP, TRACE_PAD = (
+    214,
+    54,
+    82,
+    14,
+    34,
+)
+
+
+def trace_flow_svg(root):
+    """Uniform-card four-column trace graph preserving every valid parent."""
+    details, tier, parents, children = {}, {}, {}, {}
+
+    def add(nid, kind, title, body, meta="", status=""):
+        details[nid] = {
+            "tier": kind,
+            "title": title,
+            "body": body,
+            "meta": meta,
+            "status": status,
+        }
+        tier[nid] = kind
+        parents.setdefault(nid, [])
+        children.setdefault(nid, [])
+
+    def link(parent, child):
+        if parent in details and child in details and child not in children[parent]:
+            children[parent].append(child)
+            parents[child].append(parent)
+
+    sns = _sn_rows(root)
+    for row in sns:
+        add(
+            row["id"],
+            "sn",
+            row["need"],
+            row["need"],
+            "Why: {} · Acceptance: {}".format(row["why"], row["acceptance"]),
+        )
+    sn_ids = {r["id"] for r in sns}
+    srs = [
+        r
+        for r in ct.read_rows(root / ct.SR_CSV)
+        if (r.get("SR-ID") or "").startswith("SR-")
+    ]
+    for row in srs:
+        sid = row["SR-ID"].strip()
+        phase = (row.get("Phase") or "").strip()
+        add(
+            sid,
+            "sr",
+            (row.get("Title") or "").strip(),
+            (row.get("Requirement") or "").strip(),
+            "Phase: {} · Acceptance: {}".format(
+                phase or "—", (row.get("AcceptanceCriteria") or "").strip()
+            ),
+            (row.get("Status") or "").strip(),
+        )
+    sr_ids = {r["SR-ID"].strip() for r in srs}
+    for row in srs:
+        for parent in ct._split_refs(row.get("SN-Refs", "")):
+            if parent in sn_ids:
+                link(parent, row["SR-ID"].strip())
+    llrs = [
+        r
+        for r in ct.read_rows(root / "docs/requirements/low-level-requirements.csv")
+        if (r.get("LLR-ID") or "").startswith("LLR-")
+    ]
+    for row in llrs:
+        add(
+            row["LLR-ID"].strip(),
+            "llr",
+            (row.get("Title") or "").strip(),
+            (row.get("Detail") or "").strip(),
+            "Module: {}".format((row.get("Module") or "").strip()),
+            (row.get("Status") or "").strip(),
+        )
+    llr_ids = {r["LLR-ID"].strip() for r in llrs}
+    for row in llrs:
+        for parent in ct._split_refs(row.get("SR-Refs", "")):
+            if parent in sr_ids:
+                link(parent, row["LLR-ID"].strip())
+    tcs = [
+        r
+        for r in ct.read_rows(root / "docs/test/test-cases.csv")
+        if (r.get("TC-ID") or "").startswith("TC-")
+    ]
+    for row in tcs:
+        verifies = ct._split_refs(row.get("Verifies", ""))
+        add(
+            row["TC-ID"].strip(),
+            "tc",
+            "verifies {}".format("; ".join(verifies)),
+            (row.get("Expected") or "").strip(),
+            "Method: {}".format((row.get("Method") or "").strip()),
+            (row.get("Status") or "").strip(),
+        )
+    for row in tcs:
+        for parent in ct._split_refs(row.get("Verifies", "")):
+            if parent in llr_ids or parent in sr_ids:
+                link(parent, row["TC-ID"].strip())
+    for nid in details:
+        details[nid]["meta"] += " · Parents: {} · Children: {}".format(
+            ", ".join(sorted(parents[nid])) or "—",
+            ", ".join(sorted(children[nid])) or "—",
+        )
+
+    kinds = ("sn", "sr", "llr", "tc")
+    columns = {kind: sorted(n for n in tier if tier[n] == kind) for kind in kinds}
+    max_rows = max((len(v) for v in columns.values()), default=1)
+    content_h = max_rows * TRACE_CARD_H + max(max_rows - 1, 0) * TRACE_ROW_GAP
+    pos = {}
+    for col, kind in enumerate(kinds):
+        lane_h = (
+            len(columns[kind]) * TRACE_CARD_H
+            + max(len(columns[kind]) - 1, 0) * TRACE_ROW_GAP
+        )
+        y0 = TRACE_PAD + (content_h - lane_h) / 2
+        x = TRACE_PAD + col * (TRACE_CARD_W + TRACE_COL_GAP)
+        for index, nid in enumerate(columns[kind]):
+            pos[nid] = (x, y0 + index * (TRACE_CARD_H + TRACE_ROW_GAP))
+
+    def esc(value):
+        return html.escape(str(value), quote=True)
+
+    edges = []
+    for source in sorted(children):
+        for target in sorted(children[source]):
+            x1, y1 = pos[source]
+            x2, y2 = pos[target]
+            sx, sy, tx, ty = (
+                x1 + TRACE_CARD_W,
+                y1 + TRACE_CARD_H / 2,
+                x2,
+                y2 + TRACE_CARD_H / 2,
+            )
+            mid = (sx + tx) / 2
+            edges.append(
+                '<path class="trace-edge" data-src="{}" data-tgt="{}" d="M{:.1f},{:.1f} H{:.1f} V{:.1f} H{:.1f}" marker-end="url(#trace-arrow)"></path>'.format(
+                    esc(source), esc(target), sx, sy, mid, ty, tx
+                )
+            )
+    cards = []
+    for nid in sorted(details, key=lambda n: (TIER_COL[tier[n]], n)):
+        x, y = pos[nid]
+        kind, title = tier[nid], details[nid]["title"] or ""
+        short = title if len(title) <= 28 else title[:27] + "…"
+        draft = details[nid]["status"].lower() == "draft"
+        cards.append(
+            '<g class="cell {}{}" data-id="{}" tabindex="0" role="button" aria-label="{} {}{}"><rect class="trace-card" x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="8"></rect><rect class="trace-accent" x="{:.1f}" y="{:.1f}" width="5" height="{}" rx="2" fill="{}"></rect><text x="{:.1f}" y="{:.1f}"><tspan class="wid">{}</tspan><tspan x="{:.1f}" dy="17" class="sub">{}</tspan>{}</text></g>'.format(
+                kind,
+                " draft" if draft else "",
+                esc(nid),
+                kind.upper(),
+                esc(nid),
+                " Draft" if draft else "",
+                x,
+                y,
+                TRACE_CARD_W,
+                TRACE_CARD_H,
+                x,
+                y,
+                TRACE_CARD_H,
+                TIER_FILL[kind],
+                x + 14,
+                y + 20,
+                esc(nid),
+                x + 14,
+                esc(short),
+                '<tspan x="{:.1f}" dy="15" class="state">DRAFT</tspan>'.format(
+                    x + TRACE_CARD_W - 54
+                )
+                if draft
+                else "",
+            )
+        )
+    width = 2 * TRACE_PAD + 4 * TRACE_CARD_W + 3 * TRACE_COL_GAP
+    height = content_h + 2 * TRACE_PAD
+    lanes = []
+    for col, kind in enumerate(kinds):
+        x = TRACE_PAD + col * (TRACE_CARD_W + TRACE_COL_GAP) - 10
+        lanes.append(
+            '<rect class="trace-lane" x="{:.1f}" y="8" width="{}" height="{:.1f}" rx="10"></rect><text class="lane-head" x="{:.1f}" y="26">{} · {}</text>'.format(
+                x,
+                TRACE_CARD_W + 20,
+                height - 16,
+                x + 10,
+                kind.upper(),
+                len(columns[kind]),
+            )
+        )
+    defs = '<defs><marker id="trace-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z"></path></marker></defs>'
+    svg = '<svg class="traceflow" viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Complete SN to SR to LLR to TC traceability flow">{}{}{}{}</svg>'.format(
+        width, height, width, defs, "".join(lanes), "".join(edges), "".join(cards)
+    )
+    descendants = {}
+    for nid in details:
+        seen, stack = set(), list(children[nid])
+        while stack:
+            child = stack.pop()
+            if child not in seen:
+                seen.add(child)
+                stack.extend(children.get(child, []))
+        descendants[nid] = sorted(seen)
+    return svg, details, descendants
+
+
 def spine_stats(root):
     """Definition-maturity numbers. 'Definition completeness' = SRs marked
     Verified / total SRs — how much of the requirement definition is decomposed
@@ -1201,6 +1408,16 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   #ice .cell text { fill:#fff; font-size:10px; pointer-events:none; }
   #ice .cell .sub { font-size:8.5px; opacity:.85; }
   #ice .lane-head { fill:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em; }
+  #ice .trace-lane { fill:var(--surface); stroke:var(--border); stroke-width:1.2;
+        stroke-dasharray:5 5; }
+  #ice .trace-edge { fill:none; stroke:#94a3b8; stroke-width:1.25; }
+  #ice #trace-arrow path { fill:#94a3b8; }
+  #ice .traceflow .trace-card { fill:var(--surface); stroke:var(--border); stroke-width:1; }
+  #ice .traceflow .cell text { fill:var(--text); font-size:11px; text-anchor:start; }
+  #ice .traceflow .cell .wid { font-weight:750; }
+  #ice .traceflow .cell .sub { fill:var(--muted); font-size:9.5px; }
+  #ice .traceflow .cell .state { fill:#b45309; font-size:8px; font-weight:800; }
+  #ice .traceflow .cell.draft .trace-card { stroke:#d97706; stroke-dasharray:4 3; }
   .cell.dim, .wi.dim, .edge.dim { opacity:.15; }
   #ice .cell.hl rect { stroke:#f59e0b; stroke-width:2.5; }
   .cell:focus, .wi:focus { outline:none; }
@@ -1280,12 +1497,12 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     </nav>
 
     <section id="arch" class="panel active">
-      <h2>Architecture decomposition</h2>
-      <p class="cap">The <code>SN→SR→LLR→TC</code> spine as an <strong>icicle</strong>:
-      block height is leaf-proportional — a TC is one unit, an LLR spans the sum of
-      its TCs, an SR the sum of its LLRs — so every lane totals the same height.
-      <strong>Hover</strong> to highlight a block and its children; <strong>click</strong>
-      to read its full text. A view — the registries are the source of truth.</p>
+      <h2>Complete traceability flow</h2>
+      <p class="cap">Every valid relationship in the <code>SN→SR→LLR→TC</code>
+      spine, including secondary parents. Uniform cards keep dense tiers readable;
+      dotted containers separate artifact kinds and arrows show direction.
+      <strong>Hover or focus</strong> to highlight descendants; <strong>click</strong>
+      to read full text, status, parents and children. Draft artifacts remain visible.</p>
       <div class="layout">
         <div id="ice" class="view">$arch_svg</div>
         <aside id="arch-detail" class="detail"><p class="hint">Hover to highlight a subtree;
@@ -1856,7 +2073,7 @@ def build_html(root, wis):
     active = sum(1 for w in wis if w["status"] == "active")
     stats = spine_stats(root)
     workstreams = len({w["workstream"] for w in wis})
-    arch, arch_details, arch_desc = arch_icicle(root)
+    arch, arch_details, arch_desc = trace_flow_svg(root)
     dag, wi_details = dag_svg(wis)
     # WI-074: when any work item carries a Campaign tag, the When view bins the
     # DAG into collapsed campaign containers (the WHEN-axis FB5 mirror); with no
