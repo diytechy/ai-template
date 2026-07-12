@@ -2508,3 +2508,36 @@ archetype (spec §7/§9.3). No spine change — validator + reader behavior only
 **Checks.** `pytest -q -n auto` **664 passed, 3 skipped**; `check_docs.py --root .
 --stale` OK, 0 broken; `check_trajectory --strict` clean (0 phase/connectivity
 warns on the meta); arch-map + dashboard regenerated fresh.
+
+## 2026-07-12 — WI-094 (derived-gate campaign): ratification = a reviewed Status-change commit
+
+**Session (branch `derived-gate-model`).** Docs/skill only (spec §6/§10.6). The
+human no longer bumps a gate line — they **ratify a batch of artifacts in a
+reviewed commit**, and the gate derives from it.
+
+- **`gate-advance` skill** — the "active-gate mechanism" section rewritten:
+  `docs/gate` is **generated** by `derive_gate.py` (computed from artifact
+  states), regenerated after a ratification, freshness-guarded by the
+  `derived-gate` step. A new **"Ratification = a reviewed Status-change commit"**
+  section: mark a batch ratified (`Draft`→`Planned` on the SR, or move an SN out
+  of the `## Draft needs` section) and that commit *is* the sign-off; it composes
+  with the gate-authority levels (`attended` = each batch; `single-ratify` = once
+  at the phase `[g2]` close; `autonomous` = a fresh-context reviewer's verdict),
+  and an agent may make the ratifying commit governed by the level. "Sync before
+  you bump" → "Sync before you **ratify**".
+- **`gate-policy.template` + the meta `docs/gate-policy`** — comment rewritten:
+  gates are derived, the level governs **who makes the ratifying commit**, and the
+  policy value itself stays hand-set (`docs/gate` is generated, never hand-edited).
+- **Skill fan-out** — the source skill edit was re-synced byte-identical to
+  `.claude`/`.agents` (`bootstrap.py --sync`, 2 files refreshed) and
+  `skills/INDEX.csv` regenerated (the frontmatter description changed).
+  `gen_skills_index --check-agents` clean (10 copies match).
+
+**No spine change, no re-attestation impact.** No SN/SR/LLR/TC rows touched.
+
+**Byte deltas.** `AGENTS.template.md` **untouched** (9,978); `PROCESS.md`
+**untouched** (58,297). No byte-budgeted file changed (PROCESS.md §4/§7 rewrite is
+WI-095).
+
+**Checks.** `pytest -q -n auto` **664 passed, 3 skipped**; `check_docs.py --root .
+--stale` OK, 0 broken; `gen_skills_index --check-agents` clean.
