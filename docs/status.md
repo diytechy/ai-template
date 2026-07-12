@@ -24,37 +24,15 @@ working surface.
   `SN→SR→LLR→TC` spine is self-adopted: `docs/gate` is at **G3**;
   `check.py --gate G3` (13 steps) is the full bar and CI runs it on real data
   (the meta-repo dogfoods its own trajectory + OKF layers).
-- **Plan state:** meta-repo at **G3**, spine **SN=24 SR=48 LLR=49 TC=49, 0
+- **Plan state:** meta-repo at **G3** (re-attested 2026-07-12, all-mechanized;
+  new scope opens as **phase v2**), spine **SN=24 SR=48 LLR=49 TC=49, 0
   orphans**, 49 declared interface seams, 5 declared components (the meta's own
   How-SW top view is now 23 modules → 5 top-level components, 0 uncontained). The
   dashboard is the root [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session
   history: [log.md](log.md).
 - **Open items:**
   - **Needs \<human> (the run is paused on these):**
-    1. **G3 re-attestation** — one sitting covers the accumulated spine changes
-       still awaiting sign-off: `SR-034` text (Inspection→Analysis), the added
-       `SR-039…SR-043`, the extended `SR-038` (now also the OKF Knowledge tab
-       consuming `docs/okf`, C4; `SR-042` Rationale gained the consumer note),
-       the **`SR-037` text change** (the
-       SSOT coherence + SpecRef rules), **`SN-023` + `SR-044`** (the
-       declared-interface connectivity layer, new SN→SR), the **`SR-025`
-       text change** (extended to the checked per-agent skill fan-out; +LLR-043/
-       TC-045), and now the **new `SR-045`** under `SN-006`/`SN-016` (the S8
-       heterogeneous implementer/reviewer scheduling layer; +LLR-044/045/046 +
-       TC-046 + IF-044…047), **its text since extended by the pair-row registry
-       slice** (pair-row identity/access split, Family-keyed heterogeneity,
-       version-less newest resolution, per-pair `Env`; +LLR-044/045 text), and
-       now the **new `SR-046`** under `SN-001` (the
-       run capability menu / launcher surface; +LLR-047 + TC-047), and now the
-       **new `SN-024` + `SR-047`** under `SN-024`/`SN-006` (the subjective-quality
-       critique loop / `Critique` verification value; +LLR-048 + TC-048), and now
-       the **new `SR-048`** under `SN-023`/`SN-012` (the How-SW top-view bound +
-       containerized render / right-sizing rule; +LLR-049 + TC-049) with its
-       sibling **`SR-038` text since clarified** (the How-SW view containerizes
-       when a CMP layer contains modules; the non-software component table).
-       *Mandatory*: Verified SR text changed and new SN/SRs joined the spine
-       ([log.md](log.md)).
-    2. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
+    1. **Push decision** — `MultiRepoSupport` is local-only (~48 commits).
     *(Former items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
     the already-made sibling-repo ruling, and the guardrails-batch review;
     see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed
@@ -134,16 +112,20 @@ working surface.
       scaffolding), lowest urgency of the three. Spec:
       [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
       M5.
-    - **WI-085** — Process reference view in `PROJECT_STATE.html` (the
-      development-process explainer tab: artifact lifecycle × gates · the resume
-      loop · slices→campaigns→gates). Owner-ruled 2026-07-12: needs a **new SR**
-      (rides the re-attestation); generated if tenable, else a static diagram
-      verified by a **Critique** TC (an agent checks the diagram matches the real
-      process). Spec: [specs/WI-085.md](specs/WI-085.md).
-- **Next action:** the **owner sitting** — one G3 re-attestation over every
-  accumulated spine change + the push ruling. After that: the G-Release walk or
-  the newly-ruled deep-review backlog (WI-078 dupes-gate first, then the
-  `main-decomposition` campaign WI-080…082).
+- **Next action — open phase v2 (new scope; `docs/gate` stays G3).** A resume
+  session picks up here:
+  1. **WI-085 (queued — needs a new SR) → the G1 sign-off gate**
+     ([spec](specs/WI-085.md)). Draft its new
+     requirement artifacts — a new `SR` under `SN-021`/`SN-010`, `Phase=v2`, with
+     measurable acceptance criteria (the reviewer consistency sweep now flags
+     contradictions against existing SRs) — then **STOP and page the owner to
+     sign off** (the §4 G1 consistency review, recorded in [log.md](log.md)). On
+     sign-off: G2 (LLR + TC) → G3 (implement, panel 1 first), closing with
+     `check.py --gate G3 --phase v1` so v2 reads phase-deferred.
+  2. **The rest of the backlog needs no new SR — proceed at G3** (complete slice
+     per WI, held gate): WI-078 (dupes-gate) first, then the
+     `main-decomposition` campaign (WI-080 → WI-081), then WI-079.
+  Remaining owner item: the **push decision** above.
 
 ## Scope
 

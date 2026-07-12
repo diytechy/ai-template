@@ -98,6 +98,16 @@ in scope for every phase). Semantics:
   them.
 - Later phases re-enter at G1/G2 as requirement increments and close their own
   G3/G-Release with the grown phase list.
+- **A project already at G3 that takes on new scope holds its gate.** `docs/gate`
+  stays at the high-water mark — the marker only advances (§7 "the active
+  gate"); "re-enter at G1" is *per-increment via the `Phase` tag*, never a
+  rewind of the marker (rewinding would discard the closed gate's attestation).
+  And because traceability is phase-blind, a new-phase SR must reach
+  **G2-completeness (LLR + TC)** to sit in the live spine — a
+  requirements-only draft stays a `-000` placeholder row or off-spine until it
+  does; only *Verified* and *G-Release* defer by phase. Close the shipped set
+  with `check.py --gate G3 --phase <shipped>`; the new phase's SRs read
+  phase-deferred until their own G3.
 
 ## Lifecycle phase
 

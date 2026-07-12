@@ -2148,3 +2148,43 @@ the relationship. Predecessors WI-039/WI-070; campaign `process-view`.
 --strict` clean (85 WIs, 73 done); `gen_trajectory --check` fresh after regen;
 `check_docs --stale` OK, 0 broken links (30 docs incl. the new spec); `pytest -q`
 → **640 passed, 1 skipped in 92.15s**.
+
+## 2026-07-12 — GATE: G3 re-attestation (owner sign-off; bar green, spine all-mechanized)
+
+**Gate action (`docs/gate-policy` = attended — the human owner is the acceptor).**
+The owner re-attests **G3** over the accumulated spine changes that were awaiting
+sign-off (status.md item 1): `SR-034` (Inspection→Analysis); added
+`SR-039…043`; extended `SR-038` (OKF Knowledge-tab consumer + the How-SW
+containment clarification) + `SR-042` Rationale consumer note; `SR-037` text
+(SSOT coherence + SpecRef); `SN-023` + `SR-044` (declared-interface
+connectivity); `SR-025` text (checked per-agent skill fan-out; +LLR-043/TC-045);
+`SR-045` (S8 heterogeneous implementer/reviewer scheduling; +LLR-044/045/046 +
+TC-046 + IF-044…047, extended by the pair-row registry slice); `SR-046` (run
+capability menu; +LLR-047/TC-047); `SN-024` + `SR-047` (Critique verification /
+critique loop; +LLR-048/TC-048); `SR-048` (How-SW top-view bound + containerized
+render; +LLR-049/TC-049).
+
+**Mechanized bar — RESULT: PASS.** `check.py --gate G3 --jobs 0`, all 13 steps:
+format · lint · **tests+coverage 90.62 % (≥ 80), 641 passed** · traceability ·
+privacy · doc-navigability · perf-budgets · design-flows · trajectory · arch-map
+· trajectory-map · okf · skills-sync. `docs/gate` stays **G3** (a
+re-attestation, not an advance).
+
+**Verification basis (the trust footprint).** Of 48 `Verified` SRs, **48
+mechanized** (Test/Demonstration/Manual/Analysis/Inspection) and **0 attested**
+(`Attest`) — the spine rests entirely on runnable checks; nothing rides an
+unverifiable human judgment (`docs/test/report.md` "Verification basis").
+
+**Sign-off (§4 consistency review — the human half).** Owner **Peter Johnson**
+attests the accumulated SR text changes and new SN/SRs are consistent with the
+`PROJECT-VISION:` and with one another; the pending re-attestation is **closed**.
+Housekeeping: the 5 stale "Rides the pending G3 re-attestation" notes
+(`SR-037/045/046/047/048` Rationale) cleared; `docs/okf` + `PROJECT_STATE.html`
+regenerated to match.
+
+**Phased re-entry — opening the next increment.** New scope re-enters as a new
+phase: the attested baseline is the implicit **v1** (blank `Phase` tag), new SRs
+get `Phase=v2`, and `docs/gate` is **held at G3** — the recipe now spelled out in
+PROCESS_OPTIONS "Phased delivery" (WI-086). status.md "Next action" routes a
+resume session to draft the new requirement artifacts and **page the owner for
+the G1 sign-off** before implementing (WI-085 first).
