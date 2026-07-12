@@ -36,6 +36,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/rubrics/rubric-000.md",
         "docs/test/test-cases.csv",
         "scripts/check.py",
+        "scripts/derive_gate.py",
         "scripts/check_doc_refs.py",
         "scripts/check_dupes.py",
         "scripts/check_privacy.py",

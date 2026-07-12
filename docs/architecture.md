@@ -291,6 +291,25 @@ Contracts (interfaces): IF-016, IF-036
 | `fetch(url, timeout)` | (bytes, None) on success; (None, reason) on any network failure — so the |  |
 | `main()` |  |  |
 
+### `scripts/derive_gate`
+_Derive the active gate from artifact states — the hybrid, cached gate._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `load_csv(path)` |  |  |
+| `refs(value)` | Split a multi-ref cell (';', ',' or whitespace separated) into ids. |  |
+| `is_example(rid)` |  |  |
+| `is_draft(row)` | A row in the pre-ratification `Draft` state (open-vocab Status). |  |
+| `sn_draft_ids(text)` | Draft SN ids (section-as-state §4a): every SN-### under a heading whose text |  |
+| `sr_gate(sr, has_llr, has_tc)` | The gate an SR row has reached, from its Status + whether it is decomposed. |  |
+| `maturity_gate(row)` | An LLR/TC caps the gate only when it is Draft (G0 — the new-phase signal). |  |
+| `sn_gate(sn_id, draft_ids)` | A Draft SN (section-as-state) is G0; a ratified SN has no obligation past G1 |  |
+| `compute(docs)` | Derive the gate from the spine registries under `docs`. Returns a result |  |
+| `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check |  |
+| `render_cache(result, as_of, date)` | The full docs/gate file text: static header, the compared `# basis:` line, |  |
+| `parse_cache(text)` | `(gate_value, basis_line)` from a cached docs/gate: the first non-comment |  |
+| `main()` |  |  |
+
 ### `scripts/gen_arch_map`
 _Generate the module/function map for `architecture.md` from the source tree._
 Contracts (interfaces): IF-010, IF-025

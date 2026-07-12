@@ -1,0 +1,185 @@
+"""derive_gate.py: the gate computed from artifact states (the derived-gate model).
+
+The derivation is the trust root of the whole model, so every per-artifact rule,
+the min-aggregation, the draft drop, and the --check rot guard get a red->green
+test here. The meta-repo smoke test proves the dogfood: the derived gate reads G3,
+byte-for-byte with today's declared docs/gate (docs/specs/derived-gate-model.md
+§11 done-when).
+"""
+
+from conftest import ROOT, SCRIPTS, load_script, make_minimal_project, run_py
+
+GATE = load_script("derive_gate")
+
+# Registry helpers -------------------------------------------------------------
+SRS_H = (
+    "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
+    "Priority,Verification,Status\n"
+)
+LLRS_H = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
+TCS_H = (
+    "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+)
+
+
+def _sr(sid, verification="Test", status="Verified", sn="SN-001"):
+    return '{},T,{},"r","why","ac",,M,{},{}\n'.format(sid, sn, verification, status)
+
+
+def _write(scaffold, srs="", llrs="", tcs=""):
+    req = scaffold / "docs" / "requirements"
+    if srs:
+        (req / "system-requirements.csv").write_text(SRS_H + srs, encoding="utf-8")
+    if llrs:
+        (req / "low-level-requirements.csv").write_text(LLRS_H + llrs, encoding="utf-8")
+    if tcs:
+        (scaffold / "docs" / "test" / "test-cases.csv").write_text(
+            TCS_H + tcs, encoding="utf-8"
+        )
+
+
+def _derive(scaffold):
+    return GATE.compute(scaffold / "docs")
+
+
+# --- the meta-repo dogfood ----------------------------------------------------
+def test_meta_repo_derives_g3():
+    # The whole campaign's north star: the meta's derived gate equals its declared
+    # G3 (every artifact Verified / ratified). Run against the real meta root.
+    proc = run_py([SCRIPTS / "derive_gate.py", "--print", "--root", ROOT], cwd=ROOT)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "derived gate: G3" in proc.stdout
+    assert "drafts=0 computed=G3" in proc.stdout
+
+
+# --- per-artifact gate rules --------------------------------------------------
+def test_sr_gate_rules():
+    draft = {"Status": "Draft", "Verification": "Test"}
+    assert GATE.sr_gate(draft, True, True) == GATE.G0
+    planned = {"Status": "Planned", "Verification": "Test"}
+    assert GATE.sr_gate(planned, False, False) == GATE.G1  # ratified, undecomposed
+    assert GATE.sr_gate(planned, True, True) == GATE.G2  # decomposed, not verified
+    verified = {"Status": "Verified", "Verification": "Test"}
+    assert GATE.sr_gate(verified, True, True) == GATE.G3
+    # An LLR-exempt method needs only a TC to be decomposed (no LLR).
+    attest = {"Status": "Verified", "Verification": "Attest"}
+    assert GATE.sr_gate(attest, False, True) == GATE.G3
+    assert GATE.sr_gate(attest, False, False) == GATE.G1  # still needs its TC
+
+
+def test_maturity_and_sn_gate_rules():
+    # A present LLR/TC caps only when Draft; its own Status does not gate G3 (the
+    # SR's Verified status does), so Implemented and Verified both contribute G3.
+    assert GATE.maturity_gate({"Status": "Draft"}) == GATE.G0
+    assert GATE.maturity_gate({"Status": "Implemented"}) == GATE.G3
+    assert GATE.maturity_gate({"Status": "Verified"}) == GATE.G3
+    assert GATE.sn_gate("SN-009", {"SN-009"}) == GATE.G0  # draft section
+    assert GATE.sn_gate("SN-001", {"SN-009"}) == GATE.G3  # ratified: never caps
+
+
+# --- aggregation over a real scaffold -----------------------------------------
+def test_minimal_project_derives_g3(scaffold):
+    make_minimal_project(scaffold)
+    assert _derive(scaffold)["gate"] == "G3"
+
+
+def test_draft_sr_drops_the_gate(scaffold):
+    # A Draft SR sits at G0, dropping the min; the runnable value floors to G1 and
+    # the raw G0 is recorded in the basis (the new-phase-pending signal).
+    make_minimal_project(scaffold)
+    _write(
+        scaffold,
+        srs=_sr("SR-001") + _sr("SR-002", status="Draft"),
+    )
+    result = _derive(scaffold)
+    assert result["raw"] == GATE.G0
+    assert result["gate"] == "G1"
+    assert result["drafts"] == 1
+
+
+def test_undecomposed_sr_is_g1(scaffold):
+    # A ratified (Planned) SR with no LLR/TC is at G1 (requirement not decomposed).
+    make_minimal_project(scaffold)
+    _write(scaffold, srs=_sr("SR-001", status="Planned"))
+    # Empty (header-only) LLR/TC registries: SR-001 has no decomposition.
+    (scaffold / "docs" / "requirements" / "low-level-requirements.csv").write_text(
+        LLRS_H, encoding="utf-8"
+    )
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(TCS_H, encoding="utf-8")
+    assert _derive(scaffold)["gate"] == "G1"
+
+
+def test_decomposed_unverified_is_g2(scaffold):
+    # SR + LLR + TC all present but not Verified -> G2 (decomposed, not verified).
+    make_minimal_project(scaffold)
+    _write(
+        scaffold,
+        srs=_sr("SR-001", status="Implemented"),
+        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Implemented\n',
+        tcs='TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Implemented\n',
+    )
+    assert _derive(scaffold)["gate"] == "G2"
+
+
+def test_no_real_srs_is_g1(scaffold):
+    # A fresh scaffold (only -000 placeholders) is at G1, never a vacuous G3.
+    assert _derive(scaffold)["gate"] == "G1"
+
+
+# --- the cache + --check rot guard --------------------------------------------
+def test_write_then_check_roundtrips(scaffold):
+    make_minimal_project(scaffold)
+    write = run_py(["scripts/derive_gate.py"], cwd=scaffold)
+    assert write.returncode == 0, write.stdout + write.stderr
+    gate_text = (scaffold / "docs" / "gate").read_text(encoding="utf-8")
+    assert "# basis:" in gate_text
+    assert gate_text.strip().splitlines()[-1] == "G3"  # the runnable value last
+    # A fresh compute matches the cache.
+    check = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
+    assert check.returncode == 0, check.stdout + check.stderr
+    assert "up to date" in check.stdout
+
+
+def test_check_detects_state_drift(scaffold):
+    make_minimal_project(scaffold)
+    run_py(["scripts/derive_gate.py"], cwd=scaffold)
+    # Un-verify an SR: the derived gate drops but the cache still says G3 -> STALE.
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(",Test,Verified", ",Test,Implemented"),
+        encoding="utf-8",
+    )
+    check = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
+    assert check.returncode == 1
+    assert "STALE" in check.stdout + check.stderr
+
+
+def test_check_legacy_gate_compares_value_only(scaffold):
+    # A hand-set docs/gate with no basis line (pre-migration) passes --check when
+    # its VALUE matches the derived one (the smooth-transition path), and fails
+    # when it does not.
+    make_minimal_project(scaffold)
+    gate = scaffold / "docs" / "gate"
+    gate.write_text("# legacy hand-set\nG3\n", encoding="utf-8")
+    ok = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    assert "not yet in derived form" in ok.stdout + ok.stderr
+    gate.write_text("# legacy hand-set\nG2\n", encoding="utf-8")
+    bad = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
+    assert bad.returncode == 1
+    assert "STALE" in bad.stdout + bad.stderr
+
+
+def test_draft_sn_drops_the_gate(scaffold):
+    # A Draft SN (section-as-state) sits at G0 and drops the derived gate too.
+    make_minimal_project(scaffold)
+    sn = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
+    sn.write_text(
+        sn.read_text(encoding="utf-8") + "\n## Draft needs (unratified)\n\n"
+        "| SN-ID | Need | Priority | Acceptance |\n|---|---|---|---|\n"
+        "| SN-050 | drafted | S | tbd |\n",
+        encoding="utf-8",
+    )
+    result = _derive(scaffold)
+    assert result["raw"] == GATE.G0
+    assert result["drafts"] == 1

@@ -119,12 +119,14 @@ working surface.
   1. **Derived-gate campaign — RATIFIED, in flight (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the foundation slices have landed — the `Draft` artifact state + exemption in
-     `trace.py`, and SN section-as-state maturity. Remaining slices down the spec
-     §10 DAG: **WI-091** `derive_gate.py` (compute + cache `docs/gate` + `--check`)
-     · **WI-092** check.py integration · **WI-093** phase + `[phase]-[g*]` ·
-     **WI-094** ratification workflow · **WI-095** process-doc rewrite · **WI-096**
-     migration + dogfood. Runs under today's monolithic gate; once it lands, phase
-     v3+ uses the derived gate.
+     `trace.py`, SN section-as-state maturity, and **`scripts/derive_gate.py`**
+     (the gate computed from artifact states, cached to `docs/gate` with a
+     `--check` rot guard; the meta reads G3). Remaining slices down the spec §10
+     DAG: **WI-092** check.py consumes the derived gate · **WI-093** phase +
+     `[phase]-[g*]` · **WI-094** ratification workflow · **WI-095** process-doc
+     rewrite · **WI-096** migration + dogfood (migrate the meta `docs/gate`, add
+     derive_gate's own SR/IF rows — the one interim connectivity warn). Runs under
+     today's monolithic gate; once it lands, phase v3+ uses the derived gate.
   2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer

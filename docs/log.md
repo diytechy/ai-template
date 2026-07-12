@@ -2354,3 +2354,62 @@ behavior under today's monolithic gate.
 
 **Checks.** `pytest -q -n auto` **646 passed, 3 skipped**; `check_docs.py --root
 . --stale` OK, 0 broken; trace self-run clean.
+
+## 2026-07-12 — WI-091 (derived-gate campaign): derive_gate.py — the hybrid, cached derived gate
+
+**Session (branch `derived-gate-model`).** The campaign core (spec §5): a new
+`scripts/derive_gate.py` computes the active gate from the spine's own maturity
+states instead of a hand-set marker. **The repo is at gate G iff every in-scope
+SN/SR/LLR/TC meets G's bar.** Stdlib, self-contained (small loaders duplicated
+from trace.py per the F5 rule — it never imports the joined-spine engine).
+
+**Per-artifact gate (§3), with one reconciliation to trace's actual bar.**
+- **SR** — Draft→G0; ratified-but-undecomposed→G1; decomposed (its LLR — unless
+  LLR-exempt Analysis/Inspection/Attest — plus a TC)→G2; decomposed +
+  Status=Verified→G3.
+- **LLR/TC** — Draft→G0 (the new-phase signal). **Reconciliation:** once present,
+  an LLR/TC's own Status does *not* independently gate — the SR's Verified status
+  drives G2→G3, matching `trace.py --require-verified` (which checks SRs, not
+  LLR/TC status). The spec §3 sketch had "LLR present⇒G2, Verified⇒G3"; taken
+  literally that caps any repo whose LLRs read `Implemented` (the kit's own
+  minimal-project fixture, and typical downstream) at G2 even though trace calls
+  it G3. So a present LLR/TC contributes G3 and never caps; its *existence* is
+  what makes its SR decomposed (decided in sr_gate). This keeps derived == trace's
+  G3 for **any** G3 repo, not just the meta.
+- **SN** — Draft (section-as-state)→G0; ratified never caps (contributes G3).
+
+**Aggregation.** Repo gate = min over all in-scope artifacts; a repo with no real
+SRs is G1 (never a vacuous G3). A draft/reopen drops the min to G0 → the runnable
+value floors to G1 with the raw G0 recorded in the basis (the new-phase-pending
+signal; the phase detector + `[phase]-[g*]` archetype are WI-093). Per-phase
+breakdown reported.
+
+**Hybrid cache.** Writes `docs/gate` as a generated file: a static header, a
+compared `# basis:` line (counts + raw level + per-phase), an informational
+git-derived compute stamp (never compared — the arch-map/trajectory as-of idiom),
+then the runnable value as the first non-comment line — so `check.py`'s
+`resolve_gate()` reads it unchanged. `--check` recomputes and guards rot; a
+**legacy** hand-set gate (no `# basis:` line) is compared value-only, so the meta
+and fresh scaffolds stay green until the one-time migration (WI-096). `--print`
+computes without writing. `bootstrap.py` MAPPING ships it downstream.
+
+**Meta dogfood (proven early).** `derive_gate.py --print` on the meta reads **G3**
+(SN=24 SR=48 LLR=49 TC=49 drafts=0), byte-matching today's declared `docs/gate`.
+The meta's `docs/gate` is NOT migrated yet (that's WI-096); it stays the legacy
+hand-set `G3`, which `--check` accepts value-only.
+
+**Interim connectivity warn (resolved in WI-096).** derive_gate.py is a new
+arch-map module with no IF-### row yet (its SR + interface rows are the WI-096
+spine reconciliation), so `check_trajectory` emits **one warn-only** "connectivity
+undeclared: module 'scripts/derive_gate'…". Never fails the exit code (interface
+coverage is warn-first at every gate); `check_trajectory --strict` stays clean.
+
+**No re-attestation impact.** No SR/SN/LLR/TC rows added or changed; a new script
++ tests under today's monolithic gate. check.py wiring is WI-092.
+
+**Byte deltas.** `AGENTS.template.md` **untouched** (9,978); `PROCESS.md`
+**untouched** (58,297). No byte-budgeted file changed.
+
+**Checks.** `pytest -q -n auto` **658 passed, 3 skipped**; `check_docs.py --root
+. --stale` OK, 0 broken; `check_trajectory --strict` clean (1 warn-only
+connectivity note); arch-map + dashboard regenerated fresh.

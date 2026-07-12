@@ -39,7 +39,7 @@ What it creates in the destination:
     docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
-    scripts/trace.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+    scripts/trace.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
@@ -1059,6 +1059,7 @@ MAPPING = [
     ("rubrics/README.template.md", "docs/rubrics/README.md"),
     ("rubrics/rubric-000.template.md", "docs/rubrics/rubric-000.md"),
     ("scripts/trace.py", "scripts/trace.py"),
+    ("scripts/derive_gate.py", "scripts/derive_gate.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),
     ("scripts/check_docs.py", "scripts/check_docs.py"),
