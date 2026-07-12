@@ -1902,3 +1902,19 @@ README stale hints, warn-only). `ruff format` / `ruff check` (the gate
 interpreter, `C:/Python38`) clean. The full `check.py --gate G3` is **deferred to
 the coordinating close** per the batch cadence — **all three batch slices
 (WI-074/075/076) are now done at the commit bar, awaiting that close.**
+
+## 2026-07-11 — Batch close (coordinating session): campaign-binning batch spec archived; the batch's ONE full gate
+
+**Session.** The campaign-binning · parallel-tests · resume-hardening batch
+is closed — all three slices landed at the commit bar per the campaign
+cadence. The spec moved `docs/specs/` →
+[archive/specs/campaign-binning-parallel-tests-resume-hardening.2026-07-11.md](archive/specs/campaign-binning-parallel-tests-resume-hardening.2026-07-11.md)
+(close date appended, ARCHIVED banner naming WI-074…WI-076); status.md
+citations re-pointed, the archive README `specs/` row extended, the done-WI
+id tokens scrubbed from the working surface (R-D), and the in-flight lane
+returned to empty. The batch's one full gate runs in this close — its result
+rides this entry's commit.
+
+**No SR/LLR/TC text touched by the batch or the close** — all three slices
+verified no-spine-change honestly (recorded in their entries above); nothing
+new rides the pending re-attestation.

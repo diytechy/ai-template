@@ -1,5 +1,10 @@
 # Campaign binning · parallel tests · dirty-tree resume hardening — PLAN
 
+> **ARCHIVED 2026-07-11 — batch complete.** This was the spec-of-record for
+> work items **WI-074, WI-075, WI-076** (all `done`; deliverables in
+> `docs/requirements/work-items.csv`, session record in `docs/log.md`).
+> Archived per the spec lifecycle: close date appended, attributed WIs named.
+
 **Status:** 🟢 **RULED BY DIRECTION (owner, 2026-07-11)** — three items from
 owner direction ("scope those in" + the interruption-safety recheck).
 Ingested as **WI-074…WI-076**. Per the campaign cadence, WI sessions end at

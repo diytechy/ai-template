@@ -64,25 +64,14 @@ working surface.
        [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2).
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
-  - **Awaiting the coordinating close — the campaign-binning · parallel-tests ·
-    resume-hardening batch** (spec:
-    [specs/campaign-binning-parallel-tests-resume-hardening.md](specs/campaign-binning-parallel-tests-resume-hardening.md),
-    ruled by direction 2026-07-11; commit-bar cadence, one full gate at
-    close): **all three slices landed.** WI-076 dirty-tree resume hardening
-    (the loop surfaces a loop-start dirty tree into the first session's prompt +
-    protocol text; stale-lock verified SAFE; full stash/rollback stays deferred
-    as WI-060), WI-075 parallel test execution (pytest-xdist `-n auto`; meta
-    opts in, template ships the opt-in commented, subprocess coverage 90.8%
-    under 24 workers, serial→parallel times in [log.md](log.md)), and WI-074
-    `Campaign` column + When-view binning (the When-view now bins the WI DAG
-    into collapsed campaign containers by the new `Campaign` grouping tag).
-    **The coordinating close runs the one full gate and archives the spec.**
-    All three prior
-    2026-07-11 batches are **closed and
-    archived**: the owner-feedback batch (the campaign gate cadence · the
-    owner scratchpad + check_docs scan-scope · the ≤10-item How-SW
-    containment;
-    [archive/specs/owner-feedback-2026-07-11.md](archive/specs/owner-feedback-2026-07-11.md)),
+  - **In flight:** _(none)_ — all four 2026-07-11 batches are **closed and
+    archived**: the campaign-binning · parallel-tests · resume-hardening
+    batch (the `Campaign` grouping column + the campaign-binned When-view
+    DAG · pytest-xdist parallel execution, ~6× plain and ~4.6× at the gate ·
+    the dirty-tree reconcile surface at loop start, stale-lock verified safe;
+    [archive/specs/campaign-binning-parallel-tests-resume-hardening.2026-07-11.md](archive/specs/campaign-binning-parallel-tests-resume-hardening.2026-07-11.md)),
+    the owner-feedback batch
+    ([archive/specs/owner-feedback-2026-07-11.md](archive/specs/owner-feedback-2026-07-11.md)),
     the capability-expansion campaign
     ([archive/specs/capability-expansion.2026-07-11.md](archive/specs/capability-expansion.2026-07-11.md)),
     and the working-surface + architecture campaign
@@ -108,14 +97,10 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-- **Next action:** the **coordinating close** for the campaign-binning ·
-  parallel-tests · resume-hardening batch — the one full gate (G3) plus the
-  spec archive; all three slices (WI-074/075/076) are done at the commit bar.
-  The run **holds for the human** after that (R-D): the **owner sitting** —
-  one G3 re-attestation over every accumulated spine change, the push ruling,
-  the sibling-repo target, and the deferred batch review. After that: the
-  G-Release walk, the WI-DAG edge data-pass, or new scope (which needs a
-  plan/WI entry first).
+- **Next action:** the **owner sitting** — one G3 re-attestation over every
+  accumulated spine change, the push ruling, the sibling-repo target, and the
+  deferred batch review. After that: the G-Release walk, the WI-DAG edge
+  data-pass, or new scope (which needs a plan/WI entry first).
 
 ## Scope
 
