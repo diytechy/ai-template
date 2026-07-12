@@ -134,6 +134,12 @@ working surface.
       scaffolding), lowest urgency of the three. Spec:
       [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §3
       M5.
+    - **WI-085** — Process reference view in `PROJECT_STATE.html` (the
+      development-process explainer tab: artifact lifecycle × gates · the resume
+      loop · slices→campaigns→gates). Owner-ruled 2026-07-12: needs a **new SR**
+      (rides the re-attestation); generated if tenable, else a static diagram
+      verified by a **Critique** TC (an agent checks the diagram matches the real
+      process). Spec: [specs/WI-085.md](specs/WI-085.md).
 - **Next action:** the **owner sitting** — one G3 re-attestation over every
   accumulated spine change + the push ruling. After that: the G-Release walk or
   the newly-ruled deep-review backlog (WI-078 dupes-gate first, then the

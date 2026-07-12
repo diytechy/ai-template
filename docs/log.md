@@ -2116,3 +2116,35 @@ passed, 1 skipped in 89.10s**.
 **Byte deltas.** Byte-budgeted files (`AGENTS.template.md`, `PROCESS.md`)
 untouched — the additions land in the unbudgeted `PROCESS_OPTIONS.md` +
 `ADOPTING.md`.
+
+## 2026-07-12 — WI-084 (reviewer requirement-consistency sweep) + WI-085 (process-view spec filed)
+
+**Session (owner-directed).** From the Ask-2 options menu the owner chose
+**Option A only**, extended to cross-check historical items; and directed the
+Ask-3 process view into a work item.
+
+**WI-084 — Option A (done).** The embedded `REVIEWER_PROMPT` (`agent_loop.py`,
+the SR-045 reviewer surface) gains a directed requirement-consistency sweep:
+when a diff adds/changes SN/SR/TC rows, the reviewer cross-checks them against
+the existing registries — the new rows **and** the historical rows they touch —
+for contradiction / overlap / attribute-limit conflict, raising each as a finding
+(MINOR "for clarity" where sharper SN/SR/TC wording would resolve an ambiguity,
+per the owner's future-clarity goal). Operationalizes PROCESS.md §3's existing
+statement that "§6 [the reviewer] is well-suited to a first-pass contradiction
+sweep" within the existing reviewer capability — **no new SR, no PROCESS/SR text
+change** (byte-budgeted files untouched); the critique prompt is untouched
+(consistency is a review, not an artifact-quality, concern). Test:
+`test_agent_loop_review.py::test_reviewer_prompt_carries_requirement_consistency_sweep`.
+
+**WI-085 — process-view spec filed (deferred).** `docs/specs/WI-085.md` captures
+the Ask-3 plan + owner rulings: a new Process tab in `PROJECT_STATE.html`
+(artifact lifecycle × gates · the resume loop · slices→campaigns→gates); needs a
+**new SR** (rides the re-attestation); generated if tenable, else a static
+diagram whose **Critique** TC has an agent verify the diagram matches the real
+process; bounded in-view duplication accepted where no single other doc states
+the relationship. Predecessors WI-039/WI-070; campaign `process-view`.
+
+**Checks.** ruff format+lint clean on the changed script/test; `check_trajectory
+--strict` clean (85 WIs, 73 done); `gen_trajectory --check` fresh after regen;
+`check_docs --stale` OK, 0 broken links (30 docs incl. the new spec); `pytest -q`
+→ **640 passed, 1 skipped in 92.15s**.

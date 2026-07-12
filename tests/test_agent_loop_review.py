@@ -237,6 +237,22 @@ def test_reviewer_prompt_is_redacted_by_construction(managed_repo):
     assert "assume no human is watching" not in rev_block
 
 
+def test_reviewer_prompt_carries_requirement_consistency_sweep(managed_repo):
+    # Option A (WI-084): when a diff changes requirement rows, the reviewer is
+    # directed to sweep them (new AND historical) for contradiction/overlap and
+    # flag wording that sharper SN/SR/TC language would clarify. Assert the
+    # standing directive rides the deployed reviewer prompt.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("2", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
+    rev_block = prompts.split("=== revb ===\n", 1)[1].split("\n=== ", 1)[0]
+    assert "contradiction" in rev_block
+    assert "SN/SR/TC" in rev_block
+
+
 def test_prompt_map_slots_a_custom_reviewer_template(managed_repo):
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
