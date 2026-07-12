@@ -1922,7 +1922,7 @@ new rides the pending re-attestation.
 ## 2026-07-12 — WI-077: owner-directed deep review + confident fixes + parallel harness steps (deep-review-2026-07-12)
 
 **Session.** Owner-directed full-repo review (logs/archive out of scope), the
-report committed first ([repo-review-2026-07-12.md](repo-review-2026-07-12.md),
+report committed first ([archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md),
 commit `9cba199`), then the confident fixes in this entry's commit. **No
 critical findings**; four owner rulings queued in status.md Open items #6 (F5
 duplication census/bound · wiring `[step:dupes]` · the archive-anchor comment
@@ -1973,3 +1973,14 @@ gen_trajectory test anchors updated to the batched call / `dag-view`.
 `PROCESS.md` 58,853 B) **untouched**. `check.py` +171/−36 lines;
 `gen_trajectory.py` −44 net (the dedup); `hooks/pre-commit` −34 net.
 `PROJECT_STATE.html` regenerated (WI-077 node + arch-map symbol updates).
+
+## 2026-07-12 — Follow-up: deep-review report archived; the remaining owner items moved inline to status.md
+
+**Session (owner-directed follow-up).** The review report moved
+`docs/` → [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md)
+with the ARCHIVED banner (the spec-lifecycle idiom); the archive README gained
+its row. status.md Open items #6 now names **every** owner item inline — the
+four rulings plus `Links.rtf` and the `AGENTS.template.md` 22-byte-headroom
+note — so nothing awaits a decision outside the working surface. Citations
+re-pointed (this log's WI entry link + the WI registry Deliverable path); no
+code, spine, or template change.

@@ -65,11 +65,25 @@ working surface.
     5. **Review the owner-directed guardrails-integration batch** (built with
        review deferred; see [log.md](log.md)).
     6. **Rule on the deep-review deferred items** — the 2026-07-12 full-repo
-       review ([repo-review-2026-07-12.md](repo-review-2026-07-12.md)) fixed
-       the confident findings and left four rulings to the owner: the F5
-       duplication census/bound, wiring `[step:dupes]`, the archive-anchor
-       comment policy, and the `agent_loop.py` decomposition campaign (its §1
-       has each with reasons).
+       review ([archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md),
+       archived with its confident fixes landed) left these to the owner (its
+       §1 has each with reasons):
+       - **F5 duplication census/bound** — the small-helper duplication rule
+         now covers ~22 copies of `_utf8_console`; accept-and-census it, wire
+         `[step:dupes]` over a `docs/dupes-allow` allowlist, or allow one
+         shared helper module and amend the rule.
+       - **`[step:dupes]` wiring** — follows whichever way the F5 ruling goes.
+       - **Archive-anchor comment policy** — script comments citing
+         `docs/archive/` review docs dangle in every downstream scaffold;
+         strip, expand in place, or accept.
+       - **Decomposition campaign** — approve (or not) a plan/WI for splitting
+         the ~1,015/~640/~390-line `main()`s of `agent_loop.py` / `trace.py` /
+         `bootstrap.py` (the `parse_model_map` rename folds in).
+       - **`Links.rtf` at the root** — owner content in an opaque format on
+         the live-only root; convert to markdown or archive it.
+       - *(Note, no ruling needed:* `AGENTS.template.md` sits 22 bytes under
+         its 10,000-byte hard budget — the next durable rule added there
+         forces a compensating cut.)
   - **In flight:** _(none)_ — all four 2026-07-11 batches are **closed and
     archived**: the campaign-binning · parallel-tests · resume-hardening
     batch (the `Campaign` grouping column + the campaign-binned When-view

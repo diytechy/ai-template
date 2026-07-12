@@ -1,5 +1,10 @@
 # Deep repository review — 2026-07-12
 
+> **ARCHIVED 2026-07-12 — review complete, confident fixes landed (WI-077,
+> commit `89ee999`).** The owner-decision items in §1 are queued inline in
+> `docs/status.md` Open items #6 (the working surface); this file is the full
+> findings record. Session record: `docs/log.md`.
+
 Owner-directed full-repo review (scope: everything except `docs/log.md`,
 `docs/archive/`, and the generated artifacts they describe). Reviewer: Claude
 (Fable 5), one sitting, with the real harness run for every claim. Baseline at
