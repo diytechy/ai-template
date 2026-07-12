@@ -1165,6 +1165,22 @@ and the When-view dashboard **bins the WI DAG** into collapsed campaign
 containers by it — the WHEN-axis mirror of the How-SW component containment (no
 right-sizing bound, since a campaign is bounded by construction).
 
+**Parallel test execution.** Running the suite across cores is a **`docs/stack.ini`
+concern**, not a process rule: append `-n auto` to `[product] test` and the harness,
+gate, and CI all parallelize with [pytest-xdist](https://pytest.dev). It is the
+right lever for a slow suite because test-impact selection is **rejected** (above),
+so the sanctioned speed-ups are the **smoke** tier per commit and **parallel
+execution** at the gate. The kit's **template** ships the plain command with the
+`-n auto` line **commented** — opting in is a knowing act, since a suite with
+order-dependent or shared-mutable-state tests may not be xdist-safe (each xdist
+worker is a separate process; only filesystem writes to shared, non-`tmp_path`
+paths race — env vars and cwd are per-worker). A suite whose parallel wall time
+still disappoints has one recorded, **not-yet-built** fallback lever: a
+**session-scoped shared-scaffold fixture** (bootstrap one scaffold per worker
+instead of per test). The kit's own meta-suite opts in (24 workers: ~377 s → ~65 s
+plain, ~726 s → ~157 s with coverage; subprocess coverage holds per-worker,
+combined total unchanged at ~91%).
+
 **Dashboard** — `gen_trajectory.py` renders the root `PROJECT_STATE.html` (the
 unified project-state artifact; formerly `docs/trajectory.html`), a generated
 *view* (never a source of truth — the `gen_arch_map` / `trace.py` idiom). One

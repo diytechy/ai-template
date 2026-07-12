@@ -5,12 +5,13 @@
 # install slots for downstream repos to fill. This is that template *filled in*
 # for the meta-repo's own stack, so the kit provisions itself: Python 3.8+, ruff
 # (format), pytest + pytest-cov (the self-test suite and the harness's coverage
-# step), and an offline Mermaid renderer for the generated diagrams.
+# step), pytest-xdist (`-n auto` parallel execution — the declared test command,
+# WI-075), and an offline Mermaid renderer for the generated diagrams.
 # Consent-first: the default only reports; -Install acts.
 #
 # Usage:  powershell -ExecutionPolicy Bypass -File scripts\dev-setup.ps1 [-Check | -Install]
 #   -Check    (default) report what's present; install nothing.
-#   -Install  create .\.venv (ruff + pytest + pytest-cov, asks first) AND wire
+#   -Install  create .\.venv (ruff + pytest + pytest-cov + pytest-xdist, asks first) AND wire
 #             the pre-commit process floor (core.hooksPath=.githooks; local +
 #             reversible).
 #
@@ -44,6 +45,7 @@ try {
     Report "ruff (format/lint)" (HasModule "ruff") "pip install ruff (or run -Install)"
     Report "pytest (self-tests)" (HasModule "pytest") "pip install pytest (or run -Install)"
     Report "pytest-cov (harness coverage step)" (HasModule "pytest_cov") "pip install pytest-cov (or run -Install)"
+    Report "pytest-xdist (parallel -n auto)" (HasModule "xdist") "pip install pytest-xdist (or run -Install)"
     Report "offline Mermaid renderer" ((Have "code") -or (Have "mmdc") -or (Have "npx")) `
         "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
     $hooksPath = (git config --get core.hooksPath 2>$null)
@@ -52,7 +54,7 @@ try {
 
     if (-not $Install) {
         Write-Host ""
-        Write-Host "To install ruff + pytest + pytest-cov into .\.venv: scripts\dev-setup.ps1 -Install"
+        Write-Host "To install ruff + pytest + pytest-cov + pytest-xdist into .\.venv: scripts\dev-setup.ps1 -Install"
         return
     }
 
@@ -69,12 +71,12 @@ try {
         Write-Host "Enabled pre-commit floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
     }
     Write-Host ""
-    $ans = Read-Host "Create .\.venv and install ruff + pytest + pytest-cov into it? [y/N]"
+    $ans = Read-Host "Create .\.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N]"
     if ($ans -notmatch '^[Yy]') { Write-Host "Cancelled."; return }
     if (-not (Test-Path ".venv")) { & $py -m venv .venv }
     $python = Join-Path ".venv" "Scripts\python.exe"
     & $python -m pip install --upgrade pip
-    & $python -m pip install ruff pytest pytest-cov
+    & $python -m pip install ruff pytest pytest-cov pytest-xdist
     Write-Host ""
     Write-Host "Done. Run the self-tests with: python -m pytest -q"
 }

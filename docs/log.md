@@ -1715,3 +1715,93 @@ no-campaign byte-identical, boundary-dedupe, deterministic+--check, meta smoke] 
 `gen_arch_map --check`, `gen_okf --check`, `gen_trajectory --check` all clean.
 `ruff format`/`ruff check` (the gate interpreter) clean. The full `check.py
 --gate G3` is **deferred to the coordinating close** per the batch cadence.
+
+## 2026-07-11 — WI-075 (campaign-binning batch, slice 2): pytest-xdist parallel execution — verified, no spine change
+
+**Session.** WI-075 (P2 of the campaign-binning batch) landed at the **commit
+bar** — the batch's one full `check.py --gate G3` runs at the coordinating
+close, not here. Owner-directed: the fully-serial suite (~377 s, no hotspot —
+time is spread across hundreds of ~0.5 s subprocess/scaffold tests) is
+embarrassingly parallel (every test isolated in `tmp_path`), so wire
+**pytest-xdist `-n auto`** and **verify, don't assume** the three risks the
+owner named.
+
+**Deliverables.**
+- **Wiring.** `docs/stack.ini` `[product] test` gains `-n auto` (the `smoke`
+  tier line + the `[coverage]` args untouched — check.py still appends them).
+  `scripts/dev-setup.{sh,ps1}` gain a **pytest-xdist** check row + the
+  `--install` set (`dev-setup.command` delegates to `.sh`, so it inherits both).
+  pytest-xdist is **dev tooling**, not a kit script — the stdlib-only rule
+  governs `project-trajectory/scripts/`, not the test tooling (the
+  pytest/pytest-cov precedent).
+- **Template posture.** The shipped `stack.ini.template` keeps the plain
+  `test = {py} -m pytest -q` with a **commented** `-n auto` opt-in line + one
+  explainer sentence: a downstream suite may not be xdist-safe, so opting in is a
+  knowing act. configparser ignores the comment, so the template plan stays
+  byte-identical to check.py's built-ins (`test_reference_profile_matches_builtin_plan_every_tier`
+  still passes).
+- **Docs.** A new **"Parallel test execution"** paragraph in the PROCESS_OPTIONS
+  "Trajectory / work-items layer" (beside the Campaign ruling): parallelism is a
+  stack.ini concern; the FB1 **test-impact-selection rejection stands** (the
+  sanctioned levers are the smoke tier per commit + parallel execution at the
+  gate); the **session-scoped shared-scaffold fixture is the recorded fallback
+  lever — filed, not built**. No README kit-contents row: the scaffold **surface**
+  is unchanged (only `stack.ini.template`'s content).
+
+**Verify, don't assume — the three owner items, on 24 workers (`-n auto` on a
+24-core box).**
+- **(a) Subprocess coverage under xdist HOLDS.** Full coverage command
+  (`pytest -q -n auto --cov=project-trajectory/scripts --cov-report=term-missing
+  --cov-fail-under=80`) → **combined total 90.8%** (serial baseline ~91% —
+  **unchanged**), exit 0, "Required test coverage of 80% reached." The
+  `conftest.augment_env` wiring works **per-worker**: each xdist worker runs under
+  pytest-cov (`COV_CORE_DATAFILE` set per worker; here pytest-cov 4.1.0), so the
+  subprocesses each worker spawns start coverage against that worker's datafile,
+  and `.coveragerc parallel=true` + the session-end combine folds it all back.
+  No silent unwiring. Coverage **step time 726 s → 157 s** (~4.6×).
+- **(b) Meta-tree readers are concurrency-safe.** Surveyed every test that reads
+  the real repo (not `tmp_path`): `check_privacy --repo`, `gen_skills_index
+  --check` (returns before its write), `dev-setup --check` (installs nothing),
+  and `gen_trajectory` graph reads (`know_graph`/`component_top_view`/
+  `sw_containment`/`load_wis`) — **all read-only**. No test calls `os.chdir`;
+  subprocess `cwd=` is per-call, and env vars + cwd are per-worker-process, so
+  the only cross-worker hazard (a shared non-`tmp_path` write) does not occur.
+  No markers/serialization needed.
+- **(c) Windows spawn overhead is fine.** Plain suite **377 s → 71.0 s / 61.4 s**
+  across the two required runs (~5.5×).
+
+**Flake honesty — two clean parallel runs.** Both plain runs `629 passed / 3
+skipped` with **zero flakes**; the coverage run `629 passed / 3 skipped`; the
+commit-bar run `630 passed / 3 skipped` (+1 = the new stack-profile guard).
+`pytest.ini` declares no `addopts`/`--reruns`, and pytest-rerunfailures is not
+configured, so a flake would have surfaced honestly. None did.
+
+**CI decision (`.github/workflows/test.yml`).** Both jobs parallelize. The
+**gate** job runs check.py, which reads the meta `docs/stack.ini` and so inherits
+`-n auto` automatically — pytest-xdist is therefore **required** there (check.py
+SKIP-guards only `-m <module>`/`--cov` deps, not the `-n` flag, so a missing
+xdist would **fail** the tests+coverage step, not skip). Added it to the gate
+job's install. The **matrix `test`** job runs `pytest -q` directly; parallelized
+it too (`-n auto` + the dep) so all three OSes exercise the same parallel path
+developers and the gate run — the minimal coherent choice (a serial matrix would
+never test cross-OS xdist-safety and would leave CI's slowest job un-sped).
+
+**Spine decision — NO spine change.** Dev tooling + a change to the declared
+stack test command; no requirement is added or altered. Verified **SR-034**
+(Analysis) and **SR-035** (cross-OS CI) are not contradicted: their stdlib-only
+claims are about the **kit scripts** (`project-trajectory/scripts/`), not the
+test tooling, and SR-035's "CI inherits the stack.ini command" is exactly what
+now parallelizes. **Does NOT ride the pending re-attestation.**
+
+**Byte deltas.** Byte-budgeted files (`AGENTS.template.md`, `PROCESS.md`)
+**untouched** (verified — not in the diff). `PROJECT_STATE.html` 385,720 →
+385,716 B (**−4**; the WI-075 node flips queued→done). `PROCESS_OPTIONS.md`
++16 lines (the parallel-execution paragraph). No `docs/okf` / arch-map churn
+(neither reads `work-items.csv`; `--check` clean).
+
+**Gates (commit bar).** `pytest -q -n auto` **630 passed / 3 skipped** in 65.8 s.
+`check_docs.py --root . --stale` → **0 broken** (1 pre-existing out-of-scope
+orphan warn + pre-existing README stale hints, all warn-only). `ruff format` /
+`ruff check` (the gate interpreter, `C:/Python38`) clean. The full `check.py
+--gate G3` is **deferred to the coordinating close** per the batch cadence.
+**Next up: WI-076** (dirty-tree resume hardening — the batch's last slice).

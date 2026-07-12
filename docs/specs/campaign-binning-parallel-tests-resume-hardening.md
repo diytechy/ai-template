@@ -49,7 +49,7 @@ binned render deterministic + `--check` stable; campaign-less rows render
 flat; boundary edge aggregation dedupes; meta smoke (three campaign
 containers render).
 
-## P2 — Parallel test execution (owner-directed)
+## P2 — Parallel test execution (owner-directed) — ✅ DONE (2026-07-11)
 
 **Owner question answered 2026-07-11:** the suite is fully serial — 625
 tests, ~386 s, time spread across hundreds of subprocess/scaffold tests

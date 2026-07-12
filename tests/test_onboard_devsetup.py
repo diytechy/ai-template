@@ -229,3 +229,7 @@ def test_meta_repo_dogfoods_dev_setup():
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "ai-template meta-repo" in proc.stdout
+    # WI-075: dev-setup reports (and --install provisions) pytest-xdist, the
+    # parallel `-n auto` runner the meta stack.ini now declares. The report label
+    # prints whether or not the module is present, so this is stable in any env.
+    assert "pytest-xdist" in proc.stdout

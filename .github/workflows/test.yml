@@ -32,12 +32,14 @@ jobs:
           python-version: ${{ matrix.python }}
 
       # The kit scripts themselves are stdlib-only; these tools are what the
-      # harness tests drive (the same set scripts/setup installs downstream).
+      # harness tests drive (the same set scripts/dev-setup installs). pytest-xdist
+      # runs the suite in parallel (WI-075) — the same `-n auto` command developers
+      # and the gate job run, so all three OSes also exercise the parallel path.
       - name: Install test tooling
-        run: python -m pip install ruff pytest pytest-cov
+        run: python -m pip install ruff pytest pytest-cov pytest-xdist
 
       - name: Run kit self-tests
-        run: python -m pytest -q
+        run: python -m pytest -q -n auto
 
   # The kit self-adopts its own gated process (IMPROVEMENT_PLAN.md Thread 47): this
   # job runs the kit's OWN check.py at the gate docs/gate declares — the same bar a
@@ -52,7 +54,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+      # pytest-xdist is required here because the gate runs docs/stack.ini's
+      # declared test command, which is `pytest -q -n auto` (WI-075); check.py
+      # does not SKIP-guard the `-n` flag (only `-m <module>` / `--cov` deps), so
+      # a missing xdist would fail the tests+coverage step rather than skip.
       - name: Install harness tooling
-        run: python -m pip install ruff pytest pytest-cov
+        run: python -m pip install ruff pytest pytest-cov pytest-xdist
       - name: Run the kit's own gate (docs/gate)
         run: python project-trajectory/scripts/check.py

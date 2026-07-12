@@ -16,7 +16,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import KIT, SCRIPTS, load_script, make_minimal_project, run_py
+from conftest import KIT, ROOT, SCRIPTS, load_script, make_minimal_project, run_py
 
 check = load_script("check")
 
@@ -56,6 +56,33 @@ def test_reference_profile_matches_builtin_plan_every_tier():
             builtin = check.steps(80, tier, gate)
             profiled = check.steps(80, tier, gate, None, reference)
             assert _plan_sig(builtin) == _plan_sig(profiled), (tier, gate)
+
+
+def test_meta_repo_declares_parallel_test_command_but_template_opts_out():
+    # WI-075: the meta-repo's OWN docs/stack.ini opts into pytest-xdist, so its
+    # gate/CI test command parallelizes (`-n auto`); the shipped TEMPLATE keeps
+    # the plain command with the opt-in COMMENTED (a downstream suite may not be
+    # xdist-safe). Guards the wiring, the opt-in posture, and that `-n auto`
+    # composes as two contiguous argv tokens through _expand (not a fused `-nauto`
+    # from a quoting/split slip).
+    meta = check.load_profile(ROOT / "docs" / "stack.ini")
+    assert meta is not None, "meta repo docs/stack.ini is missing"
+    meta_test = next(
+        s[2]
+        for s in check.steps(80, "all", "all", None, meta)
+        if s[0] == "tests+coverage"
+    )
+    assert "-n" in meta_test and meta_test[meta_test.index("-n") + 1] == "auto", (
+        meta_test
+    )
+
+    template = _profile((KIT / "stack.ini.template").read_text(encoding="utf-8"))
+    tmpl_test = next(
+        s[2]
+        for s in check.steps(80, "all", "all", None, template)
+        if s[0] == "tests+coverage"
+    )
+    assert "-n" not in tmpl_test, "template must keep the -n auto opt-in commented"
 
 
 def test_absent_profile_list_matches_reference_profile(scaffold):

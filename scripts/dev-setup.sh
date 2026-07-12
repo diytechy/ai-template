@@ -6,12 +6,13 @@
 # install slots for downstream repos to fill. This is that template *filled in*
 # for the meta-repo's own stack, so the kit provisions itself: Python 3.8+, ruff
 # (format), pytest + pytest-cov (the self-test suite and the harness's coverage
-# step), and an offline Mermaid renderer for the generated diagrams.
+# step), pytest-xdist (`-n auto` parallel execution — the declared test command,
+# WI-075), and an offline Mermaid renderer for the generated diagrams.
 # Consent-first: the default only reports; --install acts.
 #
 # Usage:  sh scripts/dev-setup.sh [--check | --install]
 #   --check    (default) report what's present; install nothing.
-#   --install  create ./.venv (ruff + pytest + pytest-cov, asks first) AND wire
+#   --install  create ./.venv (ruff + pytest + pytest-cov + pytest-xdist, asks first) AND wire
 #              the pre-commit process floor (core.hooksPath=.githooks; local +
 #              reversible).
 #
@@ -53,12 +54,13 @@ report "git"               "$(real git && echo 1 || echo 0)" "install git (macOS
 report "ruff (format/lint)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("ruff") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install ruff (or run --install)"
 report "pytest (self-tests)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("pytest") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest (or run --install)"
 report "pytest-cov (harness coverage step)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("pytest_cov") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest-cov (or run --install)"
+report "pytest-xdist (parallel -n auto)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("xdist") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest-xdist (or run --install)"
 report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } && echo 1 || echo 0)" "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
 report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" "run --install, or: git config core.hooksPath .githooks"
 
 if [ "$MODE" = "check" ]; then
   echo
-  echo "To install ruff + pytest + pytest-cov into ./.venv: sh scripts/dev-setup.sh --install"
+  echo "To install ruff + pytest + pytest-cov + pytest-xdist into ./.venv: sh scripts/dev-setup.sh --install"
   exit 0
 fi
 
@@ -74,7 +76,7 @@ if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null
   echo "Enabled pre-commit floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
 fi
 echo
-printf 'Create ./.venv and install ruff + pytest + pytest-cov into it? [y/N] '
+printf 'Create ./.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N] '
 read -r ans
 case "$ans" in
   [Yy]*) ;;
@@ -84,6 +86,6 @@ esac
 # shellcheck disable=SC1091
 . .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install ruff pytest pytest-cov
+python -m pip install ruff pytest pytest-cov pytest-xdist
 echo
 echo "Done. Run the self-tests with: python -m pytest -q"

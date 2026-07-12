@@ -30,6 +30,12 @@ lint = {py} -m ruff check {src} {tests}
 # The BASE test command. check.py appends the [coverage] args at the covered
 # tiers and the [tiers] selector below, so keep this just the runner invocation.
 test = {py} -m pytest -q
+# Parallel execution is an OPT-IN: appending `-n auto` runs the suite across all
+# cores via pytest-xdist (a big win on a slow suite), but a suite with
+# order-dependent or shared-state tests may not be xdist-safe — so opting in is a
+# knowing act. When your suite is isolated (each test in tmp_path, no shared
+# mutable files), uncomment the line below and add pytest-xdist to your dev-setup:
+# test = {py} -m pytest -q -n auto
 
 [tiers]
 # The kit tiers are fixed (smoke | full | release | all); their *expressions*
