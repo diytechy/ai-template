@@ -13,7 +13,7 @@ Spec pin: [UPSTREAM.md](UPSTREAM.md).
 
 - [stakeholder-needs](stakeholder-needs/index.md) — 24 concept(s)
 - [system-requirements](system-requirements/index.md) — 50 concept(s)
-- [low-level-requirements](low-level-requirements/index.md) — 50 concept(s)
-- [test-cases](test-cases/index.md) — 50 concept(s)
+- [low-level-requirements](low-level-requirements/index.md) — 53 concept(s)
+- [test-cases](test-cases/index.md) — 54 concept(s)
 - [interfaces](interfaces/index.md) — 51 concept(s)
 - [process-guides](process-guides/index.md) — 3 concept(s)

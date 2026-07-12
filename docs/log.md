@@ -2640,6 +2640,15 @@ bar run on the migrated meta (see the run recorded in this session).
   `check_docs.py --root . --stale` — **OK**, 32 docs / 203 links / 0 broken.
 - **Budgets:** no budget-watched file changed.
 
+## 2026-07-12 — WI-087 G2 decomposition
+
+- **Decomposition:** added LLR-051 (complete What flow), LLR-052 (phase-aware
+  When hierarchy/frontier), and LLR-053 (CMP/IF How-SW drill), with mechanized
+  TC-052…054 plus the independent visual Critique TC-051/rubric.
+- **Gate effect:** `SR-050` is ratified and fully decomposed, so phase v2 derives
+  G2; implementation and verified evidence remain outstanding.
+- **Budgets:** no budget-watched file changed.
+
 ## 2026-07-12 — WI-087 / SR-050 attended G1 ratification
 
 - **Decision:** owner Peter Johnson explicitly directed “commit for traceability

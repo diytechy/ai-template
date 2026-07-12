@@ -145,8 +145,9 @@ working surface.
   2. **Dashboard visual redesign is active at G1 — WI-087**
      ([spec](specs/WI-087.md)): `SR-050` is drafted in Phase v2 and the derived
      gate honestly reads G1 / v2=G0. The owner directed implementation; the next
-     commit records attended Draft→Planned ratification, then G2 decomposition
-     and implementation follow the root redesign plan. **WI-085**
+     attended Draft→Planned ratification is recorded; LLR-051…053 and
+     TC-051…054 now define the G2 decomposition, and implementation follows the
+     root redesign plan. **WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
      remains separate/deferred Process-tab scope and is not absorbed by this
      campaign. After WI-087 ratification, proceed G2→G3 while preserving the

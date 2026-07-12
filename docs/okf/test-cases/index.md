@@ -61,3 +61,7 @@ resource: "generated"
 | [TC-048](TC-048.md) | Run the critique-loop suite: the loop schedules CRITIQUE exactly when a committing build'… |
 | [TC-049](TC-049.md) | Run the top-view suite: an inventory over 10 modules with no containing CMPs warns plain … |
 | [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache |
+| [TC-051](TC-051.md) | Independent visual critique of the generated What/When/How diagrams against the dashboard… |
+| [TC-052](TC-052.md) | Generate dense multi-parent and Draft traceability fixtures and inspect serialized graph/… |
+| [TC-053](TC-053.md) | Generate >3/≤3 phase and workstream fixtures with campaigns, mixed/unphased/deferred WIs … |
+| [TC-054](TC-054.md) | Generate nested CMP/IF fixtures above and below the component threshold and inspect hiera… |

@@ -61,3 +61,6 @@ resource: "generated"
 | [LLR-048](LLR-048.md) | Critique loop dispatch + lax-TC ratchet |
 | [LLR-049](LLR-049.md) | How-SW top-view containment rule + render |
 | [LLR-050](LLR-050.md) | Derived-gate computation + hybrid cache |
+| [LLR-051](LLR-051.md) | Columnar complete traceability renderer |
+| [LLR-052](LLR-052.md) | Phase-aware hierarchical work-item renderer |
+| [LLR-053](LLR-053.md) | Component-module software drill renderer |
