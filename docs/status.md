@@ -114,14 +114,15 @@ working surface.
       M5.
 - **Next action — open phase v2 (new scope; `docs/gate` stays G3).** A resume
   session picks up here:
-  1. **WI-085 (queued — needs a new SR) → the G1 sign-off gate**
-     ([spec](specs/WI-085.md)). Draft its new
-     requirement artifacts — a new `SR` under `SN-021`/`SN-010`, `Phase=v2`, with
-     measurable acceptance criteria (the reviewer consistency sweep now flags
-     contradictions against existing SRs) — then **STOP and page the owner to
-     sign off** (the §4 G1 consistency review, recorded in [log.md](log.md)). On
-     sign-off: G2 (LLR + TC) → G3 (implement, panel 1 first), closing with
-     `check.py --gate G3 --phase v1` so v2 reads phase-deferred.
+  1. **Phase-v2 requirement drafting → the G1 sign-off gate.** Two new-SR WIs
+     re-enter at G1: **WI-085** ([spec](specs/WI-085.md) — the process-explainer
+     tab) and **WI-087** ([spec](specs/WI-087.md) — the tiered, phase-aware When
+     & How drill-down views). Draft each a new `SR` (under `SN-021`/`SN-010`,
+     `Phase=v2`, measurable acceptance criteria; the reviewer consistency sweep
+     flags contradictions against existing SRs), then **STOP and page the owner
+     to sign off** on the new requirement artifacts (the §4 G1 review, recorded
+     in [log.md](log.md)). On sign-off: G2 (LLR + TC) → G3 (implement), closing
+     with `check.py --gate G3 --phase v1` so v2 reads phase-deferred.
   2. **The rest of the backlog needs no new SR — proceed at G3** (complete slice
      per WI, held gate): WI-078 (dupes-gate) first, then the
      `main-decomposition` campaign (WI-080 → WI-081), then WI-079.

@@ -2188,3 +2188,29 @@ get `Phase=v2`, and `docs/gate` is **held at G3** — the recipe now spelled out
 PROCESS_OPTIONS "Phased delivery" (WI-086). status.md "Next action" routes a
 resume session to draft the new requirement artifacts and **page the owner for
 the G1 sign-off** before implementing (WI-085 first).
+
+## 2026-07-12 — WI-087 filed (phase-aware hierarchical When/How views); gate-fallback design clarified
+
+**Session (owner-directed).** Two owner topics.
+
+**WI-087 (queued, phase v2).** Filed `docs/specs/WI-087.md` for tiered,
+count-thresholded, click-to-explode ("Simulink-style") When and How views: When
+tiers **phase → workstream → WI** (each collapsing above > 3), How tiers
+**component → module** (> 3), parent edges inherited/aggregated from children
+(the WI-073/WI-074 idiom generalized), and the delivery `Phase` surfaced on the
+When view. Builds on campaign binning (WI-074) + component containment (WI-073).
+Needs a new SR + owner G1 sign-off; the grouping composition (Phase vs Campaign
+vs Workstream) and phase encoding are the open G1 questions. status.md's phase-v2
+drafting now batches WI-085 + WI-087 for one owner sign-off.
+
+**Gate-fallback question (design discussion, no change).** Clarified that "keep
+confirmed items while new content reopens some" is achieved by **phasing +
+per-item Status/`Attest`**, not by regressing `docs/gate` (the marker is CI's
+enforcement bar; regressing it *un-enforces* the confirmed items — the opposite
+of preserving them). Reopening a confirmed item a later phase affects = phase-tag
+it (Verified-deferred while reworked), its prior `Attest` staying in the log as
+history. Offered a complementary process note (the reopen-a-confirmed-item case)
++ a possible per-item attest-maturity enhancement, pending owner direction.
+
+**Checks.** `check_trajectory --strict` clean (87 WIs); `gen_trajectory --check`
+fresh after regen; `check_docs --stale` OK, 0 broken links.
