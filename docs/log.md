@@ -3495,3 +3495,21 @@ parsed `type=result` with turns/cost intact.
 - Close bar (full, unfiltered): `pytest -q -n auto` → `683 passed, 3 skipped
   in 60.19s`; `check_docs --stale` → `OK - 45 doc(s), 264 intra-repo link(s),
   0 broken`.
+
+## 2026-07-13 — WI-126 filed (queued): per-WI routing hints (owner proposal, ruling pending)
+
+Owner asked whether an explicit PLAN stage is sometimes unnecessary when the
+spec is already detailed, proposing a per-WI build-tier pin + plan-required
+flag. **Finding recorded in the spec:** the loop already avoids standing PLAN
+sessions — PLAN is bounce-only (`docs/plan.md` cadence; the PLAN session
+continues straight into building), this repo has no `docs/plan.md`, and zero
+PLAN sessions have ever run (index); the WI row + SpecRef *is* the plan and
+BUILD sessions plan inline in one context. The genuinely new half is
+**per-WI routing**: a `BuildTier` column + coordinator WI-awareness via a
+declared `docs/next-wi` (never-breaking; composes with tier-up-never-down).
+Recommendation: adopt the pin, fold the plan flag into SpecRef semantics (a
+filled spec = plan-ready) rather than duplicating the signal. Decision record:
+[specs/WI-126.md](specs/WI-126.md); queued in the status.md owner queue.
+Filing only — no engine change. Commit bar (smoke, first live use):
+`pytest -q -n auto -m smoke` → `531 passed, 2 skipped in 38.53s`;
+`check_docs --stale` → `OK - 46 doc(s), 266 intra-repo link(s), 0 broken`.
