@@ -59,6 +59,16 @@ Additions:
 
 On resync, we should also stress to odopters to recheck if there are updated / newly available skills or knowledge packs that should be adopted as well.  Since resync will also result in the new gate derivation methodology, resync will require stakeholder need verification to be derived based on the stakeholder needs that were present at gate bump (from commit history)
 
+One important distinction related to the derived gate updates, this means work items should always get processed to their G2 level before implimentation starts.  This means running be default from status.md should verify all G2 processes are met before implimenting code, and either go through those processes in autonomous mode, or tell the user to close the open items before proceeding to implimentation on work items.  If a user specifically asks for work items to be implimented of course it should be honored, but resuming from status should try to ensure G2 is passed so conflicts between implimentations are minimized.
+
+Related to the readme:
+
 Does the readme show the config options for the repo and the opt-in vs opt-out options?
 
 Related now that we have the gate rederivation complete, is that readme and other documentation up-to-date?
+
+Should we drop in open code or emphasize it's capability as a multi-model provider?
+
+For gate reviews should we drop in a full review?  Should the text be verbatim: 
+
+Can we add in the knowledge kits from 
