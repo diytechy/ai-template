@@ -3769,3 +3769,69 @@ box's stale 4.1.0):
 + G3 re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
 → **WI-078** (the dupes-gate + census — owner-ruled 2026-07-12, implementation
 only); the run continues at G3 on the deep-review-b backlog.
+
+## 2026-07-13 — WI-078: wire [step:dupes] + populate the docs/dupes-allow census (F5 bound, M2/M6)
+
+**The kit's own dedup detector, finally run on the kit.** The 2026-07-12 review's
+M2/M6: `check_dupes.py` ships in the kit but the flagship dogfooding repo did not
+run it on itself, and the F5 small-helper duplication policy was unbounded and
+uncensused. Owner ruling was **option (b)** — gate *new* duplication over an
+allowlist that **is** the census; keep every script independently copy-able (the
+shared `_kitcommon.py` module rejected). This session did the wiring; the
+decision was already made.
+
+**Machinery already existed — this was configuration.** No kit-shipped file
+changed. `check_dupes.py` already reads `docs/dupes-allow` (substring match
+against the finding's line-number-free `a.py == b.py` form) and `check.py`'s
+`extra_steps` already picks up any `docs/stack.ini` `[step:<name>]` section. So:
+- **`docs/stack.ini`** gained `[step:dupes]` (`command = {py}
+  project-trajectory/scripts/check_dupes.py --src {src}`, `gates = G3`,
+  `layer = product`) — it now slots beside format/lint/tests in the G3 plan
+  (`check.py --gate G3 --list` confirms) and the CI gate job.
+- **`docs/dupes-allow`** (new) is the census: the detector reported **128
+  duplicate blocks across 57 unique file-pairs**; I recorded all 57, split and
+  annotated — **51 cross-file F5 sanctioned** small-helper pairs (`_utf8_console`,
+  the one-line declared-policy readers, `refs()`/argparse/`__main__` scaffolding)
+  and **6 intra-file GRANDFATHERED debris** pairs (`agent_loop`, `trace`,
+  `check_trajectory`, `gen_arch_map`, `gen_okf`, `gen_trajectory`) — recorded for
+  removal under the **WI-080/081 decomposition** campaign, *not blessed*.
+
+**The bound, honestly scoped.** The gate now turns G3 **RED** on new copy-paste
+between a file-pair **not** in the census, forcing a conscious census edit — the
+upper bound M6 asked for. The **known limitation** is stated in the census header:
+granularity is the file-*pair* (the finding form carries no block identity), so
+new duplication between two *already-listed* files is not caught; finer
+(block-content) censusing would need a `check_dupes` change — out of scope for
+WI-078, recorded so it's findable.
+
+**Status-currency sweep (protocol, WI-087 precedent).** The full G3 gate was
+already **RED before this session** on `trajectory --strict` R-D: the WI-104 and
+WI-105 done-ids still lingered in the forward-only `status.md` (the commit bar —
+smoke + `check_docs --stale` — doesn't run `trajectory --strict`, so the WI-105
+commit didn't surface it). Since I was rewriting `status.md` to close WI-078
+anyway, I swept the WI-104/WI-105 done-id tokens (and WI-078's own, now done) out
+of `status.md`. `trajectory --strict` → **clean** afterward.
+
+**Verification.**
+- `check_dupes.py --src project-trajectory/scripts` → **OK, 0 findings** (was 128)
+  with the census; **exit 0**.
+- **Full derived G3 gate** `check.py --gate G3 --phase v1,v2 --jobs 0` → **RESULT:
+  PASS**, incl. the new **dupes** step (`PASS dupes 0.5s`); `tests+coverage`
+  695 passed / 3 skipped at **91.26% ≥ 85**; `trajectory` now PASS (was the lone
+  FAIL, the pre-existing R-D).
+- Commit bar: `pytest -q -n auto -m smoke` → **543 passed, 2 skipped**;
+  `check_docs --root . --stale` → **OK, 0 broken** (the "possibly stale" hints are
+  pre-existing, on archived review docs).
+- Regenerated `PROJECT_STATE.html` (work-items.csv changed); `gen_trajectory
+  --check` → up to date.
+
+**Scope boundary held.** Meta-only config: `docs/stack.ini` + new
+`docs/dupes-allow` + the registry/status/log/next-wi bookkeeping. **No kit-shipped
+file changed**, no new SN/SR/LLR/TC (proceed at G3), no byte-budgeted file
+(AGENTS.template.md / PROCESS.md) touched. Derived gate stays **G3**.
+
+**Not pushed** (push-policy: human). Owner queue unchanged (push decision + G3
+re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
+→ **WI-079** (strip archive-anchor citations on scaffold — owner-ruled, no owner
+dependency). **`main-decomposition` (WI-080 → WI-081) stays sequenced behind the
+owner sitting** (highest-value/highest-risk); the run continues at G3.

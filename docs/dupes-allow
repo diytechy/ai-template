@@ -1,0 +1,95 @@
+# docs/dupes-allow — the meta-repo's duplicate-code CENSUS (WI-078).
+#
+# Read by project-trajectory/scripts/check_dupes.py (wired as docs/stack.ini
+# [step:dupes]). Each non-comment line is a SUBSTRING matched against a finding's
+# line-number-free "a.py == b.py" form; a matched finding is passed. So this file
+# is the allowlist AND the census: it records every file-pair that currently
+# carries sanctioned/known duplication, and — because it is line-number-free —
+# an allowed pair stays allowed as those files grow.
+#
+# WHY a census, not a fix (owner ruling 2026-07-12, repo-review §1 M6 option (b)):
+# the kit's F5 working agreement DELIBERATELY duplicates small stable helpers
+# (_utf8_console, the declared-policy readers, argparse/exit boilerplate) so each
+# script ships independently copy-able — a shared _kitcommon.py was rejected. That
+# policy was unbounded and uncensused; this file bounds it. The gate now fails on
+# NEW duplication between a pair NOT listed here, forcing a conscious census edit.
+#
+# KNOWN LIMITATION (honest): granularity is the file-PAIR, because the finding
+# form carries no block identity — so new copy-paste between two files ALREADY
+# listed here is not caught. Finer (block-content) censusing would need a
+# check_dupes change; out of scope for WI-078, recorded here so it is findable.
+#
+# MAINTENANCE: when you legitimately add F5 helper duplication to a new pair, add
+# the pair here (run check_dupes.py --src project-trajectory/scripts to get the
+# exact string). When a decomposition removes an intra-file block below, delete
+# its line so the census does not rot into permanent cover.
+
+# --- F5 sanctioned cross-file small-helper duplication -----------------------
+# The _utf8_console emitter, the one-line declared-policy readers, the
+# refs()/_split_refs traceability parsers, and the __main__/argparse/exit
+# scaffolding — each duplicated so its script stays standalone (F5).
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_route.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/bootstrap.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_doc_refs.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_docs.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_dupes.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_flows.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_perf.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_privacy.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_stubs.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_trajectory.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_vendored.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/derive_gate.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/gen_arch_map.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/gen_cases.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/gen_okf.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/gen_release_checklist.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/gen_skills_index.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/run_menu.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/score_reviews.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/trace.py
+project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
+project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
+project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajectory.py
+project-trajectory/scripts/check.py == project-trajectory/scripts/run_menu.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_stubs.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/derive_gate.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_trajectory.py
+project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_vendored.py
+project-trajectory/scripts/check_docs.py == project-trajectory/scripts/gen_release_checklist.py
+project-trajectory/scripts/check_perf.py == project-trajectory/scripts/derive_gate.py
+project-trajectory/scripts/check_perf.py == project-trajectory/scripts/gen_release_checklist.py
+project-trajectory/scripts/check_perf.py == project-trajectory/scripts/trace.py
+project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
+project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/gen_trajectory.py
+project-trajectory/scripts/check_stubs.py == project-trajectory/scripts/gen_arch_map.py
+project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/derive_gate.py
+project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
+project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_okf.py
+project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
+project-trajectory/scripts/check_vendored.py == project-trajectory/scripts/score_reviews.py
+project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
+project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
+project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/trace.py
+project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
+
+# --- Intra-file duplication — GRANDFATHERED debris, not sanctioned -----------
+# Genuine intra-file copy-paste in the four monolithic scripts. NOT F5 (F5 is a
+# cross-script standalone-copy rule). These are recorded, not blessed: the
+# decomposition campaign (WI-080 agent_loop, WI-081 trace) is the standing plan
+# to remove them; delete each line as its blocks are extracted. gen_trajectory /
+# gen_arch_map / gen_okf / check_trajectory intra-file dupes are follow-on
+# targets tracked with the same campaign.
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
+project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/gen_arch_map.py
+project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
+project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py

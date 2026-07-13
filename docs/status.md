@@ -135,7 +135,7 @@ working surface.
     *(Earlier items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
     the already-made sibling-repo ruling, and the guardrails-batch review;
     see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed
-    as backlog WI-078…082 below.)*
+    as backlog WI-079…082 below.)*
   - **External follow-up (tracked upstream, not this repo's work):** the
     guardrails content enrichment (`JUDGMENT.md` playbook + CONTEXT-class rules
     + the `Verified:` greppable claim vocabulary) is **owner-ruled to live in
@@ -179,15 +179,6 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-    - **WI-078** — wire `[step:dupes]` + a `docs/dupes-allow` census (the F5
-      bound). Owner-ruled 2026-07-12 (deep-review option (b)): gate *new*
-      duplication over an allowlist that **is** the census; keep every script
-      independently copy-able (reject the shared helper module). The allowlist
-      machinery already exists in `check_dupes.py` — only the `stack.ini` step
-      and the populated allowlist remain. Ready; scheduled behind the owner
-      sitting. Spec:
-      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §1
-      M2/M6.
     - **WI-079** — strip archive-anchor citations on scaffold. Owner-ruled
       2026-07-12: `bootstrap.py` drops the trailing `(REVIEW_*/THREAD_*)`
       provenance suffixes as it copies scripts downstream — provenance stays
@@ -252,11 +243,6 @@ working surface.
       it honest).
     - **WI-103** — PROCESS_OPTIONS byte budget + applies-when index table (M5;
       any doc *split* additionally needs an owner taste ruling).
-    - **WI-105 — DONE 2026-07-13** — coverage plumbing hardening (M9/L1). Verified
-      WI-104's pin is the primary remedy (clean 91.23%, 0 debris, stale
-      `.coverage.*` self-heals); raised the meta coverage floor 80 → 85 as the
-      regression sensor; declined the dedicated-child-dir rewrite. The record is
-      the WI-105 row Deliverable + [log.md](log.md).
     - **WI-115** — status-currency hardening (owner-asked 2026-07-12): a
       warn-first `check_trajectory` finding when `docs/run-state` holds an
       end-state over an actionable queue (the observed agent-resume-parks-at-
@@ -267,9 +253,10 @@ working surface.
       owner taste ruling on a deliberate design, medium churn to shipped
       templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
 - **Next action — the G3 backlog (branch `derived-gate-model`; `docs/next-wi` =
-  WI-078).** Phase v2 is complete; the dev-toolchain pin (WI-104) and **the
-  coverage-plumbing hardening (WI-105) both landed 2026-07-13** (see log.md); a
-  resume session picks up WI-078 next (backlog below).
+  WI-079).** Phase v2 is complete; the dev-toolchain pin, the coverage-plumbing
+  hardening, and **the dupes-gate + census all landed 2026-07-13** (records in
+  log.md + each WI row's Deliverable); a resume session picks up WI-079 next
+  (backlog below).
   1. **Derived-gate campaign — LANDED (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the whole 8-slice campaign has shipped: the `Draft` artifact state + trace
@@ -301,14 +288,18 @@ working surface.
      (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's
      Deliverable). The v2 spine cut rides the owner single-ratify sitting above.
   3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
-     = WI-078): the dev-toolchain pin (WI-104) and the coverage-plumbing
-     hardening (**WI-105 DONE 2026-07-13** — verified WI-104's pin closes the M9
-     race/debris on one known toolchain, raised the meta coverage floor 80 → 85
-     as the regression sensor; log.md) are both landed. Next: **WI-078**
-     (dupes-gate + census — owner-ruled 2026-07-12, implementation only), then
-     `main-decomposition` (WI-080 → WI-081), then WI-079 and the remaining
-     deep-review-b queue (WI-099 the trace↔derive_gate sync test is the cheap
-     high-leverage one; WI-100/101/102/115 the hygiene batch).
+     = WI-079). The dev-toolchain pin, the coverage-plumbing hardening, and the
+     **dupes-gate + census** (the M2/M6 census wired as `docs/stack.ini`
+     `[step:dupes]` over the `docs/dupes-allow` allowlist — new copy-paste
+     between an unlisted file-pair now fails G3) all landed 2026-07-13 (records
+     in log.md + registry Deliverables). **`main-decomposition` (WI-080 →
+     WI-081) is the highest-value next step but is sequenced *behind the owner
+     sitting*** (highest-risk, behavior-preserving, test-seams-first) — so the
+     autonomous next is **WI-079** (strip archive-anchor citations on scaffold —
+     owner-ruled 2026-07-12, implementation-only, no owner dependency). The
+     remaining deep-review-b queue (WI-099 the trace↔derive_gate sync test is
+     the cheap high-leverage one; WI-100/101/102/115 the hygiene batch) awaits
+     owner triage/sequencing.
   Remaining owner item: the **push decision** above.
 
 ## Scope
