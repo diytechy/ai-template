@@ -395,7 +395,7 @@ Contracts (interfaces): IF-019, IF-035
 ### `scripts/gen_trajectory`
 _Generate the offline project-state dashboard (root `PROJECT_STATE.html`)._
 Imports (internal): `check_trajectory`
-Contracts (interfaces): IF-011, IF-024
+Contracts (interfaces): IF-011, IF-024, IF-052
 
 | Public item | Summary | Implements |
 |---|---|---|
@@ -411,6 +411,7 @@ Contracts (interfaces): IF-011, IF-024
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
+| `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no |  |
 | `build_html(root, wis)` |  |  |
 | `main()` |  |  |
 

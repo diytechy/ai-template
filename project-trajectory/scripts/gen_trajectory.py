@@ -30,6 +30,13 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
      description and links out to its `docs/okf/<tier>/<id>.md` for the full body
      (the middle-path embedding). Omitted when there is no bundle, so a
      bundle-less repo renders byte-identically to before this view existed.
+  6. **Process** — the method reference (WI-085): *how this project is built* —
+     the artifact lifecycle x gates flow (live tier counts from the spine, the
+     current derived gate highlighted from `docs/gate`), the agent-resume loop,
+     and the slice -> campaign -> gate-bar cadence (campaign counts from
+     `work-items.csv`). Data-derived where a canonical source exists; links out
+     to the process docs. Omitted when there is no `docs/gate`, so a gate-less
+     repo renders byte-identically.
 
 Deterministic by construction (sorted inputs, fixed layout passes, no clocks;
 the as-of stamp derives from the last source-touching *commit*), so the
@@ -43,7 +50,7 @@ An absent or placeholder-only registry renders nothing and passes vacuously (the
 opt-out layer stays free for a repo that never adopts it).
 Exit codes: 0 clean / vacuous / opted-out, 1 invalid registry or stale HTML.
 
-Contracts: IF-011, IF-024 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-011, IF-024, IF-052 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -1850,6 +1857,222 @@ def _know_panel(svg, details):
     return tab, panel
 
 
+# --- the Process tab: how this project is built (WI-085 / SR-050) --------------
+#
+# The method reference view: the dashboard's other tabs show project *state*;
+# this one shows the *process* the state moves through. Data-derived where a
+# canonical source exists — the current gate from docs/gate, tier counts from
+# the spine registries, campaign bins from work-items.csv — and linking out to
+# the process docs everywhere a canonical home exists. The in-view restatement
+# is limited to the relationships no single doc states as one picture (the
+# lifecycle x gates ordering, the loop chips, the slice -> campaign -> gate-bar
+# cadence) — the WI-085 anti-duplication ruling.
+
+PROCESS_GATE_FILE = "docs/gate"
+
+
+def _gate_value(root):
+    """The runnable gate from docs/gate — the first non-comment line (the
+    derive_gate.parse_cache contract, a small stable parse duplicated per the F5
+    rule), or None when the file is absent/comment-only. None is the Process
+    tab's omit condition: no gate layer, no method view."""
+    path = root / PROCESS_GATE_FILE
+    if not path.exists():
+        return None
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        s = line.strip()
+        if s and not s.startswith("#"):
+            return s
+    return None
+
+
+def _process_doc(root, scaffolded, master):
+    """The process-doc link target that resolves in THIS repo: the scaffolded
+    docs/ copy when present (the downstream case), else the kit master (the
+    meta-repo case, which never scaffolds docs/process.md), else the scaffolded
+    default (what bootstrap writes). File presence only — deterministic."""
+    for rel in (scaffolded, master):
+        if (root / rel).exists():
+            return rel
+    return scaffolded
+
+
+def process_panel(root, wis, stats):
+    """The Process tab + panel as (tab, panel), or None when there is no
+    docs/gate (the tab is then omitted -> a gate-less repo renders
+    byte-identically; the Knowledge-tab vacuity idiom). Three linked panels:
+    artifact lifecycle x gates (live tier counts; the stages the current
+    derived gate spans are highlighted), the agent-resume loop (the managed
+    agent_loop phase vocabulary with its escalation edges), and slices ->
+    campaigns -> gates (commit bar vs gate bar, campaign counts joined from
+    work-items.csv). Fully self-contained (style inside the panel, no script
+    needed — the shared tab switcher handles it); sorted inputs, no clocks."""
+    gate = _gate_value(root)
+    if not gate:
+        return None
+
+    def esc(s):
+        return html.escape(str(s), quote=True)
+
+    proc_doc = _process_doc(root, "docs/process.md", "project-trajectory/PROCESS.md")
+    opts_doc = _process_doc(
+        root, "docs/process-options.md", "project-trajectory/PROCESS_OPTIONS.md"
+    )
+
+    # Panel 1 — artifact lifecycle x gates. Live counts join the spine
+    # registries; a stage is highlighted when the current gate falls in its
+    # gate span (G2 spans SR / LLR+architecture / TC — the tiers a G2 project
+    # is working across).
+    stages = [
+        ("Vision", "", "one home (the README tag)"),
+        ("SN", "G1", "{} SN".format(stats["sn_total"])),
+        (
+            "SR",
+            "G1→G2",
+            "{} SR · {} verified".format(stats["sr_total"], stats["sr_verified"]),
+        ),
+        ("LLR + architecture", "G2", "{} LLR".format(stats["llr_total"])),
+        ("TC", "G2→G3", "{} TC".format(stats["tc_total"])),
+        (
+            "code + tests",
+            "G3",
+            "{} of {} SR verified".format(stats["sr_verified"], stats["sr_total"]),
+        ),
+    ]
+    stage_lis = []
+    for label, span, note in stages:
+        now = gate in span.split("→") if span else False
+        stage_lis.append(
+            '<li class="stg{}" data-gates="{}"><b>{}</b><span class="g">{}</span>'
+            '<span class="n">{}</span></li>'.format(
+                " now" if now else "",
+                esc(span),
+                esc(label),
+                esc(span or "—"),
+                esc(note),
+            )
+        )
+
+    # Panel 3 — the campaign join (work-items.csv is the canonical source).
+    camps = sorted({w["campaign"] for w in wis if w.get("campaign")})
+    binned = sum(1 for w in wis if w.get("campaign"))
+    wi_done = sum(1 for w in wis if w["status"] == "done")
+    bars = [
+        ("per-WI slice", "one scoped work item; ends at the commit bar"),
+        ("commit bar", "the per-commit suite + doc checks — every commit"),
+        ("campaign close", "spine-touchers batch to one re-attestation sitting"),
+        ("gate bar", "the full check.py --gate run at campaign close / advance"),
+        ("CI", "runs the same bar on every push"),
+    ]
+    bar_lis = "".join(
+        '<li class="stg"><b>{}</b><span class="n">{}</span></li>'.format(esc(b), esc(n))
+        for b, n in bars
+    )
+
+    # Panel 2 — the resume loop (the agent_loop.py phase vocabulary; CRITIQUE is
+    # tier-conditional, so its chip renders dashed).
+    loop_steps = [
+        ("read status", ""),
+        ("PLAN", ""),
+        ("BUILD", ""),
+        ("REVIEW-A/B", ""),
+        ("CRITIQUE", "opt"),
+        ("INTEGRATE", ""),
+        ("commit", ""),
+        ("hook / gate", ""),
+        ("repeat", ""),
+    ]
+    loop_lis = "".join(
+        '<li class="stg{}"><b>{}</b></li>'.format(" " + cls if cls else "", esc(s))
+        for s, cls in loop_steps
+    )
+
+    style = (
+        "<style>"
+        "#process h3{font-size:.95rem;margin:1.5rem 0 .25rem;letter-spacing:-.01em;}"
+        "#process .gnow{background:var(--surface);border:1px solid var(--border);"
+        "border-radius:10px;padding:.6rem .9rem;box-shadow:var(--shadow);"
+        "display:inline-block;margin:.2rem 0 .4rem;}"
+        "#process .gnow b{color:var(--accent);}"
+        "#process ol.pflow{list-style:none;display:flex;flex-wrap:wrap;"
+        "gap:.55rem;padding:0;margin:.5rem 0;align-items:stretch;}"
+        "#process .pflow li{position:relative;background:var(--surface);"
+        "border:1px solid var(--border);border-radius:10px;"
+        "padding:.5rem .7rem .55rem;box-shadow:var(--shadow);max-width:200px;}"
+        "#process .pflow li+li{margin-left:1rem;}"
+        '#process .pflow li+li::before{content:"→";'
+        "position:absolute;left:-.95rem;top:50%;transform:translateY(-50%);"
+        "color:var(--muted);}"
+        "#process .pflow li.now{border:2px solid var(--accent);"
+        "padding:calc(.5rem - 1px) calc(.7rem - 1px) calc(.55rem - 1px);}"
+        "#process .pflow li.opt{border-style:dashed;}"
+        "#process .pflow b{display:block;font-size:.85rem;}"
+        "#process .pflow .g{display:block;font-size:.7rem;font-weight:700;"
+        "letter-spacing:.04em;color:var(--accent);}"
+        "#process .pflow .n{display:block;font-size:.75rem;color:var(--muted);}"
+        "#process ul.esc{font-size:.9rem;color:var(--muted);margin:.4rem 0 0;"
+        "padding-left:1.2rem;}"
+        "#process ul.esc b{color:var(--text);}"
+        "</style>"
+    )
+    panel = (
+        '<section id="process" class="panel">\n'
+        "<h2>How this project is built</h2>\n"
+        '<p class="cap">The method reference — the other tabs show project '
+        "<em>state</em>; this one shows the <strong>process</strong> the state "
+        "moves through. Data-derived where a canonical source exists "
+        "(<code>docs/gate</code>, the spine registries, "
+        "<code>work-items.csv</code>). A view — the process docs are the source "
+        "of truth.</p>\n" + style + "\n"
+        '<p class="gnow">Current gate: <b>' + esc(gate) + "</b> — derived from "
+        "artifact states and cached to <code>docs/gate</code> "
+        "(<code>derive_gate.py</code>); highlighted stages are the tiers this "
+        "gate spans.</p>\n"
+        "<h3>1 · Artifact lifecycle × gates</h3>\n"
+        '<p class="cap">Each tier decomposes the one above it and is ratified '
+        "through the gate it spans — the tiers (§3) and the gate bars (§4) live "
+        'in <a href="' + esc(proc_doc) + '">' + esc(proc_doc) + "</a>. Counts are "
+        "live from this repo's registries.</p>\n"
+        '<ol class="pflow">' + "".join(stage_lis) + "</ol>\n"
+        "<h3>2 · The resume loop</h3>\n"
+        '<p class="cap">The managed <code>agent_loop.py</code> walk-away flow — '
+        'the full contract is <a href="'
+        + esc(opts_doc)
+        + '">'
+        + esc(opts_doc)
+        + "</a> “Unattended operation”. The dashed CRITIQUE phase is "
+        "tier-conditional.</p>\n"
+        '<ol class="pflow">' + loop_lis + "</ol>\n"
+        '<ul class="esc">\n'
+        "<li><b>DESIGN-CHECK</b> — a review finding that indicts the design "
+        "routes the next session to a design pass, not a re-build.</li>\n"
+        "<li><b>Page the human</b> — nothing routable, or the declared gate "
+        "policy requires a human act: the loop parks with the ask recorded in "
+        "<code>docs/status.md</code>.</li>\n"
+        "</ul>\n"
+        "<h3>3 · Slices → campaigns → gates</h3>\n"
+        '<p class="cap">A per-WI slice ends at the <strong>commit bar</strong>; '
+        "a campaign closes at the <strong>gate bar</strong> — the campaign "
+        'ruling lives in <a href="'
+        + esc(opts_doc)
+        + '">'
+        + esc(opts_doc)
+        + "</a> “Trajectory / work-items layer”. Live from "
+        "<code>work-items.csv</code>: "
+        + esc(len(wis))
+        + " work items · "
+        + esc(wi_done)
+        + " done · "
+        + esc(binned)
+        + " campaign-binned across "
+        + esc(len(camps))
+        + " campaign(s).</p>\n"
+        '<ol class="pflow">' + bar_lis + "</ol>\n"
+        "</section>"
+    )
+    return '<button data-tab="process">Process</button>', panel
+
+
 def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
@@ -1887,6 +2110,11 @@ def build_html(root, wis):
     know = know_graph(root)  # the OKF bundle's first real consumer (WI-070)
     if know:
         tab, panel = _know_panel(*know)
+        extra_tabs.append(tab)
+        extra_panels.append(panel)
+    proc = process_panel(root, wis, stats)  # the method reference view (WI-085)
+    if proc:
+        tab, panel = proc
         extra_tabs.append(tab)
         extra_panels.append(panel)
 

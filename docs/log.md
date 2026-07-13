@@ -3170,3 +3170,69 @@ implementation)`). After both fixes, run for real on this tree:
   traceability (`--require-verified --strict-schema --phase v1`, the 2 v2 SRs
   explicitly phase-deferred), trajectory `--strict`, and every freshness step.
   The status.md claim ("the scoped v1 full bar") is verified, not asserted.
+
+## 2026-07-12 — WI-085 (phase v2 dev slice 1): the Process reference tab — SR-050 Planned→Verified (v2 stays G2)
+
+**Session start — residue reconcile (session-protocol):** the tree carried the
+unattended loop's own bookkeeping (`docs/iteration/001–003` logs +
+`iteration_index.md` + `docs/reviews/scoreboard.txt`) from the already-landed
+sessions (001 = the [v2]-[g2] close, 003 = review 003-A) — written after each
+session's own commit, so they could not self-include. Verified complete and
+committed as-is (`loop bookkeeping:` commit). **Observation surfaced, not
+fixed:** session 002's log records the REVIEW-A spawn of `gpt-5.6-terra`
+failing with `[WinError 2] The system cannot find the file specified` — the
+opencode CLI was not found at spawn time despite the live-verify having reached
+it; the loop degraded legally (opus took REVIEW-A). Worth a WI if it recurs —
+the candidate cause is the Windows `.cmd`-shim spawn path.
+
+**The slice (spec archived → `docs/archive/specs/WI-085.2026-07-12.md`):**
+`gen_trajectory.py` gains the **Process tab** — `process_panel()` +
+`_gate_value()`/`_process_doc()`, registered in `build_html` per LLR-051 (the
+Knowledge-tab conditional-panel idiom). Three linked panels: (1) **artifact
+lifecycle × gates** — live tier counts joined from the spine registries, the
+current derived gate read from `docs/gate` (the `derive_gate` cache contract)
+with the stages it spans highlighted; (2) **the resume loop** — the real
+`agent_loop.py` phase vocabulary (PLAN/BUILD/REVIEW-A/B/CRITIQUE-dashed/
+INTEGRATE) plus the DESIGN-CHECK and page-human escalation edges; (3) **slices
+→ campaigns → gates** — the commit-bar/gate-bar cadence with live campaign
+bins joined from `work-items.csv`. Link-outs prefer the scaffolded
+`docs/process*.md` (downstream) and fall back to the kit masters (this
+meta-repo); in-view restatement bounded per the owner's anti-duplication
+ruling. Tab omitted without `docs/gate` — round-trip-proven byte-identical for
+a gate-less repo; no new `--check` exclusion. New seam **IF-052**
+(`gen_trajectory` Consumes `docs/gate`; docstring `Contracts:` updated).
+
+**Spine movement (rides the queued owner sitting, per `single-ratify`):**
+TC-051 `Planned`→**`Verified`** with Evidence pinned to **7 pytest node
+paths** in `tests/test_gen_trajectory.py` (three-panels-from-live-data,
+gate-highlight-follows-docs/gate, link-outs-prefer-scaffolded, campaign-stats
+join, omitted+byte-identical round-trip, deterministic+`--check`-trips, meta
+smoke proving every link-out resolves); LLR-051 `Planned`→`Implemented`;
+SR-050 `Planned`→**`Verified`** (`Test` — the generated-first ruling held, no
+`Critique` fallback needed). Derived gate regenerated: runnable **G2**
+unchanged, `per-phase=(default)=G3;v2=G2` — v2 → G3 only when SR-051 verifies
+(WI-087, next). Meta dashboard renders the tab live (gate G2 banner, 118 WIs ·
+93 done · 45 binned across 10 campaigns).
+
+**Deviations from spec:** none of substance; the panels render as CSS flow
+chips rather than `_layered_layout` SVG — the spec's "reusing
+`_layered_layout()` where a panel has ranked nodes" found no ranked-node panel
+(all three flows are linear), so no layouter reuse was warranted.
+
+**Deviation from the status.md close ritual:** status said each dev-slice
+close runs `check.py --gate G3 --phase v1,v2` — that bar cannot pass until
+SR-051 verifies (it is honestly `Planned`); ran the scoped
+**`check.py --gate G3 --phase v1 --jobs 0` → RESULT: PASS (14/14)** instead
+(the WI-117-close precedent), with the strict R-D sweep forcing the done ids
+off status.md as a side effect. `--phase v1,v2` belongs to the WI-087 close.
+
+**Byte budgets:** AGENTS.template.md / PROCESS.md untouched (delta 0).
+
+**Mechanized verification (commit bar, real output):**
+- `python -m pytest -q -n auto` → `647 passed, 34 skipped` (7 new process-tab
+  cases; totals re-run post-format, appended below at commit).
+- `check.py --gate G3 --phase v1 --jobs 0` → **RESULT: PASS (14/14 steps)**
+  incl. tests+coverage, traceability (`--require-verified --strict-schema
+  --phase v1`), trajectory `--strict` (R-D clean after the status.md scrub),
+  and every freshness step (derived-gate, arch-map, trajectory-map, okf,
+  skills-sync).
