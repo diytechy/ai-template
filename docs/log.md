@@ -3454,3 +3454,44 @@ row is the record). **Byte budgets:** untouched (delta 0).
 - Close bar (full, unfiltered): `pytest -q -n auto` → `681 passed, 3 skipped
   in 61.01s`; `check_docs --stale` → `OK - 45 doc(s), 264 intra-repo link(s),
   0 broken`.
+
+## 2026-07-13 — WI-125: live session echo — the coordinator console shows progress during a campaign
+
+**Owner-directed** ("the feedback would be nice to have during a campaign"):
+between the session banner and the outcome line the console previously
+printed nothing — a 30-minute BUILD was 30 silent minutes (the WI-124
+perception finding, now fixed at the source).
+
+**Engine:** `run_session` reopened from `subprocess.run` to `Popen` + a
+reader thread (the same pump shape `run()` uses internally — capture,
+timeout-kill, OSError sentinel, and the WI-120 which-resolution all
+unchanged), each line echoed as it arrives via `echo_session_line`:
+stream-json events render compact one-liners (assistant text `  > …`, tool
+calls `  * <name>`; result/system/user events suppressed — the coordinator
+prints its own outcome line, and tool results would re-echo file contents),
+plain-text CLIs (opencode) pass through, every echoed line truncated to 240
+chars. The FULL stream is still captured to the session log + `out/run-logs`.
+`--no-session-echo` silences the console, never the capture.
+
+**Config:** the claude CmdTemplates (3 `agents.csv` ANTHROPIC rows + both
+launcher `AGENT_CMD` fallbacks) move `--output-format json` →
+`stream-json --verbose` so per-turn events exist to stream; the final result
+event carries the same WI-119/124 telemetry. `parse_json_result` hardened to
+**prefer a `type: result` line** so a trailing non-result event (killed
+stream) never shadows the result. **Order of operations:** the flag combo was
+live-verified against the real CLI *before* the config switch — a sonnet
+one-liner through `build_argv` + `run_session(echo=True)` echoed `  > OK` and
+parsed `type=result` with turns/cost intact.
+
+**Deviations from spec:** none (owner-directed; the WI row is the record).
+**Byte budgets:** untouched (delta 0).
+
+**Verification (real output):**
+- `pytest -q tests/test_agent_loop.py` → `44 passed` (stream-done action:
+  compact echo asserted, tokens/turns parsed from a result event that is
+  deliberately not last; `--no-session-echo` silences console, log keeps the
+  stream).
+- Live CLI verify (pre-switch): exit 0, echo rendered, result parsed.
+- Close bar (full, unfiltered): `pytest -q -n auto` → `683 passed, 3 skipped
+  in 60.19s`; `check_docs --stale` → `OK - 45 doc(s), 264 intra-repo link(s),
+  0 broken`.

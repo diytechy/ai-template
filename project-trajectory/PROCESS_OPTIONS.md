@@ -727,7 +727,10 @@ behavior**, so a fresh scaffold pays nothing.
 each session's log to `docs/iteration/NNN-<stamp>.log` — size-bounded (head +
 capped tail of the transcript) so forensic detail survives machine death and
 travels with the repo; the raw unbounded stream may additionally go to the
-gitignored `out/run-logs/` for local debugging — and regenerates
+gitignored `out/run-logs/` for local debugging, and is echoed **live** to the
+coordinator console as it arrives (compact one-line renderings for a
+stream-json CLI's events; `--no-session-echo` silences the console, never the
+capture) — and regenerates
 `docs/iteration_index.md`: one row per session (number, date, model/tier,
 phase, outcome, commit range, tokens, cost, wall/API seconds, turns, per-turn
 pace + context volume, log link), generated and never hand-edited. `docs/log.md` stays the *collated* human-review layer above it.

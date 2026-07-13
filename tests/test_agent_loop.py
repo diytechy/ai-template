@@ -59,6 +59,20 @@ elif action in ("done", "blocked", "needs-human"):
                       "total_cost_usd": 0.12,
                       "duration_api_ms": 61000, "num_turns": 7,
                       "ttft_ms": 4200, "fast_mode_state": "off"}))
+elif action == "stream-done":
+    # A stream-json CLI: per-turn events, then the result event NOT last (a
+    # trailing event must not shadow it - the parse preference under test).
+    commit("finishing")
+    pathlib.Path("docs/run-state").write_text("DONE")
+    print(json.dumps({"type": "assistant", "message": {"content": [
+        {"type": "text", "text": "refactoring the parser now"}]}}))
+    print(json.dumps({"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "name": "Edit", "input": {}}]}}))
+    print(json.dumps({"type": "result", "result": "ok",
+                      "usage": {"input_tokens": 3, "output_tokens": 2},
+                      "total_cost_usd": 0.01, "duration_api_ms": 1000,
+                      "num_turns": 2}))
+    print(json.dumps({"type": "system", "subtype": "trailing"}))
 elif action == "limit":
     print(json.dumps({"is_error": True,
                       "result": "You've hit your session limit \\u00b7 resets 3:45pm"}))
@@ -811,3 +825,36 @@ def test_cmd_shim_cli_spawns_on_windows(loop_repo, tmp_path):
     assert _invocations(ctl) == 1
     index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
     assert "DONE" in index and "ERROR" not in index
+
+
+def test_stream_json_echo_and_result_parse(loop_repo):
+    # WI-125: a stream-json session's events render live on the coordinator
+    # console (assistant text as '  > ...', tool calls as '  * <name>'), and
+    # the type:result event is parsed for outcome/telemetry even when a
+    # trailing non-result event follows it (a killed stream must not shadow
+    # the result; result/system events themselves are not echoed).
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("stream-done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "> refactoring the parser now" in proc.stdout
+    assert "* Edit" in proc.stdout
+    assert '"type": "result"' not in proc.stdout  # events echo compact, not raw
+    log = sorted((repo / "docs" / "iteration").glob("*.log"))[0].read_text(
+        encoding="utf-8"
+    )
+    assert "# outcome: DONE" in log
+    assert "# tokens: 3+2" in log  # from the result event, not the trailing one
+    assert "# turns: 2" in log
+
+
+def test_no_session_echo_silences_the_console_not_the_log(loop_repo):
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("stream-done", encoding="utf-8")
+    proc = _loop(repo, template, "--no-session-echo")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "refactoring the parser" not in proc.stdout  # console silenced...
+    log = sorted((repo / "docs" / "iteration").glob("*.log"))[0].read_text(
+        encoding="utf-8"
+    )
+    assert "refactoring the parser" in log  # ...but the stream is captured

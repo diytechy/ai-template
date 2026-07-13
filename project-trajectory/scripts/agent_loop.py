@@ -99,6 +99,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -769,17 +770,24 @@ def current_state_excerpt(status_path, max_lines=40):
 
 
 def parse_json_result(output):
-    """Best-effort parse of a --output-format json run: the last line (or the
-    whole output) that loads as a JSON object. Returns {} when none does."""
+    """Best-effort parse of a --output-format json / stream-json run: the last
+    line (or the whole output) that loads as a JSON object, preferring a
+    `type: result` event — so a stream-json transcript whose tail carries a
+    non-result event (a killed stream, trailing diagnostics) never shadows the
+    session result. Returns {} when nothing parses."""
     candidates = [ln for ln in output.splitlines() if ln.strip()][-3:]
+    dicts = []
     for text in reversed(candidates + [output.strip()]):
         try:
             data = json.loads(text)
         except ValueError:
             continue
         if isinstance(data, dict):
+            dicts.append(data)
+    for data in dicts:
+        if data.get("type") == "result":
             return data
-    return {}
+    return dicts[0] if dicts else {}
 
 
 def limit_reset_hint(output, data, exit_code):
@@ -1091,14 +1099,48 @@ def preflight(root, template, args):
     return failures
 
 
-def run_session(argv, root, timeout, env=None):
+def echo_session_line(line):
+    """Compact live rendering of one line of session output (WI-125) — the
+    walk-away console shows progress instead of 30 silent minutes. stream-json
+    events render one-line summaries: assistant text as `  > ...`, a tool call
+    as `  * <name>`; result/system/user events are suppressed (the coordinator
+    prints its own outcome line, and tool results re-echo file contents).
+    Anything that isn't a JSON event — a plain-text CLI like opencode — passes
+    through. Every echoed line is truncated for console hygiene; the FULL
+    stream is still captured for the session log + out/run-logs."""
+    s = line.rstrip()
+    if not s:
+        return
+    if s.startswith("{"):
+        try:
+            evt = json.loads(s)
+        except ValueError:
+            evt = None
+        if isinstance(evt, dict):
+            if evt.get("type") == "assistant":
+                for block in (evt.get("message") or {}).get("content") or []:
+                    if block.get("type") == "text" and block.get("text", "").strip():
+                        txt = " ".join(block["text"].split())
+                        print(
+                            "  > {}".format(
+                                txt[:240] + ("..." if len(txt) > 240 else "")
+                            )
+                        )
+                    elif block.get("type") == "tool_use":
+                        print("  * {}".format(block.get("name", "tool")))
+            return  # every other event type is log detail, not progress
+    print(s[:240] + ("..." if len(s) > 240 else ""))
+
+
+def run_session(argv, root, timeout, env=None, echo=False):
     """One fresh headless driver session. Returns (exit_code, output,
     timed_out). stdin is closed so a CLI that would wait on it can't hang.
 
     `env` is the merged environment for a pair row that declares one (the
     registry `Env` column, already merged over os.environ by the caller); None
     means inherit the ambient environment exactly — today's call, byte for
-    byte."""
+    byte. `echo` renders each output line live via echo_session_line (WI-125);
+    the returned output is the full captured stream either way."""
     if os.name == "nt":
         # CreateProcess resolves a bare argv[0] only to .exe/.com — never the
         # PATHEXT script shims (.cmd/.bat) npm-style CLIs install on Windows —
@@ -1111,7 +1153,7 @@ def run_session(argv, root, timeout, env=None):
         if resolved and not resolved.lower().endswith(".ps1"):
             argv = [resolved] + argv[1:]
     try:
-        proc = subprocess.run(
+        proc = subprocess.Popen(
             argv,
             cwd=str(root),
             stdin=subprocess.DEVNULL,
@@ -1120,21 +1162,38 @@ def run_session(argv, root, timeout, env=None):
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=timeout or None,
             env=env,
-        )
-        return proc.returncode, proc.stdout or "", False
-    except subprocess.TimeoutExpired as exc:
-        out = exc.stdout or ""
-        if isinstance(out, bytes):
-            out = out.decode("utf-8", "replace")
-        return (
-            -1,
-            out + "\ncoordinator: session timed out after {}s".format(timeout),
-            True,
         )
     except OSError as exc:
         return -1, "coordinator: session error: {}".format(exc), False
+    # A reader thread pumps the pipe so the child can never block on a full
+    # buffer while the main thread waits — the same shape subprocess.run uses
+    # internally, opened up so each line can be echoed as it arrives.
+    lines = []
+
+    def _pump():
+        for line in proc.stdout:
+            lines.append(line)
+            if echo:
+                echo_session_line(line)
+        proc.stdout.close()
+
+    pump = threading.Thread(target=_pump, daemon=True)
+    pump.start()
+    try:
+        proc.wait(timeout=timeout or None)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+        pump.join(5)
+        return (
+            -1,
+            "".join(lines)
+            + "\ncoordinator: session timed out after {}s".format(timeout),
+            True,
+        )
+    pump.join(5)
+    return proc.returncode, "".join(lines), False
 
 
 def stop_banner(status_path, label, detail=""):
@@ -1273,6 +1332,13 @@ def main():
         type=int,
         default=10,
         help="seconds between sessions (default 10)",
+    )
+    ap.add_argument(
+        "--no-session-echo",
+        action="store_true",
+        help="silence the live echo of session output on the coordinator "
+        "console (WI-125; the full stream is still captured to the session "
+        "log and out/run-logs either way)",
     )
     ap.add_argument(
         "--wait-on-limit",
@@ -1793,7 +1859,11 @@ def main():
         # session dies before emitting JSON (spawn failure, timeout, crash).
         wall_start = time.time()
         code, output, timed_out = run_session(
-            argv, root, args.session_timeout, env=session_env
+            argv,
+            root,
+            args.session_timeout,
+            env=session_env,
+            echo=not args.no_session_echo,
         )
         wall_secs = int(round(time.time() - wall_start))
 

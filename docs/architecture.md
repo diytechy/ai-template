@@ -61,7 +61,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `head_sha(root)` | Short HEAD sha, or None on a zero-commit repo (guarded rev-parse). |  |
 | `working_tree_dirty(root)` | The `git status --porcelain` lines — one per uncommitted path (a rename is |  |
 | `current_state_excerpt(status_path, max_lines)` | The '## Current State' section of a status.md — the root dispatcher's or |  |
-| `parse_json_result(output)` | Best-effort parse of a --output-format json run: the last line (or the |  |
+| `parse_json_result(output)` | Best-effort parse of a --output-format json / stream-json run: the last |  |
 | `limit_reset_hint(output, data, exit_code)` | The 'resets <time>' text of a rate-limit message, or None. |  |
 | `seconds_until_reset(hint, now)` | Best-effort seconds until a reset hint like '3:45pm', '10am', |  |
 | `bounded_transcript(output)` | Head + capped tail of a session transcript (the tracked-log bound). |  |
@@ -72,7 +72,8 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `regenerate_index(docs_dir)` | Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata |  |
 | `next_session_number(iter_dir)` | Next NNN, continuing across coordinator restarts. |  |
 | `preflight(root, template, args)` | Refuse to start iteration 1 on a broken footing. Returns the list of |  |
-| `run_session(argv, root, timeout, env)` | One fresh headless driver session. Returns (exit_code, output, |  |
+| `echo_session_line(line)` | Compact live rendering of one line of session output (WI-125) — the |  |
+| `run_session(argv, root, timeout, env, echo)` | One fresh headless driver session. Returns (exit_code, output, |  |
 | `stop_banner(status_path, label, detail)` |  |  |
 | `main()` |  |  |
 

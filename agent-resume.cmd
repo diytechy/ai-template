@@ -19,7 +19,10 @@ REM The agent command template; {model} and {prompt} are substituted per
 REM session (no {prompt} = the resume prompt is appended).
 REM Keep agent-resume.sh's slots in sync — it is the POSIX twin;
 REM agent-resume.command delegates to it.
-set "AGENT_CMD=claude -p {prompt} --model {model} --output-format json --dangerously-skip-permissions"
+REM stream-json + --verbose (WI-125): the CLI emits an event line per turn, so
+REM the coordinator console shows live progress instead of 30 silent minutes;
+REM the final result event carries the same telemetry the json format did.
+set "AGENT_CMD=claude -p {prompt} --model {model} --output-format stream-json --verbose --dangerously-skip-permissions"
 REM Default model tier + per-phase map read against docs/run-phase (the default
 REM model stays strong — an unknown phase routes UP, never down). With managed
 REM routing ON (docs/agents-enabled present) the docs/agents.csv registry +
