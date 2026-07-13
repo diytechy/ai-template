@@ -282,10 +282,43 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 - It currently passes its own gates at **G3** (gate-walk record:
   [`docs/log.md`](docs/log.md)).
 
+### Configuration at a glance (defaults vs. this repo)
+
+Every runtime knob is a small declared file under `docs/` — stated once, read
+by the hooks, `check.py`, and the coordinator; **each file's own header is its
+canonical doc** (this table is the map, checked against this repo's tree). What
+a fresh scaffold gets, which way each option toggles, and how this repo is set:
+
+| Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
+|---|---|---|---|
+| `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `G1`) | never hand-edited; advances by *ratifying* artifacts | `G3` (derived) |
+| `gate-policy` | `attended` | opt-in levels `single-ratify` / `autonomous` (each scaffolds a deviation register) | **`single-ratify`** + [register](docs/gate-policy.md) |
+| `push-policy` | `human` | opt-in `agent-iteration` / `agent` | `human` |
+| `review-policy` | `1` | reviewer dial `0`–`2` | `1` |
+| `privacy-check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
+| `secrets-scan` | on (no file) | **opt-out** `off` | on |
+| `okf-export` | on (no file) | **opt-out** `off` | on (`docs/okf/` committed) |
+| `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — 51 declared seams |
+| `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
+| `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 6 pair rows / 2 families, fable-led (tiers `strong/medium/quick`) |
+| `run-phase` | absent (an unknown phase routes to the strong tier) | coordinator-maintained once present | `BUILD` |
+| `guardrails-policy` | off (no file) | **opt-in** model-substring allowlist / `all except …` | `off` (no vendored core — reason in the file) |
+| `subagent-gate` | off (no file) | **opt-in** `ask` / `deny` (Claude hook example) | off |
+| `[step:dupes]` + `dupes-allow` | not wired | **opt-in** `stack.ini` step | not wired (deferred) |
+
+Scaffold-time *structure* (which process sections your generated docs carry) is
+a separate dial — `bootstrap.py --stack/--omit`, recorded in `docs/kit-profile`.
+The opt-in **layers** themselves (what each costs, when it applies) are
+specified in [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md).
+
 ### The gates at a glance
 
 What each approval gate certifies — full criteria in
-[`PROCESS.md`](project-trajectory/PROCESS.md) §4:
+[`PROCESS.md`](project-trajectory/PROCESS.md) §4. The **active** gate is
+*derived*, not declared: `derive_gate.py` computes it from the artifact states
+and caches it to `docs/gate` (generated, never hand-edited); it advances when a
+batch of artifacts is **ratified** in a reviewed `Status`-change commit
+(process-options.md "Derived gate model").
 
 - **G1 — Requirements/UX/Constraints.** Needs + requirements are complete,
   measurable, and consistent with the vision; every requirement links a need;

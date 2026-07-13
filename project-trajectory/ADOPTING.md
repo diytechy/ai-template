@@ -229,7 +229,15 @@ range to see exactly which templates/scripts changed before you touch anything.
 **Re-weigh the opt-in layers while you're here.** A re-sync is the natural moment
 to reconsider vendoring or extending a guardrails / efficiency package
 (process-options.md "Tier-conditional guardrails") as the kit and the agent
-ecosystem move — the same decision adoption raised (§5).
+ecosystem move — the same decision adoption raised (§5). And recheck what's
+**new** in the range you're syncing across, not just what changed in files you
+already have: diff `skills/INDEX.csv` for new or updated **skills** (materialize
+for your agent with `bootstrap.py --dest . --agents <agent>`; refresh existing
+per-agent copies with `--sync`), scan process-options.md's layer list for
+**opt-in layers added** since your pinned commit, and revisit the **vendorable
+packs** those layers name (guardrails cores, efficiency packages, knowledge
+bundles). An upgrade that only takes script fixes leaves accelerators on the
+table.
 
 ### What to overwrite vs preserve
 
@@ -262,6 +270,19 @@ ecosystem move — the same decision adoption raised (§5).
   un-migrated repo is never broken). After migrating, you stop bumping the line —
   you ratify artifacts (`Status` `Draft`→`Planned`, or an SN section move) in a
   reviewed commit and regenerate (process-options.md "Derived gate model").
+  **Reconcile states against your ratification history before trusting the
+  migrated value.** The derived gate believes your recorded `Status` values and
+  SN sections — but a legacy repo's registries usually contain artifacts added
+  *after* the commit that last set `docs/gate`, states no reviewer ever
+  ratified. Find that commit (`git log --oneline -- docs/gate`), diff the
+  requirement surfaces since (`git diff <sha>..HEAD -- docs/requirements
+  docs/test`), and stage everything added or materially changed since per the
+  new model — new stakeholder needs into a `## Draft needs (unratified)`
+  section, not-yet-re-reviewed SRs to `Status=Draft` — so `derive_gate.py`
+  reproduces the gate your history actually attests instead of laundering
+  post-attestation additions into it. If the derived value still disagrees with
+  your old hand-set line after that, the *disagreement is the finding*: ratify
+  (or demote) deliberately before relying on the derived gate.
 - **Regenerate, never raw-copy (kit-owned but generated):** `docs/process.md` +
   `docs/process-options.md` are *generated* from the kit masters per the
   recorded `docs/kit-profile` (§1). Raw-copying `PROCESS.md`/

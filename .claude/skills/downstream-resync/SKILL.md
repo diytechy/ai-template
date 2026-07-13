@@ -25,6 +25,10 @@ checklist.
   unreproducible).
 - Diff the recorded SHA against the target to see exactly which templates/scripts
   changed before touching anything.
+- While the diff is open, recheck the **new capability surface** across the
+  range — new/updated skills (`skills/INDEX.csv`), opt-in layers added to
+  process-options.md, new vendorable packs (guardrails / efficiency /
+  knowledge) — ADOPTING.md §6 "Re-weigh the opt-in layers".
 
 ## 2. Overwrite vs. preserve
 
@@ -60,6 +64,13 @@ in your diff range (e.g. `process.md` split into `process.md` +
 `process-options.md`; a legacy `UN-` → `SN-` rename keeping id numbers; a TC CSV
 gaining a required `Tier` column; a `gen_release_checklist.py` function rename).
 Apply only the ones your diff actually contains.
+
+- **Derived-gate migration:** after taking `derive_gate.py`, reconcile artifact
+  states against the registries **as of your last gate-bump commit** before
+  trusting the derived value — stage everything added since per the new model
+  (new SNs → the `## Draft needs` section; not-yet-re-reviewed SRs →
+  `Status=Draft`), or post-attestation additions launder into the ratified
+  gate. ADOPTING.md §6 has the exact recipe (`git log -- docs/gate` → diff).
 
 ## 4. Re-stamp and verify
 

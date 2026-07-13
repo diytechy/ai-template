@@ -2766,7 +2766,8 @@ and the derived-gate-campaign G3 re-attestation.
 touched).** Owner-directed, the sitting after the WI-107 enablement: require
 `claude` + `opencode` as dev tools, register the GPT-5.6 family through
 opencode, prompt for sign-in when models fail, pin claude effort high, and file
-the effort-selection mechanization as deferred future work. Owner's parallel
+the effort-selection mechanization as deferred future work (this WI's spec of
+record: [specs/WI-109.md](specs/WI-109.md)). Owner's parallel
 question answered in-session: the root `docs/run-phase` is only the single-lane
 surface — parallel workstreams each get `docs/tracks/<name>/run-phase` (+
 run-state/status/log/iteration) on their own `llm/<name>` branch/worktree, so
@@ -2961,3 +2962,61 @@ deliberately as living alias proofs. Routing/loop suites: **91 passed**.
 **Checks:** commit bar `pytest -q -n auto` **673 passed, 1 skipped**,
 `check_docs --stale` exit 0; gate bar `check.py --gate G3 --jobs 0` →
 **RESULT: PASS** (674 passed, coverage 90.92% ≥ 80).
+
+## 2026-07-12 — WI-114: post-derived-gate doc currency + re-sync guidance + README config table
+
+**Session (branch `derived-gate-model`; docs only — no kit-script change, no
+spine change, byte-budgeted files untouched).** Three owner asks, answered then
+fixed.
+
+**Q: does the README show the config options, defaults, opt-in vs opt-out, and
+this repo's settings?** It didn't — policy files were mentioned in scattered
+bullets, with no consolidated view and nothing on the meta's own configuration.
+Root README now carries **"Configuration at a glance (defaults vs. this
+repo)"**: a 15-row table of every `docs/*` runtime knob — fresh-scaffold
+default (**verified against a live bootstrap**, not memory: `gate` = derived
+`G1`, `gate-policy` = `attended`, `push-policy` = `human`, `review-policy` =
+`1`, `privacy-check` = `false`, `agents.csv` seeded inert, everything else
+absence-defaulted), toggle direction (opt-in vs opt-out), and this repo's
+setting (`single-ratify` + register, managed routing ON — 6 rows / 2 families,
+fable-led — `run-phase` = `BUILD`, `guardrails-policy` = `off`, the
+absence-defaulted checks all on). Each file's own header stays the canonical
+doc; the table is the map. Pointers close it: `bootstrap.py --stack/--omit`
+(`docs/kit-profile`) for scaffold-time structure, PROCESS_OPTIONS for layer
+semantics.
+
+**Q: is the documentation current with the derived gate?** Audit (grep over
+READMEs, ADOPTING, EXAMPLE, MULTI_REPO, templates, skills): the shipped
+surfaces were already rewritten by WI-095/096 — the remaining "bump"/"declared
+gate" hits are correct usages (version bumps at G-Release; the gate-*policy*).
+One gap: the root README's "gates at a glance" described what gates certify but
+not the new mechanism — it now states the active gate is **derived** (computed
++ cached by `derive_gate.py`, advanced by ratifying artifacts in a reviewed
+`Status`-change commit).
+
+**Re-sync guidance (owner-directed).** ADOPTING §6 extended twice:
+
+- *"Re-weigh the opt-in layers"* now also directs a re-syncing adopter to
+  recheck what's **new** across the sync range — new/updated **skills**
+  (`skills/INDEX.csv`; materialize with `--agents`, refresh copies with
+  `--sync`), **opt-in layers added** to process-options.md since the pinned
+  commit, and the **vendorable packs** those layers name (guardrails cores,
+  efficiency packages, knowledge bundles).
+- The derived-gate migration bullet gains the **state-reconciliation recipe**:
+  the derived gate believes recorded `Status`/SN-section states, but a legacy
+  repo's registries usually contain artifacts added *after* the commit that
+  last set `docs/gate` — states no reviewer ratified. Find the bump commit
+  (`git log --oneline -- docs/gate`), diff the requirement surfaces since, and
+  stage post-attestation additions per the new model (new SNs → the
+  `## Draft needs (unratified)` section; not-yet-re-reviewed SRs →
+  `Status=Draft`) so `derive_gate.py` reproduces the gate the history actually
+  attests. Residual disagreement after that = the finding; ratify or demote
+  deliberately before relying on the derived value.
+
+The `downstream-resync` skill gains the two matching compact bullets (new
+capability surface in §1; the reconciliation in §3), source edited →
+`.claude`/`.agents` fan-out re-synced byte-identical (`bootstrap.py --sync`).
+
+**Also fixed:** `docs/specs/WI-109.md` had been a warn-only orphan since its
+commit (its registry SpecRef is a CSV cell, not a doc link) — now linked from
+its log entry; orphan count back to the standing 1 (`docs/test/report.md`).
