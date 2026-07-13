@@ -5,6 +5,7 @@ import os
 
 from conftest import (
     DEMO_SRC,
+    SCRIPTS,
     SRS,
     augment_env,
     load_script,
@@ -45,6 +46,17 @@ def test_minimal_project_is_green(scaffold):
     arch = (scaffold / "docs" / "architecture.md").read_text(encoding="utf-8")
     assert "```mermaid" in arch
     assert "src/demo" in arch
+
+
+def test_off_root_fails_loudly(tmp_path):
+    # M2 / WI-100: check.py reads docs/gate + docs/stack.ini + docs/architecture.md
+    # relative to CWD. Run it where there is no docs/ tree and it must FAIL loudly
+    # rather than silently fall back to the built-in commands and gate `all` (a
+    # different, weaker plan). tmp_path has no docs/, so this stands in for "off
+    # the repo root". SCRIPTS is absolute, so check.py is still found to run.
+    proc = run_py([SCRIPTS / "check.py", "--gate", "G1"], cwd=tmp_path)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "must run at the repo root" in (proc.stdout + proc.stderr)
 
 
 def test_step_env_strips_ambient_coverage_vars(monkeypatch):

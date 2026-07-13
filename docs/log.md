@@ -3960,3 +3960,49 @@ re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
 loudly off-root — the next deep-review-b hygiene pick). The run continues at G3;
 **`main-decomposition` (WI-080 → WI-081) stays sequenced behind the owner
 sitting**.
+
+## 2026-07-13 — WI-100: fail loudly when check.py runs off the repo root (deep-review-b M2)
+
+**The defect.** Review-b **M2**: `check.py` resolves `docs/gate`,
+`docs/stack.ini`, and the arch-map's `docs/architecture.md` **relative to the
+CWD**, while every sibling script (`trace.py`, `derive_gate.py`, `check_docs.py`,
+`check_trajectory.py`) takes `--root`. Run `check.py` from anywhere but the repo
+root and it silently sees *no profile and no gate* — falling back to the built-in
+format/lint/test commands and gate `all`. The failure mode isn't an error; it's a
+*different, stricter-or-weaker plan*, exactly the silent divergence the kit
+exists to prevent. It works today only by convention (hooks + CI happen to run at
+root).
+
+**The fix — loud fail, not a new flag.** The review offered two options (add
+`--root`, or fail loudly when `docs/` is absent); the WI title itself carries the
+choice ("…or fail loudly off-root"). Took the loud-fail path as the smallest
+change that closes the divergence: `main()` now checks `Path("docs").is_dir()`
+right after arg-parse and, if absent, `sys.exit`s naming the CWD — before any
+gate/profile read can quietly default. Rationale for *not* adding `--root`+chdir:
+the whole plan (incl. the spawned `ruff`/`pytest` commands and every sub-script,
+which default `--root` to `.`) is inherently CWD-anchored, so a `--root` would
+mean baking a `chdir` and a new inherited flag into every downstream `check.py` —
+more surface on a foundation file for no additional safety. The loud guard makes
+the existing "run me at root" contract explicit and honest.
+
+**Test.** `tests/test_check_harness.py::test_off_root_fails_loudly` runs
+`check.py` with `cwd` = a bare `tmp_path` (no `docs/`, `SCRIPTS` absolute so the
+script is still found) and asserts nonzero exit + the "must run at the repo root"
+message. All existing `check.py` invocations run at a scaffold/repo root, so the
+guard is a no-op for them (harness suite unchanged: 15 passed, 1 skipped).
+
+**Verification.**
+- Commit bar: `pytest -q -n auto -m smoke` → **547 passed, 2 skipped**;
+  `check_docs --root . --stale` → **OK, 0 broken** (the "possibly stale" hints are
+  pre-existing, on archived review docs).
+- Full unfiltered suite → **701 passed, 3 skipped**.
+
+**No spine change** — no new SN/SR/LLR/TC (proceed at G3), no byte-budgeted file
+touched. Derived gate stays **G3**.
+
+**Not pushed** (push-policy: human). Owner queue unchanged (push decision + G3
+re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
+→ **WI-101** (state the Status-vocabulary casing rule once + a near-miss hint —
+the next deep-review-b hygiene pick). The run continues at G3;
+**`main-decomposition` (WI-080 → WI-081) stays sequenced behind the owner
+sitting**.

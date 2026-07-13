@@ -225,11 +225,10 @@ working surface.
       the strip-at-scaffold precedent shipped 2026-07-13, so this masters-comment
       question now stands on its own — and could absorb the design-doc citations
       `AGENT_ROLES`/`IMPROVEMENT_PLAN` the scaffold-strip left in scope).
-    - **WI-100** — root-anchor `check.py`'s `docs/gate`/`docs/stack.ini` reads
-      or fail loudly off-root (M2). *(The M1 rule-set-sync meta test landed
-      2026-07-13 — records in log.md + registry Deliverable.)*
     - **WI-101** — state the Status-casing rule once + near-miss hint in the
-      finding text (M3).
+      finding text (M3). *(The M1 rule-set-sync meta test and the M2 off-root
+      loud-fail guard on `check.py` both landed 2026-07-13 — records in log.md +
+      registry Deliverables.)*
     - **WI-102** — gen_trajectory hygiene: one module-level `_esc` (now defined
       6×) + SVG node `<title>` labels (M4/L7; one regeneration, `--check` keeps
       it honest).
@@ -245,11 +244,13 @@ working surface.
       owner taste ruling on a deliberate design, medium churn to shipped
       templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
 - **Next action — the G3 backlog (branch `derived-gate-model`; `docs/next-wi` =
-  WI-100).** Phase v2 is complete; the dev-toolchain pin, the coverage-plumbing
+  WI-101).** Phase v2 is complete; the dev-toolchain pin, the coverage-plumbing
   hardening, **the dupes-gate + census, the scaffold-strip of the archive-
-  anchor review citations, and the M1 rule-set-sync meta test all landed
-  2026-07-13** (records in log.md + each WI row's Deliverable); a resume session
-  picks up **WI-100** next (backlog below).
+  anchor review citations, the M1 rule-set-sync meta test, and the M2
+  off-root loud-fail guard on `check.py` all landed 2026-07-13**
+  (records in log.md + each WI row's Deliverable); a resume session picks up
+  **WI-101** next (state the Status-vocabulary casing rule once + a near-miss
+  hint — M3; backlog below).
   1. **Derived-gate campaign — LANDED (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the whole 8-slice campaign has shipped: the `Draft` artifact state + trace
@@ -281,24 +282,28 @@ working surface.
      (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's
      Deliverable). The v2 spine cut rides the owner single-ratify sitting above.
   3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
-     = WI-100). The dev-toolchain pin, the coverage-plumbing hardening, the
+     = WI-101). The dev-toolchain pin, the coverage-plumbing hardening, the
      **dupes-gate + census** (the M2/M6 census wired as `docs/stack.ini`
      `[step:dupes]` over the `docs/dupes-allow` allowlist — new copy-paste
      between an unlisted file-pair now fails G3), the **scaffold-strip of the
      archive-anchor review citations** (`bootstrap.strip_provenance` drops the
      `(REVIEW_*/THREAD_*)` provenance from scripts as it copies them, so a
      downstream reader inherits no dangling `docs/archive/` pointer — deep-review
-     M7), and the **M1 rule-set-sync meta test** (`tests/test_rule_sync.py` pins
+     M7), the **M1 rule-set-sync meta test** (`tests/test_rule_sync.py` pins
      `trace.LLR_EXEMPT`/`derive_gate.LLR_EXEMPT` and the `is_draft`/`sn_draft_ids`
      *policy* predicates equal, so the orphan report and the derived gate can't
-     silently disagree — trace.py's inline exempt literal became a named constant)
+     silently disagree — trace.py's inline exempt literal became a named constant),
+     and the **M2 off-root loud-fail guard** (`check.py`'s `main()` now
+     refuses to run when no `docs/` dir sits at CWD, so its CWD-relative gate/
+     profile/arch reads can't silently fall back to the built-in commands + gate
+     `all`; the loud-fail option over a new inherited `--root`+chdir flag)
      all landed 2026-07-13 (records in log.md + registry Deliverables).
      **`main-decomposition` (WI-080 → WI-081) is the highest-value next step but
      is sequenced *behind the owner sitting*** (highest-risk, behavior-preserving,
-     test-seams-first) — so the autonomous next is **WI-100** (root-anchor
-     `check.py`'s `docs/gate`/`docs/stack.ini` reads or fail loudly off-root; M2 —
-     a driver-sequencing call the owner can re-order). The rest of that queue
-     (WI-101/102/115 hygiene; WI-097/098 owner-gated) follows; the owner's
+     test-seams-first) — so the autonomous next is **WI-101** (state the
+     Status-vocabulary casing rule once + a near-miss hint; M3 — a
+     driver-sequencing call the owner can re-order). The rest of that queue
+     (WI-102/115 hygiene; WI-097/098 owner-gated) follows; the owner's
      triage/sequencing is welcome but does not block the cheap picks.
   Remaining owner item: the **push decision** above.
 

@@ -855,6 +855,20 @@ def main():
         "with each step's output streamed live exactly as before",
     )
     args = ap.parse_args()
+    # check.py resolves docs/gate, docs/stack.ini, and docs/architecture.md
+    # relative to the CWD (unlike the sibling scripts, which take --root). Run it
+    # anywhere but the repo root and it would silently see no profile and no gate
+    # — falling back to the built-in commands and gate `all`, i.e. a different,
+    # stricter-or-weaker plan rather than an error. Anchor that invariant loudly:
+    # the whole plan assumes a docs/ tree at CWD, so refuse to run without one
+    # instead of diverging quietly (deep-review-2026-07-12b M2 / WI-100).
+    if not Path("docs").is_dir():
+        sys.exit(
+            "check: must run at the repo root — no docs/ directory in {} "
+            "(the gate, stack profile, and arch-map reads are CWD-relative)".format(
+                Path.cwd()
+            )
+        )
     gate = resolve_gate(args.gate)
     profile = load_profile()
 
