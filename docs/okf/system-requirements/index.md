@@ -60,3 +60,5 @@ resource: "generated"
 | [SR-047](SR-047.md) | Subjective-quality critique loop |
 | [SR-048](SR-048.md) | How-SW top view bounded and containerized |
 | [SR-049](SR-049.md) | Derived gate from artifact states |
+| [SR-050](SR-050.md) | Process reference view |
+| [SR-051](SR-051.md) | Tiered drill-down views |

@@ -43,13 +43,16 @@ def _derive(scaffold):
 
 
 # --- the meta-repo dogfood ----------------------------------------------------
-def test_meta_repo_derives_g3():
-    # The whole campaign's north star: the meta's derived gate equals its declared
-    # G3 (every artifact Verified / ratified). Run against the real meta root.
+def test_meta_repo_default_phase_holds_g3_and_cache_is_fresh():
+    # The campaign's north star, phase-aware since phase v2 opened (WI-116): the
+    # meta's verified spine — the (default) phase — holds G3 regardless of what
+    # pre-dev drafts a later phase carries, and the committed docs/gate cache
+    # matches the recomputed state (--check green). Run against the real meta root.
     proc = run_py([SCRIPTS / "derive_gate.py", "--print", "--root", ROOT], cwd=ROOT)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "derived gate: G3" in proc.stdout
-    assert "drafts=0 computed=G3" in proc.stdout
+    assert "(default)=G3" in proc.stdout
+    check = run_py([SCRIPTS / "derive_gate.py", "--check", "--root", ROOT], cwd=ROOT)
+    assert check.returncode == 0, check.stdout + check.stderr
 
 
 # --- per-artifact gate rules --------------------------------------------------
