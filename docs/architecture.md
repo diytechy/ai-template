@@ -128,6 +128,7 @@ Contracts (interfaces): IF-014, IF-039
 | `write_kit_profile(dest, stack, omit, dry_run)` | Record the resolved profile in docs/kit-profile (beside the kit-version |  |
 | `seed_arch_map_mode(dest, stack, created, dry_run)` | A non-Python stack starts on the stack-neutral file-level arch map: |  |
 | `append_stack_checklist(dest, stack, dry_run)` | Insert the rewiring checklist into the freshly scaffolded status.md's |  |
+| `strip_provenance(text)` | Remove archive-anchor review-doc provenance citations from a kit script so |  |
 | `apply_template_rewrites(dst_rel, dst)` | Strip copy-me meta-prose from a freshly written scaffold file (see |  |
 | `initialize_generated_docs(dest, created)` | Run the generators once so the fresh scaffold starts green: the arch-map |  |
 | `kit_version()` | The kit's committed identity for the version stamp: (label, dirty). |  |

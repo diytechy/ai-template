@@ -1,5 +1,7 @@
 """Bootstrap must produce a scaffold that is green out of the box."""
 
+import re
+
 from conftest import KIT, SCRIPTS, load_script, run_py
 
 
@@ -510,3 +512,54 @@ def test_tracks_flag_scaffolds_lane_files_and_stays_green(tmp_path):
     assert "out/agent-loop.lock" in (dest / ".gitignore").read_text(encoding="utf-8")
     assert run_py(["scripts/trace.py", "--strict"], cwd=dest).returncode == 0
     assert run_py(["scripts/check_docs.py", "--stale"], cwd=dest).returncode == 0
+
+
+def test_strip_provenance_drops_review_anchors_keeps_prose_and_code():
+    # WI-079: scaffolded scripts must not carry citations into this meta-repo's
+    # docs/archive/ review docs (which do not ship). strip_provenance drops the
+    # (REVIEW_GRIND_*/THREAD_*_REVIEW code) tags across every citation SHAPE
+    # while leaving the surrounding prose — and never touching code.
+    strip = load_script("bootstrap").strip_provenance
+    cases = {
+        # whole-parenthetical -> the paren and its leading space go
+        "fall back to the default (REVIEW_GRIND_A A5).": "fall back to the default.",
+        "posture (REVIEW_GRIND_FULL C9): the target": "posture: the target",
+        # leading clause in a shared paren -> keep the prose
+        "console (REVIEW_GRIND_FULL C5; verbatim across the kit).": "console (verbatim across the kit).",
+        "scope (REVIEW_GRIND_A A2 — false-positive control is the point).": "scope (false-positive control is the point).",
+        # trailing clause in a shared paren -> keep the prose and the ")"
+        "adjacent (a gap > 1 line is a second block; REVIEW_GRIND_A A6).": "adjacent (a gap > 1 line is a second block).",
+        # a citation wrapped across one comment-continuation line
+        "drifted — REVIEW_GRIND_FULL\n    # C6). Change both": "drifted). Change both",
+        # a whole comment line that is only the citation -> the line goes
+        "no cruft behind\n    # (REVIEW_GRIND_A A7).\n    if pruned:": "no cruft behind\n    if pruned:",
+        # a citation that opens a comment line before real prose
+        "\n    # (THREAD_52_REVIEW.md F4). Kept recursive so": "\n    # Kept recursive so",
+        # bare, "See"-introduced, wrapped onto its own comment line
+        "directory explicitly. See\n# THREAD_52_REVIEW.md F5.\ntry:": "directory explicitly.\ntry:",
+    }
+    for src, want in cases.items():
+        assert strip(src) == want, "shape not stripped cleanly:\n" + repr(strip(src))
+    # Must NOT touch code identifiers or the hyphenated phase names that merely
+    # LOOK like anchors (REVIEW_GRIND_[A-Z]+ excludes REVIEW_PHASES).
+    for keep in (
+        "frozenset(REVIEW_PHASES)",
+        "Reviewer phases (REVIEW-A/REVIEW-B) fall",
+    ):
+        assert strip(keep) == keep
+
+
+def test_scaffolded_scripts_carry_no_archive_review_anchors(scaffold):
+    # The kit source DOES cite its archive review docs; the scaffolded copies
+    # must not (bootstrap strips them on copy) — and must stay valid Python.
+    anchor = re.compile(r"THREAD_\d+_REVIEW|REVIEW_GRIND_[A-Z]+")
+    kit_hits = 0
+    for src in sorted(SCRIPTS.glob("*.py")):
+        kit_hits += len(anchor.findall(src.read_text(encoding="utf-8")))
+        copied = scaffold / "scripts" / src.name
+        if not copied.exists():
+            continue  # *.template.* sources scaffold under a renamed target
+        text = copied.read_text(encoding="utf-8")
+        assert not anchor.search(text), "archive anchor survived in " + src.name
+        compile(text, str(copied), "exec")
+    assert kit_hits > 0, "kit source should still carry the provenance citations"

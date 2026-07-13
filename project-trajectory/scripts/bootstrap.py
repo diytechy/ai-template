@@ -1173,6 +1173,89 @@ TEMPLATE_REWRITES = {
 }
 
 
+# Archive-anchor provenance citations — comment/docstring pointers into this
+# meta-repo's docs/archive/ review docs (THREAD_<n>_REVIEW.md, REVIEW_GRIND_A/B/
+# FULL.md) tagged with a finding code (A5, C7, F4). They resolve HERE but dangle
+# for a downstream reader, whose scaffold copies the scripts WITHOUT docs/archive/
+# — so bootstrap drops them as it copies, keeping the copy-ready *why* and leaving
+# the provenance in the kit (deep-review-2026-07-12 M7 / WI-079). The anchors are
+# doc names that never appear in code (REVIEW_GRIND_[A-Z]+ excludes the
+# REVIEW_PHASES identifier), so these subs can only ever touch a real citation,
+# never a `foo()` call. Design-doc references (AGENT_ROLES, IMPROVEMENT_PLAN) are
+# a different, out-of-scope class — see the WI-079 note in docs/log.md.
+_PROV_ANCHOR = r"(?:THREAD_\d+_REVIEW(?:\.md)?|REVIEW_GRIND_[A-Z]+)"
+# A citation can wrap across one comment-continuation line ("REVIEW_GRIND_FULL\n
+# # C6"), so allow at most one newline + optional "#" between the pieces.
+_PROV_WRAP = r"[ \t]*(?:\r?\n[ \t]*#?)?[ \t]*"
+_PROV_CITE = _PROV_ANCHOR + _PROV_WRAP + r"[A-Z]\d+"
+# Order matters: the two in-paren clause forms run before the whole-paren form so
+# a citation sharing a paren with real prose keeps the prose; the bare form last.
+_PROVENANCE_SUBS = (
+    # Leading clause inside a paren — drop the "ANCHOR CODE; "/" — " head, keep
+    # the prose: "(C5; verbatim across the kit)" -> "(verbatim across the kit)".
+    (re.compile(r"\(" + _PROV_WRAP + _PROV_CITE + r"[ \t]*[;—][ \t]*"), "("),
+    # Trailing clause inside a paren — drop the "; ANCHOR CODE"/" — " tail, keep
+    # the prose and the ")": "(...second block; A6)" -> "(...second block)".
+    (
+        re.compile(
+            r"[ \t]*[;—][ \t]*(?:#[ \t]*)?" + _PROV_CITE + r"(?=" + _PROV_WRAP + r"\))"
+        ),
+        "",
+    ),
+    # Whole-parenthetical citation that IS a whole comment line ("# (A7).") —
+    # drop the line entirely so nothing dangles; the sentence it tailed sits on
+    # the line above.
+    (
+        re.compile(
+            r"\r?\n[ \t]*#[ \t]*\("
+            + _PROV_WRAP
+            + _PROV_CITE
+            + _PROV_WRAP
+            + r"\)[ \t]*\.?[ \t]*(?=\r?\n)"
+        ),
+        "",
+    ),
+    # Whole-parenthetical citation that OPENS a comment line before real prose
+    # ("# (F4). Kept…") — keep the "# " and the prose, drop the citation.
+    (
+        re.compile(
+            r"(\r?\n[ \t]*#[ \t]*)\("
+            + _PROV_WRAP
+            + _PROV_CITE
+            + _PROV_WRAP
+            + r"\)[ \t]*\.?[ \t]*"
+        ),
+        r"\1",
+    ),
+    # Whole-parenthetical citation (the paren holds nothing but the citation) —
+    # drop it and the space (or wrapped-onto-its-own-line break) before it:
+    # "posture (C9): ..." -> "posture: ...".
+    (
+        re.compile(
+            r"[ \t]*(?:\r?\n[ \t]*)?\(" + _PROV_WRAP + _PROV_CITE + _PROV_WRAP + r"\)"
+        ),
+        "",
+    ),
+    # Bare trailing citation, optionally introduced by "See" and wrapped onto its
+    # own comment line: "...explicitly. See\n# THREAD_52_REVIEW.md F5." -> "...".
+    (
+        re.compile(
+            r"[ \t]*(?:[Ss]ee[ \t]*)?(?:\r?\n[ \t]*#[ \t]*)?" + _PROV_CITE + r"\.?"
+        ),
+        "",
+    ),
+)
+
+
+def strip_provenance(text):
+    """Remove archive-anchor review-doc provenance citations from a kit script so
+    its scaffolded copy carries no pointer into docs/archive/ (which does not ship
+    downstream). See _PROVENANCE_SUBS for the citation shapes handled."""
+    for pat, repl in _PROVENANCE_SUBS:
+        text = pat.sub(repl, text)
+    return text
+
+
 def apply_template_rewrites(dst_rel, dst):
     """Strip copy-me meta-prose from a freshly written scaffold file (see
     TEMPLATE_REWRITES). Returns the count of substitutions applied."""
@@ -1545,6 +1628,14 @@ def main():
             dst.write_text(
                 strip_markers(src.read_text(encoding="utf-8"), omit, src_rel),
                 encoding="utf-8",
+            )
+        elif dst.suffix == ".py":
+            # Kit scripts copy verbatim EXCEPT for the archive-anchor provenance
+            # citations, which would dangle downstream (see strip_provenance).
+            # write_bytes keeps the source's LF endings byte-for-byte (unlike
+            # write_text, which would translate to os.linesep on Windows).
+            dst.write_bytes(
+                strip_provenance(src.read_text(encoding="utf-8")).encode("utf-8")
             )
         else:
             shutil.copyfile(src, dst)
