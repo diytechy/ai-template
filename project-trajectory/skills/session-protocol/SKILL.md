@@ -31,6 +31,10 @@ kit's design history — the old thread specs and the WI-1.x log — is archived
   *before* new work — verify-and-commit what is complete, discard what is not
   part of the scope, and record which in the log. (The unattended loop surfaces
   this into the session prompt; the judgment is yours — it never auto-stashes.)
+- **Treat a declared-policy change as a status-staleness event.** In the same
+  sitting, grep `docs/status.md` and `docs/run-state` for pause/stop/approval
+  language predicated on the old `gate-policy`, `push-policy`, `review-policy`,
+  or `guardrails-policy` value; point to the policy file instead of paraphrasing it.
 
 ## 2. Respect the constraints
 

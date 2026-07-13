@@ -251,6 +251,7 @@ def test_reviewer_prompt_carries_requirement_consistency_sweep(managed_repo):
     rev_block = prompts.split("=== revb ===\n", 1)[1].split("\n=== ", 1)[0]
     assert "contradiction" in rev_block
     assert "SN/SR/TC" in rev_block
+    assert "status.md prose that contradicts a declared policy" in rev_block
 
 
 def test_prompt_map_slots_a_custom_reviewer_template(managed_repo):

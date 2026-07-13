@@ -1,4 +1,4 @@
 # Unattended-run state (read by project-trajectory/scripts/agent_loop.py via
 # the root agent-resume.* launchers). RUNNING while work remains; a driver
 # writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run.
-RUNNING
+NEEDS-HUMAN

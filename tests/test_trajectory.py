@@ -428,6 +428,45 @@ def test_absent_status_md_is_vacuous_for_rbcd_under_strict(tmp_path):
         assert rule not in proc.stderr
 
 
+def test_run_state_end_state_warns_for_actionable_queue_and_fails_strict(tmp_path):
+    # WI-115: an end-state must not strand a queued WI whose hard predecessors
+    # are all done; soft predecessors remain advisory.
+    write_spec(tmp_path, "docs/specs/WI-002.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Done,scripts,,,done,shipped,\n"
+        "WI-002,Next,scripts,,WI-001;~WI-003,queued,,docs/specs/WI-002.md\n"
+        "WI-003,Advisory,scripts,,,active,,docs/specs/WI-002.md\n",
+    )
+    write_status(tmp_path, "Next: WI-002; WI-003 is its predecessor.\n")
+    (tmp_path / "docs" / "run-state").write_text("NEEDS-HUMAN\n", encoding="utf-8")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "run-state NEEDS-HUMAN" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "run-state NEEDS-HUMAN" in strict.stderr
+
+
+def test_run_state_check_is_vacuous_without_file_and_for_done_empty_queue(tmp_path):
+    # Non-adopters have no run-state file; DONE is legal when no queued WI is ready.
+    write_spec(tmp_path, "docs/specs/WI-002.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Done,scripts,,,done,shipped,\n"
+        "WI-002,Waiting,scripts,,WI-003,queued,,docs/specs/WI-002.md\n"
+        "WI-003,Blocked predecessor,scripts,,,active,,docs/specs/WI-002.md\n",
+    )
+    write_status(tmp_path, "Next: WI-002; WI-003 is its predecessor.\n")
+    absent = run_traj(tmp_path, "--strict")
+    assert absent.returncode == 0, absent.stdout + absent.stderr
+    assert "run-state" not in absent.stderr
+    (tmp_path / "docs" / "run-state").write_text("DONE\n", encoding="utf-8")
+    done = run_traj(tmp_path, "--strict")
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert "run-state" not in done.stderr
+
+
 def test_placeholder_only_stays_vacuous_under_strict(tmp_path):
     # The opt-out promise holds under --strict too: a fresh scaffold's inert
     # WI-000 row triggers no SSOT finding.

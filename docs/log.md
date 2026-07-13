@@ -4110,3 +4110,28 @@ when `docs/run-state` holds an end-state over an actionable queue; WI-103 skippe
 as the autonomous next since its PROCESS_OPTIONS split needs an owner taste
 ruling). The run continues at G3; **`main-decomposition` (WI-080 → WI-081) stays
 sequenced behind the owner sitting**.
+
+## 2026-07-13 — WI-115: status-currency hardening
+
+Delivered [WI-115](specs/WI-115.md): `check_trajectory.py` now warns when
+`NEEDS-HUMAN` or `BLOCKED` would park a queued WI whose hard predecessors are
+done, and promotes the finding under `--strict`. Absent `docs/run-state` and
+`DONE` with no actionable queue remain vacuous. Added fire/vacuous/strict tests,
+the declared-policy status sweep to the session and gate skills (all four
+materialized copies refreshed), and the reviewer charter clause for policy-contradictory
+status prose.
+
+The owner-gated WI-097, WI-098, WI-103, and WI-123 rows now accurately read
+`deferred`, so the new currency check does not mistake them for autonomous work.
+**Deviation:** none. **Byte-budgeted files:** none.
+
+**Verification.** Full suite: `python -m pytest -q -n auto` → **673 passed, 34
+skipped in 61.35s**. Commit bar: `python -m pytest -q -n auto -m smoke` → **550
+passed, 2 skipped in 47.51s**; `python project-trajectory/scripts/check_docs.py
+--root . --stale` → **OK, 0 broken** (11 pre-existing/generated-orphan warnings
+and stale hints).
+
+No spine change; derived gate remains G3. No push (`push-policy: human`).
+`docs/next-wi` → WI-123 and `docs/run-state` → `NEEDS-HUMAN`: **Needs <human>**
+to rule the review-cadence proposal in `docs/specs/WI-123.md` (accept its
+evidence-gated deferral, adapt it, or authorize implementation).

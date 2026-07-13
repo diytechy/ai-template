@@ -112,6 +112,7 @@ IF_CSV = "docs/requirements/interfaces.csv"
 LLR_CSV = "docs/requirements/low-level-requirements.csv"
 CMP_CSV = "docs/requirements/components.csv"
 STATUS_MD = "docs/status.md"
+RUN_STATE = "docs/run-state"
 ARCH_MD = "docs/architecture.md"
 
 # The How-SW top view is bounded at this many items (top-level components +
@@ -922,6 +923,32 @@ def ssot_findings(wis, root):
     return out
 
 
+def run_state_findings(wis, root):
+    """Warn when an end-state would park a runnable queued work item (WI-115).
+
+    An absent ``docs/run-state`` means the repo has not adopted unattended
+    operation, so this remains vacuous. Only hard predecessors constrain
+    readiness; soft edges are advisory by definition.
+    """
+    state = _first_declared_line(root / RUN_STATE)
+    if state not in ("NEEDS-HUMAN", "BLOCKED"):
+        return []
+    by_id = {w["id"]: w for w in wis}
+    actionable = [
+        w["id"]
+        for w in wis
+        if w["status"] == "queued"
+        and all(by_id.get(pred, {}).get("status") == "done" for pred in w["preds"])
+    ]
+    if not actionable:
+        return []
+    return [
+        "run-state {} but actionable queued WI(s) {} have all hard predecessors "
+        "done — is the pause still real? A stale end-state parks agent-resume at "
+        "boot".format(state, ";".join(sorted(actionable)))
+    ]
+
+
 def _git(root, args):
     """`git -C <root> <args>` stdout on success, else None (git absent, not a
     repo, no such object). Every staged-mode git call degrades to None so the
@@ -1202,9 +1229,12 @@ def main():
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     errors = comp_errors + integrity + validate(wis, load_known_srs(root))
-    # The SSOT coherence layer: R-A is always an error; R-B…R-E + the
-    # unknown-status lint are WARN unless --strict promotes them.
-    for rule, hard, msg in ssot_findings(wis, root):
+    # The SSOT coherence layer: R-A is always an error; R-B…R-E, the
+    # run-state currency check, and the unknown-status lint are WARN unless
+    # --strict promotes them.
+    findings = ssot_findings(wis, root)
+    findings.extend(("run-state", False, msg) for msg in run_state_findings(wis, root))
+    for rule, hard, msg in findings:
         line = "{} {}".format(rule, msg)
         if hard or args.strict:
             errors.append(line)

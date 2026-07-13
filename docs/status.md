@@ -233,27 +233,16 @@ working surface.
       gen_trajectory hygiene — one module-level `esc` + a `<title>` tooltip on
       every SVG node — all landed 2026-07-13; records in log.md + registry
       Deliverables.)*
-    - **WI-115** — status-currency hardening (owner-asked 2026-07-12): a
-      warn-first `check_trajectory` finding when `docs/run-state` holds an
-      end-state over an actionable queue (the observed agent-resume-parks-at-
-      boot trap), plus the policy-flip status sweep as protocol (skills +
-      reviewer charter). Spec: [specs/WI-115.md](specs/WI-115.md).
     - _(Not filed, deliberately: L5 commit-subject length — accept, or it needs
       a commit-msg check to be a backed rule; L6 template-cell manuals — an
       owner taste ruling on a deliberate design, medium churn to shipped
       templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
-- **Next action — the G3 backlog (branch `derived-gate-model`; `docs/next-wi` =
-  WI-115).** Phase v2 is complete; the dev-toolchain pin, the coverage-plumbing
-  hardening, **the dupes-gate + census, the scaffold-strip of the archive-
-  anchor review citations, the M1 rule-set-sync meta test, the M2 off-root
-  loud-fail guard on `check.py`, the M3 Status-casing rule (unified
-  case-insensitive + stated once in §4), and the M4/L7 gen_trajectory hygiene
-  (one module-level `esc` + a `<title>` tooltip on every SVG node) all landed
-  2026-07-13** (records in log.md + each WI row's Deliverable); a resume session
-  picks up **WI-115** next (status-currency hardening — a warn-first
-  `check_trajectory` finding when `docs/run-state` holds an end-state over an
-  actionable queue; backlog below). *(WI-103 is skipped as the autonomous next —
-  its PROCESS_OPTIONS split needs an owner taste ruling.)*
+- **Next action — Needs <human> (branch `derived-gate-model`; `docs/next-wi` =
+  WI-123).** Rule the queued review-cadence proposal in
+  [specs/WI-123.md](specs/WI-123.md): accept its evidence-gated deferral,
+  adapt it, or authorize implementation. No autonomous queued WI remains
+  (WI-097/098/103 each needs an owner ruling). The coordinator
+  must stop in `NEEDS-HUMAN` until this decision creates actionable scope.
   1. **Derived-gate campaign — LANDED (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the whole 8-slice campaign has shipped: the `Draft` artifact state + trace
@@ -284,8 +273,8 @@ working surface.
      regenerated the gate (v2 → G3) and passed `check.py --gate G3 --phase v1,v2`
      (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's
      Deliverable). The v2 spine cut rides the owner single-ratify sitting above.
-  3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
-     = WI-115). The dev-toolchain pin, the coverage-plumbing hardening, the
+   3. **The rest of the backlog needs no new SR — proceed at G3 after the owner
+      ruling above.** The dev-toolchain pin, the coverage-plumbing hardening, the
      **dupes-gate + census** (the M2/M6 census wired as `docs/stack.ini`
      `[step:dupes]` over the `docs/dupes-allow` allowlist — new copy-paste
      between an unlisted file-pair now fails G3), the **scaffold-strip of the
@@ -308,12 +297,9 @@ working surface.
      closures collapsed to one module-level `esc`, and a `<title>` hover/a11y
      tooltip added to every SVG node across all four view emitters)
      all landed 2026-07-13 (records in log.md + registry Deliverables).
-     **`main-decomposition` (WI-080 → WI-081) is the highest-value next step but
-     is sequenced *behind the owner sitting*** (highest-risk, behavior-preserving,
-     test-seams-first) — so the autonomous next is **WI-115** (status-currency
-     hardening: a warn-first `check_trajectory` finding when `docs/run-state`
-     holds an end-state over an actionable queue; [specs/WI-115.md](specs/WI-115.md) —
-     a driver-sequencing call the owner can re-order). WI-103 (PROCESS_OPTIONS
+      **`main-decomposition` (WI-080 → WI-081) is the highest-value next step but
+      is sequenced *behind the owner sitting*** (highest-risk, behavior-preserving,
+      test-seams-first). WI-103 (PROCESS_OPTIONS
      byte budget + applies-when index) is owner-taste-gated (its doc split needs
      a ruling); WI-097/098 are owner-gated; the owner's triage/sequencing is
      welcome but does not block the cheap picks.
