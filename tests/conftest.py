@@ -18,6 +18,17 @@ ROOT = Path(__file__).resolve().parent.parent
 KIT = ROOT / "project-trajectory"
 SCRIPTS = KIT / "scripts"
 
+# Hermeticity: a coordinator-launched session (agent-resume.* -> agent_loop.py ->
+# the agent CLI running this suite as the commit bar) inherits the launcher's
+# AGENT_* routing contract (AGENT_CMD, AGENT_MODEL_MAP, AGENT_TIER_MAP, ...).
+# The agent_loop tests build their own scaffolds and env, but an *ambient*
+# AGENT_TIER_MAP (e.g. BUILD=strong) re-routes their subprocess loops and fails
+# 8 of them — so the unattended layer could never produce a green commit bar
+# (WI-118, found live 2026-07-12). Scrub the whole namespace at import, before
+# any test copies os.environ; tests that need these vars set them explicitly.
+for _k in [k for k in os.environ if k.startswith("AGENT_")]:
+    del os.environ[_k]
+
 
 def load_script(name):
     """Import a kit script as a module (scripts/ is intentionally not a package).
