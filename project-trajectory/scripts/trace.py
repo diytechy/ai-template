@@ -256,6 +256,16 @@ def is_draft(row):
     return (row.get("Status") or "").strip().lower() == "draft"
 
 
+# SR Verification methods that decompose to a TC but no LLR — there is no code to
+# write, only its acceptance to analyze/inspect/attest, so the orphan rule below
+# exempts them from the "SR with no LLR" finding. The derived gate mirrors this
+# exact set as derive_gate.LLR_EXEMPT; tests/test_rule_sync.py pins the two equal
+# (WI-099) so the orphan report and the gate computation never disagree about what
+# "decomposed" means. (Critique is NOT here: its artifact is produced by code, only
+# its acceptance is subjective.)
+LLR_EXEMPT = ("Analysis", "Inspection", "Attest")
+
+
 def structure_findings(path, display=None):
     """Column-count structural check over one registry CSV: every data row must
     parse (RFC-4180 quoting) to exactly the header's column count. This is the
@@ -1033,7 +1043,7 @@ def main():
         # the live spine without orphaning. Its SN linkage and every integrity
         # rule still apply.
         draft = is_draft(r)
-        analytic = r.get("Verification", "") in ("Analysis", "Inspection", "Attest")
+        analytic = r.get("Verification", "") in LLR_EXEMPT
         if not draft and not analytic and sid not in llr_sr_refs:
             orphans.append(
                 f"SR {sid} has no LLR (and Verification not in "

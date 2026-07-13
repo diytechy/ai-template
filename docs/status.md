@@ -135,7 +135,7 @@ working surface.
     *(Earlier items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
     the already-made sibling-repo ruling, and the guardrails-batch review;
     see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed
-    as backlog WI-079…082 below.)*
+    as backlog WI-080…082 below.)*
   - **External follow-up (tracked upstream, not this repo's work):** the
     guardrails content enrichment (`JUDGMENT.md` playbook + CONTEXT-class rules
     + the `Verified:` greppable claim vocabulary) is **owner-ruled to live in
@@ -179,14 +179,6 @@ working surface.
       the seam-TC-citation scan (spec: [specs/WI-065.md](specs/WI-065.md);
       deferred until a seam actually needs `Active` status — every current
       seam is `Stable`).
-    - **WI-079** — strip archive-anchor citations on scaffold. Owner-ruled
-      2026-07-12: `bootstrap.py` drops the trailing `(REVIEW_*/THREAD_*)`
-      provenance suffixes as it copies scripts downstream — provenance stays
-      here, downstream gets the copy-ready comment. Lowest-value of the batch;
-      accept-and-document is the recorded fallback if the transform isn't cheap.
-      Spec:
-      [archive/repo-review-2026-07-12.md](archive/repo-review-2026-07-12.md) §1
-      M7.
     - **WI-080** — decompose `agent_loop.py:main()` (~1,015 lines / ~500-line
       loop body) behind unit-testable seams. Owner-ruled 2026-07-12: approved as
       its own `main-decomposition` campaign, **test-seams-first** and
@@ -230,12 +222,12 @@ working surface.
     - **WI-097** — LICENSE decision + file (**needs the owner**: which license,
       and whether the kit is headed public; the report's H3).
     - **WI-098** — thin history-provenance comments in the kit masters (H4;
-      soft-edged after WI-079's strip-at-scaffold).
-    - **WI-099** — mechanize the trace↔derive_gate rule-set sync promise with a
-      meta test (M1 — closes the one found path to a silent gate/trace
-      disagreement; cheap, high leverage).
+      the strip-at-scaffold precedent shipped 2026-07-13, so this masters-comment
+      question now stands on its own — and could absorb the design-doc citations
+      `AGENT_ROLES`/`IMPROVEMENT_PLAN` the scaffold-strip left in scope).
     - **WI-100** — root-anchor `check.py`'s `docs/gate`/`docs/stack.ini` reads
-      or fail loudly off-root (M2).
+      or fail loudly off-root (M2). *(The M1 rule-set-sync meta test landed
+      2026-07-13 — records in log.md + registry Deliverable.)*
     - **WI-101** — state the Status-casing rule once + near-miss hint in the
       finding text (M3).
     - **WI-102** — gen_trajectory hygiene: one module-level `_esc` (now defined
@@ -253,10 +245,11 @@ working surface.
       owner taste ruling on a deliberate design, medium churn to shipped
       templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
 - **Next action — the G3 backlog (branch `derived-gate-model`; `docs/next-wi` =
-  WI-079).** Phase v2 is complete; the dev-toolchain pin, the coverage-plumbing
-  hardening, and **the dupes-gate + census all landed 2026-07-13** (records in
-  log.md + each WI row's Deliverable); a resume session picks up WI-079 next
-  (backlog below).
+  WI-100).** Phase v2 is complete; the dev-toolchain pin, the coverage-plumbing
+  hardening, **the dupes-gate + census, the scaffold-strip of the archive-
+  anchor review citations, and the M1 rule-set-sync meta test all landed
+  2026-07-13** (records in log.md + each WI row's Deliverable); a resume session
+  picks up **WI-100** next (backlog below).
   1. **Derived-gate campaign — LANDED (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the whole 8-slice campaign has shipped: the `Draft` artifact state + trace
@@ -288,18 +281,25 @@ working surface.
      (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's
      Deliverable). The v2 spine cut rides the owner single-ratify sitting above.
   3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
-     = WI-079). The dev-toolchain pin, the coverage-plumbing hardening, and the
+     = WI-100). The dev-toolchain pin, the coverage-plumbing hardening, the
      **dupes-gate + census** (the M2/M6 census wired as `docs/stack.ini`
      `[step:dupes]` over the `docs/dupes-allow` allowlist — new copy-paste
-     between an unlisted file-pair now fails G3) all landed 2026-07-13 (records
-     in log.md + registry Deliverables). **`main-decomposition` (WI-080 →
-     WI-081) is the highest-value next step but is sequenced *behind the owner
-     sitting*** (highest-risk, behavior-preserving, test-seams-first) — so the
-     autonomous next is **WI-079** (strip archive-anchor citations on scaffold —
-     owner-ruled 2026-07-12, implementation-only, no owner dependency). The
-     remaining deep-review-b queue (WI-099 the trace↔derive_gate sync test is
-     the cheap high-leverage one; WI-100/101/102/115 the hygiene batch) awaits
-     owner triage/sequencing.
+     between an unlisted file-pair now fails G3), the **scaffold-strip of the
+     archive-anchor review citations** (`bootstrap.strip_provenance` drops the
+     `(REVIEW_*/THREAD_*)` provenance from scripts as it copies them, so a
+     downstream reader inherits no dangling `docs/archive/` pointer — deep-review
+     M7), and the **M1 rule-set-sync meta test** (`tests/test_rule_sync.py` pins
+     `trace.LLR_EXEMPT`/`derive_gate.LLR_EXEMPT` and the `is_draft`/`sn_draft_ids`
+     *policy* predicates equal, so the orphan report and the derived gate can't
+     silently disagree — trace.py's inline exempt literal became a named constant)
+     all landed 2026-07-13 (records in log.md + registry Deliverables).
+     **`main-decomposition` (WI-080 → WI-081) is the highest-value next step but
+     is sequenced *behind the owner sitting*** (highest-risk, behavior-preserving,
+     test-seams-first) — so the autonomous next is **WI-100** (root-anchor
+     `check.py`'s `docs/gate`/`docs/stack.ini` reads or fail loudly off-root; M2 —
+     a driver-sequencing call the owner can re-order). The rest of that queue
+     (WI-101/102/115 hygiene; WI-097/098 owner-gated) follows; the owner's
+     triage/sequencing is welcome but does not block the cheap picks.
   Remaining owner item: the **push decision** above.
 
 ## Scope

@@ -72,9 +72,11 @@ from pathlib import Path
 G0, G1, G2, G3 = 0, 1, 2, 3
 GATE_NAMES = {G0: "G0", G1: "G1", G2: "G2", G3: "G3"}
 
-# SR Verification methods with no code to decompose, so they need a TC but no LLR
-# (kept in sync with trace.py's orphan rule — Critique is NOT here: its artifact
-# is produced by code, only its acceptance is subjective).
+# SR Verification methods with no code to decompose, so they need a TC but no LLR.
+# This is the same policy as trace.py's orphan rule (trace.LLR_EXEMPT); the promise
+# is mechanized, not just prose — tests/test_rule_sync.py pins the two sets equal
+# (WI-099). Critique is NOT here: its artifact is produced by code, only its
+# acceptance is subjective.
 LLR_EXEMPT = {"Analysis", "Inspection", "Attest"}
 
 GATE_FILE = "docs/gate"

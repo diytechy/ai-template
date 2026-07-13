@@ -3835,3 +3835,128 @@ re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
 → **WI-079** (strip archive-anchor citations on scaffold — owner-ruled, no owner
 dependency). **`main-decomposition` (WI-080 → WI-081) stays sequenced behind the
 owner sitting** (highest-value/highest-risk); the run continues at G3.
+
+## 2026-07-13 — WI-079: strip archive-anchor citations on scaffold (deep-review M7)
+
+**The defect.** The 2026-07-12 review's **M7**: kit scripts carry comment/
+docstring citations into *this* meta-repo's `docs/archive/` **review** docs —
+`(THREAD_52_REVIEW.md F4)`, `(REVIEW_GRIND_FULL C6)`, etc. — tagged with a
+finding code (A5, C7, F4). They resolve here, but every scaffold copies the
+scripts **without** `docs/archive/`, so a downstream reader inherits dangling
+pointers. Owner-ruled 2026-07-12: `bootstrap.py` **drops them as it copies** —
+provenance stays in the kit, downstream gets the copy-ready *why* — with
+accept-and-document the recorded fallback *if the transform isn't cheap*.
+
+**Why the transform earned its keep (it is not trivial).** A grep found the
+citations in **six syntactic shapes**, not one: whole-parenthetical
+(`… (C9): …`), a citation sharing a paren with real prose as a **leading**
+clause (`(C5; verbatim across the kit)`) or a **trailing** clause
+(`(…second block; A6)`), a citation **wrapped across one comment-continuation
+line** (`— REVIEW_GRIND_FULL\n    # C6)`), a **whole comment line** that is
+nothing but the citation, and a **bare** `See\n# THREAD_52_REVIEW.md F5.`. A
+naive "strip the paren" would have **deleted meaningful prose** in three of
+them, and a naive "remove empty parens" tidy would have **destroyed every
+`foo()` call** in the script. The safe design is **anchor-scoped**: every regex
+*requires* an archive-doc name (`THREAD_\d+_REVIEW` | `REVIEW_GRIND_[A-Z]+`),
+and those names appear **only in comments/docstrings, never in code** — so a
+sub can only ever touch a real citation. `REVIEW_GRIND_[A-Z]+` deliberately
+**excludes** the `REVIEW_PHASES` identifier (`frozenset(REVIEW_PHASES)`) and the
+hyphenated `REVIEW-A/REVIEW-B` phase names, both verified untouched.
+
+**Implementation.** `strip_provenance(text)` + a `_PROVENANCE_SUBS` table of
+shape-specific regexes (ordered: the two in-paren clause forms before the
+whole-paren forms so shared prose survives; the two comment-line-start forms;
+the bare form last). Wired into `bootstrap.py`'s copy branch for `.py` sources
+via `write_bytes(strip_provenance(...).encode())` — which keeps the source's LF
+endings **byte-for-byte** on Windows (unlike `write_text`, whose newline arg is
+3.10+ anyway). No kit-shipped **behavior** changes — only comment text, and only
+downstream copies; the meta-repo's own scripts are untouched (it does not
+scaffold its own scripts).
+
+**Scope held to the ruling.** The owner named `(REVIEW_*/THREAD_*)` — the review-
+**finding** anchors. The scripts *also* cite two **design** docs — `(AGENT_ROLES
+R6)`, `(IMPROVEMENT_PLAN.md Thread 50)` — a different, load-bearing-reference
+class (closer to WI-098's "thin history-provenance comments"). Left **in scope
+for the owner**, surfaced here rather than fixed inline (working-agreement: a
+spotted smell is a separate finding). A follow-on could fold them into WI-098.
+
+**Verification.**
+- Empirical transform over all 11 affected scripts: **25 anchors → 0 survive**;
+  `REVIEW_PHASES` / `REVIEW-A/REVIEW-B` untouched; every transformed script
+  **compiles**; a changed-line debris scan is clean (the one flag was a false
+  positive — `# .gitattributes`, a filename).
+- **Two new tests** (`test_bootstrap.py`, slow tier): a **unit** test asserting
+  each citation shape strips cleanly *and* the must-not-touch identifiers
+  survive; an **integration** test asserting the scaffolded `scripts/*.py` carry
+  **no** review anchor while the kit source still does, and compile.
+- Commit bar: `pytest -q -n auto -m smoke` → **543 passed, 2 skipped**;
+  `check_docs --root . --stale` → **OK, 0 broken** (the "possibly stale" hints
+  are pre-existing, on archived review docs).
+- Full unfiltered suite → **697 passed, 3 skipped**. Full derived **G3 gate**
+  `check.py --gate G3 --phase v1,v2 --jobs 0` → **PASS** (tests+coverage 91.54%
+  ≥ 85; `dupes` PASS — `check_dupes` 0 findings incl. the new code;
+  `derived-gate` / `trajectory` PASS). `arch-map` + `PROJECT_STATE.html`
+  regenerated for the one new `strip_provenance` symbol (one map row; two
+  dashboard lines).
+
+**No spine change** — no new SN/SR/LLR/TC (proceed at G3), no byte-budgeted file
+(AGENTS.template.md / PROCESS.md) touched. Derived gate stays **G3**.
+
+**Not pushed** (push-policy: human). Owner queue unchanged (push decision + G3
+re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
+→ **WI-099** (mechanize the trace↔derive_gate rule-set sync with a meta test —
+the deep-review-b queue's cheap, high-leverage, owner-independent pick). The run
+continues at G3; **`main-decomposition` (WI-080 → WI-081) stays sequenced behind
+the owner sitting**.
+
+## 2026-07-13 — WI-099: mechanize the trace↔derive_gate rule-set sync (deep-review-b M1)
+
+**The defect.** Review-b **M1**: `trace.py` and `derive_gate.py` each carry the
+same *gate policy* — which SR Verification methods are LLR-exempt, and what
+"Draft" means — and their agreement was promised only in a **prose comment**
+("kept in sync with trace.py's orphan rule"). The F5 rule licenses duplicating
+*plumbing* (the small CSV/heading loaders) so each script stays an independently-
+copyable drop-in; duplicating *policy* is the riskier thing the finding flags —
+if one file adds a method to the exempt set and the other doesn't, the orphan
+report and the derived gate disagree about the same repo, i.e. a false green or
+false red at a gate (the exact failure the kit exists to prevent).
+
+**The fix — pin the two equal with a meta test.** The finding's own cheapest-
+honest suggestion: import both modules and assert equivalence.
+- **Named the policy once per file so it's directly comparable.** `trace.py`'s
+  exempt set was an **inline literal** `("Analysis", "Inspection", "Attest")`
+  buried in the orphan loop (plus a restatement in the finding-message string);
+  extracted it to a module-level `LLR_EXEMPT` constant (a net *reduction* of
+  trace.py's own duplication) and used it at the membership test. `derive_gate`
+  already had a named `LLR_EXEMPT`; both comments now point at the test instead of
+  promising sync in prose. The message string stays literal (cosmetic, not policy).
+- **New meta test** `tests/test_rule_sync.py` (3 tests, smoke tier by default):
+  `set(trace.LLR_EXEMPT) == set(derive_gate.LLR_EXEMPT)` (and both == the expected
+  three), plus **behavioral** equivalence of the other two duplicated *policy*
+  predicates across a battery — `is_draft` (casing/whitespace/None/missing) and
+  `sn_draft_ids` (draft vs ratified headings, `-000` placeholders, section
+  boundaries). The plumbing loaders (`refs`, `load_csv`) are deliberately *not*
+  pinned — F5 licenses those to drift as pure mechanism.
+
+**Scope held.** Only the LLR-exempt literal moved in trace.py; no behavior change
+(same membership test, same orphan output — full suite green proves it). The
+`is_draft`/`sn_draft_ids` bodies were left duplicated *as-is* and pinned by test
+rather than de-duplicated by a shared import, keeping both scripts self-contained
+per F5.
+
+**Verification.**
+- New test alone: `pytest -q tests/test_rule_sync.py` → **3 passed**.
+- Commit bar: `pytest -q -n auto -m smoke` → **546 passed, 2 skipped**;
+  `check_docs --root . --stale` → **OK, 0 broken** (the "possibly stale" hints are
+  pre-existing, on archived review docs).
+- Full unfiltered suite → **700 passed, 3 skipped**.
+
+**No spine change** — no new SN/SR/LLR/TC (proceed at G3), no byte-budgeted file
+(AGENTS.template.md / PROCESS.md) touched. Derived gate stays **G3**.
+
+**Not pushed** (push-policy: human). Owner queue unchanged (push decision + G3
+re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
+→ **WI-100** (root-anchor `check.py`'s `docs/gate`/`docs/stack.ini` reads or fail
+loudly off-root — the next deep-review-b hygiene pick). The run continues at G3;
+**`main-decomposition` (WI-080 → WI-081) stays sequenced behind the owner
+sitting**.
