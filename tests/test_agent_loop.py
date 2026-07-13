@@ -53,9 +53,12 @@ elif action in ("done", "blocked", "needs-human"):
     commit("finishing")
     pathlib.Path("docs/run-state").write_text(action.upper())
     print(json.dumps({"result": "ok",
-                      "usage": {"input_tokens": 10, "output_tokens": 5},
+                      "usage": {"input_tokens": 10, "output_tokens": 5,
+                                "cache_read_input_tokens": 70000,
+                                "cache_creation_input_tokens": 9000},
                       "total_cost_usd": 0.12,
-                      "duration_api_ms": 61000, "num_turns": 7}))
+                      "duration_api_ms": 61000, "num_turns": 7,
+                      "ttft_ms": 4200, "fast_mode_state": "off"}))
 elif action == "limit":
     print(json.dumps({"is_error": True,
                       "result": "You've hit your session limit \\u00b7 resets 3:45pm"}))
@@ -174,12 +177,21 @@ def test_done_exit_writes_logs_and_index(loop_repo):
     assert re.search(r"^# wall-secs: \d+$", meta, re.M)
     assert "# api-secs: 61" in meta
     assert "# turns: 7" in meta
+    # Session-shape telemetry (WI-124): boot latency, context volumes, and the
+    # two per-turn speed dials, plus the coordinator-side prompt size.
+    assert "# ttft-secs: 4" in meta
+    assert "# cache-read: 70000" in meta
+    assert "# cache-create: 9000" in meta
+    assert "# fast: off" in meta
+    assert "# effort:" in meta  # key present; value is whatever env was launched
+    assert re.search(r"^# prompt-chars: \d+$", meta, re.M)
     index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
     assert "| 001 |" in index and "| 002 |" in index
     assert "COMMITTED" in index and "DONE" in index
     assert "10+5" in index and "0.12" in index  # tokens + cost from the JSON
-    assert "| Wall s | API s | Turns |" in index
-    assert "| 61 | 7 |" in index  # the done session's API seconds + turns
+    assert "| Wall s | API s | Turns | s/turn | Ctx/turn |" in index
+    # 61 s API / 7 turns = 8.7 s/turn; 70000 cache-read / 7 turns = 10k ctx/turn
+    assert "| 61 | 7 | 8.7 | 10k |" in index
     assert "never hand-edited" in index
     # The raw unbounded stream lands in the gitignored out/run-logs/.
     assert list((repo / "out" / "run-logs").glob("*.log"))

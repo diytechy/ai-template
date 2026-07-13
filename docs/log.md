@@ -3414,3 +3414,43 @@ mechanism; recorded in the spec's "Selection principle."
   not slow"` 0, `-m "smoke and slow"` 0.
 - `check_docs.py --root . --stale` → `OK - 45 doc(s), 265 intra-repo link(s),
   0 broken`.
+
+## 2026-07-13 — WI-124: session-shape telemetry — why a session was slow, not just that it was
+
+**Owner-directed**, prompted by "the CLI via agent-resume feels much slower
+than the VS Code extension — perception?". WI-119 recorded how long; this
+records **why**, so tier/effort/fast-mode tweaks become measurable instead of
+felt. Six new log-header fields (parsed from the CLI JSON already stored in
+every transcript, plus the launch env the coordinator knows): `ttft-secs`
+(boot-to-first-token — initial context-ingest latency), `cache-read` /
+`cache-create` (context tokens carried per turn / ingested fresh at boot —
+the "initial information complexity" signal), `effort`
+(`CLAUDE_CODE_EFFORT_LEVEL` from the launched env), `fast` (`fast_mode_state`),
+`prompt-chars` (the composed instruction's size). The index gains two
+**derived** columns computed at regeneration — `s/turn` (api-secs/turns, the
+like-for-like pace across sessions of different lengths) and `Ctx/turn`
+(cache-read/turns, humanized) — old logs render `—`. `read_log_meta` headroom
+24→32.
+
+**Baseline read from the 2026-07-12 run's stored JSON (the perception
+answer):** fable BUILDs ran **12.7 / 11.3 s per turn** at ~91k/77k ctx-per-turn
+(effort=high, fast=off); opus reviews **15.5 / 11.6 s per turn**. Per turn the
+CLI matches an interactive session's pace — the felt slowness is structural:
+**~100-turn autonomous batches** with **zero streaming output** (headless
+`--output-format json` prints nothing until the end), a **cold ~190k-token
+ingest every session** (fresh context is the process invariant), effort
+pinned high, fast mode off. The dials this makes measurable: WI-121's
+BUILD→opus (next run's rows will show it), an effort-map experiment
+(**WI-110's un-defer evidence stream is now automatic** — dial
+`CLAUDE_CODE_EFFORT_LEVEL` per phase and read the `s/turn` delta), and a
+fast-mode-on-opus experiment (the `fast` column makes it a controlled test).
+
+**Deviations from spec:** none (owner-directed scope; no prior spec — the WI
+row is the record). **Byte budgets:** untouched (delta 0).
+
+**Verification (real output):**
+- `pytest -q tests/test_agent_loop.py` → `42 passed` (new fake-agent fields +
+  six header keys + derived-column assertions).
+- Close bar (full, unfiltered): `pytest -q -n auto` → `681 passed, 3 skipped
+  in 61.01s`; `check_docs --stale` → `OK - 45 doc(s), 264 intra-repo link(s),
+  0 broken`.

@@ -67,6 +67,8 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `bounded_transcript(output)` | Head + capped tail of a session transcript (the tracked-log bound). |  |
 | `write_session_log(iter_dir, meta, transcript)` | Write the tracked, size-bounded per-session log: a `# key: value` |  |
 | `read_log_meta(path)` | Parse the `# key: value` metadata header of one session log. |  |
+| `per_turn_pace(meta)` | API seconds per turn from a log's header meta — the like-for-like speed |  |
+| `per_turn_context(meta)` | Average context carried per turn (cache-read tokens / turns, humanized |  |
 | `regenerate_index(docs_dir)` | Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata |  |
 | `next_session_number(iter_dir)` | Next NNN, continuing across coordinator restarts. |  |
 | `preflight(root, template, args)` | Refuse to start iteration 1 on a broken footing. Returns the list of |  |

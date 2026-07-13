@@ -886,6 +886,12 @@ def write_session_log(iter_dir, meta, transcript):
         "wall-secs",
         "api-secs",
         "turns",
+        "ttft-secs",
+        "cache-read",
+        "cache-create",
+        "effort",
+        "fast",
+        "prompt-chars",
         "exit-code",
     ):
         header.append("# {}: {}".format(key, meta.get(key, "")))
@@ -903,7 +909,7 @@ def read_log_meta(path):
     meta = {}
     try:
         with open(str(path), encoding="utf-8", errors="replace") as fh:
-            for _ in range(24):
+            for _ in range(32):
                 line = fh.readline()
                 if not line or line.startswith("# ---"):
                     break
@@ -913,6 +919,29 @@ def read_log_meta(path):
     except OSError:
         pass
     return meta
+
+
+def per_turn_pace(meta):
+    """API seconds per turn from a log's header meta — the like-for-like speed
+    number across sessions of different lengths (a 100-turn build and a
+    25-turn review compare honestly here, not on wall time). Empty when either
+    field is absent (pre-WI-119 logs, errored sessions)."""
+    try:
+        api, turns = float(meta.get("api-secs", "")), float(meta.get("turns", ""))
+    except ValueError:
+        return ""
+    return "{:.1f}".format(api / turns) if turns else ""
+
+
+def per_turn_context(meta):
+    """Average context carried per turn (cache-read tokens / turns, humanized
+    to k) — the "how much is it re-reading every step" complexity number the
+    per-session totals hide. Empty when the fields are absent."""
+    try:
+        read, turns = float(meta.get("cache-read", "")), float(meta.get("turns", ""))
+    except ValueError:
+        return ""
+    return "{:.0f}k".format(read / turns / 1000.0) if turns else ""
 
 
 def regenerate_index(docs_dir):
@@ -926,7 +955,7 @@ def regenerate_index(docs_dir):
         if not meta.get("session"):
             continue
         rows.append(
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} "
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} "
             "| [{}](iteration/{}) |".format(
                 meta.get("session", ""),
                 meta.get("date", ""),
@@ -939,6 +968,8 @@ def regenerate_index(docs_dir):
                 meta.get("wall-secs", "") or "—",
                 meta.get("api-secs", "") or "—",
                 meta.get("turns", "") or "—",
+                per_turn_pace(meta) or "—",
+                per_turn_context(meta) or "—",
                 log.name,
                 log.name,
             )
@@ -951,8 +982,10 @@ def regenerate_index(docs_dir):
         '"which session did this" pointer (process-options.md "Unattended\n'
         'operation")._\n\n'
         "| # | Date | Phase | Model | Outcome | Commits | Tokens | Cost USD "
-        "| Wall s | API s | Turns | Log |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|\n" + "\n".join(rows) + "\n"
+        "| Wall s | API s | Turns | s/turn | Ctx/turn | Log |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+        + "\n".join(rows)
+        + "\n"
     )
     (docs_dir / "iteration_index.md").write_text(text, encoding="utf-8")
 
@@ -1791,6 +1824,22 @@ def main():
             int(round(api_ms / 1000.0)) if isinstance(api_ms, (int, float)) else ""
         )
         turns = data.get("num_turns", "")
+        # Session-shape telemetry (WI-124): why a session was slow, not just
+        # that it was. ttft = boot-to-first-token (the initial context-ingest
+        # latency); cache read/create = context volume carried per turn /
+        # ingested fresh at session start; effort + fast-mode name the two
+        # per-turn speed dials so their experiments are measurable per row;
+        # prompt-chars sizes the instruction the coordinator composed. All
+        # blank when the CLI reported no JSON (the effort/prompt pair still
+        # stands — the coordinator knows what it launched).
+        ttft_ms = data.get("ttft_ms")
+        ttft_secs = (
+            int(round(ttft_ms / 1000.0)) if isinstance(ttft_ms, (int, float)) else ""
+        )
+        cache_read = usage.get("cache_read_input_tokens", "")
+        cache_create = usage.get("cache_creation_input_tokens", "")
+        fast = data.get("fast_mode_state", "") or ""
+        effort = (session_env or os.environ).get("CLAUDE_CODE_EFFORT_LEVEL", "")
 
         reset_hint = limit_reset_hint(output, data, code)
         after = head_sha(root)
@@ -1843,6 +1892,12 @@ def main():
             "wall-secs": wall_secs,
             "api-secs": api_secs,
             "turns": turns,
+            "ttft-secs": ttft_secs,
+            "cache-read": cache_read,
+            "cache-create": cache_create,
+            "effort": effort,
+            "fast": fast,
+            "prompt-chars": len(prompt),
             "exit-code": code,
         }
         write_session_log(iter_dir, meta, output)
