@@ -3050,3 +3050,75 @@ run-phase `BUILD` routes `ANTHROPIC-FABLE`, a committing build schedules
 REVIEW-A on `OPENAI-TERRA` (an opencode reviewer that fails to write a verdict
 cools and re-routes to opus — self-healing), and `gpt-5.6-luna` stays unused
 by default phases (its hang is not on any takeoff path).
+
+## 2026-07-12 — phase v2 opened ([v2]-[g1] / WI-116) + WI-118 hermeticity fix (driver session, coordinator-launched)
+
+**Reconcile at boot (dirty tree):** `OWNER_SCRATCHPAD.md` was *staged* from an
+earlier sitting. Owner-only per CLAUDE.md (never read/cited/acted on) — unstaged
+so no session commit sweeps it in; its working-tree edit left untouched for the
+owner. Nothing else in the tree; no scoped work was discarded.
+
+**WI-118 (found live, fixed):** this was the first driver session launched by
+the unattended coordinator itself, and the commit bar failed on arrival — the
+`agent-resume.*` launchers export the `AGENT_*` routing contract (`AGENT_CMD`,
+`AGENT_MODEL_MAP`, `AGENT_TIER_MAP=BUILD=strong`, ...), the session inherits
+it, pytest inherits it in turn, and **8 agent_loop tests failed** (the ambient
+`AGENT_TIER_MAP` re-routed their scaffold loops to "no routable model at tier
+strong"). The unattended layer could never have produced a green commit bar
+from inside its own sessions. Fix: `tests/conftest.py` scrubs the `AGENT_*`
+namespace at import (no test reads these from ambient; each builds its own
+child env). Verified with the contamination present in the launching shell.
+
+### GATE — v2 G1 — Round 1 — 2026-07-12 (LLM-gate review under `single-ratify`)
+
+**Scope:** SR-050 (process reference view; realizes WI-085's owner rulings) and
+SR-051 (tiered drill-down views; realizes WI-087's owner intent), drafted
+`Status=Draft, Phase=v2` under SN-010;SN-021 in the LIVE spine — the derived-gate
+model's first live use (no `-000`/off-spine workaround; trace's draft exemption
+held, 0 orphans). `docs/gate` dropped to runnable **G1**
+(`per-phase=(default)=G3;v2=G0`) exactly per design — the draft-drop signal.
+
+**Consistency sweep (the WI-084 reviewer charter, run by the driver LLM-gate):**
+- **No contradiction with the existing 49 SRs.** SR-038 remains the umbrella
+  dashboard SR (tabs, determinism, `--check` contract); SR-050/051 are *facet*
+  SRs — a new tab and a rendering refinement — consistent with SR-038's text
+  (it nowhere prescribes flat rendering; the WI-073 containment it names is the
+  idiom SR-051 generalizes). The new-SR-vs-fold-into-SR-038 question was
+  already owner-ruled (WI-085 spec: "a new SR is required").
+- **Attributes:** SN refs match SR-038's parents (SN-010/SN-021); Priority C
+  (could-have views); Verification Test; AcceptanceCriteria deterministic and
+  mechanically assertable (byte-identical data-less render, > 3 threshold
+  behavior, aggregated-edge = deduped union of child edges).
+- **One soft criterion noted:** SR-051's "the phase encoding is visible" —
+  pinned by provisional ruling Q2 below; concretize in the TC at `[v2]-[g2]`.
+
+**Provisional rulings (queued for the owner's single sitting at the `[v2]-[g2]`
+close; recorded here, not ratified):**
+1. **WI-087 Q1 (composition):** Phase ⊃ Workstream ⊃ WI tiers; **Campaign stays**
+   the WI-074 bottom-tier container (a named work-set, orthogonal to structure).
+2. **WI-087 Q2 (phase encoding):** grouping-primary (the phase blocks ARE the
+   encoding) + a per-phase color accent carried on lower-tier nodes.
+3. **WI-087 Q3 (explode):** in-place expand evolving the native `<details>`
+   idiom — self-contained, deterministic, accessible; no zoom/drill-in nav.
+4. **WI-087 Q4 (thresholds):** > 3 governs each tier's start-collapsed state;
+   the How-SW `TOP_VIEW_MAX = 10` right-sizing bound is unchanged.
+5. **WI-085 render mode:** generated-first (Test TC); `Critique` only if the
+   implementation falls back to a static-authored panel (per the owner's
+   already-recorded fallback ruling in the WI-085 spec).
+
+**Ratification:** SR-050/SR-051 `Draft` → `Planned` in this reviewed
+Status-change commit (gate-policy register: LLM-gate closes G1, human calls
+queued + provisional decisions; the owner ratifies the v2 batch once at the
+`[v2]-[g2]` close). Derived gate after ratification: runnable **G1**,
+`per-phase=(default)=G3;v2=G1`, drafts=0.
+
+**Mechanized verification (commit bar, real output, run per commit):**
+- `python -m pytest -q -n auto` → `640 passed, 34 skipped in 51.25s`
+  (drafting-commit run: `640 passed, 34 skipped in 52.88s`; pre-fix baseline
+  showed the WI-118 failure mode: `8 failed, 632 passed, 34 skipped`).
+- `check_docs.py --root . --stale` → `OK - 39 doc(s), 252 intra-repo link(s),
+  0 broken (1 orphan warning(s))` + 5 pre-existing possibly-stale hints.
+- Pre-commit floor (arch-map, okf, trajectory-map, trajectory R-A,
+  registry-integrity `SN=24 SR=51 LLR=50 TC=50 orphans=0 integrity=0 drafts=2`,
+  derived-gate, skills-sync, format): ALL PASS on both landed commits.
+- Byte budgets: AGENTS.template.md / PROCESS.md untouched (delta 0).
