@@ -69,6 +69,19 @@ Related now that we have the gate rederivation complete, is that readme and othe
 
 Should we drop in open code or emphasize it's capability as a multi-model provider?
 
+***********************************************************
+Is dropping the per-commit full test already in the work-item backlog?  It looks like hundreds of test cases are still running each commit.
+
+Instead of doing reviews each commit, should the basis just be doing 2 adversarial reviews at the end of a campaign?  If the test cases pass, that should probably protent generally against issues.
+
+Should we flip build to be medium and review to be strong if they are delayed?
+
+*****************************
+
+Update the plan so that WI-122 is the first one to land, to speed up iteration.
+
+Is there a way to restrict CLI envirments to only allow writes within the repository as a restrictive / protective measure?
+
 For gate reviews should we drop in a full review?  Should the text be verbatim: 
 
 Can we add in the knowledge kits from 

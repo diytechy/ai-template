@@ -1,0 +1,28 @@
+"""WI-122 — the meta commit-bar smoke tier stays honest.
+
+The per-commit bar runs `-m smoke`; the full suite runs at slice/campaign close
+and in CI. These guard the two ways that split could silently rot into a false
+green: a test landing outside both tiers, or a SLOW_MODULES entry going stale.
+"""
+
+from conftest import ROOT, SLOW_MODULES, smoke_tier_for
+
+
+def test_tiering_is_total_smoke_or_slow():
+    # smoke_tier_for maps ANY module stem to exactly one tier, so the collection
+    # hook marks every collected test smoke-or-slow and never neither — the
+    # "a new test is in the commit bar by default" invariant.
+    assert smoke_tier_for("test_trace") == "smoke"  # a contract test: in
+    assert smoke_tier_for("test_derive_gate") == "smoke"
+    assert smoke_tier_for("test_brand_new_module_nobody_marked") == "smoke"
+    assert smoke_tier_for("test_pre_push_hook") == "slow"  # heavy e2e: out
+    for stem in SLOW_MODULES:
+        assert smoke_tier_for(stem) == "slow"
+
+
+def test_slow_modules_are_real_test_files():
+    # A renamed/removed file must not leave a dead SLOW_MODULES entry silently
+    # shrinking the slow set (slowing the commit bar back down unnoticed), and
+    # nothing outside tests/ can be listed.
+    for stem in SLOW_MODULES:
+        assert (ROOT / "tests" / (stem + ".py")).is_file(), stem

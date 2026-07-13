@@ -43,11 +43,13 @@ that easier to achieve in a real project — or get out of the way.
 - **Templates must stay copy-ready.** A `*.template.*` file should produce
   something sensible the moment it's copied and filled — example/placeholder rows
   end in `-000` so `trace.py` ignores them.
-- **Self-test before claiming done.** After changing a script, run
-  `python -m pytest -q -n auto` — the suite in `tests/` bootstraps a temp
-  scaffold and exercises every script end-to-end (`-n auto` is the declared
-  stack.ini command; ~70 s vs ~340 s serial) — and paste the real output. Never
-  report a green you didn't produce.
+- **Self-test before claiming done.** The per-commit bar is the fast **smoke**
+  tier (`python -m pytest -q -n auto -m smoke`, ~47 s); run the **full**
+  unfiltered suite (`python -m pytest -q -n auto`, ~66 s) before claiming a
+  WI/slice done, at campaign close, and after a broad script change — it
+  bootstraps a temp scaffold and exercises every script end-to-end. Paste the
+  real output; never report a green you didn't produce. (Commit bar vs gate bar,
+  and what the smoke tier drops: the `session-protocol` skill §3.)
 - **Edit conservatively.** This is a foundation many projects inherit; prefer the
   smallest change that fixes the problem, and flag anything that would force
   downstream repos to migrate.

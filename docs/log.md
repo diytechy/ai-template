@@ -3356,3 +3356,61 @@ rulings):**
 - `python -m pytest -q -n auto` → `679 passed, 3 skipped in 68.60s`
 - `check_docs.py --root . --stale` → `OK - 45 doc(s), 263 intra-repo
   link(s), 0 broken (4 orphan warning(s))` (hints pre-existing, warn-only)
+
+## 2026-07-13 — WI-122: smoke-tier commit bar (owner-directed) + dependency bookkeeping
+
+**Owner-directed** implementation of the WI-122 decision record: the meta
+per-commit bar drops from the full suite to the fast **smoke** tier, full
+suite retained at slice/campaign close + CI.
+
+**Design — opt-out tiering (defends "never a false green").** Measured first:
+the suite is subprocess-bound (~793 s CPU / 684 cases; the "fast unit tests"
+the spec imagined as a smoke core are a tiny minority — trace/registry/hook
+contract tests all spawn subprocesses at 1–3 s each). So an opt-IN smoke of
+"just the fast ones" would be near-empty and cover nothing. Instead
+`tests/conftest.py`'s `pytest_collection_modifyitems` marks **every** test
+`smoke` **unless** its module is in `SLOW_MODULES` (nine heavy end-to-end
+modules), which get `slow`. `smoke`+`slow` **partition** the suite (531 + 153
+= 684; verified none in neither or both), so a NEW test is in the commit bar
+by default and leaves only by an explicit `SLOW_MODULES` entry. `root
+pytest.ini` registers the four tier markers + `--strict-markers`.
+`test_smoke_tier.py` guards the partition-is-total invariant and that each
+`SLOW_MODULES` name is a real file (roster-rot guard).
+
+**Commit-bar re-point (one home, links elsewhere).** `session-protocol` skill
+§3 is the home — `pytest -q -n auto -m smoke`; fanned out to `.claude`/`.agents`
+byte-identical (`gen_skills_index --check-agents` OK). CLAUDE.md self-test
+bullet, `agent-resume.{sh,cmd}` launcher prompts, and the status.md Bar line
+updated to the smoke bar + link. The shipped `PROCESS_OPTIONS.md` "Campaign
+ruling" already sanctioned `pytest -m smoke` per commit generically — no
+template change; this is the meta adoption only.
+
+**Measured:** smoke **~47 s / 531 cases** vs full **~66 s / 684** — a ~30%
+per-commit reduction, reported honestly (modest because the suite is already
+xdist-parallel, so the wall floor is spawn overhead + the heaviest remaining
+contract tests, not raw count). `check.py --tier smoke` is now meaningful for
+the meta (previously selected nothing — the spec's fact #1 gap, closed).
+
+**Dependency tracking (owner's "tracking dependencies when complete").** No WI
+lists WI-122 as a predecessor, so nothing unblocks. Bookkeeping done: WI-122
+row → `done` with deliverable; status.md owner-queue item 5 narrowed to WI-123
+(with a note that WI-122 shipped); the trajectory DAG/dashboard regenerated
+(`gen_trajectory.py`) so PROJECT_STATE.html reflects the closed node.
+
+**Deviations from spec:** the spec's proposal #1 imagined marking a smoke
+*subset* (opt-in); the shipped design inverts to opt-out (smoke = all − slow)
+because the data showed opt-in would be near-empty and undercut the
+never-false-green goal the spec's own done-when demands. Same intent, better
+mechanism; recorded in the spec's "Selection principle."
+
+**Byte budgets:** AGENTS.template.md / PROCESS.md untouched (delta 0).
+
+**Verification (real output):**
+- Commit bar (smoke): `pytest -q -n auto -m smoke` → `529 passed, 2 skipped in
+  47.01s`.
+- Close bar (full, unfiltered): `pytest -q -n auto` → `681 passed, 3 skipped
+  in 63.95s`.
+- Partition (collect-only): `-m smoke` 531, `-m slow` 153, `-m "not smoke and
+  not slow"` 0, `-m "smoke and slow"` 0.
+- `check_docs.py --root . --stale` → `OK - 45 doc(s), 265 intra-repo link(s),
+  0 broken`.

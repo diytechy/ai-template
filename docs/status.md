@@ -18,7 +18,9 @@ working surface.
 
 ## Current State
 
-- **Bar:** `python -m pytest -q` and
+- **Bar:** `python -m pytest -q -n auto -m smoke` (the fast per-commit smoke
+  tier — ~47 s / 531 cases; full unfiltered suite ~66 s / 684 at
+  slice/campaign close) and
   `python project-trajectory/scripts/check_docs.py --root . --stale` green
   before every commit — this repo's standing gate. The kit's own
   `SN→SR→LLR→TC` spine is self-adopted and the gate is **derived**
@@ -111,15 +113,16 @@ working surface.
        rule governs start-collapsed with `TOP_VIEW_MAX = 10` unchanged) and
        the process view's generated-first render mode (Test TC; Critique only on a
        static fallback). Verdicts + rationale: [log.md](log.md).
-    5. **Two cadence proposals (owner-raised 2026-07-12 evening, rulings
-       pending — queued as decision records, the loop does not act on them):**
-       **WI-122** ([specs/WI-122.md](specs/WI-122.md)) — populate the meta
-       smoke tier and re-point the per-commit test command at it (full suite
-       at close + CI); **WI-123** ([specs/WI-123.md](specs/WI-123.md)) —
-       campaign-close 2× adversarial review cadence instead of per-slice.
-       Recorded recommendation: rule WI-123 only after ≥ 2 campaigns of
-       medium-BUILD evidence (per-slice reviews are the escalation sensor the
-       BUILD-tier relax above leans on).
+    5. **Review-cadence proposal (owner-raised 2026-07-12 evening, ruling
+       pending — queued as a decision record, the loop does not act on it):**
+       **WI-123** ([specs/WI-123.md](specs/WI-123.md)) — campaign-close 2×
+       adversarial review cadence instead of per-slice. Recorded
+       recommendation: rule only after ≥ 2 campaigns of medium-BUILD evidence
+       (per-slice reviews are the escalation sensor the BUILD-tier relax above
+       leans on). *(Its sibling proposal — the smoke-tier commit bar — was
+       owner-directed and **implemented 2026-07-13**; the commit bar is now
+       `pytest -q -n auto -m smoke`, full suite at close — see the Bar line
+       above and log.md.)*
     *(Earlier items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
     the already-made sibling-repo ruling, and the guardrails-batch review;
     see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed

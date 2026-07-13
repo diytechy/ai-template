@@ -30,6 +30,47 @@ for _k in [k for k in os.environ if k.startswith("AGENT_")]:
     del os.environ[_k]
 
 
+# --- WI-122: the meta commit-bar smoke tier -----------------------------------
+# The per-commit bar runs the fast SMOKE tier (docs/stack.ini [tiers]
+# smoke = -m smoke); the FULL suite runs at slice/campaign close and in CI
+# (PROCESS_OPTIONS.md "Campaign ruling"). Tiering here is OPT-OUT so the smoke
+# set stays generously sized and "never a false green": every collected test is
+# `smoke` UNLESS its module is one of the heavy end-to-end integration modules
+# below — full hook / gate / scaffold-bootstrap runs that the commit hook
+# re-exercises live and the close/CI gate re-runs wholesale, so per commit they
+# are redundant. A NEW test is therefore in the commit bar by default; a test
+# leaves it only by being named here. `smoke` and `slow` PARTITION the suite
+# (every test gets exactly one) — test_smoke_tier.py guards the invariant and
+# that each name below is a real test module.
+SLOW_MODULES = frozenset(
+    {
+        "test_pre_push_hook",  # full pre-push hook end-to-end
+        "test_pre_commit_hook",  # full pre-commit hook end-to-end
+        "test_bootstrap",  # full scaffold bootstraps
+        "test_onboard_devsetup",  # dev-setup.sh on a bootstrapped scaffold
+        "test_profile",  # scaffold-profile byte-compare
+        "test_stack_profile",  # scaffold-profile byte-compare
+        "test_check_perf",  # perf gate step on a scaffold
+        "test_check_flows",  # design-flow gate step on a scaffold
+        "test_meta_repo_hook",  # meta pre-commit hook integration
+    }
+)
+
+
+def smoke_tier_for(module_stem):
+    """The tier a test module belongs to: 'slow' for the heavy end-to-end
+    modules in SLOW_MODULES, else 'smoke'. Total by construction — one test
+    maps to exactly one tier, so nothing lands outside both (the invariant the
+    smoke commit bar leans on)."""
+    return "slow" if module_stem in SLOW_MODULES else "smoke"
+
+
+def pytest_collection_modifyitems(config, items):
+    for item in items:
+        stem = Path(item.nodeid.split("::", 1)[0]).stem
+        item.add_marker(smoke_tier_for(stem))
+
+
 def load_script(name):
     """Import a kit script as a module (scripts/ is intentionally not a package).
 
