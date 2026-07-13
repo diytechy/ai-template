@@ -20,20 +20,23 @@ REM session (no {prompt} = the resume prompt is appended).
 REM Keep agent-resume.sh's slots in sync — it is the POSIX twin;
 REM agent-resume.command delegates to it.
 set "AGENT_CMD=claude -p {prompt} --model {model} --output-format json --dangerously-skip-permissions"
-REM Default model tier + per-phase map read against docs/run-phase. Kit work is
-REM gate-bearing template design — default to the strong tier. With managed
+REM Default model tier + per-phase map read against docs/run-phase (the default
+REM model stays strong — an unknown phase routes UP, never down). With managed
 REM routing ON (docs/agents-enabled present) the docs/agents.csv registry +
 REM AGENT_TIER_MAP below drive selection; these env maps are the declared
 REM FALLBACK (an absent enable-list = this legacy path). Values kept coherent
-REM with the WI-113 lineup: strong (fable) plans/builds, reviews ride medium (opus).
+REM with the owner dial 2026-07-12 evening (WI-121): strong (fable) plans,
+REM medium (opus) builds + reviews.
 set "AGENT_MODEL=claude-fable-5"
-set "AGENT_MODEL_MAP=PLAN=claude-fable-5,BUILD=claude-fable-5,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=claude-fable-5,CRITIQUE=claude-fable-5"
-REM Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|weak).
-REM BUILD pinned strong for gate-bearing work (tier-up-never-down lets reviews
-REM ride medium safely); relaxing BUILD to medium is a later, deliberate dial
-REM turn at a ratification sitting. Unlisted phases use the built-in defaults
-REM (PLAN / DESIGN-CHECK / CRITIQUE strong, REVIEW-A / REVIEW-B medium).
-set "AGENT_TIER_MAP=BUILD=strong"
+set "AGENT_MODEL_MAP=PLAN=claude-fable-5,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=claude-fable-5,CRITIQUE=claude-fable-5"
+REM Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
+REM Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE
+REM strong, BUILD / REVIEW-A / REVIEW-B medium). BUILD's initial strong pin was
+REM relaxed to the medium default at the owner's 2026-07-12-evening dial turn
+REM (WI-121 - the first live run spent 78% of its wall time in strong-tier
+REM BUILD sessions); tier-up-never-down still re-raises a contested build to
+REM strong.
+set "AGENT_TIER_MAP="
 REM Optional per-phase COMMAND template map (cross-provider routing; pairs
 REM with the docs/review-policy reviewer dial), e.g.:
 REM   set "AGENT_CMD_MAP=REVIEW-B=gemini -p {prompt} --model {model}"

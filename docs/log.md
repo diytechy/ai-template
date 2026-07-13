@@ -3314,3 +3314,45 @@ recorded in the spec as unexplained residue.
   the new shim test)
 - `check_docs.py --root . --stale` → `OK - 43 doc(s), 260 intra-repo link(s),
   0 broken (4 orphan warning(s))` (hints pre-existing, warn-only)
+
+## 2026-07-12 — WI-121: BUILD tier relaxed to medium (owner dial turn) + WI-122/123 filed (queued)
+
+**Owner-ruled 2026-07-12 evening, on WI-119's evidence** (the first live run
+spent 78% of wall time / ~$31.50 of ~$36 in the two strong-tier BUILD
+sessions): BUILD drops from the launcher's strong pin to the engine's
+built-in **medium** default. `AGENT_TIER_MAP` emptied in both launcher twins
+(unlisted phases → `DEFAULT_PHASE_TIER`: PLAN/DESIGN-CHECK/CRITIQUE strong,
+BUILD/REVIEW-A/B medium); fallback `AGENT_MODEL_MAP` `BUILD=opus` for
+coherence; `AGENT_MODEL` stays `claude-fable-5` (an unknown phase routes UP,
+never down). The original pin's own comment named the safety this leans on —
+**tier-up-never-down re-raises a contested build to strong via the per-slice
+review escalation** — so the per-slice review leg stays ON (the coupling is
+recorded in [specs/WI-123.md](specs/WI-123.md)). Registry Notes
+(`agents.csv` fable/opus rows), status.md's unattended-layer bullet, and the
+README config table updated to match. Config + docs only; no engine change,
+no spine change.
+
+**Two owner questions filed as first-class queued WIs (decision records, not
+rulings):**
+
+- **WI-122** ([specs/WI-122.md](specs/WI-122.md)) — drop the per-commit full
+  suite: **was not in the backlog**. The mechanism exists (`stack.ini`
+  `[tiers] smoke`, `check.py --tier smoke`, the WI-071 ruling that rejected
+  test-impact selection in favor of the declared tier) but the meta suite has
+  zero `@pytest.mark.smoke` marks and the commit bar names the full command
+  (~70 s post-WI-075). Spec records the population/re-point plan and the
+  honest counterweight (push-policy `human` means CI can lag many commits).
+- **WI-123** ([specs/WI-123.md](specs/WI-123.md)) — owner proposal: two
+  adversarial reviews at campaign close instead of per-slice review.
+  Recommendation recorded: **evidence-gate, don't turn this dial in the same
+  breath as WI-121** — the builder writes its own tests (a green suite can't
+  catch a vacuous TC or an overstated claim; reviews 003-A/006-A did), and
+  the medium-BUILD relax is safe *because* per-slice reviews feed the
+  escalation ladder.
+
+**Deviations from spec:** none. **Byte budgets:** untouched (delta 0).
+
+**Mechanized verification (commit bar, real output):**
+- `python -m pytest -q -n auto` → `679 passed, 3 skipped in 68.60s`
+- `check_docs.py --root . --stale` → `OK - 45 doc(s), 263 intra-repo
+  link(s), 0 broken (4 orphan warning(s))` (hints pre-existing, warn-only)

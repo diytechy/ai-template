@@ -300,7 +300,7 @@ a fresh scaffold gets, which way each option toggles, and how this repo is set:
 | `okf-export` | on (no file) | **opt-out** `off` | on (`docs/okf/` committed) |
 | `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — 51 declared seams |
 | `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
-| `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 6 pair rows / 2 families, fable-led (tiers `strong/medium/quick`) |
+| `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 6 pair rows / 2 families (tiers `strong/medium/quick`; fable plans, opus builds + reviews) |
 | `run-phase` | absent (an unknown phase routes to the strong tier) | coordinator-maintained once present | `BUILD` |
 | `guardrails-policy` | off (no file) | **opt-in** model-substring allowlist / `all except …` | `off` (no vendored core — reason in the file) |
 | `subagent-gate` | off (no file) | **opt-in** `ask` / `deny` (Claude hook example) | off |

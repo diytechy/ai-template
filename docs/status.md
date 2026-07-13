@@ -59,8 +59,11 @@ working surface.
   context rides the registry `Notes` (echoed at preflight, cooldown, and the
   no-routable page). `docs/run-phase` = `BUILD`, `docs/guardrails-policy` =
   `off` (no core vendored here — reason in the file), launcher twins' fallback
-  maps re-pointed (strong=claude-fable-5, reviews=opus; `AGENT_TIER_MAP`
-  `BUILD=strong`). No spine change — **derived gate stays G3**. **Live-verified
+  maps re-pointed (strong=claude-fable-5; BUILD + reviews=opus since the
+  owner's 2026-07-12-evening dial turn — `AGENT_TIER_MAP` empty, so BUILD
+  rides the engine's medium default with tier-up-never-down escalation as the
+  re-raise; the first live run had spent 78% of wall time in strong-tier
+  BUILDs). No spine change — **derived gate stays G3**. **Live-verified
   through the loop's own machinery (run_session): 5/6 models replied** —
   fable/opus/sonnet (effort env merged) + sol/terra; **gpt-5.6-luna hangs
   today** (id valid in opencode's catalog; 2 attempts, zero output — the loop
@@ -108,6 +111,15 @@ working surface.
        rule governs start-collapsed with `TOP_VIEW_MAX = 10` unchanged) and
        the process view's generated-first render mode (Test TC; Critique only on a
        static fallback). Verdicts + rationale: [log.md](log.md).
+    5. **Two cadence proposals (owner-raised 2026-07-12 evening, rulings
+       pending — queued as decision records, the loop does not act on them):**
+       **WI-122** ([specs/WI-122.md](specs/WI-122.md)) — populate the meta
+       smoke tier and re-point the per-commit test command at it (full suite
+       at close + CI); **WI-123** ([specs/WI-123.md](specs/WI-123.md)) —
+       campaign-close 2× adversarial review cadence instead of per-slice.
+       Recorded recommendation: rule WI-123 only after ≥ 2 campaigns of
+       medium-BUILD evidence (per-slice reviews are the escalation sensor the
+       BUILD-tier relax above leans on).
     *(Earlier items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
     the already-made sibling-repo ruling, and the guardrails-batch review;
     see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed
