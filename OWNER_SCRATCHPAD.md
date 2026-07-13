@@ -82,6 +82,18 @@ Update the plan so that WI-122 is the first one to land, to speed up iteration.
 
 Is there a way to restrict CLI envirments to only allow writes within the repository as a restrictive / protective measure?
 
+******************************
+
+Might there be times when an explicit plan stage is unecessary in agent-resume?  If the spec is documented sufficiently, it doesn't need to be replanned.  Perhaps work-items should be pinned to a teir for it's build at creation, and also contain a flag if additional planning is required.  If the plan / spec is detailed enough, no need to spin up another agent.  This could also reduce spinning up dedicated sessions for planning and building that will already hold much of the same context.
+
+*******************************
+
+While agent-resume is running, is it possible for each workstream to just update it's latest line on the console (so, intead of a long rolling window, each workstream continues to update it's status in a line that gets continuously updated.)
+
+Other noticed items: The logs (in /docs/interation) and reviews don't appear to be committed with the rest of their content, it would be good for them to be part of the code commit for reference.  Should the reviews and logs include the work item key name in their label / filename for tracking?  
+
+Do we need "hats" to be allocated to specific SRs to be spun up during related development?  Or how can we ensure test cases / and specifically critiques are triggered appropriately for the right content.  Ex: If a work-item is building UI, how does the resume-agent chain know to wear a UI hat to evaluate the UI for accessability and readability?
+
 For gate reviews should we drop in a full review?  Should the text be verbatim: 
 
 Can we add in the knowledge kits from 
