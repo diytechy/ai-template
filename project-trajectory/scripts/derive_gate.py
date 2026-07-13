@@ -114,6 +114,13 @@ def is_draft(row):
     return (row.get("Status") or "").strip().lower() == "draft"
 
 
+def is_verified(row):
+    """The terminal `Verified` state, matched case-insensitively — the SAME rule as
+    is_draft (the one Status-casing rule, process.md §4). Duplicated from trace.py
+    per the F5 rule; pinned equal by test_rule_sync."""
+    return (row.get("Status") or "").strip().lower() == "verified"
+
+
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
 
 
@@ -140,7 +147,7 @@ def sr_gate(sr, has_llr, has_tc):
         return G0
     exempt = (sr.get("Verification") or "").strip() in LLR_EXEMPT
     decomposed = (exempt or has_llr) and has_tc
-    verified = (sr.get("Status") or "").strip() == "Verified"
+    verified = is_verified(sr)
     if decomposed and verified:
         return G3
     if decomposed:

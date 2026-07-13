@@ -40,6 +40,25 @@ def test_is_draft_agrees():
         assert TRACE.is_draft(row) == GATE.is_draft(row), row
 
 
+def test_is_verified_agrees():
+    # Both files decide the terminal Verified state (the G3 --require-verified
+    # criterion in trace.py, the gate derivation in derive_gate.py). Matched
+    # case-insensitively — the one Status-casing rule (M3 -> WI-101) — so pin the
+    # two equivalent across the same casing/whitespace/None battery as is_draft.
+    cases = [
+        {"Status": "Verified"},
+        {"Status": "verified"},
+        {"Status": "  VERIFIED  "},
+        {"Status": "Draft"},
+        {"Status": "Planned"},
+        {"Status": ""},
+        {"Status": None},
+        {},
+    ]
+    for row in cases:
+        assert TRACE.is_verified(row) == GATE.is_verified(row), row
+
+
 def test_sn_draft_ids_agrees():
     # Both files scan stakeholder-needs.md for SNs under a "draft" heading
     # (section-as-state maturity). Pin them equivalent across headings, -000

@@ -290,6 +290,9 @@ never a manual bump (§7 "The active gate"; the model + parallel/series workflow
 [process-options.md "Derived gate model"](process-options.md#derived-gate-model)).
 A `Draft` artifact lives in the live spine (exempt from the decomposition rules),
 retiring the old `-000`/off-spine drafting workaround.
+`Status` is open-vocabulary, but its two gate-bearing values — `Draft` and
+`Verified` — are matched **case-insensitively** (write them Title-Case); no other
+value carries gate meaning.
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 - **G1 — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in

@@ -256,6 +256,15 @@ def is_draft(row):
     return (row.get("Status") or "").strip().lower() == "draft"
 
 
+def is_verified(row):
+    """The terminal `Verified` state, matched case-insensitively so it follows the
+    SAME rule as is_draft (the one Status-casing rule, process.md §4): both magic
+    Status values are recognized in any case. Status is open-vocabulary; `Verified`
+    is the value the G3 --require-verified criterion and the gate derivation act on.
+    Duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
+    return (row.get("Status") or "").strip().lower() == "verified"
+
+
 # SR Verification methods that decompose to a TC but no LLR — there is no code to
 # write, only its acceptance to analyze/inspect/attest, so the orphan rule below
 # exempts them from the "SR with no LLR" finding. The derived gate mirrors this
@@ -1182,14 +1191,12 @@ def main():
     mechanized_verified = [
         r["SR-ID"]
         for r in srs
-        if r.get("Status", "") == "Verified"
-        and r.get("Verification", "") not in ATTESTED_METHODS
+        if is_verified(r) and r.get("Verification", "") not in ATTESTED_METHODS
     ]
     attested_verified = [
         r["SR-ID"]
         for r in srs
-        if r.get("Status", "") == "Verified"
-        and r.get("Verification", "") in ATTESTED_METHODS
+        if is_verified(r) and r.get("Verification", "") in ATTESTED_METHODS
     ]
     if args.require_verified:
         for r in srs:
@@ -1206,10 +1213,13 @@ def main():
                     "status check deferred to its own phase"
                 )
                 continue
-            if r.get("Status", "") != "Verified":
+            if not is_verified(r):
+                val = (r.get("Status") or "").strip()
                 status_findings.append(
                     f"SR {r['SR-ID']} is Verification=Test but Status="
-                    f"{r.get('Status', '') or '(blank)'} (G3 requires Verified)"
+                    f"{val or '(blank)'} (G3 requires Verified — the magic Status "
+                    "values are matched case-insensitively, so this is a real "
+                    "mismatch, not a casing near-miss)"
                 )
 
     raw = {"SR": raw_srs, "LLR": raw_llrs, "TC": raw_tcs}

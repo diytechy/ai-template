@@ -311,6 +311,7 @@ Contracts (interfaces): IF-050, IF-051
 | `refs(value)` | Split a multi-ref cell (';', ',' or whitespace separated) into ids. |  |
 | `is_example(rid)` |  |  |
 | `is_draft(row)` | A row in the pre-ratification `Draft` state (open-vocab Status). |  |
+| `is_verified(row)` | The terminal `Verified` state, matched case-insensitively — the SAME rule as |  |
 | `sn_draft_ids(text)` | Draft SN ids (section-as-state §4a): every SN-### under a heading whose text |  |
 | `sr_gate(sr, has_llr, has_tc)` | The gate an SR row has reached, from its Status + whether it is decomposed. |  |
 | `maturity_gate(row)` | An LLR/TC caps the gate only when it is Draft (G0 — the new-phase signal). |  |
@@ -480,6 +481,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `refs(value)` | Split a multi-ref cell (';', ',' or whitespace separated) into ids. |  |
 | `is_example(rid)` |  |  |
 | `is_draft(row)` | A row in the pre-ratification `Draft` state (derived-gate model §3): exempt |  |
+| `is_verified(row)` | The terminal `Verified` state, matched case-insensitively so it follows the |  |
 | `structure_findings(path, display)` | Column-count structural check over one registry CSV: every data row must |  |
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
 | `id_key(label)` |  |  |

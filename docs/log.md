@@ -4006,3 +4006,60 @@ re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
 the next deep-review-b hygiene pick). The run continues at G3;
 **`main-decomposition` (WI-080 → WI-081) stays sequenced behind the owner
 sitting**.
+
+## 2026-07-13 — WI-101: unify the Status-casing rule (case-insensitive) + state it once (deep-review-b M3)
+
+**The defect.** Review-b **M3**: the two magic `Status` values were matched by
+*different* rules. `is_draft()` lowercases (`trace.py`, `derive_gate.py`), so
+`draft`/`Draft`/`DRAFT` all count; but the `Verified` checks compared exact-case
+(`r.get("Status") == "Verified"`), so `verified` silently counted as **not**
+verified. The failure direction is safe (a gate *under*-reports), but the
+asymmetry was undocumented — an adopter typing `verified` gets a G3 status
+finding whose cause ("capital V") nothing explains.
+
+**The fix — unify on the non-breaking rule, state it once.** Of the review's two
+options (case-insensitive for both, or exact-case for both), **case-insensitive
+is the only non-breaking unification**: `is_draft`'s case tolerance is
+load-bearing (a lowercase `draft` is exempt from the orphan/decomposition rules;
+tightening it to exact-case would newly *fail* an adopter who wrote lowercase),
+so the safe direction is to extend that same tolerance to `Verified` — which only
+ever *accepts more*, never turns a previously-green artifact red.
+- **New `is_verified(row)`** in both `trace.py` and `derive_gate.py`, mirroring
+  `is_draft` (`.strip().lower() == "verified"`). F5-duplicated (each script stays
+  an independently-copyable drop-in), and **pinned equal** by a new
+  `test_rule_sync::test_is_verified_agrees` across the same casing/whitespace/
+  None battery as `is_draft` — so the two files can't drift on this policy either
+  (the WI-099 discipline, extended).
+- **Routed every Verified comparison through it:** trace.py's mechanized/attested
+  audit counts and the G3 `--require-verified` gate (3 sites), and derive_gate's
+  `sr_gate` computation (the derived gate itself).
+- **Stated once in `PROCESS.md` §4:** "`Status` is open-vocabulary, but its two
+  gate-bearing values — `Draft` and `Verified` — are matched case-insensitively
+  (write them Title-Case); no other value carries gate meaning."
+- **Finding message:** the `--require-verified` finding now notes matching is
+  case-insensitive, so a residual failure reads as a *real* mismatch (a typo like
+  `verifed`, or a genuinely different status), not a casing near-miss — the
+  confusion M3 flagged is fixed at the source rather than merely explained.
+
+**Byte budget.** `PROCESS.md` **+189 B** (59,638 → **59,827**), flagged; one
+sentence, no other file grew. Re-stamped the baseline in the `byte-budget-guard`
+skill + its two materialized agent copies (`.claude/`, `.agents/`) so the
+skills-sync gate stays byte-clean.
+
+**Verification.**
+- `pytest -q tests/test_rule_sync.py tests/test_derive_gate.py` → **17 passed**;
+  `gen_skills_index --check-agents` → **OK, 10 copies match**;
+  `derive_gate --check` → **G3, up to date** (no gate change — all meta SRs are
+  exact-case `Verified`, so the derivation output is identical).
+- Full unfiltered suite → **702 passed, 3 skipped** (701 + the new sync test);
+  `check_docs --root . --stale` → **exit 0**.
+
+**No spine change** — no new SN/SR/LLR/TC (proceed at G3), derived gate stays
+**G3**. `PROCESS.md` grew (flagged above); `AGENTS.template.md` untouched.
+
+**Not pushed** (push-policy: human). Owner queue unchanged (push decision + G3
+re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
+→ **WI-102** (gen_trajectory hygiene: one module-level `_esc` + SVG node
+`<title>` labels — the next deep-review-b hygiene pick). The run continues at G3;
+**`main-decomposition` (WI-080 → WI-081) stays sequenced behind the owner
+sitting**.
