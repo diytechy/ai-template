@@ -22,19 +22,20 @@ working surface.
   `python project-trajectory/scripts/check_docs.py --root . --stale` green
   before every commit — this repo's standing gate. The kit's own
   `SN→SR→LLR→TC` spine is self-adopted and the gate is **derived**
-  (`scripts/derive_gate.py`): with **phase v2's pre-dev batch open** the
-  runnable `docs/gate` reads **G1** (basis `per-phase=(default)=G3;v2=G1` —
+  (`scripts/derive_gate.py`): with **phase v2 decomposed and in dev** the
+  runnable `docs/gate` reads **G2** (basis `per-phase=(default)=G3;v2=G2` —
   the verified v1 spine still holds G3); the scoped v1 full bar is
   `check.py --gate G3 --phase v1` (incl. the `derived-gate` freshness step),
   and CI runs the derived gate on real data (the meta-repo dogfoods its own
   trajectory + OKF + derived-gate layers).
 - **Plan state:** v1 spine at **G3** (re-attested 2026-07-12, all-mechanized;
   the derived-gate campaign added **SR-049**, a mechanized Test SR, which
-  **rides a pending re-attestation** — Needs \<human> above); **phase v2 open
-  at G1** since 2026-07-12 — SR-050/SR-051 (the dashboard views, `Phase=v2`)
-  ratified `Planned` by the G1 LLM-gate review (WI-116; owner batch
+  **rides a pending re-attestation** — Needs \<human> above); **phase v2 at
+  G2** since 2026-07-12 — SR-050/SR-051 (the dashboard views, `Phase=v2`)
+  ratified `Planned` by the G1 LLM-gate review and decomposed to LLR-051/052 +
+  TC-051/052 by the `[v2]-[g2]` batch (owner batch
   ratification queued below). Spine **SN=24 SR=51
-  LLR=50 TC=50, 0 orphans**, 51 declared interface seams, 5 declared components
+  LLR=52 TC=52, 0 orphans**, 51 declared interface seams, 5 declared components
   (the meta's own How-SW top view is now 24 modules → 5 top-level components, 0
   uncontained). The
   dashboard is the root [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session
@@ -82,16 +83,18 @@ working surface.
        enablement commit; until then [gate-policy.md](gate-policy.md) stands
        DRAFT. (Config only — it governs WHO makes a ratifying commit, not what
        the derived gate computes.)
-    4. **v2 batch ratification (due at the `[v2]-[g2]` close)** — SR-050/SR-051
-       were ratified `Draft`→`Planned` by the G1 LLM-gate review (WI-116,
-       2026-07-12) with **provisional rulings** the owner accepts or amends at
+    4. **v2 batch ratification (due — the `[v2]-[g2]` close landed
+       2026-07-12)** — SR-050/SR-051
+       were ratified `Draft`→`Planned` by the G1 LLM-gate review and
+       decomposed (LLR-051/052 + TC-051/052) by the G2 batch, with
+       **provisional rulings** the owner accepts or amends at
        the single sitting: WI-087's four open questions (tier composition
-       Phase ⊃ Workstream ⊃ WI with Campaign kept as the bottom-tier WI-074
-       container; grouping-primary phase encoding + per-phase color accent;
-       in-place `<details>`-style expand, no zoom navigation; the > 3 rule
-       governs start-collapsed with `TOP_VIEW_MAX = 10` unchanged) and
+       Phase ⊃ Workstream ⊃ WI with Campaign kept as the existing bottom-tier
+       campaign container; grouping-primary phase encoding + per-phase color
+       accent; in-place `<details>`-style expand, no zoom navigation; the > 3
+       rule governs start-collapsed with `TOP_VIEW_MAX = 10` unchanged) and
        WI-085's generated-first render mode (Test TC; Critique only on a
-       static fallback). Verdict + rationale: [log.md](log.md).
+       static fallback). Verdicts + rationale: [log.md](log.md).
     *(Earlier items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
     the already-made sibling-repo ruling, and the guardrails-batch review;
     see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed
@@ -102,10 +105,10 @@ working surface.
     `TheColliny/FableClaudeMDForOpus`** and pulled downstream via the vendoring
     layer (`check_vendored.py`); nothing to build in this kit repo. Rationale:
     [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2.
-  - **In flight:** the **phase v2 pre-dev batch** — `[v2]-[g1]` (**WI-116**)
-    closed 2026-07-12; next is `[v2]-[g2]` (**WI-117**, queued): decompose
-    SR-050/SR-051 to LLR + TC. (All four 2026-07-11 batches are **closed and
-    archived**: the campaign-binning · parallel-tests · resume-hardening
+  - **In flight:** the **phase v2 dev slices** — the pre-dev batch
+    (`[v2]-[g1]` + `[v2]-[g2]`) closed 2026-07-12; **WI-085** (queued, next)
+    then **WI-087** run G2→G3 in series. (All four 2026-07-11 batches are
+    **closed and archived**: the campaign-binning · parallel-tests · resume-hardening
     batch (the `Campaign` grouping column + the campaign-binned When-view
     DAG · pytest-xdist parallel execution, ~6× plain and ~4.6× at the gate ·
     the dirty-tree reconcile surface at loop start, stale-lock verified safe;
@@ -245,21 +248,17 @@ working surface.
      *(The unattended-enablement step landed 2026-07-12 — the managed-routing
      consent layer + `single-ratify` gate authority; see the Unattended-layer
      bullet under Current State and its single-attest item in Needs \<human>.)*
-  2. **Phase v2 pre-dev, step 2 — decomposition (`[v2]-[g2]`, WI-117).**
-     `[v2]-[g1]` (WI-116) closed 2026-07-12: **SR-050** (WI-085,
-     [spec](specs/WI-085.md)) and **SR-051** (WI-087,
-     [spec](specs/WI-087.md)) are `Planned` in the live spine (G1 LLM-gate
-     review recorded in [log.md](log.md); provisional rulings queued in Needs
-     \<human> above). Now draft each SR's **LLR + TC** (`Planned`) per its
-     spec's verification section — SR-050's TC is `Test` under the
-     generated-first ruling (re-pin to `Critique` only if implementation falls
-     back to a static panel); SR-051's TC asserts the > 3 tiering and the
-     aggregated-parent-edge = deduped-union-of-child-edges property.
-     Regenerate the gate (v2 → G2), close WI-117 per the declared
-     **`single-ratify`** authority ([gate-policy.md](gate-policy.md)) — the
-     LLM-gate review closes G2, the owner ratifies the queued batch **once at
-     that close** — then the dev slices run in series: **WI-085**, then
-     **WI-087**, each to `Verified` under `check.py --gate G3 --phase v1,v2`.
+  2. **Phase v2 dev slices — WI-085 first, then WI-087 (series).** The pre-dev
+     batch closed 2026-07-12: SR-050/SR-051 are `Planned` and decomposed
+     (LLR-051/052 + TC-051/052, G1+G2 LLM-gate reviews in [log.md](log.md);
+     the owner's single-ratify sitting is queued in Needs \<human> above and
+     does **not** block dev). Implement **WI-085**
+     ([spec](specs/WI-085.md)): `process_panel()` in `gen_trajectory.py` per
+     LLR-051, pin TC-051's pytest node paths, drive SR-050 to `Verified`
+     (`Test` under the generated-first ruling; re-pin to `Critique` only on a
+     static fallback). Then **WI-087** ([spec](specs/WI-087.md)) the same way
+     against LLR-052/TC-052. Each close regenerates the gate (v2 → G3 when
+     both SRs verify) and runs the full `check.py --gate G3 --phase v1,v2`.
   3. **The rest of the backlog needs no new SR — proceed at G3:** WI-104 (pin
      the dev toolchain) then WI-105 (the coverage-plumbing fix, verified on the
      pinned toolchain — the review's ranked-first defect), then WI-078

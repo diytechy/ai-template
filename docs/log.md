@@ -3122,3 +3122,34 @@ queued + provisional decisions; the owner ratifies the v2 batch once at the
   registry-integrity `SN=24 SR=51 LLR=50 TC=50 orphans=0 integrity=0 drafts=2`,
   derived-gate, skills-sync, format): ALL PASS on both landed commits.
 - Byte budgets: AGENTS.template.md / PROCESS.md untouched (delta 0).
+
+### GATE — v2 G2 — Round 1 — 2026-07-12 (LLM-gate review under `single-ratify`, same sitting)
+
+**Scope ([v2]-[g2] / WI-117):** decomposition of the two ratified v2 SRs.
+SR-050 → **LLR-051** (`process_panel`/`build_html` in `gen_trajectory.py`, the
+Knowledge-tab conditional-panel pattern; links-out-first with bounded in-view
+restatement) + **TC-051** (Integration, `Planned`; data-derived joins,
+link-outs resolve, data-less byte-identity, determinism, `--check`). SR-051 →
+**LLR-052** (`dag_svg`/`sw_modules`/`_layered_layout` tiering, encoding the
+five provisional rulings verbatim) + **TC-052** (Integration, `Planned`;
+> 3 threshold firing, aggregated-parent-edge = deduped child-edge union, phase
+encoding, determinism). TC node paths are declared planned in `Parameters` and
+get pinned to real pytest nodes at implementation (the WI-085/087 dev slices).
+
+**G2 sweep:** each TC criterion is mechanically assertable and maps 1:1 onto
+its SR's AcceptanceCriteria; the LLRs name real modules/symbols in CMP-002
+(the dashboard component); no overlap with LLR-035 (the SR-038 umbrella LLR —
+these decompose the new facet SRs only). Phase-blind orphans back to **0**
+(the G1-interim 4 were the undecomposed Planned SRs — expected between g1 and
+g2, gated nowhere since the runnable gate was G1). Derived gate after this
+commit: runnable **G2**, `per-phase=(default)=G3;v2=G2`, drafts=0.
+
+**Owner sitting (queued, does not block dev):** the single-ratify batch now
+covers the SR ratification + the five provisional rulings + this
+decomposition — status.md Needs <human> item 4, due since this close.
+
+**Scoped-bar verification:** `check.py --gate G3 --phase v1` was RED between
+g1 and g2 (traceability: the 4 phase-blind orphans; trajectory --strict: done
+ids then on the working surface) — run for real, recorded here, and the
+status.md claim held back until re-verified green after this close (result
+appended below once run).

@@ -61,3 +61,5 @@ resource: "generated"
 | [LLR-048](LLR-048.md) | Critique loop dispatch + lax-TC ratchet |
 | [LLR-049](LLR-049.md) | How-SW top-view containment rule + render |
 | [LLR-050](LLR-050.md) | Derived-gate computation + hybrid cache |
+| [LLR-051](LLR-051.md) | Process reference tab |
+| [LLR-052](LLR-052.md) | Tiered When/How-SW drill-down |

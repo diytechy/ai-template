@@ -61,3 +61,5 @@ resource: "generated"
 | [TC-048](TC-048.md) | Run the critique-loop suite: the loop schedules CRITIQUE exactly when a committing build'… |
 | [TC-049](TC-049.md) | Run the top-view suite: an inventory over 10 modules with no containing CMPs warns plain … |
 | [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache |
+| [TC-051](TC-051.md) | Run the dashboard suite; the Process tab renders its three panels from the live registrie… |
+| [TC-052](TC-052.md) | Run the dashboard suite; with fixture registries exceeding 3 phases / workstreams / compo… |
