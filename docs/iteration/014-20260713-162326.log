@@ -1,0 +1,484 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 014
+# date: 2026-07-13 16:29
+# phase: REVIEW-A
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 379
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1634
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the reviewed diff and governing requirement records, run the repository checks, then record only evidence-backed findings in the requested review file.
+[0m# [0mTodos
+[•] Read contributor/process rules and locate work-item spec
+[ ] Inspect reviewed diff and impacted registry history
+[ ] Run traceability and repository harnesses
+[ ] Write independent review verdict
+[0m
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m→ [0mRead docs/reviews
+[0m✱ [0mGlob "docs/requirements/**/*"[90m in . · 6 matches[0m
+[0m✱ [0mGlob "docs/specs/**/*"[90m in . · 11 matches[0m
+[0m→ [0mRead CLAUDE.md
+[0m
+[0m$ [0mgit status --short; git log --oneline -12; git diff --stat HEAD~1..HEAD; git diff --find-renames --find-copies HEAD~1..HEAD
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f5d5d42f6001Jr8p8H7Mh8CCu2
+
+ · After: WI-124"}, "WI-126": {"status": "done", "title": "Per-WI routing hints - build-tier pin + plan-required flag (owner proposal)", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: ~WI-121, ~WI-107"}};
+     function esc(s){ const d=document.createElement('div'); d.textContent = s==null?'':s; return d.innerHTML; }
+ 
+     function renderDetail(box, d, id, tierColor){
+diff --git a/docs/dupes-allow b/docs/dupes-allow
+new file mode 100644
+index 0000000..6ee6f79
+--- /dev/null
++++ b/docs/dupes-allow
+@@ -0,0 +1,95 @@
++# docs/dupes-allow — the meta-repo's duplicate-code CENSUS (WI-078).
++#
++# Read by project-trajectory/scripts/check_dupes.py (wired as docs/stack.ini
++# [step:dupes]). Each non-comment line is a SUBSTRING matched against a finding's
++# line-number-free "a.py == b.py" form; a matched finding is passed. So this file
++# is the allowlist AND the census: it records every file-pair that currently
++# carries sanctioned/known duplication, and — because it is line-number-free —
++# an allowed pair stays allowed as those files grow.
++#
++# WHY a census, not a fix (owner ruling 2026-07-12, repo-review §1 M6 option (b)):
++# the kit's F5 working agreement DELIBERATELY duplicates small stable helpers
++# (_utf8_console, the declared-policy readers, argparse/exit boilerplate) so each
++# script ships independently copy-able — a shared _kitcommon.py was rejected. That
++# policy was unbounded and uncensused; this file bounds it. The gate now fails on
++# NEW duplication between a pair NOT listed here, forcing a conscious census edit.
++#
++# KNOWN LIMITATION (honest): granularity is the file-PAIR, because the finding
++# form carries no block identity — so new copy-paste between two files ALREADY
++# listed here is not caught. Finer (block-content) censusing would need a
++# check_dupes change; out of scope for WI-078, recorded here so it is findable.
++#
++# MAINTENANCE: when you legitimately add F5 helper duplication to a new pair, add
++# the pair here (run check_dupes.py --src project-trajectory/scripts to get the
++# exact string). When a decomposition removes an intra-file block below, delete
++# its line so the census does not rot into permanent cover.
++
++# --- F5 sanctioned cross-file small-helper duplication -----------------------
++# The _utf8_console emitter, the one-line declared-policy readers, the
+
+[... 672 line(s) elided — full stream in out/run-logs/ ...]
+
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/agent_loop.py:1262 == project-trajectory/scripts/check_trajectory.py:1123
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/agent_loop.py:1262 == project-trajectory/scripts/derive_gate.py:325
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/agent_loop.py:1262 == project-trajectory/scripts/gen_arch_map.py:640
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/bootstrap.py:1308
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/check.py:794
+check_dupes: duplicate block (~35 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/check_doc_refs.py:200
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/check_perf.py:280
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/check_stubs.py:217
+check_dupes: duplicate block (~35 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/check_trajectory.py:1126
+check_dupes: duplicate block (~35 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/derive_gate.py:328
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/gen_arch_map.py:643
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/gen_cases.py:182
+check_dupes: duplicate block (~35 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/gen_okf.py:529
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/agent_loop.py:1265 == project-trajectory/scripts/gen_release_checklist.py:97
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/agent_loop.py:2052 == project-trajectory/scripts/agent_loop.py:2156
+check_dupes: duplicate block (~41 tokens): project-trajectory/scripts/agent_loop.py:2053 == project-trajectory/scripts/agent_loop.py:2159
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/agent_loop.py:2127 == project-trajectory/scripts/agent_loop.py:2190
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/agent_loop.py:2135 == project-trajectory/scripts/agent_loop.py:2201
+check_dupes: duplicate block (~76 tokens): project-trajectory/scripts/bootstrap.py:332 == project-trajectory/scripts/gen_skills_index.py:120
+check_dupes: duplicate block (~56 tokens): project-trajectory/scripts/bootstrap.py:440 == project-trajectory/scripts/gen_skills_index.py:84
+check_dupes: duplicate block (~38 tokens): project-trajectory/scripts/bootstrap.py:1216 == project-trajectory/scripts/check_trajectory.py:945
+check_dupes: duplicate block (~37 tokens): project-trajectory/scripts/check.py:197 == project-trajectory/scripts/run_menu.py:80
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/check.py:791 == project-trajectory/scripts/check_trajectory.py:1123
+check_dupes: duplicate block (~34 tokens): project-trajectory/scripts/check_doc_refs.py:184 == project-trajectory/scripts/gen_cases.py:166
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/check_doc_refs.py:185 == project-trajectory/scripts/check_dupes.py:153
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/check_doc_refs.py:185 == project-trajectory/scripts/check_stubs.py:202
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/check_doc_refs.py:185 == project-trajectory/scripts/gen_okf.py:514
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/check_doc_refs.py:185 == project-trajectory/scripts/gen_release_checklist.py:82
+check_dupes: duplicate block (~36 tokens): project-trajectory/scripts/check_doc_refs.py:188 == project-trajectory/scripts/check_dupes.py:156
+check_dupes: duplicate block (~36 tokens): project-trajectory/scripts/check_doc_refs.py:188 == project-trajectory/scripts/check_stubs.py:205
+check_dupes: duplicate block (~36 tokens): project-trajectory/scripts/check_doc_refs.py:188 == project-trajectory/scripts/gen_cases.py:170
+check_dupes: duplicate block (~36 tokens): project-trajectory/scripts/check_doc_refs.py:188 == project-trajectory/scripts/gen_okf.py:517
+check_dupes: duplicate block (~36 tokens): project-trajectory/scripts/check_doc_refs.py:188 == project-trajectory/scripts/gen_release_checklist.py:85
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/check_doc_refs.py:201 == project-trajectory/scripts/check_trajectory.py:1127
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/check_doc_refs.py:201 == project-trajectory/scripts/derive_gate.py:329
+check_dupes: duplicate block (~40 tokens): project-trajectory/scripts/check_doc_refs.py:201 == project-trajectory/scripts/gen_okf.py:530
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/check_doc_refs.py:201 == project-trajectory/scripts/gen_trajectory.py:2363
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/check_docs.py:406 == project-trajectory/scripts/gen_release_checklist.py:67
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/check_docs.py:523 == project-trajectory/scripts/check_vendored.py:72
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/check_docs.py:526 == project-trajectory/scripts/check_vendored.py:75
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/check_perf.py:80 == project-trajectory/scripts/derive_gate.py:94
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/check_perf.py:80 == project-trajectory/scripts/gen_release_checklist.py:47
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/check_perf.py:80 == project-trajectory/scripts/trace.py:234
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/check_perf.py:285 == project-trajectory/scripts/derive_gate.py:332
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/check_perf.py:285 == project-trajectory/scripts/trace.py:942
+check_dupes: duplicate block (~34 tokens): project-trajectory/scripts/check_perf.py:289 == project-trajectory/scripts/derive_gate.py:333
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/check_perf.py:301 == project-trajectory/scripts/trace.py:951
+check_dupes: duplicate block (~35 tokens): project-trajectory/scripts/check_privacy.py:153 == project-trajectory/scripts/check_trajectory.py:150
+check_dupes: duplicate block (~61 tokens): project-trajectory/scripts/check_privacy.py:162 == project-trajectory/scripts/check_trajectory.py:160
+check_dupes: duplicate block (~34 tokens): project-trajectory/scripts/check_privacy.py:162 == project-trajectory/scripts/gen_trajectory.py:2090
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/check_stubs.py:217 == project-trajectory/scripts/gen_arch_map.py:643
+check_dupes: duplicate block (~43 tokens): project-trajectory/scripts/check_trajectory.py:209 == project-trajectory/scripts/gen_okf.py:80
+check_dupes: duplicate block (~94 tokens): project-trajectory/scripts/check_trajectory.py:374 == project-trajectory/scripts/gen_arch_map.py:197
+check_dupes: duplicate block (~94 tokens): project-trajectory/scripts/check_trajectory.py:374 == project-trajectory/scripts/trace.py:529
+check_dupes: duplicate block (~38 tokens): project-trajectory/scripts/check_trajectory.py:392 == project-trajectory/scripts/gen_arch_map.py:518
+check_dupes: duplicate block (~59 tokens): project-trajectory/scripts/check_trajectory.py:423 == project-trajectory/scripts/gen_trajectory.py:1670
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/check_trajectory.py:585 == project-trajectory/scripts/gen_trajectory.py:792
+check_dupes: duplicate block (~32 tokens): project-trajectory/scripts/check_trajectory.py:738 == project-trajectory/scripts/gen_trajectory.py:2092
+check_dupes: duplicate block (~56 tokens): project-trajectory/scripts/check_trajectory.py:928 == project-trajectory/scripts/derive_gate.py:256
+check_dupes: duplicate block (~104 tokens): project-trajectory/scripts/check_trajectory.py:981 == project-trajectory/scripts/check_trajectory.py:1085
+check_dupes: duplicate block (~61 tokens): project-trajectory/scripts/check_trajectory.py:1000 == project-trajectory/scripts/check_trajectory.py:1098
+check_dupes: duplicate block (~34 tokens): project-trajectory/scripts/check_trajectory.py:1007 == project-trajectory/scripts/check_trajectory.py:1105
+check_dupes: duplicate block (~36 tokens): project-trajectory/scripts/check_trajectory.py:1128 == project-trajectory/scripts/gen_trajectory.py:2364
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/check_vendored.py:36 == project-trajectory/scripts/score_reviews.py:87
+check_dupes: duplicate block (~34 tokens): project-trajectory/scripts/check_vendored.py:39 == project-trajectory/scripts/score_reviews.py:90
+check_dupes: duplicate block (~57 tokens): project-trajectory/scripts/derive_gate.py:86 == project-trajectory/scripts/trace.py:227
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/derive_gate.py:90 == project-trajectory/scripts/gen_release_checklist.py:44
+check_dupes: duplicate block (~47 tokens): project-trajectory/scripts/derive_gate.py:94 == project-trajectory/scripts/gen_release_checklist.py:47
+check_dupes: duplicate block (~75 tokens): project-trajectory/scripts/derive_gate.py:94 == project-trajectory/scripts/trace.py:234
+check_dupes: duplicate block (~43 tokens): project-trajectory/scripts/derive_gate.py:101 == project-trajectory/scripts/trace.py:241
+check_dupes: duplicate block (~87 tokens): project-trajectory/scripts/derive_gate.py:120 == project-trajectory/scripts/trace.py:606
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/derive_gate.py:169 == project-trajectory/scripts/trace.py:954
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/derive_gate.py:170 == project-trajectory/scripts/trace.py:956
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/derive_gate.py:172 == project-trajectory/scripts/trace.py:986
+check_dupes: duplicate block (~78 tokens): project-trajectory/scripts/derive_gate.py:173 == project-trajectory/scripts/trace.py:991
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/derive_gate.py:182 == project-trajectory/scripts/trace.py:1020
+check_dupes: duplicate block (~44 tokens): project-trajectory/scripts/derive_gate.py:185 == project-trajectory/scripts/trace.py:1021
+check_dupes: duplicate block (~41 tokens): project-trajectory/scripts/gen_arch_map.py:89 == project-trajectory/scripts/trace.py:216
+check_dupes: duplicate block (~36 tokens): project-trajectory/scripts/gen_arch_map.py:95 == project-trajectory/scripts/trace.py:222
+check_dupes: duplicate block (~32 tokens): project-trajectory/scripts/gen_arch_map.py:300 == project-trajectory/scripts/gen_arch_map.py:323
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/gen_okf.py:109 == project-trajectory/scripts/gen_trajectory.py:116
+check_dupes: duplicate block (~180 tokens): project-trajectory/scripts/gen_okf.py:113 == project-trajectory/scripts/gen_trajectory.py:117
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/gen_okf.py:319 == project-trajectory/scripts/gen_trajectory.py:194
+check_dupes: duplicate block (~36 tokens): project-trajectory/scripts/gen_okf.py:328 == project-trajectory/scripts/gen_okf.py:355
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/gen_okf.py:351 == project-trajectory/scripts/gen_trajectory.py:214
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/gen_trajectory.py:182 == project-trajectory/scripts/gen_trajectory.py:341
+check_dupes: duplicate block (~35 tokens): project-trajectory/scripts/gen_trajectory.py:184 == project-trajectory/scripts/gen_trajectory.py:342
+check_dupes: duplicate block (~42 tokens): project-trajectory/scripts/gen_trajectory.py:197 == project-trajectory/scripts/gen_trajectory.py:217
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/gen_trajectory.py:202 == project-trajectory/scripts/gen_trajectory.py:346
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/gen_trajectory.py:204 == project-trajectory/scripts/gen_trajectory.py:347
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/gen_trajectory.py:224 == project-trajectory/scripts/gen_trajectory.py:352
+check_dupes: duplicate block (~39 tokens): project-trajectory/scripts/gen_trajectory.py:651 == project-trajectory/scripts/gen_trajectory.py:1906
+check_dupes: duplicate block (~51 tokens): project-trajectory/scripts/gen_trajectory.py:655 == project-trajectory/scripts/gen_trajectory.py:1909
+check_dupes: duplicate block (~44 tokens): project-trajectory/scripts/gen_trajectory.py:659 == project-trajectory/scripts/gen_trajectory.py:1913
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/gen_trajectory.py:667 == project-trajectory/scripts/gen_trajectory.py:1921
+check_dupes: duplicate block (~31 tokens): project-trajectory/scripts/gen_trajectory.py:670 == project-trajectory/scripts/gen_trajectory.py:1924
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/gen_trajectory.py:714 == project-trajectory/scripts/gen_trajectory.py:1974
+check_dupes: duplicate block (~33 tokens): project-trajectory/scripts/gen_trajectory.py:862 == project-trajectory/scripts/gen_trajectory.py:1711
+check_dupes: duplicate block (~46 tokens): project-trajectory/scripts/gen_trajectory.py:1060 == project-trajectory/scripts/gen_trajectory.py:1100
+check_dupes: duplicate block (~37 tokens): project-trajectory/scripts/gen_trajectory.py:1139 == project-trajectory/scripts/gen_trajectory.py:1282
+check_dupes: duplicate block (~30 tokens): project-trajectory/scripts/trace.py:1172 == project-trajectory/scripts/trace.py:1178
+5	5	PROJECT_STATE.html
+95	0	docs/dupes-allow
+66	0	docs/log.md
+1	1	docs/next-wi
+1	1	docs/requirements/work-items.csv
+11	0	docs/stack.ini
+17	26	docs/status.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --strict --strict-integrity --no-placeholders --strict-schema; python project-trajectory/scripts/check_trajectory.py --strict; python project-trajectory/scripts/check.py --gate G3 --phase v1,v2 --jobs 0
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 placeholders=0 schema-findings=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+check_trajectory: clean (126 work item(s), 105 done (83%), graph acyclic).
+
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G3).
+  PASS  derived-gate     0.1s
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html --require-verified --strict-schema --phase v1,v2 ===
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 phase-deferred=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+  PASS  traceability     0.2s
+
+=== format : C:\Python38\python.exe -m ruff format --check project-trajectory/scripts tests ===
+71 files already formatted
+  PASS  format           0.2s
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+  PASS  design-flows     0.2s
+
+=== perf-budgets : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_perf.py --tier all ===
+check_perf: OK - no performance budgets to compare (process.md §9)
+  PASS  perf-budgets     0.2s
+
+=== skills-sync : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.3s
+
+=== lint : C:\Python38\python.exe -m ruff check project-trajectory/scripts tests ===
+All checks passed!
+  PASS  lint             0.3s
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (126 work item(s), 105 done (83%), graph acyclic).
+  PASS  trajectory       0.3s
+
+=== okf : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (242 file(s)).
+  PASS  okf              0.4s
+
+=== trajectory-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.4s
+
+=== dupes : C:\Python38\python.exe project-trajectory/scripts/check_dupes.py --src project-trajectory/scripts ===
+check_dupes: OK - no duplicate blocks in 24 file(s).
+  PASS  dupes            0.5s
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+  PASS  privacy          0.5s
+
+=== arch-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.6s
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 48 doc(s), 270 intra-repo link(s), 0 broken (6 orphan warning(s)).
+  PASS  doc-navigability 9.5s
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G3 --phase v1,v2 --jobs 0
+=== perf-budgets : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_perf.py --tier all ===
+check_perf: OK - no performance budgets to compare (process.md §9)
+  PASS  perf-budgets     0.1s
+
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G3).
+  PASS  derived-gate     0.1s
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+  PASS  design-flows     0.1s
+
+=== skills-sync : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.1s
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (126 work item(s), 105 done (83%), graph acyclic).
+  PASS  trajectory       0.1s
+
+=== format : C:\Python38\python.exe -m ruff format --check project-trajectory/scripts tests ===
+71 files already formatted
+  PASS  format           0.2s
+
+=== lint : C:\Python38\python.exe -m ruff check project-trajectory/scripts tests ===
+All checks passed!
+  PASS  lint             0.2s
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html --require-verified --strict-schema --phase v1,v2 ===
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 phase-deferred=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+  PASS  traceability     0.2s
+
+=== okf : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (242 file(s)).
+  PASS  okf              0.2s
+
+=== trajectory-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.3s
+
+=== arch-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.4s
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+  PASS  privacy          0.5s
+
+=== dupes : C:\Python38\python.exe project-trajectory/scripts/check_dupes.py --src project-trajectory/scripts ===
+check_dupes: OK - no duplicate blocks in 24 file(s).
+  PASS  dupes            0.5s
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 48 doc(s), 270 intra-repo link(s), 0 broken (6 orphan warning(s)).
+  PASS  doc-navigability 8.6s
+
+=== tests+coverage : C:\Python38\python.exe -m pytest -q -n auto --cov=project-trajectory/scripts --cov-report=term-missing --cov-fail-under=85 ===
+bringing up nodes...
+bringing up nodes...
+
+.............................s.......................................... [ 10%]
+........................................................................ [ 20%]
+..............................................................s......... [ 30%]
+........................................................................ [ 41%]
+..............................................................s.......ss [ 51%]
+ssssssssssssssss....s.....................s........s........s.......ss.. [ 61%]
+..s..............s......s.s............s.........s.s.................... [ 72%]
+........................................................................ [ 82%]
+........................................................................ [ 92%]
+..................................................                       [100%]
+============================== warnings summary ===============================
+..\..\Python38\lib\site-packages\xdist\plugin.py:259: 13 warnings
+  C:\Python38\lib\site-packages\xdist\plugin.py:259: DeprecationWarning: The --rsyncdir command line argument and rsyncdirs config variable are deprecated.
+  The rsync feature will be removed in pytest-xdist 4.0.
+    config.issue_config_time_warning(warning, 2)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform win32, python 3.8.10-final-0 -----------
+Name                                                  Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------------
+project-trajectory\scripts\agent_loop.py                954    118    88%   300, 337-338, 362-364, 385-386, 417, 441-442, 457-458, 568, 604, 682, 685, 688, 712, 742-743, 786, 808, 896-897, 911-912, 968-969, 1005, 1070-1072, 1081, 1116-1117, 1154, 1158-1159, 1208-1209, 1261-1262, 1415-1417, 1450-1451, 1472, 1486-1487, 1493, 1501-1502, 1549-1550, 1627-1628, 1692, 1711-1712, 1718-1719, 1741-1742, 1744, 1832, 1834-1841, 1884, 1893-1899, 1928-1929, 2044-2051, 2064-2065, 2110-2111, 2138-2139, 2143-2147, 2149-2152, 2176-2211, 2218-2219, 2226-2232, 2290-2296, 2354
+project-trajectory\scripts\agent_route.py               290     14    95%   169-170, 184-185, 188, 203, 220, 226, 290, 450, 555, 699, 705, 709
+project-trajectory\scripts\bootstrap.py                 488     44    91%   334, 339, 364, 381, 401, 438, 446, 452, 499, 525, 529, 546, 556, 562-568, 704, 722, 755, 758, 835, 860, 921, 932, 939, 960-961, 1221-1222, 1234, 1237, 1261, 1285-1286, 1533-1534, 1628, 1636, 1653, 1693
+project-trajectory\scripts\check.py                     269     12    96%   116-117, 285, 308, 637, 684-688, 721, 896, 925-926
+project-trajectory\scripts\check_doc_refs.py            116      4    97%   103, 118, 196-197
+project-trajectory\scripts\check_docs.py                309     23    93%   83-84, 188, 194-195, 208, 254-255, 280, 286, 292-293, 309, 311, 414, 441, 467, 481, 510, 513, 516, 563-564
+project-trajectory\scripts\check_dupes.py                85      5    94%   108, 138-139, 164-165
+project-trajectory\scripts\check_flows.py                84      6    93%   46-47, 60, 125-126, 139
+project-trajectory\scripts\check_perf.py                188      9    95%   67-68, 82, 97, 99, 201, 212, 315-316
+project-trajectory\scripts\check_privacy.py             249     22    91%   156-157, 169, 210-211, 242-243, 246-247, 362-363, 365, 397-402, 425-430, 434, 518-523, 529-533
+project-trajectory\scripts\check_stubs.py               137     10    93%   67, 70, 98, 165-166, 213-214, 252-258
+project-trajectory\scripts\check_trajectory.py          542     31    94%   153-154, 383, 496-500, 589, 611, 744, 896, 905, 937-938, 947-953, 987, 990, 1057, 1060, 1063-1064, 1067, 1088, 1091, 1094, 1106, 1202
+project-trajectory\scripts\check_vendored.py             72      5    93%   43-44, 55, 99-100
+project-trajectory\scripts\derive_gate.py               165      7    96%   89-90, 96, 265-266, 364-369
+project-trajectory\scripts\gen_arch_map.py              394     43    89%   103-104, 135, 146, 154, 156-158, 160, 174, 190, 200, 203-204, 206, 260, 270-287, 302, 323, 370-371, 394, 399, 464-465, 525, 542-546, 564-566, 578-579, 632, 749, 758, 778
+project-trajectory\scripts\gen_cases.py                 135     53    61%   66, 71, 87, 89, 92, 108, 175-179, 183-263, 267
+project-trajectory\scripts\gen_okf.py                   269     16    94%   116, 141, 223-224, 226-228, 232, 237-238, 240-242, 461, 525-526
+project-trajectory\scripts\gen_release_checklist.py     115     27    77%   49, 61, 79-81, 93-94, 144-145, 157-159, 162-163, 183, 199-201, 211-212, 225-226, 238-240, 283, 285
+project-trajectory\scripts\gen_skills_index.py          126     15    88%   47-48, 98-103, 122, 127, 150, 160, 166, 247-248, 263-268, 274-275
+project-trajectory\scripts\gen_trajectory.py            788     38    95%   120, 124, 385-391, 436-438, 544, 653, 796, 808-810, 850, 857-862, 874, 1129, 1642, 1653-1654, 1749-1769, 1829, 1834-1836, 1860-1861, 2097, 2319-2321
+project-trajectory\scripts\run_menu.py                   87      7    92%   64-65, 83-84, 157-158, 162
+project-trajectory\scripts\score_reviews.py             277     28    90%   94-95, 128, 189-191, 194, 198-199, 201, 225, 240, 266, 273, 292, 316, 348, 352, 363, 419-420, 499, 506-508, 546-548
+project-trajectory\scripts\subagent_gate.py              57     33    42%   51-59, 95-108, 114-120, 128-141, 145
+project-trajectory\scripts\trace.py                     544     19    97%   230-231, 269, 276, 496, 532, 535-536, 538, 587, 739, 786, 899, 1055-1056, 1062-1063, 1079-1080
+-----------------------------------------------------------------------------------
+TOTAL                                                  6740    589    91%
+
+Required test coverage of 85% reached. Total coverage: 91.26%
+664 passed, 34 skipped, 13 warnings in 148.54s (0:02:28)
+  PASS  tests+coverage   175.1s
+
+========================================================
+Check summary (gate G3, tier all):
+  PASS  format           0.2s
+  PASS  lint             0.2s
+  PASS  tests+coverage   175.1s
+  PASS  dupes            0.5s
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.2s
+  PASS  privacy          0.5s
+  PASS  doc-navigability 8.6s
+  PASS  perf-budgets     0.1s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+  PASS  arch-map         0.4s
+  PASS  trajectory-map   0.3s
+  PASS  okf              0.2s
+  PASS  skills-sync      0.1s
+========================================================
+RESULT: PASS
+[0m
+The independent G3 run passed all 15 steps, including the new `dupes` step. The raw detector reports the pre-existing duplicate blocks when the allowlist is disabled; their file-pairs are covered by the new census, and I found no unaddressed requirement-registry contradiction in this diff.
+[0m# [0mTodos
+[✓] Read contributor/process rules and locate work-item spec
+[✓] Inspect reviewed diff and impacted registry history
+[✓] Run traceability and repository harnesses
+[•] Write independent review verdict
+[0m
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Read contributor/process rules and locate work-item spec
+[✓] Inspect reviewed diff and impacted registry history
+[✓] Run traceability and repository harnesses
+[✓] Write independent review verdict
+[0m
+Review recorded: `docs/reviews/014-REVIEW-A.md`
+
+Verdict: `APPROVE` with 0 findings.
+
+Verified independently:
+- `trace.py`: 0 orphans/integrity/schema findings.
+- `check_trajectory.py --strict`: clean.
+- Full G3 harness: `RESULT: PASS` (including `dupes`; 664 passed, 34 skipped, 91.26% coverage).

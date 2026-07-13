@@ -1,0 +1,362 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 008
+# date: 2026-07-13 15:17
+# phase: REVIEW-A
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 405
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1634
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the committed work and governing requirement records, run the repository harness, then write only evidence-backed findings to the specified review file.
+[0m✱ [0mGlob "docs/requirements/**/*"[90m in . · 6 matches[0m
+[0m→ [0mRead CLAUDE.md
+[0m→ [0mRead AGENTS.md
+[0m✱ [0mGlob "**/*"[90m in docs · 100 matches[0m
+[0m
+[0m$ [0mgit status --short; git log --oneline -12; git diff --stat HEAD~1 HEAD; git diff --find-renames --find-copies HEAD~1 HEAD
+M OWNER_SCRATCHPAD.md
+ M docs/iteration_index.md
+?? docs/iteration/007-20260713-143706.log
+05fb2fb WI-087: status-currency sweep — drop the done WI id from status.md
+75c2137 WI-087: tiered phase-aware When/How drill-down views (phase v2 -> G3)
+d854099 WI-126: route BUILD sessions at a per-WI tier via a BuildTier pin
+4477684 WI-126 filed (queued): per-WI routing hints - build-tier pin (owner proposal)
+58683f4 WI-125: live session echo - console progress during walk-away runs
+cdbde13 WI-124: session-shape telemetry - boot latency, context volume, speed dials
+9499df4 WI-122: smoke-tier commit bar for the meta repo (owner-directed)
+aca0b0a WI-121: relax BUILD to the medium tier (owner dial) + file WI-122/123 (queued)
+b567f92 WI-120: resolve Windows CLI shims in run_session - cross-family reviews restored
+486c127 WI-119: record wall/API duration + turns in session logs and iteration index
+55860d6 loop bookkeeping: commit sessions 004-006 iteration logs + index + review scoreboard
+48ef547 review(006-A): independent REVIEW-A of WI-085 (Process tab / SR-050) — APPROVE findings=3
+ docs/status.md | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+diff --git a/docs/status.md b/docs/status.md
+index 6e25174..671f22c 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -108,7 +108,8 @@ working surface.
+        were ratified `Draft`→`Planned` by the G1 LLM-gate review, decomposed
+        (LLR-051/052 + TC-051/052) by the G2 batch, and then Verified by the two
+        dev slices, with **provisional rulings** the owner accepts or amends at
+-       the single sitting: WI-087's four open questions — now **implemented as
++       the single sitting: the tiered-drill-down slice's four open questions —
++       now **implemented as
+        ruled** (tier composition Phase ⊃ Workstream ⊃ WI with Campaign kept as the
+        bottom-tier campaign container; grouping-primary phase encoding + per-phase
+        color accent; in-place `<details>`-style expand, no zoom navigation; the
+@@ -289,15 +290,15 @@ working surface.
+   2. **Phase v2 dev slices — BOTH DONE (v2 at G3).** The process-view slice
+      closed 2026-07-12 (the Process tab, `process_panel()` per LLR-051, TC-051's
+      7 nodes, SR-050 `Verified`, seam IF-052). The **tiered drill-down slice
+-     (WI-087) closed 2026-07-13**: `when_view()`/`_wi_phases()` + the shared
++     closed 2026-07-13**: `when_view()`/`_wi_phases()` + the shared
+      `_campboxes`/`_wi_row`/`_wi_table` helpers give the When roadmap a
+      phase ⊃ workstream ⊃ WI hierarchy (collapse at > 3 local members, campaign
+      bottom tier, per-phase color accent, per-tier aggregated edges) and the
+      How-SW view an expand-at-≤3/collapse-at->3 top view; LLR-052 `Implemented`,
+      TC-052 `Verified` (9 pinned nodes), **SR-051 `Verified`**. The close
+      regenerated the gate (v2 → G3) and passed `check.py --gate G3 --phase v1,v2`
+-     (14/14). Spec archived to `docs/archive/specs/WI-087.2026-07-13.md`. The v2
+-     spine cut rides the owner single-ratify sitting queued above.
++     (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's
++     Deliverable). The v2 spine cut rides the owner single-ratify sitting above.
+   3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
+      = WI-104): WI-104 (pin
+      the dev toolchain) then WI-105 (the coverage-plumbing fix, verified on the
+[0m
+[0m# [0mTodos
+[•] Inspect review diff and governing requirements/specification
+[ ] Run independent trace and check harnesses
+[ ] Write required REVIEW-A verdict
+[0m
+[0m→ [0mRead docs/status.md[90m [offset=90, limit=230][0m
+[0m→ [0mRead docs/requirements/work-items.csv
+[0m→ [0mRead docs/review-policy
+[0m→ [0mRead docs/requirements/system-requirements.csv
+[0m→ [0mRead docs/requirements/low-level-requirements.csv
+[0m→ [0mRead docs/requirements/stakeholder-needs.md
+[0m→ [0mRead docs/archive/specs/WI-087.2026-07-13.md
+[0m
+[0m$ [0mif (Test-Path -LiteralPath 'docs/process.md') { 'docs/process.md exists' } else { 'docs/process.md missing' }; if (Test-Path -LiteralPath 'scripts/check.py') { 'scripts/check.py exists' } else { 'scripts/check.py missing' }; git show --format=fuller --no-ext-diff HEAD
+docs/process.md missing
+scripts/check.py missing
+commit 05fb2fba7b4d9886e9e84c29773f3cb172509013
+Author:     / <peterandersjohnson@outlook.com>
+AuthorDate: Mon Jul 13 15:10:06 2026 -0500
+Commit:     / <peterandersjohnson@outlook.com>
+CommitDate: Mon Jul 13 15:10:06 2026 -0500
+
+    WI-087: status-currency sweep — drop the done WI id from status.md
+    
+    Honor the R-D rule (closed work leaves the working surface): reword the two
+    residual WI-087 references in docs/status.md to the slice's descriptive name,
+    clearing the check_trajectory warn-first finding.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+diff --git a/docs/status.md b/docs/status.md
+index 6e25174..671f22c 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -108,7 +108,8 @@ working surface.
+        were ratified `Draft`→`Planned` by the G1 LLM-gate review, decomposed
+        (LLR-051/052 + TC-051/052) by the G2 batch, and then Verified by the two
+        dev slices, with **provisional rulings** the owner accepts or amends at
+-       the single sitting: WI-087's four open questions — now **implemented as
++       the single sitting: the tiered-drill-down slice's four open questions —
++       now **implemented as
+        ruled** (tier composition Phase ⊃ Workstream ⊃ WI with Campaign kept as the
+        bottom-tier campaign container; grouping-primary phase encoding + per-phase
+        color accent; in-place `<details>`-style expand, no zoom navigation; the
+@@ -289,15 +290,15 @@ working surface.
+   2. **Phase v2 dev slices — BOTH DONE (v2 at G3).** The process-view slice
+      closed 2026-07-12 (the Process tab, `process_panel()` per LLR-051, TC-051's
+      7 nodes, SR-050 `Verified`, seam IF-052). The **tiered drill-down slice
+-     (WI-087) closed 2026-07-13**: `when_view()`/`_wi_phases()` + the shared
++     closed 2026-07-13**: `when_view()`/`_wi_phases()` + the shared
+      `_campboxes`/`_wi_row`/`_wi_table` helpers give the When roadmap a
+      phase ⊃ workstream ⊃ WI hierarchy (collapse at > 3 local members, campaign
+      bottom tier, per-phase color accent, per-tier aggregated edges) and the
+      How-SW view an expand-at-≤3/collapse-at->3 top view; LLR-052 `Implemented`,
+      TC-052 `Verified` (9 pinned nodes), **SR-051 `Verified`**. The close
+      regenerated the gate (v2 → G3) and passed `check.py --gate G3 --phase v1,v2`
+-     (14/14). Spec archived to `docs/archive/specs/WI-087.2026-07-13.md`. The v2
+-     spine cut rides the owner single-ratify sitting queued above.
++     (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's
++     Deliverable). The v2 spine cut rides the owner single-ratify sitting above.
+   3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
+      = WI-104): WI-104 (pin
+      the dev toolchain) then WI-105 (the coverage-plumbing fix, verified on the
+[0m
+The reviewed commit changes only `docs/status.md`, removing residual `WI-087` references to satisfy the done-work-item currency rule. The repository intentionally has no `docs/process.md` or root `scripts/`; its governing process and runnable harness live under `project-trajectory/`.
+[0m→ [0mRead docs/stack.ini
+[0m✱ [0mGrep "work-items|done WI|working surface|status.md"[90m in project-trajectory/PROCESS.md · 14 matches[0m
+[0m✱ [0mGrep "R-D|done WI|working surface|status.md|SpecRef"[90m in project-trajectory/PROCESS_OPTIONS.md · 44 matches[0m
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --strict --strict-integrity --strict-schema --no-placeholders
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 placeholders=0 schema-findings=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_trajectory.py --strict; git diff --check HEAD~1 HEAD; git grep -n -e 'WI-087' HEAD -- docs/status.md; git grep -n -e 'WI-087' HEAD~1 -- docs/status.md
+check_trajectory: clean (126 work item(s), 102 done (81%), graph acyclic).
+HEAD~1:docs/status.md:111:       the single sitting: WI-087's four open questions — now **implemented as
+HEAD~1:docs/status.md:292:     (WI-087) closed 2026-07-13**: `when_view()`/`_wi_phases()` + the shared
+HEAD~1:docs/status.md:299:     (14/14). Spec archived to `docs/archive/specs/WI-087.2026-07-13.md`. The v2
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G3 --phase v1,v2
+=== format : C:\Python38\python.exe -m ruff format --check project-trajectory/scripts tests ===
+71 files already formatted
+
+=== lint : C:\Python38\python.exe -m ruff check project-trajectory/scripts tests ===
+All checks passed!
+
+=== tests+coverage : C:\Python38\python.exe -m pytest -q -n auto --cov=project-trajectory/scripts --cov-report=term-missing --cov-fail-under=80 ===
+bringing up nodes...
+bringing up nodes...
+
+.............................s.......................................... [ 10%]
+........................................................................ [ 20%]
+................................................................s....... [ 30%]
+........................................................................ [ 41%]
+.....................................................................s.. [ 51%]
+.s.ssssss....................sssss....s.......s..........s.....s......s. [ 61%]
+.............s..ssssss......s..s..........s...........s................. [ 72%]
+.....s....s..................................s.......................... [ 82%]
+........................................................................ [ 92%]
+..............................................
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m→ [0mRead docs/next-wi
+[0m→ [0mRead project-trajectory/PROCESS.md[90m [offset=484, limit=30][0m
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md[90m [offset=1238, limit=42][0m
+[0m→ [0mRead docs/reviews/006-REVIEW-A.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G3 --phase v1,v2
+=== format : C:\Python38\python.exe -m ruff format --check project-trajectory/scripts tests ===
+71 files already formatted
+
+=== lint : C:\Python38\python.exe -m ruff check project-trajectory/scripts tests ===
+All checks passed!
+
+=== tests+coverage : C:\Python38\python.exe -m pytest -q -n auto --cov=project-trajectory/scripts --cov-report=term-missing --cov-fail-under=80 ===
+bringing up nodes...
+bringing up nodes...
+
+.............................s.......................................... [ 10%]
+........................................................................ [ 20%]
+.............................................................s.......... [ 30%]
+........................................................................ [ 41%]
+....................................................s.................s. [ 51%]
+..............s.....ss......s.s......sssssss......s.s..ssssssssss....... [ 61%]
+.................................s..........................s........s.. [ 72%]
+.................................................s...............s...... [ 82%]
+.............s.......................................................... [ 92%]
+..................................................                       [100%]
+============================== warnings summary ===============================
+..\..\Python38\lib\site-packages\xdist\plugin.py:259: 13 warnings
+  C:\Python38\lib\site-packages\xdist\plugin.py:259: DeprecationWarning: The --rsyncdir command line argument and rsyncdirs config variable are deprecated.
+  The rsync feature will be removed in pytest-xdist 4.0.
+    config.issue_config_time_warning(warning, 2)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform win32, python 3.8.10-final-0 -----------
+Name                                                  Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------------
+project-trajectory\scripts\agent_loop.py                954    118    88%   300, 337-338, 362-364, 385-386, 417, 441-442, 457-458, 568, 604, 682, 685, 688, 712, 742-743, 786, 808, 896-897, 911-912, 968-969, 1005, 1070-1072, 1081, 1116-1117, 1154, 1158-1159, 1208-1209, 1261-1262, 1415-1417, 1450-1451, 1472, 1486-1487, 1493, 1501-1502, 1549-1550, 1627-1628, 1692, 1711-1712, 1718-1719, 1741-1742, 1744, 1832, 1834-1841, 1884, 1893-1899, 1928-1929, 2044-2051, 2064-2065, 2110-2111, 2138-2139, 2143-2147, 2149-2152, 2176-2211, 2218-2219, 2226-2232, 2290-2296, 2354
+project-trajectory\scripts\agent_route.py               290     14    95%   169-170, 184-185, 188, 203, 220, 226, 290, 450, 555, 699, 705, 709
+project-trajectory\scripts\bootstrap.py                 488     44    91%   334, 339, 364, 381, 401, 438, 446, 452, 499, 525, 529, 546, 556, 562-568, 704, 722, 755, 758, 835, 860, 921, 932, 939, 960-961, 1221-1222, 1234, 1237, 1261, 1285-1286, 1533-1534, 1628, 1636, 1653, 1693
+project-trajectory\scripts\check.py                     269     12    96%   116-117, 285, 308, 637, 684-688, 721, 896, 925-926
+project-trajectory\scripts\check_doc_refs.py            116      4    97%   103, 118, 196-197
+project-trajectory\scripts\check_docs.py                309     23    93%   83-84, 188, 194-195, 208, 254-255, 280, 286, 292-293, 309, 311, 414, 441, 467, 481, 510, 513, 516, 563-564
+project-trajectory\scripts\check_dupes.py                85      5    94%   108, 138-139, 164-165
+project-trajectory\scripts\check_flows.py                84      6    93%   46-47, 60, 125-126, 139
+project-trajectory\scripts\check_perf.py                188      9    95%   67-68, 82, 97, 99, 201, 212, 315-316
+project-trajectory\scripts\check_privacy.py             249     22    91%   156-157, 169, 210-211, 242-243, 246-247, 362-363, 365, 397-402, 425-430, 434, 518-523, 529-533
+project-trajectory\scripts\check_stubs.py               137     10    93%   67, 70, 98, 165-166, 213-214, 252-258
+project-trajectory\scripts\check_trajectory.py          542     31    94%   153-154, 383, 496-500, 589, 611, 744, 896, 905, 937-938, 947-953, 987, 990, 1057, 1060, 1063-1064, 1067, 1088, 1091, 1094, 1106, 1202
+project-trajectory\scripts\check_vendored.py             72      5    93%   43-44, 55, 99-100
+project-trajectory\scripts\derive_gate.py               165      7    96%   89-90, 96, 265-266, 364-369
+project-trajectory\scripts\gen_arch_map.py              394     43    89%   103-104, 135, 146, 154, 156-158, 160, 174, 190, 200, 203-204, 206, 260, 270-287, 302, 323, 370-371, 394, 399, 464-465, 525, 542-546, 564-566, 578-579, 632, 749, 758, 778
+project-trajectory\scripts\gen_cases.py                 135     53    61%   66, 71, 87, 89, 92, 108, 175-179, 183-263, 267
+project-trajectory\scripts\gen_okf.py                   269     16    94%   116, 141, 223-224, 226-228, 232, 237-238, 240-242, 461, 525-526
+project-trajectory\scripts\gen_release_checklist.py     115     27    77%   49, 61, 79-81, 93-94, 144-145, 157-159, 162-163, 183, 199-201, 211-212, 225-226, 238-240, 283, 285
+project-trajectory\scripts\gen_skills_index.py          126     15    88%   47-48, 98-103, 122, 127, 150, 160, 166, 247-248, 263-268, 274-275
+project-trajectory\scripts\gen_trajectory.py            788     38    95%   120, 124, 385-391, 436-438, 544, 653, 796, 808-810, 850, 857-862, 874, 1129, 1642, 1653-1654, 1749-1769, 1829, 1834-1836, 1860-1861, 2097, 2319-2321
+project-trajectory\scripts\run_menu.py                   87      7    92%   64-65, 83-84, 157-158, 162
+project-trajectory\scripts\score_reviews.py             277     28    90%   94-95, 128, 189-191, 194, 198-199, 201, 225, 240, 266, 273, 292, 316, 348, 352, 363, 419-420, 499, 506-508, 546-548
+project-trajectory\scripts\subagent_gate.py              57     33    42%   51-59, 95-108, 114-120, 128-141, 145
+project-trajectory\scripts\trace.py                     544     19    97%   230-231, 269, 276, 496, 532, 535-536, 538, 587, 739, 786, 899, 1055-1056, 1062-1063, 1079-1080
+-----------------------------------------------------------------------------------
+TOTAL                                                  6740    589    91%
+
+Required test coverage of 80% reached. Total coverage: 91.26%
+664 passed, 34 skipped, 13 warnings in 143.22s (0:02:23)
+
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G3).
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html --require-verified --strict-schema --phase v1,v2 ===
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 phase-deferred=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 45 doc(s), 265 intra-repo link(s), 0 broken (3 orphan warning(s)).
+
+=== perf-budgets : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_perf.py --tier all ===
+check_perf: OK - no performance budgets to compare (process.md §9)
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (126 work item(s), 102 done (81%), graph acyclic).
+
+=== arch-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+
+=== trajectory-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+
+=== okf : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (242 file(s)).
+
+=== skills-sync : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+
+========================================================
+Check summary (gate G3, tier all):
+  PASS  format           0.1s
+  PASS  lint             0.1s
+  PASS  tests+coverage   167.5s
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.1s
+  PASS  privacy          0.4s
+  PASS  doc-navigability 4.3s
+  PASS  perf-budgets     0.1s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+  PASS  arch-map         0.4s
+  PASS  trajectory-map   0.2s
+  PASS  okf              0.1s
+  PASS  skills-sync      0.1s
+========================================================
+RESULT: PASS
+[0m
+Independent verification is green: the full G3 phase-v1,v2 harness passed all 14 steps (`664 passed, 34 skipped`, 91.26% coverage), and strict traceability plus strict trajectory validation report zero findings. The committed wording now contains no `WI-087` token, matching R-D; I found no defect in the reviewed diff.
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Inspect review diff and governing requirements/specification
+[✓] Run independent trace and check harnesses
+[•] Write required REVIEW-A verdict
+[0m
+[0m→ [0mRead docs/reviews/008-REVIEW-A.md
+[0m
+[0m$ [0mgit diff --check; git status --short
+warning: in the working copy of 'docs/iteration_index.md', CRLF will be replaced by LF the next time Git touches it
+ M OWNER_SCRATCHPAD.md
+ M docs/iteration_index.md
+?? docs/iteration/007-20260713-143706.log
+?? docs/reviews/008-REVIEW-A.md
+[0m
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Inspect review diff and governing requirements/specification
+[✓] Run independent trace and check harnesses
+[✓] Write required REVIEW-A verdict
+[0m
+Review recorded in `docs/reviews/008-REVIEW-A.md`.
+
+Verdict: `APPROVE findings=0`. Full G3 harness passed; strict trace and trajectory checks were clean.

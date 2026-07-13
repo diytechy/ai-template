@@ -1,0 +1,484 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 012
+# date: 2026-07-13 16:06
+# phase: REVIEW-A
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 243
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1634
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the reviewed diff and governing requirement records, run the repository harnesses, then write the requested review verdict.
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m→ [0mRead CLAUDE.md
+[0m→ [0mRead AGENTS.md
+[0m
+[0m$ [0mgit status --short; git log --oneline -12; git diff --stat HEAD~1..HEAD; git diff --name-status HEAD~1..HEAD
+M OWNER_SCRATCHPAD.md
+ M docs/iteration_index.md
+ M docs/reviews/scoreboard.txt
+?? docs/iteration/007-20260713-143706.log
+?? docs/iteration/008-20260713-151051.log
+?? docs/iteration/009-20260713-151746.log
+?? docs/iteration/010-20260713-153426.log
+?? docs/iteration/011-20260713-153915.log
+?? docs/reviews/008-REVIEW-A.md
+?? docs/reviews/010-REVIEW-A.md
+1391ef4 WI-105: coverage-plumbing hardening — verify WI-104 pin closed M9/L1; raise meta coverage floor 80->85
+058f033 WI-104: pin the meta dev toolchain (requirements-dev.txt + CI/dev-setup consume + canary)
+05fb2fb WI-087: status-currency sweep — drop the done WI id from status.md
+75c2137 WI-087: tiered phase-aware When/How drill-down views (phase v2 -> G3)
+d854099 WI-126: route BUILD sessions at a per-WI tier via a BuildTier pin
+4477684 WI-126 filed (queued): per-WI routing hints - build-tier pin (owner proposal)
+58683f4 WI-125: live session echo - console progress during walk-away runs
+cdbde13 WI-124: session-shape telemetry - boot latency, context volume, speed dials
+9499df4 WI-122: smoke-tier commit bar for the meta repo (owner-directed)
+aca0b0a WI-121: relax BUILD to the medium tier (owner dial) + file WI-122/123 (queued)
+b567f92 WI-120: resolve Windows CLI shims in run_session - cross-family reviews restored
+486c127 WI-119: record wall/API duration + turns in session logs and iteration index
+ .coveragerc                      | 17 +++++++++++
+ PROJECT_STATE.html               | 14 ++++-----
+ docs/log.md                      | 65 ++++++++++++++++++++++++++++++++++++++++
+ docs/next-wi                     |  2 +-
+ docs/requirements/work-items.csv |  2 +-
+ docs/stack.ini                   | 14 +++++++--
+ docs/status.md                   | 33 ++++++++++----------
+ 7 files changed, 118 insertions(+), 29 deletions(-)
+M	.coveragerc
+M	PROJECT_STATE.html
+M	docs/log.md
+M	docs/next-wi
+M	docs/requirements/work-items.csv
+M	docs/stack.ini
+M	docs/status.md
+[0m
+[0m# [0mTodos
+[•] Inspect reviewed commit and governing requirement/spec surfaces
+[ ] Run traceability and repository check harnesses
+[ ] Write independent review verdict in requested format
+[0m
+[0m→ [0mRead docs/next-wi
+[0m✱ [0mGlob "docs/specs/**/*"[90m in . · 11 matches[0m
+[0m→ [0mRead docs/requirements/work-items.csv
+[0m→ [0mRead project-trajectory/PROCESS.md
+[0m→ [0mRead docs/requirements/stakeholder-needs.md
+[0m→ [0mRead docs/requirements/system-requirements.csv
+[0m→ [0mRead docs/requirements/low-level-requirements.csv
+
+[... 201 line(s) elided — full stream in out/run-logs/ ...]
+
+11	3	docs/stack.ini
+# Subprocess-aware coverage for the meta-repo self-tests (IMPROVEMENT_PLAN.md
+# Thread 47 phase 6). The suite runs the kit scripts as SUBPROCESSES (bootstrap a
+# temp scaffold, then run the real command in it), so most coverage is produced
+# by child processes running the scaffold's *copied* scripts from a temp dir.
+# tests/conftest.run_py wires each child (COVERAGE_PROCESS_START + the
+# tests/_cov/sitecustomize.py that calls coverage.process_startup()) when
+# pytest-cov is active, sharing pytest-cov's datafile so the parallel data lands
+# in one place for the session-end combine.
+[run]
+parallel = true
+# No `source` here on purpose: a child runs the scaffold's copied script from a
+# temp dir, and `source` is applied at TRACE time against that real temp path, so
+# it would exclude every child entirely. Children trace freely; the REPORT is
+# scoped by the parent's --cov=project-trajectory/scripts (COV_CORE_SOURCE), and
+# the [paths] map below folds each temp-scaffold */scripts/ copy back onto the
+# source tree at combine time.
+
+[paths]
+scripts =
+    project-trajectory/scripts/
+    */scripts/
+
+[report]
+# Scope the report (and so --cov-fail-under) to the PRODUCT only. A child traces
+# freely (no [run] source — see above), so it also records temp-scaffold fixtures
+# it spawns (e.g. agent_loop's fake_agent.py). Those keep their temp path (they are
+# not under a */scripts/ dir, so [paths] does not fold them onto the source tree),
+# while the real script copies are remapped to project-trajectory/scripts/. This
+# omit runs AFTER that remap, so it drops the fixtures without touching the scripts.
+# A [run] omit could not: the script copies live under the same pytest tmp dir.
+omit =
+    */pytest-of-*/*
+    */tmp*/*
+# Subprocess-aware coverage for the meta-repo self-tests (IMPROVEMENT_PLAN.md
+# Thread 47 phase 6). The suite runs the kit scripts as SUBPROCESSES (bootstrap a
+# temp scaffold, then run the real command in it), so most coverage is produced
+# by child processes running the scaffold's *copied* scripts from a temp dir.
+# tests/conftest.run_py wires each child (COVERAGE_PROCESS_START + the
+# tests/_cov/sitecustomize.py that calls coverage.process_startup()) when
+# pytest-cov is active, sharing pytest-cov's datafile so the parallel data lands
+# in one place for the session-end combine.
+#
+# Combine race + debris (WI-105 / the 2026-07-12b review's M9/L1): children write
+# their `.coverage.*` parallel files next to pytest-cov's datafile at the repo
+# root, the same glob the xdist master erases at start and combines at end. On the
+# old-local pytest-cov 4.1.0 that shared glob raced (workers mis-erasing mid-write
+# -> WinError 32; a mid-combine delete -> FileNotFoundError INTERNALERROR), losing
+# children from the combine (~91% -> ~82%) and leaving debris behind. The WI-104
+# pin closes it: on the pinned toolchain (pytest-cov ~=7 / ~=5) the master erases
+# stale `.coverage.*` at session start (verified: a seeded stale file is consumed)
+# so an aborted run self-heals, and a full-suite run measures a clean ~91% with
+# zero debris left at root. The `[coverage] threshold = 85` in docs/stack.ini is
+# the regression sensor if that ever silently breaks again. Pointing children at a
+# dedicated data DIRECTORY (to unshare the glob structurally) was considered and
+# declined: pytest-cov's session-end combine only merges parallel files beside its
+# own datafile, so a separate dir needs an explicit combine step that risks
+# dropping the subprocess coverage the ~91% depends on — a poor trade once the pin
+# already makes the shared-glob path clean.
+[run]
+parallel = true
+# No `source` here on purpose: a child runs the scaffold's copied script from a
+# temp dir, and `source` is applied at TRACE time against that real temp path, so
+# it would exclude every child entirely. Children trace freely; the REPORT is
+# scoped by the parent's --cov=project-trajectory/scripts (COV_CORE_SOURCE), and
+# the [paths] map below folds each temp-scaffold */scripts/ copy back onto the
+# source tree at combine time.
+
+[paths]
+scripts =
+    project-trajectory/scripts/
+    */scripts/
+
+[report]
+# Scope the report (and so --cov-fail-under) to the PRODUCT only. A child traces
+# freely (no [run] source — see above), so it also records temp-scaffold fixtures
+# it spawns (e.g. agent_loop's fake_agent.py). Those keep their temp path (they are
+# not under a */scripts/ dir, so [paths] does not fold them onto the source tree),
+# while the real script copies are remapped to project-trajectory/scripts/. This
+# omit runs AFTER that remap, so it drops the fixtures without touching the scripts.
+# A [run] omit could not: the script copies live under the same pytest tmp dir.
+omit =
+    */pytest-of-*/*
+    */tmp*/*
+[0m
+[0m$ [0mpython --version; python -m pytest --version; python -m coverage --version; python project-trajectory/scripts/trace.py --root . --strict --strict-integrity --strict-schema --no-placeholders --require-verified
+Python 3.8.10
+pytest 7.4.3
+Coverage.py, version 7.3.2 with C extension
+Full documentation is at https://coverage.readthedocs.io/en/7.3.2
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+[0m# [0mTodos
+[✓] Inspect reviewed commit and governing requirement/spec surfaces
+[•] Run traceability and repository check harnesses
+[ ] Write independent review verdict in requested format
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G3 --jobs 0
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G3).
+  PASS  derived-gate     0.1s
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+  PASS  design-flows     0.2s
+
+=== perf-budgets : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_perf.py --tier all ===
+check_perf: OK - no performance budgets to compare (process.md §9)
+  PASS  perf-budgets     0.2s
+
+=== skills-sync : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.2s
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html --require-verified --strict-schema ===
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+  PASS  traceability     0.2s
+
+=== format : C:\Python38\python.exe -m ruff format --check project-trajectory/scripts tests ===
+71 files already formatted
+  PASS  format           0.2s
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: ERROR - R-D WI-104: a done WI id appears in docs/status.md (closed work leaves the working surface)
+check_trajectory: ERROR - R-D WI-105: a done WI id appears in docs/status.md (closed work leaves the working surface)
+check_trajectory: 2 error(s) in docs/requirements/work-items.csv.
+  FAIL  trajectory       exit 1 (0.2s)
+
+=== lint : C:\Python38\python.exe -m ruff check project-trajectory/scripts tests ===
+All checks passed!
+  PASS  lint             0.2s
+
+=== okf : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (242 file(s)).
+  PASS  okf              0.2s
+
+=== trajectory-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.3s
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+  PASS  privacy          0.4s
+
+=== arch-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.5s
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 47 doc(s), 270 intra-repo link(s), 0 broken (5 orphan warning(s)).
+  PASS  doc-navigability 8.9s
+
+=== tests+coverage : C:\Python38\python.exe -m pytest -q -n auto --cov=project-trajectory/scripts --cov-report=term-missing --cov-fail-under=85 ===
+bringing up nodes...
+bringing up nodes...
+
+.............................s.......................................... [ 10%]
+........................................................................ [ 20%]
+................................................................s....... [ 30%]
+........................................................................ [ 41%]
+................................................................s......s [ 51%]
+......s.ssssssss.s..........s..ss.sssssss......s...............s......s. [ 61%]
+......................................s.....s........s.s................ [ 72%]
+..................s............s......s................................. [ 82%]
+........................................................................ [ 92%]
+..................................................                       [100%]
+============================== warnings summary ===============================
+..\..\Python38\lib\site-packages\xdist\plugin.py:259: 13 warnings
+  C:\Python38\lib\site-packages\xdist\plugin.py:259: DeprecationWarning: The --rsyncdir command line argument and rsyncdirs config variable are deprecated.
+  The rsync feature will be removed in pytest-xdist 4.0.
+    config.issue_config_time_warning(warning, 2)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform win32, python 3.8.10-final-0 -----------
+Name                                                  Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------------
+project-trajectory\scripts\agent_loop.py                954    118    88%   300, 337-338, 362-364, 385-386, 417, 441-442, 457-458, 568, 604, 682, 685, 688, 712, 742-743, 786, 808, 896-897, 911-912, 968-969, 1005, 1070-1072, 1081, 1116-1117, 1154, 1158-1159, 1208-1209, 1261-1262, 1415-1417, 1450-1451, 1472, 1486-1487, 1493, 1501-1502, 1549-1550, 1627-1628, 1692, 1711-1712, 1718-1719, 1741-1742, 1744, 1832, 1834-1841, 1884, 1893-1899, 1928-1929, 2044-2051, 2064-2065, 2110-2111, 2138-2139, 2143-2147, 2149-2152, 2176-2211, 2218-2219, 2226-2232, 2290-2296, 2354
+project-trajectory\scripts\agent_route.py               290     14    95%   169-170, 184-185, 188, 203, 220, 226, 290, 450, 555, 699, 705, 709
+project-trajectory\scripts\bootstrap.py                 488     44    91%   334, 339, 364, 381, 401, 438, 446, 452, 499, 525, 529, 546, 556, 562-568, 704, 722, 755, 758, 835, 860, 921, 932, 939, 960-961, 1221-1222, 1234, 1237, 1261, 1285-1286, 1533-1534, 1628, 1636, 1653, 1693
+project-trajectory\scripts\check.py                     269     12    96%   116-117, 285, 308, 637, 684-688, 721, 896, 925-926
+project-trajectory\scripts\check_doc_refs.py            116      4    97%   103, 118, 196-197
+project-trajectory\scripts\check_docs.py                309     23    93%   83-84, 188, 194-195, 208, 254-255, 280, 286, 292-293, 309, 311, 414, 441, 467, 481, 510, 513, 516, 563-564
+project-trajectory\scripts\check_dupes.py                85      5    94%   108, 138-139, 164-165
+project-trajectory\scripts\check_flows.py                84      6    93%   46-47, 60, 125-126, 139
+project-trajectory\scripts\check_perf.py                188      9    95%   67-68, 82, 97, 99, 201, 212, 315-316
+project-trajectory\scripts\check_privacy.py             249     22    91%   156-157, 169, 210-211, 242-243, 246-247, 362-363, 365, 397-402, 425-430, 434, 518-523, 529-533
+project-trajectory\scripts\check_stubs.py               137     10    93%   67, 70, 98, 165-166, 213-214, 252-258
+project-trajectory\scripts\check_trajectory.py          542     31    94%   153-154, 383, 496-500, 589, 611, 744, 896, 905, 937-938, 947-953, 987, 990, 1057, 1060, 1063-1064, 1067, 1088, 1091, 1094, 1106, 1202
+project-trajectory\scripts\check_vendored.py             72      5    93%   43-44, 55, 99-100
+project-trajectory\scripts\derive_gate.py               165      7    96%   89-90, 96, 265-266, 364-369
+project-trajectory\scripts\gen_arch_map.py              394     43    89%   103-104, 135, 146, 154, 156-158, 160, 174, 190, 200, 203-204, 206, 260, 270-287, 302, 323, 370-371, 394, 399, 464-465, 525, 542-546, 564-566, 578-579, 632, 749, 758, 778
+project-trajectory\scripts\gen_cases.py                 135     53    61%   66, 71, 87, 89, 92, 108, 175-179, 183-263, 267
+project-trajectory\scripts\gen_okf.py                   269     16    94%   116, 141, 223-224, 226-228, 232, 237-238, 240-242, 461, 525-526
+project-trajectory\scripts\gen_release_checklist.py     115     27    77%   49, 61, 79-81, 93-94, 144-145, 157-159, 162-163, 183, 199-201, 211-212, 225-226, 238-240, 283, 285
+project-trajectory\scripts\gen_skills_index.py          126     15    88%   47-48, 98-103, 122, 127, 150, 160, 166, 247-248, 263-268, 274-275
+project-trajectory\scripts\gen_trajectory.py            788     38    95%   120, 124, 385-391, 436-438, 544, 653, 796, 808-810, 850, 857-862, 874, 1129, 1642, 1653-1654, 1749-1769, 1829, 1834-1836, 1860-1861, 2097, 2319-2321
+project-trajectory\scripts\run_menu.py                   87      7    92%   64-65, 83-84, 157-158, 162
+project-trajectory\scripts\score_reviews.py             277     28    90%   94-95, 128, 189-191, 194, 198-199, 201, 225, 240, 266, 273, 292, 316, 348, 352, 363, 419-420, 499, 506-508, 546-548
+project-trajectory\scripts\subagent_gate.py              57     33    42%   51-59, 95-108, 114-120, 128-141, 145
+project-trajectory\scripts\trace.py                     544     19    97%   230-231, 269, 276, 496, 532, 535-536, 538, 587, 739, 786, 899, 1055-1056, 1062-1063, 1079-1080
+-----------------------------------------------------------------------------------
+TOTAL                                                  6740    589    91%
+
+Required test coverage of 85% reached. Total coverage: 91.26%
+664 passed, 34 skipped, 13 warnings in 145.68s (0:02:25)
+  PASS  tests+coverage   146.4s
+
+========================================================
+Check summary (gate G3, tier all):
+  PASS  format           0.2s
+  PASS  lint             0.2s
+  PASS  tests+coverage   146.4s
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.2s
+  PASS  privacy          0.4s
+  PASS  doc-navigability 8.9s
+  PASS  perf-budgets     0.2s
+  PASS  design-flows     0.2s
+  FAIL  trajectory       exit 1 (0.2s)
+  PASS  arch-map         0.5s
+  PASS  trajectory-map   0.3s
+  PASS  okf              0.2s
+  PASS  skills-sync      0.2s
+========================================================
+RESULT: FAIL (1 step(s) failed)
+[0m
+The trace harness passed with zero integrity, orphan, and schema findings. The G3 harness ran its complete plan but failed `trajectory`: this commit leaves done `WI-104` and `WI-105` identifiers on the forward-only status surface, violating the strict SSOT rule.
+[0m→ [0mRead docs/status.md[90m [offset=245, limit=70][0m
+[0m→ [0mRead docs/log.md[90m [offset=3756, limit=12][0m
+[0m
+[0m$ [0mgit status --short; git diff --check HEAD~1..HEAD; git diff --unified=0 HEAD~1..HEAD -- docs/status.md docs/log.md
+M OWNER_SCRATCHPAD.md
+ M docs/iteration_index.md
+ M docs/reviews/scoreboard.txt
+?? docs/iteration/007-20260713-143706.log
+?? docs/iteration/008-20260713-151051.log
+?? docs/iteration/009-20260713-151746.log
+?? docs/iteration/010-20260713-153426.log
+?? docs/iteration/011-20260713-153915.log
+?? docs/reviews/008-REVIEW-A.md
+?? docs/reviews/010-REVIEW-A.md
+docs/log.md:3762: trailing whitespace.
++- Close bar (full, unfiltered, coverage on): `pytest -q -n auto --cov=… 
+diff --git a/docs/log.md b/docs/log.md
+index 3e96aff..4e01212 100644
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -3706,0 +3707,65 @@ toolchain); the run continues at G3.
++
++## 2026-07-13 — WI-105: coverage-plumbing hardening (M9/L1) — verify the pin closed the race, add the missing floor
++
++**The deep-review-b's ranked-first defect, closed.** WI-105 is the M9/L1
++remediation (the 2026-07-12b review's flaky coverage-combine race + debris loop +
++the ~9-point subprocess-coverage loss). Its hard edge — **WI-104's toolchain pin**
++— had already landed; this session **measured, on the pinned toolchain, that the
++pin is the primary remedy**, then added the one guard the pin doesn't provide.
++
++**Reproduced-then-confirmed on the pinned toolchain.** The local box still runs
++the *old* combo (pytest-cov 4.1.0 / pytest 7.4.3) — exactly where the review saw
++the races — so I installed the pinned **3.8** resolution into a throwaway venv
++(`pytest 8.3.5`, `pytest-cov 5.0.0`, `coverage 7.6.1`, `xdist 3.6.1`) and ran the
++real coverage command there:
++- **Full suite → 695 passed / 3 skipped, coverage 91.23%** (not the degraded
++  81.83% the review measured on 4.1.0), **exit 0, ZERO `.coverage.*` debris** at
++  root. The combine race and the ~9-point loss **do not reproduce** on the pin.
++- **Debris self-heals:** seeded a real stale `.coverage.*` parallel file, then ran
++  a measured `-n auto` session — the stale file was **consumed** (pytest-cov
++  erases stale parallel data at session start on the pinned toolchain). So L1's
++  "leftovers join later combines" path is closed by the pin, not just masked.
++
++**The one missing safety net — a real coverage floor.** The pin fixes the race,
++but an **80** floor would still have passed the degraded **~82%** silently ("1.83
++points of plumbing luck", the review's words). So I raised
++`docs/stack.ini [coverage] threshold` **80 → 85**: a renewed silent
++subprocess-coverage loss (~91% → ~82%) now turns the gate **RED** instead of
++sneaking under 80 — the direct mechanization of the review's suggestion (4)
++("alert when measured coverage deviates far from ~90.8%"). ~6 pts of headroom on
++both pinned Pythons (91.23% here; ~90.8% documented on the 3.9+/7.x CI leg), and
++`check.py` propagates it through `--cov-fail-under` (verified it reads
++`[coverage] threshold`). Side effect, intended: an **unpinned** toolchain now
++reads ~82% and **fails** here — the red is the nudge to `dev-setup --install`
++onto the pinned tools.
++
++**Recorded the closure; declined the structural rewrite.** Documented in
++`.coveragerc` why the shared-glob path is now clean (the pin's erase-at-start) and
++that the pinned toolchain is required. **Declined** the review's suggestion (2)
++— point the subprocess children at a *dedicated* coverage data directory to
++unshare the glob structurally: pytest-cov's session-end combine only merges
++parallel files **beside its own datafile**, so a separate dir would need an
++explicit combine step that risks **dropping the subprocess coverage the 91%
++depends on**. A poor trade once the pin already makes the shared glob race-free —
++and squarely against the repo's "edit conservatively / don't break working
++plumbing" rule. The judgment is recorded in `.coveragerc` so it isn't
++re-litigated.
++
++**Scope boundary held.** Meta-only: `docs/stack.ini` + `.coveragerc`. **No
++kit-shipped file changed** — the shipped `check.py` default
++`COVERAGE_THRESHOLD = 80` is untouched (the 85 is the meta's own stack.ini
++override). No spine change; no byte-budgeted file (AGENTS.template.md /
++PROCESS.md) touched. Derived gate stays **G3**.
++
++**Verification — on the pinned venv** (the pinned machinery's green, not this
++box's stale 4.1.0):
++- Close bar (full, unfiltered, coverage on): `pytest -q -n auto --cov=… 
++  --cov-fail-under=85` → **695 passed, 3 skipped, 91.23% ≥ 85, exit 0**, 0 debris.
++- Commit bar: `pytest -q -n auto -m smoke` → **543 passed, 2 skipped**;
++  `check_docs --root . --stale` → **OK, 0 broken** (the "possibly stale" hints are
++  pre-existing, on archived review docs I did not touch).
++
++**Not pushed** (push-policy: human). The owner queue is unchanged (push decision
+++ G3 re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
++→ **WI-078** (the dupes-gate + census — owner-ruled 2026-07-12, implementation
++only); the run continues at G3 on the deep-review-b backlog.
+diff --git a/docs/status.md b/docs/status.md
+index 5e95218..59df2ba 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -255,7 +255,5 @@ working surface.
+-    - **WI-105** — coverage plumbing hardening: combine race + debris loop +
+-      the ~9-point subprocess-coverage loss observed live (M9/L1). **Ranked
+-      first by the review** — the only item that makes the gate itself flaky.
+-      Its hard-edge — **the dev-toolchain pin, landed 2026-07-13**
+-      (`requirements-dev.txt` + CI/dev-setup consume + a non-gating `canary.yml`;
+-      see log.md) — is now met, so the fix is verifiable on one known toolchain;
+-      this is the backlog head (`docs/next-wi` = WI-105).
++    - **WI-105 — DONE 2026-07-13** — coverage plumbing hardening (M9/L1). Verified
++      WI-104's pin is the primary remedy (clean 91.23%, 0 debris, stale
++      `.coverage.*` self-heals); raised the meta coverage floor 80 → 85 as the
++      regression sensor; declined the dedicated-child-dir rewrite. The record is
++      the WI-105 row Deliverable + [log.md](log.md).
+@@ -272,2 +270,3 @@ working surface.
+-  WI-105).** Phase v2 is complete; **the dev-toolchain pin landed 2026-07-13**
+-  (see log.md); a resume session picks up WI-105 next (backlog below).
++  WI-078).** Phase v2 is complete; the dev-toolchain pin (WI-104) and **the
++  coverage-plumbing hardening (WI-105) both landed 2026-07-13** (see log.md); a
++  resume session picks up WI-078 next (backlog below).
+@@ -305,8 +304,8 @@ working surface.
+-     = WI-105): **the dev-toolchain pin DONE 2026-07-13** —
+-     `requirements-dev.txt` (`~=` pins; a Python-gated pytest-cov split for the
+-     3.8 floor) consumed by both `test.yml` jobs + both meta dev-setup twins,
+-     plus a non-gating `canary.yml` that floats latest weekly; verified green on
+-     the pinned 3.8 resolution (log.md). Next: WI-105 (the coverage-plumbing fix,
+-     now verifiable on the pinned toolchain — the review's ranked-first defect),
+-     then WI-078 (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then
+-     WI-079 and the remaining deep-review-b queue.
++     = WI-078): the dev-toolchain pin (WI-104) and the coverage-plumbing
++     hardening (**WI-105 DONE 2026-07-13** — verified WI-104's pin closes the M9
++     race/debris on one known toolchain, raised the meta coverage floor 80 → 85
++     as the regression sensor; log.md) are both landed. Next: **WI-078**
++     (dupes-gate + census — owner-ruled 2026-07-12, implementation only), then
++     `main-decomposition` (WI-080 → WI-081), then WI-079 and the remaining
++     deep-review-b queue (WI-099 the trace↔derive_gate sync test is the cheap
++     high-leverage one; WI-100/101/102/115 the hygiene batch).
+[0m
+I found one additional diff-quality issue: `git diff --check` reports trailing whitespace in the added log entry. I’ll record both findings with the observed harness result in the requested review block.
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Inspect reviewed commit and governing requirement/spec surfaces
+[✓] Run traceability and repository check harnesses
+[✓] Write independent review verdict in requested format
+[0m
+Review written to `docs/reviews/012-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED` with 2 findings. `trace.py` passed; G3 harness failed on status SSOT R-D violations.
