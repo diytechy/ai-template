@@ -413,6 +413,7 @@ Contracts (interfaces): IF-011, IF-024, IF-052
 | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
 | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
 | `sw_containment(root, mods)` | The containerized How-SW top view (WI-073), or None when no `CMP-###` |  |
+| `esc(s)` |  |  |
 | `campaign_containment(wis)` | The campaign-binned When view (WI-074), or None when no work item carries a |  |
 | `when_view(root, wis)` | The When roadmap as a count-thresholded phase -> workstream -> work-item |  |
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |

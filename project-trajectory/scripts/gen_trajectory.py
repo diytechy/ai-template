@@ -278,9 +278,6 @@ def arch_icicle(root):
     cells = []
     col_w, gap = 200, 16
 
-    def esc(s):
-        return html.escape(str(s), quote=True)
-
     def draw(nid, y):
         h = weight[nid] * ICICLE_UNIT
         t = tier[nid]
@@ -302,11 +299,13 @@ def arch_icicle(root):
                 '<text x="{:.0f}" y="{:.1f}" text-anchor="middle" '
                 'dominant-baseline="central">{}{}</text>'.format(cx, cy, line1, line2)
             )
+        tip = nid + (" — " + title if title else "")
         cells.append(
             '<g class="cell {}" data-id="{}" tabindex="0">'
+            "<title>{}</title>"
             '<rect x="{}" y="{:.1f}" width="{}" height="{:.1f}" rx="3" '
             'fill="{}"></rect>{}</g>'.format(
-                t, esc(nid), x, y, col_w, max(h - 1, 1), TIER_FILL[t], txt
+                t, esc(nid), esc(tip), x, y, col_w, max(h - 1, 1), TIER_FILL[t], txt
             )
         )
         cur = y
@@ -528,9 +527,6 @@ def dag_svg(wis):
     ids = {w["id"] for w in wis}
     pos, width, height = _dag_layout(wis)
 
-    def esc(s):
-        return html.escape(str(s), quote=True)
-
     # Edges first (drawn under the nodes). A hard predecessor sits in a lower
     # rank, so hard edges run left->right; a horizontal control offset softens
     # them. Soft (advisory) edges render dashed and may run backwards — they
@@ -571,11 +567,21 @@ def dag_svg(wis):
                 esc(short),
             )
         )
+        tip = "{} — {} ({})".format(w["id"], title, st)
         nodes.append(
             '<g class="wi {}" data-id="{}" tabindex="0">'
+            "<title>{}</title>"
             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="7" '
             'fill="{}"></rect>{}</g>'.format(
-                st, esc(w["id"]), x, y, DAG_COL_W, DAG_ROW_H, STATUS_FILL[st], label
+                st,
+                esc(w["id"]),
+                esc(tip),
+                x,
+                y,
+                DAG_COL_W,
+                DAG_ROW_H,
+                STATUS_FILL[st],
+                label,
             )
         )
         ws = WORKSTREAM_LABELS.get(w["workstream"], w["workstream"])
@@ -667,9 +673,6 @@ def sw_graph(root, mods):
         (SW_COL_W, SW_COL_GAP, SW_ROW_H, SW_ROW_GAP, SW_PAD),
     )
 
-    def esc(s):
-        return html.escape(str(s), quote=True)
-
     edge_svg = []
     for s, d, iid in sorted(edges):
         x1, y1 = pos[s][0] + SW_COL_W, pos[s][1] + SW_ROW_H / 2
@@ -691,11 +694,14 @@ def sw_graph(root, mods):
         info = nodes[k]
         disp = info["display"]
         short = disp if len(disp) <= 22 else disp[:21] + "…"
+        tip = "{} ({})".format(disp, info["kind"])
         node_svg.append(
-            '<g><rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
+            "<g><title>{}</title>"
+            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
             'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
             'dominant-baseline="central" fill="#fff" font-size="10">{}</text>'
             "</g>".format(
+                esc(tip),
                 x,
                 y,
                 SW_COL_W,
@@ -774,9 +780,6 @@ def sw_containment(root, mods):
     module_roots = view["module_roots"]
     inv = view["inventory"]  # {norm: display}
     mod_by_norm = {ct._norm_module(m["name"]): m for m in mods}
-
-    def esc(s):
-        return html.escape(str(s), quote=True)
 
     # A module's DIRECT container(s) = the finest CMP(s) its LLRs tag; a coarser
     # ancestor contains it through PartOf (rendered as the nested tree).
@@ -1003,7 +1006,7 @@ CAMPAIGN_STYLE = (
 )
 
 
-def _esc(s):
+def esc(s):
     return html.escape(str(s), quote=True)
 
 
@@ -1030,12 +1033,12 @@ def _wi_row(w, accent_of=None):
         '<td><span class="st" style="background:{}"></span>{}</td>'
         '<td><code>{}</code></td><td class="sub"><code>{}</code></td></tr>'.format(
             swatch,
-            _esc(w["id"]),
-            _esc(w["title"]),
+            esc(w["id"]),
+            esc(w["title"]),
             STATUS_FILL[st],
-            _esc(st),
-            _esc(delivers),
-            _esc(after),
+            esc(st),
+            esc(delivers),
+            esc(after),
         )
     )
 
@@ -1067,7 +1070,7 @@ def _campboxes(wis, accent_of=None):
     for slug in sorted(by_camp):
         members = by_camp[slug]
         head = '<code>{}</code> <span class="sub">· {} item(s)</span>'.format(
-            _esc(slug), len(members)
+            esc(slug), len(members)
         )
         tree += (
             '<details class="campbox"><summary>{}</summary>'
@@ -1107,9 +1110,6 @@ def campaign_containment(wis):
         return None
 
     ids = {w["id"] for w in wis}
-
-    def esc(s):
-        return html.escape(str(s), quote=True)
 
     # A top-level item key: the campaign slug when tagged, else `WI:<id>` (a
     # campaign-less WI is its own top-level item — the sw_containment "uncontained"
@@ -1277,9 +1277,9 @@ def when_view(root, wis):
         lis = "".join(
             "<li><code>{}</code> → <code>{}</code> "
             '<span class="sub">({})</span></li>'.format(
-                _esc(a),
-                _esc(b),
-                _esc(", ".join("{}→{}".format(p, w) for p, w in sorted(edges))),
+                esc(a),
+                esc(b),
+                esc(", ".join("{}→{}".format(p, w) for p, w in sorted(edges))),
             )
             for (a, b), edges in sorted(agg.items())
         )
@@ -1307,7 +1307,7 @@ def when_view(root, wis):
                     else ""
                 )
                 head = '{}<code>{}</code> <span class="sub">· {} · {} item(s)</span>'.format(
-                    sw, _esc(lbl), name, len(members)
+                    sw, esc(lbl), name, len(members)
                 )
                 blocks += (
                     '<details class="tierbox"><summary>{}</summary>'
@@ -1321,7 +1321,7 @@ def when_view(root, wis):
         return _campboxes(subset, accent_of)
 
     legend = "".join(
-        '<span class="ph" style="background:{}"></span>{}'.format(color[p], _esc(p))
+        '<span class="ph" style="background:{}"></span>{}'.format(color[p], esc(p))
         for p in sorted(phases)
     )
     summary = (
@@ -1921,9 +1921,6 @@ def know_graph(root):
         (KN_COL_W, KN_COL_GAP, KN_ROW_H, KN_ROW_GAP, KN_PAD),
     )
 
-    def esc(s):
-        return html.escape(str(s), quote=True)
-
     edge_svg = []
     for s, d in edges:
         x1, y1 = pos[s][0] + KN_COL_W, pos[s][1] + KN_ROW_H / 2
@@ -1942,12 +1939,16 @@ def know_graph(root):
         info = nodes[k]
         fill = OKF_TYPE_FILL.get(info["type"], "#64748b")
         short = k if len(k) <= 20 else k[:19] + "…"
+        kt = (info.get("title") or "").strip()
+        tip = k + (" — " + kt if kt else "") + " ({})".format(info["type"])
         node_svg.append(
             '<g class="knode" data-id="{}" tabindex="0">'
+            "<title>{}</title>"
             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
             'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
             'dominant-baseline="central">{}</text></g>'.format(
                 esc(k),
+                esc(tip),
                 x,
                 y,
                 KN_COL_W,
@@ -2121,9 +2122,6 @@ def process_panel(root, wis, stats):
     gate = _gate_value(root)
     if not gate:
         return None
-
-    def esc(s):
-        return html.escape(str(s), quote=True)
 
     proc_doc = _process_doc(root, "docs/process.md", "project-trajectory/PROCESS.md")
     opts_doc = _process_doc(

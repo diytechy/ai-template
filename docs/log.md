@@ -4063,3 +4063,50 @@ re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
 `<title>` labels — the next deep-review-b hygiene pick). The run continues at G3;
 **`main-decomposition` (WI-080 → WI-081) stays sequenced behind the owner
 sitting**.
+
+## 2026-07-13 — WI-102: gen_trajectory hygiene — one `esc` helper + SVG node tooltips (deep-review-b M4/L7)
+
+**The defects.** Review-b **M4**: `gen_trajectory.py` redefined the identical
+HTML-escape closure — `def esc(s): return html.escape(str(s), quote=True)` —
+**7 times** (one nested closure per panel builder), alongside a module-level
+`_esc`. The F5 rule licenses duplicating *plumbing across scripts*, not the same
+closure *within one 2,000-line module* — plain copy-paste that "one fact, one
+home — in code too" forbids. Review-b **L7**: the dashboard's SVG views carry no
+per-node `<title>`, so a node has no hover tooltip and no accessible name.
+
+**The fix.**
+- **M4 — one home.** Consolidated to a single module-level helper. Renamed the
+  existing module-level `_esc` → `esc` (its def + 11 call sites) so the 65
+  existing bare `esc(` calls bind to it, then deleted the 7 nested closures.
+  Naming it `esc` (not `_esc`) kept the change surgical — the 65 bare call sites
+  were untouched — and, crucially, avoided a blind `esc(`→`_esc(` rename that
+  would have also rewritten the **unrelated client-side JS `esc()`** embedded in
+  the dashboard's `<script>` template (a real trap: the first attempt did exactly
+  that). The regenerated dashboard is **byte-identical** to the prior one except
+  the `asof` commit stamp — proof the refactor is behavior-preserving.
+- **L7 — a `<title>` per SVG node.** Added a `<title>` tooltip child to the node
+  `<g>` in all **four** SVG emitters: the requirements icicle (`SN-ID — title`),
+  the When-DAG WI node (`WI-ID — title (status)`), the How-SW containment box
+  (`display (kind)`), and the OKF knode (`id — title (type)`). Hovering any node
+  now shows its identity; screen readers get an accessible name. 414 `<title>`
+  elements render. Updated the one test (`test_dag_layers_by_dependency_rank`)
+  whose regex assumed `<rect>` immediately followed the node `<g>` — it now
+  tolerates the interposed `<title>`.
+
+**Verification.**
+- `pytest -q tests/test_gen_trajectory.py` → **52 passed**; `gen_arch_map
+  --check` (the `esc` symbol rename) → **up to date**; `gen_trajectory --check`
+  → **up to date**.
+- Full unfiltered suite → **702 passed, 3 skipped**;
+  `check_docs --root . --stale` → **exit 0**.
+
+**No spine change** — no new SN/SR/LLR/TC (proceed at G3), no byte-budgeted file
+touched. Derived gate stays **G3**.
+
+**Not pushed** (push-policy: human). Owner queue unchanged (push decision + G3
+re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
+→ **WI-115** (status-currency hardening — a warn-first `check_trajectory` finding
+when `docs/run-state` holds an end-state over an actionable queue; WI-103 skipped
+as the autonomous next since its PROCESS_OPTIONS split needs an owner taste
+ruling). The run continues at G3; **`main-decomposition` (WI-080 → WI-081) stays
+sequenced behind the owner sitting**.

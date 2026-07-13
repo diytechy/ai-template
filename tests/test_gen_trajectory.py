@@ -134,7 +134,11 @@ def test_dag_layers_by_dependency_rank(tmp_path):
     )
     xs = {
         m.group(1): float(m.group(2))
-        for m in re.finditer(r'data-id="(WI-\d+)"[^>]*><rect x="([\d.]+)"', dag)
+        for m in re.finditer(
+            # each node <g> now carries a <title> tooltip child before its <rect>
+            r'data-id="(WI-\d+)"[^>]*>(?:<title>[^<]*</title>)?<rect x="([\d.]+)"',
+            dag,
+        )
     }
     # the root sits left of its successors; the sink sits right of them.
     assert xs["WI-001"] < xs["WI-002"] < xs["WI-004"]

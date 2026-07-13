@@ -225,14 +225,14 @@ working surface.
       the strip-at-scaffold precedent shipped 2026-07-13, so this masters-comment
       question now stands on its own — and could absorb the design-doc citations
       `AGENT_ROLES`/`IMPROVEMENT_PLAN` the scaffold-strip left in scope).
-    - **WI-102** — gen_trajectory hygiene: one module-level `_esc` (now defined
-      6×) + SVG node `<title>` labels (M4/L7; one regeneration, `--check` keeps
-      it honest). *(The M1 rule-set-sync meta test, the M2 off-root loud-fail
-      guard on `check.py`, and the M3 Status-casing rule — unified case-insensitive
-      + stated once in §4 — all landed 2026-07-13; records in log.md + registry
-      Deliverables.)*
     - **WI-103** — PROCESS_OPTIONS byte budget + applies-when index table (M5;
-      any doc *split* additionally needs an owner taste ruling).
+      any doc *split* additionally needs an owner taste ruling — so this one is
+      owner-taste-gated, not an autonomous cheap pick). *(The M1 rule-set-sync
+      meta test, the M2 off-root loud-fail guard, the M3 Status-casing rule
+      (unified case-insensitive + stated once in §4), and the M4/L7
+      gen_trajectory hygiene — one module-level `esc` + a `<title>` tooltip on
+      every SVG node — all landed 2026-07-13; records in log.md + registry
+      Deliverables.)*
     - **WI-115** — status-currency hardening (owner-asked 2026-07-12): a
       warn-first `check_trajectory` finding when `docs/run-state` holds an
       end-state over an actionable queue (the observed agent-resume-parks-at-
@@ -243,14 +243,17 @@ working surface.
       owner taste ruling on a deliberate design, medium churn to shipped
       templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
 - **Next action — the G3 backlog (branch `derived-gate-model`; `docs/next-wi` =
-  WI-102).** Phase v2 is complete; the dev-toolchain pin, the coverage-plumbing
+  WI-115).** Phase v2 is complete; the dev-toolchain pin, the coverage-plumbing
   hardening, **the dupes-gate + census, the scaffold-strip of the archive-
   anchor review citations, the M1 rule-set-sync meta test, the M2 off-root
-  loud-fail guard on `check.py`, and the M3 Status-casing rule (unified
-  case-insensitive + stated once in §4) all landed 2026-07-13**
-  (records in log.md + each WI row's Deliverable); a resume session picks up
-  **WI-102** next (gen_trajectory hygiene — one module-level `_esc` + SVG node
-  `<title>` labels; M4/L7; backlog below).
+  loud-fail guard on `check.py`, the M3 Status-casing rule (unified
+  case-insensitive + stated once in §4), and the M4/L7 gen_trajectory hygiene
+  (one module-level `esc` + a `<title>` tooltip on every SVG node) all landed
+  2026-07-13** (records in log.md + each WI row's Deliverable); a resume session
+  picks up **WI-115** next (status-currency hardening — a warn-first
+  `check_trajectory` finding when `docs/run-state` holds an end-state over an
+  actionable queue; backlog below). *(WI-103 is skipped as the autonomous next —
+  its PROCESS_OPTIONS split needs an owner taste ruling.)*
   1. **Derived-gate campaign — LANDED (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the whole 8-slice campaign has shipped: the `Draft` artifact state + trace
@@ -282,7 +285,7 @@ working surface.
      (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's
      Deliverable). The v2 spine cut rides the owner single-ratify sitting above.
   3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
-     = WI-102). The dev-toolchain pin, the coverage-plumbing hardening, the
+     = WI-115). The dev-toolchain pin, the coverage-plumbing hardening, the
      **dupes-gate + census** (the M2/M6 census wired as `docs/stack.ini`
      `[step:dupes]` over the `docs/dupes-allow` allowlist — new copy-paste
      between an unlisted file-pair now fails G3), the **scaffold-strip of the
@@ -300,15 +303,20 @@ working surface.
      the **M3 Status-casing rule** (`is_verified()` now mirrors `is_draft()` —
      both magic Status values matched case-insensitively, the non-breaking
      unification — pinned equal across trace.py/derive_gate.py by
-     `test_rule_sync`, with the one rule stated once in PROCESS.md §4)
+     `test_rule_sync`, with the one rule stated once in PROCESS.md §4), and the
+     **M4/L7 gen_trajectory hygiene** (the 7 duplicated per-function `esc`
+     closures collapsed to one module-level `esc`, and a `<title>` hover/a11y
+     tooltip added to every SVG node across all four view emitters)
      all landed 2026-07-13 (records in log.md + registry Deliverables).
      **`main-decomposition` (WI-080 → WI-081) is the highest-value next step but
      is sequenced *behind the owner sitting*** (highest-risk, behavior-preserving,
-     test-seams-first) — so the autonomous next is **WI-102** (gen_trajectory
-     hygiene: one module-level `_esc` + SVG node `<title>` labels; M4/L7 — a
-     driver-sequencing call the owner can re-order). The rest of that queue
-     (WI-115 hygiene; WI-097/098 owner-gated) follows; the owner's
-     triage/sequencing is welcome but does not block the cheap picks.
+     test-seams-first) — so the autonomous next is **WI-115** (status-currency
+     hardening: a warn-first `check_trajectory` finding when `docs/run-state`
+     holds an end-state over an actionable queue; [specs/WI-115.md](specs/WI-115.md) —
+     a driver-sequencing call the owner can re-order). WI-103 (PROCESS_OPTIONS
+     byte budget + applies-when index) is owner-taste-gated (its doc split needs
+     a ruling); WI-097/098 are owner-gated; the owner's triage/sequencing is
+     welcome but does not block the cheap picks.
   Remaining owner item: the **push decision** above.
 
 ## Scope
