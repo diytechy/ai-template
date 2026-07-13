@@ -82,6 +82,16 @@ if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null
   git config core.hooksPath .githooks
   echo "Enabled pre-commit floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
 fi
+# Delta-aware fast path (WI-111): --install must never initiate an unnecessary
+# install. When ./.venv already imports all four dev tools, report and stop —
+# before the prompt AND before the unconditional `pip install --upgrade pip`
+# that used to run on every consented pass. (The floor wiring above still ran:
+# local git config, idempotent, not an install. The agent CLIs are hint-only
+# rows above — never auto-installed under any mode.)
+if [ -x .venv/bin/python ] && .venv/bin/python -c 'import importlib.util,sys; sys.exit(0 if all(importlib.util.find_spec(m) for m in ("ruff","pytest","pytest_cov","xdist")) else 1)' 2>/dev/null; then
+  echo "All dev tools already present in ./.venv — nothing to install."
+  exit 0
+fi
 echo
 printf 'Create ./.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N] '
 read -r ans

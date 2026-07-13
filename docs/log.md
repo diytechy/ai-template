@@ -2830,3 +2830,27 @@ line-wrapping; `ruff format` applied — 4 files — and the full bar re-run gre
 install + sign in both CLIs first — `dev-setup --check` names the gaps; with
 either CLI missing, `agent-resume.*` preflight refuses loudly and now says what
 to run.
+
+## 2026-07-12 — WI-111: dev-setup --install delta-awareness (owner follow-up)
+
+**Session (branch `derived-gate-model`; meta dev tooling only — no kit-shipped
+file, no spine change).** Owner asked whether `--install` only installs what
+needs installing (they want to test from their machine without unnecessary
+installs). Audit answer: `--check` was already report-only and the agent CLIs
+are hint-only (never auto-installed); **but** a consented `--install`
+unconditionally ran `pip install --upgrade pip` + the 4-tool pip line and
+prompted even with a complete `./.venv` — the exact class the owner ruled out.
+
+**Fix.** Both twins (`scripts/dev-setup.{sh,ps1}`) gain the delta-aware fast
+path: when `./.venv` already imports ruff + pytest + pytest_cov + xdist,
+`--install` reports **"All dev tools already present in ./.venv — nothing to
+install."** and stops — before the prompt and before the pip self-upgrade. The
+hooksPath floor wiring still runs (idempotent local git config, not an
+install); the ps1 twin reuses `HasModule` (already venv-preferring). The
+missing-tool path is unchanged (prompt, then pip — which no-ops satisfied
+packages).
+
+**Verified live on this machine** (complete venv — the owner's case): report +
+floor no-op + fast-path line, **no prompt, no pip, exit 0**. Tests: textual
+fast-path assertion on both twins in `test_onboard_devsetup.py` (15 passed);
+commit bar at session end.

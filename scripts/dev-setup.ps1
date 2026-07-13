@@ -79,6 +79,17 @@ try {
         git config core.hooksPath .githooks
         Write-Host "Enabled pre-commit floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
     }
+    # Delta-aware fast path (WI-111): -Install must never initiate an
+    # unnecessary install. When .\.venv already imports all four dev tools,
+    # report and stop — before the prompt AND before the unconditional pip
+    # self-upgrade. ($py already prefers the venv interpreter when .venv
+    # exists, so HasModule probes the right environment. The agent CLIs are
+    # hint-only rows above — never auto-installed under any mode.)
+    if ((Test-Path ".venv") -and (HasModule "ruff") -and (HasModule "pytest") `
+            -and (HasModule "pytest_cov") -and (HasModule "xdist")) {
+        Write-Host "All dev tools already present in .\.venv — nothing to install."
+        return
+    }
     Write-Host ""
     $ans = Read-Host "Create .\.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N]"
     if ($ans -notmatch '^[Yy]') { Write-Host "Cancelled."; return }

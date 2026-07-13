@@ -241,3 +241,11 @@ def test_meta_repo_dogfoods_dev_setup():
     assert "opencode CLI" in proc.stdout
     ps1 = (REPO_ROOT / "scripts/dev-setup.ps1").read_text(encoding="utf-8")
     assert "claude CLI" in ps1 and "opencode CLI" in ps1
+    # WI-111: --install is delta-aware — the nothing-to-do fast path (skips the
+    # prompt AND the pip self-upgrade when ./.venv already has all four tools)
+    # exists in both twins. Asserted textually: executing --install in a test
+    # would prompt or mutate an environment.
+    for name in DEVSETUP:
+        assert "nothing to install" in (REPO_ROOT / name).read_text(encoding="utf-8"), (
+            name + " missing the WI-111 delta-aware fast path"
+        )
