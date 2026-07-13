@@ -199,6 +199,11 @@ working surface.
       the ~9-point subprocess-coverage loss observed live (M9/L1; hard-edged
       behind WI-104 so the fix is verified on one known toolchain). **Ranked
       first by the review** — the only item that makes the gate itself flaky.
+    - **WI-115** — status-currency hardening (owner-asked 2026-07-12): a
+      warn-first `check_trajectory` finding when `docs/run-state` holds an
+      end-state over an actionable queue (the observed agent-resume-parks-at-
+      boot trap), plus the policy-flip status sweep as protocol (skills +
+      reviewer charter). Spec: [specs/WI-115.md](specs/WI-115.md).
     - _(Not filed, deliberately: L5 commit-subject length — accept, or it needs
       a commit-msg check to be a backed rule; L6 template-cell manuals — an
       owner taste ruling on a deliberate design, medium churn to shipped
