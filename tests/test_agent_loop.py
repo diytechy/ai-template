@@ -5,12 +5,13 @@ invocation from a control dir outside the repo: commit / noop / done /
 blocked / needs-human / limit / sleep."""
 
 import datetime
+import os
 import re
 import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, run_py
+from conftest import SCRIPTS, augment_env, load_script, run_py
 
 # The fake agent: records every invocation + the model it was handed, then
 # performs the next scripted action in the repo it was launched in (cwd),
@@ -755,3 +756,46 @@ def test_working_tree_dirty_counts_renames_and_untracked(tmp_path):
     _git(repo, "mv", "a.txt", "c.txt")  # a staged rename
     lines = loop.working_tree_dirty(repo)
     assert len(lines) == 2, lines  # the rename is ONE entry (+ b.txt), not three
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows CreateProcess/PATHEXT shim path")
+def test_cmd_shim_cli_spawns_on_windows(loop_repo, tmp_path):
+    # WI-120: an npm-style CLI installed only as a .cmd shim (no .exe) passes
+    # preflight — shutil.which honors PATHEXT — but a bare argv[0] hits
+    # CreateProcess, which resolves only .exe/.com, so every session died at
+    # spawn with [WinError 2] (live: the opencode rows, sessions 002/005 of the
+    # 2026-07-12 run). run_session now hands CreateProcess the which-resolved
+    # path; the shim must launch, work, and end the run DONE with no ERROR row.
+    repo, ctl, _template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    shims = tmp_path / "shims"
+    shims.mkdir()
+    (shims / "fakecli.cmd").write_text(
+        '@echo off\n"{}" "{}" %*\n'.format(sys.executable, tmp_path / "fake_agent.py"),
+        encoding="utf-8",
+    )
+    env = augment_env(dict(os.environ))
+    env["PATH"] = str(shims) + os.pathsep + env["PATH"]
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPTS / "agent_loop.py"),
+            "--root",
+            str(repo),
+            "--agent-cmd",
+            'fakecli --control "{}" --model {{model}} -p {{prompt}}'.format(ctl),
+            "--pause",
+            "0",
+            "--model",
+            "default-tier",
+        ],
+        cwd=str(repo),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        env=env,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert _invocations(ctl) == 1
+    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
+    assert "DONE" in index and "ERROR" not in index

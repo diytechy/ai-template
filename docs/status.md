@@ -65,12 +65,15 @@ working surface.
   fable/opus/sonnet (effort env merged) + sol/terra; **gpt-5.6-luna hangs
   today** (id valid in opencode's catalog; 2 attempts, zero output — the loop
   degrades to TIMEOUT→cooldown and quick still routes sonnet; retry later or
-  rule an alternate id). **Caveat found 2026-07-12 evening (WI-120, queued):**
-  the coordinator's own spawn of the OPENAI rows fails on Windows
-  (`[WinError 2]`, sessions 002/005 — bare `opencode` resolves as a `.cmd`
-  shim for `shutil.which` but not for CreateProcess), so the cross-family
-  REVIEW-A leg silently runs same-family (degraded-legal) until it lands;
-  diagnosis + reproduced fix sketch in [specs/WI-120.md](specs/WI-120.md).
+  rule an alternate id). **Found + fixed 2026-07-12 evening — the Windows
+  CLI-shim spawn defect:** the coordinator's spawn of the OPENAI rows failed
+  on Windows (`[WinError 2]`, sessions 002/005 — bare `opencode` resolves as
+  a `.cmd` shim for `shutil.which` but not for CreateProcess), so that run's
+  REVIEW-A silently ran same-family; `run_session` now which-resolves
+  `argv[0]` on Windows and the terra spawn is live-verified green (the fix's
+  WI row + spec are the record; session entry in [log.md](log.md)).
+  **Watch the next unattended run's index**: REVIEW-A should route
+  `gpt-5.6-terra` with no ERROR row — that closes the fix's last done-when.
 - **Open items:**
   - **Needs \<human> (the owner queue — human-only calls; under the declared
     `single-ratify` gate authority the loop does NOT pause on these — it

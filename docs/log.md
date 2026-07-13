@@ -3284,3 +3284,33 @@ PROCESS_OPTIONS.md is unbudgeted).
 - `python -m pytest -q -n auto` → `678 passed, 3 skipped in 66.84s`
 - `check_docs.py --root . --stale` → `OK - 43 doc(s), 258 intra-repo link(s),
   0 broken (4 orphan warning(s))` (orphan hints pre-existing, warn-only)
+
+## 2026-07-12 — WI-120: Windows CLI-shim spawn fix — the cross-family review leg restored
+
+Owner-directed follow-on to WI-119's filing, same evening. `run_session` now
+which-resolves `argv[0]` **on Windows only** (against the session env's PATH
+when a registry row declares one) and hands CreateProcess the resolved
+absolute path; a `which` miss or a `.ps1`-only resolution falls through
+unchanged to the existing OSError sentinel, and the POSIX spawn path is
+byte-identical (`os.name == "nt"` gate). `shell=True` rejected
+(quoting/injection surface on a prompt-carrying template).
+
+**Verification (real output):** the new Windows-only scaffold test
+`test_cmd_shim_cli_spawns_on_windows` — a `.cmd`-shim-only fake CLI passes
+preflight, spawns, and the run ends DONE with no ERROR row (red before the
+fix by construction: it reproduces sessions 002/005's exact failure). Live:
+`build_argv` + `run_session` on the registry's exact terra CmdTemplate
+(`opencode run --model openai/gpt-5.6-terra …`) → **exit 0, model replied
+"OK"** — the argv that produced `[WinError 2]` hours earlier. The full
+OPENAI-written REVIEW-A verdict is the next unattended run's to produce
+(spec done-when, [specs/WI-120.md](specs/WI-120.md)); the WI-112 live-verify
+discrepancy (terra "replied through run_session" earlier that day) stays
+recorded in the spec as unexplained residue.
+
+**Deviations from spec:** none. **Byte budgets:** untouched (delta 0).
+
+**Mechanized verification (commit bar, real output):**
+- `python -m pytest -q -n auto` → `679 passed, 3 skipped in 69.42s` (the +1 is
+  the new shim test)
+- `check_docs.py --root . --stale` → `OK - 43 doc(s), 260 intra-repo link(s),
+  0 broken (4 orphan warning(s))` (hints pre-existing, warn-only)

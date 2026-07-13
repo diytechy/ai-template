@@ -1066,6 +1066,17 @@ def run_session(argv, root, timeout, env=None):
     registry `Env` column, already merged over os.environ by the caller); None
     means inherit the ambient environment exactly — today's call, byte for
     byte."""
+    if os.name == "nt":
+        # CreateProcess resolves a bare argv[0] only to .exe/.com — never the
+        # PATHEXT script shims (.cmd/.bat) npm-style CLIs install on Windows —
+        # while preflight's shutil.which honors PATHEXT, so a shim-only CLI
+        # passes preflight then dies here with [WinError 2] (WI-120). Hand
+        # CreateProcess the which-resolved path (an explicit .cmd runs fine);
+        # a miss, or a .ps1-only resolution (no CreateProcess interposition),
+        # falls through unchanged to the OSError sentinel below.
+        resolved = shutil.which(argv[0], path=(env or os.environ).get("PATH"))
+        if resolved and not resolved.lower().endswith(".ps1"):
+            argv = [resolved] + argv[1:]
     try:
         proc = subprocess.run(
             argv,
