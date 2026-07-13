@@ -883,6 +883,9 @@ def write_session_log(iter_dir, meta, transcript):
         "commits",
         "tokens",
         "cost-usd",
+        "wall-secs",
+        "api-secs",
+        "turns",
         "exit-code",
     ):
         header.append("# {}: {}".format(key, meta.get(key, "")))
@@ -900,7 +903,7 @@ def read_log_meta(path):
     meta = {}
     try:
         with open(str(path), encoding="utf-8", errors="replace") as fh:
-            for _ in range(16):
+            for _ in range(24):
                 line = fh.readline()
                 if not line or line.startswith("# ---"):
                     break
@@ -923,7 +926,8 @@ def regenerate_index(docs_dir):
         if not meta.get("session"):
             continue
         rows.append(
-            "| {} | {} | {} | {} | {} | {} | {} | {} | [{}](iteration/{}) |".format(
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} "
+            "| [{}](iteration/{}) |".format(
                 meta.get("session", ""),
                 meta.get("date", ""),
                 meta.get("phase", "") or "—",
@@ -932,6 +936,9 @@ def regenerate_index(docs_dir):
                 meta.get("commits", "") or "—",
                 meta.get("tokens", "") or "—",
                 meta.get("cost-usd", "") or "—",
+                meta.get("wall-secs", "") or "—",
+                meta.get("api-secs", "") or "—",
+                meta.get("turns", "") or "—",
                 log.name,
                 log.name,
             )
@@ -943,8 +950,9 @@ def regenerate_index(docs_dir):
         "collated human-review record is `log.md`; this index is the quick\n"
         '"which session did this" pointer (process-options.md "Unattended\n'
         'operation")._\n\n'
-        "| # | Date | Phase | Model | Outcome | Commits | Tokens | Cost USD | Log |\n"
-        "|---|---|---|---|---|---|---|---|---|\n" + "\n".join(rows) + "\n"
+        "| # | Date | Phase | Model | Outcome | Commits | Tokens | Cost USD "
+        "| Wall s | API s | Turns | Log |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|\n" + "\n".join(rows) + "\n"
     )
     (docs_dir / "iteration_index.md").write_text(text, encoding="utf-8")
 
@@ -1737,9 +1745,13 @@ def main():
             )
         )
         argv = build_argv(tmpl, model, prompt)
+        # The coordinator's own clock, so a duration exists even when the
+        # session dies before emitting JSON (spawn failure, timeout, crash).
+        wall_start = time.time()
         code, output, timed_out = run_session(
             argv, root, args.session_timeout, env=session_env
         )
+        wall_secs = int(round(time.time() - wall_start))
 
         try:
             raw_dir.mkdir(parents=True, exist_ok=True)
@@ -1760,6 +1772,14 @@ def main():
                 usage.get("input_tokens", 0), usage.get("output_tokens", 0)
             )
         cost = data.get("total_cost_usd", "")
+        # Where the wall time went: API round-trips vs local tool execution
+        # (the gap is the harness running gates/tools). Blank when the CLI
+        # reported no JSON result — the wall clock above still stands.
+        api_ms = data.get("duration_api_ms")
+        api_secs = (
+            int(round(api_ms / 1000.0)) if isinstance(api_ms, (int, float)) else ""
+        )
+        turns = data.get("num_turns", "")
 
         reset_hint = limit_reset_hint(output, data, code)
         after = head_sha(root)
@@ -1809,12 +1829,21 @@ def main():
             "commits": commits,
             "tokens": tokens,
             "cost-usd": cost,
+            "wall-secs": wall_secs,
+            "api-secs": api_secs,
+            "turns": turns,
             "exit-code": code,
         }
         write_session_log(iter_dir, meta, output)
         regenerate_index(lane)
         print(
-            "session {}: outcome={} commits={}".format(session, outcome, commits or "—")
+            "session {}: outcome={} commits={} wall={}s{}".format(
+                session,
+                outcome,
+                commits or "—",
+                wall_secs,
+                " api={}s turns={}".format(api_secs, turns) if turns != "" else "",
+            )
         )
 
         # --- managed routing / reviewer dispatch bookkeeping (S8) -------------

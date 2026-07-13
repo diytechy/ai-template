@@ -3236,3 +3236,51 @@ off status.md as a side effect. `--phase v1,v2` belongs to the WI-087 close.
   --phase v1`), trajectory `--strict` (R-D clean after the status.md scrub),
   and every freshness step (derived-gate, arch-map, trajectory-map, okf,
   skills-sync).
+
+## 2026-07-12 — WI-119: session timing telemetry (owner-directed slow-run triage) + WI-120 filed (queued)
+
+Owner-directed interactive session (not coordinator-launched): the owner
+interrupted the evening's unattended run as "incredibly slow" and asked why.
+**Findings (from the run's own logs — the JSON transcripts already carried the
+time signal, just not the index):** the 21:44–23:10 run (~86 min, 9 commits)
+spent **78% of wall time in the two BUILD sessions** — session 001: 2288 s
+(1367 s API / 108 turns / 5 commits), session 004: 1721 s (1066 s API / 94
+turns / 2 commits) — vs ~540 s per opus review and <1 min of coordinator
+overhead. Within a BUILD, ~60% is API round-trips (strong-tier fable at
+`CLAUDE_CODE_EFFORT_LEVEL=high`, ~100 turns, fresh-context reload each
+session) and ~40% local gate execution (the per-commit commit bar plus the
+slice-close `check.py` gate bar). The already-landed speed layers were all
+active (pytest-xdist WI-075, `--jobs 0` WI-077, reviewer dial at 1, reviews on
+the medium tier); the loop itself is serial **by design** — a review verdict
+can re-route the next phase, so nothing overlaps. Slowness = the declared
+tiering/effort doing gate-bearing work, not a regression.
+
+**WI-119 shipped:** `agent_loop.py` now measures **wall seconds** around
+`run_session` on the coordinator's own clock (present even for ERROR/non-JSON
+sessions) and parses **api-secs + turns** from the CLI JSON; the session-log
+header gains `wall-secs`/`api-secs`/`turns` (`read_log_meta` headroom 16→24),
+`iteration_index.md` gains **Wall s / API s / Turns** columns (older logs
+render `—`), the per-session console line prints the same, and the
+PROCESS_OPTIONS sizing-sensor + index prose name the new fields. Index
+regenerated (new format, committed). Tests: the fake agent emits
+`duration_api_ms`/`num_turns`; the done-exit test asserts the header keys and
+index columns.
+
+**WI-120 filed (queued, not fixed — separate-finding discipline):** the run's
+sessions 002/005 each ERROR'd spawning `gpt-5.6-terra` (`[WinError 2]`) — the
+session-004 "worth a WI if it recurs" note recurred. Root cause reproduced on
+the box: bare `opencode` resolves via `shutil.which` (PATHEXT finds the npm
+`.cmd` shim; preflight passes) but not via CreateProcess (spawn fails); the
+`which`-resolved path runs fine (`1.17.18`). Consequence is silent
+review-diversity loss (cross-family REVIEW-A never runs), ~10 s/round in
+time. Diagnosis + verified fix sketch: [specs/WI-120.md](specs/WI-120.md);
+status.md unattended-layer bullet carries the caveat.
+
+**Deviations from spec:** none (owner-directed scope; no prior spec).
+**Byte budgets:** AGENTS.template.md / PROCESS.md untouched (delta 0;
+PROCESS_OPTIONS.md is unbudgeted).
+
+**Mechanized verification (commit bar, real output):**
+- `python -m pytest -q -n auto` → `678 passed, 3 skipped in 66.84s`
+- `check_docs.py --root . --stale` → `OK - 43 doc(s), 258 intra-repo link(s),
+  0 broken (4 orphan warning(s))` (orphan hints pre-existing, warn-only)

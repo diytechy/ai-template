@@ -538,8 +538,9 @@ mechanized, but it can be steered:
   merge the next blocks. **Too big** reads as timeouts, stall-guard trips, or a
   session ending mid-block with no commit: split.
 - **The sizing loop has a sensor**: `iteration_index.md` records tokens, cost,
-  outcome, and commit range per session. A PLAN session reads the recent rows
-  before re-chunking and coarsens or splits against the evidence, not a guess.
+  wall/API seconds, turns, outcome, and commit range per session. A PLAN
+  session reads the recent rows before re-chunking and coarsens or splits
+  against the evidence, not a guess.
 
 The cadence needs no coordinator to be useful — an attended human alternating
 "plan on the strong tier, execute on the cheap one" across hands-on sessions is
@@ -726,8 +727,8 @@ capped tail of the transcript) so forensic detail survives machine death and
 travels with the repo; the raw unbounded stream may additionally go to the
 gitignored `out/run-logs/` for local debugging — and regenerates
 `docs/iteration_index.md`: one row per session (number, date, model/tier,
-phase, outcome, commit range, cost, log link), generated and never
-hand-edited. `docs/log.md` stays the *collated* human-review layer above it.
+phase, outcome, commit range, tokens, cost, wall/API seconds, turns, log
+link), generated and never hand-edited. `docs/log.md` stays the *collated* human-review layer above it.
 On an privacy-checked repo the logs ride the iteration branch and pass its scrub
 with everything else.
 
