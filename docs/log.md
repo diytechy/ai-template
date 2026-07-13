@@ -3571,3 +3571,79 @@ spec's "read by name, never-breaking".
   iteration_index.md / review verdicts / test/report.md).
 - Close bar (full, unfiltered): `pytest -q -n auto` → `687 passed, 3 skipped in
   56.25s`.
+
+## 2026-07-13 — WI-087: tiered phase-aware When/How drill-down views (phase v2 → G3)
+
+**WI-087 closed — SR-051 Verified, phase v2 advances to G3.** The second and
+final v2 dev slice shipped on `derived-gate-model`; the derived gate now reads a
+uniform **G3** (`per-phase=(default)=G3;v2=G3`).
+
+**What shipped.** `gen_trajectory.py` gains `when_view()` + `_wi_phases()` and the
+shared `_campboxes`/`_wi_row`/`_wi_table` helpers (extracted from
+`campaign_containment`, which now delegates to them — the existing WI-074 tests
+prove the extraction is byte-identical). The **When** roadmap becomes a
+count-thresholded **phase ⊃ workstream ⊃ work-item** hierarchy: a tier collapses
+into native `<details>` blocks only when its **local** group count exceeds 3
+(flat at or below — the owner's `> 3` rule, ruling Q4); campaign containers stay
+the WI-074 bottom tier (Q1); each WI carries a per-phase color accent
+(grouping-primary encoding, Q2); every rendered tier draws one deduped
+parent-to-parent edge per crossing pair, aggregated from the union of its
+members' crossing edges (the FB5 boundary idiom applied per tier); in-place
+`<details>` expand, no zoom nav (Q3). The **How-SW** view (`sw_containment`)
+starts its top components **expanded at ≤ 3** and **collapsed at > 3**, the
+`TOP_VIEW_MAX` right-sizing bound unchanged.
+
+**Phase derivation (a design call, recorded).** work-items.csv carries no `Phase`
+column, so a WI's phase is derived from the `Phase` cell of the SRs it delivers.
+A delivered SR **always** has a phase — its cell, or `(default)` when blank (the
+derived-gate model's unnamed default, matching `derive_gate`'s own label) — kept
+**distinct from `unphased`** (a WI that delivers no SR at all). So the meta's
+default-spine WIs read as `(default)`, its 4 v2 WIs as `v2`, and its SR-less
+self-adoption/scripts WIs as `unphased`: **3 phase groups (≤ 3 → phase tier
+flat), 4 workstreams (> 3 → workstream tier fires)**, giving the dogfooded
+dashboard four workstream blocks with the campaign containers nested at the
+bottom.
+
+**Earned by scale (byte-identity preserved).** When ≤ 3 phases **and** ≤ 3
+workstreams, `when_view` delegates to `campaign_containment` unchanged, which
+still returns `None` for a campaign-less registry — so every existing WI-074 /
+flat-DAG fixture renders byte-for-byte as before. No new interface seam:
+`gen_trajectory` already consumes the SR registry (`spine_stats`).
+
+**Spine movement.** `SR-051` Planned → **Verified** (`Test`, via TC-052 — the
+generated-first ideal held, no `Critique` fallback); `LLR-052` → **Implemented**
+(CodeSymbol corrected to `when_view/_wi_phases/sw_containment`); `TC-052` →
+**Verified** with **9 pinned pytest node paths**. Regenerated `docs/gate`
+(v2 → G3), `docs/architecture.md` (the new public `when_view` symbol),
+`PROJECT_STATE.html`, and the OKF export. Spine unchanged in size: **SN=24 SR=51
+LLR=52 TC=52, 0 orphans, 52 seams, 5 components**.
+
+**Deviations from spec:** the WI-087 spec's Done-when item 1 ("a new SR + owner
+G1 sign-off") was already satisfied by the `[v2]-[g1]` batch (SR-051 drafted +
+ratified `Planned`); this slice implemented against it. The three affected WI-073
+How-SW tests were updated to the new `≤ 3 → expanded` behavior (a deliberate
+refinement, not a regression). **Byte budgets:** untouched (AGENTS.template.md /
+PROCESS.md not touched; delta 0).
+
+**Gate outputs (real).**
+- New/updated tests (`tests/test_gen_trajectory.py`): 8 new WI-087 cases
+  (`test_when_view_tiers_by_phase_above_threshold`,
+  `…_parent_edge_is_deduped_union_of_child_edges`,
+  `…_nests_workstream_tier_inside_a_phase`, `…_workstream_tier_when_phases_flat`,
+  `…_flat_below_thresholds_is_the_campaign_view`,
+  `…_is_deterministic_and_check_stable`,
+  `test_how_sw_collapses_above_component_threshold`,
+  `test_meta_tiered_when_view_smoke`) + the updated
+  `test_how_sw_containerizes_when_components_contain_modules` (≤ 3 → expanded).
+- Commit bar: `pytest -q -n auto -m smoke` → `543 passed, 2 skipped in 38.27s`;
+  `check_docs --stale` → `OK - 46 doc(s), 265 intra-repo link(s), 0 broken
+  (4 orphan warning(s))` (exit 0; orphans pre-existing).
+- Close bar (full, unfiltered): `pytest -q -n auto` → `695 passed, 3 skipped in
+  60.87s`.
+- Gate bar: `check.py --gate G3 --phase v1,v2 --jobs 0` → **RESULT: PASS**
+  (14/14 steps; tests+coverage 145.5s).
+
+**Not pushed** (push-policy: human). The owner's queued single-ratify sitting
+still covers the v2 batch ratification + the pending G3 re-attestation; this
+slice's SR-051/LLR-052/TC-052 Verified cut bundles into it. `docs/next-wi` →
+**WI-104** (pin the dev toolchain); the run continues at G3.

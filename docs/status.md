@@ -24,22 +24,22 @@ working surface.
   `python project-trajectory/scripts/check_docs.py --root . --stale` green
   before every commit — this repo's standing gate. The kit's own
   `SN→SR→LLR→TC` spine is self-adopted and the gate is **derived**
-  (`scripts/derive_gate.py`): with **phase v2 decomposed and in dev** the
-  runnable `docs/gate` reads **G2** (basis `per-phase=(default)=G3;v2=G2` —
-  the verified v1 spine still holds G3); the scoped v1 full bar is
-  `check.py --gate G3 --phase v1` (incl. the `derived-gate` freshness step),
+  (`scripts/derive_gate.py`): with **phase v2 verified** (both v2 SRs
+  `Verified` 2026-07-13) the runnable `docs/gate` reads a uniform **G3** (basis
+  `per-phase=(default)=G3;v2=G3`); the full bar is
+  `check.py --gate G3 --phase v1,v2` (incl. the `derived-gate` freshness step),
   and CI runs the derived gate on real data (the meta-repo dogfoods its own
   trajectory + OKF + derived-gate layers).
 - **Plan state:** v1 spine at **G3** (re-attested 2026-07-12, all-mechanized;
   the derived-gate campaign added **SR-049**, a mechanized Test SR, which
-  **rides a pending re-attestation** — Needs \<human> above); **phase v2 at
-  G2** since 2026-07-12 — SR-050/SR-051 (the dashboard views, `Phase=v2`)
-  ratified `Planned` by the G1 LLM-gate review and decomposed to LLR-051/052 +
-  TC-051/052 by the `[v2]-[g2]` batch (owner batch
-  ratification queued below). **SR-050 Verified 2026-07-12** by the
-  process-view dev slice (the Process tab; Test, TC-051's 7 pinned pytest
-  nodes); SR-051 is the one
-  remaining v2 `Planned` SR — v2 → G3 when WI-087 verifies it. Spine **SN=24
+  **rides a pending re-attestation** — Needs \<human> above); **phase v2 now at
+  G3** — SR-050/SR-051 (the dashboard views, `Phase=v2`) ratified `Planned` by
+  the G1 LLM-gate review, decomposed to LLR-051/052 + TC-051/052 by the
+  `[v2]-[g2]` batch, then both **Verified by their dev slices** (SR-050 by the
+  Process tab 2026-07-12; **SR-051 by the tiered drill-down views 2026-07-13**,
+  `Test`, TC-052's 9 pinned pytest nodes). The whole v2 spine cut + the v2 → G3
+  advance **rides the owner's queued single-ratify sitting** (Needs \<human>
+  below). Spine **SN=24
   SR=51 LLR=52 TC=52, 0 orphans**, 52 declared interface seams, 5 declared components
   (the meta's own How-SW top view is now 24 modules → 5 top-level components, 0
   uncontained). The
@@ -92,8 +92,9 @@ working surface.
        met (derived gate reads G3; all-mechanized: 46 Test · 2 Analysis · 1
        Inspection · 0 Attest); the owner's attested sign-off over the SR-049 spine
        cut + the gate-model change is outstanding. See [log.md](log.md).
-       *(The SR-050 spine cut — Verified 2026-07-12 by the process-view dev
-       slice — bundles into the same sitting.)*
+       *(The **whole phase-v2 spine cut** — SR-050 Verified 2026-07-12 by the
+       process-view slice, **SR-051 Verified 2026-07-13 by the tiered
+       drill-down views**, taking v2 → G3 — bundles into the same sitting.)*
     3. **Single-ratify enablement review (the single attest)** — moving
        `docs/gate-policy` from `attended` to `single-ratify` (the unattended
        layer's gate authority) is, by the policy file's own rule, a change whose
@@ -101,16 +102,17 @@ working surface.
        enablement commit; until then [gate-policy.md](gate-policy.md) stands
        DRAFT. (Config only — it governs WHO makes a ratifying commit, not what
        the derived gate computes.)
-    4. **v2 batch ratification (due — the `[v2]-[g2]` close landed
-       2026-07-12)** — SR-050/SR-051
-       were ratified `Draft`→`Planned` by the G1 LLM-gate review and
-       decomposed (LLR-051/052 + TC-051/052) by the G2 batch, with
-       **provisional rulings** the owner accepts or amends at
-       the single sitting: WI-087's four open questions (tier composition
-       Phase ⊃ Workstream ⊃ WI with Campaign kept as the existing bottom-tier
-       campaign container; grouping-primary phase encoding + per-phase color
-       accent; in-place `<details>`-style expand, no zoom navigation; the > 3
-       rule governs start-collapsed with `TOP_VIEW_MAX = 10` unchanged) and
+    4. **v2 batch ratification (due — the `[v2]-[g2]` close landed 2026-07-12;
+       both v2 dev slices have since shipped and Verified their SRs, so the whole
+       v2 arc through G3 is now one sitting)** — SR-050/SR-051
+       were ratified `Draft`→`Planned` by the G1 LLM-gate review, decomposed
+       (LLR-051/052 + TC-051/052) by the G2 batch, and then Verified by the two
+       dev slices, with **provisional rulings** the owner accepts or amends at
+       the single sitting: WI-087's four open questions — now **implemented as
+       ruled** (tier composition Phase ⊃ Workstream ⊃ WI with Campaign kept as the
+       bottom-tier campaign container; grouping-primary phase encoding + per-phase
+       color accent; in-place `<details>`-style expand, no zoom navigation; the
+       > 3 rule governs start-collapsed with `TOP_VIEW_MAX = 10` unchanged) — and
        the process view's generated-first render mode (Test TC; Critique only on a
        static fallback). Verdicts + rationale: [log.md](log.md).
     5. **Review-cadence proposal (owner-raised 2026-07-12 evening, ruling
@@ -139,10 +141,11 @@ working surface.
     `TheColliny/FableClaudeMDForOpus`** and pulled downstream via the vendoring
     layer (`check_vendored.py`); nothing to build in this kit repo. Rationale:
     [archive/INTEGRATION_PLAN.md](archive/INTEGRATION_PLAN.md) Phase 2.
-  - **In flight:** the **phase v2 dev slices** — the pre-dev batch
-    (`[v2]-[g1]` + `[v2]-[g2]`) closed 2026-07-12, and the **process-view
-    slice closed 2026-07-12** (the Process tab, SR-050 Verified); **WI-087**
-    (queued, next) is the remaining slice — v2 → G3 at its close. (All four 2026-07-11 batches are
+  - **Phase v2 — COMPLETE (2026-07-13, at G3).** Both dev slices shipped: the
+    process-view slice (the Process tab, SR-050 Verified 2026-07-12) and the
+    tiered drill-down views (SR-051 Verified 2026-07-13); the pre-dev batch
+    (`[v2]-[g1]` + `[v2]-[g2]`) closed 2026-07-12. The derived gate now reads a
+    uniform G3; the whole v2 spine cut rides the owner sitting above. (All four 2026-07-11 batches are
     **closed and archived**: the campaign-binning · parallel-tests · resume-hardening
     batch (the `Campaign` grouping column + the campaign-binned When-view
     DAG · pytest-xdist parallel execution, ~6× plain and ~4.6× at the gate ·
@@ -263,8 +266,8 @@ working surface.
       a commit-msg check to be a backed rule; L6 template-cell manuals — an
       owner taste ruling on a deliberate design, medium churn to shipped
       templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
-- **Next action — phase v2 (new scope; branch `derived-gate-model`).** A resume
-  session picks up here:
+- **Next action — the G3 backlog (branch `derived-gate-model`; `docs/next-wi` =
+  WI-104).** Phase v2 is complete; a resume session picks up the backlog below.
   1. **Derived-gate campaign — LANDED (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the whole 8-slice campaign has shipped: the `Draft` artifact state + trace
@@ -283,18 +286,20 @@ working surface.
      *(The unattended-enablement step landed 2026-07-12 — the managed-routing
      consent layer + `single-ratify` gate authority; see the Unattended-layer
      bullet under Current State and its single-attest item in Needs \<human>.)*
-  2. **Phase v2 dev slices — slice 1 (process view) done, WI-087 next.** The
-     process-view slice closed 2026-07-12: the Process tab shipped
-     generated-first (`process_panel()` per LLR-051), TC-051's 7 pytest nodes
-     pinned, **SR-050 `Verified`** (`Test` — no `Critique` fallback needed),
-     seam IF-052 declared; the spec is archived under `docs/archive/specs/`
-     (path in the WI row's Deliverable). Now implement **WI-087**
-     ([spec](specs/WI-087.md)) the same way against LLR-052/TC-052 (the five
-     provisional rulings are in the `[v2]-[g1]`/`[v2]-[g2]` log entries; the
-     owner's single-ratify sitting queued above does **not** block dev). Its
-     close regenerates the gate (v2 → G3 — both v2 SRs then `Verified`) and
-     runs the full `check.py --gate G3 --phase v1,v2`.
-  3. **The rest of the backlog needs no new SR — proceed at G3:** WI-104 (pin
+  2. **Phase v2 dev slices — BOTH DONE (v2 at G3).** The process-view slice
+     closed 2026-07-12 (the Process tab, `process_panel()` per LLR-051, TC-051's
+     7 nodes, SR-050 `Verified`, seam IF-052). The **tiered drill-down slice
+     (WI-087) closed 2026-07-13**: `when_view()`/`_wi_phases()` + the shared
+     `_campboxes`/`_wi_row`/`_wi_table` helpers give the When roadmap a
+     phase ⊃ workstream ⊃ WI hierarchy (collapse at > 3 local members, campaign
+     bottom tier, per-phase color accent, per-tier aggregated edges) and the
+     How-SW view an expand-at-≤3/collapse-at->3 top view; LLR-052 `Implemented`,
+     TC-052 `Verified` (9 pinned nodes), **SR-051 `Verified`**. The close
+     regenerated the gate (v2 → G3) and passed `check.py --gate G3 --phase v1,v2`
+     (14/14). Spec archived to `docs/archive/specs/WI-087.2026-07-13.md`. The v2
+     spine cut rides the owner single-ratify sitting queued above.
+  3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
+     = WI-104): WI-104 (pin
      the dev toolchain) then WI-105 (the coverage-plumbing fix, verified on the
      pinned toolchain — the review's ranked-first defect), then WI-078
      (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then WI-079 and

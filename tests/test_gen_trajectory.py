@@ -583,7 +583,10 @@ def test_how_sw_containerizes_when_components_contain_modules(tmp_path):
     assert gen(tmp_path).returncode == 0
     sw = sw_section(tmp_path)
     assert 'class="cmptree"' in sw
-    assert sw.count('<details class="cmpbox">') == 2  # two top-level components
+    # WI-087: two top-level components is <= the > 3 threshold, so the blocks start
+    # EXPANDED (a flat read of a small view); the count is threshold-independent.
+    assert sw.count('<details class="cmpbox"') == 2  # two top-level components
+    assert sw.count('<details class="cmpbox" open>') == 2  # <= 3 -> start expanded
     assert "Top view: 2 item" in sw
     # members are revealed inside the expansion; intra + boundary seams surface.
     assert "scripts/mod_a" in sw and "scripts/mod_c" in sw
@@ -800,6 +803,181 @@ def test_meta_campaign_binning_smoke():
         "campaign-binning-batch-2026-07-11",
     ):
         assert slug in view
+
+
+# --- WI-087 / SR-051: the tiered, phase-aware drill-down views -----------------
+# The When roadmap tiers into phase -> workstream -> work-item <details> blocks
+# once a tier holds > 3 members (generalizing the WI-074 campaign binning), each
+# WI carries a per-phase color accent, parent edges aggregate the deduped union of
+# their members' crossing edges, and the How-SW view starts collapsed above the
+# > 3 component threshold. A registry below the thresholds renders byte-identically
+# to the flat WI-074 view.
+
+# Four SR phases (v1..v4), so a WI's phase is derived from the SR it delivers.
+TIER_SRS = (
+    "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
+    "Priority,Verification,Status,Phase\n"
+    'SR-001,P1,SN-001,"r",R,"a",,M,Test,Verified,v1\n'
+    'SR-002,P2,SN-001,"r",R,"a",,M,Test,Verified,v2\n'
+    'SR-003,P3,SN-001,"r",R,"a",,M,Test,Verified,v3\n'
+    'SR-004,P4,SN-001,"r",R,"a",,M,Test,Verified,v4\n'
+)
+TIER_HDR = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,Campaign\n"
+
+# Two v1 WIs both feed the single v2 WI -> the v1->v2 parent edge is the deduped
+# union of two child edges. Phases: v1={001,002}, v2={003}, v3={004}, v4={005}.
+TIER_UNION_WIS = (
+    "WI-001,A,scripts,SR-001,,done,d,\n"
+    "WI-002,B,docs,SR-001,,done,d,\n"
+    "WI-003,C,unattended,SR-002,WI-001;WI-002,queued,d,\n"
+    "WI-004,D,self-adoption,SR-003,WI-003,queued,d,\n"
+    "WI-005,E,scripts,SR-004,WI-003,queued,d,\n"
+)
+
+
+def tiered_repo(root, wis_body, header=TIER_HDR, srs=TIER_SRS):
+    """make_repo + a phase-carrying SR registry (the WI phase is derived from the
+    SRs a work item delivers)."""
+    make_repo(root, wis_body, header=header)
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        srs, encoding="utf-8"
+    )
+    return root
+
+
+def test_when_view_tiers_by_phase_above_threshold(tmp_path):
+    # > 3 phases -> the When view starts at phase blocks (4), each carrying the
+    # per-phase color accent; the phase count is surfaced.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    # `dag_view` truncates at the first nested </div>; the tierbox markup is unique
+    # to the When panel, so count over the full page.
+    view = html_of(tmp_path)
+    assert "Tiered roadmap: 4 phase(s), 4 workstream(s)" in view
+    assert view.count('<details class="tierbox">') == 4  # one block per phase
+    assert "· phase ·" in view  # the tier is labeled
+    assert '<span class="ph"' in view  # the per-phase color accent renders
+
+
+def test_when_view_parent_edge_is_deduped_union_of_child_edges(tmp_path):
+    # The two v1->v2 child edges (WI-001->WI-003 and WI-002->WI-003) aggregate to
+    # ONE parent block edge equal to their deduped union.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    view = dag_view(tmp_path)
+    xt = re.search(r'<ul class="xtier">(.*?)</ul>', view, re.S).group(1)
+    # crossing phase pairs: v1->v2, v2->v3, v2->v4 -> three aggregated edges
+    assert len(re.findall(r"<li>", xt)) == 3
+    v1v2 = re.search(r"<code>v1</code> → <code>v2</code>.*?\((.*?)\)", xt, re.S).group(
+        1
+    )
+    assert v1v2 == "WI-001→WI-003, WI-002→WI-003"  # deduped union
+
+
+def test_when_view_nests_workstream_tier_inside_a_phase(tmp_path):
+    # Within a phase that holds > 3 workstreams the workstream tier fires,
+    # nesting phase -> workstream -> work item; below the threshold it stays flat.
+    body = (
+        "WI-001,A1,scripts,SR-001,,done,d,\n"
+        "WI-002,A2,docs,SR-001,,done,d,\n"
+        "WI-003,A3,unattended,SR-001,,done,d,\n"
+        "WI-004,A4,self-adoption,SR-001,,done,d,\n"  # v1 spans 4 workstreams
+        "WI-005,B1,scripts,SR-002,WI-001,active,d,\n"  # v2, one workstream -> flat
+        "WI-006,C1,scripts,SR-003,WI-005,queued,d,\n"
+        "WI-007,D1,scripts,SR-004,WI-006,queued,d,\n"
+    )
+    tiered_repo(tmp_path, body)
+    assert gen(tmp_path).returncode == 0
+    view = html_of(tmp_path)
+    assert "· phase ·" in view and "· workstream ·" in view  # both tiers rendered
+    # 4 phase blocks + 4 workstream blocks nested inside v1 = 8 tierboxes.
+    assert view.count('<details class="tierbox">') == 8
+    assert "<code>Scripts / harness</code>" in view  # workstream label on a sub-block
+
+
+def test_when_view_workstream_tier_when_phases_flat(tmp_path):
+    # <= 3 phases but > 3 workstreams -> the workstream tier fires at the TOP
+    # (the "or at the top when phases <= 3" rule); phases stay flat.
+    body = (
+        "WI-001,A,scripts,,,done,d,\n"
+        "WI-002,B,docs,,WI-001,active,d,\n"
+        "WI-003,C,unattended,,WI-001,queued,d,\n"
+        "WI-004,D,self-adoption,,WI-002;WI-003,queued,d,\n"
+        "WI-005,E,deliverable,,WI-004,queued,d,\n"  # five workstreams, all unphased
+    )
+    make_repo(tmp_path, body, header=TIER_HDR)  # default SRs (no Phase) -> unphased
+    assert gen(tmp_path).returncode == 0
+    view = html_of(tmp_path)
+    assert "Tiered roadmap: 1 phase(s), 5 workstream(s)" in view
+    assert view.count('<details class="tierbox">') == 5  # one block per workstream
+    assert "· workstream ·" in view and "· phase ·" not in view
+
+
+def test_when_view_flat_below_thresholds_is_the_campaign_view(tmp_path):
+    # <= 3 phases and <= 3 workstreams -> when_view delegates to
+    # campaign_containment byte-for-byte (the tiering is earned by scale).
+    make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)  # 2 workstreams, unphased
+    gt = load_script("gen_trajectory")
+    ct = load_script("check_trajectory")
+    wis, _ = ct.load_wis(ct.read_rows(tmp_path / ct.WI_CSV))
+    view = gt.when_view(tmp_path, wis)
+    assert view == gt.campaign_containment(wis)  # identical bytes
+    assert 'class="tierbox"' not in view and 'class="campbox"' in view
+
+
+def test_when_view_is_deterministic_and_check_stable(tmp_path):
+    # Sorted inputs, no clocks -> a re-render is byte-identical and --check passes.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    first = (tmp_path / "PROJECT_STATE.html").read_bytes()
+    again = gen(tmp_path)
+    assert again.returncode == 0 and "already up to date" in again.stdout
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
+    assert gen(tmp_path, "--check").returncode == 0
+
+
+# Four one-module components -> the How-SW top view exceeds the > 3 threshold.
+FOUR_CMP_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
+LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Verified,CMP-001
+LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Verified,CMP-002
+LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Verified,CMP-003
+LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Verified,CMP-004
+"""
+FOUR_CMPS = (
+    "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
+    "CMP-001,Core,software,,built,,,,\n"
+    "CMP-002,Two,software,,built,,,,\n"
+    "CMP-003,Three,software,,built,,,,\n"
+    "CMP-004,Four,software,,built,,,,\n"
+)
+
+
+def test_how_sw_collapses_above_component_threshold(tmp_path):
+    # > 3 top-level components -> the blocks start COLLAPSED (click-to-explode);
+    # contrast the <= 3 case (test_how_sw_containerizes...), which starts expanded.
+    containerize(tmp_path)
+    req = tmp_path / "docs" / "requirements"
+    (req / "low-level-requirements.csv").write_text(FOUR_CMP_LLRS, encoding="utf-8")
+    (req / "components.csv").write_text(FOUR_CMPS, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    assert "Top view: 4 item" in sw
+    assert sw.count('<details class="cmpbox">') == 4  # four collapsed blocks
+    assert '<details class="cmpbox" open>' not in sw  # > 3 -> not auto-expanded
+
+
+def test_meta_tiered_when_view_smoke():
+    # Over the real meta repo (4 workstreams > 3): the When view tiers into
+    # workstream blocks with the campaign containers nested at the bottom tier.
+    ct = load_script("check_trajectory")
+    gt = load_script("gen_trajectory")
+    wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
+    assert not integrity
+    view = gt.when_view(ROOT, wis)
+    assert view is not None
+    assert '<details class="tierbox">' in view  # workstream tier fires
+    assert "· workstream ·" in view
+    assert 'class="campbox"' in view  # campaigns stay the bottom-tier container
 
 
 # --- WI-085 / SR-050: the Process reference tab ---------------------------------

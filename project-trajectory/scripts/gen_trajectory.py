@@ -896,7 +896,7 @@ def sw_containment(root, mods):
             'component:</p><ul class="cmpseams">{}</ul>'.format("".join(items))
         )
 
-    def render_cmp(cid, seams):
+    def render_cmp(cid, seams, top_open=False):
         kids = [c for c in children_of.get(cid, []) if subtree_modules(c)]
         body = "".join(render_cmp(c, "") for c in kids)
         body += module_table(direct.get(cid, []))
@@ -907,12 +907,18 @@ def sw_containment(root, mods):
             esc(cid), " — " + esc(nm) if nm else "", n
         )
         return (
-            '<details class="cmpbox"><summary>{}</summary>'
-            '<div class="cmpbody">{}</div></details>'.format(head, body)
+            '<details class="cmpbox"{}><summary>{}</summary>'
+            '<div class="cmpbody">{}</div></details>'.format(
+                " open" if top_open else "", head, body
+            )
         )
 
     tab = '<button data-tab="sw">How (SW architecture)</button>'
-    tree = "".join(render_cmp(r, seam_block(r)) for r in view["top_roots"])
+    # WI-087: the top-level component blocks start EXPANDED at or below the > 3
+    # threshold (a flat read of a small view) and start COLLAPSED above it (the
+    # click-to-explode drill-down); the TOP_VIEW_MAX right-sizing bound is unchanged.
+    top_open = len(view["top_roots"]) <= 3
+    tree = "".join(render_cmp(r, seam_block(r), top_open) for r in view["top_roots"])
     unc = "".join(
         '<div class="uncontained"><code>{}</code> '
         '<span class="sub">— uncontained: no Component tag on its LLR(s)</span>'
@@ -997,6 +1003,88 @@ CAMPAIGN_STYLE = (
 )
 
 
+def _esc(s):
+    return html.escape(str(s), quote=True)
+
+
+def _wi_st(w):
+    """A work item's status clamped to a known fill key."""
+    return w["status"] if w["status"] in STATUS_FILL else "queued"
+
+
+def _wi_row(w, accent_of=None):
+    """One WI member row for the When-view tables (WI-074). `accent_of` (id ->
+    color) prepends the WI-087 per-phase color swatch; when None the swatch is
+    omitted, so the flat campaign view renders byte-identically to before the phase
+    encoding existed."""
+    st = _wi_st(w)
+    delivers = ", ".join(w["srs"]) or "—"
+    after = ", ".join(w["preds"] + ["~" + p for p in w["soft"]]) or "—"
+    swatch = ""
+    if accent_of is not None:
+        swatch = '<span class="ph" style="background:{}"></span>'.format(
+            accent_of.get(w["id"], "transparent")
+        )
+    return (
+        "<tr><td>{}<code>{}</code></td><td>{}</td>"
+        '<td><span class="st" style="background:{}"></span>{}</td>'
+        '<td><code>{}</code></td><td class="sub"><code>{}</code></td></tr>'.format(
+            swatch,
+            _esc(w["id"]),
+            _esc(w["title"]),
+            STATUS_FILL[st],
+            _esc(st),
+            _esc(delivers),
+            _esc(after),
+        )
+    )
+
+
+def _wi_table(members, accent_of=None):
+    rows = "".join(
+        _wi_row(w, accent_of) for w in sorted(members, key=lambda w: w["id"])
+    )
+    return (
+        '<table class="witable"><thead><tr><th>WI</th><th>Title</th>'
+        "<th>Status</th><th>Delivers</th><th>After</th></tr></thead>"
+        "<tbody>{}</tbody></table>".format(rows)
+    )
+
+
+def _campboxes(wis, accent_of=None):
+    """The WI-074 bottom tier for a WI subset: one collapsed `<details>` per
+    campaign (members inside) followed by a flat table of the campaign-less WIs.
+    `accent_of` carries the WI-087 phase swatch; None reproduces the flat campaign
+    view's bytes. Shared by `campaign_containment` and the tiered `when_view`
+    leaf."""
+    by_camp, campaignless = {}, []
+    for w in wis:
+        if w.get("campaign"):
+            by_camp.setdefault(w["campaign"], []).append(w)
+        else:
+            campaignless.append(w)
+    tree = ""
+    for slug in sorted(by_camp):
+        members = by_camp[slug]
+        head = '<code>{}</code> <span class="sub">· {} item(s)</span>'.format(
+            _esc(slug), len(members)
+        )
+        tree += (
+            '<details class="campbox"><summary>{}</summary>'
+            '<div class="campbody">{}</div></details>'.format(
+                head, _wi_table(members, accent_of)
+            )
+        )
+    if campaignless:
+        tree += (
+            '<div class="standalone"><p class="sub" style="margin:.5rem 0 .2rem">'
+            "Standalone work items — no campaign:</p>{}</div>".format(
+                _wi_table(campaignless, accent_of)
+            )
+        )
+    return tree
+
+
 def campaign_containment(wis):
     """The campaign-binned When view (WI-074), or None when no work item carries a
     `Campaign` value (the caller then keeps today's flat SVG DAG, byte-identical).
@@ -1031,34 +1119,6 @@ def campaign_containment(wis):
     def label(k):
         return k[len("WI:") :] if k.startswith("WI:") else k
 
-    def st_of(w):
-        return w["status"] if w["status"] in STATUS_FILL else "queued"
-
-    def wi_row(w):
-        st = st_of(w)
-        delivers = ", ".join(w["srs"]) or "—"
-        after = ", ".join(w["preds"] + ["~" + p for p in w["soft"]]) or "—"
-        return (
-            "<tr><td><code>{}</code></td><td>{}</td>"
-            '<td><span class="st" style="background:{}"></span>{}</td>'
-            '<td><code>{}</code></td><td class="sub"><code>{}</code></td></tr>'.format(
-                esc(w["id"]),
-                esc(w["title"]),
-                STATUS_FILL[st],
-                esc(st),
-                esc(delivers),
-                esc(after),
-            )
-        )
-
-    def wi_table(members):
-        rows = "".join(wi_row(w) for w in sorted(members, key=lambda w: w["id"]))
-        return (
-            '<table class="witable"><thead><tr><th>WI</th><th>Title</th>'
-            "<th>Status</th><th>Delivers</th><th>After</th></tr></thead>"
-            "<tbody>{}</tbody></table>".format(rows)
-        )
-
     # Cross-boundary predecessor edges -> aggregate to one edge per crossing pair,
     # deduplicating the contributing WI edges (the FB5 boundary-aggregation idiom).
     cross = {}
@@ -1070,26 +1130,6 @@ def campaign_containment(wis):
             kp = key_of[p]
             if kp != kw:
                 cross.setdefault((kp, kw), set()).add((p, w["id"]))
-
-    tree = ""
-    for slug in sorted(by_camp):
-        members = by_camp[slug]
-        head = '<code>{}</code> <span class="sub">· {} item(s)</span>'.format(
-            esc(slug), len(members)
-        )
-        tree += (
-            '<details class="campbox"><summary>{}</summary>'
-            '<div class="campbody">{}</div></details>'.format(head, wi_table(members))
-        )
-
-    standalone = ""
-    if campaignless:
-        standalone = (
-            '<div class="standalone"><p class="sub" style="margin:.5rem 0 .2rem">'
-            "Standalone work items — no campaign:</p>{}</div>".format(
-                wi_table(campaignless)
-            )
-        )
 
     xlines = "".join(
         "<li><code>{}</code> → <code>{}</code> "
@@ -1122,9 +1162,180 @@ def campaign_containment(wis):
         + summary_line
         + cross_html
         + '<div class="camptree">'
-        + tree
-        + standalone
+        + _campboxes(wis)
         + "</div>"
+    )
+
+
+# --- WI-087: phase-aware, count-thresholded tiering over the When view ----------
+#
+# Generalizes the shipped campaign-binning (WI-074) into a phase -> workstream ->
+# work-item hierarchy: a tier collapses into native <details> blocks only when its
+# LOCAL group count exceeds 3 (flat at or below — the owner's "> 3" rule), campaign
+# containers stay the bottom tier (ruling Q1), each WI carries a per-phase color
+# accent (the grouping-primary encoding, ruling Q2), and every rendered tier draws
+# one deduped parent-to-parent edge per crossing pair, aggregated from the union of
+# its members' crossing edges (the FB5 boundary idiom, applied per tier). A
+# registry with <= 3 phases AND <= 3 workstreams renders exactly what the WI-074
+# view did (byte-identical) — the tiering is EARNED by scale, so a small project
+# stays flat.
+
+# A stable, sorted-order palette for the per-phase accent (grouping-primary
+# encoding). Deterministic: the i-th sorted phase label takes the i-th color.
+PHASE_ACCENTS = (
+    "#4f46e5", "#0891b2", "#7c3aed", "#d97706",
+    "#059669", "#db2777", "#2563eb", "#65a30d",
+)  # fmt: skip
+
+TIER_STYLE = (
+    "<style>"
+    "#dag details.tierbox{border:1px solid var(--border);border-radius:10px;"
+    "margin:.45rem 0;background:var(--surface);box-shadow:var(--shadow);}"
+    "#dag details.tierbox>summary{cursor:pointer;font-weight:600;padding:.55rem .8rem;"
+    "list-style-position:inside;}"
+    "#dag details.tierbox>summary .sub{font-weight:400;color:var(--muted);}"
+    "#dag .tierbody{padding:.2rem 0 .2rem .85rem;}"
+    "#dag span.ph{display:inline-block;width:.55rem;height:.55rem;border-radius:2px;"
+    "vertical-align:-1px;margin-right:.4rem;}"
+    "#dag ul.xtier{margin:.2rem 0 .6rem;padding-left:1.3rem;font-size:.9rem;}"
+    "#dag ul.xtier li{margin:.1rem 0;}"
+    "#dag p.tierlegend{font-size:.82rem;color:var(--muted);margin:.3rem 0 .6rem;}"
+    "#dag p.tierlegend .ph{margin-left:.7rem;}"
+    "</style>"
+)
+
+
+# The label for an SR whose `Phase` cell is blank — the derived-gate model's
+# unnamed default phase (derive_gate prints it `(default)` too). A WI delivering
+# such an SR IS phased (the default phase), distinct from a WI that delivers no SR
+# at all (`unphased`).
+DEFAULT_PHASE = "(default)"
+
+
+def _wi_phases(root, wis):
+    """Each WI id -> its delivery-phase label, derived from the `Phase` column of
+    the SRs it delivers (work-items.csv carries no Phase of its own). A delivered
+    SR always has a phase — its `Phase` cell, or `(default)` when blank; a WI
+    delivering SRs across phases joins them sorted (`(default)+v2`); a WI that
+    delivers no SR is `unphased`. Deterministic (sorted, no clocks) so the render
+    stays `--check`-stable."""
+    sr_phase = {}
+    for r in ct.read_rows(root / ct.SR_CSV):
+        sid = (r.get("SR-ID") or "").strip()
+        if sid.startswith("SR-"):
+            sr_phase[sid] = (r.get("Phase") or "").strip() or DEFAULT_PHASE
+    out = {}
+    for w in wis:
+        phs = sorted({sr_phase[s] for s in w["srs"] if s in sr_phase})
+        out[w["id"]] = "+".join(phs) if phs else "unphased"
+    return out
+
+
+def when_view(root, wis):
+    """The When roadmap as a count-thresholded phase -> workstream -> work-item
+    hierarchy (WI-087), or the flat WI-074 campaign view / SVG DAG when no tier
+    fires (returns None in the latter case, so the caller keeps today's flat SVG).
+
+    A tier renders as collapsed `<details>` blocks only when its LOCAL group count
+    exceeds 3 (flat at or below); campaign containers stay the bottom tier; each
+    rendered tier draws aggregated parent-to-parent edges (the deduped union of the
+    child crossing edges); each WI carries a per-phase color accent. Deterministic
+    (sorted inputs, no clocks). A registry with <= 3 phases and <= 3 workstreams
+    delegates to `campaign_containment` unchanged (byte-identical)."""
+    phase_of = _wi_phases(root, wis)
+    phases = {phase_of[w["id"]] for w in wis}
+    workstreams = {w["workstream"] for w in wis}
+    if len(phases) <= 3 and len(workstreams) <= 3:
+        return campaign_containment(
+            wis
+        )  # byte-identical fallback (None / campaign tree)
+
+    color = {
+        p: PHASE_ACCENTS[i % len(PHASE_ACCENTS)] for i, p in enumerate(sorted(phases))
+    }
+    accent_of = {w["id"]: color[phase_of[w["id"]]] for w in wis}
+    tiers = [
+        ("phase", lambda w: phase_of[w["id"]]),
+        ("workstream", lambda w: w["workstream"]),
+    ]
+
+    def cross_edges(subset, keyfn):
+        """Aggregated block-to-block edges among `subset`: one entry per crossing
+        (key_p, key_w) pair, valued by the deduped set of contributing WI edges —
+        so a parent edge is exactly the union of its members' crossing edges."""
+        kof = {w["id"]: keyfn(w) for w in subset}
+        agg = {}
+        for w in subset:
+            for p in w["preds"] + w["soft"]:
+                if p in kof and kof[p] != kof[w["id"]]:
+                    agg.setdefault((kof[p], kof[w["id"]]), set()).add((p, w["id"]))
+        return agg
+
+    def cross_html(agg):
+        if not agg:
+            return ""
+        lis = "".join(
+            "<li><code>{}</code> → <code>{}</code> "
+            '<span class="sub">({})</span></li>'.format(
+                _esc(a),
+                _esc(b),
+                _esc(", ".join("{}→{}".format(p, w) for p, w in sorted(edges))),
+            )
+            for (a, b), edges in sorted(agg.items())
+        )
+        return (
+            '<p class="cap">Cross-tier dependency edges — aggregated to the boundary '
+            "(one edge per crossing pair; the per-WI predecessors live in each member "
+            'row\'s <em>After</em> column):</p><ul class="xtier">{}</ul>'.format(lis)
+        )
+
+    def render(subset, remaining):
+        for i, (name, keyfn) in enumerate(remaining):
+            groups = {}
+            for w in subset:
+                groups.setdefault(keyfn(w), []).append(w)
+            if len(groups) <= 3:
+                continue  # this tier stays flat -> try the next grouping
+            rest = remaining[i + 1 :]
+            blocks = ""
+            for gv in sorted(groups):
+                members = groups[gv]
+                lbl = WORKSTREAM_LABELS.get(gv, gv) if name == "workstream" else gv
+                sw = (
+                    '<span class="ph" style="background:{}"></span>'.format(color[gv])
+                    if name == "phase"
+                    else ""
+                )
+                head = '{}<code>{}</code> <span class="sub">· {} · {} item(s)</span>'.format(
+                    sw, _esc(lbl), name, len(members)
+                )
+                blocks += (
+                    '<details class="tierbox"><summary>{}</summary>'
+                    '<div class="tierbody">{}</div></details>'.format(
+                        head, render(members, rest)
+                    )
+                )
+            return cross_html(cross_edges(subset, keyfn)) + blocks
+        # No tier crosses its threshold here -> the WI-074 campaign bin (bottom
+        # tier), with the per-phase accent carried onto each member row.
+        return _campboxes(subset, accent_of)
+
+    legend = "".join(
+        '<span class="ph" style="background:{}"></span>{}'.format(color[p], _esc(p))
+        for p in sorted(phases)
+    )
+    summary = (
+        '<p class="cap"><strong>Tiered roadmap: {} phase(s), {} workstream(s).</strong> '
+        "A tier collapses into blocks only when it holds more than 3 members "
+        "(phase ⊃ workstream ⊃ work item); <strong>expand</strong> a block to drill "
+        "in. Campaigns stay the bottom-tier container (WI-074); each parent edge "
+        "aggregates the union of its members’ crossing edges.</p>"
+        '<p class="tierlegend">Phase accent:{}</p>'.format(
+            len(phases), len(workstreams), legend
+        )
+    )
+    return (
+        TIER_STYLE + summary + '<div class="camptree">' + render(wis, tiers) + "</div>"
     )
 
 
@@ -2081,11 +2292,12 @@ def build_html(root, wis):
     workstreams = len({w["workstream"] for w in wis})
     arch, arch_details, arch_desc = arch_icicle(root)
     dag, wi_details = dag_svg(wis)
-    # WI-074: when any work item carries a Campaign tag, the When view bins the
-    # DAG into collapsed campaign containers (the WHEN-axis FB5 mirror); with no
-    # campaign values this returns None and the flat SVG DAG renders unchanged, so
-    # a campaign-less registry stays byte-identical.
-    dag_view = campaign_containment(wis) or dag
+    # WI-087: the When view tiers into phase -> workstream -> work-item <details>
+    # blocks once a tier holds more than 3 members (generalizing the WI-074
+    # campaign binning); at <= 3 phases and <= 3 workstreams `when_view` delegates
+    # to `campaign_containment` unchanged, which itself returns None for a
+    # campaign-less registry so the flat SVG DAG renders byte-identically.
+    dag_view = when_view(root, wis) or dag
     extra_tabs, extra_panels = [], []
     mods = sw_modules(root)
     if mods:
