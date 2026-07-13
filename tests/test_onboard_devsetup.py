@@ -249,3 +249,20 @@ def test_meta_repo_dogfoods_dev_setup():
         assert "nothing to install" in (REPO_ROOT / name).read_text(encoding="utf-8"), (
             name + " missing the WI-111 delta-aware fast path"
         )
+    # WI-112: --install OFFERS each agent CLI individually ([y/N] per CLI, npm
+    # package named), and both twins carry the emphasized consequence: with an
+    # enabled row's CLI missing, agent-resume cannot boot the walk-away loop —
+    # deferrable for users on their own tools / an IDE extension. Textual (the
+    # live prompt/NOTE only prints when a CLI is missing, which varies per box).
+    for name in DEVSETUP:
+        text = (REPO_ROOT / name).read_text(encoding="utf-8")
+        assert "CLI now (npm install -g" in text, name + " missing the per-CLI offer"
+        assert "opencode-ai" in text and "@anthropic-ai/claude-code" in text, (
+            name + " missing an npm package name"
+        )
+        assert "cannot boot the walk-away" in text, (
+            name + " missing the emphasized agent-resume consequence"
+        )
+        assert "cannot boot the unattended" in text, (
+            name + " missing the --check-mode warning"
+        )

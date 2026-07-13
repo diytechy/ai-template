@@ -16,7 +16,10 @@
 #   --check    (default) report what's present; install nothing.
 #   --install  create ./.venv (ruff + pytest + pytest-cov + pytest-xdist, asks first) AND wire
 #              the pre-commit process floor (core.hooksPath=.githooks; local +
-#              reversible).
+#              reversible). Then OFFERS the agent CLIs (claude, opencode) — each
+#              its own [y/N] (WI-112): most users want the agentic workflow, but
+#              both are deferrable for someone driving sessions with their own
+#              tools or an IDE extension.
 #
 # Windows contributors: use scripts/dev-setup.ps1.
 set -eu
@@ -44,6 +47,27 @@ real() {
 report() { # <label> <present:0/1> <hint>
   if [ "$2" -eq 1 ]; then echo "  [ok]      $1"; else echo "  [missing] $1  — $3"; fi
 }
+offer_cli() { # <cmd> <npm package> <post-install sign-in hint>  (--install helper, WI-112)
+  # One consented offer per agent CLI — never implicit. `read` guarded so a
+  # non-interactive run (stdin closed) declines gracefully instead of dying.
+  have "$1" && return 0
+  if ! have npm; then
+    echo "  [skip] $1 — npm not found; install Node.js first, or install $1 your own way."
+    return 0
+  fi
+  printf 'Install the %s CLI now (npm install -g %s)? [y/N] ' "$1" "$2"
+  read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      if npm install -g "$2" && have "$1"; then
+        echo "  [ok] $1 installed — $3"
+      else
+        echo "  [warn] $1 is still not on PATH — check the npm global bin dir is on PATH, then: $3"
+      fi
+      ;;
+    *) echo "  Skipped $1 — fine if you use your own tools or an IDE extension." ;;
+  esac
+}
 
 # Prefer the project venv --install creates, so the report reflects what the
 # harness will actually import; fall back to the ambient interpreter.
@@ -67,7 +91,14 @@ report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPa
 
 if [ "$MODE" = "check" ]; then
   echo
-  echo "To install ruff + pytest + pytest-cov + pytest-xdist into ./.venv: sh scripts/dev-setup.sh --install"
+  if ! have claude || ! have opencode; then
+    echo "note: agent CLI(s) missing above — agent-resume.* cannot boot the unattended"
+    echo "loop while docs/agents-enabled lists their rows (preflight refuses, naming"
+    echo "each gap + hint). --install offers each CLI, individually consented;"
+    echo "skipping is fine with your own tools / an IDE extension."
+    echo
+  fi
+  echo "To install the Python dev tools into ./.venv (and be offered the agent CLIs): sh scripts/dev-setup.sh --install"
   exit 0
 fi
 
@@ -82,27 +113,43 @@ if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null
   git config core.hooksPath .githooks
   echo "Enabled pre-commit floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
 fi
-# Delta-aware fast path (WI-111): --install must never initiate an unnecessary
-# install. When ./.venv already imports all four dev tools, report and stop —
-# before the prompt AND before the unconditional `pip install --upgrade pip`
-# that used to run on every consented pass. (The floor wiring above still ran:
-# local git config, idempotent, not an install. The agent CLIs are hint-only
-# rows above — never auto-installed under any mode.)
+# Delta-aware venv section (WI-111): --install must never initiate an
+# unnecessary install. When ./.venv already imports all four dev tools, skip
+# this whole section — no prompt AND no unconditional `pip install --upgrade
+# pip`. (The floor wiring above still ran: local git config, idempotent, not
+# an install.) The agent-CLI offers below still run either way (WI-112).
 if [ -x .venv/bin/python ] && .venv/bin/python -c 'import importlib.util,sys; sys.exit(0 if all(importlib.util.find_spec(m) for m in ("ruff","pytest","pytest_cov","xdist")) else 1)' 2>/dev/null; then
   echo "All dev tools already present in ./.venv — nothing to install."
-  exit 0
+else
+  echo
+  printf 'Create ./.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N] '
+  read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      [ -d .venv ] || "$PY" -m venv .venv
+      # shellcheck disable=SC1091
+      . .venv/bin/activate
+      python -m pip install --upgrade pip
+      python -m pip install ruff pytest pytest-cov pytest-xdist
+      echo "Python dev tools installed. Run the self-tests with: python -m pytest -q"
+      ;;
+    *) echo "Skipped the Python dev-tools install." ;;
+  esac
 fi
+
+# Agent CLIs (WI-112) — individually consented, never implicit: most users
+# want the agentic workflow (agent-resume.*) easily accessible, but each CLI
+# is deferrable for someone driving sessions with their own tools or an IDE
+# extension.
 echo
-printf 'Create ./.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N] '
-read -r ans
-case "$ans" in
-  [Yy]*) ;;
-  *) echo "Cancelled."; exit 0 ;;
-esac
-[ -d .venv ] || "$PY" -m venv .venv
-# shellcheck disable=SC1091
-. .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install ruff pytest pytest-cov pytest-xdist
-echo
-echo "Done. Run the self-tests with: python -m pytest -q"
+echo "Agent CLIs (docs/agents.csv routes unattended sessions through these):"
+offer_cli claude "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
+offer_cli opencode "opencode-ai" "sign in with: opencode auth login"
+if ! have claude || ! have opencode; then
+  echo
+  echo "NOTE: docs/agents-enabled currently routes sessions through BOTH claude and"
+  echo "opencode — with either CLI missing, agent-resume.* cannot boot the walk-away"
+  echo "loop (its preflight refuses, naming each gap and its install/sign-in hint)."
+  echo "Skipping is fine if you drive sessions with your own tools or an IDE"
+  echo "extension; then trim docs/agents-enabled to the rows whose CLIs you keep."
+fi

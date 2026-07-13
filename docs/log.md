@@ -2854,3 +2854,57 @@ packages).
 floor no-op + fast-path line, **no prompt, no pip, exit 0**. Tests: textual
 fast-path assertion on both twins in `test_onboard_devsetup.py` (15 passed);
 commit bar at session end.
+
+## 2026-07-12 — WI-112: model-access verification + dev-setup per-CLI consented installs
+
+**Session (branch `derived-gate-model`; meta tooling only — no kit-shipped file,
+no spine change).** Owner asked to (a) verify agent-resume can access each model
+defined in the repo, (b) see the opencode errors, and (c) make dev-setup warn
+about missing CLIs *and* offer to install each — per-user choice, deferrable,
+with the agent-resume consequence emphasized.
+
+**Model-access verification.** The repo defines 6 rows (opus/sonnet/haiku +
+Sol/Terra/Luna); the owner's list also names **fable** (not yet registered) and
+frames the OpenAI rows as "Codex /" (the ruled route is **opencode**, WI-107/109
+sitting) — both queued as owner calls below.
+
+- **ANTHROPIC — verified LIVE.** No `claude` exists on any shell PATH on this
+  machine; the only binary is the VSCode extension's bundled
+  `…anthropic.claude-code-2.1.200…/native-binary/claude` (found via the process
+  tree). Through it, on the owner's real auth: `--model claude-fable-5`, `opus`,
+  `sonnet`, `haiku` each **exit 0 and returned the asked-for reply** (the opus
+  response attributed `claude-opus-4-8` exactly; probes ~$0.64 total). So every
+  Claude token the registry uses — plus the unregistered fable id — is
+  launchable once `claude` is on PATH (`npm install -g @anthropic-ai/claude-code`).
+- **OPENAI — demonstrated failing through the real path** (opencode not
+  installed): `sh agent-resume.sh` → preflight **exit 2, zero writes**, every
+  missing-CLI row listed WITH its WI-109 Notes hint (e.g. `agents.csv
+  [OPENAI-SOL]: CmdTemplate CLI 'opencode' is not on PATH. — GPT-5.6 flagship
+  (Sol); sign in: opencode auth login`). The mid-run surface (CLI vanishing
+  *after* preflight) shown via `run_session` → `coordinator: session error:
+  [Errno 2] No such file or directory: 'opencode'`. Live smoke of the three
+  rows awaits `opencode auth login`; per-row commands:
+  `opencode run --model openai/gpt-5.6-sol "Reply with exactly: OK"` (then
+  `-terra`, `-luna`).
+
+**dev-setup (both twins).** `--install` now **offers each agent CLI
+individually** (`offer_cli`/`Offer-Cli`: `[y/N]` per CLI → `npm install -g
+@anthropic-ai/claude-code` / `opencode-ai` → post-install sign-in hint;
+npm-absent = honest `[skip]`; `read` guarded so a non-interactive run declines
+gracefully). The WI-111 venv fast path reshaped from exit-0 to *skip-section*
+so the offers always run. Both `--check` and the post-offer path now
+**emphasize the consequence** (owner-directed): with an enabled row's CLI
+missing, `agent-resume.*` cannot boot the walk-away loop (preflight refuses,
+naming each gap + hint) — skipping is fine for a user on their own tools or an
+IDE extension; trim `docs/agents-enabled` to the rows whose CLIs you keep.
+Demoed live: `--check` note; `--install` decline path (fast-path line, both
+offers declined, NOTE block, exit 0, zero mutations).
+
+**Owner calls queued (not acted on):** (1) register **ANTHROPIC-FABLE**
+(token `claude-fable-5` verified live) — and whether fable *leads* the strong
+tier (BUILD currently routes opus; no silent model swaps); (2)
+**opencode vs codex** for the OPENAI rows (owner's phrasing said "Codex /"; the
+ruled route is opencode — a one-cell CmdTemplate change per row if re-ruled).
+
+**Tests.** Textual per-CLI-offer + npm-package + emphasis assertions on both
+twins (`test_onboard_devsetup.py`, 15 passed). Commit bar at session end.
