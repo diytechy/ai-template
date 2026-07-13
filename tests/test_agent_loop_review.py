@@ -378,3 +378,89 @@ def test_preflight_missing_cli_carries_notes_hint(managed_repo):
     assert proc.returncode == 2, proc.stdout + proc.stderr
     assert "is not on PATH" in proc.stderr
     assert "install: npm i -g opencode-ai" in proc.stderr
+
+
+# --- per-WI BuildTier pin (WI-126) --------------------------------------------
+# docs/next-wi names the WI the coordinator picks up next; that WI's BuildTier
+# column overrides the BUILD phase default as the session's STARTING tier. The
+# managed_repo registry carries a medium implementer (builda) and a strong one
+# (stronga), so a pin is observable as the model the build session was handed.
+
+
+def _write_next_wi(repo, wid):
+    (repo / "docs" / "next-wi").write_text(
+        "# the WI the coordinator picks up next (WI-126)\n{}\n".format(wid),
+        encoding="utf-8",
+    )
+
+
+def _write_work_items(repo, rows):
+    # A minimal work-items.csv the pin reads by name (WI-ID + BuildTier); rows is
+    # a list of (wi-id, build-tier).
+    req = repo / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    body = "\n".join("{},{}".format(w, t) for (w, t) in rows)
+    (req / "work-items.csv").write_text(
+        "WI-ID,BuildTier\n" + body + "\n", encoding="utf-8"
+    )
+
+
+def test_build_tier_pin_routes_the_build_session(managed_repo):
+    # (a) pin honored: next-wi + a BuildTier=strong row routes BUILD to the
+    # pinned tier's model (stronga), not the medium phase default (builda).
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    _write_work_items(repo, [("WI-200", "strong")])
+    _write_next_wi(repo, "WI-200")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    models = _models(ctl)
+    assert "stronga" in models and "builda" not in models, models
+    assert "BuildTier pin WI-200 -> starting tier strong" in proc.stdout
+
+
+def test_build_tier_pin_absent_is_unchanged_routing(managed_repo):
+    # (b) pin absent: the BuildTier column exists but NO docs/next-wi pointer,
+    # so it is never consulted — BUILD rides the medium default (builda),
+    # byte-identical to today, and no pin line prints.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    _write_work_items(repo, [("WI-200", "strong")])  # pinnable, but unpinned
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    models = _models(ctl)
+    assert "builda" in models and "stronga" not in models, models
+    assert "BuildTier pin" not in proc.stdout
+
+
+def test_build_tier_pin_bad_value_warns_and_falls_back(managed_repo):
+    # (c) bad value: a BuildTier the tier vocabulary does not know is LOUD but
+    # never fatal — a warning line to stdout, phase default still routes.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    _write_work_items(repo, [("WI-200", "turbo")])
+    _write_next_wi(repo, "WI-200")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "is not one of" in proc.stdout
+    assert "using the phase default" in proc.stdout
+    models = _models(ctl)
+    assert "builda" in models and "stronga" not in models, models
+
+
+def test_build_tier_pin_unknown_wi_warns_and_falls_back(managed_repo):
+    # (d) unknown WI id: docs/next-wi naming a WI with no registry row is the
+    # same loud-fallback — warn to stdout, phase default routes, no crash.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    _write_work_items(repo, [("WI-200", "strong")])
+    _write_next_wi(repo, "WI-404")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "no such WI-ID row" in proc.stdout
+    models = _models(ctl)
+    assert "builda" in models and "stronga" not in models, models

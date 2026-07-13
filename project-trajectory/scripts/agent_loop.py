@@ -581,6 +581,47 @@ def phase_tier(phase, tier_map):
     return DEFAULT_PHASE_TIER.get(phase, "strong")
 
 
+def build_tier_pin(next_wi_path, work_items_path):
+    """The per-WI starting-tier pin (WI-126). `docs/next-wi` (the declared-file
+    idiom, driver-maintained alongside status.md's Next action) names the WI the
+    coordinator expects to pick up next; that WI's `BuildTier` column in
+    docs/requirements/work-items.csv, when set to a valid tier, is the BUILD
+    session's STARTING tier in place of the phase default — the escalation
+    override (tier-up-never-down) still wins AFTER it, so a pin never caps
+    escalation. Returns (tier, note): a tier to apply plus the loud line to log;
+    (None, None) when nothing is pinned (absent/empty file, no matching row, or an
+    empty BuildTier = the phase default, byte-identical to today); (None, warning)
+    for a bad pin — an unknown WI id, or a BuildTier that does not normalize to a
+    known tier — LOUD but never fatal, the caller falls back to the phase
+    default."""
+    wi = read_declared(next_wi_path, "")
+    if not wi:
+        return None, None
+    for row in _read_csv_rows(work_items_path):
+        if (row.get("WI-ID") or "").strip() == wi:
+            raw = (row.get("BuildTier") or "").strip()
+            if not raw:
+                return None, None  # empty BuildTier = phase default (no pin)
+            tier = agent_route.normalize_tier(raw)
+            if tier in agent_route.TIER_ORDER:
+                return tier, (
+                    "BuildTier pin {} -> starting tier {} (docs/next-wi)".format(
+                        wi, tier
+                    )
+                )
+            return None, (
+                "docs/next-wi pins {} whose BuildTier {!r} is not one of {} — "
+                "ignoring, using the phase default".format(
+                    wi, raw, "|".join(agent_route.TIER_ORDER)
+                )
+            )
+    return None, (
+        "docs/next-wi names {} but no such WI-ID row in "
+        "docs/requirements/work-items.csv — ignoring, using the phase "
+        "default".format(wi)
+    )
+
+
 def reviewer_prompt(prompt_templates, phase, verdict_path):
     """The redacted reviewer prompt for a review phase: the per-phase prompt-map
     template (a FILE the operator wired) if present, else the embedded
@@ -1775,6 +1816,18 @@ def main():
                 if last_impl_family:
                     exclude.add(last_impl_family)
             elif phase == "BUILD" or phase == "":
+                # WI-126: a per-WI BuildTier pin (docs/next-wi -> the named WI's
+                # row) sets the STARTING tier, replacing the phase default; the
+                # escalation override below still wins after it (tier-up-never-
+                # down), so a pin never caps escalation. A bad pin logs loud and
+                # falls back to the phase default (never fatal, never silent).
+                pinned, pin_note = build_tier_pin(
+                    lane / "next-wi", docs / "requirements" / "work-items.csv"
+                )
+                if pin_note:
+                    print("route [{}]: {}".format(phase or "—", pin_note))
+                if pinned:
+                    tier = pinned
                 if impl_tier_override:
                     tier = impl_tier_override
                 if impl_exclude:

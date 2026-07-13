@@ -3513,3 +3513,61 @@ filled spec = plan-ready) rather than duplicating the signal. Decision record:
 Filing only — no engine change. Commit bar (smoke, first live use):
 `pytest -q -n auto -m smoke` → `531 passed, 2 skipped in 38.53s`;
 `check_docs --stale` → `OK - 46 doc(s), 266 intra-repo link(s), 0 broken`.
+
+## 2026-07-13 — WI-126: per-WI build-tier routing (BuildTier pin + docs/next-wi)
+
+Implemented the owner proposal filed above: the unattended coordinator can now
+start a BUILD session at a per-WI tier instead of only the phase default.
+
+**What shipped.** (1) An optional `BuildTier` column (`strong|medium|quick`;
+legacy `weak` reads as `quick` via `agent_route.normalize_tier`; empty/absent =
+the phase default) on this repo's `work-items.csv` and the shipped
+`work-items.template.csv` — read by name, so it is never-breaking for every
+DictReader reader. (2) A new declared `docs/next-wi` file in the `docs/run-phase`
+idiom (comment lines + one WI id on the last line, read via the existing
+`read_declared`); the driver maintains it alongside `status.md`'s Next action.
+(3) `agent_loop.build_tier_pin()` honors the pin in **managed mode + BUILD phase
+only**: it reads `docs/next-wi` once per iteration, looks the WI up in
+`work-items.csv` via `_read_csv_rows`, and uses a valid `BuildTier` as the
+session's STARTING tier in place of the phase default, printing one loud
+`route [BUILD]: BuildTier pin …` line (the no-silent-swap rule).
+
+**Ordering (the load-bearing decision).** The pin replaces the phase default;
+the escalation override (`impl_tier_override`, tier-up-never-down) still wins
+AFTER the pin, so a pin sets where a build *starts* and never caps escalation.
+Bad states are LOUD but never fatal and never silent: an unknown WI id, or a
+`BuildTier` that does not normalize, prints one warning line and the session
+falls back to the phase default.
+
+**Plan-required flag — folded, not mechanized.** Per the spec recommendation the
+proposed plan-required boolean was NOT added as a column: a WI whose `SpecRef`
+points at a filled spec already *is* plan-ready (anti-duplication), and PLAN is
+bounce-only (zero PLAN sessions ever run here).
+
+**Docs, one home.** PROCESS_OPTIONS "Unattended operation" documents BuildTier +
+docs/next-wi in one paragraph; the session-protocol skill's "Record the work"
+gained the maintain-`docs/next-wi` line (source edited, `.claude`/`.agents`
+fan-out re-synced byte-identical, `gen_skills_index --check-agents` OK,
+frontmatter unchanged so INDEX needs no regen); both `agent-resume.{cmd,sh}`
+`AGENT_PROMPT` twins name `docs/next-wi` in the same clause. Seeded
+`docs/next-wi = WI-087` (this repo's next slice; WI-087 carries no BuildTier, so
+its routing stays byte-identical). Regenerated `docs/architecture.md` (the new
+`build_tier_pin` symbol) then `PROJECT_STATE.html`.
+
+**Deviations from spec/brief:** none. **Byte budgets:** untouched
+(AGENTS.template.md and PROCESS.md not touched; delta 0). **Meta work-items.csv
+note:** BuildTier was appended to the header only (all data rows stay 9-wide =
+empty BuildTier = phase default; DictReader fills the column by name), per the
+spec's "read by name, never-breaking".
+
+**Gate outputs (real).**
+- New tests (`tests/test_agent_loop_review.py`, reusing the `managed_repo`
+  fixture, smoke-tier): `test_build_tier_pin_routes_the_build_session`,
+  `…_absent_is_unchanged_routing`, `…_bad_value_warns_and_falls_back`,
+  `…_unknown_wi_warns_and_falls_back`.
+- Commit bar: `pytest -q -n auto -m smoke` → `535 passed, 2 skipped in 39.31s`;
+  `check_docs --stale` → `OK - 46 doc(s), 265 intra-repo link(s), 0 broken
+  (4 orphan warning(s))` (exit 0; the orphans are pre-existing —
+  iteration_index.md / review verdicts / test/report.md).
+- Close bar (full, unfiltered): `pytest -q -n auto` → `687 passed, 3 skipped in
+  56.25s`.

@@ -73,6 +73,9 @@ ruling"). New behavior needs new tests
   deliverables, **deviations from spec**, **byte deltas on budgeted files**, and
   the `pytest -q` totals (match the style already there).
 - Update `docs/status.md` to point at what's next; don't leave a stale "next".
+- Where the unattended coordinator is in use, maintain `docs/next-wi` (the next
+  WI id) alongside `status.md`'s Next action, so a managed BUILD session honors
+  that WI's `BuildTier` pin (process-options.md "Unattended operation").
 
 ## 5. Commit in this repo's style
 

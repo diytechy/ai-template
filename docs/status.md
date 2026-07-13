@@ -122,13 +122,13 @@ working surface.
        leans on). *(Its sibling proposal — the smoke-tier commit bar — was
        owner-directed and **implemented 2026-07-13**; the commit bar is now
        `pytest -q -n auto -m smoke`, full suite at close — see the Bar line
-       above and log.md.)* **WI-126** ([specs/WI-126.md](specs/WI-126.md)) —
-       owner-proposed 2026-07-13: per-WI routing hints (a `BuildTier` pin at
-       WI creation + coordinator WI-awareness via a declared `docs/next-wi`).
-       Recorded recommendation: adopt the tier pin (a real cost dial now that
-       BUILD defaults medium); fold the proposed plan-required flag into the
-       existing SpecRef semantics instead of a new column — the loop already
-       plans inline (PLAN is bounce-only; zero PLAN sessions ever run here).
+       above and log.md.)* *(The other sibling — per-WI routing hints — was
+       likewise **implemented 2026-07-13**: an optional `BuildTier` column on
+       `work-items.csv` plus a driver-maintained `docs/next-wi` the managed
+       coordinator reads to set a BUILD session's starting tier, with
+       tier-up-never-down still winning after the pin; the proposed
+       plan-required flag folded into `SpecRef` semantics rather than a new
+       column — see PROCESS_OPTIONS "Unattended operation" and log.md.)*
     *(Earlier items 3–5 resolved 2026-07-12 — the WI-DAG soft-edge sweep,
     the already-made sibling-repo ruling, and the guardrails-batch review;
     see [log.md](log.md). The 2026-07-12 deep-review items are ruled and filed

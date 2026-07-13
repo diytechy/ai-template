@@ -663,6 +663,26 @@ behavior**, so a fresh scaffold pays nothing.
   and a cooled or preflight-failed row's Notes is echoed at the failure point —
   put the provider's install/sign-in hint there (e.g. `opencode auth login`),
   so an exhausted pool says what to *do*, not just that it paged.
+- **Per-WI build-tier pin (`docs/next-wi` + a `BuildTier` column; WI-126).**
+  Tier is otherwise per-*phase*, so a docs-only WI and a spine-critical engine WI
+  both ride the BUILD default. An **optional `BuildTier` column** on
+  `work-items.csv` (`strong|medium|quick`, legacy `weak` reads as `quick`;
+  empty/absent = the phase default) names a WI's *starting* build tier, and a
+  **declared `docs/next-wi`** file (the `run-phase` idiom — comment lines + one WI
+  id on the last line) tells the coordinator which WI it is about to build. In
+  managed mode's BUILD branch the loop reads `docs/next-wi` once per iteration,
+  looks that WI up in `work-items.csv`, and — when its `BuildTier` is a valid tier
+  — uses it as the session's starting tier **in place of the phase default**,
+  logging one loud line (no silent swap). It **composes with
+  tier-up-never-down**: the pin sets where a build *starts*; a contested review
+  still escalates above it, so a pin never caps escalation. A bad state (an absent
+  file, an unknown WI id, or a `BuildTier` that doesn't normalize) is loud but
+  never fatal — one warning line, then the phase default. The **driver maintains
+  `docs/next-wi`** alongside `status.md`'s Next action; absent, it is
+  byte-identical to phase-only routing (never-breaking). The *plan-required* half
+  of the original proposal is deliberately **not** a column: a WI whose `SpecRef`
+  points at a filled spec already *is* plan-ready (the anti-duplication rule), and
+  PLAN is bounce-only, so the coordinator never needs a parallel boolean.
 - **Reviewer independence (the evidence-backed core).** Reviewers are fresh
   sessions, **two families, at least one differing from the implementer's —
   *preferred, not required*** (family = who trained the model, so a router-fronted
