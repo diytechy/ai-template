@@ -6,7 +6,9 @@
 # for the meta-repo's own stack, so the kit provisions itself: Python 3.8+, ruff
 # (format), pytest + pytest-cov (the self-test suite and the harness's coverage
 # step), pytest-xdist (`-n auto` parallel execution — the declared test command,
-# WI-075), and an offline Mermaid renderer for the generated diagrams.
+# WI-075), an offline Mermaid renderer for the generated diagrams, and the two
+# agent CLIs the unattended layer routes through — claude + opencode
+# (docs/agents.csv pair rows; preflight-enforced at agent-resume boot, WI-109).
 # Consent-first: the default only reports; -Install acts.
 #
 # Usage:  powershell -ExecutionPolicy Bypass -File scripts\dev-setup.ps1 [-Check | -Install]
@@ -46,6 +48,13 @@ try {
     Report "pytest (self-tests)" (HasModule "pytest") "pip install pytest (or run -Install)"
     Report "pytest-cov (harness coverage step)" (HasModule "pytest_cov") "pip install pytest-cov (or run -Install)"
     Report "pytest-xdist (parallel -n auto)" (HasModule "xdist") "pip install pytest-xdist (or run -Install)"
+    # The agent CLIs docs/agents.csv routes through (WI-109) — required for the
+    # unattended layer (agent_loop preflight refuses to boot without an enabled
+    # row's CLI); everything above still works without them.
+    Report "claude CLI (agent sessions: agent-resume.*)" (Have "claude") `
+        "npm install -g @anthropic-ai/claude-code; then run claude once to sign in"
+    Report "opencode CLI (the OPENAI-* rows in docs/agents.csv)" (Have "opencode") `
+        "npm install -g opencode-ai (or see opencode.ai); then: opencode auth login"
     Report "offline Mermaid renderer" ((Have "code") -or (Have "mmdc") -or (Have "npx")) `
         "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
     $hooksPath = (git config --get core.hooksPath 2>$null)

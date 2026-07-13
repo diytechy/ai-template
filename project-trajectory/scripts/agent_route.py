@@ -473,6 +473,27 @@ def select(
     )
 
 
+def pool_context(enabled, registry, cooldowns=None, now=0.0):
+    """The enabled pool, one line per row, for a page-human/failure banner:
+    id, tier + Family, cooling-vs-available state, and the row's `Notes` cell.
+    Notes is the declared home for the provider's install/sign-in hint (e.g.
+    `sign in: opencode auth login`), so an exhausted pool tells the human what
+    to actually DO — the kit itself stays provider-neutral. Lenient: an enabled
+    id missing from the registry (can't happen past preflight) still renders."""
+    cooldowns = cooldowns or {}
+    lines = ["enabled pool (docs/agents-enabled x docs/agents.csv):"]
+    for mid in enabled:
+        m = registry.get(mid)
+        if m is None:
+            lines.append("  - {} (not in docs/agents.csv)".format(mid))
+            continue
+        wait = cooldowns.get(mid, 0.0) - now
+        state = "cooling ~{}s".format(int(wait)) if wait > 0 else "available"
+        note = " — {}".format(m.notes) if m.notes else ""
+        lines.append("  - {} [{}, {}] {}{}".format(mid, m.tier, m.family, state, note))
+    return "\n".join(lines)
+
+
 def load_constants(env=None):
     """The escalation constants: the per-repo-overridable defaults, each read from
     its env var when set to a valid non-negative int, else the default (a bad

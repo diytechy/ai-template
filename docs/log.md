@@ -2759,3 +2759,74 @@ precedent).
 **Needs owner.** The single-ratify enablement review (the single attest) — the
 third `Needs <human>` item now in status.md, alongside the standing push decision
 and the derived-gate-campaign G3 re-attestation.
+
+## 2026-07-12 — WI-109: cross-provider enablement (GPT-5.6 via opencode) + routing failure context; WI-110 filed (deferred)
+
+**Session (branch `derived-gate-model`; no spine change, no byte-budgeted file
+touched).** Owner-directed, the sitting after the WI-107 enablement: require
+`claude` + `opencode` as dev tools, register the GPT-5.6 family through
+opencode, prompt for sign-in when models fail, pin claude effort high, and file
+the effort-selection mechanization as deferred future work. Owner's parallel
+question answered in-session: the root `docs/run-phase` is only the single-lane
+surface — parallel workstreams each get `docs/tracks/<name>/run-phase` (+
+run-state/status/log/iteration) on their own `llm/<name>` branch/worktree, so
+phase state never thrashes across streams (PROCESS_OPTIONS "Parallel tracks").
+
+**External facts verified before baking in** (post-cutoff, web-checked): the
+GPT-5.6 family GA'd 2026-07-09 — explicit ids `gpt-5.6-sol` (flagship),
+`gpt-5.6-terra` (balanced), `gpt-5.6-luna` (fast/affordable); bare `gpt-5.6`
+aliases to Sol. opencode: `opencode run --model provider/model` non-interactive,
+`opencode auth login` for credentials. claude CLI: `--effort low|medium|high|max`
+(session-scoped, works with `-p`); env `CLAUDE_CODE_EFFORT_LEVEL` additionally
+accepts `xhigh` on Opus 4.8/4.7 — **default is already `high` on Opus 4.8**.
+
+**Registry (`docs/agents.csv` → 6 rows / 2 families).** +`OPENAI-SOL`/`-TERRA`/
+`-LUNA` (Version 5.6, strong/medium/weak — the owner's strong/medium/quick)
+via `opencode run --model openai/{model} {prompt}`; ANTHROPIC rows gain
+`Env=CLAUDE_CODE_EFFORT_LEVEL=high` (env-var over `--effort` flag: unread var =
+no-op on older CLIs, unknown flag = failed session) + sign-in Notes.
+`docs/agents-enabled` → the 6 ids, ANTHROPIC-preferred per tier. Reviews now
+route **cross-family**: verified on the real config — BUILD/PLAN→opus (effort
+env merged into the launch env), REVIEW-A→gpt-5.6-terra (not degraded),
+CRITIQUE→gpt-5.6-sol; 6/6 resolve, 0 errors.
+
+**Dev tools (meta `scripts/dev-setup.{sh,ps1}`).** `claude` + `opencode` named
+required rows with install + sign-in hints (`npm install -g
+@anthropic-ai/claude-code` / `npm install -g opencode-ai`; `opencode auth
+login`). Report-only `--check` stays exit-0/consent-first — the loop's managed
+preflight is the hard enforcement point. Kit templates untouched (a downstream
+repo declares its own agent CLIs). Live run on this box: both rows `[missing]`
+(honest — neither is on the sandbox PATH), everything else `[ok]`.
+
+**Failure context (kit code — the one behavior change).** The registry `Notes`
+column is now the declared home for install/sign-in hints, echoed at the three
+failure points: (1) managed-preflight missing CLI (`… is not on PATH. — <notes>`),
+(2) the ERROR/TIMEOUT cooldown — **previously silent** (the WAITING/no-verdict
+siblings already printed) — now `route: <id> session outcome=… (exit N); cooled
+~Ns, re-routing — <notes>`, and (3) the NEEDS-HUMAN no-routable page, which
+renders the whole enabled pool per row (tier, family, cooling state, Notes) via
+new `agent_route.pool_context()`. Kit stays provider-neutral — no provider
+names in kit code; hints are registry data. PROCESS_OPTIONS routing bullet
++1 sentence (unbudgeted doc). No spine change: message surface within SR-045's
+existing selection-logging claim (the WI-084 precedent).
+
+**WI-110 filed (deferred, `~WI-109`).** Effort-level selection
+([specs/WI-110.md](specs/WI-110.md)): the `xhigh` ("very high") live experiment
+before any dial-up, a per-phase `AGENT_EFFORT_MAP` sibling of the tier map
+(the WI-049 "Per-phase effort" framing + its fabrication caution), and
+evidence-gated computed selection. The static `high` pin stands meanwhile.
+
+**Tests.** `test_agent_route.py::test_pool_context_lists_state_and_notes`;
+`test_agent_loop_review.py::test_no_routable_model_pages_with_pool_context` +
+`::test_preflight_missing_cli_carries_notes_hint`;
+`test_onboard_devsetup.py` meta-root run asserts both CLI rows (+ ps1 twin
+textually). Touched-module suites 90 passed pre-regen.
+
+**Checks.** Commit bar: `pytest -q -n auto` **672 passed, 1 skipped**;
+`check_docs --stale` exit 0. Gate bar `check.py --gate G3 --jobs 0` →
+**RESULT: PASS** (first run failed only its `format` step on the new code's
+line-wrapping; `ruff format` applied — 4 files — and the full bar re-run green:
+**673 passed, coverage 90.92% ≥ 80**). **Boot order on the owner's machine:**
+install + sign in both CLIs first — `dev-setup --check` names the gaps; with
+either CLI missing, `agent-resume.*` preflight refuses loudly and now says what
+to run.

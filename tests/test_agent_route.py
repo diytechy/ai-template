@@ -393,3 +393,36 @@ def test_cli_resolves_versionless_token(tmp_path):
     assert listed.returncode == 0, listed.stdout + listed.stderr
     # The version-less token resolved to the concrete newest-GA id.
     assert "ANTHROPIC-OPUS-4.9" in listed.stdout and "ANTHROPIC" in listed.stdout
+
+
+def test_pool_context_lists_state_and_notes(tmp_path):
+    # WI-109: the page-human banner's per-row pool context — tier/family,
+    # cooling-vs-available, and the Notes cell (the declared home for the
+    # provider's sign-in/install hint). Lenient on an unknown enabled id.
+    p = tmp_path / "agents.csv"
+    p.write_text(
+        "Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes\n"
+        "OPENAI-SOL,OPENAI,gpt-5.6-sol,5.6,strong,opencode run {prompt},,"
+        "sign in: opencode auth login\n"
+        "ANTHROPIC-OPUS,ANTHROPIC,opus,4.8,strong,claude -p {prompt},,\n",
+        encoding="utf-8",
+    )
+    reg, errors = route.load_registry(p)
+    assert errors == []
+    now = 1000.0
+    ctx = route.pool_context(
+        ["OPENAI-SOL", "ANTHROPIC-OPUS", "GHOST-9"],
+        reg,
+        {"OPENAI-SOL": now + 90.0},  # cooling 90s from `now`
+        now,
+    )
+    assert "enabled pool" in ctx
+    # The cooling row carries its remaining seconds AND its Notes hint.
+    assert (
+        "OPENAI-SOL [strong, OPENAI] cooling ~90s — sign in: opencode auth login" in ctx
+    )
+    # The available row shows its state; empty Notes adds no dangling dash.
+    assert "ANTHROPIC-OPUS [strong, ANTHROPIC] available" in ctx
+    assert "available —" not in ctx
+    # An enabled id not in the registry renders honestly rather than crashing.
+    assert "GHOST-9 (not in docs/agents.csv)" in ctx

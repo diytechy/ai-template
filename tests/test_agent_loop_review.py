@@ -316,3 +316,65 @@ def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
     assert "routing: docs/agents-enabled present" not in proc.stdout
     assert "dispatch: review-policy" not in proc.stdout
     assert not (repo / "docs" / "reviews").exists()
+
+
+def test_no_routable_model_pages_with_pool_context(managed_repo):
+    # WI-109: the NEEDS-HUMAN "no routable model" banner lists the enabled pool
+    # with each row's Notes — so an exhausted/misconfigured pool tells the human
+    # what to DO (here: the opencode sign-in hint). Staged by enabling ONLY a
+    # weak row while BUILD routes medium: select() finds nothing at tier+.
+    repo, ctl, cmd = managed_repo
+    with open(
+        str(repo / "docs" / "agents.csv"), "w", encoding="utf-8", newline=""
+    ) as fh:
+        csv.writer(fh).writerows(
+            [
+                [
+                    "Id",
+                    "Family",
+                    "Model",
+                    "Version",
+                    "Tier",
+                    "CmdTemplate",
+                    "Env",
+                    "Notes",
+                ],
+                [
+                    "OPENAI-LUNA",
+                    "OPENAI",
+                    "gpt-5.6-luna",
+                    "5.6",
+                    "weak",
+                    cmd,  # launchable (preflight checks it) — just never routable
+                    "",
+                    "sign in: opencode auth login",
+                ],
+            ]
+        )
+    (repo / "docs" / "agents-enabled").write_text("OPENAI-LUNA\n", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 7, proc.stdout + proc.stderr
+    assert "no routable model" in proc.stdout
+    assert "enabled pool" in proc.stdout
+    assert "sign in: opencode auth login" in proc.stdout
+    assert (repo / "docs" / "run-state").read_text(
+        encoding="utf-8"
+    ).strip() == "NEEDS-HUMAN"
+
+
+def test_preflight_missing_cli_carries_notes_hint(managed_repo):
+    # WI-109: a registry row whose CmdTemplate CLI is absent fails preflight
+    # (unchanged) — now WITH the row's Notes install/sign-in hint appended.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "agents.csv").write_text(
+        "Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes\n"
+        "OPENAI-SOL,OPENAI,gpt-5.6-sol,5.6,strong,"
+        "definitely-not-a-cli-93135 run {prompt},,"
+        "install: npm i -g opencode-ai; then: opencode auth login\n",
+        encoding="utf-8",
+    )
+    (repo / "docs" / "agents-enabled").write_text("OPENAI-SOL\n", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "is not on PATH" in proc.stderr
+    assert "install: npm i -g opencode-ai" in proc.stderr

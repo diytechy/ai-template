@@ -34,17 +34,25 @@ working surface.
   uncontained). The
   dashboard is the root [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session
   history: [log.md](log.md).
-- **Unattended layer (enabled 2026-07-12):** the kit's walk-away loop is now
-  wired for a managed, consent-explicit run — `docs/gate-policy` =
-  **`single-ratify`** (one human attest per phase batch; register
-  [gate-policy.md](gate-policy.md)), managed routing ON via `docs/agents-enabled`
-  (3 `ANTHROPIC` pair rows in `docs/agents.csv`: opus/strong · sonnet/medium ·
-  haiku/weak — same-family reviews are the documented degraded-legal mode),
-  `docs/run-phase` = `BUILD`, `docs/guardrails-policy` = `off` (no core vendored
-  here — reason in the file), and the `agent-resume.*` twins'
-  `AGENT_MODEL_MAP`/`AGENT_TIER_MAP` (`BUILD=strong`) filled. Config layer only —
-  no spine change, **derived gate stays G3**. Routing verified: BUILD→opus,
-  reviews→sonnet, enable-list resolves 3/3.
+- **Unattended layer (enabled 2026-07-12; cross-provider same day):** the kit's
+  walk-away loop is wired for a managed, consent-explicit run —
+  `docs/gate-policy` = **`single-ratify`** (one human attest per phase batch;
+  register [gate-policy.md](gate-policy.md)), managed routing ON via
+  `docs/agents-enabled`: **6 pair rows / 2 families** in `docs/agents.csv` —
+  `ANTHROPIC` opus/sonnet/haiku via the claude CLI (Env pins
+  `CLAUDE_CODE_EFFORT_LEVEL=high`, the owner's high/very-high balance) and
+  `OPENAI` GPT-5.6 Sol/Terra/Luna via the opencode CLI — so reviews route
+  **cross-family** (build=opus → review=gpt-5.6-terra; same-family is the
+  degraded-legal fallback). Both CLIs are named required dev tools
+  (`scripts/dev-setup.sh`); failure context rides the registry `Notes`
+  (sign-in/install hints echoed at preflight, cooldown, and the no-routable
+  page). `docs/run-phase` = `BUILD`, `docs/guardrails-policy` = `off` (no core
+  vendored here — reason in the file), launcher twins'
+  `AGENT_MODEL_MAP`/`AGENT_TIER_MAP` (`BUILD=strong`) filled. No spine change —
+  **derived gate stays G3**. Routing verified on the real config: 6/6 resolve,
+  BUILD→opus (effort env merged), reviews→terra. **Before first boot:** install
+  + sign in both CLIs (`dev-setup --check` names the gaps; `opencode auth
+  login`).
 - **Open items:**
   - **Needs \<human> (the run is paused on these):**
     1. **Push decision** — `MultiRepoSupport` is local-only (~48 commits); the
@@ -151,6 +159,12 @@ working surface.
       reproduce (and therefore verify a fix against); the candidate hardening
       (xdist `loadgroup` grouping of the hook tests) is recorded, not applied
       blind. Spec: [specs/WI-108.md](specs/WI-108.md).
+    - **WI-110** — effort-level selection for agent sessions (owner-filed
+      2026-07-12 at the cross-provider sitting): the static
+      `CLAUDE_CODE_EFFORT_LEVEL=high` pin landed; deferred are the `xhigh`
+      ("very high") live experiment, a per-phase `AGENT_EFFORT_MAP` sibling of
+      the tier map, and computed selection (evidence-gated — see the un-defer
+      triggers). Spec: [specs/WI-110.md](specs/WI-110.md).
     - _(The derived-gate campaign landed 2026-07-12; its one open item is the
       owner G3 re-attestation, in **Needs \<human>** above.)_
   - **Queued (deep-review-b remediation, filed 2026-07-12 — awaiting owner

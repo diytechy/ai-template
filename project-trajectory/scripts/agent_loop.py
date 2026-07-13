@@ -1316,10 +1316,11 @@ def main():
             try:
                 exe = build_argv(m.cmd_template, "model", "prompt")[0]
                 if not (shutil.which(exe) or Path(exe).exists()):
+                    # The row's Notes is the declared install/sign-in hint —
+                    # surface it at the earliest failure point (WI-109).
                     failures.append(
-                        "agents.csv [{}]: CmdTemplate CLI {!r} is not on PATH.".format(
-                            mid, exe
-                        )
+                        "agents.csv [{}]: CmdTemplate CLI {!r} is not on "
+                        "PATH.{}".format(mid, exe, " — " + m.notes if m.notes else "")
                     )
             except (ValueError, IndexError) as exc:
                 failures.append(
@@ -1677,7 +1678,12 @@ def main():
                     status_path,
                     "NEEDS-HUMAN — no routable model",
                     reason + " (add/enable a model of this tier, or wait for a "
-                    "cooldown; the loop never silently drops to a weaker tier).",
+                    "cooldown; the loop never silently drops to a weaker tier).\n"
+                    # Per-row state + the Notes cell — the declared home for the
+                    # provider's sign-in/install hint (e.g. `opencode auth
+                    # login`), so the page says what to DO, not just that it
+                    # paged (WI-109).
+                     + agent_route.pool_context(enabled, registry, cooldowns, now),
                 )
                 return EXIT_NEEDS_HUMAN
             m = registry[route_id]
@@ -1997,6 +2003,21 @@ def main():
         elif managed and not is_review:
             if outcome in ("ERROR", "TIMEOUT"):
                 agent_route.cool(cooldowns, route_id, now, cooldown_seconds)
+                # Say WHY the pool is shrinking, at the moment it shrinks — the
+                # WAITING/no-verdict siblings already do; this path was silent.
+                # The row's Notes carries the actionable hint (auth/install),
+                # and the session log holds the full transcript (WI-109).
+                note = registry[route_id].notes
+                print(
+                    "route: {} session outcome={} (exit {}); cooled ~{}s, "
+                    "re-routing{}".format(
+                        route_id,
+                        outcome,
+                        code,
+                        int(cooldown_seconds),
+                        " — " + note if note else "",
+                    )
+                )
             elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
                 last_impl_family = route_family
                 impl_range = commits

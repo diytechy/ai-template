@@ -6,5 +6,8 @@
 # byte-for-byte — consent is this list plus the declared routing rules, and the
 # coordinator logs every selection before launch (no silent model swaps).
 ANTHROPIC-OPUS
+OPENAI-SOL
 ANTHROPIC-SONNET
+OPENAI-TERRA
 ANTHROPIC-HAIKU
+OPENAI-LUNA

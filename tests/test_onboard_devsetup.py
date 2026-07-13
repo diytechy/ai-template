@@ -233,3 +233,11 @@ def test_meta_repo_dogfoods_dev_setup():
     # parallel `-n auto` runner the meta stack.ini now declares. The report label
     # prints whether or not the module is present, so this is stable in any env.
     assert "pytest-xdist" in proc.stdout
+    # WI-109: the two agent CLIs the unattended layer routes through are named
+    # required dev tools here (the labels print [ok]/[missing] either way, so
+    # this is stable on a CI box that has neither). The ps1 twin carries the
+    # same rows (asserted textually — no PowerShell on POSIX CI).
+    assert "claude CLI" in proc.stdout
+    assert "opencode CLI" in proc.stdout
+    ps1 = (REPO_ROOT / "scripts/dev-setup.ps1").read_text(encoding="utf-8")
+    assert "claude CLI" in ps1 and "opencode CLI" in ps1

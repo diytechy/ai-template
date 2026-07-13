@@ -655,7 +655,11 @@ behavior**, so a fresh scaffold pays nothing.
   preferred tier is available the loop walks the **next tier up — never a weaker
   one**, and pages rather than silently downgrade. **Every selection and
   cooldown is logged before launch** (consent = the enabled set + these declared
-  rules).
+  rules). Failure context rides the registry's `Notes` column: the page-human
+  banner renders the enabled pool per row (tier, family, cooling state, Notes),
+  and a cooled or preflight-failed row's Notes is echoed at the failure point —
+  put the provider's install/sign-in hint there (e.g. `opencode auth login`),
+  so an exhausted pool says what to *do*, not just that it paged.
 - **Reviewer independence (the evidence-backed core).** Reviewers are fresh
   sessions, **two families, at least one differing from the implementer's —
   *preferred, not required*** (family = who trained the model, so a router-fronted

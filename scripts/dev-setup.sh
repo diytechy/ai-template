@@ -7,7 +7,9 @@
 # for the meta-repo's own stack, so the kit provisions itself: Python 3.8+, ruff
 # (format), pytest + pytest-cov (the self-test suite and the harness's coverage
 # step), pytest-xdist (`-n auto` parallel execution — the declared test command,
-# WI-075), and an offline Mermaid renderer for the generated diagrams.
+# WI-075), an offline Mermaid renderer for the generated diagrams, and the two
+# agent CLIs the unattended layer routes through — claude + opencode
+# (docs/agents.csv pair rows; preflight-enforced at agent-resume boot, WI-109).
 # Consent-first: the default only reports; --install acts.
 #
 # Usage:  sh scripts/dev-setup.sh [--check | --install]
@@ -55,6 +57,11 @@ report "ruff (format/lint)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,s
 report "pytest (self-tests)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("pytest") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest (or run --install)"
 report "pytest-cov (harness coverage step)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("pytest_cov") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest-cov (or run --install)"
 report "pytest-xdist (parallel -n auto)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("xdist") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest-xdist (or run --install)"
+# The agent CLIs docs/agents.csv routes through (WI-109) — required for the
+# unattended layer (agent_loop preflight refuses to boot without an enabled
+# row's CLI); everything above still works without them.
+report "claude CLI (agent sessions: agent-resume.*)" "$(have claude && echo 1 || echo 0)" "npm install -g @anthropic-ai/claude-code; then run claude once to sign in"
+report "opencode CLI (the OPENAI-* rows in docs/agents.csv)" "$(have opencode && echo 1 || echo 0)" "npm install -g opencode-ai (or see opencode.ai); then: opencode auth login"
 report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } && echo 1 || echo 0)" "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
 report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" "run --install, or: git config core.hooksPath .githooks"
 
