@@ -3020,3 +3020,33 @@ capability surface in §1; the reconciliation in §3), source edited →
 **Also fixed:** `docs/specs/WI-109.md` had been a warn-only orphan since its
 commit (its registry SpecRef is a CSV cell, not a doc link) — now linked from
 its log entry; orphan count back to the standing 1 (`docs/test/report.md`).
+
+## 2026-07-12 — takeoff-readiness alignment (session note; no WI — working-surface maintenance)
+
+**Owner asked: how many open WIs, is status.md correct, will `agent-resume`
+take off?** Census (mechanical): **114 WIs — 90 done, 11 queued
+(WI-085/087/097–105), 13 deferred, 0 active**; `check_trajectory --strict`
+clean (R-A…R-E). Readiness dry-run found **one real blocker + two
+attended-era stalenesses**, all fixed:
+
+- **`docs/run-state` read `NEEDS-HUMAN`** (set at an earlier pause) — the loop
+  reads it at start (agent_loop.py:1546) and exits on it, so agent-resume would
+  boot, pass preflight, and immediately park. Reset to **`RUNNING`** — honest:
+  actionable non-human backlog exists (WI-104→105→078…).
+- status.md's Needs-\<human> header said "**the run is paused on these**" —
+  true under `attended`, wrong under the declared `single-ratify` (the register
+  routes human calls to the queue and continues independent work). Reworded:
+  the owner queue; the loop pages only when nothing actionable remains.
+- status.md's WI-085/087 step said "**STOP and page the owner** (§4 G1
+  review)" — the attended-era flow. Rewritten to the single-ratify flow:
+  Draft SRs in the live spine, LLM-gate closes G1/G2 with human calls queued,
+  the owner ratifies the batch once at the phase's `[g2]` close.
+
+Preflight itself re-verified green earlier today (WI-113: 6/6 rows, exe checks
+ALL PASS, banner 6-of-6). Expected first-run behavior noted for the record:
+warn-only status-size tripwire fires (status.md ≈ 16.5 KB > 8,192 default),
+a dirty-tree reconcile note prepends if `OWNER_SCRATCHPAD.md` is uncommitted,
+run-phase `BUILD` routes `ANTHROPIC-FABLE`, a committing build schedules
+REVIEW-A on `OPENAI-TERRA` (an opencode reviewer that fails to write a verdict
+cools and re-routes to opus — self-healing), and `gpt-5.6-luna` stays unused
+by default phases (its hang is not on any takeoff path).

@@ -58,7 +58,10 @@ working surface.
   degrades to TIMEOUT→cooldown and quick still routes sonnet; retry later or
   rule an alternate id).
 - **Open items:**
-  - **Needs \<human> (the run is paused on these):**
+  - **Needs \<human> (the owner queue — human-only calls; under the declared
+    `single-ratify` gate authority the loop does NOT pause on these — it
+    continues independent backlog work per Next action and pages only when
+    nothing actionable remains):**
     1. **Push decision** — `MultiRepoSupport` is local-only (~48 commits); the
        `derived-gate-model` branch adds the derived-gate campaign on top.
     2. **G3 re-attestation** — the derived-gate campaign added **SR-049** (derived
@@ -222,10 +225,13 @@ working surface.
      bullet under Current State and its single-attest item in Needs \<human>.)*
   2. **Dashboard views re-enter at G1 as new-SR WIs — WI-085**
      ([spec](specs/WI-085.md)) **and WI-087** ([spec](specs/WI-087.md)). Draft
-     each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`; the reviewer
-     consistency sweep flags contradictions), **STOP and page the owner to sign
-     off** (§4 G1 review, [log.md](log.md)), then G2→G3 under
-     `check.py --gate G3 --phase v1`.
+     each a new `SR` (under `SN-021`/`SN-010`, `Phase=v2`, `Status=Draft`; the
+     reviewer consistency sweep flags contradictions). Gate per the declared
+     **`single-ratify`** authority ([gate-policy.md](gate-policy.md)): an
+     LLM-gate review closes G1/G2, each human call is queued as a `Needs
+     \<human>` Open item (+ provisional decision), and the owner ratifies the
+     queued batch **once at the phase's `[g2]` close** — no mid-run stop. Then
+     G3 under `check.py --gate G3 --phase v1`.
   3. **The rest of the backlog needs no new SR — proceed at G3:** WI-104 (pin
      the dev toolchain) then WI-105 (the coverage-plumbing fix, verified on the
      pinned toolchain — the review's ranked-first defect), then WI-078
