@@ -3153,3 +3153,20 @@ g1 and g2 (traceability: the 4 phase-blind orphans; trajectory --strict: done
 ids then on the working surface) — run for real, recorded here, and the
 status.md claim held back until re-verified green after this close (result
 appended below once run).
+
+**Correction + scoped-bar evidence (same sitting, follow-up commit):** the G2
+block above claimed "orphans back to 0" — at the [v2]-[g2] commit itself trace
+still counted **orphans=2**: TC-051/052 cited only their SR in `Verifies`, and
+an LLR uncited by any TC is an orphan (the TC-039 `SR;LLR` convention).
+Fixed (`Verifies=SR-050;LLR-051` / `SR-051;LLR-052`). The G3 `--strict-schema`
+pass then flagged both TCs `Automated=Yes` with no `Evidence` (the Thread-51
+false-green rule, phase-blind) — fixed with explicit planned-evidence pointers
+(`tests/test_gen_trajectory.py (planned; node paths pinned at WI-085/087
+implementation)`). After both fixes, run for real on this tree:
+
+- `trace.py --strict` → `SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0`.
+- **`check.py --gate G3 --phase v1 --jobs 0` → RESULT: PASS (14/14 steps)** —
+  incl. `tests+coverage` (640 passed, 34 skipped; coverage 91% ≥ 80 floor),
+  traceability (`--require-verified --strict-schema --phase v1`, the 2 v2 SRs
+  explicitly phase-deferred), trajectory `--strict`, and every freshness step.
+  The status.md claim ("the scoped v1 full bar") is verified, not asserted.
