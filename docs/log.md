@@ -3647,3 +3647,60 @@ PROCESS.md not touched; delta 0).
 still covers the v2 batch ratification + the pending G3 re-attestation; this
 slice's SR-051/LLR-052/TC-052 Verified cut bundles into it. `docs/next-wi` →
 **WI-104** (pin the dev toolchain); the run continues at G3.
+
+## 2026-07-13 — WI-104: pin the dev toolchain (requirements-dev.txt + CI/dev-setup consume + canary)
+
+**Why.** The 2026-07-12b review's **M6**: the kit *runtime* is dependency-free,
+but the meta-repo's own verification chain floated on **unpinned** dev tools, so
+the "same" declared command ran materially different machinery per machine — the
+concrete cost being **M9** (the flaky coverage-combine race + the ~9-point
+coverage loss lived on this box's old pytest-cov 4.1.0 while CI ran 7.x). M6 is
+the hard-edge under **WI-105** (the coverage fix, now verifiable on *one* known
+toolchain). This is a G3 backlog slice — no new SR (the pinning touches only
+meta dev tooling, not the traced spine).
+
+**What shipped.**
+- **New `requirements-dev.txt`** (repo root) with compatible-release (`~=`) pins
+  for the four tools the self-tests + gate drive: `ruff~=0.15.0`, `pytest~=8.3`,
+  `pytest-xdist~=3.6`, and a **Python-gated `pytest-cov` split** —
+  `~=7.0` on 3.9+ (the contract `conftest.py` targets) and `~=5.0` on the kit's
+  **3.8 floor** (pytest-cov 6.0 dropped 3.8). That per-Python split is the one
+  *irreducible* difference no pin can erase — and precisely why the coverage
+  plumbing must be robust across both (WI-105). Rationale + the WHY-PIN failure
+  modes live in the file header, single-homed.
+- **Consumers rewired** to `pip install -r requirements-dev.txt`: both jobs in
+  `.github/workflows/test.yml` (test + gate) and both meta dev-setup twins
+  (`scripts/dev-setup.{sh,ps1}`); the `.command` wrapper delegates unchanged.
+  The pins simply **freeze what CI already installed as "latest"** (its 3.8 leg
+  already resolved pytest 8.3 / cov 5.0, its 3.x leg 7.x) — so the pinned set was
+  already green in CI; only this local box lagged.
+- **New `.github/workflows/canary.yml`** — a **non-gating** weekly (`cron` +
+  `workflow_dispatch`) job that installs **unpinned latest** and runs
+  `ruff format --check` + `ruff check` + the suite. It preserves the
+  early-warning the unpinned CI used to give for free: an incoming ruff/pytest
+  break surfaces here as a heads-up to bump the pin, never as a surprise red on
+  a contributor's PR.
+
+**Scope boundary held.** The kit scripts stay **stdlib-only** and **nothing
+ships downstream**: `project-trajectory/scripts/setup.*` and
+`project-trajectory/ci/check.yml` are the *adopter's own* product-toolchain
+templates and were left untouched. requirements-dev.txt is a meta-repo-only file.
+No byte-budgeted file (AGENTS.template.md / PROCESS.md) touched; no spine change.
+
+**Verification — on the pinned toolchain.** Installed the pinned **3.8**
+resolution into a throwaway venv (`ruff 0.15.21`, `pytest 8.3.5`,
+`pytest-cov 5.0.0`, `pytest-xdist 3.6.1`, `coverage 7.6.1`) and ran the bars
+there, so the green is the pinned machinery's, not this box's stale 4.1.0:
+- Close bar (full, unfiltered): `pytest -q -n auto` → **695 passed, 3 skipped**
+  in 51.4s.
+- `ruff format --check` → `71 files already formatted`; `ruff check` →
+  `All checks passed!`.
+- Commit bar: `pytest -q -n auto -m smoke` → **543 passed, 2 skipped** (exit 0);
+  `check_docs --root . --stale` → exit 0, `0 broken` (the stale *hints* are
+  pre-existing, on archived review docs I did not touch).
+- `sh -n scripts/dev-setup.sh` → OK.
+
+**Not pushed** (push-policy: human). The owner queue is unchanged (push decision
++ G3 re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
+→ **WI-105** (coverage-plumbing hardening, now verifiable on the pinned
+toolchain); the run continues at G3.

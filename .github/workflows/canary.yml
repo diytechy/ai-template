@@ -1,0 +1,34 @@
+# Floating-latest canary (WI-104). The test + gate workflows install the PINNED
+# requirements-dev.txt so a tool major can't turn them red unannounced — but that
+# same pin hides *upcoming* breakage (the next ruff format-rule change, the next
+# pytest-cov contract shift). This job runs the self-tests + ruff against UNPINNED
+# latest on a schedule (and on demand), NON-gating — nothing here blocks a merge,
+# so an incoming break surfaces as a heads-up to bump the pin, not a surprise red
+# on some contributor's PR. This is the early-warning the unpinned CI used to give
+# for free, kept alive after pinning.
+name: canary-latest
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC — weekly is plenty for a heads-up.
+  workflow_dispatch: {}
+
+jobs:
+  latest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      # Deliberately UNPINNED — the whole point is to see what `latest` resolves
+      # to today and whether the suite still passes against it.
+      - name: Install latest (unpinned) dev tooling
+        run: python -m pip install ruff pytest pytest-cov pytest-xdist
+      # ruff format is the specific gate M6 flagged as most likely to drift red on
+      # a rule change, so check it explicitly alongside the suite.
+      - name: ruff format + lint (latest)
+        run: |
+          python -m ruff format --check project-trajectory/scripts tests
+          python -m ruff check project-trajectory/scripts tests
+      - name: Kit self-tests (latest)
+        run: python -m pytest -q -n auto

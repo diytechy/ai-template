@@ -252,12 +252,13 @@ working surface.
       it honest).
     - **WI-103** — PROCESS_OPTIONS byte budget + applies-when index table (M5;
       any doc *split* additionally needs an owner taste ruling).
-    - **WI-104** — pin the dev toolchain (`requirements-dev.txt`; CI +
-      dev-setup consume) (M6).
     - **WI-105** — coverage plumbing hardening: combine race + debris loop +
-      the ~9-point subprocess-coverage loss observed live (M9/L1; hard-edged
-      behind WI-104 so the fix is verified on one known toolchain). **Ranked
+      the ~9-point subprocess-coverage loss observed live (M9/L1). **Ranked
       first by the review** — the only item that makes the gate itself flaky.
+      Its hard-edge — **the dev-toolchain pin, landed 2026-07-13**
+      (`requirements-dev.txt` + CI/dev-setup consume + a non-gating `canary.yml`;
+      see log.md) — is now met, so the fix is verifiable on one known toolchain;
+      this is the backlog head (`docs/next-wi` = WI-105).
     - **WI-115** — status-currency hardening (owner-asked 2026-07-12): a
       warn-first `check_trajectory` finding when `docs/run-state` holds an
       end-state over an actionable queue (the observed agent-resume-parks-at-
@@ -268,7 +269,8 @@ working surface.
       owner taste ruling on a deliberate design, medium churn to shipped
       templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
 - **Next action — the G3 backlog (branch `derived-gate-model`; `docs/next-wi` =
-  WI-104).** Phase v2 is complete; a resume session picks up the backlog below.
+  WI-105).** Phase v2 is complete; **the dev-toolchain pin landed 2026-07-13**
+  (see log.md); a resume session picks up WI-105 next (backlog below).
   1. **Derived-gate campaign — LANDED (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the whole 8-slice campaign has shipped: the `Draft` artifact state + trace
@@ -300,11 +302,14 @@ working surface.
      (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's
      Deliverable). The v2 spine cut rides the owner single-ratify sitting above.
   3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
-     = WI-104): WI-104 (pin
-     the dev toolchain) then WI-105 (the coverage-plumbing fix, verified on the
-     pinned toolchain — the review's ranked-first defect), then WI-078
-     (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then WI-079 and
-     the remaining deep-review-b queue.
+     = WI-105): **the dev-toolchain pin DONE 2026-07-13** —
+     `requirements-dev.txt` (`~=` pins; a Python-gated pytest-cov split for the
+     3.8 floor) consumed by both `test.yml` jobs + both meta dev-setup twins,
+     plus a non-gating `canary.yml` that floats latest weekly; verified green on
+     the pinned 3.8 resolution (log.md). Next: WI-105 (the coverage-plumbing fix,
+     now verifiable on the pinned toolchain — the review's ranked-first defect),
+     then WI-078 (dupes-gate), then `main-decomposition` (WI-080 → WI-081), then
+     WI-079 and the remaining deep-review-b queue.
   Remaining owner item: the **push decision** above.
 
 ## Scope

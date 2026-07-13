@@ -130,7 +130,8 @@ else
       # shellcheck disable=SC1091
       . .venv/bin/activate
       python -m pip install --upgrade pip
-      python -m pip install ruff pytest pytest-cov pytest-xdist
+      # Pinned toolchain (requirements-dev.txt, WI-104) — same versions CI runs.
+      python -m pip install -r requirements-dev.txt
       echo "Python dev tools installed. Run the self-tests with: python -m pytest -q"
       ;;
     *) echo "Skipped the Python dev-tools install." ;;

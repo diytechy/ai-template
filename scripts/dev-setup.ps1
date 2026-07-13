@@ -105,7 +105,8 @@ try {
             if (-not (Test-Path ".venv")) { & $py -m venv .venv }
             $python = Join-Path ".venv" "Scripts\python.exe"
             & $python -m pip install --upgrade pip
-            & $python -m pip install ruff pytest pytest-cov pytest-xdist
+            # Pinned toolchain (requirements-dev.txt, WI-104) — same versions CI runs.
+            & $python -m pip install -r requirements-dev.txt
             Write-Host "Python dev tools installed. Run the self-tests with: python -m pytest -q"
         } else {
             Write-Host "Skipped the Python dev-tools install."

@@ -32,11 +32,14 @@ jobs:
           python-version: ${{ matrix.python }}
 
       # The kit scripts themselves are stdlib-only; these tools are what the
-      # harness tests drive (the same set scripts/dev-setup installs). pytest-xdist
-      # runs the suite in parallel (WI-075) — the same `-n auto` command developers
-      # and the gate job run, so all three OSes also exercise the parallel path.
+      # harness tests drive — PINNED in requirements-dev.txt (WI-104), the same
+      # file scripts/dev-setup installs, so every machine runs one machinery and
+      # a tool major can't turn the suite red unannounced (canary.yml floats
+      # latest on a schedule to catch that early). pytest-xdist runs the suite in
+      # parallel (WI-075) — the same `-n auto` command developers and the gate job
+      # run, so all three OSes also exercise the parallel path.
       - name: Install test tooling
-        run: python -m pip install ruff pytest pytest-cov pytest-xdist
+        run: python -m pip install -r requirements-dev.txt
 
       - name: Run kit self-tests
         run: python -m pytest -q -n auto
@@ -54,12 +57,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      # pytest-xdist is required here because the gate runs docs/stack.ini's
-      # declared test command, which is `pytest -q -n auto` (WI-075); check.py
-      # does not SKIP-guard the `-n` flag (only `-m <module>` / `--cov` deps), so
-      # a missing xdist would fail the tests+coverage step rather than skip.
+      # Same PINNED toolchain as the test job (requirements-dev.txt, WI-104) so
+      # the gate a contributor runs locally and the gate CI runs are the same
+      # machinery. pytest-xdist is required here because the gate runs
+      # docs/stack.ini's declared test command, which is `pytest -q -n auto`
+      # (WI-075); check.py does not SKIP-guard the `-n` flag (only `-m <module>` /
+      # `--cov` deps), so a missing xdist would fail the tests+coverage step
+      # rather than skip.
       - name: Install harness tooling
-        run: python -m pip install ruff pytest pytest-cov pytest-xdist
+        run: python -m pip install -r requirements-dev.txt
       # --jobs 0 runs the gate's independent steps concurrently (output is
       # captured per step and printed whole, so the log never interleaves);
       # the light process checks overlap the long tests+coverage step.
