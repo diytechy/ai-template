@@ -3704,3 +3704,68 @@ there, so the green is the pinned machinery's, not this box's stale 4.1.0:
 + G3 re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
 → **WI-105** (coverage-plumbing hardening, now verifiable on the pinned
 toolchain); the run continues at G3.
+
+## 2026-07-13 — WI-105: coverage-plumbing hardening (M9/L1) — verify the pin closed the race, add the missing floor
+
+**The deep-review-b's ranked-first defect, closed.** WI-105 is the M9/L1
+remediation (the 2026-07-12b review's flaky coverage-combine race + debris loop +
+the ~9-point subprocess-coverage loss). Its hard edge — **WI-104's toolchain pin**
+— had already landed; this session **measured, on the pinned toolchain, that the
+pin is the primary remedy**, then added the one guard the pin doesn't provide.
+
+**Reproduced-then-confirmed on the pinned toolchain.** The local box still runs
+the *old* combo (pytest-cov 4.1.0 / pytest 7.4.3) — exactly where the review saw
+the races — so I installed the pinned **3.8** resolution into a throwaway venv
+(`pytest 8.3.5`, `pytest-cov 5.0.0`, `coverage 7.6.1`, `xdist 3.6.1`) and ran the
+real coverage command there:
+- **Full suite → 695 passed / 3 skipped, coverage 91.23%** (not the degraded
+  81.83% the review measured on 4.1.0), **exit 0, ZERO `.coverage.*` debris** at
+  root. The combine race and the ~9-point loss **do not reproduce** on the pin.
+- **Debris self-heals:** seeded a real stale `.coverage.*` parallel file, then ran
+  a measured `-n auto` session — the stale file was **consumed** (pytest-cov
+  erases stale parallel data at session start on the pinned toolchain). So L1's
+  "leftovers join later combines" path is closed by the pin, not just masked.
+
+**The one missing safety net — a real coverage floor.** The pin fixes the race,
+but an **80** floor would still have passed the degraded **~82%** silently ("1.83
+points of plumbing luck", the review's words). So I raised
+`docs/stack.ini [coverage] threshold` **80 → 85**: a renewed silent
+subprocess-coverage loss (~91% → ~82%) now turns the gate **RED** instead of
+sneaking under 80 — the direct mechanization of the review's suggestion (4)
+("alert when measured coverage deviates far from ~90.8%"). ~6 pts of headroom on
+both pinned Pythons (91.23% here; ~90.8% documented on the 3.9+/7.x CI leg), and
+`check.py` propagates it through `--cov-fail-under` (verified it reads
+`[coverage] threshold`). Side effect, intended: an **unpinned** toolchain now
+reads ~82% and **fails** here — the red is the nudge to `dev-setup --install`
+onto the pinned tools.
+
+**Recorded the closure; declined the structural rewrite.** Documented in
+`.coveragerc` why the shared-glob path is now clean (the pin's erase-at-start) and
+that the pinned toolchain is required. **Declined** the review's suggestion (2)
+— point the subprocess children at a *dedicated* coverage data directory to
+unshare the glob structurally: pytest-cov's session-end combine only merges
+parallel files **beside its own datafile**, so a separate dir would need an
+explicit combine step that risks **dropping the subprocess coverage the 91%
+depends on**. A poor trade once the pin already makes the shared glob race-free —
+and squarely against the repo's "edit conservatively / don't break working
+plumbing" rule. The judgment is recorded in `.coveragerc` so it isn't
+re-litigated.
+
+**Scope boundary held.** Meta-only: `docs/stack.ini` + `.coveragerc`. **No
+kit-shipped file changed** — the shipped `check.py` default
+`COVERAGE_THRESHOLD = 80` is untouched (the 85 is the meta's own stack.ini
+override). No spine change; no byte-budgeted file (AGENTS.template.md /
+PROCESS.md) touched. Derived gate stays **G3**.
+
+**Verification — on the pinned venv** (the pinned machinery's green, not this
+box's stale 4.1.0):
+- Close bar (full, unfiltered, coverage on): `pytest -q -n auto --cov=… 
+  --cov-fail-under=85` → **695 passed, 3 skipped, 91.23% ≥ 85, exit 0**, 0 debris.
+- Commit bar: `pytest -q -n auto -m smoke` → **543 passed, 2 skipped**;
+  `check_docs --root . --stale` → **OK, 0 broken** (the "possibly stale" hints are
+  pre-existing, on archived review docs I did not touch).
+
+**Not pushed** (push-policy: human). The owner queue is unchanged (push decision
++ G3 re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
+→ **WI-078** (the dupes-gate + census — owner-ruled 2026-07-12, implementation
+only); the run continues at G3 on the deep-review-b backlog.

@@ -5,4 +5,4 @@
 # as the session's STARTING tier in place of the phase default (WI-126); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md's Next action.
-WI-105
+WI-078

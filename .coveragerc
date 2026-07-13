@@ -6,6 +6,23 @@
 # tests/_cov/sitecustomize.py that calls coverage.process_startup()) when
 # pytest-cov is active, sharing pytest-cov's datafile so the parallel data lands
 # in one place for the session-end combine.
+#
+# Combine race + debris (WI-105 / the 2026-07-12b review's M9/L1): children write
+# their `.coverage.*` parallel files next to pytest-cov's datafile at the repo
+# root, the same glob the xdist master erases at start and combines at end. On the
+# old-local pytest-cov 4.1.0 that shared glob raced (workers mis-erasing mid-write
+# -> WinError 32; a mid-combine delete -> FileNotFoundError INTERNALERROR), losing
+# children from the combine (~91% -> ~82%) and leaving debris behind. The WI-104
+# pin closes it: on the pinned toolchain (pytest-cov ~=7 / ~=5) the master erases
+# stale `.coverage.*` at session start (verified: a seeded stale file is consumed)
+# so an aborted run self-heals, and a full-suite run measures a clean ~91% with
+# zero debris left at root. The `[coverage] threshold = 85` in docs/stack.ini is
+# the regression sensor if that ever silently breaks again. Pointing children at a
+# dedicated data DIRECTORY (to unshare the glob structurally) was considered and
+# declined: pytest-cov's session-end combine only merges parallel files beside its
+# own datafile, so a separate dir needs an explicit combine step that risks
+# dropping the subprocess coverage the ~91% depends on — a poor trade once the pin
+# already makes the shared-glob path clean.
 [run]
 parallel = true
 # No `source` here on purpose: a child runs the scaffold's copied script from a
