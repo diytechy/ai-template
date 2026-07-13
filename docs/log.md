@@ -2908,3 +2908,56 @@ ruled route is opencode — a one-cell CmdTemplate change per row if re-ruled).
 
 **Tests.** Textual per-CLI-offer + npm-package + emphasis assertions on both
 twins (`test_onboard_devsetup.py`, 15 passed). Commit bar at session end.
+
+## 2026-07-12 — WI-113: tier rename (weak→quick) + Claude re-lineup + full re-verification
+
+**Session (branch `derived-gate-model`).** Owner-ruled: **Fable=strong,
+Opus=medium, Sonnet=quick**, and the tier vocabulary itself renamed
+**strong / medium / quick** (was `weak`). Then re-verify every defined model
+through the agent-resume machinery.
+
+**Kit (never-breaking).** `agent_route.TIER_ORDER` → `("quick","medium",
+"strong")` + new `normalize_tier()`: legacy `weak` reads as `quick` (the
+Provider→Family alias precedent), applied at `load_registry`, `select()`,
+`agent_loop.phase_tier`, and the tier-map preflight — an existing downstream
+registry or `AGENT_TIER_MAP=…=weak` stays valid. `--tier-map` help, module
+docstrings, guardrails prose, `agents.template.csv` (example row + vocabulary
+sentence), and the PROCESS_OPTIONS guardrails line updated. **No spine text
+carries the tier vocabulary** (grep-verified SR/LLR) — no re-attestation
+impact.
+
+**Meta re-lineup.** `docs/agents.csv`: **ANTHROPIC-FABLE** added
+(`claude-fable-5`, Version 5, strong — leads gate-bearing work), OPUS→medium,
+SONNET→quick, **HAIKU row dropped** (the ruled lineup is Fable/Opus/Sonnet);
+SOL/TERRA/LUNA → strong/medium/quick. `docs/agents-enabled` reordered
+(FABLE, SOL, OPUS, TERRA, SONNET, LUNA — ANTHROPIC preferred per tier).
+Launcher twins' fallback maps re-pointed (`AGENT_MODEL=claude-fable-5`;
+PLAN/BUILD/DESIGN-CHECK/CRITIQUE=claude-fable-5, REVIEW-A/B=opus);
+`docs/guardrails-policy` example haiku→sonnet/quick-tier.
+
+**Re-verification (both CLIs now installed + authed: claude 2.1.207 on PATH,
+opencode with OpenAI oauth).**
+
+- *Mechanical (the exact preflight chain):* 6/6 rows parse, 6/6 enabled
+  resolve, **preflight exe checks ALL PASS**, routing — PLAN/BUILD→FABLE,
+  REVIEW-A→TERRA (cross-family), REVIEW-B→OPUS (degraded-legal),
+  CRITIQUE→SOL; banner "6 enabled of 6 registry models".
+- *Live (the loop's own `build_argv` + `parse_env` + `run_session`, scratchpad
+  cwd):* **fable 8.0s · opus 2.2s · sonnet 2.8s** (each with
+  `CLAUDE_CODE_EFFORT_LEVEL=high` merged into the launch env) and **sol 2.9s ·
+  terra 2.4s** — all exit 0, all replied the asked-for "OK".
+- ***gpt-5.6-luna hangs today:*** the id is valid (present in `opencode
+  models`), the CLI/auth are proven by sol/terra, but two attempts (240s,
+  60s) produced **zero output** — provider/plan-side, not config. Runtime
+  impact is bounded by design: a real session would TIMEOUT → cooldown →
+  re-route (WI-109 logging), and the quick tier still routes SONNET. Options
+  recorded, not taken: retry later; owner-rule `gpt-5.6-luna-fast` as an
+  alternate pair row.
+
+**Tests.** `test_weak_is_a_legacy_alias_for_quick` (TIER_ORDER, normalize,
+legacy-`weak` registry row loads as quick, `select("weak")` works,
+`phase_tier` normalizes); the pre-existing `weak` rows in tests kept
+deliberately as living alias proofs. Routing/loop suites: **91 passed**.
+**Checks:** commit bar `pytest -q -n auto` **673 passed, 1 skipped**,
+`check_docs --stale` exit 0; gate bar `check.py --gate G3 --jobs 0` →
+**RESULT: PASS** (674 passed, coverage 90.92% ≥ 80).

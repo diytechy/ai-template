@@ -859,7 +859,7 @@ should, mutating **nothing** in the workspace.
     model matches any (e.g. `opus sonnet`). Name the weaker tier(s).
   - `all except <sub> [<sub> …]` — a **denylist**: guard everything *except*
     models matching a listed substring (e.g. `all except fable`). Name your
-    **frontier** model, and a newly added weak tier is guarded automatically —
+    **frontier** model, and a newly added quick tier is guarded automatically —
     the more rot-resistant form.
   The token is necessarily per-repo (it names a model in *this* repo's map, not
   a shared list); if it would guard none of the run's configured models — a

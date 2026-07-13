@@ -5,9 +5,11 @@
 # renaming this file returns the loop to today's AGENT_CMD/AGENT_MODEL behavior
 # byte-for-byte — consent is this list plus the declared routing rules, and the
 # coordinator logs every selection before launch (no silent model swaps).
-ANTHROPIC-OPUS
+# Owner re-lineup 2026-07-12 (WI-113): Fable leads strong; per tier the ANTHROPIC
+# row is preferred, the OPENAI sibling is the cross-family draw.
+ANTHROPIC-FABLE
 OPENAI-SOL
-ANTHROPIC-SONNET
+ANTHROPIC-OPUS
 OPENAI-TERRA
-ANTHROPIC-HAIKU
+ANTHROPIC-SONNET
 OPENAI-LUNA

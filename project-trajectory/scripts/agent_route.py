@@ -18,7 +18,8 @@ now, factor later"): identity vs access, one row per (model x route) pair.
       * ACCESS = `CmdTemplate` (`{model}`/`{prompt}` slots) + `Env`
         (`KEY=value;KEY2=value2`, merged over the inherited environment at
         launch; **empty Env = the ambient environment = today's behavior**).
-      * `Tier in {strong,medium,weak}`. **One row = one (model x route) pair** —
+      * `Tier in {strong,medium,quick}` (legacy `weak` reads as `quick` —
+        never-breaking). **One row = one (model x route) pair** —
         the table itself IS the allow matrix (no `Serves` patterns). A second
         account or a router service is a *second pair row* (distinct id, same
         Family, its own Env) — so its cooldown is independent by construction.
@@ -76,7 +77,16 @@ from pathlib import Path
 
 # Tier strength, ascending. Selection never picks a WEAKER tier than requested
 # (a hard rule: cheap-is-not-free, so an unavailable tier escalates UP).
-TIER_ORDER = ("weak", "medium", "strong")
+TIER_ORDER = ("quick", "medium", "strong")
+
+
+def normalize_tier(tier):
+    """Lowercase + the legacy alias: `weak` — the pre-rename bottom tier — reads
+    as `quick` (owner rename 2026-07-12), so an existing registry or tier-map
+    value stays valid (the Provider->Family never-breaking precedent)."""
+    t = (tier or "").strip().lower()
+    return "quick" if t == "weak" else t
+
 
 # Registry id charset: uppercase + digits + hyphen + dot, starting alphanumeric.
 # Deliberately permissive on internal structure — the id is a join key, never
@@ -223,7 +233,7 @@ def load_registry(path):
         if mid in models:
             errors.append("{}: duplicate id {!r}".format(path.name, mid))
             continue
-        tier = cell(row, "Tier").lower()
+        tier = normalize_tier(cell(row, "Tier"))
         if tier not in TIER_ORDER:
             errors.append(
                 "{}: id {!r} has tier {!r}; expected one of {}".format(
@@ -435,6 +445,7 @@ def select(
     """
     cooldowns = cooldowns or {}
     exclude = set(exclude_families or ())
+    tier = normalize_tier(tier)  # legacy `weak` selects the `quick` tier
     if tier not in TIER_ORDER:
         return None, "unknown tier {!r} (expected {})".format(
             tier, "|".join(TIER_ORDER)
@@ -529,7 +540,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False):
 
     `rounds` is the chronological history, each a dict:
       verdict          -> APPROVE | CHANGES-REQUESTED  (the merged round result)
-      tier             -> the implementer tier this round ran at (weak/medium/strong)
+      tier             -> the implementer tier this round ran at (quick/medium/strong)
       margin           -> substance margin between the two reviewers this round
       primary          -> the higher-substance family this round (for win-stay)
       contradiction    -> True when the two reviewers gave opposite verdicts

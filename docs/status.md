@@ -34,25 +34,29 @@ working surface.
   uncontained). The
   dashboard is the root [`PROJECT_STATE.html`](../PROJECT_STATE.html). Session
   history: [log.md](log.md).
-- **Unattended layer (enabled 2026-07-12; cross-provider same day):** the kit's
-  walk-away loop is wired for a managed, consent-explicit run —
+- **Unattended layer (enabled 2026-07-12; cross-provider + owner re-lineup same
+  day):** the kit's walk-away loop is wired for a managed, consent-explicit run —
   `docs/gate-policy` = **`single-ratify`** (one human attest per phase batch;
   register [gate-policy.md](gate-policy.md)), managed routing ON via
   `docs/agents-enabled`: **6 pair rows / 2 families** in `docs/agents.csv` —
-  `ANTHROPIC` opus/sonnet/haiku via the claude CLI (Env pins
-  `CLAUDE_CODE_EFFORT_LEVEL=high`, the owner's high/very-high balance) and
-  `OPENAI` GPT-5.6 Sol/Terra/Luna via the opencode CLI — so reviews route
-  **cross-family** (build=opus → review=gpt-5.6-terra; same-family is the
-  degraded-legal fallback). Both CLIs are named required dev tools
-  (`scripts/dev-setup.sh`); failure context rides the registry `Notes`
-  (sign-in/install hints echoed at preflight, cooldown, and the no-routable
-  page). `docs/run-phase` = `BUILD`, `docs/guardrails-policy` = `off` (no core
-  vendored here — reason in the file), launcher twins'
-  `AGENT_MODEL_MAP`/`AGENT_TIER_MAP` (`BUILD=strong`) filled. No spine change —
-  **derived gate stays G3**. Routing verified on the real config: 6/6 resolve,
-  BUILD→opus (effort env merged), reviews→terra. **Before first boot:** install
-  + sign in both CLIs (`dev-setup --check` names the gaps; `opencode auth
-  login`).
+  `ANTHROPIC` **Fable/Opus/Sonnet = strong/medium/quick** via the claude CLI
+  (Env pins `CLAUDE_CODE_EFFORT_LEVEL=high`) and `OPENAI` GPT-5.6
+  **Sol/Terra/Luna = strong/medium/quick** via the opencode CLI. Tier
+  vocabulary renamed **`weak`→`quick`** (kit-wide; legacy `weak` reads as
+  `quick`, never-breaking). Reviews route **cross-family** (build=fable →
+  REVIEW-A=terra; same-family is the degraded-legal fallback). Both CLIs are
+  **installed + signed in** (claude 2.1.207 on PATH; opencode OpenAI oauth);
+  dev-setup names them and `--install` offers each individually. Failure
+  context rides the registry `Notes` (echoed at preflight, cooldown, and the
+  no-routable page). `docs/run-phase` = `BUILD`, `docs/guardrails-policy` =
+  `off` (no core vendored here — reason in the file), launcher twins' fallback
+  maps re-pointed (strong=claude-fable-5, reviews=opus; `AGENT_TIER_MAP`
+  `BUILD=strong`). No spine change — **derived gate stays G3**. **Live-verified
+  through the loop's own machinery (run_session): 5/6 models replied** —
+  fable/opus/sonnet (effort env merged) + sol/terra; **gpt-5.6-luna hangs
+  today** (id valid in opencode's catalog; 2 attempts, zero output — the loop
+  degrades to TIMEOUT→cooldown and quick still routes sonnet; retry later or
+  rule an alternate id).
 - **Open items:**
   - **Needs \<human> (the run is paused on these):**
     1. **Push decision** — `MultiRepoSupport` is local-only (~48 commits); the

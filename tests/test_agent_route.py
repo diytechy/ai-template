@@ -426,3 +426,24 @@ def test_pool_context_lists_state_and_notes(tmp_path):
     assert "available —" not in ctx
     # An enabled id not in the registry renders honestly rather than crashing.
     assert "GHOST-9 (not in docs/agents.csv)" in ctx
+
+
+def test_weak_is_a_legacy_alias_for_quick(tmp_path):
+    # WI-113 (owner rename 2026-07-12): the bottom tier is `quick`; the old
+    # `weak` vocabulary still loads, validates, and selects — never-breaking
+    # (the Provider->Family precedent). REGISTRY_CSV above deliberately still
+    # says `weak`, so this doubles as the legacy-registry proof.
+    assert route.TIER_ORDER == ("quick", "medium", "strong")
+    assert route.normalize_tier("WEAK") == "quick"
+    assert route.normalize_tier(" quick ") == "quick"
+    reg, errors = _registry(tmp_path)
+    assert errors == []
+    assert reg["ANTHROPIC-HAIKU-4"].tier == "quick"  # loaded from Tier=weak
+    # Selecting BY the legacy token also works (normalized inside select()).
+    chosen, reason = route.select(["ANTHROPIC-HAIKU-4"], reg, "weak")
+    assert chosen == "ANTHROPIC-HAIKU-4", reason
+    # And a legacy tier-map value passes the loop's normalization (phase_tier).
+    from conftest import load_script
+
+    agent_loop = load_script("agent_loop")
+    assert agent_loop.phase_tier("BUILD", {"BUILD": "weak"}) == "quick"

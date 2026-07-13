@@ -45,7 +45,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `acquire_lock(lock_path)` | Take the per-worktree coordinator lock, or return an error string. |  |
 | `release_lock(lock_path)` | Drop the coordinator lock: closing the descriptor releases the OS lock. |  |
 | `guardrails_apply(policy, model)` | Whether to inject the guardrails core for a session on `model`, under |  |
-| `guardrails_core(root)` | The always-on core to prepend to a weak-tier session's prompt, or None. |  |
+| `guardrails_core(root)` | The always-on core to prepend to a quick-tier session's prompt, or None. |  |
 | `guardrails_inert(policy, models)` | True when a *guarding* policy (not off / bare all) would guard none of the |  |
 | `split_cmd(template)` | Split a command template into tokens, quote-aware but with backslash |  |
 | `build_argv(template, model, prompt)` | Substitute {model}/{prompt} per token (never through a shell, so the |  |
@@ -80,6 +80,7 @@ Contracts (interfaces): IF-044, IF-045
 
 | Public item | Summary | Implements |
 |---|---|---|
+| `normalize_tier(tier)` | Lowercase + the legacy alias: `weak` — the pre-rename bottom tier — reads |  |
 | `Model (class)` | One registry row = one (model x route) pair. The id is opaque (a join |  |
 | `load_registry(path)` | Parse docs/agents.csv into {id: Model}, plus a list of error strings for |  |
 | `parse_env(spec)` | Parse an `Env` cell (`KEY=value;KEY2=value2`) into a dict, to be merged |  |

@@ -472,7 +472,7 @@ def guardrails_apply(policy, model):
       - `all`                   -> every session.
       - `all except <sub> ...`  -> every session EXCEPT models matching a listed
                                    substring — name your frontier model(s), so a
-                                   newly added weak tier is guarded automatically.
+                                   newly added quick tier is guarded automatically.
       - `<sub> [<sub> ...]`     -> an allowlist: guard when the model matches ANY
                                    listed substring (e.g. `opus sonnet`).
     See process-options.md "Tier-conditional guardrails"."""
@@ -488,7 +488,7 @@ def guardrails_apply(policy, model):
 
 
 def guardrails_core(root):
-    """The always-on core to prepend to a weak-tier session's prompt, or None.
+    """The always-on core to prepend to a quick-tier session's prompt, or None.
     Vendored verbatim as docs/guardrails/core.md; the BEGIN/END KIT CORE block is
     extracted when present, else the whole file. Absent -> None (the caller warns
     once and runs without it — guardrails accelerate, they are not a gate)."""
@@ -573,9 +573,10 @@ def parse_model_map(spec):
 def phase_tier(phase, tier_map):
     """The routing tier for a run-phase: the declared --tier-map / AGENT_TIER_MAP
     value, else DEFAULT_PHASE_TIER, else `strong` (route an unknown phase UP —
-    cheap is not free)."""
+    cheap is not free). Declared values are normalized — legacy `weak` reads as
+    `quick` (the tier-rename alias, agent_route.normalize_tier)."""
     if phase in (tier_map or {}):
-        return tier_map[phase]
+        return agent_route.normalize_tier(tier_map[phase])
     return DEFAULT_PHASE_TIER.get(phase, "strong")
 
 
@@ -1196,7 +1197,8 @@ def main():
     ap.add_argument(
         "--tier-map",
         default=os.environ.get("AGENT_TIER_MAP", ""),
-        help='per-phase tier map "BUILD=medium,PLAN=strong" (strong|medium|weak) '
+        help='per-phase tier map "BUILD=medium,PLAN=strong" (strong|medium|quick; '
+        "legacy `weak` reads as quick) "
         "used by the docs/agents.csv router when the enable-list is present; "
         "falls back to the built-in phase->tier defaults (default: AGENT_TIER_MAP "
         "env var)",
@@ -1327,7 +1329,8 @@ def main():
                     "agents.csv [{}]: cannot parse CmdTemplate: {}".format(mid, exc)
                 )
         for ph, tier in sorted(tier_map.items()):
-            if tier not in agent_route.TIER_ORDER:
+            # normalize_tier: the legacy `weak` value stays a valid tier-map entry.
+            if agent_route.normalize_tier(tier) not in agent_route.TIER_ORDER:
                 failures.append(
                     "tier-map [{}]: {!r} is not one of {}".format(
                         ph, tier, "|".join(agent_route.TIER_ORDER)
@@ -1429,7 +1432,7 @@ def main():
         A loop-start dirty tree adds the WI-076 reconcile note ahead of the
         preamble for the first session (resume_reconcile). Returns (prompt,
         guarded); a selected-but-absent core warns once, then runs without it
-        (guardrails accelerate weak tiers, they never gate a run)."""
+        (guardrails accelerate quick tiers, they never gate a run)."""
         base = (
             resume_reconcile + track_preamble + (args.prompt if body is None else body)
         )

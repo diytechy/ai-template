@@ -24,10 +24,10 @@ REM Default model tier + per-phase map read against docs/run-phase. Kit work is
 REM gate-bearing template design — default to the strong tier. With managed
 REM routing ON (docs/agents-enabled present) the docs/agents.csv registry +
 REM AGENT_TIER_MAP below drive selection; these env maps are the declared
-REM FALLBACK (an absent enable-list = this legacy path). Values kept coherent:
-REM strong plans/builds, reviews ride medium.
-set "AGENT_MODEL=opus"
-set "AGENT_MODEL_MAP=PLAN=opus,BUILD=opus,REVIEW-A=sonnet,REVIEW-B=sonnet,DESIGN-CHECK=opus,CRITIQUE=opus"
+REM FALLBACK (an absent enable-list = this legacy path). Values kept coherent
+REM with the WI-113 lineup: strong (fable) plans/builds, reviews ride medium (opus).
+set "AGENT_MODEL=claude-fable-5"
+set "AGENT_MODEL_MAP=PLAN=claude-fable-5,BUILD=claude-fable-5,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=claude-fable-5,CRITIQUE=claude-fable-5"
 REM Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|weak).
 REM BUILD pinned strong for gate-bearing work (tier-up-never-down lets reviews
 REM ride medium safely); relaxing BUILD to medium is a later, deliberate dial

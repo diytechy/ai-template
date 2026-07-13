@@ -23,10 +23,10 @@ AGENT_CMD="claude -p {prompt} --model {model} --output-format json --dangerously
 # gate-bearing template design — default to the strong tier. With managed routing
 # ON (docs/agents-enabled present) the docs/agents.csv registry + AGENT_TIER_MAP
 # below drive selection; these env maps are the declared FALLBACK (an absent
-# enable-list = this legacy path). Values kept coherent: strong plans/builds,
-# reviews ride medium.
-AGENT_MODEL="opus"
-AGENT_MODEL_MAP="PLAN=opus,BUILD=opus,REVIEW-A=sonnet,REVIEW-B=sonnet,DESIGN-CHECK=opus,CRITIQUE=opus"
+# enable-list = this legacy path). Values kept coherent with the WI-113 lineup:
+# strong (fable) plans/builds, reviews ride medium (opus).
+AGENT_MODEL="claude-fable-5"
+AGENT_MODEL_MAP="PLAN=claude-fable-5,BUILD=claude-fable-5,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=claude-fable-5,CRITIQUE=claude-fable-5"
 # Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|weak).
 # BUILD pinned strong for gate-bearing work (tier-up-never-down lets reviews ride
 # medium safely); relaxing BUILD to medium is a later, deliberate dial turn at a
