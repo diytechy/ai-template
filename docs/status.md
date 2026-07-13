@@ -108,7 +108,8 @@ working surface.
        were ratified `Draft`→`Planned` by the G1 LLM-gate review, decomposed
        (LLR-051/052 + TC-051/052) by the G2 batch, and then Verified by the two
        dev slices, with **provisional rulings** the owner accepts or amends at
-       the single sitting: WI-087's four open questions — now **implemented as
+       the single sitting: the tiered-drill-down slice's four open questions —
+       now **implemented as
        ruled** (tier composition Phase ⊃ Workstream ⊃ WI with Campaign kept as the
        bottom-tier campaign container; grouping-primary phase encoding + per-phase
        color accent; in-place `<details>`-style expand, no zoom navigation; the
@@ -289,15 +290,15 @@ working surface.
   2. **Phase v2 dev slices — BOTH DONE (v2 at G3).** The process-view slice
      closed 2026-07-12 (the Process tab, `process_panel()` per LLR-051, TC-051's
      7 nodes, SR-050 `Verified`, seam IF-052). The **tiered drill-down slice
-     (WI-087) closed 2026-07-13**: `when_view()`/`_wi_phases()` + the shared
+     closed 2026-07-13**: `when_view()`/`_wi_phases()` + the shared
      `_campboxes`/`_wi_row`/`_wi_table` helpers give the When roadmap a
      phase ⊃ workstream ⊃ WI hierarchy (collapse at > 3 local members, campaign
      bottom tier, per-phase color accent, per-tier aggregated edges) and the
      How-SW view an expand-at-≤3/collapse-at->3 top view; LLR-052 `Implemented`,
      TC-052 `Verified` (9 pinned nodes), **SR-051 `Verified`**. The close
      regenerated the gate (v2 → G3) and passed `check.py --gate G3 --phase v1,v2`
-     (14/14). Spec archived to `docs/archive/specs/WI-087.2026-07-13.md`. The v2
-     spine cut rides the owner single-ratify sitting queued above.
+     (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's
+     Deliverable). The v2 spine cut rides the owner single-ratify sitting above.
   3. **The rest of the backlog needs no new SR — proceed at G3** (`docs/next-wi`
      = WI-104): WI-104 (pin
      the dev toolchain) then WI-105 (the coverage-plumbing fix, verified on the
