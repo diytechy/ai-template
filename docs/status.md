@@ -22,18 +22,21 @@ home elsewhere — don't restate it here:
 
 ## Current State
 
-- **Active gate:** runnable **G1** (derived — `scripts/derive_gate.py`;
-  per-phase `(default)=G3;v2=G2;v3=G1`, cached to [`docs/gate`](gate)) —
-  **phase v3 (dashboard-ux) is open** (the `[v3]-[g1]` GATE entry, log.md
-  2026-07-14) and the SR-051 rev holds v2 at G2 until re-verified. Spine self-adopted:
-  **SN=24 SR=56 LLR=52 TC=52** (the 10 SR-no-LLR/no-TC orphans are the
-  designed post-g1 window — closed by WI-135's decomposition), 52 seams,
-  5 components.
+- **Active gate:** runnable **G2** (derived — `scripts/derive_gate.py`;
+  per-phase `(default)=G3;v2=G2;v3=G2`, cached to [`docs/gate`](gate)) —
+  **phase v3 (dashboard-ux) is decomposed to G2** (the `[v3]-[g2]` batch,
+  log.md 2026-07-14): each v3 SR owns its LLR+TC, the three Critique rows own
+  their `docs/rubrics/dashboard-*.md` rubrics, and the SR-051 rev holds v2 at
+  G2 until the WI-141 dev slice re-verifies. Spine self-adopted:
+  **SN=24 SR=56 LLR=57 TC=57** (orphans=0 — the post-g1 window is closed),
+  52 seams, 5 components.
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~47 s) +
   `python project-trajectory/scripts/check_docs.py --root . --stale`, both green.
-  At slice/campaign close: the full suite `pytest -q -n auto` (~66 s) and
-  `check.py --gate G3 --phase v1` (v2 rejoins when its rev re-verifies; v3 at
-  its own close).
+  At slice/campaign close: the full suite `pytest -q -n auto` (~72 s) and
+  `check.py` at the derived gate (now **G2**; its `trajectory` step gains
+  `--strict`, so status.md must stay current — closed WI ids leave, open ones are
+  named). The whole spine rejoins `--gate G3` when the v2/v3 dev slices
+  (WI-141→144) re-verify.
 - **Run-state:** [run-state](run-state) holds the declared value (don't
   paraphrase it here); when it reads NEEDS-HUMAN its `ask:` line is the
   canonical one-line summary the stop banner headlines.
@@ -50,16 +53,22 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
+    - **OI-8** — **ratify the `[v3]-[g2]` batch** (single-ratify's one human
+      sitting at the phase g2 close): bless the decomposed v3 requirement work —
+      SR-052…056's LLR+TC, the three `docs/rubrics/dashboard-*.md` rubrics, and
+      the SR-051 rev — then the v3 dev slices run autonomously. Rec: ratify (the
+      LLM-gate consistency sweep + green floor are recorded in the g2 GATE entry,
+      [log.md](log.md)). Brief: [open-items.md](open-items.md) OI-8.
 - **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
-  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_
-  **WI-135** `[v3]-[g2]` (dashboard-ux decomposition: LLR+TC per new SR
-  **including the three Critique rows** — non-LLR-exempt per SR-047 — the
-  `docs/rubrics/dashboard-*.md` rubrics, the LLR-052/TC-052 rev for the
-  SR-051 amendment, and the dev-slice definitions; the g1 GATE entry lists
-  the soft criteria to concretize) · **WI-136** + **WI-137** (independent
-  off-spine `unattended` dev-slices — a natural `;`-batch: live console
-  lines · telemetry commit hygiene) · **WI-138** (research track + durable
-  knowledge layer, design)._
+  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ the
+  **v3 dev slices** run G2→G3 in series *after* the OI-8 sitting —
+  **WI-141** (SR-051-rev interface-wired render + descend-a-layer) →
+  **WI-142** (Process tab intake + human-decision loops) →
+  **WI-143** (decomposition render polish) →
+  **WI-144** (dashboard UI-quality pass + the SR-047 critique). Off-spine and
+  parallel-eligible independently of OI-8: **WI-136** + **WI-137** (a natural
+  `;`-batch: live console lines · telemetry commit hygiene) · **WI-138**
+  (research track + durable knowledge layer, design)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-110** in
@@ -69,14 +78,14 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** **WI-135** (`docs/next-wi`) — the `[v3]-[g2]`
-  decomposition batch closing the post-g1 window (LLRs+TCs for
-  SR-051rev/052–056, the three rubrics, dev-slice definitions); spine-touching,
-  one batch review, and the **owner's single v3 ratification sitting lands at
-  its close** (`single-ratify`). Lower-risk alternative if a smaller next step
-  is wanted: the off-spine `;`-batch **WI-136;WI-137**. The deferred
-  `main-decomposition` campaign (**WI-080→WI-081**) stays the highest-value
-  refactor but is parked (`deferred`, not queued). Owner items
+- **Next action:** **OI-8 — the owner's single v3 ratification sitting** at the
+  `[v3]-[g2]` close (run-state **NEEDS-HUMAN**; `single-ratify` defers the phase's
+  one human sign-off to here). The decomposition is committed and the mechanized
+  floor is green; once ratified, `docs/next-wi` → **WI-141** and the v3 dev slices
+  run G2→G3 in series (autonomous after). Parallel alternative the owner may
+  greenlight independently: the off-spine `;`-batch **WI-136;WI-137**. The
+  deferred `main-decomposition` campaign (**WI-080→WI-081**) stays the
+  highest-value refactor but is parked (`deferred`, not queued). Owner items
   (OI-3/OI-4/OI-7, [open-items.md](open-items.md)) don't block any of these.
 
 ## Scope

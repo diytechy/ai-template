@@ -64,3 +64,30 @@ against git and stays open, with OI-4 and OI-7._
   evidence.
 - **Recommendation (recorded):** rule only after ≥ 2 campaigns of medium-BUILD
   evidence.
+
+## OI-8 — Ratify the `[v3]-[g2]` dashboard-ux batch (single-ratify's one human sitting)
+
+- **Decision:** bless the v3 requirement work now decomposed to G2 — the single
+  human ratification `single-ratify` defers to one sitting at the phase's g2
+  close (`docs/gate-policy`; the derived-gate model §6). This is that close.
+- **What's on the table (the g2 GATE entry in [log.md](log.md) 2026-07-14 has
+  the full consistency sweep):**
+  - **SR-052…056's LLR+TC** (LLR-053…057 / TC-053…057, all `Planned`) —
+    including the three `Verification=Critique` rows SR-052/053/054, each
+    non-LLR-exempt per SR-047 so each owns an LLR + TC beside its rubric;
+  - the three intent-derived rubrics
+    `docs/rubrics/dashboard-{accessibility,uniformity,usability}.md` (the
+    concretized soft criteria: WCAG 2.1 AA contrast, the one-tab-switch task
+    list, the `MAX_TIER_COL` bound, the loop-stage 1:1 map);
+  - the **SR-051 rev** (LLR-052/TC-052 `Verified→Planned`) — interface-wired
+    Simulink render + descend-a-layer/breadcrumb, holding v2 at G2 until WI-141
+    rebuilds it.
+- **Blast radius:** unblocks the v3 dev slices (WI-141→144, series G2→G3). No
+  code shipped yet — this ratifies the *design*, not an implementation.
+- **Options:** ratify the batch (agent may record it under `single-ratify`, or
+  you sign off) · request changes to a specific SR/LLR/TC/rubric · hold.
+- **Recommendation:** ratify — the LLM-gate consistency sweep is recorded in the
+  g2 GATE entry, the mechanized floor is green (trace `--strict` orphans=0,
+  derived gate G2, full suite 719 passed), and the Critique rubrics are authored
+  from SR intent, not the TCs. After ratification, `docs/next-wi` → **WI-141**
+  and the loop resumes autonomously.

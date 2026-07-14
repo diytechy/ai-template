@@ -62,4 +62,9 @@ resource: "generated"
 | [TC-049](TC-049.md) | Run the top-view suite: an inventory over 10 modules with no containing CMPs warns plain … |
 | [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache |
 | [TC-051](TC-051.md) | Run the dashboard suite; the Process tab renders its three panels from the live registrie… |
-| [TC-052](TC-052.md) | Run the dashboard suite; with fixture registries exceeding 3 phases / workstreams / compo… |
+| [TC-052](TC-052.md) | Run the dashboard suite; with fixture registries exceeding the tier thresholds the When/H… |
+| [TC-053](TC-053.md) | A fresh, provider-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated … |
+| [TC-054](TC-054.md) | A fresh, provider-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated … |
+| [TC-055](TC-055.md) | A fresh, provider-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated … |
+| [TC-056](TC-056.md) | Run the dashboard suite; the Process tab renders both loop panels (intake loop A + human-… |
+| [TC-057](TC-057.md) | Run the dashboard suite; the tiered decomposition views render one horizontal parent->chi… |

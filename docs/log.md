@@ -4705,3 +4705,82 @@ SR-055's stage list 1:1 to panel nodes). Partial decomposition would leave the
 v3 SRs half-covered — worse than the clean designed post-g1 window. Left whole
 for a fresh full-budget BUILD session; `docs/next-wi` stays **WI-135**,
 run-state RUNNING.
+
+## 2026-07-14 — WI-135 [v3]-[g2]: dashboard-ux decomposition (v3 → G2; runnable G1 → G2)
+
+Closed the post-g1 window the WI-134 structuring batch left open. The five v3
+SRs (SR-052…056) and the reopened SR-051 rev now each own their LLR + TC, the
+three Critique rows own their rubrics, and the derived gate rose accordingly.
+**No kit-script change** — a pure spine/design decomposition.
+
+**Deliverables:**
+- **LLR-053…057 + TC-053…057** (all `Planned`) for SR-052…056 — including the
+  three `Verification=Critique` rows **SR-052/053/054**, each **non-LLR-exempt
+  per SR-047** (`trace.py`'s `llr_exempt` excludes Critique), so each owns an
+  LLR **and** a TC alongside its rubric. The Critique TCs are `Method=Critique,
+  Automated=No` (the SR-047 loop adjudicates against the rubric; the per-run
+  verdict lands in `docs/reviews/NNN-CRITIQUE.md`); the two Test rows (TC-056
+  process loops, TC-057 render polish) carry intended pytest nodes.
+- **LLR-052 + TC-052 revised `Verified → Planned`** for the SR-051 rev
+  (interface-wired Simulink render + double-click descend-a-layer/breadcrumb) —
+  the design is revised but not rebuilt, so v2 holds at G2 until WI-141.
+- **Three intent-derived rubrics** (authored from SN/SR intent, never the TC):
+  [`docs/rubrics/dashboard-accessibility.md`](rubrics/dashboard-accessibility.md),
+  [`docs/rubrics/dashboard-uniformity.md`](rubrics/dashboard-uniformity.md),
+  [`docs/rubrics/dashboard-usability.md`](rubrics/dashboard-usability.md).
+- **Soft criteria concretized** (the g1 GATE entry's list): SR-052 "readable
+  contrast" → **WCAG 2.1 AA (4.5:1 normal / 3:1 large)** anchor A4; SR-054 "one
+  tab switch" → the usability rubric's **three-task list** (T1); SR-056
+  "right-sized columns" → the **declared `MAX_TIER_COL` bound** in TC-057;
+  SR-055's stage list → **1:1 to panel nodes** in TC-056's Expected.
+- **v3 dev slices filed** (queued, series G2→G3): **WI-141** (SR-051-rev render
+  + descend) → **WI-142** (SR-055 process loops) → **WI-143** (SR-056 render
+  polish) → **WI-144** (SR-052/053/054 UI-quality pass + the SR-047 critique;
+  predecessors WI-141/142/143 so the critique judges the finished dashboard).
+
+### GATE — v3 G2 — Round 1 — 2026-07-14 (LLM-gate review under `single-ratify`)
+
+**Consistency sweep (the WI-084 reviewer charter, run by the driver LLM-gate):**
+- **Triangle coherence + orphans.** `trace.py --strict` → `SN=24 SR=56 LLR=57
+  TC=57 orphans=0 integrity=0` (the 10 post-g1 SR-no-LLR/no-TC orphans closed).
+  Every new TC cites both its SR and its LLR (`SR-05x;LLR-05y`); every new LLR
+  back-links `SR-05x` + `(see TC-05y)`.
+- **Critique modelling.** The three Critique SRs keep their LLRs (SR-047's
+  explicit non-exemption, pinned by `llr_exempt` across trace/derive_gate,
+  WI-139) — consistent with the derived-gate model §3's "LLR-exempt = Analysis/
+  Inspection/Attest" (Critique deliberately excluded because its artifact is
+  produced by code). No contradiction with the existing spine.
+- **Schema.** Closed vocabularies hold (`Verification∈{…,Critique}`, TC
+  `Tier=Full`); `Method=Critique` is free-text, `Automated=No` leaves Evidence
+  legally empty; the Test TCs' `Automated=Yes` cite pytest-node Evidence.
+- **Rubrics from intent.** Each rubric derives from the SN/SR intent with
+  numbered good/bad anchors, not the (possibly-lax) TC — the SR-047 ratchet's
+  premise.
+
+**Derived gate (the honest rise, one commit):** adding LLR+TC for the five v3
+SRs moves each to G2; `derive_gate.py` recomputes **per-phase
+`(default)=G3;v2=G2;v3=G2`, runnable G1 → G2**, drafts=0. `docs/gate` +
+`PROJECT_STATE.html` + the OKF bundle regenerated (`--check` clean); arch-map
+untouched (no code change). The close bar widens from `--gate G3 --phase v1` to
+`check.py` at the derived **G2** (its `trajectory` step gains `--strict`, so
+the SSOT-currency rules are now gating — WI-135 left status.md as a done id,
+WI-141…144 are named).
+
+**Mechanized verification (real output):**
+- Full unfiltered suite (slice-done bar): `python -m pytest -q -n auto` →
+  **719 passed, 3 skipped in 71.52s** (722 total, matching the WI-134 baseline;
+  the skip-count delta vs. that run's 34 is environmental — git/POSIX hook +
+  dev-setup tests ran in this shell). Commit-bar smoke: `565 passed, 2 skipped
+  in 43.34s`.
+- `check.py --jobs 0` at G2 → **RESULT: PASS** (derived-gate, traceability,
+  privacy, doc-navigability, design-flows, trajectory all green).
+  `check_docs --stale` exit 0, 0 broken links.
+- **Byte deltas:** no budgeted file touched (AGENTS.template.md / PROCESS.md /
+  PROCESS_OPTIONS.md unchanged) — spine CSVs, rubrics, and generated artifacts
+  only.
+
+**Owner sitting due (OI-8).** Under `single-ratify` the one human ratification
+lands at the phase's g2 close — this close. The decomposition is committed and
+the floor is green; `docs/next-wi` → **WI-141** and run-state **NEEDS-HUMAN**
+(ask: ratify the `[v3]-[g2]` batch — [open-items.md](open-items.md) OI-8). The
+v3 dev slices run autonomously after. Not pushed (`push-policy: human`).
