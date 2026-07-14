@@ -907,6 +907,11 @@ def test_telemetry_commit_is_best_effort_when_the_hook_vetoes(loop_repo):
     assert proc.returncode == 6, proc.stdout + proc.stderr  # budget, not a crash
     assert "telemetry commit skipped" in proc.stderr
     assert len(sorted((repo / "docs" / "iteration").glob("*.log"))) == 2  # on disk
+    # ...and unstaged: the veto leaves the index as before, not `A  <path>`
+    # primed to ride the next session's work commit (review 031-A).
+    staged = _git(repo, "diff", "--cached", "--name-only")
+    assert "docs/iteration" not in staged, staged
+    assert "iteration_index.md" not in staged, staged
 
 
 def test_wi_label_recorded_in_log_header_and_index(loop_repo):

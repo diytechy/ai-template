@@ -1172,10 +1172,18 @@ def commit_telemetry(root, session, label, paths):
     code, out = git(root, "status", "--porcelain", "--", *rels)
     if code != 0 or not out.strip():
         return  # unchanged bookkeeping — no empty commit
+    code, staged = git(root, "diff", "--cached", "--name-only", "--", *rels)
+    pre_staged = set(staged.splitlines()) if code == 0 else set()
     git(root, "add", "--", *rels)
     msg = "telemetry: session {} {}".format(session, label)
     code, out = git(root, "commit", "-q", "-m", msg, "--", *rels)
     if code != 0:
+        # "Exactly as before" covers the index too: a veto must not leave the
+        # bookkeeping staged for the next session's work commit to swallow.
+        # Unstage only what this add staged; anything already staged stays.
+        fresh = [r for r in rels if r.replace(os.sep, "/") not in pre_staged]
+        if fresh:
+            git(root, "reset", "-q", "--", *fresh)
         print(
             "agent_loop: telemetry commit skipped (session {}): {}".format(
                 session, (out or "").strip()[:200] or "hook veto or nothing staged"
