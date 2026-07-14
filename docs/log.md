@@ -5365,3 +5365,38 @@ produced; `gen_trajectory.py --check` reports up to date). No spine change, no
 `gen_trajectory.py` change, no byte-budgeted doc touched — reconciliation +
 owner-brief bookkeeping. Smoke bar + `check_docs --stale` below. WI-144 build
 round 1 (the 7 findings) follows.
+
+## 2026-07-14 — Reconcile 044-REVIEW-A; clear the status.md budget warning; clarify gate-policy
+
+Driver session opening WI-144 build. Reconciled the session-044 REVIEW-A residue
+(the recurring NO-COMMIT gap — tracked `docs/reviews/044-REVIEW-A.md`,
+CHANGES-REQUESTED, 3 findings, all against **docs**, not the dashboard) and its
+findings before build:
+
+- **[MINOR] status.md over budget — fixed.** The status-lint harness
+  (`check_docs.py`, warn-only) flagged `status.md is 137 lines (budget 120)`. Trimmed
+  the Active-gate, OI-11/OI-12, and Next-action prose (the last duplicated OI-12's
+  disposition, which lives in open-items.md) → **116 lines**, warning cleared. No WI
+  id token dropped: R-B requires all **27** open (queued/active/deferred) ids to
+  appear, and `check_trajectory --strict` stays clean (158 WIs, 131 done, acyclic).
+- **[MAJOR] gate-policy vs status gate value — clarified.** The finding read
+  gate-policy.md's "the derived gate stays G3" as an authoritative standing claim
+  contradicting status.md's live **G2**. Correction: `docs/gate` / `derive_gate.py`
+  is authoritative over the gate value — **not** this register (which governs only
+  the *ratifying authority*, `single-ratify`). The sentence described **WI-107's own
+  effect** (config-only, so WI-107 did not move the gate), still true; the gate later
+  moved to G2 via the unrelated `[v3]-[g2]` decomposition. Annotated the sentence to
+  say exactly that (non-normative — the ratified policy value and deviation table are
+  untouched; a fixed point forbids re-deciding a ratified decision, and this only
+  clarifies explanatory prose).
+- **[MAJOR] U5 amendment workflow — owner-gated, no action.** The finding asks the
+  U5 rubric amendment to route through an explicit reopened phase-requirement batch
+  rather than "ratify at phase-g2 close." Already the recorded plan: **OI-12** holds
+  U5 (+ phase-hue de-collision + the 3 TC-HARDEN) as **owner-gated and out of WI-144
+  build scope**; only the six rubric-*meeting* fixes are build work. The exact
+  ratification mechanism for U5 is the owner's call at the sitting — recorded, not
+  agent-decided.
+
+No spine change; no `gen_trajectory.py` change; no byte-budgeted file touched —
+reconciliation + owner-brief bookkeeping. Commit bar (smoke + `check_docs --stale`)
+below. WI-144 build round 1 (the six rubric-meeting findings) follows.

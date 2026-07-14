@@ -23,17 +23,13 @@ home elsewhere — don't restate it here:
 ## Current State
 
 - **Active gate:** runnable **G2** (derived — `scripts/derive_gate.py`;
-  per-phase `(default)=G3;v2=G3;v3=G2`, cached to [`docs/gate`](gate)) —
-  **phase v3 (dashboard-ux) is decomposed to G2** (the `[v3]-[g2]` batch,
-  log.md 2026-07-14): each v3 SR owns its LLR+TC, the three Critique rows own
-  their `docs/rubrics/dashboard-*.md` rubrics. **Phase v2 is at G3**
-  (SR-051/LLR-052/TC-052 Verified); the intake/human-decision loop panels shipped
-  2026-07-14 (SR-055/LLR-056/TC-056 Verified) and the decomposition render polish
-  shipped 2026-07-14 (SR-056/LLR-057/TC-057 Verified — right-sized columns,
-  explicit containment arrows, persistent hover). v3 stays G2 until the remaining
-  dev slice (WI-144) lands. Spine self-adopted:
-  **SN=24 SR=56 LLR=57 TC=57** (orphans=0 — the post-g1 window is closed),
-  52 seams, 5 components.
+  per-phase `(default)=G3;v2=G3;v3=G2`, cached to [`docs/gate`](gate)). **Phase
+  v3 (dashboard-ux) is decomposed to G2** (the `[v3]-[g2]` batch, log.md
+  2026-07-14): each v3 SR owns its LLR+TC; the three Critique rows own their
+  `docs/rubrics/dashboard-*.md`. **Phase v2 is at G3** (the intake/decision-loop
+  panels + decomposition render polish shipped 2026-07-14). v3 stays G2 until the
+  last dev slice (**WI-144**) lands. Spine: **SN=24 SR=56 LLR=57 TC=57**
+  (orphans=0), 52 seams, 5 components.
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~47 s) +
   `python project-trajectory/scripts/check_docs.py --root . --stale`, both green.
   At slice/campaign close: the full suite `pytest -q -n auto` (~72 s) and
@@ -58,19 +54,13 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-    - **OI-11** — disposition the **session-038 REVIEW-A** [MAJOR] (the
-      decomposition containment-arrow reading against SR-056); verified a
-      spec-interpretation call (the layer-swap drill renders one containment edge
-      per descendable block, which the code satisfies); rec: accept — the fresh
-      042 critique did **not** re-raise arrow legibility. Depth in
-      [open-items.md](open-items.md).
-    - **OI-12** — disposition the **042 CRITIQUE** (7 findings,
-      CHANGES-REQUESTED) against the SR-052/053/054 rubrics; rec: accept the
-      contrast/dead-panel/legend/glyph/grouping fixes as WI-144's remaining build
-      work (they meet already-ratified rubrics), and ratify the new **U5**
-      uniformity anchor + phase-hue palette de-collision + the 3 TC-HARDEN
-      change-intake cases at the phase-g2 close. Depth in
-      [open-items.md](open-items.md).
+    - **OI-11** — session-038 REVIEW-A [MAJOR] (containment-arrow vs SR-056);
+      rec: accept — a spec-interpretation call the code satisfies, and the 042
+      critique did not re-raise it (subsumed by OI-12).
+    - **OI-12** — 042 CRITIQUE (7 findings, CHANGES-REQUESTED) vs the
+      SR-052/053/054 rubrics; rec: accept — six rubric-meeting fixes are WI-144
+      build work; the **U5** anchor + phase-hue de-collision + 3 TC-HARDEN are
+      owner-gated (ratify at phase-g2 close). Depth in [open-items.md](open-items.md).
 - **Queued (v3 dev slices, owner intake 2026-07-13** —
   [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ **live**,
   running G2→G3 in series. The SR-051-rev interface-wired descend-a-layer render,
@@ -107,24 +97,13 @@ home elsewhere — don't restate it here:
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
 - **Next action:** **WI-144 — dashboard UI-quality pass, build round 1**
-  ([next-wi](next-wi)). The fresh provider-heterogeneous **042 CRITIQUE**
-  (SR-047's loop, armed for the first time) returned **CHANGES-REQUESTED — 7
-  findings** against `PROJECT_STATE.html` vs the SR-052/053/054 rubrics (2
-  BLOCKER: a dead When-tab detail panel + sub-4.5:1 label contrast; 4 MAJOR; 1
-  MINOR) + 3 TC-HARDEN change-intake proposals — filed as **OI-12**
-  ([open-items.md](open-items.md)). Disposition split: the contrast /
-  dead-panel / How-legend / status-glyph / knowledge-grouping fixes meet the
-  **already-ratified** rubrics (build work, provisional per the OI-8
-  amendments-are-future-WIs note); the new **U5** uniformity anchor + phase-hue
-  palette de-collision, and the 3 TC-HARDEN cases, are **owner-gated** (a rubric
-  amendment + change-intake). WI-144 stays **open** (critique CHANGES-REQUESTED);
-  it re-critiques **fresh** after the build round (never self-adjudicated).
-  [run-state](run-state) is **RUNNING**. Once WI-144 closes it rejoins the whole
-  spine to G3; then the owner-intake WIs (WI-146…151, WI-110) and the
-  research-knowledge campaign (WI-152…157). OI-3 (push), OI-4 (LICENSE), OI-7
-  (cadence), OI-12 (critique disposition) block nothing under `single-ratify` and
-  can be ruled any time. The deferred `main-decomposition` campaign
-  (**WI-080→WI-081**) stays parked (`deferred`, not queued).
+  ([next-wi](next-wi)): fix the six rubric-meeting **042 CRITIQUE** findings
+  (2 BLOCKER + 3 MAJOR + 1 MINOR, against the SR-052/053/054 rubrics) in
+  `gen_trajectory.py`, then **re-critique fresh** (never self-adjudicated) and run
+  the full gate bar at close. The full disposition and the owner-gated split (the
+  U5 uniformity anchor + phase-hue de-collision + 3 TC-HARDEN) live in **OI-12**
+  ([open-items.md](open-items.md)). [run-state](run-state) is **RUNNING**; on
+  close WI-144 rejoins the whole spine to G3.
 
 ## Scope
 
