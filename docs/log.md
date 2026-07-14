@@ -4480,3 +4480,55 @@ draft inside WI-134, not at filing; derived gate stays G3.
 **Verification.** `check_trajectory --strict` clean (138 WIs, acyclic; R-B
 satisfied for all five new ids); status.md 82 lines (S-1 budget 120);
 `check_docs` 0 broken. Commit bar at commit. No push (`push-policy: human`).
+
+## 2026-07-14 — WI-098 ; WI-103 (the first live dev-slice batch — one session, one review)
+
+**The first live use of the WI-133 dev-slice batching layer**: the owner-ruled
+off-spine pair `docs/next-wi = WI-098;WI-103`, executed in order as one session
+under one review round. Both are 2026-07-12b-review findings the 2026-07-13
+sitting ruled (OI-5, OI-6; Decisions log above).
+
+**WI-098 (H4, OI-5 `thin`).** Shipped kit scripts narrated meta-repo history
+inline (`REVIEW_GRIND_*`/`THREAD_*_REVIEW` finding codes, `AGENT_ROLES` /
+`IMPROVEMENT_PLAN` / `capability-expansion` design-doc citations, `owner-ruled
+<date>`) whose cited docs live only in `docs/archive/` and dangle for a reader;
+WI-079 strips them at *scaffold*, this thins them *in the masters*. Dropped ~40
+citations across 15 scripts, keeping the rule prose. **Kept as the retained
+pointers** (the owner ruled `thin`, not `strip entirely` which "loses the
+pointer"): the named-convention shorthand **`the F5 rule`** (20+ live uses — a
+term of art, out of the owner's named scope), the live `process.md`/
+`process-options.md` cross-refs, and the meaningful glosses. **Untouched:**
+`bootstrap.py`'s `strip_provenance` machinery documentation (it names the
+anchor patterns to explain the regexes) — which also keeps WI-079's
+`kit_hits>0` scaffold test valid.
+
+**WI-103 (M5, OI-6 `budget + index, split deferred`).** `PROCESS_OPTIONS.md`
+(~131 KB, 2× the core it optionalizes) grew unbudgeted while PROCESS.md/
+AGENTS.template.md are guarded. Added an **Applies-when index** — a 22-row
+table (one per `##` layer: trigger → what it adds) at the top, so the common
+path is scan one table, read one section. Registered the doc as **byte-watched**
+(the PROCESS.md model, not a hard test — a doc holding every opt-in layer would
+fight legitimate additions) in the `byte-budget-guard` skill (baseline
+**134,965**), synced its 2 agent copies + regenerated `skills/INDEX.csv`. The
+doc **split** (promoting the two spec-sized layers) is **deferred** per OI-6.
+
+**Follow-on surfaced (working-agreement: a spotted smell is a separate finding,
+not an inline fix):** the `the F5 rule`/`F5 convention` shorthand (20+ sites)
+is the same opaque-finding-code class as the citations WI-098 dropped, but is
+used as a named term of art; a dedicated naming cleanup (point it at a live
+home for the copy-ability rule) is a candidate future WI, not folded here.
+
+**Deviation:** none. **Byte deltas (flagged):** `PROCESS_OPTIONS.md` 130,964 →
+**134,965** (+4,001 = the index table; establishes the watched baseline);
+`AGENTS.template.md`/`PROCESS.md` unchanged; `docs/architecture.md` regenerated
+(one docstring-derived detail line, `triangle_findings`).
+
+**Verification.** Commit bar green on both commits (smoke 563 passed/2 skipped;
+`check_docs --stale` exit 0; the pre-commit floor — derived-gate, skills-sync
+10/10, trajectory, registry-integrity, okf, arch-map, format — PASS).
+**Review round:** no findings (comment/docstring + doc-table + skill diff, zero
+logic change; risk classes checked: strip_provenance coupling, the 6 verbatim
+`_utf8_console` docstrings byte-identical, no arch-map first-line drift, 0
+broken doc links). **Batch-close full suite:** `python -m pytest -q -n auto` →
+**717 passed, 3 skipped in 71.83s**. No spine change (SN=24 SR=51 LLR=52
+TC=52, 0 orphans); derived gate stays G3. No push (`push-policy: human`).

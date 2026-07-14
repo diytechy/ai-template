@@ -45,19 +45,16 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-  - **In flight** _(driver; owner-ruled scope from the sitting):_ the
-    **dev-slice batch `WI-098;WI-103`** (`docs/next-wi`; one session, one
-    review round — the first live use of the batching layer): **WI-098** (thin
-    the masters' provenance comments to log/archive pointers) then **WI-103**
-    (PROCESS_OPTIONS byte budget + applies-when index; split deferred) —
-    rulings in [log.md](log.md) Decisions.
 - **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
-  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md);
-  sequenced behind the In-flight batch):_ **WI-134** `[v3]-[g1]` + **WI-135**
-  `[v3]-[g2]` (the dashboard-ux phase: UI critique arming, ingest/human
-  process map, render polish, interface-wired diagrams) · **WI-136** (live
-  console lines) · **WI-137** (telemetry commit hygiene) · **WI-138**
-  (research track + durable knowledge layer, design)._
+  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md); the
+  off-spine batch that preceded these landed 2026-07-14, log.md):_
+  **WI-134** `[v3]-[g1]` + **WI-135** `[v3]-[g2]` (the dashboard-ux phase: UI
+  critique arming, ingest/human process map, render polish, interface-wired
+  diagrams — WI-134 opens the new **v3** phase and drafts an SR-051 rev, the
+  owner-sanctioned amendment) · **WI-136** + **WI-137** (independent off-spine
+  `unattended` dev-slices — a natural `;`-batch: live console lines · telemetry
+  commit hygiene) · **WI-138** (research track + durable knowledge layer,
+  design)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-110** in
@@ -67,9 +64,14 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** run the ruled scope as the batch `docs/next-wi` names —
-  **WI-098** then **WI-103**, one session; the remaining owner items
-  (OI-3/OI-4/OI-7, [open-items.md](open-items.md)) don't block it.
+- **Next action:** **WI-134** (`docs/next-wi`) — the owner's headline
+  dashboard-ux ask and first of the queued intake; it **opens the v3 phase**
+  (Critique-SR arming + rubrics, the process map, the SR-051 rev), so it is a
+  spine-touching g1 campaign, not a single dev-slice. Lower-risk alternative if
+  a smaller next step is wanted: the off-spine `;`-batch **WI-136;WI-137**. The
+  deferred `main-decomposition` campaign (**WI-080→WI-081**) stays the
+  highest-value refactor but is parked (`deferred`, not queued). Owner items
+  (OI-3/OI-4/OI-7, [open-items.md](open-items.md)) don't block any of these.
 
 ## Scope
 
