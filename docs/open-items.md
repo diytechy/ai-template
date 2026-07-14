@@ -94,6 +94,73 @@ against git and stays open, with OI-4 and OI-7._
   `docs/next-wi` already points at **WI-141** — and the loop resumes
   autonomously.
 
+### The batch as a tree (owner-requested view, added 2026-07-14)
+
+_The SN→SR→LLR/TC hierarchy of everything this sitting ratifies. Registry
+prose quoted as of 2026-07-14 — the registries stay canonical; this section
+dies with the ruling. (Mechanizing this view for every future ratification is
+**WI-146**.)_
+
+- **SN-024** — subjective/perceptual acceptance is adjudicated by an
+  independent critical eye against a written rubric, never by the authoring
+  session — and **SN-023** — one dashboard shows progress *and how the parts
+  connect*:
+  - **SR-052 Dashboard accessibility** (`Critique`, v3, Planned) — operable
+    and readable without a pointer or full color perception: every
+    interactive element keyboard-reachable with an accessible name; no
+    information encoded by color alone; readable text contrast.
+    - LLR-053 — `gen_trajectory.py build_html/_svg_node/_nav`: focusable
+      elements/tabindex + key handlers, title/aria names, color+shape/text
+      cues, contrast ≥ the rubric's WCAG 2.1 AA threshold.
+    - TC-053 (Critique) — fresh cross-family CRITIQUE session judges the
+      generated dashboard against `docs/rubrics/dashboard-accessibility.md`;
+      APPROVE citing anchors A1–A4.
+  - **SR-053 Dashboard UI uniformity** (`Critique`, v3, Planned) — one system
+    across tabs/views: one type scale + spacing rhythm, one status/phase/type
+    color vocabulary, uniform node/edge/legend/detail styling across the SVG
+    emitters, one interaction idiom per structure.
+    - LLR-054 — shared style constants/helpers so emitters cannot drift.
+    - TC-054 (Critique) — rubric `dashboard-uniformity.md`, anchors U1–U4.
+  - **SR-054 Dashboard usability** (`Critique`, v3, Planned) — core reading
+    tasks with low friction: project state / next work / how parts connect
+    each within **one tab switch**; legible default density (start-collapsed
+    per the >3 rule); detail without losing context; no clipped/overlapping
+    labels at default zoom.
+    - LLR-055 — landing view surfaces or one-click links each task; the task
+      list lives in `docs/rubrics/dashboard-usability.md`.
+    - TC-055 (Critique) — rubric anchors T1–T4.
+- **SN-010** — docs stay navigable and honest — and **SN-021** — a generated
+  artifact that drifts from its source is a red, not silent rot:
+  - **SR-055 Ingest and human-decision process loops** (`Test`, v3, Planned)
+    — the Process tab renders the two circular working loops: (A) intake →
+    triage-to-WI → resume loop → build/review → merge; (B) open-items
+    population (incl. the gate-ratification table) → human ruling → log
+    Decisions → merge — the LLM_Agent entry node rendered once, shared by
+    both; every stage links its canonical home; data-less repos render
+    byte-identically.
+    - LLR-056 — `process_panel/_loop_panel` extends SR-050's tab.
+    - TC-056 (Integration) — both panels, stage list 1:1 to nodes, links
+      resolve, deterministic, `--check` trips.
+  - **SR-056 Decomposition render polish** (`Test`, v3, Planned) —
+    right-sized tier columns within a declared bound; one explicit horizontal
+    parent→child arrow per containment edge; hover highlight persists on the
+    last-hovered item (no flash-on-exit).
+    - LLR-057 — `MAX_TIER_COL` per-tier width cap; stateful highlight keyed
+      to last-hovered node id.
+    - TC-057 (Integration) — one arrow per edge, width ≤ the declared bound,
+      persistent-highlight contract, deterministic.
+  - **SR-051 rev Tiered drill-down views** (`Test`, **v2**,
+    Verified→**Planned** — the owner-sanctioned reopen) — the When/How-SW
+    hierarchies render **interface-wired** (IF-### seams attach to block
+    input/output ports at every tier, cross-container seams aggregate to the
+    boundary — Simulink-style) and **double-click descends a layer** with a
+    breadcrumb return (keyboard alternative required); tiering thresholds and
+    edge aggregation unchanged; supersedes the Q3 in-place-expand ruling.
+    - LLR-052 — `when_view/_wi_phases/sw_containment/_descend`; rebuilt by
+      dev slice WI-141; v2 stays G2 until it re-verifies.
+    - TC-052 (Integration) — ports/aggregation, descend + breadcrumb +
+      keyboard path, byte-determinism, `--check` trips.
+
 ## OI-9 — Ratify the research-track + knowledge-layer design spec (WI-138)
 
 - **Decision:** bless the design in
@@ -108,7 +175,25 @@ against git and stays open, with OI-4 and OI-7._
   `PROCESS_OPTIONS.md` section) — never gating, nothing downstream must
   migrate. No spine rows change; the design deliberately reuses the existing
   CMP `Knowledge`/`DetailDoc` hooks and the WI/BuildTier machinery.
-- **Options:** ratify as specced · ratify with changed §6 calls · request
+- **Revised 2026-07-14 per your feedback** (the intake:
+  [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)) —
+  what changed in the spec before you rule:
+  - **§3b tier model:** research runs as a **strong-tier coordinator** that
+    spawns lower-tier (quick/medium) directed gatherer subagents — your
+    ruling, superseding the draft's medium default; still zero coordinator
+    changes (the fan-out is the CLI's own, governed by `docs/subagent-gate`).
+  - **§3a coupling:** knowledge packs present ⇒ the component layer is
+    expected — a warn-first check arms the existing module→component join
+    (WI-073) from knowledge presence, closing the "each implementation module
+    ties back to a component" conditional you raised.
+  - **§4.4:** meta-repo packs confirmed ON (the dogfood is required).
+  - **§4.5/§6.5–6/§8.6–7:** the kit now also **provisions** packs downstream
+    (intake item 8) — a domain-tagged library + opt-in scaffold, plus the
+    skills domains filter; import scope from the ClaudeGuardChecks staging
+    library is your §6.5/§6.6 call at this sitting.
+  - **§9 seed:** the first end-to-end research WI = the prompt→image
+    investigation (intake item 5).
+- **Options:** ratify as revised · ratify with changed §6 calls · request
   changes · hold.
 - **Recommendation:** ratify — the design builds on the already-resolved
   Thread-52 knowledge home rather than inventing a parallel surface, and every

@@ -67,6 +67,21 @@ why (one bullet each; cite ids)._
   this sitting), `MultiRepoSupport` is in sync. The brief is rewritten with the
   verify-at-read command; an open-item claim about git state must be checked
   against git, not carried forward.
+- **2026-07-14 — WI-110 RE-QUEUED (owner directive, intake item 2): opus BUILD
+  effort → `xhigh`.** The deferral ("wait for evidence") is superseded by the
+  explicit ruling; the WI executes the one-cell `Env` change
+  (`CLAUDE_CODE_EFFORT_LEVEL=xhigh` on the ANTHROPIC-OPUS row) **with**
+  before/after `s/turn` evidence via the WI-124 telemetry, and answers the
+  OpenAI side (`reasoning_effort` via opencode per-model config). Alternative
+  passed over: flipping the cell config-only in this intake session — rejected
+  so the cost delta lands with its measurement, not before it.
+- **2026-07-14 — Research-knowledge spec REVISED pre-ratification (owner
+  intake, OI-9 feedback):** §3b research = strong-tier coordinator delegating
+  to quick/medium gatherer subagents (supersedes the draft's medium default);
+  §3a knowledge⇒component coupling warn; §4.5/§6.5–6/§8.6–7 kit-provisioned
+  pack library + skills domains filter (intake item 8); §9 seed research WI =
+  the prompt→image investigation (item 5). OI-9 stays pending — the revision
+  is what the sitting now ratifies.
 
 ## Audit log
 
@@ -4915,3 +4930,71 @@ human act as an `active` WI the gated work hard-depends on.
 **Handoff.** Run-state **NEEDS-HUMAN** (`ask:` = the one sitting: OI-8 +
 OI-9); `docs/next-wi` pre-pointed at **WI-141** for the resume. Not pushed
 (`push-policy: human`).
+
+## 2026-07-14 — SESSION: owner intake (8 items) — triage + answers, briefs/spec revised, 6 WIs filed + WI-110 re-queued; NO spine change
+
+**Scope.** Owner-handed batch of eight items, triaged against the open
+registry per the change-intake flow; spec-of-record
+[specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md) (dedupe
+table + per-item answers + Done-whens). Item 1 was feedback on the **pending**
+OI-8/OI-9 briefs and was folded into those surfaces rather than filed as new
+work — the sitting stays pending and now covers the revised material.
+
+**Deliverables.**
+- **Intake spec** — answers recorded for: the ratification-view guarantee
+  ladder (warn-first lint + reviewer charter + skill text; hard-gating
+  rejected); the component web (LLR→CMP allocation, SR sets derived through
+  LLRs, the WI-073 module→component check already live — 24 modules → 5
+  components, 0 uncontained); interfaces-at-WI-time (change-intake already
+  IF/CMP-scoped; the `[g2]`-authors-IF-rows guidance rides WI-146; an
+  `IF-Refs` column deliberately not filed); model preferences (fully covered
+  by the routing stack; no new mechanism); OpenAI effort (`reasoning_effort`,
+  wired via opencode per-model config — verify in WI-110); prompt→image token
+  math (2–3× *more* expensive than text at legible resolution on area-priced
+  vision; research-WI'd, not built); throughline (process side already
+  covered; leverage = a vendorable UI-domain package pointer).
+- **OI-8 brief** — gains the owner-requested batch tree: SN-024/023 →
+  SR-052/053/054 (+LLR-053..055/TC-053..055, rubrics A/U/T anchors) and
+  SN-010/021 → SR-055/056 + the SR-051 rev (+LLR/TC), prose quoted as-of
+  today, section ephemeral. Mechanization filed as WI-146.
+- **OI-9 brief + [specs/research-knowledge.md](specs/research-knowledge.md)**
+  — revised pre-ratification per the feedback (see the Decisions entry):
+  strong-coordinator research tiering, knowledge⇒component coupling, the
+  kit-provisioned pack library + skills domains filter (§6.5/§6.6 are new
+  owner calls at the sitting), the §9 seed research WI.
+- **Registry** — filed **WI-146** (ratification package), **WI-147**
+  (graceful pause), **WI-148** (weekday blackout, default weekdays
+  12:00–19:00 UTC via scaffold, absent-file = off), **WI-149**
+  (lowest-gate-first advisory), **WI-150** (planner-assigned BuildTier),
+  **WI-151** (throughline pointer); **WI-110** deferred→queued (Decisions
+  entry). All carry **WI-145** as a hard predecessor — the WI-115 strict
+  coherence check flagged the NEEDS-HUMAN pause over a newly-actionable
+  queue, and per the WI-145 precedent the human gate is recorded in the DAG
+  rather than the check gamed. R-D also caught a done id (WI-124) in the
+  new status.md prose — reworded. Both findings fixed pre-commit; strict now
+  clean (151 WIs, 127 done, acyclic).
+- **status.md** — the 2026-07-14 queued bullet + OI-8/OI-9 one-liners note
+  the amendments; WI-110 left the deferred list.
+
+**Deviations.** None from the intake asks; two deliberate non-filings
+recorded in the spec (`IF-Refs` column; mid-loop autonomous tier-downgrade)
+with their revisit triggers.
+
+**Externals consulted.** `github.com/jrpease/throughline` (fetched);
+`C:\Projects\ClaudeGuardChecks\skill-knowledge-library` (21 skills, 6
+research packs, 8 field packs; its README already maps into this kit and
+names the domains-filter gap).
+
+**Mechanized verification (real output).**
+- Commit bar: `python -m pytest -q -n auto -m smoke` → **571 passed, 2
+  skipped in 60.56s**; `check_docs.py --root . --stale` → **OK — 67 docs,
+  323 links, 0 broken** (exit 0; pre-existing warn-tier hints only).
+- `check_trajectory --strict` → **clean (151 work item(s), 127 done (84%),
+  graph acyclic)**; `derive_gate.py --check` → **up to date (G2)**.
+- Regenerated `PROJECT_STATE.html`; `docs/okf` already up to date (OKF does
+  not ingest WI rows). No byte-budgeted file touched; no SN/SR/LLR/TC change
+  (docs + registry + specs only — proceed under the derived gate).
+
+**Handoff.** Run-state stays **NEEDS-HUMAN** on the same one sitting (OI-8 +
+OI-9, both briefs now carrying the 2026-07-14 material); `docs/next-wi`
+unchanged (WI-141). Not pushed (`push-policy: human`).

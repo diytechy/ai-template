@@ -58,9 +58,12 @@ home elsewhere — don't restate it here:
       SR-052…056's LLR+TC, the three `docs/rubrics/dashboard-*.md` rubrics, and
       the SR-051 rev — then the v3 dev slices run autonomously. Rec: ratify (the
       LLM-gate consistency sweep + green floor are recorded in the g2 GATE entry,
-      [log.md](log.md)). Brief: [open-items.md](open-items.md) OI-8.
+      [log.md](log.md)). Brief: [open-items.md](open-items.md) OI-8 — now
+      carries the owner-requested SN→SR→LLR/TC tree of the batch (2026-07-14).
     - **OI-9** — **ratify the research-track + knowledge-layer design spec**
-      ([specs/research-knowledge.md](specs/research-knowledge.md)); its §8
+      ([specs/research-knowledge.md](specs/research-knowledge.md), **revised
+      2026-07-14** per the owner's feedback — strong-tier research coordinator,
+      knowledge⇒component coupling, kit-provisioned pack library); its §8
       implementation WIs file on ratification. Rec: ratify — same sitting as
       OI-8. Brief: [open-items.md](open-items.md) OI-9.
 - **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
@@ -73,9 +76,18 @@ home elsewhere — don't restate it here:
   track's implementation WIs are **not yet filed** — they come from
   [specs/research-knowledge.md](specs/research-knowledge.md) §8 at the OI-9
   ratification._
+- **Queued (owner intake 2026-07-14** — triage + answers:
+  [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
+  **WI-146** (ratification tree view + brief lint) · **WI-147** (graceful
+  pause) · **WI-148** (weekday blackout window) · **WI-149** (lowest-gate-first
+  advisory) · **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline
+  pointer) · **WI-110** re-queued (owner directive: opus BUILD effort → xhigh,
+  verified via the iteration-index s/turn telemetry). All gate behind the
+  sitting (WI-145 predecessor — the DAG records the pause); sequence after the
+  v3 slices unless the owner reorders `docs/next-wi`._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
-  WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-110** in
+  WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
   [work-items.csv](requirements/work-items.csv). The highest-value next step is
   the `main-decomposition` campaign (**WI-080** → **WI-081**), sequenced *behind*
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
