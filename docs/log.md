@@ -4272,3 +4272,31 @@ passed, 2 skipped in 39.91s**; `check_docs --root . --stale` → run at commit
 (below). `check_trajectory --strict` green with the 3 new rows (R-A…R-E: the
 two queued ids named in status.md In-flight, done WI-130 absent, SpecRef
 resolves). No push (`push-policy: human`).
+
+## 2026-07-13 — WI-131: the open-items surface ships (template + scaffold)
+
+**Slice 2 of the open-items-surface campaign**
+(`docs/specs/open-items-surface.md`). New
+`project-trajectory/OPEN_ITEMS.template.md` — the header states the lifecycle
+(a section lives only while its decision is pending; the ruling appends to the
+log's Decisions and the section is deleted) and the enforcement split (content
+quality is reviewer-class; `check_docs` will warn on structure only, WI-132) —
+with an OI-1 example brief matching `STATUS.template.md`'s OI-1 example, so a
+fresh scaffold is coherent for the coming S-3 check. Wiring: `bootstrap.py`
+`MAPPING` gains `(OPEN_ITEMS.template.md → docs/open-items.md)`;
+`STATUS.template.md` gains the header Owner-decision-briefs link line and the
+Needs-\<human> guidance (**gate/ratification blockers first**; one-liners
+here; depth in open-items.md); `project-trajectory/README.md` kit-contents
+gains the row; `tests/test_bootstrap.py` scaffold file list gains
+`docs/open-items.md`.
+
+**Deviation:** none. **Byte-budgeted files:** none.
+
+**Verification.** `pytest -q tests/test_bootstrap.py tests/test_check_docs.py`
+→ **70 passed** (incl. `test_clean_scaffold_passes` — the scaffolded
+status.md → open-items.md link resolves). Commit bar:
+`python -m pytest -q -n auto -m smoke` → **552 passed, 2 skipped in 35.05s**;
+`check_docs --root . --stale` green at commit. Registry: WI-131 → done
+(surgical single-line edit — a first csv.writer rewrite was reverted for
+re-quoting 22 unrelated rows; the registry's hand-owned cell quoting is
+preserved). `docs/next-wi` = WI-132. No push (`push-policy: human`).

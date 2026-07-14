@@ -23,6 +23,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/agents.csv",
         "docs/kit-profile",
         "docs/status.md",
+        "docs/open-items.md",
         "docs/log.md",
         "docs/plan.md",
         "docs/architecture.md",

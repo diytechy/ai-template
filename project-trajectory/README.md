@@ -20,6 +20,7 @@ audits.
 | `PROCESS.md` | The canonical method's **load-bearing core** — the *master* bootstrap **generates** `docs/process.md` from: `kit-only` regions dropped, `profile:` regions kept or stubbed per `docs/kit-profile` (an omitted section keeps its § heading + a one-line stub; § labels never renumber). Roles, gates, ID scheme, anti-duplication, verdict protocol, review triage, harness contract; opens with a minimum-profile table. |
 | `PROCESS_OPTIONS.md` | The **opt-in layers** the core doc summarizes — the master for `docs/process-options.md`, generated the same profile-gated way. Phased delivery, lifecycle tags, the §7 boundary notes, the §9 NFR checklist + perf comparator, and the rung-2 multi-module detail — each with an *applies-when*. |
 | `STATUS.template.md` | The blackboard's **working surface** (only what happens next) → copy to `docs/status.md`. |
+| `OPEN_ITEMS.template.md` | The **owner decision briefs** status.md's Needs-\<human> bullets link to — one `OI-N` section per pending decision (blast radius, options, recommendation), deleted when the ruling lands in the log's Decisions → copy to `docs/open-items.md`. |
 | `LOG.template.md` | The **append-only history** status.md points at (gate sign-offs, verdicts, ratified decisions — process.md §5) → copy to `docs/log.md`. |
 | `ARCHITECTURE.template.md` | One-page overview + generated map → copy to `docs/architecture.md`. |
 | `INTERFACES.template.md` | Interface-seam contracts (IF-###) → copy to `docs/interfaces.md`. Cross-project **and** intra-repo (module↔module/file/external). |

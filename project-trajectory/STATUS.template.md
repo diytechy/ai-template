@@ -6,6 +6,10 @@ every section short and current; history — sign-offs, verdicts, ratified
 decisions, session notes — appends to the log this header points at, never here.
 
 - **History:** [log.md](log.md) _(append-only; see process.md §5)_
+- **Owner decision briefs:** [open-items.md](open-items.md) _(one `## OI-N`
+  section per pending Needs-\<human> decision — blast radius, options,
+  recommendation; the bullet here stays a one-liner. A ruling appends to the
+  log's Decisions and the section is removed.)_
 - **Work plan:** [plan.md](plan.md) _(the sequenced session blocks the
   plan/build cadence executes; the "Next action" below names the current
   block — see process-options.md "Plan/build cadence")_
@@ -35,7 +39,9 @@ decisions, session notes — appends to the log this header points at, never her
   end every bullet with a link to the artifact it concerns; keep the two
   sub-lists below. Any deferrals/decisions list follows the same bullet
   discipline.)_
-  - **Needs <human>** _(state the decision wanted, per item)_:
+  - **Needs <human>** _(state the decision wanted, per item — **gate/ratification
+    blockers first**; keep each a one-liner and put the depth in
+    [open-items.md](open-items.md))_:
     - OI-1 — decide: keep or drop the legacy export flag (blocks: G1) →
       [system-requirements.csv](requirements/system-requirements.csv)
   - **In flight** _(driver; no approval needed)_:

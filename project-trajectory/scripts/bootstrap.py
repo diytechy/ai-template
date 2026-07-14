@@ -1002,6 +1002,10 @@ MAPPING = [
     # agent never pushes; --push-policy overrides.
     ("push-policy.template", "docs/push-policy"),
     ("STATUS.template.md", "docs/status.md"),
+    # The owner decision briefs status.md's Needs-<human> bullets link to
+    # (process-options.md "Trajectory / work-items layer"): one OI-N section
+    # per pending decision, deleted when the ruling lands in log.md Decisions.
+    ("OPEN_ITEMS.template.md", "docs/open-items.md"),
     # The append-only history status.md points at (Thread 36, process.md §5):
     # sign-offs, verdicts, and ratified decisions append here, keeping the
     # per-session status.md reload cheap.
