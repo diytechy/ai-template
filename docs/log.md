@@ -4532,3 +4532,140 @@ logic change; risk classes checked: strip_provenance coupling, the 6 verbatim
 broken doc links). **Batch-close full suite:** `python -m pytest -q -n auto` →
 **717 passed, 3 skipped in 71.83s**. No spine change (SN=24 SR=51 LLR=52
 TC=52, 0 orphans); derived gate stays G3. No push (`push-policy: human`).
+
+## 2026-07-14 — Review-round remediation: 023 fix + WI-139 + WI-140 (three dangling CHANGES-REQUESTED rounds cleared)
+
+**The driver session found three committed/residual REVIEW-A rounds whose
+CHANGES-REQUESTED findings had never been remediated** — 017 and 019 were left
+dangling by the NEEDS-HUMAN owner sittings that followed them (the loop never
+got a BUILD iteration to route the findings), and 023 (the WI-098;WI-103
+batch's round) sat uncommitted in the working tree. All three cleared this
+sitting; the residue (iteration logs 022/023 + index + scoreboard + the 023
+verdict) committed first in the established bookkeeping style. *Correction of
+record:* the WI-098;WI-103 batch entry above says "Review round: no findings"
+— that was the BUILD session's self-assessment; the loop's independent
+REVIEW-A (023, gpt-5.6-terra) later returned **CHANGES-REQUESTED findings=1**.
+
+- **023 fix (MAJOR, docs):** `byte-budget-guard` registered PROCESS_OPTIONS.md
+  as byte-watched (WI-103) but step 3 + the report shape still named only
+  PROCESS.md — option-doc growth could comply while bypassing the watch. Step 3
+  now covers both watched files + the baseline re-stamp rule; the report
+  template gains the PROCESS_OPTIONS.md line; both agent copies re-synced
+  (skills-sync 10/10), INDEX.csv unchanged.
+- **WI-139 (017's MAJOR, scripts):** trace.py read `Verification` raw while
+  `derive_gate.sr_gate` stripped it — a whitespace-padded valid method was
+  exempt in the gate but orphaned in trace, the exact divergence WI-099
+  promised away. The decision is now an F5-duplicated `llr_exempt(row)`
+  predicate (the WI-101 pattern) routed at both decision points, pinned
+  equivalent by `test_rule_sync::test_llr_exempt_agrees` incl. the padded case
+  pinned to the fixed direction. Closed vocab stays case-sensitive.
+- **WI-140 (019's MINOR, tests):** WI-102's per-node SVG `<title>` contract
+  was untested (the one changed assertion made it optional). New
+  `test_svg_nodes_carry_escaped_title_tooltips`: one render over a fixture
+  with markup-hostile titles pins every-node `<title>` presence + exact
+  escaped tip content across all four emitters.
+
+**Deviations:** the 017 finding was routed `@owner` by its reviewer; the fix
+direction (normalize identically, padded = exempt) is the mechanically obvious
+alignment with derive_gate's existing behavior, so the driver executed it
+without an owner sitting — flagged here for the audit trail. **Byte deltas:**
+AGENTS.template.md 9978 → 9978 (untouched); PROCESS.md 59827 → 59827
+(unchanged); PROCESS_OPTIONS.md 134965 → 134965 (unchanged). **Verification:**
+commit bar green per commit (smoke 563→565 passed / 2 skipped as the two new
+tests landed; `check_docs --stale` exit 0 each time); arch-map regenerated
+(+2 detail lines, `llr_exempt`); dashboard regenerated per registry edit.
+
+## 2026-07-14 — WI-134 [v3]-[g1]: dashboard-ux requirement structuring (phase v3 opens; the SR-051 rev)
+
+**Phase v3 (`dashboard-ux`) opened in the LIVE spine** per the owner intake
+2026-07-13 ([specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md#v3-dashboard-ux))
+— the second live use of the derived-gate phase flow (the v2/WI-116 precedent),
+and the first **reopen**: the owner-sanctioned SR-051 rev rode the g1 batch per
+the model's §8 backward-movement flow.
+
+### GATE — v3 G1 — Round 1 — 2026-07-14 (LLM-gate review under `single-ratify`)
+
+**Scope:** five new SRs drafted `Status=Draft, Phase=v3` + the SR-051 rev
+(`Phase=v2`, `Verified → Draft`), then ratified `Draft → Planned` in this
+reviewed Status-change commit:
+
+- **SR-052/053/054** — dashboard accessibility / UI uniformity / usability
+  under SN-024;SN-023: the spine's **first `Verification=Critique` rows**,
+  arming SR-047's critique loop for dashboard-touching builds (intake items
+  1+4 — the rubric *is* the hat). Rubrics (`docs/rubrics/dashboard-*.md`) are
+  authored at `[v3]-[g2]`.
+- **SR-055** — the Process tab's two circular working loops (intake 1A) under
+  SN-010;SN-021: the agent-intake loop + the human-decision loop (incl. the
+  gate-ratification table), shared LLM_Agent entry; `Verification=Test`.
+- **SR-056** — decomposition render polish (intake 1B) under SN-023;SN-010:
+  right-sized columns, one explicit parent→child containment arrow per edge,
+  persistent last-hovered highlight; `Verification=Test`.
+- **SR-051 REV** (intake 1C, the owner-sanctioned amendment — the 2026-07-13
+  ratification note recorded amendments arrive as future WIs): interface-wired
+  Simulink-style rendering (seams attach to block ports, aggregated at
+  container boundaries) + double-click descend-a-layer with breadcrumb,
+  **superseding the Q3 in-place-expand/no-zoom provisional ruling**; data-side
+  graph extensions stay WI-064 (soft edge).
+
+**Consistency sweep (the WI-084 reviewer charter, run by the driver LLM-gate):**
+- **No contradiction with the existing 51 SRs.** SR-047 defines the critique
+  machinery and these are its arming (it explicitly anticipated "absent … any
+  Critique SR, nothing changes"); SR-038/SR-050 stay the umbrella/facet
+  pattern (owner-ruled at WI-085). SR-052's color-independence is consistent
+  with the Q2 phase-encoding ruling (grouping-primary; color is an *accent*).
+  SR-054's density expectation restates SR-051's >3 rule, not a new threshold.
+  SR-056 polishes SR-051's views without touching its thresholds; hover is not
+  navigation, and the navigation ruling it might have collided with (Q3) is
+  superseded by the rev in the same batch.
+- **Attributes:** SN parents exist and fit (SN-024 subjective acceptance,
+  SN-023 dashboard legibility, SN-010/021 honest generated views); Priority C
+  (could-have views, the SR-050/051 precedent); Critique rows are
+  **non-LLR-exempt** by SR-047's own mandate, so `[v3]-[g2]` owes each an LLR
+  + TC alongside its rubric.
+- **Soft criteria to concretize at `[v3]-[g2]`:** SR-052 "readable contrast"
+  (rubric anchor with a named threshold intent); SR-056 "right-sized columns"
+  (the bound must be *declared* — a TC parameter, not adjective); SR-054 "one
+  tab switch" (rubric task list). SR-055's stage list must map 1:1 to panel
+  nodes in the TC.
+
+**Provisional rulings (queued for the owner's single sitting at the
+`[v3]-[g2]` close; recorded, not ratified):**
+1. **Three separate Critique SRs** (per the intake wording) rather than one
+   combined UI-quality SR — granularity matches one rubric file per concern.
+2. **SR-056 stays `Verification=Test`** — its outcomes are mechanically
+   assertable; the Critique rows judge the residual look-and-feel.
+3. **The SR-051 rev rides WI-134 as its committed anchor** (§8 backward
+   movement; the §9.3 detector warned "open a `[v2]-[g*]`" exactly as designed
+   — this cross-phase g1 batch is that anchor, membership recorded here).
+4. **Rubric-per-SR** at `docs/rubrics/dashboard-{accessibility,uniformity,usability}.md`,
+   authored at g2 from the SR intent (never from the TC).
+
+**Ratification + derived gate (the honest drop, both commits):** drafting
+commit → `per-phase=(default)=G3;v2=G0;v3=G0`, runnable **G1**, drafts=6 (the
+draft-drop signal; the §9.3 reopen warn fired on v2). Ratifying commit →
+`per-phase=(default)=G3;v2=G2;v3=G1`, runnable **G1**, drafts=0 (v2 reads G2
+because LLR-052/TC-052 *exist* — they cover the pre-rev scope; the g2 batch
+revs them, and the anchor warn cleared at G2=anchor level). The **10
+phase-blind SR-no-LLR/no-TC orphans are the designed post-g1 window**
+(orphan rules join `--strict`, which runs from G2; the G1 floor is
+`--strict-integrity` = 0 findings), closed by WI-135's decomposition. The
+close bar narrows to `check.py --gate G3 --phase v1` until the v2 rev
+re-verifies (v2 rejoins then; v3 at its own close).
+
+**Mechanized verification (commit bar, real output, run per commit):**
+- Drafting commit: smoke `565 passed, 2 skipped in 48.47s`; `check_docs
+  --stale` exit 0; pre-commit floor ALL PASS (trajectory warned the §9.3
+  reopen signal, PASS).
+- Ratifying commit (slice-done bar, full unfiltered suite): `python -m pytest
+  -q -n auto` → **688 passed, 34 skipped in 61.58s** (the 31 extra skips vs
+  the 022 batch-close run are environmental — "needs a POSIX shell and git on
+  PATH" hook/dev-setup tests in this driver shell, verified by `-rs`); +2
+  tests over the 720-case baseline = WI-139/WI-140. `check_docs --stale`
+  exit 0.
+- Byte deltas: AGENTS.template.md 9978 → 9978 (untouched); PROCESS.md 59827 →
+  59827 (unchanged); PROCESS_OPTIONS.md 134965 → 134965 (unchanged).
+
+**Owner queue unchanged** (OI-3 push / OI-4 LICENSE / OI-7 cadence; the v3
+batch ratification joins the owner's single sitting at the `[v3]-[g2]` close
+per `single-ratify`). `docs/next-wi` → **WI-135**. Not pushed
+(`push-policy: human`).
