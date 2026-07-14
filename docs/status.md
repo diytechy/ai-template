@@ -268,7 +268,8 @@ working surface.
      `_campboxes`/`_wi_row`/`_wi_table` helpers give the When roadmap a
      phase ⊃ workstream ⊃ WI hierarchy (collapse at > 3 local members, campaign
      bottom tier, per-phase color accent, per-tier aggregated edges) and the
-     How-SW view an expand-at-≤3/collapse-at->3 top view; LLR-052 `Implemented`,
+     How-SW view an expand-at-≤3/collapse-at->3 top view; LLR-052 `Verified`
+     (owner-directed lift 2026-07-13, with LLR-051 — TC evidence already green),
      TC-052 `Verified` (9 pinned nodes), **SR-051 `Verified`**. The close
      regenerated the gate (v2 → G3) and passed `check.py --gate G3 --phase v1,v2`
      (14/14). Spec archived under `docs/archive/specs/` (path in the WI row's

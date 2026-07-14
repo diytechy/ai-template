@@ -4166,3 +4166,19 @@ only).
 No spine change; derived gate remains G3. No push (`push-policy: human`).
 `docs/next-wi` stays WI-123; `docs/run-state` stays `NEEDS-HUMAN`, now with its
 ask line.
+
+## 2026-07-13 — WI-128: lift LLR-051/052 to Verified (v2 LLR status uniformity)
+
+Owner-directed at the ratification-review sweep: the v2 dev slices had lifted
+TC-051/052 and SR-050/051 to `Verified` but left LLR-051/052 at `Implemented` —
+legal under the derived-gate model (LLR status never independently gates) but
+inconsistent with the 50 v1 LLRs. Lifted both to `Verified` on the existing TC
+evidence, re-run green this sitting (`tests/test_gen_trajectory.py` → 52
+passed); corrected the status.md v2-slice prose recording the old state.
+Registry + prose only; derived gate stays G3; the spine's LLR statuses are now
+uniform. **Deviation:** none. **Byte-budgeted files:** none.
+
+**Verification.** Commit bar: `python -m pytest -q -n auto -m smoke` → **550
+passed, 2 skipped in 41.47s**; `check_docs --root . --stale` → **OK, 0 broken**. `trace.py
+--strict-integrity` → 0 orphans / 0 findings; `derive_gate --check` → G3 up to
+date. No push (`push-policy: human`).
