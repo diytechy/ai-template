@@ -4,7 +4,4 @@
 # that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it
 # as the session's STARTING tier in place of the phase default (WI-126); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
-# The DRIVER maintains this alongside docs/status.md's Next action.
-# (empty — WI-129 landed 2026-07-13; no autonomous queued WI remains, the loop
-# parks in NEEDS-HUMAN pending an owner ruling; see docs/status.md Next action.)
-
+WI-131

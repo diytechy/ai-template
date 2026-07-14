@@ -4238,3 +4238,37 @@ push (`push-policy: human`).
 This was the last autonomously-actionable queued WI. Everything remaining
 needs an owner act (the single-ratify sitting + the WI-097/098/103/123
 rulings), so the loop parks in **NEEDS-HUMAN**.
+
+## 2026-07-13 — WI-130: the owner decision surface, self-applied (open-items.md)
+
+**Owner-directed** at the status.md-slim sitting (same day, after commit
+`a7d187c` cut status.md 329 → 77 lines): open items must surface as a short
+bulleted list at the top of status.md, ratification blockers first, while the
+*depth* of each pending owner decision — blast radius, options + pros/cons,
+recommendation — lives in **one file the owner reviews with all context**.
+Campaign spec: `docs/specs/open-items-surface.md` (3 slices; this is slice 1).
+
+**Deliverables.** New `docs/open-items.md` — one `## OI-N` section per pending
+decision (OI-1 G3 re-attestation incl. the provisional v2 rulings, OI-2
+single-ratify enablement review, OI-3 push, OI-4 LICENSE, OI-5 masters
+provenance, OI-6 PROCESS_OPTIONS budget/index, OI-7 review cadence), lifecycle
+stated in the header: a section lives only while pending; the ruling appends to
+this log's Decisions and the section is deleted (work-items.csv = tracking,
+open-items.md = pre-ruling analysis, log.md = post-ruling record — no third
+source of truth). status.md gains the header link + depth pointer; its OI
+bullets shrink to one-liners; the Run-state bullet now points at
+`docs/run-state` instead of paraphrasing its value (session-protocol §1).
+Registry: WI-130 done; WI-131 (ship the template + scaffold) and WI-132 (the
+warn-tier status-surface lint) queued; `docs/next-wi` = WI-131; `docs/run-state`
+= RUNNING for the campaign (restored to NEEDS-HUMAN + refreshed ask at close).
+**No-new-SR ruling** recorded in the spec (WI-129 precedent; a Draft v3 SR
+would drop the runnable derived gate to G1 repo-wide — disproportionate for a
+warn-tier lint; un-defer trigger: promoting the lint to a gating tier).
+
+**Deviation:** none. **Byte-budgeted files:** none.
+
+**Verification.** Commit bar: `python -m pytest -q -n auto -m smoke` → **552
+passed, 2 skipped in 39.91s**; `check_docs --root . --stale` → run at commit
+(below). `check_trajectory --strict` green with the 3 new rows (R-A…R-E: the
+two queued ids named in status.md In-flight, done WI-130 absent, SpecRef
+resolves). No push (`push-policy: human`).
