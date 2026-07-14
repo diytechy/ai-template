@@ -1,0 +1,2 @@
+- [MINOR] docs/status.md:53 -> the changed queued-section heading still records that the completed `[v3]-[g1]` batch "landed 2026-07-14", contradicting this surface's forward-only policy that backward-looking shipment history lives only in `docs/log.md` -> remove the landed-batch clause and leave the queue's owner-intake/spec link and pending WI-135 work -> @docs-engineer
+VERDICT: CHANGES-REQUESTED findings=1
