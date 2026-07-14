@@ -88,6 +88,10 @@ Might there be times when an explicit plan stage is unecessary in agent-resume? 
 
 *******************************
 
+I notice in visual code using claude code, I can complete multiple work items in a single session, but often when running agent-resume it seems only 1 work item is pulled per session, resulting in signficantly more session spin ups / context re-uploads / etc.  Is there a gap with how work-items are grouped and aggrigated for a session?  Is the method being used too concervative?
+
+Need to adjust the process maps, specifically to show how injest occurs and interaction with open items and human.
+
 While agent-resume is running, is it possible for each workstream to just update it's latest line on the console (so, intead of a long rolling window, each workstream continues to update it's status in a line that gets continuously updated.)
 
 Other noticed items: The logs (in /docs/interation) and reviews don't appear to be committed with the rest of their content, it would be good for them to be part of the code commit for reference.  Should the reviews and logs include the work item key name in their label / filename for tracking?  

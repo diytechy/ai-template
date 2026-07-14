@@ -1,9 +1,11 @@
 # Gate-authority deviation register — `single-ratify`
 
-**Status:** DRAFT — ratify with the owner, then keep in version control.
+**Status:** RATIFIED 2026-07-13 — owner review of the enablement commit (OI-2;
+the sitting record + ruling: [log.md](log.md) "GATE: G3 re-attestation" +
+Decisions log). Keep in version control.
 **What this is:** this repo declares the `single-ratify` gate authority (`docs/gate-policy`; process.md §4). The kit-owned process doc is never edited per-repo (a re-sync overwrites it); this register amends it (process-options.md "Gate authority levels"). Where the two disagree, this file wins — except the fixed points at the bottom, which nothing overrides.
 
-**This repo (the ai-template META-repo):** the kit's own unattended layer, self-applied. Adopted via **WI-107** (`docs/specs/WI-107.md`) so `agent-resume.*` boots a managed, consent-explicit run with **one human attestation point per phase batch**. Config-layer only — no spine change, so the **derived gate stays G3** (`derive_gate.py`); this level governs only WHO makes the ratifying Status-change commit, not what the gate computes. The landing commit that flips `docs/gate-policy` to `single-ratify` is itself the reviewed commit the owner accepts (the single attest); until that review lands this register is DRAFT.
+**This repo (the ai-template META-repo):** the kit's own unattended layer, self-applied. Adopted via **WI-107** (`docs/specs/WI-107.md`) so `agent-resume.*` boots a managed, consent-explicit run with **one human attestation point per phase batch**. Config-layer only — no spine change, so the **derived gate stays G3** (`derive_gate.py`); this level governs only WHO makes the ratifying Status-change commit, not what the gate computes. The landing commit that flipped `docs/gate-policy` to `single-ratify` was itself the reviewed commit the owner accepts (the single attest) — that review landed 2026-07-13 (the OI-2 acceptance; see the Status line above).
 
 ## Deviation register
 

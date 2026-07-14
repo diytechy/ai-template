@@ -39,6 +39,34 @@ why (one bullet each; cite ids)._
   untestable. Spine now SN=22 SR=36 LLR=32 TC=36, orphans=0; the earlier G2
   DRIVER block's 35/35 counts predate this refinement. Surfaced by the Thread 47
   dogfood (a requirement that described the process, not the tool).
+- **2026-07-13 — OI-1 RATIFIED: the SR-049 spine cut + v2 batch attested (G3
+  re-attestation).** Owner **Peter Johnson** attests the whole chain —
+  SR-049/LLR-050/TC-050 (derived gate) + SR-050/LLR-051/TC-051 and
+  SR-051/LLR-052/TC-052 (v2) — including the four provisional tiered-drill-down
+  rulings, the process view's generated-first render mode, the WI-128 LLR-lift
+  convention, and the derived `docs/gate` itself. **Noted with the ratification:
+  the graphic breakdowns (the tiered/hierarchical views) are expected to need
+  iteration — amendments arrive as future WIs, not as blockers on this attest.**
+  Full sitting record: the 2026-07-13 GATE entry below.
+- **2026-07-13 — OI-2 ACCEPTED: single-ratify enablement reviewed.** The owner
+  reviewed the enablement commit (WI-107); `docs/gate-policy` = `single-ratify`
+  stands and [gate-policy.md](gate-policy.md) DRAFT is lifted. Alternative
+  passed over: reverting to `attended` (a live human per ratification) — this
+  sitting itself demonstrated the one-attest-per-batch cadence.
+- **2026-07-13 — OI-5 RULED (WI-098): thin the masters' provenance comments**
+  to log/archive pointers (per the driver recommendation); absorbs the
+  `AGENT_ROLES`/`IMPROVEMENT_PLAN` design-doc citations the scaffold-strip left
+  in scope. Alternatives passed over: keep (archaeology stays in `docs/archive/`
+  anyway) · strip entirely (loses the pointer). WI-098 → queued.
+- **2026-07-13 — OI-6 RULED (WI-103): PROCESS_OPTIONS gets a byte budget + an
+  applies-when index table; the doc split is DEFERRED** until the file actually
+  fights its budget (per the driver recommendation). WI-103 → queued.
+- **2026-07-13 — OI-3 CORRECTED, not ruled: the push brief was stale.** The
+  owner challenged the "~48 local-only commits" claim; git-checked reality:
+  remote `origin` exists, `derived-gate-model` tracks it **ahead 9** (~10 with
+  this sitting), `MultiRepoSupport` is in sync. The brief is rewritten with the
+  verify-at-read command; an open-item claim about git state must be checked
+  against git, not carried forward.
 
 ## Audit log
 
@@ -4349,3 +4377,41 @@ its generated OKF row-view (a reading map, not a copy: the registries stay
 SSOT, and the table dies with the section at ruling; completeness re-checkable
 via `trace.py --require-verified`). Commit bar: smoke 558p/2s, check_docs OK
 (orphan warnings 13→12 — linking test/report.md made it reachable).
+
+## 2026-07-13 — GATE: G3 re-attestation (owner sitting; the first `single-ratify` attest)
+
+**Gate action (`docs/gate-policy` = `single-ratify` — this sitting is the one
+human attestation point for the batch; the OI-2 acceptance below is what lifts
+that policy register out of DRAFT).** The owner ratifies **OI-1**: the whole
+spine chain under attestation — **SR-049 / LLR-050 / TC-050** (derived gate
+from artifact states) plus the v2 batch **SR-050 / LLR-051 / TC-051** (Process
+reference view) and **SR-051 / LLR-052 / TC-052** (tiered drill-down views) —
+together with the four provisional tiered-drill-down rulings (tier composition
+Phase ⊃ Workstream ⊃ WI; grouping-primary phase encoding + per-phase accent;
+in-place expand; the >3 start-collapsed rule with `TOP_VIEW_MAX = 10`), the
+process view's generated-first render mode, the WI-128 LLR-lift convention,
+and the derived `docs/gate` mechanism itself. **Ratification note:** the
+graphic breakdowns are expected to need iteration — future WIs, not blockers.
+
+**Mechanized bar — RESULT: PASS.** `check.py --gate G3 --phase v1,v2 --jobs 0`,
+all 15 steps: format · lint · **tests+coverage (125.0s)** · dupes ·
+derived-gate · traceability · privacy · doc-navigability · perf-budgets ·
+design-flows · trajectory · arch-map · trajectory-map · okf · skills-sync.
+`docs/gate` stays **G3** (a re-attestation, not an advance; derived, basis
+per-phase `(default)=G3;v2=G3`).
+
+**Verification basis (the trust footprint).** `trace.py --strict
+--require-verified`: SN=24 SR=51 LLR=52 TC=52, orphans=0, integrity=0. Of 51
+`Verified` SRs, **51 mechanized** and **0 attested** — the spine rests
+entirely on runnable checks (`docs/test/report.md` "Verification basis").
+
+**Sign-off.** Owner **Peter Johnson** ratifies OI-1 and accepts OI-2 in this
+sitting (rulings given in-session; this commit is the ratifying record per
+"ratification = a reviewed Status-change commit" — no artifact Status moves,
+so the commit records the attest over already-Verified rows). Also ruled:
+OI-5 (WI-098: thin) and OI-6 (WI-103: budget + index, split deferred) — the
+Decisions log carries each ruling; OI-3 corrected against git (ahead 9, not
+"48 local-only") and left open; OI-4 (LICENSE) and OI-7 (review cadence)
+remain open. `docs/open-items.md` drops the four ruled sections per its
+lifecycle. **The rulings create scope:** WI-098 and WI-103 flip
+`deferred → queued`; `docs/next-wi` = WI-098; `docs/run-state` = RUNNING.

@@ -9,75 +9,38 @@ while the decision is pending** — the ruling appends to [log.md](log.md)'s
 Decisions log and the section is deleted. (Format:
 [specs/open-items-surface.md](specs/open-items-surface.md).)
 
-Items OI-1…OI-3 bundle into **one ratification sitting**; OI-4…OI-7 are
-independent rulings the same sitting can absorb.
+_The 2026-07-13 sitting ruled OI-1 (G3 re-attestation — ratified), OI-2
+(single-ratify enablement — accepted), OI-5 (WI-098 — thin) and OI-6 (WI-103 —
+budget + index); their records live in the log's Decisions. OI-3 was corrected
+against git and stays open, with OI-4 and OI-7._
 
 ---
 
-## OI-1 — Attest the SR-049 spine cut + the v2 batch (→ G3)
+## OI-3 — Push / sync decision
 
-- **Decision:** accept (attest) the spine as it now stands: the derived-gate
-  campaign added **SR-049** (gate computed from artifact states) to the
-  ratified spine, and phase v2 (SR-050 process view, SR-051 tiered drill-downs)
-  was ratified `Planned` by the G1 LLM-gate review, decomposed by the
-  `[v2]-[g2]` batch, and Verified by the two dev slices. The mechanized bar is
-  met (derived gate reads uniform G3; 46 Test · 2 Analysis · 1 Inspection · 0
-  Attest); the owner's attested sign-off is the outstanding half.
-- **Blast radius:** the spine's trust claim. G3 asserts owner-accepted scope;
-  until attested, that claim rides mechanics alone — every downstream consumer
-  of the "kit traces itself" story inherits the gap.
-- **The spine rows under attestation — the whole SR→LLR→TC chain in one
-  group** (each id links its generated row-view; the registries stay the
-  SSOT — this table is a reading map for the sitting and dies with this
-  section at ruling):
-
-  | Chain | SR | LLR | TC (evidence) | All statuses |
-  |---|---|---|---|---|
-  | Derived gate (default phase) | [SR-049](okf/system-requirements/SR-049.md) Derived gate from artifact states | [LLR-050](okf/low-level-requirements/LLR-050.md) Derived-gate computation + hybrid cache | [TC-050](okf/test-cases/TC-050.md) | Verified (Test) |
-  | v2 — Process view | [SR-050](okf/system-requirements/SR-050.md) Process reference view | [LLR-051](okf/low-level-requirements/LLR-051.md) Process reference tab | [TC-051](okf/test-cases/TC-051.md) — 7 pinned pytest nodes | Verified (Test) |
-  | v2 — Drill-downs | [SR-051](okf/system-requirements/SR-051.md) Tiered drill-down views | [LLR-052](okf/low-level-requirements/LLR-052.md) Tiered When/How-SW drill-down | [TC-052](okf/test-cases/TC-052.md) — 9 pinned pytest nodes | Verified (Test) |
-
-  Nothing else in the spine sits below `Verified` (checked at filing; re-check
-  with `trace.py --require-verified` → [test/report.md](test/report.md)).
-  Also riding this attestation: the **WI-128 LLR-lift convention** (an LLR
-  reads Verified once its citing TCs verify — no attestation involved) and the
-  **derived `docs/gate` itself** (G3 now computed, not hand-set).
-- **Included provisional rulings to accept or amend** (implemented as ruled;
-  verdicts + rationale in [log.md](log.md)): the tiered-drill-down slice's four
-  calls (tier composition Phase ⊃ Workstream ⊃ WI; grouping-primary phase
-  encoding + per-phase accent; in-place expand, no zoom; the >3
-  start-collapsed rule with `TOP_VIEW_MAX = 10`) and the process view's
-  generated-first render mode.
-- **Options:** attest as-is · amend a provisional ruling (re-opens the slice
-  that implemented it) · reject a slice (reverts its spine rows).
-- **Recommendation:** review the provisional verdicts in the log, attest at
-  one sitting (`gate-advance` skill, Attest row) — the mechanized evidence is
-  green and re-runnable.
-
-## OI-2 — Review the single-ratify enablement commit
-
-- **Decision:** accept the `docs/gate-policy` move `attended` → `single-ratify`
-  (one human attest per phase batch). By the policy file's own rule the landing
-  commit *is* the reviewed commit the owner accepts; until reviewed,
-  [gate-policy.md](gate-policy.md) stands DRAFT.
-- **Blast radius:** governance only — WHO makes a ratifying commit for every
-  future phase batch. It does not change what the derived gate computes.
-- **Options:** accept (unattended loop continues under one-attest-per-batch) ·
-  revert to `attended` (every ratification needs a live human in the loop).
-- **Recommendation:** accept if the OI-1 sitting felt right — that sitting *is*
-  the cadence this policy institutionalizes.
-
-## OI-3 — Push decision
-
-- **Decision:** whether/where to push. `MultiRepoSupport` is local-only (~48
-  commits); branch `derived-gate-model` adds the derived-gate campaign + the
-  open-items-surface campaign on top.
-- **Blast radius:** durability (one disk holds the only copy) vs. exposure
-  (pushing to a public remote publishes — and no license is chosen yet, OI-4).
-- **Options:** push to a **private** remote now (durability, no exposure) ·
-  stay local until OI-4 rules public intent · push public after OI-4.
-- **Recommendation:** private remote now; the public question is OI-4's and
-  doesn't block backup.
+- **Decision:** whether to push the pending local commits on
+  `derived-gate-model` (and, separately and later, whether/when to integrate
+  the branch into `main`).
+- **Git-checked facts (2026-07-13; re-verify at read time — an open-item claim
+  about git state must come from git, not memory):**
+  - remote `origin` exists (`github.com:diytechy/ai-template`);
+  - `derived-gate-model` tracks `origin/derived-gate-model`, **ahead 9** at
+    check (10 with the ratification commit that lands this brief) —
+    verify: `git fetch --prune && git branch -vv`;
+  - `MultiRepoSupport` is **in sync** with its remote;
+  - `main` is 340 commits behind this branch
+    (`git rev-list --count main..derived-gate-model`) — the eventual
+    integration question, **not** part of the routine push.
+  - _(The earlier "local-only, ~48 commits" claim was stale and wrong —
+    corrected at the 2026-07-13 sitting.)_
+- **Blast radius:** durability of ~10 commits of ratification + campaign work
+  (one disk holds them until pushed). The branch is already public-remote
+  tracked, so pushing adds no new exposure.
+- **Options:** authorize the push (`push-policy` = `human`: you push, or
+  explicitly authorize the agent once) · hold.
+- **Recommendation:** push — the branch is already tracked upstream; the
+  unpushed commits are pure durability risk. The `main` integration is a
+  separate, later sitting.
 
 ## OI-4 — WI-097: LICENSE decision
 
@@ -89,31 +52,7 @@ independent rulings the same sitting can absorb.
   (adds an explicit patent grant; slightly heavier notice obligations) · **stay
   private / no license** (default all-rights-reserved; blocks outside use).
 - **Recommendation:** none recorded — this needs the owner's public/private
-  intent first; it's the gating input OI-3's public option also waits on.
-
-## OI-5 — WI-098: history-provenance comments in the kit masters
-
-- **Decision:** keep, thin, or strip the `(REVIEW_*/THREAD_*)` provenance
-  comments in the kit **masters** (the strip-at-scaffold precedent shipped
-  2026-07-13, so downstream readers already inherit none — this is now purely
-  about the masters' own readability).
-- **Blast radius:** kit-source readability vs. design archaeology; could absorb
-  the design-doc citations (`AGENT_ROLES`/`IMPROVEMENT_PLAN`) the
-  scaffold-strip left in scope.
-- **Options:** keep (archaeology intact) · thin to log/archive pointers ·
-  strip entirely.
-- **Recommendation (driver):** thin — the scaffold-strip precedent showed the
-  citations aren't load-bearing for readers, and the archive holds the history.
-
-## OI-6 — WI-103: PROCESS_OPTIONS byte budget + applies-when index
-
-- **Decision:** give PROCESS_OPTIONS.md a byte budget + an applies-when index
-  table (deep-review M5); any further doc *split* is an owner-taste call.
-- **Blast radius:** shipped-doc structure churn; §-numbering stability
-  (`§N` cross-refs pervade the kit).
-- **Options:** budget only · budget + index table · full split (taste).
-- **Recommendation (driver):** budget + index; defer the split until the file
-  actually fights its budget.
+  intent first.
 
 ## OI-7 — WI-123: review-cadence dial
 

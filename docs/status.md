@@ -35,26 +35,20 @@ home elsewhere — don't restate it here:
 
 - **Open items** _(one bullet per item; `OI-N` ids are stable and never
   renumbered):_
-  - **Needs \<human>** — the owner ratification sitting (items bundle into one
-    sitting; under `single-ratify` the loop does **not** pause on these). Depth
-    per item — blast radius, options, recommendation — in
-    [open-items.md](open-items.md):
-    - **OI-1** — attest the **SR-049** spine cut + the **v2 batch**
-      (SR-050 / SR-051 → G3); rec: review the provisional verdicts, attest at
-      one sitting.
-    - **OI-2** — review the **single-ratify enablement** commit; until then
-      [gate-policy.md](gate-policy.md) stands DRAFT.
-    - **OI-3** — **push decision**; rec: private remote now.
+  - **Needs \<human>** _(the 2026-07-13 sitting ratified OI-1/OI-2 and ruled
+    OI-5/OI-6 — records in [log.md](log.md) Decisions; under `single-ratify`
+    the loop does **not** pause on these). Depth per item in
+    [open-items.md](open-items.md):_
+    - **OI-3** — **push decision** (git-checked: `origin` exists, this branch
+      tracked, ~10 unpushed commits — not "48 local-only"); rec: push.
     - **OI-4** — rule **WI-097** (LICENSE + public/private intent); no rec —
       needs the owner's intent.
-    - **OI-5** — rule **WI-098** (masters provenance comments); rec: thin.
-    - **OI-6** — rule **WI-103** (PROCESS_OPTIONS budget + index); rec: budget
-      + index, defer the split.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-  - **In flight** _(driver; no approval needed):_ none — the open-items-surface
-    campaign closed 2026-07-13 (this surface + its shipped template + the
-    warn-tier `check_docs` lint; record in [log.md](log.md)).
+  - **In flight** _(driver; owner-ruled scope from the sitting):_ **WI-098**
+    (thin the masters' provenance comments to log/archive pointers) then
+    **WI-103** (PROCESS_OPTIONS byte budget + applies-when index; split
+    deferred) — rulings in [log.md](log.md) Decisions.
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-110** in
@@ -64,9 +58,9 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** the loop parks in **NEEDS-HUMAN** — when the owner rules
-  OI-1…7 ([open-items.md](open-items.md)), that ruling creates the next
-  actionable scope; until then there is no autonomous BUILD to route.
+- **Next action:** run the ruled scope — **WI-098** (`docs/next-wi`) then
+  **WI-103**; the remaining owner items (OI-3/OI-4/OI-7,
+  [open-items.md](open-items.md)) don't block it.
 
 ## Scope
 
