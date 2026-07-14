@@ -4669,3 +4669,39 @@ re-verifies (v2 rejoins then; v3 at its own close).
 batch ratification joins the owner's single sitting at the `[v3]-[g2]` close
 per `single-ratify`). `docs/next-wi` → **WI-135**. Not pushed
 (`push-policy: human`).
+
+## 2026-07-14 — Review-round remediation: 025-A cleared (the WI-134 status-currency round)
+
+**The driver session found one dangling REVIEW-A round uncommitted in the
+working tree.** Session 024 (BUILD, claude-fable-5) closed WI-134 `[v3]-[g1]`
+then added the `6c8a927` status-currency reword (dropping the closed WI-134
+ids the R-D trajectory check warned on); session 025 (REVIEW-A, gpt-5.6-terra,
+NO-COMMIT) independently reviewed that commit and returned **CHANGES-REQUESTED
+findings=1**, its verdict + the iteration logs left in the tree for the driver.
+
+- **025-A fix (MINOR, docs):** the reword removed the WI-134 ids but its
+  queued-section heading still recorded that the `[v3]-[g1]` batch "landed
+  2026-07-14, log.md" — backward-looking shipment history on a surface whose
+  stated policy is forward-only (R-D catches done-id *tokens*, not prose
+  history, so it passed the mechanized floor; the reviewer caught it by
+  inspection). Removed the clause; the owner-intake/spec link + pending WI-135
+  work remain. Shipment history stays here in log.md. Commit `bab9f46`.
+- **Bookkeeping (`389a709`):** sessions 024/025 iteration logs + index +
+  scoreboard + the 025-A verdict committed in the established style.
+
+**Verification:** commit bar green per commit — smoke `565 passed, 2 skipped in
+44.87s`; `check_docs --stale` exit 0; pre-commit floor ALL PASS (trajectory
+clean, no R-D warn — the prose fix also cleared the design-warn that the prior
+commit narrowed but did not fully resolve). **Byte deltas:** none (docs/status.md
++ docs/log.md only; no budgeted file touched). Not pushed (`push-policy: human`).
+
+**Handoff — WI-135 unstarted, by design.** `[v3]-[g2]` is an atomic, one-batch-review
+decomposition (LLR+TC for SR-052/053/054 — Critique, non-LLR-exempt — plus
+SR-055/SR-056, the LLR-052/TC-052 rev for the SR-051 amendment, the three
+`docs/rubrics/dashboard-*.md` rubrics authored from SR intent, dev-slice
+definitions, and the named soft criteria concretized: SR-052 contrast threshold,
+SR-056 declared column bound as a TC parameter, SR-054 one-tab-switch task list,
+SR-055's stage list 1:1 to panel nodes). Partial decomposition would leave the
+v3 SRs half-covered — worse than the clean designed post-g1 window. Left whole
+for a fresh full-budget BUILD session; `docs/next-wi` stays **WI-135**,
+run-state RUNNING.
