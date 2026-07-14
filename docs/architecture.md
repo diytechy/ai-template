@@ -182,6 +182,7 @@ Contracts (interfaces): IF-002, IF-030
 | `check_inventory(docs, root, docs_dir)` | The root README honors the traceability spine (process.md §4 G1). |  |
 | `git_commit_lookup(root)` | Return a memoized path->last-commit-epoch lookup, or None when git is |  |
 | `find_stale(parsed, root, lookup)` | Docs linking a non-doc file committed more recently than the doc itself. |  |
+| `check_status_surface(root, docs_dir)` | S-1 (line budget) / S-2 (Open items before ## Scope) / S-3 (OI coherence |  |
 | `main()` |  |  |
 
 ### `scripts/check_dupes`

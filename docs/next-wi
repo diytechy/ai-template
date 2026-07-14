@@ -4,4 +4,5 @@
 # that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it
 # as the session's STARTING tier in place of the phase default (WI-126); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
-WI-132
+# (empty - the open-items-surface campaign closed 2026-07-13; no autonomous
+# queued WI remains, the loop parks in NEEDS-HUMAN; see docs/status.md.)

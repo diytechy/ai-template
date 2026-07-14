@@ -55,6 +55,9 @@ project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajecto
 project-trajectory/scripts/check.py == project-trajectory/scripts/run_menu.py
 project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
 project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_stubs.py
+# WI-132: check_docs gained the docs/status-lint declared-policy reader (F5).
+project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
+project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
 project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
 project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/derive_gate.py
 project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py

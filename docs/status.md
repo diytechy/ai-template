@@ -52,10 +52,9 @@ home elsewhere — don't restate it here:
       + index, defer the split.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-  - **In flight** _(driver; no approval needed):_ the **open-items-surface
-    campaign** (owner-directed 2026-07-13;
-    [specs/open-items-surface.md](specs/open-items-surface.md)) — last slice
-    **WI-132**, the status-surface lint in `check_docs.py` (warn-tier).
+  - **In flight** _(driver; no approval needed):_ none — the open-items-surface
+    campaign closed 2026-07-13 (this surface + its shipped template + the
+    warn-tier `check_docs` lint; record in [log.md](log.md)).
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-110** in
@@ -65,9 +64,9 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** finish the open-items-surface campaign (WI-132, In flight
-  above); then the loop re-parks in **NEEDS-HUMAN** — when the owner rules
-  OI-1…7, that ruling creates the next actionable scope.
+- **Next action:** the loop parks in **NEEDS-HUMAN** — when the owner rules
+  OI-1…7 ([open-items.md](open-items.md)), that ruling creates the next
+  actionable scope; until then there is no autonomous BUILD to route.
 
 ## Scope
 

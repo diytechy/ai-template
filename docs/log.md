@@ -4300,3 +4300,41 @@ status.md → open-items.md link resolves). Commit bar:
 (surgical single-line edit — a first csv.writer rewrite was reverted for
 re-quoting 22 unrelated rows; the registry's hand-owned cell quoting is
 preserved). `docs/next-wi` = WI-132. No push (`push-policy: human`).
+
+## 2026-07-13 — WI-132: the status-surface lint (open-items-surface campaign close)
+
+**Slice 3 of 3** (`docs/specs/open-items-surface.md`).
+`check_docs.check_status_surface()` — **S-1** line budget (default 120;
+`docs/status-lint` run-phase-idiom policy file: integer override, or `off`
+disabling S-1..S-3), **S-2** the Open-items marker must precede `## Scope`
+(plus a Scope-with-no-marker warn), **S-3** OI coherence with
+`docs/open-items.md` (every Needs-\<human> `OI-N` — best-effort block
+extraction over the template shape — has a `## OI-N` section; every section id
+appears in status.md; vacuous when open-items.md is absent). **All warn-only,
+never the exit code** (the WI-129 stance); gate-promotion is the recorded
+un-defer trigger for a spine SR. PROCESS_OPTIONS "Trajectory / work-items
+layer" gains the owner-decision-surface block (the one home). 6 new tests in
+`test_check_docs.py`.
+
+**The full suite earned its keep at close:** the first unfiltered run failed
+5 tests — the **non-Python scaffold** path (`append_stack_checklist`) seeds
+`OI-3` (choose the stack toolchain commands) into Needs-\<human>, and S-3
+rightly flagged the missing brief. Fixed at the root: `bootstrap.py` now
+appends the matching `STACK_OI3_BRIEF` to the scaffolded `open-items.md`
+(the In-flight OI-4..6 are driver work and need no brief). Also caught and
+fixed: two `DeprecationWarning: invalid escape sequence \<` from the new
+docstring, and the **dupes gate** flagged the new `docs/status-lint` declared
+reader as F5 helper duplication — censused in `docs/dupes-allow`
+(check_docs == check_privacy / check_trajectory) per the census's own
+maintenance rule. **Deviation from spec:** the bootstrap OI-3 brief (not in
+the spec's slice list; forced by the scaffold-clean done-when).
+**Byte-budgeted files:** none.
+
+**Verification.** Full unfiltered suite: `python -m pytest -q -n auto` →
+**713 passed, 2 skipped in 54.89s** (zero warnings). Campaign-close gate bar:
+`check.py --gate G3 --phase v1,v2 --jobs 0` → **15/15 PASS** (after the
+trajectory-map regen). Meta dogfood: this repo's own status.md + open-items.md
+pass S-1..S-3 with **zero warnings** (the 13 pre-existing orphan warnings are
+unchanged). Registry: WI-132 → done; `docs/next-wi` cleared;
+`docs/run-state` → NEEDS-HUMAN with the refreshed OI-1…OI-7 ask. No push
+(`push-policy: human`).

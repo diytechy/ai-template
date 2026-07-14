@@ -49,6 +49,18 @@ finding classes:
     Docs under `docs/archive/` (frozen history) are exempt — staleness is noise
     there.
 
+  - **status-surface structure** (**warn-only**, never the exit code;
+    process-options.md "Trajectory / work-items layer"): `docs/status.md` is the
+    forward-only blackboard, so (S-1) it warns past a line budget — default 120,
+    `docs/status-lint` overrides with an integer or the one word `off` (which
+    disables S-1..S-3); (S-2) its Open-items marker must precede the `## Scope`
+    heading (open items surface at the top); (S-3) with `docs/open-items.md`
+    present, every `OI-N` inside the Needs-<human> block has a `## OI-N`
+    section there (no undocumented owner ask) and every section id appears in
+    status.md (no orphan brief). S-3 extraction is best-effort over the
+    template's shape; a custom layout misses warnings, never false-fails.
+    Vacuous when status.md (or, for S-3, open-items.md) is absent.
+
 The root `OWNER_SCRATCHPAD.md` is exempt from all of the above: it holds the
 human owner's free-form private notes and is dropped from doc discovery entirely
 (agents must not read or act on it; its own header says so).
@@ -523,6 +535,124 @@ def find_stale(parsed, root, lookup):
     return stale
 
 
+# --- status-surface structure (S-1..S-3; warn-only) --------------------------
+# The forward-only contract on docs/status.md, mechanized at its self-proving
+# floor: length + ordering + OI coherence. Content quality (is the pros/cons
+# real?) is reviewer-class by the enforcement audit and deliberately NOT here.
+
+STATUS_BUDGET_DEFAULT = 120
+_OI_RE = re.compile(r"\bOI-\d+\b")
+_OI_HEADING_RE = re.compile(r"^#{2,3}\s+[^\n]*?\b(OI-\d+)\b", re.M)
+_NEEDS_HUMAN_RE = re.compile(r"needs\s*\\?<human>", re.I)
+_SCOPE_HEADING_RE = re.compile(r"^##\s+scope\b", re.I | re.M)
+_OPEN_ITEMS_MARKER_RE = re.compile(r"open items", re.I)
+
+
+def _status_lint_policy(root, docs_dir):
+    """The `docs/status-lint` declared value (run-phase idiom: `#` comment lines,
+    one value on the last non-blank line): an int line budget, the string
+    "off", or None (absent/blank/unparseable => the default budget)."""
+    p = root / docs_dir / "status-lint"
+    if not p.exists():
+        return None
+    value = None
+    for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            value = line
+    if value is None:
+        return None
+    if value.lower() == "off":
+        return "off"
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
+def _needs_human_block(text):
+    """The Needs-<human> block of status.md, best-effort over the template's
+    mandated shape: from the marker line, a bullet's block runs while lines are
+    blank or indented deeper than the marker; a heading's block runs to the next
+    heading. Returns "" when no marker is found (S-3 then only checks the
+    orphan-brief direction)."""
+    lines = text.splitlines()
+    for i, line in enumerate(lines):
+        if not _NEEDS_HUMAN_RE.search(line):
+            continue
+        block = [line]
+        if line.lstrip().startswith("#"):
+            for nxt in lines[i + 1 :]:
+                if nxt.lstrip().startswith("#"):
+                    break
+                block.append(nxt)
+        else:
+            indent = len(line) - len(line.lstrip())
+            for nxt in lines[i + 1 :]:
+                if nxt.strip() and (len(nxt) - len(nxt.lstrip())) <= indent:
+                    break
+                block.append(nxt)
+        return "\n".join(block)
+    return ""
+
+
+def check_status_surface(root, docs_dir):
+    """S-1 (line budget) / S-2 (Open items before ## Scope) / S-3 (OI coherence
+    with docs/open-items.md) over docs/status.md — warnings only, never the exit
+    code (the WI-129 stance: warn, don't gate, don't mutate). Vacuous when
+    status.md is absent or docs/status-lint says `off`."""
+    status = root / docs_dir / "status.md"
+    if not status.exists():
+        return []
+    policy = _status_lint_policy(root, docs_dir)
+    if policy == "off":
+        return []
+    budget = policy if isinstance(policy, int) else STATUS_BUDGET_DEFAULT
+    text = status.read_text(encoding="utf-8", errors="replace")
+    warns = []
+
+    n_lines = len(text.splitlines())
+    if n_lines > budget:
+        warns.append(
+            "status.md is {} lines (budget {}): it is the forward-only surface "
+            "— move depth to open-items.md / the WI registry / the log "
+            "(docs/status-lint overrides the budget, `off` disables)".format(
+                n_lines, budget
+            )
+        )
+
+    scope = _SCOPE_HEADING_RE.search(text)
+    marker = _OPEN_ITEMS_MARKER_RE.search(text)
+    if scope and not marker:
+        warns.append(
+            "status.md has a ## Scope section but no Open-items marker — the "
+            "open items must surface on the working surface"
+        )
+    elif scope and marker and marker.start() > scope.start():
+        warns.append(
+            "status.md lists Open items after ## Scope — open items surface at "
+            "the top, backward/context matter below"
+        )
+
+    open_items = root / docs_dir / "open-items.md"
+    if open_items.exists():
+        oi_text = open_items.read_text(encoding="utf-8", errors="replace")
+        briefed = set(_OI_HEADING_RE.findall(oi_text))
+        needs = set(_OI_RE.findall(_needs_human_block(text)))
+        for oid in sorted(needs - briefed):
+            warns.append(
+                "{}: a Needs-<human> item in status.md with no `## {}` section "
+                "in open-items.md (every owner ask carries its brief)".format(oid, oid)
+            )
+        for oid in sorted(briefed - set(_OI_RE.findall(text))):
+            warns.append(
+                "{}: briefed in open-items.md but never named in status.md "
+                "(an orphan brief — ruled items move to the log's Decisions "
+                "and the section is deleted)".format(oid)
+            )
+    return warns
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)
@@ -584,7 +714,9 @@ def main():
         )
     for msg in vision_fails + inv_fails:
         print("check_docs: FAIL - " + msg)
-    for msg in vision_warns + inv_warns:
+    # Warn-only by design (never the exit code): the status-surface structure.
+    status_warns = check_status_surface(root, args.docs)
+    for msg in vision_warns + inv_warns + status_warns:
         print("check_docs: WARN - " + msg)
 
     if args.stale:

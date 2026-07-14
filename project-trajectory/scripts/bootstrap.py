@@ -904,6 +904,20 @@ STACK_IN_FLIGHT = (
     "runner in docs/stack.ini's [tiers] (pytest.ini deliberately not "
     "scaffolded) → [stack.ini](stack.ini)\n"
 )
+# The Needs-<human> OI-3 carries its decision brief in docs/open-items.md
+# (check_docs S-3: every owner ask has its brief); the In-flight OI-4..6 are
+# driver work and need none.
+STACK_OI3_BRIEF = (
+    "\n## OI-3 — Decide: the {stack} toolchain commands\n\n"
+    "- **Decision:** the format / lint / test commands for the {stack} stack "
+    "in docs/stack.ini's `[product]` section (blocks: G1).\n"
+    "- **Blast radius:** every gate run and CI job shells these commands — a "
+    "wrong entry green-washes the harness.\n"
+    "- **Options:** the stack's conventional tools · whatever the repo "
+    "already runs in CI.\n"
+    "- **Recommendation:** mirror the existing CI commands first, then "
+    "tighten.\n"
+)
 
 
 def seed_arch_map_mode(dest, stack, created, dry_run):
@@ -946,6 +960,14 @@ def append_stack_checklist(dest, stack, dry_run):
         1,
     )
     status.write_text(text, encoding="utf-8")
+    # OI-3 is a Needs-<human> ask, so it owes a brief (check_docs S-3).
+    open_items = dest / "docs" / "open-items.md"
+    if open_items.exists():
+        open_items.write_text(
+            open_items.read_text(encoding="utf-8")
+            + STACK_OI3_BRIEF.format(stack=stack),
+            encoding="utf-8",
+        )
     return True
 
 

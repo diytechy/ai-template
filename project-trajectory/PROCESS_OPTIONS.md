@@ -1267,6 +1267,25 @@ at the commit floor; `--strict` gates R-B…R-E at G2+):
 If `status.md` is absent, R-B/R-C/R-D are vacuous (a repo may keep no status
 blackboard); a placeholder-only/absent registry stays vacuous for all of them.
 
+**The owner decision surface (`docs/open-items.md`) + the status-surface
+lint.** The Needs-\<human> bullets in `status.md` stay **one-liners** (id +
+one-line recommendation), or the blackboard re-bloats; the *depth* of each
+pending decision — blast radius, options with pros/cons, the driver's
+recommendation — lives in **`docs/open-items.md`** (scaffolded from
+`OPEN_ITEMS.template.md`), one `## OI-N` section per pending decision, so the
+owner reviews **one file with all context**. Lifecycle: a section lives there
+only while pending — the ruling appends to `log.md`'s Decisions and the
+section is deleted (`work-items.csv` = tracking, `open-items.md` = pre-ruling
+analysis, `log.md` = post-ruling record; no third source of truth).
+`check_docs.py` warns — **structure only, never the exit code** (content
+quality is reviewer-class, and gate promotion is this layer's un-defer trigger
+for a spine SR): **S-1** `status.md` over its line budget (default 120;
+`docs/status-lint` overrides with an integer, `off` disables S-1..S-3);
+**S-2** the Open-items marker must precede `## Scope`; **S-3** every
+Needs-\<human> `OI-N` has a section in `open-items.md` and every section id
+appears in `status.md`. S-3 is vacuous without `open-items.md` — the surface
+is optional; delete the file to opt out.
+
 **Spec-of-record (`SpecRef` + `docs/specs/`).** A queued WI whose only description
 is its title is not implementable, and nothing used to check that an open WI named
 a reachable spec. `SpecRef` fixes that: a spec-of-record lives in

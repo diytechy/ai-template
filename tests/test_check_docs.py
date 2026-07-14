@@ -604,3 +604,105 @@ def test_git_commit_lookup_none_outside_work_tree(tmp_path):
     # A bare temp dir is not a git work tree (and the call also returns None
     # when git isn't installed) -> staleness is skipped.
     assert check.git_commit_lookup(tmp_path) is None
+
+
+# --- status-surface structure (S-1..S-3; warn-only) ---------------------------
+
+
+_STATUS_SHAPED = """# Status
+
+- **Open items:**
+  - **Needs <human>**:
+    - OI-1 - decide the flag
+    - OI-9 - decide the port
+  - **In flight**:
+    - OI-2 - pinning the acceptance predicate
+
+## Scope
+
+- **Goal:** the thing
+"""
+
+
+def _write_status(scaffold, text):
+    (scaffold / "docs" / "status.md").write_text(text, encoding="utf-8")
+
+
+def test_scaffold_status_surface_is_clean(scaffold):
+    # A fresh scaffold must produce ZERO S-1..S-3 warnings out of the box: the
+    # template status.md is under budget, Open items precede Scope, and the
+    # OPEN_ITEMS template's OI-1 example matches STATUS.template's.
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0
+    assert "status.md is" not in proc.stdout  # S-1
+    assert "Open items" not in proc.stdout  # S-2 (warn text)
+    assert "Needs-<human> item" not in proc.stdout  # S-3
+    assert "orphan brief" not in proc.stdout  # S-3 reverse
+
+
+def test_status_budget_warns_but_never_fails(scaffold):
+    # S-1 is warn-only by design (the WI-129 stance): over-budget prose warns
+    # and the exit code stays 0.
+    _write_status(scaffold, "# Status\n" + "filler line\n" * 130)
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARN - status.md is 131 lines (budget 120)" in proc.stdout
+
+
+def test_status_lint_policy_overrides_and_off(scaffold):
+    # An integer in docs/status-lint replaces the default budget; the one word
+    # `off` silences S-1..S-3 entirely (here: an order violation too).
+    _write_status(
+        scaffold, "# Status\n\n## Scope\n\n- Goal\n\n- **Open items:** none\n"
+    )
+    (scaffold / "docs" / "status-lint").write_text("# comment\n200\n", "utf-8")
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert "budget 200" not in proc.stdout  # under the raised budget: no S-1
+    assert "after ## Scope" in proc.stdout  # S-2 still live
+    (scaffold / "docs" / "status-lint").write_text("off\n", encoding="utf-8")
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert "after ## Scope" not in proc.stdout
+    assert "status.md is" not in proc.stdout
+
+
+def test_status_order_and_missing_marker_warn(scaffold):
+    # S-2: Scope before the Open-items marker warns; a Scope section with no
+    # Open-items marker at all also warns.
+    _write_status(
+        scaffold, "# Status\n\n## Scope\n\n- Goal\n\n- **Open items:** none\n"
+    )
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert proc.returncode == 0
+    assert "Open items after ## Scope" in proc.stdout
+    _write_status(scaffold, "# Status\n\n## Scope\n\n- Goal\n")
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert "no Open-items marker" in proc.stdout
+
+
+def test_oi_coherence_both_directions(scaffold):
+    # S-3: a Needs-<human> OI with no brief warns; a briefed OI never named in
+    # status.md warns; an In-flight OI needs NO brief; all warn-only (exit 0).
+    _write_status(scaffold, _STATUS_SHAPED)
+    (scaffold / "docs" / "open-items.md").write_text(
+        "# Open items\n\n## OI-1 - decide the flag\n\n- **Decision:** ...\n\n"
+        "## OI-8 - stale ruled item\n\n- **Decision:** ...\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "OI-9: a Needs-<human> item" in proc.stdout  # missing brief
+    assert "OI-8: briefed in open-items.md" in proc.stdout  # orphan brief
+    assert "OI-1" not in proc.stdout  # coherent id is quiet
+    assert "OI-2" not in proc.stdout  # in-flight needs no brief
+
+
+def test_oi_coherence_vacuous_without_open_items(scaffold):
+    # S-3 is opt-in: deleting open-items.md silences it (the other status
+    # rules stay live).
+    _write_status(scaffold, _STATUS_SHAPED)
+    (scaffold / "docs" / "open-items.md").unlink()
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert proc.returncode == 0
+    assert "OI-9" not in proc.stdout
