@@ -5219,8 +5219,12 @@ they are amendment candidates, not blockers on this slice.
 **Deviation:** none. `gen_trajectory.py` is not budget-watched; no budgeted doc
 touched; no code behavior change outside the new panel. Regenerated
 `PROJECT_STATE.html` + `docs/gate` (still G2) + `docs/okf` (3 files, the
-SR-055/LLR-056/TC-056 status text). Smoke: 574+2; the four new tests + the 8
-existing process tests green (12/12). Full suite + gate bar recorded below.
+SR-055/LLR-056/TC-056 status text). Smoke: 578+2; the four new tests + the 8
+existing process tests green (12/12). Full unfiltered suite (slice close, run
+under Git-Bash so the `sh`-dependent hook tests execute): **732 passed, 3
+skipped in 69.87s**. Gate bar (`check.py --gate`) deferred to the dashboard-ux
+campaign close (WI-144), per the mid-campaign-slice rule (a slice ends at the
+commit bar).
 
 **Handoff.** Run-state **RUNNING**; `docs/next-wi` → **WI-143** (SR-056
 decomposition render polish, folding OI-10). Not pushed (`push-policy: human`).
