@@ -152,8 +152,8 @@ Always (independent of --strict-schema), structural integrity is checked:
       The combined `SR;LLR` citation is a convenience so one test discharges both
       the "SR needs a TC" and "LLR needs a TC" rules, but it must not contradict
       the SR<->LLR link recorded canonically on the LLR's SR-Refs — an incoherent
-      pairing is wrong at any stage, like a malformed id (IMPROVEMENT_PLAN.md
-      Thread 50). A TC citing only LLRs (no SR) has no SR to contradict and is
+      pairing is wrong at any stage, like a malformed id. A TC citing only LLRs
+      (no SR) has no SR to contradict and is
       left to the orphan rules
 These join `--strict`'s failure set like orphans do. `--strict-integrity` fails
 on *only* this integrity class: it is the always-valid floor the pre-commit hook
@@ -171,8 +171,8 @@ starts green.
       AcceptanceCriteria, Priority, Verification, Status; LLR: LLR-ID, SR-Refs,
       Title, Module, CodeSymbol, Detail, Status; TC: TC-ID, Verifies, Level,
       Method, Tier, Expected, Automated, Status);
-    - a TC claiming Automated=Yes cites its Evidence (Thread 51, owner-ruled
-      2026-07-09): the `Evidence` column names the concrete test — a pytest
+    - a TC claiming Automated=Yes cites its Evidence: the `Evidence` column
+      names the concrete test — a pytest
       node, a script path, or a procedure-doc link. Inspection-only text, never
       a mechanized resolve (node ids aren't filesystem paths). Conditional, not
       a flat required field: Automated=No/blank rows may leave it empty, and
@@ -538,7 +538,7 @@ def integrity_findings(label, raw_rows):
 
 
 def triangle_findings(tcs, llrs):
-    """SR/LLR citation coherence (IMPROVEMENT_PLAN.md Thread 50). A TC may cite an
+    """SR/LLR citation coherence. A TC may cite an
     SR and an LLR together so one test discharges both the "SR needs a TC" and
     "LLR needs a TC" rules; the SR<->LLR relationship itself is recorded
     canonically on the LLR's SR-Refs. This keeps the derived citation honest: when
@@ -696,7 +696,7 @@ def schema_findings(label, rows):
                     f"{label} {rid} has {col}={val!r} (allowed: "
                     f"{', '.join(sorted(allowed))})"
                 )
-        # Thread 51 (owner-ruled 2026-07-09): a TC claiming Automated=Yes must
+        # A TC claiming Automated=Yes must
         # cite its Evidence (pytest node / path / procedure link) — a
         # claimed-automated test with no cited location is a soft false-green.
         # Conditional on the claim, so it can't live in REQUIRED_FIELDS; a
@@ -1280,7 +1280,7 @@ def main():
         for f in structure_findings(p, p.relative_to(docs.parent).as_posix())
     ]
     integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
-    # SR/LLR citation coherence (Thread 50): a TC that cites an SR and an LLR
+    # SR/LLR citation coherence: a TC that cites an SR and an LLR
     # together must not pair an LLR with an SR it does not decompose. Integrity-
     # class (wrong at any stage), so it joins the --strict-integrity floor.
     integrity += triangle_findings(tcs, llrs)

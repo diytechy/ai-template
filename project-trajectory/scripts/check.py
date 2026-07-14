@@ -222,7 +222,7 @@ def _split_template(template):
     Windows path value in a stack.ini command (`.venv\\Scripts\\eslint`) keeps
     its separators — a bare shlex.split (posix escaping) would eat them to
     `.venvScriptseslint`. Same tokenizer agent_loop.split_cmd uses; kept a small
-    duplicated helper per the F5 rule (REVIEW_GRIND_FULL C2)."""
+    duplicated helper per the F5 rule."""
     lex = shlex.shlex(template, posix=True)
     lex.whitespace_split = True
     lex.escape = ""

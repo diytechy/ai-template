@@ -741,7 +741,7 @@ def main():
     stale = False
     for doc in docs:
         if not doc.exists():
-            # Missing-target posture (REVIEW_GRIND_FULL C9): arch-map's target is
+            # Missing-target posture: arch-map's target is
             # a HAND-AUTHORED doc that must already exist (it holds prose around
             # the generated block), so its absence is a hard error — unlike the
             # fully-generated gen_okf / gen_trajectory outputs, whose --check
@@ -770,7 +770,7 @@ def main():
         elif updated != current:
             # newline="\n" via open() (write_text(newline=) is 3.10+, floor is
             # 3.8): LF on every OS so the generated block stays byte-stable
-            # regardless of a downstream .gitattributes rule (REVIEW_GRIND_FULL C7).
+            # regardless of a downstream .gitattributes rule.
             with doc.open("w", encoding="utf-8", newline="\n") as fh:
                 fh.write(updated)
             print("code map regenerated -> {}".format(doc))

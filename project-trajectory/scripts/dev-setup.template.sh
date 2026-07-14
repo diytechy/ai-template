@@ -200,7 +200,7 @@ fi
 # zero-dependency, reversible, so every committer gets it from the rung they
 # actually run. setup.sh wires it too (idempotent); doing it here means a
 # contributor who onboards via dev-setup is protected without waiting to run setup
-# (process.md §7 / IMPROVEMENT_PLAN.md WI-1.42). Skipped cleanly outside a git repo
+# (process.md §7). Skipped cleanly outside a git repo
 # or before the hook is scaffolded.
 if [ -f .githooks/pre-commit ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git config core.hooksPath .githooks

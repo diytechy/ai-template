@@ -85,7 +85,7 @@ def read_stakeholder_needs(md_path):
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
     non-ASCII path / title / registry cell can't raise UnicodeEncodeError on a
-    legacy Windows cp1252 console (REVIEW_GRIND_FULL C5; verbatim across the
+    legacy Windows cp1252 console (verbatim across the
     kit). Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
     for s in (sys.stdout, sys.stderr):
         try:

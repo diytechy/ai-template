@@ -138,7 +138,7 @@ if ($tier -eq "full") {
 }
 
 # Wire the agent-neutral pre-commit process floor (core.hooksPath) — universal,
-# zero-dependency, reversible (process.md §7 / IMPROVEMENT_PLAN.md WI-1.42).
+# zero-dependency, reversible (process.md §7).
 # setup.ps1 wires it too (idempotent); doing it here protects a dev-setup-only
 # onboarding. Skipped cleanly outside a git repo or before the hook is scaffolded.
 if (Test-Path ".githooks/pre-commit") {

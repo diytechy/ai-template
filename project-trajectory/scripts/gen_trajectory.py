@@ -71,8 +71,7 @@ from pathlib import Path
 # bootstrap.py precedent). Run as a script/subprocess, the sibling resolves via
 # sys.path[0] (this file's own directory); loaded another way — an in-process
 # test through importlib, a downstream tool importing the module — that entry is
-# absent, so fall back to adding this file's directory explicitly. See
-# THREAD_52_REVIEW.md F5.
+# absent, so fall back to adding this file's directory explicitly.
 try:
     import check_trajectory as ct
 except ImportError:
@@ -112,8 +111,8 @@ def _sn_rows(root):
 
     Kept byte-for-byte in sync with gen_okf.sn_rows (a small stable helper
     duplicated per the F5 rule, not shared) — the two once drifted (one kept
-    `-000`, one didn't), which rendered a phantom SN-000 root in the icicle
-    (REVIEW_GRIND_FULL C6). Change both together."""
+    `-000`, one didn't), which rendered a phantom SN-000 root in the icicle.
+    Change both together."""
     md = root / "docs/requirements/stakeholder-needs.md"
     rows = []
     if not md.exists():
@@ -247,8 +246,8 @@ def arch_icicle(root):
     # only ever called SN->SR, SR->LLR, LLR->TC, SR->TC (see the tiers above), so
     # no input — pathological or not — can deepen it past the SN->SR->LLR->TC
     # spine. They therefore need no iterative rewrite or depth guard, unlike
-    # `_dag_ranks` / `check_trajectory._cycles` which walk the unbounded WI chain
-    # (THREAD_52_REVIEW.md F4). Kept recursive so this block stays a faithful port
+    # `_dag_ranks` / `check_trajectory._cycles` which walk the unbounded WI chain.
+    # Kept recursive so this block stays a faithful port
     # of the proven gilbert icicle; if that port is ever hardened upstream (for a
     # deeper tree there), mirror it — here it is provably safe.
     weight = {}
@@ -418,7 +417,7 @@ def _dag_ranks(wis, pred_map):
 
     Iterative post-order (explicit stack), not recursion: a deep dependency chain
     would blow CPython's ~1000-frame limit and raise ``RecursionError`` instead of
-    a rendered dashboard (THREAD_52_REVIEW.md F4). ``on_path`` tracks the nodes on
+    a rendered dashboard. ``on_path`` tracks the nodes on
     the current DFS branch; in a DAG no predecessor is ever on the path, so the
     guard is inert for valid input, and a stray back-edge (a cycle that slipped
     past validation) degrades to no constraint rather than spinning — the same
@@ -2416,7 +2415,7 @@ def main():
         out.parent.mkdir(parents=True, exist_ok=True)
         # newline="\n" via open() (write_text(newline=) is 3.10+, floor is 3.8):
         # LF on every OS, so byte-stability doesn't rest on a downstream
-        # .gitattributes eol=lf rule surviving (REVIEW_GRIND_FULL C7).
+        # .gitattributes eol=lf rule surviving.
         with out.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(generated)
         print("gen_trajectory: wrote {}".format(OUT_HTML))

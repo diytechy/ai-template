@@ -1003,7 +1003,7 @@ MAPPING = [
     # gate advance. Scaffolds `attended`; --gate-policy sets a non-default
     # level and pre-fills the deviation-register skeleton for it.
     ("gate-policy.template", "docs/gate-policy"),
-    # The reviewer dial (AGENT_ROLES R1, process-options.md "Unattended
+    # The reviewer dial (process-options.md "Unattended
     # operation"): how many independent fresh-context review verdicts a WI
     # gets (0|1|2). Default `1`; floors above the dial live in the file.
     ("review-policy.template", "docs/review-policy"),

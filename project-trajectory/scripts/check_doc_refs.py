@@ -80,7 +80,7 @@ def is_path_shaped(token):
     # `::` is a pytest node id (tests/x.py::test_name — the kit's sanctioned
     # Evidence form, a real file plus a selector), and `;`/`,` join a list of
     # paths; none is a single filesystem path, so they are out of the path
-    # tier's scope (REVIEW_GRIND_A A2 — false-positive control is the point).
+    # tier's scope (false-positive control is the point).
     if "::" in token or ";" in token or "," in token:
         return False
     if "/" not in token:
@@ -92,7 +92,7 @@ def _generated_prefixes(root):
     """Directory prefixes marked `linguist-generated` in .gitattributes (e.g.
     `docs/okf/`), so the tool never lints its own generated output — the same
     "don't lint generated" stance the GENERATED marker-block skip already
-    encodes for inline blocks (REVIEW_GRIND_A A2)."""
+    encodes for inline blocks."""
     ga = root / ".gitattributes"
     prefixes = []
     if not ga.exists():
@@ -188,7 +188,7 @@ def findings_for(doc, root, oracle):
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
     non-ASCII path / title / registry cell can't raise UnicodeEncodeError on a
-    legacy Windows cp1252 console (REVIEW_GRIND_FULL C5; verbatim across the
+    legacy Windows cp1252 console (verbatim across the
     kit). Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
     for s in (sys.stdout, sys.stderr):
         try:

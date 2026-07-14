@@ -4,9 +4,9 @@ selector and the fixed escalation policy (process-options.md "Unattended
 operation" -> the routing/escalation subsection). Stdlib only, Python 3.8+.
 
 This is the declared, legible half of heterogeneous implementer/reviewer
-scheduling (AGENT_ROLES R6; the S8 rulings). It is **config, not a catalog**,
-and its registry is the **pair-row model** (capability-expansion.md C3, "pairs
-now, factor later"): identity vs access, one row per (model x route) pair.
+scheduling. It is **config, not a catalog**, and its registry is the
+**pair-row model** ("pairs now, factor later"): identity vs access, one row
+per (model x route) pair.
 
   - `docs/agents.csv` is the model REGISTRY. Columns:
     `Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes`.

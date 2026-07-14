@@ -29,7 +29,7 @@ Per session the coordinator:
     routing; REVIEW-A/REVIEW-B keys are free-form), falling back to AGENT_CMD.
     docs/review-policy (the reviewer dial, 0|1|2) is surfaced in the banner;
     the loop never enforces it — review dispatch is the run-phase + status.md
-    convention (AGENT_ROLES R1/R2);
+    convention;
   - runs one fresh headless session (stdin closed; optional
     --session-timeout so a hung session can't wedge the loop);
   - writes the raw transcript to gitignored out/run-logs/ and a size-bounded
@@ -106,7 +106,7 @@ from pathlib import Path
 # Sibling scripts (the S8 routing/scoring half). Run as a subprocess the loop's
 # own dir is sys.path[0] so a plain import resolves; the guard covers an
 # in-process import (a test) whose sys.path doesn't yet carry scripts/ — the
-# same sanctioned-sibling-import idiom gen_trajectory uses (THREAD_52_REVIEW F5).
+# same sanctioned-sibling-import idiom gen_trajectory uses.
 try:
     import agent_route
     import score_reviews
@@ -255,8 +255,8 @@ CRITIQUE_PROMPT = (
     "stop."
 )
 
-# The review-phase names the loop schedules (AGENT_ROLES: run-phase in {PLAN,
-# BUILD, REVIEW-A, REVIEW-B, INTEGRATE}). A committing non-review session
+# The review-phase names the loop schedules (run-phase in {PLAN, BUILD,
+# REVIEW-A, REVIEW-B, INTEGRATE}). A committing non-review session
 # triggers a review round; these phases are the round.
 REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")
 
@@ -565,7 +565,7 @@ def status_size_warning(status_path, limit):
     """A warn-only message when the resume surface outgrew one screen, or None.
 
     Every session inherits the lane's status.md; a bloated one is the
-    file-world analogue of a full context window (AGENT_ROLES R3). Advisory
+    file-world analogue of a full context window. Advisory
     only — the integrator's prune charter is the fix; limit <= 0 disables."""
     try:
         size = status_path.stat().st_size
@@ -991,7 +991,7 @@ def seconds_until_reset(hint, now=None):
         # A named weekday is a weekly reset: if that day/time has already passed
         # today (ahead == 0, time in the past), the true reset is next week's
         # same weekday — advance by whole weeks, not one day (which would land
-        # on a different weekday; REVIEW_GRIND_A A3).
+        # on a different weekday).
         while target <= now:
             target += datetime.timedelta(days=7)
     else:
@@ -1440,7 +1440,7 @@ def main():
         help='per-phase agent COMMAND template map "REVIEW-B=gemini -p '
         '{prompt},BUILD=claude -p {prompt} --model {model}" matched against '
         "docs/run-phase, falling back to the single AGENT_CMD template — "
-        "first-class cross-provider routing (AGENT_ROLES R6; cross-provider "
+        "first-class cross-provider routing (cross-provider "
         "dual review is the recommended review-policy 2 pairing). Same "
         "syntax/parser as --model-map, so a template must not itself contain "
         "',' or ';' — for one that does, use a thin dispatcher wrapper "
@@ -1649,12 +1649,12 @@ def main():
     review_policy = read_declared(docs / "review-policy", "1")
     _, branch = git(root, "branch", "--show-current")
 
-    # The resume-surface size preflight (AGENT_ROLES R3, warn-only): every
+    # The resume-surface size preflight (warn-only): every
     # session inherits the lane's status.md, so a bloated one is the file-world
     # version of a full context window. The integrator's charter is to prune it
     # to one screen; this is the cheap tripwire, never a gate.
     # A misconfigured AGENT_STATUS_WARN_BYTES must never crash the run this
-    # warning exists to help — fall back to the default (REVIEW_GRIND_A A5).
+    # warning exists to help — fall back to the default.
     try:
         warn_bytes = int(os.environ.get("AGENT_STATUS_WARN_BYTES", "8192"))
     except ValueError:
@@ -1670,7 +1670,7 @@ def main():
     def session_template(phase):
         """The per-phase command template (AGENT_CMD_MAP), else AGENT_CMD —
         run-phase keys are free-form, so REVIEW-A/REVIEW-B route providers
-        without any loop change (AGENT_ROLES R6)."""
+        without any loop change."""
         return cmd_map.get(phase, template)
 
     guardrails_policy = read_declared(docs / "guardrails-policy", "off")

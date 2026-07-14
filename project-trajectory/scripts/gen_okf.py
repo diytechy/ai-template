@@ -97,7 +97,7 @@ def real_rows(rows, key, prefix):
     shape (trace.py's integrity rule) — a crafted id with `/`..`..` would
     otherwise escape docs/okf/ on write. trace.py --strict-integrity is the
     floor that blocks such an id from committing; this is defense-in-depth for
-    the standalone run (REVIEW_GRIND_A A4)."""
+    the standalone run."""
     out = []
     for r in rows:
         rid = (r.get(key) or "").strip()
@@ -108,8 +108,8 @@ def real_rows(rows, key, prefix):
 
 def sn_rows(root):
     # Kept byte-for-byte in sync with gen_trajectory._sn_rows (small stable
-    # helper duplicated per the F5 rule; they once drifted — REVIEW_GRIND_FULL
-    # C6). Change both together: skip `-000`, id-sort.
+    # helper duplicated per the F5 rule; they once drifted). Change both
+    # together: skip `-000`, id-sort.
     md = root / "docs/requirements/stakeholder-needs.md"
     rows = []
     if not md.exists():
@@ -517,7 +517,7 @@ def on_disk(out_root):
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
     non-ASCII path / title / registry cell can't raise UnicodeEncodeError on a
-    legacy Windows cp1252 console (REVIEW_GRIND_FULL C5; verbatim across the
+    legacy Windows cp1252 console (verbatim across the
     kit). Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
     for s in (sys.stdout, sys.stderr):
         try:
@@ -581,8 +581,7 @@ def main():
         (out_root / rel).unlink()
         pruned += 1
     # Remove now-empty tier directories left by the prune (e.g. interfaces/
-    # after the last IF row goes), so a deleted tier leaves no cruft behind
-    # (REVIEW_GRIND_A A7).
+    # after the last IF row goes), so a deleted tier leaves no cruft behind.
     if pruned:
         for d in sorted(out_root.rglob("*"), key=lambda p: len(p.parts), reverse=True):
             if d.is_dir() and not any(d.iterdir()):

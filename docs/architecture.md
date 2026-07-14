@@ -492,7 +492,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Verified` |  |
 | `id_key(label)` |  |  |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
-| `triangle_findings(tcs, llrs)` | SR/LLR citation coherence (IMPROVEMENT_PLAN.md Thread 50). A TC may cite an | LLR-1, SR-1, SR-2 |
+| `triangle_findings(tcs, llrs)` | SR/LLR citation coherence. A TC may cite an | LLR-1, SR-1, SR-2 |
 | `interface_findings(ifs, sr_ids, module_ids)` | The IF-### seam tier's back-link checks (process.md §8), closing the gap |  |
 | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |
 | `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |

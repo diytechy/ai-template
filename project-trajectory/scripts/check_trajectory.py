@@ -276,8 +276,8 @@ def _cycles(wis, pred_map):
     Iterative (explicit stack), not recursive: a work-item registry may encode an
     arbitrarily long dependency chain, and a recursive DFS would raise a raw
     ``RecursionError`` past CPython's ~1000-frame limit — the kit fails on bad
-    data with a clear message, never an uncaught traceback (THREAD_52_REVIEW.md
-    F4). ``stack`` holds ``[node, next-pred-index]`` frames and ``path`` mirrors
+    data with a clear message, never an uncaught traceback. ``stack`` holds
+    ``[node, next-pred-index]`` frames and ``path`` mirrors
     their nodes, so a back-edge to a GREY (on-path) node reconstructs the cycle
     exactly as the former recursion did."""
     WHITE, GREY, BLACK = 0, 1, 2
