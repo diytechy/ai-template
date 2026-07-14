@@ -421,7 +421,7 @@ Contracts (interfaces): IF-011, IF-024, IF-052
 | `project_name(root)` | The project's display name — the README's first H1, else the folder name. |  |
 | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
 | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
-| `sw_containment(root, mods)` | The containerized How-SW top view (WI-073), or None when no `CMP-###` |  |
+| `sw_containment(root, mods)` | The containerized How-SW top view (WI-073) as a Simulink-style drill (SR-051 | SR-051 |
 | `esc(s)` |  |  |
 | `campaign_containment(wis)` | The campaign-binned When view (WI-074), or None when no work item carries a |  |
 | `when_view(root, wis)` | The When roadmap as a Simulink-style, count-thresholded drill-down (SR-051 | SR-051 |

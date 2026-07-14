@@ -738,37 +738,22 @@ def sw_graph(root, mods):
 # expansion. When no CMP contains a module the caller keeps today's flat panel,
 # so a repo without a component layer renders byte-identically.
 
-SW_CONTAINMENT_STYLE = (
-    "<style>"
-    "#sw .cmptree{margin-top:.4rem;}"
-    "#sw details.cmpbox{border:1px solid var(--border);border-radius:10px;"
-    "margin:.45rem 0;background:var(--surface);box-shadow:var(--shadow);}"
-    "#sw details.cmpbox>summary{cursor:pointer;font-weight:600;padding:.6rem .8rem;"
-    "list-style-position:inside;}"
-    "#sw details.cmpbox>summary .sub{font-weight:400;color:var(--muted);}"
-    "#sw .cmpbody{padding:.1rem .85rem .7rem;}"
-    "#sw details.cmpbox details.cmpbox{margin-left:.7rem;}"
-    "#sw .uncontained{padding:.5rem .8rem;border:1px dashed var(--border);"
-    "border-radius:10px;margin:.35rem 0;}"
-    "#sw ul.xseams,#sw ul.cmpseams{margin:.2rem 0 .7rem;padding-left:1.3rem;"
-    "font-size:.9rem;}"
-    "#sw ul.xseams li,#sw ul.cmpseams li{margin:.1rem 0;}"
-    "#sw table.swmap{margin:.35rem 0;}"
-    "</style>"
-)
+SW_CMPTREE_STYLE = "<style>#sw .cmptree{margin-top:.4rem;}</style>"
 
 
 def sw_containment(root, mods):
-    """The containerized How-SW top view (WI-073), or None when no `CMP-###`
-    component contains an arch-map module (the caller then keeps today's flat
-    panel, byte-identical). Returns `(tab, panel)`.
+    """The containerized How-SW top view (WI-073) as a Simulink-style drill (SR-051
+    rev, WI-141), or None when no `CMP-###` component contains an arch-map module
+    (the caller then keeps today's flat panel, byte-identical). Returns
+    `(tab, panel)`.
 
-    The top view is a native `<details>` tree of the top-level components plus the
-    uncontained modules; each component expands to its member modules, its nested
-    child components, and the interface seams internal to it. IF seams whose
-    endpoints fall in two different top-level items render once as an aggregated
-    component-to-component edge at the top level. Deterministic (sorted inputs, no
-    clocks), so the `--check` freshness compare stays byte-stable."""
+    The root layer is a block diagram of the top-level components plus the
+    uncontained modules; a component block is double-clicked (or Enter/Space) to
+    DESCEND one layer into its member modules, nested child components, and the
+    seams internal to it, and a breadcrumb returns. IF-### seams wire endpoint block
+    OUTPUT ports -> INPUT ports; a seam whose endpoints fall in two different
+    top-level items renders once as an aggregated component-to-component wire at the
+    top (deduped to the boundary). Deterministic (sorted inputs, no clocks)."""
     view = ct.component_top_view(root)
     if not view["top_roots"]:
         return None
@@ -778,10 +763,9 @@ def sw_containment(root, mods):
     module_cmps = view["module_cmps"]
     module_roots = view["module_roots"]
     inv = view["inventory"]  # {norm: display}
-    mod_by_norm = {ct._norm_module(m["name"]): m for m in mods}
 
     # A module's DIRECT container(s) = the finest CMP(s) its LLRs tag; a coarser
-    # ancestor contains it through PartOf (rendered as the nested tree).
+    # ancestor contains it through PartOf (rendered as the nested drill layers).
     direct = {cid: [] for cid in by_id}
     for norm, tags in module_cmps.items():
         for cid in tags:
@@ -801,153 +785,140 @@ def sw_containment(root, mods):
             frontier.extend(children_of.get(n, []))
         return out
 
-    def item_keys(norm):
-        """The top-level item key(s) a module falls under: its top-level CMP
-        root(s) when contained, else its own `mod:` key when it is an uncontained
-        inventory module, else empty (a file/external endpoint is not a top item)."""
-        if module_roots.get(norm):
-            return set(module_roots[norm])
-        if norm in inv:
-            return {"mod:" + norm}
-        return set()
+    ifs = ct.load_ifs(ct.read_rows(root / ct.IF_CSV))
+    counter = [0]
+    layers = []
 
-    # Classify every declared seam into: cross-component edges (deduped to the
-    # boundary), per-component intra seams, and per-component boundary seams
-    # (to a file/external hub).
-    cross, intra, boundary = {}, {}, {}
-    for r in ct.load_ifs(ct.read_rows(root / ct.IF_CSV)):
-        tk, tkey, tdisp = _sw_node(r["this"], inv)
-        ck, ckey, cdisp = _sw_node(r["counterpart"], inv)
-        if r["direction"] == "consumes":  # flip so producer -> consumer
-            (pk, pkey, pdisp), (nk, nkey, ndisp) = (ck, ckey, cdisp), (tk, tkey, tdisp)
-        else:
-            (pk, pkey, pdisp), (nk, nkey, ndisp) = (tk, tkey, tdisp), (ck, ckey, cdisp)
-        iid = r["id"]
-        pnorm = pkey.split(":", 1)[1] if pk == "module" else None
-        nnorm = nkey.split(":", 1)[1] if nk == "module" else None
-        pkeys = item_keys(pnorm) if pnorm else set()
-        nkeys = item_keys(nnorm) if nnorm else set()
-        if pkeys and nkeys:
+    def new_id():
+        counter[0] += 1
+        return "sw-{}".format(counter[0] - 1)
+
+    def cmp_label(cid):
+        nm = by_id.get(cid, {}).get("name", "")
+        return "{} — {}".format(cid, nm) if nm else cid
+
+    def cmp_block(cid, child):
+        n = len(subtree_modules(cid))
+        return {
+            "key": "cmp:" + cid,
+            "label": cmp_label(cid),
+            "sub": "component · {} module(s)".format(n),
+            "fill": "var(--surface)",
+            "stroke": "var(--border)",
+            "tier": "component",
+            "descend": child,
+            "crumb": cid,
+            "title": "{} — {} module(s)".format(cmp_label(cid), n),
+        }
+
+    def mod_block(norm):
+        return {
+            "key": "mod:" + norm,
+            "label": inv.get(norm, norm),
+            "sub": "module",
+            "fill": SW_NODE_FILL["module"],
+            "textfill": "#fff",
+            "stroke": "rgba(15,23,42,.15)",
+            "tier": "module",
+            "title": inv.get(norm, norm),
+        }
+
+    def ext_block(key, disp, kind):
+        return {
+            "key": key,
+            "label": disp,
+            "sub": kind,
+            "fill": SW_NODE_FILL.get(kind, "#64748b"),
+            "textfill": "#fff",
+            "stroke": "rgba(15,23,42,.15)",
+            "tier": kind,
+            "title": "{} ({})".format(disp, kind),
+        }
+
+    def layer_edges(block_of, in_scope, allow_boundary):
+        """Aggregated seam wires among this layer's blocks + the file/external
+        blocks they reach. `block_of(norm)` -> the sibling block key(s) a module
+        maps to at this layer (empty when out of this layer's scope); a seam whose
+        two module endpoints land in different sibling blocks (or a boundary seam to
+        a file/external, when `allow_boundary(norm)`) becomes one deduped wire."""
+        agg, externals = {}, {}
+        for r in ifs:
+            tk, tkey, tdisp = _sw_node(r["this"], inv)
+            ck, ckey, cdisp = _sw_node(r["counterpart"], inv)
+            if r["direction"] == "consumes":  # flip so producer -> consumer
+                (pk, pkey, pd), (nk, nkey, nd) = (ck, ckey, cdisp), (tk, tkey, tdisp)
+            else:
+                (pk, pkey, pd), (nk, nkey, nd) = (tk, tkey, tdisp), (ck, ckey, cdisp)
+            pn = pkey.split(":", 1)[1] if pk == "module" else None
+            nn = nkey.split(":", 1)[1] if nk == "module" else None
+            if pk == "module" and nk == "module":  # internal / cross seam
+                if pn not in in_scope or nn not in in_scope:
+                    continue
+                pkeys, nkeys = block_of(pn), block_of(nn)
+            else:  # boundary seam to a file / external hub
+                # exactly one endpoint is the module; the other is the hub. Keep
+                # the producer -> consumer orientation (module producer wires OUT to
+                # the hub; module consumer takes the hub's OUT into its IN).
+                if pk == "module":
+                    mnorm, (ekey, edisp, ekind) = pn, (nkey, nd, nk)
+                else:
+                    mnorm, (ekey, edisp, ekind) = nn, (pkey, pd, pk)
+                if mnorm not in in_scope or not allow_boundary(mnorm):
+                    continue
+                externals[ekey] = (edisp, ekind)
+                mkeys = block_of(mnorm)
+                pkeys, nkeys = (mkeys, {ekey}) if pk == "module" else ({ekey}, mkeys)
             for a in sorted(pkeys):
                 for b in sorted(nkeys):
-                    if a == b:
-                        if a.startswith("CMP-"):
-                            intra.setdefault(a, set()).add((iid, pdisp, ndisp))
-                    else:
-                        cross.setdefault((a, b), set()).add(iid)
-        else:  # one endpoint is a file/external hub -> a boundary seam
-            mnorm = (
-                pnorm
-                if module_roots.get(pnorm)
-                else (nnorm if module_roots.get(nnorm) else None)
-            )
-            if mnorm:
-                for a in module_roots[mnorm]:
-                    boundary.setdefault(a, set()).add((iid, pdisp, ndisp))
+                    if a != b:
+                        agg.setdefault((a, b), set()).add(r["id"])
+        edges = [(a, b, ", ".join(sorted(ids))) for (a, b), ids in sorted(agg.items())]
+        return edges, externals
 
-    def label_key(k):
-        if k.startswith("CMP-"):
-            nm = by_id.get(k, {}).get("name", "")
-            return "{} — {}".format(k, nm) if nm else k
-        return k.split(":", 1)[1]
+    def emit_cmp_layer(cid):
+        lid = new_id()
+        sub = subtree_modules(cid)
+        child_cmps = [c for c in children_of.get(cid, []) if subtree_modules(c)]
+        dmods = direct.get(cid, [])
 
-    def mod_rows(norms):
-        out = []
-        for n in norms:
-            m = mod_by_norm.get(n)
-            if not m:
-                out.append(
-                    "<tr><td><code>{}</code></td><td>—</td><td>—</td></tr>".format(
-                        esc(inv.get(n, n))
-                    )
-                )
-                continue
-            syms = ", ".join(m["symbols"][:8]) + ("…" if len(m["symbols"]) > 8 else "")
-            out.append(
-                "<tr><td><code>{}</code></td><td>{}</td><td>{}<br>"
-                '<span class="sub"><code>{}</code></span></td></tr>'.format(
-                    esc(m["name"]), len(m["symbols"]), esc(m["summary"]), esc(syms)
-                )
-            )
-        return "".join(out)
+        def block_of(norm):
+            if norm in dmods:
+                return {"mod:" + norm}
+            return {"cmp:" + c for c in child_cmps if norm in subtree_modules(c)}
 
-    def module_table(norms):
-        if not norms:
-            return ""
-        return (
-            '<table class="swmap"><thead><tr><th>Module</th><th>Public</th>'
-            "<th>Summary · symbols</th></tr></thead><tbody>{}</tbody>"
-            "</table>".format(mod_rows(norms))
-        )
+        edges, externals = layer_edges(block_of, sub, lambda n: True)
+        blocks = [cmp_block(c, emit_cmp_layer(c)) for c in child_cmps]
+        blocks += [mod_block(m) for m in dmods]
+        blocks += [ext_block(k, d, kind) for k, (d, kind) in sorted(externals.items())]
+        layers.append((lid, _drill_layer_svg(blocks, edges)))
+        return lid
 
-    def seam_block(cid):
-        items = []
-        for iid, a, b in sorted(intra.get(cid, set())):
-            items.append(
-                "<li><code>{}</code>: {} → {}</li>".format(esc(iid), esc(a), esc(b))
-            )
-        for iid, a, b in sorted(boundary.get(cid, set())):
-            items.append(
-                '<li><code>{}</code>: {} → {} <span class="sub">(boundary)</span>'
-                "</li>".format(esc(iid), esc(a), esc(b))
-            )
-        if not items:
-            return ""
-        return (
-            '<p class="sub" style="margin:.5rem 0 .1rem">Seams within this '
-            'component:</p><ul class="cmpseams">{}</ul>'.format("".join(items))
-        )
+    # Root layer: top-level component blocks + uncontained module blocks, wired by
+    # the cross-component seams (a contained module's boundary seams live one layer
+    # in; an uncontained module's boundary seam has nowhere deeper, so it shows here).
+    def root_block_of(norm):
+        roots = module_roots.get(norm) or set()
+        if roots:
+            return {"cmp:" + r for r in roots}
+        return {"mod:" + norm} if norm in inv else set()
 
-    def render_cmp(cid, seams, top_open=False):
-        kids = [c for c in children_of.get(cid, []) if subtree_modules(c)]
-        body = "".join(render_cmp(c, "") for c in kids)
-        body += module_table(direct.get(cid, []))
-        body += seams
-        nm = by_id.get(cid, {}).get("name", "")
-        n = len(subtree_modules(cid))
-        head = '<code>{}</code>{} <span class="sub">· {} module(s)</span>'.format(
-            esc(cid), " — " + esc(nm) if nm else "", n
-        )
-        return (
-            '<details class="cmpbox"{}><summary>{}</summary>'
-            '<div class="cmpbody">{}</div></details>'.format(
-                " open" if top_open else "", head, body
-            )
-        )
+    root_id = new_id()
+    root_edges, root_ext = layer_edges(
+        root_block_of, set(inv), lambda n: not module_roots.get(n)
+    )
+    root_blocks = [cmp_block(r, emit_cmp_layer(r)) for r in view["top_roots"]]
+    root_blocks += [mod_block(n) for n in view["uncontained"]]
+    root_blocks += [ext_block(k, d, kind) for k, (d, kind) in sorted(root_ext.items())]
+    layers.append((root_id, _drill_layer_svg(root_blocks, root_edges)))
 
     tab = '<button data-tab="sw">How (SW architecture)</button>'
-    # WI-087: the top-level component blocks start EXPANDED at or below the > 3
-    # threshold (a flat read of a small view) and start COLLAPSED above it (the
-    # click-to-explode drill-down); the TOP_VIEW_MAX right-sizing bound is unchanged.
-    top_open = len(view["top_roots"]) <= 3
-    tree = "".join(render_cmp(r, seam_block(r), top_open) for r in view["top_roots"])
-    unc = "".join(
-        '<div class="uncontained"><code>{}</code> '
-        '<span class="sub">— uncontained: no Component tag on its LLR(s)</span>'
-        "</div>".format(esc(inv.get(n, n)))
-        for n in view["uncontained"]
-    )
-    xlines = "".join(
-        "<li><code>{}</code> → <code>{}</code> "
-        '<span class="sub">({})</span></li>'.format(
-            esc(label_key(a)), esc(label_key(b)), esc(", ".join(sorted(iids)))
-        )
-        for (a, b), iids in sorted(cross.items())
-    )
-    cross_html = (
-        '<p class="cap">Cross-component seams — aggregated to the boundary (one '
-        "edge per crossing pair; the module-level seams live inside each "
-        'component):</p><ul class="xseams">{}</ul>'.format(xlines)
-        if xlines
-        else ""
-    )
     summary_line = (
         '<p class="cap"><strong>Top view: {} item(s)</strong> — {} top-level '
         "component(s) + {} uncontained module(s); bounded at {} "
         '(process-options.md "Component layer"). Software items are '
-        "<strong>containerized</strong> into the component they belong to; "
-        "<strong>expand</strong> a component to reveal its members and internal "
-        "seams.</p>".format(
+        "<strong>containerized</strong>; <strong>double-click</strong> a component "
+        "— or focus it and press Enter — to <strong>descend</strong> into its "
+        "members and internal seams, and the breadcrumb returns.</p>".format(
             view["count"],
             len(view["top_roots"]),
             len(view["uncontained"]),
@@ -956,13 +927,12 @@ def sw_containment(root, mods):
     )
     panel = (
         '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
-        + SW_CONTAINMENT_STYLE
+        + DRILL_STYLE
+        + SW_CMPTREE_STYLE
         + "\n"
         + summary_line
-        + cross_html
         + '<div class="cmptree">'
-        + tree
-        + unc
+        + _render_drill("sw", root_id, "Architecture", layers)
         + "</div>\n</section>"
     )
     return tab, panel

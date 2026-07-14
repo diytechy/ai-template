@@ -640,33 +640,43 @@ def sw_section(root):
     return html_of(root).split('id="sw"', 1)[1].split("</section>", 1)[0]
 
 
+def _sw_layer_with(sw, marker):
+    """The SVG of the first How-SW drill `.layer` whose blocks carry `marker`."""
+    for _lid, svg in re.findall(
+        r'<div class="layer" data-layer="(sw-\d+)"[^>]*>(.*?)</div>', sw, re.S
+    ):
+        if marker in svg:
+            return svg
+    raise AssertionError("no sw layer contains " + marker)
+
+
 def test_how_sw_containerizes_when_components_contain_modules(tmp_path):
     # With a CMP layer that contains modules, the How-SW panel becomes the
-    # containerized <details> top view (≤10 items), not the flat table/graph.
+    # containerized Simulink-style drill top view (≤10 items), not the flat table.
     containerize(tmp_path)
     assert gen(tmp_path).returncode == 0
     sw = sw_section(tmp_path)
-    assert 'class="cmptree"' in sw
-    # WI-087: two top-level components is <= the > 3 threshold, so the blocks start
-    # EXPANDED (a flat read of a small view); the count is threshold-independent.
-    assert sw.count('<details class="cmpbox"') == 2  # two top-level components
-    assert sw.count('<details class="cmpbox" open>') == 2  # <= 3 -> start expanded
+    assert 'class="cmptree"' in sw and 'class="drill"' in sw
+    root = _sw_layer_with(sw, 'data-tier="component"')
+    assert root.count('data-tier="component"') == 2  # two top-level components
+    assert root.count('data-tier="component" data-descend=') == 2  # each descends
     assert "Top view: 2 item" in sw
-    # members are revealed inside the expansion; intra + boundary seams surface.
-    assert "scripts/mod_a" in sw and "scripts/mod_c" in sw
-    assert "IF-003" in sw  # intra-component seam
-    assert "IF-004" in sw and "stack.ini" in sw  # boundary seam to a file hub
+    # descending CMP-001 reveals its modules + its intra + boundary seams.
+    inside = _sw_layer_with(sw, "scripts/mod_a")
+    assert "scripts/mod_a" in inside
+    assert "IF-003" in inside  # intra-component seam (mod_a -> mod_b)
+    assert "IF-004" in inside and "stack.ini" in inside  # boundary seam to a file hub
 
 
 def test_boundary_aggregation_dedupes_cross_component_edges(tmp_path):
     # IF-001 and IF-002 both cross CMP-001 -> CMP-002; at the top level they
-    # aggregate to ONE deduplicated component-to-component edge naming both ids.
+    # aggregate to ONE deduplicated component-to-component wire naming both ids.
     containerize(tmp_path)
     assert gen(tmp_path).returncode == 0
-    sw = sw_section(tmp_path)
-    xs = re.search(r'<ul class="xseams">(.*?)</ul>', sw, re.S).group(1)
-    assert len(re.findall(r"<li>", xs)) == 1
-    assert "IF-001, IF-002" in xs
+    root = _sw_layer_with(sw_section(tmp_path), 'data-tier="component"')
+    titles = re.findall(r'<path class="wire"[^>]*><title>(.*?)</title>', root)
+    assert len(titles) == 1  # one aggregated cross-component wire
+    assert "IF-001, IF-002" in titles
 
 
 def test_no_cmp_renders_flat_view_byte_identical(tmp_path):
@@ -703,8 +713,8 @@ def test_containerized_view_is_deterministic_and_check_stable(tmp_path):
 
 
 def test_nested_components_render_inside_their_parent(tmp_path):
-    # A CMP with PartOf renders as a nested <details> inside its parent, and only
-    # the top-level root is a first-view item.
+    # A CMP with PartOf renders as a nested component block inside its parent's
+    # descend layer, and only the top-level root is a first-view item.
     containerize(tmp_path)
     req = tmp_path / "docs" / "requirements"
     (req / "components.csv").write_text(
@@ -1077,8 +1087,8 @@ FOUR_CMPS = (
 
 
 def test_how_sw_collapses_above_component_threshold(tmp_path):
-    # > 3 top-level components -> the blocks start COLLAPSED (click-to-explode);
-    # contrast the <= 3 case (test_how_sw_containerizes...), which starts expanded.
+    # > 3 top-level components -> the root layer holds four component blocks, each a
+    # descend container (double-click / Enter to explode into its modules).
     containerize(tmp_path)
     req = tmp_path / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(FOUR_CMP_LLRS, encoding="utf-8")
@@ -1086,8 +1096,8 @@ def test_how_sw_collapses_above_component_threshold(tmp_path):
     assert gen(tmp_path).returncode == 0
     sw = sw_section(tmp_path)
     assert "Top view: 4 item" in sw
-    assert sw.count('<details class="cmpbox">') == 4  # four collapsed blocks
-    assert '<details class="cmpbox" open>' not in sw  # > 3 -> not auto-expanded
+    root = _sw_layer_with(sw, 'data-tier="component"')
+    assert root.count('data-tier="component" data-descend=') == 4  # four descend blocks
 
 
 def test_meta_tiered_when_view_smoke():
