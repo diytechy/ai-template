@@ -86,18 +86,43 @@ Is there a way to restrict CLI envirments to only allow writes within the reposi
 
 Might there be times when an explicit plan stage is unecessary in agent-resume?  If the spec is documented sufficiently, it doesn't need to be replanned.  Perhaps work-items should be pinned to a teir for it's build at creation, and also contain a flag if additional planning is required.  If the plan / spec is detailed enough, no need to spin up another agent.  This could also reduce spinning up dedicated sessions for planning and building that will already hold much of the same context.
 
-*******************************
-
 I notice in visual code using claude code, I can complete multiple work items in a single session, but often when running agent-resume it seems only 1 work item is pulled per session, resulting in signficantly more session spin ups / context re-uploads / etc.  Is there a gap with how work-items are grouped and aggrigated for a session?  Is the method being used too concervative?
 
-Need to adjust the process maps, specifically to show how injest occurs and interaction with open items and human.
+*******************************
 
+IMPORTANT: It is possible some of these items are already covered by some work items.  Take care not to duplicate queued work.
+
+1) All the flow diagrams in PROJECT_STATE.html need some work.  The work-items that iterate here should have critiques around accessability, UI uniformity, and other interface usability standards.
+
+1A)
+Need to adjust the process maps, / diagrams shown in PROJECT_STATE specifically to show how injest occurs and interaction with open items and human.  This should show how the two circular processes:
+
+[LLM_Agent] - Any AI agent recieving feedback in the repo context should follow the processes here to review user input and determine next actions.
+
+[From LLM_Agent] -> 
+A2. New items are converted to work items with spec details if necessary -> [HERE SHOW THE RESUME LOOP]->[Back to A&B_Merge]
+
+[From LLM_Agent] -> B3. Open items list is populated, including gate ratification table, B2. Human reviews open items and gives feedback -> [Back to A&B_Merge]
+
+1B) Architecture decomposition - columns can be much narrower, and each parent should have a horizontal arrow going to it's child.  Highlights can stay on the last item hovered over (instead of removing the highlight as soon as the cursor gets off the item, which tends to cause flashing-like behavior)
+
+1C) Software architecture and Work-item trajectory should present like simulink diagrams, where interfaces connect to the inputs / outputs / finals.  I believe this may already exist as a work item, but it is very important that the visuals are crisp, and ideally that double-clicking on the item brings the user into a deeper layer.
+
+
+2)
 While agent-resume is running, is it possible for each workstream to just update it's latest line on the console (so, intead of a long rolling window, each workstream continues to update it's status in a line that gets continuously updated.)
 
-Other noticed items: The logs (in /docs/interation) and reviews don't appear to be committed with the rest of their content, it would be good for them to be part of the code commit for reference.  Should the reviews and logs include the work item key name in their label / filename for tracking?  
+3)
+Other noticed items: The logs (in /docs/interation) and reviews don't appear to be committed with the rest of their content (instead they sometimes get bundled with a later commit), iI t would be good for them to be part of the code commit for reference.  Should the reviews and logs include the work item key name in their label / filename for tracking? 
 
+4)
 Do we need "hats" to be allocated to specific SRs to be spun up during related development?  Or how can we ensure test cases / and specifically critiques are triggered appropriately for the right content.  Ex: If a work-item is building UI, how does the resume-agent chain know to wear a UI hat to evaluate the UI for accessability and readability?
 
-For gate reviews should we drop in a full review?  Should the text be verbatim: 
+5)
+Is there anything from this repository that should be considered? ==> https://github.com/PiLastDigit/TRIP-workflow
+I think this flow already contains everything, but perhaps the big benifit here is stress on research.  In my mind that should be part of the plan phase.  I'm not sure of the best time to run this (before creating work items?  When actually ingesting work items?  Both?) but I think the emphasis on research and spinning up mid-tier agents to find online information would be very valuble, so long as the research findings are looped back into the knowledge kits (which I dont' even recall where those are stored).
+
+6)
+My other concern here is specs.  The intent of the specs was to actually hold specs for component and module-piece information that could point to knowledge packs and draw the what with the how with greater detail.  Right now most of the specs are just work items that get archived, and ultimately create risk of duplicating analysis through work-item iteration instead of collating the defined expectations for modules into their respective chunks, and updating those as new work items come in and act on the similar layers.
 
 Can we add in the knowledge kits from 
