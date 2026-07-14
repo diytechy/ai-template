@@ -161,7 +161,10 @@ Phase N:  [phase-N-g1]  draft+ratify ALL new/reopened SN/SR   (parallel, batch r
 
 A reopen during a later phase's g1 revs the phase: the affected verified artifact
 returns to `Draft`/`Planned`, the derived gate for that phase drops, and the batch
-review sees it alongside the new work. Within a phase the derived gate only rises
+review sees it alongside the new work. (One sanctioned relaxation of the series
+rule: a run of *independent, off-spine* dev slices may batch into one BUILD
+session + one review round — "Dev-slice batching" under Unattended operation;
+spine-touching slices always stay per-slice.) Within a phase the derived gate only rises
 (draft → ratify → decompose → verify), so a **drop from a closed level is an
 unambiguous boundary** — the detection is robust; the committed anchor just makes
 membership legible and durable.
@@ -683,7 +686,22 @@ behavior**, so a fresh scaffold pays nothing.
   file, an unknown WI id, or a `BuildTier` that doesn't normalize) is loud but
   never fatal — one warning line, then the phase default. The **driver maintains
   `docs/next-wi`** alongside `status.md`'s Next action; absent, it is
-  byte-identical to phase-only routing (never-breaking). The *plan-required* half
+  byte-identical to phase-only routing (never-breaking).
+  **Dev-slice batching (WI-133).** The value line may instead carry a
+  **`;`-joined ordered batch** of WI ids (`WI-098;WI-103`) — a run of
+  **independent, off-spine** dev slices (each queued, empty `SR-Refs`, no hard
+  edge between members) that ONE BUILD session executes in order, committing
+  per WI. The loop's review round already covers a committing session's whole
+  commit range, so **the batch takes one review round** instead of one per WI —
+  the spin-up/context cost amortizes across the run. The pin becomes the
+  **strongest** member `BuildTier` (route up, never down); eligibility is
+  **advisory, not enforced** — the coordinator prints one `dev-batch advisory`
+  line per violation (a spine-touching member, an intra-batch hard edge) and
+  proceeds. Spine-touching slices stay strictly per-slice ("Parallel for
+  pre-dev, series for dev", the Derived-gate-model section — batching is the
+  sanctioned relaxation for the cheap tail only, and it deliberately does NOT
+  touch `docs/review-policy`). A single id is byte-identical to the WI-126
+  behavior above. The *plan-required* half
   of the original proposal is deliberately **not** a column: a WI whose `SpecRef`
   points at a filled spec already *is* plan-ready (the anti-duplication rule), and
   PLAN is bounce-only, so the coordinator never needs a parallel boolean.

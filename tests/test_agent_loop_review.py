@@ -465,3 +465,112 @@ def test_build_tier_pin_unknown_wi_warns_and_falls_back(managed_repo):
     assert "no such WI-ID row" in proc.stdout
     models = _models(ctl)
     assert "builda" in models and "stronga" not in models, models
+
+
+# --- dev-slice batching (WI-133): a ;-joined next-wi batch ---------------------
+# One BUILD session executes the ordered batch under ONE review round (the loop
+# already reviews the session's whole commit range); the pin is the STRONGEST
+# member BuildTier, and eligibility (off-spine, no intra-batch hard edge) is
+# advisory — loud lines, never fatal.
+
+
+def _write_work_items_full(repo, rows):
+    # A work-items.csv with the columns the batch advisories read; rows is a
+    # list of (wi-id, build-tier, sr-refs, predecessors).
+    req = repo / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    body = "\n".join("{},{},{},{}".format(w, t, s, p) for (w, t, s, p) in rows)
+    (req / "work-items.csv").write_text(
+        "WI-ID,BuildTier,SR-Refs,Predecessors\n" + body + "\n", encoding="utf-8"
+    )
+
+
+def test_batch_pin_routes_strongest_member(managed_repo):
+    # (e) a batch pins its STRONGEST member tier (route up, never down): a
+    # medium + a strong member routes the strong model, one loud batch line.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    _write_work_items(repo, [("WI-200", "medium"), ("WI-201", "strong")])
+    _write_next_wi(repo, "WI-200;WI-201")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    models = _models(ctl)
+    assert "stronga" in models and "builda" not in models, models
+    assert "BuildTier batch pin WI-200;WI-201 -> starting tier strong" in proc.stdout
+
+
+def test_batch_unknown_member_named_but_batch_still_pins(managed_repo):
+    # (f) an unknown id inside a batch is NAMED in the loud line but does not
+    # void the batch — the known member's pin still routes.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    _write_work_items(repo, [("WI-200", "strong")])
+    _write_next_wi(repo, "WI-200;WI-404")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    models = _models(ctl)
+    assert "stronga" in models, models
+    assert "unknown WI id(s) WI-404 ignored" in proc.stdout
+
+
+def test_batch_no_pins_is_silent_phase_default(managed_repo):
+    # (g) a clean batch with no BuildTier pins routes the phase default with
+    # NO pin/advisory noise — byte-identical routing to an unpinned single WI.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    _write_work_items_full(repo, [("WI-200", "", "", ""), ("WI-201", "", "", "")])
+    _write_next_wi(repo, "WI-200;WI-201")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    models = _models(ctl)
+    assert "builda" in models and "stronga" not in models, models
+    assert "BuildTier" not in proc.stdout
+    assert "dev-batch advisory" not in proc.stdout
+
+
+def test_batch_eligibility_advisories_warn_but_never_block(managed_repo):
+    # (h) eligibility is advisory: a spine-touching member (SR-Refs) and an
+    # intra-batch hard edge each print ONE loud line; the run still proceeds
+    # and exits 0 (never fatal, never blocking).
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    _write_work_items_full(
+        repo,
+        [
+            ("WI-300", "", "SR-001", ""),
+            ("WI-301", "", "", "WI-300"),
+        ],
+    )
+    _write_next_wi(repo, "WI-300;WI-301")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "dev-batch advisory: WI-300 carries SR-Refs (spine-touching)" in proc.stdout
+    assert (
+        "dev-batch advisory: WI-301 hard-depends on batch member(s) WI-300"
+        in proc.stdout
+    )
+    models = _models(ctl)
+    assert "builda" in models, models  # default routing proceeded
+
+
+def test_batch_soft_edge_inside_batch_is_quiet(managed_repo):
+    # (i) a SOFT (~) intra-batch edge is advisory ordering by definition — it
+    # must NOT trigger the hard-edge advisory.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    _write_work_items_full(
+        repo,
+        [
+            ("WI-300", "", "", ""),
+            ("WI-301", "", "", "~WI-300"),
+        ],
+    )
+    _write_next_wi(repo, "WI-300;WI-301")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "dev-batch advisory" not in proc.stdout

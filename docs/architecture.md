@@ -54,6 +54,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `parse_model_map(spec)` | "P0=model-a,G3=model-b" -> {"P0": "model-a", "G3": "model-b"}. |  |
 | `phase_tier(phase, tier_map)` | The routing tier for a run-phase: the declared --tier-map / AGENT_TIER_MAP |  |
 | `build_tier_pin(next_wi_path, work_items_path)` | The per-WI starting-tier pin (WI-126). `docs/next-wi` (the declared-file |  |
+| `batch_advisories(next_wi_path, work_items_path)` | Dev-slice batch eligibility advisories (WI-133) — a batch should hold |  |
 | `reviewer_prompt(prompt_templates, phase, verdict_path)` | The redacted reviewer prompt for a review phase: the per-phase prompt-map |  |
 | `load_critique_srs(docs)` | The SR ids whose Verification is `Critique` (docs/requirements/ |  |
 | `build_scope_srs(root, docs, commit_range)` | The SR ids the WIs named in `commit_range`'s commit subjects deliver — the |  |

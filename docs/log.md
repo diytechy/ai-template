@@ -4415,3 +4415,39 @@ Decisions log carries each ruling; OI-3 corrected against git (ahead 9, not
 remain open. `docs/open-items.md` drops the four ruled sections per its
 lifecycle. **The rulings create scope:** WI-098 and WI-103 flip
 `deferred → queued`; `docs/next-wi` = WI-098; `docs/run-state` = RUNNING.
+
+## 2026-07-13 — WI-133: dev-slice batching (a `;`-joined next-wi batch — one session, one review)
+
+**Owner-directed** at the session-economics sitting: attended sessions close
+several WIs per context, but the loop ran one WI per spin-up — a full context
+re-upload + a review round per slice, paid even for trivial off-spine work.
+Investigation first (recorded in-session): the constraint was **convention,
+not mechanics** — the loop already reviews a committing session's whole commit
+range, and pre-dev already batches via the `[phase]-[g*]` archetype
+(WI-116/117); only the dev slices lacked a batch form. Spec:
+[specs/WI-133.md](specs/WI-133.md). **Deliberately NOT the review dial** — WI-123/OI-7
+stays a separate owner ruling.
+
+**Deliverables.** `docs/next-wi` may carry a `;`-joined **ordered batch** of
+independent off-spine WIs: one BUILD session executes them in order (commit
+per WI) under **one review round**. `agent_loop.py`: `_next_wi_ids()`,
+batch-aware `build_tier_pin()` (single-id byte-identical — legacy strings
+pinned by the four WI-126 tests; a batch pins the **strongest** member
+`BuildTier`, unknown/invalid members named in the one loud line), new
+`batch_advisories()` (advisory, never fatal: a spine-touching member, an
+intra-batch hard edge; soft `~` edges quiet), printed from the BUILD route
+branch. Docs single-homed in PROCESS_OPTIONS "Unattended operation" + one
+cross-ref at "Parallel for pre-dev, series for dev"; both launcher
+`AGENT_PROMPT`s + the `session-protocol` skill (source + fan-outs, 10/10
+byte-identical) name the batch form. **Dogfood:** `docs/next-wi` =
+`WI-098;WI-103` — the owner-ruled off-spine pair is the first live batch.
+
+**Deviation:** none. **Byte-budgeted files:** none (PROCESS_OPTIONS is
+unbudgeted until WI-103).
+
+**Verification.** 5 new tests in `test_agent_loop_review.py` (strongest-member
+pin routes strong; unknown member named, batch still pins; clean no-pin batch
+silent; both advisories fire and never block; soft-edge quiet) — module 21/21.
+Full unfiltered suite: `python -m pytest -q -n auto` → **718 passed, 2 skipped
+in 57.06s**. No spine change, no new SR (WI-126/WI-129 precedent); derived
+gate stays G3. No push (`push-policy: human`).

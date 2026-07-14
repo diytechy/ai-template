@@ -605,45 +605,132 @@ def phase_tier(phase, tier_map):
     return DEFAULT_PHASE_TIER.get(phase, "strong")
 
 
+def _next_wi_ids(next_wi_path):
+    """The ordered WI id(s) declared in `docs/next-wi`: the value line split on
+    `;` (the registry join convention) — one id is the WI-126 form, several are
+    a dev-slice batch (WI-133). Empty/absent file => []."""
+    line = read_declared(next_wi_path, "")
+    return [w.strip() for w in line.split(";") if w.strip()]
+
+
 def build_tier_pin(next_wi_path, work_items_path):
     """The per-WI starting-tier pin (WI-126). `docs/next-wi` (the declared-file
     idiom, driver-maintained alongside status.md's Next action) names the WI the
-    coordinator expects to pick up next; that WI's `BuildTier` column in
+    coordinator expects to pick up next — or a `;`-joined ordered dev-slice
+    BATCH (WI-133); that WI's `BuildTier` column in
     docs/requirements/work-items.csv, when set to a valid tier, is the BUILD
     session's STARTING tier in place of the phase default — the escalation
     override (tier-up-never-down) still wins AFTER it, so a pin never caps
-    escalation. Returns (tier, note): a tier to apply plus the loud line to log;
-    (None, None) when nothing is pinned (absent/empty file, no matching row, or an
-    empty BuildTier = the phase default, byte-identical to today); (None, warning)
-    for a bad pin — an unknown WI id, or a BuildTier that does not normalize to a
-    known tier — LOUD but never fatal, the caller falls back to the phase
-    default."""
-    wi = read_declared(next_wi_path, "")
-    if not wi:
+    escalation. A batch pins the STRONGEST member BuildTier (route up, never
+    down); members with no row or an empty/invalid BuildTier contribute no pin
+    and are named in the loud line. Returns (tier, note): a tier to apply plus
+    the loud line to log; (None, None) when nothing is pinned (absent/empty
+    file, no matching row, or an empty BuildTier = the phase default,
+    byte-identical to today); (None, warning) for a bad pin — an unknown WI id,
+    or a BuildTier that does not normalize to a known tier — LOUD but never
+    fatal, the caller falls back to the phase default."""
+    ids = _next_wi_ids(next_wi_path)
+    if not ids:
         return None, None
-    for row in _read_csv_rows(work_items_path):
-        if (row.get("WI-ID") or "").strip() == wi:
-            raw = (row.get("BuildTier") or "").strip()
-            if not raw:
-                return None, None  # empty BuildTier = phase default (no pin)
-            tier = agent_route.normalize_tier(raw)
-            if tier in agent_route.TIER_ORDER:
-                return tier, (
-                    "BuildTier pin {} -> starting tier {} (docs/next-wi)".format(
-                        wi, tier
-                    )
-                )
+    rows = {
+        (row.get("WI-ID") or "").strip(): row for row in _read_csv_rows(work_items_path)
+    }
+    if len(ids) == 1:
+        # The WI-126 single-id contract, byte-identical (strings pinned by tests).
+        wi = ids[0]
+        row = rows.get(wi)
+        if row is None:
             return None, (
-                "docs/next-wi pins {} whose BuildTier {!r} is not one of {} — "
-                "ignoring, using the phase default".format(
-                    wi, raw, "|".join(agent_route.TIER_ORDER)
+                "docs/next-wi names {} but no such WI-ID row in "
+                "docs/requirements/work-items.csv — ignoring, using the phase "
+                "default".format(wi)
+            )
+        raw = (row.get("BuildTier") or "").strip()
+        if not raw:
+            return None, None  # empty BuildTier = phase default (no pin)
+        tier = agent_route.normalize_tier(raw)
+        if tier in agent_route.TIER_ORDER:
+            return tier, (
+                "BuildTier pin {} -> starting tier {} (docs/next-wi)".format(wi, tier)
+            )
+        return None, (
+            "docs/next-wi pins {} whose BuildTier {!r} is not one of {} — "
+            "ignoring, using the phase default".format(
+                wi, raw, "|".join(agent_route.TIER_ORDER)
+            )
+        )
+    # A dev-slice batch (WI-133): strongest member pin, problems named loudly.
+    issues = []
+    unknown = [w for w in ids if w not in rows]
+    if unknown:
+        issues.append("unknown WI id(s) {} ignored".format(";".join(unknown)))
+    best = None  # (TIER_ORDER index, tier)
+    for wi in ids:
+        row = rows.get(wi)
+        if row is None:
+            continue
+        raw = (row.get("BuildTier") or "").strip()
+        if not raw:
+            continue
+        tier = agent_route.normalize_tier(raw)
+        if tier not in agent_route.TIER_ORDER:
+            issues.append("BuildTier {!r} on {} ignored".format(raw, wi))
+            continue
+        rank = agent_route.TIER_ORDER.index(tier)
+        if best is None or rank > best[0]:
+            best = (rank, tier)
+    suffix = " — " + "; ".join(issues) if issues else ""
+    if best:
+        return best[1], (
+            "BuildTier batch pin {} -> starting tier {} (strongest member; "
+            "docs/next-wi){}".format(";".join(ids), best[1], suffix)
+        )
+    if issues:
+        return None, (
+            "docs/next-wi batch {}: no usable BuildTier pin — using the phase "
+            "default{}".format(";".join(ids), suffix)
+        )
+    return None, None  # a batch with no pins = the phase default, silently
+
+
+def batch_advisories(next_wi_path, work_items_path):
+    """Dev-slice batch eligibility advisories (WI-133) — a batch should hold
+    only INDEPENDENT, OFF-SPINE slices, but the rule is advisory: one loud line
+    per violation, never fatal, never blocking (the WI-126 pin's failure
+    style). Flags a spine-touching member (non-empty SR-Refs — spine slices
+    review per-slice, 'series for dev') and a member hard-depending on another
+    member (a mid-batch failure would strand it). Empty for a single id."""
+    ids = _next_wi_ids(next_wi_path)
+    if len(ids) < 2:
+        return []
+    rows = {
+        (row.get("WI-ID") or "").strip(): row for row in _read_csv_rows(work_items_path)
+    }
+    idset = set(ids)
+    advisories = []
+    for wi in ids:
+        row = rows.get(wi)
+        if row is None:
+            continue
+        if (row.get("SR-Refs") or "").strip():
+            advisories.append(
+                "dev-batch advisory: {} carries SR-Refs (spine-touching) — "
+                "spine slices review per-slice; split it from the batch".format(wi)
+            )
+        hard = [
+            p.strip()
+            for p in (row.get("Predecessors") or "").split(";")
+            if p.strip() and not p.strip().startswith("~")
+        ]
+        inside = sorted(set(hard) & idset)
+        if inside:
+            advisories.append(
+                "dev-batch advisory: {} hard-depends on batch member(s) {} — "
+                "a mid-batch failure strands it; keep the order or split".format(
+                    wi, ";".join(inside)
                 )
             )
-    return None, (
-        "docs/next-wi names {} but no such WI-ID row in "
-        "docs/requirements/work-items.csv — ignoring, using the phase "
-        "default".format(wi)
-    )
+    return advisories
 
 
 def reviewer_prompt(prompt_templates, phase, verdict_path):
@@ -1850,6 +1937,12 @@ def main():
                 )
                 if pin_note:
                     print("route [{}]: {}".format(phase or "—", pin_note))
+                # WI-133: dev-slice batch eligibility is advisory — loud, never
+                # fatal (a spine-touching member / an intra-batch hard edge).
+                for adv in batch_advisories(
+                    lane / "next-wi", docs / "requirements" / "work-items.csv"
+                ):
+                    print("route [{}]: {}".format(phase or "—", adv))
                 if pinned:
                     tier = pinned
                 if impl_tier_override:

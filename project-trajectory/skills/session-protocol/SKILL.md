@@ -78,8 +78,11 @@ ruling"). New behavior needs new tests
   the `pytest -q` totals (match the style already there).
 - Update `docs/status.md` to point at what's next; don't leave a stale "next".
 - Where the unattended coordinator is in use, maintain `docs/next-wi` (the next
-  WI id) alongside `status.md`'s Next action, so a managed BUILD session honors
-  that WI's `BuildTier` pin (process-options.md "Unattended operation").
+  WI id — or a `;`-joined ordered batch of independent, off-spine WIs, which one
+  BUILD session executes in order under ONE review round; dev-slice batching,
+  WI-133) alongside `status.md`'s Next action, so a managed BUILD session honors
+  the `BuildTier` pin — strongest member wins in a batch (process-options.md
+  "Unattended operation").
 
 ## 5. Commit in this repo's style
 

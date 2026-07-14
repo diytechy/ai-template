@@ -45,10 +45,12 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-  - **In flight** _(driver; owner-ruled scope from the sitting):_ **WI-098**
-    (thin the masters' provenance comments to log/archive pointers) then
-    **WI-103** (PROCESS_OPTIONS byte budget + applies-when index; split
-    deferred) — rulings in [log.md](log.md) Decisions.
+  - **In flight** _(driver; owner-ruled scope from the sitting):_ the
+    **dev-slice batch `WI-098;WI-103`** (`docs/next-wi`; one session, one
+    review round — the first live use of the batching layer): **WI-098** (thin
+    the masters' provenance comments to log/archive pointers) then **WI-103**
+    (PROCESS_OPTIONS byte budget + applies-when index; split deferred) —
+    rulings in [log.md](log.md) Decisions.
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-110** in
@@ -58,9 +60,9 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** run the ruled scope — **WI-098** (`docs/next-wi`) then
-  **WI-103**; the remaining owner items (OI-3/OI-4/OI-7,
-  [open-items.md](open-items.md)) don't block it.
+- **Next action:** run the ruled scope as the batch `docs/next-wi` names —
+  **WI-098** then **WI-103**, one session; the remaining owner items
+  (OI-3/OI-4/OI-7, [open-items.md](open-items.md)) don't block it.
 
 ## Scope
 
