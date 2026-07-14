@@ -7,7 +7,7 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# NOTE: the WI-145 owner sitting closed 2026-07-14 (OI-8 + OI-9 ratified,
-# log.md Decisions) — run-state is RUNNING and this pin is now live: the v3 dev
-# slices WI-141..144 run G2->G3 in series, WI-141 first.
-WI-141
+# NOTE: WI-141 landed 2026-07-14 (SR-051-rev drill: When + How-SW; phase v2 back
+# to G3). The v3 dev slices continue G2->G3 in series — WI-142 next (Process-tab
+# intake + human-decision loop panels, SR-055), then WI-143, WI-144.
+WI-142

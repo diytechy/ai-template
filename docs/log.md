@@ -5105,3 +5105,55 @@ autonomously on the v3 dev slices WI-141→144 (G2→G3, series), then the
 owner-intake WIs (WI-146…151, WI-110) and the research-knowledge campaign
 (WI-152…157). Standing owner decisions OI-3 (push), OI-4 (LICENSE), OI-7 (review
 cadence) remain open and block nothing. Not pushed (`push-policy: human`).
+
+## 2026-07-14 — WI-141 [v3] dev slice: SR-051-rev interface-wired render + descend-a-layer
+
+**The first v3 dev slice** (`dashboard-ux`, G2→G3): rebuilt the tiered When and
+How-SW dashboard views from the shipped in-place `<details>` expand to a
+**Simulink-style descend-a-layer drill** (the owner-sanctioned SR-051 rev,
+[v3]-[g1]/WI-134). Two logical commits.
+
+- **Shared renderer (commit 1, `gen_trajectory.py`).** `DRILL_STYLE` +
+  `DRILL_SCRIPT` (a self-contained, idempotent vanilla-JS controller) +
+  `_drill_layer_svg` (one tier as an SVG block diagram — each block an input
+  port left-middle + output port right-middle; each aggregated edge a wire from
+  a source **OUT** port to a target **IN** port, laid out left→right by the
+  shared `_layered_layout`) + `_render_drill` (breadcrumb nav + one `.layer` per
+  tier, root shown). A container block **double-clicks — or Enter/Space on
+  focus — to DESCEND** one layer; the breadcrumb restores any ancestor.
+- **When roadmap (commit 1).** `when_view` now builds phase → workstream →
+  campaign → work-item block **layers**; the per-phase accent, the >3 tiering
+  thresholds, and the deduped boundary edge aggregation are retained (the
+  aggregated union rides each wire's `<title>`). The ≤3/≤3 fallback to
+  `campaign_containment` stays **byte-identical**.
+- **How-SW containment (commit 2).** `sw_containment` reuses the renderer: root
+  layer = top-level component blocks + uncontained module blocks wired by the
+  cross-component seams (deduped to the boundary); descend a component into its
+  modules, nested child components, and internal + boundary seams (file/external
+  endpoints render as leaf blocks so a seam attaches to a real port). One
+  `layer_edges` helper generalizes the WI-073 cross/intra/boundary split to any
+  layer via a module→block map. The no-CMP vacuity guarantee (`None` → flat
+  panel, byte-identical) and the `TOP_VIEW_MAX` bound are unchanged. Retired
+  `SW_CONTAINMENT_STYLE` (only the `.cmptree` margin survives).
+
+**Spine.** SR-051 / LLR-052 / TC-052 **Planned → Verified**; the three named
+TC-052 cases (`test_when_view_seams_wire_to_block_ports`,
+`::_double_click_descends_a_layer`, `::_breadcrumb_restores_parent`) plus the
+reworked WI-087 / WI-073 tiering cases pin it. **Phase v2 rejoins G3**
+(`derive_gate` per-phase now `(default)=G3;v2=G3;v3=G2`); the overall derived
+gate stays **G2** (min over phases — v3 holds at G2 until WI-142→144). Nothing
+else moved; SN=24 SR=56 LLR=57 TC=57, orphans=0.
+
+**Deviation (layout).** Blocks lay out left→right by the shared layered pipeline
+rather than a bespoke Simulink grid — the contract LLR-052/TC-052 assert is
+port-attachment + boundary aggregation + descend/breadcrumb, which the reused
+`_layered_layout` satisfies deterministically without new layout code (kit
+anti-duplication). Byte deltas: no budgeted doc touched (`gen_trajectory.py` is
+not budget-watched). Full suite **728 passed, 3 skipped**; smoke 574+2;
+gen/derive/okf/arch `--check` all green; `trace --strict-integrity` clean.
+
+**Handoff.** Run-state **RUNNING**; `docs/next-wi` → **WI-142** (Process-tab
+intake + human-decision loop panels, SR-055). The remaining v3 dev slices
+WI-142→144 run G2→G3 in series, then the owner-intake WIs (WI-146…151, WI-110)
+and the research-knowledge campaign (WI-152…157). Not pushed
+(`push-policy: human`).
