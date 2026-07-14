@@ -783,3 +783,74 @@ def test_duplicate_of_malformed_id_reports_duplicated():
     # A well-formed duplicate still reports only "duplicated" (no regression).
     dup = trace.integrity_findings("SR", [{"SR-ID": "SR-001"}, {"SR-ID": "SR-001"}])
     assert dup == ["SR id SR-001 is duplicated"], dup
+
+
+# --- WI-129: LLR/TC status-coherence warn (registry lint) ---------------------
+# An LLR reading below Verified while every TC that cites it is Verified is a
+# readout drift, not a coverage hole (LLR status is non-gating under the
+# derived-gate model). Warn-only; never touches an exit code.
+
+
+def test_llr_status_coherence_predicate():
+    # Done-when 1-3: the coherence predicate itself, unit-level.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def warns(llrs, tcs):
+        return trace.llr_status_advisories(llrs, tcs)
+
+    impl = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Implemented"}
+    ver_tc = {"TC-ID": "TC-010", "Verifies": "SR-010;LLR-010", "Status": "Verified"}
+
+    # (1) Implemented LLR, sole citing TC Verified -> exactly the warn.
+    found = warns([impl], [ver_tc])
+    assert len(found) == 1, found
+    assert "LLR LLR-010 reads 'Implemented'" in found[0]
+    assert "every citing TC is Verified" in found[0]
+
+    # (1, cont.) Lifting the LLR to Verified silences it.
+    assert warns([{**impl, "Status": "Verified"}], [ver_tc]) == []
+
+    # (3) Case-insensitive via the shared is_verified() predicate: a lowercase
+    # 'verified' LLR is silent, and a lowercase citing TC still counts as Verified.
+    assert warns([{**impl, "Status": "verified"}], [ver_tc]) == []
+    assert len(warns([impl], [{**ver_tc, "Status": "verified"}])) == 1
+
+    # (2) Quiet: one citing TC is not Verified -> not "every citing TC".
+    planned_tc = {"TC-ID": "TC-011", "Verifies": "LLR-010", "Status": "Planned"}
+    assert warns([impl], [ver_tc, planned_tc]) == []
+
+    # (2) Quiet: an LLR with no citing TC is the orphan rules' job, not this lint's.
+    assert warns([impl], []) == []
+
+
+def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
+    # Done-when 1+4: the minimal project ships LLR-001 Implemented under a
+    # Verified TC-001, so trace emits the warn on stdout and in the report — but
+    # it never changes the --strict or --strict-integrity exit code.
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARNING (advisory): LLR LLR-001 reads 'Implemented'" in proc.stdout
+    assert "llr-status-advisories=1" in proc.stdout
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "LLR status-coherence advisories" in report
+    assert "LLR-001 reads 'Implemented'" in report
+
+    # --strict-integrity likewise unaffected (the warn never joins the integrity set).
+    proc2 = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc2.returncode == 0, proc2.stdout + proc2.stderr
+
+    # Lifting LLR-001 to Verified silences the warn.
+    llr_csv = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
+    llr_csv.write_text(
+        llr_csv.read_text(encoding="utf-8").replace(",Implemented", ",Verified"),
+        encoding="utf-8",
+    )
+    proc3 = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc3.returncode == 0, proc3.stdout + proc3.stderr
+    assert "reads 'Implemented'" not in proc3.stdout
+    assert "llr-status-advisories" not in proc3.stdout
+    report3 = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "None. No unlifted LLRs under fully-Verified tests." in report3

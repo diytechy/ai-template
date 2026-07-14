@@ -4199,3 +4199,42 @@ action re-pointed. **Deviation:** none. **Byte-budgeted files:** none.
 passed, 2 skipped in 34.64s**; `check_docs --root . --stale` → **OK, 0
 broken**; `check_trajectory` → clean (129 WIs, graph acyclic). No push
 (`push-policy: human`).
+
+## 2026-07-13 — WI-129: LLR/TC status-coherence warn (the lint shipped)
+
+Built the WI-129 lint as designed. `trace.llr_status_advisories(llrs, tcs)`
+joins the TC citations to the LLR tier (`ID_PATTERNS["LLR"]` over each TC's
+`Verifies`) and, for each non-`Verified` LLR (via the shared case-insensitive
+`is_verified()`) that is cited by ≥1 TC and **all** of whose citing TCs are
+`Verified`, emits one warn-tier finding — on stdout (`WARNING (advisory): LLR
+… reads '…' but every citing TC is Verified — lift to Verified (the evidence
+already exists)`), in a new `docs/test/report.md` section ("LLR
+status-coherence advisories (warn-only)"), and in the `llr-status-advisories=N`
+summary tally. **Never gating:** the finding joins neither the `--strict` nor
+the `--strict-integrity` exit set (asserted in the tests) — it mirrors the
+derived-gate stance that LLR status is non-gating (`maturity_gate` ignores
+LLR/TC Status past `Draft`; the SR's `Verified` drives G2→G3), so promoting it
+would re-introduce the coupling the gate model dropped. Auto-lift stays
+rejected (registries are hand-owned SSOT; generators never write cells back);
+the fix is to lift the `Status` cell by hand. The `registry-hygiene` skill
+gained the fixer line and the module docstring documents the warn.
+**Deviation:** none. **Byte-budgeted files:** none (no PROCESS.md change — the
+warn text is self-explanatory).
+
+**Verification.** New tests in `tests/test_trace.py`:
+`test_llr_status_coherence_predicate` (all done-when cases at unit level —
+warn/silence, case-insensitivity, the not-all-Verified quiet case, the
+no-citing-TC quiet case) and `test_llr_status_advisory_is_warn_only_and_reported`
+(scaffold: the minimal project's `LLR-001` Implemented under a Verified
+`TC-001` warns; `--strict` **and** `--strict-integrity` still exit 0; lifting
+`LLR-001` silences it). Meta's own spine re-run: `trace.py` →
+`orphans=0 integrity=0`, **no** `llr-status-advisories` (all 52 LLRs Verified
+after WI-128). Commit bar: `python -m pytest -q -n auto -m smoke` → **552
+passed, 2 skipped in 36.06s**; `check_docs --root . --stale` → **OK, 0 broken**
+(40 pre-existing archive-anchor hints, unchanged count). Slice-close full
+suite: `python -m pytest -q -n auto` → **707 passed, 2 skipped in 58.10s**. No
+push (`push-policy: human`).
+
+This was the last autonomously-actionable queued WI. Everything remaining
+needs an owner act (the single-ratify sitting + the WI-097/098/103/123
+rulings), so the loop parks in **NEEDS-HUMAN**.

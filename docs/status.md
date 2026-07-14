@@ -237,17 +237,20 @@ working surface.
       a commit-msg check to be a backed rule; L6 template-cell manuals — an
       owner taste ruling on a deliberate design, medium churn to shipped
       templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
-- **Next action (branch `derived-gate-model`; `docs/next-wi` = WI-129;
-  `docs/run-state` = RUNNING).** Build **WI-129**
-  ([specs/WI-129.md](specs/WI-129.md)) — the LLR/TC status-coherence warn in
-  `trace.py` (owner-filed 2026-07-13 at the ratification-review sitting: warn
-  when an LLR
-  reads below Verified while every citing TC is Verified; warn-tier only,
-  never gating, no auto-lift). After it lands, no autonomous queued WI
-  remains (WI-097/098/103 each needs an owner ruling; the WI-123
-  review-cadence ruling is still pending in Needs \<human> above) — the
-  coordinator then stops in `NEEDS-HUMAN` until an owner decision creates
-  actionable scope.
+- **Next action (branch `derived-gate-model`; `docs/next-wi` = (empty — no
+  autonomous WI); `docs/run-state` = NEEDS-HUMAN).** The last
+  autonomously-actionable queued WI — the LLR/TC status-coherence warn in
+  `trace.py` (`llr_status_advisories`: warn-tier only, fires when an LLR reads
+  below Verified while every citing TC is Verified; never joins the
+  `--strict`/`--strict-integrity` exit set; no auto-lift) — **landed 2026-07-13**
+  (record: [log.md](log.md) + its WI-row Deliverable; full suite 707p/2s).
+  **Everything now open needs an owner act**, so the loop parks in
+  **NEEDS-HUMAN**: the single-ratify sitting bundling the G3 re-attestation +
+  v2 batch ratification + single-ratify enablement review + push decision, and
+  the WI-097 (LICENSE) / WI-098 (masters provenance) / WI-103 (PROCESS_OPTIONS
+  split) / WI-123 (review cadence) rulings — all in **Needs \<human>** above.
+  When the owner rules, that decision creates the next actionable scope (a
+  new/unblocked WI row); until then there is no autonomous BUILD to route.
   1. **Derived-gate campaign — LANDED (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the whole 8-slice campaign has shipped: the `Draft` artifact state + trace

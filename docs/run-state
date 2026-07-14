@@ -2,4 +2,5 @@
 # the root agent-resume.* launchers). RUNNING while work remains; a driver
 # writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may
 # carry one `ask:` line naming the act — the stop banner headlines it (WI-127).
-RUNNING
+NEEDS-HUMAN
+ask: Owner ratification sitting — attest the SR-049 spine cut + v2 batch (SR-050/051) → G3, review the single-ratify enablement commit, and make the push decision; then rule WI-097 (LICENSE) / WI-098 (masters provenance) / WI-103 (PROCESS_OPTIONS split) / WI-123 (review cadence). No autonomous WI remains until a ruling creates scope.

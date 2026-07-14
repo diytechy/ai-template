@@ -60,6 +60,13 @@ call `trace.py` directly to iterate on a specific finding.
   equivalent / "same as" / matches) without naming its predicate. Pin it: say
   identical *in what*, judged *how* — or accept the wording knowingly at the G1
   consistency review (process.md §4).
+- **LLR status-coherence advisory** (`WARNING (advisory)`, warn-only — never
+  fails a run) — an LLR reads below `Verified` while every TC that cites it is
+  `Verified`, so the evidence to lift it already exists. Fix: edit the LLR's
+  `Status` cell to `Verified` (registries are hand-owned — no generator writes
+  them back). It never gates: LLR status is non-gating under the derived-gate
+  model (the SR's `Verified` drives G2→G3), so a lagging LLR is a readout drift,
+  not a coverage hole.
 
 ## Verify the fix
 

@@ -487,6 +487,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `is_verified(row)` | The terminal `Verified` state, matched case-insensitively so it follows the |  |
 | `structure_findings(path, display)` | Column-count structural check over one registry CSV: every data row must |  |
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
+| `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Verified` |  |
 | `id_key(label)` |  |  |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
 | `triangle_findings(tcs, llrs)` | SR/LLR citation coherence (IMPROVEMENT_PLAN.md Thread 50). A TC may cite an | LLR-1, SR-1, SR-2 |

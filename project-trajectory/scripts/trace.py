@@ -197,6 +197,15 @@ byte-for-byte/byte-identical/bit-identical/== ...), so it is deliberately a
 consistency review (process.md §4) makes the call, and the reviewer either
 pins the predicate or accepts the wording knowingly.
 
+Also always (warn-only, never an exit-code change): an LLR whose Status reads
+below Verified while *every* TC that cites it is Verified is flagged as a
+WARNING (WI-129) — the evidence to lift it already exists, so the gap is a
+readout drift, not a coverage hole. It is never gating (not under --strict or
+--strict-integrity): LLR status is non-gating under the derived-gate model
+(only the SR's Verified drives G2->G3), and making this warn block would
+re-introduce the coupling the model dropped. The fix is to lift the LLR's
+Status cell by hand; no generator writes registry cells back.
+
 When the SR registry carries the optional `Area` column (owner-hat/domain tag,
 process.md §1) with real values, the report adds a per-Area SR count section —
 report-only, never an exit-code change; blank cells and registries without the
@@ -457,6 +466,40 @@ def ac_advisories(srs):
                 "say identical/equivalent *in what*, judged *how* (process.md "
                 "§4 consistency review; heuristic, warn-only)".format(
                     r["SR-ID"], ", ".join(repr(t) for t in sorted(terms))
+                )
+            )
+    return out
+
+
+def llr_status_advisories(llrs, tcs):
+    """Warn-only findings (WI-129): an LLR whose Status reads below `Verified`
+    while *every* TC that cites it is already `Verified`. The evidence to lift it
+    exists, so the gap is a readout drift, not a coverage hole — mechanically
+    harmless (the derived gate ignores LLR/TC Status past `Draft`; only the SR's
+    `Verified` drives G2->G3, derive_gate.maturity_gate), but confusing at a
+    ratification review, where an `Implemented` LLR under a `Verified` SR reads
+    like an unfinished decomposition. Warn only: never promoted to an error (not
+    under --strict or --strict-integrity), because making LLR status gate would
+    re-introduce the exact LLR-status coupling the derived-gate model dropped.
+    An LLR with no citing TC is the orphan rules' job, not this lint's; matching
+    is case-insensitive via the shared is_verified() predicate."""
+    citing = {}  # LLR id -> [is_verified(tc) for each citing TC]
+    for r in tcs:
+        tc_ok = is_verified(r)
+        for x in refs(r.get("Verifies")):
+            if ID_PATTERNS["LLR"].match(x):
+                citing.setdefault(x, []).append(tc_ok)
+    out = []
+    for r in llrs:
+        lid = r.get("LLR-ID")
+        if not lid or is_verified(r):
+            continue
+        verdicts = citing.get(lid)
+        if verdicts and all(verdicts):
+            out.append(
+                "LLR {} reads '{}' but every citing TC is Verified — lift to "
+                "Verified (the evidence already exists)".format(
+                    lid, (r.get("Status") or "").strip()
                 )
             )
     return out
@@ -1287,6 +1330,10 @@ def main():
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
     # predicate (see the module docstring). Never joins a failure set below.
     advisories = ac_advisories(srs)
+    # Warn-only, always on (WI-129): an LLR reading below Verified while every
+    # citing TC is Verified — a readout drift, never a failure (LLR status is
+    # non-gating under the derived-gate model). Never joins a failure set below.
+    llr_status_advis = llr_status_advisories(llrs, tcs)
 
     # Draft artifacts (derived-gate model §3): the rows exempted from the
     # child-completeness orphan rules + the --require-verified criterion. Listed
@@ -1423,6 +1470,15 @@ def main():
         if not advisories
         else [f"- {f}" for f in advisories]
     )
+    # Warn-only advisory section (never a failure, WI-129): LLRs reading below
+    # Verified whose citing TCs are all Verified. Lift the Status cell by hand
+    # (registries are hand-owned SSOT — no generator writes them back).
+    lines += ["", "## LLR status-coherence advisories (warn-only)", ""]
+    lines += (
+        ["None. No unlifted LLRs under fully-Verified tests."]
+        if not llr_status_advis
+        else [f"- {f}" for f in llr_status_advis]
+    )
     # Attested-vs-mechanized surface (process.md §4 "Attest"): make the project's
     # trust footprint auditable — how much of what is "Verified" rests on a named
     # human's recorded judgment rather than a runnable check.
@@ -1558,6 +1614,8 @@ def main():
         print(f"WARNING (advisory): {a}")
     for a in interface_advisories:
         print(f"WARNING (advisory): {a}")
+    for a in llr_status_advis:
+        print(f"WARNING (advisory): {a}")
     print(
         f"Traceability: SN={len(sn_ids)} SR={len(srs)} LLR={len(llrs)} "
         f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"
@@ -1592,6 +1650,11 @@ def main():
             else ""
         )
         + (f" ac-advisories={len(advisories)}" if advisories else "")
+        + (
+            f" llr-status-advisories={len(llr_status_advis)}"
+            if llr_status_advis
+            else ""
+        )
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
     )
