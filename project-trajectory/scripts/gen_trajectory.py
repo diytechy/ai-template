@@ -33,10 +33,12 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
   6. **Process** — the method reference (WI-085): *how this project is built* —
      the artifact lifecycle x gates flow (live tier counts from the spine, the
      current derived gate highlighted from `docs/gate`), the agent-resume loop,
-     and the slice -> campaign -> gate-bar cadence (campaign counts from
-     `work-items.csv`). Data-derived where a canonical source exists; links out
-     to the process docs. Omitted when there is no `docs/gate`, so a gate-less
-     repo renders byte-identically.
+     the slice -> campaign -> gate-bar cadence (campaign counts from
+     `work-items.csv`), and (WI-142/SR-055) the two circular working loops —
+     intake and human-decision — sharing one LLM_Agent entry. Data-derived where
+     a canonical source exists; links out to the process docs and the canonical
+     working surfaces. Omitted when there is no `docs/gate`, so a gate-less repo
+     renders byte-identically.
 
 Deterministic by construction (sorted inputs, fixed layout passes, no clocks;
 the as-of stamp derives from the last source-touching *commit*), so the
@@ -2342,15 +2344,75 @@ def _process_doc(root, scaffolded, master):
     return scaffolded
 
 
+def _loop_panel(root):
+    """The two circular working loops (SR-055) as one self-contained
+    `<div class="loops">` block: the intake loop (A) and the human-decision
+    loop (B), sharing a single LLM_Agent entry node rendered once. Each stage
+    links to its canonical home *when that home exists in this repo*, so every
+    emitted href resolves (a repo missing the file renders the stage as plain
+    text — still deterministic; the tab itself is gated on docs/gate upstream).
+    No clocks, no repo counts: the loop structure is the method's, not the
+    repo's data, so it renders byte-identically regardless of the registries."""
+
+    def canon(rel, label):
+        if (root / rel).exists():
+            return '<a href="{}">{}</a>'.format(esc(rel), esc(label))
+        return esc(label)
+
+    wi_csv = "docs/requirements/work-items.csv"
+    intake_loop = [
+        ("Intake", canon("docs/status.md", "owner/agent hands work in")),
+        ("Triage → WIs", canon(wi_csv, "scoped work items with spec detail")),
+        ("Resume loop", canon("docs/next-wi", "the coordinator picks up docs/next-wi")),
+        ("Build / review", canon("docs/log.md", "BUILD then REVIEW-A/B")),
+        ("Merge", canon("docs/log.md", "verdicts merged; the loop repeats")),
+    ]
+    decide_loop = [
+        (
+            "Open items",
+            canon("docs/open-items.md", "populated incl. the gate-ratification table"),
+        ),
+        ("Human review", canon("docs/open-items.md", "the owner reviews and rules")),
+        ("Decisions record", canon("docs/log.md", "the ruling appends to the log")),
+        (
+            "Merge",
+            canon("docs/log.md", "the item leaves the surface; the loop repeats"),
+        ),
+    ]
+
+    def loop_ol(name, stages):
+        lis = "".join(
+            '<li class="stg"><b>{}</b><span class="n">{}</span></li>'.format(
+                esc(title), note
+            )
+            for title, note in stages
+        )
+        return (
+            '<div class="loop"><b class="loopname">{}</b>'
+            '<ol class="pflow loop">{}</ol></div>'.format(esc(name), lis)
+        )
+
+    return (
+        '<div class="loops">'
+        '<div class="entry"><b>LLM_Agent</b>'
+        "<span>the shared entry point — both loops start here</span></div>"
+        + loop_ol("A · Intake loop", intake_loop)
+        + loop_ol("B · Human-decision loop", decide_loop)
+        + "</div>"
+    )
+
+
 def process_panel(root, wis, stats):
     """The Process tab + panel as (tab, panel), or None when there is no
     docs/gate (the tab is then omitted -> a gate-less repo renders
     byte-identically; the Knowledge-tab vacuity idiom). Three linked panels:
     artifact lifecycle x gates (live tier counts; the stages the current
     derived gate spans are highlighted), the agent-resume loop (the managed
-    agent_loop phase vocabulary with its escalation edges), and slices ->
+    agent_loop phase vocabulary with its escalation edges), slices ->
     campaigns -> gates (commit bar vs gate bar, campaign counts joined from
-    work-items.csv). Fully self-contained (style inside the panel, no script
+    work-items.csv), and (SR-055) the two circular working loops — intake and
+    human-decision — sharing one LLM_Agent entry, each stage linking to its
+    canonical home. Fully self-contained (style inside the panel, no script
     needed — the shared tab switcher handles it); sorted inputs, no clocks."""
     gate = _gate_value(root)
     if not gate:
@@ -2429,6 +2491,9 @@ def process_panel(root, wis, stats):
         for s, cls in loop_steps
     )
 
+    # Panel 4 — the two circular working loops (SR-055).
+    loops_html = _loop_panel(root)
+
     style = (
         "<style>"
         "#process h3{font-size:.95rem;margin:1.5rem 0 .25rem;letter-spacing:-.01em;}"
@@ -2455,6 +2520,21 @@ def process_panel(root, wis, stats):
         "#process ul.esc{font-size:.9rem;color:var(--muted);margin:.4rem 0 0;"
         "padding-left:1.2rem;}"
         "#process ul.esc b{color:var(--text);}"
+        # Panel 4 — the two circular working loops, sharing one LLM_Agent entry.
+        "#process .loops{display:flex;flex-direction:column;gap:.5rem;"
+        "margin:.5rem 0;}"
+        "#process .entry{align-self:flex-start;background:var(--surface);"
+        "border:2px solid var(--accent);border-radius:10px;"
+        "padding:.45rem .8rem;box-shadow:var(--shadow);}"
+        "#process .entry b{display:block;font-size:.88rem;color:var(--accent);}"
+        "#process .entry span{font-size:.72rem;color:var(--muted);}"
+        "#process .loop .loopname{display:block;font-size:.82rem;font-weight:700;"
+        "color:var(--text);margin:.35rem 0 .1rem;}"
+        "#process ol.pflow.loop{align-items:center;}"
+        '#process .pflow.loop::after{content:"↺ back to the entry";'
+        "align-self:center;font-size:.72rem;color:var(--accent);font-weight:700;"
+        "margin-left:1rem;white-space:nowrap;}"
+        "#process .pflow.loop a{color:inherit;}"
         "</style>"
     )
     panel = (
@@ -2510,6 +2590,13 @@ def process_panel(root, wis, stats):
         + esc(len(camps))
         + " campaign(s).</p>\n"
         '<ol class="pflow">' + bar_lis + "</ol>\n"
+        "<h3>4 · The working loops</h3>\n"
+        '<p class="cap">Two circular flows close the method — how work '
+        "<strong>enters</strong> (A) and how the human <strong>decides</strong> "
+        "(B) — both entered by the same agent. Each stage links to its canonical "
+        "home (<code>status.md</code>, <code>work-items.csv</code>, "
+        "<code>open-items.md</code>, <code>log.md</code>); the loop structure is "
+        "the method's, not this repo's data.</p>\n" + loops_html + "\n"
         "</section>"
     )
     return '<button data-tab="process">Process</button>', panel

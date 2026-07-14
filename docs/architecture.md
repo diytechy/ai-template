@@ -428,7 +428,7 @@ Contracts (interfaces): IF-011, IF-024, IF-052
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
-| `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no |  |
+| `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
 | `build_html(root, wis)` |  |  |
 | `main()` |  |  |
 

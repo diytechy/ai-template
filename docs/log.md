@@ -5181,3 +5181,46 @@ WI-142:
 
 No spine change; no code change; no byte-budgeted file touched. This is
 review-flow bookkeeping, not new product scope. WI-142 build follows.
+
+## 2026-07-14 — WI-142 [v3] dev slice: Process-tab intake + human-decision loops
+
+The second v3 dev slice (`dashboard-ux`, G2). Added **Panel 4** to the Process
+tab (SR-055): the project's two circular working loops as linked flow panels,
+sharing one LLM_Agent entry.
+
+- **Renderer (`gen_trajectory.py`).** New module-level `_loop_panel(root)` (the
+  symbol LLR-056 names) builds one `<div class="loops">`: a single `.entry`
+  node (**LLM_Agent**, rendered once) above **Loop A · Intake** (Intake →
+  Triage→WIs → Resume loop → Build/review → Merge) and **Loop B ·
+  Human-decision** (Open items incl. the gate-ratification table → Human review
+  → Decisions record → Merge). Each stage links to its canonical home
+  (`status.md` / `work-items.csv` / `next-wi` / `open-items.md` / `log.md`)
+  *when that file exists in the repo*, else renders plain text — so every
+  emitted href resolves. Reuses the existing `.pflow` chip idiom + a `.loop`
+  class whose `::after` draws the “↺ back to the entry” wrap-back; CSS added to
+  the panel's own `<style>`.
+- **Data-independence.** The loop structure is the method's, not the repo's
+  data (no counts, no clocks), so it renders **byte-identically** regardless of
+  the registries — proven by comparing the loops block across a minimal vs a
+  campaign-rich fixture.
+
+**Spine.** SR-055 / LLR-056 / TC-056 **Planned → Verified** (the g2 batch had
+pre-minted LLR-056/TC-056). Four TC-056 tests
+(`test_process_tab_renders_intake_and_decision_loops`,
+`::_share_one_llm_agent_entry`, `::_loop_stage_links_resolve`,
+`::_loops_byte_identical_without_data`) pin it. Phase v3 **stays G2** (min over
+its SRs — SR-052/053/054 Critique + SR-056 remain Planned until WI-143/144);
+overall derived gate unchanged at **G2**. SN=24 SR=56 LLR=57 TC=57, orphans=0.
+
+**Review carryover.** The session-034 REVIEW-A findings against WI-141 were
+filed as [OI-10](open-items.md) this sitting (recommended fold into WI-143);
+they are amendment candidates, not blockers on this slice.
+
+**Deviation:** none. `gen_trajectory.py` is not budget-watched; no budgeted doc
+touched; no code behavior change outside the new panel. Regenerated
+`PROJECT_STATE.html` + `docs/gate` (still G2) + `docs/okf` (3 files, the
+SR-055/LLR-056/TC-056 status text). Smoke: 574+2; the four new tests + the 8
+existing process tests green (12/12). Full suite + gate bar recorded below.
+
+**Handoff.** Run-state **RUNNING**; `docs/next-wi` → **WI-143** (SR-056
+decomposition render polish, folding OI-10). Not pushed (`push-policy: human`).

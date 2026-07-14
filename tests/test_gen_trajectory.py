@@ -1260,3 +1260,98 @@ def test_meta_process_tab_smoke():
     assert "project-trajectory/PROCESS.md" in hrefs
     for href in hrefs:
         assert (ROOT / href).exists(), href
+
+
+# --- WI-142 / SR-055: the two circular working-loop panels ----------------------
+
+
+def _loops_div(text):
+    """The `<div class="loops">…</div>` block (Panel 4), balanced across its
+    nested `<div>`s, sliced from the rendered panel/HTML."""
+    start = text.index('<div class="loops">')
+    depth, i = 0, start
+    while i < len(text):
+        if text.startswith("<div", i):
+            depth += 1
+        elif text.startswith("</div>", i):
+            depth -= 1
+            if depth == 0:
+                return text[start : i + len("</div>")]
+        i += 1
+    raise AssertionError("unbalanced loops div")
+
+
+def test_process_tab_renders_intake_and_decision_loops(tmp_path):
+    # SR-055: the Process tab renders both circular loops as linked flow panels,
+    # each with its ordered stages, and the gate-ratification stage lives in
+    # loop B (the human-decision loop).
+    with_gate(tmp_path, "G2")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert "The working loops" in text
+    loops = _loops_div(text)
+    # both loop panels present and named
+    assert "A · Intake loop" in loops and "B · Human-decision loop" in loops
+    # loop A's ordered stage titles
+    for stg in ("Intake", "Triage → WIs", "Resume loop", "Build / review", "Merge"):
+        assert ">" + stg + "<" in loops, stg
+    # loop B's ordered stage titles, incl. the gate-ratification stage
+    for stg in ("Open items", "Human review", "Decisions record"):
+        assert ">" + stg + "<" in loops, stg
+    assert "gate-ratification table" in loops
+    # the gate-ratification stage sits in loop B, after the loop-B heading
+    b_start = loops.index("B · Human-decision loop")
+    assert loops.index("gate-ratification table") > b_start
+    # both loops advertise their circular return (the ↺ marker via CSS class)
+    assert loops.count('class="pflow loop"') == 2
+    # still fully offline
+    low = text.lower()
+    assert "http://" not in low and "https://" not in low
+
+
+def test_process_loops_share_one_llm_agent_entry(tmp_path):
+    # The LLM_Agent entry node is rendered exactly once and lives in the shared
+    # `.entry` node (above both loops), not duplicated per loop.
+    with_gate(tmp_path, "G2")
+    assert gen(tmp_path).returncode == 0
+    loops = _loops_div(html_of(tmp_path))
+    assert loops.count("<b>LLM_Agent</b>") == 1
+    # the entry node precedes both loop panels (a shared head, not per-loop)
+    entry_at = loops.index('<div class="entry">')
+    assert entry_at < loops.index("A · Intake loop")
+    assert entry_at < loops.index("B · Human-decision loop")
+
+
+def test_process_loop_stage_links_resolve():
+    # Over the real meta repo (where every canonical home exists): each stage
+    # links to its canonical doc and every emitted href resolves.
+    gt = load_script("gen_trajectory")
+    loops = gt._loop_panel(ROOT)
+    hrefs = re.findall(r'href="([^"]+)"', loops)
+    assert hrefs, "loop stages should link to their canonical homes"
+    for href in hrefs:
+        assert (ROOT / href).exists(), href
+    # every canonical home named by SR-055 is linked
+    for home in (
+        "docs/status.md",
+        "docs/requirements/work-items.csv",
+        "docs/next-wi",
+        "docs/open-items.md",
+        "docs/log.md",
+    ):
+        assert 'href="{}"'.format(home) in loops, home
+
+
+def test_process_loops_byte_identical_without_data(tmp_path):
+    # The loop structure is the method's, not the repo's data: the loops block
+    # renders byte-for-byte the same whether the registry is minimal or
+    # campaign-rich (SR-055 "a data-less repo renders byte-identically").
+    minimal = tmp_path / "min"
+    minimal.mkdir()
+    with_gate(minimal, "G2")
+    assert gen(minimal).returncode == 0
+    rich = tmp_path / "rich"
+    rich.mkdir()
+    with_gate(rich, "G2", CAMP_WIS, header=CAMP_HEADER)
+    assert gen(rich).returncode == 0
+    assert _loops_div(html_of(minimal)) == _loops_div(html_of(rich))
