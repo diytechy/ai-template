@@ -140,7 +140,7 @@ def read_sns(root):
     return [(r["id"], r["need"]) for r in _sn_rows(root)]
 
 
-TIER_FILL = {"sn": "#6366f1", "sr": "#0891b2", "llr": "#64748b", "tc": "#059669"}
+TIER_FILL = {"sn": "#4338ca", "sr": "#0e7490", "llr": "#64748b", "tc": "#047857"}
 TIER_COL = {"sn": 0, "sr": 1, "llr": 2, "tc": 3}
 ICICLE_UNIT = 18  # px of height per TC leaf
 
@@ -410,7 +410,11 @@ DAG_COL_GAP = 60  # horizontal gap between dependency ranks
 DAG_ROW_H = 46  # node height
 DAG_ROW_GAP = 22  # vertical gap between nodes in a rank
 DAG_PAD = 18
-STATUS_FILL = {"done": "#059669", "active": "#d97706", "queued": "#94a3b8"}
+STATUS_FILL = {"done": "#047857", "active": "#b45309", "queued": "#94a3b8"}
+# A3 (no-info-by-color-alone): a redundant, shape-distinct status glyph paired with
+# every status fill — the meaning survives without colour perception. Prefixed to a
+# drill work-item block's label (and named in its hover title / detail).
+STATUS_GLYPH = {"done": "✓", "active": "●", "queued": "○"}
 
 
 def _dag_ranks(wis, pred_map):
@@ -612,7 +616,7 @@ def dag_svg(wis):
 
 # --- the How-SW interface graph (WI-056), reusing the WI-DAG layouter -----------
 
-SW_NODE_FILL = {"module": "#0891b2", "file": "#7c3aed", "external": "#64748b"}
+SW_NODE_FILL = {"module": "#0e7490", "file": "#7c3aed", "external": "#64748b"}
 SW_COL_W = 168
 SW_COL_GAP = 64
 SW_ROW_H = 40
@@ -790,6 +794,11 @@ def sw_containment(root, mods):
     ifs = ct.load_ifs(ct.read_rows(root / ct.IF_CSV))
     counter = [0]
     layers = []
+    # U3: a per-block detail record (keyed by the block's `data-node`) so the How-SW
+    # drill gets the same click/focus-for-detail aside its sibling When drill has. The
+    # module summary comes from the arch-map rows (`mods`), keyed by display name.
+    sw_details = {}
+    mod_summary = {m["name"]: m.get("summary", "") for m in mods}
 
     def new_id():
         counter[0] += 1
@@ -801,6 +810,13 @@ def sw_containment(root, mods):
 
     def cmp_block(cid, child):
         n = len(subtree_modules(cid))
+        sw_details["cmp:" + cid] = {
+            "kind": "component",
+            "title": cmp_label(cid),
+            "body": "A CMP-### component: {} module(s) in it and its PartOf parts. "
+            "Double-click to descend into its members and internal seams.".format(n),
+            "fill": "#475569",  # slate — the neutral container badge (7.58:1 on #fff)
+        }
         return {
             "key": "cmp:" + cid,
             "label": cmp_label(cid),
@@ -814,18 +830,33 @@ def sw_containment(root, mods):
         }
 
     def mod_block(norm):
+        disp = inv.get(norm, norm)
+        sw_details["mod:" + norm] = {
+            "kind": "module",
+            "title": disp,
+            "body": mod_summary.get(disp) or "A source module in the architecture map.",
+            "fill": SW_NODE_FILL["module"],
+        }
         return {
             "key": "mod:" + norm,
-            "label": inv.get(norm, norm),
+            "label": disp,
             "sub": "module",
             "fill": SW_NODE_FILL["module"],
             "textfill": "#fff",
             "stroke": "rgba(15,23,42,.15)",
             "tier": "module",
-            "title": inv.get(norm, norm),
+            "title": disp,
         }
 
     def ext_block(key, disp, kind):
+        sw_details[key] = {
+            "kind": kind,
+            "title": disp,
+            "body": "A {} the modules reach across a declared IF-### seam.".format(
+                kind
+            ),
+            "fill": SW_NODE_FILL.get(kind, "#64748b"),
+        }
         return {
             "key": key,
             "label": disp,
@@ -927,15 +958,63 @@ def sw_containment(root, mods):
             ct.TOP_VIEW_MAX,
         )
     )
+    # U3: node-kind legend (the fills were "explained nowhere" in the How tab) —
+    # built from the shared SW_NODE_FILL so it stays in lock-step with the blocks.
+    legend = (
+        '<span><i style="background:var(--surface);border:1px solid '
+        'var(--border)"></i>component</span>'
+        '<span><i style="background:{module}"></i>module</span>'
+        '<span><i style="background:{file}"></i>file (shared-contract hub)</span>'
+        '<span><i style="background:{external}"></i>external actor</span>'.format(
+            **SW_NODE_FILL
+        )
+    )
+    # U3: a #sw-detail aside wired click/focus-for-detail, mirroring the When drill.
+    # Self-contained (its own embedded data + controller), so a no-CMP repo that never
+    # appends this panel stays byte-identical. sort_keys -> byte-deterministic.
+    dj = json.dumps(sw_details, ensure_ascii=False, sort_keys=True).replace(
+        "</", "<\\/"
+    )
+    detail_script = (
+        "<script>(function(){\n"
+        "  const D = " + dj + ";\n"
+        "  const sw = document.getElementById('sw'); if(!sw) return;\n"
+        "  const box = document.getElementById('sw-detail'); if(!box) return;\n"
+        "  const esc = s => { const d=document.createElement('div');"
+        " d.textContent = s==null?'':s; return d.innerHTML; };\n"
+        "  function show(key){\n"
+        "    const d = D[key];\n"
+        "    if(!d){ box.innerHTML = '<p class=\"hint\">No detail.</p>'; return; }\n"
+        '    box.innerHTML = \'<span class="badge" style="background:\''
+        "+(d.fill||'#64748b')+'\">'+esc(d.kind)+'</span>'\n"
+        "      + '<h3>'+esc(d.title)+'</h3>'\n"
+        "      + '<p class=\"body\">'+esc(d.body)+'</p>';\n"
+        "  }\n"
+        "  for(const b of sw.querySelectorAll('.block[data-node]')){\n"
+        "    const key=b.getAttribute('data-node');\n"
+        "    b.addEventListener('click', () => show(key));\n"
+        "    b.addEventListener('focus', () => show(key)); }\n"
+        "})();</script>"
+    )
     panel = (
         '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
         + DRILL_STYLE
         + SW_CMPTREE_STYLE
         + "\n"
         + summary_line
-        + '<div class="cmptree">'
+        + '<div class="layout">\n'
+        + '<div class="view"><div class="cmptree">'
         + _render_drill("sw", root_id, "Architecture", layers)
-        + "</div>\n</section>"
+        + "</div></div>\n"
+        + '<aside id="sw-detail" class="detail"><p class="hint">Click a component or '
+        "module to read its detail; double-click a component (or focus it and press "
+        "Enter) to descend into its members and internal seams.</p></aside>\n"
+        + "</div>\n"
+        + '<div class="legend">'
+        + legend
+        + "</div>\n"
+        + detail_script
+        + "\n</section>"
     )
     return tab, panel
 
@@ -1154,8 +1233,8 @@ def campaign_containment(wis):
 # A stable, sorted-order palette for the per-phase accent (grouping-primary
 # encoding). Deterministic: the i-th sorted phase label takes the i-th color.
 PHASE_ACCENTS = (
-    "#4f46e5", "#0891b2", "#7c3aed", "#d97706",
-    "#059669", "#db2777", "#2563eb", "#65a30d",
+    "#4f46e5", "#0e7490", "#7c3aed", "#b45309",
+    "#047857", "#be185d", "#1d4ed8", "#4d7c0f",
 )  # fmt: skip
 
 # --- SR-051 rev (WI-141): the Simulink-style drill renderer --------------------
@@ -1188,8 +1267,8 @@ PORT_R = 4.5
 MAX_TIER_COL = DRILL_GEOM[0]  # 172 — the declared upper bound (the former width)
 TIER_COL_MIN = 96  # a floor so a short-label block stays a comfortable click target
 TIER_COL_PAD = 24  # fixed padding around the widest label (≈12px each side)
-_BLAB_CH = 7  # px/char, the 11px bold block label (`.blab`)
-_BSUB_CH = 5  # px/char, the 8.5px block sub-label (`.bsub`)
+_BLAB_CH = 7  # px/char, over-estimates the shared bold node label (`--nlabel`, `.blab`)
+_BSUB_CH = 5  # px/char, over-estimates the shared sub-label (`--nsub`, `.bsub`)
 CEDGE_LEN = 9  # the containment arrow's shaft length (a horizontal parent→child →)
 
 
@@ -1232,8 +1311,8 @@ DRILL_STYLE = (
     # SR-056: the hover/focus highlight persists on the last-hovered block until
     # another takes it (the shared .hl idiom — cf. the icicle/DAG/knowledge views).
     ".drill .block.hl rect{stroke:#f59e0b;stroke-width:2.5;}"
-    ".drill .block .blab{font-size:11px;font-weight:700;}"
-    ".drill .block .bsub{font-size:8.5px;opacity:.85;}"
+    ".drill .block .blab{font-size:var(--nlabel);font-weight:700;}"
+    ".drill .block .bsub{font-size:var(--nsub);}"
     ".drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;}"
     ".drill .port.in{stroke:var(--accent);}"
     ".drill .wire{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.85;}"
@@ -1393,6 +1472,10 @@ def _drill_layer_svg(blocks, edges):
         # keyed to the last-hovered node (appended last, preserving the existing
         # `data-tier="…" data-descend="…"` adjacency other views assert on).
         attrs += ' data-node="{}"'.format(esc(b["key"]))
+        # U4: a leaf work-item block advertises its bare id so the When panel can
+        # wire single-click + focus to the detail aside (the sw drill sets no `wi`).
+        if b.get("wi"):
+            attrs += ' data-wi="{}"'.format(esc(b["wi"]))
         nodes.append(
             "<g {}><title>{}</title>"
             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="8" '
@@ -1530,7 +1613,11 @@ def when_view(root, wis):
         t = w["title"]
         return {
             "key": key or w["id"],
-            "label": w["id"],
+            # A3: the status glyph rides in the visible label (so the column width
+            # accounts for it), redundant with the fill hue; `wi` carries the bare id
+            # for the detail-panel wiring (U4) independent of the decorated label.
+            "label": "{} {}".format(STATUS_GLYPH[st], w["id"]),
+            "wi": w["id"],
             "sub": t if len(t) <= 20 else t[:19] + "…",
             "fill": STATUS_FILL[st],
             "textfill": "#0f172a" if st == "queued" else "#fff",
@@ -1652,7 +1739,10 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     color-scheme: light dark;
     --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --text:#0f172a;
     --muted:#64748b; --accent:#4f46e5;
-    --done:#059669; --active:#d97706; --queued:#94a3b8;
+    --done:#047857; --active:#b45309; --queued:#94a3b8;
+    /* U1: one shared node-label / sub-label type scale across every SVG emitter
+       (icicle, drill, knowledge) — no per-emitter font-size overrides. */
+    --nlabel:10px; --nsub:8.5px;
     --shadow:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
   }
   @media (prefers-color-scheme: dark) {
@@ -1720,8 +1810,8 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .view svg { display:block; font-family:inherit; }
   #ice .cell rect { stroke:rgba(255,255,255,.35); stroke-width:.5; cursor:pointer;
         transition:opacity .1s ease; }
-  #ice .cell text { fill:#fff; font-size:10px; pointer-events:none; }
-  #ice .cell .sub { font-size:8.5px; opacity:.85; }
+  #ice .cell text { fill:#fff; font-size:var(--nlabel); pointer-events:none; }
+  #ice .cell .sub { font-size:var(--nsub); }
   #ice .lane-head { fill:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em; }
   .cell.dim, .wi.dim, .edge.dim { opacity:.15; }
   #ice .cell.hl rect { stroke:#f59e0b; stroke-width:2.5; }
@@ -1729,8 +1819,8 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   #dag .wi rect { stroke:rgba(15,23,42,.15); stroke-width:1; cursor:pointer;
         transition:opacity .1s ease; }
   #dag .wi text { fill:#fff; pointer-events:none; }
-  #dag .wi .wid { font-size:10px; font-weight:700; }
-  #dag .wi .sub { font-size:8.5px; opacity:.9; }
+  #dag .wi .wid { font-size:var(--nlabel); font-weight:700; }
+  #dag .wi .sub { font-size:var(--nsub); }
   #dag .wi.queued text { fill:#0f172a; }
   #dag .wi.hl rect { stroke:#f59e0b; stroke-width:2.5; }
   #dag .edge { fill:none; stroke:var(--border); stroke-width:1.4; }
@@ -1814,10 +1904,10 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
           click a block to read its full text — requirement, acceptance, status.</p></aside>
       </div>
       <div class="legend">
-        <span><i style="background:#6366f1"></i>SN</span>
-        <span><i style="background:#0891b2"></i>SR</span>
+        <span><i style="background:#4338ca"></i>SN</span>
+        <span><i style="background:#0e7490"></i>SR</span>
         <span><i style="background:#64748b"></i>LLR</span>
-        <span><i style="background:#059669"></i>TC</span>
+        <span><i style="background:#047857"></i>TC</span>
       </div>
     </section>
 
@@ -1863,8 +1953,8 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         + '<p class="body">'+esc(d.body)+'</p>'
         + (d.meta?'<p class="meta">'+esc(d.meta)+'</p>':'');
     }
-    const tierColor = { sn:'#6366f1', sr:'#0891b2', llr:'#64748b', tc:'#059669' };
-    const statusColor = { done:'#059669', active:'#d97706', queued:'#94a3b8' };
+    const tierColor = { sn:'#4338ca', sr:'#0e7490', llr:'#64748b', tc:'#047857' };
+    const statusColor = { done:'#047857', active:'#b45309', queued:'#94a3b8' };
 
     // Icicle: hover highlights a block + its descendants; click shows detail.
     const ice = document.getElementById('ice');
@@ -1913,6 +2003,17 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       n.addEventListener('focus', () => { dagHover(id); renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||'#94a3b8'); });
     }
     if(dag) dag.addEventListener('mouseleave', dagClear);
+    // When roadmap (drill render): a leaf work-item block opens the SAME detail aside
+    // on single-click / focus. The `.wi` wiring above serves the small-registry SVG
+    // DAG fallback; this serves the tiered drill (its blocks carry `data-wi`, and the
+    // drill's own controller keeps dblclick=descend + hover=highlight). One selector
+    // matches per render mode, so neither is a dead wiring for the artifact it renders.
+    if(dag) for(const b of dag.querySelectorAll('.block[data-wi]')){
+      const id = b.getAttribute('data-wi');
+      const show = () => renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||'#94a3b8');
+      b.addEventListener('click', show);
+      b.addEventListener('focus', show);
+    }
 
     for (const b of document.querySelectorAll('nav.tabs button'))
       b.onclick = () => {
@@ -2101,12 +2202,12 @@ OKF_TIER_ORDER = {
 # Node fill keyed by the OKF `type` (the icicle tier palette, extended for the
 # two off-spine concept kinds the bundle also carries).
 OKF_TYPE_FILL = {
-    "Stakeholder Need": "#6366f1",
-    "System Requirement": "#0891b2",
+    "Stakeholder Need": "#4338ca",
+    "System Requirement": "#0e7490",
     "Low-Level Requirement": "#64748b",
-    "Test Case": "#059669",
+    "Test Case": "#047857",
     "Interface": "#7c3aed",
-    "Process Guide": "#d97706",
+    "Process Guide": "#b45309",
 }
 
 KN_COL_W = 150
@@ -2303,7 +2404,7 @@ def _know_panel(svg, details):
         "<style>"
         "#knowgraph .knode rect{stroke:rgba(15,23,42,.15);stroke-width:1;"
         "cursor:pointer;transition:opacity .1s ease;}"
-        "#knowgraph .knode text{fill:#fff;font-size:9px;pointer-events:none;}"
+        "#knowgraph .knode text{fill:#fff;font-size:var(--nlabel);pointer-events:none;}"
         "#knowgraph .knode.dim,#knowgraph .kedge.dim{opacity:.15;}"
         "#knowgraph .knode.hl rect{stroke:#f59e0b;stroke-width:2.5;}"
         "#knowgraph .kedge{fill:none;stroke:#94a3b8;stroke-width:1.2;}"

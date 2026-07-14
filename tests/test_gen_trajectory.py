@@ -1420,3 +1420,106 @@ def test_process_loops_byte_identical_without_data(tmp_path):
     with_gate(rich, "G2", CAMP_WIS, header=CAMP_HEADER)
     assert gen(rich).returncode == 0
     assert _loops_div(html_of(minimal)) == _loops_div(html_of(rich))
+
+
+# --- WI-144: the 042-CRITIQUE rubric-meeting build round (dashboard-*.md) -------
+# Regression guards for the six rubric-meeting fixes (A4/U4/A3/U3/U1 done here;
+# T2 knowledge-density is the round's handed-off remainder). These guard the build
+# against regressions; they are NOT the owner-gated formal TC-HARDEN cases (the
+# per-<text> WCAG parse / dead-selector / legend-per-fill TCs route via §5 intake).
+
+
+def _wcag(fg, bg):
+    def lum(h):
+        h = h.lstrip("#")
+        chan = [int(h[i : i + 2], 16) / 255 for i in (0, 2, 4)]
+        f = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in chan]
+        return 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2]
+
+    a, b = lum(fg), lum(bg)
+    hi, lo = max(a, b), min(a, b)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def test_a4_node_fills_meet_the_wcag_floor():
+    # dashboard-accessibility.md A4: every node fill keeps >= 4.5:1 for its label
+    # text. Node text is #fff except the queued status (dark #0f172a on the light
+    # gray), so every fill in the shared palette must clear the floor with one of
+    # those two — the darkened palette this build lands.
+    gt = load_script("gen_trajectory")
+    white_fills = set(gt.STATUS_FILL.values()) - {gt.STATUS_FILL["queued"]}
+    white_fills |= set(gt.TIER_FILL.values())
+    white_fills |= set(gt.SW_NODE_FILL.values())
+    white_fills |= set(gt.OKF_TYPE_FILL.values())
+    white_fills |= set(gt.PHASE_ACCENTS)
+    for fill in sorted(white_fills):
+        assert _wcag("#ffffff", fill) >= 4.5, (fill, _wcag("#ffffff", fill))
+    # the queued fill carries dark text instead
+    assert _wcag("#0f172a", gt.STATUS_FILL["queued"]) >= 4.5
+
+
+def test_a4_no_sub_label_opacity_discount(tmp_path):
+    # A4: the emitted CSS must not discount sub-label text opacity (which dropped
+    # the effective contrast below the floor). No `.sub`/`.bsub { ... opacity }`.
+    with_bundle(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    css = html_of(tmp_path)
+    assert re.search(r"\.(?:sub|bsub)\s*\{[^}]*opacity", css) is None
+
+
+def test_a3_status_glyph_pairs_every_status_fill(tmp_path):
+    # dashboard-accessibility.md A3 (no info by colour alone): a drill work-item
+    # block pairs its status fill with a shape-distinct glyph in the visible label.
+    gt = load_script("gen_trajectory")
+    assert set(gt.STATUS_GLYPH) == set(gt.STATUS_FILL)  # one glyph per status
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    leaf = _layer_with(html_of(tmp_path), 'data-tier="work-item"')
+    labels = re.findall(r'class="blab">([^<]*)</tspan>', leaf)
+    assert labels, "no work-item blocks rendered"
+    glyphs = set(gt.STATUS_GLYPH.values())
+    for lab in labels:
+        assert lab[0] in glyphs, lab  # every leaf label is glyph-prefixed
+
+
+def test_u4_when_drill_blocks_wire_to_the_detail_panel(tmp_path):
+    # dashboard-{uniformity U4, usability T3, accessibility A1}: the When drill's
+    # leaf blocks advertise their bare id (`data-wi`) and the page wires
+    # click/focus-for-detail to them — the panel was previously dead (`#dag .wi`
+    # matched zero drill blocks).
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    view = html_of(tmp_path)
+    assert re.search(r'class="block[^"]*"[^>]*data-wi="WI-\d+"', view)
+    assert ".block[data-wi]" in view  # the wiring loop targets the drill blocks
+
+
+def test_u3_sw_drill_has_a_legend_and_a_wired_detail_aside(tmp_path):
+    # dashboard-uniformity.md U3: the How-SW drill gets the same legend + detail
+    # aside its sibling When drill has (fills were explained nowhere; no aside).
+    containerize(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    assert 'class="legend"' in sw and 'id="sw-detail"' in sw
+    assert "module" in sw and "external actor" in sw  # node-kind legend entries
+    assert ".block[data-node]" in sw  # the detail wiring targets the sw blocks
+
+
+def test_u1_node_labels_share_one_type_scale(tmp_path):
+    # dashboard-uniformity.md U1: one shared node-label / sub-label size across the
+    # emitters — declared once as CSS vars, referenced (no per-emitter px override).
+    # The icicle + knowledge rules render in any bundle repo; the drill `.blab`
+    # rule needs a tiered (drill) render.
+    with_bundle(tmp_path / "bundle")
+    assert gen(tmp_path / "bundle").returncode == 0
+    css = html_of(tmp_path / "bundle")
+    assert "--nlabel:" in css and "--nsub:" in css
+    assert "#ice .cell text { fill:#fff; font-size:var(--nlabel)" in css
+    assert "#knowgraph .knode text{fill:#fff;font-size:var(--nlabel)" in css
+    # the specific per-emitter node-label overrides this build removed are gone
+    assert "#ice .cell text { fill:#fff; font-size:10px" not in css
+    assert "#knowgraph .knode text{fill:#fff;font-size:9px" not in css
+
+    tiered_repo(tmp_path / "drill", TIER_UNION_WIS)
+    assert gen(tmp_path / "drill").returncode == 0
+    assert ".blab{font-size:var(--nlabel)" in html_of(tmp_path / "drill")
