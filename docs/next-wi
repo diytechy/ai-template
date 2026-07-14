@@ -20,11 +20,20 @@
 # Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN
 # first so one final build round mechanizes contrast instead of another hand pass.
 #
-# NEXT: WI-110 — a standalone, already-ratified owner directive (log.md 2026-07-14:
-# opus BUILD effort → xhigh, the one-cell Env change + before/after s/turn telemetry
-# via WI-124, plus the OpenAI reasoning_effort answer). Predecessors ~WI-109;~WI-145
-# done; it is NOT a campaign kickoff, so it sidesteps the campaign-sequencing the
-# owner does at the sitting — the cleanest non-dependent unit to keep the loop moving.
-# (The owner-intake WI-146+ and research-knowledge WI-152+ campaigns wait for the
-# sitting to sequence them; do not auto-start a campaign.)
-WI-110
+# NEXT: WI-146 (ratification tree view + brief lint). The standalone opus→xhigh
+# owner directive shipped 2026-07-14 (log.md), and it was the LAST buffer before
+# the owner-intake backlog. WI-144 (the v3 closer) is `active` but PAUSED - its
+# SR-047 critique loop EXHAUSTED AGENT_CRITIQUE_MAX=3 still CHANGES-REQUESTED
+# (042/048/052); single-ratify's budget failure_action pauses it + surfaces the
+# block for the phase-v3 g2-close sitting (OI-12) but keep_nondependent KEEPS the
+# loop RUNNING on non-dependent work. With the buffer gone, that non-dependent work
+# IS the owner-intake backlog (WI-146…151): all hard predecessors done (WI-145, the
+# 2026-07-14 sitting, is done), so the trajectory --strict check treats them as
+# actionable and a NEEDS-HUMAN park would be a STALE end-state it rejects. So the
+# loop proceeds through them in id order. The g2-close sitting is DUE in PARALLEL
+# (rule OI-12, sequence the campaigns) - if the owner would rather the loop hold for
+# it, they rule OI-12 / reorder next-wi. Research-knowledge WI-152+ is a coherent
+# campaign the owner sequences at the sitting: do NOT auto-start it ahead of the
+# owner-intake WIs. WI-144 resumes for its final build round after the sitting rules
+# OI-12, then the full gate bar and the spine rejoins G3.
+WI-146

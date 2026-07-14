@@ -75,6 +75,21 @@ why (one bullet each; cite ids)._
   OpenAI side (`reasoning_effort` via opencode per-model config). Alternative
   passed over: flipping the cell config-only in this intake session — rejected
   so the cost delta lands with its measurement, not before it.
+- **2026-07-14 — WI-110 EXECUTED (static pin).** `docs/agents.csv` ANTHROPIC-OPUS
+  `Env` `CLAUDE_CODE_EFFORT_LEVEL` `high`→`xhigh` (one cell; FABLE/SONNET stay
+  `high`); the value reaches the session via `agent_route.parse_env` and the WI-124
+  telemetry reads it back into the log `effort` field. Default question resolved:
+  live `claude` 2.1.201 ambient effort with no pin resolves to `high` (WI-109's
+  record holds), so `xhigh` is a genuine dial-up, not a no-op (`xhigh` valid live —
+  owner `~/.claude/settings.json` already `effortLevel: xhigh`). Before/after: the
+  measurement is *armed*, not fabricated — before baseline (OPUS at `high`, WI-124
+  log) is opus reviews 15.5/11.6 s/turn; after is captured on the next OPUS session
+  (`effort=xhigh` + its own `s/turn`). OpenAI answer, verified live (opencode
+  1.17.18): reasoning effort is `opencode run --variant <level>` — a CLI flag →
+  `CmdTemplate`, **not** an `Env` cell (corrects the intake draft's config-file
+  guess); left unwired (no s/turn telemetry parity to measure it). Per-phase effort
+  map + computed selection stay deferred. No spine/test change (config; tests use
+  synthetic registries). Spec [WI-110.md](specs/WI-110.md) rewritten to executed.
 - **2026-07-14 — Research-knowledge spec REVISED pre-ratification (owner
   intake, OI-9 feedback):** §3b research = strong-tier coordinator delegating
   to quick/medium gatherer subagents (supersedes the draft's medium default);
@@ -5539,3 +5554,79 @@ sitting owns). WI-144 resumes for its final build round after the sitting rules
 OI-12. (The initial commit attempt also filled WI-144's Deliverable while open —
 the check rejected it; an open WI's Deliverable stays empty, so the pause is
 recorded in status.md / next-wi / OI-12 instead.)
+
+## 2026-07-14 — SESSION: WI-110 (opus BUILD effort → xhigh); static pin executed, OpenAI knob answered; NO spine change
+
+**Scope.** The standalone owner directive re-queued from the 2026-07-14 intake
+(status.md Next action; `docs/next-wi` = WI-110): dial the BUILD-tier ANTHROPIC-OPUS
+row's reasoning effort up to `xhigh`, arm the before/after measurement, and answer
+whether OpenAI has a comparable knob. One WI, config-only, off-spine.
+
+**What shipped.**
+- **The one cell.** `docs/agents.csv` ANTHROPIC-OPUS `Env`
+  `CLAUDE_CODE_EFFORT_LEVEL` `high`→`xhigh`. FABLE/SONNET stay `high`. Wiring
+  verified in-tree: `agent_route.parse_env` merges the `Env` cell over the launch
+  environment, and `agent_loop` reads `CLAUDE_CODE_EFFORT_LEVEL` back into the
+  session-log `effort` field (WI-124) — so every OPUS BUILD row now records
+  `effort=xhigh`. Header comment + OPUS `Notes` updated to carry the rationale.
+- **Default question, settled.** WI-109 recorded `high` as the Opus 4.8 default;
+  the intake draft called `xhigh` the default. Live check (this repo's driver env,
+  `claude` 2.1.201): with no explicit pin, ambient `CLAUDE_CODE_EFFORT_LEVEL`
+  resolves to **`high`** — WI-109's record holds, so `xhigh` is a genuine dial-up,
+  not a no-op. `xhigh` is a valid live level (owner `~/.claude/settings.json`
+  already carries `"effortLevel": "xhigh"`; ladder `low/medium/high/xhigh/max`).
+- **Before/after — armed, not fabricated.** Before baseline (OPUS at `high`, from
+  the WI-124 log): opus iteration reviews **15.5 / 11.6 s/turn**. After is captured
+  automatically on the next OPUS session (it now logs `effort=xhigh` with its own
+  `s/turn`/`Ctx/turn`); the delta is read from `iteration_index.md`, not guessed.
+  This WI does **not** run a full xhigh BUILD session to invent an "after" number.
+- **OpenAI answer (verified live).** opencode 1.17.18: reasoning effort is
+  `opencode run --variant <low|medium|high|max|minimal>` — a **CLI flag** →
+  `CmdTemplate`, **not** an env var (corrects the intake draft's "needs an
+  `opencode.json`" guess). Left **unwired**: the WI-124 s/turn telemetry is
+  claude-JSON-specific, so an OpenAI effort change can't be measured before/after
+  the way the OPUS one can — wiring it is a follow-up gated on telemetry parity,
+  not this owner directive. Per-phase effort map + computed selection (spec #2/#3)
+  stay deferred (un-defer triggers unchanged).
+
+**No spine / no test change.** Config only (WI-075/107/109 precedent), spine holds
+SN=24 SR=56 LLR=57 TC=57. Tests untouched: they run synthetic registries, and
+`test_agent_loop` asserts the `effort` key is present regardless of value.
+PROCESS_OPTIONS untouched — its general "Per-phase effort" paragraph already frames
+the knob; the concrete pin lives in `agents.csv` Notes + `docs/specs/WI-110.md`
+(rewritten deferred→executed). Registry Deliverable filled; WI-110 → `done`.
+
+**Gates.** Commit bar green — smoke `593 passed, 2 skipped`; `check_docs --stale`
+exit 0 (the WI-110.md→agents.csv "possibly stale" hint is a same-commit
+false-positive that resolves on commit). Slice close: full suite
+`747 passed, 3 skipped`; derived gate G2 (`derive_gate` re-wrote `docs/gate` → G2,
+basis SN=24 SR=56 LLR=57 TC=57); `check_trajectory --strict` clean after the R-D
+scrub below.
+
+**Handoff — run-state RUNNING; next-wi WI-146.** WI-110 was the last standalone
+buffer before the owner-intake backlog. With it done, `check_trajectory --strict`
+flags the queued owner-intake WIs (WI-146…151) and research-knowledge WI-152 as
+**actionable** — all their hard predecessors are done (WI-145, the 2026-07-14
+sitting, is done; their other preds are soft `~`) — so a NEEDS-HUMAN park is a
+**stale end-state the check rejects** (verified: `run-state NEEDS-HUMAN but
+actionable queued WI(s) WI-146;…;WI-152 …`). Per `single-ratify`'s
+`keep_nondependent`, the loop stays RUNNING and advances through the owner-intake
+WIs in id order (WI-146 next) — these are ratified independent directives, the same
+class as the opus→xhigh one, not the research-knowledge campaign (that stays for
+the owner to sequence at the sitting; do not auto-start it). The phase-v3 g2-close
+sitting is DUE **in parallel** (rule OI-12, sequence the campaigns); if the owner
+would rather the loop hold, they rule OI-12 / reorder `docs/next-wi`. R-D scrub:
+`WI-110` (now done) and `WI-124` (done) were removed from `docs/status.md` — the
+working surface names only open WIs; the shipped record lives here.
+
+**Review residue reconciled.** Tracked the untracked `docs/reviews/054-REVIEW-A.md`
+(4 findings, CHANGES-REQUESTED on the pre-WI-110 state — the recurring NO-COMMIT
+review-artifact gap). Three are **addressed** by executing WI-110 correctly:
+[MAJOR] next-wi selected WI-110 while its spec still read *deferred* → spec
+rewritten deferred→executed; [MAJOR] status.md said the sitting must "ratify the
+v3 g2 batch" though WI-145 already ratified it → removed, the sitting is the
+g2-close (not a re-ratification), noted inline; [MINOR] status.md over its 120-line
+budget → trimmed 139→120, within budget. The remaining [MAJOR] (open-items.md U5
+palette anchor should route through an explicit G1/G2 requirement-change batch, not
+a bare sitting ratification) is an **@owner** process call folded into the OI-12
+disposition — left for the g2-close sitting, not resolved here.

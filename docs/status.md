@@ -43,18 +43,17 @@ home elsewhere — don't restate it here:
 
 - **Open items** _(one bullet per item; `OI-N` ids are stable and never
   renumbered):_
-  - **The phase-v3 g2-close ratification sitting is now DUE** (a *batched* human
-    touch, not a loop stop). WI-144 (the campaign-closing slice) has **exhausted
-    its critique budget** (`AGENT_CRITIQUE_MAX=3`: 042/048/052 all
-    CHANGES-REQUESTED on SR-052/053/054), so under `single-ratify`'s budget
-    `failure_action` the slice **pauses** and the block surfaces for the batched
-    ratification — but `keep_nondependent` keeps the loop **RUNNING** on
-    non-dependent work (next: **WI-110**). The sitting must (a) ratify the v3 g2
-    batch, (b) rule the **OI-12** critique disposition — authorize the residual
-    buildable A4/T4 accessibility fixes **and** the 3 TC-HARDEN change-intake +
-    the U5 palette taxonomy — and (c) sequence the queued campaigns (owner-intake
-    WI-146+, research-knowledge WI-152+). WI-144 resumes for its final build round
-    once the sitting rules OI-12.
+  - **The phase-v3 g2-close ratification sitting is DUE** — a batched human touch
+    *parallel* to the loop, not a stop: `keep_nondependent` keeps run-state
+    RUNNING on the non-dependent owner-intake WIs, and a NEEDS-HUMAN park while
+    those queued WIs are actionable is a stale end-state `trajectory --strict`
+    rejects. WI-144 is `active` but **paused** — its critique budget is exhausted
+    (`AGENT_CRITIQUE_MAX=3`; 042/048/052 CHANGES-REQUESTED on SR-052/053/054). The
+    sitting rules **OI-12** (the critique disposition: buildable A4/T4 fixes + the
+    owner-gated 3 TC-HARDEN / U5 palette taxonomy) and sequences the queued
+    campaigns (owner-intake vs research-knowledge); WI-144 then resumes its final
+    build round. (The `[v3]-[g2]` *design* batch was already ratified 2026-07-14
+    ([log.md](log.md)); this is the g2-close, not a re-ratification.)
   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
@@ -73,32 +72,30 @@ home elsewhere — don't restate it here:
       SR-052/053/054 rubrics; rec: accept — six rubric-meeting fixes are WI-144
       build work; the **U5** anchor + phase-hue de-collision + 3 TC-HARDEN are
       owner-gated (ratify at phase-g2 close). Depth in [open-items.md](open-items.md).
-- **Queued (v3 dev slices, owner intake 2026-07-13** —
-  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ **live**,
-  running G2→G3 in series. The SR-051-rev interface-wired descend-a-layer render,
-  the Process-tab intake + human-decision loop panels (SR-055), and the SR-056
-  decomposition render polish (with OI-10 folded) all **shipped** (log.md
-  2026-07-14; phase v2 at G3). Remaining:
-  **WI-144** (dashboard UI-quality pass + the SR-052/053/054 Critique rows — the
-  campaign-closing slice that arms SR-047's critique loop and runs the full gate
-  bar at close)._
+- **Queued (v3 dev slice, owner intake 2026-07-13** —
+  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ the
+  earlier SR-051-rev / SR-055 / SR-056 slices **shipped** ([log.md](log.md)
+  2026-07-14; phase v2 at G3). Remaining: **WI-144** (dashboard UI-quality pass +
+  the SR-052/053/054 Critique rows — arms SR-047's critique loop, runs the full
+  gate bar at close)._
 - **Queued (research-knowledge campaign, OI-9 §8** —
   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
   2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
   ref integrity + knowledge⇒component coupling) · **WI-154** (process text) ·
   **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
-  domains filter); **WI-158** deferred (OKF pack export). Sequence after the v3
-  slices unless the owner reorders `docs/next-wi`._
+  domains filter); **WI-158** deferred (OKF pack export). The owner sequences
+  this campaign at the g2-close sitting; do not auto-start it._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
   **WI-146** (ratification tree view + brief lint) · **WI-147** (graceful
   pause) · **WI-148** (weekday blackout window) · **WI-149** (lowest-gate-first
   advisory) · **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline
-  pointer) · **WI-110** re-queued (owner directive: opus BUILD effort → xhigh,
-  verified via the iteration-index s/turn telemetry). Their sitting-gate
-  predecessor is now satisfied (the sitting closed); sequence after the v3
-  slices unless the owner reorders `docs/next-wi`._
+  pointer). Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting
+  closed), so these are the loop's **actionable non-dependent backlog** — the
+  loop works them in id order (the standalone opus→xhigh directive already
+  shipped 2026-07-14, see [log.md](log.md)) unless the owner reorders
+  `docs/next-wi` at the pending g2-close sitting._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
@@ -106,18 +103,11 @@ home elsewhere — don't restate it here:
   the `main-decomposition` campaign (**WI-080** → **WI-081**), sequenced *behind*
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
-  is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
-  via the vendoring layer — nothing to build here.
-- **Next action:** **WI-110** ([next-wi](next-wi)) — a standalone, already-ratified
-  owner directive (opus BUILD effort → `xhigh`; the one-cell `Env` change +
-  before/after `s/turn` telemetry). It is the next non-dependent unit the loop
-  works while **WI-144 is paused** (its critique budget is exhausted; disposition in
-  **OI-12**, [open-items.md](open-items.md)) awaiting the batched phase-v3 g2-close
-  ratification sitting. WI-144 is `active` in the registry (no `paused` enum — the
-  pause is recorded above + in [next-wi](next-wi)); it resumes for its final build
-  round once the sitting rules OI-12, then the full gate bar and the spine rejoins
-  G3. Round-by-round build/critique evidence lives in [log.md](log.md) and OI-12,
-  not here. [run-state](run-state) is **RUNNING**.
+  is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+- **Next action:** **WI-146** ([next-wi](next-wi)) — run-state **RUNNING**. The
+  loop works the actionable owner-intake backlog (WI-146…151, id order) while
+  WI-144 is paused and the g2-close sitting is DUE in parallel (Open items above).
+  Shipped work + round-by-round evidence → [log.md](log.md) / OI-12, not here.
 
 ## Scope
 
