@@ -5323,3 +5323,45 @@ the session-protocol before starting WI-144:
 
 No spine change; no code change; no byte-budgeted file touched. This is
 review-flow bookkeeping, not new product scope. WI-144 build follows.
+
+## 2026-07-14 — Reconcile 040-REVIEW-A + 042-CRITIQUE; fix a real gate failure; file OI-12
+
+Driver session opening the WI-144 build. Found the loop had run past three
+sessions (039 handoff, 040 REVIEW-A, 041 CRITIQUE error, 042 CRITIQUE) with
+residue and one **real** blocker to reconcile before any build:
+
+- **Confirmed a live gate failure (not just a paper finding).** Session-040
+  REVIEW-A's second [MAJOR] claimed the G2 `trajectory` step (`--strict`) now
+  fails because `docs/status.md` still named the **done** WI-143. Verified:
+  `check_trajectory --strict` → `ERROR R-D WI-143: a done WI id appears in
+  docs/status.md`. Rewrote the status.md forward surface to drop every WI-143
+  token (the OI-11 one-liner now references the finding generically + links to
+  open-items.md; the Next-action block is forward-only). `check_trajectory
+  --strict` now **clean** (158 WIs, 131 done, acyclic).
+- **Tracked the session-040 REVIEW-A residue** (the recurring NO-COMMIT gap —
+  034/036/038): committed `docs/reviews/040-REVIEW-A.md`. Its finding #1 (the
+  `cedge` arrow) is the already-open **OI-11**; finding #2 is the gate failure
+  fixed above.
+- **Filed [OI-12](open-items.md) — the 042 CRITIQUE disposition.** The fresh,
+  provider-heterogeneous critique (Claude Fable 5;
+  [reviews/042-CRITIQUE.md](reviews/042-CRITIQUE.md)) is SR-047's loop firing for
+  the first time and returned **CHANGES-REQUESTED, 7 findings + 3 TC-HARDEN**.
+  Split recorded: six are **build work that meets the already-ratified rubrics**
+  (dead When-tab detail panel [BLOCKER U4/T3/A1], sub-4.5:1 label contrast
+  [BLOCKER A4], status-by-hue [A3], flat 249-node Knowledge tab [T2], missing
+  How-SW legend/detail [U3], per-emitter label sizes [U1]); two are **owner-gated**
+  (a new uniformity anchor **U5** "one color, one meaning" + phase-hue palette
+  de-collision, and the 3 TC-HARDEN change-intake cases). Rec: accept the split;
+  build the rubric-meeting fixes provisionally (OI-8 "amendments are future WIs"),
+  ratify U5 + TC-HARDEN at the g2 close. **WI-144 stays open** — the critique is
+  CHANGES-REQUESTED and re-critiques fresh after the build round.
+- **Correcting the record:** the session-039 telemetry is labelled BUILD/WI-144
+  but that session did the OI-11 reconcile + next-wi handoff, **not** a dashboard
+  build — the dashboard is still WI-143-era. No WI-144 code exists yet; the 042
+  critique judged the current artifact.
+
+Kept the working-tree `PROJECT_STATE.html` (a 1-line regen the critique session
+produced; `gen_trajectory.py --check` reports up to date). No spine change, no
+`gen_trajectory.py` change, no byte-budgeted doc touched — reconciliation +
+owner-brief bookkeeping. Smoke bar + `check_docs --stale` below. WI-144 build
+round 1 (the 7 findings) follows.

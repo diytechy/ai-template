@@ -58,12 +58,19 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-    - **OI-11** — disposition the **session-038 REVIEW-A** [MAJOR] against
-      WI-143/SR-056 (the `cedge` containment arrow); verified a
-      spec-interpretation call (the drill is a layer-swap render ⇒ one
-      containment edge per descendable block, which the code satisfies); rec:
-      accept, fold the arrow-legibility question into WI-144's SR-052/053/054
-      critique. WI-143 keeps Verified. Depth in [open-items.md](open-items.md).
+    - **OI-11** — disposition the **session-038 REVIEW-A** [MAJOR] (the
+      decomposition containment-arrow reading against SR-056); verified a
+      spec-interpretation call (the layer-swap drill renders one containment edge
+      per descendable block, which the code satisfies); rec: accept — the fresh
+      042 critique did **not** re-raise arrow legibility. Depth in
+      [open-items.md](open-items.md).
+    - **OI-12** — disposition the **042 CRITIQUE** (7 findings,
+      CHANGES-REQUESTED) against the SR-052/053/054 rubrics; rec: accept the
+      contrast/dead-panel/legend/glyph/grouping fixes as WI-144's remaining build
+      work (they meet already-ratified rubrics), and ratify the new **U5**
+      uniformity anchor + phase-hue palette de-collision + the 3 TC-HARDEN
+      change-intake cases at the phase-g2 close. Depth in
+      [open-items.md](open-items.md).
 - **Queued (v3 dev slices, owner intake 2026-07-13** —
   [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ **live**,
   running G2→G3 in series. The SR-051-rev interface-wired descend-a-layer render,
@@ -99,22 +106,25 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** **resume the loop — WI-144** ([next-wi](next-wi)): the
-  dashboard UI-quality pass + the SR-052/053/054 Critique rows — the
-  campaign-closing v3 slice (arms SR-047's critique loop for the first time and
-  runs the full gate bar `check.py --gate` at close). The SR-056 render polish
-  (OI-10 folded and closed) landed 2026-07-14 ([log.md](log.md)); its
-  **session-038 REVIEW-A** returned CHANGES-REQUESTED with one @owner finding,
-  reconciled this session → **OI-11** (verified a spec-interpretation call, not a
-  bug; the arrow-legibility residual folds into WI-144's critique — WI-143 keeps
-  Verified).
-  [run-state](run-state) is **RUNNING**. WI-144 closes the `dashboard-ux`
-  campaign and rejoins the whole spine to G3; then the owner-intake WIs
-  (WI-146…151, WI-110) and
-  the research-knowledge campaign (WI-152…157). The standing OI-3 (push), OI-4
-  (LICENSE), OI-7 (review cadence) block nothing and can be ruled any time. The
-  deferred `main-decomposition` campaign (**WI-080→WI-081**) stays parked
-  (`deferred`, not queued).
+- **Next action:** **WI-144 — dashboard UI-quality pass, build round 1**
+  ([next-wi](next-wi)). The fresh provider-heterogeneous **042 CRITIQUE**
+  (SR-047's loop, armed for the first time) returned **CHANGES-REQUESTED — 7
+  findings** against `PROJECT_STATE.html` vs the SR-052/053/054 rubrics (2
+  BLOCKER: a dead When-tab detail panel + sub-4.5:1 label contrast; 4 MAJOR; 1
+  MINOR) + 3 TC-HARDEN change-intake proposals — filed as **OI-12**
+  ([open-items.md](open-items.md)). Disposition split: the contrast /
+  dead-panel / How-legend / status-glyph / knowledge-grouping fixes meet the
+  **already-ratified** rubrics (build work, provisional per the OI-8
+  amendments-are-future-WIs note); the new **U5** uniformity anchor + phase-hue
+  palette de-collision, and the 3 TC-HARDEN cases, are **owner-gated** (a rubric
+  amendment + change-intake). WI-144 stays **open** (critique CHANGES-REQUESTED);
+  it re-critiques **fresh** after the build round (never self-adjudicated).
+  [run-state](run-state) is **RUNNING**. Once WI-144 closes it rejoins the whole
+  spine to G3; then the owner-intake WIs (WI-146…151, WI-110) and the
+  research-knowledge campaign (WI-152…157). OI-3 (push), OI-4 (LICENSE), OI-7
+  (cadence), OI-12 (critique disposition) block nothing under `single-ratify` and
+  can be ruled any time. The deferred `main-decomposition` campaign
+  (**WI-080→WI-081**) stays parked (`deferred`, not queued).
 
 ## Scope
 

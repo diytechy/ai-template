@@ -13,8 +13,9 @@ _The 2026-07-13 sitting ruled OI-1 (G3 re-attestation — ratified), OI-2
 (single-ratify enablement — accepted), OI-5 (WI-098 — thin) and OI-6 (WI-103 —
 budget + index). The 2026-07-14 sitting ratified OI-8 (the `[v3]-[g2]`
 dashboard-ux batch) and OI-9 (the research-knowledge design spec, as revised) —
-records in the log's Decisions. OI-3 (corrected against git), OI-4, OI-7, and
-OI-11 (session-038 REVIEW-A disposition) remain open._
+records in the log's Decisions. OI-3 (corrected against git), OI-4, OI-7,
+OI-11 (session-038 REVIEW-A disposition), and OI-12 (the 042 dashboard
+critique disposition) remain open._
 
 ---
 
@@ -94,3 +95,72 @@ OI-11 (session-038 REVIEW-A disposition) remain open._
 - **Recommendation:** (a). WI-143 keeps its Verified status (the OI-10 precedent:
   a REVIEW-A finding does not un-Verify a ratified slice); the arrow's legibility
   is judged by WI-144's SR-052/053/054 Critique rows, which are next in the loop.
+- **Update (2026-07-14):** the fresh **042 CRITIQUE** has now run and did **not**
+  re-raise the containment-arrow legibility (it flagged contrast, a dead panel,
+  status-by-hue, and palette collisions — not the `cedge` arrow). The folded
+  question is therefore answered in the affirmative — the arrow reads acceptably
+  to an independent critic — so OI-11 can close with recommendation (a) at the
+  next sitting; it is subsumed by **OI-12** below.
+
+## OI-12 — 042 CRITIQUE disposition (dashboard vs SR-052/053/054 rubrics)
+
+- **Decision:** how to disposition the **042 CRITIQUE** (fresh,
+  provider-heterogeneous — Claude Fable 5; [reviews/042-CRITIQUE.md](reviews/042-CRITIQUE.md)),
+  which returned **CHANGES-REQUESTED with 7 findings** + 3 TC-HARDEN proposals
+  against the regenerated `PROJECT_STATE.html` judged by the three ratified
+  rubrics. This is SR-047's critique loop firing for the **first time** on the
+  `dashboard-ux` campaign-closing slice (WI-144).
+- **The findings split two ways:**
+  - **Build work that meets ALREADY-RATIFIED rubrics** (no rubric change; do it
+    in WI-144's build round, provisional per the OI-8 "amendments arrive as
+    future WIs" note):
+    - **[BLOCKER] U4/T3/A1** — the When-tab detail aside is *dead*: its JS targets
+      `#dag .wi`, but the drill emitter renders `.block` nodes (zero `.wi`), so
+      the panel never populates and keyboard users have no path to WI detail.
+      Rewire the drill blocks (single-click + focus) to `renderDetail(...)`.
+    - **[BLOCKER] A4** — SVG label text is below the rubric's own declared 4.5:1
+      floor on most node fills (e.g. `#fff` on done-green `#059669` = 3.77; amber
+      = 3.19; sub-labels drop to 2.72–3.95 via the opacity discount). Darken the
+      fills / drop the sub-label opacity discount. **Fixing this MEETS the
+      ratified `dashboard-accessibility.md` floor — it is not an amendment.**
+    - **[MAJOR] A3** — status is encoded by hue alone on drill blocks; add a
+      redundant visible glyph/word (matches the phase swatch+label pattern).
+    - **[MAJOR] T2** — the Knowledge tab renders all 249 nodes flat on open; apply
+      the same start-collapsed `>3` grouping the When/How drills already use.
+    - **[MAJOR] U3** — the How-SW drill ships no legend and no detail aside though
+      its sibling When drill has both; emit the shared `.legend` + a `#sw-detail`.
+    - **[MINOR] U1** — unify the three per-emitter node-label sizes (9/10/11px)
+      into one shared CSS rule.
+  - **Owner-gated (a rubric amendment + change-intake — ratify at phase-g2
+    close):**
+    - **[MAJOR] U2 → new anchor U5 "one color, one meaning"** — the same hue
+      carries different meanings across tabs (`#059669` = done = phase-v3 = Test
+      Case; `#d97706` = active = phase v2+v3 = Process Guide; `#0891b2` = SR =
+      unphased = an sw tier). Proposes giving **phases their own hue family**
+      distinct from the status vocabulary and de-colliding the per-tab type
+      palettes, and **adding U5 to `docs/rubrics/dashboard-uniformity.md`**. This
+      is a genuine design taxonomy call (and it couples with the A4 fill choices),
+      so it wants the owner's ruling before the palette-touching build.
+    - **3 × [TC-HARDEN]** (route via change-intake, PROCESS §5): (1) a TC that
+      parses every emitted `<text>`/effective-fill pair and asserts WCAG ≥ 4.5
+      (≥ 3.0 for ≥18.66px-bold) — mechanizes A4; (2) a TC asserting every
+      `querySelectorAll` selector in emitted scripts matches ≥ 1 element (would
+      have caught the dead `#dag .wi` wiring); (3) a TC asserting every multi-fill
+      SVG panel also emits a legend naming each fill.
+- **Blast radius:** the dashboard's readability/accessibility (the kit's own
+  dogfooded trajectory surface, and the template downstream repos inherit). The
+  build fixes are self-contained in `gen_trajectory.py`; the U5 amendment changes
+  a ratified rubric + the palette taxonomy; the 3 TC-HARDEN cases add tests that
+  would prevent regressions of exactly these classes.
+- **Options:** (a) accept the split as above — build the rubric-meeting fixes in
+  WI-144 (to the critique's proposed dispositions, provisional), ratify U5 + the
+  3 TC-HARDEN at the g2 close · (b) request changes to a specific disposition
+  (e.g. a different phase-hue family, or dark-text-on-light-tint instead of
+  darker fills) · (c) hold the whole slice for a live design sitting.
+- **Recommendation:** (a). The build fixes make the dashboard meet rubrics it
+  already fails; the U5 anchor + TC-HARDEN are strict improvements that fit the
+  OI-8 "iterate the graphic breakdowns via future amendments" note. WI-144 stays
+  open and re-critiques **fresh** after the build round (never self-adjudicated).
+  The one point that benefits from an early owner steer is the **phase-hue
+  family** (U5) — if the owner has a palette preference, ruling it before the
+  build avoids tuning fills twice.
