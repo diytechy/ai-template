@@ -24,8 +24,8 @@ home elsewhere — don't restate it here:
 
 - **Active gate:** runnable **G1** (derived — `scripts/derive_gate.py`;
   per-phase `(default)=G3;v2=G2;v3=G1`, cached to [`docs/gate`](gate)) —
-  **phase v3 (dashboard-ux) is open** (WI-134, log.md 2026-07-14) and the
-  SR-051 rev holds v2 at G2 until re-verified. Spine self-adopted:
+  **phase v3 (dashboard-ux) is open** (the `[v3]-[g1]` GATE entry, log.md
+  2026-07-14) and the SR-051 rev holds v2 at G2 until re-verified. Spine self-adopted:
   **SN=24 SR=56 LLR=52 TC=52** (the 10 SR-no-LLR/no-TC orphans are the
   designed post-g1 window — closed by WI-135's decomposition), 52 seams,
   5 components.
@@ -51,8 +51,8 @@ home elsewhere — don't restate it here:
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
 - **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
-  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md);
-  WI-134 landed 2026-07-14, log.md):_
+  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md); the
+  `[v3]-[g1]` structuring batch landed 2026-07-14, log.md):_
   **WI-135** `[v3]-[g2]` (dashboard-ux decomposition: LLR+TC per new SR
   **including the three Critique rows** — non-LLR-exempt per SR-047 — the
   `docs/rubrics/dashboard-*.md` rubrics, the LLR-052/TC-052 rev for the
@@ -71,7 +71,7 @@ home elsewhere — don't restate it here:
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
 - **Next action:** **WI-135** (`docs/next-wi`) — the `[v3]-[g2]`
-  decomposition batch closing WI-134's post-g1 window (LLRs+TCs for
+  decomposition batch closing the post-g1 window (LLRs+TCs for
   SR-051rev/052–056, the three rubrics, dev-slice definitions); spine-touching,
   one batch review, and the **owner's single v3 ratification sitting lands at
   its close** (`single-ratify`). Lower-risk alternative if a smaller next step
