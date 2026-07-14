@@ -1523,3 +1523,68 @@ def test_u1_node_labels_share_one_type_scale(tmp_path):
     tiered_repo(tmp_path / "drill", TIER_UNION_WIS)
     assert gen(tmp_path / "drill").returncode == 0
     assert ".blab{font-size:var(--nlabel)" in html_of(tmp_path / "drill")
+
+
+def test_a3_flat_dag_fallback_also_prefixes_the_status_glyph(tmp_path):
+    # dashboard-accessibility A3 (046-REVIEW-A): the <=3-tier flat `dag_svg`
+    # fallback (a small registry that never tiers) must encode status by the same
+    # visible glyph the drill uses, not by fill hue alone. GOOD_WIS renders flat.
+    gt = load_script("gen_trajectory")
+    make_repo(tmp_path)  # 4 WIs, 2 workstreams, no phases -> flat SVG DAG
+    assert gen(tmp_path).returncode == 0
+    dag = html_of(tmp_path).split('id="dag-view"', 1)[1].split("</svg>", 1)[0]
+    wids = re.findall(r'class="wid">([^<]*)</tspan>', dag)
+    assert wids, "no flat-DAG work-item labels rendered"
+    glyphs = set(gt.STATUS_GLYPH.values())
+    for lab in wids:
+        assert lab[0] in glyphs, lab  # every id label is glyph-prefixed
+
+
+def test_a1_drill_leaf_blocks_are_keyboard_focusable(tmp_path):
+    # dashboard-accessibility A1 (048 BLOCKER): a leaf drill block carries a
+    # click/focus detail handler (`.block[data-wi]`/`[data-node]`), so it must be
+    # keyboard-focusable — not only the descend containers. Every block is now
+    # `tabindex="0"`, and a leaf `data-wi` block is reachable by keyboard.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    leaf = _layer_with(html_of(tmp_path), 'data-tier="work-item"')
+    blocks = re.findall(r"<g (class=\"block[^>]*)>", leaf)
+    assert blocks, "no leaf work-item blocks rendered"
+    for b in blocks:
+        assert 'tabindex="0"' in b, b  # focusable
+    # and the leaf carrying the panel wiring is itself focusable (not a container)
+    assert re.search(r'tabindex="0"[^>]*data-wi="WI-\d+"', leaf)
+
+
+def test_t1_hero_names_the_active_work_item(tmp_path):
+    # dashboard-usability T1 (048): the landing hero names the in-flight work item
+    # (id + title) so finding "the next work" costs zero tab switches. WI-002 is
+    # the active row in GOOD_WIS.
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    hero = text.split('class="hero"', 1)[1].split("</section>", 1)[0]
+    assert 'class="sub nowat"' in hero
+    assert "WI-002" in hero and "Harness" in hero  # id + title on the hero
+
+
+def test_t1_hero_active_line_absent_when_nothing_is_active(tmp_path):
+    # T1: no active WI -> no hero active line (empty markup, not a stray label).
+    wis = (
+        "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
+        "WI-002,Release,docs,SR-002,WI-001,queued,shipped\n"
+    )
+    make_repo(tmp_path, wis)
+    assert gen(tmp_path).returncode == 0
+    assert 'class="sub nowat"' not in html_of(tmp_path)
+
+
+def test_u3_knowledge_edge_stroke_uses_the_shared_muted_token(tmp_path):
+    # dashboard-uniformity U3 (048 MINOR): the knowledge-graph directed edge shares
+    # the drill `.wire` stroke idiom (the `--muted` token), not a hardcoded hex
+    # that diverged from `.wire` in light mode.
+    with_bundle(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    css = html_of(tmp_path)
+    assert "#knowgraph .kedge{fill:none;stroke:var(--muted);stroke-width:1.5;}" in css
+    assert "#knowgraph .kedge{fill:none;stroke:#94a3b8" not in css

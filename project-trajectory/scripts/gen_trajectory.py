@@ -567,7 +567,10 @@ def dag_svg(wis):
                 x + DAG_COL_W / 2,
                 y + DAG_ROW_H / 2,
                 x + DAG_COL_W / 2,
-                esc(w["id"]),
+                # A3 (no info by colour alone): the flat fallback pairs its status
+                # fill with the same visible glyph the tiered drill uses, so a small
+                # (<=3-tier) registry still encodes status by shape, not hue alone.
+                "{} {}".format(STATUS_GLYPH[st], esc(w["id"])),
                 x + DAG_COL_W / 2,
                 esc(short),
             )
@@ -1468,6 +1471,12 @@ def _drill_layer_svg(blocks, edges):
                 'marker-end="url(#cedgearrow)"><title>contains → descend</title>'
                 "</path>".format(ax, y + 9, CEDGE_LEN)
             )
+        else:
+            # A1 (dashboard-accessibility): a leaf block is interactive too — the
+            # page wires click + focus-for-detail to `.block[data-wi]`/`[data-node]`
+            # — so it must be keyboard-focusable, matching the descend containers'
+            # `tabindex`. Its `<title>` supplies the accessible name (A2).
+            attrs += ' tabindex="0"'
         # SR-056: a stable per-block node key so the persistent highlight can be
         # keyed to the last-hovered node (appended last, preserving the existing
         # `data-tier="…" data-descend="…"` adjacency other views assert on).
@@ -1781,6 +1790,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .card .big { font-size:2rem; font-weight:700; letter-spacing:-.03em;
                margin:.15rem 0 .1rem; }
   .card .sub { font-size:.85rem; color:var(--muted); }
+  .card .sub.nowat { color:var(--active); font-weight:600; margin-top:.2rem; }
   .meter { background:var(--border); border-radius:999px; height:.55rem;
            overflow:hidden; margin-top:.7rem; }
   .meter > span { display:block; height:100%; border-radius:999px; }
@@ -1871,6 +1881,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
           <div class="label">Execution</div>
           <div class="big">$wi_pct%</div>
           <div class="sub">$wi_done of $wi_total work items done · $wi_active active</div>
+          $wi_active_line
           <div class="meter exe"><span style="width:$wi_pct%"></span></div>
         </div>
       </div>
@@ -2407,7 +2418,10 @@ def _know_panel(svg, details):
         "#knowgraph .knode text{fill:#fff;font-size:var(--nlabel);pointer-events:none;}"
         "#knowgraph .knode.dim,#knowgraph .kedge.dim{opacity:.15;}"
         "#knowgraph .knode.hl rect{stroke:#f59e0b;stroke-width:2.5;}"
-        "#knowgraph .kedge{fill:none;stroke:#94a3b8;stroke-width:1.2;}"
+        # U3 (dashboard-uniformity): the directed-dependency edge shares the drill
+        # `.wire` idiom — one `--muted` stroke token (was a hardcoded #94a3b8 that
+        # diverged from `.wire` in light mode) at the same 1.5 width.
+        "#knowgraph .kedge{fill:none;stroke:var(--muted);stroke-width:1.5;}"
         "#knowgraph .kedge.hl{stroke:#f59e0b;stroke-width:2;}"
         "#know-detail .body{overflow-wrap:anywhere;}"
         "</style>"
@@ -2776,6 +2790,16 @@ def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
     active = sum(1 for w in wis if w["status"] == "active")
+    # T1 (dashboard-usability): name the in-flight work on the landing hero so
+    # "find the next work" costs zero tab switches — the When drill buries the
+    # active leaf several descents deep. Empty (no markup) when nothing is active.
+    active_wis = [w for w in wis if w["status"] == "active"]
+    wi_active_line = ""
+    if active_wis:
+        names = "; ".join("{} — {}".format(w["id"], w["title"]) for w in active_wis)
+        wi_active_line = '<div class="sub nowat">{} {}</div>'.format(
+            STATUS_GLYPH["active"], html.escape(names)
+        )
     stats = spine_stats(root)
     workstreams = len({w["workstream"] for w in wis})
     arch, arch_details, arch_desc = arch_icicle(root)
@@ -2839,6 +2863,7 @@ def build_html(root, wis):
         wi_done=done,
         wi_total=total,
         wi_active=active,
+        wi_active_line=wi_active_line,
         arch_svg=arch,
         arch_details=j(arch_details),
         arch_desc=j(arch_desc),
