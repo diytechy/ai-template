@@ -8,6 +8,6 @@
 # Freshness is guarded by `--check` (a pre-commit + gate step). check.py / CI
 # read the first non-comment line below, exactly as before.
 #
-# basis: SN=24 SR=51 LLR=52 TC=52 drafts=0 computed=G3 per-phase=(default)=G3;v2=G3
-# computed 2026-07-13 (as-of d854099)
-G3
+# basis: SN=24 SR=56 LLR=52 TC=52 drafts=6 computed=G0 per-phase=(default)=G3;v2=G0;v3=G0
+# computed 2026-07-14 (as-of 7172900)
+G1

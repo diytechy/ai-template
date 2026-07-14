@@ -62,3 +62,8 @@ resource: "generated"
 | [SR-049](SR-049.md) | Derived gate from artifact states |
 | [SR-050](SR-050.md) | Process reference view |
 | [SR-051](SR-051.md) | Tiered drill-down views |
+| [SR-052](SR-052.md) | Dashboard accessibility (rubric-adjudicated) |
+| [SR-053](SR-053.md) | Dashboard UI uniformity (rubric-adjudicated) |
+| [SR-054](SR-054.md) | Dashboard usability (rubric-adjudicated) |
+| [SR-055](SR-055.md) | Ingest and human-decision process loops |
+| [SR-056](SR-056.md) | Decomposition render polish |
