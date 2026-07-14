@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 044
+# date: 2026-07-14 16:15
+# phase: REVIEW-A
+# wi: WI-144
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 151
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I will independently inspect the reviewed commit range and governing requirement records, run the required validation tools, then write the specified review artifact without consulting implementation session notes.
+[0m# [0mTodos
+[•] Read repository guidance and identify the work-under-review diff
+[ ] Review applicable process, specs, and requirement registries against the diff
+[ ] Run check and trace harnesses
+[ ] Write independent review verdict artifact
+[0m
+[0m→ [0mRead CLAUDE.md
+[0m✱ [0mGlob "docs/reviews/*"[90m 19 matches[0m
+[0m✱ [0mGlob "docs/specs/**/*"[90m 17 matches[0m
+[0m✱ [0mGlob "docs/requirements/**/*"[90m 6 matches[0m
+[0m
+[0m$ [0mgit status --short; git log --oneline --decorate -12; git diff --stat HEAD~1..HEAD; git diff --name-status HEAD~1..HEAD
+147b87c (HEAD -> derived-gate-model) telemetry: session 043 BUILD COMMITTED
+bd998d9 reconcile: track 040-REVIEW-A + file OI-12; fix real trajectory-gate failure
+454af46 telemetry: session 042 CRITIQUE COMMITTED
+56796ea critique: session 042 CHANGES-REQUESTED (7 findings) — PROJECT_STATE.html vs SR-052/053/054 rubrics
+3609289 telemetry: session 041 CRITIQUE ERROR
+d69dc55 telemetry: session 040 review scoreboard
+fc5e107 telemetry: session 040 REVIEW-A NO-COMMIT
+909981f telemetry: session 039 BUILD COMMITTED
+22179f5 reconcile: carry OI-11 breadcrumb into the WI-144 handoff (next-wi NOTE)
+1f34920 reconcile: track session-038 REVIEW-A verdict + file OI-11
+749441e telemetry: session 038 review scoreboard
+47ea61d telemetry: session 038 REVIEW-A NO-COMMIT
+ docs/iteration/043-20260714-160111.log | 75 ++++++++++++++++++++++++++++++++++
+ docs/iteration_index.md                |  1 +
+ 2 files changed, 76 insertions(+)
+A	docs/iteration/043-20260714-160111.log
+M	docs/iteration_index.md
+[0m
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m✗ [0mRead docs/push-policy.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\push-policy.md
+
+Did you mean one of these?
+C:\Projects\ai-template\docs\push-policy
+[0m✗ [0mRead docs/privacy-check.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\privacy-check.md
+
+Did you mean one of these?
+C:\Projects\ai-template\docs\privacy-check
+[0m✗ [0mRead docs/run-state.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\run-state.md
+
+Did you mean one of these?
+C:\Projects\ai-template\docs\run-state
+[0m→ [0mRead docs/requirements/work-items.csv
+[0m→ [0mRead docs/iteration_index.md
+[0m→ [0mRead docs/status.md
+[0m→ [0mRead docs/gate-policy.md
+[0m✱ [0mGrep "WI-14[0-9]|043-20260714-160111|derived-gate-model"[90m in . · 100 matches[0m
+The review target is the WI-144 build range `454af46..bd998d9` (with the current telemetry commit recorded afterward). This meta-repo intentionally has no scaffolded `docs/process.md`; its status file identifies `project-trajectory/PROCESS.md` as the governing process source.
+[0m→ [0mRead project-trajectory/PROCESS.md
+[0m→ [0mRead docs/push-policy
+[0m→ [0mRead docs/privacy-check
+
+[... 527 line(s) elided — full stream in out/run-logs/ ...]
+
+   the arrow-legibility question into the queued **WI-144** critique; WI-143 keeps
+   its ratified **Verified** status (the OI-10 precedent — a REVIEW-A finding does
+   not un-Verify a ratified slice).
+ 
+ No spine change; no code change; no byte-budgeted file touched. This is
+ review-flow bookkeeping, not new product scope. WI-144 build follows.
++
++## 2026-07-14 — Reconcile 040-REVIEW-A + 042-CRITIQUE; fix a real gate failure; file OI-12
++
++Driver session opening the WI-144 build. Found the loop had run past three
++sessions (039 handoff, 040 REVIEW-A, 041 CRITIQUE error, 042 CRITIQUE) with
++residue and one **real** blocker to reconcile before any build:
++
++- **Confirmed a live gate failure (not just a paper finding).** Session-040
++  REVIEW-A's second [MAJOR] claimed the G2 `trajectory` step (`--strict`) now
++  fails because `docs/status.md` still named the **done** WI-143. Verified:
++  `check_trajectory --strict` → `ERROR R-D WI-143: a done WI id appears in
++  docs/status.md`. Rewrote the status.md forward surface to drop every WI-143
++  token (the OI-11 one-liner now references the finding generically + links to
++  open-items.md; the Next-action block is forward-only). `check_trajectory
++  --strict` now **clean** (158 WIs, 131 done, acyclic).
++- **Tracked the session-040 REVIEW-A residue** (the recurring NO-COMMIT gap —
++  034/036/038): committed `docs/reviews/040-REVIEW-A.md`. Its finding #1 (the
++  `cedge` arrow) is the already-open **OI-11**; finding #2 is the gate failure
++  fixed above.
++- **Filed [OI-12](open-items.md) — the 042 CRITIQUE disposition.** The fresh,
++  provider-heterogeneous critique (Claude Fable 5;
++  [reviews/042-CRITIQUE.md](reviews/042-CRITIQUE.md)) is SR-047's loop firing for
++  the first time and returned **CHANGES-REQUESTED, 7 findings + 3 TC-HARDEN**.
++  Split recorded: six are **build work that meets the already-ratified rubrics**
++  (dead When-tab detail panel [BLOCKER U4/T3/A1], sub-4.5:1 label contrast
++  [BLOCKER A4], status-by-hue [A3], flat 249-node Knowledge tab [T2], missing
++  How-SW legend/detail [U3], per-emitter label sizes [U1]); two are **owner-gated**
++  (a new uniformity anchor **U5** "one color, one meaning" + phase-hue palette
++  de-collision, and the 3 TC-HARDEN change-intake cases). Rec: accept the split;
++  build the rubric-meeting fixes provisionally (OI-8 "amendments are future WIs"),
++  ratify U5 + TC-HARDEN at the g2 close. **WI-144 stays open** — the critique is
++  CHANGES-REQUESTED and re-critiques fresh after the build round.
++- **Correcting the record:** the session-039 telemetry is labelled BUILD/WI-144
++  but that session did the OI-11 reconcile + next-wi handoff, **not** a dashboard
++  build — the dashboard is still WI-143-era. No WI-144 code exists yet; the 042
++  critique judged the current artifact.
++
++Kept the working-tree `PROJECT_STATE.html` (a 1-line regen the critique session
++produced; `gen_trajectory.py --check` reports up to date). No spine change, no
++`gen_trajectory.py` change, no byte-budgeted doc touched — reconciliation +
++owner-brief bookkeeping. Smoke bar + `check_docs --stale` below. WI-144 build
++round 1 (the 7 findings) follows.
+[0m
+[0m$ [0mgit show --format=fuller --no-patch bd998d9; git diff --check 454af46..bd998d9; git status --short
+commit bd998d9f9830b7bb649fd9f885701ce549d96eab
+Author:     / <peterandersjohnson@outlook.com>
+AuthorDate: Tue Jul 14 16:11:28 2026 -0500
+Commit:     / <peterandersjohnson@outlook.com>
+CommitDate: Tue Jul 14 16:11:28 2026 -0500
+
+    reconcile: track 040-REVIEW-A + file OI-12; fix real trajectory-gate failure
+    
+    Opening the WI-144 build round; reconciled loop residue before any build.
+    
+    - Confirmed + fixed a LIVE gate failure: check_trajectory --strict errored
+      (R-D WI-143 — a done WI id on the status.md forward surface, the 040-REVIEW-A
+      finding #2). Rewrote status.md to drop every WI-143 token; --strict now clean.
+    - Tracked docs/reviews/040-REVIEW-A.md (recurring NO-COMMIT residue).
+    - Filed OI-12: the 042 CRITIQUE disposition (CHANGES-REQUESTED, 7 findings + 3
+      TC-HARDEN). Split recorded — 6 build fixes meeting already-ratified rubrics vs
+      2 owner-gated (U5 anchor + phase-hue palette; the TC-HARDEN change-intake).
+      WI-144 stays open; re-critiques fresh after the build round.
+    - Corrected the record: session-039 (labelled BUILD/WI-144) did the OI-11
+      reconcile, not a dashboard build — no WI-144 code exists yet.
+    
+    Smoke 582 passed / 2 skipped; check_docs 0 broken; gen_trajectory --check up to
+    date. No spine/code/byte-budgeted change — reconciliation + owner brief.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+[0m
+The reviewed range contains reconciliation and generated-state updates rather than a WI-144 implementation. I am validating the live G2 gate and traceability independently, including the dashboard rubric requirements that govern the queued slice.
+[0m→ [0mRead docs/status.md[90m [offset=20, limit=110][0m
+[0m→ [0mRead docs/open-items.md[90m [offset=55, limit=120][0m
+[0m→ [0mRead docs/rubrics/dashboard-accessibility.md
+[0m→ [0mRead docs/rubrics/dashboard-uniformity.md
+[0m→ [0mRead docs/rubrics/dashboard-usability.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --root .
+usage: check.py [-h] [--gate {G1,G2,G3,all}] [--tier {smoke,full,release,all}]
+                [--coverage COVERAGE] [--phase PHASE] [--lenient] [--list]
+                [--run-step NAME] [--run-steps NAMES] [--jobs N]
+check.py: error: unrecognized arguments: --root .
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --root . --strict
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+[0m$ [0mgit diff --no-ext-diff --numstat 454af46..bd998d9 -- PROJECT_STATE.html; git diff --no-ext-diff --unified=3 454af46..bd998d9 -- PROJECT_STATE.html
+1	1	PROJECT_STATE.html
+diff --git a/PROJECT_STATE.html b/PROJECT_STATE.html
+index c2ee2cb..1278ae4 100644
+--- a/PROJECT_STATE.html
++++ b/PROJECT_STATE.html
+@@ -123,7 +123,7 @@
+     <section class="hero">
+       <h1>Vision</h1>
+       <p class="vision">A reusable starting point for building maintainable, requirement-traced projects with AI agents and humans working from the same playbook. The goal: code and analytics that stay readable and correct over the long run, built test-first with explicit approval gates so you can trust what ships.</p>
+-      <p class="asof">state as of commit c34ae9c · 2026-07-14</p>
++      <p class="asof">state as of commit 0bf15b7 · 2026-07-14</p>
+ 
+       <div class="cards">
+         <div class="card">
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_trajectory.py --strict
+check_trajectory: clean (158 work item(s), 131 done (83%), graph acyclic).
+[0m
+[0m$ [0mpython project-trajectory/scripts/derive_gate.py --check
+derive_gate: docs/gate up to date (G2).
+[0m
+[0m$ [0mgit branch -vv
+MultiRepoSupport   2438e77 [origin/MultiRepoSupport: behind 6] docs(review): archive the 2026-07-12 deep-review report; owner items inline in status.md
+* derived-gate-model 147b87c [origin/derived-gate-model: ahead 29] telemetry: session 043 BUILD COMMITTED
+  main               6d98b21 [origin/main: behind 2] Phased delivery: scope the G3 Verified criterion to version subsets
+[0m
+[0m$ [0mgit diff --no-ext-diff --unified=0 454af46..bd998d9 -- docs/status.md docs/open-items.md docs/next-wi
+diff --git a/docs/next-wi b/docs/next-wi
+index fa0abad..5150667 100644
+--- a/docs/next-wi
++++ b/docs/next-wi
+@@ -10,12 +10,13 @@
+-# NOTE: WI-143 landed 2026-07-14 (SR-056 decomposition render polish — right-sized
+-# columns, explicit containment arrows, persistent hover; OI-10 folded and closed).
+-# Its session-038 REVIEW-A [MAJOR] was reconciled → OI-11 (a spec-interpretation
+-# call, not a bug — the drill is a layer-swap render, one containment edge per
+-# descendable block, which the code satisfies); the arrow-legibility residual is
+-# FOLDED INTO WI-144's critique (carry it into the SR-052 accessibility / SR-053
+-# uniformity / SR-054 usability rubric judgement).
+-# WI-144 next: the dashboard UI-quality pass + the SR-052/053/054 Critique rows —
+-# the campaign-closing v3 slice (runs the full gate bar / check.py --gate at close,
+-# and arms SR-047's critique loop for the first time; the 3 rubrics already exist
+-# under docs/rubrics/, and acceptance needs a FRESH provider-heterogeneous CRITIQUE
+-# session, never the authoring build's self-assessment).
++# NOTE: WI-144 is IN PROGRESS. The fresh provider-heterogeneous 042 CRITIQUE
++# (SR-047's loop, first arming) returned CHANGES-REQUESTED — 7 findings + 3
++# TC-HARDEN against the dashboard vs the SR-052/053/054 rubrics — filed as OI-12
++# (docs/open-items.md; verdict docs/reviews/042-CRITIQUE.md). Disposition split:
++# six are BUILD work meeting already-ratified rubrics (dead When-tab detail panel
++# [BLOCKER], sub-4.5:1 contrast [BLOCKER], status-by-hue, flat Knowledge tab,
++# missing How-SW legend/detail, per-emitter label sizes); two are OWNER-GATED (the
++# new U5 uniformity anchor + phase-hue palette de-collision, and the 3 TC-HARDEN
++# change-intake cases — ratify at the g2 close). WI-144 build round 1 addresses the
++# 7 findings in gen_trajectory.py, then RE-CRITIQUES FRESH (never the authoring
++# build's self-assessment) and runs the full gate bar / check.py --gate at close.
++# session-038 REVIEW-A → OI-11 (accept; the 042 critique did not re-raise arrow
++# legibility, so OI-11 is subsumed by OI-12).
+diff --git a/docs/open-items.md b/docs/open-items.md
+index d98ce32..dd7e297 100644
+--- a/docs/open-items.md
++++ b/docs/open-items.md
+@@ -16,2 +16,3 @@ dashboard-ux batch) and OI-9 (the research-knowledge design spec, as revised) 
+-records in the log's Decisions. OI-3 (corrected against git), OI-4, OI-7, and
+-OI-11 (session-038 REVIEW-A disposition) remain open._
++records in the log's Decisions. OI-3 (corrected against git), OI-4, OI-7,
++OI-11 (session-038 REVIEW-A disposition), and OI-12 (the 042 dashboard
++critique disposition) remain open._
+@@ -96,0 +98,69 @@ OI-11 (session-038 REVIEW-A disposition) remain open._
++- **Update (2026-07-14):** the fresh **042 CRITIQUE** has now run and did **not**
++  re-raise the containment-arrow legibility (it flagged contrast, a dead panel,
++  status-by-hue, and palette collisions — not the `cedge` arrow). The folded
++  question is therefore answered in the affirmative — the arrow reads acceptably
++  to an independent critic — so OI-11 can close with recommendation (a) at the
++  next sitting; it is subsumed by **OI-12** below.
++
++## OI-12 — 042 CRITIQUE disposition (dashboard vs SR-052/053/054 rubrics)
++
++- **Decision:** how to disposition the **042 CRITIQUE** (fresh,
++  provider-heterogeneous — Claude Fable 5; [reviews/042-CRITIQUE.md](reviews/042-CRITIQUE.md)),
++  which returned **CHANGES-REQUESTED with 7 findings** + 3 TC-HARDEN proposals
++  against the regenerated `PROJECT_STATE.html` judged by the three ratified
++  rubrics. This is SR-047's critique loop firing for the **first time** on the
++  `dashboard-ux` campaign-closing slice (WI-144).
++- **The findings split two ways:**
++  - **Build work that meets ALREADY-RATIFIED rubrics** (no rubric change; do it
++    in WI-144's build round, provisional per the OI-8 "amendments arrive as
++    future WIs" note):
++    - **[BLOCKER] U4/T3/A1** — the When-tab detail aside is *dead*: its JS targets
++      `#dag .wi`, but the drill emitter renders `.block` nodes (zero `.wi`), so
++      the panel never populates and keyboard users have no path to WI detail.
++      Rewire the drill blocks (single-click + focus) to `renderDetail(...)`.
++    - **[BLOCKER] A4** — SVG label text is below the rubric's own declared 4.5:1
++      floor on most node fills (e.g. `#fff` on done-green `#059669` = 3.77; amber
++      = 3.19; sub-labels drop to 2.72–3.95 via the opacity discount). Darken the
++      fills / drop the sub-label opacity discount. **Fixing this MEETS the
++      ratified `dashboard-accessibility.md` floor — it is not an amendment.**
++    - **[MAJOR] A3** — status is encoded by hue alone on drill blocks; add a
++      redundant visible glyph/word (matches the phase swatch+label pattern).
++    - **[MAJOR] T2** — the Knowledge tab renders all 249 nodes flat on open; apply
++      the same start-collapsed `>3` grouping the When/How drills already use.
++    - **[MAJOR] U3** — the How-SW drill ships no legend and no detail aside though
++      its sibling When drill has both; emit the shared `.legend` + a `#sw-detail`.
++    - **[MINOR] U1** — unify the three per-emitter node-label sizes (9/10/11px)
++      into one shared CSS rule.
++  - **Owner-gated (a rubric amendment + change-intake — ratify at phase-g2
++    close):**
++    - **[MAJOR] U2 → new anchor U5 "one color, one meaning"** — the same hue
++      carries different meanings across tabs (`#059669` = done = phase-v3 = Test
++      Case; `#d97706` = active = phase v2+v3 = Process Guide; `#0891b2` = SR =
++      unphased = an sw tier). Proposes giving **phases their own hue family**
++      distinct from the status vocabulary and de-colliding the per-tab type
++      palettes, and **adding U5 to `docs/rubrics/dashboard-uniformity.md`**. This
++      is a genuine design taxonomy call (and it couples with the A4 fill choices),
++      so it wants the owner's ruling before the palette-touching build.
++    - **3 × [TC-HARDEN]** (route via change-intake, PROCESS §5): (1) a TC that
++      parses every emitted `<text>`/effective-fill pair and asserts WCAG ≥ 4.5
++      (≥ 3.0 for ≥18.66px-bold) — mechanizes A4; (2) a TC asserting every
++      `querySelectorAll` selector in emitted scripts matches ≥ 1 element (would
++      have caught the dead `#dag .wi` wiring); (3) a TC asserting every multi-fill
++      SVG panel also emits a legend naming each fill.
++- **Blast radius:** the dashboard's readability/accessibility (the kit's own
++  dogfooded trajectory surface, and the template downstream repos inherit). The
++  build fixes are self-contained in `gen_trajectory.py`; the U5 amendment changes
++  a ratified rubric + the palette taxonomy; the 3 TC-HARDEN cases add tests that
++  would prevent regressions of exactly these classes.
++- **Options:** (a) accept the split as above — build the rubric-meeting fixes in
++  WI-144 (to the critique's proposed dispositions, provisional), ratify U5 + the
++  3 TC-HARDEN at the g2 close · (b) request changes to a specific disposition
++  (e.g. a different phase-hue family, or dark-text-on-light-tint instead of
++  darker fills) · (c) hold the whole slice for a live design sitting.
++- **Recommendation:** (a). The build fixes make the dashboard meet rubrics it
++  already fails; the U5 anchor + TC-HARDEN are strict improvements that fit the
++  OI-8 "iterate the graphic breakdowns via future amendments" note. WI-144 stays
++  open and re-critiques **fresh** after the build round (never self-adjudicated).
++  The one point that benefits from an early owner steer is the **phase-hue
++  family** (U5) — if the owner has a palette preference, ruling it before the
++  build avoids tuning fills twice.
+diff --git a/docs/status.md b/docs/status.md
+index 0d2af3c..6b95c0d 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -61,6 +61,13 @@ home elsewhere — don't restate it here:
+-    - **OI-11** — disposition the **session-038 REVIEW-A** [MAJOR] against
+-      WI-143/SR-056 (the `cedge` containment arrow); verified a
+-      spec-interpretation call (the drill is a layer-swap render ⇒ one
+-      containment edge per descendable block, which the code satisfies); rec:
+-      accept, fold the arrow-legibility question into WI-144's SR-052/053/054
+-      critique. WI-143 keeps Verified. Depth in [open-items.md](open-items.md).
++    - **OI-11** — disposition the **session-038 REVIEW-A** [MAJOR] (the
++      decomposition containment-arrow reading against SR-056); verified a
++      spec-interpretation call (the layer-swap drill renders one containment edge
++      per descendable block, which the code satisfies); rec: accept — the fresh
++      042 critique did **not** re-raise arrow legibility. Depth in
++      [open-items.md](open-items.md).
++    - **OI-12** — disposition the **042 CRITIQUE** (7 findings,
++      CHANGES-REQUESTED) against the SR-052/053/054 rubrics; rec: accept the
++      contrast/dead-panel/legend/glyph/grouping fixes as WI-144's remaining build
++      work (they meet already-ratified rubrics), and ratify the new **U5**
++      uniformity anchor + phase-hue palette de-collision + the 3 TC-HARDEN
++      change-intake cases at the phase-g2 close. Depth in
++      [open-items.md](open-items.md).
+@@ -102,16 +109,19 @@ home elsewhere — don't restate it here:
+-- **Next action:** **resume the loop — WI-144** ([next-wi](next-wi)): the
+-  dashboard UI-quality pass + the SR-052/053/054 Critique rows — the
+-  campaign-closing v3 slice (arms SR-047's critique loop for the first time and
+-  runs the full gate bar `check.py --gate` at close). The SR-056 render polish
+-  (OI-10 folded and closed) landed 2026-07-14 ([log.md](log.md)); its
+-  **session-038 REVIEW-A** returned CHANGES-REQUESTED with one @owner finding,
+-  reconciled this session → **OI-11** (verified a spec-interpretation call, not a
+-  bug; the arrow-legibility residual folds into WI-144's critique — WI-143 keeps
+-  Verified).
+-  [run-state](run-state) is **RUNNING**. WI-144 closes the `dashboard-ux`
+-  campaign and rejoins the whole spine to G3; then the owner-intake WIs
+-  (WI-146…151, WI-110) and
+-  the research-knowledge campaign (WI-152…157). The standing OI-3 (push), OI-4
+-  (LICENSE), OI-7 (review cadence) block nothing and can be ruled any time. The
+-  deferred `main-decomposition` campaign (**WI-080→WI-081**) stays parked
+-  (`deferred`, not queued).
++- **Next action:** **WI-144 — dashboard UI-quality pass, build round 1**
++  ([next-wi](next-wi)). The fresh provider-heterogeneous **042 CRITIQUE**
++  (SR-047's loop, armed for the first time) returned **CHANGES-REQUESTED — 7
++  findings** against `PROJECT_STATE.html` vs the SR-052/053/054 rubrics (2
++  BLOCKER: a dead When-tab detail panel + sub-4.5:1 label contrast; 4 MAJOR; 1
++  MINOR) + 3 TC-HARDEN change-intake proposals — filed as **OI-12**
++  ([open-items.md](open-items.md)). Disposition split: the contrast /
++  dead-panel / How-legend / status-glyph / knowledge-grouping fixes meet the
++  **already-ratified** rubrics (build work, provisional per the OI-8
++  amendments-are-future-WIs note); the new **U5** uniformity anchor + phase-hue
++  palette de-collision, and the 3 TC-HARDEN cases, are **owner-gated** (a rubric
++  amendment + change-intake). WI-144 stays **open** (critique CHANGES-REQUESTED);
++  it re-critiques **fresh** after the build round (never self-adjudicated).
++  [run-state](run-state) is **RUNNING**. Once WI-144 closes it rejoins the whole
++  spine to G3; then the owner-intake WIs (WI-146…151, WI-110) and the
++  research-knowledge campaign (WI-152…157). OI-3 (push), OI-4 (LICENSE), OI-7
++  (cadence), OI-12 (critique disposition) block nothing under `single-ratify` and
++  can be ruled any time. The deferred `main-decomposition` campaign
++  (**WI-080→WI-081**) stays parked (`deferred`, not queued).
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 placeholders=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - status.md is 137 lines (budget 120): it is the forward-only surface — move depth to open-items.md / the WI registry / the log (docs/status-lint overrides the budget, `off` disables)
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 71 doc(s), 342 intra-repo link(s), 0 broken (21 orphan warning(s)).
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (158 work item(s), 131 done (83%), graph acyclic).
+
+========================================================
+Check summary (gate G2, tier all):
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.1s
+  PASS  privacy          0.6s
+  PASS  doc-navigability 10.8s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+========================================================
+RESULT: PASS
+[0m
+Independent validation passed at the derived G2 gate and trace reported zero orphans/integrity findings. I found process-state issues in the newly recorded disposition and status surface; I am recording them in the required machine-readable review format.
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Read repository guidance and identify the work-under-review diff
+[✓] Review applicable process, specs, and requirement registries against the diff
+[✓] Run check and trace harnesses
+[✓] Write independent review verdict artifact
+[0m
+Review written to `docs/reviews/044-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED` with 3 findings.
+
+Validation observed:
+- `check.py`: `RESULT: PASS` at G2
+- `trace.py --strict`: `orphans=0 integrity=0`
