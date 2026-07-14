@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 054
+# date: 2026-07-14 17:55
+# phase: REVIEW-A
+# wi: WI-110
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 163
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the reviewed diff and governing requirement records, run the repository harnesses, then write only verified findings to the requested review log.
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m✱ [0mGlob "requirements/**/*"[90m in docs · 6 matches[0m
+[0m✱ [0mGlob "specs/**/*"[90m in docs · 17 matches[0m
+[0m✱ [0mGlob "*"[90m in docs/reviews · 24 matches[0m
+[0m→ [0mRead CLAUDE.md
+[0m→ [0mRead AGENTS.md
+[0m
+[0m# [0mTodos
+[•] Inspect reviewed diff and identify open work item/spec
+[ ] Review changed requirements against governing registries
+[ ] Run check and trace harnesses
+[ ] Write independent review log
+[0m
+[0m→ [0mRead docs/requirements/work-items.csv
+[0m→ [0mRead docs/status.md
+[0m→ [0mRead docs/reviews/050-REVIEW-A.md
+[0m
+[0m$ [0mgit status --short
+(no output)
+[0m
+[0m→ [0mRead docs/reviews/052-CRITIQUE.md
+[0m
+[0m$ [0mgit log --oneline -12
+bb4bb19 telemetry: session 053 BUILD COMMITTED
+bf99bee WI-144: critique budget exhausted (042/048/052) -> pause, surface OI-12, loop continues on WI-110
+bf64455 telemetry: session 052 CRITIQUE COMMITTED
+87e118d telemetry: session 052 CRITIQUE CHANGES-REQUESTED (SR-052/053/054 rubric verdict, findings=8)
+8c23578 telemetry: session 051 CRITIQUE ERROR
+2f89c47 telemetry: session 050 review scoreboard
+08a08a6 telemetry: session 050 REVIEW-A NO-COMMIT
+00a7c56 telemetry: session 049 BUILD COMMITTED
+873b13e WI-144: record build round 2 + track 046-REVIEW-A (status/next-wi/OI-12/log)
+4322aef WI-144: dashboard UI-quality build round 2 — A1/T1/U3 + 046 flat-DAG glyph
+b4b4c40 telemetry: session 048 CRITIQUE COMMITTED
+8bfa8a1 telemetry: session 048 CRITIQUE CHANGES-REQUESTED (SR-052/053/054, findings=5)
+[0m
+[0m$ [0mgit diff HEAD~1..HEAD --stat; git diff HEAD~1..HEAD --
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f62d58aa6001zMkX5OxfStZE9P
+
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2kTnbZmjMMgpZmApSSP","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_016wH6jUuNCQZrRrQPttLZT2","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\next-wi"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":3250,"cache_creation_input_tokens":6648,"cache_read_input_tokens":12298,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":6648},"output_tokens":7,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18","uuid":"71ec825b-c287-45ab-856b-d17594470d7f","request_id":"req_011Cd2kTmg18t24zwTQAfH1j"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_016wH6jUuNCQZrRrQPttLZT2","type":"tool_result","content":"1\t# Next WI (process-options.md \"Unattended operation\") — the WI id the driver\n2\t# expects the coordinator to pick up next, in the docs/run-phase idiom (comment\n3\t# lines + one value on the last line). The managed BUILD branch reads it and, if\n4\t# that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it\n5\t# as the session's STARTING tier in place of the phase default (WI-126). The\n6\t# value may be a `;`-joined ordered DEV-SLICE BATCH of independent off-spine WIs\n7\t# — one session, one review round, strongest-member pin (WI-133); an\n8\t# absent/empty file, an unknown id, or an empty BuildTier = the phase default.\n9\t# The DRIVER maintains this alongside docs/status.md Next action.\n10\t# NOTE: WI-144 is `active`. Build ROUND 2 LANDED (log.md 2026-07-14). The fresh\n11\t# re-critique had already fired (048-CRITIQUE, CHANGES-REQUESTED, findings=5) plus a\n12\t# 046-REVIEW-A; round 2 shipped every buildable finding, all verified:\n13\t#  - [BLOCKER A1] leaf drill blocks now tabindex=\"0\" (keyboard can open WI/module detail)\n14\t#  - [MAJOR T1]   the landing hero names the active WI (id+title) — zero tab switches\n15\t#  - [MINOR U3]   knowledge .kedge shares the drill --muted stroke token (light-mode parity)\n16\t#  - 046-REVIEW-A the <=3-tier flat dag_svg fallback now glyph-prefixes the .wid label\n17\t# test_gen_trajectory.py 75 passed; smoke 593 passed; gen_trajectory --check fresh.\n18\t# DEFERRED / OWNER-GATED (unchanged): [MINOR T2] Knowledge-tab density (a .knode/\n19\t# knowarrow re-spec, its own pass); the U5 anchor (048 refines it to \"no cross-\n20\t# vocabulary colour collision\") + phase-hue de-collision; the TC-HARDEN cases — OI-12,\n21\t# ratify at the phase-g2 close.\n22\t# NEXT IN THE LOOP: a FRESH re-critique of the rebuilt PROJECT_STATE.html (SR-047's\n23\t# loop, never the authoring build's self-assessment). It judges the round-2 fixes.\n24\t# WI-144 stays open until the critique APPROVEs; after that confirms round 2, only the\n25\t# owner ratification of U5 + TC-HARDEN remains, then the full gate bar / check.py\n26\t# --gate at close, and the whole spine rejoins G3.\n27\tWI-144\n28\t"}]},"parent_tool_use_id":null,"session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18","uuid":"1065d12f-e5ec-4d99-a732-0845bd2a3634","timestamp":"2026-07-14T22:37:05.379Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\next-wi","content":"# Next WI (process-options.md \"Unattended operation\") — the WI id the driver\n# expects the coordinator to pick up next, in the docs/run-phase idiom (comment\n# lines + one value on the last line). The managed BUILD branch reads it and, if\n# that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it\n# as the session's STARTING tier in place of the phase default (WI-126). The\n# value may be a `;`-joined ordered DEV-SLICE BATCH of independent off-spine WIs\n# — one session, one review round, strongest-member pin (WI-133); an\n# absent/empty file, an unknown id, or an empty BuildTier = the phase default.\n# The DRIVER maintains this alongside docs/status.md Next action.\n# NOTE: WI-144 is `active`. Build ROUND 2 LANDED (log.md 2026-07-14). The fresh\n# re-critique had already fired (048-CRITIQUE, CHANGES-REQUESTED, findings=5) plus a\n# 046-REVIEW-A; round 2 shipped every buildable finding, all verified:\n#  - [BLOCKER A1] leaf drill blocks now tabindex=\"0\" (keyboard can open WI/module detail)\n#  - [MAJOR T1]   the landing hero names the active WI (id+title) — zero tab switches\n#  - [MINOR U3]   knowledge .kedge shares the drill --muted stroke token (light-mode parity)\n#  - 046-REVIEW-A the <=3-tier flat dag_svg fallback now glyph-prefixes the .wid label\n# test_gen_trajectory.py 75 passed; smoke 593 passed; gen_trajectory --check fresh.\n# DEFERRED / OWNER-GATED (unchanged): [MINOR T2] Knowledge-tab density (a .knode/\n# knowarrow re-spec, its own pass); the U5 anchor (048 refines it to \"no cross-\n# vocabulary colour collision\") + phase-hue de-collision; the TC-HARDEN cases — OI-12,\n# ratify at the phase-g2 close.\n# NEXT IN THE LOOP: a FRESH re-critique of the rebuilt PROJECT_STATE.html (SR-047's\n# loop, never the authoring build's self-assessment). It judges the round-2 fixes.\n# WI-144 stays open until the critique APPROVEs; after that confirms round 2, only the\n# owner ratification of U5 + TC-HARDEN remains, then the full gate bar / check.py\n# --gate at close, and the whole spine rejoins G3.\nWI-144\n","numLines":28,"startLine":1,"totalLines":28}}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2kTnbZmjMMgpZmApSSP","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01G91oSUpyVT2wpGWxVH24uv","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\run-state"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":3250,"cache_creation_input_tokens":6648,"cache_read_input_tokens":12298,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":6648},"output_tokens":7,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18","uuid":"fd758803-844d-4faf-9ace-80b80d8fe371","request_id":"req_011Cd2kTmg18t24zwTQAfH1j"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01G91oSUpyVT2wpGWxVH24uv","type":"tool_result","content":"1\t# Unattended-run state (read by project-trajectory/scripts/agent_loop.py via\n2\t# the root agent-resume.* launchers). RUNNING while work remains; a driver\n3\t# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may\n4\t# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).\n5\tRUNNING\n6\t"}]},"parent_tool_use_id":null,"session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18","uuid":"01a2d165-9ac6-42f1-bf3c-72804736cb91","timestamp":"2026-07-14T22:37:05.848Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\run-state","content":"# Unattended-run state (read by project-trajectory/scripts/agent_loop.py via\n# the root agent-resume.* launchers). RUNNING while work remains; a driver\n# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may\n# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).\nRUNNING\n","numLines":6,"startLine":1,"totalLines":6}}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2kTnbZmjMMgpZmApSSP","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01CEMj7uGfyTR8bVQXXUitXF","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\push-policy"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":3250,"cache_creation_input_tokens":6648,"cache_read_input_tokens":12298,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":6648},"output_tokens":7,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18","uuid":"4d28d9b7-3337-4f40-8cb6-b8852b4bac6e","request_id":"req_011Cd2kTmg18t24zwTQAfH1j"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01CEMj7uGfyTR8bVQXXUitXF","type":"tool_result","content":"1\t# Push policy (process.md §7; process-options.md \"Agent iteration branch &\n2\t# sync\"). One value on the last line — who may publish (`git push`) this repo:\n3\t#   human           — the default: an agent never pushes, even if asked\n4\t#                     mid-session; it prepares the branch and requests a push.\n5\t#   agent-iteration — an agent may push only the scrubbed llm/<branch>\n6\t#                     iteration branch; the development branch stays\n7\t#                     human-pushed.\n8\t#   agent           — an agent may push the development branch after a landed\n9\t#                     sync (full delegation, still gated by the sync ritual).\n10\t# A process rule honored by agent drivers and coordinators (hooks are\n11\t# per-clone and can only assist). Change this value in a reviewed commit,\n12\t# like docs/gate.\n13\thuman\n14\t"}]},"parent_tool_use_id":null,"session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18","uuid":"90207479-7647-49d5-98f1-f726e4743477","timestamp":"2026-07-14T22:37:06.326Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\push-policy","content":"# Push policy (process.md §7; process-options.md \"Agent iteration branch &\n# sync\"). One value on the last line — who may publish (`git push`) this repo:\n#   human           — the default: an agent never pushes, even if asked\n#                     mid-session; it prepares the branch and requests a push.\n#   agent-iteration — an agent may push only the scrubbed llm/<branch>\n#                     iteration branch; the development branch stays\n#                     human-pushed.\n#   agent           — an agent may push the development branch after a landed\n#                     sync (full delegation, still gated by the sync ritual).\n# A process rule honored by agent drivers and coordinators (hooks are\n# per-clone and can only assist). Change this value in a reviewed commit,\n# like docs/gate.\nhuman\n","numLines":14,"startLine":1,"totalLines":14}}}
++{"type":"rate_limit_event","rate_limit_info":{"status":"allowed","resetsAt":1784070000,"rateLimitType":"five_hour","overageStatus":"rejected","overageDisabledReason":"org_level_disabled","isUsingOverage":false},"uuid":"8ae9cd84-ea5b-482c-ad28-bcea4c2c3c3a","session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"8acbd44e-8e5d-43d2-8265-b1194a61441c","session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":150,"estimated_tokens_delta":100,"uuid":"e2c0635c-3b0a-4270-ae78-786492f05eb2","session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":198,"estimated_tokens_delta":48,"uuid":"0db3074c-7ccb-403a-88c0-ca7decc34099","session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2kU89ohCZvYgayGU381","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"Eo4GCokBCA8YAipAnRZXPn/ypEj+tAkUYCcTAqquumWn+8l6ysP9Bh/n0qqi2KgZ+hiqg3nuka0f3bd4YK59mkRp++U0kvuMfrD78jIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDDNRcDsU0/5wRBO2nxoMdhmJSI1HCer8yr5UIjCxHeT0D8VKAjDMS1JuFckn9ixT+0kQD9Y1U7QzJNYwsj157mytu
++[... byte cap hit — full stream in out/run-logs/ ...]
++lready-ratified** `dashboard-accessibility.md` A4. Those + the [MAJOR] T4\n  `.blab` overflow (main labels emitted untruncated while `.bsub` truncates) + the\n  U4/U3/U1 polish are **buildable, rubric-meeting**. Recurring **owner-gated**:\n  U5 palette taxonomy (U2 collision), [MAJOR] T2 Knowledge-tab flat-open density,\n  and the 3 TC-HARDEN (contrast / label-fit / palette-bijection, change-intake).\n- **Recurrence insight → recommendation.** The contrast TC-HARDEN has been\n  proposed three rounds running because manual A4 fixing keeps missing a surface —\n  the durable fix is mechanization, not another hand pass. Recommend the sitting\n  **ratify the 3 TC-HARDEN first**, then a single owner-directed final build round\n  fixes every contrast/label surface at once with a test proving it (badge/fill inks\n  tuned together with the U5 palette ruling, which the critic notes couples).\n- **Review residue reconciled.** Tracked the untracked `docs/reviews/050-REVIEW-A.md`\n  (the recurring NO-COMMIT gap — 034/036/038/040/044/046). Its 1 MINOR — status.md\n  duplicating log/OI-12 evidence in the next-action — is **acted on**: the\n  next-action block is trimmed to the pending sitting + the OI-12 link, the\n  round-by-round record left to log.md/OI-12.\n\nRegenerated `PROJECT_STATE.html` after the WI-144 Deliverable edit (`--check`:\nalready up to date — Deliverable text is not a rendered field). Commit bar below\n(smoke + `check_docs --stale`); this is a bookkeeping/handoff commit, not a\nslice-close, so the full suite waits for the post-sitting build round. **Handoff:**\nrun-state **NEEDS-HUMAN** (the phase-v3 g2-close ratification sitting is the next\nact — no non-dependent WI is safely auto-startable); `docs/next-wi` stays **WI-144**\n(resumes after the sitting rules OI-12).\n","structuredPatch":[{"oldStart":5527,"oldLines":10,"newStart":5527,"newLines":15,"lines":["   next-action block is trimmed to the pending sitting + the OI-12 link, the","   round-by-round record left to log.md/OI-12."," ","-Regenerated `PROJECT_STATE.html` after the WI-144 Deliverable edit (`--check`:","-already up to date — Deliverable text is not a rendered field). Commit bar below","-(smoke + `check_docs --stale`); this is a bookkeeping/handoff commit, not a","-slice-close, so the full suite waits for the post-sitting build round. **Handoff:**","-run-state **NEEDS-HUMAN** (the phase-v3 g2-close ratification sitting is the next","-act — no non-dependent WI is safely auto-startable); `docs/next-wi` stays **WI-144**","-(resumes after the sitting rules OI-12).","+Commit bar (smoke + `check_docs --stale`); this is a bookkeeping/handoff commit,","+not a slice-close, so the full suite waits for the post-sitting build round.","+**Handoff:** run-state **RUNNING** — the pre-commit `trajectory` check correctly","+flagged an initial NEEDS-HUMAN as a stale end-state (actionable non-dependent WIs","+have all hard predecessors done), and `single-ratify`'s budget `failure_action` is","+`keep_nondependent` anyway: it pauses WI-144 + surfaces the block but keeps the loop","+running. `docs/next-wi` moves to **WI-110** (a standalone, already-ratified owner","+directive — not a campaign kickoff, so it sidesteps the campaign-sequencing the","+sitting owns). WI-144 resumes for its final build round after the sitting rules","+OI-12. (The initial commit attempt also filled WI-144's Deliverable while open —","+the check rejected it; an open WI's Deliverable stays empty, so the pause is","+recorded in status.md / next-wi / OI-12 instead.)"]}],"userModified":false,"replaceAll":false}}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"76ade2ef-b2d0-4592-81b1-a8f3fdffd8db","session_id":"dc605af1-23d9-45a9-8e96-49bb12be2f18"}
+
+[... 309 line(s) elided — full stream in out/run-logs/ ...]
+
+   renumbered):_
++  - **The phase-v3 g2-close ratification sitting is now DUE** (a *batched* human
++    touch, not a loop stop). WI-144 (the campaign-closing slice) has **exhausted
++    its critique budget** (`AGENT_CRITIQUE_MAX=3`: 042/048/052 all
++    CHANGES-REQUESTED on SR-052/053/054), so under `single-ratify`'s budget
++    `failure_action` the slice **pauses** and the block surfaces for the batched
++    ratification — but `keep_nondependent` keeps the loop **RUNNING** on
++    non-dependent work (next: **WI-110**). The sitting must (a) ratify the v3 g2
++    batch, (b) rule the **OI-12** critique disposition — authorize the residual
++    buildable A4/T4 accessibility fixes **and** the 3 TC-HARDEN change-intake +
++    the U5 palette taxonomy — and (c) sequence the queued campaigns (owner-intake
++    WI-146+, research-knowledge WI-152+). WI-144 resumes for its final build round
++    once the sitting rules OI-12.
+   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
+     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
+     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
+     pause on the items below. Depth per item in
+     [open-items.md](open-items.md):_
+     - **OI-3** — **push decision** (git-checked: `origin` exists, this branch
+       tracked, ~10 unpushed commits — not "48 local-only"); rec: push.
+     - **OI-4** — rule **WI-097** (LICENSE + public/private intent); no rec —
+       needs the owner's intent.
+     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
+       of medium-BUILD evidence.
+     - **OI-11** — session-038 REVIEW-A [MAJOR] (containment-arrow vs SR-056);
+       rec: accept — a spec-interpretation call the code satisfies, and the 042
+       critique did not re-raise it (subsumed by OI-12).
+     - **OI-12** — 042 CRITIQUE (7 findings, CHANGES-REQUESTED) vs the
+       SR-052/053/054 rubrics; rec: accept — six rubric-meeting fixes are WI-144
+       build work; the **U5** anchor + phase-hue de-collision + 3 TC-HARDEN are
+       owner-gated (ratify at phase-g2 close). Depth in [open-items.md](open-items.md).
+ - **Queued (v3 dev slices, owner intake 2026-07-13** —
+   [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ **live**,
+   running G2→G3 in series. The SR-051-rev interface-wired descend-a-layer render,
+   the Process-tab intake + human-decision loop panels (SR-055), and the SR-056
+   decomposition render polish (with OI-10 folded) all **shipped** (log.md
+   2026-07-14; phase v2 at G3). Remaining:
+   **WI-144** (dashboard UI-quality pass + the SR-052/053/054 Critique rows — the
+   campaign-closing slice that arms SR-047's critique loop and runs the full gate
+   bar at close)._
+ - **Queued (research-knowledge campaign, OI-9 §8** —
+   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
+   2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
+   ref integrity + knowledge⇒component coupling) · **WI-154** (process text) ·
+   **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
+   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
+   domains filter); **WI-158** deferred (OKF pack export). Sequence after the v3
+   slices unless the owner reorders `docs/next-wi`._
+ - **Queued (owner intake 2026-07-14** — triage + answers:
+   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
+   **WI-146** (ratification tree view + brief lint) · **WI-147** (graceful
+   pause) · **WI-148** (weekday blackout window) · **WI-149** (lowest-gate-first
+   advisory) · **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline
+   pointer) · **WI-110** re-queued (owner directive: opus BUILD effort → xhigh,
+   verified via the iteration-index s/turn telemetry). Their sitting-gate
+   predecessor is now satisfied (the sitting closed); sequence after the v3
+   slices unless the owner reorders `docs/next-wi`._
+ - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
+   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
+   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
+   [work-items.csv](requirements/work-items.csv). The highest-value next step is
+   the `main-decomposition` campaign (**WI-080** → **WI-081**), sequenced *behind*
+   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
+   via the vendoring layer — nothing to build here.
+-- **Next action:** **WI-144 — dashboard UI-quality pass** (`active`,
+-  [next-wi](next-wi)). The fresh re-critique ran (048-CRITIQUE,
+-  CHANGES-REQUESTED, findings=5); **build round 2 landed** its buildable findings
+-  ([BLOCKER A1] leaf-block `tabindex`, [MAJOR T1] hero active-WI line, [MINOR U3]
+-  knowledge edge `--muted` token, 046-REVIEW-A flat-DAG status glyph). Next in the
+-  loop: a **fresh re-critique** (never self-adjudicated). Everything left is
+-  owner-gated (U5 anchor + phase-hue de-collision + TC-HARDEN) or deferred (**[T2]**
+-  Knowledge-tab density, a `.knode`/`knowarrow` re-spec) — disposition in **OI-12**
+-  ([open-items.md](open-items.md)). At WI-144 close: the full gate bar, and the
+-  whole spine rejoins G3. [run-state](run-state) is **RUNNING**.
++- **Next action:** **WI-110** ([next-wi](next-wi)) — a standalone, already-ratified
++  owner directive (opus BUILD effort → `xhigh`; the one-cell `Env` change +
++  before/after `s/turn` telemetry). It is the next non-dependent unit the loop
++  works while **WI-144 is paused** (its critique budget is exhausted; disposition in
++  **OI-12**, [open-items.md](open-items.md)) awaiting the batched phase-v3 g2-close
++  ratification sitting. WI-144 is `active` in the registry (no `paused` enum — the
++  pause is recorded above + in [next-wi](next-wi)); it resumes for its final build
++  round once the sitting rules OI-12, then the full gate bar and the spine rejoins
++  G3. Round-by-round build/critique evidence lives in [log.md](log.md) and OI-12,
++  not here. [run-state](run-state) is **RUNNING**.
+ 
+ ## Scope
+ 
+ - **Goal:** keep the kit **maintainable and trustworthy** — the
+   `PROJECT-VISION:` tag opening [README.md](../README.md) is canonical.
+ - **Supported platforms:** Windows + POSIX; kit scripts stdlib-only on
+   Python 3.8+.
+ - **Non-goals (self-application boundary):** no `run.*` product launchers (the
+   kit's "product" is `project-trajectory/` + `tests/`); no scaffolded
+   `docs/process.md` (the masters live in `project-trajectory/`).
+[0m
+[0m→ [0mRead project-trajectory/PROCESS.md
+[0m→ [0mRead docs/specs/WI-110.md
+[0m✱ [0mGrep "SR-052|SR-053|SR-054"[90m in docs/requirements · 10 matches[0m
+[0m✱ [0mGrep "^WI-110,"[90m in . · 1 match[0m
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md
+[0m✱ [0mGrep "keep_nondependent|failure_action|AGENT_CRITIQUE_MAX|single-ratify"[90m in . · 100 matches[0m
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md[90m [offset=760, limit=180][0m
+[0m→ [0mRead docs/gate-policy.md
+[0m→ [0mRead docs/reviews/003-REVIEW-A.md
+[0m→ [0mRead docs/reviews/040-REVIEW-A.md
+[0m
+[0m$ [0mgit show --format= --no-ext-diff bf64455..bf99bee -- docs/status.md docs/next-wi docs/open-items.md docs/reviews/050-REVIEW-A.md
+diff --git a/docs/next-wi b/docs/next-wi
+index 2424a3f..015d1cd 100644
+--- a/docs/next-wi
++++ b/docs/next-wi
+@@ -7,21 +7,24 @@
+ # — one session, one review round, strongest-member pin (WI-133); an
+ # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
+ # The DRIVER maintains this alongside docs/status.md Next action.
+-# NOTE: WI-144 is `active`. Build ROUND 2 LANDED (log.md 2026-07-14). The fresh
+-# re-critique had already fired (048-CRITIQUE, CHANGES-REQUESTED, findings=5) plus a
+-# 046-REVIEW-A; round 2 shipped every buildable finding, all verified:
+-#  - [BLOCKER A1] leaf drill blocks now tabindex="0" (keyboard can open WI/module detail)
+-#  - [MAJOR T1]   the landing hero names the active WI (id+title) — zero tab switches
+-#  - [MINOR U3]   knowledge .kedge shares the drill --muted stroke token (light-mode parity)
+-#  - 046-REVIEW-A the <=3-tier flat dag_svg fallback now glyph-prefixes the .wid label
+-# test_gen_trajectory.py 75 passed; smoke 593 passed; gen_trajectory --check fresh.
+-# DEFERRED / OWNER-GATED (unchanged): [MINOR T2] Knowledge-tab density (a .knode/
+-# knowarrow re-spec, its own pass); the U5 anchor (048 refines it to "no cross-
+-# vocabulary colour collision") + phase-hue de-collision; the TC-HARDEN cases — OI-12,
+-# ratify at the phase-g2 close.
+-# NEXT IN THE LOOP: a FRESH re-critique of the rebuilt PROJECT_STATE.html (SR-047's
+-# loop, never the authoring build's self-assessment). It judges the round-2 fixes.
+-# WI-144 stays open until the critique APPROVEs; after that confirms round 2, only the
+-# owner ratification of U5 + TC-HARDEN remains, then the full gate bar / check.py
+-# --gate at close, and the whole spine rejoins G3.
+-WI-144
++# NOTE: WI-144 (the v3 campaign closer) is `active` but PAUSED — its SR-047
++# critique loop has EXHAUSTED the AGENT_CRITIQUE_MAX=3 budget still
++# CHANGES-REQUESTED (042/048/052; log.md 2026-07-14). Under single-ratify the
++# budget failure_action pauses that WI + surfaces the block for the phase-v3
++# g2-close ratification sitting (OI-12) but KEEPS the loop RUNNING on non-dependent
++# work — so next-wi moves OFF WI-144 to the next actionable non-dependent unit
++# (WI-144 resumes for its final build round after the sitting rules OI-12).
++# 052-CRITIQUE disposition (OI-12): BUILDABLE rubric-meeting [MAJOR A4] queued
++# .detail .badge 2.56:1 · [MINOR A4] focus ring 2.05:1 · [MAJOR T4] .blab overflow
++# · U4/U3/U1 polish; OWNER-GATED (recurring) U5 palette taxonomy · [MAJOR T2]
++# Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN
++# first so one final build round mechanizes contrast instead of another hand pass.
++#
++# NEXT: WI-110 — a standalone, already-ratified owner directive (log.md 2026-07-14:
++# opus BUILD effort → xhigh, the one-cell Env change + before/after s/turn telemetry
++# via WI-124, plus the OpenAI reasoning_effort answer). Predecessors ~WI-109;~WI-145
++# done; it is NOT a campaign kickoff, so it sidesteps the campaign-sequencing the
++# owner does at the sitting — the cleanest non-dependent unit to keep the loop moving.
++# (The owner-intake WI-146+ and research-knowledge WI-152+ campaigns wait for the
++# sitting to sequence them; do not auto-start a campaign.)
++WI-110
+diff --git a/docs/open-items.md b/docs/open-items.md
+index 8d40bd0..6633975 100644
+--- a/docs/open-items.md
++++ b/docs/open-items.md
+@@ -200,3 +200,50 @@ critique disposition) remain open._
+   - **After the next fresh re-critique confirms round 2, WI-144's buildable work
+     is complete** — only the owner ratification of U5 + TC-HARDEN at the phase-g2
+     close remains for the slice to close and the spine to rejoin G3.
++- **Update (2026-07-14) — round-3 re-critique ran; critique budget now EXHAUSTED.**
++  The fresh re-critique fired ([reviews/052-CRITIQUE.md](reviews/052-CRITIQUE.md),
++  provider-heterogeneous, no implementer notes; **CHANGES-REQUESTED, 8 findings + 3
++  TC-HARDEN**), preceded by a 050-REVIEW-A (NO-COMMIT, 1 MINOR — status.md verbosity,
++  acted on) and a 051 CRITIQUE ERROR (no verdict — did not count). This is the
++  **3rd** CHANGES-REQUESTED critique on the SR-052/053/054 scope (042/048/052), so
++  per `AGENT_CRITIQUE_MAX=3` the loop's budget is spent and `single-ratify`'s
++  `failure_action` **pauses WI-144 and surfaces the block for the batched
++  ratification** (it does not auto-page; run-state is driver-set to NEEDS-HUMAN
++  because no non-dependent WI is safely auto-startable). The 052 findings split the
++  same two ways, with one honesty correction:
++  - **Newly-buildable, rubric-MEETING (round-1's A4 scan was too narrow — it
++    covered SVG node text-on-fill only, missing the HTML surfaces below, so A4 is
++    **not** actually satisfied):**
++    - **[MAJOR] A4 queued detail badge** — `.detail .badge` hard-codes `color:#fff`
++      on the `queued` slate `#94a3b8` = **2.56:1** (.68rem, normal text) vs the
++      ratified 4.5:1 floor. Fix: dark ink `#0f172a` (the `#dag .wi.queued text`
++      already uses it). ~1-line emitter/CSS fix.
++    - **[MINOR] A4 focus ring** — the amber `#f59e0b` 2.5px focus stroke (the sole
++      focus cue; native outlines suppressed) measures **2.05:1** on white vs the
++      3:1 graphical-boundary floor. Fix: darker ring (`#b45309` ≈ 3.2:1).
++    - **[MAJOR] T4 `.blab` overflow** — drill main labels are emitted untruncated
++      while `.bsub` truncates with `…`; long ids (`system-requirements.csv` 41ch in
++      a 172px block) overrun the block + arrowheads. Fix: apply `.bsub`'s
++      width-fit truncation to `.blab` (full text already in `<title>`).
++    - **[MINOR] U4 / U3 / U1** — When-container click→detail parity, converge the
++      two legend idioms, collapse the 21 near-duplicate HTML font sizes (polish).
++  - **Owner-gated (recurring — proposed at 042/048/052):** **U5** "one concept per
++    colour" (U2 palette collision — green/amber phase-accents render directly above
++    a status legend declaring green=done/amber=active) + phase-hue de-collision;
++    **[MAJOR] T2** Knowledge tab opens as 249 nodes flat (the `.knode`/`knowarrow`
++    re-spec, its own pass); the **3 × TC-HARDEN** (contrast, label-fit,
++    palette-bijection — route via change-intake, PROCESS §5).
++- **Recurrence insight (the reason the budget tripped):** the contrast TC-HARDEN
++  has been proposed **three rounds running** because manual A4 fixing keeps missing
++  a surface (round 1 fixed SVG fills; round 3 found the badge + focus ring still
++  fail). The durable fix is the **mechanized** contrast/label-fit/palette tests, not
++  another hand pass — so the strong recommendation at the sitting is to **ratify the
++  3 TC-HARDEN cases first**, then land ONE final build round that fixes every
++  contrast/label surface at once with a test proving it (and tunes the badge/fill
++  inks together with the U5 palette ruling, since the critic notes they couple).
++  This ends the whack-a-mole the budget exists to stop.
++- **Recommendation (at the phase-g2 sitting):** ratify the U5 anchor + the 3
++  TC-HARDEN, authorize the residual buildable A4/T4 fixes as one final owner-directed
++  build round (paired with the U5 palette ruling), and defer T2 to its own
++  `.knode`/`knowarrow` pass. Alternatives: rule a specific palette family for U5 ·
++  hold the whole slice for a live design sitting.
+diff --git a/docs/reviews/050-REVIEW-A.md b/docs/reviews/050-REVIEW-A.md
+new file mode 100644
+index 0000000..9e5d082
+--- /dev/null
++++ b/docs/reviews/050-REVIEW-A.md
+@@ -0,0 +1,2 @@
++- [MINOR] docs/status.md:101 -> the forward-only working surface now records the completed re-critique and four landed implementation details, duplicating the evidence/disposition that belongs in `log.md` and OI-12 rather than only stating what must happen next -> reduce the next-action entry to WI-144's pending independent critique and the OI-12 link; retain the completed-round record in `log.md`/`open-items.md` -> @owner
++VERDICT: CHANGES-REQUESTED findings=1
+diff --git a/docs/status.md b/docs/status.md
+index 27ed83d..ff77ae7 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -43,6 +43,18 @@ home elsewhere — don't restate it here:
+ 
+ - **Open items** _(one bullet per item; `OI-N` ids are stable and never
+   renumbered):_
++  - **The phase-v3 g2-close ratification sitting is now DUE** (a *batched* human
++    touch, not a loop stop). WI-144 (the campaign-closing slice) has **exhausted
++    its critique budget** (`AGENT_CRITIQUE_MAX=3`: 042/048/052 all
++    CHANGES-REQUESTED on SR-052/053/054), so under `single-ratify`'s budget
++    `failure_action` the slice **pauses** and the block surfaces for the batched
++    ratification — but `keep_nondependent` keeps the loop **RUNNING** on
++    non-dependent work (next: **WI-110**). The sitting must (a) ratify the v3 g2
++    batch, (b) rule the **OI-12** critique disposition — authorize the residual
++    buildable A4/T4 accessibility fixes **and** the 3 TC-HARDEN change-intake +
++    the U5 palette taxonomy — and (c) sequence the queued campaigns (owner-intake
++    WI-146+, research-knowledge WI-152+). WI-144 resumes for its final build round
++    once the sitting rules OI-12.
+   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
+     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
+     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
+@@ -96,16 +108,16 @@ home elsewhere — don't restate it here:
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
+   via the vendoring layer — nothing to build here.
+-- **Next action:** **WI-144 — dashboard UI-quality pass** (`active`,
+-  [next-wi](next-wi)). The fresh re-critique ran (048-CRITIQUE,
+-  CHANGES-REQUESTED, findings=5); **build round 2 landed** its buildable findings
+-  ([BLOCKER A1] leaf-block `tabindex`, [MAJOR T1] hero active-WI line, [MINOR U3]
+-  knowledge edge `--muted` token, 046-REVIEW-A flat-DAG status glyph). Next in the
+-  loop: a **fresh re-critique** (never self-adjudicated). Everything left is
+-  owner-gated (U5 anchor + phase-hue de-collision + TC-HARDEN) or deferred (**[T2]**
+-  Knowledge-tab density, a `.knode`/`knowarrow` re-spec) — disposition in **OI-12**
+-  ([open-items.md](open-items.md)). At WI-144 close: the full gate bar, and the
+-  whole spine rejoins G3. [run-state](run-state) is **RUNNING**.
++- **Next action:** **WI-110** ([next-wi](next-wi)) — a standalone, already-ratified
++  owner directive (opus BUILD effort → `xhigh`; the one-cell `Env` change +
++  before/after `s/turn` telemetry). It is the next non-dependent unit the loop
++  works while **WI-144 is paused** (its critique budget is exhausted; disposition in
++  **OI-12**, [open-items.md](open-items.md)) awaiting the batched phase-v3 g2-close
++  ratification sitting. WI-144 is `active` in the registry (no `paused` enum — the
++  pause is recorded above + in [next-wi](next-wi)); it resumes for its final build
++  round once the sitting rules OI-12, then the full gate bar and the spine rejoins
++  G3. Round-by-round build/critique evidence lives in [log.md](log.md) and OI-12,
++  not here. [run-state](run-state) is **RUNNING**.
+ 
+ ## Scope
+[0m
+The policy permits continuing independent work after this critique-budget escalation. However, the selected WI’s spec still declares it deferred, and the new status text also asks to ratify a v3 G2 batch already recorded as ratified. I’m validating the repository checks before recording findings.
+[0m$ [0mpython project-trajectory/scripts/trace.py --root .
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --root .
+usage: check.py [-h] [--gate {G1,G2,G3,all}] [--tier {smoke,full,release,all}]
+                [--coverage COVERAGE] [--phase PHASE] [--lenient] [--list]
+                [--run-step NAME] [--run-steps NAMES] [--jobs N]
+check.py: error: unrecognized arguments: --root .
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 placeholders=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - status.md is 130 lines (budget 120): it is the forward-only surface — move depth to open-items.md / the WI registry / the log (docs/status-lint overrides the budget, `off` disables)
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 76 doc(s), 355 intra-repo link(s), 0 broken (24 orphan warning(s)).
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (158 work item(s), 131 done (83%), graph acyclic).
+
+========================================================
+Check summary (gate G2, tier all):
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.1s
+  PASS  privacy          0.7s
+  PASS  doc-navigability 14.9s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+========================================================
+RESULT: PASS
+[0m
+[0m→ [0mRead docs/open-items.md[90m [offset=224, limit=35][0m
+[0m
+[0m$ [0mgit status --short
+(no output)
+[0m
+I found four independent issues: an invalid selection of a still-deferred WI, an already-completed ratification presented as pending, a proposed rubric/acceptance change bypassing change intake, and the expanded status surface exceeding its checked budget. I’m writing the review with the observed harness result.
+[0m% [0mPatch 1 file
+[0m→ [0mRead docs/reviews/054-REVIEW-A.md
+[0m
+[0m$ [0mgit status --short
+?? docs/reviews/054-REVIEW-A.md
+[0m
+[0m# [0mTodos
+[✓] Inspect reviewed diff and identify open work item/spec
+[✓] Review changed requirements against governing registries
+[✓] Run check and trace harnesses
+[✓] Write independent review log
+[0m
+Review written to `docs/reviews/054-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED findings=4`.
+
+Observed:
+- `trace.py`: 0 orphans, 0 integrity findings.
+- `check.py`: `RESULT: PASS`; `check_docs` warns `status.md is 130 lines (budget 120)`.
