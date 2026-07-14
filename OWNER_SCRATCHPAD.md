@@ -125,4 +125,49 @@ I think this flow already contains everything, but perhaps the big benifit here 
 6)
 My other concern here is specs.  The intent of the specs was to actually hold specs for component and module-piece information that could point to knowledge packs and draw the what with the how with greater detail.  Right now most of the specs are just work items that get archived, and ultimately create risk of duplicating analysis through work-item iteration instead of collating the defined expectations for modules into their respective chunks, and updating those as new work items come in and act on the similar layers.
 
+Please commit all the unstaged files, even if they were edited by me.
+
+***********************************************
+
+IMPORTANT: It is possible some of these items are already covered by some work items.  Take care not to duplicate queued work.
+
+Then go through the following items:
+
+1)
+Related to open-items.md:
+
+OI-8: I want to see the heirarchy here.  Whenever there is a G2 or G1 ratification, I want to be presented with the heirarchy / tree of each SN -> SR -> LLR so I can review the prose and the associated breakdown.  What restrictions / checks can be put in place to gaurantee that view?
+
+OI-9: Many pieces of feedback here,  Research should probably be a strong teir that spawns off lower teir agents to actually gather information (basically, I would expect it to run as a small coordinator, deciding which context to dig further into spawning directed agents).  I would ask that knowledge packs be turned on for the meta repo as well to excercise it.  I don't recall, how does each component store / alllocate against implimentation?   Does it contain SRs / LLRs?  That is -if components are what tie the what to the knowledge which supports the how- that web needs to be robust.  I think in that case if knoweldge packs are enabled for a repository, there needs to be a check that ensures each implimentation module (again - is this an LLR and SR?  Some other way to define it?) is tied back to a component.
+
+This actually ties in to another question I had: Should some interfaces be defined at the same time as work items to define how work items connect?  Aren't we effectively building out arcitecture changes when breaking items into work items or defining where their content should likely be implimented?  And does this influence OI-8 where the heirarchy of the software arcitecture should be containerized by components and traced / connected by their connecting interfaces?  Note I would expect interfaces to also define their start / end points if it is external to the system.  For this meta repo, that would include various files that are created / generated, and the input mainly from the user, and many of the files themselves become circular references that are both edited and are ingested.
+
+
+2)
+Explore: the build / research tiers also need to be optionally configurable with a preference set so it always prefers a certain designated model for certain tasks.  Ex: Research and plan should always attempt to use fable, else another teired model if not available.  Build should always attempt to use opus.
+
+Related: Opus implimentation should be set to extra high.  Are there effort parameters for openai?
+
+3)
+When deciding on work items, always clear work items that affect the lowest gate level first, this prevents implimentation from potentially having to go through rework.  This would then prompt a "Needs Human" to ratify the relevent gates.
+
+4)
+Allow method to pause using key or other method during agent-resume, all coordinators wrap up what they are working on and pause at a clean state.
+
+Setup a pause period where the coordinators do the same action based on a weekday pause configuration.  Default: Weekdays Noon UTC to 7:00 PM UTC are blackout times where no coordinators will start new work.  This prevents execution of work during peak hours through claude agents.  This would be always on but time gate configurable for weekdays.  If the blackout start time is the same as the end time, it would be disabled.  Default should be as described above.
+
+5)
+What would it take to convert a prompt into an image (like a black and white image with text) and feed that into the agents?  Many agents apply different tokenizers to image processing such that this might actually be more efficient.  Can this be added as an opt-it behavior?  It may require a specialized tool though to "print" a prompt to an image, and then hand that image to an LLM agent.
+
+6)
+What does this design system introduce that this framework doesn't currently contain?  Does it have anything that should be / could be leveraged here?  It seems to be focused on UI related design, but that might still have some relevence (most projects need a front end, and often time those front ends are lacking in style), but it's process backend might also have something to leverage ==>
+https://github.com/jrpease/throughline
+
+7)
+Coordinator should have some inferencing capability to drop down to a lower teir planner if applicable.  This may have already been implimented, but it should be able ot autonomously determine if the preferred higher teir model (fable in this case) is really neccessary.  And if not - The plan and build cycle can be done with the mid-tier preferred builder.
+
+8)
+Can this template / kit provision knowledge kits for downstream adopters to consume?  There are updated knowledge definitions in "C:\Projects\ClaudeGuardChecks\skill-knowledge-library",
+~~~~~~~~~~~~~~~
+
 Can we add in the knowledge kits from 
