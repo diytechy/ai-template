@@ -7,17 +7,18 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# NOTE: WI-144 is IN PROGRESS. The fresh provider-heterogeneous 042 CRITIQUE
-# (SR-047's loop, first arming) returned CHANGES-REQUESTED — 7 findings + 3
-# TC-HARDEN against the dashboard vs the SR-052/053/054 rubrics — filed as OI-12
-# (docs/open-items.md; verdict docs/reviews/042-CRITIQUE.md). Disposition split:
-# six are BUILD work meeting already-ratified rubrics (dead When-tab detail panel
-# [BLOCKER], sub-4.5:1 contrast [BLOCKER], status-by-hue, flat Knowledge tab,
-# missing How-SW legend/detail, per-emitter label sizes); two are OWNER-GATED (the
-# new U5 uniformity anchor + phase-hue palette de-collision, and the 3 TC-HARDEN
-# change-intake cases — ratify at the g2 close). WI-144 build round 1 addresses the
-# 7 findings in gen_trajectory.py, then RE-CRITIQUES FRESH (never the authoring
-# build's self-assessment) and runs the full gate bar / check.py --gate at close.
-# session-038 REVIEW-A → OI-11 (accept; the 042 critique did not re-raise arrow
-# legibility, so OI-11 is subsumed by OI-12).
+# NOTE: WI-144 is `active`. Build round 1 LANDED (commit "WI-144: …round 1",
+# log.md 2026-07-14): five of the six rubric-meeting 042-CRITIQUE findings shipped
+# and are verified — A4 (contrast, WCAG scan 0/8 fills fail), U4 (dead When detail
+# panel rewired), A3 (status glyph), U3 (How-SW legend + #sw-detail), U1 (shared
+# --nlabel/--nsub type scale). Full suite 742 passed; gen_trajectory --check fresh.
+# DEFERRED one round: [MAJOR T2] Knowledge-tab density (249 flat nodes) — a faithful
+# start-collapsed grouping is a .knode/knowarrow re-spec that breaks 4 tests + drops
+# cross-type edges; it wants its own focused pass, not a rushed late-round change.
+# OWNER-GATED (unchanged): the U5 uniformity anchor + phase-hue de-collision + the 3
+# TC-HARDEN change-intake cases — ratify at the phase-g2 close (OI-12).
+# NEXT IN THE LOOP: a FRESH re-critique of the rebuilt PROJECT_STATE.html (SR-047's
+# loop, never the authoring build's self-assessment). It judges the five landed fixes
+# and re-surfaces T2. WI-144 stays open until the critique APPROVEs; then the full
+# gate bar / check.py --gate at close, and the whole spine rejoins G3.
 WI-144

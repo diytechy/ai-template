@@ -96,14 +96,15 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** **WI-144 — dashboard UI-quality pass, build round 1**
-  ([next-wi](next-wi)): fix the six rubric-meeting **042 CRITIQUE** findings
-  (2 BLOCKER + 3 MAJOR + 1 MINOR, against the SR-052/053/054 rubrics) in
-  `gen_trajectory.py`, then **re-critique fresh** (never self-adjudicated) and run
-  the full gate bar at close. The full disposition and the owner-gated split (the
-  U5 uniformity anchor + phase-hue de-collision + 3 TC-HARDEN) live in **OI-12**
-  ([open-items.md](open-items.md)). [run-state](run-state) is **RUNNING**; on
-  close WI-144 rejoins the whole spine to G3.
+- **Next action:** **WI-144 — dashboard UI-quality pass** (`active`,
+  [next-wi](next-wi)). **Build round 1 landed** (A4/U4/A3/U3/U1 verified; full
+  suite 742 passed — log.md 2026-07-14). Next in the loop: a **fresh re-critique**
+  of the rebuilt dashboard (never self-adjudicated) — it judges the five landed
+  fixes and re-surfaces the one deferred build item, **[MAJOR T2]** Knowledge-tab
+  density (a `.knode`/`knowarrow` re-spec, its own focused pass). Disposition + the
+  owner-gated split (U5 anchor + phase-hue de-collision + 3 TC-HARDEN) live in
+  **OI-12** ([open-items.md](open-items.md)). At WI-144 close: the full gate bar,
+  and the whole spine rejoins G3. [run-state](run-state) is **RUNNING**.
 
 ## Scope
 

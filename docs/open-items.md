@@ -164,3 +164,14 @@ critique disposition) remain open._
   The one point that benefits from an early owner steer is the **phase-hue
   family** (U5) — if the owner has a palette preference, ruling it before the
   build avoids tuning fills twice.
+- **Update (2026-07-14) — build round 1 landed** (log.md; commit `WI-144: …round
+  1`). **Five of the six** rubric-meeting fixes shipped and are verified: A4
+  (contrast, 0/8 fills fail a WCAG scan), U4 (dead When panel rewired), A3 (status
+  glyph), U3 (How-SW legend + `#sw-detail`), U1 (shared type scale). A4 darkened
+  fills within-hue, so it does **not** foreclose the U5 taxonomy call. **Still
+  pending build:** [MAJOR T2] Knowledge-tab density — deferred one round (a
+  faithful grouping is a `.knode`/`knowarrow` re-spec that wants its own focused
+  pass). **Still owner-gated (unchanged by this round):** the **U5** anchor +
+  phase-hue de-collision, and the **3 TC-HARDEN** cases — ratify at the phase-g2
+  close. Next in the loop: a **fresh re-critique** of the rebuilt dashboard (it
+  will re-surface T2 and judge the five landed fixes).

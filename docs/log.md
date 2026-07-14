@@ -5400,3 +5400,46 @@ findings before build:
 No spine change; no `gen_trajectory.py` change; no byte-budgeted file touched —
 reconciliation + owner-brief bookkeeping. Commit bar (smoke + `check_docs --stale`)
 below. WI-144 build round 1 (the six rubric-meeting findings) follows.
+
+## 2026-07-14 — WI-144 dashboard UI-quality build round 1 (A4/U4/A3/U3/U1; T2 deferred)
+
+Executed the first build round of WI-144 against the **042 CRITIQUE** (OI-12) —
+the five rubric-*meeting* fixes that make `PROJECT_STATE.html` satisfy the ratified
+`docs/rubrics/dashboard-*.md` anchors it was failing. All in `gen_trajectory.py`;
+no rubric touched (the owner-gated U5 + phase-hue de-collision + 3 TC-HARDEN stay
+out of scope, still pending at the sitting).
+
+- **[BLOCKER A4] contrast** — darkened every white-text node fill to ≥ 4.5:1,
+  hue and *meaning* preserved (done→#047857, active→#b45309, SR/module→#0e7490,
+  SN→#4338ca, three PHASE_ACCENTS likewise; #64748b kept at 4.76). Removed the
+  `.sub`/`.bsub` opacity discount. **Verified by a WCAG scan of the emitted
+  output: 0 of 8 distinct node fills fail** (SN chose indigo-700 #4338ca over
+  indigo-600 to avoid colliding with `--accent`). This is a contrast fix within
+  A4; it does **not** pre-empt U5's cross-tab hue-family taxonomy (owner-gated).
+- **[BLOCKER U4/T3/A1] dead When detail panel** — the drill emits `.block` nodes
+  but the wiring targeted `#dag .wi` (zero matches). Leaf blocks now carry
+  `data-wi`; the page wires single-click + focus to `renderDetail`. The `.wi`
+  wiring stays for the small-registry SVG fallback (one selector matches per
+  render mode — neither is universally dead).
+- **[MAJOR A3]** — a shape-distinct status glyph (✓/●/○) prefixes each drill
+  work-item label, redundant with the fill.
+- **[MAJOR U3]** — the How-SW drill gained the node-kind legend + a wired
+  `#sw-detail` aside (self-contained, byte-deterministic), mirroring the When drill.
+- **[MINOR U1]** — one shared `--nlabel`/`--nsub` type scale across the icicle,
+  drill, and knowledge emitters (the icicle lane-*head* stays 11px — a header, not
+  a node label; the flat `sw_graph` fallback's inline sizes were out of the
+  critique's cited three-emitter scope).
+
+**Deferred to the next round — [MAJOR T2]** Knowledge-tab density (249 flat nodes
+on open). A faithful start-collapsed grouping needs a drill/emitter re-spec that
+rewrites the `.knode`/`knowarrow` structure four tests assert on and drops the
+cross-type spine edges — the wrong change to rush at the end of a large round. The
+tab is functional + accessible today (contrast-fixed, keyboard-reachable, named).
+
+Tests: +6 regression guards (WCAG palette floor, no sub opacity, status glyph,
+`data-wi` wiring, sw legend/detail, shared type scale) — distinct from the
+owner-gated formal TC-HARDEN. **Full suite 742 passed, 3 skipped**;
+`gen_trajectory --check` fresh; `check_docs` OK; `check_trajectory --strict` clean;
+pre-commit gate all-PASS. WI-144 → `active`, stays **open**: the critique is
+CHANGES-REQUESTED and **re-critiques fresh** next (never self-adjudicated), which
+also re-surfaces T2.
