@@ -484,7 +484,11 @@ the driver owes the coordinator; update it in the session's final commit:
   requires surfaced. Written only **after** the ask is stated as
   `Needs <human>` Open-items bullets in `status.md`, so stopping is always
   **interrupt-and-report, never infer-and-continue**; the coordinator exits
-  printing the pending asks in its banner.
+  printing the pending asks in its banner. Follow the state word with one
+  `ask: <one-line ask>` line naming the act — the coordinator headlines it in
+  the stop banner (the status excerpt is line-capped, and on a long Current
+  State the `Needs <human>` items can fall past the cap; state readers take
+  only the first declared line, so the extra line costs nothing).
 
 **Optional `docs/run-phase`** (one word): the phase the *next* session should
 drive — the coordinator's model-tier key (§6 tiering, mapped per phase), kept

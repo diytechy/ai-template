@@ -51,7 +51,11 @@ if action == "commit":
     print("session committed progress; noted the usage limit resets 3:45pm")
 elif action in ("done", "blocked", "needs-human"):
     commit("finishing")
-    pathlib.Path("docs/run-state").write_text(action.upper())
+    state = action.upper()
+    if action == "needs-human":
+        # WI-127: a driver follows the state word with the one-line ask.
+        state += "\\nask: OI-1 needs the demo-gate approval"
+    pathlib.Path("docs/run-state").write_text(state)
     print(json.dumps({"result": "ok",
                       "usage": {"input_tokens": 10, "output_tokens": 5,
                                 "cache_read_input_tokens": 70000,
@@ -230,6 +234,10 @@ def test_needs_human_exit_surfaces_the_ask(loop_repo):
     assert proc.returncode == 7, proc.stdout + proc.stderr
     assert "run-state=NEEDS-HUMAN" in proc.stdout
     assert "OI-1" in proc.stdout
+    # WI-127: the driver's run-state ask line is the banner's headline — it
+    # must surface even when the status excerpt would truncate before the
+    # Needs-<human> items.
+    assert "ask: OI-1 needs the demo-gate approval" in proc.stdout
 
 
 def test_stall_guard_aborts_after_no_commit_sessions(loop_repo):

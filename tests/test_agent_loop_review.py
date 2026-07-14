@@ -301,9 +301,9 @@ def test_two_top_tier_failures_page_the_human(managed_repo):
     assert proc.returncode == 7, proc.stdout + proc.stderr
     assert "PAGE-HUMAN" in proc.stdout
     assert "top-tier review failures" in proc.stdout  # the shared-failure regime
-    assert (repo / "docs" / "run-state").read_text(
-        encoding="utf-8"
-    ).strip() == "NEEDS-HUMAN"
+    state = (repo / "docs" / "run-state").read_text(encoding="utf-8").splitlines()
+    assert state[0].strip() == "NEEDS-HUMAN"
+    assert state[1].startswith("ask: review escalation")  # WI-127 ask line
 
 
 def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
@@ -358,9 +358,9 @@ def test_no_routable_model_pages_with_pool_context(managed_repo):
     assert "no routable model" in proc.stdout
     assert "enabled pool" in proc.stdout
     assert "sign in: opencode auth login" in proc.stdout
-    assert (repo / "docs" / "run-state").read_text(
-        encoding="utf-8"
-    ).strip() == "NEEDS-HUMAN"
+    state = (repo / "docs" / "run-state").read_text(encoding="utf-8").splitlines()
+    assert state[0].strip() == "NEEDS-HUMAN"
+    assert state[1].startswith("ask: no routable model")  # WI-127 ask line
 
 
 def test_preflight_missing_cli_carries_notes_hint(managed_repo):

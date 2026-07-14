@@ -1,4 +1,6 @@
 # Unattended-run state (read by project-trajectory/scripts/agent_loop.py via
 # the root agent-resume.* launchers). RUNNING while work remains; a driver
-# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run.
+# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may
+# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).
 NEEDS-HUMAN
+ask: rule WI-123 (docs/specs/WI-123.md) — the review-cadence proposal; the bundled owner sitting in status.md "Needs <human>" is also open

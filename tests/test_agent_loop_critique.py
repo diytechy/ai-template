@@ -284,9 +284,9 @@ def test_critique_budget_exhaustion_pages_human(critique_repo):
     )
     assert proc.returncode == 7, proc.stdout + proc.stderr
     assert "critique budget exhausted" in proc.stdout
-    assert (repo / "docs" / "run-state").read_text(
-        encoding="utf-8"
-    ).strip() == "NEEDS-HUMAN"
+    state = (repo / "docs" / "run-state").read_text(encoding="utf-8").splitlines()
+    assert state[0].strip() == "NEEDS-HUMAN"
+    assert state[1].startswith("ask: critique budget exhausted")  # WI-127
 
 
 def test_absent_enable_list_no_critique(critique_repo):

@@ -125,6 +125,10 @@ LOG_MAX_BYTES = 65536
 
 # The end states a driver may write to docs/run-state (one word, tracked like
 # docs/gate; anything else — including the file being absent — reads RUNNING).
+# NEEDS-HUMAN may carry one `ask: <one-line ask>` line after the state word —
+# read_ask() headlines it in the stop banner, so the console names the human
+# act instead of burying it in the status excerpt (WI-127). Every state reader
+# takes only the first declared line, so the extra line is invisible to them.
 END_STATES = ("DONE", "BLOCKED", "NEEDS-HUMAN")
 
 EXIT_DONE = 0
@@ -163,7 +167,9 @@ DEFAULT_PROMPT = (
     "remains, DONE only at the declared end state (a wrong DONE is a false "
     "green), BLOCKED when everything remaining is in the Blocked register, "
     "NEEDS-HUMAN when the next step requires a human act (state the ask as a "
-    "'Needs <human>' Open item in status.md first)."
+    "'Needs <human>' Open item in status.md first, and follow the state word "
+    "in docs/run-state with one 'ask: <the one-line ask>' line — the "
+    "coordinator headlines it in its stop banner)."
 )
 
 # The dirty-tree resume note (WI-076; process-options.md "Unattended
@@ -299,6 +305,23 @@ def read_declared(path, default):
         if ln and not ln.startswith("#"):
             return ln
     return default
+
+
+def read_ask(path):
+    """The optional `ask: <one-line ask>` line a driver leaves in docs/run-state
+    below the NEEDS-HUMAN state word — the concrete human act the stop banner
+    must headline (WI-127: a long status.md Current State can push the
+    Needs-<human> items past the banner excerpt's line cap, so the ask gets its
+    own dedicated line). Returns "" when absent — the legacy one-word file."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ""
+    for ln in lines:
+        ln = ln.strip()
+        if ln.lower().startswith("ask:"):
+            return ln[4:].strip()
+    return ""
 
 
 def sanitize_track(name):
@@ -1848,7 +1871,12 @@ def main():
             if route_id is None:
                 # Every enabled model at the preferred tier-or-stronger is cooling
                 # down or none is enabled: page rather than drop to a weaker tier.
-                (lane / "run-state").write_text("NEEDS-HUMAN\n", encoding="utf-8")
+                (lane / "run-state").write_text(
+                    "NEEDS-HUMAN\nask: no routable model — add/enable a model "
+                    "of the required tier in docs/agents.csv, or wait out the "
+                    "cooldown\n",
+                    encoding="utf-8",
+                )
                 stop_banner(
                     status_path,
                     "NEEDS-HUMAN — no routable model",
@@ -2128,7 +2156,10 @@ def main():
                     print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
                     if fa["mode"] == "attended":
                         (lane / "run-state").write_text(
-                            "NEEDS-HUMAN\n", encoding="utf-8"
+                            "NEEDS-HUMAN\nask: review escalation — "
+                            + decision["reason"]
+                            + "\n",
+                            encoding="utf-8",
                         )
                         stop_banner(
                             status_path,
@@ -2191,7 +2222,10 @@ def main():
                         critique_scope = set()
                         if fa["mode"] == "attended":
                             (lane / "run-state").write_text(
-                                "NEEDS-HUMAN\n", encoding="utf-8"
+                                "NEEDS-HUMAN\nask: critique budget exhausted "
+                                "still CHANGES-REQUESTED — review the findings "
+                                "and rule\n",
+                                encoding="utf-8",
                             )
                             stop_banner(
                                 status_path,
@@ -2313,10 +2347,15 @@ def main():
             )
             return EXIT_BLOCKED
         if outcome == "NEEDS-HUMAN":
+            # Headline the driver's own ask line (WI-127): the status excerpt
+            # below is capped, and on a long Current State the Needs-<human>
+            # items land past the cap — the ask must never scroll away.
+            ask = read_ask(lane / "run-state")
             stop_banner(
                 status_path,
                 "run-state=NEEDS-HUMAN",
-                "the next step requires a human act — the asks below; "
+                (("ask: " + ask + "\n") if ask else "")
+                + "the next step requires a human act — the asks below; "
                 "re-run agent-resume.* after acting.",
             )
             return EXIT_NEEDS_HUMAN

@@ -4135,3 +4135,34 @@ No spine change; derived gate remains G3. No push (`push-policy: human`).
 `docs/next-wi` → WI-123 and `docs/run-state` → `NEEDS-HUMAN`: **Needs <human>**
 to rule the review-cadence proposal in `docs/specs/WI-123.md` (accept its
 evidence-gated deferral, adapt it, or authorize implementation).
+
+## 2026-07-13 — WI-127: run-state ask line — the NEEDS-HUMAN banner headlines the act
+
+Delivered WI-127 (owner-directed, interrupted-run triage): the stop banner
+promised "the asks below" but `current_state_excerpt` caps at 40 lines and the
+meta's Current State runs ~290 — the `Needs <human>` items fell past the cap,
+so the console said NEEDS-HUMAN without naming the act. `docs/run-state` may
+now carry one `ask: <one-line ask>` line after the state word; `read_ask()`
+headlines it in the NEEDS-HUMAN exit banner above the capped excerpt. The
+driver prompt mandates the line alongside the existing status.md requirement;
+the loop's own three NEEDS-HUMAN writes (no-routable-model, review-escalation,
+critique-budget pages) write their own asks so the parked state stays
+self-describing. Never-breaking: every state reader takes only the first
+declared line; an absent ask line leaves the banner byte-identical.
+PROCESS_OPTIONS "run-state contract" documents the line (the one home); the
+live `docs/run-state` gains its real ask (rule WI-123). Tests: the fake agent's
+needs-human action writes the ask and the exit test asserts the headline; the
+three page-path tests pin `state[0]`/`state[1]`.
+
+**Deviation:** none. **Byte-budgeted files:** none (PROCESS_OPTIONS is not
+budgeted; PROCESS.md untouched).
+
+**Verification.** Full suite: `python -m pytest -q -n auto` → **705 passed, 2
+skipped in 53.22s**. Commit bar: `python -m pytest -q -n auto -m smoke` → **550
+passed, 2 skipped in 37.24s**; `python project-trajectory/scripts/check_docs.py
+--root . --stale` → **OK, 0 broken** (pre-existing orphan warnings/stale hints
+only).
+
+No spine change; derived gate remains G3. No push (`push-policy: human`).
+`docs/next-wi` stays WI-123; `docs/run-state` stays `NEEDS-HUMAN`, now with its
+ask line.

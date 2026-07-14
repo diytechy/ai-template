@@ -40,6 +40,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | Public item | Summary | Implements |
 |---|---|---|
 | `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/run-state, …): |  |
+| `read_ask(path)` | The optional `ask: <one-line ask>` line a driver leaves in docs/run-state |  |
 | `sanitize_track(name)` | A track name becomes a lane directory segment, so restrict it to a safe |  |
 | `lane_dir(docs, track)` | The coordination lane for a track: docs/tracks/<track> when a track is |  |
 | `acquire_lock(lock_path)` | Take the per-worktree coordinator lock, or return an error string. |  |
