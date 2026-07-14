@@ -59,6 +59,30 @@ def test_is_verified_agrees():
         assert TRACE.is_verified(row) == GATE.is_verified(row), row
 
 
+def test_llr_exempt_agrees():
+    # Both files decide the LLR-exemption at their own decision point (trace's
+    # orphan rule, derive_gate's sr_gate). Review 017 caught them disagreeing on
+    # a whitespace-padded valid method (derive_gate stripped, trace did not) —
+    # the exact false-green/false-red divergence WI-099 promised away. Pin the
+    # predicate equivalent, and pin the padded case to the fixed direction.
+    cases = [
+        {"Verification": "Analysis"},
+        {"Verification": " Analysis "},
+        {"Verification": "Inspection"},
+        {"Verification": "Attest"},
+        {"Verification": "analysis"},  # closed vocab stays case-sensitive
+        {"Verification": "Test"},
+        {"Verification": ""},
+        {"Verification": None},
+        {},
+    ]
+    for row in cases:
+        assert TRACE.llr_exempt(row) == GATE.llr_exempt(row), row
+    # the 017 case itself: whitespace-padded valid method IS exempt, in both
+    assert TRACE.llr_exempt({"Verification": " Analysis "}) is True
+    assert GATE.llr_exempt({"Verification": "Attest  "}) is True
+
+
 def test_sn_draft_ids_agrees():
     # Both files scan stakeholder-needs.md for SNs under a "draft" heading
     # (section-as-state maturity). Pin them equivalent across headings, -000

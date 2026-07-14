@@ -121,6 +121,12 @@ def is_verified(row):
     return (row.get("Status") or "").strip().lower() == "verified"
 
 
+def llr_exempt(row):
+    """SR Verification method in LLR_EXEMPT, matched on the stripped cell.
+    Duplicated in trace.py per the F5 rule; pinned equal by test_rule_sync."""
+    return (row.get("Verification") or "").strip() in LLR_EXEMPT
+
+
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
 
 
@@ -145,7 +151,7 @@ def sr_gate(sr, has_llr, has_tc):
     """The gate an SR row has reached, from its Status + whether it is decomposed."""
     if is_draft(sr):
         return G0
-    exempt = (sr.get("Verification") or "").strip() in LLR_EXEMPT
+    exempt = llr_exempt(sr)
     decomposed = (exempt or has_llr) and has_tc
     verified = is_verified(sr)
     if decomposed and verified:

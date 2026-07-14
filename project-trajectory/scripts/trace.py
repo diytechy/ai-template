@@ -284,6 +284,15 @@ def is_verified(row):
 LLR_EXEMPT = ("Analysis", "Inspection", "Attest")
 
 
+def llr_exempt(row):
+    """SR Verification method in LLR_EXEMPT, matched on the stripped cell so a
+    whitespace-padded valid method exempts here exactly as it does in the gate
+    derivation (the two decision points must agree — a divergence is a false
+    green or false red at a gate).
+    Duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
+    return (row.get("Verification") or "").strip() in LLR_EXEMPT
+
+
 def structure_findings(path, display=None):
     """Column-count structural check over one registry CSV: every data row must
     parse (RFC-4180 quoting) to exactly the header's column count. This is the
@@ -1095,7 +1104,7 @@ def main():
         # the live spine without orphaning. Its SN linkage and every integrity
         # rule still apply.
         draft = is_draft(r)
-        analytic = r.get("Verification", "") in LLR_EXEMPT
+        analytic = llr_exempt(r)
         if not draft and not analytic and sid not in llr_sr_refs:
             orphans.append(
                 f"SR {sid} has no LLR (and Verification not in "
