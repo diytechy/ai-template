@@ -811,10 +811,17 @@ travels with the repo; the raw unbounded stream may additionally go to the
 gitignored `out/run-logs/` for local debugging, and is echoed **live** to the
 coordinator console as it arrives (compact one-line renderings for a
 stream-json CLI's events; `--no-session-echo` silences the console, never the
-capture) — and regenerates
-`docs/iteration_index.md`: one row per session (number, date, model/tier,
-phase, outcome, commit range, tokens, cost, wall/API seconds, turns, per-turn
-pace + context volume, log link), generated and never hand-edited. `docs/log.md` stays the *collated* human-review layer above it.
+capture; `--live-status` / a `docs/live-status` toggle upgrades the scroll to
+one in-place status line per workstream when stdout is a TTY, a pipe/CI log
+keeping the append-only scroll) — and regenerates
+`docs/iteration_index.md`: one row per session (number, date, phase, the WI it
+claimed, model/tier, outcome, commit range, tokens, cost, wall/API seconds,
+turns, per-turn pace + context volume, log link), generated and never
+hand-edited. **The coordinator commits this bookkeeping in its own
+`telemetry:` commit the moment it writes it** — so the log + index (and the
+review scoreboard) never ride the next session's *work* commit or dangle in
+the tree; it is best-effort (a hook veto leaves the files in place, as before).
+`docs/log.md` stays the *collated* human-review layer above it.
 On an privacy-checked repo the logs ride the iteration branch and pass its scrub
 with everything else.
 

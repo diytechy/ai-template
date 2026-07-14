@@ -866,3 +866,146 @@ def test_no_session_echo_silences_the_console_not_the_log(loop_repo):
         encoding="utf-8"
     )
     assert "refactoring the parser" in log  # ...but the stream is captured
+
+
+# --- WI-137: telemetry commit hygiene + WI-keyed labels -----------------------
+
+
+def test_telemetry_commits_itself_not_riding_the_next_commit(loop_repo):
+    # WI-137: the coordinator commits its own bookkeeping (the iteration log +
+    # regenerated index) in its own `telemetry:` commit right after writing it —
+    # so it never dangles or rides the next session's work commit (session-021
+    # defect-shape). After a run the tree carries no uncommitted iteration file,
+    # and a telemetry commit exists naming the session.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("commit done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    porcelain = _git(repo, "status", "--porcelain")
+    assert "docs/iteration" not in porcelain, "telemetry must not dangle"
+    assert "iteration_index.md" not in porcelain
+    subjects = _git(repo, "log", "--format=%s")
+    assert "telemetry: session" in subjects, subjects
+    # The telemetry commit is distinct from the session's own work commit.
+    assert "progress" in subjects and "finishing" in subjects
+    # The iteration logs are tracked, not just present on disk.
+    tracked = _git(repo, "ls-files", "docs/iteration")
+    assert tracked.count(".log") == 2
+
+
+def test_telemetry_commit_is_best_effort_when_the_hook_vetoes(loop_repo):
+    # WI-137 never-breaking: a pre-commit hook that vetoes the telemetry commit
+    # must not abort the run — the files stay in the tree (today's behavior) and
+    # the loop keeps going. Simulate with a hook that always fails; noop sessions
+    # never make a work commit, so only the telemetry commit meets the veto.
+    repo, ctl, template = loop_repo
+    hook = repo / ".git" / "hooks" / "pre-commit"
+    hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    hook.chmod(0o755)
+    (ctl / "actions.txt").write_text("noop noop", encoding="utf-8")
+    proc = _loop(repo, template, "--max-iterations", "2", "--stall-limit", "9")
+    assert proc.returncode == 6, proc.stdout + proc.stderr  # budget, not a crash
+    assert "telemetry commit skipped" in proc.stderr
+    assert len(sorted((repo / "docs" / "iteration").glob("*.log"))) == 2  # on disk
+
+
+def test_wi_label_recorded_in_log_header_and_index(loop_repo):
+    # WI-137: docs/next-wi (the WI the session claims) is captured at session
+    # start into a `# wi:` log header line and a WI index column — a `;`-batch
+    # (WI-133) is kept verbatim.
+    repo, ctl, template = loop_repo
+    (repo / "docs" / "next-wi").write_text(
+        "# comment\nWI-136;WI-137\n", encoding="utf-8"
+    )
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    log = sorted((repo / "docs" / "iteration").glob("*.log"))[0].read_text(
+        encoding="utf-8"
+    )
+    assert "# wi: WI-136;WI-137" in log
+    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
+    assert "| WI | Model |" in index  # the new column header
+    assert "WI-136;WI-137" in index
+
+
+# --- WI-136: live per-workstream status line ----------------------------------
+
+
+def test_summarize_session_line_shapes():
+    import json
+
+    loop = load_script("agent_loop")
+    txt = json.dumps(
+        {"type": "assistant", "message": {"content": [{"type": "text", "text": "hi"}]}}
+    )
+    assert loop.summarize_session_line(txt) == ["  > hi"]
+    tool = json.dumps(
+        {
+            "type": "assistant",
+            "message": {"content": [{"type": "tool_use", "name": "Edit", "input": {}}]},
+        }
+    )
+    assert loop.summarize_session_line(tool) == ["  * Edit"]
+    # result/system events are log detail, not progress.
+    assert loop.summarize_session_line(json.dumps({"type": "result"})) == []
+    # a non-JSON plain-text line passes through.
+    assert loop.summarize_session_line("plain cli output") == ["plain cli output"]
+    assert loop.summarize_session_line("   ") == []
+
+
+def test_live_status_rewrites_one_line_in_place():
+    import io
+    import json
+
+    loop = load_script("agent_loop")
+    buf = io.StringIO()
+    old = sys.stdout
+    sys.stdout = buf
+    try:
+        ls = loop.LiveStatus("single")
+        ls.event(
+            json.dumps(
+                {
+                    "type": "assistant",
+                    "message": {
+                        "content": [{"type": "tool_use", "name": "Edit", "input": {}}]
+                    },
+                }
+            )
+        )
+        ls.event(
+            json.dumps(
+                {
+                    "type": "assistant",
+                    "message": {"content": [{"type": "text", "text": "next step"}]},
+                }
+            )
+        )
+        ls.finish()
+    finally:
+        sys.stdout = old
+    out = buf.getvalue()
+    assert "\r\x1b[2K" in out  # carriage-return + clear-to-EOL rewrite
+    assert "[single]" in out and "Edit" in out and "next step" in out
+    assert out.endswith("\n")  # finish() closes the line
+    # A no-op finish (nothing rendered) writes nothing.
+    buf2 = io.StringIO()
+    sys.stdout = buf2
+    try:
+        loop.LiveStatus("x").finish()
+    finally:
+        sys.stdout = old
+    assert buf2.getvalue() == ""
+
+
+def test_live_status_falls_back_to_scroll_on_non_tty(loop_repo):
+    # WI-136 never-breaking: --live-status on a non-TTY (the test subprocess's
+    # stdout is a pipe) must keep the append-only scroll, not emit raw escapes —
+    # CI logs stay readable. The scrolling summaries still appear.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("stream-done", encoding="utf-8")
+    proc = _loop(repo, template, "--live-status")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "> refactoring the parser" in proc.stdout  # scrolled, not rewritten
+    assert "\x1b[2K" not in proc.stdout  # no in-place escapes on a non-TTY

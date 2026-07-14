@@ -66,9 +66,9 @@ home elsewhere — don't restate it here:
   **WI-142** (Process tab intake + human-decision loops) →
   **WI-143** (decomposition render polish) →
   **WI-144** (dashboard UI-quality pass + the SR-047 critique). Off-spine and
-  parallel-eligible independently of OI-8: **WI-136** + **WI-137** (a natural
-  `;`-batch: live console lines · telemetry commit hygiene) · **WI-138**
-  (research track + durable knowledge layer, design)._
+  parallel-eligible independently of OI-8: **WI-138** (research track + durable
+  knowledge layer, design) — the last remaining non-v3 queued item (the
+  earlier off-spine `unattended` batch has landed; see [log.md](log.md))._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-110** in
@@ -78,18 +78,19 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** the off-spine `;`-batch **WI-136;WI-137** (`docs/next-wi` —
-  live console lines · telemetry commit hygiene; independent of v3, one
-  session/one review — dev-slice batching). Run-state **RUNNING**: autonomous
-  off-spine
-  work remains, so the loop does not idle. **OI-8** (the owner's single v3
-  ratification sitting at the `[v3]-[g2]` close, `single-ratify`) gates **only**
-  the v3 dev slices **WI-141→144** — they do **not** auto-run until the owner
-  ratifies (brief: [open-items.md](open-items.md) OI-8). After WI-136;WI-137
-  (then the WI-138 design), when the only remaining work is OI-8-gated the loop
-  stops NEEDS-HUMAN for the sitting. The deferred `main-decomposition` campaign
-  (**WI-080→WI-081**) stays parked (`deferred`, not queued). Owner items
-  (OI-3/OI-4/OI-7) don't block any of these.
+- **Next action:** the off-spine **WI-138** (`docs/next-wi`; `BuildTier=strong`)
+  — the research track + durable knowledge/module-spec design WI, spec-first
+  (a ratifiable design spec; implementation WIs get filed from it), independent
+  of v3. Run-state **RUNNING**: this
+  autonomous off-spine work remains, so the loop does not idle. **OI-8** (the
+  owner's single v3 ratification sitting at the `[v3]-[g2]` close,
+  `single-ratify`) gates **only** the v3 dev slices **WI-141→144** — they do
+  **not** auto-run until the owner ratifies (brief:
+  [open-items.md](open-items.md) OI-8). Once WI-138 lands, the only remaining
+  work is OI-8-gated, so a driver then stops **NEEDS-HUMAN** for the sitting.
+  The deferred `main-decomposition` campaign (**WI-080→WI-081**) stays parked
+  (`deferred`, not queued). Owner items (OI-3/OI-4/OI-7) don't block any of
+  these.
 
 ## Scope
 

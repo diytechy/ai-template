@@ -73,10 +73,14 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `per_turn_pace(meta)` | API seconds per turn from a log's header meta — the like-for-like speed |  |
 | `per_turn_context(meta)` | Average context carried per turn (cache-read tokens / turns, humanized |  |
 | `regenerate_index(docs_dir)` | Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata |  |
+| `commit_telemetry(root, session, label, paths)` | Commit the coordinator's own bookkeeping in its own `telemetry:` commit, |  |
 | `next_session_number(iter_dir)` | Next NNN, continuing across coordinator restarts. |  |
 | `preflight(root, template, args)` | Refuse to start iteration 1 on a broken footing. Returns the list of |  |
-| `echo_session_line(line)` | Compact live rendering of one line of session output (WI-125) — the |  |
-| `run_session(argv, root, timeout, env, echo)` | One fresh headless driver session. Returns (exit_code, output, |  |
+| `summarize_session_line(line)` | Parse one line of session output into zero or more compact console |  |
+| `echo_session_line(line)` | Scrolling live echo (WI-125): print each compact summary of one output |  |
+| `LiveStatus (class)` | One in-place console status line for a workstream (WI-136). Opt-in |  |
+| `  methods` | event · finish |  |
+| `run_session(argv, root, timeout, env, on_line)` | One fresh headless driver session. Returns (exit_code, output, |  |
 | `stop_banner(status_path, label, detail)` |  |  |
 | `main()` |  |  |
 

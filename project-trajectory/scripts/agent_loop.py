@@ -1037,6 +1037,7 @@ def write_session_log(iter_dir, meta, transcript):
         "session",
         "date",
         "phase",
+        "wi",
         "model",
         "guardrails",
         "outcome",
@@ -1115,11 +1116,12 @@ def regenerate_index(docs_dir):
         if not meta.get("session"):
             continue
         rows.append(
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} "
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} "
             "| [{}](iteration/{}) |".format(
                 meta.get("session", ""),
                 meta.get("date", ""),
                 meta.get("phase", "") or "—",
+                meta.get("wi", "") or "—",
                 meta.get("model", "") or "—",
                 meta.get("outcome", ""),
                 meta.get("commits", "") or "—",
@@ -1141,13 +1143,45 @@ def regenerate_index(docs_dir):
         "collated human-review record is `log.md`; this index is the quick\n"
         '"which session did this" pointer (process-options.md "Unattended\n'
         'operation")._\n\n'
-        "| # | Date | Phase | Model | Outcome | Commits | Tokens | Cost USD "
+        "| # | Date | Phase | WI | Model | Outcome | Commits | Tokens | Cost USD "
         "| Wall s | API s | Turns | s/turn | Ctx/turn | Log |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
         + "\n".join(rows)
         + "\n"
     )
     (docs_dir / "iteration_index.md").write_text(text, encoding="utf-8")
+
+
+def commit_telemetry(root, session, label, paths):
+    """Commit the coordinator's own bookkeeping in its own `telemetry:` commit,
+    right after it is written — so it never rides the next session's work commit
+    or dangles in the tree (WI-137, the session-021 defect-shape). Stages only
+    the named bookkeeping paths (the iteration log + regenerated index, the
+    review scoreboard); the reviewer's verdict files commit themselves. Honors
+    the hooks and is best-effort: nothing staged, or a hook veto, leaves the
+    files in the tree exactly as before — never fatal, so the fix can only help
+    (a walk-away run that today dangles telemetry keeps working either way)."""
+    rels = []
+    for p in paths:
+        try:
+            rels.append(os.path.relpath(str(p), str(root)))
+        except ValueError:
+            continue  # a path on another drive (Windows) — skip, never crash
+    if not rels:
+        return
+    code, out = git(root, "status", "--porcelain", "--", *rels)
+    if code != 0 or not out.strip():
+        return  # unchanged bookkeeping — no empty commit
+    git(root, "add", "--", *rels)
+    msg = "telemetry: session {} {}".format(session, label)
+    code, out = git(root, "commit", "-q", "-m", msg, "--", *rels)
+    if code != 0:
+        print(
+            "agent_loop: telemetry commit skipped (session {}): {}".format(
+                session, (out or "").strip()[:200] or "hook veto or nothing staged"
+            ),
+            file=sys.stderr,
+        )
 
 
 def next_session_number(iter_dir):
@@ -1251,48 +1285,131 @@ def preflight(root, template, args):
     return failures
 
 
-def echo_session_line(line):
-    """Compact live rendering of one line of session output (WI-125) — the
-    walk-away console shows progress instead of 30 silent minutes. stream-json
-    events render one-line summaries: assistant text as `  > ...`, a tool call
-    as `  * <name>`; result/system/user events are suppressed (the coordinator
-    prints its own outcome line, and tool results re-echo file contents).
-    Anything that isn't a JSON event — a plain-text CLI like opencode — passes
-    through. Every echoed line is truncated for console hygiene; the FULL
-    stream is still captured for the session log + out/run-logs."""
+def summarize_session_line(line):
+    """Parse one line of session output into zero or more compact console
+    summaries (WI-125) — shared by the scrolling echo (echo_session_line) and
+    the in-place live line (LiveStatus, WI-136). stream-json events render as
+    `  > <assistant text>` / `  * <tool name>`; result/system/user events are
+    suppressed (the coordinator prints its own outcome line, and tool results
+    re-echo file contents). A line that isn't a JSON event — a plain-text CLI
+    like opencode — passes through as one truncated summary. Every summary is
+    truncated for console hygiene; the FULL stream is still captured for the
+    session log + out/run-logs regardless."""
     s = line.rstrip()
     if not s:
-        return
+        return []
     if s.startswith("{"):
         try:
             evt = json.loads(s)
         except ValueError:
             evt = None
         if isinstance(evt, dict):
+            out = []
             if evt.get("type") == "assistant":
                 for block in (evt.get("message") or {}).get("content") or []:
                     if block.get("type") == "text" and block.get("text", "").strip():
                         txt = " ".join(block["text"].split())
-                        print(
+                        out.append(
                             "  > {}".format(
                                 txt[:240] + ("..." if len(txt) > 240 else "")
                             )
                         )
                     elif block.get("type") == "tool_use":
-                        print("  * {}".format(block.get("name", "tool")))
-            return  # every other event type is log detail, not progress
-    print(s[:240] + ("..." if len(s) > 240 else ""))
+                        out.append("  * {}".format(block.get("name", "tool")))
+            return out  # every other event type is log detail, not progress
+    return [s[:240] + ("..." if len(s) > 240 else "")]
 
 
-def run_session(argv, root, timeout, env=None, echo=False):
+def echo_session_line(line):
+    """Scrolling live echo (WI-125): print each compact summary of one output
+    line so a walk-away console shows progress instead of silent minutes."""
+    for summary in summarize_session_line(line):
+        print(summary)
+
+
+def _stdout_is_tty():
+    """True only when the coordinator console is an interactive terminal — the
+    gate for the in-place live line (WI-136). A pipe / redirect / CI log is not
+    a TTY, so it keeps the append-only scroll (CI logs must stay append-only)."""
+    try:
+        return bool(sys.stdout.isatty())
+    except Exception:
+        return False
+
+
+def _enable_windows_vt():
+    """Best-effort enable of ANSI/VT escape processing for the current Windows
+    console (modern conhost + Windows Terminal support it, but the flag can be
+    off). stdlib-only via ctypes — no curses / colorama dependency. Returns True
+    when VT is usable (always so on a non-Windows OS), False when it could not be
+    turned on, so the caller falls back to the plain scroll rather than emit raw
+    escape bytes (never-breaking)."""
+    if os.name != "nt":
+        return True
+    try:
+        import ctypes
+
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+        if not handle or handle == -1:
+            return False
+        mode = ctypes.c_uint()
+        if not kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            return False
+        enable_vt = 0x0004  # ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        if mode.value & enable_vt:
+            return True
+        return bool(kernel32.SetConsoleMode(handle, mode.value | enable_vt))
+    except Exception:
+        return False
+
+
+class LiveStatus:
+    """One in-place console status line for a workstream (WI-136). Opt-in
+    (--live-status / docs/live-status) and used only when stdout is a TTY with
+    VT enabled — a non-TTY keeps the scrolling echo. Each streamed event
+    rewrites a single line (carriage-return + clear-to-EOL) instead of
+    scrolling, so a long walk-away session shows its current step rather than
+    30 silent minutes. The FULL stream is still captured for the session log +
+    out/run-logs; this only changes what the console shows."""
+
+    def __init__(self, label):
+        self.label = label
+        self.active = False
+
+    def event(self, line):
+        for summary in summarize_session_line(line):
+            self._render(summary)
+
+    def _render(self, summary):
+        prefix = "  [{}] ".format(self.label)
+        width = shutil.get_terminal_size((80, 24)).columns
+        text = (prefix + " ".join(summary.split()))[: max(1, width - 1)]
+        # \r to column 0, \x1b[2K to clear the whole line, then rewrite it.
+        sys.stdout.write("\r\x1b[2K" + text)
+        sys.stdout.flush()
+        self.active = True
+
+    def finish(self):
+        """Close the live line with a newline so the next scrolling print starts
+        clean — a no-op when nothing was ever rendered (an idle/errored session)."""
+        if self.active:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+            self.active = False
+
+
+def run_session(argv, root, timeout, env=None, on_line=None):
     """One fresh headless driver session. Returns (exit_code, output,
     timed_out). stdin is closed so a CLI that would wait on it can't hang.
 
     `env` is the merged environment for a pair row that declares one (the
     registry `Env` column, already merged over os.environ by the caller); None
     means inherit the ambient environment exactly — today's call, byte for
-    byte. `echo` renders each output line live via echo_session_line (WI-125);
-    the returned output is the full captured stream either way."""
+    byte. `on_line`, when given, is called with each output line as it arrives —
+    the console renderer (echo_session_line's scroll, WI-125, or LiveStatus's
+    in-place line, WI-136); the returned output is the full captured stream
+    either way."""
     if os.name == "nt":
         # CreateProcess resolves a bare argv[0] only to .exe/.com — never the
         # PATHEXT script shims (.cmd/.bat) npm-style CLIs install on Windows —
@@ -1326,8 +1443,8 @@ def run_session(argv, root, timeout, env=None, echo=False):
     def _pump():
         for line in proc.stdout:
             lines.append(line)
-            if echo:
-                echo_session_line(line)
+            if on_line is not None:
+                on_line(line)
         proc.stdout.close()
 
     pump = threading.Thread(target=_pump, daemon=True)
@@ -1491,6 +1608,14 @@ def main():
         help="silence the live echo of session output on the coordinator "
         "console (WI-125; the full stream is still captured to the session "
         "log and out/run-logs either way)",
+    )
+    ap.add_argument(
+        "--live-status",
+        action="store_true",
+        help="upgrade the scrolling session echo to one in-place status line "
+        "per workstream (WI-136) — only when stdout is a TTY (a pipe / CI log "
+        "keeps the append-only scroll); also enabled by a docs/live-status "
+        "file reading 'true'. Overridden by --no-session-echo.",
     )
     ap.add_argument(
         "--wait-on-limit",
@@ -1811,6 +1936,16 @@ def main():
     raw_dir = root / "out" / "run-logs"
     iter_dir = lane / "iteration"
     tag = "{}-".format(track) if track else ""
+    # Console rendering (WI-125 scroll / WI-136 live line). --no-session-echo
+    # silences it; otherwise --live-status (or a docs/live-status file) upgrades
+    # the scroll to one in-place line per workstream — but only when stdout is a
+    # TTY with VT enabled, so a pipe / CI log keeps the append-only scroll
+    # (never-breaking). Decided once: the TTY/VT facts don't change mid-run.
+    live_status_on = (
+        args.live_status
+        or read_declared(docs / "live-status", "false").lower() == "true"
+    )
+    use_live = live_status_on and _stdout_is_tty() and _enable_windows_vt()
     stall = 0
     errors = 0  # consecutive ERROR sessions (agent unavailable, not a work stall)
     state = read_declared(lane / "run-state", "RUNNING").upper()
@@ -1887,6 +2022,11 @@ def main():
         )
         session = "{:03d}".format(next_session_number(iter_dir))
         stamp = time.strftime("%Y%m%d-%H%M%S")
+        # The WI this session claims (WI-137) — captured BEFORE the session runs,
+        # since a BUILD that closes its WI rewrites docs/next-wi to the next one;
+        # recorded as a `# wi:` header line + an index column. A `;`-batch value
+        # (WI-133) is kept verbatim; empty when docs/next-wi is absent.
+        wi_label = read_declared(lane / "next-wi", "")
         before = head_sha(root)
         now = time.time()
         is_review = False
@@ -2033,13 +2173,22 @@ def main():
         # The coordinator's own clock, so a duration exists even when the
         # session dies before emitting JSON (spawn failure, timeout, crash).
         wall_start = time.time()
+        live = LiveStatus(track or "single") if use_live else None
+        if args.no_session_echo:
+            on_line = None
+        elif live is not None:
+            on_line = live.event
+        else:
+            on_line = echo_session_line
         code, output, timed_out = run_session(
             argv,
             root,
             args.session_timeout,
             env=session_env,
-            echo=not args.no_session_echo,
+            on_line=on_line,
         )
+        if live is not None:
+            live.finish()
         wall_secs = int(round(time.time() - wall_start))
 
         try:
@@ -2128,6 +2277,7 @@ def main():
             "stamp": stamp,
             "date": time.strftime("%Y-%m-%d %H:%M"),
             "phase": phase,
+            "wi": wi_label,
             "model": model,
             "guardrails": "on" if guarded else "",
             "outcome": outcome,
@@ -2145,8 +2295,17 @@ def main():
             "prompt-chars": len(prompt),
             "exit-code": code,
         }
-        write_session_log(iter_dir, meta, output)
+        log_path = write_session_log(iter_dir, meta, output)
         regenerate_index(lane)
+        # Commit the coordinator's own bookkeeping now, in its own telemetry
+        # commit — never let it ride the next session's work commit or dangle
+        # (WI-137). The review scoreboard is committed at its own write below.
+        commit_telemetry(
+            root,
+            session,
+            "{} {}".format(phase or "—", outcome),
+            [log_path, lane / "iteration_index.md"],
+        )
         print(
             "session {}: outcome={} commits={} wall={}s{}".format(
                 session,
@@ -2231,6 +2390,10 @@ def main():
                     score_reviews.record_round(scoreboard, round_info, family_substance)
                 except OSError:
                     pass
+                # The scoreboard is coordinator-written state too — commit it in
+                # its own telemetry commit the moment the round records (WI-137),
+                # not on the next session's commit.
+                commit_telemetry(root, session, "review scoreboard", [scoreboard])
                 print(
                     "review round: merged={} margin={:.2f} tripwires={} "
                     "(advisory scoreboard {})".format(

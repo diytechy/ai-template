@@ -4796,3 +4796,61 @@ walk-away run should not idle. Corrected to run-state **RUNNING**,
 pending owner decision gating only the v3 slices; when the loop exhausts the
 off-spine tail, the only remaining work is OI-8-gated and a driver then stops
 NEEDS-HUMAN for the sitting.
+
+## 2026-07-14 — WI-136;WI-137: coordinator console + telemetry hygiene (off-spine `;`-batch)
+
+**The off-spine `unattended` dev-slice batch** (WI-133 batching: one session,
+one review round, strongest-member pin — here both members carry no `BuildTier`,
+so the phase default stood). Two independent refinements to `agent_loop.py`, no
+spine touch (both rows have empty `SR-Refs`).
+
+- **WI-136 — live per-workstream status line.** `echo_session_line` split into
+  `summarize_session_line` (the shared stream-json → one-line parse) + a thin
+  scrolling echo; a new `LiveStatus` renders **one in-place line per
+  workstream** (carriage-return + `\x1b[2K` clear + terminal-width truncation)
+  selected by `--live-status` / a `docs/live-status` toggle **only when stdout
+  is a TTY with VT enabled** (`_stdout_is_tty` + `_enable_windows_vt`, stdlib
+  `ctypes` on Windows — no curses/colorama). A pipe / CI log is not a TTY, so it
+  keeps the append-only scroll — **never-breaking**. `run_session`'s `echo`
+  bool generalized to an `on_line` callback; `--no-session-echo` still silences
+  both renderers.
+- **WI-137 — telemetry commit hygiene + WI labels.** New `commit_telemetry`
+  commits the coordinator's **own** bookkeeping (the iteration log + regenerated
+  index; the review scoreboard at its own write point) in a dedicated
+  best-effort `telemetry:` commit **the moment it is written** — closing the
+  session-021 defect-shape where telemetry rode the *next* session's work commit
+  or dangled (this very session opened by committing sessions 028/029's dangled
+  telemetry as bookkeeping — the defect, observed live). A hook veto or
+  nothing-staged leaves the files in the tree exactly as before (never-breaking;
+  the `git commit -- <paths>` pathspec never sweeps unrelated residue). The WI a
+  session **claims** is captured from `docs/next-wi` at session **start** (before
+  a closing BUILD rewrites it) into a `# wi:` log-header line + a new **WI**
+  index column.
+
+**Surfaced smell (not fixed here — a separate finding).** Session 029's
+`docs/reviews/029-REVIEW-A.md` verdict **dangled** uncommitted, even though the
+reviewer prompt mandates verdict files self-commit. WI-137 deliberately scopes
+the coordinator to *its own* bookkeeping (log/index/scoreboard), not the
+reviewer's verdict, per the intake spec. If third-party reviewer CLIs keep
+failing to self-commit, a future WI could have the coordinator sweep the
+consumed `verdict_path` into the scoreboard telemetry commit — filed as an
+observation, not actioned.
+
+**Mechanized verification (real output):**
+- Full unfiltered suite (batch-done bar): `python -m pytest -q -n auto` →
+  **725 passed, 3 skipped in 70.51s** (+6 new: 3 for WI-136, 3 for WI-137).
+  Commit-bar smoke: `571 passed, 2 skipped in 47.05s`. `check_docs --stale`
+  exit 0. `gen_skills_index --check-agents` OK (10 copies match).
+  `check_trajectory --strict` clean (144 WIs, 126 done, acyclic).
+- **Byte deltas:** `PROCESS_OPTIONS.md` **134,965 → 135,449 (+484 B, flagged)** —
+  the "Unattended operation" iteration-logs paragraph gained the `--live-status`
+  option, the WI column, and the telemetry-commit sentence; baseline re-stamped
+  across all three `byte-budget-guard` skill copies (source + `.claude` +
+  `.agents`). AGENTS.template.md / PROCESS.md unchanged. Regenerated
+  `PROJECT_STATE.html` (dashboard) + `docs/okf` (already current).
+
+**Handoff.** `docs/next-wi` → **WI-138** (the last remaining non-v3 queued item,
+`BuildTier=strong`, the research-track/knowledge-layer **design** WI). Run-state
+**RUNNING** — WI-138 is autonomous off-spine work. Once it lands, the only
+remaining work is OI-8-gated (the owner's single v3 ratification sitting), so a
+driver then stops **NEEDS-HUMAN**. Not pushed (`push-policy: human`).
