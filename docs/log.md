@@ -4182,3 +4182,20 @@ uniform. **Deviation:** none. **Byte-budgeted files:** none.
 passed, 2 skipped in 41.47s**; `check_docs --root . --stale` → **OK, 0 broken**. `trace.py
 --strict-integrity` → 0 orphans / 0 findings; `derive_gate --check` → G3 up to
 date. No push (`push-policy: human`).
+
+## 2026-07-13 — WI-129 filed: LLR/TC status-coherence warn (queued)
+
+Owner-filed at the ratification-review sitting: queued **WI-129**
+([specs/WI-129.md](specs/WI-129.md)) — a warn-tier `trace.py` lint that fires
+when an LLR reads below `Verified` while every citing TC is `Verified` (the
+readout drift the v2 slices left and the prior WI corrected by hand). Design
+ruled in the spec: warn, never gate (mirrors the derived-gate stance that LLR
+status is non-gating), no auto-lift (registries stay hand-owned SSOT).
+Filing only — no script change this session. `docs/next-wi` → WI-129;
+`docs/run-state` → RUNNING (actionable work exists again); status.md Next
+action re-pointed. **Deviation:** none. **Byte-budgeted files:** none.
+
+**Verification.** Commit bar: `python -m pytest -q -n auto -m smoke` → **550
+passed, 2 skipped in 34.64s**; `check_docs --root . --stale` → **OK, 0
+broken**; `check_trajectory` → clean (129 WIs, graph acyclic). No push
+(`push-policy: human`).

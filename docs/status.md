@@ -237,12 +237,17 @@ working surface.
       a commit-msg check to be a backed rule; L6 template-cell manuals — an
       owner taste ruling on a deliberate design, medium churn to shipped
       templates; M8/L3 fold into WI-081/WI-080 as noted above.)_
-- **Next action — Needs <human> (branch `derived-gate-model`; `docs/next-wi` =
-  WI-123).** Rule the queued review-cadence proposal in
-  [specs/WI-123.md](specs/WI-123.md): accept its evidence-gated deferral,
-  adapt it, or authorize implementation. No autonomous queued WI remains
-  (WI-097/098/103 each needs an owner ruling). The coordinator
-  must stop in `NEEDS-HUMAN` until this decision creates actionable scope.
+- **Next action (branch `derived-gate-model`; `docs/next-wi` = WI-129;
+  `docs/run-state` = RUNNING).** Build **WI-129**
+  ([specs/WI-129.md](specs/WI-129.md)) — the LLR/TC status-coherence warn in
+  `trace.py` (owner-filed 2026-07-13 at the ratification-review sitting: warn
+  when an LLR
+  reads below Verified while every citing TC is Verified; warn-tier only,
+  never gating, no auto-lift). After it lands, no autonomous queued WI
+  remains (WI-097/098/103 each needs an owner ruling; the WI-123
+  review-cadence ruling is still pending in Needs \<human> above) — the
+  coordinator then stops in `NEEDS-HUMAN` until an owner decision creates
+  actionable scope.
   1. **Derived-gate campaign — LANDED (this branch).** The design
      ([specs/derived-gate-model.md](specs/derived-gate-model.md)) is ratified and
      the whole 8-slice campaign has shipped: the `Draft` artifact state + trace
