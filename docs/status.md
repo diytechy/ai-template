@@ -56,6 +56,9 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
+    - **OI-10** — disposition the session-034 REVIEW-A findings against
+      WI-141/SR-051 (leaf-block phase annotation + a threshold-wording nit);
+      rec: fold both into the queued **WI-143** render-polish slice.
 - **Queued (v3 dev slices, owner intake 2026-07-13** —
   [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ **live**,
   running G2→G3 in series. The SR-051-rev interface-wired descend-a-layer render

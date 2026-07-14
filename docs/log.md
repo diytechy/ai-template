@@ -5157,3 +5157,27 @@ intake + human-decision loop panels, SR-055). The remaining v3 dev slices
 WI-142→144 run G2→G3 in series, then the owner-intake WIs (WI-146…151, WI-110)
 and the research-knowledge campaign (WI-152…157). Not pushed
 (`push-policy: human`).
+
+## 2026-07-14 — Reconcile session-034 REVIEW-A residue (before WI-142)
+
+Session 034 (REVIEW-A, gpt-5.6-terra, outcome NO-COMMIT) reviewed the WI-141
+commit range and returned **CHANGES-REQUESTED** with two `@owner`-routed
+findings, but left its verdict file `docs/reviews/034-REVIEW-A.md` **untracked**
+(the NO-COMMIT reviewer never committed it, unlike every prior verdict file).
+Reconciled as working-tree residue per the session-protocol before starting
+WI-142:
+
+- **Tracked the artifact.** Committed `034-REVIEW-A.md` so the review record
+  lives in the repo like 003…031-REVIEW-A.
+- **Verified the findings against the code, then filed [OI-10](open-items.md).**
+  Finding 1 [MAJOR] is real but edge-case — `gen_trajectory.py` `wi_block()`
+  surfaces the delivery Phase in no visible/hover text, so a descent into a
+  mixed-phase workstream (phase tier ≤3, workstream tier >3) drops the per-WI
+  Phase that SR-051 says the When view "surfaces." Finding 2 [MINOR] is a
+  threshold-wording mismatch across SR-051/LLR-052/TC-052. Both sit squarely in
+  the "graphic breakdowns will need iteration" the OI-1 ratification
+  anticipated. Recommendation: fold both into the already-queued **WI-143**
+  render-polish slice; WI-141 keeps its ratified Verified status.
+
+No spine change; no code change; no byte-budgeted file touched. This is
+review-flow bookkeeping, not new product scope. WI-142 build follows.
