@@ -1,0 +1,2 @@
+- [MAJOR] project-trajectory/scripts/agent_loop.py:1175 -> a hook-vetoed telemetry commit leaves the coordinator's bookkeeping paths staged (`git add` succeeds, `git commit` fails, and nothing restores the index), violating WI-137's required best-effort behavior that a veto leaves files as before; independent reproduction reports `A  telemetry` -> preserve and restore each named path's pre-commit index state when the telemetry commit fails, and add an assertion that the veto path is unstaged -> @owner
+VERDICT: CHANGES-REQUESTED findings=1
