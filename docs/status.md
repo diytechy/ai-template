@@ -58,6 +58,12 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
+    - **OI-11** — disposition the **session-038 REVIEW-A** [MAJOR] against
+      WI-143/SR-056 (the `cedge` containment arrow); verified a
+      spec-interpretation call (the drill is a layer-swap render ⇒ one
+      containment edge per descendable block, which the code satisfies); rec:
+      accept, fold the arrow-legibility question into WI-144's SR-052/053/054
+      critique. WI-143 keeps Verified. Depth in [open-items.md](open-items.md).
 - **Queued (v3 dev slices, owner intake 2026-07-13** —
   [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ **live**,
   running G2→G3 in series. The SR-051-rev interface-wired descend-a-layer render,
@@ -97,7 +103,11 @@ home elsewhere — don't restate it here:
   dashboard UI-quality pass + the SR-052/053/054 Critique rows — the
   campaign-closing v3 slice (arms SR-047's critique loop for the first time and
   runs the full gate bar `check.py --gate` at close). The SR-056 render polish
-  (OI-10 folded and closed) landed 2026-07-14 ([log.md](log.md)).
+  (OI-10 folded and closed) landed 2026-07-14 ([log.md](log.md)); its
+  **session-038 REVIEW-A** returned CHANGES-REQUESTED with one @owner finding,
+  reconciled this session → **OI-11** (verified a spec-interpretation call, not a
+  bug; the arrow-legibility residual folds into WI-144's critique — WI-143 keeps
+  Verified).
   [run-state](run-state) is **RUNNING**. WI-144 closes the `dashboard-ux`
   campaign and rejoins the whole spine to G3; then the owner-intake WIs
   (WI-146…151, WI-110) and

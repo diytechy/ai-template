@@ -5291,3 +5291,35 @@ this fold (executed the recommended disposition; removed from `open-items.md`).
 **Handoff.** Run-state **RUNNING**; `docs/next-wi` → **WI-144** (dashboard
 UI-quality pass + the SR-052/053/054 Critique rows — the campaign-closing slice).
 Not pushed (`push-policy: human`).
+
+## 2026-07-14 — Reconcile session-038 REVIEW-A residue (after WI-143 / before WI-144)
+
+Session 038 (REVIEW-A, medium tier, outcome NO-COMMIT) reviewed the WI-143 commit
+range and returned **CHANGES-REQUESTED** with one `@owner`-routed **[MAJOR]**
+finding, but left its verdict file `docs/reviews/038-REVIEW-A.md` **untracked**
+(the recurring NO-COMMIT gap — 034, 036). Reconciled as working-tree residue per
+the session-protocol before starting WI-144:
+
+- **Tracked the artifact.** Committed `038-REVIEW-A.md` so the review record lives
+  in the repo like 003…036-REVIEW-A.
+- **Verified the finding against the code, then filed [OI-11](open-items.md).**
+  The finding — the `cedge` arrow is emitted once per descendable block as a short
+  shaft "terminating at no child," which the reviewer reads as violating SR-056's
+  "one arrow per containment edge" and asks to end each arrow "at the corresponding
+  child" with "a container with multiple children" fixture — presupposes a
+  **co-rendered tree**. But the ratified render is a **drill / layer-swap** view
+  (`gen_trajectory.py` §"SR-051 rev": a container carries `data-descend` → a *child
+  layer id*; descending replaces the layer), so a parent and its children are never
+  in one SVG to point at. In that model each container has exactly one containment
+  edge in its layer ("descend into my decomposition") and the code emits exactly
+  one arrow for it (52 `cedge` = 52 `data-descend`; `test_decomposition_one_arrow_
+  per_containment_edge`) — which **satisfies** SR-056's Done-when. The residual —
+  does a 9px arrow into empty space *read* as containment — is a look-and-feel
+  judgment SR-056 explicitly routes to the SR-052/053/054 Critique rows.
+  Recommendation: **accept the interpretation** (no WI-143 correctness fix); fold
+  the arrow-legibility question into the queued **WI-144** critique; WI-143 keeps
+  its ratified **Verified** status (the OI-10 precedent — a REVIEW-A finding does
+  not un-Verify a ratified slice).
+
+No spine change; no code change; no byte-budgeted file touched. This is
+review-flow bookkeeping, not new product scope. WI-144 build follows.

@@ -13,8 +13,8 @@ _The 2026-07-13 sitting ruled OI-1 (G3 re-attestation — ratified), OI-2
 (single-ratify enablement — accepted), OI-5 (WI-098 — thin) and OI-6 (WI-103 —
 budget + index). The 2026-07-14 sitting ratified OI-8 (the `[v3]-[g2]`
 dashboard-ux batch) and OI-9 (the research-knowledge design spec, as revised) —
-records in the log's Decisions. OI-3 (corrected against git), OI-4, and OI-7
-remain open._
+records in the log's Decisions. OI-3 (corrected against git), OI-4, OI-7, and
+OI-11 (session-038 REVIEW-A disposition) remain open._
 
 ---
 
@@ -66,3 +66,31 @@ remain open._
   evidence.
 - **Recommendation (recorded):** rule only after ≥ 2 campaigns of medium-BUILD
   evidence.
+
+## OI-11 — Review-038 finding against WI-143 / SR-056 (containment arrow)
+
+- **Decision:** disposition the session-038 REVIEW-A **[MAJOR]** finding — the
+  `cedge` containment arrow is emitted once per descendable block as a short
+  shaft inside the parent (terminating at no child), which the reviewer reads as
+  violating SR-056's "one horizontal parent-to-child arrow per containment edge."
+- **Finding verified against the code:** the drill view is a **layer-swap** model
+  (`gen_trajectory.py` §"SR-051 rev": a container carries `data-descend` → a
+  *child layer id*; descending replaces the layer). A parent and its children are
+  never co-rendered in one SVG, so the reviewer's proposed fix (an arrow ending
+  "at the corresponding child"; a fixture with "multiple children" in one layer)
+  is architecturally inapplicable — it presupposes a co-rendered tree, not the
+  ratified drill/descend render. In the drill model each container has exactly
+  one containment edge visible in its layer ("descend into my decomposition"),
+  and the code emits exactly one arrow for it — satisfying SR-056's Done-when
+  ("Each containment edge renders exactly one parent-to-child arrow").
+- **Blast radius:** none to correctness — a spec-interpretation call. The residual
+  is whether a 9px arrow into empty space *reads* as a containment cue, which
+  SR-056 explicitly routes to the SR-052/053/054 Critique rows ("the Critique
+  rows judge the residual look-and-feel").
+- **Options:** (a) accept the interpretation — no WI-143 correctness fix; fold
+  the arrow-legibility question into WI-144's critique scope · (b) treat it as a
+  bug and redesign the decomposition render to co-render parent + children (a new
+  SR; large blast radius — reverses the ratified drill/layer-swap model).
+- **Recommendation:** (a). WI-143 keeps its Verified status (the OI-10 precedent:
+  a REVIEW-A finding does not un-Verify a ratified slice); the arrow's legibility
+  is judged by WI-144's SR-052/053/054 Critique rows, which are next in the loop.
