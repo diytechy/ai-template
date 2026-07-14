@@ -506,6 +506,66 @@ def test_meta_okf_bundle_renders_the_knowledge_graph():
         assert (ROOT / details[cid]["href"]).exists()
 
 
+# --- review 019: the WI-102 per-node <title> tooltip contract, pinned -----------
+
+
+def _view_svg(text, marker):
+    """The first SVG body after `marker` — one rendered view's node markup."""
+    return text.split(marker, 1)[1].split("</svg>", 1)[0]
+
+
+def test_svg_nodes_carry_escaped_title_tooltips(tmp_path):
+    """Review 019 (on WI-102): the tooltip/a11y contract was untested — the one
+    changed assertion made <title> optional, so a regression dropping it from
+    any of the four emitters stayed green. Pin each emitter: every node <g>
+    carries a <title> child, and the tip renders markup-hostile row content
+    escaped."""
+    make_repo(
+        tmp_path,
+        wis_body=(
+            "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
+            "WI-002,Harness <fast & loose>,scripts,SR-001,WI-001,active,harness\n"
+        ),
+    )
+    # a markup-hostile SR title flows into the icicle and the OKF concept graph
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SRS.replace("Core add", "Core add & <check>"), encoding="utf-8"
+    )
+    # the How-SW graph needs the module map + a declared seam (hostile external)
+    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    (tmp_path / "docs" / "requirements" / "interfaces.csv").write_text(
+        IF_HDR + 'IF-001,Provides,src/m,pip & git,"cli",SR-001,v1,Stable,Active,,\n',
+        encoding="utf-8",
+    )
+    assert gen_okf(tmp_path).returncode == 0  # the Knowledge tab's bundle
+    proc = gen(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    text = html_of(tmp_path)
+
+    # arch_icicle: every cell carries a <title>; the SR tip renders escaped.
+    ice = _view_svg(text, 'id="ice"')
+    assert ice.count("<title>") == ice.count('class="cell') > 0
+    assert "<title>SR-001 — Core add &amp; &lt;check&gt;</title>" in ice
+
+    # dag_svg: every WI node carries a <title> = id — escaped title (status).
+    dag = _view_svg(text, 'id="dag-view"')
+    assert dag.count("<title>WI-") == 2
+    assert "<title>WI-002 — Harness &lt;fast &amp; loose&gt; (active)</title>" in dag
+
+    # sw_graph: node tips are kind-suffixed and escaped (module + external).
+    sw = _view_svg(text, 'id="sw"')
+    assert "<title>src/m (module)</title>" in sw
+    assert "<title>pip &amp; git (external)</title>" in sw
+
+    # know_graph: every concept node carries a <title> = id — title (type).
+    know = _view_svg(text, 'id="know"')
+    assert know.count("<title>") == know.count('class="knode"') > 0
+    assert (
+        "<title>SR-001 — Core add &amp; &lt;check&gt; (System Requirement)</title>"
+        in know
+    )
+
+
 # --- WI-073/FB5: the containerized How-SW top view -----------------------------
 
 CONT_ARCH = """# Architecture
