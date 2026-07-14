@@ -78,15 +78,18 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** **OI-8 — the owner's single v3 ratification sitting** at the
-  `[v3]-[g2]` close (run-state **NEEDS-HUMAN**; `single-ratify` defers the phase's
-  one human sign-off to here). The decomposition is committed and the mechanized
-  floor is green; once ratified, `docs/next-wi` → **WI-141** and the v3 dev slices
-  run G2→G3 in series (autonomous after). Parallel alternative the owner may
-  greenlight independently: the off-spine `;`-batch **WI-136;WI-137**. The
-  deferred `main-decomposition` campaign (**WI-080→WI-081**) stays the
-  highest-value refactor but is parked (`deferred`, not queued). Owner items
-  (OI-3/OI-4/OI-7, [open-items.md](open-items.md)) don't block any of these.
+- **Next action:** the off-spine `;`-batch **WI-136;WI-137** (`docs/next-wi` —
+  live console lines · telemetry commit hygiene; independent of v3, one
+  session/one review — dev-slice batching). Run-state **RUNNING**: autonomous
+  off-spine
+  work remains, so the loop does not idle. **OI-8** (the owner's single v3
+  ratification sitting at the `[v3]-[g2]` close, `single-ratify`) gates **only**
+  the v3 dev slices **WI-141→144** — they do **not** auto-run until the owner
+  ratifies (brief: [open-items.md](open-items.md) OI-8). After WI-136;WI-137
+  (then the WI-138 design), when the only remaining work is OI-8-gated the loop
+  stops NEEDS-HUMAN for the sitting. The deferred `main-decomposition` campaign
+  (**WI-080→WI-081**) stays parked (`deferred`, not queued). Owner items
+  (OI-3/OI-4/OI-7) don't block any of these.
 
 ## Scope
 

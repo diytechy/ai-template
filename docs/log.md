@@ -4781,6 +4781,18 @@ WI-141…144 are named).
 
 **Owner sitting due (OI-8).** Under `single-ratify` the one human ratification
 lands at the phase's g2 close — this close. The decomposition is committed and
-the floor is green; `docs/next-wi` → **WI-141** and run-state **NEEDS-HUMAN**
-(ask: ratify the `[v3]-[g2]` batch — [open-items.md](open-items.md) OI-8). The
-v3 dev slices run autonomously after. Not pushed (`push-policy: human`).
+the floor is green; the sitting's brief is [open-items.md](open-items.md) OI-8.
+Not pushed (`push-policy: human`).
+
+**Handoff correction (same session).** The driver first wrote run-state
+**NEEDS-HUMAN** / `docs/next-wi` → WI-141, halting for OI-8. `check_trajectory`'s
+pre-commit guard flagged it: *"NEEDS-HUMAN but actionable queued WI(s)
+WI-136;WI-137;WI-138 … have all hard predecessors done — is the pause still
+real?"* It was not: `single-ratify`'s "autonomous after" gates only **v3's own**
+dev slices (WI-141→144) behind the owner, while **WI-136/137/138 are off-spine,
+owner-triaged, and independent of v3** — autonomous work remains, so a
+walk-away run should not idle. Corrected to run-state **RUNNING**,
+`docs/next-wi` → **WI-136;WI-137** (the off-spine `;`-batch). OI-8 stays a
+pending owner decision gating only the v3 slices; when the loop exhausts the
+off-spine tail, the only remaining work is OI-8-gated and a driver then stops
+NEEDS-HUMAN for the sitting.

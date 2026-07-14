@@ -2,5 +2,4 @@
 # the root agent-resume.* launchers). RUNNING while work remains; a driver
 # writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may
 # carry one `ask:` line naming the act — the stop banner headlines it (WI-127).
-NEEDS-HUMAN
-ask: ratify the [v3]-[g2] dashboard-ux batch (single-ratify's one human sitting at the phase g2 close) — brief in docs/open-items.md OI-8; then re-run and the v3 dev slices WI-141->144 run autonomously.
+RUNNING
