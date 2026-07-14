@@ -4451,3 +4451,32 @@ silent; both advisories fire and never block; soft-edge quiet) — module 21/21.
 Full unfiltered suite: `python -m pytest -q -n auto` → **718 passed, 2 skipped
 in 57.06s**. No spine change, no new SR (WI-126/WI-129 precedent); derived
 gate stays G3. No push (`push-policy: human`).
+
+## 2026-07-13 — Owner intake: six items triaged, deduped, filed (WI-134…138)
+
+**Owner-handed batch** with an explicit no-duplicate instruction; full triage
+in [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md).
+**Dedupe findings:** the drill-down hierarchy already shipped (WI-087/SR-051
+done); the graph-data extensions stay deferred **WI-064** (soft edge from the
+new render work); the critique "hat" mechanism (item 4) **already exists
+end-to-end** (SR-047: a build touching a `Verification=Critique` SR schedules
+a rubric-fed CRITIQUE session) but the spine has **zero Critique SRs** — armed,
+never loaded; TRIP-workflow (item 5, fetched + evaluated) is covered on
+plan/review/memory, its one real export is the **first-class research task**.
+**Filed:** **WI-134** `[v3]-[g1]` + **WI-135** `[v3]-[g2]` — the
+`dashboard-ux` phase batches (items 1/1A/1B/1C: Critique-SR arming + rubrics,
+the ingest/open-items/human process map, decomposition render polish,
+Simulink-style interface wiring; the deeper-layer navigation is drafted as an
+explicit SR-051 rev — the amendment the owner sanctioned at ratification);
+**WI-136** live per-workstream console lines (TTY-only, opt-in, stdlib);
+**WI-137** telemetry commit hygiene + WI-keyed labels (the dangling
+session-021 case, observed live this session); **WI-138** research track +
+durable knowledge/module-spec layer (items 5+6 converge: docs/okf is
+generated-only, so findings/module expectations have no hand-owned home —
+design WI, spec-first, WI-088 pattern). v3 dev slices are deliberately NOT
+pre-filed (the g2 batch defines them). No spine change today — the v3 SRs
+draft inside WI-134, not at filing; derived gate stays G3.
+
+**Verification.** `check_trajectory --strict` clean (138 WIs, acyclic; R-B
+satisfied for all five new ids); status.md 82 lines (S-1 budget 120);
+`check_docs` 0 broken. Commit bar at commit. No push (`push-policy: human`).

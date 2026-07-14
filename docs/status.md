@@ -51,6 +51,13 @@ home elsewhere — don't restate it here:
     the masters' provenance comments to log/archive pointers) then **WI-103**
     (PROCESS_OPTIONS byte budget + applies-when index; split deferred) —
     rulings in [log.md](log.md) Decisions.
+- **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
+  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md);
+  sequenced behind the In-flight batch):_ **WI-134** `[v3]-[g1]` + **WI-135**
+  `[v3]-[g2]` (the dashboard-ux phase: UI critique arming, ingest/human
+  process map, render polish, interface-wired diagrams) · **WI-136** (live
+  console lines) · **WI-137** (telemetry commit hygiene) · **WI-138**
+  (research track + durable knowledge layer, design)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-110** in
