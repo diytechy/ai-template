@@ -1,0 +1,484 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 023
+# date: 2026-07-14 00:28
+# phase: REVIEW-A
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 464
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+[0m# [0mTodos
+[•] Read governing review guidance and identify work-item diff/spec scope
+[ ] Inspect changed requirements and relevant registries/specs
+[ ] Run validation harness and analyze findings
+[ ] Write independent review verdict
+[0m
+I’ll independently establish the reviewed change range and governing requirements, then run the repository checks before writing the prescribed verdict.
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m✱ [0mGlob "docs/specs/**/*"[90m in . · 15 matches[0m
+[0m✱ [0mGlob "docs/requirements/**/*"[90m in . · 6 matches[0m
+[0m→ [0mRead CLAUDE.md
+[0m→ [0mRead AGENTS.md
+[0m
+[0m$ [0mgit status --short; git log --oneline -15; git diff --stat HEAD~1..HEAD; git diff --name-status HEAD~1..HEAD; git diff --find-renames HEAD~1..HEAD
+M docs/iteration_index.md
+?? docs/iteration/022-20260713-234644.log
+3ebb49e Batch close WI-098;WI-103: log entry, status next-action, next-wi=WI-134
+349c718 WI-103: byte-watch PROCESS_OPTIONS + add an applies-when index table
+3cdccbf WI-098: thin history-provenance comments in the kit masters
+6ced435 Owner intake 2026-07-13: six items triaged + deduped, WI-134..138 filed
+4c53762 Scratch updates
+49deccf WI-133: dev-slice batching - ;-joined next-wi batch, one session one review
+f4b8a9f Commit dangling agent-loop telemetry from interrupted session 021
+8b05e48 GATE: G3 re-attestation - the owner sitting rules OI-1/2/5/6, corrects OI-3
+a09f4bd OI-1: group the whole SR->LLR->TC chain under attestation in one table
+42b7448 WI-132: status-surface lint in check_docs (campaign close)
+cc353df WI-131: ship the open-items surface - OPEN_ITEMS template + scaffold
+a77a45f WI-130: open-items.md - the owner decision surface, self-applied
+a7d187c status.md: restore forward-only contract (329 -> 77 lines)
+5b3e4ef WI-129: LLR/TC status-coherence warn in trace.py (warn-only, non-gating)
+ddcf4d9 WI-129: File the LLR/TC status-coherence warn (queued) + re-arm the loop
+ PROJECT_STATE.html |  2 +-
+ docs/log.md        | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ docs/next-wi       |  2 +-
+ docs/status.md     | 32 +++++++++++++++++---------------
+ 4 files changed, 71 insertions(+), 17 deletions(-)
+M	PROJECT_STATE.html
+M	docs/log.md
+M	docs/next-wi
+M	docs/status.md
+diff --git a/PROJECT_STATE.html b/PROJECT_STATE.html
+index 4ebbc33..cfb5fd9 100644
+--- a/PROJECT_STATE.html
++++ b/PROJECT_STATE.html
+@@ -123,7 +123,7 @@
+     <section class="hero">
+       <h1>Vision</h1>
+       <p class="vision">A reusable starting point for building maintainable, requirement-traced projects with AI agents and humans working from the same playbook. The goal: code and analytics that stay readable and correct over the long run, built test-first with explicit approval gates so you can trust what ships.</p>
+-      <p class="asof">state as of commit 3cdccbf · 2026-07-14</p>
++      <p class="asof">state as of commit 349c718 · 2026-07-14</p>
+ 
+       <div class="cards">
+         <div class="card">
+diff --git a/docs/log.md b/docs/log.md
+index 5c8b3b9..2408771 100644
+--- a/docs/log.md
+
+[... 1417 line(s) elided — full stream in out/run-logs/ ...]
+
++++ b/project-trajectory/scripts/gen_release_checklist.py
+@@ -85,7 +85,7 @@ def read_stakeholder_needs(md_path):
+ def _utf8_console():
+     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
+     non-ASCII path / title / registry cell can't raise UnicodeEncodeError on a
+-    legacy Windows cp1252 console (REVIEW_GRIND_FULL C5; verbatim across the
++    legacy Windows cp1252 console (verbatim across the
+     kit). Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
+     for s in (sys.stdout, sys.stderr):
+         try:
+diff --git a/project-trajectory/scripts/gen_trajectory.py b/project-trajectory/scripts/gen_trajectory.py
+index 9e275b0..9cd60cf 100644
+--- a/project-trajectory/scripts/gen_trajectory.py
++++ b/project-trajectory/scripts/gen_trajectory.py
+@@ -71,8 +71,7 @@ from pathlib import Path
+ # bootstrap.py precedent). Run as a script/subprocess, the sibling resolves via
+ # sys.path[0] (this file's own directory); loaded another way — an in-process
+ # test through importlib, a downstream tool importing the module — that entry is
+-# absent, so fall back to adding this file's directory explicitly. See
+-# THREAD_52_REVIEW.md F5.
++# absent, so fall back to adding this file's directory explicitly.
+ try:
+     import check_trajectory as ct
+ except ImportError:
+@@ -112,8 +111,8 @@ def _sn_rows(root):
+ 
+     Kept byte-for-byte in sync with gen_okf.sn_rows (a small stable helper
+     duplicated per the F5 rule, not shared) — the two once drifted (one kept
+-    `-000`, one didn't), which rendered a phantom SN-000 root in the icicle
+-    (REVIEW_GRIND_FULL C6). Change both together."""
++    `-000`, one didn't), which rendered a phantom SN-000 root in the icicle.
++    Change both together."""
+     md = root / "docs/requirements/stakeholder-needs.md"
+     rows = []
+     if not md.exists():
+@@ -247,8 +246,8 @@ def arch_icicle(root):
+     # only ever called SN->SR, SR->LLR, LLR->TC, SR->TC (see the tiers above), so
+     # no input — pathological or not — can deepen it past the SN->SR->LLR->TC
+     # spine. They therefore need no iterative rewrite or depth guard, unlike
+-    # `_dag_ranks` / `check_trajectory._cycles` which walk the unbounded WI chain
+-    # (THREAD_52_REVIEW.md F4). Kept recursive so this block stays a faithful port
++    # `_dag_ranks` / `check_trajectory._cycles` which walk the unbounded WI chain.
++    # Kept recursive so this block stays a faithful port
+     # of the proven gilbert icicle; if that port is ever hardened upstream (for a
+     # deeper tree there), mirror it — here it is provably safe.
+     weight = {}
+@@ -418,7 +417,7 @@ def _dag_ranks(wis, pred_map):
+ 
+     Iterative post-order (explicit stack), not recursion: a deep dependency chain
+     would blow CPython's ~1000-frame limit and raise ``RecursionError`` instead of
+-    a rendered dashboard (THREAD_52_REVIEW.md F4). ``on_path`` tracks the nodes on
++    a rendered dashboard. ``on_path`` tracks the nodes on
+     the current DFS branch; in a DAG no predecessor is ever on the path, so the
+     guard is inert for valid input, and a stray back-edge (a cycle that slipped
+     past validation) degrades to no constraint rather than spinning — the same
+@@ -2416,7 +2415,7 @@ def main():
+         out.parent.mkdir(parents=True, exist_ok=True)
+         # newline="\n" via open() (write_text(newline=) is 3.10+, floor is 3.8):
+         # LF on every OS, so byte-stability doesn't rest on a downstream
+-        # .gitattributes eol=lf rule surviving (REVIEW_GRIND_FULL C7).
++        # .gitattributes eol=lf rule surviving.
+         with out.open("w", encoding="utf-8", newline="\n") as fh:
+             fh.write(generated)
+         print("gen_trajectory: wrote {}".format(OUT_HTML))
+diff --git a/project-trajectory/scripts/trace.py b/project-trajectory/scripts/trace.py
+index f983be5..5c2c946 100644
+--- a/project-trajectory/scripts/trace.py
++++ b/project-trajectory/scripts/trace.py
+@@ -152,8 +152,8 @@ Always (independent of --strict-schema), structural integrity is checked:
+       The combined `SR;LLR` citation is a convenience so one test discharges both
+       the "SR needs a TC" and "LLR needs a TC" rules, but it must not contradict
+       the SR<->LLR link recorded canonically on the LLR's SR-Refs — an incoherent
+-      pairing is wrong at any stage, like a malformed id (IMPROVEMENT_PLAN.md
+-      Thread 50). A TC citing only LLRs (no SR) has no SR to contradict and is
++      pairing is wrong at any stage, like a malformed id. A TC citing only LLRs
++      (no SR) has no SR to contradict and is
+       left to the orphan rules
+ These join `--strict`'s failure set like orphans do. `--strict-integrity` fails
+ on *only* this integrity class: it is the always-valid floor the pre-commit hook
+@@ -171,8 +171,8 @@ starts green.
+       AcceptanceCriteria, Priority, Verification, Status; LLR: LLR-ID, SR-Refs,
+       Title, Module, CodeSymbol, Detail, Status; TC: TC-ID, Verifies, Level,
+       Method, Tier, Expected, Automated, Status);
+-    - a TC claiming Automated=Yes cites its Evidence (Thread 51, owner-ruled
+-      2026-07-09): the `Evidence` column names the concrete test — a pytest
++    - a TC claiming Automated=Yes cites its Evidence: the `Evidence` column
++      names the concrete test — a pytest
+       node, a script path, or a procedure-doc link. Inspection-only text, never
+       a mechanized resolve (node ids aren't filesystem paths). Conditional, not
+       a flat required field: Automated=No/blank rows may leave it empty, and
+@@ -538,7 +538,7 @@ def integrity_findings(label, raw_rows):
+ 
+ 
+ def triangle_findings(tcs, llrs):
+-    """SR/LLR citation coherence (IMPROVEMENT_PLAN.md Thread 50). A TC may cite an
++    """SR/LLR citation coherence. A TC may cite an
+     SR and an LLR together so one test discharges both the "SR needs a TC" and
+     "LLR needs a TC" rules; the SR<->LLR relationship itself is recorded
+     canonically on the LLR's SR-Refs. This keeps the derived citation honest: when
+@@ -696,7 +696,7 @@ def schema_findings(label, rows):
+                     f"{label} {rid} has {col}={val!r} (allowed: "
+                     f"{', '.join(sorted(allowed))})"
+                 )
+-        # Thread 51 (owner-ruled 2026-07-09): a TC claiming Automated=Yes must
++        # A TC claiming Automated=Yes must
+         # cite its Evidence (pytest node / path / procedure link) — a
+         # claimed-automated test with no cited location is a soft false-green.
+         # Conditional on the claim, so it can't live in REQUIRED_FIELDS; a
+@@ -1280,7 +1280,7 @@ def main():
+         for f in structure_findings(p, p.relative_to(docs.parent).as_posix())
+     ]
+     integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
+-    # SR/LLR citation coherence (Thread 50): a TC that cites an SR and an LLR
++    # SR/LLR citation coherence: a TC that cites an SR and an LLR
+     # together must not pair an LLR with an SR it does not decompose. Integrity-
+     # class (wrong at any stage), so it joins the --strict-integrity floor.
+     integrity += triangle_findings(tcs, llrs)
+commit 349c718d77379c5c46e8a7a8096e288f2f090dcc
+Author: / <peterandersjohnson@outlook.com>
+Date:   Tue Jul 14 00:13:05 2026 -0500
+
+    WI-103: byte-watch PROCESS_OPTIONS + add an applies-when index table
+    
+    M5 from the 2026-07-12b review: PROCESS_OPTIONS.md (now ~131 KB, 2x the core
+    it optionalizes) grew unbudgeted while PROCESS.md/AGENTS.template.md are
+    guarded - the bloat just moved next door - and an adopter deciding WHETHER a
+    layer applies had to read the whole book. Per the OI-6 ruling (log.md
+    2026-07-13): budget + index now; the doc split is deferred until size forces it.
+    
+    (1) Applies-when index: a 22-row table at the top of PROCESS_OPTIONS.md, one
+    row per `##` layer in document order - Layer | Applies when (skip the section
+    if not) | What it adds - so the common path is scan one table, read one section.
+    
+    (2) Byte budget (watched, the PROCESS.md model - not a hard test, which would
+    fight legitimate additions to a doc holding every opt-in layer): registered
+    PROCESS_OPTIONS.md in the byte-budget-guard skill with baseline 134,965,
+    reworded the intro + expansion-homes note, extended the wc command; synced the
+    2 agent copies (bootstrap --sync) and regenerated skills/INDEX.csv. A Byte
+    budget note in the doc points at the skill and records the deferred split.
+    
+    Byte delta (flagged): PROCESS_OPTIONS.md 130,964 -> 134,965 (+4,001 = the index
+    table; establishes the watched baseline). AGENTS.template.md/PROCESS.md
+    unchanged. Commit bar: smoke 563 passed/2 skipped, check_docs --stale exit 0,
+    skills-sync 10/10.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+diff --git a/.agents/skills/byte-budget-guard/SKILL.md b/.agents/skills/byte-budget-guard/SKILL.md
+index 32f3189..8080ba9 100644
+--- a/.agents/skills/byte-budget-guard/SKILL.md
++++ b/.agents/skills/byte-budget-guard/SKILL.md
+@@ -1,6 +1,6 @@
+ ---
+ name: byte-budget-guard
+-description: Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md) to confirm they stay within their hard byte budgets and to report the delta.
++description: Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md, PROCESS_OPTIONS.md) to confirm they stay within their byte budgets and to report the delta.
+ stacks: [any]
+ domains: [any]
+ phases: [dev, gate]
+@@ -10,10 +10,12 @@ scope: this-repo
+ 
+ # Byte-budget guard (this template repo)
+ 
+-This repo's shipped guides have **hard byte budgets** because a downstream
+-`AGENTS.md` is truncated by Gemini near ~12k chars and `PROCESS.md` is the
+-load-bearing core we keep lean. Growing them silently is a recurring failure
+-mode here. Check before you edit and again before you commit.
++This repo's shipped guides have **byte budgets** because a downstream
++`AGENTS.md` is truncated by Gemini near ~12k chars, `PROCESS.md` is the
++load-bearing core we keep lean, and `PROCESS_OPTIONS.md` (the opt-in expansion
++home) will otherwise bloat the adopter's reading cost silently — the growth
++just moves next door. Growing any of them silently is a recurring failure mode
++here. Check before you edit and again before you commit.
+ 
+ ## Budgets
+ 
+@@ -21,16 +23,19 @@ mode here. Check before you edit and again before you commit.
+ |---|---|---|
+ | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
+ | `project-trajectory/PROCESS.md` | **watched** (baseline **59,827** as of 2026-07-13/WI-101; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
++| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **134,965** as of 2026-07-14/WI-103; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+ 
+-`PROCESS_OPTIONS.md`, `ADOPTING.md`, and `EXAMPLE.md` are the **expansion homes**:
+-push detail there instead of growing the two budgeted files.
++`ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
++push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
++`PROCESS_OPTIONS.md` is also an expansion home, but — watched itself now — its
++growth is flagged too, not free.
+ 
+ ## Procedure
+ 
+ 1. **Record the before-size** of any budgeted file you will touch:
+ 
+    ```
+-   wc -c project-trajectory/AGENTS.template.md project-trajectory/PROCESS.md
++   wc -c project-trajectory/AGENTS.template.md project-trajectory/PROCESS.md project-trajectory/PROCESS_OPTIONS.md
+    ```
+ 
+ 2. Make the edit. Prefer net-zero wording; if a rule must be added to
+diff --git a/.claude/skills/byte-budget-guard/SKILL.md b/.claude/skills/byte-budget-guard/SKILL.md
+index 32f3189..8080ba9 100644
+--- a/.claude/skills/byte-budget-guard/SKILL.md
++++ b/.claude/skills/byte-budget-guard/SKILL.md
+@@ -1,6 +1,6 @@
+ ---
+ name: byte-budget-guard
+-description: Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md) to confirm they stay within their hard byte budgets and to report the delta.
++description: Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md, PROCESS_OPTIONS.md) to confirm they stay within their byte budgets and to report the delta.
+ stacks: [any]
+ domains: [any]
+ phases: [dev, gate]
+@@ -10,10 +10,12 @@ scope: this-repo
+ 
+ # Byte-budget guard (this template repo)
+ 
+-This repo's shipped guides have **hard byte budgets** because a downstream
+-`AGENTS.md` is truncated by Gemini near ~12k chars and `PROCESS.md` is the
+-load-bearing core we keep lean. Growing them silently is a recurring failure
+-mode here. Check before you edit and again before you commit.
++This repo's shipped guides have **byte budgets** because a downstream
++`AGENTS.md` is truncated by Gemini near ~12k chars, `PROCESS.md` is the
++load-bearing core we keep lean, and `PROCESS_OPTIONS.md` (the opt-in expansion
++home) will otherwise bloat the adopter's reading cost silently — the growth
++just moves next door. Growing any of them silently is a recurring failure mode
++here. Check before you edit and again before you commit.
+ 
+ ## Budgets
+ 
+@@ -21,16 +23,19 @@ mode here. Check before you edit and again before you commit.
+ |---|---|---|
+ | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
+ | `project-trajectory/PROCESS.md` | **watched** (baseline **59,827** as of 2026-07-13/WI-101; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
++| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **134,965** as of 2026-07-14/WI-103; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+ 
+-`PROCESS_OPTIONS.md`, `ADOPTING.md`, and `EXAMPLE.md` are the **expansion homes**:
+-push detail there instead of growing the two budgeted files.
++`ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
++push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
++`PROCESS_OPTIONS.md` is also an expansion home, but — watched itself now — its
++growth is flagged too, not free.
+ 
+ ## Procedure
+ 
+ 1. **Record the before-size** of any budgeted file you will touch:
+ 
+    ```
+-   wc -c project-trajectory/AGENTS.template.md project-trajectory/PROCESS.md
++   wc -c project-trajectory/AGENTS.template.md project-trajectory/PROCESS.md project-trajectory/PROCESS_OPTIONS.md
+    ```
+ 
+ 2. Make the edit. Prefer net-zero wording; if a rule must be added to
+diff --git a/project-trajectory/PROCESS_OPTIONS.md b/project-trajectory/PROCESS_OPTIONS.md
+index 6e314ac..102c828 100644
+--- a/project-trajectory/PROCESS_OPTIONS.md
++++ b/project-trajectory/PROCESS_OPTIONS.md
+@@ -9,6 +9,45 @@ applies-when doesn't match your scope.
+ 
+ Section headings mirror the core-doc sections that point here.
+ 
++## Applies-when index
++
++Scan this table once, then read only the sections whose trigger matches your
++scope — **skip a layer if its "applies when" doesn't fit** (nothing here is
++required for the minimum profile). Rows are in document order; each maps to the
++`##` section of the same name below.
++
++| Layer | Applies when — skip the section if not | What it adds |
++|---|---|---|
++| Proportionality doctrine | **always** — the mindset that frames how hard every layer below is applied | nothing (tells you when *not* to reach for machinery) |
++| Derived gate model | **always**, once you use gates — the default: the gate is computed from artifact states, not declared | `docs/gate` (generated) + `derive_gate.py` |
++| Phased delivery | a roadmap ships v1 before v2/v3 (a single-shot deliverable skips it) | a `Phase` column on the spine + a per-phase gate |
++| Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
++| Gate authority levels | a repo declares a non-default `docs/gate-policy` | `docs/gate-policy` + an attestation / deviation register |
++| Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
++| Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py`, `docs/run-*`, `agents.csv`, the launchers |
++| Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
++| Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/guardrails-policy` |
++| Enforcement audit | your process outgrew one reader's head and you want to know which rules actually bind | `docs/enforcement-audit.md` |
++| §7 boundary notes | onboarding contributors, wiring a workstation, or a contested tooling boundary | prose (setup-script + boundary calls) |
++| Skills layer | an AI agent works the repo and you want it to load reusable skills | `skills/` + a per-agent fan-out |
++| Trajectory / work-items layer | you want to track **how** work executes — cross-track order, %-complete | `work-items.csv` + `PROJECT_STATE.html` + `gen_trajectory.py` |
++| Commit identity & privacy | you must keep a real, contactable identity out of published commits | `docs/privacy-check` + commit-identity config |
++| §8 purchased parts | the product incorporates purchased/external parts it buys rather than builds | a parts registry (`PB`/`PART`) |
++| Binary assets | the project ships unavoidably-binary deliverables (art, audio, video) | an assets registry (provenance / license / hash) |
++| Intra-repo interfaces & the architecture graph | more than one module, and you want the arch view to show how they connect | an `IF-###` seam registry + the `architecture.md` graph |
++| Component layer | you want a durable home for set-grained knowledge & lifecycle (a subsystem, an assembly) | a `CMP` component registry |
++| §9 NFR checklist | deciding which non-functional concerns a project must consider at G1 | an NFR checklist |
++| §9 perf comparator | you have captured `PB-###` budgets you want tracked over time | a perf comparator over `PB` rows |
++| §10 several modules, one repo | a repo grows distinct sub-systems that still build and release as one (scale rung 2) | a module map |
++| Parallel tracks (multi-lane operation) | one repo carries multiple concurrent work lanes | per-lane `status.md` + a tracks registry |
++
++**Byte budget.** This file is **byte-watched** the way [`process.md`](process.md)
++is: its baseline lives in the `byte-budget-guard` skill, and any growth must be
++**flagged** with a byte delta + reason in the session/WI log — so the opt-in
++surface can't bloat silently the way the core is protected from. The **split**
++of the two spec-sized layers (Unattended operation, Trajectory) into their own
++reference docs is **deferred** until the file's size actually forces it.
++
+ ---
+ 
+ ## Proportionality doctrine
+diff --git a/project-trajectory/skills/INDEX.csv b/project-trajectory/skills/INDEX.csv
+index 5e3baee..67ec63b 100644
+--- a/project-trajectory/skills/INDEX.csv
++++ b/project-trajectory/skills/INDEX.csv
+@@ -1,5 +1,5 @@
+ name,scope,stacks,domains,phases,tags,description
+-byte-budget-guard,this-repo,any,any,dev gate,byte-budget agents-md process-md docs,"Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md) to confirm they stay within their hard byte budgets and to report the delta."
++byte-budget-guard,this-repo,any,any,dev gate,byte-budget agents-md process-md docs,"Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md, PROCESS_OPTIONS.md) to confirm they stay within their byte budgets and to report the delta."
+ downstream-resync,kit,python node powershell go rust any,any,dev release,adopting re-sync kit-version upgrade migration,"Use when upgrading a repo that adopted this kit to a newer kit version — walk ADOPTING.md section 6 to diff from the recorded kit commit, overwrite the kit-owned files, preserve your own, and re-stamp."
+ gate-advance,kit,python node powershell go rust any,any,gate release,gates g1 g2 g3 attest verification sign-off,"Use when moving a project honestly from one gate to the next (G1 to G2 to G3) — what each gate requires, how ratification works as a reviewed Status-change commit (docs/gate is DERIVED from artifact states, regenerated by derive_gate.py, not hand-set), how to record human attestation with Attest, and how the attested-vs-mechanized verification split is reported."
+ registry-hygiene,kit,python node powershell go rust any,any,dev gate,traceability trace registries orphans schema,"Use when the traceability registries (SN/SR/LLR/TC and the off-spine PB/PART/ASSET/REPO/CMP) need checking or fixing — run trace.py/check.py with the right flags for the current gate, read the orphan/integrity/schema findings, and correct them."
+diff --git a/project-trajectory/skills/byte-budget-guard/SKILL.md b/project-trajectory/skills/byte-budget-guard/SKILL.md
+index 32f3189..8080ba9 100644
+--- a/project-trajectory/skills/byte-budget-guard/SKILL.md
++++ b/project-trajectory/skills/byte-budget-guard/SKILL.md
+@@ -1,6 +1,6 @@
+ ---
+ name: byte-budget-guard
+-description: Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md) to confirm they stay within their hard byte budgets and to report the delta.
++description: Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md, PROCESS_OPTIONS.md) to confirm they stay within their byte budgets and to report the delta.
+ stacks: [any]
+ domains: [any]
+ phases: [dev, gate]
+@@ -10,10 +10,12 @@ scope: this-repo
+ 
+ # Byte-budget guard (this template repo)
+ 
+-This repo's shipped guides have **hard byte budgets** because a downstream
+-`AGENTS.md` is truncated by Gemini near ~12k chars and `PROCESS.md` is the
+-load-bearing core we keep lean. Growing them silently is a recurring failure
+-mode here. Check before you edit and again before you commit.
++This repo's shipped guides have **byte budgets** because a downstream
++`AGENTS.md` is truncated by Gemini near ~12k chars, `PROCESS.md` is the
++load-bearing core we keep lean, and `PROCESS_OPTIONS.md` (the opt-in expansion
++home) will otherwise bloat the adopter's reading cost silently — the growth
++just moves next door. Growing any of them silently is a recurring failure mode
++here. Check before you edit and again before you commit.
+ 
+ ## Budgets
+ 
+@@ -21,16 +23,19 @@ mode here. Check before you edit and again before you commit.
+ |---|---|---|
+ | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
+ | `project-trajectory/PROCESS.md` | **watched** (baseline **59,827** as of 2026-07-13/WI-101; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
++| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **134,965** as of 2026-07-14/WI-103; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+ 
+-`PROCESS_OPTIONS.md`, `ADOPTING.md`, and `EXAMPLE.md` are the **expansion homes**:
+-push detail there instead of growing the two budgeted files.
++`ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
++push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
++`PROCESS_OPTIONS.md` is also an expansion home, but — watched itself now — its
++growth is flagged too, not free.
+ 
+ ## Procedure
+ 
+ 1. **Record the before-size** of any budgeted file you will touch:
+ 
+    ```
+-   wc -c project-trajectory/AGENTS.template.md project-trajectory/PROCESS.md
++   wc -c project-trajectory/AGENTS.template.md project-trajectory/PROCESS.md project-trajectory/PROCESS_OPTIONS.md
+    ```
+ 
+ 2. Make the edit. Prefer net-zero wording; if a rule must be added to
+[0m
+[0m$ [0mgit status --short; git diff -- docs/iteration_index.md; git diff -- docs/iteration/022-20260713-234644.log
+M docs/iteration_index.md
+?? docs/iteration/022-20260713-234644.log
+warning: in the working copy of 'docs/iteration_index.md', CRLF will be replaced by LF the next time Git touches it
+diff --git a/docs/iteration_index.md b/docs/iteration_index.md
+index e66a6f1..20ed644 100644
+--- a/docs/iteration_index.md
++++ b/docs/iteration_index.md
+@@ -29,3 +29,4 @@ operation")._
+ | 019 | 2026-07-13 17:55 | REVIEW-A | gpt-5.6-terra | NO-COMMIT | — | — | — | 295 | — | — | — | — | [019-20260713-175026.log](iteration/019-20260713-175026.log) |
+ | 020 | 2026-07-13 18:11 | BUILD | gpt-5.6-terra | NEEDS-HUMAN | 166d080..24c3ad4 | — | — | 956 | — | — | — | — | [020-20260713-175532.log](iteration/020-20260713-175532.log) |
+ | 021 | 2026-07-13 20:40 | BUILD | opus | NEEDS-HUMAN | ddcf4d9..5b3e4ef | 115+36075 | 3.7873385000000006 | 1743 | 806 | 67 | 12.0 | 59k | [021-20260713-201146.log](iteration/021-20260713-201146.log) |
++| 022 | 2026-07-14 00:21 | BUILD | opus | COMMITTED | 6ced435..3ebb49e | 8536+120381 | 12.059868000000003 | 2061 | 1705 | 184 | 9.3 | 71k | [022-20260713-234644.log](iteration/022-20260713-234644.log) |
+[0m
+The full derived-G3 harness passes: `686 passed, 34 skipped`, 91.28% coverage, zero traceability or integrity findings, and all generated artifacts plus the 10 skill copies are current. I found one gap in the new byte-watch workflow: its procedure and report template still omit `PROCESS_OPTIONS.md`, despite making that file’s change reporting mandatory.
+[0m# [0mTodos
+[✓] Read governing review guidance and identify work-item diff/spec scope
+[✓] Inspect changed requirements and relevant registries/specs
+[✓] Run validation harness and analyze findings
+[•] Write independent review verdict
+[0m
+I’m recording the independent verdict with the required single finding and machine-readable verdict line.
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Read governing review guidance and identify work-item diff/spec scope
+[✓] Inspect changed requirements and relevant registries/specs
+[✓] Run validation harness and analyze findings
+[✓] Write independent review verdict
+[0m
+Review written to `docs/reviews/023-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED` with 1 MAJOR finding.
+
+Verified: full G3 harness passed (`686 passed, 34 skipped`, 91.28% coverage); traceability reports zero orphans and integrity findings.
