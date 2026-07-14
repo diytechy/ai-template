@@ -5228,3 +5228,66 @@ commit bar).
 
 **Handoff.** Run-state **RUNNING**; `docs/next-wi` → **WI-143** (SR-056
 decomposition render polish, folding OI-10). Not pushed (`push-policy: human`).
+
+## 2026-07-14 — Reconcile session-036 REVIEW-A residue (before WI-143)
+
+Session 036 (REVIEW-A, outcome NO-COMMIT) reviewed the WI-142 commit range and
+returned **APPROVE with 0 findings**, but left its verdict file
+`docs/reviews/036-REVIEW-A.md` **untracked** (the same NO-COMMIT gap as session
+034). Reconciled as working-tree residue per the session-protocol before
+starting WI-143: **tracked the artifact** so the review record lives in the repo
+like 003…034-REVIEW-A. No findings ⇒ no OI to file. No spine change, no code
+change, no byte-budgeted file touched — review-flow bookkeeping only.
+
+## 2026-07-14 — WI-143 [v3] dev slice: decomposition render polish (SR-056) + OI-10 folded
+
+The third v3 dev slice (`dashboard-ux`, G2). Polished the tiered decomposition
+render (`gen_trajectory.py`, the shared `_drill_layer_svg` behind both the When
+and How-SW drill views) against SR-056, and folded the two OI-10 findings.
+
+- **Right-sized columns (SR-056).** A drill layer's column is now sized to its
+  widest member's content (`_tier_col_width`: max of label vs. sub width in fixed
+  per-char px + `TIER_COL_PAD`), clamped to `[TIER_COL_MIN, MAX_TIER_COL]` — the
+  declared bound `MAX_TIER_COL` (the former uniform 172) is the cap, and a
+  content-light layer renders **narrower**, replacing the uniform column the
+  owner called wasteful. Integer/fixed ⇒ byte-deterministic.
+- **Explicit containment arrows (SR-056).** Each descend container renders
+  **exactly one** horizontal parent→child arrow (`class="cedge"`, accent-coloured
+  vs. the muted dependency wire, top-right of the block) so containment is
+  visible, not merely implied by the descend interaction. Whole-dashboard count:
+  52 `cedge` = 52 `data-descend`.
+- **Persistent hover highlight (SR-056).** The drill controller now keys a
+  highlight to the last-hovered/focused block (`data-node` on every block →
+  `data-hl` on the drill, the shared `.hl` amber idiom); no `mouseleave`/
+  `mouseout` clear ⇒ no flash-on-exit.
+- **OI-10 [MAJOR] fold.** The leaf `wi_block` hover title now carries the
+  delivery Phase (`… (status) · <phase>`), so it stays visible when the phase
+  tier is flat (≤3 phases) but a workstream tier drills in — closing the
+  SR-051 "surfaces each work item Phase" gap on that path.
+- **OI-10 [MINOR] fold.** Reconciled the threshold wording across
+  **SR-051 / LLR-052 / TC-052**: the `>3` rule governs the **When-view** phase→
+  workstream tiers; the **How-SW** view containerizes components via the WI-073
+  idiom **bounded above at `TOP_VIEW_MAX`** (not a `>3` gate — the renderer
+  containerizes whenever a component holds a module). Prose-only; no behaviour
+  change, so the ratified SR-051/LLR-052/TC-052 **Verified** status stands.
+
+**Spine.** SR-056 / LLR-057 / TC-057 **Planned → Verified** (the g2 batch
+pre-minted LLR-057/TC-057). Three TC-057 tests pin SR-056
+(`test_decomposition_one_arrow_per_containment_edge`,
+`::test_tier_column_honors_declared_width_bound`,
+`::test_persistent_hover_highlight_keyed_to_last_node`) plus one OI-10 case
+(`test_leaf_wi_block_surfaces_delivery_phase`). Phase v3 **stays G2** (min over
+its SRs — SR-052/053/054 Critique remain Planned until WI-144); overall derived
+gate unchanged at **G2**. SN=24 SR=56 LLR=57 TC=57, orphans=0.
+
+**Deviation:** none. `gen_trajectory.py` is not budget-watched; no budgeted doc
+touched. Regenerated `PROJECT_STATE.html` + `docs/gate` (still G2, `--check`
+clean). Smoke: **582 passed, 2 skipped in 49.45s**; `check_docs --stale` OK (0
+broken). `gen_trajectory` module: **64/64**. Gate bar (`check.py --gate`)
+deferred to the `dashboard-ux` campaign close (WI-144), per the
+mid-campaign-slice rule (a slice ends at the commit bar). OI-10 is **closed** by
+this fold (executed the recommended disposition; removed from `open-items.md`).
+
+**Handoff.** Run-state **RUNNING**; `docs/next-wi` → **WI-144** (dashboard
+UI-quality pass + the SR-052/053/054 Critique rows — the campaign-closing slice).
+Not pushed (`push-policy: human`).

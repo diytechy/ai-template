@@ -1070,6 +1070,71 @@ def test_when_view_breadcrumb_restores_parent(tmp_path):
     assert "trail=trail.slice(0,i+1)" in view  # crumb click restores the ancestor
 
 
+# --- SR-056 (WI-143): the decomposition render-polish contracts ------------------
+
+
+def test_decomposition_one_arrow_per_containment_edge(tmp_path):
+    # Each descend container (a containment edge) renders EXACTLY one horizontal
+    # parent->child arrow (class="cedge"), making containment explicit rather than
+    # implied by the descend interaction alone.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    phase_layer = _layer_with(html_of(tmp_path), 'data-tier="phase"')
+    containers = phase_layer.count("data-descend=")  # 4 phase containers
+    assert containers == 4
+    assert phase_layer.count('class="cedge"') == containers  # one arrow each, no more
+
+
+def test_tier_column_honors_declared_width_bound(tmp_path):
+    # The tier column is a declared value (MAX_TIER_COL), not an adjective: every
+    # block honours it, and a content-light layer renders NARROWER than the bound
+    # (right-sized, not the former uniform column).
+    gt = load_script("gen_trajectory")
+    assert isinstance(gt.MAX_TIER_COL, int) and gt.MAX_TIER_COL > 0
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    widths = [
+        int(w)
+        for w in re.findall(
+            r'<rect x="[\d.]+" y="[\d.]+" width="(\d+)" height="\d+" rx="8"',
+            html_of(tmp_path),
+        )
+    ]
+    assert widths  # blocks render
+    assert all(w <= gt.MAX_TIER_COL for w in widths)  # never exceeds the bound
+    assert any(w < gt.MAX_TIER_COL for w in widths)  # right-sized where content allows
+
+
+def test_persistent_hover_highlight_keyed_to_last_node(tmp_path):
+    # The persistent-highlight contract: every block is keyed by a data-node id; the
+    # controller records the last-hovered/focused node (data-hl) and never clears on
+    # exit (no mouseleave/mouseout in the drill controller) -> no flash-on-exit.
+    gt = load_script("gen_trajectory")
+    assert "addEventListener('mouseover'" in gt.DRILL_SCRIPT
+    assert "setAttribute('data-hl'" in gt.DRILL_SCRIPT  # keyed to the last node
+    assert "mouseleave" not in gt.DRILL_SCRIPT and "mouseout" not in gt.DRILL_SCRIPT
+    assert ".block.hl" in gt.DRILL_STYLE  # the persistent highlight style
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    view = html_of(tmp_path)
+    assert re.search(r'class="block[^"]*"[^>]*data-node="', view)  # blocks are keyed
+
+
+def test_leaf_wi_block_surfaces_delivery_phase(tmp_path):
+    # OI-10 fix: the leaf work-item block's hover title carries the delivery Phase,
+    # so it stays visible when the phase tier is flat but a workstream tier drills in.
+    body = (
+        "WI-001,A1,scripts,SR-001,,done,d,\n"
+        "WI-002,A2,docs,SR-001,,done,d,\n"
+        "WI-003,A3,unattended,SR-001,,done,d,\n"
+        "WI-004,A4,self-adoption,SR-001,,done,d,\n"  # v1 spans 4 workstreams -> tiers
+    )
+    tiered_repo(tmp_path, body)  # all v1 (SR-001 Phase=v1), <=3 phases so phase flat
+    assert gen(tmp_path).returncode == 0
+    # the leaf work-item block's hover title carries the delivery phase (· v1)
+    assert re.search(r"<title>WI-001 — [^<]*\(done\) · v1</title>", html_of(tmp_path))
+
+
 # Four one-module components -> the How-SW top view exceeds the > 3 threshold.
 FOUR_CMP_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
 LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Verified,CMP-001

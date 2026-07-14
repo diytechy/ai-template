@@ -1179,6 +1179,35 @@ DRILL_GEOM = (
 )  # (col_w, col_gap, row_h, row_gap, pad) — DAG geometry
 PORT_R = 4.5
 
+# SR-056 decomposition-render polish. A drill layer's column is RIGHT-SIZED to its
+# widest member's content rather than the former uniform DRILL_GEOM width, capped
+# at the declared bound MAX_TIER_COL (a named value, not an adjective) — narrower
+# columns where content allows, never wider than the bound. Integer/fixed so the
+# render stays byte-deterministic. The per-char pixel weights over-estimate the
+# real glyph widths so a right-sized column never clips its centred label.
+MAX_TIER_COL = DRILL_GEOM[0]  # 172 — the declared upper bound (the former width)
+TIER_COL_MIN = 96  # a floor so a short-label block stays a comfortable click target
+TIER_COL_PAD = 24  # fixed padding around the widest label (≈12px each side)
+_BLAB_CH = 7  # px/char, the 11px bold block label (`.blab`)
+_BSUB_CH = 5  # px/char, the 8.5px block sub-label (`.bsub`)
+CEDGE_LEN = 9  # the containment arrow's shaft length (a horizontal parent→child →)
+
+
+def _tier_col_width(blocks):
+    """The right-sized column width for one drill layer (SR-056): the widest
+    member's content — the block label vs. its sub-label, whichever is wider — plus
+    a fixed padding, clamped to [TIER_COL_MIN, MAX_TIER_COL]. A content-light layer
+    renders narrower than the bound; nothing exceeds it. Deterministic (fixed ints)."""
+    content = max(
+        (
+            max(len(b["label"]) * _BLAB_CH, len(b.get("sub", "")) * _BSUB_CH)
+            for b in blocks
+        ),
+        default=0,
+    )
+    return max(TIER_COL_MIN, min(MAX_TIER_COL, content + TIER_COL_PAD))
+
+
 DRILL_STYLE = (
     "<style>"
     "#dag span.ph,#sw span.ph{display:inline-block;width:.55rem;height:.55rem;"
@@ -1200,12 +1229,19 @@ DRILL_STYLE = (
     ".drill .block[data-descend] rect{stroke-width:1.5;}"
     ".drill .block:focus{outline:none;}"
     ".drill .block:focus rect{stroke:#f59e0b;stroke-width:2.5;}"
+    # SR-056: the hover/focus highlight persists on the last-hovered block until
+    # another takes it (the shared .hl idiom — cf. the icicle/DAG/knowledge views).
+    ".drill .block.hl rect{stroke:#f59e0b;stroke-width:2.5;}"
     ".drill .block .blab{font-size:11px;font-weight:700;}"
     ".drill .block .bsub{font-size:8.5px;opacity:.85;}"
     ".drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;}"
     ".drill .port.in{stroke:var(--accent);}"
     ".drill .wire{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.85;}"
     ".drill .warrow{fill:var(--muted);}"
+    # SR-056: one horizontal parent→child arrow per containment edge — the accent
+    # colour (vs. the muted dependency wire) marks it as a descend/containment edge.
+    ".drill .cedge{fill:none;stroke:var(--accent);stroke-width:1.5;}"
+    ".drill .cedgehead{fill:var(--accent);}"
     "</style>"
 )
 
@@ -1242,6 +1278,17 @@ DRILL_SCRIPT = (
     "el.addEventListener('dblclick',function(){descend(el);});"
     "el.addEventListener('keydown',function(e){"
     "if(e.key==='Enter'||e.key===' '){e.preventDefault();descend(el);}});}"
+    # SR-056: the highlight persists on the last-hovered/focused block (keyed by its
+    # data-node id) until another takes it — no mouseleave clear, so no flash-on-exit.
+    "let hl=null;"
+    "function highlight(el){"
+    "if(hl===el)return;"
+    "if(hl)hl.classList.remove('hl');"
+    "hl=el;el.classList.add('hl');"
+    "drill.setAttribute('data-hl',el.getAttribute('data-node')||'');}"
+    "for(const el of drill.querySelectorAll('.block')){"
+    "el.addEventListener('mouseover',function(){highlight(el);});"
+    "el.addEventListener('focus',function(){highlight(el);});}"
     "render();}"
     "})();</script>"
 )
@@ -1265,14 +1312,16 @@ def _drill_layer_svg(blocks, edges):
             seen.add((a, b))
             pred_map[b].append(a)
             succ_map[a].append(b)
+    col_w = _tier_col_width(blocks)  # SR-056: right-sized, ≤ MAX_TIER_COL
+    geom = (col_w,) + DRILL_GEOM[1:]
     pos, width, height = _layered_layout(
         [{"id": k} for k in keys],
         pred_map,
         succ_map,
         lambda k: (order[k], k),
-        DRILL_GEOM,
+        geom,
     )
-    col_w, _cg, row_h, _rg, _pad = DRILL_GEOM
+    _cw, _cg, row_h, _rg, _pad = geom
 
     wires = []
     for a, b, title in sorted(edges):
@@ -1322,6 +1371,7 @@ def _drill_layer_svg(blocks, edges):
         attrs = 'class="block {}" data-tier="{}"'.format(
             b.get("cls", ""), esc(b.get("tier", ""))
         )
+        cedge = ""
         if b.get("descend"):
             attrs += (
                 ' data-descend="{}" data-crumb="{}" tabindex="0" role="button"'
@@ -1331,10 +1381,22 @@ def _drill_layer_svg(blocks, edges):
                     esc("Descend into " + str(b["label"])),
                 )
             )
+            # SR-056: one horizontal parent→child arrow makes the containment edge
+            # explicit (top-right, clear of the centred label), not merely implied.
+            ax = x + col_w - CEDGE_LEN - 6
+            cedge = (
+                '<path class="cedge" d="M{:.1f},{:.1f} h{}" '
+                'marker-end="url(#cedgearrow)"><title>contains → descend</title>'
+                "</path>".format(ax, y + 9, CEDGE_LEN)
+            )
+        # SR-056: a stable per-block node key so the persistent highlight can be
+        # keyed to the last-hovered node (appended last, preserving the existing
+        # `data-tier="…" data-descend="…"` adjacency other views assert on).
+        attrs += ' data-node="{}"'.format(esc(b["key"]))
         nodes.append(
             "<g {}><title>{}</title>"
             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="8" '
-            'fill="{}" stroke="{}"></rect>{}{}</g>'.format(
+            'fill="{}" stroke="{}"></rect>{}{}{}</g>'.format(
                 attrs,
                 esc(b.get("title", b["label"])),
                 x,
@@ -1344,6 +1406,7 @@ def _drill_layer_svg(blocks, edges):
                 b.get("fill", "var(--surface)"),
                 b.get("stroke", "var(--border)"),
                 ports,
+                cedge,
                 label,
             )
         )
@@ -1351,7 +1414,10 @@ def _drill_layer_svg(blocks, edges):
     defs = (
         '<defs><marker id="drillarrow" viewBox="0 0 10 10" refX="9" refY="5" '
         'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-        '<path d="M0,0 L10,5 L0,10 z" class="warrow"></path></marker></defs>'
+        '<path d="M0,0 L10,5 L0,10 z" class="warrow"></path></marker>'
+        '<marker id="cedgearrow" viewBox="0 0 10 10" refX="9" refY="5" '
+        'markerWidth="6" markerHeight="6" orient="auto">'
+        '<path d="M0,0 L10,5 L0,10 z" class="cedgehead"></path></marker></defs>'
     )
     return (
         '<svg viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
@@ -1471,7 +1537,10 @@ def when_view(root, wis):
             "stroke": "rgba(15,23,42,.15)",
             "tier": "work-item",
             "cls": st,
-            "title": "{} — {} ({})".format(w["id"], t, st),
+            # OI-10 fix: surface the delivery Phase in the leaf block's hover title
+            # too, so it stays visible when the phase tier is flat (≤3 phases) but a
+            # workstream tier drills in (SR-051 "surfaces each work item Phase").
+            "title": "{} — {} ({}) · {}".format(w["id"], t, st, phase_of[w["id"]]),
         }
 
     def wi_layer(members):

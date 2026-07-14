@@ -28,8 +28,10 @@ home elsewhere — don't restate it here:
   log.md 2026-07-14): each v3 SR owns its LLR+TC, the three Critique rows own
   their `docs/rubrics/dashboard-*.md` rubrics. **Phase v2 is at G3**
   (SR-051/LLR-052/TC-052 Verified); the intake/human-decision loop panels shipped
-  2026-07-14 (SR-055/LLR-056/TC-056 Verified). v3 stays G2 until the remaining
-  dev slices (WI-143, WI-144) land. Spine self-adopted:
+  2026-07-14 (SR-055/LLR-056/TC-056 Verified) and the decomposition render polish
+  shipped 2026-07-14 (SR-056/LLR-057/TC-057 Verified — right-sized columns,
+  explicit containment arrows, persistent hover). v3 stays G2 until the remaining
+  dev slice (WI-144) lands. Spine self-adopted:
   **SN=24 SR=56 LLR=57 TC=57** (orphans=0 — the post-g1 window is closed),
   52 seams, 5 components.
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~47 s) +
@@ -37,8 +39,8 @@ home elsewhere — don't restate it here:
   At slice/campaign close: the full suite `pytest -q -n auto` (~72 s) and
   `check.py` at the derived gate (now **G2**; its `trajectory` step gains
   `--strict`, so status.md must stay current — closed WI ids leave, open ones are
-  named). The whole spine rejoins `--gate G3` when the remaining v3 dev slices
-  (WI-143, WI-144) re-verify.
+  named). The whole spine rejoins `--gate G3` when the remaining v3 dev slice
+  (WI-144) re-verifies.
 - **Run-state:** [run-state](run-state) holds the declared value (don't
   paraphrase it here); when it reads NEEDS-HUMAN its `ask:` line is the
   canonical one-line summary the stop banner headlines.
@@ -56,17 +58,15 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-    - **OI-10** — disposition the session-034 REVIEW-A findings against
-      SR-051's landed render (leaf-block phase annotation + a threshold-wording
-      nit); rec: fold both into the queued **WI-143** render-polish slice.
 - **Queued (v3 dev slices, owner intake 2026-07-13** —
   [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ **live**,
-  running G2→G3 in series. The SR-051-rev interface-wired descend-a-layer render
-  and the Process-tab intake + human-decision loop panels (SR-055) both
-  **shipped** (log.md 2026-07-14; phase v2 at G3). Remaining:
-  **WI-143** (decomposition render polish — fold in the OI-10 phase-annotation +
-  threshold-wording fixes) →
-  **WI-144** (dashboard UI-quality pass + the SR-047 critique)._
+  running G2→G3 in series. The SR-051-rev interface-wired descend-a-layer render,
+  the Process-tab intake + human-decision loop panels (SR-055), and the SR-056
+  decomposition render polish (with OI-10 folded) all **shipped** (log.md
+  2026-07-14; phase v2 at G3). Remaining:
+  **WI-144** (dashboard UI-quality pass + the SR-052/053/054 Critique rows — the
+  campaign-closing slice that arms SR-047's critique loop and runs the full gate
+  bar at close)._
 - **Queued (research-knowledge campaign, OI-9 §8** —
   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
   2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
@@ -93,13 +93,14 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** **resume the loop — WI-143** ([next-wi](next-wi)): the
-  decomposition render polish (SR-056), folding in the OI-10 fixes (leaf-block
-  phase annotation + the SR-051/LLR-052/TC-052 threshold-wording reconcile). The
-  Process-tab loop panels (SR-055) landed 2026-07-14 ([log.md](log.md)).
-  [run-state](run-state) is **RUNNING**. The remaining v3 dev slices
-  **WI-143→144** run G2→G3 in series, then the owner-intake WIs (WI-146…151,
-  WI-110) and
+- **Next action:** **resume the loop — WI-144** ([next-wi](next-wi)): the
+  dashboard UI-quality pass + the SR-052/053/054 Critique rows — the
+  campaign-closing v3 slice (arms SR-047's critique loop for the first time and
+  runs the full gate bar `check.py --gate` at close). The SR-056 render polish
+  (OI-10 folded and closed) landed 2026-07-14 ([log.md](log.md)).
+  [run-state](run-state) is **RUNNING**. WI-144 closes the `dashboard-ux`
+  campaign and rejoins the whole spine to G3; then the owner-intake WIs
+  (WI-146…151, WI-110) and
   the research-knowledge campaign (WI-152…157). The standing OI-3 (push), OI-4
   (LICENSE), OI-7 (review cadence) block nothing and can be ruled any time. The
   deferred `main-decomposition` campaign (**WI-080→WI-081**) stays parked

@@ -44,38 +44,6 @@ remain open._
   unpushed commits are pure durability risk. The `main` integration is a
   separate, later sitting.
 
-## OI-10 — Review-034 findings against WI-141 / SR-051 (drill render)
-
-- **Decision:** how to disposition the two `@owner`-routed findings the
-  session-034 REVIEW-A ([reviews/034-REVIEW-A.md](reviews/034-REVIEW-A.md),
-  gpt-5.6-terra, CHANGES-REQUESTED) raised against the landed WI-141 render —
-  neither is auto-fixable, both touch ratified SR-051 territory.
-- **The findings (verified against the code, 2026-07-14):**
-  - **[MAJOR] phase not surfaced in leaf WI blocks.** `gen_trajectory.py`
-    `wi_block()` puts the delivery Phase in neither the block label/sub nor the
-    hover title. When the phase tier does **not** fire (≤3 phases) but the
-    workstream tier does (>3 workstreams), a viewer descends into a mixed-phase
-    workstream and the per-WI Phase — which SR-051 says the When view "surfaces
-    each work item delivery Phase" — is no longer visible. Real but edge-case
-    (the common path carries phase in the breadcrumb of the descended layer).
-  - **[MINOR] threshold wording inconsistency.** LLR-052 says component blocks
-    explode only above `TOP_VIEW_MAX` (10) while SR-051 requires the component
-    tier above 3 and the renderer drills even at 2 — the intended ≤3 threshold
-    should be stated consistently across SR-051 / LLR-052 / TC-052.
-- **Blast radius:** cosmetic/traceability only — no wrong data renders; the gap
-  is a missing annotation on one edge-case path plus a doc-wording mismatch.
-  Both are exactly the "graphic breakdowns will need iteration" the OI-1
-  ratification anticipated (amendments as future WIs, not blockers).
-- **Options:** (a) fold both into the already-queued **WI-143** (SR-056
-  decomposition render polish) — add phase to the leaf `wi_block` hover/text +
-  reconcile the SR-051/LLR-052/TC-052 threshold wording, since WI-143 already
-  reopens this renderer · (b) file a dedicated fix WI · (c) accept-as-is (the
-  common path surfaces phase; deem the edge case out of SR-051's intent).
-- **Recommendation:** (a) — WI-143 is the render-polish slice touching this same
-  code; folding the phase-annotation fix and the doc-wording reconcile into it
-  is the smallest change and keeps WI-141's ratified Verified status intact
-  (making code match the SR, not reopening the phase). No new WI needed.
-
 ## OI-4 — WI-097: LICENSE decision
 
 - **Decision:** which license, and whether the kit is headed public (the
