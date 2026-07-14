@@ -59,16 +59,20 @@ home elsewhere — don't restate it here:
       the SR-051 rev — then the v3 dev slices run autonomously. Rec: ratify (the
       LLM-gate consistency sweep + green floor are recorded in the g2 GATE entry,
       [log.md](log.md)). Brief: [open-items.md](open-items.md) OI-8.
+    - **OI-9** — **ratify the research-track + knowledge-layer design spec**
+      ([specs/research-knowledge.md](specs/research-knowledge.md)); its §8
+      implementation WIs file on ratification. Rec: ratify — same sitting as
+      OI-8. Brief: [open-items.md](open-items.md) OI-9.
 - **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
   [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ the
   **v3 dev slices** run G2→G3 in series *after* the OI-8 sitting —
   **WI-141** (SR-051-rev interface-wired render + descend-a-layer) →
   **WI-142** (Process tab intake + human-decision loops) →
   **WI-143** (decomposition render polish) →
-  **WI-144** (dashboard UI-quality pass + the SR-047 critique). Off-spine and
-  parallel-eligible independently of OI-8: **WI-138** (research track + durable
-  knowledge layer, design) — the last remaining non-v3 queued item (the
-  earlier off-spine `unattended` batch has landed; see [log.md](log.md))._
+  **WI-144** (dashboard UI-quality pass + the SR-047 critique). The research
+  track's implementation WIs are **not yet filed** — they come from
+  [specs/research-knowledge.md](specs/research-knowledge.md) §8 at the OI-9
+  ratification._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-110** in
@@ -78,19 +82,18 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** the off-spine **WI-138** (`docs/next-wi`; `BuildTier=strong`)
-  — the research track + durable knowledge/module-spec design WI, spec-first
-  (a ratifiable design spec; implementation WIs get filed from it), independent
-  of v3. Run-state **RUNNING**: this
-  autonomous off-spine work remains, so the loop does not idle. **OI-8** (the
-  owner's single v3 ratification sitting at the `[v3]-[g2]` close,
-  `single-ratify`) gates **only** the v3 dev slices **WI-141→144** — they do
-  **not** auto-run until the owner ratifies (brief:
-  [open-items.md](open-items.md) OI-8). Once WI-138 lands, the only remaining
-  work is OI-8-gated, so a driver then stops **NEEDS-HUMAN** for the sitting.
-  The deferred `main-decomposition` campaign (**WI-080→WI-081**) stays parked
-  (`deferred`, not queued). Owner items (OI-3/OI-4/OI-7) don't block any of
-  these.
+- **Next action:** **the owner sitting — WI-145 (`active`)**: everything left
+  to execute is human-gated, so run-state is **NEEDS-HUMAN**. One sitting
+  covers **OI-8** (ratify the `[v3]-[g2]` batch; closes WI-145 and unblocks
+  the v3 dev slices **WI-141→144**, series G2→G3) and **OI-9** (ratify
+  [specs/research-knowledge.md](specs/research-knowledge.md); files its §8
+  implementation WIs) — plus the standing OI-3/OI-4/OI-7 rulings if wanted
+  (they block nothing). The v3 slices' registry rows carry WI-145 as a hard
+  predecessor, so the DAG itself records why the queue is parked. After the
+  sitting: mark WI-145 done, flip [run-state](run-state) to RUNNING —
+  `docs/next-wi` is pre-pointed at **WI-141**. The deferred
+  `main-decomposition` campaign (**WI-080→WI-081**) stays parked (`deferred`,
+  not queued).
 
 ## Scope
 

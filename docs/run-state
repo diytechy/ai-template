@@ -2,4 +2,5 @@
 # the root agent-resume.* launchers). RUNNING while work remains; a driver
 # writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may
 # carry one `ask:` line naming the act — the stop banner headlines it (WI-127).
-RUNNING
+NEEDS-HUMAN
+ask: one owner sitting - ratify the [v3]-[g2] batch (OI-8) + the research-knowledge design spec (OI-9); briefs in docs/open-items.md

@@ -4854,3 +4854,64 @@ observation, not actioned.
 **RUNNING** — WI-138 is autonomous off-spine work. Once it lands, the only
 remaining work is OI-8-gated (the owner's single v3 ratification sitting), so a
 driver then stops **NEEDS-HUMAN**. Not pushed (`push-policy: human`).
+
+## 2026-07-14 — WI-138: research track + durable knowledge layer (design WI, spec-first)
+
+**Session opened by reconciling residue** (session-protocol §1): committed the
+still-running pre-WI-137 coordinator's dangled bookkeeping (sessions 030–031
+logs + index + scoreboard + review 031-A) — after regenerating
+`iteration_index.md` with the current `regenerate_index()`, because the old
+in-memory loop code had rewritten it *without* the WI column WI-137 added.
+Then fixed review **031-A's MAJOR** (CHANGES-REQUESTED, round 13): a
+hook-vetoed `telemetry:` commit left the bookkeeping paths staged, violating
+`commit_telemetry`'s "files exactly as before" contract — now the pre-add
+staged set is captured and a failed commit `git reset`s only the freshly
+staged paths; the veto test asserts the paths end unstaged (commits
+`b0a6f49`, `ec94508`).
+
+**WI-138 — the deliverable:** the ratifiable design spec
+[docs/specs/research-knowledge.md](specs/research-knowledge.md) (WI-088
+pattern), answering owner-intake items 5+6 as one layer:
+
+- **Knowledge packs** — make the Thread-52-resolved `docs/knowledge/<label>.md`
+  home real (the CMP `Knowledge`/`DetailDoc` hooks already reference it): a
+  pack contract (holds only what no registry can; links ids, never restates;
+  promotion via §5 change-intake keeps the spine authoritative), a scaffolded
+  `docs/knowledge/README.md`, a warn-first `trace.py` Knowledge-ref check.
+- **Research track** — a research WI is an *ordinary WI row*
+  (`Workstream=research`, Done-when = named questions, deliverable = a pack,
+  never code) riding the existing loop with **zero coordinator changes**;
+  `BuildTier` *is* TRIP's "defined compute level" (default medium — floor per
+  the effortmining fabrication caution); grounded second-opinion review via
+  the existing `review-policy` dial with a grounding charter.
+- **Rejected:** `docs/specs/components/` chunks (forks archive-at-close), an
+  authored OKF dir (generated-only constraint), a knowledge CSV, a new
+  RESEARCH phase. Implementation WIs (spec §8) file **on OI-9 ratification**.
+
+**New: OI-9** (ratify the spec — brief in open-items.md, rec: ratify, same
+sitting as OI-8) and **WI-145** (`active`) — the owner sitting itself as a
+registry row, a hard predecessor of the v3 slices WI-141→143. That last is a
+**deviation worth naming**: the WI-115 run-state coherence check (strict at
+G2+) correctly flagged NEEDS-HUMAN over a DAG-actionable queue; rather than
+game the check ordering, the human gate is now *recorded in the DAG* — the
+pause derives from the registry. Precedent: a policy-gated pause files the
+human act as an `active` WI the gated work hard-depends on.
+
+**Mechanized verification (real output):**
+- Full unfiltered suite (close bar): `python -m pytest -q -n auto` →
+  **725 passed, 3 skipped in 62.97s**. (An earlier PowerShell run read
+  694 passed / 34 skipped — `sh` off PATH skips the Git-Bash-dependent
+  pre-push-hook tests; the close bar must run where `sh` resolves. Recorded
+  so the next driver doesn't chase a phantom regression.)
+- `check.py --jobs 0` at the derived gate (**G2**): **PASS** (derived-gate ·
+  traceability · privacy · doc-navigability · design-flows · trajectory, the
+  last `--strict`-clean at 145 WIs / 127 done / acyclic).
+- Commit-bar smoke + `check_docs --stale`: green per commit (571 passed, 2
+  skipped; 0 broken links).
+- **Byte deltas:** none — PROCESS.md / PROCESS_OPTIONS.md / AGENTS.template.md
+  untouched (the spec defers all process-text edits to its §8 WIs).
+  Regenerated `PROJECT_STATE.html`; `docs/okf` + `docs/gate` already current.
+
+**Handoff.** Run-state **NEEDS-HUMAN** (`ask:` = the one sitting: OI-8 +
+OI-9); `docs/next-wi` pre-pointed at **WI-141** for the resume. Not pushed
+(`push-policy: human`).

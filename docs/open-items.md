@@ -89,5 +89,27 @@ against git and stays open, with OI-4 and OI-7._
 - **Recommendation:** ratify — the LLM-gate consistency sweep is recorded in the
   g2 GATE entry, the mechanized floor is green (trace `--strict` orphans=0,
   derived gate G2, full suite 719 passed), and the Critique rubrics are authored
-  from SR intent, not the TCs. After ratification, `docs/next-wi` → **WI-141**
-  and the loop resumes autonomously.
+  from SR intent, not the TCs. After ratification: mark **WI-145** (the
+  sitting's registry row) done, flip `docs/run-state` to RUNNING —
+  `docs/next-wi` already points at **WI-141** — and the loop resumes
+  autonomously.
+
+## OI-9 — Ratify the research-track + knowledge-layer design spec (WI-138)
+
+- **Decision:** bless the design in
+  [specs/research-knowledge.md](specs/research-knowledge.md) (owner-intake
+  items 5+6) so its §8 implementation WIs get filed — the WI-088
+  spec-then-implement pattern. Four sub-decisions are listed in the spec's §6
+  with recommendations: the `docs/knowledge/` home, the medium-tier default
+  for research WIs, the warn-first ref check in `trace.py`, and deferring the
+  OKF pack export.
+- **Blast radius:** adds an opt-in kit layer (a scaffolded
+  `docs/knowledge/README.md`, a warn-first `trace.py` check, one
+  `PROCESS_OPTIONS.md` section) — never gating, nothing downstream must
+  migrate. No spine rows change; the design deliberately reuses the existing
+  CMP `Knowledge`/`DetailDoc` hooks and the WI/BuildTier machinery.
+- **Options:** ratify as specced · ratify with changed §6 calls · request
+  changes · hold.
+- **Recommendation:** ratify — the design builds on the already-resolved
+  Thread-52 knowledge home rather than inventing a parallel surface, and every
+  addition is warn-first/opt-in. Fits the same sitting as OI-8.
