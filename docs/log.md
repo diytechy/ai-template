@@ -4338,3 +4338,14 @@ pass S-1..S-3 with **zero warnings** (the 13 pre-existing orphan warnings are
 unchanged). Registry: WI-132 → done; `docs/next-wi` cleared;
 `docs/run-state` → NEEDS-HUMAN with the refreshed OI-1…OI-7 ask. No push
 (`push-policy: human`).
+
+## 2026-07-13 — OI-1 amendment: the spine chain grouped for the sitting
+
+Owner-directed: the ratification sitting needs the whole SR→LLR→TC chain
+visible as ONE group, not found row-by-row across three registries. OI-1 in
+`docs/open-items.md` gains the chain table — SR-049/LLR-050/TC-050 (derived
+gate) + SR-050/LLR-051/TC-051 and SR-051/LLR-052/TC-052 (v2) — each id linking
+its generated OKF row-view (a reading map, not a copy: the registries stay
+SSOT, and the table dies with the section at ruling; completeness re-checkable
+via `trace.py --require-verified`). Commit bar: smoke 558p/2s, check_docs OK
+(orphan warnings 13→12 — linking test/report.md made it reachable).

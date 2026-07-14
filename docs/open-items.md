@@ -26,6 +26,22 @@ independent rulings the same sitting can absorb.
 - **Blast radius:** the spine's trust claim. G3 asserts owner-accepted scope;
   until attested, that claim rides mechanics alone — every downstream consumer
   of the "kit traces itself" story inherits the gap.
+- **The spine rows under attestation — the whole SR→LLR→TC chain in one
+  group** (each id links its generated row-view; the registries stay the
+  SSOT — this table is a reading map for the sitting and dies with this
+  section at ruling):
+
+  | Chain | SR | LLR | TC (evidence) | All statuses |
+  |---|---|---|---|---|
+  | Derived gate (default phase) | [SR-049](okf/system-requirements/SR-049.md) Derived gate from artifact states | [LLR-050](okf/low-level-requirements/LLR-050.md) Derived-gate computation + hybrid cache | [TC-050](okf/test-cases/TC-050.md) | Verified (Test) |
+  | v2 — Process view | [SR-050](okf/system-requirements/SR-050.md) Process reference view | [LLR-051](okf/low-level-requirements/LLR-051.md) Process reference tab | [TC-051](okf/test-cases/TC-051.md) — 7 pinned pytest nodes | Verified (Test) |
+  | v2 — Drill-downs | [SR-051](okf/system-requirements/SR-051.md) Tiered drill-down views | [LLR-052](okf/low-level-requirements/LLR-052.md) Tiered When/How-SW drill-down | [TC-052](okf/test-cases/TC-052.md) — 9 pinned pytest nodes | Verified (Test) |
+
+  Nothing else in the spine sits below `Verified` (checked at filing; re-check
+  with `trace.py --require-verified` → [test/report.md](test/report.md)).
+  Also riding this attestation: the **WI-128 LLR-lift convention** (an LLR
+  reads Verified once its citing TCs verify — no attestation involved) and the
+  **derived `docs/gate` itself** (G3 now computed, not hand-set).
 - **Included provisional rulings to accept or amend** (implemented as ruled;
   verdicts + rationale in [log.md](log.md)): the tiered-drill-down slice's four
   calls (tier composition Phase ⊃ Workstream ⊃ WI; grouping-primary phase
