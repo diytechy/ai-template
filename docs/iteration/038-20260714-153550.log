@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 038
+# date: 2026-07-14 15:37
+# phase: REVIEW-A
+# wi: WI-144
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 123
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently identify the reviewed commit range and applicable work-item requirements, then run the repository checks and write the review verdict without consulting implementation notes.
+[0m# [0mTodos
+[•] Read contributor rules and locate open work-item spec
+[ ] Inspect reviewed diff and relevant requirement registries
+[ ] Run check and trace harnesses
+[ ] Write independent review verdict
+[0m
+[0m→ [0mRead CLAUDE.md
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m✱ [0mGlob "**/*038*"[90m in docs · 4 matches[0m
+[0m✱ [0mGlob "**/*"[90m in docs/specs · 17 matches[0m
+[0m
+[0m$ [0mgit log --oneline --decorate -15; git status --short; git diff --stat HEAD~1 HEAD; git diff --name-only HEAD~1 HEAD
+c80c78c (HEAD -> derived-gate-model) telemetry: session 037 BUILD COMMITTED
+0bf15b7 WI-143: decomposition render polish (SR-056) + OI-10 folded
+a4026bb reconcile: track session-036 REVIEW-A verdict (untracked NO-COMMIT residue)
+cba746e telemetry: session 036 review scoreboard
+7069ad8 telemetry: session 036 REVIEW-A NO-COMMIT
+b7444c6 telemetry: session 035 BUILD COMMITTED
+2a7122d WI-142: record the full-suite close result in the log
+c34ae9c WI-142: Process-tab intake + human-decision loop panels (SR-055)
+1d20f69 reconcile: track session-034 REVIEW-A verdict + file OI-10
+3f45c5c telemetry: session 034 review scoreboard
+270efac telemetry: session 034 REVIEW-A NO-COMMIT
+4518d58 telemetry: session 033 BUILD COMMITTED
+fc002c9 WI-141: re-verify SR-051 rev (phase v2 -> G3); close the dev slice
+b4c0eb2 WI-141: rebuild the How-SW containment view as a descend-a-layer drill
+fdd15a8 WI-141: rebuild the When roadmap as a Simulink-style descend-a-layer drill
+ docs/iteration/037-20260714-151106.log | 70 ++++++++++++++++++++++++++++++++++
+ docs/iteration_index.md                |  1 +
+ 2 files changed, 71 insertions(+)
+docs/iteration/037-20260714-151106.log
+docs/iteration_index.md
+[0m
+[0m→ [0mRead docs/reviews
+[0m→ [0mRead docs/requirements/work-items.csv
+[0m→ [0mRead project-trajectory/PROCESS.md
+[0m→ [0mRead docs/status.md
+[0m→ [0mRead docs/okf/system-requirements/SR-038.md
+[0m→ [0mRead docs/okf/low-level-requirements/LLR-038.md
+[0m→ [0mRead docs/okf/test-cases/TC-038.md
+[0m
+[0m$ [0mgit show --format=fuller --stat 0bf15b7; git diff --find-renames a4026bb 0bf15b7; git show --format=fuller --stat c80c78c
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f62582e8e001SY2oqdcpOZ2tD3
+
+-LLR-057,SR-056,"Decomposition render polish (columns, arrows, persistent hover)",project-trajectory/scripts/gen_trajectory.py,when_view/_tier_column/_svg_node,"Polishes the tiered decomposition render: each tier column is sized no wider than its content within a declared bound (a per-tier max-width cap MAX_TIER_COL, not the current uniform column); one horizontal parent->child arrow is drawn per containment edge so containment is explicit rather than implied by nesting alone; and the hover/focus highlight persists on the last-hovered item until another takes it (a stateful highlight keyed to the last-hovered node id, killing the flash-on-exit). Self-contained, byte-deterministic; --check unchanged. Composes with SR-051's tiering without changing its >3 thresholds.",(see TC-057),Planned,CMP-002
++LLR-057,SR-056,"Decomposition render polish (columns, arrows, persistent hover)",project-trajectory/scripts/gen_trajectory.py,when_view/_tier_column/_svg_node,"Polishes the tiered decomposition render: each tier column is sized no wider than its content within a declared bound (a per-tier max-width cap MAX_TIER_COL, not the current uniform column); one horizontal parent->child arrow is drawn per containment edge so containment is explicit rather than implied by nesting alone; and the hover/focus highlight persists on the last-hovered item until another takes it (a stateful highlight keyed to the last-hovered node id, killing the flash-on-exit). Self-contained, byte-deterministic; --check unchanged. Composes with SR-051's tiering without changing its >3 thresholds.",(see TC-057),Verified,CMP-002
+diff --git a/docs/requirements/system-requirements.csv b/docs/requirements/system-requirements.csv
+index ba531a5..c7f4483 100644
+--- a/docs/requirements/system-requirements.csv
++++ b/docs/requirements/system-requirements.csv
+@@ -49,9 +49,9 @@ SR-047,Subjective-quality critique loop,SN-024;SN-006,"When docs/agents-enabled
+ SR-048,How-SW top view bounded and containerized,SN-023;SN-012,"check_trajectory.py shall bound the software-architecture top view at 10 items - top-level CMP-### components (no PartOf) that contain an arch-map module plus uncontained modules - reporting a finding warn-first and, under --strict (G2+), an error that drives right-sizing of the component designations; and gen_trajectory.py shall render that top view containerized in PROJECT_STATE.html, each component expandable to its member modules, nested components and internal seams with cross-component IF-### seams aggregated to the container boundary. Membership derives from the Component tag on LLR rows (LLR.Module -> CMP-###), nesting via PartOf (a module counts only at its top-level root); docs/components-check: off opts out and a <=10-module or arch-map-less inventory is vacuous.","Realizes SN-023 (the architecture view stays legible - an unbounded module map on the dashboard hides drift as much as scattering the relationships does) and SN-012 (the bound, not the registry, is the rule, so a small or non-adopting repo pays nothing while a 20-module repo is nudged to declare its composition). The AXES-ratified Component-tag membership join already existed; WI-073 makes the top view honor it and the bound enforce right-sizing.","An arch-map inventory over 10 modules with no containing CMP rows warns plain and fails --strict naming the count; declaring a right-sized handful of top-level CMPs that contain the modules clears it; a nested CMP (PartOf) counts only at its top-level root; docs/components-check: off silences it; a <=10-module or arch-map-less inventory is vacuous; the How-SW panel renders the containerized <details> top view with expandable members and one deduplicated component-to-component edge per crossing pair when CMP rows contain modules, and stays the flat view (byte-identical) otherwise; generation is byte-deterministic through --check.",,S,Test,Verified,,Architecture connectivity
+ SR-049,Derived gate from artifact states,SN-004;SN-008,"The active gate shall be COMPUTED from the spine artifact states (SN section-state + SR/LLR/TC Status maturity) and cached to docs/gate, rather than hand-set, so a gate advances only when the mechanical states do.","SSOT applied to the gate itself (docs/specs/derived-gate-model.md): a hand-set marker can be bumped without the work; deriving it makes gate advancement mechanical (SN-004) and un-gameable (SN-008). The hybrid cache keeps the value readable on checkout; --check guards rot.","derive_gate.py --print on the meta computes G3 from the current states; --check exits nonzero when a state change is not reflected in the cached docs/gate basis.",,M,Test,Verified,,
+
+[... 900 line(s) elided — full stream in out/run-logs/ ...]
+
+                     "tier": name,
+                     "descend": child,
+                     "crumb": lbl,
+                     "title": "{} {} — {} work item(s)".format(name, lbl, len(members)),
+                 }
+                 if name == "phase":
+                     blk.update(fill=color[gv], textfill="#fff", stroke=color[gv])
+                 else:
+                     blk.update(fill="var(--surface)", stroke="var(--border)")
+                 blocks.append(blk)
+             edges = agg_edges(subset, {w["id"]: keyfn(w) for w in subset})
+             layers.append((lid, _drill_layer_svg(blocks, edges)))
+             return lid
+         # No tier crosses its threshold here -> the bottom-tier campaign layer.
+         return leaf_layer(subset)
+ 
+     tiers = [
+         ("phase", lambda w: phase_of[w["id"]]),
+diff --git a/tests/test_gen_trajectory.py b/tests/test_gen_trajectory.py
+index 726edca..49ca3c5 100644
+--- a/tests/test_gen_trajectory.py
++++ b/tests/test_gen_trajectory.py
+@@ -993,160 +993,225 @@ def test_when_view_workstream_tier_when_phases_flat(tmp_path):
+     assert gen(tmp_path).returncode == 0
+     view = html_of(tmp_path)
+     assert "Tiered roadmap: 1 phase(s), 5 workstream(s)" in view
+     assert view.count('data-tier="workstream"') == 5  # one block per workstream
+     assert 'data-tier="phase"' not in view  # phases stay flat
+ 
+ 
+ def test_when_view_flat_below_thresholds_is_the_campaign_view(tmp_path):
+     # <= 3 phases and <= 3 workstreams -> when_view delegates to
+     # campaign_containment byte-for-byte (the tiering is earned by scale).
+     make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)  # 2 workstreams, unphased
+     gt = load_script("gen_trajectory")
+     ct = load_script("check_trajectory")
+     wis, _ = ct.load_wis(ct.read_rows(tmp_path / ct.WI_CSV))
+     view = gt.when_view(tmp_path, wis)
+     assert view == gt.campaign_containment(wis)  # identical bytes
+     assert 'class="tierbox"' not in view and 'class="campbox"' in view
+ 
+ 
+ def test_when_view_is_deterministic_and_check_stable(tmp_path):
+     # Sorted inputs, no clocks -> a re-render is byte-identical and --check passes.
+     tiered_repo(tmp_path, TIER_UNION_WIS)
+     assert gen(tmp_path).returncode == 0
+     first = (tmp_path / "PROJECT_STATE.html").read_bytes()
+     again = gen(tmp_path)
+     assert again.returncode == 0 and "already up to date" in again.stdout
+     assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
+     assert gen(tmp_path, "--check").returncode == 0
+ 
+ 
+ # --- SR-051 rev (WI-141): the three interface-wired / descend-a-layer contracts --
+ 
+ 
+ def test_when_view_seams_wire_to_block_ports(tmp_path):
+     # Each block carries an input port (left-middle) and an output port
+     # (right-middle); each aggregated edge is a wire whose endpoints ATTACH to those
+     # ports (Simulink-style), not free-floating text.
+     tiered_repo(tmp_path, TIER_UNION_WIS)
+     assert gen(tmp_path).returncode == 0
+     root = _layer_with(html_of(tmp_path), 'data-tier="phase"')  # the phase layer
+     out_ports = {
+         round(float(cx), 1)
+         for cx in re.findall(r'<circle class="port out" cx="([\d.]+)"', root)
+     }
+     in_ports = {
+         round(float(cx), 1)
+         for cx in re.findall(r'<circle class="port in" cx="([\d.]+)"', root)
+     }
+     assert out_ports and in_ports  # both port kinds render
+     wires = re.findall(r'<path class="wire" d="M([\d.]+),[\d.]+ C.* ([\d.]+),', root)
+     assert wires  # at least one wire
+     for x1, x2 in wires:  # every wire leaves an OUT port and enters an IN port
+         assert round(float(x1), 1) in out_ports
+         assert round(float(x2), 1) in in_ports
+ 
+ 
+ def test_when_view_double_click_descends_a_layer(tmp_path):
+     # A container block descends one layer on double-click (keyboard alt: Enter /
+     # Space on the focused block); its data-descend names a real child layer.
+     tiered_repo(tmp_path, TIER_UNION_WIS)
+     assert gen(tmp_path).returncode == 0
+     view = html_of(tmp_path)
+     m = re.search(r'data-tier="phase" data-descend="(when-\d+)"', view)
+     assert m and 'data-layer="{}"'.format(m.group(1)) in view  # target layer exists
+     # focusable + labelled + a keyboard alternative to the pointer
+     assert 'tabindex="0" role="button"' in view
+     assert "addEventListener('dblclick'" in view
+     assert "addEventListener('keydown'" in view and "e.key==='Enter'" in view
+ 
+ 
+ def test_when_view_breadcrumb_restores_parent(tmp_path):
+     # The drill carries a breadcrumb whose crumb click truncates the trail back to
+     # that ancestor (restoring the parent view); the root crumb is declared.
+     tiered_repo(tmp_path, TIER_UNION_WIS)
+     assert gen(tmp_path).returncode == 0
+     view = html_of(tmp_path)
+     assert '<nav class="crumbs"' in view and 'data-root-crumb="Roadmap"' in view
+     assert "trail=trail.slice(0,i+1)" in view  # crumb click restores the ancestor
+ 
+ 
++# --- SR-056 (WI-143): the decomposition render-polish contracts ------------------
++
++
++def test_decomposition_one_arrow_per_containment_edge(tmp_path):
++    # Each descend container (a containment edge) renders EXACTLY one horizontal
++    # parent->child arrow (class="cedge"), making containment explicit rather than
++    # implied by the descend interaction alone.
++    tiered_repo(tmp_path, TIER_UNION_WIS)
++    assert gen(tmp_path).returncode == 0
++    phase_layer = _layer_with(html_of(tmp_path), 'data-tier="phase"')
++    containers = phase_layer.count("data-descend=")  # 4 phase containers
++    assert containers == 4
++    assert phase_layer.count('class="cedge"') == containers  # one arrow each, no more
++
++
++def test_tier_column_honors_declared_width_bound(tmp_path):
++    # The tier column is a declared value (MAX_TIER_COL), not an adjective: every
++    # block honours it, and a content-light layer renders NARROWER than the bound
++    # (right-sized, not the former uniform column).
++    gt = load_script("gen_trajectory")
++    assert isinstance(gt.MAX_TIER_COL, int) and gt.MAX_TIER_COL > 0
++    tiered_repo(tmp_path, TIER_UNION_WIS)
++    assert gen(tmp_path).returncode == 0
++    widths = [
++        int(w)
++        for w in re.findall(
++            r'<rect x="[\d.]+" y="[\d.]+" width="(\d+)" height="\d+" rx="8"',
++            html_of(tmp_path),
++        )
++    ]
++    assert widths  # blocks render
++    assert all(w <= gt.MAX_TIER_COL for w in widths)  # never exceeds the bound
++    assert any(w < gt.MAX_TIER_COL for w in widths)  # right-sized where content allows
++
++
++def test_persistent_hover_highlight_keyed_to_last_node(tmp_path):
++    # The persistent-highlight contract: every block is keyed by a data-node id; the
++    # controller records the last-hovered/focused node (data-hl) and never clears on
++    # exit (no mouseleave/mouseout in the drill controller) -> no flash-on-exit.
++    gt = load_script("gen_trajectory")
++    assert "addEventListener('mouseover'" in gt.DRILL_SCRIPT
++    assert "setAttribute('data-hl'" in gt.DRILL_SCRIPT  # keyed to the last node
++    assert "mouseleave" not in gt.DRILL_SCRIPT and "mouseout" not in gt.DRILL_SCRIPT
++    assert ".block.hl" in gt.DRILL_STYLE  # the persistent highlight style
++    tiered_repo(tmp_path, TIER_UNION_WIS)
++    assert gen(tmp_path).returncode == 0
++    view = html_of(tmp_path)
++    assert re.search(r'class="block[^"]*"[^>]*data-node="', view)  # blocks are keyed
++
++
++def test_leaf_wi_block_surfaces_delivery_phase(tmp_path):
++    # OI-10 fix: the leaf work-item block's hover title carries the delivery Phase,
++    # so it stays visible when the phase tier is flat but a workstream tier drills in.
++    body = (
++        "WI-001,A1,scripts,SR-001,,done,d,\n"
++        "WI-002,A2,docs,SR-001,,done,d,\n"
++        "WI-003,A3,unattended,SR-001,,done,d,\n"
++        "WI-004,A4,self-adoption,SR-001,,done,d,\n"  # v1 spans 4 workstreams -> tiers
++    )
++    tiered_repo(tmp_path, body)  # all v1 (SR-001 Phase=v1), <=3 phases so phase flat
++    assert gen(tmp_path).returncode == 0
++    # the leaf work-item block's hover title carries the delivery phase (· v1)
++    assert re.search(r"<title>WI-001 — [^<]*\(done\) · v1</title>", html_of(tmp_path))
++
++
+ # Four one-module components -> the How-SW top view exceeds the > 3 threshold.
+ FOUR_CMP_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
+ LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Verified,CMP-001
+ LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Verified,CMP-002
+ LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Verified,CMP-003
+ LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Verified,CMP-004
+ """
+ FOUR_CMPS = (
+     "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
+     "CMP-001,Core,software,,built,,,,\n"
+     "CMP-002,Two,software,,built,,,,\n"
+     "CMP-003,Three,software,,built,,,,\n"
+     "CMP-004,Four,software,,built,,,,\n"
+ )
+ 
+ 
+ def test_how_sw_collapses_above_component_threshold(tmp_path):
+     # > 3 top-level components -> the root layer holds four component blocks, each a
+     # descend container (double-click / Enter to explode into its modules).
+     containerize(tmp_path)
+     req = tmp_path / "docs" / "requirements"
+     (req / "low-level-requirements.csv").write_text(FOUR_CMP_LLRS, encoding="utf-8")
+     (req / "components.csv").write_text(FOUR_CMPS, encoding="utf-8")
+     assert gen(tmp_path).returncode == 0
+     sw = sw_section(tmp_path)
+     assert "Top view: 4 item" in sw
+     root = _sw_layer_with(sw, 'data-tier="component"')
+     assert root.count('data-tier="component" data-descend=') == 4  # four descend blocks
+ 
+ 
+ def test_meta_tiered_when_view_smoke():
+     # Over the real meta repo (4 workstreams > 3): the When view tiers into a
+     # workstream block layer with campaign container blocks at the bottom tier,
+     # rendered as a wired drill diagram.
+     ct = load_script("check_trajectory")
+     gt = load_script("gen_trajectory")
+     wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
+     assert not integrity
+     view = gt.when_view(ROOT, wis)
+     assert view is not None
+     assert 'class="drill"' in view and 'data-tier="workstream"' in view
+     assert 'data-tier="campaign"' in view  # campaigns stay the bottom-tier container
+     assert 'class="port in"' in view and 'class="wire"' in view  # interface-wired
+ 
+ 
+ # --- WI-085 / SR-050: the Process reference tab ---------------------------------
+ 
+ 
+ def with_gate(root, gate="G2", wis_body=GOOD_WIS, header=WI_HEADER):
+     """make_repo + a derived-format docs/gate (comment header, then the runnable
+     gate value) — the Process tab's render condition."""
+     make_repo(root, wis_body, header=header)
+     (root / "docs" / "gate").write_text(
+         "# DERIVED GATE - generated by scripts/derive_gate.py\n"
+         "# basis: SN=1 SR=2 LLR=3 TC=4 drafts=0 computed={g} per-phase=(none)\n"
+         "{g}\n".format(g=gate),
+         encoding="utf-8",
+     )
+     return root
+ 
+ 
+ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
+     # SR-050: with a docs/gate the dashboard gains the Process tab — the three
+     # linked panels, each joining a canonical data source (docs/gate, the spine
+     # registries, work-items.csv) rather than restating hand-set numbers.
+     with_gate(tmp_path, "G2")
+     assert gen(tmp_path).returncode == 0
+     text = html_of(tmp_path)
+     assert 'data-tab="process"' in text and 'id="process"' in text
+     # the three panels are present and titled
+     assert "Artifact lifecycle × gates" in text
+     assert "The resume loop" in text
+     assert "Slices → campaigns → gates" in text
+     # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Verified,
+     # 3 LLR, 4 TC) — live counts, not prose
+     assert "1 SN" in text
+     assert "2 SR · 1 verified" in text
+     assert "3 LLR" in text and "4 TC" in text
+     assert "1 of 2 SR verified" in text
+     # panel 2 carries the real agent_loop phase vocabulary + escalation edges
+[0m
+The reviewed change is `0bf15b7` (WI-143 / SR-056), with the current HEAD only adding session telemetry. I found the declared work-item input and completed the registry consistency sweep; I’m running the derived-G2 harness and traceability check now.
+[0m# [0mTodos
+[✓] Read contributor rules and locate open work-item spec
+[✓] Inspect reviewed diff and relevant requirement registries
+[•] Run check and trace harnesses
+[ ] Write independent review verdict
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --root . --gate G2
+usage: check.py [-h] [--gate {G1,G2,G3,all}] [--tier {smoke,full,release,all}]
+                [--coverage COVERAGE] [--phase PHASE] [--lenient] [--list]
+                [--run-step NAME] [--run-steps NAMES] [--jobs N]
+check.py: error: unrecognized arguments: --root .
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --root . --strict
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+[0m$ [0mpython -m pytest -q -n auto tests/test_gen_trajectory.py
+bringing up nodes...
+bringing up nodes...
+
+................................................................         [100%]
+64 passed in 3.89s
+[0m
+[0m→ [0mRead docs/gate
+[0m→ [0mRead docs/run-state
+[0m→ [0mRead docs/gate-policy
+[0m→ [0mRead docs/push-policy
+[0m✗ [0mGrep "cedge|data-hl|MAX_TIER_COL" failed[90m in PROJECT_STATE.html[0m
+[91m[1mError: [0mRipgrep JSON record exceeded 65536 bytes
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G2
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 placeholders=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 68 doc(s), 330 intra-repo link(s), 0 broken (19 orphan warning(s)).
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (158 work item(s), 131 done (83%), graph acyclic).
+
+========================================================
+Check summary (gate G2, tier all):
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.1s
+  PASS  privacy          0.5s
+  PASS  doc-navigability 8.6s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+========================================================
+RESULT: PASS
+[0m
+[0m→ [0mRead docs/reviews/034-REVIEW-A.md
+[0m→ [0mRead project-trajectory/scripts/gen_trajectory.py[90m [offset=1170, limit=260][0m
+[0m
+[0m$ [0mgit status --short; git diff --check 0bf15b7 HEAD; git diff --stat 0bf15b7 HEAD
+docs/iteration/037-20260714-151106.log:7: trailing whitespace.
++# guardrails: 
+ docs/iteration/037-20260714-151106.log | 70 ++++++++++++++++++++++++++++++++++
+ docs/iteration_index.md                |  1 +
+ 2 files changed, 71 insertions(+)
+[0m
+The G2 harness passed, traceability reported `SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0`, and the focused dashboard suite passed `64 passed`. The review found that the new containment glyph counts containers rather than actual parent-child containment edges, so I’m recording a changes-requested verdict.
+[0m% [0mPatch 1 file
+[0m→ [0mRead docs/reviews/038-REVIEW-A.md
+[0m
+[0m$ [0mgit status --short; git diff --check -- docs/reviews/038-REVIEW-A.md
+?? docs/reviews/038-REVIEW-A.md
+[0m
+[0m# [0mTodos
+[✓] Read contributor rules and locate open work-item spec
+[✓] Inspect reviewed diff and relevant requirement registries
+[✓] Run check and trace harnesses
+[✓] Write independent review verdict
+[0m
+Review written to `docs/reviews/038-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED findings=1`
+
+Verified:
+- `check.py --gate G2`: PASS
+- `trace.py --strict`: 0 orphans, 0 integrity findings
+- `tests/test_gen_trajectory.py`: 64 passed
