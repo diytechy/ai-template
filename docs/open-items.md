@@ -200,3 +200,50 @@ critique disposition) remain open._
   - **After the next fresh re-critique confirms round 2, WI-144's buildable work
     is complete** — only the owner ratification of U5 + TC-HARDEN at the phase-g2
     close remains for the slice to close and the spine to rejoin G3.
+- **Update (2026-07-14) — round-3 re-critique ran; critique budget now EXHAUSTED.**
+  The fresh re-critique fired ([reviews/052-CRITIQUE.md](reviews/052-CRITIQUE.md),
+  provider-heterogeneous, no implementer notes; **CHANGES-REQUESTED, 8 findings + 3
+  TC-HARDEN**), preceded by a 050-REVIEW-A (NO-COMMIT, 1 MINOR — status.md verbosity,
+  acted on) and a 051 CRITIQUE ERROR (no verdict — did not count). This is the
+  **3rd** CHANGES-REQUESTED critique on the SR-052/053/054 scope (042/048/052), so
+  per `AGENT_CRITIQUE_MAX=3` the loop's budget is spent and `single-ratify`'s
+  `failure_action` **pauses WI-144 and surfaces the block for the batched
+  ratification** (it does not auto-page; run-state is driver-set to NEEDS-HUMAN
+  because no non-dependent WI is safely auto-startable). The 052 findings split the
+  same two ways, with one honesty correction:
+  - **Newly-buildable, rubric-MEETING (round-1's A4 scan was too narrow — it
+    covered SVG node text-on-fill only, missing the HTML surfaces below, so A4 is
+    **not** actually satisfied):**
+    - **[MAJOR] A4 queued detail badge** — `.detail .badge` hard-codes `color:#fff`
+      on the `queued` slate `#94a3b8` = **2.56:1** (.68rem, normal text) vs the
+      ratified 4.5:1 floor. Fix: dark ink `#0f172a` (the `#dag .wi.queued text`
+      already uses it). ~1-line emitter/CSS fix.
+    - **[MINOR] A4 focus ring** — the amber `#f59e0b` 2.5px focus stroke (the sole
+      focus cue; native outlines suppressed) measures **2.05:1** on white vs the
+      3:1 graphical-boundary floor. Fix: darker ring (`#b45309` ≈ 3.2:1).
+    - **[MAJOR] T4 `.blab` overflow** — drill main labels are emitted untruncated
+      while `.bsub` truncates with `…`; long ids (`system-requirements.csv` 41ch in
+      a 172px block) overrun the block + arrowheads. Fix: apply `.bsub`'s
+      width-fit truncation to `.blab` (full text already in `<title>`).
+    - **[MINOR] U4 / U3 / U1** — When-container click→detail parity, converge the
+      two legend idioms, collapse the 21 near-duplicate HTML font sizes (polish).
+  - **Owner-gated (recurring — proposed at 042/048/052):** **U5** "one concept per
+    colour" (U2 palette collision — green/amber phase-accents render directly above
+    a status legend declaring green=done/amber=active) + phase-hue de-collision;
+    **[MAJOR] T2** Knowledge tab opens as 249 nodes flat (the `.knode`/`knowarrow`
+    re-spec, its own pass); the **3 × TC-HARDEN** (contrast, label-fit,
+    palette-bijection — route via change-intake, PROCESS §5).
+- **Recurrence insight (the reason the budget tripped):** the contrast TC-HARDEN
+  has been proposed **three rounds running** because manual A4 fixing keeps missing
+  a surface (round 1 fixed SVG fills; round 3 found the badge + focus ring still
+  fail). The durable fix is the **mechanized** contrast/label-fit/palette tests, not
+  another hand pass — so the strong recommendation at the sitting is to **ratify the
+  3 TC-HARDEN cases first**, then land ONE final build round that fixes every
+  contrast/label surface at once with a test proving it (and tunes the badge/fill
+  inks together with the U5 palette ruling, since the critic notes they couple).
+  This ends the whack-a-mole the budget exists to stop.
+- **Recommendation (at the phase-g2 sitting):** ratify the U5 anchor + the 3
+  TC-HARDEN, authorize the residual buildable A4/T4 fixes as one final owner-directed
+  build round (paired with the U5 palette ruling), and defer T2 to its own
+  `.knode`/`knowarrow` pass. Alternatives: rule a specific palette family for U5 ·
+  hold the whole slice for a live design sitting.

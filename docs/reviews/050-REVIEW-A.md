@@ -1,0 +1,2 @@
+- [MINOR] docs/status.md:101 -> the forward-only working surface now records the completed re-critique and four landed implementation details, duplicating the evidence/disposition that belongs in `log.md` and OI-12 rather than only stating what must happen next -> reduce the next-action entry to WI-144's pending independent critique and the OI-12 link; retain the completed-round record in `log.md`/`open-items.md` -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

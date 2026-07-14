@@ -5486,3 +5486,56 @@ smoke 593 passed, 2 skipped**; `gen_trajectory --check` fresh; `check_docs --sta
 OK. WI-144 stays **`active` / open**: re-critiques **fresh** next (never
 self-adjudicated). After that confirms round 2, the buildable work is complete —
 only the owner ratification of U5 + TC-HARDEN remains for close.
+
+## 2026-07-14 — WI-144 round-3 re-critique + critique budget EXHAUSTED → pause for ratification
+
+Driver reconcile session. The fresh round-3 re-critique the round-2 handoff called
+for had already fired in the managed loop (sessions 049–052): **052-CRITIQUE**
+(provider-heterogeneous, no implementer notes; **CHANGES-REQUESTED, 8 findings + 3
+TC-HARDEN** against the regenerated `PROJECT_STATE.html`), preceded by a
+**050-REVIEW-A** (NO-COMMIT, 1 MINOR) and a **051 CRITIQUE ERROR** (no verdict
+written — did not count). No new build ran; this session dispositions the loop
+state and hands off.
+
+- **Budget call.** 052 is the **3rd** CHANGES-REQUESTED critique on the
+  SR-052/053/054 scope (042/048/052). `AGENT_CRITIQUE_MAX=3`, so the loop's budget
+  is spent; `agent_route.failure_action("single-ratify")` **pauses WI-144 and
+  surfaces the block for the batched ratification** (mode single-ratify:
+  run_state RUNNING + keep non-dependent work). No further autonomous
+  build→critique cycling is in-budget — the remaining path is the owner's phase-v3
+  g2-close sitting. WI-144 registry status stays `active` (no `paused` enum); the
+  pause is recorded in status.md + the WI-144 Deliverable.
+- **052 findings disposition (OI-12 updated).** Split the same two ways, with one
+  honesty correction: round-1's "A4 passes / 0-of-8 fills fail" scan covered SVG
+  node text-on-fill **only** — it missed the HTML `.detail .badge` (queued badge
+  `#fff` on `#94a3b8` = **2.56:1**, normal text) and the focus-ring stroke (amber
+  `#f59e0b` = **2.05:1** vs the 3:1 boundary floor), both genuine failures of the
+  **already-ratified** `dashboard-accessibility.md` A4. Those + the [MAJOR] T4
+  `.blab` overflow (main labels emitted untruncated while `.bsub` truncates) + the
+  U4/U3/U1 polish are **buildable, rubric-meeting**. Recurring **owner-gated**:
+  U5 palette taxonomy (U2 collision), [MAJOR] T2 Knowledge-tab flat-open density,
+  and the 3 TC-HARDEN (contrast / label-fit / palette-bijection, change-intake).
+- **Recurrence insight → recommendation.** The contrast TC-HARDEN has been
+  proposed three rounds running because manual A4 fixing keeps missing a surface —
+  the durable fix is mechanization, not another hand pass. Recommend the sitting
+  **ratify the 3 TC-HARDEN first**, then a single owner-directed final build round
+  fixes every contrast/label surface at once with a test proving it (badge/fill inks
+  tuned together with the U5 palette ruling, which the critic notes couples).
+- **Review residue reconciled.** Tracked the untracked `docs/reviews/050-REVIEW-A.md`
+  (the recurring NO-COMMIT gap — 034/036/038/040/044/046). Its 1 MINOR — status.md
+  duplicating log/OI-12 evidence in the next-action — is **acted on**: the
+  next-action block is trimmed to the pending sitting + the OI-12 link, the
+  round-by-round record left to log.md/OI-12.
+
+Commit bar (smoke + `check_docs --stale`); this is a bookkeeping/handoff commit,
+not a slice-close, so the full suite waits for the post-sitting build round.
+**Handoff:** run-state **RUNNING** — the pre-commit `trajectory` check correctly
+flagged an initial NEEDS-HUMAN as a stale end-state (actionable non-dependent WIs
+have all hard predecessors done), and `single-ratify`'s budget `failure_action` is
+`keep_nondependent` anyway: it pauses WI-144 + surfaces the block but keeps the loop
+running. `docs/next-wi` moves to **WI-110** (a standalone, already-ratified owner
+directive — not a campaign kickoff, so it sidesteps the campaign-sequencing the
+sitting owns). WI-144 resumes for its final build round after the sitting rules
+OI-12. (The initial commit attempt also filled WI-144's Deliverable while open —
+the check rejected it; an open WI's Deliverable stays empty, so the pause is
+recorded in status.md / next-wi / OI-12 instead.)

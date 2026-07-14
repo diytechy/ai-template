@@ -43,6 +43,18 @@ home elsewhere — don't restate it here:
 
 - **Open items** _(one bullet per item; `OI-N` ids are stable and never
   renumbered):_
+  - **The phase-v3 g2-close ratification sitting is now DUE** (a *batched* human
+    touch, not a loop stop). WI-144 (the campaign-closing slice) has **exhausted
+    its critique budget** (`AGENT_CRITIQUE_MAX=3`: 042/048/052 all
+    CHANGES-REQUESTED on SR-052/053/054), so under `single-ratify`'s budget
+    `failure_action` the slice **pauses** and the block surfaces for the batched
+    ratification — but `keep_nondependent` keeps the loop **RUNNING** on
+    non-dependent work (next: **WI-110**). The sitting must (a) ratify the v3 g2
+    batch, (b) rule the **OI-12** critique disposition — authorize the residual
+    buildable A4/T4 accessibility fixes **and** the 3 TC-HARDEN change-intake +
+    the U5 palette taxonomy — and (c) sequence the queued campaigns (owner-intake
+    WI-146+, research-knowledge WI-152+). WI-144 resumes for its final build round
+    once the sitting rules OI-12.
   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
@@ -96,16 +108,16 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** **WI-144 — dashboard UI-quality pass** (`active`,
-  [next-wi](next-wi)). The fresh re-critique ran (048-CRITIQUE,
-  CHANGES-REQUESTED, findings=5); **build round 2 landed** its buildable findings
-  ([BLOCKER A1] leaf-block `tabindex`, [MAJOR T1] hero active-WI line, [MINOR U3]
-  knowledge edge `--muted` token, 046-REVIEW-A flat-DAG status glyph). Next in the
-  loop: a **fresh re-critique** (never self-adjudicated). Everything left is
-  owner-gated (U5 anchor + phase-hue de-collision + TC-HARDEN) or deferred (**[T2]**
-  Knowledge-tab density, a `.knode`/`knowarrow` re-spec) — disposition in **OI-12**
-  ([open-items.md](open-items.md)). At WI-144 close: the full gate bar, and the
-  whole spine rejoins G3. [run-state](run-state) is **RUNNING**.
+- **Next action:** **WI-110** ([next-wi](next-wi)) — a standalone, already-ratified
+  owner directive (opus BUILD effort → `xhigh`; the one-cell `Env` change +
+  before/after `s/turn` telemetry). It is the next non-dependent unit the loop
+  works while **WI-144 is paused** (its critique budget is exhausted; disposition in
+  **OI-12**, [open-items.md](open-items.md)) awaiting the batched phase-v3 g2-close
+  ratification sitting. WI-144 is `active` in the registry (no `paused` enum — the
+  pause is recorded above + in [next-wi](next-wi)); it resumes for its final build
+  round once the sitting rules OI-12, then the full gate bar and the spine rejoins
+  G3. Round-by-round build/critique evidence lives in [log.md](log.md) and OI-12,
+  not here. [run-state](run-state) is **RUNNING**.
 
 ## Scope
 

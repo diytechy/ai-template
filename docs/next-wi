@@ -7,21 +7,24 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# NOTE: WI-144 is `active`. Build ROUND 2 LANDED (log.md 2026-07-14). The fresh
-# re-critique had already fired (048-CRITIQUE, CHANGES-REQUESTED, findings=5) plus a
-# 046-REVIEW-A; round 2 shipped every buildable finding, all verified:
-#  - [BLOCKER A1] leaf drill blocks now tabindex="0" (keyboard can open WI/module detail)
-#  - [MAJOR T1]   the landing hero names the active WI (id+title) — zero tab switches
-#  - [MINOR U3]   knowledge .kedge shares the drill --muted stroke token (light-mode parity)
-#  - 046-REVIEW-A the <=3-tier flat dag_svg fallback now glyph-prefixes the .wid label
-# test_gen_trajectory.py 75 passed; smoke 593 passed; gen_trajectory --check fresh.
-# DEFERRED / OWNER-GATED (unchanged): [MINOR T2] Knowledge-tab density (a .knode/
-# knowarrow re-spec, its own pass); the U5 anchor (048 refines it to "no cross-
-# vocabulary colour collision") + phase-hue de-collision; the TC-HARDEN cases — OI-12,
-# ratify at the phase-g2 close.
-# NEXT IN THE LOOP: a FRESH re-critique of the rebuilt PROJECT_STATE.html (SR-047's
-# loop, never the authoring build's self-assessment). It judges the round-2 fixes.
-# WI-144 stays open until the critique APPROVEs; after that confirms round 2, only the
-# owner ratification of U5 + TC-HARDEN remains, then the full gate bar / check.py
-# --gate at close, and the whole spine rejoins G3.
-WI-144
+# NOTE: WI-144 (the v3 campaign closer) is `active` but PAUSED — its SR-047
+# critique loop has EXHAUSTED the AGENT_CRITIQUE_MAX=3 budget still
+# CHANGES-REQUESTED (042/048/052; log.md 2026-07-14). Under single-ratify the
+# budget failure_action pauses that WI + surfaces the block for the phase-v3
+# g2-close ratification sitting (OI-12) but KEEPS the loop RUNNING on non-dependent
+# work — so next-wi moves OFF WI-144 to the next actionable non-dependent unit
+# (WI-144 resumes for its final build round after the sitting rules OI-12).
+# 052-CRITIQUE disposition (OI-12): BUILDABLE rubric-meeting [MAJOR A4] queued
+# .detail .badge 2.56:1 · [MINOR A4] focus ring 2.05:1 · [MAJOR T4] .blab overflow
+# · U4/U3/U1 polish; OWNER-GATED (recurring) U5 palette taxonomy · [MAJOR T2]
+# Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN
+# first so one final build round mechanizes contrast instead of another hand pass.
+#
+# NEXT: WI-110 — a standalone, already-ratified owner directive (log.md 2026-07-14:
+# opus BUILD effort → xhigh, the one-cell Env change + before/after s/turn telemetry
+# via WI-124, plus the OpenAI reasoning_effort answer). Predecessors ~WI-109;~WI-145
+# done; it is NOT a campaign kickoff, so it sidesteps the campaign-sequencing the
+# owner does at the sitting — the cleanest non-dependent unit to keep the loop moving.
+# (The owner-intake WI-146+ and research-knowledge WI-152+ campaigns wait for the
+# sitting to sequence them; do not auto-start a campaign.)
+WI-110
