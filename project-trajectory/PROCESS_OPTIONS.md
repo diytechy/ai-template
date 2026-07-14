@@ -9,6 +9,45 @@ applies-when doesn't match your scope.
 
 Section headings mirror the core-doc sections that point here.
 
+## Applies-when index
+
+Scan this table once, then read only the sections whose trigger matches your
+scope — **skip a layer if its "applies when" doesn't fit** (nothing here is
+required for the minimum profile). Rows are in document order; each maps to the
+`##` section of the same name below.
+
+| Layer | Applies when — skip the section if not | What it adds |
+|---|---|---|
+| Proportionality doctrine | **always** — the mindset that frames how hard every layer below is applied | nothing (tells you when *not* to reach for machinery) |
+| Derived gate model | **always**, once you use gates — the default: the gate is computed from artifact states, not declared | `docs/gate` (generated) + `derive_gate.py` |
+| Phased delivery | a roadmap ships v1 before v2/v3 (a single-shot deliverable skips it) | a `Phase` column on the spine + a per-phase gate |
+| Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
+| Gate authority levels | a repo declares a non-default `docs/gate-policy` | `docs/gate-policy` + an attestation / deviation register |
+| Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
+| Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py`, `docs/run-*`, `agents.csv`, the launchers |
+| Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
+| Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/guardrails-policy` |
+| Enforcement audit | your process outgrew one reader's head and you want to know which rules actually bind | `docs/enforcement-audit.md` |
+| §7 boundary notes | onboarding contributors, wiring a workstation, or a contested tooling boundary | prose (setup-script + boundary calls) |
+| Skills layer | an AI agent works the repo and you want it to load reusable skills | `skills/` + a per-agent fan-out |
+| Trajectory / work-items layer | you want to track **how** work executes — cross-track order, %-complete | `work-items.csv` + `PROJECT_STATE.html` + `gen_trajectory.py` |
+| Commit identity & privacy | you must keep a real, contactable identity out of published commits | `docs/privacy-check` + commit-identity config |
+| §8 purchased parts | the product incorporates purchased/external parts it buys rather than builds | a parts registry (`PB`/`PART`) |
+| Binary assets | the project ships unavoidably-binary deliverables (art, audio, video) | an assets registry (provenance / license / hash) |
+| Intra-repo interfaces & the architecture graph | more than one module, and you want the arch view to show how they connect | an `IF-###` seam registry + the `architecture.md` graph |
+| Component layer | you want a durable home for set-grained knowledge & lifecycle (a subsystem, an assembly) | a `CMP` component registry |
+| §9 NFR checklist | deciding which non-functional concerns a project must consider at G1 | an NFR checklist |
+| §9 perf comparator | you have captured `PB-###` budgets you want tracked over time | a perf comparator over `PB` rows |
+| §10 several modules, one repo | a repo grows distinct sub-systems that still build and release as one (scale rung 2) | a module map |
+| Parallel tracks (multi-lane operation) | one repo carries multiple concurrent work lanes | per-lane `status.md` + a tracks registry |
+
+**Byte budget.** This file is **byte-watched** the way [`process.md`](process.md)
+is: its baseline lives in the `byte-budget-guard` skill, and any growth must be
+**flagged** with a byte delta + reason in the session/WI log — so the opt-in
+surface can't bloat silently the way the core is protected from. The **split**
+of the two spec-sized layers (Unattended operation, Trajectory) into their own
+reference docs is **deferred** until the file's size actually forces it.
+
 ---
 
 ## Proportionality doctrine

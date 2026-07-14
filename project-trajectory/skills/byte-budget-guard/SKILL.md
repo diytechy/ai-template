@@ -1,6 +1,6 @@
 ---
 name: byte-budget-guard
-description: Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md) to confirm they stay within their hard byte budgets and to report the delta.
+description: Use before and after editing this repo's budget-watched docs (AGENTS.template.md, PROCESS.md, PROCESS_OPTIONS.md) to confirm they stay within their byte budgets and to report the delta.
 stacks: [any]
 domains: [any]
 phases: [dev, gate]
@@ -10,10 +10,12 @@ scope: this-repo
 
 # Byte-budget guard (this template repo)
 
-This repo's shipped guides have **hard byte budgets** because a downstream
-`AGENTS.md` is truncated by Gemini near ~12k chars and `PROCESS.md` is the
-load-bearing core we keep lean. Growing them silently is a recurring failure
-mode here. Check before you edit and again before you commit.
+This repo's shipped guides have **byte budgets** because a downstream
+`AGENTS.md` is truncated by Gemini near ~12k chars, `PROCESS.md` is the
+load-bearing core we keep lean, and `PROCESS_OPTIONS.md` (the opt-in expansion
+home) will otherwise bloat the adopter's reading cost silently — the growth
+just moves next door. Growing any of them silently is a recurring failure mode
+here. Check before you edit and again before you commit.
 
 ## Budgets
 
@@ -21,16 +23,19 @@ mode here. Check before you edit and again before you commit.
 |---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
 | `project-trajectory/PROCESS.md` | **watched** (baseline **59,827** as of 2026-07-13/WI-101; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
+| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **134,965** as of 2026-07-14/WI-103; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
 
-`PROCESS_OPTIONS.md`, `ADOPTING.md`, and `EXAMPLE.md` are the **expansion homes**:
-push detail there instead of growing the two budgeted files.
+`ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
+push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
+`PROCESS_OPTIONS.md` is also an expansion home, but — watched itself now — its
+growth is flagged too, not free.
 
 ## Procedure
 
 1. **Record the before-size** of any budgeted file you will touch:
 
    ```
-   wc -c project-trajectory/AGENTS.template.md project-trajectory/PROCESS.md
+   wc -c project-trajectory/AGENTS.template.md project-trajectory/PROCESS.md project-trajectory/PROCESS_OPTIONS.md
    ```
 
 2. Make the edit. Prefer net-zero wording; if a rule must be added to
