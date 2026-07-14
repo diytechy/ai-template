@@ -82,6 +82,40 @@ why (one bullet each; cite ids)._
   pack library + skills domains filter (intake item 8); §9 seed research WI =
   the prompt→image investigation (item 5). OI-9 stays pending — the revision
   is what the sitting now ratifies.
+- **2026-07-14 — OI-8 RATIFIED (WI-145): the `[v3]-[g2]` dashboard-ux batch
+  blessed under `single-ratify`.** The one human ratification the level defers
+  to the phase g2 close (`docs/gate-policy`) — owner sign-off on the decomposed
+  v3 requirement work: SR-052/053/054 (`Critique`, v3) + SR-055/056 (`Test`,
+  v3) with their LLR-053…057 / TC-053…057 (all `Planned`, orphans=0); the three
+  intent-derived rubrics
+  `docs/rubrics/dashboard-{accessibility,uniformity,usability}.md`; and the
+  SR-051 rev (LLR-052/TC-052 `Verified→Planned`, v2 held at G2 until WI-141
+  rebuilds it). Basis: the g2 GATE entry's consistency sweep (triangle
+  coherence, the Critique non-exemption, closed-vocabulary schema,
+  rubrics-from-intent) + the green floor (trace `--strict` orphans=0, derived
+  gate G2, full suite green — re-verified this sitting, see the GATE entry
+  below). Alternatives passed over: request changes to a specific SR/LLR/TC/
+  rubric · hold — the design is coherent and no code ships yet (this ratifies
+  the *design*, not an implementation). Unblocks the v3 dev slices WI-141→144
+  (G2→G3, series).
+- **2026-07-14 — OI-9 RATIFIED (WI-145): the research-track + durable
+  knowledge-layer design spec accepted as revised**
+  ([specs/research-knowledge.md](specs/research-knowledge.md)). The §6 open
+  decisions ruled per the spec recommendations: (1) home =
+  `docs/knowledge/<label>.md` + the CMP `Knowledge`/`DetailDoc` hooks; (2) tier
+  = a `BuildTier=strong` research coordinator delegating to quick/medium
+  gatherer subagents, grounding review mandatory; (3) the warn-first
+  `Knowledge`-ref check lives in `trace.py` (it already owns CMP joins); (4) OKF
+  pack export **deferred** (revisit when a downstream consumes OKF); (5)
+  pack-library import scope = the 6 domain-general research packs only (the 8
+  field packs stay project-local per the library's own epistemics caveat); (6)
+  the `bootstrap.py --agents` domains filter = yes (the precondition for
+  importing the staged 21-skill library without polluting every adopter). Every
+  addition is warn-first / opt-in — no spine rows change, nothing downstream
+  must migrate. Alternatives passed over: ratify with changed §6 calls · hold —
+  the design builds on the Thread-52 knowledge home rather than a parallel
+  surface. Files the §8 implementation WIs (WI-152…157 queued; WI-158 the
+  deferred OKF export); seed research WI = the prompt→image investigation (§9).
 
 ## Audit log
 
@@ -4998,3 +5032,76 @@ names the domains-filter gap).
 **Handoff.** Run-state stays **NEEDS-HUMAN** on the same one sitting (OI-8 +
 OI-9, both briefs now carrying the 2026-07-14 material); `docs/next-wi`
 unchanged (WI-141). Not pushed (`push-policy: human`).
+
+## 2026-07-14 — GATE: owner sitting — OI-8 ([v3]-[g2] batch) + OI-9 (research-knowledge) ratified; WI-145 closed
+
+**Gate action (`docs/gate-policy` = `single-ratify`).** This is the one human
+ratification the level defers to the phase's `[v3]-[g2]` close — the
+owner-authorized sitting (this session, owner instruction "Ratify OI-8", then
+"Ratify OI-8 AND OI-9" at the WI-145-bundling clarification). Both rulings are
+in the Decisions log above; this entry is the executed record. **No spine state
+changes** — under `single-ratify` the LLM-gate already advanced the states at
+WI-135 (v3 → G2); this sitting is the deferred human sign-off, so `docs/gate`
+stays **G2** (`derive_gate --check` up to date, no recompute).
+
+**OI-8 — the `[v3]-[g2]` dashboard-ux batch, ratified.** Blessed: SR-052/053/054
+(`Critique`, v3) + SR-055/056 (`Test`, v3) with LLR-053…057 / TC-053…057 (all
+`Planned`, orphans=0); the three intent-derived rubrics
+`docs/rubrics/dashboard-{accessibility,uniformity,usability}.md`; and the SR-051
+rev (LLR-052/TC-052 `Verified→Planned`, v2 held at G2 until WI-141 rebuilds it).
+Basis: the WI-135 g2 GATE entry's consistency sweep (triangle coherence, the
+Critique non-exemption, closed-vocabulary schema, rubrics-from-intent) + the
+green floor re-verified this sitting (below). Unblocks the v3 dev slices
+WI-141→144 (G2→G3, series).
+
+**OI-9 — the research-track + durable knowledge-layer design spec, ratified as
+revised** ([specs/research-knowledge.md](specs/research-knowledge.md), Status →
+RATIFIED). The §6 open decisions ruled per their recommendations: (1) home =
+`docs/knowledge/<label>.md` + the CMP `Knowledge`/`DetailDoc` hooks; (2) tier =
+`BuildTier=strong` research coordinator delegating to quick/medium gatherer
+subagents (grounding review mandatory); (3) warn-first `Knowledge`-ref check in
+`trace.py`; (4) OKF pack export **deferred**; (5) import scope = the 6
+domain-general research packs only; (6) `bootstrap.py --agents` domains filter =
+yes. Filed the §8 implementation WIs: **WI-152** (knowledge home) · **WI-153**
+(trace.py ref integrity + knowledge⇒component coupling) · **WI-154** (process
+text) · **WI-155** (dogfood packs + the seed prompt→image research WI,
+`BuildTier=strong`) · **WI-156** (kit-provisioned pack library) · **WI-157**
+(skills domains filter), all `queued`; **WI-158** (OKF pack export) `deferred`.
+Every addition is warn-first / opt-in — **no spine rows change, nothing
+downstream must migrate**.
+
+**State changes (prepare agent-resume).** **WI-145 → done** (Deliverable records
+both rulings + the state flip); [run-state](run-state) **NEEDS-HUMAN → RUNNING**
+(the `ask:` line dropped); [next-wi](next-wi) stays **WI-141** (the OI-8-gated
+NOTE refreshed — the pin is now live). `open-items.md`: the OI-8 + OI-9 sections
+deleted (a ruling clears its brief); OI-3/OI-4/OI-7 remain open (block nothing).
+status.md rewritten forward-only for the resumed loop.
+
+**Mechanized verification (real output, this sitting).**
+- Full unfiltered suite (close bar, run where `sh` resolves — the Git-Bash
+  shell): `python -m pytest -q -n auto` → **725 passed, 3 skipped in 75.45s**.
+  (A PowerShell run read **694 passed / 34 skipped** — `sh` off PATH skips the
+  Git-Bash-dependent hook tests, the standing WI-138 caveat; recorded so the
+  next driver doesn't chase a phantom.)
+- `check.py --jobs 0` at the derived gate (**G2**) → **RESULT: PASS** —
+  derived-gate (up to date, G2) · traceability (`SN=24 SR=56 LLR=57 TC=57
+  orphans=0 integrity=0 placeholders=0`, interfaces=52, components=5) · privacy ·
+  doc-navigability (66 docs, 320 links, **0 broken**) · design-flows · trajectory
+  (`--strict` clean, **158 WIs, 128 done, acyclic**).
+- Regenerated `PROJECT_STATE.html` (WI DAG: WI-145 done + 7 new rows);
+  `docs/okf` already current (OKF does not ingest WI rows); `derive_gate --check`
+  up to date. **No byte-budgeted file touched** (AGENTS.template.md / PROCESS.md /
+  PROCESS_OPTIONS.md unchanged); **no SN/SR/LLR/TC change** — docs + registry +
+  spec only.
+
+**Deviation (in-scope cleanup).** status.md's `Needs-<human>` note previously
+named ruled OI ids (OI-1/2/5/6) for context, tripping check_docs' OI-brief
+coherence warn (warn-first, long tolerated); rewording it to point at the log's
+Decisions for ratification history — instead of adding OI-8/OI-9 to that noise —
+zeroes all six warnings and keeps status.md forward-only.
+
+**Handoff.** Run-state **RUNNING**; `docs/next-wi` → **WI-141**. The loop resumes
+autonomously on the v3 dev slices WI-141→144 (G2→G3, series), then the
+owner-intake WIs (WI-146…151, WI-110) and the research-knowledge campaign
+(WI-152…157). Standing owner decisions OI-3 (push), OI-4 (LICENSE), OI-7 (review
+cadence) remain open and block nothing. Not pushed (`push-policy: human`).

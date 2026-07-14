@@ -7,6 +7,7 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# NOTE: WI-141 is OI-8-gated — the run is stopped NEEDS-HUMAN; this pin is for
-# the resume after the owner's ratification sitting.
+# NOTE: the WI-145 owner sitting closed 2026-07-14 (OI-8 + OI-9 ratified,
+# log.md Decisions) — run-state is RUNNING and this pin is now live: the v3 dev
+# slices WI-141..144 run G2->G3 in series, WI-141 first.
 WI-141

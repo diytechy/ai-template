@@ -1,10 +1,11 @@
 # Design spec — Research track + durable knowledge layer
 
-**Status: DRAFT — pending owner ratification (OI-9).** Branch:
-`derived-gate-model`. Registered as **WI-138** (owner intake 2026-07-13 items
-5+6 — [the intake brief](owner-intake-2026-07-13.md#research-knowledge)).
-This doc is the spec-of-record; implementation WIs are filed from §8 **on
-ratification**, not before.
+**Status: RATIFIED 2026-07-14 (OI-9, owner sitting — log.md Decisions).**
+Branch: `derived-gate-model`. Registered as **WI-138** (owner intake 2026-07-13
+items 5+6 — [the intake brief](owner-intake-2026-07-13.md#research-knowledge)).
+This doc is the spec-of-record; its §8 implementation WIs were filed **at
+ratification**: WI-152…157 (queued) + WI-158 (deferred OKF export). The §6
+open decisions were ruled per their recommendations (see the log's Decisions).
 
 > **Revised 2026-07-14** per the owner's OI-9 feedback
 > ([intake](owner-intake-2026-07-14.md)): §3b research tiering (strong-tier

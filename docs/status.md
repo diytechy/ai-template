@@ -43,9 +43,10 @@ home elsewhere — don't restate it here:
 
 - **Open items** _(one bullet per item; `OI-N` ids are stable and never
   renumbered):_
-  - **Needs \<human>** _(the 2026-07-13 sitting ratified OI-1/OI-2 and ruled
-    OI-5/OI-6 — records in [log.md](log.md) Decisions; under `single-ratify`
-    the loop does **not** pause on these). Depth per item in
+  - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
+    that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
+    in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
+    pause on the items below. Depth per item in
     [open-items.md](open-items.md):_
     - **OI-3** — **push decision** (git-checked: `origin` exists, this branch
       tracked, ~10 unpushed commits — not "48 local-only"); rec: push.
@@ -53,38 +54,30 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-    - **OI-8** — **ratify the `[v3]-[g2]` batch** (single-ratify's one human
-      sitting at the phase g2 close): bless the decomposed v3 requirement work —
-      SR-052…056's LLR+TC, the three `docs/rubrics/dashboard-*.md` rubrics, and
-      the SR-051 rev — then the v3 dev slices run autonomously. Rec: ratify (the
-      LLM-gate consistency sweep + green floor are recorded in the g2 GATE entry,
-      [log.md](log.md)). Brief: [open-items.md](open-items.md) OI-8 — now
-      carries the owner-requested SN→SR→LLR/TC tree of the batch (2026-07-14).
-    - **OI-9** — **ratify the research-track + knowledge-layer design spec**
-      ([specs/research-knowledge.md](specs/research-knowledge.md), **revised
-      2026-07-14** per the owner's feedback — strong-tier research coordinator,
-      knowledge⇒component coupling, kit-provisioned pack library); its §8
-      implementation WIs file on ratification. Rec: ratify — same sitting as
-      OI-8. Brief: [open-items.md](open-items.md) OI-9.
-- **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
-  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ the
-  **v3 dev slices** run G2→G3 in series *after* the OI-8 sitting —
+- **Queued (v3 dev slices, owner intake 2026-07-13** —
+  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ now
+  **live** — the OI-8 sitting closed, so they run G2→G3 in series:
   **WI-141** (SR-051-rev interface-wired render + descend-a-layer) →
   **WI-142** (Process tab intake + human-decision loops) →
   **WI-143** (decomposition render polish) →
-  **WI-144** (dashboard UI-quality pass + the SR-047 critique). The research
-  track's implementation WIs are **not yet filed** — they come from
-  [specs/research-knowledge.md](specs/research-knowledge.md) §8 at the OI-9
-  ratification._
+  **WI-144** (dashboard UI-quality pass + the SR-047 critique)._
+- **Queued (research-knowledge campaign, OI-9 §8** —
+  [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
+  2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
+  ref integrity + knowledge⇒component coupling) · **WI-154** (process text) ·
+  **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
+  strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
+  domains filter); **WI-158** deferred (OKF pack export). Sequence after the v3
+  slices unless the owner reorders `docs/next-wi`._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
   **WI-146** (ratification tree view + brief lint) · **WI-147** (graceful
   pause) · **WI-148** (weekday blackout window) · **WI-149** (lowest-gate-first
   advisory) · **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline
   pointer) · **WI-110** re-queued (owner directive: opus BUILD effort → xhigh,
-  verified via the iteration-index s/turn telemetry). All gate behind the
-  sitting (WI-145 predecessor — the DAG records the pause); sequence after the
-  v3 slices unless the owner reorders `docs/next-wi`._
+  verified via the iteration-index s/turn telemetry). Their sitting-gate
+  predecessor is now satisfied (the sitting closed); sequence after the v3
+  slices unless the owner reorders `docs/next-wi`._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
@@ -94,18 +87,16 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
   via the vendoring layer — nothing to build here.
-- **Next action:** **the owner sitting — WI-145 (`active`)**: everything left
-  to execute is human-gated, so run-state is **NEEDS-HUMAN**. One sitting
-  covers **OI-8** (ratify the `[v3]-[g2]` batch; closes WI-145 and unblocks
-  the v3 dev slices **WI-141→144**, series G2→G3) and **OI-9** (ratify
-  [specs/research-knowledge.md](specs/research-knowledge.md); files its §8
-  implementation WIs) — plus the standing OI-3/OI-4/OI-7 rulings if wanted
-  (they block nothing). The v3 slices' registry rows carry WI-145 as a hard
-  predecessor, so the DAG itself records why the queue is parked. After the
-  sitting: mark WI-145 done, flip [run-state](run-state) to RUNNING —
-  `docs/next-wi` is pre-pointed at **WI-141**. The deferred
-  `main-decomposition` campaign (**WI-080→WI-081**) stays parked (`deferred`,
-  not queued).
+- **Next action:** **resume the loop — WI-141** ([next-wi](next-wi)). The
+  **owner ratification sitting closed 2026-07-14** (OI-8 + OI-9 ratified —
+  [log.md](log.md) Decisions); [run-state](run-state) is **RUNNING**. The v3
+  dev slices **WI-141→144** run G2→G3 in series first (their sitting-gate
+  predecessor is now satisfied), then the owner-intake WIs (WI-146…151, WI-110)
+  and
+  the research-knowledge campaign (WI-152…157). The standing OI-3 (push), OI-4
+  (LICENSE), OI-7 (review cadence) block nothing and can be ruled any time. The
+  deferred `main-decomposition` campaign (**WI-080→WI-081**) stays parked
+  (`deferred`, not queued).
 
 ## Scope
 
