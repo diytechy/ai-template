@@ -43,9 +43,11 @@ growth is flagged too, not free.
    *Customizing* note states this).
 
 3. **Re-measure and compute the delta.** `AGENTS.template.md` must be
-   `<= 10000`. If `PROCESS.md` grew, that is allowed but must be *flagged* with
-   the byte delta and a reason in the session/WI note (the convention every late
-   thread followed).
+   `<= 10000`. If `PROCESS.md` or `PROCESS_OPTIONS.md` grew, that is allowed
+   but must be *flagged* with the byte delta and a reason in the session/WI
+   note (the convention every late thread followed), and the grown file's
+   baseline in the Budgets table above must be **re-stamped** — source plus
+   every tracked skill copy — in the same commit.
 
 4. **Confirm the test still passes** whenever `AGENTS.template.md` changed:
 
@@ -57,7 +59,8 @@ growth is flagged too, not free.
 
 ```
 Byte deltas: AGENTS.template.md 9976 -> 9976 (untouched, 24 B headroom preserved);
-PROCESS.md 56230 -> 56230 (unchanged).
+PROCESS.md 56230 -> 56230 (unchanged);
+PROCESS_OPTIONS.md 134965 -> 134965 (unchanged).
 ```
 
 If a budgeted file grew, say by how much and where the paid-for tightening (or the
