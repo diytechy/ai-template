@@ -869,13 +869,14 @@ def test_meta_campaign_binning_smoke():
         assert slug in view
 
 
-# --- WI-087 / SR-051: the tiered, phase-aware drill-down views -----------------
-# The When roadmap tiers into phase -> workstream -> work-item <details> blocks
-# once a tier holds > 3 members (generalizing the WI-074 campaign binning), each
-# WI carries a per-phase color accent, parent edges aggregate the deduped union of
-# their members' crossing edges, and the How-SW view starts collapsed above the
-# > 3 component threshold. A registry below the thresholds renders byte-identically
-# to the flat WI-074 view.
+# --- WI-087 / SR-051 (rev WI-141): the tiered, Simulink-style drill-down views --
+# The When roadmap tiers into phase -> workstream -> campaign -> work-item block
+# LAYERS once a tier holds > 3 members (generalizing the WI-074 campaign binning):
+# each layer is an SVG diagram of blocks with input/output ports, the aggregated
+# cross-tier edges wired between ports (the deduped union of child edges), a
+# container block double-clicked (or Enter/Space) to DESCEND one layer and a
+# breadcrumb to return (superseding the old <details> expand). A registry below the
+# thresholds renders byte-identically to the flat WI-074 view.
 
 # Four SR phases (v1..v4), so a WI's phase is derived from the SR it delivers.
 TIER_SRS = (
@@ -899,6 +900,17 @@ TIER_UNION_WIS = (
 )
 
 
+def _layer_with(view, marker):
+    """The SVG of the first drill `.layer` whose blocks carry `marker` (a drill
+    layer div holds only its SVG — no nested divs — so the split is clean)."""
+    for _lid, svg in re.findall(
+        r'<div class="layer" data-layer="(when-\d+)"[^>]*>(.*?)</div>', view, re.S
+    ):
+        if marker in svg:
+            return svg
+    raise AssertionError("no layer contains " + marker)
+
+
 def tiered_repo(root, wis_body, header=TIER_HDR, srs=TIER_SRS):
     """make_repo + a phase-carrying SR registry (the WI phase is derived from the
     SRs a work item delivers)."""
@@ -910,37 +922,35 @@ def tiered_repo(root, wis_body, header=TIER_HDR, srs=TIER_SRS):
 
 
 def test_when_view_tiers_by_phase_above_threshold(tmp_path):
-    # > 3 phases -> the When view starts at phase blocks (4), each carrying the
-    # per-phase color accent; the phase count is surfaced.
+    # > 3 phases -> the When view starts at a layer of 4 phase blocks, each a
+    # descend container carrying the per-phase color accent; the count is surfaced.
     tiered_repo(tmp_path, TIER_UNION_WIS)
     assert gen(tmp_path).returncode == 0
-    # `dag_view` truncates at the first nested </div>; the tierbox markup is unique
-    # to the When panel, so count over the full page.
     view = html_of(tmp_path)
     assert "Tiered roadmap: 4 phase(s), 4 workstream(s)" in view
-    assert view.count('<details class="tierbox">') == 4  # one block per phase
-    assert "· phase ·" in view  # the tier is labeled
-    assert '<span class="ph"' in view  # the per-phase color accent renders
+    assert view.count('data-tier="phase"') == 4  # one block per phase
+    # each phase block is a descend container (double-click / Enter to drill in)
+    assert view.count('data-tier="phase" data-descend=') == 4
+    assert '<span class="ph"' in view  # the per-phase color accent legend renders
 
 
 def test_when_view_parent_edge_is_deduped_union_of_child_edges(tmp_path):
     # The two v1->v2 child edges (WI-001->WI-003 and WI-002->WI-003) aggregate to
-    # ONE parent block edge equal to their deduped union.
+    # ONE parent block wire equal to their deduped union, carried as the wire title.
     tiered_repo(tmp_path, TIER_UNION_WIS)
     assert gen(tmp_path).returncode == 0
-    view = dag_view(tmp_path)
-    xt = re.search(r'<ul class="xtier">(.*?)</ul>', view, re.S).group(1)
-    # crossing phase pairs: v1->v2, v2->v3, v2->v4 -> three aggregated edges
-    assert len(re.findall(r"<li>", xt)) == 3
-    v1v2 = re.search(r"<code>v1</code> → <code>v2</code>.*?\((.*?)\)", xt, re.S).group(
-        1
+    phase_layer = _layer_with(html_of(tmp_path), 'data-tier="phase"')
+    wire_titles = re.findall(
+        r'<path class="wire"[^>]*><title>(.*?)</title>', phase_layer
     )
-    assert v1v2 == "WI-001→WI-003, WI-002→WI-003"  # deduped union
+    # crossing phase pairs v1->v2, v2->v3, v2->v4 -> three aggregated wires
+    assert len(wire_titles) == 3
+    assert "WI-001→WI-003, WI-002→WI-003" in wire_titles  # deduped union, one wire
 
 
 def test_when_view_nests_workstream_tier_inside_a_phase(tmp_path):
-    # Within a phase that holds > 3 workstreams the workstream tier fires,
-    # nesting phase -> workstream -> work item; below the threshold it stays flat.
+    # Within a phase that holds > 3 workstreams the workstream tier fires, nesting
+    # phase -> workstream -> work item as descend layers; below the threshold flat.
     body = (
         "WI-001,A1,scripts,SR-001,,done,d,\n"
         "WI-002,A2,docs,SR-001,,done,d,\n"
@@ -953,10 +963,10 @@ def test_when_view_nests_workstream_tier_inside_a_phase(tmp_path):
     tiered_repo(tmp_path, body)
     assert gen(tmp_path).returncode == 0
     view = html_of(tmp_path)
-    assert "· phase ·" in view and "· workstream ·" in view  # both tiers rendered
-    # 4 phase blocks + 4 workstream blocks nested inside v1 = 8 tierboxes.
-    assert view.count('<details class="tierbox">') == 8
-    assert "<code>Scripts / harness</code>" in view  # workstream label on a sub-block
+    assert view.count('data-tier="phase"') == 4  # 4 phase blocks at the root layer
+    # only v1 (4 workstreams) explodes into a workstream layer -> 4 workstream blocks
+    assert view.count('data-tier="workstream"') == 4
+    assert "Scripts / harness" in view  # workstream label on a sub-block
 
 
 def test_when_view_workstream_tier_when_phases_flat(tmp_path):
@@ -973,8 +983,8 @@ def test_when_view_workstream_tier_when_phases_flat(tmp_path):
     assert gen(tmp_path).returncode == 0
     view = html_of(tmp_path)
     assert "Tiered roadmap: 1 phase(s), 5 workstream(s)" in view
-    assert view.count('<details class="tierbox">') == 5  # one block per workstream
-    assert "· workstream ·" in view and "· phase ·" not in view
+    assert view.count('data-tier="workstream"') == 5  # one block per workstream
+    assert 'data-tier="phase"' not in view  # phases stay flat
 
 
 def test_when_view_flat_below_thresholds_is_the_campaign_view(tmp_path):
@@ -998,6 +1008,56 @@ def test_when_view_is_deterministic_and_check_stable(tmp_path):
     assert again.returncode == 0 and "already up to date" in again.stdout
     assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
     assert gen(tmp_path, "--check").returncode == 0
+
+
+# --- SR-051 rev (WI-141): the three interface-wired / descend-a-layer contracts --
+
+
+def test_when_view_seams_wire_to_block_ports(tmp_path):
+    # Each block carries an input port (left-middle) and an output port
+    # (right-middle); each aggregated edge is a wire whose endpoints ATTACH to those
+    # ports (Simulink-style), not free-floating text.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    root = _layer_with(html_of(tmp_path), 'data-tier="phase"')  # the phase layer
+    out_ports = {
+        round(float(cx), 1)
+        for cx in re.findall(r'<circle class="port out" cx="([\d.]+)"', root)
+    }
+    in_ports = {
+        round(float(cx), 1)
+        for cx in re.findall(r'<circle class="port in" cx="([\d.]+)"', root)
+    }
+    assert out_ports and in_ports  # both port kinds render
+    wires = re.findall(r'<path class="wire" d="M([\d.]+),[\d.]+ C.* ([\d.]+),', root)
+    assert wires  # at least one wire
+    for x1, x2 in wires:  # every wire leaves an OUT port and enters an IN port
+        assert round(float(x1), 1) in out_ports
+        assert round(float(x2), 1) in in_ports
+
+
+def test_when_view_double_click_descends_a_layer(tmp_path):
+    # A container block descends one layer on double-click (keyboard alt: Enter /
+    # Space on the focused block); its data-descend names a real child layer.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    view = html_of(tmp_path)
+    m = re.search(r'data-tier="phase" data-descend="(when-\d+)"', view)
+    assert m and 'data-layer="{}"'.format(m.group(1)) in view  # target layer exists
+    # focusable + labelled + a keyboard alternative to the pointer
+    assert 'tabindex="0" role="button"' in view
+    assert "addEventListener('dblclick'" in view
+    assert "addEventListener('keydown'" in view and "e.key==='Enter'" in view
+
+
+def test_when_view_breadcrumb_restores_parent(tmp_path):
+    # The drill carries a breadcrumb whose crumb click truncates the trail back to
+    # that ancestor (restoring the parent view); the root crumb is declared.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    view = html_of(tmp_path)
+    assert '<nav class="crumbs"' in view and 'data-root-crumb="Roadmap"' in view
+    assert "trail=trail.slice(0,i+1)" in view  # crumb click restores the ancestor
 
 
 # Four one-module components -> the How-SW top view exceeds the > 3 threshold.
@@ -1031,17 +1091,18 @@ def test_how_sw_collapses_above_component_threshold(tmp_path):
 
 
 def test_meta_tiered_when_view_smoke():
-    # Over the real meta repo (4 workstreams > 3): the When view tiers into
-    # workstream blocks with the campaign containers nested at the bottom tier.
+    # Over the real meta repo (4 workstreams > 3): the When view tiers into a
+    # workstream block layer with campaign container blocks at the bottom tier,
+    # rendered as a wired drill diagram.
     ct = load_script("check_trajectory")
     gt = load_script("gen_trajectory")
     wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
     assert not integrity
     view = gt.when_view(ROOT, wis)
     assert view is not None
-    assert '<details class="tierbox">' in view  # workstream tier fires
-    assert "· workstream ·" in view
-    assert 'class="campbox"' in view  # campaigns stay the bottom-tier container
+    assert 'class="drill"' in view and 'data-tier="workstream"' in view
+    assert 'data-tier="campaign"' in view  # campaigns stay the bottom-tier container
+    assert 'class="port in"' in view and 'class="wire"' in view  # interface-wired
 
 
 # --- WI-085 / SR-050: the Process reference tab ---------------------------------

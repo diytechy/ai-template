@@ -424,7 +424,7 @@ Contracts (interfaces): IF-011, IF-024, IF-052
 | `sw_containment(root, mods)` | The containerized How-SW top view (WI-073), or None when no `CMP-###` |  |
 | `esc(s)` |  |  |
 | `campaign_containment(wis)` | The campaign-binned When view (WI-074), or None when no work item carries a |  |
-| `when_view(root, wis)` | The When roadmap as a count-thresholded phase -> workstream -> work-item |  |
+| `when_view(root, wis)` | The When roadmap as a Simulink-style, count-thresholded drill-down (SR-051 | SR-051 |
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |

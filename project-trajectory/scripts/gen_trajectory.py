@@ -1186,22 +1186,233 @@ PHASE_ACCENTS = (
     "#059669", "#db2777", "#2563eb", "#65a30d",
 )  # fmt: skip
 
-TIER_STYLE = (
+# --- SR-051 rev (WI-141): the Simulink-style drill renderer --------------------
+#
+# Shared by the tiered When roadmap and the containerized How-SW view: a tier is a
+# diagram of BLOCKS (SVG rectangles) each with an input port (left-middle) and an
+# output port (right-middle); the aggregated cross-block edges are WIRES from a
+# source block's output port to a target block's input port. A container block
+# carries `data-descend` -> a child layer id; double-click (or Enter/Space on a
+# focused block) DESCENDS one layer and a breadcrumb restores any ancestor,
+# superseding the shipped in-place-<details>-expand render. Self-contained (own
+# style + controller, no external fetch) and byte-deterministic (sorted inputs, no
+# clocks), so the --check freshness compare stays stable.
+
+DRILL_GEOM = (
+    172,
+    60,
+    46,
+    22,
+    18,
+)  # (col_w, col_gap, row_h, row_gap, pad) — DAG geometry
+PORT_R = 4.5
+
+DRILL_STYLE = (
     "<style>"
-    "#dag details.tierbox{border:1px solid var(--border);border-radius:10px;"
-    "margin:.45rem 0;background:var(--surface);box-shadow:var(--shadow);}"
-    "#dag details.tierbox>summary{cursor:pointer;font-weight:600;padding:.55rem .8rem;"
-    "list-style-position:inside;}"
-    "#dag details.tierbox>summary .sub{font-weight:400;color:var(--muted);}"
-    "#dag .tierbody{padding:.2rem 0 .2rem .85rem;}"
-    "#dag span.ph{display:inline-block;width:.55rem;height:.55rem;border-radius:2px;"
-    "vertical-align:-1px;margin-right:.4rem;}"
-    "#dag ul.xtier{margin:.2rem 0 .6rem;padding-left:1.3rem;font-size:.9rem;}"
-    "#dag ul.xtier li{margin:.1rem 0;}"
-    "#dag p.tierlegend{font-size:.82rem;color:var(--muted);margin:.3rem 0 .6rem;}"
-    "#dag p.tierlegend .ph{margin-left:.7rem;}"
+    "#dag span.ph,#sw span.ph{display:inline-block;width:.55rem;height:.55rem;"
+    "border-radius:2px;vertical-align:-1px;margin-right:.4rem;}"
+    "#dag p.tierlegend,#sw p.tierlegend{font-size:.82rem;color:var(--muted);"
+    "margin:.3rem 0 .6rem;}"
+    "#dag p.tierlegend .ph,#sw p.tierlegend .ph{margin-left:.7rem;}"
+    ".drill nav.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:.1rem;"
+    "margin:.1rem 0 .6rem;font-size:.85rem;}"
+    ".drill nav.crumbs .crumb{appearance:none;background:none;border:none;"
+    "cursor:pointer;font:inherit;color:var(--accent);padding:.15rem .35rem;"
+    "border-radius:6px;}"
+    ".drill nav.crumbs .crumb[aria-current]{color:var(--text);font-weight:600;"
+    "cursor:default;}"
+    ".drill nav.crumbs .sep{color:var(--muted);}"
+    ".drill .layer[hidden]{display:none;}"
+    ".drill svg.drillsvg{display:block;font-family:inherit;}"
+    ".drill .block[data-descend]{cursor:pointer;}"
+    ".drill .block[data-descend] rect{stroke-width:1.5;}"
+    ".drill .block:focus{outline:none;}"
+    ".drill .block:focus rect{stroke:#f59e0b;stroke-width:2.5;}"
+    ".drill .block .blab{font-size:11px;font-weight:700;}"
+    ".drill .block .bsub{font-size:8.5px;opacity:.85;}"
+    ".drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;}"
+    ".drill .port.in{stroke:var(--accent);}"
+    ".drill .wire{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.85;}"
+    ".drill .warrow{fill:var(--muted);}"
     "</style>"
 )
+
+# Self-contained controller (no libraries, runs at parse time). Idempotent: it
+# wires every `.drill` on the page once (the `data-ready` guard), so including it
+# in more than one drill view is harmless.
+DRILL_SCRIPT = (
+    "<script>(function(){"
+    "for(const drill of document.querySelectorAll('.drill:not([data-ready])')){"
+    "drill.setAttribute('data-ready','1');"
+    "const layers=[...drill.querySelectorAll('.layer')];"
+    "const byId={};for(const l of layers)byId[l.getAttribute('data-layer')]=l;"
+    "const crumbsEl=drill.querySelector('nav.crumbs');"
+    "let trail=[{id:drill.getAttribute('data-root'),"
+    "crumb:drill.getAttribute('data-root-crumb')||'Top'}];"
+    "function render(){"
+    "const cur=trail[trail.length-1].id;"
+    "for(const l of layers)l.hidden=(l.getAttribute('data-layer')!==cur);"
+    "crumbsEl.innerHTML='';"
+    "trail.forEach(function(t,i){"
+    "const b=document.createElement('button');b.type='button';b.className='crumb';"
+    "b.textContent=t.crumb;"
+    "if(i===trail.length-1)b.setAttribute('aria-current','true');"
+    "b.onclick=function(){trail=trail.slice(0,i+1);render();};"
+    "crumbsEl.appendChild(b);"
+    "if(i<trail.length-1){const s=document.createElement('span');s.className='sep';"
+    "s.textContent=' \\u203a ';crumbsEl.appendChild(s);}"
+    "});}"
+    "function descend(el){"
+    "const id=el.getAttribute('data-descend');if(!id||!byId[id])return;"
+    "if(trail.some(function(t){return t.id===id;}))return;"
+    "trail.push({id:id,crumb:el.getAttribute('data-crumb')||id});render();}"
+    "for(const el of drill.querySelectorAll('[data-descend]')){"
+    "el.addEventListener('dblclick',function(){descend(el);});"
+    "el.addEventListener('keydown',function(e){"
+    "if(e.key==='Enter'||e.key===' '){e.preventDefault();descend(el);}});}"
+    "render();}"
+    "})();</script>"
+)
+
+
+def _drill_layer_svg(blocks, edges):
+    """One drill layer as a plain SVG block diagram. Each block is a rectangle with
+    an input port (left-middle) and an output port (right-middle); each aggregated
+    `edges` entry (src_key, tgt_key, title) is a wire from the source block's OUTPUT
+    port to the target block's INPUT port (Simulink-style). Blocks lay out left->
+    right by the shared layered pipeline over the edge set, so a producer sits left
+    of its consumer and crossings are reduced. Byte-deterministic."""
+    keys = [b["key"] for b in blocks]
+    by_key = {b["key"]: b for b in blocks}
+    order = {k: i for i, k in enumerate(sorted(keys))}
+    pred_map = {k: [] for k in keys}
+    succ_map = {k: [] for k in keys}
+    seen = set()
+    for a, b, _t in edges:
+        if a in by_key and b in by_key and a != b and (a, b) not in seen:
+            seen.add((a, b))
+            pred_map[b].append(a)
+            succ_map[a].append(b)
+    pos, width, height = _layered_layout(
+        [{"id": k} for k in keys],
+        pred_map,
+        succ_map,
+        lambda k: (order[k], k),
+        DRILL_GEOM,
+    )
+    col_w, _cg, row_h, _rg, _pad = DRILL_GEOM
+
+    wires = []
+    for a, b, title in sorted(edges):
+        if a not in pos or b not in pos or a == b:
+            continue
+        x1, y1 = pos[a][0] + col_w, pos[a][1] + row_h / 2
+        x2, y2 = pos[b][0], pos[b][1] + row_h / 2
+        dx = max((x2 - x1) * 0.4, 14)
+        wires.append(
+            '<path class="wire" d="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} '
+            '{:.1f},{:.1f}" marker-end="url(#drillarrow)">{}</path>'.format(
+                x1,
+                y1,
+                x1 + dx,
+                y1,
+                x2 - dx,
+                y2,
+                x2,
+                y2,
+                "<title>{}</title>".format(esc(title)) if title else "",
+            )
+        )
+
+    nodes = []
+    for b in blocks:
+        x, y = pos[b["key"]]
+        cy = y + row_h / 2
+        label = (
+            '<text x="{:.1f}" y="{:.1f}" text-anchor="middle" fill="{}">'
+            '<tspan x="{:.1f}" dy="-2" class="blab">{}</tspan>'
+            '<tspan x="{:.1f}" dy="13" class="bsub">{}</tspan></text>'.format(
+                x + col_w / 2,
+                cy,
+                b.get("textfill", "var(--text)"),
+                x + col_w / 2,
+                esc(b["label"]),
+                x + col_w / 2,
+                esc(b["sub"]),
+            )
+        )
+        ports = (
+            '<circle class="port in" cx="{:.1f}" cy="{:.1f}" r="{}"></circle>'
+            '<circle class="port out" cx="{:.1f}" cy="{:.1f}" r="{}"></circle>'.format(
+                x, cy, PORT_R, x + col_w, cy, PORT_R
+            )
+        )
+        attrs = 'class="block {}" data-tier="{}"'.format(
+            b.get("cls", ""), esc(b.get("tier", ""))
+        )
+        if b.get("descend"):
+            attrs += (
+                ' data-descend="{}" data-crumb="{}" tabindex="0" role="button"'
+                ' aria-label="{}"'.format(
+                    esc(b["descend"]),
+                    esc(b.get("crumb", b["label"])),
+                    esc("Descend into " + str(b["label"])),
+                )
+            )
+        nodes.append(
+            "<g {}><title>{}</title>"
+            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="8" '
+            'fill="{}" stroke="{}"></rect>{}{}</g>'.format(
+                attrs,
+                esc(b.get("title", b["label"])),
+                x,
+                y,
+                col_w,
+                row_h,
+                b.get("fill", "var(--surface)"),
+                b.get("stroke", "var(--border)"),
+                ports,
+                label,
+            )
+        )
+
+    defs = (
+        '<defs><marker id="drillarrow" viewBox="0 0 10 10" refX="9" refY="5" '
+        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+        '<path d="M0,0 L10,5 L0,10 z" class="warrow"></path></marker></defs>'
+    )
+    return (
+        '<svg viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
+        'preserveAspectRatio="xMinYMin meet" role="img" class="drillsvg">'
+        "{d}{wi}{no}</svg>".format(
+            w=width, h=height, d=defs, wi="".join(wires), no="".join(nodes)
+        )
+    )
+
+
+def _render_drill(drill_id, root_id, root_crumb, layers):
+    """Assemble a drill view: a breadcrumb nav + one `.layer` per tier layer (the
+    root shown, the rest `hidden`), plus the self-contained controller. `layers` is
+    an ordered list of (layer_id, svg); each container block inside a layer carries
+    `data-descend` -> a child layer id."""
+    divs = "".join(
+        '<div class="layer" data-layer="{}"{}>{}</div>'.format(
+            esc(lid), "" if lid == root_id else " hidden", svg
+        )
+        for lid, svg in layers
+    )
+    return (
+        '<div class="drill" data-drill="{did}" data-root="{root}" '
+        'data-root-crumb="{crumb}">'
+        '<nav class="crumbs" aria-label="Breadcrumb"></nav>'
+        '<div class="layers">{divs}</div></div>{script}'.format(
+            did=esc(drill_id),
+            root=esc(root_id),
+            crumb=esc(root_crumb),
+            divs=divs,
+            script=DRILL_SCRIPT,
+        )
+    )
 
 
 # The label for an SR whose `Phase` cell is blank — the derived-gate model's
@@ -1231,16 +1442,17 @@ def _wi_phases(root, wis):
 
 
 def when_view(root, wis):
-    """The When roadmap as a count-thresholded phase -> workstream -> work-item
-    hierarchy (WI-087), or the flat WI-074 campaign view / SVG DAG when no tier
-    fires (returns None in the latter case, so the caller keeps today's flat SVG).
-
-    A tier renders as collapsed `<details>` blocks only when its LOCAL group count
-    exceeds 3 (flat at or below); campaign containers stay the bottom tier; each
-    rendered tier draws aggregated parent-to-parent edges (the deduped union of the
-    child crossing edges); each WI carries a per-phase color accent. Deterministic
-    (sorted inputs, no clocks). A registry with <= 3 phases and <= 3 workstreams
-    delegates to `campaign_containment` unchanged (byte-identical)."""
+    """The When roadmap as a Simulink-style, count-thresholded drill-down (SR-051
+    rev, WI-141): phase ⊃ workstream ⊃ campaign ⊃ work-item block LAYERS, each tier
+    a diagram of blocks whose input/output ports are wired by the aggregated
+    cross-tier dependency edges (the deduped union of the child edges). A container
+    block is double-clicked — or focused and Enter/Space'd — to DESCEND one layer,
+    and the breadcrumb restores any ancestor, superseding the shipped in-place
+    `<details>` expand. A phase/workstream tier renders only when its LOCAL group
+    count exceeds 3 (flat at or below); campaigns stay the bottom-tier container.
+    A registry with <= 3 phases AND <= 3 workstreams delegates to
+    `campaign_containment` unchanged (byte-identical). Deterministic (sorted inputs,
+    no clocks)."""
     phase_of = _wi_phases(root, wis)
     phases = {phase_of[w["id"]] for w in wis}
     workstreams = {w["workstream"] for w in wis}
@@ -1252,72 +1464,125 @@ def when_view(root, wis):
     color = {
         p: PHASE_ACCENTS[i % len(PHASE_ACCENTS)] for i, p in enumerate(sorted(phases))
     }
-    accent_of = {w["id"]: color[phase_of[w["id"]]] for w in wis}
-    tiers = [
-        ("phase", lambda w: phase_of[w["id"]]),
-        ("workstream", lambda w: w["workstream"]),
-    ]
+    counter = [0]
+    layers = []  # (layer_id, svg), in deterministic DFS order
 
-    def cross_edges(subset, keyfn):
-        """Aggregated block-to-block edges among `subset`: one entry per crossing
-        (key_p, key_w) pair, valued by the deduped set of contributing WI edges —
-        so a parent edge is exactly the union of its members' crossing edges."""
-        kof = {w["id"]: keyfn(w) for w in subset}
+    def new_id():
+        counter[0] += 1
+        return "when-{}".format(counter[0] - 1)
+
+    def agg_edges(subset, key_of):
+        """One aggregated edge per crossing (key_of[p] != key_of[w]) pair, valued by
+        the deduped union of contributing WI edges — so a parent edge is exactly that
+        union (the WI-074 boundary idiom). Returns sorted (a, b, title) triples."""
+        member = {w["id"] for w in subset}
         agg = {}
         for w in subset:
+            kw = key_of[w["id"]]
             for p in w["preds"] + w["soft"]:
-                if p in kof and kof[p] != kof[w["id"]]:
-                    agg.setdefault((kof[p], kof[w["id"]]), set()).add((p, w["id"]))
-        return agg
+                if p in member and key_of[p] != kw:
+                    agg.setdefault((key_of[p], kw), set()).add((p, w["id"]))
+        return [
+            (a, b, ", ".join("{}→{}".format(p, w) for p, w in sorted(e)))
+            for (a, b), e in sorted(agg.items())
+        ]
 
-    def cross_html(agg):
-        if not agg:
-            return ""
-        lis = "".join(
-            "<li><code>{}</code> → <code>{}</code> "
-            '<span class="sub">({})</span></li>'.format(
-                esc(a),
-                esc(b),
-                esc(", ".join("{}→{}".format(p, w) for p, w in sorted(edges))),
+    def wi_block(w, key=None):
+        st = _wi_st(w)
+        t = w["title"]
+        return {
+            "key": key or w["id"],
+            "label": w["id"],
+            "sub": t if len(t) <= 20 else t[:19] + "…",
+            "fill": STATUS_FILL[st],
+            "textfill": "#0f172a" if st == "queued" else "#fff",
+            "stroke": "rgba(15,23,42,.15)",
+            "tier": "work-item",
+            "cls": st,
+            "title": "{} — {} ({})".format(w["id"], t, st),
+        }
+
+    def wi_layer(members):
+        """A leaf layer of work-item blocks wired by their intra-set edges."""
+        lid = new_id()
+        blocks = [wi_block(w) for w in sorted(members, key=lambda w: w["id"])]
+        edges = agg_edges(members, {w["id"]: w["id"] for w in members})
+        layers.append((lid, _drill_layer_svg(blocks, edges)))
+        return lid
+
+    def leaf_layer(subset):
+        """No phase/workstream tier fires here -> the bottom tier: one container
+        block per campaign (descend to its work items) plus standalone WI blocks."""
+        lid = new_id()
+        by_camp, standalone = {}, []
+        for w in subset:
+            (by_camp.setdefault(w["campaign"], []).append(w)) if w.get(
+                "campaign"
+            ) else standalone.append(w)
+        blocks, key_of = [], {}
+        for slug in sorted(by_camp):
+            members = by_camp[slug]
+            child = wi_layer(members)
+            for w in members:
+                key_of[w["id"]] = "camp:" + slug
+            blocks.append(
+                {
+                    "key": "camp:" + slug,
+                    "label": slug,
+                    "sub": "campaign · {} item(s)".format(len(members)),
+                    "fill": "var(--surface)",
+                    "stroke": "var(--border)",
+                    "tier": "campaign",
+                    "descend": child,
+                    "crumb": slug,
+                    "title": "Campaign {} — {} work item(s)".format(slug, len(members)),
+                }
             )
-            for (a, b), edges in sorted(agg.items())
-        )
-        return (
-            '<p class="cap">Cross-tier dependency edges — aggregated to the boundary '
-            "(one edge per crossing pair; the per-WI predecessors live in each member "
-            'row\'s <em>After</em> column):</p><ul class="xtier">{}</ul>'.format(lis)
-        )
+        for w in sorted(standalone, key=lambda w: w["id"]):
+            key_of[w["id"]] = "wi:" + w["id"]
+            blocks.append(wi_block(w, key="wi:" + w["id"]))
+        layers.append((lid, _drill_layer_svg(blocks, agg_edges(subset, key_of))))
+        return lid
 
-    def render(subset, remaining):
+    def build(subset, remaining):
         for i, (name, keyfn) in enumerate(remaining):
             groups = {}
             for w in subset:
                 groups.setdefault(keyfn(w), []).append(w)
             if len(groups) <= 3:
                 continue  # this tier stays flat -> try the next grouping
+            lid = new_id()
             rest = remaining[i + 1 :]
-            blocks = ""
+            blocks = []
             for gv in sorted(groups):
                 members = groups[gv]
+                child = build(members, rest)
                 lbl = WORKSTREAM_LABELS.get(gv, gv) if name == "workstream" else gv
-                sw = (
-                    '<span class="ph" style="background:{}"></span>'.format(color[gv])
-                    if name == "phase"
-                    else ""
-                )
-                head = '{}<code>{}</code> <span class="sub">· {} · {} item(s)</span>'.format(
-                    sw, esc(lbl), name, len(members)
-                )
-                blocks += (
-                    '<details class="tierbox"><summary>{}</summary>'
-                    '<div class="tierbody">{}</div></details>'.format(
-                        head, render(members, rest)
-                    )
-                )
-            return cross_html(cross_edges(subset, keyfn)) + blocks
-        # No tier crosses its threshold here -> the WI-074 campaign bin (bottom
-        # tier), with the per-phase accent carried onto each member row.
-        return _campboxes(subset, accent_of)
+                blk = {
+                    "key": gv,
+                    "label": lbl,
+                    "sub": "{} · {} item(s)".format(name, len(members)),
+                    "tier": name,
+                    "descend": child,
+                    "crumb": lbl,
+                    "title": "{} {} — {} work item(s)".format(name, lbl, len(members)),
+                }
+                if name == "phase":
+                    blk.update(fill=color[gv], textfill="#fff", stroke=color[gv])
+                else:
+                    blk.update(fill="var(--surface)", stroke="var(--border)")
+                blocks.append(blk)
+            edges = agg_edges(subset, {w["id"]: keyfn(w) for w in subset})
+            layers.append((lid, _drill_layer_svg(blocks, edges)))
+            return lid
+        # No tier crosses its threshold here -> the bottom-tier campaign layer.
+        return leaf_layer(subset)
+
+    tiers = [
+        ("phase", lambda w: phase_of[w["id"]]),
+        ("workstream", lambda w: w["workstream"]),
+    ]
+    root_id = build(wis, tiers)
 
     legend = "".join(
         '<span class="ph" style="background:{}"></span>{}'.format(color[p], esc(p))
@@ -1325,17 +1590,16 @@ def when_view(root, wis):
     )
     summary = (
         '<p class="cap"><strong>Tiered roadmap: {} phase(s), {} workstream(s).</strong> '
-        "A tier collapses into blocks only when it holds more than 3 members "
-        "(phase ⊃ workstream ⊃ work item); <strong>expand</strong> a block to drill "
-        "in. Campaigns stay the bottom-tier container (WI-074); each parent edge "
-        "aggregates the union of its members’ crossing edges.</p>"
+        "A tier renders as wired blocks only when it holds more than 3 members "
+        "(phase ⊃ workstream ⊃ campaign ⊃ work item). <strong>Double-click</strong> a "
+        "block — or focus it and press Enter — to <strong>descend</strong> a layer; "
+        "the <strong>breadcrumb</strong> returns. A block’s ports carry the aggregated "
+        "dependency edges (the deduped union of its members’ crossing edges).</p>"
         '<p class="tierlegend">Phase accent:{}</p>'.format(
             len(phases), len(workstreams), legend
         )
     )
-    return (
-        TIER_STYLE + summary + '<div class="camptree">' + render(wis, tiers) + "</div>"
-    )
+    return DRILL_STYLE + summary + _render_drill("when", root_id, "Roadmap", layers)
 
 
 HTML_TEMPLATE = string.Template("""<!doctype html>
