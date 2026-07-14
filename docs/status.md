@@ -51,8 +51,7 @@ home elsewhere — don't restate it here:
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
 - **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
-  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md); the
-  `[v3]-[g1]` structuring batch landed 2026-07-14, log.md):_
+  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_
   **WI-135** `[v3]-[g2]` (dashboard-ux decomposition: LLR+TC per new SR
   **including the three Critique rows** — non-LLR-exempt per SR-047 — the
   `docs/rubrics/dashboard-*.md` rubrics, the LLR-052/TC-052 rev for the
