@@ -175,3 +175,28 @@ critique disposition) remain open._
   phase-hue de-collision, and the **3 TC-HARDEN** cases — ratify at the phase-g2
   close. Next in the loop: a **fresh re-critique** of the rebuilt dashboard (it
   will re-surface T2 and judge the five landed fixes).
+- **Update (2026-07-14) — fresh re-critique ran + build round 2 landed.** The
+  independent re-critique fired ([reviews/048-CRITIQUE.md](reviews/048-CRITIQUE.md),
+  provider-heterogeneous; **CHANGES-REQUESTED, 5 findings + 2 TC-HARDEN**). It
+  confirmed the round-1 fixes (A2/A3/A4/U1/U4/T3/T4 all pass) and raised **new**
+  build items, now shipped in **build round 2** (verified; full trajectory suite
+  75 passed, smoke 593):
+  - **[BLOCKER] A1** — leaf drill blocks carried click/focus detail handlers but
+    no `tabindex`, so keyboard readers couldn't open any WI/module detail. Every
+    `.block` is now `tabindex="0"` (containers keep their `role="button"`).
+  - **[MAJOR] T1** — "find the next work" cost three descents; the landing hero
+    now names the active WI (id + title) in a `.sub.nowat` line — zero tab switches.
+  - **[MINOR] U3** — the knowledge `.kedge` hardcoded `#94a3b8`, diverging from the
+    drill `.wire` in light mode; it now shares the `--muted` stroke token at 1.5px.
+  - **046-REVIEW-A [MAJOR]** (a separate REVIEW-A round, its finding folded in
+    here) — the `<=3-tier` flat `dag_svg` fallback showed the bare WI id; it now
+    glyph-prefixes the `.wid` label like the drill (A3's "every status" floor for
+    small registries). Regression tests added for all four.
+  - **Deferred / owner-gated (unchanged):** **[MINOR T2]** Knowledge-tab density
+    (the `.knode`/`knowarrow` re-spec — its own focused pass); the **U5** anchor
+    (048 refines it to "no cross-vocabulary colour collision" — a phase hex reused
+    by the status/tier/kind vocab in one view) + phase-hue de-collision, and the
+    **TC-HARDEN** cases (the tabindex-has-handler and palette-disjoint assertions).
+  - **After the next fresh re-critique confirms round 2, WI-144's buildable work
+    is complete** — only the owner ratification of U5 + TC-HARDEN at the phase-g2
+    close remains for the slice to close and the spine to rejoin G3.

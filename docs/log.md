@@ -5443,3 +5443,46 @@ owner-gated formal TC-HARDEN. **Full suite 742 passed, 3 skipped**;
 pre-commit gate all-PASS. WI-144 → `active`, stays **open**: the critique is
 CHANGES-REQUESTED and **re-critiques fresh** next (never self-adjudicated), which
 also re-surfaces T2.
+
+## 2026-07-14 — WI-144 dashboard UI-quality build round 2 (A1/T1/U3 + 046-REVIEW-A glyph)
+
+Driver reconcile + second build round. The **fresh re-critique** the round-1
+handoff called for had already fired (managed loop sessions 045–048):
+**048-CRITIQUE** (provider-heterogeneous; CHANGES-REQUESTED, 5 findings + 2
+TC-HARDEN) confirmed the round-1 fixes (A2/A3/A4/U1/U4/T3/T4 pass) and raised new
+build items; a separate **046-REVIEW-A** (NO-COMMIT) raised one more. This round
+ships every *buildable* finding — all in `gen_trajectory.py`, no rubric touched
+(the owner-gated U5 + phase-hue + TC-HARDEN stay out of scope). Reconciled the
+untracked `docs/reviews/046-REVIEW-A.md` into the tree; the regenerated
+`PROJECT_STATE.html` (round-1 commit-stamp residue) is superseded by this round's.
+
+- **[BLOCKER A1] leaf blocks unfocusable** — the drill wired click + focus-detail
+  to `.block[data-wi]`/`[data-node]`, but only the descend *containers* carried
+  `tabindex`; a keyboard reader could open no WI/module detail. Every `.block` now
+  emits `tabindex="0"` (containers keep `role="button"` + `aria-label`; the
+  descend adjacency the double-click test asserts is unchanged).
+- **[MAJOR T1] find-the-next-work** — the active WI was named only three descents
+  deep in the When drill. The landing hero now carries a `.sub.nowat` line naming
+  the active WI (id + title, `●`-glyphed) — zero tab switches. Empty markup when
+  nothing is active.
+- **[MINOR U3] edge-stroke divergence** — the knowledge `.kedge` hardcoded
+  `#94a3b8`, splitting from the drill `.wire` in light mode; it now shares the
+  `--muted` token at the same 1.5px. (The rx-radius unification the finding also
+  floats is cosmetic across a treemap + two node graphs — left as a noted residual,
+  not rushed here.)
+- **046-REVIEW-A [MAJOR] flat-DAG glyph** — the `<=3-tier` `dag_svg` fallback (a
+  small downstream registry, never the kit's own tiered render) showed the bare WI
+  id; it now glyph-prefixes the `.wid` label like the drill, meeting A3's
+  every-status floor for small registries.
+
+**Deferred / owner-gated (unchanged):** [MINOR T2] Knowledge-tab density (a
+`.knode`/`knowarrow` re-spec, its own pass); the U5 anchor (048 refines it to "no
+cross-vocabulary colour collision") + phase-hue de-collision; the TC-HARDEN cases
+— all in OI-12, ratify at the phase-g2 close.
+
+Tests: +5 regression guards (flat-DAG glyph, leaf `tabindex`, hero active-WI
+present/absent, kedge `--muted` token). **`test_gen_trajectory.py` 75 passed;
+smoke 593 passed, 2 skipped**; `gen_trajectory --check` fresh; `check_docs --stale`
+OK. WI-144 stays **`active` / open**: re-critiques **fresh** next (never
+self-adjudicated). After that confirms round 2, the buildable work is complete —
+only the owner ratification of U5 + TC-HARDEN remains for close.

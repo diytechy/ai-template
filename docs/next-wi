@@ -7,18 +7,21 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# NOTE: WI-144 is `active`. Build round 1 LANDED (commit "WI-144: …round 1",
-# log.md 2026-07-14): five of the six rubric-meeting 042-CRITIQUE findings shipped
-# and are verified — A4 (contrast, WCAG scan 0/8 fills fail), U4 (dead When detail
-# panel rewired), A3 (status glyph), U3 (How-SW legend + #sw-detail), U1 (shared
-# --nlabel/--nsub type scale). Full suite 742 passed; gen_trajectory --check fresh.
-# DEFERRED one round: [MAJOR T2] Knowledge-tab density (249 flat nodes) — a faithful
-# start-collapsed grouping is a .knode/knowarrow re-spec that breaks 4 tests + drops
-# cross-type edges; it wants its own focused pass, not a rushed late-round change.
-# OWNER-GATED (unchanged): the U5 uniformity anchor + phase-hue de-collision + the 3
-# TC-HARDEN change-intake cases — ratify at the phase-g2 close (OI-12).
+# NOTE: WI-144 is `active`. Build ROUND 2 LANDED (log.md 2026-07-14). The fresh
+# re-critique had already fired (048-CRITIQUE, CHANGES-REQUESTED, findings=5) plus a
+# 046-REVIEW-A; round 2 shipped every buildable finding, all verified:
+#  - [BLOCKER A1] leaf drill blocks now tabindex="0" (keyboard can open WI/module detail)
+#  - [MAJOR T1]   the landing hero names the active WI (id+title) — zero tab switches
+#  - [MINOR U3]   knowledge .kedge shares the drill --muted stroke token (light-mode parity)
+#  - 046-REVIEW-A the <=3-tier flat dag_svg fallback now glyph-prefixes the .wid label
+# test_gen_trajectory.py 75 passed; smoke 593 passed; gen_trajectory --check fresh.
+# DEFERRED / OWNER-GATED (unchanged): [MINOR T2] Knowledge-tab density (a .knode/
+# knowarrow re-spec, its own pass); the U5 anchor (048 refines it to "no cross-
+# vocabulary colour collision") + phase-hue de-collision; the TC-HARDEN cases — OI-12,
+# ratify at the phase-g2 close.
 # NEXT IN THE LOOP: a FRESH re-critique of the rebuilt PROJECT_STATE.html (SR-047's
-# loop, never the authoring build's self-assessment). It judges the five landed fixes
-# and re-surfaces T2. WI-144 stays open until the critique APPROVEs; then the full
-# gate bar / check.py --gate at close, and the whole spine rejoins G3.
+# loop, never the authoring build's self-assessment). It judges the round-2 fixes.
+# WI-144 stays open until the critique APPROVEs; after that confirms round 2, only the
+# owner ratification of U5 + TC-HARDEN remains, then the full gate bar / check.py
+# --gate at close, and the whole spine rejoins G3.
 WI-144
