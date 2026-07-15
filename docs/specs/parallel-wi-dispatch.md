@@ -323,24 +323,24 @@ regardless.
 Packing WIs into traincars is the open design piece. It is **resource-constrained
 DAG scheduling with task clustering**, and the literature says keep it simple:
 
-- **List scheduling (Graham, 1966)** — greedily dispatching ready tasks to free
-  workers in priority order is within `(2 − 1/m)` of optimal makespan for `m`
-  workers, even with an imperfect priority. The "no optimal scheduler needed"
-  license; it is already the shape of §4's dispatch loop.
-- **HEFT (Topcuoglu, Hariri & Wu, 2002)** — prioritize by *upward rank* (critical
-  path to the exit) on heterogeneous workers. §4's `remaining hard-path length`
-  ordering is the upward-rank heuristic; the model tiers are the heterogeneous
-  workers.
-- **DAG clustering / coalescing (Sarkar, 1989; DSC — Yang & Gerasoulis, 1994)** —
-  the batch-vs-parallel trade-off as computation-vs-communication. Here the
-  "communication cost" is per-traincar **integration + review overhead**: group
-  WIs into one traincar when the overhead saved exceeds the parallelism and
-  failure-isolation given up — so small mechanical off-spine WIs batch,
-  substantial ones stay separate. Clustering must respect WI precedence (no
-  traincar cycle).
-- **LPT / bin packing (Graham, 4/3-approx)** — balancing sized WIs across workers
-  needs a per-WI size estimate, which is why the `EstTokens` column (§3.1) is a
-  prerequisite.
+- **List scheduling (Graham, *Bell System Technical Journal*, 1966)** — greedily
+  dispatching ready tasks to free workers in priority order is within `(2 − 1/m)`
+  of optimal makespan for `m` workers, even with an imperfect priority. The "no
+  optimal scheduler needed" license; it is already the shape of §4's dispatch loop.
+- **HEFT (Topcuoglu, Hariri & Wu, *IEEE TPDS* 13(3):260–274, 2002)** — prioritize
+  by *upward rank* (critical path to the exit) on heterogeneous workers. §4's
+  `remaining hard-path length` ordering is the upward-rank heuristic; the model
+  tiers are the heterogeneous workers.
+- **DAG clustering / coalescing (Sarkar, MIT Press, 1989 — edge-zeroing; DSC —
+  Yang & Gerasoulis, *IEEE TPDS*, 1994)** — the batch-vs-parallel trade-off as
+  computation-vs-communication. Here the "communication cost" is per-traincar
+  **integration + review overhead**: group WIs into one traincar when the overhead
+  saved exceeds the parallelism and failure-isolation given up — so small
+  mechanical off-spine WIs batch, substantial ones stay separate. Clustering must
+  respect WI precedence (no traincar cycle).
+- **LPT / bin packing (Graham, *SIAM J. Applied Math*, 1969 — the `4/3 − 1/3m`
+  bound)** — balancing sized WIs across workers needs a per-WI size estimate,
+  which is why the `EstTokens` column (§3.1) is a prerequisite.
 
 Applied analogs to crib rather than reinvent: `make -j` / Ninja (job-limited DAG
 dispatch); Bazel / Nx / Turborepo (build-target DAG + affected-set + caching);
