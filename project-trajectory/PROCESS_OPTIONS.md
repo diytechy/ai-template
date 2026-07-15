@@ -718,8 +718,12 @@ behavior**, so a fresh scaffold pays nothing.
   turns managed routing on (it is deliberately *not* scaffolded; absence =
   routing off). Per session the loop selects from that pool by the phase's tier
   (`AGENT_TIER_MAP`/`--tier-map`, else the built-in phase->tier defaults —
-  iteration reviewers default to a cheaper tier) plus the **family**-heterogeneity
-  rules; a model whose session fails to start or stalls
+  iteration reviewers default to a cheaper tier). An optional per-phase
+  `AGENT_PREFER_MAP`/`--prefer-map` (for example `BUILD=OPENAI-SOL`) moves one
+  enabled id ahead of that list **within the resolved tier only**; an unknown,
+  disabled, wrong-tier, or cooling id falls through to enable-list order, and
+  absence preserves that order byte-for-byte. The **family**-heterogeneity rules
+  still win for reviewers and critics; a model whose session fails to start or stalls
   goes on **cooldown** (the rate-limit backoff, generalized per-model,
   `AGENT_COOLDOWN_SECONDS`) and is retried; when no enabled model of the
   preferred tier is available the loop walks the **next tier up — never a weaker

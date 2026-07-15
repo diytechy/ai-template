@@ -40,6 +40,10 @@ AGENT_MODEL_MAP="PLAN=claude-fable-5,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESI
 # that history stands if this directive is reverted). Keep agent-resume.cmd in
 # sync. tier-up-never-down unchanged.
 AGENT_TIER_MAP="BUILD=strong"
+# Optional within-tier preference per phase. Unknown, disabled, wrong-tier, or
+# cooling ids fall through to docs/agents-enabled order; this never changes the
+# resolved tier. Keep agent-resume.cmd in sync.
+AGENT_PREFER_MAP="BUILD=OPENAI-SOL"
 # Optional per-phase COMMAND template map (cross-provider routing; pairs
 # with the docs/review-policy reviewer dial), e.g.:
 #   AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt} --model {model}"
@@ -62,7 +66,7 @@ if [ -z "$AGENT_CMD" ]; then
   echo "sessions; see project-trajectory/PROCESS_OPTIONS.md 'Unattended operation'." >&2
   exit 1
 fi
-export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_TIER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
+export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_TIER_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
 PY="$(command -v python3 || command -v python)" || {
   echo "agent-resume.sh: python3 not found." >&2; exit 1;
 }

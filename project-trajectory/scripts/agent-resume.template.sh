@@ -25,6 +25,10 @@ AGENT_CMD=""
 #   AGENT_MODEL_MAP="PLAN=<strong-model>,BUILD=<cheap-model>"
 AGENT_MODEL=""
 AGENT_MODEL_MAP=""
+# Optional per-phase preference WITHIN the resolved routing tier, e.g.:
+#   AGENT_PREFER_MAP="BUILD=OPENAI-SOL"
+# Unknown/cooling ids fall through to docs/agents-enabled order.
+AGENT_PREFER_MAP=""
 # Optional per-phase COMMAND template map (cross-provider routing; pairs with
 # the docs/review-policy reviewer dial — cross-provider dual review is the
 # recommended review-policy 2 config), e.g.:
@@ -42,7 +46,7 @@ if [ -z "$AGENT_CMD" ]; then
   echo "sessions; see docs/process-options.md 'Unattended operation'." >&2
   exit 1
 fi
-export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
+export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
 PY="$(command -v python3 || command -v python)" || {
   echo "agent-resume.sh: python3 not found." >&2; exit 1;
 }

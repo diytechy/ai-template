@@ -40,6 +40,10 @@ REM OPENAI-SOL first in docs/agents-enabled - superseding FOR NOW the WI-121
 REM medium relax (that history stands if this directive is reverted). Keep
 REM agent-resume.sh in sync. tier-up-never-down unchanged.
 set "AGENT_TIER_MAP=BUILD=strong"
+REM Optional within-tier preference per phase. Unknown, disabled, wrong-tier,
+REM or cooling ids fall through to docs/agents-enabled order; this never changes
+REM the resolved tier. Keep agent-resume.sh in sync.
+set "AGENT_PREFER_MAP=BUILD=OPENAI-SOL"
 REM Optional per-phase COMMAND template map (cross-provider routing; pairs
 REM with the docs/review-policy reviewer dial), e.g.:
 REM   set "AGENT_CMD_MAP=REVIEW-B=gemini -p {prompt} --model {model}"

@@ -195,6 +195,24 @@ def test_review_policy_1_dispatches_one_heterogeneous_reviewer(managed_repo):
     assert list((repo / "docs" / "reviews").glob("*-REVIEW-A.md"))
 
 
+def test_prefer_map_routes_build_then_reviewer_heterogeneity_wins(managed_repo):
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("2", encoding="utf-8")
+    proc = _loop(repo, cmd, "--prefer-map", "BUILD=PROVB-REV-1")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    models = _models(ctl)
+    assert models[0] == "revb"  # phase preference beats enable-list order
+    assert "builda" in models[1:]  # reviewer differs from the PROVB implementer
+
+
+def test_invalid_prefer_map_id_fails_preflight(managed_repo):
+    repo, ctl, cmd = managed_repo
+    proc = _loop(repo, cmd, "--prefer-map", "BUILD=bad id")
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "prefer-map [BUILD]" in proc.stderr
+
+
 def test_review_policy_2_schedules_two_providers(managed_repo):
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("2\n", encoding="utf-8")

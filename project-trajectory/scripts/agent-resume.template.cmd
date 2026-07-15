@@ -26,6 +26,10 @@ REM strong-model-plans / cheaper-model-executes here, e.g.:
 REM   set "AGENT_MODEL_MAP=PLAN=<strong-model>,BUILD=<cheap-model>"
 set "AGENT_MODEL="
 set "AGENT_MODEL_MAP="
+REM Optional per-phase preference WITHIN the resolved routing tier, e.g.:
+REM   set "AGENT_PREFER_MAP=BUILD=OPENAI-SOL"
+REM Unknown/cooling ids fall through to docs/agents-enabled order.
+set "AGENT_PREFER_MAP="
 REM Optional per-phase COMMAND template map (cross-provider routing; pairs
 REM with the docs/review-policy reviewer dial — cross-provider dual review
 REM is the recommended review-policy 2 config), e.g.:

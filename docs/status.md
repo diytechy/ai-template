@@ -75,9 +75,8 @@ home elsewhere — don't restate it here:
 - **Queued (owner intake 2026-07-14b** — 4 items, triage + answers:
   [specs/owner-intake-2026-07-14b.md](specs/owner-intake-2026-07-14b.md); item 1
   — the codex-CLI swap + Sol builder preference — was executed at intake as a
-  dial turn, Decisions log):_ **WI-161** (per-phase model preference knob —
-  restores Fable-led PLAN while BUILD keeps Sol) · **WI-162** (parallel WI
-  dispatch across lanes — design spec, strong) · **WI-163** (per-WI critique
+  dial turn, Decisions log; its per-phase preference follow-up is complete):_
+  **WI-162** (parallel WI dispatch across lanes — design spec, strong) · **WI-163** (per-WI critique
   budget dial: `inf`-until-APPROVE | `block`-on-exhaust) · **WI-164**
   (optimization-methodology research — joins the research-knowledge campaign
   behind WI-152) · **WI-165** (Process-tab circular loops, SR-055 — **now
@@ -95,9 +94,9 @@ home elsewhere — don't restate it here:
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** **the loop resumes under `autonomous`** — the v3 campaign
   closed (spine at G3), so the DAG-actionable off-spine backlog is next:
-  **WI-161** (per-phase preference knob) → **WI-163** (critique-budget dial) →
-  **WI-166** (`dev-setup.template.cmd`) → **WI-162** (parallel-dispatch spec) →
-  **WI-165** (Process circular loops); `docs/next-wi` is pointed at **WI-161**.
+  **WI-163** (critique-budget dial) → **WI-166** (`dev-setup.template.cmd`) →
+  **WI-162** (parallel-dispatch spec) → **WI-165** (Process circular loops);
+  `docs/next-wi` is pointed at **WI-163**.
   The `docs/pause` hold is lifted at this close. **After the backlog the loop
   flows into the research-knowledge campaign** (WI-152…157 + WI-164)
   automatically — the owner greenlit it 2026-07-15; only the deferred

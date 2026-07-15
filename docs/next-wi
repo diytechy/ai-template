@@ -14,8 +14,7 @@
 # Verified, the derived gate is back at G3, the v3 dashboard-ux campaign is
 # complete. `docs/gate-policy` is now `autonomous` (owner directive) — no
 # g2-close sitting for future campaigns.
-# NEXT: the DAG-actionable off-spine backlog in id order — WI-161 (per-phase
-# preference knob; complements the WI-160 codex/Sol dial) -> WI-163 (per-WI
+# NEXT: the DAG-actionable off-spine backlog in id order — WI-163 (per-WI
 # critique-budget dial) -> WI-166 (dev-setup.template.cmd) -> WI-162 (parallel-
 # dispatch design spec, strong) -> WI-165 (Process-tab circular loops, now
 # unblocked). WI-159 (Knowledge-tab density) stays deferred.
@@ -25,4 +24,4 @@
 # main-decomposition (WI-080->WI-081) stays parked — do not auto-start it.
 # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
 # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to Fable).
-WI-161
+WI-163

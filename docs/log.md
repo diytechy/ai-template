@@ -6327,3 +6327,26 @@ DAG-actionable off-spine backlog WI-161 → WI-163 → WI-166 → WI-162 → WI-
 now unblocked). Research-knowledge (WI-152…157) + WI-164 stay owner-sequenced — do
 not auto-start. Sol builds need `@openai/codex` + `codex login` (else BUILD
 self-heals to Fable). Not pushed (`push-policy: human`).
+
+## 2026-07-15 — WI-161 per-phase within-tier model preference
+
+Shipped `AGENT_PREFER_MAP` / `--prefer-map`: managed routing now lets one phase
+move a declared agent id ahead of `docs/agents-enabled` **within the already
+resolved tier**. Unknown, disabled, wrong-tier, and cooling ids fall through to
+the existing order; the tier-up-never-down rule is unchanged, and reviewer /
+critic family heterogeneity still wins over the preference. Preflight validates
+the map's syntax and id shape before iteration 1. The launcher templates expose
+the optional slot; the self-applied launchers set `BUILD=OPENAI-SOL`, allowing
+`docs/agents-enabled` to return to Fable-first for PLAN/DESIGN-CHECK while BUILD
+keeps the owner's Sol preference. Unit and managed-loop tests cover preferred
+selection, cooldown fallback, wrong-tier containment, invalid-map preflight,
+and reviewer heterogeneity.
+
+**End green (real output):** focused routing suite **55 passed in 11.66s**;
+unfiltered suite **744 passed, 34 skipped in 76.77s**. Commit-bar smoke and
+`check_docs --stale` are recorded in the commit that follows this entry. Byte
+deltas: `PROCESS_OPTIONS.md` **137,541 → 137,877 (+336 B)** for the canonical
+routing contract; its byte-budget baseline was re-stamped in all three tracked
+skill copies. `PROCESS.md` and `AGENTS.template.md` were untouched. No spine
+state changed; no deviation from the WI spec. **Handoff:** run-state remains
+**RUNNING**; `docs/next-wi` → **WI-163**. Not pushed (`push-policy: human`).

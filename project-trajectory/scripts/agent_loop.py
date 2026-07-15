@@ -1675,6 +1675,14 @@ def main():
         "env var)",
     )
     ap.add_argument(
+        "--prefer-map",
+        default=os.environ.get("AGENT_PREFER_MAP", ""),
+        help='per-phase within-tier preference map "BUILD=OPENAI-SOL"; the '
+        "preferred id is tried before docs/agents-enabled order without changing "
+        "tier, and unknown/cooling ids fall through (default: AGENT_PREFER_MAP "
+        "env var)",
+    )
+    ap.add_argument(
         "--prompt",
         default=DEFAULT_PROMPT,
         help="resume prompt passed to each session (default: the kit's "
@@ -1739,6 +1747,7 @@ def main():
         cmd_map = parse_model_map(args.cmd_map)  # same "KEY=value" syntax
         prompt_map = parse_model_map(args.prompt_map)  # phase -> prompt-template FILE
         tier_map = parse_model_map(args.tier_map)  # phase -> tier
+        prefer_map = parse_model_map(args.prefer_map)  # phase -> registry id
     except ValueError as exc:
         print("agent_loop: {}".format(exc), file=sys.stderr)
         return EXIT_PREFLIGHT
@@ -1821,6 +1830,11 @@ def main():
                     "tier-map [{}]: {!r} is not one of {}".format(
                         ph, tier, "|".join(agent_route.TIER_ORDER)
                     )
+                )
+        for ph, mid in sorted(prefer_map.items()):
+            if not ph or not mid or not agent_route.ID_RE.match(mid):
+                failures.append(
+                    "prefer-map [{}]: {!r} is not a valid agent id".format(ph, mid)
                 )
     elif reg_errors:
         # A malformed registry in a repo NOT using routing is only a warning —
@@ -2225,7 +2239,14 @@ def main():
                 if last_impl_family:
                     exclude.add(last_impl_family)
             route_id, reason = agent_route.select(
-                enabled, registry, tier, now, cooldowns, exclude, prefer_different
+                enabled,
+                registry,
+                tier,
+                now,
+                cooldowns,
+                exclude,
+                prefer_different,
+                [prefer_map[phase]] if phase in prefer_map else (),
             )
             # Log the routing decision BEFORE launch (the no-silent-swap rule).
             print("route [{}]: {}".format(phase or "—", reason))

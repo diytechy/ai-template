@@ -428,6 +428,7 @@ def select(
     cooldowns=None,
     exclude_families=(),
     prefer_different=False,
+    preferred_ids=(),
 ):
     """Pick a model id from the enabled pool, or None. Returns (id, reason) — the
     reason is the line the coordinator LOGS before launch (no silent swap).
@@ -435,7 +436,9 @@ def select(
     Rules, in order:
       - Only enabled ids that exist in the registry and are not cooling down.
       - Walk from `tier` UP to strong; never select a weaker tier than asked.
-      - Within a tier the enable-list order is the preference order.
+      - Within a tier, `preferred_ids` are tried first, then enable-list order.
+        Unknown, disabled, wrong-tier, or cooling preferred ids simply fall
+        through; a preference can never change the requested tier.
       - When prefer_different, prefer an id whose FAMILY (who trained it — never
         the route it is reached by) is not in exclude_families; if none
         qualifies, fall back to any available one (degraded availability is
@@ -462,6 +465,8 @@ def select(
         ]
         if not avail:
             continue
+        preferred = [mid for mid in (preferred_ids or ()) if mid in avail]
+        avail = preferred + [mid for mid in avail if mid not in preferred]
         bumped = " (tier bumped up from {})".format(tier) if ti != start else ""
         if prefer_different:
             different = [m for m in avail if registry[m].family not in exclude]

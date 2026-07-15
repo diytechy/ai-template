@@ -87,6 +87,46 @@ def test_select_honors_preference_order_and_tier(tmp_path):
     assert "OPENAI-GPT-5.2" in reason
 
 
+def test_select_phase_preference_is_within_tier_and_cooling_falls_through(tmp_path):
+    reg, _ = _registry(tmp_path)
+    enabled = ["OPENAI-GPT-5.2", "ANTHROPIC-OPUS-4.8", "ANTHROPIC-HAIKU-4"]
+    chosen, _ = route.select(
+        enabled, reg, "strong", preferred_ids=["ANTHROPIC-OPUS-4.8"]
+    )
+    assert chosen == "ANTHROPIC-OPUS-4.8"
+
+    cooldowns = {"ANTHROPIC-OPUS-4.8": 200.0}
+    fallback, _ = route.select(
+        enabled,
+        reg,
+        "strong",
+        now=100.0,
+        cooldowns=cooldowns,
+        preferred_ids=["ANTHROPIC-OPUS-4.8"],
+    )
+    assert fallback == "OPENAI-GPT-5.2"
+
+    # A wrong-tier preference never pulls selection down from the requested tier.
+    same_tier, _ = route.select(
+        enabled, reg, "strong", preferred_ids=["ANTHROPIC-HAIKU-4"]
+    )
+    assert same_tier == "OPENAI-GPT-5.2"
+
+
+def test_select_reviewer_heterogeneity_wins_over_phase_preference(tmp_path):
+    reg, _ = _registry(tmp_path)
+    chosen, reason = route.select(
+        ["ANTHROPIC-OPUS-4.8", "OPENAI-GPT-5.2"],
+        reg,
+        "strong",
+        exclude_families=["ANTHROPIC"],
+        prefer_different=True,
+        preferred_ids=["ANTHROPIC-OPUS-4.8"],
+    )
+    assert chosen == "OPENAI-GPT-5.2"
+    assert "DEGRADED" not in reason
+
+
 def test_select_prefers_a_different_provider_but_degrades(tmp_path):
     reg, _ = _registry(tmp_path)
     # Two strong models, both same provider as the implementer -> degraded, legal.
