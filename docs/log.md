@@ -6464,3 +6464,46 @@ covered structurally by the hardened TC-056 tests. No byte-budgeted file changed
 and no spine state changed. **Handoff:** run-state remains **RUNNING**;
 `docs/next-wi` → **WI-167** (`BuildTier=medium`). Not pushed
 (`docs/push-policy: human`).
+
+## 2026-07-15 — DESIGN-CHECK (085): grind-through on the top-tier shared-failure page; two orphaned review rounds remediated (WI-168/169/170 filed)
+
+**What paged.** Review round 33 (session 084, REVIEW-A of WI-165:
+**CHANGES-REQUESTED findings=2**, tier=strong, tripwire=0) plus round 31
+(session 080, REVIEW-A of WI-166: **CHANGES-REQUESTED findings=3**,
+tier=strong) hit `escalate`'s `page_top_tier_fails=2` threshold ("the spec is
+wrong, not the model"); `docs/gate-policy: autonomous` routed the page to this
+fresh cross-family strong design-check (Claude Fable; the implementer was
+gpt-5.6-sol). The loop had left `docs/run-phase = DESIGN-CHECK` as uncommitted
+residue.
+
+**Ruling: GRIND-THROUGH** ([reviews/085-DESIGN-CHECK.md](reviews/085-DESIGN-CHECK.md)):
+the two fails are **independent mechanical implementation defects** in unrelated
+deliverables — WI-166's shim copied the meta dogfood's `-Install` switch against
+a template ps1 that doesn't declare it (silent no-op on the consented install
+path), and WI-165's bare `.loop` CSS selectors match both the wrapper div and
+the inner `<ol class="pflow loop">` (nested double racetrack). Both re-verified
+live in the tree; the shared-failure hypothesis is refuted — no spec or design
+indicted, no re-entry into PROCESS.md §5. `run-phase` → **BUILD**.
+
+**The real gap the trace exposed: orphaned CHANGES-REQUESTED remediation.** On
+CHANGES-REQUESTED the coordinator resets run-phase to BUILD, but the next BUILD
+session scopes from `docs/next-wi`, which the reviewed build had already
+advanced. Observed: WI-166 sits `done` with 080's BLOCKER unfixed (no commit
+after `57b199b` touches the flagged files; sessions 081/083 built WI-162/WI-165
+instead), and 084's findings were headed the same way (`next-wi` → WI-167).
+Second occurrence of the dangling-round pattern (first: the 2026-07-14
+WI-139/WI-140 remediation sitting). Filed per that idiom: **WI-168** (080
+rework, `scripts`, medium), **WI-169** (084 rework, `dashboard`, **strong** —
+inherits WI-165's declared spine-touching route, never a downgrade), and
+**WI-170** (mechanize CHANGES-REQUESTED rework carry-forward, `unattended`,
+medium — the orphaning gap itself). Order **WI-168 → WI-169 → WI-167 →
+WI-170**, no batching (WI-169 is spine-touching; each remediation gets its own
+review round), then the greenlit research-knowledge campaign.
+
+**End green (real output):** recorded in the commit that follows this entry
+(commit-bar smoke + `check_docs --stale`). No spine rows changed (the three new
+registry rows are off-spine WI rows); `PROJECT_STATE.html` regenerated for the
+registry edit (also folding in the 084 reviewer's uncommitted regeneration
+residue). No byte-budgeted file touched. **Handoff:** run-state **RUNNING**;
+`docs/next-wi` → **WI-168** (`BuildTier=medium`). Not pushed
+(`push-policy: human`).

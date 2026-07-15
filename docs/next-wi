@@ -7,26 +7,25 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# NOTE (2026-07-15): WI-144 CLOSED on the OWNER's manual critique APPROVE
-# (docs/reviews/074-CRITIQUE.md) — the automated critique loop had no browser
-# backend (sessions 070-073 churned on it), so the owner rendered + judged
-# PROJECT_STATE.html directly (the strongest Critique form). SR-052/053/054 ->
-# Verified, the derived gate is back at G3, the v3 dashboard-ux campaign is
-# complete. `docs/gate-policy` is now `autonomous` (owner directive) — no
-# g2-close sitting for future campaigns.
-# NEXT: the DAG-actionable off-spine backlog — WI-167 (tripwire path coverage;
-# WI-165 Process-tab circular loops is complete). WI-159
-# (Knowledge-tab density) stays deferred. WI-162's ratifiable parallel-dispatch
-# design is complete; implementation slices file only after ratification.
+# NOTE (2026-07-15, 085-DESIGN-CHECK): review round 33 (084-REVIEW-A of WI-165,
+# CHANGES-REQUESTED strong) hit the page_top_tier_fails=2 threshold together
+# with round 31 (080-REVIEW-A of WI-166, CHANGES-REQUESTED strong); gate-policy
+# autonomous routed the page to a cross-family strong design-check, which ruled
+# GRIND-THROUGH (docs/reviews/085-DESIGN-CHECK.md): two independent mechanical
+# implementation defects, no shared spec failure, no redesign. The trace found
+# BOTH rounds' findings had been ORPHANED (WI-166 sits done with 080's BLOCKER
+# unfixed; next-wi had already advanced past WI-165's rework), so remediation
+# rows were filed per the WI-139/WI-140 idiom and jump the backlog:
+# NEXT ORDER: WI-168 (080 rework - dev-setup.template.cmd -Install no-op;
+# medium) -> WI-169 (084 rework - div.loop CSS scoping + TC-056; strong, WI-165's
+# declared route) -> WI-167 (tripwire path coverage; medium) -> WI-170 (mechanize
+# CHANGES-REQUESTED rework carry-forward; medium). No batching: WI-169 is
+# spine-touching and each remediation gets its own review round.
 # THEN (owner GREENLIT 2026-07-15): flow straight into the research-knowledge
 # campaign WI-152..157 + WI-164 — no stop between it and the backlog; the DAG
 # edges sequence it (WI-152 first, predecessor WI-145 done). Only the deferred
 # main-decomposition (WI-080->WI-081) stays parked — do not auto-start it.
 # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
-# draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to Fable).
-# NOTE (2026-07-15): the WI-161 review round fired the implementer-touched-
-# review-path tripwire (the build's owner-ordered docs/agents-enabled edit);
-# the autonomous design-check ruled GRIND-THROUGH (docs/reviews/076-DESIGN-
-# CHECK.md) — run-phase is back to BUILD, WI-167 filed for the tripwire's
-# meta-repo path-coverage gap (joins the backlog after WI-165).
-WI-167
+# draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to
+# Fable); per-WI BuildTier pins above still apply.
+WI-168

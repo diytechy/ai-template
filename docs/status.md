@@ -87,17 +87,21 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **the loop resumes under `autonomous`** — the v3 campaign
-  closed (spine at G3), so the DAG-actionable off-spine backlog continues:
-  **WI-167** (tripwire path coverage — filed by the 076 design-check, which
-  ruled GRIND-THROUGH on the last review round's tripwire page,
-  [reviews/076-DESIGN-CHECK.md](reviews/076-DESIGN-CHECK.md));
-  `docs/next-wi` is pointed at **WI-167** (`BuildTier=medium`).
-  The `docs/pause` hold is lifted at this close. **After the backlog the loop
-  flows into the research-knowledge campaign** (WI-152…157 + WI-164)
-  automatically — the owner greenlit it 2026-07-15; only the deferred
-  `main-decomposition` (WI-080→WI-081) stays parked. Codex Sol builds are live.
-  Round-by-round evidence → [log.md](log.md), not here.
+- **Next action:** **the loop resumes under `autonomous`** — the 085
+  design-check ([reviews/085-DESIGN-CHECK.md](reviews/085-DESIGN-CHECK.md))
+  ruled **GRIND-THROUGH** on the top-tier shared-failure page (review rounds 31
+  + 33 both CHANGES-REQUESTED at strong) and found both rounds' findings had
+  been **orphaned**, so two remediation rows jump the backlog:
+  **WI-168** (080 rework — the shipped `dev-setup.template.cmd` consented
+  install is a silent no-op; `medium`) → **WI-169** (084 rework — Process-tab
+  loop CSS scoping + TC-056 de-tautologizing; `strong`, WI-165's declared
+  route) → **WI-167** (tripwire path coverage; `medium`) → **WI-170**
+  (mechanize CHANGES-REQUESTED rework carry-forward — the orphaning gap
+  itself; `medium`); `docs/next-wi` is pointed at **WI-168**.
+  **After the backlog the loop flows into the research-knowledge campaign**
+  (WI-152…157 + WI-164) automatically — the owner greenlit it 2026-07-15; only
+  the deferred `main-decomposition` (WI-080→WI-081) stays parked. Codex Sol
+  builds are live. Round-by-round evidence → [log.md](log.md), not here.
 
 ## Scope
 
