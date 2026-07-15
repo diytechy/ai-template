@@ -94,8 +94,8 @@ home elsewhere — don't restate it here:
   been **orphaned**, so two remediation rows jump the backlog:
   **WI-168** (080 rework — the shipped `dev-setup.template.cmd` consented
   install is a silent no-op; `medium`) → **WI-169** (084 rework — Process-tab
-  loop CSS scoping + TC-056 de-tautologizing; `strong`, WI-165's declared
-  route) → **WI-167** (tripwire path coverage; `medium`) → **WI-170**
+  loop CSS scoping + TC-056 de-tautologizing; `strong`, inheriting the declared
+  spine-touching route) → **WI-167** (tripwire path coverage; `medium`) → **WI-170**
   (mechanize CHANGES-REQUESTED rework carry-forward — the orphaning gap
   itself; `medium`); `docs/next-wi` is pointed at **WI-168**.
   **After the backlog the loop flows into the research-knowledge campaign**
