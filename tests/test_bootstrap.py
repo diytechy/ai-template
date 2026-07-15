@@ -36,6 +36,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/requirements/work-items.csv",
         "docs/specs/README.md",
         "docs/specs/WI-000.md",
+        "docs/knowledge/README.md",
         "docs/rubrics/README.md",
         "docs/rubrics/rubric-000.md",
         "docs/test/test-cases.csv",
@@ -84,6 +85,19 @@ def test_agents_guide_is_canonical_and_stubs_point_at_it(scaffold):
         assert "AGENTS.md" in stub, stub_name + " should point at AGENTS.md"
         # The stub must not duplicate the full guide.
         assert "Working agreement" not in stub, stub_name + " duplicates the guide"
+
+
+def test_scaffold_knowledge_home_states_pack_contract(scaffold):
+    knowledge = (scaffold / "docs" / "knowledge" / "README.md").read_text(
+        encoding="utf-8"
+    )
+    assert "## Pack contract" in knowledge
+    assert "## Pack index" in knowledge
+    assert "retrieval dates" in knowledge
+    assert "promote it through the change-intake flow" in knowledge
+    assert "Packs are advisory context, never gates" in knowledge
+    project_readme = (scaffold / "README.md").read_text(encoding="utf-8")
+    assert "[docs/knowledge/](docs/knowledge/README.md)" in project_readme
 
 
 def test_agents_template_stays_within_size_budget():

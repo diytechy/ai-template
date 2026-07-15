@@ -59,13 +59,13 @@ home elsewhere — don't restate it here:
   iteration the owner flagged._
 - **Queued (research-knowledge campaign, OI-9 §8** —
   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
-  2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
-  ref integrity + knowledge⇒component coupling) · **WI-154** (process text) ·
+  2026-07-14 ratification — **WI-153** (trace.py ref integrity +
+  knowledge⇒component coupling) · **WI-154** (process text) ·
   **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
   domains filter); **WI-158** deferred (OKF pack export). The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
-  no stop in between; the DAG sequences it from WI-152._
+  no stop in between; the DAG sequences it from WI-153._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
   All owner-intake WIs are complete — the loop worked them in id order after the
@@ -76,7 +76,7 @@ home elsewhere — don't restate it here:
   dial turn, Decisions log; its per-phase preference follow-up is complete):_
   **WI-164**
   (optimization-methodology research — joins the research-knowledge campaign
-  behind WI-152). Codex **Sol builds are now live** (`codex` on PATH + logged in
+  after its declared predecessors). Codex **Sol builds are now live** (`codex` on PATH + logged in
   2026-07-15)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
@@ -86,14 +86,17 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-152** (knowledge home + bootstrap scaffold wiring), the
-  first open row in the owner-greenlit research-knowledge campaign;
-  `docs/next-wi` points at WI-152. The remediation backlog from
-  085-DESIGN-CHECK is complete, including the durable `docs/rework-wi`
+- **Next action:** **WI-153** (warn-first knowledge-ref integrity +
+  knowledge⇒component coupling), the next open row in the owner-greenlit
+  research-knowledge campaign; `docs/next-wi` points at WI-153
+  (`BuildTier=medium`, deliberately pinned as the default implementation
+  route). The remediation backlog from 085-DESIGN-CHECK is complete, including
+  the durable `docs/rework-wi`
   carry-forward that prevents a CHANGES-REQUESTED
   review from being orphaned when the reviewed build already advanced
-  `docs/next-wi`. The DAG then sequences WI-153…157 + WI-164 automatically.
-  Only deferred main-decomposition (WI-080→WI-081) stays parked. Codex Sol
+  `docs/next-wi`. The DAG then sequences WI-154…157 + WI-164 automatically.
+  Only deferred
+  main-decomposition (WI-080→WI-081) stays parked. Codex Sol
   builds are live. Round-by-round evidence → [log.md](log.md), not here.
 
 ## Scope

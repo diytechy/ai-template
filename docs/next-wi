@@ -7,11 +7,11 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# WI-170 closed the 085-DESIGN-CHECK remediation backlog. The owner-greenlit
-# research-knowledge campaign now starts at WI-152 and proceeds by its DAG
-# through WI-153..157 + WI-164. Only the deferred main-decomposition
+# WI-152 opened the owner-greenlit research-knowledge campaign by shipping the
+# scaffolded knowledge home. The campaign now proceeds by its DAG through
+# WI-153..157 + WI-164. Only the deferred main-decomposition
 # (WI-080->WI-081) stays parked — do not auto-start it.
 # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
 # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to
 # Fable); per-WI BuildTier pins above still apply.
-WI-152
+WI-153

@@ -38,6 +38,7 @@ What it creates in the destination:
     docs/requirements/components.csv           <- registries/components.template.csv
     docs/requirements/work-items.csv           <- registries/work-items.template.csv
     docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
+    docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
@@ -1087,6 +1088,10 @@ MAPPING = [
     # ignores the WI-000 row), so a fresh scaffold stays vacuously clean.
     ("specs/README.template.md", "docs/specs/README.md"),
     ("specs/WI-000.template.md", "docs/specs/WI-000.md"),
+    # Durable, hand-owned project knowledge: one topic per pack, indexed by this
+    # README so documentation checks discover every pack. Packs are advisory;
+    # requirements remain authoritative in the spine.
+    ("knowledge/README.template.md", "docs/knowledge/README.md"),
     # Critique rubrics (process-options.md "Critique verification & the critique
     # loop", WI-068): the judgment reference a Verification=Critique requirement is
     # scored against — written from the SN/SR intent (not the possibly-lax TC),

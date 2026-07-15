@@ -6629,3 +6629,28 @@ broken** (40 historical orphan warnings plus pre-existing stale hints).
 `PROJECT_STATE.html` regenerated for WI-170 → done. **Handoff:** run-state remains **RUNNING**;
 `docs/next-wi` → **WI-152**, the first research-knowledge campaign slice (no
 BuildTier pin, so phase default). Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-152 (knowledge home, BUILD): durable pack scaffold
+
+**Scope.** Added `project-trajectory/knowledge/README.template.md`, a one-page
+hand-owned knowledge-pack contract and index. It keeps evidence, rationale,
+quirks, failed approaches, and external references with retrieval dates while
+forbidding registry restatement; packs stay advisory and hardened findings route
+through change intake. `bootstrap.py` now scaffolds it to
+`docs/knowledge/README.md`, the scaffolded project README links it from an entry
+root, and the kit-contents table names the new surface. Bootstrap tests assert
+the file and its load-bearing contract; the profile matrix proves every scaffold
+remains warning-free.
+
+**Tests / deviations / residue.** Focused bootstrap suite: **39 passed in
+6.68s**. The first full run honestly found the missing entry-root link (**10
+failed, 742 passed, 34 skipped in 80.10s**); adding the project-README link
+closed that integration gap, with no scope deviation or worktree residue. No
+byte-budgeted file changed. Full end-green suite: **752 passed, 34 skipped in
+82.12s**. Commit bar: `pytest -q -n auto -m smoke` → **625 passed, 2 skipped
+in 64.96s**; `check_docs.py --root . --stale` → **OK, 98 docs, 417 links, 0
+broken** (40 historical orphan warnings plus pre-existing stale hints).
+
+**Handoff.** `docs/run-state` remains **RUNNING**. `docs/next-wi` → **WI-153**,
+deliberately pinned `BuildTier=medium` for the warn-first knowledge-reference
+and component-coupling implementation. Not pushed (`docs/push-policy: human`).
