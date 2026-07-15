@@ -5965,3 +5965,51 @@ g2-close sitting; that enforcer/process conflict needs the owner's ruling.
 **Handoff — run-state NEEDS-HUMAN; next-wi WI-144.** All actionable
 owner-intake work is complete. The owner must rule OI-12 at the phase-v3
 g2-close ratification before WI-144 resumes; do not auto-start WI-152+.
+
+## 2026-07-14 — SESSION: 062-REVIEW-A residue reconciled → OI-13 filed; NO spine change
+
+**Scope.** Session-protocol §1 residue reconciliation: the untracked
+`docs/reviews/062-REVIEW-A.md` (session-062 REVIEW-A on WI-147, **NO-COMMIT**, 1
+MAJOR + 1 MINOR, CHANGES-REQUESTED) sat in the working tree — the one orphan among
+the review files (WI-151's session entry saw it and correctly left it as
+out-of-scope; sessions 063–069 never swept it up because the two `NO-COMMIT`
+reviews, 060 and 062, don't self-commit their file and only 060 was later
+rescued). Unlike the 060 residue, 062's live finding is **not** buildable
+correction — it disputes a **deliberate, already-documented WI-147 deviation** and
+routes to `@owner`, so it is surfaced as an OI, not fixed here.
+
+**Findings dispositioned.**
+- **[MAJOR] `agent_loop.py` pause branch leaves `run-state` untouched vs. the
+  spec's `ask:` line → filed OI-13.** Verified the divergence is real and live:
+  the WI-147 spec (owner-intake-2026-07-14.md #pause-blackout) requires the pause
+  stop to set "the run-state `ask:` line naming `docs/pause`," but the shipped
+  `pause_reason` docstring + top-of-loop pause branch (exit 8) **deliberately**
+  leave `run-state` as-is, and `test_pause_delete_resumes` + the WI-147 deliverable
+  lock that in. The builder documented this as an explicit deviation (WI-147
+  session entry: persisting `NEEDS-HUMAN` "would force a two-act resume"), but the
+  reviewer asked for "an explicit spec amendment before closing WI-147" and no
+  owner ruling exists though the row is `done`. Routed to
+  **OI-13** ([open-items.md](open-items.md)) — ratify the deviation (amend the
+  spec) vs. direct the code fix; rec: ratify (single-act resume; a graceful pause
+  ≠ a `NEEDS-HUMAN` decision-block; honest downside recorded). No code/test change
+  made — an `@owner` call is not the driver's to adjudicate.
+- **[MINOR] `status.md:95` forward-only nit → superseded, no action.** The
+  queued-backlog "shipped 2026-07-14" line the reviewer flagged was rewritten away
+  in the interim status.md churn; the residual "shipped" mentions are load-bearing
+  queue-boundary context (naming what's done to bound what's next), not
+  history-narration.
+
+**What changed.** `062-REVIEW-A.md` committed as-is (the review record joins its
+peers in git). `open-items.md` gains the OI-13 brief + the intro open-list line;
+`status.md` gains the OI-13 one-liner in the Needs-`<human>` list and folds it
+into the Next-action sitting agenda.
+
+**Gates.** Commit bar (paste below in the commit): `pytest -q -n auto -m smoke`
++ `check_docs --stale`. Docs-only + one tracked review file; no spine change
+(SN=24 SR=56 LLR=57 TC=57), no code/test/scaffold surface touched.
+
+**Handoff — run-state NEEDS-HUMAN; next-wi WI-144 (unchanged).** The orphan is
+resolved (record tracked, live finding routed to OI-13, no WI-147 reopen pending
+the ruling). The phase-v3 g2-close sitting now rules **OI-12 + OI-13** and
+sequences the research-knowledge campaign before WI-144 resumes; do not
+auto-start WI-152+.

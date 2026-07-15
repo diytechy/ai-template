@@ -72,6 +72,12 @@ home elsewhere — don't restate it here:
       SR-052/053/054 rubrics; rec: accept — six rubric-meeting fixes are WI-144
       build work; the **U5** anchor + phase-hue de-collision + 3 TC-HARDEN are
       owner-gated (ratify at phase-g2 close). Depth in [open-items.md](open-items.md).
+    - **OI-13** — session-062 REVIEW-A [MAJOR] (the `docs/pause` stop leaves
+      `run-state` untouched vs. the spec's `ask:` line); reconciled from the
+      orphaned 062-REVIEW-A. Rec: **ratify the documented deviation** (amend the
+      spec) — the file is the whole pause contract and `NEEDS-HUMAN` would break
+      single-act resume; owner may instead direct the code fix. Depth in
+      [open-items.md](open-items.md).
 - **Queued (v3 dev slice, owner intake 2026-07-13** —
   [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ the
   earlier SR-051-rev / SR-055 / SR-056 slices **shipped** ([log.md](log.md)
@@ -102,9 +108,10 @@ home elsewhere — don't restate it here:
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** **OI-12 g2-close ratification** — run-state **NEEDS-HUMAN**;
   then **WI-144** ([next-wi](next-wi)) resumes its final build round. The owner
-  must rule the critique disposition and sequence the queued research-knowledge
-  campaign (Open items above). Shipped work + round-by-round evidence →
-  [log.md](log.md) / OI-12, not here.
+  must rule the critique disposition, rule **OI-13** (the `docs/pause`
+  `run-state` deviation, now folded into the same sitting), and sequence the
+  queued research-knowledge campaign (Open items above). Shipped work +
+  round-by-round evidence → [log.md](log.md) / OI-12, not here.
 
 ## Scope
 

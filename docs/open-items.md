@@ -14,8 +14,9 @@ _The 2026-07-13 sitting ruled OI-1 (G3 re-attestation — ratified), OI-2
 budget + index). The 2026-07-14 sitting ratified OI-8 (the `[v3]-[g2]`
 dashboard-ux batch) and OI-9 (the research-knowledge design spec, as revised) —
 records in the log's Decisions. OI-3 (corrected against git), OI-4, OI-7,
-OI-11 (session-038 REVIEW-A disposition), and OI-12 (the 042 dashboard
-critique disposition) remain open._
+OI-11 (session-038 REVIEW-A disposition), OI-12 (the 042 dashboard
+critique disposition), and OI-13 (the WI-147 pause `run-state` deviation)
+remain open._
 
 ---
 
@@ -247,3 +248,52 @@ critique disposition) remain open._
   build round (paired with the U5 palette ruling), and defer T2 to its own
   `.knode`/`knowarrow` pass. Alternatives: rule a specific palette family for U5 ·
   hold the whole slice for a live design sitting.
+
+## OI-13 — WI-147: pause leaves `run-state` untouched vs. the spec's `ask:` line
+
+- **Decision:** whether to **ratify the documented WI-147 deviation** (amend the
+  spec so a `docs/pause` stop leaves `run-state` untouched) or **direct a code
+  fix** (persist `NEEDS-HUMAN` + `ask: docs/pause` on pause, and clear it on
+  resume). Surfaced by the orphaned **062-REVIEW-A** (session-062 REVIEW-A on
+  WI-147, NO-COMMIT, 1 MAJOR + 1 MINOR, CHANGES-REQUESTED;
+  [reviews/062-REVIEW-A.md](reviews/062-REVIEW-A.md)) — reconciled from the working
+  tree, its live MAJOR routed here rather than buried.
+- **The divergence (verified against code + tests + deliverable + the WI-147 log
+  entry):** the WI-147 spec
+  ([specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)
+  #pause-blackout) says the coordinator "stops the loop with a clear banner
+  **(and the run-state `ask:` line naming `docs/pause`)**." The shipped code
+  (`agent_loop.py` `pause_reason` docstring + the top-of-loop pause branch, exit
+  8) **deliberately leaves `run-state` untouched** and honors the phrase as the
+  **banner detail** instead; `test_pause_delete_resumes` and the WI-147 deliverable
+  both lock in "run-state untouched." The builder **documented this as an explicit
+  deviation** (log.md WI-147 session entry: persisting `NEEDS-HUMAN` "would force a
+  two-act resume and contradict 'deleting it resumes'"). The reviewer disputed it
+  and asked for "an explicit spec amendment before closing WI-147" — but WI-147's
+  row is already `done` with **no owner ruling**, so the amendment the deviation
+  needs is still outstanding.
+- **Blast radius:** narrow and self-contained (one coordinator control, absent by
+  default downstream). The tension is purely which signal carries "paused": today
+  it is the **exit code (8) + banner**; the spec wanted it **also in `run-state`**.
+- **Options:**
+  - **(a) Ratify the deviation (amend the spec).** Bless the shipped
+    file-is-the-contract design; strike/soften the spec parenthetical to "the
+    banner names `docs/pause` + the resume act." No code/test change; keeps the
+    single-act delete-to-resume.
+  - **(b) Direct the code fix.** Persist `NEEDS-HUMAN` + `ask: docs/pause` on
+    pause and clear it on resume (a two-act resume, or a launcher special-case
+    that treats `run-state=NEEDS-HUMAN` + `ask:docs/pause` + file-absent as
+    resumable). Reopens WI-147 for a corrective slice + test updates.
+- **Recommendation: (a) ratify the deviation.** The rationale is already recorded
+  and sound: a graceful pause is an operator "I'll be back," semantically distinct
+  from a `NEEDS-HUMAN` decision-block — and setting `NEEDS-HUMAN` here would
+  collide with the loop's own `trajectory --strict` rule that rejects a stale
+  `NEEDS-HUMAN` park while work is actionable. Code, tests, and deliverable already
+  cohere. **Honest downside:** an external monitor reading only `run-state` sees
+  `RUNNING` while the loop is paused — mitigated (not eliminated) by the
+  `EXIT_PAUSED=8` exit code + the stop banner. If the owner weights the
+  observable-state concern higher, option (b) is the fix. (The MINOR finding —
+  session-062's `status.md:95` forward-only nit — is **superseded**: that
+  queued-backlog line was rewritten away in the interim; the residual "shipped"
+  mentions in status.md are load-bearing queue-boundary context, not
+  history-narration, so no action.)
