@@ -101,6 +101,56 @@ def test_scaffold_knowledge_home_states_pack_contract(scaffold):
     assert "[docs/knowledge/](docs/knowledge/README.md)" in project_readme
 
 
+def test_knowledge_library_is_opt_in_by_declared_domain(tmp_path):
+    # The default/`any` scaffold carries only the index: curated packs become
+    # durable project context, so they must never arrive as an implicit superset.
+    plain = tmp_path / "plain"
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", plain], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert {p.name for p in (plain / "docs" / "knowledge").glob("*.md")} == {
+        "README.md"
+    }
+
+    web = tmp_path / "web"
+    proc = run_py(
+        [SCRIPTS / "bootstrap.py", "--dest", web, "--domain", "web"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    expected = {
+        "README.md",
+        "ui-design-systems.md",
+        "web-rendering.md",
+        "model-inference.md",
+    }
+    assert {p.name for p in (web / "docs" / "knowledge").glob("*.md")} == expected
+    index = (web / "docs" / "knowledge" / "README.md").read_text(encoding="utf-8")
+    for name in expected - {"README.md"}:
+        assert "({})".format(name) in index
+    assert "domains: [web]" in (
+        web / "docs" / "knowledge" / "ui-design-systems.md"
+    ).read_text(encoding="utf-8")
+
+
+def test_knowledge_pack_materialization_is_write_once_and_forceable(tmp_path):
+    dest = tmp_path / "repo"
+    args = [SCRIPTS / "bootstrap.py", "--dest", dest, "--domain", "hardware"]
+    first = run_py(args, cwd=tmp_path)
+    assert first.returncode == 0, first.stdout + first.stderr
+    pack = dest / "docs" / "knowledge" / "perception.md"
+    pack.write_text("project-owned\n", encoding="utf-8")
+
+    second = run_py(args, cwd=tmp_path)
+    assert second.returncode == 0, second.stdout + second.stderr
+    assert pack.read_text(encoding="utf-8") == "project-owned\n"
+
+    forced = run_py([*args, "--force"], cwd=tmp_path)
+    assert forced.returncode == 0, forced.stdout + forced.stderr
+    assert "# Perception" in pack.read_text(encoding="utf-8")
+    index = (dest / "docs" / "knowledge" / "README.md").read_text(encoding="utf-8")
+    assert index.count("[perception](perception.md)") == 1
+
+
 def test_agents_template_stays_within_size_budget():
     # Gemini's AGENTS.md support truncates near ~12k chars, and a downstream
     # project must still fill the Project section and add its own rules. The

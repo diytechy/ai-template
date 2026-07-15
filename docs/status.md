@@ -62,7 +62,6 @@ home elsewhere — don't restate it here:
   2026-07-14 ratification; the ref-integrity slice (trace.py Knowledge resolution
   + knowledge⇒component coupling) landed 2026-07-15 ([log.md](log.md)). The
   dogfood packs + first live research pass also landed ([knowledge index](knowledge/README.md)). Remaining:
-  **WI-156** (kit-provisioned pack library) ·
   **WI-157** (skills domains filter); **WI-158** deferred (OKF pack export).
   The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
@@ -87,11 +86,10 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-156** (kit-provisioned pack library; default
-  `BuildTier=medium`) continues the owner-greenlit research-knowledge campaign;
-  its DAG carries
-  **WI-157**, and **WI-164** automatically. `docs/next-wi` points at
-  **WI-156**. The grounded research review for the completed dogfood slice is recorded in
+- **Next action:** **WI-157** (skills domains filter + staged skill-library
+  import; default `BuildTier=medium`) continues the owner-greenlit
+  research-knowledge campaign; its DAG then carries **WI-164** automatically.
+  `docs/next-wi` points at **WI-157**. The grounded research review for the completed dogfood slice is recorded in
   [reviews/101-GROUNDING.md](reviews/101-GROUNDING.md). This was off-spine docs,
   so nothing rides a re-attestation.
   Only deferred main-decomposition (**WI-080**→**WI-081**) stays parked. Codex

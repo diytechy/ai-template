@@ -6874,3 +6874,33 @@ docs, 445 links, 0 broken** (41 warn-only historical orphans).
 `docs/run-state` remains **RUNNING** and `docs/next-wi` → **WI-156** (default
 `BuildTier=medium`) for the kit-provisioned pack library. Not pushed
 (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-156 (research-knowledge campaign): kit-provisioned pack library
+
+**What shipped.** The kit now carries six curated research packs under
+`project-trajectory/knowledge/`, split from the owner-ratified staging library
+and tagged by domain: three `web` packs (UI/design systems, rendering, model
+inference) and three `hardware` packs (perception, kinematics, simulation/robot
+learning). `bootstrap.py --domain web|hardware` explicitly opts into the
+matching set, copies it write-once under `docs/knowledge/`, and adds stable rows
+to the scaffolded pack index. An omitted/`any`/unmatched domain installs no
+packs; `--force` is the deliberate refresh path. The kit README names the new
+library surface.
+
+**Tests / deviations / budgets.** Two integration tests cover default-empty and
+domain-selected scaffolds, index/frontmatter shape, write-once preservation,
+forced refresh, and idempotent index rows. The staged library originally
+described pack directories; the ratified pack contract requires one Markdown
+file per label, so each staged section became one file. No budget-watched file
+changed; this is off-spine scripts/content, so no re-attestation rides it.
+
+**End green (real output).** Full unfiltered `pytest -q -n auto` → **771 passed,
+34 skipped in 88.48s**. Pre-bookkeeping commit bar: smoke → **642 passed, 2
+skipped in 68.41s**; docs → **OK, 109 docs, 448 links, 0 broken** (42 historical
+orphan warnings). The commit bar was rerun after the close bookkeeping and
+trajectory regeneration.
+
+**Handoff.** WI-156 → done; `PROJECT_STATE.html` regenerated;
+`docs/run-state` remains **RUNNING** and `docs/next-wi` → **WI-157** (default
+`BuildTier=medium`) for skills domain filtering and the staged skill-library
+import. Not pushed (`docs/push-policy: human`).

@@ -124,6 +124,7 @@ Contracts (interfaces): IF-014, IF-039
 | `matches_scope(fm, stack, domain, binary_assets)` | Trivial tag-intersection matcher: does a skill's applicability fit the |  |
 | `select_skills(stack, domain, binary_assets)` | The kit-scope skills whose applicability intersects the declared scope. |  |
 | `materialize_agent_layer(dest, agents, skills, dry_run, force)` | Copy the selected skills (and the inert hook example) into each chosen |  |
+| `materialize_knowledge_packs(dest, domain, dry_run, force)` | Install the curated packs for one explicitly declared domain. |  |
 | `sync_agent_skills(dest, dry_run)` | Force-refresh each per-agent skill copy from the ONE neutral source, so a |  |
 | `seed_agent_resume(dest, agents, created, dry_run)` | Fill the freshly scaffolded agent-resume launchers' AGENT_CMD/AGENT_MODEL |  |
 | `record_agent_choice(dest, choice, skills, dry_run)` | Append a one-line setup note to docs/status.md recording the agent choice |  |

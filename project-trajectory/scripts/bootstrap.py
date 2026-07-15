@@ -304,6 +304,22 @@ AGENTS = {
 STACK_CHOICES = ("python", "node", "go", "rust", "powershell", "any")
 DOMAIN_CHOICES = ("web", "game", "hardware", "data", "any")
 
+# Curated knowledge packs are an explicit domain opt-in.  Unlike skills, an
+# unspecified/"any" domain must not install the superset: packs become authored
+# project context once materialized, so irrelevant packs would be durable noise.
+KNOWLEDGE_PACKS = {
+    "web": (
+        ("ui-design-systems", "UI & design systems", "web"),
+        ("web-rendering", "Web rendering", "web"),
+        ("model-inference", "Model inference", "web"),
+    ),
+    "hardware": (
+        ("perception", "Perception", "hardware"),
+        ("kinematics", "Kinematics", "hardware"),
+        ("simulation-robot-learning", "Simulation & robot learning", "hardware"),
+    ),
+}
+
 # Stacks that are *explicitly* not Python: their scaffold skips the dead Python
 # artifacts (pytest.ini) and gets the harness-rewiring checklist appended to
 # docs/status.md as Open-items bullets instead (Thread 34, R7/C3). Blank/`any`
@@ -417,6 +433,48 @@ def materialize_agent_layer(dest, agents, skills, dry_run, force):
                     hooks_dst.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(hooks_src, hooks_dst)
                 created.append(spec["hooks_dst"])
+    return created
+
+
+def materialize_knowledge_packs(dest, domain, dry_run, force):
+    """Install the curated packs for one explicitly declared domain.
+
+    Pack files are write-once like the rest of the scaffold.  The index is
+    extended only for files this invocation creates/overwrites, and only when
+    their row is absent, so a re-run cannot duplicate rows or silently adopt a
+    pre-existing project-owned pack into the kit's index.
+    """
+    selected = KNOWLEDGE_PACKS.get(domain, ())
+    created = []
+    indexed = []
+    for label, topic, pack_domain in selected:
+        src = KIT / "knowledge" / (label + ".md")
+        dst_rel = "docs/knowledge/" + label + ".md"
+        dst = dest / dst_rel
+        if not src.is_file() or (dst.exists() and not force):
+            continue
+        if not dry_run:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src, dst)
+        created.append(dst_rel)
+        indexed.append((label, topic, pack_domain))
+
+    index = dest / "docs" / "knowledge" / "README.md"
+    if indexed and index.is_file() and not dry_run:
+        text = index.read_text(encoding="utf-8")
+        rows = []
+        for label, topic, pack_domain in indexed:
+            marker = "[{}]({}.md)".format(label, label)
+            if marker not in text:
+                rows.append(
+                    "| [{}]({}.md) | {} | domain: `{}` | 2026-07-09 |".format(
+                        label, label, topic, pack_domain
+                    )
+                )
+        if rows:
+            index.write_text(
+                text.rstrip() + "\n" + "\n".join(rows) + "\n", encoding="utf-8"
+            )
     return created
 
 
@@ -1484,8 +1542,10 @@ def main():
         "--domain",
         choices=DOMAIN_CHOICES,
         default=None,
-        help="declared primary domain, for skill matching (web|game|hardware|"
-        "data|any). Omitted + interactive -> ASK; non-interactive -> no filter.",
+        help="declared primary domain, for skill matching and curated knowledge-"
+        "pack opt-in (web|game|hardware|data|any). web/hardware materialize their "
+        "pack sets; any/omitted materializes no packs. Omitted + interactive "
+        "agent setup -> ASK; non-interactive -> no filter.",
     )
     ap.add_argument(
         "--gate-policy",
@@ -1732,6 +1792,7 @@ def main():
     created.extend(
         materialize_agent_layer(dest, agents, skills, args.dry_run, args.force)
     )
+    created.extend(materialize_knowledge_packs(dest, domain, args.dry_run, args.force))
 
     # Seed the fresh agent-resume launchers' AGENT_CMD slot with the chosen
     # agent's example command (never on a re-sync that skipped them).
