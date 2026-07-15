@@ -902,7 +902,6 @@ def ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
     then nests each SR's LLRs and TCs with their prose. Deterministic, stdlib-only."""
     sn_meta = sn_meta or {}
     in_scope = _scope_srs(scope, srs)
-    scoped_ids = {s["SR-ID"] for s in in_scope}
 
     def tc_block(t):
         auto = " · Automated" if _cell(t, "Automated").lower() in ("yes", "y") else ""

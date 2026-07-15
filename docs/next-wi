@@ -7,34 +7,19 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# NOTE (phase-v3 g2-close sitting, 2026-07-14 — OI-11/12/13 RULED, log.md
-# Decisions): WI-144's final owner-directed build round is implemented. The
-# critique budget is a per-run in-memory counter (agent_loop critique_rounds), so
-# a fresh launch restores it — no reset file needed. Ratified round scope (OI-12):
-# MECHANIZE FIRST via the 3 TC-HARDEN (contrast WCAG>=4.5 · every emitted selector
-# matches >=1 element · every multi-fill panel emits a legend / palette-bijection),
-# landed residual contrast/label surfaces were 052's [MAJOR] A4
-# queued `.detail .badge` (2.56:1 -> dark ink) · [MINOR] A4 focus ring (2.05:1 ->
-# darker) · [MAJOR] T4 `.blab` overflow (truncate like `.bsub`) · U4/U3/U1 polish
-# — together with the U5 palette de-collision (phases get their own hue family
-# distinct from the status vocabulary; U5 is now an anchor in
-# docs/rubrics/dashboard-uniformity.md). [MAJOR] T2 (Knowledge-tab 249-node flat
-# density) remains deferred to WI-159. EXACT RESUME: run the FRESH provider-
-# heterogeneous re-critique; on APPROVE WI-144 closes, the full gate bar runs,
-# the spine rejoins G3.
-# RESOLUTION IN PROGRESS (2026-07-15, in-chat): the browser-backend churn
-# (sessions 070-073 each re-hit WI-144's rendered critique with no browser and
-# stopped) is being resolved by an OWNER manual critique instead. The loop is
-# `docs/pause`-held while that happens (run-state stays RUNNING per OI-13). On the
-# owner's APPROVE, WI-144 closes + the full gate bar runs + the spine rejoins G3;
-# on CHANGES, a build round runs. Then `docs/pause` is deleted and the loop
-# resumes under `docs/gate-policy`=autonomous.
-# NOTE the DAG-actionable off-spine backlog if WI-144 stays open: WI-161
-# (per-phase preference knob) · WI-163 (critique-budget dial) · WI-166
-# (dev-setup.template.cmd) · WI-162 (parallel-dispatch spec) — all hard
-# predecessors done, none depend on WI-144, so the loop has real work even before
-# WI-144 closes (this is why run-state is RUNNING, not a stale NEEDS-HUMAN park).
-# AFTER WI-144 CLOSES: the owner sequences the next campaign — research-knowledge
-# (WI-152..157) vs the deferred main-decomposition (WI-080->WI-081). Do NOT
-# auto-start WI-152+ ahead of that greenlight.
-WI-144
+# NOTE (2026-07-15): WI-144 CLOSED on the OWNER's manual critique APPROVE
+# (docs/reviews/074-CRITIQUE.md) — the automated critique loop had no browser
+# backend (sessions 070-073 churned on it), so the owner rendered + judged
+# PROJECT_STATE.html directly (the strongest Critique form). SR-052/053/054 ->
+# Verified, the derived gate is back at G3, the v3 dashboard-ux campaign is
+# complete. `docs/gate-policy` is now `autonomous` (owner directive) — no
+# g2-close sitting for future campaigns.
+# NEXT: the DAG-actionable off-spine backlog in id order — WI-161 (per-phase
+# preference knob; complements the WI-160 codex/Sol dial) -> WI-163 (per-WI
+# critique-budget dial) -> WI-166 (dev-setup.template.cmd) -> WI-162 (parallel-
+# dispatch design spec, strong) -> WI-165 (Process-tab circular loops, now
+# unblocked). WI-159 (Knowledge-tab density) stays deferred. The
+# research-knowledge campaign (WI-152..157) + WI-164 stay OWNER-SEQUENCED — do
+# NOT auto-start WI-152+ ahead of the owner's greenlight. Sol builds need the
+# owner to install @openai/codex + codex login (else BUILD self-heals to Fable).
+WI-161

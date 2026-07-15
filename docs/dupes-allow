@@ -82,6 +82,10 @@ project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_rele
 project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/trace.py
 project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
+# WI-146: trace.py's --ratify view gained the SN-meta parser mirroring
+# gen_okf.sn_rows / gen_trajectory._sn_rows (F5, "change all three together");
+# the pair was surfaced (uncensused) at the WI-144 G3 close — dupes is G3-only.
+project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
 
 # --- Intra-file duplication — GRANDFATHERED debris, not sanctioned -----------
 # Genuine intra-file copy-paste in the four monolithic scripts. NOT F5 (F5 is a

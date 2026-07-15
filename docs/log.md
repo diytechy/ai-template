@@ -6281,3 +6281,49 @@ Not pushed (`docs/push-policy: human`).
 **End green (real output):** smoke **615 passed, 2 skipped in 65.70s**;
 `check_docs --stale` **OK — 87 docs, 385 links, 0 broken** (existing warnings
 only); unfiltered suite **740 passed, 34 skipped in 81.70s**.
+
+## 2026-07-15 — GATE: WI-144 closed on the OWNER's manual critique → v3 rejoins G3 (whole spine G3)
+
+**Gate action.** The owner rendered `PROJECT_STATE.html` themselves and returned
+**APPROVE** for the three `Verification=Critique` rows (recorded
+[reviews/074-CRITIQUE.md](reviews/074-CRITIQUE.md)) — the automated critique loop
+had cycled NEEDS-HUMAN across sessions 070-073 for want of an in-app browser
+backend, and the "No un-run greens" fixed point forbade fabricating an APPROVE, so
+a **human critique** (the strongest form of the method) closed it. **WI-144 →
+done**; **SR-052/053/054 + LLR-053/054/055 + TC-053/054/055 → Verified**;
+`derive_gate.py` recomputed **per-phase `(default)=G3;v2=G3;v3=G3`, runnable G2 →
+G3** — the whole spine is back at G3, the v3 dashboard-ux campaign complete. Owner
+note: **sufficient for now, future iteration expected** (arriving as WIs — WI-159
+Knowledge-tab density, WI-165 Process circular loops — not blockers on this close;
+the standing OI-8 posture).
+
+**Latent debt surfaced by the G3 advance (fixed here).** Advancing G2 → G3 turned
+on the **G3-only** `lint` and `dupes` steps, which caught two WI-146 (ratify-view)
+issues the G2 bar never ran:
+- **`lint`** — `trace.py` carried a dead `scoped_ids = {…}` (F841, unused). Removed.
+- **`dupes`** — WI-146 added an SN-meta parser to `trace.py` mirroring
+  `gen_okf.sn_rows` / `gen_trajectory._sn_rows` (an **F5** sanctioned small-helper
+  duplication, "change all three together") but did not census the new
+  `gen_okf.py == trace.py` pair in `docs/dupes-allow`. Added it (a census edit, not
+  a refactor — the F5 script-independence convention deliberately duplicates these,
+  WI-078). Neither is a WI-144 defect; both were pre-existing and are recorded as
+  the honest cost of the gate advance.
+
+**Mechanized verification (real output, full G3 gate bar).**
+- `check.py --jobs 0` at the derived gate (**G3**) → **RESULT: PASS** — all 15
+  steps green: `tests+coverage` **91.39%** (≥ 85), `traceability`
+  `--strict --no-placeholders --strict-schema --require-verified`
+  (`SN=24 SR=56 LLR=57 TC=57 orphans=0 status-findings=0 schema-findings=0`),
+  `lint`, `dupes`, `derived-gate`, `trajectory --strict`, `okf`, `trajectory-map`,
+  `arch-map`, `doc-navigability` (0 broken), `perf-budgets`, `design-flows`,
+  `privacy`, `skills-sync`, `format`.
+- Regenerated `docs/gate` (G3), `PROJECT_STATE.html`, `docs/okf` (9 SN/SR/LLR/TC
+  concepts re-emitted on the Verified flip). No byte-budgeted file touched.
+
+**Context.** `docs/gate-policy` is `autonomous` (owner directive, the Decisions
+entry above); the loop was `docs/pause`-held for this in-chat close and resumes on
+delete. **Handoff:** run-state **RUNNING**; `docs/next-wi` → **WI-161** (the
+DAG-actionable off-spine backlog WI-161 → WI-163 → WI-166 → WI-162 → WI-165,
+now unblocked). Research-knowledge (WI-152…157) + WI-164 stay owner-sequenced — do
+not auto-start. Sol builds need `@openai/codex` + `codex login` (else BUILD
+self-heals to Fable). Not pushed (`push-policy: human`).
