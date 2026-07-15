@@ -60,7 +60,9 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `batch_advisories(next_wi_path, work_items_path)` | Dev-slice batch eligibility advisories (WI-133) — a batch should hold |  |
 | `reviewer_prompt(prompt_templates, phase, verdict_path)` | The redacted reviewer prompt for a review phase: the per-phase prompt-map |  |
 | `load_critique_srs(docs)` | The SR ids whose Verification is `Critique` (docs/requirements/ |  |
-| `build_scope_srs(root, docs, commit_range)` | The SR ids the WIs named in `commit_range`'s commit subjects deliver — the |  |
+| `build_scope_wis(root, docs, commit_range)` | The WI ids named in `commit_range`'s commit subjects; empty when there is |  |
+| `build_scope_srs(root, docs, commit_range)` | The SR ids delivered by the WI-tagged commits in `commit_range`. |  |
+| `critique_control(docs, wi_ids, default_max)` | Resolve the optional per-WI critique control for one build scope. |  |
 | `critique_brief(root, docs, scope_srs)` | The redacted critique brief: for each in-scope Critique SR, its intent (the |  |
 | `critique_prompt(prompt_templates, verdict_path, brief)` | The redacted critique prompt: the CRITIQUE prompt-map template (a FILE the |  |
 | `git(root, *args)` | Run git in the repo; returns (returncode, stdout-stripped). |  |

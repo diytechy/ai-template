@@ -866,25 +866,53 @@ def load_critique_srs(docs):
     return out
 
 
-def build_scope_srs(root, docs, commit_range):
-    """The SR ids the WIs named in `commit_range`'s commit subjects deliver — the
-    honest 'which WI did this build touch' signal (the `WI-<n>: <subject>` commit
-    convention § the loop already relies on), joined through
-    docs/requirements/work-items.csv. Empty when there is no range, no WI-tagged
-    subject, or no work-items.csv (the layer is then vacuous — recorded gap)."""
+def build_scope_wis(root, docs, commit_range):
+    """The WI ids named in `commit_range`'s commit subjects; empty when there is
+    no range or no WI-tagged subject."""
     if not commit_range or ".." not in commit_range:
         return set()
     code, subjects = git(root, "log", "--format=%s", commit_range)
     if code != 0:
         return set()
-    wi_ids = set(re.findall(r"WI-\d+", subjects))
-    if not wi_ids:
-        return set()
+    return set(re.findall(r"WI-\d+", subjects))
+
+
+def build_scope_srs(root, docs, commit_range):
+    """The SR ids delivered by the WI-tagged commits in `commit_range`."""
+    wi_ids = build_scope_wis(root, docs, commit_range)
     srs = set()
     for r in _read_csv_rows(Path(docs) / "requirements" / "work-items.csv"):
         if (r.get("WI-ID") or "").strip() in wi_ids:
             srs.update(_refs(r.get("SR-Refs")))
     return srs
+
+
+def critique_control(docs, wi_ids, default_max):
+    """Resolve the optional per-WI critique control for one build scope.
+
+    A mixed scope uses the most conservative settings: `inf` outranks every
+    integer, otherwise the largest budget wins; `block` outranks `move-on`.
+    Missing/invalid cells preserve the global default and move-on behavior.
+    """
+    budgets, disposition = [], "move-on"
+    for r in _read_csv_rows(Path(docs) / "requirements" / "work-items.csv"):
+        if (r.get("WI-ID") or "").strip() not in wi_ids:
+            continue
+        raw = (r.get("CritiqueBudget") or "").strip().lower()
+        if raw == "inf":
+            budgets.append(None)
+        else:
+            try:
+                value = int(raw)
+            except ValueError:
+                value = 0
+            if value >= 1:
+                budgets.append(value)
+        if (r.get("CritiqueExhaustion") or "").strip().lower() == "block":
+            disposition = "block"
+    if any(value is None for value in budgets):
+        return None, disposition
+    return max(budgets or [default_max]), disposition
 
 
 def critique_brief(root, docs, scope_srs):
@@ -2087,6 +2115,8 @@ def main():
     critique_queue = []  # ["CRITIQUE"] when a critique round is scheduled
     critique_scope = set()  # the in-scope Critique SR ids for the current loop
     critique_rounds = 0  # consecutive CHANGES-REQUESTED critique rounds this scope
+    critique_limit = None  # None means inf-until-APPROVE for the active scope
+    critique_exhaustion = "move-on"
     try:
         critique_max = int(os.environ.get("AGENT_CRITIQUE_MAX", "3"))
     except ValueError:
@@ -2611,7 +2641,7 @@ def main():
                 )
                 if merged == "CHANGES-REQUESTED":
                     critique_rounds += 1
-                    if critique_rounds >= critique_max:
+                    if critique_limit is not None and critique_rounds >= critique_limit:
                         # Budget exhausted -> the S8 page-the-human semantics, keyed
                         # to docs/gate-policy (same failure_action the review round
                         # uses). The critic gates iteration; the human owns final
@@ -2620,12 +2650,12 @@ def main():
                         print(
                             "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
                             "{} -> page-human: {}".format(
-                                fa["mode"], critique_rounds, critique_max, fa["note"]
+                                fa["mode"], critique_rounds, critique_limit, fa["note"]
                             )
                         )
                         critique_rounds = 0
                         critique_scope = set()
-                        if fa["mode"] == "attended":
+                        if fa["mode"] == "attended" or critique_exhaustion == "block":
                             (lane / "run-state").write_text(
                                 "NEEDS-HUMAN\nask: critique budget exhausted "
                                 "still CHANGES-REQUESTED — review the findings "
@@ -2637,7 +2667,7 @@ def main():
                                 "PAGE-HUMAN — critique budget exhausted",
                                 "the critique loop hit its {}-round budget still "
                                 "CHANGES-REQUESTED | {}".format(
-                                    critique_max, fa["note"]
+                                    critique_limit, fa["note"]
                                 ),
                             )
                             return EXIT_NEEDS_HUMAN
@@ -2694,6 +2724,7 @@ def main():
                 # fires only when this build's WI touches a Critique-verified SR.
                 # Vacuous when no Critique SR exists, so a non-adopter pays nothing.
                 if critique_srs:
+                    scope_wis = build_scope_wis(root, docs, commits)
                     in_scope = build_scope_srs(root, docs, commits) & critique_srs
                     if in_scope:
                         # A NEW scope starts a fresh budget; a rework of the SAME
@@ -2701,11 +2732,18 @@ def main():
                         # the budget actually bounds the loop.
                         if in_scope != critique_scope:
                             critique_rounds = 0
+                        critique_limit, critique_exhaustion = critique_control(
+                            docs, scope_wis, critique_max
+                        )
                         critique_scope = in_scope
                         critique_queue = ["CRITIQUE"]
                         print(
                             "dispatch: build touches Critique SR(s) {} -> scheduling "
-                            "CRITIQUE round".format(",".join(sorted(in_scope)))
+                            "CRITIQUE round (budget {}, exhaustion {})".format(
+                                ",".join(sorted(in_scope)),
+                                "inf" if critique_limit is None else critique_limit,
+                                critique_exhaustion,
+                            )
                         )
 
         if outcome == "WAITING":

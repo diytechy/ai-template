@@ -87,8 +87,9 @@ TC_ROW = (
 )
 
 WI_ROW = (
-    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef\n"
-    "WI-050,Render,scripts,SR-050,,active,,docs/specs/WI-050.md\n"
+    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,"
+    "CritiqueBudget,CritiqueExhaustion\n"
+    "WI-050,Render,scripts,SR-050,,active,,docs/specs/WI-050.md,,\n"
 )
 
 RUBRIC = "# render rubric\n\n- G1 contact shadows are consistent\n- B1 RUBRIC-MARKER seam artifacts\n"
@@ -186,6 +187,26 @@ def _loop(repo, cmd, *extra):
 def _models(ctl):
     p = ctl / "models.txt"
     return p.read_text(encoding="utf-8").split() if p.exists() else []
+
+
+def _set_critique_control(repo, budget, exhaustion):
+    rows = list(
+        csv.DictReader(
+            (repo / "docs/requirements/work-items.csv")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        )
+    )
+    rows[0]["CritiqueBudget"] = budget
+    rows[0]["CritiqueExhaustion"] = exhaustion
+    with open(
+        repo / "docs/requirements/work-items.csv", "w", encoding="utf-8", newline=""
+    ) as fh:
+        writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+    _git(repo, "add", "docs/requirements/work-items.csv")
+    _git(repo, "commit", "-qm", "set critique control")
 
 
 def test_critique_scheduled_when_critique_sr_in_scope(critique_repo):
@@ -287,6 +308,40 @@ def test_critique_budget_exhaustion_pages_human(critique_repo):
     state = (repo / "docs" / "run-state").read_text(encoding="utf-8").splitlines()
     assert state[0].strip() == "NEEDS-HUMAN"
     assert state[1].startswith("ask: critique budget exhausted")  # WI-127
+
+
+def test_per_wi_infinite_budget_keeps_iterating(critique_repo):
+    repo, ctl, cmd = critique_repo
+    _set_critique_control(repo, "inf", "move-on")
+    (ctl / "verdict.txt").write_text(CHANGES, encoding="utf-8")
+    proc = _loop(repo, cmd, "--max-iterations", "6")
+    assert proc.returncode == 6, proc.stdout + proc.stderr
+    assert _models(ctl).count("critb") >= 2
+    assert "critique budget exhausted" not in proc.stdout
+
+
+@pytest.mark.parametrize("disposition,expected", [("move-on", 6), ("block", 7)])
+def test_per_wi_exhaustion_disposition_overrides_autonomous(
+    critique_repo, disposition, expected
+):
+    repo, ctl, cmd = critique_repo
+    _set_critique_control(repo, "1", disposition)
+    (repo / "docs/gate-policy").write_text("autonomous\n", encoding="utf-8")
+    _git(repo, "add", "docs/gate-policy")
+    _git(repo, "commit", "-qm", "set autonomous policy")
+    (ctl / "verdict.txt").write_text(CHANGES, encoding="utf-8")
+    proc = _loop(repo, cmd, "--max-iterations", "3")
+    assert proc.returncode == expected, proc.stdout + proc.stderr
+    if disposition == "block":
+        assert (
+            (repo / "docs/run-state")
+            .read_text(encoding="utf-8")
+            .startswith("NEEDS-HUMAN")
+        )
+    else:
+        assert (repo / "docs/run-phase").read_text(
+            encoding="utf-8"
+        ).strip() == "DESIGN-CHECK"
 
 
 def test_absent_enable_list_no_critique(critique_repo):

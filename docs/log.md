@@ -6379,3 +6379,26 @@ registry row);
 `PROJECT_STATE.html` regenerated for the registry edit. No byte-budgeted file
 touched. **Handoff:** run-state **RUNNING**; `docs/next-wi` stays **WI-163**.
 Not pushed (`push-policy: human`).
+
+## 2026-07-15 — WI-163 per-WI critique budget and exhaustion dial
+
+Shipped optional `CritiqueBudget` and `CritiqueExhaustion` columns on the WI
+registry. A critique scope may now select a positive integer or `inf` (iterate
+until APPROVE), plus `move-on` or `block` on exhaustion. Missing or invalid cells
+preserve the existing `AGENT_CRITIQUE_MAX` + move-on behavior. Batched scopes
+compose conservatively: `inf` and `block` win; otherwise the largest declared
+budget wins. `block` writes `NEEDS-HUMAN` under every gate policy; infinite loops
+remain operationally bounded by max iterations, CLI session limits, and the
+declared pause/blackout controls. The scaffold registry, kit contents table, and
+canonical critique-loop guidance carry the contract. The derived architecture
+map was regenerated for the two new coordinator helpers.
+
+**End green (real output):** focused critique/bootstrap suite **47 passed in
+56.14s**; unfiltered suite **747 passed, 34 skipped in 79.06s**. Commit-bar
+smoke and `check_docs --stale` are recorded in the commit that follows this
+entry. Byte deltas: `PROCESS_OPTIONS.md` **137,877 → 138,370 (+493 B)** for the
+per-WI control, composition, and runaway-guard contract; its baseline was
+re-stamped in all three tracked byte-budget skill copies. `PROCESS.md` and
+`AGENTS.template.md` were untouched. No deviation from the WI spec and no spine
+state changed. **Handoff:** run-state remains **RUNNING**; `docs/next-wi` →
+**WI-166**. Not pushed (`push-policy: human`).

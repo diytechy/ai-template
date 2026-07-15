@@ -76,8 +76,7 @@ home elsewhere — don't restate it here:
   [specs/owner-intake-2026-07-14b.md](specs/owner-intake-2026-07-14b.md); item 1
   — the codex-CLI swap + Sol builder preference — was executed at intake as a
   dial turn, Decisions log; its per-phase preference follow-up is complete):_
-  **WI-162** (parallel WI dispatch across lanes — design spec, strong) · **WI-163** (per-WI critique
-  budget dial: `inf`-until-APPROVE | `block`-on-exhaust) · **WI-164**
+  **WI-162** (parallel WI dispatch across lanes — design spec, strong) · **WI-164**
   (optimization-methodology research — joins the research-knowledge campaign
   behind WI-152) · **WI-165** (Process-tab circular loops, SR-055 — **now
   unblocked**, the v3 campaign closed) · **WI-166** (`dev-setup.template.cmd` Windows double-click rung —
@@ -94,12 +93,12 @@ home elsewhere — don't restate it here:
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** **the loop resumes under `autonomous`** — the v3 campaign
   closed (spine at G3), so the DAG-actionable off-spine backlog is next:
-  **WI-163** (critique-budget dial) → **WI-166** (`dev-setup.template.cmd`) →
-  **WI-162** (parallel-dispatch spec) → **WI-165** (Process circular loops) →
+  **WI-166** (`dev-setup.template.cmd`) → **WI-162** (parallel-dispatch spec) →
+  **WI-165** (Process circular loops) →
   **WI-167** (tripwire path coverage — filed by the 076 design-check, which
   ruled GRIND-THROUGH on the last review round's tripwire page,
   [reviews/076-DESIGN-CHECK.md](reviews/076-DESIGN-CHECK.md));
-  `docs/next-wi` is pointed at **WI-163**.
+  `docs/next-wi` is pointed at **WI-166**.
   The `docs/pause` hold is lifted at this close. **After the backlog the loop
   flows into the research-knowledge campaign** (WI-152…157 + WI-164)
   automatically — the owner greenlit it 2026-07-15; only the deferred

@@ -927,7 +927,13 @@ redacted prompts, verdict files, `gate-policy`-keyed escalation).
   available (`agent_route`), strong-tier by default.
 - **The optimization loop, bounded.** BUILD → CRITIQUE → rework, iterating until
   `APPROVE` or the budget (`AGENT_CRITIQUE_MAX`, default **3**, env-overridable
-  like the S8 knobs) trips the `gate-policy` page-the-human path. The trigger is a
+  like the S8 knobs) trips the `gate-policy` page-the-human path. A WI row may
+  override that run-wide default with `CritiqueBudget=n|inf` (`inf` means iterate
+  until `APPROVE`) and set `CritiqueExhaustion=move-on|block`; absent/invalid cells
+  preserve the global default + move-on, while `block` forces `NEEDS-HUMAN` under
+  every gate policy. `inf` remains bounded operationally by `--max-iterations`,
+  the per-session CLI limits, and the declared pause/blackout controls. In a
+  batched build, `inf` and `block` win; otherwise the largest budget wins. The trigger is a
   committing build whose WI touches a `Critique` SR (read straight off the spine);
   absent an enable-list or any `Critique` SR, nothing changes.
 - **The lax-TC ratchet.** A `CRITIQUE` round that returned CHANGES-REQUESTED and
