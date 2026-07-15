@@ -33,11 +33,13 @@ AGENT_MODEL="claude-fable-5"
 AGENT_MODEL_MAP="PLAN=claude-fable-5,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=claude-fable-5,CRITIQUE=claude-fable-5"
 # Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
 # Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE strong,
-# BUILD / REVIEW-A / REVIEW-B medium). BUILD's initial strong pin was relaxed to
-# the medium default at the owner's 2026-07-12-evening dial turn (WI-121 — the
-# first live run spent 78% of its wall time in strong-tier BUILD sessions);
-# tier-up-never-down still re-raises a contested build to strong.
-AGENT_TIER_MAP=""
+# BUILD / REVIEW-A / REVIEW-B medium). BUILD=strong per the owner directive
+# 2026-07-14b (WI-160): builds prefer Codex Sol — strong tier + OPENAI-SOL first
+# in docs/agents-enabled — superseding FOR NOW the WI-121 medium relax (which
+# had undone the original strong pin after 78% wall time in strong BUILDs;
+# that history stands if this directive is reverted). Keep agent-resume.cmd in
+# sync. tier-up-never-down unchanged.
+AGENT_TIER_MAP="BUILD=strong"
 # Optional per-phase COMMAND template map (cross-provider routing; pairs
 # with the docs/review-policy reviewer dial), e.g.:
 #   AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt} --model {model}"

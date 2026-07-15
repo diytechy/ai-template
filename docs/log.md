@@ -178,6 +178,24 @@ why (one bullet each; cite ids)._
   needs no action. Alternative passed over: (b) direct a code fix (persist
   `NEEDS-HUMAN` + `ask: docs/pause` on pause, clear on resume) — the two-act
   resume the owner declined.
+- **2026-07-14 — OWNER DIRECTIVE (intake b item 1, WI-160): OpenAI routes ride
+  the provider CLI (codex exec, replacing opencode); builder preference = Codex
+  Sol for now.** Driver: opencode sessions sometimes do not respond. Executed:
+  the 3 OPENAI `docs/agents.csv` rows swap to `codex exec --model {model}
+  --dangerously-bypass-approvals-and-sandbox` (the bypass flag = the same
+  explicit unattended consent as claude's `--dangerously-skip-permissions`);
+  `AGENT_TIER_MAP=BUILD=strong` in both launchers; `OPENAI-SOL` heads
+  `docs/agents-enabled`. **Side-effect ruling (owner, at intake): "flip now +
+  knob WI"** — one preference order exists per tier, so Sol leading strong also
+  moves the PLAN/DESIGN-CHECK first draws to Sol (amending WI-113 "Fable leads
+  strong" *for now*; CRITIQUE keeps drawing Fable whenever the implementer is
+  OpenAI, via heterogeneity); **WI-161** (per-phase preference knob) restores
+  Fable-led PLAN when it lands. Supersedes-for-now: the WI-121 BUILD-medium
+  relax. `codex` is not on PATH at execution — selection self-heals (failed
+  start → cooldown → Fable at strong) until the owner runs
+  `npm i -g @openai/codex` + `codex login`. Alternatives passed over: Sol
+  everywhere permanently (owner chose the knob path) · wait for the knob
+  (delays the directive).
 
 ## Audit log
 
@@ -6128,3 +6146,52 @@ sequence the next campaign (research-knowledge WI-152… vs the deferred
 `main-decomposition` WI-080→WI-081) — do not auto-start WI-152+ ahead of that.
 Standing owner items OI-3 (push), OI-4 (LICENSE), OI-7 (review cadence) remain
 open and block nothing. Not pushed (`push-policy: human`).
+
+## 2026-07-14 — SESSION: owner intake b (4 items) — triage + answers, WI-160 executed, WI-161…165 filed; NO spine change
+
+**The owner's second 2026-07-14 batch** ("possible duplicates" — dedupe first),
+triaged into [specs/owner-intake-2026-07-14b.md](specs/owner-intake-2026-07-14b.md)
+(the dedupe table + per-item answers + Done-whens). One side-effect question was
+put to the owner mid-intake and ruled ("flip now + knob WI" — the Decisions
+entry above).
+
+- **Item 1 (OpenAI provider CLI + Sol builder) — executed as WI-160** (dial
+  turn, the WI-121 precedent): agents.csv codex swap, `BUILD=strong` tier map
+  in both launchers (kept in sync), enable-list reorder. Full record: the
+  Decisions entry + the WI row. **Owner action needed before Sol builds run:**
+  `npm i -g @openai/codex` + `codex login` (until then BUILD self-heals onto
+  Fable-strong via cooldown — loud, never silent).
+- **Item 2 (parallelization) — answered: no setting prevents it; the missing
+  piece is a dispatcher.** WI-025's parallel tracks (per-lane lock/run-state)
+  exist; the shipped mode is one lane working one `next-wi` pin serially, and
+  some serialism is deliberate (G2→G3 series slices, owner-sequenced
+  campaigns). Filed **WI-162** (design spec, WI-088 pattern, strong): the
+  actionability scan × overlap guard × lane lifecycle.
+- **Item 3 (critique budget) — answered: the max is global today**
+  (`AGENT_CRITIQUE_MAX`, default 3, per-run) **and a block provision already
+  exists** (exhaustion routes through `failure_action(gate-policy)`: attended
+  blocks NEEDS-HUMAN; single-ratify pauses the WI + surfaces it and moves on —
+  the WI-144/OI-12 shape). Filed **WI-163**: the per-WI dial (integer |
+  `inf`-until-APPROVE with runaway guards; `move-on` | `block` disposition).
+  The optimization-methodology ask → **WI-164**, a research-track WI
+  (`Workstream=research`, strong) joining the ratified OI-9 campaign behind
+  WI-152/~WI-154: solution-space layout, sampling, cross-pollination, and the
+  constructed-optimizer-vs-LLM-iteration rubric; deliverable = knowledge pack +
+  PROCESS_OPTIONS input, never code.
+- **Item 4 (Process-tab loops render straight) — filed WI-165** (dashboard,
+  SR-055, hard predecessor WI-144 — same emitter file, overlap avoidance):
+  render loops A/B as true circular loops intersecting at the shared
+  `LLM_Agent` node. SR-055's prose already says "circular working loops," so
+  this is render fidelity — no spine change; a TC-056 layout assertion may ride
+  the build via change-intake.
+
+**Mechanized verification (real output):** commit-bar smoke `python -m pytest
+-q -n auto -m smoke` → **612 passed, 2 skipped in 69.16s**; `check_docs
+--stale` → **OK — 85 docs, 384 links, 0 broken**; `check_trajectory --strict`
+→ **clean (165 WIs, 139 done, acyclic)**; `PROJECT_STATE.html` regenerated
+(6 new rows). No byte-budgeted file touched; no SN/SR/LLR/TC change (config +
+docs + registry only, proceed under the derived gate).
+
+**Handoff.** Run-state **RUNNING**, `docs/next-wi` → **WI-144** (unchanged —
+the final build round remains first; the new WIs queue behind the existing
+order). Not pushed (`push-policy: human`).

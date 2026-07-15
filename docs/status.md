@@ -81,6 +81,17 @@ home elsewhere — don't restate it here:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
   All owner-intake WIs are complete — the loop worked them in id order after the
   2026-07-14 sitting._
+- **Queued (owner intake 2026-07-14b** — 4 items, triage + answers:
+  [specs/owner-intake-2026-07-14b.md](specs/owner-intake-2026-07-14b.md); item 1
+  — the codex-CLI swap + Sol builder preference — was executed at intake as a
+  dial turn, Decisions log):_ **WI-161** (per-phase model preference knob —
+  restores Fable-led PLAN while BUILD keeps Sol) · **WI-162** (parallel WI
+  dispatch across lanes — design spec, strong) · **WI-163** (per-WI critique
+  budget dial: `inf`-until-APPROVE | `block`-on-exhaust) · **WI-164**
+  (optimization-methodology research — joins the research-knowledge campaign
+  behind WI-152) · **WI-165** (Process-tab circular loops, SR-055 — behind the
+  v3 closer). Owner pre-req for Sol builds: install `@openai/codex` +
+  `codex login`._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in

@@ -5,10 +5,17 @@
 # renaming this file returns the loop to today's AGENT_CMD/AGENT_MODEL behavior
 # byte-for-byte — consent is this list plus the declared routing rules, and the
 # coordinator logs every selection before launch (no silent model swaps).
-# Owner re-lineup 2026-07-12 (WI-113): Fable leads strong; per tier the ANTHROPIC
-# row is preferred, the OPENAI sibling is the cross-family draw.
-ANTHROPIC-FABLE
+# Owner directive 2026-07-14b (WI-160, amending the WI-113 lineup FOR NOW): Codex
+# Sol leads strong so BUILD (routed strong via AGENT_TIER_MAP) draws it first;
+# Fable is the strong cross-family draw — CRITIQUE still lands Fable whenever the
+# implementer is OpenAI (heterogeneity excludes the implementer's family). Note
+# the side effect the owner accepted at intake: PLAN/DESIGN-CHECK first draws
+# also move to Sol until the WI-161 per-phase preference knob lands, which lets
+# this list revert to Fable-first while BUILD keeps preferring OPENAI-SOL.
+# Below Sol/Fable: per tier the ANTHROPIC row is preferred, the OPENAI sibling
+# is the cross-family draw (WI-113, unchanged).
 OPENAI-SOL
+ANTHROPIC-FABLE
 ANTHROPIC-OPUS
 OPENAI-TERRA
 ANTHROPIC-SONNET
