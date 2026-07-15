@@ -6934,3 +6934,31 @@ rerun after this session record.
 `docs/run-state` remains **RUNNING** and `docs/next-wi` → **WI-164**
 (`BuildTier=strong`) for optimization-methodology research. Not pushed
 (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-164 (research-knowledge campaign): iterative optimization
+
+**What shipped.** The new `iterative-optimization` knowledge pack answers the
+four named questions: a representation/evaluator-based route among LLM,
+constructed, and hybrid loops; a WI-scale search card with diverse sampling,
+elite archives, promotion, and cross-pollination; convergence criteria distinct
+from WI-163's critique ceiling; and a clean boundary between durable
+PROCESS_OPTIONS guidance and evidence-rich pack detail. PROCESS_OPTIONS now
+carries the compact route/search/stop discipline. The grounded second opinion
+in `reviews/107-GROUNDING.md` verified seven primary sources and approved the
+synthesis.
+
+**Deviations / budgets / spine.** No deviation from the research-WI spec. No
+budget-watched file changed. This is off-spine research/process guidance, so the
+SN/SR/LLR/TC states and derived G3 gate are unchanged.
+
+**End green (real output).** Full unfiltered `pytest -q -n auto` → **772 passed,
+34 skipped in 95.29s**. Commit bar on the completed bookkeeping state:
+`pytest -q -n auto -m smoke` → **642 passed, 2 skipped in 74.56s**;
+`check_docs.py --root . --stale` → **OK, 111 docs, 453 links, 0 broken**
+(42 historical orphan warnings). The commit bar was rerun after recording these
+totals.
+
+**Handoff.** WI-164 → done, closing the owner-greenlit research-knowledge
+campaign. No queued WI remains; deferred WI-080→WI-081 stays parked pending
+deliberate owner ordering. `docs/run-state` → **DONE** and `docs/next-wi` is
+empty. Not pushed (`docs/push-policy: human`).

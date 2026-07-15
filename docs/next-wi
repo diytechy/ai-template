@@ -9,12 +9,11 @@
 # The DRIVER maintains this alongside docs/status.md Next action.
 # The 094 remediation and WI-172;WI-173 batch are complete. WI-153 (knowledge-ref
 # integrity + knowledge->component coupling) and WI-154 (process text) are done;
-# WI-155 (dogfood packs + seed research), WI-156 (kit pack library), and WI-157
-# (domain-filtered staged skills) are done; the owner-greenlit research-knowledge
-# campaign continues through WI-164. Only
+# WI-155 (dogfood packs + seed research), WI-156 (kit pack library), WI-157
+# (domain-filtered staged skills), and WI-164 (optimization research) are done.
+# No queued WI remains. Only
 # deferred main-decomposition (WI-080->WI-081) stays
 # parked — do not auto-start it.
 # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
 # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to
 # Fable); per-WI BuildTier pins above still apply.
-WI-164

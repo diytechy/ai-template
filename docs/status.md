@@ -63,7 +63,8 @@ home elsewhere — don't restate it here:
   + knowledge⇒component coupling) landed 2026-07-15 ([log.md](log.md)). The
   dogfood packs + first live research pass, pack library, and domain-filtered
   skill library also landed ([knowledge index](knowledge/README.md)). Remaining:
-  **WI-158** deferred (OKF pack export) and **WI-164** (optimization research).
+  **WI-158** remains deferred (OKF pack export). The iterative-optimization pack
+  and grounded review closed the campaign.
   The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
   no stop in between; the DAG now sequences its remaining slices._
@@ -75,9 +76,7 @@ home elsewhere — don't restate it here:
   [specs/owner-intake-2026-07-14b.md](specs/owner-intake-2026-07-14b.md); item 1
   — the codex-CLI swap + Sol builder preference — was executed at intake as a
   dial turn, Decisions log; its per-phase preference follow-up is complete):_
-  **WI-164**
-  (optimization-methodology research — joins the research-knowledge campaign
-  after its declared predecessors). Codex **Sol builds are now live** (`codex` on PATH + logged in
+  The optimization-methodology research is complete. Codex **Sol builds are now live** (`codex` on PATH + logged in
   2026-07-15)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
@@ -87,12 +86,12 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-164** (optimization-methodology research;
-  `BuildTier=strong`) continues the owner-greenlit research-knowledge campaign.
-  `docs/next-wi` points at **WI-164**. The grounded research review for the completed dogfood slice is recorded in
-  [reviews/101-GROUNDING.md](reviews/101-GROUNDING.md). This was off-spine docs,
-  so nothing rides a re-attestation.
-  Only deferred main-decomposition (**WI-080**→**WI-081**) stays parked. Codex
+- **Next action:** no queued WI remains; the declared unattended run is complete.
+  The optimization rubric and grounded review are recorded in
+  [iterative-optimization.md](knowledge/iterative-optimization.md) and
+  [reviews/107-GROUNDING.md](reviews/107-GROUNDING.md). This was off-spine docs,
+  so nothing rides a re-attestation. Deferred main-decomposition
+  (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering. Codex
   Sol builds are live.
   Round-by-round evidence → [log.md](log.md), not here.
 

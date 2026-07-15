@@ -1826,6 +1826,22 @@ Research may be filed at PLAN/spec time as a predecessor to dependent work, or
 at intake when the question is clearer than the requirement; both entry points
 are optional under proportionality.
 
+**Iterative optimization at WI scale.** Before spending a refinement budget,
+write a small search card: candidate representation + constraints, objective +
+guardrails, meaningful diversity axes, evaluation/noise protocol, initial
+sampling + promotion rule, and stop rule. Construct a conventional optimizer
+when variables are explicit and bounded and the objective is stable,
+repeatable, and affordable to sample; use LLM iteration when representation or
+evaluation is irreducibly semantic; use a hybrid only with an explicit boundary
+between machine-owned variables/metrics and model- or human-owned judgments.
+Start with random/diverse sampling and preserve a small elite-plus-diversity
+archive before adopting a specialized search method. A critique-budget dial is
+a resource ceiling, **not convergence**: stop separately on success, a
+predeclared practically-insignificant plateau, stability within evaluator noise,
+budget exhaustion, or an invalid/drifting search. Record best-so-far, diversity,
+evaluation cost, and the stop reason. Algorithm evidence and selection cautions
+belong in a knowledge pack; optimizer code remains project product work.
+
 ## Component layer
 
 *Referenced from the registry templates (`components.template.csv`).* **Applies
