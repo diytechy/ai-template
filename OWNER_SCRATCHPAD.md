@@ -189,4 +189,71 @@ The "Process" UI is also showing the working loops (4A and 4B) as just straight 
 ~~~~~~~~~~~~~~~~~~~~~~
 
 1)
-Is status.md even necessary anymore?  If work items in the csv carry their dependencies, blockers, and readiness state, can the work items to be executed be derived?  But of the key concern, how are two work-items with interdependencies handled such that they are not scheduled in parallel?  Or shouldn't that already be worked out because of the dependency relationship definition.
+Is status.md even necessary anymore?  If work items in the csv carry their dependencies, blockers, and readiness state, can the work items to be executed be derived?  But of the key concern, how are two work-items with interdependencies handled such that they are not scheduled in parallel?  Or shouldn't that already be worked out because of the dependency relationship definition.  Multiple related work items should be able to be consumed at once.  In the most recent run, all work occured in series from agent-resume.cmd, but I really want to take advantage of parallel development where possible, what design changes can be made to this template repository to help push the automated development cycles kicked off by "agent-resume" toward more parallel development?
+
+I further question if defined parallel tracks are even necessary.  They do help to catagorize work-streams, but the parallization likely does not need to rely on them.  Parallization can be derived, each time a work item is queued and no dependencies are open, it can start a new development branch.  If it has exactly one dependency, that next work item can be pulled into the same branch, each iterating until they get to the end of the series sequence (End of series sequence means there are 0 or more than 1 work items that depend on the current work item, or the single work item that depends on the current work item also depends on another work item that is not already in the main branch).  Once at the end of the sequence the dev branch get's merged by an integrator.
+
+This allows multiple work items to automatically queue up in dedicated dev branches, getting merged in when needed.  The integrator would need to handle potential conflicts, but most of those should be trivial (like test case adjustments), it relies on work items being defined with correct dependencies to avoid merging conflict pain.
+
+Or is there any other research that might indicate other ways to do this?
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Feedback:
+1) Agreed, but this is what allows for faster development.
+2) Agreed.
+3) Agreed, this parallization will be less advantageous for this repo, it's intended for much larger adopters, like the gilbert repository.
+4) Isn't the DAG computed before commit?  Is there something that needs to be done to build confidence?
+5) I'm not following, can you give an example?
+6) This is interseting, why can't batches of series WI be consumed into a single train?  Is it just a matter of flushing out those requirements?
+
+Related to gaps:
+docs/run-phase - Do we even need run-phase anymore?  Perhaps this makes this effort distinct.  Phases are not all that important, they help to substantiate new requirement intake and build out changes in a timeline, and that probably still can happen.  If a work item happens to bump the phase in it's iteration branch, that's fine, but then the integrator should take / prefer the biggest phase bump it sees at merge to help emphasize a phase bump occured.  Phases in that way can be completely derived from the workflow, and completely deleted from registries.  This also means multiple campaigns can run in parallel if they are isolated from one-another.
+
+Agreed upstreem adopters will flip to parallel - it will be a good excersize of the framework.
+
+"Material integration edit forces re-review" - Explain specifically what "Material integration" is here, any content getting merged?  How does that translate into a coin flip?
+
+"Train-branch and integrate-branch proliferation." - Agreed, maybe that's a rolling check like the push check, see how many LLM branches exist that are older than 2 days, and recommend cleanup.  This could be automated in the future, but for now I tend to think it should be intentional from the human side.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+From work-items: Remove Workstreams, it should not be needed anywhere.  The phase groups / clusters things that occured in similar history.  An alternative is campaign, which even that might not really hold any value.
+
+Explain Exclusive keys / new edges human-ratified?
+
+And please re-expound on the 2 open items again.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Exclusive keys / new edges - But by then the work items are already done.  It would expose poorer planning, but I don't think it's something a human could ratify after the fact, it just means the planning / work item setup stage did not properly allocate resources.  Agreed the dispatcher can't change the allocated resources, all it can do is record the conflict and be reviewed in post to understand why the resource allocation to the WI was incorrect / underestimated.  Agreed it will continue causing conflict until it is resolved, but I don't see a better method, forcing human intervention due to some collitions would not be preferable in my opinion.
+
+For open item 1 and 2,  let's take a step back on the iteration sequence.
+
+1. Campaign should not be used to schedule workflow.  It should only be an attribute of a work item.
+
+Then let's talk about the agent-resume behavior.
+
+A: When it starts, it should make sure all /llm branches are at a merged state, if not it means it needs to get things to a clean state.
+    a: To get to a clean start, it should only execute open llm branches until they are merged into the current main development branch.
+    b: Any traincar scehdule is deleted after this, it might be out of date now if new work items were added.
+
+B1: Next, any work items that affect G1 are completed as a single large item.  These need the scope of the whole project anyways, no reason to complete these as a single work item.
+B2: If ratification is required, the process exits because ratification is required.
+B3: Next, any work items that affect G2 are completed as a single large item.  These need the scope of the whole project anyways, no reason to complete these as a single work item.
+Then it moves into a fresh build-out plan.
+
+
+
+C: It kicks off a work-advisor / schedular that goes through the unblocked work items that are in the queue, and creates a small table / other tracking element that scehdules "traincars" that are filled with work items.  The design of this needs to be careful, as it could include multiple small work items in parallel, multiple small work items that are acceptable to group in series.  What research is available to help design this?  It would be complex but it's apart of the vision: making sure agents can execute efficiently on a larger project.
+    IMPORTANT: Work items also probably need some estimates to be made while they are being drafted.  Maybe an estimated token cost?  Model teir already exists.
+    
+    Traincars get assigned WIs, and their dependent traincars.
+    Then if a traincar has no open dependencies and there is an open thread, it get's kicked off.
+
+For open item 1 - This should be automatic, opt-out.  Perhaps this needs to be it's own design effort.  If you have many interdependnent work items / chained work items, those should be run on a chain.  And in fact work items could be grouped along that chain as train as well.  Thus each session along a chain becomes a traincar.  It could hold multiple unrelated mini-work-items, multiple workitems that are co-dependnent but can be reasonably executed (but then I would question why they are seperate work-items).  Perhaps this is all making the executor do more than it should.  Do we need a work-advisor to collate work-items and fold them into eachother where applicable?  That way the executor only cares about execution, and a prestep is a work-advisor that is trimming down the work-items and collating their scope into reasonable portions before the executor acts.
+
+For open item 2 - Again, this makes me think "campaign" should die, or perhaps just not drive any work.  
+
+
+
