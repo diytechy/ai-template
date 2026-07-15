@@ -6211,4 +6211,8 @@ The scaffold-surface template twin (`dev-setup.template.cmd` + MAPPING + tests +
 README) filed as **WI-166**. Spec: the intake-b doc's `dev-setup-windows`
 section; WI-160's Deliverable cell extended. Verification in the follow-up
 commit (the dev-setup module runs explicitly — it is a `SLOW_MODULES` member the
-smoke tier drops).
+smoke tier drops). Second rider (owner follow-up "can I pass -Install to the
+.cmd?"): the shim now forwards terminal arguments to the `.ps1` (the
+`dev-setup.command` `"$@"` parity, prompt/pause skipped) —
+`scripts\dev-setup.cmd -Install` works; textual dogfood test added
+(`test_meta_repo_dogfoods_devsetup_cmd`: ASCII-only + delegation + `%*`).

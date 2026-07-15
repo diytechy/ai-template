@@ -206,6 +206,25 @@ def test_meta_repo_dogfoods_devsetup_command():
     assert os.name != "posix" or os.access(path, os.X_OK)
 
 
+def test_meta_repo_dogfoods_devsetup_cmd():
+    # The Windows double-click rung (WI-160 follow-up; template twin = WI-166):
+    # a thin shim over dev-setup.ps1 — logic lives once, in the .ps1. Textual
+    # (running a .cmd needs cmd.exe; the passthrough contract is the shape).
+    path = REPO_ROOT / "scripts/dev-setup.cmd"
+    assert path.exists(), "meta-repo missing dogfood scripts/dev-setup.cmd"
+    raw = path.read_bytes()
+    # ASCII-only by design: cmd.exe decodes batch text by console codepage, so
+    # any non-ASCII would mojibake (the comment in the file states the rule).
+    assert all(b < 128 for b in raw), "dev-setup.cmd must stay ASCII-only"
+    text = raw.decode("ascii")
+    # Delegates both modes to the .ps1 (never reimplements logic)...
+    assert text.count("dev-setup.ps1") >= 3
+    assert "-Check" in text and "-Install" in text
+    # ...and forwards terminal arguments (the dev-setup.command "$@" parity),
+    # so `scripts\dev-setup.cmd -Install` runs without the interactive prompt.
+    assert "%*" in text, "dev-setup.cmd missing the argument passthrough"
+
+
 def test_meta_repo_dogfoods_dev_setup():
     # Part D: the kit provisions itself with a concrete dev-setup in scripts/
     # (the same layout it scaffolds downstream), an instantiation of the

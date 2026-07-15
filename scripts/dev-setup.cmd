@@ -14,6 +14,14 @@ REM
 REM Linux/macOS contributors: use dev-setup.sh / dev-setup.command.
 cd /d "%~dp0"
 
+REM Terminal use: any argument is forwarded straight to the .ps1 (parity with
+REM dev-setup.command's "$@" hand-off) and the interactive prompt/pause is
+REM skipped, e.g.:  scripts\dev-setup.cmd -Install
+if not "%~1"=="" (
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0dev-setup.ps1" %*
+  exit /b %ERRORLEVEL%
+)
+
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0dev-setup.ps1" -Check
 if errorlevel 1 (
   echo.
