@@ -167,7 +167,26 @@ https://github.com/jrpease/throughline
 Coordinator should have some inferencing capability to drop down to a lower teir planner if applicable.  This may have already been implimented, but it should be able ot autonomously determine if the preferred higher teir model (fable in this case) is really neccessary.  And if not - The plan and build cycle can be done with the mid-tier preferred builder.
 
 8)
-Can this template / kit provision knowledge kits for downstream adopters to consume?  There are updated knowledge definitions in "C:\Projects\ClaudeGuardChecks\skill-knowledge-library",
+Can this template / kit provision knowledge kits for downstream adopters to consume?  There are updated knowledge definitions in "C:\Projects\ClaudeGuardChecks\skill-knowledge-library"
 ~~~~~~~~~~~~~~~
 
-Can we add in the knowledge kits from 
+Some additional feedback, but again note it's possible some of these are duplicates:
+
+1)
+Can we update the cli for open ai to actually use the provider cli instead of opencode?  It seems sometimes opencode does not respond, it will be curious if openai / codex cli interfaces work better.
+
+Related please set the builder preference to Codex Sol for now.
+
+2)
+It appears there are many times work items could be taken in parallel but are not.  Is there a setting in this repo preventing that?  If a work item's dependencies are all complete and there is no risk over overlap with another work-item already being actively worked on,  the work item should start getting processed.    Parallelization should be emphasized here for development speed.
+
+3)
+Related to speed and optomization, there should be a method to let a critique level run an "infinite" number of times until an acceptance criteria is met.  Right now is the max number of critique iterations a global definition?  If we run through the max number of iterations in general it is good to move on, but there may be some special cases where it needs to become a blocker for a human to reeview.  So, default would be to move on, but is there a provision to block?  For iterative / optomization processes themselves it would be good to do some research here so this template has a good approach to exploring problem optomization.  How to lay out solution spaces, select samples, cross-polinate, etc.  Additionally, there may be times the agent should construct a conventional optomization / minimization loop around training variables instead of iterating on the LLM itself.  It all depends on the problem.  
+
+4)
+The "Process" UI is also showing the working loops (4A and 4B) as just straight lines, but this should be rendered as two actual circular loops that intersect on the LLM Agent feedback from the user.
+
+~~~~~~~~~~~~~~~~~~~~~~
+
+1)
+Is status.md even necessary anymore?  If work items in the csv carry their dependencies, blockers, and readiness state, can the work items to be executed be derived?  But of the key concern, how are two work-items with interdependencies handled such that they are not scheduled in parallel?  Or shouldn't that already be worked out because of the dependency relationship definition.

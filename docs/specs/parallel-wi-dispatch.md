@@ -1,205 +1,536 @@
-# Design spec — Parallel WI dispatch across coordinator lanes
+# Implementation plan — inherent parallel WI execution
 
-**Status: PROPOSED for autonomous ratification.** Registered as **WI-162**
-(`BuildTier=strong`). The owner requested that every dependency-ready,
-non-overlapping work item start without waiting behind unrelated work. This
-design adds a dispatcher over the existing WI DAG and `--track` worktree lanes;
-it does not weaken the lowest-gate-first rule or make spine work concurrent.
+**Status: DETAILED PLAN, pending ratification and implementation-WI filing.**
+This plan supersedes the earlier proposed `--track`-lane design written under
+WI-162. WI-162 delivered the design exploration; it did **not** deliver a
+dispatcher. The implementation slices in §15 receive new WI ids only after this
+contract is ratified.
 
-## 1. Problem and boundary
+The objective is simple: launching `agent-resume` should automatically execute
+every dependency-ready work item that can safely make progress, without a human
+curating `docs/next-wi` or predefining parallel tracks. Development and review
+fan out; mutation of the integration branch remains serialized and gated.
 
-The kit already supports independently locked lanes: `agent_loop.py --track x`
-runs on branch `llm/x`, in its own worktree, with coordination files under
-`docs/tracks/x/`. Nothing assigns work to those lanes. The root coordinator
-therefore consumes one `docs/next-wi` pin at a time even when several queued WIs
-are independently actionable.
+---
 
-Parallel dispatch is opt-in and concerns **WI execution**, not parallel writes
-to the requirement spine or parallel integration into the iteration branch.
-Absent the opt-in, today's single-lane bytes and behavior remain unchanged.
+## 1. Decisions fixed by this plan
 
-## 2. Declared control and ownership
+1. **The WI DAG schedules work.** Readiness is derived from the tracked WI
+   registry plus dispatcher reservations; it is never copied into prose.
+2. **`agent-resume` is the dispatcher/integrator.** A normal launch uses bounded
+   parallelism by default. `--jobs 1` is the explicit serial escape hatch.
+3. **Tracks are not scheduling inputs.** `Workstream` and `Campaign` remain
+   reporting categories. Temporary execution lanes and change trains are
+   allocated dynamically.
+4. **`docs/next-wi` is retired.** Explicit ordering, where needed, lives in WI
+   metadata; otherwise a deterministic scheduler selects the frontier.
+5. **Root `status.md` is reference-only.** Only the integrator regenerates it on
+   the integration branch after a successful integration. Workers do not read
+   or write lane-local status files.
+6. **Parallelism is optimistic but bounded.** Ordinary off-spine WIs may run
+   together even when their eventual file sets are not known. Hard dependencies,
+   protected shared state, and explicit exclusivity still serialize work.
+7. **Unary dependency sequences become change trains.** A lane may pull the
+   single safe successor onto the same branch until a fork, join, boundary, or
+   safety cap ends the train.
+8. **Git is the durable recovery substrate.** `out/dispatch/` is a rebuildable
+   runtime journal/cache, never the sole record of a reservation or unintegrated
+   result.
+9. **Integration is serialized and atomic.** A result becomes done only after it
+   is composed with the latest integration HEAD, reviewed as required, passes
+   the combined bar, and advances the integration ref in one compare-and-swap.
 
-`docs/parallel` is the consent surface. Its first non-comment line is an integer
-maximum lane count. Absent, empty, `0`, or `1` means the existing serial mode;
-values above `1` enable dispatch. Invalid or unreasonably large values fail
-preflight rather than silently selecting a different concurrency level. The
-scaffold does not create the file.
+## 2. Terms and ownership
 
-One **dispatcher/integrator** runs in the primary iteration worktree and is the
-only process allowed to:
+| Term | Meaning | Owner |
+| --- | --- | --- |
+| **Workstream / Campaign** | Human grouping and dashboard categorization | WI registry |
+| **Hard predecessor** | Correctness edge that blocks readiness | WI registry |
+| **Soft predecessor** | Advisory ordering only; never a safety edge | WI registry |
+| **Exclusive key** | Exceptional semantic resource that cannot be mutated concurrently | WI registry + scheduler inference |
+| **Frontier** | Queued WIs whose hard predecessors are integrated done | Scheduler, derived |
+| **Reservation** | Dispatcher claim preventing another worker from owning the WI | Dispatcher journal + train branch |
+| **Lane** | Temporary worker process and linked worktree | Dispatcher |
+| **Change train** | One branch carrying an ordered dependency chain of one or more WIs | Lane, dispatcher-authorized |
+| **Integration queue** | Reviewed trains waiting to compose into the development branch | Integrator |
+| **Integration branch** | The project's main development/iteration branch for this run | Integrator only |
 
-- scan the root WI registry and choose candidates;
-- create/reuse lane worktrees and `llm/<lane>` branches;
-- write root `docs/status.md`, `docs/next-wi`, `docs/run-state`, or spine rows;
-- integrate an approved lane result into the iteration branch; and
-- publish the next root actionability snapshot.
+The public concept `track` is retired from automated scheduling. The current
+`agent_loop.py --track` implementation is retained temporarily as compatibility
+plumbing, then replaced internally by an explicit worker assignment. If a
+downstream project wants long-lived human tracks, they remain an optional
+dashboard/ownership view and do not influence readiness.
 
-The dispatcher holds one repo-level dispatch lock. Existing per-worktree
-`out/agent-loop.lock` files continue to prevent duplicate coordinators inside a
-lane. An assignment is durable in a dispatcher-owned manifest under `out/`
-(runtime state, not a source of truth) and mirrored for humans in the lane's
-tracked `docs/tracks/<lane>/next-wi`. Assignment is atomic: reserve the WI in the
-manifest before starting its process. On restart the dispatcher reconciles the
-manifest against live processes, lane HEADs, and recorded verdicts before making
-new assignments. Thus a crash cannot cause two lanes to own one WI.
+## 3. Sources of truth and state split
 
-## 3. Actionability scan
+### 3.1 Tracked durable disposition
 
-The root `work-items.csv` is the authoritative snapshot. A WI is eligible only
-when all of these hold:
+`docs/requirements/work-items.csv` remains the authoritative definition and
+integrated disposition of every WI. The implementation extends its optional
+schema with:
 
-1. `Status=queued`; `active`, `blocked`, `deferred`, and `done` are ineligible.
-2. Every **hard** predecessor is `done`. A `~WI-n` soft predecessor is ordering
-   advice, not an actionability edge, but it remains an overlap/order signal.
-3. It is not already reserved, running, awaiting review, or awaiting integration
-   in any lane or the root session.
-4. It passes the lowest-gate-first filter: an open `[phase]-[g1|g2]` anchor or a
-   Draft SR suppresses later development for that phase unless an explicit owner
-   order recorded in status selects otherwise.
-5. It is safe for a lane under the overlap rules in §4.
+- `Priority` — integer, default `0`; a deliberate ordering override within the
+  same gate class. Higher values run first.
+- `Exclusive` — `;`-joined semantic mutex keys for the rare resource that must
+  not be touched concurrently. Empty means optimistic execution, not unknown.
+- `BlockRef` — required when `Status=blocked`; points to an `OI-N`, spec anchor,
+  or named external condition explaining what must change.
 
-Selection is deterministic: first the explicit owner/root `docs/next-wi` order,
-then registry order. The scanner fills at most the declared free lane count and
-records every accepted and rejected candidate with its reason. It rescans only
-from an integrated root snapshot—not from mutually stale lane registries.
+Tracked `Status` becomes:
 
-## 4. Conservative overlap guard
+- `queued` — authorized work, whether currently waiting, ready, or reserved;
+- `deferred` — deliberately outside the active queue;
+- `blocked` — cannot proceed for a non-predecessor reason named by `BlockRef`;
+- `done` — integrated and verified at the required bar.
 
-Parallelism is an accelerator, never a correctness bet. Two candidates may share
-a wave only when **all** known conflict keys are disjoint:
+Legacy `active` rows remain readable during migration but are not written by
+the new dispatcher. Runtime activity does not belong in a shared CSV: multiple
+train branches would otherwise carry mutually stale copies of the same registry.
 
-- neither has non-empty `SR-Refs`, touches a spine registry, is a `[phase]-[g*]`
-  anchor, advances a gate, or otherwise declares spine scope;
-- neither is a hard or soft predecessor of the other;
-- their non-empty `Campaign` values differ;
-- their non-empty `Workstream` values differ;
-- their normalized `SpecRef` file surfaces (fragment removed) differ; and
-- their declared deliverable/path surfaces do not overlap.
+### 3.2 Derived dependency state
 
-The same comparison is made against every root-active and lane-reserved WI, not
-only candidates in the new wave. Missing path metadata is **unknown**, not
-disjoint: the WI stays serial unless its spec names bounded files or an owner
-explicitly records a parallel-safe exception. A runtime lane diff that escapes
-its declared surfaces is quarantined before review/integration and returned for
-re-plan; it never teaches the dispatcher a looser rule automatically.
+For a queued WI:
 
-These rules intentionally leave performance on the table. Same-campaign and
-same-workstream work often shares concepts even when current file lists differ;
-spine edits carry semantic conflicts that git cannot detect. Later evidence may
-justify a narrower rule through a new WI.
+- `waiting` — at least one hard predecessor is not integrated `done`;
+- `ready` — every hard predecessor is integrated `done`, or is an approved
+  ancestor on the same dispatcher-authorized train;
+- `reserved` — ready and claimed by exactly one live/recoverable train.
 
-## 5. Lane lifecycle
+Readiness is never stored as a column. Because every immediate hard predecessor
+must be satisfied, transitive dependencies are satisfied automatically. A soft
+edge cannot prevent concurrent execution; any ordering needed for correctness
+must be promoted to a hard edge.
 
-For each accepted WI the dispatcher:
+### 3.3 Runtime execution state
 
-1. creates or resets an idle worktree from the current integration HEAD on its
-   stable `llm/<lane>` branch;
-2. materializes lane-local `status.md`, `next-wi`, `run-phase`, and `run-state`
-   naming exactly that WI and its existing `BuildTier` (never downgraded);
-3. launches `agent_loop.py --track <lane>` with the normal policy, routing,
-   pause/blackout, stall, and iteration-budget controls;
-4. moves the lane through BUILD and its own required review round(s);
-5. marks an approved result `ready-to-integrate`, or preserves a precise
-   blocked/needs-human/rework state without occupying another WI; and
-6. integrates ready lanes **one at a time**, in deterministic assignment order.
+The dispatcher maintains these reconstructable states under `out/dispatch/`:
 
-Lane work does not directly close root registry rows. The integrator verifies
-the reviewed diff is within the assignment, applies it without auto-committing,
-updates the root WI/log/status surfaces, runs the real commit bar on the combined
-root state, and only then commits. If a lane represents a slice/campaign close,
-the full suite/gate obligations still apply. After each integration it refreshes
-the remaining lanes against the new root HEAD: a newly introduced conflict or
-failed rebase quarantines that lane for re-plan instead of guessing through it.
+`reserved -> building -> reviewing -> ready-to-integrate -> integrating -> integrated`
 
-Worktrees and branches are retained while assigned or diagnostically useful.
-An idle, fully integrated lane may be cleaned/reused; cleanup never deletes an
-unintegrated commit. `docs/pause` stops new dispatch at the next boundary while
-in-flight lanes finish normally. Blackout likewise starts no new lane session.
+with side states `blocked`, `rework`, `waiting`, and `quarantined`. These are
+operational facts, not project history. The authoritative `done` transition is
+written to the root WI registry only by the integrator.
 
-## 6. Review and failure semantics
+## 4. Scheduling and default concurrency
 
-Review rounds are **per lane assignment**, not pooled across concurrent WIs.
-Each reviewer receives that lane's WI, diff, TCs, and commit range; the existing
-review-policy count, family heterogeneity, score merge, tripwires, critique loop,
-and escalation rules apply unchanged. A verdict for WI-A cannot approve WI-B.
+`agent-resume` launches the dispatcher by default. The public control is:
 
-The integrator is not a substitute reviewer. It checks scope, root composition,
-and the commit bar. Contested or changed-after-review lane output returns to that
-lane for another normal review round. A lane failure affects only its assignment:
-other disjoint lanes may continue. Root `run-state` is:
+```text
+agent-resume                 # bounded parallel scheduling; new default = 2
+agent-resume --jobs 1        # explicit serial mode
+agent-resume --jobs 4        # explicit higher ceiling
+agent-resume --jobs auto     # adaptive up to the configured ceiling
+```
 
-- `RUNNING` while any eligible, running, reviewing, or integrable work remains;
-- `NEEDS-HUMAN` only when the next global action needs a human act (with the
-  required `Needs <human>` status item and `ask:` line);
-- `BLOCKED` only when every remaining WI is blocked; and
-- `DONE` only at the declared end state.
+The Windows/POSIX launchers expose the same value through `AGENT_JOBS`. CPU
+count does not set it: model quotas, cost, agent availability, and integration
+throughput are the real constraints. A new scaffold defaults to two workers.
+During downstream migration, an adopter may pin `1` before taking the new
+behavior. Running `agent-resume` remains the permission-bypass consent act; a
+second parallel-consent file is unnecessary.
 
-If the dispatcher itself cannot prove ownership, overlap safety, or integration
-correctness, it starts no new work and pages rather than falling back silently.
+For each scheduling event the dispatcher:
 
-## 7. Telemetry and durable evidence
+1. loads the integrated WI registry;
+2. reconciles existing reservations and trains (§11);
+3. computes the dependency-ready frontier;
+4. applies the lowest-gate-first hard filter;
+5. excludes blocked, deferred, reserved, protected-conflicting, and explicitly
+   exclusive-conflicting WIs;
+6. orders survivors by `(gate class, Priority descending, remaining hard-path
+   length descending, WI id)`; and
+7. reserves candidates until the worker ceiling or eligible frontier is
+   exhausted.
 
-Lane iteration logs and indexes remain namespaced under
-`docs/tracks/<lane>/iteration*`. Each row gains/retains stable lane and WI keys.
-The dispatcher emits one generated root aggregate ordered by start time and
-keyed by `(lane, session)`, so simultaneous session numbers cannot collide.
-Aggregation is a projection over lane logs, never a second editable history.
+It rescans after every reservation release, worker completion, block, review
+verdict, or integration. It does not create static waves that wait for the
+slowest member before filling a free lane.
 
-The root `docs/log.md` receives the durable WI close/integration record and real
-gate outputs. Dispatcher events record candidate decisions, conflict keys,
-assignment/release, review verdict, integration commit, and failure reason. This
-supports utilization and false-serialization analysis without treating the
-runtime manifest as project memory.
+`schedule.py` is a new stdlib-only library/CLI shared by validation, dashboard,
+dispatcher, and tests:
 
-## 8. Never-breaking and safety properties
+```text
+python scripts/schedule.py ready --explain
+python scripts/schedule.py ready --format json
+python scripts/schedule.py simulate --jobs 2
+```
 
-- No `docs/parallel` means the current one-coordinator path exactly.
-- The dispatcher launches only rows already allowed by `docs/agents-enabled` and
-  honors `docs/push-policy`; it never pushes under `human`.
-- Lane count controls concurrency, not model tier, review depth, gate authority,
-  or test strength.
-- At most one owner exists per WI; at most one integrator mutates the root; spine
-  and gate work remain serial; every integrated commit meets the root commit bar.
-- The engine and dispatcher remain stdlib-only, Python 3.8+, Windows/POSIX.
+`check_trajectory.py` validates the registry and calls the library where useful;
+it does not become the stateful scheduler.
 
-## 9. Ratification decisions
+## 5. Concurrency safety: optimistic ordinary work, explicit hard boundaries
 
-Ratification accepts these design-shaping choices as one contract:
+The scheduler does **not** treat shared `Workstream`, `Campaign`, or `SpecRef` as
+mutexes. Those are broad categories, and using them as locks would serialize
+the same related work this feature exists to accelerate.
 
-1. opt-in integer `docs/parallel`, absent/≤1 = serial;
-2. a central dispatcher plus separate worktrees, with serialized integration;
-3. strict off-spine overlap keys and unknown-surface-means-serial;
-4. per-lane review rounds before integration; and
-5. lane-local telemetry with one generated root projection.
+### 5.1 Always serialized
 
-The principal trade-off is conservative utilization versus trustworthy merges.
-The design chooses trust: parallelize only what can be proven independent, then
-use recorded rejection reasons to motivate future, narrower improvements.
+- hard predecessor/descendant relationships outside one authorized train;
+- requirement-spine, gate-advance, attestation, and root registry mutation;
+- root coordination files and generated artifacts owned by the integrator;
+- two WIs sharing a non-empty `Exclusive` key;
+- a WI explicitly marked blocked/deferred;
+- any state the dispatcher cannot reconcile to a single owner.
 
-## 10. Implementation WI breakdown (file on ratification)
+Spine-affecting work may still use a worker branch, but only one such train is
+active and it integrates before another spine train starts. Generated artifacts
+are regenerated on the composed integration tree rather than text-merged from
+workers.
 
-1. **Actionability + overlap library** — parse the registry/DAG, lowest-gate
-   filter, conflict keys, deterministic selection, reason-coded fixture tests.
-2. **Dispatcher + worktree lifecycle** — `docs/parallel`, dispatch lock,
-   manifest/recovery, lane creation/reuse, process supervision, pause/blackout.
-3. **Lane review/integration state machine** — per-WI review rounds, quarantine,
-   serialized no-auto-commit application, root gate/close handling.
-4. **Telemetry projection** — collision-safe lane/WI identity, generated root
-   aggregate, candidate/assignment/integration events.
-5. **Docs/scaffold/dogfood** — canonical PROCESS_OPTIONS text, launcher/control
-   exposure, optional scaffold wiring if ratified, end-to-end parallel fixtures,
-   and a two-independent-WI meta-repo trial.
+### 5.2 Optimistically parallel
 
-## 11. Done-when for the implementation campaign
+Independent, dependency-ready off-spine WIs normally run together even when
+their precise path sets are not predeclared. Each train records its base commit.
+At integration the dispatcher compares its changed paths with changes integrated
+since that base:
 
-- Two independent dependency-ready off-spine WIs execute concurrently in
-  separate worktrees, receive separate review verdicts, and integrate serially.
-- Shared campaign/workstream/spec/path, dependency-related, unknown-surface, and
-  spine candidates are demonstrably serialized with reason-coded evidence.
-- Crash/restart never double-assigns a WI or loses an unintegrated commit.
-- One lane may block or fail while another disjoint lane completes; root
-  `run-state` remains honest.
-- Absent `docs/parallel`, existing single-lane tests and behavior are unchanged.
-- Windows and POSIX end-to-end fixtures pass, and the complete campaign closes at
-  the full gate bar.
+- disjoint paths take the fast path;
+- overlapping paths trigger integrator reconciliation;
+- textual conflicts are resolved on the integration staging branch;
+- a semantic/material resolution invalidates the old approval and requires a
+  fresh review of the composed change;
+- the combined commit bar always runs, even after a clean textual apply.
+
+Telemetry records overlap, conflict, re-review, and rollback rates. Repeated
+real collisions justify a new inferred or explicit exclusive key; the system
+does not demand speculative path metadata before evidence shows a need.
+
+## 6. Lane and branch lifecycle
+
+For each accepted candidate the dispatcher:
+
+1. chooses a unique train id, e.g. `WI-180-a31f`;
+2. creates `llm/train/WI-180-a31f` from the current integration HEAD;
+3. creates/reuses a linked worktree leased to that branch;
+4. writes the runtime reservation atomically;
+5. launches an internal worker with explicit `--wi`, `--train`, and worktree
+   arguments; and
+6. records the process identity as a lease hint, never as proof of life.
+
+The unique train branch ref is the durable reservation: its name carries the WI
+and train id, and before the first work commit its target is the exact base. The
+first real WI commit carries `WI`, `Train`, and `Base` trailers; later recovery
+can derive the same base with `git merge-base`. This avoids an empty metadata
+commit and its unnecessary product-hook run while preserving recovery if the
+machine dies before the worker's first commit.
+
+The worker prompt is assembled from `AGENTS.md`, the WI row, its `SpecRef`, its
+predecessor context, the current train diff, and any rework finding. It does not
+resume from `status.md` and does not read `docs/next-wi`.
+
+Workers commit coherent progress per WI. Their branches do not edit root
+`status.md`, `run-state`, `next-wi`, the integrated WI statuses, the root log, or
+generated root artifacts. WI-scoped review evidence uses collision-safe paths
+or ids and names the exact reviewed code commit.
+
+## 7. Change-train continuation
+
+After a WI reaches its required local commit/review boundary, the dispatcher
+may authorize the same lane to pull its successor onto the train. Continuation
+requires all of the following:
+
+1. the current WI has exactly one unclaimed hard successor;
+2. that successor is queued and not reserved elsewhere;
+3. every other hard predecessor of the successor is already integrated or is an
+   approved ancestor on this train;
+4. the successor has no explicit exclusive conflict with another active train;
+5. continuation does not cross a spine/gate/attestation boundary;
+6. its critique/review policy does not require an integration checkpoint; and
+7. the train has not reached the configurable safety cap (default four WIs).
+
+The sequence ends when the current WI has zero or multiple hard successors, the
+only successor joins another unintegrated branch, a blocker appears, a boundary
+requires composition, or the cap is reached.
+
+At a **fork**, the parent train integrates, then each newly ready child may take
+a separate lane. At a **join**, all parent trains integrate, then the join WI
+starts from the combined integration HEAD. A downstream WI is never built from
+two unintegrated sibling branches.
+
+Every WI remains a distinct commit/evidence unit inside the train. Quick/medium
+off-spine trains may receive one bounded end-of-train review when policy allows;
+strong, spine-touching, critique-verified, or explicitly high-risk WIs force a
+per-WI review/integration boundary. Any material integration edit is reviewed
+again regardless of the earlier boundary.
+
+## 8. Review semantics
+
+- A review verdict belongs to `(WI or train scope, reviewed code HEAD)`, not to a
+  lane name or mutable branch tip.
+- Existing review-policy count, family heterogeneity, critique budget,
+  escalation, and rework rules remain in force.
+- A reviewer never approves another concurrent train implicitly.
+- `CHANGES-REQUESTED` returns the same reservation to rework; it does not expose
+  the WI to another lane.
+- A failed/blocked train does not prevent disjoint ready work from continuing.
+- If integration changes reviewed product files beyond mechanical conflict
+  resolution, the integrator schedules a fresh review before advancing root.
+
+The old global `docs/rework-wi` pointer becomes assignment-scoped dispatcher
+state. Durable findings remain in review artifacts; the dispatcher reconstructs
+which train owns them from the reviewed-head metadata.
+
+## 9. Atomic serialized integration
+
+The integration branch has one logical writer. For each ready train, in
+deterministic queue order, the integrator:
+
+1. creates a temporary integration branch/worktree from the exact current root
+   HEAD (`llm/integrate/<train-id>`);
+2. verifies reservation metadata, WI scope, train commit sequence, and the
+   review verdict for the exact code HEAD;
+3. applies the product/doc changes while excluding runtime reservation
+   bookkeeping;
+4. resolves overlap/conflicts against the already-integrated tree;
+5. re-reviews if the resolution was material;
+6. updates WI rows to `done` with their Deliverables;
+7. appends the durable integration/session evidence to `docs/log.md`;
+8. regenerates root `status.md` and all generated artifacts;
+9. runs the combined commit bar, and the full/gate bar when the train closes a
+   slice, campaign, or gate;
+10. creates one integration commit with `Integrated-WI` and `Train-Head`
+    trailers; and
+11. advances the integration ref from the expected old hash to the new hash
+    using compare-and-swap semantics.
+
+If root moved since step 1, the compare-and-swap fails harmlessly and the train
+re-enters composition from the new HEAD. The main development branch is never
+left half-applied: before the atomic ref advance, all mutation occurs on the
+temporary integration worktree.
+
+Cleanup is conservative. Integrated, clean train worktrees/branches may be
+retained for diagnostics or removed later. The dispatcher never deletes an
+unintegrated commit or dirty worktree automatically.
+
+## 10. `status.md`, `next-wi`, and run-state migration
+
+### `docs/next-wi`
+
+Delete it from the scaffold and remove all coordinator, prompt, BuildTier,
+batching, check, test, and process dependencies. `Priority` supplies deliberate
+ordering in the registry; the scheduler supplies the normal order. BuildTier is
+looked up from each reserved WI directly.
+
+### `docs/status.md`
+
+It becomes an integrator-generated reference snapshot containing only:
+
+- derived gate/bar pointers;
+- queued/deferred/blocked counts and links to the WI dashboard;
+- pending `Needs <human>` items linked to `open-items.md`;
+- the last integrated train and current integration-queue summary; and
+- project scope/constraints whose canonical homes are linked rather than copied.
+
+It is not an agent resume surface and is never written on worker branches. The
+trajectory R-B/R-C/R-D rules that require every open WI to be repeated in status
+are retired and replaced, if status is present, by generated freshness.
+
+### `docs/run-state`
+
+Root run-state becomes a generated dispatcher outcome:
+
+- `RUNNING` while eligible, reserved, reviewing, or integrable work exists;
+- `NEEDS-HUMAN` when a required human act is the global next action;
+- `BLOCKED` only when every unfinished active-queue WI is blocked/waiting with no
+  recoverable train able to advance;
+- `DONE` only when no queued/reserved/integrable work remains.
+
+Workers have no tracked lane-local run-state. Their exit/result is runtime
+dispatcher state plus committed evidence.
+
+## 11. Crash safety and recovery
+
+`out/dispatch/` is gitignored because it is runtime state, but it is persistent
+on an ordinary process/OS crash and accelerates recovery:
+
+```text
+out/dispatch/
+  manifest.json
+  events.jsonl
+  dispatcher.lock
+  trains/<train-id>.json
+```
+
+Manifest writes use temp-file + flush + atomic replace. Events append before the
+corresponding externally visible action where possible. The dispatcher reserves
+durably before launching a worker.
+
+The directory is nevertheless a **cache/journal, not authority**. Every startup
+acquires the repo-level dispatcher lock and performs recovery before scheduling:
+
+1. read the integrated WI registry and root integration trailers;
+2. enumerate `llm/train/*` and `llm/integrate/*` branches;
+3. enumerate linked worktrees and their dirty/clean state;
+4. parse reservation commits and exact-head review records;
+5. cross-check the runtime manifest when present;
+6. reconstruct one ownership/state record per WI and train;
+7. quarantine ambiguity or duplicate reservations; and
+8. only then derive new work.
+
+Recovery rules:
+
+| Observed evidence | Recovery action |
+| --- | --- |
+| Train branch exists; worktree missing | Recreate the worktree from the branch |
+| Worktree is dirty | Resume that WI with a reconcile-first prompt; never reset/stash automatically |
+| Implementation commits exist; no valid review | Schedule review |
+| Review approves the exact code HEAD | Restore `ready-to-integrate` |
+| Review names an older HEAD | Re-review |
+| Integration commit exists and WI is done | Restore `integrated`; cleanup is optional |
+| Runtime manifest entry has no branch/worktree | Drop the stale cache entry after recording recovery |
+| Two branches reserve one WI | Quarantine both; start neither until ownership is resolved |
+| Integration staging branch exists | Resume/verify staging; root remains unchanged until CAS |
+| Ownership cannot be proven | Fail closed for that WI and continue only disjoint proven work |
+
+Kernel locks release when processes die. Stored PIDs are hints and are never
+trusted across reboot. Frequent WI commits bound the amount of dirty recovery.
+
+This contract covers a process or computer crash with the disk intact. Disk loss
+or recovery on a fresh host requires train refs to have been pushed/mirrored;
+that remains subject to `docs/push-policy`. The coordinator never silently
+pushes a train when policy requires a human.
+
+## 12. Pause, blackout, cost, and capacity
+
+- Root `docs/pause` stops new reservations at the next dispatcher boundary;
+  in-flight workers finish their current safe boundary and remain recoverable.
+- Blackout starts no new worker/integration session but does not corrupt or
+  discard running trains.
+- `--jobs` is a ceiling, not a promise. Unavailable/cooling model routes,
+  provider-specific account serialization, review requirements, and eligible
+  frontier width may reduce actual concurrency.
+- One worker failure cools/releases only its route and assignment as existing
+  policy dictates; other disjoint trains continue.
+- The banner reports active lanes, queued frontier, integration queue, and the
+  cost/concurrency ceiling so parallel spend is visible.
+
+## 13. Telemetry and adaptive policy
+
+Record reason-coded events for frontier decisions, reservation, worker/reviewer
+start/finish, continuation, fork/join, overlap, conflict, re-review, integration,
+recovery, quarantine, and cleanup. Aggregate by `(train, WI, session)` so
+parallel session numbers cannot collide.
+
+Required measurements:
+
+- ready-frontier width over time;
+- active-worker utilization and idle reason;
+- queue wait versus build/review/integration time;
+- changed-path overlap and textual-conflict rates;
+- semantic/integration rework and invalidated-review rates;
+- train length, age, and continuation cutoff reason;
+- recovery outcomes and time to resume;
+- combined-bar failures after individually green trains.
+
+The initial policy is two optimistic off-spine workers. Evidence, not intuition,
+drives later changes: add exclusive keys for repeated collisions, raise worker
+capacity when the integration queue stays healthy, or lower/cap it when rework
+or provider pressure dominates. Speculative merge-queue testing is a later rung,
+not part of the first implementation.
+
+## 14. Compatibility and downstream migration
+
+The implementation must remain stdlib-only, Python 3.8+, Windows/POSIX.
+
+Migration is explicit because this changes default execution:
+
+1. `downstream-resync` documents the new default and the `--jobs 1` escape hatch.
+2. Existing `docs/next-wi` content is translated, if meaningful, into WI
+   `Priority`, then the file is removed.
+3. Legacy `active` WI rows are reconciled to queued + recovered reservation or
+   returned to queued with a logged migration finding.
+4. Existing long-lived `docs/tracks/*` lanes remain readable during one
+   compatibility window; the new dispatcher does not schedule from them.
+5. `--track` warns as deprecated and continues manual legacy behavior for that
+   window; new launchers never emit it.
+6. Status becomes generated only after the repository passes the new freshness
+   check, preventing a half-migrated state where agents still act from prose.
+7. A fresh scaffold ships `agent-resume` parallel-by-default at two workers and
+   contains no `next-wi` or track directory.
+
+## 15. Implementation slices and dependency plan
+
+File these as separate WIs on ratification. Labels are provisional; WI ids come
+from the registry at filing.
+
+| Slice | Scope | Hard predecessors | Parallel implementation note |
+| --- | --- | --- | --- |
+| **A — Scheduler contract + schema** | `schedule.py`; `blocked`, `Priority`, `Exclusive`, `BlockRef`; frontier/explain/simulation tests | none | Foundation |
+| **B — De-author status and remove next-wi** | prompt/process/check/bootstrap migration; generated root status contract | A | Can run beside C after A |
+| **C — Worker assignment mode** | replace internal track assumptions with explicit WI/train/lane assignment; collision-safe logs/reviews | A | Can run beside B after A |
+| **D — Dispatcher + worktree pool** | default `--jobs 2`; reservations; dynamic refill; pause/blackout/model-capacity supervision | A, C | Central fan-out engine |
+| **E — Change-train continuation** | unary-chain rule; fork/join behavior; caps; review-boundary composition | D | Can overlap F only if code ownership is split deliberately |
+| **F — Atomic integrator** | staging branches; conflict/re-review; registry/log/status regen; CAS advance | B, D | Can overlap E only with bounded file ownership |
+| **G — Recovery + fault injection** | journal; Git reconstruction; dirty/missing worktree; duplicate reservation; crash-at-every-boundary fixtures | D, F | Must prove deletion of `out/dispatch/` is recoverable |
+| **H — Telemetry, scaffold, migration, dogfood** | projections; launchers; downstream-resync; two-real-WI trial; full cross-OS campaign | B, E, F, G | Campaign close |
+
+The implementation campaign itself should exercise the new dependency design:
+B and C are independent after A; E and F may proceed concurrently only after
+their touched surfaces are split during planning; H is the explicit join.
+
+## 16. Verification strategy
+
+### Scheduler unit fixtures
+
+- independent roots fill all available workers;
+- direct and transitive hard dependencies never co-schedule;
+- soft edges do not block;
+- lowest-gate and Priority ordering are deterministic;
+- blocked/deferred/reserved items are excluded with reason codes;
+- shared Workstream/Campaign/SpecRef does not serialize;
+- shared `Exclusive` keys do serialize;
+- unary sequences continue; forks and joins stop/launch at the right points.
+
+### Process/worktree integration fixtures
+
+- two off-spine WIs build and review concurrently in separate linked worktrees;
+- a free lane refills while another lane remains busy;
+- one lane blocks/fails while another integrates;
+- overlapping edits reach integrator reconciliation and combined tests;
+- a material conflict resolution invalidates and renews review;
+- spine/gate work remains serialized;
+- no worker edits root status, registry disposition, log, or generated output.
+
+### Crash matrix
+
+Inject termination after reservation, branch creation, dirty edit, WI commit,
+review request, review verdict, integration apply, integration test, integration
+commit, and immediately before/after root CAS. For each point:
+
+- restart reconstructs exactly one owner;
+- no WI is double-run or falsely done;
+- no unintegrated commit/dirty tree is deleted;
+- root is either entirely before or entirely after integration;
+- deleting all of `out/dispatch/` still reconstructs from Git/worktrees;
+- stale PIDs and released OS locks do not block recovery.
+
+### Cross-platform and compatibility
+
+- Windows and POSIX worktree/process/lock paths;
+- `--jobs 1` behavior matches the serial semantic outcome;
+- legacy `--track` compatibility window;
+- existing managed routing, critique, pause, blackout, privacy, gate, and push
+  policy tests remain green;
+- fresh scaffold and downstream migration fixtures.
+
+## 17. Campaign done-when
+
+- A plain `agent-resume` launch on a fresh scaffold uses up to two workers
+  without predefined tracks or `docs/next-wi`.
+- The dispatcher derives and explains the frontier directly from the registry,
+  reservations, and gate policy.
+- Two real independent WIs execute concurrently and integrate serially; a unary
+  dependent successor continues on its parent train; fork and join behavior is
+  proven.
+- Workers never use lane-local status/next/run-state files and never mutate root
+  coordination truth.
+- Root status is reference-only, integrator-generated, and freshness-gated.
+- Ordinary overlapping work is reconciled and revalidated; protected/exclusive
+  work demonstrably serializes.
+- A crash at every lifecycle boundary recovers without double assignment, lost
+  commits, false completion, or half-integrated root state.
+- Removing `out/dispatch/` before restart does not prevent reconstruction.
+- `--jobs 1` remains available; Windows/POSIX suites and the full gate bar pass.
+- Telemetry reports whether parallelism saved wall time and what prevented
+  greater utilization, giving downstream adopters evidence for tuning.
