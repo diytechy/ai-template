@@ -25,6 +25,7 @@ SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,Verification,Status\n"
 )
+PHASE_SR_HEADER = SR_HEADER.rstrip("\n") + ",Phase\n"
 
 PLACEHOLDER_ROW = (
     "WI-000,EXAMPLE - delete on first real entry,track-name,SR-000,,queued,demo\n"
@@ -48,6 +49,21 @@ def write_srs(root, *sr_ids):
         for s in sr_ids
     )
     (req / "system-requirements.csv").write_text(SR_HEADER + rows, encoding="utf-8")
+
+
+def write_phase_srs(root, rows):
+    """Write SR rows as `(id, status, phase)` for queue-order advisory tests."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    text = "".join(
+        '{},Title,SN-001,"The system shall.",R,AC,,M,Test,{},{}\n'.format(
+            sid, status, phase
+        )
+        for sid, status, phase in rows
+    )
+    (req / "system-requirements.csv").write_text(
+        PHASE_SR_HEADER + text, encoding="utf-8"
+    )
 
 
 def run_traj(root, *extra):
@@ -1032,6 +1048,71 @@ def test_phase_findings_vacuous_without_anchors(tmp_path):
     _write_gate(tmp_path, "v1=G0")  # a phase at G0 but NO anchor records a close
     wis = _wis(ct, [{"WI-ID": "WI-220", "Title": "ordinary", "Status": "queued"}])
     assert ct.phase_findings(tmp_path, wis) == []
+
+
+# --- WI-149: lowest-gate-first next-wi advisory -------------------------------
+
+
+def test_gate_first_warns_when_dev_is_queued_ahead_of_open_anchor(tmp_path):
+    ct = load_script("check_trajectory")
+    write_phase_srs(tmp_path, [("SR-201", "Planned", "v4")])
+    (tmp_path / "docs" / "next-wi").write_text("WI-203\n", encoding="utf-8")
+    wis = _wis(
+        ct,
+        [
+            {"WI-ID": "WI-201", "Title": "[v4]-[g1] structure", "Status": "done"},
+            {
+                "WI-ID": "WI-202",
+                "Title": "[v4]-[g2] decompose",
+                "Predecessors": "WI-201",
+                "Status": "queued",
+            },
+            {
+                "WI-ID": "WI-203",
+                "Title": "implement",
+                "SR-Refs": "SR-201",
+                "Status": "queued",
+            },
+        ],
+    )
+    findings = ct.gate_first_findings(tmp_path, wis)
+    assert findings == [
+        "dev WI-203 queued ahead of open gate work WI-202 in phase v4 — clear "
+        "the lowest gate first ([v4]-[g2])"
+    ]
+
+
+def test_gate_first_warns_when_selected_phase_has_draft_sr(tmp_path):
+    ct = load_script("check_trajectory")
+    write_phase_srs(tmp_path, [("SR-201", "Planned", "v4"), ("SR-202", "Draft", "v4")])
+    (tmp_path / "docs" / "next-wi").write_text("WI-203\n", encoding="utf-8")
+    wis = _wis(
+        ct,
+        [
+            {
+                "WI-ID": "WI-203",
+                "Title": "implement",
+                "SR-Refs": "SR-201",
+                "Status": "queued",
+            }
+        ],
+    )
+    assert ct.gate_first_findings(tmp_path, wis) == [
+        "dev WI-203 queued while phase v4 has Draft SR(s) SR-202 — clear the "
+        "lowest gate first"
+    ]
+
+
+def test_gate_first_is_vacuous_without_a_selected_phase_dev_wi(tmp_path):
+    ct = load_script("check_trajectory")
+    write_phase_srs(tmp_path, [("SR-201", "Draft", "v4")])
+    wis = _wis(
+        ct,
+        [{"WI-ID": "WI-203", "Title": "off-spine docs", "Status": "queued"}],
+    )
+    assert ct.gate_first_findings(tmp_path, wis) == []
+    (tmp_path / "docs" / "next-wi").write_text("WI-203\n", encoding="utf-8")
+    assert ct.gate_first_findings(tmp_path, wis) == []
 
 
 # --- WI-146(b): the ratification-brief hierarchy-view lint --------------------

@@ -5871,3 +5871,33 @@ stdlib-only.
 continues in id order (WI-148 weekday blackout next — the sibling wrap-up
 semantic; `docs/blackout`). WI-144 stays paused; the g2-close sitting is DUE in
 parallel (OI-12).
+
+## 2026-07-14 — SESSION: WI-149 (lowest-gate-first queue advisory); NO spine change
+
+**Scope.** Owner-intake 2026-07-14 #gate-first: warn when the owner-ordered
+`docs/next-wi` queue selects phase development ahead of lower-gate work. The
+untracked `docs/reviews/062-REVIEW-A.md` residue was reconciled as already-closed
+WI-147 review evidence (later commits recorded its deliberate run-state deviation);
+it is unrelated to WI-149 and remains untouched.
+
+**What shipped.** `check_trajectory.gate_first_findings` reads `docs/next-wi` and
+warns only for a selected non-anchor WI whose SR refs identify a Phase. It names an
+open `[phase]-[g1|g2]` anchor or Draft SRs in that phase as lower-gate work to
+clear first. No next WI, phase tag, selected phase development WI, or an anchor
+itself is vacuous. The warning is owner-order advisory only and never changes the
+exit code. Both meta-repo `agent-resume` prompts carry the same lowest-gate-first
+instruction. Three fixture tests cover the open-anchor, Draft-SR, and vacuous
+paths.
+
+**Deviations.** None. This does not infer or reorder the queue: `docs/next-wi`
+remains the owner's declarative selection.
+
+**Byte deltas.** AGENTS.template.md 9978 → 9978 (untouched); PROCESS.md 59,827 →
+59,827 (unchanged); PROCESS_OPTIONS.md 136,841 → 136,841 (unchanged).
+
+**Gates.** Targeted `tests/test_trajectory.py`: **66 passed**. Commit bar and full
+suite results follow in this session's final validation.
+
+**Handoff — run-state RUNNING; next-wi WI-150.** The remaining actionable
+owner-intake work proceeds in id order. WI-144 stays paused; the phase-v3 g2-close
+ratification sitting remains due in parallel (OI-12).

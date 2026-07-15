@@ -88,8 +88,7 @@ home elsewhere — don't restate it here:
   this campaign at the g2-close sitting; do not auto-start it._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
-  **WI-149** (lowest-gate-first advisory) · **WI-150** (planner-assigned
-  BuildTier) · **WI-151** (throughline pointer).
+  **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline pointer).
   Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so
   these are the loop's **actionable non-dependent backlog** — the loop works them
   in id order (the ratification-package + graceful-pause + weekday-blackout WIs
@@ -103,8 +102,8 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-149** ([next-wi](next-wi)) — run-state **RUNNING**. The
-  loop works the actionable owner-intake backlog (WI-149…151, id order; the
+- **Next action:** **WI-150** ([next-wi](next-wi)) — run-state **RUNNING**. The
+  loop works the actionable owner-intake backlog (WI-150…151, id order; the
   weekday-blackout slice shipped 2026-07-14) while WI-144 is paused and the
   g2-close sitting is DUE in parallel (Open items above). Shipped work +
   round-by-round evidence → [log.md](log.md) / OI-12, not here.

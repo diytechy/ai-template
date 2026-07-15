@@ -296,6 +296,7 @@ Contracts (interfaces): IF-009, IF-023
 | `read_derived_phases(root)` | `{phase-label: gate-level-int}` parsed from the `# basis:` line of the |  |
 | `phase_anchors(wis)` | `({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs |  |
 | `phase_findings(root, wis)` | The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the |  |
+| `gate_first_findings(root, wis)` | Warn when `next-wi` selects phase development ahead of unfinished G1/G2. |  |
 | `ssot_findings(wis, root)` | The status.md ↔ work-items.csv coherence findings (R-A…R-E) + the |  |
 | `run_state_findings(wis, root)` | Warn when an end-state would park a runnable queued work item (WI-115). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |

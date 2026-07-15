@@ -113,6 +113,7 @@ LLR_CSV = "docs/requirements/low-level-requirements.csv"
 CMP_CSV = "docs/requirements/components.csv"
 STATUS_MD = "docs/status.md"
 RUN_STATE = "docs/run-state"
+NEXT_WI = "docs/next-wi"
 ARCH_MD = "docs/architecture.md"
 
 # The How-SW top view is bounded at this many items (top-level components +
@@ -808,6 +809,58 @@ def phase_findings(root, wis):
     return warns
 
 
+def gate_first_findings(root, wis):
+    """Warn when `next-wi` selects phase development ahead of unfinished G1/G2.
+
+    The queue remains owner-ordered, so this is deliberately advisory. A selected
+    non-anchor WI is a development candidate only when one of its SR refs names a
+    Phase. For each such phase, an open `[phase]-[g1|g2]` anchor or a Draft SR is
+    lower-gate work that should normally clear first. Repos without `next-wi`,
+    phase tags, or a selected development WI are vacuous.
+    """
+    selected = _first_declared_line(root / NEXT_WI)
+    if not selected:
+        return []
+    by_id = {w["id"]: w for w in wis}
+    anchors, _ = phase_anchors(wis)
+    sr_rows = {(r.get("SR-ID") or "").strip(): r for r in read_rows(root / SR_CSV)}
+    findings = []
+    for wid in _split_refs(selected.replace(";", " ")):
+        wi = by_id.get(wid)
+        if wi is None or any(wi is anchor for anchor in anchors.values()):
+            continue
+        phases = {
+            (sr_rows.get(sid, {}).get("Phase") or "").strip() for sid in wi["srs"]
+        }
+        phases.discard("")
+        for phase in sorted(phases):
+            open_anchors = [
+                (gate, anchor)
+                for (anchor_phase, gate), anchor in anchors.items()
+                if anchor_phase == phase and anchor["status"] != "done"
+            ]
+            if open_anchors:
+                gate, anchor = min(open_anchors, key=lambda item: item[0])
+                findings.append(
+                    "dev {} queued ahead of open gate work {} in phase {} — clear "
+                    "the lowest gate first ([{}]-[g{}])".format(
+                        wid, anchor["id"], phase, phase, gate
+                    )
+                )
+            drafts = sorted(
+                sid
+                for sid, sr in sr_rows.items()
+                if (sr.get("Phase") or "").strip() == phase
+                and (sr.get("Status") or "").strip().lower() == "draft"
+            )
+            if drafts:
+                findings.append(
+                    "dev {} queued while phase {} has Draft SR(s) {} — clear the "
+                    "lowest gate first".format(wid, phase, ";".join(drafts))
+                )
+    return findings
+
+
 def _read_status_tokens(root):
     """`(text, {WI ids named in status.md})`, or `(None, set())` when status.md
     is absent (R-B/R-C/R-D are then vacuous — a repo may keep no status
@@ -1279,6 +1332,10 @@ def main():
     # exit-code change (like the connectivity coverage). Vacuous on a single-phase
     # repo with no `[phase]-[g*]` anchors (the meta case).
     for w in phase_findings(root, wis):
+        print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
+    # Lowest-gate-first queue ordering (WI-149) is an owner-order advisory, never
+    # a gate failure; surface it beside the other phase-planning warnings.
+    for w in gate_first_findings(root, wis):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     errors = comp_errors + integrity + validate(wis, load_known_srs(root))
