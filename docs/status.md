@@ -92,9 +92,9 @@ home elsewhere — don't restate it here:
   **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline pointer).
   Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so
   these are the loop's **actionable non-dependent backlog** — the loop works them
-  in id order (WI-146 ratification package + WI-147 graceful pause shipped
-  2026-07-14, see [log.md](log.md)) unless the owner reorders `docs/next-wi` at
-  the pending g2-close sitting._
+  in id order (the ratification-package + graceful-pause WIs shipped 2026-07-14,
+  see [log.md](log.md)) unless the owner reorders `docs/next-wi` at the pending
+  g2-close sitting._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
