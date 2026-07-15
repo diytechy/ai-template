@@ -5690,10 +5690,13 @@ a REVIEW-A finding does not un-close a landed unit (OI-10/OI-11). Left as an
 @owner note here (not a new OI — the WI-110 record already anticipated it); the
 owner may reopen WI-110 at a sitting if they want the delta recorded before close.
 
-**Gates.** Commit bar: `pytest -q -n auto -m smoke` + `check_docs --stale`
-(pasted in the commit). Affected modules full-run green (test_trace, test_trajectory,
-test_skills_index, test_skills_sync, test_agent_loop, test_agent_loop_review):
-**189 passed**. Slice close: full suite + derived gate below.
+**Gates.** Commit bar (green): `pytest -q -n auto -m smoke` **600 passed / 2
+skipped** + `check_docs --stale` exit 0. The commit's pre-commit hook re-ran the
+gate steps (derived-gate, skills-sync, trajectory, registry-integrity, okf,
+trajectory-map, arch-map, privacy, ruff-format) all PASS after regenerating
+PROJECT_STATE.html + docs/architecture.md and ruff-formatting. Slice close: full
+unfiltered suite **754 passed / 3 skipped** (`pytest -q -n auto`); derived gate
+holds G2 (SN=24 SR=56 LLR=57 TC=57 — no spine change).
 
 **Handoff — run-state RUNNING; next-wi WI-147.** The owner-intake backlog
 continues in id order (WI-147 graceful pause next). WI-144 stays paused; the
