@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 065
+# date: 2026-07-14 20:13
+# phase: BUILD
+# wi: WI-149
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: 9cd8e35..896f9ed
+# tokens: 
+# cost-usd: 
+# wall-secs: 1126
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1475
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll establish the recorded work-item scope and session protocol first, then execute only the selected WI with the required validation and session records.
+[0m→ [0mSkill "session-protocol"
+[0m
+[0m# [0mTodos
+[•] Read governing guidance, current state, and selected WI scope
+[ ] Implement only the selected work item
+[ ] Run commit-bar and full-suite validation
+[ ] Update session records and commit progress
+[0m
+[0m→ [0mRead CLAUDE.md
+[0m→ [0mRead docs/status.md
+[0m→ [0mRead docs/next-wi
+[0m→ [0mRead docs/run-state
+[0m→ [0mRead project-trajectory/PROCESS.md
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md
+[0m
+[0m$ [0mgit status --short; git log --oneline -10
+?? docs/reviews/062-REVIEW-A.md
+9cd8e35 telemetry: session 064 review scoreboard
+618eda1 telemetry: session 064 REVIEW-A COMMITTED
+7810196 review: WI-148 blackout verdict
+95f2d04 telemetry: session 063 BUILD COMMITTED
+ced9194 @ WI-148: weekday blackout window via docs/blackout
+e92fde6 telemetry: session 062 review scoreboard
+2964703 telemetry: session 062 REVIEW-A NO-COMMIT
+a9348ec telemetry: session 061 BUILD COMMITTED
+f247437 WI-147: scrub done WI ids from status.md working surface
+bd3d8e1 WI-147: coordinator graceful pause via docs/pause
+[0m
+[0m→ [0mRead docs/reviews/062-REVIEW-A.md
+[0m✱ [0mGrep "^WI-149,|,WI-149,|WI-149"[90m in docs/requirements/work-items.csv · 1 match[0m
+[0m→ [0mRead docs/specs/owner-intake-2026-07-14.md
+[0m→ [0mRead docs/review-policy
+[0m→ [0mRead docs/run-phase
+[0m→ [0mRead docs/log.md[90m [offset=1, limit=160][0m
+[0m✗ [0mGrep "lowest-gate-first|WI-149|Lowest-gate" failed[90m in .[0m
+[91m[1mError: [0mRipgrep JSON record exceeded 65536 bytes
+The selected scope is WI-149: a warn-only queue-order advisory in `check_trajectory`, plus the resume prompt and bidirectional fixtures. The untracked `062-REVIEW-A` file belongs to already-closed WI-147 and its findings were superseded by later commits; I’ll leave it untouched and record that reconciliation in this session’s log.
+[0m✱ [0mGlob "**/*trajectory*"[90m in project-trajectory · 2 matches[0m
+[0m✱ [0mGrep "check_trajectory|trajectory"[90m in tests · 84 matches[0m
+[0m→ [0mRead docs/requirements/work-items.csv[90m [offset=1, limit=165][0m
+[0m✱ [0mGrep "062-REVIEW-A|WI-147|session 062"[90m in docs/log.md · 86 matches[0m
+[0m✱ [0mGrep "AGENT_PROMPT|lowest|gate"[90m in agent-resume.sh · 100 matches[0m
+[0m✱ [0mGrep "AGENT_PROMPT|lowest|gate"[90m in agent-resume.cmd · 100 matches[0m
+[0m✱ [0mGrep "AGENT_PROMPT|lowest|gate"[90m in agent-resume.command · 100 matches[0m
+[0m→ [0mRead agent-resume.cmd[90m [offset=45, limit=35][0m
+[0m→ [0mRead agent-resume.sh[90m [offset=42, limit=35][0m
+[0m→ [0mRead agent-resume.command[90m [offset=1, limit=120][0m
+[0m→ [0mRead tests/test_trajectory.py[90m [offset=1, limit=340][0m
+[0m→ [0mRead project-trajectory/scripts/check_trajectory.py[90m [offset=1, limit=380][0m
+[0m→ [0mRead docs/log.md[90m [offset=5790, limit=85][0m
+[0m✱ [0mGrep "phase_anchors|phase.*findings|drop|read_derived"[90m in project-trajectory/scripts/check_trajectory.py · 63 matches[0m
+[0m✱ [0mGrep "phase_anchors|phase-drop|phase_drop|derived.*phase"[90m in tests/test_trajectory.py · 9 matches[0m
+[0m✱ [0mGrep "agent-resume"[90m in tests · 17 matches[0m
+[0m→ [0mRead tests/test_trajectory.py[90m [offset=850, limit=260][0m
+[0m→ [0mRead project-trajectory/scripts/check_trajectory.py[90m [offset=780, limit=380][0m
+I’ll add the advisory as a standalone warn-first validator: it only activates when `docs/next-wi` selects a non-anchor WI with phase-tagged SRs, and it reports unresolved phase anchors or Draft SRs without changing exit status. I’ll cover both warnings and the vacuous cases, then mirror the driver instruction in both launchers.
+
+[... 430 line(s) elided — full stream in out/run-logs/ ...]
+
++        '{},Title,SN-001,"The system shall.",R,AC,,M,Test,{},{}\n'.format(
++            sid, status, phase
++        )
++        for sid, status, phase in rows
++    )
++    (req / "system-requirements.csv").write_text(
++        PHASE_SR_HEADER + text, encoding="utf-8"
++    )
++
++
+ def run_traj(root, *extra):
+     return run_py([SCRIPTS / "check_trajectory.py", "--root", root, *extra], cwd=root)
+ 
+@@ -1034,6 +1050,61 @@ def test_phase_findings_vacuous_without_anchors(tmp_path):
+     assert ct.phase_findings(tmp_path, wis) == []
+ 
+ 
++# --- WI-149: lowest-gate-first next-wi advisory -------------------------------
++
++
++def test_gate_first_warns_when_dev_is_queued_ahead_of_open_anchor(tmp_path):
++    ct = load_script("check_trajectory")
++    write_phase_srs(tmp_path, [("SR-201", "Planned", "v4")])
++    (tmp_path / "docs" / "next-wi").write_text("WI-203\n", encoding="utf-8")
++    wis = _wis(
++        ct,
++        [
++            {"WI-ID": "WI-201", "Title": "[v4]-[g1] structure", "Status": "done"},
++            {
++                "WI-ID": "WI-202",
++                "Title": "[v4]-[g2] decompose",
++                "Predecessors": "WI-201",
++                "Status": "queued",
++            },
++            {"WI-ID": "WI-203", "Title": "implement", "SR-Refs": "SR-201", "Status": "queued"},
++        ],
++    )
++    findings = ct.gate_first_findings(tmp_path, wis)
++    assert findings == [
++        "dev WI-203 queued ahead of open gate work WI-202 in phase v4 — clear "
++        "the lowest gate first ([v4]-[g2])"
++    ]
++
++
++def test_gate_first_warns_when_selected_phase_has_draft_sr(tmp_path):
++    ct = load_script("check_trajectory")
++    write_phase_srs(
++        tmp_path, [("SR-201", "Planned", "v4"), ("SR-202", "Draft", "v4")]
++    )
++    (tmp_path / "docs" / "next-wi").write_text("WI-203\n", encoding="utf-8")
++    wis = _wis(
++        ct,
++        [{"WI-ID": "WI-203", "Title": "implement", "SR-Refs": "SR-201", "Status": "queued"}],
++    )
++    assert ct.gate_first_findings(tmp_path, wis) == [
++        "dev WI-203 queued while phase v4 has Draft SR(s) SR-202 — clear the "
++        "lowest gate first"
++    ]
++
++
++def test_gate_first_is_vacuous_without_a_selected_phase_dev_wi(tmp_path):
++    ct = load_script("check_trajectory")
++    write_phase_srs(tmp_path, [("SR-201", "Draft", "v4")])
++    wis = _wis(
++        ct,
++        [{"WI-ID": "WI-203", "Title": "off-spine docs", "Status": "queued"}],
++    )
++    assert ct.gate_first_findings(tmp_path, wis) == []
++    (tmp_path / "docs" / "next-wi").write_text("WI-203\n", encoding="utf-8")
++    assert ct.gate_first_findings(tmp_path, wis) == []
++
++
+ # --- WI-146(b): the ratification-brief hierarchy-view lint --------------------
+ # A `## OI-N` brief whose decision is a `[phase]-[g1|g2]` ratification should
+ # *link* the generated batch-scoped hierarchy view rather than hand-copy rows.
+[31;1mrg: [31;1mThe term 'rg' is not recognized as a name of a cmdlet, function, script file, or executable program.[0m
+[31;1m[31;1mCheck the spelling of the name, or if a path was included, verify that the path is correct and try again.[0m
+[0m
+[0m$ [0mpython -m ruff format project-trajectory/scripts/check_trajectory.py tests/test_trajectory.py
+2 files reformatted
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_docs.py --root . --stale
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/054-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/056-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/058-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/060-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/062-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/064-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/test/report.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:51 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 83 doc(s), 369 intra-repo link(s), 0 broken (31 orphan warning(s)).
+[0m
+[0m$ [0mpython -m pytest -q -n auto -m smoke
+bringing up nodes...
+bringing up nodes...
+
+...........s............................................................ [ 11%]
+........................................................................ [ 23%]
+.............s.......................................................... [ 35%]
+........................................................................ [ 46%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 93%]
+......................................                                   [100%]
+612 passed, 2 skipped in 60.68s (0:01:00)
+[0m
+[0m$ [0mpython -m pytest -q -n auto
+bringing up nodes...
+bringing up nodes...
+
+...............................s........................................ [  9%]
+........................................................................ [ 18%]
+.................................................s...................... [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 46%]
+..................................................s..s......s.....ss.sss [ 56%]
+ssssssssssss.ss.....s..s....s..s...........s.s.......................s.. [ 65%]
+..s...................................s................................. [ 74%]
+........................................................................ [ 84%]
+..........s............................................................. [ 93%]
+..................................................                       [100%]
+736 passed, 34 skipped in 73.73s (0:01:13)
+[0m
+Final validation is green on the formatted tree: smoke `612 passed, 2 skipped`; full `736 passed, 34 skipped`; doc check reports no broken links (only its existing orphan/staleness warnings). I’ll commit the WI-149 slice now, excluding the pre-existing untracked review file.
+[0m$ [0mgit add PROJECT_STATE.html agent-resume.cmd agent-resume.sh docs/log.md docs/next-wi docs/requirements/work-items.csv docs/status.md project-trajectory/scripts/check_trajectory.py tests/test_trajectory.py; git commit -m "WI-149: warn on lower-gate queue order" -m "Warn when the selected phase development WI precedes open phase gate work or Draft requirements, while preserving explicit owner queue ordering."
+warning: in the working copy of 'agent-resume.cmd', LF will be replaced by CRLF the next time Git touches it
+
+=== derived-gate : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+  PASS  derived-gate     0.1s
+
+=== skills-sync : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.1s
+
+=== trajectory : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py ===
+check_trajectory: clean (158 work item(s), 136 done (86%), graph acyclic).
+  PASS  trajectory       0.1s
+
+=== registry-integrity : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict-integrity ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+  PASS  registry-integrity 0.2s
+
+=== okf : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (257 file(s)).
+  PASS  okf              0.2s
+
+=== trajectory-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.2s
+
+=== arch-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map STALE in docs\architecture.md: run `python scripts/gen_arch_map.py`
+  FAIL  arch-map         exit 1 (0.4s)
+[0m
+The commit hook correctly blocked the commit because `docs/architecture.md`’s generated symbol map did not include the new public helper. I’ll regenerate that required artifact and rerun all required validation before retrying.
+[0m$ [0mpython project-trajectory/scripts/gen_arch_map.py --src project-trajectory/scripts --doc docs/architecture.md
+code map regenerated -> docs\architecture.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_docs.py --root . --stale
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/054-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/056-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/058-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/060-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/062-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/064-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/test/report.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:51 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 83 doc(s), 369 intra-repo link(s), 0 broken (31 orphan warning(s)).
+[0m
+[0m$ [0mpython -m pytest -q -n auto -m smoke
+bringing up nodes...
+bringing up nodes...
+
+.........s.............................................................. [ 11%]
+........................................................................ [ 23%]
+..............s......................................................... [ 35%]
+........................................................................ [ 46%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 93%]
+......................................                                   [100%]
+612 passed, 2 skipped in 59.13s
+[0m
+[0m$ [0mpython -m pytest -q -n auto
+bringing up nodes...
+bringing up nodes...
+
+...............................s........................................ [  9%]
+........................................................................ [ 18%]
+................................................s....................... [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 46%]
+...................................................s............s...ssss [ 56%]
+sssssss.s........s.....s.s..................s.ssssss....s.......s....... [ 65%]
+................s.........................................s............. [ 74%]
+........................s..............s......................s......... [ 84%]
+.......s................................................................ [ 93%]
+..................................................                       [100%]
+736 passed, 34 skipped in 75.01s (0:01:15)
+[0m
+[0m$ [0mgit add docs/architecture.md; git commit -m "WI-149: warn on lower-gate queue order" -m "Warn when the selected phase development WI precedes open phase gate work or Draft requirements, while preserving explicit owner queue ordering."
+=== derived-gate : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+  PASS  derived-gate     0.1s
+
+=== skills-sync : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.1s
+
+=== trajectory : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py ===
+check_trajectory: clean (158 work item(s), 136 done (86%), graph acyclic).
+  PASS  trajectory       0.1s
+
+=== registry-integrity : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict-integrity ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+  PASS  registry-integrity 0.2s
+
+=== okf : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (257 file(s)).
+  PASS  okf              0.2s
+
+=== trajectory-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.2s
+
+=== arch-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.4s
+check_privacy: privacy check off (docs/privacy-check) — author not checked.
+check_privacy: clean (staged diff; secrets floor).
+
+=== format : C:\Projects\ai-template\.venv\Scripts\python.exe -m ruff format --check project-trajectory/scripts tests ===
+72 files already formatted
+  PASS  format           0.1s
+[derived-gate-model 896f9ed] WI-149: warn on lower-gate queue order
+ 10 files changed, 188 insertions(+), 19 deletions(-)
+[0m
+[0m→ [0mRead docs/run-state
+[0m→ [0mRead docs/next-wi[90m [offset=45, limit=10][0m
+[0m
+[0m$ [0mgit status --short; git log -1 --oneline
+?? docs/reviews/062-REVIEW-A.md
+896f9ed WI-149: warn on lower-gate queue order
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_trajectory.py --root . --strict
+check_trajectory: clean (158 work item(s), 136 done (86%), graph acyclic).
+[0m
+[0m# [0mTodos
+[✓] Read governing guidance, current state, and selected WI scope
+[✓] Implement only the selected work item
+[✓] Run commit-bar and full-suite validation
+[✓] Update session records and commit progress
+[0m
+Implemented and committed WI-149.
+
+- Commit: `896f9ed WI-149: warn on lower-gate queue order`
+- `check_trajectory` now warns when `docs/next-wi` selects a phase dev WI ahead of open G1/G2 anchor work or Draft SRs, without overriding owner ordering.
+- Added prompt guidance, tests, generated map/dashboard, and session records.
+- Advanced `docs/next-wi` and status to `WI-150`; run-state remains `RUNNING`.
+- Validation:
+  - Smoke: `612 passed, 2 skipped`
+  - Full: `736 passed, 34 skipped`
+  - Docs: `0 broken` (existing orphan/staleness warnings remain)
+
+Left the pre-existing untracked `docs/reviews/062-REVIEW-A.md` untouched.
