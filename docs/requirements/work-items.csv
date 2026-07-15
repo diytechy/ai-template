@@ -165,3 +165,4 @@ WI-163,Per-WI critique budget dial (n | inf-until-APPROVE; move-on | block dispo
 WI-164,Optimization-methodology research - solution spaces / sampling / cross-pollination / constructed-optimizer-vs-LLM-iteration,research,,WI-152;~WI-154,queued,,docs/specs/owner-intake-2026-07-14b.md#optimization-research,research-knowledge,strong
 WI-165,Process tab - render loops A/B as true circular loops intersecting at the shared LLM_Agent node,dashboard,SR-055,WI-144,queued,,docs/specs/owner-intake-2026-07-14b.md#process-loops,dashboard-ux,
 WI-166,dev-setup.template.cmd - Windows double-click rung (MAPPING + tests + README),scripts,SR-032,WI-051;WI-160,queued,,docs/specs/owner-intake-2026-07-14b.md#dev-setup-windows,owner-intake-2026-07-14b,
+WI-167,Tripwire path coverage - REVIEW_POLICY_PATHS misses the meta-repo kit-script layout (project-trajectory/scripts/),unattended,,WI-059,queued,,docs/reviews/076-DESIGN-CHECK.md,,medium

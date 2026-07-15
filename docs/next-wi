@@ -24,4 +24,9 @@
 # main-decomposition (WI-080->WI-081) stays parked — do not auto-start it.
 # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
 # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to Fable).
+# NOTE (2026-07-15): the WI-161 review round fired the implementer-touched-
+# review-path tripwire (the build's owner-ordered docs/agents-enabled edit);
+# the autonomous design-check ruled GRIND-THROUGH (docs/reviews/076-DESIGN-
+# CHECK.md) — run-phase is back to BUILD, WI-167 filed for the tripwire's
+# meta-repo path-coverage gap (joins the backlog after WI-165).
 WI-163

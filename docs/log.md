@@ -6350,3 +6350,32 @@ routing contract; its byte-budget baseline was re-stamped in all three tracked
 skill copies. `PROCESS.md` and `AGENTS.template.md` were untouched. No spine
 state changed; no deviation from the WI spec. **Handoff:** run-state remains
 **RUNNING**; `docs/next-wi` → **WI-163**. Not pushed (`push-policy: human`).
+
+## 2026-07-15 — DESIGN-CHECK (076): grind-through ruled on the WI-161 review-round tripwire
+
+**What paged.** Review round 29 (session 075, REVIEW-A of WI-161) fired the
+`implementer-touched-review-path` tripwire — the WI-161 build diff
+(`9a39714..75cb46c`) touched `docs/agents-enabled`, an exact
+`REVIEW_POLICY_PATHS` member — so `escalate` returned page-human and
+`gate-policy: autonomous` routed a fresh cross-family strong design-check
+(this session, Claude Fable; the implementer was gpt-5.6-sol). The loop had
+left `docs/run-phase = DESIGN-CHECK` as uncommitted residue.
+
+**Ruling: GRIND-THROUGH** ([reviews/076-DESIGN-CHECK.md](reviews/076-DESIGN-CHECK.md)):
+the enable-list edit was WI-161's owner-ordered scope (spec
+`owner-intake-2026-07-14b.md#phase-preference`), independently APPROVEd
+cross-family with findings=0 at the full G3 bar (075-REVIEW-A) — a true-to-letter
+tripwire, not gaming; no design indicted. `run-phase` → **BUILD**.
+
+**Follow-up filed: WI-167** (medium) — the trace exposed a real gap:
+`REVIEW_POLICY_PATHS` lists the downstream `scripts/…` layout only, so the same
+build's edit to `project-trajectory/scripts/agent_route.py` (the referee source
+in this meta-repo) did *not* fire. Joins the off-spine backlog after WI-165.
+
+**End green (real output):** smoke **619 passed, 2 skipped in 65.46s**;
+`check_docs --stale` **OK — 90 docs, 392 links, 0 broken** (pre-existing
+hints/orphan warnings only). No spine rows changed (WI-167 is an off-spine
+registry row);
+`PROJECT_STATE.html` regenerated for the registry edit. No byte-budgeted file
+touched. **Handoff:** run-state **RUNNING**; `docs/next-wi` stays **WI-163**.
+Not pushed (`push-policy: human`).
