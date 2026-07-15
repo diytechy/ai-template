@@ -33,6 +33,31 @@ questions that changed that plan without restating its contract.
   ownership even when the entire directory is missing.
 - **Should `agent-resume` parallelize automatically?** Yes. New scaffolds default
   to two workers; `--jobs 1` is the explicit serial mode.
+- **Do migrated repos flip to parallel too?** Yes — deliberately, as an exercise
+  of the framework, not just fresh scaffolds; `--jobs 1` is the per-run
+  conservative escape.
+- **Do we still need `docs/run-phase`?** No. The coordinator PLAN/BUILD phase
+  becomes per-lane runtime state; the file is deleted and model routing keys off
+  a lane's current activity.
+- **What happens to the delivery `Phase` (v2/v3)?** Derived from closed gate
+  anchors; the integrator prefers the largest phase bump among composed trains;
+  the `Phase` column survives only for a forward-deferred SR (intent, not a
+  derivable fact). Isolated campaigns become parallelizable trains;
+  overlapping-spine campaigns stay a later rung.
+- **When does an integration edit force re-review?** Only a *material* edit — a
+  hunk the integrator authors that is not byte-identical to one side of the merge.
+  Clean applies and verbatim one-side resolutions do not; generated artifacts are
+  exempt. The rule is mechanical so it cannot drift between sessions.
+- **Are `Exclusive` keys or new hard edges learned automatically?** No. Telemetry
+  *suggests*; a human ratifies. The dispatcher never auto-enforces a learned
+  serialization rule.
+- **The DAG is checked before commit — what more builds confidence?** The
+  validator confirms declared edges are well-formed but cannot detect a
+  *forgotten* edge. Confidence = a one-time audit promoting real `~` soft edges to
+  hard, plus collision telemetry over time.
+- **How are stale `llm/` branches handled?** An advisory rolling check (like the
+  push/privacy checks) reports train/integrate branches older than ~2 days,
+  splitting merged from unintegrated, and never deletes — human-driven for now.
 
 ## Evidence that changed the earlier proposal
 

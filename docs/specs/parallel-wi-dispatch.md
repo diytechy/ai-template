@@ -39,6 +39,18 @@ fan out; mutation of the integration branch remains serialized and gated.
 9. **Integration is serialized and atomic.** A result becomes done only after it
    is composed with the latest integration HEAD, reviewed as required, passes
    the combined bar, and advances the integration ref in one compare-and-swap.
+10. **Run-phase is retired; delivery phase is derived.** The coordinator
+    `docs/run-phase` file is deleted — phase is per-lane runtime state (§3.3) and
+    model routing keys off a lane's current activity. The delivery `Phase`
+    (v2/v3 lifecycle) is derived from the workflow: the integrator prefers the
+    largest phase bump among the trains it composes, and the registry retains a
+    `Phase` tag only for a *forward-deferred* SR (authored now, built in a later
+    phase), which cannot be derived. Isolated campaigns can then run as parallel
+    trains (overlapping-spine campaigns remain a later rung — §10).
+11. **Safety-narrowing rules are human-ratified, never auto-enforced.** Telemetry
+    may *suggest* an `Exclusive` key or a missing hard edge from observed
+    collisions; a human ratifies it. The dispatcher never learns and enforces a
+    new serialization rule on its own.
 
 ## 2. Terms and ownership
 
@@ -47,7 +59,7 @@ fan out; mutation of the integration branch remains serialized and gated.
 | **Workstream / Campaign** | Human grouping and dashboard categorization | WI registry |
 | **Hard predecessor** | Correctness edge that blocks readiness | WI registry |
 | **Soft predecessor** | Advisory ordering only; never a safety edge | WI registry |
-| **Exclusive key** | Exceptional semantic resource that cannot be mutated concurrently | WI registry + scheduler inference |
+| **Exclusive key** | Exceptional semantic resource that cannot be mutated concurrently | WI registry (human-ratified); telemetry may suggest, never enforce |
 | **Frontier** | Queued WIs whose hard predecessors are integrated done | Scheduler, derived |
 | **Reservation** | Dispatcher claim preventing another worker from owning the WI | Dispatcher journal + train branch |
 | **Lane** | Temporary worker process and linked worktree | Dispatcher |
@@ -125,9 +137,10 @@ agent-resume --jobs auto     # adaptive up to the configured ceiling
 The Windows/POSIX launchers expose the same value through `AGENT_JOBS`. CPU
 count does not set it: model quotas, cost, agent availability, and integration
 throughput are the real constraints. A new scaffold defaults to two workers.
-During downstream migration, an adopter may pin `1` before taking the new
-behavior. Running `agent-resume` remains the permission-bypass consent act; a
-second parallel-consent file is unnecessary.
+During downstream migration a repo **flips to the same two-worker default** — a
+deliberate exercise of the framework, not an opt-in — and an adopter that wants a
+conservative first run pins `--jobs 1` for it. Running `agent-resume` remains the
+permission-bypass consent act; a second parallel-consent file is unnecessary.
 
 For each scheduling event the dispatcher:
 
@@ -188,13 +201,23 @@ since that base:
 - disjoint paths take the fast path;
 - overlapping paths trigger integrator reconciliation;
 - textual conflicts are resolved on the integration staging branch;
-- a semantic/material resolution invalidates the old approval and requires a
-  fresh review of the composed change;
+- an integrator-**authored** reconciliation is *material* and invalidates the old
+  approval, requiring a fresh review of the composed change; taking one side of a
+  conflict verbatim is **not** material;
 - the combined commit bar always runs, even after a clean textual apply.
 
-Telemetry records overlap, conflict, re-review, and rollback rates. Repeated
-real collisions justify a new inferred or explicit exclusive key; the system
-does not demand speculative path metadata before evidence shows a need.
+**Material edit — the bright line.** Re-review is required iff the composed tree
+contains, in any non-generated product or doc file, a hunk that is **not**
+byte-identical to one side of the merge. A clean 3-way apply, and a conflict
+resolved by keeping one side verbatim, never re-review; any hunk the integrator
+authors (interleaving two edits, reconciling two logic changes, hand-adjusting a
+value) always does. Generated artifacts are exempt — they are regenerated, not
+reviewed. The rule is mechanical so the boundary cannot drift between sessions.
+
+Telemetry records overlap, conflict, re-review, and rollback rates. Repeated real
+collisions surface a candidate **human-ratified** `Exclusive` key (telemetry flags
+it; a person confirms it — the dispatcher never auto-enforces a learned rule); the
+system does not demand speculative path metadata before evidence shows a need.
 
 ## 6. Lane and branch lifecycle
 
@@ -284,7 +307,8 @@ deterministic queue order, the integrator:
    bookkeeping;
 4. resolves overlap/conflicts against the already-integrated tree;
 5. re-reviews if the resolution was material;
-6. updates WI rows to `done` with their Deliverables;
+6. updates WI rows to `done` with their Deliverables, and records the largest
+   delivery-phase advance among the composed trains (§10 Delivery `Phase`);
 7. appends the durable integration/session evidence to `docs/log.md`;
 8. regenerates root `status.md` and all generated artifacts;
 9. runs the combined commit bar, and the full/gate bar when the train closes a
@@ -302,6 +326,15 @@ temporary integration worktree.
 Cleanup is conservative. Integrated, clean train worktrees/branches may be
 retained for diagnostics or removed later. The dispatcher never deletes an
 unintegrated commit or dirty worktree automatically.
+
+**Branch hygiene is advisory.** A rolling check (kit-idiomatic, like the push and
+privacy advisories) lists `llm/train/*` and `llm/integrate/*` refs whose tip is
+older than a threshold (default two days) and recommends cleanup —
+`git for-each-ref --sort=committerdate refs/heads/llm/`, warn-only, never an
+automatic delete. It splits branches already merged into the integration ref
+(`git branch --merged`, safe to remove) from those still carrying unintegrated
+commits (flagged louder as possibly stranded work). Automated pruning is a later
+rung; for now the human decides.
 
 ## 10. `status.md`, `next-wi`, and run-state migration
 
@@ -338,6 +371,27 @@ Root run-state becomes a generated dispatcher outcome:
 
 Workers have no tracked lane-local run-state. Their exit/result is runtime
 dispatcher state plus committed evidence.
+
+### `docs/run-phase`
+
+Delete it. The PLAN/BUILD/REVIEW session phase was a single-lane global; in the
+parallel model each lane's phase is its runtime state (§3.3 `building` /
+`reviewing` / …) and model routing keys off that activity, not a tracked file.
+Nothing reads a repo-global run-phase, and its routing wiring is removed.
+
+### Delivery `Phase` (v2/v3)
+
+Derive it; do not store a live pointer. The **current active phase** follows from
+which `[phase]-[gN]` gate anchors are closed (already `derive_gate.py`'s basis);
+at integration the integrator prefers the **largest phase bump** among the trains
+it composes, so a phase advance made on one lane surfaces at merge. Remove the
+per-SR `Phase` column **except** where it records a **forward deferral** — an SR
+authored now but scheduled for a later phase (the phase-deferred exemption),
+which is intent, not a derivable workflow fact. A repo that never defers drops
+the column entirely. This makes **isolated campaigns parallelizable**: two
+campaigns that share no spine or `Exclusive` resource can run as concurrent
+trains — but spine work still serializes (§5.1), so overlapping-spine campaigns
+remain a later rung, not part of this plan.
 
 ## 11. Crash safety and recovery
 
@@ -424,9 +478,10 @@ Required measurements:
 - combined-bar failures after individually green trains.
 
 The initial policy is two optimistic off-spine workers. Evidence, not intuition,
-drives later changes: add exclusive keys for repeated collisions, raise worker
-capacity when the integration queue stays healthy, or lower/cap it when rework
-or provider pressure dominates. Speculative merge-queue testing is a later rung,
+drives later changes: surface candidate human-ratified `Exclusive` keys (or
+missing hard edges) for repeated collisions, raise worker capacity when the
+integration queue stays healthy, or lower/cap it when rework or provider pressure
+dominates. Speculative merge-queue testing is a later rung,
 not part of the first implementation.
 
 ## 14. Compatibility and downstream migration
@@ -435,7 +490,9 @@ The implementation must remain stdlib-only, Python 3.8+, Windows/POSIX.
 
 Migration is explicit because this changes default execution:
 
-1. `downstream-resync` documents the new default and the `--jobs 1` escape hatch.
+1. `downstream-resync` documents that an upgraded repo **flips to the two-worker
+   default** (a deliberate exercise of the framework) and the `--jobs 1` per-run
+   escape hatch.
 2. Existing `docs/next-wi` content is translated, if meaningful, into WI
    `Priority`, then the file is removed.
 3. Legacy `active` WI rows are reconciled to queued + recovered reservation or
@@ -448,6 +505,14 @@ Migration is explicit because this changes default execution:
    check, preventing a half-migrated state where agents still act from prose.
 7. A fresh scaffold ships `agent-resume` parallel-by-default at two workers and
    contains no `next-wi` or track directory.
+8. `docs/run-phase` is deleted and its routing wiring removed; the delivery
+   `Phase` column is dropped except on forward-deferred SRs (§10).
+9. Before first parallel enable, existing `~` soft predecessor edges are audited
+   and any that encode a *correctness* (not merely ordering) dependency are
+   promoted to hard edges — the optimistic scheduler treats every soft edge as
+   safe-to-run-concurrently, so a missed hard edge is the main silent-conflict
+   risk. The registry validator confirms declared edges are well-formed but
+   cannot detect a *forgotten* edge, so this audit is the confidence step.
 
 ## 15. Implementation slices and dependency plan
 
@@ -489,6 +554,11 @@ their touched surfaces are split during planning; H is the explicit join.
 - one lane blocks/fails while another integrates;
 - overlapping edits reach integrator reconciliation and combined tests;
 - a material conflict resolution invalidates and renews review;
+- a verbatim one-side conflict resolution integrates **without** re-review, while
+  an integrator-authored hunk **forces** it (the §5.2 material bright line);
+- the integrator records the largest delivery-phase advance among composed trains;
+- the branch-age advisory lists stale `llm/*` refs and splits merged from
+  unintegrated, never deleting;
 - spine/gate work remains serialized;
 - no worker edits root status, registry disposition, log, or generated output.
 
@@ -509,6 +579,7 @@ commit, and immediately before/after root CAS. For each point:
 
 - Windows and POSIX worktree/process/lock paths;
 - `--jobs 1` behavior matches the serial semantic outcome;
+- routing works with `docs/run-phase` absent (phase resolves per-lane);
 - legacy `--track` compatibility window;
 - existing managed routing, critique, pause, blackout, privacy, gate, and push
   policy tests remain green;
@@ -526,8 +597,12 @@ commit, and immediately before/after root CAS. For each point:
 - Workers never use lane-local status/next/run-state files and never mutate root
   coordination truth.
 - Root status is reference-only, integrator-generated, and freshness-gated.
+- `docs/run-phase` is gone and model routing resolves per-lane; delivery phase is
+  derived, with the integrator taking the largest bump at merge.
 - Ordinary overlapping work is reconciled and revalidated; protected/exclusive
   work demonstrably serializes.
+- The branch-age advisory reports stale `llm/` branches (merged vs. unintegrated)
+  and never deletes them.
 - A crash at every lifecycle boundary recovers without double assignment, lost
   commits, false completion, or half-integrated root state.
 - Removing `out/dispatch/` before restart does not prevent reconstruction.
