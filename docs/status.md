@@ -91,12 +91,10 @@ home elsewhere — don't restate it here:
   design-check ([reviews/085-DESIGN-CHECK.md](reviews/085-DESIGN-CHECK.md))
   ruled **GRIND-THROUGH** on the top-tier shared-failure page (review rounds 31
   + 33 both CHANGES-REQUESTED at strong) and found both rounds' findings had
-  been **orphaned**, so four remediation rows jump the backlog. **WI-168 is
-  BUILT** (2026-07-15, session log): the shipped `dev-setup.template.cmd`
-  consented install now runs `-Baseline` (was a silent-no-op `-Install`), and
-  the scaffold shape test cross-checks the shim's switches against the ps1
-  `param()` block — it awaits its own review round before it's Verified. Order
-  continues: **WI-169** (084 rework — Process-tab loop CSS scoping + TC-056
+  been **orphaned**, so four remediation rows jump the backlog. The first (the
+  `dev-setup.template.cmd` `-Install`→`-Baseline` fix) shipped 2026-07-15
+  (session log) and awaits its own review round; the order continues:
+  **WI-169** (084 rework — Process-tab loop CSS scoping + TC-056
   de-tautologizing; `strong`, inheriting the declared spine-touching route) →
   **WI-167** (tripwire path coverage; `medium`) → **WI-170** (mechanize
   CHANGES-REQUESTED rework carry-forward — the orphaning gap itself; `medium`);
