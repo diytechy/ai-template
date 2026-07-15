@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 064
+# date: 2026-07-14 19:54
+# phase: REVIEW-A
+# wi: WI-149
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: 95f2d04..7810196
+# tokens: 
+# cost-usd: 
+# wall-secs: 154
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently identify the reviewed commit/diff, read only the governing requirement surface, run the prescribed checks, then write the review record with evidence-based findings.
+[0m# [0mTodos
+[•] Read contributor guide and review format requirements
+[ ] Inspect work-under-review diff and governing specifications
+[ ] Run check and trace harnesses
+[ ] Write independent review verdict
+[0m
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m→ [0mRead CLAUDE.md
+[0m✱ [0mGlob "**/*064*"[90m in docs · 1 match[0m
+[0m✱ [0mGlob "**/*"[90m in docs/specs · 17 matches[0m
+[0m✗ [0mRead docs/push-policy.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\push-policy.md
+
+Did you mean one of these?
+C:\Projects\ai-template\docs\push-policy
+[0m→ [0mRead docs/status.md
+[0m→ [0mRead docs/gate-policy.md
+[0m→ [0mRead docs/requirements/work-items.csv
+[0m→ [0mRead docs/log.md[90m [offset=1, limit=180][0m
+[0m
+[0m$ [0mgit status --short; git log --oneline --decorate -15; git diff --stat HEAD~1 HEAD; git diff --find-renames --find-copies HEAD~1 HEAD
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f6342dba4001drBJ3ya205wLAQ
+
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2uJ3LrY9AsVUxA4wTPV","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01EfUx8qLoQLNtkoFTeqeBhS","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\next-wi"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":3250,"cache_creation_input_tokens":6616,"cache_read_input_tokens":12298,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":6616},"output_tokens":7,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"50ee8bff-d3de-4ee2-b66c-280b8f8e4dfc","request_id":"req_011Cd2uHyxxA5p57jE2G8UX6"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01EfUx8qLoQLNtkoFTeqeBhS","type":"tool_result","content":"1\t# Next WI (process-options.md \"Unattended operation\") — the WI id the driver\n2\t# expects the coordinator to pick up next, in the docs/run-phase idiom (comment\n3\t# lines + one value on the last line). The managed BUILD branch reads it and, if\n4\t# that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it\n5\t# as the session's STARTING tier in place of the phase default (WI-126). The\n6\t# value may be a `;`-joined ordered DEV-SLICE BATCH of independent off-spine WIs\n7\t# — one session, one review round, strongest-member pin (WI-133); an\n8\t# absent/empty file, an unknown id, or an empty BuildTier = the phase default.\n9\t# The DRIVER maintains this alongside docs/status.md Next action.\n10\t# NOTE: WI-144 (the v3 campaign closer) is `active` but PAUSED — its SR-047\n11\t# critique loop has EXHAUSTED the AGENT_CRITIQUE_MAX=3 budget still\n12\t# CHANGES-REQUESTED (042/048/052; log.md 2026-07-14). Under single-ratify the\n13\t# budget failure_action pauses that WI + surfaces the block for the phase-v3\n14\t# g2-close ratification sitting (OI-12) but KEEPS the loop RUNNING on non-dependent\n15\t# work — so next-wi moves OFF WI-144 to the next actionable non-dependent unit\n16\t# (WI-144 resumes for its final build round after the sitting rules OI-12).\n17\t# 052-CRITIQUE disposition (OI-12): BUILDABLE rubric-meeting [MAJOR A4] queued\n18\t# .detail .badge 2.56:1 · [MINOR A4] focus ring 2.05:1 · [MAJOR T4] .blab overflow\n19\t# · U4/U3/U1 polish; OWNER-GATED (recurring) U5 palette taxonomy · [MAJOR T2]\n20\t# Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN\n21\t# first so one final build round mechanizes contrast instead of another hand pass.\n22\t#\n23\t# NEXT: WI-148 (weekday blackout window). WI-147 (coordinator graceful pause -\n24\t# docs/pause honored at the session boundary: launch-refusal, graceful stop,\n25\t# delete-to-resume) SHIPPED 2026-07-14 (log.md); the 060-REVIEW-A residue on\n26\t# WI-146 was reconciled the same day (SN prose in the --ratify view + link-only\n27\t# brief lint). WI-146 (ratification package - trace.py --ratify view + the\n28\t# warn-first brief lint + gate-advance/reviewer-prompt wiring + the\n29\t# [g2]-authors-IF recipe line) SHIPPED 2026-07-14 (log.md). The loop continues the\n30\t# actionable owner-intake backlog in id order: WI-148 (weekday blackout) -> WI-149\n31\t# (lowest-gate-first warn) -> WI-150 (planner-assigned BuildTier) -> WI-151\n32\t# (throughline pointer). WI-144 (the v3 closer) is `active` but PAUSED - its\n33\t# SR-047 critique loop EXHAUSTED AGENT_CRITIQUE_MAX=3 still CHANGES-REQUESTED\n34\t# (042/048/052); single-ratify's budget failure_action pauses it + surfaces the\n35\t# block for the phase-v3 g2-close sitting (OI-12) but keep_nondependent KEEPS the\n36\t# loop RUNNING on non-dependent work. With the buffer gone, that non-dependent work\n37\t# IS the owner-intake backlog (WI-146…151): all hard predecessors done (WI-145, the\n38\t# 2026-07-14 sitting, is done), so the trajectory --strict check treats them as\n39\t# actionable and a NEEDS-HUMAN park would be a STALE end-state it rejects. So the\n40\t# loop proceeds through them in id order. The g2-close sitting is DUE in PARALLEL\n41\t# (rule OI-12, sequence the campaigns) - if the owner would rather the loop hold for\n42\t# it, they rule OI-12 / reorder next-wi. Research-knowledge WI-152+ is a coherent\n43\t# campaign the owner sequences at the sitting: do NOT auto-start it ahead of the\n44\t# owner-intake WIs. WI-144 resumes for its final build round after the sitting rules\n45\t# OI-12, then the full gate bar and the spine rejoins G3.\n46\tWI-148\n47\t"}]},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"c851aa58-aae6-4276-b2a9-60e2db3909b8","timestamp":"2026-07-15T00:32:54.430Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\next-wi","content":"# Next WI (process-options.md \"Unattended operation\") — the WI id the driver\n# expects the coordinator to pick up next, in the docs/run-phase idiom (comment\n# lines + one value on the last line). The managed BUILD branch reads it and, if\n# that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it\n# as the session's STARTING tier in place of the phase default (WI-126). The\n# value may be a `;`-joined ordered DEV-SLICE BATCH of independent off-spine WIs\n# — one session, one review round, strongest-member pin (WI-133); an\n# absent/empty file, an unknown id, or an empty BuildTier = the phase default.\n# The DRIVER maintains this alongside docs/status.md Next action.\n# NOTE: WI-144 (the v3 campaign closer) is `active` but PAUSED — its SR-047\n# critique loop has EXHAUSTED the AGENT_CRITIQUE_MAX=3 budget still\n# CHANGES-REQUESTED (042/048/052; log.md 2026-07-14). Under single-ratify the\n# budget failure_action pauses that WI + surfaces the block for the phase-v3\n# g2-close ratification sitting (OI-12) but KEEPS the loop RUNNING on non-dependent\n# work — so next-wi moves OFF WI-144 to the next actionable non-dependent unit\n# (WI-144 resumes for its final build round after the sitting rules OI-12).\n# 052-CRITIQUE disposition (OI-12): BUILDABLE rubric-meeting [MAJOR A4] queued\n# .detail .badge 2.56:1 · [MINOR A4] focus ring 2.05:1 · [MAJOR T4] .blab overflow\n# · U4/U3/U1 polish; OWNER-GATED (recurring) U5 palette taxonomy · [MAJOR T2]\n# Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN\n# first so one final build round mechanizes contrast instead of another hand pass.\n#\n# NEXT: WI-148 (weekday blackout window). WI-147 (coordinator graceful pause -\n# docs/pause honored at the session boundary: launch-refusal, graceful stop,\n# delete-to-resume) SHIPPED 2026-07-14 (log.md); the 060-REVIEW-A residue on\n# WI-146 was reconciled the same day (SN prose in the --ratify view + link-only\n# brief lint). WI-146 (ratification package - trace.py --ratify view + the\n# warn-first brief lint + gate-advance/reviewer-prompt wiring + the\n# [g2]-authors-IF recipe line) SHIPPED 2026-07-14 (log.md). The loop continues the\n# actionable owner-intake backlog in id order: WI-148 (weekday blackout) -> WI-149\n# (lowest-gate-first warn) -> WI-150 (planner-assigned BuildTier) -> WI-151\n# (throughline pointer). WI-144 (the v3 closer) is `active` but PAUSED - its\n# SR-047 critique loop EXHAUSTED AGENT_CRITIQUE_MAX=3 still CHANGES-REQUESTED\n# (042/048/052); single-ratify's budget failure_action pauses it + surfaces the\n# block for the phase-v3 g2-close sitting (OI-12) but keep_nondependent KEEPS the\n# loop RUNNING on non-dependent work. With the buffer gone, that non-dependent work\n# IS the owner-intake backlog (WI-146…151): all hard predecessors done (WI-145, the\n# 2026-07-14 sitting, is done), so the trajectory --strict check treats them as\n# actionable and a NEEDS-HUMAN park would be a STALE end-state it rejects. So the\n# loop proceeds through them in id order. The g2-close sitting is DUE in PARALLEL\n# (rule OI-12, sequence the campaigns) - if the owner would rather the loop hold for\n# it, they rule OI-12 / reorder next-wi. Research-knowledge WI-152+ is a coherent\n# campaign the owner sequences at the sitting: do NOT auto-start it ahead of the\n# owner-intake WIs. WI-144 resumes for its final build round after the sitting rules\n# OI-12, then the full gate bar and the spine rejoins G3.\nWI-148\n","numLines":47,"startLine":1,"totalLines":47}}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2uJ3LrY9AsVUxA4wTPV","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01Em18HhU7AhppTpWwr2V3uz","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\run-state"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":3250,"cache_creation_input_tokens":6616,"cache_read_input_tokens":12298,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":6616},"output_tokens":7,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"77a6ce23-f248-480f-9665-b07b48499c9f","request_id":"req_011Cd2uHyxxA5p57jE2G8UX6"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01Em18HhU7AhppTpWwr2V3uz","type":"tool_result","content":"1\t# Unattended-run state (read by project-trajectory/scripts/agent_loop.py via\n2\t# the root agent-resume.* launchers). RUNNING while work remains; a driver\n3\t# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may\n4\t# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).\n5\tRUNNING\n6\t"}]},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"5dcb5e31-e09a-45a1-bc93-4b00ed9f10f8","timestamp":"2026-07-15T00:32:54.866Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\run-state","content":"# Unattended-run state (read by project-trajectory/scripts/agent_loop.py via\n# the root agent-resume.* launchers). RUNNING while work remains; a driver\n# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may\n# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).\nRUNNING\n","numLines":6,"startLine":1,"totalLines":6}}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2uJJvEBNu6VzQeMuF9b","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EuMCCokBCA8YAipA4fJawPm3BghvX1co3OliJD1rXLZ5x692od9upTTlEGCfRkaf6/X9yGbCiL6oSvbAbiDc8iMw33oXU0tEsGQuuTIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDN+8Tx4gDhf6PcMEgxoM419IR6X6Nsi7OYmKIjAC7EqFaBp5k4r0YztbSXUz7SEvUgPCA4Eg6BTBz2TgYUT6hX3pvFfNTlVM1+fjFaIqhgFzdRRdXYOLcCwlpxUFrzY3KU0kxlCodXlDvq8lPyqG2+VhVKjo3uHXEo3hfKRvTb76xOCfW0/BXxGtBaz9DKbJepkUTuKxWfU75Y3LkiCMLVKlwFC1ZBwL/j6a8WGJjSLW/cHS0qUb6FdbhkmmW76QGFcMg2L4wSpcY/kAuTE3owWB1rTYCRgB"}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":8938,"cache_read_input_tokens":18914
++[... byte cap hit — full stream in out/run-logs/ ...]
++-state dashboard up to date.\r\n  PASS  trajectory-map   0.3s\r\n\r\n=== arch-map : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===\r\ncode map up to date.\r\n  PASS  arch-map         0.4s\r\ncheck_privacy: privacy check off (docs/privacy-check) — author not checked.\r\ncheck_privacy: clean (staged diff; secrets floor).\r\n\r\n=== format : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe -m ruff format --check project-trajectory/scripts tests ===\r\nWould reformat: tests\\test_agent_loop.py\nWould reformat: tests\\test_bootstrap.py\n2 files would be reformatted, 70 files already formatted\n  FAIL  format           exit 1 (0.1s)"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"60d26053-ccdf-465f-a612-b163aa23e218","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":153,"estimated_tokens_delta":103,"uuid":"558cde72-f9a2-45ea-9e1a-081eecdbaad3","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2vh2N5C76V3dx3eWpk2","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EtsECokBCA8YAipAy5xj7nX2ujHR0W2myrn/nBqo9bJwWgwSR1lZ7Kpq1qJUJbMi6S4Se8IVk2zkwWrS24aUyooPLCrHDbNeg0QqdzIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDCiwPkNd7UaQEoC30BoMNmWxJ9RMsEE2MdU3IjBv9E+VPsqN7HPSAk7x96UMvPhdWfyhPrsu6xaA3JncIOvnn13J8ct40a1ktItNGoIq/gImX/URaWeEmLLD4c+YvROzwPGzRBVOYxV80sdj5Wa8OTjqW9X6JtKOMSpbJW3Ti8fUV31ehHTdMdX+3MvpBvAHRB3kE3dSEcK9smCL7hHrQn8ozY8v9uxbBi6MVv8K4KZlzntUgK/KfCErgeYHgipGAKQlCnYjDB0ibSj1g3Vx42orTJR6BcfYu0o9aCOVeS6xDuoMLpv4GfzxkZ1yOEoPdrmSElBxoDcI+4DQiS+4WuiiP7RtT50R18MdWxG/at0qfSdFwSR3fny3KA92KSBkSEI232BFMUuOE0li/H60NEyB2wxHLKAdsTcAYa/HEmhmaQHG1dsOXpFloL6sz5voZvu4UlN+EHX1NdNZMPUjiyR1jxKtVvPjcG4iNR9mRlJ82l6WSridMjgGAK9d2YeGD4v6FnAYsjGHD9aVibbvMEMy39Tei/lfcjms/uPKwKfLxpagPLZU5el3L8EfhWhkFIO5ncOt4PNHkf4rG9N1vtkWHHYhdL2XP4guobfDGAE="}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":1616,"cache_read_input_tokens":148044,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":1616},"output_tokens":3,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"662ec057-ac22-41c9-b8f6-a30d335646cf","request_id":"req_011Cd2vgzpoTsHszuA4R5Ru2"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2vh2N5C76V3dx3eWpk2","type":"message","role":"assistant","content":[{"type":"text","text":"The hook's ruff format check wants my test files reformatted. Let me apply it:"}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":1616,"cache_read_input_tokens":148044,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":1616},"output_tokens":3,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"257ec338-fab9-4fa6-abbf-2f6b43820a24","request_id":"req_011Cd2vgzpoTsHszuA4R5Ru2"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2vh2N5C76V3dx3eWpk2","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01ApeWXUpjZMDruJphGNfUCZ","name":"Bash","input":{"command":"cd C:/Projects/ai-template && python -m ruff format tests/test_agent_loop.py tests/test_bootstrap.py 2>&1 | tail -3 && git add tests/test_agent_loop.py tests/test_bootstrap.py && git diff --cached --stat tests/","description":"Reformat test files with ruff and re-stage"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":1616,"cache_read_input_tokens":148044,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":1616},"output_tokens":3,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"91d06a82-4505-4f11-9365-7123dec13873","request_id":"req_011Cd2vgzpoTsHszuA4R5Ru2"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01ApeWXUpjZMDruJphGNfUCZ","type":"tool_result","content":"2 files reformatted\n tests/test_agent_loop.py | 83 ++++++++++++++++++++++++++++++++++++++++++++++++\n tests/test_bootstrap.py  | 12 +++++++\n 2 files changed, 95 insertions(+)\n[This command modified 2 files you've previously read: tests\\test_agent_loop.py, tests\\test_bootstrap.py. Call Read before editing.]","is_error":false}]},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"76c91848-b9e1-41b2-bf18-3f921d5162bc","timestamp":"2026-07-15T00:51:15.763Z","tool_use_result":{"stdout":"2 files reformatted\n tests/test_agent_loop.py | 83 ++++++++++++++++++++++++++++++++++++++++++++++++\n tests/test_bootstrap.py  | 12 +++++++\n 2 files changed, 95 insertions(+)","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false,"staleReadFileStateHint":"[This command modified 2 files you've previously read: tests\\test_agent_loop.py, tests\\test_bootstrap.py. Call Read before editing.]"}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2vhXKcMJdKQhMq7fWwH","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EpEDCokBCA8YAipArO9yupW0KKx0y75JZi1QRviDKS93AJZrkbRsNzfqXEO1YGP6koh/3FTlaz+FRVWB1viSxWewaSRta/J5KPfRQTIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDADbOfpqnlsSOi92XxoMgFjsLuzxqdOz9EFzIjDHe2uLayhIuE5+HtWrkmKJcF9vnBq5bm9/3XgYjz/dZ2N7Cy3k+0dLGKvSdMpTTwQqtAHVg0dmgOoMi0l9F3WHiLZeuwXq/9FPQCkT6actQhkE1RnvP0I1fDrTw2vKZmKMcGQqXLvkaQKQiSLvJUD6oFQYkJcIQV8EzzRANcinq0glmanl24TvMAlV10AMqhzs/52A5HGc7ci7/i4OB9pmZ0/5ycX05brCGbfiLrid52WyaBsCs1ZLZ55NSQjcQbdOoPZAOl5sX7tEGy0AZuxfwtlxxp4/owwtUvOiGURygcQ0+tEwRtIYAQ=="}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":7194,"cache_creation_input_tokens":495,"cache_read_input_tokens":149660,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":495},"output_tokens":10,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"11600750-2010-44ca-8ffa-ae371844fb7d","request_id":"req_011Cd2vhUqXxGEandkzM7f3H"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2vhXKcMJdKQhMq7fWwH","type":"message","role":"assistant","content":[{"type":"text","text":"Reformatted and re-staged. Let me re-commit:"}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":7194,"cache_creation_input_tokens":495,"cache_read_input_tokens":149660,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":495},"output_tokens":10,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"b23b0798-a90d-46bf-98c6-4cc27a40ce5b","request_id":"req_011Cd2vhUqXxGEandkzM7f3H"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2vhXKcMJdKQhMq7fWwH","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_012YLt76hktPaRngb8ej6nxR","name":"Bash","input":{"command":"cd C:/Projects/ai-template && git commit -q -m @'\nWI-148: weekday blackout window via docs/blackout\n\nA declared docs/blackout policy (HH:MM-HH:MM, UTC, Mon-Fri) inside which the\ncoordinator starts no new session: parse_blackout + blackout_wake pure helpers\nin agent_loop.py, and one boundary check at the top of the iteration loop that\nwaits the window out and resumes automatically (a single walk-away launch\nsurvives the blackout; same graceful next-boundary semantic as docs/pause). The\nwindow is half-open [start, end), wraps past midnight, and start==end / absent /\nmalformed disables it (byte-identical to today). blackout.template scaffolds the\n12:00-19:00 default so a fresh repo gets it, not a hidden built-in.\n\nDocs: PROCESS_OPTIONS \"Unattended operation\" gains an Optional docs/blackout\nparagraph (+742 B, watched baseline re-stamped 136,841 in byte-budget-guard,\nsource + both tracked skill copies) + the module docstring + arch-map regen. 6\nnew tests (parse edges, boundary minutes, disable/weekend, wrap,\npresent-but-inactive end-to-end, scaffold default). Full suite 764 passed / 3\nskipped; check.py PASS at G2. No spine change.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n'@ && git log -1 --format='%h %s'","description":"Re-commit WI-148 after formatting"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":7194,"cache_creation_input_tokens":495,"cache_read_input_tokens":149660,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":495},"output_tokens":10,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"301d55aa-abd5-4ba1-b7f9-cdb2ab8797c4","request_id":"req_011Cd2vhUqXxGEandkzM7f3H"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_012YLt76hktPaRngb8ej6nxR","type":"tool_result","content":"=== derived-gate : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\derive_gate.py --check ===\r\nderive_gate: docs/gate up to date (G2).\r\n  PASS  derived-gate     0.1s\r\n\r\n=== skills-sync : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_skills_index.py --check-agents ===\r\ngen_skills_index: OK - 10 per-agent skill copy(ies) match source.\r\n  PASS  skills-sync      0.1s\r\n\r\n=== trajectory : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\check_trajectory.py ===\r\ncheck_trajectory: clean (158 work item(s), 135 done (85%), graph acyclic).\r\n  PASS  trajectory       0.1s\r\n\r\n=== registry-integrity : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\trace.py --strict-integrity ===\r\nTraceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\\test\\report.md\r\n  PASS  registry-integrity 0.2s\r\n\r\n=== okf : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_okf.py --check ===\r\ngen_okf: OKF bundle up to date (257 file(s)).\r\n  PASS  okf              0.2s\r\n\r\n=== trajectory-map : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_trajectory.py --check ===\r\nproject-state dashboard up to date.\r\n  PASS  trajectory-map   0.2s\r\n\r\n=== arch-map : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===\r\ncode map up to date.\r\n  PASS  arch-map         0.4s\r\ncheck_privacy: privacy check off (docs/privacy-check) — author not checked.\r\ncheck_privacy: clean (staged diff; secrets floor).\r\n\r\n=== format : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe -m ruff format --check project-trajectory/scripts tests ===\r\n72 files already formatted\n  PASS  format           0.2s\r\nced9194 @ WI-148: weekday blackout window via docs/blackout","is_error":false}]},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"1e178ac4-6225-4805-9034-d6ad2d0f15d1","timestamp":"2026-07-15T00:51:27.669Z","tool_use_result":{"stdout":"=== derived-gate : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\derive_gate.py --check ===\r\nderive_gate: docs/gate up to date (G2).\r\n  PASS  derived-gate     0.1s\r\n\r\n=== skills-sync : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_skills_index.py --check-agents ===\r\ngen_skills_index: OK - 10 per-agent skill copy(ies) match source.\r\n  PASS  skills-sync      0.1s\r\n\r\n=== trajectory : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\check_trajectory.py ===\r\ncheck_trajectory: clean (158 work item(s), 135 done (85%), graph acyclic).\r\n  PASS  trajectory       0.1s\r\n\r\n=== registry-integrity : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\trace.py --strict-integrity ===\r\nTraceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\\test\\report.md\r\n  PASS  registry-integrity 0.2s\r\n\r\n=== okf : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_okf.py --check ===\r\ngen_okf: OKF bundle up to date (257 file(s)).\r\n  PASS  okf              0.2s\r\n\r\n=== trajectory-map : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_trajectory.py --check ===\r\nproject-state dashboard up to date.\r\n  PASS  trajectory-map   0.2s\r\n\r\n=== arch-map : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===\r\ncode map up to date.\r\n  PASS  arch-map         0.4s\r\ncheck_privacy: privacy check off (docs/privacy-check) — author not checked.\r\ncheck_privacy: clean (staged diff; secrets floor).\r\n\r\n=== format : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe -m ruff format --check project-trajectory/scripts tests ===\r\n72 files already formatted\n  PASS  format           0.2s\r\nced9194 @ WI-148: weekday blackout window via docs/blackout","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false}}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"1e33c60e-886f-4808-ac53-26c362f6620f","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":200,"estimated_tokens_delta":150,"uuid":"b92a2441-87a5-4a85-926b-1f6c86302c54","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":300,"estimated_tokens_delta":100,"uuid":"4f58cc72-bfcd-4df5-b20b-ebeca27ab608","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":400,"estimated_tokens_delta":100,"uuid":"d7dcf8df-5035-4898-a9ea-db6dc8c61afb","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":500,"estimated_tokens_delta":100,"uuid":"59f401f5-dcc5-4c5e-b079-c39c9d946057","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":600,"estimated_tokens_delta":100,"uuid":"f6e59a64-6a59-46c6-84b5-898e79d8c3e2","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2viPAzxKNNWFWFeVXyg","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EoYRCokBCA8YAipAdrF6t1eRyUfoEDk0BMzN8Z1pkxA9p3GlJ7wdbufOxo3H1nwAX4hCKbc85d7V/4E7/s599S50cKks3Tyiw7WTojIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDLi78Gjsf5G2TuQyoxoMe4KebjzfOCeFvxlVIjDqt7Dne/Bvw/nd0aidPIouoFAOcseAW/N4nIrIvO93bAmfQtCH1OkiWxy6Tgv9ygEqqQ/LT8jHXxS7bK6UcDC/AgYDGFNYjFKAjyBpO6vHR/HlfZQ+/MtXcmzroProFJD51bpeVXFJ5c2g8EDtKTWSKcwUIesg84K0GsKNZdzsYDQpSdOIBkrm6D6vyWyeewvbdl1BPoAD9do11BCVqs6gaKMkxUrmRnqXSk/hbS17YR08YS9AtV9XFMvz/xwhgUQwfnEhfFSR2q2HneUEsURU6U8E7iJybCteRQvhxN72UyYNSyo8xp477NLTFPk9sYxgwHiuFCdEVxmFevjzn7sqaNwxUdQ6gspxJRno/MYr7fBuCTNZJ/UPYsvx315dAzoFA8uh/1iNemS+qOjJE5BopntAJVSuF/3lcA55RTyE+Z0M91NJW9x5MpMsgQeqMJE77eBAQQrV+m0R2vTw2Gqy+EJwrGYEZdVGE1PDObsOennAsQwAuMBlsSXWNJ2a5HPNTC+q7zcOqCeKCVutd7Etj6mYqisBKvm3JvynrvLUconWGsEG6L69PQDuFYo7nCk3oMM7uvzvoRiy7lFKc2rnfDr7FbaFYdw2MSzVRz1of7kOoYFCn23C0hDgteP61pVkAKAsqPxKHsmJmXmrTd9YRgkDw1rsLhQ3HhsMka7CODjkDAxah5InVRMOuaOfGKnWJol6R8Jfvsb7eq2c6+ryFDU8khvp6I4S6oN2DLb+K5cP3Z7zv8F8sRR0ijG09JxFyiv8fZGZc+DJ7NPYvGINfWFzqF0gyHBpblIfnqrIzKomDVU69Pf6bSRAw2fqRBBRdbEXVtydlS82sDhZF3/Q05nWY94siGIoH6Z5Gp/LdByAh2aiZOnl1MAnU23Of7D+pyobaxZ7ly6md1zThBSWoHdJAprL+WCZMxBsOvjMvu9leu6BrEw8TonexST0MfDG7UDjMFQ/IJZhQCUzauC3qoQ6Xkq6EptO4dS1/JMJ9IcyIV//z9dFm4NwmfFXwlgeBuq45Y+awjoS3opDa63Lv5FFw6Es97k2QScHJea9QE+LQTbSBFOmNidm1CYwJ7SroXR2JKVOJ/GIfgmKTUP7qSW9UIpzYjSflLHJPrpvEeB1jM58+6sTpvZU63A8lD9ItvpIIQAsNW75ad7B+ncI7RZeoCGiZe6wgfSr6MXJT9cOevx/5ualPMxWuLI4V9phJmzowOmFmOxnTytkUCJPkRFs9+KE07I9utngZI39BUXk1TzyTNWmzUsgGJcZQMn6ddbC/6VoJ/HOrtelo0U8EZCdjvw1lwEIitmV6HHgZ8PCWzldGGPUbpC4b14r/KST6DNlmB6q5GL4vA4GtMYMRL/rBeOjNvEVyUBaminysxW0vvlyPsTg2vaKc2FM0/LQ+lSwKjMd8o0r8WQH4JZS7tGBJrZ+384UUupxTfYHopC5VwpniauKr+ZiDGsXbF4tjVhWxVzCwAjfAg3d4aPeIjIrdN9AKriKppIXFgCEAob1h1GeEwRzwhH1qGvIBCBGC4vSsU1fhlXVY1y07EisSSIJMTLXxJ4tGlN9/bcexN1wFjZg1reyoGPzyugAurAow56A7o6P0DInNgz2GLiS+mtn+nM3hVBIXAJBKpPuQAQXB5s0L7myPc6MdNp72mPfG/gvArkM6R6H38umZilsfcOj2+bA2M3+2ns6d9XDB6aNK126u2qWDHgu9eHHCy0F6KjKcZ6o1ZTd2gQ7jEip6u4fO8dy/FrJrihDA+uNXGBzcsoRkc22ff3FCOw6zsLQn9L0Bb1/VbDNNM9rGJzsWx7wTI8Q44uvCws7f8XEzDAG+8BgfOcFJ+I9wzuNEM0RzZTuz1Ale+uP/cV4WM54gNQIxL5Zr9m0fXGtNhObFFHoeo25IvMmGP1fEv64YGiHZ7yB5nxSmN5SH/najCUwRsRza93dLzzqz+/MgtLe8WGeNjndcEIf5550qrru+xIVqx3WFB2TTcbuSYPKIKHpQXnTRSLXSb3sA4IBAQT+O7y39ouZ+bm2zgyxCJmkmFfHV56tr4bTQDFxYMMrRDYfU8mMH49/u4tWZY7dkDJTa0H1JJ7IrpGt3pKw6dBgy7JCpWYRPdTNF/9vQ0DWWHsjyGzbh6iMkchSGuwuAtimkLkobPmXrz6lUlQwbMv9FBIDkesVigkkwc35/h2mNQPLTvPCcKzctU8X+8IN5doOfosoromuSuPk+uRNOUUwjmawEQ6gEzEFDppeagy0j1/XRvZ1queOpD3ZdQmDN9m/NZgUYu/suWLDATtWaR/NMXf/7TBL8M+h8vYHrxK2Bsn8fw16UfLb1ERaUDaqkcPJTmcL19P1OA0zr0phK+GAcASvjCFDSrGiwo/czk6GcU7ZnbcuDcbFOUof9zyVDzZMeKDxgp4O+9AuYsUqQnIkSX+WnYWuMUzwdKs29U+YYMqLnEN/+ToXxE+DRINE3WX4j8FpOpXa+PuyOZjdXqNtdpHdLSaB82qChNgDKbwmVidH9VC6CKHscbeXwGMHYHilUwCl16SHWGe30YnG+uCLMzh/14DLPcuMHiEJqb0fOJyJdm1E1lO9jkRmDlc80OKyRkriAaSFjfQaeh2hlnSUZbQPgP/hYKkPTJF2CuCUgxCtJdxAUf/epmakvzIX4iWhQIvY3QtlR8IKmb7P/xgB"}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":8836,"cache_read_input_tokens":150155,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":8836},"output_tokens":3,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"77d16426-6bfd-4c7e-b31d-7e72287d2334","request_id":"req_011Cd2viLq7LqSTL4ZxrfUCz"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2viPAzxKNNWFWFeVXyg","type":"message","role":"assistant","content":[{"type":"text","text":"Committed cleanly (**ced9194**) — all pre-commit gate steps PASS. Let me verify final state:"}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":8836,"cache_read_input_tokens":150155,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":8836},"output_tokens":3,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"1bac2bd6-2234-422a-b755-35870ea14d63","request_id":"req_011Cd2viLq7LqSTL4ZxrfUCz"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2viPAzxKNNWFWFeVXyg","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01764gqmoVhFBY5eWXue24nT","name":"Bash","input":{"command":"cd C:/Projects/ai-template && git status --short && echo \"--- run-state ---\" && tail -1 docs/run-state && echo \"--- next-wi ---\" && tail -1 docs/next-wi","description":"Verify final working tree, run-state, next-wi"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":8836,"cache_read_input_tokens":150155,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":8836},"output_tokens":3,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"3b4af880-e82f-4427-abcf-0b7bc9b24f61","request_id":"req_011Cd2viLq7LqSTL4ZxrfUCz"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01764gqmoVhFBY5eWXue24nT","type":"tool_result","content":"?? docs/reviews/062-REVIEW-A.md\n--- run-state ---\nRUNNING\n--- next-wi ---\nWI-149","is_error":false}]},"parent_tool_use_id":null,"session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb","uuid":"95f3858d-6f52-4f81-a6e5-bb7ad11dd74f","timestamp":"2026-07-15T00:51:42.072Z","tool_use_result":{"stdout":"?? docs/reviews/062-REVIEW-A.md\n--- run-state ---\nRUNNING\n--- next-wi ---\nWI-149","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false}}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"83e0e8c7-99fb-4776-b8e8-3cb647e40c76","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":150,"estimated_tokens_delta":100,"uuid":"1c33e10a-cc9d-4f3f-ba76-6c1e2ddee9cc","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":234,"estimated_tokens_delta":84,"uuid":"97e988bb-a425-4c9f-82f5-b5a09bc92be6","session_id":"bc511463-ffff-4b92-9f63-496dae6d61cb"}
+
+[... 362 line(s) elided — full stream in out/run-logs/ ...]
+
++        # (we sleep inline, never `continue`), so a single walk-away launch
++        # survives the blackout and resumes automatically. Absent/disabled file
++        # => a no-op (byte-identical to today).
++        wake = blackout_wake(
++            read_declared(lane / "blackout", ""), datetime.datetime.utcnow()
++        )
++        if wake:
++            resume_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=wake)
++            print(
++                "agent_loop: inside the docs/blackout window — starting no new "
++                "session until {} UTC (~{}s); waiting.".format(
++                    resume_at.strftime("%H:%M"), wake
++                )
++            )
++            time.sleep(wake)
+         # Inject the reconcile note into the first session's prompt only (see the
+         # once-at-start rationale above); every later session's prompt is
+         # unchanged from today.
+diff --git a/project-trajectory/scripts/bootstrap.py b/project-trajectory/scripts/bootstrap.py
+index b34e792..53760c3 100644
+--- a/project-trajectory/scripts/bootstrap.py
++++ b/project-trajectory/scripts/bootstrap.py
+@@ -21,6 +21,7 @@ What it creates in the destination:
+     docs/gate-policy                           <- gate-policy.template  (authority: attended)
+     docs/privacy-check                         <- privacy-check.template  (privacy: off)
+     docs/push-policy                           <- push-policy.template  (policy: human)
++    docs/blackout                              <- blackout.template  (window: 12:00-19:00 UTC)
+     docs/review-policy                         <- review-policy.template  (reviewers: 1)
+     docs/status.md                             <- STATUS.template.md  (working surface)
+     docs/log.md                                <- LOG.template.md  (append-only history)
+@@ -1023,6 +1024,12 @@ MAPPING = [
+     # iteration branch & sync"): who may publish. `human` by default — an
+     # agent never pushes; --push-policy overrides.
+     ("push-policy.template", "docs/push-policy"),
++    # The weekday blackout window (WI-148, process-options.md "Unattended
++    # operation"): a `HH:MM-HH:MM` UTC Mon–Fri window the coordinator starts no
++    # new session inside (it waits the window out, then resumes). Ships the
++    # 12:00–19:00 default so a fresh scaffold gets it; delete the file or set
++    # start==end to disable (absent = disabled, byte-identical to before).
++    ("blackout.template", "docs/blackout"),
+     ("STATUS.template.md", "docs/status.md"),
+     # The owner decision briefs status.md's Needs-<human> bullets link to
+     # (process-options.md "Trajectory / work-items layer"): one OI-N section
+diff --git a/project-trajectory/skills/byte-budget-guard/SKILL.md b/project-trajectory/skills/byte-budget-guard/SKILL.md
+index 6c9f7af..b031966 100644
+--- a/project-trajectory/skills/byte-budget-guard/SKILL.md
++++ b/project-trajectory/skills/byte-budget-guard/SKILL.md
+@@ -23,7 +23,7 @@ here. Check before you edit and again before you commit.
+ |---|---|---|
+ | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
+ | `project-trajectory/PROCESS.md` | **watched** (baseline **59,827** as of 2026-07-13/WI-101; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
+-| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **136,099** as of 2026-07-14/WI-147; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
++| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **136,841** as of 2026-07-14/WI-148; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+ 
+ `ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
+ push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
+diff --git a/tests/test_agent_loop.py b/tests/test_agent_loop.py
+index aeb2a69..277c45e 100644
+--- a/tests/test_agent_loop.py
++++ b/tests/test_agent_loop.py
+@@ -319,6 +319,89 @@ def test_pause_reason_helper_edges(tmp_path):
+     assert al.pause_reason(tmp_path) == "budget check"  # first non-comment line
+ 
+ 
++# --- WI-148: weekday blackout window ------------------------------------------
++
++
++def test_parse_blackout_edges():
++    al = load_script("agent_loop")
++    assert al.parse_blackout("12:00-19:00") == (720, 1140)
++    assert al.parse_blackout("  09:30 - 17:45  ") == (570, 1065)
++    assert al.parse_blackout("00:00-00:00") == (0, 0)  # parsed; disable is policy
++    assert al.parse_blackout("") is None  # empty
++    assert al.parse_blackout("not-a-window") is None  # malformed
++    assert al.parse_blackout("24:00-19:00") is None  # hour out of range
++    assert al.parse_blackout("12:60-19:00") is None  # minute out of range
++
++
++def test_blackout_wake_boundary_minutes():
++    al = load_script("agent_loop")
++    line = "12:00-19:00"
++    # A Monday (weekday 0) so the window is active.
++    mon = datetime.datetime(2026, 7, 13)  # 2026-07-13 is a Monday
++
++    def at(h, m, s=0):
++        return mon.replace(hour=h, minute=m, second=s)
++
++    # Half-open [start, end): the first minute is inside, `end` itself is clear.
++    assert al.blackout_wake(line, at(11, 59)) is None  # just before -> unaffected
++    assert al.blackout_wake(line, at(12, 0)) == 7 * 3600  # start -> 7h to 19:00
++    assert al.blackout_wake(line, at(18, 59)) == 60  # last minute inside
++    assert al.blackout_wake(line, at(18, 59, 30)) == 30  # seconds honored
++    assert al.blackout_wake(line, at(19, 0)) is None  # end -> already clear
++    assert al.blackout_wake(line, at(19, 1)) is None  # after -> unaffected
++
++
++def test_blackout_wake_disable_and_weekend():
++    al = load_script("agent_loop")
++    mon_noon = datetime.datetime(2026, 7, 13, 12, 0)  # Monday, inside a 12-19 window
++    sat_noon = datetime.datetime(2026, 7, 11, 12, 0)  # Saturday
++    sun_noon = datetime.datetime(2026, 7, 12, 12, 0)  # Sunday
++    # start == end disables even on a weekday inside "the window".
++    assert al.blackout_wake("00:00-00:00", mon_noon) is None
++    assert al.blackout_wake("12:00-12:00", mon_noon) is None
++    # The window is Mon–Fri only — weekends are never blacked out.
++    assert al.blackout_wake("12:00-19:00", sat_noon) is None
++    assert al.blackout_wake("12:00-19:00", sun_noon) is None
++    # Absent/malformed line = disabled.
++    assert al.blackout_wake("", mon_noon) is None
++    assert al.blackout_wake("garbage", mon_noon) is None
++
++
++def test_blackout_wake_wraps_past_midnight():
++    al = load_script("agent_loop")
++    line = "22:00-06:00"  # start > end -> a window crossing UTC midnight
++    tue = datetime.datetime(2026, 7, 14)  # a Tuesday
++    assert (
++        al.blackout_wake(line, tue.replace(hour=23, minute=0)) == 7 * 3600
++    )  # -> 06:00 next day
++    assert (
++        al.blackout_wake(line, tue.replace(hour=2, minute=0)) == 4 * 3600
++    )  # early-morning tail
++    assert (
++        al.blackout_wake(line, tue.replace(hour=12, minute=0)) is None
++    )  # midday -> clear
++
++
++def test_blackout_present_but_inactive_does_not_block(loop_repo):
++    # A docs/blackout file whose window does NOT cover "now" is a no-op: the
++    # session runs and the loop reaches DONE (proves the loop reads the file and
++    # only waits when actually inside the window).
++    repo, ctl, template = loop_repo
++    now = datetime.datetime.utcnow()
++    # A 1-minute window two minutes ahead — never active at loop start, whatever
++    # the wall clock or weekday (an inactive window is a no-op regardless).
++    start = (now + datetime.timedelta(minutes=2)).strftime("%H:%M")
++    end = (now + datetime.timedelta(minutes=3)).strftime("%H:%M")
++    (repo / "docs" / "blackout").write_text(
++        "{}-{}\n".format(start, end), encoding="utf-8"
++    )
++    (ctl / "actions.txt").write_text("done", encoding="utf-8")
++    proc = _loop(repo, template)
++    assert proc.returncode == 0, proc.stdout + proc.stderr
++    assert "run-state=DONE" in proc.stdout
++    assert _invocations(ctl) == 1
++
++
+ def test_phase_model_map_picks_the_declared_tier(loop_repo):
+     # docs/run-phase is the coordinator's model-tier key: a mapped phase gets
+     # the strong model, everything else the default.
+diff --git a/tests/test_bootstrap.py b/tests/test_bootstrap.py
+index b6b9e1a..1d5c2f2 100644
+--- a/tests/test_bootstrap.py
++++ b/tests/test_bootstrap.py
+@@ -19,6 +19,7 @@ def test_scaffold_contains_expected_files(scaffold):
+         "docs/gate-policy",
+         "docs/privacy-check",
+         "docs/push-policy",
++        "docs/blackout",
+         "docs/review-policy",
+         "docs/agents.csv",
+         "docs/kit-profile",
+@@ -273,6 +274,17 @@ def test_run_launchers_delegate_to_run_menu(scaffold):
+     assert "\n[run]" not in ini, "a fresh scaffold ships the [run] examples commented"
+ 
+ 
++def test_scaffold_blackout_ships_the_default_window(scaffold):
++    # WI-148: a fresh scaffold ships the 12:00–19:00 UTC weekday default, so the
++    # owner's "always on" blackout is honored by the scaffold, not a hidden
++    # built-in (the value is the last non-comment line, like the other policies).
++    text = (scaffold / "docs" / "blackout").read_text(encoding="utf-8")
++    value = [
++        ln.strip() for ln in text.splitlines() if ln.strip() and not ln.startswith("#")
++    ][-1]
++    assert value == "12:00-19:00"
++
++
+ def test_agent_resume_launchers_ship_inert_with_edit_slots(scaffold):
+     # The work-resume counterpart of run.* (Thread 33): root agent launchers
+     # over scripts/agent_loop.py, shipped inert (empty AGENT_CMD) with a
+[0m
+[0m$ [0mgit diff --check ced9194^ ced9194; git diff --name-only ced9194^ ced9194
+.agents/skills/byte-budget-guard/SKILL.md
+.claude/skills/byte-budget-guard/SKILL.md
+PROJECT_STATE.html
+docs/architecture.md
+docs/log.md
+docs/next-wi
+docs/requirements/work-items.csv
+docs/status.md
+project-trajectory/PROCESS_OPTIONS.md
+project-trajectory/blackout.template
+project-trajectory/scripts/agent_loop.py
+project-trajectory/scripts/bootstrap.py
+project-trajectory/skills/byte-budget-guard/SKILL.md
+tests/test_agent_loop.py
+tests/test_bootstrap.py
+[0m
+The blackout implementation has a calendar-boundary edge worth testing directly: a Friday-started window that crosses midnight must remain active into early Saturday, while a Monday early-morning tail must not inherit a Sunday window.
+[0m→ [0mRead docs/run-state
+[0m→ [0mRead docs/push-policy
+[0m→ [0mRead project-trajectory/scripts/agent_loop.py[90m [offset=2040, limit=150][0m
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --strict-integrity
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+[0m$ [0mpython -c "import datetime; from importlib.util import spec_from_file_location,module_from_spec; s=spec_from_file_location('agent_loop','project-trajectory/scripts/agent_loop.py'); m=module_from_spec(s); s.loader.exec_module(m); w='22:00-06:00'; print('fri-23',m.blackout_wake(w,datetime.datetime(2026,7,17,23))); print('sat-02',m.blackout_wake(w,datetime.datetime(2026,7,18,2))); print('mon-02',m.blackout_wake(w,datetime.datetime(2026,7,13,2)))"
+fri-23 25200
+sat-02 None
+mon-02 14400
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G2
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 placeholders=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/054-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/056-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/058-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/060-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/062-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:51 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 81 doc(s), 368 intra-repo link(s), 0 broken (29 orphan warning(s)).
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (158 work item(s), 135 done (85%), graph acyclic).
+
+========================================================
+Check summary (gate G2, tier all):
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.1s
+  PASS  privacy          0.5s
+  PASS  doc-navigability 15.1s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+========================================================
+RESULT: PASS
+[0m
+Independent execution confirms the defect: `blackout_wake("22:00-06:00", 2026-07-18 02:00 UTC)` returns `None` after a Friday start, and it blocks Monday 02:00 after an ineligible Sunday start. I’ll record this as a MAJOR verdict with the required concrete correction.
+[0m# [0mTodos
+[✓] Read contributor guide and review format requirements
+[✓] Inspect work-under-review diff and governing specifications
+[✓] Run check and trace harnesses
+[•] Write independent review verdict
+[0m
+[0m✱ [0mGrep "VERDICT|\[BLOCKER|findings="[90m in project-trajectory/scripts/score_reviews.py · 22 matches[0m
+[0m→ [0mRead project-trajectory/scripts/score_reviews.py[90m [offset=1, limit=180][0m
+[0m✱ [0mGrep "now\.weekday|inside ="[90m in project-trajectory/scripts/agent_loop.py · 9 matches[0m
+[0m% [0mPatch 1 file
+[0m
+[0m$ [0mgit status --short
+?? docs/reviews/062-REVIEW-A.md
+?? docs/reviews/064-REVIEW-A.md
+[0m
+[0m$ [0mgit diff --no-index -- /dev/null docs/reviews/064-REVIEW-A.md
+diff --git a/docs/reviews/064-REVIEW-A.md b/docs/reviews/064-REVIEW-A.md
+new file mode 100644
+index 0000000..6de1343
+--- /dev/null
++++ b/docs/reviews/064-REVIEW-A.md
+@@ -0,0 +1,2 @@
++- [MAJOR] project-trajectory/scripts/agent_loop.py:398 -> weekday filtering uses `now.weekday()` for both parts of a wrapping `22:00-06:00` window, so it releases the Friday-started window at Saturday 00:00 and blocks Monday 00:00-06:00 as a tail of Sunday -> determine eligibility from the window's effective start day (`now` for the late segment, previous day for the after-midnight segment) and add Friday-to-Saturday and Sunday-to-Monday boundary tests -> @owner
++VERDICT: CHANGES-REQUESTED findings=1
+[0m
+[0m$ [0mgit log --oneline -10
+95f2d04 telemetry: session 063 BUILD COMMITTED
+ced9194 @ WI-148: weekday blackout window via docs/blackout
+e92fde6 telemetry: session 062 review scoreboard
+2964703 telemetry: session 062 REVIEW-A NO-COMMIT
+a9348ec telemetry: session 061 BUILD COMMITTED
+f247437 WI-147: scrub done WI ids from status.md working surface
+bd3d8e1 WI-147: coordinator graceful pause via docs/pause
+3b67ed0 WI-146: reconcile 060-REVIEW-A — SN prose in ratify view + link-only brief lint
+b95c227 telemetry: session 060 review scoreboard
+d461870 telemetry: session 060 REVIEW-A NO-COMMIT
+[0m
+[0m$ [0mgit add docs/reviews/064-REVIEW-A.md; git commit -m "review: WI-148 blackout verdict"
+=== derived-gate : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+  PASS  derived-gate     0.2s
+
+=== skills-sync : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.2s
+
+=== trajectory : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py ===
+check_trajectory: clean (158 work item(s), 135 done (85%), graph acyclic).
+  PASS  trajectory       0.2s
+
+=== okf : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (257 file(s)).
+  PASS  okf              0.2s
+
+=== registry-integrity : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict-integrity ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+  PASS  registry-integrity 0.2s
+
+=== trajectory-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.3s
+
+=== arch-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.5s
+check_privacy: privacy check off (docs/privacy-check) — author not checked.
+check_privacy: clean (staged diff; secrets floor).
+
+=== format : C:\Projects\ai-template\.venv\Scripts\python.exe -m ruff format --check project-trajectory/scripts tests ===
+72 files already formatted
+  PASS  format           0.1s
+[derived-gate-model 7810196] review: WI-148 blackout verdict
+ 1 file changed, 2 insertions(+)
+ create mode 100644 docs/reviews/064-REVIEW-A.md
+[0m
+[0m# [0mTodos
+[✓] Read contributor guide and review format requirements
+[✓] Inspect work-under-review diff and governing specifications
+[✓] Run check and trace harnesses
+[✓] Write independent review verdict
+[0m
+Review verdict committed: `7810196 review: WI-148 blackout verdict`.
+
+- `docs/reviews/064-REVIEW-A.md` records one MAJOR: wrapping weekday windows mishandle Friday-to-Saturday and Sunday-to-Monday tails.
+- `check.py --gate G2`: PASS.
+- `trace.py --strict-integrity`: `orphans=0 integrity=0`.
