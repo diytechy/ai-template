@@ -3,7 +3,7 @@
 # by score_reviews.py. Per-provider decayed substance + the round history
 # the escalation policy (agent_route.escalate) reads.
 provider ANTHROPIC substance=2.1782 rounds=11
-provider OPENAI substance=2.2219 rounds=25
+provider OPENAI substance=2.2220 rounds=26
 round 1 verdict=APPROVE tier=strong margin=0 primary= tripwire=0 contradiction=0
 round 2 verdict=APPROVE tier=strong margin=0 primary= tripwire=1 contradiction=0
 round 3 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
@@ -40,3 +40,4 @@ round 33 verdict=CHANGES-REQUESTED tier=strong margin=0 primary= tripwire=0 cont
 round 34 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
 round 35 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
 round 36 verdict=APPROVE tier=strong margin=0 primary= tripwire=0 contradiction=0
+round 37 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
