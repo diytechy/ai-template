@@ -2,7 +2,7 @@
 # policy picks the next routing - nothing here auto-optimizes). Written
 # by score_reviews.py. Per-provider decayed substance + the round history
 # the escalation policy (agent_route.escalate) reads.
-provider ANTHROPIC substance=1.1334 rounds=2
+provider ANTHROPIC substance=1.4600 rounds=3
 provider OPENAI substance=2.2216 rounds=23
 round 1 verdict=APPROVE tier=strong margin=0 primary= tripwire=0 contradiction=0
 round 2 verdict=APPROVE tier=strong margin=0 primary= tripwire=1 contradiction=0
@@ -29,3 +29,4 @@ round 22 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 cont
 round 23 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
 round 24 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
 round 25 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 26 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
