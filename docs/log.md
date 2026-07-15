@@ -6800,3 +6800,35 @@ scripts + tests), so nothing rides a re-attestation. Not pushed
 **Handoff.** WI-153 → done; `PROJECT_STATE.html` regenerated; `docs/run-state`
 remains **RUNNING**; `docs/next-wi` → **WI-154** (process text — docs, no
 BuildTier pin → phase default) continues the research-knowledge campaign.
+
+## 2026-07-15 — WI-154 (research-knowledge campaign): process text
+
+**What shipped.** `PROCESS_OPTIONS.md` now defines the opt-in "Research track &
+knowledge packs" layer: its applies-when, the pack anti-duplication and
+promotion rules, the ordinary research-WI shape, strong-coordinator / directed
+gatherer split, grounding-review charter, and optional PLAN/intake entry points.
+The applies-when index and Component layer cross-link it. `PROCESS.md` carries
+only a one-line durable-memory pointer, and Reviewer B's process/trace charter
+now files a pack that restates a registry fact instead of linking its id.
+
+**Review residue reconciled first.** Session 099 REVIEW-A found that WI-153's
+pack resolver allowed `..` to escape `docs/knowledge/`. The accepted finding was
+fixed before this slice: resolved candidates must remain under the pack root;
+regressions cover traversal, absolute escape, and normalized in-home refs.
+Focused suite: **12 passed in 15.86s**. Commit bar before the remediation commit:
+smoke **642 passed, 2 skipped in 68.29s**; docs **103 docs, 435 links, 0 broken**
+(41 warn-only historical orphans).
+
+**Byte deltas.** `PROCESS.md` **59,827 → 59,768 B** (-59; pointer paid for by
+tightening the same durable-memory paragraph). `PROCESS_OPTIONS.md` **139,038 →
+141,480 B** (+2,442; the substantive, ratified opt-in doctrine); its baseline
+was re-stamped in the source and all tracked byte-budget-guard copies.
+
+**End green (real output).** Full unfiltered suite `pytest -q -n auto` →
+**769 passed, 34 skipped in 80.68s**. `check_docs.py --root . --stale` → **OK,
+103 docs, 435 links, 0 broken** (41 warn-only historical orphans). The final
+smoke/docs commit bar was rerun after this session record.
+
+**Handoff.** WI-154 → done; no spine change. `docs/run-state` remains
+**RUNNING** and `docs/next-wi` → **WI-155** (`BuildTier=strong`) for the dogfood
+packs and seed prompt→image research pass. Not pushed (`docs/push-policy: human`).

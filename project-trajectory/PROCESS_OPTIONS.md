@@ -36,6 +36,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Binary assets | the project ships unavoidably-binary deliverables (art, audio, video) | an assets registry (provenance / license / hash) |
 | Intra-repo interfaces & the architecture graph | more than one module, and you want the arch view to show how they connect | an `IF-###` seam registry + the `architecture.md` graph |
 | Component layer | you want a durable home for set-grained knowledge & lifecycle (a subsystem, an assembly) | a `CMP` component registry |
+| Research track & knowledge packs | findings must outlive their research session, or a spec rests on a load-bearing unknown | `WI` research rows + `docs/knowledge/` packs |
 | §9 NFR checklist | deciding which non-functional concerns a project must consider at G1 | an NFR checklist |
 | §9 perf comparator | you have captured `PB-###` budgets you want tracked over time | a perf comparator over `PB` rows |
 | §10 several modules, one repo | a repo grows distinct sub-systems that still build and release as one (scale rung 2) | a module map |
@@ -642,7 +643,8 @@ else is *filed as a finding* for the integrator. Reviewer B's process/trace
 charter includes one codename check: a **session-local codename in a durable
 cell** — a `work-items.csv`/SR/LLR/TC row or a `docs/specs/` file, as opposed to
 a `log.md` entry — is filed as a finding (the codename-discipline rule stated
-under "Trajectory / work-items"). Related tripwire: the
+under "Trajectory / work-items"). The charter also files a knowledge pack that
+restates a registry fact instead of linking its id. Related tripwire: the
 coordinator warns (never blocks) when a lane's `status.md` outgrows one screen
 (`AGENT_STATUS_WARN_BYTES`, default 8192, `0` silences) — every session
 inherits that resume surface, so pruning it is the integrator's charter,
@@ -1791,6 +1793,39 @@ pinned by the never-break-downstream rule. Declare seams because the connectivit
 view earns its keep, not for completeness — and lean on the source/sink valve so a
 pure sink doesn't cost a row.
 
+## Research track & knowledge packs
+
+**Applies when** research findings must outlive the session that produced them,
+or a specification rests on a load-bearing unknown. This is an optional WI
+shape and durable prose home, not a new gate, run phase, or source of
+requirements.
+
+**A knowledge pack** is one hand-owned `docs/knowledge/<label>.md` topic. It
+holds findings with evidence and retrieval dates, decision rationale,
+vendor/tool quirks, and failed approaches. It never restates an SR/LLR/TC/IF
+row or generated view: link the id instead. When a finding hardens into a rule,
+constraint, or requirement, promote it through §5 change intake; the pack keeps
+the why and trail while the spine keeps the what. Packs are advisory and never
+gate. A component associates durable module knowledge through its `Knowledge`
+refs and optional `DetailDoc`; `trace.py` resolves `docs/knowledge/`-shaped refs
+warn-first.
+
+**A research track** is an ordinary `WI-###` row with `Workstream=research`.
+Its Done-when names the questions to answer, and its deliverable is a knowledge
+pack and/or specification input — never code. It rides `docs/next-wi`, the
+`BuildTier` pin, and the review dial with no coordinator changes. Pin it
+`strong` when synthesis needs a strong coordinator; that coordinator may
+delegate directed gathering to quick/medium subagents when the project's
+subagent policy permits, but retains source verification and the verdict.
+
+The existing review round becomes a **grounding review**: verify that
+load-bearing sources exist and support the claims, retrieval dates are present,
+and repo facts match the repo. If source access is unavailable, label the claim
+ungrounded rather than silently passing it. Cross-family review is recommended.
+Research may be filed at PLAN/spec time as a predecessor to dependent work, or
+at intake when the question is clearer than the requirement; both entry points
+are optional under proportionality.
+
 ## Component layer
 
 *Referenced from the registry templates (`components.template.csv`).* **Applies
@@ -1809,6 +1844,10 @@ holds **only what a tag can't**: the knowledge refs (`;`-joined skill names,
 the successor so identity survives a rewrite), nesting (`PartOf`), and an
 optional `DetailDoc`. `Category` is an open value set (`software`, `physical`,
 …).
+
+When findings need to outlive the session that produced them, use the
+"Research track & knowledge packs" layer above; the CMP `Knowledge` cell is the
+durable component-to-pack association, not a second copy of the findings.
 
 **Structure is derived, never restated.** Membership lives on the **primitive**
 rows: LLR / IF / ASSET / PART each carry a `Component` cell (`;`-joined CMP ids

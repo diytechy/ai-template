@@ -721,13 +721,12 @@ shipping skills/agents/hooks/MCP for one tool is a different, optional product
 that *composes* with a scaffolded repo but neither depends on the other — though
 the kit *does* ship neutral, opt-in **skills** an agent can materialize at setup,
 `process-options.md` "Skills layer"); and
-**repo text is the durable agent memory layer** — the committed artifacts
-(`status.md`, registries, `AGENTS.md`, the code map) are the agent-neutral,
-reviewable memory; agent-native memory tools (auto-memory, MCP memory servers)
-are *scratch*, never the home for load-bearing facts. Durable facts — a
-decision, constraint, or gotcha — are **promoted** into `status.md` or the
-registries. The kit does not install or require any agent-memory tooling; a
-larger repo simply makes the committed layer matter more.
+**repo text is the durable agent memory layer** — committed `status.md`,
+registries, `AGENTS.md`, and the code map are agent-neutral and reviewable;
+agent-native memory tools are scratch, never homes for load-bearing facts.
+Promote decisions, constraints, and gotchas into `status.md` or the registries;
+durable research findings use optional knowledge packs (`process-options.md`,
+"Research track & knowledge packs"). The kit requires no memory tooling.
 
 Ready reference scripts ship with this template (Python 3.8+, stdlib only — no
 pip needed to run them):

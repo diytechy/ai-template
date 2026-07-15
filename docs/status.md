@@ -61,12 +61,12 @@ home elsewhere — don't restate it here:
   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
   2026-07-14 ratification; the ref-integrity slice (trace.py Knowledge resolution
   + knowledge⇒component coupling) landed 2026-07-15 ([log.md](log.md)). Remaining:
-  **WI-154** (process text) · **WI-155** (dogfood packs + the seed prompt→image
+  **WI-155** (dogfood packs + the seed prompt→image
   research WI, `BuildTier=strong`) · **WI-156** (kit-provisioned pack library) ·
   **WI-157** (skills domains filter); **WI-158** deferred (OKF pack export).
   The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
-  no stop in between; the DAG now sequences it from WI-154._
+  no stop in between; the DAG now sequences its remaining slices._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
   All owner-intake WIs are complete — the loop worked them in id order after the
@@ -87,13 +87,12 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-154** (research-track process text — PROCESS_OPTIONS
-  section + component-layer cross-link + PROCESS.md pointer + reviewer-charter
-  line; docs, no `BuildTier` pin → phase default) continues the owner-greenlit
-  research-knowledge campaign; its DAG carries **WI-155**…**WI-157** + **WI-164**
-  automatically. `docs/next-wi` points at **WI-154**. The campaign's ref-integrity
-  slice landed 2026-07-15 (evidence in [log.md](log.md)); it was off-spine
-  (scripts + tests), so nothing rides a re-attestation.
+- **Next action:** **WI-155** (dogfood knowledge packs + CMP refs, then run the
+  seed prompt→image research WI end-to-end; `BuildTier=strong`) continues the
+  owner-greenlit research-knowledge campaign; its DAG carries **WI-156**,
+  **WI-157**, and **WI-164** automatically. `docs/next-wi` points at
+  **WI-155**. The process-text slice landed 2026-07-15 (evidence in
+  [log.md](log.md)); it was off-spine docs, so nothing rides a re-attestation.
   Only deferred main-decomposition (**WI-080**→**WI-081**) stays parked. Codex
   Sol builds are live.
   Round-by-round evidence → [log.md](log.md), not here.
