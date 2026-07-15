@@ -47,7 +47,7 @@ What it creates in the destination:
     docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
     scripts/onboard.{sh,command,cmd}           <- onboard.template.*  (Stage-0 onboarder)
-    scripts/dev-setup.{sh,ps1,command}         <- dev-setup.template.* (workstation setup)
+    scripts/dev-setup.{sh,ps1,command,cmd}     <- dev-setup.template.* (workstation setup)
     README.md                                  <- README.template.md (human front door; kept if one exists)
     OWNER_SCRATCHPAD.md                        <- OWNER_SCRATCHPAD.template.md (owner-only notes; agents ignore)
     scripts/run_menu.py                        (capability-menu reader the run.* launchers delegate to)

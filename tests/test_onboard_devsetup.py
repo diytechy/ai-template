@@ -12,6 +12,7 @@ cross-platform/GUI/auth behavior is verified manually per OS (see the plan).
 """
 
 import os
+import re
 import shutil
 import subprocess
 
@@ -232,7 +233,20 @@ def test_scaffold_ships_devsetup_cmd(scaffold):
     assert all(b < 128 for b in raw), "dev-setup.cmd must stay ASCII-only"
     text = raw.decode("ascii")
     assert text.count("dev-setup.ps1") >= 3
-    assert "-Check" in text and "-Install" in text
+    # Cross-check the shim's switches against the scaffolded ps1's param() block
+    # rather than pinning literals: 080-REVIEW-A caught the cmd calling -Install,
+    # a switch the *template* ps1 never declares (a silent no-op). Every -Switch
+    # the cmd hands the ps1 must be one the ps1 actually declares.
+    ps1 = (scaffold / "scripts/dev-setup.ps1").read_text(encoding="utf-8")
+    declared = {s.lower() for s in re.findall(r"\[switch\]\$(\w+)", ps1)}
+    assert {"check", "baseline"} <= declared, (
+        "scaffolded dev-setup.ps1 lost its -Check/-Baseline switches: " + repr(declared)
+    )
+    for switch in re.findall(r"dev-setup\.ps1\"?\s+-(\w+)", text):
+        assert switch.lower() in declared, (
+            "dev-setup.cmd calls -" + switch + " which dev-setup.ps1 does not declare"
+        )
+    assert "-Check" in text and "-Baseline" in text
     assert "%*" in text, "dev-setup.cmd missing the argument passthrough"
 
 

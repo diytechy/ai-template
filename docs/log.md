@@ -6507,3 +6507,40 @@ registry edit (also folding in the 084 reviewer's uncommitted regeneration
 residue). No byte-budgeted file touched. **Handoff:** run-state **RUNNING**;
 `docs/next-wi` → **WI-168** (`BuildTier=medium`). Not pushed
 (`push-policy: human`).
+
+## 2026-07-15 — WI-168 (080 rework, BUILD, medium): the Windows double-click install path installs again
+
+**Scope (080-REVIEW-A findings 1–3, [reviews/080-REVIEW-A.md](reviews/080-REVIEW-A.md)).**
+The scaffolded `dev-setup.template.cmd`'s consented install branch invoked
+`dev-setup.ps1 -Install`, but the template ps1 it ships beside declares only
+`-Check/-Baseline/-Full` — PowerShell silently drops the unknown switch into
+`$args`, so the "install" ran the report-only `-Check` default and exited green
+(a silent no-op that read as success). This BUILD reworks the three findings; it
+is off-spine `scripts` work (SR-032 text unchanged), so no registry sweep.
+
+**The fix.**
+- **BLOCKER (dev-setup.template.cmd).** `-Install` → `-Baseline` at the install
+  invocation (line 31) and the "install later" hint (line 33), the two REM
+  comments (lines 7, 14), and the `[y/N]` prompt wording — now "Run the baseline
+  install now (runtime + git + renderer + role tools, each consented)?",
+  matching the ps1's own `-Baseline` description and the macOS `.command`'s
+  `--baseline` twin. The meta-repo **dogfood** `scripts/dev-setup.cmd` correctly
+  keeps `-Install` (its sibling `scripts/dev-setup.ps1` is the two-switch meta
+  script that declares it) — left untouched.
+- **MINOR (test_onboard_devsetup.py).** Rewrote `test_scaffold_ships_devsetup_cmd`
+  to stop pinning the literal `-Install`: it now cross-checks *every* `-Switch`
+  the shim hands the ps1 against the scaffolded `dev-setup.ps1`'s `param()` block
+  (regex over `[switch]$Name`), so a shim calling a switch the ps1 doesn't
+  declare now fails the shape test instead of locking the defect in green. Added
+  `import re`.
+- **MINOR (bootstrap.py).** Appended `cmd` to the scaffold-map docstring
+  (`scripts/dev-setup.{sh,ps1,command,cmd}`), which had drifted from the
+  `MAPPING` it documents.
+
+**End green (real output).** Commit bar: `pytest -q -n auto -m smoke` →
+**623 passed, 2 skipped in 54.24s**; `check_docs.py --root . --stale` → **OK,
+96 docs, 406 links, 0 broken** (the stale hints are on archived review docs, not
+the changed files). No byte-budgeted file touched. `PROJECT_STATE.html`
+regenerated for the WI-168 row → `done`. **Handoff:** run-state **RUNNING**;
+`docs/next-wi` → **WI-169** (084 rework, `BuildTier=strong` — spine-touching,
+its own review round). Not pushed (`push-policy: human`).
