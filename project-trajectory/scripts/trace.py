@@ -1450,7 +1450,14 @@ def main():
             if not label:
                 continue
             rel = label if label.endswith(".md") else label + ".md"
-            if not (docs / "knowledge" / rel).exists():
+            pack_root = (docs / "knowledge").resolve()
+            candidate = (pack_root / rel).resolve()
+            try:
+                candidate.relative_to(pack_root)
+                contained = True
+            except ValueError:
+                contained = False
+            if not contained or not candidate.is_file():
                 knowledge_advisories.append(
                     f"CMP {cid} Knowledge ref '{ref}' names no pack ({kn_prefix}{rel})"
                 )

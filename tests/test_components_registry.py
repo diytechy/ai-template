@@ -125,7 +125,9 @@ def krow(cid, know):
 def write_pack(root, label, body="# Pack\n"):
     d = root / "docs" / "knowledge"
     d.mkdir(parents=True, exist_ok=True)
-    (d / (label + ".md")).write_text(body, encoding="utf-8")
+    target = d / (label + ".md")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
 
 
 def test_knowledge_ref_missing_pack_warns_only(scaffold):
@@ -154,6 +156,28 @@ def test_knowledge_ref_present_pack_resolves(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "knowledge-advisories" not in proc.stdout
+
+
+def test_knowledge_ref_must_resolve_inside_pack_home(scaffold):
+    # Traversal/absolute refs are not packs even when they happen to name an
+    # existing Markdown file; normalized paths that stay in-home remain valid.
+    make_minimal_project(scaffold)
+    write_pack(scaffold, "nested/found")
+    write_cmps(
+        scaffold,
+        krow("CMP-001", "docs/knowledge/../architecture"),
+        krow(
+            "CMP-002",
+            "docs/knowledge/"
+            + str((scaffold / "docs" / "architecture.md").resolve()).replace("\\", "/"),
+        ),
+        krow("CMP-003", "docs/knowledge/nested/../nested/found"),
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "knowledge-advisories=2" in proc.stdout
+    assert "docs/knowledge/../architecture" in proc.stdout
+    assert "architecture.md' names no pack" in proc.stdout
 
 
 def test_knowledge_skill_and_url_refs_are_unchecked(scaffold):
