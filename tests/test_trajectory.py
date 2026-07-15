@@ -1032,3 +1032,74 @@ def test_phase_findings_vacuous_without_anchors(tmp_path):
     _write_gate(tmp_path, "v1=G0")  # a phase at G0 but NO anchor records a close
     wis = _wis(ct, [{"WI-ID": "WI-220", "Title": "ordinary", "Status": "queued"}])
     assert ct.phase_findings(tmp_path, wis) == []
+
+
+# --- WI-146(b): the ratification-brief hierarchy-view lint --------------------
+# A `## OI-N` brief whose decision is a `[phase]-[g1|g2]` ratification should
+# *link* the generated batch-scoped hierarchy view rather than hand-copy rows.
+# Warn-first (never a gate fail); vacuous without such a brief.
+
+
+def _write_open_items(root, body):
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "open-items.md").write_text(body, encoding="utf-8")
+    return root
+
+
+def test_ratify_brief_without_view_warns(tmp_path):
+    ct = load_script("check_trajectory")
+    _write_open_items(
+        tmp_path,
+        "# Open items\n"
+        "Intro naming `[v3]-[g2]` in passing (before any section).\n\n"
+        "## OI-20 — v3 g2 close\n"
+        "- Decision: ratify the `[v3]-[g2]` dashboard batch.\n"
+        "- Options: accept.\n\n"
+        "## OI-21 — unrelated\n"
+        "- Decision: something else, no anchor here.\n",
+    )
+    warns = ct.ratify_brief_findings(tmp_path)
+    # Exactly the ratification brief warns; the intro prose and OI-21 do not.
+    assert len(warns) == 1
+    assert warns[0].startswith("OI-20:")
+    assert "hierarchy view" in warns[0]
+
+
+def test_ratify_brief_with_generator_command_is_silent(tmp_path):
+    ct = load_script("check_trajectory")
+    _write_open_items(
+        tmp_path,
+        "## OI-20 — v3 g2 close\n"
+        "- Decision: ratify the `[v3]-[g2]` batch. Hierarchy: run "
+        "`trace.py --ratify v3`.\n",
+    )
+    assert ct.ratify_brief_findings(tmp_path) == []
+
+
+def test_ratify_brief_with_view_link_is_silent(tmp_path):
+    ct = load_script("check_trajectory")
+    _write_open_items(
+        tmp_path,
+        "## OI-20 — v3 g2 close\n"
+        "- Decision: ratify the `[v3]-[g2]` batch. "
+        "See the [tree](ratify/v3-g2.md).\n",
+    )
+    assert ct.ratify_brief_findings(tmp_path) == []
+
+
+def test_ratify_brief_lint_vacuous_without_brief(tmp_path):
+    ct = load_script("check_trajectory")
+    # No open-items.md at all -> nothing to check.
+    assert ct.ratify_brief_findings(tmp_path) == []
+    # A section with a ratification word but no [phase]-[g*] anchor -> not a brief.
+    _write_open_items(
+        tmp_path,
+        "## OI-30 — general\n- Decision: whether to ratify a policy change.\n",
+    )
+    assert ct.ratify_brief_findings(tmp_path) == []
+    # ...and an anchor with no ratification language -> also not a brief.
+    _write_open_items(
+        tmp_path,
+        "## OI-31 — scheduling\n- Decision: sequence `[v3]-[g2]` after v2 work.\n",
+    )
+    assert ct.ratify_brief_findings(tmp_path) == []

@@ -5630,3 +5630,71 @@ budget → trimmed 139→120, within budget. The remaining [MAJOR] (open-items.m
 palette anchor should route through an explicit G1/G2 requirement-change batch, not
 a bare sitting ratification) is an **@owner** process call folded into the OI-12
 disposition — left for the g2-close sitting, not resolved here.
+
+## 2026-07-14 — SESSION: WI-146 (ratification package — the batch-scoped hierarchy view + brief lint + wiring); NO spine change
+
+**Scope.** Owner-intake 2026-07-14 #hierarchy-view, the first actionable
+owner-intake backlog WI (WI-146…151, id order) after WI-110 removed the last
+buffer. Four deliverables (a–d) + fixtures. Scripts + docs only, off-spine.
+
+**What shipped.**
+- **(a) `trace.py --ratify SCOPE`** — a generator mode emitting the *batch-scoped*
+  `SN → SR → LLR/TC` hierarchy **with prose** (SR Requirement/AC, LLR
+  Detail + Module/Component, TC Method/Expected, and any `docs/rubrics/*.md`
+  cited in the SR prose), so a ratification brief **links** the view instead of
+  hand-copying rows. SCOPE is a phase tag (`v3`) or an `SR-###` list; output goes
+  to stdout or `--out FILE` (parent dirs created). It reuses the already-loaded,
+  example-filtered working sets and **runs no checks** — exit 0 always. Groups
+  each SR under its primary (first) SN, notes any additional SN refs.
+- **(b) `check_trajectory.ratify_brief_findings`** — a **warn-first** (never a
+  gate fail) lint: an `## OI-N` `open-items.md` section whose decision names a
+  `[phase]-[g1|g2]` anchor **and** ratification language should link the view
+  (recognized by a `trace.py --ratify` command token **or** a `ratif`/`hierarch`
+  link target). Vacuous without such a brief. Silent on the live repo — the only
+  `[v3]-[g2]` token sits in the intro prose *before* any `## OI-N` section, so the
+  section split excludes it (the lint arms for a *future* g2-close brief).
+- **(c)** The `gate-advance` skill gains a **"Carry the batch-scoped hierarchy
+  view (G1/G2)"** step (generate with `trace.py --ratify … --out
+  docs/ratify/<phase>-g2.md`, link it from the brief), and the redacted
+  `REVIEWER_PROMPT` (agent_loop.py) now names the view a **REQUIRED input** when
+  the diff under review is a G1/G2 ratification.
+- **(d)** The `gate-advance` G2→G3 decomposition recipe gains one line: **a
+  `[g2]` batch also authors/updates the `IF-###` rows its new LLRs imply**
+  (PROCESS.md §8), rather than retrofitting seams later (WI-056/057 precedent).
+- **Skills re-synced.** gate-advance is `scope: kit`; edited the source
+  (`project-trajectory/skills/`) and re-ran `bootstrap.py --dest . --sync` so the
+  `.claude/` + `.agents/` copies stay byte-identical — `gen_skills_index
+  --check-agents` = OK (10 copies match). INDEX.csv unchanged (frontmatter
+  untouched).
+
+**No spine / no scaffold-surface change.** `--ratify` writes only on demand
+(`docs/ratify/` is not a scaffolded dir, so no bootstrap MAPPING / README
+kit-contents change). Spine holds SN=24 SR=56 LLR=57 TC=57. `re` was already
+imported in both scripts (stdlib-only preserved).
+
+**Tests (7 new, all green).** `test_trace.py`: SR-list prose, phase-scope +
+rubric + empty-scope, `--out` writes a linkable file. `test_trajectory.py`:
+unlinked ratification brief warns (intro prose + a non-anchor section do not),
+generator-command silent, view-link silent, vacuous without a brief.
+
+**Review residue reconciled.** Tracked the untracked `docs/reviews/058-REVIEW-A.md`
+(session-058 REVIEW-A, **NO-COMMIT**, 1 finding, CHANGES-REQUESTED). The finding
+(@owner) asks that WI-110 return to open until an *xhigh* OPUS BUILD's `s/turn`
+/`Ctx/turn` is recorded, arguing the experiment isn't closed on the `high`
+baseline alone. **Disposition: no reopen** — this re-raises WI-110's *deliberate*
+armed-not-fabricated design (log.md 2026-07-14): the `after` number is captured
+**automatically** off the next OPUS BUILD session's WI-124 telemetry (which now
+logs `effort=xhigh`), not fabricated at close, so the pin + armed measurement is
+the honest closure and a running BUILD session *is* the measurement. Precedent:
+a REVIEW-A finding does not un-close a landed unit (OI-10/OI-11). Left as an
+@owner note here (not a new OI — the WI-110 record already anticipated it); the
+owner may reopen WI-110 at a sitting if they want the delta recorded before close.
+
+**Gates.** Commit bar: `pytest -q -n auto -m smoke` + `check_docs --stale`
+(pasted in the commit). Affected modules full-run green (test_trace, test_trajectory,
+test_skills_index, test_skills_sync, test_agent_loop, test_agent_loop_review):
+**189 passed**. Slice close: full suite + derived gate below.
+
+**Handoff — run-state RUNNING; next-wi WI-147.** The owner-intake backlog
+continues in id order (WI-147 graceful pause next). WI-144 stays paused; the
+g2-close sitting is DUE in parallel (OI-12). No spine change → gate basis holds.

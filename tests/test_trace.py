@@ -854,3 +854,59 @@ def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
     assert "llr-status-advisories" not in proc3.stdout
     report3 = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "None. No unlifted LLRs under fully-Verified tests." in report3
+
+
+# --- WI-146(a): the --ratify batch-scoped ratification hierarchy view ---------
+# A generated SN->SR->LLR/TC tree carrying the prose a ratifier needs (Requirement/
+# AC, LLR Detail, TC Method/Expected, cited rubric), scoped by an SR-id list or a
+# phase tag. A generator mode: it runs no checks and always exits 0.
+
+# An SR with a Phase cell and a rubric citation, still traced to LLR-001/TC-001.
+PHASED_RUBRIC_SR = (
+    "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+    "Permutations,Priority,Verification,Status,Phase\n"
+    'SR-001,Addition,SN-001,"The system shall add two numbers.",'
+    '"Realizes SN-001.","Judged against docs/rubrics/adder.md",,'
+    "M,Critique,Planned,v9\n"
+)
+
+
+def test_ratify_sr_list_emits_prose(scaffold):
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--ratify", "SR-001"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    assert "# Ratification hierarchy" in out and "scope: SR-001" in out
+    assert "1 SR(s)" in out
+    assert "SR-001" in out and "Addition" in out
+    assert "The system shall add two numbers." in out  # SR Requirement prose
+    assert "Pure function: two numbers -> sum." in out  # LLR Detail prose
+    assert "TC-001" in out and "Satisfies SR-001 AcceptanceCriteria" in out  # TC
+
+
+def test_ratify_phase_scope_and_rubric(scaffold):
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        PHASED_RUBRIC_SR, encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--ratify", "v9"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "SR-001" in proc.stdout and "Addition" in proc.stdout
+    assert "**Rubrics.** docs/rubrics/adder.md" in proc.stdout
+    # A non-matching phase resolves to an empty batch (no crash, exit 0).
+    empty = run_py(["scripts/trace.py", "--ratify", "v1"], cwd=scaffold)
+    assert empty.returncode == 0
+    assert "no SR matched this scope" in empty.stdout
+
+
+def test_ratify_out_writes_linkable_file(scaffold):
+    make_minimal_project(scaffold)
+    proc = run_py(
+        ["scripts/trace.py", "--ratify", "SR-001", "--out", "docs/ratify/x.md"],
+        cwd=scaffold,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    written = (scaffold / "docs" / "ratify" / "x.md").read_text(encoding="utf-8")
+    assert "# Ratification hierarchy" in written
+    assert "The system shall add two numbers." in written
+    assert "trace: wrote ratification view" in proc.stdout

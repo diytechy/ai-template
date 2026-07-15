@@ -46,6 +46,15 @@ gate derives from it:
 - **G2 → G3** — the SR reaches `Status=Verified` once its tests pass; the derived
   gate follows.
 
+**Carry the batch-scoped hierarchy view (G1/G2).** A ratification brief presents
+the batch's `SN → SR → LLR/TC` tree with its prose so the acceptor rules on the
+whole decomposition, not a row list. **Generate it, never hand-copy:**
+`python scripts/trace.py --ratify <phase> --out docs/ratify/<phase>-g2.md` (scope
+is a phase tag or an `SR-###` list) emits the tree with each SR's Requirement/AC,
+LLR Detail, TC Method/Expected, and any cited rubric — then link that file from
+the `## OI-N` brief. `check_trajectory.py` warns (never fails) when a
+`[phase]-[g1|g2]` ratification brief carries no such link.
+
 This preserves the reviewed-commit discipline while making the marker computed. It
 **composes with the gate-authority levels** (`docs/gate-policy`): `attended` = the
 human ratifies each batch; `single-ratify` = the batch is ratified once at its
@@ -62,7 +71,11 @@ sign-off in `docs/log.md` (the append-only history `docs/status.md` points at).
 - **G2 → G3 (Decomposition & Test Coverage).** Every SR decomposes to LLR/TC;
   each requirement's TC exists as a **failing test first** (red → green). The
   harness at G2 runs traceability + `--no-placeholders` + runnable tests + flow
-  checks. `orphans=0`.
+  checks. `orphans=0`. **A `[g2]` batch also authors/updates the `IF-###`
+  interface rows its new LLRs imply** — when a decomposition mints a seam
+  (a module now provides/consumes a contract), add its `interfaces.csv` row in
+  the same batch rather than retrofitting later (PROCESS.md §8; the
+  `registry-hygiene` skill).
 - **G3 (Implementation).** Code implements the LLRs with `Implements:` back-links;
   the full harness passes: `trace.py --strict --no-placeholders --strict-schema
   --require-verified`, coverage ≥ threshold, arch-map fresh, flows current. Every

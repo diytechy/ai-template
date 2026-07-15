@@ -1057,6 +1057,54 @@ CRITIQUE_VERDICT_RE = re.compile(
     re.I | re.M,
 )
 
+OPEN_ITEMS_MD = "docs/open-items.md"
+OI_SECTION_RE = re.compile(r"(?m)^(##\s+OI-\d+\b.*)$")
+# A `[<phase>]-[g1|g2]` bracketed anchor appearing anywhere in a brief body (not
+# line-anchored like PHASE_ANCHOR_RE, which matches a WI *title*).
+RATIFY_ANCHOR_RE = re.compile(r"\[[^\]\[]+\]-\[g[12]\]")
+# The batch-scoped hierarchy view is recognized either by the generator
+# invocation (`trace.py --ratify`) or by a Markdown link whose target names a
+# ratification/hierarchy view — either satisfies the brief-links-the-view rule.
+RATIFY_VIEW_RE = re.compile(
+    r"--ratify\b|\]\([^)]*(?:ratif|hierarch)[^)]*\)", re.IGNORECASE
+)
+
+
+def ratify_brief_findings(root):
+    """Warn-first brief lint (WI-146b): an `## OI-N` decision brief whose decision
+    is a `[phase]-[g1|g2]` ratification should *link* the batch-scoped
+    ratification hierarchy view (`trace.py --ratify <phase>`) instead of
+    hand-copying registry rows. WARN only — never a gate fail (the house stance
+    for prose surfaces, WI-129/132). Vacuous when `docs/open-items.md` is absent
+    or carries no ratification brief, so a repo without the surface pays nothing."""
+    path = root / OPEN_ITEMS_MD
+    if not path.is_file():
+        return []
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    # Split on `## OI-N` headings: parts = [pre, head1, body1, head2, body2, ...],
+    # so any intro prose before the first section (which may name a `[phase]-[g2]`
+    # in passing) is correctly excluded from every brief body.
+    parts = OI_SECTION_RE.split(text)
+    out = []
+    for i in range(1, len(parts), 2):
+        head = parts[i].strip()
+        body = parts[i + 1] if i + 1 < len(parts) else ""
+        is_ratification = RATIFY_ANCHOR_RE.search(body) and re.search(
+            r"ratif", body, re.IGNORECASE
+        )
+        if not is_ratification or RATIFY_VIEW_RE.search(body):
+            continue
+        oid = head.split()[1]  # the `OI-N` token
+        out.append(
+            "{}: a [phase]-[g1|g2] ratification brief should link the batch-scoped "
+            "hierarchy view (generate it with `trace.py --ratify <phase>`) instead "
+            "of hand-copying registry rows ({})".format(oid, OPEN_ITEMS_MD)
+        )
+    return out
+
 
 def _load_critique_srs(root):
     """SR ids whose Verification is `Critique` (system-requirements.csv). Empty
@@ -1191,6 +1239,12 @@ def main():
     # return so a repo with modules + seams but no work items is still covered;
     # vacuous under docs/interfaces-check: off or a ≤1-module arch-map.
     for w in interface_findings(root):
+        print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
+
+    # Ratification-brief hierarchy-view lint (WI-146b) — warn-first prose-surface
+    # check: a `[phase]-[g1|g2]` ratification brief should link the generated
+    # batch-scoped hierarchy view. Vacuous without a ratification brief.
+    for w in ratify_brief_findings(root):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     # How-SW top-view right-sizing (WI-073/FB5) — WARN plain, ERROR under --strict

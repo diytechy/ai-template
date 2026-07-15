@@ -296,6 +296,7 @@ Contracts (interfaces): IF-009, IF-023
 | `ssot_findings(wis, root)` | The status.md ↔ work-items.csv coherence findings (R-A…R-E) + the |  |
 | `run_state_findings(wis, root)` | Warn when an end-state would park a runnable queued work item (WI-115). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
+| `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an `## OI-N` decision brief whose decision |  |
 | `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |
 | `main()` |  |  |
 
@@ -506,6 +507,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
 | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
 | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |
+| `ratify_lines(scope, sn_ids, srs, llrs, tcs)` | Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the |  |
 | `mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored |  |
 | `html_document(roots)` | A dependency-free, collapsible <details> tree of the full graph — inline |  |
 | `main()` |  |  |
