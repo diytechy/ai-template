@@ -53,6 +53,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/gen_trajectory.py",
         "scripts/gen_okf.py",
         "scripts/run_menu.py",
+        "scripts/dev-setup.cmd",
         ".githooks/pre-commit",
         ".githooks/commit-msg",
         ".githooks/pre-push",

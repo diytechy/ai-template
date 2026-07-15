@@ -1135,6 +1135,7 @@ MAPPING = [
     ("scripts/dev-setup.template.sh", "scripts/dev-setup.sh"),
     ("scripts/dev-setup.template.ps1", "scripts/dev-setup.ps1"),
     ("scripts/dev-setup.template.command", "scripts/dev-setup.command"),
+    ("scripts/dev-setup.template.cmd", "scripts/dev-setup.cmd"),
     # The evaluator's rungs (WI-1.12): a README skeleton the kickoff agent
     # builds out from the project brief (never overwritten — an adopted repo
     # keeps its own README), and root double-clickable product launchers, one

@@ -14,8 +14,8 @@
 # Verified, the derived gate is back at G3, the v3 dashboard-ux campaign is
 # complete. `docs/gate-policy` is now `autonomous` (owner directive) — no
 # g2-close sitting for future campaigns.
-# NEXT: the DAG-actionable off-spine backlog in id order — WI-166
-# (dev-setup.template.cmd) -> WI-162 (parallel-dispatch design spec, strong) ->
+# NEXT: the DAG-actionable off-spine backlog — WI-162 (parallel-dispatch
+# design spec, strong) ->
 # WI-165 (Process-tab circular loops, now
 # unblocked). WI-159 (Knowledge-tab density) stays deferred.
 # THEN (owner GREENLIT 2026-07-15): flow straight into the research-knowledge
@@ -29,4 +29,4 @@
 # the autonomous design-check ruled GRIND-THROUGH (docs/reviews/076-DESIGN-
 # CHECK.md) — run-phase is back to BUILD, WI-167 filed for the tripwire's
 # meta-repo path-coverage gap (joins the backlog after WI-165).
-WI-166
+WI-162

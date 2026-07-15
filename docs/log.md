@@ -6402,3 +6402,20 @@ re-stamped in all three tracked byte-budget skill copies. `PROCESS.md` and
 `AGENTS.template.md` were untouched. No deviation from the WI spec and no spine
 state changed. **Handoff:** run-state remains **RUNNING**; `docs/next-wi` →
 **WI-166**. Not pushed (`push-policy: human`).
+
+## 2026-07-15 — WI-166 Windows double-click dev-setup rung
+
+Shipped `dev-setup.template.cmd` downstream as an ASCII-safe Explorer wrapper
+over the shared PowerShell setup logic. A no-argument launch runs `-Check` and
+then offers the consent-first `-Install`; terminal arguments pass through to the
+PowerShell script. Bootstrap now maps the template into fresh scaffolds, tests
+cover scaffold presence and delegation shape, and the kit-contents table names
+both platform double-click wrappers.
+
+**End green (real output):** focused bootstrap/dev-setup suite **46 passed, 9
+skipped in 7.26s**; unfiltered suite **748 passed, 34 skipped in 77.98s**.
+Commit-bar smoke and `check_docs --stale` are recorded in the commit that follows
+this entry. No byte-budgeted file changed; no deviation from the WI spec and no
+spine state changed. **Handoff:** run-state remains **RUNNING**;
+`docs/next-wi` → **WI-162** (`BuildTier=strong`). Not pushed
+(`push-policy: human`).

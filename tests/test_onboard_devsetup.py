@@ -225,6 +225,17 @@ def test_meta_repo_dogfoods_devsetup_cmd():
     assert "%*" in text, "dev-setup.cmd missing the argument passthrough"
 
 
+def test_scaffold_ships_devsetup_cmd(scaffold):
+    path = scaffold / "scripts/dev-setup.cmd"
+    assert path.exists(), "fresh scaffold missing scripts/dev-setup.cmd"
+    raw = path.read_bytes()
+    assert all(b < 128 for b in raw), "dev-setup.cmd must stay ASCII-only"
+    text = raw.decode("ascii")
+    assert text.count("dev-setup.ps1") >= 3
+    assert "-Check" in text and "-Install" in text
+    assert "%*" in text, "dev-setup.cmd missing the argument passthrough"
+
+
 def test_meta_repo_dogfoods_dev_setup():
     # Part D: the kit provisions itself with a concrete dev-setup in scripts/
     # (the same layout it scaffolds downstream), an instantiation of the
