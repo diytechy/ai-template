@@ -2574,24 +2574,26 @@ def _loop_panel(root):
         ),
     ]
 
-    def loop_ol(name, stages):
+    def loop_ol(loop_id, name, stages):
         lis = "".join(
-            '<li class="stg"><b>{}</b><span class="n">{}</span></li>'.format(
-                esc(title), note
-            )
-            for title, note in stages
+            '<li class="stg" data-node="{}"><b>{}</b>'
+            '<span class="n">{}</span></li>'.format(index, esc(title), note)
+            for index, (title, note) in enumerate(stages, 1)
         )
         return (
-            '<div class="loop"><b class="loopname">{}</b>'
-            '<ol class="pflow loop">{}</ol></div>'.format(esc(name), lis)
+            '<div class="loop loop-{}" data-cycle="closed">'
+            '<b class="loopname">{}</b><ol class="pflow loop">{}</ol></div>'.format(
+                esc(loop_id), esc(name), lis
+            )
         )
 
     return (
         '<div class="loops">'
-        '<div class="entry"><b>LLM_Agent</b>'
+        '<div class="entry" data-loop-a-degree="2" data-loop-b-degree="2">'
+        "<b>LLM_Agent</b>"
         "<span>the shared entry point — both loops start here</span></div>"
-        + loop_ol("A · Intake loop", intake_loop)
-        + loop_ol("B · Human-decision loop", decide_loop)
+        + loop_ol("a", "A · Intake loop", intake_loop)
+        + loop_ol("b", "B · Human-decision loop", decide_loop)
         + "</div>"
     )
 
@@ -2715,20 +2717,46 @@ def process_panel(root, wis, stats):
         "padding-left:1.2rem;}"
         "#process ul.esc b{color:var(--text);}"
         # Panel 4 — the two circular working loops, sharing one LLM_Agent entry.
-        "#process .loops{display:flex;flex-direction:column;gap:.5rem;"
-        "margin:.5rem 0;}"
-        "#process .entry{align-self:flex-start;background:var(--surface);"
+        "#process .loops{display:grid;grid-template-columns:minmax(7.5rem,auto) 1fr;"
+        "grid-template-rows:1fr 1fr;gap:.8rem 0;align-items:stretch;"
+        "margin:.7rem 0;isolation:isolate;}"
+        "#process .entry{grid-column:1;grid-row:1/3;align-self:center;z-index:3;"
+        "background:var(--surface);"
         "border:2px solid var(--accent);border-radius:10px;"
-        "padding:.45rem .8rem;box-shadow:var(--shadow);}"
+        "padding:.45rem .8rem;box-shadow:var(--shadow);max-width:9.5rem;}"
         "#process .entry b{display:block;font-size:.88rem;color:var(--accent);}"
         "#process .entry span{font-size:.72rem;color:var(--muted);}"
-        "#process .loop .loopname{display:block;font-size:.82rem;font-weight:700;"
-        "color:var(--text);margin:.35rem 0 .1rem;}"
-        "#process ol.pflow.loop{align-items:center;}"
-        '#process .pflow.loop::after{content:"↺ back to the entry";'
-        "align-self:center;font-size:.72rem;color:var(--accent);font-weight:700;"
-        "margin-left:1rem;white-space:nowrap;}"
+        "#process .loop{grid-column:2;position:relative;border:2px solid var(--accent);"
+        "border-left-width:3px;border-radius:999px;padding:1.45rem 2rem 1.2rem 3rem;"
+        "margin-left:-1rem;min-height:10.5rem;}"
+        "#process .loop-a{grid-row:1;}#process .loop-b{grid-row:2;}"
+        '#process .loop::after{content:"";position:absolute;left:-.45rem;top:50%;'
+        "width:.72rem;height:.72rem;border-top:3px solid var(--accent);"
+        "border-right:3px solid var(--accent);transform:translateY(-50%) rotate(-135deg);"
+        "background:var(--bg);}"
+        "#process .loop .loopname{position:absolute;left:3rem;top:.3rem;"
+        "font-size:.82rem;font-weight:700;color:var(--accent);}"
+        "#process ol.pflow.loop{display:grid;grid-template-columns:repeat(3,minmax(7rem,1fr));"
+        "grid-template-rows:repeat(2,auto);gap:.65rem 1rem;margin:0;align-items:center;}"
+        "#process .pflow.loop li{max-width:none;margin-left:0;}"
+        "#process .pflow.loop li+li::before{display:none;}"
+        "#process .pflow.loop li:nth-child(1){grid-column:1;grid-row:1;}"
+        "#process .pflow.loop li:nth-child(2){grid-column:2;grid-row:1;}"
+        "#process .pflow.loop li:nth-child(3){grid-column:3;grid-row:1;}"
+        "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}"
+        "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}"
+        "#process .loop-b .pflow.loop li:nth-child(2){grid-column:3;}"
+        "#process .loop-b .pflow.loop li:nth-child(3){grid-column:3;grid-row:2;}"
+        "#process .loop-b .pflow.loop li:nth-child(4){grid-column:1;grid-row:2;}"
         "#process .pflow.loop a{color:inherit;}"
+        "@media(max-width:760px){#process .loops{grid-template-columns:1fr;"
+        "grid-template-rows:auto;}#process .entry{grid-column:1;grid-row:1;"
+        "justify-self:center;max-width:none;}#process .loop{grid-column:1;"
+        "margin:-.65rem 0 0;padding:2.2rem 1rem 1rem;border-radius:28px;}"
+        "#process .loop-a{grid-row:2}#process .loop-b{grid-row:3}"
+        "#process ol.pflow.loop{grid-template-columns:1fr;}"
+        "#process .pflow.loop li:nth-child(n){grid-column:1;grid-row:auto;}"
+        "#process .loop::after{left:50%;top:-.4rem;transform:translateX(-50%) rotate(-45deg);}}"
         "</style>"
     )
     panel = (

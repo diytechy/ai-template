@@ -6444,3 +6444,23 @@ it spine-touching; no declared route was downgraded.
 warning/hint classes only); unfiltered suite **748 passed, 34 skipped in
 76.78s**. **Handoff:** run-state remains **RUNNING**; `docs/next-wi` →
 **WI-165** (`BuildTier=strong`). Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-165 Process-tab circular loops
+
+Replaced the Process tab's two straight stage rows plus textual return markers
+with responsive closed racetracks. Intake loop A and human-decision loop B now
+meet at the single rendered `LLM_Agent` junction; explicit cycle and per-loop
+degree metadata make the topology regression-testable, while CSS places stages
+on outbound and return sides and preserves a compact single-column layout.
+TC-056 now asserts the closed cycles, shared-node degree, return-side placement,
+canonical links, data-less byte identity, and deterministic generation.
+
+**End green (real output):** focused process-loop suite **4 passed, 75
+deselected in 0.95s**; unfiltered suite **749 passed, 34 skipped in 79.28s**.
+Commit-bar smoke and `check_docs --stale` are recorded in the commit that follows
+this entry. The in-app browser connection was unavailable, so no live visual
+critique was claimed; this is the only deviation from the intended visual QA,
+covered structurally by the hardened TC-056 tests. No byte-budgeted file changed
+and no spine state changed. **Handoff:** run-state remains **RUNNING**;
+`docs/next-wi` → **WI-167** (`BuildTier=medium`). Not pushed
+(`docs/push-policy: human`).

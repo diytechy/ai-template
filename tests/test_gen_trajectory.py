@@ -1367,8 +1367,11 @@ def test_process_tab_renders_intake_and_decision_loops(tmp_path):
     # the gate-ratification stage sits in loop B, after the loop-B heading
     b_start = loops.index("B · Human-decision loop")
     assert loops.index("gate-ratification table") > b_start
-    # both loops advertise their circular return (the ↺ marker via CSS class)
+    # Both loops are explicitly closed cycles, not straight rows with a return label.
     assert loops.count('class="pflow loop"') == 2
+    assert loops.count('data-cycle="closed"') == 2
+    assert 'class="loop loop-a"' in loops
+    assert 'class="loop loop-b"' in loops
     # still fully offline
     low = text.lower()
     assert "http://" not in low and "https://" not in low
@@ -1381,10 +1384,26 @@ def test_process_loops_share_one_llm_agent_entry(tmp_path):
     assert gen(tmp_path).returncode == 0
     loops = _loops_div(html_of(tmp_path))
     assert loops.count("<b>LLM_Agent</b>") == 1
+    assert 'data-loop-a-degree="2"' in loops
+    assert 'data-loop-b-degree="2"' in loops
     # the entry node precedes both loop panels (a shared head, not per-loop)
-    entry_at = loops.index('<div class="entry">')
+    entry_at = loops.index('<div class="entry"')
     assert entry_at < loops.index("A · Intake loop")
     assert entry_at < loops.index("B · Human-decision loop")
+
+
+def test_process_loop_layout_is_a_shared_circular_junction(tmp_path):
+    # WI-165: the CSS draws two closed racetracks that meet at the one shared
+    # LLM_Agent junction; loop stages occupy both the outbound and return sides.
+    with_gate(tmp_path, "G2")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert "#process .loops{display:grid" in text
+    assert "grid-row:1/3" in text
+    assert "border-radius:999px" in text
+    assert "#process .loop::after" in text
+    assert "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}" in text
+    assert "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}" in text
 
 
 def test_process_loop_stage_links_resolve():

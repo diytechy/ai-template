@@ -54,10 +54,9 @@ home elsewhere — don't restate it here:
       of medium-BUILD evidence.
 - **v3 dashboard-ux campaign — COMPLETE** (owner intake 2026-07-13). All slices
   shipped; the closing UI-quality slice (SR-052/053/054 Critique) passed the
-  owner's manual critique 2026-07-15 and the spine rejoined G3. A follow-up render
-  slice (**WI-165**, Process-tab circular loops) is now unblocked, and **WI-159**
-  (Knowledge-tab density) stays deferred — both future graphic-breakdown
-  iterations the owner flagged._
+  owner's manual critique 2026-07-15 and the spine rejoined G3. **WI-159**
+  (Knowledge-tab density) stays deferred as the remaining graphic-breakdown
+  iteration the owner flagged._
 - **Queued (research-knowledge campaign, OI-9 §8** —
   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
   2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
@@ -78,8 +77,7 @@ home elsewhere — don't restate it here:
   dial turn, Decisions log; its per-phase preference follow-up is complete):_
   **WI-164**
   (optimization-methodology research — joins the research-knowledge campaign
-  behind WI-152) · **WI-165** (Process-tab circular loops, SR-055 — **now
-  unblocked**, the v3 campaign closed). Codex **Sol builds are now live** (`codex` on PATH + logged in
+  behind WI-152). Codex **Sol builds are now live** (`codex` on PATH + logged in
   2026-07-15)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
@@ -91,11 +89,10 @@ home elsewhere — don't restate it here:
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** **the loop resumes under `autonomous`** — the v3 campaign
   closed (spine at G3), so the DAG-actionable off-spine backlog continues:
-  **WI-165** (Process circular loops) →
   **WI-167** (tripwire path coverage — filed by the 076 design-check, which
   ruled GRIND-THROUGH on the last review round's tripwire page,
   [reviews/076-DESIGN-CHECK.md](reviews/076-DESIGN-CHECK.md));
-  `docs/next-wi` is pointed at **WI-165** (`BuildTier=strong`).
+  `docs/next-wi` is pointed at **WI-167** (`BuildTier=medium`).
   The `docs/pause` hold is lifted at this close. **After the backlog the loop
   flows into the research-knowledge campaign** (WI-152…157 + WI-164)
   automatically — the owner greenlit it 2026-07-15; only the deferred
