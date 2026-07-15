@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 091
+# date: 2026-07-15 04:19
+# phase: DESIGN-CHECK
+# wi: WI-170
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: ed3cea9..cef63a1
+# tokens: 
+# cost-usd: 
+# wall-secs: 799
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1858
+# exit-code: 0
+# ---
+Reading additional input from stdin...
+OpenAI Codex v0.144.4
+--------
+workdir: C:\Projects\ai-template
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019f6506-625e-7090-9bad-f34816b30876
+--------
+user
+You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. When filing or triaging a WI, assign BuildTier deliberately: quick for mechanical/off-spine work, medium by default, strong only for design-shaping or spine-touching work; never silently downgrade a declared route mid-loop. Clear the lowest gate level first: do not queue phase development ahead of its open [phase]-[g1|g2] work or Draft SRs unless the owner deliberately orders it. Gates before every commit (the commit bar): python -m pytest -q -n auto -m smoke and python project-trajectory/scripts/check_docs.py --root . --stale - paste the real output; never report a green you didn't produce. Run the FULL suite (python -m pytest -q -n auto, no -m) before claiming a slice/campaign done or at close (session-protocol skill 'End green'). Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, docs/next-wi (the next WI id - or a ';'-joined batch of independent off-spine WIs to execute in order as ONE session with ONE review round, WI-133 - for the coordinator's BuildTier pin), the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first.
+codex
+I’m using the `session-protocol` skill because this is a scoped WI driver session. I’ll first read the repo guide, then the skill and current-state routing before touching any work.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-Content -Raw CLAUDE.md' in C:\Projects\ai-template
+ succeeded in 653ms:
+# CLAUDE.md — Working in this template repo
+
+This repo is a **meta-project**: its product is the reusable kit in
+[`project-trajectory/`](project-trajectory/) that *other* repos copy in to run a
+gated, requirement-traced development process. So work here improves templates
+and scripts, not a downstream application.
+
+> Looking for the agent guide that ships **to** new projects? That's
+> [`project-trajectory/AGENTS.template.md`](project-trajectory/AGENTS.template.md)
+> (scaffolds to `AGENTS.md`, with thin `CLAUDE.md`/`GEMINI.md` stubs pointing at
+> it). Don't confuse the two: this file governs editing the kit; that one governs
+> using the kit.
+
+> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
+> holds the human owner's free-form notes; the working surfaces are
+> `docs/status.md`, the registries, and `docs/log.md`.
+
+---
+
+## What we're optimizing for
+
+The canonical purpose statement is the `PROJECT-VISION:` tag opening the root
+[README.md](README.md) — the same one-home pattern the kit ships downstream.
+In short: the kit exists to make downstream code **maintainable and
+trustworthy** — readable for humans and agents alike, deeply tested, and
+advanced only through explicit approval gates. Every change here should make
+that easier to achieve in a real project — or get out of the way.
+
+## Principles for editing the kit
+
+- **Dogfood the philosophy.** The templates preach single-source-of-truth,
+  decompose-don't-paraphrase, and generated-not-hand-maintained. Hold the kit to
+  the same bar: don't restate a rule in five files — state it in
+  [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
+- **Keep scripts stdlib-only and cross-platform.** The kit's own scripts
+  (`trace.py`, `check.py`, `gen_arch_map.py`, `bootstrap.py`) must run on a clean
+  Python 3.8+ with no pip installs, on Windows and POSIX. Tools a *downstream*
+  project needs (ruff, pytest) are theirs to install; the kit must not require
+  them to run its own checks.
+- **Stack-agnostic core, Python-first reference.** The process and ID scheme are
+  language-neutral; concrete harness commands are Python examples clearly marked
+
+[... 24906 line(s) elided — full stream in out/run-logs/ ...]
+
++    repo, ctl, cmd = managed_repo
++    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
++    (repo / "docs" / "next-wi").write_text("WI-OLD\n", encoding="utf-8")
++    (ctl / "advance_next_wi").write_text("WI-NEW\n", encoding="utf-8")
++    (ctl / "verdict_body.txt").write_text(
++        "- [MAJOR] work.txt:1 -> broken -> fix -> @owner\n"
++        "VERDICT: CHANGES-REQUESTED findings=1\n",
++        encoding="utf-8",
++    )
++    first = _loop(repo, cmd, "--max-iterations", "2")
++    assert first.returncode == 6, first.stdout + first.stderr
++    assert (repo / "docs" / "next-wi").read_text(encoding="utf-8").strip() == "WI-NEW"
++    assert (repo / "docs" / "rework-wi").read_text(encoding="utf-8").strip() == "WI-OLD"
++
++    (ctl / "verdict_body.txt").write_text(
++        "VERDICT: APPROVE findings=0\n", encoding="utf-8"
++    )
++    second = _loop(repo, cmd, "--max-iterations", "2")
++    assert second.returncode == 6, second.stdout + second.stderr
++    prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
++    assert "REWORK OVERRIDE: docs/rework-wi names WI-OLD" in prompts
++    assert not (repo / "docs" / "rework-wi").exists()
++    assert (repo / "docs" / "next-wi").read_text(encoding="utf-8").strip() == "WI-NEW"
++
++
+ def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
+     # No agents-enabled -> routing off -> the base --agent-cmd runs and NO review
+     # is scheduled (the never-breaking guarantee; managed banner absent).
+
+codex
+Implemented and committed WI-170 as `cef63a1`.
+
+- CHANGES-REQUESTED reviews now persist `docs/rework-wi`, overriding an advanced `docs/next-wi`.
+- The override survives restarts and clears only after that scope is approved.
+- Added end-to-end regression coverage and documented the contract.
+- WI-170 marked done; next action is WI-152.
+- `run-phase=BUILD`, `run-state=RUNNING`.
+- Working tree clean; branch ahead 58. Not pushed.
+
+Verification:
+
+- Full: `751 passed, 34 skipped`
+- Smoke: `625 passed, 2 skipped`
+- Docs: `98 docs, 416 links, 0 broken`
+- Managed-review module: `24 passed`
+diff --git a/.agents/skills/byte-budget-guard/SKILL.md b/.agents/skills/byte-budget-guard/SKILL.md
+index d61432ca72ba2f4e2d3e17ea52ccbc58505493ab..df6520df2da8e4e88885c346e67f3eb31169af46
+--- a/.agents/skills/byte-budget-guard/SKILL.md
++++ b/.agents/skills/byte-budget-guard/SKILL.md
+@@ -23,7 +23,7 @@
+ |---|---|---|
+ | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
+ | `project-trajectory/PROCESS.md` | **watched** (baseline **59,827** as of 2026-07-13/WI-101; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
+-| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **138,370** as of 2026-07-15/WI-163; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
++| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **139,038** as of 2026-07-15/WI-170; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+ 
+ `ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
+ push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
+diff --git a/.claude/skills/byte-budget-guard/SKILL.md b/.claude/skills/byte-budget-guard/SKILL.md
+index d61432ca72ba2f4e2d3e17ea52ccbc58505493ab..df6520df2da8e4e88885c346e67f3eb31169af46
+--- a/.claude/skills/byte-budget-guard/SKILL.md
++++ b/.claude/skills/byte-budget-guard/SKILL.md
+@@ -23,7 +23,7 @@
+ |---|---|---|
+ | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
+ | `project-trajectory/PROCESS.md` | **watched** (baseline **59,827** as of 2026-07-13/WI-101; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
+-| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **138,370** as of 2026-07-15/WI-163; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
++| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **139,038** as of 2026-07-15/WI-170; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+ 
+ `ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
+ push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
+diff --git a/docs/log.md b/docs/log.md
+index de543624fd1f1729a7e23ffd396a1be987f799df..b7ea57ac817bbd3e3295333cdce797c9f940aa2b
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -6596,3 +6596,36 @@
+ **Handoff:** run-state remains **RUNNING**; `docs/next-wi` → **WI-170**
+ (`BuildTier=medium`, the mechanism fix that closes the orphaned-rework gap).
+ Not pushed (`docs/push-policy: human`).
++
++## 2026-07-15 — WI-170 (review rework carry-forward, BUILD, medium): requested changes cannot fall behind the backlog pointer
++
++**Scope ([reviews/085-DESIGN-CHECK.md](reviews/085-DESIGN-CHECK.md)).** Closed
++the twice-observed orphaning gap where a reviewed BUILD had already advanced
++`docs/next-wi`, then CHANGES-REQUESTED merely reset `run-phase=BUILD` and the
++next driver silently built the new WI. Managed review dispatch now writes the
++reviewed scope to coordinator-owned `docs/rework-wi`; that durable pointer
++outranks `docs/next-wi` for the BUILD prompt, telemetry WI label, and BuildTier
++lookup. It is committed immediately as coordinator telemetry, persists through
++repeated review rounds and restarts, and clears in its own telemetry commit only
++when APPROVE names the same scope. The advanced backlog pointer remains intact.
++PROCESS_OPTIONS is the single-home contract.
++
++**Tests / deviations / residue.** The new end-to-end regression makes WI-OLD
++advance `next-wi` to WI-NEW before its review requests changes, proves the
++second BUILD is explicitly re-scoped to WI-OLD, then proves APPROVE clears the
++override and leaves WI-NEW ready. Full managed-review module: **24 passed in
++44.79s**. No deviation from the design-check ruling. Preserved legitimate
++coordinator residue: [reviews/090-REVIEW-A.md](reviews/090-REVIEW-A.md) is the
++zero-finding APPROVE for WI-167, and `run-phase` returns its expected tripwire
++DESIGN-CHECK residue to BUILD. Byte deltas: `AGENTS.template.md` **9978 → 9978**
++(untouched, 22 B headroom); `PROCESS.md` **59827 → 59827** (unchanged);
++`PROCESS_OPTIONS.md` **138370 → 139038** (**+668 B**, the new durable-pointer
++contract; baseline re-stamped in all three byte-budget skill copies).
++
++**End green (real output).** Full unfiltered suite: **751 passed, 34 skipped in
++81.08s**. Commit bar: `pytest -q -n auto -m smoke` → **625 passed, 2 skipped
++in 62.49s**; `check_docs.py --root . --stale` → **OK, 98 docs, 416 links, 0
++broken** (40 historical orphan warnings plus pre-existing stale hints).
++`PROJECT_STATE.html` regenerated for WI-170 → done. **Handoff:** run-state remains **RUNNING**;
++`docs/next-wi` → **WI-152**, the first research-knowledge campaign slice (no
++BuildTier pin, so phase default). Not pushed (`docs/push-policy: human`).
+diff --git a/docs/next-wi b/docs/next-wi
+index a30215235adea32bd87b26b32205861ffab72f64..dd48cf2aae2d67d9e7814a6e6ec144be9e0f6742
+--- a/docs/next-wi
++++ b/docs/next-wi
+@@ -7,28 +7,11 @@
+ # — one session, one review round, strongest-member pin (WI-133); an
+ # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
+ # The DRIVER maintains this alongside docs/status.md Next action.
+-# NOTE (2026-07-15, 085-DESIGN-CHECK): review round 33 (084-REVIEW-A of WI-165,
+-# CHANGES-REQUESTED strong) hit the page_top_tier_fails=2 threshold together
+-# with round 31 (080-REVIEW-A of WI-166, CHANGES-REQUESTED strong); gate-policy
+-# autonomous routed the page to a cross-family strong design-check, which ruled
+-# GRIND-THROUGH (docs/reviews/085-DESIGN-CHECK.md): two independent mechanical
+-# implementation defects, no shared spec failure, no redesign. The trace found
+-# BOTH rounds' findings had been ORPHANED (WI-166 sits done with 080's BLOCKER
+-# unfixed; next-wi had already advanced past WI-165's rework), so remediation
+-# rows were filed per the WI-139/WI-140 idiom and jump the backlog:
+-# NEXT ORDER: WI-168 DONE (080 rework - dev-setup.template.cmd -Install no-op;
+-# medium) -> WI-169 DONE (084 rework - div.loop CSS scoping + TC-056; strong) ->
+-# WI-167 DONE (tripwire path coverage - REVIEW_POLICY_PATHS now lists the
+-# project-trajectory/scripts/ referee paths; medium) -> WI-170 (mechanize
+-# CHANGES-REQUESTED rework carry-forward; medium).
+-# No batching: each remediation gets its own review round. Note (076-DESIGN-CHECK):
+-# WI-167's own commit touches a now-listed path, so its review round fires the
+-# implementer-touched-review tripwire once - expected, by design.
+-# THEN (owner GREENLIT 2026-07-15): flow straight into the research-knowledge
+-# campaign WI-152..157 + WI-164 — no stop between it and the backlog; the DAG
+-# edges sequence it (WI-152 first, predecessor WI-145 done). Only the deferred
+-# main-decomposition (WI-080->WI-081) stays parked — do not auto-start it.
++# WI-170 closed the 085-DESIGN-CHECK remediation backlog. The owner-greenlit
++# research-knowledge campaign now starts at WI-152 and proceeds by its DAG
++# through WI-153..157 + WI-164. Only the deferred main-decomposition
++# (WI-080->WI-081) stays parked — do not auto-start it.
+ # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
+ # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to
+ # Fable); per-WI BuildTier pins above still apply.
+-WI-170
++WI-152
+diff --git a/docs/requirements/work-items.csv b/docs/requirements/work-items.csv
+index 905050b0e3c1b949ca25ad7d2b5fa6a660af6a38..8fa5fb5719785bddfcff3e535f4bceaafffbb6fb
+--- a/docs/requirements/work-items.csv
++++ b/docs/requirements/work-items.csv
+@@ -168,4 +168,4 @@
+ WI-167,Tripwire path coverage - REVIEW_POLICY_PATHS misses the meta-repo kit-script layout (project-trajectory/scripts/),unattended,,WI-059,done,"Extended REVIEW_POLICY_PATHS with the project-trajectory/scripts/ variants of score_reviews.py + agent_route.py (kept the downstream scripts/ entries) so the implementer-touched-review tripwire fires when an implementer edits a routing referee in this meta-repo's own kit-script home, not only the downstream scaffolded layout; regression test covers both layouts, Windows separators, and a non-referee sibling negative. Expected by-design side effect (076-DESIGN-CHECK): this commit touches a now-listed path, so its own review round fires the tripwire once.",docs/reviews/076-DESIGN-CHECK.md,,medium
+ WI-168,Review 080 remediation - dev-setup.template.cmd consented install is a silent no-op (swap -Install for -Baseline; flip the shape-test token; fix the bootstrap MAPPING docstring),scripts,SR-032,WI-166,done,"Swapped -Install -> -Baseline across dev-setup.template.cmd (install invocation line 31, later-hint line 33, the two comments, and the [y/N] prompt wording); rewrote test_scaffold_ships_devsetup_cmd to cross-check every switch the shim hands the ps1 against the scaffolded ps1's param() block instead of pinning a literal; appended cmd to the bootstrap MAPPING docstring inventory.",docs/reviews/080-REVIEW-A.md,,medium
+ WI-169,Review 084 remediation - scope the Process-tab loop box/arrow CSS to the wrapper div.loop (kill the nested double racetrack) + de-tautologize the TC-056 degree assertion,dashboard,SR-055,WI-165,done,"Scoped the default and responsive racetrack/return-arrow CSS to wrapper div.loop elements so nested ol.loop stage lists cannot draw a second track; removed self-declared degree attributes; hardened TC-056 and its tests around the actual shared-entry grid span and wrapper-only border/arrow structure; regenerated OKF and trajectory outputs.",docs/reviews/084-REVIEW-A.md,,strong
+-WI-170,CHANGES-REQUESTED rework routing - carry review findings into the next BUILD scope (a rework pointer outranking docs/next-wi) so remediation never depends on a driver noticing dangling verdicts,unattended,,WI-059,queued,,docs/reviews/085-DESIGN-CHECK.md,,medium
++WI-170,CHANGES-REQUESTED rework routing - carry review findings into the next BUILD scope (a rework pointer outranking docs/next-wi) so remediation never depends on a driver noticing dangling verdicts,unattended,,WI-059,done,"Managed review dispatch now writes a coordinator-owned docs/rework-wi pointer on CHANGES-REQUESTED. It overrides docs/next-wi for the next BUILD prompt, telemetry WI label, and BuildTier lookup; survives repeated review rounds and coordinator restarts in its own telemetry commit; and clears only when that same scope receives APPROVE, leaving the advanced backlog pointer intact. PROCESS_OPTIONS is the single-home contract. Regression test advances next-wi before a requested-change verdict, proves WI-OLD remains the rework scope, then proves APPROVE clears the override and resumes WI-NEW.",docs/reviews/085-DESIGN-CHECK.md,,medium
+diff --git a/docs/run-phase b/docs/run-phase
+index c8fbf1a00ddffe9e0764bebb3a2655c0ce7bbd8f..89620f31052a2d00ffae6e76013d2e3bfc891452
+--- a/docs/run-phase
++++ b/docs/run-phase
+@@ -1 +1 @@
+-DESIGN-CHECK
++BUILD
+diff --git a/docs/status.md b/docs/status.md
+index cb07047e21d7e18bb4c90a28a5db2c86770660db..d9d3f0de77e57074d6577a856effb03175274a51
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -65,8 +65,7 @@
+   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
+   domains filter); **WI-158** deferred (OKF pack export). The owner **greenlit**
+   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
+-  no stop in between; the DAG sequences it (WI-152 first, its ratification-sitting
+-  predecessor already done)._
++  no stop in between; the DAG sequences it from WI-152._
+ - **Queued (owner intake 2026-07-14** — triage + answers:
+   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
+   All owner-intake WIs are complete — the loop worked them in id order after the
+@@ -87,23 +86,14 @@
+   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+-- **Next action:** **the loop resumes under `autonomous`** — the 085
+-  design-check ([reviews/085-DESIGN-CHECK.md](reviews/085-DESIGN-CHECK.md))
+-  ruled **GRIND-THROUGH** on the top-tier shared-failure page (review rounds 31
+-  + 33 both CHANGES-REQUESTED at strong) and found both rounds' findings had
+-  been **orphaned**, so four remediation rows jump the backlog. Three have now
+-  shipped (session log): the `dev-setup.template.cmd` `-Install`→`-Baseline`
+-  fix, the Process-tab loop CSS + TC-056 remediation, and the tripwire
+-  path-coverage fix (`REVIEW_POLICY_PATHS` now also lists the
+-  `project-trajectory/scripts/` referee paths, so the implementer-touched-review
+-  wire fires on this meta-repo's own kit-script layout). The order continues:
+-  **WI-170** (mechanize CHANGES-REQUESTED rework carry-forward — the orphaning
+-  gap itself; `medium`); `docs/next-wi` is pointed at **WI-170**. Expected
+-  by-design side effect (076-DESIGN-CHECK): the tripwire-coverage commit touches
+-  a now-listed path, so its own review round fires the tripwire once.
+-  **After the backlog the loop flows into the research-knowledge campaign**
+-  (WI-152…157 + WI-164) automatically — the owner greenlit it 2026-07-15; only
+-  the deferred `main-decomposition` (WI-080→WI-081) stays parked. Codex Sol
++- **Next action:** **WI-152** (knowledge home + bootstrap scaffold wiring), the
++  first open row in the owner-greenlit research-knowledge campaign;
++  `docs/next-wi` points at WI-152. The remediation backlog from
++  085-DESIGN-CHECK is complete, including the durable `docs/rework-wi`
++  carry-forward that prevents a CHANGES-REQUESTED
++  review from being orphaned when the reviewed build already advanced
++  `docs/next-wi`. The DAG then sequences WI-153…157 + WI-164 automatically.
++  Only deferred main-decomposition (WI-080→WI-081) stays parked. Codex Sol
+   builds are live. Round-by-round evidence → [log.md](log.md), not here.
+ 
+ ## Scope
+diff --git a/project-trajectory/PROCESS_OPTIONS.md b/project-trajectory/PROCESS_OPTIONS.md
+index 33fe4d0b553009326b1d681254b6b0f82576c26d..9876e532bf55b4af053c226165fe03b05e845df3
+--- a/project-trajectory/PROCESS_OPTIONS.md
++++ b/project-trajectory/PROCESS_OPTIONS.md
+@@ -773,6 +773,15 @@
+   of the original proposal is deliberately **not** a column: a WI whose `SpecRef`
+   points at a filled spec already *is* plan-ready (the anti-duplication rule), and
+   PLAN is bounce-only, so the coordinator never needs a parallel boolean.
++  **Review rework carry-forward (WI-170).** When a managed review merges to
++  `CHANGES-REQUESTED`, the coordinator records the reviewed BUILD scope in
++  `docs/rework-wi`. That coordinator-owned pointer outranks `docs/next-wi` for
++  the next BUILD's prompt, telemetry label, and BuildTier lookup, so a build
++  that already advanced the backlog cannot orphan its findings. It remains
++  durable through further review rounds and coordinator restarts; only an
++  `APPROVE` of that same scope clears it. `docs/next-wi` is left intact, ready
++  for the backlog to resume after the rework approves. Absent `rework-wi`,
++  routing is byte-identical to the per-WI behavior above.
+ - **Reviewer independence (the evidence-backed core).** Reviewers are fresh
+   sessions, **two families, at least one differing from the implementer's —
+   *preferred, not required*** (family = who trained the model, so a router-fronted
+diff --git a/project-trajectory/scripts/agent_loop.py b/project-trajectory/scripts/agent_loop.py
+index c2d2233cfaaf1b8c577150283323bb89a1fe0372..bfa663eec865971a6ef57449506d8bb1a0f07642
+--- a/project-trajectory/scripts/agent_loop.py
++++ b/project-trajectory/scripts/agent_loop.py
+@@ -2103,6 +2103,7 @@
+     round_verdicts = []  # (phase, Verdict, provider, model_id) collected this round
+     rounds = []  # accumulated round dicts the escalation policy reads
+     last_impl_family = None  # the FAMILY of the build under review (heterogeneity key)
++    last_impl_wi = ""  # durable rework scope if that build's review requests changes
+     last_impl_tier = "medium"  # the tier that build ran at
+     impl_range = None  # the build's commit range (for the tripwire diff)
+     swapped = False  # an implementer-family swap has been applied
+@@ -2198,7 +2199,9 @@
+         # since a BUILD that closes its WI rewrites docs/next-wi to the next one;
+         # recorded as a `# wi:` header line + an index column. A `;`-batch value
+         # (WI-133) is kept verbatim; empty when docs/next-wi is absent.
+-        wi_label = read_declared(lane / "next-wi", "")
++        queued_wi = read_declared(lane / "next-wi", "")
++        rework_wi = read_declared(lane / "rework-wi", "")
++        wi_label = rework_wi or queued_wi
+         before = head_sha(root)
+         now = time.time()
+         is_review = False
+@@ -2244,8 +2247,9 @@
+                 # escalation override below still wins after it (tier-up-never-
+                 # down), so a pin never caps escalation. A bad pin logs loud and
+                 # falls back to the phase default (never fatal, never silent).
++                scope_pointer = lane / ("rework-wi" if rework_wi else "next-wi")
+                 pinned, pin_note = build_tier_pin(
+-                    lane / "next-wi", docs / "requirements" / "work-items.csv"
++                    scope_pointer, docs / "requirements" / "work-items.csv"
+                 )
+                 if pin_note:
+                     print("route [{}]: {}".format(phase or "—", pin_note))
+@@ -2326,6 +2330,12 @@
+             else:
+                 body = None
+             prompt, guarded = session_prompt(model, body=body)
++            if rework_wi and not is_review and not is_critique and phase in ("", "BUILD"):
++                prompt = (
++                    "REWORK OVERRIDE: docs/rework-wi names {}. Rework that reviewed "
++                    "scope and its recorded findings before docs/next-wi; do not advance "
++                    "the backlog pointer.\n\n---\n\n{}".format(rework_wi, prompt)
++                )
+         else:
+             phase, model = session_model()
+             tmpl = session_template(phase)
+@@ -2586,6 +2596,30 @@
+                     "escalate: {} — {}".format(decision["action"], decision["reason"])
+                 )
+                 round_verdicts = []
++                if merged == "CHANGES-REQUESTED" and last_impl_wi:
++                    rework_path = lane / "rework-wi"
++                    rework_path.write_text(last_impl_wi + "\n", encoding="utf-8")
++                    commit_telemetry(root, session, "review rework scope", [rework_path])
++                    print(
++                        "dispatch: CHANGES-REQUESTED -> rework override {} "
++                        "outranks docs/next-wi".format(last_impl_wi)
++                    )
++                elif merged == "APPROVE":
++                    rework_path = lane / "rework-wi"
++                    if (
++                        last_impl_wi
++                        and rework_path.exists()
++                        and read_declared(rework_path, "") == last_impl_wi
++                    ):
++                        rework_path.unlink()
++                        commit_telemetry(
++                            root, session, "review rework scope cleared", [rework_path]
++                        )
++                        print(
++                            "dispatch: APPROVE -> cleared rework override {}".format(
++                                last_impl_wi
++                            )
++                        )
+                 if decision["action"] == "page-human":
+                     fa = agent_route.failure_action(gate_policy)
+                     print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
+@@ -2711,6 +2745,7 @@
+                 )
+             elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
+                 last_impl_family = route_family
++                last_impl_wi = wi_label
+                 impl_range = commits
+                 # The review round follows the reviewer dial (S8).
+                 if rp_int >= 1:
+diff --git a/project-trajectory/skills/byte-budget-guard/SKILL.md b/project-trajectory/skills/byte-budget-guard/SKILL.md
+index d61432ca72ba2f4e2d3e17ea52ccbc58505493ab..df6520df2da8e4e88885c346e67f3eb31169af46
+--- a/project-trajectory/skills/byte-budget-guard/SKILL.md
++++ b/project-trajectory/skills/byte-budget-guard/SKILL.md
+@@ -23,7 +23,7 @@
+ |---|---|---|
+ | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
+ | `project-trajectory/PROCESS.md` | **watched** (baseline **59,827** as of 2026-07-13/WI-101; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
+-| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **138,370** as of 2026-07-15/WI-163; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
++| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **139,038** as of 2026-07-15/WI-170; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+ 
+ `ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
+ push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
+diff --git a/tests/test_agent_loop_review.py b/tests/test_agent_loop_review.py
+index ff6622a584132b8ed36d1b6017a66fb5d813be34..b7d02ee8b154f360ee49f186639ed4d977279f00
+--- a/tests/test_agent_loop_review.py
++++ b/tests/test_agent_loop_review.py
+@@ -66,6 +66,12 @@
+     with open(str(cf), "a", encoding="utf-8") as fh:
+         fh.write("b\n")
+     pathlib.Path("work.txt").write_text("build progress " + str(n), encoding="utf-8")
++    advance = ctl / "advance_next_wi"
++    if advance.exists():
++        pathlib.Path("docs/next-wi").write_text(
++            advance.read_text(encoding="utf-8"), encoding="utf-8"
++        )
++        subprocess.run(["git", "add", "docs/next-wi"], check=True)
+     commit("work.txt", "build progress " + str(n))
+     done_after = (
+         int((ctl / "done_after").read_text(encoding="utf-8"))
+@@ -324,6 +330,32 @@
+     assert state[1].startswith("ask: review escalation")  # WI-127 ask line
+ 
+ 
++def test_changes_requested_rework_scope_outranks_advanced_next_wi(managed_repo):
++    repo, ctl, cmd = managed_repo
++    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
++    (repo / "docs" / "next-wi").write_text("WI-OLD\n", encoding="utf-8")
++    (ctl / "advance_next_wi").write_text("WI-NEW\n", encoding="utf-8")
++    (ctl / "verdict_body.txt").write_text(
++        "- [MAJOR] work.txt:1 -> broken -> fix -> @owner\n"
++        "VERDICT: CHANGES-REQUESTED findings=1\n",
++        encoding="utf-8",
++    )
++    first = _loop(repo, cmd, "--max-iterations", "2")
++    assert first.returncode == 6, first.stdout + first.stderr
++    assert (repo / "docs" / "next-wi").read_text(encoding="utf-8").strip() == "WI-NEW"
++    assert (repo / "docs" / "rework-wi").read_text(encoding="utf-8").strip() == "WI-OLD"
++
++    (ctl / "verdict_body.txt").write_text(
++        "VERDICT: APPROVE findings=0\n", encoding="utf-8"
++    )
++    second = _loop(repo, cmd, "--max-iterations", "2")
++    assert second.returncode == 6, second.stdout + second.stderr
++    prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
++    assert "REWORK OVERRIDE: docs/rework-wi names WI-OLD" in prompts
++    assert not (repo / "docs" / "rework-wi").exists()
++    assert (repo / "docs" / "next-wi").read_text(encoding="utf-8").strip() == "WI-NEW"
++
++
+ def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
+     # No agents-enabled -> routing off -> the base --agent-cmd runs and NO review
+     # is scheduled (the never-breaking guarantee; managed banner absent).
+
+tokens used
+139,523
+Implemented and committed WI-170 as `cef63a1`.
+
+- CHANGES-REQUESTED reviews now persist `docs/rework-wi`, overriding an advanced `docs/next-wi`.
+- The override survives restarts and clears only after that scope is approved.
+- Added end-to-end regression coverage and documented the contract.
+- WI-170 marked done; next action is WI-152.
+- `run-phase=BUILD`, `run-state=RUNNING`.
+- Working tree clean; branch ahead 58. Not pushed.
+
+Verification:
+
+- Full: `751 passed, 34 skipped`
+- Smoke: `625 passed, 2 skipped`
+- Docs: `98 docs, 416 links, 0 broken`
+- Managed-review module: `24 passed`
