@@ -91,13 +91,16 @@ home elsewhere — don't restate it here:
   design-check ([reviews/085-DESIGN-CHECK.md](reviews/085-DESIGN-CHECK.md))
   ruled **GRIND-THROUGH** on the top-tier shared-failure page (review rounds 31
   + 33 both CHANGES-REQUESTED at strong) and found both rounds' findings had
-  been **orphaned**, so four remediation rows jump the backlog. The first (the
-  `dev-setup.template.cmd` `-Install`→`-Baseline` fix) shipped and its review
-  round approved; the subsequent Process-tab loop CSS + TC-056 remediation
-  also shipped (session log). The order continues:
-  **WI-167** (tripwire path coverage; `medium`) → **WI-170** (mechanize
-  CHANGES-REQUESTED rework carry-forward — the orphaning gap itself; `medium`);
-  `docs/next-wi` is pointed at **WI-167**.
+  been **orphaned**, so four remediation rows jump the backlog. Three have now
+  shipped (session log): the `dev-setup.template.cmd` `-Install`→`-Baseline`
+  fix, the Process-tab loop CSS + TC-056 remediation, and the tripwire
+  path-coverage fix (`REVIEW_POLICY_PATHS` now also lists the
+  `project-trajectory/scripts/` referee paths, so the implementer-touched-review
+  wire fires on this meta-repo's own kit-script layout). The order continues:
+  **WI-170** (mechanize CHANGES-REQUESTED rework carry-forward — the orphaning
+  gap itself; `medium`); `docs/next-wi` is pointed at **WI-170**. Expected
+  by-design side effect (076-DESIGN-CHECK): the tripwire-coverage commit touches
+  a now-listed path, so its own review round fires the tripwire once.
   **After the backlog the loop flows into the research-knowledge campaign**
   (WI-152…157 + WI-164) automatically — the owner greenlit it 2026-07-15; only
   the deferred `main-decomposition` (WI-080→WI-081) stays parked. Codex Sol

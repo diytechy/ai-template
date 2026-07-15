@@ -76,7 +76,11 @@ SAME_FAMILY_WEIGHT = 0.5
 ANCHOR_LINE_WINDOW = 10
 # Near-duplicate tripwire: token-Jaccard at or above this = not independent.
 NEAR_DUP_THRESHOLD = 0.8
-# Paths an implementer diff must not touch (editing the referee).
+# Paths an implementer diff must not touch (editing the referee). The two
+# routing-referee scripts are listed twice: the `scripts/` prefix is the
+# downstream scaffolded layout, and `project-trajectory/scripts/` is this
+# meta-repo's own kit-script home — self-adoption needs both, since a prefix
+# match on one never catches the other (WI-167).
 REVIEW_POLICY_PATHS = (
     "docs/reviews/",
     "docs/review-policy",
@@ -84,6 +88,8 @@ REVIEW_POLICY_PATHS = (
     "docs/agents-enabled",
     "scripts/score_reviews.py",
     "scripts/agent_route.py",
+    "project-trajectory/scripts/score_reviews.py",
+    "project-trajectory/scripts/agent_route.py",
 )
 
 

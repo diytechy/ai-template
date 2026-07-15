@@ -133,6 +133,26 @@ def test_tripwire_implementer_touched_review_path():
     assert not score.tripwire_implementer_touched_review(["src/a.py", "docs/x.md"])
 
 
+def test_tripwire_covers_meta_repo_kit_script_layout():
+    # WI-167: the routing referees live at project-trajectory/scripts/ in this
+    # meta-repo, so a downstream-only prefix would miss an implementer editing
+    # the scorer/router here. Both layouts must fire.
+    assert score.tripwire_implementer_touched_review(
+        ["project-trajectory/scripts/score_reviews.py"]
+    )
+    assert score.tripwire_implementer_touched_review(
+        ["project-trajectory/scripts/agent_route.py"]
+    )
+    # Windows-style separators normalise to the same match.
+    assert score.tripwire_implementer_touched_review(
+        ["project-trajectory\\scripts\\agent_route.py"]
+    )
+    # A sibling kit script that is not a routing referee still does not fire.
+    assert not score.tripwire_implementer_touched_review(
+        ["project-trajectory/scripts/trace.py"]
+    )
+
+
 def test_tripwire_mass_rejection():
     assert score.tripwire_mass_rejection(rejected=3, total=4)
     assert not score.tripwire_mass_rejection(rejected=1, total=4)

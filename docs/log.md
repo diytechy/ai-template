@@ -6568,3 +6568,31 @@ skipped in 65.64s**; `check_docs.py --root . --stale` → **OK, 97 docs, 411
 links, 0 broken** (40 historical orphan warnings plus stale hints).
 **Handoff:** run-state remains **RUNNING**; `docs/next-wi` → **WI-167**
 (`BuildTier=medium`). Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-167 (tripwire path coverage, BUILD, medium): the meta-repo's own routing referees are now watched
+
+**Scope ([reviews/076-DESIGN-CHECK.md](reviews/076-DESIGN-CHECK.md), Follow-up
+filed).** `score_reviews.REVIEW_POLICY_PATHS` listed only the *downstream
+scaffolded* referee paths (`scripts/score_reviews.py`,
+`scripts/agent_route.py`), so the `implementer-touched-review-path` tripwire
+never fired when an implementer edited a routing referee in this meta-repo,
+where the kit scripts live at `project-trajectory/scripts/` — a prefix match on
+one layout can't catch the other. Extended the tuple with the two
+`project-trajectory/scripts/` variants, keeping the downstream entries so both
+layouts fire. Added `test_tripwire_covers_meta_repo_kit_script_layout` covering
+both meta paths, Windows-separator normalisation, and a non-referee sibling
+(`trace.py`) negative.
+
+**Deviations / residue.** None to the spec — mechanical tuple extension exactly
+as the design-check sketched. Expected **by-design** side effect it flagged: this
+commit itself touches a now-listed path (`score_reviews.py`), so its own review
+round will fire the tripwire once and route one more design-check — anticipated,
+not a defect. No spine change; off-spine `unattended` workstream. No
+byte-budgeted file changed. Regenerated `PROJECT_STATE.html` (registry status
+edit). Full end-green suite: **781 passed, 3 skipped in 78.91s**. Commit bar:
+`pytest -q -n auto -m smoke` → **624 passed, 2 skipped in 54.25s**;
+`check_docs.py --root . --stale` → **OK, 97 docs, 412 links, 0 broken** (40
+historical orphan warnings plus pre-existing stale hints on unrelated docs).
+**Handoff:** run-state remains **RUNNING**; `docs/next-wi` → **WI-170**
+(`BuildTier=medium`, the mechanism fix that closes the orphaned-rework gap).
+Not pushed (`docs/push-policy: human`).

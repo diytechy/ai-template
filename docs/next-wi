@@ -17,11 +17,13 @@
 # unfixed; next-wi had already advanced past WI-165's rework), so remediation
 # rows were filed per the WI-139/WI-140 idiom and jump the backlog:
 # NEXT ORDER: WI-168 DONE (080 rework - dev-setup.template.cmd -Install no-op;
-# session 2026-07-15, medium) -> WI-169 (084 rework - div.loop CSS scoping +
-# TC-056; strong, WI-165's declared route) -> WI-167 (tripwire path coverage;
-# medium) -> WI-170 (mechanize CHANGES-REQUESTED rework carry-forward; medium).
-# No batching: WI-169 is spine-touching and each remediation gets its own review
-# round. (WI-168 awaits its own review round before it's Verified.)
+# medium) -> WI-169 DONE (084 rework - div.loop CSS scoping + TC-056; strong) ->
+# WI-167 DONE (tripwire path coverage - REVIEW_POLICY_PATHS now lists the
+# project-trajectory/scripts/ referee paths; medium) -> WI-170 (mechanize
+# CHANGES-REQUESTED rework carry-forward; medium).
+# No batching: each remediation gets its own review round. Note (076-DESIGN-CHECK):
+# WI-167's own commit touches a now-listed path, so its review round fires the
+# implementer-touched-review tripwire once - expected, by design.
 # THEN (owner GREENLIT 2026-07-15): flow straight into the research-knowledge
 # campaign WI-152..157 + WI-164 — no stop between it and the backlog; the DAG
 # edges sequence it (WI-152 first, predecessor WI-145 done). Only the deferred
@@ -29,4 +31,4 @@
 # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
 # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to
 # Fable); per-WI BuildTier pins above still apply.
-WI-167
+WI-170
