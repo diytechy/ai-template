@@ -875,10 +875,32 @@ def _scope_srs(scope, srs):
     return [s for s in srs if _cell(s, "Phase").lower() in phases]
 
 
-def ratify_lines(scope, sn_ids, srs, llrs, tcs):
+def _sn_prose(sn_text):
+    """Parse each SN row's prose (Need / Why it matters / Acceptance intent) from
+    stakeholder-needs.md so the ratify view renders the *top* of the chain, not a
+    bare SN id (WI-146 REVIEW-A). Mirrors gen_okf.sn_rows / gen_trajectory._sn_rows
+    field mapping (need=col0, why=col1, acceptance=col3); example `-000` rows are
+    skipped. Change all three together if the SN table columns move."""
+    meta = {}
+    for line in sn_text.splitlines():
+        m = re.match(r"\|\s*(SN-\d+)\s*\|(.*)", line)
+        if not m or m.group(1).endswith("-000"):
+            continue
+        cells = [re.sub(r"\*\*|`", "", c).strip() for c in m.group(2).split("|")]
+        meta[m.group(1)] = {
+            "need": cells[0] if cells else "",
+            "why": cells[1] if len(cells) > 1 else "",
+            "acceptance": cells[3] if len(cells) > 3 else "",
+        }
+    return meta
+
+
+def ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
     """Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the
-    in-scope SRs under their primary (first-listed) stakeholder need, then nests
-    each SR's LLRs and TCs with their prose. Deterministic (sorted), stdlib-only."""
+    in-scope SRs under their primary (first-listed) stakeholder need — rendering
+    that need's own prose (Need/Why/Acceptance from `sn_meta`, WI-146 REVIEW-A) —
+    then nests each SR's LLRs and TCs with their prose. Deterministic, stdlib-only."""
+    sn_meta = sn_meta or {}
     in_scope = _scope_srs(scope, srs)
     scoped_ids = {s["SR-ID"] for s in in_scope}
 
@@ -972,6 +994,14 @@ def ratify_lines(scope, sn_ids, srs, llrs, tcs):
     )
     for sn in ordered:
         lines.append("## {}".format(sn if sn else "(no linked stakeholder need)"))
+        prose = sn_meta.get(sn) if sn else None
+        if prose:
+            if prose.get("need"):
+                lines.append("**Need.** {}".format(prose["need"]))
+            if prose.get("why"):
+                lines.append("**Why it matters.** {}".format(prose["why"]))
+            if prose.get("acceptance"):
+                lines.append("**Acceptance intent.** {}".format(prose["acceptance"]))
         for s in by_sn[sn]:
             extra = [x for x in refs(s.get("SN-Refs")) if x != sn]
             block = sr_block(s)
@@ -1235,6 +1265,7 @@ def main():
 
     sn_ids = set()
     sn_draft = set()
+    sn_meta = {}
     sn_md = docs / "requirements" / "stakeholder-needs.md"
     if sn_md.exists():
         sn_text = sn_md.read_text(encoding="utf-8")
@@ -1242,12 +1273,15 @@ def main():
         # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
         # are unratified (G0) and exempt from the "SN with no SR" child rule below.
         sn_draft = sn_draft_ids(sn_text)
+        sn_meta = _sn_prose(sn_text)
 
     # --ratify is a generator mode, not a checker: emit the batch-scoped
     # ratification hierarchy and exit 0 without running any orphan/integrity pass
     # (WI-146a). It reuses the loaded, example-filtered working sets above.
     if args.ratify is not None:
-        text = "\n".join(ratify_lines(args.ratify, sn_ids, srs, llrs, tcs)) + "\n"
+        text = (
+            "\n".join(ratify_lines(args.ratify, sn_ids, srs, llrs, tcs, sn_meta)) + "\n"
+        )
         if args.out:
             out_path = Path(args.out)
             out_path.parent.mkdir(parents=True, exist_ok=True)

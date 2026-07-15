@@ -5701,3 +5701,50 @@ holds G2 (SN=24 SR=56 LLR=57 TC=57 — no spine change).
 **Handoff — run-state RUNNING; next-wi WI-147.** The owner-intake backlog
 continues in id order (WI-147 graceful pause next). WI-144 stays paused; the
 g2-close sitting is DUE in parallel (OI-12). No spine change → gate basis holds.
+
+## 2026-07-14 — SESSION: 060-REVIEW-A residue reconciled (WI-146 corrective slice); NO spine change
+
+**Scope.** Session-protocol §1 residue reconciliation: the untracked
+`docs/reviews/060-REVIEW-A.md` (session-060 REVIEW-A on WI-146, **NO-COMMIT**, 2
+MAJOR, CHANGES-REQUESTED) sat in the working tree ahead of WI-147. Both findings
+are **buildable corrections that meet WI-146's own stated intent** (the same
+class the OI-12 disposition calls build work, not owner-gated scope) — so they
+are executed here, not parked, and the review file is tracked as-is.
+
+**Findings dispositioned — both FIXED.**
+- **[MAJOR] `trace.py` ratify view omitted SN prose.** WI-146a promised the
+  `SN → SR → LLR/TC` tree *with full registry prose*, but the SN heading printed
+  only the id (`## SN-010`), dropping the stakeholder Need / Why-it-matters /
+  Acceptance-intent — the top of the chain a ratifier most needs. Added
+  `_sn_prose(sn_text)` (parses the SN table, mirroring `gen_okf.sn_rows` /
+  `gen_trajectory._sn_rows` field mapping — need=col0, why=col1, acceptance=col3,
+  `-000` skipped; a comment ties the three copies) and threaded a `sn_meta` dict
+  through `ratify_lines`, which now renders **Need. / Why it matters. /
+  Acceptance intent.** under each SN heading. Verified on the live repo:
+  `trace.py --ratify v3` now heads SN-010/SN-023/SN-024 with their prose.
+- **[MAJOR] the brief lint accepted a bare command mention as proof.**
+  `RATIFY_VIEW_RE` treated any `trace.py --ratify` token as satisfying the
+  brief-links-the-view rule, so a brief could pass with an unexecuted/wrong-scope
+  command and **no view at all**. Tightened the regex to require a Markdown
+  *link* whose target names a ratification/hierarchy view (dropped the
+  `--ratify\b` alternation); a command-only brief now warns. This matches the
+  documented workflow (gate-advance: generate to `docs/ratify/<phase>-g2.md`,
+  **link** it) and stays warn-first.
+
+**Tests.** `test_trace.py::test_ratify_sr_list_emits_prose` gains SN Need/Why/
+Acceptance assertions (the scaffold's SN-001 prose). `test_trajectory.py`'s
+former `..._with_generator_command_is_silent` is now
+`..._with_generator_command_only_warns` (a command mention without a link warns —
+the finding's requested assertion); the view-link-silent case is unchanged. 7
+ratify tests green.
+
+**Gates.** Commit bar (green): `pytest -q -n auto -m smoke` **600 passed / 2
+skipped** + `check_docs --stale` exit 0 (29 pre-existing orphan hints, 0 broken).
+No spine change (SN=24 SR=56 LLR=57 TC=57); `trace.py` stayed stdlib-only (`re`
+already imported). Off-spine scripts+tests only — no scaffold-surface / bootstrap
+MAPPING change.
+
+**Handoff — run-state RUNNING; next-wi WI-147.** The 060-REVIEW-A residue is
+resolved (both findings fixed, no reopen of WI-146's row, no new OI). The loop
+resumes the owner-intake backlog at WI-147. WI-144 stays paused; the g2-close
+sitting is DUE in parallel (OI-12).

@@ -1065,7 +1065,9 @@ def test_ratify_brief_without_view_warns(tmp_path):
     assert "hierarchy view" in warns[0]
 
 
-def test_ratify_brief_with_generator_command_is_silent(tmp_path):
+def test_ratify_brief_with_generator_command_only_warns(tmp_path):
+    # A bare `trace.py --ratify` command mention is NOT proof the view exists and
+    # is carried — the brief must *link* the generated view (WI-146 REVIEW-A).
     ct = load_script("check_trajectory")
     _write_open_items(
         tmp_path,
@@ -1073,7 +1075,8 @@ def test_ratify_brief_with_generator_command_is_silent(tmp_path):
         "- Decision: ratify the `[v3]-[g2]` batch. Hierarchy: run "
         "`trace.py --ratify v3`.\n",
     )
-    assert ct.ratify_brief_findings(tmp_path) == []
+    warns = ct.ratify_brief_findings(tmp_path)
+    assert len(warns) == 1 and warns[0].startswith("OI-20:")
 
 
 def test_ratify_brief_with_view_link_is_silent(tmp_path):

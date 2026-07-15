@@ -1062,12 +1062,11 @@ OI_SECTION_RE = re.compile(r"(?m)^(##\s+OI-\d+\b.*)$")
 # A `[<phase>]-[g1|g2]` bracketed anchor appearing anywhere in a brief body (not
 # line-anchored like PHASE_ANCHOR_RE, which matches a WI *title*).
 RATIFY_ANCHOR_RE = re.compile(r"\[[^\]\[]+\]-\[g[12]\]")
-# The batch-scoped hierarchy view is recognized either by the generator
-# invocation (`trace.py --ratify`) or by a Markdown link whose target names a
-# ratification/hierarchy view — either satisfies the brief-links-the-view rule.
-RATIFY_VIEW_RE = re.compile(
-    r"--ratify\b|\]\([^)]*(?:ratif|hierarch)[^)]*\)", re.IGNORECASE
-)
+# The brief satisfies the rule only by a Markdown *link* whose target names a
+# ratification/hierarchy view — a bare `trace.py --ratify` command mention no
+# longer counts (WI-146 REVIEW-A): a command can be unexecuted or wrong-scope, so
+# it is not proof the generated view exists and is carried in the brief.
+RATIFY_VIEW_RE = re.compile(r"\]\([^)]*(?:ratif|hierarch)[^)]*\)", re.IGNORECASE)
 
 
 def ratify_brief_findings(root):

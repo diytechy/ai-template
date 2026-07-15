@@ -879,6 +879,12 @@ def test_ratify_sr_list_emits_prose(scaffold):
     assert "# Ratification hierarchy" in out and "scope: SR-001" in out
     assert "1 SR(s)" in out
     assert "SR-001" in out and "Addition" in out
+    # The stakeholder need's own prose heads its subtree, not a bare SN id
+    # (WI-146 REVIEW-A): Need / Why it matters / Acceptance intent from the SN row.
+    assert "## SN-001" in out
+    assert "**Need.** Add two numbers." in out
+    assert "**Why it matters.** Demo." in out
+    assert "**Acceptance intent.** add(1,2) gives 3." in out
     assert "The system shall add two numbers." in out  # SR Requirement prose
     assert "Pure function: two numbers -> sum." in out  # LLR Detail prose
     assert "TC-001" in out and "Satisfies SR-001 AcceptanceCriteria" in out  # TC
