@@ -5901,3 +5901,35 @@ suite results follow in this session's final validation.
 **Handoff — run-state RUNNING; next-wi WI-150.** The remaining actionable
 owner-intake work proceeds in id order. WI-144 stays paused; the phase-v3 g2-close
 ratification sitting remains due in parallel (OI-12).
+
+## 2026-07-14 — SESSION: WI-150 (planner-assigned BuildTier); NO spine change
+
+**Scope.** Owner-intake 2026-07-14 #tier-routing: make the existing per-WI
+`BuildTier` route a deliberate filing/triage decision rather than a silent
+mid-loop inference.
+
+**What shipped.** The `PROCESS_OPTIONS.md` per-WI routing contract, both
+meta-repo `agent-resume` prompts, and `session-protocol` (kit source plus
+`.claude` and `.agents` dogfood copies) now direct planners to set `quick` for
+mechanical off-spine work, `medium` by default, and `strong` only for
+design-shaping or spine-touching work. A declared route is never silently
+downgraded mid-loop.
+
+**Deviations.** None. No classifier was added; that remains unfiled until
+WI-124 has `s/turn` evidence, as the spec requires. Pre-existing untracked
+`docs/reviews/062-REVIEW-A.md` residue is unrelated to WI-150 and was preserved
+unchanged.
+
+**Byte deltas.** AGENTS.template.md 9,978 -> 9,978 (untouched, 22 B headroom);
+PROCESS.md 59,827 -> 59,827 (unchanged); PROCESS_OPTIONS.md 136,841 -> 137,132
+(+291 B, flagged for the routing rule). The watched baseline is re-stamped to
+137,132 in all three byte-budget-guard skill copies.
+
+**Gates.** Commit bar: smoke **612 passed / 2 skipped**; `check_docs --stale`
+exit 0 (32 pre-existing orphan warnings, 0 broken links). Full unfiltered suite:
+**736 passed / 34 skipped**. No spine or scaffold surface change; derived gate
+holds G2.
+
+**Handoff — run-state RUNNING; next-wi WI-151.** The remaining actionable
+owner-intake WI is the throughline pointer. WI-144 stays paused; the phase-v3
+g2-close ratification sitting remains due in parallel (OI-12).

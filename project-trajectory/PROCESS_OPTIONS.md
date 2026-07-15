@@ -746,7 +746,11 @@ behavior**, so a fresh scaffold pays nothing.
   file, an unknown WI id, or a `BuildTier` that doesn't normalize) is loud but
   never fatal — one warning line, then the phase default. The **driver maintains
   `docs/next-wi`** alongside `status.md`'s Next action; absent, it is
-  byte-identical to phase-only routing (never-breaking).
+  byte-identical to phase-only routing (never-breaking). **Set the hint while
+  filing or triaging the WI:** use `quick` for mechanical, off-spine work,
+  `medium` by default, and `strong` only for design-shaping or spine-touching
+  changes. This is a deliberate planner decision, not a mid-loop classifier: a
+  route is never silently downgraded.
   **Dev-slice batching (WI-133).** The value line may instead carry a
   **`;`-joined ordered batch** of WI ids (`WI-098;WI-103`) — a run of
   **independent, off-spine** dev slices (each queued, empty `SR-Refs`, no hard

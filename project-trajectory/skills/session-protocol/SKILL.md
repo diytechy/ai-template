@@ -82,7 +82,10 @@ ruling"). New behavior needs new tests
   BUILD session executes in order under ONE review round; dev-slice batching,
   WI-133) alongside `status.md`'s Next action, so a managed BUILD session honors
   the `BuildTier` pin — strongest member wins in a batch (process-options.md
-  "Unattended operation").
+  "Unattended operation"). When filing or triaging a WI, set `BuildTier`
+  deliberately: `quick` for mechanical, off-spine work; `medium` by default;
+  `strong` only for design-shaping or spine-touching changes. Do not silently
+  downgrade a declared route mid-loop.
 
 ## 5. Commit in this repo's style
 
