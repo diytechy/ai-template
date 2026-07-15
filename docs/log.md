@@ -6654,3 +6654,59 @@ broken** (40 historical orphan warnings plus pre-existing stale hints).
 **Handoff.** `docs/run-state` remains **RUNNING**. `docs/next-wi` → **WI-153**,
 deliberately pinned `BuildTier=medium` for the warn-first knowledge-reference
 and component-coupling implementation. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — Driver: WI-171 rearm + WI-174 check_docs fix (094 remediation)
+
+**Context.** Opus 4.8 driver session picking up the
+[094-DESIGN-CHECK](reviews/094-DESIGN-CHECK.md) GRIND-THROUGH ruling's queued
+remediation. The design-check had filed the ruling and queued WI-171/172/173 but
+left them uncommitted (residue: the ruling doc + iteration bookkeeping + the
+registry/status/next-wi queue). This session lands that residue and works the
+first remediation item, and files + fixes a blocker it exposed.
+
+**WI-171 — rearm the shared-failure page.** `agent_route.escalate` summed
+strong-tier CHANGES-REQUESTED rounds over the whole coordinator run, so once the
+tally hit `page_top_tier_fails` (2) every later review round — even a clean
+APPROVE — re-paged and scheduled a design-check forever (the exact bleed the 094
+ruling traced). Added a `fails_since` index to `escalate` (default 0 keeps the
+whole-run count for un-updated callers); `top_tier_fails` now counts only
+`rounds[fails_since:]`. The coordinator (`agent_loop.py`) advances
+`page_fails_since = len(rounds)` on **every** page dispatch, before the mode
+branch, so an already-paged (autonomous: already-ruled) fail can't re-page — only
+NEW strong-tier fails after the last dispatch reach the shared-failure regime. The
+last-round tripwire and two-round contradiction windows are untouched (already
+bounded). Regression test in `test_agent_route.py`: two strong fails page → the
+boundary advances → a later APPROVE does NOT page → two FRESH fails re-page. Takes
+effect on the next coordinator restart (routing referees import at process start),
+so successor design-checks until then still take the 094 fast path.
+
+**WI-174 — check_docs multi-backtick strip (discovered here).** Running the WI-171
+commit bar surfaced a **pre-existing** red: `check_docs --stale` reported 3 broken
+links, all `[...](x.md)` markdown-link syntax QUOTED as examples inside
+double-backtick code spans in review prose (`093-REVIEW-A.md` — committed at HEAD
+via a bar-bypassing telemetry commit — and the untracked `094-DESIGN-CHECK.md`,
+both quoting WI-173's `` [`x`](x.md) `` fix). `INLINE_CODE_RE` only matched
+single-backtick spans, so the double-backtick run mis-split and leaked a phantom
+`[](x.md)` link. Widened the regex to match an N-backtick run closed by a run of
+exactly N (CommonMark). Broken links **3 → 0**; the 40 orphan warnings are
+warn-only (exit 1 needs `--strict-orphans`) and unchanged. Regression tests (CLI
+end-to-end green on a quoted example + a `parse_doc` unit proving a real same-line
+link still resolves) in `test_check_docs.py`. Filed as WI-174 (new scope,
+`BuildTier=quick`) — a genuine kit-script correctness bug that also protects every
+future review doc quoting a link example.
+
+**Gates (real output).** Full unfiltered suite: **755 passed, 34 skipped in
+75.29s**. Commit bar: `pytest -q -n auto -m smoke` → **628 passed, 2 skipped in
+64.06s**; `check_docs.py --root . --stale` → **OK, 100 docs, 427 links, 0 broken**
+(40 historical orphan warnings + pre-existing stale hints). Hook floor
+(`check.py --run-steps arch-map,okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync`
++ `--run-step format`) all PASS; `ruff format` reformatted `agent_route.py` (the
+`fails_since` slice spacing). Regenerated `docs/architecture.md` (arch-map, the new
+`escalate(...)` signature) and `PROJECT_STATE.html` (dashboard, the WI rows). No
+byte-budgeted file changed (`AGENTS.template.md`/`PROCESS.md`/`PROCESS_OPTIONS.md`
+untouched). No spine change — SN/SR/LLR/TC unchanged; both WIs off-spine.
+
+**Handoff.** `docs/run-state` remains **RUNNING**. `docs/next-wi` → the
+**WI-172;WI-173** dev-slice batch (one session, one review round, strongest-member
+pin `medium`), then **WI-153** resumes the research-knowledge campaign. Not pushed
+(`docs/push-policy: human`).

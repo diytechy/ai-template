@@ -7,11 +7,20 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# WI-152 opened the owner-greenlit research-knowledge campaign by shipping the
-# scaffolded knowledge home. The campaign now proceeds by its DAG through
-# WI-153..157 + WI-164. Only the deferred main-decomposition
-# (WI-080->WI-081) stays parked — do not auto-start it.
+# 094-DESIGN-CHECK (grind-through on the stale shared-failure tally) sequenced
+# remediation ahead of the backlog. WI-171 (rearm the page) has LANDED, together
+# with WI-174 (a check_docs multi-backtick false-positive it exposed that had
+# reddened the meta commit bar). Next is the batch WI-172;WI-173 (one session,
+# one review round, strongest-member = medium), then WI-153 resumes the
+# owner-greenlit research-knowledge campaign (BuildTier=medium pin) and its DAG
+# carries on through WI-154..157 + WI-164.
+# The rearm takes effect only on the NEXT coordinator restart (routing referees
+# import at process start); until then every review round still re-pages on the
+# stale tally — successor design-checks take the 094 fast path (cite the ruling,
+# verify no new strong-tier fail after round 33, reset run-phase to BUILD). Only
+# the deferred main-decomposition (WI-080->WI-081) stays parked — do not
+# auto-start it.
 # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
 # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to
 # Fable); per-WI BuildTier pins above still apply.
-WI-153
+WI-172;WI-173
