@@ -1,0 +1,369 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 062
+# date: 2026-07-14 19:32
+# phase: REVIEW-A
+# wi: WI-148
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 122
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the reviewed commit range and authoritative requirement records, then run the repository harness before writing the required verdict.
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m✱ [0mGlob "docs/requirements/**/*"[90m in . · 6 matches[0m
+[0m✱ [0mGlob "docs/specs/**/*"[90m in . · 17 matches[0m
+[0m→ [0mRead CLAUDE.md
+[0m
+[0m$ [0mgit status --short; git log --oneline -12; git diff --stat HEAD~1..HEAD; git diff --find-renames --find-copies HEAD~1..HEAD
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f632ee2dc0012mwH2gsa69v4EP
+
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2sYHSqDBycZErDKyoa7","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01UjKgb2ahvMyH622Qv2jPa9","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\next-wi"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":3250,"cache_creation_input_tokens":6619,"cache_read_input_tokens":12298,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":6619},"output_tokens":5,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"fa31eded-a952-4b97-ba81-7887e6a7d9b6","request_id":"req_011Cd2sYAFEk9fG11dhGHep1"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01UjKgb2ahvMyH622Qv2jPa9","type":"tool_result","content":"1\t# Next WI (process-options.md \"Unattended operation\") — the WI id the driver\n2\t# expects the coordinator to pick up next, in the docs/run-phase idiom (comment\n3\t# lines + one value on the last line). The managed BUILD branch reads it and, if\n4\t# that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it\n5\t# as the session's STARTING tier in place of the phase default (WI-126). The\n6\t# value may be a `;`-joined ordered DEV-SLICE BATCH of independent off-spine WIs\n7\t# — one session, one review round, strongest-member pin (WI-133); an\n8\t# absent/empty file, an unknown id, or an empty BuildTier = the phase default.\n9\t# The DRIVER maintains this alongside docs/status.md Next action.\n10\t# NOTE: WI-144 (the v3 campaign closer) is `active` but PAUSED — its SR-047\n11\t# critique loop has EXHAUSTED the AGENT_CRITIQUE_MAX=3 budget still\n12\t# CHANGES-REQUESTED (042/048/052; log.md 2026-07-14). Under single-ratify the\n13\t# budget failure_action pauses that WI + surfaces the block for the phase-v3\n14\t# g2-close ratification sitting (OI-12) but KEEPS the loop RUNNING on non-dependent\n15\t# work — so next-wi moves OFF WI-144 to the next actionable non-dependent unit\n16\t# (WI-144 resumes for its final build round after the sitting rules OI-12).\n17\t# 052-CRITIQUE disposition (OI-12): BUILDABLE rubric-meeting [MAJOR A4] queued\n18\t# .detail .badge 2.56:1 · [MINOR A4] focus ring 2.05:1 · [MAJOR T4] .blab overflow\n19\t# · U4/U3/U1 polish; OWNER-GATED (recurring) U5 palette taxonomy · [MAJOR T2]\n20\t# Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN\n21\t# first so one final build round mechanizes contrast instead of another hand pass.\n22\t#\n23\t# NEXT: WI-147 (coordinator graceful pause). WI-146 (ratification package -\n24\t# trace.py --ratify view + the warn-first brief lint + gate-advance/reviewer-prompt\n25\t# wiring + the [g2]-authors-IF recipe line) SHIPPED 2026-07-14 (log.md). The loop\n26\t# continues the actionable owner-intake backlog in id order: WI-147 (graceful\n27\t# pause) -> WI-148 (weekday blackout) -> WI-149 (lowest-gate-first warn) -> WI-150\n28\t# (planner-assigned BuildTier) -> WI-151 (throughline pointer). WI-144 (the v3\n29\t# closer) is `active` but PAUSED - its\n30\t# SR-047 critique loop EXHAUSTED AGENT_CRITIQUE_MAX=3 still CHANGES-REQUESTED\n31\t# (042/048/052); single-ratify's budget failure_action pauses it + surfaces the\n32\t# block for the phase-v3 g2-close sitting (OI-12) but keep_nondependent KEEPS the\n33\t# loop RUNNING on non-dependent work. With the buffer gone, that non-dependent work\n34\t# IS the owner-intake backlog (WI-146…151): all hard predecessors done (WI-145, the\n35\t# 2026-07-14 sitting, is done), so the trajectory --strict check treats them as\n36\t# actionable and a NEEDS-HUMAN park would be a STALE end-state it rejects. So the\n37\t# loop proceeds through them in id order. The g2-close sitting is DUE in PARALLEL\n38\t# (rule OI-12, sequence the campaigns) - if the owner would rather the loop hold for\n39\t# it, they rule OI-12 / reorder next-wi. Research-knowledge WI-152+ is a coherent\n40\t# campaign the owner sequences at the sitting: do NOT auto-start it ahead of the\n41\t# owner-intake WIs. WI-144 resumes for its final build round after the sitting rules\n42\t# OI-12, then the full gate bar and the spine rejoins G3.\n43\tWI-147\n44\t"}]},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"0bc72710-2ffc-4e3b-89e3-ec12441e885a","timestamp":"2026-07-15T00:09:55.854Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\next-wi","content":"# Next WI (process-options.md \"Unattended operation\") — the WI id the driver\n# expects the coordinator to pick up next, in the docs/run-phase idiom (comment\n# lines + one value on the last line). The managed BUILD branch reads it and, if\n# that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it\n# as the session's STARTING tier in place of the phase default (WI-126). The\n# value may be a `;`-joined ordered DEV-SLICE BATCH of independent off-spine WIs\n# — one session, one review round, strongest-member pin (WI-133); an\n# absent/empty file, an unknown id, or an empty BuildTier = the phase default.\n# The DRIVER maintains this alongside docs/status.md Next action.\n# NOTE: WI-144 (the v3 campaign closer) is `active` but PAUSED — its SR-047\n# critique loop has EXHAUSTED the AGENT_CRITIQUE_MAX=3 budget still\n# CHANGES-REQUESTED (042/048/052; log.md 2026-07-14). Under single-ratify the\n# budget failure_action pauses that WI + surfaces the block for the phase-v3\n# g2-close ratification sitting (OI-12) but KEEPS the loop RUNNING on non-dependent\n# work — so next-wi moves OFF WI-144 to the next actionable non-dependent unit\n# (WI-144 resumes for its final build round after the sitting rules OI-12).\n# 052-CRITIQUE disposition (OI-12): BUILDABLE rubric-meeting [MAJOR A4] queued\n# .detail .badge 2.56:1 · [MINOR A4] focus ring 2.05:1 · [MAJOR T4] .blab overflow\n# · U4/U3/U1 polish; OWNER-GATED (recurring) U5 palette taxonomy · [MAJOR T2]\n# Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN\n# first so one final build round mechanizes contrast instead of another hand pass.\n#\n# NEXT: WI-147 (coordinator graceful pause). WI-146 (ratification package -\n# trace.py --ratify view + the warn-first brief lint + gate-advance/reviewer-prompt\n# wiring + the [g2]-authors-IF recipe line) SHIPPED 2026-07-14 (log.md). The loop\n# continues the actionable owner-intake backlog in id order: WI-147 (graceful\n# pause) -> WI-148 (weekday blackout) -> WI-149 (lowest-gate-first warn) -> WI-150\n# (planner-assigned BuildTier) -> WI-151 (throughline pointer). WI-144 (the v3\n# closer) is `active` but PAUSED - its\n# SR-047 critique loop EXHAUSTED AGENT_CRITIQUE_MAX=3 still CHANGES-REQUESTED\n# (042/048/052); single-ratify's budget failure_action pauses it + surfaces the\n# block for the phase-v3 g2-close sitting (OI-12) but keep_nondependent KEEPS the\n# loop RUNNING on non-dependent work. With the buffer gone, that non-dependent work\n# IS the owner-intake backlog (WI-146…151): all hard predecessors done (WI-145, the\n# 2026-07-14 sitting, is done), so the trajectory --strict check treats them as\n# actionable and a NEEDS-HUMAN park would be a STALE end-state it rejects. So the\n# loop proceeds through them in id order. The g2-close sitting is DUE in PARALLEL\n# (rule OI-12, sequence the campaigns) - if the owner would rather the loop hold for\n# it, they rule OI-12 / reorder next-wi. Research-knowledge WI-152+ is a coherent\n# campaign the owner sequences at the sitting: do NOT auto-start it ahead of the\n# owner-intake WIs. WI-144 resumes for its final build round after the sitting rules\n# OI-12, then the full gate bar and the spine rejoins G3.\nWI-147\n","numLines":44,"startLine":1,"totalLines":44}}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2sYHSqDBycZErDKyoa7","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01B563gvDEYfQQv9CiiAFaVv","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\run-state"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":3250,"cache_creation_input_tokens":6619,"cache_read_input_tokens":12298,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":6619},"output_tokens":5,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"89eb95d6-8823-4ac1-8c5d-7ee1f6a6c0e3","request_id":"req_011Cd2sYAFEk9fG11dhGHep1"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01B563gvDEYfQQv9CiiAFaVv","type":"tool_result","content":"1\t# Unattended-run state (read by project-trajectory/scripts/agent_loop.py via\n2\t# the root agent-resume.* launchers). RUNNING while work remains; a driver\n3\t# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may\n4\t# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).\n5\tRUNNING\n6\t"}]},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"9e681b20-3a54-4f8e-a805-c21b985bcf76","timestamp":"2026-07-15T00:09:56.101Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\run-state","content":"# Unattended-run state (read by project-trajectory/scripts/agent_loop.py via\n# the root agent-resume.* launchers). RUNNING while work remains; a driver\n# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may\n# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).\nRUNNING\n","numLines":6,"startLine":1,"totalLines":6}}}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"79d2043a-11ce-4ddb-a0cd-2811adc0942e","session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":151,"estimated_tokens_delta":101,"uuid":"a3584496-e892-41fb-b3fd-3aef5346adc1","session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2sYgFHAwx1TBf7kfNjF","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EtQECokBCA8YAipAXreEEzpO0uPDkl+FI0mxbRe/giSmOIjq1K3tPiHyW74Ug2cryBlfSLNUfmcrILc+MajLo7bwg3coPcvA98I55jIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDNNCuR76ciG93K2vpBoMw76OOoMYrUNjddwYIjDyHvzktdI2S9rZa9A6S4o5S4y1mCnQNxV5Q4X8iWjEXqR9UJr7NlyId6NVMv9E+bUq9wKOkZnOz6MsewzGcQSxOqxDG1u6cjofQgOal5HYtigkt3Yp8uK5Uu4fLZoP5hOqh3aX7wJZwipFAu54geam8ocAVxk3L6S1QA8pNXKR644qx+QIH+CWW7OCBIjqDGusiEr2jfEnPo+CMKJujOQLJ1MbL/9iQRf32YJgk3ytugMi3QiUdQGv1qySuS1OoJSLL97xGlheT6pyjeYc0gah+WvGMJDBx27PhBx6TRV5VhSugB9u7Ajakyff5R1W1s9+ppNJp2G9poHhdNDhpgJNZcy/qcRNzcCsk/N6svr/tiqNuKzrBAkdV8Gv6nbzbVTKDoE/agp0P6CiUOysWIAicTRD4yYWZdo62SHneZO+sPtRSD7zn8SYM2yExWBnUyGpjJu8jNe90ypsbzvBLgWh3+XGx9L56OHhwoeFhI+LrgitryLAOwCE2UH5ZgFTo1xOEq
++[... byte cap hit — full stream in out/run-logs/ ...]
++stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":2381,"cache_read_input_tokens":155530,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":2381},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"46bbeba6-1e3e-407d-bdd9-1e5cd349ac72","request_id":"req_011Cd2u2zDv95WSZ83twRPF8"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_018zG9tBnPMq3eSfd1UKRTex","type":"tool_result","content":"95:  in id order (WI-146 ratification package + WI-147 graceful pause shipped","is_error":false}]},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"74b47619-8f76-40f4-8705-8d4373e8dc67","timestamp":"2026-07-15T00:29:38.724Z","tool_use_result":{"stdout":"95:  in id order (WI-146 ratification package + WI-147 graceful pause shipped","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2u3u2tzPcuNXvy1sTk1","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01MfMZt6bEsXpNTUEb15uZZZ","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\status.md","offset":89,"limit":10},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":131,"cache_creation_input_tokens":560,"cache_read_input_tokens":157911,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":560},"output_tokens":34,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"c63c3e6f-202d-4897-b8b2-e8d01a06f1b5","request_id":"req_011Cd2u3rVbnn31e8PYTk948"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01MfMZt6bEsXpNTUEb15uZZZ","type":"tool_result","content":"89\t- **Queued (owner intake 2026-07-14** — triage + answers:\n90\t  [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_\n91\t  **WI-148** (weekday blackout window) · **WI-149** (lowest-gate-first advisory) ·\n92\t  **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline pointer).\n93\t  Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so\n94\t  these are the loop's **actionable non-dependent backlog** — the loop works them\n95\t  in id order (WI-146 ratification package + WI-147 graceful pause shipped\n96\t  2026-07-14, see [log.md](log.md)) unless the owner reorders `docs/next-wi` at\n97\t  the pending g2-close sitting._\n98\t- **Deferred backlog** _(first-class `deferred` rows; each carries its reason in"}]},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"de6b746a-a96f-47c6-9c9f-3e41ca194a54","timestamp":"2026-07-15T00:29:42.956Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\status.md","content":"- **Queued (owner intake 2026-07-14** — triage + answers:\n  [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_\n  **WI-148** (weekday blackout window) · **WI-149** (lowest-gate-first advisory) ·\n  **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline pointer).\n  Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so\n  these are the loop's **actionable non-dependent backlog** — the loop works them\n  in id order (WI-146 ratification package + WI-147 graceful pause shipped\n  2026-07-14, see [log.md](log.md)) unless the owner reorders `docs/next-wi` at\n  the pending g2-close sitting._\n- **Deferred backlog** _(first-class `deferred` rows; each carries its reason in","numLines":10,"startLine":89,"totalLines":121}}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2u4Epn4jVguxcuFKk3c","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01DvpkTEhAjZmYudqJmL4Wzq","name":"Edit","input":{"replace_all":false,"file_path":"C:\\Projects\\ai-template\\docs\\status.md","old_string":"  Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so\n  these are the loop's **actionable non-dependent backlog** — the loop works them\n  in id order (WI-146 ratification package + WI-147 graceful pause shipped\n  2026-07-14, see [log.md](log.md)) unless the owner reorders `docs/next-wi` at\n  the pending g2-close sitting._","new_string":"  Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so\n  these are the loop's **actionable non-dependent backlog** — the loop works them\n  in id order (the ratification-package + graceful-pause WIs shipped 2026-07-14,\n  see [log.md](log.md)) unless the owner reorders `docs/next-wi` at the pending\n  g2-close sitting._"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":578,"cache_read_input_tokens":158471,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":578},"output_tokens":54,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"8730f08e-3ce6-438d-9fd4-6bac9a31024e","request_id":"req_011Cd2u4AjTcz31uDZipn3YF"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01DvpkTEhAjZmYudqJmL4Wzq","type":"tool_result","content":"The file C:\\Projects\\ai-template\\docs\\status.md has been updated successfully. (file state is current in your context — no need to Read it back)"}]},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"fc5104d6-0d51-4d6f-81f2-331771b40a71","timestamp":"2026-07-15T00:29:48.987Z","tool_use_result":{"filePath":"C:\\Projects\\ai-template\\docs\\status.md","oldString":"  Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so\n  these are the loop's **actionable non-dependent backlog** — the loop works them\n  in id order (WI-146 ratification package + WI-147 graceful pause shipped\n  2026-07-14, see [log.md](log.md)) unless the owner reorders `docs/next-wi` at\n  the pending g2-close sitting._","newString":"  Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so\n  these are the loop's **actionable non-dependent backlog** — the loop works them\n  in id order (the ratification-package + graceful-pause WIs shipped 2026-07-14,\n  see [log.md](log.md)) unless the owner reorders `docs/next-wi` at the pending\n  g2-close sitting._","originalFile":"# Meta-Repo Status — Blackboard\n\nThe **working surface** for developing the kit itself — the same `status.md`\npattern the kit scaffolds downstream, self-applied. This file is **forward-only**:\nonly what must happen **next** lives here. Everything backward-looking has a\nhome elsewhere — don't restate it here:\n\n- **What shipped / verdicts / session record:** [log.md](log.md).\n- **Owner decision briefs:** [open-items.md](open-items.md) — one `## OI-N`\n  section per pending decision (blast radius, options, recommendation); a\n  ruling appends to the log's Decisions and the section is removed.\n- **The WI registry (every backlog + deferred item, with its reason):**\n  [work-items.csv](requirements/work-items.csv) — the dashboard is the root\n  [`PROJECT_STATE.html`](../PROJECT_STATE.html).\n- **Design history:** [archive/](archive/README.md).\n- **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·\n  [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) (this repo has\n  no scaffolded `docs/process.md`; the masters are the reference).\n- **Working rules:** [CLAUDE.md](../CLAUDE.md) + the `session-protocol` skill.\n\n---\n\n## Current State\n\n- **Active gate:** runnable **G2** (derived — `scripts/derive_gate.py`;\n  per-phase `(default)=G3;v2=G3;v3=G2`, cached to [`docs/gate`](gate)). **Phase\n  v3 (dashboard-ux) is decomposed to G2** (the `[v3]-[g2]` batch, log.md\n  2026-07-14): each v3 SR owns its LLR+TC; the three Critique rows own their\n  `docs/rubrics/dashboard-*.md`. **Phase v2 is at G3** (the intake/decision-loop\n  panels + decomposition render polish shipped 2026-07-14). v3 stays G2 until the\n  last dev slice (**WI-144**) lands. Spine: **SN=24 SR=56 LLR=57 TC=57**\n  (orphans=0), 52 seams, 5 components.\n- **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~47 s) +\n  `python project-trajectory/scripts/check_docs.py --root . --stale`, both green.\n  At slice/campaign close: the full suite `pytest -q -n auto` (~72 s) and\n  `check.py` at the derived gate (now **G2**; its `trajectory` step gains\n  `--strict`, so status.md must stay current — closed WI ids leave, open ones are\n  named). The whole spine rejoins `--gate G3` when the remaining v3 dev slice\n  (WI-144) re-verifies.\n- **Run-state:** [run-state](run-state) holds the declared value (don't\n  paraphrase it here); when it reads NEEDS-HUMAN its `ask:` line is the\n  canonical one-line summary the stop banner headlines.\n\n- **Open items** _(one bullet per item; `OI-N` ids are stable and never\n  renumbered):_\n  - **The phase-v3 g2-close ratification sitting is DUE** — a batched human touch\n    *parallel* to the loop, not a stop: `keep_nondependent` keeps run-state\n    RUNNING on the non-dependent owner-intake WIs, and a NEEDS-HUMAN park while\n    those queued WIs are actionable is a stale end-state `trajectory --strict`\n    rejects. WI-144 is `active` but **paused** — its critique budget is exhausted\n    (`AGENT_CRITIQUE_MAX=3`; 042/048/052 CHANGES-REQUESTED on SR-052/053/054). The\n    sitting rules **OI-12** (the critique disposition: buildable A4/T4 fixes + the\n    owner-gated 3 TC-HARDEN / U5 palette taxonomy) and sequences the queued\n    campaigns (owner-intake vs research-knowledge); WI-144 then resumes its final\n    build round. (The `[v3]-[g2]` *design* batch was already ratified 2026-07-14\n    ([log.md](log.md)); this is the g2-close, not a re-ratification.)\n  - **Needs \\<human>** _(ratification history — including the 2026-07-14 sitting\n    that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives\n    in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**\n    pause on the items below. Depth per item in\n    [open-items.md](open-items.md):_\n    - **OI-3** — **push decision** (git-checked: `origin` exists, this branch\n      tracked, ~10 unpushed commits — not \"48 local-only\"); rec: push.\n    - **OI-4** — rule **WI-097** (LICENSE + public/private intent); no rec —\n      needs the owner's intent.\n    - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns\n      of medium-BUILD evidence.\n    - **OI-11** — session-038 REVIEW-A [MAJOR] (containment-arrow vs SR-056);\n      rec: accept — a spec-interpretation call the code satisfies, and the 042\n      critique did not re-raise it (subsumed by OI-12).\n    - **OI-12** — 042 CRITIQUE (7 findings, CHANGES-REQUESTED) vs the\n      SR-052/053/054 rubrics; rec: accept — six rubric-meeting fixes are WI-144\n      build work; the **U5** anchor + phase-hue de-collision + 3 TC-HARDEN are\n      owner-gated (ratify at phase-g2 close). Depth in [open-items.md](open-items.md).\n- **Queued (v3 dev slice, owner intake 2026-07-13** —\n  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ the\n  earlier SR-051-rev / SR-055 / SR-056 slices **shipped** ([log.md](log.md)\n  2026-07-14; phase v2 at G3). Remaining: **WI-144** (dashboard UI-quality pass +\n  the SR-052/053/054 Critique rows — arms SR-047's critique loop, runs the full\n  gate bar at close)._\n- **Queued (research-knowledge campaign, OI-9 §8** —\n  [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the\n  2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py\n  ref integrity + knowledge⇒component coupling) · **WI-154** (process text) ·\n  **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=\n  strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills\n  domains filter); **WI-158** deferred (OKF pack export). The owner sequences\n  this campaign at the g2-close sitting; do not auto-start it._\n- **Queued (owner intake 2026-07-14** — triage + answers:\n  [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_\n  **WI-148** (weekday blackout window) · **WI-149** (lowest-gate-first advisory) ·\n  **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline pointer).\n  Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so\n  these are the loop's **actionable non-dependent backlog** — the loop works them\n  in id order (WI-146 ratification package + WI-147 graceful pause shipped\n  2026-07-14, see [log.md](log.md)) unless the owner reorders `docs/next-wi` at\n  the pending g2-close sitting._\n- **Deferred backlog** _(first-class `deferred` rows; each carries its reason in\n  the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·\n  WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in\n  [work-items.csv](requirements/work-items.csv). The highest-value next step is\n  the `main-decomposition` campaign (**WI-080** → **WI-081**), sequenced *behind*\n  the owner sitting (highest-risk, test-seams-first, behavior-preserving).\n- **External follow-up** _(not this repo's work):_ guardrails content enrichment\n  is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).\n- **Next action:** **WI-148** ([next-wi](next-wi)) — run-state **RUNNING**. The\n  loop works the actionable owner-intake backlog (WI-148…151, id order) while\n  WI-144 is paused and the g2-close sitting is DUE in parallel (Open items\n  above). Shipped work + round-by-round evidence → [log.md](log.md) / OI-12,\n  not here.\n\n## Scope\n\n- **Goal:** keep the kit **maintainable and trustworthy** — the\n  `PROJECT-VISION:` tag opening [README.md](../README.md) is canonical.\n- **Supported platforms:** Windows + POSIX; kit scripts stdlib-only on\n  Python 3.8+.\n- **Non-goals (self-application boundary):** no `run.*` product launchers (the\n  kit's \"product\" is `project-trajectory/` + `tests/`); no scaffolded\n  `docs/process.md` (the masters live in `project-trajectory/`).\n","structuredPatch":[{"oldStart":92,"oldLines":9,"newStart":92,"newLines":9,"lines":["   **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline pointer).","   Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so","   these are the loop's **actionable non-dependent backlog** — the loop works them","-  in id order (WI-146 ratification package + WI-147 graceful pause shipped","-  2026-07-14, see [log.md](log.md)) unless the owner reorders `docs/next-wi` at","-  the pending g2-close sitting._","+  in id order (the ratification-package + graceful-pause WIs shipped 2026-07-14,","+  see [log.md](log.md)) unless the owner reorders `docs/next-wi` at the pending","+  g2-close sitting._"," - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in","   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·","   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in"]}],"userModified":false,"replaceAll":false}}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"ad8b87e6-7df6-44c7-9695-3a02270190d0","session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":146,"estimated_tokens_delta":96,"uuid":"397b5ae2-c5e3-44f3-bdd1-da6b0c544dab","session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2u4drNA1Hjv5cejsztD","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EsAECokBCA8YAipAsrUGHpvV+JHFdtGg1u0mNCldhK4lwGslJNA/0ljNGCBYxGjZdfSSetmbInHoEg6GqGKe6P6UVzpkQDtjyXv4lzIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDEjcaKCfbmMIAVAnLxoMp3VqUhh4SLX5fKG/IjDcqMJ8GmINw5YR8rx9X+QMd3QQq+dPSIKrI704h05AAaIrYItZ/1MstEF6fBhFGikq4wIBBsIBSpzjQIxCiyBOVg5JgI5xczoRBuzDnCzwgcUSbuN7jfnTr3b4/sY8anO0mu2MOd7GdMGcxE9Yy6lHgdYAM6V16dnWV7DRFVSL20Z41yAec/E1UfjaAo6wAHce+GYcUjO2Z0XZLy13MlN2QYWc5oW8TSIewaVoHcvAPQIqldyDEghFkkKazoCNXpREQ7FLN3UxCeUhYhqf+/PhdUwGO0iWLivge3/Den+K6LCsi58spCbZKIHZv2MvSwUy/vb4HJ8RtzqIp0LWD0HSJ+RwAaV3sO2VohMHLLnjTPn+n8Nxzb0JgcRHHkStREzx4/deCMXdMHxxjMdrc9RpKxI8Kt/fZkazPFcYv4iVdUDec3Ehhy55U0r+Ua6lCf8cTJI3vgXTDoLPWuUpzhWK2ajp6cgvzG1BlLhmj+Sm+pNQV3fYAxKAG7Q3mOcbsUPmIq8i+LYAW/8xHEEjTG7lU0X9dxqbGAE="}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":465,"cache_read_input_tokens":159049,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":465},"output_tokens":4,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"aa583de0-cae6-4711-8e58-aac3ec669f95","request_id":"req_011Cd2u4cRYhvz1Pnuq7LPrW"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2u4drNA1Hjv5cejsztD","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01LFGfF2yjmJagAJaWhyyhjA","name":"Bash","input":{"command":"python project-trajectory/scripts/check_trajectory.py --root . --strict 2>&1 | tail -3; echo \"EXIT=$?\"; echo \"lines: $(wc -l < docs/status.md)\"","description":"Re-run strict trajectory check"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":465,"cache_read_input_tokens":159049,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":465},"output_tokens":4,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"5734b6a8-46ed-4929-90f9-64f6929ef02b","request_id":"req_011Cd2u4cRYhvz1Pnuq7LPrW"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01LFGfF2yjmJagAJaWhyyhjA","type":"tool_result","content":"check_trajectory: clean (158 work item(s), 134 done (85%), graph acyclic).\r\nEXIT=0\nlines: 120","is_error":false}]},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"701562e9-c173-4736-9d89-6943b48924a9","timestamp":"2026-07-15T00:29:55.170Z","tool_use_result":{"stdout":"check_trajectory: clean (158 work item(s), 134 done (85%), graph acyclic).\r\nEXIT=0\nlines: 120","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2u564hmtq36ezjfUu8P","type":"message","role":"assistant","content":[{"type":"text","text":"Clean, status.md at 120 lines (budget). Let me commit this status scrub:"}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":342,"cache_read_input_tokens":159514,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":342},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"02b55c2d-fc4e-4165-92e0-c8c2e88ded1d","uuid":"15a0ec1a-4c5d-49bc-8ed3-f9cc83dd8f0f","request_id":"req_011Cd2u54mKKLBNqSnB26YFU"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2u564hmtq36ezjfUu8P","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01SQ3s9dsxUqJLtVtVD141qs","name":"Bash","input":{"command":"git add docs/status.md && git commit -F - 2>&1 <<'EOF' | tail -4\nWI-147: scrub done WI ids from status.md working surface\n\nThe trajectory --strict R-D rule (gate bar) requires closed WIs leave the\nworking surface — WI-146/WI-147 are done, so status.md names the shipped work\ngenerically and points at log.md for the record. status.md holds at 120 lines.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF","description":"Commit status.md R-D scrub"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequ
+[... byte cap hit — full stream in out/run-logs/ ...]
+ []
+ 
+ 
+ def test_ratify_brief_lint_vacuous_without_brief(tmp_path):
+     ct = load_script("check_trajectory")
+     # No open-items.md at all -> nothing to check.
+     assert ct.ratify_brief_findings(tmp_path) == []
+     # A section with a ratification word but no [phase]-[g*] anchor -> not a brief.
+     _write_open_items(
+         tmp_path,
+         "## OI-30 — general\n- Decision: whether to ratify a policy change.\n",
+     )
+     assert ct.ratify_brief_findings(tmp_path) == []
+     # ...and an anchor with no ratification language -> also not a brief.
+     _write_open_items(
+         tmp_path,
+         "## OI-31 — scheduling\n- Decision: sequence `[v3]-[g2]` after v2 work.\n",
+     )
+     assert ct.ratify_brief_findings(tmp_path) == []
+[0m
+[0m✱ [0mGrep "def _sn_prose|def ratify_lines|RATIFY_VIEW_RE|def ratify_brief_findings"[90m in project-trajectory/scripts/trace.py · 5 matches[0m
+[0m✱ [0mGrep "RATIFY_VIEW_RE|def ratify_brief_findings"[90m in project-trajectory/scripts/check_trajectory.py · 3 matches[0m
+[0m✱ [0mGrep "EXIT_PAUSED|EXIT_"[90m in project-trajectory/scripts/agent_loop.py · 23 matches[0m
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py; python project-trajectory/scripts/trace.py --strict; python project-trajectory/scripts/check_trajectory.py --root . --strict
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 placeholders=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/054-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/056-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/058-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/060-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:51 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 80 doc(s), 366 intra-repo link(s), 0 broken (28 orphan warning(s)).
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (158 work item(s), 134 done (85%), graph acyclic).
+
+========================================================
+Check summary (gate G2, tier all):
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.1s
+  PASS  privacy          0.6s
+  PASS  doc-navigability 14.5s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+========================================================
+RESULT: PASS
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+check_trajectory: clean (158 work item(s), 134 done (85%), graph acyclic).
+[0m
+[0m✱ [0mGrep "^VERDICT:|^- \[(BLOCKER|MAJOR|MINOR)\]"[90m in docs/reviews · 82 matches[0m
+[0m→ [0mRead project-trajectory/scripts/check_trajectory.py[90m [offset=1050, limit=65][0m
+[0m→ [0mRead project-trajectory/scripts/trace.py[90m [offset=850, limit=145][0m
+[0m→ [0mRead project-trajectory/scripts/agent_loop.py[90m [offset=2140, limit=50][0m
+[0m
+[0m$ [0mgit -c diff.external= --no-pager diff --no-ext-diff --unified=8 b95c227..HEAD -- docs/requirements/work-items.csv docs/status.md docs/next-wi docs/architecture.md; git status --short
+diff --git a/docs/architecture.md b/docs/architecture.md
+index ff7b2c4..08a4a11 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -36,16 +36,17 @@ _Generated by `scripts/gen_arch_map.py` from the source tree (AST). Do not edit
+ _Unattended coordinator: loop fresh agent driver sessions until done._
+ Imports (internal): `agent_route`, `score_reviews`
+ Contracts (interfaces): IF-015, IF-037, IF-041
+ 
+ | Public item | Summary | Implements |
+ |---|---|---|
+ | `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/run-state, …): |  |
+ | `read_ask(path)` | The optional `ask: <one-line ask>` line a driver leaves in docs/run-state |  |
++| `pause_reason(lane)` | A declared **graceful-pause** request (WI-147): the `docs/pause` file |  |
+ | `sanitize_track(name)` | A track name becomes a lane directory segment, so restrict it to a safe |  |
+ | `lane_dir(docs, track)` | The coordination lane for a track: docs/tracks/<track> when a track is |  |
+ | `acquire_lock(lock_path)` | Take the per-worktree coordinator lock, or return an error string. |  |
+ | `release_lock(lock_path)` | Drop the coordinator lock: closing the descriptor releases the OS lock. |  |
+ | `guardrails_apply(policy, model)` | Whether to inject the guardrails core for a session on `model`, under |  |
+ | `guardrails_core(root)` | The always-on core to prepend to a quick-tier session's prompt, or None. |  |
+ | `guardrails_inert(policy, models)` | True when a *guarding* policy (not off / bare all) would guard none of the |  |
+ | `split_cmd(template)` | Split a command template into tokens, quote-aware but with backslash |  |
+@@ -502,17 +503,17 @@ Contracts (interfaces): IF-001, IF-021, IF-042
+ | `triangle_findings(tcs, llrs)` | SR/LLR citation coherence. A TC may cite an | LLR-1, SR-1, SR-2 |
+ | `interface_findings(ifs, sr_ids, module_ids)` | The IF-### seam tier's back-link checks (process.md §8), closing the gap |  |
+ | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |
+ | `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |
+ | `sn_draft_ids(text)` | The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state): |  |
+ | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
+ | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
+ | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |
+-| `ratify_lines(scope, sn_ids, srs, llrs, tcs)` | Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the |  |
++| `ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta)` | Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the |  |
+ | `mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored |  |
+ | `html_document(roots)` | A dependency-free, collapsible <details> tree of the full graph — inline |  |
+ | `main()` |  |  |
+ <!-- END GENERATED MODULE MAP -->
+ 
+ ## Runtime flows
+ 
+ Hand-authored sequence diagrams of the behaviors most easily misread from
+diff --git a/docs/next-wi b/docs/next-wi
+index 4aa48ef..6d95c6b 100644
+--- a/docs/next-wi
++++ b/docs/next-wi
+@@ -15,29 +15,32 @@
+ # work — so next-wi moves OFF WI-144 to the next actionable non-dependent unit
+ # (WI-144 resumes for its final build round after the sitting rules OI-12).
+ # 052-CRITIQUE disposition (OI-12): BUILDABLE rubric-meeting [MAJOR A4] queued
+ # .detail .badge 2.56:1 · [MINOR A4] focus ring 2.05:1 · [MAJOR T4] .blab overflow
+ # · U4/U3/U1 polish; OWNER-GATED (recurring) U5 palette taxonomy · [MAJOR T2]
+ # Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN
+ # first so one final build round mechanizes contrast instead of another hand pass.
+ #
+-# NEXT: WI-147 (coordinator graceful pause). WI-146 (ratification package -
+-# trace.py --ratify view + the warn-first brief lint + gate-advance/reviewer-prompt
+-# wiring + the [g2]-authors-IF recipe line) SHIPPED 2026-07-14 (log.md). The loop
+-# continues the actionable owner-intake backlog in id order: WI-147 (graceful
+-# pause) -> WI-148 (weekday blackout) -> WI-149 (lowest-gate-first warn) -> WI-150
+-# (planner-assigned BuildTier) -> WI-151 (throughline pointer). WI-144 (the v3
+-# closer) is `active` but PAUSED - its
++# NEXT: WI-148 (weekday blackout window). WI-147 (coordinator graceful pause -
++# docs/pause honored at the session boundary: launch-refusal, graceful stop,
++# delete-to-resume) SHIPPED 2026-07-14 (log.md); the 060-REVIEW-A residue on
++# WI-146 was reconciled the same day (SN prose in the --ratify view + link-only
++# brief lint). WI-146 (ratification package - trace.py --ratify view + the
++# warn-first brief lint + gate-advance/reviewer-prompt wiring + the
++# [g2]-authors-IF recipe line) SHIPPED 2026-07-14 (log.md). The loop continues the
++# actionable owner-intake backlog in id order: WI-148 (weekday blackout) -> WI-149
++# (lowest-gate-first warn) -> WI-150 (planner-assigned BuildTier) -> WI-151
++# (throughline pointer). WI-144 (the v3 closer) is `active` but PAUSED - its
+ # SR-047 critique loop EXHAUSTED AGENT_CRITIQUE_MAX=3 still CHANGES-REQUESTED
+ # (042/048/052); single-ratify's budget failure_action pauses it + surfaces the
+ # block for the phase-v3 g2-close sitting (OI-12) but keep_nondependent KEEPS the
+ # loop RUNNING on non-dependent work. With the buffer gone, that non-dependent work
+ # IS the owner-intake backlog (WI-146…151): all hard predecessors done (WI-145, the
+ # 2026-07-14 sitting, is done), so the trajectory --strict check treats them as
+ # actionable and a NEEDS-HUMAN park would be a STALE end-state it rejects. So the
+ # loop proceeds through them in id order. The g2-close sitting is DUE in PARALLEL
+ # (rule OI-12, sequence the campaigns) - if the owner would rather the loop hold for
+ # it, they rule OI-12 / reorder next-wi. Research-knowledge WI-152+ is a coherent
+ # campaign the owner sequences at the sitting: do NOT auto-start it ahead of the
+ # owner-intake WIs. WI-144 resumes for its final build round after the sitting rules
+ # OI-12, then the full gate bar and the spine rejoins G3.
+-WI-147
++WI-148
+diff --git a/docs/requirements/work-items.csv b/docs/requirements/work-items.csv
+index bbc8824..6434f96 100644
+--- a/docs/requirements/work-items.csv
++++ b/docs/requirements/work-items.csv
+@@ -140,17 +140,17 @@ WI-138,Research track + durable knowledge/module-spec layer (design),docs,,,done
+ WI-139,Review 017 remediation - llr_exempt predicate pinned across trace/derive_gate,scripts,,WI-099,done,"WI-139 (2026-07-14, review 017's MAJOR, driver-remediated - the round predates the batch loop's remediation path and was left dangling): trace.py's orphan rule read the Verification cell raw while derive_gate.sr_gate stripped it, so a whitespace-padded valid method (e.g. 'Analysis ' ) was LLR-exempt in the derived gate but orphaned in the trace report - the exact orphan-report/derived-gate disagreement WI-099 promised away (test_rule_sync pinned only LLR_EXEMPT set-equality, not the decision itself). Fix per the finding: the decision named once per file as an F5-duplicated llr_exempt(row) predicate (stripped-cell match - the is_draft/is_verified pattern from WI-101), routed at BOTH decision points (trace orphan loop, derive_gate.sr_gate); new test_rule_sync::test_llr_exempt_agrees pins the predicates equivalent across a padded/case/empty/None battery AND pins the padded case to the fixed direction (exempt in both). Closed vocab stays case-sensitive ('analysis' non-exempt in both - Status casing was WI-101's scope, Verification is not Status). arch-map regenerated (+2 detail lines). No spine change; derived gate value unchanged (the meta spine carries unpadded methods).",docs/reviews/017-REVIEW-A.md,,
+ WI-140,Review 019 remediation - pin the SVG per-node title tooltip contract,scripts,,WI-102,done,"WI-140 (2026-07-14, review 019's MINOR, driver-remediated with WI-139 - the round was left dangling by the NEEDS-HUMAN sittings that followed it): WI-102 added a <title> tooltip/a11y child to every SVG node across the four emitters, but the only changed assertion made the title OPTIONAL in a regex, so a regression removing the labels from any emitter stayed green. New tests/test_gen_trajectory.py::test_svg_nodes_carry_escaped_title_tooltips (smoke tier by default): one integration render over a fixture whose SR title, WI title, and IF counterpart carry markup-hostile characters (& <), pinning per emitter - arch_icicle (every cell has a title; SR tip escaped), dag_svg (every WI node; id-title-status tip escaped), sw_graph (kind-suffixed module + external tips escaped), know_graph (every knode; id-title-type tip escaped via the gen_okf bundle round-trip). No script change - test-only; the WI-102 contract is now regression-pinned.",docs/reviews/019-REVIEW-A.md,,
+ WI-141,[v3] dev slice: SR-051-rev interface-wired render + descend-a-layer,dashboard,SR-051,WI-135;WI-145,done,"Two commits (When roadmap + How-SW containment): replaced the tiered views' in-place <details> expand with a shared Simulink-style drill renderer (DRILL_STYLE/DRILL_SCRIPT/_drill_layer_svg/_render_drill in gen_trajectory.py) — each tier is an SVG block diagram with input/output ports, seams/edges wire OUT->IN ports (deduped union aggregated to the container boundary), a container block double-clicks (or Enter/Space on focus) to DESCEND one layer, and a self-contained breadcrumb restores any ancestor. When view: phase->workstream->campaign->work-item layers, per-phase accent, <=3/<=3 fallback to campaign_containment byte-identical. How-SW: component/module/external block layers, one layer_edges helper generalizing the WI-073 cross/intra/boundary split; no-CMP vacuity + TOP_VIEW_MAX bound unchanged. Byte-deterministic; --check stable. SR-051/LLR-052/TC-052 Planned->Verified (phase v2 rejoins G3; v3 held at G2 until WI-142..144). Tests: 3 named TC-052 cases + reworked WI-087/WI-073 tiering cases; full suite 728 passed.",docs/specs/owner-intake-2026-07-13.md#v3-dashboard-ux,dashboard-ux,
+ WI-142,[v3] dev slice: Process tab intake + human-decision loops,dashboard,SR-055,WI-135;WI-145,done,"Added Process-tab Panel 4 (SR-055): the two circular working loops as linked flow panels via a new gen_trajectory._loop_panel(root) — (A) intake: owner/agent intake -> triage into WIs -> resume loop (docs/next-wi) -> build/review -> merge; (B) human-decision: open-items population incl. the gate-ratification table -> human review/ruling -> log Decisions -> merge - sharing one LLM_Agent entry node rendered once. Each stage links to its canonical home (status.md/work-items.csv/next-wi/open-items.md/log.md) when present, else plain text so every emitted href resolves; the loop structure carries no repo data, so it renders byte-identically regardless of the registries. Reuses the existing .pflow chip idiom + a .loop wrap-back marker. SR-055/LLR-056/TC-056 Planned->Verified (v3 stays G2 until WI-143/144). 4 TC-056 tests in test_gen_trajectory.py.",docs/specs/owner-intake-2026-07-13.md#v3-dashboard-ux,dashboard-ux,
+ WI-143,[v3] dev slice: decomposition render polish (columns/arrows/hover),dashboard,SR-056,WI-135;WI-145,done,"SR-056 shipped in gen_trajectory.py: right-sized tier columns (declared MAX_TIER_COL bound; narrower where content allows), one horizontal parent->child containment arrow per descend edge (class=cedge), and a persistent last-hovered highlight keyed to data-node (no flash-on-exit). Folded OI-10: leaf wi_block hover title now carries the delivery Phase, and the SR-051/LLR-052/TC-052 threshold wording reconciled (>3 = When-view tiers; How-SW = WI-073 containerization bounded at TOP_VIEW_MAX). LLR-057/TC-057 Verified; 3 TC-057 cases + 1 OI-10 leaf-phase case.",docs/specs/owner-intake-2026-07-13.md#v3-dashboard-ux,dashboard-ux,
+ WI-144,[v3] dev slice: dashboard UI-quality pass (accessibility/uniformity/usability + critique),dashboard,SR-052;SR-053;SR-054,WI-141;WI-142;WI-143,active,,docs/specs/owner-intake-2026-07-13.md#v3-dashboard-ux,dashboard-ux,
+ WI-145,Owner ratification sitting: OI-8 ([v3]-[g2] batch) + OI-9 (research-knowledge spec),docs,,WI-135;WI-138,done,"Owner sitting 2026-07-14 (log.md Decisions): OI-8 RATIFIED - the [v3]-[g2] dashboard-ux batch (SR-052..056 LLR/TC + the 3 docs/rubrics/dashboard-* rubrics + the SR-051 rev) blessed under single-ratify, unblocking the v3 dev slices WI-141..144; OI-9 RATIFIED as revised - the research-knowledge design spec accepted, filing its Section 8 WIs (WI-152..157 queued, WI-158 deferred). run-state -> RUNNING, next-wi -> WI-141.",,,
+ WI-146,Ratification package - batch-scoped SN->SR->LLR/TC tree + brief link check,scripts,,~WI-130;~WI-093;WI-145,done,"Owner-intake 2026-07-14 #hierarchy-view. (a) trace.py --ratify SCOPE (a phase tag or SR-id list) emits the batch-scoped SN->SR->LLR/TC hierarchy WITH prose (SR Requirement/AC, LLR Detail+Module/Component, TC Method/Expected, any docs/rubrics/*.md cited) to stdout or --out FILE, reusing the loaded/filtered working sets - a generator mode that runs no checks (exit 0). (b) check_trajectory.ratify_brief_findings: warn-first (never a gate fail) lint that an `## OI-N` open-items.md section whose decision names a `[phase]-[g1|g2]` anchor + ratification language links the view (a `trace.py --ratify` cmd token or a ratif/hierarch link) - vacuous without such a brief; silent on the live repo (the only [v3]-[g2] token is intro prose, outside any OI section). (c) gate-advance SKILL 'Carry the hierarchy view' step + the redacted REVIEWER_PROMPT names the view a REQUIRED input for a G1/G2 ratification diff. (d) gate-advance G2->G3 recipe line: a [g2] batch also authors/updates the IF-### rows its LLRs imply (PROCESS.md 8). Skills re-synced byte-identical (.claude/.agents). Tests: 3 in test_trace.py (SR-list prose, phase+rubric+empty, --out) + 4 in test_trajectory.py (unlinked warns, cmd/link silent, vacuous). No spine change.",docs/specs/owner-intake-2026-07-14.md#hierarchy-view,owner-intake-2026-07-14,
+-WI-147,Coordinator graceful pause - declared pause request wraps to a clean stop,unattended,,WI-024;WI-145,queued,,docs/specs/owner-intake-2026-07-14.md#pause-blackout,owner-intake-2026-07-14,
++WI-147,Coordinator graceful pause - declared pause request wraps to a clean stop,unattended,,WI-024;WI-145,done,"agent_loop.py honors docs/pause (pause_reason helper + top-of-loop boundary check, exit 8): launch-time refusal, graceful stop after the in-flight session, delete-to-resume (run-state untouched); per-lane like run-state. PROCESS_OPTIONS unattended section documents it (+650 B, baseline re-stamped 136,099). 4 tests.",docs/specs/owner-intake-2026-07-14.md#pause-blackout,owner-intake-2026-07-14,
+ WI-148,Weekday blackout window - no new sessions inside configured UTC hours,unattended,,WI-023;WI-024;~WI-147;WI-145,queued,,docs/specs/owner-intake-2026-07-14.md#pause-blackout,owner-intake-2026-07-14,
+ WI-149,Lowest-gate-first queue advisory (check_trajectory warn),scripts,,WI-093;~WI-115;WI-145,queued,,docs/specs/owner-intake-2026-07-14.md#gate-first,owner-intake-2026-07-14,
+ WI-150,Planner-assigned BuildTier - deliberate tier at WI filing,docs,,WI-126;WI-145,queued,,docs/specs/owner-intake-2026-07-14.md#tier-routing,owner-intake-2026-07-14,
+ WI-151,Throughline pointer - vendorable design-system package note,docs,,~WI-083;WI-145,queued,,docs/specs/owner-intake-2026-07-14.md#throughline,owner-intake-2026-07-14,
+ WI-152,Knowledge home - docs/knowledge/README.md + bootstrap scaffold wiring + scaffold tests,scripts,,WI-145,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+ WI-153,Knowledge ref integrity - trace.py warn-first Knowledge resolution + knowledge->component coupling warn + fixtures,scripts,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+ WI-154,Research-track process text - PROCESS_OPTIONS section + component-layer cross-link + PROCESS.md pointer + reviewer-charter line,docs,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+ WI-155,Dogfood knowledge packs - seed meta packs + CMP refs then run the seed prompt->image research WI end-to-end,research,,WI-152;WI-153,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,strong
+diff --git a/docs/status.md b/docs/status.md
+index c0bcb24..341182e 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -83,33 +83,33 @@ home elsewhere — don't restate it here:
+   2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
+   ref integrity + knowledge⇒component coupling) · **WI-154** (process text) ·
+   **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
+   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
+   domains filter); **WI-158** deferred (OKF pack export). The owner sequences
+   this campaign at the g2-close sitting; do not auto-start it._
+ - **Queued (owner intake 2026-07-14** — triage + answers:
+   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
+-  **WI-147** (graceful pause) · **WI-148** (weekday blackout window) ·
+-  **WI-149** (lowest-gate-first advisory) · **WI-150** (planner-assigned
+-  BuildTier) · **WI-151** (throughline pointer). Their sitting-gate predecessor
+-  is satisfied (the 2026-07-14 sitting closed), so these are the loop's
+-  **actionable non-dependent backlog** — the loop works them in id order (the
+-  ratification-package WI shipped 2026-07-14, see [log.md](log.md)) unless the
+-  owner reorders `docs/next-wi` at the pending g2-close sitting._
++  **WI-148** (weekday blackout window) · **WI-149** (lowest-gate-first advisory) ·
++  **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline pointer).
++  Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so
++  these are the loop's **actionable non-dependent backlog** — the loop works them
++  in id order (the ratification-package + graceful-pause WIs shipped 2026-07-14,
++  see [log.md](log.md)) unless the owner reorders `docs/next-wi` at the pending
++  g2-close sitting._
+ - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
+   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
+   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
+   [work-items.csv](requirements/work-items.csv). The highest-value next step is
+   the `main-decomposition` campaign (**WI-080** → **WI-081**), sequenced *behind*
+   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+-- **Next action:** **WI-147** ([next-wi](next-wi)) — run-state **RUNNING**. The
+-  loop works the actionable owner-intake backlog (WI-147…151, id order) while
++- **Next action:** **WI-148** ([next-wi](next-wi)) — run-state **RUNNING**. The
++  loop works the actionable owner-intake backlog (WI-148…151, id order) while
+   WI-144 is paused and the g2-close sitting is DUE in parallel (Open items
+   above). Shipped work + round-by-round evidence → [log.md](log.md) / OI-12,
+   not here.
+ 
+ ## Scope
+ 
+ - **Goal:** keep the kit **maintainable and trustworthy** — the
+   `PROJECT-VISION:` tag opening [README.md](../README.md) is canonical.
+[0m
+The implementation meets the boundary-stop behavior, but it omits the spec’s required `run-state` `ask:` record. I’ll record that requirement miss and the forward-only status-surface regression in the review verdict.
+[0m% [0mPatch 1 file
+[0m→ [0mRead docs/reviews/062-REVIEW-A.md
+[0m
+[0m$ [0mgit diff --check; git status --short
+?? docs/reviews/062-REVIEW-A.md
+[0m
+[0m# [0mTodos
+[✓] Identify review range and authoritative WI-147 requirements
+[✓] Inspect implementation diff and related registry consistency
+[✓] Run required harness and write independent review verdict
+[0m
+Review written to `docs/reviews/062-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED findings=2`
+
+Harness observed:
+- `python project-trajectory/scripts/check.py`: `RESULT: PASS`
+- `python project-trajectory/scripts/trace.py --strict`: `orphans=0 integrity=0`
+- `check_trajectory --strict`: clean.
