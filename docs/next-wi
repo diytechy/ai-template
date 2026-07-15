@@ -22,7 +22,19 @@
 # density) remains deferred to WI-159. EXACT RESUME: run the FRESH provider-
 # heterogeneous re-critique; on APPROVE WI-144 closes, the full gate bar runs,
 # the spine rejoins G3.
-# AFTER WI-144 CLOSES: stop NEEDS-HUMAN for the owner to sequence the next
-# campaign — research-knowledge (WI-152..157) vs the deferred main-decomposition
-# (WI-080->WI-081). Do NOT auto-start WI-152+ ahead of that greenlight.
+# RESOLUTION IN PROGRESS (2026-07-15, in-chat): the browser-backend churn
+# (sessions 070-073 each re-hit WI-144's rendered critique with no browser and
+# stopped) is being resolved by an OWNER manual critique instead. The loop is
+# `docs/pause`-held while that happens (run-state stays RUNNING per OI-13). On the
+# owner's APPROVE, WI-144 closes + the full gate bar runs + the spine rejoins G3;
+# on CHANGES, a build round runs. Then `docs/pause` is deleted and the loop
+# resumes under `docs/gate-policy`=autonomous.
+# NOTE the DAG-actionable off-spine backlog if WI-144 stays open: WI-161
+# (per-phase preference knob) · WI-163 (critique-budget dial) · WI-166
+# (dev-setup.template.cmd) · WI-162 (parallel-dispatch spec) — all hard
+# predecessors done, none depend on WI-144, so the loop has real work even before
+# WI-144 closes (this is why run-state is RUNNING, not a stale NEEDS-HUMAN park).
+# AFTER WI-144 CLOSES: the owner sequences the next campaign — research-knowledge
+# (WI-152..157) vs the deferred main-decomposition (WI-080->WI-081). Do NOT
+# auto-start WI-152+ ahead of that greenlight.
 WI-144

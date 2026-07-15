@@ -13,4 +13,4 @@
 # (docs/gate-policy.md — scaffolded by `bootstrap.py --gate-policy`); the §4
 # fixed points hold at every level. This policy value is itself hand-set — change
 # it in a reviewed commit (docs/gate itself is generated, never hand-edited).
-single-ratify
+autonomous

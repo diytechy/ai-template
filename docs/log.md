@@ -196,6 +196,26 @@ why (one bullet each; cite ids)._
   `npm i -g @openai/codex` + `codex login`. Alternatives passed over: Sol
   everywhere permanently (owner chose the knob path) · wait for the knob
   (delays the directive).
+- **2026-07-15 — OWNER DIRECTIVE (in-chat): `docs/gate-policy` `single-ratify`
+  → `autonomous`.** The owner flipped the gate authority so campaigns iterate
+  through their gates on an independent fresh-context LLM reviewer's verdict —
+  no human g2-close sitting — to "let the build iterate as far as possible
+  without stopping." **Reversible / temporary** (owner: "I may change it again
+  later"); the deviation register ([gate-policy.md](gate-policy.md)) is rewritten
+  for the autonomous level, with the prior `single-ratify` (OI-2) preserved as
+  restorable history. Config-layer only — **no spine change**, so the flip does
+  not move the derived gate (`docs/gate` stays the `derive_gate.py` value, G2
+  while v3 is open). **Honest scope note:** this does **not** unblock the current
+  WI-144 stop — that is a *browser-backend* gap for the dashboard's perceptual
+  `Critique`, and the register's **"No un-run greens"** fixed point holds at
+  every level (the loop may not fabricate an APPROVE it could not render); under
+  `single-ratify` v3 was already "autonomous after" the 2026-07-14 g2-close
+  sitting, so the flip changes nothing for v3 and only removes the human sitting
+  for **future** campaigns (research-knowledge, main-decomposition). Alternatives
+  passed over: keep `single-ratify` (the human sitting adds latency the owner
+  doesn't want for now) · a per-WI/per-campaign dial (that is WI-163, not yet
+  built). The loop was `docs/pause`-stopped for this change (WI-147, ratified
+  OI-13) and resumes on delete.
 
 ## Audit log
 

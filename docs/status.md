@@ -43,21 +43,22 @@ home elsewhere — don't restate it here:
 
 - **Open items** _(one bullet per item; `OI-N` ids are stable and never
   renumbered):_
-  - **WI-144 final build round is implemented and mechanized** (3 TC-HARDEN +
-    residual A4/T4/U4/U3/U1/U5 fixes; [log.md](log.md)); T2 stays deferred →
-    **WI-159**. The fresh provider-heterogeneous critique is the exact resume
-    point; this session had no browser backend, so no approval was fabricated.
-    On APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 the owner
-    sequences the next campaign (research-knowledge WI-152… vs the deferred
-    `main-decomposition`).
-  - **Needs <human>** — make an in-app browser backend available and relaunch,
-    or record WI-144's fresh rendered heterogeneous critique; only an actual
-    `APPROVE` may close it.
+  - **WI-144 is browser-blocked — being resolved by an OWNER manual critique
+    (2026-07-15, in-chat).** The final build round is implemented and mechanized
+    (3 TC-HARDEN + residual A4/T4/U4/U3/U1/U5 fixes; [log.md](log.md)); T2 stays
+    deferred → **WI-159**. The one step left is the perceptual `Critique` APPROVE
+    of the rendered `PROJECT_STATE.html`; sessions 070-073 each re-hit it with no
+    browser backend and stopped, so the owner records the critique directly
+    instead. On APPROVE, WI-144 closes and the spine rejoins G3; on CHANGES, a
+    build round runs. The loop is `docs/pause`-held during this (run-state stays
+    RUNNING per OI-13). **WI-144 is not the loop's only work:** the off-spine
+    WI-161/163/166 + the WI-162 spec are DAG-actionable (predecessors done, no
+    WI-144 dependency), so `autonomous` has real work to resume onto.
   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
-    in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
-    pause on the items below. Depth per item in
-    [open-items.md](open-items.md):_
+    in [log.md](log.md) Decisions; `docs/gate-policy` is now **`autonomous`**
+    (owner directive 2026-07-15) so the loop does **not** pause on the items
+    below. Depth per item in [open-items.md](open-items.md):_
     - **OI-3** — **push decision** (git-checked: `origin` exists, this branch
       tracked, ~10 unpushed commits — not "48 local-only"); rec: push.
     - **OI-4** — rule **WI-097** (LICENSE + public/private intent); no rec —
@@ -104,11 +105,16 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-144 fresh heterogeneous re-critique** ([next-wi](next-wi))
-  — run-state **NEEDS-HUMAN** pending the ask above. The final build round is
-  implemented; T2 remains deferred → WI-159. On APPROVE WI-144 closes, the full gate bar runs,
-  the spine rejoins G3, and the loop stops NEEDS-HUMAN for the owner to sequence
-  the next campaign. Round-by-round evidence → [log.md](log.md), not here.
+- **Next action:** **the owner's WI-144 rendered critique** (in-chat) — open
+  `PROJECT_STATE.html`, judge it against the three `docs/rubrics/dashboard-*.md`
+  rubrics, and give APPROVE or the changes seen. run-state is **RUNNING** with the
+  loop `docs/pause`-held so the verdict records without racing a session. On
+  APPROVE: WI-144 closes, the full gate bar runs, the spine rejoins G3; then
+  `docs/pause` is deleted and the loop resumes under `docs/gate-policy`=
+  **autonomous** (the DAG-actionable WI-161/163/166/162 backlog, then the
+  owner-sequenced research-knowledge campaign). Round-by-round evidence →
+  [log.md](log.md), not here.
+
 ## Scope
 
 - **Goal:** keep the kit **maintainable and trustworthy** — the
