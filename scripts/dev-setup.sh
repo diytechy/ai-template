@@ -8,15 +8,16 @@
 # (format), pytest + pytest-cov (the self-test suite and the harness's coverage
 # step), pytest-xdist (`-n auto` parallel execution — the declared test command,
 # WI-075), an offline Mermaid renderer for the generated diagrams, and the two
-# agent CLIs the unattended layer routes through — claude + opencode
-# (docs/agents.csv pair rows; preflight-enforced at agent-resume boot, WI-109).
+# agent CLIs the unattended layer routes through — claude + codex
+# (docs/agents.csv pair rows; preflight-enforced at agent-resume boot, WI-109;
+# codex replaced opencode at the WI-160 provider-CLI swap, 2026-07-14b).
 # Consent-first: the default only reports; --install acts.
 #
 # Usage:  sh scripts/dev-setup.sh [--check | --install]
 #   --check    (default) report what's present; install nothing.
 #   --install  create ./.venv (ruff + pytest + pytest-cov + pytest-xdist, asks first) AND wire
 #              the pre-commit process floor (core.hooksPath=.githooks; local +
-#              reversible). Then OFFERS the agent CLIs (claude, opencode) — each
+#              reversible). Then OFFERS the agent CLIs (claude, codex) — each
 #              its own [y/N] (WI-112): most users want the agentic workflow, but
 #              both are deferrable for someone driving sessions with their own
 #              tools or an IDE extension.
@@ -85,13 +86,13 @@ report "pytest-xdist (parallel -n auto)" "$([ -n "$PY" ] && "$PY" -c 'import imp
 # unattended layer (agent_loop preflight refuses to boot without an enabled
 # row's CLI); everything above still works without them.
 report "claude CLI (agent sessions: agent-resume.*)" "$(have claude && echo 1 || echo 0)" "npm install -g @anthropic-ai/claude-code; then run claude once to sign in"
-report "opencode CLI (the OPENAI-* rows in docs/agents.csv)" "$(have opencode && echo 1 || echo 0)" "npm install -g opencode-ai (or see opencode.ai); then: opencode auth login"
+report "codex CLI (the OPENAI-* rows in docs/agents.csv)" "$(have codex && echo 1 || echo 0)" "npm install -g @openai/codex; then: codex login"
 report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } && echo 1 || echo 0)" "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
 report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" "run --install, or: git config core.hooksPath .githooks"
 
 if [ "$MODE" = "check" ]; then
   echo
-  if ! have claude || ! have opencode; then
+  if ! have claude || ! have codex; then
     echo "note: agent CLI(s) missing above — agent-resume.* cannot boot the unattended"
     echo "loop while docs/agents-enabled lists their rows (preflight refuses, naming"
     echo "each gap + hint). --install offers each CLI, individually consented;"
@@ -145,11 +146,11 @@ fi
 echo
 echo "Agent CLIs (docs/agents.csv routes unattended sessions through these):"
 offer_cli claude "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
-offer_cli opencode "opencode-ai" "sign in with: opencode auth login"
-if ! have claude || ! have opencode; then
+offer_cli codex "@openai/codex" "sign in with: codex login"
+if ! have claude || ! have codex; then
   echo
   echo "NOTE: docs/agents-enabled currently routes sessions through BOTH claude and"
-  echo "opencode — with either CLI missing, agent-resume.* cannot boot the walk-away"
+  echo "codex — with either CLI missing, agent-resume.* cannot boot the walk-away"
   echo "loop (its preflight refuses, naming each gap and its install/sign-in hint)."
   echo "Skipping is fine if you drive sessions with your own tools or an IDE"
   echo "extension; then trim docs/agents-enabled to the rows whose CLIs you keep."

@@ -41,6 +41,25 @@ moved to the head of `docs/agents-enabled`.
   `-c model_reasoning_effort=<level>` — left unwired, same no-telemetry-parity
   reason as WI-110).
 
+## dev-setup-windows
+
+**WI-160 follow-up (same directive, owner follow-up question "will dev-setup
+also install the OpenAI CLI?").** Two gaps closed in the meta repo at the
+follow-up: (1) `scripts/dev-setup.{sh,ps1}` still checked/offered **opencode**
+after the codex swap — both twins now report/offer the **codex CLI**
+(`npm install -g @openai/codex`, `codex login`); pinned test strings updated
+(`test_onboard_devsetup.py`). (2) **No Windows double-click rung existed**
+(`dev-setup.command` is macOS-only; double-clicking a `.ps1` opens an editor) —
+new `scripts/dev-setup.cmd` shim runs `-Check` then offers `-Install`, logic
+staying in the `.ps1` (the WI-051 `.command` pattern, Windows twin).
+
+**WI-166 (queued, scripts).** Ship the rung downstream: a
+`dev-setup.template.cmd` twin of `dev-setup.template.command` — scaffold-surface
+work (bootstrap `MAPPING` + `test_bootstrap` file lists + README kit-contents +
+a syntactic-validity test, per the session-protocol scaffold rule). Done-when: a
+fresh scaffold ships the `.cmd` rung; double-click on Windows reports then
+offers install; tests cover presence + shape; README row updated.
+
 ## phase-preference
 
 **WI-161 (queued, unattended).** A per-phase model *preference* knob so "builder

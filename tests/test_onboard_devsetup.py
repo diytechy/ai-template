@@ -236,11 +236,12 @@ def test_meta_repo_dogfoods_dev_setup():
     # WI-109: the two agent CLIs the unattended layer routes through are named
     # required dev tools here (the labels print [ok]/[missing] either way, so
     # this is stable on a CI box that has neither). The ps1 twin carries the
-    # same rows (asserted textually — no PowerShell on POSIX CI).
+    # same rows (asserted textually — no PowerShell on POSIX CI). codex replaced
+    # opencode at the WI-160 provider-CLI swap (2026-07-14b).
     assert "claude CLI" in proc.stdout
-    assert "opencode CLI" in proc.stdout
+    assert "codex CLI" in proc.stdout
     ps1 = (REPO_ROOT / "scripts/dev-setup.ps1").read_text(encoding="utf-8")
-    assert "claude CLI" in ps1 and "opencode CLI" in ps1
+    assert "claude CLI" in ps1 and "codex CLI" in ps1
     # WI-111: --install is delta-aware — the nothing-to-do fast path (skips the
     # prompt AND the pip self-upgrade when ./.venv already has all four tools)
     # exists in both twins. Asserted textually: executing --install in a test
@@ -257,7 +258,7 @@ def test_meta_repo_dogfoods_dev_setup():
     for name in DEVSETUP:
         text = (REPO_ROOT / name).read_text(encoding="utf-8")
         assert "CLI now (npm install -g" in text, name + " missing the per-CLI offer"
-        assert "opencode-ai" in text and "@anthropic-ai/claude-code" in text, (
+        assert "@openai/codex" in text and "@anthropic-ai/claude-code" in text, (
             name + " missing an npm package name"
         )
         assert "cannot boot the walk-away" in text, (

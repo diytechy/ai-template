@@ -90,8 +90,11 @@ home elsewhere — don't restate it here:
   budget dial: `inf`-until-APPROVE | `block`-on-exhaust) · **WI-164**
   (optimization-methodology research — joins the research-knowledge campaign
   behind WI-152) · **WI-165** (Process-tab circular loops, SR-055 — behind the
-  v3 closer). Owner pre-req for Sol builds: install `@openai/codex` +
-  `codex login`._
+  v3 closer) · **WI-166** (`dev-setup.template.cmd` Windows double-click rung —
+  the meta shim + codex dev-setup rows already shipped at the intake follow-up,
+  log.md). Owner pre-req for Sol builds: install `@openai/codex` + `codex login`
+  (`scripts/dev-setup.ps1 -Install` or the new double-click
+  `scripts\dev-setup.cmd` offers it)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in

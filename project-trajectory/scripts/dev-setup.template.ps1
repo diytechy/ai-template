@@ -1,4 +1,4 @@
-# dev-setup (Windows) — provision the *developer workstation* rung of the
+﻿# dev-setup (Windows) — provision the *developer workstation* rung of the
 # onboarding ladder (process.md §7):
 #
 #     Stage 0  ->  dev-setup  ->  setup  ->  check

@@ -1,4 +1,4 @@
-# dev-setup for THIS repo (the ai-template meta-repo) — the concrete dogfood of
+﻿# dev-setup for THIS repo (the ai-template meta-repo) — the concrete dogfood of
 # the onboarding ladder's dev-setup rung (project-trajectory/PROCESS.md §7).
 #
 # The kit ships project-trajectory/scripts/dev-setup.template.{sh,ps1} with EMPTY
@@ -7,15 +7,16 @@
 # (format), pytest + pytest-cov (the self-test suite and the harness's coverage
 # step), pytest-xdist (`-n auto` parallel execution — the declared test command,
 # WI-075), an offline Mermaid renderer for the generated diagrams, and the two
-# agent CLIs the unattended layer routes through — claude + opencode
-# (docs/agents.csv pair rows; preflight-enforced at agent-resume boot, WI-109).
+# agent CLIs the unattended layer routes through — claude + codex
+# (docs/agents.csv pair rows; preflight-enforced at agent-resume boot, WI-109;
+# codex replaced opencode at the WI-160 provider-CLI swap, 2026-07-14b).
 # Consent-first: the default only reports; -Install acts.
 #
 # Usage:  powershell -ExecutionPolicy Bypass -File scripts\dev-setup.ps1 [-Check | -Install]
 #   -Check    (default) report what's present; install nothing.
 #   -Install  create .\.venv (ruff + pytest + pytest-cov + pytest-xdist, asks first) AND wire
 #             the pre-commit process floor (core.hooksPath=.githooks; local +
-#             reversible). Then OFFERS the agent CLIs (claude, opencode) — each
+#             reversible). Then OFFERS the agent CLIs (claude, codex) — each
 #             its own [y/N] (WI-112): most users want the agentic workflow, but
 #             both are deferrable for someone driving sessions with their own
 #             tools or an IDE extension.
@@ -56,8 +57,8 @@ try {
     # row's CLI); everything above still works without them.
     Report "claude CLI (agent sessions: agent-resume.*)" (Have "claude") `
         "npm install -g @anthropic-ai/claude-code; then run claude once to sign in"
-    Report "opencode CLI (the OPENAI-* rows in docs/agents.csv)" (Have "opencode") `
-        "npm install -g opencode-ai (or see opencode.ai); then: opencode auth login"
+    Report "codex CLI (the OPENAI-* rows in docs/agents.csv)" (Have "codex") `
+        "npm install -g @openai/codex; then: codex login"
     Report "offline Mermaid renderer" ((Have "code") -or (Have "mmdc") -or (Have "npx")) `
         "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
     $hooksPath = (git config --get core.hooksPath 2>$null)
@@ -66,7 +67,7 @@ try {
 
     if (-not $Install) {
         Write-Host ""
-        if ((-not (Have "claude")) -or (-not (Have "opencode"))) {
+        if ((-not (Have "claude")) -or (-not (Have "codex"))) {
             Write-Host "note: agent CLI(s) missing above — agent-resume.* cannot boot the unattended"
             Write-Host "loop while docs/agents-enabled lists their rows (preflight refuses, naming"
             Write-Host "each gap + hint). -Install offers each CLI, individually consented;"
@@ -138,11 +139,11 @@ try {
     Write-Host ""
     Write-Host "Agent CLIs (docs/agents.csv routes unattended sessions through these):"
     Offer-Cli "claude" "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
-    Offer-Cli "opencode" "opencode-ai" "sign in with: opencode auth login"
-    if ((-not (Have "claude")) -or (-not (Have "opencode"))) {
+    Offer-Cli "codex" "@openai/codex" "sign in with: codex login"
+    if ((-not (Have "claude")) -or (-not (Have "codex"))) {
         Write-Host ""
         Write-Host "NOTE: docs/agents-enabled currently routes sessions through BOTH claude and"
-        Write-Host "opencode — with either CLI missing, agent-resume.* cannot boot the walk-away"
+        Write-Host "codex — with either CLI missing, agent-resume.* cannot boot the walk-away"
         Write-Host "loop (its preflight refuses, naming each gap and its install/sign-in hint)."
         Write-Host "Skipping is fine if you drive sessions with your own tools or an IDE"
         Write-Host "extension; then trim docs/agents-enabled to the rows whose CLIs you keep."

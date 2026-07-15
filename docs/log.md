@@ -6195,3 +6195,20 @@ docs + registry only, proceed under the derived gate).
 **Handoff.** Run-state **RUNNING**, `docs/next-wi` → **WI-144** (unchanged —
 the final build round remains first; the new WIs queue behind the existing
 order). Not pushed (`push-policy: human`).
+
+**Addendum (same day) — WI-160 follow-up: dev-setup catches up with the codex
+swap + a Windows double-click rung.** The owner asked whether dev-setup installs
+the OpenAI CLI — it didn't: both meta twins (`scripts/dev-setup.{sh,ps1}`) still
+checked/offered **opencode** (a WI-160 gap). Fixed: report row + `--install`
+offer + both missing-CLI notes now name the **codex CLI**
+(`npm install -g @openai/codex`, `codex login`); the pinned strings in
+`test_onboard_devsetup.py` updated with it. And the owner's "test the
+double-clicker" surfaced that no Windows rung existed (`dev-setup.command` is
+macOS-only; double-clicking a `.ps1` opens an editor) — new
+**`scripts/dev-setup.cmd`** shim (meta dogfood): runs `-Check`, then offers
+`-Install`, all logic staying in the `.ps1` (the WI-051 `.command` pattern).
+The scaffold-surface template twin (`dev-setup.template.cmd` + MAPPING + tests +
+README) filed as **WI-166**. Spec: the intake-b doc's `dev-setup-windows`
+section; WI-160's Deliverable cell extended. Verification in the follow-up
+commit (the dev-setup module runs explicitly — it is a `SLOW_MODULES` member the
+smoke tier drops).
