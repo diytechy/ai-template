@@ -42,15 +42,17 @@ questions that changed that plan without restating its contract.
 - **What happens to the delivery `Phase` (v2/v3)?** Derived from closed gate
   anchors; the integrator prefers the largest phase bump among composed trains;
   the `Phase` column survives only for a forward-deferred SR (intent, not a
-  derivable fact). Isolated campaigns become parallelizable trains;
-  overlapping-spine campaigns stay a later rung.
+  derivable fact). Campaign is only a WI attribute, never a scheduling unit, so
+  campaign-tagged WIs parallelize wherever off-spine — no isolation machinery.
 - **When does an integration edit force re-review?** Only a *material* edit — a
   hunk the integrator authors that is not byte-identical to one side of the merge.
   Clean applies and verbatim one-side resolutions do not; generated artifacts are
   exempt. The rule is mechanical so it cannot drift between sessions.
-- **Are `Exclusive` keys or new hard edges learned automatically?** No. Telemetry
-  *suggests*; a human ratifies. The dispatcher never auto-enforces a learned
-  serialization rule.
+- **Are `Exclusive` keys / hard edges runtime rules?** No — they are *planning-time
+  declarations* set at WI draft. A runtime collision is under-allocation evidence:
+  the run records it and reconciles, never pausing; a human corrects future WI
+  drafts (and can declare a key on a not-yet-run WI sharing the resource). Never
+  inferred or enforced by the dispatcher.
 - **The DAG is checked before commit — what more builds confidence?** The
   validator confirms declared edges are well-formed but cannot detect a
   *forgotten* edge. Confidence = a one-time audit promoting real `~` soft edges to
@@ -58,6 +60,27 @@ questions that changed that plan without restating its contract.
 - **How are stale `llm/` branches handled?** An advisory rolling check (like the
   push/privacy checks) reports train/integrate branches older than ~2 days,
   splitting merged from unintegrated, and never deletes — human-driven for now.
+- **How is a launch sequenced?** Drain every open `llm/*` branch to an integrated
+  baseline (surface + exit if one cannot merge), discard the stale traincar
+  schedule, clear G1 then G2 spine work serially at whole-project scope (exit for
+  ratification under attended/human authority; self-ratify under autonomous), then
+  plan and dispatch parallel build-out.
+- **How does a traincar execute?** One Build pass (plan/optimize as needed, one
+  commit per WI) → one Review over the traincar's combined diff. Safe because
+  clustering only groups review-compatible WIs (off-spine, bounded, non-critique,
+  no boundary crossing); strong/spine/critique work runs as its own single-WI
+  traincar.
+- **How are WIs packed into traincars and dispatched?** The open design piece —
+  resource-constrained DAG scheduling with clustering. Design path: (1) add an
+  `EstTokens` estimate to WIs, calibrated from session telemetry; (2) design the
+  batch-vs-parallel clustering heuristic; (3) define traincar-DAG ingestion (a
+  traincar whose deps are all integrated feeds a free worker thread as one opens
+  up). Research anchors: list scheduling (Graham 1966 — greedy is within 2× of
+  optimal, so no optimal scheduler is needed), HEFT upward-rank (Topcuoglu et al.
+  2002), DAG clustering / DSC (Sarkar 1989; Yang & Gerasoulis 1994), LPT
+  bin-packing; applied analogs `make -j`/Ninja, Bazel/Nx/Turborepo, merge queues
+  (GitHub/Bors/Zuul speculative pipelines), Airflow pools + Temporal durable
+  execution.
 
 ## Evidence that changed the earlier proposal
 
