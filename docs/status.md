@@ -61,8 +61,9 @@ home elsewhere — don't restate it here:
   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
   2026-07-14 ratification; the ref-integrity slice (trace.py Knowledge resolution
   + knowledge⇒component coupling) landed 2026-07-15 ([log.md](log.md)). The
-  dogfood packs + first live research pass also landed ([knowledge index](knowledge/README.md)). Remaining:
-  **WI-157** (skills domains filter); **WI-158** deferred (OKF pack export).
+  dogfood packs + first live research pass, pack library, and domain-filtered
+  skill library also landed ([knowledge index](knowledge/README.md)). Remaining:
+  **WI-158** deferred (OKF pack export) and **WI-164** (optimization research).
   The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
   no stop in between; the DAG now sequences its remaining slices._
@@ -86,10 +87,9 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-157** (skills domains filter + staged skill-library
-  import; default `BuildTier=medium`) continues the owner-greenlit
-  research-knowledge campaign; its DAG then carries **WI-164** automatically.
-  `docs/next-wi` points at **WI-157**. The grounded research review for the completed dogfood slice is recorded in
+- **Next action:** **WI-164** (optimization-methodology research;
+  `BuildTier=strong`) continues the owner-greenlit research-knowledge campaign.
+  `docs/next-wi` points at **WI-164**. The grounded research review for the completed dogfood slice is recorded in
   [reviews/101-GROUNDING.md](reviews/101-GROUNDING.md). This was off-spine docs,
   so nothing rides a re-attestation.
   Only deferred main-decomposition (**WI-080**→**WI-081**) stays parked. Codex

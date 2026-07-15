@@ -118,8 +118,9 @@ deliverable, not the matcher**: the schema + index are what let a *later* tool d
 something smarter; the built-in matcher stays a one-function set-intersection.
 
 Non-interactive/CI runs never prompt: with `--agents none` (the default) nothing
-is materialized; with an explicit agent flag and no scope answers, all `kit`
-skills are materialized (the safe superset).
+is materialized. With an explicit agent flag and no domain choice, only
+`domains: [any]` kit skills materialize; domain-specific skills and knowledge
+packs require an explicit matching `--domain` opt-in.
 
 ## Future external skill sources (the plug-in contract)
 
@@ -145,8 +146,12 @@ external source must honor this contract:
    auto-run, and its body is reviewable text in the repo (diffable in the PR that
    adds it).
 
-This kit ships only the **built-in** skills below; the fetch mechanism itself is
-a future tool that plugs in here — the convention is what makes it possible now.
+The kit ships both universal process skills and curated domain skills. Domain
+skills materialize only when their `domains` metadata intersects the adopter's
+explicit `--domain` choice; `--domain any` keeps them out. The generated
+[`INDEX.csv`](INDEX.csv) is the complete shipped inventory. The fetch mechanism
+itself is a future tool that plugs in here — the convention is what makes it
+possible now.
 
 ## Shipped skills
 
@@ -157,6 +162,12 @@ a future tool that plugs in here — the convention is what makes it possible no
 | `registry-hygiene` | kit | Run `trace.py`/`check.py` with the right flags; read orphan/schema findings and fix them. |
 | `downstream-resync` | kit | Walk `ADOPTING.md` §6 to upgrade an adopted repo to kit HEAD. |
 | `gate-advance` | kit | Move G1→G2→G3 honestly — including `Attest` usage and attested-vs-mechanized reporting. |
+
+The curated domain library adds web/rendering/model-inference skills for `web`,
+robotics/perception/simulation skills for `hardware`, and cross-domain skills
+where the applicability metadata names more than one domain. Skills tagged
+`domains: [any]` are intentionally universal and remain part of the safe base
+set. Read `INDEX.csv` rather than duplicating that evolving inventory here.
 
 **Split rationale.** `registry-hygiene`, `downstream-resync`, and `gate-advance`
 are **`kit`-scope**: every adopted repo runs the same registries, gates, and

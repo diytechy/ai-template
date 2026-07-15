@@ -6904,3 +6904,33 @@ trajectory regeneration.
 `docs/run-state` remains **RUNNING** and `docs/next-wi` → **WI-157** (default
 `BuildTier=medium`) for skills domain filtering and the staged skill-library
 import. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-157 (research-knowledge campaign): domain-filtered skill library
+
+**What shipped.** The neutral `project-trajectory/skills/` source now carries
+the 21 skills from the owner-ratified staging library: web/rendering/model-
+inference, hardware/perception/kinematics/simulation, and deliberately universal
+process/evaluation procedures. The generated index now inventories 26 skills.
+Bootstrap documentation now states the consent boundary precisely: an explicit
+agent with no domain selection receives only `domains: [any]` skills; web and
+hardware skills materialize only when `--domain` explicitly intersects them.
+
+**Tests / deviations / budgets.** A bootstrap integration test proves web,
+hardware, and neutral selection across Claude and Codex materialization paths,
+including exclusion of the opposite domain. The preceding pack-library slice
+had already landed the trivial domain matcher in `bootstrap.py`, so this WI did
+not duplicate or rewrite that mechanism; it imported the staged skill bodies,
+corrected the stale safe-superset wording, and pinned the behavior. No budget-
+watched file changed. This is off-spine content/tests, so no re-attestation rides
+it.
+
+**End green (real output).** Full unfiltered `pytest -q -n auto` → **772 passed,
+34 skipped in 86.03s**. Commit bar after close bookkeeping: smoke → **642
+passed, 2 skipped in 66.12s**; `check_docs.py --root . --stale` → **OK, 109
+docs, 450 links, 0 broken** (42 historical orphan warnings). The commit bar was
+rerun after this session record.
+
+**Handoff.** WI-157 → done; `PROJECT_STATE.html` regenerated;
+`docs/run-state` remains **RUNNING** and `docs/next-wi` → **WI-164**
+(`BuildTier=strong`) for optimization-methodology research. Not pushed
+(`docs/push-policy: human`).

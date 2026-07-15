@@ -391,8 +391,8 @@ def select_skills(stack, domain, binary_assets):
     Only `scope: kit` skills are materialized downstream — `this-repo` skills
     maintain *this* template and are meaningless in an adopted product repo
     (skills/README.md "split rationale"). Returns a list of (name, SKILL.md path).
-    When no scope was declared (all answers blank), every kit skill matches (the
-    safe superset)."""
+    An unspecified domain resolves to `any`, which selects universal skills but
+    not domain-specific ones; those require an explicit domain opt-in."""
     chosen = []
     skills_dir = KIT / "skills"
     if not skills_dir.is_dir():

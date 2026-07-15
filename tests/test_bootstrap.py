@@ -534,6 +534,28 @@ def test_agents_both_materializes_for_both(tmp_path):
         assert (dest / agent_dir / "settings.json.example").exists()
 
 
+def test_domain_skills_require_matching_explicit_opt_in(tmp_path):
+    for name in ("web", "hardware", "neutral"):
+        (tmp_path / name).mkdir()
+    web = _bootstrap(tmp_path / "web", "--agents", "claude", "--domain", "web")
+    web_skills = {p.name for p in (web / ".claude" / "skills").iterdir()}
+    assert "ui-accessible-component" in web_skills
+    assert "ros2-perception-pipeline" not in web_skills
+
+    hardware = _bootstrap(
+        tmp_path / "hardware", "--agents", "codex", "--domain", "hardware"
+    )
+    hardware_skills = {p.name for p in (hardware / ".agents" / "skills").iterdir()}
+    assert "ros2-perception-pipeline" in hardware_skills
+    assert "ui-accessible-component" not in hardware_skills
+
+    neutral = _bootstrap(tmp_path / "neutral", "--agents", "claude")
+    neutral_skills = {p.name for p in (neutral / ".claude" / "skills").iterdir()}
+    assert "ui-accessible-component" not in neutral_skills
+    assert "ros2-perception-pipeline" not in neutral_skills
+    assert "registry-hygiene" in neutral_skills
+
+
 def test_scaffold_with_agents_still_green(tmp_path):
     # Materializing the agent layer must not break the out-of-the-box harness.
     dest = _bootstrap(tmp_path, "--agents", "both")
