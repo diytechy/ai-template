@@ -2103,6 +2103,7 @@ def main():
     round_verdicts = []  # (phase, Verdict, provider, model_id) collected this round
     rounds = []  # accumulated round dicts the escalation policy reads
     last_impl_family = None  # the FAMILY of the build under review (heterogeneity key)
+    last_impl_wi = ""  # durable rework scope if that build's review requests changes
     last_impl_tier = "medium"  # the tier that build ran at
     impl_range = None  # the build's commit range (for the tripwire diff)
     swapped = False  # an implementer-family swap has been applied
@@ -2198,7 +2199,9 @@ def main():
         # since a BUILD that closes its WI rewrites docs/next-wi to the next one;
         # recorded as a `# wi:` header line + an index column. A `;`-batch value
         # (WI-133) is kept verbatim; empty when docs/next-wi is absent.
-        wi_label = read_declared(lane / "next-wi", "")
+        queued_wi = read_declared(lane / "next-wi", "")
+        rework_wi = read_declared(lane / "rework-wi", "")
+        wi_label = rework_wi or queued_wi
         before = head_sha(root)
         now = time.time()
         is_review = False
@@ -2244,8 +2247,9 @@ def main():
                 # escalation override below still wins after it (tier-up-never-
                 # down), so a pin never caps escalation. A bad pin logs loud and
                 # falls back to the phase default (never fatal, never silent).
+                scope_pointer = lane / ("rework-wi" if rework_wi else "next-wi")
                 pinned, pin_note = build_tier_pin(
-                    lane / "next-wi", docs / "requirements" / "work-items.csv"
+                    scope_pointer, docs / "requirements" / "work-items.csv"
                 )
                 if pin_note:
                     print("route [{}]: {}".format(phase or "—", pin_note))
@@ -2326,6 +2330,17 @@ def main():
             else:
                 body = None
             prompt, guarded = session_prompt(model, body=body)
+            if (
+                rework_wi
+                and not is_review
+                and not is_critique
+                and phase in ("", "BUILD")
+            ):
+                prompt = (
+                    "REWORK OVERRIDE: docs/rework-wi names {}. Rework that reviewed "
+                    "scope and its recorded findings before docs/next-wi; do not advance "
+                    "the backlog pointer.\n\n---\n\n{}".format(rework_wi, prompt)
+                )
         else:
             phase, model = session_model()
             tmpl = session_template(phase)
@@ -2586,6 +2601,32 @@ def main():
                     "escalate: {} — {}".format(decision["action"], decision["reason"])
                 )
                 round_verdicts = []
+                if merged == "CHANGES-REQUESTED" and last_impl_wi:
+                    rework_path = lane / "rework-wi"
+                    rework_path.write_text(last_impl_wi + "\n", encoding="utf-8")
+                    commit_telemetry(
+                        root, session, "review rework scope", [rework_path]
+                    )
+                    print(
+                        "dispatch: CHANGES-REQUESTED -> rework override {} "
+                        "outranks docs/next-wi".format(last_impl_wi)
+                    )
+                elif merged == "APPROVE":
+                    rework_path = lane / "rework-wi"
+                    if (
+                        last_impl_wi
+                        and rework_path.exists()
+                        and read_declared(rework_path, "") == last_impl_wi
+                    ):
+                        rework_path.unlink()
+                        commit_telemetry(
+                            root, session, "review rework scope cleared", [rework_path]
+                        )
+                        print(
+                            "dispatch: APPROVE -> cleared rework override {}".format(
+                                last_impl_wi
+                            )
+                        )
                 if decision["action"] == "page-human":
                     fa = agent_route.failure_action(gate_policy)
                     print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
@@ -2711,6 +2752,7 @@ def main():
                 )
             elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
                 last_impl_family = route_family
+                last_impl_wi = wi_label
                 impl_range = commits
                 # The review round follows the reviewer dial (S8).
                 if rp_int >= 1:

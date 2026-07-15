@@ -6596,3 +6596,36 @@ historical orphan warnings plus pre-existing stale hints on unrelated docs).
 **Handoff:** run-state remains **RUNNING**; `docs/next-wi` → **WI-170**
 (`BuildTier=medium`, the mechanism fix that closes the orphaned-rework gap).
 Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-170 (review rework carry-forward, BUILD, medium): requested changes cannot fall behind the backlog pointer
+
+**Scope ([reviews/085-DESIGN-CHECK.md](reviews/085-DESIGN-CHECK.md)).** Closed
+the twice-observed orphaning gap where a reviewed BUILD had already advanced
+`docs/next-wi`, then CHANGES-REQUESTED merely reset `run-phase=BUILD` and the
+next driver silently built the new WI. Managed review dispatch now writes the
+reviewed scope to coordinator-owned `docs/rework-wi`; that durable pointer
+outranks `docs/next-wi` for the BUILD prompt, telemetry WI label, and BuildTier
+lookup. It is committed immediately as coordinator telemetry, persists through
+repeated review rounds and restarts, and clears in its own telemetry commit only
+when APPROVE names the same scope. The advanced backlog pointer remains intact.
+PROCESS_OPTIONS is the single-home contract.
+
+**Tests / deviations / residue.** The new end-to-end regression makes WI-OLD
+advance `next-wi` to WI-NEW before its review requests changes, proves the
+second BUILD is explicitly re-scoped to WI-OLD, then proves APPROVE clears the
+override and leaves WI-NEW ready. Full managed-review module: **24 passed in
+44.79s**. No deviation from the design-check ruling. Preserved legitimate
+coordinator residue: [reviews/090-REVIEW-A.md](reviews/090-REVIEW-A.md) is the
+zero-finding APPROVE for WI-167, and `run-phase` returns its expected tripwire
+DESIGN-CHECK residue to BUILD. Byte deltas: `AGENTS.template.md` **9978 → 9978**
+(untouched, 22 B headroom); `PROCESS.md` **59827 → 59827** (unchanged);
+`PROCESS_OPTIONS.md` **138370 → 139038** (**+668 B**, the new durable-pointer
+contract; baseline re-stamped in all three byte-budget skill copies).
+
+**End green (real output).** Full unfiltered suite: **751 passed, 34 skipped in
+81.08s**. Commit bar: `pytest -q -n auto -m smoke` → **625 passed, 2 skipped
+in 62.49s**; `check_docs.py --root . --stale` → **OK, 98 docs, 416 links, 0
+broken** (40 historical orphan warnings plus pre-existing stale hints).
+`PROJECT_STATE.html` regenerated for WI-170 → done. **Handoff:** run-state remains **RUNNING**;
+`docs/next-wi` → **WI-152**, the first research-knowledge campaign slice (no
+BuildTier pin, so phase default). Not pushed (`docs/push-policy: human`).

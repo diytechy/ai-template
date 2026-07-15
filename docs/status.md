@@ -65,8 +65,7 @@ home elsewhere — don't restate it here:
   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
   domains filter); **WI-158** deferred (OKF pack export). The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
-  no stop in between; the DAG sequences it (WI-152 first, its ratification-sitting
-  predecessor already done)._
+  no stop in between; the DAG sequences it from WI-152._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
   All owner-intake WIs are complete — the loop worked them in id order after the
@@ -87,23 +86,14 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **the loop resumes under `autonomous`** — the 085
-  design-check ([reviews/085-DESIGN-CHECK.md](reviews/085-DESIGN-CHECK.md))
-  ruled **GRIND-THROUGH** on the top-tier shared-failure page (review rounds 31
-  + 33 both CHANGES-REQUESTED at strong) and found both rounds' findings had
-  been **orphaned**, so four remediation rows jump the backlog. Three have now
-  shipped (session log): the `dev-setup.template.cmd` `-Install`→`-Baseline`
-  fix, the Process-tab loop CSS + TC-056 remediation, and the tripwire
-  path-coverage fix (`REVIEW_POLICY_PATHS` now also lists the
-  `project-trajectory/scripts/` referee paths, so the implementer-touched-review
-  wire fires on this meta-repo's own kit-script layout). The order continues:
-  **WI-170** (mechanize CHANGES-REQUESTED rework carry-forward — the orphaning
-  gap itself; `medium`); `docs/next-wi` is pointed at **WI-170**. Expected
-  by-design side effect (076-DESIGN-CHECK): the tripwire-coverage commit touches
-  a now-listed path, so its own review round fires the tripwire once.
-  **After the backlog the loop flows into the research-knowledge campaign**
-  (WI-152…157 + WI-164) automatically — the owner greenlit it 2026-07-15; only
-  the deferred `main-decomposition` (WI-080→WI-081) stays parked. Codex Sol
+- **Next action:** **WI-152** (knowledge home + bootstrap scaffold wiring), the
+  first open row in the owner-greenlit research-knowledge campaign;
+  `docs/next-wi` points at WI-152. The remediation backlog from
+  085-DESIGN-CHECK is complete, including the durable `docs/rework-wi`
+  carry-forward that prevents a CHANGES-REQUESTED
+  review from being orphaned when the reviewed build already advanced
+  `docs/next-wi`. The DAG then sequences WI-153…157 + WI-164 automatically.
+  Only deferred main-decomposition (WI-080→WI-081) stays parked. Codex Sol
   builds are live. Round-by-round evidence → [log.md](log.md), not here.
 
 ## Scope

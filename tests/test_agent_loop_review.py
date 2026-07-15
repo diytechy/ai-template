@@ -66,6 +66,12 @@ else:
     with open(str(cf), "a", encoding="utf-8") as fh:
         fh.write("b\n")
     pathlib.Path("work.txt").write_text("build progress " + str(n), encoding="utf-8")
+    advance = ctl / "advance_next_wi"
+    if advance.exists():
+        pathlib.Path("docs/next-wi").write_text(
+            advance.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        subprocess.run(["git", "add", "docs/next-wi"], check=True)
     commit("work.txt", "build progress " + str(n))
     done_after = (
         int((ctl / "done_after").read_text(encoding="utf-8"))
@@ -322,6 +328,32 @@ def test_two_top_tier_failures_page_the_human(managed_repo):
     state = (repo / "docs" / "run-state").read_text(encoding="utf-8").splitlines()
     assert state[0].strip() == "NEEDS-HUMAN"
     assert state[1].startswith("ask: review escalation")  # WI-127 ask line
+
+
+def test_changes_requested_rework_scope_outranks_advanced_next_wi(managed_repo):
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (repo / "docs" / "next-wi").write_text("WI-OLD\n", encoding="utf-8")
+    (ctl / "advance_next_wi").write_text("WI-NEW\n", encoding="utf-8")
+    (ctl / "verdict_body.txt").write_text(
+        "- [MAJOR] work.txt:1 -> broken -> fix -> @owner\n"
+        "VERDICT: CHANGES-REQUESTED findings=1\n",
+        encoding="utf-8",
+    )
+    first = _loop(repo, cmd, "--max-iterations", "2")
+    assert first.returncode == 6, first.stdout + first.stderr
+    assert (repo / "docs" / "next-wi").read_text(encoding="utf-8").strip() == "WI-NEW"
+    assert (repo / "docs" / "rework-wi").read_text(encoding="utf-8").strip() == "WI-OLD"
+
+    (ctl / "verdict_body.txt").write_text(
+        "VERDICT: APPROVE findings=0\n", encoding="utf-8"
+    )
+    second = _loop(repo, cmd, "--max-iterations", "2")
+    assert second.returncode == 6, second.stdout + second.stderr
+    prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
+    assert "REWORK OVERRIDE: docs/rework-wi names WI-OLD" in prompts
+    assert not (repo / "docs" / "rework-wi").exists()
+    assert (repo / "docs" / "next-wi").read_text(encoding="utf-8").strip() == "WI-NEW"
 
 
 def test_absent_enable_list_keeps_legacy_behavior(managed_repo):

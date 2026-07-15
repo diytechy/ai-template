@@ -773,6 +773,15 @@ behavior**, so a fresh scaffold pays nothing.
   of the original proposal is deliberately **not** a column: a WI whose `SpecRef`
   points at a filled spec already *is* plan-ready (the anti-duplication rule), and
   PLAN is bounce-only, so the coordinator never needs a parallel boolean.
+  **Review rework carry-forward (WI-170).** When a managed review merges to
+  `CHANGES-REQUESTED`, the coordinator records the reviewed BUILD scope in
+  `docs/rework-wi`. That coordinator-owned pointer outranks `docs/next-wi` for
+  the next BUILD's prompt, telemetry label, and BuildTier lookup, so a build
+  that already advanced the backlog cannot orphan its findings. It remains
+  durable through further review rounds and coordinator restarts; only an
+  `APPROVE` of that same scope clears it. `docs/next-wi` is left intact, ready
+  for the backlog to resume after the rework approves. Absent `rework-wi`,
+  routing is byte-identical to the per-WI behavior above.
 - **Reviewer independence (the evidence-backed core).** Reviewers are fresh
   sessions, **two families, at least one differing from the implementer's —
   *preferred, not required*** (family = who trained the model, so a router-fronted

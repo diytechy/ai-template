@@ -7,28 +7,11 @@
 # — one session, one review round, strongest-member pin (WI-133); an
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
-# NOTE (2026-07-15, 085-DESIGN-CHECK): review round 33 (084-REVIEW-A of WI-165,
-# CHANGES-REQUESTED strong) hit the page_top_tier_fails=2 threshold together
-# with round 31 (080-REVIEW-A of WI-166, CHANGES-REQUESTED strong); gate-policy
-# autonomous routed the page to a cross-family strong design-check, which ruled
-# GRIND-THROUGH (docs/reviews/085-DESIGN-CHECK.md): two independent mechanical
-# implementation defects, no shared spec failure, no redesign. The trace found
-# BOTH rounds' findings had been ORPHANED (WI-166 sits done with 080's BLOCKER
-# unfixed; next-wi had already advanced past WI-165's rework), so remediation
-# rows were filed per the WI-139/WI-140 idiom and jump the backlog:
-# NEXT ORDER: WI-168 DONE (080 rework - dev-setup.template.cmd -Install no-op;
-# medium) -> WI-169 DONE (084 rework - div.loop CSS scoping + TC-056; strong) ->
-# WI-167 DONE (tripwire path coverage - REVIEW_POLICY_PATHS now lists the
-# project-trajectory/scripts/ referee paths; medium) -> WI-170 (mechanize
-# CHANGES-REQUESTED rework carry-forward; medium).
-# No batching: each remediation gets its own review round. Note (076-DESIGN-CHECK):
-# WI-167's own commit touches a now-listed path, so its review round fires the
-# implementer-touched-review tripwire once - expected, by design.
-# THEN (owner GREENLIT 2026-07-15): flow straight into the research-knowledge
-# campaign WI-152..157 + WI-164 — no stop between it and the backlog; the DAG
-# edges sequence it (WI-152 first, predecessor WI-145 done). Only the deferred
-# main-decomposition (WI-080->WI-081) stays parked — do not auto-start it.
+# WI-170 closed the 085-DESIGN-CHECK remediation backlog. The owner-greenlit
+# research-knowledge campaign now starts at WI-152 and proceeds by its DAG
+# through WI-153..157 + WI-164. Only the deferred main-decomposition
+# (WI-080->WI-081) stays parked — do not auto-start it.
 # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
 # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to
 # Fable); per-WI BuildTier pins above still apply.
-WI-170
+WI-152
