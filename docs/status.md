@@ -97,7 +97,7 @@ home elsewhere — don't restate it here:
   **WI-163** (critique-budget dial) → **WI-166** (`dev-setup.template.cmd`) →
   **WI-162** (parallel-dispatch spec) → **WI-165** (Process circular loops) →
   **WI-167** (tripwire path coverage — filed by the 076 design-check, which
-  ruled GRIND-THROUGH on the WI-161 review-path tripwire page,
+  ruled GRIND-THROUGH on the last review round's tripwire page,
   [reviews/076-DESIGN-CHECK.md](reviews/076-DESIGN-CHECK.md));
   `docs/next-wi` is pointed at **WI-163**.
   The `docs/pause` hold is lifted at this close. **After the backlog the loop
