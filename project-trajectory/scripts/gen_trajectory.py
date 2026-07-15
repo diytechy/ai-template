@@ -1236,8 +1236,8 @@ def campaign_containment(wis):
 # A stable, sorted-order palette for the per-phase accent (grouping-primary
 # encoding). Deterministic: the i-th sorted phase label takes the i-th color.
 PHASE_ACCENTS = (
-    "#4f46e5", "#0e7490", "#7c3aed", "#b45309",
-    "#047857", "#be185d", "#1d4ed8", "#4d7c0f",
+    "#9f1239", "#881337", "#701a75", "#86198f",
+    "#831843", "#9d174d", "#7f1d1d", "#713f12",
 )  # fmt: skip
 
 # --- SR-051 rev (WI-141): the Simulink-style drill renderer --------------------
@@ -1294,9 +1294,7 @@ DRILL_STYLE = (
     "<style>"
     "#dag span.ph,#sw span.ph{display:inline-block;width:.55rem;height:.55rem;"
     "border-radius:2px;vertical-align:-1px;margin-right:.4rem;}"
-    "#dag p.tierlegend,#sw p.tierlegend{font-size:.82rem;color:var(--muted);"
-    "margin:.3rem 0 .6rem;}"
-    "#dag p.tierlegend .ph,#sw p.tierlegend .ph{margin-left:.7rem;}"
+    "#dag .phaselegend,#sw .phaselegend{margin:.3rem 0 .6rem;}"
     ".drill nav.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:.1rem;"
     "margin:.1rem 0 .6rem;font-size:.85rem;}"
     ".drill nav.crumbs .crumb{appearance:none;background:none;border:none;"
@@ -1310,10 +1308,10 @@ DRILL_STYLE = (
     ".drill .block[data-descend]{cursor:pointer;}"
     ".drill .block[data-descend] rect{stroke-width:1.5;}"
     ".drill .block:focus{outline:none;}"
-    ".drill .block:focus rect{stroke:#f59e0b;stroke-width:2.5;}"
+    ".drill .block:focus rect{stroke:#b45309;stroke-width:2.5;}"
     # SR-056: the hover/focus highlight persists on the last-hovered block until
     # another takes it (the shared .hl idiom — cf. the icicle/DAG/knowledge views).
-    ".drill .block.hl rect{stroke:#f59e0b;stroke-width:2.5;}"
+    ".drill .block.hl rect{stroke:#b45309;stroke-width:2.5;}"
     ".drill .block .blab{font-size:var(--nlabel);font-weight:700;}"
     ".drill .block .bsub{font-size:var(--nsub);}"
     ".drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;}"
@@ -1431,6 +1429,10 @@ def _drill_layer_svg(blocks, edges):
     for b in blocks:
         x, y = pos[b["key"]]
         cy = y + row_h / 2
+        max_label = max(1, (col_w - TIER_COL_PAD) // _BLAB_CH)
+        main_label = b["label"]
+        if len(main_label) > max_label:
+            main_label = main_label[: max_label - 1] + "…"
         label = (
             '<text x="{:.1f}" y="{:.1f}" text-anchor="middle" fill="{}">'
             '<tspan x="{:.1f}" dy="-2" class="blab">{}</tspan>'
@@ -1439,7 +1441,7 @@ def _drill_layer_svg(blocks, edges):
                 cy,
                 b.get("textfill", "var(--text)"),
                 x + col_w / 2,
-                esc(b["label"]),
+                esc(main_label),
                 x + col_w / 2,
                 esc(b["sub"]),
             )
@@ -1481,6 +1483,9 @@ def _drill_layer_svg(blocks, edges):
         # keyed to the last-hovered node (appended last, preserving the existing
         # `data-tier="…" data-descend="…"` adjacency other views assert on).
         attrs += ' data-node="{}"'.format(esc(b["key"]))
+        attrs += ' data-label="{}" data-summary="{}"'.format(
+            esc(b["label"]), esc(b.get("sub", ""))
+        )
         # U4: a leaf work-item block advertises its bare id so the When panel can
         # wire single-click + focus to the detail aside (the sw drill sets no `wi`).
         if b.get("wi"):
@@ -1496,7 +1501,7 @@ def _drill_layer_svg(blocks, edges):
                 col_w,
                 row_h,
                 b.get("fill", "var(--surface)"),
-                b.get("stroke", "var(--border)"),
+                b.get("stroke", "var(--muted)"),
                 ports,
                 cedge,
                 label,
@@ -1707,7 +1712,7 @@ def when_view(root, wis):
                 if name == "phase":
                     blk.update(fill=color[gv], textfill="#fff", stroke=color[gv])
                 else:
-                    blk.update(fill="var(--surface)", stroke="var(--border)")
+                    blk.update(fill="var(--surface)", stroke="var(--muted)")
                 blocks.append(blk)
             edges = agg_edges(subset, {w["id"]: keyfn(w) for w in subset})
             layers.append((lid, _drill_layer_svg(blocks, edges)))
@@ -1732,7 +1737,7 @@ def when_view(root, wis):
         "block — or focus it and press Enter — to <strong>descend</strong> a layer; "
         "the <strong>breadcrumb</strong> returns. A block’s ports carry the aggregated "
         "dependency edges (the deduped union of its members’ crossing edges).</p>"
-        '<p class="tierlegend">Phase accent:{}</p>'.format(
+        '<div class="legend phaselegend"><strong>Phase accent:</strong>{}</div>'.format(
             len(phases), len(workstreams), legend
         )
     )
@@ -1751,7 +1756,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     --done:#047857; --active:#b45309; --queued:#94a3b8;
     /* U1: one shared node-label / sub-label type scale across every SVG emitter
        (icicle, drill, knowledge) — no per-emitter font-size overrides. */
-    --nlabel:10px; --nsub:8.5px;
+    --nlabel:10px; --nsub:8.5px; --small:.85rem; --xsmall:.8rem;
     --shadow:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
   }
   @media (prefers-color-scheme: dark) {
@@ -1841,18 +1846,18 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         border-radius:12px; padding:1rem 1.1rem; box-shadow:var(--shadow);
         overflow-y:auto; max-height:640px; }
   .detail .hint { color:var(--muted); }
-  .detail .badge { display:inline-block; font-size:.68rem; font-weight:700;
+  .detail .badge { display:inline-block; font-size:var(--xsmall); font-weight:700;
         text-transform:uppercase; letter-spacing:.05em; padding:.15rem .5rem;
         border-radius:6px; color:#fff; }
   .detail h3 { font-size:.98rem; margin:.55rem 0 .35rem; letter-spacing:-.01em; }
-  .detail .status { color:var(--muted); font-size:.8rem; margin:0 0 .5rem; }
+  .detail .status { color:var(--muted); font-size:var(--xsmall); margin:0 0 .5rem; }
   .detail .body { color:var(--text); margin:.2rem 0; }
-  .detail .meta { color:var(--muted); font-size:.83rem; margin-top:.6rem;
+  .detail .meta { color:var(--muted); font-size:var(--small); margin-top:.6rem;
         border-top:1px solid var(--border); padding-top:.55rem; }
   @media (max-width:760px){ .layout{ grid-template-columns:1fr; }
         .detail{ max-height:none; } }
   .legend { display:flex; flex-wrap:wrap; gap:1rem; margin-top:.9rem;
-            font-size:.85rem; color:var(--muted); }
+            font-size:var(--small); color:var(--muted); }
   .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px;
               vertical-align:-1px; margin-right:.35rem; }
   footer { margin-top:2.5rem; padding-top:1rem; border-top:1px solid var(--border);
@@ -1958,7 +1963,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     function renderDetail(box, d, id, tierColor){
       if(!d){ box.innerHTML = '<p class="hint">No detail.</p>'; return; }
       box.innerHTML =
-        '<span class="badge" style="background:'+tierColor+'">'+esc(d.tier||d.status)+'</span>'
+        '<span class="badge" style="background:'+tierColor+';color:'+(tierColor==='#94a3b8'?'#0f172a':'#fff')+'">'+esc(d.tier||d.status)+'</span>'
         + '<h3>'+esc(id)+(d.title?' — '+esc(d.title):'')+'</h3>'
         + (d.status&&d.tier?'<p class="status">'+esc(d.status)+'</p>':'')
         + '<p class="body">'+esc(d.body)+'</p>'
@@ -2014,7 +2019,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       n.addEventListener('focus', () => { dagHover(id); renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||'#94a3b8'); });
     }
     if(dag) dag.addEventListener('mouseleave', dagClear);
-    // When roadmap (drill render): a leaf work-item block opens the SAME detail aside
+    // When roadmap (drill render): every block opens the SAME detail aside.
     // on single-click / focus. The `.wi` wiring above serves the small-registry SVG
     // DAG fallback; this serves the tiered drill (its blocks carry `data-wi`, and the
     // drill's own controller keeps dblclick=descend + hover=highlight). One selector
@@ -2024,6 +2029,11 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       const show = () => renderDetail(dagBox, wiDetails[id], id, statusColor[wiDetails[id]?.status]||'#94a3b8');
       b.addEventListener('click', show);
       b.addEventListener('focus', show);
+    }
+    if(dag) for(const b of dag.querySelectorAll('.block[data-node]:not([data-wi])')){
+      const id=b.getAttribute('data-label'), summary=b.getAttribute('data-summary');
+      const show=()=>renderDetail(dagBox,{tier:b.getAttribute('data-tier'),title:id,body:summary},id,'#64748b');
+      b.addEventListener('click',show); b.addEventListener('focus',show);
     }
 
     for (const b of document.querySelectorAll('nav.tabs button'))

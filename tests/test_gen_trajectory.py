@@ -1458,6 +1458,42 @@ def test_a4_node_fills_meet_the_wcag_floor():
     assert _wcag("#0f172a", gt.STATUS_FILL["queued"]) >= 4.5
 
 
+def test_a4_every_emitted_dashboard_contrast_pair_meets_floor():
+    """TC-HARDEN: computed colors must catch badge/boundary/focus regressions."""
+    gt = load_script("gen_trajectory")
+    for status, fill in gt.STATUS_FILL.items():
+        ink = "#0f172a" if status == "queued" else "#ffffff"
+        assert _wcag(ink, fill) >= 4.5, (status, ink, fill)
+    for fill in gt.PHASE_ACCENTS:
+        assert _wcag("#ffffff", fill) >= 4.5, fill
+    assert _wcag("#64748b", "#ffffff") >= 3
+    assert _wcag("#64748b", "#0f172a") >= 3
+    assert _wcag("#b45309", "#ffffff") >= 3
+
+
+def test_every_emitted_interactive_selector_matches_a_node(tmp_path):
+    """TC-HARDEN: controller selectors must not silently target dead markup."""
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    page = html_of(tmp_path)
+    assert re.search(r'class="block[^>]*data-wi="WI-\d+"', page)
+    assert re.search(r'class="block[^>]*data-node="[^"]+"', page)
+    assert re.search(r'class="block[^>]*data-node="[^"]+"(?![^>]*data-wi=)', page)
+
+
+def test_every_multifill_panel_emits_a_palette_bijection_legend(tmp_path):
+    """TC-HARDEN: every phase fill is explained exactly once in the When legend."""
+    gt = load_script("gen_trajectory")
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    page = html_of(tmp_path)
+    legend = page.split('class="legend phaselegend"', 1)[1].split("</div>", 1)[0]
+    swatches = re.findall(r'class="ph" style="background:(#[0-9a-f]{6})"', legend)
+    assert set(swatches) == set(gt.PHASE_ACCENTS[: len(swatches)])
+    assert swatches
+    assert len(swatches) == len(set(swatches))
+
+
 def test_a4_no_sub_label_opacity_discount(tmp_path):
     # A4: the emitted CSS must not discount sub-label text opacity (which dropped
     # the effective contrast below the floor). No `.sub`/`.bsub { ... opacity }`.

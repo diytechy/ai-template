@@ -8,19 +8,19 @@
 # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
 # The DRIVER maintains this alongside docs/status.md Next action.
 # NOTE (phase-v3 g2-close sitting, 2026-07-14 — OI-11/12/13 RULED, log.md
-# Decisions): WI-144 RESUMES for ONE final owner-directed build round. The
+# Decisions): WI-144's final owner-directed build round is implemented. The
 # critique budget is a per-run in-memory counter (agent_loop critique_rounds), so
 # a fresh launch restores it — no reset file needed. Ratified round scope (OI-12):
 # MECHANIZE FIRST via the 3 TC-HARDEN (contrast WCAG>=4.5 · every emitted selector
 # matches >=1 element · every multi-fill panel emits a legend / palette-bijection),
-# then land every residual contrast/label surface at once — 052's [MAJOR] A4
+# landed residual contrast/label surfaces were 052's [MAJOR] A4
 # queued `.detail .badge` (2.56:1 -> dark ink) · [MINOR] A4 focus ring (2.05:1 ->
 # darker) · [MAJOR] T4 `.blab` overflow (truncate like `.bsub`) · U4/U3/U1 polish
 # — together with the U5 palette de-collision (phases get their own hue family
 # distinct from the status vocabulary; U5 is now an anchor in
-# docs/rubrics/dashboard-uniformity.md). DEFER [MAJOR] T2 (Knowledge-tab 249-node
-# flat density) to WI-159 (its own `.knode`/`knowarrow` pass). Then a FRESH
-# re-critique judges the round; on APPROVE WI-144 closes, the full gate bar runs,
+# docs/rubrics/dashboard-uniformity.md). [MAJOR] T2 (Knowledge-tab 249-node flat
+# density) remains deferred to WI-159. EXACT RESUME: run the FRESH provider-
+# heterogeneous re-critique; on APPROVE WI-144 closes, the full gate bar runs,
 # the spine rejoins G3.
 # AFTER WI-144 CLOSES: stop NEEDS-HUMAN for the owner to sequence the next
 # campaign — research-knowledge (WI-152..157) vs the deferred main-decomposition

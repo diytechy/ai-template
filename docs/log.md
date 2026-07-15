@@ -6216,3 +6216,29 @@ smoke tier drops). Second rider (owner follow-up "can I pass -Install to the
 `dev-setup.command` `"$@"` parity, prompt/pause skipped) —
 `scripts\dev-setup.cmd -Install` works; textual dogfood test added
 (`test_meta_repo_dogfoods_devsetup_cmd`: ASCII-only + delegation + `%*`).
+
+## 2026-07-14 — WI-144 final build round implemented; fresh critique pending
+
+Implemented the owner-ratified final dashboard-quality round without closing the
+WI: queued-badge ink and interactive block/focus contrast now meet A4; long drill
+labels ellipsize while their full accessible title remains; When containers share
+click/focus detail behavior with How-SW; phase and status palettes no longer
+collide; phase legends use the shared legend idiom; and the small type scale uses
+shared tokens. T2 remains deliberately deferred to WI-159.
+
+Mechanized first, per the ruling: three new TC-HARDEN tests compute emitted
+contrast pairs, prove the interactive controller selectors have live targets,
+and require the multi-fill phase panel's palette/legend bijection. Targeted run:
+**8 passed, 70 deselected in 1.53s**. End green: smoke **615 passed, 2 skipped in
+61.82s**; `check_docs --stale` **OK — 86 docs, 383 links, 0 broken** (existing
+orphan/staleness hints only); final unfiltered suite **740 passed, 34 skipped in
+76.37s**. No byte-budgeted file touched; no spine state changed.
+
+Deviation: the in-app browser runtime reported no available browser backends, so
+this session could not honestly perform the required fresh rendered,
+provider-heterogeneous critique. WI-144 therefore stays `active`, run-state stays
+**RUNNING**, and `docs/next-wi` remains **WI-144** with the exact resume point:
+run that critique; only APPROVE may close the WI and advance v3 to G3. Not pushed
+(`docs/push-policy: human`).
+The WI Deliverable remains empty because `check_trajectory` enforces that field
+as close-only while status/log carry this active-WI progress.

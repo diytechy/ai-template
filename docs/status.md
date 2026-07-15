@@ -43,13 +43,11 @@ home elsewhere — don't restate it here:
 
 - **Open items** _(one bullet per item; `OI-N` ids are stable and never
   renumbered):_
-  - **The phase-v3 g2-close sitting is DONE** (2026-07-14 — OI-11/12/13 ruled,
-    [log.md](log.md) Decisions). **WI-144 resumes for one final owner-directed
-    build round**: the 3 TC-HARDEN are mechanized first, then the residual A4/T4
-    contrast+label fixes + U4/U3/U1 polish + the **U5** palette de-collision land
-    together (U5 is now an anchor in `docs/rubrics/dashboard-uniformity.md`); T2 is
-    deferred → **WI-159**. A fresh re-critique then judges the round and, on
-    APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 closes the owner
+  - **WI-144 final build round is implemented and mechanized** (3 TC-HARDEN +
+    residual A4/T4/U4/U3/U1/U5 fixes; [log.md](log.md)); T2 stays deferred →
+    **WI-159**. The fresh provider-heterogeneous critique is the exact resume
+    point; this session had no browser backend, so no approval was fabricated.
+    On APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 the owner
     sequences the next campaign (research-knowledge WI-152… vs the deferred
     `main-decomposition`).
   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
@@ -103,11 +101,9 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-144's final build round** ([next-wi](next-wi)) —
-  run-state **RUNNING**. The phase-v3 g2-close sitting ruled OI-11/12/13
-  (2026-07-14, [log.md](log.md) Decisions), so the loop resumes WI-144 with the
-  ratified round scope (TC-HARDEN-first, then the A4/T4 + U5 fixes; T2 → WI-159).
-  A fresh re-critique judges it; on APPROVE WI-144 closes, the full gate bar runs,
+- **Next action:** **WI-144 fresh heterogeneous re-critique** ([next-wi](next-wi))
+  — run-state **RUNNING**. The ratified final build round and its 3 TC-HARDEN are
+  implemented; T2 remains deferred → WI-159. On APPROVE WI-144 closes, the full gate bar runs,
   the spine rejoins G3, and the loop stops NEEDS-HUMAN for the owner to sequence
   the next campaign. Round-by-round evidence → [log.md](log.md), not here.
 
