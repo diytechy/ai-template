@@ -2102,6 +2102,9 @@ def main():
     review_queue = []  # the pending review phases for the current round
     round_verdicts = []  # (phase, Verdict, provider, model_id) collected this round
     rounds = []  # accumulated round dicts the escalation policy reads
+    page_fails_since = 0  # WI-171: rounds index the shared-failure tally counts
+    # from — advanced to len(rounds) each time a page dispatches so an
+    # already-paged strong-tier fail can't re-page forever (only NEW fails do).
     last_impl_family = None  # the FAMILY of the build under review (heterogeneity key)
     last_impl_wi = ""  # durable rework scope if that build's review requests changes
     last_impl_tier = "medium"  # the tier that build ran at
@@ -2595,7 +2598,7 @@ def main():
                     )
                 )
                 decision = agent_route.escalate(
-                    rounds, route_constants, swapped, at_top_tier
+                    rounds, route_constants, swapped, at_top_tier, page_fails_since
                 )
                 print(
                     "escalate: {} — {}".format(decision["action"], decision["reason"])
@@ -2628,6 +2631,12 @@ def main():
                             )
                         )
                 if decision["action"] == "page-human":
+                    # WI-171: this page has now surfaced the current round history
+                    # to a human (attended) or a design-check (autonomous). Re-arm
+                    # the shared-failure tally so the same already-paged strong-tier
+                    # fails can't re-page every subsequent round — only NEW fails
+                    # recorded after this dispatch accumulate toward the next page.
+                    page_fails_since = len(rounds)
                     fa = agent_route.failure_action(gate_policy)
                     print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
                     if fa["mode"] == "attended":

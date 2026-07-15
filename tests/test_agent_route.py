@@ -222,6 +222,28 @@ def test_escalate_pages_on_top_tier_shared_failure():
     assert d["action"] == "page-human" and "shared-failure" in d["reason"]
 
 
+def test_escalate_shared_failure_tally_rearms_after_dispatch():
+    # WI-171: the shared-failure page must not re-fire forever on already-paged
+    # strong-tier fails. `fails_since` is the dispatch boundary the coordinator
+    # advances each time a page dispatches; only rounds AT/AFTER it count.
+    c = route.DEFAULT_CONSTANTS
+    sf = lambda: {"verdict": "CHANGES-REQUESTED", "tier": "strong", "margin": 0}
+    ok = lambda: {"verdict": "APPROVE", "tier": "strong", "margin": 0}
+    rounds = [sf(), sf()]  # two strong-tier fails -> the shared-failure regime
+    assert route.escalate(rounds, c)["action"] == "page-human"
+    # The coordinator dispatches and advances the boundary to len(rounds); a
+    # later clean APPROVE now counts zero fresh fails, so no re-page (the 094
+    # design-check bug: a clean APPROVE was still paging).
+    boundary = len(rounds)
+    rounds.append(ok())
+    d = route.escalate(rounds, c, fails_since=boundary)
+    assert d["action"] == "continue"
+    # But two FRESH strong-tier fails after the boundary re-page (semantics kept).
+    rounds.extend([sf(), sf()])
+    d = route.escalate(rounds, c, fails_since=boundary)
+    assert d["action"] == "page-human" and "shared-failure" in d["reason"]
+
+
 def test_escalate_pages_on_tripwire_and_double_contradiction():
     c = route.DEFAULT_CONSTANTS
     assert (

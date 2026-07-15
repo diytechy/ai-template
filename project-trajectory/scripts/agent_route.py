@@ -540,7 +540,7 @@ def _consecutive_changes_requested(rounds):
     return n
 
 
-def escalate(rounds, constants=None, swapped=False, at_top_tier=False):
+def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_since=0):
     """The fixed win-stay/lose-shift decision after a review round.
 
     `rounds` is the chronological history, each a dict:
@@ -551,6 +551,15 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False):
       contradiction    -> True when the two reviewers gave opposite verdicts
       tripwire         -> True when any anti-gaming tripwire fired
     `swapped`/`at_top_tier` are the coordinator's applied-so-far state.
+
+    `fails_since` (WI-171) is the round index the shared-failure tally counts
+    from: the coordinator advances it to len(rounds) each time a page dispatches,
+    so an already-paged (and, under autonomous policy, already-ruled) strong-tier
+    failure cannot re-page forever — only NEW strong-tier failures recorded after
+    the last dispatch accumulate toward the shared-failure regime. The last-round
+    tripwire and two-round contradiction pages carry their own bounded windows and
+    are unaffected (the default 0 preserves the whole-run count for callers that
+    pass no index).
 
     Returns {'action', 'reason', 'next_primary'} with action in
     {continue, swap-implementer, tier-up, page-human}.
@@ -583,7 +592,7 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False):
         }
     top_tier_fails = sum(
         1
-        for r in rounds
+        for r in rounds[max(0, fails_since) :]
         if r.get("tier") == "strong"
         and str(r.get("verdict", "")).upper() == "CHANGES-REQUESTED"
     )
