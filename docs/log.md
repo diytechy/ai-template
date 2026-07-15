@@ -6832,3 +6832,45 @@ smoke/docs commit bar was rerun after this session record.
 **Handoff.** WI-154 → done; no spine change. `docs/run-state` remains
 **RUNNING** and `docs/next-wi` → **WI-155** (`BuildTier=strong`) for the dogfood
 packs and seed prompt→image research pass. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-155 (research-knowledge campaign): dogfood packs + seed research pass
+
+**What shipped.** The meta-repo now dogfoods its knowledge layer with a linked
+`docs/knowledge/README.md` index and three packs referenced by `CMP-004`:
+agent-routing evidence distilled from the archive, effort-tiering evidence and
+its low-effort fabrication caution, and the seed prompt→image token-efficiency
+research deliverable. The seed answers all three named questions with explicit
+assumptions: image-vs-text cost for dense prose, structured code/table, and a
+short instruction on representative current OpenAI and Anthropic paths;
+readable-resolution/OCR fidelity; and image-prefix caching behavior. The result
+is native text by default, adding images only where appearance or spatial layout
+is itself evidence. No renderer was built.
+
+**Research execution + grounding review.** The declared strong-tier route was
+kept: three directed gatherers collected provider cost/cache facts, primary OCR
+evidence, and the worked prompt shapes; the coordinator verified and synthesized
+the pack. Fresh-context grounded review
+[`101-GROUNDING.md`](reviews/101-GROUNDING.md) checked cited primary sources,
+repo facts, arithmetic, and anti-duplication. It found one MEDIUM overstatement
+that a renderer necessarily requires a non-stdlib dependency; the pack now
+qualifies that acceptable cross-platform typography would *likely* add one.
+Re-review: **APPROVE**.
+
+**Deviations / budgets / spine.** The spec called for at least two seed packs;
+three were created because the live seed research's deliverable is itself a
+pack. No budget-watched file changed. This is off-spine research/docs plus a CMP
+knowledge reference, so SN/SR/LLR/TC states and the derived G3 gate are unchanged.
+
+**End green (real output).** Full unfiltered `pytest -q -n auto` → **769 passed,
+34 skipped in 81.79s**. Pre-close integrity: `trace.py --strict` → **SN=24 SR=56
+LLR=57 TC=57, orphans=0, component-findings=0**;
+`check_trajectory.py --strict` was clean before close bookkeeping and exposed the
+expected stale closed-id reference after the WI row advanced; that reference was
+removed before the final bar. Commit bar: `pytest -q -n auto -m smoke` → **642
+passed, 2 skipped in 65.35s**; `check_docs.py --root . --stale` → **OK, 108
+docs, 445 links, 0 broken** (41 warn-only historical orphans).
+
+**Handoff.** WI-155 → done; `PROJECT_STATE.html` regenerated;
+`docs/run-state` remains **RUNNING** and `docs/next-wi` → **WI-156** (default
+`BuildTier=medium`) for the kit-provisioned pack library. Not pushed
+(`docs/push-policy: human`).

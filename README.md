@@ -154,6 +154,9 @@ integrity-check the ids the moment real rows exist.
 | [`work-items`](project-trajectory/registries/work-items.template.csv) | `WI-###` | The execution DAG — *when/how* atop the spine's *what*: each WI delivers SRs, belongs to a workstream, and depends on predecessors (a bare id blocks; a `~`-prefixed id only orders). Validated by `check_trajectory.py`; rendered into `PROJECT_STATE.html`. |
 | [`repos`](project-trajectory/registries/repos.template.csv) | `REPO-###` | Coordinator-only, for the rare multi-repo rung: one row per delegated repo plus the coordinator SRs it fulfils ([`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md) §6). |
 
+This meta-repo dogfoods the component knowledge layer in its
+[`docs/knowledge/` index](docs/knowledge/README.md).
+
 *(Under the parallel-tracks layer,
 [`id-blocks`](project-trajectory/registries/id-blocks.template.md) additionally
 reserves per-track `SN`/`SR` hundreds-blocks so concurrent drafts never mint the

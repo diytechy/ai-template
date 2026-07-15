@@ -60,9 +60,9 @@ home elsewhere — don't restate it here:
 - **Queued (research-knowledge campaign, OI-9 §8** —
   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
   2026-07-14 ratification; the ref-integrity slice (trace.py Knowledge resolution
-  + knowledge⇒component coupling) landed 2026-07-15 ([log.md](log.md)). Remaining:
-  **WI-155** (dogfood packs + the seed prompt→image
-  research WI, `BuildTier=strong`) · **WI-156** (kit-provisioned pack library) ·
+  + knowledge⇒component coupling) landed 2026-07-15 ([log.md](log.md)). The
+  dogfood packs + first live research pass also landed ([knowledge index](knowledge/README.md)). Remaining:
+  **WI-156** (kit-provisioned pack library) ·
   **WI-157** (skills domains filter); **WI-158** deferred (OKF pack export).
   The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
@@ -87,12 +87,13 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-155** (dogfood knowledge packs + CMP refs, then run the
-  seed prompt→image research WI end-to-end; `BuildTier=strong`) continues the
-  owner-greenlit research-knowledge campaign; its DAG carries **WI-156**,
+- **Next action:** **WI-156** (kit-provisioned pack library; default
+  `BuildTier=medium`) continues the owner-greenlit research-knowledge campaign;
+  its DAG carries
   **WI-157**, and **WI-164** automatically. `docs/next-wi` points at
-  **WI-155**. The process-text slice landed 2026-07-15 (evidence in
-  [log.md](log.md)); it was off-spine docs, so nothing rides a re-attestation.
+  **WI-156**. The grounded research review for the completed dogfood slice is recorded in
+  [reviews/101-GROUNDING.md](reviews/101-GROUNDING.md). This was off-spine docs,
+  so nothing rides a re-attestation.
   Only deferred main-decomposition (**WI-080**→**WI-081**) stays parked. Codex
   Sol builds are live.
   Round-by-round evidence → [log.md](log.md), not here.
