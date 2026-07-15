@@ -50,6 +50,9 @@ home elsewhere — don't restate it here:
     On APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 the owner
     sequences the next campaign (research-knowledge WI-152… vs the deferred
     `main-decomposition`).
+  - **Needs <human>** — make an in-app browser backend available and relaunch,
+    or record WI-144's fresh rendered heterogeneous critique; only an actual
+    `APPROVE` may close it.
   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
@@ -102,11 +105,10 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** **WI-144 fresh heterogeneous re-critique** ([next-wi](next-wi))
-  — run-state **RUNNING**. The ratified final build round and its 3 TC-HARDEN are
+  — run-state **NEEDS-HUMAN** pending the ask above. The final build round is
   implemented; T2 remains deferred → WI-159. On APPROVE WI-144 closes, the full gate bar runs,
   the spine rejoins G3, and the loop stops NEEDS-HUMAN for the owner to sequence
   the next campaign. Round-by-round evidence → [log.md](log.md), not here.
-
 ## Scope
 
 - **Goal:** keep the kit **maintainable and trustworthy** — the

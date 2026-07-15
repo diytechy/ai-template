@@ -6242,3 +6242,22 @@ run that critique; only APPROVE may close the WI and advance v3 to G3. Not pushe
 (`docs/push-policy: human`).
 The WI Deliverable remains empty because `check_trajectory` enforces that field
 as close-only while status/log carry this active-WI progress.
+
+## 2026-07-14 — WI-144 fresh critique retry; browser backend unavailable
+
+Resumed at WI-144's exact remaining step and attempted the required rendered,
+provider-heterogeneous critique through the installed in-app browser runtime.
+After the prescribed recovery check, browser discovery returned an empty backend
+list, so no rendered inspection and no `APPROVE` verdict could honestly be
+produced. No product, spine, rubric, or budget-watched file changed; the WI row
+therefore remains `active` with its Deliverable empty.
+
+**Handoff.** `docs/next-wi` remains **WI-144**. Run-state is **NEEDS-HUMAN**:
+make an in-app browser backend available and relaunch, or perform and record the
+fresh heterogeneous rendered critique. On `APPROVE`, close WI-144 and run its
+full G3 gate close; do not start the next campaign before the owner sequences it.
+Not pushed (`docs/push-policy: human`).
+
+**End green (real output):** smoke **615 passed, 2 skipped in 65.70s**;
+`check_docs --stale` **OK — 87 docs, 385 links, 0 broken** (existing warnings
+only); unfiltered suite **740 passed, 34 skipped in 81.70s**.

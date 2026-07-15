@@ -6,4 +6,5 @@
 # file RUNNING — the pause signal is the exit-8 code + the stop banner, not this
 # value; don't read RUNNING here as "not paused" when a `docs/pause` file may be
 # present (PROCESS_OPTIONS "Unattended operation").
-RUNNING
+NEEDS-HUMAN
+ask: provide an in-app browser backend or record WI-144's fresh rendered heterogeneous critique
