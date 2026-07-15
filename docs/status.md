@@ -90,7 +90,12 @@ home elsewhere — don't restate it here:
   The optimization rubric and grounded review are recorded in
   [iterative-optimization.md](knowledge/iterative-optimization.md) and
   [reviews/107-GROUNDING.md](reviews/107-GROUNDING.md). This was off-spine docs,
-  so nothing rides a re-attestation. Deferred main-decomposition
+  so nothing rides a re-attestation. An **owner-directed interpreter /
+  coverage-debris hardening** landed 2026-07-15 (a VS Code `./.venv` interpreter
+  pin + a warn-only ambient-`pytest-cov` probe in the meta `dev-setup`, after
+  thousands of stranded `.coverage.*` files traced to a full `--cov` run on the
+  unpinned global interpreter, not the pinned venv) — off-spine dev tooling, no
+  spine change; detail in [log.md](log.md). Deferred main-decomposition
   (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering. Codex
   Sol builds are live.
   Round-by-round evidence → [log.md](log.md), not here.

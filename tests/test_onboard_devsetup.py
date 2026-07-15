@@ -250,6 +250,27 @@ def test_scaffold_ships_devsetup_cmd(scaffold):
     assert "%*" in text, "dev-setup.cmd missing the argument passthrough"
 
 
+def test_meta_devsetup_warns_on_racing_ambient_pytest_cov():
+    # WI-175: `--check` reports on ./.venv (its PY prefers the venv), so it never
+    # inspected the AMBIENT PATH python — the interpreter a bare `python -m pytest`
+    # actually hits. A pre-5.0 pytest-cov there races the parallel combine and
+    # strands .coverage.* debris at root (WI-105). Both meta twins now carry a
+    # warn-only probe of the PATH python. Asserted TEXTUALLY (like the WI-111/112
+    # conditional-output rows): the live warning only prints when the box happens
+    # to have a racing pre-5.0 ambient pytest-cov, which varies per machine/CI.
+    for name in DEVSETUP:
+        text = (REPO_ROOT / name).read_text(encoding="utf-8")
+        assert "pre-5.0" in text, (
+            name + " missing the WI-175 ambient-interpreter warning"
+        )
+        assert "WI-105" in text, name + " ambient warning must cite WI-105"
+        assert ".coverage.*" in text, name + " ambient warning must name the debris"
+        # It must be warn-only: the probe never changes the exit code. `sh -n`
+        # already proves the .sh parses; the exit-0 contract is re-checked by
+        # test_meta_repo_dogfoods_dev_setup / test_devsetup_check_runs_and_reports.
+        assert "[warn]" in text, name + " ambient warning must be a warn, not a failure"
+
+
 def test_meta_repo_dogfoods_dev_setup():
     # Part D: the kit provisions itself with a concrete dev-setup in scripts/
     # (the same layout it scaffolds downstream), an instantiation of the

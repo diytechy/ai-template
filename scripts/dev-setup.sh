@@ -90,6 +90,32 @@ report "codex CLI (the OPENAI-* rows in docs/agents.csv)" "$(have codex && echo 
 report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } && echo 1 || echo 0)" "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
 report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" "run --install, or: git config core.hooksPath .githooks"
 
+# Ambient-interpreter debris warning (WI-175 / WI-105). The report above describes
+# ./.venv (PY prefers it), but a bare `python -m pytest` resolves via PATH — which
+# may be a DIFFERENT interpreter carrying a pre-5.0 pytest-cov. That racing version
+# loses subprocess data from the parallel combine and strands thousands of
+# .coverage.* files at the repo root. Warn (never fail) when the PATH python is not
+# the venv and carries the racing version; point at ./.venv. The `[0-4].*` glob
+# matches only majors 0–4 (5.0.0 / 10.x never match), and an empty covver (no
+# pytest-cov on PATH) matches nothing — no coverage run, no debris to warn about.
+AMBIENT=""
+for cand in python3 python; do
+  if real "$cand"; then AMBIENT=$(command -v "$cand"); break; fi
+done
+if [ -n "$AMBIENT" ] && [ -x .venv/bin/python ] \
+   && [ "$AMBIENT" != "$(command -v .venv/bin/python 2>/dev/null)" ]; then
+  covver=$("$AMBIENT" -c 'import pytest_cov,sys; sys.stdout.write(pytest_cov.__version__)' 2>/dev/null || true)
+  case "$covver" in
+    [0-4].*)
+      echo
+      echo "  [warn] PATH python ($AMBIENT) carries pytest-cov $covver — this pre-5.0"
+      echo "         version races the parallel coverage combine and strands .coverage.*"
+      echo "         debris at the repo root (WI-105). Run the suite through ./.venv"
+      echo "         (.venv/bin/python -m pytest), or activate it, so the pinned tools run."
+      ;;
+  esac
+fi
+
 if [ "$MODE" = "check" ]; then
   echo
   if ! have claude || ! have codex; then

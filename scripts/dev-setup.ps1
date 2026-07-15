@@ -65,6 +65,32 @@ try {
     Report "pre-commit floor (core.hooksPath)" ($hooksPath -eq ".githooks") `
         "run -Install, or: git config core.hooksPath .githooks"
 
+    # Ambient-interpreter debris warning (WI-175 / WI-105). $py above prefers the
+    # venv; a bare `python -m pytest` resolves via PATH, which may be a DIFFERENT
+    # interpreter carrying a pre-5.0 pytest-cov whose parallel-combine race strands
+    # thousands of .coverage.* files at the repo root. Warn (never fail) when the
+    # PATH python is not the venv and carries the racing version; point at .\.venv.
+    # The ^[0-4]\. regex matches only majors 0-4 (5.0.0 / 10.x never match); an
+    # empty $covver (no pytest-cov on PATH) fails the match — no coverage, no debris.
+    # Probe `python`/`python3` (NOT the `py` launcher): the debris vector is a bare
+    # `python -m pytest`, so resolve exactly what that invocation hits.
+    $ambient = $null
+    foreach ($cand in @("python", "python3")) {
+        if (Have $cand) { $ambient = (Get-Command $cand).Source; break }
+    }
+    $venvPy = Join-Path ".venv" "Scripts\python.exe"
+    if ($ambient -and (Test-Path $venvPy) -and
+            ((Resolve-Path $ambient).Path -ne (Resolve-Path $venvPy).Path)) {
+        $covver = & $ambient -c "import pytest_cov,sys; sys.stdout.write(pytest_cov.__version__)" 2>$null
+        if (($LASTEXITCODE -eq 0) -and ($covver -match '^[0-4]\.')) {
+            Write-Host ""
+            Write-Host "  [warn] PATH python ($ambient) carries pytest-cov $covver - this pre-5.0"
+            Write-Host "         version races the parallel coverage combine and strands .coverage.*"
+            Write-Host "         debris at the repo root (WI-105). Run the suite through .\.venv"
+            Write-Host "         (.venv\Scripts\python.exe -m pytest), or activate it, so the pinned tools run."
+        }
+    }
+
     if (-not $Install) {
         Write-Host ""
         if ((-not (Have "claude")) -or (-not (Have "codex"))) {

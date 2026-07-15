@@ -6962,3 +6962,63 @@ totals.
 campaign. No queued WI remains; deferred WI-080→WI-081 stays parked pending
 deliberate owner ordering. `docs/run-state` → **DONE** and `docs/next-wi` is
 empty. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-175 (owner-directed): harden the .venv/interpreter boundary
+
+**Trigger.** The owner noticed thousands of `.coverage.DESKTOP-OFFICE.*` files
+stranded at the repo root and asked whether a cleanup activity was missing.
+
+**Diagnosis (not a missing cleanup step).** The debris was one full `--cov`
+run's parallel fragments (3259 files, 1192 PIDs, a 3-minute window), gitignored
+(`.coverage.*`) so it never showed in `git status`. Root cause: the run used the
+**ambient global** `C:\Python38\python.exe`, which carries **pytest-cov 4.1.0** —
+the pre-5.0 racing version `.coveragerc`/WI-105 already document, whose
+parallel-combine strands debris. The repo's pinned **`./.venv` was correct**
+(pytest-cov 5.0.0) and would have combined cleanly; the run simply bypassed it.
+So it is neither a missing sweep (WI-105 ruled the pinned toolchain leaves zero
+debris + self-heals) nor a low pin (WI-104's pins already sit above the break;
+5.x is the 3.8-floor ceiling since pytest-cov 6.0 dropped 3.8). It is a
+**wrong-interpreter** gap. I deleted the 3259 stray files (gitignored, no
+combined `.coverage` to preserve).
+
+**What shipped (three recs in one WI).**
+- **Rec 1 — already shipped, recorded only.** The pre-commit hook already
+  prefers `./.venv` (`project-trajectory/hooks/pre-commit` ~L36–56: probe-by-run,
+  Windows-alias-safe, PATH fallback) and `check.py` runs the coverage command
+  under `sys.executable`, so the commit path is covered. The residual — a direct
+  non-hook `--cov` run under a global interpreter — is the local call the owner
+  disclaimed. Re-execing the kit-shipped `check.py` under `./.venv` was
+  **considered and declined** (downstream blast radius; Rec 2 + Rec 3 deliver the
+  same intent without magic).
+- **Rec 2 — VS Code interpreter pin.** `.vscode/settings.json` now pins
+  `${workspaceFolder}/.venv` as the default interpreter and enables pytest as the
+  test runner, so VS Code Run/Debug/Test use the pinned toolchain (auto-discovery
+  resolves bin/ vs Scripts/ per-OS). It only governs paths VS Code launches — the
+  agent shell + hooks are Rec 1's job.
+- **Rec 3 — dev-setup ambient warning.** The meta `scripts/dev-setup.{sh,ps1}`
+  gained a warn-only probe of the **PATH** interpreter (the one a bare
+  `python -m pytest` hits, which the report's venv-preferring `PY` never
+  inspected): when it differs from `./.venv` and carries a pre-5.0 pytest-cov, it
+  names the interpreter + version and points at `./.venv`. Never changes the exit
+  code. Verified live on Windows — it flagged `C:\Python38\python.exe` pytest-cov
+  4.1.0 while the report's other rows read `[ok]` on the venv.
+
+**Scope / deviations.** Meta-only: the downstream `dev-setup.template.*` and the
+`check.py` interpreter contract are deliberately untouched (the pre-5.0-race
+specificity is the meta suite's, not a generic downstream property). No spine
+change (off-spine dev tooling) — no SN/SR/LLR/TC edit, derived gate stays G3, no
+re-attestation. No budget-watched file touched. Working-tree residue
+(`OWNER_SCRATCHPAD.md`, `docs/run-phase`) is owner/coordinator churn, left
+untouched and unstaged.
+
+**Tests / end green (real output, run through `./.venv`).**
+`test_onboard_devsetup.py` → **17 passed, 1 skipped**. Floor steps
+(`check.py --run-steps arch-map,okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync`)
+→ **7/7 PASS** (`check_trajectory: clean, 175 work items`; derived gate G3).
+Commit bar: `pytest -q -n auto -m smoke` → **642 passed, 2 skipped in 75.99s**;
+`check_docs.py --root . --stale` → **OK, 112 docs, 457 links, 0 broken** (43
+orphan warnings — the +1 over the historical 42 is this WI's `docs/specs/WI-175.md`,
+referenced via the registry `SpecRef` like every WI spec, not a markdown link).
+
+**Handoff.** WI-175 → done. No queued WI remains; deferred WI-080→WI-081 stays
+parked. Not pushed (`docs/push-policy: human`).
