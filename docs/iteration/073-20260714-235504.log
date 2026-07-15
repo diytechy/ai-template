@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 073
+# date: 2026-07-15 00:04
+# phase: BUILD
+# wi: WI-144
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: NEEDS-HUMAN
+# commits: c633950..3bbc059
+# tokens: 
+# cost-usd: 
+# wall-secs: 558
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1858
+# exit-code: 0
+# ---
+Reading additional input from stdin...
+OpenAI Codex v0.144.4
+--------
+workdir: C:\Projects\ai-template
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019f6420-e6b5-7113-9932-bf609f59a427
+--------
+user
+You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. When filing or triaging a WI, assign BuildTier deliberately: quick for mechanical/off-spine work, medium by default, strong only for design-shaping or spine-touching work; never silently downgrade a declared route mid-loop. Clear the lowest gate level first: do not queue phase development ahead of its open [phase]-[g1|g2] work or Draft SRs unless the owner deliberately orders it. Gates before every commit (the commit bar): python -m pytest -q -n auto -m smoke and python project-trajectory/scripts/check_docs.py --root . --stale - paste the real output; never report a green you didn't produce. Run the FULL suite (python -m pytest -q -n auto, no -m) before claiming a slice/campaign done or at close (session-protocol skill 'End green'). Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, docs/next-wi (the next WI id - or a ';'-joined batch of independent off-spine WIs to execute in order as ONE session with ONE review round, WI-133 - for the coordinator's BuildTier pin), the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first.
+codex
+I’m using the `session-protocol` skill because this is an explicitly scoped WI driver session. I’ll first read its full instructions, then `CLAUDE.md`, `docs/status.md` Current State, the WI registry, and the unattended-operation process master before touching any files.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Raw 'C:\\Projects\\ai-template\\.agents\\skills\\session-protocol\\SKILL.md'; Get-Content -Raw 'CLAUDE.md'; Get-Content -Raw 'docs\\status.md'; Get-Content -Raw 'docs\\requirements\\work-items.csv'; Get-Content -Raw 'docs\\next-wi'; Get-Content -Raw 'docs\\run-state'; Select-String -Path 'project-trajectory\\PROCESS_OPTIONS.md' -Pattern 'Unattended operation' -Context 0,120; Get-Content -Raw 'docs\\push-policy'" in C:\Projects\ai-template
+ succeeded in 731ms:
+---
+name: session-protocol
+description: Use when running a work-item (WI) or thread session in this template repo — how to read the plan, execute only the scoped work, pass the gates, write the session/WI log, and commit in this repo's style.
+stacks: [any]
+domains: [any]
+phases: [dev, gate, release]
+tags: [session, improvement-plan, workflow, commit-style, wi]
+scope: this-repo
+---
+
+# Session protocol (this template repo)
+
+How a WI/thread session runs here. The live homes: **`docs/status.md`** (what's
+next), **`docs/requirements/work-items.csv`** (the WI registry), and
+**`docs/log.md`** (the session/gate record). This skill is the fast path; the
+process masters (`PROCESS.md` / `PROCESS_OPTIONS.md`) win when they disagree. The
+kit's design history — the old thread specs and the WI-1.x log — is archived at
+`docs/archive/IMPROVEMENT_PLAN.md` (context, not a working surface).
+
+## 1. Read before doing
+
+- Read `CLAUDE.md` (governs editing the kit) and `AGENTS.md` (the pointer stub).
+- Read `docs/status.md` (the working surface — what's next) and the scoped WI's
+  row in `docs/requirements/work-items.csv`. The spec-of-record for a WI is what
+  its row points at (an SR and/or a plan doc); older landed work is in the
+  archived plan. **Do only the scoped work** — no unrelated edits.
+- If a stub is being revived, find and link its earlier backlogged form (search
+  `docs/archive/scratch.md` + the stub threads) so the resolution is traceable.
+- **Check `git status` first.** Residue in the working tree is from an
+  interrupted session; reconcile it against the open WI's spec / Done-when
+  *before* new work — verify-and-commit what is complete, discard what is not
+  part of the scope, and record which in the log. (The unattended loop surfaces
+  this into the session prompt; the judgment is yours — it never auto-stashes.)
+- **Treat a declared-policy change as a status-staleness event.** In the same
+  sitting, grep `docs/status.md` and `docs/run-state` for pause/stop/approval
+  language predicated on the old `gate-policy`, `push-policy`, `review-policy`,
+  or `guardrails-policy` value; point to the policy file instead of paraphrasing it.
+
+## 2. Respect the constraints
+
+- **Byte budgets** on `AGENTS.template.md` (10,000) and `PROCESS.md` — see the
+
+[... 4774 line(s) elided — full stream in out/run-logs/ ...]
+
++## 2026-07-14 — WI-144 fresh critique retry; browser backend unavailable
++
++Resumed at WI-144's exact remaining step and attempted the required rendered,
++provider-heterogeneous critique through the installed in-app browser runtime.
++After the prescribed recovery check, browser discovery returned an empty backend
++list, so no rendered inspection and no `APPROVE` verdict could honestly be
++produced. No product, spine, rubric, or budget-watched file changed; the WI row
++therefore remains `active` with its Deliverable empty.
++
++**Handoff.** `docs/next-wi` remains **WI-144**. Run-state is **NEEDS-HUMAN**:
++make an in-app browser backend available and relaunch, or perform and record the
++fresh heterogeneous rendered critique. On `APPROVE`, close WI-144 and run its
++full G3 gate close; do not start the next campaign before the owner sequences it.
++Not pushed (`docs/push-policy: human`).
++
++**End green (real output):** smoke **615 passed, 2 skipped in 65.70s**;
++`check_docs --stale` **OK — 87 docs, 385 links, 0 broken** (existing warnings
++only); unfiltered suite **740 passed, 34 skipped in 81.70s**.
+diff --git a/docs/run-state b/docs/run-state
+index 9d074ef8430328603f8834b10b8fcd11639dccc8..7d1713c635863a98f1bdedd62a45eb5f9e86ea03
+--- a/docs/run-state
++++ b/docs/run-state
+@@ -6,4 +6,5 @@
+ # file RUNNING — the pause signal is the exit-8 code + the stop banner, not this
+ # value; don't read RUNNING here as "not paused" when a `docs/pause` file may be
+ # present (PROCESS_OPTIONS "Unattended operation").
+-RUNNING
++NEEDS-HUMAN
++ask: provide an in-app browser backend or record WI-144's fresh rendered heterogeneous critique
+diff --git a/docs/status.md b/docs/status.md
+index 2a94283bb230b9eaf85f8face11a28eae56cc176..4b7d6a32eb36d1bf0dd881642e7376b37f415240
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -50,6 +50,9 @@
+     On APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 the owner
+     sequences the next campaign (research-knowledge WI-152… vs the deferred
+     `main-decomposition`).
++  - **Needs <human>** — make an in-app browser backend available and relaunch,
++    or record WI-144's fresh rendered heterogeneous critique; only an actual
++    `APPROVE` may close it.
+   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
+     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
+     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
+@@ -102,11 +105,10 @@
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+ - **Next action:** **WI-144 fresh heterogeneous re-critique** ([next-wi](next-wi))
+-  — run-state **RUNNING**. The ratified final build round and its 3 TC-HARDEN are
++  — run-state **NEEDS-HUMAN** pending the ask above. The final build round is
+   implemented; T2 remains deferred → WI-159. On APPROVE WI-144 closes, the full gate bar runs,
+   the spine rejoins G3, and the loop stops NEEDS-HUMAN for the owner to sequence
+   the next campaign. Round-by-round evidence → [log.md](log.md), not here.
+-
+ ## Scope
+ 
+ - **Goal:** keep the kit **maintainable and trustworthy** — the
+
+codex
+The final pre-commit bar is green: smoke `615 passed, 2 skipped in 67.87s`; stale-doc check `OK — 87 docs, 385 links, 0 broken`, with the status line-budget warning eliminated. The earlier unfiltered close run remains green at `740 passed, 34 skipped`. I’m reviewing the scoped diff and committing the blocked handoff now; no push will occur.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'git diff --check; git diff -- docs/status.md docs/run-state docs/log.md docs/next-wi docs/requirements/work-items.csv; git status --short' in C:\Projects\ai-template
+ succeeded in 873ms:
+diff --git a/docs/log.md b/docs/log.md
+index 72a8cbd..2b5e524 100644
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -6242,3 +6242,22 @@ run that critique; only APPROVE may close the WI and advance v3 to G3. Not pushe
+ (`docs/push-policy: human`).
+ The WI Deliverable remains empty because `check_trajectory` enforces that field
+ as close-only while status/log carry this active-WI progress.
++
++## 2026-07-14 — WI-144 fresh critique retry; browser backend unavailable
++
++Resumed at WI-144's exact remaining step and attempted the required rendered,
++provider-heterogeneous critique through the installed in-app browser runtime.
++After the prescribed recovery check, browser discovery returned an empty backend
++list, so no rendered inspection and no `APPROVE` verdict could honestly be
++produced. No product, spine, rubric, or budget-watched file changed; the WI row
++therefore remains `active` with its Deliverable empty.
++
++**Handoff.** `docs/next-wi` remains **WI-144**. Run-state is **NEEDS-HUMAN**:
++make an in-app browser backend available and relaunch, or perform and record the
++fresh heterogeneous rendered critique. On `APPROVE`, close WI-144 and run its
++full G3 gate close; do not start the next campaign before the owner sequences it.
++Not pushed (`docs/push-policy: human`).
++
++**End green (real output):** smoke **615 passed, 2 skipped in 65.70s**;
++`check_docs --stale` **OK — 87 docs, 385 links, 0 broken** (existing warnings
++only); unfiltered suite **740 passed, 34 skipped in 81.70s**.
+diff --git a/docs/run-state b/docs/run-state
+index 9d074ef..7d1713c 100644
+--- a/docs/run-state
++++ b/docs/run-state
+@@ -6,4 +6,5 @@
+ # file RUNNING — the pause signal is the exit-8 code + the stop banner, not this
+ # value; don't read RUNNING here as "not paused" when a `docs/pause` file may be
+ # present (PROCESS_OPTIONS "Unattended operation").
+-RUNNING
++NEEDS-HUMAN
++ask: provide an in-app browser backend or record WI-144's fresh rendered heterogeneous critique
+diff --git a/docs/status.md b/docs/status.md
+index 2a94283..4b7d6a3 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -50,6 +50,9 @@ home elsewhere — don't restate it here:
+     On APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 the owner
+     sequences the next campaign (research-knowledge WI-152… vs the deferred
+     `main-decomposition`).
++  - **Needs <human>** — make an in-app browser backend available and relaunch,
++    or record WI-144's fresh rendered heterogeneous critique; only an actual
++    `APPROVE` may close it.
+   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
+     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
+     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
+@@ -102,11 +105,10 @@ home elsewhere — don't restate it here:
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+ - **Next action:** **WI-144 fresh heterogeneous re-critique** ([next-wi](next-wi))
+-  — run-state **RUNNING**. The ratified final build round and its 3 TC-HARDEN are
++  — run-state **NEEDS-HUMAN** pending the ask above. The final build round is
+   implemented; T2 remains deferred → WI-159. On APPROVE WI-144 closes, the full gate bar runs,
+   the spine rejoins G3, and the loop stops NEEDS-HUMAN for the owner to sequence
+   the next campaign. Round-by-round evidence → [log.md](log.md), not here.
+-
+ ## Scope
+ 
+ - **Goal:** keep the kit **maintainable and trustworthy** — the
+ M docs/log.md
+ M docs/run-state
+ M docs/status.md
+
+diff --git a/docs/log.md b/docs/log.md
+index 72a8cbd2ea78c975349573265c862c8910f752c1..2b5e5247664db0b9766febd3f0d78af3e567c976
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -6242,3 +6242,22 @@
+ (`docs/push-policy: human`).
+ The WI Deliverable remains empty because `check_trajectory` enforces that field
+ as close-only while status/log carry this active-WI progress.
++
++## 2026-07-14 — WI-144 fresh critique retry; browser backend unavailable
++
++Resumed at WI-144's exact remaining step and attempted the required rendered,
++provider-heterogeneous critique through the installed in-app browser runtime.
++After the prescribed recovery check, browser discovery returned an empty backend
++list, so no rendered inspection and no `APPROVE` verdict could honestly be
++produced. No product, spine, rubric, or budget-watched file changed; the WI row
++therefore remains `active` with its Deliverable empty.
++
++**Handoff.** `docs/next-wi` remains **WI-144**. Run-state is **NEEDS-HUMAN**:
++make an in-app browser backend available and relaunch, or perform and record the
++fresh heterogeneous rendered critique. On `APPROVE`, close WI-144 and run its
++full G3 gate close; do not start the next campaign before the owner sequences it.
++Not pushed (`docs/push-policy: human`).
++
++**End green (real output):** smoke **615 passed, 2 skipped in 65.70s**;
++`check_docs --stale` **OK — 87 docs, 385 links, 0 broken** (existing warnings
++only); unfiltered suite **740 passed, 34 skipped in 81.70s**.
+diff --git a/docs/run-state b/docs/run-state
+index 9d074ef8430328603f8834b10b8fcd11639dccc8..7d1713c635863a98f1bdedd62a45eb5f9e86ea03
+--- a/docs/run-state
++++ b/docs/run-state
+@@ -6,4 +6,5 @@
+ # file RUNNING — the pause signal is the exit-8 code + the stop banner, not this
+ # value; don't read RUNNING here as "not paused" when a `docs/pause` file may be
+ # present (PROCESS_OPTIONS "Unattended operation").
+-RUNNING
++NEEDS-HUMAN
++ask: provide an in-app browser backend or record WI-144's fresh rendered heterogeneous critique
+diff --git a/docs/status.md b/docs/status.md
+index 2a94283bb230b9eaf85f8face11a28eae56cc176..4b7d6a32eb36d1bf0dd881642e7376b37f415240
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -50,6 +50,9 @@
+     On APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 the owner
+     sequences the next campaign (research-knowledge WI-152… vs the deferred
+     `main-decomposition`).
++  - **Needs <human>** — make an in-app browser backend available and relaunch,
++    or record WI-144's fresh rendered heterogeneous critique; only an actual
++    `APPROVE` may close it.
+   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
+     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
+     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
+@@ -102,11 +105,10 @@
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+ - **Next action:** **WI-144 fresh heterogeneous re-critique** ([next-wi](next-wi))
+-  — run-state **RUNNING**. The ratified final build round and its 3 TC-HARDEN are
++  — run-state **NEEDS-HUMAN** pending the ask above. The final build round is
+   implemented; T2 remains deferred → WI-159. On APPROVE WI-144 closes, the full gate bar runs,
+   the spine rejoins G3, and the loop stops NEEDS-HUMAN for the owner to sequence
+   the next campaign. Round-by-round evidence → [log.md](log.md), not here.
+-
+ ## Scope
+ 
+ - **Goal:** keep the kit **maintainable and trustworthy** — the
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'git add docs/status.md docs/run-state docs/log.md; git commit -m "WI-144: record unavailable critique backend" -m "Preserve the honest critique gate by stopping for a real rendered review when browser discovery exposes no backend. Keep WI-144 active and name the exact human recovery action."; git status --short; git log -1 --oneline' in C:\Projects\ai-template
+ succeeded in 2627ms:
+[derived-gate-model 3bbc059] WI-144: record unavailable critique backend
+ 3 files changed, 25 insertions(+), 3 deletions(-)
+3bbc059 WI-144: record unavailable critique backend
+
+=== derived-gate : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+  PASS  derived-gate     0.2s
+
+=== skills-sync : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.2s
+
+=== trajectory : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py ===
+check_trajectory: WARN - run-state run-state NEEDS-HUMAN but actionable queued WI(s) WI-152;WI-161;WI-162;WI-163;WI-166 have all hard predecessors done — is the pause still real? A stale end-state parks agent-resume at boot
+check_trajectory: clean (166 work item(s), 139 done (84%), graph acyclic).
+  PASS  trajectory       0.2s
+
+=== okf : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (257 file(s)).
+  PASS  okf              0.2s
+
+=== registry-integrity : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict-integrity ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+  PASS  registry-integrity 0.2s
+
+=== trajectory-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.3s
+
+=== arch-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.5s
+check_privacy: privacy check off (docs/privacy-check) — author not checked.
+check_privacy: clean (staged diff; secrets floor).
+
+=== format : C:\Projects\ai-template\.venv\Scripts\python.exe -m ruff format --check project-trajectory/scripts tests ===
+72 files already formatted
+  PASS  format           0.1s
+
+diff --git a/docs/log.md b/docs/log.md
+index 72a8cbd2ea78c975349573265c862c8910f752c1..2b5e5247664db0b9766febd3f0d78af3e567c976
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -6242,3 +6242,22 @@
+ (`docs/push-policy: human`).
+ The WI Deliverable remains empty because `check_trajectory` enforces that field
+ as close-only while status/log carry this active-WI progress.
++
++## 2026-07-14 — WI-144 fresh critique retry; browser backend unavailable
++
++Resumed at WI-144's exact remaining step and attempted the required rendered,
++provider-heterogeneous critique through the installed in-app browser runtime.
++After the prescribed recovery check, browser discovery returned an empty backend
++list, so no rendered inspection and no `APPROVE` verdict could honestly be
++produced. No product, spine, rubric, or budget-watched file changed; the WI row
++therefore remains `active` with its Deliverable empty.
++
++**Handoff.** `docs/next-wi` remains **WI-144**. Run-state is **NEEDS-HUMAN**:
++make an in-app browser backend available and relaunch, or perform and record the
++fresh heterogeneous rendered critique. On `APPROVE`, close WI-144 and run its
++full G3 gate close; do not start the next campaign before the owner sequences it.
++Not pushed (`docs/push-policy: human`).
++
++**End green (real output):** smoke **615 passed, 2 skipped in 65.70s**;
++`check_docs --stale` **OK — 87 docs, 385 links, 0 broken** (existing warnings
++only); unfiltered suite **740 passed, 34 skipped in 81.70s**.
+diff --git a/docs/run-state b/docs/run-state
+index 9d074ef8430328603f8834b10b8fcd11639dccc8..7d1713c635863a98f1bdedd62a45eb5f9e86ea03
+--- a/docs/run-state
++++ b/docs/run-state
+@@ -6,4 +6,5 @@
+ # file RUNNING — the pause signal is the exit-8 code + the stop banner, not this
+ # value; don't read RUNNING here as "not paused" when a `docs/pause` file may be
+ # present (PROCESS_OPTIONS "Unattended operation").
+-RUNNING
++NEEDS-HUMAN
++ask: provide an in-app browser backend or record WI-144's fresh rendered heterogeneous critique
+diff --git a/docs/status.md b/docs/status.md
+index 2a94283bb230b9eaf85f8face11a28eae56cc176..4b7d6a32eb36d1bf0dd881642e7376b37f415240
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -50,6 +50,9 @@
+     On APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 the owner
+     sequences the next campaign (research-knowledge WI-152… vs the deferred
+     `main-decomposition`).
++  - **Needs <human>** — make an in-app browser backend available and relaunch,
++    or record WI-144's fresh rendered heterogeneous critique; only an actual
++    `APPROVE` may close it.
+   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
+     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
+     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
+@@ -102,11 +105,10 @@
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+ - **Next action:** **WI-144 fresh heterogeneous re-critique** ([next-wi](next-wi))
+-  — run-state **RUNNING**. The ratified final build round and its 3 TC-HARDEN are
++  — run-state **NEEDS-HUMAN** pending the ask above. The final build round is
+   implemented; T2 remains deferred → WI-159. On APPROVE WI-144 closes, the full gate bar runs,
+   the spine rejoins G3, and the loop stops NEEDS-HUMAN for the owner to sequence
+   the next campaign. Round-by-round evidence → [log.md](log.md), not here.
+-
+ ## Scope
+ 
+ - **Goal:** keep the kit **maintainable and trustworthy** — the
+
+codex
+WI-144 remains honestly gated: no browser backend was available, so no rendered critique or approval was fabricated.
+
+Committed `3bbc059` (`WI-144: record unavailable critique backend`).
+
+- `docs/run-state`: `NEEDS-HUMAN`
+- `docs/next-wi`: remains `WI-144`
+- Human ask recorded in `docs/status.md`
+- WI remains active; Deliverable intentionally empty
+- Smoke: `615 passed, 2 skipped`
+- Full suite: `740 passed, 34 skipped`
+- Docs: `87 docs, 385 links, 0 broken`
+- Working tree clean
+- Not pushed, per `push-policy: human`
+diff --git a/docs/log.md b/docs/log.md
+index 72a8cbd2ea78c975349573265c862c8910f752c1..2b5e5247664db0b9766febd3f0d78af3e567c976
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -6242,3 +6242,22 @@
+ (`docs/push-policy: human`).
+ The WI Deliverable remains empty because `check_trajectory` enforces that field
+ as close-only while status/log carry this active-WI progress.
++
++## 2026-07-14 — WI-144 fresh critique retry; browser backend unavailable
++
++Resumed at WI-144's exact remaining step and attempted the required rendered,
++provider-heterogeneous critique through the installed in-app browser runtime.
++After the prescribed recovery check, browser discovery returned an empty backend
++list, so no rendered inspection and no `APPROVE` verdict could honestly be
++produced. No product, spine, rubric, or budget-watched file changed; the WI row
++therefore remains `active` with its Deliverable empty.
++
++**Handoff.** `docs/next-wi` remains **WI-144**. Run-state is **NEEDS-HUMAN**:
++make an in-app browser backend available and relaunch, or perform and record the
++fresh heterogeneous rendered critique. On `APPROVE`, close WI-144 and run its
++full G3 gate close; do not start the next campaign before the owner sequences it.
++Not pushed (`docs/push-policy: human`).
++
++**End green (real output):** smoke **615 passed, 2 skipped in 65.70s**;
++`check_docs --stale` **OK — 87 docs, 385 links, 0 broken** (existing warnings
++only); unfiltered suite **740 passed, 34 skipped in 81.70s**.
+diff --git a/docs/run-state b/docs/run-state
+index 9d074ef8430328603f8834b10b8fcd11639dccc8..7d1713c635863a98f1bdedd62a45eb5f9e86ea03
+--- a/docs/run-state
++++ b/docs/run-state
+@@ -6,4 +6,5 @@
+ # file RUNNING — the pause signal is the exit-8 code + the stop banner, not this
+ # value; don't read RUNNING here as "not paused" when a `docs/pause` file may be
+ # present (PROCESS_OPTIONS "Unattended operation").
+-RUNNING
++NEEDS-HUMAN
++ask: provide an in-app browser backend or record WI-144's fresh rendered heterogeneous critique
+diff --git a/docs/status.md b/docs/status.md
+index 2a94283bb230b9eaf85f8face11a28eae56cc176..4b7d6a32eb36d1bf0dd881642e7376b37f415240
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -50,6 +50,9 @@
+     On APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 the owner
+     sequences the next campaign (research-knowledge WI-152… vs the deferred
+     `main-decomposition`).
++  - **Needs <human>** — make an in-app browser backend available and relaunch,
++    or record WI-144's fresh rendered heterogeneous critique; only an actual
++    `APPROVE` may close it.
+   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
+     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
+     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
+@@ -102,11 +105,10 @@
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+ - **Next action:** **WI-144 fresh heterogeneous re-critique** ([next-wi](next-wi))
+-  — run-state **RUNNING**. The ratified final build round and its 3 TC-HARDEN are
++  — run-state **NEEDS-HUMAN** pending the ask above. The final build round is
+   implemented; T2 remains deferred → WI-159. On APPROVE WI-144 closes, the full gate bar runs,
+   the spine rejoins G3, and the loop stops NEEDS-HUMAN for the owner to sequence
+   the next campaign. Round-by-round evidence → [log.md](log.md), not here.
+-
+ ## Scope
+ 
+ - **Goal:** keep the kit **maintainable and trustworthy** — the
+
+tokens used
+90,571
+WI-144 remains honestly gated: no browser backend was available, so no rendered critique or approval was fabricated.
+
+Committed `3bbc059` (`WI-144: record unavailable critique backend`).
+
+- `docs/run-state`: `NEEDS-HUMAN`
+- `docs/next-wi`: remains `WI-144`
+- Human ask recorded in `docs/status.md`
+- WI remains active; Deliverable intentionally empty
+- Smoke: `615 passed, 2 skipped`
+- Full suite: `740 passed, 34 skipped`
+- Docs: `87 docs, 385 links, 0 broken`
+- Working tree clean
+- Not pushed, per `push-policy: human`
