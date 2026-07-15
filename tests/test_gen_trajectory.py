@@ -1384,8 +1384,6 @@ def test_process_loops_share_one_llm_agent_entry(tmp_path):
     assert gen(tmp_path).returncode == 0
     loops = _loops_div(html_of(tmp_path))
     assert loops.count("<b>LLM_Agent</b>") == 1
-    assert 'data-loop-a-degree="2"' in loops
-    assert 'data-loop-b-degree="2"' in loops
     # the entry node precedes both loop panels (a shared head, not per-loop)
     entry_at = loops.index('<div class="entry"')
     assert entry_at < loops.index("A · Intake loop")
@@ -1401,7 +1399,12 @@ def test_process_loop_layout_is_a_shared_circular_junction(tmp_path):
     assert "#process .loops{display:grid" in text
     assert "grid-row:1/3" in text
     assert "border-radius:999px" in text
-    assert "#process .loop::after" in text
+    # Only the two wrapper divs own racetrack borders and return arrowheads;
+    # the nested ol.loop elements must not create duplicate tracks/arrows.
+    assert "#process div.loop{" in text
+    assert "#process div.loop::after" in text
+    assert "#process .loop{" not in text
+    assert "#process .loop::after" not in text
     assert "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}" in text
     assert "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}" in text
 

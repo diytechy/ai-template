@@ -2589,7 +2589,7 @@ def _loop_panel(root):
 
     return (
         '<div class="loops">'
-        '<div class="entry" data-loop-a-degree="2" data-loop-b-degree="2">'
+        '<div class="entry">'
         "<b>LLM_Agent</b>"
         "<span>the shared entry point — both loops start here</span></div>"
         + loop_ol("a", "A · Intake loop", intake_loop)
@@ -2726,11 +2726,11 @@ def process_panel(root, wis, stats):
         "padding:.45rem .8rem;box-shadow:var(--shadow);max-width:9.5rem;}"
         "#process .entry b{display:block;font-size:.88rem;color:var(--accent);}"
         "#process .entry span{font-size:.72rem;color:var(--muted);}"
-        "#process .loop{grid-column:2;position:relative;border:2px solid var(--accent);"
+        "#process div.loop{grid-column:2;position:relative;border:2px solid var(--accent);"
         "border-left-width:3px;border-radius:999px;padding:1.45rem 2rem 1.2rem 3rem;"
         "margin-left:-1rem;min-height:10.5rem;}"
         "#process .loop-a{grid-row:1;}#process .loop-b{grid-row:2;}"
-        '#process .loop::after{content:"";position:absolute;left:-.45rem;top:50%;'
+        '#process div.loop::after{content:"";position:absolute;left:-.45rem;top:50%;'
         "width:.72rem;height:.72rem;border-top:3px solid var(--accent);"
         "border-right:3px solid var(--accent);transform:translateY(-50%) rotate(-135deg);"
         "background:var(--bg);}"
@@ -2751,12 +2751,12 @@ def process_panel(root, wis, stats):
         "#process .pflow.loop a{color:inherit;}"
         "@media(max-width:760px){#process .loops{grid-template-columns:1fr;"
         "grid-template-rows:auto;}#process .entry{grid-column:1;grid-row:1;"
-        "justify-self:center;max-width:none;}#process .loop{grid-column:1;"
+        "justify-self:center;max-width:none;}#process div.loop{grid-column:1;"
         "margin:-.65rem 0 0;padding:2.2rem 1rem 1rem;border-radius:28px;}"
         "#process .loop-a{grid-row:2}#process .loop-b{grid-row:3}"
         "#process ol.pflow.loop{grid-template-columns:1fr;}"
         "#process .pflow.loop li:nth-child(n){grid-column:1;grid-row:auto;}"
-        "#process .loop::after{left:50%;top:-.4rem;transform:translateX(-50%) rotate(-45deg);}}"
+        "#process div.loop::after{left:50%;top:-.4rem;transform:translateX(-50%) rotate(-45deg);}}"
         "</style>"
     )
     panel = (

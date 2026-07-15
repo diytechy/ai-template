@@ -92,13 +92,12 @@ home elsewhere — don't restate it here:
   ruled **GRIND-THROUGH** on the top-tier shared-failure page (review rounds 31
   + 33 both CHANGES-REQUESTED at strong) and found both rounds' findings had
   been **orphaned**, so four remediation rows jump the backlog. The first (the
-  `dev-setup.template.cmd` `-Install`→`-Baseline` fix) shipped 2026-07-15
-  (session log) and awaits its own review round; the order continues:
-  **WI-169** (084 rework — Process-tab loop CSS scoping + TC-056
-  de-tautologizing; `strong`, inheriting the declared spine-touching route) →
+  `dev-setup.template.cmd` `-Install`→`-Baseline` fix) shipped and its review
+  round approved; the subsequent Process-tab loop CSS + TC-056 remediation
+  also shipped (session log). The order continues:
   **WI-167** (tripwire path coverage; `medium`) → **WI-170** (mechanize
   CHANGES-REQUESTED rework carry-forward — the orphaning gap itself; `medium`);
-  `docs/next-wi` is pointed at **WI-169**.
+  `docs/next-wi` is pointed at **WI-167**.
   **After the backlog the loop flows into the research-knowledge campaign**
   (WI-152…157 + WI-164) automatically — the owner greenlit it 2026-07-15; only
   the deferred `main-decomposition` (WI-080→WI-081) stays parked. Codex Sol

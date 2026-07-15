@@ -6544,3 +6544,27 @@ the changed files). No byte-budgeted file touched. `PROJECT_STATE.html`
 regenerated for the WI-168 row → `done`. **Handoff:** run-state **RUNNING**;
 `docs/next-wi` → **WI-169** (084 rework, `BuildTier=strong` — spine-touching,
 its own review round). Not pushed (`push-policy: human`).
+
+## 2026-07-15 — WI-169 (084 rework, BUILD, strong): Process loops own one racetrack each
+
+**Scope ([reviews/084-REVIEW-A.md](reviews/084-REVIEW-A.md)).** Reworked the
+MAJOR nested-double-racetrack defect and MINOR tautological degree assertion from
+WI-165's review. The default and responsive box/return-arrow selectors now
+target `div.loop` wrappers only; the nested `ol.pflow.loop` stage grids cannot
+inherit a second border, pill geometry, or arrowhead. Removed the self-declared
+`data-loop-*-degree="2"` constants. TC-056 and its tests now verify the actual
+structure: one shared entry spanning both grid rows, two wrapper-owned closed
+tracks/return arrows, and no bare `.loop` box/arrow selectors. Regenerated the
+TC-056 OKF copy and `PROJECT_STATE.html`.
+
+**Deviations / residue.** The in-app browser was unavailable, so the requested
+live eyeball could not be performed and is not claimed; focused structural
+render tests cover the exact cascade failure. Preserved coordinator residue:
+[reviews/087-REVIEW-A.md](reviews/087-REVIEW-A.md) records APPROVE with zero
+findings for WI-168, and `docs/run-phase` returns `DESIGN-CHECK` → `BUILD`.
+No byte-budgeted file changed. Full end-green suite: **749 passed, 34 skipped
+in 78.14s**. Commit bar: `pytest -q -n auto -m smoke` → **623 passed, 2
+skipped in 65.64s**; `check_docs.py --root . --stale` → **OK, 97 docs, 411
+links, 0 broken** (40 historical orphan warnings plus stale hints).
+**Handoff:** run-state remains **RUNNING**; `docs/next-wi` → **WI-167**
+(`BuildTier=medium`). Not pushed (`docs/push-policy: human`).
