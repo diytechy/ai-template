@@ -93,6 +93,7 @@ def test_scaffold_knowledge_home_states_pack_contract(scaffold):
     )
     assert "## Pack contract" in knowledge
     assert "## Pack index" in knowledge
+    assert "[`example`](README.md)" in knowledge
     assert "retrieval dates" in knowledge
     assert "promote it through the change-intake flow" in knowledge
     assert "Packs are advisory context, never gates" in knowledge

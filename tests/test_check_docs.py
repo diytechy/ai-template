@@ -107,6 +107,21 @@ def test_parse_doc_strips_links_in_multi_backtick_spans(tmp_path):
     assert dests == ["real.md"]
 
 
+def test_parse_doc_requires_exact_inline_code_closer(tmp_path):
+    check = load_script("check_docs")
+    doc = tmp_path / "d.md"
+    doc.write_text("``code` [real](real.md)\n", encoding="utf-8")
+    dests = [dest for _ln, dest in check.parse_doc(doc)["links"]]
+    assert dests == ["real.md"]
+
+
+def test_parse_doc_strips_multiline_inline_code_span(tmp_path):
+    check = load_script("check_docs")
+    doc = tmp_path / "d.md"
+    doc.write_text("``quoted\n[not real](missing.md)``\n", encoding="utf-8")
+    assert check.parse_doc(doc)["links"] == []
+
+
 def test_orphan_warns_by_default_and_fails_when_strict(scaffold):
     # A doc nothing links to is unreachable from the entry roots.
     (scaffold / "docs" / "lonely.md").write_text(

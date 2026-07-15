@@ -63,8 +63,7 @@ home elsewhere — don't restate it here:
   knowledge⇒component coupling) · **WI-154** (process text) ·
   **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
-  domains filter); **WI-158** deferred (OKF pack export); **WI-173** joined
-  2026-07-15 (the 093-REVIEW-A MINOR — the pack-index example row as a link).
+  domains filter); **WI-158** deferred (OKF pack export).
   The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
   no stop in between; the DAG sequences it from WI-153._
@@ -88,23 +87,14 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** the dev-slice batch **WI-172;WI-173** — retrospective
-  independent review of the two builds that landed inside review-exempt
-  design-check sessions (088/091) + the 093-REVIEW-A MINOR link fix; one
-  session, one review round (strongest-member pin = `medium`). Then **WI-153**
-  (warn-first knowledge-ref integrity + knowledge⇒component coupling,
-  `BuildTier=medium` pin) resumes the owner-greenlit research-knowledge
-  campaign and its DAG carries **WI-154**…**WI-157** + **WI-164** automatically.
-  `docs/next-wi` points at the **WI-172;WI-173** batch. The
-  [reviews/094-DESIGN-CHECK.md](reviews/094-DESIGN-CHECK.md) remediation's first
-  item — the shared-failure-page **rearm** — **has landed** (with a `check_docs`
-  multi-backtick false-positive fix it exposed, both this session — see
-  [log.md](log.md)); the rearm takes effect only on the **next coordinator
-  restart** (routing referees import at process start), so until then successor
-  design-checks still take the **094 fast path**: cite the ruling, verify no new
-  strong-tier fail after round 33 on [reviews/scoreboard.txt](reviews/scoreboard.txt),
-  and reset `docs/run-phase` to BUILD. Only deferred main-decomposition
-  (**WI-080**→**WI-081**) stays parked. Codex Sol builds are live.
+- **Next action:** **WI-153** (warn-first knowledge-ref integrity +
+  knowledge⇒component coupling, `BuildTier=medium` pin) resumes the
+  owner-greenlit research-knowledge campaign; its DAG carries **WI-154**…
+  **WI-157** + **WI-164** automatically. `docs/next-wi` points at **WI-153**.
+  The 094 remediation batch is complete; evidence is in [log.md](log.md) and
+  [reviews/097-REVIEW-A.md](reviews/097-REVIEW-A.md).
+  Only deferred main-decomposition (**WI-080**→**WI-081**) stays parked. Codex
+  Sol builds are live.
   Round-by-round evidence → [log.md](log.md), not here.
 
 ## Scope

@@ -103,7 +103,7 @@ FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
 # equal-length match matters for the double-backtick form `` `[`x`](y)` `` used
 # when the span's own text contains backticks — a single-backtick regex mis-splits
 # it and leaks `[](y)` as a phantom broken link (WI-174).
-INLINE_CODE_RE = re.compile(r"(`+)(?:(?!\1).)*?\1")
+INLINE_CODE_RE = re.compile(r"(?<!`)(`+)(?:(?!\1).)*?\1(?!`)", re.DOTALL)
 # ATX heading: 1-6 leading #, optional trailing #s.
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 # Inline link: optional leading ! (image), [text](dest "optional title").
@@ -199,7 +199,14 @@ def parse_doc(path):
     links = []  # (lineno, dest)
     anchors = set()  # slugs/ids this doc exposes as #fragments
     seen = {}  # slug -> count, for GitHub's -1/-2 disambiguation
-    for i, line in enumerate(blank_fenced(text), 1):
+    unfenced = "\n".join(blank_fenced(text))
+    # Strip spans over the whole document because CommonMark permits inline code
+    # to cross a line boundary. Preserve its newlines so finding line numbers do
+    # not shift when a multiline span precedes a real link.
+    cleaned_text = INLINE_CODE_RE.sub(
+        lambda match: "\n" * match.group(0).count("\n"), unfenced
+    )
+    for i, line in enumerate(cleaned_text.splitlines(), 1):
         for m in HTML_ANCHOR_RE.finditer(line):
             anchors.add(m.group(1).lower())
         heading = HEADING_RE.match(line)
@@ -215,8 +222,7 @@ def parse_doc(path):
                 anchors.add(slug if n == 0 else "{}-{}".format(slug, n))
                 seen[slug] = n + 1
             continue
-        cleaned = INLINE_CODE_RE.sub("", line)
-        for m in LINK_RE.finditer(cleaned):
+        for m in LINK_RE.finditer(line):
             if m.group(1) == "!":
                 continue  # image: out of scope (see module docstring)
             dest = m.group(2).strip()

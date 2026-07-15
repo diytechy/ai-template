@@ -29,5 +29,4 @@ Add every pack here so documentation checks can discover it.
 
 | Label | Topic | Components | Last reviewed |
 |---|---|---|---|
-| `example` | Replace with a short description | `CMP-000` | YYYY-MM-DD |
-
+| [`example`](README.md) | Replace label and target with the pack file | `CMP-000` | YYYY-MM-DD |

@@ -6260,6 +6260,7 @@ provider-heterogeneous critique. WI-144 therefore stays `active`, run-state stay
 **RUNNING**, and `docs/next-wi` remains **WI-144** with the exact resume point:
 run that critique; only APPROVE may close the WI and advance v3 to G3. Not pushed
 (`docs/push-policy: human`).
+
 The WI Deliverable remains empty because `check_trajectory` enforces that field
 as close-only while status/log carry this active-WI progress.
 
@@ -6710,3 +6711,42 @@ untouched). No spine change — SN/SR/LLR/TC unchanged; both WIs off-spine.
 **WI-172;WI-173** dev-slice batch (one session, one review round, strongest-member
 pin `medium`), then **WI-153** resumes the research-knowledge campaign. Not pushed
 (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-172;WI-173 batch: retrospective review + linked pack example
+
+**Scope and deliverables.** [097-REVIEW-A](reviews/097-REVIEW-A.md) independently
+reviewed `e544ae1` (WI-169) and `cef63a1` (WI-170) against their WI records,
+behavior seams, tests, process contract, generated outputs, and watched-byte
+restamp; both received `APPROVE findings=0`. WI-173 changed the pack-index
+example from a code span to a valid markdown link. It self-links to `README.md`
+and instructs adopters to replace both label and target, demonstrating the
+reachable-pack pattern without making a fresh scaffold reference a fake pack;
+the bootstrap contract test pins it.
+
+**Review rework and deviations.** The coordinator-provided
+[096-REVIEW-A](reviews/096-REVIEW-A.md) residue was reconciled first. Its two
+MAJOR findings were valid collateral in WI-171/WI-174: the first multi-backtick
+regex accepted the first N ticks of a longer closer, and the WI-171 regression
+used E731 lambdas. Inline spans now require opener/closer run boundaries, are
+stripped across the whole unfenced document, and preserve embedded newlines;
+unequal-run and multiline regressions were added. The lambdas are local
+functions. The first full run honestly failed **38 tests** because the initially
+suggested `example.md` target did not exist (**719 passed, 34 skipped**);
+switching to the valid self-link restored the clean-scaffold invariant. No
+budget-watched file changed; no spine change.
+
+**End green (real output).** Focused remediation suites: **76 passed**. Full
+unfiltered suite: **757 passed, 34 skipped in 77.40s**. Commit bar:
+`pytest -q -n auto -m smoke` → **630 passed, 2 skipped in 65.46s**;
+`check_docs.py --root . --stale` → **OK, 102 docs, 432 links, 0 broken** (40
+warn-only historical orphans). The first G3 harness re-exercise exposed two
+bookkeeping/format findings after all substantive steps passed: Ruff wanted one
+test reformatted and strict trajectory rejected closed WI ids in status.md.
+Both were corrected; focused `ruff format --check` and
+`check_trajectory.py --strict` passed. The final commit bar was rerun after this
+log update.
+
+**Handoff.** Both WI rows are done; `PROJECT_STATE.html` regenerated;
+`docs/run-phase` is **BUILD**, `docs/run-state` remains **RUNNING**, and
+`docs/next-wi` → **WI-153** (`BuildTier=medium`) to resume the owner-greenlit
+research-knowledge campaign. Not pushed (`docs/push-policy: human`).
