@@ -6419,3 +6419,28 @@ this entry. No byte-budgeted file changed; no deviation from the WI spec and no
 spine state changed. **Handoff:** run-state remains **RUNNING**;
 `docs/next-wi` → **WI-162** (`BuildTier=strong`). Not pushed
 (`push-policy: human`).
+
+## 2026-07-15 — WI-162 parallel WI dispatch design
+
+Produced the ratifiable design in
+`docs/specs/parallel-wi-dispatch.md`. It keeps absent/one-lane operation
+unchanged and adds an opt-in integer `docs/parallel` control over a central
+dispatcher: deterministic hard-predecessor + lowest-gate actionability,
+conservative off-spine overlap keys (dependency, campaign, workstream, SpecRef,
+declared path, and spine scope), durable one-WI/one-lane ownership in separate
+worktrees, per-lane review rounds, and serialized gated integration into the
+root iteration branch. Unknown scope stays serial. Lane telemetry remains
+namespaced and feeds one generated root projection.
+
+The spec resolves the design-shaping trade-off in favor of trustworthy merges
+over maximum utilization and defines five implementation slices to file only on
+ratification. No implementation, scaffold surface, spine artifact, or
+byte-budgeted file changed. No deviation from the WI contract. WI-165 was
+deliberately triaged at `BuildTier=strong` because its SR-055 verification makes
+it spine-touching; no declared route was downgraded.
+
+**End green (real output):** smoke **622 passed, 2 skipped in 64.47s**;
+`check_docs --stale` **OK — 93 docs, 397 links, 0 broken** (existing
+warning/hint classes only); unfiltered suite **748 passed, 34 skipped in
+76.78s**. **Handoff:** run-state remains **RUNNING**; `docs/next-wi` →
+**WI-165** (`BuildTier=strong`). Not pushed (`docs/push-policy: human`).
