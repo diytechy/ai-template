@@ -946,6 +946,95 @@ def test_absent_inventory_top_view_is_vacuous(tmp_path):
     assert "How-SW top view" not in proc.stderr
 
 
+# --- WI-153: knowledge⇒component coupling (research-knowledge.md §3a) -----------
+# When docs/knowledge/ holds a real pack, an uncontained arch-map module is a
+# finding *regardless of* the 10-item bound — WARN plain, ERROR under --strict —
+# so the knowledge⇒component web must be complete wherever packs are enabled. It
+# reuses the Component-tag join (no new join), the docs/components-check opt-out,
+# and stays dormant until a real pack (not the README index) exists.
+
+KN_MSG = "arch-map module(s) are in no CMP-### component"
+
+
+def write_pack(root, label, body="# Pack\n"):
+    d = root / "docs" / "knowledge"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / (label + ".md")).write_text(body, encoding="utf-8")
+
+
+def test_pack_presence_arms_coupling_below_bound(tmp_path):
+    # 3 modules (well under the 10-item bound), none contained, + one pack: the
+    # top-view rule is vacuous here, but the pack arms the coupling finding.
+    write_arch(tmp_path, _arch_n(3))
+    write_pack(tmp_path, "prompt-image")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "docs/knowledge/ holds 1 pack(s) but 3 " + KN_MSG in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert KN_MSG in strict.stderr
+
+
+def test_coupling_dormant_without_packs(tmp_path):
+    # Same uncontained 3-module arch-map but no pack -> below the bound, silent.
+    write_arch(tmp_path, _arch_n(3))
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
+def test_readme_index_alone_does_not_arm_coupling(tmp_path):
+    # The scaffolded README.md is the index, not a pack -> still dormant.
+    write_arch(tmp_path, _arch_n(3))
+    (tmp_path / "docs" / "knowledge").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "knowledge" / "README.md").write_text("# idx\n", "utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
+def test_coupling_clears_when_every_module_contained(tmp_path):
+    # A pack exists, but every module is tagged into a CMP -> web complete, silent.
+    write_arch(tmp_path, _arch_n(3))
+    write_pack(tmp_path, "prompt-image")
+    write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
+    write_tagged_llrs(
+        tmp_path, [("scripts/mod_{}".format(i), "CMP-001") for i in range(3)]
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
+def test_coupling_reports_only_the_uncontained_modules(tmp_path):
+    # A pack + a CMP holding one of three modules -> two remain uncontained.
+    write_arch(tmp_path, _arch_n(3))
+    write_pack(tmp_path, "prompt-image")
+    write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
+    write_tagged_llrs(tmp_path, [("scripts/mod_0", "CMP-001")])
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "holds 1 pack(s) but 2 " + KN_MSG in strict.stderr
+
+
+def test_coupling_respects_the_components_check_off_switch(tmp_path):
+    # docs/components-check: off silences the coupling as it does the top view.
+    write_arch(tmp_path, _arch_n(3))
+    write_pack(tmp_path, "prompt-image")
+    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
+def test_coupling_needs_an_arch_map_inventory(tmp_path):
+    # A pack but no arch-map -> no modules to leave uncontained -> dormant.
+    write_pack(tmp_path, "prompt-image")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert KN_MSG not in proc.stderr
+
+
 # --- WI-093: the [phase]-[g*] archetype + phase-drop detector ------------------
 # The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3): a phase's
 # pre-dev batch is a WI whose Title carries a `[<phase>]-[g<N>]` tag; the derived

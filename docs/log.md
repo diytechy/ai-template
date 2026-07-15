@@ -6750,3 +6750,53 @@ log update.
 `docs/run-phase` is **BUILD**, `docs/run-state` remains **RUNNING**, and
 `docs/next-wi` → **WI-153** (`BuildTier=medium`) to resume the owner-greenlit
 research-knowledge campaign. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — WI-153 (research-knowledge campaign): knowledge-ref integrity + knowledge⇒component coupling
+
+**What shipped.** Two warn-first checks give the knowledge layer its integrity
+web (research-knowledge.md §3a, §8 item 2), both dormant for a non-adopter:
+
+- **`trace.py` — Knowledge-ref resolution.** A CMP row's `Knowledge` cell may
+  name a hand-owned pack as a `docs/knowledge/<label>` ref (the `.md` suffix
+  optional). trace.py now resolves those to real files; a ref naming a missing
+  pack is a **warn-only advisory** — loud on stdout, in the report's new
+  `### Knowledge-pack advisories` section, and counted in the summary line
+  (`knowledge-advisories=N`) — but it **never** changes the exit code, not even
+  under `--strict` (a pack is advisory context, never a gate). Skill names and
+  URLs share the cell and aren't file-checkable, so only the `docs/knowledge/`
+  prefix is resolved; everything else is left alone.
+- **`check_trajectory.py` — knowledge⇒component coupling (owner-ruled
+  2026-07-14).** `component_findings` is now *armed* by pack presence: once
+  `docs/knowledge/` holds a real pack (any `*.md` but the `README.md` index), an
+  uncontained arch-map module is a finding **regardless of** the 10-item top-view
+  bound — WARN plain, ERROR under `--strict` (G2+). It reuses the existing
+  `Component`-tag join (no new join) and the same `docs/components-check` opt-out,
+  and stays dormant until a pack exists.
+
+**Design note (the cost-class split).** The two checks split exactly as the spec
+directs: the pack-file existence check is advisory (never gates, so pack rot never
+falsely fails a run), while the coupling *arms* the component-coverage check the
+owner ruled "must be robust wherever packs are enabled" — so it inherits WI-073's
+warn-plain / `--strict`-error treatment rather than staying pure warn-only. The
+meta repo is unaffected: its `docs/knowledge/` is still empty (dogfood seeding is
+WI-155) and its CMP `Knowledge` cells are skill names (`registry-hygiene`,
+`downstream-resync`), so no advisory fires and the coupling is dormant.
+
+**Tests.** 5 trace Knowledge-ref cases (missing / present / `.md`-suffix /
+skill+URL / mixed cell) in `test_components_registry.py`; 7 coupling cases
+(arms-below-bound, dormant-without-packs, README-index-alone, all-contained,
+partial-containment, off-switch, needs-inventory) in `test_trajectory.py`.
+
+**End green (real output).** Full unfiltered suite `pytest -q -n auto` →
+**799 passed, 3 skipped in 80.55s**. Commit bar: `check_docs.py --root . --stale`
+→ **OK, 102 docs, 433 links, 0 broken** (40 warn-only historical orphans; the
+`--stale` hints on old review docs are non-fatal). Meta spine re-checked:
+`trace.py --strict` → SN=24 SR=56 LLR=57 TC=57 orphans=0 component-findings=0
+(no `knowledge-advisories` line — none fire); `check_trajectory --root . --strict`
+→ clean, exit 0. No budget-watched file changed; no spine change (off-spine
+scripts + tests), so nothing rides a re-attestation. Not pushed
+(`docs/push-policy: human`).
+
+**Handoff.** WI-153 → done; `PROJECT_STATE.html` regenerated; `docs/run-state`
+remains **RUNNING**; `docs/next-wi` → **WI-154** (process text — docs, no
+BuildTier pin → phase default) continues the research-knowledge campaign.

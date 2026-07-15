@@ -81,6 +81,15 @@ tag on an LLR row joins its `Module` → `CMP-###`; nesting via the CMP registry
 modules — or no arch-map inventory — passes trivially (the bound, not the
 registry, is the rule), so a small or non-adopting repo is never broken.
 
+**Knowledge⇒component coupling** (WI-153; research-knowledge.md §3a, owner-ruled
+2026-07-14). The same finding is *armed independent of the bound* once
+`docs/knowledge/` holds a real pack: an uncontained arch-map module is then a
+finding even below the 10-item bound, because a knowledge pack ties the *what* to
+the knowledge behind the *how*, so that web must be robust wherever packs are
+enabled. It reuses the existing `Component`-tag join (no new join) and the same
+`docs/components-check` opt-out, and is dormant — costing a non-adopter nothing —
+until a pack (any `docs/knowledge/*.md` but the `README.md` index) exists.
+
 **Phase archetype + phase-drop detector** (WI-093; derived-gate model §7/§9.3).
 A phase's pre-dev batch is a first-class WI whose Title carries a `[<phase>]-[g<N>]`
 tag (`[v2]-[g1]` = requirement structuring, `[v2]-[g2]` = decomposition + TCs).
@@ -682,36 +691,63 @@ def component_top_view(root):
     }
 
 
-def component_findings(root):
-    """The How-SW top-view right-sizing finding(s) (WI-073/FB5; process-options.md
-    "Component layer"). Returns the finding strings ([] when opted out, vacuous,
-    or within the bound). The caller prints them WARN plain and promotes them to
-    ERROR under `--strict` (G2+).
+def knowledge_packs(root):
+    """Real knowledge-pack labels under `docs/knowledge/` (research-knowledge.md
+    §3a) — every `*.md` except the scaffolded `README.md` index. Empty (a
+    non-adopter, an absent dir, or the index alone) means the knowledge layer is
+    not in use, so the knowledge⇒component coupling stays dormant. Sorted for a
+    deterministic count/message."""
+    d = root / "docs" / "knowledge"
+    if not d.is_dir():
+        return []
+    return sorted(p.stem for p in d.glob("*.md") if p.name.lower() != "readme.md")
 
-    Opt-out via `docs/components-check: off`; vacuous when the arch-map inventory
-    has ≤ TOP_VIEW_MAX modules (a small or pre-arch-map repo can never exceed the
-    bound — the bound, not the registry, is the rule). Only when the inventory
-    itself is larger than the bound do the declared components decide: a
-    right-sized handful of top-level CMPs brings the top view back under it."""
+
+def component_findings(root):
+    """The How-SW component-coverage finding(s) (process-options.md "Component
+    layer"). Returns the finding strings ([] when opted out or clean). The caller
+    prints them WARN plain and promotes them to ERROR under `--strict` (G2+).
+    Opt-out via `docs/components-check: off`. Two rules, both off the arch-map ⇒
+    CMP join:
+
+    - **Top-view right-sizing** (WI-073/FB5): vacuous when the arch-map inventory
+      has ≤ TOP_VIEW_MAX modules (a small or pre-arch-map repo can never exceed the
+      bound — the bound, not the registry, is the rule). Only when the inventory
+      itself is larger than the bound do the declared components decide: a
+      right-sized handful of top-level CMPs brings the top view back under it.
+    - **Knowledge⇒component coupling** (WI-153; research-knowledge.md §3a,
+      owner-ruled 2026-07-14): when ≥1 knowledge pack exists the component web is
+      *expected* — any arch-map module the CMP join leaves uncontained is a finding
+      regardless of the bound, because packs tie the *what* to the knowledge behind
+      the *how* and that web must be robust wherever packs are enabled. Arms the
+      existing join from pack presence; invents no new join, and is dormant (no
+      cost to a non-adopter) until `docs/knowledge/` holds a real pack."""
     if not read_components_check_enabled(root):
         return []
     view = component_top_view(root)
-    if len(view["inventory"]) <= TOP_VIEW_MAX:
-        return []
-    if view["count"] <= TOP_VIEW_MAX:
-        return []
-    return [
-        "How-SW top view has {} items ({} top-level component(s) + {} uncontained "
-        "module(s)) — exceeds the bound of {}; declare CMP-### components in {} to "
-        "contain modules (nest with PartOf), or set docs/components-check: "
-        "off".format(
-            view["count"],
-            len(view["top_roots"]),
-            len(view["uncontained"]),
-            TOP_VIEW_MAX,
-            CMP_CSV,
+    out = []
+    packs = knowledge_packs(root)
+    if packs and view["inventory"] and view["uncontained"]:
+        out.append(
+            "docs/knowledge/ holds {} pack(s) but {} arch-map module(s) are in no "
+            "CMP-### component ({}); tag them via LLR `Component` cells so the "
+            "knowledge⇒component web is complete, or set docs/components-check: "
+            "off".format(len(packs), len(view["uncontained"]), CMP_CSV)
         )
-    ]
+    if len(view["inventory"]) > TOP_VIEW_MAX and view["count"] > TOP_VIEW_MAX:
+        out.append(
+            "How-SW top view has {} items ({} top-level component(s) + {} "
+            "uncontained module(s)) — exceeds the bound of {}; declare CMP-### "
+            "components in {} to contain modules (nest with PartOf), or set "
+            "docs/components-check: off".format(
+                view["count"],
+                len(view["top_roots"]),
+                len(view["uncontained"]),
+                TOP_VIEW_MAX,
+                CMP_CSV,
+            )
+        )
+    return out
 
 
 # --- the [phase]-[g*] archetype + phase-drop detector (WI-093) -----------------

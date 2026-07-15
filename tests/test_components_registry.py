@@ -5,6 +5,11 @@ restated on the CMP row — membership is a `Component` tag on the primitive row
 so what trace.py checks is exactly the joins: PartOf / SupersededBy must name real
 CMP ids, a primitive's Component tag must resolve to a real CMP row, a malformed
 CMP id fails --strict, and a leftover CMP-000 placeholder never blocks a gate.
+
+A CMP row's `Knowledge` cell may also name a hand-owned knowledge pack
+(research-knowledge.md §3a) as a `docs/knowledge/<label>` ref; trace.py resolves
+those to real pack files as a warn-only advisory (a missing pack never gates),
+and leaves skill names and URLs in the same cell alone.
 """
 
 from conftest import make_minimal_project, run_py
@@ -104,3 +109,74 @@ def test_malformed_cmp_id_fails_strict(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "CMP id 'CMP-XX' is malformed" in report_of(scaffold)
+
+
+# --- WI-153: warn-first `Knowledge`-ref resolution (research-knowledge.md §3a) --
+# A CMP's Knowledge cell may name a `docs/knowledge/<label>` pack; trace.py resolves
+# it to a real file as a warn-only advisory (never a gate), and leaves skill names
+# and URLs in the same cell unchecked.
+KROW = "{cid},arm,software,{know},built,,,,note\n"
+
+
+def krow(cid, know):
+    return KROW.format(cid=cid, know=know)
+
+
+def write_pack(root, label, body="# Pack\n"):
+    d = root / "docs" / "knowledge"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / (label + ".md")).write_text(body, encoding="utf-8")
+
+
+def test_knowledge_ref_missing_pack_warns_only(scaffold):
+    # A docs/knowledge/-shaped ref with no pack file is a warn-only advisory: it
+    # is loud on stdout + in the report, but never changes the exit code — not
+    # even under --strict (a pack is advisory context, never a gate).
+    make_minimal_project(scaffold)
+    write_cmps(scaffold, krow("CMP-001", "docs/knowledge/missing"))
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "knowledge-advisories=1" in proc.stdout
+    assert "names no pack (docs/knowledge/missing.md)" in proc.stdout
+    assert "Knowledge-pack advisories (warn-only)" in report_of(scaffold)
+    assert "names no pack (docs/knowledge/missing.md)" in report_of(scaffold)
+
+
+def test_knowledge_ref_present_pack_resolves(scaffold):
+    # The ref resolves whether or not the author writes the `.md` suffix.
+    make_minimal_project(scaffold)
+    write_pack(scaffold, "found")
+    write_cmps(
+        scaffold,
+        krow("CMP-001", "docs/knowledge/found"),
+        krow("CMP-002", "docs/knowledge/found.md"),
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "knowledge-advisories" not in proc.stdout
+
+
+def test_knowledge_skill_and_url_refs_are_unchecked(scaffold):
+    # A bare skill name and a URL share the cell with pack refs but are not
+    # file-checkable, so neither yields an advisory.
+    make_minimal_project(scaffold)
+    write_cmps(scaffold, krow("CMP-001", "registry-hygiene;https://example.com/x"))
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "knowledge-advisories" not in proc.stdout
+
+
+def test_knowledge_ref_mixed_cell_checks_only_the_pack(scaffold):
+    # One cell, three refs (skill, present pack, missing pack): only the missing
+    # pack advises; the skill and the resolved pack are silent.
+    make_minimal_project(scaffold)
+    write_pack(scaffold, "there")
+    write_cmps(
+        scaffold,
+        krow("CMP-001", "registry-hygiene;docs/knowledge/there;docs/knowledge/gone"),
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "knowledge-advisories=1" in proc.stdout
+    assert "names no pack (docs/knowledge/gone.md)" in proc.stdout
+    assert "docs/knowledge/there" not in report_of(scaffold)

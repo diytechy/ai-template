@@ -59,14 +59,14 @@ home elsewhere — don't restate it here:
   iteration the owner flagged._
 - **Queued (research-knowledge campaign, OI-9 §8** —
   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
-  2026-07-14 ratification — **WI-153** (trace.py ref integrity +
-  knowledge⇒component coupling) · **WI-154** (process text) ·
-  **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
-  strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
-  domains filter); **WI-158** deferred (OKF pack export).
+  2026-07-14 ratification; the ref-integrity slice (trace.py Knowledge resolution
+  + knowledge⇒component coupling) landed 2026-07-15 ([log.md](log.md)). Remaining:
+  **WI-154** (process text) · **WI-155** (dogfood packs + the seed prompt→image
+  research WI, `BuildTier=strong`) · **WI-156** (kit-provisioned pack library) ·
+  **WI-157** (skills domains filter); **WI-158** deferred (OKF pack export).
   The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
-  no stop in between; the DAG sequences it from WI-153._
+  no stop in between; the DAG now sequences it from WI-154._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
   All owner-intake WIs are complete — the loop worked them in id order after the
@@ -87,12 +87,13 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-153** (warn-first knowledge-ref integrity +
-  knowledge⇒component coupling, `BuildTier=medium` pin) resumes the
-  owner-greenlit research-knowledge campaign; its DAG carries **WI-154**…
-  **WI-157** + **WI-164** automatically. `docs/next-wi` points at **WI-153**.
-  The 094 remediation batch is complete; evidence is in [log.md](log.md) and
-  [reviews/097-REVIEW-A.md](reviews/097-REVIEW-A.md).
+- **Next action:** **WI-154** (research-track process text — PROCESS_OPTIONS
+  section + component-layer cross-link + PROCESS.md pointer + reviewer-charter
+  line; docs, no `BuildTier` pin → phase default) continues the owner-greenlit
+  research-knowledge campaign; its DAG carries **WI-155**…**WI-157** + **WI-164**
+  automatically. `docs/next-wi` points at **WI-154**. The campaign's ref-integrity
+  slice landed 2026-07-15 (evidence in [log.md](log.md)); it was off-spine
+  (scripts + tests), so nothing rides a re-attestation.
   Only deferred main-decomposition (**WI-080**→**WI-081**) stays parked. Codex
   Sol builds are live.
   Round-by-round evidence → [log.md](log.md), not here.

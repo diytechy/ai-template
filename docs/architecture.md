@@ -294,7 +294,8 @@ Contracts (interfaces): IF-009, IF-023
 | `load_cmps(rows)` | Real (non-`-000`) CMP-### component rows as dicts (id, name, category, |  |
 | `module_components(root)` | `{normalized module key: set(real-looking CMP ids)}` from the LLR |  |
 | `component_top_view(root)` | The How-SW containment derivation (WI-073), shared by the right-sizing |  |
-| `component_findings(root)` | The How-SW top-view right-sizing finding(s) (WI-073/FB5; process-options.md |  |
+| `knowledge_packs(root)` | Real knowledge-pack labels under `docs/knowledge/` (research-knowledge.md |  |
+| `component_findings(root)` | The How-SW component-coverage finding(s) (process-options.md "Component |  |
 | `read_derived_phases(root)` | `{phase-label: gate-level-int}` parsed from the `# basis:` line of the |  |
 | `phase_anchors(wis)` | `({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs |  |
 | `phase_findings(root, wis)` | The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the |  |

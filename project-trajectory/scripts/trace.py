@@ -206,6 +206,14 @@ readout drift, not a coverage hole. It is never gating (not under --strict or
 re-introduce the coupling the model dropped. The fix is to lift the LLR's
 Status cell by hand; no generator writes registry cells back.
 
+Also always (warn-only, never an exit-code change): a component row's `Knowledge`
+cell may name a hand-owned knowledge pack (process-options.md "Research track &
+knowledge packs") as a `docs/knowledge/<label>`-shaped ref. Those are resolved to
+real pack files — a ref naming a missing pack is flagged as a WARNING (a pack is
+advisory context, never a gate, so a stale ref never fails a run). The same cell
+also holds skill names and URLs, which aren't file-checkable and are left alone;
+only the `docs/knowledge/` prefix is resolved.
+
 When the SR registry carries the optional `Area` column (owner-hat/domain tag,
 process.md §1) with real values, the report adds a per-Area SR count section —
 report-only, never an exit-code change; blank cells and registries without the
@@ -1423,6 +1431,30 @@ def main():
                             f"{label} {r[key]} Component tag references unknown {x}"
                         )
 
+    # Knowledge-pack refs on a CMP row's `Knowledge` cell (process-options.md
+    # "Research track & knowledge packs"): a `docs/knowledge/<label>`-shaped ref
+    # names a hand-owned pack file. Resolve those to real files — a missing pack
+    # is a warn-only advisory, NEVER a gate finding (a pack is advisory context,
+    # research-knowledge.md §3a). Skill names and URLs share the cell and are not
+    # file-checkable, so only the `docs/knowledge/` prefix is resolved; anything
+    # else is left alone. Uses `docs` (not root) so a custom --docs still resolves.
+    knowledge_advisories = []
+    kn_prefix = "docs/knowledge/"
+    for r in cmps:
+        cid = r["CMP-ID"]
+        for ref in refs(r.get("Knowledge")):
+            label = ref.replace("\\", "/")
+            if not label.startswith(kn_prefix):
+                continue
+            label = label[len(kn_prefix) :]
+            if not label:
+                continue
+            rel = label if label.endswith(".md") else label + ".md"
+            if not (docs / "knowledge" / rel).exists():
+                knowledge_advisories.append(
+                    f"CMP {cid} Knowledge ref '{ref}' names no pack ({kn_prefix}{rel})"
+                )
+
     # Interface seams (IF-###, process.md §8): SR-Refs back-links join the
     # --strict failure set like PB's; the ThisProject-vs-LLR-Module endpoint join
     # is a warn-only advisory (module_ids reused from the PB back-link check above).
@@ -1776,6 +1808,9 @@ def main():
             if not component_findings
             else [f"- {f}" for f in component_findings]
         )
+        if knowledge_advisories:
+            lines += ["", "### Knowledge-pack advisories (warn-only)", ""]
+            lines += [f"- {a}" for a in knowledge_advisories]
     if ifs:
         lines += ["", "## Interface seams (process.md §8 back-links)", ""]
         lines += (
@@ -1826,6 +1861,8 @@ def main():
         print(f"WARNING (advisory): {a}")
     for a in interface_advisories:
         print(f"WARNING (advisory): {a}")
+    for a in knowledge_advisories:
+        print(f"WARNING (advisory): {a}")
     for a in llr_status_advis:
         print(f"WARNING (advisory): {a}")
     print(
@@ -1853,6 +1890,11 @@ def main():
         + (
             f" components={len(cmps)} component-findings={len(component_findings)}"
             if cmps
+            else ""
+        )
+        + (
+            f" knowledge-advisories={len(knowledge_advisories)}"
+            if knowledge_advisories
             else ""
         )
         + (
