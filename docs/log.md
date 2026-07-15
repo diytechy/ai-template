@@ -5804,6 +5804,69 @@ stdlib-only. No scaffold surface change (`docs/pause` is a runtime signal, absen
 by default — no bootstrap MAPPING / README kit-contents change, like
 `docs/live-status`).
 
+## 2026-07-14 — SESSION: WI-148 (weekday blackout window — docs/blackout); NO spine change
+
+**Scope.** Owner-intake 2026-07-14 #pause-blackout, the next actionable
+owner-intake backlog WI after WI-147 (its soft `~WI-147` predecessor). Coordinator
++ scaffold, off-spine (`unattended`).
+
+**What shipped.**
+- **`docs/blackout` — a recurring weekday blackout window.** Two pure helpers in
+  `agent_loop.py`: `parse_blackout(line)` turns `HH:MM-HH:MM` into
+  `(start_min, end_min)` UTC minutes (or `None` when absent/empty/malformed —
+  out-of-range hour/minute is malformed); `blackout_wake(line, now)` returns the
+  seconds until the current window ends, or `None` when a new session is not
+  blacked out (disabled `start==end`, weekend, or `now` outside). The window is
+  **half-open `[start, end)`** (12:00–19:00 blocks 12:00 through 18:59, releases
+  at 19:00), **Mon–Fri only**, and **wraps past midnight** when `start > end`.
+- **One boundary check** at the top of the iteration loop (right after the
+  `docs/pause` check): when `blackout_wake` returns seconds, the loop prints a
+  banner naming the UTC wake time and **`time.sleep`s inline** — no iteration
+  budget consumed (no `continue`), so a single walk-away launch **waits the
+  window out and resumes automatically** (unlike `pause`, no re-launch needed).
+  The in-flight session already wrapped normally (same graceful semantic as
+  `pause`). Absent/disabled file ⇒ a no-op, byte-identical to today.
+- **Scaffold ships the default.** New `blackout.template` (12:00–19:00) wired
+  into `bootstrap.py`'s `SCAFFOLD` table → `docs/blackout`, so a fresh repo gets
+  the owner's "always on" blackout from the scaffold, not a hidden built-in.
+- **Docs.** `PROCESS_OPTIONS.md` "Unattended operation" gains an *Optional
+  `docs/blackout`* paragraph; the module docstring lists the file + its
+  wait-and-resume behavior.
+
+**Design choice — wait, not exit.** The spec left "waits *or* exits" open;
+waiting is the walk-away-correct behavior (the single launched coordinator sleeps
+through the daily blackout and resumes on its own — exiting would kill the run
+every weekday and demand a manual re-launch). The pure helpers take an injected
+`now`, so the minute-boundary and disable behavior is unit-tested without any
+real sleeping; the inside-window sleep itself is exercised only via those
+helpers (a real end-to-end sleep is minute-granular and would be flaky).
+
+**Self-application (meta repo).** No `docs/blackout` added to *this* repo's
+`docs/` — absent = disabled = byte-identical, so the currently-running walk-away
+loop is not silently blacked out during 12:00–19:00 UTC. Enabling a blackout on
+the meta's own coordinator is an operational policy choice (like
+`push-policy=human`), not a correctness requirement; the deliverable is the
+scaffold default for adopters + the mechanism.
+
+**Tests (6 new, all green).** `test_agent_loop.py`: `parse_blackout` edges
+(valid, whitespace, `00:00-00:00` parses, empty/malformed/out-of-range → None);
+`blackout_wake` boundary minutes (11:59 clear, 12:00 → 7 h, 18:59 → 60 s,
+seconds honored, 19:00 clear); disable form + weekend (Sat/Sun never blacked
+out); wrap-past-midnight; and an end-to-end loop test that a present-but-inactive
+window is a no-op (session runs → DONE). `test_bootstrap.py`: `docs/blackout` in
+the scaffold checklist + a default-value assertion (`12:00-19:00`).
+
+**Byte deltas (byte-budget-guard).** AGENTS.template.md 9978 → 9978 (untouched);
+PROCESS.md 59,827 → 59,827 (unchanged); **PROCESS_OPTIONS.md 136,099 → 136,841
+(+742 B, flagged** — documents the new `docs/blackout` operator control; the
+watched baseline is re-stamped to 136,841 as of WI-148 in `byte-budget-guard`
+SKILL.md, source + both tracked skill copies).
+
+**Gates.** Full unfiltered suite **764 passed / 3 skipped** (`pytest -q -n auto`;
++6 blackout tests over the 758 baseline) + `check_docs --stale` exit 0. No spine
+change (SN=24 SR=56 LLR=57 TC=57); derived gate holds G2. `agent_loop.py` stayed
+stdlib-only.
+
 **Handoff — run-state RUNNING; next-wi WI-148.** The owner-intake backlog
 continues in id order (WI-148 weekday blackout next — the sibling wrap-up
 semantic; `docs/blackout`). WI-144 stays paused; the g2-close sitting is DUE in

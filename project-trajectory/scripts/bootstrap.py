@@ -21,6 +21,7 @@ What it creates in the destination:
     docs/gate-policy                           <- gate-policy.template  (authority: attended)
     docs/privacy-check                         <- privacy-check.template  (privacy: off)
     docs/push-policy                           <- push-policy.template  (policy: human)
+    docs/blackout                              <- blackout.template  (window: 12:00-19:00 UTC)
     docs/review-policy                         <- review-policy.template  (reviewers: 1)
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
@@ -1023,6 +1024,12 @@ MAPPING = [
     # iteration branch & sync"): who may publish. `human` by default — an
     # agent never pushes; --push-policy overrides.
     ("push-policy.template", "docs/push-policy"),
+    # The weekday blackout window (WI-148, process-options.md "Unattended
+    # operation"): a `HH:MM-HH:MM` UTC Mon–Fri window the coordinator starts no
+    # new session inside (it waits the window out, then resumes). Ships the
+    # 12:00–19:00 default so a fresh scaffold gets it; delete the file or set
+    # start==end to disable (absent = disabled, byte-identical to before).
+    ("blackout.template", "docs/blackout"),
     ("STATUS.template.md", "docs/status.md"),
     # The owner decision briefs status.md's Needs-<human> bullets link to
     # (process-options.md "Trajectory / work-items layer"): one OI-N section

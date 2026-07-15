@@ -19,6 +19,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/gate-policy",
         "docs/privacy-check",
         "docs/push-policy",
+        "docs/blackout",
         "docs/review-policy",
         "docs/agents.csv",
         "docs/kit-profile",
@@ -271,6 +272,17 @@ def test_run_launchers_delegate_to_run_menu(scaffold):
     # only), so the launcher degrades to guidance rather than launching nothing.
     ini = (scaffold / "docs" / "stack.ini").read_text(encoding="utf-8")
     assert "\n[run]" not in ini, "a fresh scaffold ships the [run] examples commented"
+
+
+def test_scaffold_blackout_ships_the_default_window(scaffold):
+    # WI-148: a fresh scaffold ships the 12:00–19:00 UTC weekday default, so the
+    # owner's "always on" blackout is honored by the scaffold, not a hidden
+    # built-in (the value is the last non-comment line, like the other policies).
+    text = (scaffold / "docs" / "blackout").read_text(encoding="utf-8")
+    value = [
+        ln.strip() for ln in text.splitlines() if ln.strip() and not ln.startswith("#")
+    ][-1]
+    assert value == "12:00-19:00"
 
 
 def test_agent_resume_launchers_ship_inert_with_edit_slots(scaffold):

@@ -41,6 +41,11 @@ Per session the coordinator:
   - honors docs/pause: a graceful-pause request (the file present) stops the
     loop at the next session boundary — the in-flight session finishes and
     commits normally, never a mid-session kill; deleting the file resumes;
+  - honors docs/blackout: a declared `HH:MM-HH:MM` UTC weekday window inside
+    which no new session starts — the in-flight one wraps normally, then the
+    loop waits the window out and resumes automatically (a single launch
+    survives the blackout). Absent/empty/malformed or start==end = disabled;
+    the scaffold ships a 12:00–19:00 default;
   - counts a no-commit session toward the stall guard (git HEAD unmoved) —
     except limit-hit sessions (below), which never count as a stall. A session
     that errored *before it could work* (the CLI reported is_error, or it could
@@ -346,6 +351,60 @@ def pause_reason(lane):
     if not path.is_file():
         return None
     return read_declared(path, "")
+
+
+# --- WI-148: weekday blackout window ------------------------------------------
+# A declared `docs/blackout` policy: first non-comment line `HH:MM-HH:MM` (UTC),
+# active Mon–Fri. Inside the window the coordinator starts no new session (the
+# in-flight one already wrapped, the same graceful semantic as docs/pause) — it
+# waits out the window, then resumes automatically, so a single walk-away launch
+# survives the blackout. An absent/empty/malformed file, or `start == end`,
+# disables it (byte-identical to a repo that never had the file — never-breaking);
+# a fresh scaffold ships the 12:00–19:00 default so the owner's "always on"
+# blackout is honored by the scaffold, not a hidden built-in.
+BLACKOUT_RE = re.compile(r"^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$")
+
+
+def parse_blackout(line):
+    """Parse a `HH:MM-HH:MM` blackout line into `(start_min, end_min)` — minutes
+    past UTC midnight — or `None` when absent/empty/malformed (an out-of-range
+    hour or minute is malformed). Deliberately does NOT apply the `start == end`
+    disable rule; the caller (blackout_wake) does, so the parse and the policy
+    stay separately testable."""
+    m = BLACKOUT_RE.match(line or "")
+    if not m:
+        return None
+    sh, sm, eh, em = (int(g) for g in m.groups())
+    if sh > 23 or eh > 23 or sm > 59 or em > 59:
+        return None
+    return (sh * 60 + sm, eh * 60 + em)
+
+
+def blackout_wake(line, now):
+    """Seconds until the current UTC weekday blackout window ends, or `None` when
+    a new session is NOT blacked out at `now` — the file is absent/empty/
+    malformed, the window is disabled (`start == end`), it is the weekend (the
+    window is Mon–Fri only), or `now` falls outside the window. The window is
+    half-open `[start, end)`: a session starting exactly at `end` is already
+    clear (so 12:00–19:00 blocks 12:00 through 18:59 and releases at 19:00). A
+    window whose start is after its end wraps past UTC midnight, honored on its
+    start weekday. `now` is a naive UTC datetime (datetime.utcnow())."""
+    win = parse_blackout(line)
+    if win is None:
+        return None
+    start, end = win
+    if start == end:
+        return None  # the disable form
+    if now.weekday() >= 5:  # Sat/Sun — the window is weekdays only
+        return None
+    minute = now.hour * 60 + now.minute
+    inside = start <= minute < end if start < end else (minute >= start or minute < end)
+    if not inside:
+        return None
+    wake = now.replace(hour=end // 60, minute=end % 60, second=0, microsecond=0)
+    if wake <= now:  # a wrap window's end is tomorrow morning
+        wake += datetime.timedelta(days=1)
+    return int((wake - now).total_seconds())
 
 
 def sanitize_track(name):
@@ -2064,6 +2123,25 @@ def main():
                 ),
             )
             return EXIT_PAUSED
+        # WI-148: a declared docs/blackout window pauses NEW sessions on UTC
+        # weekdays. The in-flight session already wrapped normally (the pause
+        # semantic), so here we simply wait the window out and then let this
+        # iteration's session start — no iteration budget is consumed by waiting
+        # (we sleep inline, never `continue`), so a single walk-away launch
+        # survives the blackout and resumes automatically. Absent/disabled file
+        # => a no-op (byte-identical to today).
+        wake = blackout_wake(
+            read_declared(lane / "blackout", ""), datetime.datetime.utcnow()
+        )
+        if wake:
+            resume_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=wake)
+            print(
+                "agent_loop: inside the docs/blackout window — starting no new "
+                "session until {} UTC (~{}s); waiting.".format(
+                    resume_at.strftime("%H:%M"), wake
+                )
+            )
+            time.sleep(wake)
         # Inject the reconcile note into the first session's prompt only (see the
         # once-at-start rationale above); every later session's prompt is
         # unchanged from today.

@@ -542,6 +542,17 @@ resuming is a single act. Per-lane like `run-state` (a `--track` run pauses only
 its own coordinator); absent = not paused, so an adopter who never creates it
 pays nothing.
 
+**Optional `docs/blackout`** (first line `HH:MM-HH:MM`, UTC, Mon–Fri): a
+recurring window inside which the coordinator starts **no new session** — the
+same next-boundary graceful semantic as `docs/pause`, but temporal and
+self-clearing. The in-flight session wraps normally, then the loop **waits the
+window out and resumes automatically**, so one walk-away launch survives a daily
+blackout (unlike `pause`, no re-launch needed). The window is half-open
+`[start, end)` — 12:00–19:00 blocks 12:00 through 18:59 and releases at 19:00.
+`start == end` disables, and so does deleting the file (absent = disabled,
+byte-identical to before); the scaffold ships a **12:00–19:00** default so a
+fresh repo gets it without a hidden built-in.
+
 **Optional `docs/run-phase`** (one word): the phase the *next* session should
 drive — the coordinator's model-tier key (§6 tiering, mapped per phase), kept
 current in the finishing commit so a tier bump lands on the right sessions.

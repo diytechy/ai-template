@@ -20,14 +20,17 @@
 # Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN
 # first so one final build round mechanizes contrast instead of another hand pass.
 #
-# NEXT: WI-148 (weekday blackout window). WI-147 (coordinator graceful pause -
-# docs/pause honored at the session boundary: launch-refusal, graceful stop,
-# delete-to-resume) SHIPPED 2026-07-14 (log.md); the 060-REVIEW-A residue on
-# WI-146 was reconciled the same day (SN prose in the --ratify view + link-only
-# brief lint). WI-146 (ratification package - trace.py --ratify view + the
-# warn-first brief lint + gate-advance/reviewer-prompt wiring + the
-# [g2]-authors-IF recipe line) SHIPPED 2026-07-14 (log.md). The loop continues the
-# actionable owner-intake backlog in id order: WI-148 (weekday blackout) -> WI-149
+# NEXT: WI-149 (lowest-gate-first queue advisory). WI-148 (weekday blackout
+# window - docs/blackout HH:MM-HH:MM UTC Mon-Fri honored at the session boundary:
+# no new session inside the window, wait-it-out-and-resume; start==end/absent =
+# disabled; 12:00-19:00 scaffold default) SHIPPED 2026-07-14 (log.md). WI-147
+# (coordinator graceful pause - docs/pause honored at the session boundary:
+# launch-refusal, graceful stop, delete-to-resume) SHIPPED 2026-07-14 (log.md);
+# the 060-REVIEW-A residue on WI-146 was reconciled the same day (SN prose in the
+# --ratify view + link-only brief lint). WI-146 (ratification package - trace.py
+# --ratify view + the warn-first brief lint + gate-advance/reviewer-prompt wiring
+# + the [g2]-authors-IF recipe line) SHIPPED 2026-07-14 (log.md). The loop
+# continues the actionable owner-intake backlog in id order: WI-149
 # (lowest-gate-first warn) -> WI-150 (planner-assigned BuildTier) -> WI-151
 # (throughline pointer). WI-144 (the v3 closer) is `active` but PAUSED - its
 # SR-047 critique loop EXHAUSTED AGENT_CRITIQUE_MAX=3 still CHANGES-REQUESTED
@@ -43,4 +46,4 @@
 # campaign the owner sequences at the sitting: do NOT auto-start it ahead of the
 # owner-intake WIs. WI-144 resumes for its final build round after the sitting rules
 # OI-12, then the full gate bar and the spine rejoins G3.
-WI-148
+WI-149
