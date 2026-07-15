@@ -1033,6 +1033,12 @@ YAGNI output-ladder ruleset + a `PostToolUse` scrub/elide/dedup tool-output
 compressor). Vendor one, or fold its ideas into your own package; **weigh it at
 kit adoption and at each re-sync** (the adoption guide flags both moments).
 
+**A related opt-in — design-system packages.** **Applies when** the product has
+a UI/design-system need. [`jrpease/throughline`](https://github.com/jrpease/throughline)
+is a worked, vendorable package for design tokens, component libraries, and
+visual-regression tooling. Its manifest and gates complement this process; keep
+`check.py` as the downstream's single gate runner rather than competing runners.
+
 **The boundary.** Guardrails govern *in-session agent mechanics*; the process
 (gates, traceability, the honest-gate rule) governs *artifacts*. A guardrail
 never relaxes a gate, and the honest-gate rule still owns every `run-state`.

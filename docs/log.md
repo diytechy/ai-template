@@ -5933,3 +5933,35 @@ holds G2.
 **Handoff — run-state RUNNING; next-wi WI-151.** The remaining actionable
 owner-intake WI is the throughline pointer. WI-144 stays paused; the phase-v3
 g2-close ratification sitting remains due in parallel (OI-12).
+
+## 2026-07-14 — WI-151: throughline vendorable design-system pointer
+
+**Scope.** Owner-intake 2026-07-14 #throughline: add the requested worked
+pointer only; do not adopt its process machinery into the kit.
+
+**What shipped.** PROCESS_OPTIONS' vendorable-packages discussion now names
+[`jrpease/throughline`](https://github.com/jrpease/throughline) as a related,
+vendorable UI/design-system package, scoped to products with that need. Its
+manifest and gates are explicitly complementary: downstream `check.py` remains
+the single gate runner.
+
+**Deviations.** None. Pre-existing untracked `docs/reviews/062-REVIEW-A.md`
+residue is outside WI-151 and remains preserved unchanged.
+
+**Byte deltas.** AGENTS.template.md 9,978 -> 9,978 (untouched, 22 B headroom);
+PROCESS.md 59,827 -> 59,827 (unchanged); PROCESS_OPTIONS.md 137,132 -> 137,541
+(+409 B, flagged for the applicability and single-runner caveat). The watched
+baseline is re-stamped to 137,541 in all three byte-budget-guard skill copies.
+
+**Gates.** Commit bar: `python -m pytest -q -n auto -m smoke` -> **612 passed,
+2 skipped in 92.77s**; `python project-trajectory/scripts/check_docs.py --root .
+--stale` -> **OK, 85 docs, 372 links, 0 broken** (33 pre-existing orphan
+warnings). Full suite: `python -m pytest -q -n auto` -> **736 passed, 34 skipped
+in 111.59s**. `check_trajectory.py --root . --strict` is intentionally **not
+green**: it identifies WI-152 as mechanically actionable while the ratified
+status/spec explicitly reserve research-campaign sequencing to the OI-12
+g2-close sitting; that enforcer/process conflict needs the owner's ruling.
+
+**Handoff — run-state NEEDS-HUMAN; next-wi WI-144.** All actionable
+owner-intake work is complete. The owner must rule OI-12 at the phase-v3
+g2-close ratification before WI-144 resumes; do not auto-start WI-152+.

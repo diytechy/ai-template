@@ -88,12 +88,10 @@ home elsewhere — don't restate it here:
   this campaign at the g2-close sitting; do not auto-start it._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
-  **WI-151** (throughline pointer).
+  All owner-intake WIs are complete.
   Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so
-  these are the loop's **actionable non-dependent backlog** — the loop works them
-  in id order (the ratification-package + graceful-pause + weekday-blackout WIs
-  shipped 2026-07-14, see [log.md](log.md)) unless the owner reorders
-  `docs/next-wi` at the pending g2-close sitting._
+  the loop worked them in id order. The pending g2-close sitting must now rule
+  OI-12 before WI-144's final build round resumes._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
@@ -102,10 +100,11 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-151** ([next-wi](next-wi)) — run-state **RUNNING**. The
-  loop works the remaining actionable owner-intake WI while WI-144 is paused and
-  the g2-close sitting is DUE in parallel (Open items above). Shipped work +
-  round-by-round evidence → [log.md](log.md) / OI-12, not here.
+- **Next action:** **OI-12 g2-close ratification** — run-state **NEEDS-HUMAN**;
+  then **WI-144** ([next-wi](next-wi)) resumes its final build round. The owner
+  must rule the critique disposition and sequence the queued research-knowledge
+  campaign (Open items above). Shipped work + round-by-round evidence →
+  [log.md](log.md) / OI-12, not here.
 
 ## Scope
 

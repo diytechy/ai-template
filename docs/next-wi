@@ -48,4 +48,7 @@
 # campaign the owner sequences at the sitting: do NOT auto-start it ahead of the
 # owner-intake WIs. WI-144 resumes for its final build round after the sitting rules
 # OI-12, then the full gate bar and the spine rejoins G3.
-WI-151
+# NEXT: WI-144 resumes only after the OI-12 phase-v3 g2-close ratification rules
+# the critique disposition and sequences the research-knowledge campaign. The
+# coordinator is parked NEEDS-HUMAN until then; do not auto-start WI-152+.
+WI-144
