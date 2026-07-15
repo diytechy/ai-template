@@ -66,8 +66,8 @@ home elsewhere — don't restate it here:
   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
   domains filter); **WI-158** deferred (OKF pack export). The owner **greenlit**
   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
-  no stop in between; the DAG sequences it (WI-152 first, predecessor WI-145
-  done)._
+  no stop in between; the DAG sequences it (WI-152 first, its ratification-sitting
+  predecessor already done)._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
   All owner-intake WIs are complete — the loop worked them in id order after the
