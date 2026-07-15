@@ -43,17 +43,15 @@ home elsewhere — don't restate it here:
 
 - **Open items** _(one bullet per item; `OI-N` ids are stable and never
   renumbered):_
-  - **The phase-v3 g2-close ratification sitting is DUE** — a batched human touch
-    *parallel* to the loop, not a stop: `keep_nondependent` keeps run-state
-    RUNNING on the non-dependent owner-intake WIs, and a NEEDS-HUMAN park while
-    those queued WIs are actionable is a stale end-state `trajectory --strict`
-    rejects. WI-144 is `active` but **paused** — its critique budget is exhausted
-    (`AGENT_CRITIQUE_MAX=3`; 042/048/052 CHANGES-REQUESTED on SR-052/053/054). The
-    sitting rules **OI-12** (the critique disposition: buildable A4/T4 fixes + the
-    owner-gated 3 TC-HARDEN / U5 palette taxonomy) and sequences the queued
-    campaigns (owner-intake vs research-knowledge); WI-144 then resumes its final
-    build round. (The `[v3]-[g2]` *design* batch was already ratified 2026-07-14
-    ([log.md](log.md)); this is the g2-close, not a re-ratification.)
+  - **The phase-v3 g2-close sitting is DONE** (2026-07-14 — OI-11/12/13 ruled,
+    [log.md](log.md) Decisions). **WI-144 resumes for one final owner-directed
+    build round**: the 3 TC-HARDEN are mechanized first, then the residual A4/T4
+    contrast+label fixes + U4/U3/U1 polish + the **U5** palette de-collision land
+    together (U5 is now an anchor in `docs/rubrics/dashboard-uniformity.md`); T2 is
+    deferred → **WI-159**. A fresh re-critique then judges the round and, on
+    APPROVE, WI-144 closes and the spine rejoins G3. After WI-144 closes the owner
+    sequences the next campaign (research-knowledge WI-152… vs the deferred
+    `main-decomposition`).
   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
@@ -65,19 +63,6 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-    - **OI-11** — session-038 REVIEW-A [MAJOR] (containment-arrow vs SR-056);
-      rec: accept — a spec-interpretation call the code satisfies, and the 042
-      critique did not re-raise it (subsumed by OI-12).
-    - **OI-12** — 042 CRITIQUE (7 findings, CHANGES-REQUESTED) vs the
-      SR-052/053/054 rubrics; rec: accept — six rubric-meeting fixes are WI-144
-      build work; the **U5** anchor + phase-hue de-collision + 3 TC-HARDEN are
-      owner-gated (ratify at phase-g2 close). Depth in [open-items.md](open-items.md).
-    - **OI-13** — session-062 REVIEW-A [MAJOR] (the `docs/pause` stop leaves
-      `run-state` untouched vs. the spec's `ask:` line); reconciled from the
-      orphaned 062-REVIEW-A. Rec: **ratify the documented deviation** (amend the
-      spec) — the file is the whole pause contract and `NEEDS-HUMAN` would break
-      single-act resume; owner may instead direct the code fix. Depth in
-      [open-items.md](open-items.md).
 - **Queued (v3 dev slice, owner intake 2026-07-13** —
   [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ the
   earlier SR-051-rev / SR-055 / SR-056 slices **shipped** ([log.md](log.md)
@@ -91,27 +76,26 @@ home elsewhere — don't restate it here:
   **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
   domains filter); **WI-158** deferred (OKF pack export). The owner sequences
-  this campaign at the g2-close sitting; do not auto-start it._
+  this campaign after WI-144 closes; do not auto-start it._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
-  All owner-intake WIs are complete.
-  Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so
-  the loop worked them in id order. The pending g2-close sitting must now rule
-  OI-12 before WI-144's final build round resumes._
+  All owner-intake WIs are complete — the loop worked them in id order after the
+  2026-07-14 sitting._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
-  WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
+  WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in
   [work-items.csv](requirements/work-items.csv). The highest-value next step is
   the `main-decomposition` campaign (**WI-080** → **WI-081**), sequenced *behind*
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **OI-12 g2-close ratification** — run-state **NEEDS-HUMAN**;
-  then **WI-144** ([next-wi](next-wi)) resumes its final build round. The owner
-  must rule the critique disposition, rule **OI-13** (the `docs/pause`
-  `run-state` deviation, now folded into the same sitting), and sequence the
-  queued research-knowledge campaign (Open items above). Shipped work +
-  round-by-round evidence → [log.md](log.md) / OI-12, not here.
+- **Next action:** **WI-144's final build round** ([next-wi](next-wi)) —
+  run-state **RUNNING**. The phase-v3 g2-close sitting ruled OI-11/12/13
+  (2026-07-14, [log.md](log.md) Decisions), so the loop resumes WI-144 with the
+  ratified round scope (TC-HARDEN-first, then the A4/T4 + U5 fixes; T2 → WI-159).
+  A fresh re-critique judges it; on APPROVE WI-144 closes, the full gate bar runs,
+  the spine rejoins G3, and the loop stops NEEDS-HUMAN for the owner to sequence
+  the next campaign. Round-by-round evidence → [log.md](log.md), not here.
 
 ## Scope
 

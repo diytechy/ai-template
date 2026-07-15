@@ -2,5 +2,8 @@
 # the root agent-resume.* launchers). RUNNING while work remains; a driver
 # writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may
 # carry one `ask:` line naming the act — the stop banner headlines it (WI-127).
-NEEDS-HUMAN
-ask: Needs human phase-v3 g2-close sitting to rule OI-12 (WI-144 critique disposition) + OI-13 (WI-147 pause run-state deviation) and sequence the research-knowledge campaign.
+# NOTE (OI-13, 2026-07-14): a `docs/pause` graceful stop deliberately leaves this
+# file RUNNING — the pause signal is the exit-8 code + the stop banner, not this
+# value; don't read RUNNING here as "not paused" when a `docs/pause` file may be
+# present (PROCESS_OPTIONS "Unattended operation").
+RUNNING

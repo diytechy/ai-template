@@ -157,3 +157,4 @@ WI-155,Dogfood knowledge packs - seed meta packs + CMP refs then run the seed pr
 WI-156,Kit-provisioned pack library - project-trajectory/knowledge/ + opt-in scaffold wiring + staged research-pack import (6 packs),scripts,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
 WI-157,Skills domains filter - bootstrap.py --agents domain filtering + staged skill-library import,scripts,,WI-156;~WI-058,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
 WI-158,OKF pack export (deferred) - export knowledge packs alongside registry pages,scripts,,WI-153,deferred,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+WI-159,Knowledge-tab density - start-collapsed .knode/knowarrow re-spec (T2 deferred from OI-12 / 052 CRITIQUE),dashboard,SR-053,WI-144,deferred,,docs/reviews/052-CRITIQUE.md,dashboard-ux,

@@ -8,7 +8,7 @@ the implementer's self-assessment**. Authored at `[v3]-[g2]` (WI-135) from the
 SR-053 / SN-024 / SN-023 intent, not from the TC.
 
 The verdict is `VERDICT: APPROVE|CHANGES-REQUESTED findings=N` with each finding
-citing an anchor id (`U1`…`U4`). APPROVE requires every anchor satisfied.
+citing an anchor id (`U1`…`U5`). APPROVE requires every anchor satisfied.
 "Uniform" is judged across the whole document — every tab (When / How-SW /
 Process / Knowledge) and every SVG emitter (`dag_svg`, `sw_graph`, `when_view`).
 
@@ -38,6 +38,16 @@ the same interaction reveals it: expand-to-descend, hover-to-highlight, and
 click-for-detail behave identically across views. *Good:* descending a container
 works the same in the roadmap and the module map. *Bad:* hover shows a tooltip in
 one view and nothing in another for the same node kind.
+
+**U5 — One concept per colour (no cross-vocabulary collision).** A single hue
+carries a single meaning across the whole document: the status, phase, tier, and
+type vocabularies do not reuse the same colour for different concepts — above all
+where two of them render together (a legend beside the thing it labels). Phases
+keep their own hue family, distinct from the status palette. *Good:* the
+`done`-green never doubles as a phase accent or a type swatch in a view that also
+shows the status legend. *Bad:* `#059669` reads as `done` in the status legend
+and as `phase v3` and as `Test Case` in the same or an adjacent panel. (Ratified
+at the phase-v3 g2 close, OI-12 — the 042/048/052 critique's U2→U5 refinement.)
 
 ## Notes for the critic
 

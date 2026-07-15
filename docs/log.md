@@ -131,6 +131,53 @@ why (one bullet each; cite ids)._
   the design builds on the Thread-52 knowledge home rather than a parallel
   surface. Files the §8 implementation WIs (WI-152…157 queued; WI-158 the
   deferred OKF export); seed research WI = the prompt→image investigation (§9).
+- **2026-07-14 — OI-11 RULED (WI-143/SR-056): the session-038 containment-arrow
+  [MAJOR] disposition — accept the interpretation (option a).** The `cedge`
+  arrow satisfies SR-056 under the ratified drill/layer-swap render (a parent and
+  its children are never co-rendered, so "one parent→child arrow per containment
+  edge" = the single "descend into my decomposition" arrow the code emits); the
+  reviewer's co-rendered-tree fix is architecturally inapplicable. WI-143 keeps
+  its Verified status (the OI-10 precedent: a REVIEW-A finding does not un-Verify
+  a ratified slice). The residual legibility question was folded into WI-144's
+  critique scope and the fresh 042 critique did **not** re-raise it — so OI-11 is
+  answered and subsumed by OI-12. Alternative passed over: (b) redesign to
+  co-render parent+children (a new SR reversing the ratified drill model). Owner
+  note (2026-07-14): more graphic-breakdown enhancements may arrive as future WIs.
+- **2026-07-14 — OI-12 RULED (WI-144): the 042/048/052 CRITIQUE disposition —
+  accept the split (option a).** Ratified at the phase-v3 g2 close: (1) the new
+  uniformity anchor **U5 "one concept per colour / no cross-vocabulary colour
+  collision"** added to `docs/rubrics/dashboard-uniformity.md`; (2) the **3
+  TC-HARDEN** cases (contrast WCAG ≥ 4.5; every emitted selector matches ≥ 1
+  element; every multi-fill panel emits a legend / palette-bijection) authorized —
+  mechanized in one final build round rather than another hand pass (the
+  recurrence insight: contrast was hand-fixed three rounds running and kept
+  missing a surface — badge 2.56:1, focus ring 2.05:1 still failed at round 3).
+  **WI-144 resumes for one final owner-directed build round**: the residual
+  buildable fixes (052's A4 queued-badge + A4 focus-ring + T4 `.blab` overflow +
+  the U4/U3/U1 polish) land together with the TC-HARDEN and the **U5 palette
+  de-collision** (phases get their own hue family distinct from the status
+  vocabulary; the owner left the specific family to the build round), then a fresh
+  re-critique judges it. **[MAJOR] T2** (Knowledge tab opens 249 nodes flat) is
+  **deferred** to its own `.knode`/`knowarrow` pass → **WI-159**. WI-144 stays
+  open until the fresh re-critique APPROVEs; then the spine rejoins G3.
+  Alternatives passed over: (b) direct a specific palette family · (c) hold for a
+  live design sitting. Owner note: more enhancements may arrive as future WIs (the
+  OI-8 "iterate the graphic breakdowns via future amendments" line).
+- **2026-07-14 — OI-13 RULED (WI-147): ratify the documented pause deviation
+  (option a), conditioned on documentation.** A `docs/pause` graceful stop leaves
+  `run-state` untouched (the file is the whole contract; the pause signal is the
+  exit-8 code + the banner), so resuming is a single act — persisting
+  `NEEDS-HUMAN` would force a two-act resume and contradict "delete-to-resume,"
+  and would also collide with the loop's own `trajectory --strict` rule that
+  rejects a stale `NEEDS-HUMAN` park. The owner ratifies the shipped behavior on
+  the **explicit condition that it be documented** (someone reading `run-state`
+  alone could wrongly assume RUNNING = not paused): the WI-147 spec parenthetical
+  is corrected to match, and the `docs/run-state` comment header now flags the
+  caveat (PROCESS_OPTIONS "Unattended operation" already stated "run-state is left
+  untouched"). The superseded 062-REVIEW-A MINOR (a status.md forward-only nit)
+  needs no action. Alternative passed over: (b) direct a code fix (persist
+  `NEEDS-HUMAN` + `ask: docs/pause` on pause, clear on resume) — the two-act
+  resume the owner declined.
 
 ## Audit log
 
@@ -6013,3 +6060,71 @@ resolved (record tracked, live finding routed to OI-13, no WI-147 reopen pending
 the ruling). The phase-v3 g2-close sitting now rules **OI-12 + OI-13** and
 sequences the research-knowledge campaign before WI-144 resumes; do not
 auto-start WI-152+.
+
+## 2026-07-14 — GATE: phase-v3 g2-close sitting — OI-11/12/13 ruled; WI-144 resumes for its final build round
+
+**Gate action (`docs/gate-policy` = `single-ratify`).** The owner ruled the three
+open items surfaced when WI-144's critique budget tripped (owner messages: OI-13 →
+option (a) "as long as that is documented"; OI-11 & OI-12 → "yes this okay, might
+be more enhancements later"). Rulings recorded in the Decisions log above; this is
+the executed record. **No gate change** — v3 stays **G2** until WI-144's final
+build round re-verifies; no SN/SR/LLR/TC state moved (`derive_gate --check` up to
+date, G2). This sitting ratifies the owner-gated critique dispositions and
+unblocks WI-144; the build itself is WI-144's autonomous resume.
+
+- **OI-11 (WI-143/SR-056) — accept (a).** The `cedge` containment arrow satisfies
+  SR-056 under the ratified drill/layer-swap render; WI-143 keeps Verified; the
+  042 critique did not re-raise the arrow, so it is subsumed by OI-12. No artifact
+  change.
+- **OI-12 (WI-144) — accept (a).** Ratified: (1) the new uniformity anchor **U5**
+  "one concept per colour / no cross-vocabulary collision" **added to
+  `docs/rubrics/dashboard-uniformity.md`** (the `U1…U4` verdict-id range widened to
+  `U1…U5`); (2) the **3 TC-HARDEN** cases authorized (contrast WCAG ≥ 4.5 · every
+  emitted selector matches ≥ 1 element · every multi-fill panel emits a legend /
+  palette-bijection). WI-144 resumes for **one final owner-directed build round** —
+  TC-HARDEN mechanized first, then the residual 052 fixes (A4 queued-badge 2.56:1,
+  A4 focus-ring 2.05:1, T4 `.blab` overflow, U4/U3/U1 polish) + the U5 palette
+  de-collision (phases get their own hue family; the owner left the specific family
+  to the build) land together. **[MAJOR] T2** (Knowledge tab 249 nodes flat) is
+  **deferred → WI-159** (a `deferred` row, its own `.knode`/`knowarrow` pass). A
+  fresh re-critique then judges the round; WI-144 stays open until APPROVE.
+- **OI-13 (WI-147) — ratify the deviation (a), documented per the owner's
+  condition.** A `docs/pause` graceful stop leaves `run-state` untouched (the file
+  is the whole contract; the pause signal is exit-8 + the banner). Documented in
+  three places so a `run-state`-only reader isn't misled: the **WI-147 spec**
+  parenthetical corrected
+  ([specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)
+  #pause-blackout), a **`docs/run-state` comment caveat** added, and
+  PROCESS_OPTIONS "Unattended operation" already stated "run-state is left
+  untouched." No code/test change.
+
+**State changes (unblock the loop).** [run-state](run-state) **NEEDS-HUMAN →
+RUNNING** (ask line dropped, pause caveat added); [next-wi](next-wi) stays
+**WI-144**, its NOTE rewritten for the final round (the critique budget is a
+per-run in-memory counter, so a fresh launch restores it — no reset file). Filed
+**WI-159** (`deferred`, T2). Closed OI-11/12/13 in `open-items.md`; status.md
+forward-only.
+
+**Mechanized verification (real output).**
+- Full unfiltered suite (run where `sh` resolves): `python -m pytest -q -n auto` →
+  **767 passed, 3 skipped in 84.00s**.
+- `check.py --jobs 0` at the derived gate (**G2**) → **RESULT: PASS** — derived-gate
+  (up to date, G2) · traceability (`SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0
+  placeholders=0`, interfaces=52, components=5) · privacy · doc-navigability (84
+  docs, 372 links, **0 broken**) · design-flows · trajectory (`--strict` clean,
+  **159 WIs, 138 done, acyclic**).
+- Regenerated `PROJECT_STATE.html` (WI DAG gained WI-159). **No byte-budgeted file
+  touched** (AGENTS.template.md / PROCESS.md / PROCESS_OPTIONS.md unchanged); **no
+  spine SR/LLR/TC change**. The U5 rubric addition changes the criteria the *next*
+  critique judges against (owner-ratified) — the current dashboard meets it only
+  after WI-144's final round; Critique TCs are `Automated=No`, so the gate bar is
+  unaffected.
+
+**Handoff.** Run-state **RUNNING**; `docs/next-wi` → **WI-144**. The loop resumes
+WI-144's final build round (TC-HARDEN-first, then the A4/T4 + U5 fixes; T2 →
+WI-159), then a fresh re-critique. On APPROVE, WI-144 closes, the full gate bar
+runs, the spine rejoins **G3**, and the loop stops **NEEDS-HUMAN** for the owner to
+sequence the next campaign (research-knowledge WI-152… vs the deferred
+`main-decomposition` WI-080→WI-081) — do not auto-start WI-152+ ahead of that.
+Standing owner items OI-3 (push), OI-4 (LICENSE), OI-7 (review cadence) remain
+open and block nothing. Not pushed (`push-policy: human`).

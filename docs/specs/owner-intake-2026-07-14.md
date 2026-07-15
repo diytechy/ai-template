@@ -163,9 +163,11 @@ next-session boundary.**
 file (run-phase idiom: presence = pause requested; content free-form reason).
 The coordinator checks it at each session boundary: wraps the current
 session, commits its own bookkeeping, and stops the loop with a clear banner
-(and the run-state `ask:` line naming `docs/pause`); an `agent-resume` launch
-with the file present refuses to start new work naming the file; deleting it
-resumes. A TTY keypress (the WI-136 VT machinery) may write the file as a
+naming `docs/pause` (exit 8); **`run-state` is left untouched — the file is the
+whole contract, so deleting it is a single-act resume** (ratified OI-13,
+2026-07-14: the banner + exit code carry the pause signal, not `run-state`, so
+NEEDS-HUMAN is not persisted). An `agent-resume` launch with the file present
+refuses to start new work naming the file; deleting it resumes. A TTY keypress (the WI-136 VT machinery) may write the file as a
 convenience — the file is the contract. Done-when: mid-run request → clean
 stop after the current session; launch-time refusal; delete-to-resume; tests.
 
