@@ -74,6 +74,39 @@ def test_valid_anchor_link_passes(scaffold):
     assert "0 broken" in proc.stdout
 
 
+def test_link_example_in_double_backtick_span_is_not_a_link(scaffold):
+    # WI-174: a doc that QUOTES markdown-link syntax as an example wraps it in a
+    # double-backtick span — needed because the label itself holds backticks:
+    # `` [`foo`](foo.md) ``. That span is code, not a navigational link, so it
+    # must not surface as a broken link to foo.md. A single-backtick regex
+    # mis-splits the run and leaks a phantom `[](foo.md)`; equal-length matching
+    # doesn't. (This is the exact false positive that reddened the meta bar.)
+    (scaffold / "docs" / "guide.md").write_text(
+        "# Guide\n\nRender the label as a link, e.g. `` [`foo`](foo.md) ``.\n",
+        encoding="utf-8",
+    )
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "0 broken" in proc.stdout
+    assert "foo.md" not in proc.stdout
+
+
+def test_parse_doc_strips_links_in_multi_backtick_spans(tmp_path):
+    # WI-174 (unit): parse_doc strips inline code spans of ANY backtick-run length
+    # before extracting links, so a quoted `` [`x`](x.md) `` example is not a link
+    # while a real link on the same line still is — the strip stays precise.
+    check = load_script("check_docs")
+    doc = tmp_path / "d.md"
+    doc.write_text(
+        "See [real](real.md) but ignore `` [`x`](x.md) `` and `single()`.\n",
+        encoding="utf-8",
+    )
+    dests = [dest for _ln, dest in check.parse_doc(doc)["links"]]
+    assert dests == ["real.md"]
+
+
 def test_orphan_warns_by_default_and_fails_when_strict(scaffold):
     # A doc nothing links to is unreachable from the entry roots.
     (scaffold / "docs" / "lonely.md").write_text(

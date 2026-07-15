@@ -98,8 +98,12 @@ def _utf8_console():
 
 # A fenced code block opens/closes on a line of >=3 backticks or tildes.
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
-# Inline code span: backtick-delimited; stripped so `[x](y)` in code isn't a link.
-INLINE_CODE_RE = re.compile(r"`[^`]*`")
+# Inline code span: a run of N backticks closed by a run of exactly N (CommonMark),
+# stripped so `[x](y)` written as an example isn't parsed as a real link. The
+# equal-length match matters for the double-backtick form `` `[`x`](y)` `` used
+# when the span's own text contains backticks — a single-backtick regex mis-splits
+# it and leaks `[](y)` as a phantom broken link (WI-174).
+INLINE_CODE_RE = re.compile(r"(`+)(?:(?!\1).)*?\1")
 # ATX heading: 1-6 leading #, optional trailing #s.
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 # Inline link: optional leading ! (image), [text](dest "optional title").
