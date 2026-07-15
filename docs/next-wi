@@ -18,8 +18,11 @@
 # preference knob; complements the WI-160 codex/Sol dial) -> WI-163 (per-WI
 # critique-budget dial) -> WI-166 (dev-setup.template.cmd) -> WI-162 (parallel-
 # dispatch design spec, strong) -> WI-165 (Process-tab circular loops, now
-# unblocked). WI-159 (Knowledge-tab density) stays deferred. The
-# research-knowledge campaign (WI-152..157) + WI-164 stay OWNER-SEQUENCED — do
-# NOT auto-start WI-152+ ahead of the owner's greenlight. Sol builds need the
-# owner to install @openai/codex + codex login (else BUILD self-heals to Fable).
+# unblocked). WI-159 (Knowledge-tab density) stays deferred.
+# THEN (owner GREENLIT 2026-07-15): flow straight into the research-knowledge
+# campaign WI-152..157 + WI-164 — no stop between it and the backlog; the DAG
+# edges sequence it (WI-152 first, predecessor WI-145 done). Only the deferred
+# main-decomposition (WI-080->WI-081) stays parked — do not auto-start it.
+# Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
+# draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to Fable).
 WI-161

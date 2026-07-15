@@ -64,8 +64,10 @@ home elsewhere — don't restate it here:
   ref integrity + knowledge⇒component coupling) · **WI-154** (process text) ·
   **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
-  domains filter); **WI-158** deferred (OKF pack export). The owner sequences
-  this campaign (it is owner-sequenced); do not auto-start it._
+  domains filter); **WI-158** deferred (OKF pack export). The owner **greenlit**
+  this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
+  no stop in between; the DAG sequences it (WI-152 first, predecessor WI-145
+  done)._
 - **Queued (owner intake 2026-07-14** — triage + answers:
   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
   All owner-intake WIs are complete — the loop worked them in id order after the
@@ -81,9 +83,8 @@ home elsewhere — don't restate it here:
   behind WI-152) · **WI-165** (Process-tab circular loops, SR-055 — **now
   unblocked**, the v3 campaign closed) · **WI-166** (`dev-setup.template.cmd` Windows double-click rung —
   the meta shim + codex dev-setup rows already shipped at the intake follow-up,
-  log.md). Owner pre-req for Sol builds: install `@openai/codex` + `codex login`
-  (`scripts/dev-setup.ps1 -Install` or the new double-click
-  `scripts\dev-setup.cmd` offers it)._
+  log.md). Codex **Sol builds are now live** (`codex` on PATH + logged in
+  2026-07-15)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in
@@ -97,10 +98,11 @@ home elsewhere — don't restate it here:
   **WI-161** (per-phase preference knob) → **WI-163** (critique-budget dial) →
   **WI-166** (`dev-setup.template.cmd`) → **WI-162** (parallel-dispatch spec) →
   **WI-165** (Process circular loops); `docs/next-wi` is pointed at **WI-161**.
-  The `docs/pause` hold is lifted at this close. The research-knowledge campaign
-  (WI-152…) stays owner-sequenced — do not auto-start it. Owner pre-req for Sol
-  builds: `@openai/codex` + `codex login`. Round-by-round evidence →
-  [log.md](log.md), not here.
+  The `docs/pause` hold is lifted at this close. **After the backlog the loop
+  flows into the research-knowledge campaign** (WI-152…157 + WI-164)
+  automatically — the owner greenlit it 2026-07-15; only the deferred
+  `main-decomposition` (WI-080→WI-081) stays parked. Codex Sol builds are live.
+  Round-by-round evidence → [log.md](log.md), not here.
 
 ## Scope
 
