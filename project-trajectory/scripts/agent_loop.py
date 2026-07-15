@@ -38,6 +38,9 @@ Per session the coordinator:
     never hand-edited);
   - reads docs/run-state: DONE / BLOCKED / NEEDS-HUMAN exit the loop, each
     printing the pending asks from docs/status.md Current State;
+  - honors docs/pause: a graceful-pause request (the file present) stops the
+    loop at the next session boundary — the in-flight session finishes and
+    commits normally, never a mid-session kill; deleting the file resumes;
   - counts a no-commit session toward the stall guard (git HEAD unmoved) —
     except limit-hit sessions (below), which never count as a stall. A session
     that errored *before it could work* (the CLI reported is_error, or it could
@@ -75,7 +78,8 @@ applies there too — one coordinator per checkout).
 Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
 slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
 run — the banner distinguishes them) · 5 WAITING on a rate limit · 6 iteration
-budget exhausted while still RUNNING · 7 NEEDS-HUMAN (act, then re-run).
+budget exhausted while still RUNNING · 7 NEEDS-HUMAN (act, then re-run) · 8
+paused (docs/pause present — delete it and re-run to resume).
 
 Preflight refuses to start iteration 1 when: the AGENT_CMD executable is
 missing (report, never a hang); the working directory is not a git repo; or
@@ -138,6 +142,7 @@ EXIT_STALL = 4
 EXIT_WAITING = 5
 EXIT_BUDGET = 6
 EXIT_NEEDS_HUMAN = 7
+EXIT_PAUSED = 8
 
 # The limit-hit message a throttled headless run returns, e.g. "You've hit
 # your session limit · resets 3:45pm" / "…weekly limit · resets Mon 12:00am".
@@ -327,6 +332,20 @@ def read_ask(path):
         if ln.lower().startswith("ask:"):
             return ln[4:].strip()
     return ""
+
+
+def pause_reason(lane):
+    """A declared **graceful-pause** request (WI-147): the `docs/pause` file
+    present = pause the loop at the next session boundary. Returns the free-form
+    reason (the file's first non-comment line, `""` when it carries none) or
+    `None` when the file is absent. The file is the whole contract — presence
+    pauses, deleting it resumes — so `run-state` is deliberately left untouched
+    (a resume is one act: delete the file and re-launch). Per-lane like
+    run-state, so a track pauses only its own coordinator."""
+    path = lane / "pause"
+    if not path.is_file():
+        return None
+    return read_declared(path, "")
 
 
 def sanitize_track(name):
@@ -2027,6 +2046,24 @@ def main():
         )
 
     for i in range(1, args.max_iterations + 1):
+        # WI-147: a graceful-pause request (docs/pause) stops the loop at a
+        # session *boundary* — never mid-session. Checked at the top of every
+        # iteration, so iteration 1 is the launch-time refusal (no session starts
+        # while the file is present) and a mid-run request takes effect only after
+        # the in-flight session has already finished and committed. run-state is
+        # left as-is; deleting docs/pause and re-launching resumes.
+        paused = pause_reason(lane)
+        if paused is not None:
+            because = " — reason: {}".format(paused) if paused else ""
+            stop_banner(
+                status_path,
+                "paused (docs/pause present)",
+                "a graceful-pause request is in effect{}. No new session will "
+                "start; delete {} and re-run agent-resume.* to resume.".format(
+                    because, lane / "pause"
+                ),
+            )
+            return EXIT_PAUSED
         # Inject the reconcile note into the first session's prompt only (see the
         # once-at-start rationale above); every later session's prompt is
         # unchanged from today.

@@ -532,6 +532,16 @@ the driver owes the coordinator; update it in the session's final commit:
   State the `Needs <human>` items can fall past the cap; state readers take
   only the first declared line, so the extra line costs nothing).
 
+**Optional `docs/pause`** (presence = pause requested; content = a free-form
+reason): a **graceful** walk-away stop honored at the *next session boundary* —
+the in-flight session finishes and commits normally, then the coordinator stops
+(exit 8) with a banner naming the file, **never a mid-session kill**. A launch
+with the file present starts no work; **deleting the file and re-launching
+resumes** — the file is the whole contract, so `run-state` is left untouched and
+resuming is a single act. Per-lane like `run-state` (a `--track` run pauses only
+its own coordinator); absent = not paused, so an adopter who never creates it
+pays nothing.
+
 **Optional `docs/run-phase`** (one word): the phase the *next* session should
 drive — the coordinator's model-tier key (§6 tiering, mapped per phase), kept
 current in the finishing commit so a tier bump lands on the right sessions.

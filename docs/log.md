@@ -5748,3 +5748,63 @@ MAPPING change.
 resolved (both findings fixed, no reopen of WI-146's row, no new OI). The loop
 resumes the owner-intake backlog at WI-147. WI-144 stays paused; the g2-close
 sitting is DUE in parallel (OI-12).
+
+## 2026-07-14 — SESSION: WI-147 (coordinator graceful pause — docs/pause); NO spine change
+
+**Scope.** Owner-intake 2026-07-14 #pause-blackout, the next actionable
+owner-intake backlog WI after the 060-REVIEW-A reconciliation. Coordinator-only
+(`agent_loop.py`), off-spine (`unattended`).
+
+**What shipped.**
+- **`docs/pause` — a graceful walk-away stop.** `pause_reason(lane)` reads the
+  file (presence = pause requested; first non-comment line = free-form reason,
+  `""` when empty; `None` when absent). A **single boundary check** at the top of
+  the iteration loop returns `EXIT_PAUSED` (**8**) with a banner naming the file
+  + reason. One insertion point covers the whole Done-when: iteration 1 is the
+  **launch-time refusal** (no session starts while the file is present); a
+  mid-run request (a session — or a human — creates the file) takes effect only
+  at the **next** boundary, so the in-flight session finishes and commits — never
+  a mid-session kill; **deleting the file resumes**.
+- **`run-state` is deliberately left untouched.** The file is the whole
+  contract, so resuming is one act (delete + re-launch) rather than two
+  (delete + reset run-state). Per-lane like `run-state` (a `--track` run pauses
+  only its own coordinator); absent = not paused, so an adopter who never creates
+  it pays nothing (never-breaking, the WI-148 blackout precedent).
+- **Docs.** `PROCESS_OPTIONS.md` "Unattended operation" gains an *Optional
+  `docs/pause`* paragraph; the module docstring lists the file + exit code 8.
+
+**Deviations from spec.** (1) The spec phrase "the run-state `ask:` line naming
+`docs/pause`" is honored as the **banner detail** naming the file + resume act,
+not by persisting `NEEDS-HUMAN` into `run-state` — persisting it would force a
+two-act resume and contradict "deleting it resumes," so the pause file stays the
+sole contract. (2) The optional TTY-keypress convenience (WI-136 VT machinery,
+"*may* write the file") is **not** built: it is not in the Done-when, headless
+loop stdin is closed, and non-blocking cross-platform keypress reading is a poor
+cost/value trade — the file contract fully satisfies the Done-when. A convenience
+writer can be layered on later without touching this contract.
+
+**Tests (4 new, all green).** `test_agent_loop.py`: launch-time refusal (0
+sessions run, exit 8, banner names the file + reason); mid-run stop after the
+current session (the pausing session's commit lands, next boundary refused, 2
+sessions run); delete-to-resume (paused → exit 8 → delete → DONE); the
+`pause_reason` helper edges (absent/empty/comment-skipping). A `pause` action was
+added to the fake-agent harness.
+
+**Byte deltas (byte-budget-guard).** AGENTS.template.md 9978 → 9978 (untouched);
+PROCESS.md 59,827 → 59,827 (unchanged); **PROCESS_OPTIONS.md 135,449 → 136,099
+(+650 B, flagged** — documents the new `docs/pause` operator control; the
+watched baseline is re-stamped to 136,099 as of WI-147 in `byte-budget-guard`
+SKILL.md, source + both tracked skill copies re-synced via `bootstrap.py
+--sync`, `gen_skills_index --check-agents` = 10 copies match).
+
+**Gates.** Full unfiltered suite **758 passed / 3 skipped** (`pytest -q -n auto`;
++4 pause tests over the 754 baseline) + `check_docs --stale` exit 0. No spine
+change (SN=24 SR=56 LLR=57 TC=57); derived gate holds G2. `agent_loop.py` stayed
+stdlib-only. No scaffold surface change (`docs/pause` is a runtime signal, absent
+by default — no bootstrap MAPPING / README kit-contents change, like
+`docs/live-status`).
+
+**Handoff — run-state RUNNING; next-wi WI-148.** The owner-intake backlog
+continues in id order (WI-148 weekday blackout next — the sibling wrap-up
+semantic; `docs/blackout`). WI-144 stays paused; the g2-close sitting is DUE in
+parallel (OI-12).

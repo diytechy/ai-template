@@ -63,6 +63,12 @@ elif action in ("done", "blocked", "needs-human"):
                       "total_cost_usd": 0.12,
                       "duration_api_ms": 61000, "num_turns": 7,
                       "ttft_ms": 4200, "fast_mode_state": "off"}))
+elif action == "pause":
+    # WI-147: a session that (over)writes docs/pause mid-run — the loop must let
+    # this session finish and commit, then stop at the NEXT boundary.
+    commit("pausing")
+    pathlib.Path("docs/pause").write_text("owner requested a break")
+    print("session committed progress; wrote docs/pause")
 elif action == "stream-done":
     # A stream-json CLI: per-turn events, then the result event NOT last (a
     # trailing event must not shadow it - the parse preference under test).
@@ -257,6 +263,60 @@ def test_budget_ceiling(loop_repo):
     assert proc.returncode == 6, proc.stdout + proc.stderr
     assert "budget" in proc.stdout.lower()
     assert _invocations(ctl) == 3
+
+
+# --- WI-147: graceful pause (docs/pause) --------------------------------------
+
+
+def test_pause_present_at_launch_refuses_to_start(loop_repo):
+    # docs/pause present at launch = launch-time refusal: no session runs, the
+    # loop stops with exit 8 and a banner naming the file + its reason.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")  # would DONE if run
+    (repo / "docs" / "pause").write_text("out for lunch", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 8, proc.stdout + proc.stderr
+    assert "paused (docs/pause present)" in proc.stdout
+    assert "out for lunch" in proc.stdout
+    assert _invocations(ctl) == 0, "no session may start while paused"
+
+
+def test_pause_mid_run_stops_after_the_current_session(loop_repo):
+    # A session writes docs/pause; it still finishes and commits (graceful), and
+    # the NEXT boundary stops the loop — never a mid-session kill.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("commit pause commit", encoding="utf-8")
+    proc = _loop(repo, template, "--max-iterations", "6")
+    assert proc.returncode == 8, proc.stdout + proc.stderr
+    assert "paused (docs/pause present)" in proc.stdout
+    # Sessions 1 (commit) and 2 (pause) ran; session 3 was refused at the boundary.
+    assert _invocations(ctl) == 2
+    # The pausing session's own commit landed — the stop was graceful, not a kill.
+    assert "pausing" in _git(repo, "log", "--format=%s")
+
+
+def test_pause_delete_resumes(loop_repo):
+    # Deleting docs/pause and re-launching resumes work (the file is the whole
+    # contract — run-state is never touched, so resume is a single act).
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    (repo / "docs" / "pause").write_text("", encoding="utf-8")
+    paused = _loop(repo, template)
+    assert paused.returncode == 8 and _invocations(ctl) == 0
+    (repo / "docs" / "pause").unlink()
+    resumed = _loop(repo, template)
+    assert resumed.returncode == 0, resumed.stdout + resumed.stderr
+    assert "run-state=DONE" in resumed.stdout
+    assert _invocations(ctl) == 1
+
+
+def test_pause_reason_helper_edges(tmp_path):
+    al = load_script("agent_loop")
+    assert al.pause_reason(tmp_path) is None  # absent -> not paused
+    (tmp_path / "pause").write_text("", encoding="utf-8")
+    assert al.pause_reason(tmp_path) == ""  # present but empty -> paused, no reason
+    (tmp_path / "pause").write_text("# note\nbudget check\n", encoding="utf-8")
+    assert al.pause_reason(tmp_path) == "budget check"  # first non-comment line
 
 
 def test_phase_model_map_picks_the_declared_tier(loop_repo):
