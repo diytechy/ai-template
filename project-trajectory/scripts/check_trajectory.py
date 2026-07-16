@@ -23,25 +23,23 @@ Checks (integrity, in the spirit of `trace.py`):
   - every `SR-Refs` id exists in `system-requirements.csv` — a WARN, not a
     failure (a draft SR referenced ahead of its registry row is legitimate).
 
-**The status.md ↔ registry SSOT rules** (S1; process-options.md "Trajectory /
-work-items layer"). status.md is **forward-only** (what happens next) and the WI
-`Deliverable` is **backward-only** (what shipped); the bridge is a per-WI
-`SpecRef` that lives while the WI is open and clears at close. Cross-reading
-`work-items.csv` and `docs/status.md` mechanizes five rules:
+**The registry SSOT rules** (S1; process-options.md "Trajectory /
+work-items layer"). The WI `Deliverable` is **backward-only** (what shipped) and
+the per-WI `SpecRef` is the forward bridge that lives while the WI is open and
+clears at close. Cross-reading `work-items.csv` and its SpecRefs mechanizes two
+rules:
   - **R-A** — a WI's `Deliverable` is non-empty **iff** `Status = done`. An open
     (queued/active/deferred) WI with a filled Deliverable, or a `done` WI with an
     empty one, is a hard **ERROR at every run** (no flag needed): a commit is the
     agent handoff point, so an incoherent WI state launches the next session
     wrong.
-  - **R-B** — every open WI id appears as a token in `status.md` (its context).
-  - **R-C** — `status.md` names at least one open WI id (the next/active work).
-  - **R-D** — no `done` WI id token appears in `status.md` (closed work leaves the
-    working surface).
   - **R-E** — every open WI carries a non-empty `SpecRef` resolving to an in-repo
     target (`path` or `path#anchor`; the path part must exist).
-R-B…R-E are **WARN by default, ERROR under `--strict`** (wired at G2+). If
-`status.md` is absent, R-B/R-C/R-D are vacuous (a repo may not use a status
-blackboard). `--staged` adds the warn-first **no-validation-delta** checks: the
+R-E is **WARN by default, ERROR under `--strict`** (wired at G2+). The former
+R-B/R-C/R-D rules — every open WI repeated as a token in `status.md` — are
+**retired** (WI-180): status becomes an integrator-generated snapshot, so its
+currency is enforced by generated freshness, not by requiring the registry to be
+copied back into prose. `--staged` adds the warn-first **no-validation-delta** checks: the
 follow-up-on-a-done-SR ratchet, and the **critique-loop ratchet** (WI-068) — a WI
 closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
@@ -120,9 +118,7 @@ TC_CSV = "docs/test/test-cases.csv"
 IF_CSV = "docs/requirements/interfaces.csv"
 LLR_CSV = "docs/requirements/low-level-requirements.csv"
 CMP_CSV = "docs/requirements/components.csv"
-STATUS_MD = "docs/status.md"
 RUN_STATE = "docs/run-state"
-NEXT_WI = "docs/next-wi"
 ARCH_MD = "docs/architecture.md"
 
 # The How-SW top view is bounded at this many items (top-level components +
@@ -142,10 +138,6 @@ CMP_ID_RE = re.compile(r"^CMP-\d+$")
 # A well-formed work-item id: `WI-` then digits (`WI-001`). The `-000` example
 # row matches this shape but is inert (skipped from the graph — see load_wis).
 WI_ID_RE = re.compile(r"^WI-\d+$")
-# A word-bounded WI id token as it appears in prose (status.md): `re.findall`
-# grabs each maximal `WI-<digits>` run, so `WI-053…WI-059` yields both ids and
-# `WI-05` never matches inside `WI-053` (R-D's "bare id token" rule).
-WI_TOKEN_RE = re.compile(r"WI-\d+")
 
 # The work-item lifecycle vocabulary (S1). `deferred` is a first-class,
 # queued-but-not-next state carrying a recorded reason; an unknown status is a
@@ -845,84 +837,17 @@ def phase_findings(root, wis):
     return warns
 
 
-def gate_first_findings(root, wis):
-    """Warn when `next-wi` selects phase development ahead of unfinished G1/G2.
-
-    The queue remains owner-ordered, so this is deliberately advisory. A selected
-    non-anchor WI is a development candidate only when one of its SR refs names a
-    Phase. For each such phase, an open `[phase]-[g1|g2]` anchor or a Draft SR is
-    lower-gate work that should normally clear first. Repos without `next-wi`,
-    phase tags, or a selected development WI are vacuous.
-    """
-    selected = _first_declared_line(root / NEXT_WI)
-    if not selected:
-        return []
-    by_id = {w["id"]: w for w in wis}
-    anchors, _ = phase_anchors(wis)
-    sr_rows = {(r.get("SR-ID") or "").strip(): r for r in read_rows(root / SR_CSV)}
-    findings = []
-    for wid in _split_refs(selected.replace(";", " ")):
-        wi = by_id.get(wid)
-        if wi is None or any(wi is anchor for anchor in anchors.values()):
-            continue
-        phases = {
-            (sr_rows.get(sid, {}).get("Phase") or "").strip() for sid in wi["srs"]
-        }
-        phases.discard("")
-        for phase in sorted(phases):
-            open_anchors = [
-                (gate, anchor)
-                for (anchor_phase, gate), anchor in anchors.items()
-                if anchor_phase == phase and anchor["status"] != "done"
-            ]
-            if open_anchors:
-                gate, anchor = min(open_anchors, key=lambda item: item[0])
-                findings.append(
-                    "dev {} queued ahead of open gate work {} in phase {} — clear "
-                    "the lowest gate first ([{}]-[g{}])".format(
-                        wid, anchor["id"], phase, phase, gate
-                    )
-                )
-            drafts = sorted(
-                sid
-                for sid, sr in sr_rows.items()
-                if (sr.get("Phase") or "").strip() == phase
-                and (sr.get("Status") or "").strip().lower() == "draft"
-            )
-            if drafts:
-                findings.append(
-                    "dev {} queued while phase {} has Draft SR(s) {} — clear the "
-                    "lowest gate first".format(wid, phase, ";".join(drafts))
-                )
-    return findings
-
-
-def _read_status_tokens(root):
-    """`(text, {WI ids named in status.md})`, or `(None, set())` when status.md
-    is absent (R-B/R-C/R-D are then vacuous — a repo may keep no status
-    blackboard). Read errors="replace" so a stray byte degrades, never crashes
-    (the declared-policy reader idiom)."""
-    path = root / STATUS_MD
-    if not path.exists():
-        return None, set()
-    text = path.read_text(encoding="utf-8", errors="replace")
-    return text, set(WI_TOKEN_RE.findall(text))
-
-
 def ssot_findings(wis, root):
-    """The status.md ↔ work-items.csv coherence findings (R-A…R-E) + the
-    unknown-status lint, each as `(rule, hard, message)`.
+    """The work-items.csv coherence findings (R-A + R-E) + the unknown-status
+    lint, each as `(rule, hard, message)`.
 
     `hard=True` (R-A only) is an ERROR at every run — the incoherent-handoff
-    rule. The rest are warn-first; the caller promotes them to errors under
-    `--strict`. Kept OUT of `validate()` so the dashboard renderer
-    (`gen_trajectory`, which imports `validate`) is unaffected by a status.md it
-    never reads."""
+    rule. R-E is warn-first; the caller promotes it to an error under `--strict`.
+    Kept OUT of `validate()` so the dashboard renderer (`gen_trajectory`, which
+    imports `validate`) shares the same registry read. The former R-B/R-C/R-D
+    status-repetition rules are retired (WI-180): a generated status snapshot
+    carries no registry copy to cross-check."""
     out = []
-    status_text, status_tokens = _read_status_tokens(root)
-    open_ids = {w["id"] for w in wis if w["status"] in OPEN_STATUSES}
-    done_ids = {w["id"] for w in wis if w["status"] == "done"}
-
     for w in wis:
         st = w["status"]
         if st not in KNOWN_STATUSES:
@@ -979,36 +904,6 @@ def ssot_findings(wis, root):
                         )
                     )
 
-    # R-B/R-C/R-D need status.md; absent -> vacuous.
-    if status_text is not None:
-        for wid in sorted(open_ids):
-            if wid not in status_tokens:
-                out.append(
-                    (
-                        "R-B",
-                        False,
-                        "{}: open WI is not named in docs/status.md (its "
-                        "context/lane)".format(wid),
-                    )
-                )
-        if open_ids and not (open_ids & status_tokens):
-            out.append(
-                (
-                    "R-C",
-                    False,
-                    "docs/status.md names no open WI id (it must name the "
-                    "next/active work)",
-                )
-            )
-        for wid in sorted(done_ids & status_tokens):
-            out.append(
-                (
-                    "R-D",
-                    False,
-                    "{}: a done WI id appears in docs/status.md (closed work "
-                    "leaves the working surface)".format(wid),
-                )
-            )
     return out
 
 
@@ -1297,8 +1192,8 @@ def main():
     ap.add_argument(
         "--strict",
         action="store_true",
-        help="promote the status↔registry coherence rules R-B…R-E from WARN to "
-        "ERROR (wired at gate G2+; R-A always fails regardless)",
+        help="promote the registry coherence rule R-E (open-WI SpecRef resolves) "
+        "from WARN to ERROR (wired at gate G2+; R-A always fails regardless)",
     )
     ap.add_argument(
         "--staged",
@@ -1369,13 +1264,9 @@ def main():
     # repo with no `[phase]-[g*]` anchors (the meta case).
     for w in phase_findings(root, wis):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
-    # Lowest-gate-first queue ordering (WI-149) is an owner-order advisory, never
-    # a gate failure; surface it beside the other phase-planning warnings.
-    for w in gate_first_findings(root, wis):
-        print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     errors = comp_errors + integrity + validate(wis, load_known_srs(root))
-    # The SSOT coherence layer: R-A is always an error; R-B…R-E, the
+    # The SSOT coherence layer: R-A is always an error; R-E, the
     # run-state currency check, and the unknown-status lint are WARN unless
     # --strict promotes them.
     findings = ssot_findings(wis, root)

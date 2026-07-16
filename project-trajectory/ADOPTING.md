@@ -498,7 +498,7 @@ table.
 - **Unattended coordinator (`scripts/agent_loop.py` + root `agent-resume.*`).**
   Newer kits ship a walk-away resume entry (process-options.md "Unattended
   operation"): the launchers boot the right agent session at the right tier —
-  or the coordinator loop reading `docs/run-state`/`docs/run-phase` — and ship
+  or the coordinator loop reading `docs/run-state` — and ship
   **inert** until their `AGENT_CMD` slot is wired. To adopt: copy the engine
   (kit-owned, overwrite freely on later re-syncs) + the three launchers
   (yours after seeding — like `run.*`), and merge the `out/run-logs/` line

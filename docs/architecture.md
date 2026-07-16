@@ -55,9 +55,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `build_argv(template, model, prompt)` | Substitute {model}/{prompt} per token (never through a shell, so the |  |
 | `status_size_warning(status_path, limit)` | A warn-only message when the resume surface outgrew one screen, or None. |  |
 | `parse_model_map(spec)` | "P0=model-a,G3=model-b" -> {"P0": "model-a", "G3": "model-b"}. |  |
-| `phase_tier(phase, tier_map)` | The routing tier for a run-phase: the declared --tier-map / AGENT_TIER_MAP |  |
-| `build_tier_pin(next_wi_path, work_items_path)` | The per-WI starting-tier pin (WI-126). `docs/next-wi` (the declared-file |  |
-| `batch_advisories(next_wi_path, work_items_path)` | Dev-slice batch eligibility advisories (WI-133) — a batch should hold |  |
+| `phase_tier(phase, tier_map)` | The routing tier for a phase: the declared --tier-map / AGENT_TIER_MAP |  |
 | `reviewer_prompt(prompt_templates, phase, verdict_path)` | The redacted reviewer prompt for a review phase: the per-phase prompt-map |  |
 | `load_critique_srs(docs)` | The SR ids whose Verification is `Critique` (docs/requirements/ |  |
 | `build_scope_wis(root, docs, commit_range)` | The WI ids named in `commit_range`'s commit subjects; empty when there is |  |
@@ -300,8 +298,7 @@ Contracts (interfaces): IF-009, IF-023
 | `read_derived_phases(root)` | `{phase-label: gate-level-int}` parsed from the `# basis:` line of the |  |
 | `phase_anchors(wis)` | `({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs |  |
 | `phase_findings(root, wis)` | The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the |  |
-| `gate_first_findings(root, wis)` | Warn when `next-wi` selects phase development ahead of unfinished G1/G2. |  |
-| `ssot_findings(wis, root)` | The status.md ↔ work-items.csv coherence findings (R-A…R-E) + the |  |
+| `ssot_findings(wis, root)` | The work-items.csv coherence findings (R-A + R-E) + the unknown-status |  |
 | `run_state_findings(wis, root)` | Warn when an end-state would park a runnable queued work item (WI-115). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an `## OI-N` decision brief whose decision |  |

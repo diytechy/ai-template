@@ -122,7 +122,6 @@ def critique_repo(tmp_path):
     (repo / "docs" / "test").mkdir(parents=True)
     (repo / "docs" / "rubrics").mkdir(parents=True)
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
-    (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
     (repo / "docs" / "review-policy").write_text(
         "0\n", encoding="utf-8"
     )  # critique only
@@ -339,9 +338,9 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
             .startswith("NEEDS-HUMAN")
         )
     else:
-        assert (repo / "docs/run-phase").read_text(
-            encoding="utf-8"
-        ).strip() == "DESIGN-CHECK"
+        # docs/run-phase is retired (WI-180): the design-check escalation sets the
+        # phase in-process, observable as the next session routing DESIGN-CHECK.
+        assert "phase=DESIGN-CHECK" in proc.stdout
 
 
 def test_absent_enable_list_no_critique(critique_repo):

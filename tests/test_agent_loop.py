@@ -402,40 +402,6 @@ def test_blackout_present_but_inactive_does_not_block(loop_repo):
     assert _invocations(ctl) == 1
 
 
-def test_phase_model_map_picks_the_declared_tier(loop_repo):
-    # docs/run-phase is the coordinator's model-tier key: a mapped phase gets
-    # the strong model, everything else the default.
-    repo, ctl, template = loop_repo
-    (repo / "docs" / "run-phase").write_text("P2\n", encoding="utf-8")
-    (ctl / "actions.txt").write_text("done", encoding="utf-8")
-    proc = _loop(repo, template, "--model-map", "P0=other,P2=strong-tier")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    models = (ctl / "models.txt").read_text(encoding="utf-8").split()
-    assert models == ["strong-tier"]
-
-
-def test_phase_cmd_map_routes_the_command_template(loop_repo, tmp_path):
-    # AGENT_ROLES R6 / WI-042: --cmd-map (AGENT_CMD_MAP) maps a run-phase to a
-    # whole COMMAND template — first-class cross-provider routing — falling
-    # back to AGENT_CMD. A REVIEW-B phase must invoke the second "provider"
-    # (a second fake CLI with its own control dir) and never the default one.
-    repo, ctl, template = loop_repo
-    ctl_b = tmp_path / "control-b"
-    ctl_b.mkdir()
-    fake_b = tmp_path / "fake_agent_b.py"
-    fake_b.write_text(FAKE_AGENT, encoding="utf-8")
-    template_b = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
-        sys.executable, fake_b, ctl_b
-    )
-    (repo / "docs" / "run-phase").write_text("REVIEW-B\n", encoding="utf-8")
-    (ctl_b / "actions.txt").write_text("done", encoding="utf-8")
-    proc = _loop(repo, template, "--cmd-map", "REVIEW-B={}".format(template_b))
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert _invocations(ctl_b) == 1, "the mapped phase must use its template"
-    assert _invocations(ctl) == 0, "the default template must not fire"
-    assert "cmd-map [REVIEW-B]" in proc.stdout  # surfaced in the banner
-
-
 def test_cmd_map_broken_entry_fails_preflight(loop_repo):
     # A broken REVIEW-B entry must fail before iteration 1 (the preflight
     # contract), not at the first review session mid-run.
@@ -563,27 +529,30 @@ def test_guardrails_all_injects_only_the_kit_core_block(loop_repo):
 
 
 def test_guardrails_weak_tier_injects_only_matching_model(loop_repo):
-    # policy=a model substring: the BUILD session (opus) is guarded; a PLAN
-    # session (fable) would not be. Here BUILD runs, so the core is injected.
+    # policy=a model substring: a session on the matching model (opus) is
+    # guarded. The model map still declares the pool so the policy is not inert.
     repo, ctl, template = loop_repo
     _vendor_core(repo, "MARKER-CORE\n")
     (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
-    (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
-    proc = _loop(repo, template, "--model-map", "PLAN=fable-5,BUILD=claude-opus-4-8")
+    proc = _loop(
+        repo, template, "--model", "claude-opus-4-8", "--model-map", "PLAN=fable-5"
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "MARKER-CORE" in (ctl / "prompt.txt").read_text(encoding="utf-8")
 
 
 def test_guardrails_strong_tier_is_not_injected(loop_repo):
-    # Same policy, but the PLAN session runs on the frontier model (fable): no
-    # substring match -> the guardrails core is not injected.
+    # Same policy, but the session runs on the frontier model (fable): no
+    # substring match -> the guardrails core is not injected (opus stays in the
+    # declared pool, so the policy is not inert — it just doesn't match this run).
     repo, ctl, template = loop_repo
     _vendor_core(repo, "MARKER-CORE\n")
     (repo / "docs" / "guardrails-policy").write_text("opus\n", encoding="utf-8")
-    (repo / "docs" / "run-phase").write_text("PLAN\n", encoding="utf-8")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
-    proc = _loop(repo, template, "--model-map", "PLAN=fable-5,BUILD=claude-opus-4-8")
+    proc = _loop(
+        repo, template, "--model", "fable-5", "--model-map", "BUILD=claude-opus-4-8"
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "MARKER-CORE" not in (ctl / "prompt.txt").read_text(encoding="utf-8")
 
@@ -752,16 +721,17 @@ def test_seconds_until_reset_parses_both_clock_formats():
 
 
 def test_default_prompt_carries_the_plan_build_cadence():
-    # WI-1.29: the engine's resume prompt is where the cadence becomes real —
-    # without these instructions a driver session never bounces run-phase
-    # between PLAN and BUILD, and the launcher's model map has nothing to key
-    # on. Conditional ("where docs/plan.md exists"), like the iteration-branch
-    # clause, so a repo without the plan surface is unchanged.
+    # WI-1.29 / WI-180: the engine's resume prompt carries the plan cadence. With
+    # docs/run-phase retired the PLAN/BUILD phase bounce is gone from the prompt,
+    # but the plan-surface cadence remains: work the next block, and re-chunk
+    # against the iteration sensor when the plan is exhausted or wrong.
+    # Conditional ("where docs/plan.md exists"), so a repo without the plan
+    # surface is unchanged.
     prompt = load_script("agent_loop").DEFAULT_PROMPT
     assert "docs/plan.md" in prompt
-    assert "PLAN" in prompt and "BUILD" in prompt
     assert "iteration_index.md" in prompt  # the sizing servo's sensor
     assert "where docs/plan.md exists" in prompt  # stays conditional
+    assert "run-phase" not in prompt  # the retired phase file is gone (WI-180)
 
 
 def test_declared_policy_parsers_agree():
@@ -1058,23 +1028,22 @@ def test_telemetry_commit_is_best_effort_when_the_hook_vetoes(loop_repo):
 
 
 def test_wi_label_recorded_in_log_header_and_index(loop_repo):
-    # WI-137: docs/next-wi (the WI the session claims) is captured at session
-    # start into a `# wi:` log header line and a WI index column — a `;`-batch
-    # (WI-133) is kept verbatim.
+    # WI-137 / WI-180: the WI the session claims is captured at session start into
+    # a `# wi:` log header line and a WI index column. With docs/next-wi retired,
+    # the durable per-session scope pointer is docs/rework-wi (a review rework
+    # override); the dispatcher supplies the explicit assignment (Slice D).
     repo, ctl, template = loop_repo
-    (repo / "docs" / "next-wi").write_text(
-        "# comment\nWI-136;WI-137\n", encoding="utf-8"
-    )
+    (repo / "docs" / "rework-wi").write_text("# comment\nWI-137\n", encoding="utf-8")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     log = sorted((repo / "docs" / "iteration").glob("*.log"))[0].read_text(
         encoding="utf-8"
     )
-    assert "# wi: WI-136;WI-137" in log
+    assert "# wi: WI-137" in log
     index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
     assert "| WI | Model |" in index  # the new column header
-    assert "WI-136;WI-137" in index
+    assert "WI-137" in index
 
 
 # --- WI-136: live per-workstream status line ----------------------------------

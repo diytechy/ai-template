@@ -554,25 +554,28 @@ blackout (unlike `pause`, no re-launch needed). The window is half-open
 byte-identical to before); the scaffold ships a **12:00–19:00** default so a
 fresh repo gets it without a hidden built-in.
 
-**Optional `docs/run-phase`** (one word): the phase the *next* session should
-drive — the coordinator's model-tier key (§6 tiering, mapped per phase), kept
-current in the finishing commit so a tier bump lands on the right sessions.
-Phase names are free-form; the named convention below is `PLAN`/`BUILD`.
+**The phase (in-process routing state).** The coordinator routes each session's
+model tier (§6 tiering, mapped per phase) from the phase it is driving. This was
+a tracked `docs/run-phase` file; it is **retired** (WI-180) — a repo-global phase
+pointer does not survive the move to parallel dispatch, where a build-out lane
+routes from its own activity and a `{phase}-{gate}` branch name (the
+parallel-dispatch plan, §10). The phase
+is now in-process runtime state (review/critique queues + the `BUILD` default);
+phase names stay free-form, the named convention below `PLAN`/`BUILD`.
 
 **Plan/build cadence (the bounce).** The §6 tiering doctrine — *strong model
-plans, cheaper model executes, safe because of the gates* — mechanized on
-`run-phase`. A **PLAN** session (strong tier) writes or repairs **`docs/plan.md`**:
-sequenced blocks, each one coherent deliverable + its tests with an observable
-done-when, a size class, and a §6 tier hint — then sets `run-phase` to `BUILD`.
-Each **BUILD** session (cheaper tier) executes the next block — and only it —
-and, when it finds the plan exhausted or *wrong* (a §5 finding, never a silent
-rework), sets `run-phase` to `PLAN` and stops; the coordinator's model map does
-the rest: `AGENT_MODEL_MAP="PLAN=<strong-model>,BUILD=<cheap-model>"`. The
-bounce governs **who plans**, never how much one session does: only the
-BUILD→PLAN direction mandates a stop (re-planning belongs on the strong tier);
-a PLAN session that finishes chunking rolls straight into the first block,
-budget allowing — the plan is hot in its context, and on a small scope the
-cadence collapses to plan-and-build in one session. The plan
+plans, cheaper model executes, safe because of the gates*. A **PLAN** session
+(strong tier) writes or repairs **`docs/plan.md`**: sequenced blocks, each one
+coherent deliverable + its tests with an observable done-when, a size class, and
+a §6 tier hint. Each **BUILD** session (cheaper tier) executes the next block —
+and only it — and, when it finds the plan exhausted or *wrong* (a §5 finding,
+never a silent rework), re-chunks `docs/plan.md` before continuing (re-planning
+belongs on the strong tier). The coordinator's model map ties the tier to the
+phase: `AGENT_MODEL_MAP="PLAN=<strong-model>,BUILD=<cheap-model>"`. The mechanized
+bounce — a stop that forces re-planning onto the strong tier — rode the retired
+`run-phase` file; under parallel dispatch it becomes the dispatcher's
+activity-routing (Slices D–H, in development). On a small scope the cadence
+collapses to plan-and-build in one session. The plan
 file is the **compressed hand-off**: fresh sessions have no chat memory, and a
 block spec is far cheaper to reload than the exploration that produced it — the
 strong tier pays the exploration cost once, every cheap session after reloads
@@ -628,11 +631,11 @@ because two samples of one model share blind spots; for the same reason
 **cross-provider is the recommended `2` pairing**, and `AGENT_CMD_MAP` (or
 `--cmd-map`) makes it first-class: a per-phase *command-template* map in the
 `--model-map` syntax (`AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt}"`), matched
-against `docs/run-phase` — whose keys are free-form, so `REVIEW-A`/`REVIEW-B`
+against the in-process phase — whose keys are free-form, so `REVIEW-A`/`REVIEW-B`
 phases just work — falling back to the single `AGENT_CMD`. (A template that
-itself needs `,`/`;` routes through a thin dispatcher wrapper instead.) Review
-dispatch stays the **zero-code convention**: the previous session sets
-`run-phase` and names "review WI-x" in `status.md`; the loop surfaces the dial
+itself needs `,`/`;` routes through a thin dispatcher wrapper instead.) In
+managed mode the loop **schedules the review round** automatically after a
+committing build (the reviewer dial sets how many); the loop surfaces the dial
 in its banner but never enforces it — the harness pass is the entry ticket,
 the recorded verdict is the value. A reviewer is **independent** (no shared
 transcript with the implementer; input = the diff + the WI + the TCs), treats
@@ -736,54 +739,35 @@ behavior**, so a fresh scaffold pays nothing.
   and a cooled or preflight-failed row's Notes is echoed at the failure point —
   put the provider's install/sign-in hint there (e.g. `opencode auth login`),
   so an exhausted pool says what to *do*, not just that it paged.
-- **Per-WI build-tier pin (`docs/next-wi` + a `BuildTier` column; WI-126).**
+- **Per-WI build tier (a `BuildTier` column; WI-126).**
   Tier is otherwise per-*phase*, so a docs-only WI and a spine-critical engine WI
   both ride the BUILD default. An **optional `BuildTier` column** on
   `work-items.csv` (`strong|medium|quick`, legacy `weak` reads as `quick`;
-  empty/absent = the phase default) names a WI's *starting* build tier, and a
-  **declared `docs/next-wi`** file (the `run-phase` idiom — comment lines + one WI
-  id on the last line) tells the coordinator which WI it is about to build. In
-  managed mode's BUILD branch the loop reads `docs/next-wi` once per iteration,
-  looks that WI up in `work-items.csv`, and — when its `BuildTier` is a valid tier
-  — uses it as the session's starting tier **in place of the phase default**,
-  logging one loud line (no silent swap). It **composes with
-  tier-up-never-down**: the pin sets where a build *starts*; a contested review
-  still escalates above it, so a pin never caps escalation. A bad state (an absent
-  file, an unknown WI id, or a `BuildTier` that doesn't normalize) is loud but
-  never fatal — one warning line, then the phase default. The **driver maintains
-  `docs/next-wi`** alongside `status.md`'s Next action; absent, it is
-  byte-identical to phase-only routing (never-breaking). **Set the hint while
-  filing or triaging the WI:** use `quick` for mechanical, off-spine work,
-  `medium` by default, and `strong` only for design-shaping or spine-touching
-  changes. This is a deliberate planner decision, not a mid-loop classifier: a
-  route is never silently downgraded.
-  **Dev-slice batching (WI-133).** The value line may instead carry a
-  **`;`-joined ordered batch** of WI ids (`WI-098;WI-103`) — a run of
-  **independent, off-spine** dev slices (each queued, empty `SR-Refs`, no hard
-  edge between members) that ONE BUILD session executes in order, committing
-  per WI. The loop's review round already covers a committing session's whole
-  commit range, so **the batch takes one review round** instead of one per WI —
-  the spin-up/context cost amortizes across the run. The pin becomes the
-  **strongest** member `BuildTier` (route up, never down); eligibility is
-  **advisory, not enforced** — the coordinator prints one `dev-batch advisory`
-  line per violation (a spine-touching member, an intra-batch hard edge) and
-  proceeds. Spine-touching slices stay strictly per-slice ("Parallel for
-  pre-dev, series for dev", the Derived-gate-model section — batching is the
-  sanctioned relaxation for the cheap tail only, and it deliberately does NOT
-  touch `docs/review-policy`). A single id is byte-identical to the WI-126
-  behavior above. The *plan-required* half
-  of the original proposal is deliberately **not** a column: a WI whose `SpecRef`
-  points at a filled spec already *is* plan-ready (the anti-duplication rule), and
-  PLAN is bounce-only, so the coordinator never needs a parallel boolean.
+  empty/absent = the phase default) names a WI's *starting* build tier. The
+  dispatcher reads it **directly from the reserved WI's row** (the
+  parallel-dispatch plan, §10); the
+  hand-curated `docs/next-wi` pointer that once carried it is **retired** (WI-180,
+  with its `;`-batch and gate-first advisories). It **composes with
+  tier-up-never-down**: the column sets where a build *starts*; a contested review
+  still escalates above it, so it never caps escalation. **Set the tier while
+  filing or triaging the WI:** `quick` for mechanical, off-spine work, `medium` by
+  default, `strong` only for design-shaping or spine-touching changes — a
+  deliberate planner decision, never a mid-loop downgrade.
+  **Traincar batching (WI-133 → the scheduler).** Independent, off-spine dev
+  slices that once rode a `;`-joined `docs/next-wi` batch now cluster into a
+  **traincar** — one branch, one Build pass per WI, one review round over the
+  combined diff — packed by `schedule.py` (the scheduler contract) and dispatched
+  by the parallel dispatcher (Slices A/D). The single-review amortization and the
+  off-spine-only rule are unchanged; the mechanism moves from a driver-curated
+  file to the registry-derived frontier.
   **Review rework carry-forward (WI-170).** When a managed review merges to
   `CHANGES-REQUESTED`, the coordinator records the reviewed BUILD scope in
-  `docs/rework-wi`. That coordinator-owned pointer outranks `docs/next-wi` for
-  the next BUILD's prompt, telemetry label, and BuildTier lookup, so a build
-  that already advanced the backlog cannot orphan its findings. It remains
-  durable through further review rounds and coordinator restarts; only an
-  `APPROVE` of that same scope clears it. `docs/next-wi` is left intact, ready
-  for the backlog to resume after the rework approves. Absent `rework-wi`,
-  routing is byte-identical to the per-WI behavior above.
+  `docs/rework-wi` and reworks it before taking new work (its prompt, telemetry
+  label, and BuildTier lookup all follow it), so a build that already advanced
+  cannot orphan its findings. It stays durable through further review rounds and
+  coordinator restarts; only an `APPROVE` of that scope clears it. Under parallel
+  dispatch this becomes assignment-scoped dispatcher state (§8 of the dispatch
+  plan).
 - **Reviewer independence (the evidence-backed core).** Reviewers are fresh
   sessions, **two families, at least one differing from the implementer's —
   *preferred, not required*** (family = who trained the model, so a router-fronted
@@ -971,7 +955,7 @@ redacted prompts, verdict files, `gate-policy`-keyed escalation).
 
 *Referenced from the "Unattended operation" layer above.* **Applies when** an
 unattended run maps **different model tiers to different phases** (the
-`--model-map` / `docs/run-phase` servo) and you want the weaker tier to operate
+`--model-map` servo keyed on the in-process phase) and you want the weaker tier to operate
 more procedurally — extra plan/verify/reference-sweep discipline — while a
 frontier tier plans unguarded. This is an **accelerator, not a gate**: it never
 blocks a run, and a repo that leaves it off is unchanged.
@@ -1359,29 +1343,36 @@ edges is a **warning** (conflicting ordering hints, not a blocker); every `SR-Re
 draft SR referenced ahead of its row is legitimate; `WI-###` id shape and
 uniqueness — integrity, like `trace.py`.
 
-**The SSOT model (status.md ↔ registry).** `status.md` and `work-items.csv` used
-to compete — both carried work descriptions, and they drifted. The model splits
-them: **`status.md` is forward-only** (what happens next) and **the WI
-`Deliverable` is backward-only** (what shipped). The bridge is a per-WI
-**`SpecRef`** that lives while the WI is open and clears at close.
-`check_trajectory.py` mechanizes five rules by cross-reading both files (warn-first
-at the commit floor; `--strict` gates R-B…R-E at G2+):
+**The SSOT model (registry-authoritative).** `status.md` and `work-items.csv`
+used to compete — both carried work descriptions, and they drifted. The model
+makes the registry authoritative: **the WI `Deliverable` is backward-only** (what
+shipped) and the forward bridge is a per-WI **`SpecRef`** that lives while the WI
+is open and clears at close. `check_trajectory.py` mechanizes two rules over the
+registry (warn-first at the commit floor; `--strict` gates R-E at G2+):
 
 - **R-A** — a WI's `Deliverable` is non-empty **iff** `Status = done`; an open WI
   (queued/active/deferred) has an **empty** Deliverable. A **hard error at every
   run** (no flag): a commit is the agent handoff point, so an incoherent WI state
   launches the next session into the wrong item. This is the pre-commit floor.
-- **R-B** — every **open** WI id appears as a token in `status.md` (its lane); a
-  `deferred` WI additionally carries its **reason** there.
-- **R-C** — `status.md` names at least one **open** WI id (the next/active work).
-- **R-D** — a **`done`** WI id must **not** appear in `status.md` (bare id token) —
-  closed work leaves the working surface; history lives in `log.md`.
 - **R-E** — every **open** WI has a non-empty **`SpecRef`** resolving to an
   in-repo target (`docs/specs/WI-###.md` or a `doc#anchor`; the path part must
   exist). Deeper anchor/path validation rides `check_doc_refs.py`'s path tier.
 
-If `status.md` is absent, R-B/R-C/R-D are vacuous (a repo may keep no status
-blackboard); a placeholder-only/absent registry stays vacuous for all of them.
+A placeholder-only/absent registry stays vacuous for both.
+
+**Generated status (the integrator-owned snapshot; WI-180).** `status.md` is not
+an agent resume surface authored session-to-session. Under parallel dispatch it
+becomes an **integrator-generated reference snapshot** — regenerated only on the
+integration branch after a successful integration and gated by generated
+freshness (like `PROJECT_STATE.html`), never written on a worker branch. It
+carries only: the derived gate/bar pointers; queued/deferred/blocked counts + a
+link to the WI dashboard; pending `Needs <human>` items linked to
+`open-items.md`; the last integrated train + integration-queue summary; and
+project scope/constraints whose canonical homes are linked, not copied. The
+former **R-B/R-C/R-D** rules — every open WI repeated as a token in `status.md` —
+are **retired** (WI-180): a generated snapshot needs no registry copy to
+cross-check, and the generator + its freshness `--check` land with the
+dispatcher/integrator (the parallel-dispatch plan, §10, Slices D/F).
 
 **The owner decision surface (`docs/open-items.md`) + the status-surface
 lint.** The Needs-\<human> bullets in `status.md` stay **one-liners** (id +
@@ -1812,8 +1803,8 @@ warn-first.
 
 **A research track** is an ordinary `WI-###` row with `Workstream=research`.
 Its Done-when names the questions to answer, and its deliverable is a knowledge
-pack and/or specification input — never code. It rides `docs/next-wi`, the
-`BuildTier` pin, and the review dial with no coordinator changes. Pin it
+pack and/or specification input — never code. It rides the `BuildTier` column
+and the review dial with no coordinator changes. Set it
 `strong` when synthesis needs a strong coordinator; that coordinator may
 delegate directed gathering to quick/medium subagents when the project's
 subagent policy permits, but retains source verification and the verdict.
@@ -2017,7 +2008,7 @@ repo carries
 **several large deliverables progressing in parallel** and you want more than one
 driver (human or agent, attended or unattended) working at once **without
 thrashing the single coordination blackboard** — the failure the single-driver
-model (`status.md`, `run-state`, `run-phase`, `plan.md`, the iteration logs) hits
+model (`status.md`, `run-state`, `plan.md`, the iteration logs) hits
 the moment two sessions run. A repo with one active line of work skips this layer
 and pays nothing. Generalized from a field adoption (a multi-deliverable robotics
 build) that outgrew one blackboard.
@@ -2038,7 +2029,7 @@ and history):
 
    ```
    docs/tracks/<track>/
-     status.md   plan.md   run-state   run-phase   log.md   iteration/
+     status.md   plan.md   run-state   log.md   iteration/
    ```
 
    The lane is selected **by invocation** (a coordinator `--track <name>` flag /
@@ -2108,7 +2099,7 @@ budget rows; the heavy tooling is product-layer meters wired when that phase ope
 
 **Unattended safety (the coordinator).** The unattended coordinator
 (`scripts/agent_loop.py`) takes `--track <name>` and resolves **every** per-track
-file (`run-state`, `run-phase`, the `status.md` resume excerpt, the iteration logs
+file (`run-state`, the `status.md` resume excerpt, the iteration logs
 + index) under `docs/tracks/<name>/`, leaving the repo-singular policy files at
 `docs/`; the session prompt gains a preamble redirecting the driver to that lane.
 Two guards make concurrent unattended runs safe: a **preflight branch-guard** (a

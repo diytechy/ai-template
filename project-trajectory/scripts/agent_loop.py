@@ -22,14 +22,15 @@ and running this; git + CI remain the enforcement floor. The banner restates
 this every run.
 
 Per session the coordinator:
-  - reads docs/run-phase (optional) and picks the model: --model-map
+  - picks the model per the in-process phase: --model-map
     "PHASE=model,PHASE=model" (or AGENT_MODEL_MAP), falling back to --model /
     AGENT_MODEL — and the COMMAND template the same way: --cmd-map /
     AGENT_CMD_MAP maps a phase to a whole template (first-class cross-provider
     routing; REVIEW-A/REVIEW-B keys are free-form), falling back to AGENT_CMD.
-    docs/review-policy (the reviewer dial, 0|1|2) is surfaced in the banner;
-    the loop never enforces it — review dispatch is the run-phase + status.md
-    convention;
+    The phase is runtime state (review/critique queues + the build/design-check
+    default), never a tracked docs/run-phase file (retired WI-180). docs/review-
+    policy (the reviewer dial, 0|1|2) is surfaced in the banner; the loop never
+    enforces it — review dispatch is the managed-mode + status.md convention;
   - runs one fresh headless session (stdin closed; optional
     --session-timeout so a hung session can't wedge the loop);
   - writes the raw transcript to gitignored out/run-logs/ and a size-bounded
@@ -70,7 +71,7 @@ AGENT_CMD_INTERACTIVE env var, falling back to AGENT_CMD.
 
 --track <name> drives one parallel development lane (process-options.md
 "Parallel tracks"): every coordination file this loop reads or writes —
-run-state, run-phase, status.md (the resume excerpt), the iteration logs and
+run-state, status.md (the resume excerpt), the iteration logs and
 their index — resolves under docs/tracks/<name>/ instead of docs/, and the
 session prompt gains a preamble redirecting the driver to that lane. The
 repo-singular policies (gate, gate-policy, push-policy, privacy-check,
@@ -158,22 +159,18 @@ DEFAULT_PROMPT = (
     "(scripts/agent_loop.py) — assume no human is watching. Read AGENTS.md, "
     "then docs/process.md and docs/process-options.md ('Unattended "
     "operation'), and resume from docs/status.md Current State under the "
-    "declared docs/gate-policy. Work as far as you can this session — but "
-    "where docs/plan.md exists, follow the plan/build cadence "
-    "(process-options.md): in BUILD, execute the next pending block and only "
-    "it; if the plan is exhausted or wrong (a finding, never a silent "
-    "rework), set docs/run-phase to PLAN and stop; in PLAN, re-chunk "
-    "docs/plan.md against the recent iteration_index.md rows, set run-phase "
-    "to BUILD, and — budget allowing — continue straight into the first "
-    "block: the bounce governs who plans, not how much one session does. "
+    "declared docs/gate-policy. Work as far as you can this session — where "
+    "docs/plan.md exists, execute the next pending block and only it; if the "
+    "plan is exhausted or wrong, re-chunk docs/plan.md against the recent "
+    "iteration_index.md rows before continuing (a finding, never a silent "
+    "rework). "
     "Honor "
     "docs/push-policy (default: never push, even if asked) and, where the "
     "iteration-branch layer is in use, stay on the llm/ iteration branch and "
     "run its sync ritual at end states. Before stopping: commit your "
     "progress (even a Blocked-register entry is a commit); append session "
     "evidence to docs/log.md and keep docs/status.md holding only the resume "
-    "point + open/blocked items; update docs/run-phase to the phase the next "
-    "session should drive; and write docs/run-state — RUNNING while work "
+    "point + open/blocked items; and write docs/run-state — RUNNING while work "
     "remains, DONE only at the declared end state (a wrong DONE is a false "
     "green), BLOCKED when everything remaining is in the Blocked register, "
     "NEEDS-HUMAN when the next step requires a human act (state the ask as a "
@@ -270,8 +267,8 @@ CRITIQUE_PROMPT = (
     "stop."
 )
 
-# The review-phase names the loop schedules (run-phase in {PLAN, BUILD,
-# REVIEW-A, REVIEW-B, INTEGRATE}). A committing non-review session
+# The review-phase names the loop schedules (the in-process phase in {PLAN,
+# BUILD, REVIEW-A, REVIEW-B, INTEGRATE}). A committing non-review session
 # triggers a review round; these phases are the round.
 REVIEW_PHASES = ("REVIEW-A", "REVIEW-B")
 
@@ -679,141 +676,13 @@ def parse_model_map(spec):
 
 
 def phase_tier(phase, tier_map):
-    """The routing tier for a run-phase: the declared --tier-map / AGENT_TIER_MAP
+    """The routing tier for a phase: the declared --tier-map / AGENT_TIER_MAP
     value, else DEFAULT_PHASE_TIER, else `strong` (route an unknown phase UP —
     cheap is not free). Declared values are normalized — legacy `weak` reads as
     `quick` (the tier-rename alias, agent_route.normalize_tier)."""
     if phase in (tier_map or {}):
         return agent_route.normalize_tier(tier_map[phase])
     return DEFAULT_PHASE_TIER.get(phase, "strong")
-
-
-def _next_wi_ids(next_wi_path):
-    """The ordered WI id(s) declared in `docs/next-wi`: the value line split on
-    `;` (the registry join convention) — one id is the WI-126 form, several are
-    a dev-slice batch (WI-133). Empty/absent file => []."""
-    line = read_declared(next_wi_path, "")
-    return [w.strip() for w in line.split(";") if w.strip()]
-
-
-def build_tier_pin(next_wi_path, work_items_path):
-    """The per-WI starting-tier pin (WI-126). `docs/next-wi` (the declared-file
-    idiom, driver-maintained alongside status.md's Next action) names the WI the
-    coordinator expects to pick up next — or a `;`-joined ordered dev-slice
-    BATCH (WI-133); that WI's `BuildTier` column in
-    docs/requirements/work-items.csv, when set to a valid tier, is the BUILD
-    session's STARTING tier in place of the phase default — the escalation
-    override (tier-up-never-down) still wins AFTER it, so a pin never caps
-    escalation. A batch pins the STRONGEST member BuildTier (route up, never
-    down); members with no row or an empty/invalid BuildTier contribute no pin
-    and are named in the loud line. Returns (tier, note): a tier to apply plus
-    the loud line to log; (None, None) when nothing is pinned (absent/empty
-    file, no matching row, or an empty BuildTier = the phase default,
-    byte-identical to today); (None, warning) for a bad pin — an unknown WI id,
-    or a BuildTier that does not normalize to a known tier — LOUD but never
-    fatal, the caller falls back to the phase default."""
-    ids = _next_wi_ids(next_wi_path)
-    if not ids:
-        return None, None
-    rows = {
-        (row.get("WI-ID") or "").strip(): row for row in _read_csv_rows(work_items_path)
-    }
-    if len(ids) == 1:
-        # The WI-126 single-id contract, byte-identical (strings pinned by tests).
-        wi = ids[0]
-        row = rows.get(wi)
-        if row is None:
-            return None, (
-                "docs/next-wi names {} but no such WI-ID row in "
-                "docs/requirements/work-items.csv — ignoring, using the phase "
-                "default".format(wi)
-            )
-        raw = (row.get("BuildTier") or "").strip()
-        if not raw:
-            return None, None  # empty BuildTier = phase default (no pin)
-        tier = agent_route.normalize_tier(raw)
-        if tier in agent_route.TIER_ORDER:
-            return tier, (
-                "BuildTier pin {} -> starting tier {} (docs/next-wi)".format(wi, tier)
-            )
-        return None, (
-            "docs/next-wi pins {} whose BuildTier {!r} is not one of {} — "
-            "ignoring, using the phase default".format(
-                wi, raw, "|".join(agent_route.TIER_ORDER)
-            )
-        )
-    # A dev-slice batch (WI-133): strongest member pin, problems named loudly.
-    issues = []
-    unknown = [w for w in ids if w not in rows]
-    if unknown:
-        issues.append("unknown WI id(s) {} ignored".format(";".join(unknown)))
-    best = None  # (TIER_ORDER index, tier)
-    for wi in ids:
-        row = rows.get(wi)
-        if row is None:
-            continue
-        raw = (row.get("BuildTier") or "").strip()
-        if not raw:
-            continue
-        tier = agent_route.normalize_tier(raw)
-        if tier not in agent_route.TIER_ORDER:
-            issues.append("BuildTier {!r} on {} ignored".format(raw, wi))
-            continue
-        rank = agent_route.TIER_ORDER.index(tier)
-        if best is None or rank > best[0]:
-            best = (rank, tier)
-    suffix = " — " + "; ".join(issues) if issues else ""
-    if best:
-        return best[1], (
-            "BuildTier batch pin {} -> starting tier {} (strongest member; "
-            "docs/next-wi){}".format(";".join(ids), best[1], suffix)
-        )
-    if issues:
-        return None, (
-            "docs/next-wi batch {}: no usable BuildTier pin — using the phase "
-            "default{}".format(";".join(ids), suffix)
-        )
-    return None, None  # a batch with no pins = the phase default, silently
-
-
-def batch_advisories(next_wi_path, work_items_path):
-    """Dev-slice batch eligibility advisories (WI-133) — a batch should hold
-    only INDEPENDENT, OFF-SPINE slices, but the rule is advisory: one loud line
-    per violation, never fatal, never blocking (the WI-126 pin's failure
-    style). Flags a spine-touching member (non-empty SR-Refs — spine slices
-    review per-slice, 'series for dev') and a member hard-depending on another
-    member (a mid-batch failure would strand it). Empty for a single id."""
-    ids = _next_wi_ids(next_wi_path)
-    if len(ids) < 2:
-        return []
-    rows = {
-        (row.get("WI-ID") or "").strip(): row for row in _read_csv_rows(work_items_path)
-    }
-    idset = set(ids)
-    advisories = []
-    for wi in ids:
-        row = rows.get(wi)
-        if row is None:
-            continue
-        if (row.get("SR-Refs") or "").strip():
-            advisories.append(
-                "dev-batch advisory: {} carries SR-Refs (spine-touching) — "
-                "spine slices review per-slice; split it from the batch".format(wi)
-            )
-        hard = [
-            p.strip()
-            for p in (row.get("Predecessors") or "").split(";")
-            if p.strip() and not p.strip().startswith("~")
-        ]
-        inside = sorted(set(hard) & idset)
-        if inside:
-            advisories.append(
-                "dev-batch advisory: {} hard-depends on batch member(s) {} — "
-                "a mid-batch failure strands it; keep the order or split".format(
-                    wi, ";".join(inside)
-                )
-            )
-    return advisories
 
 
 def reviewer_prompt(prompt_templates, phase, verdict_path):
@@ -1641,7 +1510,7 @@ def main():
         "--track",
         default=os.environ.get("AGENT_TRACK", "") or None,
         help="drive one parallel development lane: every coordination file "
-        "(run-state, run-phase, status.md excerpt, iteration logs + index) "
+        "(run-state, status.md excerpt, iteration logs + index) "
         "resolves under docs/tracks/<track>/ and the session must be on branch "
         "llm/<track> in its own worktree. Omit for single-lane operation "
         "(default: the AGENT_TRACK env var). See process-options.md "
@@ -1668,14 +1537,14 @@ def main():
         "--model-map",
         default=os.environ.get("AGENT_MODEL_MAP", ""),
         help='per-phase tier map "P0=strong-model,G3=strong-model" matched '
-        "against docs/run-phase (default: AGENT_MODEL_MAP env var)",
+        "against the in-process phase (default: AGENT_MODEL_MAP env var)",
     )
     ap.add_argument(
         "--cmd-map",
         default=os.environ.get("AGENT_CMD_MAP", ""),
         help='per-phase agent COMMAND template map "REVIEW-B=gemini -p '
         '{prompt},BUILD=claude -p {prompt} --model {model}" matched against '
-        "docs/run-phase, falling back to the single AGENT_CMD template — "
+        "the in-process phase, falling back to the single AGENT_CMD template — "
         "first-class cross-provider routing (cross-provider "
         "dual review is the recommended review-policy 2 pairing). Same "
         "syntax/parser as --model-map, so a template must not itself contain "
@@ -1877,7 +1746,7 @@ def main():
         return EXIT_PREFLIGHT
 
     # Resolve the coordination lane. --track redirects the per-track files
-    # (run-state, run-phase, status.md, iteration/) under docs/tracks/<track>/;
+    # (run-state, status.md, iteration/) under docs/tracks/<track>/;
     # the repo-singular policy files (gate/gate-policy/push-policy/privacy-check/
     # guardrails-policy) always stay at docs/. No track = docs/ itself, so
     # single-lane operation is unchanged (preflight already slug-validated).
@@ -1889,8 +1758,8 @@ def main():
     if track:
         track_preamble = (
             "You are driving the '{t}' development track. Wherever the "
-            "instructions below say docs/status.md, docs/plan.md, docs/run-state "
-            "or docs/run-phase, use the docs/tracks/{t}/ copy instead — that "
+            "instructions below say docs/status.md, docs/plan.md or "
+            "docs/run-state, use the docs/tracks/{t}/ copy instead — that "
             "lane is your resume surface and coordinator contract. Append this "
             "session's evidence to docs/tracks/{t}/log.md. Do NOT write the root "
             "docs/status.md (the cross-track dispatcher, integrator-only) or any "
@@ -1922,12 +1791,14 @@ def main():
         print("agent_loop: WARNING - " + warn, file=sys.stderr)
 
     def session_model():
-        phase = read_declared(lane / "run-phase", "")
-        return phase, model_map.get(phase, args.model)
+        # The tracked docs/run-phase file is retired (WI-180); the legacy and
+        # interactive paths route the default model, and managed mode carries
+        # the phase as in-process runtime state.
+        return "", model_map.get("", args.model)
 
     def session_template(phase):
         """The per-phase command template (AGENT_CMD_MAP), else AGENT_CMD —
-        run-phase keys are free-form, so REVIEW-A/REVIEW-B route providers
+        phase keys are free-form, so REVIEW-A/REVIEW-B route providers
         without any loop change."""
         return cmd_map.get(phase, template)
 
@@ -2100,6 +1971,10 @@ def main():
     scoreboard = lane / "reviews" / "scoreboard.txt"
     cooldowns = {}  # model id -> epoch it is available again (per-model backoff)
     review_queue = []  # the pending review phases for the current round
+    # The build-vs-design-check phase for the next non-review/non-critique
+    # session, held in-process now that docs/run-phase is retired (WI-180): the
+    # escalation paths set it to DESIGN-CHECK, everything else routes BUILD.
+    next_phase = "BUILD"
     round_verdicts = []  # (phase, Verdict, provider, model_id) collected this round
     rounds = []  # accumulated round dicts the escalation policy reads
     page_fails_since = 0  # WI-171: rounds index the shared-failure tally counts
@@ -2198,13 +2073,12 @@ def main():
         )
         session = "{:03d}".format(next_session_number(iter_dir))
         stamp = time.strftime("%Y%m%d-%H%M%S")
-        # The WI this session claims (WI-137) — captured BEFORE the session runs,
-        # since a BUILD that closes its WI rewrites docs/next-wi to the next one;
-        # recorded as a `# wi:` header line + an index column. A `;`-batch value
-        # (WI-133) is kept verbatim; empty when docs/next-wi is absent.
-        queued_wi = read_declared(lane / "next-wi", "")
+        # The WI this session claims (WI-137) — recorded as a `# wi:` header line
+        # + an index column. With docs/next-wi retired (WI-180) the only durable
+        # per-session scope pointer is a rework override; empty otherwise (the
+        # dispatcher will supply the explicit WI/train assignment — Slice D).
         rework_wi = read_declared(lane / "rework-wi", "")
-        wi_label = rework_wi or queued_wi
+        wi_label = rework_wi
         before = head_sha(root)
         now = time.time()
         is_review = False
@@ -2227,7 +2101,7 @@ def main():
                 phase = "CRITIQUE"
                 is_critique = True
             else:
-                phase = read_declared(lane / "run-phase", "")
+                phase = next_phase
             tier = phase_tier(phase, tier_map)
             exclude = set()
             prefer_different = False
@@ -2245,25 +2119,10 @@ def main():
                 if last_impl_family:
                     exclude.add(last_impl_family)
             elif phase == "BUILD" or phase == "":
-                # WI-126: a per-WI BuildTier pin (docs/next-wi -> the named WI's
-                # row) sets the STARTING tier, replacing the phase default; the
-                # escalation override below still wins after it (tier-up-never-
-                # down), so a pin never caps escalation. A bad pin logs loud and
-                # falls back to the phase default (never fatal, never silent).
-                scope_pointer = lane / ("rework-wi" if rework_wi else "next-wi")
-                pinned, pin_note = build_tier_pin(
-                    scope_pointer, docs / "requirements" / "work-items.csv"
-                )
-                if pin_note:
-                    print("route [{}]: {}".format(phase or "—", pin_note))
-                # WI-133: dev-slice batch eligibility is advisory — loud, never
-                # fatal (a spine-touching member / an intra-batch hard edge).
-                for adv in batch_advisories(
-                    lane / "next-wi", docs / "requirements" / "work-items.csv"
-                ):
-                    print("route [{}]: {}".format(phase or "—", adv))
-                if pinned:
-                    tier = pinned
+                # Per-WI BuildTier pins rode docs/next-wi, retired (WI-180): the
+                # BUILD tier is the phase default unless escalation raised it. The
+                # dispatcher restores per-WI BuildTier from the reserved WI row
+                # (Slice D).
                 if impl_tier_override:
                     tier = impl_tier_override
                 if impl_exclude:
@@ -2341,8 +2200,8 @@ def main():
             ):
                 prompt = (
                     "REWORK OVERRIDE: docs/rework-wi names {}. Rework that reviewed "
-                    "scope and its recorded findings before docs/next-wi; do not advance "
-                    "the backlog pointer.\n\n---\n\n{}".format(rework_wi, prompt)
+                    "scope and its recorded findings before taking new "
+                    "work.\n\n---\n\n{}".format(rework_wi, prompt)
                 )
         else:
             phase, model = session_model()
@@ -2612,7 +2471,7 @@ def main():
                     )
                     print(
                         "dispatch: CHANGES-REQUESTED -> rework override {} "
-                        "outranks docs/next-wi".format(last_impl_wi)
+                        "takes precedence".format(last_impl_wi)
                     )
                 elif merged == "APPROVE":
                     rework_path = lane / "rework-wi"
@@ -2653,23 +2512,21 @@ def main():
                         )
                         return EXIT_NEEDS_HUMAN
                     if fa.get("design_check"):
-                        (lane / "run-phase").write_text(
-                            "DESIGN-CHECK\n", encoding="utf-8"
-                        )
+                        next_phase = "DESIGN-CHECK"
                 elif decision["action"] == "swap-implementer":
                     if last_impl_family:
                         impl_exclude = {last_impl_family}
                     swapped = True
                     critique_queue = []  # the artifact will change; re-critique later
-                    (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
+                    next_phase = "BUILD"
                 elif decision["action"] == "tier-up":
                     impl_tier_override = "strong"
                     at_top_tier = True
                     critique_queue = []
-                    (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
+                    next_phase = "BUILD"
                 elif merged == "CHANGES-REQUESTED":
                     critique_queue = []
-                    (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
+                    next_phase = "BUILD"
         elif managed and is_critique:
             # The perceptual arbiter (WI-068): read the critic's verdict, iterate
             # BUILD<->CRITIQUE until APPROVE or the budget trips S8 escalation.
@@ -2722,13 +2579,11 @@ def main():
                             )
                             return EXIT_NEEDS_HUMAN
                         if fa.get("design_check"):
-                            (lane / "run-phase").write_text(
-                                "DESIGN-CHECK\n", encoding="utf-8"
-                            )
+                            next_phase = "DESIGN-CHECK"
                     else:
                         # Rework: back to BUILD; a re-critique schedules after the
                         # reworked build commits.
-                        (lane / "run-phase").write_text("BUILD\n", encoding="utf-8")
+                        next_phase = "BUILD"
                 else:  # APPROVE (or no parseable request) -> the critique loop ends
                     critique_rounds = 0
                     critique_scope = set()
@@ -2796,6 +2651,11 @@ def main():
                                 critique_exhaustion,
                             )
                         )
+            elif phase == "DESIGN-CHECK":
+                # The design-check ruling has run (its verdict is in the commit /
+                # log); resume building. Without a tracked run-phase this reset is
+                # in-process (WI-180) — the agent no longer advances a phase file.
+                next_phase = "BUILD"
 
         if outcome == "WAITING":
             # A throttled session is not progress *or* a stall — never count

@@ -2557,7 +2557,7 @@ def _loop_panel(root):
     intake_loop = [
         ("Intake", canon("docs/status.md", "owner/agent hands work in")),
         ("Triage → WIs", canon(wi_csv, "scoped work items with spec detail")),
-        ("Resume loop", canon("docs/next-wi", "the coordinator picks up docs/next-wi")),
+        ("Resume loop", canon(wi_csv, "the scheduler derives the ready frontier")),
         ("Build / review", canon("docs/log.md", "BUILD then REVIEW-A/B")),
         ("Merge", canon("docs/log.md", "verdicts merged; the loop repeats")),
     ]

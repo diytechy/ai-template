@@ -188,7 +188,9 @@ def test_plan_build_cadence_surfaces(scaffold):
     assert "Plan/build" in plan  # names the process-options cadence section
     assert "B-1" in plan  # the example block a fresh repo replaces
     assert "Done-when" in plan  # every block states an observable done-when
-    assert "run-phase" in plan  # the bounce rule: exhausted/wrong -> PLAN
+    assert (
+        "re-chunk" in plan
+    )  # the bounce rule: exhausted/wrong -> re-chunk (strong tier)
     status = (scaffold / "docs" / "status.md").read_text(encoding="utf-8")
     assert "plan.md" in status, "status.md must point at the work plan"
     for launcher in ("agent-resume.sh", "agent-resume.cmd"):

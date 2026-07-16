@@ -5172,7 +5172,7 @@ downstream must migrate**.
 
 **State changes (prepare agent-resume).** **WI-145 → done** (Deliverable records
 both rulings + the state flip); [run-state](run-state) **NEEDS-HUMAN → RUNNING**
-(the `ask:` line dropped); [next-wi](next-wi) stays **WI-141** (the OI-8-gated
+(the `ask:` line dropped); `next-wi` stays **WI-141** (the OI-8-gated
 NOTE refreshed — the pin is now live). `open-items.md`: the OI-8 + OI-9 sections
 deleted (a ruling clears its brief); OI-3/OI-4/OI-7 remain open (block nothing).
 status.md rewritten forward-only for the resumed loop.
@@ -6137,7 +6137,7 @@ unblocks WI-144; the build itself is WI-144's autonomous resume.
   untouched." No code/test change.
 
 **State changes (unblock the loop).** [run-state](run-state) **NEEDS-HUMAN →
-RUNNING** (ask line dropped, pause caveat added); [next-wi](next-wi) stays
+RUNNING** (ask line dropped, pause caveat added); `next-wi` stays
 **WI-144**, its NOTE rewritten for the final round (the critique budget is a
 per-run in-memory counter, so a fresh launch restores it — no reset file). Filed
 **WI-159** (`deferred`, T2). Closed OI-11/12/13 in `open-items.md`; status.md
@@ -7158,3 +7158,77 @@ orphans=0 integrity=0 interfaces=54 interface-findings=0; `check_trajectory
 **Handoff.** Slice A done; SR-057/058 Verified. Next: **WI-180** (Slice B —
 de-author status / retire next-wi) and **WI-181** (Slice C — worker assignment),
 both unblocked after A. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-16 — v4 Slice B (WI-180): retire next-wi + run-phase; the generated-status contract
+
+**What.** The de-authoring half of SR-059. The owner ruled **"full literal B"** at
+intake (an AskUserQuestion sitting): remove `docs/next-wi` + `docs/run-phase` and
+every live dependency **now**, accepting a degraded coordinator until Slice D
+rebuilds activity-routing, rather than deferring run-phase to D.
+
+- **`docs/next-wi` retired.** `agent_loop` drops all next-wi reading —
+  `build_tier_pin`/`batch_advisories`/`_next_wi_ids` deleted; `queued_wi` + the
+  next-wi `scope_pointer` gone; the WI label now sources only from `docs/rework-wi`
+  (the dispatcher supplies the explicit `--wi` assignment in Slice C). BuildTier is
+  read directly from the reserved WI row by the dispatcher (Slice D), not pinned
+  via a file.
+- **`docs/run-phase` retired — phase carried in-process.** The one thing the file
+  persisted (the BUILD/DESIGN-CHECK straggler; review/critique already live in the
+  in-process queues) becomes a loop-local `next_phase`. The managed
+  review/critique/escalation state machine keeps routing **within a run** (a
+  design-check ruling now resets to BUILD in-process, replacing the agent's retired
+  run-phase write); its cross-crash / cross-fresh-launch persistence is what Slice
+  D's activity-routing + `{phase}-{gate}` branch replace. `DEFAULT_PROMPT`, the
+  module docstring, the track preamble, and the arg help are all de-run-phased.
+- **Checks + projections.** `check_trajectory` retires **R-B/R-C/R-D** (the
+  "repeat every open WI in status" rules) + the `gate_first_findings` next-wi
+  advisory + the `STATUS_MD`/`NEXT_WI`/`WI_TOKEN_RE`/`_read_status_tokens`
+  machinery — **R-A** (the always-on deliverable-coherence floor) and **R-E**
+  (open-WI SpecRef resolves, `--strict` at G2+) stay. `gen_trajectory` re-points
+  the dashboard's Resume-loop stage from `docs/next-wi` to the WI registry.
+  `check_docs` re-frames the status-lint off "forward-only".
+- **The generated-root-status contract.** PROCESS_OPTIONS gains it: `status.md`
+  becomes an **integrator-generated, freshness-gated reference snapshot** (derived
+  gate/bar pointers, queued/deferred/blocked counts + dashboard link, pending
+  Needs-\<human> items, last integrated train, linked scope) — never written on a
+  worker branch. **The generator itself is Slice F**; the contract + the R-B/C/D
+  retirement land here (§15 splits B=contract / F=regen).
+- **Fan-out.** Launchers ×4 + templates (work-items/PLAN/tracks-README/
+  review-policy) + the session-protocol skill ×3 (byte-identical) + READMEs +
+  ADOPTING de-referenced. Meta `docs/next-wi` + `docs/run-phase` deleted;
+  `docs/run-state` set RUNNING with a forward note (it becomes a dispatcher-derived
+  outcome in D/F); log history's two `[next-wi](next-wi)` links de-linked to text.
+
+**Disposition (honest).** **SR-059 / LLR-060 / TC-060 stay Planned** — SR-059's
+generation clauses ("regenerates only on the integration branch", "generated
+dispatcher outcome") need the integrator (F) + dispatcher (D), which don't exist
+yet; TC-060 is `Automated=No` for the same reason. This slice ships the removal +
+contract and ends at the **commit bar** (a mid-campaign build slice); SR-059
+verifies when the generation half lands at F/H. Derived gate stays **G2**.
+
+**Deviations from spec.** (1) run-phase removed as an in-process refactor, not a
+gutting of the managed-review subsystem — the S8 loop keeps working within a run
+(the least-destructive faithful reading; the owner accepted "degraded"). (2)
+`--model-map` / `--cmd-map` legacy per-phase routing is now **inert** (the legacy
+path's phase is always `""` without run-phase; managed mode routes via
+`agents.csv`): recorded as a follow-up cleanup, not removed this slice.
+
+**Byte deltas (budgeted files).** PROCESS_OPTIONS.md **142,635 → 141,734 (−901 B**;
+retiring next-wi/run-phase removed more than the generated-status contract +
+retirement notes added — a net shrink, no re-stamp). AGENTS.template.md 9,978 →
+9,978 (untouched). PROCESS.md 59,768 → 59,768 (untouched).
+
+**Tests / end green (real output, via `./.venv`).** `pytest -q -n auto` → **809
+passed, 3 skipped**. `check.py --gate G2 --jobs 0` → **PASS**. `check_trajectory
+--strict` clean (0 R-B/R-C/R-D — retired); `trace --strict-integrity` orphans=0
+integrity=0 interfaces=54 interface-findings=0; `gen_arch_map/gen_trajectory/
+gen_okf --check` green; `check_docs --stale` OK 0 broken (43 orphan warnings — WI
+specs resolve via SpecRef). Test surgery: deleted the build_tier_pin/batch cluster
++ the two run-phase-file routing tests + 3 gate_first + the R-D test; rewrote
+guardrails / wi-label / rework / critique-design-check / process-loop to the
+in-process model.
+
+**Handoff.** Slice B done; SR-059 stays Planned (generation → F/H). Next:
+**WI-181** (Slice C — explicit `--wi`/`--train`/worktree assignment, collision-safe
+logs/reviews, `--track` deprecation window), then **WI-182** (D). Grinding under
+`gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).

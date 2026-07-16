@@ -1418,11 +1418,11 @@ def test_process_loop_stage_links_resolve():
     assert hrefs, "loop stages should link to their canonical homes"
     for href in hrefs:
         assert (ROOT / href).exists(), href
-    # every canonical home named by SR-055 is linked
+    # every canonical home named by SR-055 is linked (docs/next-wi retired, WI-180:
+    # the Resume-loop stage now links the WI registry it derives the frontier from)
     for home in (
         "docs/status.md",
         "docs/requirements/work-items.csv",
-        "docs/next-wi",
         "docs/open-items.md",
         "docs/log.md",
     ):

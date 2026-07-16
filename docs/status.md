@@ -57,45 +57,32 @@ home elsewhere — don't restate it here:
       needs the owner's intent.
     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
       of medium-BUILD evidence.
-- **v3 dashboard-ux campaign — COMPLETE** (owner intake 2026-07-13). All slices
-  shipped; the closing UI-quality slice (SR-052/053/054 Critique) passed the
-  owner's manual critique 2026-07-15 and the spine rejoined G3. **WI-159**
-  (Knowledge-tab density) stays deferred as the remaining graphic-breakdown
-  iteration the owner flagged._
-- **Queued (research-knowledge campaign, OI-9 §8** —
-  [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
-  2026-07-14 ratification; the ref-integrity slice (trace.py Knowledge resolution
-  + knowledge⇒component coupling) landed 2026-07-15 ([log.md](log.md)). The
-  dogfood packs + first live research pass, pack library, and domain-filtered
-  skill library also landed ([knowledge index](knowledge/README.md)). Remaining:
-  **WI-158** remains deferred (OKF pack export). The iterative-optimization pack
-  and grounded review closed the campaign.
-  The owner **greenlit**
-  this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
-  no stop in between; the DAG now sequences its remaining slices._
-- **Queued (owner intake 2026-07-14** — triage + answers:
-  [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
-  All owner-intake WIs are complete — the loop worked them in id order after the
-  2026-07-14 sitting._
-- **Queued (owner intake 2026-07-14b** — 4 items, triage + answers:
-  [specs/owner-intake-2026-07-14b.md](specs/owner-intake-2026-07-14b.md); item 1
-  — the codex-CLI swap + Sol builder preference — was executed at intake as a
-  dial turn, Decisions log; its per-phase preference follow-up is complete):_
-  The optimization-methodology research is complete. Codex **Sol builds are now live** (`codex` on PATH + logged in
-  2026-07-15)._
+- **Recently closed** _(detail in [log.md](log.md); the status-repetition rules
+  R-B/C/D are retired per WI-180, so history lives in the log, not here):_ the
+  **v3 dashboard-ux** campaign (SR-052/053/054 Critique, spine rejoined G3); the
+  **research-knowledge** campaign (ref-integrity + dogfood packs + pack/skill
+  libraries — [knowledge index](knowledge/README.md); **WI-158** OKF pack export
+  stays deferred); and both **owner-intake** sittings (2026-07-14 / -14b — Codex
+  **Sol builds live**, `codex` on PATH 2026-07-15). **WI-159** (Knowledge-tab
+  density) stays deferred._
 - **Queued (parallel-dispatch campaign, phase `v4`** —
   [specs/parallel-wi-dispatch.md](specs/parallel-wi-dispatch.md)):_ requirements
   **ratified + decomposed** 2026-07-15 (SN-025 in Core needs; SR-057…065 +
   LLR-058…066 + TC-058…066 Planned), so `v4` sits at **G2** (see Active gate).
-  **Slice A shipped** (`scripts/schedule.py` + `tests/test_schedule.py`; SR-057/058
-  Verified). The remaining build slices, in DAG order: **WI-180** (B: de-author
-  status / remove next-wi) · **WI-181** (C: worker assignment) · **WI-182** (D:
-  dispatcher + reservations) · **WI-183** (E: change-train continuation) ·
-  **WI-184** (F: atomic integrator) · **WI-185** (G: recovery + fault injection) ·
-  **WI-186** (H: telemetry + migration + dogfood). Edges wire the §15 DAG (B,C
-  after A; D after A,C; E after D; F after B,D; G after D,F; H the join). Each
-  slice implements + verifies its SR (→G3) at its commit; grinding under
-  `gate-policy: autonomous`._
+  **Slices A + B shipped:** A = `scripts/schedule.py` (SR-057/058 **Verified**);
+  B (WI-180) = retired `docs/next-wi` + `docs/run-phase` and every live dependency
+  + the generated-root-status **contract** (owner ruled "full literal B",
+  [log.md](log.md) 2026-07-16). **SR-059/LLR-060/TC-060 stay Planned** — the
+  *generation* half (integrator-generated `status.md`, dispatcher-derived
+  `run-state`, "only on the integration branch") lands with Slices D/F and
+  verifies then. Interim: the coordinator's phase is now in-process, so the
+  managed loop routes within a run but its cross-crash persistence + per-WI
+  BuildTier pin return with C/D. Remaining build slices, in DAG order: **WI-181**
+  (C: worker assignment) · **WI-182** (D: dispatcher + reservations) · **WI-183**
+  (E: change-train continuation) · **WI-184** (F: atomic integrator) · **WI-185**
+  (G: recovery + fault injection) · **WI-186** (H: telemetry + migration +
+  dogfood). Edges wire the §15 DAG (C after A; D after A,C; E after D; F after
+  B,D; G after D,F; H the join). Grinding under `gate-policy: autonomous`._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in
@@ -105,11 +92,11 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** the **parallel-dispatch campaign (phase `v4`)** is the live
-  frontier (above), at **G2** with Slice A shipped. Next WI is **WI-180** (Slice B:
-  de-author `docs/status.md` into an integrator-generated snapshot and retire
-  `docs/next-wi` + `docs/run-phase`, generated `run-state`), then Slice C in
-  parallel — both after A. Grinding under `gate-policy: autonomous` (single-agent
-  adversarial self-review at gates, recorded as a limitation vs a
+  frontier (above), at **G2** with **Slices A + B shipped**. Next WI is **WI-181**
+  (Slice C: worker assignment — explicit `--wi/--train/worktree`, collision-safe
+  logs/reviews, legacy `--track` deprecation window), unblocked after A; then
+  **WI-182** (D: the dispatcher) after C. Grinding under `gate-policy: autonomous`
+  (single-agent adversarial self-review at gates, recorded as a limitation vs a
   provider-heterogeneous reviewer). Deferred main-decomposition
   (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering; Codex
   Sol builds are live.

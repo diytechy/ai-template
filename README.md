@@ -54,8 +54,8 @@ any repo and wire the harness to that repo's tooling (SN-003).
     [`parallel-wi-dispatch.md`](docs/specs/parallel-wi-dispatch.md))*: a launch
     fans out every dependency-ready work item across bounded worker lanes, while
     mutation of the integration branch stays serialized and gated (SN-025).
-  - A per-phase model map (`docs/run-phase`), reactive rate-limit backoff, a
-    stall guard, and tracked per-session logs in `docs/iteration/`.
+  - A per-phase model map (keyed on the in-process phase), reactive rate-limit
+    backoff, a stall guard, and tracked per-session logs in `docs/iteration/`.
   - Optional **heterogeneous scheduling** — when `docs/agents-enabled` opts in,
     a committing build schedules separate fresh **reviewer** sessions (redacted
     of the implementer's self-assessment), with the model chosen from the
@@ -308,7 +308,6 @@ a fresh scaffold gets, which way each option toggles, and how this repo is set:
 | `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — 51 declared seams |
 | `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
 | `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 6 pair rows / 2 families (tiers `strong/medium/quick`; fable plans, opus builds + reviews) |
-| `run-phase` | absent (an unknown phase routes to the strong tier) | coordinator-maintained once present | `BUILD` |
 | `guardrails-policy` | off (no file) | **opt-in** model-substring allowlist / `all except …` | `off` (no vendored core — reason in the file) |
 | `subagent-gate` | off (no file) | **opt-in** `ask` / `deny` (Claude hook example) | off |
 | `[step:dupes]` + `dupes-allow` | not wired | **opt-in** `stack.ini` step | not wired (deferred) |

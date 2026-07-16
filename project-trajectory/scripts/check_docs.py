@@ -51,7 +51,7 @@ finding classes:
 
   - **status-surface structure** (**warn-only**, never the exit code;
     process-options.md "Trajectory / work-items layer"): `docs/status.md` is the
-    forward-only blackboard, so (S-1) it warns past a line budget — default 120,
+    lean status snapshot, so (S-1) it warns past a line budget — default 120,
     `docs/status-lint` overrides with an integer or the one word `off` (which
     disables S-1..S-3); (S-2) its Open-items marker must precede the `## Scope`
     heading (open items surface at the top); (S-3) with `docs/open-items.md`
@@ -546,7 +546,7 @@ def find_stale(parsed, root, lookup):
 
 
 # --- status-surface structure (S-1..S-3; warn-only) --------------------------
-# The forward-only contract on docs/status.md, mechanized at its self-proving
+# The lean-surface contract on docs/status.md, mechanized at its self-proving
 # floor: length + ordering + OI coherence. Content quality (is the pros/cons
 # real?) is reviewer-class by the enforcement audit and deliberately NOT here.
 
@@ -559,8 +559,8 @@ _OPEN_ITEMS_MARKER_RE = re.compile(r"open items", re.I)
 
 
 def _status_lint_policy(root, docs_dir):
-    """The `docs/status-lint` declared value (run-phase idiom: `#` comment lines,
-    one value on the last non-blank line): an int line budget, the string
+    """The `docs/status-lint` declared value (declared-file idiom: `#` comment
+    lines, one value on the last non-blank line): an int line budget, the string
     "off", or None (absent/blank/unparseable => the default budget)."""
     p = root / docs_dir / "status-lint"
     if not p.exists():
@@ -624,7 +624,7 @@ def check_status_surface(root, docs_dir):
     n_lines = len(text.splitlines())
     if n_lines > budget:
         warns.append(
-            "status.md is {} lines (budget {}): it is the forward-only surface "
+            "status.md is {} lines (budget {}): it is the lean status snapshot "
             "— move depth to open-items.md / the WI registry / the log "
             "(docs/status-lint overrides the budget, `off` disables)".format(
                 n_lines, budget

@@ -5,7 +5,7 @@
 #   1 — one reviewer session (the default).
 #   2 — two reviewers with SPLIT charters (cross-provider recommended).
 # The floors above the dial, the A/B charter split, and how sessions are
-# dispatched (the REVIEW-A/REVIEW-B run-phase convention + AGENT_CMD_MAP) are
+# dispatched (the REVIEW-A/REVIEW-B phase convention + AGENT_CMD_MAP) are
 # owned by process-options.md "Unattended operation" — stated once there, not
 # restated here (the gate-policy / push-policy templates keep the same shape).
 1

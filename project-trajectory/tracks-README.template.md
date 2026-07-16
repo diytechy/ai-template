@@ -24,7 +24,6 @@ docs/tracks/<track>/
   status.md          # this track's Current State — its resume surface
   plan.md            # this track's PLAN/BUILD block list (if it uses the cadence)
   run-state          # coordinator contract: RUNNING | DONE | BLOCKED | NEEDS-HUMAN
-  run-phase          # coordinator model-tier key (PLAN | BUILD | …); optional
   log.md             # this track's append-only session evidence
   iteration/         # this track's session logs + generated iteration_index.md
 ```

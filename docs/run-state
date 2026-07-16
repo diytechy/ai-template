@@ -6,4 +6,7 @@
 # file RUNNING — the pause signal is the exit-8 code + the stop banner, not this
 # value; don't read RUNNING here as "not paused" when a `docs/pause` file may be
 # present (PROCESS_OPTIONS "Unattended operation").
-DONE
+# NOTE (WI-180, 2026-07-16): SR-059 makes run-state a generated dispatcher
+# outcome (RUNNING|NEEDS-HUMAN|BLOCKED|DONE); its generator lands with the
+# dispatcher/integrator (Slices D/F). Until then the session writes it as before.
+RUNNING

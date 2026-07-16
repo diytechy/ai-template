@@ -25,7 +25,6 @@ SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,Verification,Status\n"
 )
-PHASE_SR_HEADER = SR_HEADER.rstrip("\n") + ",Phase\n"
 
 PLACEHOLDER_ROW = (
     "WI-000,EXAMPLE - delete on first real entry,track-name,SR-000,,queued,demo\n"
@@ -49,21 +48,6 @@ def write_srs(root, *sr_ids):
         for s in sr_ids
     )
     (req / "system-requirements.csv").write_text(SR_HEADER + rows, encoding="utf-8")
-
-
-def write_phase_srs(root, rows):
-    """Write SR rows as `(id, status, phase)` for queue-order advisory tests."""
-    req = root / "docs" / "requirements"
-    req.mkdir(parents=True, exist_ok=True)
-    text = "".join(
-        '{},Title,SN-001,"The system shall.",R,AC,,M,Test,{},{}\n'.format(
-            sid, status, phase
-        )
-        for sid, status, phase in rows
-    )
-    (req / "system-requirements.csv").write_text(
-        PHASE_SR_HEADER + text, encoding="utf-8"
-    )
 
 
 def run_traj(root, *extra):
@@ -319,9 +303,10 @@ def test_deep_cycle_reported_cleanly_not_recursionerror(tmp_path):
     assert "dependency cycle" in proc.stderr
 
 
-# --- S1: the status.md <-> registry SSOT rules ---------------------------------
-# R-A is a hard error at every run (the pre-commit floor); R-B..R-E warn plain
-# and gate under --strict; the vocabulary gains `deferred`.
+# --- S1: the registry SSOT rules -----------------------------------------------
+# R-A is a hard error at every run (the pre-commit floor); R-E warns plain and
+# gates under --strict; the vocabulary gains `deferred`. R-B/R-C/R-D (status
+# repetition) are retired (WI-180: status is a generated snapshot).
 
 
 def test_ra_open_wi_with_deliverable_fails_plain(tmp_path):
@@ -364,24 +349,6 @@ def test_unknown_status_warns_plain_fails_strict(tmp_path):
     assert "unknown status" in strict.stderr
 
 
-def test_rd_done_id_in_status_warns_plain_fails_strict(tmp_path):
-    # R-D: a done WI id must not linger on the forward-only status.md — warn
-    # plain, ERROR under --strict. WI-002 (open) keeps status.md R-B/R-C clean.
-    write_spec(tmp_path, "docs/specs/WI-002.md")
-    write_wis_sr(
-        tmp_path,
-        "WI-001,First,scripts,,,done,d,\n"
-        "WI-002,Next,scripts,,WI-001,active,,docs/specs/WI-002.md\n",
-    )
-    write_status(tmp_path, "Next: WI-002. Superseded WI-001 (leaked done id).\n")
-    plain = run_traj(tmp_path)
-    assert plain.returncode == 0, plain.stdout + plain.stderr
-    assert "R-D WI-001" in plain.stderr
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 1
-    assert "R-D WI-001" in strict.stderr
-
-
 def test_re_empty_specref_warns_plain_fails_strict(tmp_path):
     # R-E: an open WI must name a SpecRef — warn plain, ERROR under --strict.
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,active,,\n")
@@ -418,8 +385,9 @@ def test_specref_with_anchor_resolves(tmp_path):
 
 def test_compliant_registry_and_status_passes_strict(tmp_path):
     # The whole model, coherent: a done row with a Deliverable and no SpecRef, an
-    # open row with an empty Deliverable + resolvable SpecRef, status.md naming
-    # the open WI and never the done one -> --strict is fully green.
+    # open row with an empty Deliverable + resolvable SpecRef -> --strict is fully
+    # green (R-A + R-E). status.md is present but no longer cross-checked against
+    # the registry (R-B/R-C/R-D retired, WI-180).
     write_spec(tmp_path, "docs/specs/WI-002.md")
     write_wis_sr(
         tmp_path,
@@ -433,9 +401,10 @@ def test_compliant_registry_and_status_passes_strict(tmp_path):
     assert "clean" in proc.stdout
 
 
-def test_absent_status_md_is_vacuous_for_rbcd_under_strict(tmp_path):
-    # No status.md: R-B/R-C/R-D cannot apply (a repo may keep no blackboard), so
-    # a registry that is otherwise coherent passes even under --strict.
+def test_coherent_registry_passes_strict_without_status_md(tmp_path):
+    # status.md is no longer cross-checked (R-B/R-C/R-D retired, WI-180): a
+    # coherent registry (R-A clean, every open WI's SpecRef resolves) passes
+    # --strict, and those retired rules never surface.
     write_spec(tmp_path, "docs/specs/WI-001.md")
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,active,,docs/specs/WI-001.md\n")
     proc = run_traj(tmp_path, "--strict")
@@ -1137,71 +1106,6 @@ def test_phase_findings_vacuous_without_anchors(tmp_path):
     _write_gate(tmp_path, "v1=G0")  # a phase at G0 but NO anchor records a close
     wis = _wis(ct, [{"WI-ID": "WI-220", "Title": "ordinary", "Status": "queued"}])
     assert ct.phase_findings(tmp_path, wis) == []
-
-
-# --- WI-149: lowest-gate-first next-wi advisory -------------------------------
-
-
-def test_gate_first_warns_when_dev_is_queued_ahead_of_open_anchor(tmp_path):
-    ct = load_script("check_trajectory")
-    write_phase_srs(tmp_path, [("SR-201", "Planned", "v4")])
-    (tmp_path / "docs" / "next-wi").write_text("WI-203\n", encoding="utf-8")
-    wis = _wis(
-        ct,
-        [
-            {"WI-ID": "WI-201", "Title": "[v4]-[g1] structure", "Status": "done"},
-            {
-                "WI-ID": "WI-202",
-                "Title": "[v4]-[g2] decompose",
-                "Predecessors": "WI-201",
-                "Status": "queued",
-            },
-            {
-                "WI-ID": "WI-203",
-                "Title": "implement",
-                "SR-Refs": "SR-201",
-                "Status": "queued",
-            },
-        ],
-    )
-    findings = ct.gate_first_findings(tmp_path, wis)
-    assert findings == [
-        "dev WI-203 queued ahead of open gate work WI-202 in phase v4 — clear "
-        "the lowest gate first ([v4]-[g2])"
-    ]
-
-
-def test_gate_first_warns_when_selected_phase_has_draft_sr(tmp_path):
-    ct = load_script("check_trajectory")
-    write_phase_srs(tmp_path, [("SR-201", "Planned", "v4"), ("SR-202", "Draft", "v4")])
-    (tmp_path / "docs" / "next-wi").write_text("WI-203\n", encoding="utf-8")
-    wis = _wis(
-        ct,
-        [
-            {
-                "WI-ID": "WI-203",
-                "Title": "implement",
-                "SR-Refs": "SR-201",
-                "Status": "queued",
-            }
-        ],
-    )
-    assert ct.gate_first_findings(tmp_path, wis) == [
-        "dev WI-203 queued while phase v4 has Draft SR(s) SR-202 — clear the "
-        "lowest gate first"
-    ]
-
-
-def test_gate_first_is_vacuous_without_a_selected_phase_dev_wi(tmp_path):
-    ct = load_script("check_trajectory")
-    write_phase_srs(tmp_path, [("SR-201", "Draft", "v4")])
-    wis = _wis(
-        ct,
-        [{"WI-ID": "WI-203", "Title": "off-spine docs", "Status": "queued"}],
-    )
-    assert ct.gate_first_findings(tmp_path, wis) == []
-    (tmp_path / "docs" / "next-wi").write_text("WI-203\n", encoding="utf-8")
-    assert ct.gate_first_findings(tmp_path, wis) == []
 
 
 # --- WI-146(b): the ratification-brief hierarchy-view lint --------------------

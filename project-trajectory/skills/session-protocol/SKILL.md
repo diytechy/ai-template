@@ -77,15 +77,13 @@ ruling"). New behavior needs new tests
   deliverables, **deviations from spec**, **byte deltas on budgeted files**, and
   the `pytest -q` totals (match the style already there).
 - Update `docs/status.md` to point at what's next; don't leave a stale "next".
-- Where the unattended coordinator is in use, maintain `docs/next-wi` (the next
-  WI id — or a `;`-joined ordered batch of independent, off-spine WIs, which one
-  BUILD session executes in order under ONE review round; dev-slice batching,
-  WI-133) alongside `status.md`'s Next action, so a managed BUILD session honors
-  the `BuildTier` pin — strongest member wins in a batch (process-options.md
-  "Unattended operation"). When filing or triaging a WI, set `BuildTier`
-  deliberately: `quick` for mechanical, off-spine work; `medium` by default;
-  `strong` only for design-shaping or spine-touching changes. Do not silently
-  downgrade a declared route mid-loop.
+- With the parallel-dispatch scheduler, WI ordering is derived from the registry
+  (the DAG + `Priority` + gate class), not a hand-curated `docs/next-wi` — that
+  pointer is retired (WI-180; process-options.md "Unattended operation"). When
+  filing or triaging a WI, set `BuildTier` deliberately: `quick` for mechanical,
+  off-spine work; `medium` by default; `strong` only for design-shaping or
+  spine-touching changes — the dispatcher reads it from the WI row. Do not
+  silently downgrade a declared route mid-loop.
 
 ## 5. Commit in this repo's style
 

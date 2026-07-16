@@ -19,7 +19,8 @@ Discipline (same bullet rules as status.md Open items):
 - Every block states an observable **done-when** (the §4 honest-gate rule in
   miniature — "block done" must be checkable, not felt).
 - A BUILD session that finds this list exhausted — or *wrong* (route it as a
-  finding, don't silently rework) — sets `docs/run-phase` to `PLAN` and stops.
+  finding, don't silently rework) — re-chunks it on the strong tier before
+  continuing (re-planning belongs on the strong tier).
 
 ## Blocks
 
