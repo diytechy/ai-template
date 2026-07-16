@@ -520,15 +520,26 @@ and checks it out only in its dedicated integration worktree. The user's primary
 worktree remains on that selected development branch — never on
 `llm/integration` — while workers and the ordinary checkout never mutate the
 integration ref. After a successful integration CAS, the dispatcher publishes
-the integration HEAD only when the primary development worktree is clean: it
-advances the selected development ref with a second CAS against the hash it last
-observed, then synchronizes that clean worktree's index and files to the same
-target using fast-forward/reset semantics, never a merge. If the ref moved,
-publication fails harmlessly and the integrator
+the integration HEAD only when the primary development worktree is clean. Because
+the development-ref CAS and the worktree sync are two steps, the publish is made
+crash-identifiable by a **durable publication-intent ref** rather than the
+disposable `out/dispatch/` journal: before the CAS the dispatcher writes
+`refs/llm/publish-intent` pointing at a metadata object that records the
+integration target hash, the **expected old development hash**, and the selected
+development ref. It then advances the development ref with a second CAS against
+that expected old hash, synchronizes the clean worktree's index and files to the
+target using fast-forward/reset semantics (never a merge), and deletes the intent
+ref **only after** the sync succeeds. This bounds the reset: a reset fires only
+when the worktree matches the intent's expected old hash exactly; any divergence
+means edits landed in the CAS-to-sync window, so publication is deferred and the
+checkout is left untouched and reported, never reset — the intent ref, not a
+guessed ancestor, is what tells recovery which hash was pre-publication even when
+several integration commits have accumulated while publication was deferred. If
+the development ref moved, the second CAS fails harmlessly and the integrator
 recomposes from the new development HEAD before retrying. If the worktree is
-dirty, publication is deferred and the checkout is left untouched and reported,
-never reset/stashed automatically. A manual update to `llm/integration` itself
-is likewise detected by its CAS and forces recomposition.
+dirty at the outset, publication is deferred and the checkout is left untouched
+and reported, never reset/stashed automatically. A manual update to
+`llm/integration` itself is likewise detected by its CAS and forces recomposition.
 
 ### Blocked-disposition integration
 
@@ -655,12 +666,18 @@ durably before launching a worker.
 The directory is nevertheless a **cache/journal, not authority**. Every startup
 acquires the repo-level dispatcher lock and performs recovery before scheduling:
 
-1. initialize `refs/heads/llm/integration` from the selected development branch
-   when it is absent on first launch; otherwise read the authoritative integrated
-   disposition and integration trailers from it — the selected development
-   branch is its published projection, not the recovery authority;
-2. enumerate `refs/heads/llm/integration`, `llm/train/*`, and
-   `llm/integrate/*` branches plus `refs/llm/reservations/*`;
+1. enumerate the dispatcher-owned evidence first: `refs/heads/llm/integration`,
+   `llm/train/*`, `llm/integrate/*` branches, `refs/llm/reservations/*`, the
+   `refs/llm/publish-intent` ref, and the integration trailers on the development
+   branch;
+2. resolve the integration authority from that evidence — **presence** of
+   `refs/heads/llm/integration` makes it the authoritative integrated disposition
+   (the development branch is its published projection, not the recovery
+   authority); **absence with no dispatcher-owned evidence** is a genuine cold
+   start, so initialize it from the selected development branch; **absence while
+   owned train/integrate/reservation/intent refs or integration trailers exist**
+   is a deleted or corrupt ref — reconstruct it only if uniquely provable from
+   that evidence, else fail closed, never silently blessing the development branch;
 3. enumerate linked worktrees and their dirty/clean state;
 4. parse reservation commits and exact-head review records;
 5. cross-check the runtime manifest when present;
@@ -683,9 +700,11 @@ Recovery rules:
 | Reservation ref metadata disagrees with train branch/trailers | Quarantine that WI/train; start neither until ownership is resolved |
 | Train claims a WI without its reservation ref | Quarantine that WI/train mismatch; do not recreate authority from cache alone |
 | Integration staging branch exists | Resume/verify staging; `llm/integration` remains unchanged until its CAS |
-| `llm/integration` is ahead of the selected development branch | Idempotently resume publication: verify the expected development hash and clean worktree, perform the development-ref CAS, then synchronize the worktree by fast-forward/reset |
-| Development ref equals `llm/integration`, but its worktree/index still match the pre-publication commit | Treat synchronization as an idempotent publish step and re-run the clean fast-forward/reset sync; do not classify the mechanically stale checkout as a user-dirty tree |
+| `llm/integration` is ahead of the selected development branch | Idempotently resume publication: write (or confirm) the publication-intent ref, verify a clean worktree at its expected old hash, perform the development-ref CAS, synchronize by fast-forward/reset, then delete the intent |
+| Publication-intent ref exists and the development ref already equals its integration target, but the worktree/index still match the intent's expected old hash | Re-run the idempotent clean fast-forward/reset sync to the target and delete the intent; do not classify the mechanically stale checkout as user-dirty. If the worktree diverges from that expected old hash, edits landed in the CAS-to-sync window — defer and report, never reset |
 | Selected development branch moved or diverged from unpublished integration | Recompose the authoritative integration result from the new development HEAD, verify it, and retry publication; never re-dispatch a WI already done on `llm/integration` |
+| `refs/heads/llm/integration` absent and no dispatcher-owned evidence | Genuine cold start: initialize it from the selected development branch |
+| `refs/heads/llm/integration` absent but owned train/integrate/reservation/intent refs or integration trailers exist | Deleted/corrupt ref: reconstruct only if uniquely provable from that evidence, else fail closed — never initialize from the development branch |
 | Ownership cannot be proven | Fail closed for that WI and continue only disjoint proven work |
 
 Kernel locks release when processes die. Stored PIDs are hints and are never
@@ -846,11 +865,16 @@ synchronization. For each point:
 - restart reconstructs exactly one owner;
 - no WI is double-run or falsely done;
 - no unintegrated commit/dirty tree is deleted;
-- root is either entirely before or entirely after integration;
+- `llm/integration` is atomically either entirely before or entirely after
+  integration;
+- the development ref and its worktree are either fully unpublished or fully
+  synchronized to the integration target, with the durable publication-intent ref
+  marking the in-between state so recovery finishes or safely abandons the publish;
 - an unpublished integration commit remains authoritative and is published
   idempotently rather than making its already-done WIs ready again;
-- a published ref with a pre-publication index/worktree is recognized and
-  idempotently synchronized rather than reported as user dirt;
+- a crash between the development-ref CAS and the worktree sync is recognized via
+  the publication-intent ref and idempotently synchronized — never reported as
+  user dirt, never reset over edits that diverge from the intent's expected old hash;
 - deleting all of `out/dispatch/` still reconstructs from Git/worktrees;
 - every constituent reservation reconstructs from
   `refs/llm/reservations/*`, including before its first WI commit;
