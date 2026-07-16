@@ -50,6 +50,10 @@ any repo and wire the harness to that repo's tooling (SN-003).
     ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)).
   - Fresh headless sessions resume from `docs/status.md` until
     `docs/run-state` reaches an end state.
+  - **Parallel-by-default execution** *(in development, phase `v4` —
+    [`parallel-wi-dispatch.md`](docs/specs/parallel-wi-dispatch.md))*: a launch
+    fans out every dependency-ready work item across bounded worker lanes, while
+    mutation of the integration branch stays serialized and gated (SN-025).
   - A per-phase model map (`docs/run-phase`), reactive rate-limit backoff, a
     stall guard, and tracked per-session logs in `docs/iteration/`.
   - Optional **heterogeneous scheduling** — when `docs/agents-enabled` opts in,

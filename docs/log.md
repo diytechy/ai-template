@@ -7078,3 +7078,38 @@ warnings — the new WI specs resolve via the registry `SpecRef`, not markdown l
 **Handoff.** Campaign filed; loop's next WI is **WI-177** (`[v4]-[g1]`) — under
 `gate-policy: autonomous` an independent LLM reviewer closes g1, then WI-178 g2,
 then slices A→H. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — v4 [g1]+[g2]: parallel-dispatch requirements ratified + decomposed (G1→G2)
+
+**What.** Grinding the parallel-dispatch campaign under `gate-policy=autonomous`
+(owner directive). Closed the two phase anchors: **[v4]-[g1]** — ratified SN-025
+(moved from the `Draft needs` section into Core needs, section-as-state) and
+flipped SR-057…065 `Draft→Planned`; **[v4]-[g2]** — flipped LLR-058…066 +
+TC-058…066 `Draft→Planned`. Derived gate rose **G1→G2** (basis `drafts=0
+computed=G2 per-phase=…;v4=G2`); the TCs stay `Automated=No` until their slice
+implements them, and each SR→Verified (→G3) happens at its slice's commit.
+
+**Review basis (honest limitation).** Ratification here was **single-agent
+adversarial self-review**, not the provider-heterogeneous independent review the
+autonomous model prefers — recorded as a known limitation. The requirements were
+stress-tested across seven prior Codex review rounds on the spec of record
+(docs/specs/parallel-wi-dispatch.md), which is the substantive independent-review
+signal behind this ratification.
+
+**Incidental fixes.** SN-025's row referenced the bare token `SN-016`, which
+check_docs' Must/Should inventory scraper (check_docs.py:438 scans the whole row)
+dragged into the README-citation floor once SN-025 left the draft section;
+de-referenced it (kept the "never-wedged" meaning) and cited SN-025 in the README
+"Unattended agent operation" section, honestly framed as *in development*.
+Regenerated docs/gate, PROJECT_STATE.html, docs/okf; status.md updated (gate G2,
+frontier now WI-179…186).
+
+**Tests / end green (real output, via `./.venv`).** `check.py --gate G2 --jobs 0`
+→ **PASS** (derived-gate, traceability, privacy, doc-navigability, design-flows,
+trajectory). `check_trajectory --strict` clean; `trace --strict-integrity`
+orphans=0 integrity=0; all `--check`s up to date. `pytest -q -n auto` → **805
+passed, 2 skipped**; `check_docs --stale` → OK 0 broken.
+
+**Handoff.** v4 at G2. Next: **WI-179** (Slice A — schedule.py + schema fields +
+safety classifier + unit fixtures), which verifies SR-057/058 → G3. Not pushed
+(`docs/push-policy: human`).
