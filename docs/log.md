@@ -7728,3 +7728,75 @@ refactor; LLR-037 text-sync only); no byte-budgeted file touched.
 **Next.** WI-081 (trace.py analyze/render_report split + M8 pre-indexing +
 docstring shrink, BuildTier medium) completes the campaign; then the campaign
 close runs `check.py --gate G3`.
+
+## 2026-07-16 — WI-081 + main-decomposition campaign CLOSE: trace.py main() decomposed (slices A–D, behavior-preserving; M8 fold-in)
+
+**Session (owner-directed: "grind through WI-081 to completion").** The second
+and final half of the `main-decomposition` campaign
+([spec](specs/main-decomposition.md) §4), run at `medium` tier (the design was
+fixed by the spec; the strong-tier work was the plan). trace.py's `main()` went
+from ~790 lines to **114 orchestration-only lines**, under a **byte-identical
+golden-master net**. Coordinator (now on Opus) did the golden net, the docstring
+shrink, the census refresh, and every diff review; two Opus subagents did the
+Slice B/C transcriptions to written briefs.
+
+**Slices.**
+- **A (6ead1ae, tests only):** `tests/test_trace_golden.py` +
+  `tests/golden/{clean,offspine,orphan}.txt` pin `report.md` + normalized stdout
+  + exit code byte-for-byte over three fixtures (a clean spine, an
+  off-spine-rich orphan-free spine exercising PB/REPO/PART/ASSET/CMP/IF + drafts
+  + attest + AC/knowledge advisories + Area + `--html`, and an orphaned spine).
+  Regenerate deliberately with `UPDATE_TRACE_GOLDEN=1`. Flipped WI-081 queued.
+- **B (c7620e5):** `load_registries(docs) -> Registries` +
+  `analyze(reg, args) -> Findings` via the unpack/verbatim-body/bind pattern
+  (byte-identical logic; `_repo_id` hoisted to module level). *Recorded
+  deviation:* `analyze` reads `docs`, so `load_registries` stashes `reg.docs`.
+- **C (ff24fe6):** `render_report(reg, findings, args, forest) -> str` +
+  `render_console(...)` + `exit_code(...) -> int`; main() reduced to
+  orchestration. **M8 fold-in:** `_bucket_by_ref(rows, ref_col)` indexes the
+  SR→LLR→TC joins once — the matrix loop and `build_forest`'s
+  `sr_node`/`llr_node`/SN-loop — turning O(SR×LLR + SR×TC + LLR×TC) into O(N),
+  input order preserved so output is byte-identical. *Recorded signature
+  adaptation:* `render_report` takes `forest` (main builds it once, shared with
+  `html_document`). New unit tests for `_bucket_by_ref` + `exit_code`.
+- **D (1529ef9):** module docstring **229 → 72 lines** — contract + usage +
+  pointers to process.md §4/§8/§9 and derived-gate-model §3/§4a, with the
+  normative rule restatements removed (decompose-don't-paraphrase, applied to
+  the kit). `Contracts:` IF line kept verbatim. *Recorded deviation:* 72 lines
+  vs the spec's ≤60 target (the remainder is flag/IO contract, not restatement;
+  a 69% cut).
+
+**Dupes census refresh (campaign-wide, this close).** The G3-only `dupes` step
+first runs at campaign close. The campaign's own refactors — chiefly WI-080
+extracting `parse_args()` from agent_loop.py, plus trace.py's line shifts —
+moved the token positions `check_dupes` keys on, **re-attributing three
+sanctioned duplicate groups to new representative pairs** (the F5 `_utf8_console`
+emitter from agent_route to eight more files, the argparse/`main()` boilerplate
+to bootstrap, and the WI-146 SN-parser mirror to trace↔gen_trajectory). This is
+the census's documented file-pair-granularity limitation and mirrors the WI-186
+re-attribution already recorded in `docs/dupes-allow`; **18 new census rows** for
+duplication that already existed, not new copy-paste (verified: every finding
+originates at `agent_route.py:165` / `bootstrap.py:1485-1488` /
+`gen_trajectory.py:122`↔`trace.py`, all in files the campaign did not change in
+substance). The grandfathered `agent_loop.py`/`trace.py` intra-file self-dup
+lines were briefly removed then **restored** — the decomposition reduced but did
+not eliminate their intra-file debris (agent_loop still shares many blocks;
+trace's three bag-unpack headers are new minor debris, covered by the existing
+self-dup line). A stale-check bug (a mis-scoped awk) caused the momentary wrong
+removal; caught by re-running `check_dupes`.
+
+**Tests / end green (real output).** Golden-master net green throughout with
+zero existing-test edits. **Campaign-close gate `check.py --gate G3 --jobs 0` →
+PASS**, all 15 steps: format, lint, **tests+coverage 932 passed / 3 skipped /
+91.11% (trace.py 97%)**, dupes, derived-gate (G3), traceability, privacy,
+doc-navigability, perf-budgets, design-flows, trajectory, arch-map,
+trajectory-map, okf, skills-sync. No spine change (behavior-preserving refactor;
+no SR/LLR/TC added). No byte-budgeted file touched.
+
+**Campaign close.** The **`main-decomposition` campaign is COMPLETE**: WI-080
+(agent_loop.py) + WI-081 (trace.py), the two most intricate/most-copied scripts
+in the kit, are now decomposed behind test seams — the routing/escalation state
+machine is unit-addressable (RoutingState) and the trace checker/renderer split
+is pure (analyze/render_report) with the report joins de-quadrated (M8). Both
+`main()`s are orchestration-only. `bootstrap.py` (WI-082) stays deferred
+indefinitely as planned. Not pushed (`docs/push-policy: human`).

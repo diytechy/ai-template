@@ -79,22 +79,24 @@ home elsewhere — don't restate it here:
   [log.md](log.md)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
-  WI-063 · WI-064 · WI-065 · WI-081 · WI-082 · WI-108 · WI-159** in
-  [work-items.csv](requirements/work-items.csv). The highest-value next step is
-  **WI-081**, the second half of the `main-decomposition` campaign — see Next
-  action below.
+  WI-063 · WI-064 · WI-065 · WI-082 · WI-108 · WI-159** in
+  [work-items.csv](requirements/work-items.csv). (`main-decomposition` is now
+  **CLOSED** — WI-080 + WI-081 done; WI-082 `bootstrap.py` stays deferred
+  indefinitely as planned.)
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** the **`main-decomposition` campaign is half done** —
-  **WI-080 closed 2026-07-16** (slices A–E per
-  [specs/main-decomposition.md](specs/main-decomposition.md): `agent_loop.py
-  main()` is orchestration-only behind RoutingState/route_session/
-  run_iteration seams; full suite 927 passed at close; evidence in
-  [log.md](log.md)). **WI-081** (trace.py `analyze()`/`render_report()` split
-  + M8 pre-indexing + docstring shrink, BuildTier **medium**, spec §4) is the
-  remaining half — flip it `deferred` → `queued` to continue; the campaign
-  close then runs the full `check.py --gate G3` bar. Run serial/attended; the
-  meta-repo SafetyClass audit (the `--jobs 1` hold) stays out of the campaign.
+- **Next action:** the **`main-decomposition` campaign is COMPLETE**
+  (2026-07-16, [specs/main-decomposition.md](specs/main-decomposition.md)) —
+  WI-080 (`agent_loop.py` → RoutingState/route_session/run_iteration) and
+  WI-081 (`trace.py` → load_registries/analyze/render_report + the M8
+  de-quadrated joins + docstring shrink) both closed; both `main()`s are
+  orchestration-only, behavior-preserving under their test/golden nets. The
+  **campaign-close `check.py --gate G3` bar PASSED** (932 passed, 91.11%
+  coverage; `docs/dupes-allow` refreshed for the campaign's representative-pair
+  shifts — see [log.md](log.md)). No active build frontier remains. Open owner
+  items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are unchanged
+  under `gate-policy: autonomous`. The next candidates are the remaining
+  deferred backlog (owner-ordered) — nothing is auto-started.
   Open owner items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are
   unchanged under `gate-policy: autonomous`; Codex Sol builds are live. Grinding
   under single-agent adversarial self-review at gates (recorded as a limitation
