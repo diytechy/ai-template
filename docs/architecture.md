@@ -93,6 +93,8 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `list_reservations(root)` | {WI-ID: reservation-commit-sha} from refs/llm/reservations/* — the |  |
 | `reservation_meta(root, sha)` | The metadata JSON a reservation commit carries ({train, wis, base}), or |  |
 | `reserve_traincar(root, train_id, wis, base)` | Atomically claim a traincar: ONE off-history metadata commit | SR-061 |
+| `release_reservations(root, wis)` | Transactionally delete the reservation refs of `wis` (one update-ref | SR-062 |
+| `train_branch_evidence(root, train_id, base)` | (built, blocked) trailer evidence read off the train BRANCH (not a |  |
 | `worktree_root(root)` | Where train worktrees live: a sibling directory of the repo |  |
 | `existing_worktrees(root)` | {branch: worktree-path} parsed from `git worktree list --porcelain`. |  |
 | `lease_worktree(root, train_id)` | The linked worktree for a train — reuse the one already checked out on |  |

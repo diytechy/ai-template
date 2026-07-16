@@ -2130,6 +2130,14 @@ trailers (a blocker commits `Blocked-WI:` + `BlockRef:` instead; exit 3). Its
 session logs (`docs/iteration/<train>-NNN-*.log`) and review verdicts
 (`docs/reviews/<train>/NNN-<PHASE>-<sha7>.md`, naming the **exact reviewed
 commit**) are train-scoped so parallel workers never collide at integration.
+A traincar is **one review scope**: the policy-required review round fires
+once, after the *last* constituent commits, over the combined train diff —
+intermediate constituents are accepted-on-train, not reviewed, and **no
+constituent becomes `done` until the whole train integrates**. Before each
+successor the continuation conditions are re-checked; a positive classifier
+conflict ends the train early (exit 10) and the dispatcher **transactionally
+releases the unstarted constituents' reservations** (built and blocked ones
+keep theirs as integrator evidence).
 `--track` is **deprecated** for one compatibility window (legacy behavior
 unchanged, warned); new launchers never emit it.
 

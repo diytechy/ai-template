@@ -101,8 +101,15 @@ finding, and its RESULT is committed evidence: each WI's final commit carries
 instead and the worker exits 3). Session logs are collision-safe
 (docs/iteration/<train>-NNN-*.log) and review verdicts land at
 docs/reviews/<train>/NNN-<PHASE>-<sha7>.md naming the exact reviewed commit, so
-parallel workers never collide. Exit 0 = every assigned WI built (and, under
-managed routing + review-policy >= 1, its review round approved).
+parallel workers never collide. A traincar is ONE review scope (WI-183,
+SR-062): under managed routing + review-policy >= 1 the round is scheduled
+once, after the LAST assigned WI commits, over the combined base..HEAD train
+diff — intermediate constituents are accepted-on-train, not reviewed. Before
+each successor the §7 continuation conditions are re-checked: a constituent
+the classifier no longer permits in a multi-WI grouping ends the train EARLY
+(exit 10) — built evidence stands and the dispatcher transactionally releases
+the unstarted constituents' reservations. Exit 0 = every assigned WI built
+(and its one review cycle approved).
 
 --track <name> drives one parallel development lane (process-options.md
 "Parallel tracks"): every coordination file this loop reads or writes —
@@ -189,6 +196,10 @@ EXIT_WAITING = 5
 EXIT_BUDGET = 6
 EXIT_NEEDS_HUMAN = 7
 EXIT_PAUSED = 8
+# A worker whose §7 continuation re-check refuses the next constituent ends
+# its train EARLY (WI-183, SR-062): built/blocked evidence stands, and the
+# dispatcher transactionally releases the unstarted constituents' reservations.
+EXIT_TRAIN_END = 10
 
 # The limit-hit message a throttled headless run returns, e.g. "You've hit
 # your session limit · resets 3:45pm" / "…weekly limit · resets Mon 12:00am".
@@ -1897,6 +1908,55 @@ def reserve_traincar(root, train_id, wis, base):
 TRAIN_BRANCH_HEADS = "refs/heads/" + TRAIN_BRANCH_PREFIX
 
 
+def release_reservations(root, wis):
+    """Transactionally delete the reservation refs of `wis` (one update-ref
+    --stdin transaction — the release-on-early-end rule, SR-062). Returns None
+    on success, else the failure text. A no-op on an empty list."""
+    wis = [w for w in wis if WI_TOKEN_RE.match(w)]
+    if not wis:
+        return None
+    lines = ["start"]
+    for wid in wis:
+        lines.append("delete {}{}".format(RESERVATION_NS, wid))
+    lines += ["prepare", "commit"]
+    proc = subprocess.run(
+        ["git", "-C", str(root), "update-ref", "--stdin"],
+        input=("\n".join(lines) + "\n").encode("utf-8"),
+        capture_output=True,
+    )
+    if proc.returncode != 0:
+        return "release transaction failed: {}".format(
+            proc.stderr.decode("utf-8", "replace").strip()[:300]
+        )
+    return None
+
+
+def train_branch_evidence(root, train_id, base):
+    """(built, blocked) trailer evidence read off the train BRANCH (not a
+    worktree) — usable from the primary checkout for reconcile and for the
+    early-end release decision."""
+    code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + train_id)
+    built, blocked = set(), set()
+    if code != 0:
+        return built, blocked
+    fmt = (
+        "T%x09%(trailers:key=WI,valueonly,separator=;)%x09"
+        "%(trailers:key=Blocked-WI,valueonly,separator=;)"
+    )
+    code, out = git(root, "log", "--format=" + fmt, base + ".." + tip.strip())
+    if code != 0:
+        return built, blocked
+    for line in out.splitlines():
+        parts = (line.split("\t")[1:] + ["", ""])[:2]
+        built.update(
+            x.strip() for x in parts[0].split(";") if WI_TOKEN_RE.match(x.strip())
+        )
+        blocked.update(
+            x.strip() for x in parts[1].split(";") if WI_TOKEN_RE.match(x.strip())
+        )
+    return built, blocked
+
+
 def worktree_root(root):
     """Where train worktrees live: a sibling directory of the repo
     (`../<repo>-trains/<train-id>`) — outside the repo so a linked worktree
@@ -2153,31 +2213,7 @@ def dispatch_run(args, root):
             quarantined_wis.update(t["wis"])
             continue
         # Read evidence off the branch (works without a worktree).
-        code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + tid)
-        built, blocked = set(), {}
-        if code == 0:
-            fmt = (
-                "T%x09%(trailers:key=WI,valueonly,separator=;)%x09"
-                "%(trailers:key=Blocked-WI,valueonly,separator=;)"
-            )
-            code2, out = git(
-                root, "log", "--format=" + fmt, t["base"] + ".." + tip.strip()
-            )
-            if code2 == 0:
-                for line in out.splitlines():
-                    parts = (line.split("\t")[1:] + ["", ""])[:2]
-                    built.update(
-                        x.strip()
-                        for x in parts[0].split(";")
-                        if WI_TOKEN_RE.match(x.strip())
-                    )
-                    blocked.update(
-                        {
-                            x.strip(): ""
-                            for x in parts[1].split(";")
-                            if WI_TOKEN_RE.match(x.strip())
-                        }
-                    )
+        built, blocked = train_branch_evidence(root, tid, t["base"])
         if blocked:
             parked[tid] = {"state": "blocked", "wis": t["wis"]}
             journal.event("reconcile", train=tid, state="blocked")
@@ -2278,12 +2314,30 @@ def dispatch_run(args, root):
                     "(docs/gate-policy: {})".format(tid, gate_policy)
                 )
                 journal.event("gate-ratification-exit", train=tid)
-        elif code == EXIT_BLOCKED:
-            # The durable blocked DISPOSITION is the integrator's serialized
-            # transaction (Slice F); the dispatcher parks the train and keeps
-            # its reservations so nothing double-runs the blocked WI.
-            parked[tid] = {"state": "blocked", "wis": info["wis"]}
-            journal.event("worker-blocked", train=tid)
+        elif code in (EXIT_BLOCKED, EXIT_TRAIN_END):
+            # A blocked constituent or a refused continuation ends the train
+            # early (SR-062): built + blocked constituents KEEP their
+            # reservations (evidence for the Slice-F integrator; nothing
+            # double-runs), while every UNSTARTED constituent is released in
+            # one transaction and the next rescan recomputes the traincar DAG.
+            built, blocked_set = train_branch_evidence(root, tid, info["base"])
+            unstarted = [
+                w for w in info["wis"] if w not in built and w not in blocked_set
+            ]
+            err = release_reservations(root, unstarted)
+            if err:
+                journal.event("release-failed", train=tid, reason=err[:200])
+            elif unstarted:
+                journal.event("release-unstarted", train=tid, wis=";".join(unstarted))
+            state = "blocked" if code == EXIT_BLOCKED else "train-end"
+            parked[tid] = {
+                "state": state,
+                "wis": [w for w in info["wis"] if w not in unstarted],
+            }
+            journal.event(
+                "worker-blocked" if code == EXIT_BLOCKED else "worker-train-end",
+                train=tid,
+            )
         elif code == EXIT_WAITING:
             retry_at[tid] = time.time() + TRAIN_RETRY_SECONDS
             parked[tid] = {"state": "waiting", "wis": info["wis"], "base": info["base"]}
@@ -2429,7 +2483,13 @@ def dispatch_run(args, root):
             time.sleep(args.poll_seconds)
 
     # --- end state (spec §10: run-state is a generated dispatcher outcome) ---
-    ready = [t for t, p in parked.items() if p["state"] == "ready-to-integrate"]
+    # An early-ended train's BUILT part awaits integration like any other.
+    ready = [
+        t
+        for t, p in parked.items()
+        if p["state"] == "ready-to-integrate"
+        or (p["state"] == "train-end" and p["wis"])
+    ]
     blocked = [t for t, p in parked.items() if p["state"] == "blocked"]
     quarantined = [
         t for t, p in parked.items() if p["state"] in ("quarantined", "needs-human")
@@ -2860,6 +2920,16 @@ def main():
             "assigned": parse_wi_list(args.wi),
             "base": base,
             "rows": load_wi_registry(root),
+            # The scheduler's view of the same registry, for the §7
+            # continuation re-check (classifier eligibility per constituent).
+            "sched": {
+                w["id"]: w
+                for w in schedule.load_wis(
+                    schedule.load_rows(
+                        root / "docs" / "requirements" / "work-items.csv"
+                    )
+                )
+            },
             "rework": "",  # in-process rework note (a CHANGES-REQUESTED verdict)
         }
         if args.rework:
@@ -3284,6 +3354,42 @@ def main():
                 if remaining
                 else (worker.get("rework_wi") or worker["assigned"][-1])
             )
+            # §7 continuation re-check (WI-183): before the lane takes the next
+            # constituent of a MULTI-WI traincar, the classifier must still
+            # permit optimistic grouping — a POSITIVE conflict (spine/gate/
+            # attestation/protected/high-risk/critique/checkpoint) ends the
+            # train EARLY instead of building inside a shared review scope.
+            # Missing classification is NOT a newly-visible conflict: the
+            # dispatcher already fails closed at packing, and an explicit
+            # assignment is dispatcher-authorized. Built evidence stands; the
+            # dispatcher releases the unstarted reservations (SR-062).
+            if remaining and len(worker["assigned"]) > 1:
+                sched_wi = worker["sched"].get(current_wi)
+                sched_class, reasons = (
+                    schedule.classify(sched_wi)
+                    if sched_wi is not None
+                    else (schedule.SCHED_UNCLASSIFIED, ["unclassified:missing-row"])
+                )
+                if sched_class in (
+                    schedule.SCHED_SPINE_SERIAL,
+                    schedule.SCHED_PROTECTED,
+                    schedule.SCHED_SINGLE_WI,
+                ):
+                    print(
+                        "\n=== worker {} [{}]: TRAIN-END (early) ===".format(
+                            worker["train"], ";".join(worker["assigned"])
+                        )
+                    )
+                    print(
+                        "continuation refused at {}: {} — built {} stay(s) "
+                        "accepted-on-train; the dispatcher releases the "
+                        "unstarted constituent(s).".format(
+                            current_wi,
+                            ";".join(reasons),
+                            ";".join(sorted(built)) or "(none)",
+                        )
+                    )
+                    return EXIT_TRAIN_END
         session = "{:03d}".format(
             next_session_number(iter_dir, worker["train"] if worker else None)
         )
@@ -3918,13 +4024,29 @@ def main():
                 last_impl_family = route_family
                 last_impl_wi = wi_label
                 impl_range = commits
-                # The review round follows the reviewer dial (S8).
-                if rp_int >= 1:
+                # The review round follows the reviewer dial (S8). A traincar
+                # is ONE review scope (WI-183, SR-062): a worker schedules the
+                # round only once EVERY assigned WI is built, and the round
+                # covers the combined train diff base..HEAD — never a per-WI
+                # slice of it. An intermediate constituent commit is
+                # accepted-on-train (locally green and committed), not
+                # reviewed; the cycle comes once, at the end.
+                schedule_review = rp_int >= 1
+                if worker and schedule_review:
+                    built_now, _blk = train_evidence(root, worker["base"])
+                    schedule_review = all(w in built_now for w in worker["assigned"])
+                    if schedule_review:
+                        impl_range = "{}..{}".format(worker["base"], after)
+                if schedule_review:
                     round_verdicts = []
                     review_queue = ["REVIEW-A"] + (["REVIEW-B"] if rp_int >= 2 else [])
                     print(
                         "dispatch: review-policy {} -> scheduling review round "
-                        "{}".format(rp_int, review_queue)
+                        "{}{}".format(
+                            rp_int,
+                            review_queue,
+                            " over the whole train diff" if worker else "",
+                        )
                     )
                 # The critique round is INDEPENDENT of the review dial (WI-068): it
                 # fires only when this build's WI touches a Critique-verified SR.

@@ -79,13 +79,16 @@ home elsewhere — don't restate it here:
   `refs/llm/reservations/*` traincar claims, `../<repo>-trains/*` worktree
   pool, dynamic refill, spine whole-project serialization + attended
   ratification exit, generated `run-state`; SR-061 **Verified** — legacy loop
-  untouched without `--jobs`, launchers flip at H). **SR-059/LLR-060/TC-060
-  stay Planned** — the run-state leg now exists; the integrator-generated
-  `status.md` lands with Slice F and SR-059 verifies then. Remaining build
-  slices, in DAG order: **WI-183**
-  (E: change-train continuation) · **WI-184** (F: atomic integrator) · **WI-185**
+  untouched without `--jobs`, launchers flip at H); E (WI-183) = the traincar
+  execution model (one review cycle per traincar over the combined train diff,
+  §7 continuation re-check + `EXIT_TRAIN_END`, transactional
+  release-of-unstarted on early end, fork/join proven; SR-062 **Verified**).
+  **SR-059/LLR-060/TC-060 stay Planned** — the run-state leg now exists; the
+  integrator-generated `status.md` lands with Slice F and SR-059 verifies
+  then. Remaining build slices, in DAG order: **WI-184** (F: atomic
+  integrator) · **WI-185**
   (G: recovery + fault injection) · **WI-186** (H: telemetry + migration +
-  dogfood). Edges wire the §15 DAG (E after D; F after
+  dogfood). Edges wire the §15 DAG (F after
   B,D; G after D,F; H the join). Grinding under `gate-policy: autonomous`._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
@@ -96,10 +99,10 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** the **parallel-dispatch campaign (phase `v4`)** is the live
-  frontier (above), at **G2** with **Slices A–D shipped**. Next WI is **WI-183**
-  (Slice E: change-train continuation — the one-review-cycle-per-traincar
-  model, fork/join, early-end reservation release); **WI-184** (F: atomic
-  integrator) is also unblocked and follows. Grinding under `gate-policy: autonomous`
+  frontier (above), at **G2** with **Slices A–E shipped**. Next WI is **WI-184**
+  (Slice F: the atomic integrator — staging branches, integration-ref CAS,
+  blocked-disposition transaction, registry/log/status regen, publication
+  intent), then **WI-185** (G). Grinding under `gate-policy: autonomous`
   (single-agent adversarial self-review at gates, recorded as a limitation vs a
   provider-heterogeneous reviewer). Deferred main-decomposition
   (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering; Codex

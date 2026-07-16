@@ -7384,3 +7384,59 @@ exit + caught the CRLF transaction mangle and the blackout end-state hole).
 continuation: the one-review-cycle-per-traincar model, fork/join, early-end
 release) and **WI-184** (F — atomic integrator) both unblocked; grinding E
 first. `gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-16 — v4 Slice E (WI-183): change-train continuation + fork/join (SR-062 Verified)
+
+**What.** The traincar execution model (spec §7) over C's worker and D's
+dispatcher.
+
+- **One review cycle per traincar.** The worker now schedules the
+  policy-required review round only after the **last** assigned WI commits,
+  and the round covers the **combined `base..HEAD` train diff** (the verdict
+  file names the train head). Intermediate constituents are
+  **accepted-on-train** — locally green and committed, never per-WI reviewed —
+  and no constituent becomes `done` on-branch (integrator-only, F). This
+  retires Slice C's recorded per-WI-commit review deviation.
+- **§7 continuation re-check.** Before the lane takes each successor of a
+  multi-WI traincar, the classifier must still permit the grouping: a
+  **positive** conflict (spine/gate/attestation/protected/high-risk/critique/
+  checkpoint) ends the train early with the new **`EXIT_TRAIN_END` (10)**.
+  Missing classification is deliberately *not* a refusal — the dispatcher
+  already fails closed at packing, and an explicit assignment is
+  dispatcher-authorized (the first cut refused `unclassified` and broke the
+  Slice-C contract; the C suite caught it).
+- **Early-end release.** On a blocked or early-end worker exit the dispatcher
+  splits built/blocked/unstarted via `train_branch_evidence` (extracted, also
+  reused by reconcile) and **transactionally releases the unstarted
+  constituents' reservations** (`release_reservations`, one `update-ref
+  --stdin` transaction); built + blocked keep theirs as integrator evidence.
+  The rescan is the traincar-DAG recompute.
+- **Fork/join.** A fork is structural: the packer never chains past multiple
+  successors; after (Slice-F-simulated) parent integration the children take
+  **two separate lanes** (proven). A join dispatches only when **all** parents
+  are integrated, and its reservation metadata records the **combined
+  integration HEAD** as base (asserted). Cap 4 bounds packing (a 5-chain packs
+  as a 4-car; the tail waits for integration).
+
+**Tests.** `tests/test_agent_loop_train.py` — 6 fixtures (TC-063):
+one-review-cycle (single verdict, after the last constituent, named on the
+train head, no on-branch `done`), continuation-refusal early end,
+blocked-mid-chain release-of-unstarted (WI-203 released; 201 built + 202
+blocked kept), cap packing, fork-to-separate-lanes, join-from-combined-HEAD.
+
+**Byte deltas (budgeted files).** PROCESS_OPTIONS.md **144,457 → 145,022
+(+565 B**: the one-review-scope + early-end-release rules in the worker
+paragraph; baseline re-stamped ×3). AGENTS.template.md 9,978 / PROCESS.md
+59,768 (untouched).
+
+**Tests / end green (real output).** `pytest -q -n auto -m smoke` → **686
+passed, 2 skipped** (61 s); C/D/E family 39 green; ruff clean+formatted;
+`check_docs --stale` OK; okf/arch-map/dashboard regenerated. SR-062 + LLR-063 +
+TC-063 (`Automated=Yes`, `Evidence=tests/test_agent_loop_train.py`) →
+**Verified** (autonomous single-agent adversarial review; the review's
+unclassified-refusal rollback is the recorded finding).
+
+**Handoff.** Slice E done. Next: **WI-184** (Slice F — the atomic integrator:
+staging branches, integration-ref CAS, blocked-disposition transaction,
+registry/log/status regen, publication intent), then **WI-185** (G). Grinding
+under `gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).
