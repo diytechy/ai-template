@@ -530,13 +530,23 @@ development ref. It then advances the development ref with a second CAS against
 that expected old hash, synchronizes the clean worktree's index and files to the
 target using fast-forward/reset semantics (never a merge), and deletes the intent
 ref **only after** the sync succeeds. This bounds the reset: a reset fires only
-when the worktree matches the intent's expected old hash exactly; any divergence
-means edits landed in the CAS-to-sync window, so publication is deferred and the
-checkout is left untouched and reported, never reset — the intent ref, not a
-guessed ancestor, is what tells recovery which hash was pre-publication even when
-several integration commits have accumulated while publication was deferred. If
-the development ref moved, the second CAS fails harmlessly and the integrator
-recomposes from the new development HEAD before retrying. If the worktree is
+when **both** the index tree and the tracked worktree are exactly at the intent's
+expected old hash (untracked files are left untouched, and a checkout obstruction
+defers synchronization rather than deleting anything); any divergence means edits
+landed in the CAS-to-sync window, so publication is deferred and the checkout is
+left untouched and reported, never reset — the intent ref, not a guessed ancestor,
+is what tells recovery which hash was pre-publication even when several integration
+commits have accumulated while publication was deferred. If
+the development ref moved to a third hash (neither the expected old hash nor the
+target), no publication occurred and the second CAS fails harmlessly. The
+singleton intent then follows an explicit lifecycle so a failed attempt is never
+mistaken for an in-flight one: the integrator keeps the stale intent as recovery
+evidence while it recomposes from the new development HEAD, then **transactionally
+replaces** it with the new attempt's metadata. An existing intent is reused only
+when all three fields — target, expected old hash, and development ref — match
+exactly; a differing intent is never silently overwritten. If the development ref
+is instead already at the target, a prior attempt's publication succeeded, so the
+intent is deleted once the worktree sync is confirmed. If the worktree is
 dirty at the outset, publication is deferred and the checkout is left untouched
 and reported, never reset/stashed automatically. A manual update to
 `llm/integration` itself is likewise detected by its CAS and forces recomposition.
@@ -711,10 +721,13 @@ Kernel locks release when processes die. Stored PIDs are hints and are never
 trusted across reboot. Frequent WI commits bound the amount of dirty recovery.
 
 This contract covers a process or computer crash with the disk intact. Disk loss
-or recovery on a fresh host requires both train branches and reservation refs to
-have been pushed/mirrored explicitly; custom `refs/llm/reservations/*` are not
-assumed to follow an ordinary branch push. Mirroring remains subject to
-`docs/push-policy`. The coordinator never silently pushes any ref when policy
+or recovery on a fresh host requires the whole authoritative ref set — the
+`refs/heads/llm/integration` ref, train branches, `refs/llm/reservations/*`, and
+the `refs/llm/publish-intent` ref (equally necessary to finish or abandon an
+interrupted publish) — to have been pushed/mirrored explicitly; the custom
+`refs/llm/reservations/*` and `refs/llm/publish-intent` namespaces are not assumed
+to follow an ordinary branch push (unlike `refs/heads/llm/integration`, an
+ordinary branch). Mirroring remains subject to `docs/push-policy`. The coordinator never silently pushes any ref when policy
 requires a human.
 
 ## 12. Pause, blackout, cost, and capacity
