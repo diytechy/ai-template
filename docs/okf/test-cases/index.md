@@ -75,5 +75,5 @@ resource: "generated"
 | [TC-062](TC-062.md) | Launch the dispatcher with independent ready WIs; assert up-to-ceiling concurrency in sep… |
 | [TC-063](TC-063.md) | Drive a unary chain, a fork, a join, a cap, and an early end; assert the continuation/sto… |
 | [TC-064](TC-064.md) | Compose overlapping trains through the integrator; assert the combined bar always runs, a… |
-| [TC-065](TC-065.md) | Inject termination at each lifecycle boundary (reservation txn, both CAS points, the work… |
+| [TC-065](TC-065.md) | Inject termination at each lifecycle boundary (reservation txn, both CAS points, the publ… |
 | [TC-066](TC-066.md) | Run a parallel session + a downstream-migration fixture; assert reason-coded telemetry ag… |

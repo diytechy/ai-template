@@ -542,9 +542,11 @@ target), no publication occurred and the second CAS fails harmlessly. The
 singleton intent then follows an explicit lifecycle so a failed attempt is never
 mistaken for an in-flight one: the integrator keeps the stale intent as recovery
 evidence while it recomposes from the new development HEAD, then **transactionally
-replaces** it with the new attempt's metadata. An existing intent is reused only
-when all three fields — target, expected old hash, and development ref — match
-exactly; a differing intent is never silently overwritten. If the development ref
+replaces** it — an expected-old-value CAS on `refs/llm/publish-intent` against the
+stale object it observed, so two racing recompositions cannot both replace it —
+with the new attempt's metadata. An existing intent is reused only when all three
+fields — target, expected old hash, and development ref — match exactly; a
+differing intent is never silently overwritten. If the development ref
 is instead already at the target, a prior attempt's publication succeeded, so the
 intent is deleted once the worktree sync is confirmed. If the worktree is
 dirty at the outset, publication is deferred and the checkout is left untouched
@@ -722,13 +724,18 @@ trusted across reboot. Frequent WI commits bound the amount of dirty recovery.
 
 This contract covers a process or computer crash with the disk intact. Disk loss
 or recovery on a fresh host requires the whole authoritative ref set — the
-`refs/heads/llm/integration` ref, train branches, `refs/llm/reservations/*`, and
-the `refs/llm/publish-intent` ref (equally necessary to finish or abandon an
-interrupted publish) — to have been pushed/mirrored explicitly; the custom
-`refs/llm/reservations/*` and `refs/llm/publish-intent` namespaces are not assumed
-to follow an ordinary branch push (unlike `refs/heads/llm/integration`, an
-ordinary branch). Mirroring remains subject to `docs/push-policy`. The coordinator never silently pushes any ref when policy
-requires a human.
+`refs/heads/llm/integration` ref, `llm/train/*` and `llm/integrate/*` branches,
+`refs/llm/reservations/*`, and the `refs/llm/publish-intent` ref (equally
+necessary to finish or abandon an interrupted publish) — to have been
+pushed/mirrored explicitly; the custom `refs/llm/reservations/*` and
+`refs/llm/publish-intent` namespaces are not assumed to follow an ordinary branch
+push (unlike the `refs/heads/llm/*` branches). An unmirrored `llm/integrate/*`
+staging branch carries unique conflict resolution and renewed review evidence not
+present on its train branch; without it, that work is reconstructable only by
+recomposing and re-reviewing the train from the integration HEAD, so mirroring the
+staging branch is what preserves in-progress composition across disk loss.
+Mirroring remains subject to `docs/push-policy`; the coordinator never silently
+pushes any ref when policy requires a human.
 
 ## 12. Pause, blackout, cost, and capacity
 
@@ -871,9 +878,10 @@ their touched surfaces are split during planning; H is the explicit join.
 Inject termination during the atomic multi-WI reservation-ref transaction and
 after reservation, branch creation, dirty edit, WI commit, review request,
 review verdict, blocked-disposition apply, integration apply, integration test,
-integration commit, immediately before/after integration-ref CAS, and
-immediately before/after the development-publication CAS and clean-worktree
-synchronization. For each point:
+integration commit, immediately before/after integration-ref CAS, the
+publication-intent write and its transactional replacement, and immediately
+before/after the development-publication CAS and clean-worktree synchronization.
+For each point:
 
 - restart reconstructs exactly one owner;
 - no WI is double-run or falsely done;
@@ -888,6 +896,12 @@ synchronization. For each point:
 - a crash between the development-ref CAS and the worktree sync is recognized via
   the publication-intent ref and idempotently synchronized — never reported as
   user dirt, never reset over edits that diverge from the intent's expected old hash;
+- an identical existing publication-intent is reused, a differing one is never
+  overwritten, and the transactional replacement is an expected-old-object CAS on
+  `refs/llm/publish-intent`;
+- a failed development CAS retains the old intent through recomposition and then
+  replaces it; a crash immediately before or after that replacement recovers
+  deterministically to exactly one intent (never a lost or duplicated attempt);
 - deleting all of `out/dispatch/` still reconstructs from Git/worktrees;
 - every constituent reservation reconstructs from
   `refs/llm/reservations/*`, including before its first WI commit;
