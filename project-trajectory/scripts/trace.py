@@ -582,6 +582,35 @@ def schema_findings(label, rows):
     return out
 
 
+def phase_ratified_findings(real):
+    """The ratified-phase completeness rule (process.md §4 "Phased delivery"): once
+    the project phases ANY spine row, every RATIFIED (non-Draft) SR/LLR/TC must carry
+    a `Phase` that digit-parses to a number (`v2`->2, `2`->2 — the same parse
+    derive_gate uses, so a downstream `vN` registry arms the rule AND passes it). The
+    rule is **vacuous until >=1 artifact is phased** — the arming idiom the component
+    checks use — so a fully-blank downstream registry stays green (a `Draft` row may
+    always leave `Phase` blank). SN is covered transitively: at G1+ every ratified SN
+    has >=1 SR (the orphan rule) and SRs are phased; pre-G1 it is vacuously exempt.
+    Part of --strict-schema; extends the schema tier rather than forking it."""
+    all_rows = [r for label in real for r in real[label]]
+    if not any(phase_num(r) is not None for r in all_rows):
+        return []  # unarmed: nothing is phased yet
+    out = []
+    for label in ("SR", "LLR", "TC"):
+        key = id_key(label)
+        for r in real.get(label, []):
+            if is_draft(r) or phase_num(r) is not None:
+                continue
+            cell = (r.get("Phase") or "").strip()
+            shown = f"={cell!r}" if cell else " (blank)"
+            out.append(
+                f"{label} {r[key]} is ratified but its Phase{shown} does not parse "
+                "to a number — a ratified row must carry a numeric phase "
+                "(process.md §4 'Phased delivery')"
+            )
+    return out
+
+
 # --- Generated traceability views --------------------------------------------
 # The registries are the reviewed source of truth; everything below is a
 # *rendering* of the same join, regenerated every run (process.md §3
@@ -1415,6 +1444,7 @@ def analyze(reg, args):
     )
     schema = (
         [f for label in real for f in schema_findings(label, real[label])]
+        + phase_ratified_findings(real)
         if args.strict_schema
         else []
     )

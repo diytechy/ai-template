@@ -13,7 +13,7 @@ resource: "generated"
 |---|---|
 | [TC-001](TC-001.md) | Run the trace suite; a linked chain is orphan-free and an injected orphan fails --strict. |
 | [TC-002](TC-002.md) | Run the registry-checks suite; duplicate/malformed ids and mis-columned rows fail --stric… |
-| [TC-003](TC-003.md) | Run the registry-checks suite; leftover -000 rows and empty/out-of-vocab fields are flagg… |
+| [TC-003](TC-003.md) | Run the registry-checks suite; leftover -000 rows, empty/out-of-vocab fields, and (once t… |
 | [TC-004](TC-004.md) | Run the acceptance-criteria advisory suite; an unpinned comparative warns without changin… |
 | [TC-005](TC-005.md) | Run the off-spine registry suites; back-link findings fire and -000 rows are ignored. |
 | [TC-006](TC-006.md) | Run the check-harness suite; gate steps run and a missing required tool fails with SKIP(m… |
@@ -60,7 +60,7 @@ resource: "generated"
 | [TC-047](TC-047.md) | Run the run-menu suite: --list prints name<TAB>desc for each declared capability in decla… |
 | [TC-048](TC-048.md) | Run the critique-loop suite: the loop schedules CRITIQUE exactly when a committing build'… |
 | [TC-049](TC-049.md) | Run the top-view suite: an inventory over 10 modules with no containing CMPs warns plain … |
-| [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache |
+| [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache; -… |
 | [TC-051](TC-051.md) | Run the dashboard suite; the Process tab renders its three panels from the live registrie… |
 | [TC-052](TC-052.md) | Run the dashboard suite; with fixture registries exceeding the tier thresholds the When/H… |
 | [TC-053](TC-053.md) | A fresh, provider-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated … |

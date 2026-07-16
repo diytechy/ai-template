@@ -1,6 +1,6 @@
 """trace.py: orphan detection and the --require-verified G3 criterion."""
 
-from conftest import KIT, make_minimal_project, run_py
+from conftest import KIT, load_script, make_minimal_project, run_py
 
 # SR-002 is a genuine (ratified, non-Draft) orphan: Status=Planned, so the
 # derived-gate Draft exemption (WI-089) does NOT apply and the decomposition
@@ -992,3 +992,81 @@ def test_exit_code_gate_policy():
     # No gating flag -> always 0, even with findings present.
     loud = _findings_stub(trace, orphans=["x"], integrity=["y"], status_findings=["z"])
     assert trace.exit_code(loud, ns()) == 0
+
+
+# --- WI-188: the ratified-phase completeness rule -----------------------------
+TRACE = load_script("trace")
+
+
+def _real(sr=(), llr=(), tc=()):
+    """The {label: [dict-rows]} shape phase_ratified_findings takes — minimal
+    id/Status/Phase columns are all the rule reads."""
+    import csv
+    import io
+
+    def rows(idcol, data):
+        text = "{},Status,Phase\n".format(idcol) + "\n".join(data)
+        return list(csv.DictReader(io.StringIO(text)))
+
+    return {
+        "SR": rows("SR-ID", sr),
+        "LLR": rows("LLR-ID", llr),
+        "TC": rows("TC-ID", tc),
+    }
+
+
+def test_phase_ratified_rule_arms_and_fires():
+    f = TRACE.phase_ratified_findings
+    # Unarmed: nothing phased -> vacuous (a fully-blank downstream registry).
+    assert f(_real(["SR-001,Verified,", "SR-002,Verified,"])) == []
+    # Armed by SR-001's phase; SR-002 ratified with a blank phase -> one finding.
+    fired = f(_real(["SR-001,Verified,1", "SR-002,Verified,"]))
+    assert len(fired) == 1 and "SR-002" in fired[0]
+    # A vN-tagged ratified registry arms the rule AND passes (the compatibility
+    # guarantee — the filter/parse are digit-based, so a downstream `vN` is legal).
+    assert f(_real(["SR-001,Verified,v1", "SR-002,Verified,v2"])) == []
+    # An unparseable ratified phase fails (armed by SR-001).
+    fired = f(_real(["SR-001,Verified,1", "SR-002,Verified,later"]))
+    assert len(fired) == 1 and "SR-002" in fired[0]
+    # A Draft row may leave Phase blank even when armed.
+    assert f(_real(["SR-001,Verified,1", "SR-002,Draft,"])) == []
+    # The rule spans LLR and TC too, not just SR.
+    fired = f(
+        _real(["SR-001,Verified,1"], ["LLR-001,Verified,"], ["TC-001,Verified,2"])
+    )
+    assert len(fired) == 1 and "LLR-001" in fired[0]
+
+
+def _phase_scaffold(scaffold, sr="1", llr="1", tc="1"):
+    """Append a Phase column (a value per registry) to a scaffold's spine CSVs."""
+    req = scaffold / "docs" / "requirements"
+    for path, val in (
+        (req / "system-requirements.csv", sr),
+        (req / "low-level-requirements.csv", llr),
+        (scaffold / "docs" / "test" / "test-cases.csv", tc),
+    ):
+        lines = [
+            ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()
+        ]
+        lines[0] += ",Phase"
+        lines[1:] = [ln + "," + val for ln in lines[1:]]
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def test_phased_scaffold_passes_strict_schema(scaffold):
+    # A fully phased spine (arming the rule) with every ratified row numeric passes.
+    make_minimal_project(scaffold)
+    _phase_scaffold(scaffold, sr="1", llr="1", tc="1")
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_ratified_blank_phase_fails_strict_schema(scaffold):
+    # Armed by the SR/LLR phases; the ratified TC left blank is a schema finding
+    # that gates under --strict (the schema tier's standing exit convention).
+    make_minimal_project(scaffold)
+    _phase_scaffold(scaffold, sr="1", llr="1", tc="")
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "ratified but its Phase" in report and "TC-001" in report

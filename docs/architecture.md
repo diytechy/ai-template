@@ -648,6 +648,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |
 | `sn_draft_ids(text)` | The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state): |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
+| `phase_ratified_findings(real)` | The ratified-phase completeness rule (process.md §4 "Phased delivery"): once |  |
 | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
 | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |
 | `ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta)` | Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the |  |

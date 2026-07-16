@@ -240,3 +240,38 @@ def test_draft_sn_drops_the_gate(scaffold):
     result = _derive(scaffold)
     assert result["raw"] == GATE.G0
     assert result["drafts"] == 1
+
+
+# --- WI-188: the derived current phase ----------------------------------------
+def test_phase_num_digit_parses():
+    # The one phase-parse the kit shares: bare integers and vN both digit-parse.
+    assert GATE.phase_num({"Phase": "v2"}) == 2
+    assert GATE.phase_num({"Phase": "3"}) == 3
+    assert GATE.phase_num({"Phase": ""}) is None
+    assert GATE.phase_num({"Phase": "later"}) is None
+    assert GATE.phase_num({}) is None
+
+
+def test_derived_current_phase(scaffold):
+    # The derived current phase = the highest phase over RATIFIED rows; a Draft in a
+    # not-yet-ratified higher phase does not bump it (the phase analogue of the gate).
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SRS_H.rstrip("\n")
+        + ",Phase\n"
+        + _sr("SR-001").rstrip("\n")
+        + ",1\n"
+        + _sr("SR-002").rstrip("\n")
+        + ",3\n"
+        + _sr("SR-003", status="Draft").rstrip("\n")
+        + ",4\n",
+        encoding="utf-8",
+    )
+    assert _derive(scaffold)["phase"] == 3  # SR-003's phase 4 is Draft, so excluded
+
+
+def test_derived_phase_none_when_unphased(scaffold):
+    # An unphased spine (no Phase column) reads phase=(none) — a non-adopter is
+    # unaffected, exactly like the all-blank --strict-schema case.
+    make_minimal_project(scaffold)
+    assert _derive(scaffold)["phase"] is None
