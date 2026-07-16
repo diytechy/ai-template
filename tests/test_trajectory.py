@@ -1180,3 +1180,119 @@ def test_ratify_brief_lint_vacuous_without_brief(tmp_path):
         "## OI-31 — scheduling\n- Decision: sequence `[v3]-[g2]` after v2 work.\n",
     )
     assert ct.ratify_brief_findings(tmp_path) == []
+
+
+# --- WI-064: the cross-CMP-edge-without-IF rule ---------------------------------
+# An internal import edge between two DIFFERENT components with no covering
+# IF-### row is a finding (the AXES ratified model's enforceability ruling) —
+# WARN plain, ERROR under --strict, sharing the docs/components-check opt-out.
+# Edges come from the MODULE MAP block's `Imports (internal):` lines; the seam
+# side joins interfaces.csv endpoints in either direction. Vacuous whenever any
+# input is absent (never-breaking).
+
+ARCH_2MOD_IMPORT = """# Arch
+<!-- BEGIN GENERATED MODULE MAP -->
+### `scripts/mod_a`
+_A._
+Imports (internal): `mod_b`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `run()` | go |  |
+
+### `scripts/mod_b`
+_B._
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `go()` | g |  |
+<!-- END GENERATED MODULE MAP -->
+"""
+
+TWO_CMPS = "CMP-001,A,software,,built,,,,\nCMP-002,B,software,,built,,,,\n"
+
+
+def _cross_cmp_repo(tmp_path, cmp_b="CMP-002"):
+    """mod_a (CMP-001) imports mod_b (cmp_b); no IF row unless a test adds one."""
+    write_arch(tmp_path, ARCH_2MOD_IMPORT)
+    write_cmps(tmp_path, TWO_CMPS)
+    write_tagged_llrs(
+        tmp_path, [("scripts/mod_a", "CMP-001"), ("scripts/mod_b", cmp_b)]
+    )
+
+
+def test_cross_cmp_import_without_seam_warns_plain_fails_strict(tmp_path):
+    _cross_cmp_repo(tmp_path)
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert (
+        "cross-component import scripts/mod_a (CMP-001) -> scripts/mod_b (CMP-002)"
+        in plain.stderr
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "has no declared IF-### seam" in strict.stderr
+
+
+def test_cross_cmp_import_with_declared_seam_is_silent(tmp_path):
+    _cross_cmp_repo(tmp_path)
+    write_ifs(
+        tmp_path,
+        'IF-001,Consumes,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_cross_cmp_seam_covers_either_direction(tmp_path):
+    # The seam row authored from mod_b's side (b -> a) still covers the a -> b
+    # import edge — a seam is one declared relationship, not a directed pair.
+    _cross_cmp_repo(tmp_path)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_b,scripts/mod_a,"call",SR-001,v1,Stable,Active,,\n',
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_intra_cmp_import_is_silent(tmp_path):
+    # Both endpoints in CMP-001: internal wiring, never a finding.
+    _cross_cmp_repo(tmp_path, cmp_b="CMP-001")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_cross_cmp_unmapped_endpoint_is_vacuous(tmp_path):
+    # mod_b has no Component membership: coverage is the containment rule's job,
+    # so the cross-CMP rule stays silent rather than double-reporting.
+    write_arch(tmp_path, ARCH_2MOD_IMPORT)
+    write_cmps(tmp_path, TWO_CMPS)
+    write_tagged_llrs(tmp_path, [("scripts/mod_a", "CMP-001")])
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_cross_cmp_no_imports_lines_is_vacuous(tmp_path):
+    # An arch-map without `Imports (internal):` lines (older gen, or no internal
+    # imports) contributes no edges — the rule costs nothing.
+    write_arch(tmp_path, ARCH_2MOD)
+    write_cmps(tmp_path, TWO_CMPS)
+    write_tagged_llrs(
+        tmp_path, [("scripts/mod_a", "CMP-001"), ("scripts/mod_b", "CMP-002")]
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr
+
+
+def test_components_check_off_silences_cross_cmp(tmp_path):
+    _cross_cmp_repo(tmp_path)
+    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cross-component import" not in proc.stderr

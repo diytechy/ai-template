@@ -396,6 +396,9 @@ def build_map(src_roots):
         if summary:
             sections.append("_{}_".format(summary.replace("|", "\\|")))
         if imports:
+            # check_trajectory.arch_inventory parses this line (backticked bare
+            # stems) as the cross-CMP rule's edge source (WI-064) — keep the
+            # grammar in sync with that parser.
             sections.append(
                 "Imports (internal): {}".format(
                     ", ".join("`{}`".format(i) for i in imports)

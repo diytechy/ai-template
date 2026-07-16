@@ -403,12 +403,13 @@ Contracts (interfaces): IF-009, IF-023
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
 | `load_known_srs(root)` | The set of real SR ids from system-requirements.csv (for the SR-ref warn). |  |
 | `load_ifs(rows)` | Real (non-`-000`) IF-### interface rows as dicts. Lenient — `trace.py` owns |  |
-| `arch_inventory(root)` | `(module_names, {module: {IF ids}})` parsed from `docs/architecture.md`'s |  |
+| `arch_inventory(root)` | `(module_names, {module: {IF ids}}, {module: {imported stems}})` parsed |  |
 | `interface_findings(root)` | Architecture-connectivity coverage warns (S5/WI-056; process.md §8), all |  |
 | `load_cmps(rows)` | Real (non-`-000`) CMP-### component rows as dicts (id, name, category, |  |
 | `module_components(root)` | `{normalized module key: set(real-looking CMP ids)}` from the LLR |  |
 | `component_top_view(root)` | The How-SW containment derivation (WI-073), shared by the right-sizing |  |
 | `knowledge_packs(root)` | Real knowledge-pack labels under `docs/knowledge/` (research-knowledge.md |  |
+| `cross_component_findings(root)` | The cross-CMP-edge-without-IF rule (WI-064; the AXES ratified model's |  |
 | `component_findings(root)` | The How-SW component-coverage finding(s) (process-options.md "Component |  |
 | `read_derived_phases(root)` | `{phase-label: gate-level-int}` parsed from the `# basis:` line of the |  |
 | `phase_anchors(wis)` | `({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs |  |

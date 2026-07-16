@@ -410,19 +410,23 @@ def load_ifs(rows):
 
 
 def arch_inventory(root):
-    """`(module_names, {module: {IF ids}})` parsed from `docs/architecture.md`'s
-    generated MODULE MAP block — the committed arch-map artifact (the same block
-    `gen_trajectory.sw_modules` reads for the How-SW view, and `gen_arch_map`
-    writes). `module_names` are the ``### `name``` headers; the IF map harvests
-    the `Contracts (interfaces): IF-###, ...` line `gen_arch_map` emits from a
-    module's `Contracts:` docstring. A small stable parser duplicated per the F5
-    convention (sw_modules also collects symbols; this one collects the Contracts
-    citations) — keep the header grammar in sync. Empty when the doc/block is
-    absent, so the coverage layer is vacuous pre-arch-map."""
+    """`(module_names, {module: {IF ids}}, {module: {imported stems}})` parsed
+    from `docs/architecture.md`'s generated MODULE MAP block — the committed
+    arch-map artifact (the same block `gen_trajectory.sw_modules` reads for the
+    How-SW view, and `gen_arch_map` writes). `module_names` are the
+    ``### `name``` headers; the IF map harvests the
+    `Contracts (interfaces): IF-###, ...` line `gen_arch_map` emits from a
+    module's `Contracts:` docstring; the import map harvests the
+    `Imports (internal): `a`, `b`` line (bare backticked module stems — the
+    cross-CMP rule's edge source, WI-064). A small stable parser duplicated per
+    the F5 convention (sw_modules also collects symbols; this one collects the
+    Contracts citations) — keep the header/line grammar in sync with
+    `gen_arch_map.build_map`. Empty when the doc/block is absent, so the
+    coverage layers are vacuous pre-arch-map."""
     md = root / ARCH_MD
     if not md.exists():
-        return set(), {}
-    names, contracts, current, inside = [], {}, None, False
+        return set(), {}, {}
+    names, contracts, imports, current, inside = [], {}, {}, None, False
     for line in md.read_text(encoding="utf-8", errors="replace").splitlines():
         if "BEGIN GENERATED MODULE MAP" in line:
             inside = True
@@ -439,7 +443,9 @@ def arch_inventory(root):
             names.append(current)
         elif current and line.strip().startswith("Contracts (interfaces):"):
             contracts.setdefault(current, set()).update(IF_ID_RE.findall(line))
-    return set(names), contracts
+        elif current and line.strip().startswith("Imports (internal):"):
+            imports.setdefault(current, set()).update(re.findall(r"`([^`]+)`", line))
+    return set(names), contracts, imports
 
 
 def interface_findings(root):
@@ -453,7 +459,7 @@ def interface_findings(root):
     inventory (nothing to connect)."""
     if not read_interfaces_check_enabled(root):
         return []
-    inventory, declared_contracts = arch_inventory(root)
+    inventory, declared_contracts, _imports = arch_inventory(root)
     if len(inventory) <= 1:
         return []  # nothing to connect (or no arch-map yet) — vacuous
     ifs = load_ifs(read_rows(root / IF_CSV))
@@ -695,11 +701,79 @@ def knowledge_packs(root):
     return sorted(p.stem for p in d.glob("*.md") if p.name.lower() != "readme.md")
 
 
+def cross_component_findings(root):
+    """The cross-CMP-edge-without-IF rule (WI-064; the AXES ratified model's
+    "Enforceability" ruling, process-options.md "Component layer"): an internal
+    import edge whose endpoints belong to *different* CMP-### components must be
+    covered by a declared IF-### row — an undeclared cross-component coupling is
+    a finding, mechanized from the same committed artifacts the other component
+    rules read. The CALLER gates the opt-out (`component_findings` shares
+    `docs/components-check`) and the WARN-plain / ERROR-under-`--strict`
+    promotion.
+
+    Vacuous by construction when any input is absent (never-breaking): no
+    arch-map `Imports (internal):` lines, no real CMP rows, an endpoint with no
+    `Component`-tag membership (coverage is the containment rule's job, not
+    this one's), or an import stem that resolves to no/multiple inventory
+    modules. A pair is covered when any real IF row's normalized
+    `(ThisProject, Counterpart)` matches the edge's endpoints in either
+    direction — a seam is one declared relationship, whichever side authored
+    the row."""
+    names, _contracts, imports = arch_inventory(root)
+    if not imports:
+        return []
+    cmp_ids = {c["id"] for c in load_cmps(read_rows(root / CMP_CSV))}
+    if not cmp_ids:
+        return []
+    raw = module_components(root)
+    membership = {n: tags & cmp_ids for n, tags in raw.items()}
+    covered = set()
+    for r in load_ifs(read_rows(root / IF_CSV)):
+        a, b = _norm_module(r["this"]), _norm_module(r["counterpart"])
+        if a and b:
+            covered.add((a, b))
+            covered.add((b, a))
+    # A bare imported stem (`agent_route`) resolves against the inventory's
+    # normalized module names (`scripts/agent_route`) by unique-stem match —
+    # the same resolution gen_arch_map applied when it emitted the line.
+    by_stem = {}
+    for m in names:
+        n = _norm_module(m)
+        if n:
+            by_stem.setdefault(n.rsplit("/", 1)[-1], set()).add(n)
+    out = []
+    for src in sorted(imports):
+        src_n = _norm_module(src)
+        src_cmps = membership.get(src_n, set())
+        if not src_cmps:
+            continue
+        for stem in sorted(imports[src]):
+            targets = by_stem.get(stem, set())
+            if len(targets) != 1:
+                continue  # unknown/ambiguous stem — not this rule's finding
+            dst_n = next(iter(targets))
+            dst_cmps = membership.get(dst_n, set())
+            if not dst_cmps or (src_cmps & dst_cmps) or (src_n, dst_n) in covered:
+                continue
+            out.append(
+                "cross-component import {} ({}) -> {} ({}) has no declared "
+                "IF-### seam — declare the interface row in {} or retag the "
+                "membership, or set docs/components-check: off".format(
+                    src_n,
+                    "/".join(sorted(src_cmps)),
+                    dst_n,
+                    "/".join(sorted(dst_cmps)),
+                    IF_CSV,
+                )
+            )
+    return out
+
+
 def component_findings(root):
     """The How-SW component-coverage finding(s) (process-options.md "Component
     layer"). Returns the finding strings ([] when opted out or clean). The caller
     prints them WARN plain and promotes them to ERROR under `--strict` (G2+).
-    Opt-out via `docs/components-check: off`. Two rules, both off the arch-map ⇒
+    Opt-out via `docs/components-check: off`. Three rules, all off the arch-map ⇒
     CMP join:
 
     - **Top-view right-sizing** (WI-073/FB5): vacuous when the arch-map inventory
@@ -713,7 +787,10 @@ def component_findings(root):
       regardless of the bound, because packs tie the *what* to the knowledge behind
       the *how* and that web must be robust wherever packs are enabled. Arms the
       existing join from pack presence; invents no new join, and is dormant (no
-      cost to a non-adopter) until `docs/knowledge/` holds a real pack."""
+      cost to a non-adopter) until `docs/knowledge/` holds a real pack.
+    - **Cross-CMP edges need a declared seam** (WI-064): see
+      `cross_component_findings` — an import edge between two components with
+      no covering IF-### row."""
     if not read_components_check_enabled(root):
         return []
     view = component_top_view(root)
@@ -739,6 +816,7 @@ def component_findings(root):
                 CMP_CSV,
             )
         )
+    out.extend(cross_component_findings(root))
     return out
 
 
