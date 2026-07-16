@@ -41,20 +41,23 @@ fan out; mutation of the integration branch remains serialized and gated.
 9. **Integration is serialized and atomic.** A result becomes done only after it
    is composed with the latest integration HEAD, reviewed as required, passes
    the combined bar, and advances the integration ref in one compare-and-swap.
-10. **Run-phase is retired; delivery phase is derived.** The coordinator
-    `docs/run-phase` file is deleted — phase is per-lane runtime state (§3.3) and
-    model routing keys off a lane's current activity. The delivery `Phase`
-    (v2/v3 lifecycle) is derived from the workflow: the integrator prefers the
-    largest phase bump among the trains it composes, and the registry retains a
-    `Phase` tag only for a *forward-deferred* SR (authored now, built in a later
-    phase), which cannot be derived. Because a campaign is only a WI attribute
-    (§1.3), campaign-tagged WIs parallelize wherever they are off-spine; the only
-    serialization is spine work itself (§5.1).
-11. **`Exclusive` keys and hard edges are planning-time declarations, not runtime
-    gates.** They are set when a WI is drafted, allocating its resources. A
-    runtime collision is *evidence the WI setup under-allocated* — the dispatcher
-    records it and reconciles normally (§5.2); it never pauses the run, and it
-    never infers, adds, or enforces a key/edge itself. Corrections land upstream,
+10. **The coordinator `docs/run-phase` file is retired; the SR delivery `Phase` is
+    left as-is.** The global PLAN/BUILD/REVIEW pointer is deleted: a build-out
+    lane routes from its own activity (build, then review), and a train's branch
+    carries a `{phase}-{gate}` name so its delivery phase is visible — and
+    crash-recoverable — without per-train phase state. Delivery-phase shifts
+    happen only at gates, and gate/spine work (SN/SR/TC) is serial and upfront
+    (§4), so there is no concurrent phase to derive or reconcile; the SR `Phase`
+    column and the derived-gate model are untouched by this campaign. Because a
+    campaign is only a WI attribute (§1.3), campaign-tagged WIs parallelize
+    wherever off-spine; the only serialization is spine work itself (§5.1).
+11. **`Exclusive` keys and hard edges are declared at planning time and enforced by
+    the dispatcher — but it never invents or silently mutates them.** They are set
+    when a WI is drafted (allocating its resources), and the scheduler serializes
+    on them at runtime (§5.1); that is their purpose. What the dispatcher must
+    *not* do is infer, add, or reactively enforce a rule it was not given. An
+    *undeclared* runtime collision is evidence the WI setup under-allocated: it is
+    recorded and reconciled (§5.2) without pausing the run, and corrected upstream
     in how future WIs are drafted.
 
 ## 2. Terms and ownership
@@ -64,7 +67,7 @@ fan out; mutation of the integration branch remains serialized and gated.
 | **Workstream / Campaign** | Human grouping and dashboard categorization | WI registry |
 | **Hard predecessor** | Correctness edge that blocks readiness | WI registry |
 | **Soft predecessor** | Advisory ordering only; never a safety edge | WI registry |
-| **Exclusive key** | Exceptional semantic resource that cannot be mutated concurrently | WI registry (declared at WI draft); collisions recorded for retrospective review, never enforced |
+| **Exclusive key** | Exceptional semantic resource that cannot be mutated concurrently | WI registry (declared at draft, enforced by the scheduler); the dispatcher never invents keys — undeclared collisions are recorded, not enforced |
 | **Frontier** | Queued WIs whose hard predecessors are integrated done | Scheduler, derived |
 | **Reservation** | Dispatcher claim preventing another worker from owning the WI | Dispatcher journal + train branch |
 | **Lane** | Temporary worker process and linked worktree | Dispatcher |
@@ -92,9 +95,9 @@ schema with:
   not be touched concurrently. Empty means optimistic execution, not unknown.
 - `BlockRef` — required when `Status=blocked`; points to an `OI-N`, spec anchor,
   or named external condition explaining what must change.
-- `EstTokens` — *(planned; design step 1)* a draft-time size estimate used by the
-  traincar clustering heuristic (§7), calibrated from session-log telemetry and
-  kept robust to error.
+- `EstTokens` — a draft-time size estimate feeding the traincar clustering
+  heuristic (§7), calibrated from session-log telemetry and kept advisory (the
+  scheduler stays robust to a wrong estimate).
 
 Tracked `Status` becomes:
 
@@ -112,8 +115,9 @@ train branches would otherwise carry mutually stale copies of the same registry.
 For a queued WI:
 
 - `waiting` — at least one hard predecessor is not integrated `done`;
-- `ready` — every hard predecessor is integrated `done`, or is an approved
-  ancestor on the same dispatcher-authorized train;
+- `ready` — every hard predecessor is integrated `done`, or is an
+  **accepted-on-train** ancestor (locally green and committed on the same
+  dispatcher-authorized train, not yet reviewed);
 - `reserved` — ready and claimed by exactly one live/recoverable train.
 
 Readiness is never stored as a column. Because every immediate hard predecessor
@@ -145,31 +149,35 @@ agent-resume --jobs auto     # adaptive up to the configured ceiling
 The Windows/POSIX launchers expose the same value through `AGENT_JOBS`. CPU
 count does not set it: model quotas, cost, agent availability, and integration
 throughput are the real constraints. A new scaffold defaults to two workers.
-During downstream migration a repo **flips to the same two-worker default** — a
-deliberate exercise of the framework, not an opt-in — and an adopter that wants a
-conservative first run pins `--jobs 1` for it. Running `agent-resume` remains the
+During downstream migration a repo **flips to the two-worker default only after
+its soft-edge audit passes** (§14) — the audit is what makes optimistic
+parallelism safe, so until it passes the repo runs `--jobs 1`, and the promotion
+to two workers is a recorded, deliberate step. Running `agent-resume` remains the
 permission-bypass consent act; a second parallel-consent file is unnecessary.
 
-### The launch sequence — drain, gate, then build-out
+### The launch sequence — reconcile, gate, then build-out
 
 A launch does not jump straight into parallel build-out; it establishes a clean
 baseline and clears the gated spine first, in three stages:
 
-1. **Drain to a clean baseline.** Bring every open `llm/*` branch to an
-   integrated state before planning new work — an interrupted prior run may have
-   left in-flight trains. The dispatcher completes each recoverable train through
-   its remaining review/integration (§11); a train that cannot merge autonomously
-   (blocked, needs-human, or an unreconciled dirty tree) is surfaced and the run
-   exits for a human rather than looping. The prior traincar schedule is then
-   **discarded** — new WIs may have been added, so it is stale; the schedule is
-   derived fresh each launch, never resumed.
+1. **Reconcile owned trains to a clean baseline.** Before planning fresh
+   traincars, resolve every dispatcher-owned branch — `llm/train/*` and
+   `llm/integrate/*`, **not** manual `llm/*` branches: integrate the recoverable,
+   resume the incomplete with a reconcile-first prompt (§11), and **quarantine**
+   only the genuinely stuck (ambiguous ownership, or a train needing a human). A
+   quarantined train never halts the run — disjoint ready work still proceeds
+   (§8). The prior traincar schedule is then **discarded** and re-derived fresh —
+   new WIs may have been added, so it is stale; only active reservations survive,
+   never a stale prospective plan.
 2. **Clear the gated spine, serially, whole-project.** Gate-affecting work is not
    fanned out — concurrent spine writes are the hazard §5.1 forbids. G1
    requirement work (draft/reopen SN/SR) runs as one coherent whole-project pass;
-   if the gate needs human ratification the run **exits for ratification** (under
-   `attended`/`human` gate authority; under `autonomous` the agent ratifies and
-   continues). G2 decomposition (LLR/TC) then runs the same way, with the same
-   ratification exit. Only a drafted, decomposed, ratified spine proceeds.
+   if the gate needs human ratification the run **exits for ratification** — under
+   `attended` (a human ratifies each batch) or `single-ratify` (a human ratifies
+   once at the `[g2]` close); under `autonomous` an independent LLM reviewer's
+   verdict closes the gate and the run continues. G2 decomposition (LLR/TC) then
+   runs the same way, with the same ratification exit. Only a drafted, decomposed,
+   ratified spine proceeds.
 3. **Plan and dispatch build-out.** With the spine settled, the work-advisor
    scans the unblocked frontier and packs WIs into **traincars** (§7), then runs
    the steady-state loop below — dispatching any traincar whose dependencies are
@@ -234,33 +242,36 @@ since that base:
 - disjoint paths take the fast path;
 - overlapping paths trigger integrator reconciliation;
 - textual conflicts are resolved on the integration staging branch;
-- an integrator-**authored** reconciliation is *material* and invalidates the old
-  approval, requiring a fresh review of the composed change; taking one side of a
-  conflict verbatim is **not** material;
+- any genuine conflict resolution — including taking one side (`ours`/`theirs`)
+  verbatim, or a hand-authored merge — invalidates the old approval and requires a
+  focused re-review of the composed change;
 - the combined commit bar always runs, even after a clean textual apply.
 
-**Material edit — the bright line.** Re-review is required iff the composed tree
-contains, in any non-generated product or doc file, a hunk that is **not**
-byte-identical to one side of the merge. A clean 3-way apply, and a conflict
-resolved by keeping one side verbatim, never re-review; any hunk the integrator
-authors (interleaving two edits, reconciling two logic changes, hand-adjusting a
-value) always does. Generated artifacts are exempt — they are regenerated, not
-reviewed. The rule is mechanical so the boundary cannot drift between sessions.
+**When integration re-review is required.** A clean, conflict-free apply (a 3-way
+merge with no conflict), and a generated artifact recreated from reviewed sources,
+never re-review. **Any genuine conflict resolution does** — *including* choosing
+one side (`ours`/`theirs`) verbatim, because a conflict means two reviewed changes
+were incompatible and one was dropped; byte-identity proves only *where the text
+came from*, not that the composed result satisfies both WIs. Hand-authored
+reconciliation likewise re-reviews. The renewed review is **focused** on the
+composed conflict and the requirements it touches — it does not repeat every
+original review.
 
 Telemetry records overlap, conflict, re-review, and rollback rates. A repeated
 collision is **under-allocation evidence** (§1.11): the run reconciles and
 continues — it never pauses — and a human reviews the pattern in retrospect,
 declaring an `Exclusive` key or hard edge on any *not-yet-run* WI that shares the
-resource (it cannot un-collide work already done). The dispatcher never infers or
-enforces a key itself, and the system does not demand speculative path metadata
-before evidence shows a need.
+resource (it cannot un-collide work already done). The dispatcher enforces only
+*declared* keys, never one of its own invention, and the system does not demand
+speculative path metadata before evidence shows a need.
 
 ## 6. Lane and branch lifecycle
 
 For each accepted candidate the dispatcher:
 
-1. chooses a unique train id, e.g. `WI-180-a31f`;
-2. creates `llm/train/WI-180-a31f` from the current integration HEAD;
+1. chooses a unique train id, e.g. `v3-g3-WI-180-a31f` — a `{phase}-{gate}` prefix
+   recording the delivery phase and gate the train builds within;
+2. creates `llm/train/v3-g3-WI-180-a31f` from the current integration HEAD;
 3. creates/reuses a linked worktree leased to that branch;
 4. writes the runtime reservation atomically;
 5. launches an internal worker with explicit `--wi`, `--train`, and worktree
@@ -285,14 +296,14 @@ or ids and names the exact reviewed code commit.
 
 ## 7. Traincars — continuation, execution, and clustering
 
-After a WI reaches its required local commit/review boundary, the dispatcher
-may authorize the same lane to pull its successor onto the train. Continuation
-requires all of the following:
+After a WI reaches its local commit boundary (locally green and committed, not
+yet reviewed), the dispatcher may authorize the same lane to pull its successor
+onto the train. Continuation requires all of the following:
 
 1. the current WI has exactly one unclaimed hard successor;
 2. that successor is queued and not reserved elsewhere;
 3. every other hard predecessor of the successor is already integrated or is an
-   approved ancestor on this train;
+   accepted-on-train ancestor on this train;
 4. the successor has no explicit exclusive conflict with another active train;
 5. continuation does not cross a spine/gate/attestation boundary;
 6. its critique/review policy does not require an integration checkpoint; and
@@ -310,53 +321,60 @@ two unintegrated sibling branches.
 **Execution model — one Build, one Review per traincar.** A traincar is the
 review unit: one Build pass (planning/optimization included as each WI needs)
 produces **one commit per WI** on the branch, then **one Review** covers the
-traincar's combined diff. This single-review model is safe by construction
-because the clustering rule (below) only groups **review-compatible** WIs into a
-multi-WI traincar — off-spine, bounded, not critique-gated, no boundary crossing.
-A strong, spine-touching, critique-verified, or high-risk WI runs as its **own
-single-WI traincar** with its own review. Every WI stays a distinct
-commit/evidence unit, and any material integration edit (§5.2) is reviewed again
-regardless.
+traincar's combined diff. A successor within the train depends on its predecessor
+being **accepted-on-train** (locally green and committed), not reviewed — the
+review comes once, at the end — and **no constituent WI becomes `done` until the
+whole train is reviewed and integrated atomically** (§9). This single-review model
+is safe by construction because the clustering rule (below) only groups
+**review-compatible** WIs into a multi-WI traincar — off-spine, bounded, not
+critique-gated, no boundary crossing. A strong, spine-touching, critique-verified,
+or high-risk WI runs as its **own single-WI traincar** with its own review. Every
+WI stays a distinct commit/evidence unit, and any integration conflict resolution
+(§5.2) triggers a focused re-review regardless.
 
-### Traincar clustering — the work-advisor (research-informed, design open)
+### Traincar clustering — the work-advisor (research-informed)
 
-Packing WIs into traincars is the open design piece. It is **resource-constrained
-DAG scheduling with task clustering**, and the literature says keep it simple:
+Packing WIs into traincars is **resource-constrained DAG scheduling with task
+clustering**. The literature offers **heuristics, not guarantees for this
+setting** — its bounds assume identical machines, known non-preemptive durations,
+and no review/rework/conflict loops, none of which hold for heterogeneous LLM
+workers with retries, review gates, and integration conflicts. So the following
+are design *inspiration*; **no approximation bound is claimed for this system**:
 
 - **List scheduling (Graham, *Bell System Technical Journal*, 1966)** — greedily
-  dispatching ready tasks to free workers in priority order is within `(2 − 1/m)`
-  of optimal makespan for `m` workers, even with an imperfect priority. The "no
-  optimal scheduler needed" license; it is already the shape of §4's dispatch loop.
+  dispatch ready tasks to free workers in priority order. Its `(2 − 1/m)` makespan
+  bound holds only in the classical model; here it just says a simple greedy
+  dispatcher is a reasonable default — already the shape of §4's loop.
 - **HEFT (Topcuoglu, Hariri & Wu, *IEEE TPDS* 13(3):260–274, 2002)** — prioritize
-  by *upward rank* (critical path to the exit) on heterogeneous workers. §4's
-  `remaining hard-path length` ordering is the upward-rank heuristic; the model
-  tiers are the heterogeneous workers.
+  by *upward rank*, a **cost-weighted** critical path. §4's unweighted `remaining
+  hard-path length` is *criticality-inspired*, **not** HEFT's weighted upward
+  rank; a weighted version (using `EstTokens` / measured API-seconds) is the
+  HEFT-shaped upgrade for later.
 - **DAG clustering / coalescing (Sarkar, MIT Press, 1989 — edge-zeroing; DSC —
   Yang & Gerasoulis, *IEEE TPDS*, 1994)** — the batch-vs-parallel trade-off as
   computation-vs-communication. Here the "communication cost" is per-traincar
   **integration + review overhead**: group WIs into one traincar when the overhead
-  saved exceeds the parallelism and failure-isolation given up — so small
-  mechanical off-spine WIs batch, substantial ones stay separate. Clustering must
-  respect WI precedence (no traincar cycle).
-- **LPT / bin packing (Graham, *SIAM J. Applied Math*, 1969 — the `4/3 − 1/3m`
-  bound)** — balancing sized WIs across workers needs a per-WI size estimate,
-  which is why the `EstTokens` column (§3.1) is a prerequisite.
+  saved exceeds the parallelism and failure-isolation given up — small mechanical
+  off-spine WIs batch, substantial ones stay separate. Clustering must respect WI
+  precedence (no traincar cycle).
+- **LPT / bin packing (Graham, *SIAM J. Applied Math*, 1969)** — balancing sized
+  WIs needs a per-WI size estimate, so `EstTokens` (§3.1) feeds clustering. The
+  `4/3` bound is classical-model only; treat estimates as advisory.
 
 Applied analogs to crib rather than reinvent: `make -j` / Ninja (job-limited DAG
 dispatch); Bazel / Nx / Turborepo (build-target DAG + affected-set + caching);
 merge queues — GitHub merge queue, Bors, and **Zuul**'s speculative dependent
 pipelines — for the integration-ordering half (the §13 speculative-merge-queue
 rung); Airflow **pools** + `priority_weight` and Temporal **durable execution**
-for resource caps and the §11 recovery semantics.
+for resource caps and the §11 recovery semantics. (If this survey grows, it moves
+to `docs/knowledge/` and the plan keeps only the normative rule.)
 
-**Estimates come from telemetry already collected.** The session logs record
-`tokens`, `cost-usd`, `turns`, and `api-secs` per WI, so `EstTokens` can be
-*calibrated from historical actuals* (by BuildTier / SpecRef size / file-touch
-count) rather than guessed — and the scheduler is kept **robust to bad estimates**
-(Graham's bound holds within ~2× even when sizes are wrong, so precision has
-diminishing returns).
+**Cost signal.** Calibrate `EstTokens` from telemetry already logged (`tokens`,
+`cost-usd`, `turns`, `api-secs`) rather than guessing, and prefer **wall / API
+seconds** over raw tokens as the scheduling cost — tokens do not capture review
+and integration latency. Keep the scheduler robust to a wrong estimate.
 
-**Design path (in order):**
+**Design path (front of the campaign, in order):**
 
 1. add the `EstTokens` estimate to the WI schema (draft-time, telemetry-calibrated);
 2. design the clustering heuristic (the batch-vs-parallel rule above);
@@ -364,7 +382,8 @@ diminishing returns).
    traincars, and a traincar whose dependencies are all integrated is fed to a
    free LLM worker thread as one opens up (list scheduling over the traincar DAG).
 
-These three precede Slice D's dispatcher (§15).
+These three are foundational to Slice D's dispatcher (§15) — built with it, not
+deferred.
 
 ## 8. Review semantics
 
@@ -396,8 +415,7 @@ deterministic queue order, the integrator:
    bookkeeping;
 4. resolves overlap/conflicts against the already-integrated tree;
 5. re-reviews if the resolution was material;
-6. updates WI rows to `done` with their Deliverables, and records the largest
-   delivery-phase advance among the composed trains (§10 Delivery `Phase`);
+6. updates WI rows to `done` with their Deliverables;
 7. appends the durable integration/session evidence to `docs/log.md`;
 8. regenerates root `status.md` and all generated artifacts;
 9. runs the combined commit bar, and the full/gate bar when the train closes a
@@ -463,24 +481,27 @@ dispatcher state plus committed evidence.
 
 ### `docs/run-phase`
 
-Delete it. The PLAN/BUILD/REVIEW session phase was a single-lane global; in the
-parallel model each lane's phase is its runtime state (§3.3 `building` /
-`reviewing` / …) and model routing keys off that activity, not a tracked file.
-Nothing reads a repo-global run-phase, and its routing wiring is removed.
+Delete the global file. A build-out lane routes from its own activity — build,
+then review — and its train branch is named `{phase}-{gate}` (e.g.
+`llm/train/v3-g3-WI-180-…`), so the delivery phase is recoverable from the branch
+after a crash, without `out/dispatch/`. The richer routing phases (PLAN,
+DESIGN-CHECK, CRITIQUE, G1/G2 drafting) are **not** build-out activities: they
+belong to the serial, upfront gate/spine pass (§4), not a parallel lane, so they
+need no per-lane global pointer. Nothing reads a repo-global run-phase, and its
+routing wiring is removed.
 
 ### Delivery `Phase` (v2/v3)
 
-Derive it; do not store a live pointer. The **current active phase** follows from
-which `[phase]-[gN]` gate anchors are closed (already `derive_gate.py`'s basis);
-at integration the integrator prefers the **largest phase bump** among the trains
-it composes, so a phase advance made on one lane surfaces at merge. Remove the
-per-SR `Phase` column **except** where it records a **forward deferral** — an SR
-authored now but scheduled for a later phase (the phase-deferred exemption),
-which is intent, not a derivable workflow fact. A repo that never defers drops
-the column entirely. Because a campaign is only a WI attribute and never a
-scheduling unit (§1.3), campaigns need no isolation machinery: campaign-tagged
-WIs parallelize wherever they are off-spine, and the only serialization is spine
-work itself (§5.1).
+**Left unchanged by this campaign.** The SR `Phase` column is authored
+scope/deferral metadata consumed by the derived-gate model (`derive_gate.py`),
+and phase shifts occur only at gates — during serial, upfront gate/spine work,
+never on a parallel build-out train. So there is nothing to derive or reconcile
+at merge: the column, its meaning, and the gate derivation stay exactly as they
+are. A train's `{phase}-{gate}` branch name simply records which already-ratified
+phase it builds within. Because a campaign is only a WI attribute and never a
+scheduling unit (§1.3), campaigns need no isolation machinery — campaign-tagged
+WIs parallelize wherever off-spine, and the only serialization is spine work
+itself (§5.1).
 
 ## 11. Crash safety and recovery
 
@@ -579,9 +600,9 @@ The implementation must remain stdlib-only, Python 3.8+, Windows/POSIX.
 
 Migration is explicit because this changes default execution:
 
-1. `downstream-resync` documents that an upgraded repo **flips to the two-worker
-   default** (a deliberate exercise of the framework) and the `--jobs 1` per-run
-   escape hatch.
+1. `downstream-resync` documents that an upgraded repo runs `--jobs 1` until its
+   soft-edge audit (item 9) passes, then **flips to the two-worker default** as a
+   recorded, deliberate promotion; `--jobs 1` remains the per-run escape.
 2. Existing `docs/next-wi` content is translated, if meaningful, into WI
    `Priority`, then the file is removed.
 3. Legacy `active` WI rows are reconciled to queued + recovered reservation or
@@ -594,8 +615,8 @@ Migration is explicit because this changes default execution:
    check, preventing a half-migrated state where agents still act from prose.
 7. A fresh scaffold ships `agent-resume` parallel-by-default at two workers and
    contains no `next-wi` or track directory.
-8. `docs/run-phase` is deleted and its routing wiring removed; the delivery
-   `Phase` column is dropped except on forward-deferred SRs (§10).
+8. `docs/run-phase` is deleted and its routing wiring removed; the SR `Phase`
+   column and the derived-gate model are left unchanged (§10).
 9. Before first parallel enable, existing `~` soft predecessor edges are audited
    and any that encode a *correctness* (not merely ordering) dependency are
    promoted to hard edges — the optimistic scheduler treats every soft edge as
@@ -613,7 +634,7 @@ from the registry at filing.
 | **A — Scheduler contract + schema** | `schedule.py`; `blocked`, `Priority`, `Exclusive`, `BlockRef`, `EstTokens`; frontier/explain/simulation tests | none | Foundation |
 | **B — De-author status and remove next-wi** | prompt/process/check/bootstrap migration; generated root status contract | A | Can run beside C after A |
 | **C — Worker assignment mode** | replace internal track assumptions with explicit WI/train/lane assignment; collision-safe logs/reviews | A | Can run beside B after A |
-| **D — Dispatcher + worktree pool** | default `--jobs 2`; the drain→gate→build-out launch sequence (§4); traincar clustering + traincar-DAG dispatch (§7); reservations; dynamic refill; pause/blackout/model-capacity supervision | A, C | Central fan-out engine |
+| **D — Dispatcher + worktree pool** | default `--jobs 2`; the reconcile→gate→build-out launch sequence (§4); traincar clustering + traincar-DAG dispatch (§7); reservations; dynamic refill; pause/blackout/model-capacity supervision | A, C | Central fan-out engine |
 | **E — Change-train continuation** | unary-chain rule; fork/join behavior; caps; review-boundary composition | D | Can overlap F only if code ownership is split deliberately |
 | **F — Atomic integrator** | staging branches; conflict/re-review; registry/log/status regen; CAS advance | B, D | Can overlap E only with bounded file ownership |
 | **G — Recovery + fault injection** | journal; Git reconstruction; dirty/missing worktree; duplicate reservation; crash-at-every-boundary fixtures | D, F | Must prove deletion of `out/dispatch/` is recoverable |
@@ -643,9 +664,9 @@ their touched surfaces are split during planning; H is the explicit join.
 - one lane blocks/fails while another integrates;
 - overlapping edits reach integrator reconciliation and combined tests;
 - a material conflict resolution invalidates and renews review;
-- a verbatim one-side conflict resolution integrates **without** re-review, while
-  an integrator-authored hunk **forces** it (the §5.2 material bright line);
-- the integrator records the largest delivery-phase advance among composed trains;
+- a clean, conflict-free apply integrates **without** re-review; any conflict
+  resolution — including a verbatim one-side pick — forces a focused re-review
+  (§5.2);
 - the branch-age advisory lists stale `llm/*` refs and splits merged from
   unintegrated, never deleting;
 - spine/gate work remains serialized;
@@ -668,7 +689,9 @@ commit, and immediately before/after root CAS. For each point:
 
 - Windows and POSIX worktree/process/lock paths;
 - `--jobs 1` behavior matches the serial semantic outcome;
-- routing works with `docs/run-phase` absent (phase resolves per-lane);
+- routing works with `docs/run-phase` absent — a build-out lane's phase resolves
+  from its activity and its `{phase}-{gate}` branch name, recoverable without
+  `out/dispatch/`;
 - legacy `--track` compatibility window;
 - existing managed routing, critique, pause, blackout, privacy, gate, and push
   policy tests remain green;
@@ -686,8 +709,9 @@ commit, and immediately before/after root CAS. For each point:
 - Workers never use lane-local status/next/run-state files and never mutate root
   coordination truth.
 - Root status is reference-only, integrator-generated, and freshness-gated.
-- `docs/run-phase` is gone and model routing resolves per-lane; delivery phase is
-  derived, with the integrator taking the largest bump at merge.
+- `docs/run-phase` is gone; a build-out lane routes from its activity and its
+  `{phase}-{gate}` branch name, and the SR `Phase` column / derived-gate model are
+  unchanged.
 - Ordinary overlapping work is reconciled and revalidated; protected/exclusive
   work demonstrably serializes.
 - The branch-age advisory reports stale `llm/` branches (merged vs. unintegrated)

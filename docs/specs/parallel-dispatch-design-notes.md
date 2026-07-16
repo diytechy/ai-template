@@ -33,26 +33,29 @@ questions that changed that plan without restating its contract.
   ownership even when the entire directory is missing.
 - **Should `agent-resume` parallelize automatically?** Yes. New scaffolds default
   to two workers; `--jobs 1` is the explicit serial mode.
-- **Do migrated repos flip to parallel too?** Yes — deliberately, as an exercise
-  of the framework, not just fresh scaffolds; `--jobs 1` is the per-run
-  conservative escape.
-- **Do we still need `docs/run-phase`?** No. The coordinator PLAN/BUILD phase
-  becomes per-lane runtime state; the file is deleted and model routing keys off
-  a lane's current activity.
-- **What happens to the delivery `Phase` (v2/v3)?** Derived from closed gate
-  anchors; the integrator prefers the largest phase bump among composed trains;
-  the `Phase` column survives only for a forward-deferred SR (intent, not a
-  derivable fact). Campaign is only a WI attribute, never a scheduling unit, so
-  campaign-tagged WIs parallelize wherever off-spine — no isolation machinery.
-- **When does an integration edit force re-review?** Only a *material* edit — a
-  hunk the integrator authors that is not byte-identical to one side of the merge.
-  Clean applies and verbatim one-side resolutions do not; generated artifacts are
-  exempt. The rule is mechanical so it cannot drift between sessions.
-- **Are `Exclusive` keys / hard edges runtime rules?** No — they are *planning-time
-  declarations* set at WI draft. A runtime collision is under-allocation evidence:
-  the run records it and reconciles, never pausing; a human corrects future WI
-  drafts (and can declare a key on a not-yet-run WI sharing the resource). Never
-  inferred or enforced by the dispatcher.
+- **Do migrated repos flip to parallel too?** Yes, but only **after the soft-edge
+  audit passes** — until then `--jobs 1`, then a recorded, deliberate promotion;
+  fresh scaffolds default to two.
+- **Do we still need `docs/run-phase`?** No — the coordinator file is deleted. A
+  build-out lane routes from its activity (build → review), and its train branch
+  is named `{phase}-{gate}` so the phase is crash-recoverable without
+  `out/dispatch/`. The richer routing phases (PLAN/DESIGN-CHECK/CRITIQUE/G1-G2)
+  belong to the serial upfront gate pass, not a parallel lane.
+- **What happens to the delivery `Phase` (v2/v3)?** **Left unchanged this
+  campaign.** It feeds `derive_gate.py` and shifts only at gates (serial, upfront),
+  so there is nothing to derive or reconcile at merge — the column, its meaning,
+  and the gate model stay as they are. (The earlier "derive it / largest bump at
+  merge" idea was dropped as out-of-scope and underdefined.)
+- **When does an integration edit force re-review?** **Any genuine conflict
+  resolution** — including choosing one side (`ours`/`theirs`) verbatim, because a
+  conflict means a reviewed change was dropped and byte-identity proves only
+  provenance, not that the merge satisfies both WIs. Clean conflict-free applies
+  and regenerated artifacts do not; the renewed review is focused on the composed
+  conflict.
+- **Are `Exclusive` keys / hard edges runtime rules?** Yes — declared at WI draft
+  and **enforced** by the scheduler (that is their purpose). What the dispatcher
+  never does is *invent* one: an undeclared collision is under-allocation evidence,
+  recorded and reconciled without pausing, and corrected in future WI drafts.
 - **The DAG is checked before commit — what more builds confidence?** The
   validator confirms declared edges are well-formed but cannot detect a
   *forgotten* edge. Confidence = a one-time audit promoting real `~` soft edges to
@@ -60,27 +63,23 @@ questions that changed that plan without restating its contract.
 - **How are stale `llm/` branches handled?** An advisory rolling check (like the
   push/privacy checks) reports train/integrate branches older than ~2 days,
   splitting merged from unintegrated, and never deletes — human-driven for now.
-- **How is a launch sequenced?** Drain every open `llm/*` branch to an integrated
-  baseline (surface + exit if one cannot merge), discard the stale traincar
-  schedule, clear G1 then G2 spine work serially at whole-project scope (exit for
-  ratification under attended/human authority; self-ratify under autonomous), then
-  plan and dispatch parallel build-out.
+- **How is a launch sequenced?** **Reconcile** dispatcher-owned trains
+  (`llm/train|integrate/*`) to a clean baseline — integrate recoverable, resume
+  incomplete, quarantine only the stuck (never halting disjoint work) — discard the
+  stale schedule, clear G1/G2 spine serially (exit for ratification under
+  `attended`/`single-ratify`; self-close under `autonomous`), then dispatch
+  build-out.
 - **How does a traincar execute?** One Build pass (plan/optimize as needed, one
-  commit per WI) → one Review over the traincar's combined diff. Safe because
-  clustering only groups review-compatible WIs (off-spine, bounded, non-critique,
-  no boundary crossing); strong/spine/critique work runs as its own single-WI
+  commit per WI) → one Review over the combined diff. Successors depend on an
+  **accepted-on-train** (locally green, not yet reviewed) ancestor, and **no WI is
+  `done` until the whole train integrates**. Clustering only groups
+  review-compatible WIs; strong/spine/critique work runs as its own single-WI
   traincar.
-- **How are WIs packed into traincars and dispatched?** The open design piece —
-  resource-constrained DAG scheduling with clustering. Design path: (1) add an
-  `EstTokens` estimate to WIs, calibrated from session telemetry; (2) design the
-  batch-vs-parallel clustering heuristic; (3) define traincar-DAG ingestion (a
-  traincar whose deps are all integrated feeds a free worker thread as one opens
-  up). Research anchors: list scheduling (Graham 1966 — greedy is within 2× of
-  optimal, so no optimal scheduler is needed), HEFT upward-rank (Topcuoglu et al.
-  2002), DAG clustering / DSC (Sarkar 1989; Yang & Gerasoulis 1994), LPT
-  bin-packing; applied analogs `make -j`/Ninja, Bazel/Nx/Turborepo, merge queues
-  (GitHub/Bors/Zuul speculative pipelines), Airflow pools + Temporal durable
-  execution.
+- **How are WIs packed into traincars and dispatched?** Resource-constrained DAG
+  scheduling with clustering, **in scope from the start** (not deferred). Design
+  path: `EstTokens` estimate → clustering heuristic → traincar-DAG ingestion. The
+  research anchors and their honest caveats (heuristics, **not** guarantees for
+  this setting — no approximation bound is claimed) live in the plan §7.
 
 ## Evidence that changed the earlier proposal
 
