@@ -46,6 +46,11 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `blackout_wake(line, now)` | Seconds until the current UTC weekday blackout window ends, or `None` when |  |
 | `sanitize_track(name)` | A track name becomes a lane directory segment, so restrict it to a safe |  |
 | `lane_dir(docs, track)` | The coordination lane for a track: docs/tracks/<track> when a track is |  |
+| `sanitize_train(name)` | A train id becomes a branch segment, a log-file prefix, and a reviews/ |  |
+| `parse_wi_list(spec)` | The ordered assigned-WI list from a `;`/`,`/whitespace-joined --wi value. |  |
+| `load_wi_registry(root)` | {WI-ID: raw row dict} from the worktree's tracked WI registry — the |  |
+| `train_evidence(root, base)` | (built, blocked) read from the train branch's committed trailers in |  |
+| `worker_prompt(root, wi_rows, wi, train, base, rework_text)` | The per-session worker prompt (SR-060): the WI row + SpecRef + | SR-060 |
 | `acquire_lock(lock_path)` | Take the per-worktree coordinator lock, or return an error string. |  |
 | `release_lock(lock_path)` | Drop the coordinator lock: closing the descriptor releases the OS lock. |  |
 | `guardrails_apply(policy, model)` | Whether to inject the guardrails core for a session on `model`, under |  |
@@ -77,7 +82,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041
 | `per_turn_context(meta)` | Average context carried per turn (cache-read tokens / turns, humanized |  |
 | `regenerate_index(docs_dir)` | Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata |  |
 | `commit_telemetry(root, session, label, paths)` | Commit the coordinator's own bookkeeping in its own `telemetry:` commit, |  |
-| `next_session_number(iter_dir)` | Next NNN, continuing across coordinator restarts. |  |
+| `next_session_number(iter_dir, train)` | Next NNN, continuing across coordinator restarts. A worker's numbering |  |
 | `preflight(root, template, args)` | Refuse to start iteration 1 on a broken footing. Returns the list of |  |
 | `summarize_session_line(line)` | Parse one line of session output into zero or more compact console |  |
 | `echo_session_line(line)` | Scrolling live echo (WI-125): print each compact summary of one output |  |

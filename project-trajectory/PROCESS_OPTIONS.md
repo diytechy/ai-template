@@ -2116,6 +2116,23 @@ the single-lane behavior** (with `docs/` itself as the lane); its only addition
 there is the same per-worktree lock, which merely refuses a second coordinator in
 one checkout.
 
+**Worker assignment (parallel dispatch) — the tracks successor.** The
+dispatcher-era coordinator replaces long-lived tracks with **explicit worker
+assignments** (`--wi "WI-###[;…]" --train <id> [--worktree <path> --base <sha>
+--rework <file>]`): one dispatcher-assigned traincar built on branch
+`llm/train/<id>` in its leased worktree. A worker has **no lane files** — it
+never reads or writes `run-state`/`status.md`/`pause` and never regenerates
+generated root artifacts (integrator-owned); its prompt is assembled from
+`AGENTS.md` + the WI row + its SpecRef + predecessor context + the current
+train diff + any rework finding (never a `status.md` resume), and its **result
+is committed evidence**: each WI's final commit carries `WI:`/`Train:`/`Base:`
+trailers (a blocker commits `Blocked-WI:` + `BlockRef:` instead; exit 3). Its
+session logs (`docs/iteration/<train>-NNN-*.log`) and review verdicts
+(`docs/reviews/<train>/NNN-<PHASE>-<sha7>.md`, naming the **exact reviewed
+commit**) are train-scoped so parallel workers never collide at integration.
+`--track` is **deprecated** for one compatibility window (legacy behavior
+unchanged, warned); new launchers never emit it.
+
 **Throughput caution.** Under `attended` gate authority, every track's human asks
 converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The
 dispatcher's job is to aggregate those asks into one review surface, and 2–3

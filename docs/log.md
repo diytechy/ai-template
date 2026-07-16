@@ -7232,3 +7232,76 @@ in-process model.
 **WI-181** (Slice C — explicit `--wi`/`--train`/worktree assignment, collision-safe
 logs/reviews, `--track` deprecation window), then **WI-182** (D). Grinding under
 `gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-16 — v4 Slice C (WI-181): explicit worker assignment mode (SR-060 Verified)
+
+**What.** The worker half of the dispatcher contract (spec §6): `agent_loop.py`
+gains `--wi "WI-###[;…]" --train <id> [--worktree <path> --base <sha> --rework
+<file>]` — one dispatcher-assigned traincar built on branch `llm/train/<id>` in
+its leased worktree.
+
+- **No lane files.** A worker never reads/writes `run-state` (the three
+  NEEDS-HUMAN page writes are gated off; its exit code is the page), never reads
+  `docs/pause` (dispatcher-owned, §12), never regenerates
+  `docs/iteration_index.md` (integrator-owned generated artifact, §5.1), and its
+  session state is `RUNNING` by construction — end states come from evidence.
+- **Prompt = the assignment.** `worker_prompt()` assembles AGENTS.md pointer +
+  WI row + SpecRef + hard-predecessor context (status + trimmed deliverable) +
+  the current train diff (`base..HEAD`, clipped) + any rework finding — never a
+  `status.md` resume, never `next-wi`. The WI-076 dirty-tree reconcile note
+  doubles as the §11 dirty-worktree recovery prompt.
+- **Result = committed evidence.** Each WI's final commit carries
+  `WI:`/`Train:`/`Base:` trailers; a blocker commits `Blocked-WI:` + `BlockRef:`
+  instead → exit 3 (the durable disposition lands via the integrator, Slice F).
+  `train_evidence()` reads trailers back from git alone, so a relaunched worker
+  whose train already carries complete evidence exits DONE **without spending a
+  session** (§11 recovery semantics; proven by test).
+- **Collision-safe evidence (SR-060).** Session logs
+  `docs/iteration/<train>-NNN-*.log` with train-scoped numbering; review
+  verdicts `docs/reviews/<train>/NNN-<PHASE>-<sha7>.md` naming the **exact
+  reviewed commit**; train-scoped scoreboard. Two concurrent workers in linked
+  worktrees proven disjoint end-to-end.
+- **Managed-mode integration.** Per-WI BuildTier pin restored from the reserved
+  WI row (the pin that used to ride `docs/next-wi`); escalation tier-up still
+  wins. A CHANGES-REQUESTED round becomes **assignment-scoped in-process
+  rework** (verdict text embedded in the next build prompt) — never the lane's
+  tracked `rework-wi` pointer on a train branch.
+- **Fail-closed preflight.** `--wi`/`--train` pairing, slug/traversal guards,
+  the `llm/train/<id>` branch guard (detached HEAD fails closed), unknown/done
+  assigned WIs, unresolvable `--base`, and mutual exclusion with
+  `--track`/`--interactive`. **`--track` is deprecated** (one compatibility
+  window): old behavior intact + a warning; launchers never emit it.
+
+**Tests.** `tests/test_agent_loop_worker.py` — 22 fixtures (TC-061): the
+trailer-evidence contract, DONE/BLOCKED/budget exits, resume-without-a-session,
+two concurrent workers (non-colliding train-prefixed logs, untouched primary
+worktree), managed review evidence naming the reviewed HEAD, fail-closed
+preflight ×4, and the `--track` deprecation warning. One implementation bug
+found and fixed by the suite: `git()`'s stdout `.strip()` ate the leading TAB of
+the trailer-scan format, shifting fields left (a blocked commit read as built) —
+fixed with a line sentinel.
+
+**Deviations from spec.** (1) In worker mode the review round still fires
+per-WI-commit (the existing S8 dispatch), not once per multi-WI traincar — the
+one-review-cycle-per-traincar model is Slice E's scope (SR-062); for the
+single-WI trains Slice D starts with, the two are identical. (2) A DESIGN-CHECK
+escalation inside a worker session reuses the assignment prompt (never a status
+resume); the dedicated design-check framing stays loop-side.
+
+**Byte deltas (budgeted files).** PROCESS_OPTIONS.md **141,734 → 142,919
+(+1,185 B**: the "Worker assignment (parallel dispatch)" downstream contract —
+the spec doc is meta-repo-local, so the shipped rule statement must live here;
+baseline re-stamped in byte-budget-guard ×3). AGENTS.template.md 9,978
+(untouched). PROCESS.md 59,768 (untouched).
+
+**Tests / end green (real output).** `pytest -q -n auto -m smoke` → **669
+passed, 2 skipped** (82 s). Full agent_loop family (123 tests incl. the 22 new)
+green; ruff clean; `check_docs --stale` OK 0 broken; `gen_trajectory`
+regenerated. SR-060 + LLR-061 + TC-061 (`Automated=Yes`,
+`Evidence=tests/test_agent_loop_worker.py`) → **Verified** (autonomous
+single-agent adversarial self-review; the review found + fixed the strip-bug
+above and added the `--base` fail-closed guard).
+
+**Handoff.** Slice C done. Next: **WI-182** (Slice D — dispatcher + worktree
+pool + reservations; the central fan-out engine), then E–G per the §15 DAG.
+Grinding under `gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).
