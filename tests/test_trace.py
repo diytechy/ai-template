@@ -916,3 +916,76 @@ def test_ratify_out_writes_linkable_file(scaffold):
     assert "# Ratification hierarchy" in written
     assert "The system shall add two numbers." in written
     assert "trace: wrote ratification view" in proc.stdout
+
+
+# --- WI-081 Slice C: the render/exit extraction + M8 pre-indexing --------------
+# The report render/console/exit block moved out of main() into render_report /
+# render_console / exit_code (byte-identity pinned by test_trace_golden.py). These
+# unit-check the two new pure helpers the golden net does not isolate: the M8
+# ref-bucket index and the gate exit-code policy.
+
+
+def test_bucket_by_ref_groups_preserves_order_and_parses_multi():
+    from conftest import load_script
+
+    trace = load_script("trace")
+    rows = [
+        {"LLR-ID": "LLR-001", "SR-Refs": "SR-001"},
+        {"LLR-ID": "LLR-002", "SR-Refs": "SR-002"},
+        {"LLR-ID": "LLR-003", "SR-Refs": "SR-001;SR-002"},
+    ]
+    index = trace._bucket_by_ref(rows, "SR-Refs")
+    # Grouped by each referenced id, children kept in input order.
+    assert [r["LLR-ID"] for r in index["SR-001"]] == ["LLR-001", "LLR-003"]
+    assert [r["LLR-ID"] for r in index["SR-002"]] == ["LLR-002", "LLR-003"]
+    # A row whose ref cell names two parents appears under BOTH (cell parsed once).
+    assert rows[2] in index["SR-001"] and rows[2] in index["SR-002"]
+    # An id nobody references is simply absent (no empty buckets); a blank/absent
+    # ref cell contributes nothing.
+    assert "SR-999" not in index
+    assert trace._bucket_by_ref([{"SR-Refs": ""}, {"SR-Refs": None}], "SR-Refs") == {}
+
+
+def _findings_stub(trace, **overrides):
+    """A Findings bag with every attribute exit_code reads defaulted to empty."""
+    f = trace.Findings()
+    for attr in (
+        "orphans",
+        "status_findings",
+        "integrity",
+        "placeholders",
+        "schema",
+        "budget_findings",
+        "module_findings",
+        "component_findings",
+        "interface_backlink_findings",
+    ):
+        setattr(f, attr, [])
+    for attr, value in overrides.items():
+        setattr(f, attr, value)
+    return f
+
+
+def test_exit_code_gate_policy():
+    import argparse
+
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def ns(strict=False, strict_integrity=False):
+        return argparse.Namespace(strict=strict, strict_integrity=strict_integrity)
+
+    # --strict fails on any gated finding (orphans here)...
+    orphaned = _findings_stub(trace, orphans=["SR-002 has no test (TC)"])
+    assert trace.exit_code(orphaned, ns(strict=True)) == 1
+    # ...and on integrity (integrity is in the strict set too).
+    bad_id = _findings_stub(trace, integrity=["SR id SR-001 is duplicated"])
+    assert trace.exit_code(bad_id, ns(strict=True)) == 1
+    # --strict-integrity fails on integrity...
+    assert trace.exit_code(bad_id, ns(strict_integrity=True)) == 1
+    # ...but the integrity floor ignores orphans (a gate criterion, not always-invalid).
+    assert trace.exit_code(orphaned, ns(strict_integrity=True)) == 0
+    # No gating flag -> always 0, even with findings present.
+    loud = _findings_stub(trace, orphans=["x"], integrity=["y"], status_findings=["z"])
+    assert trace.exit_code(loud, ns()) == 0

@@ -590,6 +590,9 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `Findings (class)` | The analyze() output — every finding list + derived set the report, |  |
 | `load_registries(docs)` | Load the spine + off-spine registries under docs (loading only — no analysis). |  |
 | `analyze(reg, args)` | The whole checker pass over loaded registries: orphan rules, off-spine |  |
+| `render_report(reg, findings, args, forest)` | Assemble the full report.md text (the metric table, the SR->LLR->TC matrix, the outline + mermaid views over `forest`, the orphan/integrity/advisory sections, and the flag-gated off-spine/draft/area/status sections). Pure — returns the text; the caller writes it. |  |
+| `render_console(reg, findings, args, out, html_out)` | Print the warn-only advisory lines and the one-line Traceability summary to stdout (loud but never gating). |  |
+| `exit_code(findings, args)` | The gate exit code: 1 under --strict if any orphan/status/integrity/placeholder/schema/off-spine finding exists; 1 under --strict-integrity if any integrity finding exists; else 0. |  |
 | `main()` |  |  |
 <!-- END GENERATED MODULE MAP -->
 

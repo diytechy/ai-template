@@ -767,29 +767,45 @@ def _group(label, children):
     return {"id": label, "status": "", "title": "", "cls": "", "children": children}
 
 
+def _bucket_by_ref(rows, ref_col):
+    """Index rows by each id named in their `ref_col` cell — parent-id -> [rows
+    that reference it], child rows kept in input order, each cell parsed once.
+    Replaces the per-parent refs() rescans that made the report joins quadratic
+    (WI-081, M8: O(SR×LLR + SR×TC + LLR×TC) -> O(N))."""
+    index = {}
+    for row in rows:
+        for parent in refs(row.get(ref_col)):
+            index.setdefault(parent, []).append(row)
+    return index
+
+
 def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for
     rows with no valid parent. Shared by the text outline and the HTML tree.
     `sn_draft` (section-as-state, §4a) labels those SNs `Draft` so the views flag
     them like a `Status=Draft` SR/LLR/TC row."""
+    llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
+    tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
+    srs_by_sn = _bucket_by_ref(srs, "SN-Refs")
+    tc_verifies = {t["TC-ID"]: set(refs(t.get("Verifies"))) for t in tcs}
 
     def tc_node(t):
         return _node(t["TC-ID"], _cell(t, "Status"), _cell(t, "Method"), orphan_ids)
 
     def llr_node(lr):
         lid = lr["LLR-ID"]
-        kids = [tc_node(t) for t in tcs if lid in refs(t.get("Verifies"))]
+        kids = [tc_node(t) for t in tcs_by_ref.get(lid, [])]
         return _node(lid, _cell(lr, "Status"), _cell(lr, "Title"), orphan_ids, kids)
 
     def sr_node(s):
         sid = s["SR-ID"]
-        own_llrs = {lr["LLR-ID"] for lr in llrs if sid in refs(lr.get("SR-Refs"))}
-        kids = [llr_node(lr) for lr in llrs if sid in refs(lr.get("SR-Refs"))]
+        own = llrs_by_sr.get(sid, [])
+        own_llrs = {lr["LLR-ID"] for lr in own}
+        kids = [llr_node(lr) for lr in own]
         # TCs verifying the SR directly but none of its LLRs (so a TC that already
         # appears under an LLR of this SR is not also repeated under the SR).
-        for t in tcs:
-            verifies = set(refs(t.get("Verifies")))
-            if sid in verifies and not verifies & own_llrs:
+        for t in tcs_by_ref.get(sid, []):
+            if not tc_verifies[t["TC-ID"]] & own_llrs:
                 kids.append(tc_node(t))
         return _node(sid, _cell(s, "Status"), _cell(s, "Title"), orphan_ids, kids)
 
@@ -797,7 +813,7 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     llr_ids = {lr["LLR-ID"] for lr in llrs}
     roots = []
     for sn in sorted(sn_ids):
-        kids = [sr_node(s) for s in srs if sn in refs(s.get("SN-Refs"))]
+        kids = [sr_node(s) for s in srs_by_sn.get(sn, [])]
         roots.append(_node(sn, "Draft" if sn in sn_draft else "", "", orphan_ids, kids))
     rootless_srs = [s for s in srs if not sn_ids & set(refs(s.get("SN-Refs")))]
     if rootless_srs:
@@ -1586,100 +1602,8 @@ def analyze(reg, args):
     return findings
 
 
-def main():
-    _utf8_console()
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument(
-        "--strict", action="store_true", help="exit 1 if any orphan / status finding"
-    )
-    ap.add_argument(
-        "--strict-integrity",
-        action="store_true",
-        help="exit 1 only on integrity findings (duplicate/malformed ids) — the "
-        "always-valid floor the pre-commit hook runs; orphans stay gate-scoped",
-    )
-    ap.add_argument(
-        "--require-verified",
-        action="store_true",
-        help="G3 criterion: flag Verification=Test SRs not Status=Verified",
-    )
-    ap.add_argument(
-        "--phase",
-        default=None,
-        help="comma-separated phases in scope (e.g. v1 or v1,v2): scopes "
-        "--require-verified to SRs whose Phase is blank or listed",
-    )
-    ap.add_argument(
-        "--no-placeholders",
-        action="store_true",
-        help="flag any leftover '-000' template example row (use from G2 on)",
-    )
-    ap.add_argument(
-        "--strict-schema",
-        action="store_true",
-        help="also require non-empty required fields and valid "
-        "Verification/Tier values on the real rows",
-    )
-    ap.add_argument(
-        "--html",
-        action="store_true",
-        help="also write test/report.html — a dependency-free collapsible tree "
-        "of the full graph (gitignored composite artifact)",
-    )
-    ap.add_argument(
-        "--ratify",
-        metavar="SCOPE",
-        default=None,
-        help="emit ONLY the batch-scoped ratification hierarchy (SN->SR->LLR->TC "
-        "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
-        "(e.g. 'SR-052,SR-053'); a G1/G2 brief links this instead of hand-copying "
-        "rows (WI-146). Prints to stdout unless --out is given; runs no checks",
-    )
-    ap.add_argument(
-        "--out",
-        metavar="FILE",
-        default=None,
-        help="with --ratify, write the view to FILE (parent dirs created) instead "
-        "of stdout, so a brief can link a stable path",
-    )
-    # --root/--docs are the uniform path flags across trace.py, check_docs.py,
-    # and check_perf.py: --docs is the docs dir; --root (default ".") is its
-    # parent, so a repo whose docs live elsewhere passes one --root. An explicit
-    # --docs wins; otherwise it is <root>/docs.
-    ap.add_argument("--root", default=".", help="repo root (default: .)")
-    ap.add_argument(
-        "--docs",
-        default=None,
-        help="docs directory (default: <root>/docs)",
-    )
-    args = ap.parse_args()
-    docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
-
-    reg = load_registries(docs)
-
-    # --ratify is a generator mode, not a checker: emit the batch-scoped
-    # ratification hierarchy and exit 0 without running any orphan/integrity pass
-    # (WI-146a). It reuses the loaded, example-filtered working sets above.
-    if args.ratify is not None:
-        text = (
-            "\n".join(
-                ratify_lines(
-                    args.ratify, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
-                )
-            )
-            + "\n"
-        )
-        if args.out:
-            out_path = Path(args.out)
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-            out_path.write_text(text, encoding="utf-8")
-            print("trace: wrote ratification view -> {}".format(out_path))
-        else:
-            sys.stdout.write(text)
-        return 0
-
-    findings = analyze(reg, args)
-    # Bridge the analysis outputs to the render/console/exit block below (WI-081 Slice B; Slice C lifts that block into render_report and removes these aliases).
+def render_report(reg, findings, args, forest):
+    """Assemble the full report.md text (the metric table, the SR->LLR->TC matrix, the outline + mermaid views over `forest`, the orphan/integrity/advisory sections, and the flag-gated off-spine/draft/area/status sections). Pure — returns the text; the caller writes it."""
     srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
     pbs, mods, parts = reg.pbs, reg.mods, reg.parts
     assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
@@ -1783,13 +1707,14 @@ def main():
             "|---|---|---|---|",
         ]
     )
+    llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
+    tcs_by_sr = _bucket_by_ref(tcs, "Verifies")
     for r in srs:
         sid = r["SR-ID"]
-        kids = " ".join(x["LLR-ID"] for x in llrs if sid in refs(x.get("SR-Refs")))
-        tests = " ".join(x["TC-ID"] for x in tcs if sid in refs(x.get("Verifies")))
+        kids = " ".join(x["LLR-ID"] for x in llrs_by_sr.get(sid, []))
+        tests = " ".join(x["TC-ID"] for x in tcs_by_sr.get(sid, []))
         lines.append(f"| {sid} | {kids} | {tests} | {r.get('Status', '')} |")
 
-    forest = build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)
     lines += [
         "",
         "## Traceability outline",
@@ -1957,15 +1882,33 @@ def main():
         if phase_deferred:
             lines += ["", "### Phase-deferred (explicitly out of scope)", ""]
             lines += [f"- {s}" for s in phase_deferred]
+    return "\n".join(lines) + "\n"
 
-    out = docs / "test" / "report.md"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    html_out = None
-    if args.html:
-        html_out = docs / "test" / "report.html"
-        html_out.write_text(html_document(forest), encoding="utf-8")
+def render_console(reg, findings, args, out, html_out):
+    """Print the warn-only advisory lines and the one-line Traceability summary to stdout (loud but never gating)."""
+    sn_ids = reg.sn_ids
+    srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
+    pbs, mods, parts = reg.pbs, reg.mods, reg.parts
+    assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
+    orphans = findings.orphans
+    integrity = findings.integrity
+    advisories = findings.advisories
+    interface_advisories = findings.interface_advisories
+    knowledge_advisories = findings.knowledge_advisories
+    llr_status_advis = findings.llr_status_advis
+    mechanized_verified = findings.mechanized_verified
+    attested_verified = findings.attested_verified
+    status_findings = findings.status_findings
+    n_draft = findings.n_draft
+    placeholders = findings.placeholders
+    schema = findings.schema
+    phases = findings.phases
+    phase_deferred = findings.phase_deferred
+    budget_findings = findings.budget_findings
+    module_findings = findings.module_findings
+    component_findings = findings.component_findings
+    interface_backlink_findings = findings.interface_backlink_findings
 
     # Advisories are loud (stdout, not just the report) but never fail the run.
     for a in advisories:
@@ -2023,20 +1966,138 @@ def main():
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
     )
+
+
+def exit_code(findings, args):
+    """The gate exit code: 1 under --strict if any orphan/status/integrity/placeholder/schema/off-spine finding exists; 1 under --strict-integrity if any integrity finding exists; else 0."""
     if args.strict and (
-        orphans
-        or status_findings
-        or integrity
-        or placeholders
-        or schema
-        or budget_findings
-        or module_findings
-        or component_findings
-        or interface_backlink_findings
+        findings.orphans
+        or findings.status_findings
+        or findings.integrity
+        or findings.placeholders
+        or findings.schema
+        or findings.budget_findings
+        or findings.module_findings
+        or findings.component_findings
+        or findings.interface_backlink_findings
     ):
-        sys.exit(1)
-    if args.strict_integrity and integrity:
-        sys.exit(1)
+        return 1
+    if args.strict_integrity and findings.integrity:
+        return 1
+    return 0
+
+
+def main():
+    _utf8_console()
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--strict", action="store_true", help="exit 1 if any orphan / status finding"
+    )
+    ap.add_argument(
+        "--strict-integrity",
+        action="store_true",
+        help="exit 1 only on integrity findings (duplicate/malformed ids) — the "
+        "always-valid floor the pre-commit hook runs; orphans stay gate-scoped",
+    )
+    ap.add_argument(
+        "--require-verified",
+        action="store_true",
+        help="G3 criterion: flag Verification=Test SRs not Status=Verified",
+    )
+    ap.add_argument(
+        "--phase",
+        default=None,
+        help="comma-separated phases in scope (e.g. v1 or v1,v2): scopes "
+        "--require-verified to SRs whose Phase is blank or listed",
+    )
+    ap.add_argument(
+        "--no-placeholders",
+        action="store_true",
+        help="flag any leftover '-000' template example row (use from G2 on)",
+    )
+    ap.add_argument(
+        "--strict-schema",
+        action="store_true",
+        help="also require non-empty required fields and valid "
+        "Verification/Tier values on the real rows",
+    )
+    ap.add_argument(
+        "--html",
+        action="store_true",
+        help="also write test/report.html — a dependency-free collapsible tree "
+        "of the full graph (gitignored composite artifact)",
+    )
+    ap.add_argument(
+        "--ratify",
+        metavar="SCOPE",
+        default=None,
+        help="emit ONLY the batch-scoped ratification hierarchy (SN->SR->LLR->TC "
+        "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
+        "(e.g. 'SR-052,SR-053'); a G1/G2 brief links this instead of hand-copying "
+        "rows (WI-146). Prints to stdout unless --out is given; runs no checks",
+    )
+    ap.add_argument(
+        "--out",
+        metavar="FILE",
+        default=None,
+        help="with --ratify, write the view to FILE (parent dirs created) instead "
+        "of stdout, so a brief can link a stable path",
+    )
+    # --root/--docs are the uniform path flags across trace.py, check_docs.py,
+    # and check_perf.py: --docs is the docs dir; --root (default ".") is its
+    # parent, so a repo whose docs live elsewhere passes one --root. An explicit
+    # --docs wins; otherwise it is <root>/docs.
+    ap.add_argument("--root", default=".", help="repo root (default: .)")
+    ap.add_argument(
+        "--docs",
+        default=None,
+        help="docs directory (default: <root>/docs)",
+    )
+    args = ap.parse_args()
+    docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
+
+    reg = load_registries(docs)
+
+    # --ratify is a generator mode, not a checker: emit the batch-scoped
+    # ratification hierarchy and exit 0 without running any orphan/integrity pass
+    # (WI-146a). It reuses the loaded, example-filtered working sets above.
+    if args.ratify is not None:
+        text = (
+            "\n".join(
+                ratify_lines(
+                    args.ratify, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
+                )
+            )
+            + "\n"
+        )
+        if args.out:
+            out_path = Path(args.out)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(text, encoding="utf-8")
+            print("trace: wrote ratification view -> {}".format(out_path))
+        else:
+            sys.stdout.write(text)
+        return 0
+
+    findings = analyze(reg, args)
+    forest = build_forest(
+        reg.sn_ids, reg.srs, reg.llrs, reg.tcs, findings.orphan_ids, reg.sn_draft
+    )
+
+    out = docs / "test" / "report.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(render_report(reg, findings, args, forest), encoding="utf-8")
+
+    html_out = None
+    if args.html:
+        html_out = docs / "test" / "report.html"
+        html_out.write_text(html_document(forest), encoding="utf-8")
+
+    render_console(reg, findings, args, out, html_out)
+
+    code = exit_code(findings, args)
+    if code:
+        sys.exit(code)
 
 
 if __name__ == "__main__":
