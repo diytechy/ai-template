@@ -52,3 +52,13 @@ tests that already exist (noted).
 | SN-020 | Runtime | The agent CLI / model errors before doing work (retired model, expired auth) | The session is logged `ERROR` and an all-`ERROR` stall is reported as an **unavailable agent**, not a work stall. *(tests/test_agent_loop.py — error region)* |
 | SN-021 | Runtime | A generated artifact (arch map, trace view) drifts from its source | Its `--check` fails at the gate — a stale generated doc is a red, not a silent rot (SN-010). |
 | SN-022 | Runtime | A committed example row / placeholder is left in a registry at a gate | `--no-placeholders` flags a leftover `-000` row from G2 on; a fresh scaffold stays green until it claims a gate. |
+
+## Draft needs (unratified)
+
+Needs entering the live spine as **Draft** (section-as-state, derived-gate model
+§4a) — authored but not yet ratified, so they sit at G0 and open a new phase.
+The `[v4]-[g1]` requirement-structuring WI (work-items.csv) ratifies them.
+
+| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent (how we'd know it's met) |
+|---|---|---|---|---|
+| SN-025 | A plain `agent-resume` run automatically executes **every dependency-ready work item that can safely make progress, in parallel** — development and review fan out across bounded worker lanes — without a human curating `docs/next-wi` or predefining tracks, while mutation of the integration branch stays **serialized and gated**. | Throughput + walk-away autonomy: the coordinator advances one WI at a time behind a hand-curated pointer, yet the WI DAG already encodes what may proceed — a ready frontier should fan out instead of idling, without weakening the serialized, reviewed integration that keeps what ships trustworthy. Extends SN-006 (resumable unattended run) and SN-016 (never wedged). | S | A launch on a scaffold with independent ready WIs runs up to the configured worker ceiling (default 2) concurrently in isolated worktrees and integrates them serially through one gated compare-and-swap; a unary dependent successor continues on its parent train; `--jobs 1` preserves the serial semantic; a crash at any lifecycle boundary recovers from Git without double-assignment or half-integrated root state. Spec of record: `docs/specs/parallel-wi-dispatch.md`. |

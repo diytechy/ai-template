@@ -68,3 +68,12 @@ resource: "generated"
 | [TC-055](TC-055.md) | A fresh, provider-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated … |
 | [TC-056](TC-056.md) | Run the dashboard suite; the Process tab renders both loop panels (intake loop A + human-… |
 | [TC-057](TC-057.md) | Run the dashboard suite; the tiered decomposition views render one horizontal parent->chi… |
+| [TC-058](TC-058.md) | Run schedule.py against a fixture registry; the ready frontier, the exclusions with reaso… |
+| [TC-059](TC-059.md) | Drive the pure safety classifier over each SafetyClass + review-policy input including mi… |
+| [TC-060](TC-060.md) | Exercise the migration on a fixture scaffold: next-wi/run-phase absent, no live surface r… |
+| [TC-061](TC-061.md) | Run two concurrent workers from explicit --wi/--train/worktree assignments; assert no lan… |
+| [TC-062](TC-062.md) | Launch the dispatcher with independent ready WIs; assert up-to-ceiling concurrency in sep… |
+| [TC-063](TC-063.md) | Drive a unary chain, a fork, a join, a cap, and an early end; assert the continuation/sto… |
+| [TC-064](TC-064.md) | Compose overlapping trains through the integrator; assert the combined bar always runs, a… |
+| [TC-065](TC-065.md) | Inject termination at each lifecycle boundary (reservation txn, both CAS points, the work… |
+| [TC-066](TC-066.md) | Run a parallel session + a downstream-migration fixture; assert reason-coded telemetry ag… |

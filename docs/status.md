@@ -22,19 +22,23 @@ home elsewhere — don't restate it here:
 
 ## Current State
 
-- **Active gate:** runnable **G3** (derived — `scripts/derive_gate.py`; per-phase
-  `(default)=G3;v2=G3;v3=G3`, cached to [`docs/gate`](gate)) — **the whole spine
-  is back at G3** (2026-07-15): the v3 dashboard-ux campaign closed when its final
-  UI-quality slice passed the **owner's manual critique** APPROVE
-  ([reviews/074-CRITIQUE.md](reviews/074-CRITIQUE.md)), moving SR-052/053/054 →
-  Verified. Spine: **SN=24 SR=56 LLR=57 TC=57** (orphans=0), 52 seams, 5
-  components.
+- **Active gate:** runnable **G1** (derived — `scripts/derive_gate.py`; per-phase
+  `(default)=G3;v2=G3;v3=G3;v4=G0`, cached to [`docs/gate`](gate)) — the ratified
+  spine stays at **G3**, but the new **`v4` parallel-dispatch phase entered Draft
+  (G0)** on 2026-07-15, so the min-aggregated runnable gate drops to **G1** until
+  the campaign is built and re-ratified (the honest derived-gate signal for new
+  scope — docs/specs/derived-gate-model.md §3). Spine: **SN=25 SR=65 LLR=66 TC=66**
+  (orphans=0, 30 drafts), 52 seams, 5 components. The v3 dashboard-ux campaign
+  closed at G3 (SR-052/053/054 Verified via the owner's manual critique,
+  [reviews/074-CRITIQUE.md](reviews/074-CRITIQUE.md)).
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~47 s) +
   `python project-trajectory/scripts/check_docs.py --root . --stale`, both green.
   At slice/campaign close: the full suite `pytest -q -n auto` (~72 s) and
-  `check.py` at the derived gate (now **G3** — its `trajectory` step runs
-  `--strict` and the G3-only `lint` / `dupes` / `--require-verified` steps are
-  live, so status.md must stay current: closed WI ids leave, open ones are named).
+  `check.py` at the derived gate (now **G1** while `v4` is Draft — the G2+/G3-only
+  `--strict` trajectory, `lint`, `dupes`, and `--require-verified` steps stand
+  down until v4 re-ratifies; R-A (Deliverable non-empty iff done) stays the
+  always-on floor). Keep status.md current regardless: closed WI ids leave, open
+  ones are named.
 - **Run-state:** [run-state](run-state) holds the declared value (don't
   paraphrase it here); when it reads NEEDS-HUMAN its `ask:` line is the
   canonical one-line summary the stop banner headlines.
@@ -78,6 +82,21 @@ home elsewhere — don't restate it here:
   dial turn, Decisions log; its per-phase preference follow-up is complete):_
   The optimization-methodology research is complete. Codex **Sol builds are now live** (`codex` on PATH + logged in
   2026-07-15)._
+- **Queued (parallel-dispatch campaign, phase `v4`** —
+  [specs/parallel-wi-dispatch.md](specs/parallel-wi-dispatch.md), design ratified
+  2026-07-15):_ the parallel-by-default dispatcher redesign is filed for
+  build. The `v4` spine entered **Draft** — SN-025 + SR-057…065 + LLR-058…066 +
+  TC-058…066 — dropping the runnable gate to G1 (see Active gate). Open WIs in
+  DAG order: **WI-177** (`[v4]-[g1]` requirement structuring — draft/ratify SN-025
+  + SR-057…065) → **WI-178** (`[v4]-[g2]` decomposition — LLR/TC to Planned) → the
+  eight build slices **WI-179** (A: scheduler + safety classifier) · **WI-180**
+  (B: de-author status / remove next-wi) · **WI-181** (C: worker assignment) ·
+  **WI-182** (D: dispatcher + reservations) · **WI-183** (E: change-train
+  continuation) · **WI-184** (F: atomic integrator) · **WI-185** (G: recovery +
+  fault injection) · **WI-186** (H: telemetry + migration + dogfood). Edges wire
+  the §15 DAG (A→{B,C}; D after A,C; E after D; F after B,D; G after D,F; H the
+  join). No dispatcher code has shipped — owner directive: file the WIs, the loop
+  builds._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in
@@ -86,18 +105,14 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** no queued WI remains; the declared unattended run is complete.
-  The optimization rubric and grounded review are recorded in
-  [iterative-optimization.md](knowledge/iterative-optimization.md) and
-  [reviews/107-GROUNDING.md](reviews/107-GROUNDING.md). This was off-spine docs,
-  so nothing rides a re-attestation. An **owner-directed interpreter /
-  coverage-debris hardening** landed 2026-07-15 (a VS Code `./.venv` interpreter
-  pin + a warn-only ambient-`pytest-cov` probe in the meta `dev-setup`, after
-  thousands of stranded `.coverage.*` files traced to a full `--cov` run on the
-  unpinned global interpreter, not the pinned venv) — off-spine dev tooling, no
-  spine change; detail in [log.md](log.md). Deferred main-decomposition
-  (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering. Codex
-  Sol builds are live.
+- **Next action:** the **parallel-dispatch campaign (phase `v4`)** is the live
+  frontier (above). The loop's next WI is **WI-177** (`[v4]-[g1]`) — draft/ratify
+  SN-025 + SR-057…065; under `gate-policy: autonomous` an independent LLM reviewer
+  closes the g1 gate and the run continues to **WI-178** (`[v4]-[g2]`, LLR/TC
+  decomposition) and then the build slices A→H. The Draft `v4` spine was filed
+  2026-07-15 (the redesign design is ratified); no dispatcher code has shipped yet.
+  Deferred main-decomposition (**WI-080**→**WI-081**) stays parked pending
+  deliberate owner ordering; Codex Sol builds are live.
   Round-by-round evidence → [log.md](log.md), not here.
 
 ## Scope

@@ -35,3 +35,4 @@ resource: "generated"
 | [SN-022](SN-022.md) | Runtime |
 | [SN-023](SN-023.md) | A reviewer can see the project's progress and how its parts connect from one dashboard-li… |
 | [SN-024](SN-024.md) | Subjective/perceptual acceptance — a realistic-looking render, an artifact comparison wit… |
+| [SN-025](SN-025.md) | A plain agent-resume run automatically executes every dependency-ready work item that can… |

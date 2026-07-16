@@ -67,3 +67,12 @@ resource: "generated"
 | [SR-054](SR-054.md) | Dashboard usability (rubric-adjudicated) |
 | [SR-055](SR-055.md) | Ingest and human-decision process loops |
 | [SR-056](SR-056.md) | Decomposition render polish |
+| [SR-057](SR-057.md) | WI-DAG frontier scheduling |
+| [SR-058](SR-058.md) | Deterministic safety classification |
+| [SR-059](SR-059.md) | Retire next-wi; generated status and run-state |
+| [SR-060](SR-060.md) | Explicit worker assignment mode |
+| [SR-061](SR-061.md) | Parallel-by-default dispatcher |
+| [SR-062](SR-062.md) | Change-train continuation |
+| [SR-063](SR-063.md) | Atomic serialized integration |
+| [SR-064](SR-064.md) | Crash safety and git-as-authority recovery |
+| [SR-065](SR-065.md) | Parallel-execution telemetry and downstream migration |

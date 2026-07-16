@@ -68,3 +68,12 @@ resource: "generated"
 | [LLR-055](LLR-055.md) | Dashboard usability rendering |
 | [LLR-056](LLR-056.md) | Process tab intake + human-decision loop panels |
 | [LLR-057](LLR-057.md) | Decomposition render polish (columns, arrows, persistent hover) |
+| [LLR-058](LLR-058.md) | WI-DAG frontier + deterministic traincar ordering |
+| [LLR-059](LLR-059.md) | Pure safety classifier + validator cross-check |
+| [LLR-060](LLR-060.md) | next-wi/run-phase retirement + generated status/run-state |
+| [LLR-061](LLR-061.md) | Explicit WI/train/worktree worker assignment |
+| [LLR-062](LLR-062.md) | Dispatcher + worktree pool + atomic reservations |
+| [LLR-063](LLR-063.md) | Traincar continuation + fork/join + release-on-end |
+| [LLR-064](LLR-064.md) | Atomic integrator + CAS + blocked-disposition + publish |
+| [LLR-065](LLR-065.md) | Git-as-authority crash recovery |
+| [LLR-066](LLR-066.md) | Parallel telemetry + downstream migration/audits |

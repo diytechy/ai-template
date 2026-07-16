@@ -7022,3 +7022,59 @@ referenced via the registry `SpecRef` like every WI spec, not a markdown link).
 
 **Handoff.** WI-175 → done. No queued WI remains; deferred WI-080→WI-081 stays
 parked. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-15 — Parallel-dispatch campaign filed (phase `v4` opened; Draft SN/SR/LLR/TC + WI-177…186)
+
+**What.** Ratified the parallel-by-default dispatcher design
+([specs/parallel-wi-dispatch.md](specs/parallel-wi-dispatch.md)) and filed the
+implementation campaign per §15, at the owner's direction: **mint Draft
+SN/SR/LLR/TC + file the WIs only** (the loop builds; no dispatcher code ships in
+this session). Minted the `v4` spine as **Draft** — **SN-025** (a plain
+`agent-resume` run executes every dependency-ready WI in parallel while
+integration stays serialized/gated; section-as-state under a new
+`## Draft needs (unratified)` heading, extending SN-006/SN-016) + **SR-057…065**
+(`Phase=v4`) + **LLR-058…066** (CMP-004) + **TC-058…066** — every row
+citation-coherent (`trace --strict-integrity` orphans=0 integrity=0, the
+draft-exemption carrying the un-decomposed rows). Filed **11 WIs**: **WI-177**
+`[v4]-[g1]` (requirement structuring) → **WI-178** `[v4]-[g2]` (decomposition) →
+the eight build slices **WI-179…186** wired to the §15 hard-predecessor DAG
+(A→{B,C}; D after A,C; E after D; F after B,D; G after D,F; H the join),
+`Campaign=parallel-dispatch`, SpecRef the plan.
+
+**SR↔slice map.** SR-057 WI-DAG frontier scheduling + SR-058 deterministic safety
+classification (Slice A); SR-059 retire next-wi / generated status (B); SR-060
+worker assignment (C); SR-061 parallel-by-default dispatcher + reservations (D);
+SR-062 change-train continuation (E); SR-063 atomic serialized integration (F);
+SR-064 git-as-authority recovery (G); SR-065 telemetry + downstream migration (H).
+
+**Gate impact (intended, owner-okayed).** The Draft `v4` phase sits at G0, so the
+min-aggregated runnable derived gate drops **G3 → G1** (basis
+`computed=G0 per-phase=(default)=G3;v2=G3;v3=G3;v4=G0`) — the honest derived-gate
+signal that new scope entered ([derived-gate-model.md](specs/derived-gate-model.md)
+§3); it re-ratifies to G3 as the loop builds and verifies each slice. Regenerated
+`docs/gate`, `PROJECT_STATE.html`, and `docs/okf` (28 new concepts + SN-006/008/
+010/012/016/017 backlink updates). `docs/status.md` updated: gate/bar lines, a
+`v4` queued block naming WI-177…186 (clears R-B), Next action → WI-177.
+
+**Scope / deviations.** No product/kit code changed (`docs/architecture.md`
+untouched — confirmed up to date via `gen_arch_map --check --src
+project-trajectory/scripts`). No budget-watched file touched. LLR Modules name the
+future `schedule.py` / dispatcher-side `agent_loop.py` symbols (Draft — refined at
+build). One AC advisory on SR-061 reworded away at authoring ("matches" → "produces
+the same integrated result set as a serial run"). SafetyClass is authored in the
+SR/spec text only; the downstream WI-schema column arrives with Slice A (SR-058),
+not in this meta-registry filing.
+
+**Tests / end green (real output, via `./.venv`).**
+`trace --strict-integrity` → **SN=25 SR=65 LLR=66 TC=66 orphans=0 integrity=0
+drafts=30 components=5 component-findings=0 interfaces=52 interface-findings=0**.
+`derive_gate --check` → **docs/gate up to date (G1)**. `gen_trajectory/gen_okf/
+gen_arch_map --check` → **up to date**. `check_trajectory` → **clean (186 work
+items, 162 done, graph acyclic)**, 0 R-B / 0 R-D. Commit bar:
+`pytest -q -n auto -m smoke` → **642 passed, 2 skipped in 41.61s**;
+`check_docs --root . --stale` → **OK, 114 docs, 458 links, 0 broken** (44 orphan
+warnings — the new WI specs resolve via the registry `SpecRef`, not markdown links).
+
+**Handoff.** Campaign filed; loop's next WI is **WI-177** (`[v4]-[g1]`) — under
+`gate-policy: autonomous` an independent LLM reviewer closes g1, then WI-178 g2,
+then slices A→H. Not pushed (`docs/push-policy: human`).
