@@ -241,9 +241,9 @@ A: When it starts, it should make sure all /llm branches are at a merged state, 
 B1: Next, any work items that affect G1 are completed as a single large item.  These need the scope of the whole project anyways, no reason to complete these as a single work item.
 B2: If ratification is required, the process exits because ratification is required.
 B3: Next, any work items that affect G2 are completed as a single large item.  These need the scope of the whole project anyways, no reason to complete these as a single work item.
+B4: If ratification is required, the process exits because ratification is required.
+
 Then it moves into a fresh build-out plan.
-
-
 
 C: It kicks off a work-advisor / schedular that goes through the unblocked work items that are in the queue, and creates a small table / other tracking element that scehdules "traincars" that are filled with work items.  The design of this needs to be careful, as it could include multiple small work items in parallel, multiple small work items that are acceptable to group in series.  What research is available to help design this?  It would be complex but it's apart of the vision: making sure agents can execute efficiently on a larger project.
     IMPORTANT: Work items also probably need some estimates to be made while they are being drafted.  Maybe an estimated token cost?  Model teir already exists.
@@ -251,9 +251,14 @@ C: It kicks off a work-advisor / schedular that goes through the unblocked work 
     Traincars get assigned WIs, and their dependent traincars.
     Then if a traincar has no open dependencies and there is an open thread, it get's kicked off.
 
-For open item 1 - This should be automatic, opt-out.  Perhaps this needs to be it's own design effort.  If you have many interdependnent work items / chained work items, those should be run on a chain.  And in fact work items could be grouped along that chain as train as well.  Thus each session along a chain becomes a traincar.  It could hold multiple unrelated mini-work-items, multiple workitems that are co-dependnent but can be reasonably executed (but then I would question why they are seperate work-items).  Perhaps this is all making the executor do more than it should.  Do we need a work-advisor to collate work-items and fold them into eachother where applicable?  That way the executor only cares about execution, and a prestep is a work-advisor that is trimming down the work-items and collating their scope into reasonable portions before the executor acts.
+I believe this addresses your parallel campaign open item and independent-batch train mode open item.
 
-For open item 2 - Again, this makes me think "campaign" should die, or perhaps just not drive any work.  
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+It appears the language "campaign" is still persisting when breaking down items.  Can you please make sure that "campaign" language is removed from all sources in this repo (ignoring logs and archive documents) and in your memory.  Instead SN/SR/LLR/TC workflow should have a phase property tied to them when indicating what phase they were ratified in, to make it clear when changes in scope (SN/SR/LLR) were introduced.  You can look at git history to back-date the current SN/SR/LLR/TCs, and then design a test to ensure a ratified SN/SR/LLR/TCs is populated with a non-empty phase.  Note in this way the phase also becomes derived (it is always the highest phase number of the last ratified item)
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+My main concern remaining is around the planning / research / build station and the way the current html is rendered.  (So 2 issues - The way some items are rendered in the html is subpar, and the actual planning process itself could likely use some improvement) 1. What tools will allow you to see the rendered html and make better critiques of the current implimentation?  2. In relation to palnning itself, how can we better select deep planning and test case generation?  For example, if I'm building something that needs to optomize for a certain variable, I probably want that to be developed all within the same plan / develop station, but if the loop will be that complex, I probably want an adversarial review from another agent, and then I want those 2 agents to continue to iterate back and forth until they are agreed on the plan and optomization method.   Note this should also likely happen when constructing work items, and work items should generally always act on either defined software modules / LLRs or interfaces that bind them together.  When work items are constructed, the interfaces they expect to use for intercommunication should also be built out.
+
+Finally verify there is nothing here missing that would make all these template updates incompatible or struggle when I push it to upstream repositories, specifically gilbert which is quite complex.  My main concern is if the modules there will create any changes with some of the template's new capabilities.
