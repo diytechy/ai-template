@@ -69,11 +69,11 @@ fan out; mutation of the integration branch remains serialized and gated.
 | **Soft predecessor** | Advisory ordering only; never a safety edge | WI registry |
 | **Exclusive key** | Exceptional semantic resource that cannot be mutated concurrently | WI registry (declared at draft, enforced by the scheduler); the dispatcher never invents keys — undeclared collisions are recorded, not enforced |
 | **Frontier** | Queued WIs whose hard predecessors are integrated done | Scheduler, derived |
-| **Reservation** | Dispatcher claim preventing another worker from owning the WI | Dispatcher journal + train branch |
+| **Reservation** | Dispatcher claim preventing another worker from owning the WI | `refs/llm/reservations/WI-###` (durable) + dispatcher journal (cache) |
 | **Lane** | Temporary worker process and linked worktree | Dispatcher |
 | **Change train** | One branch carrying an ordered dependency chain of one or more WIs | Lane, dispatcher-authorized |
 | **Integration queue** | Reviewed trains waiting to compose into the development branch | Integrator |
-| **Integration branch** | The project's main development/iteration branch for this run | Integrator only |
+| **Integration branch** | Dispatcher-owned aggregation branch `refs/heads/llm/integration`, published by CAS to the selected development branch | Integrator only |
 
 The public concept `track` is retired from automated scheduling. The current
 `agent_loop.py --track` implementation is retained temporarily as compatibility
@@ -322,7 +322,8 @@ For each accepted candidate the dispatcher:
    (the base tree and parent plus the train id and complete WI list), then
    atomically creates the train branch and one fixed reservation ref per
    constituent WI using one `git update-ref --stdin` transaction with
-   zero-old-value checks;
+   zero-old-value checks; the train branch initially points at the exact
+   integration base, not at the off-history reservation commit;
 3. creates/reuses a linked worktree leased to the train branch;
 4. writes the runtime reservation cache atomically;
 5. launches an internal worker with explicit `--wi`, `--train`, and worktree
@@ -392,6 +393,13 @@ may still proceed through their required review and integration. A traincar is a
 runtime scheduling structure and never inherits or writes a project-level
 `blocked` status of its own.
 
+The same cleanup rule applies to every other early traincar end: after preserving
+any completed constituent scope that can still proceed independently, the
+dispatcher transactionally releases every unstarted constituent reservation,
+dissolves the obsolete grouping, and recomputes the traincar DAG. A newly visible
+exclusivity, boundary, review-policy conflict, failure, or safety-cap cutoff
+therefore cannot strand reservation refs for work the lane will not consume.
+
 At a **fork**, the parent train integrates, then each newly ready child may take
 a separate lane. At a **join**, all parent trains integrate, then the join WI
 starts from the combined integration HEAD. A downstream WI is never built from
@@ -416,6 +424,9 @@ WI stays a distinct commit/evidence unit, and any integration conflict resolutio
 
 For a multi-WI traincar, policy aggregation is deterministic: its scheduling
 Priority is the highest constituent Priority (preserving the human override);
+its transitive downstream-dependent count is the number of distinct traincars
+reachable from any constituent after clustering; its remaining hard-path length
+is the maximum remaining constituent-to-terminal hard-edge length;
 its BuildTier is the strongest constituent tier; its reviewer count is the
 maximum required by any constituent or by the traincar's computed complexity;
 and its required reviewer families are the union of constituent requirements. A
@@ -480,8 +491,8 @@ which train owns them from the reviewed-head metadata.
 The integration branch has one logical writer. For each ready train, in
 deterministic queue order, the integrator:
 
-1. creates a temporary integration branch/worktree from the exact current root
-   HEAD (`llm/integrate/<train-id>`);
+1. creates a temporary integration branch/worktree from the exact current
+   integration HEAD (`llm/integrate/<train-id>`);
 2. verifies reservation metadata, WI scope, train commit sequence, and the
    review verdict for the exact code HEAD;
 3. applies the product/doc changes while excluding runtime reservation
@@ -503,14 +514,20 @@ and the train re-enters composition from the new HEAD. The main development
 branch is never left half-applied: before the atomic ref advance, all mutation
 occurs on the temporary integration worktree.
 
-The integration ref is dispatcher-owned while a run is active and is checked
-out only in its dedicated integration worktree; workers and the user's ordinary
-checkout never mutate it. The user's checkout is a separate projection: after a
-successful CAS it may be synchronized to the new integration HEAD only when
-clean and explicitly owned by the dispatcher. A dirty or manually advanced user
-checkout is left untouched and reported; it never blocks the authoritative
-integration ref or gets reset/stashed automatically. A manual update to the
-integration ref itself is detected by CAS and forces recomposition.
+The concrete integration ref is `refs/heads/llm/integration`. At launch the
+dispatcher creates or reconciles it from the selected project development branch
+and checks it out only in its dedicated integration worktree. The user's primary
+worktree remains on that selected development branch — never on
+`llm/integration` — while workers and the ordinary checkout never mutate the
+integration ref. After a successful integration CAS, the dispatcher publishes
+the integration HEAD only when the primary development worktree is clean: it
+advances the selected development ref with a second CAS against the hash it last
+observed, then synchronizes that clean worktree's index and files to the same
+target. If the ref moved, publication fails harmlessly and the integrator
+recomposes from the new development HEAD before retrying. If the worktree is
+dirty, publication is deferred and the checkout is left untouched and reported,
+never reset/stashed automatically. A manual update to `llm/integration` itself
+is likewise detected by its CAS and forces recomposition.
 
 ### Blocked-disposition integration
 
