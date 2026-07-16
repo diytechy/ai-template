@@ -2133,6 +2133,28 @@ commit**) are train-scoped so parallel workers never collide at integration.
 `--track` is **deprecated** for one compatibility window (legacy behavior
 unchanged, warned); new launchers never emit it.
 
+**The parallel dispatcher (`--jobs`).** `agent_loop.py --jobs N|auto` (or the
+`AGENT_JOBS` env) replaces the resume loop with the **dispatcher**: it derives
+the ready frontier from the WI registry via `schedule.py` (a **declared
+`SafetyClass` is required** — an unclassified WI fails closed without stopping
+classified disjoint work), packs it into traincars (ordinary unary hard-chains
+cluster up to the cap, default 4; spine/gate/attestation/protected work
+serializes **whole-project** with every other lane drained first), **atomically
+reserves** each selected traincar's constituent WIs — one off-history
+`commit-tree` metadata commit + one `update-ref --stdin` zero-old-value
+transaction creating the train branch and every `refs/llm/reservations/WI-###`
+ref, all-or-none — leases a linked worktree per train
+(`../<repo>-trains/<id>`), and runs workers in parallel up to the ceiling,
+rescanning on every worker exit (dynamic refill, never a static wave). A built
+train parks **ready-to-integrate with its reservations held** until the
+integrator advances the durable disposition, so nothing double-runs across
+restarts. `docs/pause` stops new reservations at the next boundary while
+in-flight workers finish; a blackout window starts no new worker;
+`out/dispatch/` is a rebuildable journal/cache — Git refs are the authority;
+root `run-state` becomes a **generated dispatcher outcome**. `--jobs 1` is the
+explicit serial mode; absent `--jobs`/`AGENT_JOBS`, the legacy resume loop is
+unchanged (launchers flip at migration).
+
 **Throughput caution.** Under `attended` gate authority, every track's human asks
 converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The
 dispatcher's job is to aggregate those asks into one review surface, and 2–3

@@ -69,6 +69,25 @@ no capture) at the mapped tier — the "grind from a single point" entry for a
 human sitting down. The template comes from --interactive-cmd / the
 AGENT_CMD_INTERACTIVE env var, falling back to AGENT_CMD.
 
+--jobs N|auto (or the AGENT_JOBS env) launches the PARALLEL DISPATCHER
+(WI-182, SR-061; docs/specs/parallel-wi-dispatch.md §4): reconcile owned
+trains -> gate -> build-out. It derives the ready frontier from the WI
+registry via schedule.py (declared SafetyClass required — unclassified fails
+closed), packs it into traincars (ordinary unary chains cluster up to the
+cap; spine/gate/protected serialize whole-project with every other lane
+drained), atomically reserves each selected traincar's constituent WIs
+(refs/llm/reservations/WI-### — one commit-tree metadata commit + one
+update-ref --stdin zero-old-value transaction, all-or-none), leases a linked
+worktree per train (../<repo>-trains/<id>), and runs Slice-C workers in
+parallel up to the ceiling, rescanning on every worker exit (dynamic refill —
+never a static wave). A built train parks ready-to-integrate with its
+reservations held for the integrator (Slice F); docs/pause stops new
+reservations at the next boundary while in-flight workers finish;
+out/dispatch/ is a rebuildable journal/cache, never authority (§11); root
+docs/run-state becomes a generated dispatcher outcome. --jobs 1 is the
+explicit serial mode. Absent --jobs/AGENT_JOBS keeps today's legacy resume
+loop (the launchers flip at migration, Slice H).
+
 --wi/--train run one WORKER ASSIGNMENT (WI-181, SR-060; the parallel-dispatch
 contract docs/specs/parallel-wi-dispatch.md §6): an explicit, dispatcher-supplied
 traincar — the ordered `--wi "WI-###[;WI-###…]"` list built on train branch
@@ -112,7 +131,7 @@ docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
-Contracts: IF-015, IF-037, IF-041 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-015, IF-037, IF-041, IF-055 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -138,10 +157,12 @@ from pathlib import Path
 # same sanctioned-sibling-import idiom gen_trajectory uses.
 try:
     import agent_route
+    import schedule
     import score_reviews
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import agent_route
+    import schedule
     import score_reviews
 
 # Size bounds for the tracked per-session log (the Q13d "size-bounded" cap):
@@ -1773,6 +1794,684 @@ def _utf8_console():
             pass
 
 
+# =============================================================================
+# WI-182: the parallel dispatcher (SR-061; spec §4/§6/§11/§12)
+# =============================================================================
+# `--jobs N|auto` (or the AGENT_JOBS env the launchers wire at migration)
+# switches agent_loop from the legacy resume loop to the DISPATCHER: derive the
+# ready frontier from the WI registry via schedule.py, pack it into traincars,
+# reserve each selected traincar's constituent WIs atomically in Git, lease a
+# linked worktree per train, and run Slice-C workers in parallel up to the
+# ceiling — rescanning for dynamic refill on every worker exit. Reservations
+# and train branches are the DURABLE state (out/dispatch/ is a rebuildable
+# journal/cache, spec §11); a built train parks ready-to-integrate with its
+# reservations held until the integrator (Slice F) advances the durable
+# disposition, so nothing is double-run even across dispatcher restarts.
+
+RESERVATION_NS = "refs/llm/reservations/"
+DISPATCH_DIR = "out/dispatch"
+# A worker that rate-limited (exit 5) is retried after this cooldown.
+TRAIN_RETRY_SECONDS = 300
+
+
+def list_reservations(root):
+    """{WI-ID: reservation-commit-sha} from refs/llm/reservations/* — the
+    durable claims. Empty on error (a broken git surfaces elsewhere)."""
+    code, out = git(
+        root,
+        "for-each-ref",
+        "--format=%(refname)%09%(objectname)",
+        RESERVATION_NS.rstrip("/"),
+    )
+    claims = {}
+    if code != 0:
+        return claims
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if len(parts) == 2 and parts[0].startswith(RESERVATION_NS):
+            wid = parts[0][len(RESERVATION_NS) :]
+            if WI_TOKEN_RE.match(wid):
+                claims[wid] = parts[1]
+    return claims
+
+
+def reservation_meta(root, sha):
+    """The metadata JSON a reservation commit carries ({train, wis, base}), or
+    None when unreadable/malformed — the caller quarantines that claim."""
+    code, out = git(root, "log", "-1", "--format=%B", sha)
+    if code != 0:
+        return None
+    try:
+        meta = json.loads(out)
+    except ValueError:
+        return None
+    if not isinstance(meta, dict) or not meta.get("train") or not meta.get("wis"):
+        return None
+    return meta
+
+
+def reserve_traincar(root, train_id, wis, base):
+    """Atomically claim a traincar: ONE off-history metadata commit
+    (`git commit-tree` — base tree + base parent, message = the {train, wis,
+    base} JSON) and ONE `git update-ref --stdin` transaction creating the
+    train branch and every constituent reservation ref with zero-old-value
+    checks. If ANY WI is already reserved (or the branch exists) the whole
+    transaction fails and nothing is created (SR-061 all-or-none). Returns
+    None on success, else the failure text."""
+    code, tree = git(root, "rev-parse", base + "^{tree}")
+    if code != 0:
+        return "cannot resolve base tree for {}: {}".format(base, tree)
+    meta = json.dumps(
+        {"train": train_id, "wis": list(wis), "base": base}, sort_keys=True
+    )
+    proc = subprocess.run(
+        ["git", "-C", str(root), "commit-tree", tree, "-p", base, "-m", meta],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    if proc.returncode != 0:
+        return "commit-tree failed: {}".format(proc.stderr.strip())
+    commit = proc.stdout.strip()
+    # `create` = an atomic zero-old-value check: the fixed ref name is the
+    # uniqueness claim for that WI, and one stdin transaction makes the branch
+    # + every constituent ref all-or-none (spec §6).
+    lines = ["start", "create {} {}".format(TRAIN_BRANCH_HEADS + train_id, base)]
+    for wid in wis:
+        lines.append("create {}{} {}".format(RESERVATION_NS, wid, commit))
+    lines += ["prepare", "commit"]
+    # Bytes, not text mode: Windows text mode would rewrite \n as \r\n and
+    # git update-ref --stdin would read "start\r" as an unknown command.
+    proc = subprocess.run(
+        ["git", "-C", str(root), "update-ref", "--stdin"],
+        input=("\n".join(lines) + "\n").encode("utf-8"),
+        capture_output=True,
+    )
+    if proc.returncode != 0:
+        return "reservation transaction failed (already claimed?): {}".format(
+            proc.stderr.decode("utf-8", "replace").strip()[:300]
+        )
+    return None
+
+
+TRAIN_BRANCH_HEADS = "refs/heads/" + TRAIN_BRANCH_PREFIX
+
+
+def worktree_root(root):
+    """Where train worktrees live: a sibling directory of the repo
+    (`../<repo>-trains/<train-id>`) — outside the repo so a linked worktree
+    never nests inside the primary checkout or the disposable out/."""
+    root = Path(root).resolve()
+    return root.parent / (root.name + "-trains")
+
+
+def existing_worktrees(root):
+    """{branch: worktree-path} parsed from `git worktree list --porcelain`."""
+    code, out = git(root, "worktree", "list", "--porcelain")
+    trees = {}
+    if code != 0:
+        return trees
+    path = None
+    for line in out.splitlines():
+        if line.startswith("worktree "):
+            path = line[len("worktree ") :].strip()
+        elif line.startswith("branch ") and path:
+            trees[line[len("branch ") :].strip()] = path
+    return trees
+
+
+def lease_worktree(root, train_id):
+    """The linked worktree for a train — reuse the one already checked out on
+    its branch (recovery), else `git worktree add`. Returns (path, err)."""
+    branch_ref = TRAIN_BRANCH_HEADS + train_id
+    trees = existing_worktrees(root)
+    if branch_ref in trees:
+        return Path(trees[branch_ref]), None
+    wt = worktree_root(root) / train_id
+    wt.parent.mkdir(parents=True, exist_ok=True)
+    code, out = git(root, "worktree", "add", str(wt), TRAIN_BRANCH_PREFIX + train_id)
+    if code != 0:
+        return None, "worktree add failed for {}: {}".format(train_id, out[:300])
+    return wt, None
+
+
+def train_phase_gate(root, wi_rows, wid):
+    """The `{phase}-{gate}` train-id prefix (spec §6): the WI's first SR's
+    delivery Phase (or `p0`) + the derived gate cache (or `g0`)."""
+    phase = ""
+    srs = _refs((wi_rows.get(wid) or {}).get("SR-Refs", ""))
+    if srs:
+        for r in _read_csv_rows(
+            Path(root) / "docs" / "requirements" / "system-requirements.csv"
+        ):
+            if (r.get("SR-ID") or "").strip() == srs[0]:
+                phase = (r.get("Phase") or "").strip()
+                break
+    gate = read_declared(Path(root) / "docs" / "gate", "").strip().lower() or "g0"
+    phase = re.sub(r"[^A-Za-z0-9._-]", "", phase) or "p0"
+    return "{}-{}".format(phase, gate)
+
+
+def pack_traincars(records, wis_by_id, cap=4):
+    """Pack the evaluated schedule records into dispatchable traincars —
+    resource-constrained list scheduling with conservative clustering (spec
+    §7): every ready WI starts its own traincar in the deterministic order;
+    an ORDINARY ready WI then absorbs its unary hard-successor chain (each
+    successor `ordinary`-classified, all its other hard preds already done,
+    single hard successor edge) up to the cap. Spine/gate/attestation/
+    protected/single-wi classes never join a multi-WI traincar. Returns a
+    list of {wis, sched_class} dicts in dispatch order."""
+    by_id = {r["id"]: r for r in records}
+    # children[x] = hard successors of x among tracked WIs
+    children = {}
+    for w in wis_by_id.values():
+        for p in w["preds"]:
+            children.setdefault(p, []).append(w["id"])
+    consumed = set()
+    cars = []
+    for r in records:
+        if r["disposition"] != "ready" or r["id"] in consumed:
+            continue
+        car = [r["id"]]
+        consumed.add(r["id"])
+        if r["sched_class"] == schedule.SCHED_ORDINARY:
+            cur = r["id"]
+            while len(car) < cap:
+                succs = children.get(cur, [])
+                if len(succs) != 1:
+                    break
+                nxt = succs[0]
+                nrec = by_id.get(nxt)
+                nwi = wis_by_id.get(nxt)
+                if (
+                    nrec is None
+                    or nwi is None
+                    or nxt in consumed
+                    or nrec["sched_class"] != schedule.SCHED_ORDINARY
+                    or nrec["disposition"] not in ("waiting", "ready")
+                    or nwi["status"] != "queued"
+                ):
+                    break
+                # Every OTHER hard pred of the successor must already be done
+                # (accepted-on-train covers only `cur`, which rides this car).
+                others = [p for p in nwi["preds"] if p != cur]
+                if any(
+                    (wis_by_id.get(p) or {}).get("status") != "done" for p in others
+                ):
+                    break
+                # The successor must itself have a single-successor shape to
+                # keep the chain unary (a fork ends the train, spec §7).
+                car.append(nxt)
+                consumed.add(nxt)
+                cur = nxt
+        cars.append({"wis": car, "sched_class": r["sched_class"]})
+    return cars
+
+
+class _Journal:
+    """The out/dispatch/ runtime journal — a CACHE, never authority (§11).
+    Events append before the corresponding external action where possible;
+    the manifest is rewritten atomically (temp file + os.replace)."""
+
+    def __init__(self, root):
+        self.dir = Path(root) / DISPATCH_DIR
+        try:
+            self.dir.mkdir(parents=True, exist_ok=True)
+            (self.dir / "trains").mkdir(exist_ok=True)
+        except OSError:
+            pass
+
+    def event(self, event, **fields):
+        rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "event": event}
+        rec.update(fields)
+        try:
+            with (self.dir / "events.jsonl").open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(rec, sort_keys=True) + "\n")
+        except OSError:
+            pass
+        detail = " ".join(
+            "{}={}".format(k, v) for k, v in sorted(fields.items()) if v != ""
+        )
+        print("dispatch: {}{}".format(event, " " + detail if detail else ""))
+
+    def manifest(self, data):
+        try:
+            tmp = self.dir / "manifest.json.tmp"
+            tmp.write_text(json.dumps(data, indent=2, sort_keys=True), "utf-8")
+            os.replace(str(tmp), str(self.dir / "manifest.json"))
+        except OSError:
+            pass
+
+    def train(self, train_id, data):
+        try:
+            tmp = self.dir / "trains" / (train_id + ".json.tmp")
+            tmp.write_text(json.dumps(data, indent=2, sort_keys=True), "utf-8")
+            os.replace(str(tmp), str(self.dir / "trains" / (train_id + ".json")))
+        except OSError:
+            pass
+
+
+def parse_jobs(value):
+    """The --jobs/AGENT_JOBS value: a positive int, or `auto` (adaptive up to
+    the configured ceiling — AGENT_JOBS_CEILING, default 2). Raises ValueError
+    on anything else."""
+    v = (str(value) or "").strip().lower()
+    if v == "auto":
+        try:
+            ceiling = int(os.environ.get("AGENT_JOBS_CEILING", "2"))
+        except ValueError:
+            ceiling = 2
+        return max(1, ceiling)
+    n = int(v)  # ValueError propagates to the caller's preflight
+    if n < 1:
+        raise ValueError("--jobs must be >= 1, got {}".format(n))
+    return n
+
+
+def _write_runstate(docs, state, ask=""):
+    """The dispatcher-generated root run-state (spec §10; SR-059's generation
+    half): RUNNING | NEEDS-HUMAN (+ ask) | BLOCKED | DONE. Generated only by
+    the dispatcher/integrator — never by a worker."""
+    try:
+        (docs / "run-state").write_text(
+            state + ("\nask: " + ask if ask else "") + "\n", encoding="utf-8"
+        )
+    except OSError:
+        pass
+
+
+def dispatch_run(args, root):
+    """The dispatcher/integrator loop (SR-061): reconcile -> gate -> build-out.
+
+    Returns an exit code. Concurrency is bounded by --jobs; every worker exit,
+    block, or reservation event triggers a rescan (dynamic refill — never a
+    static wave). Spine-class traincars serialize whole-project: one runs with
+    every other lane drained, and nothing else dispatches meanwhile."""
+    docs = root / "docs"
+    journal = _Journal(root)
+    try:
+        jobs = parse_jobs(args.jobs)
+    except ValueError as exc:
+        print("agent_loop: --jobs: {}".format(exc), file=sys.stderr)
+        return EXIT_PREFLIGHT
+
+    template = (
+        args.agent_cmd
+        if args.agent_cmd is not None
+        else os.environ.get("AGENT_CMD", "")
+    )
+    failures = preflight(root, template, args)
+    if failures:
+        print("agent_loop: preflight failed —", file=sys.stderr)
+        for f in failures:
+            print("  - " + f, file=sys.stderr)
+        return EXIT_PREFLIGHT
+
+    # One dispatcher per checkout — the same kernel lock the legacy loop takes,
+    # so a legacy coordinator and a dispatcher can never grind one worktree.
+    lock_err = acquire_lock(root / "out" / "agent-loop.lock")
+    if lock_err:
+        print("agent_loop: {}".format(lock_err), file=sys.stderr)
+        return EXIT_PREFLIGHT
+    atexit.register(release_lock, root / "out" / "agent-loop.lock")
+
+    gate_policy = read_declared(docs / "gate-policy", "attended")
+    print("=== parallel dispatcher (scripts/agent_loop.py --jobs {}) ===".format(jobs))
+    print(
+        "repo: {} | gate-policy: {} | worktrees: {}".format(
+            root, gate_policy, worktree_root(root)
+        )
+    )
+    print(
+        "CONSENT: workers run headless with the wired permission-bypass "
+        "template; reservations + train branches are durable Git state."
+    )
+
+    # --- stage 1: reconcile owned trains to a clean baseline (spec §4.1) -----
+    # Group durable reservation claims into trains; resume the incomplete,
+    # park the built (ready-to-integrate, Slice F), quarantine the unreadable.
+    active = {}  # train_id -> {proc, wis, base, worktree, spine}
+    parked = {}  # train_id -> {"state": ..., "wis": [...]}
+    retry_at = {}  # train_id -> epoch when a WAITING train may retry
+    quarantined_wis = set()
+    claims = list_reservations(root)
+    trains = {}
+    for wid, sha in sorted(claims.items()):
+        meta = reservation_meta(root, sha)
+        if meta is None:
+            journal.event("quarantine", wi=wid, reason="unreadable-reservation")
+            quarantined_wis.add(wid)
+            continue
+        trains.setdefault(meta["train"], {"wis": [], "base": meta["base"]})
+        trains[meta["train"]]["wis"].append(wid)
+    for tid, t in sorted(trains.items()):
+        code, _ = git(
+            root, "rev-parse", "--verify", "--quiet", TRAIN_BRANCH_HEADS + tid
+        )
+        if code != 0:
+            journal.event("quarantine", train=tid, reason="reservation-without-branch")
+            quarantined_wis.update(t["wis"])
+            continue
+        # Read evidence off the branch (works without a worktree).
+        code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + tid)
+        built, blocked = set(), {}
+        if code == 0:
+            fmt = (
+                "T%x09%(trailers:key=WI,valueonly,separator=;)%x09"
+                "%(trailers:key=Blocked-WI,valueonly,separator=;)"
+            )
+            code2, out = git(
+                root, "log", "--format=" + fmt, t["base"] + ".." + tip.strip()
+            )
+            if code2 == 0:
+                for line in out.splitlines():
+                    parts = (line.split("\t")[1:] + ["", ""])[:2]
+                    built.update(
+                        x.strip()
+                        for x in parts[0].split(";")
+                        if WI_TOKEN_RE.match(x.strip())
+                    )
+                    blocked.update(
+                        {
+                            x.strip(): ""
+                            for x in parts[1].split(";")
+                            if WI_TOKEN_RE.match(x.strip())
+                        }
+                    )
+        if blocked:
+            parked[tid] = {"state": "blocked", "wis": t["wis"]}
+            journal.event("reconcile", train=tid, state="blocked")
+        elif set(t["wis"]) <= built:
+            parked[tid] = {"state": "ready-to-integrate", "wis": t["wis"]}
+            journal.event("reconcile", train=tid, state="ready-to-integrate")
+        else:
+            # Incomplete: resume with a fresh worker (its dirty-tree note is
+            # the reconcile-first prompt, spec §11).
+            parked[tid] = {"state": "resume", "wis": t["wis"], "base": t["base"]}
+            journal.event("reconcile", train=tid, state="resume")
+
+    def spawn_worker(tid, wis, base, spine):
+        wt, err = lease_worktree(root, tid)
+        if err:
+            journal.event("quarantine", train=tid, reason=err)
+            parked[tid] = {"state": "quarantined", "wis": wis}
+            return False
+        argv = [
+            sys.executable,
+            str(Path(__file__).resolve()),
+            "--worktree",
+            str(wt),
+            "--wi",
+            ";".join(wis),
+            "--train",
+            tid,
+            "--base",
+            base,
+            "--max-iterations",
+            str(args.worker_iterations),
+            "--pause",
+            str(args.pause),
+            "--no-session-echo",
+        ]
+        if args.agent_cmd is not None:
+            argv += ["--agent-cmd", args.agent_cmd]
+        if args.model:
+            argv += ["--model", args.model]
+        if args.session_timeout:
+            argv += ["--session-timeout", str(args.session_timeout)]
+        logdir = journal.dir / "logs"
+        out_fh = None
+        try:
+            logdir.mkdir(parents=True, exist_ok=True)
+            out_fh = (logdir / (tid + ".out")).open("ab")
+        except OSError:
+            pass
+        proc = subprocess.Popen(
+            argv,
+            cwd=str(wt),
+            stdout=out_fh if out_fh is not None else subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+        )
+        active[tid] = {
+            "proc": proc,
+            "wis": wis,
+            "base": base,
+            "worktree": str(wt),
+            "spine": spine,
+            "log_fh": out_fh,
+        }
+        journal.event(
+            "worker-start", train=tid, wis=";".join(wis), pid=proc.pid, spine=spine
+        )
+        journal.train(tid, {"wis": wis, "base": base, "state": "building"})
+        return True
+
+    needs_human_ask = ""
+
+    def handle_exit(tid, code):
+        nonlocal needs_human_ask
+        info = active.pop(tid)
+        if info.get("log_fh") is not None:
+            try:
+                info["log_fh"].close()
+            except OSError:
+                pass
+        if code == EXIT_DONE:
+            parked[tid] = {"state": "ready-to-integrate", "wis": info["wis"]}
+            journal.event("worker-done", train=tid, state="ready-to-integrate")
+            journal.train(
+                tid,
+                {
+                    "wis": info["wis"],
+                    "base": info["base"],
+                    "state": "ready-to-integrate",
+                },
+            )
+            if info["spine"] and gate_policy != "autonomous":
+                # Gate/spine work built: under attended/single-ratify the run
+                # EXITS FOR RATIFICATION (spec §4.2) — a human closes the gate
+                # before build-out continues; `autonomous` continues on the
+                # independent-reviewer verdict.
+                needs_human_ask = (
+                    "spine/gate train {} is built and needs ratification "
+                    "(docs/gate-policy: {})".format(tid, gate_policy)
+                )
+                journal.event("gate-ratification-exit", train=tid)
+        elif code == EXIT_BLOCKED:
+            # The durable blocked DISPOSITION is the integrator's serialized
+            # transaction (Slice F); the dispatcher parks the train and keeps
+            # its reservations so nothing double-runs the blocked WI.
+            parked[tid] = {"state": "blocked", "wis": info["wis"]}
+            journal.event("worker-blocked", train=tid)
+        elif code == EXIT_WAITING:
+            retry_at[tid] = time.time() + TRAIN_RETRY_SECONDS
+            parked[tid] = {"state": "waiting", "wis": info["wis"], "base": info["base"]}
+            journal.event("worker-waiting", train=tid, retry_s=TRAIN_RETRY_SECONDS)
+        elif code == EXIT_NEEDS_HUMAN:
+            parked[tid] = {"state": "needs-human", "wis": info["wis"]}
+            needs_human_ask = "worker train {} paged (no routable model / escalation) — see {}".format(
+                tid, journal.dir / "logs" / (tid + ".out")
+            )
+            journal.event("worker-needs-human", train=tid)
+        else:
+            parked[tid] = {"state": "quarantined", "wis": info["wis"]}
+            journal.event("worker-quarantined", train=tid, exit=code)
+
+    # --- stages 2+3: gate-first, then build-out with dynamic refill ----------
+    # The lowest-gate-first order (schedule.py) puts spine/gate work at the
+    # frontier head; the dispatcher serializes it whole-project by draining
+    # every other lane before it runs and dispatching nothing beside it.
+    while True:
+        # Pause: stop NEW reservations at this boundary; in-flight workers
+        # finish their safe boundary and stay recoverable (spec §12).
+        # Blackout: start no NEW worker inside the window (spec §12); the
+        # in-flight ones continue (their own session loop honors it too).
+        paused = pause_reason(docs)
+        blacked_out = bool(
+            blackout_wake(
+                read_declared(docs / "blackout", ""), datetime.datetime.utcnow()
+            )
+        )
+        may_dispatch = paused is None and not blacked_out and not needs_human_ask
+
+        spine_active = any(a["spine"] for a in active.values())
+        if may_dispatch:
+            # Resume reconciled trains first (they already hold reservations).
+            for tid, p in sorted(parked.items()):
+                if len(active) >= jobs or spine_active:
+                    break
+                if p.get("state") == "resume" or (
+                    p.get("state") == "waiting" and time.time() >= retry_at.get(tid, 0)
+                ):
+                    del parked[tid]
+                    spawn_worker(tid, p["wis"], p["base"], spine=False)
+
+        # Scan the frontier every pass (cheap, and the end-state test below
+        # needs it even while paused/blacked out).
+        wi_rows = load_wi_registry(root)
+        wis = schedule.load_wis(
+            schedule.load_rows(root / "docs" / "requirements" / "work-items.csv")
+        )
+        reserved = set(list_reservations(root)) | quarantined_wis
+        records = schedule.evaluate(wis, reserved)
+        wis_by_id = {w["id"]: w for w in wis}
+        cars = pack_traincars(records, wis_by_id)
+
+        if may_dispatch:
+            spine_active = any(a["spine"] for a in active.values())
+            for car in cars:
+                if len(active) >= jobs or spine_active:
+                    break
+                is_spine = car["sched_class"] in (
+                    schedule.SCHED_SPINE_SERIAL,
+                    schedule.SCHED_PROTECTED,
+                )
+                if is_spine and active:
+                    break  # spine serializes whole-project: drain lanes first
+                first = car["wis"][0]
+                tid = "{}-{}-{}".format(
+                    train_phase_gate(root, wi_rows, first),
+                    first,
+                    "%04x" % int.from_bytes(os.urandom(2), "big"),
+                )
+                base = head_sha_full(root)
+                err = reserve_traincar(root, tid, car["wis"], base)
+                if err:
+                    journal.event("reserve-failed", train=tid, reason=err[:200])
+                    continue
+                journal.event(
+                    "reserve",
+                    train=tid,
+                    wis=";".join(car["wis"]),
+                    cls=car["sched_class"],
+                )
+                spawn_worker(tid, car["wis"], base, spine=is_spine)
+                if is_spine:
+                    break
+
+        journal.manifest(
+            {
+                "jobs": jobs,
+                "active": {t: a["wis"] for t, a in active.items()},
+                "parked": {t: p["state"] for t, p in parked.items()},
+                "updated": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            }
+        )
+
+        if not active:
+            waiting = [t for t, p in parked.items() if p["state"] == "waiting"]
+            resumable = [t for t, p in parked.items() if p["state"] == "resume"]
+            dispatchable = bool(cars) or bool(resumable)
+            if paused is not None:
+                stop_banner(
+                    docs / "status.md",
+                    "paused (docs/pause present)",
+                    "no new reservations; delete docs/pause and relaunch to "
+                    "resume ({} in-flight train(s) already wrapped safely).".format(
+                        len(parked)
+                    ),
+                )
+                return EXIT_PAUSED
+            if needs_human_ask:
+                _write_runstate(docs, "NEEDS-HUMAN", needs_human_ask)
+                stop_banner(docs / "status.md", "NEEDS-HUMAN", needs_human_ask)
+                return EXIT_NEEDS_HUMAN
+            if blacked_out and dispatchable:
+                # Inside the window with work available: wait it out — a
+                # single walk-away launch survives the blackout (spec §12).
+                wake = blackout_wake(
+                    read_declared(docs / "blackout", ""),
+                    datetime.datetime.utcnow(),
+                )
+                time.sleep(min(wake or 60, 60))
+                continue
+            if waiting and not dispatchable:
+                _write_runstate(docs, "RUNNING")
+                stop_banner(
+                    docs / "status.md",
+                    "WAITING on rate limits",
+                    "every dispatchable train is rate-limited; relaunch later.",
+                )
+                return EXIT_WAITING
+            if not dispatchable and not waiting:
+                break  # frontier + lanes drained — evaluate the end state
+
+        # Poll workers; every exit is a rescan trigger (dynamic refill).
+        exited = [
+            (t, a["proc"].poll())
+            for t, a in list(active.items())
+            if a["proc"].poll() is not None
+        ]
+        for tid, code in exited:
+            handle_exit(tid, code)
+        if not exited:
+            time.sleep(args.poll_seconds)
+
+    # --- end state (spec §10: run-state is a generated dispatcher outcome) ---
+    ready = [t for t, p in parked.items() if p["state"] == "ready-to-integrate"]
+    blocked = [t for t, p in parked.items() if p["state"] == "blocked"]
+    quarantined = [
+        t for t, p in parked.items() if p["state"] in ("quarantined", "needs-human")
+    ]
+    queued_left = False
+    wis = schedule.load_wis(
+        schedule.load_rows(root / "docs" / "requirements" / "work-items.csv")
+    )
+    reserved = set(list_reservations(root))
+    queued_left = any(w["status"] == "queued" and w["id"] not in reserved for w in wis)
+    summary = (
+        "trains: {} ready-to-integrate (Slice F integrates), {} blocked, "
+        "{} quarantined; {} unreserved queued WI(s) remain".format(
+            len(ready),
+            len(blocked),
+            len(quarantined),
+            sum(1 for w in wis if w["status"] == "queued" and w["id"] not in reserved),
+        )
+    )
+    if quarantined:
+        _write_runstate(docs, "RUNNING")
+        stop_banner(docs / "status.md", "quarantined trains need attention", summary)
+        return EXIT_STALL
+    if ready or queued_left:
+        _write_runstate(docs, "RUNNING")
+        stop_banner(docs / "status.md", "build-out wave complete", summary)
+        return EXIT_DONE
+    if blocked:
+        _write_runstate(docs, "BLOCKED")
+        stop_banner(docs / "status.md", "run-state=BLOCKED", summary)
+        return EXIT_BLOCKED
+    _write_runstate(docs, "DONE")
+    stop_banner(docs / "status.md", "run-state=DONE", summary)
+    return EXIT_DONE
+
+
+def head_sha_full(root):
+    """Full HEAD sha (reservation bases are exact, never abbreviated)."""
+    code, out = git(root, "rev-parse", "HEAD")
+    return out if code == 0 else ""
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -1846,6 +2545,27 @@ def main():
         help="worker assignment: a findings file (review verdict) to embed in "
         "the worker prompt as the rework scope — assignment-scoped state, "
         "replacing the lane rework-wi pointer.",
+    )
+    ap.add_argument(
+        "--jobs",
+        default=None,
+        help="launch the PARALLEL DISPATCHER with this worker ceiling: an "
+        "integer (1 = explicit serial mode) or 'auto' (adaptive up to the "
+        "AGENT_JOBS_CEILING env, default 2). Presence of this flag — or the "
+        "AGENT_JOBS env var — selects dispatcher mode; absent keeps the "
+        "legacy resume loop (docs/specs/parallel-wi-dispatch.md §4).",
+    )
+    ap.add_argument(
+        "--worker-iterations",
+        type=int,
+        default=12,
+        help="dispatcher mode: per-worker session budget (default 12)",
+    )
+    ap.add_argument(
+        "--poll-seconds",
+        type=float,
+        default=2.0,
+        help="dispatcher mode: worker poll cadence in seconds (default 2)",
     )
     ap.add_argument(
         "--max-iterations",
@@ -1976,6 +2696,21 @@ def main():
     else:
         root = Path(args.root).resolve()
     docs = root / "docs"
+
+    # Dispatcher mode (WI-182, SR-061): --jobs (or the AGENT_JOBS env the
+    # migrated launchers wire) selects the parallel dispatcher. A worker
+    # assignment, legacy track, or interactive sitting always wins — those are
+    # explicit per-process roles the dispatcher itself launches or replaces.
+    jobs_opt = (
+        args.jobs
+        if args.jobs is not None
+        else (os.environ.get("AGENT_JOBS", "").strip() or None)
+    )
+    if jobs_opt is not None and not (
+        args.wi or args.train or args.track or args.interactive
+    ):
+        args.jobs = jobs_opt
+        return dispatch_run(args, root)
     template = (
         args.agent_cmd
         if args.agent_cmd is not None

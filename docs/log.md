@@ -7305,3 +7305,82 @@ above and added the `--base` fail-closed guard).
 **Handoff.** Slice C done. Next: **WI-182** (Slice D — dispatcher + worktree
 pool + reservations; the central fan-out engine), then E–G per the §15 DAG.
 Grinding under `gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-16 — v4 Slice D (WI-182): the parallel dispatcher (SR-061 Verified)
+
+**What.** The central fan-out engine (spec §4/§6): `agent_loop.py --jobs N|auto`
+(or `AGENT_JOBS`) launches the dispatcher — reconcile → gate → build-out —
+while the legacy resume loop stays byte-untouched without the flag (the
+launchers flip at Slice H, so mid-campaign nothing breaks).
+
+- **Frontier via `schedule.py`** (sanctioned sibling import; **IF-055** row +
+  Contracts line): `load_wis`/`evaluate` + the `SCHED_*` classes; an
+  unclassified WI **fails closed per-WI** without stopping classified disjoint
+  work (proven by test — the meta registry itself dispatches nothing until its
+  SafetyClass audit, exactly the §14 migration posture).
+- **Traincar packing** (`pack_traincars`): every ready WI heads its own car in
+  the deterministic order; an `ordinary` car absorbs its **unary hard-successor
+  chain** (successor ordinary, other preds done, single edge) up to the cap 4;
+  spine/gate/attestation/protected never join a multi-WI car.
+- **Atomic reservations** (`reserve_traincar`): ONE off-history `commit-tree`
+  metadata commit (`{train, wis, base}` JSON) + ONE `update-ref --stdin`
+  transaction creating the train branch and every
+  `refs/llm/reservations/WI-###` ref with zero-old-value checks — all-or-none
+  (a pre-claimed constituent creates *nothing*, proven by test). Found live:
+  Windows text-mode rewrote the transaction's `\n` as `\r\n` and git read
+  `start\r` as an unknown command — the stdin is now bytes.
+- **Worktree pool**: `../<repo>-trains/<train-id>` linked worktrees
+  (`lease_worktree` reuses a recovered checkout); workers are Slice-C
+  subprocesses (`--worktree/--wi/--train/--base`), stdout journaled to
+  `out/dispatch/logs/`.
+- **Dynamic refill**: rescan on every worker exit — never a static wave; the
+  3-WI/2-lane test proves the third start follows the first done, and a
+  **rendezvous fake** (each worker waits for the other's start marker or dies)
+  proves genuine overlap. `--jobs 1` = explicit serial (peak concurrency 1).
+- **Spine serialization + ratification exit**: a spine/gate/protected car
+  dispatches only into a drained pool and nothing dispatches beside it; under
+  `attended`/`single-ratify` a built spine train **exits NEEDS-HUMAN for
+  ratification** (§4.2); `autonomous` continues.
+- **Reconcile stage** (§4.1): durable reservations grouped into trains — built
+  → parked ready-to-integrate, blocked → parked, incomplete → **resumed** from
+  the existing reservation (never re-reserved, proven), unreadable/branchless →
+  quarantined (fail closed for that WI, disjoint work continues).
+- **Pause/blackout/run-state**: `docs/pause` stops new reservations at the
+  boundary (zero refs, proven); a blackout window starts no new worker; root
+  `run-state` becomes a **generated dispatcher outcome**
+  (RUNNING|BLOCKED|DONE|NEEDS-HUMAN) — the SR-059 generation half's run-state
+  leg now exists (status.md generation remains Slice F).
+- **`out/dispatch/`** journal: `events.jsonl` (append-before-action) + atomic
+  `manifest.json` + `trains/*.json` — cache, never authority (§11).
+
+**Deviations from spec.** (1) A *resumed* train spawns with `spine=False` even
+if its constituents are spine-class — recovery-time reclassification hardens in
+Slice G. (2) Built trains park **ready-to-integrate with reservations held**;
+cross-wave dependent WIs stay `waiting` until the integrator (F) advances the
+durable disposition — the honest mid-campaign semantics, not a gap. (3) The
+work-advisor's EstTokens-weighted clustering is the conservative
+unary-chain-only rule for now (the knowledge-pack heuristic; cost calibration
+arrives with H's telemetry).
+
+**Tests.** `tests/test_agent_loop_dispatch.py` — 11 fixtures (TC-062): refill,
+rendezvous overlap, `--jobs 1` serial equivalence, spine whole-project
+serialization, attended ratification exit, pause-at-boundary, unclassified
+fail-closed, all-or-none reservation, unary-chain packing, resume-no-rereserve,
+bad `--jobs` preflight.
+
+**Byte deltas (budgeted files).** PROCESS_OPTIONS.md **142,919 → 144,457
+(+1,538 B**: the dispatcher's downstream contract paragraph; baseline
+re-stamped ×3). AGENTS.template.md 9,978 / PROCESS.md 59,768 (untouched).
+
+**Tests / end green (real output).** `pytest -q -n auto -m smoke` → **680
+passed, 2 skipped** (61 s). Dispatcher+worker suites 33 green; ruff
+clean+formatted; `check_docs --stale` OK; `gen_okf` (IF-055 + 3 verified rows) +
+`gen_arch_map` + `gen_trajectory` regenerated. SR-061 + LLR-062 + TC-062
+(`Automated=Yes`, `Evidence=tests/test_agent_loop_dispatch.py`) → **Verified**
+(autonomous single-agent adversarial review; the review added the ratification
+exit + caught the CRLF transaction mangle and the blackout end-state hole).
+
+**Handoff.** Slice D done. Next: **WI-183** (Slice E — change-train
+continuation: the one-review-cycle-per-traincar model, fork/join, early-end
+release) and **WI-184** (F — atomic integrator) both unblocked; grinding E
+first. `gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).

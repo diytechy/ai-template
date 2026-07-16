@@ -69,20 +69,23 @@ home elsewhere — don't restate it here:
   [specs/parallel-wi-dispatch.md](specs/parallel-wi-dispatch.md)):_ requirements
   **ratified + decomposed** 2026-07-15 (SN-025 in Core needs; SR-057…065 +
   LLR-058…066 + TC-058…066 Planned), so `v4` sits at **G2** (see Active gate).
-  **Slices A–C shipped:** A = `scripts/schedule.py` (SR-057/058 **Verified**);
+  **Slices A–D shipped:** A = `scripts/schedule.py` (SR-057/058 **Verified**);
   B (WI-180) = retired `docs/next-wi` + `docs/run-phase` and every live dependency
   + the generated-root-status **contract** (owner ruled "full literal B",
   [log.md](log.md) 2026-07-16); C (WI-181) = explicit `--wi`/`--train` worker
   assignment (trailer-evidence result channel, collision-safe train-scoped
-  logs/reviews naming the reviewed commit, per-WI BuildTier pin restored,
-  `--track` deprecated one window; SR-060 **Verified**). **SR-059/LLR-060/TC-060
-  stay Planned** — the *generation* half (integrator-generated `status.md`,
-  dispatcher-derived `run-state`, "only on the integration branch") lands with
-  Slices D/F and verifies then. Remaining build slices, in DAG order: **WI-182**
-  (D: dispatcher + worktree pool + reservations) · **WI-183**
+  logs/reviews naming the reviewed commit, `--track` deprecated one window;
+  SR-060 **Verified**); D (WI-182) = the `--jobs` parallel dispatcher (atomic
+  `refs/llm/reservations/*` traincar claims, `../<repo>-trains/*` worktree
+  pool, dynamic refill, spine whole-project serialization + attended
+  ratification exit, generated `run-state`; SR-061 **Verified** — legacy loop
+  untouched without `--jobs`, launchers flip at H). **SR-059/LLR-060/TC-060
+  stay Planned** — the run-state leg now exists; the integrator-generated
+  `status.md` lands with Slice F and SR-059 verifies then. Remaining build
+  slices, in DAG order: **WI-183**
   (E: change-train continuation) · **WI-184** (F: atomic integrator) · **WI-185**
   (G: recovery + fault injection) · **WI-186** (H: telemetry + migration +
-  dogfood). Edges wire the §15 DAG (D after A,C; E after D; F after
+  dogfood). Edges wire the §15 DAG (E after D; F after
   B,D; G after D,F; H the join). Grinding under `gate-policy: autonomous`._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
@@ -93,10 +96,10 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** the **parallel-dispatch campaign (phase `v4`)** is the live
-  frontier (above), at **G2** with **Slices A–C shipped**. Next WI is **WI-182**
-  (Slice D: the dispatcher — worktree pool, atomic `refs/llm/reservations/*`,
-  reconcile→gate→build-out launch sequence, dynamic refill), unblocked after
-  A+C. Grinding under `gate-policy: autonomous`
+  frontier (above), at **G2** with **Slices A–D shipped**. Next WI is **WI-183**
+  (Slice E: change-train continuation — the one-review-cycle-per-traincar
+  model, fork/join, early-end reservation release); **WI-184** (F: atomic
+  integrator) is also unblocked and follows. Grinding under `gate-policy: autonomous`
   (single-agent adversarial self-review at gates, recorded as a limitation vs a
   provider-heterogeneous reviewer). Deferred main-decomposition
   (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering; Codex
