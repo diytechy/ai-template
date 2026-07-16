@@ -655,9 +655,10 @@ durably before launching a worker.
 The directory is nevertheless a **cache/journal, not authority**. Every startup
 acquires the repo-level dispatcher lock and performs recovery before scheduling:
 
-1. read the authoritative integrated disposition and integration trailers from
-   `refs/heads/llm/integration`; the selected development branch is its published
-   projection, not the recovery authority;
+1. initialize `refs/heads/llm/integration` from the selected development branch
+   when it is absent on first launch; otherwise read the authoritative integrated
+   disposition and integration trailers from it — the selected development
+   branch is its published projection, not the recovery authority;
 2. enumerate `refs/heads/llm/integration`, `llm/train/*`, and
    `llm/integrate/*` branches plus `refs/llm/reservations/*`;
 3. enumerate linked worktrees and their dirty/clean state;
@@ -683,6 +684,7 @@ Recovery rules:
 | Train claims a WI without its reservation ref | Quarantine that WI/train mismatch; do not recreate authority from cache alone |
 | Integration staging branch exists | Resume/verify staging; `llm/integration` remains unchanged until its CAS |
 | `llm/integration` is ahead of the selected development branch | Idempotently resume publication: verify the expected development hash and clean worktree, perform the development-ref CAS, then synchronize the worktree by fast-forward/reset |
+| Development ref equals `llm/integration`, but its worktree/index still match the pre-publication commit | Treat synchronization as an idempotent publish step and re-run the clean fast-forward/reset sync; do not classify the mechanically stale checkout as a user-dirty tree |
 | Selected development branch moved or diverged from unpublished integration | Recompose the authoritative integration result from the new development HEAD, verify it, and retry publication; never re-dispatch a WI already done on `llm/integration` |
 | Ownership cannot be proven | Fail closed for that WI and continue only disjoint proven work |
 
@@ -847,6 +849,8 @@ synchronization. For each point:
 - root is either entirely before or entirely after integration;
 - an unpublished integration commit remains authoritative and is published
   idempotently rather than making its already-done WIs ready again;
+- a published ref with a pre-publication index/worktree is recognized and
+  idempotently synchronized rather than reported as user dirt;
 - deleting all of `out/dispatch/` still reconstructs from Git/worktrees;
 - every constituent reservation reconstructs from
   `refs/llm/reservations/*`, including before its first WI commit;
