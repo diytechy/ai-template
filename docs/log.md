@@ -7113,3 +7113,48 @@ passed, 2 skipped**; `check_docs --stale` → OK 0 broken.
 **Handoff.** v4 at G2. Next: **WI-179** (Slice A — schedule.py + schema fields +
 safety classifier + unit fixtures), which verifies SR-057/058 → G3. Not pushed
 (`docs/push-policy: human`).
+
+## 2026-07-15 — v4 Slice A (WI-179): the scheduler contract, `scripts/schedule.py` (SR-057/058 Verified)
+
+**What.** Built the first build slice of the parallel-dispatch campaign — the pure,
+side-effect-free scheduler library + CLI the dispatcher/dashboard/validator will
+share. `scripts/schedule.py` (stdlib, 3.8+, F5 self-contained loaders):
+- **Frontier + deterministic order (SR-057):** a queued WI is ready when every
+  hard predecessor is integrated `done` (soft `~` edges never block); ordered by
+  `(gate class, Priority desc, transitive downstream-dependent count desc,
+  remaining hard-path length desc, WI id)`. `ready [--explain|--format json]` and
+  `simulate --jobs N` (greedy list-schedule; `--jobs 1` = serial order).
+- **Deterministic safety classifier (SR-058):** one pure function over declared
+  `SafetyClass` + critique/checkpoint flags + optional structural evidence →
+  scheduling class + reason codes; spine/gate/attestation and protected serialize
+  whole-project, high-risk/critique/checkpoint force single-WI, ordinary packs,
+  and missing/unknown/structurally-contradicted **fails closed as `unclassified`**
+  (never scheduled) for that WI only.
+
+Schema: added the optional `Priority`/`Exclusive`/`BlockRef`/`EstTokens`/
+`SafetyClass` columns + the `blocked` status to the work-item **template** (the
+meta registry is unchanged — schedule reads absent columns as documented defaults,
+so the meta's own WIs read `unclassified` until its Slice-H SafetyClass audit).
+Declared `schedule.py`'s seams **IF-053** (Provides the scheduler) + **IF-054**
+(Consumes work-items.csv), CMP-004, keeping connectivity coverage at 0 warns.
+
+**Verification.** `tests/test_schedule.py` — 20 fixtures covering the §16
+scheduler cases (independent roots fill workers; hard/transitive deps never
+co-schedule; soft edges don't block; Priority outranks downstream within a gate
+class; lowest gate class first; shared Workstream/Campaign/SR don't serialize but
+shared Exclusive keys do; blocked/deferred/reserved excluded with reason codes;
+every SafetyClass value deterministic; missing/unknown/structural-mismatch fail
+closed for only that WI; critique/checkpoint force single-WI; CLI ready-json +
+explain + simulate). TC-058/059 → Automated=Yes (evidence tests/test_schedule.py)
++ Verified; LLR-058/059 + SR-057/058 → Verified (autonomous single-agent review).
+Derived gate stays **G2** (v4 phase min — the other slices' SRs remain Planned).
+
+**Tests / end green (real output, via `./.venv`).** `pytest -q -n auto` → **825
+passed, 2 skipped** (+20). ruff format/check clean. `trace --strict-integrity`
+orphans=0 integrity=0 interfaces=54 interface-findings=0; `check_trajectory
+--strict` clean; `derive_gate/gen_arch_map/gen_okf/gen_trajectory --check` green;
+`check_docs --stale` OK 0 broken.
+
+**Handoff.** Slice A done; SR-057/058 Verified. Next: **WI-180** (Slice B —
+de-author status / retire next-wi) and **WI-181** (Slice C — worker assignment),
+both unblocked after A. Not pushed (`docs/push-policy: human`).

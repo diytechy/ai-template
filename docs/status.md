@@ -86,15 +86,16 @@ home elsewhere — don't restate it here:
 - **Queued (parallel-dispatch campaign, phase `v4`** —
   [specs/parallel-wi-dispatch.md](specs/parallel-wi-dispatch.md)):_ requirements
   **ratified + decomposed** 2026-07-15 (SN-025 in Core needs; SR-057…065 +
-  LLR-058…066 + TC-058…066 Planned), so `v4` sits at **G2** (see Active gate). The
-  eight build slices remain, in DAG order: **WI-179** (A: scheduler + safety
-  classifier) · **WI-180** (B: de-author status / remove next-wi) · **WI-181**
-  (C: worker assignment) · **WI-182** (D: dispatcher + reservations) · **WI-183**
-  (E: change-train continuation) · **WI-184** (F: atomic integrator) · **WI-185**
-  (G: recovery + fault injection) · **WI-186** (H: telemetry + migration +
-  dogfood). Edges wire the §15 DAG (A→{B,C}; D after A,C; E after D; F after B,D;
-  G after D,F; H the join). Each slice implements + verifies its SR (→G3) at its
-  commit; grinding under `gate-policy: autonomous`._
+  LLR-058…066 + TC-058…066 Planned), so `v4` sits at **G2** (see Active gate).
+  **Slice A shipped** (`scripts/schedule.py` + `tests/test_schedule.py`; SR-057/058
+  Verified). The remaining build slices, in DAG order: **WI-180** (B: de-author
+  status / remove next-wi) · **WI-181** (C: worker assignment) · **WI-182** (D:
+  dispatcher + reservations) · **WI-183** (E: change-train continuation) ·
+  **WI-184** (F: atomic integrator) · **WI-185** (G: recovery + fault injection) ·
+  **WI-186** (H: telemetry + migration + dogfood). Edges wire the §15 DAG (B,C
+  after A; D after A,C; E after D; F after B,D; G after D,F; H the join). Each
+  slice implements + verifies its SR (→G3) at its commit; grinding under
+  `gate-policy: autonomous`._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in
@@ -104,11 +105,11 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** the **parallel-dispatch campaign (phase `v4`)** is the live
-  frontier (above), now at **G2** with the spine ratified + decomposed. Next WI is
-  **WI-179** (Slice A: `schedule.py` frontier + deterministic ordering + the safety
-  classifier + the `Priority`/`Exclusive`/`BlockRef`/`EstTokens`/`SafetyClass`
-  schema fields + unit fixtures), building under `gate-policy: autonomous`
-  (single-agent adversarial self-review at gates, recorded as a limitation vs a
+  frontier (above), at **G2** with Slice A shipped. Next WI is **WI-180** (Slice B:
+  de-author `docs/status.md` into an integrator-generated snapshot and retire
+  `docs/next-wi` + `docs/run-phase`, generated `run-state`), then Slice C in
+  parallel — both after A. Grinding under `gate-policy: autonomous` (single-agent
+  adversarial self-review at gates, recorded as a limitation vs a
   provider-heterogeneous reviewer). Deferred main-decomposition
   (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering; Codex
   Sol builds are live.

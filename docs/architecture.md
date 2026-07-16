@@ -453,6 +453,25 @@ Contracts (interfaces): IF-048, IF-049
 | `interactive_menu(capabilities)` | Present the numbered menu, read a pick from stdin, launch it. |  |
 | `main(argv)` |  |  |
 
+### `scripts/schedule`
+_Derive the dependency-ready WI frontier and its deterministic schedule._
+Contracts (interfaces): IF-053, IF-054
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `load_rows(path)` |  |  |
+| `load_wis(rows)` | Parse work-item rows into a list of scheduler WI dicts (skips the inert |  |
+| `classify(wi, *, structural)` | `(scheduling_class, [reason_codes])` for one WI — a pure function. | SR-058 |
+| `is_schedulable_class(sched_class)` | Only a positively-classified WI is eligible; unclassified fails closed. |  |
+| `hard_preds_satisfied(wi, status)` | Every hard predecessor is integrated `done`. An unknown predecessor id |  |
+| `downstream_counts(wis)` | `{id: transitive hard-descendant count}` — how many distinct WIs depend on |  |
+| `hard_path_lengths(wis)` | `{id: remaining hard-path length}` — the longest chain of hard descendants |  |
+| `order_key(wi, sched_class, downstream, hardpath)` | The deterministic sort key (spec §4 step 6): lowest gate class first, then |  |
+| `evaluate(wis, reserved)` | Classify every WI and compute its readiness disposition — the one pass the |  |
+| `frontier(wis, reserved)` | The ordered ready frontier: records whose disposition is `ready`. |  |
+| `simulate(wis, jobs, reserved)` | Greedy list-scheduling simulation over the hard DAG: each round assigns up |  |
+| `main(argv)` |  |  |
+
 ### `scripts/score_reviews`
 _The substance scorer — score a review verdict block by how USEFUL it is, not_
 Contracts (interfaces): IF-046, IF-047
