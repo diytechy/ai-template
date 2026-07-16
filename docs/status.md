@@ -22,23 +22,19 @@ home elsewhere — don't restate it here:
 
 ## Current State
 
-- **Active gate:** runnable **G2** (derived — `scripts/derive_gate.py`; per-phase
-  `(default)=G3;v2=G3;v3=G3;v4=G2`, cached to [`docs/gate`](gate)) — the ratified
-  spine stays at **G3**; the **`v4` parallel-dispatch phase is at G2** (requirements
-  ratified + decomposed 2026-07-15: SN-025 in Core needs, SR-057…065 + LLR-058…066
-  + TC-058…066 Planned), so the min-aggregated runnable gate is **G2** until the
-  build slices implement and verify their SRs (→G3). Spine: **SN=25 SR=65 LLR=66
-  TC=66** (orphans=0, 0 drafts), 52 seams, 5 components. The v3 dashboard-ux
-  campaign closed at G3 (SR-052/053/054 Verified via the owner's manual critique,
-  [reviews/074-CRITIQUE.md](reviews/074-CRITIQUE.md)).
+- **Active gate:** runnable **G3** (derived — `scripts/derive_gate.py`; per-phase
+  `(default)=G3;v2=G3;v3=G3;v4=G3`, cached to [`docs/gate`](gate)) — the
+  **`v4` parallel-dispatch campaign CLOSED at G3** (2026-07-16: SN-025 +
+  SR-057…065 + LLR-058…066 + TC-058…066 all **Verified**), so the whole repo
+  returns to G3. Spine: **SN=25 SR=65 LLR=66 TC=66** (orphans=0, 0 drafts), 55
+  seams, 5 components. The full `check.py --gate G3` bar passes as a unit,
+  including the now-active G3-only lint/dupes/require-verified steps.
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~47 s) +
   `python project-trajectory/scripts/check_docs.py --root . --stale`, both green.
-  At slice/campaign close: the full suite `pytest -q -n auto` (~72 s) and
-  `check.py` at the derived gate (now **G2** — the `--strict` trajectory step is
-  live (R-B…R-E gate: open WIs named, no done id, SpecRefs resolve), while the
-  G3-only `lint`, `dupes`, and `--require-verified` steps arrive when v4 reaches
-  G3; R-A (Deliverable non-empty iff done) stays the
-  always-on floor). Keep status.md current regardless: closed WI ids leave, open
+  At slice/campaign close: the full suite `pytest -q -n auto` (~117 s) and
+  `check.py` at the derived gate (now **G3** — all 15 steps including the
+  G3-only `lint`, `dupes`, and `--require-verified`, plus the `--strict`
+  trajectory step). Keep status.md current regardless: closed WI ids leave, open
   ones are named.
 - **Run-state:** [run-state](run-state) holds the declared value (don't
   paraphrase it here); when it reads NEEDS-HUMAN its `ask:` line is the
@@ -65,38 +61,22 @@ home elsewhere — don't restate it here:
   stays deferred); and both **owner-intake** sittings (2026-07-14 / -14b — Codex
   **Sol builds live**, `codex` on PATH 2026-07-15). **WI-159** (Knowledge-tab
   density) stays deferred._
-- **Queued (parallel-dispatch campaign, phase `v4`** —
-  [specs/parallel-wi-dispatch.md](specs/parallel-wi-dispatch.md)):_ requirements
-  **ratified + decomposed** 2026-07-15 (SN-025 in Core needs; SR-057…065 +
-  LLR-058…066 + TC-058…066 Planned), so `v4` sits at **G2** (see Active gate).
-  **Slices A–D shipped:** A = `scripts/schedule.py` (SR-057/058 **Verified**);
-  B (WI-180) = retired `docs/next-wi` + `docs/run-phase` and every live dependency
-  + the generated-root-status **contract** (owner ruled "full literal B",
-  [log.md](log.md) 2026-07-16); C (WI-181) = explicit `--wi`/`--train` worker
-  assignment (trailer-evidence result channel, collision-safe train-scoped
-  logs/reviews naming the reviewed commit, `--track` deprecated one window;
-  SR-060 **Verified**); D (WI-182) = the `--jobs` parallel dispatcher (atomic
-  `refs/llm/reservations/*` traincar claims, `../<repo>-trains/*` worktree
-  pool, dynamic refill, spine whole-project serialization + attended
-  ratification exit, generated `run-state`; SR-061 **Verified** — legacy loop
-  untouched without `--jobs`, launchers flip at H); E (WI-183) = the traincar
-  execution model (one review cycle per traincar over the combined train diff,
-  §7 continuation re-check + `EXIT_TRAIN_END`, transactional
-  release-of-unstarted on early end, fork/join proven; SR-062 **Verified**);
-  F (WI-184) = the atomic serialized integrator (CAS-only `llm/integration`,
-  staging composition + exact-head verdict verification, clean-apply fast path
-  vs conflict-parks-for-re-review, blocked-disposition transaction, durable
-  publish-intent publication, generated status snapshot; SR-063 **Verified** —
-  multi-wave runs complete in one launch); G (WI-185) = the fault-injected
-  crash matrix (`AGENT_FAULT_POINT` at six lifecycle boundaries; reconcile
-  hardening: already-integrated restore + unprovable-ownership quarantine;
-  out/dispatch-deleted reconstruction proven; SR-064 **Verified**).
-  **SR-059/LLR-060/TC-060 stay Planned** — both generation legs (run-state +
-  status.md) now exist in code; SR-059 verifies at H's migration/freshness
-  fixture. Remaining: **WI-186** (H: telemetry + scaffold/launcher flip +
-  downstream migration/audits + two-real-WI dogfood + cross-OS close — the
-  §15 join, closing v4 G2→G3 at the full gate bar). Grinding under
-  `gate-policy: autonomous`._
+- **parallel-dispatch campaign (phase `v4`) — COMPLETE** (2026-07-16;
+  [specs/parallel-wi-dispatch.md](specs/parallel-wi-dispatch.md)):_ all eight
+  slices A–H shipped and **G3-closed** — SN-025 + SR-057…065 + LLR-058…066 +
+  TC-058…066 all **Verified**. `agent-resume --jobs N` now runs the full
+  dispatcher/integrator: `schedule.py` frontier + safety classification (A),
+  retired `next-wi`/`run-phase` (B), explicit `--wi`/`--train` worker
+  assignment with trailer-evidence (C), the `--jobs` dispatcher with atomic
+  `refs/llm/reservations/*` + a worktree pool + dynamic refill (D), the
+  one-review-cycle traincar model + fork/join (E), the CAS-only atomic
+  serialized integrator + durable publish-intent publication (F), the
+  fault-injected crash matrix + git-as-authority recovery (G), and telemetry +
+  gated downstream migration + the parallel-by-default scaffold flip (H). The
+  legacy single-session resume loop is untouched without `--jobs`/`AGENT_JOBS`;
+  a downstream repo holds at `--jobs 1` until its soft-edge + SafetyClass
+  audits pass (the `downstream-resync` skill). Round-by-round evidence →
+  [log.md](log.md)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in
@@ -105,18 +85,18 @@ home elsewhere — don't restate it here:
   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** the **parallel-dispatch campaign (phase `v4`)** is the live
-  frontier (above), at **G2** with **Slices A–G shipped** (SR-057/058 +
-  SR-060…064 Verified). Next WI is **WI-186** (Slice H, the §15 join:
-  telemetry, the scaffold/launcher parallel-by-default flip, downstream
-  migration + soft-edge/SafetyClass audits, the two-real-WI dogfood trial, and
-  the cross-OS campaign close taking v4 G2→G3 at the full gate bar — SR-059 +
-  SR-065 verify there). Grinding under `gate-policy: autonomous`
-  (single-agent adversarial self-review at gates, recorded as a limitation vs a
-  provider-heterogeneous reviewer). Deferred main-decomposition
-  (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering; Codex
-  Sol builds are live.
-  Round-by-round evidence → [log.md](log.md), not here.
+- **Next action:** the **parallel-dispatch campaign (v4) is COMPLETE** and the
+  repo is back at **G3** — no active build frontier. The highest-value next step
+  is the deferred **`main-decomposition` campaign** (**WI-080** → **WI-081**:
+  break up the `agent_loop.py` / `trace.py` monoliths, test-seams-first,
+  behavior-preserving — now itself a prime candidate to grind *through the new
+  parallel dispatcher*, once the meta-repo does its own SafetyClass audit to
+  clear the `--jobs 1` hold). It stays parked pending deliberate owner ordering.
+  Open owner items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are
+  unchanged under `gate-policy: autonomous`; Codex Sol builds are live. Grinding
+  under single-agent adversarial self-review at gates (recorded as a limitation
+  vs a provider-heterogeneous reviewer). Round-by-round evidence →
+  [log.md](log.md), not here.
 
 ## Scope
 

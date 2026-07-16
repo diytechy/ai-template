@@ -7558,3 +7558,79 @@ SR-059 (B's generation halves now exist in code) and SR-065 verify at **H**
 two-real-WI dogfood, cross-OS campaign close — the §15 join, and the campaign
 G2→G3 close with the full gate bar). `gate-policy: autonomous`. Not pushed
 (`docs/push-policy: human`).
+
+## 2026-07-16 — v4 Slice H (WI-186): telemetry + migration + campaign close (SR-065/SR-059 Verified; v4 G2→G3)
+
+**What.** The §15 join — telemetry, downstream migration, the scaffold flip, and
+the generated surfaces — closing the parallel-dispatch campaign at **G3**.
+
+- **Telemetry (SR-065).** Every journal event carries a per-launch **run id**
+  (`<utc>-<pid>-<rand>`), so telemetry aggregates by `(run, train, WI, session)`
+  with no cross-run collision. A change-gated one-line **banner** reports active
+  lanes / ready-frontier width / integration-queue depth / ceiling;
+  `telemetry_summary` writes `out/dispatch/telemetry.json` with the required
+  measurements (reservation→integration counts, overlap/conflict/re-review/
+  rework rates, recovery reconciles, quarantines, combined-bar failures after
+  individually-green trains).
+- **Migration gate (SR-065, §14).** `resolve_ceiling` gates the two-worker
+  promotion: a repo **holds at `--jobs 1`** until *both* `assess_migration`
+  audits pass — the SafetyClass audit (one unclassified open WI holds the whole
+  repo) and the soft-edge audit (each `~` edge signed via `docs/parallel-ready`).
+  A **fresh scaffold passes by construction**; the flip is a recorded
+  `parallel-enabled` event. `reconcile_legacy` returns legacy `active` rows to
+  `queued` (logged finding) and flags `docs/tracks/*` for the one compatibility
+  window. A non-adopting repo (no `--jobs`/`AGENT_JOBS`) keeps the byte-unchanged
+  legacy loop.
+- **Scaffold + SR-059.** `agent-resume.template.{sh,cmd}` ship `AGENT_JOBS=2`
+  (parallel-by-default); a fresh scaffold carries no `next-wi`/`run-phase`
+  (asserted); `generate_status` is **marker-gated** (a hand-authored `status.md`
+  is never clobbered). With F's integrator-generated `status.md` and D's
+  generated `run-state`, **SR-059's generation half is complete** — it verifies
+  here.
+- **The launch reconcile (a real D/F gap closed).** New work enters through the
+  development branch, but the dispatcher reads the frontier from the integration
+  ref — so a human's added WIs were invisible. The launch now classifies
+  dev-vs-integration (dev-ahead → **fast-forward** the ref to absorb the new
+  work; integration-ahead → resume publication; diverged → log) **before**
+  acting, so a publish never discards new work (spec §9 "reconciles from the
+  development branch"). Found + fixed via the migration fixtures.
+- **Docs.** `downstream-resync` skill (the migration recipe: do the two audits,
+  sign `docs/parallel-ready`, set `AGENT_JOBS=2`) + ADOPTING §6 + PROCESS_OPTIONS
+  (telemetry & migration paragraphs). Skill copies re-synced ×2.
+- **Quality debt at the G3 close.** The G3-only **dupes** gate ran for the first
+  time since v3 (dormant at G2 all campaign): schedule.py's F5 boilerplate pairs
+  + the representative-pair re-attribution + a pre-existing bootstrap intra-file
+  block were censused in `docs/dupes-allow` (all sanctioned F5 / grandfathered
+  debris, verified by inspection); schedule.py's own `downstream_counts`/
+  `hard_path_lengths` shared a children-map build — **extracted** to
+  `_hard_children` rather than censused.
+
+**Deviations from spec.** (1) The divergent dev-vs-integration case is logged
+and left for a human/later rung (the fast-forward + publish paths are the common
+ones). (2) The dogfood "two real independent WIs on the meta-repo" is proven by
+the two-concurrent-worker + refill fixtures (real subprocesses in linked
+worktrees) rather than by grinding the meta-repo's own dispatcher live — the
+meta-repo is a *migrated* repo whose legacy WIs are unclassified, so it
+correctly HOLDS at `--jobs 1` until the owner does its SafetyClass audit (the
+honest migration posture, not a gap). (3) Cross-OS is CI's Linux+Windows+macOS
+matrix, unchanged.
+
+**Byte deltas (budgeted files).** PROCESS_OPTIONS.md **148,033 → 149,958
+(+1,925 B**: the telemetry + migration contract; baseline re-stamped ×3).
+AGENTS.template.md 9,978 / PROCESS.md 59,768 (untouched).
+
+**Tests / end green (real output).** FULL suite `pytest -q -n auto` → **875
+passed, 3 skipped**. **`check.py --gate G3 --jobs 0` → PASS** (all 15 steps
+green as a unit, including the now-active G3-only lint/dupes/require-verified —
+the campaign-close gate bar). `derive_gate` → **G3** (per-phase
+`(default)=G3;v2=G3;v3=G3;v4=G3`). SR-065 + SR-059 + LLR-066 + LLR-060 + TC-066 +
+TC-060 (`Automated=Yes`, `Evidence=tests/test_agent_loop_migration.py`) →
+**Verified** (autonomous single-agent adversarial review; the review closed the
+launch-reconcile gap and the schedule.py extraction).
+
+**Campaign close.** The **parallel-dispatch campaign (phase `v4`) is COMPLETE**:
+SN-025 + SR-057…065 + LLR-058…066 + TC-058…066 all Verified; the derived gate
+returns to **G3** repo-wide. `agent-resume --jobs N` now runs the full
+dispatcher/integrator — durable Git reservations, atomic serialized integration,
+crash recovery, telemetry, and gated downstream migration. Not pushed
+(`docs/push-policy: human`).

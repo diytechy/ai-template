@@ -36,6 +36,13 @@ AGENT_PREFER_MAP=""
 AGENT_CMD_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):
 AGENT_CMD_INTERACTIVE=""
+# Parallel dispatch (process-options.md "Worker assignment"): a FRESH scaffold
+# ships parallel-by-default at two workers. The dispatcher still HOLDS at one
+# worker until this repo's soft-edge + SafetyClass audits pass (a fresh
+# scaffold passes by construction); a repo migrating in from the legacy loop
+# sets AGENT_JOBS=1 here until it signs off (the downstream-resync skill). Set
+# empty to keep the legacy single-session resume loop.
+AGENT_JOBS="2"
 # ------------------------------------------------------------------------------
 
 cd "$(dirname "$0")" || exit 1
@@ -46,7 +53,7 @@ if [ -z "$AGENT_CMD" ]; then
   echo "sessions; see docs/process-options.md 'Unattended operation'." >&2
   exit 1
 fi
-export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
+export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE AGENT_JOBS
 PY="$(command -v python3 || command -v python)" || {
   echo "agent-resume.sh: python3 not found." >&2; exit 1;
 }

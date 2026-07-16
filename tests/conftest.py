@@ -53,6 +53,15 @@ SLOW_MODULES = frozenset(
         "test_check_perf",  # perf gate step on a scaffold
         "test_check_flows",  # design-flow gate step on a scaffold
         "test_meta_repo_hook",  # meta pre-commit hook integration
+        # The v4 parallel-dispatch end-to-end modules (WI-186): each spawns real
+        # dispatcher + worker subprocesses driving live git worktrees/reservations
+        # — the same heavy-integration class as the hook/scaffold runs above, so
+        # the commit bar drops them and the full suite + CI exercise them.
+        "test_agent_loop_dispatch",  # dispatcher fan-out end-to-end
+        "test_agent_loop_train",  # traincar continuation / fork / join
+        "test_agent_loop_integrate",  # atomic integrator end-to-end
+        "test_agent_loop_recovery",  # fault-injected crash matrix
+        "test_agent_loop_migration",  # telemetry + downstream migration
     }
 )
 

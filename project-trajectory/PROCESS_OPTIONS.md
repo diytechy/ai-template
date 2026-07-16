@@ -2206,6 +2206,34 @@ publication state (the wired `AGENT_FAULT_POINT` hook is how the kit's own
 crash matrix proves it). Kernel locks release on process death; stored PIDs
 are hints, never liveness.
 
+**Telemetry & the parallel banner.** The dispatcher records reason-coded events
+(frontier, reservation, worker/reviewer start/finish, continuation, fork/join,
+overlap, conflict, re-review, integration, recovery, quarantine, cleanup)
+stamped with a per-launch **run id**, so telemetry aggregates by `(run, train,
+WI, session)` and a parallel session number never collides across runs. A
+one-line **banner** reports active lanes, ready-frontier width, integration-queue
+depth, and the cost/concurrency ceiling so parallel spend is visible; an
+end-of-run rollup (`out/dispatch/telemetry.json`) reports the required
+measurements — overlap/conflict/re-review/rework rates, recovery reconciles,
+combined-bar failures after individually-green trains — the evidence a
+downstream adopter tunes capacity from.
+
+**Downstream migration (the two-worker flip is earned, not assumed).** Enabling
+parallel dispatch changes default execution, so it is gated. A repo runs
+`--jobs 1` until **both** audits pass: the **SafetyClass audit** (every open WI
+carries a resolvable, non-`unclassified` class — one unaudited row holds the
+whole repo) and the **soft-edge audit** (every `~` soft predecessor reviewed for
+a hidden correctness dependency, signed off by creating `docs/parallel-ready`).
+A **fresh scaffold passes by construction** — no soft edges, all drafted WIs
+classified — so it ships parallel-by-default (`AGENT_JOBS=2` in the launcher);
+a repo migrating from the legacy loop holds at one worker until it signs off,
+and the flip is a **recorded** promotion. Legacy `active` WI rows reconcile to
+`queued` with a logged finding (runtime activity is dispatcher state, not a
+tracked column), and `docs/tracks/*` stays readable for one compatibility window
+while the dispatcher never schedules from it. A repo that never opts in
+(`--jobs`/`AGENT_JOBS` unset) keeps the legacy single-session resume loop,
+byte-for-byte unchanged.
+
 **Throughput caution.** Under `attended` gate authority, every track's human asks
 converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The
 dispatcher's job is to aggregate those asks into one review surface, and 2–3

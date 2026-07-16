@@ -37,6 +37,13 @@ REM   set "AGENT_CMD_MAP=REVIEW-B=gemini -p {prompt} --model {model}"
 set "AGENT_CMD_MAP="
 REM Optional hands-on template for --interactive (defaults to AGENT_CMD):
 set "AGENT_CMD_INTERACTIVE="
+REM Parallel dispatch (process-options.md "Worker assignment"): a FRESH scaffold
+REM ships parallel-by-default at two workers. The dispatcher still HOLDS at one
+REM worker until this repo's soft-edge + SafetyClass audits pass (a fresh
+REM scaffold passes by construction); a repo migrating in from the legacy loop
+REM sets AGENT_JOBS=1 here until it signs off (the downstream-resync skill).
+REM Set empty to keep the legacy single-session resume loop.
+set "AGENT_JOBS=2"
 REM ----------------------------------------------------------------------------
 
 cd /d "%~dp0"

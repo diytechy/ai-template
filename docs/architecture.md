@@ -112,6 +112,11 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `blocked_disposition(root, docs, journal, tid, wis, base)` | The smaller serialized blocked-disposition transaction (spec §9): from |  |
 | `publish_integration(root, journal, dev_branch)` | Publish the integration HEAD to the development branch (spec §9): only |  |
 | `parse_jobs(value)` | The --jobs/AGENT_JOBS value: a positive int, or `auto` (adaptive up to |  |
+| `assess_migration(root)` | The two audits that gate the two-worker promotion (spec §14 items 9-10). | SR-059 |
+| `reconcile_legacy(root, journal, assessment)` | Reconcile migration residue within the one compatibility window (§14.3-4): |  |
+| `resolve_ceiling(root, requested, journal)` | Apply the migration gate to the requested worker ceiling (SR-065): a | SR-065 |
+| `dispatch_banner(jobs, active, parked, cars, journal, integrating)` | The one-line dispatcher banner (SR-065): active lanes, ready-frontier | SR-065 |
+| `telemetry_summary(journal)` | The end-of-run telemetry rollup (spec §13): the required measurements |  |
 | `dispatch_run(args, root)` | The dispatcher/integrator loop (SR-061): reconcile -> gate -> build-out. | SR-061 |
 | `head_sha_full(root)` | Full HEAD sha (reservation bases are exact, never abbreviated). |  |
 | `main()` |  |  |

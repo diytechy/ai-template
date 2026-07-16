@@ -505,6 +505,23 @@ table.
   into `.gitignore`. The tracked `docs/iteration/` logs + `iteration_index.md`
   appear on first run; preserve them like `docs/log.md` — they are history. A
   repo without agent-driven work skips all of it.
+- **Parallel dispatch (`agent-resume --jobs`, v4).** Newer kits let one
+  `agent-resume` launch drive **every dependency-ready WI in parallel** — a
+  dispatcher/integrator over the WI DAG with durable Git reservations and
+  serialized atomic integration (process-options.md "Worker assignment" /
+  "The parallel dispatcher" / "The atomic integrator"). It is **opt-in and
+  gated**: absent `--jobs`/`AGENT_JOBS` the legacy single-session resume loop is
+  byte-for-byte unchanged, and even when set the dispatcher **holds at
+  `--jobs 1` until two audits pass** — a SafetyClass audit (every open WI
+  classified) and a soft-edge audit (signed via `docs/parallel-ready`). A fresh
+  scaffold passes both by construction and ships parallel-by-default; a
+  migrating repo does the audits deliberately, then sets `AGENT_JOBS=2` (the
+  **downstream-resync skill** walks this). Adopting also **retires
+  `docs/next-wi` + `docs/run-phase`** (the WI DAG + `Priority` are the whole
+  ordering contract — no former content translates to scheduling state) and
+  makes `docs/status.md`/`docs/run-state` **generated** dispatcher surfaces (a
+  hand-authored `status.md` is left untouched until you adopt the generated
+  one). Legacy `active` rows and `docs/tracks/*` reconcile within one window.
 - **Run launchers become a capability menu (`scripts/run_menu.py` + `[run]`).**
   Newer kits retire the hard-wired, duplicated `RUN_CMD` in `run.cmd`/`run.sh`:
   the launchers are now thin delegates to `scripts/run_menu.py`, which reads a

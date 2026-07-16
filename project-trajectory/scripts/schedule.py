@@ -217,15 +217,22 @@ def hard_preds_satisfied(wi, status):
     return all(status.get(p) == _DONE for p in wi["preds"])
 
 
-def downstream_counts(wis):
-    """`{id: transitive hard-descendant count}` — how many distinct WIs depend on
-    this one through hard edges (the unblocking-value signal in the order key)."""
+def _hard_children(wis):
+    """`{id: [hard-successor ids]}` — the hard-edge adjacency both graph
+    derivations below walk (shared so the map is built once, one way)."""
     children = {w["id"]: [] for w in wis}
     ids = set(children)
     for w in wis:
         for p in w["preds"]:
             if p in ids:
                 children[p].append(w["id"])
+    return children
+
+
+def downstream_counts(wis):
+    """`{id: transitive hard-descendant count}` — how many distinct WIs depend on
+    this one through hard edges (the unblocking-value signal in the order key)."""
+    children = _hard_children(wis)
     out = {}
 
     def reach(wid, seen):
@@ -235,7 +242,7 @@ def downstream_counts(wis):
                 reach(c, seen)
         return seen
 
-    for wid in ids:
+    for wid in children:
         out[wid] = len(reach(wid, set()))
     return out
 
@@ -243,12 +250,7 @@ def downstream_counts(wis):
 def hard_path_lengths(wis):
     """`{id: remaining hard-path length}` — the longest chain of hard descendants
     from this WI to a terminal (critical-path signal). Iterative memoized DFS."""
-    children = {w["id"]: [] for w in wis}
-    ids = set(children)
-    for w in wis:
-        for p in w["preds"]:
-            if p in ids:
-                children[p].append(w["id"])
+    children = _hard_children(wis)
     memo = {}
 
     def depth(wid, stack):
@@ -264,7 +266,7 @@ def hard_path_lengths(wis):
         memo[wid] = best
         return best
 
-    return {wid: depth(wid, set()) for wid in ids}
+    return {wid: depth(wid, set()) for wid in children}
 
 
 def order_key(wi, sched_class, downstream, hardpath):

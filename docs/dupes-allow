@@ -86,6 +86,29 @@ project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajecto
 # gen_okf.sn_rows / gen_trajectory._sn_rows (F5, "change all three together");
 # the pair was surfaced (uncensused) at the WI-144 G3 close — dupes is G3-only.
 project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
+# WI-186 (v4 close): schedule.py (Slice A) is a standalone F5 script carrying the
+# _utf8_console emitter, the _split_refs/refs parser, load_wis (mirroring
+# check_trajectory), and the argparse/__main__ scaffolding. It first meets the
+# G3-only dupes gate at the v4 close (dormant at G2 all campaign), so its F5
+# pairs are censused now; entering the corpus also re-attributed the
+# representative _utf8_console pair from agent_route to several unlisted files.
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/schedule.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/check_doc_refs.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/check_dupes.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/check_privacy.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/check_stubs.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/check_trajectory.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/check_vendored.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/derive_gate.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/gen_cases.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/gen_okf.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/gen_release_checklist.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/run_menu.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/schedule.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/trace.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/schedule.py
+project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
+project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/schedule.py
 
 # --- Intra-file duplication — GRANDFATHERED debris, not sanctioned -----------
 # Genuine intra-file copy-paste in the four monolithic scripts. NOT F5 (F5 is a
@@ -95,6 +118,10 @@ project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
 # gen_arch_map / gen_okf / check_trajectory intra-file dupes are follow-on
 # targets tracked with the same campaign.
 project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+# WI-186: bootstrap.py's two agent-launcher seed helpers share a ~40-token
+# read-replace-write block (surfaced at the v4 G3 close, dupes being G3-only) —
+# grandfathered debris, a follow-on decomposition target like the others.
+project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
 project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/gen_arch_map.py
 project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py

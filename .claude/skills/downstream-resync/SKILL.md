@@ -72,6 +72,25 @@ Apply only the ones your diff actually contains.
   `Status=Draft`), or post-attestation additions launder into the ratified
   gate. ADOPTING.md §6 has the exact recipe (`git log -- docs/gate` → diff).
 
+- **Parallel-dispatch migration (adopting `agent-resume --jobs`):** the
+  dispatcher **holds your repo at `--jobs 1`** until two audits pass, so the
+  optimistic parallelism is safe before it ever runs. Do them deliberately:
+  1. **SafetyClass audit** — give every open WI (`queued`/`blocked`/legacy
+     `active`) a reviewed `SafetyClass`; the validator flags the structurally
+     visible ones, but you must classify the indirect scope it cannot see. One
+     `unclassified` open row keeps the whole repo serial.
+  2. **Soft-edge audit** — review every `~` soft predecessor for a hidden
+     *correctness* dependency (promote those to hard edges); the optimistic
+     scheduler runs soft-linked WIs concurrently, so a missed hard edge is the
+     main silent-conflict risk. Record the sign-off by creating
+     `docs/parallel-ready`.
+  Then set `AGENT_JOBS=2` in the launcher — the dispatcher logs the deliberate
+  two-worker promotion. Legacy `active` rows auto-reconcile to `queued` (a
+  logged finding) and `docs/tracks/*` stays readable one window while the
+  dispatcher ignores it; delete `docs/next-wi`/`docs/run-phase` if a pre-v4
+  scaffold still carries them (their content translates to **no** scheduling
+  state — the WI DAG + `Priority` are the whole ordering contract).
+
 ## 4. Re-stamp and verify
 
 - Re-run bootstrap to refresh generated pieces — it also **re-stamps

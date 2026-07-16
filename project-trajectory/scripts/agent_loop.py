@@ -86,7 +86,11 @@ reservations at the next boundary while in-flight workers finish;
 out/dispatch/ is a rebuildable journal/cache, never authority (§11); root
 docs/run-state becomes a generated dispatcher outcome. --jobs 1 is the
 explicit serial mode. Absent --jobs/AGENT_JOBS keeps today's legacy resume
-loop (the launchers flip at migration, Slice H).
+loop. The two-worker promotion is GATED (WI-186, SR-065): a repo holds at
+--jobs 1 until its SafetyClass audit (every open WI classified) AND soft-edge
+audit (signed via docs/parallel-ready) pass — a fresh scaffold passes by
+construction — and every launch emits reason-coded telemetry (run/train/WI/
+session aggregation) + a lanes/frontier/queue/ceiling banner.
 
 --wi/--train run one WORKER ASSIGNMENT (WI-181, SR-060; the parallel-dispatch
 contract docs/specs/parallel-wi-dispatch.md §6): an explicit, dispatcher-supplied
@@ -2089,10 +2093,20 @@ def pack_traincars(records, wis_by_id, cap=4):
 class _Journal:
     """The out/dispatch/ runtime journal — a CACHE, never authority (§11).
     Events append before the corresponding external action where possible;
-    the manifest is rewritten atomically (temp file + os.replace)."""
+    the manifest is rewritten atomically (temp file + os.replace).
 
-    def __init__(self, root):
+    WI-185: every event is stamped with this dispatcher process's `run` id so
+    telemetry aggregates by `(run, train, WI, session)` — a parallel session
+    number from one worker can never collide with another's across runs
+    (SR-065). The id is `<utc-stamp>-<pid>-<rand>`, unique per launch."""
+
+    def __init__(self, root, run_id=None):
         self.dir = Path(root) / DISPATCH_DIR
+        self.run_id = run_id or "{}-{}-{:04x}".format(
+            time.strftime("%Y%m%dT%H%M%S"),
+            os.getpid(),
+            int.from_bytes(os.urandom(2), "big"),
+        )
         try:
             self.dir.mkdir(parents=True, exist_ok=True)
             (self.dir / "trains").mkdir(exist_ok=True)
@@ -2100,7 +2114,11 @@ class _Journal:
             pass
 
     def event(self, event, **fields):
-        rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "event": event}
+        rec = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "run": self.run_id,
+            "event": event,
+        }
         rec.update(fields)
         try:
             with (self.dir / "events.jsonl").open("a", encoding="utf-8") as fh:
@@ -2762,6 +2780,233 @@ def _write_runstate(docs, state, ask=""):
         pass
 
 
+# -----------------------------------------------------------------------------
+# WI-186 (SR-065/SR-059; spec §13/§14): telemetry, banner, downstream migration
+# -----------------------------------------------------------------------------
+
+PARALLEL_READY_FILE = "parallel-ready"
+
+
+def assess_migration(root):
+    """The two audits that gate the two-worker promotion (spec §14 items 9-10).
+    Returns a dict:
+
+    - `safetyclass_ok` — every OPEN WI (queued/blocked/legacy-active) carries a
+      resolvable, non-`unclassified` SafetyClass (schedule.classify over the
+      declared value). A single unclassified open WI holds the whole repo at
+      `--jobs 1` (an unaudited row cannot be promoted, §14.10).
+    - `soft_edges` — the `(wi, soft-pred)` pairs the optimistic scheduler would
+      treat as safe-to-run-concurrently; each must be human-audited before
+      first parallel enable (§14.9).
+    - `softedge_ok` — True when there are no soft edges, OR `docs/parallel-ready`
+      records the human sign-off (its presence IS the recorded audit).
+    - `legacy_active` / `legacy_tracks` — migration residue to reconcile.
+
+    A FRESH scaffold passes by construction: no soft edges, every drafted WI
+    classified, no legacy rows — so it runs parallel-by-default with no marker
+    (SR-059). A MIGRATED repo holds at 1 until both audits pass."""
+    wis = schedule.load_wis(
+        schedule.load_rows(root / "docs" / "requirements" / "work-items.csv")
+    )
+    open_states = ("queued", "blocked", "active", "ready", "reserved")
+    unclassified = []
+    for w in wis:
+        if w["status"] in open_states:
+            sched_class, _ = schedule.classify(w)
+            if sched_class == schedule.SCHED_UNCLASSIFIED:
+                unclassified.append(w["id"])
+    soft_edges = [(w["id"], s) for w in wis for s in w["soft"]]
+    legacy_active = [w["id"] for w in wis if w["status"] == "active"]
+    tracks_dir = root / "docs" / "tracks"
+    legacy_tracks = (
+        sorted(p.name for p in tracks_dir.iterdir() if p.is_dir())
+        if tracks_dir.is_dir()
+        else []
+    )
+    signed = (root / "docs" / PARALLEL_READY_FILE).exists()
+    return {
+        "safetyclass_ok": not unclassified,
+        "unclassified": unclassified,
+        "soft_edges": soft_edges,
+        "softedge_ok": (not soft_edges) or signed,
+        "signed": signed,
+        "legacy_active": legacy_active,
+        "legacy_tracks": legacy_tracks,
+    }
+
+
+def reconcile_legacy(root, journal, assessment):
+    """Reconcile migration residue within the one compatibility window (§14.3-4):
+    a legacy `active` WI row returns to `queued` with a logged finding (runtime
+    activity is dispatcher state, not a tracked column); `docs/tracks/*` lanes
+    stay readable but are flagged (the new dispatcher never schedules from
+    them). Returns the count of reconciled active rows."""
+    reg = root / "docs" / "requirements" / "work-items.csv"
+    reconciled = []
+    if assessment["legacy_active"] and reg.exists():
+        updates = {w: {"Status": "queued"} for w in assessment["legacy_active"]}
+        reconciled = _rewrite_wi_rows(reg, updates)
+        if reconciled:
+            journal.event(
+                "legacy-active-reconciled",
+                wis=";".join(reconciled),
+                finding="active->queued (runtime activity is dispatcher state)",
+            )
+    if assessment["legacy_tracks"]:
+        journal.event(
+            "legacy-tracks-flagged",
+            tracks=";".join(assessment["legacy_tracks"]),
+            finding="docs/tracks/* readable this window; dispatcher never "
+            "schedules from them (declare Priority/edges instead)",
+        )
+    return len(reconciled)
+
+
+def resolve_ceiling(root, requested, journal):
+    """Apply the migration gate to the requested worker ceiling (SR-065): a
+    repo may run >1 worker only once BOTH audits pass. Returns (ceiling,
+    assessment). A held repo drops to 1 with a reason-coded event; a repo that
+    passes at a ceiling>1 for the first time records the deliberate promotion."""
+    assessment = assess_migration(root)
+    if requested <= 1:
+        return 1, assessment
+    if not assessment["safetyclass_ok"]:
+        journal.event(
+            "migration-hold",
+            requested=requested,
+            reason="unclassified-open-wi:" + ";".join(assessment["unclassified"]),
+        )
+        return 1, assessment
+    if not assessment["softedge_ok"]:
+        journal.event(
+            "migration-hold",
+            requested=requested,
+            reason="soft-edge-audit-unsigned:{}-edge(s); review and create "
+            "docs/parallel-ready".format(len(assessment["soft_edges"])),
+        )
+        return 1, assessment
+    # Both audits pass — record the deliberate two-worker promotion once.
+    if requested > 1:
+        journal.event(
+            "parallel-enabled",
+            ceiling=requested,
+            soft_edges=len(assessment["soft_edges"]),
+        )
+    return requested, assessment
+
+
+def dispatch_banner(jobs, active, parked, cars, journal, integrating=0):
+    """The one-line dispatcher banner (SR-065): active lanes, ready-frontier
+    width, integration-queue depth, and the cost/concurrency ceiling — so
+    parallel spend is visible at a glance."""
+    ready_frontier = sum(len(c["wis"]) for c in cars)
+    queued_to_integrate = sum(
+        1
+        for p in parked.values()
+        if p["state"] in ("ready-to-integrate", "blocked", "train-end")
+    )
+    print(
+        "dispatch banner | lanes {}/{} | frontier {} WI in {} car(s) | "
+        "integration-queue {} | ceiling {}".format(
+            len(active),
+            jobs,
+            ready_frontier,
+            len(cars),
+            queued_to_integrate,
+            jobs,
+        )
+    )
+
+
+def telemetry_summary(journal):
+    """The end-of-run telemetry rollup (spec §13): the required measurements
+    derived from the reason-coded event stream, aggregated by `(run, train,
+    WI, session)`. Written to out/dispatch/telemetry.json and printed — the
+    evidence a downstream adopter tunes capacity from."""
+    events = []
+    try:
+        with (journal.dir / "events.jsonl").open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if line:
+                    try:
+                        events.append(json.loads(line))
+                    except ValueError:
+                        continue
+    except OSError:
+        events = []
+    run = journal.run_id
+    mine = [e for e in events if e.get("run") == run]
+
+    def count(name):
+        return sum(1 for e in mine if e.get("event") == name)
+
+    trains = sorted({e["train"] for e in mine if e.get("train")})
+    summary = {
+        "run": run,
+        # ready-frontier decisions + reservation/worker/integration lifecycle
+        "reservations": count("reserve"),
+        "workers_started": count("worker-start"),
+        "workers_done": count("worker-done"),
+        "integrations": count("integrated"),
+        "blocked_dispositions": count("blocked-disposition"),
+        # overlap / conflict / re-review rates (spec §13 required measurements)
+        "conflicts": count("integration-conflict"),
+        "re_reviews_needed": sum(
+            1
+            for e in mine
+            if e.get("event") == "integration-parked"
+            and e.get("state") == "needs-re-review"
+        ),
+        "rework_parks": sum(
+            1
+            for e in mine
+            if e.get("event") == "integration-parked" and e.get("state") == "rework"
+        ),
+        # train continuation / early-end reasons
+        "train_ends": count("worker-train-end"),
+        "released_unstarted": count("release-unstarted"),
+        # recovery outcomes
+        "reconciles": count("reconcile"),
+        "quarantines": count("quarantine"),
+        "trains": trains,
+        # combined-bar failures after individually-green trains
+        "bar_failures": sum(
+            1
+            for e in mine
+            if e.get("event") == "integration-bar"
+            and e.get("result")
+            not in (
+                "pass",
+                "skipped (no docs/stack.ini)",
+                "skipped (no declared test command)",
+            )
+        ),
+    }
+    try:
+        (journal.dir / "telemetry.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
+        )
+    except OSError:
+        pass
+    print(
+        "dispatch telemetry | {} reservation(s) -> {} integration(s), "
+        "{} conflict(s)/{} re-review(s)/{} rework, {} recovery reconcile(s), "
+        "{} quarantine(s), {} bar-failure(s) after green | trains: {}".format(
+            summary["reservations"],
+            summary["integrations"],
+            summary["conflicts"],
+            summary["re_reviews_needed"],
+            summary["rework_parks"],
+            summary["reconciles"],
+            summary["quarantines"],
+            summary["bar_failures"],
+            ", ".join(trains) or "none",
+        )
+    )
+    return summary
+
+
 def dispatch_run(args, root):
     """The dispatcher/integrator loop (SR-061): reconcile -> gate -> build-out.
 
@@ -2819,10 +3064,31 @@ def dispatch_run(args, root):
         return EXIT_PREFLIGHT
     dev_branch = dev_branch.strip()
 
+    # The downstream-migration gate (SR-065, spec §14): a repo runs >1 worker
+    # only once its soft-edge AND SafetyClass audits pass; until then it holds
+    # at --jobs 1. A fresh scaffold passes by construction. Legacy `active`
+    # rows + docs/tracks/* reconcile within this one compatibility window.
+    requested_jobs = jobs
+    jobs, assessment = resolve_ceiling(root, jobs, journal)
+    reconcile_legacy(root, journal, assessment)
+
     print("=== parallel dispatcher (scripts/agent_loop.py --jobs {}) ===".format(jobs))
+    if jobs < requested_jobs:
+        hold = (
+            "unclassified open WI(s): " + ";".join(assessment["unclassified"])
+            if not assessment["safetyclass_ok"]
+            else "{} unaudited soft edge(s) — sign off by creating "
+            "docs/parallel-ready".format(len(assessment["soft_edges"]))
+        )
+        print(
+            "MIGRATION HOLD: requested {} worker(s) but held at 1 until the "
+            "migration audits pass ({}). See the downstream-resync skill.".format(
+                requested_jobs, hold
+            )
+        )
     print(
-        "repo: {} | gate-policy: {} | dev branch: {} | worktrees: {}".format(
-            root, gate_policy, dev_branch, worktree_root(root)
+        "repo: {} | gate-policy: {} | dev branch: {} | worktrees: {} | run {}".format(
+            root, gate_policy, dev_branch, worktree_root(root), journal.run_id
         )
     )
     print(
@@ -2836,11 +3102,36 @@ def dispatch_run(args, root):
     if err:
         print("agent_loop: {}".format(err), file=sys.stderr)
         return EXIT_PREFLIGHT
-    # Recovery: an integration head ahead of the development branch is an
-    # interrupted publication — resume it idempotently before dispatching.
-    state, detail = publish_integration(root, journal, dev_branch)
-    if state == "published":
-        print("dispatch: resumed an interrupted publication ({})".format(detail[:12]))
+    # Reconcile the integration ref against the development branch at launch
+    # (spec §9 "creates or reconciles it from the selected development branch").
+    # Classify the relationship BEFORE acting so a human's new work is never
+    # discarded by a mistaken publish:
+    ihead = integration_head(root)
+    dhead = head_sha_full(root)
+    dev_strictly_ahead = False
+    if ihead and dhead and ihead != dhead:
+        int_is_anc = git(root, "merge-base", "--is-ancestor", ihead, dhead)[0] == 0
+        dev_is_anc = git(root, "merge-base", "--is-ancestor", dhead, ihead)[0] == 0
+        if int_is_anc and not dev_is_anc:
+            dev_strictly_ahead = True
+        elif not int_is_anc and not dev_is_anc:
+            journal.event("integration-diverged", ihead=ihead[:12], dhead=dhead[:12])
+    if dev_strictly_ahead:
+        # Dev is strictly AHEAD of integration: a human added WIs on the
+        # development branch. Fast-forward the ref to absorb that new work
+        # (never over unpublished integration commits — the divergent case
+        # above is logged and left for a human/later rung).
+        if cas_ref(root, INTEGRATION_REF, dhead, ihead):
+            journal.event("integration-fast-forward", head=dhead[:12])
+    else:
+        # Integration ahead-or-equal of dev: resume any interrupted publication
+        # idempotently (this also finishes a crash-stranded worktree sync when
+        # the dev ref already equals the integration head, spec §11).
+        state, detail = publish_integration(root, journal, dev_branch)
+        if state == "published":
+            print(
+                "dispatch: resumed an interrupted publication ({})".format(detail[:12])
+            )
 
     # --- stage 1: reconcile owned trains to a clean baseline (spec §4.1) -----
     # Group durable reservation claims into trains; resume the incomplete,
@@ -3056,6 +3347,7 @@ def dispatch_run(args, root):
     # The lowest-gate-first order (schedule.py) puts spine/gate work at the
     # frontier head; the dispatcher serializes it whole-project by draining
     # every other lane before it runs and dispatching nothing beside it.
+    last_banner_sig = None
     while True:
         # Pause: stop NEW reservations at this boundary; in-flight workers
         # finish their safe boundary and stay recoverable (spec §12).
@@ -3194,11 +3486,22 @@ def dispatch_run(args, root):
         journal.manifest(
             {
                 "jobs": jobs,
+                "run": journal.run_id,
                 "active": {t: a["wis"] for t, a in active.items()},
                 "parked": {t: p["state"] for t, p in parked.items()},
                 "updated": time.strftime("%Y-%m-%dT%H:%M:%S"),
             }
         )
+        # The banner (SR-065) — only when the picture changed, so the poll loop
+        # does not spam it every cadence tick.
+        banner_sig = (
+            len(active),
+            tuple(sorted(p["state"] for p in parked.values())),
+            sum(len(c["wis"]) for c in cars),
+        )
+        if banner_sig != last_banner_sig:
+            dispatch_banner(jobs, active, parked, cars, journal)
+            last_banner_sig = banner_sig
         if integrated_any:
             continue  # the integrated frontier may have unlocked successors
 
@@ -3252,6 +3555,7 @@ def dispatch_run(args, root):
             time.sleep(args.poll_seconds)
 
     # --- end state (spec §10: run-state is a generated dispatcher outcome) ---
+    telemetry_summary(journal)  # the §13 rollup for the completed run
     integrated = [
         t for t, p in parked.items() if p["state"] in ("integrated", "blocked-done")
     ]
