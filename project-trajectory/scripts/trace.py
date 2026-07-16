@@ -1223,8 +1223,9 @@ def analyze(reg, args):
     # PartOf (nesting — tag primitives at the finest CMP, coarser membership
     # derives) and SupersededBy (lifecycle identity across a rewrite) must name
     # real CMP ids. And the membership join is checked from the primitive side:
-    # a `Component` tag on an LLR/PART/ASSET row must resolve to a real CMP row
-    # (IF rows carry the tag too, but the IF tier is off trace.py's read set).
+    # a `Component` tag on an LLR/IF/PART/ASSET row must resolve to a real CMP
+    # row (the IF tier joined the sweep at WI-064 — trace.py has read
+    # interfaces.csv since WI-056, so its tags were the one unvalidated cell).
     cmp_ids = {r["CMP-ID"] for r in cmps}
     component_findings = []
     for r in cmps:
@@ -1236,6 +1237,7 @@ def analyze(reg, args):
     if cmp_ids:
         for label, rows_, key in (
             ("LLR", llrs, "LLR-ID"),
+            ("IF", ifs, "IF-ID"),
             ("PART", parts, "PART-ID"),
             ("ASSET", assets, "ASSET-ID"),
         ):

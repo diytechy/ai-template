@@ -204,3 +204,42 @@ def test_knowledge_ref_mixed_cell_checks_only_the_pack(scaffold):
     assert "knowledge-advisories=1" in proc.stdout
     assert "names no pack (docs/knowledge/gone.md)" in proc.stdout
     assert "docs/knowledge/there" not in report_of(scaffold)
+
+
+# --- WI-064: the IF tier joins the Component-tag membership sweep ---------------
+# trace.py has read interfaces.csv since WI-056, but an IF row's `Component` tag
+# was the one membership cell it never validated (the old comment predated
+# WI-056). An IF tagged with a phantom CMP is now the same finding an LLR one is.
+
+IF_HEADER = (
+    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+    "Stability,Status,Component,Notes\n"
+)
+
+
+def write_if(root, component):
+    (root / "docs" / "requirements" / "interfaces.csv").write_text(
+        IF_HEADER
+        + 'IF-001,Provides,src/demo,downstream,"call",SR-001,v1,Stable,Active,{},\n'.format(
+            component
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_if_component_tag_must_resolve(scaffold):
+    make_minimal_project(scaffold)
+    write_cmps(scaffold, row("CMP-001"))
+    write_if(scaffold, "CMP-404")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "IF IF-001 Component tag references unknown CMP-404" in report_of(scaffold)
+
+
+def test_if_component_tag_resolving_passes(scaffold):
+    make_minimal_project(scaffold)
+    write_cmps(scaffold, row("CMP-001"))
+    write_if(scaffold, "CMP-001")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "component-findings=0" in proc.stdout
