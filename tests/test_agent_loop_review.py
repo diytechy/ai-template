@@ -77,6 +77,99 @@ else:
 sys.exit(0)
 """
 
+# A variant of FAKE whose FIRST session on a chosen model fails before working —
+# either a rate-limit signal (fail_mode=limit -> the WAITING outcome) or a plain
+# nonzero exit with no JSON (fail_mode=error -> the ERROR outcome). Every other
+# model builds normally. Used to pin the managed cool-and-re-route branches
+# (agent_loop.py rate-limit WAITING / ERROR paths) from outside.
+FAKE_FIRST_FAILS = r"""
+import argparse, json, pathlib, subprocess, sys
+ap = argparse.ArgumentParser()
+ap.add_argument("--control", required=True)
+ap.add_argument("--model", default="")
+ap.add_argument("-p", "--prompt", default="")
+args, _ = ap.parse_known_args()
+ctl = pathlib.Path(args.control)
+with open(str(ctl / "models.txt"), "a", encoding="utf-8") as fh:
+    fh.write(args.model + "\n")
+
+
+def _read(name):
+    p = ctl / name
+    return p.read_text(encoding="utf-8").strip() if p.exists() else ""
+
+
+if args.model == _read("fail_model"):
+    if _read("fail_mode") == "limit":
+        print(json.dumps({"is_error": True,
+                          "result": "You've hit your session limit; resets 3:45pm"}))
+        sys.exit(1)
+    print("fatal: model endpoint unreachable")  # no JSON, nonzero -> ERROR
+    sys.exit(2)
+cf = ctl / "builds.txt"
+n = len(cf.read_text(encoding="utf-8").splitlines()) if cf.exists() else 0
+with open(str(cf), "a", encoding="utf-8") as fh:
+    fh.write("b\n")
+pathlib.Path("work.txt").write_text("build " + str(n), encoding="utf-8")
+subprocess.run(["git", "add", "work.txt"], check=True)
+subprocess.run(["git", "commit", "-q", "-m", "build " + str(n)], check=True)
+done_after = int(_read("done_after")) if _read("done_after") else 999
+if n + 1 >= done_after:
+    pathlib.Path("docs/run-state").write_text("DONE", encoding="utf-8")
+sys.exit(0)
+"""
+
+# A variant of FAKE where a chosen reviewer model writes NO verdict file (it just
+# exits): the loop must cool it and re-dispatch the SAME review phase to another
+# enabled reviewer. Every other reviewer/implementer behaves like FAKE.
+FAKE_REVIEWER_SKIPS = r"""
+import argparse, json, pathlib, re, subprocess, sys
+ap = argparse.ArgumentParser()
+ap.add_argument("--control", required=True)
+ap.add_argument("--model", default="")
+ap.add_argument("-p", "--prompt", default="")
+args, _ = ap.parse_known_args()
+ctl = pathlib.Path(args.control)
+with open(str(ctl / "models.txt"), "a", encoding="utf-8") as fh:
+    fh.write(args.model + "\n")
+BODIES = json.loads((ctl / "bodies.json").read_text(encoding="utf-8"))
+skip = (
+    (ctl / "skip_verdict_model").read_text(encoding="utf-8").strip()
+    if (ctl / "skip_verdict_model").exists()
+    else ""
+)
+
+
+def commit(path, msg):
+    subprocess.run(["git", "add", str(path)], check=True)
+    subprocess.run(["git", "commit", "-q", "-m", msg], check=True)
+
+
+m = re.search(r"Write your verdict to (\S+)", args.prompt)
+if m:
+    if args.model == skip:
+        sys.exit(0)  # write NO verdict -> the loop cools + re-routes the phase
+    vpath = pathlib.Path(m.group(1))
+    vpath.parent.mkdir(parents=True, exist_ok=True)
+    vpath.write_text(BODIES.get(args.model, BODIES["_default"]), encoding="utf-8")
+    commit(vpath, "review verdict")
+else:
+    cf = ctl / "builds.txt"
+    n = len(cf.read_text(encoding="utf-8").splitlines()) if cf.exists() else 0
+    with open(str(cf), "a", encoding="utf-8") as fh:
+        fh.write("b\n")
+    pathlib.Path("work.txt").write_text("build " + str(n), encoding="utf-8")
+    commit("work.txt", "build " + str(n))
+    done_after = (
+        int((ctl / "done_after").read_text(encoding="utf-8"))
+        if (ctl / "done_after").exists()
+        else 999
+    )
+    if n + 1 >= done_after:
+        pathlib.Path("docs/run-state").write_text("DONE", encoding="utf-8")
+sys.exit(0)
+"""
+
 STATUS_MD = """# Status
 
 ## Current State
@@ -84,6 +177,11 @@ STATUS_MD = """# Status
 - **Open items:**
   - **Needs <human>**: OI-9 — a pending ask
 """
+
+CHANGES_REQUESTED_BODY = (
+    "- [MAJOR] work.txt:1 -> broken -> fix -> @owner\n"
+    "VERDICT: CHANGES-REQUESTED findings=1\n"
+)
 
 
 def _git(repo, *args):
@@ -176,6 +274,13 @@ def _loop(repo, cmd, *extra):
 def _models(ctl):
     p = ctl / "models.txt"
     return p.read_text(encoding="utf-8").split() if p.exists() else []
+
+
+def _routes(stdout, phase):
+    """The `route [<phase>]:` selection lines the loop logs before each launch —
+    the no-silent-swap record (each names the chosen registry id + tier)."""
+    tag = "route [{}]".format(phase)
+    return [ln for ln in stdout.splitlines() if ln.startswith(tag)]
 
 
 def test_review_policy_1_dispatches_one_heterogeneous_reviewer(managed_repo):
@@ -425,3 +530,106 @@ def test_preflight_missing_cli_carries_notes_hint(managed_repo):
     assert proc.returncode == 2, proc.stdout + proc.stderr
     assert "is not on PATH" in proc.stderr
     assert "install: npm i -g opencode-ai" in proc.stderr
+
+
+# --- WI-080 Slice A golden net: the escalation + cool-and-reroute transitions --
+# These pin observable behavior (route lines / models.txt / exit codes / verdict
+# files) of the serial-loop transitions ahead of a behavior-preserving decompose.
+
+
+def test_changes_requested_swaps_implementer_family(managed_repo):
+    # Two consecutive medium-tier CHANGES-REQUESTED rounds -> agent_route.escalate
+    # returns swap-implementer (a non-top tier, so the shared-failure page never
+    # fires first). The loop applies impl_exclude and the NEXT build routes a
+    # DIFFERENT Family (the PROVA implementer -> a PROVB one). Build cadence:
+    # sessions 1/3 build PROVA, 2/4 review CHANGES-REQUESTED, 5 is the swapped
+    # build (done_after=3 ends the run there).
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "verdict_body.txt").write_text(CHANGES_REQUESTED_BODY, encoding="utf-8")
+    (ctl / "done_after").write_text("3", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "escalate: swap-implementer" in proc.stdout
+    builds = _routes(proc.stdout, "BUILD")
+    # First build routed the PROVA implementer; the post-swap build a PROVB one.
+    assert "PROVA-BUILD-1" in builds[0]
+    assert "PROVB-REV-1" in builds[-1]
+    assert "PROVA" not in builds[-1]  # a genuinely different Family, not PROVA
+
+
+def test_escalation_tiers_up_after_swap(managed_repo):
+    # One CHANGES-REQUESTED round beyond the swap -> escalate returns tier-up; the
+    # loop sets impl_tier_override=strong (tier-up-never-down) and the next BUILD
+    # routes the strong-tier registry row at the strong tier. Only a same-family
+    # strong row is enabled, so the pick is the DEGRADED PROVA-STRONG-1 — the tier
+    # is the observable that matters. done_after=4 ends the run on that build.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "verdict_body.txt").write_text(CHANGES_REQUESTED_BODY, encoding="utf-8")
+    (ctl / "done_after").write_text("4", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "escalate: swap-implementer" in proc.stdout
+    assert "escalate: tier-up" in proc.stdout
+    builds = _routes(proc.stdout, "BUILD")
+    assert "PROVA-STRONG-1" in builds[-1]  # the strong-tier row
+    assert "[strong]" in builds[-1]  # routed at the strong tier, never dropped
+    assert "stronga" in _models(ctl)  # and actually launched
+
+
+def test_managed_rate_limit_cools_and_reroutes(managed_repo):
+    # A managed BUILD session that emits a rate-limit signal must NOT exit WAITING:
+    # the managed branch cools that model and CONTINUES (unlike the legacy WAITING
+    # exit). The next session re-routes to the other enabled same-tier family and
+    # the run finishes DONE.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")  # build-only
+    (ctl / "fail_model").write_text("builda", encoding="utf-8")
+    (ctl / "fail_mode").write_text("limit", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    (repo.parent / "fake.py").write_text(FAKE_FIRST_FAILS, encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr  # DONE, not EXIT_WAITING(5)
+    assert "PROVA-BUILD-1 rate-limited; cooled" in proc.stdout
+    assert "re-routing" in proc.stdout
+    assert "WAITING on a rate limit" not in proc.stdout  # never took the WAITING exit
+    # builda hit the limit and was cooled; the run re-routed to the other family.
+    assert _models(ctl) == ["builda", "revb"]
+
+
+def test_review_no_verdict_cools_and_reroutes_same_phase(managed_repo):
+    # A reviewer that writes NO verdict file is cooled and the SAME review phase is
+    # re-dispatched to a different enabled reviewer next iteration; the round still
+    # completes (a REVIEW-A verdict lands from the re-routed reviewer).
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "skip_verdict_model").write_text("revb", encoding="utf-8")
+    (ctl / "done_after").write_text("2", encoding="utf-8")
+    (repo.parent / "fake.py").write_text(FAKE_REVIEWER_SKIPS, encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PROVB-REV-1 review [REVIEW-A] wrote no verdict" in proc.stdout
+    assert "re-routing" in proc.stdout
+    reviews = _routes(proc.stdout, "REVIEW-A")
+    assert len(reviews) >= 2  # the SAME phase was re-dispatched, not dropped
+    assert "PROVC-REV-1" in reviews[-1]  # to a different enabled reviewer
+    # The round completed: the re-routed reviewer's verdict landed as a repo file.
+    assert list((repo / "docs" / "reviews").glob("*-REVIEW-A.md"))
+    assert "revc" in _models(ctl)
+
+
+def test_managed_error_session_cools_and_reroutes(managed_repo):
+    # A managed BUILD session that ERRORS (nonzero exit, no JSON) cools that model
+    # and re-routes to the other enabled same-tier family the next iteration.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")  # build-only
+    (ctl / "fail_model").write_text("builda", encoding="utf-8")
+    (ctl / "fail_mode").write_text("error", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    (repo.parent / "fake.py").write_text(FAKE_FIRST_FAILS, encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "PROVA-BUILD-1 session outcome=ERROR" in proc.stdout
+    assert "cooled" in proc.stdout and "re-routing" in proc.stdout
+    assert _models(ctl) == ["builda", "revb"]

@@ -1126,3 +1126,55 @@ def test_live_status_falls_back_to_scroll_on_non_tty(loop_repo):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "> refactoring the parser" in proc.stdout  # scrolled, not rewritten
     assert "\x1b[2K" not in proc.stdout  # no in-place escapes on a non-TTY
+
+
+# --- WI-080 Slice A golden net: model-map / {model} preflight guards -----------
+
+
+def test_model_map_entry_without_equals_fails_preflight(loop_repo):
+    # A --model-map entry lacking '=' is a parse error -> EXIT_PREFLIGHT before any
+    # session runs, with the message on stderr (the preflight contract).
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template, "--model-map", "BUILDstrong")
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "without '='" in proc.stderr
+    assert _invocations(ctl) == 0, "a parse failure must start no session"
+
+
+def test_parse_model_map_rejects_entry_without_equals():
+    # The pure parser raises ValueError on a no-'=' entry (the guard the preflight
+    # above leans on); a well-formed map still parses.
+    agent_loop = load_script("agent_loop")
+    with pytest.raises(ValueError):
+        agent_loop.parse_model_map("BUILDstrong")
+    assert agent_loop.parse_model_map("BUILD=strong,PLAN=fast") == {
+        "BUILD": "strong",
+        "PLAN": "fast",
+    }
+
+
+def test_model_placeholder_without_model_fails_preflight(loop_repo):
+    # A template carrying {model} with NO model configured (no --model /
+    # --model-map / AGENT_MODEL) must exit EXIT_PREFLIGHT naming the missing model.
+    # preflight() accepts the launchable template, so the mid-loop guard is what
+    # fires at iteration 1 — before any session runs (the _loop helper is bypassed
+    # here precisely because it always wires --model).
+    repo, ctl, template = loop_repo  # template carries `--model {model}`
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = run_py(
+        [
+            SCRIPTS / "agent_loop.py",
+            "--root",
+            repo,
+            "--agent-cmd",
+            template,
+            "--pause",
+            "0",
+            # deliberately NO --model / --model-map / AGENT_MODEL
+        ],
+        cwd=repo,
+    )
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "no model is configured for this phase" in proc.stderr
+    assert _invocations(ctl) == 0, "the guard fires before any session launches"
