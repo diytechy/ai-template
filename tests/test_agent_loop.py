@@ -1488,3 +1488,143 @@ def test_routingstate_note_session_and_stall_verdict():
     assert st.stall == 0
     assert st.errors == 0
     assert st.stall_verdict(1) is None
+
+
+# --- WI-080 Slice D: the session-outcome ladder + worker end-state as module ---
+# functions. classify_outcome (the outcome/errored ladder) and worker_endstate /
+# worker_exit_banner (the worker's committed-evidence disposition) were extracted
+# from main() to module level, unit-addressable without a coordinator run.
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    [
+        # A rate limit wins as WAITING over everything — even timed_out True and
+        # committed True — and never reads as errored (reset_hint gates it).
+        (
+            ("resets 3:45pm", True, "DONE", True, {"is_error": True}, 1),
+            ("WAITING", False),
+        ),
+        # A timeout is its own outcome and beats a declared end-state.
+        ((None, True, "DONE", False, {}, 0), ("TIMEOUT", False)),
+        # Each declared end-state passes through (a healthy run-state commit).
+        ((None, False, "DONE", True, {"is_error": False}, 0), ("DONE", False)),
+        ((None, False, "BLOCKED", True, {"is_error": False}, 0), ("BLOCKED", False)),
+        (
+            (None, False, "NEEDS-HUMAN", True, {"is_error": False}, 0),
+            ("NEEDS-HUMAN", False),
+        ),
+        # A commit with no end-state -> COMMITTED, not errored.
+        ((None, False, "RUNNING", True, {}, 0), ("COMMITTED", False)),
+        # is_error JSON -> ERROR + errored, even on a zero exit code.
+        ((None, False, "RUNNING", False, {"is_error": True}, 0), ("ERROR", True)),
+        # No JSON ({} — parse_json_result's "nothing parsed" signal) + nonzero
+        # exit -> ERROR + errored (covers run_session's OSError sentinel).
+        ((None, False, "RUNNING", False, {}, 1), ("ERROR", True)),
+        # A healthy session that simply idled -> NO-COMMIT, not errored.
+        ((None, False, "RUNNING", False, {"is_error": False}, 0), ("NO-COMMIT", False)),
+    ],
+)
+def test_classify_outcome_ladder(args, expected):
+    al = load_script("agent_loop")
+    assert al.classify_outcome(*args) == expected
+
+
+def _train_repo(tmp_path, train="t1", assigned=("WI-201",)):
+    """A throwaway repo: a seed commit (the integration base), then branch
+    llm/train/<train>. Returns (repo, base, worker-dict) — the worker carries
+    exactly the keys worker_endstate reads."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "loop@example.com")
+    _git(repo, "config", "user.name", "Loop Test")
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    base = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "checkout", "-q", "-b", "llm/train/" + train)
+    worker = {"train": train, "assigned": list(assigned), "base": base, "rework": ""}
+    return repo, base, worker
+
+
+def _build_commit(repo, wi, train, base):
+    (repo / ("work-" + wi + ".txt")).write_text("work " + wi, encoding="utf-8")
+    _git(repo, "add", "-A")
+    msg = "build {}\n\nWI: {}\nTrain: {}\nBase: {}\n".format(wi, wi, train, base)
+    _git(repo, "commit", "-q", "-m", msg)
+
+
+@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+def test_worker_endstate_done_names_train_branch(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    end = al.worker_endstate(str(repo), worker, False, False, 1)
+    assert end is not None
+    code, label, detail = end
+    assert code == al.EXIT_DONE
+    assert label == "DONE"
+    assert al.TRAIN_BRANCH_PREFIX + "t1" in detail
+
+
+@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+def test_worker_endstate_review_open_defers(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    # Built + clean, but the caller reports the train's review cycle still open.
+    assert al.worker_endstate(str(repo), worker, True, False, 1) is None
+
+
+@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+def test_worker_endstate_rework_pending_defers(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    worker["rework"] = "a CHANGES-REQUESTED verdict is pending"
+    assert al.worker_endstate(str(repo), worker, False, False, 1) is None
+
+
+@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+def test_worker_endstate_blocked_trailer_exits_blocked(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    (repo / "work-WI-201.txt").write_text("stuck", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(
+        repo,
+        "commit",
+        "-q",
+        "-m",
+        "blocked WI-201\n\nBlocked-WI: WI-201\nBlockRef: OI-99\n",
+    )
+    end = al.worker_endstate(str(repo), worker, False, False, 1)
+    assert end is not None
+    code, label, detail = end
+    assert code == al.EXIT_BLOCKED
+    assert label == "BLOCKED"
+    assert "OI-99" in detail
+
+
+@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+def test_worker_endstate_dirty_tree_defers(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    # Committed evidence is complete, but an uncommitted path means not-done.
+    (repo / "scratch.txt").write_text("uncommitted", encoding="utf-8")
+    assert al.worker_endstate(str(repo), worker, False, False, 1) is None
+
+
+def test_worker_exit_banner_returns_code_and_prints(capsys):
+    al = load_script("agent_loop")
+    worker = {"train": "t1", "assigned": ["WI-201", "WI-204"]}
+    code = al.worker_exit_banner(
+        worker, (al.EXIT_DONE, "DONE", "every assigned WI built")
+    )
+    assert code == al.EXIT_DONE
+    out = capsys.readouterr().out
+    assert "worker t1 [WI-201;WI-204]: DONE" in out
+    assert "every assigned WI built" in out

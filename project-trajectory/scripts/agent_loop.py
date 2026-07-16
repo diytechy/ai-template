@@ -1528,6 +1528,96 @@ def seconds_until_reset(hint, now=None):
     return int((target - now).total_seconds())
 
 
+def classify_outcome(reset_hint, timed_out, state, committed, data, exit_code):
+    """The outcome ladder for one session — a rate limit wins as WAITING, a
+    timeout is its own outcome, a declared end-state (run-state) passes through,
+    a commit is COMMITTED, an agent error (is_error JSON, or a non-JSON nonzero
+    exit — which also covers run_session's OSError sentinel of -1 with no JSON)
+    is ERROR, else NO-COMMIT.
+
+    `errored` marks a session that failed *before it could work* — not a rate
+    limit (that wins as WAITING) or a timeout (its own outcome): the CLI reported
+    an error result (is_error in JSON), or a non-JSON session exited nonzero.
+    Distinct from NO-COMMIT (a healthy session that idled), so a fast-dying
+    walk-away run — model retired, auth expired, CLI broke — reads as an agent
+    error, not a work stall. Mirrors the error signal limit_reset_hint already
+    trusts (is_error / nonzero exit), never a substring scan of the transcript.
+    Reporting only: it still counts toward the stall guard (no commit), but the
+    abort banner names it (Thread 45).
+
+    Returns (outcome, errored)."""
+    errored = (
+        not reset_hint
+        and not timed_out
+        and (bool(data.get("is_error")) or (not data and exit_code != 0))
+    )
+    if reset_hint:
+        outcome = "WAITING"
+    elif timed_out:
+        outcome = "TIMEOUT"
+    elif state in END_STATES:
+        outcome = state
+    elif committed:
+        outcome = "COMMITTED"
+    elif errored:
+        outcome = "ERROR"
+    else:
+        outcome = "NO-COMMIT"
+    return outcome, errored
+
+
+def worker_endstate(root, worker, review_open, managed, rp_int):
+    """(exit_code, label, detail) when the assignment reached an end state,
+    else None — judged ONLY from committed evidence + in-process queues:
+    EXIT_BLOCKED when a Blocked-WI trailer names an assigned WI (the
+    integrator turns it into the durable disposition, Slice F); EXIT_DONE
+    when every assigned WI carries its WI trailer, the tree is clean, and
+    no review/critique/rework is pending. A worker never reads run-state."""
+    built, blocked_map = train_evidence(root, worker["base"])
+    hit = [w for w in worker["assigned"] if w in blocked_map]
+    if hit:
+        return (
+            EXIT_BLOCKED,
+            "BLOCKED",
+            "\n".join(
+                "{} blocked — BlockRef: {}".format(
+                    w, blocked_map[w] or "(none committed — a finding)"
+                )
+                for w in hit
+            ),
+        )
+    remaining = [w for w in worker["assigned"] if w not in built]
+    if remaining:
+        return None
+    if review_open or worker["rework"]:
+        return None  # built, but the train's review cycle is still open
+    if working_tree_dirty(root):
+        return None  # committed evidence only — a dirty tree is not done
+    return (
+        EXIT_DONE,
+        "DONE",
+        "every assigned WI ({}) carries its trailer commit on {}{}".format(
+            ";".join(worker["assigned"]),
+            TRAIN_BRANCH_PREFIX + worker["train"],
+            "; review round approved" if managed and rp_int >= 1 else "",
+        ),
+    )
+
+
+def worker_exit_banner(worker, end):
+    """Print the worker's end banner (never a status.md excerpt — a worker
+    has no resume surface) and hand the exit code to the dispatcher."""
+    code_, label, detail = end
+    print(
+        "\n=== worker {} [{}]: {} ===".format(
+            worker["train"], ";".join(worker["assigned"]), label
+        )
+    )
+    if detail:
+        print(detail)
+    return code_
+
+
 def bounded_transcript(output):
     """Head + capped tail of a session transcript (the tracked-log bound)."""
     lines = output.splitlines()
@@ -4556,57 +4646,6 @@ def main():
             )
         )
 
-    # --- worker end-state evaluation (WI-181) ---------------------------------
-    def worker_endstate():
-        """(exit_code, label, detail) when the assignment reached an end state,
-        else None — judged ONLY from committed evidence + in-process queues:
-        EXIT_BLOCKED when a Blocked-WI trailer names an assigned WI (the
-        integrator turns it into the durable disposition, Slice F); EXIT_DONE
-        when every assigned WI carries its WI trailer, the tree is clean, and
-        no review/critique/rework is pending. A worker never reads run-state."""
-        built, blocked_map = train_evidence(root, worker["base"])
-        hit = [w for w in worker["assigned"] if w in blocked_map]
-        if hit:
-            return (
-                EXIT_BLOCKED,
-                "BLOCKED",
-                "\n".join(
-                    "{} blocked — BlockRef: {}".format(
-                        w, blocked_map[w] or "(none committed — a finding)"
-                    )
-                    for w in hit
-                ),
-            )
-        remaining = [w for w in worker["assigned"] if w not in built]
-        if remaining:
-            return None
-        if st.review_queue or st.critique_queue or worker["rework"]:
-            return None  # built, but the train's review cycle is still open
-        if working_tree_dirty(root):
-            return None  # committed evidence only — a dirty tree is not done
-        return (
-            EXIT_DONE,
-            "DONE",
-            "every assigned WI ({}) carries its trailer commit on {}{}".format(
-                ";".join(worker["assigned"]),
-                TRAIN_BRANCH_PREFIX + worker["train"],
-                "; review round approved" if managed and rp_int >= 1 else "",
-            ),
-        )
-
-    def worker_exit(end):
-        """Print the worker's end banner (never a status.md excerpt — a worker
-        has no resume surface) and hand the exit code to the dispatcher."""
-        code_, label, detail = end
-        print(
-            "\n=== worker {} [{}]: {} ===".format(
-                worker["train"], ";".join(worker["assigned"]), label
-            )
-        )
-        if detail:
-            print(detail)
-        return code_
-
     # --- WI-076: surface the loop-start dirty tree (ONCE) --------------------
     # start_dirty was snapshotted before the lock (above). A non-empty tree here
     # is residue from a prior interrupted run/session: a fresh coordinator has
@@ -4676,9 +4715,15 @@ def main():
         # recovery reconstructs the same verdict from git alone (spec §11).
         current_wi = None
         if worker:
-            end = worker_endstate()
+            end = worker_endstate(
+                root,
+                worker,
+                bool(st.review_queue or st.critique_queue),
+                managed,
+                rp_int,
+            )
             if end:
-                return worker_exit(end)
+                return worker_exit_banner(worker, end)
             built, _blk = train_evidence(root, worker["base"])
             remaining = [w for w in worker["assigned"] if w not in built]
             current_wi = (
@@ -4991,35 +5036,12 @@ def main():
             else read_declared(lane / "run-state", "RUNNING").upper()
         )
 
-        # A session that failed *before it could work* — and is not a rate limit
-        # (that wins as WAITING) or a timeout (its own outcome): the CLI reported
-        # an error result (is_error in JSON), or a non-JSON session exited nonzero
-        # — which also covers run_session's OSError sentinel (-1, no JSON) when it
-        # could not launch at all. Distinct from NO-COMMIT (a healthy session that
-        # idled), so a fast-dying walk-away run — model retired, auth expired, CLI
-        # broke — reads as an agent error, not a work stall. Mirrors the error
-        # signal limit_reset_hint already trusts (is_error / nonzero exit), never
-        # a substring scan of the transcript. Reporting only: it still counts
-        # toward the stall guard (no commit), but the abort banner names it
-        # (Thread 45).
-        errored = (
-            not reset_hint
-            and not timed_out
-            and (bool(data.get("is_error")) or (not data and code != 0))
+        # (outcome, errored) via the session-outcome ladder — full semantics
+        # (including the "failed before it could work" error rule) live in
+        # classify_outcome's docstring (single-source, WI-080 Slice D).
+        outcome, errored = classify_outcome(
+            reset_hint, timed_out, state, before != after, data, code
         )
-
-        if reset_hint:
-            outcome = "WAITING"
-        elif timed_out:
-            outcome = "TIMEOUT"
-        elif state in END_STATES:
-            outcome = state
-        elif before != after:
-            outcome = "COMMITTED"
-        elif errored:
-            outcome = "ERROR"
-        else:
-            outcome = "NO-COMMIT"
 
         meta = {
             "session": session,
@@ -5438,9 +5460,15 @@ def main():
         # Worker end-state after the session too — a completed assignment must
         # exit DONE here, not spend the remaining budget re-checking at the top.
         if worker:
-            end = worker_endstate()
+            end = worker_endstate(
+                root,
+                worker,
+                bool(st.review_queue or st.critique_queue),
+                managed,
+                rp_int,
+            )
             if end:
-                return worker_exit(end)
+                return worker_exit_banner(worker, end)
 
         st.note_session(before != after, outcome == "ERROR")
         verdict = st.stall_verdict(args.stall_limit)

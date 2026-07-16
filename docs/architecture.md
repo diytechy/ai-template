@@ -80,6 +80,9 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `parse_json_result(output)` | Best-effort parse of a --output-format json / stream-json run: the last |  |
 | `limit_reset_hint(output, data, exit_code)` | The 'resets <time>' text of a rate-limit message, or None. |  |
 | `seconds_until_reset(hint, now)` | Best-effort seconds until a reset hint like '3:45pm', '10am', |  |
+| `classify_outcome(reset_hint, timed_out, state, committed, data, exit_code)` | The outcome ladder for one session — a rate limit wins as WAITING, a |  |
+| `worker_endstate(root, worker, review_open, managed, rp_int)` | (exit_code, label, detail) when the assignment reached an end state, |  |
+| `worker_exit_banner(worker, end)` | Print the worker's end banner (never a status.md excerpt — a worker |  |
 | `bounded_transcript(output)` | Head + capped tail of a session transcript (the tracked-log bound). |  |
 | `write_session_log(iter_dir, meta, transcript)` | Write the tracked, size-bounded per-session log: a `# key: value` |  |
 | `read_log_meta(path)` | Parse the `# key: value` metadata header of one session log. |  |
