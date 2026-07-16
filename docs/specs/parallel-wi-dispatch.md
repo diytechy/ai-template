@@ -888,9 +888,11 @@ For each point:
 - no unintegrated commit/dirty tree is deleted;
 - `llm/integration` is atomically either entirely before or entirely after
   integration;
-- the development ref and its worktree are either fully unpublished or fully
-  synchronized to the integration target, with the durable publication-intent ref
-  marking the in-between state so recovery finishes or safely abandons the publish;
+- the development ref and its worktree are in exactly one of three recoverable
+  states — fully unpublished, fully synchronized to the integration target, or
+  recoverably in-between with a valid publication-intent ref proving the
+  expected-old and target hashes — so recovery finishes or safely abandons the
+  publish, never leaving an unclassifiable fourth state;
 - an unpublished integration commit remains authoritative and is published
   idempotently rather than making its already-done WIs ready again;
 - a crash between the development-ref CAS and the worktree sync is recognized via
