@@ -9,222 +9,65 @@ PROCESS.md: it never needs hand-maintaining.
 Usage:
     python scripts/trace.py [--strict] [--strict-integrity] [--require-verified]
                             [--phase LIST] [--no-placeholders] [--strict-schema]
-                            [--html] [--root DIR] [--docs DIR]
+                            [--html] [--ratify SCOPE [--out FILE]]
+                            [--root DIR] [--docs DIR]
 
-Reads (relative to --docs, default "<root>/docs"; --root defaults to "."):
-    requirements/system-requirements.csv   (cols: SR-ID, SN-Refs, Verification, Status, ...)
-    requirements/low-level-requirements.csv (cols: LLR-ID, SR-Refs, ...)
-    test/test-cases.csv                     (cols: TC-ID, Verifies, ...)
-    requirements/stakeholder-needs.md       (optional; SN-### ids scraped for SN->SR coverage.
-                                             SN maturity is section-as-state: SNs under a heading
-                                             containing "draft" are unratified/Draft (§4a) and
-                                             exempt from the SN-with-no-SR orphan rule)
-    requirements/performance-budgets.csv    (optional; PB-### perf/resource budgets, §9 —
-                                             each row's Refs must back-link a real SR/LLR/Module)
-    requirements/repos.csv                   (optional; REPO-### coordinator repo-delegation
-                                             registry, MULTI_REPO.md — each row's DelegatedSRs
-                                             must name a real coordinator SR; the multi-repo
-                                             layer only. The legacy modules.csv / MOD-### form
-                                             is still read)
-    requirements/procurement.csv             (optional; PART-### purchased/external parts,
-                                             process-options.md — each row's IF-Ref names the
-                                             owning interface row of record (MULTI_REPO.md §3.3);
-                                             integrity-checked only, like a MOD row with no
-                                             DelegatedSRs)
-    requirements/assets.csv                  (optional; ASSET-### binary/large-asset provenance,
-                                             process-options.md "Binary assets" — provenance,
-                                             license, attribution, contract link + a pointer/hash;
-                                             integrity-checked only, like PART)
-    requirements/components.csv              (optional; CMP-### domain-neutral components,
-                                             process-options.md "Component layer" — the
-                                             set-grained knowledge + lifecycle home; PartOf/
-                                             SupersededBy must name real CMP ids, and a
-                                             `Component` tag on an LLR/PART/ASSET row must
-                                             resolve to a real CMP row)
-    requirements/interfaces.csv              (optional; IF-### directed interface seams,
-                                             process.md 8 — one row per directed seam
-                                             (ThisProject module -> Counterpart module/file/
-                                             external actor); each row's SR-Refs must resolve
-                                             to a real SR, and ThisProject is best-effort
-                                             joined to the LLR Module inventory. The seam
-                                             registry is off the joined spine but must stay
-                                             traceable to it (WI-056 closed the SR-002-era gap
-                                             where trace.py never read the IF tier))
+Reads (under --docs, default "<root>/docs"; --root defaults to "."): the spine —
+    requirements/{system-requirements,low-level-requirements}.csv,
+    test/test-cases.csv, and requirements/stakeholder-needs.md (SN ids scraped;
+    an SN under a heading containing "draft" is unratified, §4a) — plus the
+    OPTIONAL off-spine registries requirements/{performance-budgets,repos,
+    procurement,assets,components,interfaces}.csv (PB/REPO/PART/ASSET/CMP/IF, each
+    documented on its own *.template.csv and in process.md §8/§9 +
+    process-options.md; the legacy modules.csv/MOD- form is still read). Absent
+    optional files and "-000" example rows are ignored, so a fresh scaffold is
+    green.
 
 Writes:
-    test/report.md  — counts, the SR->LLR->TC matrix, the orphan list, and two
-        rendered views of the same join: a line-reviewable SN->SR->LLR->TC text
-        outline and a small, diff-friendly Mermaid `graph LR` DAG colored by
-        orphan/draft state.
-    test/report.html (only with --html) — a dependency-free, collapsible
-        <details> tree of the full graph (inline CSS, zero JS) that scales to any
-        size. A generated composite artifact: gitignored, never the review
-        surface — review the registry CSVs (process.md §3 "Reviewability").
+    test/report.md — counts, the SR->LLR->TC matrix, the orphan/integrity/
+        advisory sections, and two rendered views of the same join: a
+        line-reviewable SN->SR->LLR->TC outline and a small, diff-friendly Mermaid
+        DAG colored by orphan/draft state.
+    test/report.html (only with --html) — a dependency-free, collapsible <details>
+        tree of the full graph (inline CSS, zero JS). A gitignored composite
+        artifact, never the review surface — review the registry CSVs (process.md
+        §3 "Reviewability").
 
-Exit code: 0 normally; with --strict, 1 if any orphan (or, with
---require-verified, any status finding) exists — use in gates.
+Exit: 0 normally; --strict -> 1 on any orphan / status / off-spine finding;
+--strict-integrity -> 1 on an integrity finding ONLY (the always-valid floor the
+pre-commit hook runs on every commit — a duplicate/malformed id is wrong at any
+stage, while orphans are a G2+ gate criterion).
 
-Orphan rules (the method rules are stated once, in process.md §4):
-    - SR with no LLR (unless Verification is Analysis/Inspection/Attest — those
-      have no code to decompose; Demonstration/Manual SRs still describe behavior
-      the software implements, so they keep the LLR requirement. Attest is the
-      human-attestation kind — a named person's recorded judgment, often over a
-      subjective/binary asset with no code symbol, so it is LLR-exempt too.
-      Critique is NOT LLR-exempt: the artifact it judges is *produced by code*
-      (a render/generation pipeline) and only its acceptance is subjective, so a
-      Critique SR keeps the LLR like Demonstration/Manual — a genuinely code-less
-      subjective requirement is an Attest, not a Critique)
-    - SR with no TC (every SR needs ≥1 TC row regardless of method; for human
-      methods the TC records the procedure with Automated=No)
-    - SR with no SN link (only when stakeholder-needs.md provides real SN ids —
-      the G1 "every SR links ≥1 SN" criterion, machine-checked)
-    - LLR with no SR parent, or referencing an unknown SR
-    - LLR with no TC
-    - TC that verifies nothing, or references an unknown SR/LLR
-    - SN with no SR (only when stakeholder-needs.md is present; a Draft SN — see
-      below — is exempt)
-Draft exemption (derived-gate model, docs/specs/derived-gate-model.md §3): an
-artifact in the pre-ratification `Draft` state is exempt from the
-*child-completeness* rules above — a Draft SR needs no LLR/TC, a Draft LLR needs
-no TC, and a Draft SN needs no SR — so a requirement can be drafted in the live
-spine before it is decomposed (retiring the -000/off-spine workaround). SR/LLR/TC
-maturity is the open-vocabulary `Status` value `Draft` (the ladder is Draft ->
-Planned -> Verified); SN maturity is **section-as-state** (§4a): an SN under a
-stakeholder-needs.md heading whose text contains "draft" (e.g. `## Draft needs
-(unratified)`) is Draft, all other SNs ratified. Parent-linkage and integrity
-rules still apply (a Draft SR still links an SN; ids stay unique/well-formed), and
-a Draft SR is exempt from the --require-verified criterion below (it is
-pre-ratification, below G1).
---require-verified adds the G3 status criterion:
-    - SR with Verification=Test whose Status is not Verified (Draft SRs exempt)
---phase scopes that status criterion to a delivery phase (process.md §4
-"Phased delivery"): SRs may carry an optional `Phase` column (e.g. v1, v2);
-`--phase v1` (or a cumulative list, `--phase v1,v2`) exempts SRs tagged with
-*other* phases from --require-verified and reports them as phase-deferred —
-the exemption is explicit, never silent. A blank/absent Phase means the SR is
-in scope for every phase. Orphan rules are phase-blind: every SR keeps its
-LLR + TC rows regardless of phase.
+The method rules this script mechanizes are stated ONCE elsewhere — they are NOT
+restated here (the kit's decompose-don't-paraphrase rule applied to itself):
+    - the orphan rules (an SR needs an LLR unless Verification is
+      Analysis/Inspection/Attest, a TC, and — when a needs file exists — an SN;
+      LLR/TC parentage), the Draft child-completeness exemption, and the
+      Draft->Planned->Verified ladder: process.md §4 + the derived-gate model
+      (docs/specs/derived-gate-model.md §3, and §4a for section-as-state SN
+      maturity).
+    - the always-on structural-integrity floor (a CSV data row whose column count
+      differs from its header, a duplicate/malformed SR/LLR/TC/PB/REPO/CMP/IF id,
+      and the SR;LLR citation-coherence rule) and the off-spine back-link rules
+      (every PB/REPO/CMP/IF row resolves to the spine): process.md §4/§8/§9 +
+      process-options.md.
+    - phased delivery (--phase scopes --require-verified to listed/blank-Phase
+      SRs and reports the rest as phase-deferred; orphan rules stay phase-blind)
+      and the closed vocabularies --strict-schema enforces (SR Verification, TC
+      Tier): process.md §4.
 
-Always (independent of --strict-schema), structural integrity is checked:
-    - a registry CSV data row whose parsed column count differs from its
-      header's. An unquoted comma (inside a Permutations set like `set{a,b,c}`
-      or a free-text Rationale cell) silently shifts every later column, so the
-      DictReader-based join reads misaligned cells for two gates before
-      --strict-schema would notice. Checked for EVERY *.csv under
-      docs/requirements/ and docs/test/ — spine, off-spine (interfaces,
-      procurement, ...), and project-added registries alike — since the check
-      needs no knowledge of a file's semantics, only its header
-    - a duplicated SR/LLR/TC/PB/REPO/CMP/IF id (the join would otherwise silently dedupe it)
-    - a malformed id (not "PREFIX-<digits>")
-    - a performance-budget row (PB-###, §9) whose Refs name an unknown
-      SR/LLR/Module, or that back-links nothing — the budgets registry is off the
-      spine but must stay traceable to it (the PB-000 example row is ignored, so
-      the optional registry never blocks a gate a project doesn't use)
-    - a coordinator repo-delegation row (REPO-###, MULTI_REPO.md — the multi-repo
-      layer; legacy MOD-###/modules.csv still read) whose DelegatedSRs name an
-      unknown coordinator SR; an external/reused part
-      referenced only via the IF-### catalog may delegate nothing, so an empty
-      back-link is allowed here (unlike PB). The MOD-000 example row is ignored,
-      so the optional registry never blocks a single-repo project's gate
-    - a purchased/external part row (PART-###, process-options.md) with a
-      malformed/duplicate PART- id. Its IF-Ref names the owning interface row of
-      record (MULTI_REPO.md §3.3) but is NOT resolved here (the interface tier is
-      checked in its own pass, below), so PART is integrity-checked only — like a
-      MOD row that delegates nothing. The PART-000 example row is ignored, so the
-      optional registry never blocks a gate
-    - an interface seam row (IF-###, process.md §8 — the intra-repo/cross-project
-      interface catalog) with a malformed/duplicate IF- id (the always-on floor),
-      whose SR-Refs is empty or names an unknown SR (a --strict finding, like PB's
-      back-links: every seam links the spine so it stays transitively TC-covered),
-      or whose ThisProject endpoint resolves to no LLR Module after normalization
-      (a warn-only advisory — the LLR Module set is a partial, differently-named
-      inventory, so the full module-coverage check lives in check_trajectory
-      against the arch-map). WI-056 closed the SR-002-era gap (trace.py never read
-      the IF tier); the IF-000 example row is ignored, so the optional registry
-      never blocks a gate
-    - a binary/large-asset provenance row (ASSET-###, process-options.md "Binary
-      assets") with a malformed/duplicate ASSET- id. Off the spine like PART:
-      integrity-checked only, its provenance/license/hash tracked in text even
-      though the asset itself can't be diffed. The ASSET-000 example row is
-      ignored, so the optional registry never blocks a gate
-    - a test case (TC) that cites an SR and an LLR together whose LLR does not
-      decompose that SR (the LLR's SR-Refs excludes every SR the same TC cites).
-      The combined `SR;LLR` citation is a convenience so one test discharges both
-      the "SR needs a TC" and "LLR needs a TC" rules, but it must not contradict
-      the SR<->LLR link recorded canonically on the LLR's SR-Refs — an incoherent
-      pairing is wrong at any stage, like a malformed id. A TC citing only LLRs
-      (no SR) has no SR to contradict and is
-      left to the orphan rules
-These join `--strict`'s failure set like orphans do. `--strict-integrity` fails
-on *only* this integrity class: it is the always-valid floor the pre-commit hook
-runs on every commit — a duplicated or malformed id is wrong at any stage, while
-orphans are a G2+ *gate* criterion (a mid-G1 registry legitimately has SRs with
-no LLR/TC yet, and must still be committable).
-
---no-placeholders flags any leftover template example row (id ending "-000") as
-a finding — wire it in from G2 on (a fresh scaffold is exempt only until you
-claim a gate). Without it, "-000" example rows are ignored so a fresh scaffold
-starts green.
-
---strict-schema adds data-quality checks over the real (non-placeholder) rows:
-    - required fields are non-empty (SR: SR-ID, Title, SN-Refs, Requirement,
-      AcceptanceCriteria, Priority, Verification, Status; LLR: LLR-ID, SR-Refs,
-      Title, Module, CodeSymbol, Detail, Status; TC: TC-ID, Verifies, Level,
-      Method, Tier, Expected, Automated, Status);
-    - a TC claiming Automated=Yes cites its Evidence: the `Evidence` column
-      names the concrete test — a pytest
-      node, a script path, or a procedure-doc link. Inspection-only text, never
-      a mechanized resolve (node ids aren't filesystem paths). Conditional, not
-      a flat required field: Automated=No/blank rows may leave it empty, and
-      `Parameters` stays reserved for dimensional inputs (the gen_cases
-      grammar), which the pre-Evidence `node=` overload was polluting;
-    - the two *closed* vocabularies the method defines (process.md §4) hold:
-      SR Verification in {Test, Demonstration, Manual, Analysis, Inspection,
-      Attest, Critique}, TC Tier in {Smoke, Full, Release}. Priority/Status are
-      deliberately NOT enumerated — the method leaves them open (e.g. Priority S,
-      Status Planned).
-
-Always (warn-only, never an exit-code change), acceptance-criteria testability
-is advised on: a comparative/absolute term in an SR's AcceptanceCriteria
-("identical", "indistinguishable", "equivalent", "same as", "matches", ...)
-with no pinned predicate nearby in the cell is flagged as a WARNING on stdout
-and in the report. A comparative is untestable until it names its predicate —
-identical *in what*, judged *how* ("cannot distinguish source by schema" vs
-"identical field names and dtypes per IF-003"). The predicate heuristic looks
-for pinning markers (i.e./e.g./defined/listed/per/measured/tolerance/golden/
-byte-for-byte/byte-identical/bit-identical/== ...), so it is deliberately a
-*lint*, not a gate: the G1
-consistency review (process.md §4) makes the call, and the reviewer either
-pins the predicate or accepts the wording knowingly.
-
-Also always (warn-only, never an exit-code change): an LLR whose Status reads
-below Verified while *every* TC that cites it is Verified is flagged as a
-WARNING (WI-129) — the evidence to lift it already exists, so the gap is a
-readout drift, not a coverage hole. It is never gating (not under --strict or
---strict-integrity): LLR status is non-gating under the derived-gate model
-(only the SR's Verified drives G2->G3), and making this warn block would
-re-introduce the coupling the model dropped. The fix is to lift the LLR's
-Status cell by hand; no generator writes registry cells back.
-
-Also always (warn-only, never an exit-code change): a component row's `Knowledge`
-cell may name a hand-owned knowledge pack (process-options.md "Research track &
-knowledge packs") as a `docs/knowledge/<label>`-shaped ref. Those are resolved to
-real pack files — a ref naming a missing pack is flagged as a WARNING (a pack is
-advisory context, never a gate, so a stale ref never fails a run). The same cell
-also holds skill names and URLs, which aren't file-checkable and are left alone;
-only the `docs/knowledge/` prefix is resolved.
-
-When the SR registry carries the optional `Area` column (owner-hat/domain tag,
-process.md §1) with real values, the report adds a per-Area SR count section —
-report-only, never an exit-code change; blank cells and registries without the
-column are simply not counted.
-
-The report always includes a "Verification basis (attested vs mechanized)"
-count (process.md §4 "Attest"): of the SRs reported Verified, how many rest on a
-runnable check vs a named human's recorded judgment (Verification=Attest). This
-keeps the project's trust footprint auditable — attestation is honest but
-trust-based (the box can be checked without the work having happened), so the
-report never lets it hide inside a bare "Verified".
+Flags in brief: --require-verified adds the G3 criterion "a Verification=Test SR
+is Status=Verified" (Draft SRs exempt); --no-placeholders flags leftover "-000"
+example rows (wire in from G2 on); --strict-schema adds required-field,
+closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
+--ratify SCOPE emits ONLY the batch-scoped ratification hierarchy (a phase tag or
+an SR-id list) to stdout or --out and runs no checks (WI-146). Warn-only
+advisories (loud on stdout + in the report, never gating): an unpinned
+comparative acceptance-criterion, an LLR reading below Verified while every
+citing TC is Verified (WI-129), a missing knowledge pack, and an interface
+endpoint that resolves to no LLR Module. The report always carries the
+attested-vs-mechanized Verified split (process.md §4 "Attest") and, when the SR
+registry tags Area, a per-Area count.
 
 Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
