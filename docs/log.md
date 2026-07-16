@@ -7664,3 +7664,67 @@ the new spec; **Status stays `deferred`** — starting means flipping to
 pre-existing); smoke `pytest -q -n auto -m smoke` → **669 passed, 2 skipped in
 55.12s**. Docs-only + registry-cell change; no script or spine change; no
 byte-budgeted file touched.
+
+## 2026-07-16 — WI-080: agent_loop.py main() decomposed (main-decomposition slices A–E, behavior-preserving)
+
+**Session (owner-directed: "grind through WI-080, spin up opus level agents
+where appropriate").** The first half of the `main-decomposition` campaign
+([spec](specs/main-decomposition.md)) executed as five slices, each a logical
+commit behind the smoke + check_docs bar. Division of labor per the
+strong-plans/medium-builds dial: the coordinator (strong tier) did the deep
+read, the state inventory, every seam/API design, and every diff review; four
+Opus subagents did the test-coverage inventory and the slice builds to
+written briefs.
+
+**The state inventory (Slice A deliverable).** main() was ~1,657 lines with
+~28 cross-iteration mutable locals. The routing/escalation cluster:
+`cooldowns, review_queue, next_phase, round_verdicts, rounds,
+page_fails_since, last_impl_family/_wi/_tier, impl_range, swapped,
+at_top_tier, impl_tier_override, impl_exclude` + the critique cluster
+(`critique_queue/scope/rounds/limit/exhaustion`) + `stall/errors/state` +
+prompt state (`resume_reconcile, warned_no_core`) + worker rework. The
+coverage inventory found the loop's *consumption* of escalation decisions
+entirely unpinned e2e (the agent_route primitives were unit-pinned; terminal
+paths covered) — exactly the code the decomposition would move.
+
+**Slices.**
+- **A (b032ff0, tests only):** 8 e2e pins — swap-implementer applied to the
+  next BUILD, tier-up after swap routes strong, managed rate-limit
+  cool+continue (never the WAITING exit), review-no-verdict same-phase
+  re-dispatch, managed-ERROR cool+re-route, map-parse + missing-{model}
+  preflights. Also flipped WI-080 queued.
+- **B (437ba8b):** `session_model` / `session_template` /
+  `compose_session_prompt` to module level with explicit state; **L3 fold-in**
+  `parse_model_map` → `parse_map` (LLR-037 Detail, OKF, arch-map synced —
+  archives untouched). 5 seam unit tests.
+- **C (759d7f5):** **RoutingState** — the ~24-local cluster behind 18 pure
+  transition methods (mutate the object, return decisions; all I/O stays with
+  the caller); 18 direct transition unit tests retire the review's core
+  complaint ("no test can pin a single transition without staging a whole
+  coordinator run"). *Deviation:* `complete_round`'s append/clear stays split
+  at its two original positions in the loop — the worker-rework handler reads
+  `round_verdicts` between `escalation()` and the clear (comment at the site).
+- **D (3ff0560):** `classify_outcome` (the outcome ladder, rationale moved
+  into the docstring) + `worker_endstate`/`worker_exit_banner` as module
+  functions; 9-case outcome matrix + git-backed endstate unit tests.
+- **E (d61e95a):** `run_iteration(ctx, i)` composed from `route_session`
+  (plan-or-exit) + `session_bookkeeping` (None/exit/"reroute"); setup
+  extracted (`parse_args`, `map_preflight`, `build_worker_assignment`,
+  `track_preamble_text`, `run_interactive`, `print_run_banner`,
+  `LoopContext`). The continue-path semantics (skip stall counting AND the
+  pause sleep) preserved exactly; a token-level literal multiset diff of the
+  moved bodies showed zero content change. *Deviation:* main() is **323
+  lines** of genuine wiring vs the spec's ~150 target — not compressed to hit
+  a number; it is orchestration-only (no business logic).
+
+**Tests / end green (real output).** Golden net green throughout with zero
+existing-test edits (one mechanical rename at the parse_map fold-in). FULL
+suite at close: `pytest -q -n auto` → **927 passed, 3 skipped in 159.22s**
+(suite grew 875 → 927: +8 e2e pins, +44 unit tests across the new seams).
+Per-slice smoke bars: 677/683/701/716/721 passed, all with check_docs OK
+0 broken. No spine change (no SR/LLR/TC rows added — behavior-preserving
+refactor; LLR-037 text-sync only); no byte-budgeted file touched.
+
+**Next.** WI-081 (trace.py analyze/render_report split + M8 pre-indexing +
+docstring shrink, BuildTier medium) completes the campaign; then the campaign
+close runs `check.py --gate G3`.

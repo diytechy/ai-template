@@ -79,21 +79,22 @@ home elsewhere — don't restate it here:
   [log.md](log.md)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
-  WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in
+  WI-063 · WI-064 · WI-065 · WI-081 · WI-082 · WI-108 · WI-159** in
   [work-items.csv](requirements/work-items.csv). The highest-value next step is
-  the `main-decomposition` campaign (**WI-080** → **WI-081**) — plan filed, see
-  Next action below.
+  **WI-081**, the second half of the `main-decomposition` campaign — see Next
+  action below.
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** the **parallel-dispatch campaign (v4) is COMPLETE** and the
-  repo is back at **G3** — no active build frontier. The next step is the
-  **`main-decomposition` campaign** (**WI-080** strong → **WI-081** medium):
-  its detailed slice plan is filed at
-  [specs/main-decomposition.md](specs/main-decomposition.md) (2026-07-16,
-  owner-directed; tier ruling + fold-ins recorded there) — starting means
-  flipping WI-080's Status `deferred` → `queued`, which awaits the owner's go
-  on that plan. Run it serial/attended; the meta-repo SafetyClass audit
-  (the `--jobs 1` hold) is deliberately **not** part of the campaign.
+- **Next action:** the **`main-decomposition` campaign is half done** —
+  **WI-080 closed 2026-07-16** (slices A–E per
+  [specs/main-decomposition.md](specs/main-decomposition.md): `agent_loop.py
+  main()` is orchestration-only behind RoutingState/route_session/
+  run_iteration seams; full suite 927 passed at close; evidence in
+  [log.md](log.md)). **WI-081** (trace.py `analyze()`/`render_report()` split
+  + M8 pre-indexing + docstring shrink, BuildTier **medium**, spec §4) is the
+  remaining half — flip it `deferred` → `queued` to continue; the campaign
+  close then runs the full `check.py --gate G3` bar. Run serial/attended; the
+  meta-repo SafetyClass audit (the `--jobs 1` hold) stays out of the campaign.
   Open owner items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are
   unchanged under `gate-policy: autonomous`; Codex Sol builds are live. Grinding
   under single-agent adversarial self-review at gates (recorded as a limitation
