@@ -1142,16 +1142,101 @@ def test_model_map_entry_without_equals_fails_preflight(loop_repo):
     assert _invocations(ctl) == 0, "a parse failure must start no session"
 
 
-def test_parse_model_map_rejects_entry_without_equals():
+def test_parse_map_rejects_entry_without_equals():
     # The pure parser raises ValueError on a no-'=' entry (the guard the preflight
     # above leans on); a well-formed map still parses.
     agent_loop = load_script("agent_loop")
     with pytest.raises(ValueError):
-        agent_loop.parse_model_map("BUILDstrong")
-    assert agent_loop.parse_model_map("BUILD=strong,PLAN=fast") == {
+        agent_loop.parse_map("BUILDstrong")
+    assert agent_loop.parse_map("BUILD=strong,PLAN=fast") == {
         "BUILD": "strong",
         "PLAN": "fast",
     }
+
+
+# --- WI-080 Slice B seams -----------------------------------------------------
+# The three session-construction functions extracted from main() to module level:
+# pure model/template selection and prompt composition, unit-addressable without a
+# coordinator run.
+
+
+def test_session_model_seam():
+    # Empty map -> the phase is '' and the default model rides through; a
+    # ''-keyed map entry overrides the default.
+    al = load_script("agent_loop")
+    assert al.session_model({}, "claude-opus-4-8") == ("", "claude-opus-4-8")
+    assert al.session_model({"": "claude-fable-5"}, "claude-opus-4-8") == (
+        "",
+        "claude-fable-5",
+    )
+
+
+def test_session_template_seam():
+    # A phase-keyed template wins; an unknown phase falls back to the default.
+    al = load_script("agent_loop")
+    cmd_map = {"REVIEW-A": "agent --review", "BUILD": "agent --build"}
+    assert al.session_template(cmd_map, "agent --default", "REVIEW-A") == (
+        "agent --review"
+    )
+    assert al.session_template(cmd_map, "agent --default", "PLAN") == "agent --default"
+
+
+def test_compose_session_prompt_plain(tmp_path):
+    # body None -> the default prompt, no preamble/reconcile, guardrails off ->
+    # unchanged base and guarded False.
+    al = load_script("agent_loop")
+    prompt, guarded = al.compose_session_prompt(
+        "claude-opus-4-8", None, "", "", "DEFAULT-PROMPT", "off", tmp_path, []
+    )
+    assert prompt == "DEFAULT-PROMPT"
+    assert guarded is False
+
+
+def test_compose_session_prompt_ordering(tmp_path):
+    # reconcile + preamble + body concatenate in exactly that order (body
+    # overrides the default prompt); guardrails off -> guarded False.
+    al = load_script("agent_loop")
+    prompt, guarded = al.compose_session_prompt(
+        "claude-opus-4-8", "BODY", "RECON\n", "PRE\n", "DEFAULT", "off", tmp_path, []
+    )
+    assert prompt == "RECON\nPRE\nBODY"
+    assert guarded is False
+
+
+def test_compose_session_prompt_guardrails_on(tmp_path):
+    # policy selects the model and a real core.md is vendored -> the core is
+    # prepended ahead of the base with the "---" separator, and guarded is True.
+    al = load_script("agent_loop")
+    _vendor_core(tmp_path, "CORE-RULES\n")
+    prompt, guarded = al.compose_session_prompt(
+        "claude-opus-4-8", None, "", "", "BASE", "opus", tmp_path, []
+    )
+    assert prompt == "CORE-RULES\n\n---\n\nBASE"
+    assert guarded is True
+
+
+def test_compose_session_prompt_guardrails_missing_core_warns_once(tmp_path, capsys):
+    # policy selects the model but core.md is absent -> warn once to stderr,
+    # return the base with guarded False; a SECOND call sharing warned_no_core
+    # does not warn again.
+    al = load_script("agent_loop")
+    warned = []
+    prompt, guarded = al.compose_session_prompt(
+        "claude-opus-4-8", None, "", "", "BASE", "opus", tmp_path, warned
+    )
+    assert prompt == "BASE"
+    assert guarded is False
+    first = capsys.readouterr()
+    assert "core.md is absent" in first.err
+    assert warned == [True]
+
+    prompt2, guarded2 = al.compose_session_prompt(
+        "claude-opus-4-8", None, "", "", "BASE", "opus", tmp_path, warned
+    )
+    assert prompt2 == "BASE"
+    assert guarded2 is False
+    second = capsys.readouterr()
+    assert "core.md is absent" not in second.err
 
 
 def test_model_placeholder_without_model_fails_preflight(loop_repo):

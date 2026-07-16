@@ -920,8 +920,10 @@ def status_size_warning(status_path, limit):
     )
 
 
-def parse_model_map(spec):
-    """ "P0=model-a,G3=model-b" -> {"P0": "model-a", "G3": "model-b"}."""
+def parse_map(spec):
+    """Parse a KEY=value phase map — shared by --model-map/--cmd-map/--prompt-map/
+    --tier-map/--prefer-map: "P0=model-a,G3=model-b" -> {"P0": "model-a",
+    "G3": "model-b"}."""
     mapping = {}
     for pair in (spec or "").replace(";", ",").split(","):
         pair = pair.strip()
@@ -952,6 +954,60 @@ def reviewer_prompt(prompt_templates, phase, verdict_path):
     construction)."""
     base = prompt_templates.get(phase, REVIEWER_PROMPT)
     return base.replace("{verdict}", str(verdict_path))
+
+
+def session_model(model_map, default_model):
+    """The legacy/interactive route: the tracked docs/run-phase file is retired
+    (WI-180), so the phase is '' and the model the ''-keyed map entry, else the
+    default."""
+    return "", model_map.get("", default_model)
+
+
+def session_template(cmd_map, default_template, phase):
+    """The per-phase command template (AGENT_CMD_MAP), else AGENT_CMD — phase
+    keys are free-form, so REVIEW-A/REVIEW-B route providers without any loop
+    change."""
+    return cmd_map.get(phase, default_template)
+
+
+def compose_session_prompt(
+    model,
+    body,
+    resume_reconcile,
+    track_preamble,
+    default_prompt,
+    guardrails_policy,
+    root,
+    warned_no_core,
+):
+    """The session prompt: the track preamble (when --track redirects the
+    driver to a lane) prepended to the base prompt, with the vendored
+    guardrails core prepended ahead of both when docs/guardrails-policy
+    selects this session's model (Thread 41). `body` overrides the default
+    resume prompt (a --prompt-map template, or a redacted reviewer prompt).
+    A loop-start dirty tree adds the WI-076 reconcile note ahead of the
+    preamble for the first session (resume_reconcile). Returns (prompt,
+    guarded); a selected-but-absent core warns once, then runs without it
+    (guardrails accelerate quick tiers, they never gate a run). warned_no_core
+    is a shared mutable list used as the warn-once flag across calls."""
+    base = (
+        resume_reconcile + track_preamble + (default_prompt if body is None else body)
+    )
+    if not guardrails_apply(guardrails_policy, model):
+        return base, False
+    core = guardrails_core(root)
+    if core:
+        return core + "\n\n---\n\n" + base, True
+    if not warned_no_core:
+        warned_no_core.append(True)
+        print(
+            "agent_loop: guardrails-policy={!r} selects model {!r} but "
+            "docs/guardrails/core.md is absent — running without the "
+            "guardrails core (vendor it per process-options.md "
+            '"Tier-conditional guardrails").'.format(guardrails_policy, model),
+            file=sys.stderr,
+        )
+    return base, False
 
 
 # --- the critique loop (WI-068) ------------------------------------------------
@@ -3869,11 +3925,11 @@ def main():
         else os.environ.get("AGENT_CMD", "")
     )
     try:
-        model_map = parse_model_map(args.model_map)
-        cmd_map = parse_model_map(args.cmd_map)  # same "KEY=value" syntax
-        prompt_map = parse_model_map(args.prompt_map)  # phase -> prompt-template FILE
-        tier_map = parse_model_map(args.tier_map)  # phase -> tier
-        prefer_map = parse_model_map(args.prefer_map)  # phase -> registry id
+        model_map = parse_map(args.model_map)
+        cmd_map = parse_map(args.cmd_map)  # same "KEY=value" syntax
+        prompt_map = parse_map(args.prompt_map)  # phase -> prompt-template FILE
+        tier_map = parse_map(args.tier_map)  # phase -> tier
+        prefer_map = parse_map(args.prefer_map)  # phase -> registry id
     except ValueError as exc:
         print("agent_loop: {}".format(exc), file=sys.stderr)
         return EXIT_PREFLIGHT
@@ -4077,18 +4133,6 @@ def main():
     if warn:
         print("agent_loop: WARNING - " + warn, file=sys.stderr)
 
-    def session_model():
-        # The tracked docs/run-phase file is retired (WI-180); the legacy and
-        # interactive paths route the default model, and managed mode carries
-        # the phase as in-process runtime state.
-        return "", model_map.get("", args.model)
-
-    def session_template(phase):
-        """The per-phase command template (AGENT_CMD_MAP), else AGENT_CMD —
-        phase keys are free-form, so REVIEW-A/REVIEW-B route providers
-        without any loop change."""
-        return cmd_map.get(phase, template)
-
     guardrails_policy = read_declared(docs / "guardrails-policy", "off")
     # Surface a stale/typo'd policy token before the run: if it names a substring
     # that matches none of the models this run could use, the guard is inert.
@@ -4109,35 +4153,6 @@ def main():
     # leaves this "" — a human at the keyboard already sees the tree.
     resume_reconcile = ""
 
-    def session_prompt(model, body=None):
-        """The session prompt: the track preamble (when --track redirects the
-        driver to a lane) prepended to the base prompt, with the vendored
-        guardrails core prepended ahead of both when docs/guardrails-policy
-        selects this session's model (Thread 41). `body` overrides the default
-        resume prompt (a --prompt-map template, or a redacted reviewer prompt).
-        A loop-start dirty tree adds the WI-076 reconcile note ahead of the
-        preamble for the first session (resume_reconcile). Returns (prompt,
-        guarded); a selected-but-absent core warns once, then runs without it
-        (guardrails accelerate quick tiers, they never gate a run)."""
-        base = (
-            resume_reconcile + track_preamble + (args.prompt if body is None else body)
-        )
-        if not guardrails_apply(guardrails_policy, model):
-            return base, False
-        core = guardrails_core(root)
-        if core:
-            return core + "\n\n---\n\n" + base, True
-        if not warned_no_core:
-            warned_no_core.append(True)
-            print(
-                "agent_loop: guardrails-policy={!r} selects model {!r} but "
-                "docs/guardrails/core.md is absent — running without the "
-                "guardrails core (vendor it per process-options.md "
-                '"Tier-conditional guardrails").'.format(guardrails_policy, model),
-                file=sys.stderr,
-            )
-        return base, False
-
     # WI-076: snapshot the working tree BEFORE the coordinator creates its own
     # out/agent-loop.lock (and, later, docs/iteration/*.log) — so the check sees
     # genuine interrupted-session residue, never our own artifacts. In a scaffold
@@ -4156,21 +4171,35 @@ def main():
     atexit.register(release_lock, lock_path)
 
     if args.interactive:
-        phase, model = session_model()
+        phase, model = session_model(model_map, args.model)
         # Explicit interactive template wins; then the per-phase map; then the
         # default — so a REVIEW-phase interactive sitting uses the same
         # provider routing the unattended leg would.
         itemplate = (
             args.interactive_cmd
             if args.interactive_cmd is not None
-            else os.environ.get("AGENT_CMD_INTERACTIVE", "") or session_template(phase)
+            else os.environ.get("AGENT_CMD_INTERACTIVE", "")
+            or session_template(cmd_map, template, phase)
         )
         print(
             "=== one interactive session | track={} phase={} model={} ===".format(
                 track or "—", phase or "—", model or "—"
             )
         )
-        argv = build_argv(itemplate, model, session_prompt(model)[0])
+        argv = build_argv(
+            itemplate,
+            model,
+            compose_session_prompt(
+                model,
+                None,
+                resume_reconcile,
+                track_preamble,
+                args.prompt,
+                guardrails_policy,
+                root,
+                warned_no_core,
+            )[0],
+        )
         proc = subprocess.run(argv, cwd=str(root))
         return proc.returncode
 
@@ -4644,7 +4673,16 @@ def main():
                 body = prompt_templates[phase]
             else:
                 body = None
-            prompt, guarded = session_prompt(model, body=body)
+            prompt, guarded = compose_session_prompt(
+                model,
+                body,
+                resume_reconcile,
+                track_preamble,
+                args.prompt,
+                guardrails_policy,
+                root,
+                warned_no_core,
+            )
             if (
                 rework_wi
                 and not is_review
@@ -4657,11 +4695,11 @@ def main():
                     "work.\n\n---\n\n{}".format(rework_wi, prompt)
                 )
         else:
-            phase, model = session_model()
-            tmpl = session_template(phase)
-            prompt, guarded = session_prompt(
+            phase, model = session_model(model_map, args.model)
+            tmpl = session_template(cmd_map, template, phase)
+            prompt, guarded = compose_session_prompt(
                 model,
-                body=worker_prompt(
+                worker_prompt(
                     root,
                     worker["rows"],
                     current_wi,
@@ -4671,6 +4709,12 @@ def main():
                 )
                 if worker
                 else None,
+                resume_reconcile,
+                track_preamble,
+                args.prompt,
+                guardrails_policy,
+                root,
+                warned_no_core,
             )
         if not model and "{model}" in tmpl:
             print(

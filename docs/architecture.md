@@ -59,9 +59,12 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `split_cmd(template)` | Split a command template into tokens, quote-aware but with backslash |  |
 | `build_argv(template, model, prompt)` | Substitute {model}/{prompt} per token (never through a shell, so the |  |
 | `status_size_warning(status_path, limit)` | A warn-only message when the resume surface outgrew one screen, or None. |  |
-| `parse_model_map(spec)` | "P0=model-a,G3=model-b" -> {"P0": "model-a", "G3": "model-b"}. |  |
+| `parse_map(spec)` | Parse a KEY=value phase map — shared by --model-map/--cmd-map/--prompt-map/ |  |
 | `phase_tier(phase, tier_map)` | The routing tier for a phase: the declared --tier-map / AGENT_TIER_MAP |  |
 | `reviewer_prompt(prompt_templates, phase, verdict_path)` | The redacted reviewer prompt for a review phase: the per-phase prompt-map |  |
+| `session_model(model_map, default_model)` | The legacy/interactive route: the tracked docs/run-phase file is retired |  |
+| `session_template(cmd_map, default_template, phase)` | The per-phase command template (AGENT_CMD_MAP), else AGENT_CMD — phase |  |
+| `compose_session_prompt(model, body, resume_reconcile, track_preamble, default_prompt, guardrails_policy, root, warned_no_core)` | The session prompt: the track preamble (when --track redirects the |  |
 | `load_critique_srs(docs)` | The SR ids whose Verification is `Critique` (docs/requirements/ |  |
 | `build_scope_wis(root, docs, commit_range)` | The WI ids named in `commit_range`'s commit subjects; empty when there is |  |
 | `build_scope_srs(root, docs, commit_range)` | The SR ids delivered by the WI-tagged commits in `commit_range`. |  |
