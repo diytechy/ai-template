@@ -286,14 +286,23 @@ def test_blocked_constituent_releases_unstarted_and_keeps_built(tmp_path):
     proc = _dispatch(repo, template)
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
 
-    assert _reservations(repo) == {"WI-201", "WI-202"}
+    # Unstarted WI-203 released at the early end; blocked WI-202's reservation
+    # released only AFTER its durable disposition CAS (Slice F); built WI-201
+    # keeps its reservation as integrator evidence (its partial-train
+    # re-review path hardens in Slice G).
+    assert _reservations(repo) == {"WI-201"}
     events = (repo / "out" / "dispatch" / "events.jsonl").read_text("utf-8")
     assert '"release-unstarted"' in events and "WI-203" in events
     assert '"worker-blocked"' in events
-    # Released WI-203 stays queued and untouched — it re-enters the frontier
-    # only when its predecessor's durable disposition advances (Slice F).
+    assert '"blocked-disposition"' in events
+    # The durable disposition landed through the integrator and published:
+    # ONLY WI-202 changed; WI-203 stays queued and untouched.
     reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    assert "WI-202,Work WI-202,ws,SR-062,WI-201,blocked" in reg
     assert "WI-203,Work WI-203,ws,SR-062,WI-202,queued" in reg
+    assert "WI-201,Work WI-201,ws,SR-062,,queued" in reg, (
+        "a built-but-unreviewed constituent is never silently done"
+    )
 
 
 # --- cap, fork, join -------------------------------------------------------------
@@ -325,9 +334,11 @@ def test_unary_chain_packs_to_the_cap(tmp_path):
 
 
 def test_fork_parent_integrates_then_children_take_separate_lanes(tmp_path):
-    # WI-201 forks into WI-202 + WI-203: the packer never chains past a fork,
-    # so run 1 builds the parent alone; after (simulated, Slice F) integration
-    # the children dispatch on TWO separate trains.
+    # WI-201 forks into WI-202 + WI-203: the packer never chains past a fork.
+    # In ONE launch the parent builds and INTEGRATES first (Slice F), then the
+    # children dispatch on TWO separate trains from the integrated frontier.
+    import json as _json
+
     repo, ctl, template = _setup(
         tmp_path,
         [
@@ -338,39 +349,38 @@ def test_fork_parent_integrates_then_children_take_separate_lanes(tmp_path):
     )
     proc = _dispatch(repo, template)
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    assert _reservations(repo) == {"WI-201"}, "children wait for integration"
-
-    # Simulate the integrator: durable done + reservation release (Slice F).
-    rows = [
-        _wi_row("WI-201", status="done"),
-        _wi_row("WI-202", preds="WI-201"),
-        _wi_row("WI-203", preds="WI-201"),
-    ]
-    _write_registry(repo, rows)
-    _git(repo, "add", "-A")
-    _git(repo, "commit", "-q", "-m", "integrate WI-201 (simulated)")
-    assert agent_loop.release_reservations(repo, ["WI-201"]) is None
-
-    proc = _dispatch(repo, template)
-    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    starts = [
-        ln
+    events = [
+        _json.loads(ln)
         for ln in (repo / "out" / "dispatch" / "events.jsonl")
         .read_text("utf-8")
         .splitlines()
-        if '"worker-start"' in ln
+        if ln.strip()
     ]
-    child_starts = [ln for ln in starts if "WI-202" in ln or "WI-203" in ln]
+    starts = [e for e in events if e["event"] == "worker-start"]
+    child_starts = [e for e in starts if "WI-202" in e["wis"] or "WI-203" in e["wis"]]
     assert len(child_starts) == 2
-    assert not any("WI-202" in ln and "WI-203" in ln for ln in child_starts), (
-        "children of a fork take SEPARATE lanes"
-    )
+    assert not any(
+        "WI-202" in e["wis"] and "WI-203" in e["wis"] for e in child_starts
+    ), "children of a fork take SEPARATE lanes"
+    # The parent's INTEGRATION precedes either child's start (spec §7 fork).
+    idx = {id(e): i for i, e in enumerate(events)}
+    parent_integrated = [
+        e for e in events if e["event"] == "integrated" and "WI-201" in e["wis"]
+    ][0]
+    assert all(idx[id(parent_integrated)] < idx[id(c)] for c in child_starts)
+    # Everything landed: rows done on the published dev branch, refs released.
+    assert _reservations(repo) == set()
+    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    assert reg.count(",done,") >= 3
+    assert (repo / "docs" / "run-state").read_text().startswith("DONE")
 
 
 def test_join_starts_from_the_combined_integration_head(tmp_path):
-    # WI-203 joins WI-201 + WI-202 (independent parents): it never dispatches
-    # while either parent is unintegrated, and its train base is the combined
-    # integration HEAD once both are done.
+    # WI-203 joins WI-201 + WI-202 (independent parents): it dispatches only
+    # after BOTH parents integrate, and its reservation base is the combined
+    # integration HEAD (spec §7 join) — asserted from the reserve event.
+    import json as _json
+
     repo, ctl, template = _setup(
         tmp_path,
         [
@@ -381,22 +391,24 @@ def test_join_starts_from_the_combined_integration_head(tmp_path):
     )
     proc = _dispatch(repo, template)
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    assert _reservations(repo) == {"WI-201", "WI-202"}, "the join must wait"
-
-    rows = [
-        _wi_row("WI-201", status="done"),
-        _wi_row("WI-202", status="done"),
-        _wi_row("WI-203", preds="WI-201;WI-202"),
+    events = [
+        _json.loads(ln)
+        for ln in (repo / "out" / "dispatch" / "events.jsonl")
+        .read_text("utf-8")
+        .splitlines()
+        if ln.strip()
     ]
-    _write_registry(repo, rows)
-    _git(repo, "add", "-A")
-    _git(repo, "commit", "-q", "-m", "integrate WI-201+WI-202 (simulated)")
-    assert agent_loop.release_reservations(repo, ["WI-201", "WI-202"]) is None
-    combined_head = _git(repo, "rev-parse", "HEAD")
-
-    proc = _dispatch(repo, template)
-    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    claims = agent_loop.list_reservations(repo)
-    assert set(claims) == {"WI-203"}
-    meta = agent_loop.reservation_meta(repo, claims["WI-203"])
-    assert meta["base"] == combined_head, "the join builds from the combined HEAD"
+    integrations = [e for e in events if e["event"] == "integrated"]
+    join_reserve = [
+        e for e in events if e["event"] == "reserve" and e["wis"] == "WI-203"
+    ][0]
+    parent_integrations = [e for e in integrations if "WI-203" not in e["wis"]]
+    assert len(parent_integrations) == 2
+    idx = {id(e): i for i, e in enumerate(events)}
+    assert all(idx[id(pi)] < idx[id(join_reserve)] for pi in parent_integrations)
+    # The join's base IS the combined integration head — the head recorded by
+    # the LAST parent integration.
+    last_parent_head = parent_integrations[-1]["head"]
+    assert join_reserve["base"] == last_parent_head
+    assert _reservations(repo) == set()
+    assert (repo / "docs" / "run-state").read_text().startswith("DONE")

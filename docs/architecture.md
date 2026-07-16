@@ -100,6 +100,17 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `lease_worktree(root, train_id)` | The linked worktree for a train — reuse the one already checked out on |  |
 | `train_phase_gate(root, wi_rows, wid)` | The `{phase}-{gate}` train-id prefix (spec §6): the WI's first SR's |  |
 | `pack_traincars(records, wis_by_id, cap)` | Pack the evaluated schedule records into dispatchable traincars — |  |
+| `integration_head(root)` | The integration ref's commit, or None when the ref does not exist. |  |
+| `cas_ref(root, ref, new, old)` | Compare-and-swap `ref` from exactly `old` to `new` (one update-ref |  |
+| `ensure_integration_ref(root, journal)` | Create refs/heads/llm/integration from the selected development branch |  |
+| `registry_rows_at(root, ref)` | The WI registry rows as read from `ref` (the integrated disposition), |  |
+| `reviewed_train_head(root, tid, base)` | The exact code HEAD a train's review must name: the LAST commit in |  |
+| `train_verdicts(root, tid, reviewed_sha)` | [(phase, verdict)] parsed from the verdict files committed on the train |  |
+| `synth_deliverable(root, tid, wid, base)` | The integrator's Deliverable text for a WI it marks done: the train, |  |
+| `generate_status(docs, root, last_train)` | The integrator-generated root status snapshot (SR-059's generation | SR-059 |
+| `integrate_train(root, docs, journal, tid, wis, base, required_verdicts)` | Compose one ready train into the integration ref (spec §9 steps 1-11). |  |
+| `blocked_disposition(root, docs, journal, tid, wis, base)` | The smaller serialized blocked-disposition transaction (spec §9): from |  |
+| `publish_integration(root, journal, dev_branch)` | Publish the integration HEAD to the development branch (spec §9): only |  |
 | `parse_jobs(value)` | The --jobs/AGENT_JOBS value: a positive int, or `auto` (adaptive up to |  |
 | `dispatch_run(args, root)` | The dispatcher/integrator loop (SR-061): reconcile -> gate -> build-out. | SR-061 |
 | `head_sha_full(root)` | Full HEAD sha (reservation bases are exact, never abbreviated). |  |

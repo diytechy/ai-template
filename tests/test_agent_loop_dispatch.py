@@ -199,22 +199,30 @@ def test_dispatcher_builds_frontier_with_refill(tmp_path):
     proc = _dispatch(repo, fake, ctl)
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
 
-    # All three built: reservation refs held for the integrator (Slice F),
-    # train branches carrying the WI trailer evidence.
-    assert _reservations(repo) == {"WI-201", "WI-202", "WI-203"}
+    # All three built AND integrated (Slice F): rows done on the published
+    # development branch, reservation refs released after the durable
+    # disposition advanced, and the integration commits carry the trailers.
+    assert _reservations(repo) == set()
+    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    for wid in ("WI-201", "WI-202", "WI-203"):
+        assert wid + ",Work " + wid + ",ws,SR-061,,done," in reg
+        assert "Integrated from train" in reg
     events = _events(repo)
     starts = [e for e in events if e["event"] == "worker-start"]
     dones = [e for e in events if e["event"] == "worker-done"]
     assert len(starts) == 3 and len(dones) == 3
-    assert all(d["state"] == "ready-to-integrate" for d in dones)
+    assert sum(1 for e in events if e["event"] == "integrated") == 3
     # Refill: the third start comes after the first done (ceiling 2 held).
     idx = {id(e): i for i, e in enumerate(events)}
     assert idx[id(starts[2])] > idx[id(dones[0])]
-    # Three linked worktrees in the sibling pool.
+    # Linked worktrees in the sibling pool (3 trains + staging worktrees).
     pool = agent_loop.worktree_root(repo)
-    assert len(list(pool.iterdir())) == 3
-    # run-state is a generated dispatcher outcome: integrable work remains.
-    assert (repo / "docs" / "run-state").read_text().startswith("RUNNING")
+    assert len([p for p in pool.iterdir() if not p.name.startswith("integrate-")]) == 3
+    # run-state is a generated dispatcher outcome: everything integrated.
+    assert (repo / "docs" / "run-state").read_text().startswith("DONE")
+    # SR-059's generation half: the integrator-generated status snapshot.
+    status = (repo / "docs" / "status.md").read_text("utf-8")
+    assert agent_loop.STATUS_GENERATED_MARKER in status
 
 
 def test_two_workers_genuinely_overlap(tmp_path):
@@ -234,7 +242,10 @@ def test_jobs_1_is_serial_with_the_same_result_set(tmp_path):
     )
     proc = _dispatch(repo, fake, ctl, jobs="1")
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    assert _reservations(repo) == {"WI-201", "WI-202", "WI-203"}
+    # The same integrated result set as the parallel run (SR-061 AC).
+    assert _reservations(repo) == set()
+    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    assert reg.count(",done,") >= 3
     events = _events(repo)
     # Strictly serial: every start after the first is preceded by a done.
     order = [e["event"] for e in events if e["event"].startswith("worker-")]
@@ -301,7 +312,12 @@ def test_unclassified_wi_fails_closed_without_stopping_others(tmp_path):
     )
     proc = _dispatch(repo, fake, ctl)
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    assert _reservations(repo) == {"WI-201"}
+    # WI-201 built AND integrated (reservation released); the unclassified
+    # WI-202 was never dispatched and keeps the run RUNNING.
+    assert _reservations(repo) == set()
+    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    assert "WI-201,Work WI-201,ws,SR-061,,done," in reg
+    assert "WI-202,Work WI-202,ws,SR-061,,queued," in reg
     assert (repo / "docs" / "run-state").read_text().startswith("RUNNING")
 
 
@@ -340,7 +356,9 @@ def test_ordinary_unary_chain_packs_one_traincar(tmp_path):
     )
     proc = _dispatch(repo, fake, ctl)
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    assert _reservations(repo) == {"WI-201", "WI-202"}
+    assert _reservations(repo) == set()
+    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    assert reg.count(",done,") >= 2
     starts = [e for e in _events(repo) if e["event"] == "worker-start"]
     assert len(starts) == 1 and starts[0]["wis"] == "WI-201;WI-202"
 
@@ -350,6 +368,10 @@ def test_reconciled_incomplete_train_resumes(tmp_path):
     # the relaunched dispatcher resumes it rather than double-reserving.
     repo, ctl, fake = _setup(tmp_path, [_wi_row("WI-201")])
     head = _git(repo, "rev-parse", "HEAD")
+    # The crashed run had already initialized the integration ref — without
+    # it, reservations alone make the dispatcher fail closed (spec §11; that
+    # guard has its own test in the F suite).
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
     err = agent_loop.reserve_traincar(repo, "p0-g0-WI-201-dead", ["WI-201"], head)
     assert err is None
     proc = _dispatch(repo, fake, ctl)

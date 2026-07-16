@@ -2163,6 +2163,32 @@ root `run-state` becomes a **generated dispatcher outcome**. `--jobs 1` is the
 explicit serial mode; absent `--jobs`/`AGENT_JOBS`, the legacy resume loop is
 unchanged (launchers flip at migration).
 
+**The atomic integrator.** Integration has **one logical writer** against a
+dispatcher-owned `refs/heads/llm/integration` ref — advanced **only by
+compare-and-swap** and never checked out in the primary worktree. Each ready
+train composes on a staging branch `llm/integrate/<train-id>` in its own
+worktree from the *current* integration HEAD: reservation scope and the
+**exact-head review verdicts** are verified first (a verdict naming an older
+commit does not count); a clean 3-way apply takes the fast path with **no
+re-review**, while *any* textual conflict parks the train for a **focused
+re-review** — never a silent one-side pick; the WI rows go `done` with derived
+Deliverables, the log gains the integration evidence, the status snapshot and
+iteration index regenerate on the composed tree, and the **combined bar always
+runs** (a red bar blocks integration with the ref untouched). One integration
+commit carries `Integrated-WI`/`Train-Head` trailers; a stale CAS fails
+harmlessly and recomposes. A worker-reported blocker takes the **smaller
+disposition transaction** (only its WI → `blocked` + `BlockRef` + trailers +
+CAS, reservation released only after). Publication to the development branch
+is guarded by the durable `refs/llm/publish-intent` ref (target + expected-old
++ dev ref, written before the second CAS, deleted only after the **verified**
+fast-forward/reset sync): a dirty checkout defers publication untouched; a
+crash between the CAS and the sync recovers idempotently — the intent, not a
+guess, identifies the pre-publication hash. Once the integration ref exists it
+is the **authoritative integrated disposition**; the development branch is its
+published projection, and `status.md` regeneration only ever touches a file
+that is absent or already generator-marked (a hand-authored status waits for
+the migration).
+
 **Throughput caution.** Under `attended` gate authority, every track's human asks
 converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The
 dispatcher's job is to aggregate those asks into one review surface, and 2–3

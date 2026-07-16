@@ -82,14 +82,18 @@ home elsewhere — don't restate it here:
   untouched without `--jobs`, launchers flip at H); E (WI-183) = the traincar
   execution model (one review cycle per traincar over the combined train diff,
   §7 continuation re-check + `EXIT_TRAIN_END`, transactional
-  release-of-unstarted on early end, fork/join proven; SR-062 **Verified**).
-  **SR-059/LLR-060/TC-060 stay Planned** — the run-state leg now exists; the
-  integrator-generated `status.md` lands with Slice F and SR-059 verifies
-  then. Remaining build slices, in DAG order: **WI-184** (F: atomic
-  integrator) · **WI-185**
+  release-of-unstarted on early end, fork/join proven; SR-062 **Verified**);
+  F (WI-184) = the atomic serialized integrator (CAS-only `llm/integration`,
+  staging composition + exact-head verdict verification, clean-apply fast path
+  vs conflict-parks-for-re-review, blocked-disposition transaction, durable
+  publish-intent publication, generated status snapshot; SR-063 **Verified** —
+  multi-wave runs complete in one launch). **SR-059/LLR-060/TC-060 stay
+  Planned** — both generation legs (run-state + status.md) now exist in code;
+  SR-059 verifies at H's migration/freshness fixture. Remaining build slices,
+  in DAG order: **WI-185**
   (G: recovery + fault injection) · **WI-186** (H: telemetry + migration +
-  dogfood). Edges wire the §15 DAG (F after
-  B,D; G after D,F; H the join). Grinding under `gate-policy: autonomous`._
+  dogfood). Edges wire the §15 DAG (G after D,F; H the join). Grinding under
+  `gate-policy: autonomous`._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in
@@ -99,10 +103,10 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** the **parallel-dispatch campaign (phase `v4`)** is the live
-  frontier (above), at **G2** with **Slices A–E shipped**. Next WI is **WI-184**
-  (Slice F: the atomic integrator — staging branches, integration-ref CAS,
-  blocked-disposition transaction, registry/log/status regen, publication
-  intent), then **WI-185** (G). Grinding under `gate-policy: autonomous`
+  frontier (above), at **G2** with **Slices A–F shipped**. Next WI is **WI-185**
+  (Slice G: recovery + fault injection — the §16 crash matrix over the
+  reservation/CAS/publication boundaries, out/dispatch deletion, duplicate
+  quarantine), then **WI-186** (H, the join). Grinding under `gate-policy: autonomous`
   (single-agent adversarial self-review at gates, recorded as a limitation vs a
   provider-heterogeneous reviewer). Deferred main-decomposition
   (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering; Codex

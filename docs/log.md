@@ -7440,3 +7440,75 @@ unclassified-refusal rollback is the recorded finding).
 staging branches, integration-ref CAS, blocked-disposition transaction,
 registry/log/status regen, publication intent), then **WI-185** (G). Grinding
 under `gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-16 — v4 Slice F (WI-184): the atomic serialized integrator (SR-063 Verified)
+
+**What.** Integration gets its one logical writer (spec §9), wired into the
+dispatch loop — multi-wave runs now complete **in one launch** (build →
+integrate → publish → rescan unlocks successors; the E fork/join tests are now
+true end-to-end).
+
+- **CAS-only integration ref.** `refs/heads/llm/integration` is never checked
+  out in the primary worktree and advances only by compare-and-swap (a stale
+  expected-old fails harmlessly and recomposes). Once it exists it is the
+  **authoritative integrated disposition**: the frontier, new-train bases, and
+  the end-state all read it (`registry_rows_at`); the development branch is a
+  published projection. An absent ref with dispatcher-owned evidence **fails
+  closed** (never silently re-seeded — proven).
+- **Per-train staging composition.** `llm/integrate/<tid>` branches in their
+  own worktrees compose from the *current* integration HEAD: reservation
+  scope + **exact-head review verdicts** verified first (`train_verdicts`
+  parses `reviews/<tid>/NNN-<PHASE>-<sha7>.md` off the branch; a verdict
+  naming an older commit = rework, proven); a clean 3-way apply is the fast
+  path with **no re-review**; *any* textual conflict parks the train
+  `needs-re-review` (proven with a shared-path collision) — never a silent
+  one-side pick.
+- **The composed integration commit** carries `Integrated-WI`/`Train-Head`
+  trailers and includes: WI rows → `done` with **derived** Deliverables
+  (surgical row rewrite — no registry reflow), the log.md integration
+  evidence, the **generated status snapshot** (marker-gated: a hand-authored
+  status.md is left alone until migration — SR-059's generation half now
+  exists in code), and the regenerated iteration index. The **combined bar
+  always runs** (declared `stack.ini` test command); a red bar blocks with the
+  ref untouched (proven). Reservations release **only after** the CAS.
+- **Blocked disposition** (smaller transaction): only its WI → `blocked` +
+  `BlockRef` + `Blocked-WI`/`BlockRef`/`Train` trailers + CAS; the blocked
+  WI's reservation releases after; built constituents keep theirs (proven
+  only-its-WI-changed).
+- **Publication with the durable intent.** `refs/llm/publish-intent` (a
+  commit-tree metadata object: target + expected-old + dev ref) is written
+  before the dev-ref CAS; the sync is a **verified** reset (index + tracked
+  tree exactly at the expected old; untracked untouched); the intent deletes
+  only after the sync. A dirty checkout **defers publication untouched** and
+  the end state stays RUNNING; a relaunch resumes idempotently; a simulated
+  crash **between the CAS and the sync** recovers to the target without
+  reading the stale checkout as user dirt (all proven).
+
+**Deviations from spec.** (1) A blocked train's built-but-unreviewed
+constituents keep reservations and await the partial-train re-review path —
+Slice G/H hardening. (2) Conflicted trains PARK for focused re-review; the
+automated resolution/re-review loop is a later rung. (3) The full/gate-bar
+distinction at slice/campaign closes is H's telemetry/migration scope; the
+combined bar is the declared stack test command.
+
+**Tests.** `tests/test_agent_loop_integrate.py` — 9 fixtures (TC-064) — plus
+the D/E suites **upgraded to integrated semantics** (reservations released,
+rows done on the published dev branch, run-state DONE, generated status
+asserted). C/D/E/F family: 48 green.
+
+**Byte deltas (budgeted files).** PROCESS_OPTIONS.md **145,022 → 146,874
+(+1,852 B**: the integrator's downstream contract; baseline re-stamped ×3).
+AGENTS.template.md 9,978 / PROCESS.md 59,768 (untouched).
+
+**Tests / end green (real output).** `pytest -q -n auto -m smoke` → **695
+passed, 2 skipped** (79 s); ruff clean+formatted; `check_docs --stale` OK;
+okf/arch-map/dashboard regenerated. SR-063 + LLR-064 + TC-064
+(`Automated=Yes`, `Evidence=tests/test_agent_loop_integrate.py`) →
+**Verified** (autonomous single-agent adversarial review; the review moved the
+end state to RUNNING while the published projection lags and gated integration
+behind a pending ratification ask).
+
+**Handoff.** Slice F done. Next: **WI-185** (Slice G — recovery + fault
+injection: the §16 crash matrix over reservation/CAS/publication boundaries,
+out/dispatch deletion, duplicate-reservation quarantine). Then H (the join).
+`gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).
