@@ -23,12 +23,14 @@ home elsewhere — don't restate it here:
 ## Current State
 
 - **Active gate:** runnable **G3** (derived — `scripts/derive_gate.py`; per-phase
-  `(default)=G3;v2=G3;v3=G3;v4=G3`, cached to [`docs/gate`](gate)) — the
-  **`v4` parallel-dispatch effort CLOSED at G3** (2026-07-16: SN-025 +
-  SR-057…065 + LLR-058…066 + TC-058…066 all **Verified**), so the whole repo
-  returns to G3. Spine: **SN=25 SR=65 LLR=66 TC=66** (orphans=0, 0 drafts), 55
-  seams, 5 components. The full `check.py --gate G3` bar passes as a unit,
-  including the now-active G3-only lint/dupes/require-verified steps.
+  `1=G3;2=G3;3=G3;4=G3`, derived current **phase=4**, cached to [`docs/gate`](gate))
+  — **WI-188 (2026-07-16) made *phase* a DERIVED first-class spine property and
+  retired the old per-WI grouping** (`Phase` now on SR/LLR/TC — integers or `vN`
+  both digit-parse; the current phase is derived = highest ratified; a ratified
+  blank/unparseable `Phase` is a `--strict-schema` finding, vacuous-until-armed;
+  the dashboard tiers `phase ⊃ workstream ⊃ work-item`). Spine: **SN=25 SR=65
+  LLR=67 TC=67** (orphans=0, 0 drafts), 56 seams, 5 components. The full
+  `check.py --gate G3 --jobs 0` bar passes as a unit (all 15 steps, coverage 91%).
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~47 s) +
   `python project-trajectory/scripts/check_docs.py --root . --stale`, both green.
   At slice/phase close: the full suite `pytest -q -n auto` (~117 s) and
@@ -86,25 +88,23 @@ home elsewhere — don't restate it here:
   applies-when each in [specs/WI-064.md](specs/WI-064.md) §2.)
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-064 is CLOSED** (2026-07-16,
-  [specs/WI-064.md](specs/WI-064.md)) — the AXES enforceability rule is
-  mechanized: a cross-CMP import edge with no declared IF-### seam is a
-  `check_trajectory` finding (warn-first, `--strict` at G2+,
-  `docs/components-check` opt-out); its first live finding, the sanctioned
-  `gen_trajectory→check_trajectory` sibling import, is declared as **IF-056**;
-  IF `Component` tags joined trace.py's membership sweep; **LLR-067 + TC-067**
-  landed Verified under SR-044 (spine SR=65 LLR=67 TC=67, IF=56); `check.py
-  --gate G3` passed at close — evidence in [log.md](log.md). This follows the
-  same-day **`main-decomposition` effort close** (WI-080 + WI-081, see
-  log.md). No active build frontier remains. Open owner items (push ruling
-  OI-3, LICENSE OI-4, review cadence OI-7) are unchanged under `gate-policy:
-  autonomous`. The next candidates are the remaining deferred backlog
-  (owner-ordered) — nothing is auto-started.
-  Open owner items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are
-  unchanged under `gate-policy: autonomous`; Codex Sol builds are live. Grinding
-  under single-agent adversarial self-review at gates (recorded as a limitation
-  vs a provider-heterogeneous reviewer). Round-by-round evidence →
-  [log.md](log.md), not here.
+- **Next action:** **WI-188 is CLOSED** (2026-07-16, external plan
+  `splendid-hopping-pike.md`, evidence in [log.md](log.md)) — *phase* is now a
+  **derived** first-class spine property and the old per-WI grouping tag is
+  retired: `Phase` on SR/LLR/TC (integers or `vN` digit-parse), the current
+  phase derived = highest ratified, a ratified blank/unparseable `Phase` a
+  `--strict-schema` finding (vacuous-until-armed), the dashboard tiered `phase ⊃
+  workstream ⊃ work-item`, PROCESS_OPTIONS **"Phase cadence"** (the renamed
+  cadence section), ADOPTING §6 migration note. Full suite **941p/3s**; `check.py --gate
+  G3 --jobs 0` **PASS** (15/15, 91% coverage); **grep-zero** for the retired word over
+  the live repo (minus history + `docs/repo-review-2026-07-12b.md`, preserved as a
+  review verdict). Follows the same-day **WI-064** (AXES enforceability) and
+  **main-decomposition** closes. **No active build frontier remains.** Open owner
+  items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are unchanged under
+  `gate-policy: autonomous`; Codex Sol builds are live. The next candidates are the
+  remaining deferred backlog (owner-ordered) — nothing is auto-started. Grinding
+  under single-agent adversarial self-review at gates (a recorded limitation vs a
+  provider-heterogeneous reviewer). Round-by-round evidence → [log.md](log.md).
 
 ## Scope
 

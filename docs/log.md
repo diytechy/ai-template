@@ -7853,3 +7853,77 @@ orphans=0, integrity=0, interfaces=56, component-findings=0. FULL suite:
 --jobs 0` → PASS** (all 15 steps — the strict trajectory step now includes
 the cross-CMP rule over this repo's own graph). Per-slice smoke bars:
 733/735 passed + the close bar, all with check_docs OK 0 broken.
+
+## 2026-07-16 — WI-188: phase becomes a DERIVED first-class spine property; the campaign concept retired (5 slices, closed at G3)
+
+Owner-directed (external plan `splendid-hopping-pike.md`): "campaign" is retired
+from all live sources and replaced by **phase**, which becomes a **derived**
+property of the spine (mirroring the derived gate). Five slices on
+`derived-gate-model`, each green at the commit bar; closed at the gate bar.
+
+**Slice 1 — phase universal + back-filled + model docs (6daee92).** `Phase` added
+to `low-level-requirements.csv` + `test-cases.csv` + their templates + EXAMPLE.md
+snippets. Back-fill (surgical raw-line migration, only Phase cells change): SR
+blank→1, v2/v3/v4→2/3/4 (49/2/5/9); LLR = max parent-SR phase; TC = max over what
+it Verifies (anchor boundary SR-057…065 / LLR-058…066 / TC-058…066 = phase 4). The
+six `[vN]-[g*]` WI titles renumbered to `[N]-[g*]` so `check_trajectory`'s
+phase-drop anchors match the now-numeric `derive_gate` per-phase basis. Both
+`in_phase` filters (`trace.py` + `gen_release_checklist.py`) keep the **foundation
+(minimum) phase always in scope** under `--phase` (fixed the second-script bug: a
+back-filled foundation SR would otherwise drop off the release checklist).
+`derive_gate.py` gained `phase_num()` (F5-duplicated into `trace.py`) + the derived
+current phase on the basis line and `--print` (`phase=4`). PROCESS.md +
+PROCESS_OPTIONS "Phased delivery" carry the doctrine.
+
+**Slice 2 — the ratified⇒non-empty-phase rule + tests (ab2b429).**
+`trace.phase_ratified_findings(real)` joins the `--strict-schema` tier: once any
+row is phased, a **ratified** (non-Draft) SR/LLR/TC whose `Phase` doesn't
+digit-parse is a finding — **vacuous-until-armed** (a fully-blank downstream stays
+green; a `Draft` row may leave Phase blank; a downstream `vN` arms AND passes).
+LLR-003/050 + TC-003/050 detail extended in place; predicate + integration tests.
+
+**Slice 3 — remove the Campaign concept (1cc8d63).** `Campaign` column dropped from
+`work-items.csv` (188 rows) + template; `check_trajectory` no longer loads the
+field; `gen_trajectory` retired `campaign_containment` (+ `_campboxes`/`_wi_table`/
+`_wi_row`/`CAMPAIGN_STYLE`) and collapsed `when_view` to **`phase ⊃ workstream ⊃
+work-item`** (a ≤3-phase/≤3-workstream registry now returns None → flat SVG DAG;
+Process Panel 3 = slices→phase→gates). Spine text re-attested (gate stays G3, no
+structural change): SR-050/051/055/063, LLR-051, TC-051. Tests: removed the 6
+`campaign_containment` tests; the 6 `agent_loop` fixtures + `test_schedule` dropped
+the column (header + row alignment); `test_trajectory`'s column test repurposed to
+"a retired grouping tag is tolerated".
+
+**Slice 4 — scrub the word from live prose + downstream note (a30e7f5).**
+`campaign` → phase/effort/grouping across every remaining live source:
+`work-items.csv` free-text, PROCESS_OPTIONS ("Campaign ruling" → **"Phase cadence"**),
+the `session-protocol` skill (×3 byte-identical), CLAUDE.md, README.md, the
+`agent-resume.*` launchers, `docs/{status,open-items,gate-policy,dupes-allow}`,
+`docs/rubrics/*`, `project-trajectory/README.md`, the specs templates, and every
+live `docs/specs/*`. ADOPTING §6 gained the WI-188 migration note (Phase now on
+LLR/TC, integers recommended / `vN` still filters, the grouping column dropped,
+both readers vacuous-until-armed → a re-sync is diffable and non-breaking).
+**Deviation:** `docs/repo-review-2026-07-12b.md` left unscrubbed — a historical
+repo-review verdict (same class as the excluded `docs/reviews/`); its path outside
+`docs/reviews/` is the only reason it is not already excluded, and rewording a
+review verdict falsifies the record.
+
+**Slice 5 — memory + close (this entry).** Memory refreshed (index + frontmatter
+record the phase-first / derived model; the historical narrative kept). WI-188
+filed as `done`.
+
+**Byte deltas (budgeted).** PROCESS.md **59,768 → 60,169** (+401, the phase-model
+prose; baseline re-stamped 59,827 → 60,169). PROCESS_OPTIONS.md **150,572 →
+151,921** (net +1,349 across slices 1+4: +1,568 doctrine, −219 dropping the removed
+Campaign-column sentence; baseline re-stamped). AGENTS.template.md 9,978
+(untouched). All re-stamped ×3 (skill source + `.claude` + `.agents`).
+
+**Acceptance.** `grep -rli campaign` over the repo minus history/owner-only
+(`docs/log.md`, `docs/iteration/`, `docs/archive/`, `docs/reviews/`,
+`OWNER_SCRATCHPAD.md`) + `docs/repo-review-2026-07-12b.md` → **zero**.
+`derive_gate --print` → numeric per-phase (`1=G3;2=G3;3=G3;4=G3`) + `phase=4`;
+`gen_release_checklist --phase 3` keeps the foundation SRs.
+
+**Tests / end green (real output).** Spine **SN=25 SR=65 LLR=67 TC=67**, orphans=0,
+integrity=0, interfaces=56. FULL suite `pytest -q -n auto` → **941 passed, 3 skipped**.
+**`check.py --gate G3 --jobs 0` → PASS (all 15 steps; coverage 91.04%)**. Derived gate G3, `phase=4`. NOT
+pushed (`push-policy: human`).
