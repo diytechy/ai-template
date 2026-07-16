@@ -79,24 +79,27 @@ home elsewhere — don't restate it here:
   [log.md](log.md)._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
-  WI-063 · WI-064 · WI-065 · WI-082 · WI-108 · WI-159** in
-  [work-items.csv](requirements/work-items.csv). (`main-decomposition` is now
-  **CLOSED** — WI-080 + WI-081 done; WI-082 `bootstrap.py` stays deferred
-  indefinitely as planned.)
+  WI-063 · WI-065 · WI-082 · WI-108 · WI-159 · WI-187** in
+  [work-items.csv](requirements/work-items.csv). (`main-decomposition` is
+  **CLOSED** — WI-080 + WI-081 done, WI-082 deferred indefinitely as planned;
+  **WI-064 is CLOSED** — its still-gated AXES residuals live on as WI-187,
+  applies-when each in [specs/WI-064.md](specs/WI-064.md) §2.)
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** the **`main-decomposition` campaign is COMPLETE**
-  (2026-07-16, [specs/main-decomposition.md](specs/main-decomposition.md)) —
-  WI-080 (`agent_loop.py` → RoutingState/route_session/run_iteration) and
-  WI-081 (`trace.py` → load_registries/analyze/render_report + the M8
-  de-quadrated joins + docstring shrink) both closed; both `main()`s are
-  orchestration-only, behavior-preserving under their test/golden nets. The
-  **campaign-close `check.py --gate G3` bar PASSED** (932 passed, 91.11%
-  coverage; `docs/dupes-allow` refreshed for the campaign's representative-pair
-  shifts — see [log.md](log.md)). No active build frontier remains. Open owner
-  items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are unchanged
-  under `gate-policy: autonomous`. The next candidates are the remaining
-  deferred backlog (owner-ordered) — nothing is auto-started.
+- **Next action:** **WI-064 is CLOSED** (2026-07-16,
+  [specs/WI-064.md](specs/WI-064.md)) — the AXES enforceability rule is
+  mechanized: a cross-CMP import edge with no declared IF-### seam is a
+  `check_trajectory` finding (warn-first, `--strict` at G2+,
+  `docs/components-check` opt-out); its first live finding, the sanctioned
+  `gen_trajectory→check_trajectory` sibling import, is declared as **IF-056**;
+  IF `Component` tags joined trace.py's membership sweep; **LLR-067 + TC-067**
+  landed Verified under SR-044 (spine SR=65 LLR=67 TC=67, IF=56); `check.py
+  --gate G3` passed at close — evidence in [log.md](log.md). This follows the
+  same-day **`main-decomposition` campaign close** (WI-080 + WI-081, see
+  log.md). No active build frontier remains. Open owner items (push ruling
+  OI-3, LICENSE OI-4, review cadence OI-7) are unchanged under `gate-policy:
+  autonomous`. The next candidates are the remaining deferred backlog
+  (owner-ordered) — nothing is auto-started.
   Open owner items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are
   unchanged under `gate-policy: autonomous`; Codex Sol builds are live. Grinding
   under single-agent adversarial self-review at gates (recorded as a limitation

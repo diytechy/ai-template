@@ -77,3 +77,4 @@ resource: "generated"
 | [LLR-064](LLR-064.md) | Atomic integrator + CAS + blocked-disposition + publish |
 | [LLR-065](LLR-065.md) | Git-as-authority crash recovery |
 | [LLR-066](LLR-066.md) | Parallel telemetry + downstream migration/audits |
+| [LLR-067](LLR-067.md) | Cross-CMP-edge-without-IF finding |

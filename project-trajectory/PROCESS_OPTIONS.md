@@ -1868,10 +1868,19 @@ IFs is legal.
 
 **What the kit checks** (`trace.py`, when real CMP rows exist): `CMP-` id
 integrity; `PartOf`/`SupersededBy` resolve to real CMP ids; and every primitive
-`Component` tag resolves to a real CMP row (the membership join — checked on the
-registries `trace.py` reads: LLR/PART/ASSET). Deeper mechanization — e.g.
-flagging a cross-component import with no declared IF — is a routed, later
-check; until then the boundary discipline is gate-attested.
+`Component` tag resolves to a real CMP row (the membership join — checked on
+all four registries `trace.py` reads: LLR/IF/PART/ASSET).
+
+**A cross-component edge needs a declared seam** (WI-064 — the AXES
+enforceability rule, mechanized for software). `check_trajectory.py` joins the
+committed arch-map's `Imports (internal):` lines with the `Component`-tag
+membership and `interfaces.csv`: an import edge between two *different*
+components with no IF row covering the module pair (either endpoint direction)
+is a finding — **WARN** at the plain/hook run, **ERROR under `--strict` (G2+)**
+— sharing the `docs/components-check` opt-out. Vacuous when any input is absent
+(no imports lines, no real CMP rows, an untagged endpoint), so a non-adopting
+or small repo pays nothing. A *physical* repo's cross-CMP discipline stays
+gate-attested (`Inspection`) — the import graph is the software mechanization.
 
 **The How-SW top view is bounded** (WI-073/FB5). The software-architecture panel
 of `PROJECT_STATE.html` shows at most **ten** first-view items — the **top-level**

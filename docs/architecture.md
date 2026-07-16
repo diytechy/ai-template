@@ -74,6 +74,7 @@ graph LR
     m_scripts_check_privacy -. IF-005 .-> m_scripts_check
     m_scripts_check_stubs -. IF-006 .-> m_scripts_check
     m_scripts_check_trajectory -. IF-009 .-> m_scripts_check
+    m_scripts_check_trajectory -. IF-056 .-> m_scripts_gen_trajectory
     m_scripts_derive_gate -. IF-050 .-> m_scripts_check
     m_scripts_gen_arch_map -. IF-010 .-> m_scripts_check
     m_scripts_gen_okf -. IF-012 .-> m_scripts_check
@@ -532,7 +533,7 @@ Contracts (interfaces): IF-019, IF-035
 ### `scripts/gen_trajectory`
 _Generate the offline project-state dashboard (root `PROJECT_STATE.html`)._
 Imports (internal): `check_trajectory`
-Contracts (interfaces): IF-011, IF-024, IF-052
+Contracts (interfaces): IF-011, IF-024, IF-052, IF-056
 
 | Public item | Summary | Implements |
 |---|---|---|

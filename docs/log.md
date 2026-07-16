@@ -7800,3 +7800,56 @@ machine is unit-addressable (RoutingState) and the trace checker/renderer split
 is pure (analyze/render_report) with the report joins de-quadrated (M8). Both
 `main()`s are orchestration-only. `bootstrap.py` (WI-082) stays deferred
 indefinitely as planned. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-16 — WI-064: the AXES enforceability rule mechanized (cross-CMP-edge-without-IF; slices A–D)
+
+**Session (owner-directed: "dig into WI-064… ready to take on this session",
+then "grind through them").** WI-064 was the AXES archive's open-questions
+container; [docs/specs/WI-064.md](specs/WI-064.md) (filed at prep, 2e4a6db)
+scoped it to the residuals with verified real need and recorded the rest as
+gated. Ground truth verified at prep: membership complete (25 modules → 5
+CMPs), 4 import edges, exactly one cross-CMP and undeclared.
+
+**Slices.**
+- **A (213dc56):** the meta-repo's `architecture.md` gains the DEPENDENCY
+  DIAGRAM block the shipped template already carried (solid import edges +
+  dotted IF seams; freshness under the existing arch-map `--check`). *Recorded
+  improvement:* the Slice B check reads the MODULE MAP's `Imports (internal):`
+  lines (a required block, same grammar family `arch_inventory` parses) rather
+  than the optional mermaid — the diagram stays the human render.
+- **B (f987963):** `check_trajectory.cross_component_findings` — an import
+  edge whose endpoints resolve to *different* CMP-### components with no
+  `interfaces.csv` row covering the pair (either direction) is a finding;
+  wired as `component_findings`' third rule (WARN plain / ERROR under
+  `--strict` G2+, `docs/components-check` opt-out; vacuous when any input is
+  absent). `arch_inventory` extended to a 3-tuple (grammar-sync notes on both
+  the parse and the `gen_arch_map` emit side). **The check fired exactly once
+  live** — the predicted `gen_trajectory (CMP-002) → check_trajectory
+  (CMP-001)` edge — and the WARN rode the B/C hook runs honestly mid-campaign.
+  7 e2e tests.
+- **C (474c97d):** IF rows join `trace.py`'s Component-tag membership sweep —
+  the one unvalidated membership cell (the "off trace.py's read set" comment
+  predated WI-056). 2 tests; golden-master net byte-identical.
+- **D (this commit):** the found coupling declared as **IF-056** (the kit's
+  ONE sanctioned sibling import, gen_trajectory → check_trajectory; Contract
+  names the consumed loader/join surface) + the module's `Contracts:` line —
+  the strict trajectory step went red→green on the declaration (the dogfood
+  loop closed). Spine: **LLR-067 + TC-067** under SR-044 (Verified;
+  Evidence = the cross-CMP tests), LLR-041/TC-044 text extended for the IF
+  tag sweep. PROCESS_OPTIONS "Component layer": the stale "routed, later
+  check… gate-attested" placeholder replaced with the shipped contract.
+  WI-187 filed (deferred) as the pointer to the still-gated residuals
+  (typed IF contracts / consumes / cyclic renderer / engine extraction —
+  applies-when each, spec §2).
+
+**Byte deltas (budgeted files).** PROCESS_OPTIONS.md **149,958 → 150,572
+(+614 B**: the mechanized-check contract replacing the two-line placeholder;
+baseline re-stamped ×3 — skill source + .claude + .agents copies).
+AGENTS.template.md 9,978 / PROCESS.md 59,768 (untouched).
+
+**Tests / end green (real output).** Spine **SN=25 SR=65 LLR=67 TC=67**,
+orphans=0, integrity=0, interfaces=56, component-findings=0. FULL suite:
+`pytest -q -n auto` → **941 passed, 3 skipped**. **`check.py --gate G3
+--jobs 0` → PASS** (all 15 steps — the strict trajectory step now includes
+the cross-CMP rule over this repo's own graph). Per-slice smoke bars:
+733/735 passed + the close bar, all with check_docs OK 0 broken.
