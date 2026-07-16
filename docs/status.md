@@ -87,12 +87,15 @@ home elsewhere — don't restate it here:
   staging composition + exact-head verdict verification, clean-apply fast path
   vs conflict-parks-for-re-review, blocked-disposition transaction, durable
   publish-intent publication, generated status snapshot; SR-063 **Verified** —
-  multi-wave runs complete in one launch). **SR-059/LLR-060/TC-060 stay
-  Planned** — both generation legs (run-state + status.md) now exist in code;
-  SR-059 verifies at H's migration/freshness fixture. Remaining build slices,
-  in DAG order: **WI-185**
-  (G: recovery + fault injection) · **WI-186** (H: telemetry + migration +
-  dogfood). Edges wire the §15 DAG (G after D,F; H the join). Grinding under
+  multi-wave runs complete in one launch); G (WI-185) = the fault-injected
+  crash matrix (`AGENT_FAULT_POINT` at six lifecycle boundaries; reconcile
+  hardening: already-integrated restore + unprovable-ownership quarantine;
+  out/dispatch-deleted reconstruction proven; SR-064 **Verified**).
+  **SR-059/LLR-060/TC-060 stay Planned** — both generation legs (run-state +
+  status.md) now exist in code; SR-059 verifies at H's migration/freshness
+  fixture. Remaining: **WI-186** (H: telemetry + scaffold/launcher flip +
+  downstream migration/audits + two-real-WI dogfood + cross-OS close — the
+  §15 join, closing v4 G2→G3 at the full gate bar). Grinding under
   `gate-policy: autonomous`._
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
@@ -103,10 +106,12 @@ home elsewhere — don't restate it here:
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** the **parallel-dispatch campaign (phase `v4`)** is the live
-  frontier (above), at **G2** with **Slices A–F shipped**. Next WI is **WI-185**
-  (Slice G: recovery + fault injection — the §16 crash matrix over the
-  reservation/CAS/publication boundaries, out/dispatch deletion, duplicate
-  quarantine), then **WI-186** (H, the join). Grinding under `gate-policy: autonomous`
+  frontier (above), at **G2** with **Slices A–G shipped** (SR-057/058 +
+  SR-060…064 Verified). Next WI is **WI-186** (Slice H, the §15 join:
+  telemetry, the scaffold/launcher parallel-by-default flip, downstream
+  migration + soft-edge/SafetyClass audits, the two-real-WI dogfood trial, and
+  the cross-OS campaign close taking v4 G2→G3 at the full gate bar — SR-059 +
+  SR-065 verify there). Grinding under `gate-policy: autonomous`
   (single-agent adversarial self-review at gates, recorded as a limitation vs a
   provider-heterogeneous reviewer). Deferred main-decomposition
   (**WI-080**→**WI-081**) stays parked pending deliberate owner ordering; Codex

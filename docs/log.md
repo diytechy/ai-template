@@ -7512,3 +7512,49 @@ behind a pending ratification ask).
 injection: the §16 crash matrix over reservation/CAS/publication boundaries,
 out/dispatch deletion, duplicate-reservation quarantine). Then H (the join).
 `gate-policy: autonomous`. Not pushed (`docs/push-policy: human`).
+
+## 2026-07-16 — v4 Slice G (WI-185): recovery + fault injection (SR-064 Verified)
+
+**What.** The crash matrix (spec §16) proven against a live dispatcher, plus
+the two §11 reconcile rows the D/F implementation still lacked.
+
+- **Real fault injection.** `AGENT_FAULT_POINT=<point>` hard-kills the
+  dispatcher (`_fault` → `os._exit(86)` — no cleanup, no atexit) at six wired
+  lifecycle boundaries: `reserve-pre-txn`, `reserve-post-txn`,
+  `pre-integration-cas`, `post-integration-cas`, `post-intent`,
+  `post-dev-cas`. A coverage-guard test asserts every named point stays wired
+  (a renamed constant cannot silently skip a matrix row).
+- **Reconcile hardening.** (1) **Already-integrated restore**: a train whose
+  WIs are all `done` on `llm/integration` (the post-CAS-crash state) restores
+  `integrated` and finishes the pending reservation release — never a second
+  integration (proven: one worker session total, one integration commit).
+  (2) **Unprovable-ownership quarantine**: a train branch claiming a WI
+  outside its reservation set quarantines that train only — branch, commit,
+  and reservation survive untouched for a human — while disjoint proven work
+  builds and integrates.
+- **The matrix** (`tests/test_agent_loop_recovery.py`, 9 fixtures, TC-065):
+  each point crashes a live run (`FAULT_EXIT` asserted), relaunches clean, and
+  asserts exactly-one-owner, no double-run, no false done, `llm/integration`
+  atomically before-or-after, the three recoverable publication states through
+  the intent ref, and — the capstone — **all of `out/dispatch/` deleted
+  between crash and relaunch still reconstructs from Git alone**. Stale-PID /
+  released-lock liveness rides the existing kernel-lock evidence
+  (test_agent_loop_tracks).
+
+**Byte deltas (budgeted files).** PROCESS_OPTIONS.md **146,874 → 148,033
+(+1,159 B**: the crash-safety downstream contract; baseline re-stamped ×3).
+AGENTS.template.md 9,978 / PROCESS.md 59,768 (untouched).
+
+**Tests / end green (real output).** FULL unfiltered suite `pytest -q -n auto`
+→ **866 passed, 3 skipped** (133 s; the slice-close bar). agent_loop family
+158 green; ruff clean (2 unused imports fixed); `check_docs --stale` OK;
+okf/arch-map/dashboard regenerated. SR-064 + LLR-065 + TC-065
+(`Automated=Yes`, `Evidence=tests/test_agent_loop_recovery.py`) → **Verified**
+(autonomous single-agent adversarial review).
+
+**Handoff.** Slices C–G done — SR-057…058 + SR-060…064 all **Verified**;
+SR-059 (B's generation halves now exist in code) and SR-065 verify at **H**
+(WI-186: telemetry, scaffold/launcher flip, downstream migration + audits,
+two-real-WI dogfood, cross-OS campaign close — the §15 join, and the campaign
+G2→G3 close with the full gate bar). `gate-policy: autonomous`. Not pushed
+(`docs/push-policy: human`).

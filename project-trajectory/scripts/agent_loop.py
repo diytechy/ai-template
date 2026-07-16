@@ -1824,6 +1824,19 @@ DISPATCH_DIR = "out/dispatch"
 # A worker that rate-limited (exit 5) is retried after this cooldown.
 TRAIN_RETRY_SECONDS = 300
 
+# WI-185 (SR-064): the fault-injection hook the crash matrix drives. Setting
+# AGENT_FAULT_POINT=<point> hard-kills the dispatcher (os._exit, no cleanup,
+# no atexit — a real crash) the first time execution reaches that named
+# lifecycle boundary. Production runs never set it; recovery must reconstruct
+# from Git alone afterwards.
+FAULT_EXIT = 86
+
+
+def _fault(point):
+    if os.environ.get("AGENT_FAULT_POINT", "") == point:
+        print("FAULT-INJECTED: {}".format(point), flush=True)
+        os._exit(FAULT_EXIT)
+
 
 def list_reservations(root):
     """{WI-ID: reservation-commit-sha} from refs/llm/reservations/* — the
@@ -1884,6 +1897,7 @@ def reserve_traincar(root, train_id, wis, base):
     if proc.returncode != 0:
         return "commit-tree failed: {}".format(proc.stderr.strip())
     commit = proc.stdout.strip()
+    _fault("reserve-pre-txn")
     # `create` = an atomic zero-old-value check: the fixed ref name is the
     # uniqueness claim for that WI, and one stdin transaction makes the branch
     # + every constituent ref all-or-none (spec §6).
@@ -1902,6 +1916,7 @@ def reserve_traincar(root, train_id, wis, base):
         return "reservation transaction failed (already claimed?): {}".format(
             proc.stderr.decode("utf-8", "replace").strip()[:300]
         )
+    _fault("reserve-post-txn")
     return None
 
 
@@ -2493,6 +2508,7 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
         return "error", "integration commit failed: {}".format(out[:200])
     code, new_head = git(wt, "rev-parse", "HEAD")
     new_head = new_head.strip()
+    _fault("pre-integration-cas")
 
     # Step 11: advance the integration ref by CAS. A stale expected-old is
     # HARMLESS — the train re-enters composition from the new HEAD.
@@ -2500,6 +2516,7 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
         journal.event("integration-cas-stale", train=tid)
         git(wt, "reset", "--hard", old_head)
         return "recompose", "integration ref moved; recomposing"
+    _fault("post-integration-cas")
     journal.event("integrated", train=tid, wis=";".join(wis), head=new_head[:12])
     # Reservation refs release transactionally ONLY after the durable
     # disposition advanced (spec §6).
@@ -2689,6 +2706,7 @@ def publish_integration(root, journal, dev_branch):
             return "deferred", "publish intent raced; retrying next pass"
         journal.event("publish-intent", target=target[:12], old=dev_head[:12])
 
+    _fault("post-intent")
     # Second CAS: the development ref, against the intent's expected old.
     if not cas_ref(root, dev_ref, target, dev_head):
         # Moved to a third hash: no publication occurred; the stale intent is
@@ -2696,6 +2714,7 @@ def publish_integration(root, journal, dev_branch):
         journal.event("publish-cas-stale", ref=dev_ref)
         return "deferred", "development ref moved; recomposing from its new head"
 
+    _fault("post-dev-cas")
     # Verified sync: a reset fires ONLY with index + tracked tree exactly at
     # the expected old hash (untracked files untouched); divergence defers.
     code1, _ = git(root, "diff", "--quiet", dev_head)
@@ -2850,7 +2869,35 @@ def dispatch_run(args, root):
             continue
         # Read evidence off the branch (works without a worktree).
         built, blocked = train_branch_evidence(root, tid, t["base"])
-        if blocked:
+        # Ownership cross-check (spec §6/§11): a train branch claiming a WI
+        # outside its own reservation set is unprovable ownership — quarantine
+        # THIS train (fail closed) and let disjoint proven work continue.
+        foreign = (built | set(blocked)) - set(t["wis"])
+        if foreign:
+            journal.event(
+                "quarantine",
+                train=tid,
+                reason="claims-unreserved-wi:" + ";".join(sorted(foreign)),
+            )
+            quarantined_wis.update(t["wis"])
+            parked[tid] = {"state": "quarantined", "wis": t["wis"], "base": t["base"]}
+            continue
+        # Already-integrated restore (spec §11 table): the durable disposition
+        # advanced before a crash could release the reservations — every WI is
+        # done on the integration ref, so restore `integrated` and finish the
+        # pending release; never re-integrate.
+        int_rows = registry_rows_at(root, INTEGRATION_REF) or []
+        int_status = {
+            (r.get("WI-ID") or "").strip(): (r.get("Status") or "").strip().lower()
+            for r in int_rows
+        }
+        if t["wis"] and all(int_status.get(w) == "done" for w in t["wis"]):
+            err = release_reservations(root, t["wis"])
+            if err:
+                journal.event("release-failed", train=tid, reason=err[:200])
+            parked[tid] = {"state": "integrated", "wis": t["wis"], "base": t["base"]}
+            journal.event("reconcile", train=tid, state="integrated")
+        elif blocked:
             parked[tid] = {"state": "blocked", "wis": t["wis"], "base": t["base"]}
             journal.event("reconcile", train=tid, state="blocked")
         elif set(t["wis"]) <= built:

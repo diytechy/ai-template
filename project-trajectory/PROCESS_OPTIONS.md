@@ -2189,6 +2189,23 @@ published projection, and `status.md` regeneration only ever touches a file
 that is absent or already generator-marked (a hand-authored status waits for
 the migration).
 
+**Crash safety (git as the recovery substrate).** `out/dispatch/` is a
+rebuildable journal/cache, **never authority**: every startup reconstructs one
+ownership/state record per WI and train from Git alone — the reservation refs
+and their metadata commits, the train/staging branches and their trailers, the
+integration ref's registry, and the publish intent. The reconcile stage
+restores an **already-integrated** train (all WIs `done` on the integration
+ref) and finishes its pending reservation release rather than re-integrating;
+a train branch claiming a WI **outside its reservation set** is unprovable
+ownership and quarantines (nothing deleted), while disjoint proven work
+proceeds. A crash at any lifecycle boundary — either side of the reservation
+transaction, either side of the integration CAS, after the intent write, or
+between the development CAS and the worktree sync — recovers without
+double-assignment, false completion, lost commits, or an unclassifiable
+publication state (the wired `AGENT_FAULT_POINT` hook is how the kit's own
+crash matrix proves it). Kernel locks release on process death; stored PIDs
+are hints, never liveness.
+
 **Throughput caution.** Under `attended` gate authority, every track's human asks
 converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The
 dispatcher's job is to aggregate those asks into one review surface, and 2–3
