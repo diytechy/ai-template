@@ -61,12 +61,12 @@ is opt-out: smoke drops only the heavy end-to-end modules
 (`tests/conftest.py` `SLOW_MODULES` — full hook/gate/scaffold runs the commit
 hook and the gate re-exercise anyway), so a **new test is in the bar by
 default**. Run the **full** unfiltered suite (`pytest -q -n auto`) before
-claiming a slice/campaign done, at close, and after a broad script change. The
+claiming a slice/phase done, at close, and after a broad script change. The
 full `check.py --gate <gate>` is the **gate bar** (unfiltered suite + coverage):
-it belongs to gate advancement, campaign close, and CI, not to each
-mid-campaign slice; `--jobs 0` runs its independent steps concurrently. A per-WI
-slice inside a campaign ends at the commit bar (PROCESS_OPTIONS.md, "Campaign
-ruling"). New behavior needs new tests
+it belongs to gate advancement, phase close, and CI, not to each
+mid-phase slice; `--jobs 0` runs its independent steps concurrently. A per-WI
+slice inside a phase ends at the commit bar (PROCESS_OPTIONS.md, "Phase
+cadence"). New behavior needs new tests
 (`tests/`); update `test_bootstrap.py` file lists and `README.md` kit-contents /
 `bootstrap.py` `MAPPING` when the scaffold surface changes.
 

@@ -1,7 +1,7 @@
 # Design spec — Derived gate model (replace the monolithic declared gate)
 
 **Status: RATIFIED (owner G1, 2026-07-12).** Branch: `derived-gate-model`.
-Registered as **WI-088** (campaign `derived-gate`, design done). This doc is the
+Registered as **WI-088** (effort `derived-gate`, design done). This doc is the
 spec-of-record; the implementation is filed as **WI-089…096** (§10).
 
 Owner direction (2026-07-12): **replace** the monolithic gate (not opt-in);
@@ -51,7 +51,7 @@ human bumps. Two failures keep recurring:
   derived gate **dropping** — a reopen, or new draft content entering below the
   last closed level — is the *detector* that a new phase is due; the
   `[phase]-[g*]` work item is the committed *anchor* of its identity + membership
-  (§9.3). Phase = the time-bucket that captures *leak-in*; campaign stays a
+  (§9.3). Phase = the time-bucket that captures *leak-in*; effort stays a
   *named* new-work set (they diverge exactly when other work is pulled in).
 - **The pre-dev batch is a first-class work item:** `[phase]-[g1]` / `[phase]-[g2]`.
 
@@ -205,7 +205,7 @@ drops, and the batch review sees it alongside the new work.
 8. **Migration + dogfood** — ADOPTING recipe; migrate the meta's own spine and
    prove the derived gate reads `G3` byte-for-byte against today's declared one.
 
-## 11. Done-when (the campaign) — LANDED 2026-07-12 (WI-089…096)
+## 11. Done-when (the effort) — LANDED 2026-07-12 (WI-089…096)
 
 - [x] This design ratified by the owner (G1). *(WI-088, 2026-07-12.)*
 - [x] `docs/gate` is generated from artifact states (`derive_gate.py`, WI-091);

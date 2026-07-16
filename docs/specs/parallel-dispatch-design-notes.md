@@ -13,7 +13,7 @@ contract; where a line here and the plan ever disagree, the plan wins.
 | Does the DAG stop interdependent WIs running together? | Yes, transitively, on hard edges; soft edges are advisory only. | §3.2 |
 | Is `status.md` a scheduling authority? | No — integrator-generated reference only; workers never read or write lane status. | §10 |
 | `docs/next-wi`? | Retired; deliberate ordering lives in a `Priority` column. | §1, §10 |
-| Do tracks or campaigns schedule work? | No — both are WI attributes only, so "parallel campaigns" needs no isolation machinery. | §1.3, §10 |
+| Do tracks or groupings schedule work? | No — both are WI attributes only, so "parallel groupings" needs no isolation machinery. | §1.3, §10 |
 | Optimistic or conservative overlap? | Optimistic off-spine, bounded to two workers; spine / `Exclusive` / dependency work serializes. | §5 |
 | `docs/run-phase`? | Coordinator file retired; a lane routes from its activity + a `{phase}-{gate}` branch name (crash-recoverable). | §10 |
 | Delivery `Phase` (v2/v3)? | Left unchanged — feeds `derive_gate`, shifts only at gates; the "largest bump at merge" idea was dropped. | §10 |

@@ -1414,12 +1414,12 @@ is optional; delete the file to opt out.
 is its title is not implementable, and nothing used to check that an open WI named
 a reachable spec. `SpecRef` fixes that: a spec-of-record lives in
 [`docs/specs/`](specs/README.md) (a per-WI `WI-###.md`, or a shared
-**campaign** doc addressed by `#anchor`) while the WI is open, and is **archived at
+**multi-WI effort** doc addressed by `#anchor`) while the WI is open, and is **archived at
 close** to `docs/archive/specs/` with the close date appended and the WI it was
 attributed to noted (git keeps the history; the `Deliverable` + `log.md` carry the
 summary). Every spec ships a **Done-when checklist**, so a half-complete WI's
 frontier is its **first unticked box**, not prose discipline (ticks are transient
-working state). A shared campaign doc archives when its **last** open WI closes.
+working state). A shared effort doc archives when its **last** open WI closes.
 
 **No-validation-delta warn.** A rework WI that addresses a prior failure but
 changes neither the TC prose (`docs/test/test-cases.csv`) nor the test logic
@@ -1437,25 +1437,22 @@ checklist item**, not a mechanical lint — a naive `[A-Z]\d+`-shaped matcher
 would false-positive on `G3`, `SR-###`, and the like, so a narrow lint waits
 until a real recurring pattern earns it.
 
-**Campaign ruling.** Any batch of spine-touching work headed for the same
-re-attestation should land as **one campaign** — batch the changes so a **single
+**Phase cadence.** Any batch of spine-touching work headed for the same
+re-attestation should land as **one phase** — batch the changes so a **single
 owner sitting** covers each re-attestation, rather than paying for several. A
-campaign's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
-cadence:** mid-campaign WI sessions end at the **commit bar** (the pre-commit
+phase's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
+cadence:** mid-phase WI sessions end at the **commit bar** (the pre-commit
 hook floor + the project's test command + `check_docs --stale`), not the full
-gate; the full `check.py --gate <gate>` runs **once at campaign close** (the
+gate; the full `check.py --gate <gate>` runs **once at phase close** (the
 coordinating close), and CI runs the gate job on every push regardless — a
-mid-campaign regression is still caught by the per-commit suite run. Test-impact
+mid-phase regression is still caught by the per-commit suite run. Test-impact
 selection ("run only the relevant tests") is **rejected**: a missed transitive
 dependency passes silently and the coverage floor breaks, so the sanctioned
 cheap per-commit layer for a slow suite is the declared **smoke** tier
 (`stack.ini [tiers]` — `pytest -m smoke` per commit, full tier at gates), not a
-guessed subset. The optional **`Campaign`** column on `work-items.csv` (a
-grouping tag in the `Workstream` precedent — mutable, not id-checked; empty =
-standalone) records a WI's campaign durably once its `SpecRef` clears at close,
-and the When-view dashboard **bins the WI DAG** into collapsed campaign
-containers by it — the WHEN-axis mirror of the How-SW component containment (no
-right-sizing bound, since a campaign is bounded by construction).
+guessed subset. A WI's phase is **derived** from the delivery `Phase` of the SRs
+it delivers (§4 "Phased delivery"), and the When-view dashboard tiers the WI DAG
+by **phase ⊃ workstream ⊃ work-item** — there is no separate grouping column.
 
 **Parallel test execution.** Running the suite across cores is a **`docs/stack.ini`
 concern**, not a process rule: append `-n auto` to `[product] test` and the harness,

@@ -14,8 +14,8 @@ and `check_trajectory.py` fails a gate when an open WI names no reachable spec.
 ## Shape
 
 - **One file per standalone WI** — `docs/specs/WI-###.md` — **or** a shared
-  **campaign doc** with `#anchor`s when a batch of related WIs ships together
-  (e.g. `docs/specs/my-campaign.md#s1--first-slice`). A `SpecRef` is either a
+  **effort doc** with `#anchor`s when a batch of related WIs ships together
+  (e.g. `docs/specs/my-effort.md#s1--first-slice`). A `SpecRef` is either a
   `path` or a `path#anchor`; the path part must exist in the repo.
 - Every spec carries a **Done-when checklist** (see [`WI-000.md`](WI-000.md)).
   Sessions tick
@@ -31,7 +31,7 @@ and `check_trajectory.py` fails a gate when an open WI names no reachable spec.
 **Archive at close, don't delete.** When a WI closes, move its spec to
 `docs/archive/specs/` with the **close date appended** to the filename and the
 **WI id it was attributed to** noted inside — future context, and no live plan
-file can re-grow onto the working surface. A shared campaign doc archives (date-
+file can re-grow onto the working surface. A shared effort doc archives (date-
 stamped, WI-attributed) when its **last** open WI closes.
 
 ## What a spec is not

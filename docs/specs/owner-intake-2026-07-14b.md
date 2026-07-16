@@ -10,7 +10,7 @@ answered "flip now + knob WI"); items 2–4 are answered below and filed as WIs.
 |---|---|---|
 | 1 (OpenAI CLI → provider CLI; builder = Codex Sol) | Not covered — routing rows ride opencode | **WI-160** executed in-session ([openai-cli](#openai-cli)); the per-phase preference gap → **WI-161** ([phase-preference](#phase-preference)) |
 | 2 (parallel work-items) | **Partially** — parallel tracks exist (WI-025: per-track lock, `--track` lanes); nothing *dispatches* independent WIs onto them | Answer below; auto-dispatch design → **WI-162** ([parallel-dispatch](#parallel-dispatch)) |
-| 3 (critique budget: infinite / block dial) | **Partially** — `AGENT_CRITIQUE_MAX` exists (global); exhaustion already blocks-or-moves-on keyed to `docs/gate-policy` | Answer below; per-WI dial → **WI-163** ([critique-budget](#critique-budget)); the optimization-methodology research → **WI-164** ([optimization-research](#optimization-research)), joins the ratified research campaign |
+| 3 (critique budget: infinite / block dial) | **Partially** — `AGENT_CRITIQUE_MAX` exists (global); exhaustion already blocks-or-moves-on keyed to `docs/gate-policy` | Answer below; per-WI dial → **WI-163** ([critique-budget](#critique-budget)); the optimization-methodology research → **WI-164** ([optimization-research](#optimization-research)), joins the ratified research effort |
 | 4 (Process tab loops render straight, want circular) | Not covered — SR-055's *prose* says "circular working loops"; the shipped TC-056 checks stages/links/determinism, not layout shape | **WI-165** ([process-loops](#process-loops)) |
 
 ## openai-cli
@@ -84,10 +84,10 @@ a setting preventing that?": no blocker — a missing dispatcher.** The machiner
 exists (WI-025: `--track` lanes, per-track lock, per-lane `run-state`/`next-wi`),
 but the shipped operating mode is one coordinator lane working one
 `docs/next-wi` pin serially; nothing *assigns* independent actionable WIs to
-parallel lanes. (Some of today's serialism is deliberate: campaign coherence —
-the v3 slices are a G2→G3 series; the research campaign is owner-sequenced.)
+parallel lanes. (Some of today's serialism is deliberate: effort coherence —
+the v3 slices are a G2→G3 series; the research effort is owner-sequenced.)
 The design WI specs: an actionability scan (all hard predecessors `done`) ×
-an **overlap guard** (never two lanes on one WI; heuristics: shared `Campaign` /
+an **overlap guard** (never two lanes on one WI; heuristics: shared `Workstream` /
 same `Workstream` / shared SpecRef surface / spine-touching WIs stay serial —
 exact rule is the spec's core question) × lane lifecycle (spawn up to
 `docs/parallel` N lanes, per-lane next-wi, telemetry merge) × review-round
@@ -118,7 +118,7 @@ all three shapes; PROCESS_OPTIONS paragraph.
 ## optimization-research
 
 **WI-164 (queued, research track — `Workstream=research`, `BuildTier=strong`,
-joins the ratified OI-9 campaign behind WI-152/WI-154).** The owner's ask: a
+joins the ratified OI-9 effort behind WI-152/WI-154).** The owner's ask: a
 principled approach to *iterative optimization problems* so the template stops
 treating every refinement loop as "re-prompt the LLM and hope": how to lay out a
 solution space, select samples, cross-pollinate candidates (population/beam

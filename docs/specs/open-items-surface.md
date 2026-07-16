@@ -1,4 +1,4 @@
-# Campaign: open-items-surface — the owner decision surface + the status.md structure lint
+# Effort: open-items-surface — the owner decision surface + the status.md structure lint
 
 **Owner-directed 2026-07-13** (the sitting that slimmed `docs/status.md` from
 329 → 77 lines, commit `a7d187c`). Two asks: (1) open items must surface at the

@@ -283,6 +283,20 @@ table.
   post-attestation additions into it. If the derived value still disagrees with
   your old hand-set line after that, the *disagreement is the finding*: ratify
   (or demote) deliberately before relying on the derived gate.
+  **Phase model + the retired grouping column (2026-07, WI-188):** the delivery
+  `Phase` is now a column on `low-level-requirements.csv` and `test-cases.csv` too
+  (it was SR-only), and `work-items.csv` **drops** its old per-WI grouping column
+  (the one the dashboard used to bin the roadmap by — it now tiers `phase ⊃
+  workstream ⊃ work-item`). Both changes are **vacuous-until-armed**, so a re-sync
+  is diffable and never breaks: a registry with no phased row keeps `trace.py`'s
+  ratified-Phase schema rule dormant (blank = in scope for every phase), and any
+  leftover grouping column is simply ignored (read by name, no vocabulary rule).
+  Recommended convention is **bare integers** (`1`, `2`, …), but a `vN` label still
+  digit-parses everywhere (`--phase`, the derived current phase, the schema rule),
+  so a downstream that kept `vN` arms the rule and passes it. Once you phase any
+  row, phase every *ratified* SR/LLR/TC — a ratified blank/unparseable `Phase` is
+  then a `--strict-schema` finding — and the foundation (minimum) phase stays in
+  scope under `--phase`.
 - **Regenerate, never raw-copy (kit-owned but generated):** `docs/process.md` +
   `docs/process-options.md` are *generated* from the kit masters per the
   recorded `docs/kit-profile` (§1). Raw-copying `PROCESS.md`/

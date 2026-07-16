@@ -36,7 +36,7 @@ OI-3 (corrected against git), OI-4, and OI-7 remain open._
     integration question, **not** part of the routine push.
   - _(The earlier "local-only, ~48 commits" claim was stale and wrong —
     corrected at the 2026-07-13 sitting.)_
-- **Blast radius:** durability of ~10 commits of ratification + campaign work
+- **Blast radius:** durability of ~10 commits of ratification + phase work
   (one disk holds them until pushed). The branch is already public-remote
   tracked, so pushing adds no new exposure.
 - **Options:** authorize the push (`push-policy` = `human`: you push, or
@@ -59,11 +59,11 @@ OI-3 (corrected against git), OI-4, and OI-7 remain open._
 
 ## OI-7 — WI-123: review-cadence dial
 
-- **Decision:** campaign-close 2× adversarial review instead of per-slice
+- **Decision:** phase-close 2× adversarial review instead of per-slice
   (owner-raised 2026-07-12; spec: [specs/WI-123.md](specs/WI-123.md)).
 - **Blast radius:** the unattended loop's defect-catch latency — per-slice
   reviews are the escalation sensor the medium-BUILD relax leans on.
-- **Options:** adopt campaign-close cadence now · keep per-slice · wait for
+- **Options:** adopt phase-close cadence now · keep per-slice · wait for
   evidence.
-- **Recommendation (recorded):** rule only after ≥ 2 campaigns of medium-BUILD
+- **Recommendation (recorded):** rule only after ≥ 2 phases of medium-BUILD
   evidence.

@@ -19,10 +19,10 @@ fan out; mutation of the integration branch remains serialized and gated.
    registry plus dispatcher reservations; it is never copied into prose.
 2. **`agent-resume` is the dispatcher/integrator.** A normal launch uses bounded
    parallelism by default. `--jobs 1` is the explicit serial escape hatch.
-3. **Neither tracks nor campaigns schedule work.** `Workstream` and `Campaign`
+3. **Neither tracks nor groupings schedule work.** `Workstream`
    are WI *attributes* for reporting/dashboards only — never a scheduling or
-   isolation unit. "Parallel campaigns" therefore needs no special machinery: it
-   is just parallel WIs that happen to carry different `Campaign` tags. Execution
+   isolation unit. "parallel groupings" therefore needs no special machinery: it
+   is just parallel WIs that happen to carry different grouping tags. Execution
    lanes and traincars are allocated dynamically.
 4. **`docs/next-wi` is retired.** Explicit ordering, where needed, lives in WI
    metadata; otherwise a deterministic scheduler selects the frontier.
@@ -48,8 +48,8 @@ fan out; mutation of the integration branch remains serialized and gated.
     crash-recoverable — without per-train phase state. Delivery-phase shifts
     happen only at gates, and gate/spine work (SN/SR/TC) is serial and upfront
     (§4), so there is no concurrent phase to derive or reconcile; the SR `Phase`
-    column and the derived-gate model are untouched by this campaign. Because a
-    campaign is only a WI attribute (§1.3), campaign-tagged WIs parallelize
+    column and the derived-gate model are untouched by this effort. Because a
+    the grouping is only a WI attribute (§1.3), grouping-tagged WIs parallelize
     wherever off-spine; the only serialization is spine work itself (§5.1).
 11. **`Exclusive` keys and hard edges are declared at planning time and enforced by
     the dispatcher — but it never invents or silently mutates them.** They are set
@@ -64,7 +64,7 @@ fan out; mutation of the integration branch remains serialized and gated.
 
 | Term | Meaning | Owner |
 | --- | --- | --- |
-| **Workstream / Campaign** | Human grouping and dashboard categorization | WI registry |
+| **Workstream** | Human grouping and dashboard categorization | WI registry |
 | **Hard predecessor** | Correctness edge that blocks readiness | WI registry |
 | **Soft predecessor** | Advisory ordering only; never a safety edge | WI registry |
 | **Exclusive key** | Exceptional semantic resource that cannot be mutated concurrently | WI registry (declared at draft, enforced by the scheduler); the dispatcher never invents keys — undeclared collisions are recorded, not enforced |
@@ -259,7 +259,7 @@ planning audit in §14.
 
 ## 5. Concurrency safety: optimistic ordinary work, explicit hard boundaries
 
-The scheduler does **not** treat shared `Workstream`, `Campaign`, or `SpecRef` as
+The scheduler does **not** treat shared `Workstream`, `Workstream` or `SpecRef` as
 mutexes. Those are broad categories, and using them as locks would serialize
 the same related work this feature exists to accelerate.
 
@@ -458,7 +458,7 @@ distils:
 seconds** over raw tokens as the scheduling cost — tokens do not capture review
 and integration latency. Keep the scheduler robust to a wrong estimate.
 
-**Design path (front of the campaign, in order):**
+**Design path (front of the effort, in order):**
 
 1. add the `EstTokens` estimate to the WI schema (draft-time, telemetry-calibrated);
 2. design the clustering heuristic (the batch-vs-parallel rule above);
@@ -503,7 +503,7 @@ deterministic queue order, the integrator:
 7. appends the durable integration/session evidence to `docs/log.md`;
 8. regenerates root `status.md` and all generated artifacts;
 9. runs the combined commit bar, and the full/gate bar when the train closes a
-   slice, campaign, or gate;
+   slice, effort, or gate;
 10. creates one integration commit with `Integrated-WI` and `Train-Head`
     trailers; and
 11. advances the integration ref from the expected old hash to the new hash
@@ -647,14 +647,14 @@ routing wiring is removed.
 
 ### Delivery `Phase` (v2/v3)
 
-**Left unchanged by this campaign.** The SR `Phase` column is authored
+**Left unchanged by this effort.** The SR `Phase` column is authored
 scope/deferral metadata consumed by the derived-gate model (`derive_gate.py`),
 and phase shifts occur only at gates — during serial, upfront gate/spine work,
 never on a parallel build-out train. So there is nothing to derive or reconcile
 at merge: the column, its meaning, and the gate derivation stay exactly as they
 are. A train's `{phase}-{gate}` branch name simply records which already-ratified
-phase it builds within. Because a campaign is only a WI attribute and never a
-scheduling unit (§1.3), campaigns need no isolation machinery — campaign-tagged
+phase it builds within. Because the grouping is only a WI attribute and never a
+scheduling unit (§1.3), groupings need no isolation machinery — grouping-tagged
 WIs parallelize wherever off-spine, and the only serialization is spine work
 itself (§5.1).
 
@@ -826,9 +826,9 @@ from the registry at filing.
 | **E — Change-train continuation** | unary-chain rule; fork/join behavior; caps; review-boundary composition | D | Can overlap F only if code ownership is split deliberately |
 | **F — Atomic integrator** | staging branches; dispatcher-owned integration ref/worktree; conflict/re-review; successful and blocked-disposition CAS paths; registry/log/status regen; transactional reservation-ref release | B, D | Can overlap E only with bounded file ownership |
 | **G — Recovery + fault injection** | journal; Git reconstruction; dirty/missing worktree; duplicate reservation; crash-at-every-boundary fixtures | D, F | Must prove deletion of `out/dispatch/` is recoverable |
-| **H — Telemetry, scaffold, migration, dogfood** | projections; launchers; downstream-resync; two-real-WI trial; full cross-OS campaign | B, E, F, G | Campaign close |
+| **H — Telemetry, scaffold, migration, dogfood** | projections; launchers; downstream-resync; two-real-WI trial; full cross-OS effort | B, E, F, G | Phase close |
 
-The implementation campaign itself should exercise the new dependency design:
+The implementation effort itself should exercise the new dependency design:
 B and C are independent after A; E and F may proceed concurrently only after
 their touched surfaces are split during planning; H is the explicit join.
 
@@ -842,7 +842,7 @@ their touched surfaces are split during planning; H is the explicit join.
 - lowest-gate and human Priority ordering are deterministic, and Priority wins
   over downstream-dependent count within one gate class;
 - blocked/deferred/reserved items are excluded with reason codes;
-- shared Workstream/Campaign/SpecRef does not serialize;
+- shared Workstream/SpecRef does not serialize;
 - shared `Exclusive` keys do serialize;
 - every `SafetyClass` and review-policy input produces the same scheduling class
   and reason codes across CLI, validator, dashboard, and dispatcher;
@@ -921,7 +921,7 @@ For each point:
   policy tests remain green;
 - fresh scaffold and downstream migration fixtures.
 
-## 17. Campaign done-when
+## 17. Effort done-when
 
 - A plain `agent-resume` launch on a fresh scaffold uses up to two workers
   without predefined tracks or `docs/next-wi`.

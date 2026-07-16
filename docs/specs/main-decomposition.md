@@ -15,12 +15,12 @@ in [work-items.csv](../requirements/work-items.csv).
 ## 1. Tier ruling (why the routes below are what they are)
 
 Per the session-protocol triage rule — `strong` only for design-shaping or
-spine-touching work; `medium` by default — the campaign splits:
+spine-touching work; `medium` by default — the effort splits:
 
 - **WI-080 (`agent_loop.py`) — `BuildTier=strong`.** Genuinely design-shaping:
   the slice work *chooses the seam architecture* (which state becomes an
   object, which closure becomes a function, what the unit-test surface is) for
-  the most intricate logic in the kit, in a file the v4 campaign just reworked
+  the most intricate logic in the kit, in a file the v4 effort just reworked
   (5,283 lines today; `main()` grew from ~1,015 lines at review time to
   ~1,657). The refactor must thread between the legacy serial loop and the new
   worker/dispatcher paths (`--wi`/`--train`, managed routing, reviewer
@@ -42,7 +42,7 @@ on the wider-shipping but more mechanical half (WI-081).
 
 - **Behavior-preserving.** No flag, output, exit-code, or file-format change.
   Every slice ends at the commit bar (smoke suite + `check_docs.py --stale`);
-  each WI closes with the full unfiltered suite; the campaign closes with
+  each WI closes with the full unfiltered suite; the phase closes with
   `check.py --gate G3`.
 - **Test-seams-first.** A slice that extracts a unit lands the unit tests for
   it in the same commit — the extraction *creates* the seams; the tests are
@@ -51,7 +51,7 @@ on the wider-shipping but more mechanical half (WI-081).
   need 3.10, no third-party test helpers).
 - **Serial execution.** Both WIs touch the same workstream and WI-081 is soft
   `~WI-080`. Run attended or at `--jobs 1`; the meta-repo's SafetyClass audit
-  (the `--jobs 1` hold) is **not** part of this campaign.
+  (the `--jobs 1` hold) is **not** part of this effort.
 - **Existing end-to-end tests are the golden net** — they must pass unmodified
   unless a test names an internal symbol that moved (mechanical rename only,
   called out in the log).
@@ -115,8 +115,8 @@ Four slices.
 - **D — Docstring shrink.** Cut the 239-line module docstring to contract +
   usage + a pointer to `process.md` §4 (decompose-don't-paraphrase applied to
   itself; target ≲ 60 lines). Check `docs/dupes-allow` (line ~116 references
-  this campaign) and `check_docs.py` for anything anchored to the old text.
-  Close WI-081: full suite, log entry, registry row; then campaign close —
+  this effort) and `check_docs.py` for anything anchored to the old text.
+  Close WI-081: full suite, log entry, registry row; then phase close —
   `check.py --gate G3` + `pytest -q -n auto` pasted in the log.
 
 ## 5. Done-when
@@ -126,9 +126,9 @@ Four slices.
   unit-addressable with direct transition/golden tests.
 - Zero behavior change: full suite green throughout; golden nets unmodified
   (mechanical renames excepted and logged).
-- `check.py --gate G3` passes at campaign close; `gen_trajectory.py` regenerated.
+- `check.py --gate G3` passes at phase close; `gen_trajectory.py` regenerated.
 - Registry: WI-080/WI-081 `done` with deliverables; log entries per slice
-  batch; status.md Next action no longer names this campaign.
+  batch; status.md Next action no longer names this effort.
 
 ## 6. Risks / watch-fors
 

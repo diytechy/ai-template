@@ -216,7 +216,7 @@ One layer, two faces: **knowledge packs** (the durable store) and the
    the staged skill-library import per the §6.6 ruling (§4.5).
 7. *(deferred)* OKF pack export (§6.4).
 
-## 9. Done-when (the campaign)
+## 9. Done-when (the effort)
 
 - [ ] This design ratified by the owner (OI-9).
 - [ ] A fresh scaffold ships `docs/knowledge/README.md`; the kit's own

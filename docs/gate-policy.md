@@ -1,7 +1,7 @@
 # Gate-authority deviation register — `autonomous`
 
 **Status:** ACTIVE — owner directive 2026-07-15 (in-chat) flipped
-`docs/gate-policy` `single-ratify` → **`autonomous`** to let campaigns iterate
+`docs/gate-policy` `single-ratify` → **`autonomous`** to let phases iterate
 through their gates without a human g2-close sitting. **Reversible / temporary:**
 the owner may restore a lower level at any time. Keep in version control.
 

@@ -22,7 +22,7 @@ the How-SW tab's for the same kind of node.
 
 **U2 — One status / phase / type color vocabulary.** The same concept renders in
 the same color wherever it appears, from one declared palette. *Good:* `done` is
-the same fill in the roadmap DAG, the module graph, and the campaign bins; each
+the same fill in the roadmap DAG, the module graph, and the phase tiers; each
 phase keeps one accent across tabs. *Bad:* two different greens for `done` in two
 views, or a phase accent that shifts between the When and Process tabs.
 

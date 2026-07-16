@@ -46,7 +46,7 @@ that easier to achieve in a real project — or get out of the way.
 - **Self-test before claiming done.** The per-commit bar is the fast **smoke**
   tier (`python -m pytest -q -n auto -m smoke`, ~47 s); run the **full**
   unfiltered suite (`python -m pytest -q -n auto`, ~66 s) before claiming a
-  WI/slice done, at campaign close, and after a broad script change — it
+  WI/slice done, at phase close, and after a broad script change — it
   bootstraps a temp scaffold and exercises every script end-to-end. Paste the
   real output; never report a green you didn't produce. (Commit bar vs gate bar,
   and what the smoke tier drops: the `session-protocol` skill §3.)

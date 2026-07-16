@@ -18,7 +18,7 @@ landing view, each must be reachable with **at most one tab switch** (one click 
 a nav button — no hunting, no scrolling a dense graph to find the entry point):
 
 1. **Find the project state** — what gate the project is at and what is done
-   vs open (the roadmap / campaign summary or the Process tab's lifecycle panel).
+   vs open (the roadmap / phase summary or the Process tab's lifecycle panel).
 2. **Find the next work** — the next action / next WI (the status surface or the
    resume-loop panel).
 3. **Find how the parts connect** — the module map / interface seams (the How-SW

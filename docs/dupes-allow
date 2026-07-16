@@ -89,7 +89,7 @@ project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
 # WI-186 (v4 close): schedule.py (Slice A) is a standalone F5 script carrying the
 # _utf8_console emitter, the _split_refs/refs parser, load_wis (mirroring
 # check_trajectory), and the argparse/__main__ scaffolding. It first meets the
-# G3-only dupes gate at the v4 close (dormant at G2 all campaign), so its F5
+# G3-only dupes gate at the v4 close (dormant at G2 the whole effort), so its F5
 # pairs are censused now; entering the corpus also re-attributed the
 # representative _utf8_console pair from agent_route to several unlisted files.
 project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/schedule.py
@@ -139,7 +139,7 @@ project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/trace
 # --- Intra-file duplication — GRANDFATHERED debris, not sanctioned -----------
 # Genuine intra-file copy-paste in the monolithic scripts. NOT F5 (F5 is a
 # cross-script standalone-copy rule). Recorded, not blessed: the decomposition
-# campaign removes them — delete each line as its blocks are extracted. WI-080
+# effort removes them — delete each line as its blocks are extracted. WI-080
 # (agent_loop) and WI-081 (trace) decomposed each script's main() and REDUCED
 # this debris, but both still carry other intra-file duplicated blocks (shared
 # helper patterns), so their self-dup lines stay live below until those blocks

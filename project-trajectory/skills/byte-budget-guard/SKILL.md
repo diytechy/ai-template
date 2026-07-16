@@ -23,7 +23,7 @@ here. Check before you edit and again before you commit.
 |---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
 | `project-trajectory/PROCESS.md` | **watched** (baseline **60,169** as of 2026-07-16/WI-188; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
-| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **152,140** as of 2026-07-16/WI-188; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **151,921** as of 2026-07-16/WI-188; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
 
 `ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
 push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.

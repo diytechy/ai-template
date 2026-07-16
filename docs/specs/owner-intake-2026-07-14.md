@@ -275,7 +275,7 @@ missing kit mechanism: a **domains filter** at materialize time
 (`bootstrap.py --agents` currently fans out every kit skill; domain skills
 must materialize only into repos that opt into that domain).
 
-**Disposition — extend the research-knowledge campaign, don't fork it.** The
+**Disposition — extend the research-knowledge effort, don't fork it.** The
 draft spec (revised 2026-07-14) gains: §4 a *kit-provisioned pack library*
 surface (domain-tagged packs shipped in `project-trajectory/`, scaffolded on
 opt-in — distribution of packs, distinct from the per-repo authored home);
