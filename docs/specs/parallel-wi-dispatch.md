@@ -335,39 +335,20 @@ WI stays a distinct commit/evidence unit, and any integration conflict resolutio
 ### Traincar clustering — the work-advisor (research-informed)
 
 Packing WIs into traincars is **resource-constrained DAG scheduling with task
-clustering**. The literature offers **heuristics, not guarantees for this
-setting** — its bounds assume identical machines, known non-preemptive durations,
-and no review/rework/conflict loops, none of which hold for heterogeneous LLM
-workers with retries, review gates, and integration conflicts. So the following
-are design *inspiration*; **no approximation bound is claimed for this system**:
+clustering** (list scheduling + DAG clustering + bin packing). The prior art — its
+sources, applied analogs, and the reason its guarantees do **not** transfer to
+this setting — is the `parallel-scheduling` knowledge pack
+([docs/knowledge/parallel-scheduling.md](../knowledge/parallel-scheduling.md));
+**no approximation bound is claimed for this system**. The normative rule it
+distils:
 
-- **List scheduling (Graham, *Bell System Technical Journal*, 1966)** — greedily
-  dispatch ready tasks to free workers in priority order. Its `(2 − 1/m)` makespan
-  bound holds only in the classical model; here it just says a simple greedy
-  dispatcher is a reasonable default — already the shape of §4's loop.
-- **HEFT (Topcuoglu, Hariri & Wu, *IEEE TPDS* 13(3):260–274, 2002)** — prioritize
-  by *upward rank*, a **cost-weighted** critical path. §4's unweighted `remaining
-  hard-path length` is *criticality-inspired*, **not** HEFT's weighted upward
-  rank; a weighted version (using `EstTokens` / measured API-seconds) is the
-  HEFT-shaped upgrade for later.
-- **DAG clustering / coalescing (Sarkar, MIT Press, 1989 — edge-zeroing; DSC —
-  Yang & Gerasoulis, *IEEE TPDS*, 1994)** — the batch-vs-parallel trade-off as
-  computation-vs-communication. Here the "communication cost" is per-traincar
-  **integration + review overhead**: group WIs into one traincar when the overhead
-  saved exceeds the parallelism and failure-isolation given up — small mechanical
-  off-spine WIs batch, substantial ones stay separate. Clustering must respect WI
-  precedence (no traincar cycle).
-- **LPT / bin packing (Graham, *SIAM J. Applied Math*, 1969)** — balancing sized
-  WIs needs a per-WI size estimate, so `EstTokens` (§3.1) feeds clustering. The
-  `4/3` bound is classical-model only; treat estimates as advisory.
-
-Applied analogs to crib rather than reinvent: `make -j` / Ninja (job-limited DAG
-dispatch); Bazel / Nx / Turborepo (build-target DAG + affected-set + caching);
-merge queues — GitHub merge queue, Bors, and **Zuul**'s speculative dependent
-pipelines — for the integration-ordering half (the §13 speculative-merge-queue
-rung); Airflow **pools** + `priority_weight` and Temporal **durable execution**
-for resource caps and the §11 recovery semantics. (If this survey grows, it moves
-to `docs/knowledge/` and the plan keeps only the normative rule.)
+- **Priority** — greedy list scheduling by critical-path length (§4's `remaining
+  hard-path length`); a cost-weighted, HEFT-style rank is a later upgrade.
+- **Batching** — group WIs into one traincar only when the per-traincar
+  **integration + review overhead** saved exceeds the parallelism and
+  failure-isolation given up — small mechanical off-spine WIs batch, substantial
+  ones stay separate — and never so as to create a traincar cycle (clustering
+  respects WI precedence).
 
 **Cost signal.** Calibrate `EstTokens` from telemetry already logged (`tokens`,
 `cost-usd`, `turns`, `api-secs`) rather than guessing, and prefer **wall / API
