@@ -98,6 +98,11 @@ schema with:
 - `EstTokens` — a draft-time size estimate feeding the traincar clustering
   heuristic (§7), calibrated from session-log telemetry and kept advisory (the
   scheduler stays robust to a wrong estimate).
+- `SafetyClass` — planning-time classification used by the shared safety
+  classifier: `ordinary|spine|gate|attestation|protected|high-risk`. It is
+  required for newly queued WIs. A migrated queued WI remains `unclassified`
+  until audited and fails closed for dispatch; empty is never silently treated
+  as `ordinary`.
 
 Tracked `Status` becomes:
 
@@ -181,7 +186,10 @@ baseline and clears the gated spine first, in three stages:
 3. **Plan and dispatch build-out.** With the spine settled, the work-advisor
    scans the unblocked frontier and packs WIs into **traincars** (§7), then runs
    the steady-state loop below — dispatching any traincar whose dependencies are
-   integrated to a free worker as one opens up.
+   integrated to a free worker as one opens up. The traincar DAG records grouping
+   and dependencies, not a static execution sequence: among dependency-clear
+   traincars, the dispatcher takes the one with the most downstream dependents
+   first, with the deterministic WI ordering below as its tie-breaker.
 
 For each scheduling event the dispatcher:
 
@@ -191,8 +199,10 @@ For each scheduling event the dispatcher:
 4. applies the lowest-gate-first hard filter;
 5. excludes blocked, deferred, reserved, protected-conflicting, and explicitly
    exclusive-conflicting WIs;
-6. orders survivors by `(gate class, Priority descending, remaining hard-path
-   length descending, WI id)`; and
+6. packs survivors into the current traincar DAG (§7), then orders eligible
+   traincars by `(gate class, transitive downstream-dependent count descending,
+   Priority descending, remaining hard-path length descending, first WI id)`;
+   and
 7. reserves candidates until the worker ceiling or eligible frontier is
    exhausted.
 
@@ -211,6 +221,28 @@ python scripts/schedule.py simulate --jobs 2
 
 `check_trajectory.py` validates the registry and calls the library where useful;
 it does not become the stateful scheduler.
+
+### Deterministic safety classification
+
+`schedule.py` owns one pure classifier shared by validation, dashboard,
+traincar packing, and dispatch. Its inputs are the WI's declared `SafetyClass`,
+gate/phase, hard edges, `Exclusive` keys, and applicable review/critique policy;
+its output is a scheduling class plus reason codes. The ordered rules are:
+
+1. `spine`, `gate`, and `attestation` serialize whole-project and cannot join a
+   multi-WI traincar;
+2. `protected` serializes whole-project; narrower semantic-resource locking uses
+   declared `Exclusive` keys instead;
+3. `high-risk`, a critique requirement, or a review policy requiring an
+   integration checkpoint forces a single-WI traincar;
+4. only classified `ordinary` work is eligible for optimistic multi-WI packing;
+   and
+5. missing, invalid, or contradictory input returns `unclassified`, fails closed
+   for that WI, and does not stop disjoint classified work.
+
+The dispatcher does not infer or rewrite `SafetyClass`, review boundaries,
+hard edges, or keys. `ready --explain` exposes the classifier's reason codes so
+the same decision is inspectable everywhere it is enforced.
 
 ## 5. Concurrency safety: optimistic ordinary work, explicit hard boundaries
 
@@ -258,12 +290,14 @@ composed conflict and the requirements it touches — it does not repeat every
 original review.
 
 Telemetry records overlap, conflict, re-review, and rollback rates. A repeated
-collision is **under-allocation evidence** (§1.11): the run reconciles and
-continues — it never pauses — and a human reviews the pattern in retrospect,
-declaring an `Exclusive` key or hard edge on any *not-yet-run* WI that shares the
-resource (it cannot un-collide work already done). The dispatcher enforces only
-*declared* keys, never one of its own invention, and the system does not demand
-speculative path metadata before evidence shows a need.
+collision is **under-allocation evidence** (§1.11): the affected train is
+reconciled, returned to rework, or quarantined when human judgment is required,
+while disjoint eligible work continues. A human reviews the pattern in
+retrospect, declaring an `Exclusive` key or hard edge on any *not-yet-run* WI
+that shares the resource (it cannot un-collide work already done). The
+dispatcher enforces only *declared* keys, never one of its own invention, and
+the system does not demand speculative path metadata before evidence shows a
+need.
 
 ## 6. Lane and branch lifecycle
 
@@ -271,19 +305,35 @@ For each accepted candidate the dispatcher:
 
 1. chooses a unique train id, e.g. `v3-g3-WI-180-a31f` — a `{phase}-{gate}` prefix
    recording the delivery phase and gate the train builds within;
-2. creates `llm/train/v3-g3-WI-180-a31f` from the current integration HEAD;
-3. creates/reuses a linked worktree leased to that branch;
-4. writes the runtime reservation atomically;
+2. creates one off-history reservation metadata commit with `git commit-tree`
+   (the base tree and parent plus the train id and complete WI list), then
+   atomically creates the train branch and one fixed reservation ref per
+   constituent WI using one `git update-ref --stdin` transaction with
+   zero-old-value checks;
+3. creates/reuses a linked worktree leased to the train branch;
+4. writes the runtime reservation cache atomically;
 5. launches an internal worker with explicit `--wi`, `--train`, and worktree
    arguments; and
 6. records the process identity as a lease hint, never as proof of life.
 
-The unique train branch ref is the durable reservation: its name carries the WI
-and train id, and before the first work commit its target is the exact base. The
-first real WI commit carries `WI`, `Train`, and `Base` trailers; later recovery
-can derive the same base with `git merge-base`. This avoids an empty metadata
-commit and its unnecessary product-hook run while preserving recovery if the
-machine dies before the worker's first commit.
+The durable reservation is the atomically created set of Git refs:
+
+```text
+refs/llm/reservations/WI-180
+refs/llm/reservations/WI-181
+```
+
+Every constituent ref points to the same reservation metadata commit. Its fixed
+name makes the zero-old-value check an atomic uniqueness claim for that WI; the
+commit maps the complete traincar to its id and exact base. `git commit-tree`
+does not update product history, check out files, or run product commit hooks.
+If any WI is already reserved, the transaction fails and none of the traincar's
+refs or branch is created. The first real WI commit still carries `WI`, `Train`,
+and `Base` trailers; recovery cross-checks those trailers and `git merge-base`
+against the reservation commit. Integration, blocking, or release deletes the
+applicable reservation refs transactionally only after their durable disposition
+has advanced; the unreachable metadata object is then left to ordinary Git
+garbage collection.
 
 The worker prompt is assembled from `AGENTS.md`, the WI row, its `SpecRef`, its
 predecessor context, the current train diff, and any rework finding. It does not
@@ -296,12 +346,20 @@ or ids and names the exact reviewed code commit.
 
 ## 7. Traincars — continuation, execution, and clustering
 
-After a WI reaches its local commit boundary (locally green and committed, not
-yet reviewed), the dispatcher may authorize the same lane to pull its successor
-onto the train. Continuation requires all of the following:
+A traincar is a provisional grouping of review-compatible WIs plus its
+dependencies on other traincars. It does not dictate a static global sequence:
+the dispatcher dynamically list-schedules dependency-clear traincars, reserving
+a selected traincar's constituent WIs when it assigns the traincar to a lane.
+The prospective grouping is discarded and recomputed after any integration,
+block, failure, registry change, or reservation release; only active
+reservations survive recomputation.
 
-1. the current WI has exactly one unclaimed hard successor;
-2. that successor is queued and not reserved elsewhere;
+Within an assigned traincar, after a WI reaches its local commit boundary
+(locally green and committed, not yet reviewed), the same lane may continue to
+the traincar's next successor. Continuation requires all of the following:
+
+1. the current WI has exactly one hard successor assigned to this traincar;
+2. that successor is queued and reserved by this traincar, with no other owner;
 3. every other hard predecessor of the successor is already integrated or is an
    accepted-on-train ancestor on this train;
 4. the successor has no explicit exclusive conflict with another active train;
@@ -313,15 +371,27 @@ The sequence ends when the current WI has zero or multiple hard successors, the
 only successor joins another unintegrated branch, a blocker appears, a boundary
 requires composition, or the cap is reached.
 
+If one constituent WI blocks, the WI — not the traincar — receives the durable
+`blocked` disposition and `BlockRef` through the serialized integrator. The
+traincar is dissolved: unstarted constituents are released to `queued`, the
+traincar DAG is recomputed, and no descendant that depends on the blocked WI may
+integrate. Already completed constituents that do not depend on the blocked WI
+may still proceed through their required review and integration. A traincar is a
+runtime scheduling structure and never inherits or writes a project-level
+`blocked` status of its own.
+
 At a **fork**, the parent train integrates, then each newly ready child may take
 a separate lane. At a **join**, all parent trains integrate, then the join WI
 starts from the combined integration HEAD. A downstream WI is never built from
 two unintegrated sibling branches.
 
-**Execution model — one Build, one Review per traincar.** A traincar is the
-review unit: one Build pass (planning/optimization included as each WI needs)
-produces **one commit per WI** on the branch, then **one Review** covers the
-traincar's combined diff. A successor within the train depends on its predecessor
+**Execution model — one Build and one review cycle per traincar.** A traincar is
+the indivisible review scope: one Build pass (planning/optimization included as
+each WI needs) produces **one commit per WI** on the branch, then one review
+cycle covers the traincar's complete combined diff. That cycle uses however many
+independent reviewers the applicable review count, reviewer-family, critique,
+and complexity policies require; it is not split into separate per-WI reviews.
+A successor within the train depends on its predecessor
 being **accepted-on-train** (locally green and committed), not reviewed — the
 review comes once, at the end — and **no constituent WI becomes `done` until the
 whole train is reviewed and integrated atomically** (§9). This single-review model
@@ -331,6 +401,14 @@ critique-gated, no boundary crossing. A strong, spine-touching, critique-verifie
 or high-risk WI runs as its **own single-WI traincar** with its own review. Every
 WI stays a distinct commit/evidence unit, and any integration conflict resolution
 (§5.2) triggers a focused re-review regardless.
+
+For a multi-WI traincar, policy aggregation is deterministic: its BuildTier is
+the strongest constituent tier; its reviewer count is the maximum required by
+any constituent or by the traincar's computed complexity; and its required
+reviewer families are the union of constituent requirements. A constituent
+whose policy requires individual critique, spine review, or an integration
+checkpoint is not aggregated — the safety classifier places it in a single-WI
+traincar.
 
 ### Traincar clustering — the work-advisor (research-informed)
 
@@ -406,10 +484,34 @@ deterministic queue order, the integrator:
 11. advances the integration ref from the expected old hash to the new hash
     using compare-and-swap semantics.
 
-If root moved since step 1, the compare-and-swap fails harmlessly and the train
-re-enters composition from the new HEAD. The main development branch is never
-left half-applied: before the atomic ref advance, all mutation occurs on the
-temporary integration worktree.
+If the integration ref moved since step 1, the compare-and-swap fails harmlessly
+and the train re-enters composition from the new HEAD. The main development
+branch is never left half-applied: before the atomic ref advance, all mutation
+occurs on the temporary integration worktree.
+
+The integration ref is dispatcher-owned while a run is active and is checked
+out only in its dedicated integration worktree; workers and the user's ordinary
+checkout never mutate it. The user's checkout is a separate projection: after a
+successful CAS it may be synchronized to the new integration HEAD only when
+clean and explicitly owned by the dispatcher. A dirty or manually advanced user
+checkout is left untouched and reported; it never blocks the authoritative
+integration ref or gets reset/stashed automatically. A manual update to the
+integration ref itself is detected by CAS and forces recomposition.
+
+### Blocked-disposition integration
+
+A worker-reported blocker uses a smaller serialized transaction rather than the
+successful `done` path. The integrator validates the named WI, `BlockRef`, and
+committed evidence; starts from the current integration HEAD; changes only that
+WI to `blocked`; appends the durable log evidence; regenerates status and derived
+artifacts; runs the applicable documentation/registry bar; commits with
+`Blocked-WI`, `BlockRef`, and `Train` trailers; and advances the integration ref
+by CAS. Only after that CAS succeeds does it transactionally delete the blocked
+WI's reservation ref, release unstarted constituent reservations, dissolve the
+traincar, and recompute the traincar DAG. Completed constituents independent of
+the blocked WI retain reservations and proceed through their required review;
+dependent descendants cannot integrate. A CAS race recomposes this disposition
+transaction exactly as it does a successful integration.
 
 Cleanup is conservative. Integrated, clean train worktrees/branches may be
 retained for diagnostics or removed later. The dispatcher never deletes an
@@ -428,10 +530,27 @@ rung; for now the human decides.
 
 ### `docs/next-wi`
 
-Delete it from the scaffold and remove all coordinator, prompt, BuildTier,
-batching, check, test, and process dependencies. `Priority` supplies deliberate
-ordering in the registry; the scheduler supplies the normal order. BuildTier is
-looked up from each reserved WI directly.
+Delete it outright from fresh scaffolds and migrated repositories. Its former
+content is not translated into `Priority` or any other scheduling state: the WI
+DAG, gate class, registry `Priority`, and the scheduler are the complete ordering
+contract. Migration may record the old declared value in its log for audit, then
+removes the file.
+
+Removal includes every live dependency, not only the file itself:
+
+- coordinator selection, prompt scope, telemetry/session labels, rework
+  precedence, BuildTier pins, and the old `;`-batch behavior in `agent_loop.py`;
+- gate-first/check logic and trajectory/dashboard projections;
+- launcher prompts, bootstrap/scaffold manifests, process and skill prose, and
+  the work-item template documentation; and
+- tests and generated architecture/dashboard outputs that encode those former
+  behaviors.
+
+The dispatcher supplies the WI/train assignment explicitly. BuildTier is looked
+up directly from each reserved WI; review findings and rework ownership are
+assignment-scoped dispatcher state. Historical logs, reviews, and archived specs
+may retain `next-wi` references as history, but no live instruction or executable
+surface reads, writes, validates, generates, or links it.
 
 ### `docs/status.md`
 
@@ -505,7 +624,8 @@ The directory is nevertheless a **cache/journal, not authority**. Every startup
 acquires the repo-level dispatcher lock and performs recovery before scheduling:
 
 1. read the integrated WI registry and root integration trailers;
-2. enumerate `llm/train/*` and `llm/integrate/*` branches;
+2. enumerate `llm/train/*` and `llm/integrate/*` branches plus
+   `refs/llm/reservations/*`;
 3. enumerate linked worktrees and their dirty/clean state;
 4. parse reservation commits and exact-head review records;
 5. cross-check the runtime manifest when present;
@@ -524,7 +644,9 @@ Recovery rules:
 | Review names an older HEAD | Re-review |
 | Integration commit exists and WI is done | Restore `integrated`; cleanup is optional |
 | Runtime manifest entry has no branch/worktree | Drop the stale cache entry after recording recovery |
-| Two branches reserve one WI | Quarantine both; start neither until ownership is resolved |
+| Reservation ref exists; train worktree missing | Recreate the worktree from its train branch |
+| Reservation ref metadata disagrees with train branch/trailers | Quarantine that WI/train; start neither until ownership is resolved |
+| Train claims a WI without its reservation ref | Quarantine that WI/train mismatch; do not recreate authority from cache alone |
 | Integration staging branch exists | Resume/verify staging; root remains unchanged until CAS |
 | Ownership cannot be proven | Fail closed for that WI and continue only disjoint proven work |
 
@@ -532,9 +654,11 @@ Kernel locks release when processes die. Stored PIDs are hints and are never
 trusted across reboot. Frequent WI commits bound the amount of dirty recovery.
 
 This contract covers a process or computer crash with the disk intact. Disk loss
-or recovery on a fresh host requires train refs to have been pushed/mirrored;
-that remains subject to `docs/push-policy`. The coordinator never silently
-pushes a train when policy requires a human.
+or recovery on a fresh host requires both train branches and reservation refs to
+have been pushed/mirrored explicitly; custom `refs/llm/reservations/*` are not
+assumed to follow an ordinary branch push. Mirroring remains subject to
+`docs/push-policy`. The coordinator never silently pushes any ref when policy
+requires a human.
 
 ## 12. Pause, blackout, cost, and capacity
 
@@ -584,8 +708,8 @@ Migration is explicit because this changes default execution:
 1. `downstream-resync` documents that an upgraded repo runs `--jobs 1` until its
    soft-edge audit (item 9) passes, then **flips to the two-worker default** as a
    recorded, deliberate promotion; `--jobs 1` remains the per-run escape.
-2. Existing `docs/next-wi` content is translated, if meaningful, into WI
-   `Priority`, then the file is removed.
+2. Existing `docs/next-wi` is logged once for migration audit and then removed;
+   its content is not translated into `Priority`, dependencies, or a traincar.
 3. Legacy `active` WI rows are reconciled to queued + recovered reservation or
    returned to queued with a logged migration finding.
 4. Existing long-lived `docs/tracks/*` lanes remain readable during one
@@ -612,12 +736,12 @@ from the registry at filing.
 
 | Slice | Scope | Hard predecessors | Parallel implementation note |
 | --- | --- | --- | --- |
-| **A — Scheduler contract + schema** | `schedule.py`; `blocked`, `Priority`, `Exclusive`, `BlockRef`, `EstTokens`; frontier/explain/simulation tests | none | Foundation |
-| **B — De-author status and remove next-wi** | prompt/process/check/bootstrap migration; generated root status contract | A | Can run beside C after A |
+| **A — Scheduler contract + schema** | `schedule.py`; `blocked`, `Priority`, `Exclusive`, `BlockRef`, `EstTokens`, `SafetyClass`; pure safety classifier; frontier/explain/simulation tests | none | Foundation |
+| **B — De-author status and remove next-wi** | delete the file and all runtime, prompt, routing, rework, telemetry, check, process/skill, scaffold, projection, generated-output, and test dependencies; generated root status contract | A | Can run beside C after A |
 | **C — Worker assignment mode** | replace internal track assumptions with explicit WI/train/lane assignment; collision-safe logs/reviews | A | Can run beside B after A |
 | **D — Dispatcher + worktree pool** | default `--jobs 2`; the reconcile→gate→build-out launch sequence (§4); traincar clustering + traincar-DAG dispatch (§7); reservations; dynamic refill; pause/blackout/model-capacity supervision | A, C | Central fan-out engine |
 | **E — Change-train continuation** | unary-chain rule; fork/join behavior; caps; review-boundary composition | D | Can overlap F only if code ownership is split deliberately |
-| **F — Atomic integrator** | staging branches; conflict/re-review; registry/log/status regen; CAS advance | B, D | Can overlap E only with bounded file ownership |
+| **F — Atomic integrator** | staging branches; dispatcher-owned integration ref/worktree; conflict/re-review; successful and blocked-disposition CAS paths; registry/log/status regen; transactional reservation-ref release | B, D | Can overlap E only with bounded file ownership |
 | **G — Recovery + fault injection** | journal; Git reconstruction; dirty/missing worktree; duplicate reservation; crash-at-every-boundary fixtures | D, F | Must prove deletion of `out/dispatch/` is recoverable |
 | **H — Telemetry, scaffold, migration, dogfood** | projections; launchers; downstream-resync; two-real-WI trial; full cross-OS campaign | B, E, F, G | Campaign close |
 
@@ -636,6 +760,9 @@ their touched surfaces are split during planning; H is the explicit join.
 - blocked/deferred/reserved items are excluded with reason codes;
 - shared Workstream/Campaign/SpecRef does not serialize;
 - shared `Exclusive` keys do serialize;
+- every `SafetyClass` and review-policy input produces the same scheduling class
+  and reason codes across CLI, validator, dashboard, and dispatcher;
+- missing/contradictory safety input fails closed only for the affected WI;
 - unary sequences continue; forks and joins stop/launch at the right points.
 
 ### Process/worktree integration fixtures
@@ -643,6 +770,8 @@ their touched surfaces are split during planning; H is the explicit join.
 - two off-spine WIs build and review concurrently in separate linked worktrees;
 - a free lane refills while another lane remains busy;
 - one lane blocks/fails while another integrates;
+- a blocker durably marks only its WI, releases/dissolves its traincar after CAS,
+  and recomputes unaffected work;
 - overlapping edits reach integrator reconciliation and combined tests;
 - a material conflict resolution invalidates and renews review;
 - a clean, conflict-free apply integrates **without** re-review; any conflict
@@ -651,19 +780,27 @@ their touched surfaces are split during planning; H is the explicit join.
 - the branch-age advisory lists stale `llm/*` refs and splits merged from
   unintegrated, never deleting;
 - spine/gate work remains serialized;
+- mixed traincar policy selects the strongest BuildTier, maximum reviewer count,
+  and union of reviewer families; boundary-requiring WIs remain single-WI;
+- a dirty ordinary checkout remains untouched after integration while the
+  dispatcher-owned integration ref/worktree advances cleanly;
 - no worker edits root status, registry disposition, log, or generated output.
 
 ### Crash matrix
 
-Inject termination after reservation, branch creation, dirty edit, WI commit,
-review request, review verdict, integration apply, integration test, integration
-commit, and immediately before/after root CAS. For each point:
+Inject termination during the atomic multi-WI reservation-ref transaction and
+after reservation, branch creation, dirty edit, WI commit, review request,
+review verdict, blocked-disposition apply, integration apply, integration test,
+integration commit, and immediately before/after integration-ref CAS. For each
+point:
 
 - restart reconstructs exactly one owner;
 - no WI is double-run or falsely done;
 - no unintegrated commit/dirty tree is deleted;
 - root is either entirely before or entirely after integration;
 - deleting all of `out/dispatch/` still reconstructs from Git/worktrees;
+- every constituent reservation reconstructs from
+  `refs/llm/reservations/*`, including before its first WI commit;
 - stale PIDs and released OS locks do not block recovery.
 
 ### Cross-platform and compatibility
