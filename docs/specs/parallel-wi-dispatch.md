@@ -942,7 +942,7 @@ For each point:
   and never deletes them.
 - A crash at every lifecycle boundary recovers without double assignment, lost
   commits, false completion, or half-integrated authoritative state or
-unclassifiable publication state.
+  unclassifiable publication state.
 - Removing `out/dispatch/` before restart does not prevent reconstruction.
 - `--jobs 1` remains available; Windows/POSIX suites and the full gate bar pass.
 - Telemetry reports whether parallelism saved wall time and what prevented
