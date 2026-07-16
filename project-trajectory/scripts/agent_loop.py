@@ -1161,6 +1161,239 @@ def critique_prompt(prompt_templates, verdict_path, brief):
     return base.replace("{verdict}", str(verdict_path)).replace("{brief}", brief)
 
 
+# --- the serial loop's managed-routing / escalation / critique / stall state ---
+# (WI-080 Slice C) What were ~24 mutable locals threaded through main() now live
+# on one object behind PURE transition methods: each method mutates only this
+# object and returns a decision — every print, file-write, telemetry-commit, and
+# repo-context call (agent_route.select/failure_action, stop_banner, run-state
+# writes) stays with the caller. See the (S8 routing / WI-068 critique / stall
+# guard) call sites in main() for how these transitions are wired.
+class RoutingState:
+    """The serial loop's managed-routing / escalation / critique / stall state
+    (S8 + WI-068 + the stall guard) behind pure transition methods (WI-080
+    Slice C): methods mutate only this object and return decisions — every
+    print/file-write/telemetry-commit stays with the caller."""
+
+    def __init__(
+        self, rp_int, cooldown_seconds, critique_srs, critique_max, route_constants
+    ):
+        self.rp_int = rp_int
+        self.cooldown_seconds = cooldown_seconds
+        self.route_constants = route_constants
+        self.critique_srs = critique_srs
+        self.critique_max = critique_max
+        # --- managed-routing / reviewer-dispatch state (S8) ---
+        self.cooldowns = {}  # model id -> epoch it is available again
+        self.review_queue = []  # the pending review phases for the current round
+        # The build-vs-design-check phase for the next non-review/non-critique
+        # session, held in-process now that docs/run-phase is retired (WI-180).
+        self.next_phase = "BUILD"
+        self.round_verdicts = []  # (phase, Verdict, provider, model_id) this round
+        self.rounds = []  # accumulated round dicts the escalation policy reads
+        self.page_fails_since = 0  # WI-171: rounds index the shared-failure tally
+        self.last_impl_family = None  # the FAMILY of the build under review
+        self.last_impl_wi = ""  # durable rework scope on CHANGES-REQUESTED
+        self.last_impl_tier = "medium"  # the tier that build ran at
+        self.impl_range = None  # the build's commit range (for the tripwire diff)
+        self.swapped = False  # an implementer-family swap has been applied
+        self.at_top_tier = False  # the implementer tier has been raised to the top
+        self.impl_tier_override = None  # escalation raised the BUILD tier
+        self.impl_exclude = set()  # families to avoid for the next BUILD
+        # --- critique-loop state (WI-068; vacuous when no Critique SR exists) ---
+        self.critique_queue = []  # ["CRITIQUE"] when a critique round is scheduled
+        self.critique_scope = set()  # the in-scope Critique SR ids for this loop
+        self.critique_rounds = 0  # consecutive CHANGES-REQUESTED critique rounds
+        self.critique_limit = None  # None means inf-until-APPROVE for the scope
+        self.critique_exhaustion = "move-on"
+        # --- stall guard ---
+        self.stall = 0
+        self.errors = 0  # consecutive ERROR sessions (agent unavailable)
+
+    def pick_phase(self):
+        """(phase, is_review, is_critique) for the next session: a queued review
+        phase wins, then a queued critique, else the held build/design-check
+        default."""
+        if self.review_queue:
+            return self.review_queue[0], True, False
+        if self.critique_queue:
+            return "CRITIQUE", False, True
+        return self.next_phase, False, False
+
+    def route_intent(self, phase, is_review, is_critique, tier_map, pinned_tier=None):
+        """(tier, exclude, prefer_different) for agent_route.select — the S8
+        exclude/prefer/tier rules. `pinned_tier` (a normalized valid tier or
+        None, computed by the caller from a worker's BuildTier) replaces the
+        phase-default BUILD tier when given; an escalation override still wins.
+        Returns a FRESH exclude set each call."""
+        tier = phase_tier(phase, tier_map)
+        exclude = set()
+        prefer_different = False
+        if is_review:
+            prefer_different = True
+            if self.last_impl_family:
+                exclude.add(self.last_impl_family)
+            for _ph, _v, fam, _mid in self.round_verdicts:
+                if fam:
+                    exclude.add(fam)  # REVIEW-B differs from REVIEW-A too
+        elif is_critique:
+            prefer_different = True
+            if self.last_impl_family:
+                exclude.add(self.last_impl_family)
+        elif phase == "BUILD" or phase == "":
+            if pinned_tier is not None:
+                tier = pinned_tier
+            if self.impl_tier_override:
+                tier = self.impl_tier_override
+            if self.impl_exclude:
+                exclude = set(self.impl_exclude)
+                prefer_different = True
+        elif phase == "DESIGN-CHECK":
+            prefer_different = True
+            if self.last_impl_family:
+                exclude.add(self.last_impl_family)
+        return tier, exclude, prefer_different
+
+    def note_build_tier(self, tier):
+        """Record the tier a BUILD/"" session ran at (the round's implementer
+        tier). Called only on the non-review BUILD/"" condition, as today."""
+        self.last_impl_tier = tier
+
+    def cool(self, route_id, now, seconds=None):
+        """Put a route on cooldown (per-model backoff): the parsed rate-limit
+        wait when given, else the configured default."""
+        agent_route.cool(
+            self.cooldowns,
+            route_id,
+            now,
+            seconds if seconds is not None else self.cooldown_seconds,
+        )
+
+    def record_review_verdict(self, phase, verdict, family, model_id):
+        """Append one reviewer's verdict to the round and pop the phase it
+        consumed off the review queue."""
+        self.round_verdicts.append((phase, verdict, family, model_id))
+        if self.review_queue:
+            self.review_queue.pop(0)
+
+    def round_ready(self):
+        """True when the review queue has drained and a verdict was collected —
+        the round is complete and ready to merge/escalate."""
+        return (not self.review_queue) and bool(self.round_verdicts)
+
+    def complete_round(self, round_info):
+        """Record a finished round for the escalation policy and clear the
+        per-round verdicts. (main() keeps the append and clear at their original
+        distinct positions — see the Slice-C note — because the worker-rework
+        handler reads round_verdicts between escalation and the clear.)"""
+        self.rounds.append(round_info)
+        self.round_verdicts = []
+
+    def escalation(self):
+        """The S8 escalation decision dict for the rounds accumulated so far."""
+        return agent_route.escalate(
+            self.rounds,
+            self.route_constants,
+            self.swapped,
+            self.at_top_tier,
+            self.page_fails_since,
+        )
+
+    def apply_decision(self, action, merged):
+        """The STATE consequences of an escalation decision only — no I/O. The
+        caller keeps the prints / failure_action / banners / run-state writes."""
+        if action == "page-human":
+            # Re-arm the shared-failure tally so already-paged strong-tier fails
+            # can't re-page every subsequent round — only NEW fails accumulate.
+            self.page_fails_since = len(self.rounds)
+        elif action == "swap-implementer":
+            if self.last_impl_family:
+                self.impl_exclude = {self.last_impl_family}
+            self.swapped = True
+            self.critique_queue = []  # the artifact will change; re-critique later
+            self.next_phase = "BUILD"
+        elif action == "tier-up":
+            self.impl_tier_override = "strong"
+            self.at_top_tier = True
+            self.critique_queue = []
+            self.next_phase = "BUILD"
+        elif merged == "CHANGES-REQUESTED":
+            self.critique_queue = []
+            self.next_phase = "BUILD"
+
+    def set_design_check(self):
+        """Route the next non-review/non-critique session to DESIGN-CHECK (the
+        autonomous page path)."""
+        self.next_phase = "DESIGN-CHECK"
+
+    def after_design_check(self):
+        """The design-check ruling has run; resume building."""
+        self.next_phase = "BUILD"
+
+    def on_committed_build(self, family, wi, commits):
+        """Record a committing build: its family (the heterogeneity key), its WI
+        (the durable rework scope), and its commit range (the tripwire diff)."""
+        self.last_impl_family = family
+        self.last_impl_wi = wi
+        self.impl_range = commits
+
+    def set_train_range(self, rng):
+        """Override the impl range with a worker's whole-train diff (base..HEAD)
+        — one review scope covers the combined train, not a per-WI slice."""
+        self.impl_range = rng
+
+    def schedule_review_round(self):
+        """Queue a fresh review round (REVIEW-A, plus REVIEW-B at policy >= 2)
+        and return the queue list for the caller's dispatch log. Called only
+        when the caller's schedule_review condition holds, as today."""
+        self.round_verdicts = []
+        self.review_queue = ["REVIEW-A"] + (["REVIEW-B"] if self.rp_int >= 2 else [])
+        return list(self.review_queue)
+
+    def schedule_critique(self, in_scope, limit, exhaustion):
+        """Queue a critique round for one build scope. A NEW scope starts a fresh
+        budget; a rework of the SAME scope preserves the count so the budget
+        actually bounds the loop."""
+        if in_scope != self.critique_scope:
+            self.critique_rounds = 0
+        self.critique_limit = limit
+        self.critique_exhaustion = exhaustion
+        self.critique_scope = set(in_scope)
+        self.critique_queue = ["CRITIQUE"]
+
+    def record_critique_verdict(self, merged):
+        """Consume the critique round and return the disposition: "rework" (back
+        to BUILD), "page" (budget exhausted — the caller pages/design-checks), or
+        "approved" (the loop ends). Resets the scope on page/approve."""
+        self.critique_queue = []  # this round consumed
+        if merged == "CHANGES-REQUESTED":
+            self.critique_rounds += 1
+            if (
+                self.critique_limit is not None
+                and self.critique_rounds >= self.critique_limit
+            ):
+                self.critique_rounds = 0
+                self.critique_scope = set()
+                return "page"
+            self.next_phase = "BUILD"
+            return "rework"
+        self.critique_rounds = 0
+        self.critique_scope = set()
+        return "approved"
+
+    def note_session(self, committed, errored):
+        """Fold one session's outcome into the stall/error counters: a commit
+        resets the stall; an error before work increments the error run."""
+        self.stall = 0 if committed else self.stall + 1
+        self.errors = self.errors + 1 if errored else 0
+
+    def stall_verdict(self, limit):
+        """None (keep going), "agent-error" (the whole stall run errored before
+        working — an unavailable agent), or "stall" (a work stall)."""
+        if self.stall < limit:
+            return None
+        return "agent-error" if self.errors >= limit else "stall"
+
+
 def git(root, *args):
     """Run git in the repo; returns (returncode, stdout-stripped)."""
     proc = subprocess.run(
@@ -4277,16 +4510,17 @@ def main():
         or read_declared(docs / "live-status", "false").lower() == "true"
     )
     use_live = live_status_on and _stdout_is_tty() and _enable_windows_vt()
-    stall = 0
-    errors = 0  # consecutive ERROR sessions (agent unavailable, not a work stall)
     # A worker has no lane run-state (spec §10) — its state is always RUNNING
     # until its committed evidence says otherwise (worker_endstate below).
     state = (
         "RUNNING" if worker else read_declared(lane / "run-state", "RUNNING").upper()
     )
 
-    # --- managed-routing / reviewer-dispatch state (S8; all no-ops when the
-    # enable-list is absent, so the legacy path is byte-for-byte unchanged) ----
+    # --- managed-routing / critique / stall state (S8 + WI-068 + the stall
+    # guard) — one RoutingState now holds what were ~24 mutable locals here
+    # (WI-080 Slice C). All no-ops when the enable-list is absent, so the legacy
+    # path is byte-for-byte unchanged. The parse/env blocks that feed the
+    # constructor stay exactly as before. ----------------------------------------
     try:
         rp_int = int(review_policy)
     except ValueError:
@@ -4304,44 +4538,21 @@ def main():
     # integration, so each train gets its own reviews/<train>/ directory.
     reviews_dir = (docs / "reviews" / worker["train"]) if worker else (lane / "reviews")
     scoreboard = reviews_dir / "scoreboard.txt"
-    cooldowns = {}  # model id -> epoch it is available again (per-model backoff)
-    review_queue = []  # the pending review phases for the current round
-    # The build-vs-design-check phase for the next non-review/non-critique
-    # session, held in-process now that docs/run-phase is retired (WI-180): the
-    # escalation paths set it to DESIGN-CHECK, everything else routes BUILD.
-    next_phase = "BUILD"
-    round_verdicts = []  # (phase, Verdict, provider, model_id) collected this round
-    rounds = []  # accumulated round dicts the escalation policy reads
-    page_fails_since = 0  # WI-171: rounds index the shared-failure tally counts
-    # from — advanced to len(rounds) each time a page dispatches so an
-    # already-paged strong-tier fail can't re-page forever (only NEW fails do).
-    last_impl_family = None  # the FAMILY of the build under review (heterogeneity key)
-    last_impl_wi = ""  # durable rework scope if that build's review requests changes
-    last_impl_tier = "medium"  # the tier that build ran at
-    impl_range = None  # the build's commit range (for the tripwire diff)
-    swapped = False  # an implementer-family swap has been applied
-    at_top_tier = False  # the implementer tier has been raised to the top
-    impl_tier_override = None  # escalation raised the BUILD tier
-    impl_exclude = set()  # families to avoid for the next BUILD (after a swap)
-
-    # --- critique-loop state (WI-068; vacuous when no Critique SR exists) ------
     critique_srs = load_critique_srs(docs) if managed else set()
-    critique_queue = []  # ["CRITIQUE"] when a critique round is scheduled
-    critique_scope = set()  # the in-scope Critique SR ids for the current loop
-    critique_rounds = 0  # consecutive CHANGES-REQUESTED critique rounds this scope
-    critique_limit = None  # None means inf-until-APPROVE for the active scope
-    critique_exhaustion = "move-on"
     try:
         critique_max = int(os.environ.get("AGENT_CRITIQUE_MAX", "3"))
     except ValueError:
         critique_max = 3
     if critique_max < 1:  # a budget is >= 1; a bad value falls back (S8-knob idiom)
         critique_max = 3
-    if managed and critique_srs:
+    st = RoutingState(
+        rp_int, cooldown_seconds, critique_srs, critique_max, route_constants
+    )
+    if managed and st.critique_srs:
         print(
             "critique: {} Critique-verified SR(s) present -> a build touching one "
             "schedules a rubric-anchored CRITIQUE round (budget {} per scope)".format(
-                len(critique_srs), critique_max
+                len(st.critique_srs), st.critique_max
             )
         )
 
@@ -4369,7 +4580,7 @@ def main():
         remaining = [w for w in worker["assigned"] if w not in built]
         if remaining:
             return None
-        if review_queue or critique_queue or worker["rework"]:
+        if st.review_queue or st.critique_queue or worker["rework"]:
             return None  # built, but the train's review cycle is still open
         if working_tree_dirty(root):
             return None  # committed evidence only — a dirty tree is not done
@@ -4534,62 +4745,30 @@ def main():
         # CODEX_HOME), or an API key (GEMINI_API_KEY) is selected declaratively.
         session_env = None
         if managed:
-            if review_queue:
-                phase = review_queue[0]
-                is_review = True
-            elif critique_queue:
-                # Reviews (if any) drain first; then the perceptual critique runs
-                # before the next build (WI-068).
-                phase = "CRITIQUE"
-                is_critique = True
-            else:
-                phase = next_phase
-            tier = phase_tier(phase, tier_map)
-            exclude = set()
-            prefer_different = False
-            if is_review:
-                prefer_different = True
-                if last_impl_family:
-                    exclude.add(last_impl_family)
-                for _ph, _v, fam, _mid in round_verdicts:
-                    if fam:
-                        exclude.add(fam)  # REVIEW-B differs from REVIEW-A too
-            elif is_critique:
-                # A critic wears a different hat: prefer a different FAMILY from
-                # the implementer (fresh context is the invariant; degraded legal).
-                prefer_different = True
-                if last_impl_family:
-                    exclude.add(last_impl_family)
-            elif phase == "BUILD" or phase == "":
-                # A worker pins the BUILD tier from its reserved WI row's
-                # BuildTier (WI-181 — the per-WI pin that used to ride
-                # docs/next-wi); the phase default covers an empty cell, and an
-                # escalation override still wins (tier-up-never-down).
-                if worker and current_wi:
-                    row_tier = agent_route.normalize_tier(
-                        (worker["rows"].get(current_wi, {}).get("BuildTier") or "")
-                        .strip()
-                        .lower()
-                    )
-                    if row_tier in agent_route.TIER_ORDER:
-                        tier = row_tier
-                if impl_tier_override:
-                    tier = impl_tier_override
-                if impl_exclude:
-                    exclude = set(impl_exclude)
-                    prefer_different = True
-            elif phase == "DESIGN-CHECK":
-                # The autonomous page-the-human path: a fresh strong-tier session
-                # from a DIFFERENT family rules grind-through vs redesign.
-                prefer_different = True
-                if last_impl_family:
-                    exclude.add(last_impl_family)
+            phase, is_review, is_critique = st.pick_phase()
+            # A worker pins the BUILD tier from its reserved WI row's BuildTier
+            # (WI-181 — the per-WI pin that used to ride docs/next-wi); the phase
+            # default covers an empty cell, and an escalation override still wins
+            # (tier-up-never-down). Computed here (the caller owns the worker row
+            # read); route_intent folds it in against the phase default.
+            pinned_tier = None
+            if (phase == "BUILD" or phase == "") and worker and current_wi:
+                row_tier = agent_route.normalize_tier(
+                    (worker["rows"].get(current_wi, {}).get("BuildTier") or "")
+                    .strip()
+                    .lower()
+                )
+                if row_tier in agent_route.TIER_ORDER:
+                    pinned_tier = row_tier
+            tier, exclude, prefer_different = st.route_intent(
+                phase, is_review, is_critique, tier_map, pinned_tier
+            )
             route_id, reason = agent_route.select(
                 enabled,
                 registry,
                 tier,
                 now,
-                cooldowns,
+                st.cooldowns,
                 exclude,
                 prefer_different,
                 [prefer_map[phase]] if phase in prefer_map else (),
@@ -4616,7 +4795,7 @@ def main():
                     # provider's sign-in/install hint (e.g. `opencode auth
                     # login`), so the page says what to DO, not just that it
                     # paged (WI-109).
-                     + agent_route.pool_context(enabled, registry, cooldowns, now),
+                     + agent_route.pool_context(enabled, registry, st.cooldowns, now),
                 )
                 return EXIT_NEEDS_HUMAN
             m = registry[route_id]
@@ -4629,15 +4808,15 @@ def main():
                 # the inherited environment exactly (session_env stays None).
                 session_env = {**os.environ, **row_env}
             if not is_review and (phase == "BUILD" or phase == ""):
-                last_impl_tier = tier
+                st.note_build_tier(tier)
             # A worker's verdict filename names the exact reviewed code HEAD
             # (SR-060) — the review belongs to (train scope, reviewed commit),
             # never to a mutable branch tip.
             reviewed_sha = ""
             if worker:
                 reviewed_sha = (
-                    impl_range.split("..")[1]
-                    if impl_range and ".." in impl_range
+                    st.impl_range.split("..")[1]
+                    if st.impl_range and ".." in st.impl_range
                     else head_sha(root)
                 ) or ""
             if is_review:
@@ -4655,7 +4834,7 @@ def main():
                     else "{}-CRITIQUE.md".format(session)
                 )
                 verdict_path.parent.mkdir(parents=True, exist_ok=True)
-                brief = critique_brief(root, docs, critique_scope)
+                brief = critique_brief(root, docs, st.critique_scope)
                 body = critique_prompt(prompt_templates, verdict_path, brief)
             elif worker:
                 # Every non-review worker session builds from the assignment
@@ -4898,8 +5077,8 @@ def main():
             # Generalize the rate-limit backoff PER-MODEL: cool this model and
             # re-route to another available one next iteration. select() pages if
             # none is left rather than dropping to a weaker tier (no silent swap).
-            wait = seconds_until_reset(reset_hint) or cooldown_seconds
-            agent_route.cool(cooldowns, route_id, now, wait)
+            wait = seconds_until_reset(reset_hint) or st.cooldown_seconds
+            st.cool(route_id, now, wait)
             print(
                 "route: {} rate-limited; cooled ~{}s, re-routing".format(
                     route_id, int(wait)
@@ -4912,32 +5091,32 @@ def main():
                     Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
                     model=route_family,
                 )
-                round_verdicts.append((phase, v, route_family, route_id))
-                if review_queue:
-                    review_queue.pop(0)
+                st.record_review_verdict(phase, v, route_family, route_id)
             else:
                 # No verdict file (errored, stalled, or the session simply did not
                 # write one): cool the model and re-route the same review phase.
-                agent_route.cool(cooldowns, route_id, now, cooldown_seconds)
+                st.cool(route_id, now)
                 print(
                     "route: {} review [{}] wrote no verdict ({}); cooled, "
                     "re-routing".format(route_id, phase, outcome)
                 )
-            if not review_queue and round_verdicts:
-                verdicts = [v for (_ph, v, _p, _m) in round_verdicts]
+            if st.round_ready():
+                verdicts = [v for (_ph, v, _p, _m) in st.round_verdicts]
                 merged, contradiction = score_reviews.merge_verdict(verdicts)
                 # Substance/corroboration key on Family (who trained it), so a
                 # cross-family overlap outweighs a same-family one; the scoreboard
                 # tallies by that same Family key.
                 family_substance = {}
                 subs = []
-                for j, (_ph, rv, rfam, _mid) in enumerate(round_verdicts):
+                for j, (_ph, rv, rfam, _mid) in enumerate(st.round_verdicts):
                     peer = (
-                        round_verdicts[1 - j][1] if len(round_verdicts) == 2 else None
+                        st.round_verdicts[1 - j][1]
+                        if len(st.round_verdicts) == 2
+                        else None
                     )
                     fams = (
-                        (rfam, round_verdicts[1 - j][2])
-                        if len(round_verdicts) == 2
+                        (rfam, st.round_verdicts[1 - j][2])
+                        if len(st.round_verdicts) == 2
                         else None
                     )
                     s = score_reviews.substance(rv, root, other=peer, providers=fams)
@@ -4949,19 +5128,27 @@ def main():
                 if len(subs) == 2:
                     primary = subs[0][0] if subs[0][1] >= subs[1][1] else subs[1][0]
                 changed = []
-                if impl_range and ".." in impl_range:
-                    _rc, diff_out = git(root, "diff", "--name-only", impl_range)
+                if st.impl_range and ".." in st.impl_range:
+                    _rc, diff_out = git(root, "diff", "--name-only", st.impl_range)
                     changed = [ln for ln in diff_out.splitlines() if ln.strip()]
                 fired = score_reviews.fired_tripwires(verdicts, changed_paths=changed)
                 round_info = {
                     "verdict": merged or "",
-                    "tier": last_impl_tier,
+                    "tier": st.last_impl_tier,
                     "margin": margin,
                     "primary": primary,
                     "tripwire": bool(fired),
                     "contradiction": contradiction,
                 }
-                rounds.append(round_info)
+                # Record the round for the escalation policy. Slice-C note: the
+                # append and the round_verdicts clear (below) stay at their
+                # original distinct positions rather than folding into one
+                # st.complete_round() call — the worker-rework handler between
+                # escalation() and the clear still reads st.round_verdicts, so a
+                # single append+clear would either empty that read or hide the
+                # round from escalate(). Behavior (content + console order) is
+                # preserved exactly.
+                st.rounds.append(round_info)
                 try:
                     score_reviews.record_round(scoreboard, round_info, family_substance)
                 except OSError:
@@ -4976,9 +5163,7 @@ def main():
                         merged, margin, ",".join(fired) or "none", scoreboard
                     )
                 )
-                decision = agent_route.escalate(
-                    rounds, route_constants, swapped, at_top_tier, page_fails_since
-                )
+                decision = st.escalation()
                 print(
                     "escalate: {} — {}".format(decision["action"], decision["reason"])
                 )
@@ -4989,10 +5174,10 @@ def main():
                 if worker and merged == "CHANGES-REQUESTED":
                     worker["rework"] = "\n".join(
                         (rv.text or "").strip()
-                        for (_ph, rv, _f, _m) in round_verdicts
+                        for (_ph, rv, _f, _m) in st.round_verdicts
                         if (rv.text or "").strip()
                     )
-                    worker["rework_wi"] = last_impl_wi or ""
+                    worker["rework_wi"] = st.last_impl_wi or ""
                     print(
                         "dispatch: CHANGES-REQUESTED -> assignment-scoped "
                         "rework of {}".format(worker["rework_wi"] or "the train")
@@ -5000,25 +5185,25 @@ def main():
                 elif worker and merged == "APPROVE":
                     worker["rework"] = ""
                     worker["rework_wi"] = ""
-                round_verdicts = []
+                st.round_verdicts = []
                 if worker:
                     pass  # handled above — no lane rework-wi file in worker mode
-                elif merged == "CHANGES-REQUESTED" and last_impl_wi:
+                elif merged == "CHANGES-REQUESTED" and st.last_impl_wi:
                     rework_path = lane / "rework-wi"
-                    rework_path.write_text(last_impl_wi + "\n", encoding="utf-8")
+                    rework_path.write_text(st.last_impl_wi + "\n", encoding="utf-8")
                     commit_telemetry(
                         root, session, "review rework scope", [rework_path]
                     )
                     print(
                         "dispatch: CHANGES-REQUESTED -> rework override {} "
-                        "takes precedence".format(last_impl_wi)
+                        "takes precedence".format(st.last_impl_wi)
                     )
                 elif merged == "APPROVE":
                     rework_path = lane / "rework-wi"
                     if (
-                        last_impl_wi
+                        st.last_impl_wi
                         and rework_path.exists()
-                        and read_declared(rework_path, "") == last_impl_wi
+                        and read_declared(rework_path, "") == st.last_impl_wi
                     ):
                         rework_path.unlink()
                         commit_telemetry(
@@ -5026,16 +5211,16 @@ def main():
                         )
                         print(
                             "dispatch: APPROVE -> cleared rework override {}".format(
-                                last_impl_wi
+                                st.last_impl_wi
                             )
                         )
+                # State consequences of the escalation happen ONCE, here (WI-171
+                # page re-arm, swap/tier-up/changes-requested); the branch below
+                # keeps only the page path's I/O (failure_action / banner /
+                # run-state). apply_decision first is safe — failure_action does
+                # not read page_fails_since.
+                st.apply_decision(decision["action"], merged)
                 if decision["action"] == "page-human":
-                    # WI-171: this page has now surfaced the current round history
-                    # to a human (attended) or a design-check (autonomous). Re-arm
-                    # the shared-failure tally so the same already-paged strong-tier
-                    # fails can't re-page every subsequent round — only NEW fails
-                    # recorded after this dispatch accumulate toward the next page.
-                    page_fails_since = len(rounds)
                     fa = agent_route.failure_action(gate_policy)
                     print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
                     if fa["mode"] == "attended":
@@ -5053,21 +5238,7 @@ def main():
                         )
                         return EXIT_NEEDS_HUMAN
                     if fa.get("design_check"):
-                        next_phase = "DESIGN-CHECK"
-                elif decision["action"] == "swap-implementer":
-                    if last_impl_family:
-                        impl_exclude = {last_impl_family}
-                    swapped = True
-                    critique_queue = []  # the artifact will change; re-critique later
-                    next_phase = "BUILD"
-                elif decision["action"] == "tier-up":
-                    impl_tier_override = "strong"
-                    at_top_tier = True
-                    critique_queue = []
-                    next_phase = "BUILD"
-                elif merged == "CHANGES-REQUESTED":
-                    critique_queue = []
-                    next_phase = "BUILD"
+                        st.set_design_check()
         elif managed and is_critique:
             # The perceptual arbiter (WI-068): read the critic's verdict, iterate
             # BUILD<->CRITIQUE until APPROVE or the budget trips S8 escalation.
@@ -5076,63 +5247,59 @@ def main():
                     Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
                     model=route_family,
                 )
-                critique_queue = []  # this round consumed
                 merged = (v.verdict or "").upper()
                 print(
                     "critique [{}]: verdict={} findings={} scope={} ({})".format(
                         route_id,
                         merged or "?",
                         len(v.findings),
-                        ",".join(sorted(critique_scope)) or "—",
+                        ",".join(sorted(st.critique_scope)) or "—",
                         verdict_path,
                     )
                 )
-                if merged == "CHANGES-REQUESTED":
-                    critique_rounds += 1
-                    if critique_limit is not None and critique_rounds >= critique_limit:
-                        # Budget exhausted -> the S8 page-the-human semantics, keyed
-                        # to docs/gate-policy (same failure_action the review round
-                        # uses). The critic gates iteration; the human owns final
-                        # acceptance via Attest at gate closure.
-                        fa = agent_route.failure_action(gate_policy)
-                        print(
-                            "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
-                            "{} -> page-human: {}".format(
-                                fa["mode"], critique_rounds, critique_limit, fa["note"]
-                            )
+                # record_critique_verdict resets critique_rounds on the page path,
+                # so capture the exhausted count for the (byte-identical) budget
+                # print BEFORE the call — the printed value is the post-increment
+                # round count, i.e. pre-call rounds + 1.
+                pre_rounds = st.critique_rounds
+                action = st.record_critique_verdict(merged)
+                if action == "page":
+                    # Budget exhausted -> the S8 page-the-human semantics, keyed
+                    # to docs/gate-policy (same failure_action the review round
+                    # uses). The critic gates iteration; the human owns final
+                    # acceptance via Attest at gate closure.
+                    fa = agent_route.failure_action(gate_policy)
+                    print(
+                        "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
+                        "{} -> page-human: {}".format(
+                            fa["mode"], pre_rounds + 1, st.critique_limit, fa["note"]
                         )
-                        critique_rounds = 0
-                        critique_scope = set()
-                        if fa["mode"] == "attended" or critique_exhaustion == "block":
-                            if not worker:
-                                (lane / "run-state").write_text(
-                                    "NEEDS-HUMAN\nask: critique budget exhausted "
-                                    "still CHANGES-REQUESTED — review the findings "
-                                    "and rule\n",
-                                    encoding="utf-8",
-                                )
-                            stop_banner(
-                                status_path,
-                                "PAGE-HUMAN — critique budget exhausted",
-                                "the critique loop hit its {}-round budget still "
-                                "CHANGES-REQUESTED | {}".format(
-                                    critique_limit, fa["note"]
-                                ),
+                    )
+                    if fa["mode"] == "attended" or st.critique_exhaustion == "block":
+                        if not worker:
+                            (lane / "run-state").write_text(
+                                "NEEDS-HUMAN\nask: critique budget exhausted "
+                                "still CHANGES-REQUESTED — review the findings "
+                                "and rule\n",
+                                encoding="utf-8",
                             )
-                            return EXIT_NEEDS_HUMAN
-                        if fa.get("design_check"):
-                            next_phase = "DESIGN-CHECK"
-                    else:
-                        # Rework: back to BUILD; a re-critique schedules after the
-                        # reworked build commits.
-                        next_phase = "BUILD"
-                else:  # APPROVE (or no parseable request) -> the critique loop ends
-                    critique_rounds = 0
-                    critique_scope = set()
+                        stop_banner(
+                            status_path,
+                            "PAGE-HUMAN — critique budget exhausted",
+                            "the critique loop hit its {}-round budget still "
+                            "CHANGES-REQUESTED | {}".format(
+                                st.critique_limit, fa["note"]
+                            ),
+                        )
+                        return EXIT_NEEDS_HUMAN
+                    if fa.get("design_check"):
+                        st.set_design_check()
+                # action == "rework" (next_phase set to BUILD) / "approved" (the
+                # loop ended) need nothing more from the caller.
             else:
                 # No verdict written (errored/stalled): cool + re-critique next pass
                 # (the stall guard backstops a critic that never writes one).
-                agent_route.cool(cooldowns, route_id, now, cooldown_seconds)
+                st.cool(route_id, now)
                 print(
                     "critique: {} wrote no verdict ({}); cooled, re-critiquing".format(
                         route_id, outcome
@@ -5140,7 +5307,7 @@ def main():
                 )
         elif managed and not is_review:
             if outcome in ("ERROR", "TIMEOUT"):
-                agent_route.cool(cooldowns, route_id, now, cooldown_seconds)
+                st.cool(route_id, now)
                 # Say WHY the pool is shrinking, at the moment it shrinks — the
                 # WAITING/no-verdict siblings already do; this path was silent.
                 # The row's Notes carries the actionable hint (auth/install),
@@ -5152,14 +5319,12 @@ def main():
                         route_id,
                         outcome,
                         code,
-                        int(cooldown_seconds),
+                        int(st.cooldown_seconds),
                         " — " + note if note else "",
                     )
                 )
             elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
-                last_impl_family = route_family
-                last_impl_wi = wi_label
-                impl_range = commits
+                st.on_committed_build(route_family, wi_label, commits)
                 # The review round follows the reviewer dial (S8). A traincar
                 # is ONE review scope (WI-183, SR-062): a worker schedules the
                 # round only once EVERY assigned WI is built, and the round
@@ -5172,48 +5337,46 @@ def main():
                     built_now, _blk = train_evidence(root, worker["base"])
                     schedule_review = all(w in built_now for w in worker["assigned"])
                     if schedule_review:
-                        impl_range = "{}..{}".format(worker["base"], after)
+                        st.set_train_range("{}..{}".format(worker["base"], after))
                 if schedule_review:
-                    round_verdicts = []
-                    review_queue = ["REVIEW-A"] + (["REVIEW-B"] if rp_int >= 2 else [])
+                    queued = st.schedule_review_round()
                     print(
                         "dispatch: review-policy {} -> scheduling review round "
                         "{}{}".format(
                             rp_int,
-                            review_queue,
+                            queued,
                             " over the whole train diff" if worker else "",
                         )
                     )
                 # The critique round is INDEPENDENT of the review dial (WI-068): it
                 # fires only when this build's WI touches a Critique-verified SR.
                 # Vacuous when no Critique SR exists, so a non-adopter pays nothing.
-                if critique_srs:
+                if st.critique_srs:
                     scope_wis = build_scope_wis(root, docs, commits)
-                    in_scope = build_scope_srs(root, docs, commits) & critique_srs
+                    in_scope = build_scope_srs(root, docs, commits) & st.critique_srs
                     if in_scope:
                         # A NEW scope starts a fresh budget; a rework of the SAME
                         # scope (a CHANGES-REQUESTED loop) preserves the count, so
-                        # the budget actually bounds the loop.
-                        if in_scope != critique_scope:
-                            critique_rounds = 0
-                        critique_limit, critique_exhaustion = critique_control(
-                            docs, scope_wis, critique_max
+                        # the budget actually bounds the loop (schedule_critique
+                        # folds that reset in; critique_control does not read the
+                        # round count, so the order is identical to before).
+                        limit, exhaustion = critique_control(
+                            docs, scope_wis, st.critique_max
                         )
-                        critique_scope = in_scope
-                        critique_queue = ["CRITIQUE"]
+                        st.schedule_critique(in_scope, limit, exhaustion)
                         print(
                             "dispatch: build touches Critique SR(s) {} -> scheduling "
                             "CRITIQUE round (budget {}, exhaustion {})".format(
                                 ",".join(sorted(in_scope)),
-                                "inf" if critique_limit is None else critique_limit,
-                                critique_exhaustion,
+                                "inf" if limit is None else limit,
+                                exhaustion,
                             )
                         )
             elif phase == "DESIGN-CHECK":
                 # The design-check ruling has run (its verdict is in the commit /
                 # log); resume building. Without a tracked run-phase this reset is
                 # in-process (WI-180) — the agent no longer advances a phase file.
-                next_phase = "BUILD"
+                st.after_design_check()
 
         if outcome == "WAITING":
             # A throttled session is not progress *or* a stall — never count
@@ -5279,33 +5442,30 @@ def main():
             if end:
                 return worker_exit(end)
 
-        if before == after:
-            stall += 1
-        else:
-            stall = 0
-        errors = errors + 1 if outcome == "ERROR" else 0
-        if stall >= args.stall_limit:
-            if errors >= args.stall_limit:
-                # Every session that tripped the guard errored before working —
-                # an unavailable agent, not a stuck task. Name it so, and point
-                # at the fix (an unsupported model is repointed by hand).
-                stop_banner(
-                    status_path,
-                    "STALL — agent error",
-                    "{} consecutive session(s) errored before doing work "
-                    "(agent unavailable / CLI or model error) — aborting. Check "
-                    "the AGENT_CMD model + auth and the latest {} "
-                    "log (outcome=ERROR, its exit-code); an unsupported model is "
-                    "fixed by pointing --model / the model map at a live "
-                    "tier.".format(errors, iter_dir),
-                )
-                return EXIT_STALL
+        st.note_session(before != after, outcome == "ERROR")
+        verdict = st.stall_verdict(args.stall_limit)
+        if verdict == "agent-error":
+            # Every session that tripped the guard errored before working —
+            # an unavailable agent, not a stuck task. Name it so, and point
+            # at the fix (an unsupported model is repointed by hand).
+            stop_banner(
+                status_path,
+                "STALL — agent error",
+                "{} consecutive session(s) errored before doing work "
+                "(agent unavailable / CLI or model error) — aborting. Check "
+                "the AGENT_CMD model + auth and the latest {} "
+                "log (outcome=ERROR, its exit-code); an unsupported model is "
+                "fixed by pointing --model / the model map at a live "
+                "tier.".format(st.errors, iter_dir),
+            )
+            return EXIT_STALL
+        if verdict == "stall":
             stop_banner(
                 status_path,
                 "STALL",
                 "{} consecutive session(s) without a commit — aborting to "
                 "protect the budget. See the latest {} "
-                "log.".format(stall, iter_dir),
+                "log.".format(st.stall, iter_dir),
             )
             return EXIT_STALL
 

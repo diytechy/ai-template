@@ -1263,3 +1263,228 @@ def test_model_placeholder_without_model_fails_preflight(loop_repo):
     assert proc.returncode == 2, proc.stdout + proc.stderr
     assert "no model is configured for this phase" in proc.stderr
     assert _invocations(ctl) == 0, "the guard fires before any session launches"
+
+
+# =============================================================================
+# WI-080 Slice C — RoutingState transitions
+# =============================================================================
+# The serial loop's ~24 routing/escalation/critique/stall locals now live on one
+# RoutingState whose methods are PURE transitions (mutate the object, return a
+# decision — no I/O). These pin single transitions directly; the end-to-end
+# routing/critique/stall behavior is still pinned by the golden-net suites above.
+
+
+def _rs(rp_int=1, cooldown_seconds=900, critique_srs=None, critique_max=3):
+    """A RoutingState with defaults for a single-transition test."""
+    al = load_script("agent_loop")
+    return al.RoutingState(
+        rp_int, cooldown_seconds, critique_srs or set(), critique_max, {}
+    )
+
+
+def test_routingstate_pick_phase_precedence():
+    st = _rs()
+    # Default: the held next_phase (BUILD), no review/critique.
+    assert st.pick_phase() == ("BUILD", False, False)
+    # A queued critique wins over the default.
+    st.critique_queue = ["CRITIQUE"]
+    assert st.pick_phase() == ("CRITIQUE", False, True)
+    # A queued review phase wins over a queued critique (reviews drain first).
+    st.review_queue = ["REVIEW-A", "REVIEW-B"]
+    assert st.pick_phase() == ("REVIEW-A", True, False)
+
+
+def test_routingstate_route_intent_review_excludes_impl_and_verdict_families():
+    st = _rs()
+    st.last_impl_family = "anthropic"
+    st.round_verdicts = [("REVIEW-A", object(), "openai", "id-a")]
+    tier, exclude, prefer = st.route_intent("REVIEW-A", True, False, {})
+    assert prefer is True
+    assert exclude == {"anthropic", "openai"}
+    # A fresh set each call — mutating the returned set never bleeds into state.
+    exclude.add("google")
+    _t2, exclude2, _p2 = st.route_intent("REVIEW-A", True, False, {})
+    assert exclude2 == {"anthropic", "openai"}
+
+
+def test_routingstate_route_intent_critique_prefers_different_family():
+    st = _rs()
+    st.last_impl_family = "anthropic"
+    tier, exclude, prefer = st.route_intent("CRITIQUE", False, True, {})
+    assert prefer is True
+    assert exclude == {"anthropic"}
+
+
+def test_routingstate_route_intent_build_pins_tier():
+    st = _rs()
+    # phase_tier(BUILD) defaults to medium; the worker pin replaces it.
+    tier, exclude, prefer = st.route_intent(
+        "BUILD", False, False, {}, pinned_tier="strong"
+    )
+    assert tier == "strong"
+    assert exclude == set()
+    assert prefer is False
+
+
+def test_routingstate_route_intent_build_override_beats_pin():
+    st = _rs()
+    st.impl_tier_override = "strong"
+    tier, _exclude, _prefer = st.route_intent(
+        "BUILD", False, False, {}, pinned_tier="quick"
+    )
+    assert tier == "strong"  # escalation override wins over the per-WI pin
+
+
+def test_routingstate_route_intent_build_impl_exclude():
+    st = _rs()
+    st.impl_exclude = {"anthropic"}
+    tier, exclude, prefer = st.route_intent("", False, False, {})
+    assert exclude == {"anthropic"}
+    assert prefer is True
+
+
+def test_routingstate_route_intent_design_check():
+    st = _rs()
+    st.last_impl_family = "anthropic"
+    tier, exclude, prefer = st.route_intent("DESIGN-CHECK", False, False, {})
+    assert tier == "strong"  # DEFAULT_PHASE_TIER routes design-check strong
+    assert exclude == {"anthropic"}
+    assert prefer is True
+
+
+def test_routingstate_apply_decision_swap():
+    st = _rs()
+    st.last_impl_family = "anthropic"
+    st.critique_queue = ["CRITIQUE"]
+    st.next_phase = "DESIGN-CHECK"
+    st.apply_decision("swap-implementer", "CHANGES-REQUESTED")
+    assert st.impl_exclude == {"anthropic"}
+    assert st.swapped is True
+    assert st.critique_queue == []  # the artifact will change; re-critique later
+    assert st.next_phase == "BUILD"
+
+
+def test_routingstate_apply_decision_tier_up():
+    st = _rs()
+    st.critique_queue = ["CRITIQUE"]
+    st.apply_decision("tier-up", "CHANGES-REQUESTED")
+    assert st.impl_tier_override == "strong"
+    assert st.at_top_tier is True
+    assert st.critique_queue == []
+    assert st.next_phase == "BUILD"
+
+
+def test_routingstate_apply_decision_page_rearms_fail_tally():
+    st = _rs()
+    st.rounds = [{}, {}, {}]
+    st.next_phase = "BUILD"
+    st.critique_queue = ["CRITIQUE"]
+    st.apply_decision("page-human", "CHANGES-REQUESTED")
+    # Re-armed to the current round count; nothing else touched (the page path's
+    # I/O — failure_action / banner / run-state — stays with the caller).
+    assert st.page_fails_since == 3
+    assert st.next_phase == "BUILD"
+    assert st.critique_queue == ["CRITIQUE"]
+
+
+def test_routingstate_record_critique_verdict_rework():
+    st = _rs()
+    st.critique_limit = 3
+    st.critique_queue = ["CRITIQUE"]
+    assert st.record_critique_verdict("CHANGES-REQUESTED") == "rework"
+    assert st.critique_rounds == 1
+    assert st.next_phase == "BUILD"
+    assert st.critique_queue == []  # the round is consumed
+
+
+def test_routingstate_record_critique_verdict_pages_at_budget():
+    st = _rs()
+    st.critique_limit = 2
+    st.critique_rounds = 1  # one prior CHANGES-REQUESTED round
+    st.critique_scope = {"SR-1"}
+    assert st.record_critique_verdict("CHANGES-REQUESTED") == "page"
+    # Reset on page so the next scope starts fresh.
+    assert st.critique_rounds == 0
+    assert st.critique_scope == set()
+
+
+def test_routingstate_record_critique_verdict_infinite_budget_never_pages():
+    st = _rs()
+    st.critique_limit = None  # inf-until-APPROVE
+    st.critique_rounds = 99
+    assert st.record_critique_verdict("CHANGES-REQUESTED") == "rework"
+    assert st.critique_rounds == 100
+
+
+def test_routingstate_record_critique_verdict_approved_resets_scope():
+    st = _rs()
+    st.critique_scope = {"SR-1"}
+    st.critique_rounds = 2
+    assert st.record_critique_verdict("APPROVE") == "approved"
+    assert st.critique_rounds == 0
+    assert st.critique_scope == set()
+
+
+def test_routingstate_schedule_critique_new_scope_resets_same_scope_preserves():
+    st = _rs()
+    st.critique_scope = {"SR-1"}
+    st.critique_rounds = 2
+    # A NEW scope starts a fresh budget.
+    st.schedule_critique({"SR-2"}, 3, "move-on")
+    assert st.critique_rounds == 0
+    assert st.critique_scope == {"SR-2"}
+    assert st.critique_queue == ["CRITIQUE"]
+    assert st.critique_limit == 3
+    assert st.critique_exhaustion == "move-on"
+    # The SAME scope (a rework loop) preserves the count so the budget bounds it.
+    st.critique_rounds = 2
+    st.schedule_critique({"SR-2"}, 5, "block")
+    assert st.critique_rounds == 2
+    assert st.critique_exhaustion == "block"
+
+
+def test_routingstate_schedule_review_round_by_policy():
+    # rp 1 queues REVIEW-A only; rp 2 adds REVIEW-B; both clear round_verdicts.
+    st1 = _rs(rp_int=1)
+    st1.round_verdicts = [("x", object(), "f", "id")]
+    assert st1.schedule_review_round() == ["REVIEW-A"]
+    assert st1.review_queue == ["REVIEW-A"]
+    assert st1.round_verdicts == []
+    st2 = _rs(rp_int=2)
+    assert st2.schedule_review_round() == ["REVIEW-A", "REVIEW-B"]
+    # rp 0: the CALLER's schedule_review (rp_int >= 1) gate means the method is
+    # never invoked, so review-policy 0 schedules no round.
+
+
+def test_routingstate_record_review_verdict_pops_and_round_ready():
+    st = _rs()
+    st.review_queue = ["REVIEW-A", "REVIEW-B"]
+    assert st.round_ready() is False  # no verdicts collected yet
+    st.record_review_verdict("REVIEW-A", object(), "anthropic", "id-a")
+    assert st.review_queue == ["REVIEW-B"]
+    assert st.round_ready() is False  # queue not yet drained
+    st.record_review_verdict("REVIEW-B", object(), "openai", "id-b")
+    assert st.review_queue == []
+    assert len(st.round_verdicts) == 2
+    assert st.round_ready() is True
+
+
+def test_routingstate_note_session_and_stall_verdict():
+    st = _rs()
+    # A no-commit session increments the stall; an ERROR qualifies the run.
+    st.note_session(committed=False, errored=True)
+    st.note_session(committed=False, errored=True)
+    st.note_session(committed=False, errored=True)
+    assert st.stall == 3
+    assert st.errors == 3
+    assert st.stall_verdict(3) == "agent-error"  # every stalled session errored
+    # A NO-COMMIT (non-error) run at the limit is a plain work stall.
+    st.errors = 1
+    assert st.stall_verdict(3) == "stall"
+    # Below the limit: keep going.
+    assert st.stall_verdict(4) is None
+    # A commit resets both counters.
+    st.note_session(committed=True, errored=False)
+    assert st.stall == 0
+    assert st.errors == 0
+    assert st.stall_verdict(1) is None
