@@ -155,10 +155,11 @@ The Windows/POSIX launchers expose the same value through `AGENT_JOBS`. CPU
 count does not set it: model quotas, cost, agent availability, and integration
 throughput are the real constraints. A new scaffold defaults to two workers.
 During downstream migration a repo **flips to the two-worker default only after
-its soft-edge audit passes** (§14) — the audit is what makes optimistic
-parallelism safe, so until it passes the repo runs `--jobs 1`, and the promotion
-to two workers is a recorded, deliberate step. Running `agent-resume` remains the
-permission-bypass consent act; a second parallel-consent file is unnecessary.
+its soft-edge and SafetyClass audits pass** (§14) — those audits are what make
+optimistic parallelism safe, so until both pass the repo runs `--jobs 1`, and the
+promotion to two workers is a recorded, deliberate step. Running `agent-resume`
+remains the permission-bypass consent act; a second parallel-consent file is
+unnecessary.
 
 ### The launch sequence — reconcile, gate, then build-out
 
@@ -188,8 +189,8 @@ baseline and clears the gated spine first, in three stages:
    the steady-state loop below — dispatching any traincar whose dependencies are
    integrated to a free worker as one opens up. The traincar DAG records grouping
    and dependencies, not a static execution sequence: among dependency-clear
-   traincars, the dispatcher takes the one with the most downstream dependents
-   first, with the deterministic WI ordering below as its tie-breaker.
+   traincars, the dispatcher honors explicit human Priority first, then takes the
+   one with the most downstream dependents.
 
 For each scheduling event the dispatcher:
 
@@ -200,8 +201,9 @@ For each scheduling event the dispatcher:
 5. excludes blocked, deferred, reserved, protected-conflicting, and explicitly
    exclusive-conflicting WIs;
 6. packs survivors into the current traincar DAG (§7), then orders eligible
-   traincars by `(gate class, transitive downstream-dependent count descending,
-   Priority descending, remaining hard-path length descending, first WI id)`;
+   traincars by `(gate class, Priority descending, transitive
+   downstream-dependent count descending, remaining hard-path length descending,
+   first WI id)`;
    and
 7. reserves candidates until the worker ceiling or eligible frontier is
    exhausted.
@@ -243,6 +245,17 @@ its output is a scheduling class plus reason codes. The ordered rules are:
 The dispatcher does not infer or rewrite `SafetyClass`, review boundaries,
 hard edges, or keys. `ready --explain` exposes the classifier's reason codes so
 the same decision is inspectable everywhere it is enforced.
+
+Declaration is not accepted blindly. The validator conservatively cross-checks
+`SafetyClass` against structural evidence available before dispatch: a `SpecRef`
+or declared deliverable surface resolving into SN/SR/LLR/TC registries or their
+tracked documents requires `spine`; gate derivation, `docs/gate`, or ratification
+scope requires `gate`; attestation scope requires `attestation`; and applicable
+critique/review policy must agree with any claimed `ordinary` class. A mismatch
+is a hard validation finding and classifies that WI as `unclassified`; the
+validator never silently upgrades or edits the declaration. Because structural
+checks cannot detect omitted scope, first parallel enable also requires the
+planning audit in §14.
 
 ## 5. Concurrency safety: optimistic ordinary work, explicit hard boundaries
 
@@ -358,14 +371,13 @@ Within an assigned traincar, after a WI reaches its local commit boundary
 (locally green and committed, not yet reviewed), the same lane may continue to
 the traincar's next successor. Continuation requires all of the following:
 
-1. the current WI has exactly one hard successor assigned to this traincar;
-2. that successor is queued and reserved by this traincar, with no other owner;
-3. every other hard predecessor of the successor is already integrated or is an
+1. the reserved traincar names that successor as the next WI after the current
+   WI's single hard-successor edge;
+2. every other hard predecessor of the successor is already integrated or is an
    accepted-on-train ancestor on this train;
-4. the successor has no explicit exclusive conflict with another active train;
-5. continuation does not cross a spine/gate/attestation boundary;
-6. its critique/review policy does not require an integration checkpoint; and
-7. the train has not reached the configurable safety cap (default four WIs).
+3. the safety classifier still permits the grouping — no newly visible
+   exclusivity, boundary, or review-policy conflict has appeared; and
+4. the train has not reached the configurable safety cap (default four WIs).
 
 The sequence ends when the current WI has zero or multiple hard successors, the
 only successor joins another unintegrated branch, a blocker appears, a boundary
@@ -402,13 +414,14 @@ or high-risk WI runs as its **own single-WI traincar** with its own review. Ever
 WI stays a distinct commit/evidence unit, and any integration conflict resolution
 (§5.2) triggers a focused re-review regardless.
 
-For a multi-WI traincar, policy aggregation is deterministic: its BuildTier is
-the strongest constituent tier; its reviewer count is the maximum required by
-any constituent or by the traincar's computed complexity; and its required
-reviewer families are the union of constituent requirements. A constituent
-whose policy requires individual critique, spine review, or an integration
-checkpoint is not aggregated — the safety classifier places it in a single-WI
-traincar.
+For a multi-WI traincar, policy aggregation is deterministic: its scheduling
+Priority is the highest constituent Priority (preserving the human override);
+its BuildTier is the strongest constituent tier; its reviewer count is the
+maximum required by any constituent or by the traincar's computed complexity;
+and its required reviewer families are the union of constituent requirements. A
+constituent whose policy requires individual critique, spine review, or an
+integration checkpoint is not aggregated — the safety classifier places it in
+a single-WI traincar.
 
 ### Traincar clustering — the work-advisor (research-informed)
 
@@ -420,8 +433,9 @@ this setting — is the `parallel-scheduling` knowledge pack
 **no approximation bound is claimed for this system**. The normative rule it
 distils:
 
-- **Priority** — greedy list scheduling by critical-path length (§4's `remaining
-  hard-path length`); a cost-weighted, HEFT-style rank is a later upgrade.
+- **Structural rank** — after the registry's human `Priority`, greedy list
+  scheduling uses transitive downstream-dependent count and then critical-path
+  length (§4); a cost-weighted, HEFT-style rank is a later upgrade.
 - **Batching** — group WIs into one traincar only when the per-traincar
   **integration + review overhead** saved exceeds the parallelism and
   failure-isolation given up — small mechanical off-spine WIs batch, substantial
@@ -706,8 +720,9 @@ The implementation must remain stdlib-only, Python 3.8+, Windows/POSIX.
 Migration is explicit because this changes default execution:
 
 1. `downstream-resync` documents that an upgraded repo runs `--jobs 1` until its
-   soft-edge audit (item 9) passes, then **flips to the two-worker default** as a
-   recorded, deliberate promotion; `--jobs 1` remains the per-run escape.
+   soft-edge and SafetyClass audits (items 9–10) pass, then **flips to the
+   two-worker default** as a recorded, deliberate promotion; `--jobs 1` remains
+   the per-run escape.
 2. Existing `docs/next-wi` is logged once for migration audit and then removed;
    its content is not translated into `Priority`, dependencies, or a traincar.
 3. Legacy `active` WI rows are reconciled to queued + recovered reservation or
@@ -728,6 +743,11 @@ Migration is explicit because this changes default execution:
    safe-to-run-concurrently, so a missed hard edge is the main silent-conflict
    risk. The registry validator confirms declared edges are well-formed but
    cannot detect a *forgotten* edge, so this audit is the confidence step.
+10. Before first parallel enable, every open WI receives a reviewed `SafetyClass`.
+    The validator cross-checks structurally visible spine/gate/attestation and
+    review-policy evidence (§4), while the audit catches omitted or indirect
+    scope the repository graph cannot prove. Any mismatch or unaudited row keeps
+    that WI `unclassified`; the migration cannot promote the repo to `--jobs 2`.
 
 ## 15. Implementation slices and dependency plan
 
@@ -756,13 +776,17 @@ their touched surfaces are split during planning; H is the explicit join.
 - independent roots fill all available workers;
 - direct and transitive hard dependencies never co-schedule;
 - soft edges do not block;
-- lowest-gate and Priority ordering are deterministic;
+- lowest-gate and human Priority ordering are deterministic, and Priority wins
+  over downstream-dependent count within one gate class;
 - blocked/deferred/reserved items are excluded with reason codes;
 - shared Workstream/Campaign/SpecRef does not serialize;
 - shared `Exclusive` keys do serialize;
 - every `SafetyClass` and review-policy input produces the same scheduling class
   and reason codes across CLI, validator, dashboard, and dispatcher;
 - missing/contradictory safety input fails closed only for the affected WI;
+- an `ordinary` declaration with structurally visible spine, gate, attestation,
+  critique, or review-boundary evidence fails validation rather than upgrading
+  silently;
 - unary sequences continue; forks and joins stop/launch at the right points.
 
 ### Process/worktree integration fixtures
