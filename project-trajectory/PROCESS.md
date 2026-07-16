@@ -382,10 +382,15 @@ replaces it. Same stance as `ruff`/`pytest`: name the criterion; the project wir
 the tool.
 
 **Phased delivery (version subsets) — opt-in.** *Applies when* a roadmap ships
-v1 before v2/v3. SRs carry an optional **`Phase`** tag; traceability stays
-phase-blind while the G3 Verified criterion and G-Release scope by phase
-(`check.py --gate G3 --phase v1`), reporting out-of-phase SRs as explicitly
-**phase-deferred**. Full semantics in
+phase 1 before 2/3. Every ratified SR/LLR/TC carries the **`Phase`** it was
+ratified in — a bare integer (a downstream `v2` still parses); an SN's phase is
+derived from its SRs. The project's **current phase is derived** = the highest
+ratified phase, mirroring the derived gate, so a scope change surfaces as a phase
+bump. Traceability stays phase-blind while the G3 Verified criterion and G-Release
+scope by phase (`check.py --gate G3 --phase 1`; the foundation phase is always in
+scope), reporting out-of-phase SRs as **phase-deferred**; a ratified row whose
+Phase is blank or unparseable is a schema finding (armed once any row is phased).
+Full semantics in
 [`process-options.md`](process-options.md#phased-delivery); standalone single-shot
 deliverables skip it.
 

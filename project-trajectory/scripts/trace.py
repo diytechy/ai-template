@@ -144,6 +144,16 @@ def llr_exempt(row):
     return (row.get("Verification") or "").strip() in LLR_EXEMPT
 
 
+def phase_num(row):
+    """The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2);
+    None when blank/unparseable. The one phase-parse the kit uses — the ratified-phase
+    schema rule and the `--phase` foundation filter share it, so a downstream repo that
+    kept `vN` labels parses identically (the phase doctrine, process.md §4).
+    Duplicated in derive_gate.py per the F5 rule."""
+    m = re.search(r"\d+", (row.get("Phase") or ""))
+    return int(m.group()) if m else None
+
+
 def structure_findings(path, display=None):
     """Column-count structural check over one registry CSV: every data row must
     parse (RFC-4180 quoting) to exactly the header's column count. This is the
@@ -1287,11 +1297,24 @@ def analyze(reg, args):
     )
 
     phases = set(refs(args.phase)) if args.phase else None
+    # The foundation (minimum) phase is never phase-deferred — it is in scope for
+    # every delivery filter, which is exactly what a blank Phase bought before the
+    # phase back-fill (the phase doctrine, process.md §4). Digit-parse (`v2`/`2` ->
+    # 2 — the same parse derive_gate uses) so the minimum compares numerically; an
+    # all-blank downstream registry has no parseable phase, so the blank rule below
+    # still carries it. The `tag in phases` match stays literal (CLI label-agnostic).
+    foundation_phase = min(
+        (n for n in (phase_num(s) for s in srs) if n is not None), default=None
+    )
 
     def in_phase(r):
-        """Blank Phase = every phase; otherwise the SR's phase must be listed."""
+        """In scope when there is no filter, the SR's Phase is blank (downstream
+        compat), its phase is listed, or it is the foundation (minimum) phase."""
         tag = (r.get("Phase") or "").strip()
-        return phases is None or not tag or tag in phases
+        if phases is None or not tag or tag in phases:
+            return True
+        n = phase_num(r)
+        return n is not None and n == foundation_phase
 
     status_findings = []
     phase_deferred = []

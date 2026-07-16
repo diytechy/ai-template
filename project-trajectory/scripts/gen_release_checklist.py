@@ -140,9 +140,30 @@ def main():
         else None
     )
 
+    def _phase_num(tag):
+        m = re.search(r"\d+", tag or "")
+        return int(m.group()) if m else None
+
+    # The foundation (minimum) phase is never phase-deferred (the phase doctrine,
+    # process.md §4) — the same rule trace.py's --phase filter applies, so a foundation
+    # SR stays on the release checklist under any --phase. Digit-parse (`v2`/`2` -> 2)
+    # so the minimum compares numerically; an all-blank registry has no parseable phase
+    # and the blank rule carries it unchanged.
+    foundation_phase = min(
+        (
+            n
+            for n in (_phase_num((r.get("Phase") or "").strip()) for r in srs)
+            if n is not None
+        ),
+        default=None,
+    )
+
     def in_phase(sr_row):
         tag = (sr_row.get("Phase") or "").strip()
-        return phases is None or not tag or tag in phases
+        if phases is None or not tag or tag in phases:
+            return True
+        n = _phase_num(tag)
+        return n is not None and n == foundation_phase
 
     in_scope_sr_ids = {r["SR-ID"] for r in srs if in_phase(r)}
     # An LLR is in scope when any of its parent SRs is, so TC `Verifies` cells

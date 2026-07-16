@@ -127,6 +127,16 @@ def llr_exempt(row):
     return (row.get("Verification") or "").strip() in LLR_EXEMPT
 
 
+def phase_num(row):
+    """The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2);
+    None when blank/unparseable. The one phase-parse the kit uses — trace.py's
+    schema rule and its `--phase` foundation filter reuse the same `\\d+` extraction
+    so a downstream repo that kept `vN` labels parses identically (the phase doctrine,
+    process.md §4). Duplicated in trace.py per the F5 rule."""
+    m = re.search(r"\d+", (row.get("Phase") or ""))
+    return int(m.group()) if m else None
+
+
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
 
 
@@ -230,11 +240,20 @@ def compute(docs):
 
     per_phase = _per_phase(srs, sr_g, llrs, tcs)
 
+    # Derived current phase: the highest phase number any RATIFIED (non-draft) spine
+    # row carries, digit-parsed — the phase analogue of the derived gate (a scope
+    # change surfaces as a phase bump). None when nothing is phased yet (a fresh or
+    # all-blank downstream registry), so a non-adopter reads `phase=(none)`.
+    phase_nums = [phase_num(r) for r in (srs + llrs + tcs) if not is_draft(r)]
+    phase_nums = [p for p in phase_nums if p is not None]
+    cur_phase = max(phase_nums) if phase_nums else None
+
     return {
         "counts": {"SN": len(sn_ids), "SR": len(srs), "LLR": len(llrs), "TC": len(tcs)},
         "drafts": n_draft,
         "raw": raw,
         "per_phase": per_phase,
+        "phase": cur_phase,
         "gate": GATE_NAMES[max(G1, raw)],  # the runnable value (floored to G1)
     }
 
@@ -290,13 +309,14 @@ def basis_line(result):
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
     return (
         "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafts={d} computed={raw} "
-        "per-phase={pp}".format(
+        "phase={ph} per-phase={pp}".format(
             SN=c["SN"],
             SR=c["SR"],
             LLR=c["LLR"],
             TC=c["TC"],
             d=result["drafts"],
             raw=GATE_NAMES[result["raw"]],
+            ph=result["phase"] if result["phase"] is not None else "(none)",
             pp=per_phase or "(none)",
         )
     )

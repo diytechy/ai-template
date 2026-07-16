@@ -36,14 +36,14 @@ SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180
 SR-002,Atomic export write,SN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes SN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented,,
 ```
 
-Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank here (= in scope for every phase); a phased roadmap tags rows `v1`/`v2`/… so G3 can close per phase (process.md §4 "Phased delivery"). `Area` (optional owner-hat/domain tag, process.md §1) is blank too — §7 below shows it filled, and trace.py reports per-Area SR counts when it is.
+Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank throughout because this is a single-shot deliverable (no phased roadmap): with nothing phased the ratified-row Phase rule stays unarmed, and blank means in scope for every phase. A phased roadmap instead tags every ratified SR/LLR/TC with the integer phase it shipped in (`1`/`2`/…; a downstream `vN` still parses), the project's current phase is *derived* as the highest, and only a `Draft` row may then leave `Phase` blank — see process.md §4 "Phased delivery". `Area` (optional owner-hat/domain tag, process.md §1) is blank too — §7 below shows it filled, and trace.py reports per-Area SR counts when it is.
 
 ## 3. Low-Level Requirements — `requirements/low-level-requirements.csv`
 
 ```csv
-LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure records->CSV serializer,src/export/csv,to_csv,"Pure function: records -> String. Header from the schema; values quoted per RFC-4180. No I/O — unit-testable in isolation.",(see TC),Implemented
-LLR-002,SR-002,Atomic file write,src/export/io,write_atomic,"Write bytes to <path>.tmp, then rename to <path>; remove the tmp on any error. Rename is atomic on the same volume. The I/O shell around the pure core.",(see TC),Implemented
+LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase
+LLR-001,SR-001,Pure records->CSV serializer,src/export/csv,to_csv,"Pure function: records -> String. Header from the schema; values quoted per RFC-4180. No I/O — unit-testable in isolation.",(see TC),Implemented,
+LLR-002,SR-002,Atomic file write,src/export/io,write_atomic,"Write bytes to <path>.tmp, then rename to <path>; remove the tmp on any error. Rename is atomic on the same volume. The I/O shell around the pure core.",(see TC),Implemented,
 ```
 
 Note the split: **`to_csv` is a pure core** (cheap, exhaustive unit tests);
@@ -53,9 +53,9 @@ Detail *decomposes* the SR — it doesn't restate it.
 ## 4. Test Cases — `test/test-cases.csv`
 
 ```csv
-TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-001,SR-001;LLR-001,Unit,"to_csv over records incl. special-character fields; parse the result back",Smoke,"field=set{plain,comma,quote,newline}","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_export.py::test_to_csv_roundtrip,Verified
-TC-002,SR-002;LLR-002,Integration,"Abort write_atomic mid-write; assert no file at the final path and the tmp is cleaned; then a normal run succeeds",Full,"interrupt=set{during-write,before-rename}","Satisfies SR-002 AcceptanceCriteria",Yes,tests/test_export.py::test_atomic_interrupt,Verified
+TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
+TC-001,SR-001;LLR-001,Unit,"to_csv over records incl. special-character fields; parse the result back",Smoke,"field=set{plain,comma,quote,newline}","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_export.py::test_to_csv_roundtrip,Verified,
+TC-002,SR-002;LLR-002,Integration,"Abort write_atomic mid-write; assert no file at the final path and the tmp is cleaned; then a normal run succeeds",Full,"interrupt=set{during-write,before-rename}","Satisfies SR-002 AcceptanceCriteria",Yes,tests/test_export.py::test_atomic_interrupt,Verified,
 ```
 
 The `Evidence` column names the **concrete test that provides the proof** — a
@@ -178,8 +178,8 @@ records the **procedure**, not an assertion, and is `Automated=No`, so the relea
 checklist (`gen_release_checklist.py`) finds it:
 
 ```csv
-TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a write committed just before the kill is readable after",Release,"failure=set{kill,network-loss,disk-full}","Satisfies SR-101 AcceptanceCriteria",No,docs/test/failover-procedure.md,Verified
+TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
+TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a write committed just before the kill is readable after",Release,"failure=set{kill,network-loss,disk-full}","Satisfies SR-101 AcceptanceCriteria",No,docs/test/failover-procedure.md,Verified,
 ```
 
 `Tier=Release` keeps this slow, environment-heavy test out of the per-push and
@@ -206,8 +206,8 @@ SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's establi
 ```
 
 ```csv
-TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"attested-by=A. Rivera (creative lead); attested-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Verified
+TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
+TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"attested-by=A. Rivera (creative lead); attested-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Verified,
 ```
 
 `trace.py` accepts `SR-201` as legitimately `Verified` but reports it under
@@ -284,8 +284,8 @@ relies on the contract; `IF-002` links the interface to that SR, and the TC cove
 the SR):
 
 ```csv
-TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-050,SR-050,Integration,"Run export then delivery end-to-end; assert the delivered file matches the RFC-4180 contract IF-001 publishes, and that a forced upload failure is retried and surfaced",Full,"dest=set{local,s3,sftp}","Satisfies SR-050 AcceptanceCriteria",Yes,tests/test_delivery_seam.py,Verified
+TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
+TC-050,SR-050,Integration,"Run export then delivery end-to-end; assert the delivered file matches the RFC-4180 contract IF-001 publishes, and that a forced upload failure is retried and surfaced",Full,"dest=set{local,s3,sftp}","Satisfies SR-050 AcceptanceCriteria",Yes,tests/test_delivery_seam.py,Verified,
 ```
 
 Each module's SRs still decompose into their own `Module`-tagged LLRs as usual (§3;

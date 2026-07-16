@@ -20,7 +20,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 |---|---|---|
 | Proportionality doctrine | **always** — the mindset that frames how hard every layer below is applied | nothing (tells you when *not* to reach for machinery) |
 | Derived gate model | **always**, once you use gates — the default: the gate is computed from artifact states, not declared | `docs/gate` (generated) + `derive_gate.py` |
-| Phased delivery | a roadmap ships v1 before v2/v3 (a single-shot deliverable skips it) | a `Phase` column on the spine + a per-phase gate |
+| Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every ratified SR/LLR/TC + a derived current phase + a per-phase gate |
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
 | Gate authority levels | a repo declares a non-default `docs/gate-policy` | `docs/gate-policy` + an attestation / deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
@@ -211,24 +211,40 @@ membership legible and durable.
 
 ## Phased delivery
 
-*Referenced from PROCESS.md §4.* **Applies when** a roadmap ships v1 before
-v2/v3; a single-shot deliverable skips it. Builds on the **Derived gate model**
-above (phase is the time-bucket that captures leak-in; campaign stays a *named*
-new-work set — they diverge exactly when other work is pulled in).
+*Referenced from PROCESS.md §4.* **Applies when** a roadmap ships phase 1 before
+2/3; a single-shot deliverable skips it. Builds on the **Derived gate model**
+above: just as the gate is computed from artifact states, the project's **current
+phase is derived** — the highest phase any ratified spine row carries — so a scope
+change (a new ratified SN/SR/LLR/TC) surfaces as a phase bump, never a hand-set marker.
 
-A roadmap that ships v1 before v2/v3 needs gates that close *per phase* without
-dishonesty. SRs may carry an optional **`Phase`** tag (e.g. `v1`, `v2`; blank =
-in scope for every phase). Semantics:
+A roadmap that ships phase 1 before 2/3 needs gates that close *per phase* without
+dishonesty. **Every ratified SR/LLR/TC carries the `Phase` it was ratified in** — a
+bare integer (`1`, `2`, `3`…); an SN's phase is *derived* as the minimum phase of its
+referencing SRs (no `stakeholder-needs.md` schema change). `Phase` is a free-form
+string: bare integers are the recommended convention, but a downstream repo that kept
+`vN` labels still works everywhere — the `--phase` filter matches literally, while the
+derived-max and the completeness rule **digit-parse** (`v2` → 2, `2` → 2, the same
+parse `derive_gate` uses), so a `vN` registry arms the rule and passes it. Semantics:
 
+- **A blank `Phase` is legal only on a pre-ratification (`Draft`) row.** A ratified
+  SR/LLR/TC (Planned/Verified) — and transitively a ratified SN — must carry a Phase
+  that digit-parses to a number, or `trace.py --strict-schema` reports a schema
+  finding. The rule is **vacuous until ≥1 artifact is phased** (the same arming idiom
+  the component checks use), so a fully-blank downstream registry stays green: the
+  rule is unarmed and the `--phase` filter treats blank as always-in-scope — exactly
+  what "blank = every phase" bought before the phase model.
 - **Traceability is phase-blind.** Every SR keeps its LLR + TC rows from G2 on,
-  whatever its phase — decomposition is cheap and pins the design.
-- **The G3 Verified criterion is phase-scoped.** `check.py --gate G3 --phase v1`
-  (cumulative for later closures: `--phase v1,v2`) requires Verified only for
+  whatever its phase — decomposition is cheap and pins the design. An LLR's Phase is
+  its parent SR's; a TC's is the max over what it verifies.
+- **The G3 Verified criterion is phase-scoped.** `check.py --gate G3 --phase 1`
+  (cumulative for later closures: `--phase 1,2`) requires Verified only for
   in-scope SRs; out-of-scope SRs are listed in the trace report as
-  **phase-deferred** — an explicit, recorded exemption, never a silent skip.
-- **G-Release is phase-scoped the same way:** `gen_release_checklist.py --phase v1`
+  **phase-deferred** — an explicit, recorded exemption, never a silent skip. **The
+  foundation (minimum) phase is always in scope** — never phase-deferred — so
+  foundation requirements ride every delivery filter (what blank bought before).
+- **G-Release is phase-scoped the same way:** `gen_release_checklist.py --phase 1`
   includes only in-scope human items and the release-tier/manual TCs verifying
-  them.
+  them, plus the always-in-scope foundation.
 - Later phases re-enter at G1/G2 as requirement increments and close their own
   G3/G-Release with the grown phase list.
 - **A project already at G3 that takes on new scope: the derived gate handles it.**
@@ -240,9 +256,10 @@ in scope for every phase). Semantics:
   scoping, not a marker rewind — rewinding would discard the closed phase's
   attestation). Traceability is phase-blind, so a new-phase SR still reaches
   **G2-completeness (LLR + TC)** before it is *Verified* — but it no longer waits
-  off-spine to be *drafted*: it is a live `Draft` row from the start. Only
-  *Verified* and *G-Release* defer by phase; the new phase's SRs read
-  phase-deferred until their own G3.
+  off-spine to be *drafted*: it is a live `Draft` row from the start (its Phase may
+  stay blank while `Draft` and takes its number at ratification). Only *Verified*
+  and *G-Release* defer by phase; the new phase's SRs read phase-deferred until
+  their own G3.
 
 ## Lifecycle phase
 

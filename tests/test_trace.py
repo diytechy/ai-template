@@ -411,12 +411,15 @@ def test_shipped_tc_template_carries_evidence_column():
     # Thread 51: the shipped TC header carries Evidence (between Automated and
     # Status) so the concrete test location has a first-class home and stops
     # overloading Parameters (which stays dimensional, the gen_cases grammar).
+    # Pinned by ordering, not tail position — the phase model appends a trailing
+    # Phase column after Status.
     header = (
         (KIT / "registries" / "test-cases.template.csv")
         .read_text(encoding="utf-8")
         .splitlines()[0]
     )
-    assert header.split(",")[-3:] == ["Automated", "Evidence", "Status"]
+    assert "Automated,Evidence,Status" in header
+    assert header.split(",")[-1] == "Phase"
 
 
 def test_area_values_yield_report_section(scaffold):
