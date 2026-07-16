@@ -523,7 +523,8 @@ integration ref. After a successful integration CAS, the dispatcher publishes
 the integration HEAD only when the primary development worktree is clean: it
 advances the selected development ref with a second CAS against the hash it last
 observed, then synchronizes that clean worktree's index and files to the same
-target. If the ref moved, publication fails harmlessly and the integrator
+target using fast-forward/reset semantics, never a merge. If the ref moved,
+publication fails harmlessly and the integrator
 recomposes from the new development HEAD before retrying. If the worktree is
 dirty, publication is deferred and the checkout is left untouched and reported,
 never reset/stashed automatically. A manual update to `llm/integration` itself
@@ -654,9 +655,11 @@ durably before launching a worker.
 The directory is nevertheless a **cache/journal, not authority**. Every startup
 acquires the repo-level dispatcher lock and performs recovery before scheduling:
 
-1. read the integrated WI registry and root integration trailers;
-2. enumerate `llm/train/*` and `llm/integrate/*` branches plus
-   `refs/llm/reservations/*`;
+1. read the authoritative integrated disposition and integration trailers from
+   `refs/heads/llm/integration`; the selected development branch is its published
+   projection, not the recovery authority;
+2. enumerate `refs/heads/llm/integration`, `llm/train/*`, and
+   `llm/integrate/*` branches plus `refs/llm/reservations/*`;
 3. enumerate linked worktrees and their dirty/clean state;
 4. parse reservation commits and exact-head review records;
 5. cross-check the runtime manifest when present;
@@ -678,7 +681,9 @@ Recovery rules:
 | Reservation ref exists; train worktree missing | Recreate the worktree from its train branch |
 | Reservation ref metadata disagrees with train branch/trailers | Quarantine that WI/train; start neither until ownership is resolved |
 | Train claims a WI without its reservation ref | Quarantine that WI/train mismatch; do not recreate authority from cache alone |
-| Integration staging branch exists | Resume/verify staging; root remains unchanged until CAS |
+| Integration staging branch exists | Resume/verify staging; `llm/integration` remains unchanged until its CAS |
+| `llm/integration` is ahead of the selected development branch | Idempotently resume publication: verify the expected development hash and clean worktree, perform the development-ref CAS, then synchronize the worktree by fast-forward/reset |
+| Selected development branch moved or diverged from unpublished integration | Recompose the authoritative integration result from the new development HEAD, verify it, and retry publication; never re-dispatch a WI already done on `llm/integration` |
 | Ownership cannot be proven | Fail closed for that WI and continue only disjoint proven work |
 
 Kernel locks release when processes die. Stored PIDs are hints and are never
@@ -832,13 +837,16 @@ their touched surfaces are split during planning; H is the explicit join.
 Inject termination during the atomic multi-WI reservation-ref transaction and
 after reservation, branch creation, dirty edit, WI commit, review request,
 review verdict, blocked-disposition apply, integration apply, integration test,
-integration commit, and immediately before/after integration-ref CAS. For each
-point:
+integration commit, immediately before/after integration-ref CAS, and
+immediately before/after the development-publication CAS and clean-worktree
+synchronization. For each point:
 
 - restart reconstructs exactly one owner;
 - no WI is double-run or falsely done;
 - no unintegrated commit/dirty tree is deleted;
 - root is either entirely before or entirely after integration;
+- an unpublished integration commit remains authoritative and is published
+  idempotently rather than making its already-done WIs ready again;
 - deleting all of `out/dispatch/` still reconstructs from Git/worktrees;
 - every constituent reservation reconstructs from
   `refs/llm/reservations/*`, including before its first WI commit;
