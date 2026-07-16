@@ -127,6 +127,16 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `telemetry_summary(journal)` | The end-of-run telemetry rollup (spec §13): the required measurements |  |
 | `dispatch_run(args, root)` | The dispatcher/integrator loop (SR-061): reconcile -> gate -> build-out. | SR-061 |
 | `head_sha_full(root)` | Full HEAD sha (reservation bases are exact, never abbreviated). |  |
+| `parse_args()` | The whole CLI surface — one home for every flag + its default. |  |
+| `map_preflight(root, template, args, cmd_map, prompt_map, tier_map, prefer_map, managed, registry, enabled, reg_errors, enable_errors)` | Assemble every up-front launchability failure (default template, |  |
+| `build_worker_assignment(args, root)` | The dispatcher's explicit worker assignment (--wi + --train): parse |  |
+| `track_preamble_text(track)` | The per-track prompt preamble redirecting the session to its lane; |  |
+| `run_interactive(args, root, track, model_map, cmd_map, template, resume_reconcile, track_preamble, guardrails_policy, warned_no_core)` | Boot exactly one hands-on session (stdio attached) and return its |  |
+| `print_run_banner(root, branch, worker, track, lane, gate_policy, push_policy, review_policy, managed, enabled, registry, guardrails_policy, template, cmd_map, prompt_map, docs)` | The unattended-coordinator launch banner: the run's identity, its |  |
+| `LoopContext (class)` | Everything one iteration reads, built once at loop start; the |  |
+| `route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now)` | Pick the phase + model + prompt for this session (managed routing or |  |
+| `session_bookkeeping(ctx, plan, outcome, code, commits, after, reset_hint, now, session, wi_label)` | The managed-routing / reviewer-dispatch consequences of one session |  |
+| `run_iteration(ctx, i)` | One coordinator session end-to-end: guards, routing (route_session), |  |
 | `main()` |  |  |
 
 ### `scripts/agent_route`

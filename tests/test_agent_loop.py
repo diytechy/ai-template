@@ -4,6 +4,7 @@ so no test depends on any real agent CLI. The fake pops one action per
 invocation from a control dir outside the repo: commit / noop / done /
 blocked / needs-human / limit / sleep."""
 
+import argparse
 import datetime
 import os
 import re
@@ -1628,3 +1629,63 @@ def test_worker_exit_banner_returns_code_and_prints(capsys):
     out = capsys.readouterr().out
     assert "worker t1 [WI-201;WI-204]: DONE" in out
     assert "every assigned WI built" in out
+
+
+# --- WI-080 Slice E: main() composed from module-level seams ------------------
+# main() is now orchestration-only (parse -> setup -> mode select -> loop); the
+# setup phases (parse_args / map_preflight / build_worker_assignment /
+# track_preamble_text / print_run_banner / run_interactive) and the loop body
+# (route_session / session_bookkeeping / run_iteration over a LoopContext) are
+# module functions. The e2e net pins behavior; these lean units pin the three
+# newly unit-addressable seams.
+
+
+def test_track_preamble_text_empty_and_named():
+    al = load_script("agent_loop")
+    assert al.track_preamble_text(None) == ""
+    assert al.track_preamble_text("") == ""
+    pre = al.track_preamble_text("alpha")
+    # Names the track and pins the session to its llm/<track> branch.
+    assert "'alpha' development track" in pre
+    assert "llm/alpha" in pre
+
+
+def test_build_worker_assignment_is_none_without_wi_and_train():
+    al = load_script("agent_loop")
+    args = argparse.Namespace(wi=None, train=None, base=None, rework=None)
+    # Not a worker process — no root touched, no error.
+    assert al.build_worker_assignment(args, "/does/not/matter") == (None, None)
+
+
+@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+def test_build_worker_assignment_bad_base_fails_closed(tmp_path, capsys):
+    al = load_script("agent_loop")
+    repo, _base, _worker = _train_repo(tmp_path)
+    args = argparse.Namespace(wi="WI-201", train="t1", base="deadbeef", rework=None)
+    worker, err = al.build_worker_assignment(args, repo)
+    assert worker is None
+    assert err == al.EXIT_PREFLIGHT
+    assert "does not resolve to a commit" in capsys.readouterr().err
+
+
+@pytest.mark.skipif(not __import__("shutil").which("git"), reason="needs git on PATH")
+def test_build_worker_assignment_good_base_parses_wi_list(tmp_path):
+    al = load_script("agent_loop")
+    repo, base, _worker = _train_repo(tmp_path)
+    args = argparse.Namespace(wi="WI-201;WI-204", train="t1", base=base, rework=None)
+    worker, err = al.build_worker_assignment(args, repo)
+    assert err is None
+    assert worker["train"] == "t1"
+    assert worker["assigned"] == ["WI-201", "WI-204"]
+    assert worker["base"] == base
+    assert worker["rework"] == ""
+
+
+def test_parse_args_defaults(monkeypatch):
+    al = load_script("agent_loop")
+    monkeypatch.setattr(sys, "argv", ["agent_loop.py"])
+    args = al.parse_args()
+    assert args.max_iterations == 40
+    assert args.stall_limit == 3
+    assert args.pause == 10
+    assert args.jobs is None

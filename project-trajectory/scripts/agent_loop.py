@@ -4003,8 +4003,8 @@ def head_sha_full(root):
     return out if code == 0 else ""
 
 
-def main():
-    _utf8_console()
+def parse_args():
+    """The whole CLI surface — one home for every flag + its default."""
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -4212,68 +4212,27 @@ def main():
         "sleep this many seconds and retry instead of exiting — capped at "
         "the --wait-on-limit ceiling (default 3600)",
     )
-    args = ap.parse_args()
+    return ap.parse_args()
 
-    # A worker runs in its leased linked worktree: --worktree IS the effective
-    # root (branch guard, sessions, policy reads all resolve there). WI-181.
-    if args.worktree:
-        root = Path(args.worktree).resolve()
-        if not root.is_dir():
-            print(
-                "agent_loop: --worktree {} does not exist".format(root),
-                file=sys.stderr,
-            )
-            return EXIT_PREFLIGHT
-    else:
-        root = Path(args.root).resolve()
-    docs = root / "docs"
 
-    # Dispatcher mode (WI-182, SR-061): --jobs (or the AGENT_JOBS env the
-    # migrated launchers wire) selects the parallel dispatcher. A worker
-    # assignment, legacy track, or interactive sitting always wins — those are
-    # explicit per-process roles the dispatcher itself launches or replaces.
-    jobs_opt = (
-        args.jobs
-        if args.jobs is not None
-        else (os.environ.get("AGENT_JOBS", "").strip() or None)
-    )
-    if jobs_opt is not None and not (
-        args.wi or args.train or args.track or args.interactive
-    ):
-        args.jobs = jobs_opt
-        return dispatch_run(args, root)
-    template = (
-        args.agent_cmd
-        if args.agent_cmd is not None
-        else os.environ.get("AGENT_CMD", "")
-    )
-    try:
-        model_map = parse_map(args.model_map)
-        cmd_map = parse_map(args.cmd_map)  # same "KEY=value" syntax
-        prompt_map = parse_map(args.prompt_map)  # phase -> prompt-template FILE
-        tier_map = parse_map(args.tier_map)  # phase -> tier
-        prefer_map = parse_map(args.prefer_map)  # phase -> registry id
-    except ValueError as exc:
-        print("agent_loop: {}".format(exc), file=sys.stderr)
-        return EXIT_PREFLIGHT
-
-    # The S8 routing layer (process-options.md "Unattended operation" ->
-    # routing/escalation). The enable-list's PRESENCE turns managed routing +
-    # loop-side reviewer dispatch on; ABSENT files keep exactly today's single
-    # AGENT_CMD/AGENT_MODEL behavior, so a fresh scaffold pays nothing (no silent
-    # model swap — consent = the enabled set + the declared rules).
-    registry, reg_errors = agent_route.load_registry(docs / "agents.csv")
-    raw_enabled = agent_route.load_enabled(docs / "agents-enabled")
-    # The enable-list's PRESENCE (not its resolvability) turns managed routing on
-    # — an unresolvable token must fail preflight, not silently fall to legacy.
-    managed = bool(raw_enabled)
-    # Version-less tokens resolve to concrete pair-row ids (exact-id, else newest
-    # in the Family-Model line); unresolvable tokens become preflight failures.
-    tag_rank = agent_route.load_tag_rank(docs / "agents.csv")
-    enabled, enable_errors = agent_route.resolve_enabled(
-        raw_enabled, registry, tag_rank
-    )
-
+def map_preflight(
+    root,
+    template,
+    args,
+    cmd_map,
+    prompt_map,
+    tier_map,
+    prefer_map,
+    managed,
+    registry,
+    enabled,
+    reg_errors,
+    enable_errors,
+):
+    """Assemble every up-front launchability failure (default template,
+    cmd-map, prompt-map files, and the managed-routing registry/enable/tier/
+    prefer checks) into one list, reading each mapped prompt file once.
+    Returns (failures, prompt_templates)."""
     failures = preflight(root, template, args)
     # Every per-phase template must be as launchable as the default one — a
     # broken REVIEW-B entry must fail before iteration 1, not at the first
@@ -4346,28 +4305,15 @@ def main():
         # the layer is off, so it changes nothing (never-breaking).
         for e in reg_errors:
             print("agent_loop: WARNING - agents.csv: {}".format(e), file=sys.stderr)
+    return failures, prompt_templates
 
-    if failures:
-        print("agent_loop: preflight failed —", file=sys.stderr)
-        for f in failures:
-            print("  - " + f, file=sys.stderr)
-        return EXIT_PREFLIGHT
 
-    # Resolve the coordination lane. --track redirects the per-track files
-    # (run-state, status.md, iteration/) under docs/tracks/<track>/;
-    # the repo-singular policy files (gate/gate-policy/push-policy/privacy-check/
-    # guardrails-policy) always stay at docs/. No track = docs/ itself, so
-    # single-lane operation is unchanged (preflight already slug-validated).
-    track = sanitize_track(args.track) if args.track else None
-    if track:
-        # One compatibility window (WI-181): old behavior unchanged, loudly.
-        print(
-            "agent_loop: WARNING - --track is deprecated (WI-181): the "
-            "dispatcher's explicit --wi/--train worker assignment replaces "
-            "long-lived tracks. Legacy behavior continues for one "
-            "compatibility window (process-options.md 'Parallel tracks').",
-            file=sys.stderr,
-        )
+def build_worker_assignment(args, root):
+    """The dispatcher's explicit worker assignment (--wi + --train): parse
+    the traincar's WI list, fail closed on an unresolvable --base, and load
+    the registry + scheduler views + any --rework findings. Returns
+    (None, None) when this is not a worker process, (worker, None) on
+    success, or (None, EXIT_PREFLIGHT) after printing its own error."""
     # --- worker assignment mode (WI-181, SR-060) -----------------------------
     # worker != None switches the loop from "resume from the lane" to "build
     # the explicit assignment": no lane status/run-state/pause/next-wi reads or
@@ -4385,7 +4331,7 @@ def main():
                 "worktree".format(base),
                 file=sys.stderr,
             )
-            return EXIT_PREFLIGHT
+            return None, EXIT_PREFLIGHT
         worker = {
             "train": sanitize_train(args.train),
             "assigned": parse_wi_list(args.wi),
@@ -4414,26 +4360,1186 @@ def main():
                     "agent_loop: cannot read --rework {}: {}".format(rp, exc),
                     file=sys.stderr,
                 )
-                return EXIT_PREFLIGHT
+                return None, EXIT_PREFLIGHT
+    return worker, None
+
+
+def track_preamble_text(track):
+    """The per-track prompt preamble redirecting the session to its lane;
+    "" for single-lane (no track) operation."""
+    if not track:
+        return ""
+    return (
+        "You are driving the '{t}' development track. Wherever the "
+        "instructions below say docs/status.md, docs/plan.md or "
+        "docs/run-state, use the docs/tracks/{t}/ copy instead — that "
+        "lane is your resume surface and coordinator contract. Append this "
+        "session's evidence to docs/tracks/{t}/log.md. Do NOT write the root "
+        "docs/status.md (the cross-track dispatcher, integrator-only) or any "
+        "other track's lane. The requirement registries "
+        "(docs/requirements/*), docs/gate, and the root docs/log.md gate "
+        "sign-offs are repo-singular and shared: propose registry changes as "
+        "off-spine scope drafts for the integrator to land — never edit "
+        "another lane. Stay on the llm/{t} branch (process-options.md "
+        "'Parallel tracks').\n\n---\n\n"
+    ).format(t=track)
+
+
+def run_interactive(
+    args,
+    root,
+    track,
+    model_map,
+    cmd_map,
+    template,
+    resume_reconcile,
+    track_preamble,
+    guardrails_policy,
+    warned_no_core,
+):
+    """Boot exactly one hands-on session (stdio attached) and return its
+    exit code — the --interactive early path, no loop."""
+    phase, model = session_model(model_map, args.model)
+    # Explicit interactive template wins; then the per-phase map; then the
+    # default — so a REVIEW-phase interactive sitting uses the same
+    # provider routing the unattended leg would.
+    itemplate = (
+        args.interactive_cmd
+        if args.interactive_cmd is not None
+        else os.environ.get("AGENT_CMD_INTERACTIVE", "")
+        or session_template(cmd_map, template, phase)
+    )
+    print(
+        "=== one interactive session | track={} phase={} model={} ===".format(
+            track or "—", phase or "—", model or "—"
+        )
+    )
+    argv = build_argv(
+        itemplate,
+        model,
+        compose_session_prompt(
+            model,
+            None,
+            resume_reconcile,
+            track_preamble,
+            args.prompt,
+            guardrails_policy,
+            root,
+            warned_no_core,
+        )[0],
+    )
+    proc = subprocess.run(argv, cwd=str(root))
+    return proc.returncode
+
+
+def print_run_banner(
+    root,
+    branch,
+    worker,
+    track,
+    lane,
+    gate_policy,
+    push_policy,
+    review_policy,
+    managed,
+    enabled,
+    registry,
+    guardrails_policy,
+    template,
+    cmd_map,
+    prompt_map,
+    docs,
+):
+    """The unattended-coordinator launch banner: the run's identity, its
+    policies, the routing/guardrails posture, and the privacy warning."""
+    print("=== unattended coordinator (scripts/agent_loop.py) ===")
+    print("repo: {} | branch: {}".format(root, branch or "(none)"))
+    if worker:
+        print(
+            "worker assignment: train={} wi={} base={} (result = committed "
+            "trailers + exit code; no lane files)".format(
+                worker["train"], ";".join(worker["assigned"]), worker["base"][:12]
+            )
+        )
+    else:
+        print("track: {} | lane: {}".format(track or "(single-lane)", lane))
+    print(
+        "gate-policy: {} | push-policy: {} (the coordinator never pushes "
+        "under 'human') | review-policy: {} (docs/review-policy — the reviewer "
+        "dial: {})".format(
+            gate_policy,
+            push_policy,
+            review_policy,
+            "LOOP-ENFORCED (managed routing on) — a committing build schedules "
+            "the reviewer round(s)"
+            if managed
+            else "surfaced here, enforced by the integrator convention, never "
+            "by the loop",
+        )
+    )
+    if managed:
+        print(
+            "routing: docs/agents-enabled present -> managed model selection from "
+            "{} enabled of {} registry models (tier + heterogeneity + cooldown + "
+            "tier-up-never-down); every selection logged before launch".format(
+                len(enabled), len(registry)
+            )
+        )
+    print(
+        "guardrails-policy: {} (docs/guardrails-policy — the vendored core is "
+        "injected per session when the policy selects that session's "
+        "model)".format(guardrails_policy)
+    )
+    print("agent command: {}".format(template))
+    for ph in sorted(cmd_map):
+        print("  cmd-map [{}]: {}".format(ph, cmd_map[ph]))
+    for ph in sorted(prompt_map):
+        print("  prompt-map [{}]: {}".format(ph, prompt_map[ph]))
+    print(
+        "CONSENT: sessions run headless; a permission-bypass flag in "
+        "AGENT_CMD means unattended edits without prompts — you consented by "
+        "wiring it and running this. Ctrl+C is safe; re-running resumes."
+    )
+    privacy_on = read_declared(docs / "privacy-check", "false").lower() == "true"
+    if privacy_on and not (branch or "").startswith("llm/"):
+        print(
+            "WARNING: privacy-checked repo (docs/privacy-check) but the "
+            "current branch {!r} is not an llm/ iteration branch — see "
+            'process-options.md "Agent iteration branch & sync".'.format(
+                branch or "(none)"
+            )
+        )
+
+
+class LoopContext:
+    """Everything one iteration reads, built once at loop start; the
+    per-iteration behavior lives in run_iteration (WI-080 Slice E). A plain
+    attribute bag — no logic — so a moved body reads ctx.<name> where it
+    used to read the loop-local."""
+
+
+def route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now):
+    """Pick the phase + model + prompt for this session (managed routing or
+    the legacy single-model path). Returns an int exit code to end the run
+    (no routable model -> EXIT_NEEDS_HUMAN; a {model} template with no model
+    -> EXIT_PREFLIGHT) or a `plan` dict the caller launches."""
+    args = ctx.args
+    root = ctx.root
+    docs = ctx.docs
+    lane = ctx.lane
+    status_path = ctx.status_path
+    track_preamble = ctx.track_preamble
+    worker = ctx.worker
+    managed = ctx.managed
+    registry = ctx.registry
+    enabled = ctx.enabled
+    template = ctx.template
+    model_map = ctx.model_map
+    cmd_map = ctx.cmd_map
+    prompt_templates = ctx.prompt_templates
+    tier_map = ctx.tier_map
+    prefer_map = ctx.prefer_map
+    guardrails_policy = ctx.guardrails_policy
+    warned_no_core = ctx.warned_no_core
+    reviews_dir = ctx.reviews_dir
+    st = ctx.st
+    is_review = False
+    is_critique = False
+    verdict_path = None
+    route_id = None  # the selected registry id (managed mode)
+    route_family = None  # the selected pair row's Family (identity, not route)
+    # The launch environment: None = inherit the ambient env (today's exact
+    # call); a pair row's Env is merged over os.environ below. This is how a
+    # router (ANTHROPIC_BASE_URL), a second account (CLAUDE_CONFIG_DIR /
+    # CODEX_HOME), or an API key (GEMINI_API_KEY) is selected declaratively.
+    session_env = None
+    if managed:
+        phase, is_review, is_critique = st.pick_phase()
+        # A worker pins the BUILD tier from its reserved WI row's BuildTier
+        # (WI-181 — the per-WI pin that used to ride docs/next-wi); the phase
+        # default covers an empty cell, and an escalation override still wins
+        # (tier-up-never-down). Computed here (the caller owns the worker row
+        # read); route_intent folds it in against the phase default.
+        pinned_tier = None
+        if (phase == "BUILD" or phase == "") and worker and current_wi:
+            row_tier = agent_route.normalize_tier(
+                (worker["rows"].get(current_wi, {}).get("BuildTier") or "")
+                .strip()
+                .lower()
+            )
+            if row_tier in agent_route.TIER_ORDER:
+                pinned_tier = row_tier
+        tier, exclude, prefer_different = st.route_intent(
+            phase, is_review, is_critique, tier_map, pinned_tier
+        )
+        route_id, reason = agent_route.select(
+            enabled,
+            registry,
+            tier,
+            now,
+            st.cooldowns,
+            exclude,
+            prefer_different,
+            [prefer_map[phase]] if phase in prefer_map else (),
+        )
+        # Log the routing decision BEFORE launch (the no-silent-swap rule).
+        print("route [{}]: {}".format(phase or "—", reason))
+        if route_id is None:
+            # Every enabled model at the preferred tier-or-stronger is cooling
+            # down or none is enabled: page rather than drop to a weaker tier.
+            # (A worker never writes run-state — its exit code is the page.)
+            if not worker:
+                (lane / "run-state").write_text(
+                    "NEEDS-HUMAN\nask: no routable model — add/enable a model "
+                    "of the required tier in docs/agents.csv, or wait out the "
+                    "cooldown\n",
+                    encoding="utf-8",
+                )
+            stop_banner(
+                status_path,
+                "NEEDS-HUMAN — no routable model",
+                reason + " (add/enable a model of this tier, or wait for a "
+                "cooldown; the loop never silently drops to a weaker tier).\n"
+                # Per-row state + the Notes cell — the declared home for the
+                # provider's sign-in/install hint (e.g. `opencode auth
+                # login`), so the page says what to DO, not just that it
+                # paged (WI-109).
+                 + agent_route.pool_context(enabled, registry, st.cooldowns, now),
+            )
+            return EXIT_NEEDS_HUMAN
+        m = registry[route_id]
+        model = m.model or route_id
+        route_family = m.family
+        tmpl = m.cmd_template or template
+        row_env = agent_route.parse_env(m.env)
+        if row_env:
+            # Only a declared Env changes the launch env — an empty Env keeps
+            # the inherited environment exactly (session_env stays None).
+            session_env = {**os.environ, **row_env}
+        if not is_review and (phase == "BUILD" or phase == ""):
+            st.note_build_tier(tier)
+        # A worker's verdict filename names the exact reviewed code HEAD
+        # (SR-060) — the review belongs to (train scope, reviewed commit),
+        # never to a mutable branch tip.
+        reviewed_sha = ""
+        if worker:
+            reviewed_sha = (
+                st.impl_range.split("..")[1]
+                if st.impl_range and ".." in st.impl_range
+                else head_sha(root)
+            ) or ""
+        if is_review:
+            verdict_path = reviews_dir / (
+                "{}-{}-{}.md".format(session, phase, reviewed_sha[:7])
+                if worker
+                else "{}-{}.md".format(session, phase)
+            )
+            verdict_path.parent.mkdir(parents=True, exist_ok=True)
+            body = reviewer_prompt(prompt_templates, phase, verdict_path)
+        elif is_critique:
+            verdict_path = reviews_dir / (
+                "{}-CRITIQUE-{}.md".format(session, reviewed_sha[:7])
+                if worker
+                else "{}-CRITIQUE.md".format(session)
+            )
+            verdict_path.parent.mkdir(parents=True, exist_ok=True)
+            brief = critique_brief(root, docs, st.critique_scope)
+            body = critique_prompt(prompt_templates, verdict_path, brief)
+        elif worker:
+            # Every non-review worker session builds from the assignment
+            # prompt — never the resume-from-status default and never a
+            # repo prompt-map template (the assignment is the whole scope).
+            body = worker_prompt(
+                root,
+                worker["rows"],
+                current_wi,
+                worker["train"],
+                worker["base"],
+                worker["rework"],
+            )
+        elif phase in prompt_templates:
+            body = prompt_templates[phase]
+        else:
+            body = None
+        prompt, guarded = compose_session_prompt(
+            model,
+            body,
+            resume_reconcile,
+            track_preamble,
+            args.prompt,
+            guardrails_policy,
+            root,
+            warned_no_core,
+        )
+        if rework_wi and not is_review and not is_critique and phase in ("", "BUILD"):
+            prompt = (
+                "REWORK OVERRIDE: docs/rework-wi names {}. Rework that reviewed "
+                "scope and its recorded findings before taking new "
+                "work.\n\n---\n\n{}".format(rework_wi, prompt)
+            )
+    else:
+        phase, model = session_model(model_map, args.model)
+        tmpl = session_template(cmd_map, template, phase)
+        prompt, guarded = compose_session_prompt(
+            model,
+            worker_prompt(
+                root,
+                worker["rows"],
+                current_wi,
+                worker["train"],
+                worker["base"],
+                worker["rework"],
+            )
+            if worker
+            else None,
+            resume_reconcile,
+            track_preamble,
+            args.prompt,
+            guardrails_policy,
+            root,
+            warned_no_core,
+        )
+    if not model and "{model}" in tmpl:
+        print(
+            "agent_loop: the session's command template carries a {model} "
+            "placeholder but no model is configured for this phase "
+            "(--model / --model-map / AGENT_MODEL).",
+            file=sys.stderr,
+        )
+        return EXIT_PREFLIGHT
+    return {
+        "phase": phase,
+        "is_review": is_review,
+        "is_critique": is_critique,
+        "model": model,
+        "tmpl": tmpl,
+        "prompt": prompt,
+        "guarded": guarded,
+        "verdict_path": verdict_path,
+        "route_id": route_id,
+        "route_family": route_family,
+        "session_env": session_env,
+    }
+
+
+def session_bookkeeping(
+    ctx, plan, outcome, code, commits, after, reset_hint, now, session, wi_label
+):
+    """The managed-routing / reviewer-dispatch consequences of one session
+    (S8): cool+re-route, review-round merge/scoreboard/escalation, critique
+    arbitration, committed-build scheduling, design-check reset. Returns None
+    (fall through), "reroute" (the managed-WAITING re-route), or an int exit
+    code (a page-human)."""
+    root = ctx.root
+    docs = ctx.docs
+    lane = ctx.lane
+    status_path = ctx.status_path
+    worker = ctx.worker
+    managed = ctx.managed
+    registry = ctx.registry
+    gate_policy = ctx.gate_policy
+    scoreboard = ctx.scoreboard
+    rp_int = ctx.rp_int
+    st = ctx.st
+    phase = plan["phase"]
+    is_review = plan["is_review"]
+    is_critique = plan["is_critique"]
+    verdict_path = plan["verdict_path"]
+    route_id = plan["route_id"]
+    route_family = plan["route_family"]
+    # --- managed routing / reviewer dispatch bookkeeping (S8) -------------
+    # All of this is gated on managed mode; the legacy path never enters it.
+    if managed and outcome == "WAITING":
+        # Generalize the rate-limit backoff PER-MODEL: cool this model and
+        # re-route to another available one next iteration. select() pages if
+        # none is left rather than dropping to a weaker tier (no silent swap).
+        wait = seconds_until_reset(reset_hint) or st.cooldown_seconds
+        st.cool(route_id, now, wait)
+        print(
+            "route: {} rate-limited; cooled ~{}s, re-routing".format(
+                route_id, int(wait)
+            )
+        )
+        return "reroute"
+    if managed and is_review:
+        if verdict_path and Path(verdict_path).exists():
+            v = score_reviews.parse_verdict(
+                Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
+                model=route_family,
+            )
+            st.record_review_verdict(phase, v, route_family, route_id)
+        else:
+            # No verdict file (errored, stalled, or the session simply did not
+            # write one): cool the model and re-route the same review phase.
+            st.cool(route_id, now)
+            print(
+                "route: {} review [{}] wrote no verdict ({}); cooled, "
+                "re-routing".format(route_id, phase, outcome)
+            )
+        if st.round_ready():
+            verdicts = [v for (_ph, v, _p, _m) in st.round_verdicts]
+            merged, contradiction = score_reviews.merge_verdict(verdicts)
+            # Substance/corroboration key on Family (who trained it), so a
+            # cross-family overlap outweighs a same-family one; the scoreboard
+            # tallies by that same Family key.
+            family_substance = {}
+            subs = []
+            for j, (_ph, rv, rfam, _mid) in enumerate(st.round_verdicts):
+                peer = (
+                    st.round_verdicts[1 - j][1] if len(st.round_verdicts) == 2 else None
+                )
+                fams = (
+                    (rfam, st.round_verdicts[1 - j][2])
+                    if len(st.round_verdicts) == 2
+                    else None
+                )
+                s = score_reviews.substance(rv, root, other=peer, providers=fams)
+                subs.append((rfam, s))
+                if rfam:
+                    family_substance[rfam] = s
+            margin = abs(subs[0][1] - subs[1][1]) if len(subs) == 2 else 0.0
+            primary = None
+            if len(subs) == 2:
+                primary = subs[0][0] if subs[0][1] >= subs[1][1] else subs[1][0]
+            changed = []
+            if st.impl_range and ".." in st.impl_range:
+                _rc, diff_out = git(root, "diff", "--name-only", st.impl_range)
+                changed = [ln for ln in diff_out.splitlines() if ln.strip()]
+            fired = score_reviews.fired_tripwires(verdicts, changed_paths=changed)
+            round_info = {
+                "verdict": merged or "",
+                "tier": st.last_impl_tier,
+                "margin": margin,
+                "primary": primary,
+                "tripwire": bool(fired),
+                "contradiction": contradiction,
+            }
+            # Record the round for the escalation policy. Slice-C note: the
+            # append and the round_verdicts clear (below) stay at their
+            # original distinct positions rather than folding into one
+            # st.complete_round() call — the worker-rework handler between
+            # escalation() and the clear still reads st.round_verdicts, so a
+            # single append+clear would either empty that read or hide the
+            # round from escalate(). Behavior (content + console order) is
+            # preserved exactly.
+            st.rounds.append(round_info)
+            try:
+                score_reviews.record_round(scoreboard, round_info, family_substance)
+            except OSError:
+                pass
+            # The scoreboard is coordinator-written state too — commit it in
+            # its own telemetry commit the moment the round records (WI-137),
+            # not on the next session's commit.
+            commit_telemetry(root, session, "review scoreboard", [scoreboard])
+            print(
+                "review round: merged={} margin={:.2f} tripwires={} "
+                "(advisory scoreboard {})".format(
+                    merged, margin, ",".join(fired) or "none", scoreboard
+                )
+            )
+            decision = st.escalation()
+            print("escalate: {} — {}".format(decision["action"], decision["reason"]))
+            # A worker's rework scope is assignment-scoped in-process state
+            # (SR-060) — never the lane's tracked docs/rework-wi pointer,
+            # which a train branch must not carry. The verdict text itself
+            # is embedded in the next build session's prompt.
+            if worker and merged == "CHANGES-REQUESTED":
+                worker["rework"] = "\n".join(
+                    (rv.text or "").strip()
+                    for (_ph, rv, _f, _m) in st.round_verdicts
+                    if (rv.text or "").strip()
+                )
+                worker["rework_wi"] = st.last_impl_wi or ""
+                print(
+                    "dispatch: CHANGES-REQUESTED -> assignment-scoped "
+                    "rework of {}".format(worker["rework_wi"] or "the train")
+                )
+            elif worker and merged == "APPROVE":
+                worker["rework"] = ""
+                worker["rework_wi"] = ""
+            st.round_verdicts = []
+            if worker:
+                pass  # handled above — no lane rework-wi file in worker mode
+            elif merged == "CHANGES-REQUESTED" and st.last_impl_wi:
+                rework_path = lane / "rework-wi"
+                rework_path.write_text(st.last_impl_wi + "\n", encoding="utf-8")
+                commit_telemetry(root, session, "review rework scope", [rework_path])
+                print(
+                    "dispatch: CHANGES-REQUESTED -> rework override {} "
+                    "takes precedence".format(st.last_impl_wi)
+                )
+            elif merged == "APPROVE":
+                rework_path = lane / "rework-wi"
+                if (
+                    st.last_impl_wi
+                    and rework_path.exists()
+                    and read_declared(rework_path, "") == st.last_impl_wi
+                ):
+                    rework_path.unlink()
+                    commit_telemetry(
+                        root, session, "review rework scope cleared", [rework_path]
+                    )
+                    print(
+                        "dispatch: APPROVE -> cleared rework override {}".format(
+                            st.last_impl_wi
+                        )
+                    )
+            # State consequences of the escalation happen ONCE, here (WI-171
+            # page re-arm, swap/tier-up/changes-requested); the branch below
+            # keeps only the page path's I/O (failure_action / banner /
+            # run-state). apply_decision first is safe — failure_action does
+            # not read page_fails_since.
+            st.apply_decision(decision["action"], merged)
+            if decision["action"] == "page-human":
+                fa = agent_route.failure_action(gate_policy)
+                print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
+                if fa["mode"] == "attended":
+                    if not worker:
+                        (lane / "run-state").write_text(
+                            "NEEDS-HUMAN\nask: review escalation — "
+                            + decision["reason"]
+                            + "\n",
+                            encoding="utf-8",
+                        )
+                    stop_banner(
+                        status_path,
+                        "PAGE-HUMAN — review escalation",
+                        decision["reason"] + " | " + fa["note"],
+                    )
+                    return EXIT_NEEDS_HUMAN
+                if fa.get("design_check"):
+                    st.set_design_check()
+    elif managed and is_critique:
+        # The perceptual arbiter (WI-068): read the critic's verdict, iterate
+        # BUILD<->CRITIQUE until APPROVE or the budget trips S8 escalation.
+        if verdict_path and Path(verdict_path).exists():
+            v = score_reviews.parse_verdict(
+                Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
+                model=route_family,
+            )
+            merged = (v.verdict or "").upper()
+            print(
+                "critique [{}]: verdict={} findings={} scope={} ({})".format(
+                    route_id,
+                    merged or "?",
+                    len(v.findings),
+                    ",".join(sorted(st.critique_scope)) or "—",
+                    verdict_path,
+                )
+            )
+            # record_critique_verdict resets critique_rounds on the page path,
+            # so capture the exhausted count for the (byte-identical) budget
+            # print BEFORE the call — the printed value is the post-increment
+            # round count, i.e. pre-call rounds + 1.
+            pre_rounds = st.critique_rounds
+            action = st.record_critique_verdict(merged)
+            if action == "page":
+                # Budget exhausted -> the S8 page-the-human semantics, keyed
+                # to docs/gate-policy (same failure_action the review round
+                # uses). The critic gates iteration; the human owns final
+                # acceptance via Attest at gate closure.
+                fa = agent_route.failure_action(gate_policy)
+                print(
+                    "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
+                    "{} -> page-human: {}".format(
+                        fa["mode"], pre_rounds + 1, st.critique_limit, fa["note"]
+                    )
+                )
+                if fa["mode"] == "attended" or st.critique_exhaustion == "block":
+                    if not worker:
+                        (lane / "run-state").write_text(
+                            "NEEDS-HUMAN\nask: critique budget exhausted "
+                            "still CHANGES-REQUESTED — review the findings "
+                            "and rule\n",
+                            encoding="utf-8",
+                        )
+                    stop_banner(
+                        status_path,
+                        "PAGE-HUMAN — critique budget exhausted",
+                        "the critique loop hit its {}-round budget still "
+                        "CHANGES-REQUESTED | {}".format(st.critique_limit, fa["note"]),
+                    )
+                    return EXIT_NEEDS_HUMAN
+                if fa.get("design_check"):
+                    st.set_design_check()
+            # action == "rework" (next_phase set to BUILD) / "approved" (the
+            # loop ended) need nothing more from the caller.
+        else:
+            # No verdict written (errored/stalled): cool + re-critique next pass
+            # (the stall guard backstops a critic that never writes one).
+            st.cool(route_id, now)
+            print(
+                "critique: {} wrote no verdict ({}); cooled, re-critiquing".format(
+                    route_id, outcome
+                )
+            )
+    elif managed and not is_review:
+        if outcome in ("ERROR", "TIMEOUT"):
+            st.cool(route_id, now)
+            # Say WHY the pool is shrinking, at the moment it shrinks — the
+            # WAITING/no-verdict siblings already do; this path was silent.
+            # The row's Notes carries the actionable hint (auth/install),
+            # and the session log holds the full transcript (WI-109).
+            note = registry[route_id].notes
+            print(
+                "route: {} session outcome={} (exit {}); cooled ~{}s, "
+                "re-routing{}".format(
+                    route_id,
+                    outcome,
+                    code,
+                    int(st.cooldown_seconds),
+                    " — " + note if note else "",
+                )
+            )
+        elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
+            st.on_committed_build(route_family, wi_label, commits)
+            # The review round follows the reviewer dial (S8). A traincar
+            # is ONE review scope (WI-183, SR-062): a worker schedules the
+            # round only once EVERY assigned WI is built, and the round
+            # covers the combined train diff base..HEAD — never a per-WI
+            # slice of it. An intermediate constituent commit is
+            # accepted-on-train (locally green and committed), not
+            # reviewed; the cycle comes once, at the end.
+            schedule_review = rp_int >= 1
+            if worker and schedule_review:
+                built_now, _blk = train_evidence(root, worker["base"])
+                schedule_review = all(w in built_now for w in worker["assigned"])
+                if schedule_review:
+                    st.set_train_range("{}..{}".format(worker["base"], after))
+            if schedule_review:
+                queued = st.schedule_review_round()
+                print(
+                    "dispatch: review-policy {} -> scheduling review round {}{}".format(
+                        rp_int,
+                        queued,
+                        " over the whole train diff" if worker else "",
+                    )
+                )
+            # The critique round is INDEPENDENT of the review dial (WI-068): it
+            # fires only when this build's WI touches a Critique-verified SR.
+            # Vacuous when no Critique SR exists, so a non-adopter pays nothing.
+            if st.critique_srs:
+                scope_wis = build_scope_wis(root, docs, commits)
+                in_scope = build_scope_srs(root, docs, commits) & st.critique_srs
+                if in_scope:
+                    # A NEW scope starts a fresh budget; a rework of the SAME
+                    # scope (a CHANGES-REQUESTED loop) preserves the count, so
+                    # the budget actually bounds the loop (schedule_critique
+                    # folds that reset in; critique_control does not read the
+                    # round count, so the order is identical to before).
+                    limit, exhaustion = critique_control(
+                        docs, scope_wis, st.critique_max
+                    )
+                    st.schedule_critique(in_scope, limit, exhaustion)
+                    print(
+                        "dispatch: build touches Critique SR(s) {} -> scheduling "
+                        "CRITIQUE round (budget {}, exhaustion {})".format(
+                            ",".join(sorted(in_scope)),
+                            "inf" if limit is None else limit,
+                            exhaustion,
+                        )
+                    )
+        elif phase == "DESIGN-CHECK":
+            # The design-check ruling has run (its verdict is in the commit /
+            # log); resume building. Without a tracked run-phase this reset is
+            # in-process (WI-180) — the agent no longer advances a phase file.
+            st.after_design_check()
+    return None
+
+
+def run_iteration(ctx, i):
+    """One coordinator session end-to-end: guards, routing (route_session),
+    launch, telemetry, bookkeeping (session_bookkeeping), and the outcome
+    ladder. Returns an int exit code to END the run, or None to proceed to
+    the next iteration (a `continue` path returns None early, so the trailing
+    pause sleep — the last statement — is naturally skipped)."""
+    args = ctx.args
+    root = ctx.root
+    lane = ctx.lane
+    status_path = ctx.status_path
+    track = ctx.track
+    worker = ctx.worker
+    managed = ctx.managed
+    start_dirty = ctx.start_dirty
+    raw_dir = ctx.raw_dir
+    iter_dir = ctx.iter_dir
+    tag = ctx.tag
+    use_live = ctx.use_live
+    rp_int = ctx.rp_int
+    st = ctx.st
+    # WI-147: a graceful-pause request (docs/pause) stops the loop at a
+    # session *boundary* — never mid-session. Checked at the top of every
+    # iteration, so iteration 1 is the launch-time refusal (no session starts
+    # while the file is present) and a mid-run request takes effect only after
+    # the in-flight session has already finished and committed. run-state is
+    # left as-is; deleting docs/pause and re-launching resumes.
+    # A worker ignores docs/pause: pause stops NEW RESERVATIONS at the
+    # dispatcher boundary (spec §12); an in-flight worker finishes its
+    # current safe boundary and remains recoverable.
+    paused = None if worker else pause_reason(lane)
+    if paused is not None:
+        because = " — reason: {}".format(paused) if paused else ""
+        stop_banner(
+            status_path,
+            "paused (docs/pause present)",
+            "a graceful-pause request is in effect{}. No new session will "
+            "start; delete {} and re-run agent-resume.* to resume.".format(
+                because, lane / "pause"
+            ),
+        )
+        return EXIT_PAUSED
+    # WI-148: a declared docs/blackout window pauses NEW sessions on UTC
+    # weekdays. The in-flight session already wrapped normally (the pause
+    # semantic), so here we simply wait the window out and then let this
+    # iteration's session start — no iteration budget is consumed by waiting
+    # (we sleep inline, never `continue`), so a single walk-away launch
+    # survives the blackout and resumes automatically. Absent/disabled file
+    # => a no-op (byte-identical to today).
+    wake = blackout_wake(
+        read_declared(lane / "blackout", ""), datetime.datetime.utcnow()
+    )
+    if wake:
+        resume_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=wake)
+        print(
+            "agent_loop: inside the docs/blackout window — starting no new "
+            "session until {} UTC (~{}s); waiting.".format(
+                resume_at.strftime("%H:%M"), wake
+            )
+        )
+        time.sleep(wake)
+    # Inject the reconcile note into the first session's prompt only (see the
+    # once-at-start rationale above); every later session's prompt is
+    # unchanged from today.
+    resume_reconcile = (
+        RESUME_RECONCILE_NOTE + "\n\n---\n\n" if (i == 1 and start_dirty) else ""
+    )
+    # Worker end-state check BEFORE spending a session: a resumed worker
+    # whose evidence is already complete (or blocked) exits immediately —
+    # recovery reconstructs the same verdict from git alone (spec §11).
+    current_wi = None
+    if worker:
+        end = worker_endstate(
+            root,
+            worker,
+            bool(st.review_queue or st.critique_queue),
+            managed,
+            rp_int,
+        )
+        if end:
+            return worker_exit_banner(worker, end)
+        built, _blk = train_evidence(root, worker["base"])
+        remaining = [w for w in worker["assigned"] if w not in built]
+        current_wi = (
+            remaining[0]
+            if remaining
+            else (worker.get("rework_wi") or worker["assigned"][-1])
+        )
+        # §7 continuation re-check (WI-183): before the lane takes the next
+        # constituent of a MULTI-WI traincar, the classifier must still
+        # permit optimistic grouping — a POSITIVE conflict (spine/gate/
+        # attestation/protected/high-risk/critique/checkpoint) ends the
+        # train EARLY instead of building inside a shared review scope.
+        # Missing classification is NOT a newly-visible conflict: the
+        # dispatcher already fails closed at packing, and an explicit
+        # assignment is dispatcher-authorized. Built evidence stands; the
+        # dispatcher releases the unstarted reservations (SR-062).
+        if remaining and len(worker["assigned"]) > 1:
+            sched_wi = worker["sched"].get(current_wi)
+            sched_class, reasons = (
+                schedule.classify(sched_wi)
+                if sched_wi is not None
+                else (schedule.SCHED_UNCLASSIFIED, ["unclassified:missing-row"])
+            )
+            if sched_class in (
+                schedule.SCHED_SPINE_SERIAL,
+                schedule.SCHED_PROTECTED,
+                schedule.SCHED_SINGLE_WI,
+            ):
+                print(
+                    "\n=== worker {} [{}]: TRAIN-END (early) ===".format(
+                        worker["train"], ";".join(worker["assigned"])
+                    )
+                )
+                print(
+                    "continuation refused at {}: {} — built {} stay(s) "
+                    "accepted-on-train; the dispatcher releases the "
+                    "unstarted constituent(s).".format(
+                        current_wi,
+                        ";".join(reasons),
+                        ";".join(sorted(built)) or "(none)",
+                    )
+                )
+                return EXIT_TRAIN_END
+    session = "{:03d}".format(
+        next_session_number(iter_dir, worker["train"] if worker else None)
+    )
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    # The WI this session claims (WI-137) — recorded as a `# wi:` header line
+    # + an index column. A worker's is its assignment's current WI; otherwise,
+    # with docs/next-wi retired (WI-180), the only durable per-session scope
+    # pointer is a rework override; empty when neither.
+    rework_wi = "" if worker else read_declared(lane / "rework-wi", "")
+    wi_label = current_wi if worker else rework_wi
+    before = head_sha(root)
+    now = time.time()
+    plan = route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now)
+    if isinstance(plan, int):
+        return plan
+    phase = plan["phase"]
+    model = plan["model"]
+    tmpl = plan["tmpl"]
+    prompt = plan["prompt"]
+    guarded = plan["guarded"]
+    session_env = plan["session_env"]
+    print(
+        "=== session {} [{}] ({}/{}) | phase={} model={}{} ===".format(
+            session,
+            worker["train"] if worker else (track or "single"),
+            i,
+            args.max_iterations,
+            phase or "—",
+            model or "—",
+            " wi={}".format(current_wi) if worker else "",
+        )
+    )
+    argv = build_argv(tmpl, model, prompt)
+    # The coordinator's own clock, so a duration exists even when the
+    # session dies before emitting JSON (spawn failure, timeout, crash).
+    wall_start = time.time()
+    live = LiveStatus(track or "single") if use_live else None
+    if args.no_session_echo:
+        on_line = None
+    elif live is not None:
+        on_line = live.event
+    else:
+        on_line = echo_session_line
+    code, output, timed_out = run_session(
+        argv,
+        root,
+        args.session_timeout,
+        env=session_env,
+        on_line=on_line,
+    )
+    if live is not None:
+        live.finish()
+    wall_secs = int(round(time.time() - wall_start))
+
+    try:
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        (raw_dir / "{}{}-{}.log".format(tag, session, stamp)).write_bytes(
+            output.encode("utf-8", "replace")
+        )
+    except OSError:
+        pass  # the raw stream is debug convenience, never load-bearing
+
+    data = parse_json_result(output)
+    tokens = ""
+    usage = data.get("usage") or {}
+    if usage.get("input_tokens") is not None or usage.get("output_tokens") is not None:
+        tokens = "{}+{}".format(
+            usage.get("input_tokens", 0), usage.get("output_tokens", 0)
+        )
+    cost = data.get("total_cost_usd", "")
+    # Where the wall time went: API round-trips vs local tool execution
+    # (the gap is the harness running gates/tools). Blank when the CLI
+    # reported no JSON result — the wall clock above still stands.
+    api_ms = data.get("duration_api_ms")
+    api_secs = int(round(api_ms / 1000.0)) if isinstance(api_ms, (int, float)) else ""
+    turns = data.get("num_turns", "")
+    # Session-shape telemetry (WI-124): why a session was slow, not just
+    # that it was. ttft = boot-to-first-token (the initial context-ingest
+    # latency); cache read/create = context volume carried per turn /
+    # ingested fresh at session start; effort + fast-mode name the two
+    # per-turn speed dials so their experiments are measurable per row;
+    # prompt-chars sizes the instruction the coordinator composed. All
+    # blank when the CLI reported no JSON (the effort/prompt pair still
+    # stands — the coordinator knows what it launched).
+    ttft_ms = data.get("ttft_ms")
+    ttft_secs = (
+        int(round(ttft_ms / 1000.0)) if isinstance(ttft_ms, (int, float)) else ""
+    )
+    cache_read = usage.get("cache_read_input_tokens", "")
+    cache_create = usage.get("cache_creation_input_tokens", "")
+    fast = data.get("fast_mode_state", "") or ""
+    effort = (session_env or os.environ).get("CLAUDE_CODE_EFFORT_LEVEL", "")
+
+    reset_hint = limit_reset_hint(output, data, code)
+    after = head_sha(root)
+    commits = ""
+    if before != after:
+        commits = "{}..{}".format(before or "(root)", after or "?")
+    ctx.state = (
+        "RUNNING" if worker else read_declared(lane / "run-state", "RUNNING").upper()
+    )
+
+    # (outcome, errored) via the session-outcome ladder — full semantics
+    # (including the "failed before it could work" error rule) live in
+    # classify_outcome's docstring (single-source, WI-080 Slice D).
+    outcome, errored = classify_outcome(
+        reset_hint, timed_out, ctx.state, before != after, data, code
+    )
+
+    meta = {
+        "session": session,
+        "stamp": stamp,
+        "date": time.strftime("%Y-%m-%d %H:%M"),
+        "train": worker["train"] if worker else "",
+        "base": worker["base"][:12] if worker else "",
+        "phase": phase,
+        "wi": wi_label,
+        "model": model,
+        "guardrails": "on" if guarded else "",
+        "outcome": outcome,
+        "commits": commits,
+        "tokens": tokens,
+        "cost-usd": cost,
+        "wall-secs": wall_secs,
+        "api-secs": api_secs,
+        "turns": turns,
+        "ttft-secs": ttft_secs,
+        "cache-read": cache_read,
+        "cache-create": cache_create,
+        "effort": effort,
+        "fast": fast,
+        "prompt-chars": len(prompt),
+        "exit-code": code,
+    }
+    log_path = write_session_log(iter_dir, meta, output)
+    # A worker never regenerates the iteration index: it is a GENERATED
+    # root artifact the integrator rebuilds on the composed tree (spec
+    # §5.1) — two workers regenerating it would collide at integration.
+    if not worker:
+        regenerate_index(lane)
+    # Commit the coordinator's own bookkeeping now, in its own telemetry
+    # commit — never let it ride the next session's work commit or dangle
+    # (WI-137). The review scoreboard is committed at its own write below.
+    commit_telemetry(
+        root,
+        tag + session,
+        "{} {}".format(phase or "—", outcome),
+        [log_path] if worker else [log_path, lane / "iteration_index.md"],
+    )
+    print(
+        "session {}: outcome={} commits={} wall={}s{}".format(
+            session,
+            outcome,
+            commits or "—",
+            wall_secs,
+            " api={}s turns={}".format(api_secs, turns) if turns != "" else "",
+        )
+    )
+    r = session_bookkeeping(
+        ctx, plan, outcome, code, commits, after, reset_hint, now, session, wi_label
+    )
+    if r == "reroute":
+        return None
+    if r is not None:
+        return r
+    if outcome == "WAITING":
+        # A throttled session is not progress *or* a stall — never count
+        # it toward the stall guard (three throttled sessions would
+        # otherwise misread as a stall and abort, the NHW original's bug).
+        wait = seconds_until_reset(reset_hint)
+        if args.wait_on_limit and wait is None:
+            # Unrecognized reset wording (locale/format drift): a bounded
+            # fallback nap keeps the walk-away run alive, capped at the
+            # ceiling the human already consented to waiting.
+            wait = min(args.limit_retry_fallback, args.wait_on_limit)
+            print(
+                "rate limit hit — reset time {!r} not recognized; "
+                "sleeping {}s (--limit-retry-fallback) and retrying.".format(
+                    reset_hint, wait
+                )
+            )
+            time.sleep(wait)
+            return None
+        if args.wait_on_limit and wait and wait <= args.wait_on_limit:
+            print(
+                "rate limit hit — sleeping {}s until the reset ({}).".format(
+                    wait, reset_hint
+                )
+            )
+            time.sleep(wait)
+            return None
+        stop_banner(
+            status_path,
+            "WAITING on a rate limit",
+            "resume at: {} (re-run agent-resume.* then)".format(reset_hint),
+        )
+        return EXIT_WAITING
+    if outcome == "DONE":
+        stop_banner(status_path, "run-state=DONE")
+        return EXIT_DONE
+    if outcome == "BLOCKED":
+        stop_banner(
+            status_path,
+            "run-state=BLOCKED",
+            "everything remaining is in the Blocked register.",
+        )
+        return EXIT_BLOCKED
+    if outcome == "NEEDS-HUMAN":
+        # Headline the driver's own ask line (WI-127): the status excerpt
+        # below is capped, and on a long Current State the Needs-<human>
+        # items land past the cap — the ask must never scroll away.
+        ask = read_ask(lane / "run-state")
+        stop_banner(
+            status_path,
+            "run-state=NEEDS-HUMAN",
+            (("ask: " + ask + "\n") if ask else "")
+            + "the next step requires a human act — the asks below; "
+            "re-run agent-resume.* after acting.",
+        )
+        return EXIT_NEEDS_HUMAN
+
+    # Worker end-state after the session too — a completed assignment must
+    # exit DONE here, not spend the remaining budget re-checking at the top.
+    if worker:
+        end = worker_endstate(
+            root,
+            worker,
+            bool(st.review_queue or st.critique_queue),
+            managed,
+            rp_int,
+        )
+        if end:
+            return worker_exit_banner(worker, end)
+    st.note_session(before != after, outcome == "ERROR")
+    verdict = st.stall_verdict(args.stall_limit)
+    if verdict == "agent-error":
+        # Every session that tripped the guard errored before working —
+        # an unavailable agent, not a stuck task. Name it so, and point
+        # at the fix (an unsupported model is repointed by hand).
+        stop_banner(
+            status_path,
+            "STALL — agent error",
+            "{} consecutive session(s) errored before doing work "
+            "(agent unavailable / CLI or model error) — aborting. Check "
+            "the AGENT_CMD model + auth and the latest {} "
+            "log (outcome=ERROR, its exit-code); an unsupported model is "
+            "fixed by pointing --model / the model map at a live "
+            "tier.".format(st.errors, iter_dir),
+        )
+        return EXIT_STALL
+    if verdict == "stall":
+        stop_banner(
+            status_path,
+            "STALL",
+            "{} consecutive session(s) without a commit — aborting to "
+            "protect the budget. See the latest {} "
+            "log.".format(st.stall, iter_dir),
+        )
+        return EXIT_STALL
+    if i < args.max_iterations and args.pause:
+        time.sleep(args.pause)
+    return None
+
+
+def main():
+    _utf8_console()
+    args = parse_args()
+
+    # A worker runs in its leased linked worktree: --worktree IS the effective
+    # root (branch guard, sessions, policy reads all resolve there). WI-181.
+    if args.worktree:
+        root = Path(args.worktree).resolve()
+        if not root.is_dir():
+            print(
+                "agent_loop: --worktree {} does not exist".format(root),
+                file=sys.stderr,
+            )
+            return EXIT_PREFLIGHT
+    else:
+        root = Path(args.root).resolve()
+    docs = root / "docs"
+
+    # Dispatcher mode (WI-182, SR-061): --jobs (or the AGENT_JOBS env the
+    # migrated launchers wire) selects the parallel dispatcher. A worker
+    # assignment, legacy track, or interactive sitting always wins — those are
+    # explicit per-process roles the dispatcher itself launches or replaces.
+    jobs_opt = (
+        args.jobs
+        if args.jobs is not None
+        else (os.environ.get("AGENT_JOBS", "").strip() or None)
+    )
+    if jobs_opt is not None and not (
+        args.wi or args.train or args.track or args.interactive
+    ):
+        args.jobs = jobs_opt
+        return dispatch_run(args, root)
+    template = (
+        args.agent_cmd
+        if args.agent_cmd is not None
+        else os.environ.get("AGENT_CMD", "")
+    )
+    try:
+        model_map = parse_map(args.model_map)
+        cmd_map = parse_map(args.cmd_map)  # same "KEY=value" syntax
+        prompt_map = parse_map(args.prompt_map)  # phase -> prompt-template FILE
+        tier_map = parse_map(args.tier_map)  # phase -> tier
+        prefer_map = parse_map(args.prefer_map)  # phase -> registry id
+    except ValueError as exc:
+        print("agent_loop: {}".format(exc), file=sys.stderr)
+        return EXIT_PREFLIGHT
+
+    # The S8 routing layer (process-options.md "Unattended operation" ->
+    # routing/escalation). The enable-list's PRESENCE turns managed routing +
+    # loop-side reviewer dispatch on; ABSENT files keep exactly today's single
+    # AGENT_CMD/AGENT_MODEL behavior, so a fresh scaffold pays nothing (no silent
+    # model swap — consent = the enabled set + the declared rules).
+    registry, reg_errors = agent_route.load_registry(docs / "agents.csv")
+    raw_enabled = agent_route.load_enabled(docs / "agents-enabled")
+    # The enable-list's PRESENCE (not its resolvability) turns managed routing on
+    # — an unresolvable token must fail preflight, not silently fall to legacy.
+    managed = bool(raw_enabled)
+    # Version-less tokens resolve to concrete pair-row ids (exact-id, else newest
+    # in the Family-Model line); unresolvable tokens become preflight failures.
+    tag_rank = agent_route.load_tag_rank(docs / "agents.csv")
+    enabled, enable_errors = agent_route.resolve_enabled(
+        raw_enabled, registry, tag_rank
+    )
+
+    failures, prompt_templates = map_preflight(
+        root,
+        template,
+        args,
+        cmd_map,
+        prompt_map,
+        tier_map,
+        prefer_map,
+        managed,
+        registry,
+        enabled,
+        reg_errors,
+        enable_errors,
+    )
+    if failures:
+        print("agent_loop: preflight failed —", file=sys.stderr)
+        for f in failures:
+            print("  - " + f, file=sys.stderr)
+        return EXIT_PREFLIGHT
+
+    # Resolve the coordination lane. --track redirects the per-track files
+    # (run-state, status.md, iteration/) under docs/tracks/<track>/;
+    # the repo-singular policy files (gate/gate-policy/push-policy/privacy-check/
+    # guardrails-policy) always stay at docs/. No track = docs/ itself, so
+    # single-lane operation is unchanged (preflight already slug-validated).
+    track = sanitize_track(args.track) if args.track else None
+    if track:
+        # One compatibility window (WI-181): old behavior unchanged, loudly.
+        print(
+            "agent_loop: WARNING - --track is deprecated (WI-181): the "
+            "dispatcher's explicit --wi/--train worker assignment replaces "
+            "long-lived tracks. Legacy behavior continues for one "
+            "compatibility window (process-options.md 'Parallel tracks').",
+            file=sys.stderr,
+        )
+    worker, err = build_worker_assignment(args, root)
+    if err is not None:
+        return err
     lane = lane_dir(docs, track)
     lane.mkdir(parents=True, exist_ok=True)
     status_path = lane / "status.md"
-    track_preamble = ""
-    if track:
-        track_preamble = (
-            "You are driving the '{t}' development track. Wherever the "
-            "instructions below say docs/status.md, docs/plan.md or "
-            "docs/run-state, use the docs/tracks/{t}/ copy instead — that "
-            "lane is your resume surface and coordinator contract. Append this "
-            "session's evidence to docs/tracks/{t}/log.md. Do NOT write the root "
-            "docs/status.md (the cross-track dispatcher, integrator-only) or any "
-            "other track's lane. The requirement registries "
-            "(docs/requirements/*), docs/gate, and the root docs/log.md gate "
-            "sign-offs are repo-singular and shared: propose registry changes as "
-            "off-spine scope drafts for the integrator to land — never edit "
-            "another lane. Stay on the llm/{t} branch (process-options.md "
-            "'Parallel tracks').\n\n---\n\n"
-        ).format(t=track)
+    track_preamble = track_preamble_text(track)
 
     gate_policy = read_declared(docs / "gate-policy", "attended")
     push_policy = read_declared(docs / "push-policy", "human")
@@ -4494,95 +5600,37 @@ def main():
     atexit.register(release_lock, lock_path)
 
     if args.interactive:
-        phase, model = session_model(model_map, args.model)
-        # Explicit interactive template wins; then the per-phase map; then the
-        # default — so a REVIEW-phase interactive sitting uses the same
-        # provider routing the unattended leg would.
-        itemplate = (
-            args.interactive_cmd
-            if args.interactive_cmd is not None
-            else os.environ.get("AGENT_CMD_INTERACTIVE", "")
-            or session_template(cmd_map, template, phase)
+        return run_interactive(
+            args,
+            root,
+            track,
+            model_map,
+            cmd_map,
+            template,
+            resume_reconcile,
+            track_preamble,
+            guardrails_policy,
+            warned_no_core,
         )
-        print(
-            "=== one interactive session | track={} phase={} model={} ===".format(
-                track or "—", phase or "—", model or "—"
-            )
-        )
-        argv = build_argv(
-            itemplate,
-            model,
-            compose_session_prompt(
-                model,
-                None,
-                resume_reconcile,
-                track_preamble,
-                args.prompt,
-                guardrails_policy,
-                root,
-                warned_no_core,
-            )[0],
-        )
-        proc = subprocess.run(argv, cwd=str(root))
-        return proc.returncode
 
-    print("=== unattended coordinator (scripts/agent_loop.py) ===")
-    print("repo: {} | branch: {}".format(root, branch or "(none)"))
-    if worker:
-        print(
-            "worker assignment: train={} wi={} base={} (result = committed "
-            "trailers + exit code; no lane files)".format(
-                worker["train"], ";".join(worker["assigned"]), worker["base"][:12]
-            )
-        )
-    else:
-        print("track: {} | lane: {}".format(track or "(single-lane)", lane))
-    print(
-        "gate-policy: {} | push-policy: {} (the coordinator never pushes "
-        "under 'human') | review-policy: {} (docs/review-policy — the reviewer "
-        "dial: {})".format(
-            gate_policy,
-            push_policy,
-            review_policy,
-            "LOOP-ENFORCED (managed routing on) — a committing build schedules "
-            "the reviewer round(s)"
-            if managed
-            else "surfaced here, enforced by the integrator convention, never "
-            "by the loop",
-        )
+    print_run_banner(
+        root,
+        branch,
+        worker,
+        track,
+        lane,
+        gate_policy,
+        push_policy,
+        review_policy,
+        managed,
+        enabled,
+        registry,
+        guardrails_policy,
+        template,
+        cmd_map,
+        prompt_map,
+        docs,
     )
-    if managed:
-        print(
-            "routing: docs/agents-enabled present -> managed model selection from "
-            "{} enabled of {} registry models (tier + heterogeneity + cooldown + "
-            "tier-up-never-down); every selection logged before launch".format(
-                len(enabled), len(registry)
-            )
-        )
-    print(
-        "guardrails-policy: {} (docs/guardrails-policy — the vendored core is "
-        "injected per session when the policy selects that session's "
-        "model)".format(guardrails_policy)
-    )
-    print("agent command: {}".format(template))
-    for ph in sorted(cmd_map):
-        print("  cmd-map [{}]: {}".format(ph, cmd_map[ph]))
-    for ph in sorted(prompt_map):
-        print("  prompt-map [{}]: {}".format(ph, prompt_map[ph]))
-    print(
-        "CONSENT: sessions run headless; a permission-bypass flag in "
-        "AGENT_CMD means unattended edits without prompts — you consented by "
-        "wiring it and running this. Ctrl+C is safe; re-running resumes."
-    )
-    privacy_on = read_declared(docs / "privacy-check", "false").lower() == "true"
-    if privacy_on and not (branch or "").startswith("llm/"):
-        print(
-            "WARNING: privacy-checked repo (docs/privacy-check) but the "
-            "current branch {!r} is not an llm/ iteration branch — see "
-            'process-options.md "Agent iteration branch & sync".'.format(
-                branch or "(none)"
-            )
-        )
 
     raw_dir = root / "out" / "run-logs"
     iter_dir = lane / "iteration"
@@ -4663,849 +5711,49 @@ def main():
             file=sys.stderr,
         )
 
+    ctx = LoopContext()
+    ctx.args = args
+    ctx.root = root
+    ctx.docs = docs
+    ctx.lane = lane
+    ctx.status_path = status_path
+    ctx.track = track
+    ctx.track_preamble = track_preamble
+    ctx.worker = worker
+    ctx.managed = managed
+    ctx.registry = registry
+    ctx.enabled = enabled
+    ctx.template = template
+    ctx.model_map = model_map
+    ctx.cmd_map = cmd_map
+    ctx.prompt_templates = prompt_templates
+    ctx.tier_map = tier_map
+    ctx.prefer_map = prefer_map
+    ctx.gate_policy = gate_policy
+    ctx.guardrails_policy = guardrails_policy
+    ctx.warned_no_core = warned_no_core
+    ctx.start_dirty = start_dirty
+    ctx.raw_dir = raw_dir
+    ctx.iter_dir = iter_dir
+    ctx.tag = tag
+    ctx.use_live = use_live
+    ctx.reviews_dir = reviews_dir
+    ctx.scoreboard = scoreboard
+    ctx.rp_int = rp_int
+    ctx.st = st
+    ctx.state = state
+
     for i in range(1, args.max_iterations + 1):
-        # WI-147: a graceful-pause request (docs/pause) stops the loop at a
-        # session *boundary* — never mid-session. Checked at the top of every
-        # iteration, so iteration 1 is the launch-time refusal (no session starts
-        # while the file is present) and a mid-run request takes effect only after
-        # the in-flight session has already finished and committed. run-state is
-        # left as-is; deleting docs/pause and re-launching resumes.
-        # A worker ignores docs/pause: pause stops NEW RESERVATIONS at the
-        # dispatcher boundary (spec §12); an in-flight worker finishes its
-        # current safe boundary and remains recoverable.
-        paused = None if worker else pause_reason(lane)
-        if paused is not None:
-            because = " — reason: {}".format(paused) if paused else ""
-            stop_banner(
-                status_path,
-                "paused (docs/pause present)",
-                "a graceful-pause request is in effect{}. No new session will "
-                "start; delete {} and re-run agent-resume.* to resume.".format(
-                    because, lane / "pause"
-                ),
-            )
-            return EXIT_PAUSED
-        # WI-148: a declared docs/blackout window pauses NEW sessions on UTC
-        # weekdays. The in-flight session already wrapped normally (the pause
-        # semantic), so here we simply wait the window out and then let this
-        # iteration's session start — no iteration budget is consumed by waiting
-        # (we sleep inline, never `continue`), so a single walk-away launch
-        # survives the blackout and resumes automatically. Absent/disabled file
-        # => a no-op (byte-identical to today).
-        wake = blackout_wake(
-            read_declared(lane / "blackout", ""), datetime.datetime.utcnow()
-        )
-        if wake:
-            resume_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=wake)
-            print(
-                "agent_loop: inside the docs/blackout window — starting no new "
-                "session until {} UTC (~{}s); waiting.".format(
-                    resume_at.strftime("%H:%M"), wake
-                )
-            )
-            time.sleep(wake)
-        # Inject the reconcile note into the first session's prompt only (see the
-        # once-at-start rationale above); every later session's prompt is
-        # unchanged from today.
-        resume_reconcile = (
-            RESUME_RECONCILE_NOTE + "\n\n---\n\n" if (i == 1 and start_dirty) else ""
-        )
-        # Worker end-state check BEFORE spending a session: a resumed worker
-        # whose evidence is already complete (or blocked) exits immediately —
-        # recovery reconstructs the same verdict from git alone (spec §11).
-        current_wi = None
-        if worker:
-            end = worker_endstate(
-                root,
-                worker,
-                bool(st.review_queue or st.critique_queue),
-                managed,
-                rp_int,
-            )
-            if end:
-                return worker_exit_banner(worker, end)
-            built, _blk = train_evidence(root, worker["base"])
-            remaining = [w for w in worker["assigned"] if w not in built]
-            current_wi = (
-                remaining[0]
-                if remaining
-                else (worker.get("rework_wi") or worker["assigned"][-1])
-            )
-            # §7 continuation re-check (WI-183): before the lane takes the next
-            # constituent of a MULTI-WI traincar, the classifier must still
-            # permit optimistic grouping — a POSITIVE conflict (spine/gate/
-            # attestation/protected/high-risk/critique/checkpoint) ends the
-            # train EARLY instead of building inside a shared review scope.
-            # Missing classification is NOT a newly-visible conflict: the
-            # dispatcher already fails closed at packing, and an explicit
-            # assignment is dispatcher-authorized. Built evidence stands; the
-            # dispatcher releases the unstarted reservations (SR-062).
-            if remaining and len(worker["assigned"]) > 1:
-                sched_wi = worker["sched"].get(current_wi)
-                sched_class, reasons = (
-                    schedule.classify(sched_wi)
-                    if sched_wi is not None
-                    else (schedule.SCHED_UNCLASSIFIED, ["unclassified:missing-row"])
-                )
-                if sched_class in (
-                    schedule.SCHED_SPINE_SERIAL,
-                    schedule.SCHED_PROTECTED,
-                    schedule.SCHED_SINGLE_WI,
-                ):
-                    print(
-                        "\n=== worker {} [{}]: TRAIN-END (early) ===".format(
-                            worker["train"], ";".join(worker["assigned"])
-                        )
-                    )
-                    print(
-                        "continuation refused at {}: {} — built {} stay(s) "
-                        "accepted-on-train; the dispatcher releases the "
-                        "unstarted constituent(s).".format(
-                            current_wi,
-                            ";".join(reasons),
-                            ";".join(sorted(built)) or "(none)",
-                        )
-                    )
-                    return EXIT_TRAIN_END
-        session = "{:03d}".format(
-            next_session_number(iter_dir, worker["train"] if worker else None)
-        )
-        stamp = time.strftime("%Y%m%d-%H%M%S")
-        # The WI this session claims (WI-137) — recorded as a `# wi:` header line
-        # + an index column. A worker's is its assignment's current WI; otherwise,
-        # with docs/next-wi retired (WI-180), the only durable per-session scope
-        # pointer is a rework override; empty when neither.
-        rework_wi = "" if worker else read_declared(lane / "rework-wi", "")
-        wi_label = current_wi if worker else rework_wi
-        before = head_sha(root)
-        now = time.time()
-        is_review = False
-        is_critique = False
-        verdict_path = None
-        route_id = None  # the selected registry id (managed mode)
-        route_family = None  # the selected pair row's Family (identity, not route)
-        # The launch environment: None = inherit the ambient env (today's exact
-        # call); a pair row's Env is merged over os.environ below. This is how a
-        # router (ANTHROPIC_BASE_URL), a second account (CLAUDE_CONFIG_DIR /
-        # CODEX_HOME), or an API key (GEMINI_API_KEY) is selected declaratively.
-        session_env = None
-        if managed:
-            phase, is_review, is_critique = st.pick_phase()
-            # A worker pins the BUILD tier from its reserved WI row's BuildTier
-            # (WI-181 — the per-WI pin that used to ride docs/next-wi); the phase
-            # default covers an empty cell, and an escalation override still wins
-            # (tier-up-never-down). Computed here (the caller owns the worker row
-            # read); route_intent folds it in against the phase default.
-            pinned_tier = None
-            if (phase == "BUILD" or phase == "") and worker and current_wi:
-                row_tier = agent_route.normalize_tier(
-                    (worker["rows"].get(current_wi, {}).get("BuildTier") or "")
-                    .strip()
-                    .lower()
-                )
-                if row_tier in agent_route.TIER_ORDER:
-                    pinned_tier = row_tier
-            tier, exclude, prefer_different = st.route_intent(
-                phase, is_review, is_critique, tier_map, pinned_tier
-            )
-            route_id, reason = agent_route.select(
-                enabled,
-                registry,
-                tier,
-                now,
-                st.cooldowns,
-                exclude,
-                prefer_different,
-                [prefer_map[phase]] if phase in prefer_map else (),
-            )
-            # Log the routing decision BEFORE launch (the no-silent-swap rule).
-            print("route [{}]: {}".format(phase or "—", reason))
-            if route_id is None:
-                # Every enabled model at the preferred tier-or-stronger is cooling
-                # down or none is enabled: page rather than drop to a weaker tier.
-                # (A worker never writes run-state — its exit code is the page.)
-                if not worker:
-                    (lane / "run-state").write_text(
-                        "NEEDS-HUMAN\nask: no routable model — add/enable a model "
-                        "of the required tier in docs/agents.csv, or wait out the "
-                        "cooldown\n",
-                        encoding="utf-8",
-                    )
-                stop_banner(
-                    status_path,
-                    "NEEDS-HUMAN — no routable model",
-                    reason + " (add/enable a model of this tier, or wait for a "
-                    "cooldown; the loop never silently drops to a weaker tier).\n"
-                    # Per-row state + the Notes cell — the declared home for the
-                    # provider's sign-in/install hint (e.g. `opencode auth
-                    # login`), so the page says what to DO, not just that it
-                    # paged (WI-109).
-                     + agent_route.pool_context(enabled, registry, st.cooldowns, now),
-                )
-                return EXIT_NEEDS_HUMAN
-            m = registry[route_id]
-            model = m.model or route_id
-            route_family = m.family
-            tmpl = m.cmd_template or template
-            row_env = agent_route.parse_env(m.env)
-            if row_env:
-                # Only a declared Env changes the launch env — an empty Env keeps
-                # the inherited environment exactly (session_env stays None).
-                session_env = {**os.environ, **row_env}
-            if not is_review and (phase == "BUILD" or phase == ""):
-                st.note_build_tier(tier)
-            # A worker's verdict filename names the exact reviewed code HEAD
-            # (SR-060) — the review belongs to (train scope, reviewed commit),
-            # never to a mutable branch tip.
-            reviewed_sha = ""
-            if worker:
-                reviewed_sha = (
-                    st.impl_range.split("..")[1]
-                    if st.impl_range and ".." in st.impl_range
-                    else head_sha(root)
-                ) or ""
-            if is_review:
-                verdict_path = reviews_dir / (
-                    "{}-{}-{}.md".format(session, phase, reviewed_sha[:7])
-                    if worker
-                    else "{}-{}.md".format(session, phase)
-                )
-                verdict_path.parent.mkdir(parents=True, exist_ok=True)
-                body = reviewer_prompt(prompt_templates, phase, verdict_path)
-            elif is_critique:
-                verdict_path = reviews_dir / (
-                    "{}-CRITIQUE-{}.md".format(session, reviewed_sha[:7])
-                    if worker
-                    else "{}-CRITIQUE.md".format(session)
-                )
-                verdict_path.parent.mkdir(parents=True, exist_ok=True)
-                brief = critique_brief(root, docs, st.critique_scope)
-                body = critique_prompt(prompt_templates, verdict_path, brief)
-            elif worker:
-                # Every non-review worker session builds from the assignment
-                # prompt — never the resume-from-status default and never a
-                # repo prompt-map template (the assignment is the whole scope).
-                body = worker_prompt(
-                    root,
-                    worker["rows"],
-                    current_wi,
-                    worker["train"],
-                    worker["base"],
-                    worker["rework"],
-                )
-            elif phase in prompt_templates:
-                body = prompt_templates[phase]
-            else:
-                body = None
-            prompt, guarded = compose_session_prompt(
-                model,
-                body,
-                resume_reconcile,
-                track_preamble,
-                args.prompt,
-                guardrails_policy,
-                root,
-                warned_no_core,
-            )
-            if (
-                rework_wi
-                and not is_review
-                and not is_critique
-                and phase in ("", "BUILD")
-            ):
-                prompt = (
-                    "REWORK OVERRIDE: docs/rework-wi names {}. Rework that reviewed "
-                    "scope and its recorded findings before taking new "
-                    "work.\n\n---\n\n{}".format(rework_wi, prompt)
-                )
-        else:
-            phase, model = session_model(model_map, args.model)
-            tmpl = session_template(cmd_map, template, phase)
-            prompt, guarded = compose_session_prompt(
-                model,
-                worker_prompt(
-                    root,
-                    worker["rows"],
-                    current_wi,
-                    worker["train"],
-                    worker["base"],
-                    worker["rework"],
-                )
-                if worker
-                else None,
-                resume_reconcile,
-                track_preamble,
-                args.prompt,
-                guardrails_policy,
-                root,
-                warned_no_core,
-            )
-        if not model and "{model}" in tmpl:
-            print(
-                "agent_loop: the session's command template carries a {model} "
-                "placeholder but no model is configured for this phase "
-                "(--model / --model-map / AGENT_MODEL).",
-                file=sys.stderr,
-            )
-            return EXIT_PREFLIGHT
-        print(
-            "=== session {} [{}] ({}/{}) | phase={} model={}{} ===".format(
-                session,
-                worker["train"] if worker else (track or "single"),
-                i,
-                args.max_iterations,
-                phase or "—",
-                model or "—",
-                " wi={}".format(current_wi) if worker else "",
-            )
-        )
-        argv = build_argv(tmpl, model, prompt)
-        # The coordinator's own clock, so a duration exists even when the
-        # session dies before emitting JSON (spawn failure, timeout, crash).
-        wall_start = time.time()
-        live = LiveStatus(track or "single") if use_live else None
-        if args.no_session_echo:
-            on_line = None
-        elif live is not None:
-            on_line = live.event
-        else:
-            on_line = echo_session_line
-        code, output, timed_out = run_session(
-            argv,
-            root,
-            args.session_timeout,
-            env=session_env,
-            on_line=on_line,
-        )
-        if live is not None:
-            live.finish()
-        wall_secs = int(round(time.time() - wall_start))
-
-        try:
-            raw_dir.mkdir(parents=True, exist_ok=True)
-            (raw_dir / "{}{}-{}.log".format(tag, session, stamp)).write_bytes(
-                output.encode("utf-8", "replace")
-            )
-        except OSError:
-            pass  # the raw stream is debug convenience, never load-bearing
-
-        data = parse_json_result(output)
-        tokens = ""
-        usage = data.get("usage") or {}
-        if (
-            usage.get("input_tokens") is not None
-            or usage.get("output_tokens") is not None
-        ):
-            tokens = "{}+{}".format(
-                usage.get("input_tokens", 0), usage.get("output_tokens", 0)
-            )
-        cost = data.get("total_cost_usd", "")
-        # Where the wall time went: API round-trips vs local tool execution
-        # (the gap is the harness running gates/tools). Blank when the CLI
-        # reported no JSON result — the wall clock above still stands.
-        api_ms = data.get("duration_api_ms")
-        api_secs = (
-            int(round(api_ms / 1000.0)) if isinstance(api_ms, (int, float)) else ""
-        )
-        turns = data.get("num_turns", "")
-        # Session-shape telemetry (WI-124): why a session was slow, not just
-        # that it was. ttft = boot-to-first-token (the initial context-ingest
-        # latency); cache read/create = context volume carried per turn /
-        # ingested fresh at session start; effort + fast-mode name the two
-        # per-turn speed dials so their experiments are measurable per row;
-        # prompt-chars sizes the instruction the coordinator composed. All
-        # blank when the CLI reported no JSON (the effort/prompt pair still
-        # stands — the coordinator knows what it launched).
-        ttft_ms = data.get("ttft_ms")
-        ttft_secs = (
-            int(round(ttft_ms / 1000.0)) if isinstance(ttft_ms, (int, float)) else ""
-        )
-        cache_read = usage.get("cache_read_input_tokens", "")
-        cache_create = usage.get("cache_creation_input_tokens", "")
-        fast = data.get("fast_mode_state", "") or ""
-        effort = (session_env or os.environ).get("CLAUDE_CODE_EFFORT_LEVEL", "")
-
-        reset_hint = limit_reset_hint(output, data, code)
-        after = head_sha(root)
-        commits = ""
-        if before != after:
-            commits = "{}..{}".format(before or "(root)", after or "?")
-        state = (
-            "RUNNING"
-            if worker
-            else read_declared(lane / "run-state", "RUNNING").upper()
-        )
-
-        # (outcome, errored) via the session-outcome ladder — full semantics
-        # (including the "failed before it could work" error rule) live in
-        # classify_outcome's docstring (single-source, WI-080 Slice D).
-        outcome, errored = classify_outcome(
-            reset_hint, timed_out, state, before != after, data, code
-        )
-
-        meta = {
-            "session": session,
-            "stamp": stamp,
-            "date": time.strftime("%Y-%m-%d %H:%M"),
-            "train": worker["train"] if worker else "",
-            "base": worker["base"][:12] if worker else "",
-            "phase": phase,
-            "wi": wi_label,
-            "model": model,
-            "guardrails": "on" if guarded else "",
-            "outcome": outcome,
-            "commits": commits,
-            "tokens": tokens,
-            "cost-usd": cost,
-            "wall-secs": wall_secs,
-            "api-secs": api_secs,
-            "turns": turns,
-            "ttft-secs": ttft_secs,
-            "cache-read": cache_read,
-            "cache-create": cache_create,
-            "effort": effort,
-            "fast": fast,
-            "prompt-chars": len(prompt),
-            "exit-code": code,
-        }
-        log_path = write_session_log(iter_dir, meta, output)
-        # A worker never regenerates the iteration index: it is a GENERATED
-        # root artifact the integrator rebuilds on the composed tree (spec
-        # §5.1) — two workers regenerating it would collide at integration.
-        if not worker:
-            regenerate_index(lane)
-        # Commit the coordinator's own bookkeeping now, in its own telemetry
-        # commit — never let it ride the next session's work commit or dangle
-        # (WI-137). The review scoreboard is committed at its own write below.
-        commit_telemetry(
-            root,
-            tag + session,
-            "{} {}".format(phase or "—", outcome),
-            [log_path] if worker else [log_path, lane / "iteration_index.md"],
-        )
-        print(
-            "session {}: outcome={} commits={} wall={}s{}".format(
-                session,
-                outcome,
-                commits or "—",
-                wall_secs,
-                " api={}s turns={}".format(api_secs, turns) if turns != "" else "",
-            )
-        )
-
-        # --- managed routing / reviewer dispatch bookkeeping (S8) -------------
-        # All of this is gated on managed mode; the legacy path never enters it.
-        if managed and outcome == "WAITING":
-            # Generalize the rate-limit backoff PER-MODEL: cool this model and
-            # re-route to another available one next iteration. select() pages if
-            # none is left rather than dropping to a weaker tier (no silent swap).
-            wait = seconds_until_reset(reset_hint) or st.cooldown_seconds
-            st.cool(route_id, now, wait)
-            print(
-                "route: {} rate-limited; cooled ~{}s, re-routing".format(
-                    route_id, int(wait)
-                )
-            )
-            continue
-        if managed and is_review:
-            if verdict_path and Path(verdict_path).exists():
-                v = score_reviews.parse_verdict(
-                    Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
-                    model=route_family,
-                )
-                st.record_review_verdict(phase, v, route_family, route_id)
-            else:
-                # No verdict file (errored, stalled, or the session simply did not
-                # write one): cool the model and re-route the same review phase.
-                st.cool(route_id, now)
-                print(
-                    "route: {} review [{}] wrote no verdict ({}); cooled, "
-                    "re-routing".format(route_id, phase, outcome)
-                )
-            if st.round_ready():
-                verdicts = [v for (_ph, v, _p, _m) in st.round_verdicts]
-                merged, contradiction = score_reviews.merge_verdict(verdicts)
-                # Substance/corroboration key on Family (who trained it), so a
-                # cross-family overlap outweighs a same-family one; the scoreboard
-                # tallies by that same Family key.
-                family_substance = {}
-                subs = []
-                for j, (_ph, rv, rfam, _mid) in enumerate(st.round_verdicts):
-                    peer = (
-                        st.round_verdicts[1 - j][1]
-                        if len(st.round_verdicts) == 2
-                        else None
-                    )
-                    fams = (
-                        (rfam, st.round_verdicts[1 - j][2])
-                        if len(st.round_verdicts) == 2
-                        else None
-                    )
-                    s = score_reviews.substance(rv, root, other=peer, providers=fams)
-                    subs.append((rfam, s))
-                    if rfam:
-                        family_substance[rfam] = s
-                margin = abs(subs[0][1] - subs[1][1]) if len(subs) == 2 else 0.0
-                primary = None
-                if len(subs) == 2:
-                    primary = subs[0][0] if subs[0][1] >= subs[1][1] else subs[1][0]
-                changed = []
-                if st.impl_range and ".." in st.impl_range:
-                    _rc, diff_out = git(root, "diff", "--name-only", st.impl_range)
-                    changed = [ln for ln in diff_out.splitlines() if ln.strip()]
-                fired = score_reviews.fired_tripwires(verdicts, changed_paths=changed)
-                round_info = {
-                    "verdict": merged or "",
-                    "tier": st.last_impl_tier,
-                    "margin": margin,
-                    "primary": primary,
-                    "tripwire": bool(fired),
-                    "contradiction": contradiction,
-                }
-                # Record the round for the escalation policy. Slice-C note: the
-                # append and the round_verdicts clear (below) stay at their
-                # original distinct positions rather than folding into one
-                # st.complete_round() call — the worker-rework handler between
-                # escalation() and the clear still reads st.round_verdicts, so a
-                # single append+clear would either empty that read or hide the
-                # round from escalate(). Behavior (content + console order) is
-                # preserved exactly.
-                st.rounds.append(round_info)
-                try:
-                    score_reviews.record_round(scoreboard, round_info, family_substance)
-                except OSError:
-                    pass
-                # The scoreboard is coordinator-written state too — commit it in
-                # its own telemetry commit the moment the round records (WI-137),
-                # not on the next session's commit.
-                commit_telemetry(root, session, "review scoreboard", [scoreboard])
-                print(
-                    "review round: merged={} margin={:.2f} tripwires={} "
-                    "(advisory scoreboard {})".format(
-                        merged, margin, ",".join(fired) or "none", scoreboard
-                    )
-                )
-                decision = st.escalation()
-                print(
-                    "escalate: {} — {}".format(decision["action"], decision["reason"])
-                )
-                # A worker's rework scope is assignment-scoped in-process state
-                # (SR-060) — never the lane's tracked docs/rework-wi pointer,
-                # which a train branch must not carry. The verdict text itself
-                # is embedded in the next build session's prompt.
-                if worker and merged == "CHANGES-REQUESTED":
-                    worker["rework"] = "\n".join(
-                        (rv.text or "").strip()
-                        for (_ph, rv, _f, _m) in st.round_verdicts
-                        if (rv.text or "").strip()
-                    )
-                    worker["rework_wi"] = st.last_impl_wi or ""
-                    print(
-                        "dispatch: CHANGES-REQUESTED -> assignment-scoped "
-                        "rework of {}".format(worker["rework_wi"] or "the train")
-                    )
-                elif worker and merged == "APPROVE":
-                    worker["rework"] = ""
-                    worker["rework_wi"] = ""
-                st.round_verdicts = []
-                if worker:
-                    pass  # handled above — no lane rework-wi file in worker mode
-                elif merged == "CHANGES-REQUESTED" and st.last_impl_wi:
-                    rework_path = lane / "rework-wi"
-                    rework_path.write_text(st.last_impl_wi + "\n", encoding="utf-8")
-                    commit_telemetry(
-                        root, session, "review rework scope", [rework_path]
-                    )
-                    print(
-                        "dispatch: CHANGES-REQUESTED -> rework override {} "
-                        "takes precedence".format(st.last_impl_wi)
-                    )
-                elif merged == "APPROVE":
-                    rework_path = lane / "rework-wi"
-                    if (
-                        st.last_impl_wi
-                        and rework_path.exists()
-                        and read_declared(rework_path, "") == st.last_impl_wi
-                    ):
-                        rework_path.unlink()
-                        commit_telemetry(
-                            root, session, "review rework scope cleared", [rework_path]
-                        )
-                        print(
-                            "dispatch: APPROVE -> cleared rework override {}".format(
-                                st.last_impl_wi
-                            )
-                        )
-                # State consequences of the escalation happen ONCE, here (WI-171
-                # page re-arm, swap/tier-up/changes-requested); the branch below
-                # keeps only the page path's I/O (failure_action / banner /
-                # run-state). apply_decision first is safe — failure_action does
-                # not read page_fails_since.
-                st.apply_decision(decision["action"], merged)
-                if decision["action"] == "page-human":
-                    fa = agent_route.failure_action(gate_policy)
-                    print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
-                    if fa["mode"] == "attended":
-                        if not worker:
-                            (lane / "run-state").write_text(
-                                "NEEDS-HUMAN\nask: review escalation — "
-                                + decision["reason"]
-                                + "\n",
-                                encoding="utf-8",
-                            )
-                        stop_banner(
-                            status_path,
-                            "PAGE-HUMAN — review escalation",
-                            decision["reason"] + " | " + fa["note"],
-                        )
-                        return EXIT_NEEDS_HUMAN
-                    if fa.get("design_check"):
-                        st.set_design_check()
-        elif managed and is_critique:
-            # The perceptual arbiter (WI-068): read the critic's verdict, iterate
-            # BUILD<->CRITIQUE until APPROVE or the budget trips S8 escalation.
-            if verdict_path and Path(verdict_path).exists():
-                v = score_reviews.parse_verdict(
-                    Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
-                    model=route_family,
-                )
-                merged = (v.verdict or "").upper()
-                print(
-                    "critique [{}]: verdict={} findings={} scope={} ({})".format(
-                        route_id,
-                        merged or "?",
-                        len(v.findings),
-                        ",".join(sorted(st.critique_scope)) or "—",
-                        verdict_path,
-                    )
-                )
-                # record_critique_verdict resets critique_rounds on the page path,
-                # so capture the exhausted count for the (byte-identical) budget
-                # print BEFORE the call — the printed value is the post-increment
-                # round count, i.e. pre-call rounds + 1.
-                pre_rounds = st.critique_rounds
-                action = st.record_critique_verdict(merged)
-                if action == "page":
-                    # Budget exhausted -> the S8 page-the-human semantics, keyed
-                    # to docs/gate-policy (same failure_action the review round
-                    # uses). The critic gates iteration; the human owns final
-                    # acceptance via Attest at gate closure.
-                    fa = agent_route.failure_action(gate_policy)
-                    print(
-                        "critique/budget ({}): {} CHANGES-REQUESTED round(s) >= "
-                        "{} -> page-human: {}".format(
-                            fa["mode"], pre_rounds + 1, st.critique_limit, fa["note"]
-                        )
-                    )
-                    if fa["mode"] == "attended" or st.critique_exhaustion == "block":
-                        if not worker:
-                            (lane / "run-state").write_text(
-                                "NEEDS-HUMAN\nask: critique budget exhausted "
-                                "still CHANGES-REQUESTED — review the findings "
-                                "and rule\n",
-                                encoding="utf-8",
-                            )
-                        stop_banner(
-                            status_path,
-                            "PAGE-HUMAN — critique budget exhausted",
-                            "the critique loop hit its {}-round budget still "
-                            "CHANGES-REQUESTED | {}".format(
-                                st.critique_limit, fa["note"]
-                            ),
-                        )
-                        return EXIT_NEEDS_HUMAN
-                    if fa.get("design_check"):
-                        st.set_design_check()
-                # action == "rework" (next_phase set to BUILD) / "approved" (the
-                # loop ended) need nothing more from the caller.
-            else:
-                # No verdict written (errored/stalled): cool + re-critique next pass
-                # (the stall guard backstops a critic that never writes one).
-                st.cool(route_id, now)
-                print(
-                    "critique: {} wrote no verdict ({}); cooled, re-critiquing".format(
-                        route_id, outcome
-                    )
-                )
-        elif managed and not is_review:
-            if outcome in ("ERROR", "TIMEOUT"):
-                st.cool(route_id, now)
-                # Say WHY the pool is shrinking, at the moment it shrinks — the
-                # WAITING/no-verdict siblings already do; this path was silent.
-                # The row's Notes carries the actionable hint (auth/install),
-                # and the session log holds the full transcript (WI-109).
-                note = registry[route_id].notes
-                print(
-                    "route: {} session outcome={} (exit {}); cooled ~{}s, "
-                    "re-routing{}".format(
-                        route_id,
-                        outcome,
-                        code,
-                        int(st.cooldown_seconds),
-                        " — " + note if note else "",
-                    )
-                )
-            elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
-                st.on_committed_build(route_family, wi_label, commits)
-                # The review round follows the reviewer dial (S8). A traincar
-                # is ONE review scope (WI-183, SR-062): a worker schedules the
-                # round only once EVERY assigned WI is built, and the round
-                # covers the combined train diff base..HEAD — never a per-WI
-                # slice of it. An intermediate constituent commit is
-                # accepted-on-train (locally green and committed), not
-                # reviewed; the cycle comes once, at the end.
-                schedule_review = rp_int >= 1
-                if worker and schedule_review:
-                    built_now, _blk = train_evidence(root, worker["base"])
-                    schedule_review = all(w in built_now for w in worker["assigned"])
-                    if schedule_review:
-                        st.set_train_range("{}..{}".format(worker["base"], after))
-                if schedule_review:
-                    queued = st.schedule_review_round()
-                    print(
-                        "dispatch: review-policy {} -> scheduling review round "
-                        "{}{}".format(
-                            rp_int,
-                            queued,
-                            " over the whole train diff" if worker else "",
-                        )
-                    )
-                # The critique round is INDEPENDENT of the review dial (WI-068): it
-                # fires only when this build's WI touches a Critique-verified SR.
-                # Vacuous when no Critique SR exists, so a non-adopter pays nothing.
-                if st.critique_srs:
-                    scope_wis = build_scope_wis(root, docs, commits)
-                    in_scope = build_scope_srs(root, docs, commits) & st.critique_srs
-                    if in_scope:
-                        # A NEW scope starts a fresh budget; a rework of the SAME
-                        # scope (a CHANGES-REQUESTED loop) preserves the count, so
-                        # the budget actually bounds the loop (schedule_critique
-                        # folds that reset in; critique_control does not read the
-                        # round count, so the order is identical to before).
-                        limit, exhaustion = critique_control(
-                            docs, scope_wis, st.critique_max
-                        )
-                        st.schedule_critique(in_scope, limit, exhaustion)
-                        print(
-                            "dispatch: build touches Critique SR(s) {} -> scheduling "
-                            "CRITIQUE round (budget {}, exhaustion {})".format(
-                                ",".join(sorted(in_scope)),
-                                "inf" if limit is None else limit,
-                                exhaustion,
-                            )
-                        )
-            elif phase == "DESIGN-CHECK":
-                # The design-check ruling has run (its verdict is in the commit /
-                # log); resume building. Without a tracked run-phase this reset is
-                # in-process (WI-180) — the agent no longer advances a phase file.
-                st.after_design_check()
-
-        if outcome == "WAITING":
-            # A throttled session is not progress *or* a stall — never count
-            # it toward the stall guard (three throttled sessions would
-            # otherwise misread as a stall and abort, the NHW original's bug).
-            wait = seconds_until_reset(reset_hint)
-            if args.wait_on_limit and wait is None:
-                # Unrecognized reset wording (locale/format drift): a bounded
-                # fallback nap keeps the walk-away run alive, capped at the
-                # ceiling the human already consented to waiting.
-                wait = min(args.limit_retry_fallback, args.wait_on_limit)
-                print(
-                    "rate limit hit — reset time {!r} not recognized; "
-                    "sleeping {}s (--limit-retry-fallback) and retrying.".format(
-                        reset_hint, wait
-                    )
-                )
-                time.sleep(wait)
-                continue
-            if args.wait_on_limit and wait and wait <= args.wait_on_limit:
-                print(
-                    "rate limit hit — sleeping {}s until the reset ({}).".format(
-                        wait, reset_hint
-                    )
-                )
-                time.sleep(wait)
-                continue
-            stop_banner(
-                status_path,
-                "WAITING on a rate limit",
-                "resume at: {} (re-run agent-resume.* then)".format(reset_hint),
-            )
-            return EXIT_WAITING
-
-        if outcome == "DONE":
-            stop_banner(status_path, "run-state=DONE")
-            return EXIT_DONE
-        if outcome == "BLOCKED":
-            stop_banner(
-                status_path,
-                "run-state=BLOCKED",
-                "everything remaining is in the Blocked register.",
-            )
-            return EXIT_BLOCKED
-        if outcome == "NEEDS-HUMAN":
-            # Headline the driver's own ask line (WI-127): the status excerpt
-            # below is capped, and on a long Current State the Needs-<human>
-            # items land past the cap — the ask must never scroll away.
-            ask = read_ask(lane / "run-state")
-            stop_banner(
-                status_path,
-                "run-state=NEEDS-HUMAN",
-                (("ask: " + ask + "\n") if ask else "")
-                + "the next step requires a human act — the asks below; "
-                "re-run agent-resume.* after acting.",
-            )
-            return EXIT_NEEDS_HUMAN
-
-        # Worker end-state after the session too — a completed assignment must
-        # exit DONE here, not spend the remaining budget re-checking at the top.
-        if worker:
-            end = worker_endstate(
-                root,
-                worker,
-                bool(st.review_queue or st.critique_queue),
-                managed,
-                rp_int,
-            )
-            if end:
-                return worker_exit_banner(worker, end)
-
-        st.note_session(before != after, outcome == "ERROR")
-        verdict = st.stall_verdict(args.stall_limit)
-        if verdict == "agent-error":
-            # Every session that tripped the guard errored before working —
-            # an unavailable agent, not a stuck task. Name it so, and point
-            # at the fix (an unsupported model is repointed by hand).
-            stop_banner(
-                status_path,
-                "STALL — agent error",
-                "{} consecutive session(s) errored before doing work "
-                "(agent unavailable / CLI or model error) — aborting. Check "
-                "the AGENT_CMD model + auth and the latest {} "
-                "log (outcome=ERROR, its exit-code); an unsupported model is "
-                "fixed by pointing --model / the model map at a live "
-                "tier.".format(st.errors, iter_dir),
-            )
-            return EXIT_STALL
-        if verdict == "stall":
-            stop_banner(
-                status_path,
-                "STALL",
-                "{} consecutive session(s) without a commit — aborting to "
-                "protect the budget. See the latest {} "
-                "log.".format(st.stall, iter_dir),
-            )
-            return EXIT_STALL
-
-        if i < args.max_iterations and args.pause:
-            time.sleep(args.pause)
+        code = run_iteration(ctx, i)
+        if code is not None:
+            return code
 
     stop_banner(
         status_path,
         "iteration budget exhausted",
         "{} session(s) run and {} is still {} — raise "
         "--max-iterations deliberately if the run should continue.".format(
-            args.max_iterations, lane / "run-state", state
+            args.max_iterations, lane / "run-state", ctx.state
         ),
     )
     return EXIT_BUDGET
