@@ -374,10 +374,10 @@ def test_re_dangling_specref_warns_plain_fails_strict(tmp_path):
 def test_specref_with_anchor_resolves(tmp_path):
     # A `path#anchor` SpecRef resolves on the path part alone (anchor ignored by
     # R-E; deeper validation rides check_doc_refs).
-    write_spec(tmp_path, "docs/specs/campaign.md")
+    write_spec(tmp_path, "docs/specs/effort.md")
     write_wis_sr(
         tmp_path,
-        "WI-001,A,scripts,,,queued,,docs/specs/campaign.md#s1--first-slice\n",
+        "WI-001,A,scripts,,,queued,,docs/specs/effort.md#s1--first-slice\n",
     )
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -475,16 +475,17 @@ def test_legacy_csv_without_specref_column_still_parses(tmp_path):
     assert "R-E WI-001" in proc.stderr  # missing column -> warn, never a crash
 
 
-def test_campaign_column_is_read_and_never_validated(tmp_path):
-    # WI-074: the optional Campaign grouping tag is read (like Workstream, no
-    # vocabulary rule) and never breaks validation — a registry carrying it, with
-    # arbitrary slug values, validates exactly as one without it.
+def test_extra_legacy_column_is_tolerated(tmp_path):
+    # A registry carrying an extra optional column (a legacy grouping tag, read by
+    # name like Workstream — no vocabulary rule) validates exactly as one without
+    # it: DictReader tolerates unknown columns, so a re-synced downstream that kept
+    # a retired grouping tag never breaks.
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
-    hdr = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,Campaign\n"
+    hdr = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,LegacyTag\n"
     (req / "work-items.csv").write_text(
         hdr
-        + "WI-001,A,scripts,,,done,d,my-campaign-2026\n"
+        + "WI-001,A,scripts,,,done,d,some-slug-2026\n"
         + "WI-002,B,scripts,,WI-001,done,d,anything-goes-here\n",
         encoding="utf-8",
     )

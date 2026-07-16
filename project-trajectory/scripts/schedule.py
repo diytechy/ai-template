@@ -2,7 +2,7 @@
 """Derive the dependency-ready WI frontier and its deterministic schedule.
 
 Stack-agnostic, standard-library only (Python 3.8+, Windows/POSIX). This is the
-scheduler contract of the parallel-WI-dispatch campaign (Slice A;
+scheduler contract of the parallel-WI-dispatch work (Slice A;
 docs/specs/parallel-wi-dispatch.md SR-057/SR-058). It is a **pure, side-effect-free
 library + CLI** shared by validation, the dashboard, the dispatcher, and tests —
 it never mutates the registry, spawns a worker, or touches git. Readiness is

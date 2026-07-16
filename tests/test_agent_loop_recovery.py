@@ -44,7 +44,6 @@ HEADER = [
     "Status",
     "Deliverable",
     "SpecRef",
-    "Campaign",
     "BuildTier",
     "SafetyClass",
 ]
@@ -71,7 +70,6 @@ def _wi_row(wid, preds="", safety="ordinary", status="queued"):
         status,
         "shipped" if status == "done" else "",
         "docs/specs/thing.md",
-        "camp",
         "medium",
         safety,
     ]

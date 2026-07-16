@@ -71,7 +71,6 @@ REGISTRY_HEADER = [
     "Status",
     "Deliverable",
     "SpecRef",
-    "Campaign",
     "BuildTier",
 ]
 
@@ -114,7 +113,6 @@ def _make_train_repo(tmp_path, train="t1", wis=("WI-201",)):
             "done",
             "the shipped predecessor deliverable",
             "docs/specs/thing.md",
-            "camp",
             "",
         ]
     ]
@@ -129,7 +127,6 @@ def _make_train_repo(tmp_path, train="t1", wis=("WI-201",)):
                 "queued",
                 "",
                 "docs/specs/thing.md",
-                "camp",
                 "medium",
             ]
         )

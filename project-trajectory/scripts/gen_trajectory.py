@@ -33,8 +33,7 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
   6. **Process** — the method reference (WI-085): *how this project is built* —
      the artifact lifecycle x gates flow (live tier counts from the spine, the
      current derived gate highlighted from `docs/gate`), the agent-resume loop,
-     the slice -> campaign -> gate-bar cadence (campaign counts from
-     `work-items.csv`), and (WI-142/SR-055) the two circular working loops —
+     the slice -> phase -> gate-bar cadence, and (WI-142/SR-055) the two circular working loops —
      intake and human-decision — sharing one LLM_Agent entry. Data-derived where
      a canonical source exists; links out to the process docs and the canonical
      working surfaces. Omitted when there is no `docs/gate`, so a gate-less repo
@@ -1022,43 +1021,7 @@ def sw_containment(root, mods):
     return tab, panel
 
 
-# --- the campaign-binned When view (WI-074) ------------------------------------
-#
-# The WHEN-axis mirror of the HOW-axis FB5 containment above: work items sharing a
-# `Campaign` grouping tag containerize into a collapsed <details> box (expandable
-# to their member rows), campaign-crossing predecessor edges aggregate to one
-# deduplicated container-to-container edge (contributing WI edges listed), and a
-# campaign-less WI renders flat. Reuses the sw_containment idiom (native
-# <details>, boundary-aggregated edges, sorted-input determinism -> byte-stable
-# through --check). When NO work item carries a campaign this returns None and
-# the caller keeps today's flat SVG DAG, so a campaign-less registry renders
-# byte-identically. There is deliberately NO right-sizing bound here (the FB5
-# asymmetry): a campaign is bounded by construction — one re-attestation sitting's
-# worth of WIs — so binning is presentation only, no new gate.
-
-CAMPAIGN_STYLE = (
-    "<style>"
-    "#dag .camptree{margin-top:.2rem;}"
-    "#dag details.campbox{border:1px solid var(--border);border-radius:10px;"
-    "margin:.45rem 0;background:var(--surface);box-shadow:var(--shadow);}"
-    "#dag details.campbox>summary{cursor:pointer;font-weight:600;padding:.55rem .8rem;"
-    "list-style-position:inside;}"
-    "#dag details.campbox>summary .sub{font-weight:400;color:var(--muted);}"
-    "#dag .campbody{padding:.1rem .85rem .6rem;}"
-    "#dag table.witable{border-collapse:collapse;width:100%;font-size:.85rem;"
-    "margin:.3rem 0;}"
-    "#dag table.witable th,#dag table.witable td{text-align:left;padding:.35rem .5rem;"
-    "border-bottom:1px solid var(--border);vertical-align:top;}"
-    "#dag table.witable .sub{color:var(--muted);}"
-    "#dag .st{display:inline-block;width:.62rem;height:.62rem;border-radius:50%;"
-    "vertical-align:-1px;margin-right:.35rem;}"
-    "#dag ul.xcamp{margin:.2rem 0 .7rem;padding-left:1.3rem;font-size:.9rem;}"
-    "#dag ul.xcamp li{margin:.1rem 0;}"
-    "#dag .standalone{margin-top:.6rem;}"
-    "</style>"
-)
-
-
+# --- shared When-view rendering helpers ---------------------------------------
 def esc(s):
     return html.escape(str(s), quote=True)
 
@@ -1068,170 +1031,17 @@ def _wi_st(w):
     return w["status"] if w["status"] in STATUS_FILL else "queued"
 
 
-def _wi_row(w, accent_of=None):
-    """One WI member row for the When-view tables (WI-074). `accent_of` (id ->
-    color) prepends the WI-087 per-phase color swatch; when None the swatch is
-    omitted, so the flat campaign view renders byte-identically to before the phase
-    encoding existed."""
-    st = _wi_st(w)
-    delivers = ", ".join(w["srs"]) or "—"
-    after = ", ".join(w["preds"] + ["~" + p for p in w["soft"]]) or "—"
-    swatch = ""
-    if accent_of is not None:
-        swatch = '<span class="ph" style="background:{}"></span>'.format(
-            accent_of.get(w["id"], "transparent")
-        )
-    return (
-        "<tr><td>{}<code>{}</code></td><td>{}</td>"
-        '<td><span class="st" style="background:{}"></span>{}</td>'
-        '<td><code>{}</code></td><td class="sub"><code>{}</code></td></tr>'.format(
-            swatch,
-            esc(w["id"]),
-            esc(w["title"]),
-            STATUS_FILL[st],
-            esc(st),
-            esc(delivers),
-            esc(after),
-        )
-    )
-
-
-def _wi_table(members, accent_of=None):
-    rows = "".join(
-        _wi_row(w, accent_of) for w in sorted(members, key=lambda w: w["id"])
-    )
-    return (
-        '<table class="witable"><thead><tr><th>WI</th><th>Title</th>'
-        "<th>Status</th><th>Delivers</th><th>After</th></tr></thead>"
-        "<tbody>{}</tbody></table>".format(rows)
-    )
-
-
-def _campboxes(wis, accent_of=None):
-    """The WI-074 bottom tier for a WI subset: one collapsed `<details>` per
-    campaign (members inside) followed by a flat table of the campaign-less WIs.
-    `accent_of` carries the WI-087 phase swatch; None reproduces the flat campaign
-    view's bytes. Shared by `campaign_containment` and the tiered `when_view`
-    leaf."""
-    by_camp, campaignless = {}, []
-    for w in wis:
-        if w.get("campaign"):
-            by_camp.setdefault(w["campaign"], []).append(w)
-        else:
-            campaignless.append(w)
-    tree = ""
-    for slug in sorted(by_camp):
-        members = by_camp[slug]
-        head = '<code>{}</code> <span class="sub">· {} item(s)</span>'.format(
-            esc(slug), len(members)
-        )
-        tree += (
-            '<details class="campbox"><summary>{}</summary>'
-            '<div class="campbody">{}</div></details>'.format(
-                head, _wi_table(members, accent_of)
-            )
-        )
-    if campaignless:
-        tree += (
-            '<div class="standalone"><p class="sub" style="margin:.5rem 0 .2rem">'
-            "Standalone work items — no campaign:</p>{}</div>".format(
-                _wi_table(campaignless, accent_of)
-            )
-        )
-    return tree
-
-
-def campaign_containment(wis):
-    """The campaign-binned When view (WI-074), or None when no work item carries a
-    `Campaign` value (the caller then keeps today's flat SVG DAG, byte-identical).
-    Returns the HTML string that fills the `dag` panel's view.
-
-    Campaign members collapse into a native `<details>` container (expand to a
-    member table); campaign-less WIs render flat below the containers; predecessor
-    edges whose endpoints fall in two different top-level items (campaign or a
-    standalone WI) aggregate to one deduplicated container-to-container edge at the
-    top level, listing the contributing WI edges. Deterministic (sorted inputs, no
-    clocks), so the `--check` freshness compare stays byte-stable."""
-    by_camp = {}
-    campaignless = []
-    for w in wis:
-        if w.get("campaign"):
-            by_camp.setdefault(w["campaign"], []).append(w)
-        else:
-            campaignless.append(w)
-    if not by_camp:
-        return None
-
-    ids = {w["id"] for w in wis}
-
-    # A top-level item key: the campaign slug when tagged, else `WI:<id>` (a
-    # campaign-less WI is its own top-level item — the sw_containment "uncontained"
-    # analogue). label() unwraps the `WI:` sentinel back to the bare id.
-    key_of = {w["id"]: (w["campaign"] or "WI:" + w["id"]) for w in wis}
-
-    def label(k):
-        return k[len("WI:") :] if k.startswith("WI:") else k
-
-    # Cross-boundary predecessor edges -> aggregate to one edge per crossing pair,
-    # deduplicating the contributing WI edges (the FB5 boundary-aggregation idiom).
-    cross = {}
-    for w in wis:
-        kw = key_of[w["id"]]
-        for p in w["preds"] + w["soft"]:
-            if p not in ids:
-                continue
-            kp = key_of[p]
-            if kp != kw:
-                cross.setdefault((kp, kw), set()).add((p, w["id"]))
-
-    xlines = "".join(
-        "<li><code>{}</code> → <code>{}</code> "
-        '<span class="sub">({})</span></li>'.format(
-            esc(label(a)),
-            esc(label(b)),
-            esc(", ".join("{}→{}".format(p, w) for p, w in sorted(edges))),
-        )
-        for (a, b), edges in sorted(cross.items())
-    )
-    cross_html = (
-        '<p class="cap">Cross-campaign dependency edges — aggregated to the '
-        "boundary (one edge per crossing pair; per-WI predecessors live in each "
-        'member row\'s <em>After</em> column):</p><ul class="xcamp">{}</ul>'.format(
-            xlines
-        )
-        if xlines
-        else ""
-    )
-    summary_line = (
-        '<p class="cap"><strong>Binned by campaign: {} campaign(s) + {} standalone '
-        "work item(s).</strong> Work items sharing a <code>Campaign</code> tag are "
-        "<strong>containerized</strong>; <strong>expand</strong> a campaign to "
-        "reveal its members and the requirements they deliver. A campaign is "
-        "bounded by construction (one re-attestation sitting), so there is no "
-        "right-sizing bound here.</p>".format(len(by_camp), len(campaignless))
-    )
-    return (
-        CAMPAIGN_STYLE
-        + summary_line
-        + cross_html
-        + '<div class="camptree">'
-        + _campboxes(wis)
-        + "</div>"
-    )
-
-
 # --- WI-087: phase-aware, count-thresholded tiering over the When view ----------
 #
-# Generalizes the shipped campaign-binning (WI-074) into a phase -> workstream ->
-# work-item hierarchy: a tier collapses into native <details> blocks only when its
-# LOCAL group count exceeds 3 (flat at or below — the owner's "> 3" rule), campaign
-# containers stay the bottom tier (ruling Q1), each WI carries a per-phase color
-# accent (the grouping-primary encoding, ruling Q2), and every rendered tier draws
-# one deduped parent-to-parent edge per crossing pair, aggregated from the union of
-# its members' crossing edges (the FB5 boundary idiom, applied per tier). A
-# registry with <= 3 phases AND <= 3 workstreams renders exactly what the WI-074
-# view did (byte-identical) — the tiering is EARNED by scale, so a small project
-# stays flat.
+# A phase -> workstream -> work-item hierarchy: a tier collapses into native
+# <details> blocks only when its LOCAL group count exceeds 3 (flat at or below —
+# the owner's "> 3" rule), the work items are the bottom tier, each WI carries a
+# per-phase color accent (the grouping-primary encoding, ruling Q2), and every
+# rendered tier draws one deduped parent-to-parent edge per crossing pair,
+# aggregated from the union of its members' crossing edges (the FB5 boundary idiom,
+# applied per tier). A registry with <= 3 phases AND <= 3 workstreams renders the
+# flat SVG DAG (byte-identical) — the tiering is EARNED by scale, so a small
+# project stays flat.
 
 # A stable, sorted-order palette for the per-phase accent (grouping-primary
 # encoding). Deterministic: the i-th sorted phase label takes the i-th color.
@@ -1578,23 +1388,21 @@ def _wi_phases(root, wis):
 
 def when_view(root, wis):
     """The When roadmap as a Simulink-style, count-thresholded drill-down (SR-051
-    rev, WI-141): phase ⊃ workstream ⊃ campaign ⊃ work-item block LAYERS, each tier
+    rev, WI-141): phase ⊃ workstream ⊃ work-item block LAYERS, each tier
     a diagram of blocks whose input/output ports are wired by the aggregated
     cross-tier dependency edges (the deduped union of the child edges). A container
     block is double-clicked — or focused and Enter/Space'd — to DESCEND one layer,
     and the breadcrumb restores any ancestor, superseding the shipped in-place
     `<details>` expand. A phase/workstream tier renders only when its LOCAL group
-    count exceeds 3 (flat at or below); campaigns stay the bottom-tier container.
-    A registry with <= 3 phases AND <= 3 workstreams delegates to
-    `campaign_containment` unchanged (byte-identical). Deterministic (sorted inputs,
+    count exceeds 3 (flat at or below), and the bottom tier is the work-item blocks.
+    A registry with <= 3 phases AND <= 3 workstreams returns None, so the caller
+    keeps the flat SVG DAG (byte-identical). Deterministic (sorted inputs,
     no clocks)."""
     phase_of = _wi_phases(root, wis)
     phases = {phase_of[w["id"]] for w in wis}
     workstreams = {w["workstream"] for w in wis}
     if len(phases) <= 3 and len(workstreams) <= 3:
-        return campaign_containment(
-            wis
-        )  # byte-identical fallback (None / campaign tree)
+        return None  # no tier to draw -> the caller keeps the flat SVG DAG
 
     color = {
         p: PHASE_ACCENTS[i % len(PHASE_ACCENTS)] for i, p in enumerate(sorted(phases))
@@ -1652,40 +1460,6 @@ def when_view(root, wis):
         layers.append((lid, _drill_layer_svg(blocks, edges)))
         return lid
 
-    def leaf_layer(subset):
-        """No phase/workstream tier fires here -> the bottom tier: one container
-        block per campaign (descend to its work items) plus standalone WI blocks."""
-        lid = new_id()
-        by_camp, standalone = {}, []
-        for w in subset:
-            (by_camp.setdefault(w["campaign"], []).append(w)) if w.get(
-                "campaign"
-            ) else standalone.append(w)
-        blocks, key_of = [], {}
-        for slug in sorted(by_camp):
-            members = by_camp[slug]
-            child = wi_layer(members)
-            for w in members:
-                key_of[w["id"]] = "camp:" + slug
-            blocks.append(
-                {
-                    "key": "camp:" + slug,
-                    "label": slug,
-                    "sub": "campaign · {} item(s)".format(len(members)),
-                    "fill": "var(--surface)",
-                    "stroke": "var(--border)",
-                    "tier": "campaign",
-                    "descend": child,
-                    "crumb": slug,
-                    "title": "Campaign {} — {} work item(s)".format(slug, len(members)),
-                }
-            )
-        for w in sorted(standalone, key=lambda w: w["id"]):
-            key_of[w["id"]] = "wi:" + w["id"]
-            blocks.append(wi_block(w, key="wi:" + w["id"]))
-        layers.append((lid, _drill_layer_svg(blocks, agg_edges(subset, key_of))))
-        return lid
-
     def build(subset, remaining):
         for i, (name, keyfn) in enumerate(remaining):
             groups = {}
@@ -1717,8 +1491,8 @@ def when_view(root, wis):
             edges = agg_edges(subset, {w["id"]: keyfn(w) for w in subset})
             layers.append((lid, _drill_layer_svg(blocks, edges)))
             return lid
-        # No tier crosses its threshold here -> the bottom-tier campaign layer.
-        return leaf_layer(subset)
+        # No tier crosses its threshold here -> the bottom-tier work-item layer.
+        return wi_layer(subset)
 
     tiers = [
         ("phase", lambda w: phase_of[w["id"]]),
@@ -1733,7 +1507,7 @@ def when_view(root, wis):
     summary = (
         '<p class="cap"><strong>Tiered roadmap: {} phase(s), {} workstream(s).</strong> '
         "A tier renders as wired blocks only when it holds more than 3 members "
-        "(phase ⊃ workstream ⊃ campaign ⊃ work item). <strong>Double-click</strong> a "
+        "(phase ⊃ workstream ⊃ work item). <strong>Double-click</strong> a "
         "block — or focus it and press Enter — to <strong>descend</strong> a layer; "
         "the <strong>breadcrumb</strong> returns. A block’s ports carry the aggregated "
         "dependency edges (the deduped union of its members’ crossing edges).</p>"
@@ -2503,10 +2277,10 @@ def _know_panel(svg, details):
 # The method reference view: the dashboard's other tabs show project *state*;
 # this one shows the *process* the state moves through. Data-derived where a
 # canonical source exists — the current gate from docs/gate, tier counts from
-# the spine registries, campaign bins from work-items.csv — and linking out to
+# the spine registries, work-item counts from work-items.csv — and linking out to
 # the process docs everywhere a canonical home exists. The in-view restatement
 # is limited to the relationships no single doc states as one picture (the
-# lifecycle x gates ordering, the loop chips, the slice -> campaign -> gate-bar
+# lifecycle x gates ordering, the loop chips, the slice -> phase -> gate-bar
 # cadence) — the WI-085 anti-duplication ruling.
 
 PROCESS_GATE_FILE = "docs/gate"
@@ -2605,8 +2379,7 @@ def process_panel(root, wis, stats):
     artifact lifecycle x gates (live tier counts; the stages the current
     derived gate spans are highlighted), the agent-resume loop (the managed
     agent_loop phase vocabulary with its escalation edges), slices ->
-    campaigns -> gates (commit bar vs gate bar, campaign counts joined from
-    work-items.csv), and (SR-055) the two circular working loops — intake and
+    phase -> gates (commit bar vs gate bar), and (SR-055) the two circular working loops — intake and
     human-decision — sharing one LLM_Agent entry, each stage linking to its
     canonical home. Fully self-contained (style inside the panel, no script
     needed — the shared tab switcher handles it); sorted inputs, no clocks."""
@@ -2653,15 +2426,13 @@ def process_panel(root, wis, stats):
             )
         )
 
-    # Panel 3 — the campaign join (work-items.csv is the canonical source).
-    camps = sorted({w["campaign"] for w in wis if w.get("campaign")})
-    binned = sum(1 for w in wis if w.get("campaign"))
+    # Panel 3 — the slice -> phase -> gate cadence (work-items.csv is canonical).
     wi_done = sum(1 for w in wis if w["status"] == "done")
     bars = [
         ("per-WI slice", "one scoped work item; ends at the commit bar"),
         ("commit bar", "the per-commit suite + doc checks — every commit"),
-        ("campaign close", "spine-touchers batch to one re-attestation sitting"),
-        ("gate bar", "the full check.py --gate run at campaign close / advance"),
+        ("phase close", "a phase's slices batch to one re-attestation sitting"),
+        ("gate bar", "the full check.py --gate run at phase close / advance"),
         ("CI", "runs the same bar on every push"),
     ]
     bar_lis = "".join(
@@ -2794,10 +2565,10 @@ def process_panel(root, wis, stats):
         "policy requires a human act: the loop parks with the ask recorded in "
         "<code>docs/status.md</code>.</li>\n"
         "</ul>\n"
-        "<h3>3 · Slices → campaigns → gates</h3>\n"
+        "<h3>3 · Slices → phase → gates</h3>\n"
         '<p class="cap">A per-WI slice ends at the <strong>commit bar</strong>; '
-        "a campaign closes at the <strong>gate bar</strong> — the campaign "
-        'ruling lives in <a href="'
+        "a phase closes at the <strong>gate bar</strong> — the commit-bar-vs-gate-bar "
+        'cadence lives in <a href="'
         + esc(opts_doc)
         + '">'
         + esc(opts_doc)
@@ -2806,11 +2577,7 @@ def process_panel(root, wis, stats):
         + esc(len(wis))
         + " work items · "
         + esc(wi_done)
-        + " done · "
-        + esc(binned)
-        + " campaign-binned across "
-        + esc(len(camps))
-        + " campaign(s).</p>\n"
+        + " done.</p>\n"
         '<ol class="pflow">' + bar_lis + "</ol>\n"
         "<h3>4 · The working loops</h3>\n"
         '<p class="cap">Two circular flows close the method — how work '
@@ -2842,11 +2609,10 @@ def build_html(root, wis):
     workstreams = len({w["workstream"] for w in wis})
     arch, arch_details, arch_desc = arch_icicle(root)
     dag, wi_details = dag_svg(wis)
-    # WI-087: the When view tiers into phase -> workstream -> work-item <details>
-    # blocks once a tier holds more than 3 members (generalizing the WI-074
-    # campaign binning); at <= 3 phases and <= 3 workstreams `when_view` delegates
-    # to `campaign_containment` unchanged, which itself returns None for a
-    # campaign-less registry so the flat SVG DAG renders byte-identically.
+    # WI-087: the When view tiers into phase -> workstream -> work-item block
+    # layers once a tier holds more than 3 members; at <= 3 phases and <= 3
+    # workstreams `when_view` returns None, so the flat SVG DAG renders instead
+    # (byte-identical to a small registry's roadmap).
     dag_view = when_view(root, wis) or dag
     extra_tabs, extra_panels = [], []
     mods = sw_modules(root)

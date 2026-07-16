@@ -262,11 +262,6 @@ def load_wis(rows):
                 # legacy CSV without the column reads as "" (DictReader -> None).
                 "deliverable": (r.get("Deliverable") or "").strip(),
                 "specref": (r.get("SpecRef") or "").strip(),
-                # A mutable grouping tag in the `Workstream` precedent (WI-074) —
-                # NOT id-checked (no vocabulary rule); empty = standalone. The
-                # When-view dashboard bins the DAG by it; a legacy CSV without the
-                # column reads "" (DictReader -> None), so it is never-breaking.
-                "campaign": (r.get("Campaign") or "").strip(),
             }
         )
     return wis, integrity

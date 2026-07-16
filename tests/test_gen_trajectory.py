@@ -749,146 +749,28 @@ def test_meta_component_top_view_smoke():
     assert 'data-tab="sw"' in tab and 'class="cmptree"' in panel
 
 
-# --- WI-074: the campaign-binned When view -------------------------------------
-# The WHEN-axis mirror of FB5: work items sharing a Campaign tag containerize into
-# a collapsed <details> box, campaign-crossing predecessor edges aggregate to one
-# deduplicated container edge, campaign-less WIs render flat, and a registry with
-# no Campaign values renders byte-identically to today (the flat SVG DAG).
-
-CAMP_HEADER = (
-    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,Campaign\n"
+# --- a small registry fixture (<= 3 phases AND <= 3 workstreams) --------------
+# Below both tiering thresholds `when_view` returns None, so the flat SVG DAG
+# renders (the phase->workstream->work-item tiering is earned by scale).
+SMALL_WIS = (
+    "WI-001,Root,scripts,SR-001,,done,the adder\n"
+    "WI-002,Mid,scripts,SR-001,WI-001,active,harness\n"
+    "WI-003,Sub,scripts,SR-002,WI-001,queued,the subber\n"
+    "WI-004,Release,docs,SR-002,WI-002;WI-003,queued,shipped\n"
 )
-# alpha = {WI-001, WI-002}, beta = {WI-003}, WI-004 standalone (no campaign).
-CAMP_WIS = (
-    "WI-001,Root,scripts,SR-001,,done,the adder,alpha-camp\n"
-    "WI-002,Mid,scripts,SR-001,WI-001,active,harness,alpha-camp\n"
-    "WI-003,Sub,scripts,SR-002,WI-001,queued,the subber,beta-camp\n"
-    "WI-004,Release,docs,SR-002,WI-002;WI-003,queued,shipped,\n"
-)
-
-
-def dag_view(root):
-    """The `dag` panel's view div content (the campaign tree or the flat SVG)."""
-    return (
-        html_of(root).split('id="dag-view" class="view">', 1)[1].split("</div>", 1)[0]
-    )
-
-
-def test_campaign_binning_containerizes_members(tmp_path):
-    # With campaign-tagged WIs the When panel becomes the containerized <details>
-    # tree: one collapsed box per campaign, members revealed inside, standalone
-    # WIs flat below.
-    make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)
-    assert gen(tmp_path).returncode == 0
-    text = html_of(tmp_path)
-    assert 'class="camptree"' in text
-    assert text.count('<details class="campbox">') == 2  # alpha + beta
-    assert "alpha-camp" in text and "beta-camp" in text
-    assert "Binned by campaign: 2 campaign(s) + 1 standalone" in text
-    # a member row surfaces the WI, its title, and the requirement it delivers
-    view = dag_view(tmp_path)
-    assert "WI-002" in view and "Mid" in view and "SR-001" in view
-
-
-def test_campaign_less_wi_renders_flat_outside_any_container(tmp_path):
-    # A campaign-less WI is NOT wrapped in a campbox — it renders flat in the
-    # standalone section.
-    make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)
-    assert gen(tmp_path).returncode == 0
-    text = html_of(tmp_path)
-    assert "Standalone work items" in text
-    # Within the camptree region, WI-004 lives in the standalone section, never
-    # inside a campaign container (the campboxes precede the standalone marker).
-    tree_region = text.split('class="camptree"', 1)[1]
-    containers, standalone = tree_region.split('class="standalone"', 1)
-    assert "WI-004" in standalone  # the campaign-less WI renders flat
-    assert "WI-004" not in containers  # ...and not inside any campaign container
-    assert "WI-001" in containers and "WI-003" in containers  # members are binned
-
-
-def test_no_campaign_values_render_byte_identical(tmp_path):
-    # The vacuity guarantee: an all-empty Campaign column (or none at all) renders
-    # byte-for-byte what it did before the column existed. Proven by round-trip:
-    # render column-less (flat SVG), add campaigns (tree appears), strip them back
-    # to an all-empty column, re-render == the original bytes exactly.
-    plain_body = "".join(row.rsplit(",", 1)[0] + "\n" for row in CAMP_WIS.splitlines())
-    make_repo(tmp_path, plain_body)  # default WI_HEADER, no Campaign column
-    assert gen(tmp_path).returncode == 0
-    flat = (tmp_path / "PROJECT_STATE.html").read_bytes()
-    assert b'class="camptree"' not in flat
-
-    wi = tmp_path / "docs" / "requirements" / "work-items.csv"
-    wi.write_text(CAMP_HEADER + CAMP_WIS, encoding="utf-8")
-    assert gen(tmp_path).returncode == 0
-    assert b'class="camptree"' in (tmp_path / "PROJECT_STATE.html").read_bytes()
-
-    # all-empty Campaign column (present but no values) == column-absent behavior.
-    empty_col = "".join(row + ",\n" for row in plain_body.splitlines())
-    wi.write_text(CAMP_HEADER + empty_col, encoding="utf-8")
-    assert gen(tmp_path).returncode == 0
-    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == flat
-
-
-def test_campaign_boundary_edges_dedupe(tmp_path):
-    # Two predecessor edges alpha->beta (WI-003 depends on WI-001 AND WI-002, both
-    # in alpha) aggregate to ONE deduplicated container edge naming both WI edges.
-    body = (
-        "WI-001,A1,scripts,SR-001,,done,d,alpha-camp\n"
-        "WI-002,A2,scripts,SR-001,,done,d,alpha-camp\n"
-        "WI-003,B1,scripts,SR-001,WI-001;WI-002,queued,d,beta-camp\n"
-    )
-    make_repo(tmp_path, body, header=CAMP_HEADER)
-    assert gen(tmp_path).returncode == 0
-    text = html_of(tmp_path)
-    xs = re.search(r'<ul class="xcamp">(.*?)</ul>', text, re.S).group(1)
-    assert len(re.findall(r"<li>", xs)) == 1  # one crossing pair -> one edge
-    assert "WI-001→WI-003" in xs and "WI-002→WI-003" in xs  # both contributors
-
-
-def test_campaign_view_is_deterministic_and_check_stable(tmp_path):
-    # Built from sorted inputs, no clocks -> a second render is byte-identical and
-    # --check passes (no new freshness exclusion).
-    make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)
-    assert gen(tmp_path).returncode == 0
-    first = (tmp_path / "PROJECT_STATE.html").read_bytes()
-    again = gen(tmp_path)
-    assert again.returncode == 0 and "already up to date" in again.stdout
-    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
-    assert gen(tmp_path, "--check").returncode == 0
-
-
-def test_meta_campaign_binning_smoke():
-    # Over the real meta repo: every campaign tag in the registry renders as a
-    # collapsed container in the When view, and the known campaigns are present.
-    # The count is derived, not pinned: a new campaign row must not break an
-    # unrelated smoke test (it did once — the 2026-07-12 deep-review campaign).
-    ct = load_script("check_trajectory")
-    gt = load_script("gen_trajectory")
-    wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
-    assert not integrity
-    view = gt.campaign_containment(wis)
-    assert view is not None
-    campaigns = {w["campaign"] for w in wis if w["campaign"]}
-    assert view.count('<details class="campbox">') == len(campaigns)
-    for slug in (
-        "working-surface-restructure-2026-07-11",
-        "capability-expansion-2026-07-11",
-        "owner-feedback-2026-07-11",
-        "campaign-binning-batch-2026-07-11",
-    ):
-        assert slug in view
 
 
 # --- WI-087 / SR-051 (rev WI-141): the tiered, Simulink-style drill-down views --
-# The When roadmap tiers into phase -> workstream -> campaign -> work-item block
-# LAYERS once a tier holds > 3 members (generalizing the WI-074 campaign binning):
+# The When roadmap tiers into phase -> workstream -> work-item block
+# LAYERS once a tier holds > 3 members:
 # each layer is an SVG diagram of blocks with input/output ports, the aggregated
 # cross-tier edges wired between ports (the deduped union of child edges), a
 # container block double-clicked (or Enter/Space) to DESCEND one layer and a
 # breadcrumb to return (superseding the old <details> expand). A registry below the
-# thresholds renders byte-identically to the flat WI-074 view.
+# thresholds renders byte-identically to the flat SVG DAG.
 
-# Four SR phases (v1..v4), so a WI's phase is derived from the SR it delivers.
+# Four SR phases (v1..v4 — the CLI is label-agnostic, so a downstream vN still
+# tiers), so a WI's phase is derived from the SR it delivers.
 TIER_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,"
     "Priority,Verification,Status,Phase\n"
@@ -897,7 +779,7 @@ TIER_SRS = (
     'SR-003,P3,SN-001,"r",R,"a",,M,Test,Verified,v3\n'
     'SR-004,P4,SN-001,"r",R,"a",,M,Test,Verified,v4\n'
 )
-TIER_HDR = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,Campaign\n"
+TIER_HDR = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
 
 # Two v1 WIs both feed the single v2 WI -> the v1->v2 parent edge is the deduped
 # union of two child edges. Phases: v1={001,002}, v2={003}, v3={004}, v4={005}.
@@ -997,16 +879,17 @@ def test_when_view_workstream_tier_when_phases_flat(tmp_path):
     assert 'data-tier="phase"' not in view  # phases stay flat
 
 
-def test_when_view_flat_below_thresholds_is_the_campaign_view(tmp_path):
-    # <= 3 phases and <= 3 workstreams -> when_view delegates to
-    # campaign_containment byte-for-byte (the tiering is earned by scale).
-    make_repo(tmp_path, CAMP_WIS, header=CAMP_HEADER)  # 2 workstreams, unphased
+def test_when_view_below_thresholds_returns_none_flat_dag(tmp_path):
+    # <= 3 phases and <= 3 workstreams -> when_view returns None, so the caller keeps
+    # the flat SVG DAG (the tiering is earned by scale). The rendered dashboard shows
+    # the flat DAG with no drill layers.
+    make_repo(tmp_path, SMALL_WIS)  # 2 workstreams, unphased -> 1 phase
     gt = load_script("gen_trajectory")
     ct = load_script("check_trajectory")
     wis, _ = ct.load_wis(ct.read_rows(tmp_path / ct.WI_CSV))
-    view = gt.when_view(tmp_path, wis)
-    assert view == gt.campaign_containment(wis)  # identical bytes
-    assert 'class="tierbox"' not in view and 'class="campbox"' in view
+    assert gt.when_view(tmp_path, wis) is None
+    assert gen(tmp_path).returncode == 0
+    assert 'class="drill"' not in html_of(tmp_path)  # flat DAG, no tiered drill
 
 
 def test_when_view_is_deterministic_and_check_stable(tmp_path):
@@ -1167,8 +1050,8 @@ def test_how_sw_collapses_above_component_threshold(tmp_path):
 
 def test_meta_tiered_when_view_smoke():
     # Over the real meta repo (4 workstreams > 3): the When view tiers into a
-    # workstream block layer with campaign container blocks at the bottom tier,
-    # rendered as a wired drill diagram.
+    # workstream block layer with work-item blocks at the bottom tier, rendered as a
+    # wired drill diagram.
     ct = load_script("check_trajectory")
     gt = load_script("gen_trajectory")
     wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
@@ -1176,7 +1059,7 @@ def test_meta_tiered_when_view_smoke():
     view = gt.when_view(ROOT, wis)
     assert view is not None
     assert 'class="drill"' in view and 'data-tier="workstream"' in view
-    assert 'data-tier="campaign"' in view  # campaigns stay the bottom-tier container
+    assert 'data-tier="work-item"' in view  # work items are the bottom tier
     assert 'class="port in"' in view and 'class="wire"' in view  # interface-wired
 
 
@@ -1207,7 +1090,7 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     # the three panels are present and titled
     assert "Artifact lifecycle × gates" in text
     assert "The resume loop" in text
-    assert "Slices → campaigns → gates" in text
+    assert "Slices → phase → gates" in text
     # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Verified,
     # 3 LLR, 4 TC) — live counts, not prose
     assert "1 SN" in text
@@ -1218,10 +1101,9 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     for phase in ("PLAN", "BUILD", "REVIEW-A/B", "CRITIQUE", "INTEGRATE"):
         assert phase in text
     assert "DESIGN-CHECK" in text and "Page the human" in text
-    # panel 3 states the two bars and joins work-items.csv (4 WIs, 1 done, none
-    # campaign-binned under the plain header)
+    # panel 3 states the two bars and joins work-items.csv (4 WIs, 1 done)
     assert "commit bar" in text and "gate bar" in text
-    assert "4 work items · 1 done · 0 campaign-binned across 0 campaign(s)" in text
+    assert "4 work items · 1 done." in text
     # still fully offline with the new tab present
     low = text.lower()
     assert "http://" not in low and "https://" not in low
@@ -1264,12 +1146,12 @@ def test_process_link_outs_prefer_the_scaffolded_docs(tmp_path):
     assert 'href="docs/process-options.md"' in text
 
 
-def test_process_campaign_stats_join_work_items(tmp_path):
-    # Panel 3's numbers are a live join over work-items.csv campaign bins.
-    with_gate(tmp_path, "G2", CAMP_WIS, header=CAMP_HEADER)
+def test_process_wi_counts_join_work_items(tmp_path):
+    # Panel 3's numbers are a live join over work-items.csv (total + done counts).
+    with_gate(tmp_path, "G2", SMALL_WIS)
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    assert "4 work items · 1 done · 3 campaign-binned across 2 campaign(s)" in text
+    assert "4 work items · 1 done." in text
 
 
 def test_process_tab_omitted_and_byte_identical_without_gate(tmp_path):
@@ -1432,14 +1314,14 @@ def test_process_loop_stage_links_resolve():
 def test_process_loops_byte_identical_without_data(tmp_path):
     # The loop structure is the method's, not the repo's data: the loops block
     # renders byte-for-byte the same whether the registry is minimal or
-    # campaign-rich (SR-055 "a data-less repo renders byte-identically").
+    # work-item-rich (SR-055 "a data-less repo renders byte-identically").
     minimal = tmp_path / "min"
     minimal.mkdir()
     with_gate(minimal, "G2")
     assert gen(minimal).returncode == 0
     rich = tmp_path / "rich"
     rich.mkdir()
-    with_gate(rich, "G2", CAMP_WIS, header=CAMP_HEADER)
+    with_gate(rich, "G2", SMALL_WIS)
     assert gen(rich).returncode == 0
     assert _loops_div(html_of(minimal)) == _loops_div(html_of(rich))
 

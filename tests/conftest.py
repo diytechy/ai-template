@@ -32,8 +32,8 @@ for _k in [k for k in os.environ if k.startswith("AGENT_")]:
 
 # --- WI-122: the meta commit-bar smoke tier -----------------------------------
 # The per-commit bar runs the fast SMOKE tier (docs/stack.ini [tiers]
-# smoke = -m smoke); the FULL suite runs at slice/campaign close and in CI
-# (PROCESS_OPTIONS.md "Campaign ruling"). Tiering here is OPT-OUT so the smoke
+# smoke = -m smoke); the FULL suite runs at slice/phase close and in CI
+# (PROCESS_OPTIONS.md phased-delivery cadence). Tiering here is OPT-OUT so the smoke
 # set stays generously sized and "never a false green": every collected test is
 # `smoke` UNLESS its module is one of the heavy end-to-end integration modules
 # below — full hook / gate / scaffold-bootstrap runs that the commit hook

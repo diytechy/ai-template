@@ -42,7 +42,6 @@ HEADER = [
     "Status",
     "Deliverable",
     "SpecRef",
-    "Campaign",
     "BuildTier",
     "SafetyClass",
 ]
@@ -69,7 +68,6 @@ def _wi_row(wid, preds="", safety="ordinary", status="queued"):
         status,
         "shipped" if status == "done" else "",
         "docs/specs/thing.md",
-        "camp",
         "medium",
         safety,
     ]
@@ -170,7 +168,7 @@ def test_events_carry_a_run_id_and_no_cross_run_collision(tmp_path):
     # journal — so aggregation by run never conflates the two.
     (repo / "docs" / "requirements" / "work-items.csv").write_text(
         (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
-        + "WI-203,Work WI-203,ws,SR-065,,queued,,docs/specs/thing.md,camp,"
+        + "WI-203,Work WI-203,ws,SR-065,,queued,,docs/specs/thing.md,"
         "medium,ordinary\n",
         encoding="utf-8",
     )
@@ -359,7 +357,7 @@ def test_generated_status_is_marker_gated(tmp_path):
     )
     (repo / "docs" / "requirements" / "work-items.csv").write_text(
         (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
-        + "WI-202,Work WI-202,ws,SR-065,,queued,,docs/specs/thing.md,camp,"
+        + "WI-202,Work WI-202,ws,SR-065,,queued,,docs/specs/thing.md,"
         "medium,ordinary\n",
         encoding="utf-8",
     )

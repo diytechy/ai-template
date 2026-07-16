@@ -24,7 +24,6 @@ def row(wid, status="queued", preds="", safety="ordinary", **kw):
         "Priority": kw.get("priority", ""),
         "Exclusive": kw.get("exclusive", ""),
         "SR-Refs": kw.get("srs", ""),
-        "Campaign": kw.get("campaign", ""),
         "BlockRef": kw.get("blockref", ""),
         "EstTokens": kw.get("est", ""),
     }
@@ -96,14 +95,14 @@ def test_lowest_gate_class_sorts_first():
     assert ready_ids(wis) == ["WI-002", "WI-001"]
 
 
-def test_shared_campaign_and_specref_do_not_serialize():
+def test_shared_srrefs_do_not_serialize():
     wis = sched.load_wis(
         [
-            row("WI-001", srs="SR-010", campaign="c1"),
-            row("WI-002", srs="SR-010", campaign="c1"),
+            row("WI-001", srs="SR-010"),
+            row("WI-002", srs="SR-010"),
         ]
     )
-    assert ready_ids(wis) == ["WI-001", "WI-002"]  # broad tags are not mutexes
+    assert ready_ids(wis) == ["WI-001", "WI-002"]  # a shared SR-Ref is not a mutex
 
 
 def test_shared_exclusive_key_serializes():
@@ -214,12 +213,12 @@ def _write_registry(root, rows):
     reg.mkdir(parents=True, exist_ok=True)
     header = (
         "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,"
-        "Campaign,BuildTier,Priority,Exclusive,BlockRef,EstTokens,SafetyClass\n"
+        "BuildTier,Priority,Exclusive,BlockRef,EstTokens,SafetyClass\n"
     )
     lines = [header]
     for r in rows:
         lines.append(
-            "{WI-ID},{Title},,{SR-Refs},{Predecessors},{Status},,,,,"
+            "{WI-ID},{Title},,{SR-Refs},{Predecessors},{Status},,,,"
             "{Priority},{Exclusive},{BlockRef},{EstTokens},{SafetyClass}\n".format(**r)
         )
     (reg / "work-items.csv").write_text("".join(lines), encoding="utf-8")

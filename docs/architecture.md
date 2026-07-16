@@ -547,7 +547,6 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056
 | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
 | `sw_containment(root, mods)` | The containerized How-SW top view (WI-073) as a Simulink-style drill (SR-051 | SR-051 |
 | `esc(s)` |  |  |
-| `campaign_containment(wis)` | The campaign-binned When view (WI-074), or None when no work item carries a |  |
 | `when_view(root, wis)` | The When roadmap as a Simulink-style, count-thresholded drill-down (SR-051 | SR-051 |
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |

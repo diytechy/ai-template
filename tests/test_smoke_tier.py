@@ -1,6 +1,6 @@
 """WI-122 — the meta commit-bar smoke tier stays honest.
 
-The per-commit bar runs `-m smoke`; the full suite runs at slice/campaign close
+The per-commit bar runs `-m smoke`; the full suite runs at slice/phase close
 and in CI. These guard the two ways that split could silently rot into a false
 green: a test landing outside both tiers, or a SLOW_MODULES entry going stale.
 """

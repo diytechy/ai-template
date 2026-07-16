@@ -44,7 +44,7 @@ def _derive(scaffold):
 
 # --- the meta-repo dogfood ----------------------------------------------------
 def test_meta_repo_default_phase_holds_g3_and_cache_is_fresh():
-    # The campaign's north star, phase-aware since phase 2 opened (WI-116): the
+    # The kit's north star, phase-aware since phase 2 opened (WI-116): the
     # meta's verified spine — foundation phase 1 — holds G3 regardless of what
     # pre-dev drafts a later phase carries, and the committed docs/gate cache
     # matches the recomputed state (--check green). Run against the real meta root.
