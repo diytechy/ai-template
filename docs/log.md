@@ -7634,3 +7634,33 @@ returns to **G3** repo-wide. `agent-resume --jobs N` now runs the full
 dispatcher/integrator — durable Git reservations, atomic serialized integration,
 crash recovery, telemetry, and gated downstream migration. Not pushed
 (`docs/push-policy: human`).
+
+## 2026-07-16 — main-decomposition campaign plan filed (owner-directed; tier ruling WI-080 strong / WI-081 medium)
+
+**Session (owner-directed, attended).** The owner asked whether the deferred
+`main-decomposition` campaign (WI-080 → WI-081) really needs the strong tier,
+and to prepare the implementation breakdown. Delivered
+[docs/specs/main-decomposition.md](specs/main-decomposition.md) — the detailed
+slice plan (WI-080: five slices A–E, golden-net-first, extracting the
+session-construction closures, a `RoutingState`/`EscalationState` object with
+pure transitions, outcome/worker-endstate classification, and a
+`run_one_session()` step; WI-081: four slices A–D, `analyze()`/`render_report()`
+split + docstring shrink) with the parked review fold-ins recorded (L3
+`parse_map` rename → WI-080; M8 quadratic-join pre-indexing → WI-081).
+
+**Tier ruling (the asked question).** Split, not blanket-strong: **WI-080 =
+`strong`** (design-shaping — the slices choose the seam architecture for the
+kit's most intricate state machine, in a file v4 just reworked: `main()` now
+~1,657 lines of a 5,283-line file, threading legacy + worker/dispatcher paths);
+**WI-081 = `medium`** (the shape is fixed by the spec, so the build is
+mechanical extraction under a byte-identical golden-output net — the
+"strong plans, medium builds" dial; the most-copied-artifact risk is carried by
+the net, not the tier). Registry rows updated: BuildTier pinned, SpecRef →
+the new spec; **Status stays `deferred`** — starting means flipping to
+`queued`, which awaits the owner's go on this plan.
+
+**Checks (real output).** `gen_trajectory.py` → wrote PROJECT_STATE.html;
+`check_docs.py --root . --stale` → OK, 115 docs, 459 links, 0 broken (hints
+pre-existing); smoke `pytest -q -n auto -m smoke` → **669 passed, 2 skipped in
+55.12s**. Docs-only + registry-cell change; no script or spine change; no
+byte-budgeted file touched.

@@ -81,17 +81,19 @@ home elsewhere — don't restate it here:
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108 · WI-159** in
   [work-items.csv](requirements/work-items.csv). The highest-value next step is
-  the `main-decomposition` campaign (**WI-080** → **WI-081**), sequenced *behind*
-  the owner sitting (highest-risk, test-seams-first, behavior-preserving).
+  the `main-decomposition` campaign (**WI-080** → **WI-081**) — plan filed, see
+  Next action below.
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** the **parallel-dispatch campaign (v4) is COMPLETE** and the
-  repo is back at **G3** — no active build frontier. The highest-value next step
-  is the deferred **`main-decomposition` campaign** (**WI-080** → **WI-081**:
-  break up the `agent_loop.py` / `trace.py` monoliths, test-seams-first,
-  behavior-preserving — now itself a prime candidate to grind *through the new
-  parallel dispatcher*, once the meta-repo does its own SafetyClass audit to
-  clear the `--jobs 1` hold). It stays parked pending deliberate owner ordering.
+  repo is back at **G3** — no active build frontier. The next step is the
+  **`main-decomposition` campaign** (**WI-080** strong → **WI-081** medium):
+  its detailed slice plan is filed at
+  [specs/main-decomposition.md](specs/main-decomposition.md) (2026-07-16,
+  owner-directed; tier ruling + fold-ins recorded there) — starting means
+  flipping WI-080's Status `deferred` → `queued`, which awaits the owner's go
+  on that plan. Run it serial/attended; the meta-repo SafetyClass audit
+  (the `--jobs 1` hold) is deliberately **not** part of the campaign.
   Open owner items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are
   unchanged under `gate-policy: autonomous`; Codex Sol builds are live. Grinding
   under single-agent adversarial self-review at gates (recorded as a limitation
