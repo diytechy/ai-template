@@ -586,6 +586,10 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta)` | Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the |  |
 | `mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored |  |
 | `html_document(roots)` | A dependency-free, collapsible <details> tree of the full graph — inline |  |
+| `Registries (class)` | Loaded spine + off-spine registries: raw rows (kept for the integrity/ |  |
+| `Findings (class)` | The analyze() output — every finding list + derived set the report, |  |
+| `load_registries(docs)` | Load the spine + off-spine registries under docs (loading only — no analysis). |  |
+| `analyze(reg, args)` | The whole checker pass over loaded registries: orphan rules, off-spine |  |
 | `main()` |  |  |
 <!-- END GENERATED MODULE MAP -->
 

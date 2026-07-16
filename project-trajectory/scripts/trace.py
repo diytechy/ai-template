@@ -1148,75 +1148,24 @@ def html_document(roots):
     return HTML_HEAD + "\n".join(body) + "\n" + HTML_TAIL
 
 
-def main():
-    _utf8_console()
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument(
-        "--strict", action="store_true", help="exit 1 if any orphan / status finding"
-    )
-    ap.add_argument(
-        "--strict-integrity",
-        action="store_true",
-        help="exit 1 only on integrity findings (duplicate/malformed ids) — the "
-        "always-valid floor the pre-commit hook runs; orphans stay gate-scoped",
-    )
-    ap.add_argument(
-        "--require-verified",
-        action="store_true",
-        help="G3 criterion: flag Verification=Test SRs not Status=Verified",
-    )
-    ap.add_argument(
-        "--phase",
-        default=None,
-        help="comma-separated phases in scope (e.g. v1 or v1,v2): scopes "
-        "--require-verified to SRs whose Phase is blank or listed",
-    )
-    ap.add_argument(
-        "--no-placeholders",
-        action="store_true",
-        help="flag any leftover '-000' template example row (use from G2 on)",
-    )
-    ap.add_argument(
-        "--strict-schema",
-        action="store_true",
-        help="also require non-empty required fields and valid "
-        "Verification/Tier values on the real rows",
-    )
-    ap.add_argument(
-        "--html",
-        action="store_true",
-        help="also write test/report.html — a dependency-free collapsible tree "
-        "of the full graph (gitignored composite artifact)",
-    )
-    ap.add_argument(
-        "--ratify",
-        metavar="SCOPE",
-        default=None,
-        help="emit ONLY the batch-scoped ratification hierarchy (SN->SR->LLR->TC "
-        "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
-        "(e.g. 'SR-052,SR-053'); a G1/G2 brief links this instead of hand-copying "
-        "rows (WI-146). Prints to stdout unless --out is given; runs no checks",
-    )
-    ap.add_argument(
-        "--out",
-        metavar="FILE",
-        default=None,
-        help="with --ratify, write the view to FILE (parent dirs created) instead "
-        "of stdout, so a brief can link a stable path",
-    )
-    # --root/--docs are the uniform path flags across trace.py, check_docs.py,
-    # and check_perf.py: --docs is the docs dir; --root (default ".") is its
-    # parent, so a repo whose docs live elsewhere passes one --root. An explicit
-    # --docs wins; otherwise it is <root>/docs.
-    ap.add_argument("--root", default=".", help="repo root (default: .)")
-    ap.add_argument(
-        "--docs",
-        default=None,
-        help="docs directory (default: <root>/docs)",
-    )
-    args = ap.parse_args()
-    docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
+def _repo_id(r):
+    return r.get("REPO-ID") or r.get("MOD-ID")
 
+
+class Registries:
+    """Loaded spine + off-spine registries: raw rows (kept for the integrity/
+    placeholder sweeps), example-filtered working sets for the join, and the SN
+    ids/draft/prose scraped from stakeholder-needs.md. Produced by
+    load_registries; consumed by --ratify, analyze, and the report render."""
+
+
+class Findings:
+    """The analyze() output — every finding list + derived set the report,
+    console summary, and exit policy read. Produced by analyze()."""
+
+
+def load_registries(docs):
+    """Load the spine + off-spine registries under docs (loading only — no analysis)."""
     raw_srs = load_csv(docs / "requirements" / "system-requirements.csv")
     raw_llrs = load_csv(docs / "requirements" / "low-level-requirements.csv")
     raw_tcs = load_csv(docs / "test" / "test-cases.csv")
@@ -1257,9 +1206,6 @@ def main():
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
     pbs = [r for r in raw_pbs if r.get("PB-ID") and not is_example(r["PB-ID"])]
 
-    def _repo_id(r):
-        return r.get("REPO-ID") or r.get("MOD-ID")
-
     mods = [
         r for r in raw_repos + raw_mods if _repo_id(r) and not is_example(_repo_id(r))
     ]
@@ -1281,23 +1227,33 @@ def main():
         # are unratified (G0) and exempt from the "SN with no SR" child rule below.
         sn_draft = sn_draft_ids(sn_text)
         sn_meta = _sn_prose(sn_text)
+    reg = Registries()
+    reg.raw_srs, reg.raw_llrs, reg.raw_tcs = raw_srs, raw_llrs, raw_tcs
+    reg.raw_pbs, reg.raw_repos, reg.raw_mods = raw_pbs, raw_repos, raw_mods
+    reg.raw_parts, reg.raw_assets = raw_parts, raw_assets
+    reg.raw_cmps, reg.raw_ifs = raw_cmps, raw_ifs
+    reg.srs, reg.llrs, reg.tcs, reg.pbs = srs, llrs, tcs, pbs
+    reg.mods, reg.parts, reg.assets = mods, parts, assets
+    reg.cmps, reg.ifs = cmps, ifs
+    reg.sn_ids, reg.sn_draft, reg.sn_meta, reg.sn_md = sn_ids, sn_draft, sn_meta, sn_md
+    reg.docs = docs
+    return reg
 
-    # --ratify is a generator mode, not a checker: emit the batch-scoped
-    # ratification hierarchy and exit 0 without running any orphan/integrity pass
-    # (WI-146a). It reuses the loaded, example-filtered working sets above.
-    if args.ratify is not None:
-        text = (
-            "\n".join(ratify_lines(args.ratify, sn_ids, srs, llrs, tcs, sn_meta)) + "\n"
-        )
-        if args.out:
-            out_path = Path(args.out)
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-            out_path.write_text(text, encoding="utf-8")
-            print("trace: wrote ratification view -> {}".format(out_path))
-        else:
-            sys.stdout.write(text)
-        return 0
 
+def analyze(reg, args):
+    """The whole checker pass over loaded registries: orphan rules, off-spine
+    back-link/membership checks, the --require-verified status criterion
+    (phase-scoped), the integrity/placeholder/schema sweeps, and the always-on
+    advisories. Pure — reads reg + args flags, returns a Findings bag. No I/O."""
+    srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
+    pbs, mods, parts = reg.pbs, reg.mods, reg.parts
+    assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
+    sn_ids, sn_draft, sn_md = reg.sn_ids, reg.sn_draft, reg.sn_md
+    raw_srs, raw_llrs, raw_tcs = reg.raw_srs, reg.raw_llrs, reg.raw_tcs
+    raw_pbs, raw_repos, raw_mods = reg.raw_pbs, reg.raw_repos, reg.raw_mods
+    raw_parts, raw_assets = reg.raw_parts, reg.raw_assets
+    raw_cmps, raw_ifs = reg.raw_cmps, reg.raw_ifs
+    docs = reg.docs
     sr_ids = {r["SR-ID"] for r in srs}
     llr_ids = {r["LLR-ID"] for r in llrs}
     llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
@@ -1603,6 +1559,154 @@ def main():
         area = (r.get("Area") or "").strip()
         if area:
             area_counts[area] = area_counts.get(area, 0) + 1
+    findings = Findings()
+    findings.orphans = orphans
+    findings.orphan_ids = orphan_ids
+    findings.integrity = integrity
+    findings.placeholders = placeholders
+    findings.schema = schema
+    findings.advisories = advisories
+    findings.llr_status_advis = llr_status_advis
+    findings.budget_findings = budget_findings
+    findings.module_findings = module_findings
+    findings.component_findings = component_findings
+    findings.knowledge_advisories = knowledge_advisories
+    findings.interface_backlink_findings = interface_backlink_findings
+    findings.interface_advisories = interface_advisories
+    findings.status_findings = status_findings
+    findings.phase_deferred = phase_deferred
+    findings.phases = phases
+    findings.mechanized_verified = mechanized_verified
+    findings.attested_verified = attested_verified
+    findings.draft_srs = draft_srs
+    findings.draft_llrs = draft_llrs
+    findings.draft_tcs = draft_tcs
+    findings.n_draft = n_draft
+    findings.area_counts = area_counts
+    return findings
+
+
+def main():
+    _utf8_console()
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--strict", action="store_true", help="exit 1 if any orphan / status finding"
+    )
+    ap.add_argument(
+        "--strict-integrity",
+        action="store_true",
+        help="exit 1 only on integrity findings (duplicate/malformed ids) — the "
+        "always-valid floor the pre-commit hook runs; orphans stay gate-scoped",
+    )
+    ap.add_argument(
+        "--require-verified",
+        action="store_true",
+        help="G3 criterion: flag Verification=Test SRs not Status=Verified",
+    )
+    ap.add_argument(
+        "--phase",
+        default=None,
+        help="comma-separated phases in scope (e.g. v1 or v1,v2): scopes "
+        "--require-verified to SRs whose Phase is blank or listed",
+    )
+    ap.add_argument(
+        "--no-placeholders",
+        action="store_true",
+        help="flag any leftover '-000' template example row (use from G2 on)",
+    )
+    ap.add_argument(
+        "--strict-schema",
+        action="store_true",
+        help="also require non-empty required fields and valid "
+        "Verification/Tier values on the real rows",
+    )
+    ap.add_argument(
+        "--html",
+        action="store_true",
+        help="also write test/report.html — a dependency-free collapsible tree "
+        "of the full graph (gitignored composite artifact)",
+    )
+    ap.add_argument(
+        "--ratify",
+        metavar="SCOPE",
+        default=None,
+        help="emit ONLY the batch-scoped ratification hierarchy (SN->SR->LLR->TC "
+        "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
+        "(e.g. 'SR-052,SR-053'); a G1/G2 brief links this instead of hand-copying "
+        "rows (WI-146). Prints to stdout unless --out is given; runs no checks",
+    )
+    ap.add_argument(
+        "--out",
+        metavar="FILE",
+        default=None,
+        help="with --ratify, write the view to FILE (parent dirs created) instead "
+        "of stdout, so a brief can link a stable path",
+    )
+    # --root/--docs are the uniform path flags across trace.py, check_docs.py,
+    # and check_perf.py: --docs is the docs dir; --root (default ".") is its
+    # parent, so a repo whose docs live elsewhere passes one --root. An explicit
+    # --docs wins; otherwise it is <root>/docs.
+    ap.add_argument("--root", default=".", help="repo root (default: .)")
+    ap.add_argument(
+        "--docs",
+        default=None,
+        help="docs directory (default: <root>/docs)",
+    )
+    args = ap.parse_args()
+    docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
+
+    reg = load_registries(docs)
+
+    # --ratify is a generator mode, not a checker: emit the batch-scoped
+    # ratification hierarchy and exit 0 without running any orphan/integrity pass
+    # (WI-146a). It reuses the loaded, example-filtered working sets above.
+    if args.ratify is not None:
+        text = (
+            "\n".join(
+                ratify_lines(
+                    args.ratify, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
+                )
+            )
+            + "\n"
+        )
+        if args.out:
+            out_path = Path(args.out)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(text, encoding="utf-8")
+            print("trace: wrote ratification view -> {}".format(out_path))
+        else:
+            sys.stdout.write(text)
+        return 0
+
+    findings = analyze(reg, args)
+    # Bridge the analysis outputs to the render/console/exit block below (WI-081 Slice B; Slice C lifts that block into render_report and removes these aliases).
+    srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
+    pbs, mods, parts = reg.pbs, reg.mods, reg.parts
+    assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
+    sn_ids, sn_draft = reg.sn_ids, reg.sn_draft
+    orphans = findings.orphans
+    orphan_ids = findings.orphan_ids
+    integrity = findings.integrity
+    placeholders = findings.placeholders
+    schema = findings.schema
+    advisories = findings.advisories
+    llr_status_advis = findings.llr_status_advis
+    budget_findings = findings.budget_findings
+    module_findings = findings.module_findings
+    component_findings = findings.component_findings
+    knowledge_advisories = findings.knowledge_advisories
+    interface_backlink_findings = findings.interface_backlink_findings
+    interface_advisories = findings.interface_advisories
+    status_findings = findings.status_findings
+    phase_deferred = findings.phase_deferred
+    phases = findings.phases
+    mechanized_verified = findings.mechanized_verified
+    attested_verified = findings.attested_verified
+    draft_srs = findings.draft_srs
+    draft_llrs = findings.draft_llrs
+    draft_tcs = findings.draft_tcs
+    n_draft = findings.n_draft
+    area_counts = findings.area_counts
 
     lines = (
         [
