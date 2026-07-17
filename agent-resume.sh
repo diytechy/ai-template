@@ -52,6 +52,10 @@ AGENT_PREFER_MAP="BUILD=OPENAI-SOL"
 AGENT_CMD_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):
 AGENT_CMD_INTERACTIVE="claude --model {model} {prompt}"
+# This repo has completed the dispatcher migration audits in docs/parallel-ready,
+# so normal launches use the two-worker dispatcher. Pass --jobs 1 for a serial
+# dispatcher run; downstream repos without this slot retain the legacy driver.
+AGENT_JOBS="2"
 # Meta-repo resume prompt: the engine's default prompt assumes a scaffolded
 # downstream repo (docs/process.md etc.); this one names THIS repo's actual
 # surfaces. Empty = fall back to the engine default.
@@ -66,7 +70,7 @@ if [ -z "$AGENT_CMD" ]; then
   echo "sessions; see project-trajectory/PROCESS_OPTIONS.md 'Unattended operation'." >&2
   exit 1
 fi
-export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_TIER_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
+export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_TIER_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE AGENT_JOBS
 PY="$(command -v python3 || command -v python)" || {
   echo "agent-resume.sh: python3 not found." >&2; exit 1;
 }

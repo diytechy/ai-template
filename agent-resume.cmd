@@ -52,6 +52,10 @@ REM so every phase uses AGENT_CMD; add a row + entry when a cross-provider CLI e
 set "AGENT_CMD_MAP="
 REM Optional hands-on template for --interactive (defaults to AGENT_CMD):
 set "AGENT_CMD_INTERACTIVE=claude --model {model} {prompt}"
+REM This repo has completed the dispatcher migration audits in
+REM docs/parallel-ready, so normal launches use the two-worker dispatcher.
+REM Pass --jobs 1 for a serial dispatcher run; an absent slot retains legacy.
+set "AGENT_JOBS=2"
 REM Meta-repo resume prompt: the engine's default prompt assumes a scaffolded
 REM downstream repo (docs/process.md etc.); this one names THIS repo's actual
 REM surfaces. Empty = fall back to the engine default. Keep agent-resume.sh's

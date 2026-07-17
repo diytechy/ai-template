@@ -8906,3 +8906,57 @@ generated status block re-projects it).
 **Registry:** 210 WIs / 195 done; `check_trajectory --strict` clean. Frontier:
 **WI-208**. NOT pushed since `f41f866` (this filing commit is the first new
 one; `push-policy: human`).
+
+## 2026-07-17 — WI-208: migration audits signed; dispatcher is the live launcher default
+
+**Session type:** build (`unattended`, strong; spec
+[specs/WI-208.md](specs/WI-208.md)). **No spine change:** this populated the
+already-shipped scheduler schema and launcher slot; classifier/dispatcher code
+was intentionally untouched.
+
+**SafetyClass audit (§14.10):** done rows remain blank history. Every row that
+was open at audit time was reviewed deliberately:
+
+| WI | Class | Reason |
+| --- | --- | --- |
+| WI-060 | protected | Git stash/rollback mutates shared working-tree state and must serialize whole-project. |
+| WI-061 | high-risk | Optional source-document mutation gets a single-WI traincar. |
+| WI-062 | ordinary | A warn-first checker tier is isolated, reversible off-spine work. |
+| WI-063 | high-risk | Committed-composite freshness gating has broad gate-harness consequences. |
+| WI-065 | spine | It changes TC citation semantics under SR-044. |
+| WI-082 | ordinary | Internal bootstrap decomposition is ordinary implementation work. |
+| WI-097 | protected | The owner-ruling-dependent LICENSE/legal surface is protected. |
+| WI-108 | ordinary | A contained flaky-test diagnosis/fix is ordinary off-spine work. |
+| WI-123 | high-risk | Review-cadence policy changes the safety/escalation regime. |
+| WI-158 | ordinary | OKF pack export is a contained generated-output extension. |
+| WI-159 | ordinary | Knowledge-tab density is contained dashboard presentation work. |
+| WI-187 | high-risk | Four trigger-gated architecture residuals are deliberately isolated. |
+| WI-208 | protected | Registry migration, root launchers, and the parallel-ready policy mutate root coordination state. |
+| WI-209 | spine | Its declared work amends SR-066 and its TC in the same commit. |
+| WI-210 | spine | Its retirement plan amends SR-029/SR-030 and process authority. |
+
+**Soft-edge audit (§14.9):** all three open-row edges remain advisory:
+
+| Edge | Verdict | Reason |
+| --- | --- | --- |
+| WI-123 → `~WI-107` | advisory-confirmed | The earlier evidence-window work informs the owner ruling; it is not a correctness prerequisite for implementing a later cadence decision. |
+| WI-123 → `~WI-121` | advisory-confirmed | BUILD-tier relaxation is contextual evidence; the cadence WI defines its own safe adoption conditions. |
+| WI-187 → `~WI-064` | advisory-confirmed | Each residual has its own applies-when trigger; none consumes an unintegrated WI-064 artifact. |
+
+**Promotion + proof:** `docs/parallel-ready` signs both audits against this
+WI-208 commit. The POSIX, Windows, and macOS launchers now declare/export
+`AGENT_JOBS=2`; explicit `--jobs 1` remains the serial dispatcher escape and
+an absent variable still selects the compatibility driver. A real
+`agent_loop --root . --jobs 2` boot first exercised the graceful-pause boundary
+(zero reservations), then completed a no-work run: migration event
+`parallel-enabled ceiling=2`, dispatch banner `lanes 0/2 ... ceiling 2`, and
+telemetry `0 reservation(s) -> 0 integration(s) ... 0 bar-failure(s)`.
+The registry audit counted **15 open / 0 missing SafetyClass** before close.
+
+**Verified:** full suite **1023 passed / 34 skipped**; `check.py --gate G3`
+**PASS 16/16** with 90.84% coverage, trajectory clean at 210 WIs / 196 done,
+dashboard/status/OKF/code-map freshness green, and zero broken docs links.
+**Deviations:** the human-readable `schedule.py ready --explain` renderer has a
+pre-existing duplicate-`reasons` formatting defect; the same required explain
+assessment was run through its JSON format and independently counted 15 open /
+0 missing classifications. Scheduler code stayed out of this data-only WI.
