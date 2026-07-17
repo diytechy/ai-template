@@ -16,33 +16,29 @@ decisions._
 
 ---
 
-## OI-3 — Push / sync decision
+## OI-3 — `main` integration decision
 
-- **One-line:** push — the branch is already remote-tracked, so the unpushed
-  commits are pure durability risk (the `main` integration is a separate sitting).
-- **Decision:** whether to push the pending local commits on
-  `derived-gate-model` (and, separately and later, whether/when to integrate
-  the branch into `main`).
-- **Git-checked facts (2026-07-13; re-verify at read time — an open-item claim
+- **One-line:** the routine push is done (owner, 2026-07-17 — branch in sync);
+  the remaining question is whether/when to integrate `derived-gate-model`
+  into `main`, a deliberate sitting of its own.
+- **Decision:** whether/when to integrate `derived-gate-model` into `main`
+  (the push half of the original brief was executed by the owner 2026-07-17 —
+  log Decisions; this section keeps the stable id, narrowed to the residue).
+- **Git-checked facts (2026-07-17; re-verify at read time — an open-item claim
   about git state must come from git, not memory):**
-  - remote `origin` exists (`github.com:diytechy/ai-template`);
-  - `derived-gate-model` tracks `origin/derived-gate-model`, **ahead 9** at
-    check (10 with the ratification commit that lands this brief) —
-    verify: `git fetch --prune && git branch -vv`;
-  - `MultiRepoSupport` is **in sync** with its remote;
-  - `main` is 340 commits behind this branch
-    (`git rev-list --count main..derived-gate-model`) — the eventual
-    integration question, **not** part of the routine push.
-  - _(The earlier "local-only, ~48 commits" claim was stale and wrong —
-    corrected at the 2026-07-13 sitting.)_
-- **Blast radius:** durability of ~10 commits of ratification + phase work
-  (one disk holds them until pushed). The branch is already public-remote
-  tracked, so pushing adds no new exposure.
-- **Options:** authorize the push (`push-policy` = `human`: you push, or
-  explicitly authorize the agent once) · hold.
-- **Recommendation:** push — the branch is already tracked upstream; the
-  unpushed commits are pure durability risk. The `main` integration is a
-  separate, later sitting.
+  - `derived-gate-model` tracks `origin/derived-gate-model`, **in sync** at
+    the WI-207 close — verify: `git fetch --prune && git branch -vv`;
+  - `main` is several hundred commits behind this branch
+    (`git rev-list --count main..derived-gate-model`) — the whole
+    derived-gate/self-adoption era lives only on this branch.
+- **Blast radius:** whatever consumes `main` (fresh clones, any default-branch
+  automation) sees a kit hundreds of commits stale until integrated; the
+  integration itself is a large fast-forward-or-merge best done at a
+  deliberate cut point (e.g. after the M1/M2 migration lands).
+- **Options:** integrate at the next stable cut (post-WI-209) · integrate now ·
+  keep `derived-gate-model` the de-facto mainline and re-point tooling.
+- **Recommendation:** integrate at the next stable cut — after WI-208/WI-209
+  land and bake briefly, merge to `main` in one reviewed sitting.
 
 ## OI-4 — WI-097: LICENSE decision
 

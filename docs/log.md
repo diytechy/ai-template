@@ -261,6 +261,13 @@ why (one bullet each; cite ids)._
   over: a standing all-vs-all sweep per commit (quadratic review cost for a
   net the change-scoped sweep already provides incrementally). Pointer:
   [specs/WI-206.md](specs/WI-206.md).
+- **2026-07-17 — OI-3 push half EXECUTED (owner).** The owner pushed
+  `derived-gate-model`; git-verified in sync with `origin/derived-gate-model`
+  at the WI-207 close (`f41f866`) — the ~18-commit durability risk is closed.
+  The brief's residue — whether/when to integrate into `main` — keeps the
+  stable **OI-3** id, narrowed in [open-items.md](open-items.md); rec:
+  integrate at the next stable cut (post-WI-209). Per the pending-only rule
+  the executed half moves here and out of the brief.
 
 ## Audit log
 
@@ -8862,3 +8869,40 @@ cited-SR amendments clear with this row's close — the warn→amend→close loo
 exercised end-to-end twice in one sitting.
 
 **Deviations:** none. **Byte deltas (budgeted files):** none.
+
+## 2026-07-17 — M1–M3 filed (WI-208/209/210): the dispatcher migration has rows
+
+**Session type:** intake (owner-directed: "build out M1–M3 so it is fully
+ready to implement"). Three specs written to grind-ready depth — a fresh
+session needs nothing from this conversation:
+
+- **WI-208 — M1, §14 migration audit + parallel-default flip** (queued,
+  `unattended`, strong; ≺ WI-204 done): the `SafetyClass` column + deliberate
+  classification of every open row (deferred included, done rows stay blank
+  history), the soft-edge audit with promote-or-confirm dispositions,
+  `docs/parallel-ready`, `AGENT_JOBS=2` in all three launchers (`--jobs 1`
+  the escape), and one proven boot to the dispatcher banner with zero
+  unclassified rows. [specs/WI-208.md](specs/WI-208.md).
+- **WI-209 — M2, dual-plan auto-dispatch + quiet-park auto-page** (queued,
+  `unattended`, strong; ≺ WI-208): the WI-201 ruling wired —
+  `classify()` derives single-WI-traincar from `PlanMode=dual` itself; the
+  build-out loop auto-runs `run_dual_plan_round` for a selected dual row;
+  the serial driver pages naming `--dual-plan` when only dual rows are
+  actionable; SR-066's deferral clauses drop with the TC moved in the same
+  commit. Closes the quiet-park hole on both paths.
+  [specs/WI-209.md](specs/WI-209.md).
+- **WI-210 — M3, legacy-path retirement** (**deferred**, `unattended`,
+  strong; ≺ WI-208;WI-209): absent-`--jobs` resolves to the dispatcher, the
+  serial driver + `--track` plumbing retire (SR-029/030 through a reviewed
+  spine amendment), judgment duties re-homed once, the per-path guard
+  inventory single-pathed. **Un-defer trigger declared:** ≥ 3 real multi-WI
+  dispatcher runs on this repo with no incident the serial path would have
+  avoided, then an owner un-defer. [specs/WI-210.md](specs/WI-210.md).
+
+**Also this entry:** OI-3's push half executed (Decisions above); the brief
+narrowed to the `main`-integration residue with its One-line updated (the
+generated status block re-projects it).
+
+**Registry:** 210 WIs / 195 done; `check_trajectory --strict` clean. Frontier:
+**WI-208**. NOT pushed since `f41f866` (this filing commit is the first new
+one; `push-policy: human`).
