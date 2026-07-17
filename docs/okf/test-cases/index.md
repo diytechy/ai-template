@@ -80,3 +80,4 @@ resource: "generated"
 | [TC-067](TC-067.md) | Run the cross-CMP suite: an import edge between two components with no covering IF row wa… |
 | [TC-068](TC-068.md) | Run the spec-interface suite: an unarmed spec (no ## Interfaces section) is vacuous; a se… |
 | [TC-069](TC-069.md) | Run plan_coverage.py over a goal brief + rival plan tables: two commensurable plans emit … |
+| [TC-070](TC-070.md) | Drive plan_round with injected fake step results: the happy path selects with the 8-sessi… |

@@ -80,3 +80,4 @@ resource: "generated"
 | [LLR-067](LLR-067.md) | Cross-CMP-edge-without-IF finding |
 | [LLR-068](LLR-068.md) | Spec-interface citation check |
 | [LLR-069](LLR-069.md) | Dual-plan coverage pre-pass |
+| [LLR-070](LLR-070.md) | Dual-plan round state machine |

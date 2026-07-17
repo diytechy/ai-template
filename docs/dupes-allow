@@ -49,6 +49,10 @@ project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/gen_skill
 project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/run_menu.py
 project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/score_reviews.py
 project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/trace.py
+# WI-194: plan_round.py carries the same F5 helpers (_utf8_console + its
+# docstring, class/def scaffolding) as agent_route/schedule — censused.
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/plan_round.py
+project-trajectory/scripts/plan_round.py == project-trajectory/scripts/schedule.py
 # WI-190: plan_coverage.py carries the same F5 helpers (_utf8_console, the
 # module import/docstring boilerplate, the optional-CSV column loader, the
 # argparse/exit scaffolding) as its siblings — censused, not hoisted.

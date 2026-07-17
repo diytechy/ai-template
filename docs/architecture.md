@@ -57,6 +57,7 @@ graph LR
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
     m_scripts_plan_coverage["scripts/plan_coverage — Dual-plan coverage pre-pass: make rival WI deco…"]
+    m_scripts_plan_round["scripts/plan_round — The dual-plan round state machine: a pure, side…"]
     m_scripts_run_menu["scripts/run_menu — The run capability menu — one launcher that pre…"]
     m_scripts_schedule["scripts/schedule — Derive the dependency-ready WI frontier and its…"]
     m_scripts_score_reviews["scripts/score_reviews — The substance scorer — score a review verdict b…"]
@@ -80,6 +81,7 @@ graph LR
     m_scripts_gen_arch_map -. IF-010 .-> m_scripts_check
     m_scripts_gen_okf -. IF-012 .-> m_scripts_check
     m_scripts_gen_trajectory -. IF-011 .-> m_scripts_check
+    m_scripts_plan_round -. IF-058 .-> m_scripts_agent_loop
     m_scripts_schedule -. IF-055 .-> m_scripts_agent_loop
     m_scripts_schedule -. IF-053 .-> m_scripts_check_trajectory
     m_scripts_score_reviews -. IF-046 .-> m_scripts_agent_loop
@@ -571,6 +573,20 @@ Contracts (interfaces): IF-057
 | `find_cycle(rows)` | A predecessor cycle among plan rows (list of ids), or None. Iterative |  |
 | `check_plan(name, rows, clauses, sr_ids, if_ids)` | One plan's findings + its covered-clause set. |  |
 | `format_report(goal_name, clauses, plans)` | The markdown coverage report: per-plan coverage + the pairwise diff. |  |
+| `main()` |  |  |
+
+### `scripts/plan_round`
+_The dual-plan round state machine: a pure, side-effect-free library the_
+Contracts (interfaces): IF-058
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `RoundCapError (class)` | The caller attempted a transition the protocol forbids (a second |  |
+| `new_round(slug, budget)` | A fresh round state: one JSON-able dict, no hidden objects. |  |
+| `ready_steps(state)` | The steps the coordinator may dispatch now (parallel-friendly: both |  |
+| `record(state, step, plan, stage, run, **result)` | Record one finished step and return the round's disposition. |  |
+| `disposition(state)` | The round's current disposition: PAGE / SELECTED / CONTINUE. |  |
+| `page_action(gate_policy)` | The documented failure-semantics action for a PAGE under the declared |  |
 | `main()` |  |  |
 
 ### `scripts/run_menu`

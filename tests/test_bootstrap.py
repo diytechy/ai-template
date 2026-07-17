@@ -54,6 +54,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/gen_trajectory.py",
         "scripts/gen_okf.py",
         "scripts/plan_coverage.py",
+        "scripts/plan_round.py",
         "scripts/run_menu.py",
         "scripts/dev-setup.cmd",
         ".githooks/pre-commit",
