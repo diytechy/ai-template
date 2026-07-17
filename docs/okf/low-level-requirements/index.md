@@ -81,3 +81,8 @@ resource: "generated"
 | [LLR-068](LLR-068.md) | Spec-interface citation check |
 | [LLR-069](LLR-069.md) | Dual-plan coverage pre-pass |
 | [LLR-070](LLR-070.md) | Dual-plan round state machine |
+| [LLR-071](LLR-071.md) | Redacted dual-plan brief assembler + hat prompt-map keys |
+| [LLR-072](LLR-072.md) | Two-hat planner pair + runtime-nonresponse fallback |
+| [LLR-073](LLR-073.md) | Dual-plan coverage step adapter |
+| [LLR-074](LLR-074.md) | Dual-plan round artifact filer |
+| [LLR-075](LLR-075.md) | status.md forward-only done-id enforcement (mode-aware R-D restoration) |

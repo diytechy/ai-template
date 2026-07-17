@@ -49,6 +49,24 @@ project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/gen_skill
 project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/run_menu.py
 project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/score_reviews.py
 project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/trace.py
+# WI-195..WI-198 (the opus-built dual-plan round set): the same F5 class —
+# _utf8_console, the optional-CSV loader, argparse/main scaffolding, and the
+# Plan-WI table parser deliberately duplicated from plan_coverage per F5
+# (plan_artifacts == plan_coverage, ~126 tokens — directed, not a leak); the
+# agent_route intra-file pair is the PlannerSession/PlannerPair class
+# scaffolding (two small __slots__/__init__/__repr__ blocks).
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/agent_route.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/plan_briefs.py
+project-trajectory/scripts/agent_route.py == project-trajectory/scripts/plan_coverage_step.py
+project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/plan_briefs.py
+project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_artifacts.py
+project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
+project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_artifacts.py
+project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
+project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_coverage_step.py
+project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_round.py
+project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
+project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
 # WI-194: plan_round.py carries the same F5 helpers (_utf8_console + its
 # docstring, class/def scaffolding) as agent_route/schedule — censused.
 project-trajectory/scripts/agent_route.py == project-trajectory/scripts/plan_round.py

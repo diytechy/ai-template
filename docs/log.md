@@ -8318,3 +8318,58 @@ Done-when.
 **Bar:** smoke + `check_docs --stale` green at commit (output in the commit
 message). No budgeted file touched; no spine change (registry row + spec +
 status/log only). NOT pushed (`push-policy: human`).
+
+## 2026-07-17 — WI-194…WI-198 + WI-200: the dual-plan round set built (fable root + five parallel opus agents, fable-integrated)
+
+**Session type:** build grind, owner-directed ("grind through all these here,
+spinning up an opus agent where appropriate"). Division per the declared
+tiers: **fable** built WI-194 (the contract root) and integrated; **five
+parallel opus agents** built WI-195/196/197/198/200, each confined to its own
+module + tests, all shared surfaces (spine CSVs, census, scaffold wiring,
+status/log) filed centrally by the integrator. Two commits: WI-194, then the
+five-WI integration.
+
+**WI-194** (`plan_round.py`, fable) — the pure round-lifecycle state machine;
+its own commit carries the detail. The one first-cut defect the tests caught:
+coverage findings must NAME the implicated plans so both can be repaired
+before the re-run — the contract WI-197 then consumed.
+
+**The opus deliverables (all green on arrival, integrated as reported):**
+- **WI-195** `plan_briefs.py` — allowlist-only brief assembly (the two-registry
+  read IS the redaction boundary), strict `{{NAME}}` fill, the `DUALPLAN-*`
+  prompt-map keys; 16 tests incl. the sentinel proof.
+- **WI-196** `agent_route.planner_pair/planner_fallback` — two-hat selection
+  with the degraded rule at selection AND launch; the sharp catch:
+  `exclude_families` only deprioritizes, so the fallback HARD-excludes the
+  dark family. 6 new tests (39 total).
+- **WI-197** `plan_coverage_step.py` — the checker→machine adapter, driven in
+  tests against the REAL plan_round + REAL plan_coverage subprocess
+  (clean / bounce-then-clean / bounce-then-page; exit-2 malformed
+  fail-closed). 6 tests.
+- **WI-198** `plan_artifacts.py` — the round's write-side (DP-NNN allocation,
+  stage artifacts, log append, selected-plan WI filing that the REAL
+  check_trajectory accepts plain + --strict). 14 tests.
+- **WI-200** `check_trajectory.status_forward_only_findings` — the mode-aware
+  R-D restoration (WARN plain / ERROR --strict; generated-marker stand-down;
+  freshness specified as the successor), enforcement-audit Harness row,
+  STATUS.template enforcer note; 7 tests incl. the real-repo probe.
+  **Dogfooded immediately:** closing these six WIs required scrubbing their
+  ids from status.md before the strict gate would pass.
+
+**Integration corrections (the driver's review deltas):** LLR-072/TC-072
+homed to **SR-045 Phase 1** (the agent proposed Phase 4; rows match their
+SR's phase), the planner-pair contract amendment landed on **IF-044** (the
+API seam) not IF-045 (the registry read), and IF-059/IF-060 carry **sink**
+(not source) markers — both modules' provide-side seams are WI-199's to
+declare. SR-037's stale pre-WI-180 text (R-B/R-C described as live) was
+de-staled with the WI-200 amendment. 12 F5 census pairs added (incl. the
+directed ~126-token `plan_artifacts == plan_coverage` parser duplication and
+agent_route's intra-file class scaffolding).
+
+**Spine:** SN=25 SR=65 **LLR=75 TC=75**, **61 seams** (IF-058…IF-061
+Proposed), derived gate holds G3 (per-phase all G3). **Bar (real output,
+Windows):** smoke **820 passed / 2 skipped**; `check_docs --stale` 0 broken;
+`trace --strict` + `check_trajectory --strict` clean; `check_dupes` OK (30
+files). `OWNER_SCRATCHPAD.md` carries a concurrent owner edit — deliberately
+left unstaged and untouched (owner-only surface). Frontier: **WI-199**. NOT
+pushed (`push-policy: human`).

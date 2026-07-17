@@ -495,6 +495,118 @@ def test_pool_context_lists_state_and_notes(tmp_path):
     assert "GHOST-9 (not in docs/agents.csv)" in ctx
 
 
+# --- the two-hat planner pair + runtime-nonresponse fallback (WI-196, P3) --- #
+# docs/agents.csv-shaped fixtures: a two-family pool (ANTHROPIC + OPENAI) and a
+# single-family pool. The planner pair is a PURE selection/fallback library
+# (no launching); the tests assert the routed families, the recorded reason
+# code, and FRESH-session object identity in each degraded case.
+PLANNER_TWO_FAMILY_CSV = """Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes
+ANTHROPIC-FABLE,ANTHROPIC,claude-fable-5,5,strong,claude -p {prompt} --model {model},,frontier
+OPENAI-SOL,OPENAI,gpt-5.6-sol,5.6,strong,codex exec {prompt},,cross-family leg
+"""
+
+PLANNER_ONE_FAMILY_CSV = """Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes
+ANTHROPIC-FABLE,ANTHROPIC,claude-fable-5,5,strong,claude -p {prompt} --model {model},,frontier
+ANTHROPIC-FABLE-ACCT2,ANTHROPIC,claude-fable-5,5,strong,claude -p {prompt},CLAUDE_CONFIG_DIR=~/.c2,second account
+"""
+
+
+def _reg_from(tmp_path, text):
+    p = tmp_path / "agents.csv"
+    p.write_text(text, encoding="utf-8")
+    reg, errors = route.load_registry(p)
+    assert errors == []
+    return reg
+
+
+def test_planner_pair_two_family_branch(tmp_path):
+    # Two families enabled -> the two hats route to DIFFERENT Family lines, the
+    # happy (non-degraded) path with the PAIR_TWO_FAMILY reason recorded as data.
+    reg = _reg_from(tmp_path, PLANNER_TWO_FAMILY_CSV)
+    enabled = ["ANTHROPIC-FABLE", "OPENAI-SOL"]
+    pair = route.planner_pair(enabled, reg, "strong")
+    assert pair.reason == route.PAIR_TWO_FAMILY
+    assert pair.degraded is False
+    a, b = pair.sessions
+    assert {a.family, b.family} == {"ANTHROPIC", "OPENAI"}
+    assert a.model_id == "ANTHROPIC-FABLE" and b.model_id == "OPENAI-SOL"
+    # Two distinct sessions (never the same object).
+    assert a is not b
+
+
+def test_planner_pair_one_family_pool_degrades_at_selection(tmp_path):
+    # Only ANTHROPIC enabled -> degraded AT SELECTION: two fresh same-family
+    # sessions, the machine-readable reason recorded, fresh-session identity held.
+    reg = _reg_from(tmp_path, PLANNER_ONE_FAMILY_CSV)
+    enabled = ["ANTHROPIC-FABLE", "ANTHROPIC-FABLE-ACCT2"]
+    pair = route.planner_pair(enabled, reg, "strong")
+    assert pair.reason == route.PAIR_SINGLE_FAMILY
+    assert pair.degraded is True
+    a, b = pair.sessions
+    assert a.family == b.family == "ANTHROPIC"  # same family (degraded, legal)
+    # FRESH-session identity: two distinct objects even in the degraded pair.
+    assert a is not b
+
+
+def test_planner_pair_single_row_pool_yields_two_fresh_same_id_sessions(tmp_path):
+    # The narrowest pool: one row, one family. Both hats are fresh same-family
+    # sessions of the same model_id (independent runs, weaker corroboration) —
+    # still two DISTINCT objects.
+    reg = _reg_from(tmp_path, PLANNER_TWO_FAMILY_CSV)
+    pair = route.planner_pair(["ANTHROPIC-FABLE"], reg, "strong")
+    assert pair.reason == route.PAIR_SINGLE_FAMILY and pair.degraded is True
+    a, b = pair.sessions
+    assert a.model_id == b.model_id == "ANTHROPIC-FABLE"
+    assert a is not b  # fresh identity despite the shared id
+
+
+def test_planner_pair_no_model_available(tmp_path):
+    # Nothing routable at/above tier -> a no-model pair the coordinator pages on.
+    reg = _reg_from(tmp_path, PLANNER_TWO_FAMILY_CSV)
+    cooldowns = {}
+    route.cool(cooldowns, "ANTHROPIC-FABLE", now=0.0, seconds=300)
+    route.cool(cooldowns, "OPENAI-SOL", now=0.0, seconds=300)
+    pair = route.planner_pair(
+        ["ANTHROPIC-FABLE", "OPENAI-SOL"], reg, "strong", now=10.0, cooldowns=cooldowns
+    )
+    assert pair.reason == route.PAIR_NO_MODEL and pair.sessions == (None, None)
+
+
+def test_planner_fallback_runtime_nonresponse_branch(tmp_path):
+    # Two families were routed; ANTHROPIC proves NONRESPONSIVE at launch. The
+    # fallback returns two FRESH same-family sessions from the RESPONDING family
+    # (OPENAI), with the degraded-availability reason recorded as data.
+    reg = _reg_from(tmp_path, PLANNER_TWO_FAMILY_CSV)
+    enabled = ["ANTHROPIC-FABLE", "OPENAI-SOL"]
+    pair = route.planner_pair(enabled, reg, "strong")
+    failed = pair.sessions[0]  # the ANTHROPIC hat that went dark
+    assert failed.family == "ANTHROPIC"
+
+    fb = route.planner_fallback(failed, enabled, reg, "strong")
+    assert fb.reason == route.PAIR_RUNTIME_FALLBACK
+    assert fb.degraded is True
+    a, b = fb.sessions
+    # Both fresh sessions come from the responding (OPENAI) family.
+    assert a.family == b.family == "OPENAI"
+    assert a.model_id == b.model_id == "OPENAI-SOL"
+    # FRESH-session identity: neither is the failed object reused, and the two
+    # are distinct from each other.
+    assert a is not failed and b is not failed and a is not b
+
+
+def test_planner_fallback_no_responding_family(tmp_path):
+    # The other family is also unavailable -> a no-responder pair (page).
+    reg = _reg_from(tmp_path, PLANNER_TWO_FAMILY_CSV)
+    enabled = ["ANTHROPIC-FABLE", "OPENAI-SOL"]
+    failed = route.PlannerSession("A", "ANTHROPIC-FABLE", "ANTHROPIC", "strong")
+    cooldowns = {}
+    route.cool(cooldowns, "OPENAI-SOL", now=0.0, seconds=300)
+    fb = route.planner_fallback(
+        failed, enabled, reg, "strong", now=10.0, cooldowns=cooldowns
+    )
+    assert fb.reason == route.PAIR_NO_RESPONDER and fb.sessions == (None, None)
+
+
 def test_weak_is_a_legacy_alias_for_quick(tmp_path):
     # WI-113 (owner rename 2026-07-12): the bottom tier is `quick`; the old
     # `weak` vocabulary still loads, validates, and selects — never-breaking

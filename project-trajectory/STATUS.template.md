@@ -22,7 +22,10 @@ decisions, session notes — appends to the log this header points at, never her
   default, costing nothing until a work item exists); once you use it
   (process-options.md "Trajectory / work-items layer") the **Next action** below
   names the next `WI-###`(s) from `docs/requirements/work-items.csv`, and
-  the root `PROJECT_STATE.html` renders the DAG (+ the What/How views).
+  the root `PROJECT_STATE.html` renders the DAG (+ the What/How views). Keep this
+  surface forward-only: a **`done`** WI id must not linger here (its record is the
+  log's) — `check_trajectory` flags one as a finding (warn / ERROR `--strict`),
+  unless status.md is a generated snapshot.
 
 ---
 

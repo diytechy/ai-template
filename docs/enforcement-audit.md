@@ -23,6 +23,7 @@ records where each one bites.
 | No duplicate/malformed id; CSV structure; citation coherence | Harness | `trace.py --strict-integrity` (pre-commit) |
 | Code map is generated, never hand-edited | Harness | `gen_arch_map.py --check` (pre-commit + G3) |
 | Trajectory dashboard / OKF bundle stay fresh | Harness | `check.py --run-step trajectory-map / okf` (pre-commit + G3) |
+| `status.md` stays forward-only (no closed-WI id accretes) | Harness | `check_trajectory` done-id rule (warn / ERROR `--strict`; WI-200 restored the WI-180-retired R-D, mode-aware — stands down under a generated-snapshot marker) |
 | Kit scripts are stdlib-only | Test | `tests/test_stdlib_only.py` (TC-034) |
 | No secret committed or pushed | Harness | `check_privacy.py` floor + `hooks/pre-commit`, `hooks/pre-push` |
 | Runtime flows diagrammed and current | Harness | `check_flows.py` (G2/G3) |

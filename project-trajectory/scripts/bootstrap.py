@@ -44,7 +44,8 @@ What it creates in the destination:
     scripts/trace.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_dupes.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
-    scripts/plan_coverage.py, plan_round.py    (dual-plan coverage pre-pass + round state machine, process-options.md "Dual-plan decomposition")
+    scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
+                                               (the dual-plan round set, process-options.md "Dual-plan decomposition")
     scripts/agent_route.py, scripts/score_reviews.py   (S8 coordinator routing + review scorer)
     docs/agents.csv                            <- agents.template.csv (model registry; inert until docs/agents-enabled)
     scripts/setup.{sh,ps1}, scripts/check.{sh,ps1}   (cross-platform launchers)
@@ -1179,6 +1180,9 @@ MAPPING = [
     ("scripts/gen_okf.py", "scripts/gen_okf.py"),
     ("scripts/plan_coverage.py", "scripts/plan_coverage.py"),
     ("scripts/plan_round.py", "scripts/plan_round.py"),
+    ("scripts/plan_briefs.py", "scripts/plan_briefs.py"),
+    ("scripts/plan_coverage_step.py", "scripts/plan_coverage_step.py"),
+    ("scripts/plan_artifacts.py", "scripts/plan_artifacts.py"),
     # The S8 routing/scoring half of the unattended coordinator (WI-059): the
     # model-registry router + fixed escalation policy, and the substance scorer.
     # agent_loop imports them as siblings when the docs/agents-enabled enable-list

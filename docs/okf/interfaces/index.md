@@ -69,3 +69,6 @@ resource: "generated"
 | [IF-056](IF-056.md) |  |
 | [IF-057](IF-057.md) |  |
 | [IF-058](IF-058.md) |  |
+| [IF-059](IF-059.md) |  |
+| [IF-060](IF-060.md) |  |
+| [IF-061](IF-061.md) |  |

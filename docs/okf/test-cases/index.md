@@ -81,3 +81,8 @@ resource: "generated"
 | [TC-068](TC-068.md) | Run the spec-interface suite: an unarmed spec (no ## Interfaces section) is vacuous; a se… |
 | [TC-069](TC-069.md) | Run plan_coverage.py over a goal brief + rival plan tables: two commensurable plans emit … |
 | [TC-070](TC-070.md) | Drive plan_round with injected fake step results: the happy path selects with the 8-sessi… |
+| [TC-071](TC-071.md) | Assemble each hat brief over a fixture repo whose status.md/log.md carry a sentinel and r… |
+| [TC-072](TC-072.md) | Drive planner_pair/planner_fallback against docs/agents.csv-shaped fixtures: a two-family… |
+| [TC-073](TC-073.md) | Drive plan_coverage_step end-to-end with the real plan_round machine and the real plan_co… |
+| [TC-074](TC-074.md) | Build a fixture repo (work-items.csv with the round's parent WI, a selected plan carrying… |
+| [TC-075](TC-075.md) | Run the status.md forward-only suite: a done id echoed in a hand-edited status.md warns p… |

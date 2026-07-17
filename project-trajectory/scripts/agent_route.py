@@ -680,6 +680,207 @@ def failure_action(gate_policy):
     }
 
 
+# --- the two-hat planner pair (dual-plan decomposition, DP-001 plan P3) ----- #
+# A PURE selection/fallback library: it composes `select()` for the two planner
+# hats and never launches a session (the coordinator, P6, owns launch-and-feed-
+# back). Its seams stay IF-044/IF-045 — no file I/O beyond what agent_route
+# already reads. The machine-readable reason codes below are the round-artifact /
+# telemetry key for WHY a pair is diverse or degraded.
+PAIR_TWO_FAMILY = "two-family"  # happy path: the two hats got different Family lines
+PAIR_SINGLE_FAMILY = (
+    "single-family-pool"  # degraded at SELECTION: only one family enabled
+)
+PAIR_RUNTIME_FALLBACK = (
+    "runtime-nonresponse-fallback"  # degraded at LAUNCH: a routed family went dark
+)
+PAIR_NO_MODEL = "no-model-available"  # the pool has nothing routable at/above tier
+PAIR_NO_RESPONDER = (
+    "no-responding-family"  # every non-failed family is also unavailable
+)
+
+
+class PlannerSession:
+    """One planner-hat session selection — a routed (model x route) pick for a
+    hat. FRESHNESS is object identity: the coordinator relies on each returned
+    session being a NEW instance (never the failed one reused) so a relaunch
+    starts from clean context. Two same-family sessions are two DISTINCT objects
+    that may share a `model_id` — independent runs, weaker corroboration."""
+
+    __slots__ = ("hat", "model_id", "family", "tier")
+
+    def __init__(self, hat, model_id, family, tier):
+        self.hat = hat
+        self.model_id = model_id
+        self.family = family
+        self.tier = tier
+
+    def __repr__(self):  # for round-artifact / test readability
+        return "PlannerSession(hat={!r}, model_id={!r}, family={!r}, tier={!r})".format(
+            self.hat, self.model_id, self.family, self.tier
+        )
+
+
+class PlannerPair:
+    """The result of routing the two planner hats: the two `PlannerSession`s (or
+    `(None, None)` when nothing is routable), the machine-readable `reason` code
+    (one of the PAIR_* constants — the telemetry key), `degraded` (True when
+    family diversity was not achieved), and a human `detail` line to log."""
+
+    __slots__ = ("sessions", "reason", "degraded", "detail")
+
+    def __init__(self, sessions, reason, degraded, detail):
+        self.sessions = sessions
+        self.reason = reason
+        self.degraded = degraded
+        self.detail = detail
+
+    def __repr__(self):
+        return "PlannerPair(sessions={!r}, reason={!r}, degraded={!r})".format(
+            self.sessions, self.reason, self.degraded
+        )
+
+
+def _session(hat, model_id, registry, requested_tier):
+    """Build a fresh PlannerSession for `model_id`, reading its Family + the
+    row's actual tier from the registry (a tier bump means the row's tier, not
+    the requested one). A missing row degrades to the requested tier / empty
+    family rather than crashing a walk-away run."""
+    m = registry.get(model_id)
+    fam = m.family if m is not None else ""
+    tier = m.tier if m is not None else requested_tier
+    return PlannerSession(hat, model_id, fam, tier)
+
+
+def planner_pair(
+    enabled,
+    registry,
+    tier,
+    now=0.0,
+    cooldowns=None,
+    preferred_ids=(),
+    hats=("A", "B"),
+):
+    """Route the two planner hats to two FRESH sessions (DP-001 plan P3, case a/b).
+
+    Prefer two DIFFERENT Family lines where the enabled pool allows; when the
+    pool holds only one family (or every different-family row is cooling), the
+    degraded rule applies AT SELECTION TIME: two fresh same-family sessions plus
+    the recorded reason `PAIR_SINGLE_FAMILY`. Pure — this selects, it never
+    launches (see IF-044/IF-045). Returns a `PlannerPair`.
+
+    The first hat routes by the ordinary policy (enable-list order, cooldowns,
+    tier-up-never-down); the second hat routes prefer-different against the
+    first's family. If the second lands a different family it is the happy path
+    (`PAIR_TWO_FAMILY`, not degraded); if it can only land the same family it is
+    the pool-degraded pair. Both sessions are distinct objects even when they
+    share a `model_id` — freshness is object identity, not id difference.
+    """
+    cooldowns = cooldowns or {}
+    first_id, first_reason = select(
+        enabled,
+        registry,
+        tier,
+        now=now,
+        cooldowns=cooldowns,
+        preferred_ids=preferred_ids,
+    )
+    if first_id is None:
+        return PlannerPair((None, None), PAIR_NO_MODEL, True, first_reason)
+    a = _session(hats[0], first_id, registry, tier)
+
+    second_id, second_reason = select(
+        enabled,
+        registry,
+        tier,
+        now=now,
+        cooldowns=cooldowns,
+        exclude_families=[a.family],
+        prefer_different=True,
+        preferred_ids=preferred_ids,
+    )
+    if second_id is None:
+        # Nothing at all for the second hat (all cooled): degrade to a second
+        # fresh same-family session — fresh context is the invariant.
+        b = _session(hats[1], first_id, registry, tier)
+        detail = "single-family pool (second hat exhausted): {} + a fresh same-family {}".format(
+            a.model_id, b.model_id
+        )
+        return PlannerPair((a, b), PAIR_SINGLE_FAMILY, True, detail)
+    b = _session(hats[1], second_id, registry, tier)
+    if b.family != a.family:
+        detail = "two families: {} [{}] + {} [{}]".format(
+            a.model_id, a.family, b.model_id, b.family
+        )
+        return PlannerPair((a, b), PAIR_TWO_FAMILY, False, detail)
+    detail = "single-family pool: {} + a fresh same-family {} ({})".format(
+        a.model_id, b.model_id, second_reason
+    )
+    return PlannerPair((a, b), PAIR_SINGLE_FAMILY, True, detail)
+
+
+def planner_fallback(
+    failed,
+    enabled,
+    registry,
+    tier,
+    now=0.0,
+    cooldowns=None,
+    preferred_ids=(),
+    hats=("A", "B"),
+):
+    """The runtime-nonresponse fallback (DP-001 plan P3, case c) — the entry the
+    coordinator calls when a routed family proves NONRESPONSIVE at launch, AFTER
+    `failure_action()`'s retry policy is exhausted.
+
+    `failed` is the typed session outcome for the dead hat (a `PlannerSession`,
+    or any object exposing a `.family`); its family is the one that went dark.
+    We route the RESPONDING family — the pool excluding the failed family — and
+    return two FRESH same-family sessions from it, recording the degraded-
+    availability reason `PAIR_RUNTIME_FALLBACK`. The returned sessions are NEW
+    objects: neither is the `failed` object reused, and the two are distinct from
+    each other (fresh context is the invariant). Pure — it selects, the
+    coordinator relaunches (IF-044/IF-045).
+
+    When no non-failed family is routable either, returns a `PAIR_NO_RESPONDER`
+    pair with `(None, None)` for the coordinator to page on.
+    """
+    cooldowns = cooldowns or {}
+    failed_family = getattr(failed, "family", "") or ""
+    # HARD-exclude the nonresponsive family: it went dark at launch, so it is off
+    # the pool entirely this round (select()'s exclude_families only DEPRIORITIZES
+    # a family — it would still degrade back to it, which is exactly wrong here).
+    responding = [
+        mid
+        for mid in enabled
+        if mid in registry and registry[mid].family != failed_family
+    ]
+    resp_id, resp_reason = select(
+        responding,
+        registry,
+        tier,
+        now=now,
+        cooldowns=cooldowns,
+        preferred_ids=preferred_ids,
+    )
+    if resp_id is None:
+        detail = "no responding family after {} went nonresponsive ({})".format(
+            failed_family or "the failed hat", resp_reason
+        )
+        return PlannerPair((None, None), PAIR_NO_RESPONDER, True, detail)
+    # Two FRESH same-family sessions from the responding family (distinct objects,
+    # neither is `failed`). Family diversity is off the table this round — the
+    # other family is dark — so this is a recorded degraded-availability pair.
+    a = _session(hats[0], resp_id, registry, tier)
+    b = _session(hats[1], resp_id, registry, tier)
+    detail = (
+        "{} nonresponsive at launch -> two fresh {} [{}] sessions "
+        "(degraded availability)".format(
+            failed_family or "the failed hat", resp_id, a.family
+        )
+    )
+    return PlannerPair((a, b), PAIR_RUNTIME_FALLBACK, True, detail)
+
+
 def main(argv=None):
     _utf8_console()
     ap = argparse.ArgumentParser(

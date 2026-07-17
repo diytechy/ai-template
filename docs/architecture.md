@@ -56,7 +56,10 @@ graph LR
     m_scripts_gen_release_checklist["scripts/gen_release_checklist — Generate the human release checklist from the r…"]
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
+    m_scripts_plan_artifacts["scripts/plan_artifacts — The dual-plan round artifact filer: the coordin…"]
+    m_scripts_plan_briefs["scripts/plan_briefs — Redacted dual-plan brief assembler + the three …"]
     m_scripts_plan_coverage["scripts/plan_coverage — Dual-plan coverage pre-pass: make rival WI deco…"]
+    m_scripts_plan_coverage_step["scripts/plan_coverage_step — Coverage step adapter: run the dual-plan covera…"]
     m_scripts_plan_round["scripts/plan_round — The dual-plan round state machine: a pure, side…"]
     m_scripts_run_menu["scripts/run_menu — The run capability menu — one launcher that pre…"]
     m_scripts_schedule["scripts/schedule — Derive the dependency-ready WI frontier and its…"]
@@ -81,6 +84,8 @@ graph LR
     m_scripts_gen_arch_map -. IF-010 .-> m_scripts_check
     m_scripts_gen_okf -. IF-012 .-> m_scripts_check
     m_scripts_gen_trajectory -. IF-011 .-> m_scripts_check
+    m_scripts_plan_artifacts -. IF-061 .-> m_scripts_agent_loop
+    m_scripts_plan_coverage -. IF-060 .-> m_scripts_plan_coverage_step
     m_scripts_plan_round -. IF-058 .-> m_scripts_agent_loop
     m_scripts_schedule -. IF-055 .-> m_scripts_agent_loop
     m_scripts_schedule -. IF-053 .-> m_scripts_check_trajectory
@@ -228,6 +233,10 @@ Contracts (interfaces): IF-044, IF-045
 | `load_constants(env)` | The escalation constants: the per-repo-overridable defaults, each read from |  |
 | `escalate(rounds, constants, swapped, at_top_tier, fails_since)` | The fixed win-stay/lose-shift decision after a review round. |  |
 | `failure_action(gate_policy)` | What a page-the-human escalation does, keyed to docs/gate-policy (ruled). |  |
+| `PlannerSession (class)` | One planner-hat session selection — a routed (model x route) pick for a |  |
+| `PlannerPair (class)` | The result of routing the two planner hats: the two `PlannerSession`s (or |  |
+| `planner_pair(enabled, registry, tier, now, cooldowns, preferred_ids, hats)` | Route the two planner hats to two FRESH sessions (DP-001 plan P3, case a/b). |  |
+| `planner_fallback(failed, enabled, registry, tier, now, cooldowns, preferred_ids, hats)` | The runtime-nonresponse fallback (DP-001 plan P3, case c) — the entry the |  |
 | `main(argv)` |  |  |
 
 ### `scripts/bootstrap`
@@ -420,6 +429,7 @@ Contracts (interfaces): IF-009, IF-023
 | `phase_anchors(wis)` | `({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs |  |
 | `phase_findings(root, wis)` | The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the |  |
 | `ssot_findings(wis, root)` | The work-items.csv coherence findings (R-A + R-E) + the unknown-status |  |
+| `status_forward_only_findings(root, wis)` | The status.md forward-only rule (WI-200) — restores the WI-180-retired R-D |  |
 | `run_state_findings(wis, root)` | Warn when an end-state would park a runnable queued work item (WI-115). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an `## OI-N` decision brief whose decision |  |
@@ -559,6 +569,30 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056
 | `build_html(root, wis)` |  |  |
 | `main()` |  |  |
 
+### `scripts/plan_artifacts`
+_The dual-plan round artifact filer: the coordinator's write-side of a round_
+Contracts (interfaces): IF-061
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `parse_plan_wis(text)` | The selected plan's `Plan-WI` rows (id/title/predecessors) from the first |  |
+| `allocate_round_dir(root, slug)` | Create and return the next `docs/plans/DP-NNN-<slug>/` directory. |  |
+| `write_stage(round_dir, name, text)` | Write one stage artifact `name` (a stable filename — `goal.md`, |  |
+| `file_selected_wis(root, plan_text, spec_ref, workstream, predecessor_wi, tier_map)` | Append the selected plan's `Plan-WI` rows as **queued** work items and |  |
+| `append_log_summary(root, text)` | Append a verdict-summary block (`text`, composed by the caller — it owns |  |
+
+### `scripts/plan_briefs`
+_Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_
+Contracts (interfaces): IF-059
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `load_template(hat, override)` | The prompt-template TEXT for a hat: the operator's --prompt-map override |  |
+| `strip_dispatcher_block(text)` | Return the prompt body with a leading HTML-comment dispatcher block |  |
+| `build_surface(root)` | The allowlist-only registry surface the briefs embed, as `{slot: text}` |  |
+| `assemble(hat, slots, template_text)` | Strict slot-fill of the `{{NAME}}` placeholders in `template_text`. |  |
+| `main(argv)` |  |  |
+
 ### `scripts/plan_coverage`
 _Dual-plan coverage pre-pass: make rival WI decompositions mechanically_
 Contracts (interfaces): IF-057
@@ -573,6 +607,16 @@ Contracts (interfaces): IF-057
 | `find_cycle(rows)` | A predecessor cycle among plan rows (list of ids), or None. Iterative |  |
 | `check_plan(name, rows, clauses, sr_ids, if_ids)` | One plan's findings + its covered-clause set. |  |
 | `format_report(goal_name, clauses, plans)` | The markdown coverage report: per-plan coverage + the pairwise diff. |  |
+| `main()` |  |  |
+
+### `scripts/plan_coverage_step`
+_Coverage step adapter: run the dual-plan coverage pre-pass headless and turn_
+Contracts (interfaces): IF-060
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `run_coverage(goal, plan_paths, root, out_path, plan_key_of)` | Run `plan_coverage.py` headless over `goal` + `plan_paths` and return the |  |
+| `to_record_kwargs(result)` | The `plan_round.record(state, STEP_COVERAGE, ...)` kwargs for a result: |  |
 | `main()` |  |  |
 
 ### `scripts/plan_round`

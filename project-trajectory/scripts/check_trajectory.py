@@ -35,11 +35,17 @@ rules:
     wrong.
   - **R-E** — every open WI carries a non-empty `SpecRef` resolving to an in-repo
     target (`path` or `path#anchor`; the path part must exist).
-R-E is **WARN by default, ERROR under `--strict`** (wired at G2+). The former
-R-B/R-C/R-D rules — every open WI repeated as a token in `status.md` — are
-**retired** (WI-180): status becomes an integrator-generated snapshot, so its
-currency is enforced by generated freshness, not by requiring the registry to be
-copied back into prose. `--staged` adds the warn-first **no-validation-delta** checks: the
+R-E is **WARN by default, ERROR under `--strict`** (wired at G2+). R-B/R-C —
+every *open* WI repeated as a token in `status.md` — stay **retired** (WI-180):
+status becomes an integrator-generated snapshot, so open-id currency is enforced
+by generated freshness, not by copying the registry back into prose. **R-D is
+RESTORED, mode-aware (WI-200):** `status.md` is forward-only, so a `done` WI id
+lingering there is a finding — WARN plain, ERROR under `--strict` — *except* when
+the file carries the kit's generated-block marker (`<!-- BEGIN GENERATED ... -->`,
+the `gen_arch_map`/`gen_trajectory` idiom), where it is an integrator snapshot
+that cannot accrete prose and the successor freshness check applies (specified in
+`status_forward_only_findings`, not yet implemented — no status.md generator
+exists). `--staged` adds the warn-first **no-validation-delta** checks: the
 follow-up-on-a-done-SR ratchet, and the **critique-loop ratchet** (WI-068) — a WI
 closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
@@ -121,6 +127,7 @@ CMP_CSV = "docs/requirements/components.csv"
 RUN_STATE = "docs/run-state"
 ARCH_MD = "docs/architecture.md"
 SPECS_DIR = "docs/specs"
+STATUS_MD = "docs/status.md"
 
 # The How-SW top view is bounded at this many items (top-level components +
 # uncontained modules); exceeding it drives right-sizing of the component
@@ -1014,9 +1021,10 @@ def ssot_findings(wis, root):
     `hard=True` (R-A only) is an ERROR at every run — the incoherent-handoff
     rule. R-E is warn-first; the caller promotes it to an error under `--strict`.
     Kept OUT of `validate()` so the dashboard renderer (`gen_trajectory`, which
-    imports `validate`) shares the same registry read. The former R-B/R-C/R-D
-    status-repetition rules are retired (WI-180): a generated status snapshot
-    carries no registry copy to cross-check."""
+    imports `validate`) shares the same registry read. R-B/R-C (open-WI status
+    repetition) are retired (WI-180); R-D's done-id rule is RESTORED separately in
+    `status_forward_only_findings` (WI-200), kept out of here so it reads the
+    status.md text rather than the registry rows."""
     out = []
     for w in wis:
         st = w["status"]
@@ -1075,6 +1083,62 @@ def ssot_findings(wis, root):
                     )
 
     return out
+
+
+# --- status.md forward-only enforcement (WI-200; restores WI-180-retired R-D) --
+# A word-bounded `WI-###` id token, so a `done` id embedded in status.md prose
+# (a "CLOSED (WI-142)" narrative, a bullet) is found wherever it appears.
+_WI_TOKEN_RE = re.compile(r"\bWI-\d+\b")
+# The kit's generated-block marker idiom: gen_arch_map / gen_trajectory splice
+# content between `<!-- BEGIN GENERATED ... -->` / `<!-- END GENERATED ... -->`
+# HTML comments (arch_inventory reads the same `BEGIN GENERATED` sentinel). Its
+# presence in status.md means the file is an integrator-generated snapshot.
+_STATUS_GENERATED_RE = re.compile(r"<!--\s*BEGIN GENERATED", re.IGNORECASE)
+
+
+def status_forward_only_findings(root, wis):
+    """The status.md forward-only rule (WI-200) — restores the WI-180-retired R-D
+    done-id check in a mode-aware form. `docs/status.md` holds only what must
+    happen **next**; a closed WI's record lives in `docs/log.md`. So a `done` WI
+    id appearing as a token in status.md is a finding — WARN plain, ERROR under
+    `--strict` (G2+), the pre-WI-180 severity (the caller owns that promotion, the
+    `spec_interface_findings` pattern).
+
+    A repo-state rule evaluated every run (like R-A cross-reads the registry +
+    status.md), not a staged-diff rule — under `--jobs N` only the serialized
+    integrator publishes to the shared branch, so the invariant holds at every
+    published tree.
+
+    **Mode-aware (WI-180's direction preserved, not reversed):** when status.md
+    carries the kit's generated-block marker (`<!-- BEGIN GENERATED ... -->`, the
+    `gen_arch_map`/`gen_trajectory` idiom) the file is an integrator-generated
+    snapshot that cannot accrete prose, so the token rule stands down. Its
+    successor there is a **freshness** check (regenerate in memory + byte-compare,
+    the `--check` idiom) — SPECIFIED here as the retirement's promise but **not
+    implemented**, because no status.md generator exists yet.
+
+    Only ids whose registry Status is `done` flag; open (queued/active/deferred/
+    blocked) ids and unknown ids do not (an unknown id is R-E-adjacent). Vacuous
+    when status.md is absent or the registry is placeholder-only (no real WIs ->
+    no done ids); the `docs/trajectory-check: off` opt-out is the caller's (it
+    returns before any check runs). Returns finding-message strings."""
+    path = root / STATUS_MD
+    if not path.exists():
+        return []
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if _STATUS_GENERATED_RE.search(text):
+        # Generated snapshot: the freshness check is the successor (unimplemented).
+        return []
+    done_ids = {w["id"] for w in wis if w["status"] == "done"}
+    if not done_ids:
+        return []
+    present = sorted(set(_WI_TOKEN_RE.findall(text)) & done_ids)
+    return [
+        "{}: a `done` work-item id appears in {} — status.md is forward-only; a "
+        "closed WI's record belongs in docs/log.md, not here (scrub the token, or "
+        "make status.md a generated snapshot)".format(wid, STATUS_MD)
+        for wid in present
+    ]
 
 
 def run_state_findings(wis, root):
@@ -1439,6 +1503,13 @@ def main():
     # Specs act on declared interface boundaries (WI-191) — WARN plain, ERROR
     # under --strict (G2+); vacuous until a spec adopts an `## Interfaces` section.
     for msg in spec_interface_findings(root):
+        if args.strict:
+            errors.append(msg)
+        else:
+            print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
+    # status.md forward-only (WI-200; the mode-aware R-D restoration) — WARN plain,
+    # ERROR under --strict (G2+); yields to a status.md generated-block marker.
+    for msg in status_forward_only_findings(root, wis):
         if args.strict:
             errors.append(msg)
         else:

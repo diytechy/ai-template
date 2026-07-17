@@ -13,7 +13,7 @@ import subprocess
 
 import pytest
 
-from conftest import SCRIPTS, load_script, run_py
+from conftest import ROOT, SCRIPTS, load_script, run_py
 
 WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
 # The header with the SpecRef column (S1) — used by the SSOT-rule tests.
@@ -305,8 +305,9 @@ def test_deep_cycle_reported_cleanly_not_recursionerror(tmp_path):
 
 # --- S1: the registry SSOT rules -----------------------------------------------
 # R-A is a hard error at every run (the pre-commit floor); R-E warns plain and
-# gates under --strict; the vocabulary gains `deferred`. R-B/R-C/R-D (status
-# repetition) are retired (WI-180: status is a generated snapshot).
+# gates under --strict; the vocabulary gains `deferred`. R-B/R-C (open-WI status
+# repetition) stay retired (WI-180); R-D's done-id rule is RESTORED mode-aware
+# (WI-200) — its own test block below.
 
 
 def test_ra_open_wi_with_deliverable_fails_plain(tmp_path):
@@ -386,8 +387,8 @@ def test_specref_with_anchor_resolves(tmp_path):
 def test_compliant_registry_and_status_passes_strict(tmp_path):
     # The whole model, coherent: a done row with a Deliverable and no SpecRef, an
     # open row with an empty Deliverable + resolvable SpecRef -> --strict is fully
-    # green (R-A + R-E). status.md is present but no longer cross-checked against
-    # the registry (R-B/R-C/R-D retired, WI-180).
+    # green (R-A + R-E). status.md names only the open WI-002, so the restored
+    # R-D done-id rule (WI-200) finds nothing (R-B/R-C stay retired, WI-180).
     write_spec(tmp_path, "docs/specs/WI-002.md")
     write_wis_sr(
         tmp_path,
@@ -402,9 +403,9 @@ def test_compliant_registry_and_status_passes_strict(tmp_path):
 
 
 def test_coherent_registry_passes_strict_without_status_md(tmp_path):
-    # status.md is no longer cross-checked (R-B/R-C/R-D retired, WI-180): a
-    # coherent registry (R-A clean, every open WI's SpecRef resolves) passes
-    # --strict, and those retired rules never surface.
+    # status.md is absent, so the restored R-D done-id rule (WI-200) is vacuous
+    # and R-B/R-C stay retired (WI-180): a coherent registry (R-A clean, every
+    # open WI's SpecRef resolves) passes --strict, and those rules never surface.
     write_spec(tmp_path, "docs/specs/WI-001.md")
     write_wis_sr(tmp_path, "WI-001,A,scripts,,,active,,docs/specs/WI-001.md\n")
     proc = run_traj(tmp_path, "--strict")
@@ -459,6 +460,98 @@ def test_placeholder_only_stays_vacuous_under_strict(tmp_path):
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "vacuously clean" in proc.stdout
+
+
+# --- WI-200: status.md forward-only (the mode-aware R-D restoration) -----------
+# A `done` WI id token in a hand-edited status.md is a finding — WARN plain,
+# ERROR under --strict — that yields to a generated-snapshot marker. It shares the
+# trajectory-check opt-out and the placeholder/absent-registry vacuity.
+GENERATED_MARKER = "<!-- BEGIN GENERATED TRAJECTORY SNAPSHOT -->"
+FORWARD_ONLY = "status.md is forward-only"
+
+
+def test_clean_status_has_no_forward_only_finding(tmp_path):
+    # A done WI whose id is NOT echoed in status.md is clean (the file names only
+    # the open work ahead), under --strict too.
+    write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
+    write_status(tmp_path, "## Next action\n- everything closed; await the owner.\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert FORWARD_ONLY not in proc.stderr
+
+
+def test_done_id_in_status_warns_plain_errors_strict(tmp_path):
+    # A closed WI id lingering in status.md: WARN plain (exit 0), ERROR --strict.
+    write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
+    write_status(tmp_path, "## Recently closed\n- WI-001 landed the thing.\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "WARN" in plain.stderr and FORWARD_ONLY in plain.stderr
+    assert "WI-001" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert "ERROR" in strict.stderr and FORWARD_ONLY in strict.stderr
+    assert "WI-001" in strict.stderr
+
+
+def test_open_ids_in_status_are_not_a_finding(tmp_path):
+    # queued/active/deferred ids are legal in status.md (they ARE the next work);
+    # only `done` ids flag. A done id absent from the file stays silent.
+    write_spec(tmp_path, "docs/specs/WI-002.md")
+    write_spec(tmp_path, "docs/specs/WI-003.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Shipped,scripts,,,done,shipped it,\n"
+        "WI-002,Next,scripts,,,queued,,docs/specs/WI-002.md\n"
+        "WI-003,Later,scripts,,,deferred,,docs/specs/WI-003.md\n",
+    )
+    write_status(tmp_path, "Next: WI-002; deferred backlog: WI-003.\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert FORWARD_ONLY not in proc.stderr
+
+
+def test_generated_marker_stands_the_rule_down(tmp_path):
+    # A status.md carrying the kit's generated-block marker is an integrator
+    # snapshot that cannot accrete prose — the token rule yields (freshness is its
+    # unimplemented successor), so a done id in it does NOT flag, even --strict.
+    write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
+    write_status(
+        tmp_path,
+        GENERATED_MARKER + "\n- WI-001 (from the registry snapshot)\n"
+        "<!-- END GENERATED TRAJECTORY SNAPSHOT -->\n",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert FORWARD_ONLY not in proc.stderr
+
+
+def test_forward_only_opt_out_silences(tmp_path):
+    # docs/trajectory-check: off silences the whole check, done id and all.
+    write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
+    write_status(tmp_path, "## Recently closed\n- WI-001 landed.\n")
+    (tmp_path / "docs" / "trajectory-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert FORWARD_ONLY not in proc.stderr
+
+
+def test_forward_only_vacuous_on_placeholder_registry(tmp_path):
+    # A placeholder-only registry has no real (let alone done) WIs, so even a
+    # status.md echoing the inert WI-000 id triggers nothing.
+    write_wis(tmp_path, PLACEHOLDER_ROW)
+    write_status(tmp_path, "## Recently closed\n- WI-000 example.\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert FORWARD_ONLY not in proc.stderr
+
+
+def test_forward_only_unit_over_the_real_meta_repo():
+    # Prove the pruned meta-repo status.md passes: its named WI ids (WI-194..200
+    # open, the deferred backlog) carry no `done` id, so the rule finds nothing.
+    ct = load_script("check_trajectory")
+    wis = ct.load_wis(ct.read_rows(ROOT / "docs/requirements/work-items.csv"))[0]
+    assert ct.status_forward_only_findings(ROOT, wis) == []
 
 
 def test_legacy_csv_without_specref_column_still_parses(tmp_path):
