@@ -99,10 +99,19 @@ home elsewhere — don't restate it here:
   G3 --jobs 0` **PASS** (15/15, 91% coverage); **grep-zero** for the retired word over
   the live repo (minus history + `docs/repo-review-2026-07-12b.md`, preserved as a
   review verdict). Follows the same-day **WI-064** (AXES enforceability) and
-  **main-decomposition** closes. **No active build frontier remains.** Open owner
+  **main-decomposition** closes. Open owner
   items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are unchanged under
-  `gate-policy: autonomous`; Codex Sol builds are live. The next candidates are the
-  remaining deferred backlog (owner-ordered) — nothing is auto-started. Grinding
+  `gate-policy: autonomous`; Codex Sol builds are live. **The owner feedback
+  sitting (2026-07-16) filed three queued WIs** — **WI-189** (dashboard
+  render-critique screenshot loop, meta-only), **WI-191** (specs act on declared
+  interface boundaries), and **WI-190** (dual-plan decomposition protocol,
+  predecessor-gated on WI-191) — with the research evidence preserved as the
+  [co-planning knowledge pack](knowledge/co-planning.md). The same sitting
+  found and filed **WI-192** (defect: the WI-081 trace golden masters are
+  Windows-generated — `os.sep` + mojibake — so the golden net fails on POSIX;
+  pre-existing at clean HEAD, will surface in CI the moment OI-3 pushes). The
+  build frontier is **WI-189 + WI-191 + WI-192** (WI-190 follows WI-191); the
+  deferred backlog stays owner-ordered. Grinding
   under single-agent adversarial self-review at gates (a recorded limitation vs a
   provider-heterogeneous reviewer). Round-by-round evidence → [log.md](log.md).
 

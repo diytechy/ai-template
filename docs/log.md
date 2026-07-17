@@ -7927,3 +7927,58 @@ Campaign-column sentence; baseline re-stamped). AGENTS.template.md 9,978
 integrity=0, interfaces=56. FULL suite `pytest -q -n auto` → **941 passed, 3 skipped**.
 **`check.py --gate G3 --jobs 0` → PASS (all 15 steps; coverage 91.04%)**. Derived gate G3, `phase=4`. NOT
 pushed (`push-policy: human`).
+
+## 2026-07-16 — Owner feedback sitting: WI-189/190/191 filed (render critique · dual-plan protocol · interface-boundary specs) + co-planning pack + WI-192 defect
+
+**Session type:** owner feedback + research + filing (no build). The owner
+raised three concerns from the planning/research/build review: (1) agents
+critique `PROJECT_STATE.html` from source, never rendered pixels; (2) how to
+select deep planning and whether two agents should ping-pong a decomposition
+until they agree; (3) work items should act on defined modules/LLRs or the
+interfaces binding them, with seams built out at WI construction.
+
+**Research.** Two Opus research subagents (owner-authorized) swept the
+2022–2026 literature on multi-agent debate, co-planning, judge reliability, and
+refinement conditions. Distilled into
+[knowledge/co-planning.md](knowledge/co-planning.md) (20 primary sources). Net:
+iterate-until-agree between peers is contraindicated (sycophantic conformity,
+consensus collapse, round-1 plateau + drift); plan *merging* is unpublished;
+the supported shape is independent different-family generation → mechanical
+coverage diff → ONE rubric-anchored cross-critique round → a fresh-family,
+provenance-anonymized, position-swapped arbiter that **selects one plan and
+ports coverage-closing deltas**. Transfer caveat recorded in the pack (no
+published benchmark on plan artifacts).
+
+**Filed (queued; specs in docs/specs/, owner ruled "proceed"):**
+- **WI-189** (`dashboard`, medium) — meta-only pinned-Playwright screenshot
+  matrix so agent critiques judge rendered pixels; doubles as the artifact
+  recipe for a future dashboard `Critique` TC. Dev-only: no downstream
+  template change, stdlib-only rule untouched.
+- **WI-191** (`docs`, medium, ≺WI-064) — specs act on declared interface
+  boundaries: required `Interfaces` section citing resolvable IF-IDs; new
+  seams filed `Proposed` with a nearest-existing-IF rationale;
+  vacuous-until-armed checker + critique-rubric near-duplicate anchor
+  (semantic near-dupe stays Reviewer-tier — recorded for enforcement-audit).
+- **WI-190** (`unattended`, strong, ≺WI-068;WI-191) — the dual-plan
+  decomposition protocol as an opt-in PROCESS_OPTIONS layer on the S8 chassis
+  (no new engine; n=1 critique round as a rule; measurable optimization
+  targets stay PB/NFR + `check_perf` first).
+
+**Defect found while running the bar — WI-192 (`scripts`, quick, ≺WI-081):**
+the WI-081 trace golden masters are platform-sensitive (Windows `os.sep` paths
++ mojibake em-dashes in `tests/golden/*.txt`), so
+`test_trace_golden.py`'s three cases fail on macOS **at clean HEAD** (verified
+stashed). Unrelated to this filing; not fixed inline per the working
+agreement. Will surface in the cross-OS CI the moment OI-3 pushes.
+
+**Deviations:** none from the filing scope; the commit bar's pytest half is
+red on this platform by exactly the three pre-existing WI-192 failures.
+**Byte deltas (budgeted files):** none (PROCESS.md / PROCESS_OPTIONS.md /
+AGENTS.template.md untouched; the WIs will carry their own deltas when built).
+
+**Tests / bar (real output, macOS):** smoke tier `pytest -q -n auto -m smoke`
+→ **3 failed, 732 passed, 2 skipped in 62.96s** (the 3 = WI-192, pre-existing
+at HEAD); `check_docs --root . --stale` → **OK — 121 doc(s), 473 intra-repo
+link(s), 0 broken** (2 staleness hints on unrelated older specs, warn-only).
+Dashboard regenerated (`gen_trajectory: wrote PROJECT_STATE.html`). NOT pushed
+(`push-policy: human`).
