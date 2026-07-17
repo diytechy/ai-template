@@ -1556,6 +1556,8 @@ guessed subset. A WI's phase is **derived** from the delivery `Phase` of the SRs
 it delivers (§4 "Phased delivery"), and the When-view dashboard tiers the WI DAG
 by **phase ⊃ workstream ⊃ work-item** — there is no separate grouping column.
 
+**Whole-registry contradiction audit (WI-206).** The per-commit reviewer sweep is change-scoped — it checks each new SN/SR/TC row against the whole registry as it lands (inductive pairwise coverage), but never re-audits **old-vs-old** drift between rows that both predate it. *Applies when* the registry is mature enough for that to bite (>= 2 closed phases or >= 30 SRs). *Occasion:* at **phase close** (with the gate bar) and **before G-Final**. *Execution:* one independent fresh-context session, redacted to the registries + `docs/rubrics/registry-contradiction-audit.md`, writing a recorded `docs/reviews/NNN-AUDIT.md` verdict. *Disposition:* findings route as WIs through change-intake; the audit never edits the spine. Per-commit coverage stays the change-scoped reviewer sweep — unchanged.
+
 **Parallel test execution.** Running the suite across cores is a **`docs/stack.ini`
 concern**, not a process rule: append `-n auto` to `[product] test` and the harness,
 gate, and CI all parallelize with [pytest-xdist](https://pytest.dev). It is the
@@ -2271,8 +2273,10 @@ unchanged, warned); new launchers never emit it.
 the ready frontier from the WI registry via `schedule.py` (a **declared
 `SafetyClass` is required** — an unclassified WI fails closed without stopping
 classified disjoint work), packs it into traincars (ordinary unary hard-chains
-cluster up to the cap, default 4; spine/gate/attestation/protected work
-serializes **whole-project** with every other lane drained first), **atomically
+cluster up to the cap, default 4; ready spine/gate/attestation WIs cluster into
+**one spine-only traincar** — spine packs with spine, never with anything else
+(WI-204) — which, like protected work, serializes **whole-project** with every
+other lane drained first), **atomically
 reserves** each selected traincar's constituent WIs — one off-history
 `commit-tree` metadata commit + one `update-ref --stdin` zero-old-value
 transaction creating the train branch and every `refs/llm/reservations/WI-###`

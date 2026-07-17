@@ -8772,3 +8772,49 @@ re-validated and closes with this flip.
 
 **Deviations:** none. **Byte deltas (budgeted files):** PROCESS_OPTIONS'
 +128 B restatement is recorded in the WI-206 entry (one file, one commit).
+
+## 2026-07-17 — WI-206: whole-registry contradiction audit shipped + FIRST REAL AUDIT run (5 findings → WI-207)
+
+**Session type:** build + audit (`docs`, medium; spec
+[specs/WI-206.md](specs/WI-206.md)). **Division of labor:** rubric built by a
+parallel opus agent; PROCESS_OPTIONS splice serialized through the root (the
+byte-budgeted file takes one writer); the audit itself executed by a **third,
+independent fresh-context opus session** (never the builder — the S8 posture),
+redacted to the registries + rubric only.
+
+**What landed:**
+- [rubrics/registry-contradiction-audit.md](rubrics/registry-contradiction-audit.md)
+  — anchors **C1** direct contradiction · **C2** semantic overlap / double-home
+  · **C3** attribute/limit conflict · **C4** drifted interpretation; severity
+  guidance; the `NNN-AUDIT.md` verdict contract with the machine `VERDICT:`
+  line; the redaction rule and the findings-route-as-WIs disposition stated
+  in-rubric.
+- The PROCESS_OPTIONS occasion paragraph ("Trajectory / work-items layer",
+  after *Phase cadence*): applies-when (≥ 2 closed phases or ≥ 30 SRs),
+  occasion (phase close + before G-Final), execution (independent redacted
+  session, recorded verdict), disposition; per-commit coverage stays the
+  change-scoped sweep (the ruling recorded at filing).
+
+**The first real audit (the dogfood deliverable):**
+[reviews/108-AUDIT.md](reviews/108-AUDIT.md) — 25 SN × 66 SR all-vs-all,
+old-vs-old included. **VERDICT: CHANGES-REQUESTED findings=5** (2 MAJOR,
+3 MINOR, 0 BLOCKER). Headline: **SR-040 still keys AGENT_CMD_MAP routing on
+`docs/run-phase`, which SR-059 deleted** — exactly the old-vs-old drift class
+the change-scoped sweep structurally misses, caught on the audit's first run.
+Also: the How-SW top-view cap double-homed (SR-048 literal "10" vs SR-051
+`TOP_VIEW_MAX`); Family-vs-provider vocabulary drift; SR-026's resume-authority
+text predating the WI-registry/Git substrate; SN-008's missing `--lenient`
+carve-out. **Triage (the disposition rule — the audit never edits the spine):**
+all five routed into **WI-207** (queued, `self-adoption`, strong —
+spine-touching text amendments, one reviewed batch;
+SpecRef = the verdict file). Under the WI-204 rule WI-207 is spine-class work
+that will ride a spine-only train.
+
+**Verified:** check_docs 0 broken (rubric de-orphaned by the PROCESS_OPTIONS
+reference); skills-sync green after the baseline re-stamp.
+
+**Deviations:** none. **Byte deltas (budgeted files):**
+AGENTS.template.md 9978 (untouched); PROCESS.md 60169 (untouched);
+**PROCESS_OPTIONS.md 158866 → 159799 (+933 B, flagged:** +805 B the WI-206
+occasion paragraph + +128 B the WI-204 spine-batch restatement**)** — baseline
+re-stamped in both tracked skill copies in this commit.
