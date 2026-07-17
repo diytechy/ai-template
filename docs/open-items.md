@@ -9,13 +9,10 @@ while the decision is pending** — the ruling appends to [log.md](log.md)'s
 Decisions log and the section is deleted. (Format:
 [specs/open-items-surface.md](specs/open-items-surface.md).)
 
-_The 2026-07-13 sitting ruled OI-1/OI-2/OI-5/OI-6; the 2026-07-14 ratification
-sitting ratified OI-8 (the `[v3]-[g2]` batch) and OI-9 (the research-knowledge
-spec). The 2026-07-14 phase-v3 g2-close sitting ruled OI-11 (containment arrow —
-accept), OI-12 (the 042/048/052 critique disposition — accept: U5 + 3 TC-HARDEN
-ratified, one final WI-144 build round, T2 → WI-159) and OI-13 (the WI-147 pause
-`run-state` deviation — ratified + documented) — all in the log's Decisions.
-OI-3 (corrected against git), OI-4, and OI-7 remain open._
+_Ruled items are recorded in [log.md](log.md)'s Decisions log (and the sitting's
+GATE audit entry) and their sections deleted per the pending-only rule above — so
+ruled history is **not** restated here. The sections below are the currently open
+decisions._
 
 ---
 
