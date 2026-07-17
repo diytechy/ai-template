@@ -117,8 +117,18 @@ home elsewhere — don't restate it here:
   `shoot.mjs`'s declared 36-shot width×theme×tab matrix) + the
   `render-dashboard-critique` this-repo skill; exercised end-to-end (5 rendered
   views read back), its critique findings recorded as candidate WIs (a stated
-  non-goal to fix here). The build frontier is now **WI-191** (then **WI-190**,
-  whose WI-191 predecessor this unblocks); the deferred backlog stays
+  non-goal to fix here). **WI-191 is CLOSED** (2026-07-16,
+  [specs/WI-191.md](specs/WI-191.md)) — specs-of-record now act on declared
+  interface boundaries: a `## Interfaces` section citing resolvable `IF-###`
+  seams (new ones filed `Proposed` with a nearest-existing-IF rationale), a
+  vacuous-until-armed `check_trajectory` check (SR-044 extended + LLR-068/TC-068),
+  the `spec-interface-hygiene` **B1** rubric anchor for the reviewer-tier near-dup
+  gap, and the WI-190/WI-191 specs dogfood-retrofitted to *extend* IF-023 rather
+  than mint a near-duplicate. Running the G3 dupes gate surfaced a **pre-existing**
+  census gap (WI-188's `in_phase` helper duplicated into `trace.py` +
+  `gen_release_checklist.py`, uncensused) → filed **WI-193** (quick), fixed in its
+  own follow-up commit. The build frontier is now **WI-193** (the census fix) then
+  **WI-190** (whose WI-191 predecessor this unblocks); the deferred backlog stays
   owner-ordered. Grinding under single-agent adversarial self-review at gates (a
   recorded limitation vs a provider-heterogeneous reviewer). Round-by-round
   evidence → [log.md](log.md).

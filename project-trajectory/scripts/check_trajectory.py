@@ -120,6 +120,7 @@ LLR_CSV = "docs/requirements/low-level-requirements.csv"
 CMP_CSV = "docs/requirements/components.csv"
 RUN_STATE = "docs/run-state"
 ARCH_MD = "docs/architecture.md"
+SPECS_DIR = "docs/specs"
 
 # The How-SW top view is bounded at this many items (top-level components +
 # uncontained modules); exceeding it drives right-sizing of the component
@@ -815,6 +816,102 @@ def component_findings(root):
     return out
 
 
+# --- specs act on declared interface boundaries (WI-191) -----------------------
+_IF_TOKEN_RE = re.compile(r"\bIF-\d+\b")
+_INTERFACES_HEADING_RE = re.compile(r"(?im)^[ \t]*##[ \t]+Interfaces\b.*$")
+# The intra-module escape hatch (PROCESS.md §8 scoping): a spec whose WIs act only
+# within one module states that instead of inventing a seam.
+_INTRA_MODULE_RE = re.compile(
+    r"intra-module|single-module|no (?:cross-module )?seam|no interface|no cross-module",
+    re.I,
+)
+
+
+def _spec_interfaces_section(text):
+    """The body of a spec's `## Interfaces` section (between that heading and the
+    next `## ` heading / EOF), or None when the spec has no such heading — the
+    unarmed case that keeps the check vacuous-until-armed."""
+    m = _INTERFACES_HEADING_RE.search(text)
+    if not m:
+        return None
+    rest = text[m.end() :]
+    nxt = re.search(r"(?m)^[ \t]*##[ \t]+", rest)
+    return rest[: nxt.start()] if nxt else rest
+
+
+def _proposed_rationale_present(section, iid):
+    """True when at least one line citing `iid` carries rationale text beyond the
+    id and the `Proposed` marker — a PRESENCE check (whether the rationale is
+    *honest* and truly names the nearest seam is the Reviewer/critique gap, the
+    spec-interface-hygiene rubric B1)."""
+    for line in section.splitlines():
+        if iid not in line:
+            continue
+        residue = _IF_TOKEN_RE.sub("", line)  # drop the id + any nearest-IF ids
+        residue = re.sub(r"(?i)proposed|[-*•·:()\[\].,;]", "", residue)
+        if len(residue.strip()) >= 8:
+            return True
+    return False
+
+
+def spec_interface_findings(root):
+    """WI-191 — a spec-of-record acts on DECLARED interface boundaries. A spec's
+    `## Interfaces` section must cite only IF-### seams that resolve in
+    `interfaces.csv` (the one seam home, PROCESS.md §8), and a cited
+    `Status=Proposed` seam must carry a non-empty rationale on its citation line
+    (the forced nearest-existing-IF search that is the anti-duplication
+    mechanism). WARN plain / ERROR under `--strict` (G2+), like
+    `component_findings`; the caller owns that promotion.
+
+    **Vacuous-until-armed:** a spec with no `## Interfaces` heading is skipped, so
+    existing specs and downstream repos stay green until they adopt the section.
+    An armed section that cites no resolvable IF-### AND states no intra-module
+    escape (PROCESS.md §8) is itself a finding — an empty-ceremony section. The
+    honesty of a rationale and whether a Proposed contract near-duplicates an
+    existing seam are the recorded Reviewer-tier gaps (enforcement-audit.md)."""
+    specs = root / SPECS_DIR
+    if not specs.is_dir():
+        return []
+    if_rows = {r["id"]: r for r in load_ifs(read_rows(root / IF_CSV))}
+    out = []
+    for path in sorted(specs.glob("*.md")):
+        # The specs/ README documents the rule (it names the heading in prose) and
+        # WI-000 is the inert example — neither is an armed spec-of-record.
+        if path.name.lower() == "readme.md" or path.stem.endswith("-000"):
+            continue
+        section = _spec_interfaces_section(
+            path.read_text(encoding="utf-8", errors="replace")
+        )
+        if section is None:
+            continue  # unarmed — no `## Interfaces` section
+        rel = "{}/{}".format(SPECS_DIR, path.name)
+        ids = list(dict.fromkeys(_IF_TOKEN_RE.findall(section)))
+        if not ids:
+            if not _INTRA_MODULE_RE.search(section):
+                out.append(
+                    "{}: `## Interfaces` cites no IF-### and states no "
+                    "intra-module escape — cite the seam(s) the WI acts on, or "
+                    "state the intra-module case (PROCESS.md §8)".format(rel)
+                )
+            continue
+        for iid in ids:
+            row = if_rows.get(iid)
+            if row is None:
+                out.append(
+                    "{}: `## Interfaces` cites {} which resolves to no row in "
+                    "{}".format(rel, iid, IF_CSV)
+                )
+            elif row["status"] == "proposed" and not _proposed_rationale_present(
+                section, iid
+            ):
+                out.append(
+                    "{}: cites Proposed seam {} with no rationale — name the "
+                    "nearest existing IF-### and why it does not suffice (the "
+                    "anti-duplication search, PROCESS.md §8)".format(rel, iid)
+                )
+    return out
+
+
 # --- the [phase]-[g*] archetype + phase-drop detector (WI-093) -----------------
 # The derived-gate model (docs/specs/derived-gate-model.md §7/§9.3) structures a
 # phase's pre-dev work as a first-class WI whose Title carries a `[<phase>]-[g<N>]`
@@ -1339,6 +1436,13 @@ def main():
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     errors = comp_errors + integrity + validate(wis, load_known_srs(root))
+    # Specs act on declared interface boundaries (WI-191) — WARN plain, ERROR
+    # under --strict (G2+); vacuous until a spec adopts an `## Interfaces` section.
+    for msg in spec_interface_findings(root):
+        if args.strict:
+            errors.append(msg)
+        else:
+            print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
     # The SSOT coherence layer: R-A is always an error; R-E, the
     # run-state currency check, and the unknown-status lint are WARN unless
     # --strict promotes them.

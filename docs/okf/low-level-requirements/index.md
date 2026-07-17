@@ -78,3 +78,4 @@ resource: "generated"
 | [LLR-065](LLR-065.md) | Git-as-authority crash recovery |
 | [LLR-066](LLR-066.md) | Parallel telemetry + downstream migration/audits |
 | [LLR-067](LLR-067.md) | Cross-CMP-edge-without-IF finding |
+| [LLR-068](LLR-068.md) | Spec-interface citation check |

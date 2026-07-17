@@ -22,6 +22,21 @@ and `check_trajectory.py` fails a gate when an open WI names no reachable spec.
   boxes as work lands, so a half-complete WI's frontier is its **first unticked
   box** — not prose discipline. Ticks are *transient working state*.
 
+## Interface boundaries (§8 seams)
+
+A spec whose WIs act **across a module boundary** carries an `Interfaces`
+section citing each seam as an `IF-###` that resolves in
+[`requirements/interfaces.csv`](../requirements/interfaces.csv) — the one seam
+home (`PROCESS.md §8`), so a spec never sketches its own near-duplicate. A
+**new** seam is filed as a `Status=Proposed` row *at filing*, and the citation
+names the **nearest existing** IF and why it falls short (the forced search is
+the anti-duplication mechanism — search before you invent, never invent a seam
+before a second consumer exists). Single-module WIs state that in one line and
+cite nothing; the section arms only where §8 applies. `check_trajectory`
+verifies the citations resolve and that a Proposed citation carries a rationale
+(the full contract + the honest reviewer-tier gap: process-options.md
+"Spec-of-record"). See [`WI-000.md`](WI-000.md) for the shape.
+
 ## Lifecycle
 
 `open` (spec lives here, `SpecRef` resolves, WI named in

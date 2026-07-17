@@ -412,6 +412,7 @@ Contracts (interfaces): IF-009, IF-023
 | `knowledge_packs(root)` | Real knowledge-pack labels under `docs/knowledge/` (research-knowledge.md |  |
 | `cross_component_findings(root)` | The cross-CMP-edge-without-IF rule (WI-064; the AXES ratified model's |  |
 | `component_findings(root)` | The How-SW component-coverage finding(s) (process-options.md "Component |  |
+| `spec_interface_findings(root)` | WI-191 — a spec-of-record acts on DECLARED interface boundaries. A spec's |  |
 | `read_derived_phases(root)` | `{phase-label: gate-level-int}` parsed from the `# basis:` line of the |  |
 | `phase_anchors(wis)` | `({(phase, gate): wi}, [shape-warnings])` — the `[phase]-[g*]` anchor WIs |  |
 | `phase_findings(root, wis)` | The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the |  |

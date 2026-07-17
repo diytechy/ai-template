@@ -1421,6 +1421,27 @@ summary). Every spec ships a **Done-when checklist**, so a half-complete WI's
 frontier is its **first unticked box**, not prose discipline (ticks are transient
 working state). A shared effort doc archives when its **last** open WI closes.
 
+**Specs act on declared interface boundaries (WI-191).** A spec whose WIs act
+across a module boundary carries an **`## Interfaces` section** citing each seam
+as an `IF-###` that resolves in `interfaces.csv` — the one seam home (§8), so a
+spec never sketches its own near-duplicate. A **new** seam is filed as a
+`Status=Proposed` row *at filing*, its citation naming the **nearest existing**
+IF and why it does not suffice: the forced search is the anti-duplication
+mechanism — search before you invent, because a seam defined before a second
+consumer exists tends to be wrong, bypassed, and re-invented, so the rule forces
+*search*, never early invention. Scope is §8's: seams *between* modules (or
+repos/external actors), never intra-module ceremony — a single-module WI states
+that in the section in one line and cites nothing, and single-module standalone
+projects skip §8 entirely. **Mechanized** (`check_trajectory`, warn-first /
+ERROR under `--strict`, **vacuous-until-armed** — only a spec carrying the
+section is checked): every cited IF resolves, and a cited Proposed seam carries
+a non-empty rationale. **The honest gap is reviewer-tier:** whether a rationale
+truly names the nearest seam, and whether a Proposed contract near-duplicates an
+existing one, is a judgment call (`check_dupes`' token windows work on code, not
+contract prose) — recorded in `enforcement-audit.md` with a plan/spec
+critique-rubric anchor (`docs/rubrics/spec-interface-hygiene.md` **B1**, which
+WI-190's plan rubric imports).
+
 **No-validation-delta warn.** A rework WI that addresses a prior failure but
 changes neither the TC prose (`docs/test/test-cases.csv`) nor the test logic
 (files under the declared tests dir) warns (`--staged`, warn-first): the same

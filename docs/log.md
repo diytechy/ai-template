@@ -8103,3 +8103,74 @@ copies). **Byte deltas (budgeted files):** none — no `PROCESS*.md` /
 copies match) green; `check_docs --root . --stale` →
 **OK — 121 doc(s), 475 intra-repo link(s), 0 broken**. Dashboard regenerated.
 NOT pushed (`push-policy: human`).
+
+## 2026-07-16 — WI-191: specs act on declared interface boundaries (IF citation + Proposed-with-rationale; anti-duplication mechanized + dogfooded)
+
+**Session type:** build (`docs`, medium, ≺WI-064). PROCESS.md §8 makes
+`interfaces.csv` the one seam home and WI-064 mechanized the
+cross-component-edge-without-IF rule at the *architecture* level — but nothing
+bound a **spec-of-record** to that registry at *filing* time, so a spec could
+sketch its own near-duplicate seam (the exact drift §8 prevents). WI-191 closes
+it at the spec layer.
+
+**The rule (single-sourced in PROCESS_OPTIONS "Spec-of-record", echoed by the
+spec templates):** a spec whose WIs cross a module boundary carries an
+`## Interfaces` section citing each seam as an `IF-###` that resolves in
+`interfaces.csv`; a **new** seam is filed `Status=Proposed` *at filing*, its
+citation naming the **nearest existing** IF and why it falls short — the forced
+search is the anti-duplication mechanism (search before invention; never a
+speculative seam before a second consumer). Single-module WIs state the
+intra-module escape in one line; the section arms only where §8 applies.
+
+**Mechanized** (`check_trajectory.spec_interface_findings` +
+`_spec_interfaces_section` / `_proposed_rationale_present`): every cited IF
+resolves, and a cited `Proposed` seam carries a non-empty rationale — WARN plain
+/ ERROR under `--strict` (G2+), like `component_findings`. **Vacuous-until-armed**
+(only a spec carrying the section is checked; the `specs/` README + the `-000`
+example are skipped). An armed section citing no `IF-###` and no intra-module
+escape is itself a finding. `interfaces.template.csv` documents the `Proposed`
+vocab + the rationale expectation.
+
+**The honest gap is reviewer-tier** (enforcement-audit.md finding 4 + a new
+Process-disciplines row): whether a rationale truly names the *nearest* seam, and
+whether a `Proposed` contract *near-duplicates* an existing one, is a judgment
+call (`check_dupes` works on code, not contract prose) — backed by the new
+`docs/rubrics/spec-interface-hygiene.md` **B1** anchor, which **WI-190's** plan
+rubric imports.
+
+**Dogfooded.** The WI-191 + WI-190 specs were retrofitted with `## Interfaces`
+sections that **extend IF-023** (`check_trajectory`'s consume of the trajectory /
+spec surface) rather than mint a near-duplicate — the exact outcome the rule
+produces (the search ended at an existing seam). IF-023's contract text was
+extended for accuracy. No new IF row, no `Proposed` seam.
+
+**Spine.** SR-044 ("declared interfaces are the authority; an undeclared seam is
+a finding") Requirement + AcceptanceCriteria extended to the spec layer +
+**LLR-068** + **TC-068** (the WI-064 same-file precedent — the spec-layer sibling
+of the cross-CMP rule). SN=25 SR=65 **LLR=68 TC=68**, orphans=0, derived gate
+holds **G3**.
+
+**Pre-existing defect surfaced (filed WI-193, not fixed here — out of scope).**
+Running the G3 `dupes` gate on my own change, the gate was **red at clean HEAD**
+(verified stashed): WI-188 added an identical `in_phase` SR-phase-filter helper
+to both `trace.py:1342` and `gen_release_checklist.py:162` (F5-sanctioned
+small-helper duplication — the scripts stay independently copy-able) but never
+censused the pair in `docs/dupes-allow`. My WI-191 code adds **no** new dupe
+(only that one pre-existing finding fired). Filed **WI-193** (quick), fixed in
+its own follow-up commit (a one-line census annotation, no code change).
+
+**Deviations:** the check parents on **SR-044** (not SR-037) — SR-044 is the
+"declared-interface-is-the-authority" requirement and WI-064 set the same-file
+precedent; SR-037 is work-item-registry-scoped. The rationale check is
+**presence, not honesty** (the honest-nearest-seam judgment is the recorded
+reviewer gap). **Byte deltas (budgeted files):** PROCESS_OPTIONS.md 151,921 →
+**153,448 (+1,527 B, flagged** — the spec-of-record Interfaces contract),
+baseline **re-stamped ×3** (source + `.claude` + `.agents`); AGENTS.template.md
+9,978 + PROCESS.md 60,169 both untouched.
+
+**Tests / bar (real output, macOS):** 7 new `test_trajectory.py` cases; full
+suite `pytest -q -n auto` → **951 passed, 2 skipped**; `check_trajectory` plain +
+`--strict` and `trace.py --strict` green (the two armed live specs pass);
+`check_docs --root . --stale` → **0 broken**. Dashboard + OKF regenerated. The
+full `check.py --gate G3` has ONE pre-existing red (the WI-193 `dupes` census
+gap), resolved in the next commit. NOT pushed (`push-policy: human`).

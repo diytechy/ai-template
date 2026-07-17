@@ -31,6 +31,7 @@ records where each one bites.
 | `AGENTS.template.md` stays within its byte budget | Test | `test_bootstrap.py::test_agents_template_stays_within_size_budget` |
 | Write the test first (failing-first TC) | Reviewer | G2 review (ordering can't be mechanized; the TC's existence is checked, its *timing* is judged) |
 | Gates close only on the declared authority | Harness + Prose | `check.py --gate` runs the bar; the human attestation in `docs/log.md` is Prose |
+| Specs act on declared `IF-###` seams (cite resolvable IFs; Proposed carries a rationale) | Harness + Reviewer | `check_trajectory` spec-interface check (warn / ERROR `--strict`, vacuous-until-armed); near-dup honesty is Reviewer (finding 4) |
 
 ## Working-agreement rules (AGENTS.template.md)
 
@@ -66,3 +67,16 @@ records where each one bites.
    right-size) have no mechanical enforcer and are not expected to — they are
    reserved for the always-loaded guide by design, and the reviewer charter is
    their only backup. Recorded as a **stated reason**, per the audit's bar.
+4. **Spec-interface near-duplication is reviewer-tier (WI-191).** The mechanical
+   check (`check_trajectory.spec_interface_findings`) verifies a spec's
+   `## Interfaces` citations **resolve** and that a `Proposed` citation carries a
+   **non-empty** rationale — presence, which is checkable. But whether the
+   rationale is *honest* (truly names the nearest seam) and whether a `Proposed`
+   contract near-duplicates an existing `IF-###` are judgment calls:
+   `check_dupes`' token windows work on code, not contract prose. Backed by the
+   plan/spec critique-rubric anchor
+   [`docs/rubrics/spec-interface-hygiene.md`](rubrics/spec-interface-hygiene.md)
+   **B1** ("proposes a near-duplicate of `IF-###` instead of consuming or
+   amending it"), which WI-190's plan rubric imports. Recorded as a **stated
+   reason**: Reviewer is the strongest honest enforcer for contract-prose
+   semantics.

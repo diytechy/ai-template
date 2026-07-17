@@ -78,3 +78,4 @@ resource: "generated"
 | [TC-065](TC-065.md) | Inject termination at each lifecycle boundary (reservation txn, both CAS points, the publ… |
 | [TC-066](TC-066.md) | Run a parallel session + a downstream-migration fixture; assert reason-coded telemetry ag… |
 | [TC-067](TC-067.md) | Run the cross-CMP suite: an import edge between two components with no covering IF row wa… |
+| [TC-068](TC-068.md) | Run the spec-interface suite: an unarmed spec (no ## Interfaces section) is vacuous; a se… |

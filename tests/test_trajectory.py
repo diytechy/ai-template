@@ -1297,3 +1297,105 @@ def test_components_check_off_silences_cross_cmp(tmp_path):
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "cross-component import" not in proc.stderr
+
+
+# --- specs act on declared interface boundaries (WI-191) ----------------------
+
+# One Stable seam + one Proposed seam for the spec-citation checks.
+SPEC_IFS_ONE = (
+    'IF-001,Consumes,scripts/mod_a,docs/stack.ini,"reads",SR-001,v1,Stable,Stable,,\n'
+)
+SPEC_IFS_PROPOSED = SPEC_IFS_ONE + (
+    'IF-050,Provides,scripts/mod_a,scripts/mod_b,"new seam",SR-001,v1,'
+    "Experimental,Proposed,,\n"
+)
+
+
+def write_spec_file(root, name, body):
+    d = root / "docs" / "specs"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / name).write_text(body, encoding="utf-8")
+
+
+def _spec_repo(root, spec_name, spec_body, ifs=SPEC_IFS_ONE):
+    # A non-vacuous WI registry (the spec check runs past the WI-load) + the IF
+    # registry + one spec file. The done WI keeps R-A clean; no open WI leaves
+    # R-E vacuous, so the only findings are the spec-interface ones.
+    write_wis(root, "WI-001,A,scripts,,,done,Shipped it.\n")
+    write_ifs(root, ifs)
+    write_spec_file(root, spec_name, spec_body)
+
+
+def test_spec_interfaces_unarmed_is_vacuous(tmp_path):
+    _spec_repo(tmp_path, "WI-001.md", "# WI-001\n\n## Approach\n\nNo section.\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "Interfaces" not in proc.stderr  # no `## Interfaces` -> not armed
+
+
+def test_spec_interfaces_resolvable_passes(tmp_path):
+    _spec_repo(
+        tmp_path,
+        "WI-001.md",
+        "# WI-001\n\n## Interfaces\n\n- IF-001: acts on the stack reader.\n\n"
+        "## Done-when\n",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "resolves to no row" not in proc.stderr
+
+
+def test_spec_interfaces_unresolvable_warns_then_errors_under_strict(tmp_path):
+    body = "# WI-001\n\n## Interfaces\n\n- IF-999: no such seam.\n\n## Done-when\n"
+    _spec_repo(tmp_path, "WI-001.md", body)
+    proc = run_traj(tmp_path)  # WARN plain, exit 0
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "IF-999 which resolves to no row" in proc.stderr
+    strict = run_traj(tmp_path, "--strict")  # ERROR, exit 1
+    assert strict.returncode == 1
+    assert "IF-999 which resolves to no row" in strict.stderr
+
+
+def test_spec_interfaces_proposed_needs_rationale(tmp_path):
+    bare = "# WI-001\n\n## Interfaces\n\n- IF-050 (Proposed)\n\n## Done-when\n"
+    _spec_repo(tmp_path, "WI-001.md", bare, ifs=SPEC_IFS_PROPOSED)
+    proc = run_traj(tmp_path)
+    assert "Proposed seam IF-050 with no rationale" in proc.stderr
+    # A rationale naming the nearest existing seam + why it falls short -> clean.
+    ok = (
+        "# WI-001\n\n## Interfaces\n\n- IF-050 (Proposed): a new provide; nearest "
+        "IF-001 is a consume, insufficient because this is the opposite "
+        "direction.\n"
+    )
+    write_spec_file(tmp_path, "WI-001.md", ok)
+    assert "Proposed seam IF-050" not in run_traj(tmp_path).stderr
+
+
+def test_spec_interfaces_empty_section_warns(tmp_path):
+    _spec_repo(tmp_path, "WI-001.md", "# WI-001\n\n## Interfaces\n\nTBD.\n\n## X\n")
+    assert (
+        "cites no IF-### and states no intra-module escape" in run_traj(tmp_path).stderr
+    )
+
+
+def test_spec_interfaces_intra_module_escape_passes(tmp_path):
+    body = (
+        "# WI-001\n\n## Interfaces\n\nIntra-module: acts only within scripts/mod_a; "
+        "no cross-module seam (PROCESS.md §8).\n"
+    )
+    _spec_repo(tmp_path, "WI-001.md", body)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "cites no IF-###" not in proc.stderr
+
+
+def test_spec_interfaces_readme_and_example_not_armed(tmp_path):
+    # The specs/ README documents the rule and the inert WI-000 example both carry
+    # the heading, but neither is an armed spec-of-record.
+    _spec_repo(
+        tmp_path, "README.md", "# Specs\n\n## Interfaces\n\nThe rule: cite IF-###.\n"
+    )
+    write_spec_file(tmp_path, "WI-000.md", "# WI-000\n\n## Interfaces\n\n- IF-999 x\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "IF-999" not in proc.stderr
