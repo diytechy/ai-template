@@ -145,7 +145,7 @@ _Optional owner-hat/domain tag (process.md §1). Counts only — never a gate; b
 None. Every in-scope Verification=Test SR is Verified.
 
 ===STDOUT===
-WARNING (advisory): SR SR-002 AcceptanceCriteria uses 'identical' without a named predicate â€” say identical/equivalent *in what*, judged *how* (process.md Â§4 consistency review; heuristic, warn-only)
+WARNING (advisory): SR SR-002 AcceptanceCriteria uses 'identical' without a named predicate — say identical/equivalent *in what*, judged *how* (process.md §4 consistency review; heuristic, warn-only)
 WARNING (advisory): CMP CMP-001 Knowledge ref 'docs/knowledge/missing-pack' names no pack (docs/knowledge/missing-pack.md)
-WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified â€” lift to Verified (the evidence already exists)
-Traceability: SN=3 SR=3 LLR=1 TC=2 orphans=0 integrity=0 verified-mechanized=1 verified-attested=1 status-findings=0 drafts=2 budgets=1 budget-findings=0 repos=1 delegation-findings=0 parts=1 assets=1 components=1 component-findings=0 knowledge-advisories=1 interfaces=1 interface-findings=0 ac-advisories=1 llr-status-advisories=1. Report -> docs\test\report.md + docs\test\report.html
+WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+Traceability: SN=3 SR=3 LLR=1 TC=2 orphans=0 integrity=0 verified-mechanized=1 verified-attested=1 status-findings=0 drafts=2 budgets=1 budget-findings=0 repos=1 delegation-findings=0 parts=1 assets=1 components=1 component-findings=0 knowledge-advisories=1 interfaces=1 interface-findings=0 ac-advisories=1 llr-status-advisories=1. Report -> docs/test/report.md + docs/test/report.html

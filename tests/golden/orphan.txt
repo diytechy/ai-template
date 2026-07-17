@@ -76,5 +76,5 @@ _Of the SRs reported `Verified`: `Attest` rows rest on a named human's recorded 
 - Attested (Attest): 0
 
 ===STDOUT===
-WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified â€” lift to Verified (the evidence already exists)
-Traceability: SN=1 SR=2 LLR=1 TC=1 orphans=2 integrity=0 llr-status-advisories=1. Report -> docs\test\report.md
+WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+Traceability: SN=1 SR=2 LLR=1 TC=1 orphans=2 integrity=0 llr-status-advisories=1. Report -> docs/test/report.md

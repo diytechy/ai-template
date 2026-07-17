@@ -155,11 +155,14 @@ def run_py(args, cwd):
     bootstrap's agent-selection question) runs non-interactively and takes its
     default instead of blocking — the CI-safe path the tests must exercise.
     """
+    # encoding="utf-8" (not text=True): the kit scripts emit UTF-8 via
+    # _utf8_console, and a bare text=True decodes captured output with the
+    # console codepage on Windows, mojibaking em-dashes into the goldens (WI-192).
     return subprocess.run(
         [sys.executable] + [str(a) for a in args],
         cwd=str(cwd),
         capture_output=True,
-        text=True,
+        encoding="utf-8",
         stdin=subprocess.DEVNULL,
         env=augment_env(dict(os.environ)),
     )

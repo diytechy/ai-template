@@ -85,5 +85,5 @@ None. Required fields present; Verification/Tier in vocabulary.
 None. Every in-scope Verification=Test SR is Verified.
 
 ===STDOUT===
-WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified â€” lift to Verified (the evidence already exists)
-Traceability: SN=1 SR=1 LLR=1 TC=1 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 llr-status-advisories=1. Report -> docs\test\report.md
+WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+Traceability: SN=1 SR=1 LLR=1 TC=1 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 llr-status-advisories=1. Report -> docs/test/report.md

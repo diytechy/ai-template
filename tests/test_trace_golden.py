@@ -99,11 +99,14 @@ def _make_rich(root):
 
 
 def _normalize(text, root):
-    """Strip the run-specific tmp path from the summary's `Report -> <abs>` tail
-    so the golden is location-independent."""
-    return text.replace(str(root).replace("\\", "/"), "<ROOT>").replace(
+    """Strip the run-specific tmp path from the summary's `Report -> <path>` tail
+    and force POSIX separators, so one golden set is location- AND platform-
+    independent — a Windows run emits `docs\\test\\report.md` in that tail where
+    a POSIX run emits forward slashes (WI-192)."""
+    text = text.replace(str(root).replace("\\", "/"), "<ROOT>").replace(
         str(root), "<ROOT>"
     )
+    return text.replace("\\", "/")
 
 
 def _assert_golden(name, report, stdout, root):
@@ -159,3 +162,26 @@ def test_golden_orphaned_spine(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
     _assert_golden("orphan.txt", _report(scaffold), proc.stdout, scaffold)
+
+
+def test_normalize_forces_posix_separators():
+    """WI-192 separator stability: the compared body must not depend on os.sep,
+    so a Windows-captured `Report -> docs\\test\\report.md` tail normalizes to
+    the same forward-slash form a POSIX run produces."""
+    root = os.path.join("tmp", "run")
+    assert _normalize("Report -> docs\\test\\report.md", root) == (
+        "Report -> docs/test/report.md"
+    )
+
+
+def test_goldens_are_platform_stable():
+    """WI-192 encoding + separator stability: the checked-in goldens must be one
+    set that passes on both platforms — no os.sep backslash (a Windows-captured
+    path tail) and no cp1252 mojibake (an em-dash decoded through the console
+    codepage). Guards the net against a silent per-platform re-fork on the next
+    UPDATE_TRACE_GOLDEN regeneration."""
+    for name in ("clean.txt", "offspine.txt", "orphan.txt"):
+        with open(os.path.join(GOLDEN, name), encoding="utf-8") as fh:
+            text = fh.read()
+        assert "\\" not in text, name + " carries an os.sep backslash separator"
+        assert "â€”" not in text, name + " carries cp1252 mojibake"

@@ -7982,3 +7982,58 @@ at HEAD); `check_docs --root . --stale` → **OK — 121 doc(s), 473 intra-repo
 link(s), 0 broken** (2 staleness hints on unrelated older specs, warn-only).
 Dashboard regenerated (`gen_trajectory: wrote PROJECT_STATE.html`). NOT pushed
 (`push-policy: human`).
+
+## 2026-07-16 — WI-192: trace golden net made platform-stable (POSIX + UTF-8; the WI-081 net now passes on macOS)
+
+**Session type:** defect fix (`scripts`, quick, ≺WI-081). The WI-081 golden
+masters over `trace.py` failed all three cases on macOS at clean HEAD — filed
+WI-192 the prior sitting. Both artifacts lived in the **stdout capture path**,
+not the report file: the `report.md` half of the golden is read via
+`read_text(encoding="utf-8")` and so was already clean, which is why only the
+`===STDOUT===` half forked by platform.
+
+**Fix (two changes, test-only):**
+1. **UTF-8 capture.** `conftest.run_py` now decodes captured output with
+   `encoding="utf-8"` instead of a bare `text=True`. The kit scripts emit UTF-8
+   via `_utf8_console` (`trace.py` reconfigures stdout/stderr unconditionally at
+   line 1889), but `text=True` decodes with the console codepage on Windows,
+   mojibaking the em-dash (`—`→`â€”`) and section-sign (`§`→`Â§`) into the
+   captured summary. `encoding="utf-8"` is a no-op on POSIX (already the
+   default) and the correct decode on Windows.
+2. **POSIX separators.** `test_trace_golden._normalize` now forces forward
+   slashes on the compared body, so a Windows `Report -> docs\test\report.md`
+   tail (a relative `Path` stringified with `os.sep`) matches the POSIX form.
+   `report.md` itself is already POSIX (`.as_posix()`), so this only touches
+   the summary tail.
+
+Goldens regenerated **deliberately** (`UPDATE_TRACE_GOLDEN=1`) from the fixed
+capture; the diff is confined to the three `===STDOUT===` blocks (real
+em-dashes/§ + forward slashes) — **no counts or report structure moved**. The
+body is now identical across platforms **by construction** (UTF-8 emit → UTF-8
+decode → POSIX-normalize).
+
+**Cross-OS verification (honest deviation):** verified live on **macOS only**
+(no Windows host here). Windows correctness is by construction plus the new
+stability test; the live cross-OS confirmation the Done-when asks for defers to
+CI on push (OI-3) — which is exactly the class the Linux+Windows+macOS matrix
+exists to catch, per the spec's own diagnosis.
+
+**New tests (guard the net against a silent re-fork):**
+`test_normalize_forces_posix_separators` (unit — `_normalize` collapses
+`os.sep`) and `test_goldens_are_platform_stable` (the checked-in goldens carry
+no backslash and no cp1252 mojibake).
+
+**Deviations:** the shared `run_py` change is broader than the golden net (it is
+the named capture path in the spec's fix shape); it is strictly-more-correct for
+every UTF-8-emitting kit script and is a no-op on POSIX, so the full suite green
+here is a real regression check. **Byte deltas (budgeted files):** none —
+`tests/` + `tests/golden/` only; no product script, no spine, no
+`PROCESS*.md`/`AGENTS.template.md`.
+
+**Tests / bar (real output, macOS):** full suite `pytest -q -n auto` →
+**944 passed, 2 skipped in 108.34s** (the two skips are env-conditional —
+coverage-run + Windows-only lock — not caused by this change); golden file
+`test_trace_golden.py` → **5 passed**; `check_docs --root . --stale` →
+**OK — 121 doc(s), 474 intra-repo link(s), 0 broken** (45 orphan + 4 staleness
+hints all pre-existing/unrelated). Dashboard regenerated. NOT pushed
+(`push-policy: human`).
