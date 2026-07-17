@@ -8535,3 +8535,69 @@ the sibling scratch.txt case that still defers).
 **1034 passed / 3 skipped** (+3). Commit bar (smoke + check_docs) green; the
 commit hook re-verifies the generated/spine checks. Frontier: **WI-202**
 (queued). NOT pushed (`push-policy: human`).
+
+## 2026-07-17 — WI-202: docs/status.md derived-snapshot block + `status-map` freshness gate (the WI-200 successor)
+
+**Session type:** build (`scripts`, medium; the last queued item — the build
+queue is now drained). **No spine change** — tooling + enforcement, not a
+behavior change to the status surface's meaning (the WI Non-goals); the
+block-splice emit is the established generated-block idiom, so **no new seam**.
+
+**The drift it kills:** `docs/status.md`'s `## Current State` bar hand-transcribed
+DERIVED facts (spine counts, seams, the gate, the open-items list). The DP-001
+build moved the spine to LLR=76/TC=76/61 seams while the bar still read
+LLR=69/TC=69/57 seams — and the `agent_loop` resume path feeds exactly that
+section to the driver as its resume excerpt, so the stale numbers were handed
+straight to the unattended loop. WI-200 restored the forward-only done-id guard
+but scoped OUT number-freshness, recording the real fix as a generated-block +
+`--check` "SPECIFIED here … but not implemented, because no status.md generator
+exists yet." This builds it.
+
+**The generator:** `gen_trajectory.py --status` splices a
+`<!-- BEGIN GENERATED STATUS -->` block into the otherwise hand-authored
+status.md carrying ONLY derived facts — the spine + derived gate **projected from
+`docs/gate`'s freshness-guarded `# basis:` line** (the derive_gate SSOT cache,
+never recomputed; a legacy gate with no basis line falls back to a direct
+registry count) and the open-items one-liners projected from `open-items.md`.
+Deterministic (no clocks), so `--status --check` byte-compares like
+arch-map/trajectory-map. Chose the `--status` MODE over a new `gen_status.py` to
+reuse the ONE sanctioned sibling import (`check_trajectory`) rather than mint a
+second.
+
+**The per-OI projection contract** (pinned in
+[specs/open-items-surface.md](specs/open-items-surface.md)): an explicit
+`- **One-line:**` field lifted verbatim (soft-wrapped continuation lines joined),
+else the first sentence of the `- **Recommendation…:**` line; Markdown links
+collapse to text. **Volatile per-item facts stay in the brief** — OI-3's live
+git-state (ahead/behind counts) is NOT baked into the byte-compared block
+(Done-when 4). Added `One-line` fields to the meta's OI-3/4/7.
+
+**Enforcement handoff:** wired as the check.py `status-map` G3 step + the
+pre-commit `--run-steps` floor (regenerate order documented: gate → status), so a
+registry/open-items/gate edit that stales the block blocks **at commit**, not
+first in CI. With the marker present, `check_trajectory.status_forward_only_findings`
+stands its token rule down (already coded) and this freshness step is the
+successor invariant. `check_docs` S-3 OI-coherence goes **mode-aware**: it retires
+under the marker (a projected list cannot disagree with its source — the
+`status-map` gate owns coherence) while S-1 (budget) and S-2 (order) still guard
+the hand-authored region. *(Interpretation note: the WI said "removed"; made it
+mode-aware so downstream non-generated repos keep the check — "removed for the
+generated case," proven by a test both ways.)*
+
+**Verified:** 10 new tests — 9 `--status` (splice + derived facts, id-order +
+One-line-vs-Recommendation projection + soft-wrap join, volatile-git-state not
+baked, --check fresh/stale, vacuous-without-markers/file, legacy-gate fallback,
+forward-only stands-down-under-marker AND re-arms without it) + 1 check_docs
+(S-3 retires under the marker; S-1/S-2 stay). Affected modules 155p/1s; the 8
+freshness floor steps green (status-map PASS); registry-integrity confirms the
+block's numbers (SN=25 SR=66 LLR=76 TC=76, 61 seams, 5 components).
+
+**Deviations:** the S-3 "removed" → mode-aware reading above. **Byte deltas
+(budgeted files):** none (AGENTS.template.md / PROCESS.md untouched; the contract
+landed in open-items-surface.md). Code map (docs/architecture.md) regenerated
+(8 new functions in gen_trajectory.py); PROJECT_STATE.html regenerated (WI-202
+done).
+
+**Spine:** unchanged — SN=25 SR=66 LLR=76 TC=76, derived gate **G3**. Frontier:
+the **build queue is drained** (no `queued` rows); the open owner decisions
+(OI-3/4/7) + the deferred backlog remain. NOT pushed (`push-policy: human`).

@@ -18,6 +18,8 @@ decisions._
 
 ## OI-3 — Push / sync decision
 
+- **One-line:** push — the branch is already remote-tracked, so the unpushed
+  commits are pure durability risk (the `main` integration is a separate sitting).
 - **Decision:** whether to push the pending local commits on
   `derived-gate-model` (and, separately and later, whether/when to integrate
   the branch into `main`).
@@ -44,6 +46,8 @@ decisions._
 
 ## OI-4 — WI-097: LICENSE decision
 
+- **One-line:** rule WI-097 (LICENSE + public/private intent) — no rec; needs
+  the owner's public/private intent first.
 - **Decision:** which license, and whether the kit is headed public (the
   deep-review-b H3 finding; WI row: [work-items.csv](requirements/work-items.csv)).
 - **Blast radius:** the legal terms of every downstream adoption — the kit's
@@ -56,6 +60,8 @@ decisions._
 
 ## OI-7 — WI-123: review-cadence dial
 
+- **One-line:** rule WI-123 (review cadence) — rec: wait for ≥ 2 phases of
+  medium-BUILD evidence before switching from per-slice review.
 - **Decision:** phase-close 2× adversarial review instead of per-slice
   (owner-raised 2026-07-12; spec: [specs/WI-123.md](specs/WI-123.md)).
 - **Blast radius:** the unattended loop's defect-catch latency — per-slice

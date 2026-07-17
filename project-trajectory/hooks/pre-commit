@@ -109,6 +109,14 @@ fi
 #                        the step is vacuous for a non-adopter; checks needing
 #                        the product toolchain or gate context (tests, perf,
 #                        flows) stay in check.py / CI.
+#      - status-map      docs/status.md's GENERATED STATUS block fresh (WI-202):
+#                        the derived snapshot (spine + derived gate + open-items
+#                        one-liners) regenerates + byte-compares like trajectory-map,
+#                        so a registry / open-items / gate edit that stales it blocks
+#                        HERE, not first in CI. It is the freshness successor to the
+#                        WI-200 forward-only token guard (which stands down once the
+#                        marker is present). Vacuous when status.md has no marker
+#                        pair, so a non-adopter pays nothing.
 #      - trajectory      the status.md <-> work-items.csv SSOT floor, WARN-FIRST
 #                        at gate=all: only R-A (Deliverable non-empty iff done)
 #                        is a hard ERROR here — a commit is the agent handoff
@@ -130,8 +138,9 @@ fi
 #                        where the kit-only generator isn't beside check.py.
 #    When a step reports STALE, regenerate in dependency order — arch-map ->
 #    okf -> trajectory (the dashboard consumes the other two); the gate marker via
-#    derive_gate.py — then re-commit.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync
+#    derive_gate.py, then the status snapshot via `gen_trajectory.py --status`
+#    (it reads the fresh gate) — then re-commit.
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,status-map,trajectory,registry-integrity,derived-gate,skills-sync
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

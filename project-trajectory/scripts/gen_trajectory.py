@@ -43,10 +43,15 @@ Deterministic by construction (sorted inputs, fixed layout passes, no clocks;
 the as-of stamp derives from the last source-touching *commit*), so the
 `--check` freshness gate is byte-stable — like `gen_arch_map.py --check`.
 
-Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check]
+Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check] [--status]
   (default)  regenerate PROJECT_STATE.html when the sources changed.
   --check    validate + verify freshness without writing; nonzero exit if the
              registry is invalid or the committed HTML is stale.
+  --status   splice the derived-facts snapshot (spine + derived gate + open-items
+             one-liners) into docs/status.md's `<!-- BEGIN GENERATED STATUS -->`
+             block (WI-202); with --check, byte-compare for freshness — the
+             successor invariant to the WI-200 forward-only token guard. Vacuous
+             (exit 0) when status.md is absent or has no marker pair.
 An absent or placeholder-only registry renders nothing and passes vacuously (the
 opt-out layer stays free for a repo that never adopts it).
 Exit codes: 0 clean / vacuous / opted-out, 1 invalid registry or stale HTML.
@@ -90,6 +95,24 @@ OUT_HTML = "PROJECT_STATE.html"
 # it would force a follow-up regen commit after every source commit. Content
 # freshness stays byte-exact; the stamp is informational.
 ASOF_RE = re.compile(r'<p class="asof">.*?</p>', re.S)
+
+# --- the docs/status.md derived-snapshot block (WI-202) ------------------------
+# `--status` splices a GENERATED block into the OTHERWISE hand-authored status.md
+# carrying ONLY derived facts (the spine + derived gate + the open-items
+# one-liners), the gen_arch_map-into-architecture.md block-splice idiom. Its
+# `--check` is the freshness successor to the WI-200 forward-only token guard:
+# with this marker present, check_trajectory.status_forward_only_findings stands
+# its token rule down (the marker is `<!-- BEGIN GENERATED ... -->`, which its
+# _STATUS_GENERATED_RE matches) and THIS byte-compare becomes the invariant. The
+# forward-only INTENT — Next action, the OI briefs, Scope — stays hand-authored
+# OUTSIDE the markers. Opt-in: a status.md without the marker pair is left
+# untouched, so `--status --check` passes vacuously downstream.
+STATUS_MD = "docs/status.md"
+STATUS_BEGIN = "<!-- BEGIN GENERATED STATUS -->"
+STATUS_END = "<!-- END GENERATED STATUS -->"
+# derive_gate.py's cached `# basis:` line in docs/gate — the fresh, freshness-
+# guarded derivation the status snapshot PROJECTS (never recomputes).
+_GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
 
 # Workstream render order + display labels (the mutable grouping category on a
 # work item; legacy `Track` header still read); unknown ones fall through in
@@ -2676,6 +2699,242 @@ def build_html(root, wis):
     )
 
 
+# --- the status.md derived snapshot (WI-202) -----------------------------------
+
+
+def _gate_facts(root):
+    """The derived-gate facts for the status snapshot, read from `docs/gate` — the
+    cached, freshness-guarded SSOT (derive_gate.py owns it; check.py's `derived-gate`
+    step keeps it fresh). Returns `(gate_value, basis)`: the gate is the first
+    non-comment line; `basis` parses the `# basis:` line's `k=v` tokens
+    (SN/SR/LLR/TC/drafts/computed/phase/per-phase) when present, else `{}` (a legacy
+    hand-set gate with no basis line). The snapshot PROJECTS this rather than
+    recomputing what derive_gate already cached — one home for the derivation."""
+    p = root / "docs" / "gate"
+    if not p.exists():
+        return "", {}
+    text = p.read_text(encoding="utf-8", errors="replace")
+    gate = ""
+    for ln in text.splitlines():
+        ln = ln.strip()
+        if ln and not ln.startswith("#"):
+            gate = ln
+            break
+    basis = {}
+    m = _GATE_BASIS_RE.search(text)
+    if m:
+        for tok in m.group(1).split():
+            if "=" in tok:
+                k, v = tok.split("=", 1)
+                basis[k] = v
+    return gate, basis
+
+
+def _spine_counts(root, basis):
+    """`{SN,SR,LLR,TC}` string counts for the snapshot: the fresh `docs/gate`
+    basis line when present (the authoritative derivation), else a direct count
+    of the registries (the legacy-gate fallback)."""
+    if all(k in basis for k in ("SN", "SR", "LLR", "TC")):
+        return {k: basis[k] for k in ("SN", "SR", "LLR", "TC")}
+    st = spine_stats(root)
+    return {
+        "SN": str(st["sn_total"]),
+        "SR": str(st["sr_total"]),
+        "LLR": str(st["llr_total"]),
+        "TC": str(st["tc_total"]),
+    }
+
+
+_ONELINE_LABEL_RE = re.compile(
+    r"(?i)^[ \t]*[-*][ \t]*\*\*one[- ]?line:?\*\*[ \t]*(.*)$"
+)
+_RECO_LABEL_RE = re.compile(
+    r"(?i)^[ \t]*[-*][ \t]*\*\*recommendation[^:*]*:?\*\*[ \t]*(.*)$"
+)
+_OI_ID_RE = re.compile(r"\bOI-\d+\b")
+
+
+def _field_value(body, label_re):
+    """The full (possibly soft-wrapped) value of a `- **Label:** …` field in a
+    brief body, or None. Markdown wraps a long field across indented continuation
+    lines; they are joined with a space, stopping at the first blank line, the
+    next `-`/`*` bullet, or a heading — so the projection captures the whole
+    sentence, not just its first physical line."""
+    lines = body.splitlines()
+    for i, line in enumerate(lines):
+        m = label_re.match(line)
+        if not m:
+            continue
+        parts = [m.group(1).strip()]
+        for nxt in lines[i + 1 :]:
+            s = nxt.strip()
+            if not s or re.match(r"[-*]\s", s) or s.startswith("#"):
+                break
+            parts.append(s)
+        return " ".join(p for p in parts if p).strip()
+    return None
+
+
+def _clean_oneliner(s):
+    """Normalize a projected one-liner: Markdown link `[text](url)` -> its text,
+    stray emphasis/backticks dropped, whitespace collapsed. Keeps the snapshot
+    scannable and byte-stable regardless of the brief's inline markup."""
+    s = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", s)
+    s = re.sub(r"\*\*|`", "", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def _first_sentence(s):
+    """The first sentence of `s` (up to the first sentence-ending `.`/`!`/`?`),
+    else all of `s`. A `;`-joined clause stays whole — only a full stop ends it."""
+    m = re.search(r"^(.*?[.!?])(?:\s|$)", s)
+    return (m.group(1) if m else s).strip()
+
+
+def _open_item_oneliners(root):
+    """`[(OI-id, one-liner)]` projected from `docs/open-items.md`'s `## OI-N`
+    sections, id-order. The one-liner is the section's explicit `- **One-line:** …`
+    field, else the first sentence of its `- **Recommendation…:** …` line — the
+    contract pinned in docs/specs/open-items-surface.md, so the projection is
+    deterministic. Volatile per-item facts (an OI's live git state) stay in the
+    brief, never the stamped snapshot. Empty when open-items.md is absent."""
+    p = root / "docs" / "open-items.md"
+    if not p.is_file():
+        return []
+    text = p.read_text(encoding="utf-8", errors="replace")
+    parts = ct.OI_SECTION_RE.split(text)  # [pre, head1, body1, head2, body2, ...]
+    out = []
+    for i in range(1, len(parts), 2):
+        head = parts[i]
+        body = parts[i + 1] if i + 1 < len(parts) else ""
+        m = _OI_ID_RE.search(head)
+        if not m:
+            continue
+        oid = m.group(0)
+        one = _field_value(body, _ONELINE_LABEL_RE)
+        if one is None:
+            reco = _field_value(body, _RECO_LABEL_RE)
+            one = _first_sentence(reco) if reco else ""
+        out.append((oid, _clean_oneliner(one)))
+    return sorted(out, key=lambda t: int(t[0].split("-")[1]))
+
+
+def status_block(root):
+    """The GENERATED STATUS block CONTENT (between the markers) for docs/status.md:
+    the derived gate + spine snapshot (projected from `docs/gate`, the freshness-
+    guarded SSOT) plus the open-items one-liners (from open-items.md). Derived
+    facts ONLY — the forward-only intent stays hand-authored outside the markers.
+    Deterministic (no clocks), so the `--status --check` byte-compare is stable,
+    exactly like the arch-map / dashboard freshness gates."""
+    gate, basis = _gate_facts(root)
+    counts = _spine_counts(root, basis)
+    seams = len(ct.load_ifs(ct.read_rows(root / ct.IF_CSV)))
+    comps = len(cmp_rows(root))
+
+    gate_bits = []
+    if basis.get("per-phase"):
+        gate_bits.append("per-phase `{}`".format(basis["per-phase"]))
+    if basis.get("phase"):
+        gate_bits.append("derived current **phase={}**".format(basis["phase"]))
+    gate_detail = " ({})".format(", ".join(gate_bits)) if gate_bits else ""
+
+    drafts = basis.get("drafts")
+    draft_bit = ""
+    if drafts is not None:
+        draft_bit = " ({} draft{})".format(drafts, "" if drafts == "1" else "s")
+
+    lines = [
+        "_Derived facts — regenerated by `python "
+        "project-trajectory/scripts/gen_trajectory.py --status`; do not hand-edit "
+        "(the forward-only intent below is hand-authored)._",
+        "",
+        "- **Active gate:** derived **{}**{} — the harness at the derived gate is "
+        "the bar; [`derive_gate.py`](../project-trajectory/scripts/derive_gate.py) "
+        "computes it, cached to [`docs/gate`](gate).".format(
+            gate or "(none)", gate_detail
+        ),
+        "- **Spine:** **SN={sn} SR={sr} LLR={llr} TC={tc}**{d} · {seams} seam{sp} · "
+        "{comps} component{cp}.".format(
+            sn=counts["SN"],
+            sr=counts["SR"],
+            llr=counts["LLR"],
+            tc=counts["TC"],
+            d=draft_bit,
+            seams=seams,
+            sp="" if seams == 1 else "s",
+            comps=comps,
+            cp="" if comps == 1 else "s",
+        ),
+    ]
+    ois = _open_item_oneliners(root)
+    if ois:
+        lines.append(
+            "- **Open items** _(projected from [open-items.md](open-items.md) — "
+            "each item's blast radius, options, and recommendation live there):_"
+        )
+        lines.extend("  - **{}** — {}".format(oid, one) for oid, one in ois)
+    return "\n".join(lines)
+
+
+def _splice_status(doc_text, content):
+    """Replace the text between the STATUS markers with `content`. Returns
+    `(new_text, present)`; `present` is False when the marker pair is absent — the
+    opt-in posture, a status.md without markers is left untouched so `--status
+    --check` passes vacuously downstream. A duplicated marker is refused (it would
+    make the splice ambiguous), the gen_arch_map.splice_region rule."""
+    if STATUS_BEGIN not in doc_text or STATUS_END not in doc_text:
+        return doc_text, False
+    if doc_text.count(STATUS_BEGIN) > 1 or doc_text.count(STATUS_END) > 1:
+        raise SystemExit(
+            "{}: duplicated STATUS marker; keep exactly one {} / {} pair".format(
+                STATUS_MD, STATUS_BEGIN, STATUS_END
+            )
+        )
+    pre = doc_text.split(STATUS_BEGIN)[0]
+    post = doc_text.split(STATUS_END)[1]
+    return "{}{}\n{}\n{}{}".format(pre, STATUS_BEGIN, content, STATUS_END, post), True
+
+
+def run_status(root, check):
+    """`--status` mode: splice the derived snapshot into docs/status.md (or, with
+    `check`, byte-compare and fail on drift). Vacuous — exit 0 — when status.md is
+    absent or carries no marker pair (the opt-in posture)."""
+    path = root / STATUS_MD
+    if not path.exists():
+        print("gen_trajectory: no {} — nothing to splice (vacuous).".format(STATUS_MD))
+        return 0
+    current = path.read_text(encoding="utf-8")
+    updated, present = _splice_status(current, status_block(root))
+    if not present:
+        print(
+            "gen_trajectory: {} has no GENERATED STATUS markers — vacuous (add the "
+            "{} / {} pair to opt in).".format(STATUS_MD, STATUS_BEGIN, STATUS_END)
+        )
+        return 0
+    if check:
+        if updated != current:
+            print(
+                "status snapshot STALE in {}: run `python "
+                "scripts/gen_trajectory.py --status`".format(STATUS_MD),
+                file=sys.stderr,
+            )
+            return 1
+        print("status snapshot up to date.")
+        return 0
+    if updated == current:
+        print(
+            "gen_trajectory: {} status snapshot already up to date.".format(STATUS_MD)
+        )
+    else:
+        # newline="\n" via open() (write_text(newline=) is 3.10+, floor 3.8): LF
+        # on every OS so the generated block stays byte-stable regardless of a
+        # downstream .gitattributes rule.
+        with path.open("w", encoding="utf-8", newline="\n") as fh:
+            fh.write(updated)
+        print("gen_trajectory: status snapshot regenerated -> {}".format(STATUS_MD))
+    return 0
+
+
 def main():
     ct._utf8_console()
     ap = argparse.ArgumentParser(
@@ -2692,8 +2951,19 @@ def main():
         "output, so a missing file reads as stale — unlike arch-map, whose "
         "hand-authored target must exist",
     )
+    ap.add_argument(
+        "--status",
+        action="store_true",
+        help="splice the derived-facts snapshot (spine + derived gate + "
+        "open-items one-liners) into docs/status.md instead of rendering the "
+        "dashboard; with --check, byte-compare for freshness (the WI-200 "
+        "forward-only guard's successor). Vacuous without the marker pair.",
+    )
     args = ap.parse_args()
     root = Path(args.root).resolve()
+
+    if args.status:
+        return run_status(root, args.check)
 
     if not ct.read_trajectory_enabled(root):
         print("gen_trajectory: off (docs/trajectory-check) — nothing to render.")

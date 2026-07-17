@@ -754,3 +754,34 @@ def test_oi_coherence_vacuous_without_open_items(scaffold):
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert proc.returncode == 0
     assert "OI-9" not in proc.stdout
+
+
+def test_oi_coherence_retires_under_generated_marker(scaffold):
+    # WI-202: once status.md carries a `<!-- BEGIN GENERATED STATUS -->` block,
+    # its open-items list is PROJECTED from open-items.md by gen_trajectory
+    # --status, so the S-3 coherence check stands down (the status-map freshness
+    # gate is the invariant). The SAME incoherence that fires without the marker
+    # (a missing brief AND an orphan brief) is silent with it.
+    marked = "# Status\n\n<!-- BEGIN GENERATED STATUS -->\n" + _STATUS_SHAPED.split(
+        "\n", 1
+    )[1].replace("## Scope", "<!-- END GENERATED STATUS -->\n\n## Scope")
+    _write_status(scaffold, marked)
+    (scaffold / "docs" / "open-items.md").write_text(
+        "# Open items\n\n## OI-1 - decide the flag\n\n- **Decision:** ...\n\n"
+        "## OI-8 - stale ruled item\n\n- **Decision:** ...\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # both S-3 directions stand down under the marker
+    assert "Needs-<human> item" not in proc.stdout
+    assert "orphan brief" not in proc.stdout
+    # S-1/S-2 still guard the hand-authored region: an order violation still warns
+    _write_status(
+        scaffold,
+        "# Status\n\n## Scope\n\n- Goal\n\n"
+        "<!-- BEGIN GENERATED STATUS -->\n- **Open items:** none\n"
+        "<!-- END GENERATED STATUS -->\n",
+    )
+    proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
+    assert "Open items after ## Scope" in proc.stdout

@@ -181,6 +181,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "trajectory",
         "arch-map",
         "trajectory-map",
+        "status-map",
         "okf",
         "skills-sync",
     }
@@ -567,6 +568,28 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "trajectory-map",
             (),
             [sys.executable, str(_SCRIPTS / "gen_trajectory.py"), "--check"],
+            {"G3"},
+            "process",
+        ),
+        # status.md derived-snapshot freshness (WI-202): the generated
+        # `<!-- BEGIN GENERATED STATUS -->` block in docs/status.md carries only
+        # derived facts (spine + derived gate + the open-items one-liners);
+        # gen_trajectory.py --status --check regenerates in memory and
+        # byte-compares, exactly like arch-map/trajectory-map. This is the
+        # freshness successor to the WI-200 forward-only token guard, which stands
+        # its rule down once the marker is present (check_trajectory). Vacuous when
+        # status.md is absent or carries no marker pair (the opt-in posture), so a
+        # repo that never adopts the block pays nothing. G3 only, like the sibling
+        # generated-artifact gates.
+        (
+            "status-map",
+            (),
+            [
+                sys.executable,
+                str(_SCRIPTS / "gen_trajectory.py"),
+                "--status",
+                "--check",
+            ],
             {"G3"},
             "process",
         ),

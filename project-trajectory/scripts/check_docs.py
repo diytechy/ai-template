@@ -57,9 +57,13 @@ finding classes:
     heading (open items surface at the top); (S-3) with `docs/open-items.md`
     present, every `OI-N` inside the Needs-<human> block has a `## OI-N`
     section there (no undocumented owner ask) and every section id appears in
-    status.md (no orphan brief). S-3 extraction is best-effort over the
-    template's shape; a custom layout misses warnings, never false-fails.
-    Vacuous when status.md (or, for S-3, open-items.md) is absent.
+    status.md (no orphan brief). S-3 **retires under a generated snapshot**
+    (WI-202): once status.md carries the `<!-- BEGIN GENERATED STATUS -->` block,
+    its open-items list is PROJECTED from open-items.md, so the two cannot
+    disagree — the `status-map` freshness gate is the invariant and S-3 stands
+    down (S-1/S-2 still guard the hand-authored region). S-3 extraction is
+    best-effort over the template's shape; a custom layout misses warnings, never
+    false-fails. Vacuous when status.md (or, for S-3, open-items.md) is absent.
 
 The root `OWNER_SCRATCHPAD.md` is exempt from all of the above: it holds the
 human owner's free-form private notes and is dropped from doc discovery entirely
@@ -556,6 +560,11 @@ _OI_HEADING_RE = re.compile(r"^#{2,3}\s+[^\n]*?\b(OI-\d+)\b", re.M)
 _NEEDS_HUMAN_RE = re.compile(r"needs\s*\\?<human>", re.I)
 _SCOPE_HEADING_RE = re.compile(r"^##\s+scope\b", re.I | re.M)
 _OPEN_ITEMS_MARKER_RE = re.compile(r"open items", re.I)
+# The kit's generated-block sentinel (gen_arch_map / gen_trajectory --status):
+# its presence in status.md means the open-items list is a projection of
+# open-items.md, so the S-3 coherence check retires (WI-202). Duplicated here per
+# the F5 rule rather than importing a sibling — a tiny, stable contract string.
+_STATUS_GENERATED_RE = re.compile(r"<!--\s*BEGIN GENERATED", re.IGNORECASE)
 
 
 def _status_lint_policy(root, docs_dir):
@@ -610,7 +619,10 @@ def check_status_surface(root, docs_dir):
     """S-1 (line budget) / S-2 (Open items before ## Scope) / S-3 (OI coherence
     with docs/open-items.md) over docs/status.md — warnings only, never the exit
     code (the WI-129 stance: warn, don't gate, don't mutate). Vacuous when
-    status.md is absent or docs/status-lint says `off`."""
+    status.md is absent or docs/status-lint says `off`. S-3 stands down under a
+    generated snapshot (WI-202): a `<!-- BEGIN GENERATED STATUS -->` block makes
+    the open-items list a projection of open-items.md, so the two cannot disagree
+    and the `status-map` freshness gate owns coherence instead."""
     status = root / docs_dir / "status.md"
     if not status.exists():
         return []
@@ -644,8 +656,15 @@ def check_status_surface(root, docs_dir):
             "the top, backward/context matter below"
         )
 
+    # S-3 (OI coherence) retires under a generated snapshot (WI-202): when
+    # status.md carries the `<!-- BEGIN GENERATED STATUS -->` block, its open-items
+    # list is PROJECTED from open-items.md by `gen_trajectory --status`, so the two
+    # surfaces cannot disagree — the `status-map` freshness gate is the invariant.
+    # The check stays live only for a hand-authored (non-generated) status.md,
+    # where the two lists can drift; S-1/S-2 above still guard the region a
+    # generated block does not own.
     open_items = root / docs_dir / "open-items.md"
-    if open_items.exists():
+    if open_items.exists() and not _STATUS_GENERATED_RE.search(text):
         oi_text = open_items.read_text(encoding="utf-8", errors="replace")
         briefed = set(_OI_HEADING_RE.findall(oi_text))
         needs = set(_OI_RE.findall(_needs_human_block(text)))

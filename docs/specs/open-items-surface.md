@@ -27,6 +27,23 @@ This adds no third source of truth:
 | `docs/open-items.md` | **pending** owner decisions + their analysis | pre-ruling |
 | `log.md` Decisions | ruled decisions | post-ruling, append-only |
 
+**The projected one-liner (WI-202).** When `status.md` carries the generated
+`<!-- BEGIN GENERATED STATUS -->` block, `gen_trajectory --status` projects each
+`## OI-N` section into a one-line bullet — so the two surfaces cannot drift (the
+`status-map` freshness gate replaces the S-3 coherence lint, which retires under
+the marker). The projected text is chosen **deterministically**:
+
+1. an explicit `- **One-line:** <text>` field in the section (lifted verbatim,
+   soft-wrapped continuation lines joined) — the owner-controlled form; else
+2. the **first sentence** of the section's `- **Recommendation…:** <text>` line.
+
+Markdown link syntax collapses to its text and inline emphasis is stripped, so
+the bullet stays scannable. **Volatile per-item facts** (an item's live git
+state — cf. OI-3's ahead/behind counts) must stay in the brief body, **never** in
+the `One-line` field: the field is stamped into a byte-compared block, so a
+number that changes at read time would thrash the freshness gate. Keep the field
+a stable summary + recommendation.
+
 **The lint (all warn-tier, in `check_docs.py`).** Content quality
 (is the pros/cons real?) is Reviewer-class per the enforcement audit and is
 **not** mechanized — only the self-proving structure is:
