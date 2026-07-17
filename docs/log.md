@@ -248,6 +248,19 @@ why (one bullet each; cite ids)._
   one-active-spine-train invariants already isolate the batch). Recorded in
   [specs/WI-204.md](specs/WI-204.md) scope item 1; SR-058's amended text
   carries it at the WI-204 build.
+- **2026-07-17 — RULING: change-scoped contradiction sweep is the deliberate
+  continuous coverage model (owner-confirmed).** The per-diff reviewer
+  obligation — every added/changed SN/SR/TC row swept against the ENTIRE
+  existing registry for contradiction/overlap/attribute-limit conflict
+  (REVIEWER_PROMPT) — is the *continuous* net, giving inductive pairwise
+  coverage at diff-review cost; it is now a recorded decision, not an accident
+  of prompt shape. Its structural blind spot (old-vs-old contradictions +
+  interpretation drift across amendments) is covered by the **occasion-driven
+  whole-registry audit** filed as **WI-206** (phase close + before G-Final;
+  rubric-anchored, reviewer-class, findings route as WIs). Alternative passed
+  over: a standing all-vs-all sweep per commit (quadratic review cost for a
+  net the change-scoped sweep already provides incrementally). Pointer:
+  [specs/WI-206.md](specs/WI-206.md).
 
 ## Audit log
 
@@ -8648,4 +8661,38 @@ to the record, three findings surfaced:
 **Registry:** +1 row (204 WIs, 191 done); dashboard + status snapshot
 regenerated; `check_trajectory --strict` clean. No spine change at this
 sitting (the SR-058 amendment is WI-204's build, not this filing). NOT pushed
+(`push-policy: human`).
+
+## 2026-07-17 — Owner sitting (cont.): autonomous-drive confirmed; WI-205 + WI-206 filed; WI-204 amended
+
+**Session type:** owner Q&A + intake (no build). Three owner questions, all
+answered from the code/spec record, three actions taken:
+
+1. **Autonomous drives to G-Final — confirmed, and pinned forward.** The
+   ratification pause points all key off `docs/gate-policy`: the gate stage
+   exits-for-ratification only under `attended`/`single-ratify`; under
+   `autonomous` the independent reviewer's verdict closes the gate and the run
+   continues (§4), and even PAGE failure-semantics route (`plan_round`
+   `autonomous → design-check-session`) rather than park. G-Final stays human
+   at every level; non-ratification stops (unrunnable verification, quarantined
+   trains, BlockRefs) are unaffected by design. **WI-204's Done-when gains the
+   owner's pin:** the spine-batch ratification under `autonomous` must be
+   test-proven pause-free.
+2. **Backlog re-evaluation gap → WI-205 filed** (queued, `scripts`, medium;
+   [specs/WI-205.md](specs/WI-205.md)): the continuous checks on open WIs are
+   referential only (SR-Refs/R-E resolve) — nothing re-evaluates an open WI
+   whose cited SR text was amended after filing. WI-205 = warn-tier
+   check_trajectory finding on the WI↔spine join (`check_docs --stale` idiom,
+   git-blame row timestamps, silent off-git, deferred exempt); no SR (WI-129
+   precedent), promotion-to-gating drafts it.
+3. **Contradiction-coverage model ruled + WI-206 filed** (queued, `docs`,
+   medium; [specs/WI-206.md](specs/WI-206.md)): the change-scoped
+   sweep-on-entry is the recorded continuous model (Decisions bullet above);
+   its old-vs-old / interpretation-drift blind spot gets the occasion-driven
+   whole-registry audit — rubric + PROCESS_OPTIONS occasion (phase close +
+   pre-G-Final) + one real meta-registry audit as dogfood.
+
+**Registry:** +2 rows (206 WIs, 191 done); WI-204 spec amended (attestation
+ruling + the pause-free pin); dashboard + status snapshot regenerated;
+`check_trajectory --strict` clean. No spine change at this sitting. NOT pushed
 (`push-policy: human`).
