@@ -8285,3 +8285,36 @@ PASS, 15/15 steps, coverage 91.13%** (dupes went red on the new file's F5
 pairs mid-close and is green after the census edit). Spine now **SN=25 SR=65
 LLR=69 TC=69**, 57 seams (IF-057 Proposed). Dashboard + OKF + arch-map
 regenerated. NOT pushed (`push-policy: human`).
+
+## 2026-07-16 — status.md pruned to forward-only + WI-200 filed (owner feedback)
+
+**Session type:** hygiene + intake (same sitting as WI-190). The owner flagged
+`status.md` as "once again a wall of text" and asked where the enforcement
+went. **Finding confirmed:** the old `check_trajectory` R-D rule (a `done` WI
+id in status.md is a strict finding) was retired by **WI-180** on the
+generated-snapshot rationale, but this repo still hand-edits status.md — so
+the rule regressed to prose and every session since (WI-188 → WI-190,
+including today's) appended CLOSED narratives; the Current State spine counts
+had also gone stale (68/68/56 vs the real 69/69/57).
+
+**Prune:** status.md rewritten to the forward-only contract — Current State
+(gate/bar/run-state, corrected spine counts), Open items (OI-3/4/7), the
+registry-accurate deferred list (12 ids incl. WI-097/WI-123/WI-158), the
+external follow-up pointer, and a Next-action naming only the open frontier
+(WI-194…WI-199 + WI-200). Every CLOSED narrative dropped — all already in
+this log verbatim. ~5.9 KB → ~4.5 KB and, more to the point, zero
+backward-looking paragraphs.
+
+**Intake:** **WI-200** filed (queued, `scripts`, medium, ≺ the retirement WI;
+[specs/WI-200.md](specs/WI-200.md)): restore the done-id rule **mode-aware**
+— hand-edited status: WARN plain / ERROR `--strict`; generated-marker status:
+yields to a regenerate-and-byte-compare freshness check — so the WI-180
+rationale is fulfilled rather than reversed, robust under parallel dispatch
+(a repo-state rule like R-A, holding at every integrator-published tree).
+R-B/R-C (open-id prose copying) stay retired. Intra-module per IF-023's
+existing status.md cross-read; enforcement-audit re-mapping is in the
+Done-when.
+
+**Bar:** smoke + `check_docs --stale` green at commit (output in the commit
+message). No budgeted file touched; no spine change (registry row + spec +
+status/log only). NOT pushed (`push-policy: human`).

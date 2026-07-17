@@ -23,129 +23,48 @@ home elsewhere — don't restate it here:
 ## Current State
 
 - **Active gate:** runnable **G3** (derived — `scripts/derive_gate.py`; per-phase
-  `1=G3;2=G3;3=G3;4=G3`, derived current **phase=4**, cached to [`docs/gate`](gate))
-  — **WI-188 (2026-07-16) made *phase* a DERIVED first-class spine property and
-  retired the old per-WI grouping** (`Phase` now on SR/LLR/TC — integers or `vN`
-  both digit-parse; the current phase is derived = highest ratified; a ratified
-  blank/unparseable `Phase` is a `--strict-schema` finding, vacuous-until-armed;
-  the dashboard tiers `phase ⊃ workstream ⊃ work-item`). Spine: **SN=25 SR=65
-  LLR=68 TC=68** (orphans=0, 0 drafts), 56 seams, 5 components — WI-191 added
-  LLR-068/TC-068 under SR-044 (spec-interface citation check). The full
-  `check.py --gate G3 --jobs 0` bar passes as a unit (all 15 steps, coverage 91%).
+  `1=G3;2=G3;3=G3;4=G3`, derived current **phase=4**, cached to
+  [`docs/gate`](gate)). Spine: **SN=25 SR=65 LLR=69 TC=69** (orphans=0,
+  0 drafts), 57 seams (IF-057 `Proposed`), 5 components. The full
+  `check.py --gate G3 --jobs 0` bar passes as a unit (15/15 steps, coverage
+  91.13%).
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~47 s) +
   `python project-trajectory/scripts/check_docs.py --root . --stale`, both green.
-  At slice/phase close: the full suite `pytest -q -n auto` (~117 s) and
-  `check.py` at the derived gate (now **G3** — all 15 steps including the
-  G3-only `lint`, `dupes`, and `--require-verified`, plus the `--strict`
-  trajectory step). Keep status.md current regardless: closed WI ids leave, open
-  ones are named.
+  At slice/phase close: the full suite `pytest -q -n auto` and `check.py` at the
+  derived gate (now **G3** — all 15 steps including the G3-only `lint`, `dupes`,
+  and `--require-verified`, plus the `--strict` trajectory step). Keep status.md
+  forward-only: closed WI ids leave this file (history is the log's).
 - **Run-state:** [run-state](run-state) holds the declared value (don't
   paraphrase it here); when it reads NEEDS-HUMAN its `ask:` line is the
   canonical one-line summary the stop banner headlines.
 
 - **Open items** _(one bullet per item; `OI-N` ids are stable and never
-  renumbered):_
-  - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
-    that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
-    in [log.md](log.md) Decisions; `docs/gate-policy` is now **`autonomous`**
-    (owner directive 2026-07-15) so the loop does **not** pause on the items
-    below. Depth per item in [open-items.md](open-items.md):_
-    - **OI-3** — **push decision** (git-checked: `origin` exists, this branch
-      tracked, ~10 unpushed commits — not "48 local-only"); rec: push.
-    - **OI-4** — rule **WI-097** (LICENSE + public/private intent); no rec —
-      needs the owner's intent.
-    - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 phases
-      of medium-BUILD evidence.
-- **Recently closed** _(detail in [log.md](log.md); the status-repetition rules
-  R-B/C/D are retired per WI-180, so history lives in the log, not here):_ the
-  **v3 dashboard-ux** effort (SR-052/053/054 Critique, spine rejoined G3); the
-  **research-knowledge** effort (ref-integrity + dogfood packs + pack/skill
-  libraries — [knowledge index](knowledge/README.md); **WI-158** OKF pack export
-  stays deferred); and both **owner-intake** sittings (2026-07-14 / -14b — Codex
-  **Sol builds live**, `codex` on PATH 2026-07-15). **WI-159** (Knowledge-tab
-  density) stays deferred._
-- **parallel-dispatch effort (phase `v4`) — COMPLETE** (2026-07-16;
-  [specs/parallel-wi-dispatch.md](specs/parallel-wi-dispatch.md)):_ all eight
-  slices A–H shipped and **G3-closed** — SN-025 + SR-057…065 + LLR-058…066 +
-  TC-058…066 all **Verified**. `agent-resume --jobs N` now runs the full
-  dispatcher/integrator: `schedule.py` frontier + safety classification (A),
-  retired `next-wi`/`run-phase` (B), explicit `--wi`/`--train` worker
-  assignment with trailer-evidence (C), the `--jobs` dispatcher with atomic
-  `refs/llm/reservations/*` + a worktree pool + dynamic refill (D), the
-  one-review-cycle traincar model + fork/join (E), the CAS-only atomic
-  serialized integrator + durable publish-intent publication (F), the
-  fault-injected crash matrix + git-as-authority recovery (G), and telemetry +
-  gated downstream migration + the parallel-by-default scaffold flip (H). The
-  legacy single-session resume loop is untouched without `--jobs`/`AGENT_JOBS`;
-  a downstream repo holds at `--jobs 1` until its soft-edge + SafetyClass
-  audits pass (the `downstream-resync` skill). Round-by-round evidence →
-  [log.md](log.md)._
+  renumbered; ratification history lives in [log.md](log.md) Decisions;
+  `docs/gate-policy` is **`autonomous`** (owner directive 2026-07-15) so the
+  loop does **not** pause on these. Depth per item in
+  [open-items.md](open-items.md):_
+  - **OI-3** — **push decision** (git-checked: `origin` exists, this branch
+    tracked, unpushed commits accumulating); rec: push.
+  - **OI-4** — rule **WI-097** (LICENSE + public/private intent); no rec —
+    needs the owner's intent.
+  - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 phases
+    of medium-BUILD evidence.
 - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
-  WI-063 · WI-065 · WI-082 · WI-108 · WI-159 · WI-187** in
-  [work-items.csv](requirements/work-items.csv). (`main-decomposition` is
-  **CLOSED** — WI-080 + WI-081 done, WI-082 deferred indefinitely as planned;
-  **WI-064 is CLOSED** — its still-gated AXES residuals live on as WI-187,
-  applies-when each in [specs/WI-064.md](specs/WI-064.md) §2.)
+  WI-063 · WI-065 · WI-082 · WI-097 · WI-108 · WI-123 · WI-158 · WI-159 ·
+  WI-187** in [work-items.csv](requirements/work-items.csv) (WI-097/WI-123
+  are the OI-4/OI-7 subjects above).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** **WI-188 is CLOSED** (2026-07-16, external plan
-  `splendid-hopping-pike.md`, evidence in [log.md](log.md)) — *phase* is now a
-  **derived** first-class spine property and the old per-WI grouping tag is
-  retired: `Phase` on SR/LLR/TC (integers or `vN` digit-parse), the current
-  phase derived = highest ratified, a ratified blank/unparseable `Phase` a
-  `--strict-schema` finding (vacuous-until-armed), the dashboard tiered `phase ⊃
-  workstream ⊃ work-item`, PROCESS_OPTIONS **"Phase cadence"** (the renamed
-  cadence section), ADOPTING §6 migration note. Full suite **941p/3s**; `check.py --gate
-  G3 --jobs 0` **PASS** (15/15, 91% coverage); **grep-zero** for the retired word over
-  the live repo (minus history + `docs/repo-review-2026-07-12b.md`, preserved as a
-  review verdict). Follows the same-day **WI-064** (AXES enforceability) and
-  **main-decomposition** closes. Open owner
-  items (push ruling OI-3, LICENSE OI-4, review cadence OI-7) are unchanged under
-  `gate-policy: autonomous`; Codex Sol builds are live. **The owner feedback
-  sitting (2026-07-16) filed three queued WIs** — **WI-189** (dashboard
-  render-critique screenshot loop, meta-only), **WI-191** (specs act on declared
-  interface boundaries), and **WI-190** (dual-plan decomposition protocol,
-  predecessor-gated on WI-191) — with the research evidence preserved as the
-  [co-planning knowledge pack](knowledge/co-planning.md). **WI-192 is CLOSED**
-  (2026-07-16, [specs/WI-192.md](specs/WI-192.md)) — the WI-081 trace golden net
-  is now platform-stable (UTF-8 capture in `conftest.run_py` + POSIX-normalized
-  compare + deliberately-regenerated goldens), verified live on macOS with
-  Windows correctness by construction + a new stability test (live cross-OS
-  confirmation defers to CI on push, OI-3). **WI-189 is CLOSED** (2026-07-16,
-  [specs/WI-189.md](specs/WI-189.md)) — the meta-only dashboard render-critique
-  loop (`scripts/dashboard-shots/`: pinned Playwright 1.61.1 → chromium 1228 +
-  `shoot.mjs`'s declared 36-shot width×theme×tab matrix) + the
-  `render-dashboard-critique` this-repo skill; exercised end-to-end (5 rendered
-  views read back), its critique findings recorded as candidate WIs (a stated
-  non-goal to fix here). **WI-191 is CLOSED** (2026-07-16,
-  [specs/WI-191.md](specs/WI-191.md)) — specs-of-record now act on declared
-  interface boundaries: a `## Interfaces` section citing resolvable `IF-###`
-  seams (new ones filed `Proposed` with a nearest-existing-IF rationale), a
-  vacuous-until-armed `check_trajectory` check (SR-044 extended + LLR-068/TC-068),
-  the `spec-interface-hygiene` **B1** rubric anchor for the reviewer-tier near-dup
-  gap, and the WI-190/WI-191 specs dogfood-retrofitted to *extend* IF-023 rather
-  than mint a near-duplicate. Running the G3 dupes gate surfaced a **pre-existing**
-  census gap (WI-188's `in_phase` helper duplicated into `trace.py` +
-  `gen_release_checklist.py`, uncensused) → filed and **CLOSED WI-193**
-  (2026-07-16, [specs/WI-193.md](specs/WI-193.md); the
-  `gen_release_checklist.py == trace.py` pair censused in `docs/dupes-allow`, no
-  code change), restoring the full `check.py --gate G3 --jobs 0` to **PASS
-  (15/15, 952p/1s, 90.98% coverage)**. The **WI-192 → WI-189 → WI-191 grind (+ the
-  WI-193 spin-off) is complete**. **WI-190 is CLOSED** (2026-07-16,
-  [specs/WI-190.md](specs/WI-190.md)) — the dual-plan decomposition protocol
-  shipped as slices A–C (the PROCESS_OPTIONS layer + the
-  [plan-decomposition rubric](rubrics/plan-decomposition.md) + the three kit hat
-  templates + `plan_coverage.py` with spine LLR-069/TC-069 under SR-044 and the
-  Proposed IF-057 seam) and **dogfooded end-to-end as
-  [DP-001](plans/DP-001-dual-plan-loop-wiring/verdict.md)** (planners sol+fable,
-  one cross-critique each, one revision each, arbiter ×2 position-swapped
-  **agreed**: SELECT plan-B-rev, ports=0; degradations recorded in the verdict).
-  The selected plan is filed as **WI-194…WI-199** (queued, `unattended` — the
-  coordinator wiring follow-ups; WI-199 is the integration fan-in), which are
-  now the build frontier alongside the owner-ordered deferred backlog. Grinding under single-agent
+- **Next action:** the build frontier is **WI-194…WI-199** — the coordinator
+  dual-plan wiring decomposition selected by the
+  [DP-001 verdict](plans/DP-001-dual-plan-loop-wiring/verdict.md) (WI-199 is
+  the integration fan-in; WI-197 ≺ WI-194) — plus **WI-200** (restore the
+  status.md forward-only enforcement, parallel-dispatch robust;
+  [specs/WI-200.md](specs/WI-200.md)). Owner items OI-3/OI-4/OI-7
+  stay open under `gate-policy: autonomous`. Grinding under single-agent
   adversarial self-review at gates (a recorded limitation vs a
-  provider-heterogeneous reviewer). Round-by-round evidence → [log.md](log.md).
+  provider-heterogeneous reviewer); session evidence → [log.md](log.md).
 
 ## Scope
 
