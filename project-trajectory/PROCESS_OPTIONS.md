@@ -26,6 +26,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
 | Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py`, `docs/run-*`, `agents.csv`, the launchers |
 | Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
+| Dual-plan decomposition | a goal is design-shaping enough that one planner's WI decomposition should not go unchallenged | two rival plans + a coverage diff + one critique round + an arbiter verdict (`docs/plans/`) |
 | Tier-conditional guardrails | an unattended run maps different model tiers to different phases | `docs/guardrails-policy` |
 | Enforcement audit | your process outgrew one reader's head and you want to know which rules actually bind | `docs/enforcement-audit.md` |
 | §7 boundary notes | onboarding contributors, wiring a workstation, or a contested tooling boundary | prose (setup-script + boundary calls) |
@@ -967,6 +968,83 @@ redacted prompts, verdict files, `gate-policy`-keyed escalation).
   the registry `Notes`, and a text-only model runs a **degraded text-proxy
   critique** (it judges the description/output text and says so). Honest
   degradation, never a silent pass.
+
+## Dual-plan decomposition
+
+**Applies when** a goal deserves adversarial pressure on its WI decomposition
+*before* build — it declares an **optimization target that resists a
+measurable budget** (a captured `PB-###` + `check_perf` stays the first
+preference: the harness is a better adversary than a second opinion), the
+decomposition plausibly spans **two or more modules or any IF seam**, or the
+scope is design-shaping (`strong`-tier). One declared trigger at filing time,
+like `BuildTier` — never a vibe call mid-loop. Single-planner filing stays the
+norm; this layer fires only on its applies-when.
+
+**Why select-and-port — never merge, never debate-to-consensus.** Peer LLMs
+iterating on each other's feedback conform rather than challenge (measured
+sycophantic conformity; "consensus collapse" can eliminate a correct answer
+already on the table), gains concentrate in round 1 and drift past 2–3, and
+plan *fusion* is unpublished — naive union of two WI DAGs yields incoherent
+predecessors and duplicated scope. What does hold up: independent generation
+with real cross-family diversity, a judge *separate* from the generators that
+judges **artifacts, not conversations**, rubric anchoring over bare
+"which is better", and externally computed feedback. Evidence:
+`docs/knowledge/co-planning.md` in the kit's home repo (retrieved 2026-07-16).
+**Transfer caveat:** that literature benchmarks QA/math/code with objective
+verifiers, not plan artifacts — this protocol is the best-supported
+extrapolation, not a proven design.
+
+The protocol rides the S8 chassis (fresh sessions, redacted prompts, verdict
+files, `agent_route` family heterogeneity, budgets) — **no new engine**:
+
+1. **Two independent planners,** different model families where available (two
+   samples of one family share blind spots; the reviewers'
+   degraded-availability rule applies — fresh sessions are the invariant,
+   family diversity best-effort), given **identical redacted briefs**: the
+   goal brief + the SR surface + the IF registry — never each other's output,
+   never the driver's self-assessment.
+2. **The commensurability contract.** The goal brief declares numbered clauses
+   (`C1:` …). Each plan is a table of proposed WI rows
+   (`Plan-WI | Title | Covers | Interfaces | Predecessors`): every row cites
+   the clauses/`SR-###` it covers and the `IF-###` it acts on — existing ids,
+   `Proposed:` plus a nearest-existing-IF rationale (the same rule specs
+   follow), or the intra-module escape. This is what makes rival plans
+   mechanically comparable.
+3. **Mechanical coverage pre-pass:** `plan_coverage.py` (stdlib) computes each
+   plan's clause coverage, flags unresolvable clause/SR/IF refs, `Proposed:`
+   seams missing a rationale, and predecessor cycles, and emits the pairwise
+   coverage diff — the external, checkable signal that makes the one critique
+   round work.
+4. **One rubric-anchored cross-critique round — hard cap n=1.** Each plan is
+   critiqued by the *other* family against the plan rubric
+   (`docs/rubrics/<name>.md`: solvability / completeness / non-redundancy
+   anchors plus the seam-duplication anchor) and the coverage report. One
+   revision each. No further rounds, ever.
+5. **Arbiter select-and-port.** A fresh session, third family where available
+   (an arbiter sharing a family with a planner is recorded and mitigated —
+   self-preference bias): **provenance-anonymized, position-swapped** pairwise
+   comparison — run the arbiter prompt twice with the plan order swapped; the
+   verdicts must agree, disagreement is a position-bias page-the-human —
+   against the rubric + the coverage report + the owner's original prompt,
+   warned that **more WIs ≠ better** (verbosity bias). It selects **one** plan
+   and **ports named loser-WIs** that close coverage gaps, each port a cited
+   delta in the verdict file. Never a merge. (The S8 "no LLM-judge tiebreaker
+   between reviewer scores" ruling stands — this arbiter compares *plans*.)
+6. **Artifacts are repo files:** one round directory `docs/plans/DP-NNN-<slug>/`
+   (goal brief, both plans and revisions, critiques, `coverage.md`,
+   `verdict.md` with the ports), the verdict summarized in `log.md`. The
+   selected plan's rows are then filed as real WIs through normal intake.
+7. **Acceptance:** human `Attest` closes the round per the gate philosophy;
+   under `gate-policy: autonomous` the recorded-verdict rules govern, as they
+   do for the critique loop.
+
+The three hat prompts ship as kit templates —
+`prompts/dual-plan-{planner,critic,arbiter}.template.md`, copied in when the
+layer is opted into (not scaffolded by default) — with the redaction,
+anonymization, position-swap, and anti-verbosity instructions **embedded in
+the prompt files**, so the safeguards ride the artifacts, not session memory.
+Coordinator (`agent_loop`) dispatch of this round is a declared follow-up WI;
+the manual protocol above is the shipped shape.
 
 ## Tier-conditional guardrails
 

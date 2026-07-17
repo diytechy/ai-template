@@ -56,6 +56,7 @@ graph LR
     m_scripts_gen_release_checklist["scripts/gen_release_checklist — Generate the human release checklist from the r…"]
     m_scripts_gen_skills_index["scripts/gen_skills_index — Generate the skills applicability index from th…"]
     m_scripts_gen_trajectory["scripts/gen_trajectory — Generate the offline project-state dashboard (r…"]
+    m_scripts_plan_coverage["scripts/plan_coverage — Dual-plan coverage pre-pass: make rival WI deco…"]
     m_scripts_run_menu["scripts/run_menu — The run capability menu — one launcher that pre…"]
     m_scripts_schedule["scripts/schedule — Derive the dependency-ready WI frontier and its…"]
     m_scripts_score_reviews["scripts/score_reviews — The substance scorer — score a review verdict b…"]
@@ -554,6 +555,22 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
 | `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
 | `build_html(root, wis)` |  |  |
+| `main()` |  |  |
+
+### `scripts/plan_coverage`
+_Dual-plan coverage pre-pass: make rival WI decompositions mechanically_
+Contracts (interfaces): IF-057
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `parse_goal(text)` | The goal brief's declared clauses: ordered {id: text}. Duplicate |  |
+| `parse_plan(text)` | The plan's proposed-WI rows from the first table whose header carries a |  |
+| `split_refs(cell)` | `;`-separated (commas tolerated) ref tokens from a table cell. |  |
+| `load_registry_ids(path, key)` | The id column of an optional CSV registry, or None when it is absent — |  |
+| `proposed_rationale_present(cell)` | True when a `Proposed:` interfaces cell carries rationale text beyond |  |
+| `find_cycle(rows)` | A predecessor cycle among plan rows (list of ids), or None. Iterative |  |
+| `check_plan(name, rows, clauses, sr_ids, if_ids)` | One plan's findings + its covered-clause set. |  |
+| `format_report(goal_name, clauses, plans)` | The markdown coverage report: per-plan coverage + the pairwise diff. |  |
 | `main()` |  |  |
 
 ### `scripts/run_menu`
