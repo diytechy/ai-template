@@ -331,6 +331,94 @@ def test_unary_chain_packs_to_the_cap(tmp_path):
     ], "the waiting tail WI-205 is not ready until the car integrates"
 
 
+# --- the spine-only batch (WI-204; the SR-058 amendment) -------------------------
+
+
+def _wi(wid, safety="ordinary", preds=(), status="queued", priority=0):
+    return {
+        "id": wid,
+        "status": status,
+        "preds": list(preds),
+        "soft": [],
+        "srs": [],
+        "priority": priority,
+        "exclusive": [],
+        "blockref": "",
+        "est_tokens": 0,
+        "safetyclass": safety,
+        "title": "w",
+    }
+
+
+def _pack(wis):
+    return agent_loop.pack_traincars(schedule.evaluate(wis), {w["id"]: w for w in wis})
+
+
+def test_spine_batch_packs_ready_spine_into_one_traincar(tmp_path):
+    # WI-204 (owner ruling 2026-07-17): independent ready spine WIs cluster into
+    # ONE spine-only traincar — drafted together, reviewed together, attested
+    # together — never one sequential single-WI train each.
+    wis = [
+        _wi("WI-210", safety="spine"),
+        _wi("WI-211", safety="gate"),
+        _wi("WI-212", safety="attestation"),
+        _wi("WI-201"),  # ordinary — must NOT join the spine car
+    ]
+    cars = _pack(wis)
+    assert cars[0]["sched_class"] == schedule.SCHED_SPINE_SERIAL
+    assert cars[0]["wis"] == ["WI-210", "WI-211", "WI-212"], (
+        "the whole ready spine-serial class (attestation included) rides one car"
+    )
+    assert [c["wis"] for c in cars[1:]] == [["WI-201"]]
+
+
+def test_spine_batch_absorbs_unlocked_successors_in_hard_edge_order(tmp_path):
+    # A queued spine successor whose only unmet pred rides the car boards it
+    # (the batch closure) — appended AFTER its predecessor, so the worker
+    # builds in dependency order.
+    wis = [
+        _wi("WI-210", safety="spine"),
+        _wi("WI-211", safety="spine", preds=["WI-210"]),  # waiting, unlocked aboard
+        _wi("WI-220", safety="gate"),
+    ]
+    cars = _pack(wis)
+    assert len(cars) == 1 and cars[0]["sched_class"] == schedule.SCHED_SPINE_SERIAL
+    car = cars[0]["wis"]
+    assert set(car) == {"WI-210", "WI-211", "WI-220"}
+    assert car.index("WI-210") < car.index("WI-211"), "hard-edge order inside the car"
+
+
+def test_spine_batch_chunks_at_the_cap(tmp_path):
+    # The §7 safety cap still applies: a five-member batch forms a 4-car and the
+    # overflow — both spine-class (the later chunk waits its turn: one active
+    # spine train at a time is the dispatcher's invariant, re-derived per rescan).
+    wis = [_wi("WI-21%d" % i, safety="spine") for i in range(5)]
+    cars = _pack(wis)
+    assert [c["wis"] for c in cars] == [
+        ["WI-210", "WI-211", "WI-212", "WI-213"],
+        ["WI-214"],
+    ]
+    assert all(c["sched_class"] == schedule.SCHED_SPINE_SERIAL for c in cars)
+
+
+def test_spine_batch_never_packs_other_classes(tmp_path):
+    # protected / high-risk / unclassified never board the spine car (and the
+    # unclassified WI is not scheduled at all — SR-058 fail-closed unchanged).
+    wis = [
+        _wi("WI-210", safety="spine"),
+        _wi("WI-230", safety="protected"),
+        _wi("WI-240", safety="high-risk"),
+        _wi("WI-250", safety=""),  # unclassified — fails closed
+    ]
+    cars = _pack(wis)
+    assert cars[0]["wis"] == ["WI-210"]  # spine alone: no other spine WI ready
+    assert cars[0]["sched_class"] == schedule.SCHED_SPINE_SERIAL
+    flat = [w for c in cars for w in c["wis"]]
+    assert "WI-250" not in flat
+    assert ["WI-230"] in [c["wis"] for c in cars]
+    assert ["WI-240"] in [c["wis"] for c in cars]
+
+
 def test_fork_parent_integrates_then_children_take_separate_lanes(tmp_path):
     # WI-201 forks into WI-202 + WI-203: the packer never chains past a fork.
     # In ONE launch the parent builds and INTEGRATES first (Slice F), then the

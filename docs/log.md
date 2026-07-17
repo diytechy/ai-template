@@ -8727,3 +8727,48 @@ build session (this sitting) re-validated the row against the amended spec and
 closes it — the warn clears when the row flips `done`.
 
 **Deviations:** none. **Byte deltas (budgeted files):** none.
+
+## 2026-07-17 — WI-204: the spine-only traincar (spine packs with spine, never with anything else)
+
+**Session type:** build (`unattended`, **strong** — the SR-058 amendment;
+spec [specs/WI-204.md](specs/WI-204.md), root session build per the
+strong-tier convention). **Spine change:** SR-058 Requirement + AC + Rationale
+amended in place (Status stays Verified; the amendment rode this reviewed
+commit with its TC extended in the same change — the validation chain moved
+with the text).
+
+**What landed:**
+- **`pack_traincars` spine-only batch:** every READY spine-serial WI
+  (`spine`/`gate`/`attestation` — mutually independent by construction: a
+  ready WI's hard preds are all done) seeds ONE spine-only traincar; a
+  fixed-point closure absorbs queued spine-serial WIs whose every hard pred is
+  done-or-aboard (append order is topological — a member boards only after its
+  aboard-preds), chunked at the §7 cap. Never packs with
+  ordinary/protected/high-risk/critique/checkpoint work. An empty spine
+  frontier renders byte-identical behavior.
+- **Worker §7 continuation re-check goes homogeneity-aware:** a spine-serial
+  next-constituent inside an all-spine train is the dispatcher-authorized
+  batch (no early TRAIN-END); any heterogeneous grouping still refuses; a
+  member with no sched row keeps the refusal (fail closed).
+- **Dispatch invariants untouched:** whole-project drain (never-preempt), one
+  active spine train, ratification exits per `docs/gate-policy`.
+- **Owner rulings landed in the SR:** attestation rows join the batch
+  ("drafted together, reviewed together, attested together" — one train, one
+  review scope, one ratification scope) and the **pause-free pin** — under
+  `autonomous` the built batch continues on the recorded verdict, no human
+  pause up to G-Final.
+- **Doc sync:** parallel-wi-dispatch.md §4 rule 1 + §7, agent_loop docstring,
+  TC-059 Method/Evidence; the PROCESS_OPTIONS dispatcher-paragraph restatement
+  rides the WI-206 commit (that file commits whole, byte-guard re-stamped there).
+
+**Verified:** 4 packing unit tests (one-car batch incl. attestation,
+hard-edge order, cap chunking, never-another-class) + 2 end-to-end dispatcher
+pins — the batch rides ONE train and ends DONE with **zero ratification
+pause** under `autonomous` (no `gate-ratification-exit` event, ordinary
+build-out follows), and under `attended` the whole batch still exits as ONE
+ratification scope (both WIs reserved). Targeted battery 139 passed; ruff
+clean. The WI-205 staleness warn on this row (spec amended after filing) was
+re-validated and closes with this flip.
+
+**Deviations:** none. **Byte deltas (budgeted files):** PROCESS_OPTIONS'
++128 B restatement is recorded in the WI-206 entry (one file, one commit).

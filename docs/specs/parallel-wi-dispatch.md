@@ -231,8 +231,12 @@ traincar packing, and dispatch. Its inputs are the WI's declared `SafetyClass`,
 gate/phase, hard edges, `Exclusive` keys, and applicable review/critique policy;
 its output is a scheduling class plus reason codes. The ordered rules are:
 
-1. `spine`, `gate`, and `attestation` serialize whole-project and cannot join a
-   multi-WI traincar;
+1. `spine`, `gate`, and `attestation` serialize whole-project and pack **only
+   with each other** (the WI-204 amendment to SR-058; owner ruling 2026-07-17
+   "drafted together, reviewed together, attested together"): ready
+   spine-serial WIs — plus queued spine-serial successors unlocked aboard —
+   cluster into **one spine-only traincar** in hard-edge order, cap-bounded,
+   and never share a traincar with any other class;
 2. `protected` serializes whole-project; narrower semantic-resource locking uses
    declared `Exclusive` keys instead;
 3. `high-risk`, a critique requirement, or a review policy requiring an
@@ -430,9 +434,13 @@ is the maximum remaining constituent-to-terminal hard-edge length;
 its BuildTier is the strongest constituent tier; its reviewer count is the
 maximum required by any constituent or by the traincar's computed complexity;
 and its required reviewer families are the union of constituent requirements. A
-constituent whose policy requires individual critique, spine review, or an
-integration checkpoint is not aggregated — the safety classifier places it in
-a single-WI traincar.
+constituent whose policy requires individual critique or an integration
+checkpoint is not aggregated — the safety classifier places it in a single-WI
+traincar. Spine-serial work aggregates **only into the spine-only traincar**
+(the WI-204 amendment): the whole ready spine-serial set — one batch, one
+review scope, one ratification scope — with the worker's continuation
+re-check permitting the homogeneous batch and still refusing any
+heterogeneous grouping.
 
 ### Traincar clustering — the work-advisor (research-informed)
 

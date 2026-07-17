@@ -74,8 +74,10 @@ AGENT_CMD_INTERACTIVE env var, falling back to AGENT_CMD.
 trains -> gate -> build-out. It derives the ready frontier from the WI
 registry via schedule.py (declared SafetyClass required — unclassified fails
 closed), packs it into traincars (ordinary unary chains cluster up to the
-cap; spine/gate/protected serialize whole-project with every other lane
-drained), atomically reserves each selected traincar's constituent WIs
+cap; ready spine/gate/attestation WIs cluster into ONE spine-only traincar —
+spine packs with spine, never with anything else (WI-204) — which serializes
+whole-project with every other lane drained, as does protected;
+one spine train at a time), atomically reserves each selected traincar's constituent WIs
 (refs/llm/reservations/WI-### — one commit-tree metadata commit + one
 update-ref --stdin zero-old-value transaction, all-or-none), leases a linked
 worktree per train (../<repo>-trains/<id>), and runs Slice-C workers in
@@ -2831,9 +2833,18 @@ def pack_traincars(records, wis_by_id, cap=4):
     §7): every ready WI starts its own traincar in the deterministic order;
     an ORDINARY ready WI then absorbs its unary hard-successor chain (each
     successor `ordinary`-classified, all its other hard preds already done,
-    single hard successor edge) up to the cap. Spine/gate/attestation/
-    protected/single-wi classes never join a multi-WI traincar. Returns a
-    list of {wis, sched_class} dicts in dispatch order."""
+    single hard successor edge) up to the cap. Protected/single-wi classes
+    never join a multi-WI traincar. **Spine packs with spine, never with
+    anything else** (WI-204, the SR-058 amendment; owner ruling 2026-07-17
+    "drafted together, reviewed together, attested together"): every READY
+    spine-serial WI — mutually independent by construction, a ready WI's
+    hard preds are all done — clusters into ONE spine-only traincar, which
+    then absorbs queued spine-serial WIs whose every hard pred is done or
+    already aboard (hard-edge order holds: a member boards only after its
+    aboard-preds), chunked at the cap; the whole-project drain and the
+    one-active-spine-train dispatch invariants are the caller's and are
+    unchanged. Returns a list of {wis, sched_class} dicts in dispatch
+    order (spine cars first — they rank first in `records` anyway)."""
     by_id = {r["id"]: r for r in records}
     # children[x] = hard successors of x among tracked WIs
     children = {}
@@ -2842,6 +2853,52 @@ def pack_traincars(records, wis_by_id, cap=4):
             children.setdefault(p, []).append(w["id"])
     consumed = set()
     cars = []
+
+    # --- the spine-only batch (WI-204) -----------------------------------
+    # Seed: every ready spine-serial WI, in deterministic record order.
+    aboard = []
+    aboard_set = set()
+    for r in records:
+        if (
+            r["disposition"] == "ready"
+            and r["sched_class"] == schedule.SCHED_SPINE_SERIAL
+        ):
+            aboard.append(r["id"])
+            aboard_set.add(r["id"])
+    # Closure: absorb queued spine-serial WIs unlocked by the batch (every
+    # hard pred done or aboard). A fixed-point sweep in record order keeps
+    # the append topological — a member is appended only after its aboard
+    # predecessors, so the worker builds the train in dependency order.
+    changed = bool(aboard)
+    while changed:
+        changed = False
+        for r in records:
+            if (
+                r["id"] in aboard_set
+                or r["sched_class"] != schedule.SCHED_SPINE_SERIAL
+                or r["disposition"] not in ("ready", "waiting")
+            ):
+                continue
+            wi = wis_by_id.get(r["id"])
+            if wi is None or wi["status"] != "queued":
+                continue
+            if all(
+                (wis_by_id.get(p) or {}).get("status") == "done" or p in aboard_set
+                for p in wi["preds"]
+            ):
+                aboard.append(r["id"])
+                aboard_set.add(r["id"])
+                changed = True
+    # The safety cap still applies (spec §7): overflow forms the next spine
+    # car(s); a later chunk whose preds ride an earlier one is simply not
+    # dispatched until that one integrates (spine serializes whole-project,
+    # and each rescan re-derives the cars fresh).
+    for i in range(0, len(aboard), cap):
+        cars.append(
+            {"wis": aboard[i : i + cap], "sched_class": schedule.SCHED_SPINE_SERIAL}
+        )
+    consumed |= aboard_set
+
     for r in records:
         if r["disposition"] != "ready" or r["id"] in consumed:
             continue
@@ -5573,13 +5630,17 @@ def run_iteration(ctx, i):
         )
         # §7 continuation re-check (WI-183): before the lane takes the next
         # constituent of a MULTI-WI traincar, the classifier must still
-        # permit optimistic grouping — a POSITIVE conflict (spine/gate/
+        # permit the grouping — a POSITIVE conflict (spine/gate/
         # attestation/protected/high-risk/critique/checkpoint) ends the
         # train EARLY instead of building inside a shared review scope.
         # Missing classification is NOT a newly-visible conflict: the
         # dispatcher already fails closed at packing, and an explicit
         # assignment is dispatcher-authorized. Built evidence stands; the
         # dispatcher releases the unstarted reservations (SR-062).
+        # WI-204 (the SR-058 amendment): a spine-serial constituent inside a
+        # HOMOGENEOUS spine-only train is the dispatcher-authorized batch —
+        # spine packs with spine, never with anything else — so it is not a
+        # newly-visible conflict; only a heterogeneous grouping refuses.
         if remaining and len(worker["assigned"]) > 1:
             sched_wi = worker["sched"].get(current_wi)
             sched_class, reasons = (
@@ -5587,6 +5648,14 @@ def run_iteration(ctx, i):
                 if sched_wi is not None
                 else (schedule.SCHED_UNCLASSIFIED, ["unclassified:missing-row"])
             )
+            if sched_class == schedule.SCHED_SPINE_SERIAL and all(
+                worker["sched"].get(w) is not None
+                and schedule.classify(worker["sched"][w])[0]
+                == schedule.SCHED_SPINE_SERIAL
+                for w in worker["assigned"]
+            ):
+                # A member with NO sched row keeps the refusal (fail closed).
+                sched_class = None  # spine-only batch: authorized, no refusal
             if sched_class in (
                 schedule.SCHED_SPINE_SERIAL,
                 schedule.SCHED_PROTECTED,

@@ -294,6 +294,58 @@ def test_spine_train_exits_for_ratification_under_attended(tmp_path):
     assert (repo / "docs" / "run-state").read_text().startswith("NEEDS-HUMAN")
 
 
+def test_spine_batch_one_train_no_pause_under_autonomous(tmp_path):
+    # WI-204 (the SR-058 amendment + the owner's pause-free pin, 2026-07-17):
+    # (1) ready spine-serial WIs — a spine and a gate row here — ride ONE
+    # spine-only traincar (drafted together, reviewed together, attested
+    # together), and the worker's §7 continuation re-check permits the
+    # homogeneous batch instead of ending the train early; (2) under
+    # gate-policy autonomous the built batch triggers NO ratification exit —
+    # the run continues straight into ordinary build-out and ends DONE.
+    repo, ctl, fake = _setup(
+        tmp_path,
+        [
+            _wi_row("WI-210", safety="spine"),
+            _wi_row("WI-211", safety="gate"),
+            _wi_row("WI-201"),
+        ],
+    )
+    proc = _dispatch(repo, fake, ctl)
+    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
+    assert "needs ratification" not in proc.stdout, "no human pause up to G-Final"
+    events = _events(repo)
+    assert not any(e["event"] == "gate-ratification-exit" for e in events)
+    starts = [e for e in events if e["event"] == "worker-start"]
+    assert len(starts) == 2, "one spine batch train + one ordinary train: %s" % starts
+    assert starts[0]["wis"] == "WI-210;WI-211", "the batch rides ONE train"
+    assert starts[1]["wis"] == "WI-201"
+    # the batch train genuinely finished before ordinary build-out began
+    order = [e["event"] for e in events if e["event"].startswith("worker-")]
+    assert order == ["worker-start", "worker-done", "worker-start", "worker-done"]
+
+
+def test_spine_batch_still_exits_for_ratification_under_attended(tmp_path):
+    # The batch changes packing, not gate authority: under attended the built
+    # spine-only train still EXITS FOR RATIFICATION exactly per §4.2.
+    repo, ctl, fake = _setup(
+        tmp_path,
+        [
+            _wi_row("WI-210", safety="spine"),
+            _wi_row("WI-211", safety="gate"),
+            _wi_row("WI-201"),
+        ],
+    )
+    (repo / "docs" / "gate-policy").write_text("attended\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "attended gate policy")
+    proc = _dispatch(repo, fake, ctl)
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert "needs ratification" in proc.stdout
+    assert _reservations(repo) == {"WI-210", "WI-211"}, (
+        "the whole batch is one ratification scope; build-out must not continue"
+    )
+
+
 def test_pause_stops_new_reservations_at_the_boundary(tmp_path):
     repo, ctl, fake = _setup(tmp_path, [_wi_row("WI-201")])
     (repo / "docs" / "pause").write_text("owner pause\n", encoding="utf-8")
