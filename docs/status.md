@@ -132,9 +132,18 @@ home elsewhere — don't restate it here:
   `gen_release_checklist.py == trace.py` pair censused in `docs/dupes-allow`, no
   code change), restoring the full `check.py --gate G3 --jobs 0` to **PASS
   (15/15, 952p/1s, 90.98% coverage)**. The **WI-192 → WI-189 → WI-191 grind (+ the
-  WI-193 spin-off) is complete**; the build frontier is now **WI-190** (the
-  dual-plan decomposition protocol, whose WI-191 predecessor this grind unblocks);
-  the deferred backlog stays owner-ordered. Grinding under single-agent
+  WI-193 spin-off) is complete**. **WI-190 is CLOSED** (2026-07-16,
+  [specs/WI-190.md](specs/WI-190.md)) — the dual-plan decomposition protocol
+  shipped as slices A–C (the PROCESS_OPTIONS layer + the
+  [plan-decomposition rubric](rubrics/plan-decomposition.md) + the three kit hat
+  templates + `plan_coverage.py` with spine LLR-069/TC-069 under SR-044 and the
+  Proposed IF-057 seam) and **dogfooded end-to-end as
+  [DP-001](plans/DP-001-dual-plan-loop-wiring/verdict.md)** (planners sol+fable,
+  one cross-critique each, one revision each, arbiter ×2 position-swapped
+  **agreed**: SELECT plan-B-rev, ports=0; degradations recorded in the verdict).
+  The selected plan is filed as **WI-194…WI-199** (queued, `unattended` — the
+  coordinator wiring follow-ups; WI-199 is the integration fan-in), which are
+  now the build frontier alongside the owner-ordered deferred backlog. Grinding under single-agent
   adversarial self-review at gates (a recorded limitation vs a
   provider-heterogeneous reviewer). Round-by-round evidence → [log.md](log.md).
 

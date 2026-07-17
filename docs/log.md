@@ -8204,3 +8204,84 @@ coverage**, `dupes`, `derived-gate`, `traceability`, `privacy`,
 registry/status/log only. No spine change. This closes the
 **WI-192 → WI-189 → WI-191** grind (+ this WI-193 spin-off); the frontier is
 **WI-190**. NOT pushed (`push-policy: human`).
+
+## 2026-07-16 — WI-190: dual-plan decomposition protocol shipped + dogfooded (DP-001)
+
+**Session type:** build (`unattended`, strong, ≺WI-068;WI-191), owner-directed
+("grind through WI-190 here"). Two commits: the A–C build, then this DP-001
+round + close.
+
+**Slice A (layer + rubric):** PROCESS_OPTIONS gains the **"Dual-plan
+decomposition"** opt-in layer (S8 chassis, **no new engine**): declared
+applies-when at filing (unmeasurable optimization target / ≥2 modules or an IF
+seam / `strong` design-shaping; a measurable target stays PB + `check_perf`),
+the seven steps, **select-and-port never merge**, the **n=1** cross-critique
+cap, one revision each, the **position-swap ×2 agreement rule** (disagreement
+pages), round artifacts as tracked `docs/plans/DP-NNN-<slug>/` files, and the
+transfer caveat stated in-place, citing the co-planning pack.
+[rubrics/plan-decomposition.md](rubrics/plan-decomposition.md): G1 solvable /
+G2 complete / G3 non-redundant / G4 coherent-DAG, B1 seam-duplication
+(imports spec-interface-hygiene B1), B2 coverage laundering, B3 padding
+("more WIs is not better"), B4 phantom/missing edge.
+
+**Slice B (hat prompts):** `prompts/dual-plan-{planner,critic,arbiter}.template.md`
+— kit-shipped, **not scaffolded** (copied in when the applies-when trips);
+redaction/anonymization/position-swap/anti-verbosity **embedded in the prompt
+text**; the planner template carries the single revision mode.
+
+**Slice C (checker + spine):** `scripts/plan_coverage.py` (stdlib, scaffolded
+— bootstrap MAPPING + README + file-list test): parses `C#` goal clauses +
+`Plan-WI` tables, resolves Covers/Interfaces cites against the registries
+(Proposed-rationale **presence** only — honesty stays the rubric's B1), flags
+cycles/dupes/unknown refs (exit 1), malformed inputs exit 2, **coverage gaps
+are payload, never findings**. 12 tests (`test_plan_coverage.py`). Spine:
+**LLR-069 + TC-069 under SR-044** (Requirement + AC extended — the WI-191
+same-SR precedent); seam filed honestly as **Proposed IF-057**
+(`plan_coverage` Consumes the registries; nearest existing IF-023, rationale
+on the spec citation line), `Component=CMP-001`; the WI-190 spec `##
+Interfaces` updated to cite it. Dupes census: 4 new
+`* == plan_coverage.py` F5 pairs (the `_utf8_console`/loader/boilerplate
+class, WI-193 precedent).
+
+**DP-001 dogfood (the Done-when's real run —
+[plans/DP-001-dual-plan-loop-wiring/](plans/DP-001-dual-plan-loop-wiring/goal.md)):**
+goal = the declared `agent_loop`-wiring follow-up, 7 clauses. Planners
+**gpt-5.6-sol** (codex) and **claude-fable-5** — fresh sessions, isolated
+empty cwds (redaction by construction), identical briefs (goal + SR surface +
+IF excerpt). Coverage r1: both **7/7**, diff empty — the arbiter decides on
+quality, which is the pre-pass working as designed. Cross-critique (n=1):
+**opus×xhigh** on plan A → 1 finding **[G1]** (fused C4+C5 row);
+**gpt-5.6-terra** on plan B → 1 finding **[B2]** (missing runtime-nonresponse
+degraded branch). One revision each closed both. Coverage r2 clean. Arbiter:
+**opus×xhigh ×2**, provenance-anonymized, coin-flipped labels, positions
+swapped — **both runs select the same underlying plan** (fable's revision:
+pure round state machine, edge-free P2/P3/P5, single P6 fan-in, in-row
+done-conditions) with **ports=0** (no coverage gap existed to port) and no
+residual gaps. Full de-anonymization + per-anchor record:
+[verdict.md](plans/DP-001-dual-plan-loop-wiring/verdict.md).
+
+**Recorded degradations (honest):** no third family on this host — the
+arbiter shares the ANTHROPIC family with planner B (different model;
+anonymize + coin-flip + swap-agreement mitigations applied and recorded; the
+self-preference caveat and its counterweights are stated in the verdict).
+Closed under `gate-policy: autonomous` on recorded verdicts; the owner's
+`Attest` can re-open the selection. **Disposition:** the selected plan filed
+as **WI-194…WI-199** (queued, `unattended`; WI-197→WI-194 and the WI-199
+fan-in per the plan's edges; strong/medium tiers per row).
+
+**Deviations from spec:** none of substance — slice C landed as its own
+module (the spec's pre-declared alternative), and the arbiter's
+position-swap is implemented as **two runs + agreement rule** (the layer
+states it; the spec's "position-swapped pairwise comparison" made concrete).
+**Byte deltas (budgeted files):** PROCESS_OPTIONS.md 153,448 → **158,628
+(+5,180 B, flagged** — the new layer), baseline re-stamped ×3;
+AGENTS.template.md 9,978 + PROCESS.md 60,169 untouched.
+
+**Tests / bar (real output, Windows 11):** smoke 756p/2s; **full suite
+`pytest -q -n auto` → 931 passed, 34 skipped** (the 34 are the documented
+POSIX-gated platform class — no POSIX shell/exec-bit on this box; prior
+macOS sessions read ~1–3 skips); **`check.py --gate G3 --jobs 0` → RESULT:
+PASS, 15/15 steps, coverage 91.13%** (dupes went red on the new file's F5
+pairs mid-close and is green after the census edit). Spine now **SN=25 SR=65
+LLR=69 TC=69**, 57 seams (IF-057 Proposed). Dashboard + OKF + arch-map
+regenerated. NOT pushed (`push-policy: human`).
