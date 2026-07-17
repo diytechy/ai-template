@@ -29,7 +29,8 @@ home elsewhere — don't restate it here:
   both digit-parse; the current phase is derived = highest ratified; a ratified
   blank/unparseable `Phase` is a `--strict-schema` finding, vacuous-until-armed;
   the dashboard tiers `phase ⊃ workstream ⊃ work-item`). Spine: **SN=25 SR=65
-  LLR=67 TC=67** (orphans=0, 0 drafts), 56 seams, 5 components. The full
+  LLR=68 TC=68** (orphans=0, 0 drafts), 56 seams, 5 components — WI-191 added
+  LLR-068/TC-068 under SR-044 (spec-interface citation check). The full
   `check.py --gate G3 --jobs 0` bar passes as a unit (all 15 steps, coverage 91%).
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` (~47 s) +
   `python project-trajectory/scripts/check_docs.py --root . --stale`, both green.
@@ -126,12 +127,16 @@ home elsewhere — don't restate it here:
   gap, and the WI-190/WI-191 specs dogfood-retrofitted to *extend* IF-023 rather
   than mint a near-duplicate. Running the G3 dupes gate surfaced a **pre-existing**
   census gap (WI-188's `in_phase` helper duplicated into `trace.py` +
-  `gen_release_checklist.py`, uncensused) → filed **WI-193** (quick), fixed in its
-  own follow-up commit. The build frontier is now **WI-193** (the census fix) then
-  **WI-190** (whose WI-191 predecessor this unblocks); the deferred backlog stays
-  owner-ordered. Grinding under single-agent adversarial self-review at gates (a
-  recorded limitation vs a provider-heterogeneous reviewer). Round-by-round
-  evidence → [log.md](log.md).
+  `gen_release_checklist.py`, uncensused) → filed and **CLOSED WI-193**
+  (2026-07-16, [specs/WI-193.md](specs/WI-193.md); the
+  `gen_release_checklist.py == trace.py` pair censused in `docs/dupes-allow`, no
+  code change), restoring the full `check.py --gate G3 --jobs 0` to **PASS
+  (15/15, 952p/1s, 90.98% coverage)**. The **WI-192 → WI-189 → WI-191 grind (+ the
+  WI-193 spin-off) is complete**; the build frontier is now **WI-190** (the
+  dual-plan decomposition protocol, whose WI-191 predecessor this grind unblocks);
+  the deferred backlog stays owner-ordered. Grinding under single-agent
+  adversarial self-review at gates (a recorded limitation vs a
+  provider-heterogeneous reviewer). Round-by-round evidence → [log.md](log.md).
 
 ## Scope
 

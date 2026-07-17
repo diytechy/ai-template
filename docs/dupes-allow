@@ -86,6 +86,12 @@ project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajecto
 # gen_okf.sn_rows / gen_trajectory._sn_rows (F5, "change all three together");
 # the pair was surfaced (uncensused) at the WI-144 G3 close — dupes is G3-only.
 project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
+# WI-193: WI-188 added an identical in_phase() SR-phase-filter helper to BOTH
+# gen_release_checklist.py and trace.py (each independently filters SRs by the
+# derived Phase column; ~31 tokens, F5 small-helper duplication, deliberately not
+# hoisted into a shared module). The pair went uncensused at WI-188's close —
+# dupes is G3-only and the branch is unpushed (OI-3), so CI never ran the gate.
+project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py
 # WI-186 (v4 close): schedule.py (Slice A) is a standalone F5 script carrying the
 # _utf8_console emitter, the _split_refs/refs parser, load_wis (mirroring
 # check_trajectory), and the argparse/__main__ scaffolding. It first meets the

@@ -8174,3 +8174,33 @@ suite `pytest -q -n auto` → **951 passed, 2 skipped**; `check_trajectory` plai
 `check_docs --root . --stale` → **0 broken**. Dashboard + OKF regenerated. The
 full `check.py --gate G3` has ONE pre-existing red (the WI-193 `dupes` census
 gap), resolved in the next commit. NOT pushed (`push-policy: human`).
+
+## 2026-07-16 — WI-193: dupes census gap fixed (WI-188's `in_phase` helper; G3 gate green again)
+
+**Session type:** defect fix (`scripts`, quick, ≺WI-188). The follow-up to the
+pre-existing red WI-191 surfaced: `check.py --gate G3`'s `[step:dupes]` was
+failing at clean HEAD because WI-188 added an identical `in_phase()`
+SR-phase-filter helper to **both** `trace.py:1342` and
+`gen_release_checklist.py:162` (each independently filters SRs by the derived
+`Phase` column; ~31 tokens) but never censused the pair. The gate is **G3-only**
+and the branch is unpushed (OI-3), so neither the per-commit floor nor CI ever
+ran it.
+
+**Fix (census hygiene, no code change):** added the
+`gen_release_checklist.py == trace.py` pair to `docs/dupes-allow` with a WI-193
+annotation — the same F5-sanctioned class as the ~50 pairs already there. The
+duplication is **sanctioned, not eliminated**: the kit's F5 rule deliberately
+duplicates small stable helpers so each script ships independently copy-able (a
+shared `_kitcommon.py` was rejected at WI-078); the census records them.
+
+**Verified:** `check_dupes --src project-trajectory/scripts` → **OK, 0 findings**
+(was 1); the full `check.py --gate G3 --jobs 0` → **RESULT: PASS** — all 15 steps
+green (`format`, `lint`, `tests+coverage` = **952 passed, 1 skipped, 90.98%
+coverage**, `dupes`, `derived-gate`, `traceability`, `privacy`,
+`doc-navigability`, `perf-budgets`, `design-flows`, `trajectory`, `arch-map`,
+`trajectory-map`, `okf`, `skills-sync`).
+
+**Deviations:** none. **Byte deltas (budgeted files):** none — census +
+registry/status/log only. No spine change. This closes the
+**WI-192 → WI-189 → WI-191** grind (+ this WI-193 spin-off); the frontier is
+**WI-190**. NOT pushed (`push-policy: human`).
