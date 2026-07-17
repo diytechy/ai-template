@@ -9018,3 +9018,105 @@ end-to-end, attended PAGE parks, autonomous PAGE continues pause-free, serial
 auto-page, ask-scoping unit; `test_schedule.py` 23 passed — 3 new;
 dispatch/recovery/integrate/worker 54 passed; packer never-packs test added).
 Full suite + check_docs at the commit below.
+
+## 2026-07-17 — WI-210: legacy-path retirement — one engine, one selection path
+
+**Session type:** build (`unattended`, strong; spec
+[specs/WI-210.md](specs/WI-210.md)). **Un-defer record:** the row's declared
+bake trigger (≥ 3 real multi-WI dispatcher runs, then an owner un-defer) was
+**superseded by the owner's explicit grind directive** (this sitting,
+2026-07-17) — recorded as a deviation, not silently absorbed. **The build-time
+(a)/(b) ruling the spec reserved for the owner:** asked and answered —
+**(a) delete outright** (the recommendation was (b), a one-release
+`--legacy-resume` window decoupling the engine excision from the ~130-test
+migration; the owner ruled (a) and both landed in this one commit).
+
+**What retired (the engine):** a plain `agent_loop` launch **is the
+dispatcher** — absent `--jobs`/`AGENT_JOBS` resolves to the §6 default of 2,
+held at 1 until the §14 audits (`--jobs 1` stays the serial-dispatcher
+escape). Deleted outright: the serial resume driver's reachability and its
+organs — `DEFAULT_PROMPT` (resume-from-status), the run-state
+DONE/BLOCKED/NEEDS-HUMAN read-back ladder + `read_ask`, the `docs/pause`
+session-boundary check (pause is the dispatcher-boundary semantic, spec §12),
+`status_size_warning`, the lane `docs/rework-wi` pointer, the WI-209 serial
+`dual_only_frontier_ask` guard (its no-silent-park duty needs no second path),
+and every non-worker branch in `route_session`/`session_bookkeeping`/
+`run_iteration`. `--track` + `sanitize_track`/`lane_dir`/
+`track_preamble_text` + the preflight lane guards are gone; `bootstrap.py`
+`--tracks` and the `tracks-README`/`id-blocks` templates are deleted;
+the launchers drop the `AGENT_PROMPT` slot (they passed the deleted
+`--prompt` flag — caught and fixed in the same sweep) and their
+"absent slot retains legacy" comments. `--interactive` and the worker role
+survive unchanged; `--wi/--train` is the only lane concept.
+
+**Judgment duties re-homed once** (process-options.md "Unattended
+operation"): intake/triage → the human + gate-stage sessions; drained-queue →
+the dispatcher end-state banner; NEEDS-HUMAN surfacing → the generated root
+run-state (+ the WI-127 ask line); the resume prompt → retired. ADOPTING §6 +
+the `downstream-resync` skill (source + dogfooded copy) carry the upgrade
+recipe; the PROCESS_OPTIONS "Parallel tracks" section now records the
+retirement and keeps only the surviving rules (spine singularity, regenerate-
+never-text-merge, IF-row seams, single gate, the per-checkout lock).
+
+**Per-path guard sweep** (the WI's item 5 — each guard single-pathed or
+deliberately role-scoped, with the reason):
+
+| Guard | Disposition | Why |
+| --- | --- | --- |
+| `docs/pause` | dispatcher-only (deliberate) | pause = no NEW reservations (§12); an in-flight worker finishes its safe boundary |
+| `docs/blackout` | both roles (deliberate) | the dispatcher starts no new worker; a worker's own session loop also honors the window mid-train |
+| dirty-tree reconcile note (WI-076) | worker-side (single) | surfaced into the first session's prompt; the dispatcher's reconcile stage covers crashed trains from git |
+| `PlanMode=dual` refusal | worker backstop + dispatcher auto-dispatch (deliberate pair) | the dispatcher runs the round; the worker refusal stays fail-closed against a stale/hand-built assignment |
+| run-state generation | dispatcher-only (single now) | workers never write it; the serial writers were removed with the ladder |
+| privacy/CLI/git preflight | shared `preflight()` (single) | both entries call the same function |
+| rate-limit backoff | worker WAITING exit + dispatcher lane retry (complementary) | the worker names the reset; the dispatcher re-dispatches the lane |
+| stall guard | worker-only (deliberate) | per-session progress is the worker's signal; the dispatcher bounds lanes by `--worker-iterations` |
+| coordinator lock | shared `acquire_lock` (single) | dispatcher, worker, and interactive all take it (SR-029/SR-030) |
+| map preflight (`--cmd-map` etc.) | worker-side (deliberate) | workers re-run `map_preflight` in-process with env-inherited maps; the dispatcher preflights the template + `--prompt-map` it consumes itself |
+
+**Spine (ratified in this reviewed commit):** SR-026 (one resume authority),
+SR-029/SR-030 (the lock re-scoped from "track lock" to the per-checkout
+coordinator lock — Requirement text was already lock-true; Title/Rationale
+re-scoped), SR-060 (the `--track` compatibility window closed), SR-066 (the
+serial dual-plan clause retired — the dispatcher is the one path);
+LLR-026/061/076 and TC-026/029/030/061/076 moved with them; TC-029/030
+evidence re-homed to the four lock tests **ported** into
+`tests/test_agent_loop.py`. `trace.py --strict` green: SN=25 SR=66 LLR=76
+TC=76, 0 findings.
+
+**Test migration (the (a) cost, paid):** `test_agent_loop_tracks.py` deleted
+(11 tests; lock tests ported). `test_agent_loop.py` (99 tests) converted to a
+**worker-mode harness** — registry + `llm/train/t1` fixture, trailer-commit
+end states, `.gitignore out/` (a worker's DONE needs a clean tree) — with
+serial-only subjects deleted (run-state ladder ×3, pause trio, status-size
+pair, default-prompt, track-preamble) and the rest migrated.
+review/critique/env suites: config committed pre-run, verdict paths moved to
+`reviews/<train>/…-<sha7>.md`, escalation cadences re-staged on
+`done_after=1` (rounds follow the trailer commit), the two-top-tier test pins
+the WI row's BuildTier strong (the row pin outranks the tier-map — a real
+discovery). `test_agent_loop_migration.py`'s non-adopting test inverted to
+pin the new default. Two real engine defects found and fixed by the
+migration: (1) the whole-train review range false-fired the
+`implementer-touched-review-path` tripwire on every rework round (round N
+swept round N−1's own committed verdicts; now excluded scoped to the train's
+own review dir — the integrator's exact-head verdict check remains the
+stronger guard); (2) `build_worker_assignment` crashed on an unborn HEAD
+(`base=None`) — now a controlled fail-closed preflight refusal.
+
+**Byte budgets:** PROCESS_OPTIONS.md 159,799 → 155,819 (**−3,980**, the
+track-lane layer removed; baseline re-stamped in both byte-budget-guard
+copies). AGENTS.template.md and PROCESS.md untouched.
+
+**Small collaterals (recorded):** the dupes census gained eight
+`check.py == <script>` pairs — the excision removed agent_loop.py's copy of
+the shared argparse-main F5 block, re-anchoring the SAME grandfathered
+duplicate group (a census re-home, not new duplication); README dropped the
+id-blocks aside and two archive docs de-link the deleted
+`tracks-README.template.md` (history text untouched).
+
+**Verified:** full suite **1036 passed / 3 skipped** (`pytest -q -n auto`);
+`check.py --gate G3 --jobs 0` **PASS 16/16** (format, lint, tests+coverage,
+dupes, derived-gate, traceability, privacy, doc-navigability, perf-budgets,
+design-flows, trajectory, arch-map, trajectory-map, status-map, okf,
+skills-sync); `check_docs` 0 broken links; `trace.py --strict` SN=25 SR=66
+LLR=76 TC=76, 0 findings.

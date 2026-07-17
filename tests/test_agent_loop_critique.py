@@ -46,14 +46,16 @@ else:
     with open(str(cf), "a", encoding="utf-8") as fh:
         fh.write("b\n")
     pathlib.Path("art.txt").write_text("render " + str(n), encoding="utf-8")
-    commit("art.txt", "WI-050: build the render " + str(n))
     done_after = (
         int((ctl / "done_after").read_text(encoding="utf-8"))
         if (ctl / "done_after").exists()
         else 999
     )
+    # WI-210: the end state is committed worker evidence (the WI trailer).
     if n + 1 >= done_after:
-        pathlib.Path("docs/run-state").write_text("DONE", encoding="utf-8")
+        commit("art.txt", "WI-050: build the render " + str(n) + "\n\nWI: WI-050")
+    else:
+        commit("art.txt", "WI-050: build the render " + str(n))
 sys.exit(0)
 """
 
@@ -137,8 +139,10 @@ def critique_repo(tmp_path):
     _git(repo, "init")
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
+    _git(repo, "checkout", "-q", "-b", "llm/train/t1")
 
     ctl = tmp_path / "control"
     ctl.mkdir()
@@ -163,7 +167,19 @@ def critique_repo(tmp_path):
     return repo, ctl, cmd
 
 
+def _commit_config(repo):
+    # A worker's DONE is judged from committed evidence + a CLEAN tree
+    # (WI-210), so the fixture/test config written after the seed commit
+    # must be committed before the worker starts.
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "commit", "-q", "-m", "test config", "--allow-empty"],
+        capture_output=True,
+    )
+
+
 def _loop(repo, cmd, *extra):
+    _commit_config(repo)
     return run_py(
         [
             SCRIPTS / "agent_loop.py",
@@ -177,6 +193,10 @@ def _loop(repo, cmd, *extra):
             "default-tier",
             "--max-iterations",
             "8",
+            "--wi",
+            "WI-050",
+            "--train",
+            "t1",
             *extra,
         ],
         cwd=repo,
@@ -221,7 +241,7 @@ def test_critique_scheduled_when_critique_sr_in_scope(critique_repo):
     # The critic ran on a DIFFERENT provider (heterogeneity) and wrote a verdict.
     models = _models(ctl)
     assert "builda" in models and "critb" in models
-    assert list((repo / "docs" / "reviews").glob("*-CRITIQUE.md"))
+    assert list((repo / "docs" / "reviews" / "t1").glob("*-CRITIQUE-*.md"))
 
 
 def test_no_critique_when_no_critique_sr(critique_repo):
@@ -295,6 +315,10 @@ def test_critique_budget_exhaustion_pages_human(critique_repo):
             "default-tier",
             "--max-iterations",
             "10",
+            "--wi",
+            "WI-050",
+            "--train",
+            "t1",
         ],
         cwd=str(repo),
         capture_output=True,
@@ -304,9 +328,9 @@ def test_critique_budget_exhaustion_pages_human(critique_repo):
     )
     assert proc.returncode == 7, proc.stdout + proc.stderr
     assert "critique budget exhausted" in proc.stdout
-    state = (repo / "docs" / "run-state").read_text(encoding="utf-8").splitlines()
-    assert state[0].strip() == "NEEDS-HUMAN"
-    assert state[1].startswith("ask: critique budget exhausted")  # WI-127
+    # A worker never writes run-state (WI-210): the exit code pages the
+    # dispatcher, which generates the root file.
+    assert not (repo / "docs" / "run-state").exists()
 
 
 def test_per_wi_infinite_budget_keeps_iterating(critique_repo):
@@ -332,11 +356,8 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
     proc = _loop(repo, cmd, "--max-iterations", "3")
     assert proc.returncode == expected, proc.stdout + proc.stderr
     if disposition == "block":
-        assert (
-            (repo / "docs/run-state")
-            .read_text(encoding="utf-8")
-            .startswith("NEEDS-HUMAN")
-        )
+        # A worker never writes run-state (WI-210): exit 7 is the page.
+        assert not (repo / "docs/run-state").exists()
     else:
         # docs/run-phase is retired (WI-180): the design-check escalation sets the
         # phase in-process, observable as the next session routing DESIGN-CHECK.

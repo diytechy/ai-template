@@ -69,11 +69,6 @@ What it creates in the destination:
     .github/workflows/check.yml                <- ci/check.yml
     src/, tests/                               (empty, with .gitkeep)
 
-Opt-in via `--tracks` (process-options.md "Parallel tracks"): additionally
-scaffolds `docs/tracks/README.md` + `docs/requirements/id-blocks.md` for a repo
-that will run several deliverables in parallel lanes. Off by default — a
-single-lane repo scaffolds none of it and pays nothing.
-
 The agent guide lives once, in `AGENTS.md` (the cross-tool standard). `CLAUDE.md`
 and `GEMINI.md` ship as thin stubs that point back at it, because Claude Code and
 Gemini prefer their own filenames. All three are copied unconditionally — they're
@@ -794,33 +789,11 @@ def apply_privacy_check(dest, value, dry_run):
     target.write_text("\n".join(header + [value]) + "\n", encoding="utf-8")
 
 
-# The opt-in parallel-tracks layer's scaffolded files (process-options.md
-# "Parallel tracks"): the lane README + the per-track ID-block reservations.
-# Off unless --tracks — a single-lane repo never sees them (the layer's promise:
-# skip it and pay nothing). Both are plain notes (no profile markers), so a
-# straight copy suffices.
-TRACK_FILES = [
-    ("tracks-README.template.md", "docs/tracks/README.md"),
-    ("registries/id-blocks.template.md", "docs/requirements/id-blocks.md"),
-]
-
-
-def apply_tracks(dest, dry_run):
-    """Scaffold the parallel-tracks opt-in files. Returns the created rel-paths.
-    An existing file is left untouched (a re-sync never clobbers edited lanes),
-    and a missing template is skipped, not fatal — same posture as the rest."""
-    created = []
-    for src_rel, dst_rel in TRACK_FILES:
-        src = KIT / src_rel
-        dst = dest / dst_rel
-        if dst.exists() or not src.exists():
-            continue
-        created.append(dst_rel)
-        if dry_run:
-            continue
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
-    return created
+# (The opt-in parallel-tracks layer is retired outright, WI-210: the
+# dispatcher's --wi/--train worker assignment is the only lane concept, so
+# --tracks, tracks-README.template.md, and the per-track ID-block scaffold
+# are gone. An adopted repo's existing docs/tracks/ notes are its own files;
+# ADOPTING.md §6 carries the migration recipe.)
 
 
 # --- Conditional scaffold generation (Thread 34, Q8 ruling) -------------------
@@ -1583,14 +1556,6 @@ def main():
         "Omitted + interactive TTY -> ASK; non-interactive -> 'false' "
         '(process-options.md "Commit identity & privacy").',
     )
-    ap.add_argument(
-        "--tracks",
-        action="store_true",
-        help="scaffold the opt-in parallel-tracks files (docs/tracks/README.md "
-        "+ docs/requirements/id-blocks.md) for a repo that will run several "
-        'deliverables in parallel lanes (process-options.md "Parallel tracks"). '
-        "Off by default — a single-lane repo pays nothing.",
-    )
     args = ap.parse_args()
 
     dest = Path(args.dest).resolve()
@@ -1833,14 +1798,6 @@ def main():
         if "docs/privacy-check" not in created:
             created.append("docs/privacy-check")
         print("  privacy-check: {}".format(privacy_check))
-
-    # The opt-in parallel-tracks layer (process-options.md "Parallel tracks") —
-    # only when --tracks; a single-lane repo scaffolds none of it.
-    if args.tracks:
-        for rel in apply_tracks(dest, args.dry_run):
-            if rel not in created:
-                created.append(rel)
-        print("  parallel-tracks scaffolding: docs/tracks/ + id-blocks")
 
     verb = "would create" if args.dry_run else "created"
     for c in created:

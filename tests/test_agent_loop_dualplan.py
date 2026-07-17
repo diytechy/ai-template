@@ -380,53 +380,7 @@ def test_dispatcher_dual_page_autonomous_continues_pause_free(tmp_path):
     assert actions and actions[0]["action"] == "design-check-session"
 
 
-def test_serial_driver_pages_when_only_dual_rows_are_actionable(tmp_path):
-    # The quiet-park half (until WI-210 retires the path): the legacy serial
-    # resume driver surfaces the --dual-plan ask instead of idling.
-    root, fake = make_fixture(tmp_path)
-    env = augment_env(dict(os.environ))
-    env["AGENT_CMD"] = '{} "{}" {{prompt}}'.format(sys.executable, fake)
-    proc = subprocess.run(
-        [
-            sys.executable,
-            str(AGENT_LOOP),
-            "--root",
-            str(root),
-            "--max-iterations",
-            "1",
-        ],
-        cwd=str(root),
-        capture_output=True,
-        encoding="utf-8",
-        stdin=subprocess.DEVNULL,
-        env=env,
-    )
-    assert proc.returncode == 7, proc.stdout + proc.stderr
-    state = (root / "docs" / "run-state").read_text(encoding="utf-8")
-    assert state.startswith("NEEDS-HUMAN")
-    assert "--dual-plan WI-002" in state
-
-
-def test_dual_only_frontier_ask_scopes_to_actionable_rows(tmp_path):
-    # In-process contract: fires only when EVERY dependency-actionable queued
-    # row is dual — ordinary actionable work or a pred-blocked dual stays "".
-    from conftest import load_script
-
-    agent_loop = load_script("agent_loop")
-    reqs = tmp_path / "docs" / "requirements"
-    reqs.mkdir(parents=True)
-    hdr = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,BuildTier,PlanMode\n"
-
-    def write(rows):
-        (reqs / "work-items.csv").write_text(hdr + rows, encoding="utf-8")
-
-    write("WI-001,a,ws,,,done,x,,quick,\nWI-002,b,ws,,,queued,,,strong,dual\n")
-    ask = agent_loop.dual_only_frontier_ask(tmp_path)
-    assert "--dual-plan WI-002" in ask
-    write(
-        "WI-001,a,ws,,,done,x,,quick,\nWI-002,b,ws,,,queued,,,strong,dual\n"
-        "WI-003,c,ws,,,queued,,,medium,\n"
-    )
-    assert agent_loop.dual_only_frontier_ask(tmp_path) == ""
-    write("WI-001,a,ws,,,queued,,,quick,\nWI-002,b,ws,,WI-001,queued,,,strong,dual\n")
-    assert agent_loop.dual_only_frontier_ask(tmp_path) == ""
+# (The serial-driver quiet-park auto-page and its dual_only_frontier_ask
+# guard were the WI-209 legacy-path half; WI-210 retired the serial resume
+# driver outright, so the dispatcher's auto-dispatch above is the ONE path
+# and the no-silent-park duty needs no second cover.)

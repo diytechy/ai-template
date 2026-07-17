@@ -54,12 +54,13 @@ AGENT_CMD_MAP=""
 AGENT_CMD_INTERACTIVE="claude --model {model} {prompt}"
 # This repo has completed the dispatcher migration audits in docs/parallel-ready,
 # so normal launches use the two-worker dispatcher. Pass --jobs 1 for a serial
-# dispatcher run; downstream repos without this slot retain the legacy driver.
+# dispatcher run; an absent slot also boots the dispatcher (WI-210 — the
+# legacy serial driver is retired), defaulting to 2 held at 1 until audited.
 AGENT_JOBS="2"
-# Meta-repo resume prompt: the engine's default prompt assumes a scaffolded
-# downstream repo (docs/process.md etc.); this one names THIS repo's actual
-# surfaces. Empty = fall back to the engine default.
-AGENT_PROMPT="You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. When filing or triaging a WI, assign BuildTier deliberately: quick for mechanical/off-spine work, medium by default, strong only for design-shaping or spine-touching work; never silently downgrade a declared route mid-loop. Clear the lowest gate level first: do not queue phase development ahead of its open [phase]-[g1|g2] work or Draft SRs unless the owner deliberately orders it. Gates before every commit (the commit bar): python -m pytest -q -n auto -m smoke and python project-trajectory/scripts/check_docs.py --root . --stale - paste the real output; never report a green you didn't produce. Run the FULL suite (python -m pytest -q -n auto, no -m) before claiming a slice/phase done or at close (session-protocol skill 'End green'). Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first."
+# (The meta-repo resume prompt slot is retired with the serial driver,
+# WI-210: a plain launch is the dispatcher, and worker sessions build
+# their explicit assignments — the repo rules live in CLAUDE.md and the
+# session-protocol skill, which every session already reads.)
 # ------------------------------------------------------------------------------
 
 cd "$(dirname "$0")" || exit 1
@@ -77,7 +78,4 @@ PY="$(command -v python3 || command -v python)" || {
 # --root . : in this repo the engine lives under project-trajectory/scripts/,
 # so its script-relative default would resolve to the kit dir, not the repo.
 # Explicit flags come first so anything you pass on the command line wins.
-if [ -n "$AGENT_PROMPT" ]; then
-  exec "$PY" project-trajectory/scripts/agent_loop.py --root . --prompt "$AGENT_PROMPT" "$@"
-fi
 exec "$PY" project-trajectory/scripts/agent_loop.py --root . "$@"

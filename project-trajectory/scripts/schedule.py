@@ -183,21 +183,13 @@ def classify(wi, *, structural=None):
     # declared SafetyClass that contradicts the derivation (anything whose own
     # scheduling class is not single-wi) quarantines as unclassified — the same
     # cross-check posture as rule 5, never a silent override in either direction.
-    if (wi.get("planmode") or "").strip().lower() == "dual":
-        if declared and declared != "high-risk":
-            return SCHED_UNCLASSIFIED, [
-                "unclassified:planmode-dual-vs-declared-%s" % declared
-            ]
-        reasons = ["single-wi:dual-plan"]
-        if declared == "high-risk":
-            reasons.append("single-wi:high-risk")
-        if critique:
-            reasons.append("single-wi:critique")
-        if checkpoint:
-            reasons.append("single-wi:integration-checkpoint")
-        return SCHED_SINGLE_WI, reasons
+    dual = (wi.get("planmode") or "").strip().lower() == "dual"
+    if dual and declared and declared != "high-risk":
+        return SCHED_UNCLASSIFIED, [
+            "unclassified:planmode-dual-vs-declared-%s" % declared
+        ]
 
-    if declared not in SAFETY_CLASSES:
+    if not dual and declared not in SAFETY_CLASSES:
         code = "missing" if not declared else "unknown-value:%s" % declared
         return SCHED_UNCLASSIFIED, ["unclassified:%s" % code]
 
@@ -211,8 +203,8 @@ def classify(wi, *, structural=None):
         return SCHED_SPINE_SERIAL, ["serial-whole-project:%s" % declared]
     if declared == "protected":
         return SCHED_PROTECTED, ["serial-whole-project:protected"]
-    if declared == "high-risk" or critique or checkpoint:
-        reasons = []
+    if dual or declared == "high-risk" or critique or checkpoint:
+        reasons = ["single-wi:dual-plan"] if dual else []
         if declared == "high-risk":
             reasons.append("single-wi:high-risk")
         if critique:

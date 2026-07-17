@@ -116,12 +116,9 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | Public item | Summary | Implements |
 |---|---|---|
 | `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/run-state, …): |  |
-| `read_ask(path)` | The optional `ask: <one-line ask>` line a driver leaves in docs/run-state |  |
 | `pause_reason(lane)` | A declared **graceful-pause** request (WI-147): the `docs/pause` file |  |
 | `parse_blackout(line)` | Parse a `HH:MM-HH:MM` blackout line into `(start_min, end_min)` — minutes |  |
 | `blackout_wake(line, now)` | Seconds until the current UTC weekday blackout window ends, or `None` when |  |
-| `sanitize_track(name)` | A track name becomes a lane directory segment, so restrict it to a safe |  |
-| `lane_dir(docs, track)` | The coordination lane for a track: docs/tracks/<track> when a track is |  |
 | `sanitize_train(name)` | A train id becomes a branch segment, a log-file prefix, and a reviews/ |  |
 | `parse_wi_list(spec)` | The ordered assigned-WI list from a `;`/`,`/whitespace-joined --wi value. |  |
 | `load_wi_registry(root)` | {WI-ID: raw row dict} from the worktree's tracked WI registry — the |  |
@@ -134,13 +131,12 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `guardrails_inert(policy, models)` | True when a *guarding* policy (not off / bare all) would guard none of the |  |
 | `split_cmd(template)` | Split a command template into tokens, quote-aware but with backslash |  |
 | `build_argv(template, model, prompt)` | Substitute {model}/{prompt} per token (never through a shell, so the |  |
-| `status_size_warning(status_path, limit)` | A warn-only message when the resume surface outgrew one screen, or None. |  |
 | `parse_map(spec)` | Parse a KEY=value phase map — shared by --model-map/--cmd-map/--prompt-map/ |  |
 | `phase_tier(phase, tier_map)` | The routing tier for a phase: the declared --tier-map / AGENT_TIER_MAP |  |
 | `reviewer_prompt(prompt_templates, phase, verdict_path)` | The redacted reviewer prompt for a review phase: the per-phase prompt-map |  |
 | `session_model(model_map, default_model)` | The legacy/interactive route: the tracked docs/run-phase file is retired |  |
 | `session_template(cmd_map, default_template, phase)` | The per-phase command template (AGENT_CMD_MAP), else AGENT_CMD — phase |  |
-| `compose_session_prompt(model, body, resume_reconcile, track_preamble, default_prompt, guardrails_policy, root, warned_no_core)` | The session prompt: the track preamble (when --track redirects the |  |
+| `compose_session_prompt(model, body, resume_reconcile, guardrails_policy, root, warned_no_core)` | The session prompt: `body` (the worker assignment, a redacted reviewer |  |
 | `load_critique_srs(docs)` | The SR ids whose Verification is `Critique` (docs/requirements/ |  |
 | `build_scope_wis(root, docs, commit_range)` | The WI ids named in `commit_range`'s commit subjects; empty when there is |  |
 | `build_scope_srs(root, docs, commit_range)` | The SR ids delivered by the WI-tagged commits in `commit_range`. |  |
@@ -210,14 +206,12 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `parse_args()` | The whole CLI surface — one home for every flag + its default. |  |
 | `map_preflight(root, template, args, cmd_map, prompt_map, tier_map, prefer_map, managed, registry, enabled, reg_errors, enable_errors)` | Assemble every up-front launchability failure (default template, |  |
 | `build_worker_assignment(args, root)` | The dispatcher's explicit worker assignment (--wi + --train): parse |  |
-| `track_preamble_text(track)` | The per-track prompt preamble redirecting the session to its lane; |  |
-| `run_interactive(args, root, track, model_map, cmd_map, template, resume_reconcile, track_preamble, guardrails_policy, warned_no_core)` | Boot exactly one hands-on session (stdio attached) and return its |  |
-| `print_run_banner(root, branch, worker, track, lane, gate_policy, push_policy, review_policy, managed, enabled, registry, guardrails_policy, template, cmd_map, prompt_map, docs)` | The unattended-coordinator launch banner: the run's identity, its |  |
+| `run_interactive(args, root, model_map, cmd_map, template, guardrails_policy, warned_no_core)` | Boot exactly one hands-on session (stdio attached) and return its |  |
+| `print_run_banner(root, branch, worker, gate_policy, push_policy, review_policy, managed, enabled, registry, guardrails_policy, template, cmd_map, prompt_map, docs)` | The unattended-coordinator launch banner: the run's identity, its |  |
 | `LoopContext (class)` | Everything one iteration reads, built once at loop start; the |  |
-| `route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now)` | Pick the phase + model + prompt for this session (managed routing or |  |
+| `route_session(ctx, i, current_wi, session, resume_reconcile, now)` | Pick the phase + model + prompt for this worker session (managed |  |
 | `session_bookkeeping(ctx, plan, outcome, code, commits, after, reset_hint, now, session, wi_label)` | The managed-routing / reviewer-dispatch consequences of one session |  |
-| `dual_only_frontier_ask(root)` | The serial resume driver's dual-plan quiet-park guard (WI-209, the | SR-066 |
-| `run_iteration(ctx, i)` | One coordinator session end-to-end: guards, routing (route_session), |  |
+| `run_iteration(ctx, i)` | One worker session end-to-end: guards, routing (route_session), |  |
 | `main()` |  |  |
 
 ### `scripts/agent_route`
@@ -268,7 +262,6 @@ Contracts (interfaces): IF-014, IF-039
 | `apply_gate_policy(dest, level, dry_run)` | Write a non-default gate-authority level: set docs/gate-policy (keeping |  |
 | `apply_push_policy(dest, policy, dry_run)` | Write a non-default push policy into docs/push-policy, keeping the |  |
 | `apply_privacy_check(dest, value, dry_run)` | Write the privacy-check toggle into docs/privacy-check, keeping the |  |
-| `apply_tracks(dest, dry_run)` | Scaffold the parallel-tracks opt-in files. Returns the created rel-paths. |  |
 | `profile_stub(axis)` | The resolvable one-liner an omitted profile region leaves behind: the |  |
 | `strip_markers(text, omit, where)` | Generate a scaffold doc from a master: drop kit-only regions, keep or |  |
 | `read_kit_profile(dest)` | The recorded profile of an existing adoption (docs/kit-profile), or None. |  |

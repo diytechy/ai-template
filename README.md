@@ -161,11 +161,6 @@ integrity-check the ids the moment real rows exist.
 This meta-repo dogfoods the component knowledge layer in its
 [`docs/knowledge/` index](docs/knowledge/README.md).
 
-*(Under the parallel-tracks layer,
-[`id-blocks`](project-trajectory/registries/id-blocks.template.md) additionally
-reserves per-track `SN`/`SR` hundreds-blocks so concurrent drafts never mint the
-same id.)*
-
 *(Spine-touching work batches as a **phase** so one owner sitting re-attests
 the whole batch, with the gate cadence riding the same convention — see
 [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Phase cadence".)*

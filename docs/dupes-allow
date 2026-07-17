@@ -190,3 +190,15 @@ project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/gen_arc
 project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
 project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
+# WI-210: the serial-driver excision removed agent_loop.py's copy of the shared
+# argparse-main boilerplate, so the SAME grandfathered F5 block re-anchored its
+# duplicate group onto check.py — these pairs are that census entry re-homed,
+# not new duplication.
+project-trajectory/scripts/check.py == project-trajectory/scripts/check_doc_refs.py
+project-trajectory/scripts/check.py == project-trajectory/scripts/check_perf.py
+project-trajectory/scripts/check.py == project-trajectory/scripts/check_stubs.py
+project-trajectory/scripts/check.py == project-trajectory/scripts/derive_gate.py
+project-trajectory/scripts/check.py == project-trajectory/scripts/gen_arch_map.py
+project-trajectory/scripts/check.py == project-trajectory/scripts/gen_cases.py
+project-trajectory/scripts/check.py == project-trajectory/scripts/gen_okf.py
+project-trajectory/scripts/check.py == project-trajectory/scripts/gen_release_checklist.py

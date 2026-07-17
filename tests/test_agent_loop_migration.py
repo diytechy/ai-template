@@ -283,16 +283,12 @@ def test_legacy_active_rows_and_tracks_reconcile(tmp_path):
     assert ",active," not in reg
 
 
-def test_non_adopting_repo_is_unaffected(tmp_path):
-    # No --jobs / AGENT_JOBS: the legacy single-session resume loop runs, and
-    # not a single parallel-dispatch artifact appears.
-    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
-    (repo / "docs" / "status.md").write_text(
-        "# Status\n\n## Current State\n\n- nothing\n", encoding="utf-8"
-    )
-    (repo / "docs" / "run-state").write_text("DONE\n", encoding="utf-8")
-    _git(repo, "add", "-A")
-    _git(repo, "commit", "-qm", "status")
+def test_plain_launch_is_the_dispatcher(tmp_path):
+    # WI-210 (one engine, one selection path): absent --jobs/AGENT_JOBS a
+    # plain launch IS the dispatcher — resolved to the two-worker default and
+    # held at 1 by the migration gate until the audits pass. The legacy
+    # serial resume driver is retired outright.
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201", safety="")])
     proc = run_py(
         [
             SCRIPTS / "agent_loop.py",
@@ -304,15 +300,12 @@ def test_non_adopting_repo_is_unaffected(tmp_path):
             "0",
             "--model",
             "test",
-            "--max-iterations",
-            "1",
         ],
         cwd=repo,
     )
-    # The legacy loop reads the pre-set run-state=DONE and exits; no dispatcher.
-    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    assert not (repo / "out" / "dispatch").exists()
-    assert not agent_loop.list_reservations(repo)
+    assert "parallel dispatcher" in proc.stdout, proc.stdout + proc.stderr
+    assert "MIGRATION HOLD" in proc.stdout  # unclassified WI-201 holds at 1
+    assert (repo / "out" / "dispatch").exists()  # the dispatcher journal ran
 
 
 # --- SR-059: fresh-scaffold generated surfaces ----------------------------------

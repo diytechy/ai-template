@@ -41,7 +41,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | §9 NFR checklist | deciding which non-functional concerns a project must consider at G1 | an NFR checklist |
 | §9 perf comparator | you have captured `PB-###` budgets you want tracked over time | a perf comparator over `PB` rows |
 | §10 several modules, one repo | a repo grows distinct sub-systems that still build and release as one (scale rung 2) | a module map |
-| Parallel tracks (multi-lane operation) | one repo carries multiple concurrent work lanes | per-lane `status.md` + a tracks registry |
+| Parallel tracks (multi-lane operation) | one repo runs many WIs concurrently — the dispatcher/worker model (the track-lane machinery is retired, WI-210) | worker assignments + the integration ref |
 
 **Byte budget.** This file is **byte-watched** the way [`process.md`](process.md)
 is: its baseline lives in the `byte-budget-guard` skill, and any growth must be
@@ -519,37 +519,40 @@ proven coordinator (the NotHomeWrecker `trigger.ps1`), which
 `scripts/agent_loop.py` supersedes — the protocol here is agent-neutral repo
 text, so a downstream can build its own coordinator against it.
 
-**The model.** A coordinator loops **fresh headless driver sessions** — repo
-text is the only memory (§7 boundary notes, "Repo text is the durable agent
-memory layer"); each session resumes from `status.md` Current State — until
-the run reaches an end state, a stall guard trips (N consecutive sessions
-without a commit), or an iteration budget ceiling hits. Sessions run on the
-iteration branch where the "Agent iteration branch & sync" layer is in use
-(never the development branch), trigger its sync ritual at the end states, and
-honor `docs/push-policy` — under the default `human` the coordinator never
-pushes, even if asked. At loop start the coordinator **surfaces a dirty working
-tree** (residue from an interrupted session) into the first session's prompt as
-a reconcile instruction, with a one-line log; stash/rollback is deliberately
+**The model.** The coordinator **is the parallel dispatcher** (WI-210 — one
+engine, one selection path; "Parallel tracks" below has the mechanics):
+reconcile owned trains → gate → build-out. It derives the ready WI frontier
+from the registry, reserves traincars, and runs **fresh headless worker
+sessions** — repo text is the only memory (§7 boundary notes, "Repo text is
+the durable agent memory layer"); each session builds its **explicit
+assignment** (the WI row + SpecRef + predecessor context + train diff), never
+a "resume from `status.md`" prompt — until the queue drains, a stall guard
+trips (N consecutive sessions without a commit), or an iteration budget
+ceiling hits. Work happens on `llm/train/<id>` branches (never the development
+branch), integration is serialized and honors `docs/push-policy` — under the
+default `human` the coordinator never pushes, even if asked. At worker start a
+dirty worktree (residue from an interrupted run) is surfaced into the first
+session's prompt as a reconcile instruction; stash/rollback is deliberately
 *not* automated — that judgment belongs to the session.
 
-**The `docs/run-state` contract** (one word, tracked like `docs/gate`) is what
-the driver owes the coordinator; update it in the session's final commit:
+**The judgment duties, stated once** (WI-210 re-homed them here when the
+serial resume driver — the loop that read `status.md`/`run-state` back as its
+control input — was retired):
 
-- **`RUNNING`** while work remains.
-- **`DONE`** only at the declared policy's end state — **a wrong DONE is a
-  false green** (§4 honest-gate rule).
-- **`BLOCKED`** when *everything* remaining sits in the Blocked register
-  ("Gate authority levels" above).
-- **`NEEDS-HUMAN`** when the next step requires a human act — a gate sign-off
-  under `attended`, the `single-ratify` ratification, a decision the §6 dial
-  requires surfaced. Written only **after** the ask is stated as
-  `Needs <human>` Open-items bullets in `status.md`, so stopping is always
-  **interrupt-and-report, never infer-and-continue**; the coordinator exits
-  printing the pending asks in its banner. Follow the state word with one
-  `ask: <one-line ask>` line naming the act — the coordinator headlines it in
-  the stop banner (the status excerpt is line-capped, and on a long Current
-  State the `Needs <human>` items can fall past the cap; state readers take
-  only the first declared line, so the extra line costs nothing).
+- **Intake/triage of new scope** belongs to the **human + the gate-stage
+  sessions**: new WIs enter the registry at planning/ratification (or through
+  a dual-plan round's filed children), never by a session inventing scope
+  mid-run.
+- **Drained-queue handling** is the dispatcher's **end-state banner** — the
+  run reports what integrated, what needs attention, and what remains queued.
+- **NEEDS-HUMAN surfacing** is the **generated** root `docs/run-state`
+  (dispatcher/integrator-written, spec §10): `RUNNING`/`DONE`/`BLOCKED`/
+  `NEEDS-HUMAN`, with `NEEDS-HUMAN` carrying one `ask: <one-line ask>` line
+  the stop banner headlines. **A wrong DONE is a false green** (§4); a worker
+  never writes the file — its exit code and committed trailers are its whole
+  result channel.
+- **The resume-from-`status.md` prompt is retired** with the path:
+  `status.md` is a generated snapshot for humans, never a session's input.
 
 **Optional `docs/pause`** (presence = pause requested; content = a free-form
 reason): a **graceful** walk-away stop honored at the *next session boundary* —
@@ -557,9 +560,10 @@ the in-flight session finishes and commits normally, then the coordinator stops
 (exit 8) with a banner naming the file, **never a mid-session kill**. A launch
 with the file present starts no work; **deleting the file and re-launching
 resumes** — the file is the whole contract, so `run-state` is left untouched and
-resuming is a single act. Per-lane like `run-state` (a `--track` run pauses only
-its own coordinator); absent = not paused, so an adopter who never creates it
-pays nothing.
+resuming is a single act. Under the dispatcher, `docs/pause` stops **new
+reservations** at the next boundary while in-flight workers finish their safe
+boundary (workers themselves ignore it); absent = not paused, so an adopter
+who never creates it pays nothing.
 
 **Optional `docs/blackout`** (first line `HH:MM-HH:MM`, UTC, Mon–Fri): a
 recurring window inside which the coordinator starts **no new session** — the
@@ -1407,9 +1411,9 @@ independent tracks meet, which task is in flight, how far along the whole is. A
 
 - it **delivers** one or more SRs (`SR-Refs`) — the thread back to the spine;
 - it belongs to a **workstream** — a mutable grouping category of related work
-  (`scripts`, `docs`, a subsystem). *Not* a "track": that word names only the
-  parallel-execution lane (this file, "Parallel tracks") — the legacy `Track`
-  header is still read;
+  (`scripts`, `docs`, a subsystem). *Not* a "track": that word named the
+  retired parallel-execution lane (this file, "Parallel tracks"; WI-210) — the
+  legacy `Track` CSV header is still read as `Workstream`;
 - it **depends on** predecessor work items (`Predecessors`) — the edges of a DAG.
   A bare id is a **hard** edge (a real technical blocker: drives readiness,
   ranking, and the acyclicity rule); a `~`-prefixed id (`~WI-013`) is a **soft**
@@ -2131,117 +2135,43 @@ releases as a whole.
 
 *Builds on PROCESS.md §10 (several modules, one repo) and the "Unattended
 operation" / "Agent iteration branch & sync" layers above.* **Applies when** one
-repo carries
-**several large deliverables progressing in parallel** and you want more than one
-driver (human or agent, attended or unattended) working at once **without
-thrashing the single coordination blackboard** — the failure the single-driver
-model (`status.md`, `run-state`, `plan.md`, the iteration logs) hits
-the moment two sessions run. A repo with one active line of work skips this layer
-and pays nothing. Generalized from a field adoption (a multi-deliverable robotics
-build) that outgrew one blackboard.
+repo needs **more than one driver working at once**. The answer is the
+**parallel dispatcher + explicit worker assignments** below — the earlier
+*track-lane* machinery (`--track`, per-lane `docs/tracks/<name>/` copies of the
+coordination files, per-track ID blocks) is **retired outright (WI-210)**: it
+split the judgment duties across two control philosophies and forced every
+safety guard to be wired per-path. A repo with one active line of work still
+pays nothing — a plain launch with the queue holding one ready WI simply runs
+one worker.
 
-**The unit is a *track*: one lane of work bound to three things.** Each solves a
-different collision class; none is a repo split (worktrees share one object store
-and history):
-
-1. **A git worktree** — `git worktree add ../<repo>-<track> llm/<track>` — so two
-   drivers never share a checkout (the filesystem collision, which no doc
-   convention can fix).
-2. **An iteration branch `llm/<track>`** (the "Agent iteration branch & sync"
-   layer, one branch per track) — the history collision, and it gives the
-   unattended stall guard a **private HEAD** (another track's commits can't mask a
-   stalled one).
-3. **A lane directory `docs/tracks/<track>/`** holding this track's copies of the
-   otherwise-singular coordination files:
-
-   ```
-   docs/tracks/<track>/
-     status.md   plan.md   run-state   log.md   iteration/
-   ```
-
-   The lane is selected **by invocation** (a coordinator `--track <name>` flag /
-   `AGENT_TRACK` env), **never a tracked pointer file** — a committed "current
-   track" would differ per branch and reintroduce the churn.
-
-**The root `status.md` becomes a cross-track dispatcher, not a blackboard** — a
-one-screen roll-up: one row per track (name, lane link, one-line state, its queued
-`Needs <human>` asks) plus the cross-track items (repo-wide open items, the
-verification tally, repo-scope decisions). **Only integration sessions write it**,
-so two drivers never hold it open at once. The root `log.md` keeps the gate
-sign-offs (and any repo-scope decision record); each lane's `log.md` holds that
-track's session evidence.
-
-**What stays repo-singular (integrator-owned, never forked into a lane):** the one
+**What stays repo-singular (integrator-owned, never forked per lane):** the one
 `SN→SR→LLR→TC` requirement spine and every registry, `docs/gate` + `gate-policy` +
 `push-policy` + `privacy-check` + `guardrails-policy`, the root `status.md`/`log.md`,
 `AGENTS.md`, and the generated code map. The spine is **deliberately singular**
 (§10): `trace.py --strict` still demands **0 orphans across the whole repo, seams
-included** — a per-track gate would hide exactly the cross-track seams this method
-wants first-class. Tracks **propose** changes to the singular surfaces; the
-**integrator lands** them.
+included** — a per-lane gate would hide exactly the cross-lane seams this method
+wants first-class. Workers **propose**; the **integrator lands**. Three of the
+old track disciplines survive as dispatcher rules: **registry rows land at
+ratification through the integrator** (a worker never edits the registries
+mid-flight — its filed drafts land at integration), **generated artifacts are
+never text-merged** (a conflict is resolved by regenerating on the composed
+tree), and **cross-module contracts are `IF-###` rows** in the one
+`interfaces.csv` with an integration TC backing the seam.
 
-**The integrator role.** A **sync/integration session** — a human, or an agent leg
-run without `--track` — is the only writer of the root dispatcher and the only
-lander of registry rows and generated artifacts. It runs at sync points (a gate
-close, a track reaching an end state, a periodic roll-up): it lands each track's
-ratified off-spine drafts onto the spine, regenerates the generated docs on the
-landed tree, reconciles the dispatcher, and (under the iteration-branch layer)
-lands each `llm/<track>` leg onto the development branch serially so history stays
-linear.
+**Gating stays single-gate; per-train maturity rides `Phase` tags.** Keep **one**
+`docs/gate` for the repo ("Phased delivery" above): Verified is required only
+where a phase has actually built, and everything else is listed
+**phase-deferred** — the explicit, recorded exemption, never a silent skip.
 
-**Write discipline for the shared spine.**
-
-- **Registry rows land at ratification, through the integrator.** A track grows
-  requirements as an **off-spine scope draft** (a dated `requirements/scope-draft-*`
-  doc); since SN/SR rows need human ratification anyway, registry writes are already
-  serialized through that bottleneck. The discipline just makes it explicit — no
-  track edits the registries directly mid-flight.
-- **Per-track ID blocks** stop concurrent drafts minting colliding ids: reserve
-  `SN`/`SR` hundreds-ranges per track in a small `requirements/id-blocks` note (a
-  convention, not a machine check — `trace.py` integrity still catches a real
-  collision at landing). `LLR`/`TC` stay integrator-allocated sequentially at
-  decomposition (they are created when a draft lands, so they never race);
-  placeholder ids (`LLR-D1`) in a draft become final ids at landing.
-- **Generated artifacts are never text-merged.** A conflict in the code map, trace
-  report, or dataflow diagrams at landing is resolved by **regenerating on the
-  landed tree** (the harness keeps them fresh), never by hand-merging the generated
-  text.
-- **Cross-track contracts are `IF-###` rows** in the one `interfaces.csv` (the §10
-  internal-seam rule): the counterpart names the other track's module, and an
-  integration TC backs the seam. Record a seam **early** — a downstream track builds
-  against the *interface*, not the upstream track's completion.
-
-**Gating stays single-gate; per-track maturity rides `Phase` tags.** Keep **one**
-`docs/gate` for the repo. When tracks are at different maturity, tag their SRs with
-track-scoped delivery **`Phase`** values ("Phased delivery" above) and close with
-`check.py --gate G3 --phase <active set>`: Verified is required only where a track
-has actually built, and everything else is listed **phase-deferred** — the explicit,
-recorded exemption the phased layer was built for, never a silent skip. A per-track
-`docs/gate` is rejected: it would falsify the cross-track seams (§10). An
-eventually-needed-but-not-now analysis (e.g. a fatigue study, a load test) is
-written **now** as an `Analysis`-verified SR at a later `Phase` — visible as
-phase-deferred from day one — while the numbers the design needs today ride `PB-###`
-budget rows; the heavy tooling is product-layer meters wired when that phase opens
-(§9 meters-vs-comparator).
-
-**Unattended safety (the coordinator).** The unattended coordinator
-(`scripts/agent_loop.py`) takes `--track <name>` and resolves **every** per-track
-file (`run-state`, the `status.md` resume excerpt, the iteration logs
-+ index) under `docs/tracks/<name>/`, leaving the repo-singular policy files at
-`docs/`; the session prompt gains a preamble redirecting the driver to that lane.
-Two guards make concurrent unattended runs safe: a **preflight branch-guard** (a
-`--track` session must be on branch `llm/<track>` — an unverifiable branch, e.g. a
-detached HEAD, **fails closed**, so a lane can never write from the wrong
-checkout) and a **per-worktree lock** (`out/agent-loop.lock`, one coordinator per
-checkout — the double-launch / cron-overlap collision the branch-guard can't
-catch). The lock is a **kernel advisory lock** (`flock` / `LockFileEx`) the OS
-grants atomically and releases when the process exits *or crashes*, so a dead run
-never wedges the next one — there is no stale pid file to reason about. Cross-host
-on a shared filesystem is best-effort only (`flock` over NFS is unreliable): the
-lock guards one checkout on one host, the case that matters. **No `--track` keeps
-the single-lane behavior** (with `docs/` itself as the lane); its only addition
-there is the same per-worktree lock, which merely refuses a second coordinator in
-one checkout.
+**One coordinator per checkout.** A **per-worktree lock**
+(`out/agent-loop.lock`) refuses a second coordinator in one checkout (the
+double-launch / cron-overlap collision): a **kernel advisory lock**
+(`flock` / `LockFileEx`) the OS grants atomically and releases when the process
+exits *or crashes*, so a dead run never wedges the next one — there is no stale
+pid file to reason about. Cross-host on a shared filesystem is best-effort only
+(`flock` over NFS is unreliable): the lock guards one checkout on one host, the
+case that matters. The dispatcher, each worker (in its own worktree), and an
+`--interactive` sitting all take it.
 
 **Worker assignment (parallel dispatch) — the tracks successor.** The
 dispatcher-era coordinator replaces long-lived tracks with **explicit worker
@@ -2265,8 +2195,9 @@ successor the continuation conditions are re-checked; a positive classifier
 conflict ends the train early (exit 10) and the dispatcher **transactionally
 releases the unstarted constituents' reservations** (built and blocked ones
 keep theirs as integrator evidence).
-`--track` is **deprecated** for one compatibility window (legacy behavior
-unchanged, warned); new launchers never emit it.
+`--track` is **gone** (WI-210): the flag, its lane files, and the per-track
+branch guard were retired with the serial driver; the worker assignment above
+is the only lane concept.
 
 **The parallel dispatcher (`--jobs`).** `agent_loop.py --jobs N|auto` (or the
 `AGENT_JOBS` env) replaces the resume loop with the **dispatcher**: it derives
@@ -2289,8 +2220,10 @@ restarts. `docs/pause` stops new reservations at the next boundary while
 in-flight workers finish; a blackout window starts no new worker;
 `out/dispatch/` is a rebuildable journal/cache — Git refs are the authority;
 root `run-state` becomes a **generated dispatcher outcome**. `--jobs 1` is the
-explicit serial mode; absent `--jobs`/`AGENT_JOBS`, the legacy resume loop is
-unchanged (launchers flip at migration).
+explicit serial mode. **A plain launch is the dispatcher** (WI-210 — one
+engine, one selection path): absent `--jobs`/`AGENT_JOBS` resolves to the
+two-worker default, held at 1 until the migration audits pass (§14); the
+legacy serial resume driver is retired.
 
 **The atomic integrator.** Integration has **one logical writer** against a
 dispatcher-owned `refs/heads/llm/integration` ref — advanced **only by

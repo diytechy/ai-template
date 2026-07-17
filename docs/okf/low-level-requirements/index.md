@@ -36,7 +36,7 @@ resource: "generated"
 | [LLR-023](LLR-023.md) | Arch-map splice + drift check |
 | [LLR-024](LLR-024.md) | Permutation expander |
 | [LLR-025](LLR-025.md) | Skills index generator |
-| [LLR-026](LLR-026.md) | Headless resume loop |
+| [LLR-026](LLR-026.md) | Headless session launch |
 | [LLR-027](LLR-027.md) | Preflight footing guard |
 | [LLR-028](LLR-028.md) | Typed outcome + ERROR handling |
 | [LLR-029](LLR-029.md) | Kernel advisory lock |

@@ -510,10 +510,9 @@ table.
   (the newer shipped `check.yml` already carries it) so the floor runs on
   agent legs too.
 - **Unattended coordinator (`scripts/agent_loop.py` + root `agent-resume.*`).**
-  Newer kits ship a walk-away resume entry (process-options.md "Unattended
-  operation"): the launchers boot the right agent session at the right tier —
-  or the coordinator loop reading `docs/run-state` — and ship
-  **inert** until their `AGENT_CMD` slot is wired. To adopt: copy the engine
+  Newer kits ship a walk-away entry (process-options.md "Unattended
+  operation"): the launchers boot the dispatcher (or one hands-on session at
+  the right tier) and ship **inert** until their `AGENT_CMD` slot is wired. To adopt: copy the engine
   (kit-owned, overwrite freely on later re-syncs) + the three launchers
   (yours after seeding — like `run.*`), and merge the `out/run-logs/` line
   into `.gitignore`. The tracked `docs/iteration/` logs + `iteration_index.md`
@@ -523,19 +522,24 @@ table.
   `agent-resume` launch drive **every dependency-ready WI in parallel** — a
   dispatcher/integrator over the WI DAG with durable Git reservations and
   serialized atomic integration (process-options.md "Worker assignment" /
-  "The parallel dispatcher" / "The atomic integrator"). It is **opt-in and
-  gated**: absent `--jobs`/`AGENT_JOBS` the legacy single-session resume loop is
-  byte-for-byte unchanged, and even when set the dispatcher **holds at
-  `--jobs 1` until two audits pass** — a SafetyClass audit (every open WI
-  classified) and a soft-edge audit (signed via `docs/parallel-ready`). A fresh
-  scaffold passes both by construction and ships parallel-by-default; a
-  migrating repo does the audits deliberately, then sets `AGENT_JOBS=2` (the
-  **downstream-resync skill** walks this). Adopting also **retires
-  `docs/next-wi` + `docs/run-phase`** (the WI DAG + `Priority` are the whole
-  ordering contract — no former content translates to scheduling state) and
-  makes `docs/status.md`/`docs/run-state` **generated** dispatcher surfaces (a
+  "The parallel dispatcher" / "The atomic integrator"). Since WI-210 a **plain
+  launch is the dispatcher** (the legacy serial resume driver and `--track`
+  lanes are retired — one engine, one selection path): absent
+  `--jobs`/`AGENT_JOBS` resolves to the two-worker default, and the dispatcher
+  **holds at `--jobs 1` until two audits pass** — a SafetyClass audit (every
+  open WI classified) and a soft-edge audit (signed via `docs/parallel-ready`).
+  A fresh scaffold passes both by construction. **The upgrade recipe** (the
+  **downstream-resync skill** walks it): re-sync the kit, run your own §14
+  audits, flip (`AGENT_JOBS=2` in the launchers), then drop any local reliance
+  on the retired legacy surfaces — the resume-from-`status.md` prompt, a
+  hand-set `docs/run-state`, `docs/rework-wi`, `--track`/`docs/tracks/*`
+  lanes, and `docs/next-wi`/`docs/run-phase` (the WI DAG + `Priority` are the
+  whole ordering contract — no former content translates to scheduling state).
+  `docs/status.md`/`docs/run-state` are **generated** dispatcher surfaces (a
   hand-authored `status.md` is left untouched until you adopt the generated
-  one). Legacy `active` rows and `docs/tracks/*` reconcile within one window.
+  one). Legacy `active` rows reconcile to `queued` as a logged finding, and a
+  leftover `docs/tracks/*` is your own note directory now — the dispatcher
+  never reads it.
 - **Run launchers become a capability menu (`scripts/run_menu.py` + `[run]`).**
   Newer kits retire the hard-wired, duplicated `RUN_CMD` in `run.cmd`/`run.sh`:
   the launchers are now thin delegates to `scripts/run_menu.py`, which reads a

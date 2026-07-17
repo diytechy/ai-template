@@ -25,8 +25,8 @@ with open(str(ctl / "env-seen.txt"), "a", encoding="utf-8") as fh:
     fh.write(os.environ.get("AGENT_TEST_ENV_MARKER", "<ABSENT>") + "\n")
 pathlib.Path("work.txt").write_text("built", encoding="utf-8")
 subprocess.run(["git", "add", "work.txt"], check=True)
-subprocess.run(["git", "commit", "-q", "-m", "WI-000: build"], check=True)
-pathlib.Path("docs/run-state").write_text("DONE", encoding="utf-8")
+# WI-210: the end state is committed worker evidence (the WI trailer).
+subprocess.run(["git", "commit", "-q", "-m", "build done\n\nWI: WI-201"], check=True)
 sys.exit(0)
 """
 
@@ -52,11 +52,20 @@ def _make_repo(tmp_path, env_cell):
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
     (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
     (repo / "docs" / "review-policy").write_text("0\n", encoding="utf-8")
+    (repo / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "requirements" / "work-items.csv").write_text(
+        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
+        "SpecRef,BuildTier,SafetyClass\n"
+        "WI-201,Scoped work for WI-201,ws,,,queued,,,medium,ordinary\n",
+        encoding="utf-8",
+    )
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
+    _git(repo, "checkout", "-q", "-b", "llm/train/t1")
 
     ctl = tmp_path / "control"
     ctl.mkdir()
@@ -77,7 +86,19 @@ def _make_repo(tmp_path, env_cell):
     return repo, ctl, cmd
 
 
+def _commit_config(repo):
+    # A worker's DONE is judged from committed evidence + a CLEAN tree
+    # (WI-210), so the fixture/test config written after the seed commit
+    # must be committed before the worker starts.
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "commit", "-q", "-m", "test config", "--allow-empty"],
+        capture_output=True,
+    )
+
+
 def _loop(repo, cmd):
+    _commit_config(repo)
     return run_py(
         [
             SCRIPTS / "agent_loop.py",
@@ -91,6 +112,10 @@ def _loop(repo, cmd):
             "default-tier",
             "--max-iterations",
             "4",
+            "--wi",
+            "WI-201",
+            "--train",
+            "t1",
         ],
         cwd=repo,
     )

@@ -18,7 +18,7 @@ from conftest import SCRIPTS, augment_env, load_script, run_py
 # performs the next scripted action in the repo it was launched in (cwd),
 # exactly as a headless driver session would.
 FAKE_AGENT = """
-import argparse, json, pathlib, subprocess, sys, time
+import argparse, json, pathlib, re, subprocess, sys, time
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--control", required=True)
@@ -50,13 +50,25 @@ if action == "commit":
     # Healthy prose that *mentions* limits: must never read as a throttle
     # (the engine gates the limit regex on an error signal).
     print("session committed progress; noted the usage limit resets 3:45pm")
-elif action in ("done", "blocked", "needs-human"):
-    commit("finishing")
-    state = action.upper()
-    if action == "needs-human":
-        # WI-127: a driver follows the state word with the one-line ask.
-        state += "\\nask: OI-1 needs the demo-gate approval"
-    pathlib.Path("docs/run-state").write_text(state)
+elif action in ("done", "blocked"):
+    # WI-210: end states are committed WORKER EVIDENCE (trailers parsed from
+    # the assignment prompt), never a run-state write — the serial driver
+    # that read run-state back is retired.
+    m = re.search(r"- WI: (WI-\\d+)", args.prompt)
+    wi = m.group(1) if m else "WI-201"
+    m = re.search(r"- Train: (\\S+) \\(branch", args.prompt)
+    train = m.group(1) if m else "t1"
+    m = re.search(r"integration base ([0-9a-f]+)\\)", args.prompt)
+    base = m.group(1) if m else ""
+    pathlib.Path("work.txt").write_text("finishing" + str(count))
+    subprocess.run(["git", "add", "-A"], check=True)
+    if action == "blocked":
+        msg = ("blocked " + wi + "\\n\\nBlocked-WI: " + wi +
+               "\\nBlockRef: OI-1\\nTrain: " + train + "\\nBase: " + base)
+    else:
+        msg = ("build " + wi + "\\n\\nWI: " + wi + "\\nTrain: " + train +
+               "\\nBase: " + base)
+    subprocess.run(["git", "commit", "-q", "-m", msg], check=True)
     print(json.dumps({"result": "ok",
                       "usage": {"input_tokens": 10, "output_tokens": 5,
                                 "cache_read_input_tokens": 70000,
@@ -64,17 +76,20 @@ elif action in ("done", "blocked", "needs-human"):
                       "total_cost_usd": 0.12,
                       "duration_api_ms": 61000, "num_turns": 7,
                       "ttft_ms": 4200, "fast_mode_state": "off"}))
-elif action == "pause":
-    # WI-147: a session that (over)writes docs/pause mid-run — the loop must let
-    # this session finish and commit, then stop at the NEXT boundary.
-    commit("pausing")
-    pathlib.Path("docs/pause").write_text("owner requested a break")
-    print("session committed progress; wrote docs/pause")
 elif action == "stream-done":
     # A stream-json CLI: per-turn events, then the result event NOT last (a
     # trailing event must not shadow it - the parse preference under test).
-    commit("finishing")
-    pathlib.Path("docs/run-state").write_text("DONE")
+    m = re.search(r"- WI: (WI-\\d+)", args.prompt)
+    wi = m.group(1) if m else "WI-201"
+    m = re.search(r"- Train: (\\S+) \\(branch", args.prompt)
+    train = m.group(1) if m else "t1"
+    m = re.search(r"integration base ([0-9a-f]+)\\)", args.prompt)
+    base = m.group(1) if m else ""
+    pathlib.Path("work.txt").write_text("finishing" + str(count))
+    subprocess.run(["git", "add", "-A"], check=True)
+    subprocess.run(["git", "commit", "-q", "-m",
+                    "build " + wi + "\\n\\nWI: " + wi + "\\nTrain: " +
+                    train + "\\nBase: " + base], check=True)
     print(json.dumps({"type": "assistant", "message": {"content": [
         {"type": "text", "text": "refactoring the parser now"}]}}))
     print(json.dumps({"type": "assistant", "message": {"content": [
@@ -141,13 +156,25 @@ def loop_repo(tmp_path):
     """A minimal git repo (one commit) + a control dir for the fake agent.
     Returns (repo, control-dir, AGENT_CMD template)."""
     repo = tmp_path / "repo"
-    (repo / "docs").mkdir(parents=True)
+    (repo / "docs" / "requirements").mkdir(parents=True)
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
+    # out/ (the lock + raw run logs) must never dirty the tree: a worker's
+    # DONE is judged from committed evidence + a clean tree (worker_endstate).
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
+    (repo / "docs" / "requirements" / "work-items.csv").write_text(
+        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
+        "SpecRef,BuildTier,SafetyClass\n"
+        "WI-200,Earlier thing,ws,,,done,shipped,,quick,\n"
+        "WI-201,Scoped work for WI-201,ws,,WI-200,queued,,docs/specs/thing.md,"
+        "medium,ordinary\n",
+        encoding="utf-8",
+    )
     _git(repo, "init")
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
+    _git(repo, "checkout", "-q", "-b", "llm/train/t1")
     ctl = tmp_path / "control"
     ctl.mkdir()
     fake = tmp_path / "fake_agent.py"
@@ -159,6 +186,9 @@ def loop_repo(tmp_path):
 
 
 def _loop(repo, template, *extra):
+    # The worker assignment (--wi/--train; --base defaults to HEAD at worker
+    # start) — WI-210 retired the bare resume launch, so the engine tests
+    # drive the same worker path the dispatcher spawns.
     return run_py(
         [
             SCRIPTS / "agent_loop.py",
@@ -170,6 +200,10 @@ def _loop(repo, template, *extra):
             "0",
             "--model",
             "default-tier",
+            "--wi",
+            "WI-201",
+            "--train",
+            "t1",
             *extra,
         ],
         cwd=repo,
@@ -189,14 +223,13 @@ def test_done_exit_writes_logs_and_index(loop_repo):
     (ctl / "actions.txt").write_text("commit done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "run-state=DONE" in proc.stdout
-    assert "OI-1" in proc.stdout, "exit banner must surface the pending asks"
+    assert "worker t1 [WI-201]: DONE" in proc.stdout
     assert "CONSENT" in proc.stdout, "the banner must state the consent line"
-    logs = sorted((repo / "docs" / "iteration").glob("*.log"))
+    logs = sorted((repo / "docs" / "iteration").glob("t1-*.log"))
     assert len(logs) == 2
     meta = logs[1].read_text(encoding="utf-8")
-    assert "# outcome: DONE" in meta
-    assert "# exit-code: 0" in meta
+    assert "# outcome: COMMITTED" in meta  # the trailer commit; DONE is the
+    assert "# exit-code: 0" in meta  # worker exit banner, not a session state
     # The time signal (WI-119): wall seconds measured by the coordinator's own
     # clock (never blank), API seconds + turns parsed from the CLI JSON.
     assert re.search(r"^# wall-secs: \d+$", meta, re.M)
@@ -210,14 +243,9 @@ def test_done_exit_writes_logs_and_index(loop_repo):
     assert "# fast: off" in meta
     assert "# effort:" in meta  # key present; value is whatever env was launched
     assert re.search(r"^# prompt-chars: \d+$", meta, re.M)
-    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
-    assert "| 001 |" in index and "| 002 |" in index
-    assert "COMMITTED" in index and "DONE" in index
-    assert "10+5" in index and "0.12" in index  # tokens + cost from the JSON
-    assert "| Wall s | API s | Turns | s/turn | Ctx/turn |" in index
-    # 61 s API / 7 turns = 8.7 s/turn; 70000 cache-read / 7 turns = 10k ctx/turn
-    assert "| 61 | 7 | 8.7 | 10k |" in index
-    assert "never hand-edited" in index
+    # A worker never regenerates the iteration index — it is a GENERATED root
+    # artifact the integrator rebuilds on the composed tree (spec §5.1).
+    assert not (repo / "docs" / "iteration_index.md").exists()
     # The raw unbounded stream lands in the gitignored out/run-logs/.
     assert list((repo / "out" / "run-logs").glob("*.log"))
 
@@ -227,24 +255,8 @@ def test_blocked_exit(loop_repo):
     (ctl / "actions.txt").write_text("blocked", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 3, proc.stdout + proc.stderr
-    assert "run-state=BLOCKED" in proc.stdout
-    assert "OI-1" in proc.stdout
-
-
-def test_needs_human_exit_surfaces_the_ask(loop_repo):
-    # Q7d: the loop runs under every gate policy; when progress needs a human
-    # act the driver writes NEEDS-HUMAN and the coordinator exits printing the
-    # asks — interrupt-and-report, never infer-and-continue.
-    repo, ctl, template = loop_repo
-    (ctl / "actions.txt").write_text("needs-human", encoding="utf-8")
-    proc = _loop(repo, template)
-    assert proc.returncode == 7, proc.stdout + proc.stderr
-    assert "run-state=NEEDS-HUMAN" in proc.stdout
-    assert "OI-1" in proc.stdout
-    # WI-127: the driver's run-state ask line is the banner's headline — it
-    # must surface even when the status excerpt would truncate before the
-    # Needs-<human> items.
-    assert "ask: OI-1 needs the demo-gate approval" in proc.stdout
+    assert "worker t1 [WI-201]: BLOCKED" in proc.stdout
+    assert "BlockRef: OI-1" in proc.stdout
 
 
 def test_stall_guard_aborts_after_no_commit_sessions(loop_repo):
@@ -267,48 +279,6 @@ def test_budget_ceiling(loop_repo):
 
 
 # --- WI-147: graceful pause (docs/pause) --------------------------------------
-
-
-def test_pause_present_at_launch_refuses_to_start(loop_repo):
-    # docs/pause present at launch = launch-time refusal: no session runs, the
-    # loop stops with exit 8 and a banner naming the file + its reason.
-    repo, ctl, template = loop_repo
-    (ctl / "actions.txt").write_text("done", encoding="utf-8")  # would DONE if run
-    (repo / "docs" / "pause").write_text("out for lunch", encoding="utf-8")
-    proc = _loop(repo, template)
-    assert proc.returncode == 8, proc.stdout + proc.stderr
-    assert "paused (docs/pause present)" in proc.stdout
-    assert "out for lunch" in proc.stdout
-    assert _invocations(ctl) == 0, "no session may start while paused"
-
-
-def test_pause_mid_run_stops_after_the_current_session(loop_repo):
-    # A session writes docs/pause; it still finishes and commits (graceful), and
-    # the NEXT boundary stops the loop — never a mid-session kill.
-    repo, ctl, template = loop_repo
-    (ctl / "actions.txt").write_text("commit pause commit", encoding="utf-8")
-    proc = _loop(repo, template, "--max-iterations", "6")
-    assert proc.returncode == 8, proc.stdout + proc.stderr
-    assert "paused (docs/pause present)" in proc.stdout
-    # Sessions 1 (commit) and 2 (pause) ran; session 3 was refused at the boundary.
-    assert _invocations(ctl) == 2
-    # The pausing session's own commit landed — the stop was graceful, not a kill.
-    assert "pausing" in _git(repo, "log", "--format=%s")
-
-
-def test_pause_delete_resumes(loop_repo):
-    # Deleting docs/pause and re-launching resumes work (the file is the whole
-    # contract — run-state is never touched, so resume is a single act).
-    repo, ctl, template = loop_repo
-    (ctl / "actions.txt").write_text("done", encoding="utf-8")
-    (repo / "docs" / "pause").write_text("", encoding="utf-8")
-    paused = _loop(repo, template)
-    assert paused.returncode == 8 and _invocations(ctl) == 0
-    (repo / "docs" / "pause").unlink()
-    resumed = _loop(repo, template)
-    assert resumed.returncode == 0, resumed.stdout + resumed.stderr
-    assert "run-state=DONE" in resumed.stdout
-    assert _invocations(ctl) == 1
 
 
 def test_pause_reason_helper_edges(tmp_path):
@@ -399,7 +369,7 @@ def test_blackout_present_but_inactive_does_not_block(loop_repo):
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "run-state=DONE" in proc.stdout
+    assert "worker t1 [WI-201]: DONE" in proc.stdout
     assert _invocations(ctl) == 1
 
 
@@ -427,20 +397,6 @@ def test_review_policy_surfaced_in_banner(loop_repo):
     assert "review-policy: 2" in proc.stdout
 
 
-def test_status_size_guard_warns_only(loop_repo):
-    # AGENT_ROLES R3: a bloated resume surface draws a warn-only preflight
-    # tripwire (every session inherits it); the run itself proceeds untouched.
-    repo, ctl, template = loop_repo
-    (repo / "docs" / "status.md").write_text(
-        STATUS_MD + ("filler line — evidence that belongs in log.md\n" * 400),
-        encoding="utf-8",
-    )
-    (ctl / "actions.txt").write_text("done", encoding="utf-8")
-    proc = _loop(repo, template)
-    assert proc.returncode == 0, proc.stdout + proc.stderr  # warn, never block
-    assert "prune it to one screen" in proc.stderr
-
-
 def test_seconds_until_reset_weekly_same_weekday():
     # A3: a named-weekday reset that already passed today is NEXT week's same
     # weekday (+~6 days), not tomorrow (+1 day, a different weekday).
@@ -455,23 +411,6 @@ def test_seconds_until_reset_weekly_same_weekday():
     # A future weekday this week is still this week (unchanged behavior).
     secs2 = loop.seconds_until_reset("resets Tue 12:00am", now)
     assert (now + datetime.timedelta(seconds=secs2)).weekday() == 1
-
-
-def test_status_size_warning_helper_edges():
-    # The helper is pure: absent file and limit<=0 (AGENT_STATUS_WARN_BYTES=0)
-    # both disable; an oversized file names the size and the charter.
-    from pathlib import Path
-
-    loop = load_script("agent_loop")
-    assert loop.status_size_warning(Path("no/such/status.md"), 8192) is None
-    import tempfile
-
-    with tempfile.TemporaryDirectory() as td:
-        p = Path(td) / "status.md"
-        p.write_text("x" * 9000, encoding="utf-8")
-        assert loop.status_size_warning(p, 0) is None  # 0 disables
-        msg = loop.status_size_warning(p, 8192)
-        assert msg and "9000" in msg and "one screen" in msg
 
 
 def _vendor_core(repo, body):
@@ -526,7 +465,7 @@ def test_guardrails_all_injects_only_the_kit_core_block(loop_repo):
     prompt = (ctl / "prompt.txt").read_text(encoding="utf-8")
     assert "MARKER-CORE rules." in prompt
     assert "ignored" not in prompt  # only the marked block, not the whole file
-    assert "unattended coordinator" in prompt  # the base prompt still follows
+    assert "- WI: WI-201" in prompt  # the assignment prompt still follows
 
 
 def test_guardrails_weak_tier_injects_only_matching_model(loop_repo):
@@ -636,8 +575,10 @@ def test_limit_hit_backs_off_without_counting_stall(loop_repo):
     assert proc.returncode == 5, proc.stdout + proc.stderr
     assert "WAITING" in proc.stdout
     assert "3:45pm" in proc.stdout, "banner must name the resume time"
-    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
-    assert "WAITING" in index
+    log = sorted((repo / "docs" / "iteration").glob("t1-*.log"))[0].read_text(
+        encoding="utf-8"
+    )
+    assert "# outcome: WAITING" in log
 
 
 def test_error_session_reads_error_not_no_commit(loop_repo):
@@ -649,13 +590,10 @@ def test_error_session_reads_error_not_no_commit(loop_repo):
     (ctl / "actions.txt").write_text("error done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
-    assert "ERROR" in index
-    assert "NO-COMMIT" not in index  # the errored session is not mislabeled
-    log = sorted((repo / "docs" / "iteration").glob("*.log"))[0].read_text(
-        encoding="utf-8"
-    )
-    assert "# outcome: ERROR" in log
+    logs = sorted((repo / "docs" / "iteration").glob("t1-*.log"))
+    heads = [lg.read_text(encoding="utf-8") for lg in logs]
+    assert any("# outcome: ERROR" in h for h in heads)
+    assert not any("# outcome: NO-COMMIT" in h for h in heads)
 
 
 def test_plain_text_nonzero_exit_reads_error(loop_repo):
@@ -666,8 +604,8 @@ def test_plain_text_nonzero_exit_reads_error(loop_repo):
     (ctl / "actions.txt").write_text("error-plain done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
-    assert "ERROR" in index
+    logs = sorted((repo / "docs" / "iteration").glob("t1-*.log"))
+    assert any("# outcome: ERROR" in lg.read_text(encoding="utf-8") for lg in logs)
 
 
 def test_all_error_stall_names_an_agent_error(loop_repo):
@@ -721,20 +659,6 @@ def test_seconds_until_reset_parses_both_clock_formats():
         assert agent_loop.seconds_until_reset(garbage, now=noon) is None
 
 
-def test_default_prompt_carries_the_plan_build_cadence():
-    # WI-1.29 / WI-180: the engine's resume prompt carries the plan cadence. With
-    # docs/run-phase retired the PLAN/BUILD phase bounce is gone from the prompt,
-    # but the plan-surface cadence remains: work the next block, and re-chunk
-    # against the iteration sensor when the plan is exhausted or wrong.
-    # Conditional ("where docs/plan.md exists"), so a repo without the plan
-    # surface is unchanged.
-    prompt = load_script("agent_loop").DEFAULT_PROMPT
-    assert "docs/plan.md" in prompt
-    assert "iteration_index.md" in prompt  # the sizing servo's sensor
-    assert "where docs/plan.md exists" in prompt  # stays conditional
-    assert "run-phase" not in prompt  # the retired phase file is gone (WI-180)
-
-
 def test_declared_policy_parsers_agree():
     # One parse rule for the one-word policy files (docs/gate, gate-policy,
     # push-policy, privacy-check, run-state): the FIRST non-empty, non-comment
@@ -770,9 +694,12 @@ def test_healthy_transcript_mentioning_limits_is_not_a_throttle(loop_repo):
     (ctl / "actions.txt").write_text("commit done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0
-    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
-    assert "WAITING" not in index
-    assert "COMMITTED" in index
+    heads = [
+        lg.read_text(encoding="utf-8")
+        for lg in (repo / "docs" / "iteration").glob("t1-*.log")
+    ]
+    assert not any("# outcome: WAITING" in h for h in heads)
+    assert any("# outcome: COMMITTED" in h for h in heads)
 
 
 def test_session_timeout_cannot_wedge_the_loop(loop_repo):
@@ -782,14 +709,28 @@ def test_session_timeout_cannot_wedge_the_loop(loop_repo):
     (ctl / "actions.txt").write_text("sleep", encoding="utf-8")
     proc = _loop(repo, template, "--session-timeout", "2", "--stall-limit", "1")
     assert proc.returncode == 4, proc.stdout + proc.stderr
-    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
-    assert "TIMEOUT" in index
+    logs = sorted((repo / "docs" / "iteration").glob("t1-*.log"))
+    assert any("# outcome: TIMEOUT" in lg.read_text(encoding="utf-8") for lg in logs)
 
 
 def test_interactive_boots_exactly_one_session(loop_repo):
+    # --interactive is its own explicit role (never a worker assignment), so
+    # it launches without --wi/--train.
     repo, ctl, template = loop_repo
     (ctl / "actions.txt").write_text("noop noop noop", encoding="utf-8")
-    proc = _loop(repo, template, "--interactive")
+    proc = run_py(
+        [
+            SCRIPTS / "agent_loop.py",
+            "--root",
+            repo,
+            "--agent-cmd",
+            template,
+            "--model",
+            "default-tier",
+            "--interactive",
+        ],
+        cwd=repo,
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert _invocations(ctl) == 1
     # A hands-on session writes no unattended artifacts.
@@ -831,16 +772,29 @@ def test_privacy_check_author_violation_blocks_iteration_one(loop_repo):
 
 def test_zero_commit_repo_is_guarded(tmp_path):
     # The rev-parse guard: a repo with no commits yet must not crash the loop
-    # (the NHW original assumed HEAD exists).
+    # (the NHW original assumed HEAD exists). A dispatcher never assigns from
+    # an unborn HEAD, so the worker here simply must run controlled — first
+    # commit range (root).., no traceback — and exit on its budget.
     repo = tmp_path / "repo"
-    (repo / "docs").mkdir(parents=True)
+    (repo / "docs" / "requirements").mkdir(parents=True)
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
+    (repo / "docs" / "requirements" / "work-items.csv").write_text(
+        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
+        "SpecRef,BuildTier,SafetyClass\n"
+        "WI-201,Scoped work for WI-201,ws,,,queued,,,medium,ordinary\n",
+        encoding="utf-8",
+    )
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git_ok = subprocess.run(
         ["git", "-C", str(repo), "init"], capture_output=True, text=True
     )
     assert _git_ok.returncode == 0
     subprocess.run(["git", "-C", str(repo), "config", "user.email", "l@e.com"])
     subprocess.run(["git", "-C", str(repo), "config", "user.name", "L"])
+    subprocess.run(
+        ["git", "-C", str(repo), "checkout", "-q", "-b", "llm/train/t1"],
+        capture_output=True,
+    )
     ctl = tmp_path / "control"
     ctl.mkdir()
     fake = tmp_path / "fake_agent.py"
@@ -848,11 +802,13 @@ def test_zero_commit_repo_is_guarded(tmp_path):
     template = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
         sys.executable, fake, ctl
     )
-    (ctl / "actions.txt").write_text("commit done", encoding="utf-8")
-    proc = _loop(repo, template)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
-    assert "(root).." in index, "the first commit range starts at (root)"
+    (ctl / "actions.txt").write_text("commit commit", encoding="utf-8")
+    proc = _loop(repo, template, "--max-iterations", "2")
+    # A worker has no integration base on an unborn HEAD: the guard is a
+    # controlled fail-closed preflight refusal, never a crash.
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "Traceback" not in proc.stdout + proc.stderr
+    assert "no HEAD commit" in proc.stderr
 
 
 def test_dirty_tree_at_start_injects_reconcile_and_logs(loop_repo):
@@ -879,7 +835,8 @@ def test_clean_tree_prompt_is_byte_identical(loop_repo):
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     prompt = (ctl / "prompt.txt").read_text(encoding="utf-8")
-    assert prompt == load_script("agent_loop").DEFAULT_PROMPT
+    assert "uncommitted changes" not in prompt  # no reconcile note injected
+    assert prompt.startswith("You are an unattended worker") or "- WI: WI-201" in prompt
     assert "uncommitted path(s)" not in proc.stderr
 
 
@@ -941,7 +898,8 @@ def test_owner_scratchpad_dirty_at_start_injects_nothing(loop_repo):
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     prompt = (ctl / "prompt.txt").read_text(encoding="utf-8")
-    assert prompt == load_script("agent_loop").DEFAULT_PROMPT
+    assert "uncommitted changes" not in prompt  # no reconcile note injected
+    assert prompt.startswith("You are an unattended worker") or "- WI: WI-201" in prompt
     assert "uncommitted path(s)" not in proc.stderr
 
 
@@ -975,6 +933,10 @@ def test_cmd_shim_cli_spawns_on_windows(loop_repo, tmp_path):
             "0",
             "--model",
             "default-tier",
+            "--wi",
+            "WI-201",
+            "--train",
+            "t1",
         ],
         cwd=str(repo),
         capture_output=True,
@@ -984,8 +946,12 @@ def test_cmd_shim_cli_spawns_on_windows(loop_repo, tmp_path):
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert _invocations(ctl) == 1
-    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
-    assert "DONE" in index and "ERROR" not in index
+    assert "worker t1 [WI-201]: DONE" in proc.stdout
+    heads = [
+        lg.read_text(encoding="utf-8")
+        for lg in (repo / "docs" / "iteration").glob("t1-*.log")
+    ]
+    assert not any("# outcome: ERROR" in h for h in heads)
 
 
 def test_stream_json_echo_and_result_parse(loop_repo):
@@ -1004,7 +970,7 @@ def test_stream_json_echo_and_result_parse(loop_repo):
     log = sorted((repo / "docs" / "iteration").glob("*.log"))[0].read_text(
         encoding="utf-8"
     )
-    assert "# outcome: DONE" in log
+    assert "# outcome: COMMITTED" in log  # DONE is the worker exit banner
     assert "# tokens: 3+2" in log  # from the result event, not the trailing one
     assert "# turns: 2" in log
 
@@ -1039,8 +1005,8 @@ def test_telemetry_commits_itself_not_riding_the_next_commit(loop_repo):
     assert "iteration_index.md" not in porcelain
     subjects = _git(repo, "log", "--format=%s")
     assert "telemetry: session" in subjects, subjects
-    # The telemetry commit is distinct from the session's own work commit.
-    assert "progress" in subjects and "finishing" in subjects
+    # The telemetry commit is distinct from the session's own work commits.
+    assert "progress" in subjects and "build WI-201" in subjects
     # The iteration logs are tracked, not just present on disk.
     tracked = _git(repo, "ls-files", "docs/iteration")
     assert tracked.count(".log") == 2
@@ -1073,17 +1039,13 @@ def test_wi_label_recorded_in_log_header_and_index(loop_repo):
     # the durable per-session scope pointer is docs/rework-wi (a review rework
     # override); the dispatcher supplies the explicit assignment (Slice D).
     repo, ctl, template = loop_repo
-    (repo / "docs" / "rework-wi").write_text("# comment\nWI-137\n", encoding="utf-8")
     (ctl / "actions.txt").write_text("done", encoding="utf-8")
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    log = sorted((repo / "docs" / "iteration").glob("*.log"))[0].read_text(
+    log = sorted((repo / "docs" / "iteration").glob("t1-*.log"))[0].read_text(
         encoding="utf-8"
     )
-    assert "# wi: WI-137" in log
-    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
-    assert "| WI | Model |" in index  # the new column header
-    assert "WI-137" in index
+    assert "# wi: WI-201" in log  # the assignment's WI is the session label
 
 
 # --- WI-136: live per-workstream status line ----------------------------------
@@ -1222,24 +1184,24 @@ def test_session_template_seam():
 
 
 def test_compose_session_prompt_plain(tmp_path):
-    # body None -> the default prompt, no preamble/reconcile, guardrails off ->
-    # unchanged base and guarded False.
+    # A bare body, no reconcile note, guardrails off -> unchanged base and
+    # guarded False (WI-210: body is required — the resume default is retired).
     al = load_script("agent_loop")
     prompt, guarded = al.compose_session_prompt(
-        "claude-opus-4-8", None, "", "", "DEFAULT-PROMPT", "off", tmp_path, []
+        "claude-opus-4-8", "BODY-PROMPT", "", "off", tmp_path, []
     )
-    assert prompt == "DEFAULT-PROMPT"
+    assert prompt == "BODY-PROMPT"
     assert guarded is False
 
 
 def test_compose_session_prompt_ordering(tmp_path):
-    # reconcile + preamble + body concatenate in exactly that order (body
-    # overrides the default prompt); guardrails off -> guarded False.
+    # reconcile + body concatenate in exactly that order; guardrails off ->
+    # guarded False.
     al = load_script("agent_loop")
     prompt, guarded = al.compose_session_prompt(
-        "claude-opus-4-8", "BODY", "RECON\n", "PRE\n", "DEFAULT", "off", tmp_path, []
+        "claude-opus-4-8", "BODY", "RECON\n", "off", tmp_path, []
     )
-    assert prompt == "RECON\nPRE\nBODY"
+    assert prompt == "RECON\nBODY"
     assert guarded is False
 
 
@@ -1249,7 +1211,7 @@ def test_compose_session_prompt_guardrails_on(tmp_path):
     al = load_script("agent_loop")
     _vendor_core(tmp_path, "CORE-RULES\n")
     prompt, guarded = al.compose_session_prompt(
-        "claude-opus-4-8", None, "", "", "BASE", "opus", tmp_path, []
+        "claude-opus-4-8", "BASE", "", "opus", tmp_path, []
     )
     assert prompt == "CORE-RULES\n\n---\n\nBASE"
     assert guarded is True
@@ -1262,7 +1224,7 @@ def test_compose_session_prompt_guardrails_missing_core_warns_once(tmp_path, cap
     al = load_script("agent_loop")
     warned = []
     prompt, guarded = al.compose_session_prompt(
-        "claude-opus-4-8", None, "", "", "BASE", "opus", tmp_path, warned
+        "claude-opus-4-8", "BASE", "", "opus", tmp_path, warned
     )
     assert prompt == "BASE"
     assert guarded is False
@@ -1271,7 +1233,7 @@ def test_compose_session_prompt_guardrails_missing_core_warns_once(tmp_path, cap
     assert warned == [True]
 
     prompt2, guarded2 = al.compose_session_prompt(
-        "claude-opus-4-8", None, "", "", "BASE", "opus", tmp_path, warned
+        "claude-opus-4-8", "BASE", "", "opus", tmp_path, warned
     )
     assert prompt2 == "BASE"
     assert guarded2 is False
@@ -1296,6 +1258,10 @@ def test_model_placeholder_without_model_fails_preflight(loop_repo):
             template,
             "--pause",
             "0",
+            "--wi",
+            "WI-201",
+            "--train",
+            "t1",
             # deliberately NO --model / --model-map / AGENT_MODEL
         ],
         cwd=repo,
@@ -1691,16 +1657,6 @@ def test_worker_exit_banner_returns_code_and_prints(capsys):
 # newly unit-addressable seams.
 
 
-def test_track_preamble_text_empty_and_named():
-    al = load_script("agent_loop")
-    assert al.track_preamble_text(None) == ""
-    assert al.track_preamble_text("") == ""
-    pre = al.track_preamble_text("alpha")
-    # Names the track and pins the session to its llm/<track> branch.
-    assert "'alpha' development track" in pre
-    assert "llm/alpha" in pre
-
-
 def test_build_worker_assignment_is_none_without_wi_and_train():
     al = load_script("agent_loop")
     args = argparse.Namespace(wi=None, train=None, base=None, rework=None)
@@ -1740,3 +1696,96 @@ def test_parse_args_defaults(monkeypatch):
     assert args.stall_limit == 3
     assert args.pause == 10
     assert args.jobs is None
+
+
+# --- the per-checkout coordinator lock (SR-029/SR-030) -------------------------
+# Ported from the retired tracks suite (WI-210): the lock outlives the track
+# lanes — the dispatcher, every worker, and an --interactive sitting take it.
+
+# A probe that takes the lock in a SEPARATE process (the only way to observe the
+# real cross-process kernel-lock contract). With `hard`, it dies without any
+# release/atexit (os._exit) — modelling a crash so the caller can prove the OS
+# auto-released the lock.
+_LOCK_PROBE = """
+import importlib.util, os, sys
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("agent_loop", sys.argv[1])
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+err = m.acquire_lock(Path(sys.argv[2]))
+sys.stdout.write("REFUSED" if err else "ACQUIRED")
+sys.stdout.flush()
+if len(sys.argv) > 3 and sys.argv[3] == "hard":
+    os._exit(0)
+"""
+
+
+def _probe_acquire(lock, hard_exit=False):
+    argv = [
+        sys.executable,
+        "-c",
+        _LOCK_PROBE,
+        str(SCRIPTS / "agent_loop.py"),
+        str(lock),
+    ]
+    if hard_exit:
+        argv.append("hard")
+    return subprocess.run(argv, capture_output=True, text=True).stdout.strip()
+
+
+def test_lock_excludes_a_second_process(tmp_path):
+    # The real contract: one coordinator per checkout. This process holds the
+    # kernel lock; a separate process is refused, then succeeds once it's freed.
+    agent_loop = load_script("agent_loop")
+    lock = tmp_path / "out" / "agent-loop.lock"
+    assert agent_loop.acquire_lock(lock) is None
+    try:
+        assert _probe_acquire(lock) == "REFUSED"
+    finally:
+        agent_loop.release_lock(lock)
+    assert _probe_acquire(lock) == "ACQUIRED"
+
+
+def test_lock_auto_released_when_holder_dies(tmp_path):
+    # A holder that crashes without releasing must not wedge the next run —
+    # the OS drops the advisory lock on process death. The probe acquires then
+    # hard-exits (no release/atexit); this process must then acquire cleanly.
+    agent_loop = load_script("agent_loop")
+    lock = tmp_path / "out" / "agent-loop.lock"
+    assert _probe_acquire(lock, hard_exit=True) == "ACQUIRED"
+    assert agent_loop.acquire_lock(lock) is None
+    agent_loop.release_lock(lock)
+
+
+def test_lock_refuses_on_contention_errno(tmp_path, monkeypatch):
+    # A genuine "held" errno (EWOULDBLOCK) must REFUSE — the guard is never
+    # dropped on contention, and an unknown error stays a refusal too (fail-safe).
+    import errno
+
+    agent_loop = load_script("agent_loop")
+
+    def _held(fd):
+        raise OSError(errno.EWOULDBLOCK, "held")
+
+    lock = tmp_path / "out" / "agent-loop.lock"
+    monkeypatch.setattr(agent_loop, "_take_os_lock", _held)
+    err = agent_loop.acquire_lock(lock)
+    assert err and "refusing to run two" in err
+
+
+@pytest.mark.skipif(os.name == "nt", reason="advisory-lock degrade is POSIX-only")
+def test_lock_degrades_on_unsupported_filesystem(tmp_path, monkeypatch, capsys):
+    # A filesystem that cannot lock (ENOLCK) must DEGRADE — warn and proceed, not
+    # fail closed on a legitimate run (Windows local FS always locks, so N/A there).
+    import errno
+
+    agent_loop = load_script("agent_loop")
+
+    def _unsupported(fd):
+        raise OSError(errno.ENOLCK, "no locks available")
+
+    lock = tmp_path / "out" / "agent-loop.lock"
+    monkeypatch.setattr(agent_loop, "_take_os_lock", _unsupported)
+    assert agent_loop.acquire_lock(lock) is None  # proceeds, unguarded
+    assert "without the one-coordinator" in capsys.readouterr().err.lower()
+    agent_loop.release_lock(lock)

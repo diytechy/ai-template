@@ -85,11 +85,15 @@ Apply only the ones your diff actually contains.
      main silent-conflict risk. Record the sign-off by creating
      `docs/parallel-ready`.
   Then set `AGENT_JOBS=2` in the launcher — the dispatcher logs the deliberate
-  two-worker promotion. Legacy `active` rows auto-reconcile to `queued` (a
-  logged finding) and `docs/tracks/*` stays readable one window while the
-  dispatcher ignores it; delete `docs/next-wi`/`docs/run-phase` if a pre-v4
-  scaffold still carries them (their content translates to **no** scheduling
-  state — the WI DAG + `Priority` are the whole ordering contract).
+  two-worker promotion. Since WI-210 a **plain launch is the dispatcher** (the
+  legacy serial resume driver and `--track` lanes are retired): after the flip,
+  drop any local reliance on the retired surfaces — the resume-from-`status.md`
+  prompt, a hand-set `docs/run-state`, `docs/rework-wi`, and `docs/tracks/*`
+  (now just your own notes; the dispatcher never reads them). Legacy `active`
+  rows auto-reconcile to `queued` (a logged finding); delete
+  `docs/next-wi`/`docs/run-phase` if a pre-v4 scaffold still carries them
+  (their content translates to **no** scheduling state — the WI DAG +
+  `Priority` are the whole ordering contract).
 
 ## 4. Re-stamp and verify
 

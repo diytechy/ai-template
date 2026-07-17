@@ -600,26 +600,16 @@ def test_skills_index_is_fresh():
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-def test_default_scaffold_omits_parallel_tracks(scaffold):
-    # The parallel-tracks layer is opt-in (process-options.md "Parallel tracks"):
-    # a default scaffold pays nothing — none of its files appear.
-    assert not (scaffold / "docs" / "tracks" / "README.md").exists()
+def test_scaffold_ships_no_tracks_layer(scaffold):
+    # WI-210: the parallel-tracks layer is retired outright — no scaffold
+    # (and no flag) produces its files; the dispatcher's worker assignment is
+    # the only lane concept.
+    assert not (scaffold / "docs" / "tracks").exists()
     assert not (scaffold / "docs" / "requirements" / "id-blocks.md").exists()
-
-
-def test_tracks_flag_scaffolds_lane_files_and_stays_green(tmp_path):
-    # --tracks scaffolds the lane README + the ID-block reservations, and the
-    # repo stays green: id-blocks.md is a note (not a parsed registry), so
-    # trace.py --strict is unaffected, and the README's links resolve.
-    dest = tmp_path / "repo"
-    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest, "--tracks"], cwd=tmp_path)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert (dest / "docs" / "tracks" / "README.md").exists()
-    assert (dest / "docs" / "requirements" / "id-blocks.md").exists()
     # the lock is gitignored downstream so a runtime pid file never lands
-    assert "out/agent-loop.lock" in (dest / ".gitignore").read_text(encoding="utf-8")
-    assert run_py(["scripts/trace.py", "--strict"], cwd=dest).returncode == 0
-    assert run_py(["scripts/check_docs.py", "--stale"], cwd=dest).returncode == 0
+    assert "out/agent-loop.lock" in (scaffold / ".gitignore").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_strip_provenance_drops_review_anchors_keeps_prose_and_code():

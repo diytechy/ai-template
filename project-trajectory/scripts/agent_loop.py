@@ -87,8 +87,10 @@ reservations held for the integrator (Slice F); docs/pause stops new
 reservations at the next boundary while in-flight workers finish;
 out/dispatch/ is a rebuildable journal/cache, never authority (§11); root
 docs/run-state becomes a generated dispatcher outcome. --jobs 1 is the
-explicit serial mode. Absent --jobs/AGENT_JOBS keeps today's legacy resume
-loop. The two-worker promotion is GATED (WI-186, SR-065): a repo holds at
+explicit serial mode. A plain launch IS the dispatcher (WI-210, one engine /
+one selection path): absent --jobs/AGENT_JOBS resolves to the §6 default of
+two workers — the legacy serial resume driver and its --track lanes are
+retired. The two-worker promotion is GATED (WI-186, SR-065): a repo holds at
 --jobs 1 until its SafetyClass audit (every open WI classified) AND soft-edge
 audit (signed via docs/parallel-ready) pass — a fresh scaffold passes by
 construction — and every launch emits reason-coded telemetry (run/train/WI/
@@ -117,20 +119,13 @@ the classifier no longer permits in a multi-WI grouping ends the train EARLY
 the unstarted constituents' reservations. Exit 0 = every assigned WI built
 (and its one review cycle approved).
 
---track <name> drives one parallel development lane (process-options.md
-"Parallel tracks"): every coordination file this loop reads or writes —
-run-state, status.md (the resume excerpt), the iteration logs and
-their index — resolves under docs/tracks/<name>/ instead of docs/, and the
-session prompt gains a preamble redirecting the driver to that lane. The
-repo-singular policies (gate, gate-policy, push-policy, privacy-check,
-guardrails-policy) stay at docs/. A track must run on branch llm/<name> in its
-own worktree (preflight enforces it), and a per-worktree lockfile
-(out/agent-loop.lock) stops two coordinators grinding one checkout. NO --track
-= single-lane operation with docs/ as the lane (the same per-worktree lock
-applies there too — one coordinator per checkout). --track is DEPRECATED
-(WI-181, one compatibility window): the dispatcher's explicit --wi/--train
-worker assignment replaces long-lived tracks; legacy behavior is unchanged
-meanwhile and a deprecation warning is printed.
+A per-worktree lockfile (out/agent-loop.lock) stops two coordinators grinding
+one checkout — the dispatcher, a worker, and an --interactive sitting all take
+it (one coordinator per checkout; the OS releases it on process death). The
+retired --track lanes' judgment duties are re-homed once in process-options.md
+"Unattended operation" (WI-210): intake/triage of new scope belongs to the
+human + the gate-stage sessions; drained-queue and NEEDS-HUMAN surfacing are
+dispatcher-generated (the end-state banner + root docs/run-state).
 
 Exit codes: 0 DONE · 2 preflight/config failure (incl. the inert unfilled
 slot) · 3 BLOCKED · 4 stall abort (work stall or an all-ERROR agent-unavailable
@@ -186,12 +181,13 @@ LOG_HEAD_LINES = 60
 LOG_TAIL_LINES = 400
 LOG_MAX_BYTES = 65536
 
-# The end states a driver may write to docs/run-state (one word, tracked like
-# docs/gate; anything else — including the file being absent — reads RUNNING).
-# NEEDS-HUMAN may carry one `ask: <one-line ask>` line after the state word —
-# read_ask() headlines it in the stop banner, so the console names the human
-# act instead of burying it in the status excerpt (WI-127). Every state reader
-# takes only the first declared line, so the extra line is invisible to them.
+# The end states docs/run-state may carry (one word, tracked like docs/gate;
+# anything else — including the file being absent — reads RUNNING). The file
+# is dispatcher-GENERATED (spec §10; the serial driver that used to read it
+# back is retired, WI-210). NEEDS-HUMAN may carry one `ask: <one-line ask>`
+# line after the state word — the concrete human act the stop banner
+# headlines (WI-127). Every state reader takes only the first declared line,
+# so the extra line is invisible to them.
 END_STATES = ("DONE", "BLOCKED", "NEEDS-HUMAN")
 
 EXIT_DONE = 0
@@ -211,30 +207,9 @@ EXIT_TRAIN_END = 10
 # your session limit · resets 3:45pm" / "…weekly limit · resets Mon 12:00am".
 LIMIT_RE = re.compile(r"limit[^\n]*?resets?\s*[:·|-]?\s*([^\n\"'}]+)", re.I)
 
-DEFAULT_PROMPT = (
-    "You are the driver session launched by the unattended coordinator "
-    "(scripts/agent_loop.py) — assume no human is watching. Read AGENTS.md, "
-    "then docs/process.md and docs/process-options.md ('Unattended "
-    "operation'), and resume from docs/status.md Current State under the "
-    "declared docs/gate-policy. Work as far as you can this session — where "
-    "docs/plan.md exists, execute the next pending block and only it; if the "
-    "plan is exhausted or wrong, re-chunk docs/plan.md against the recent "
-    "iteration_index.md rows before continuing (a finding, never a silent "
-    "rework). "
-    "Honor "
-    "docs/push-policy (default: never push, even if asked) and, where the "
-    "iteration-branch layer is in use, stay on the llm/ iteration branch and "
-    "run its sync ritual at end states. Before stopping: commit your "
-    "progress (even a Blocked-register entry is a commit); append session "
-    "evidence to docs/log.md and keep docs/status.md holding only the resume "
-    "point + open/blocked items; and write docs/run-state — RUNNING while work "
-    "remains, DONE only at the declared end state (a wrong DONE is a false "
-    "green), BLOCKED when everything remaining is in the Blocked register, "
-    "NEEDS-HUMAN when the next step requires a human act (state the ask as a "
-    "'Needs <human>' Open item in status.md first, and follow the state word "
-    "in docs/run-state with one 'ask: <the one-line ask>' line — the "
-    "coordinator headlines it in its stop banner)."
-)
+# (The resume-from-status.md DEFAULT_PROMPT retired with the serial resume
+# driver, WI-210: a session's scope is its worker assignment, a reviewer
+# brief, or a critique brief — never "resume from status.md".)
 
 # The dirty-tree resume note (WI-076; process-options.md "Unattended
 # operation"). Prepended to the FIRST session's prompt when the loop starts on a
@@ -425,21 +400,9 @@ def read_declared(path, default):
     return default
 
 
-def read_ask(path):
-    """The optional `ask: <one-line ask>` line a driver leaves in docs/run-state
-    below the NEEDS-HUMAN state word — the concrete human act the stop banner
-    must headline (WI-127: a long status.md Current State can push the
-    Needs-<human> items past the banner excerpt's line cap, so the ask gets its
-    own dedicated line). Returns "" when absent — the legacy one-word file."""
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return ""
-    for ln in lines:
-        ln = ln.strip()
-        if ln.lower().startswith("ask:"):
-            return ln[4:].strip()
-    return ""
+# (read_ask retired with the serial driver, WI-210: the dispatcher composes
+# its NEEDS-HUMAN banners from the ask it just generated — the `ask:` line in
+# docs/run-state remains the WI-127 contract for humans and launchers.)
 
 
 def pause_reason(lane):
@@ -510,23 +473,9 @@ def blackout_wake(line, now):
     return int((wake - now).total_seconds())
 
 
-def sanitize_track(name):
-    """A track name becomes a lane directory segment, so restrict it to a safe
-    slug — `--track` can then never traverse the tree. Returns the name or
-    raises ValueError (the preflight and main both surface the message)."""
-    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name or ""):
-        raise ValueError(
-            "track name {!r} must be a lowercase slug matching "
-            "[a-z0-9][a-z0-9-]* (starts alphanumeric)".format(name)
-        )
-    return name
-
-
-def lane_dir(docs, track):
-    """The coordination lane for a track: docs/tracks/<track> when a track is
-    named, else docs itself — so single-lane operation uses docs/ exactly as
-    before (the repo-singular policy files always stay at docs/)."""
-    return (docs / "tracks" / track) if track else docs
+# (--track and its docs/tracks/<name>/ lane plumbing retired outright, WI-210:
+# the dispatcher's explicit --wi/--train worker assignment is the only lane
+# concept; docs/ is the one coordination surface and the integrator owns it.)
 
 
 # --- WI-181: explicit worker assignment (SR-060) --------------------------------
@@ -912,24 +861,9 @@ def build_argv(template, model, prompt):
     return argv
 
 
-def status_size_warning(status_path, limit):
-    """A warn-only message when the resume surface outgrew one screen, or None.
-
-    Every session inherits the lane's status.md; a bloated one is the
-    file-world analogue of a full context window. Advisory
-    only — the integrator's prune charter is the fix; limit <= 0 disables."""
-    try:
-        size = status_path.stat().st_size
-    except OSError:
-        return None  # no surface yet — nothing to warn about
-    if limit <= 0 or size <= limit:
-        return None
-    return (
-        "{} is {} bytes (> {}): every session inherits this resume surface — "
-        "prune it to one screen (the integrator charter; evidence belongs in "
-        "log.md / the iteration logs). AGENT_STATUS_WARN_BYTES tunes or "
-        "silences (0) this warning.".format(status_path, size, limit)
-    )
+# (status_size_warning retired with the serial driver, WI-210: no session
+# inherits status.md as its resume surface any more — status.md is a
+# generated integrator artifact whose size the generator owns.)
 
 
 def parse_map(spec):
@@ -986,25 +920,20 @@ def compose_session_prompt(
     model,
     body,
     resume_reconcile,
-    track_preamble,
-    default_prompt,
     guardrails_policy,
     root,
     warned_no_core,
 ):
-    """The session prompt: the track preamble (when --track redirects the
-    driver to a lane) prepended to the base prompt, with the vendored
-    guardrails core prepended ahead of both when docs/guardrails-policy
-    selects this session's model (Thread 41). `body` overrides the default
-    resume prompt (a --prompt-map template, or a redacted reviewer prompt).
-    A loop-start dirty tree adds the WI-076 reconcile note ahead of the
-    preamble for the first session (resume_reconcile). Returns (prompt,
-    guarded); a selected-but-absent core warns once, then runs without it
-    (guardrails accelerate quick tiers, they never gate a run). warned_no_core
-    is a shared mutable list used as the warn-once flag across calls."""
-    base = (
-        resume_reconcile + track_preamble + (default_prompt if body is None else body)
-    )
+    """The session prompt: `body` (the worker assignment, a redacted reviewer
+    prompt, or a critique brief — WI-210 retired the resume-from-status
+    default) with the vendored guardrails core prepended when
+    docs/guardrails-policy selects this session's model (Thread 41). A
+    loop-start dirty tree adds the WI-076 reconcile note ahead of the body for
+    the first session (resume_reconcile). Returns (prompt, guarded); a
+    selected-but-absent core warns once, then runs without it (guardrails
+    accelerate quick tiers, they never gate a run). warned_no_core is a shared
+    mutable list used as the warn-once flag across calls."""
+    base = resume_reconcile + body
     if not guardrails_apply(guardrails_policy, model):
         return base, False
     core = guardrails_core(root)
@@ -2316,11 +2245,6 @@ def preflight(root, template, args):
                 "--wi without --train" if wi_spec else "--train without --wi"
             )
         )
-    if (wi_spec or train) and getattr(args, "track", None):
-        failures.append(
-            "--wi/--train (a worker assignment) and --track (a legacy lane) "
-            "are mutually exclusive — a worker's lane IS its assignment."
-        )
     if (wi_spec or train) and getattr(args, "interactive", False):
         failures.append(
             "--wi/--train is an unattended worker assignment; it cannot be "
@@ -2368,34 +2292,6 @@ def preflight(root, template, args):
                         "assignment; the dispatcher must re-derive the "
                         "frontier.".format(wid)
                     )
-    track = getattr(args, "track", None)
-    if track:
-        try:
-            sanitize_track(track)
-        except ValueError as exc:
-            failures.append(str(exc))
-        else:
-            code, branch = git(root, "branch", "--show-current")
-            expected = "llm/{}".format(track)
-            if code != 0 or not branch:
-                # Empty/failed = detached HEAD (or git < 2.22). We cannot confirm
-                # the lane, so a track run must fail CLOSED — never fall through
-                # and write from an unverifiable checkout.
-                failures.append(
-                    "track {!r} requires branch {!r}, but this worktree's branch "
-                    "could not be determined (detached HEAD, or git older than "
-                    "2.22). A track drives one llm/<track> iteration branch in "
-                    "one worktree (process-options.md 'Parallel tracks'); check "
-                    "out that branch, or drop --track.".format(track, expected)
-                )
-            elif branch != expected:
-                failures.append(
-                    "track {!r} must run on its own branch {!r}, but this "
-                    "worktree is on {!r}. A track drives one llm/<track> "
-                    "iteration branch in one worktree (process-options.md "
-                    "'Parallel tracks'); `git worktree add` that branch and run "
-                    "there, or drop --track.".format(track, expected, branch)
-                )
     return failures
 
 
@@ -4663,18 +4559,6 @@ def parse_args():
         "AGENT_CMD_INTERACTIVE env var, else AGENT_CMD",
     )
     ap.add_argument(
-        "--track",
-        default=os.environ.get("AGENT_TRACK", "") or None,
-        help="DEPRECATED (WI-181; one compatibility window — the dispatcher's "
-        "--wi/--train worker assignment replaces tracks): drive one parallel "
-        "development lane: every coordination file "
-        "(run-state, status.md excerpt, iteration logs + index) "
-        "resolves under docs/tracks/<track>/ and the session must be on branch "
-        "llm/<track> in its own worktree. Omit for single-lane operation "
-        "(default: the AGENT_TRACK env var). See process-options.md "
-        "'Parallel tracks'.",
-    )
-    ap.add_argument(
         "--wi",
         default=None,
         help="worker assignment (with --train): the assigned traincar's ordered "
@@ -4721,11 +4605,11 @@ def parse_args():
     ap.add_argument(
         "--jobs",
         default=None,
-        help="launch the PARALLEL DISPATCHER with this worker ceiling: an "
-        "integer (1 = explicit serial mode) or 'auto' (adaptive up to the "
-        "AGENT_JOBS_CEILING env, default 2). Presence of this flag — or the "
-        "AGENT_JOBS env var — selects dispatcher mode; absent keeps the "
-        "legacy resume loop (docs/specs/parallel-wi-dispatch.md §4).",
+        help="the dispatcher's worker ceiling: an integer (1 = explicit "
+        "serial mode) or 'auto' (adaptive up to the AGENT_JOBS_CEILING env, "
+        "default 2). A plain launch IS the dispatcher (WI-210): absent "
+        "--jobs/AGENT_JOBS resolves to 2, held at 1 until the §14 migration "
+        "audits pass (docs/specs/parallel-wi-dispatch.md §4/§14).",
     )
     ap.add_argument(
         "--worker-iterations",
@@ -4801,12 +4685,6 @@ def parse_args():
         "preferred id is tried before docs/agents-enabled order without changing "
         "tier, and unknown/cooling ids fall through (default: AGENT_PREFER_MAP "
         "env var)",
-    )
-    ap.add_argument(
-        "--prompt",
-        default=DEFAULT_PROMPT,
-        help="resume prompt passed to each session (default: the kit's "
-        "resume-from-status.md prompt)",
     )
     ap.add_argument(
         "--session-timeout",
@@ -4963,6 +4841,16 @@ def build_worker_assignment(args, root):
     worker = None
     if args.wi and args.train:
         base = (args.base or "").strip() or head_sha(root)
+        if not base:
+            # An unborn HEAD (zero-commit repo) has no integration base to
+            # build evidence against — fail closed, never crash (the
+            # dispatcher always assigns from an existing HEAD).
+            print(
+                "agent_loop: no --base and no HEAD commit to default to — a "
+                "worker builds from an integration base; commit first.",
+                file=sys.stderr,
+            )
+            return None, EXIT_PREFLIGHT
         code, _ = git(root, "rev-parse", "--verify", "--quiet", base + "^{commit}")
         if code != 0:
             # A garbage base would make every evidence scan empty and burn the
@@ -5020,41 +4908,19 @@ def build_worker_assignment(args, root):
     return worker, None
 
 
-def track_preamble_text(track):
-    """The per-track prompt preamble redirecting the session to its lane;
-    "" for single-lane (no track) operation."""
-    if not track:
-        return ""
-    return (
-        "You are driving the '{t}' development track. Wherever the "
-        "instructions below say docs/status.md, docs/plan.md or "
-        "docs/run-state, use the docs/tracks/{t}/ copy instead — that "
-        "lane is your resume surface and coordinator contract. Append this "
-        "session's evidence to docs/tracks/{t}/log.md. Do NOT write the root "
-        "docs/status.md (the cross-track dispatcher, integrator-only) or any "
-        "other track's lane. The requirement registries "
-        "(docs/requirements/*), docs/gate, and the root docs/log.md gate "
-        "sign-offs are repo-singular and shared: propose registry changes as "
-        "off-spine scope drafts for the integrator to land — never edit "
-        "another lane. Stay on the llm/{t} branch (process-options.md "
-        "'Parallel tracks').\n\n---\n\n"
-    ).format(t=track)
-
-
 def run_interactive(
     args,
     root,
-    track,
     model_map,
     cmd_map,
     template,
-    resume_reconcile,
-    track_preamble,
     guardrails_policy,
     warned_no_core,
 ):
     """Boot exactly one hands-on session (stdio attached) and return its
-    exit code — the --interactive early path, no loop."""
+    exit code — the --interactive early path, no loop. The human at the
+    keyboard drives the scope (WI-210 retired the resume-from-status
+    default), so the composed prompt is just the guardrails posture."""
     phase, model = session_model(model_map, args.model)
     # Explicit interactive template wins; then the per-phase map; then the
     # default — so a REVIEW-phase interactive sitting uses the same
@@ -5066,8 +4932,8 @@ def run_interactive(
         or session_template(cmd_map, template, phase)
     )
     print(
-        "=== one interactive session | track={} phase={} model={} ===".format(
-            track or "—", phase or "—", model or "—"
+        "=== one interactive session | phase={} model={} ===".format(
+            phase or "—", model or "—"
         )
     )
     argv = build_argv(
@@ -5075,10 +4941,8 @@ def run_interactive(
         model,
         compose_session_prompt(
             model,
-            None,
-            resume_reconcile,
-            track_preamble,
-            args.prompt,
+            "",
+            "",
             guardrails_policy,
             root,
             warned_no_core,
@@ -5092,8 +4956,6 @@ def print_run_banner(
     root,
     branch,
     worker,
-    track,
-    lane,
     gate_policy,
     push_policy,
     review_policy,
@@ -5117,8 +4979,6 @@ def print_run_banner(
                 worker["train"], ";".join(worker["assigned"]), worker["base"][:12]
             )
         )
-    else:
-        print("track: {} | lane: {}".format(track or "(single-lane)", lane))
     print(
         "gate-policy: {} | push-policy: {} (the coordinator never pushes "
         "under 'human') | review-policy: {} (docs/review-policy — the reviewer "
@@ -5174,17 +5034,16 @@ class LoopContext:
     used to read the loop-local."""
 
 
-def route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now):
-    """Pick the phase + model + prompt for this session (managed routing or
-    the legacy single-model path). Returns an int exit code to end the run
-    (no routable model -> EXIT_NEEDS_HUMAN; a {model} template with no model
-    -> EXIT_PREFLIGHT) or a `plan` dict the caller launches."""
+def route_session(ctx, i, current_wi, session, resume_reconcile, now):
+    """Pick the phase + model + prompt for this worker session (managed
+    routing or the single-model path; WI-210 — every loop session is a
+    dispatcher-assigned worker session). Returns an int exit code to end the
+    run (no routable model -> EXIT_NEEDS_HUMAN; a {model} template with no
+    model -> EXIT_PREFLIGHT) or a `plan` dict the caller launches."""
     args = ctx.args
     root = ctx.root
     docs = ctx.docs
-    lane = ctx.lane
     status_path = ctx.status_path
-    track_preamble = ctx.track_preamble
     worker = ctx.worker
     managed = ctx.managed
     registry = ctx.registry
@@ -5243,14 +5102,8 @@ def route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now)
         if route_id is None:
             # Every enabled model at the preferred tier-or-stronger is cooling
             # down or none is enabled: page rather than drop to a weaker tier.
-            # (A worker never writes run-state — its exit code is the page.)
-            if not worker:
-                (lane / "run-state").write_text(
-                    "NEEDS-HUMAN\nask: no routable model — add/enable a model "
-                    "of the required tier in docs/agents.csv, or wait out the "
-                    "cooldown\n",
-                    encoding="utf-8",
-                )
+            # (A worker never writes run-state — its exit code is the page;
+            # the dispatcher generates the root run-state, spec §10.)
             stop_banner(
                 status_path,
                 "NEEDS-HUMAN — no routable model",
@@ -5285,26 +5138,22 @@ def route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now)
                 else head_sha(root)
             ) or ""
         if is_review:
-            verdict_path = reviews_dir / (
-                "{}-{}-{}.md".format(session, phase, reviewed_sha[:7])
-                if worker
-                else "{}-{}.md".format(session, phase)
+            verdict_path = reviews_dir / "{}-{}-{}.md".format(
+                session, phase, reviewed_sha[:7]
             )
             verdict_path.parent.mkdir(parents=True, exist_ok=True)
             body = reviewer_prompt(prompt_templates, phase, verdict_path)
         elif is_critique:
-            verdict_path = reviews_dir / (
-                "{}-CRITIQUE-{}.md".format(session, reviewed_sha[:7])
-                if worker
-                else "{}-CRITIQUE.md".format(session)
+            verdict_path = reviews_dir / "{}-CRITIQUE-{}.md".format(
+                session, reviewed_sha[:7]
             )
             verdict_path.parent.mkdir(parents=True, exist_ok=True)
             brief = critique_brief(root, docs, st.critique_scope)
             body = critique_prompt(prompt_templates, verdict_path, brief)
-        elif worker:
-            # Every non-review worker session builds from the assignment
-            # prompt — never the resume-from-status default and never a
-            # repo prompt-map template (the assignment is the whole scope).
+        else:
+            # Every non-review session builds from the assignment prompt —
+            # never a resume-from-status default (retired, WI-210) and never
+            # a repo prompt-map template (the assignment is the whole scope).
             body = worker_prompt(
                 root,
                 worker["rows"],
@@ -5313,26 +5162,14 @@ def route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now)
                 worker["base"],
                 worker["rework"],
             )
-        elif phase in prompt_templates:
-            body = prompt_templates[phase]
-        else:
-            body = None
         prompt, guarded = compose_session_prompt(
             model,
             body,
             resume_reconcile,
-            track_preamble,
-            args.prompt,
             guardrails_policy,
             root,
             warned_no_core,
         )
-        if rework_wi and not is_review and not is_critique and phase in ("", "BUILD"):
-            prompt = (
-                "REWORK OVERRIDE: docs/rework-wi names {}. Rework that reviewed "
-                "scope and its recorded findings before taking new "
-                "work.\n\n---\n\n{}".format(rework_wi, prompt)
-            )
     else:
         phase, model = session_model(model_map, args.model)
         tmpl = session_template(cmd_map, template, phase)
@@ -5345,12 +5182,8 @@ def route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now)
                 worker["train"],
                 worker["base"],
                 worker["rework"],
-            )
-            if worker
-            else None,
+            ),
             resume_reconcile,
-            track_preamble,
-            args.prompt,
             guardrails_policy,
             root,
             warned_no_core,
@@ -5388,7 +5221,6 @@ def session_bookkeeping(
     code (a page-human)."""
     root = ctx.root
     docs = ctx.docs
-    lane = ctx.lane
     status_path = ctx.status_path
     worker = ctx.worker
     managed = ctx.managed
@@ -5460,7 +5292,21 @@ def session_bookkeeping(
             changed = []
             if st.impl_range and ".." in st.impl_range:
                 _rc, diff_out = git(root, "diff", "--name-only", st.impl_range)
-                changed = [ln for ln in diff_out.splitlines() if ln.strip()]
+                # The whole-train range (WI-183; the only range now, WI-210)
+                # legitimately carries THIS train's own committed verdicts,
+                # scoreboard, and session telemetry from earlier rounds — a
+                # rework round must not read them as "the implementer touched
+                # a review path" (the false-fire this excludes). A gamed
+                # verdict is still caught upstream: the integrator verifies
+                # verdicts on the exact reviewed head (SR-063).
+                own = "docs/reviews/{}/".format(worker["train"])
+                changed = [
+                    ln
+                    for ln in diff_out.splitlines()
+                    if ln.strip()
+                    and not ln.replace("\\", "/").startswith(own)
+                    and not ln.replace("\\", "/").startswith("docs/iteration")
+                ]
             fired = score_reviews.fired_tripwires(verdicts, changed_paths=changed)
             round_info = {
                 "verdict": merged or "",
@@ -5499,7 +5345,7 @@ def session_bookkeeping(
             # (SR-060) — never the lane's tracked docs/rework-wi pointer,
             # which a train branch must not carry. The verdict text itself
             # is embedded in the next build session's prompt.
-            if worker and merged == "CHANGES-REQUESTED":
+            if merged == "CHANGES-REQUESTED":
                 worker["rework"] = "\n".join(
                     (rv.text or "").strip()
                     for (_ph, rv, _f, _m) in st.round_verdicts
@@ -5510,36 +5356,13 @@ def session_bookkeeping(
                     "dispatch: CHANGES-REQUESTED -> assignment-scoped "
                     "rework of {}".format(worker["rework_wi"] or "the train")
                 )
-            elif worker and merged == "APPROVE":
+            elif merged == "APPROVE":
                 worker["rework"] = ""
                 worker["rework_wi"] = ""
             st.round_verdicts = []
-            if worker:
-                pass  # handled above — no lane rework-wi file in worker mode
-            elif merged == "CHANGES-REQUESTED" and st.last_impl_wi:
-                rework_path = lane / "rework-wi"
-                rework_path.write_text(st.last_impl_wi + "\n", encoding="utf-8")
-                commit_telemetry(root, session, "review rework scope", [rework_path])
-                print(
-                    "dispatch: CHANGES-REQUESTED -> rework override {} "
-                    "takes precedence".format(st.last_impl_wi)
-                )
-            elif merged == "APPROVE":
-                rework_path = lane / "rework-wi"
-                if (
-                    st.last_impl_wi
-                    and rework_path.exists()
-                    and read_declared(rework_path, "") == st.last_impl_wi
-                ):
-                    rework_path.unlink()
-                    commit_telemetry(
-                        root, session, "review rework scope cleared", [rework_path]
-                    )
-                    print(
-                        "dispatch: APPROVE -> cleared rework override {}".format(
-                            st.last_impl_wi
-                        )
-                    )
+            # (The lane docs/rework-wi pointer retired with the serial driver,
+            # WI-210: a worker's rework scope is assignment-scoped in-process
+            # state, handled above.)
             # State consequences of the escalation happen ONCE, here (WI-171
             # page re-arm, swap/tier-up/changes-requested); the branch below
             # keeps only the page path's I/O (failure_action / banner /
@@ -5550,13 +5373,8 @@ def session_bookkeeping(
                 fa = agent_route.failure_action(gate_policy)
                 print("route/failure ({}): {}".format(fa["mode"], fa["note"]))
                 if fa["mode"] == "attended":
-                    if not worker:
-                        (lane / "run-state").write_text(
-                            "NEEDS-HUMAN\nask: review escalation — "
-                            + decision["reason"]
-                            + "\n",
-                            encoding="utf-8",
-                        )
+                    # A worker never writes run-state — its exit code pages
+                    # the dispatcher, which generates the root file (§10).
                     stop_banner(
                         status_path,
                         "PAGE-HUMAN — review escalation",
@@ -5602,13 +5420,6 @@ def session_bookkeeping(
                     )
                 )
                 if fa["mode"] == "attended" or st.critique_exhaustion == "block":
-                    if not worker:
-                        (lane / "run-state").write_text(
-                            "NEEDS-HUMAN\nask: critique budget exhausted "
-                            "still CHANGES-REQUESTED — review the findings "
-                            "and rule\n",
-                            encoding="utf-8",
-                        )
                     stop_banner(
                         status_path,
                         "PAGE-HUMAN — critique budget exhausted",
@@ -5657,7 +5468,7 @@ def session_bookkeeping(
             # accepted-on-train (locally green and committed), not
             # reviewed; the cycle comes once, at the end.
             schedule_review = rp_int >= 1
-            if worker and schedule_review:
+            if schedule_review:
                 built_now, _blk = train_evidence(root, worker["base"])
                 schedule_review = all(w in built_now for w in worker["assigned"])
                 if schedule_review:
@@ -5665,11 +5476,8 @@ def session_bookkeeping(
             if schedule_review:
                 queued = st.schedule_review_round()
                 print(
-                    "dispatch: review-policy {} -> scheduling review round {}{}".format(
-                        rp_int,
-                        queued,
-                        " over the whole train diff" if worker else "",
-                    )
+                    "dispatch: review-policy {} -> scheduling review round {} "
+                    "over the whole train diff".format(rp_int, queued)
                 )
             # The critique round is INDEPENDENT of the review dial (WI-068): it
             # fires only when this build's WI touches a Critique-verified SR.
@@ -5703,51 +5511,20 @@ def session_bookkeeping(
     return None
 
 
-def dual_only_frontier_ask(root):
-    """The serial resume driver's dual-plan quiet-park guard (WI-209, the
-    SR-066 no-silent-park rule): when EVERY dependency-actionable queued WI
-    (hard predecessors integrated done — readiness only; the serial path never
-    consults the safety classifier, so classification must not gate this
-    check) declares PlanMode=dual, a resume session has nothing it may
-    legitimately build (a dual row is never a direct BUILD), so the loop
-    surfaces the ask instead of idling. Returns the one-line ask naming the
-    --dual-plan entry (the WI-127 headline idiom), or "" while ordinary
-    actionable work remains (or the frontier is empty — a drained queue is the
-    stop banner's story, not this guard's)."""
-    wis = schedule.load_wis(
-        schedule.load_rows(root / "docs" / "requirements" / "work-items.csv")
-    )
-    status = {w["id"]: w["status"] for w in wis}
-    actionable = [
-        w
-        for w in wis
-        if w["status"] == "queued" and all(status.get(p) == "done" for p in w["preds"])
-    ]
-    if not actionable:
-        return ""
-    dual = [w["id"] for w in actionable if w.get("planmode") == "dual"]
-    if len(dual) != len(actionable):
-        return ""
-    return (
-        "every dependency-ready WI ({}) declares PlanMode=dual — a dual row "
-        "never runs as a direct BUILD; run agent_loop --dual-plan {} (or "
-        "launch the dispatcher: --jobs auto-runs the round)".format(
-            ";".join(dual), dual[0]
-        )
-    )
-
-
 def run_iteration(ctx, i):
-    """One coordinator session end-to-end: guards, routing (route_session),
+    """One worker session end-to-end: guards, routing (route_session),
     launch, telemetry, bookkeeping (session_bookkeeping), and the outcome
-    ladder. Returns an int exit code to END the run, or None to proceed to
-    the next iteration (a `continue` path returns None early, so the trailing
-    pause sleep — the last statement — is naturally skipped)."""
+    ladder (WI-210 — the loop is the dispatcher-assigned worker engine; the
+    serial resume driver and its docs/pause boundary are retired: pause stops
+    NEW RESERVATIONS at the dispatcher, spec §12, while an in-flight worker
+    finishes its safe boundary). Returns an int exit code to END the run, or
+    None to proceed to the next iteration (a `continue` path returns None
+    early, so the trailing pause sleep — the last statement — is naturally
+    skipped)."""
     args = ctx.args
     root = ctx.root
     lane = ctx.lane
     status_path = ctx.status_path
-    track = ctx.track
     worker = ctx.worker
     managed = ctx.managed
     start_dirty = ctx.start_dirty
@@ -5757,27 +5534,6 @@ def run_iteration(ctx, i):
     use_live = ctx.use_live
     rp_int = ctx.rp_int
     st = ctx.st
-    # WI-147: a graceful-pause request (docs/pause) stops the loop at a
-    # session *boundary* — never mid-session. Checked at the top of every
-    # iteration, so iteration 1 is the launch-time refusal (no session starts
-    # while the file is present) and a mid-run request takes effect only after
-    # the in-flight session has already finished and committed. run-state is
-    # left as-is; deleting docs/pause and re-launching resumes.
-    # A worker ignores docs/pause: pause stops NEW RESERVATIONS at the
-    # dispatcher boundary (spec §12); an in-flight worker finishes its
-    # current safe boundary and remains recoverable.
-    paused = None if worker else pause_reason(lane)
-    if paused is not None:
-        because = " — reason: {}".format(paused) if paused else ""
-        stop_banner(
-            status_path,
-            "paused (docs/pause present)",
-            "a graceful-pause request is in effect{}. No new session will "
-            "start; delete {} and re-run agent-resume.* to resume.".format(
-                because, lane / "pause"
-            ),
-        )
-        return EXIT_PAUSED
     # WI-148: a declared docs/blackout window pauses NEW sessions on UTC
     # weekdays. The in-flight session already wrapped normally (the pause
     # semantic), so here we simply wait the window out and then let this
@@ -5797,17 +5553,9 @@ def run_iteration(ctx, i):
             )
         )
         time.sleep(wake)
-    # WI-209: the serial driver's dual-plan quiet-park guard. Checked before a
-    # session is spent, every iteration — a dual row must never park silently
-    # on this path either (the dispatcher auto-runs the round; here the round
-    # needs the human's --dual-plan launch, so page the ask honestly).
-    if not worker:
-        dual_ask = dual_only_frontier_ask(root)
-        if dual_ask:
-            print("agent_loop: " + dual_ask)
-            _write_runstate(lane, "NEEDS-HUMAN", dual_ask)
-            stop_banner(status_path, "NEEDS-HUMAN", dual_ask)
-            return EXIT_NEEDS_HUMAN
+    # (The WI-209 serial dual-plan quiet-park guard retired with the serial
+    # driver, WI-210: the dispatcher auto-runs a dual row's round, so the
+    # page-instead-of-idle duty has no second path left to cover.)
     # Inject the reconcile note into the first session's prompt only (see the
     # once-at-start rationale above); every later session's prompt is
     # unchanged from today.
@@ -5883,19 +5631,14 @@ def run_iteration(ctx, i):
                     )
                 )
                 return EXIT_TRAIN_END
-    session = "{:03d}".format(
-        next_session_number(iter_dir, worker["train"] if worker else None)
-    )
+    session = "{:03d}".format(next_session_number(iter_dir, worker["train"]))
     stamp = time.strftime("%Y%m%d-%H%M%S")
     # The WI this session claims (WI-137) — recorded as a `# wi:` header line
-    # + an index column. A worker's is its assignment's current WI; otherwise,
-    # with docs/next-wi retired (WI-180), the only durable per-session scope
-    # pointer is a rework override; empty when neither.
-    rework_wi = "" if worker else read_declared(lane / "rework-wi", "")
-    wi_label = current_wi if worker else rework_wi
+    # + an index column: the assignment's current WI.
+    wi_label = current_wi
     before = head_sha(root)
     now = time.time()
-    plan = route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now)
+    plan = route_session(ctx, i, current_wi, session, resume_reconcile, now)
     if isinstance(plan, int):
         return plan
     phase = plan["phase"]
@@ -5905,21 +5648,21 @@ def run_iteration(ctx, i):
     guarded = plan["guarded"]
     session_env = plan["session_env"]
     print(
-        "=== session {} [{}] ({}/{}) | phase={} model={}{} ===".format(
+        "=== session {} [{}] ({}/{}) | phase={} model={} wi={} ===".format(
             session,
-            worker["train"] if worker else (track or "single"),
+            worker["train"],
             i,
             args.max_iterations,
             phase or "—",
             model or "—",
-            " wi={}".format(current_wi) if worker else "",
+            current_wi,
         )
     )
     argv = build_argv(tmpl, model, prompt)
     # The coordinator's own clock, so a duration exists even when the
     # session dies before emitting JSON (spawn failure, timeout, crash).
     wall_start = time.time()
-    live = LiveStatus(track or "single") if use_live else None
+    live = LiveStatus(worker["train"]) if use_live else None
     if args.no_session_echo:
         on_line = None
     elif live is not None:
@@ -5981,9 +5724,9 @@ def run_iteration(ctx, i):
     commits = ""
     if before != after:
         commits = "{}..{}".format(before or "(root)", after or "?")
-    ctx.state = (
-        "RUNNING" if worker else read_declared(lane / "run-state", "RUNNING").upper()
-    )
+    # A worker has no lane run-state (spec §10): its state is always RUNNING
+    # until its committed evidence says otherwise (worker_endstate).
+    ctx.state = "RUNNING"
 
     # (outcome, errored) via the session-outcome ladder — full semantics
     # (including the "failed before it could work" error rule) live in
@@ -5996,8 +5739,8 @@ def run_iteration(ctx, i):
         "session": session,
         "stamp": stamp,
         "date": time.strftime("%Y-%m-%d %H:%M"),
-        "train": worker["train"] if worker else "",
-        "base": worker["base"][:12] if worker else "",
+        "train": worker["train"],
+        "base": worker["base"][:12],
         "phase": phase,
         "wi": wi_label,
         "model": model,
@@ -6021,8 +5764,6 @@ def run_iteration(ctx, i):
     # A worker never regenerates the iteration index: it is a GENERATED
     # root artifact the integrator rebuilds on the composed tree (spec
     # §5.1) — two workers regenerating it would collide at integration.
-    if not worker:
-        regenerate_index(lane)
     # Commit the coordinator's own bookkeeping now, in its own telemetry
     # commit — never let it ride the next session's work commit or dangle
     # (WI-137). The review scoreboard is committed at its own write below.
@@ -6030,7 +5771,7 @@ def run_iteration(ctx, i):
         root,
         tag + session,
         "{} {}".format(phase or "—", outcome),
-        [log_path] if worker else [log_path, lane / "iteration_index.md"],
+        [log_path],
     )
     print(
         "session {}: outcome={} commits={} wall={}s{}".format(
@@ -6080,42 +5821,22 @@ def run_iteration(ctx, i):
             "resume at: {} (re-run agent-resume.* then)".format(reset_hint),
         )
         return EXIT_WAITING
-    if outcome == "DONE":
-        stop_banner(status_path, "run-state=DONE")
-        return EXIT_DONE
-    if outcome == "BLOCKED":
-        stop_banner(
-            status_path,
-            "run-state=BLOCKED",
-            "everything remaining is in the Blocked register.",
-        )
-        return EXIT_BLOCKED
-    if outcome == "NEEDS-HUMAN":
-        # Headline the driver's own ask line (WI-127): the status excerpt
-        # below is capped, and on a long Current State the Needs-<human>
-        # items land past the cap — the ask must never scroll away.
-        ask = read_ask(lane / "run-state")
-        stop_banner(
-            status_path,
-            "run-state=NEEDS-HUMAN",
-            (("ask: " + ask + "\n") if ask else "")
-            + "the next step requires a human act — the asks below; "
-            "re-run agent-resume.* after acting.",
-        )
-        return EXIT_NEEDS_HUMAN
+    # (The run-state DONE/BLOCKED/NEEDS-HUMAN ladder retired with the serial
+    # driver, WI-210: a worker's state is always RUNNING here — its end
+    # states are judged from committed evidence, below, and the dispatcher
+    # generates the root run-state.)
 
     # Worker end-state after the session too — a completed assignment must
     # exit DONE here, not spend the remaining budget re-checking at the top.
-    if worker:
-        end = worker_endstate(
-            root,
-            worker,
-            bool(st.review_queue or st.critique_queue),
-            managed,
-            rp_int,
-        )
-        if end:
-            return worker_exit_banner(worker, end)
+    end = worker_endstate(
+        root,
+        worker,
+        bool(st.review_queue or st.critique_queue),
+        managed,
+        rp_int,
+    )
+    if end:
+        return worker_exit_banner(worker, end)
     st.note_session(before != after, outcome == "ERROR")
     verdict = st.stall_verdict(args.stall_limit)
     if verdict == "agent-error":
@@ -6165,19 +5886,19 @@ def main():
         root = Path(args.root).resolve()
     docs = root / "docs"
 
-    # Dispatcher mode (WI-182, SR-061): --jobs (or the AGENT_JOBS env the
-    # migrated launchers wire) selects the parallel dispatcher. A worker
-    # assignment, legacy track, or interactive sitting always wins — those are
+    # One engine, one selection path (WI-210, spec §1.2): a plain launch IS
+    # the dispatcher — absent --jobs/AGENT_JOBS resolves to the §6 default of
+    # two workers (held at 1 until the §14 migration audits pass, SR-065), and
+    # --jobs 1 is the explicit serial-dispatcher escape. A worker assignment,
+    # interactive sitting, or --dual-plan round always wins — those are
     # explicit per-process roles the dispatcher itself launches or replaces.
     jobs_opt = (
         args.jobs
         if args.jobs is not None
         else (os.environ.get("AGENT_JOBS", "").strip() or None)
     )
-    if jobs_opt is not None and not (
-        args.wi or args.train or args.track or args.interactive
-    ):
-        args.jobs = jobs_opt
+    if not (args.wi or args.train or args.interactive or args.dual_plan):
+        args.jobs = jobs_opt if jobs_opt is not None else "2"
         return dispatch_run(args, root)
     template = (
         args.agent_cmd
@@ -6231,49 +5952,19 @@ def main():
             print("  - " + f, file=sys.stderr)
         return EXIT_PREFLIGHT
 
-    # Resolve the coordination lane. --track redirects the per-track files
-    # (run-state, status.md, iteration/) under docs/tracks/<track>/;
-    # the repo-singular policy files (gate/gate-policy/push-policy/privacy-check/
-    # guardrails-policy) always stay at docs/. No track = docs/ itself, so
-    # single-lane operation is unchanged (preflight already slug-validated).
-    track = sanitize_track(args.track) if args.track else None
-    if track:
-        # One compatibility window (WI-181): old behavior unchanged, loudly.
-        print(
-            "agent_loop: WARNING - --track is deprecated (WI-181): the "
-            "dispatcher's explicit --wi/--train worker assignment replaces "
-            "long-lived tracks. Legacy behavior continues for one "
-            "compatibility window (process-options.md 'Parallel tracks').",
-            file=sys.stderr,
-        )
+    # The one coordination surface is docs/ (WI-210: the --track lane
+    # redirection is retired; the repo-singular policy files live here too).
     worker, err = build_worker_assignment(args, root)
     if err is not None:
         return err
-    lane = lane_dir(docs, track)
+    lane = docs
     lane.mkdir(parents=True, exist_ok=True)
     status_path = lane / "status.md"
-    track_preamble = track_preamble_text(track)
 
     gate_policy = read_declared(docs / "gate-policy", "attended")
     push_policy = read_declared(docs / "push-policy", "human")
     review_policy = read_declared(docs / "review-policy", "1")
     _, branch = git(root, "branch", "--show-current")
-
-    # The resume-surface size preflight (warn-only): every
-    # session inherits the lane's status.md, so a bloated one is the file-world
-    # version of a full context window. The integrator's charter is to prune it
-    # to one screen; this is the cheap tripwire, never a gate.
-    # A misconfigured AGENT_STATUS_WARN_BYTES must never crash the run this
-    # warning exists to help — fall back to the default.
-    try:
-        warn_bytes = int(os.environ.get("AGENT_STATUS_WARN_BYTES", "8192"))
-    except ValueError:
-        warn_bytes = 8192
-    # A worker's resume surface is its assignment, not status.md — the size
-    # tripwire is the integrator's concern, not the worker's.
-    warn = None if worker else status_size_warning(lane / "status.md", warn_bytes)
-    if warn:
-        print("agent_loop: WARNING - " + warn, file=sys.stderr)
 
     guardrails_policy = read_declared(docs / "guardrails-policy", "off")
     # Surface a stale/typo'd policy token before the run: if it names a substring
@@ -6289,11 +5980,6 @@ def main():
             file=sys.stderr,
         )
     warned_no_core = []
-    # WI-076: set to the reconcile note (+ separator) for the FIRST session only
-    # when the loop starts on a dirty tree; "" otherwise, so every other session's
-    # prompt is byte-for-byte today's. The interactive path (early return above)
-    # leaves this "" — a human at the keyboard already sees the tree.
-    resume_reconcile = ""
 
     # WI-076: snapshot the working tree BEFORE the coordinator creates its own
     # out/agent-loop.lock (and, later, docs/iteration/*.log) — so the check sees
@@ -6318,12 +6004,9 @@ def main():
         return run_interactive(
             args,
             root,
-            track,
             model_map,
             cmd_map,
             template,
-            resume_reconcile,
-            track_preamble,
             guardrails_policy,
             warned_no_core,
         )
@@ -6380,8 +6063,6 @@ def main():
         root,
         branch,
         worker,
-        track,
-        lane,
         gate_policy,
         push_policy,
         review_policy,
@@ -6397,10 +6078,7 @@ def main():
 
     raw_dir = root / "out" / "run-logs"
     iter_dir = lane / "iteration"
-    if worker:
-        tag = "{}-".format(worker["train"])
-    else:
-        tag = "{}-".format(track) if track else ""
+    tag = "{}-".format(worker["train"])
     # Console rendering (WI-125 scroll / WI-136 live line). --no-session-echo
     # silences it; otherwise --live-status (or a docs/live-status file) upgrades
     # the scroll to one in-place line per workstream — but only when stdout is a
@@ -6413,9 +6091,7 @@ def main():
     use_live = live_status_on and _stdout_is_tty() and _enable_windows_vt()
     # A worker has no lane run-state (spec §10) — its state is always RUNNING
     # until its committed evidence says otherwise (worker_endstate below).
-    state = (
-        "RUNNING" if worker else read_declared(lane / "run-state", "RUNNING").upper()
-    )
+    state = "RUNNING"
 
     # --- managed-routing / critique / stall state (S8 + WI-068 + the stall
     # guard) — one RoutingState now holds what were ~24 mutable locals here
@@ -6437,7 +6113,7 @@ def main():
     # Worker review evidence is train-scoped and collision-safe (SR-060): two
     # parallel workers' committed verdicts/scoreboards must never collide at
     # integration, so each train gets its own reviews/<train>/ directory.
-    reviews_dir = (docs / "reviews" / worker["train"]) if worker else (lane / "reviews")
+    reviews_dir = docs / "reviews" / worker["train"]
     scoreboard = reviews_dir / "scoreboard.txt"
     critique_srs = load_critique_srs(docs) if managed else set()
     try:
@@ -6480,8 +6156,6 @@ def main():
     ctx.docs = docs
     ctx.lane = lane
     ctx.status_path = status_path
-    ctx.track = track
-    ctx.track_preamble = track_preamble
     ctx.worker = worker
     ctx.managed = managed
     ctx.registry = registry

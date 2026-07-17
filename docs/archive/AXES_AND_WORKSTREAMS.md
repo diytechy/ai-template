@@ -138,7 +138,7 @@ inherits the framing instead of re-deriving it.
 
 The word **track** means two things that have nothing to do with each other:
 
-**(a) An execution lane.** In [`tracks-README.template.md`](../../project-trajectory/tracks-README.template.md)
+**(a) An execution lane.** In `tracks-README.template.md` (template retired by WI-210)
 and the "Parallel tracks" layer of [`PROCESS_OPTIONS.md`](../../project-trajectory/PROCESS_OPTIONS.md),
 a track is a *worktree + `llm/<track>` branch + `docs/tracks/<track>/` lane* — a
 **when / who-runs-it-in-parallel** concurrency device. Transient, chosen by

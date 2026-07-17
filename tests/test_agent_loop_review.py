@@ -66,14 +66,16 @@ else:
     with open(str(cf), "a", encoding="utf-8") as fh:
         fh.write("b\n")
     pathlib.Path("work.txt").write_text("build progress " + str(n), encoding="utf-8")
-    commit("work.txt", "build progress " + str(n))
     done_after = (
         int((ctl / "done_after").read_text(encoding="utf-8"))
         if (ctl / "done_after").exists()
         else 999
     )
+    # WI-210: the end state is committed worker evidence (the WI trailer).
     if n + 1 >= done_after:
-        pathlib.Path("docs/run-state").write_text("DONE", encoding="utf-8")
+        commit("work.txt", "build progress " + str(n) + "\n\nWI: WI-201")
+    else:
+        commit("work.txt", "build progress " + str(n))
 sys.exit(0)
 """
 
@@ -112,10 +114,11 @@ with open(str(cf), "a", encoding="utf-8") as fh:
     fh.write("b\n")
 pathlib.Path("work.txt").write_text("build " + str(n), encoding="utf-8")
 subprocess.run(["git", "add", "work.txt"], check=True)
-subprocess.run(["git", "commit", "-q", "-m", "build " + str(n)], check=True)
 done_after = int(_read("done_after")) if _read("done_after") else 999
+msg = "build " + str(n)
 if n + 1 >= done_after:
-    pathlib.Path("docs/run-state").write_text("DONE", encoding="utf-8")
+    msg += "\n\nWI: WI-201"  # WI-210: committed worker evidence
+subprocess.run(["git", "commit", "-q", "-m", msg], check=True)
 sys.exit(0)
 """
 
@@ -159,14 +162,15 @@ else:
     with open(str(cf), "a", encoding="utf-8") as fh:
         fh.write("b\n")
     pathlib.Path("work.txt").write_text("build " + str(n), encoding="utf-8")
-    commit("work.txt", "build " + str(n))
     done_after = (
         int((ctl / "done_after").read_text(encoding="utf-8"))
         if (ctl / "done_after").exists()
         else 999
     )
     if n + 1 >= done_after:
-        pathlib.Path("docs/run-state").write_text("DONE", encoding="utf-8")
+        commit("work.txt", "build " + str(n) + "\n\nWI: WI-201")
+    else:
+        commit("work.txt", "build " + str(n))
 sys.exit(0)
 """
 
@@ -204,11 +208,20 @@ def managed_repo(tmp_path):
     (repo / "docs").mkdir(parents=True)
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
     (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
+    (repo / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "requirements" / "work-items.csv").write_text(
+        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
+        "SpecRef,BuildTier,SafetyClass\n"
+        "WI-201,Scoped work for WI-201,ws,,,queued,,,medium,ordinary\n",
+        encoding="utf-8",
+    )
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
+    _git(repo, "checkout", "-q", "-b", "llm/train/t1")
 
     ctl = tmp_path / "control"
     ctl.mkdir()
@@ -251,7 +264,19 @@ def managed_repo(tmp_path):
     return repo, ctl, cmd
 
 
+def _commit_config(repo):
+    # A worker's DONE is judged from committed evidence + a CLEAN tree
+    # (WI-210), so the fixture/test config written after the seed commit
+    # must be committed before the worker starts.
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "commit", "-q", "-m", "test config", "--allow-empty"],
+        capture_output=True,
+    )
+
+
 def _loop(repo, cmd, *extra):
+    _commit_config(repo)
     return run_py(
         [
             SCRIPTS / "agent_loop.py",
@@ -265,6 +290,10 @@ def _loop(repo, cmd, *extra):
             "default-tier",
             "--max-iterations",
             "8",
+            "--wi",
+            "WI-201",
+            "--train",
+            "t1",
             *extra,
         ],
         cwd=repo,
@@ -297,7 +326,7 @@ def test_review_policy_1_dispatches_one_heterogeneous_reviewer(managed_repo):
     assert "dispatch: review-policy 1" in proc.stdout
     assert "route [BUILD]" in proc.stdout  # the selection is logged before launch
     # The verdict landed as a repo file the loop read back.
-    assert list((repo / "docs" / "reviews").glob("*-REVIEW-A.md"))
+    assert list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*.md"))
 
 
 def test_prefer_map_routes_build_then_reviewer_heterogeneity_wins(managed_repo):
@@ -327,9 +356,9 @@ def test_review_policy_2_schedules_two_providers(managed_repo):
     models = _models(ctl)
     # Two reviewers, two providers, both differing from the implementer's.
     assert "revb" in models and "revc" in models
-    assert list((repo / "docs" / "reviews").glob("*-REVIEW-B.md"))
+    assert list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-B-*.md"))
     # The advisory scoreboard recorded the round.
-    assert (repo / "docs" / "reviews" / "scoreboard.txt").exists()
+    assert (repo / "docs" / "reviews" / "t1" / "scoreboard.txt").exists()
 
 
 def test_review_policy_0_schedules_no_reviewer(managed_repo):
@@ -415,6 +444,16 @@ def test_two_top_tier_failures_page_the_human(managed_repo):
     # NEEDS-HUMAN (exit 7).
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    # The worker pins the BUILD tier from the WI row (WI-181), so the row —
+    # not just the tier-map — must declare strong for a top-tier build.
+    wi_csv = repo / "docs" / "requirements" / "work-items.csv"
+    wi_csv.write_text(
+        wi_csv.read_text(encoding="utf-8").replace(
+            ",medium,ordinary", ",strong,ordinary"
+        ),
+        encoding="utf-8",
+    )
     (ctl / "verdict_body.txt").write_text(
         "- [MAJOR] work.txt:1 -> broken -> fix -> @owner\n"
         "VERDICT: CHANGES-REQUESTED findings=1\n",
@@ -424,37 +463,30 @@ def test_two_top_tier_failures_page_the_human(managed_repo):
     assert proc.returncode == 7, proc.stdout + proc.stderr
     assert "PAGE-HUMAN" in proc.stdout
     assert "top-tier review failures" in proc.stdout  # the shared-failure regime
-    state = (repo / "docs" / "run-state").read_text(encoding="utf-8").splitlines()
-    assert state[0].strip() == "NEEDS-HUMAN"
-    assert state[1].startswith("ask: review escalation")  # WI-127 ask line
+    # A worker never writes run-state (WI-210): its exit code is the page
+    # and the dispatcher generates the root file.
+    assert not (repo / "docs" / "run-state").exists()
 
 
-def test_changes_requested_rework_scope_is_honored_and_clears_on_approve(managed_repo):
-    # WI-170 / WI-180: a CHANGES-REQUESTED review keeps docs/rework-wi on the
-    # reviewed WI; the next build gets a REWORK OVERRIDE prompt, and an APPROVE of
-    # that scope clears it. next-wi is retired, so the session's claimed scope is
-    # seeded via rework-wi here — the dispatcher supplies the explicit --wi
-    # assignment in Slice C.
+def test_changes_requested_rework_finding_reaches_the_next_build(managed_repo):
+    # WI-170 / WI-210: a CHANGES-REQUESTED review round sets the worker's
+    # assignment-scoped rework state (never a lane docs/rework-wi file — that
+    # pointer is retired with the serial driver); the next build session's
+    # prompt embeds the finding so the rework happens before new work.
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
-    (repo / "docs" / "rework-wi").write_text("WI-OLD\n", encoding="utf-8")
+    (ctl / "done_after").write_text("1", encoding="utf-8")
     (ctl / "verdict_body.txt").write_text(
         "- [MAJOR] work.txt:1 -> broken -> fix -> @owner\n"
         "VERDICT: CHANGES-REQUESTED findings=1\n",
         encoding="utf-8",
     )
-    first = _loop(repo, cmd, "--max-iterations", "2")
-    assert first.returncode == 6, first.stdout + first.stderr
-    assert (repo / "docs" / "rework-wi").read_text(encoding="utf-8").strip() == "WI-OLD"
-
-    (ctl / "verdict_body.txt").write_text(
-        "VERDICT: APPROVE findings=0\n", encoding="utf-8"
-    )
-    second = _loop(repo, cmd, "--max-iterations", "2")
-    assert second.returncode == 6, second.stdout + second.stderr
+    proc = _loop(repo, cmd, "--max-iterations", "4")
+    assert proc.returncode in (6, 7), proc.stdout + proc.stderr
     prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
-    assert "REWORK OVERRIDE: docs/rework-wi names WI-OLD" in prompts
-    assert not (repo / "docs" / "rework-wi").exists()
+    assert "REWORK FINDING" in prompts  # the worker-prompt embed
+    assert "an unhandled boundary condition" in prompts or "broken" in prompts
+    assert not (repo / "docs" / "rework-wi").exists()  # the file is retired
 
 
 def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
@@ -509,9 +541,9 @@ def test_no_routable_model_pages_with_pool_context(managed_repo):
     assert "no routable model" in proc.stdout
     assert "enabled pool" in proc.stdout
     assert "sign in: opencode auth login" in proc.stdout
-    state = (repo / "docs" / "run-state").read_text(encoding="utf-8").splitlines()
-    assert state[0].strip() == "NEEDS-HUMAN"
-    assert state[1].startswith("ask: no routable model")  # WI-127 ask line
+    # A worker never writes run-state (WI-210): the exit code pages the
+    # dispatcher, which generates the root file.
+    assert not (repo / "docs" / "run-state").exists()
 
 
 def test_preflight_missing_cli_carries_notes_hint(managed_repo):
@@ -547,9 +579,11 @@ def test_changes_requested_swaps_implementer_family(managed_repo):
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
     (ctl / "verdict_body.txt").write_text(CHANGES_REQUESTED_BODY, encoding="utf-8")
-    (ctl / "done_after").write_text("3", encoding="utf-8")
-    proc = _loop(repo, cmd)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    # Cadence: b1(trailer) r1(CR) b2 r2(CR -> swap) b3(swapped) — the budget
+    # ends the run there (a perpetually CHANGES-REQUESTED train never DONEs).
+    proc = _loop(repo, cmd, "--max-iterations", "5")
+    assert proc.returncode == 6, proc.stdout + proc.stderr
     assert "escalate: swap-implementer" in proc.stdout
     builds = _routes(proc.stdout, "BUILD")
     # First build routed the PROVA implementer; the post-swap build a PROVB one.
@@ -567,9 +601,11 @@ def test_escalation_tiers_up_after_swap(managed_repo):
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
     (ctl / "verdict_body.txt").write_text(CHANGES_REQUESTED_BODY, encoding="utf-8")
-    (ctl / "done_after").write_text("4", encoding="utf-8")
-    proc = _loop(repo, cmd)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    # Cadence: b1(trailer) r1(CR) b2 r2(CR -> swap) b3 r3(CR -> tier-up) b4
+    # at strong — the budget ends the run on that build.
+    proc = _loop(repo, cmd, "--max-iterations", "7")
+    assert proc.returncode == 6, proc.stdout + proc.stderr
     assert "escalate: swap-implementer" in proc.stdout
     assert "escalate: tier-up" in proc.stdout
     builds = _routes(proc.stdout, "BUILD")
@@ -615,7 +651,7 @@ def test_review_no_verdict_cools_and_reroutes_same_phase(managed_repo):
     assert len(reviews) >= 2  # the SAME phase was re-dispatched, not dropped
     assert "PROVC-REV-1" in reviews[-1]  # to a different enabled reviewer
     # The round completed: the re-routed reviewer's verdict landed as a repo file.
-    assert list((repo / "docs" / "reviews").glob("*-REVIEW-A.md"))
+    assert list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*.md"))
     assert "revc" in _models(ctl)
 
 

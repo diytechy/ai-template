@@ -244,7 +244,8 @@ def test_worker_builds_assignment_and_exits_done(tmp_path):
     assert "WI-200 [done]" in prompt  # predecessor context
     assert "resume from docs/status.md and do not" in prompt  # the prohibition
     assert "WI: WI-201" in prompt  # the trailer protocol
-    assert agent_loop.DEFAULT_PROMPT[:60] not in prompt  # never the resume prompt
+    # (The resume-from-status DEFAULT_PROMPT is retired outright, WI-210 —
+    # the assignment prompt is the only build prompt by construction.)
 
 
 def test_worker_multi_wi_assignment_builds_in_order(tmp_path):
@@ -430,13 +431,15 @@ def test_wi_without_train_is_preflight_failure(tmp_path):
     assert "come as a pair" in (proc.stdout + proc.stderr)
 
 
-def test_worker_plus_track_is_preflight_failure(tmp_path):
+def test_track_flag_is_gone(tmp_path):
+    # WI-210: --track is retired outright — argparse refuses it as an unknown
+    # flag (exit 2), so no code path can reach the old lane plumbing.
     repo, base, ctl, fake = _setup(tmp_path)
     proc = _worker(
         repo, fake, ctl, "--wi", "WI-201", "--train", "t1", "--track", "lane"
     )
-    assert proc.returncode == agent_loop.EXIT_PREFLIGHT
-    assert "mutually exclusive" in (proc.stdout + proc.stderr)
+    assert proc.returncode == 2
+    assert "--track" in (proc.stdout + proc.stderr)
 
 
 def test_worker_off_its_train_branch_fails_closed(tmp_path):
@@ -455,61 +458,3 @@ def test_worker_unknown_or_done_wi_fails_closed(tmp_path):
     proc = _worker(repo, fake, ctl, "--wi", "WI-200", "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
     assert "already integrated done" in (proc.stdout + proc.stderr)
-
-
-# --- the legacy --track compatibility window -------------------------------------
-
-
-def test_track_still_runs_but_warns_deprecated(tmp_path):
-    # TC-061: legacy --track keeps its old behavior within the compatibility
-    # window — and now says it is deprecated. (The old behavior itself is
-    # pinned by test_agent_loop_tracks.py; here we assert the warning.)
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init")
-    _git(repo, "config", "user.email", "loop@example.com")
-    _git(repo, "config", "user.name", "Loop Test")
-    (repo / "seed.txt").write_text("seed", encoding="utf-8")
-    _git(repo, "add", "-A")
-    _git(repo, "commit", "-q", "-m", "seed")
-    _git(repo, "checkout", "-q", "-b", "llm/lane")
-    fake = tmp_path / "fake.py"
-    fake.write_text(
-        "import json, pathlib, subprocess, sys, argparse, time\n"
-        "ap = argparse.ArgumentParser()\n"
-        "ap.add_argument('--runstate', required=True)\n"
-        "ap.add_argument('--model', default='')\n"
-        "ap.add_argument('-p', '--prompt', default='')\n"
-        "a, _ = ap.parse_known_args()\n"
-        "pathlib.Path('w.txt').write_text(str(time.time()))\n"
-        "subprocess.run(['git', 'add', '-A'], check=True)\n"
-        "subprocess.run(['git', 'commit', '-q', '-m', 'w'], check=True)\n"
-        "rs = pathlib.Path(a.runstate)\n"
-        "rs.parent.mkdir(parents=True, exist_ok=True)\n"
-        "rs.write_text('DONE\\n')\n",
-        encoding="utf-8",
-    )
-    lane = repo / "docs" / "tracks" / "lane"
-    template = '"{}" "{}" --runstate "{}" --model {{model}} -p {{prompt}}'.format(
-        sys.executable, fake, lane / "run-state"
-    )
-    proc = run_py(
-        [
-            SCRIPTS / "agent_loop.py",
-            "--root",
-            repo,
-            "--agent-cmd",
-            template,
-            "--pause",
-            "0",
-            "--model",
-            "test",
-            "--max-iterations",
-            "2",
-            "--track",
-            "lane",
-        ],
-        cwd=repo,
-    )
-    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    assert "--track is deprecated" in proc.stderr

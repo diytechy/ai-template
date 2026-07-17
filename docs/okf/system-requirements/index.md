@@ -39,7 +39,7 @@ resource: "generated"
 | [SR-026](SR-026.md) | Coordinator resumes headless |
 | [SR-027](SR-027.md) | Coordinator preflight |
 | [SR-028](SR-028.md) | Coordinator typed outcomes |
-| [SR-029](SR-029.md) | Track lock auto-release |
+| [SR-029](SR-029.md) | Coordinator lock auto-release |
 | [SR-030](SR-030.md) | Second coordinator refused |
 | [SR-031](SR-031.md) | Declared-policy readers agree |
 | [SR-032](SR-032.md) | Onboarding and dev-setup scaffold |

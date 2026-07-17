@@ -36,11 +36,11 @@ resource: "generated"
 | [TC-023](TC-023.md) | Run the gen-arch-map suite; --check fails on a stale map and regeneration rewrites only t… |
 | [TC-024](TC-024.md) | Run the gen-cases suite; the spec grammar expands to the expected case set. |
 | [TC-025](TC-025.md) | Run the skills-index suite; INDEX.csv regenerates from the SKILL.md frontmatter. |
-| [TC-026](TC-026.md) | Run the agent-loop suite; the loop resumes from status.md headless without blocking. |
+| [TC-026](TC-026.md) | Run the agent-loop suite; the dispatcher and its workers resume headless (registry + rese… |
 | [TC-027](TC-027.md) | Run the agent-loop suite; preflight exits a typed code on a non-git dir / missing CLI / p… |
 | [TC-028](TC-028.md) | Run the agent-loop suite; a zero-commit repo is guarded and an all-ERROR region reads as … |
-| [TC-029](TC-029.md) | Run the tracks suite; a dead lock holder releases and the next run acquires the lock. |
-| [TC-030](TC-030.md) | Run the tracks suite; a second coordinator on a held lock is refused. |
+| [TC-029](TC-029.md) | Run the agent-loop suite's lock tests (ported from the retired tracks suite, WI-210): a h… |
+| [TC-030](TC-030.md) | Run the agent-loop suite's lock tests (ported from the retired tracks suite, WI-210): a s… |
 | [TC-031](TC-031.md) | Run the gate-policy and push-policy suites; each reader returns the first declared line. |
 | [TC-032](TC-032.md) | Run the onboard/dev-setup suite; the scaffolded scripts run to a green setup and dev-setu… |
 | [TC-033](TC-033.md) | Run gen_release_checklist.py over a warn-tier PB budget; assert the generated checklist l… |
