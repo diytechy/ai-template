@@ -17,3 +17,10 @@ out/
 
 # macOS Finder metadata (appears anywhere you browse the tree in Finder)
 .DS_Store
+
+# Meta-only dashboard render-critique tooling (WI-189): the pinned Playwright
+# install + its screenshot output are dev artifacts, not tracked. The pinned
+# versions live in scripts/dashboard-shots/package.json (committed).
+scripts/dashboard-shots/node_modules/
+scripts/dashboard-shots/shots/
+scripts/dashboard-shots/package-lock.json

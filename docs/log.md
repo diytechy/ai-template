@@ -8037,3 +8037,69 @@ coverage-run + Windows-only lock — not caused by this change); golden file
 **OK — 121 doc(s), 474 intra-repo link(s), 0 broken** (45 orphan + 4 staleness
 hints all pre-existing/unrelated). Dashboard regenerated. NOT pushed
 (`push-policy: human`).
+
+## 2026-07-16 — WI-189: dashboard render-critique loop (meta-only Playwright; the eyes, exercised end-to-end)
+
+**Session type:** build (`dashboard`, medium). Agent critiques of
+`PROJECT_STATE.html` had judged ~790 KB of markup, never rendered pixels; this
+machine had no browser. Built the eyes and used them.
+
+**Shipped (all meta-only — the kit's install-nothing posture governs
+`project-trajectory/scripts`, not this dev helper; owner ruling at filing):**
+- **`scripts/dashboard-shots/`** — pinned Playwright (`package.json`:
+  `playwright 1.61.1` → chromium build **1228** / Chrome 149.0.7827.55) + a
+  README (install path, OS cache location, matrix rationale, read caveats) +
+  **`shoot.mjs`**, one Node command that regenerates the dashboard, then
+  screenshots it across a **declared** matrix into a gitignored `shots/`:
+  widths `narrow/laptop/wide` = 390/1280/1680 × themes `light/dark` (driven by
+  `prefers-color-scheme`, so emulating `colorScheme` is the whole toggle) × all
+  five tabs (`arch/dag/sw/know/process`), full-page per cell + a landing
+  above-the-fold shot = **36** deterministic-named PNGs. The matrix is constants
+  at the top of the script (not improvised per session).
+- **`render-dashboard-critique`** `this-repo` skill (source +
+  byte-identical `.claude/.agents` copies; `INDEX.csv` regenerated to 27
+  skills) — documents the loop and **is** the artifact recipe a future
+  `Verification=Critique` TC on dashboard quality will name (PROCESS_OPTIONS
+  "Critique verification").
+- **`scripts/dev-setup.sh --check`** gains a warn-only optional probe (NOT
+  `--install`, NOT the downstream `dev-setup.template.*`). `.gitignore` excludes
+  `node_modules/` + `shots/` + `package-lock.json` (only the pinned
+  `package.json` is tracked).
+
+**Exercised end-to-end (Done-when #4):** installed chromium, ran the loop (36
+shots), and **Read 5 rendered views** — landing fold light + dark, `sw` full,
+`dag` full, and the 390px mobile landing. The loop works: I judged real pixels,
+including the git as-of stamp confirming a live regen.
+
+**Critique findings — recorded, NOT fixed (WI-189 non-goal: "builds the eyes,
+not a redesign"; each becomes its own WI if pursued):**
+1. **How-SW graph (laptop):** component labels truncate ("CMP-003 — Quality
+   ch…"), edges cross over node boxes, and the graph is left-clustered with a
+   large empty right column (the detail panel until a click).
+2. **390px full-page:** the sticky top bar appears to overlap the EXECUTION
+   card — **most likely a `fullPage` + `position:sticky` capture artifact**, not
+   what a viewer sees (added the caveat + a confirm-against-`-fold` step to the
+   README/skill). A good reminder the loop must separate capture artifacts from
+   real defects.
+3. **What-icicle at 390px:** overflows to SN+SR columns only; LLR/TC need
+   horizontal scroll — not mobile-legible.
+4. **When phase-accent palette:** low hue separation — phases 1/2/4 read as
+   near-identical maroon; only 2+3 and 3 are distinct. A dataviz
+   discriminability finding.
+
+**Deviations:** the dev-setup probe is POSIX-only (`dev-setup.sh`); I did not
+mirror it into `dev-setup.ps1` (the runner + README are cross-platform, and the
+probe is optional per the spec's "documented step *or* a warn-only probe") —
+recorded so a Windows contributor's probe parity can be filed if wanted. The
+skill uses backticked repo-relative paths, not markdown links, matching every
+other skill (a link's relative depth would break in the `.claude`/`.agents`
+copies). **Byte deltas (budgeted files):** none — no `PROCESS*.md` /
+`AGENTS.template.md` touched; `INDEX.csv` is generated.
+
+**Tests / bar (real output, macOS):** full suite `pytest -q -n auto` →
+**944 passed, 2 skipped in 96.99s**; targeted
+`test_onboard_devsetup + test_bootstrap + test_skills_index + test_skills_sync`
+→ **76 passed**; `gen_skills_index --check` (index fresh) + `--check-agents` (12
+copies match) green; `check_docs --root . --stale` →
+**OK — 121 doc(s), 475 intra-repo link(s), 0 broken**. Dashboard regenerated.
+NOT pushed (`push-policy: human`).

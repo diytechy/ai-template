@@ -88,6 +88,11 @@ report "pytest-xdist (parallel -n auto)" "$([ -n "$PY" ] && "$PY" -c 'import imp
 report "claude CLI (agent sessions: agent-resume.*)" "$(have claude && echo 1 || echo 0)" "npm install -g @anthropic-ai/claude-code; then run claude once to sign in"
 report "codex CLI (the OPENAI-* rows in docs/agents.csv)" "$(have codex && echo 1 || echo 0)" "npm install -g @openai/codex; then: codex login"
 report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } && echo 1 || echo 0)" "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
+# Optional, dev-only (WI-189): the dashboard render-critique loop. NOT installed
+# by --install and NOT shipped downstream (the kit's install-nothing posture
+# governs project-trajectory/scripts, never this meta tool). See
+# scripts/dashboard-shots/README.md + the render-dashboard-critique skill.
+report "dashboard shots (optional, meta-only)" "$( [ -d scripts/dashboard-shots/node_modules/playwright ] && echo 1 || echo 0)" "cd scripts/dashboard-shots && npm ci && npx playwright install chromium (pinned; dev-only)"
 report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" "run --install, or: git config core.hooksPath .githooks"
 
 # Ambient-interpreter debris warning (WI-175 / WI-105). The report above describes

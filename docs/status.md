@@ -111,11 +111,17 @@ home elsewhere — don't restate it here:
   is now platform-stable (UTF-8 capture in `conftest.run_py` + POSIX-normalized
   compare + deliberately-regenerated goldens), verified live on macOS with
   Windows correctness by construction + a new stability test (live cross-OS
-  confirmation defers to CI on push, OI-3). The build frontier is now **WI-189 +
-  WI-191** (WI-190 follows WI-191); the deferred backlog stays owner-ordered.
-  Grinding under single-agent adversarial self-review at gates (a recorded
-  limitation vs a provider-heterogeneous reviewer). Round-by-round evidence →
-  [log.md](log.md).
+  confirmation defers to CI on push, OI-3). **WI-189 is CLOSED** (2026-07-16,
+  [specs/WI-189.md](specs/WI-189.md)) — the meta-only dashboard render-critique
+  loop (`scripts/dashboard-shots/`: pinned Playwright 1.61.1 → chromium 1228 +
+  `shoot.mjs`'s declared 36-shot width×theme×tab matrix) + the
+  `render-dashboard-critique` this-repo skill; exercised end-to-end (5 rendered
+  views read back), its critique findings recorded as candidate WIs (a stated
+  non-goal to fix here). The build frontier is now **WI-191** (then **WI-190**,
+  whose WI-191 predecessor this unblocks); the deferred backlog stays
+  owner-ordered. Grinding under single-agent adversarial self-review at gates (a
+  recorded limitation vs a provider-heterogeneous reviewer). Round-by-round
+  evidence → [log.md](log.md).
 
 ## Scope
 

@@ -1,0 +1,9 @@
+{
+  "name": "dashboard-shots",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Meta-only (WI-189): pinned Playwright + chromium to screenshot PROJECT_STATE.html so agent critiques judge rendered pixels, not source. NOT shipped downstream — the kit's stdlib-only, install-nothing posture governs project-trajectory/scripts, never this dev tool.",
+  "dependencies": {
+    "playwright": "1.61.1"
+  }
+}
