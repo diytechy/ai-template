@@ -8498,3 +8498,40 @@ derived gate **G3** (`docs/gate` re-cached, SR=66). Full suite **1031 passed /
 3 skipped**, coverage **90.76%**; `check.py --gate G3 --jobs 0` **PASS (15/15**
 after the OKF regen). Frontier: **WI-202** + **WI-203** (queued). NOT pushed
 (`push-policy: human`).
+
+## 2026-07-17 — WI-203: agent_loop dirty-tree signal excludes the owner-only scratchpad (signal hygiene)
+
+**Session type:** build (`unattended`, quick; the WI-076 dirty-tree signal
+refined). **No spine change** — coordinator behavior, the WI-076 precedent;
+intra-module, no new seam.
+
+**The bug:** OWNER_SCRATCHPAD.md is tracked and owner-edited continuously, so
+`working_tree_dirty` was perpetually non-empty at loop start — the WI-076
+resume-reconcile note fired on **every** resume (degrading a signal meant for
+genuine interrupted-session residue into permanent noise, and pointing an
+autonomous driver at a file it must never touch), and the worker done detection
+could read an owner-only-dirty tree as not-done.
+
+**The fix:** `substantive_working_tree_dirty(root)` drops the FB3 owner-only
+path (`OWNER_ONLY_PATHS = ("OWNER_SCRATCHPAD.md",)`, **mirrored** from
+`check_docs.SCRATCHPAD` — not imported: pulling the doc-checker into the
+coordinator would add a CMP-004→CMP-001 edge + an IF seam for one fixed
+filename, and the name is a bootstrap contract so the mirror cannot drift). It
+wraps the raw primitive (which stays honest for any caller wanting every path)
+and is wired at BOTH callers — the resume-note trigger (`start_dirty`) and the
+done-detection guard (`worker_endstate`); `_porcelain_path` splits the XY status
+token off rather than assuming a fixed column width.
+
+**Verified:** 3 new tests — the substantive-drop unit (raw counts the scratchpad,
+substantive does not; a real deliverable still counts), the resume note injecting
+nothing on an owner-only-dirty start (prompt byte-identical to the clean
+default), and done detection staying DONE on an owner-only-dirty tree (contrast
+the sibling scratch.txt case that still defers).
+
+**Deviations:** none. **Byte deltas (budgeted files):** none. Code map
+(docs/architecture.md) regenerated (2 new functions).
+
+**Spine:** unchanged — SN=25 SR=66 LLR=76 TC=76, derived gate **G3**. Full suite
+**1034 passed / 3 skipped** (+3). Commit bar (smoke + check_docs) green; the
+commit hook re-verifies the generated/spine checks. Frontier: **WI-202**
+(queued). NOT pushed (`push-policy: human`).

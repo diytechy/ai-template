@@ -154,6 +154,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `git(root, *args)` | Run git in the repo; returns (returncode, stdout-stripped). |  |
 | `head_sha(root)` | Short HEAD sha, or None on a zero-commit repo (guarded rev-parse). |  |
 | `working_tree_dirty(root)` | The `git status --porcelain` lines — one per uncommitted path (a rename is |  |
+| `substantive_working_tree_dirty(root)` | `working_tree_dirty` minus the FB3 owner-only paths (OWNER_ONLY_PATHS) — |  |
 | `current_state_excerpt(status_path, max_lines)` | The '## Current State' section of a status.md — the root dispatcher's or |  |
 | `parse_json_result(output)` | Best-effort parse of a --output-format json / stream-json run: the last |  |
 | `limit_reset_hint(output, data, exit_code)` | The 'resets <time>' text of a rate-limit message, or None. |  |

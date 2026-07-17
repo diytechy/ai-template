@@ -906,6 +906,45 @@ def test_working_tree_dirty_counts_renames_and_untracked(tmp_path):
     assert len(lines) == 2, lines  # the rename is ONE entry (+ b.txt), not three
 
 
+def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
+    # WI-203: OWNER_SCRATCHPAD.md is perpetually owner-edited, so the loop's
+    # dirty-tree signal drops it — the raw primitive still counts it, but the
+    # substantive view (used by the resume note + done detection) reads clean.
+    loop = load_script("agent_loop")
+    repo = tmp_path / "r"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "a@b.com")
+    _git(repo, "config", "user.name", "A")
+    (repo / "OWNER_SCRATCHPAD.md").write_text("notes\n", encoding="utf-8")
+    (repo / "a.txt").write_text("hi\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    # only the owner scratchpad is dirty -> raw sees it, substantive does not
+    (repo / "OWNER_SCRATCHPAD.md").write_text("edited\n", encoding="utf-8")
+    assert len(loop.working_tree_dirty(repo)) == 1  # the primitive stays honest
+    assert loop.substantive_working_tree_dirty(repo) == []  # the loop reads clean
+    # a real deliverable still counts; the scratchpad is still dropped
+    (repo / "a.txt").write_text("changed\n", encoding="utf-8")
+    sub = loop.substantive_working_tree_dirty(repo)
+    assert len(sub) == 1 and "a.txt" in sub[0]
+    assert len(loop.working_tree_dirty(repo)) == 2  # raw counts both
+
+
+def test_owner_scratchpad_dirty_at_start_injects_nothing(loop_repo):
+    # WI-203: an owner-only-dirty tree at loop start is NOT interrupted residue —
+    # no WI-076 reconcile note, no dirty line logged (the prompt stays
+    # byte-identical to the clean default), so the note fires only on real residue.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    (repo / "OWNER_SCRATCHPAD.md").write_text("owner edit\n", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    prompt = (ctl / "prompt.txt").read_text(encoding="utf-8")
+    assert prompt == load_script("agent_loop").DEFAULT_PROMPT
+    assert "uncommitted path(s)" not in proc.stderr
+
+
 @pytest.mark.skipif(os.name != "nt", reason="Windows CreateProcess/PATHEXT shim path")
 def test_cmd_shim_cli_spawns_on_windows(loop_repo, tmp_path):
     # WI-120: an npm-style CLI installed only as a .cmd shim (no .exe) passes
@@ -1617,6 +1656,18 @@ def test_worker_endstate_dirty_tree_defers(tmp_path):
     # Committed evidence is complete, but an uncommitted path means not-done.
     (repo / "scratch.txt").write_text("uncommitted", encoding="utf-8")
     assert al.worker_endstate(str(repo), worker, False, False, 1) is None
+
+
+def test_worker_endstate_owner_scratchpad_stays_done(tmp_path):
+    # WI-203: an owner-only-dirty tree (OWNER_SCRATCHPAD.md) is not interrupted
+    # work — done detection must not read it as not-done (contrast the scratch.txt
+    # case above, which still defers).
+    al = load_script("agent_loop")
+    repo, base, worker = _train_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", base)
+    (repo / "OWNER_SCRATCHPAD.md").write_text("owner notes", encoding="utf-8")
+    end = al.worker_endstate(str(repo), worker, False, False, 1)
+    assert end is not None and end[0] == al.EXIT_DONE
 
 
 def test_worker_exit_banner_returns_code_and_prints(capsys):

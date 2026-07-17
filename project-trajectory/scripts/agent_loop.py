@@ -246,6 +246,16 @@ RESUME_RECONCILE_NOTE = (
     "is not part of the scoped work, and record which you did in the log."
 )
 
+# The FB3 owner-only path(s): OWNER_SCRATCHPAD.md is free-form owner notes the
+# human edits continuously (check_docs.py drops it from doc discovery the same
+# way — check_docs.SCRATCHPAD). Because it is tracked and perpetually edited, an
+# owner-only-dirty tree is NOT interrupted-session residue: it must not fire the
+# WI-076 resume note or flip the done detection (WI-203). Mirrored, not imported
+# — importing the doc-checker into the coordinator would add a CMP-004→CMP-001
+# edge + an IF seam for one fixed filename; the name is a bootstrap contract
+# (test_bootstrap asserts the scaffold ships it), so the mirror cannot drift.
+OWNER_ONLY_PATHS = ("OWNER_SCRATCHPAD.md",)
+
 # The worker-assignment prompt (WI-181, SR-060). Assembled per session from the
 # WI row + SpecRef + predecessor context + train diff + rework finding — NEVER
 # from docs/status.md (not a resume surface) or docs/next-wi (retired). The
@@ -1801,6 +1811,33 @@ def working_tree_dirty(root):
     return [ln for ln in out.splitlines() if ln.strip()]
 
 
+def _porcelain_path(line):
+    """The repo-relative path a `git status --porcelain` line names — the
+    destination side of a rename/copy (`R  old -> new`), surrounding quotes
+    stripped — used to match a dirty line against OWNER_ONLY_PATHS. Splits the
+    XY status token off the front rather than assuming a fixed column width (a
+    leading blank status column may or may not survive to here)."""
+    body = line.strip()
+    if " -> " in body:
+        return body.split(" -> ", 1)[1].strip().strip('"')
+    parts = body.split(None, 1)  # status token, then the path
+    return (parts[1] if len(parts) == 2 else body).strip().strip('"')
+
+
+def substantive_working_tree_dirty(root):
+    """`working_tree_dirty` minus the FB3 owner-only paths (OWNER_ONLY_PATHS) —
+    the view the loop's WI-076 resume note (loop start) and done detection use,
+    so a tree whose ONLY changes are the owner scratchpad (perpetually edited,
+    never the loop's or a worker's deliverable) reads clean and the interrupted-
+    residue signal fires only on genuine residue. The raw primitive stays
+    available for a caller that wants every uncommitted path (WI-203)."""
+    return [
+        ln
+        for ln in working_tree_dirty(root)
+        if _porcelain_path(ln) not in OWNER_ONLY_PATHS
+    ]
+
+
 def current_state_excerpt(status_path, max_lines=40):
     """The '## Current State' section of a status.md — the root dispatcher's or
     a track lane's own — the pending asks a stopping coordinator must surface in
@@ -1966,8 +2003,8 @@ def worker_endstate(root, worker, review_open, managed, rp_int):
         return None
     if review_open or worker["rework"]:
         return None  # built, but the train's review cycle is still open
-    if working_tree_dirty(root):
-        return None  # committed evidence only — a dirty tree is not done
+    if substantive_working_tree_dirty(root):
+        return None  # committed evidence only — a dirty tree (owner-only exempt) is not done
     return (
         EXIT_DONE,
         "DONE",
@@ -5986,8 +6023,10 @@ def main():
     # out/agent-loop.lock (and, later, docs/iteration/*.log) — so the check sees
     # genuine interrupted-session residue, never our own artifacts. In a scaffold
     # out/ is gitignored, so the lock would not show anyway; taking the snapshot
-    # first is correct regardless of a repo's .gitignore hygiene.
-    start_dirty = working_tree_dirty(root)
+    # first is correct regardless of a repo's .gitignore hygiene. Owner-only paths
+    # (OWNER_ONLY_PATHS) are dropped so the perpetually-edited scratchpad never
+    # reads as residue and fires the reconcile note on every resume (WI-203).
+    start_dirty = substantive_working_tree_dirty(root)
 
     # One coordinator per worktree (a double-launch or cron overlap is the
     # collision the branch guard can't catch — same branch, same checkout).

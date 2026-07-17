@@ -58,13 +58,11 @@ home elsewhere — don't restate it here:
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
 - **Next action:** the build frontier is **WI-202** (status.md
   generated-snapshot + freshness gate — the forward-only guard's freshness
-  successor — [specs/WI-202.md](specs/WI-202.md)) and **WI-203** (agent_loop owner-scratchpad
-  dirty-tree exemption — [specs/WI-203.md](specs/WI-203.md)) — both queued, deps
-  met, mutually independent. The dual-plan round set is now fully structured: its
-  requirement of record is **SR-066** (re-homed off the provisional SR-061; the
-  four seams ratified out of Proposed), and the `PlanMode=dual`
-  SafetyClass/isolation residual is ruled (single-WI-traincar derived from
-  PlanMode, repo-cwd redaction floor — [log.md](log.md) Decisions). Owner items
+  successor — [specs/WI-202.md](specs/WI-202.md)): the last queued item, deps
+  met. The dual-plan round set is fully structured (requirement of record
+  **SR-066**; the four seams ratified out of Proposed; the `PlanMode=dual`
+  SafetyClass/isolation residual ruled — [log.md](log.md) Decisions), and the
+  agent_loop owner-scratchpad dirty-tree exemption has landed. Owner items
   OI-3/OI-4/OI-7 stay open under `gate-policy: autonomous`. Session evidence →
   [log.md](log.md).
 
