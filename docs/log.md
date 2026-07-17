@@ -8601,3 +8601,38 @@ done).
 **Spine:** unchanged — SN=25 SR=66 LLR=76 TC=76, derived gate **G3**. Frontier:
 the **build queue is drained** (no `queued` rows); the open owner decisions
 (OI-3/4/7) + the deferred backlog remain. NOT pushed (`push-policy: human`).
+
+## 2026-07-17 — Owner sitting: dispatcher architecture interrogated; WI-204 filed (spine-only traincar)
+
+**Session type:** owner Q&A + intake (no build). The owner interrogated the
+dual-plan activation path and the single-lane-vs-`--jobs` split; answers traced
+to the record, three findings surfaced:
+
+1. **Dual-plan quiet-park gap:** a `PlanMode=dual` row on the frontier has no
+   auto-page and no auto-dispatch — the fail-closed refusal covers only the
+   worker path, so the row (and its dependents) can park *quietly* under the
+   legacy driver. Known residual (SR-066 / WI-201's deferred item), now
+   owner-visible; folds into the future migration set.
+2. **The two execution paths are a half-finished migration, not a design:**
+   `parallel-wi-dispatch.md` §1.2 already fixes "`agent-resume` is the
+   dispatcher; `--jobs 1` is the explicit serial escape hatch." The legacy
+   resume loop survives as the pre-migration mode, gated on the §14
+   SafetyClass/soft-edge audits — which **this repo has not run on itself**
+   (no `SafetyClass` column, no `docs/parallel-ready`). Restructure = finish
+   §14 + retire the legacy strata (2–3 WIs, discussed, not yet filed).
+3. **Spine batching residual → WI-204 filed (owner-directed):** the stage-2
+   gate pass batches all ready spine work as one whole-project pass
+   (ratifications per gate level, never per WI) — but SR-058's flat
+   "never join a multi-WI traincar" forces *mid-run* spine arrivals into N
+   sequential single-WI trains, contradicting the batch intent. **WI-204**
+   (queued, `unattended`, **strong** — it amends SR-058's text;
+   [specs/WI-204.md](specs/WI-204.md)): spine-serial WIs pack together into
+   ONE spine-only serial traincar, never with any other class; whole-project
+   drain + one-active-spine-train invariants unchanged. Ordering intent
+   recorded in the spec: WI-204 lands **first**, then the migration WIs name
+   it as hard predecessor, so repos migrate onto the amended rule.
+
+**Registry:** +1 row (204 WIs, 191 done); dashboard + status snapshot
+regenerated; `check_trajectory --strict` clean. No spine change at this
+sitting (the SR-058 amendment is WI-204's build, not this filing). NOT pushed
+(`push-policy: human`).
