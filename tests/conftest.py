@@ -58,6 +58,7 @@ SLOW_MODULES = frozenset(
         # — the same heavy-integration class as the hook/scaffold runs above, so
         # the commit bar drops them and the full suite + CI exercise them.
         "test_agent_loop_dispatch",  # dispatcher fan-out end-to-end
+        "test_agent_loop_dualplan",  # the dual-plan round end-to-end (WI-199)
         "test_agent_loop_train",  # traincar continuation / fork / join
         "test_agent_loop_integrate",  # atomic integrator end-to-end
         "test_agent_loop_recovery",  # fault-injected crash matrix

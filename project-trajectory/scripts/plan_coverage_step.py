@@ -126,6 +126,10 @@ def run_coverage(goal, plan_paths, root, out_path, plan_key_of):
         "malformed": malformed,
         "implicated": implicated,
         "report": report,
+        # The raw checker stdout: on a findings run it carries the
+        # `plan_coverage: FAIL - ...` lines the report file deliberately
+        # omits — the payload a mechanical-repair prompt needs (WI-199).
+        "stdout": proc.stdout,
     }
 
 

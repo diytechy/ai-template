@@ -86,3 +86,4 @@ resource: "generated"
 | [LLR-073](LLR-073.md) | Dual-plan coverage step adapter |
 | [LLR-074](LLR-074.md) | Dual-plan round artifact filer |
 | [LLR-075](LLR-075.md) | status.md forward-only done-id enforcement (mode-aware R-D restoration) |
+| [LLR-076](LLR-076.md) | Coordinator dual-plan round dispatch |

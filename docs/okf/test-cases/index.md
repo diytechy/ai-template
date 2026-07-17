@@ -86,3 +86,4 @@ resource: "generated"
 | [TC-073](TC-073.md) | Drive plan_coverage_step end-to-end with the real plan_round machine and the real plan_co… |
 | [TC-074](TC-074.md) | Build a fixture repo (work-items.csv with the round's parent WI, a selected plan carrying… |
 | [TC-075](TC-075.md) | Run the status.md forward-only suite: a done id echoed in a hand-edited status.md warns p… |
+| [TC-076](TC-076.md) | Run the real agent_loop --dual-plan over a fixture repo (PlanMode=dual WI, C#-claused goa… |

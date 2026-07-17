@@ -8373,3 +8373,62 @@ Windows):** smoke **820 passed / 2 skipped**; `check_docs --stale` 0 broken;
 files). `OWNER_SCRATCHPAD.md` carries a concurrent owner edit — deliberately
 left unstaged and untouched (owner-only surface). Frontier: **WI-199**. NOT
 pushed (`push-policy: human`).
+
+## 2026-07-17 — WI-199: the coordinator runs the dual-plan round unattended (the DP-001 fan-in lands)
+
+**Session type:** build (`unattended`, strong, fable — the declared fan-in
+tier), same sitting as the five-WI integration. The DP-001 selected plan is
+now **fully built**.
+
+**The trigger is registry-declared:** a WI row's **`PlanMode=dual`** cell
+(an optional column; declared at filing like `BuildTier`, never by flag).
+The worker `--wi` path **refuses** a dual row fail-closed — a dual-plan WI
+can never become a direct BUILD — and `agent_loop --dual-plan WI-x` is the
+round's own early path (one round, then exit).
+
+**The runner** (`run_dual_plan_round`) drives the WI-194…WI-198 modules
+through the existing `build_argv`/`run_session` machinery, so every hat
+inherits the S8 per-session limits: planners ×2 (routed via
+`agent_route.planner_pair` when the enable-list opts routing in, with **one**
+`planner_fallback` relaunch on runtime nonresponse then page; the ambient
+template drives both hats as the **recorded routing-off degraded mode**),
+the coverage pre-pass with the bounce-once repair ladder (the clean report
+feeds the briefs; the raw FAIL lines — a new `stdout` key on
+`plan_coverage_step`'s result — feed the mechanical-repair prompt),
+cross-critique by the *other* hat's route, one revision each, and the
+arbiter ×2 with **swapped anonymized labels de-anonymized before recording**
+(the agreement rule compares TRUE plans, so a position-biased arbiter is
+caught, not laundered). SELECTED files the winner's rows as queued WIs
+hanging off the parent (plan_artifacts) and appends the verdict summary;
+PAGE maps onto `docs/gate-policy` via `plan_round.page_action` (attended
+writes the NEEDS-HUMAN run-state + stop banner).
+
+**Verified (the P6 done-condition):** 5 end-to-end fixture tests
+(`test_agent_loop_dualplan.py`, SLOW_MODULES class — a fake agent CLI serves
+all three hats): the full round completes unattended with every artifact in
+`docs/plans/DP-001-*/` and the filed rows passing the **real**
+`check_trajectory`; the worker path refuses the dual row; the flag on a
+non-dual row is refused; a **position-biased fake arbiter** (always "SELECT
+A") disagrees across the swap and PAGEs `position-unstable`; a missing plan
+rubric PAGEs honestly.
+
+**Recorded residuals (WI-201, filed):** round sessions run in the repo cwd
+like every S8 hat (redaction rides the brief's allowlist construction; the
+manual protocol's empty-cwd isolation is stronger), and frontier
+auto-dispatch under `--jobs` awaits the structuring WI's SafetyClass ruling.
+**WI-201** (queued, `unattended`, ≺WI-199; [specs/WI-201.md](specs/WI-201.md))
+also re-homes the provisional SR-061 rows and ratifies IF-058…IF-061 out of
+`Proposed` — the WI-176→WI-177 pattern the WI-190 spec declared.
+
+**Deviations:** none of substance — P6's "read through the schedule
+frontier" lands as the registry-column read + the fail-closed worker refusal
++ the dedicated entry; scheduler auto-dispatch is the recorded WI-201
+residual, not silent scope. **Byte deltas (budgeted files):**
+PROCESS_OPTIONS.md 158,628 → **158,866 (+238 B, flagged** — the layer's
+coordinator-dispatch tail replaced its follow-up-WI sentence), baseline
+re-stamped ×3; AGENTS.template.md 9,978 + PROCESS.md 60,169 untouched.
+
+**Spine:** SN=25 SR=65 **LLR=76 TC=76** (LLR-076/TC-076 under SR-061,
+provisional), 61 seams; derived gate **G3** (per-phase all G3). Full-suite +
+`check.py --gate G3 --jobs 0` output in the commit message. Frontier:
+**WI-201**. NOT pushed (`push-policy: human`).

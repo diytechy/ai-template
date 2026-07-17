@@ -1043,8 +1043,11 @@ The three hat prompts ship as kit templates —
 layer is opted into (not scaffolded by default) — with the redaction,
 anonymization, position-swap, and anti-verbosity instructions **embedded in
 the prompt files**, so the safeguards ride the artifacts, not session memory.
-Coordinator (`agent_loop`) dispatch of this round is a declared follow-up WI;
-the manual protocol above is the shipped shape.
+The coordinator runs the round unattended: `agent_loop --dual-plan <WI>` over
+a queued WI whose registry row declares **`PlanMode=dual`** (the trigger is
+declared at filing, never by flag; the worker path refuses a dual row as a
+direct BUILD, fail-closed). The manual protocol above remains the fallback —
+and the stronger-isolation option (empty-cwd sessions).
 
 ## Tier-conditional guardrails
 

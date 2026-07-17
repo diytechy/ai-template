@@ -1161,6 +1161,381 @@ def critique_prompt(prompt_templates, verdict_path, brief):
     return base.replace("{verdict}", str(verdict_path)).replace("{brief}", brief)
 
 
+# --- the dual-plan decomposition round (WI-199; DP-001 selected plan P6) -------
+# The coordinator fan-in over the WI-194..WI-198 modules: a queued WI whose
+# registry row declares `PlanMode=dual` is run as a dual-plan round — two
+# planner sessions, the coverage pre-pass, one cross-critique + revision, the
+# position-swapped arbiter pair — never as a direct BUILD (the worker path
+# refuses a dual row, fail-closed). Sessions launch through the existing
+# headless invocation path (build_argv/run_session), so each inherits the S8
+# per-session limits; routing (agent_route.planner_pair/planner_fallback) is
+# used when the enable-list opts it in, else one template drives every hat as
+# the recorded routing-off degraded mode. Residual honesty: sessions run in the
+# repo cwd like every S8 hat (redaction rides the brief's allowlist
+# construction, plan_briefs); the manual protocol's empty-cwd isolation is
+# stronger, and frontier AUTO-dispatch of dual rows under --jobs (a SafetyClass
+# single-WI classification) is the structuring WI's residual, not wired here.
+PLAN_MODE_COLUMN = "PlanMode"
+PLAN_MODE_DUAL = "dual"
+DUALPLAN_BUDGET_ENV = "AGENT_DUALPLAN_BUDGET"
+PLAN_RUBRIC = "docs/rubrics/plan-decomposition.md"
+
+_CRITIC_VERDICT_RE = re.compile(r"VERDICT:\s*(APPROVE|CHANGES-REQUESTED)")
+_ARBITER_VERDICT_RE = re.compile(r"VERDICT:\s*SELECT\s+([AB])\b(?:\s+ports=(\d+))?")
+_EMPTY_SLOT = "(empty - first round)"
+
+
+def wi_plan_mode(row):
+    """The WI row's declared plan mode: `dual` fires the round; anything else
+    (absent column, empty cell, unknown token) is ordinary BUILD dispatch."""
+    return (row.get(PLAN_MODE_COLUMN) or "").strip().lower()
+
+
+def _dp_routes(root, tier):
+    """The two planner hat routes as `[(label, model, template, env, note)]`.
+    With routing opted in (docs/agents-enabled + agents.csv), the pair comes
+    from agent_route.planner_pair (different families where the pool allows,
+    else the recorded degraded reason); with routing off, both hats ride the
+    ambient template/model — the recorded routing-off degraded mode. Returns
+    (routes, registry, note); registry is None when routing is off."""
+    import agent_route
+
+    enabled = agent_route.load_enabled(root / "docs" / "agents-enabled")
+    registry, _errors = agent_route.load_registry(root / "docs" / "agents.csv")
+    if not enabled or not registry:
+        return None, None, "routing-off: one template drives every hat (degraded)"
+    pool = agent_route.resolve_enabled(enabled, registry)
+    pair = agent_route.planner_pair(pool, registry, tier)
+    if pair.sessions[0] is None:
+        return None, registry, "routing: no routable model ({})".format(pair.detail)
+    routes = []
+    for label, sess in zip(("A", "B"), pair.sessions):
+        m = registry[sess.model_id]
+        routes.append((label, m.model, m.cmd_template, m.env, sess.model_id))
+    return routes, registry, "{} ({})".format(pair.reason, pair.detail)
+
+
+def _dp_session(template, model, prompt, root, timeout, env_cell=""):
+    """One round session through the existing headless path. Returns
+    (ok, output). A pair row's Env cell is merged over the ambient env
+    (agent_route.parse_env), matching the loop's session launch."""
+    env = None
+    if env_cell:
+        import agent_route
+
+        env = dict(os.environ)
+        env.update(agent_route.parse_env(env_cell))
+    argv = build_argv(template, model, prompt)
+    code, output, timed_out = run_session(argv, root, timeout, env=env)
+    return (code == 0 and not timed_out), output
+
+
+def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None):
+    """Run one dual-plan decomposition round for `wi` unattended and return
+    `(outcome, detail)` — outcome `SELECTED` (verdict recorded, the selected
+    plan's rows filed as queued WIs) or `PAGE` (the round's page reason;
+    the caller maps it onto the `docs/gate-policy` failure semantics via
+    plan_round.page_action). The protocol, its caps, and every safeguard live
+    in the WI-194..WI-198 modules — this runner only drives them through the
+    existing session machinery and writes the artifacts."""
+    import plan_artifacts
+    import plan_briefs
+    import plan_coverage_step
+    import plan_round
+
+    prompt_map = prompt_map or {}
+
+    spec_ref = (row.get("SpecRef") or "").split("#")[0].strip()
+    goal_path = root / spec_ref if spec_ref else None
+    if goal_path is None or not goal_path.exists():
+        return "PAGE", "dual-plan WI {} has no resolvable SpecRef goal brief".format(wi)
+    rubric_path = root / PLAN_RUBRIC
+    if not rubric_path.exists():
+        return "PAGE", "no plan rubric on file ({})".format(PLAN_RUBRIC)
+    goal_text = goal_path.read_text(encoding="utf-8", errors="replace")
+    rubric_text = rubric_path.read_text(encoding="utf-8", errors="replace")
+    surface = plan_briefs.build_surface(root)
+
+    def hat_template(hat):
+        return plan_briefs.strip_dispatcher_block(
+            plan_briefs.load_template(hat, override=prompt_map.get(hat))
+        )
+
+    try:
+        planner_tmpl = hat_template(plan_briefs.HAT_PLANNER)
+        critic_tmpl = hat_template(plan_briefs.HAT_CRITIC)
+        arbiter_tmpl = hat_template(plan_briefs.HAT_ARBITER)
+    except OSError as exc:
+        return "PAGE", "dual-plan hat template unreadable: {}".format(exc)
+
+    routes, _registry, route_note = _dp_routes(root, "strong")
+    if routes is None and _registry is not None:
+        return "PAGE", route_note  # routing opted in but nothing routable
+    if routes is None:
+        routes = [
+            ("A", model, template, "", "ambient"),
+            ("B", model, template, "", "ambient"),
+        ]
+    route_of = {r[0]: r for r in routes}
+    # Cross-critique: each plan is judged by the OTHER hat's route (cross-family
+    # exactly when the pair is). The arbiter rides the ambient template/model —
+    # a shared-family arbiter is the recorded degraded case (position-swap x2 +
+    # anonymized labels are the mitigations, enforced below).
+    critic_route_of = {"A": route_of["B"], "B": route_of["A"]}
+
+    budget = plan_round.DEFAULT_ROUND_BUDGET
+    try:
+        budget = int(os.environ.get(DUALPLAN_BUDGET_ENV, "") or budget)
+    except ValueError:
+        pass
+    slug = wi.lower()
+    round_dir = plan_artifacts.allocate_round_dir(root, slug)
+    plan_artifacts.write_stage(round_dir, "goal.md", goal_text)
+    state = plan_round.new_round(slug, budget=budget)
+
+    plan_text = {}  # true key -> current text
+    plan_path = {}  # true key -> current artifact path
+    critique_text = {}
+    coverage_report = ""  # the clean report (the critic/arbiter brief payload)
+    coverage_fails = ""  # the raw FAIL lines (the mechanical-repair payload)
+    fell_back = False
+    arbiter_notes = []
+
+    def dispatch(step):
+        nonlocal coverage_report, coverage_fails, fell_back
+        nonlocal routes, route_of, critic_route_of
+        kind, plan = step["step"], step.get("plan")
+        if kind == plan_round.STEP_PLAN or kind in (
+            plan_round.STEP_REPAIR,
+            plan_round.STEP_REVISE,
+        ):
+            own = plan_text.get(plan, _EMPTY_SLOT)
+            if kind == plan_round.STEP_PLAN:
+                crit = _EMPTY_SLOT
+            elif kind == plan_round.STEP_REPAIR:
+                crit = (
+                    "MECHANICAL REPAIR ONLY - the coverage pre-pass found:\n"
+                    + coverage_fails
+                )
+            else:
+                crit = critique_text.get(plan, "")
+            prompt = plan_briefs.assemble(
+                plan_briefs.HAT_PLANNER,
+                {
+                    "GOAL_BRIEF": goal_text,
+                    "SR_SURFACE": surface["SR_SURFACE"],
+                    "IF_REGISTRY": surface["IF_REGISTRY"],
+                    "OWN_PLAN": own if kind != plan_round.STEP_PLAN else _EMPTY_SLOT,
+                    "CRITIQUE": crit,
+                },
+                planner_tmpl,
+            )
+            _label, m, tmpl, env_cell, note = route_of[plan]
+            ok, output = _dp_session(tmpl, m, prompt, root, timeout, env_cell)
+            if not ok:
+                if _registry is not None and not fell_back:
+                    # One runtime-nonresponse fallback (WI-196), then page.
+                    import agent_route
+
+                    failed = type("S", (), {"family": ""})()
+                    for sess_id, mm in _registry.items():
+                        if mm.model == m:
+                            failed.family = mm.family
+                            break
+                    pool = agent_route.resolve_enabled(
+                        agent_route.load_enabled(root / "docs" / "agents-enabled"),
+                        _registry,
+                    )
+                    pair = agent_route.planner_fallback(
+                        failed, pool, _registry, "strong"
+                    )
+                    if pair.sessions[0] is not None:
+                        fell_back = True
+                        routes = [
+                            (
+                                lbl,
+                                _registry[s.model_id].model,
+                                _registry[s.model_id].cmd_template,
+                                _registry[s.model_id].env,
+                                s.model_id,
+                            )
+                            for lbl, s in zip(("A", "B"), pair.sessions)
+                        ]
+                        route_of.update({r[0]: r for r in routes})
+                        critic_route_of.update({"A": route_of["B"], "B": route_of["A"]})
+                        arbiter_notes.append(
+                            "runtime fallback: {} ({})".format(pair.reason, pair.detail)
+                        )
+                        return dispatch(step)  # relaunch this hat once, rerouted
+                return None, "session failed at {} {}".format(kind, plan or "")
+            suffix = {"PLAN": "", "REPAIR": "-repair", "REVISE": "-rev"}[kind]
+            path = plan_artifacts.write_stage(
+                round_dir, "plan-{}{}.md".format(plan, suffix), output
+            )
+            plan_text[plan], plan_path[plan] = output, path
+            return {"ok": True}, None
+        if kind == plan_round.STEP_COVERAGE:
+            stage = step["stage"]
+            result = plan_coverage_step.run_coverage(
+                goal_path,
+                [plan_path["A"], plan_path["B"]],
+                root,
+                round_dir / "coverage-{}.md".format(stage),
+                {plan_path["A"].name: "A", plan_path["B"].name: "B"}.get,
+            )
+            coverage_report = result["report"]
+            coverage_fails = result.get("stdout") or result["report"]
+            kwargs = plan_coverage_step.to_record_kwargs(result)
+            kwargs["stage"] = stage
+            return kwargs, None
+        if kind == plan_round.STEP_CRITIQUE:
+            prompt = plan_briefs.assemble(
+                plan_briefs.HAT_CRITIC,
+                {
+                    "GOAL_BRIEF": goal_text,
+                    "SR_SURFACE": surface["SR_SURFACE"],
+                    "IF_REGISTRY": surface["IF_REGISTRY"],
+                    "RUBRIC": rubric_text,
+                    "COVERAGE_REPORT": coverage_report,
+                    "PLAN": plan_text[plan],
+                },
+                critic_tmpl,
+            )
+            _label, m, tmpl, env_cell, _note = critic_route_of[plan]
+            ok, output = _dp_session(tmpl, m, prompt, root, timeout, env_cell)
+            if not ok:
+                return None, "session failed at CRITIQUE {}".format(plan)
+            mm = _CRITIC_VERDICT_RE.search(output)
+            if not mm:
+                return None, "unparseable critique verdict for plan {}".format(plan)
+            critique_text[plan] = output
+            plan_artifacts.write_stage(
+                round_dir, "critique-of-{}.md".format(plan), output
+            )
+            return {"verdict": mm.group(1)}, None
+        if kind == plan_round.STEP_ARBITER:
+            run = step["run"]
+            # Position swap x2: run 1 labels the plans as-is, run 2 swaps —
+            # the labels carry no provenance either way (anonymized by
+            # construction: the arbiter sees only "Plan A"/"Plan B").
+            label_to_true = {"A": "A", "B": "B"} if run == "1" else {"A": "B", "B": "A"}
+            prompt = plan_briefs.assemble(
+                plan_briefs.HAT_ARBITER,
+                {
+                    "OWNER_PROMPT": (row.get("Title") or wi).strip(),
+                    "GOAL_BRIEF": goal_text,
+                    "RUBRIC": rubric_text,
+                    "COVERAGE_REPORT": coverage_report,
+                    "PLAN_A": plan_text[label_to_true["A"]],
+                    "PLAN_B": plan_text[label_to_true["B"]],
+                },
+                arbiter_tmpl,
+            )
+            ok, output = _dp_session(template, model, prompt, root, timeout)
+            if not ok:
+                return None, "session failed at ARBITER run {}".format(run)
+            mm = _ARBITER_VERDICT_RE.search(output)
+            if not mm:
+                return None, "unparseable arbiter verdict (run {})".format(run)
+            plan_artifacts.write_stage(
+                round_dir, "verdict-run{}.md".format(run), output
+            )
+            true_key = label_to_true[mm.group(1)]
+            arbiter_notes.append(
+                "run {}: labels A={}/B={} -> SELECT {} = plan {}".format(
+                    run,
+                    label_to_true["A"],
+                    label_to_true["B"],
+                    mm.group(1),
+                    true_key,
+                )
+            )
+            return {
+                "selection": true_key,
+                "ports": int(mm.group(2) or 0),
+            }, None
+        return None, "unknown step {!r}".format(kind)
+
+    while True:
+        steps = plan_round.ready_steps(state)
+        if not steps:
+            break
+        step = steps[0]
+        result, err = dispatch(step)
+        if err:
+            state["page_reason"] = err
+            break
+        disp = plan_round.record(
+            state,
+            step["step"],
+            plan=step.get("plan"),
+            stage=result.pop("stage", step.get("stage")),
+            run=step.get("run"),
+            **result,
+        )
+        if disp != plan_round.DISP_CONTINUE:
+            break
+
+    if state["selected"]:
+        winner = state["selected"]
+        rel_plan = plan_path[winner].relative_to(root).as_posix()
+        mapping = plan_artifacts.file_selected_wis(
+            root,
+            plan_text[winner],
+            rel_plan,
+            (row.get("Workstream") or "unattended").strip() or "unattended",
+            wi,
+        )
+        verdict = (
+            "# {} verdict - dual-plan round for {} (unattended)\n\n"
+            "VERDICT: SELECT plan {} ports={} (both position-swapped runs "
+            "agree)\n\n- route: {}\n- {}\n- filed: {}\n"
+            "- budget: {}/{} sessions\n".format(
+                round_dir.name,
+                wi,
+                winner,
+                state["ports"] or 0,
+                route_note,
+                "\n- ".join(arbiter_notes),
+                ", ".join("{} -> {}".format(k, v) for k, v in sorted(mapping.items()))
+                or "(no rows)",
+                state["spent"],
+                state["budget"],
+            )
+        )
+        plan_artifacts.write_stage(round_dir, "verdict.md", verdict)
+        plan_artifacts.append_log_summary(
+            root,
+            "## dual-plan round {} ({}): SELECT plan {}, ports={}\n\n"
+            "Artifacts: {}/. Filed: {}. Route: {}. Acceptance follows "
+            "docs/gate-policy (the recorded-verdict rules).".format(
+                round_dir.name,
+                wi,
+                winner,
+                state["ports"] or 0,
+                round_dir.relative_to(root).as_posix(),
+                ", ".join(sorted(mapping.values())) or "(none)",
+                route_note,
+            ),
+        )
+        return "SELECTED", "round {}: SELECT plan {} -> {}".format(
+            round_dir.name, winner, ", ".join(sorted(mapping.values())) or "-"
+        )
+
+    reason = state["page_reason"] or "round ended without a selection"
+    plan_artifacts.write_stage(
+        round_dir,
+        "verdict.md",
+        "# {} - PAGE\n\n{}\n\nroute: {}\n{}\n".format(
+            round_dir.name,
+            reason,
+            route_note,
+            "\n".join(arbiter_notes),
+        ),
+    )
+    return "PAGE", reason
+
+
 # --- the serial loop's managed-routing / escalation / critique / stall state ---
 # (WI-080 Slice C) What were ~24 mutable locals threaded through main() now live
 # on one object behind PURE transition methods: each method mutates only this
@@ -4053,6 +4428,16 @@ def parse_args():
         "(docs/specs/parallel-wi-dispatch.md §6).",
     )
     ap.add_argument(
+        "--dual-plan",
+        default=None,
+        metavar="WI-ID",
+        help="run one dual-plan decomposition round for this queued WI (its "
+        "registry row must declare PlanMode=dual) and exit: two planner "
+        "sessions, the coverage pre-pass, one cross-critique + revision, the "
+        "position-swapped arbiter pair, artifacts under docs/plans/DP-NNN-*/ "
+        "(process-options.md 'Dual-plan decomposition'; WI-199).",
+    )
+    ap.add_argument(
         "--train",
         default=None,
         help="worker assignment (with --wi): the train id; the worktree must "
@@ -4332,11 +4717,26 @@ def build_worker_assignment(args, root):
                 file=sys.stderr,
             )
             return None, EXIT_PREFLIGHT
+        assigned = parse_wi_list(args.wi)
+        rows = load_wi_registry(root)
+        # A dual-plan WI never builds as a direct BUILD session (fail-closed,
+        # WI-199): the round has its own entry (--dual-plan) and safeguards.
+        dual = [w for w in assigned if wi_plan_mode(rows.get(w, {})) == PLAN_MODE_DUAL]
+        if dual:
+            print(
+                "agent_loop: {} declare(s) PlanMode=dual — a dual-plan WI is "
+                "never a direct BUILD; run it with --dual-plan {} instead "
+                "(process-options.md 'Dual-plan decomposition')".format(
+                    ";".join(dual), dual[0]
+                ),
+                file=sys.stderr,
+            )
+            return None, EXIT_PREFLIGHT
         worker = {
             "train": sanitize_train(args.train),
-            "assigned": parse_wi_list(args.wi),
+            "assigned": assigned,
             "base": base,
-            "rows": load_wi_registry(root),
+            "rows": rows,
             # The scheduler's view of the same registry, for the §7
             # continuation re-check (classifier eligibility per constituent).
             "sched": {
@@ -5612,6 +6012,54 @@ def main():
             guardrails_policy,
             warned_no_core,
         )
+
+    if args.dual_plan:
+        # The dual-plan round is its own early path (WI-199): one round, then
+        # exit — never the resume loop. The trigger lives in the REGISTRY
+        # (PlanMode=dual), the flag only names the WI; a non-dual row is
+        # refused so the flag can't conscript an ordinary WI into the round.
+        import plan_round as _plan_round
+
+        wid = args.dual_plan.strip()
+        rows = load_wi_registry(root)
+        row = rows.get(wid)
+        if row is None:
+            print(
+                "agent_loop: --dual-plan {}: no such WI in the registry".format(wid),
+                file=sys.stderr,
+            )
+            return EXIT_PREFLIGHT
+        if wi_plan_mode(row) != PLAN_MODE_DUAL:
+            print(
+                "agent_loop: --dual-plan {}: its registry row does not declare "
+                "PlanMode=dual (the trigger is declared at filing, never by "
+                "flag)".format(wid),
+                file=sys.stderr,
+            )
+            return EXIT_PREFLIGHT
+        outcome, detail = run_dual_plan_round(
+            root,
+            wid,
+            row,
+            template,
+            args.model,
+            args.session_timeout or None,
+            prompt_map,
+        )
+        if outcome == "SELECTED":
+            print("agent_loop: dual-plan {}: {}".format(wid, detail))
+            return EXIT_DONE
+        action = _plan_round.page_action(gate_policy)
+        print(
+            "agent_loop: dual-plan {} PAGED: {} (gate-policy {} -> {})".format(
+                wid, detail, gate_policy or "attended", action
+            ),
+            file=sys.stderr,
+        )
+        if action == "stop-needs-human":
+            _write_runstate(docs, "NEEDS-HUMAN", "dual-plan round: " + detail)
+            stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
+        return EXIT_NEEDS_HUMAN
 
     print_run_banner(
         root,

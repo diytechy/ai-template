@@ -56,13 +56,14 @@ home elsewhere — don't restate it here:
   are the OI-4/OI-7 subjects above).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** the build frontier is **WI-199** — the coordinator
-  dual-plan wiring fan-in (the last open row of the
-  [DP-001 verdict](plans/DP-001-dual-plan-loop-wiring/verdict.md)'s selected
-  plan; its five predecessor modules and the status forward-only enforcement
-  are integrated `done` — records in the registry + [log.md](log.md)). Owner
-  items OI-3/OI-4/OI-7 stay open under `gate-policy: autonomous`. Session
-  evidence → [log.md](log.md).
+- **Next action:** the build frontier is **WI-201** — the dual-plan
+  requirement structuring ([specs/WI-201.md](specs/WI-201.md)): mint the
+  round set's own SR, re-home the provisional rows, ratify the four Proposed
+  seams, and rule the `PlanMode=dual` auto-dispatch/isolation residuals. The
+  whole DP-001 selected plan is integrated `done` (records in the registry +
+  [log.md](log.md); the round is runnable unattended via
+  `agent_loop --dual-plan`). Owner items OI-3/OI-4/OI-7 stay open under
+  `gate-policy: autonomous`. Session evidence → [log.md](log.md).
 
 ## Scope
 
