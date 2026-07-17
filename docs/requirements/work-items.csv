@@ -1,4 +1,6 @@
 WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,BuildTier,SafetyClass
+WI-211,Dashboard narrow-width tab navigation wraps instead of clipping off-screen,dashboard,SR-052;SR-054,WI-189,done,"The shared dashboard nav.tabs style now wraps at narrow widths, keeping every labeled tab visible and operable at 390 px; the declared light/dark render matrix was regenerated and visually checked.",,quick,
+WI-212,Dashboard render-critique recipe is reproducible and captures the true landing fold,tooling,,WI-189,done,"Added the pinned npm lockfile required by the documented npm ci setup; moved the landing-fold screenshot ahead of tab clicks so Playwright cannot scroll the narrow page before capturing the viewport; regenerated all 36 declared screenshots.",,quick,
 WI-001,Cross-agent portability (AGENTS.md standard + stubs),docs,,,done,"Thread 0 - the agent guide standardized on AGENTS.md with CLAUDE/GEMINI stubs; foundational.",,,
 WI-002,Process core: roles - gates - IDs - anti-duplication,docs,,WI-001,done,"Threads 3-7,13 - PROCESS.md load-bearing core.",,,
 WI-003,Byte-budget discipline + core/optional split,docs,,WI-002,done,"Threads 26,27 - PROCESS.md squeeze; the PROCESS_OPTIONS opt-in split.",,,

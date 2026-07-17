@@ -264,6 +264,17 @@ def test_cli_explain_reports_every_wi_and_reasons(tmp_path):
     assert data["WI-002"]["reasons"] == ["excluded:deferred"]
 
 
+def test_cli_explain_text_formats_reason_lists(tmp_path):
+    _write_registry(tmp_path, [row("WI-001"), row("WI-002", status="deferred")])
+    proc = run_py(
+        [SCRIPTS / "schedule.py", "--root", str(tmp_path), "ready", "--explain"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "WI-001" in proc.stdout and "ready" in proc.stdout
+    assert "WI-002" in proc.stdout and "excluded:deferred" in proc.stdout
+
+
 def test_cli_simulate_serial_and_parallel(tmp_path):
     _write_registry(
         tmp_path, [row("WI-001"), row("WI-002"), row("WI-003", preds="WI-001")]

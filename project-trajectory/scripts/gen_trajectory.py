@@ -1605,7 +1605,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .tile b { display:block; font-size:1.4rem; letter-spacing:-.02em; }
   .tile span { font-size:.75rem; color:var(--muted); text-transform:uppercase;
                letter-spacing:.04em; }
-  nav.tabs { display:flex; gap:.25rem; margin:2rem 0 0; border-bottom:1px solid var(--border); }
+  nav.tabs { display:flex; flex-wrap:wrap; gap:.25rem; margin:2rem 0 0; border-bottom:1px solid var(--border); }
   nav.tabs button { appearance:none; background:none; border:none; cursor:pointer;
      font:inherit; font-weight:600; color:var(--muted); padding:.6rem .9rem;
      border-bottom:2px solid transparent; margin-bottom:-1px; }

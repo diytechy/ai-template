@@ -92,6 +92,11 @@ async function main() {
       for (const [wname, w] of Object.entries(WIDTHS)) {
         await page.setViewportSize({ width: w, height: 900 });
         await page.goto(url, { waitUntil: "networkidle" });
+        // Capture the landing fold before any click can scroll a narrow page to
+        // bring an off-viewport tab button into view.
+        const landingFold = join(OUT, `${w}px-${theme}-${LANDING}-fold.png`);
+        await page.screenshot({ path: landingFold, fullPage: false });
+        written.push(landingFold);
         for (const [tab, label] of TABS) {
           // The button's data-tab matches the panel's id; clicking it moves the
           // `active` class onto <section id="{tab}" class="panel active">.
@@ -103,11 +108,6 @@ async function main() {
           const full = join(OUT, `${base}-full.png`);
           await page.screenshot({ path: full, fullPage: true });
           written.push(full);
-          if (tab === LANDING) {
-            const fold = join(OUT, `${base}-fold.png`);
-            await page.screenshot({ path: fold, fullPage: false });
-            written.push(fold);
-          }
         }
       }
       await context.close();

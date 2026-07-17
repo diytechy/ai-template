@@ -19,7 +19,7 @@ from conftest import ROOT, SCRIPTS, load_script, run_py
 WI_HEADER = "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable\n"
 # The header with the SpecRef column (S1) — used by the SSOT-rule tests.
 SR_WI_HEADER = (
-    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef\n"
+    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,BlockRef\n"
 )
 LEGACY_HEADER = "WI-ID,Title,Track,SR-Refs,Predecessors,Status,Deliverable\n"
 SR_HEADER = (
@@ -340,9 +340,28 @@ def test_deferred_status_is_first_class(tmp_path):
     assert "unknown status" not in proc.stderr
 
 
+def test_blocked_status_is_first_class_with_blockref(tmp_path):
+    write_spec(tmp_path, "docs/specs/WI-001.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,A,scripts,,,blocked,,docs/specs/WI-001.md,OI-7\n",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "unknown status" not in proc.stderr
+
+
+def test_blocked_status_requires_blockref(tmp_path):
+    write_spec(tmp_path, "docs/specs/WI-001.md")
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,blocked,,docs/specs/WI-001.md,\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 1
+    assert "blocked-ref WI-001" in proc.stderr and "BlockRef is empty" in proc.stderr
+
+
 def test_unknown_status_warns_plain_fails_strict(tmp_path):
     # An out-of-vocabulary status lints (warn-first; ERROR under --strict).
-    write_wis_sr(tmp_path, "WI-001,A,scripts,,,blocked,,\n")
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,paused,,,\n")
     plain = run_traj(tmp_path)
     assert plain.returncode == 0, plain.stdout + plain.stderr
     assert "unknown status" in plain.stderr

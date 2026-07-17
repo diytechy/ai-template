@@ -36,9 +36,9 @@ import re
 from pathlib import Path
 
 WI_CSV = "docs/requirements/work-items.csv"
-# The header of record for the work-item registry (kept in sync with
-# work-items.template.csv / check_trajectory.load_wis); the append writes rows
-# in exactly this column order.
+# The modern header of record for a new work-item registry. Existing registries
+# are appended in THEIR declared order so legacy or extended schemas stay
+# structurally valid; optional scheduler fields are deliberately left blank.
 WI_HEADER = [
     "WI-ID",
     "Title",
@@ -49,6 +49,14 @@ WI_HEADER = [
     "Deliverable",
     "SpecRef",
     "BuildTier",
+    "CritiqueBudget",
+    "CritiqueExhaustion",
+    "Priority",
+    "Exclusive",
+    "BlockRef",
+    "EstTokens",
+    "SafetyClass",
+    "PlanMode",
 ]
 
 # A round directory: `DP-<digits>-<slug>` under docs/plans/.
@@ -130,16 +138,35 @@ def _existing_wi_nums(csv_path):
     return nums
 
 
+def _registry_header(csv_path):
+    """Return an existing registry's declared column order or the modern
+    template header for an absent/empty registry."""
+    if csv_path.exists() and csv_path.stat().st_size:
+        with csv_path.open(encoding="utf-8", newline="") as fh:
+            header = next(csv.reader(fh), [])
+        if header:
+            return header
+    return WI_HEADER
+
+
 def _append_csv_rows(csv_path, rows):
-    """Append `rows` (each a list in WI_HEADER order) to the work-item CSV via
-    the csv module (quoting-safe), preserving the file's existing line-ending
-    convention and guaranteeing the prior last row is terminated first."""
+    """Append mapping `rows` by the registry's actual header (quoting-safe),
+    preserving line endings and terminating the prior last row first."""
     newline = _detect_newline(csv_path)
+    write_header = not csv_path.exists() or csv_path.stat().st_size == 0
     needs_nl = csv_path.exists() and csv_path.read_bytes()[-1:] not in (b"", b"\n")
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
     with csv_path.open("a", encoding="utf-8", newline="") as fh:
         if needs_nl:
             fh.write(newline)
-        writer = csv.writer(fh, lineterminator=newline)
+        writer = csv.DictWriter(
+            fh,
+            fieldnames=_registry_header(csv_path),
+            extrasaction="ignore",
+            lineterminator=newline,
+        )
+        if write_header:
+            writer.writeheader()
         for row in rows:
             writer.writerow(row)
 
@@ -210,17 +237,17 @@ def file_selected_wis(
         if predecessor_wi and predecessor_wi not in preds:
             preds.append(predecessor_wi)
         out_rows.append(
-            [
-                mapping[r["id"]],  # WI-ID
-                r["title"],  # Title
-                workstream,  # Workstream
-                "",  # SR-Refs (the filed slice declares none yet)
-                ";".join(preds),  # Predecessors
-                "queued",  # Status
-                "",  # Deliverable (empty until close — R-A)
-                spec_ref,  # SpecRef (the round's plan-of-record)
-                tier_map.get(r["id"], DEFAULT_TIER),  # BuildTier
-            ]
+            {
+                "WI-ID": mapping[r["id"]],
+                "Title": r["title"],
+                "Workstream": workstream,
+                "SR-Refs": "",
+                "Predecessors": ";".join(preds),
+                "Status": "queued",
+                "Deliverable": "",  # R-A: filled only when closed
+                "SpecRef": spec_ref,
+                "BuildTier": tier_map.get(r["id"], DEFAULT_TIER),
+            }
         )
     _append_csv_rows(csv_path, out_rows)
     return mapping

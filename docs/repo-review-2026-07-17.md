@@ -11,12 +11,51 @@ rendered output rather than reviewed as independent sources of truth.
 
 ## 0. Unfixed items and why
 
-_To be filled immediately after the first report-only commit, once the
-high-confidence fixes have landed and the full verification run is complete._
+The initial report was committed independently as `6ceb172`. The following
+items remain after the fix pass because resolving them requires an owner policy
+choice, reconstruction of historical intent, or a separately reviewed
+high-risk refactor. They were not quietly converted into speculative changes.
 
 | Item | Final state | Why it remains unfixed |
 |---|---|---|
-| _pending_ | _pending_ | _pending_ |
+| H3 — coordinator complexity | Deferred to a dedicated decomposition campaign | Splitting the 698-line dispatcher and its state transitions is high-risk architectural work. It needs characterization tests, explicit module boundaries, and independent review; doing it inside a repository-wide cleanup would be reckless. |
+| H4 — active WIs whose only specs are archive/log records | Deferred for owner triage | Moving or rewriting WI-060/061/062/063/082 requires deciding whether each old intention is still wanted. The active truth cannot be reconstructed confidently from explicitly ignorable history. |
+| H5 — missing license | Needs owner/legal choice | Selecting a license changes downstream rights. No technically “safe default” can substitute for the owner’s distribution decision. |
+| M5 — 50 orphan-document warnings after this report | Deferred to a documentation-policy WI | Most warnings are historical reviews or specs. Suppression, new entry roots, or moving them to archive each encode a different retention policy; bulk relinking would merely hide the design question. |
+| M6 — weak per-module/transition coverage | Deferred to targeted test WIs | Raising meaningful coverage in `agent_loop`, `trace`, `bootstrap`, `check_docs`, and dashboard rendering requires behavior-specific tests, not low-value line chasing. |
+| M7 — Python floor, dependency bands, and CI action generations | Needs compatibility policy | Raising Python above 3.8 or moving CI actions changes downstream runner support. The current bands resolve cleanly and no vulnerability was demonstrated, so this should be a deliberate compatibility release. |
+| M8 — stale performance numbers and vacuous smoke timing | Needs a benchmark contract | Meaningful thresholds require named hardware/runner classes, warm/cold rules, and a variance policy. Replacing stale numbers with invented ones would be worse. |
+| L1 — historical Git metadata/subjects | Left intact | Rewriting shared history to repair vague subjects or author metadata is destructive and disproportionate; enforce the convention prospectively. |
+| L2 — dense/historical active prose | Deferred to scoped editorial work | Broad compression can accidentally weaken normative rules. The lifecycle paragraph touched by H2 was tightened, but a whole-guide rewrite needs separate semantic review. |
+| L3 — internationalization policy | Needs product-scope decision | Localization is not currently a stated goal; adding machinery without a downstream requirement would be speculative. |
+
+Confident fixes completed in this pass:
+
+| Finding | Disposition |
+|---|---|
+| H1 | Added `PlanMode` to the shipped schema; made dual-plan filing header-aware; preserved blank `SafetyClass`/`PlanMode` unless explicitly declared; added modern- and legacy-schema regression tests. |
+| H2 | Made `blocked` a first-class validator/process state and made a missing `BlockRef` a hard coherence error. |
+| M1 | Fixed text `ready --explain` formatting and added an end-to-end regression test. |
+| M2 | Replaced retired `next-wi` requirement text, repaired current lock-test citations, and attached the existing critique evidence to TC-053/054/055. |
+| M3 | Added the pinned npm lockfile, so the documented `npm ci` recipe is executable. |
+| M4 | Wrapped narrow tab navigation, captured the landing fold before any scroll-inducing click, and recorded the two rendered defects as WI-211/WI-212. |
+
+Final verification after remediation:
+
+- Full G3 gate: **PASS**, all 16 steps; **1,009 passed, 34 skipped**;
+  aggregate coverage **90.75%** (85% floor).
+- Strict traceability: **25 SN / 66 SR / 76 LLR / 76 TC**, with zero orphan,
+  integrity, status, placeholder, schema, component, or interface findings.
+- Trajectory: **212 WIs / 200 done**, graph acyclic, strict mode clean.
+- Focused changed-surface suite: **217 passed**; Ruff format and lint clean.
+- Documentation: **0 broken links**; 50 orphan warnings remain and are listed
+  above under M5.
+- Render tooling: clean `npm ci` succeeded with **0 vulnerabilities** reported;
+  all **36** declared screenshots regenerated; representative 390 px light/dark
+  fold and full-page images visually inspected.
+- Byte deltas: `AGENTS.template.md` **9,978 → 9,978** (unchanged, 22 B
+  headroom); `PROCESS.md` **60,169 → 60,169** (unchanged);
+  `PROCESS_OPTIONS.md` **155,819 → 155,536** (**−283 B**).
 
 ## 1. Executive summary
 
@@ -57,6 +96,11 @@ clips its tab navigation off-screen. The render-critique tool itself is not
 reproducible as documented (`npm ci` fails because there is no lockfile), and its
 narrow “fold” capture is invalid because clicking the below-fold tab scrolls the
 page before the screenshot.
+
+The subsequent fix pass resolved the schema/lifecycle/CLI/evidence/render-tool
+defects above. The remaining release-level concerns are the coordinator's
+concentration of risk, archive-dependent active work, and the absent license;
+all three require deliberate follow-on work rather than opportunistic edits.
 
 The correct posture is not a rewrite. Fix the schema/validator/CLI correctness
 defects immediately; repair evidence and stale requirements; make the render

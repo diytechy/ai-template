@@ -19,8 +19,7 @@ out/
 .DS_Store
 
 # Meta-only dashboard render-critique tooling (WI-189): the pinned Playwright
-# install + its screenshot output are dev artifacts, not tracked. The pinned
-# versions live in scripts/dashboard-shots/package.json (committed).
+# install + its screenshot output are dev artifacts, not tracked. Dependency
+# resolution is committed in package-lock.json so the documented npm ci works.
 scripts/dashboard-shots/node_modules/
 scripts/dashboard-shots/shots/
-scripts/dashboard-shots/package-lock.json

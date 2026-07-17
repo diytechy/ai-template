@@ -453,10 +453,12 @@ def _cmd_ready(args):
         return 0
     for r in records:
         if args.explain:
+            display = dict(r)
+            display["reasons"] = ";".join(r["reasons"])
             print(
                 "{id:<10} {disposition:<9} {sched_class:<14} "
                 "P{priority:<3} down={downstream:<3} path={hard_path:<3} {reasons}".format(
-                    reasons=";".join(r["reasons"]), **r
+                    **display
                 )
             )
         else:

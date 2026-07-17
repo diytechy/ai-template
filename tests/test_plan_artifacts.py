@@ -4,7 +4,8 @@ Exercises the coordinator's write-side of a round: DP-NNN directory allocation,
 stage-artifact writes, filing the selected plan's rows as queued WIs (id
 allocation, predecessor mapping incl. the fan-in row, tier map, R-A: queued
 rows carry an empty Deliverable), the end-to-end `check_trajectory.py`-passes
-fixture, and the log append. Every test builds its scaffolding under `tmp_path`
+fixture, header-safe optional-column handling, and the log append. Every test
+builds its scaffolding under `tmp_path`
 — the real `docs/` is never written.
 """
 
@@ -30,7 +31,9 @@ PLAN_TEXT = """# Selected plan (rev)
 """
 
 WI_HEADER_LINE = (
-    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,BuildTier\n"
+    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,"
+    "BuildTier,CritiqueBudget,CritiqueExhaustion,Priority,Exclusive,BlockRef,"
+    "EstTokens,SafetyClass,PlanMode\n"
 )
 
 
@@ -104,9 +107,9 @@ def _seed_registry(root):
     return _write_registry(
         root,
         [
-            "WI-000,Example row,other,,,queued,,,\n",
-            "WI-001,Foundation,docs,,,done,shipped it,,\n",
-            "WI-010,Round parent,unattended,,,done,parent shipped,,\n",
+            "WI-000,Example row,other,,,queued" + "," * 11 + "\n",
+            "WI-001,Foundation,docs,,,done,shipped it" + "," * 10 + "\n",
+            "WI-010,Round parent,unattended,,,done,parent shipped" + "," * 10 + "\n",
         ],
     )
 
@@ -175,6 +178,29 @@ def test_filed_rows_are_ra_compliant_queued(tmp_path):
         assert r["SR-Refs"] == ""
         assert r["SpecRef"] == "docs/plans/DP-001-x/plan.md"
         assert r["Workstream"] == "unattended"
+        assert r["SafetyClass"] == ""  # dispatcher audit, never inferred here
+        assert r["PlanMode"] == ""  # only an explicitly dual filing sets this
+        assert None not in r.values()  # row width matches the declared header
+
+
+def test_file_selected_wis_preserves_legacy_header_order(tmp_path):
+    path = _wi_csv(tmp_path)
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,BuildTier\n"
+        "WI-001,Parent,docs,,,done,shipped,,\n",
+        encoding="utf-8",
+    )
+    pa.file_selected_wis(
+        tmp_path,
+        PLAN_TEXT,
+        spec_ref="docs/plans/DP-001-x/plan.md",
+        workstream="unattended",
+        predecessor_wi="WI-001",
+    )
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = list(csv.reader(fh))
+    assert all(len(row) == 9 for row in rows)
 
 
 def test_file_selected_wis_preserves_lf_and_appends_cleanly(tmp_path):

@@ -148,10 +148,11 @@ CMP_ID_RE = re.compile(r"^CMP-\d+$")
 WI_ID_RE = re.compile(r"^WI-\d+$")
 
 # The work-item lifecycle vocabulary (S1). `deferred` is a first-class,
-# queued-but-not-next state carrying a recorded reason; an unknown status is a
-# lint (warn-first). "Open" = anything not yet `done`.
-OPEN_STATUSES = ("queued", "active", "deferred")
-KNOWN_STATUSES = ("queued", "active", "done", "deferred")
+# queued-but-not-next state carrying a recorded reason; `blocked` is parked on a
+# named external dependency. An unknown status is a lint (warn-first). "Open" =
+# anything not yet `done`.
+OPEN_STATUSES = ("queued", "active", "deferred", "blocked")
+KNOWN_STATUSES = ("queued", "active", "done", "deferred", "blocked")
 
 # Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
 # minus `deferred` (a deferred WI re-enters via an owner un-defer, itself the
@@ -277,6 +278,7 @@ def load_wis(rows):
                 # legacy CSV without the column reads as "" (DictReader -> None).
                 "deliverable": (r.get("Deliverable") or "").strip(),
                 "specref": (r.get("SpecRef") or "").strip(),
+                "blockref": (r.get("BlockRef") or "").strip(),
             }
         )
     return wis, integrity
@@ -1041,7 +1043,16 @@ def ssot_findings(wis, root):
                     "status-vocab",
                     False,
                     "{}: unknown status {!r} (expected queued|active|done|"
-                    "deferred)".format(w["id"], st),
+                    "deferred|blocked)".format(w["id"], st),
+                )
+            )
+        if st == "blocked" and not w["blockref"]:
+            out.append(
+                (
+                    "blocked-ref",
+                    True,
+                    "{}: status=blocked but BlockRef is empty (record the "
+                    "external dependency or decision that must clear)".format(w["id"]),
                 )
             )
         # R-A: Deliverable non-empty IFF done.

@@ -1418,24 +1418,20 @@ independent tracks meet, which task is in flight, how far along the whole is. A
   A bare id is a **hard** edge (a real technical blocker: drives readiness,
   ranking, and the acyclicity rule); a `~`-prefixed id (`~WI-013`) is a **soft**
   edge (advisory ordering — must resolve, never blocks, dashed in the render);
-- it moves through a **lifecycle**: `queued → active → done`.
+- it moves through a **lifecycle**: `queued → active → done`; `deferred` parks
+  intentionally postponed work and `blocked` parks work on a named `BlockRef`.
 
-A WI is to an SR what a build step is to a spec: the SR says the adder must be
-correct; the work items say "build the adder (done), wire the harness (active),
-then cut the release (queued)." The prose that argued the work — a plan, a
-whiteboard thread — stays the *why*; `work-items.csv` is the machine-readable
-*how*, the way an SR row is the machine-readable form of the requirement its
-thread argued. The two **coexist**; the registry does not replace the narrative.
+A WI is the machine-readable *how* beneath an SR's *what*. Plans and discussion
+retain the *why*; the registry complements rather than replaces that narrative.
 
 **Registry.** `docs/requirements/work-items.csv`, columns
 `WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef`.
 Off-spine and optional like `procurement.csv` / `assets.csv`: `trace.py` does not
 read `WI-` ids — the trajectory tooling owns them. `Status ∈
-{queued,active,done,deferred}` — `deferred` is a first-class *queued-but-not-next*
-state carrying a recorded reason (a distinct DAG state, not "next"); an unknown
-status lints. `SR-Refs` / `Predecessors` are `;`-joined id lists; a `-000` example
-row ships inert (the placeholder rule the whole kit shares). A legacy CSV without
-the `SpecRef` column reads it as empty — never-breaking.
+{queued,active,done,deferred,blocked}`; `deferred` is queued-but-not-next, while
+`blocked` requires the optional `BlockRef` column to name what must clear. An
+unknown status lints. `SR-Refs` / `Predecessors` are `;`-joined id lists; the
+`-000` example row is inert. A legacy CSV without `SpecRef` reads it as empty.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
 G2. Every `Predecessors` id (hard or soft) resolves to a real work item and the
@@ -1453,7 +1449,7 @@ is open and clears at close. `check_trajectory.py` mechanizes two rules over the
 registry (warn-first at the commit floor; `--strict` gates R-E at G2+):
 
 - **R-A** — a WI's `Deliverable` is non-empty **iff** `Status = done`; an open WI
-  (queued/active/deferred) has an **empty** Deliverable. A **hard error at every
+  (queued/active/deferred/blocked) has an **empty** Deliverable. A **hard error at every
   run** (no flag): a commit is the agent handoff point, so an incoherent WI state
   launches the next session into the wrong item. This is the pre-commit floor.
 - **R-E** — every **open** WI has a non-empty **`SpecRef`** resolving to an
