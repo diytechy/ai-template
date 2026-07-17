@@ -8818,3 +8818,47 @@ AGENTS.template.md 9978 (untouched); PROCESS.md 60169 (untouched);
 **PROCESS_OPTIONS.md 158866 → 159799 (+933 B, flagged:** +805 B the WI-206
 occasion paragraph + +128 B the WI-204 spine-batch restatement**)** — baseline
 re-stamped in both tracked skill copies in this commit.
+
+## 2026-07-17 — WI-207: registry coherence amendments — the five audit-108 findings resolved
+
+**Session type:** build (`self-adoption`, **strong** — spine text amendments;
+spec-of-record = [reviews/108-AUDIT.md](reviews/108-AUDIT.md), the WI-206
+disposition). One reviewed batch, per the filing.
+
+**The five amendments:**
+- **F1 (MAJOR) SR-040 rekeyed.** The command-template selection now keys on
+  the **in-process session phase** (PLAN/BUILD/REVIEW-A/… — the coordinator's
+  own activity), with the SR-059-deleted `docs/run-phase` named as a
+  non-input; Rationale/AC re-worded (run-phase → session-phase, cross-provider
+  → cross-family). Matches code reality (the maps key on session-phase names).
+- **F2 (MAJOR) the top-view cap single-homed.** SR-048 now declares
+  `TOP_VIEW_MAX` **= 10** as the cap value's one home; SR-051 cites "the
+  TOP_VIEW_MAX cap whose value SR-048 owns". TC/LLR concrete "10"s stay as
+  test parameters, not rule homes.
+- **F3 (MINOR) vocabulary unified.** `provider-heterogeneous` →
+  `family-heterogeneous` across SN-024 + SR-047/052/053/054 and the LLR/TC
+  echoes; SR-045's "legacy Provider read as Family" remains the mapping of
+  record. Historical WI Deliverable prose left untouched (backward record,
+  not requirement text).
+- **F4 (MINOR) SR-026 resume authority split per mode.** Serial loop =
+  `docs/status.md`; dispatcher = the WI registry + durable Git reservations
+  (SR-057/SR-064), status.md its integrator-generated reference (SR-059). AC
+  updated to both modes.
+- **F5 (MINOR) SN-008 carve-out.** `--lenient` named as the one sanctioned
+  degrade to SKIP (explicitly-requested local mode, never a CI/gate default;
+  SR-006 unchanged — the SN and SR now agree instead of silently diverging).
+
+**Verified:** independent fresh-context opus review over the amendment diff
+(per-finding resolution + a new-incoherence sweep of the amended rows against
+the whole registry + code-reality checks): **VERDICT: APPROVE findings=0** —
+all five confirmed resolved, with code reality verified (`session_template`
+keys `cmd_map.get(phase, ...)` on the in-process phase; `TOP_VIEW_MAX = 10` at
+check_trajectory.py). One reviewer residual of the F3 class folded into the
+batch: TC-046's "same-provider fallback" → "same-family" (its parent SR-045
+already said same-family);
+`trace.py --strict` + `check_trajectory --strict` clean (SN=25 SR=66 LLR=76
+TC=76, orphans=0). The WI-205 staleness warns that fired on WI-207's own
+cited-SR amendments clear with this row's close — the warn→amend→close loop
+exercised end-to-end twice in one sitting.
+
+**Deviations:** none. **Byte deltas (budgeted files):** none.
