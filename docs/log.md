@@ -8960,3 +8960,61 @@ dashboard/status/OKF/code-map freshness green, and zero broken docs links.
 pre-existing duplicate-`reasons` formatting defect; the same required explain
 assessment was run through its JSON format and independently counted 15 open /
 0 missing classifications. Scheduler code stayed out of this data-only WI.
+
+## 2026-07-17 — WI-209: dual-plan auto-dispatch + the quiet-park auto-page
+
+**Session type:** build (`unattended`, strong; spec
+[specs/WI-209.md](specs/WI-209.md)). **Spine change (SR-066 amendment,
+ratified in the same reviewed commit):** the "deferred to the --jobs
+dual-dispatch WI" clauses are gone from Requirement + Rationale; the AC gains
+the auto-dispatch acceptance; LLR-076 and TC-076 moved with it
+(`trace.py --strict` green: SN=25 SR=66 LLR=76 TC=76, 0 findings).
+
+**What shipped (the WI-201 ruling wired):**
+
+- `schedule.load_wis` reads the optional `PlanMode` column; `classify()`
+  derives `single-wi` from `PlanMode=dual` **from the signal itself** with the
+  new reason code `single-wi:dual-plan` — never a second hand-set cell; a
+  contradicting declared SafetyClass (anything but empty/high-risk)
+  quarantines `unclassified`, the existing cross-check posture. The packer
+  therefore never packs a dual row (no packer change needed — asserted).
+- Dispatcher auto-dispatch: a selected single-constituent dual traincar runs
+  `dual_plan_disposition` instead of spawning a BUILD worker — the WI-199
+  round engine reused as-is inside a staging worktree reset to the integration
+  HEAD, composed as ONE serialized docs-only disposition commit
+  (blocked_disposition's smaller-transaction model: no product code changes,
+  so the combined bar belongs to the children's own trains). SELECT closes the
+  parent row `done` (its deliverable IS the selected decomposition; the filed
+  children hang off it as hard predecessors) and publishes; PAGE commits the
+  round evidence and maps `plan_round.page_action` onto `docs/gate-policy` —
+  attended parks needs-human with the run-state ask, autonomous journals,
+  releases + quarantines for the run, and the dispatcher reaches its end state
+  (the pause-free invariant, proven by test). The worker-path fail-closed
+  refusal stays as the backstop.
+- The serial driver's quiet-park guard (`dual_only_frontier_ask`): when every
+  dependency-actionable queued row declares `PlanMode=dual`, the loop writes
+  the NEEDS-HUMAN run-state ask naming `--dual-plan <WI>` (the WI-127 headline
+  idiom) before spending a session — readiness-only, deliberately independent
+  of the safety classifier so a legacy serial repo is never falsely paged off
+  ordinary work.
+
+**Deviations from spec (recorded, none scope-expanding):**
+
+1. The reconcile pass's already-integrated restore now runs **before** the
+   train-branch guard: a dual train has no train branch, so a crash between
+   the round's CAS and its reservation release must reconcile (release +
+   integrated) rather than quarantine `reservation-without-branch`. Strictly
+   better recovery for normal trains too; recorded in LLR-076.
+2. The round's filer (`plan_artifacts.file_selected_wis`) writes children
+   without a `SafetyClass` — they enter the frontier `unclassified`/fail-closed
+   until audited. Honest but a real residual: **finding, not fixed here**
+   (the spec's non-goals fence the round engine); left for triage.
+3. The dispatcher end-state `attention` filter gained the `dual-paged` state
+   so an autonomous PAGE ends the run `EXIT_STALL`/RUNNING, never a false DONE.
+
+**Verified:** targeted suites green first
+(`test_agent_loop_dualplan.py` 10 passed — 5 new: dispatcher SELECT
+end-to-end, attended PAGE parks, autonomous PAGE continues pause-free, serial
+auto-page, ask-scoping unit; `test_schedule.py` 23 passed — 3 new;
+dispatch/recovery/integrate/worker 54 passed; packer never-packs test added).
+Full suite + check_docs at the commit below.

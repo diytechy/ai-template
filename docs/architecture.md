@@ -197,6 +197,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `generate_status(docs, root, last_train)` | The integrator-generated root status snapshot (SR-059's generation | SR-059 |
 | `integrate_train(root, docs, journal, tid, wis, base, required_verdicts)` | Compose one ready train into the integration ref (spec §9 steps 1-11). |  |
 | `blocked_disposition(root, docs, journal, tid, wis, base)` | The smaller serialized blocked-disposition transaction (spec §9): from |  |
+| `dual_plan_disposition(root, journal, tid, wid, row, template, model, timeout, prompt_map)` | Auto-dispatch one PlanMode=dual frontier WI as a dual-plan round | SR-066 |
 | `publish_integration(root, journal, dev_branch)` | Publish the integration HEAD to the development branch (spec §9): only |  |
 | `parse_jobs(value)` | The --jobs/AGENT_JOBS value: a positive int, or `auto` (adaptive up to |  |
 | `assess_migration(root)` | The two audits that gate the two-worker promotion (spec §14 items 9-10). | SR-059 |
@@ -215,6 +216,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `LoopContext (class)` | Everything one iteration reads, built once at loop start; the |  |
 | `route_session(ctx, i, current_wi, session, rework_wi, resume_reconcile, now)` | Pick the phase + model + prompt for this session (managed routing or |  |
 | `session_bookkeeping(ctx, plan, outcome, code, commits, after, reset_hint, now, session, wi_label)` | The managed-routing / reviewer-dispatch consequences of one session |  |
+| `dual_only_frontier_ask(root)` | The serial resume driver's dual-plan quiet-park guard (WI-209, the | SR-066 |
 | `run_iteration(ctx, i)` | One coordinator session end-to-end: guards, routing (route_session), |  |
 | `main()` |  |  |
 
@@ -663,7 +665,7 @@ Contracts (interfaces): IF-053, IF-054
 |---|---|---|
 | `load_rows(path)` |  |  |
 | `load_wis(rows)` | Parse work-item rows into a list of scheduler WI dicts (skips the inert |  |
-| `classify(wi, *, structural)` | `(scheduling_class, [reason_codes])` for one WI — a pure function. | SR-058 |
+| `classify(wi, *, structural)` | `(scheduling_class, [reason_codes])` for one WI — a pure function. | SR-058, SR-066 |
 | `is_schedulable_class(sched_class)` | Only a positively-classified WI is eligible; unclassified fails closed. |  |
 | `hard_preds_satisfied(wi, status)` | Every hard predecessor is integrated `done`. An unknown predecessor id |  |
 | `downstream_counts(wis)` | `{id: transitive hard-descendant count}` — how many distinct WIs depend on |  |

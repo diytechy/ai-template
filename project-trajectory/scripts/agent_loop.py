@@ -1182,11 +1182,13 @@ def critique_prompt(prompt_templates, verdict_path, brief):
 # headless invocation path (build_argv/run_session), so each inherits the S8
 # per-session limits; routing (agent_route.planner_pair/planner_fallback) is
 # used when the enable-list opts it in, else one template drives every hat as
-# the recorded routing-off degraded mode. Residual honesty: sessions run in the
-# repo cwd like every S8 hat (redaction rides the brief's allowlist
-# construction, plan_briefs); the manual protocol's empty-cwd isolation is
-# stronger, and frontier AUTO-dispatch of dual rows under --jobs (a SafetyClass
-# single-WI classification) is the structuring WI's residual, not wired here.
+# the recorded routing-off degraded mode. Frontier AUTO-dispatch under --jobs
+# is wired (WI-209): schedule.classify derives the single-WI-traincar class
+# from the PlanMode signal itself and the dispatcher runs the round as a
+# serialized disposition (dual_plan_disposition) instead of a BUILD worker.
+# Residual honesty: sessions run in the repo cwd like every S8 hat (redaction
+# rides the brief's allowlist construction, plan_briefs); the manual
+# protocol's empty-cwd isolation is stronger.
 PLAN_MODE_COLUMN = "PlanMode"
 PLAN_MODE_DUAL = "dual"
 DUALPLAN_BUDGET_ENV = "AGENT_DUALPLAN_BUDGET"
@@ -3458,6 +3460,77 @@ def blocked_disposition(root, docs, journal, tid, wis, base):
     return "integrated", new_head.strip()
 
 
+def dual_plan_disposition(
+    root, journal, tid, wid, row, template, model, timeout, prompt_map
+):
+    """Auto-dispatch one PlanMode=dual frontier WI as a dual-plan round
+    (WI-209, the SR-066 auto-dispatch AC): the round — the WI-199 engine,
+    reused as-is — runs in a staging worktree reset to the current integration
+    HEAD, so its artifact writes (docs/plans/DP-*, the filed child rows, the
+    log summary) compose into ONE serialized disposition commit exactly like
+    blocked_disposition (the smaller docs-only transaction — no product code
+    changes, so the combined bar belongs to the children's own trains, not
+    here). On SELECT the parent row closes done (its deliverable IS the
+    selected decomposition; the filed children hang off it as hard
+    predecessors, so an open parent would park the subtree and a queued one
+    would re-run the round). On PAGE the artifacts still commit (the honest
+    evidence the serial --dual-plan entry leaves in its checkout) and the
+    parent row is untouched. Returns (outcome, detail): 'SELECTED', 'PAGE',
+    or 'error'. The caller owns reservations and the gate-policy mapping."""
+    old_head = integration_head(root)
+    if old_head is None:
+        return "error", "integration ref vanished"
+    wt, err = _staging_worktree(root, tid, old_head)
+    if err:
+        return "error", err
+    code, _ = git(wt, "reset", "--hard", old_head)
+    if code != 0:
+        return "error", "cannot reset staging to the integration HEAD"
+    outcome, detail = run_dual_plan_round(
+        Path(wt), wid, row, template, model, timeout, prompt_map
+    )
+    if outcome == "SELECTED":
+        reg = Path(wt) / "docs" / "requirements" / "work-items.csv"
+        if reg.exists():
+            _rewrite_wi_rows(
+                reg,
+                {
+                    wid: {
+                        "Status": "done",
+                        "Deliverable": "dual-plan round (train {}): {}".format(
+                            tid, detail
+                        ),
+                    }
+                },
+            )
+        generate_status(Path(wt) / "docs", root, last_train=tid)
+    code, porcelain = git(wt, "status", "--porcelain")
+    if code == 0 and not porcelain.strip():
+        # A pre-artifact PAGE (missing goal brief/rubric) writes nothing.
+        return outcome, detail
+    git(wt, "add", "-A")
+    msg = "dual-plan {}: {} (train {})\n\nDual-Plan-WI: {}\nTrain: {}\n".format(
+        "select" if outcome == "SELECTED" else "page", wid, tid, wid, tid
+    )
+    code, out = git(wt, "commit", "-q", "-m", msg)
+    if code != 0:
+        git(wt, "reset", "--hard", old_head)
+        return "error", "dual-plan disposition commit failed: {}".format(out[:200])
+    code, new_head = git(wt, "rev-parse", "HEAD")
+    if not cas_ref(root, INTEGRATION_REF, new_head.strip(), old_head):
+        # The dispatcher loop is single-threaded, so a stale CAS means an
+        # EXTERNAL actor moved the ref mid-round — surface, never overwrite.
+        git(wt, "reset", "--hard", old_head)
+        return "error", "integration ref moved externally during the round"
+    journal.event(
+        "dual-plan-" + ("selected" if outcome == "SELECTED" else "paged"),
+        train=tid,
+        wi=wid,
+        detail=detail[:200],
+    )
+    return outcome, detail
+
+
 def _intent_meta(root):
     """(sha, meta) of the current publish intent, or (None, None). Unreadable
     metadata returns (sha, None) — recovery evidence, never overwritten
@@ -3869,6 +3942,13 @@ def dispatch_run(args, root):
     except ValueError as exc:
         print("agent_loop: --jobs: {}".format(exc), file=sys.stderr)
         return EXIT_PREFLIGHT
+    try:
+        # The dual-round hat overrides (WI-209): the same --prompt-map surface
+        # the serial --dual-plan entry honors, parsed once for the whole run.
+        dual_prompt_map = parse_map(args.prompt_map)
+    except ValueError as exc:
+        print("agent_loop: --prompt-map: {}".format(exc), file=sys.stderr)
+        return EXIT_PREFLIGHT
 
     template = (
         args.agent_cmd
@@ -3999,6 +4079,25 @@ def dispatch_run(args, root):
         trains.setdefault(meta["train"], {"wis": [], "base": meta["base"]})
         trains[meta["train"]]["wis"].append(wid)
     for tid, t in sorted(trains.items()):
+        # Already-integrated restore FIRST (spec §11 table): the durable
+        # disposition advanced before a crash could release the reservations —
+        # every WI is done on the integration ref, so restore `integrated` and
+        # finish the pending release; never re-integrate. Checked before the
+        # branch guard because a dual-plan train (WI-209) has no train branch
+        # at all: its round composes straight onto the integration ref, so a
+        # crash between CAS and release must reconcile here, not quarantine.
+        int_rows0 = registry_rows_at(root, INTEGRATION_REF) or []
+        int_status0 = {
+            (r.get("WI-ID") or "").strip(): (r.get("Status") or "").strip().lower()
+            for r in int_rows0
+        }
+        if t["wis"] and all(int_status0.get(w) == "done" for w in t["wis"]):
+            err = release_reservations(root, t["wis"])
+            if err:
+                journal.event("release-failed", train=tid, reason=err[:200])
+            parked[tid] = {"state": "integrated", "wis": t["wis"], "base": t["base"]}
+            journal.event("reconcile", train=tid, state="integrated")
+            continue
         code, _ = git(
             root, "rev-parse", "--verify", "--quiet", TRAIN_BRANCH_HEADS + tid
         )
@@ -4021,22 +4120,7 @@ def dispatch_run(args, root):
             quarantined_wis.update(t["wis"])
             parked[tid] = {"state": "quarantined", "wis": t["wis"], "base": t["base"]}
             continue
-        # Already-integrated restore (spec §11 table): the durable disposition
-        # advanced before a crash could release the reservations — every WI is
-        # done on the integration ref, so restore `integrated` and finish the
-        # pending release; never re-integrate.
-        int_rows = registry_rows_at(root, INTEGRATION_REF) or []
-        int_status = {
-            (r.get("WI-ID") or "").strip(): (r.get("Status") or "").strip().lower()
-            for r in int_rows
-        }
-        if t["wis"] and all(int_status.get(w) == "done" for w in t["wis"]):
-            err = release_reservations(root, t["wis"])
-            if err:
-                journal.event("release-failed", train=tid, reason=err[:200])
-            parked[tid] = {"state": "integrated", "wis": t["wis"], "base": t["base"]}
-            journal.event("reconcile", train=tid, state="integrated")
-        elif blocked:
+        if blocked:
             parked[tid] = {"state": "blocked", "wis": t["wis"], "base": t["base"]}
             journal.event("reconcile", train=tid, state="blocked")
         elif set(t["wis"]) <= built:
@@ -4244,7 +4328,7 @@ def dispatch_run(args, root):
         if may_dispatch:
             spine_active = any(a["spine"] for a in active.values())
             for car in cars:
-                if len(active) >= jobs or spine_active:
+                if len(active) >= jobs or spine_active or needs_human_ask:
                     break
                 is_spine = car["sched_class"] in (
                     schedule.SCHED_SPINE_SERIAL,
@@ -4272,6 +4356,83 @@ def dispatch_run(args, root):
                     cls=car["sched_class"],
                     base=base[:12],
                 )
+                row0 = wi_rows.get(first) or {}
+                if len(car["wis"]) == 1 and wi_plan_mode(row0) == PLAN_MODE_DUAL:
+                    # WI-209 (the SR-066 auto-dispatch AC): a dual row's
+                    # traincar — always single-WI, the classifier derives it
+                    # from the PlanMode signal — runs the decomposition round
+                    # in the dispatcher itself instead of spawning a BUILD
+                    # worker (the worker path keeps its fail-closed refusal as
+                    # the backstop). The run is synchronous, so rounds
+                    # naturally serialize: one at a time, never packed.
+                    import plan_round as _plan_round
+
+                    outcome, detail = dual_plan_disposition(
+                        root,
+                        journal,
+                        tid,
+                        first,
+                        row0,
+                        template,
+                        args.model,
+                        args.session_timeout or None,
+                        dual_prompt_map,
+                    )
+                    if outcome == "SELECTED":
+                        err = release_reservations(root, car["wis"])
+                        if err:
+                            journal.event("release-failed", train=tid, reason=err[:200])
+                        parked[tid] = {"state": "integrated", "wis": car["wis"]}
+                        state_pub, detail_pub = publish_integration(
+                            root, journal, dev_branch
+                        )
+                        if state_pub == "deferred":
+                            print(
+                                "dispatch: publication deferred — {}".format(detail_pub)
+                            )
+                        break  # the ref advanced: rescan (children just filed)
+                    if outcome == "error":
+                        journal.event(
+                            "dual-plan-error", train=tid, wi=first, reason=detail[:200]
+                        )
+                        quarantined_wis.add(first)
+                        parked[tid] = {
+                            "state": "quarantined",
+                            "wis": car["wis"],
+                            "base": base,
+                        }
+                        continue
+                    # PAGE: the CLI entry's gate-policy mapping, dispatcher-side
+                    # (plan_round.page_action) — attended stops for the human,
+                    # autonomous routes on without pausing disjoint work (the
+                    # pause-free-under-autonomous invariant).
+                    action = _plan_round.page_action(gate_policy)
+                    journal.event(
+                        "dual-plan-page-action", train=tid, wi=first, action=action
+                    )
+                    if action == "stop-needs-human":
+                        parked[tid] = {
+                            "state": "needs-human",
+                            "wis": car["wis"],
+                            "base": base,
+                        }
+                        needs_human_ask = (
+                            "dual-plan round for {} paged: {} — resolve, then "
+                            "relaunch (or run agent_loop --dual-plan {})".format(
+                                first, detail, first
+                            )
+                        )
+                    else:
+                        err = release_reservations(root, car["wis"])
+                        if err:
+                            journal.event("release-failed", train=tid, reason=err[:200])
+                        quarantined_wis.add(first)
+                        parked[tid] = {
+                            "state": "dual-paged",
+                            "wis": car["wis"],
+                            "base": base,
+                        }
+                    continue
                 spawn_worker(tid, car["wis"], base, spine=is_spine)
                 if is_spine:
                     break
@@ -4410,7 +4571,8 @@ def dispatch_run(args, root):
     attention = [
         t
         for t, p in parked.items()
-        if p["state"] in ("quarantined", "needs-human", "needs-re-review", "rework")
+        if p["state"]
+        in ("quarantined", "needs-human", "needs-re-review", "rework", "dual-paged")
         or (p["state"] == "train-end" and p["wis"])
     ]
     blocked_done = [t for t, p in parked.items() if p["state"] == "blocked-done"]
@@ -5541,6 +5703,40 @@ def session_bookkeeping(
     return None
 
 
+def dual_only_frontier_ask(root):
+    """The serial resume driver's dual-plan quiet-park guard (WI-209, the
+    SR-066 no-silent-park rule): when EVERY dependency-actionable queued WI
+    (hard predecessors integrated done — readiness only; the serial path never
+    consults the safety classifier, so classification must not gate this
+    check) declares PlanMode=dual, a resume session has nothing it may
+    legitimately build (a dual row is never a direct BUILD), so the loop
+    surfaces the ask instead of idling. Returns the one-line ask naming the
+    --dual-plan entry (the WI-127 headline idiom), or "" while ordinary
+    actionable work remains (or the frontier is empty — a drained queue is the
+    stop banner's story, not this guard's)."""
+    wis = schedule.load_wis(
+        schedule.load_rows(root / "docs" / "requirements" / "work-items.csv")
+    )
+    status = {w["id"]: w["status"] for w in wis}
+    actionable = [
+        w
+        for w in wis
+        if w["status"] == "queued" and all(status.get(p) == "done" for p in w["preds"])
+    ]
+    if not actionable:
+        return ""
+    dual = [w["id"] for w in actionable if w.get("planmode") == "dual"]
+    if len(dual) != len(actionable):
+        return ""
+    return (
+        "every dependency-ready WI ({}) declares PlanMode=dual — a dual row "
+        "never runs as a direct BUILD; run agent_loop --dual-plan {} (or "
+        "launch the dispatcher: --jobs auto-runs the round)".format(
+            ";".join(dual), dual[0]
+        )
+    )
+
+
 def run_iteration(ctx, i):
     """One coordinator session end-to-end: guards, routing (route_session),
     launch, telemetry, bookkeeping (session_bookkeeping), and the outcome
@@ -5601,6 +5797,17 @@ def run_iteration(ctx, i):
             )
         )
         time.sleep(wake)
+    # WI-209: the serial driver's dual-plan quiet-park guard. Checked before a
+    # session is spent, every iteration — a dual row must never park silently
+    # on this path either (the dispatcher auto-runs the round; here the round
+    # needs the human's --dual-plan launch, so page the ask honestly).
+    if not worker:
+        dual_ask = dual_only_frontier_ask(root)
+        if dual_ask:
+            print("agent_loop: " + dual_ask)
+            _write_runstate(lane, "NEEDS-HUMAN", dual_ask)
+            stop_banner(status_path, "NEEDS-HUMAN", dual_ask)
+            return EXIT_NEEDS_HUMAN
     # Inject the reconcile note into the first session's prompt only (see the
     # once-at-start rationale above); every later session's prompt is
     # unchanged from today.

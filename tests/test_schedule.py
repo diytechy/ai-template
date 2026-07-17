@@ -26,6 +26,7 @@ def row(wid, status="queued", preds="", safety="ordinary", **kw):
         "SR-Refs": kw.get("srs", ""),
         "BlockRef": kw.get("blockref", ""),
         "EstTokens": kw.get("est", ""),
+        "PlanMode": kw.get("PlanMode", ""),
     }
     return r
 
@@ -298,3 +299,40 @@ def test_cli_simulate_serial_and_parallel(tmp_path):
         cwd=tmp_path,
     )
     assert json.loads(par.stdout)["rounds"] == [["WI-001", "WI-002"], ["WI-003"]]
+
+
+# --- SR-066 (WI-209): PlanMode=dual derives the single-WI-traincar class ------
+def test_planmode_dual_derives_single_wi_from_the_signal():
+    # The class comes from the registry PlanMode signal itself — no SafetyClass
+    # cell needed (single-source, the WI-201 ruling wired by WI-209).
+    wis = sched.load_wis([row("WI-001", safety="", PlanMode="dual")])
+    cls, reasons = sched.classify(wis[0])
+    assert cls == sched.SCHED_SINGLE_WI
+    assert "single-wi:dual-plan" in reasons
+    # And the frontier schedules it as ready single-wi (never fail-closed for
+    # the missing SafetyClass cell a dual row deliberately does not carry).
+    assert disposition(wis, "WI-001")["disposition"] == "ready"
+
+
+def test_planmode_dual_contradicting_safetyclass_quarantines():
+    # A second hand-set cell that contradicts the derivation fails closed —
+    # the same cross-check posture as declared-ordinary-vs-structural.
+    for declared in ("ordinary", "spine", "gate", "attestation", "protected"):
+        wis = sched.load_wis([row("WI-001", safety=declared, PlanMode="dual")])
+        cls, reasons = sched.classify(wis[0])
+        assert cls == sched.SCHED_UNCLASSIFIED, declared
+        assert reasons == ["unclassified:planmode-dual-vs-declared-" + declared]
+        assert disposition(wis, "WI-001")["disposition"] == "excluded"
+    # high-risk agrees with the derivation (same scheduling class): no quarantine.
+    wis = sched.load_wis([row("WI-001", safety="high-risk", PlanMode="dual")])
+    cls, reasons = sched.classify(wis[0])
+    assert cls == sched.SCHED_SINGLE_WI
+    assert reasons == ["single-wi:dual-plan", "single-wi:high-risk"]
+
+
+def test_planmode_absent_or_other_changes_nothing():
+    # A legacy registry without the column and a non-dual token both classify
+    # exactly as before (the never-breaking optional-column rule).
+    assert sched.classify({"safetyclass": "ordinary"})[0] == sched.SCHED_ORDINARY
+    wis = sched.load_wis([row("WI-001", PlanMode="single")])
+    assert sched.classify(wis[0])[0] == sched.SCHED_ORDINARY

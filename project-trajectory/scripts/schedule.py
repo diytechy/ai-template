@@ -23,7 +23,9 @@ Two contracts live here:
     high-risk`) plus review/critique policy and structural evidence to a
     scheduling class + reason codes. `spine|gate|attestation` serialize
     whole-project; `protected` serializes whole-project; `high-risk`, a critique
-    requirement, or an integration checkpoint force a single-WI traincar; only
+    requirement, an integration checkpoint, or a registry `PlanMode=dual` signal
+    (SR-066 — derived from the signal itself, never a second hand-set cell; a
+    contradicting declared SafetyClass quarantines) force a single-WI traincar; only
     classified `ordinary` work packs optimistically; anything missing, unknown, or
     contradicting its structural evidence returns `unclassified`, which **fails
     closed** (never scheduled) for that WI without stopping disjoint classified
@@ -142,6 +144,7 @@ def load_wis(rows):
                 "blockref": (r.get("BlockRef") or "").strip(),
                 "est_tokens": _int(r.get("EstTokens"), 0),
                 "safetyclass": (r.get("SafetyClass") or "").strip().lower(),
+                "planmode": (r.get("PlanMode") or "").strip().lower(),
             }
         )
     return wis
@@ -152,9 +155,13 @@ def classify(wi, *, structural=None):
     """`(scheduling_class, [reason_codes])` for one WI — a pure function.
 
     Inputs (spec §4): the declared `SafetyClass`, a critique/integration-checkpoint
-    requirement (read off the WI's flags), and optional `structural` evidence (the
-    class the repository graph implies, supplied by the validator). Ordered rules:
+    requirement (read off the WI's flags), the registry `PlanMode` signal, and
+    optional `structural` evidence (the class the repository graph implies,
+    supplied by the validator). Ordered rules:
 
+      0. PlanMode=dual -> single-WI traincar, DERIVED from the signal itself
+         (SR-066/WI-201: never a second hand-set cell; a declared SafetyClass
+         other than empty or high-risk contradicts and quarantines unclassified)
       1. spine/gate/attestation  -> serial whole-project (never a multi-WI traincar)
       2. protected               -> serial whole-project
       3. high-risk / critique / integration-checkpoint -> single-WI traincar
@@ -169,6 +176,26 @@ def classify(wi, *, structural=None):
     declared = (wi.get("safetyclass") or "").strip().lower()
     critique = bool(wi.get("critique"))
     checkpoint = bool(wi.get("checkpoint"))
+
+    # PlanMode=dual derives the single-WI-traincar class FROM THE SIGNAL ITSELF
+    # (SR-066, the WI-201 ruling): a dual-plan round is never packed with other
+    # WIs and never needs a second hand-set SafetyClass cell (single-source). A
+    # declared SafetyClass that contradicts the derivation (anything whose own
+    # scheduling class is not single-wi) quarantines as unclassified — the same
+    # cross-check posture as rule 5, never a silent override in either direction.
+    if (wi.get("planmode") or "").strip().lower() == "dual":
+        if declared and declared != "high-risk":
+            return SCHED_UNCLASSIFIED, [
+                "unclassified:planmode-dual-vs-declared-%s" % declared
+            ]
+        reasons = ["single-wi:dual-plan"]
+        if declared == "high-risk":
+            reasons.append("single-wi:high-risk")
+        if critique:
+            reasons.append("single-wi:critique")
+        if checkpoint:
+            reasons.append("single-wi:integration-checkpoint")
+        return SCHED_SINGLE_WI, reasons
 
     if declared not in SAFETY_CLASSES:
         code = "missing" if not declared else "unknown-value:%s" % declared
