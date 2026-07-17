@@ -235,6 +235,19 @@ why (one bullet each; cite ids)._
   empty-cwd for every hat (heavier staging for a redaction the brief already
   enforces). Recorded in **SR-066** (Requirement + Rationale) and **LLR-076**;
   the structuring session is in the Audit log below.
+- **2026-07-17 — WI-204 RULING: `attestation` rows join the spine-only
+  traincar batch (owner).** The WI-204 spec's build-time question — whether
+  `attestation`-class rows pack with the spine batch or stay singleton — is
+  ruled **batch**: "if it's all drafted together and reviewed together, it
+  should be attested together." One spine-only train = one review scope = one
+  ratification scope, `attestation` included; under `gate-policy: autonomous`
+  the batch closes on the independent reviewer's recorded verdict (G-Final
+  still human), so the dependents unblock in-run. Alternative passed over:
+  attestation-singleton narrowing (splits one drafted-and-reviewed body into
+  extra serial trains for no added safety — the whole-project drain and
+  one-active-spine-train invariants already isolate the batch). Recorded in
+  [specs/WI-204.md](specs/WI-204.md) scope item 1; SR-058's amended text
+  carries it at the WI-204 build.
 
 ## Audit log
 
