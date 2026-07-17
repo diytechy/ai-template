@@ -153,6 +153,13 @@ WI_ID_RE = re.compile(r"^WI-\d+$")
 OPEN_STATUSES = ("queued", "active", "deferred")
 KNOWN_STATUSES = ("queued", "active", "done", "deferred")
 
+# Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
+# minus `deferred` (a deferred WI re-enters via an owner un-defer, itself the
+# driven look, so it is EXEMPT), plus `blocked` (a WI parked on an external
+# dependency is still live work whose cited requirements can drift under it).
+# `done` needs no re-validation.
+BACKLOG_STALE_STATUSES = ("queued", "active", "blocked")
+
 
 def _utf8_console():
     """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
@@ -1184,6 +1191,108 @@ def _git(root, args):
     return proc.stdout if proc.returncode == 0 else None
 
 
+def _blame_row_times(root, rel_path):
+    """`{row-id: committer-time-epoch}` for a registry CSV, via a single
+    `git blame --line-porcelain`. Each physical CSV row is one blame line whose
+    leading field (up to the first comma) is its id; the id maps to the committer
+    time of the commit that last touched that line. Returns {} on ANY git failure
+    — no repo, an untracked/uncommitted file, an unparseable blame — so the
+    backlog-staleness warn degrades silently off-git (never a false warn, never a
+    crash). One subprocess per file keeps the cost bounded (WI-205: ≤2 blames)."""
+    out = _git(root, ["blame", "--line-porcelain", "--", rel_path])
+    if out is None:
+        return {}
+    times = {}
+    committer_time = None
+    for line in out.split("\n"):
+        # --line-porcelain repeats the full commit header for every line, so a
+        # `committer-time <epoch>` header always precedes its `\t<content>` line.
+        if line.startswith("committer-time "):
+            try:
+                committer_time = int(line[len("committer-time ") :].strip())
+            except ValueError:
+                committer_time = None
+        elif line.startswith("\t"):
+            token = line[1:].split(",", 1)[0].strip()
+            if token and committer_time is not None:
+                times[token] = committer_time
+            committer_time = None
+    return times
+
+
+def _path_commit_time(root, rel_path):
+    """The committer time (epoch int) of the last commit to touch `rel_path`, via
+    `git log -1 --format=%ct`, or None (no repo, an untracked path, no history) —
+    the SpecRef-target half of the staleness compare, degrading silently like
+    `_blame_row_times`."""
+    out = _git(root, ["log", "-1", "--format=%ct", "--", rel_path])
+    if out is None:
+        return None
+    out = out.strip()
+    if not out:
+        return None
+    try:
+        return int(out)
+    except ValueError:
+        return None
+
+
+def backlog_staleness_findings(root, wis):
+    """WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance).
+
+    Ratifying amended SN/SR/LLR/TC content never touches the open WI rows that
+    cite it, so an incomplete backlog can silently drift out of sync with the
+    requirement state it was filed against. For each open WI (queued/active/
+    blocked — `deferred` and `done` are exempt) this compares when its registry
+    row last changed against when each cited source last changed, and warns when a
+    source is STRICTLY NEWER: the WI needs a driven re-validation against the
+    amended requirement. Re-affirming is deliberately cheap — any reviewed edit to
+    the WI row re-dates its blame and clears the warn (a *driven look*, not
+    ceremony). Cited sources: each `SR-Refs` id (a row of system-requirements.csv)
+    and the `SpecRef` target file.
+
+    NEVER joins the exit code — not even under `--strict` (a warn-tier checker
+    feature mints no SR and gates nothing, WI-129/132; the caller prints these and
+    keeps them out of `errors`). Best-effort and silent off-git: no git, an
+    untracked registry, or an uncommitted (not-yet-in-HEAD) WI or SR row simply
+    yields no comparison for the affected item — never a false warn. Bounded cost:
+    at most two `git blame`s (the WI + SR registries) plus one `git log -1` per
+    distinct SpecRef path of an open WI."""
+    open_wis = [w for w in wis if w["status"] in BACKLOG_STALE_STATUSES]
+    if not open_wis:
+        return []
+    wi_times = _blame_row_times(root, WI_CSV)
+    if not wi_times:
+        return []  # off-git / the registry is untracked — no basis to compare
+    sr_times = _blame_row_times(root, SR_CSV)
+    spec_time = {}  # SpecRef path -> commit time, memoized (bounds the git logs)
+    out = []
+    for w in open_wis:
+        wi_time = wi_times.get(w["id"])
+        if wi_time is None:
+            continue  # the WI row is not yet in HEAD — no basis, skip silently
+        for sr in w["srs"]:
+            t = sr_times.get(sr)
+            if t is not None and t > wi_time:
+                out.append(
+                    "{}: cites {} amended after the WI row was last touched — "
+                    "re-validate the WI against the amended requirement (or touch "
+                    "the row to re-affirm)".format(w["id"], sr)
+                )
+        pathpart = w["specref"].split("#", 1)[0].strip()
+        if pathpart:
+            if pathpart not in spec_time:
+                spec_time[pathpart] = _path_commit_time(root, pathpart)
+            t = spec_time[pathpart]
+            if t is not None and t > wi_time:
+                out.append(
+                    "{}: its SpecRef {} changed after the WI row was last touched "
+                    "— re-validate the WI against the amended requirement (or touch "
+                    "the row to re-affirm)".format(w["id"], pathpart)
+                )
+    return out
+
+
 def _tests_dir(root):
     """The declared tests root (docs/stack.ini [paths] tests), default `tests` —
     the surface a real validation-logic change would touch."""
@@ -1514,6 +1623,12 @@ def main():
             errors.append(msg)
         else:
             print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
+    # Backlog-staleness (WI-205) — an open WI whose cited SR row or SpecRef target
+    # was amended AFTER the WI row was last touched is re-flagged for a driven
+    # re-validation. WARN-ONLY: it never joins the exit code, not even under
+    # --strict (the WI-129 warn-tier-checker stance); silent off-git.
+    for msg in backlog_staleness_findings(root, wis):
+        print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
     # The SSOT coherence layer: R-A is always an error; R-E, the
     # run-state currency check, and the unknown-status lint are WARN unless
     # --strict promotes them.

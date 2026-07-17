@@ -8,6 +8,7 @@ check entirely. Each is pinned red/green by running the real script over a
 minimal temp registry (no full scaffold needed — the validator reads plain CSVs).
 """
 
+import os
 import shutil
 import subprocess
 
@@ -1492,3 +1493,148 @@ def test_spec_interfaces_readme_and_example_not_armed(tmp_path):
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "IF-999" not in proc.stderr
+
+
+# --- WI-205: the backlog-staleness warn (warn-only, git-driven, silent off-git)
+# An open WI whose cited SR row or SpecRef target was amended AFTER the WI row was
+# last touched is re-flagged for a driven re-validation. Fixtures pin commit times
+# via GIT_*_DATE so the strictly-newer compare is deterministic (two commits in the
+# same wall-clock second would otherwise tie and never warn).
+
+SR_ROW_V1 = 'SR-001,Feature SR,SN-001,"The system shall do X.",R,AC,,M,Test,Draft\n'
+SR_ROW_V2 = (
+    'SR-001,Feature SR,SN-001,"The system shall do X and Y.",R,AC,,M,Test,Draft\n'
+)
+
+
+def _write_sr_row(root, row):
+    """Write a system-requirements.csv carrying a single raw SR row."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "system-requirements.csv").write_text(SR_HEADER + row, encoding="utf-8")
+
+
+def _staleness_git(tmp_path):
+    """A git runner whose commits can be stamped at a chosen epoch (`at=`), so the
+    committer-time compare the staleness check reads is deterministic."""
+    git = shutil.which("git")
+    if not git:
+        pytest.skip("needs git on PATH")
+    base = dict(os.environ)
+
+    def run_git(*a, at=None):
+        env = base
+        if at is not None:
+            env = dict(base)
+            stamp = "@{} +0000".format(at)
+            env["GIT_AUTHOR_DATE"] = stamp
+            env["GIT_COMMITTER_DATE"] = stamp
+        return subprocess.run(
+            [git, "-C", str(tmp_path), *a], capture_output=True, text=True, env=env
+        )
+
+    run_git("init")
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    return run_git
+
+
+def _init_amended_sr_repo(tmp_path, status="active"):
+    """A git repo where WI-001 (given status) cites SR-001, both committed at
+    t=1000, then SR-001's row text is amended at t=2000 — the SR row is strictly
+    newer than the WI row (the staleness precondition)."""
+    run_git = _staleness_git(tmp_path)
+    _write_sr_row(tmp_path, SR_ROW_V1)
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Feature,scripts,SR-001,,{},,docs/specs/WI-001.md\n".format(status),
+    )
+    write_spec(tmp_path, "docs/specs/WI-001.md")
+    run_git("add", "-A")
+    run_git("commit", "-m", "init", at=1000)
+    _write_sr_row(tmp_path, SR_ROW_V2)
+    run_git("add", "-A")
+    run_git("commit", "-m", "amend SR-001", at=2000)
+    return run_git
+
+
+def test_backlog_staleness_amended_sr_warns(tmp_path):
+    # A cited SR amended after the WI row was filed -> the WI is re-flagged.
+    _init_amended_sr_repo(tmp_path)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WI-001: cites SR-001 amended after the WI row was last touched" in (
+        proc.stderr
+    )
+
+
+def test_backlog_staleness_wi_touched_after_amend_is_quiet(tmp_path):
+    # Re-affirming (any reviewed edit to the WI row, here at t=3000, after the SR
+    # amendment) re-dates its blame and clears the warn.
+    run_git = _init_amended_sr_repo(tmp_path)
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Feature (re-affirmed 2026-07-17),scripts,SR-001,,active,,"
+        "docs/specs/WI-001.md\n",
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "re-affirm WI-001", at=3000)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "amended after the WI row" not in proc.stderr
+
+
+def test_backlog_staleness_specref_edit_warns(tmp_path):
+    # The SpecRef target edited after the WI row was last touched -> re-flagged.
+    run_git = _staleness_git(tmp_path)
+    _write_sr_row(tmp_path, SR_ROW_V1)
+    write_wis_sr(
+        tmp_path, "WI-001,Feature,scripts,SR-001,,active,,docs/specs/WI-001.md\n"
+    )
+    write_spec(tmp_path, "docs/specs/WI-001.md")
+    run_git("add", "-A")
+    run_git("commit", "-m", "init", at=1000)
+    (tmp_path / "docs" / "specs" / "WI-001.md").write_text(
+        "# spec v2\n", encoding="utf-8"
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "edit spec", at=2000)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (
+        "WI-001: its SpecRef docs/specs/WI-001.md changed after the WI row"
+        in proc.stderr
+    )
+    assert "amended after the WI row" not in proc.stderr
+
+
+def test_backlog_staleness_off_git_is_silent(tmp_path):
+    # No git repo -> no blame basis -> no warn, no crash (best-effort off-git).
+    _write_sr_row(tmp_path, SR_ROW_V2)
+    write_wis_sr(
+        tmp_path, "WI-001,Feature,scripts,SR-001,,active,,docs/specs/WI-001.md\n"
+    )
+    write_spec(tmp_path, "docs/specs/WI-001.md")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "amended after the WI row" not in proc.stderr
+    assert "changed after the WI row" not in proc.stderr
+
+
+def test_backlog_staleness_deferred_is_exempt(tmp_path):
+    # A deferred WI citing an amended SR is EXEMPT (it re-enters via an owner
+    # un-defer, itself the driven look) -> no warn.
+    _init_amended_sr_repo(tmp_path, status="deferred")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "amended after the WI row" not in proc.stderr
+
+
+def test_backlog_staleness_never_errors_under_strict(tmp_path):
+    # The warn stays warn-only even under --strict (exit 0 with the finding).
+    _init_amended_sr_repo(tmp_path)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WI-001: cites SR-001 amended after the WI row was last touched" in (
+        proc.stderr
+    )

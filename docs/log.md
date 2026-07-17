@@ -8696,3 +8696,34 @@ answered from the code/spec record, three actions taken:
 ruling + the pause-free pin); dashboard + status snapshot regenerated;
 `check_trajectory --strict` clean. No spine change at this sitting. NOT pushed
 (`push-policy: human`).
+
+## 2026-07-17 — WI-205: backlog-staleness warn (opus agent build, root-integrated)
+
+**Session type:** build (`scripts`, medium; spec [specs/WI-205.md](specs/WI-205.md)).
+**Division of labor:** built by a parallel opus agent (the WI-194…198 pattern),
+reviewed + integrated by the root session. **No spine change** (a warn-tier
+checker feature, the WI-129 precedent — no SR minted; promotion-to-gating
+drafts it).
+
+**What landed:** `check_trajectory.backlog_staleness_findings` — for each open
+(queued/active/blocked; `deferred`/`done` exempt) WI, one
+`git blame --line-porcelain` per registry CSV maps row-id → committer time; a
+cited SR row or SpecRef target (`git log -1`, memoized) strictly newer than the
+WI row's last touch warns for a driven re-validation; any reviewed row touch
+re-affirms. Warn-only at every tier (never the exit code, even under
+`--strict`); silent off-git/untracked/uncommitted; ≤2 blames + one log per
+distinct SpecRef path. Wired in `main()` after the forward-only block.
+
+**Verified:** 7 new fixture-git tests (commit dates stamped via
+`GIT_AUTHOR_DATE`/`GIT_COMMITTER_DATE`) — both warn directions, quiet after a
+row re-touch, off-git silence, deferred exemption, strict-stays-warn;
+targeted `tests/test_trajectory.py` 96 passed; ruff clean.
+
+**Live dogfood triage (the meta backlog's first run):** one true positive —
+`WI-204: its SpecRef docs/specs/WI-204.md changed after the WI row was last
+touched`. Correct: the owner's attestation-batching ruling and pause-free pin
+amended the spec after the row was filed the same day. Disposition: the WI-204
+build session (this sitting) re-validated the row against the amended spec and
+closes it — the warn clears when the row flips `done`.
+
+**Deviations:** none. **Byte deltas (budgeted files):** none.

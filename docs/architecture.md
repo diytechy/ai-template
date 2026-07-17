@@ -186,7 +186,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `existing_worktrees(root)` | {branch: worktree-path} parsed from `git worktree list --porcelain`. |  |
 | `lease_worktree(root, train_id)` | The linked worktree for a train — reuse the one already checked out on |  |
 | `train_phase_gate(root, wi_rows, wid)` | The `{phase}-{gate}` train-id prefix (spec §6): the WI's first SR's |  |
-| `pack_traincars(records, wis_by_id, cap)` | Pack the evaluated schedule records into dispatchable traincars — |  |
+| `pack_traincars(records, wis_by_id, cap)` | Pack the evaluated schedule records into dispatchable traincars — | SR-058 |
 | `integration_head(root)` | The integration ref's commit, or None when the ref does not exist. |  |
 | `cas_ref(root, ref, new, old)` | Compare-and-swap `ref` from exactly `old` to `new` (one update-ref |  |
 | `ensure_integration_ref(root, journal)` | Create refs/heads/llm/integration from the selected development branch |  |
@@ -438,6 +438,7 @@ Contracts (interfaces): IF-009, IF-023
 | `ssot_findings(wis, root)` | The work-items.csv coherence findings (R-A + R-E) + the unknown-status |  |
 | `status_forward_only_findings(root, wis)` | The status.md forward-only rule (WI-200) — restores the WI-180-retired R-D |  |
 | `run_state_findings(wis, root)` | Warn when an end-state would park a runnable queued work item (WI-115). |  |
+| `backlog_staleness_findings(root, wis)` | WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance). |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an `## OI-N` decision brief whose decision |  |
 | `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |
