@@ -216,6 +216,25 @@ why (one bullet each; cite ids)._
   doesn't want for now) · a per-WI/per-campaign dial (that is WI-163, not yet
   built). The loop was `docs/pause`-stopped for this change (WI-147, ratified
   OI-13) and resumes on delete.
+- **2026-07-17 — WI-201 RULING: the `PlanMode=dual` frontier auto-dispatch class
+  + session isolation (owner-confirmed).** A `PlanMode=dual` row classifies as a
+  **single-WI traincar** — the SR-058 `high-risk`/critique scheduling class —
+  **derived from the `PlanMode` signal itself**, not a separate hand-set
+  `SafetyClass` cell (single-source, fail-closed; the SR-058 validator already
+  fails closed on a class contradicting structurally-visible evidence). The
+  classifier **wiring is explicitly deferred**: its consumer — the `--jobs`
+  dispatcher auto-dispatching a dual row into `run_dual_plan_round` — is unbuilt,
+  so wiring it now would be speculative, and today's fail-closed worker-path
+  refusal already prevents unsafe scheduling. **Isolation:** the round's hats run
+  in the **repo cwd on the allowlist-redaction floor** (plan_briefs/IF-059 reads
+  only system-requirements.csv + interfaces.csv, so status.md/log.md/
+  self-assessments are unreachable by construction); **empty-cwd is an optional
+  hardening**, not required. Alternatives passed over: an explicit
+  `SafetyClass=high-risk` cell beside `PlanMode=dual` (two cells to keep in sync,
+  drift-prone; absent SafetyClass is unclassified/refused anyway) · requiring
+  empty-cwd for every hat (heavier staging for a redaction the brief already
+  enforces). Recorded in **SR-066** (Requirement + Rationale) and **LLR-076**;
+  the structuring session is in the Audit log below.
 
 ## Audit log
 
@@ -8432,3 +8451,50 @@ re-stamped ×3; AGENTS.template.md 9,978 + PROCESS.md 60,169 untouched.
 provisional), 61 seams; derived gate **G3** (per-phase all G3). Full-suite +
 `check.py --gate G3 --jobs 0` output in the commit message. Frontier:
 **WI-201**. NOT pushed (`push-policy: human`).
+
+## 2026-07-17 — WI-201: dual-plan requirement structuring — SR-066 minted, provisional rows re-homed, IF-058…061 ratified, SafetyClass ruled
+
+**Session type:** structuring (`unattended`, medium; the WI-176→WI-177 pattern
+the WI-190 spec declared — the design ships first, the structuring WI follows).
+**No code or behavior change** — spine registries + records only.
+
+**Minted SR-066** (`Dual-plan decomposition round`, SN-Refs **SN-024;SN-006**,
+Verification=Test, **Verified**, phase 4): the round set's requirement of
+record. SN-024 is the "independent critical eye against a written rubric, never
+the authoring session" need — exactly the two planners + the position-swapped
+arbiter judging rival decompositions against `docs/rubrics/plan-decomposition.md`;
+SN-006 is the unattended-resumable run. The Requirement carries the seven steps
++ the hard caps + the degraded modes + the redaction/isolation floor + the
+(deferred) auto-dispatch class; the AcceptanceCriteria maps to the existing
+TC-070/071/076.
+
+**Re-homed off the provisional SR-061** (id edits + caveat drops only, behavior
+unchanged): LLR-070/071/073/074/076 and TC-070/071/073/074/076 now cite
+**SR-066**; every "provisional home pending the structuring WI" caveat is gone.
+LLR-072 (SR-045, the planner pair) and LLR-069 (SR-044, the coverage pre-pass)
+correctly stay put, and SR-061 keeps its own LLR-062 (the dispatcher).
+
+**Ratified IF-058…IF-061** out of `Proposed`: `Experimental,Proposed` →
+**`Stable,Stable`**, SR-Refs → SR-066, the "SR-Refs rides SR-061 pending…" note
+replaced with "ratified out of Proposed at WI-201 (implemented + consumed since
+WI-199)". `trace.py` interface-findings stays 0 (the Proposed-rationale
+requirement no longer applies; the seams still resolve).
+
+**The auto-dispatch residual is RULED** (owner-confirmed; full record in the
+Decisions log above): a `PlanMode=dual` row classifies as a single-WI traincar
+(the SR-058 high-risk/critique class) **derived from the PlanMode signal**, with
+the classifier wiring **explicitly deferred** (its `--jobs` consumer is unbuilt;
+the fail-closed worker refusal holds today); session isolation is the repo-cwd
+allowlist-redaction floor, empty-cwd optional. LLR-076's residual note updated to
+the ruling.
+
+**Deviations:** none. **Byte deltas (budgeted files):** none —
+AGENTS.template.md / PROCESS.md / PROCESS_OPTIONS.md untouched (spine registries
++ records only). The OKF bundle was regenerated (`gen_okf.py`) after the doc
+edits, like the dashboard.
+
+**Spine:** SN=25 **SR=66** LLR=76 TC=76, orphans=0, 61 seams (**0 Proposed**);
+derived gate **G3** (`docs/gate` re-cached, SR=66). Full suite **1031 passed /
+3 skipped**, coverage **90.76%**; `check.py --gate G3 --jobs 0` **PASS (15/15**
+after the OKF regen). Frontier: **WI-202** + **WI-203** (queued). NOT pushed
+(`push-policy: human`).

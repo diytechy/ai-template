@@ -76,3 +76,4 @@ resource: "generated"
 | [SR-063](SR-063.md) | Atomic serialized integration |
 | [SR-064](SR-064.md) | Crash safety and git-as-authority recovery |
 | [SR-065](SR-065.md) | Parallel-execution telemetry and downstream migration |
+| [SR-066](SR-066.md) | Dual-plan decomposition round |

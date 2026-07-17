@@ -56,14 +56,17 @@ home elsewhere — don't restate it here:
   are the OI-4/OI-7 subjects above).
 - **External follow-up** _(not this repo's work):_ guardrails content enrichment
   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
-- **Next action:** the build frontier is **WI-201** — the dual-plan
-  requirement structuring ([specs/WI-201.md](specs/WI-201.md)): mint the
-  round set's own SR, re-home the provisional rows, ratify the four Proposed
-  seams, and rule the `PlanMode=dual` auto-dispatch/isolation residuals. The
-  whole DP-001 selected plan is integrated `done` (records in the registry +
-  [log.md](log.md); the round is runnable unattended via
-  `agent_loop --dual-plan`). Owner items OI-3/OI-4/OI-7 stay open under
-  `gate-policy: autonomous`. Session evidence → [log.md](log.md).
+- **Next action:** the build frontier is **WI-202** (status.md
+  generated-snapshot + freshness gate — the forward-only guard's freshness
+  successor — [specs/WI-202.md](specs/WI-202.md)) and **WI-203** (agent_loop owner-scratchpad
+  dirty-tree exemption — [specs/WI-203.md](specs/WI-203.md)) — both queued, deps
+  met, mutually independent. The dual-plan round set is now fully structured: its
+  requirement of record is **SR-066** (re-homed off the provisional SR-061; the
+  four seams ratified out of Proposed), and the `PlanMode=dual`
+  SafetyClass/isolation residual is ruled (single-WI-traincar derived from
+  PlanMode, repo-cwd redaction floor — [log.md](log.md) Decisions). Owner items
+  OI-3/OI-4/OI-7 stay open under `gate-policy: autonomous`. Session evidence →
+  [log.md](log.md).
 
 ## Scope
 
