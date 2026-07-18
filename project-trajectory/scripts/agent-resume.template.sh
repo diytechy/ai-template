@@ -15,8 +15,11 @@
 
 # --- EDIT FOR YOUR PROJECT ----------------------------------------------------
 # The agent command template; {model} and {prompt} are substituted per
-# session (no {prompt} = the resume prompt is appended). Example:
-#   AGENT_CMD="claude -p {prompt} --model {model} --output-format json --dangerously-skip-permissions"
+# session. NO {prompt} = the prompt is piped to the CLI's STDIN — immune to
+# the OS command-line caps (Windows: 8191 chars under cmd.exe .CMD shims,
+# ~32767 via CreateProcess); keep {prompt} only for a CLI with no stdin
+# prompt path. Example:
+#   AGENT_CMD="claude -p --model {model} --output-format json --dangerously-skip-permissions"
 # Keep agent-resume.cmd's slots in sync — it is the Windows twin.
 AGENT_CMD=""
 # Default model tier + optional per-phase map keyed on the in-process phase.

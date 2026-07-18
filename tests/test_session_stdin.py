@@ -11,6 +11,7 @@ closed, so the child reads it and sees EOF — never an interactive wait.
 
 import os
 import sys
+import types
 
 from conftest import load_script
 
@@ -130,3 +131,38 @@ def test_run_session_codex_reads_last_message_not_transcript(tmp_path):
     assert code == 0 and not timed_out, output
     assert output == "CLEAN-165-char-result-table"  # not the GARBAGE transcript
     assert "GARBAGE" not in output
+
+
+# --- --interactive with a no-{prompt} template (review-17c H1) ----------------
+
+
+def test_run_interactive_pipes_prompt_via_stdin(tmp_path):
+    # A no-{prompt} interactive template (the registry's default form after
+    # WI-217, reachable via the --interactive-cmd -> AGENT_CMD_INTERACTIVE ->
+    # AGENT_CMD fallback chain) pipes the composed prompt to the child's stdin
+    # in TEXT mode. Regression: a str input without text=True is a TypeError,
+    # so the hands-on entry crashed on exactly the template shape the registry
+    # ships. The guardrails core makes the composed prompt non-empty so the
+    # probe can prove delivery, not just survival.
+    (tmp_path / "docs" / "guardrails").mkdir(parents=True)
+    (tmp_path / "docs" / "guardrails" / "core.md").write_text(
+        "THE-GUARDRAILS-CORE", encoding="utf-8"
+    )
+    probe = tmp_path / "probe.py"
+    probe.write_text(
+        "import sys\nsys.exit(0 if 'THE-GUARDRAILS-CORE' in sys.stdin.read() else 3)\n",
+        encoding="utf-8",
+    )
+    args = types.SimpleNamespace(
+        interactive_cmd='"{}" "{}"'.format(sys.executable, probe), model="m5"
+    )
+    code = al.run_interactive(
+        args,
+        tmp_path,
+        model_map={},
+        cmd_map={},
+        template="",
+        guardrails_policy="all",
+        warned_no_core=[],
+    )
+    assert code == 0  # the child read the piped prompt and saw EOF

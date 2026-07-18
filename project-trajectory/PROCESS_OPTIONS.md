@@ -696,7 +696,14 @@ behavior**, so a fresh scaffold pays nothing.
       a maturity tag — moving vendor aliases like `chat-latest` never live here).
     - *Access* — **`CmdTemplate`** (`{model}`/`{prompt}` slots) + **`Env`**
       (`KEY=value;KEY2=value2`, merged over the inherited environment at launch;
-      **an empty `Env` = the ambient environment = today's behavior**). `Env` is
+      **an empty `Env` = the ambient environment = today's behavior**). A
+      template that **omits `{prompt}`** has its prompt **piped to the CLI's
+      stdin** (written then closed — never an interactive wait), immune to the
+      OS command-line caps a brief-sized prompt-in-argv dies on (Windows: 8191
+      chars under a `.CMD` shim, ~32767 via CreateProcess) — keep `{prompt}`
+      only for a CLI with no stdin prompt path; a codex session additionally
+      gets `-o/--output-last-message` injected and read back as the session
+      result (codex echoes the prompt into stdout). `Env` is
       the declarative fix for every env-only selector — `CLAUDE_CONFIG_DIR`,
       `CODEX_HOME`, `ANTHROPIC_BASE_URL`, `GEMINI_API_KEY` — which a bare
       `CmdTemplate` (launched `argv`-only, no shell) can't carry.

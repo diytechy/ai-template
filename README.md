@@ -48,12 +48,15 @@ any repo and wire the harness to that repo's tooling (SN-003).
   - Root `agent-resume.*` launchers boot an agent session at the declared
     tier, or the walk-away coordinator loop
     ([`agent_loop.py`](project-trajectory/scripts/agent_loop.py)).
-  - Fresh headless sessions resume from `docs/status.md` until
-    `docs/run-state` reaches an end state.
-  - **Parallel-by-default execution** *(in development, phase `v4` —
-    [`parallel-wi-dispatch.md`](docs/specs/parallel-wi-dispatch.md))*: a launch
-    fans out every dependency-ready work item across bounded worker lanes, while
-    mutation of the integration branch stays serialized and gated (SN-025).
+  - Fresh headless **worker sessions** build explicit dispatcher assignments —
+    each scoped by its WI row, spec, and train context, never a `status.md`
+    resume — and the dispatcher *generates* `docs/run-state` as the run's
+    outcome.
+  - **Parallel-by-default execution** *(delivered — phase `v4` at G3;
+    [`parallel-wi-dispatch.md`](docs/specs/parallel-wi-dispatch.md))*: a plain
+    launch **is** the dispatcher: it fans out every dependency-ready work item
+    across bounded worker lanes, while mutation of the integration branch
+    stays serialized and gated (SN-025).
   - A per-phase model map (keyed on the in-process phase), reactive rate-limit
     backoff, a stall guard, and tracked per-session logs in `docs/iteration/`.
   - Optional **heterogeneous scheduling** — when `docs/agents-enabled` opts in,

@@ -12,7 +12,8 @@ every platform supersedes. Stdlib only, Python 3.8+.
 The agent invocation is a command template — the AGENT_CMD slot in the root
 agent-resume.{cmd,sh} launchers (or --agent-cmd / the AGENT_CMD env var).
 `{model}` and `{prompt}` placeholders are substituted per session; a template
-without `{prompt}` gets the resume prompt appended as its final argument.
+without `{prompt}` delivers the prompt on the child's STDIN instead (WI-216 —
+immune to the OS command-line caps; see build_argv/run_session).
 Empty template -> guidance and exit 2 (the launchers ship inert, like run.*).
 
 CONSENT: an unattended run typically wires the agent CLI's permission-bypass
@@ -1164,7 +1165,10 @@ def _dp_routes(root, tier):
     # (the kit's own DP-001 ran routing-off), so the defect stayed latent until it
     # surfaced downstream in gilbert. Unresolvable ids PAGE loudly, never a silent
     # skip (the main dispatcher path unpacks correctly; only these helpers did not).
-    pool, resolve_errors = agent_route.resolve_enabled(enabled, registry)
+    # The registry's declared tag-rank override rides along (as main() does) so
+    # version-less token resolution is identical in every engine path.
+    tag_rank = agent_route.load_tag_rank(root / "docs" / "agents.csv")
+    pool, resolve_errors = agent_route.resolve_enabled(enabled, registry, tag_rank)
     if resolve_errors:
         return (
             None,
@@ -1327,10 +1331,12 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                             failed.family = mm.family
                             break
                     # resolve_enabled returns (ids, errors) — unpack (the same
-                    # latent tuple bug fixed in _dp_routes).
+                    # latent tuple bug fixed in _dp_routes); the tag-rank
+                    # override rides along like every other resolution site.
                     pool, _pool_errors = agent_route.resolve_enabled(
                         agent_route.load_enabled(root / "docs" / "agents-enabled"),
                         _registry,
+                        agent_route.load_tag_rank(root / "docs" / "agents.csv"),
                     )
                     pair = agent_route.planner_fallback(
                         failed, pool, _registry, "strong"
@@ -2228,8 +2234,11 @@ def preflight(root, template, args):
             "no agent command wired yet: fill the AGENT_CMD slot in "
             "agent-resume.cmd + agent-resume.sh (or pass --agent-cmd / set "
             "the AGENT_CMD env var). Example:\n"
-            "    claude -p {prompt} --model {model} --output-format json "
+            "    claude -p --model {model} --output-format json "
             "--dangerously-skip-permissions\n"
+            "  (no {prompt} = the prompt is piped to the CLI's stdin — immune "
+            "to the OS command-line caps; keep {prompt} only for a CLI with "
+            "no stdin prompt path).\n"
             "  The permission-bypass flag is YOUR consent to unattended "
             "edits; leave it out to be prompted."
         )
@@ -2456,7 +2465,13 @@ def _codex_lastmsg_setup(argv):
     """If argv launches codex, append its `--output-last-message` temp file and
     return (augmented_argv, path); otherwise (argv, None). codex echoes its banner
     + the whole prompt into stdout, so that file — its own final-message contract —
-    is the deterministic session result (WI-217, gilbert 9add15b)."""
+    is the deterministic session result (WI-217, gilbert 9add15b).
+
+    Detection is a basename-prefix heuristic (accepted trade-off): a lookalike
+    CLI named codex-* would receive the flag too, and a template that already
+    declares its own -o/--output-last-message gets a second one (codex
+    last-wins, so the kit's temp file is the one read back). Revisit as a
+    declared registry column only if that ever bites a real registry."""
     if not (argv and os.path.basename(argv[0]).lower().startswith("codex")):
         return argv, None
     fd, path = tempfile.mkstemp(prefix="codex-lastmsg-", suffix=".txt")
@@ -4653,7 +4668,9 @@ def parse_args():
     ap.add_argument(
         "--agent-cmd",
         default=None,
-        help="agent command template ({model}/{prompt} placeholders); "
+        help="agent command template ({model}/{prompt} placeholders; omit "
+        "{prompt} to deliver the prompt via stdin — immune to the OS "
+        "command-line caps); "
         "default: the AGENT_CMD env var (set by the agent-resume launchers)",
     )
     ap.add_argument(
@@ -4904,7 +4921,8 @@ def map_preflight(
         for mid in enabled:
             m = registry[mid]  # resolve_enabled guarantees the id is in the registry
             try:
-                exe = build_argv(m.cmd_template, "model", "prompt")[0][0]
+                argv, _ = build_argv(m.cmd_template, "model", "prompt")
+                exe = argv[0]
                 if not (shutil.which(exe) or Path(exe).exists()):
                     # The row's Notes is the declared install/sign-in hint —
                     # surface it at the earliest failure point (WI-109).
@@ -5058,9 +5076,14 @@ def run_interactive(
             warned_no_core,
         )[0],
     )
-    # input=None inherits the terminal (interactive templates keep {prompt});
-    # a no-{prompt} template pipes its prompt in, then the CLI proceeds.
-    proc = subprocess.run(argv, cwd=str(root), input=stdin_input)
+    if stdin_input is None:
+        # {prompt} rode argv: stdin stays the caller's terminal (hands-on).
+        proc = subprocess.run(argv, cwd=str(root))
+    else:
+        # A no-{prompt} template pipes its prompt in, then the CLI proceeds
+        # (stdout/stderr stay attached to the terminal). text=True is
+        # load-bearing: a str input on a binary pipe is a TypeError.
+        proc = subprocess.run(argv, cwd=str(root), input=stdin_input, text=True)
     return proc.returncode
 
 

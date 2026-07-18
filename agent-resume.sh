@@ -16,12 +16,15 @@
 
 # --- EDIT FOR YOUR PROJECT ----------------------------------------------------
 # The agent command template; {model} and {prompt} are substituted per
-# session (no {prompt} = the resume prompt is appended).
+# session. NO {prompt} = the prompt is piped to the CLI's STDIN (WI-216) —
+# immune to the OS command-line caps (a brief-sized prompt-in-argv dies at the
+# Windows 8191/32767-char limits); keep {prompt} only for a CLI with no stdin
+# prompt path.
 # Keep agent-resume.cmd's slots in sync — it is the Windows twin.
 # stream-json + --verbose (WI-125): the CLI emits an event line per turn, so
 # the coordinator console shows live progress instead of 30 silent minutes;
 # the final result event carries the same telemetry the json format did.
-AGENT_CMD="claude -p {prompt} --model {model} --output-format stream-json --verbose --dangerously-skip-permissions"
+AGENT_CMD="claude -p --model {model} --output-format stream-json --verbose --dangerously-skip-permissions"
 # Default model tier + per-phase map keyed on the in-process phase (the default
 # model stays strong — an unknown phase routes UP, never down). With managed
 # routing ON (docs/agents-enabled present) the docs/agents.csv registry +

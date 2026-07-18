@@ -522,7 +522,9 @@ def sync_agent_skills(dest, dry_run):
 # which the launcher header and the loop banner call out as the consent line.
 AGENT_RESUME_SEEDS = {
     "claude": {
-        "cmd": "claude -p {prompt} --model {model} --output-format json "
+        # No {prompt}: the loop pipes the prompt to the CLI's stdin (WI-216),
+        # immune to the OS command-line caps a brief-sized prompt-in-argv hits.
+        "cmd": "claude -p --model {model} --output-format json "
         "--dangerously-skip-permissions",
         "interactive": "claude --model {model} {prompt}",
         # Strong tier by default: driver sessions carry gate-bearing judgment

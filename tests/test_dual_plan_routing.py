@@ -97,3 +97,32 @@ def test_dp_session_failed_session_is_not_reduced(tmp_path, monkeypatch):
     ok, output = al._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
     assert ok is False
     assert output == "boom"
+
+
+# --- review-17c M4: the registry's tag-rank override reaches dual-plan routing --
+
+
+def test_dp_routes_honors_registry_tag_rank_override(tmp_path):
+    # A version-less enable token must resolve under the registry's own
+    # `# tag-rank:` override — the same rule main() applies — so a dual-plan
+    # round routes the same concrete row as every ordinary session. Before the
+    # fix, _dp_routes called resolve_enabled without the tag rank and resolved
+    # A-GA here (the DEFAULT maturity order) while the main loop resolved
+    # A-BETA.
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "agents.csv").write_text(
+        "Id,Provider,Model,Version,Tier,CmdTemplate,Notes\n"
+        "# tag-rank: beta>ga\n"
+        "A-GA,ANTHROPIC,model-a,ga,strong,run {model} {prompt},ga row\n"
+        "A-BETA,ANTHROPIC,model-a,beta,strong,run {model} {prompt},beta row\n"
+        "B-STRONG,OPENAI,model-b,1,strong,run {model} {prompt},openai strong\n",
+        encoding="utf-8",
+    )
+    (docs / "agents-enabled").write_text(
+        "ANTHROPIC-MODEL-A\nB-STRONG\n", encoding="utf-8"
+    )
+    routes, _registry, note = al._dp_routes(tmp_path, "strong")
+    assert routes is not None, note
+    ids = {r[4] for r in routes}
+    assert "A-BETA" in ids and "A-GA" not in ids
