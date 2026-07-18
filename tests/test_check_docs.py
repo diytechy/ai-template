@@ -4,7 +4,7 @@ must state the `PROJECT-VISION:` tag exactly once (process.md §4 G1's
 mechanizable half), and the git-gated staleness pass degrades to a clean skip
 (process.md §3 "The doc set must stay navigable")."""
 
-from conftest import SCRIPTS, load_script, run_py
+from conftest import ROOT, SCRIPTS, load_script, run_py
 
 
 def _add_must_need(scaffold, sid="SN-005"):
@@ -990,3 +990,38 @@ def test_partition_orphans_splits_on_declared_globs():
     assert genuine == ["docs/new-note.md"]
     assert expected == ["docs/reviews/003-REVIEW-A.md", "docs/specs/WI-175.md"]
     assert check.partition_orphans(orphans, []) == (orphans, [])
+
+
+# --- the meta-repo dogfood: zero unexplained residue (REVIEW-A rework) ---------
+# REVIEW-A flagged that a hardcoded "48" census in the WI-228 spec is untraceable
+# — the count is a moving target by construction (48 when drafted, 63 at
+# integration). The requirement's real acceptance criterion is COUNT-INDEPENDENT:
+# every live orphan on the meta tree is classified, zero unexplained residue.
+# This mechanizes exactly that, dogfooding the ratchet on the kit's own tree — it
+# goes red the moment an unclassified orphan lands, whatever the census count is.
+
+
+def test_meta_repo_has_zero_unexplained_orphans():
+    # Run check_docs against the REAL meta root under --strict-orphans (matching
+    # the harness's --ignore for the generated, gitignored trace composite). Exit
+    # 0 means every live orphan is covered by a declared docs/orphans-allow class:
+    # the count-independent Done-when. No census NUMBER is asserted (that would
+    # re-introduce the fragile baseline the review objected to) — only the
+    # invariant that the residue is empty and the aggregate note is doing its job.
+    proc = run_py(
+        [
+            SCRIPTS / "check_docs.py",
+            "--root",
+            ROOT,
+            "--ignore",
+            "docs/test/report.md",
+            "--strict-orphans",
+        ],
+        cwd=ROOT,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # No genuine orphan is ever named as a finding (WARN or FAIL) on the meta tree.
+    assert "orphan doc (no path from an entry root)" not in proc.stdout
+    # ... and the census is non-empty: the classified evidence is folded into the
+    # aggregate note, proving suppression is actually happening (not vacuously 0).
+    assert "expected live-orphan(s) matched docs/orphans-allow" in proc.stdout
