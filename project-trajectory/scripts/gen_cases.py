@@ -46,11 +46,14 @@ Usage:
 Examples:
     python scripts/gen_cases.py --spec "size=range[0..2GiB]; field=set{plain,comma,quote,newline}; enc=set{utf8,utf16}"
     python scripts/gen_cases.py --spec "mode=set{Mirror,HashAddressed}; compress=bool; count=range[0..1e6]" --format params
+
+Contracts: IF-017 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
 import itertools
 import re
+import sys
 
 
 def parse_spec(spec):
@@ -164,7 +167,20 @@ def boundary_corners(dims):
     return out
 
 
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
+    non-ASCII path / title / registry cell can't raise UnicodeEncodeError on a
+    legacy Windows cp1252 console (verbatim across the
+    kit). Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

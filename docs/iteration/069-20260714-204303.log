@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 069
+# date: 2026-07-14 20:53
+# phase: BUILD
+# wi: WI-151
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NEEDS-HUMAN
+# commits: 051e062..29124d5
+# tokens: 
+# cost-usd: 
+# wall-secs: 601
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1475
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll load the repository guidance and current work-item state, then execute only the WI recorded as the next action.
+[0m# [0mTodos
+[•] Read repository process guidance and identify the recorded next WI
+[ ] Execute the scoped WI and update required tracking records
+[ ] Run required verification, commit progress, and leave resume state
+[0m
+[0m→ [0mRead CLAUDE.md
+[0m→ [0mRead docs/status.md
+[0m→ [0mRead docs/requirements/work-items.csv
+[0m→ [0mSkill "session-protocol"
+[0m→ [0mRead docs/next-wi
+[0m→ [0mRead docs/push-policy
+[0m→ [0mRead docs/requirements/work-items.csv[90m [offset=145, limit=35][0m
+[0m✱ [0mGlob "**/*151*"[90m in docs · 3 matches[0m
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md
+[0m→ [0mRead docs/run-state
+[0m
+[0m$ [0mgit status --short; git log --oneline -10
+?? docs/reviews/062-REVIEW-A.md
+051e062 telemetry: session 068 review scoreboard
+13ac788 telemetry: session 068 REVIEW-A COMMITTED
+a73ef6d review: WI-150 planner-BuildTier verdict (068-REVIEW-A)
+6cbdfc4 telemetry: session 067 BUILD COMMITTED
+d50ca80 WI-150: Assign BuildTier at filing
+7dc8560 telemetry: session 066 review scoreboard
+52cba92 telemetry: session 066 REVIEW-A COMMITTED
+e2b8519 review: WI-149 lowest-gate-first verdict (066-REVIEW-A)
+7bab852 telemetry: session 065 BUILD COMMITTED
+896f9ed WI-149: warn on lower-gate queue order
+[0m
+The next WI is `WI-151`, a docs-only throughline pointer. The working tree has one untracked `062-REVIEW-A` verdict; I’ll reconcile it before editing, then read the scoped owner-intake specification and the existing efficiency-package reference.
+[0m→ [0mRead docs/reviews/062-REVIEW-A.md
+[0m→ [0mRead docs/specs/owner-intake-2026-07-14.md
+[0m→ [0mRead docs/iteration/037-20260714-151106.log
+[0m→ [0mRead docs/log.md[90m [offset=1, limit=180][0m
+[0m✱ [0mGrep "RDXmin|efficiency package|throughline|vendora"[90m in . · 36 matches[0m
+[0m→ [0mSkill "byte-budget-guard"
+[0m→ [0mRead project-trajectory/ADOPTING.md[90m [offset=200, limit=43][0m
+[0m→ [0mRead docs/reviews/060-REVIEW-A.md
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md[90m [offset=990, limit=55][0m
+[0m→ [0mRead docs/log.md[90m [offset=2168, limit=50][0m
+`WI-151` requires one concise pointer beside the existing vendorable efficiency-package note. It will state the UI/design-system applicability and preserve `check.py` as the sole gate runner; I’ll also move the coordinator to the already-declared OI-12 human ratification state because no independent WI remains after this one.
+[0m
+[0m# [0mTodos
+[✓] Read repository process guidance and identify the recorded next WI
+[•] Execute the scoped WI and update required tracking records
+[ ] Run required verification, commit progress, and leave resume state
+[0m
+[0m$ [0mpython -c "from pathlib import Path; paths=['project-trajectory/AGENTS.template.md','project-trajectory/PROCESS.md','project-trajectory/PROCESS_OPTIONS.md']; [print(f'{p}: {Path(p).stat().st_size}') for p in paths]"
+project-trajectory/AGENTS.template.md: 9978
+project-trajectory/PROCESS.md: 59827
+project-trajectory/PROCESS_OPTIONS.md: 137132
+[0m
+[0m→ [0mRead docs/log.md[90m [offset=5890, limit=50][0m
+[0m✗ [0mPatch failed
+[91m[1mError: [0mapply_patch verification failed: Error: Failed to find expected lines in C:\Projects\ai-template\docs\next-wi:
+# NEXT: WI-151 (throughline pointer). WI-150 (planner-assigned BuildTier)
+
+[... 159 line(s) elided — full stream in out/run-logs/ ...]
+
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 85 doc(s), 372 intra-repo link(s), 0 broken (33 orphan warning(s)).
+[0m
+[0m$ [0mpython -m pytest -q -n auto -m smoke
+bringing up nodes...
+bringing up nodes...
+
+..........s............................................................. [ 11%]
+........................................................................ [ 23%]
+...................s.................................................... [ 35%]
+........................................................................ [ 46%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 93%]
+......................................                                   [100%]
+612 passed, 2 skipped in 92.77s (0:01:32)
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mpython -m pytest -q -n auto
+bringing up nodes...
+bringing up nodes...
+
+............................s........................................... [  9%]
+........................................................................ [ 18%]
+..............................................s......................... [ 28%]
+......................................................................... [ 37%]
+........................................................................ [ 46%]
+......................................................ssssssssssssssss.s [ 56%]
+.......s....s.......s..........s.......s...s.........s..s........s...s.. [ 65%]
+.s..........s................s.s........................................ [ 74%]
+....................................................s................... [ 84%]
+........................................................................ [ 93%]
+.................................................                        [100%]
+736 passed, 34 skipped in 111.59s (0:01:51)
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mpython project-trajectory/scripts/gen_trajectory.py
+gen_trajectory: wrote PROJECT_STATE.html
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_trajectory.py --root . --strict
+check_trajectory: ERROR - run-state run-state NEEDS-HUMAN but actionable queued WI(s) WI-152 have all hard predecessors done — is the pause still real? A stale end-state parks agent-resume at boot
+check_trajectory: 1 error(s) in docs/requirements/work-items.csv.
+[0m
+[0m$ [0mpython -c "from pathlib import Path; paths=['project-trajectory/AGENTS.template.md','project-trajectory/PROCESS.md','project-trajectory/PROCESS_OPTIONS.md']; [print(f'{p}: {Path(p).stat().st_size}') for p in paths]"
+project-trajectory/AGENTS.template.md: 9978
+project-trajectory/PROCESS.md: 59827
+project-trajectory/PROCESS_OPTIONS.md: 137541
+[0m
+The commit bar and full suite passed. The derived-G2 trajectory check correctly rejects a `NEEDS-HUMAN` park because `WI-152` is mechanically actionable despite the status/spec rule not to auto-start that campaign before OI-12; I’m recording that real conflict rather than claiming a strict green.
+[0m% [0mPatch 1 file
+[0m
+[0m$ [0mpython project-trajectory/scripts/gen_trajectory.py --check
+project-state dashboard up to date.
+[0m
+[0m$ [0mgit diff --check; git status --short
+M .agents/skills/byte-budget-guard/SKILL.md
+ M .claude/skills/byte-budget-guard/SKILL.md
+ M PROJECT_STATE.html
+ M docs/log.md
+ M docs/next-wi
+ M docs/requirements/work-items.csv
+ M docs/run-state
+ M docs/status.md
+ M project-trajectory/PROCESS_OPTIONS.md
+ M project-trajectory/skills/byte-budget-guard/SKILL.md
+?? docs/reviews/062-REVIEW-A.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_docs.py --root . --stale
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/054-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/056-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/058-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/060-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/062-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/064-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/066-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/068-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/test/report.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:51 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 85 doc(s), 372 intra-repo link(s), 0 broken (33 orphan warning(s)).
+[0m
+[0m$ [0mpython -m pytest -q -n auto -m smoke
+bringing up nodes...
+bringing up nodes...
+
+...........s............................................................ [ 11%]
+........................................................................ [ 23%]
+......................s................................................. [ 35%]
+........................................................................ [ 46%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 93%]
+......................................                                   [100%]
+612 passed, 2 skipped in 62.91s (0:01:02)
+[0m
+Final commit-bar runs are green: smoke `612 passed, 2 skipped in 62.91s`; docs check reports `0 broken` with existing orphan/staleness warnings; dashboard freshness is green. I’ll commit only the WI-151 files, preserving the unrelated untracked review verdict.
+[0m$ [0mpython -c "from pathlib import Path; paths=['project-trajectory/AGENTS.template.md','project-trajectory/PROCESS.md','project-trajectory/PROCESS_OPTIONS.md']; [print(f'{p}: {Path(p).stat().st_size}') for p in paths]"
+project-trajectory/AGENTS.template.md: 9978
+project-trajectory/PROCESS.md: 59827
+project-trajectory/PROCESS_OPTIONS.md: 137541
+[0m
+[0m$ [0mgit diff --check; git diff -- project-trajectory/PROCESS_OPTIONS.md docs/requirements/work-items.csv docs/status.md docs/run-state docs/next-wi docs/log.md; git log --oneline -10
+diff --git a/docs/log.md b/docs/log.md
+index f9e2a78..3e18d3e 100644
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -5933,3 +5933,35 @@ holds G2.
+ **Handoff — run-state RUNNING; next-wi WI-151.** The remaining actionable
+ owner-intake WI is the throughline pointer. WI-144 stays paused; the phase-v3
+ g2-close ratification sitting remains due in parallel (OI-12).
++
++## 2026-07-14 — WI-151: throughline vendorable design-system pointer
++
++**Scope.** Owner-intake 2026-07-14 #throughline: add the requested worked
++pointer only; do not adopt its process machinery into the kit.
++
++**What shipped.** PROCESS_OPTIONS' vendorable-packages discussion now names
++[`jrpease/throughline`](https://github.com/jrpease/throughline) as a related,
++vendorable UI/design-system package, scoped to products with that need. Its
++manifest and gates are explicitly complementary: downstream `check.py` remains
++the single gate runner.
++
++**Deviations.** None. Pre-existing untracked `docs/reviews/062-REVIEW-A.md`
++residue is outside WI-151 and remains preserved unchanged.
++
++**Byte deltas.** AGENTS.template.md 9,978 -> 9,978 (untouched, 22 B headroom);
++PROCESS.md 59,827 -> 59,827 (unchanged); PROCESS_OPTIONS.md 137,132 -> 137,541
++(+409 B, flagged for the applicability and single-runner caveat). The watched
++baseline is re-stamped to 137,541 in all three byte-budget-guard skill copies.
++
++**Gates.** Commit bar: `python -m pytest -q -n auto -m smoke` -> **612 passed,
++2 skipped in 92.77s**; `python project-trajectory/scripts/check_docs.py --root .
++--stale` -> **OK, 85 docs, 372 links, 0 broken** (33 pre-existing orphan
++warnings). Full suite: `python -m pytest -q -n auto` -> **736 passed, 34 skipped
++in 111.59s**. `check_trajectory.py --root . --strict` is intentionally **not
++green**: it identifies WI-152 as mechanically actionable while the ratified
++status/spec explicitly reserve research-campaign sequencing to the OI-12
++g2-close sitting; that enforcer/process conflict needs the owner's ruling.
++
++**Handoff — run-state NEEDS-HUMAN; next-wi WI-144.** All actionable
++owner-intake work is complete. The owner must rule OI-12 at the phase-v3
++g2-close ratification before WI-144 resumes; do not auto-start WI-152+.
+diff --git a/docs/next-wi b/docs/next-wi
+index 2be9ea3..f74a904 100644
+--- a/docs/next-wi
++++ b/docs/next-wi
+@@ -48,4 +48,7 @@
+ # campaign the owner sequences at the sitting: do NOT auto-start it ahead of the
+ # owner-intake WIs. WI-144 resumes for its final build round after the sitting rules
+ # OI-12, then the full gate bar and the spine rejoins G3.
+-WI-151
++# NEXT: WI-144 resumes only after the OI-12 phase-v3 g2-close ratification rules
++# the critique disposition and sequences the research-knowledge campaign. The
++# coordinator is parked NEEDS-HUMAN until then; do not auto-start WI-152+.
++WI-144
+diff --git a/docs/requirements/work-items.csv b/docs/requirements/work-items.csv
+index cf26335..9ce8f1e 100644
+--- a/docs/requirements/work-items.csv
++++ b/docs/requirements/work-items.csv
+@@ -149,7 +149,7 @@ WI-147,Coordinator graceful pause - declared pause request wraps to a clean stop
+ WI-148,Weekday blackout window - no new sessions inside configured UTC hours,unattended,,WI-023;WI-024;~WI-147;WI-145,done,"agent_loop.py honors docs/blackout (parse_blackout + blackout_wake helpers, top-of-loop boundary check): a HH:MM-HH:MM UTC Mon-Fri half-open window starts no new session - the loop waits it out and resumes automatically (a single walk-away launch survives the blackout). start==end / absent / malformed = disabled (byte-identical); wraps past midnight. blackout.template scaffolds the 12:00-19:00 default (bootstrap SCAFFOLD + test_scaffold_contains + a default-value test). PROCESS_OPTIONS unattended section documents it (+742 B, baseline re-stamped 136,841). 5 tests (parse edges, boundary minutes, disable/weekend, wrap, present-but-inactive end-to-end).",docs/specs/owner-intake-2026-07-14.md#pause-blackout,owner-intake-2026-07-14,
+ WI-149,Lowest-gate-first queue advisory (check_trajectory warn),scripts,,WI-093;~WI-115;WI-145,done,"check_trajectory warns when docs/next-wi selects a phase development WI ahead of an open [phase]-[g1|g2] anchor or a Draft SR in that phase; owner ordering remains authoritative. Both agent-resume prompts carry the lowest-gate-first instruction. 3 fixture tests.",docs/specs/owner-intake-2026-07-14.md#gate-first,owner-intake-2026-07-14,
+ WI-150,Planner-assigned BuildTier - deliberate tier at WI filing,docs,,WI-126;WI-145,done,"PROCESS_OPTIONS, both agent-resume prompts, and the session-protocol skill (source + .claude/.agents copies) require deliberate filing/triage assignments: quick for mechanical off-spine work, medium by default, strong only for design-shaping or spine-touching changes; no silent mid-loop downgrade. PROCESS_OPTIONS growth +291 B re-stamped in byte-budget-guard copies.",,owner-intake-2026-07-14,
+-WI-151,Throughline pointer - vendorable design-system package note,docs,,~WI-083;WI-145,queued,,docs/specs/owner-intake-2026-07-14.md#throughline,owner-intake-2026-07-14,
++WI-151,Throughline pointer - vendorable design-system package note,docs,,~WI-083;WI-145,done,"PROCESS_OPTIONS names jrpease/throughline as a vendorable UI/design-system package, scoped by applicability and with check.py retained as the single gate runner.",docs/specs/owner-intake-2026-07-14.md#throughline,owner-intake-2026-07-14,
+ WI-152,Knowledge home - docs/knowledge/README.md + bootstrap scaffold wiring + scaffold tests,scripts,,WI-145,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+ WI-153,Knowledge ref integrity - trace.py warn-first Knowledge resolution + knowledge->component coupling warn + fixtures,scripts,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+ WI-154,Research-track process text - PROCESS_OPTIONS section + component-layer cross-link + PROCESS.md pointer + reviewer-charter line,docs,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+diff --git a/docs/run-state b/docs/run-state
+index 495a3df..c037cbb 100644
+--- a/docs/run-state
++++ b/docs/run-state
+@@ -2,4 +2,5 @@
+ # the root agent-resume.* launchers). RUNNING while work remains; a driver
+ # writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may
+ # carry one `ask:` line naming the act — the stop banner headlines it (WI-127).
+-RUNNING
++NEEDS-HUMAN
++ask: Needs human OI-12 g2-close ratification to rule WI-144's critique disposition and sequence the research-knowledge campaign.
+diff --git a/docs/status.md b/docs/status.md
+index 16b4aa7..ce479d0 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -88,12 +88,10 @@ home elsewhere — don't restate it here:
+   this campaign at the g2-close sitting; do not auto-start it._
+ - **Queued (owner intake 2026-07-14** — triage + answers:
+   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
+-  **WI-151** (throughline pointer).
++  All owner-intake WIs are complete.
+   Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so
+-  these are the loop's **actionable non-dependent backlog** — the loop works them
+-  in id order (the ratification-package + graceful-pause + weekday-blackout WIs
+-  shipped 2026-07-14, see [log.md](log.md)) unless the owner reorders
+-  `docs/next-wi` at the pending g2-close sitting._
++  the loop worked them in id order. The pending g2-close sitting must now rule
++  OI-12 before WI-144's final build round resumes._
+ - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
+   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
+   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
+@@ -102,10 +100,11 @@ home elsewhere — don't restate it here:
+   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+-- **Next action:** **WI-151** ([next-wi](next-wi)) — run-state **RUNNING**. The
+-  loop works the remaining actionable owner-intake WI while WI-144 is paused and
+-  the g2-close sitting is DUE in parallel (Open items above). Shipped work +
+-  round-by-round evidence → [log.md](log.md) / OI-12, not here.
++- **Next action:** **OI-12 g2-close ratification** — run-state **NEEDS-HUMAN**;
++  then **WI-144** ([next-wi](next-wi)) resumes its final build round. The owner
++  must rule the critique disposition and sequence the queued research-knowledge
++  campaign (Open items above). Shipped work + round-by-round evidence →
++  [log.md](log.md) / OI-12, not here.
+ 
+ ## Scope
+ 
+diff --git a/project-trajectory/PROCESS_OPTIONS.md b/project-trajectory/PROCESS_OPTIONS.md
+index a235335..c76ba64 100644
+--- a/project-trajectory/PROCESS_OPTIONS.md
++++ b/project-trajectory/PROCESS_OPTIONS.md
+@@ -1033,6 +1033,12 @@ YAGNI output-ladder ruleset + a `PostToolUse` scrub/elide/dedup tool-output
+ compressor). Vendor one, or fold its ideas into your own package; **weigh it at
+ kit adoption and at each re-sync** (the adoption guide flags both moments).
+ 
++**A related opt-in — design-system packages.** **Applies when** the product has
++a UI/design-system need. [`jrpease/throughline`](https://github.com/jrpease/throughline)
++is a worked, vendorable package for design tokens, component libraries, and
++visual-regression tooling. Its manifest and gates complement this process; keep
++`check.py` as the downstream's single gate runner rather than competing runners.
++
+ **The boundary.** Guardrails govern *in-session agent mechanics*; the process
+ (gates, traceability, the honest-gate rule) governs *artifacts*. A guardrail
+ never relaxes a gate, and the honest-gate rule still owns every `run-state`.
+051e062 telemetry: session 068 review scoreboard
+13ac788 telemetry: session 068 REVIEW-A COMMITTED
+a73ef6d review: WI-150 planner-BuildTier verdict (068-REVIEW-A)
+6cbdfc4 telemetry: session 067 BUILD COMMITTED
+d50ca80 WI-150: Assign BuildTier at filing
+7dc8560 telemetry: session 066 review scoreboard
+52cba92 telemetry: session 066 REVIEW-A COMMITTED
+e2b8519 review: WI-149 lowest-gate-first verdict (066-REVIEW-A)
+7bab852 telemetry: session 065 BUILD COMMITTED
+896f9ed WI-149: warn on lower-gate queue order
+[0m
+[0m$ [0mgit add ".agents/skills/byte-budget-guard/SKILL.md" ".claude/skills/byte-budget-guard/SKILL.md" "PROJECT_STATE.html" "docs/log.md" "docs/next-wi" "docs/requirements/work-items.csv" "docs/run-state" "docs/status.md" "project-trajectory/PROCESS_OPTIONS.md" "project-trajectory/skills/byte-budget-guard/SKILL.md" && git commit -m "WI-151: Add design-system package pointer" -m "Document throughline as a vendorable UI/design-system option while retaining check.py as the single gate runner.\n\nThe coordinator now awaits the OI-12 ratification before WI-144 resumes; the research campaign remains owner-sequenced."
+=== derived-gate : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+  PASS  derived-gate     0.1s
+
+=== skills-sync : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.1s
+
+=== trajectory : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py ===
+check_trajectory: WARN - run-state run-state NEEDS-HUMAN but actionable queued WI(s) WI-152 have all hard predecessors done — is the pause still real? A stale end-state parks agent-resume at boot
+check_trajectory: clean (158 work item(s), 138 done (87%), graph acyclic).
+  PASS  trajectory       0.1s
+
+=== registry-integrity : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict-integrity ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+  PASS  registry-integrity 0.2s
+
+=== okf : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (257 file(s)).
+  PASS  okf              0.2s
+
+=== trajectory-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.2s
+
+=== arch-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.4s
+check_privacy: privacy check off (docs/privacy-check) — author not checked.
+check_privacy: clean (staged diff; secrets floor).
+
+=== format : C:\Projects\ai-template\.venv\Scripts\python.exe -m ruff format --check project-trajectory/scripts tests ===
+72 files already formatted
+  PASS  format           0.1s
+[derived-gate-model 29124d5] WI-151: Add design-system package pointer
+ 10 files changed, 61 insertions(+), 20 deletions(-)
+[0m
+[0m$ [0mgit status --short; git log --oneline -3
+?? docs/reviews/062-REVIEW-A.md
+29124d5 WI-151: Add design-system package pointer
+051e062 telemetry: session 068 review scoreboard
+13ac788 telemetry: session 068 REVIEW-A COMMITTED
+[0m
+[0m# [0mTodos
+[✓] Read repository process guidance and identify the recorded next WI
+[✓] Execute the scoped WI and update required tracking records
+[✓] Run required verification, commit progress, and leave resume state
+[0m
+Committed `29124d5 WI-151: Add design-system package pointer`.
+
+- Added the throughline vendorable UI/design-system pointer and single-`check.py` caveat.
+- Marked WI-151 done; set `next-wi` to WI-144 and `run-state` to `NEEDS-HUMAN` for OI-12.
+- Smoke: `612 passed, 2 skipped in 62.91s`.
+- Full: `736 passed, 34 skipped in 111.59s`.
+- Docs: 0 broken links; existing warnings remain.
+- `check_trajectory --strict` remains red: WI-152 is mechanically actionable despite the owner-sequenced OI-12 hold. Recorded in `docs/log.md`.
+- Preserved unrelated untracked `docs/reviews/062-REVIEW-A.md`.
+- No push performed.

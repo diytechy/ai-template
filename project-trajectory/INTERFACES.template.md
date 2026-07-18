@@ -1,12 +1,15 @@
 # Cross-Project Interfaces (IF-###)
 
-Owned by the **System Engineer** hat. Copy to `docs/interfaces.md`. Use this
-**only** when a project provides or consumes a contract shared with another
-project/repo — skip it for a standalone deliverable.
+<!-- kit-only -->
+Copied into a new repo as `docs/interfaces.md` by `scripts/bootstrap.py`.
+<!-- /kit-only -->
+Owned by the **System Engineer** hat. Use this **only** when a project provides
+or consumes a contract shared with another project/repo — skip it for a
+standalone deliverable.
 
 It keeps interlinked projects honest without heavy multi-repo machinery: each
 shared contract gets one stable id, one home, and a link back into the same
-`UN→SR→LLR→TC` spine. The registry is `requirements/interfaces.csv`; this page
+`SN→SR→LLR→TC` spine. The registry is `requirements/interfaces.csv`; this page
 is the thin, human-readable index over it.
 
 ---
@@ -22,7 +25,7 @@ each side assumes a slightly different contract and they rot apart silently.
 ## ID scheme & columns
 
 `IF-###` — Cross-Project Interface. Zero-padded, stable, never reused (its own
-namespace, parallel to UN/SR/LLR/TC).
+namespace, parallel to SN/SR/LLR/TC).
 
 | Column | Meaning |
 |---|---|
@@ -58,7 +61,7 @@ namespace, parallel to UN/SR/LLR/TC).
 ## Worked snippet
 
 ```csv
-IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status
+IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status,Component
 IF-001,Provides,billing-api,reporting-etl,"GET /v1/invoices returns the documented JSON schema (see docs/openapi.yaml#/Invoice).",SR-014,v1,Stable,Verified
 IF-002,Consumes,reporting-etl,billing-api,"Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json).",SR-031,v1,Stable,Verified
 ```

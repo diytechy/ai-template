@@ -1,0 +1,2 @@
+VERDICT: CHANGES-REQUESTED findings=1
+- [B2] P3: Its deliverable/tests cover enabled-pool family selection, but C3 requires the degraded rule when only one family *responds*; no stated behavior detects a nonresponsive routed family and launches two fresh same-family planner sessions. Specify and test that runtime fallback with its recorded reason.

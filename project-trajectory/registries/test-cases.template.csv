@@ -1,2 +1,2 @@
-TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-000,SR-000;LLR-000,Unit,EXAMPLE - delete on first real entry,Smoke,"param=a; other=x","Cite the verified requirement's AcceptanceCriteria by id (do not paraphrase).",No,Draft
+TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
+TC-000,SR-000;LLR-000,Unit,EXAMPLE - delete on first real entry,Smoke,"param=a; other=x","Cite the verified requirement's AcceptanceCriteria by id (do not paraphrase).",No,docs/test/manual-smoke.md,Draft,"Delivery phase = the max Phase of the SR/LLR it Verifies (a bare integer; blank only on a pre-ratification Draft row). See process.md 'Phased delivery'."

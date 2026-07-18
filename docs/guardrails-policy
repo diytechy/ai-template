@@ -1,0 +1,18 @@
+# Guardrails policy (process-options.md "Tier-conditional guardrails") — which
+# sessions get the vendored guardrails core prepended, keyed by model substring.
+# One value on the last line:
+#   off               — never (the current setting).
+#   all               — every session.
+#   all except <sub>  — every session except the named frontier model(s).
+#   <sub> [<sub> ...] — an allowlist (e.g. `sonnet` to guard just the quick tier).
+#
+# SET TO `off` (WI-107): guarding requires the vendored docs/guardrails/core.md
+# (from the guardrails sibling repo TheColliny/FableClaudeMDForOpus, drift-checked
+# by check_vendored.py). That content is owner-ruled to live upstream and pulled
+# downstream via the vendoring layer — NOT built in this kit repo (docs/status.md
+# "External follow-up"), so no core.md is present here. A guarding token (e.g.
+# `sonnet`) with no core would draw agent_loop's "running without the guardrails
+# core" warning every run; `off` is the honest state until the core is vendored.
+# Flip to `sonnet` (guard the quick tier) once docs/guardrails/core.md lands and
+# check_vendored.py is green.
+off

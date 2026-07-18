@@ -1,0 +1,2 @@
+- [MAJOR] project-trajectory/scripts/gen_trajectory.py:570 -> `STATUS_GLYPH` is applied only by `when_view()`'s tiered drill; the <=3-item `dag_svg()` fallback still shows the bare WI id while status is encoded solely by its `STATUS_FILL` hue. This violates SR-052/A3's "every status" floor for small registries, despite the new test covering only the drill path -> prefix the fallback `.wid` label (or add another visible text/shape cue) with the same status glyph and add a flat-DAG regression test -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

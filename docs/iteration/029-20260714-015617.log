@@ -1,0 +1,347 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 029
+# date: 2026-07-14 01:58
+# phase: REVIEW-A
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 110
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the reviewed commit range and governing artifacts, run the repository checks, then record only evidence-based findings in the requested review file.
+[0m# [0mTodos
+[•] Read contributor and review requirements
+[ ] Inspect work-under-review diff and impacted requirement records
+[ ] Run check and trace harnesses
+[ ] Write independent review verdict
+[0m
+[0m→ [0mRead CLAUDE.md
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m✱ [0mGlob "docs/requirements/**/*"[90m in . · 6 matches[0m
+[0m✱ [0mGlob "docs/specs/**/*"[90m in . · 15 matches[0m
+[0m
+[0m$ [0mgit status --short; git log --oneline -12; git diff --stat HEAD~1..HEAD; git diff --find-renames --find-copies HEAD~1..HEAD
+M docs/iteration_index.md
+?? docs/iteration/028-20260714-012047.log
+f082da6 WI-135 handoff fix: RUNNING + next-wi=WI-136;WI-137 (off-spine work remains)
+d203d2b WI-135 [v3]-[g2]: dashboard-ux decomposition (v3 -> G2, orphans 10 -> 0)
+886bc69 loop bookkeeping: sessions 026-027 iteration logs + index + scoreboard + review 027-A
+85c19c2 log: 025-A review remediation session + WI-135 handoff note
+389a709 loop bookkeeping: sessions 024-025 iteration logs + index + scoreboard + review 025-A
+bab9f46 review(025-A) fix: drop backward-looking batch-landed clause from status.md
+6c8a927 status currency: closed WI ids leave the working surface (R-D warn)
+f242d7e WI-134 close [v3]-[g1]: ratify the v3 batch Draft->Planned (G1 LLM-gate review)
+897abb3 WI-134 [v3]-[g1]: draft the dashboard-ux SRs + the sanctioned SR-051 rev (phase v3 opens)
+7172900 WI-140: pin the SVG per-node <title> tooltip contract (review 019 MINOR)
+a4866ec WI-139: llr_exempt predicate pinned across trace/derive_gate (review 017 MAJOR)
+3113f1b review(023-A) fix: byte-budget-guard step 3 + report shape cover PROCESS_OPTIONS.md
+ docs/log.md    | 18 +++++++++++++++---
+ docs/next-wi   |  2 +-
+ docs/run-state |  3 +--
+ docs/status.md | 21 ++++++++++++---------
+ 4 files changed, 29 insertions(+), 15 deletions(-)
+diff --git a/docs/log.md b/docs/log.md
+index f1d2494..c7ef3eb 100644
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -4781,6 +4781,18 @@ WI-141…144 are named).
+ 
+ **Owner sitting due (OI-8).** Under `single-ratify` the one human ratification
+ lands at the phase's g2 close — this close. The decomposition is committed and
+-the floor is green; `docs/next-wi` → **WI-141** and run-state **NEEDS-HUMAN**
+-(ask: ratify the `[v3]-[g2]` batch — [open-items.md](open-items.md) OI-8). The
+-v3 dev slices run autonomously after. Not pushed (`push-policy: human`).
++the floor is green; the sitting's brief is [open-items.md](open-items.md) OI-8.
++Not pushed (`push-policy: human`).
++
++**Handoff correction (same session).** The driver first wrote run-state
++**NEEDS-HUMAN** / `docs/next-wi` → WI-141, halting for OI-8. `check_trajectory`'s
++pre-commit guard flagged it: *"NEEDS-HUMAN but actionable queued WI(s)
++WI-136;WI-137;WI-138 … have all hard predecessors done — is the pause still
++real?"* It was not: `single-ratify`'s "autonomous after" gates only **v3's own**
++dev slices (WI-141→144) behind the owner, while **WI-136/137/138 are off-spine,
++owner-triaged, and independent of v3** — autonomous work remains, so a
++walk-away run should not idle. Corrected to run-state **RUNNING**,
++`docs/next-wi` → **WI-136;WI-137** (the off-spine `;`-batch). OI-8 stays a
++pending owner decision gating only the v3 slices; when the loop exhausts the
++off-spine tail, the only remaining work is OI-8-gated and a driver then stops
++NEEDS-HUMAN for the sitting.
+diff --git a/docs/next-wi b/docs/next-wi
+index d172559..5b7c7ab 100644
+--- a/docs/next-wi
++++ b/docs/next-wi
+@@ -7,4 +7,4 @@
+ # — one session, one review round, strongest-member pin (WI-133); an
+ # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
+ # The DRIVER maintains this alongside docs/status.md Next action.
+-WI-141
++WI-136;WI-137
+diff --git a/docs/run-state b/docs/run-state
+index 573c354..495a3df 100644
+--- a/docs/run-state
++++ b/docs/run-state
+@@ -2,5 +2,4 @@
+ # the root agent-resume.* launchers). RUNNING while work remains; a driver
+ # writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may
+ # carry one `ask:` line naming the act — the stop banner headlines it (WI-127).
+-NEEDS-HUMAN
+-ask: ratify the [v3]-[g2] dashboard-ux batch (single-ratify's one human sitting at the phase g2 close) — brief in docs/open-items.md OI-8; then re-run and the v3 dev slices WI-141->144 run autonomously.
++RUNNING
+diff --git a/docs/status.md b/docs/status.md
+index 37fbd30..bb1eda4 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -78,15 +78,18 @@ home elsewhere — don't restate it here:
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
+   via the vendoring layer — nothing to build here.
+-- **Next action:** **OI-8 — the owner's single v3 ratification sitting** at the
+-  `[v3]-[g2]` close (run-state **NEEDS-HUMAN**; `single-ratify` defers the phase's
+-  one human sign-off to here). The decomposition is committed and the mechanized
+-  floor is green; once ratified, `docs/next-wi` → **WI-141** and the v3 dev slices
+-  run G2→G3 in series (autonomous after). Parallel alternative the owner may
+-  greenlight independently: the off-spine `;`-batch **WI-136;WI-137**. The
+-  deferred `main-decomposition` campaign (**WI-080→WI-081**) stays the
+-  highest-value refactor but is parked (`deferred`, not queued). Owner items
+-  (OI-3/OI-4/OI-7, [open-items.md](open-items.md)) don't block any of these.
++- **Next action:** the off-spine `;`-batch **WI-136;WI-137** (`docs/next-wi` —
++  live console lines · telemetry commit hygiene; independent of v3, one
++  session/one review — dev-slice batching). Run-state **RUNNING**: autonomous
++  off-spine
++  work remains, so the loop does not idle. **OI-8** (the owner's single v3
++  ratification sitting at the `[v3]-[g2]` close, `single-ratify`) gates **only**
++  the v3 dev slices **WI-141→144** — they do **not** auto-run until the owner
++  ratifies (brief: [open-items.md](open-items.md) OI-8). After WI-136;WI-137
++  (then the WI-138 design), when the only remaining work is OI-8-gated the loop
++  stops NEEDS-HUMAN for the sitting. The deferred `main-decomposition` campaign
++  (**WI-080→WI-081**) stays parked (`deferred`, not queued). Owner items
++  (OI-3/OI-4/OI-7) don't block any of these.
+ 
+ ## Scope
+[0m
+[0m→ [0mRead docs/requirements/work-items.csv
+[0m✱ [0mGlob "docs/*process*"[90m in . · 0 matches[0m
+[0m→ [0mRead docs/gate-policy
+[0m→ [0mRead docs/push-policy
+[0m→ [0mRead docs/run-state
+[0m→ [0mRead docs/status.md[90m [offset=1, limit=130][0m
+[0m→ [0mRead docs/next-wi
+[0m→ [0mRead docs/open-items.md
+[0m→ [0mRead docs/specs/owner-intake-2026-07-13.md
+[0m→ [0mRead docs/specs/open-items-surface.md
+[0m
+[0m# [0mTodos
+[✓] Read contributor and review requirements
+[•] Inspect work-under-review diff and impacted requirement records
+[ ] Run check and trace harnesses
+[ ] Write independent review verdict
+[0m
+[0m✱ [0mGrep "^WI-(135|136|137|138|141|142|143|144),"[90m in docs/requirements/work-items.csv · 8 matches[0m
+[0m✱ [0mGrep "single-ratify|DEV-SLICE BATCH|next-wi|NEEDS-HUMAN|RUNNING"[90m in project-trajectory/PROCESS_OPTIONS.md · 59 matches[0m
+[0m✱ [0mGrep "^SN-|^SR-05[1-6]|^LLR-05[2-7]|^TC-05[2-7]"[90m in docs/requirements/stakeholder-needs.md · 12 matches[0m
+[0m✱ [0mGrep "^SR-05[1-6],"[90m in docs/requirements/system-requirements.csv · 6 matches[0m
+[0m✱ [0mGrep "single-ratify|NEEDS-HUMAN|next-wi|RUNNING"[90m in project-trajectory/PROCESS.md · 59 matches[0m
+[0m✱ [0mGrep "^LLR-05[2-7],"[90m in docs/requirements/low-level-requirements.csv · 6 matches[0m
+[0m→ [0mRead docs/specs/WI-133.md
+[0m✱ [0mGrep "^TC-05[2-7],"[90m in docs/test/test-cases.csv · 6 matches[0m
+The changed handoff aligns with the declared `single-ratify` rule to finish independent work; I’m now validating it against the actual coordinator checks rather than the commit narrative.
+[0m✱ [0mGlob "scripts/*.py"[90m in . · 0 matches[0m
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md[90m [offset=310, limit=30][0m
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md[90m [offset=510, limit=32][0m
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md[90m [offset=775, limit=24][0m
+[0m→ [0mRead project-trajectory/scripts/check_trajectory.py[90m [offset=900, limit=55][0m
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --root . --gate G2
+usage: check.py [-h] [--gate {G1,G2,G3,all}] [--tier {smoke,full,release,all}]
+                [--coverage COVERAGE] [--phase PHASE] [--lenient] [--list]
+                [--run-step NAME] [--run-steps NAMES] [--jobs N]
+check.py: error: unrecognized arguments: --root .
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --root . --strict
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+[0m✱ [0mGrep "^VERDICT:"[90m in docs/reviews · 11 matches[0m
+[0m✱ [0mGrep "VERDICT:|log\.md block"[90m in project-trajectory/scripts/agent_loop.py · 8 matches[0m
+[0m
+[0m$ [0mgit diff --check HEAD~1..HEAD; git status --short
+M docs/iteration_index.md
+?? docs/iteration/028-20260714-012047.log
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G2
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 placeholders=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - OI-1: a Needs-<human> item in status.md with no `## OI-1` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-2: a Needs-<human> item in status.md with no `## OI-2` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-5: a Needs-<human> item in status.md with no `## OI-5` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-6: a Needs-<human> item in status.md with no `## OI-6` section in open-items.md (every owner ask carries its brief)
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 62 doc(s), 297 intra-repo link(s), 0 broken (15 orphan warning(s)).
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (144 work item(s), 124 done (86%), graph acyclic).
+
+========================================================
+Check summary (gate G2, tier all):
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.1s
+  PASS  privacy          0.4s
+  PASS  doc-navigability 7.3s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+========================================================
+RESULT: PASS
+[0m
+[0m→ [0mRead project-trajectory/scripts/agent_loop.py[90m [offset=200, limit=58][0m
+[0m
+[0m$ [0mgit show --format=fuller --stat HEAD; git diff --name-only HEAD~1..HEAD; git diff --check HEAD~1..HEAD
+commit f082da6dbc594b2fe2380ebb9b6838385ec97789
+Author:     / <peterandersjohnson@outlook.com>
+AuthorDate: Tue Jul 14 01:55:39 2026 -0500
+Commit:     / <peterandersjohnson@outlook.com>
+CommitDate: Tue Jul 14 01:55:39 2026 -0500
+
+    WI-135 handoff fix: RUNNING + next-wi=WI-136;WI-137 (off-spine work remains)
+    
+    The WI-135 close first wrote run-state NEEDS-HUMAN / next-wi=WI-141, halting for
+    the OI-8 owner sitting. check_trajectory's pre-commit guard flagged it:
+    "NEEDS-HUMAN but actionable queued WI(s) WI-136;WI-137;WI-138 ... have all hard
+    predecessors done -- is the pause still real?"
+    
+    It was not. single-ratify's "autonomous after" gates only v3's OWN dev slices
+    (WI-141->144) behind the owner; WI-136/137/138 are off-spine, owner-triaged, and
+    independent of v3, so a walk-away run should not idle waiting for the sitting.
+    
+    Corrected: run-state RUNNING, docs/next-wi -> WI-136;WI-137 (the off-spine
+    ;-batch). OI-8 stays a pending owner decision gating only the v3 slices; when the
+    loop exhausts the off-spine tail, a driver stops NEEDS-HUMAN for the sitting.
+    status.md Next action reframed; log.md records the correction. Dropped the "per
+    WI-133" token (done id) from status.md to keep R-D clean.
+    
+    check_trajectory --strict clean; smoke 565 passed; check_docs --stale exit 0.
+    Not pushed (push-policy: human).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ docs/log.md    | 18 +++++++++++++++---
+ docs/next-wi   |  2 +-
+ docs/run-state |  3 +--
+ docs/status.md | 21 ++++++++++++---------
+ 4 files changed, 29 insertions(+), 15 deletions(-)
+docs/log.md
+docs/next-wi
+docs/run-state
+docs/status.md
+[0m
+[0m$ [0mgit diff --no-index -- /dev/null docs/reviews/029-REVIEW-A.md
+error: Could not access 'docs/reviews/029-REVIEW-A.md'
+[0m
+Both independent harness runs pass: `check.py --gate G2` reports `RESULT: PASS`, and strict trace reports `orphans=0 integrity=0`. No defect was found in the four-file handoff diff.
+[0m# [0mTodos
+[✓] Read contributor and review requirements
+[✓] Inspect work-under-review diff and impacted requirement records
+[✓] Run check and trace harnesses
+[•] Write independent review verdict
+[0m
+[0m$ [0mTest-Path -LiteralPath "docs\reviews"
+True
+[0m
+[0m% [0mPatch 1 file
+[0m→ [0mRead docs/reviews/029-REVIEW-A.md
+[0m
+[0m$ [0mgit diff --check; git status --short
+warning: in the working copy of 'docs/iteration_index.md', CRLF will be replaced by LF the next time Git touches it
+ M docs/iteration_index.md
+?? docs/iteration/028-20260714-012047.log
+?? docs/reviews/029-REVIEW-A.md
+[0m
+[0m# [0mTodos
+[✓] Read contributor and review requirements
+[✓] Inspect work-under-review diff and impacted requirement records
+[✓] Run check and trace harnesses
+[✓] Write independent review verdict
+[0m
+Review recorded in `docs/reviews/029-REVIEW-A.md`.
+
+`check.py --gate G2`: PASS.  
+`trace.py --strict`: `orphans=0 integrity=0`.

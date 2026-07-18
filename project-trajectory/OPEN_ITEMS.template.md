@@ -1,0 +1,32 @@
+# Open items — owner decision briefs
+
+The **single owner-review surface**: one section per pending decision, with the
+context needed to rule — what's being decided, blast radius, options with
+pros/cons, and the driver's recommendation. [status.md](status.md) carries only
+the one-line form of each `OI-N` (its Needs-\<human> bullet links here); the
+work DAG stays in `docs/requirements/work-items.csv`. **A section lives here
+only while the decision is pending** — the ruling appends to
+[log.md](log.md)'s Decisions log and the section is deleted, so this file only
+ever holds live decisions (no third source of truth: `work-items.csv` =
+tracking, this file = pre-ruling analysis, `log.md` = post-ruling record).
+
+Put ratification/gate blockers first; independent rulings the same sitting can
+absorb follow. Content quality is a reviewer's job — `check_docs.py` only
+warns on structure (every Needs-\<human> `OI-N` in status.md has a section
+here, and every section id appears in status.md; see process-options.md
+"Trajectory / work-items layer").
+
+---
+
+## OI-1 — Decide: keep or drop the legacy export flag
+
+_(Example — replace with your first real decision; keep the id in sync with
+status.md's Needs-\<human> bullet.)_
+
+- **Decision:** whether the legacy `--export-v1` flag ships in the first
+  release or is dropped now.
+- **Blast radius:** the public CLI surface — dropping it later is a breaking
+  change; keeping it means maintaining the v1 writer.
+- **Options:** keep (compat, carries the v1 writer) · drop (clean surface,
+  breaks two known downstream scripts).
+- **Recommendation:** drop — both downstream scripts already migrated.

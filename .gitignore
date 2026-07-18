@@ -1,9 +1,25 @@
 # Python tooling artifacts from running/​testing the kit scripts
+.venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .coverage
+.coverage.*
 .ruff_cache/
 
 # Generated reports (downstream repos generate these into docs/test/)
 docs/test/report.md
+docs/test/report.html
+
+# Raw unattended-session streams (agent_loop.py); the tracked, size-bounded
+# copies live in docs/iteration/
+out/
+
+# macOS Finder metadata (appears anywhere you browse the tree in Finder)
+.DS_Store
+
+# Meta-only dashboard render-critique tooling (WI-189): the pinned Playwright
+# install + its screenshot output are dev artifacts, not tracked. Dependency
+# resolution is committed in package-lock.json so the documented npm ci works.
+scripts/dashboard-shots/node_modules/
+scripts/dashboard-shots/shots/

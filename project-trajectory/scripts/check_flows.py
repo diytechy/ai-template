@@ -12,16 +12,20 @@ inferring it from registry rows.
 This checker keeps that section honest (stdlib only, like trace.py):
 
     python scripts/check_flows.py [--doc docs/architecture.md] [--docs docs]
-                                  [--require N]
+                                  [--require N] [--no-placeholders]
 
 Failures (exit 1):
     - the doc has no "Runtime flows" heading;
     - the section contains fewer than N (default 1) ```mermaid blocks;
     - a diagram cites no SR/LLR id at all (flows must stay traceable);
-    - a cited SR/LLR/UN/TC id does not exist in the registries.
+    - a cited SR/LLR/SN/TC id does not exist in the registries.
 
 Placeholder ids ending in "-000" (the templates' examples) satisfy the
 "cites an id" rule and are never validated, so a fresh scaffold starts green.
+--no-placeholders (wire it in from G2 on) instead *flags* every cited "-000"
+id, so a real authored flow can't keep citing the template's example ids.
+
+Contracts: IF-003, IF-029 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
@@ -30,7 +34,20 @@ import re
 import sys
 from pathlib import Path
 
-ID_RE = re.compile(r"\b(SR|LLR|UN|TC)-\d+\b")
+
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
+    non-ASCII heading echoed in a finding can't raise UnicodeEncodeError on a
+    legacy Windows cp1252 console. Python 3.7+ streams expose `.reconfigure`;
+    guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
+ID_RE = re.compile(r"\b(SR|LLR|SN|TC)-\d+\b")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
 SECTION_TITLE = "runtime flows"
 
@@ -48,11 +65,11 @@ def load_ids(docs):
         "SR": col(docs / "requirements" / "system-requirements.csv", "SR-ID"),
         "LLR": col(docs / "requirements" / "low-level-requirements.csv", "LLR-ID"),
         "TC": col(docs / "test" / "test-cases.csv", "TC-ID"),
-        "UN": set(),
+        "SN": set(),
     }
-    un_md = docs / "requirements" / "user-needs.md"
-    if un_md.exists():
-        known["UN"] = set(re.findall(r"\bUN-\d+\b", un_md.read_text(encoding="utf-8")))
+    sn_md = docs / "requirements" / "stakeholder-needs.md"
+    if sn_md.exists():
+        known["SN"] = set(re.findall(r"\bSN-\d+\b", sn_md.read_text(encoding="utf-8")))
     return known
 
 
@@ -81,6 +98,7 @@ def mermaid_blocks(section):
 
 
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--doc",
@@ -94,6 +112,11 @@ def main():
         default=1,
         metavar="N",
         help="minimum number of flow diagrams (default: 1)",
+    )
+    ap.add_argument(
+        "--no-placeholders",
+        action="store_true",
+        help="flag cited '-000' template ids instead of ignoring them (G2 on)",
     )
     args = ap.parse_args()
 
@@ -128,7 +151,12 @@ def main():
     for m in ID_RE.finditer(section):
         rid, kind = m.group(0), m.group(1)
         if rid.endswith("-000"):
-            continue  # template placeholder - never validated
+            if args.no_placeholders:
+                problems.append(
+                    f"placeholder id still cited: {rid} (replace the template "
+                    "example flow with real SR/LLR ids before this gate)"
+                )
+            continue  # otherwise a template placeholder - never validated
         if rid not in known[kind]:
             problems.append(f"unknown id cited: {rid}")
 

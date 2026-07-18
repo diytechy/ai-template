@@ -1,0 +1,13 @@
+# Push policy (process.md §7; process-options.md "Agent iteration branch &
+# sync"). One value on the last line — who may publish (`git push`) this repo:
+#   human           — the default: an agent never pushes, even if asked
+#                     mid-session; it prepares the branch and requests a push.
+#   agent-iteration — an agent may push only the scrubbed llm/<branch>
+#                     iteration branch; the development branch stays
+#                     human-pushed.
+#   agent           — an agent may push the development branch after a landed
+#                     sync (full delegation, still gated by the sync ritual).
+# A process rule honored by agent drivers and coordinators (hooks are
+# per-clone and can only assist). Change this value in a reviewed commit,
+# like docs/gate.
+human

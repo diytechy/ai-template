@@ -1,0 +1,45 @@
+# agent-review scoreboard (advisory; the declared win-stay/lose-shift
+# policy picks the next routing - nothing here auto-optimizes). Written
+# by score_reviews.py. Per-provider decayed substance + the round history
+# the escalation policy (agent_route.escalate) reads.
+provider ANTHROPIC substance=2.1914 rounds=12
+provider OPENAI substance=2.2221 rounds=27
+round 1 verdict=APPROVE tier=strong margin=0 primary= tripwire=0 contradiction=0
+round 2 verdict=APPROVE tier=strong margin=0 primary= tripwire=1 contradiction=0
+round 3 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 4 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 5 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 6 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 7 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 8 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 9 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 10 verdict=CHANGES-REQUESTED tier=strong margin=0 primary= tripwire=1 contradiction=0
+round 11 verdict=APPROVE tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 12 verdict=APPROVE tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 13 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 14 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 15 verdict=APPROVE tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 16 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 17 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 18 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 19 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 20 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 21 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 22 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 23 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 24 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 25 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 26 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 27 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 28 verdict=CHANGES-REQUESTED tier=strong margin=0 primary= tripwire=0 contradiction=0
+round 29 verdict=APPROVE tier=strong margin=0 primary= tripwire=1 contradiction=0
+round 30 verdict=APPROVE tier=strong margin=0 primary= tripwire=0 contradiction=0
+round 31 verdict=CHANGES-REQUESTED tier=strong margin=0 primary= tripwire=0 contradiction=0
+round 32 verdict=APPROVE tier=strong margin=0 primary= tripwire=0 contradiction=0
+round 33 verdict=CHANGES-REQUESTED tier=strong margin=0 primary= tripwire=0 contradiction=0
+round 34 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 35 verdict=APPROVE tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 36 verdict=APPROVE tier=strong margin=0 primary= tripwire=0 contradiction=0
+round 37 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=1 contradiction=0
+round 38 verdict=CHANGES-REQUESTED tier=medium margin=0 primary= tripwire=0 contradiction=0
+round 39 verdict=APPROVE tier=strong margin=0 primary= tripwire=1 contradiction=0

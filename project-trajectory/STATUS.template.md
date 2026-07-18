@@ -1,23 +1,62 @@
 # Project Status — Blackboard
 
-Live coordination for the gated process (see [process.md](process.md)). Keep the
-**Current State** header short and current; append the audit log below (newest
-last) — it is the record, not required reading for every pass.
+The **working surface** for the gated process (see [process.md](process.md)):
+this whole file holds only what the agent or human must perform **next**. Keep
+every section short and current; history — sign-offs, verdicts, ratified
+decisions, session notes — appends to the log this header points at, never here.
+
+- **History:** [log.md](log.md) _(append-only; see process.md §5)_
+- **Owner decision briefs:** [open-items.md](open-items.md) _(one `## OI-N`
+  section per pending Needs-\<human> decision — blast radius, options,
+  recommendation; the bullet here stays a one-liner. A ruling appends to the
+  log's Decisions and the section is removed.)_
+- **Work plan:** [plan.md](plan.md) _(the sequenced session blocks the
+  plan/build cadence executes; the "Next action" below names the current
+  block — see process-options.md "Plan/build cadence")_
+- **Work items?** _(on but vacuous until you track work items — ignore this
+  line.)_ The trajectory/work-items layer is **opt-out**, not opt-in (on by
+  default, costing nothing until a work item exists); once you use it
+  (process-options.md "Trajectory / work-items layer") the **Next action** below
+  names the next `WI-###`(s) from `docs/requirements/work-items.csv`, and
+  the root `PROJECT_STATE.html` renders the DAG (+ the What/How views). Keep this
+  surface forward-only: a **`done`** WI id must not linger here (its record is the
+  log's) — `check_trajectory` flags one as a finding (warn / ERROR `--strict`),
+  unless status.md is a generated snapshot.
 
 ---
 
 ## Current State
 
-- **Active gate:** G1 — Requirements, UX & constraints
+- **Active gate:** G1 — Requirements, UX & constraints _(mirror it in the
+  one-line `docs/gate` file — `check.py`/CI read that; see process.md §7)_
 - **Round:** 1
-- **Open items:** _(the few things blocking the current gate, by ID)_
+- **Open items:** _(the few things blocking the current gate — **one bullet per
+  item, never inline-enumerated prose**. Give each a stable short id (OI-1,
+  OI-2, … — ids are never renumbered; closed items are removed or struck
+  through) so a human can cite it from memory; add an optional `blocks:` clause
+  naming what the item holds up (a gate, a TC — omit it when nothing waits);
+  end every bullet with a link to the artifact it concerns; keep the two
+  sub-lists below. Any deferrals/decisions list follows the same bullet
+  discipline.)_
+  - **Needs <human>** _(state the decision wanted, per item — **gate/ratification
+    blockers first**; keep each a one-liner and put the depth in
+    [open-items.md](open-items.md))_:
+    - OI-1 — decide: keep or drop the legacy export flag (blocks: G1) →
+      [system-requirements.csv](requirements/system-requirements.csv)
+  - **In flight** _(driver; no approval needed)_:
+    - OI-2 — pinning SR-000's acceptance predicate →
+      [system-requirements.csv](requirements/system-requirements.csv)
+- **Assumptions (unattended):** _(decisions taken without sign-off while running
+  unattended — each to confirm or revert at the next gate; see AGENTS.md "Ask,
+  don't assume". Once ratified, move the entry to the log's Decisions log.)_
 - **Next action:** _(what happens next + who must approve)_
 
 ## Scope (restated from the brief)
 
 - **Goal:**
-- **End user(s):**
-- **Active hats:** End User, UX/Docs, System Engineer, Software Engineer, Test
+- **Stakeholders / end user(s):** _(who or what the system serves — humans,
+  operators, or another system, represented by its owner)_
+- **Active hats:** Stakeholder, UX/Docs, System Engineer, Software Engineer, Test
   Engineer _(+ any domain hats this scope needs, e.g. Network / Security / Data /
   Hardware — see process.md §1)_
 - **Supported platforms:** _(Linux / macOS / Windows — drives which setup/check
@@ -25,25 +64,3 @@ last) — it is the record, not required reading for every pass.
 - **Constraints:**
 - **Non-goals:**
 - **Definition of done:**
-
-## Gate Sign-offs
-
-Add columns for any active domain hats. Drop the `G-Release` row for a one-off
-deliverable.
-
-| Gate | End User | UX/Docs | System Eng | Test Eng | Human |
-|---|---|---|---|---|---|
-| G1 — Requirements/UX/Constraints | PENDING | PENDING | PENDING | n/a | PENDING |
-| G2 — Decomposition & Test Coverage | n/a | n/a | PENDING | PENDING | PENDING |
-| G3 — Implementation | n/a | n/a | PENDING | PENDING | PENDING |
-| G-Release — Release readiness | n/a | n/a | n/a | PENDING | PENDING |
-| G-Final — Acceptance | PENDING | n/a | n/a | (evidence) | PENDING |
-
----
-
-## Audit log
-
-<!-- Append verdict blocks here per process.md §5. Newest at the bottom. -->
-
-### DRIVER — G1 — Round 1 — <YYYY-MM-DD>
-Scaffolding created. Starting G1.

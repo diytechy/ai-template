@@ -1,0 +1,484 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 031
+# date: 2026-07-14 02:29
+# phase: REVIEW-A
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 173
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the committed work and governing requirement sources, then run the repository checks before writing the requested review record.
+[0m# [0mTodos
+[•] Read contributor and requirement-surface guidance
+[ ] Inspect work-under-review diff and affected registries
+[ ] Run independent validation harness
+[ ] Write review verdict in required log format
+[0m
+[0m→ [0mRead CLAUDE.md
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m✱ [0mGlob "docs/requirements/**/*"[90m in . · 6 matches[0m
+[0m✱ [0mGlob "docs/specs/**/*"[90m in . · 15 matches[0m
+[0m→ [0mRead AGENTS.md
+[0m
+[0m$ [0mgit status --short; git log --oneline -12; git diff --stat HEAD~1..HEAD; git diff --find-renames --find-copies HEAD~1..HEAD
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f5f8528cd001t4s7XAb8ufEWj9
+
+-| 020 | 2026-07-13 18:11 | BUILD | gpt-5.6-terra | NEEDS-HUMAN | 166d080..24c3ad4 | — | — | 956 | — | — | — | — | [020-20260713-175532.log](iteration/020-20260713-175532.log) |
+-| 021 | 2026-07-13 20:40 | BUILD | opus | NEEDS-HUMAN | ddcf4d9..5b3e4ef | 115+36075 | 3.7873385000000006 | 1743 | 806 | 67 | 12.0 | 59k | [021-20260713-201146.log](iteration/021-20260713-201146.log) |
+-| 022 | 2026-07-14 00:21 | BUILD | opus | COMMITTED | 6ced435..3ebb49e | 8536+120381 | 12.059868000000003 | 2061 | 1705 | 184 | 9.3 | 71k | [022-20260713-234644.log](iteration/022-20260713-234644.log) |
+-| 023 | 2026-07-14 00:28 | REVIEW-A | gpt-5.6-terra | NO-COMMIT | — | — | — | 464 | — | — | — | — | [023-20260714-002115.log](iteration/023-20260714-002115.log) |
+-| 024 | 2026-07-14 01:09 | BUILD | claude-fable-5 | COMMITTED | 3ebb49e..6c8a927 | 5672+89135 | 22.132517999999997 | 2392 | 1700 | 140 | 12.1 | 94k | [024-20260714-002909.log](iteration/024-20260714-002909.log) |
+-| 025 | 2026-07-14 01:10 | REVIEW-A | gpt-5.6-terra | NO-COMMIT | — | — | — | 83 | — | — | — | — | [025-20260714-010911.log](iteration/025-20260714-010911.log) |
+-| 026 | 2026-07-14 01:19 | BUILD | opus | COMMITTED | 6c8a927..85c19c2 | 14811+21911 | 2.2000580000000003 | 507 | 338 | 31 | 10.9 | 44k | [026-20260714-011044.log](iteration/026-20260714-011044.log) |
+-| 027 | 2026-07-14 01:20 | REVIEW-A | gpt-5.6-terra | NO-COMMIT | — | — | — | 76 | — | — | — | — | [027-20260714-011921.log](iteration/027-20260714-011921.log) |
+-| 028 | 2026-07-14 01:56 | BUILD | opus | COMMITTED | 85c19c2..f082da6 | 24567+106652 | 10.893432 | 2119 | 1653 | 89 | 18.6 | 134k | [028-20260714-012047.log](iteration/028-20260714-012047.log) |
+-| 029 | 2026-07-14 01:58 | REVIEW-A | gpt-5.6-terra | NO-COMMIT | — | — | — | 110 | — | — | — | — | [029-20260714-015617.log](iteration/029-20260714-015617.log) |
++| # | Date | Phase | WI | Model | Outcome | Commits | Tokens | Cost USD | Wall s | API s | Turns | s/turn | Ctx/turn | Log |
++|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
++| 001 | 2026-07-12 22:22 | BUILD | — | claude-fable-5 | COMMITTED | 6ae82d9..28dc890 | 7332+88596 | 18.022842 | — | — | — | — | — | [001-20260712-214428.log](iteration/001-20260712-214428.log) |
++| 002 | 2026-07-12 22:22 | REVIEW-A | — | gpt-5.6-terra | ERROR | — | — | — | — | — | — | — | — | [002-20260712-222249.log](iteration/002-20260712-222249.log) |
++| 003 | 2026-07-12 22:32 | REVIEW-A | — | opus | COMMITTED | 28dc890..481e374 | 12274+27740 | 2.1763235 | — | — | — | — | — | [003-20260712-222259.log](iteration/003-20260712-222259.log) |
++| 004 | 2026-07-12 23:00 | BUILD | — | claude-fable-5 | COMMITTED | 481e374..a411062 | 4974+63172 | 13.466216999999997 | — | — | — | — | — | [004-20260712-223217.log](iteration/004-20260712-223217.log) |
++| 005 | 2026-07-12 23:01 | REVIEW-A | — | gpt-5.6-terra | ERROR | — | — | — | — | — | — | — | — | [005-20260712-230110.log](iteration/005-20260712-230110.log) |
++| 006 | 2026-07-12 23:10 | REVIEW-A | — | opus | COMMITTED | a411062..48ef547 | 4267+23813 | 2.2637535000000004 | — | — | — | — | — | [006-20260712-230120.log](iteration/006-20260712-230120.log) |
++| 007 | 2026-07-13 15:10 | BUILD | — | opus | COMMITTED | d854099..05fb2fb | 10530+101538 | 12.133408000000003 | 2014 | 1472 | 112 | 13.1 | 136k | [007-20260713-143706.log](iteration/007-20260713-143706.log) |
++| 008 | 2026-07-13 15:17 | REVIEW-A | — | gpt-5.6-terra | NO-COMMIT | — | — | — | 405 | — | — | — | — | [008-20260713-151051.log](iteration/008-20260713-151051.log) |
++| 009 | 2026-07-13 15:34 | BUILD | — | opus | COMMITTED | 05fb2fb..058f033 | 5031+40958 | 4.367549499999999 | 990 | 678 | 54 | 12.6 | 80k | [009-20260713-151746.log](iteration/009-20260713-151746.log) |
++| 010 | 2026-07-13 15:39 | REVIEW-A | — | gpt-5.6-terra | NO-COMMIT | — | — | — | 279 | — | — | — | — | [010-20260713-153426.log](iteration/010-20260713-153426.log) |
++| 011 | 2026-07-13 16:02 | BUILD | — | opus | COMMITTED | 058f033..1391ef4 | 4465+61342 | 4.9559385 | 1386 | 974 | 52 | 18.7 | 81k | [011-20260713-153915.log](iteration/011-20260713-153915.log) |
++| 012 | 2026-07-13 16:06 | REVIEW-A | — | gpt-5.6-terra | NO-COMMIT | — | — | — | 243 | — | — | — | — | [012-20260713-160231.log](iteration/012-20260713-160231.log) |
++| 013 | 2026-07-13 16:23 | BUILD | — | opus | COMMITTED | 1391ef4..6123db4 | 13656+43822 | 4.473994500000002 | 992 | 670 | 56 | 12.0 | 78k | [013-20260713-160644.log](iteration/013-20260713-160644.log) |
++| 014 | 2026-07-13 16:29 | REVIEW-A | — | gpt-5.6-terra | NO-COMMIT | — | — | — | 379 | — | — | — | — | [014-20260713-162326.log](iteration/014-20260713-162326.log) |
++| 015 | 2026-07-13 17:01 | BUILD | — | opus | NO-COMMIT | — | — | — | 1873 | — | — | — | — | [015-20260713-162955.log](iteration/015-20260713-162955.log) |
++| 016 | 2026-07-13 17:15 | BUILD | — | opus | COMMITTED | 6123db4..850dc1d | 4693+38147 | 3.7169055 | 850 | 571 | 62 | 9.2 | 60k | [016-20260713-170119.log](iteration/016-20260713-170119.log) |
++| 017 | 2026-07-13 17:20 | REVIEW-A | — | gpt-5.6-terra | NO-COMMIT | — | — | — | 279 | — | — | — | — | [017-20260713-171539.log](iteration/017-20260713-171539.log) |
++| 018 | 2026-07-13 17:50 | BUILD | — | opus | COMMITTED | 850dc1d..166d080 | 6617+85769 | 11.822550999999997 | 1788 | 1317 | 151 | 8.7 | 106k | [018-20260713-172028.log](iteration/018-20260713-172028.log) |
++| 019 | 2026-07-13 17:55 | REVIEW-A | — | gpt-5.6-terra | NO-COMMIT | — | — | — | 295 | — | — | — | — | [019-20260713-175026.log](iteration/019-20260713-175026.log) |
++| 020 | 2026-07-13 18:11 | BUILD | — | gpt-5.6-terra | NEEDS-HUMAN | 166d080..24c3ad4 | — | — | 956 | — | — | — | — | [020-20260713-175532.log](iteration/020-20260713-175532.log) |
++| 021 | 2026-07-13 20:40 | BUILD | — | opus | NEEDS-HUMAN | ddcf4d9..5b3e4ef | 115+36075 | 3.7873385000000006 | 1743 | 806 | 67 | 12.0 | 59k | [021-20260713-201146.log](iteration/021-20260713-201146.log) |
++| 022 | 2026-07-14 00:21 | BUILD | — | opus | COMMITTED | 6ced435..3ebb49e | 8536+120381 | 12.059868000000003 | 2061 | 1705 | 184 | 9.3 | 71k | [022-20260713-234644.log](iteration/022-20260713-234644.log) |
++| 023 | 2026-07-14 00:28 | REVIEW-A | — | gpt-5.6-terra | NO-COMMIT | — | — | — | 464 | — | — | — | — | [023-20260714-002115.log](iteration/023-20260714-002115.log) |
++| 024 | 2026-07-14 01:09 | BUILD | — | claude-fable-5 | COMMITTED | 3ebb49e..6c8a927 | 5672+89135 | 22.132517999999997 | 2392 | 1700 | 140 | 12.1 | 94k | [024-20260714-002909.log](iteration/024-20260714-002909.log) |
++| 025 | 2026-07-14 01:10 | REVIEW-A | — | gpt-5.6-terra | NO-COMMIT | — | — | — | 83 | — | — | — | — | [025-20260714-010911.log](iteration/025-20260714-010911.log) |
++| 026 | 2026-07-14 01:19 | BUILD | — | opus | COMMITTED | 6c8a927..85c19c2 | 14811+21911 | 2.2000580000000003 | 507 | 338 | 31 | 10.9 | 44k | [026-20260714-011044.log](iteration/026-20260714-011044.log) |
+
+[... 522 line(s) elided — full stream in out/run-logs/ ...]
+
+ `ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
+ push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
+diff --git a/tests/test_agent_loop.py b/tests/test_agent_loop.py
+index 36d541d..e1a1d9f 100644
+--- a/tests/test_agent_loop.py
++++ b/tests/test_agent_loop.py
+@@ -866,3 +866,146 @@ def test_no_session_echo_silences_the_console_not_the_log(loop_repo):
+         encoding="utf-8"
+     )
+     assert "refactoring the parser" in log  # ...but the stream is captured
++
++
++# --- WI-137: telemetry commit hygiene + WI-keyed labels -----------------------
++
++
++def test_telemetry_commits_itself_not_riding_the_next_commit(loop_repo):
++    # WI-137: the coordinator commits its own bookkeeping (the iteration log +
++    # regenerated index) in its own `telemetry:` commit right after writing it —
++    # so it never dangles or rides the next session's work commit (session-021
++    # defect-shape). After a run the tree carries no uncommitted iteration file,
++    # and a telemetry commit exists naming the session.
++    repo, ctl, template = loop_repo
++    (ctl / "actions.txt").write_text("commit done", encoding="utf-8")
++    proc = _loop(repo, template)
++    assert proc.returncode == 0, proc.stdout + proc.stderr
++    porcelain = _git(repo, "status", "--porcelain")
++    assert "docs/iteration" not in porcelain, "telemetry must not dangle"
++    assert "iteration_index.md" not in porcelain
++    subjects = _git(repo, "log", "--format=%s")
++    assert "telemetry: session" in subjects, subjects
++    # The telemetry commit is distinct from the session's own work commit.
++    assert "progress" in subjects and "finishing" in subjects
++    # The iteration logs are tracked, not just present on disk.
++    tracked = _git(repo, "ls-files", "docs/iteration")
++    assert tracked.count(".log") == 2
++
++
++def test_telemetry_commit_is_best_effort_when_the_hook_vetoes(loop_repo):
++    # WI-137 never-breaking: a pre-commit hook that vetoes the telemetry commit
++    # must not abort the run — the files stay in the tree (today's behavior) and
++    # the loop keeps going. Simulate with a hook that always fails; noop sessions
++    # never make a work commit, so only the telemetry commit meets the veto.
++    repo, ctl, template = loop_repo
++    hook = repo / ".git" / "hooks" / "pre-commit"
++    hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
++    hook.chmod(0o755)
++    (ctl / "actions.txt").write_text("noop noop", encoding="utf-8")
++    proc = _loop(repo, template, "--max-iterations", "2", "--stall-limit", "9")
++    assert proc.returncode == 6, proc.stdout + proc.stderr  # budget, not a crash
++    assert "telemetry commit skipped" in proc.stderr
++    assert len(sorted((repo / "docs" / "iteration").glob("*.log"))) == 2  # on disk
++
++
++def test_wi_label_recorded_in_log_header_and_index(loop_repo):
++    # WI-137: docs/next-wi (the WI the session claims) is captured at session
++    # start into a `# wi:` log header line and a WI index column — a `;`-batch
++    # (WI-133) is kept verbatim.
++    repo, ctl, template = loop_repo
++    (repo / "docs" / "next-wi").write_text(
++        "# comment\nWI-136;WI-137\n", encoding="utf-8"
++    )
++    (ctl / "actions.txt").write_text("done", encoding="utf-8")
++    proc = _loop(repo, template)
++    assert proc.returncode == 0, proc.stdout + proc.stderr
++    log = sorted((repo / "docs" / "iteration").glob("*.log"))[0].read_text(
++        encoding="utf-8"
++    )
++    assert "# wi: WI-136;WI-137" in log
++    index = (repo / "docs" / "iteration_index.md").read_text(encoding="utf-8")
++    assert "| WI | Model |" in index  # the new column header
++    assert "WI-136;WI-137" in index
++
++
++# --- WI-136: live per-workstream status line ----------------------------------
++
++
++def test_summarize_session_line_shapes():
++    import json
++
++    loop = load_script("agent_loop")
++    txt = json.dumps(
++        {"type": "assistant", "message": {"content": [{"type": "text", "text": "hi"}]}}
++    )
++    assert loop.summarize_session_line(txt) == ["  > hi"]
++    tool = json.dumps(
++        {
++            "type": "assistant",
++            "message": {"content": [{"type": "tool_use", "name": "Edit", "input": {}}]},
++        }
++    )
++    assert loop.summarize_session_line(tool) == ["  * Edit"]
++    # result/system events are log detail, not progress.
++    assert loop.summarize_session_line(json.dumps({"type": "result"})) == []
++    # a non-JSON plain-text line passes through.
++    assert loop.summarize_session_line("plain cli output") == ["plain cli output"]
++    assert loop.summarize_session_line("   ") == []
++
++
++def test_live_status_rewrites_one_line_in_place():
++    import io
++    import json
++
++    loop = load_script("agent_loop")
++    buf = io.StringIO()
++    old = sys.stdout
++    sys.stdout = buf
++    try:
++        ls = loop.LiveStatus("single")
++        ls.event(
++            json.dumps(
++                {
++                    "type": "assistant",
++                    "message": {
++                        "content": [{"type": "tool_use", "name": "Edit", "input": {}}]
++                    },
++                }
++            )
++        )
++        ls.event(
++            json.dumps(
++                {
++                    "type": "assistant",
++                    "message": {"content": [{"type": "text", "text": "next step"}]},
++                }
++            )
++        )
++        ls.finish()
++    finally:
++        sys.stdout = old
++    out = buf.getvalue()
++    assert "\r\x1b[2K" in out  # carriage-return + clear-to-EOL rewrite
++    assert "[single]" in out and "Edit" in out and "next step" in out
++    assert out.endswith("\n")  # finish() closes the line
++    # A no-op finish (nothing rendered) writes nothing.
++    buf2 = io.StringIO()
++    sys.stdout = buf2
++    try:
++        loop.LiveStatus("x").finish()
++    finally:
++        sys.stdout = old
++    assert buf2.getvalue() == ""
++
++
++def test_live_status_falls_back_to_scroll_on_non_tty(loop_repo):
++    # WI-136 never-breaking: --live-status on a non-TTY (the test subprocess's
++    # stdout is a pipe) must keep the append-only scroll, not emit raw escapes —
++    # CI logs stay readable. The scrolling summaries still appear.
++    repo, ctl, template = loop_repo
++    (ctl / "actions.txt").write_text("stream-done", encoding="utf-8")
++    proc = _loop(repo, template, "--live-status")
++    assert proc.returncode == 0, proc.stdout + proc.stderr
++    assert "> refactoring the parser" in proc.stdout  # scrolled, not rewritten
++    assert "\x1b[2K" not in proc.stdout  # no in-place escapes on a non-TTY
+[0m
+[0m→ [0mRead docs/specs/owner-intake-2026-07-13.md[90m [offset=1, limit=260][0m
+[0m→ [0mRead docs/requirements/work-items.csv[90m [offset=130, limit=25][0m
+[0m→ [0mRead docs/requirements/system-requirements.csv
+[0m→ [0mRead docs/requirements/low-level-requirements.csv
+[0m→ [0mRead docs/requirements/stakeholder-needs.md
+[0m✱ [0mGrep "write_session_log|commit_telemetry|regenerate_index|head_sha|commits"[90m in project-trajectory/scripts/agent_loop.py · 21 matches[0m
+[0m→ [0mRead docs/iteration_index.md[90m [offset=1, limit=80][0m
+[0m→ [0mRead project-trajectory/scripts/agent_loop.py[90m [offset=2000, limit=440][0m
+The intake requires immediate, hook-respecting telemetry commits and TTY-only live rendering. I’m now checking the changed control flow against those constraints and validating the registry/status consistency.
+[0m
+[0m# [0mTodos
+[✓] Read contributor and requirement-surface guidance
+[•] Inspect work-under-review diff and affected registries
+[ ] Run independent validation harness
+[ ] Write review verdict in required log format
+[0m
+[0m→ [0mRead docs/run-state
+[0m✱ [0mGrep "135,449|134,965"[90m in . · 3 matches[0m
+[0m→ [0mRead docs/gate-policy
+[0m→ [0mRead docs/push-policy
+[0m→ [0mRead docs/privacy-check
+[0m✱ [0mGrep "live-status|telemetry:|WI-136|WI-137"[90m in tests · 12 matches[0m
+[0m✱ [0mGrep "run-state|RUNNING|NEEDS-HUMAN"[90m in docs/status.md · 4 matches[0m
+[0m→ [0mRead project-trajectory/scripts/agent_loop.py[90m [offset=860, limit=320][0m
+[0m
+[0m$ [0mgit status --short; git log --oneline -8; git diff --name-status HEAD~1..HEAD; git diff --check HEAD~1..HEAD
+M docs/iteration_index.md
+?? docs/iteration/030-20260714-015817.log
+aba5e5f WI-136;WI-137: coordinator live status line + telemetry commit hygiene
+7348a29 @ loop bookkeeping: sessions 028-029 iteration logs + index + scoreboard + review 029-A
+f082da6 WI-135 handoff fix: RUNNING + next-wi=WI-136;WI-137 (off-spine work remains)
+d203d2b WI-135 [v3]-[g2]: dashboard-ux decomposition (v3 -> G2, orphans 10 -> 0)
+886bc69 loop bookkeeping: sessions 026-027 iteration logs + index + scoreboard + review 027-A
+85c19c2 log: 025-A review remediation session + WI-135 handoff note
+389a709 loop bookkeeping: sessions 024-025 iteration logs + index + scoreboard + review 025-A
+bab9f46 review(025-A) fix: drop backward-looking batch-landed clause from status.md
+M	.agents/skills/byte-budget-guard/SKILL.md
+M	.claude/skills/byte-budget-guard/SKILL.md
+M	PROJECT_STATE.html
+M	docs/architecture.md
+M	docs/iteration_index.md
+M	docs/log.md
+M	docs/next-wi
+M	docs/requirements/work-items.csv
+M	docs/status.md
+M	project-trajectory/PROCESS_OPTIONS.md
+M	project-trajectory/scripts/agent_loop.py
+M	project-trajectory/skills/byte-budget-guard/SKILL.md
+M	tests/test_agent_loop.py
+[0m
+[0m$ [0m$env:PYTHONDONTWRITEBYTECODE='1'; python -c "import importlib.util,pathlib,tempfile,subprocess,os; p=pathlib.Path('project-trajectory/scripts/agent_loop.py'); s=importlib.util.spec_from_file_location('agent_loop',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); d=pathlib.Path(tempfile.mkdtemp()); subprocess.run(['git','init','-q',str(d)],check=True); subprocess.run(['git','-C',str(d),'config','user.email','review@example.invalid'],check=True); subprocess.run(['git','-C',str(d),'config','user.name','Review'],check=True); (d/'a').write_text('a'); subprocess.run(['git','-C',str(d),'add','a'],check=True); subprocess.run(['git','-C',str(d),'commit','-qm','init'],check=True); target=d/'telemetry'; target.write_text('x'); h=d/'.git/hooks/pre-commit'; h.write_text('#!/bin/sh`nexit 1`n'); h.chmod(0o755); m.commit_telemetry(d,'001','test',[target]); print(subprocess.run(['git','-C',str(d),'status','--porcelain','--','telemetry'],capture_output=True,text=True).stdout.strip())"
+File "<string>", line 1
+    import importlib.util,pathlib,tempfile,subprocess,os; p=pathlib.Path('project-trajectory/scripts/agent_loop.py'); s=importlib.util.spec_from_file_location('agent_loop',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); d=pathlib.Path(tempfile.mkdtemp()); subprocess.run(['git','init','-q',str(d)],check=True); subprocess.run(['git','-C',str(d),'config','user.email','review@example.invalid'],check=True); subprocess.run(['git','-C',str(d),'config','user.name','Review'],check=True); (d/'a').write_text('a'); subprocess.run(['git','-C',str(d),'add','a'],check=True); subprocess.run(['git','-C',str(d),'commit','-qm','init'],check=True); target=d/'telemetry'; target.write_text('x'); h=d/'.git/hooks/pre-commit'; h.write_text('#!/bin/sh
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ^
+SyntaxError: EOL while scanning string literal
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py; python project-trajectory/scripts/trace.py
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 placeholders=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - OI-1: a Needs-<human> item in status.md with no `## OI-1` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-2: a Needs-<human> item in status.md with no `## OI-2` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-5: a Needs-<human> item in status.md with no `## OI-5` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-6: a Needs-<human> item in status.md with no `## OI-6` section in open-items.md (every owner ask carries its brief)
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:48 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 63 doc(s), 300 intra-repo link(s), 0 broken (16 orphan warning(s)).
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (144 work item(s), 126 done (88%), graph acyclic).
+
+========================================================
+Check summary (gate G2, tier all):
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.1s
+  PASS  privacy          0.5s
+  PASS  doc-navigability 7.8s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+========================================================
+RESULT: PASS
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_trajectory.py --strict; python project-trajectory/scripts/check_docs.py --stale; python project-trajectory/scripts/gen_skills_index.py --check-agents; python project-trajectory/scripts/gen_trajectory.py --check
+check_trajectory: clean (144 work item(s), 126 done (88%), graph acyclic).
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/test/report.md
+check_docs: WARN - OI-1: a Needs-<human> item in status.md with no `## OI-1` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-2: a Needs-<human> item in status.md with no `## OI-2` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-5: a Needs-<human> item in status.md with no `## OI-5` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-6: a Needs-<human> item in status.md with no `## OI-6` section in open-items.md (every owner ask carries its brief)
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:48 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 64 doc(s), 300 intra-repo link(s), 0 broken (17 orphan warning(s)).
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+project-state dashboard up to date.
+[0m
+[0m$ [0mpython -m pytest -q tests/test_agent_loop.py
+..................................................                       [100%]
+50 passed in 49.07s
+[0m
+[0m$ [0m$env:PYTHONDONTWRITEBYTECODE='1'; python -c "import importlib.util,pathlib,tempfile,subprocess; p=pathlib.Path('project-trajectory/scripts/agent_loop.py'); s=importlib.util.spec_from_file_location('agent_loop',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); d=pathlib.Path(tempfile.mkdtemp()); subprocess.run(['git','init','-q',str(d)],check=True); subprocess.run(['git','-C',str(d),'config','user.email','review@example.invalid'],check=True); subprocess.run(['git','-C',str(d),'config','user.name','Review'],check=True); (d/'a').write_text('a'); subprocess.run(['git','-C',str(d),'add','a'],check=True); subprocess.run(['git','-C',str(d),'commit','-qm','init'],check=True); target=d/'telemetry'; target.write_text('x'); h=d/'.git/hooks/pre-commit'; h.write_text('#!/bin/sh'+chr(10)+'exit 1'+chr(10)); h.chmod(0o755); m.commit_telemetry(d,'001','test',[target]); print(subprocess.run(['git','-C',str(d),'status','--porcelain','--','telemetry'],capture_output=True,text=True).stdout.strip())"
+A  telemetry
+agent_loop: telemetry commit skipped (session 001): hook veto or nothing staged
+[0m
+Independent execution reproduced a hook-veto regression: the failed telemetry commit leaves its bookkeeping path staged (`A  telemetry`), rather than preserving the prior tree/index state. I’ll record this as a blocking review finding.
+[0m# [0mTodos
+[✓] Read contributor and requirement-surface guidance
+[✓] Inspect work-under-review diff and affected registries
+[✓] Run independent validation harness
+[•] Write review verdict in required log format
+[0m
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Read contributor and requirement-surface guidance
+[✓] Inspect work-under-review diff and affected registries
+[✓] Run independent validation harness
+[✓] Write review verdict in required log format
+[0m
+Review written to `docs/reviews/031-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED` for hook-veto telemetry staging leakage. Harness passed; reproduction confirmed `A  telemetry` remains staged after veto.

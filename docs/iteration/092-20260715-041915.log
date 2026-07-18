@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 092
+# date: 2026-07-15 04:33
+# phase: BUILD
+# wi: WI-152
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: f592cb8..7016736
+# tokens: 
+# cost-usd: 
+# wall-secs: 882
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1858
+# exit-code: 0
+# ---
+Reading additional input from stdin...
+OpenAI Codex v0.144.4
+--------
+workdir: C:\Projects\ai-template
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019f6512-c4d3-7982-870b-53c5bce54a89
+--------
+user
+You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. When filing or triaging a WI, assign BuildTier deliberately: quick for mechanical/off-spine work, medium by default, strong only for design-shaping or spine-touching work; never silently downgrade a declared route mid-loop. Clear the lowest gate level first: do not queue phase development ahead of its open [phase]-[g1|g2] work or Draft SRs unless the owner deliberately orders it. Gates before every commit (the commit bar): python -m pytest -q -n auto -m smoke and python project-trajectory/scripts/check_docs.py --root . --stale - paste the real output; never report a green you didn't produce. Run the FULL suite (python -m pytest -q -n auto, no -m) before claiming a slice/campaign done or at close (session-protocol skill 'End green'). Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, docs/next-wi (the next WI id - or a ';'-joined batch of independent off-spine WIs to execute in order as ONE session with ONE review round, WI-133 - for the coordinator's BuildTier pin), the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first.
+codex
+I’m using the `session-protocol` skill because this is a scoped WI driver session. I’ll first read the repo guide, the skill, and the recorded current state, then execute only the named WI and verify it against the required gates.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Raw CLAUDE.md; Get-Content -Raw C:\\Projects\\ai-template\\.agents\\skills\\session-protocol\\SKILL.md; Get-Content -Raw docs\\status.md" in C:\Projects\ai-template
+ succeeded in 625ms:
+# CLAUDE.md — Working in this template repo
+
+This repo is a **meta-project**: its product is the reusable kit in
+[`project-trajectory/`](project-trajectory/) that *other* repos copy in to run a
+gated, requirement-traced development process. So work here improves templates
+and scripts, not a downstream application.
+
+> Looking for the agent guide that ships **to** new projects? That's
+> [`project-trajectory/AGENTS.template.md`](project-trajectory/AGENTS.template.md)
+> (scaffolds to `AGENTS.md`, with thin `CLAUDE.md`/`GEMINI.md` stubs pointing at
+> it). Don't confuse the two: this file governs editing the kit; that one governs
+> using the kit.
+
+> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
+> holds the human owner's free-form notes; the working surfaces are
+> `docs/status.md`, the registries, and `docs/log.md`.
+
+---
+
+## What we're optimizing for
+
+The canonical purpose statement is the `PROJECT-VISION:` tag opening the root
+[README.md](README.md) — the same one-home pattern the kit ships downstream.
+In short: the kit exists to make downstream code **maintainable and
+trustworthy** — readable for humans and agents alike, deeply tested, and
+advanced only through explicit approval gates. Every change here should make
+that easier to achieve in a real project — or get out of the way.
+
+## Principles for editing the kit
+
+- **Dogfood the philosophy.** The templates preach single-source-of-truth,
+  decompose-don't-paraphrase, and generated-not-hand-maintained. Hold the kit to
+  the same bar: don't restate a rule in five files — state it in
+  [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
+- **Keep scripts stdlib-only and cross-platform.** The kit's own scripts
+  (`trace.py`, `check.py`, `gen_arch_map.py`, `bootstrap.py`) must run on a clean
+  Python 3.8+ with no pip installs, on Windows and POSIX. Tools a *downstream*
+  project needs (ruff, pytest) are theirs to install; the kit must not require
+  them to run its own checks.
+- **Stack-agnostic core, Python-first reference.** The process and ID scheme are
+  language-neutral; concrete harness commands are Python examples clearly marked
+
+[... 41632 line(s) elided — full stream in out/run-logs/ ...]
+
++  (`BuildTier=medium`, deliberately pinned as the default implementation
++  route). The remediation backlog from 085-DESIGN-CHECK is complete, including
++  the durable `docs/rework-wi`
+   carry-forward that prevents a CHANGES-REQUESTED
+   review from being orphaned when the reviewed build already advanced
+-  `docs/next-wi`. The DAG then sequences WI-153…157 + WI-164 automatically.
+-  Only deferred main-decomposition (WI-080→WI-081) stays parked. Codex Sol
++  `docs/next-wi`. The DAG then sequences WI-154…157 + WI-164 automatically.
++  Only deferred
++  main-decomposition (WI-080→WI-081) stays parked. Codex Sol
+   builds are live. Round-by-round evidence → [log.md](log.md), not here.
+ 
+ ## Scope
+diff --git a/project-trajectory/README.md b/project-trajectory/README.md
+index 234852703473ff42800cd710499950a998ef259f..15c4c7883eafaab57d363d7b75e558c54c2ecf4c
+--- a/project-trajectory/README.md
++++ b/project-trajectory/README.md
+@@ -35,6 +35,7 @@
+ | `registries/components.template.csv` | CMP-### **domain-neutral component** registry — the set-grained home for **knowledge + lifecycle** (a subsystem, "the left arm", a software package group). Structure is **derived, never restated**: membership is a `Component` tag on the primitive rows (LLR/IF/ASSET/PART); an IF with both endpoints inside a CMP is internal, one endpoint in is its boundary; `PartOf` nests (tag primitives at the finest CMP); `SupersededBy` carries identity across a rewrite. Off-spine and optional like procurement/assets; `trace.py` integrity-checks `CMP-` ids and resolves the joins (process-options.md "Component layer"). |
+ | `registries/work-items.template.csv` | WI-### execution registry for the **opt-out** trajectory/work-items layer: each row is a work item that **delivers** SR(s), belongs to a **workstream**, and **depends on** predecessor WIs (hard or advisory edges), moving `queued→active→done`. Optional `BuildTier` and `CritiqueBudget`/`CritiqueExhaustion` cells steer unattended routing and subjective-quality loops per WI. Off-spine like procurement/assets; `check_trajectory.py` owns the `WI-` ids (`trace.py` doesn't read them). Ships an inert `WI-000` row, so a repo that never adopts the layer pays nothing (process-options.md "Trajectory / work-items layer"). Its `SpecRef` column + the status.md↔registry SSOT rules (R-A…R-E) are mechanized by `check_trajectory.py`. |
+ | `specs/README.template.md`, `specs/WI-000.template.md` | The **spec-of-record** directory scaffolded to `docs/specs/`: a README explaining the layer (one file per WI or a shared campaign doc with `#anchor`; archive-at-close) and an inert `WI-000.md` example carrying a **Done-when checklist**. The `SpecRef` column of `work-items.csv` points here (rule R-E); the `-000` example is inert so nothing gates on it. |
++| `knowledge/README.template.md` | The hand-owned **knowledge-pack** home scaffolded to `docs/knowledge/`: its contract keeps durable evidence, rationale, quirks, failed approaches, and dated references without restating the requirement spine; its index makes packs discoverable by documentation checks. Packs stay advisory and findings that harden into requirements are promoted through change intake. |
+ | `rubrics/README.template.md`, `rubrics/rubric-000.template.md` | The **critique-rubric** directory scaffolded to `docs/rubrics/`: a README explaining the convention and an inert `rubric-000.md` example. A rubric is the written reference a `Verification=Critique` requirement is judged against — derived from the SN/SR intent (**not** the possibly-lax TC), carrying numbered good (`G#`) / bad (`B#`) anchors that **accumulate at rework**, cited by the critique verdict. Read by an independent critical eye, never the authoring session (process-options.md "Critique verification & the critique loop"); the `-000` example is inert so a repo that never uses `Critique` pays nothing. |
+ | `registries/repos.template.csv` | REPO-### coordinator repo-delegation registry for the **rare** multi-repo rung (`MULTI_REPO.md` §6): one row per delegated repo, `DelegatedSRs` back-linking the coordinator SRs it fulfils (formerly `modules.template.csv`/`MOD-###`; the legacy file + ids are still read). Coordinator-only — **not** scaffolded by bootstrap; `trace.py` validates it when present. |
+ | `scripts/bootstrap.py` | **One command to scaffold a new repo** from this kit (copies/generates templates → `docs/`/`scripts/`/CI, renames, won't clobber). The Markdown docs are *generated* from the masters per the declared profile (`--stack python\|node\|go\|rust\|powershell\|any`, `--omit nfr,multi-module`), recorded in `docs/kit-profile`; an explicitly non-Python `--stack` skips `pytest.ini` and appends the harness-rewiring checklist to `docs/status.md`. |
+diff --git a/project-trajectory/README.template.md b/project-trajectory/README.template.md
+index 83ec9f01d6f14d2ae67d3ecb67821b8ca6fb93b4..acad772085e18e255d522201f1cf29b17eb317ad
+--- a/project-trajectory/README.template.md
++++ b/project-trajectory/README.template.md
+@@ -65,6 +65,7 @@
+ with the code map in [docs/architecture.md](docs/architecture.md) and the
+ current state in [docs/status.md](docs/status.md). The requirement spine starts
+ at [docs/requirements/stakeholder-needs.md](docs/requirements/stakeholder-needs.md);
++durable project findings live in [docs/knowledge/](docs/knowledge/README.md);
+ shared cross-project contracts — only if this repo provides or consumes one —
+ live in [docs/interfaces.md](docs/interfaces.md).
+ 
+diff --git a/project-trajectory/knowledge/README.template.md b/project-trajectory/knowledge/README.template.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..26b8f2530ff43ed8af03da2d664b6e82df34a6f0
+--- /dev/null
++++ b/project-trajectory/knowledge/README.template.md
+@@ -0,0 +1,33 @@
++# Knowledge packs (`docs/knowledge/`)
++
++A **knowledge pack** preserves project-specific findings that should outlive the
++session or work item that produced them. Use one Markdown file per topic; its
++filename (without `.md`) is the label that a component registry's `Knowledge`
++cell may reference.
++
++## Pack contract
++
++A pack records only context the requirement registries cannot hold: evidence,
++decision rationale, vendor or tool quirks, failed approaches worth avoiding, and
++external references with retrieval dates. Link to `SN-`, `SR-`, `LLR-`, `TC-`,
++`IF-`, or `CMP-` ids instead of restating their facts, and link to generated
++architecture views instead of copying them.
++
++Packs are advisory context, never gates. When a finding becomes a rule,
++constraint, or requirement, promote it through the change-intake flow in
++[`process.md`](../process.md) so the requirement spine remains authoritative;
++keep the rationale and evidence trail in the pack.
++
++A durable module description is the component row plus its `Knowledge` and
++`DetailDoc` references. Do not create a parallel component specification inside
++this directory. The optional research-track workflow is described in
++[`process-options.md`](../process-options.md).
++
++## Pack index
++
++Add every pack here so documentation checks can discover it.
++
++| Label | Topic | Components | Last reviewed |
++|---|---|---|---|
++| `example` | Replace with a short description | `CMP-000` | YYYY-MM-DD |
++
+diff --git a/project-trajectory/scripts/bootstrap.py b/project-trajectory/scripts/bootstrap.py
+index af4958813ad0d7c66f349fcf7cf63d1026afb2cd..4ef7475e0374afc4dc9fe56b859b09234a309ee9
+--- a/project-trajectory/scripts/bootstrap.py
++++ b/project-trajectory/scripts/bootstrap.py
+@@ -38,6 +38,7 @@
+     docs/requirements/components.csv           <- registries/components.template.csv
+     docs/requirements/work-items.csv           <- registries/work-items.template.csv
+     docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
++    docs/knowledge/README.md                  <- knowledge/README.template.md
+     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
+     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
+     scripts/trace.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+@@ -1087,6 +1088,10 @@
+     # ignores the WI-000 row), so a fresh scaffold stays vacuously clean.
+     ("specs/README.template.md", "docs/specs/README.md"),
+     ("specs/WI-000.template.md", "docs/specs/WI-000.md"),
++    # Durable, hand-owned project knowledge: one topic per pack, indexed by this
++    # README so documentation checks discover every pack. Packs are advisory;
++    # requirements remain authoritative in the spine.
++    ("knowledge/README.template.md", "docs/knowledge/README.md"),
+     # Critique rubrics (process-options.md "Critique verification & the critique
+     # loop", WI-068): the judgment reference a Verification=Critique requirement is
+     # scored against — written from the SN/SR intent (not the possibly-lax TC),
+diff --git a/tests/test_bootstrap.py b/tests/test_bootstrap.py
+index 08009db946a45363027a178459075a2f15b748f0..95da9e042c11e609c216e0300cc432bbf3190d0a
+--- a/tests/test_bootstrap.py
++++ b/tests/test_bootstrap.py
+@@ -36,6 +36,7 @@
+         "docs/requirements/work-items.csv",
+         "docs/specs/README.md",
+         "docs/specs/WI-000.md",
++        "docs/knowledge/README.md",
+         "docs/rubrics/README.md",
+         "docs/rubrics/rubric-000.md",
+         "docs/test/test-cases.csv",
+@@ -86,6 +87,19 @@
+         assert "Working agreement" not in stub, stub_name + " duplicates the guide"
+ 
+ 
++def test_scaffold_knowledge_home_states_pack_contract(scaffold):
++    knowledge = (scaffold / "docs" / "knowledge" / "README.md").read_text(
++        encoding="utf-8"
++    )
++    assert "## Pack contract" in knowledge
++    assert "## Pack index" in knowledge
++    assert "retrieval dates" in knowledge
++    assert "promote it through the change-intake flow" in knowledge
++    assert "Packs are advisory context, never gates" in knowledge
++    project_readme = (scaffold / "README.md").read_text(encoding="utf-8")
++    assert "[docs/knowledge/](docs/knowledge/README.md)" in project_readme
++
++
+ def test_agents_template_stays_within_size_budget():
+     # Gemini's AGENTS.md support truncates near ~12k chars, and a downstream
+     # project must still fill the Project section and add its own rules. The
+
+codex
+Implemented and committed WI-152 as `7016736 WI-152: scaffold the knowledge home`.
+
+- Added the scaffolded `docs/knowledge/README.md` template and pack contract.
+- Wired bootstrap, project README discovery, kit documentation, and regression tests.
+- Closed WI-152 and regenerated `PROJECT_STATE.html`.
+- Advanced `docs/next-wi` to WI-153 with `BuildTier=medium`.
+- Kept `docs/run-state` as `RUNNING`.
+- Full suite: `752 passed, 34 skipped`.
+- Final smoke: `625 passed, 2 skipped`.
+- Docs: `98 docs, 417 links, 0 broken`.
+- Trajectory: clean, 170 WIs, 150 done, acyclic.
+- Worktree clean. Not pushed per human push policy.
+diff --git a/docs/log.md b/docs/log.md
+index b7ea57ac817bbd3e3295333cdce797c9f940aa2b..3d489ffc0e4919ea055651968772ae6b910b1c09
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -6629,3 +6629,28 @@
+ `PROJECT_STATE.html` regenerated for WI-170 → done. **Handoff:** run-state remains **RUNNING**;
+ `docs/next-wi` → **WI-152**, the first research-knowledge campaign slice (no
+ BuildTier pin, so phase default). Not pushed (`docs/push-policy: human`).
++
++## 2026-07-15 — WI-152 (knowledge home, BUILD): durable pack scaffold
++
++**Scope.** Added `project-trajectory/knowledge/README.template.md`, a one-page
++hand-owned knowledge-pack contract and index. It keeps evidence, rationale,
++quirks, failed approaches, and external references with retrieval dates while
++forbidding registry restatement; packs stay advisory and hardened findings route
++through change intake. `bootstrap.py` now scaffolds it to
++`docs/knowledge/README.md`, the scaffolded project README links it from an entry
++root, and the kit-contents table names the new surface. Bootstrap tests assert
++the file and its load-bearing contract; the profile matrix proves every scaffold
++remains warning-free.
++
++**Tests / deviations / residue.** Focused bootstrap suite: **39 passed in
++6.68s**. The first full run honestly found the missing entry-root link (**10
++failed, 742 passed, 34 skipped in 80.10s**); adding the project-README link
++closed that integration gap, with no scope deviation or worktree residue. No
++byte-budgeted file changed. Full end-green suite: **752 passed, 34 skipped in
++82.12s**. Commit bar: `pytest -q -n auto -m smoke` → **625 passed, 2 skipped
++in 64.96s**; `check_docs.py --root . --stale` → **OK, 98 docs, 417 links, 0
++broken** (40 historical orphan warnings plus pre-existing stale hints).
++
++**Handoff.** `docs/run-state` remains **RUNNING**. `docs/next-wi` → **WI-153**,
++deliberately pinned `BuildTier=medium` for the warn-first knowledge-reference
++and component-coupling implementation. Not pushed (`docs/push-policy: human`).
+diff --git a/docs/next-wi b/docs/next-wi
+index dd48cf2aae2d67d9e7814a6e6ec144be9e0f6742..437d920c4decf8a5986834326c68ace4093320a8
+--- a/docs/next-wi
++++ b/docs/next-wi
+@@ -7,11 +7,11 @@
+ # — one session, one review round, strongest-member pin (WI-133); an
+ # absent/empty file, an unknown id, or an empty BuildTier = the phase default.
+ # The DRIVER maintains this alongside docs/status.md Next action.
+-# WI-170 closed the 085-DESIGN-CHECK remediation backlog. The owner-greenlit
+-# research-knowledge campaign now starts at WI-152 and proceeds by its DAG
+-# through WI-153..157 + WI-164. Only the deferred main-decomposition
++# WI-152 opened the owner-greenlit research-knowledge campaign by shipping the
++# scaffolded knowledge home. The campaign now proceeds by its DAG through
++# WI-153..157 + WI-164. Only the deferred main-decomposition
+ # (WI-080->WI-081) stays parked — do not auto-start it.
+ # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
+ # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to
+ # Fable); per-WI BuildTier pins above still apply.
+-WI-152
++WI-153
+diff --git a/docs/requirements/work-items.csv b/docs/requirements/work-items.csv
+index 8fa5fb5719785bddfcff3e535f4bceaafffbb6fb..8cd4c9d0f88a37219f2b078b737c51c2e25919a5
+--- a/docs/requirements/work-items.csv
++++ b/docs/requirements/work-items.csv
+@@ -150,8 +150,8 @@
+ WI-149,Lowest-gate-first queue advisory (check_trajectory warn),scripts,,WI-093;~WI-115;WI-145,done,"check_trajectory warns when docs/next-wi selects a phase development WI ahead of an open [phase]-[g1|g2] anchor or a Draft SR in that phase; owner ordering remains authoritative. Both agent-resume prompts carry the lowest-gate-first instruction. 3 fixture tests.",docs/specs/owner-intake-2026-07-14.md#gate-first,owner-intake-2026-07-14,
+ WI-150,Planner-assigned BuildTier - deliberate tier at WI filing,docs,,WI-126;WI-145,done,"PROCESS_OPTIONS, both agent-resume prompts, and the session-protocol skill (source + .claude/.agents copies) require deliberate filing/triage assignments: quick for mechanical off-spine work, medium by default, strong only for design-shaping or spine-touching changes; no silent mid-loop downgrade. PROCESS_OPTIONS growth +291 B re-stamped in byte-budget-guard copies.",,owner-intake-2026-07-14,
+ WI-151,Throughline pointer - vendorable design-system package note,docs,,~WI-083;WI-145,done,"PROCESS_OPTIONS names jrpease/throughline as a vendorable UI/design-system package, scoped by applicability and with check.py retained as the single gate runner.",docs/specs/owner-intake-2026-07-14.md#throughline,owner-intake-2026-07-14,
+-WI-152,Knowledge home - docs/knowledge/README.md + bootstrap scaffold wiring + scaffold tests,scripts,,WI-145,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+-WI-153,Knowledge ref integrity - trace.py warn-first Knowledge resolution + knowledge->component coupling warn + fixtures,scripts,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
++WI-152,Knowledge home - docs/knowledge/README.md + bootstrap scaffold wiring + scaffold tests,scripts,,WI-145,done,"Scaffold now creates docs/knowledge/README.md from a one-page pack-contract template with an index, promotion/advisory rules, dated-evidence guidance, bootstrap and kit-contents wiring, a project-README entry-root link, and regression coverage across scaffold profiles.",docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
++WI-153,Knowledge ref integrity - trace.py warn-first Knowledge resolution + knowledge->component coupling warn + fixtures,scripts,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,medium
+ WI-154,Research-track process text - PROCESS_OPTIONS section + component-layer cross-link + PROCESS.md pointer + reviewer-charter line,docs,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+ WI-155,Dogfood knowledge packs - seed meta packs + CMP refs then run the seed prompt->image research WI end-to-end,research,,WI-152;WI-153,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,strong
+ WI-156,Kit-provisioned pack library - project-trajectory/knowledge/ + opt-in scaffold wiring + staged research-pack import (6 packs),scripts,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+diff --git a/docs/status.md b/docs/status.md
+index d9d3f0de77e57074d6577a856effb03175274a51..f3b2ba4e659c9b8b8d62f579f040490ae193715c
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -59,13 +59,13 @@
+   iteration the owner flagged._
+ - **Queued (research-knowledge campaign, OI-9 §8** —
+   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
+-  2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
+-  ref integrity + knowledge⇒component coupling) · **WI-154** (process text) ·
++  2026-07-14 ratification — **WI-153** (trace.py ref integrity +
++  knowledge⇒component coupling) · **WI-154** (process text) ·
+   **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
+   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
+   domains filter); **WI-158** deferred (OKF pack export). The owner **greenlit**
+   this campaign (2026-07-15) to **follow the off-spine backlog automatically** —
+-  no stop in between; the DAG sequences it from WI-152._
++  no stop in between; the DAG sequences it from WI-153._
+ - **Queued (owner intake 2026-07-14** — triage + answers:
+   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
+   All owner-intake WIs are complete — the loop worked them in id order after the
+@@ -76,7 +76,7 @@
+   dial turn, Decisions log; its per-phase preference follow-up is complete):_
+   **WI-164**
+   (optimization-methodology research — joins the research-knowledge campaign
+-  behind WI-152). Codex **Sol builds are now live** (`codex` on PATH + logged in
++  after its declared predecessors). Codex **Sol builds are now live** (`codex` on PATH + logged in
+   2026-07-15)._
+ - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
+   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
+@@ -86,14 +86,17 @@
+   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+-- **Next action:** **WI-152** (knowledge home + bootstrap scaffold wiring), the
+-  first open row in the owner-greenlit research-knowledge campaign;
+-  `docs/next-wi` points at WI-152. The remediation backlog from
+-  085-DESIGN-CHECK is complete, including the durable `docs/rework-wi`
++- **Next action:** **WI-153** (warn-first knowledge-ref integrity +
++  knowledge⇒component coupling), the next open row in the owner-greenlit
++  research-knowledge campaign; `docs/next-wi` points at WI-153
++  (`BuildTier=medium`, deliberately pinned as the default implementation
++  route). The remediation backlog from 085-DESIGN-CHECK is complete, including
++  the durable `docs/rework-wi`
+   carry-forward that prevents a CHANGES-REQUESTED
+   review from being orphaned when the reviewed build already advanced
+-  `docs/next-wi`. The DAG then sequences WI-153…157 + WI-164 automatically.
+-  Only deferred main-decomposition (WI-080→WI-081) stays parked. Codex Sol
++  `docs/next-wi`. The DAG then sequences WI-154…157 + WI-164 automatically.
++  Only deferred
++  main-decomposition (WI-080→WI-081) stays parked. Codex Sol
+   builds are live. Round-by-round evidence → [log.md](log.md), not here.
+ 
+ ## Scope
+diff --git a/project-trajectory/README.md b/project-trajectory/README.md
+index 234852703473ff42800cd710499950a998ef259f..15c4c7883eafaab57d363d7b75e558c54c2ecf4c
+--- a/project-trajectory/README.md
++++ b/project-trajectory/README.md
+@@ -35,6 +35,7 @@
+ | `registries/components.template.csv` | CMP-### **domain-neutral component** registry — the set-grained home for **knowledge + lifecycle** (a subsystem, "the left arm", a software package group). Structure is **derived, never restated**: membership is a `Component` tag on the primitive rows (LLR/IF/ASSET/PART); an IF with both endpoints inside a CMP is internal, one endpoint in is its boundary; `PartOf` nests (tag primitives at the finest CMP); `SupersededBy` carries identity across a rewrite. Off-spine and optional like procurement/assets; `trace.py` integrity-checks `CMP-` ids and resolves the joins (process-options.md "Component layer"). |
+ | `registries/work-items.template.csv` | WI-### execution registry for the **opt-out** trajectory/work-items layer: each row is a work item that **delivers** SR(s), belongs to a **workstream**, and **depends on** predecessor WIs (hard or advisory edges), moving `queued→active→done`. Optional `BuildTier` and `CritiqueBudget`/`CritiqueExhaustion` cells steer unattended routing and subjective-quality loops per WI. Off-spine like procurement/assets; `check_trajectory.py` owns the `WI-` ids (`trace.py` doesn't read them). Ships an inert `WI-000` row, so a repo that never adopts the layer pays nothing (process-options.md "Trajectory / work-items layer"). Its `SpecRef` column + the status.md↔registry SSOT rules (R-A…R-E) are mechanized by `check_trajectory.py`. |
+ | `specs/README.template.md`, `specs/WI-000.template.md` | The **spec-of-record** directory scaffolded to `docs/specs/`: a README explaining the layer (one file per WI or a shared campaign doc with `#anchor`; archive-at-close) and an inert `WI-000.md` example carrying a **Done-when checklist**. The `SpecRef` column of `work-items.csv` points here (rule R-E); the `-000` example is inert so nothing gates on it. |
++| `knowledge/README.template.md` | The hand-owned **knowledge-pack** home scaffolded to `docs/knowledge/`: its contract keeps durable evidence, rationale, quirks, failed approaches, and dated references without restating the requirement spine; its index makes packs discoverable by documentation checks. Packs stay advisory and findings that harden into requirements are promoted through change intake. |
+ | `rubrics/README.template.md`, `rubrics/rubric-000.template.md` | The **critique-rubric** directory scaffolded to `docs/rubrics/`: a README explaining the convention and an inert `rubric-000.md` example. A rubric is the written reference a `Verification=Critique` requirement is judged against — derived from the SN/SR intent (**not** the possibly-lax TC), carrying numbered good (`G#`) / bad (`B#`) anchors that **accumulate at rework**, cited by the critique verdict. Read by an independent critical eye, never the authoring session (process-options.md "Critique verification & the critique loop"); the `-000` example is inert so a repo that never uses `Critique` pays nothing. |
+ | `registries/repos.template.csv` | REPO-### coordinator repo-delegation registry for the **rare** multi-repo rung (`MULTI_REPO.md` §6): one row per delegated repo, `DelegatedSRs` back-linking the coordinator SRs it fulfils (formerly `modules.template.csv`/`MOD-###`; the legacy file + ids are still read). Coordinator-only — **not** scaffolded by bootstrap; `trace.py` validates it when present. |
+ | `scripts/bootstrap.py` | **One command to scaffold a new repo** from this kit (copies/generates templates → `docs/`/`scripts/`/CI, renames, won't clobber). The Markdown docs are *generated* from the masters per the declared profile (`--stack python\|node\|go\|rust\|powershell\|any`, `--omit nfr,multi-module`), recorded in `docs/kit-profile`; an explicitly non-Python `--stack` skips `pytest.ini` and appends the harness-rewiring checklist to `docs/status.md`. |
+diff --git a/project-trajectory/README.template.md b/project-trajectory/README.template.md
+index 83ec9f01d6f14d2ae67d3ecb67821b8ca6fb93b4..acad772085e18e255d522201f1cf29b17eb317ad
+--- a/project-trajectory/README.template.md
++++ b/project-trajectory/README.template.md
+@@ -65,6 +65,7 @@
+ with the code map in [docs/architecture.md](docs/architecture.md) and the
+ current state in [docs/status.md](docs/status.md). The requirement spine starts
+ at [docs/requirements/stakeholder-needs.md](docs/requirements/stakeholder-needs.md);
++durable project findings live in [docs/knowledge/](docs/knowledge/README.md);
+ shared cross-project contracts — only if this repo provides or consumes one —
+ live in [docs/interfaces.md](docs/interfaces.md).
+ 
+diff --git a/project-trajectory/knowledge/README.template.md b/project-trajectory/knowledge/README.template.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..26b8f2530ff43ed8af03da2d664b6e82df34a6f0
+--- /dev/null
++++ b/project-trajectory/knowledge/README.template.md
+@@ -0,0 +1,33 @@
++# Knowledge packs (`docs/knowledge/`)
++
++A **knowledge pack** preserves project-specific findings that should outlive the
++session or work item that produced them. Use one Markdown file per topic; its
++filename (without `.md`) is the label that a component registry's `Knowledge`
++cell may reference.
++
++## Pack contract
++
++A pack records only context the requirement registries cannot hold: evidence,
++decision rationale, vendor or tool quirks, failed approaches worth avoiding, and
++external references with retrieval dates. Link to `SN-`, `SR-`, `LLR-`, `TC-`,
++`IF-`, or `CMP-` ids instead of restating their facts, and link to generated
++architecture views instead of copying them.
++
++Packs are advisory context, never gates. When a finding becomes a rule,
++constraint, or requirement, promote it through the change-intake flow in
++[`process.md`](../process.md) so the requirement spine remains authoritative;
++keep the rationale and evidence trail in the pack.
++
++A durable module description is the component row plus its `Knowledge` and
++`DetailDoc` references. Do not create a parallel component specification inside
++this directory. The optional research-track workflow is described in
++[`process-options.md`](../process-options.md).
++
++## Pack index
++
++Add every pack here so documentation checks can discover it.
++
++| Label | Topic | Components | Last reviewed |
++|---|---|---|---|
++| `example` | Replace with a short description | `CMP-000` | YYYY-MM-DD |
++
+diff --git a/project-trajectory/scripts/bootstrap.py b/project-trajectory/scripts/bootstrap.py
+index af4958813ad0d7c66f349fcf7cf63d1026afb2cd..4ef7475e0374afc4dc9fe56b859b09234a309ee9
+--- a/project-trajectory/scripts/bootstrap.py
++++ b/project-trajectory/scripts/bootstrap.py
+@@ -38,6 +38,7 @@
+     docs/requirements/components.csv           <- registries/components.template.csv
+     docs/requirements/work-items.csv           <- registries/work-items.template.csv
+     docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
++    docs/knowledge/README.md                  <- knowledge/README.template.md
+     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
+     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
+     scripts/trace.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+@@ -1087,6 +1088,10 @@
+     # ignores the WI-000 row), so a fresh scaffold stays vacuously clean.
+     ("specs/README.template.md", "docs/specs/README.md"),
+     ("specs/WI-000.template.md", "docs/specs/WI-000.md"),
++    # Durable, hand-owned project knowledge: one topic per pack, indexed by this
++    # README so documentation checks discover every pack. Packs are advisory;
++    # requirements remain authoritative in the spine.
++    ("knowledge/README.template.md", "docs/knowledge/README.md"),
+     # Critique rubrics (process-options.md "Critique verification & the critique
+     # loop", WI-068): the judgment reference a Verification=Critique requirement is
+     # scored against — written from the SN/SR intent (not the possibly-lax TC),
+diff --git a/tests/test_bootstrap.py b/tests/test_bootstrap.py
+index 08009db946a45363027a178459075a2f15b748f0..95da9e042c11e609c216e0300cc432bbf3190d0a
+--- a/tests/test_bootstrap.py
++++ b/tests/test_bootstrap.py
+@@ -36,6 +36,7 @@
+         "docs/requirements/work-items.csv",
+         "docs/specs/README.md",
+         "docs/specs/WI-000.md",
++        "docs/knowledge/README.md",
+         "docs/rubrics/README.md",
+         "docs/rubrics/rubric-000.md",
+         "docs/test/test-cases.csv",
+@@ -86,6 +87,19 @@
+         assert "Working agreement" not in stub, stub_name + " duplicates the guide"
+ 
+ 
++def test_scaffold_knowledge_home_states_pack_contract(scaffold):
++    knowledge = (scaffold / "docs" / "knowledge" / "README.md").read_text(
++        encoding="utf-8"
++    )
++    assert "## Pack contract" in knowledge
++    assert "## Pack index" in knowledge
++    assert "retrieval dates" in knowledge
++    assert "promote it through the change-intake flow" in knowledge
++    assert "Packs are advisory context, never gates" in knowledge
++    project_readme = (scaffold / "README.md").read_text(encoding="utf-8")
++    assert "[docs/knowledge/](docs/knowledge/README.md)" in project_readme
++
++
+ def test_agents_template_stays_within_size_budget():
+     # Gemini's AGENTS.md support truncates near ~12k chars, and a downstream
+     # project must still fill the Project section and add its own rules. The
+
+tokens used
+203,111
+Implemented and committed WI-152 as `7016736 WI-152: scaffold the knowledge home`.
+
+- Added the scaffolded `docs/knowledge/README.md` template and pack contract.
+- Wired bootstrap, project README discovery, kit documentation, and regression tests.
+- Closed WI-152 and regenerated `PROJECT_STATE.html`.
+- Advanced `docs/next-wi` to WI-153 with `BuildTier=medium`.
+- Kept `docs/run-state` as `RUNNING`.
+- Full suite: `752 passed, 34 skipped`.
+- Final smoke: `625 passed, 2 skipped`.
+- Docs: `98 docs, 417 links, 0 broken`.
+- Trajectory: clean, 170 WIs, 150 done, acyclic.
+- Worktree clean. Not pushed per human push policy.

@@ -1,0 +1,12 @@
+Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes
+# One row = one (model x route) PAIR (capability-expansion.md C3). IDENTITY: Family (who trained it — the heterogeneity + scorer corroboration key), Model (the line identity, INCLUDING -pro/-flash tokens), Version (the COMPARABLE token only: a dotted numeric / date stamp / maturity tag — vendor aliases never go here). ACCESS: CmdTemplate + Env (KEY=value;KEY2=value2, merged over the inherited env at launch; empty Env = the ambient environment = today's behavior). Tier vocabulary: strong|medium|quick (legacy `weak` reads as `quick`). The Id is a free-form unique join key, NEVER parsed. Legacy: a Provider column with no Family reads Provider as Family.
+# Version-less resolution: an agents-enabled token that is not an exact Id resolves over rows whose Family-Model matches (intra-line only), newest Version winning — dotted-numeric first, then maturity rank, then date stamp; preview/exp are skipped unless named or the only candidate; equal-key route pairs fall to registry row order. Override the maturity rank below; the default equals the built-in.
+# tag-rank: ga>preview>beta>exp
+ANTHROPIC-OPUS-4.8,ANTHROPIC,opus,4.8,strong,claude -p {prompt} --model {model} --output-format json,,frontier tier; add your permission-bypass flag to run unattended
+OPENAI-GPT-5.2,OPENAI,gpt-5.2,5.2,strong,codex exec --json {prompt},,third-party providers via the codex model_providers config
+GOOGLE-GEMINI-3-PRO,GOOGLE,gemini-3-pro,3,medium,gemini -p {prompt} --output-format json,,the CLI with documented exit codes
+AGENTS-EXAMPLE-000,EXAMPLE,example,0,quick,your-cli -p {prompt},,placeholder row (ends in -000, ignored) - copy a real row above and edit
+# Second account = a second PAIR row (distinct id => independent cooldown; same Family). Claude/Codex config dirs are token-isolated, so concurrent account rows are safe:
+# ANTHROPIC-OPUS-4.8-ACCT2,ANTHROPIC,opus,4.8,strong,claude -p {prompt} --model {model} --output-format json,CLAUDE_CONFIG_DIR=~/.claude-work,second paid plan (Codex: CODEX_HOME - --profile alone shares one auth.json). Gemini OAuth accounts share one creds file and race on refresh: use GEMINI_API_KEY or serialize.
+# Router = a PAIR row with an Env selector; SAME Family (a router is access, not identity) so it is NOT a diverse reviewer from its native sibling:
+# ANTHROPIC-OPUS-4.8-ROUTER,ANTHROPIC,opus,4.8,strong,claude -p {prompt} --model {model} --output-format json,ANTHROPIC_BASE_URL=https://your-router.example,pin LiteLLM off the known-malicious PyPI builds 1.82.7/1.82.8

@@ -72,9 +72,12 @@ _(run `gen_arch_map.py --flow <entry>` to populate — e.g. `--flow run`)_
 | `path/to/mod_a` | <one line> | |
 | `path/to/mod_b` | <one line> | |
 
-Design rules (enforced): shared logic lives in one place (no duplication); pure,
+Design rules (reviewed): shared logic lives in one place (no duplication); pure,
 unit-testable cores are separated from I/O / network / GUI shells; functions stay
-small; each module has a single clear responsibility.
+small; each module has a single clear responsibility. The generated map and
+dependency diagram below make violations (duplication, a forbidden import edge)
+*visible* at a glance, but enforcing these rules is the reviewer's job, not the
+harness's — don't read "reviewed" as "machine-checked".
 
 ## Module dependencies (generated)
 

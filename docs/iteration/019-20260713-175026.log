@@ -1,0 +1,484 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 019
+# date: 2026-07-13 17:55
+# phase: REVIEW-A
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 295
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1634
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the reviewed diff and governing artifacts, run the required harnesses, then record only evidence-backed findings in the requested review file.
+[0m# [0mTodos
+[•] Read contributor guide and required review surfaces
+[ ] Inspect work-under-review diff and impacted registry history
+[ ] Run check and trace harnesses
+[ ] Write review verdict in required log format
+[0m
+[0m→ [0mRead CLAUDE.md
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m→ [0mRead AGENTS.md
+[0m✱ [0mGlob "requirements/**/*"[90m in docs · 6 matches[0m
+[0m✱ [0mGlob "specs/**/*"[90m in docs · 11 matches[0m
+[0m
+[0m$ [0mgit log --oneline -12; git status --short; git diff HEAD~1..HEAD --stat; git diff HEAD~1..HEAD
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f5dace919001UWv2qb86RIuK90
+
+": "Delivers: — · After: ~WI-107"}, "WI-119": {"status": "done", "title": "Session timing telemetry - wall/API seconds + turns in the iteration surface", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: WI-024"}, "WI-120": {"status": "done", "title": "Cross-provider spawn path - Windows CLI shims fail CreateProcess (opencode WinError 2)", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: ~WI-109"}, "WI-121": {"status": "done", "title": "BUILD tier relax - builds ride the medium default (owner dial turn)", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: WI-113, ~WI-119"}, "WI-122": {"status": "done", "title": "Smoke-tier commit bar for the meta repo (populate + re-point per-commit tests)", "body": "Workstream: Scripts / harness", "meta": "Delivers: — · After: ~WI-071, ~WI-075"}, "WI-123": {"status": "queued", "title": "Review cadence dial - campaign-close adversarial rounds (owner proposal)", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: ~WI-107, ~WI-121"}, "WI-124": {"status": "done", "title": "Session-shape telemetry - boot latency + context volume + speed dials per session", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: WI-119"}, "WI-125": {"status": "done", "title": "Live session echo - coordinator console shows progress during a session", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: WI-124"}, "WI-126": {"status": "done", "title": "Per-WI routing hints - build-tier pin + plan-required flag (owner proposal)", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: ~WI-121, ~WI-107"}};
+     function esc(s){ const d=document.createElement('div'); d.textContent = s==null?'':s; return d.innerHTML; }
+ 
+     function renderDetail(box, d, id, tierColor){
+diff --git a/docs/architecture.md b/docs/architecture.md
+index ae5d91a..f097b18 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -413,6 +413,7 @@ Contracts (interfaces): IF-011, IF-024, IF-052
+ | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
+ | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
+ | `sw_containment(root, mods)` | The containerized How-SW top view (WI-073), or None when no `CMP-###` |  |
++| `esc(s)` |  |  |
+ | `campaign_containment(wis)` | The campaign-binned When view (WI-074), or None when no work item carries a |  |
+ | `when_view(root, wis)` | The When roadmap as a count-thresholded phase -> workstream -> work-item |  |
+ | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
+diff --git a/docs/log.md b/docs/log.md
+index 089711f..e5725d5 100644
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -4063,3 +4063,50 @@ re-attestation + single-ratify + v2 ratification still pending). `docs/next-wi`
+ `<title>` labels — the next deep-review-b hygiene pick). The run continues at G3;
+ **`main-decomposition` (WI-080 → WI-081) stays sequenced behind the owner
+ sitting**.
++
++## 2026-07-13 — WI-102: gen_trajectory hygiene — one `esc` helper + SVG node tooltips (deep-review-b M4/L7)
++
++**The defects.** Review-b **M4**: `gen_trajectory.py` redefined the identical
++HTML-escape closure — `def esc(s): return html.escape(str(s), quote=True)` —
++**7 times** (one nested closure per panel builder), alongside a module-level
++`_esc`. The F5 rule licenses duplicating *plumbing across scripts*, not the same
++closure *within one 2,000-line module* — plain copy-paste that "one fact, one
++home — in code too" forbids. Review-b **L7**: the dashboard's SVG views carry no
++per-node `<title>`, so a node has no hover tooltip and no accessible name.
++
++**The fix.**
++- **M4 — one home.** Consolidated to a single module-level helper. Renamed the
++  existing module-level `_esc` → `esc` (its def + 11 call sites) so the 65
+
+[... 539 line(s) elided — full stream in out/run-logs/ ...]
+
+             '<g class="wi {}" data-id="{}" tabindex="0">'
++            "<title>{}</title>"
+             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="7" '
+             'fill="{}"></rect>{}</g>'.format(
+-                st, esc(w["id"]), x, y, DAG_COL_W, DAG_ROW_H, STATUS_FILL[st], label
++                st,
++                esc(w["id"]),
++                esc(tip),
++                x,
++                y,
++                DAG_COL_W,
++                DAG_ROW_H,
++                STATUS_FILL[st],
++                label,
+             )
+         )
+         ws = WORKSTREAM_LABELS.get(w["workstream"], w["workstream"])
+@@ -667,9 +673,6 @@ def sw_graph(root, mods):
+         (SW_COL_W, SW_COL_GAP, SW_ROW_H, SW_ROW_GAP, SW_PAD),
+     )
+ 
+-    def esc(s):
+-        return html.escape(str(s), quote=True)
+-
+     edge_svg = []
+     for s, d, iid in sorted(edges):
+         x1, y1 = pos[s][0] + SW_COL_W, pos[s][1] + SW_ROW_H / 2
+@@ -691,11 +694,14 @@ def sw_graph(root, mods):
+         info = nodes[k]
+         disp = info["display"]
+         short = disp if len(disp) <= 22 else disp[:21] + "…"
++        tip = "{} ({})".format(disp, info["kind"])
+         node_svg.append(
+-            '<g><rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
++            "<g><title>{}</title>"
++            '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
+             'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
+             'dominant-baseline="central" fill="#fff" font-size="10">{}</text>'
+             "</g>".format(
++                esc(tip),
+                 x,
+                 y,
+                 SW_COL_W,
+@@ -775,9 +781,6 @@ def sw_containment(root, mods):
+     inv = view["inventory"]  # {norm: display}
+     mod_by_norm = {ct._norm_module(m["name"]): m for m in mods}
+ 
+-    def esc(s):
+-        return html.escape(str(s), quote=True)
+-
+     # A module's DIRECT container(s) = the finest CMP(s) its LLRs tag; a coarser
+     # ancestor contains it through PartOf (rendered as the nested tree).
+     direct = {cid: [] for cid in by_id}
+@@ -1003,7 +1006,7 @@ CAMPAIGN_STYLE = (
+ )
+ 
+ 
+-def _esc(s):
++def esc(s):
+     return html.escape(str(s), quote=True)
+ 
+ 
+@@ -1030,12 +1033,12 @@ def _wi_row(w, accent_of=None):
+         '<td><span class="st" style="background:{}"></span>{}</td>'
+         '<td><code>{}</code></td><td class="sub"><code>{}</code></td></tr>'.format(
+             swatch,
+-            _esc(w["id"]),
+-            _esc(w["title"]),
++            esc(w["id"]),
++            esc(w["title"]),
+             STATUS_FILL[st],
+-            _esc(st),
+-            _esc(delivers),
+-            _esc(after),
++            esc(st),
++            esc(delivers),
++            esc(after),
+         )
+     )
+ 
+@@ -1067,7 +1070,7 @@ def _campboxes(wis, accent_of=None):
+     for slug in sorted(by_camp):
+         members = by_camp[slug]
+         head = '<code>{}</code> <span class="sub">· {} item(s)</span>'.format(
+-            _esc(slug), len(members)
++            esc(slug), len(members)
+         )
+         tree += (
+             '<details class="campbox"><summary>{}</summary>'
+@@ -1108,9 +1111,6 @@ def campaign_containment(wis):
+ 
+     ids = {w["id"] for w in wis}
+ 
+-    def esc(s):
+-        return html.escape(str(s), quote=True)
+-
+     # A top-level item key: the campaign slug when tagged, else `WI:<id>` (a
+     # campaign-less WI is its own top-level item — the sw_containment "uncontained"
+     # analogue). label() unwraps the `WI:` sentinel back to the bare id.
+@@ -1277,9 +1277,9 @@ def when_view(root, wis):
+         lis = "".join(
+             "<li><code>{}</code> → <code>{}</code> "
+             '<span class="sub">({})</span></li>'.format(
+-                _esc(a),
+-                _esc(b),
+-                _esc(", ".join("{}→{}".format(p, w) for p, w in sorted(edges))),
++                esc(a),
++                esc(b),
++                esc(", ".join("{}→{}".format(p, w) for p, w in sorted(edges))),
+             )
+             for (a, b), edges in sorted(agg.items())
+         )
+@@ -1307,7 +1307,7 @@ def when_view(root, wis):
+                     else ""
+                 )
+                 head = '{}<code>{}</code> <span class="sub">· {} · {} item(s)</span>'.format(
+-                    sw, _esc(lbl), name, len(members)
++                    sw, esc(lbl), name, len(members)
+                 )
+                 blocks += (
+                     '<details class="tierbox"><summary>{}</summary>'
+@@ -1321,7 +1321,7 @@ def when_view(root, wis):
+         return _campboxes(subset, accent_of)
+ 
+     legend = "".join(
+-        '<span class="ph" style="background:{}"></span>{}'.format(color[p], _esc(p))
++        '<span class="ph" style="background:{}"></span>{}'.format(color[p], esc(p))
+         for p in sorted(phases)
+     )
+     summary = (
+@@ -1921,9 +1921,6 @@ def know_graph(root):
+         (KN_COL_W, KN_COL_GAP, KN_ROW_H, KN_ROW_GAP, KN_PAD),
+     )
+ 
+-    def esc(s):
+-        return html.escape(str(s), quote=True)
+-
+     edge_svg = []
+     for s, d in edges:
+         x1, y1 = pos[s][0] + KN_COL_W, pos[s][1] + KN_ROW_H / 2
+@@ -1942,12 +1939,16 @@ def know_graph(root):
+         info = nodes[k]
+         fill = OKF_TYPE_FILL.get(info["type"], "#64748b")
+         short = k if len(k) <= 20 else k[:19] + "…"
++        kt = (info.get("title") or "").strip()
++        tip = k + (" — " + kt if kt else "") + " ({})".format(info["type"])
+         node_svg.append(
+             '<g class="knode" data-id="{}" tabindex="0">'
++            "<title>{}</title>"
+             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="6" '
+             'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
+             'dominant-baseline="central">{}</text></g>'.format(
+                 esc(k),
++                esc(tip),
+                 x,
+                 y,
+                 KN_COL_W,
+@@ -2122,9 +2123,6 @@ def process_panel(root, wis, stats):
+     if not gate:
+         return None
+ 
+-    def esc(s):
+-        return html.escape(str(s), quote=True)
+-
+     proc_doc = _process_doc(root, "docs/process.md", "project-trajectory/PROCESS.md")
+     opts_doc = _process_doc(
+         root, "docs/process-options.md", "project-trajectory/PROCESS_OPTIONS.md"
+diff --git a/tests/test_gen_trajectory.py b/tests/test_gen_trajectory.py
+index 2e1f69e..1c7661c 100644
+--- a/tests/test_gen_trajectory.py
++++ b/tests/test_gen_trajectory.py
+@@ -134,7 +134,11 @@ def test_dag_layers_by_dependency_rank(tmp_path):
+     )
+     xs = {
+         m.group(1): float(m.group(2))
+-        for m in re.finditer(r'data-id="(WI-\d+)"[^>]*><rect x="([\d.]+)"', dag)
++        for m in re.finditer(
++            # each node <g> now carries a <title> tooltip child before its <rect>
++            r'data-id="(WI-\d+)"[^>]*>(?:<title>[^<]*</title>)?<rect x="([\d.]+)"',
++            dag,
++        )
+     }
+     # the root sits left of its successors; the sink sits right of them.
+     assert xs["WI-001"] < xs["WI-002"] < xs["WI-004"]
+[31;1mrg: [31;1mThe term 'rg' is not recognized as a name of a cmdlet, function, script file, or executable program.[0m
+[31;1m[31;1mCheck the spelling of the name, or if a path was included, verify that the path is correct and try again.[0m
+[31;1mrg: [31;1mThe term 'rg' is not recognized as a name of a cmdlet, function, script file, or executable program.[0m
+[31;1m[31;1mCheck the spelling of the name, or if a path was included, verify that the path is correct and try again.[0m
+[0m
+The implementation centralizes all Python-side escape calls correctly and adds titles to the four SVG-producing functions. The test change only tolerates a title in an unrelated layout assertion; it does not verify the new tooltip contract. I’ll validate the actual generated artifact and run the required harnesses before finalizing the finding severity.
+[0m$ [0mpython scripts/check.py
+C:\Python38\python.exe: can't open file 'scripts/check.py': [Errno 2] No such file or directory
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py
+=== format : C:\Python38\python.exe -m ruff format --check project-trajectory/scripts tests ===
+72 files already formatted
+
+=== lint : C:\Python38\python.exe -m ruff check project-trajectory/scripts tests ===
+All checks passed!
+
+=== tests+coverage : C:\Python38\python.exe -m pytest -q -n auto --cov=project-trajectory/scripts --cov-report=term-missing --cov-fail-under=85 ===
+bringing up nodes...
+bringing up nodes...
+
+.............................s.......................................... [ 10%]
+........................................................................ [ 20%]
+...................................................................s.... [ 30%]
+........................................................................ [ 40%]
+.................................................................s...... [ 51%]
+........ssssssssssss...........s.........s......s......s.....s.s........ [ 61%]
+..........s..sssss.ss.s.....s......s.........s.......................... [ 71%]
+..........s............................................................. [ 81%]
+........................................................................ [ 91%]
+.........................................................                [100%]
+============================== warnings summary ===============================
+..\..\Python38\lib\site-packages\xdist\plugin.py:259: 13 warnings
+  C:\Python38\lib\site-packages\xdist\plugin.py:259: DeprecationWarning: The --rsyncdir command line argument and rsyncdirs config variable are deprecated.
+  The rsync feature will be removed in pytest-xdist 4.0.
+    config.issue_config_time_warning(warning, 2)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform win32, python 3.8.10-final-0 -----------
+Name                                                  Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------------
+project-trajectory\scripts\agent_loop.py                954    118    88%   300, 337-338, 362-364, 385-386, 417, 441-442, 457-458, 568, 604, 682, 685, 688, 712, 742-743, 786, 808, 896-897, 911-912, 968-969, 1005, 1070-1072, 1081, 1116-1117, 1154, 1158-1159, 1208-1209, 1261-1262, 1415-1417, 1450-1451, 1472, 1486-1487, 1493, 1501-1502, 1549-1550, 1627-1628, 1692, 1711-1712, 1718-1719, 1741-1742, 1744, 1832, 1834-1841, 1884, 1893-1899, 1928-1929, 2044-2051, 2064-2065, 2110-2111, 2138-2139, 2143-2147, 2149-2152, 2176-2211, 2218-2219, 2226-2232, 2290-2296, 2354
+project-trajectory\scripts\agent_route.py               290     14    95%   169-170, 184-185, 188, 203, 220, 226, 290, 450, 555, 699, 705, 709
+project-trajectory\scripts\bootstrap.py                 498     44    91%   334, 339, 364, 381, 401, 438, 446, 452, 499, 525, 529, 546, 556, 562-568, 704, 722, 755, 758, 835, 860, 921, 932, 939, 960-961, 1304-1305, 1317, 1320, 1344, 1368-1369, 1616-1617, 1719, 1727, 1744, 1784
+project-trajectory\scripts\check.py                     271     12    96%   116-117, 285, 308, 637, 684-688, 721, 910, 939-940
+project-trajectory\scripts\check_doc_refs.py            116      4    97%   103, 118, 196-197
+project-trajectory\scripts\check_docs.py                309     23    93%   83-84, 188, 194-195, 208, 254-255, 280, 286, 292-293, 309, 311, 414, 441, 467, 481, 510, 513, 516, 563-564
+project-trajectory\scripts\check_dupes.py                85      5    94%   108, 138-139, 164-165
+project-trajectory\scripts\check_flows.py                84      6    93%   46-47, 60, 125-126, 139
+project-trajectory\scripts\check_perf.py                188      9    95%   67-68, 82, 97, 99, 201, 212, 315-316
+project-trajectory\scripts\check_privacy.py             249     22    91%   156-157, 169, 210-211, 242-243, 246-247, 362-363, 365, 397-402, 425-430, 434, 518-523, 529-533
+project-trajectory\scripts\check_stubs.py               137     10    93%   67, 70, 98, 165-166, 213-214, 252-258
+project-trajectory\scripts\check_trajectory.py          542     31    94%   153-154, 395, 496-500, 564, 589, 744, 896, 905, 937-938, 947-953, 987, 990, 1057, 1060, 1063-1064, 1067, 1088, 1091, 1094, 1106, 1202
+project-trajectory\scripts\check_vendored.py             72      5    93%   43-44, 55, 99-100
+project-trajectory\scripts\derive_gate.py               167      7    96%   91-92, 98, 274-275, 373-378
+project-trajectory\scripts\gen_arch_map.py              394     43    89%   103-104, 135, 146, 154, 156-158, 160, 174, 190, 200, 203-204, 206, 260, 270-287, 302, 323, 370-371, 394, 399, 464-465, 525, 542-546, 564-566, 578-579, 632, 749, 758, 778
+project-trajectory\scripts\gen_cases.py                 135     53    61%   66, 71, 87, 89, 92, 108, 175-179, 183-263, 267
+project-trajectory\scripts\gen_okf.py                   269      9    97%   141, 223, 226-227, 237, 240-241, 525-526
+project-trajectory\scripts\gen_release_checklist.py     115     27    77%   49, 61, 79-81, 93-94, 144-145, 157-159, 162-163, 183, 199-201, 211-212, 225-226, 238-240, 283, 285
+project-trajectory\scripts\gen_skills_index.py          126     15    88%   47-48, 98-103, 122, 127, 150, 160, 166, 247-248, 263-268, 274-275
+project-trajectory\scripts\gen_trajectory.py            779     27    97%   384-390, 435, 540, 659, 799, 811-813, 853, 860-865, 877, 1129, 1749-1769, 1834-1836, 1861, 2098, 2317
+project-trajectory\scripts\run_menu.py                   87      7    92%   64-65, 83-84, 157-158, 162
+project-trajectory\scripts\score_reviews.py             277     28    90%   94-95, 128, 189-191, 194, 198-199, 201, 225, 240, 266, 273, 292, 316, 348, 352, 363, 419-420, 499, 506-508, 546-548
+project-trajectory\scripts\subagent_gate.py              57     33    42%   51-59, 95-108, 114-120, 128-141, 145
+project-trajectory\scripts\trace.py                     548     19    97%   230-231, 288, 295, 515, 551, 554-555, 557, 606, 758, 805, 918, 1074-1075, 1081-1082, 1098-1099
+-----------------------------------------------------------------------------------
+TOTAL                                                  6749    571    92%
+
+Required test coverage of 85% reached. Total coverage: 91.54%
+671 passed, 34 skipped, 13 warnings in 154.22s (0:02:34)
+
+=== dupes : C:\Python38\python.exe project-trajectory/scripts/check_dupes.py --src project-trajectory/scripts ===
+check_dupes: OK - no duplicate blocks in 24 file(s).
+
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G3).
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html --require-verified --strict-schema ===
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 50 doc(s), 275 intra-repo link(s), 0 broken (8 orphan warning(s)).
+
+=== perf-budgets : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_perf.py --tier all ===
+check_perf: OK - no performance budgets to compare (process.md §9)
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (126 work item(s), 110 done (87%), graph acyclic).
+
+=== arch-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+
+=== trajectory-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+
+=== okf : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (242 file(s)).
+
+=== skills-sync : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+
+========================================================
+Check summary (gate G3, tier all):
+  PASS  format           0.1s
+  PASS  lint             0.1s
+  PASS  tests+coverage   171.3s
+  PASS  dupes            0.4s
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.1s
+  PASS  privacy          0.4s
+  PASS  doc-navigability 7.2s
+  PASS  perf-budgets     0.1s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+  PASS  arch-map         0.4s
+  PASS  trajectory-map   0.2s
+  PASS  okf              0.1s
+  PASS  skills-sync      0.1s
+========================================================
+RESULT: PASS
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --strict --no-placeholders --require-verified --strict-schema
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+The G3 harness passed: `671 passed, 34 skipped`, 91.54% coverage; all 15 gate steps passed. Direct trace also passed with `orphans=0`, `integrity=0`, and `schema-findings=0`. I found one testability gap in the newly added tooltip behavior and will record it as a MINOR review finding.
+[0m% [0mPatch 1 file
+[0m
+[0m$ [0mgit status --short
+M OWNER_SCRATCHPAD.md
+ M docs/iteration_index.md
+ M docs/reviews/scoreboard.txt
+ M docs/run-phase
+?? docs/iteration/007-20260713-143706.log
+?? docs/iteration/008-20260713-151051.log
+?? docs/iteration/009-20260713-151746.log
+?? docs/iteration/010-20260713-153426.log
+?? docs/iteration/011-20260713-153915.log
+?? docs/iteration/012-20260713-160231.log
+?? docs/iteration/013-20260713-160644.log
+?? docs/iteration/014-20260713-162326.log
+?? docs/iteration/015-20260713-162955.log
+?? docs/iteration/016-20260713-170119.log
+?? docs/iteration/017-20260713-171539.log
+?? docs/iteration/018-20260713-172028.log
+?? docs/reviews/008-REVIEW-A.md
+?? docs/reviews/010-REVIEW-A.md
+?? docs/reviews/012-REVIEW-A.md
+?? docs/reviews/014-REVIEW-A.md
+?? docs/reviews/017-REVIEW-A.md
+?? docs/reviews/019-REVIEW-A.md
+[0m
+[0m# [0mTodos
+[✓] Read contributor guide and required review surfaces
+[✓] Inspect work-under-review diff and impacted registry history
+[✓] Run check and trace harnesses
+[✓] Write review verdict in required log format
+[0m
+Review recorded in `docs/reviews/019-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED findings=1`.
+
+Harness evidence: `check.py` passed all G3 steps (`671 passed, 34 skipped`); direct trace reported `orphans=0 integrity=0 schema-findings=0`.

@@ -1,0 +1,14 @@
+#!/bin/sh
+# Pre-commit floor for THIS repo (the ai-template meta-repo) — a thin WRAPPER, not
+# a copy. The kit's harness lives under project-trajectory/scripts/ (this repo's
+# scripts/ holds only dev-setup), so point the shipped floor there via
+# KIT_SCRIPTS_DIR and delegate to it. The floor logic AND the venv-preference now
+# live once in project-trajectory/hooks/pre-commit, so there is nothing here to
+# drift from the shipped hook (IMPROVEMENT_PLAN.md WI-1.42; was a hand copy).
+#
+# Enable:  git config core.hooksPath .githooks
+# Disable: git config --unset core.hooksPath
+KIT_SCRIPTS_DIR=project-trajectory/scripts
+export KIT_SCRIPTS_DIR
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || ROOT=$(cd "$(dirname "$0")/.." && pwd)
+exec sh "$ROOT/project-trajectory/hooks/pre-commit" "$@"

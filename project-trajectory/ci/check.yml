@@ -8,16 +8,27 @@
 name: check
 on:
   push:
-    branches: [main]
+    # llm/** = the agent iteration branch (process-options.md "Agent iteration
+    # branch & sync"), so the process floor also runs remotely on agent legs.
+    branches: [main, "llm/**"]
     tags: ["v*"]
   pull_request:
 
 jobs:
   check:
-    # Add more entries to run the matrix on the platforms you support.
+    # Platforms: keep this list in sync with docs/status.md "Supported platforms".
+    # The kit's own scripts are cross-platform, so the choice is driven by YOUR
+    # project's deps/toolchain. A portable project should "hold its own" on every
+    # OS it claims — uncomment the rows below; a project that can only build on one
+    # platform trims to it. Don't claim CI for an OS your deps can't run on: a red
+    # cell nobody can fix is worse than an honest single-platform matrix.
     strategy:
+      fail-fast: false   # see every platform's result, not just the first failure
       matrix:
-        os: [ubuntu-latest]   # e.g. [ubuntu-latest, macos-latest, windows-latest]
+        os:
+          - ubuntu-latest
+          # - macos-latest      # Apple Silicon (arm64); note: no CPython 3.8 build
+          # - windows-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -26,24 +37,37 @@ jobs:
         with:
           python-version: "3.x"
 
-      # Edit to your real dependencies. The reference harness uses ruff + pytest
+      # Edit to your real dependencies. This only INSTALLS the tools; what the
+      # harness RUNS (the format/lint/test commands, tiers, coverage) is
+      # declared once in docs/stack.ini and executed by check.py below — so CI
+      # never restates a check command. The reference harness uses ruff + pytest
       # (+ pytest-cov); trace.py and gen_arch_map.py are stdlib-only.
       - name: Install tooling
         run: |
           python -m pip install --upgrade pip
           pip install ruff pytest pytest-cov
-          # pip install -e . || pip install -r requirements.txt || true
+          # Then install YOUR project's deps — pick the one that fits and let it
+          # fail loudly (don't add `|| true`, which would hide an install error):
+          #   pip install -e .                 # if you have a pyproject.toml
+          #   pip install -r requirements.txt  # if you pin deps in a file
 
       # Tier by trigger: cheap smoke on every push, the full suite on PRs, and
-      # the full release tier on a version tag. In CI we do NOT pass --lenient:
-      # a missing required tool must fail, so checks can't be silently skipped.
+      # the full release tier on a version tag. The GATE comes from the repo's
+      # committed `docs/gate` file (check.py reads it), so CI enforces the bar
+      # the project is actually at — a freshly-scaffolded G1 repo is green, and
+      # the bar rises when artifacts are ratified in a reviewed commit and
+      # docs/gate is regenerated (it is DERIVED from the artifact states by
+      # derive_gate.py, not hand-set; the derived-gate step guards its freshness). A
+      # release tag claims the full bar explicitly. In CI we do NOT pass
+      # --lenient: a missing required tool must fail, so checks can't be
+      # silently skipped.
       - name: Smoke (push)
         if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
-        run: python scripts/check.py --gate G3 --tier smoke
+        run: python scripts/check.py --tier smoke
 
       - name: Full suite (pull request)
         if: github.event_name == 'pull_request'
-        run: python scripts/check.py --gate all --tier full
+        run: python scripts/check.py --tier full
 
       - name: Release suite (tag)
         if: startsWith(github.ref, 'refs/tags/')
@@ -59,6 +83,8 @@ jobs:
           name: reports-${{ matrix.os }}
           path: |
             docs/test/report.md
+            docs/test/report.html
+            docs/test/perf-report.md
             docs/release-checklist.md
             docs/releases/
           if-no-files-found: ignore

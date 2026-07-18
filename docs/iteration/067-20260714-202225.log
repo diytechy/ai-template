@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 067
+# date: 2026-07-14 20:36
+# phase: BUILD
+# wi: WI-150
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: 7dc8560..d50ca80
+# tokens: 
+# cost-usd: 
+# wall-secs: 858
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1475
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll load the repository operating guide and current state, then execute only the recorded next work item.
+[0m→ [0mRead CLAUDE.md
+[0m→ [0mSkill "session-protocol"
+[0m→ [0mRead docs/status.md
+[0m
+[0m# [0mTodos
+[•] Inspect WI-150 scope, linked requirements, and worktree residue
+[ ] Implement only WI-150 deliverable with tests
+[ ] Run commit and full completion gates
+[ ] Update session records and commit WI-150
+[0m
+[0m✱ [0mGrep "^WI-150,|WI-150"[90m in docs/requirements/work-items.csv · 1 match[0m
+[0m✱ [0mGrep "Unattended operation"[90m in project-trajectory/PROCESS_OPTIONS.md · 31 matches[0m
+[0m→ [0mRead docs/next-wi
+[0m→ [0mRead docs/specs/owner-intake-2026-07-14.md
+[0m
+[0m$ [0mgit status --short; git log --oneline -5
+?? docs/reviews/062-REVIEW-A.md
+7dc8560 telemetry: session 066 review scoreboard
+52cba92 telemetry: session 066 REVIEW-A COMMITTED
+e2b8519 review: WI-149 lowest-gate-first verdict (066-REVIEW-A)
+7bab852 telemetry: session 065 BUILD COMMITTED
+896f9ed WI-149: warn on lower-gate queue order
+[0m
+WI-150 is a documentation-only routing rule. The only worktree residue is `docs/reviews/062-REVIEW-A.md`; I’ll verify whether it belongs to this active session before editing the rule’s three required homes and their dogfooded skill copy.
+[0m→ [0mRead docs/reviews/062-REVIEW-A.md
+[0m✱ [0mGlob "**/session-protocol/SKILL.md"[90m in . · 1 match[0m
+[0m✱ [0mGrep "AGENT_PROMPT"[90m in . · 6 matches[0m
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md[90m [offset=490, limit=140][0m
+[0m✱ [0mGrep "BuildTier|tier"[90m in project-trajectory/skills/session-protocol/SKILL.md · 2 matches[0m
+[0m→ [0mRead docs/requirements/work-items.csv[90m [offset=145, limit=12][0m
+[0m✱ [0mGlob ".claude/skills/**"[90m in . · 0 matches[0m
+[0m✱ [0mGlob ".agents/skills/**"[90m in . · 0 matches[0m
+[0m✱ [0mGrep "BuildTier|tier assignment|tier-routing"[90m in tests · 14 matches[0m
+[0m→ [0mRead docs/run-state
+[0m→ [0mRead docs/log.md[90m [offset=1, limit=100][0m
+[0m→ [0mRead .claude
+[0m→ [0mRead .claude/skills
+[0m→ [0mRead .claude/skills/session-protocol/SKILL.md
+[0m→ [0mRead project-trajectory/skills/session-protocol/SKILL.md[90m [offset=1, limit=110][0m
+[0m✱ [0mGrep "BuildTier|per-WI|per WI"[90m in project-trajectory/PROCESS_OPTIONS.md · 38 matches[0m
+I’ll add the filing-time tier heuristic beside the existing `BuildTier` routing contract, then mirror it in both launch prompts and the source plus dogfooded session skill. The unrelated WI-147 review is preserved unmodified.
+[0m% [0mPatch 5 files
+[0m→ [0mRead project-trajectory/PROCESS_OPTIONS.md[90m [offset=725, limit=52][0m
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Inspect WI-150 scope, linked requirements, and worktree residue
+[✓] Implement only WI-150 deliverable with tests
+[•] Run commit and full completion gates
+[ ] Update session records and commit WI-150
+[0m
+The change is confined to the WI-150-required rule surfaces. I’m running the required commit bar and full suite now; documentation has no behavioral test to add.
+[0m$ [0mpython project-trajectory/scripts/check_docs.py --root . --stale
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+
+[... 480 line(s) elided — full stream in out/run-logs/ ...]
+
+ # no new session inside the window, wait-it-out-and-resume; start==end/absent =
+@@ -31,8 +32,8 @@
+ # --ratify view + link-only brief lint). WI-146 (ratification package - trace.py
+ # --ratify view + the warn-first brief lint + gate-advance/reviewer-prompt wiring
+ # + the [g2]-authors-IF recipe line) SHIPPED 2026-07-14 (log.md). The loop
+-# continues the actionable owner-intake backlog in id order: WI-150
+-# (planner-assigned BuildTier) -> WI-151 (throughline pointer). WI-144 (the v3
++# continues the actionable owner-intake backlog in id order through WI-151
++# (throughline pointer). WI-144 (the v3
+ # closer) is `active` but PAUSED - its
+ # SR-047 critique loop EXHAUSTED AGENT_CRITIQUE_MAX=3 still CHANGES-REQUESTED
+ # (042/048/052); single-ratify's budget failure_action pauses it + surfaces the
+@@ -47,4 +48,4 @@
+ # campaign the owner sequences at the sitting: do NOT auto-start it ahead of the
+ # owner-intake WIs. WI-144 resumes for its final build round after the sitting rules
+ # OI-12, then the full gate bar and the spine rejoins G3.
+-WI-150
++WI-151
+diff --git a/docs/requirements/work-items.csv b/docs/requirements/work-items.csv
+index ecdb033..0a8d93e 100644
+--- a/docs/requirements/work-items.csv
++++ b/docs/requirements/work-items.csv
+@@ -148,7 +148,7 @@ WI-146,Ratification package - batch-scoped SN->SR->LLR/TC tree + brief link chec
+ WI-147,Coordinator graceful pause - declared pause request wraps to a clean stop,unattended,,WI-024;WI-145,done,"agent_loop.py honors docs/pause (pause_reason helper + top-of-loop boundary check, exit 8): launch-time refusal, graceful stop after the in-flight session, delete-to-resume (run-state untouched); per-lane like run-state. PROCESS_OPTIONS unattended section documents it (+650 B, baseline re-stamped 136,099). 4 tests.",docs/specs/owner-intake-2026-07-14.md#pause-blackout,owner-intake-2026-07-14,
+ WI-148,Weekday blackout window - no new sessions inside configured UTC hours,unattended,,WI-023;WI-024;~WI-147;WI-145,done,"agent_loop.py honors docs/blackout (parse_blackout + blackout_wake helpers, top-of-loop boundary check): a HH:MM-HH:MM UTC Mon-Fri half-open window starts no new session - the loop waits it out and resumes automatically (a single walk-away launch survives the blackout). start==end / absent / malformed = disabled (byte-identical); wraps past midnight. blackout.template scaffolds the 12:00-19:00 default (bootstrap SCAFFOLD + test_scaffold_contains + a default-value test). PROCESS_OPTIONS unattended section documents it (+742 B, baseline re-stamped 136,841). 5 tests (parse edges, boundary minutes, disable/weekend, wrap, present-but-inactive end-to-end).",docs/specs/owner-intake-2026-07-14.md#pause-blackout,owner-intake-2026-07-14,
+ WI-149,Lowest-gate-first queue advisory (check_trajectory warn),scripts,,WI-093;~WI-115;WI-145,done,"check_trajectory warns when docs/next-wi selects a phase development WI ahead of an open [phase]-[g1|g2] anchor or a Draft SR in that phase; owner ordering remains authoritative. Both agent-resume prompts carry the lowest-gate-first instruction. 3 fixture tests.",docs/specs/owner-intake-2026-07-14.md#gate-first,owner-intake-2026-07-14,
+-WI-150,Planner-assigned BuildTier - deliberate tier at WI filing,docs,,WI-126;WI-145,queued,,docs/specs/owner-intake-2026-07-14.md#tier-routing,owner-intake-2026-07-14,
++WI-150,Planner-assigned BuildTier - deliberate tier at WI filing,docs,,WI-126;WI-145,done,"PROCESS_OPTIONS, both agent-resume prompts, and the session-protocol skill (source + .claude/.agents copies) require deliberate filing/triage assignments: quick for mechanical off-spine work, medium by default, strong only for design-shaping or spine-touching changes; no silent mid-loop downgrade. PROCESS_OPTIONS growth +301 B re-stamped in byte-budget-guard copies.",,owner-intake-2026-07-14,
+ WI-151,Throughline pointer - vendorable design-system package note,docs,,~WI-083;WI-145,queued,,docs/specs/owner-intake-2026-07-14.md#throughline,owner-intake-2026-07-14,
+ WI-152,Knowledge home - docs/knowledge/README.md + bootstrap scaffold wiring + scaffold tests,scripts,,WI-145,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+ WI-153,Knowledge ref integrity - trace.py warn-first Knowledge resolution + knowledge->component coupling warn + fixtures,scripts,,WI-152,queued,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+diff --git a/docs/status.md b/docs/status.md
+index 9ff89e3..2d8fb57 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -88,7 +88,7 @@ home elsewhere — don't restate it here:
+   this campaign at the g2-close sitting; do not auto-start it._
+ - **Queued (owner intake 2026-07-14** — triage + answers:
+   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
+-  **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline pointer).
++  **WI-151** (throughline pointer).
+   Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting closed), so
+   these are the loop's **actionable non-dependent backlog** — the loop works them
+   in id order (the ratification-package + graceful-pause + weekday-blackout WIs
+@@ -102,8 +102,9 @@ home elsewhere — don't restate it here:
+   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+-- **Next action:** **WI-150** ([next-wi](next-wi)) — run-state **RUNNING**. The
+-  loop works the actionable owner-intake backlog (WI-150…151, id order; the
++- **Next action:** **WI-151** ([next-wi](next-wi)) — run-state **RUNNING**. The
++  loop works the actionable owner-intake backlog (WI-151, then owner-sequenced
++  campaigns; the
+   weekday-blackout slice shipped 2026-07-14) while WI-144 is paused and the
+   g2-close sitting is DUE in parallel (Open items above). Shipped work +
+   round-by-round evidence → [log.md](log.md) / OI-12, not here.
+[0m
+[0m$ [0mgit log --oneline -10
+7dc8560 telemetry: session 066 review scoreboard
+52cba92 telemetry: session 066 REVIEW-A COMMITTED
+e2b8519 review: WI-149 lowest-gate-first verdict (066-REVIEW-A)
+7bab852 telemetry: session 065 BUILD COMMITTED
+896f9ed WI-149: warn on lower-gate queue order
+9cd8e35 telemetry: session 064 review scoreboard
+618eda1 telemetry: session 064 REVIEW-A COMMITTED
+7810196 review: WI-148 blackout verdict
+95f2d04 telemetry: session 063 BUILD COMMITTED
+ced9194 @ WI-148: weekday blackout window via docs/blackout
+[0m
+The final diff exposed two formatting-only issues in the routing paragraph and a clumsy status wrap. I’ll tighten those before the final commit-bar rerun and commit.
+[0m% [0mPatch 2 files
+[0m
+[0m$ [0m(Get-Item -LiteralPath 'project-trajectory/PROCESS_OPTIONS.md').Length; git diff --check
+137132
+warning: in the working copy of 'agent-resume.cmd', LF will be replaced by CRLF the next time Git touches it
+[0m
+[0m% [0mPatch 5 files
+[0m
+[0m$ [0mpython project-trajectory/scripts/gen_skills_index.py --check-agents; (Get-Item -LiteralPath 'project-trajectory/AGENTS.template.md').Length; (Get-Item -LiteralPath 'project-trajectory/PROCESS.md').Length; (Get-Item -LiteralPath 'project-trajectory/PROCESS_OPTIONS.md').Length
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+9978
+59827
+137132
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_docs.py --root . --stale
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/054-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/056-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/058-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/060-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/062-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/064-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/066-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/test/report.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:51 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 84 doc(s), 371 intra-repo link(s), 0 broken (32 orphan warning(s)).
+[0m
+[0m$ [0mpython -m pytest -q -n auto -m smoke
+bringing up nodes...
+bringing up nodes...
+
+...........s............................................................ [ 11%]
+..............................s......................................... [ 23%]
+........................................................................ [ 35%]
+........................................................................ [ 46%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 93%]
+......................................                                   [100%]
+612 passed, 2 skipped in 56.00s
+[0m
+Final commit bar is green: `612 passed, 2 skipped`; docs check reports `0 broken` with 32 historical warnings; all 10 skill copies match. I’ll stage only WI-150 files, leaving the unrelated untracked review untouched, then commit.
+[0m$ [0mgit diff --check; git add -- .agents/skills/byte-budget-guard/SKILL.md .agents/skills/session-protocol/SKILL.md .claude/skills/byte-budget-guard/SKILL.md .claude/skills/session-protocol/SKILL.md agent-resume.cmd agent-resume.sh docs/log.md docs/next-wi docs/requirements/work-items.csv docs/status.md project-trajectory/PROCESS_OPTIONS.md project-trajectory/skills/byte-budget-guard/SKILL.md project-trajectory/skills/session-protocol/SKILL.md; git commit -m "WI-150: Assign BuildTier at filing" -m "Make planner-assigned BuildTier routing explicit across the process, driver prompts, and session skill copies. Re-stamp the watched PROCESS_OPTIONS baseline after the focused documentation growth."
+warning: in the working copy of 'agent-resume.cmd', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'agent-resume.cmd', LF will be replaced by CRLF the next time Git touches it
+
+=== derived-gate : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+  PASS  derived-gate     0.1s
+
+=== skills-sync : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.1s
+
+=== trajectory : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py ===
+check_trajectory: clean (158 work item(s), 137 done (87%), graph acyclic).
+  PASS  trajectory       0.1s
+
+=== registry-integrity : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict-integrity ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+  PASS  registry-integrity 0.2s
+
+=== okf : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (257 file(s)).
+  PASS  okf              0.2s
+
+=== trajectory-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard STALE in PROJECT_STATE.html: run `python scripts/gen_trajectory.py`
+  FAIL  trajectory-map   exit 1 (0.2s)
+
+=== arch-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.4s
+[0m
+The commit hook correctly blocked the commit because closing WI-150 made `PROJECT_STATE.html` stale. I’ll regenerate that derived dashboard, rerun the required checks, then commit the generated file with the WI.
+[0m$ [0mpython project-trajectory/scripts/gen_trajectory.py
+gen_trajectory: wrote PROJECT_STATE.html
+[0m
+[0m$ [0mpython project-trajectory/scripts/gen_skills_index.py --check-agents; python project-trajectory/scripts/gen_trajectory.py --check
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+project-state dashboard up to date.
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_docs.py --root . --stale
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/054-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/056-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/058-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/060-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/062-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/064-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/066-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/test/report.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:51 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 84 doc(s), 371 intra-repo link(s), 0 broken (32 orphan warning(s)).
+[0m
+[0m$ [0mpython -m pytest -q -n auto -m smoke
+bringing up nodes...
+bringing up nodes...
+
+.........s.............................................................. [ 11%]
+........................................................................ [ 23%]
+..............s......................................................... [ 35%]
+........................................................................ [ 46%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 93%]
+......................................                                   [100%]
+612 passed, 2 skipped in 60.57s (0:01:00)
+[0m
+[0m$ [0mpython -m pytest -q -n auto
+bringing up nodes...
+bringing up nodes...
+
+............................s........................................... [  9%]
+........................................................................ [ 18%]
+......................................................s................. [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 46%]
+.......................................................................s [ 56%]
+.ssssssssssssssss..........s...s.....ss......s...s....s.....s....s...... [ 65%]
+s.ss........s........s........s......................................... [ 74%]
+........................................................................ [ 84%]
+........................................................................ [ 93%]
+..................................................                       [100%]
+736 passed, 34 skipped in 72.03s (0:01:12)
+[0m
+[0m$ [0mgit status --short; git diff --check; git diff --cached --stat; git diff -- PROJECT_STATE.html
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f636ace5a001I5vlnVpxOrO7fd
+
+     function esc(s){ const d=document.createElement('div'); d.textContent = s==null?'':s; return d.innerHTML; }
+ 
+     function renderDetail(box, d, id, tierColor){
+[0m
+[0m→ [0mRead C:/Users/Peter/.local/share/opencode/tool-output/tool_f636ace5a001I5vlnVpxOrO7fd[90m [offset=1, limit=20][0m
+The regenerated dashboard is now verified current. The final full suite passed `736 passed, 34 skipped`; I’m including the derived dashboard in the already staged WI commit.
+[0m
+[0m$ [0mgit add -- PROJECT_STATE.html; git commit -m "WI-150: Assign BuildTier at filing" -m "Make planner-assigned BuildTier routing explicit across the process, driver prompts, and session skill copies. Re-stamp the watched PROCESS_OPTIONS baseline after the focused documentation growth."
+=== derived-gate : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+  PASS  derived-gate     0.1s
+
+=== skills-sync : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.1s
+
+=== trajectory : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py ===
+check_trajectory: clean (158 work item(s), 137 done (87%), graph acyclic).
+  PASS  trajectory       0.1s
+
+=== registry-integrity : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict-integrity ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+  PASS  registry-integrity 0.1s
+
+=== okf : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (257 file(s)).
+  PASS  okf              0.2s
+
+=== trajectory-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.2s
+
+=== arch-map : C:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.4s
+check_privacy: privacy check off (docs/privacy-check) — author not checked.
+check_privacy: clean (staged diff; secrets floor).
+
+=== format : C:\Projects\ai-template\.venv\Scripts\python.exe -m ruff format --check project-trajectory/scripts tests ===
+72 files already formatted
+  PASS  format           0.2s
+[derived-gate-model d50ca80] WI-150: Assign BuildTier at filing
+ 14 files changed, 71 insertions(+), 26 deletions(-)
+[0m
+[0m→ [0mRead docs/next-wi[90m [offset=21, limit=30][0m
+[0m→ [0mRead docs/run-state
+[0m
+[0m$ [0mgit status --short; git log --oneline -3
+?? docs/reviews/062-REVIEW-A.md
+d50ca80 WI-150: Assign BuildTier at filing
+7dc8560 telemetry: session 066 review scoreboard
+52cba92 telemetry: session 066 REVIEW-A COMMITTED
+[0m
+[0m# [0mTodos
+[✓] Inspect WI-150 scope, linked requirements, and worktree residue
+[✓] Implement only WI-150 deliverable with tests
+[✓] Run commit and full completion gates
+[✓] Update session records and commit WI-150
+[0m
+Implemented and committed WI-150: `d50ca80 WI-150: Assign BuildTier at filing`.
+
+- Added deliberate `BuildTier` assignment guidance across process, prompts, and all skill copies.
+- Re-stamped `PROCESS_OPTIONS.md` baseline at 137,132 bytes.
+- Updated registry, status, next WI (`WI-151`), log, and generated dashboard.
+- Checks: smoke `612 passed, 2 skipped`; full `736 passed, 34 skipped`; docs check `0 broken`; commit hooks passed.
+- `docs/run-state` remains `RUNNING`.
+- Preserved unrelated untracked `docs/reviews/062-REVIEW-A.md`.

@@ -1,0 +1,23 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 051
+# date: 2026-07-14 17:23
+# phase: CRITIQUE
+# wi: WI-144
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: ERROR
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 0
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 13524
+# exit-code: 1
+# ---
+The command line is too long.

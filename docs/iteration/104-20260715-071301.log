@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 104
+# date: 2026-07-15 07:28
+# phase: DESIGN-CHECK
+# wi: WI-156
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: cea90d5..c4c2d72
+# tokens: 
+# cost-usd: 
+# wall-secs: 929
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1858
+# exit-code: 0
+# ---
+Reading additional input from stdin...
+OpenAI Codex v0.144.4
+--------
+workdir: C:\Projects\ai-template
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019f65b1-dc19-7092-aa91-37136d7d96b5
+--------
+user
+You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. When filing or triaging a WI, assign BuildTier deliberately: quick for mechanical/off-spine work, medium by default, strong only for design-shaping or spine-touching work; never silently downgrade a declared route mid-loop. Clear the lowest gate level first: do not queue phase development ahead of its open [phase]-[g1|g2] work or Draft SRs unless the owner deliberately orders it. Gates before every commit (the commit bar): python -m pytest -q -n auto -m smoke and python project-trajectory/scripts/check_docs.py --root . --stale - paste the real output; never report a green you didn't produce. Run the FULL suite (python -m pytest -q -n auto, no -m) before claiming a slice/campaign done or at close (session-protocol skill 'End green'). Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, docs/next-wi (the next WI id - or a ';'-joined batch of independent off-spine WIs to execute in order as ONE session with ONE review round, WI-133 - for the coordinator's BuildTier pin), the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first.
+codex
+I’m using the `session-protocol` skill because this is a scoped driver-session run. I’ll first read its instructions, `CLAUDE.md`, the current status, and the unattended-operation master, then execute only the recorded next WI and preserve the required commit/hand-off protocol.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$files = @('"'C:\\Projects\\ai-template\\.agents\\skills\\session-protocol\\SKILL.md','CLAUDE.md','docs\\status.md','project-trajectory\\PROCESS.md','project-trajectory\\PROCESS_OPTIONS.md','docs\\requirements\\work-items.csv','docs\\push-policy','docs\\next-wi','docs\\run-state'); foreach ("'$f in $files) { Write-Output "===== $f ====="; Get-Content -LiteralPath $f -Raw }' in C:\Projects\ai-template
+ succeeded in 651ms:
+===== C:\Projects\ai-template\.agents\skills\session-protocol\SKILL.md =====
+---
+name: session-protocol
+description: Use when running a work-item (WI) or thread session in this template repo — how to read the plan, execute only the scoped work, pass the gates, write the session/WI log, and commit in this repo's style.
+stacks: [any]
+domains: [any]
+phases: [dev, gate, release]
+tags: [session, improvement-plan, workflow, commit-style, wi]
+scope: this-repo
+---
+
+# Session protocol (this template repo)
+
+How a WI/thread session runs here. The live homes: **`docs/status.md`** (what's
+next), **`docs/requirements/work-items.csv`** (the WI registry), and
+**`docs/log.md`** (the session/gate record). This skill is the fast path; the
+process masters (`PROCESS.md` / `PROCESS_OPTIONS.md`) win when they disagree. The
+kit's design history — the old thread specs and the WI-1.x log — is archived at
+`docs/archive/IMPROVEMENT_PLAN.md` (context, not a working surface).
+
+## 1. Read before doing
+
+- Read `CLAUDE.md` (governs editing the kit) and `AGENTS.md` (the pointer stub).
+- Read `docs/status.md` (the working surface — what's next) and the scoped WI's
+  row in `docs/requirements/work-items.csv`. The spec-of-record for a WI is what
+  its row points at (an SR and/or a plan doc); older landed work is in the
+  archived plan. **Do only the scoped work** — no unrelated edits.
+- If a stub is being revived, find and link its earlier backlogged form (search
+  `docs/archive/scratch.md` + the stub threads) so the resolution is traceable.
+- **Check `git status` first.** Residue in the working tree is from an
+  interrupted session; reconcile it against the open WI's spec / Done-when
+  *before* new work — verify-and-commit what is complete, discard what is not
+  part of the scope, and record which in the log. (The unattended loop surfaces
+  this into the session prompt; the judgment is yours — it never auto-stashes.)
+- **Treat a declared-policy change as a status-staleness event.** In the same
+  sitting, grep `docs/status.md` and `docs/run-state` for pause/stop/approval
+  language predicated on the old `gate-policy`, `push-policy`, `review-policy`,
+  or `guardrails-policy` value; point to the policy file instead of paraphrasing it.
+
+## 2. Respect the constraints
+
+
+[... 42259 line(s) elided — full stream in out/run-logs/ ...]
+
++   `robot_localization`; configure per-sensor which state dimensions to trust. Odom for local
++   smoothness, IMU for orientation/yaw-rate, GPS for global drift correction.
++2. **Open-vocabulary perception pipeline** for "find/grasp the X": text prompt → Grounding DINO boxes
++   → SAM 2 masks → lift mask to 3D via the depth image + camera intrinsics → cluster to a grasp target.
++   No per-object training; swap the noun in the prompt.
++3. **Register point clouds with ICP** (align a new scan to a map / a model to an observation): coarse
++   align (feature/global) then refine point-to-plane ICP. Point-to-plane converges faster than
++   point-to-point on structured scenes.
++
++```yaml
++# robot_localization EKF (ekf.yaml): fuse wheel odometry + IMU into a smooth odom→base_link.
++ekf_filter_node:
++  ros__parameters:
++    frequency: 30.0
++    two_d_mode: false
++    odom_frame: odom
++    base_link_frame: base_link
++    world_frame: odom
++    odom0: /wheel/odometry
++    odom0_config: [true, true, false,  false, false, true,   # x,y | yaw
++                   true, false, false, false, false, true,   # vx  | vyaw
++                   false, false, false]
++    imu0: /imu/data
++    imu0_config: [false, false, false, true, true, true,     # roll,pitch,yaw
++                  false, false, false, true, true, true,     # angular vel
++                  true, true, true]                          # linear accel
++```
++
++```python
++# Open-vocabulary detect -> segment (Grounded-SAM-2 pattern), then lift to 3D.
++boxes, labels = grounding_dino.predict(image, caption="blue mug . gripper .", box_threshold=0.35)
++masks = sam2.predict(image, boxes=boxes)                     # promptable segmentation
++pts3d = deproject(depth_image, masks[0], camera_intrinsics)  # mask + depth -> object point cloud
++```
++
++### Gotchas
++- Perception lives or dies on **TF frames and time sync**; a wrong `base_link`→sensor transform makes
++  everything downstream (SLAM, planning) silently wrong. Verify the TF tree first.
++- Foundation-model inference (SAM 2 / DINO) is heavy — run it on a workstation/GPU node, not the
++  robot's compute-constrained onboard, or use distilled variants.
+diff --git a/project-trajectory/knowledge/simulation-robot-learning.md b/project-trajectory/knowledge/simulation-robot-learning.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..04afc88af7da3b89baab94dbf5f2f19f282fad06
+--- /dev/null
++++ b/project-trajectory/knowledge/simulation-robot-learning.md
+@@ -0,0 +1,61 @@
++---
++domains: [hardware]
++researched: 2026-07-09
++source: ClaudeGuardChecks/skill-knowledge-library
++---
++# Simulation & robot learning
++
++Curated research pack imported from the staged skill/knowledge library. Verify version-sensitive examples against the linked current documentation before shipping.
++
++### Core references
++- **[MuJoCo](https://mujoco.readthedocs.io/)** — best physics fidelity for contact-rich manipulation;
++  **[MJX](https://mujoco.readthedocs.io/en/stable/mjx.html)** gives JAX-accelerated parallel sim. The
++  backbone of most academic sim-to-real and VLA evaluation.
++- **[Isaac Lab](https://isaac-sim.github.io/IsaacLab/)** on **[Isaac Sim](https://developer.nvidia.com/isaac/sim)** — massively parallel GPU RL (thousands of envs; ~150K steps/s on an RTX 4090) for locomotion/whole-body.
++- **[Gazebo Sim](https://gazebosim.org/)** — the ROS-native simulator; best for navigation/SLAM/multi-robot with tight ROS 2 integration.
++- **[Genesis](https://github.com/Genesis-Embodied-AI/Genesis)** — fast multi-physics newcomer (rigid/soft/fluid). **[PyBullet](https://pybullet.org/)** — lightweight, great for quick prototyping. **[Drake](https://drake.mit.edu/)** — high-fidelity model-based.
++- **Robot learning:** **[LeRobot (Hugging Face)](https://github.com/huggingface/lerobot)** — the 2026
++  default for imitation + RL: record demos → `LeRobotDataset` → train (ACT, SmolVLA, diffusion) →
++  deploy, with low-cost arm support (SO-100/101, Koch, ALOHA). Foundation policies:
++  **[OpenVLA](https://openvla.github.io/)**, **[π0 / openpi](https://github.com/Physical-Intelligence/openpi)**,
++  **[Open X-Embodiment](https://robotics-transformer-x.github.io/)** (cross-robot dataset).
++
++### Actionable techniques
++1. **Match the sim to the job:** contact-rich manipulation & sim-to-real → MuJoCo/MJX; large-scale RL
++   locomotion → Isaac Lab; ROS navigation/SLAM in a world → Gazebo. Many teams run **dual-sim
++   validation** in 2026 — train in Isaac Lab for throughput, then re-score checkpoints in MuJoCo MJX
++   with system-identified parameters before touching hardware.
++2. **Close the sim-to-real gap two ways:** (a) **domain randomization** — randomize mass, friction,
++   latency, lighting, textures so the policy can't overfit one exact world; (b) **system
++   identification** — calibrate joint friction, rotor inertia, actuator delay against real logs so the
++   nominal sim is *right*. Randomize what you can't identify; identify what you can.
++3. **Bootstrap manipulation with imitation, not RL from scratch.** Teleoperate ~50 demos, record to a
++   `LeRobotDataset`, train an ACT/diffusion policy, evaluate in sim, then on hardware. Far cheaper than
++   reward-engineering an RL policy for a bringup task.
++
++```xml
++<!-- MuJoCo MJCF: a one-joint arm segment with a position actuator. -->
++<mujoco model="gilbert_arm">
++  <worldbody>
++    <body name="link1" pos="0 0 0.1">
++      <joint name="j1" type="hinge" axis="0 0 1" range="-3.14 3.14"/>
++      <geom type="capsule" fromto="0 0 0  0 0 0.3" size="0.03" mass="0.5"/>
++    </body>
++  </worldbody>
++  <actuator><position joint="j1" kp="50" ctrlrange="-3.14 3.14"/></actuator>
++</mujoco>
++```
++
++```bash
++# LeRobot: record teleop demos, then train an imitation policy on them.
++python -m lerobot.record  --robot.type=so101_follower --dataset.repo_id=me/gilbert_pick --dataset.num_episodes=50
++python -m lerobot.scripts.train --policy.type=act --dataset.repo_id=me/gilbert_pick
++```
++
++### Gotchas
++- Physics engines disagree on contact — a policy that works in one sim may fail in another; validate
++  across engines before hardware (the dual-sim pattern exists for this reason).
++- Domain randomization too wide hurts as much as too narrow (unlearnable task); tune the ranges.
++- Keep the **same URDF/description** driving sim and real (B2); divergence there is a top sim-to-real bug.
++
++---
+diff --git a/project-trajectory/knowledge/ui-design-systems.md b/project-trajectory/knowledge/ui-design-systems.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ba3bbab54ad72d290f1d4aa004922ea282b6489f
+--- /dev/null
++++ b/project-trajectory/knowledge/ui-design-systems.md
+@@ -0,0 +1,51 @@
++---
++domains: [web]
++researched: 2026-07-09
++source: ClaudeGuardChecks/skill-knowledge-library
++---
++# UI & design systems
++
++Curated research pack imported from the staged skill/knowledge library. Verify version-sensitive examples against the linked current documentation before shipping.
++
++### Core references
++- **[shadcn/ui](https://ui.shadcn.com)** — copy-paste, you-own-the-code components on headless
++  primitives + Tailwind, zero runtime dependency. The de-facto 2026 default for custom React design
++  systems. Note the **[July 2026 switch to Base UI as the default primitive layer](https://ui.shadcn.com/docs/changelog/2026-07-base-ui-default)** (Radix still shipped in parallel).
++- **[Radix Primitives](https://www.radix-ui.com/primitives)** and **[Base UI](https://base-ui.com/)** —
++  the headless (behavior + a11y, no styles) layer underneath. Focus management, keyboard nav, ARIA
++  roles, scroll-locking done for you.
++- **[W3C WAI-ARIA Authoring Practices Guide (APG)](https://www.w3.org/WAI/ARIA/apg/)** — the
++  authoritative source for *how each widget should behave* (roles, states, keyboard interaction).
++  This is the spec headless libraries implement; read it when a component is custom.
++- **[Radix Colors](https://www.radix-ui.com/colors)** + **[W3C Design Tokens format](https://tr.designtokens.org/format/)** — a perceptual color scale and the interchange format for tokenized design values.
++- **[Tailwind CSS](https://tailwindcss.com/docs)** — utility styling; pairs with the above.
++
++### Actionable techniques
++1. **Headless-first, tokens-first.** Never hand-roll interactive widgets (menus, dialogs, comboboxes).
++   Take behavior + a11y from a headless primitive, style it with tokens. This is the single biggest
++   quality lever for an LLM agent building UI: it can't forget focus-trapping if it never wrote it.
++2. **Design tokens as the single source of truth.** Put color/space/radii/type in one `tokens`
++   file with provenance, and *derive* component styles. (Craft's `tokens.yaml` in the checkout is a
++   good worked example of provenance-stamped tokens.) Changing "primary" in one place must cascade.
++3. **Accessibility acceptance checklist** (make it a test, not a vibe): keyboard-operable with no
++   mouse; visible focus ring; `aria-*` matches the APG pattern; color contrast ≥ 4.5:1 body / 3:1
++   large; respects `prefers-reduced-motion` and `prefers-color-scheme`. Automate with axe-core.
++
++```tsx
++// Accessible dialog: behavior/a11y from the primitive, look from tokens — agent writes only content.
++import { Dialog } from "@base-ui-components/react/dialog";
++<Dialog.Root>
++  <Dialog.Trigger className="btn-primary">Edit room</Dialog.Trigger>
++  <Dialog.Portal>
++    <Dialog.Backdrop className="bg-[var(--overlay)]" />
++    <Dialog.Popup className="p-[var(--space-4)] rounded-[var(--radius-2)]">
++      <Dialog.Title>Room settings</Dialog.Title>
++      {/* focus trap, Esc-to-close, ARIA all handled by the primitive */}
++    </Dialog.Popup>
++  </Dialog.Portal>
++</Dialog.Root>
++```
++
++### Gotchas
++- Copy-paste component libraries (shadcn) mean *you* own upgrades — pin a version/commit and track it.
++- An LLM will happily invent ARIA attributes; hold it to the APG pattern for the specific widget.
+diff --git a/project-trajectory/knowledge/web-rendering.md b/project-trajectory/knowledge/web-rendering.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d16c969b867dbcca5edb569797cd3192236131d
+--- /dev/null
++++ b/project-trajectory/knowledge/web-rendering.md
+@@ -0,0 +1,53 @@
++---
++domains: [web]
++researched: 2026-07-09
++source: ClaudeGuardChecks/skill-knowledge-library
++---
++# Web rendering
++
++Curated research pack imported from the staged skill/knowledge library. Verify version-sensitive examples against the linked current documentation before shipping.
++
++### Core references
++- **[WebGPU — W3C spec](https://www.w3.org/TR/webgpu/)** and **[MDN WebGPU API](https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API)** — normative reference + practical API docs. WebGPU is 10–20× faster than WebGL for the compute (matmul/attention) that also powers in-browser ML, so it unifies A2 and A3.
++- **[WebGPU Fundamentals](https://webgpufundamentals.org/)** and **[WebGPU Unleashed (free book)](https://shi-yan.github.io/webgpuunleashed/)** — the two best from-scratch teaching resources (pipelines, bind groups, compute shaders, 2D→3D).
++- **[awesome-webgpu](https://github.com/mikbry/awesome-webgpu)** — curated ecosystem index (engines, tools, tutorials).
++- **[three.js](https://threejs.org/docs/)** / **[Babylon.js](https://doc.babylonjs.com/)** — the two mature scene-graph engines if you don't want to write raw WebGPU. Both now render on WebGPU.
++- **3D Gaussian Splatting** (if NotHomeWrecker captures/renders real spaces): the
++  **[original 3DGS paper (Kerbl et al., SIGGRAPH 2023)](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)**,
++  **[GaussianSplats3D (three.js)](https://github.com/mkkellogg/GaussianSplats3D)**, and
++  **[Babylon's Gaussian Splatting docs](https://doc.babylonjs.com/features/featuresDeepDive/mesh/gaussianSplatting/)**.
++  The **KHR_gaussian_splatting glTF extension** is at release-candidate and expected to ratify in 2026 — meaning splats become first-class glTF alongside meshes; author toward glTF.
++
++### Actionable techniques
++1. **Choose the altitude deliberately.** Raw WebGPU for a bespoke renderer or heavy compute; a
++   scene-graph engine (three.js/Babylon) for "load models, light them, orbit." Don't write a matrix
++   stack by hand if a battle-tested engine already renders your glTF.
++2. **Structure the renderer as explicit passes** (upload → depth pre-pass → shade → post). See
++   *[The Structure of a WebGPU Renderer](https://whoisryosuke.com/blog/2025/structure-of-a-webgpu-renderer/)*.
++   Named passes make it debuggable and let an agent reason about one stage at a time.
++3. **Gaussian-splat performance:** prefer static textures over per-frame dynamic instance buffers
++   (Babylon's V8 change took a 2.5M-splat scene from ~15 → 60 FPS this way); sort splats by depth on
++   the GPU; budget by splat count and VRAM, not triangle count.
++
++```js
++// Minimal WebGPU frame loop — the skeleton every renderer shares.
++const adapter = await navigator.gpu.requestAdapter();
++const device  = await adapter.requestDevice();
++const ctx = canvas.getContext("webgpu");
++ctx.configure({ device, format: navigator.gpu.getPreferredCanvasFormat(), alphaMode: "premultiplied" });
++function frame() {
++  const enc  = device.createCommandEncoder();
++  const pass = enc.beginRenderPass({ colorAttachments: [{
++    view: ctx.getCurrentTexture().createView(),
++    clearValue: { r: 0.02, g: 0.02, b: 0.03, a: 1 }, loadOp: "clear", storeOp: "store" }] });
++  pass.setPipeline(pipeline); pass.setBindGroup(0, uniforms); pass.draw(3);
++  pass.end();
++  device.queue.submit([enc.finish()]);
++  requestAnimationFrame(frame);
++}
++requestAnimationFrame(frame);
++```
++
++### Gotchas
++- WebGPU is broadly shipped in 2026 but still feature-detect (`if (!navigator.gpu) fallbackToWebGL()`).
++- Splat scenes are unlit point data — mixing them with lit PBR meshes needs careful depth/blend order.
+diff --git a/project-trajectory/scripts/bootstrap.py b/project-trajectory/scripts/bootstrap.py
+index 4ef7475e0374afc4dc9fe56b859b09234a309ee9..3a2160d2c2017cd78bc75cefd6211c604311843e
+--- a/project-trajectory/scripts/bootstrap.py
++++ b/project-trajectory/scripts/bootstrap.py
+@@ -304,6 +304,22 @@
+ STACK_CHOICES = ("python", "node", "go", "rust", "powershell", "any")
+ DOMAIN_CHOICES = ("web", "game", "hardware", "data", "any")
+ 
++# Curated knowledge packs are an explicit domain opt-in.  Unlike skills, an
++# unspecified/"any" domain must not install the superset: packs become authored
++# project context once materialized, so irrelevant packs would be durable noise.
++KNOWLEDGE_PACKS = {
++    "web": (
++        ("ui-design-systems", "UI & design systems", "web"),
++        ("web-rendering", "Web rendering", "web"),
++        ("model-inference", "Model inference", "web"),
++    ),
++    "hardware": (
++        ("perception", "Perception", "hardware"),
++        ("kinematics", "Kinematics", "hardware"),
++        ("simulation-robot-learning", "Simulation & robot learning", "hardware"),
++    ),
++}
++
+ # Stacks that are *explicitly* not Python: their scaffold skips the dead Python
+ # artifacts (pytest.ini) and gets the harness-rewiring checklist appended to
+ # docs/status.md as Open-items bullets instead (Thread 34, R7/C3). Blank/`any`
+@@ -420,6 +436,48 @@
+     return created
+ 
+ 
++def materialize_knowledge_packs(dest, domain, dry_run, force):
++    """Install the curated packs for one explicitly declared domain.
++
++    Pack files are write-once like the rest of the scaffold.  The index is
++    extended only for files this invocation creates/overwrites, and only when
++    their row is absent, so a re-run cannot duplicate rows or silently adopt a
++    pre-existing project-owned pack into the kit's index.
++    """
++    selected = KNOWLEDGE_PACKS.get(domain, ())
++    created = []
++    indexed = []
++    for label, topic, pack_domain in selected:
++        src = KIT / "knowledge" / (label + ".md")
++        dst_rel = "docs/knowledge/" + label + ".md"
++        dst = dest / dst_rel
++        if not src.is_file() or (dst.exists() and not force):
++            continue
++        if not dry_run:
++            dst.parent.mkdir(parents=True, exist_ok=True)
++            shutil.copyfile(src, dst)
++        created.append(dst_rel)
++        indexed.append((label, topic, pack_domain))
++
++    index = dest / "docs" / "knowledge" / "README.md"
++    if indexed and index.is_file() and not dry_run:
++        text = index.read_text(encoding="utf-8")
++        rows = []
++        for label, topic, pack_domain in indexed:
++            marker = "[{}]({}.md)".format(label, label)
++            if marker not in text:
++                rows.append(
++                    "| [{}]({}.md) | {} | domain: `{}` | 2026-07-09 |".format(
++                        label, label, topic, pack_domain
++                    )
++                )
++        if rows:
++            index.write_text(
++                text.rstrip() + "\n" + "\n".join(rows) + "\n", encoding="utf-8"
++            )
++    return created
++
++
+ def sync_agent_skills(dest, dry_run):
+     """Force-refresh each per-agent skill copy from the ONE neutral source, so a
+     "edit source → re-materialize" is one command (`bootstrap.py --sync`).
+@@ -1484,8 +1542,10 @@
+         "--domain",
+         choices=DOMAIN_CHOICES,
+         default=None,
+-        help="declared primary domain, for skill matching (web|game|hardware|"
+-        "data|any). Omitted + interactive -> ASK; non-interactive -> no filter.",
++        help="declared primary domain, for skill matching and curated knowledge-"
++        "pack opt-in (web|game|hardware|data|any). web/hardware materialize their "
++        "pack sets; any/omitted materializes no packs. Omitted + interactive "
++        "agent setup -> ASK; non-interactive -> no filter.",
+     )
+     ap.add_argument(
+         "--gate-policy",
+@@ -1732,6 +1792,9 @@
+     created.extend(
+         materialize_agent_layer(dest, agents, skills, args.dry_run, args.force)
+     )
++    created.extend(
++        materialize_knowledge_packs(dest, domain, args.dry_run, args.force)
++    )
+ 
+     # Seed the fresh agent-resume launchers' AGENT_CMD slot with the chosen
+     # agent's example command (never on a re-sync that skipped them).
+diff --git a/tests/test_bootstrap.py b/tests/test_bootstrap.py
+index 43d046d96cbc3ee18d280707b990aeb2839cc6a4..e2425014d63d2e97abc38c5425695513876b31aa
+--- a/tests/test_bootstrap.py
++++ b/tests/test_bootstrap.py
+@@ -101,6 +101,56 @@
+     assert "[docs/knowledge/](docs/knowledge/README.md)" in project_readme
+ 
+ 
++def test_knowledge_library_is_opt_in_by_declared_domain(tmp_path):
++    # The default/`any` scaffold carries only the index: curated packs become
++    # durable project context, so they must never arrive as an implicit superset.
++    plain = tmp_path / "plain"
++    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", plain], cwd=tmp_path)
++    assert proc.returncode == 0, proc.stdout + proc.stderr
++    assert {p.name for p in (plain / "docs" / "knowledge").glob("*.md")} == {
++        "README.md"
++    }
++
++    web = tmp_path / "web"
++    proc = run_py(
++        [SCRIPTS / "bootstrap.py", "--dest", web, "--domain", "web"],
++        cwd=tmp_path,
++    )
++    assert proc.returncode == 0, proc.stdout + proc.stderr
++    expected = {
++        "README.md",
++        "ui-design-systems.md",
++        "web-rendering.md",
++        "model-inference.md",
++    }
++    assert {p.name for p in (web / "docs" / "knowledge").glob("*.md")} == expected
++    index = (web / "docs" / "knowledge" / "README.md").read_text(encoding="utf-8")
++    for name in expected - {"README.md"}:
++        assert "({})".format(name) in index
++    assert "domains: [web]" in (
++        web / "docs" / "knowledge" / "ui-design-systems.md"
++    ).read_text(encoding="utf-8")
++
++
++def test_knowledge_pack_materialization_is_write_once_and_forceable(tmp_path):
++    dest = tmp_path / "repo"
++    args = [SCRIPTS / "bootstrap.py", "--dest", dest, "--domain", "hardware"]
++    first = run_py(args, cwd=tmp_path)
++    assert first.returncode == 0, first.stdout + first.stderr
++    pack = dest / "docs" / "knowledge" / "perception.md"
++    pack.write_text("project-owned\n", encoding="utf-8")
++
++    second = run_py(args, cwd=tmp_path)
++    assert second.returncode == 0, second.stdout + second.stderr
++    assert pack.read_text(encoding="utf-8") == "project-owned\n"
++
++    forced = run_py([*args, "--force"], cwd=tmp_path)
++    assert forced.returncode == 0, forced.stdout + forced.stderr
++    assert "# Perception" in pack.read_text(encoding="utf-8")
++    index = (dest / "docs" / "knowledge" / "README.md").read_text(encoding="utf-8")
++    assert index.count("[perception](perception.md)") == 1
++
++
+ def test_agents_template_stays_within_size_budget():
+     # Gemini's AGENTS.md support truncates near ~12k chars, and a downstream
+     # project must still fill the Project section and add its own rules. The
+
+tokens used
+126,974
+WI-156 is complete and committed as `c4c2d72`.
+
+- Added six domain-tagged curated knowledge packs.
+- `bootstrap.py --domain web|hardware` now installs the relevant three-pack set.
+- Default/`any` scaffolds install no curated packs.
+- Materialization preserves adopter edits unless `--force` is used.
+- Updated tests, architecture map, trajectory dashboard, registry, status, log, and handoff files.
+- Full suite: `771 passed, 34 skipped`.
+- Final commit bar: `642 passed, 2 skipped`; docs `109 docs, 448 links, 0 broken`.
+- `docs/run-state`: `RUNNING`
+- Next: `WI-157`
+- No push performed.
+
+Pre-existing changes to `OWNER_SCRATCHPAD.md` and `docs/run-phase` remain untouched and uncommitted.

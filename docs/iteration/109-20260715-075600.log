@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 109
+# date: 2026-07-15 08:00
+# phase: DESIGN-CHECK
+# wi: 
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: DONE
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 296
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1858
+# exit-code: 0
+# ---
+Reading additional input from stdin...
+OpenAI Codex v0.144.4
+--------
+workdir: C:\Projects\ai-template
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019f65d9-33be-7683-be09-2233af8b637e
+--------
+user
+You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. When filing or triaging a WI, assign BuildTier deliberately: quick for mechanical/off-spine work, medium by default, strong only for design-shaping or spine-touching work; never silently downgrade a declared route mid-loop. Clear the lowest gate level first: do not queue phase development ahead of its open [phase]-[g1|g2] work or Draft SRs unless the owner deliberately orders it. Gates before every commit (the commit bar): python -m pytest -q -n auto -m smoke and python project-trajectory/scripts/check_docs.py --root . --stale - paste the real output; never report a green you didn't produce. Run the FULL suite (python -m pytest -q -n auto, no -m) before claiming a slice/campaign done or at close (session-protocol skill 'End green'). Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, docs/next-wi (the next WI id - or a ';'-joined batch of independent off-spine WIs to execute in order as ONE session with ONE review round, WI-133 - for the coordinator's BuildTier pin), the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first.
+codex
+I’m using the session-protocol skill because this is a scoped WI driver session. I’ll first read the repo guide, the skill instructions, and the current-state/next-action records, then execute only the recorded WI scope.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-Content -Raw CLAUDE.md; Get-Content -Raw .agents/skills/session-protocol/SKILL.md; Get-Content -Raw docs/status.md; Get-Content -Raw project-trajectory/PROCESS.md; Get-Content -Raw project-trajectory/PROCESS_OPTIONS.md' in C:\Projects\ai-template
+ succeeded in 623ms:
+# CLAUDE.md — Working in this template repo
+
+This repo is a **meta-project**: its product is the reusable kit in
+[`project-trajectory/`](project-trajectory/) that *other* repos copy in to run a
+gated, requirement-traced development process. So work here improves templates
+and scripts, not a downstream application.
+
+> Looking for the agent guide that ships **to** new projects? That's
+> [`project-trajectory/AGENTS.template.md`](project-trajectory/AGENTS.template.md)
+> (scaffolds to `AGENTS.md`, with thin `CLAUDE.md`/`GEMINI.md` stubs pointing at
+> it). Don't confuse the two: this file governs editing the kit; that one governs
+> using the kit.
+
+> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
+> holds the human owner's free-form notes; the working surfaces are
+> `docs/status.md`, the registries, and `docs/log.md`.
+
+---
+
+## What we're optimizing for
+
+The canonical purpose statement is the `PROJECT-VISION:` tag opening the root
+[README.md](README.md) — the same one-home pattern the kit ships downstream.
+In short: the kit exists to make downstream code **maintainable and
+trustworthy** — readable for humans and agents alike, deeply tested, and
+advanced only through explicit approval gates. Every change here should make
+that easier to achieve in a real project — or get out of the way.
+
+## Principles for editing the kit
+
+- **Dogfood the philosophy.** The templates preach single-source-of-truth,
+  decompose-don't-paraphrase, and generated-not-hand-maintained. Hold the kit to
+  the same bar: don't restate a rule in five files — state it in
+  [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
+- **Keep scripts stdlib-only and cross-platform.** The kit's own scripts
+  (`trace.py`, `check.py`, `gen_arch_map.py`, `bootstrap.py`) must run on a clean
+  Python 3.8+ with no pip installs, on Windows and POSIX. Tools a *downstream*
+  project needs (ruff, pytest) are theirs to install; the kit must not require
+  them to run its own checks.
+- **Stack-agnostic core, Python-first reference.** The process and ID scheme are
+  language-neutral; concrete harness commands are Python examples clearly marked
+
+[... 3194 line(s) elided — full stream in out/run-logs/ ...]
+
+spine, grouped by columns that already exist: the LLR **`Module`** column and the
+optional **`Area`** tag on SR/TC (§1 "Domain hats"). Each module is a sub-tree of
+`SN→SR→LLR→TC`; where a module needs its own discipline it gets its own **domain
+hat** owning that slice (§1 already allows this). The repo still builds, gates, and
+releases as a whole.
+
+- **Module-scoped review is a convention over the existing columns, not a new
+  flag.** A module owner reviews their slice by filtering the registries on
+  `Area`/`Module` (a grep or spreadsheet filter); the **repo-level gate stays the
+  source of truth** — `trace.py --strict` still requires **0 orphans across the
+  whole repo, seams included**. The kit deliberately ships **no**
+  `--module`/`--area` filter on `trace.py`/`check.py`: a per-module gate would
+  either hide the cross-module seams (a false "green" masking exactly the
+  integration gaps this method wants first-class) or need real machinery to tell a
+  legitimate seam from an orphan. The whole-repo gate already spans every module;
+  per-module *ownership* is a reading convention, not a gate of its own.
+- **Integration TCs for the seams.** A module boundary is where two parts must
+  agree, so it gets its **own** TCs — not merely each module's internal unit tests.
+  These are integration/system-level, usually `Tier=Full` or `Release` (§4 "Test
+  tiers"), so the seam is a tested contract rather than an untested gap between two
+  individually-green modules.
+- **`IF-###` applies *within* a repo, too.** The interface registry (§8) is not
+  only for separate repos: two modules in one repo that share a contract record it
+  as an `IF-###`, with the counterpart naming the **other module** instead of
+  another repo and both rows living in the one `interfaces.csv`. Same
+  direction/owner/version/stability discipline, same "one contract, one home,
+  backed by a test" rule — applied to the internal seam, with no cross-repo build
+  machinery.
+<!-- /profile -->
+
+## Parallel tracks (multi-lane operation)
+
+*Builds on PROCESS.md §10 (several modules, one repo) and the "Unattended
+operation" / "Agent iteration branch & sync" layers above.* **Applies when** one
+repo carries
+**several large deliverables progressing in parallel** and you want more than one
+driver (human or agent, attended or unattended) working at once **without
+thrashing the single coordination blackboard** — the failure the single-driver
+model (`status.md`, `run-state`, `run-phase`, `plan.md`, the iteration logs) hits
+the moment two sessions run. A repo with one active line of work skips this layer
+and pays nothing. Generalized from a field adoption (a multi-deliverable robotics
+build) that outgrew one blackboard.
+
+**The unit is a *track*: one lane of work bound to three things.** Each solves a
+different collision class; none is a repo split (worktrees share one object store
+and history):
+
+1. **A git worktree** — `git worktree add ../<repo>-<track> llm/<track>` — so two
+   drivers never share a checkout (the filesystem collision, which no doc
+   convention can fix).
+2. **An iteration branch `llm/<track>`** (the "Agent iteration branch & sync"
+   layer, one branch per track) — the history collision, and it gives the
+   unattended stall guard a **private HEAD** (another track's commits can't mask a
+   stalled one).
+3. **A lane directory `docs/tracks/<track>/`** holding this track's copies of the
+   otherwise-singular coordination files:
+
+   ```
+   docs/tracks/<track>/
+     status.md   plan.md   run-state   run-phase   log.md   iteration/
+   ```
+
+   The lane is selected **by invocation** (a coordinator `--track <name>` flag /
+   `AGENT_TRACK` env), **never a tracked pointer file** — a committed "current
+   track" would differ per branch and reintroduce the churn.
+
+**The root `status.md` becomes a cross-track dispatcher, not a blackboard** — a
+one-screen roll-up: one row per track (name, lane link, one-line state, its queued
+`Needs <human>` asks) plus the cross-track items (repo-wide open items, the
+verification tally, repo-scope decisions). **Only integration sessions write it**,
+so two drivers never hold it open at once. The root `log.md` keeps the gate
+sign-offs (and any repo-scope decision record); each lane's `log.md` holds that
+track's session evidence.
+
+**What stays repo-singular (integrator-owned, never forked into a lane):** the one
+`SN→SR→LLR→TC` requirement spine and every registry, `docs/gate` + `gate-policy` +
+`push-policy` + `privacy-check` + `guardrails-policy`, the root `status.md`/`log.md`,
+`AGENTS.md`, and the generated code map. The spine is **deliberately singular**
+(§10): `trace.py --strict` still demands **0 orphans across the whole repo, seams
+included** — a per-track gate would hide exactly the cross-track seams this method
+wants first-class. Tracks **propose** changes to the singular surfaces; the
+**integrator lands** them.
+
+**The integrator role.** A **sync/integration session** — a human, or an agent leg
+run without `--track` — is the only writer of the root dispatcher and the only
+lander of registry rows and generated artifacts. It runs at sync points (a gate
+close, a track reaching an end state, a periodic roll-up): it lands each track's
+ratified off-spine drafts onto the spine, regenerates the generated docs on the
+landed tree, reconciles the dispatcher, and (under the iteration-branch layer)
+lands each `llm/<track>` leg onto the development branch serially so history stays
+linear.
+
+**Write discipline for the shared spine.**
+
+- **Registry rows land at ratification, through the integrator.** A track grows
+  requirements as an **off-spine scope draft** (a dated `requirements/scope-draft-*`
+  doc); since SN/SR rows need human ratification anyway, registry writes are already
+  serialized through that bottleneck. The discipline just makes it explicit — no
+  track edits the registries directly mid-flight.
+- **Per-track ID blocks** stop concurrent drafts minting colliding ids: reserve
+  `SN`/`SR` hundreds-ranges per track in a small `requirements/id-blocks` note (a
+  convention, not a machine check — `trace.py` integrity still catches a real
+  collision at landing). `LLR`/`TC` stay integrator-allocated sequentially at
+  decomposition (they are created when a draft lands, so they never race);
+  placeholder ids (`LLR-D1`) in a draft become final ids at landing.
+- **Generated artifacts are never text-merged.** A conflict in the code map, trace
+  report, or dataflow diagrams at landing is resolved by **regenerating on the
+  landed tree** (the harness keeps them fresh), never by hand-merging the generated
+  text.
+- **Cross-track contracts are `IF-###` rows** in the one `interfaces.csv` (the §10
+  internal-seam rule): the counterpart names the other track's module, and an
+  integration TC backs the seam. Record a seam **early** — a downstream track builds
+  against the *interface*, not the upstream track's completion.
+
+**Gating stays single-gate; per-track maturity rides `Phase` tags.** Keep **one**
+`docs/gate` for the repo. When tracks are at different maturity, tag their SRs with
+track-scoped delivery **`Phase`** values ("Phased delivery" above) and close with
+`check.py --gate G3 --phase <active set>`: Verified is required only where a track
+has actually built, and everything else is listed **phase-deferred** — the explicit,
+recorded exemption the phased layer was built for, never a silent skip. A per-track
+`docs/gate` is rejected: it would falsify the cross-track seams (§10). An
+eventually-needed-but-not-now analysis (e.g. a fatigue study, a load test) is
+written **now** as an `Analysis`-verified SR at a later `Phase` — visible as
+phase-deferred from day one — while the numbers the design needs today ride `PB-###`
+budget rows; the heavy tooling is product-layer meters wired when that phase opens
+(§9 meters-vs-comparator).
+
+**Unattended safety (the coordinator).** The unattended coordinator
+(`scripts/agent_loop.py`) takes `--track <name>` and resolves **every** per-track
+file (`run-state`, `run-phase`, the `status.md` resume excerpt, the iteration logs
++ index) under `docs/tracks/<name>/`, leaving the repo-singular policy files at
+`docs/`; the session prompt gains a preamble redirecting the driver to that lane.
+Two guards make concurrent unattended runs safe: a **preflight branch-guard** (a
+`--track` session must be on branch `llm/<track>` — an unverifiable branch, e.g. a
+detached HEAD, **fails closed**, so a lane can never write from the wrong
+checkout) and a **per-worktree lock** (`out/agent-loop.lock`, one coordinator per
+checkout — the double-launch / cron-overlap collision the branch-guard can't
+catch). The lock is a **kernel advisory lock** (`flock` / `LockFileEx`) the OS
+grants atomically and releases when the process exits *or crashes*, so a dead run
+never wedges the next one — there is no stale pid file to reason about. Cross-host
+on a shared filesystem is best-effort only (`flock` over NFS is unreliable): the
+lock guards one checkout on one host, the case that matters. **No `--track` keeps
+the single-lane behavior** (with `docs/` itself as the lane); its only addition
+there is the same per-worktree lock, which merely refuses a second coordinator in
+one checkout.
+
+**Throughput caution.** Under `attended` gate authority, every track's human asks
+converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The
+dispatcher's job is to aggregate those asks into one review surface, and 2–3
+concurrently *active* lanes is the realistic ceiling while one human ratifies —
+dormant lanes (a lane directory + a "blocked on `IF-…`" note, no worktree) cost
+nothing until their gating decision lands.
+
+
+codex
+The recorded Next action says there is no queued WI and the unattended run is complete; deferred WI-080/081 explicitly remain parked pending owner ordering. I’m checking the working tree and coordinator markers now so I don’t manufacture scope or overwrite interrupted work.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "git status --short --branch; Write-Output '--- next-wi ---'; if (Test-Path docs/next-wi) { Get-Content docs/next-wi }; Write-Output '--- run-state ---'; Get-Content docs/run-state; Write-Output '--- work-item tail ---'; Get-Content docs/requirements/work-items.csv | Select-Object -Last 20; Write-Output '--- unattended headings ---'; Select-String -Path project-trajectory/PROCESS_OPTIONS.md -Pattern '"'^## Unattended operation|''^### '"' -Context 0,2" in C:\Projects\ai-template
+ succeeded in 782ms:
+## derived-gate-model...origin/derived-gate-model [ahead 93]
+ M OWNER_SCRATCHPAD.md
+ M docs/run-phase
+--- next-wi ---
+# Next WI (process-options.md "Unattended operation") — the WI id the driver
+# expects the coordinator to pick up next, in the docs/run-phase idiom (comment
+# lines + one value on the last line). The managed BUILD branch reads it and, if
+# that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it
+# as the session's STARTING tier in place of the phase default (WI-126). The
+# value may be a `;`-joined ordered DEV-SLICE BATCH of independent off-spine WIs
+# — one session, one review round, strongest-member pin (WI-133); an
+# absent/empty file, an unknown id, or an empty BuildTier = the phase default.
+# The DRIVER maintains this alongside docs/status.md Next action.
+# The 094 remediation and WI-172;WI-173 batch are complete. WI-153 (knowledge-ref
+# integrity + knowledge->component coupling) and WI-154 (process text) are done;
+# WI-155 (dogfood packs + seed research), WI-156 (kit pack library), WI-157
+# (domain-filtered staged skills), and WI-164 (optimization research) are done.
+# No queued WI remains. Only
+# deferred main-decomposition (WI-080->WI-081) stays
+# parked — do not auto-start it.
+# Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
+# draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to
+# Fable); per-WI BuildTier pins above still apply.
+--- run-state ---
+# Unattended-run state (read by project-trajectory/scripts/agent_loop.py via
+# the root agent-resume.* launchers). RUNNING while work remains; a driver
+# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may
+# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).
+# NOTE (OI-13, 2026-07-14): a `docs/pause` graceful stop deliberately leaves this
+# file RUNNING — the pause signal is the exit-8 code + the stop banner, not this
+# value; don't read RUNNING here as "not paused" when a `docs/pause` file may be
+# present (PROCESS_OPTIONS "Unattended operation").
+DONE
+--- work-item tail ---
+WI-155,Dogfood knowledge packs - seed meta packs + CMP refs then run the seed prompt->image research WI end-to-end,research,,WI-152;WI-153,done,"Created the meta docs/knowledge index and 3 CMP-004-linked packs: agent-routing evidence distilled from the archive; effort-tiering evidence and fabrication cautions; and the first live research-WI deliverable, prompt-image-token-efficiency. The seed answers all named questions with transparent three-shape OpenAI/Anthropic calculations, fidelity evidence, caching correction, retrieval-dated primary sources, and decision guidance (native text by default; image when appearance/spatial layout is evidence). Strong-tier synthesis used 3 directed gatherers; grounded second-opinion review 101 found and resolved one overstatement, then APPROVE.",docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,strong
+WI-156,Kit-provisioned pack library - project-trajectory/knowledge/ + opt-in scaffold wiring + staged research-pack import (6 packs),scripts,,WI-152,done,"Added a six-pack curated library under project-trajectory/knowledge with domains frontmatter: web (UI/design systems, rendering, model inference) and hardware (perception, kinematics, simulation/robot learning). bootstrap.py --domain explicitly opts into the matching three packs, copies them write-once into docs/knowledge, and extends the pack index without duplicate rows; omitted/any/game/data domains install none. --force deliberately refreshes selected packs. README kit inventory and 2 integration tests cover opt-in/default behavior, indexing, domain metadata, write-once preservation, and forced refresh.",docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+WI-157,Skills domains filter - bootstrap.py --agents domain filtering + staged skill-library import,scripts,,WI-156;~WI-058,done,"Imported 21 staged domain-tagged skills into the neutral library; documented explicit domain opt-in; added web/hardware/neutral bootstrap coverage and regenerated the 26-skill index.",docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,medium
+WI-158,OKF pack export (deferred) - export knowledge packs alongside registry pages,scripts,,WI-153,deferred,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+WI-159,Knowledge-tab density - start-collapsed .knode/knowarrow re-spec (T2 deferred from OI-12 / 052 CRITIQUE),dashboard,SR-053,WI-144,deferred,,docs/reviews/052-CRITIQUE.md,dashboard-ux,
+WI-160,OpenAI provider-CLI swap (opencode -> codex exec) + builder preference Codex Sol,unattended,,WI-059,done,"Owner directive 2026-07-14b executed in-session (log.md Decisions): the 3 OPENAI rows in docs/agents.csv now ride codex exec --model {model} --dangerously-bypass-approvals-and-sandbox (opencode sometimes unresponsive); Notes carry install (npm i -g @openai/codex) + codex login; AGENT_TIER_MAP=BUILD=strong in both launchers + OPENAI-SOL heads docs/agents-enabled so BUILD draws Sol first. Side effect owner-accepted: PLAN/DESIGN-CHECK strong draws also move to Sol until WI-161; CRITIQUE keeps Fable via heterogeneity. codex not on PATH at execution - cooldown self-heals BUILD onto Fable until the owner installs/authenticates. Supersedes-for-now: WI-121 BUILD-medium relax; WI-110's opencode --variant note (now codex -c model_reasoning_effort). FOLLOW-UP same day (owner question re dev-setup): scripts/dev-setup.{sh,ps1} swapped their stale opencode row/offer to codex (@openai/codex + codex login; test_onboard_devsetup.py pins updated) and a new scripts/dev-setup.cmd Windows double-click shim added (-Check then offered -Install; the WI-051 .command pattern) - the template twin is WI-166.",docs/specs/owner-intake-2026-07-14b.md#openai-cli,owner-intake-2026-07-14b,
+WI-161,Per-phase model preference knob (AGENT_PREFER_MAP - within-tier only),unattended,,WI-059;WI-160,done,"Shipped AGENT_PREFER_MAP/--prefer-map with managed-routing preflight validation and within-tier-only selection: preferred, enabled, available ids lead the enable-list order; unknown/cooling/wrong-tier ids fall through; reviewer/critic family heterogeneity still wins. Added launcher/template slots and routing docs, restored the meta enable list to Fable-first while BUILD prefers OPENAI-SOL, and covered selection + end-to-end dispatch. No spine change.",docs/specs/owner-intake-2026-07-14b.md#phase-preference,owner-intake-2026-07-14b,medium
+WI-162,Parallel WI dispatch across coordinator lanes - design spec (actionability scan x overlap guard x lane lifecycle),unattended,,WI-025;~WI-149,done,"Ratifiable design in docs/specs/parallel-wi-dispatch.md: opt-in lane count; deterministic hard-predecessor + lowest-gate actionability scan; conservative off-spine overlap guard; central dispatcher/worktree ownership; per-lane review; serialized gated integration; telemetry projection; five implementation slices specified for filing on ratification.",docs/specs/owner-intake-2026-07-14b.md#parallel-dispatch,owner-intake-2026-07-14b,strong
+WI-163,Per-WI critique budget dial (n | inf-until-APPROVE; move-on | block disposition),unattended,,WI-059,done,"Added optional CritiqueBudget/CritiqueExhaustion WI columns; agent_loop applies integer or inf budgets and move-on or block exhaustion per scope with conservative batch composition, legacy fallback, scaffold/process guidance, and integration tests.",,owner-intake-2026-07-14b,
+WI-164,Optimization-methodology research - solution spaces / sampling / cross-pollination / constructed-optimizer-vs-LLM-iteration,research,,WI-152;~WI-154,done,"docs/knowledge/iterative-optimization.md + PROCESS_OPTIONS WI-scale rubric + reviews/107-GROUNDING.md",docs/specs/owner-intake-2026-07-14b.md#optimization-research,research-knowledge,strong
+WI-165,Process tab - render loops A/B as true circular loops intersecting at the shared LLM_Agent node,dashboard,SR-055,WI-144,done,"Process-tab loops A/B now render as closed responsive racetracks intersecting at one LLM_Agent junction; TC-056 asserts both closed cycles, the single shared node's per-loop degree, return-side placement, and deterministic/link behavior.",docs/specs/owner-intake-2026-07-14b.md#process-loops,dashboard-ux,strong
+WI-166,dev-setup.template.cmd - Windows double-click rung (MAPPING + tests + README),scripts,SR-032,WI-051;WI-160,done,"Shipped the ASCII-safe Windows double-click template, bootstrap mapping, fresh-scaffold presence/shape coverage, and kit-contents documentation.",docs/specs/owner-intake-2026-07-14b.md#dev-setup-windows,owner-intake-2026-07-14b,
+WI-167,Tripwire path coverage - REVIEW_POLICY_PATHS misses the meta-repo kit-script layout (project-trajectory/scripts/),unattended,,WI-059,done,"Extended REVIEW_POLICY_PATHS with the project-trajectory/scripts/ variants of score_reviews.py + agent_route.py (kept the downstream scripts/ entries) so the implementer-touched-review tripwire fires when an implementer edits a routing referee in this meta-repo's own kit-script home, not only the downstream scaffolded layout; regression test covers both layouts, Windows separators, and a non-referee sibling negative. Expected by-design side effect (076-DESIGN-CHECK): this commit touches a now-listed path, so its own review round fires the tripwire once.",docs/reviews/076-DESIGN-CHECK.md,,medium
+WI-168,Review 080 remediation - dev-setup.template.cmd consented install is a silent no-op (swap -Install for -Baseline; flip the shape-test token; fix the bootstrap MAPPING docstring),scripts,SR-032,WI-166,done,"Swapped -Install -> -Baseline across dev-setup.template.cmd (install invocation line 31, later-hint line 33, the two comments, and the [y/N] prompt wording); rewrote test_scaffold_ships_devsetup_cmd to cross-check every switch the shim hands the ps1 against the scaffolded ps1's param() block instead of pinning a literal; appended cmd to the bootstrap MAPPING docstring inventory.",docs/reviews/080-REVIEW-A.md,,medium
+WI-169,Review 084 remediation - scope the Process-tab loop box/arrow CSS to the wrapper div.loop (kill the nested double racetrack) + de-tautologize the TC-056 degree assertion,dashboard,SR-055,WI-165,done,"Scoped the default and responsive racetrack/return-arrow CSS to wrapper div.loop elements so nested ol.loop stage lists cannot draw a second track; removed self-declared degree attributes; hardened TC-056 and its tests around the actual shared-entry grid span and wrapper-only border/arrow structure; regenerated OKF and trajectory outputs.",docs/reviews/084-REVIEW-A.md,,strong
+WI-170,CHANGES-REQUESTED rework routing - carry review findings into the next BUILD scope (a rework pointer outranking docs/next-wi) so remediation never depends on a driver noticing dangling verdicts,unattended,,WI-059,done,"Managed review dispatch now writes a coordinator-owned docs/rework-wi pointer on CHANGES-REQUESTED. It overrides docs/next-wi for the next BUILD prompt, telemetry WI label, and BuildTier lookup; survives repeated review rounds and coordinator restarts in its own telemetry commit; and clears only when that same scope receives APPROVE, leaving the advanced backlog pointer intact. PROCESS_OPTIONS is the single-home contract. Regression test advances next-wi before a requested-change verdict, proves WI-OLD remains the rework scope, then proves APPROVE clears the override and resumes WI-NEW.",docs/reviews/085-DESIGN-CHECK.md,,medium
+WI-171,Rearm the shared-failure page - escalate's top-tier-fail tally spans the whole coordinator run so after two strong-tier CHANGES-REQUESTED rounds every later review round (even a clean APPROVE) pages and schedules a design-check forever; reset the tally when the page dispatches so only NEW top-tier fails re-page,unattended,,WI-059,done,"escalate() gained a fails_since index (default 0 keeps the whole-run count for un-updated callers); top_tier_fails now sums strong-tier CHANGES-REQUESTED only over rounds[fails_since:]. The coordinator advances page_fails_since=len(rounds) on EVERY page dispatch (agent_loop.py, before the mode branch), so an already-paged (autonomous: already-ruled) top-tier fail can no longer re-page every subsequent round - only NEW strong-tier fails recorded after the last dispatch reach the shared-failure regime; the last-round tripwire and two-round contradiction windows are untouched. Regression test (two fails page -> boundary advanced -> a later APPROVE does not page -> two FRESH fails re-page) in test_agent_route.py; arch-map re-harvested the new signature. Takes effect on the next coordinator restart (routing referees import at process start), per the 094 fast-path note.",docs/reviews/094-DESIGN-CHECK.md,,medium
+WI-172,Retrospective independent review of the WI-169 + WI-170 builds - both landed inside review-exempt DESIGN-CHECK sessions (088/091) so the declared review-policy=1 was never satisfied; fresh-context review of e544ae1 + cef63a1 with verdicts recorded in docs/reviews/ and findings filed as WIs,unattended,,WI-169;WI-170,done,"Fresh-context review 097 examined e544ae1 and cef63a1 against their WI records, behavior seams, tests, process contract, generated outputs, and byte-budget restamp; both approved with zero findings. The preceding 096 review found two collateral MAJORs in WI-171/WI-174; both were resolved in this rework with focused regressions.",docs/reviews/094-DESIGN-CHECK.md,,medium
+WI-173,Knowledge index example row as a link - the scaffolded pack index's example row labels the pack with a code-span so a copied row leaves the pack an orphan for check_docs; render the example Label as a markdown link (093-REVIEW-A MINOR),scripts,,WI-152,done,"Changed the scaffolded pack-index example label from a code span to [`example`](README.md), a valid self-link whose row instructs replacing both label and target with the pack file; this demonstrates the reachable-pack pattern while keeping a fresh scaffold free of a fake pack and broken links. Bootstrap contract test pins the linked example.",docs/reviews/093-REVIEW-A.md,research-knowledge,quick
+WI-174,check_docs multi-backtick inline code-span strip - a quoted markdown-link example uses a double-backtick span (the label holds backticks) but INLINE_CODE_RE only matched single-backtick spans so the run mis-split and leaked a phantom empty-text broken link; discovered running WI-171 (it reddened the meta commit bar via the 093/094 review docs that quote WI-173's link fix),scripts,,WI-013,done,"INLINE_CODE_RE matches an N-backtick opener only at a run boundary and closes only on an exactly-N non-adjacent run; parse_doc strips spans across the whole unfenced document while preserving embedded newlines and finding line numbers. This removes quoted-link false positives without allowing a longer closer to hide a real link. Regression coverage includes same-line real links, unequal runs, and multiline spans.",docs/reviews/094-DESIGN-CHECK.md,,quick
+--- unattended headings ---
+
+> project-trajectory\PROCESS_OPTIONS.md:321:[7m### [0mThe three levels[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:322:[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:323:- **`attended`** *(default)* — a human approves each gate (G1/G2/G3/G-Release)[0m
+> project-trajectory\PROCESS_OPTIONS.md:351:[7m### [0mThe LLM-gate verdict protocol[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:352:[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:353:A gate closes only on the verdict of an **independent LLM reviewer**:[0m
+> project-trajectory\PROCESS_OPTIONS.md:369:[7m### [0mThe Blocked register (replaces mid-run escalation)[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:370:[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:371:When a finding survives `MAX_ROUNDS`, a call is MEDIUM/HIGH revert-cost after[0m
+> project-trajectory\PROCESS_OPTIONS.md:379:[7m### [0mThe Decisions log (replaces ask-the-human)[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:380:[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:381:Where the process says *ask / pause / solicit clarification*, an autonomous[0m
+> project-trajectory\PROCESS_OPTIONS.md:387:[7m### [0mLLM-Attest (replaces human Attest at `autonomous`)[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:388:[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:389:For subjective judgments that must not fake being tests: the TC records[0m
+> project-trajectory\PROCESS_OPTIONS.md:491:[7m## Unattended operation[0m (walk-away runs)[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:492:[0m
+[7m[0m  project-trajectory\PROCESS_OPTIONS.md:493:*Referenced from PROCESS.md §4 ("gate authority").* **Applies when** a repo[0m
+
+
+codex
+There is no authorized WI to execute. The only dirty files are the owner-only scratchpad (which I will not read or touch) and `docs/run-phase`; with no scoped WI, I will preserve both. I’ll run the required end-green checks against the current tree and report the actual outputs, but I will not create an empty/status-only commit.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'python -m pytest -q -n auto; python project-trajectory/scripts/check_docs.py --root . --stale' in C:\Projects\ai-template
+2026-07-15T12:58:28.631000Z ERROR codex_core::tools::router: error=Exit code: 124
+Wall time: 124.3 seconds
+Output:
+command timed out after 124292 milliseconds
+
+ exited 124 in 124292ms:
+codex
+The combined close check hit the command wrapper’s 120-second timeout before pytest emitted its buffered summary, so it produced no valid green and `check_docs` did not run. I’m rerunning the full suite with sufficient time, then I’ll run the docs check separately.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'python -m pytest -q -n auto' in C:\Projects\ai-template
+ succeeded in 86614ms:
+bringing up nodes...
+bringing up nodes...
+
+...................................s.................................... [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+..........s............................................................. [ 35%]
+........................................................................ [ 44%]
+........................................................................ [ 53%]
+...............................sssssssss....s.............s.ssssssss.s.. [ 62%]
+s....................s..........s...........s.............s............. [ 71%]
+.........s......................s.................s............s........ [ 80%]
+....s...............s............s...................................... [ 89%]
+........................................................................ [ 98%]
+..............                                                           [100%]
+772 passed, 34 skipped in 85.46s (0:01:25)
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'python project-trajectory/scripts/check_docs.py --root . --stale; git status --short --branch' in C:\Projects\ai-template
+ succeeded in 32442ms:
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/048-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/052-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/054-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/056-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/058-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/060-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/062-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/064-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/066-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/068-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/072-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/075-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/078-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/082-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/099-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/102-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/parallel-wi-dispatch.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/test/report.md
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:51 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/reviews/076-DESIGN-CHECK.md:14 links scoreboard.txt (changed after the doc)
+check_docs: hint - possibly stale: docs/reviews/085-DESIGN-CHECK.md:14 links scoreboard.txt (changed after the doc)
+check_docs: hint - possibly stale: docs/reviews/094-DESIGN-CHECK.md:14 links scoreboard.txt (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-110.md:13 links ../agents.csv (changed after the doc)
+check_docs: OK - 111 doc(s), 455 intra-repo link(s), 0 broken (42 orphan warning(s)).
+## derived-gate-model...origin/derived-gate-model [ahead 93]
+ M OWNER_SCRATCHPAD.md
+ M docs/run-phase
+
+codex
+No scoped WI remains, so I made no changes and created no empty commit. Deferred WI-080/081 remain parked as directed.
+
+End-green results:
+
+```text
+772 passed, 34 skipped in 85.46s
+```
+
+```text
+check_docs: OK - 111 doc(s), 455 intra-repo link(s), 0 broken (42 orphan warning(s)).
+```
+
+Existing user-owned changes were preserved:
+
+```text
+M OWNER_SCRATCHPAD.md
+M docs/run-phase
+```
+
+`docs/run-state` remains `DONE`; `docs/next-wi` correctly states that no queued WI remains. Nothing was pushed.
+tokens used
+58,384
+No scoped WI remains, so I made no changes and created no empty commit. Deferred WI-080/081 remain parked as directed.
+
+End-green results:
+
+```text
+772 passed, 34 skipped in 85.46s
+```
+
+```text
+check_docs: OK - 111 doc(s), 455 intra-repo link(s), 0 broken (42 orphan warning(s)).
+```
+
+Existing user-owned changes were preserved:
+
+```text
+M OWNER_SCRATCHPAD.md
+M docs/run-phase
+```
+
+`docs/run-state` remains `DONE`; `docs/next-wi` correctly states that no queued WI remains. Nothing was pushed.

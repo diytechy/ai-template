@@ -9,10 +9,12 @@ their requirement ids, into a tick-box checklist so the release sign-off is
 concrete and traceable instead of a vibe.
 
 It pulls, from `docs/`:
-    - User needs (UN) + their acceptance intent  -> "Does the product meet the need?"
+    - Stakeholder needs (SN) + their acceptance intent -> "Does the product meet the need?"
     - System requirements whose Verification is Demonstration / Manual / Inspection
     - Release-tier test cases, and any non-automated (manual) test cases
     - Provided cross-project interfaces (IF, if present) -> contract still honored?
+    - Performance budgets (PB, if present) -> still within allocation? (§9; the
+      warn-tier runtime budgets never fail the gate, so a human confirms them here)
 
 Each line is `- [ ] <ID> — <what to confirm> (refs)`. The output is a *generated
 record*: regenerate it per release and keep the ticked copy as the sign-off
@@ -28,12 +30,15 @@ Usage:
                manual TCs that verify an in-scope SR (or an LLR under one).
     --out      Explicit output path (overrides the default/--version location).
     default    Writes docs/release-checklist.md.
+
+Contracts: IF-018, IF-034 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
 import csv
 import datetime
 import re
+import sys
 from pathlib import Path
 
 HUMAN_METHODS = {"Demonstration", "Manual", "Inspection"}
@@ -50,8 +55,8 @@ def is_example(rid):
     return (rid or "").endswith("-000")
 
 
-def read_user_needs(md_path):
-    """Parse the UN core-needs markdown table -> list of (UN-ID, need, acceptance)."""
+def read_stakeholder_needs(md_path):
+    """Parse the SN core-needs markdown table -> list of (SN-ID, need, acceptance)."""
     if not md_path.exists():
         return []
     rows = []
@@ -63,21 +68,34 @@ def read_user_needs(md_path):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if header is None:
-            if any("UN-ID" in c for c in cells):
+            if any("SN-ID" in c for c in cells):
                 header = cells
                 need_i = next((i for i, c in enumerate(header) if "Need" in c), 1)
                 acc_i = next(
                     (i for i, c in enumerate(header) if "Acceptance" in c), None
                 )
             continue
-        if cells and re.match(r"UN-\d+$", cells[0]) and not is_example(cells[0]):
+        if cells and re.match(r"SN-\d+$", cells[0]) and not is_example(cells[0]):
             need = cells[need_i] if need_i is not None and need_i < len(cells) else ""
             acc = cells[acc_i] if acc_i is not None and acc_i < len(cells) else ""
             rows.append((cells[0], need, acc))
     return rows
 
 
+def _utf8_console():
+    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
+    non-ASCII path / title / registry cell can't raise UnicodeEncodeError on a
+    legacy Windows cp1252 console (verbatim across the
+    kit). Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main():
+    _utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -92,7 +110,7 @@ def main():
     args = ap.parse_args()
     docs = Path(args.docs)
 
-    needs = read_user_needs(docs / "requirements" / "user-needs.md")
+    needs = read_stakeholder_needs(docs / "requirements" / "stakeholder-needs.md")
     srs = [
         r
         for r in load_csv(docs / "requirements" / "system-requirements.csv")
@@ -108,6 +126,13 @@ def main():
         for r in load_csv(docs / "requirements" / "interfaces.csv")
         if r.get("IF-ID") and not is_example(r["IF-ID"])
     ]
+    # Performance budgets (process.md §9): the warn-tier runtime budgets never
+    # fail the gate, so the release checklist is where a human confirms them.
+    pbs = [
+        r
+        for r in load_csv(docs / "requirements" / "performance-budgets.csv")
+        if r.get("PB-ID") and not is_example(r["PB-ID"])
+    ]
 
     phases = (
         {p for p in re.split(r"[;,\s]+", args.phase.strip()) if p}
@@ -115,9 +140,30 @@ def main():
         else None
     )
 
+    def _phase_num(tag):
+        m = re.search(r"\d+", tag or "")
+        return int(m.group()) if m else None
+
+    # The foundation (minimum) phase is never phase-deferred (the phase doctrine,
+    # process.md §4) — the same rule trace.py's --phase filter applies, so a foundation
+    # SR stays on the release checklist under any --phase. Digit-parse (`v2`/`2` -> 2)
+    # so the minimum compares numerically; an all-blank registry has no parseable phase
+    # and the blank rule carries it unchanged.
+    foundation_phase = min(
+        (
+            n
+            for n in (_phase_num((r.get("Phase") or "").strip()) for r in srs)
+            if n is not None
+        ),
+        default=None,
+    )
+
     def in_phase(sr_row):
         tag = (sr_row.get("Phase") or "").strip()
-        return phases is None or not tag or tag in phases
+        if phases is None or not tag or tag in phases:
+            return True
+        n = _phase_num(tag)
+        return n is not None and n == foundation_phase
 
     in_scope_sr_ids = {r["SR-ID"] for r in srs if in_phase(r)}
     # An LLR is in scope when any of its parent SRs is, so TC `Verifies` cells
@@ -169,13 +215,13 @@ def main():
         "",
     ]
 
-    L += ["## 1. User needs met (acceptance)", ""]
+    L += ["## 1. Stakeholder needs met (acceptance)", ""]
     if needs:
         for uid, need, acc in needs:
             detail = acc or need or "confirm the need is met"
             L.append("- [ ] **{}** — {} ({})".format(uid, detail, uid))
     else:
-        L.append("- [ ] _(no user needs registered)_")
+        L.append("- [ ] _(no stakeholder needs registered)_")
 
     L += [
         "",
@@ -223,9 +269,25 @@ def main():
                 )
             )
 
+    if pbs:
+        L += ["", "## 5. Performance budgets within allocation (§9)", ""]
+        for r in pbs:
+            arrow = "≤" if (r.get("Direction") or "").strip() == "lower-better" else "≥"
+            L.append(
+                "- [ ] **{}** — {} {} {}{} ({}; refs {})".format(
+                    r["PB-ID"],
+                    r.get("Metric", "").strip(),
+                    arrow,
+                    r.get("Budget", "").strip(),
+                    r.get("Unit", "").strip(),
+                    r.get("Gate", "").strip() or "warn",
+                    r.get("Refs", "").strip(),
+                )
+            )
+
     L += [
         "",
-        "## 5. Release hygiene",
+        "## 6. Release hygiene",
         "",
         "- [ ] `python scripts/check.py --gate G3 --tier release` is green "
         "(paste the output in the audit log).",
@@ -233,6 +295,8 @@ def main():
         "- [ ] Version bumped; any changed `Stable` interface versions "
         "communicated to counterparts.",
         "- [ ] Docs (README / quick-reference) match the shipped behavior.",
+        "- [ ] README `sn-inventory` bullets still reflect the current "
+        "stakeholder needs (wording, not just ids — the gate checks ids).",
         "",
     ]
 
@@ -246,8 +310,13 @@ def main():
     out.write_text("\n".join(L) + "\n", encoding="utf-8")
 
     print(
-        "Release checklist -> {}  (UN={} human-SR={} manual-TC={} IF={})".format(
-            out, len(needs), len(human_srs), len(manual_tcs), len(provided_ifs)
+        "Release checklist -> {}  (SN={} human-SR={} manual-TC={} IF={} PB={})".format(
+            out,
+            len(needs),
+            len(human_srs),
+            len(manual_tcs),
+            len(provided_ifs),
+            len(pbs),
         )
     )
 

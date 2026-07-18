@@ -1,0 +1,2 @@
+- [MAJOR] project-trajectory/scripts/agent_loop.py:398 -> weekday filtering uses `now.weekday()` for both parts of a wrapping `22:00-06:00` window, so it releases the Friday-started window at Saturday 00:00 and blocks Monday 00:00-06:00 as a tail of Sunday -> determine eligibility from the window's effective start day (`now` for the late segment, previous day for the after-midnight segment) and add Friday-to-Saturday and Sunday-to-Monday boundary tests -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

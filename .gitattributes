@@ -3,6 +3,23 @@
 
 # Shell scripts must use LF or they break on Linux/macOS (bad interpreter).
 *.sh text eol=lf
+# macOS double-clickable onboarder (onboard.command) is an sh script — same LF
+# requirement (a CRLF shebang breaks the interpreter).
+*.command text eol=lf
+# The git hooks are extensionless sh scripts — same LF requirement (a CRLF in
+# the shebang breaks `#!/bin/sh`, incl. Git Bash on Windows). This repo's live
+# hooks are the .githooks/ wrappers plus the shipped project-trajectory/hooks/
+# sources; a slash-containing pattern is root-anchored, so the old bare
+# `hooks/pre-commit` line matched nothing (review 2026-07-12 M4).
+.githooks/* text eol=lf
+project-trajectory/hooks/* text eol=lf
 
 # PowerShell scripts: CRLF for native Windows tooling.
 *.ps1 text eol=crlf
+# Windows batch (onboard.cmd) — CRLF, like .ps1: LF can misparse labels/`goto`.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Generated OKF bundle: committed for availability, not change control
+# (Thread 48) - diffs suppressed from review.
+docs/okf/** linguist-generated=true -diff

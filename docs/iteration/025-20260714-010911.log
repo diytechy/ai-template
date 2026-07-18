@@ -1,0 +1,276 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 025
+# date: 2026-07-14 01:10
+# phase: REVIEW-A
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 83
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I will independently inspect the reviewed commit range and governing requirement records, then run the validation harnesses before recording only evidence-backed findings.
+[0m# [0mTodos
+[•] Read governing contributor and review-format instructions
+[ ] Inspect reviewed diff and applicable requirement/spec records
+[ ] Run independent validation harnesses
+[ ] Write review verdict in required format
+[0m
+[0m→ [0mRead CLAUDE.md
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m✱ [0mGlob "docs/requirements/**/*"[90m in . · 6 matches[0m
+[0m✱ [0mGlob "docs/specs/**/*"[90m in . · 15 matches[0m
+[0m✱ [0mGlob "docs/reviews/**/*"[90m in . · 10 matches[0m
+[0m→ [0mRead AGENTS.md
+[0m
+[0m$ [0mgit status --short; git log --oneline --decorate -12; git diff --stat HEAD~1 HEAD; git diff --find-renames --find-copies HEAD~1 HEAD
+M docs/iteration_index.md
+?? docs/iteration/024-20260714-002909.log
+6c8a927 (HEAD -> derived-gate-model) status currency: closed WI ids leave the working surface (R-D warn)
+f242d7e WI-134 close [v3]-[g1]: ratify the v3 batch Draft->Planned (G1 LLM-gate review)
+897abb3 WI-134 [v3]-[g1]: draft the dashboard-ux SRs + the sanctioned SR-051 rev (phase v3 opens)
+7172900 WI-140: pin the SVG per-node <title> tooltip contract (review 019 MINOR)
+a4866ec WI-139: llr_exempt predicate pinned across trace/derive_gate (review 017 MAJOR)
+3113f1b review(023-A) fix: byte-budget-guard step 3 + report shape cover PROCESS_OPTIONS.md
+9bddbda loop bookkeeping: commit sessions 022-023 iteration logs + index + review scoreboard
+41ad9f3 review(023-A): independent REVIEW-A of the WI-098;WI-103 batch — CHANGES-REQUESTED findings=1
+3ebb49e Batch close WI-098;WI-103: log entry, status next-action, next-wi=WI-134
+349c718 WI-103: byte-watch PROCESS_OPTIONS + add an applies-when index table
+3cdccbf WI-098: thin history-provenance comments in the kit masters
+6ced435 (origin/derived-gate-model) Owner intake 2026-07-13: six items triaged + deduped, WI-134..138 filed
+ docs/status.md | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+diff --git a/docs/status.md b/docs/status.md
+index 3f42604..cefc329 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -24,8 +24,8 @@ home elsewhere — don't restate it here:
+ 
+ - **Active gate:** runnable **G1** (derived — `scripts/derive_gate.py`;
+   per-phase `(default)=G3;v2=G2;v3=G1`, cached to [`docs/gate`](gate)) —
+-  **phase v3 (dashboard-ux) is open** (WI-134, log.md 2026-07-14) and the
+-  SR-051 rev holds v2 at G2 until re-verified. Spine self-adopted:
++  **phase v3 (dashboard-ux) is open** (the `[v3]-[g1]` GATE entry, log.md
++  2026-07-14) and the SR-051 rev holds v2 at G2 until re-verified. Spine self-adopted:
+   **SN=24 SR=56 LLR=52 TC=52** (the 10 SR-no-LLR/no-TC orphans are the
+   designed post-g1 window — closed by WI-135's decomposition), 52 seams,
+   5 components.
+@@ -51,8 +51,8 @@ home elsewhere — don't restate it here:
+     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
+       of medium-BUILD evidence.
+ - **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
+-  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md);
+-  WI-134 landed 2026-07-14, log.md):_
++  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md); the
++  `[v3]-[g1]` structuring batch landed 2026-07-14, log.md):_
+   **WI-135** `[v3]-[g2]` (dashboard-ux decomposition: LLR+TC per new SR
+   **including the three Critique rows** — non-LLR-exempt per SR-047 — the
+   `docs/rubrics/dashboard-*.md` rubrics, the LLR-052/TC-052 rev for the
+@@ -71,7 +71,7 @@ home elsewhere — don't restate it here:
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
+   via the vendoring layer — nothing to build here.
+ - **Next action:** **WI-135** (`docs/next-wi`) — the `[v3]-[g2]`
+-  decomposition batch closing WI-134's post-g1 window (LLRs+TCs for
++  decomposition batch closing the post-g1 window (LLRs+TCs for
+   SR-051rev/052–056, the three rubrics, dev-slice definitions); spine-touching,
+   one batch review, and the **owner's single v3 ratification sitting lands at
+   its close** (`single-ratify`). Lower-risk alternative if a smaller next step
+[0m
+[0m→ [0mRead docs/requirements/work-items.csv
+[0m✱ [0mGlob "docs/process*"[90m in . · 0 matches[0m
+[0m✱ [0mGlob "docs/*policy*"[90m in . · 5 matches[0m
+[0m→ [0mRead docs/status.md
+[0m→ [0mRead docs/gate-policy
+[0m→ [0mRead docs/specs/derived-gate-model.md
+[0m→ [0mRead docs/requirements/stakeholder-needs.md
+[0m→ [0mRead docs/requirements/system-requirements.csv
+[0m→ [0mRead docs/requirements/low-level-requirements.csv
+[0m→ [0mRead docs/requirements/interfaces.csv
+[0m→ [0mRead docs/requirements/components.csv
+[0m
+[0m$ [0mgit show --format=fuller --find-renames --find-copies HEAD; git log --oneline HEAD~8..HEAD -- docs/status.md docs/requirements; git log --all --oneline --grep='status currency'
+commit 6c8a9272df7b743ccde36fe185be499b17f7ae65
+Author:     / <peterandersjohnson@outlook.com>
+AuthorDate: Tue Jul 14 01:08:23 2026 -0500
+Commit:     / <peterandersjohnson@outlook.com>
+CommitDate: Tue Jul 14 01:08:23 2026 -0500
+
+    status currency: closed WI ids leave the working surface (R-D warn)
+    
+    The ratifying commit left two WI-134 mentions in status.md; the R-D
+    trajectory check warned per design. Reworded to point at the [v3]-[g1]
+    GATE entry in log.md instead.
+    
+    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+diff --git a/docs/status.md b/docs/status.md
+index 3f42604..cefc329 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -24,8 +24,8 @@ home elsewhere — don't restate it here:
+ 
+ - **Active gate:** runnable **G1** (derived — `scripts/derive_gate.py`;
+   per-phase `(default)=G3;v2=G2;v3=G1`, cached to [`docs/gate`](gate)) —
+-  **phase v3 (dashboard-ux) is open** (WI-134, log.md 2026-07-14) and the
+-  SR-051 rev holds v2 at G2 until re-verified. Spine self-adopted:
++  **phase v3 (dashboard-ux) is open** (the `[v3]-[g1]` GATE entry, log.md
++  2026-07-14) and the SR-051 rev holds v2 at G2 until re-verified. Spine self-adopted:
+   **SN=24 SR=56 LLR=52 TC=52** (the 10 SR-no-LLR/no-TC orphans are the
+   designed post-g1 window — closed by WI-135's decomposition), 52 seams,
+   5 components.
+@@ -51,8 +51,8 @@ home elsewhere — don't restate it here:
+     - **OI-7** — rule **WI-123** (review cadence); rec: wait for ≥2 campaigns
+       of medium-BUILD evidence.
+ - **Queued (owner intake 2026-07-13** — triage + dedupe + briefs:
+-  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md);
+-  WI-134 landed 2026-07-14, log.md):_
++  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md); the
++  `[v3]-[g1]` structuring batch landed 2026-07-14, log.md):_
+   **WI-135** `[v3]-[g2]` (dashboard-ux decomposition: LLR+TC per new SR
+   **including the three Critique rows** — non-LLR-exempt per SR-047 — the
+   `docs/rubrics/dashboard-*.md` rubrics, the LLR-052/TC-052 rev for the
+@@ -71,7 +71,7 @@ home elsewhere — don't restate it here:
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
+   via the vendoring layer — nothing to build here.
+ - **Next action:** **WI-135** (`docs/next-wi`) — the `[v3]-[g2]`
+-  decomposition batch closing WI-134's post-g1 window (LLRs+TCs for
++  decomposition batch closing the post-g1 window (LLRs+TCs for
+   SR-051rev/052–056, the three rubrics, dev-slice definitions); spine-touching,
+   one batch review, and the **owner's single v3 ratification sitting lands at
+   its close** (`single-ratify`). Lower-risk alternative if a smaller next step
+6c8a927 status currency: closed WI ids leave the working surface (R-D warn)
+f242d7e WI-134 close [v3]-[g1]: ratify the v3 batch Draft->Planned (G1 LLM-gate review)
+897abb3 WI-134 [v3]-[g1]: draft the dashboard-ux SRs + the sanctioned SR-051 rev (phase v3 opens)
+7172900 WI-140: pin the SVG per-node <title> tooltip contract (review 019 MINOR)
+a4866ec WI-139: llr_exempt predicate pinned across trace/derive_gate (review 017 MAJOR)
+6c8a927 status currency: closed WI ids leave the working surface (R-D warn)
+[0m
+The reviewed commit is limited to `docs/status.md` and removes the closed `WI-134` references. The applicable SSOT rule is SR-037's R-D: completed work items must not appear on that forward-only surface. I will now validate that change against the live registry and harnesses.
+[0m# [0mTodos
+[✓] Read governing contributor and review-format instructions
+[✓] Inspect reviewed diff and applicable requirement/spec records
+[•] Run independent validation harnesses
+[ ] Write review verdict in required format
+[0m
+[0m→ [0mRead docs/gate-policy.md
+[0m→ [0mRead docs/next-wi
+[0m✱ [0mGrep "VERDICT:|log\.md block|\[BLOCKER\|MAJOR\|MINOR\]"[90m in project-trajectory/scripts · 9 matches[0m
+[0m→ [0mRead docs/reviews/023-REVIEW-A.md
+[0m
+[0m$ [0mrg -n -i "WI-134|WI-135|post-g1 window|runnable \*\*G1\*\*|phase v3|single-ratify" docs/status.md docs/requirements/work-items.csv docs/gate docs/gate-policy docs/gate-policy.md docs/next-wi
+[31;1mrg: [31;1mThe term 'rg' is not recognized as a name of a cmdlet, function, script file, or executable program.[0m
+[31;1m[31;1mCheck the spelling of the name, or if a path was included, verify that the path is correct and try again.[0m
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G1; python project-trajectory/scripts/trace.py --strict; python project-trajectory/scripts/check_trajectory.py --strict; python project-trajectory/scripts/derive_gate.py --check
+=== registry-integrity : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict-integrity ===
+Traceability: SN=24 SR=56 LLR=52 TC=52 orphans=10 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G1).
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: WARN - OI-1: a Needs-<human> item in status.md with no `## OI-1` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-2: a Needs-<human> item in status.md with no `## OI-2` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-5: a Needs-<human> item in status.md with no `## OI-5` section in open-items.md (every owner ask carries its brief)
+check_docs: WARN - OI-6: a Needs-<human> item in status.md with no `## OI-6` section in open-items.md (every owner ask carries its brief)
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:48 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 57 doc(s), 286 intra-repo link(s), 0 broken (13 orphan warning(s)).
+
+========================================================
+Check summary (gate G1, tier all):
+  PASS  registry-integrity 0.1s
+  PASS  derived-gate     0.1s
+  PASS  privacy          0.4s
+  PASS  doc-navigability 6.0s
+========================================================
+RESULT: PASS
+Traceability: SN=24 SR=56 LLR=52 TC=52 orphans=10 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+check_trajectory: clean (140 work item(s), 123 done (88%), graph acyclic).
+derive_gate: docs/gate up to date (G1).
+[0m
+Independent checks pass: `check.py --gate G1`, `trace.py --strict`, `check_trajectory.py --strict`, and `derive_gate.py --check`. The edit removes the forbidden completed WI identifier, but it still adds backward-looking “batch landed” history to the explicitly forward-only status surface.
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Read governing contributor and review-format instructions
+[✓] Inspect reviewed diff and applicable requirement/spec records
+[✓] Run independent validation harnesses
+[✓] Write review verdict in required format
+[0m
+Review recorded in `docs/reviews/025-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED findings=1`
+
+Independent checks passed: `check.py --gate G1`, `trace.py --strict`, `check_trajectory.py --strict`, `derive_gate.py --check`.

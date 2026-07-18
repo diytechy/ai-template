@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 083
+# date: 2026-07-15 02:40
+# phase: BUILD
+# wi: WI-165
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: 3dfa879..a0a0361
+# tokens: 
+# cost-usd: 
+# wall-secs: 750
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1858
+# exit-code: 0
+# ---
+Reading additional input from stdin...
+OpenAI Codex v0.144.4
+--------
+workdir: C:\Projects\ai-template
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019f64ac-810d-71f0-9553-22e699500386
+--------
+user
+You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. When filing or triaging a WI, assign BuildTier deliberately: quick for mechanical/off-spine work, medium by default, strong only for design-shaping or spine-touching work; never silently downgrade a declared route mid-loop. Clear the lowest gate level first: do not queue phase development ahead of its open [phase]-[g1|g2] work or Draft SRs unless the owner deliberately orders it. Gates before every commit (the commit bar): python -m pytest -q -n auto -m smoke and python project-trajectory/scripts/check_docs.py --root . --stale - paste the real output; never report a green you didn't produce. Run the FULL suite (python -m pytest -q -n auto, no -m) before claiming a slice/campaign done or at close (session-protocol skill 'End green'). Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, docs/next-wi (the next WI id - or a ';'-joined batch of independent off-spine WIs to execute in order as ONE session with ONE review round, WI-133 - for the coordinator's BuildTier pin), the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first.
+codex
+I’m using the `session-protocol` skill because this is a scoped WI driver session. I’ll first read its full instructions, then `CLAUDE.md` and the Current State, and I’ll follow the recorded WI/Next action without expanding scope.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Raw 'C:\\Projects\\ai-template\\.agents\\skills\\session-protocol\\SKILL.md'; Get-Content -Raw 'CLAUDE.md'; Write-Output \""'`n--- STATUS CURRENT STATE ---"; Get-Content -Raw '"'docs/status.md'" in C:\Projects\ai-template
+ succeeded in 667ms:
+---
+name: session-protocol
+description: Use when running a work-item (WI) or thread session in this template repo — how to read the plan, execute only the scoped work, pass the gates, write the session/WI log, and commit in this repo's style.
+stacks: [any]
+domains: [any]
+phases: [dev, gate, release]
+tags: [session, improvement-plan, workflow, commit-style, wi]
+scope: this-repo
+---
+
+# Session protocol (this template repo)
+
+How a WI/thread session runs here. The live homes: **`docs/status.md`** (what's
+next), **`docs/requirements/work-items.csv`** (the WI registry), and
+**`docs/log.md`** (the session/gate record). This skill is the fast path; the
+process masters (`PROCESS.md` / `PROCESS_OPTIONS.md`) win when they disagree. The
+kit's design history — the old thread specs and the WI-1.x log — is archived at
+`docs/archive/IMPROVEMENT_PLAN.md` (context, not a working surface).
+
+## 1. Read before doing
+
+- Read `CLAUDE.md` (governs editing the kit) and `AGENTS.md` (the pointer stub).
+- Read `docs/status.md` (the working surface — what's next) and the scoped WI's
+  row in `docs/requirements/work-items.csv`. The spec-of-record for a WI is what
+  its row points at (an SR and/or a plan doc); older landed work is in the
+  archived plan. **Do only the scoped work** — no unrelated edits.
+- If a stub is being revived, find and link its earlier backlogged form (search
+  `docs/archive/scratch.md` + the stub threads) so the resolution is traceable.
+- **Check `git status` first.** Residue in the working tree is from an
+  interrupted session; reconcile it against the open WI's spec / Done-when
+  *before* new work — verify-and-commit what is complete, discard what is not
+  part of the scope, and record which in the log. (The unattended loop surfaces
+  this into the session prompt; the judgment is yours — it never auto-stashes.)
+- **Treat a declared-policy change as a status-staleness event.** In the same
+  sitting, grep `docs/status.md` and `docs/run-state` for pause/stop/approval
+  language predicated on the old `gate-policy`, `push-policy`, `review-policy`,
+  or `guardrails-policy` value; point to the policy file instead of paraphrasing it.
+
+## 2. Respect the constraints
+
+- **Byte budgets** on `AGENTS.template.md` (10,000) and `PROCESS.md` — see the
+
+[... 26751 line(s) elided — full stream in out/run-logs/ ...]
+
+-        "#process .loops{display:flex;flex-direction:column;gap:.5rem;"
+-        "margin:.5rem 0;}"
+-        "#process .entry{align-self:flex-start;background:var(--surface);"
+-        "border:2px solid var(--accent);border-radius:10px;"
+-        "padding:.45rem .8rem;box-shadow:var(--shadow);}"
++        "#process .loops{display:grid;grid-template-columns:minmax(7.5rem,auto) 1fr;"
++        "grid-template-rows:1fr 1fr;gap:.8rem 0;align-items:stretch;"
++        "margin:.7rem 0;isolation:isolate;}"
++        "#process .entry{grid-column:1;grid-row:1/3;align-self:center;z-index:3;"
++        "background:var(--surface);"
++        "border:2px solid var(--accent);border-radius:10px;"
++        "padding:.45rem .8rem;box-shadow:var(--shadow);max-width:9.5rem;}"
+         "#process .entry b{display:block;font-size:.88rem;color:var(--accent);}"
+         "#process .entry span{font-size:.72rem;color:var(--muted);}"
+-        "#process .loop .loopname{display:block;font-size:.82rem;font-weight:700;"
+-        "color:var(--text);margin:.35rem 0 .1rem;}"
+-        "#process ol.pflow.loop{align-items:center;}"
+-        '#process .pflow.loop::after{content:"↺ back to the entry";'
+-        "align-self:center;font-size:.72rem;color:var(--accent);font-weight:700;"
+-        "margin-left:1rem;white-space:nowrap;}"
+-        "#process .pflow.loop a{color:inherit;}"
+-        "</style>"
++        "#process .loop{grid-column:2;position:relative;border:2px solid var(--accent);"
++        "border-left-width:3px;border-radius:999px;padding:1.45rem 2rem 1.2rem 3rem;"
++        "margin-left:-1rem;min-height:10.5rem;}"
++        "#process .loop-a{grid-row:1;}#process .loop-b{grid-row:2;}"
++        "#process .loop::after{content:\"\";position:absolute;left:-.45rem;top:50%;"
++        "width:.72rem;height:.72rem;border-top:3px solid var(--accent);"
++        "border-right:3px solid var(--accent);transform:translateY(-50%) rotate(-135deg);"
++        "background:var(--bg);}"
++        "#process .loop .loopname{position:absolute;left:3rem;top:.3rem;"
++        "font-size:.82rem;font-weight:700;color:var(--accent);}"
++        "#process ol.pflow.loop{display:grid;grid-template-columns:repeat(3,minmax(7rem,1fr));"
++        "grid-template-rows:repeat(2,auto);gap:.65rem 1rem;margin:0;align-items:center;}"
++        "#process .pflow.loop li{max-width:none;margin-left:0;}"
++        "#process .pflow.loop li+li::before{display:none;}"
++        "#process .pflow.loop li:nth-child(1){grid-column:1;grid-row:1;}"
++        "#process .pflow.loop li:nth-child(2){grid-column:2;grid-row:1;}"
++        "#process .pflow.loop li:nth-child(3){grid-column:3;grid-row:1;}"
++        "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}"
++        "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}"
++        "#process .loop-b .pflow.loop li:nth-child(2){grid-column:3;}"
++        "#process .loop-b .pflow.loop li:nth-child(3){grid-column:3;grid-row:2;}"
++        "#process .loop-b .pflow.loop li:nth-child(4){grid-column:1;grid-row:2;}"
++        "#process .pflow.loop a{color:inherit;}"
++        "@media(max-width:760px){#process .loops{grid-template-columns:1fr;"
++        "grid-template-rows:auto;}#process .entry{grid-column:1;grid-row:1;"
++        "justify-self:center;max-width:none;}#process .loop{grid-column:1;"
++        "margin:-.65rem 0 0;padding:2.2rem 1rem 1rem;border-radius:28px;}"
++        "#process .loop-a{grid-row:2}#process .loop-b{grid-row:3}"
++        "#process ol.pflow.loop{grid-template-columns:1fr;}"
++        "#process .pflow.loop li:nth-child(n){grid-column:1;grid-row:auto;}"
++        "#process .loop::after{left:50%;top:-.4rem;transform:translateX(-50%) rotate(-45deg);}}"
++        "</style>"
+     )
+     panel = (
+         '<section id="process" class="panel">\n'
+diff --git a/tests/test_gen_trajectory.py b/tests/test_gen_trajectory.py
+index d901c42106cd8131643be60600bd5e4c5e0ac8da..28b57880a33b32af4f7f7bbfe5e21b4d086388f7
+--- a/tests/test_gen_trajectory.py
++++ b/tests/test_gen_trajectory.py
+@@ -1367,8 +1367,11 @@
+     # the gate-ratification stage sits in loop B, after the loop-B heading
+     b_start = loops.index("B · Human-decision loop")
+     assert loops.index("gate-ratification table") > b_start
+-    # both loops advertise their circular return (the ↺ marker via CSS class)
++    # Both loops are explicitly closed cycles, not straight rows with a return label.
+     assert loops.count('class="pflow loop"') == 2
++    assert loops.count('data-cycle="closed"') == 2
++    assert 'class="loop loop-a"' in loops
++    assert 'class="loop loop-b"' in loops
+     # still fully offline
+     low = text.lower()
+     assert "http://" not in low and "https://" not in low
+@@ -1381,12 +1384,28 @@
+     assert gen(tmp_path).returncode == 0
+     loops = _loops_div(html_of(tmp_path))
+     assert loops.count("<b>LLM_Agent</b>") == 1
++    assert 'data-loop-a-degree="2"' in loops
++    assert 'data-loop-b-degree="2"' in loops
+     # the entry node precedes both loop panels (a shared head, not per-loop)
+-    entry_at = loops.index('<div class="entry">')
++    entry_at = loops.index('<div class="entry"')
+     assert entry_at < loops.index("A · Intake loop")
+     assert entry_at < loops.index("B · Human-decision loop")
+ 
+ 
++def test_process_loop_layout_is_a_shared_circular_junction(tmp_path):
++    # WI-165: the CSS draws two closed racetracks that meet at the one shared
++    # LLM_Agent junction; loop stages occupy both the outbound and return sides.
++    with_gate(tmp_path, "G2")
++    assert gen(tmp_path).returncode == 0
++    text = html_of(tmp_path)
++    assert "#process .loops{display:grid" in text
++    assert "grid-row:1/3" in text
++    assert "border-radius:999px" in text
++    assert "#process .loop::after" in text
++    assert "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}" in text
++    assert "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}" in text
++
++
+ def test_process_loop_stage_links_resolve():
+     # Over the real meta repo (where every canonical home exists): each stage
+     # links to its canonical doc and every emitted href resolves.
+
+codex
+Completed and committed WI-165 as `a0a0361`.
+
+- Process loops now render as responsive closed racetracks sharing one `LLM_Agent` junction.
+- TC-056 now verifies cycle closure, shared-node degree, return paths, links, and deterministic output.
+- WI-165 marked done; `docs/next-wi` now points to WI-167 (`BuildTier=medium`).
+- `docs/run-state` remains `RUNNING`.
+- Full suite: `749 passed, 34 skipped in 79.28s`.
+- Final commit bar: `623 passed, 2 skipped in 62.99s`; docs check: `94 docs, 399 links, 0 broken`.
+- Working tree is clean. Nothing pushed per `push-policy: human`.
+
+Live browser visual QA was unavailable; this limitation is recorded in `docs/log.md`.
+diff --git a/docs/log.md b/docs/log.md
+index 3a4af3cb1224e4dd1d538ab1537032209a0902fd..d25f24cc0e8eb5d3a0d4722f7ddb40b66769f5d4
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -6444,3 +6444,23 @@
+ warning/hint classes only); unfiltered suite **748 passed, 34 skipped in
+ 76.78s**. **Handoff:** run-state remains **RUNNING**; `docs/next-wi` →
+ **WI-165** (`BuildTier=strong`). Not pushed (`docs/push-policy: human`).
++
++## 2026-07-15 — WI-165 Process-tab circular loops
++
++Replaced the Process tab's two straight stage rows plus textual return markers
++with responsive closed racetracks. Intake loop A and human-decision loop B now
++meet at the single rendered `LLM_Agent` junction; explicit cycle and per-loop
++degree metadata make the topology regression-testable, while CSS places stages
++on outbound and return sides and preserves a compact single-column layout.
++TC-056 now asserts the closed cycles, shared-node degree, return-side placement,
++canonical links, data-less byte identity, and deterministic generation.
++
++**End green (real output):** focused process-loop suite **4 passed, 75
++deselected in 0.95s**; unfiltered suite **749 passed, 34 skipped in 79.28s**.
++Commit-bar smoke and `check_docs --stale` are recorded in the commit that follows
++this entry. The in-app browser connection was unavailable, so no live visual
++critique was claimed; this is the only deviation from the intended visual QA,
++covered structurally by the hardened TC-056 tests. No byte-budgeted file changed
++and no spine state changed. **Handoff:** run-state remains **RUNNING**;
++`docs/next-wi` → **WI-167** (`BuildTier=medium`). Not pushed
++(`docs/push-policy: human`).
+diff --git a/docs/next-wi b/docs/next-wi
+index af71e49953456d6bd8b8841e9db612ed1e618d1b..19e0597658ce994bba5a05ececad94724d662724
+--- a/docs/next-wi
++++ b/docs/next-wi
+@@ -14,8 +14,8 @@
+ # Verified, the derived gate is back at G3, the v3 dashboard-ux campaign is
+ # complete. `docs/gate-policy` is now `autonomous` (owner directive) — no
+ # g2-close sitting for future campaigns.
+-# NEXT: the DAG-actionable off-spine backlog — WI-165 (Process-tab circular
+-# loops, now unblocked) -> WI-167 (tripwire path coverage). WI-159
++# NEXT: the DAG-actionable off-spine backlog — WI-167 (tripwire path coverage;
++# WI-165 Process-tab circular loops is complete). WI-159
+ # (Knowledge-tab density) stays deferred. WI-162's ratifiable parallel-dispatch
+ # design is complete; implementation slices file only after ratification.
+ # THEN (owner GREENLIT 2026-07-15): flow straight into the research-knowledge
+@@ -29,4 +29,4 @@
+ # the autonomous design-check ruled GRIND-THROUGH (docs/reviews/076-DESIGN-
+ # CHECK.md) — run-phase is back to BUILD, WI-167 filed for the tripwire's
+ # meta-repo path-coverage gap (joins the backlog after WI-165).
+-WI-165
++WI-167
+diff --git a/docs/requirements/work-items.csv b/docs/requirements/work-items.csv
+index 13f30fb31a665ffa9752155af1d2db246c121576..0b2041012c7b4a717a6550f5a6092bee43dbc007
+--- a/docs/requirements/work-items.csv
++++ b/docs/requirements/work-items.csv
+@@ -163,6 +163,6 @@
+ WI-162,Parallel WI dispatch across coordinator lanes - design spec (actionability scan x overlap guard x lane lifecycle),unattended,,WI-025;~WI-149,done,"Ratifiable design in docs/specs/parallel-wi-dispatch.md: opt-in lane count; deterministic hard-predecessor + lowest-gate actionability scan; conservative off-spine overlap guard; central dispatcher/worktree ownership; per-lane review; serialized gated integration; telemetry projection; five implementation slices specified for filing on ratification.",docs/specs/owner-intake-2026-07-14b.md#parallel-dispatch,owner-intake-2026-07-14b,strong
+ WI-163,Per-WI critique budget dial (n | inf-until-APPROVE; move-on | block disposition),unattended,,WI-059,done,"Added optional CritiqueBudget/CritiqueExhaustion WI columns; agent_loop applies integer or inf budgets and move-on or block exhaustion per scope with conservative batch composition, legacy fallback, scaffold/process guidance, and integration tests.",,owner-intake-2026-07-14b,
+ WI-164,Optimization-methodology research - solution spaces / sampling / cross-pollination / constructed-optimizer-vs-LLM-iteration,research,,WI-152;~WI-154,queued,,docs/specs/owner-intake-2026-07-14b.md#optimization-research,research-knowledge,strong
+-WI-165,Process tab - render loops A/B as true circular loops intersecting at the shared LLM_Agent node,dashboard,SR-055,WI-144,queued,,docs/specs/owner-intake-2026-07-14b.md#process-loops,dashboard-ux,strong
++WI-165,Process tab - render loops A/B as true circular loops intersecting at the shared LLM_Agent node,dashboard,SR-055,WI-144,done,"Process-tab loops A/B now render as closed responsive racetracks intersecting at one LLM_Agent junction; TC-056 asserts both closed cycles, the single shared node's per-loop degree, return-side placement, and deterministic/link behavior.",docs/specs/owner-intake-2026-07-14b.md#process-loops,dashboard-ux,strong
+ WI-166,dev-setup.template.cmd - Windows double-click rung (MAPPING + tests + README),scripts,SR-032,WI-051;WI-160,done,"Shipped the ASCII-safe Windows double-click template, bootstrap mapping, fresh-scaffold presence/shape coverage, and kit-contents documentation.",docs/specs/owner-intake-2026-07-14b.md#dev-setup-windows,owner-intake-2026-07-14b,
+ WI-167,Tripwire path coverage - REVIEW_POLICY_PATHS misses the meta-repo kit-script layout (project-trajectory/scripts/),unattended,,WI-059,queued,,docs/reviews/076-DESIGN-CHECK.md,,medium
+diff --git a/docs/status.md b/docs/status.md
+index 420fb0615e271e403cb085992cdca3db1fd50fd1..41bee534746b6f84f0c0dbb764be03c88d602f94
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -54,10 +54,9 @@
+       of medium-BUILD evidence.
+ - **v3 dashboard-ux campaign — COMPLETE** (owner intake 2026-07-13). All slices
+   shipped; the closing UI-quality slice (SR-052/053/054 Critique) passed the
+-  owner's manual critique 2026-07-15 and the spine rejoined G3. A follow-up render
+-  slice (**WI-165**, Process-tab circular loops) is now unblocked, and **WI-159**
+-  (Knowledge-tab density) stays deferred — both future graphic-breakdown
+-  iterations the owner flagged._
++  owner's manual critique 2026-07-15 and the spine rejoined G3. **WI-159**
++  (Knowledge-tab density) stays deferred as the remaining graphic-breakdown
++  iteration the owner flagged._
+ - **Queued (research-knowledge campaign, OI-9 §8** —
+   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
+   2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
+@@ -78,8 +77,7 @@
+   dial turn, Decisions log; its per-phase preference follow-up is complete):_
+   **WI-164**
+   (optimization-methodology research — joins the research-knowledge campaign
+-  behind WI-152) · **WI-165** (Process-tab circular loops, SR-055 — **now
+-  unblocked**, the v3 campaign closed). Codex **Sol builds are now live** (`codex` on PATH + logged in
++  behind WI-152). Codex **Sol builds are now live** (`codex` on PATH + logged in
+   2026-07-15)._
+ - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
+   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
+@@ -91,11 +89,10 @@
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+ - **Next action:** **the loop resumes under `autonomous`** — the v3 campaign
+   closed (spine at G3), so the DAG-actionable off-spine backlog continues:
+-  **WI-165** (Process circular loops) →
+   **WI-167** (tripwire path coverage — filed by the 076 design-check, which
+   ruled GRIND-THROUGH on the last review round's tripwire page,
+   [reviews/076-DESIGN-CHECK.md](reviews/076-DESIGN-CHECK.md));
+-  `docs/next-wi` is pointed at **WI-165** (`BuildTier=strong`).
++  `docs/next-wi` is pointed at **WI-167** (`BuildTier=medium`).
+   The `docs/pause` hold is lifted at this close. **After the backlog the loop
+   flows into the research-knowledge campaign** (WI-152…157 + WI-164)
+   automatically — the owner greenlit it 2026-07-15; only the deferred
+diff --git a/docs/test/test-cases.csv b/docs/test/test-cases.csv
+index f02192dd8ccdaff7ffe9ffb6c900f297a4209dca..9e50c4d253f429e7330444e0171de942e8732229
+--- a/docs/test/test-cases.csv
++++ b/docs/test/test-cases.csv
+@@ -54,5 +54,5 @@
+ TC-053,SR-052;LLR-053,Critique,"A fresh, provider-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PROJECT_STATE.html against docs/rubrics/dashboard-accessibility.md, receiving the rubric + SN/SR intent + the artifact recipe and never the implementer's self-assessment; it writes a VERDICT: APPROVE|CHANGES-REQUESTED findings=N machine line citing numbered rubric anchors.",Full,,"APPROVE citing numbered anchors; keyboard reachability (A1), accessible names (A2), colour-independent encoding (A3), and text contrast >= the rubric's declared WCAG AA threshold (A4) are each satisfied against a rubric anchor.",No,,Verified
+ TC-054,SR-053;LLR-054,Critique,"A fresh, provider-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PROJECT_STATE.html against docs/rubrics/dashboard-uniformity.md, receiving the rubric + SN/SR intent + the artifact recipe and never the implementer's self-assessment; VERDICT machine line cites numbered anchors.",Full,,"APPROVE citing numbered anchors; one type scale/spacing (U1), one colour vocabulary (U2), uniform per-emitter node/edge/legend/detail-panel styling (U3), and one interaction idiom per structure (U4) each satisfied against a rubric anchor.",No,,Verified
+ TC-055,SR-054;LLR-055,Critique,"A fresh, provider-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PROJECT_STATE.html against docs/rubrics/dashboard-usability.md, receiving the rubric + SN/SR intent + the artifact recipe and never the implementer's self-assessment; VERDICT machine line cites numbered anchors.",Full,,"APPROVE citing numbered anchors; task findability - project state, next work, and how the parts connect each within one tab switch (T1, the rubric's task list), default-density legibility (T2), detail-in-context (T3), and label legibility (T4) each satisfied against a rubric anchor.",No,,Verified
+-TC-056,SR-055;LLR-056,Integration,"Run the dashboard suite; the Process tab renders both loop panels (intake loop A + human-decision loop B) with the shared LLM_Agent entry node appearing exactly once, every stage's link resolving to its canonical doc, the gate-ratification stage present in loop B, a data-less repo rendering byte-identically, and generation byte-deterministic with --check tripping stale output.",Full,,"Both loop panels present; LLM_Agent entry node rendered once and shared; loop A stages = [intake -> triage-to-WI -> resume-loop -> build/review -> merge]; loop B stages = [open-items population incl. gate-ratification -> human review/ruling -> log Decisions -> merge], each stage 1:1 to a panel node; all stage links resolve; data-less render byte-identical; deterministic; --check trips.",Yes,tests/test_gen_trajectory.py::test_process_tab_renders_intake_and_decision_loops ::test_process_loops_share_one_llm_agent_entry ::test_process_loop_stage_links_resolve ::test_process_loops_byte_identical_without_data,Verified
++TC-056,SR-055;LLR-056,Integration,"Run the dashboard suite; the Process tab renders both loop panels (intake loop A + human-decision loop B) as closed racetracks intersecting at the shared LLM_Agent entry node, every stage's link resolving to its canonical doc, the gate-ratification stage present in loop B, a data-less repo rendering byte-identically, and generation byte-deterministic with --check tripping stale output.",Full,tests/test_gen_trajectory.py (the process-loop cases),"Both loop panels are explicit closed cycles; LLM_Agent renders once with degree >= 2 into each loop; loop A stages = [intake -> triage-to-WI -> resume-loop -> build/review -> merge]; loop B stages = [open-items population incl. gate-ratification -> human review/ruling -> log Decisions -> merge], with outbound and return-side placement; all stage links resolve; data-less render byte-identical; deterministic; --check trips.",Yes,tests/test_gen_trajectory.py::test_process_tab_renders_intake_and_decision_loops ::test_process_loops_share_one_llm_agent_entry ::test_process_loop_layout_is_a_shared_circular_junction ::test_process_loop_stage_links_resolve ::test_process_loops_byte_identical_without_data,Verified
+ TC-057,SR-056;LLR-057,Integration,"Run the dashboard suite; the tiered decomposition views render one horizontal parent->child arrow per containment edge, each tier column no wider than the declared bound, and a persistent last-hovered highlight contract keyed to the last-hovered node; byte-deterministic with --check tripping stale output.",Full,,"Exactly one parent->child arrow per containment edge; each tier column width <= the declared bound MAX_TIER_COL (a named constant = the widest member label + a fixed padding - a declared value, not an adjective); the persistent-highlight attribute is present and keyed to the last-hovered node id (no flash-on-exit); deterministic; --check trips.",Yes,tests/test_gen_trajectory.py::test_decomposition_one_arrow_per_containment_edge ::test_tier_column_honors_declared_width_bound ::test_persistent_hover_highlight_keyed_to_last_node,Verified
+diff --git a/project-trajectory/scripts/gen_trajectory.py b/project-trajectory/scripts/gen_trajectory.py
+index 9d748181cdec5c6ae1553502062cbbf3cf95bf93..462c9029026b0fb84d385c3de035dab989eb9fe7
+--- a/project-trajectory/scripts/gen_trajectory.py
++++ b/project-trajectory/scripts/gen_trajectory.py
+@@ -2574,24 +2574,28 @@
+         ),
+     ]
+ 
+-    def loop_ol(name, stages):
+-        lis = "".join(
+-            '<li class="stg"><b>{}</b><span class="n">{}</span></li>'.format(
+-                esc(title), note
+-            )
+-            for title, note in stages
+-        )
+-        return (
+-            '<div class="loop"><b class="loopname">{}</b>'
+-            '<ol class="pflow loop">{}</ol></div>'.format(esc(name), lis)
+-        )
++    def loop_ol(loop_id, name, stages):
++        lis = "".join(
++            '<li class="stg" data-node="{}"><b>{}</b>'
++            '<span class="n">{}</span></li>'.format(
++                index, esc(title), note
++            )
++            for index, (title, note) in enumerate(stages, 1)
++        )
++        return (
++            '<div class="loop loop-{}" data-cycle="closed">'
++            '<b class="loopname">{}</b><ol class="pflow loop">{}</ol></div>'.format(
++                esc(loop_id), esc(name), lis
++            )
++        )
+ 
+     return (
+         '<div class="loops">'
+-        '<div class="entry"><b>LLM_Agent</b>'
+-        "<span>the shared entry point — both loops start here</span></div>"
+-        + loop_ol("A · Intake loop", intake_loop)
+-        + loop_ol("B · Human-decision loop", decide_loop)
++        '<div class="entry" data-loop-a-degree="2" data-loop-b-degree="2">'
++        '<b>LLM_Agent</b>'
++        "<span>the shared entry point — both loops start here</span></div>"
++        + loop_ol("a", "A · Intake loop", intake_loop)
++        + loop_ol("b", "B · Human-decision loop", decide_loop)
+         + "</div>"
+     )
+ 
+@@ -2715,21 +2719,47 @@
+         "padding-left:1.2rem;}"
+         "#process ul.esc b{color:var(--text);}"
+         # Panel 4 — the two circular working loops, sharing one LLM_Agent entry.
+-        "#process .loops{display:flex;flex-direction:column;gap:.5rem;"
+-        "margin:.5rem 0;}"
+-        "#process .entry{align-self:flex-start;background:var(--surface);"
+-        "border:2px solid var(--accent);border-radius:10px;"
+-        "padding:.45rem .8rem;box-shadow:var(--shadow);}"
++        "#process .loops{display:grid;grid-template-columns:minmax(7.5rem,auto) 1fr;"
++        "grid-template-rows:1fr 1fr;gap:.8rem 0;align-items:stretch;"
++        "margin:.7rem 0;isolation:isolate;}"
++        "#process .entry{grid-column:1;grid-row:1/3;align-self:center;z-index:3;"
++        "background:var(--surface);"
++        "border:2px solid var(--accent);border-radius:10px;"
++        "padding:.45rem .8rem;box-shadow:var(--shadow);max-width:9.5rem;}"
+         "#process .entry b{display:block;font-size:.88rem;color:var(--accent);}"
+         "#process .entry span{font-size:.72rem;color:var(--muted);}"
+-        "#process .loop .loopname{display:block;font-size:.82rem;font-weight:700;"
+-        "color:var(--text);margin:.35rem 0 .1rem;}"
+-        "#process ol.pflow.loop{align-items:center;}"
+-        '#process .pflow.loop::after{content:"↺ back to the entry";'
+-        "align-self:center;font-size:.72rem;color:var(--accent);font-weight:700;"
+-        "margin-left:1rem;white-space:nowrap;}"
+-        "#process .pflow.loop a{color:inherit;}"
+-        "</style>"
++        "#process .loop{grid-column:2;position:relative;border:2px solid var(--accent);"
++        "border-left-width:3px;border-radius:999px;padding:1.45rem 2rem 1.2rem 3rem;"
++        "margin-left:-1rem;min-height:10.5rem;}"
++        "#process .loop-a{grid-row:1;}#process .loop-b{grid-row:2;}"
++        "#process .loop::after{content:\"\";position:absolute;left:-.45rem;top:50%;"
++        "width:.72rem;height:.72rem;border-top:3px solid var(--accent);"
++        "border-right:3px solid var(--accent);transform:translateY(-50%) rotate(-135deg);"
++        "background:var(--bg);}"
++        "#process .loop .loopname{position:absolute;left:3rem;top:.3rem;"
++        "font-size:.82rem;font-weight:700;color:var(--accent);}"
++        "#process ol.pflow.loop{display:grid;grid-template-columns:repeat(3,minmax(7rem,1fr));"
++        "grid-template-rows:repeat(2,auto);gap:.65rem 1rem;margin:0;align-items:center;}"
++        "#process .pflow.loop li{max-width:none;margin-left:0;}"
++        "#process .pflow.loop li+li::before{display:none;}"
++        "#process .pflow.loop li:nth-child(1){grid-column:1;grid-row:1;}"
++        "#process .pflow.loop li:nth-child(2){grid-column:2;grid-row:1;}"
++        "#process .pflow.loop li:nth-child(3){grid-column:3;grid-row:1;}"
++        "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}"
++        "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}"
++        "#process .loop-b .pflow.loop li:nth-child(2){grid-column:3;}"
++        "#process .loop-b .pflow.loop li:nth-child(3){grid-column:3;grid-row:2;}"
++        "#process .loop-b .pflow.loop li:nth-child(4){grid-column:1;grid-row:2;}"
++        "#process .pflow.loop a{color:inherit;}"
++        "@media(max-width:760px){#process .loops{grid-template-columns:1fr;"
++        "grid-template-rows:auto;}#process .entry{grid-column:1;grid-row:1;"
++        "justify-self:center;max-width:none;}#process .loop{grid-column:1;"
++        "margin:-.65rem 0 0;padding:2.2rem 1rem 1rem;border-radius:28px;}"
++        "#process .loop-a{grid-row:2}#process .loop-b{grid-row:3}"
++        "#process ol.pflow.loop{grid-template-columns:1fr;}"
++        "#process .pflow.loop li:nth-child(n){grid-column:1;grid-row:auto;}"
++        "#process .loop::after{left:50%;top:-.4rem;transform:translateX(-50%) rotate(-45deg);}}"
++        "</style>"
+     )
+     panel = (
+         '<section id="process" class="panel">\n'
+diff --git a/tests/test_gen_trajectory.py b/tests/test_gen_trajectory.py
+index d901c42106cd8131643be60600bd5e4c5e0ac8da..28b57880a33b32af4f7f7bbfe5e21b4d086388f7
+--- a/tests/test_gen_trajectory.py
++++ b/tests/test_gen_trajectory.py
+@@ -1367,8 +1367,11 @@
+     # the gate-ratification stage sits in loop B, after the loop-B heading
+     b_start = loops.index("B · Human-decision loop")
+     assert loops.index("gate-ratification table") > b_start
+-    # both loops advertise their circular return (the ↺ marker via CSS class)
++    # Both loops are explicitly closed cycles, not straight rows with a return label.
+     assert loops.count('class="pflow loop"') == 2
++    assert loops.count('data-cycle="closed"') == 2
++    assert 'class="loop loop-a"' in loops
++    assert 'class="loop loop-b"' in loops
+     # still fully offline
+     low = text.lower()
+     assert "http://" not in low and "https://" not in low
+@@ -1381,12 +1384,28 @@
+     assert gen(tmp_path).returncode == 0
+     loops = _loops_div(html_of(tmp_path))
+     assert loops.count("<b>LLM_Agent</b>") == 1
++    assert 'data-loop-a-degree="2"' in loops
++    assert 'data-loop-b-degree="2"' in loops
+     # the entry node precedes both loop panels (a shared head, not per-loop)
+-    entry_at = loops.index('<div class="entry">')
++    entry_at = loops.index('<div class="entry"')
+     assert entry_at < loops.index("A · Intake loop")
+     assert entry_at < loops.index("B · Human-decision loop")
+ 
+ 
++def test_process_loop_layout_is_a_shared_circular_junction(tmp_path):
++    # WI-165: the CSS draws two closed racetracks that meet at the one shared
++    # LLM_Agent junction; loop stages occupy both the outbound and return sides.
++    with_gate(tmp_path, "G2")
++    assert gen(tmp_path).returncode == 0
++    text = html_of(tmp_path)
++    assert "#process .loops{display:grid" in text
++    assert "grid-row:1/3" in text
++    assert "border-radius:999px" in text
++    assert "#process .loop::after" in text
++    assert "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}" in text
++    assert "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}" in text
++
++
+ def test_process_loop_stage_links_resolve():
+     # Over the real meta repo (where every canonical home exists): each stage
+     # links to its canonical doc and every emitted href resolves.
+
+tokens used
+150,248
+Completed and committed WI-165 as `a0a0361`.
+
+- Process loops now render as responsive closed racetracks sharing one `LLM_Agent` junction.
+- TC-056 now verifies cycle closure, shared-node degree, return paths, links, and deterministic output.
+- WI-165 marked done; `docs/next-wi` now points to WI-167 (`BuildTier=medium`).
+- `docs/run-state` remains `RUNNING`.
+- Full suite: `749 passed, 34 skipped in 79.28s`.
+- Final commit bar: `623 passed, 2 skipped in 62.99s`; docs check: `94 docs, 399 links, 0 broken`.
+- Working tree is clean. Nothing pushed per `push-policy: human`.
+
+Live browser visual QA was unavailable; this limitation is recorded in `docs/log.md`.

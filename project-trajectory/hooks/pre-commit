@@ -1,0 +1,187 @@
+#!/bin/sh
+# Pre-commit hook — the agent-neutral *process floor*.
+#
+# Runs only the fast, always-valid kit checks so a stale code map, a duplicated
+# or malformed requirement id, or unformatted code never lands in a commit —
+# regardless of which agent (or human) made it. Enforcement lives here (git) and
+# in CI, not in any one agent's hook config, so it holds for Claude, Gemini,
+# Codex, and bare git alike.
+#
+# This is the universal *floor*; the full gate bar (placeholder rejection, schema
+# checks, tests, coverage) is gate-scoped and lives in check.py / CI. Those
+# heavier checks are deliberately NOT here: they would block legitimate
+# early-stage (G0/G1) commits. See process.md §7 (process vs product checks).
+#
+# Enable:  git config core.hooksPath .githooks   (setup.sh / setup.ps1 do this)
+# Disable: git config --unset core.hooksPath
+#
+# One POSIX hook covers every platform: Git for Windows runs hooks through its
+# bundled sh, so this same file works on Windows, Linux, and macOS.
+set -e
+
+# Locate the repo root. `git rev-parse --show-toplevel` is authoritative and works
+# regardless of where this hook file physically lives — so a repo whose harness is
+# elsewhere can DELEGATE to this one shipped hook (see KIT_SCRIPTS_DIR below,
+# IMPROVEMENT_PLAN.md WI-1.42). Fall back to the hook's own location (.githooks/../)
+# if rev-parse is unavailable.
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+
+# Identity is no longer pinned by a repo file — the author-identity check is now
+# the privacy-layer step 3a below (Python, via check_privacy.py --author), run
+# only when docs/privacy-check is `true`. See process-options.md "Commit
+# identity & privacy". Recorded trade: unlike the old pure-shell pin, a
+# Python-less machine no longer enforces it — deliberate, since that pin moved to
+# the user's own git config and what remains is a privacy check like the rest.
+
+# Find a Python 3 interpreter. Prefer the project venv (setup.sh creates ./.venv
+# with the toolchain), so tool-backed steps like format actually RUN instead of
+# SKIP-on-missing-tool; fall back to a PATH python. Probe by *running* the
+# candidate, not just finding it: on Windows, `python3` often resolves to the
+# Microsoft Store app-execution alias, which exists on PATH but exits nonzero when
+# Python isn't installed through it — existence alone would wedge every commit.
+PY=""
+for venvpy in "$REPO_ROOT/.venv/bin/python" "$REPO_ROOT/.venv/Scripts/python.exe"; do
+  if [ -x "$venvpy" ] && "$venvpy" -c "" >/dev/null 2>&1; then PY="$venvpy"; break; fi
+done
+if [ -z "$PY" ]; then
+  for cand in python3 python; do
+    if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+      PY="$cand"; break
+    fi
+  done
+fi
+if [ -z "$PY" ]; then
+  echo "pre-commit: Python 3 not found on PATH; skipping process checks." >&2
+  exit 0
+fi
+
+# Locate the scripts directory. Default layout is scripts/ (what bootstrap
+# scaffolds). A repo whose harness lives elsewhere sets KIT_SCRIPTS_DIR (relative
+# to the repo root, or absolute) so this one shipped hook fits ANY layout — e.g.
+# the kit's own meta-repo, where the harness is under project-trajectory/scripts/
+# and .githooks/pre-commit is a two-line wrapper that sets the var and delegates
+# here (WI-1.42). NTFS is case-preserving: a repo whose dir is "Scripts/" keeps
+# that name and bare "scripts/" fails on case-sensitive Linux CI — accept either.
+SCRIPTS_DIR=""
+if [ -n "${KIT_SCRIPTS_DIR:-}" ]; then
+  case "$KIT_SCRIPTS_DIR" in
+    /*) SCRIPTS_DIR="$KIT_SCRIPTS_DIR" ;;
+    *)  SCRIPTS_DIR="$REPO_ROOT/$KIT_SCRIPTS_DIR" ;;
+  esac
+fi
+if [ -z "$SCRIPTS_DIR" ]; then
+  for sd in scripts Scripts; do
+    if [ -d "$REPO_ROOT/$sd" ]; then
+      SCRIPTS_DIR="$REPO_ROOT/$sd"; break
+    fi
+  done
+fi
+if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
+  echo "pre-commit: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/) under $REPO_ROOT; skipping process checks." >&2
+  exit 0
+fi
+
+# 1. The batched freshness/integrity floor — ONE interpreter spawn running the
+#    independent floor checks concurrently (`check.py --run-steps`), where this
+#    hook once chained a separate `--run-step`/script call per check. Faster on every
+#    commit, and it reports EVERY stale artifact in one pass (the old `set -e`
+#    chain stopped at the first, hiding the rest until the next attempt). The
+#    delegation keeps each step honoring the declared docs/stack.ini profile —
+#    e.g. [arch-map] mode, so a files-mode repo is never read as stale by the
+#    symbol parser (Finance-Auditor re-sync field report, WI-1.26). The steps:
+#      - arch-map        code map fresh: protects the GENERATED regions from
+#                        hand-edits and catches drift from the source. EDIT FOR
+#                        A PORTED GENERATOR: a repo that swapped in its own
+#                        symbol-level generator (e.g. the PowerShell reference
+#                        port, scripts/gen_arch_map.ps1) replaces this step with
+#                        its own freshness check — any generator that fills the
+#                        same marker block works (ADOPTING.md §3).
+#      - okf             knowledge bundle fresh: a registry edit stales docs/okf/
+#                        exactly like the dashboard; vacuous for a non-adopter,
+#                        `off` in docs/okf-export silences.
+#      - trajectory-map  PROJECT_STATE.html fresh: reads all four spine
+#                        registries + the README vision tag + the okf bundle
+#                        (WI-070), so an ordinary requirement edit stales it,
+#                        and CI-only checking makes that a push-long feedback
+#                        loop (THREAD_52_REVIEW.md F2). The floor rule, stated
+#                        once here: a generated artifact's freshness check joins
+#                        this hook when regenerating is one stdlib command and
+#                        the step is vacuous for a non-adopter; checks needing
+#                        the product toolchain or gate context (tests, perf,
+#                        flows) stay in check.py / CI.
+#      - status-map      docs/status.md's GENERATED STATUS block fresh (WI-202):
+#                        the derived snapshot (spine + derived gate + open-items
+#                        one-liners) regenerates + byte-compares like trajectory-map,
+#                        so a registry / open-items / gate edit that stales it blocks
+#                        HERE, not first in CI. It is the freshness successor to the
+#                        WI-200 forward-only token guard (which stands down once the
+#                        marker is present). Vacuous when status.md has no marker
+#                        pair, so a non-adopter pays nothing.
+#      - trajectory      the status.md <-> work-items.csv SSOT floor, WARN-FIRST
+#                        at gate=all: only R-A (Deliverable non-empty iff done)
+#                        is a hard ERROR here — a commit is the agent handoff
+#                        point, so an incoherent WI state launches the next
+#                        session wrong; R-B…R-E warn at commit, gate at G2+.
+#      - registry-integrity  trace.py --strict-integrity: no duplicate/malformed
+#                        ids — wrong at any stage. Deliberately NOT the full
+#                        --strict orphan check: orphans are a G2+ gate criterion
+#                        (a mid-G1 registry legitimately has SRs with no LLR/TC
+#                        yet); the floor must never block an early-stage commit.
+#      - derived-gate    docs/gate is GENERATED from artifact states by
+#                        derive_gate.py (docs/specs/derived-gate-model.md); --check
+#                        fails if a ratify/reopen moved the gate but the cache did
+#                        not. A legacy hand-set gate (no `# basis:` line) is
+#                        compared value-only, so a not-yet-migrated repo is green.
+#                        Regenerate with `python scripts/derive_gate.py`.
+#      - skills-sync     per-agent skill copies byte-match the ONE neutral
+#                        source; one-command fix (bootstrap.py --sync); a no-op
+#                        where the kit-only generator isn't beside check.py.
+#    When a step reports STALE, regenerate in dependency order — arch-map ->
+#    okf -> trajectory (the dashboard consumes the other two); the gate marker via
+#    derive_gate.py, then the status snapshot via `gen_trajectory.py --status`
+#    (it reads the fresh gate) — then re-commit.
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,status-map,trajectory,registry-integrity,derived-gate,skills-sync
+
+# 2. No-validation-delta warn (warn-first, never blocks): when this commit
+#    closes a WI that is a follow-up on an SR a previously-done WI already
+#    delivered, yet touches neither the TC registry nor a test file, the fix
+#    landed in the code but not the validation chain — so the same failure can
+#    recur. Reads the staged diff (git is available in the hook context); a
+#    silent no-op outside a git checkout and when the registry is untouched.
+"$PY" "$SCRIPTS_DIR/check_trajectory.py" --root "$REPO_ROOT" --staged || true
+
+# 3. Secrets + privacy lint. The always-on SECRETS FLOOR (private-key headers,
+#    key/token shapes) runs in EVERY repo — the security net an ordinary
+#    project gets too; opt out with the one word `off` in docs/secrets-scan. The
+#    PRIVACY layer (author identity, home-dir paths carrying the OS username,
+#    non-exempt emails, the machine's global git identity) runs only when
+#    docs/privacy-check is `true`. The script decides which layers apply and
+#    exits 0 fast when both are off: zero cost. Deterministic floor only —
+#    judgment-layer review lives at the push boundary and in the sync scrub.
+#    3a. Author identity as a PRIVACY check — the commit author email must be in
+#        the exempt allowlist (a no-op when docs/privacy-check is off). Replaces
+#        the old commit-identity pin (integrity) with the privacy property.
+#    3b. Content scan of the staged diff.
+#    The commit *message* is scanned by the separate .githooks/commit-msg hook —
+#    pre-commit runs before the message exists, so it cannot see it here.
+"$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --author
+"$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT"
+
+# 4. Format check — the product formatter, sourced from the declared toolchain
+#    (docs/stack.ini) rather than restated here. When the profile exists,
+#    delegate to `check.py --run-step format`: check.py runs the profile's
+#    format command itself (no shell-quoting of the interpreter path), treats a
+#    missing tool as SKIP (exit 0, so a not-yet-set-up repo still commits), and
+#    fails only on a real format violation. When there's no profile, fall back
+#    to the historical staged-.py ruff check, run only if ruff is importable.
+if [ -f "$REPO_ROOT/docs/stack.ini" ]; then
+  "$PY" "$SCRIPTS_DIR/check.py" --run-step format
+else
+  if "$PY" -c "import importlib.util as u, sys; sys.exit(0 if u.find_spec('ruff') else 1)" >/dev/null 2>&1; then
+    staged=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep '\.py$' || true)
+    if [ -n "$staged" ]; then
+      # shellcheck disable=SC2086  # word-splitting is intended: one arg per file.
+      "$PY" -m ruff format --check $staged
+    fi
+  fi
+fi

@@ -1,0 +1,484 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 010
+# date: 2026-07-13 15:39
+# phase: REVIEW-A
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 279
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1634
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the reviewed diff and governing requirement records, run the repository harnesses, then write only evidence-backed findings to the requested review file.
+[0m# [0mTodos
+[•] Read contributor guidance and identify the work-under-review diff
+[ ] Review changed work against process, registries, and open spec
+[ ] Run check and trace harnesses
+[ ] Write the required independent review verdict
+[0m
+[0m→ [0mRead CLAUDE.md
+[0m✱ [0mGlob "scripts/*"[90m in . · 3 matches[0m
+[0m✱ [0mGlob "docs/**/*"[90m in . · 100 matches[0m
+[0m
+[0m$ [0mgit status --short; git log --oneline -12; git diff --stat HEAD~1..HEAD; git diff --find-renames --find-copies HEAD~1..HEAD
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f5d306139001mK5eE5W3y54Pmk
+
+versarial rounds (owner proposal)", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: ~WI-107, ~WI-121"}, "WI-124": {"status": "done", "title": "Session-shape telemetry - boot latency + context volume + speed dials per session", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: WI-119"}, "WI-125": {"status": "done", "title": "Live session echo - coordinator console shows progress during a session", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: WI-124"}, "WI-126": {"status": "done", "title": "Per-WI routing hints - build-tier pin + plan-required flag (owner proposal)", "body": "Workstream: Unattended layer", "meta": "Delivers: — · After: ~WI-121, ~WI-107"}};
+     function esc(s){ const d=document.createElement('div'); d.textContent = s==null?'':s; return d.innerHTML; }
+ 
+     function renderDetail(box, d, id, tierColor){
+diff --git a/docs/log.md b/docs/log.md
+index fa12620..3e96aff 100644
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -3647,3 +3647,60 @@ PROCESS.md not touched; delta 0).
+ still covers the v2 batch ratification + the pending G3 re-attestation; this
+ slice's SR-051/LLR-052/TC-052 Verified cut bundles into it. `docs/next-wi` →
+ **WI-104** (pin the dev toolchain); the run continues at G3.
++
++## 2026-07-13 — WI-104: pin the dev toolchain (requirements-dev.txt + CI/dev-setup consume + canary)
++
++**Why.** The 2026-07-12b review's **M6**: the kit *runtime* is dependency-free,
++but the meta-repo's own verification chain floated on **unpinned** dev tools, so
++the "same" declared command ran materially different machinery per machine — the
++concrete cost being **M9** (the flaky coverage-combine race + the ~9-point
++coverage loss lived on this box's old pytest-cov 4.1.0 while CI ran 7.x). M6 is
++the hard-edge under **WI-105** (the coverage fix, now verifiable on *one* known
++toolchain). This is a G3 backlog slice — no new SR (the pinning touches only
++meta dev tooling, not the traced spine).
++
++**What shipped.**
++- **New `requirements-dev.txt`** (repo root) with compatible-release (`~=`) pins
++  for the four tools the self-tests + gate drive: `ruff~=0.15.0`, `pytest~=8.3`,
++  `pytest-xdist~=3.6`, and a **Python-gated `pytest-cov` split** —
++  `~=7.0` on 3.9+ (the contract `conftest.py` targets) and `~=5.0` on the kit's
++  **3.8 floor** (pytest-cov 6.0 dropped 3.8). That per-Python split is the one
++  *irreducible* difference no pin can erase — and precisely why the coverage
++  plumbing must be robust across both (WI-105). Rationale + the WHY-PIN failure
++  modes live in the file header, single-homed.
++- **Consumers rewired** to `pip install -r requirements-dev.txt`: both jobs in
++  `.github/workflows/test.yml` (test + gate) and both meta dev-setup twins
++  (`scripts/dev-setup.{sh,ps1}`); the `.command` wrapper delegates unchanged.
++  The pins simply **freeze what CI already installed as "latest"** (its 3.8 leg
++  already resolved pytest 8.3 / cov 5.0, its 3.x leg 7.x) — so the pinned set was
++  already green in CI; only this local box lagged.
++- **New `.github/workflows/canary.yml`** — a **non-gating** weekly (`cron` +
++  `workflow_dispatch`) job that installs **unpinned latest** and runs
+
+[... 252 line(s) elided — full stream in out/run-logs/ ...]
+
++# one irreducible per-Python difference — no pin makes 3.8 run pytest-cov 7 — and
++# it is exactly why the coverage plumbing must be robust across both (WI-105).
++ruff~=0.15.0
++pytest~=8.3
++pytest-xdist~=3.6
++pytest-cov~=7.0; python_version >= "3.9"
++pytest-cov~=5.0; python_version < "3.9"
+diff --git a/scripts/dev-setup.ps1 b/scripts/dev-setup.ps1
+index 168a97e..cbc42ad 100644
+--- a/scripts/dev-setup.ps1
++++ b/scripts/dev-setup.ps1
+@@ -105,7 +105,8 @@ try {
+             if (-not (Test-Path ".venv")) { & $py -m venv .venv }
+             $python = Join-Path ".venv" "Scripts\python.exe"
+             & $python -m pip install --upgrade pip
+-            & $python -m pip install ruff pytest pytest-cov pytest-xdist
++            # Pinned toolchain (requirements-dev.txt, WI-104) — same versions CI runs.
++            & $python -m pip install -r requirements-dev.txt
+             Write-Host "Python dev tools installed. Run the self-tests with: python -m pytest -q"
+         } else {
+             Write-Host "Skipped the Python dev-tools install."
+diff --git a/scripts/dev-setup.sh b/scripts/dev-setup.sh
+index 246f94b..4bd16e9 100644
+--- a/scripts/dev-setup.sh
++++ b/scripts/dev-setup.sh
+@@ -130,7 +130,8 @@ else
+       # shellcheck disable=SC1091
+       . .venv/bin/activate
+       python -m pip install --upgrade pip
+-      python -m pip install ruff pytest pytest-cov pytest-xdist
++      # Pinned toolchain (requirements-dev.txt, WI-104) — same versions CI runs.
++      python -m pip install -r requirements-dev.txt
+       echo "Python dev tools installed. Run the self-tests with: python -m pytest -q"
+       ;;
+     *) echo "Skipped the Python dev-tools install." ;;
+[0m
+[0m$ [0mgit diff --check HEAD~1..HEAD
+(no output)
+[0m
+[0m$ [0mgit show --format=fuller --stat --summary HEAD
+commit 058f0333f868806fe9d4a7bcb2626d6786f1271c
+Author:     / <peterandersjohnson@outlook.com>
+AuthorDate: Mon Jul 13 15:33:37 2026 -0500
+Commit:     / <peterandersjohnson@outlook.com>
+CommitDate: Mon Jul 13 15:33:37 2026 -0500
+
+    WI-104: pin the meta dev toolchain (requirements-dev.txt + CI/dev-setup consume + canary)
+    
+    M6 from the 2026-07-12b review: the kit runtime is dependency-free, but the
+    meta-repo's own verification chain floated on unpinned dev tools, so the same
+    declared command ran different machinery per machine (the concrete cost being
+    M9's flaky coverage race on this box's old pytest-cov 4.1.0 vs CI's 7.x).
+    
+    - New root requirements-dev.txt: compatible-release (~=) pins for ruff, pytest,
+      pytest-xdist, and a Python-gated pytest-cov split (~=7.0 on 3.9+, ~=5.0 on the
+      3.8 floor, since pytest-cov 6.0 dropped 3.8 - the one irreducible per-Python
+      difference WI-105 must harden across).
+    - Consumers rewired to `pip install -r requirements-dev.txt`: both test.yml jobs
+      (test + gate) and both meta dev-setup twins (dev-setup.sh/.ps1); the .command
+      wrapper delegates unchanged.
+    - New canary.yml: non-gating weekly (+ workflow_dispatch) job installs UNPINNED
+      latest and runs ruff format/lint + the suite, preserving the early-warning the
+      unpinned CI gave for free so a pin bump is a heads-up, not a surprise red.
+    
+    Scope held: kit scripts stay stdlib-only, nothing ships downstream
+    (project-trajectory/scripts/setup.* + ci/check.yml are the adopter's own
+    templates, untouched). No spine change; no byte-budgeted file touched.
+    
+    Verified on the pinned 3.8 resolution in a throwaway venv (pytest 8.3.5,
+    pytest-cov 5.0.0, ruff 0.15.21, xdist 3.6.1, coverage 7.6.1): full suite 695
+    passed / 3 skipped, ruff format+lint clean, smoke 543 passed, check_docs --stale
+    + check_trajectory --strict clean, gen_trajectory --check up to date.
+    
+    docs/next-wi -> WI-105 (coverage-plumbing fix, now verifiable on the pinned
+    toolchain). Not pushed (push-policy: human).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+ .github/workflows/canary.yml     | 34 ++++++++++++++++++++++++
+ .github/workflows/test.yml       | 24 ++++++++++-------
+ PROJECT_STATE.html               | 14 +++++-----
+ docs/log.md                      | 57 ++++++++++++++++++++++++++++++++++++++++
+ docs/next-wi                     |  2 +-
+ docs/requirements/work-items.csv |  2 +-
+ docs/status.md                   | 25 +++++++++++-------
+ requirements-dev.txt             | 24 +++++++++++++++++
+ scripts/dev-setup.ps1            |  3 ++-
+ scripts/dev-setup.sh             |  3 ++-
+ 10 files changed, 158 insertions(+), 30 deletions(-)
+ create mode 100644 .github/workflows/canary.yml
+ create mode 100644 requirements-dev.txt
+[0m
+The implementation matches the WI’s stated boundary: it does not alter shipped kit scripts or the traced spine. I’m running the derived-G3 harness now; its trace step writes shared report artifacts, so I’ll run the standalone trace check only after it completes.
+[0m# [0mTodos
+[✓] Read contributor guidance and identify the work-under-review diff
+[✓] Review changed work against process, registries, and open spec
+[•] Run check and trace harnesses
+[ ] Write the required independent review verdict
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G3 --jobs 0
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G3).
+  PASS  derived-gate     0.1s
+
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+  PASS  design-flows     0.1s
+
+=== perf-budgets : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_perf.py --tier all ===
+check_perf: OK - no performance budgets to compare (process.md §9)
+  PASS  perf-budgets     0.1s
+
+=== skills-sync : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 10 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.1s
+
+=== format : C:\Python38\python.exe -m ruff format --check project-trajectory/scripts tests ===
+71 files already formatted
+  PASS  format           0.1s
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (126 work item(s), 103 done (82%), graph acyclic).
+  PASS  trajectory       0.1s
+
+=== lint : C:\Python38\python.exe -m ruff check project-trajectory/scripts tests ===
+All checks passed!
+  PASS  lint             0.1s
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html --require-verified --strict-schema ===
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+  PASS  traceability     0.2s
+
+=== okf : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_okf.py --check ===
+gen_okf: OKF bundle up to date (242 file(s)).
+  PASS  okf              0.2s
+
+=== trajectory-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_trajectory.py --check ===
+project-state dashboard up to date.
+  PASS  trajectory-map   0.3s
+
+=== arch-map : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===
+code map up to date.
+  PASS  arch-map         0.5s
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+  PASS  privacy          0.5s
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 46 doc(s), 267 intra-repo link(s), 0 broken (4 orphan warning(s)).
+  PASS  doc-navigability 8.3s
+
+=== tests+coverage : C:\Python38\python.exe -m pytest -q -n auto --cov=project-trajectory/scripts --cov-report=term-missing --cov-fail-under=80 ===
+bringing up nodes...
+bringing up nodes...
+
+...............................s......................................... [ 10%]
+........................................................................ [ 20%]
+..............................................................s......... [ 31%]
+........................................................................ [ 41%]
+.........................................................s.....s.......s [ 51%]
+.............s.....s......s...s..sssssssss.......s...s.s........sssssss. [ 62%]
+..........................s......s.s........s........................... [ 72%]
+.........s.....................s........................................ [ 82%]
+........................................................................ [ 92%]
+.................................................                        [100%]
+============================== warnings summary ===============================
+..\..\Python38\lib\site-packages\xdist\plugin.py:259: 13 warnings
+  C:\Python38\lib\site-packages\xdist\plugin.py:259: DeprecationWarning: The --rsyncdir command line argument and rsyncdirs config variable are deprecated.
+  The rsync feature will be removed in pytest-xdist 4.0.
+    config.issue_config_time_warning(warning, 2)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform win32, python 3.8.10-final-0 -----------
+Name                                                  Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------------
+project-trajectory\scripts\agent_loop.py                954    118    88%   300, 337-338, 362-364, 385-386, 417, 441-442, 457-458, 568, 604, 682, 685, 688, 712, 742-743, 786, 808, 896-897, 911-912, 968-969, 1005, 1070-1072, 1081, 1116-1117, 1154, 1158-1159, 1208-1209, 1261-1262, 1415-1417, 1450-1451, 1472, 1486-1487, 1493, 1501-1502, 1549-1550, 1627-1628, 1692, 1711-1712, 1718-1719, 1741-1742, 1744, 1832, 1834-1841, 1884, 1893-1899, 1928-1929, 2044-2051, 2064-2065, 2110-2111, 2138-2139, 2143-2147, 2149-2152, 2176-2211, 2218-2219, 2226-2232, 2290-2296, 2354
+project-trajectory\scripts\agent_route.py               290     14    95%   169-170, 184-185, 188, 203, 220, 226, 290, 450, 555, 699, 705, 709
+project-trajectory\scripts\bootstrap.py                 488     44    91%   334, 339, 364, 381, 401, 438, 446, 452, 499, 525, 529, 546, 556, 562-568, 704, 722, 755, 758, 835, 860, 921, 932, 939, 960-961, 1221-1222, 1234, 1237, 1261, 1285-1286, 1533-1534, 1628, 1636, 1653, 1693
+project-trajectory\scripts\check.py                     269     12    96%   116-117, 285, 308, 637, 684-688, 721, 896, 925-926
+project-trajectory\scripts\check_doc_refs.py            116      4    97%   103, 118, 196-197
+project-trajectory\scripts\check_docs.py                309     23    93%   83-84, 188, 194-195, 208, 254-255, 280, 286, 292-293, 309, 311, 414, 441, 467, 481, 510, 513, 516, 563-564
+project-trajectory\scripts\check_dupes.py                85      5    94%   108, 138-139, 164-165
+project-trajectory\scripts\check_flows.py                84      6    93%   46-47, 60, 125-126, 139
+project-trajectory\scripts\check_perf.py                188      9    95%   67-68, 82, 97, 99, 201, 212, 315-316
+project-trajectory\scripts\check_privacy.py             249     22    91%   156-157, 169, 210-211, 242-243, 246-247, 362-363, 365, 397-402, 425-430, 434, 518-523, 529-533
+project-trajectory\scripts\check_stubs.py               137     10    93%   67, 70, 98, 165-166, 213-214, 252-258
+project-trajectory\scripts\check_trajectory.py          542     31    94%   153-154, 383, 496-500, 589, 611, 744, 896, 905, 937-938, 947-953, 987, 990, 1057, 1060, 1063-1064, 1067, 1088, 1091, 1094, 1106, 1202
+project-trajectory\scripts\check_vendored.py             72      5    93%   43-44, 55, 99-100
+project-trajectory\scripts\derive_gate.py               165      7    96%   89-90, 96, 265-266, 364-369
+project-trajectory\scripts\gen_arch_map.py              394     43    89%   103-104, 135, 146, 154, 156-158, 160, 174, 190, 200, 203-204, 206, 260, 270-287, 302, 323, 370-371, 394, 399, 464-465, 525, 542-546, 564-566, 578-579, 632, 749, 758, 778
+project-trajectory\scripts\gen_cases.py                 135     53    61%   66, 71, 87, 89, 92, 108, 175-179, 183-263, 267
+project-trajectory\scripts\gen_okf.py                   269     16    94%   116, 141, 223-224, 226-228, 232, 237-238, 240-242, 461, 525-526
+project-trajectory\scripts\gen_release_checklist.py     115     27    77%   49, 61, 79-81, 93-94, 144-145, 157-159, 162-163, 183, 199-201, 211-212, 225-226, 238-240, 283, 285
+project-trajectory\scripts\gen_skills_index.py          126     15    88%   47-48, 98-103, 122, 127, 150, 160, 166, 247-248, 263-268, 274-275
+project-trajectory\scripts\gen_trajectory.py            788     38    95%   120, 124, 385-391, 436-438, 544, 653, 796, 808-810, 850, 857-862, 874, 1129, 1642, 1653-1654, 1749-1769, 1829, 1834-1836, 1860-1861, 2097, 2319-2321
+project-trajectory\scripts\run_menu.py                   87      7    92%   64-65, 83-84, 157-158, 162
+project-trajectory\scripts\score_reviews.py             277     28    90%   94-95, 128, 189-191, 194, 198-199, 201, 225, 240, 266, 273, 292, 316, 348, 352, 363, 419-420, 499, 506-508, 546-548
+project-trajectory\scripts\subagent_gate.py              57     33    42%   51-59, 95-108, 114-120, 128-141, 145
+project-trajectory\scripts\trace.py                     544     19    97%   230-231, 269, 276, 496, 532, 535-536, 538, 587, 739, 786, 899, 1055-1056, 1062-1063, 1079-1080
+-----------------------------------------------------------------------------------
+TOTAL                                                  6740    589    91%
+
+Required test coverage of 80% reached. Total coverage: 91.26%
+664 passed, 34 skipped, 13 warnings in 144.91s (0:02:24)
+  PASS  tests+coverage   161.4s
+
+========================================================
+Check summary (gate G3, tier all):
+  PASS  format           0.1s
+  PASS  lint             0.1s
+  PASS  tests+coverage   161.4s
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.2s
+  PASS  privacy          0.5s
+  PASS  doc-navigability 8.3s
+  PASS  perf-budgets     0.1s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+  PASS  arch-map         0.5s
+  PASS  trajectory-map   0.3s
+  PASS  okf              0.2s
+  PASS  skills-sync      0.1s
+========================================================
+RESULT: PASS
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --strict --strict-integrity --strict-schema --no-placeholders
+Traceability: SN=24 SR=51 LLR=52 TC=52 orphans=0 integrity=0 placeholders=0 schema-findings=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+Independent verification passed: the derived-G3 harness reports all 14 steps passing, including `664 passed, 34 skipped` with 91.26% coverage; the standalone strict trace reports 24 SN, 51 SR, 52 LLR, 52 TC, and zero orphan/integrity/schema findings. No defect was found in the reviewed diff.
+[0m$ [0mgit status --short
+M OWNER_SCRATCHPAD.md
+ M docs/iteration_index.md
+ M docs/reviews/scoreboard.txt
+?? docs/iteration/007-20260713-143706.log
+?? docs/iteration/008-20260713-151051.log
+?? docs/iteration/009-20260713-151746.log
+?? docs/reviews/008-REVIEW-A.md
+[0m
+[0m$ [0mpython -m pip show ruff pytest pytest-xdist pytest-cov coverage
+Name: ruff
+Version: 0.15.20
+Summary: An extremely fast Python linter and code formatter, written in Rust.
+Home-page: https://docs.astral.sh/ruff
+Author: 
+Author-email: "Astral Software Inc." <hey@astral.sh>
+License: 
+Location: c:\python38\lib\site-packages
+Requires: 
+Required-by: 
+---
+Name: pytest
+Version: 7.4.3
+Summary: pytest: simple powerful testing with Python
+Home-page: https://docs.pytest.org/en/latest/
+Author: Holger Krekel, Bruno Oliveira, Ronny Pfannschmidt, Floris Bruynooghe, Brianna Laugher, Florian Bruhin and others
+Author-email: 
+License: MIT
+Location: c:\python38\lib\site-packages
+Requires: colorama, exceptiongroup, iniconfig, packaging, pluggy, tomli
+Required-by: colcon-core, pytest-cov, pytest-mock, pytest-repeat, pytest-rerunfailures, pytest-xdist
+---
+Name: pytest-xdist
+Version: 3.6.1
+Summary: pytest xdist plugin for distributed testing, most importantly across multiple CPUs
+Home-page: 
+Author: 
+Author-email: holger krekel and contributors <pytest-dev@python.org>, holger@merlinux.eu
+License: MIT License
+        
+        Copyright (c) 2010 Holger Krekel and contributors.
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Location: c:\python38\lib\site-packages
+Requires: execnet, pytest
+Required-by: 
+---
+Name: pytest-cov
+Version: 4.1.0
+Summary: Pytest plugin for measuring coverage.
+Home-page: https://github.com/pytest-dev/pytest-cov
+Author: Marc Schlaich
+Author-email: marc.schlaich@gmail.com
+License: MIT
+Location: c:\python38\lib\site-packages
+Requires: coverage, pytest
+Required-by: colcon-core
+---
+Name: coverage
+Version: 7.3.2
+Summary: Code coverage measurement for Python
+Home-page: https://github.com/nedbat/coveragepy
+Author: Ned Batchelder and 224 others
+Author-email: ned@nedbatchelder.com
+License: Apache-2.0
+Location: c:\python38\lib\site-packages
+Requires: 
+Required-by: pytest-cov
+[0m
+I will record an approval-only verdict in the requested review artifact, retaining the exact harness output summaries observed in this review.
+[0m% [0mPatch 1 file
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_docs.py --stale
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/test/report.md
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 48 doc(s), 267 intra-repo link(s), 0 broken (6 orphan warning(s)).
+[0m
+[0m# [0mTodos
+[✓] Read contributor guidance and identify the work-under-review diff
+[✓] Review changed work against process, registries, and open spec
+[✓] Run check and trace harnesses
+[✓] Write the required independent review verdict
+[0m
+Review verdict written to `docs/reviews/010-REVIEW-A.md`.
+
+Verdict: `APPROVE findings=0`.
+
+Verified independently: G3 harness passed all 14 steps; strict trace passed with zero findings.

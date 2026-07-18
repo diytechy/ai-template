@@ -1,0 +1,485 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 074
+# date: 2026-07-15 00:57
+# phase: BUILD
+# wi: WI-161
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: 9a39714..75cb46c
+# tokens: 
+# cost-usd: 
+# wall-secs: 637
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1858
+# exit-code: 0
+# ---
+Reading additional input from stdin...
+OpenAI Codex v0.144.4
+--------
+workdir: C:\Projects\ai-template
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019f6450-095d-7991-8243-8dd4fe53d017
+--------
+user
+You are the driver session for the ai-template META-repo - the kit source, self-applied. Read CLAUDE.md, then docs/status.md Current State. The process masters are project-trajectory/PROCESS.md and PROCESS_OPTIONS.md 'Unattended operation'; no scaffolded docs/process.md exists here. Work only scope recorded in docs/requirements/work-items.csv and docs/status.md's Next action - a WI row - per the session-protocol skill; new scope needs a WI entry first. When filing or triaging a WI, assign BuildTier deliberately: quick for mechanical/off-spine work, medium by default, strong only for design-shaping or spine-touching work; never silently downgrade a declared route mid-loop. Clear the lowest gate level first: do not queue phase development ahead of its open [phase]-[g1|g2] work or Draft SRs unless the owner deliberately orders it. Gates before every commit (the commit bar): python -m pytest -q -n auto -m smoke and python project-trajectory/scripts/check_docs.py --root . --stale - paste the real output; never report a green you didn't produce. Run the FULL suite (python -m pytest -q -n auto, no -m) before claiming a slice/campaign done or at close (session-protocol skill 'End green'). Honor docs/push-policy - human: never push, even if asked. Before stopping: commit progress; update docs/status.md resume point + open items, docs/next-wi (the next WI id - or a ';'-joined batch of independent off-spine WIs to execute in order as ONE session with ONE review round, WI-133 - for the coordinator's BuildTier pin), the WI row's Deliverable in docs/requirements/work-items.csv, and docs/log.md; write docs/run-state - RUNNING while work remains, DONE only at the declared end state, BLOCKED when everything remaining is blocked, NEEDS-HUMAN when the next step needs a human act, stating the ask as a 'Needs <human>' Open item in status.md first.
+codex
+I’m using the `session-protocol` skill because this is a scoped WI driver session. I’ll first load the repo guide, current state, and unattended-operation rules, then execute only the recorded next WI and apply the required commit gates and closeout updates.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Raw 'C:\\Projects\\ai-template\\.agents\\skills\\session-protocol\\SKILL.md'; Get-Content -Raw 'CLAUDE.md'; Get-Content -Raw 'docs/status.md'; Get-Content -Raw 'project-trajectory/PROCESS_OPTIONS.md'; Get-Content -Raw 'docs/next-wi'; Get-Content -Raw 'docs/run-state'" in C:\Projects\ai-template
+ succeeded in 622ms:
+---
+name: session-protocol
+description: Use when running a work-item (WI) or thread session in this template repo — how to read the plan, execute only the scoped work, pass the gates, write the session/WI log, and commit in this repo's style.
+stacks: [any]
+domains: [any]
+phases: [dev, gate, release]
+tags: [session, improvement-plan, workflow, commit-style, wi]
+scope: this-repo
+---
+
+# Session protocol (this template repo)
+
+How a WI/thread session runs here. The live homes: **`docs/status.md`** (what's
+next), **`docs/requirements/work-items.csv`** (the WI registry), and
+**`docs/log.md`** (the session/gate record). This skill is the fast path; the
+process masters (`PROCESS.md` / `PROCESS_OPTIONS.md`) win when they disagree. The
+kit's design history — the old thread specs and the WI-1.x log — is archived at
+`docs/archive/IMPROVEMENT_PLAN.md` (context, not a working surface).
+
+## 1. Read before doing
+
+- Read `CLAUDE.md` (governs editing the kit) and `AGENTS.md` (the pointer stub).
+- Read `docs/status.md` (the working surface — what's next) and the scoped WI's
+  row in `docs/requirements/work-items.csv`. The spec-of-record for a WI is what
+  its row points at (an SR and/or a plan doc); older landed work is in the
+  archived plan. **Do only the scoped work** — no unrelated edits.
+- If a stub is being revived, find and link its earlier backlogged form (search
+  `docs/archive/scratch.md` + the stub threads) so the resolution is traceable.
+- **Check `git status` first.** Residue in the working tree is from an
+  interrupted session; reconcile it against the open WI's spec / Done-when
+  *before* new work — verify-and-commit what is complete, discard what is not
+  part of the scope, and record which in the log. (The unattended loop surfaces
+  this into the session prompt; the judgment is yours — it never auto-stashes.)
+- **Treat a declared-policy change as a status-staleness event.** In the same
+  sitting, grep `docs/status.md` and `docs/run-state` for pause/stop/approval
+  language predicated on the old `gate-policy`, `push-policy`, `review-policy`,
+  or `guardrails-policy` value; point to the policy file instead of paraphrasing it.
+
+## 2. Respect the constraints
+
+- **Byte budgets** on `AGENTS.template.md` (10,000) and `PROCESS.md` — see the
+
+[... 31954 line(s) elided — full stream in out/run-logs/ ...]
+
+ AGENT_TIER_MAP="BUILD=strong"
++# Optional within-tier preference per phase. Unknown, disabled, wrong-tier, or
++# cooling ids fall through to docs/agents-enabled order; this never changes the
++# resolved tier. Keep agent-resume.cmd in sync.
++AGENT_PREFER_MAP="BUILD=OPENAI-SOL"
+ # Optional per-phase COMMAND template map (cross-provider routing; pairs
+ # with the docs/review-policy reviewer dial), e.g.:
+ #   AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt} --model {model}"
+@@ -62,7 +66,7 @@
+   echo "sessions; see project-trajectory/PROCESS_OPTIONS.md 'Unattended operation'." >&2
+   exit 1
+ fi
+-export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_TIER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
++export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_TIER_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
+ PY="$(command -v python3 || command -v python)" || {
+   echo "agent-resume.sh: python3 not found." >&2; exit 1;
+ }
+diff --git a/docs/agents-enabled b/docs/agents-enabled
+index 31e5621a0ec164a4f8a5c9d90a955fe5e701bf43..b3bbeac7f61dabbf9a52df27ea62e1cf9f93eca6
+--- a/docs/agents-enabled
++++ b/docs/agents-enabled
+@@ -5,17 +5,12 @@
+ # renaming this file returns the loop to today's AGENT_CMD/AGENT_MODEL behavior
+ # byte-for-byte — consent is this list plus the declared routing rules, and the
+ # coordinator logs every selection before launch (no silent model swaps).
+-# Owner directive 2026-07-14b (WI-160, amending the WI-113 lineup FOR NOW): Codex
+-# Sol leads strong so BUILD (routed strong via AGENT_TIER_MAP) draws it first;
+-# Fable is the strong cross-family draw — CRITIQUE still lands Fable whenever the
+-# implementer is OpenAI (heterogeneity excludes the implementer's family). Note
+-# the side effect the owner accepted at intake: PLAN/DESIGN-CHECK first draws
+-# also move to Sol until the WI-161 per-phase preference knob lands, which lets
+-# this list revert to Fable-first while BUILD keeps preferring OPENAI-SOL.
+-# Below Sol/Fable: per tier the ANTHROPIC row is preferred, the OPENAI sibling
+-# is the cross-family draw (WI-113, unchanged).
+-OPENAI-SOL
++# WI-161 restores Fable-led PLAN/DESIGN-CHECK while agent-resume.* declares
++# AGENT_PREFER_MAP=BUILD=OPENAI-SOL. The preference applies within BUILD's
++# resolved strong tier only; reviewer/critic heterogeneity still wins.
++# Per tier the ANTHROPIC row leads, with the OPENAI sibling as cross-family draw.
+ ANTHROPIC-FABLE
++OPENAI-SOL
+ ANTHROPIC-OPUS
+ OPENAI-TERRA
+ ANTHROPIC-SONNET
+diff --git a/docs/log.md b/docs/log.md
+index 628c9a9b575cdb547438d7d1be86995e5b6de3e1..b0d8e3d86db7d31c0da4e84881009588725b1806
+--- a/docs/log.md
++++ b/docs/log.md
+@@ -6327,3 +6327,26 @@
+ now unblocked). Research-knowledge (WI-152…157) + WI-164 stay owner-sequenced — do
+ not auto-start. Sol builds need `@openai/codex` + `codex login` (else BUILD
+ self-heals to Fable). Not pushed (`push-policy: human`).
++
++## 2026-07-15 — WI-161 per-phase within-tier model preference
++
++Shipped `AGENT_PREFER_MAP` / `--prefer-map`: managed routing now lets one phase
++move a declared agent id ahead of `docs/agents-enabled` **within the already
++resolved tier**. Unknown, disabled, wrong-tier, and cooling ids fall through to
++the existing order; the tier-up-never-down rule is unchanged, and reviewer /
++critic family heterogeneity still wins over the preference. Preflight validates
++the map's syntax and id shape before iteration 1. The launcher templates expose
++the optional slot; the self-applied launchers set `BUILD=OPENAI-SOL`, allowing
++`docs/agents-enabled` to return to Fable-first for PLAN/DESIGN-CHECK while BUILD
++keeps the owner's Sol preference. Unit and managed-loop tests cover preferred
++selection, cooldown fallback, wrong-tier containment, invalid-map preflight,
++and reviewer heterogeneity.
++
++**End green (real output):** focused routing suite **55 passed in 11.66s**;
++unfiltered suite **744 passed, 34 skipped in 76.77s**. Commit-bar smoke and
++`check_docs --stale` are recorded in the commit that follows this entry. Byte
++deltas: `PROCESS_OPTIONS.md` **137,541 → 137,877 (+336 B)** for the canonical
++routing contract; its byte-budget baseline was re-stamped in all three tracked
++skill copies. `PROCESS.md` and `AGENTS.template.md` were untouched. No spine
++state changed; no deviation from the WI spec. **Handoff:** run-state remains
++**RUNNING**; `docs/next-wi` → **WI-163**. Not pushed (`push-policy: human`).
+diff --git a/docs/next-wi b/docs/next-wi
+index 38b484a213ff3aa1ef5a53be16cb65f56e6bbdd7..a539b8c19af6f4de9e80836e76625313ac14cac5
+--- a/docs/next-wi
++++ b/docs/next-wi
+@@ -14,8 +14,7 @@
+ # Verified, the derived gate is back at G3, the v3 dashboard-ux campaign is
+ # complete. `docs/gate-policy` is now `autonomous` (owner directive) — no
+ # g2-close sitting for future campaigns.
+-# NEXT: the DAG-actionable off-spine backlog in id order — WI-161 (per-phase
+-# preference knob; complements the WI-160 codex/Sol dial) -> WI-163 (per-WI
++# NEXT: the DAG-actionable off-spine backlog in id order — WI-163 (per-WI
+ # critique-budget dial) -> WI-166 (dev-setup.template.cmd) -> WI-162 (parallel-
+ # dispatch design spec, strong) -> WI-165 (Process-tab circular loops, now
+ # unblocked). WI-159 (Knowledge-tab density) stays deferred.
+@@ -25,4 +24,4 @@
+ # main-decomposition (WI-080->WI-081) stays parked — do not auto-start it.
+ # Codex Sol builds are LIVE (codex on PATH + logged in 2026-07-15), so BUILD
+ # draws OPENAI-SOL at the strong tier (tier-up/cooldown still self-heal to Fable).
+-WI-161
++WI-163
+diff --git a/docs/requirements/work-items.csv b/docs/requirements/work-items.csv
+index 480c7279aab38cc826e4edfc7c8bfb43a8d366e3..4d84c71cdcbfdd4f4a740b729a1ce31aab554560
+--- a/docs/requirements/work-items.csv
++++ b/docs/requirements/work-items.csv
+@@ -159,7 +159,7 @@
+ WI-158,OKF pack export (deferred) - export knowledge packs alongside registry pages,scripts,,WI-153,deferred,,docs/specs/research-knowledge.md#8-wi-breakdown-filed-on-ratification,research-knowledge,
+ WI-159,Knowledge-tab density - start-collapsed .knode/knowarrow re-spec (T2 deferred from OI-12 / 052 CRITIQUE),dashboard,SR-053,WI-144,deferred,,docs/reviews/052-CRITIQUE.md,dashboard-ux,
+ WI-160,OpenAI provider-CLI swap (opencode -> codex exec) + builder preference Codex Sol,unattended,,WI-059,done,"Owner directive 2026-07-14b executed in-session (log.md Decisions): the 3 OPENAI rows in docs/agents.csv now ride codex exec --model {model} --dangerously-bypass-approvals-and-sandbox (opencode sometimes unresponsive); Notes carry install (npm i -g @openai/codex) + codex login; AGENT_TIER_MAP=BUILD=strong in both launchers + OPENAI-SOL heads docs/agents-enabled so BUILD draws Sol first. Side effect owner-accepted: PLAN/DESIGN-CHECK strong draws also move to Sol until WI-161; CRITIQUE keeps Fable via heterogeneity. codex not on PATH at execution - cooldown self-heals BUILD onto Fable until the owner installs/authenticates. Supersedes-for-now: WI-121 BUILD-medium relax; WI-110's opencode --variant note (now codex -c model_reasoning_effort). FOLLOW-UP same day (owner question re dev-setup): scripts/dev-setup.{sh,ps1} swapped their stale opencode row/offer to codex (@openai/codex + codex login; test_onboard_devsetup.py pins updated) and a new scripts/dev-setup.cmd Windows double-click shim added (-Check then offered -Install; the WI-051 .command pattern) - the template twin is WI-166.",docs/specs/owner-intake-2026-07-14b.md#openai-cli,owner-intake-2026-07-14b,
+-WI-161,Per-phase model preference knob (AGENT_PREFER_MAP - within-tier only),unattended,,WI-059;WI-160,queued,,docs/specs/owner-intake-2026-07-14b.md#phase-preference,owner-intake-2026-07-14b,
++WI-161,Per-phase model preference knob (AGENT_PREFER_MAP - within-tier only),unattended,,WI-059;WI-160,done,"Shipped AGENT_PREFER_MAP/--prefer-map with managed-routing preflight validation and within-tier-only selection: preferred, enabled, available ids lead the enable-list order; unknown/cooling/wrong-tier ids fall through; reviewer/critic family heterogeneity still wins. Added launcher/template slots and routing docs, restored the meta enable list to Fable-first while BUILD prefers OPENAI-SOL, and covered selection + end-to-end dispatch. No spine change.",docs/specs/owner-intake-2026-07-14b.md#phase-preference,owner-intake-2026-07-14b,medium
+ WI-162,Parallel WI dispatch across coordinator lanes - design spec (actionability scan x overlap guard x lane lifecycle),unattended,,WI-025;~WI-149,queued,,docs/specs/owner-intake-2026-07-14b.md#parallel-dispatch,owner-intake-2026-07-14b,strong
+ WI-163,Per-WI critique budget dial (n | inf-until-APPROVE; move-on | block disposition),unattended,,WI-059,queued,,docs/specs/owner-intake-2026-07-14b.md#critique-budget,owner-intake-2026-07-14b,
+ WI-164,Optimization-methodology research - solution spaces / sampling / cross-pollination / constructed-optimizer-vs-LLM-iteration,research,,WI-152;~WI-154,queued,,docs/specs/owner-intake-2026-07-14b.md#optimization-research,research-knowledge,strong
+diff --git a/docs/status.md b/docs/status.md
+index c1e6adf07276de54e296e75086bead038e1f32f1..fd6a1ef80547e22717c748665ca7ea9b73067796
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -75,9 +75,8 @@
+ - **Queued (owner intake 2026-07-14b** — 4 items, triage + answers:
+   [specs/owner-intake-2026-07-14b.md](specs/owner-intake-2026-07-14b.md); item 1
+   — the codex-CLI swap + Sol builder preference — was executed at intake as a
+-  dial turn, Decisions log):_ **WI-161** (per-phase model preference knob —
+-  restores Fable-led PLAN while BUILD keeps Sol) · **WI-162** (parallel WI
+-  dispatch across lanes — design spec, strong) · **WI-163** (per-WI critique
++  dial turn, Decisions log; its per-phase preference follow-up is complete):_
++  **WI-162** (parallel WI dispatch across lanes — design spec, strong) · **WI-163** (per-WI critique
+   budget dial: `inf`-until-APPROVE | `block`-on-exhaust) · **WI-164**
+   (optimization-methodology research — joins the research-knowledge campaign
+   behind WI-152) · **WI-165** (Process-tab circular loops, SR-055 — **now
+@@ -95,9 +94,9 @@
+   is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
+ - **Next action:** **the loop resumes under `autonomous`** — the v3 campaign
+   closed (spine at G3), so the DAG-actionable off-spine backlog is next:
+-  **WI-161** (per-phase preference knob) → **WI-163** (critique-budget dial) →
+-  **WI-166** (`dev-setup.template.cmd`) → **WI-162** (parallel-dispatch spec) →
+-  **WI-165** (Process circular loops); `docs/next-wi` is pointed at **WI-161**.
++  **WI-163** (critique-budget dial) → **WI-166** (`dev-setup.template.cmd`) →
++  **WI-162** (parallel-dispatch spec) → **WI-165** (Process circular loops);
++  `docs/next-wi` is pointed at **WI-163**.
+   The `docs/pause` hold is lifted at this close. **After the backlog the loop
+   flows into the research-knowledge campaign** (WI-152…157 + WI-164)
+   automatically — the owner greenlit it 2026-07-15; only the deferred
+diff --git a/project-trajectory/PROCESS_OPTIONS.md b/project-trajectory/PROCESS_OPTIONS.md
+index c76ba643dde025fc63a7d4e676d35d9ae3da019f..3e9e2a718429fe4befe750b94d1d3e47511fc9fa
+--- a/project-trajectory/PROCESS_OPTIONS.md
++++ b/project-trajectory/PROCESS_OPTIONS.md
+@@ -718,8 +718,12 @@
+   turns managed routing on (it is deliberately *not* scaffolded; absence =
+   routing off). Per session the loop selects from that pool by the phase's tier
+   (`AGENT_TIER_MAP`/`--tier-map`, else the built-in phase->tier defaults —
+-  iteration reviewers default to a cheaper tier) plus the **family**-heterogeneity
+-  rules; a model whose session fails to start or stalls
++  iteration reviewers default to a cheaper tier). An optional per-phase
++  `AGENT_PREFER_MAP`/`--prefer-map` (for example `BUILD=OPENAI-SOL`) moves one
++  enabled id ahead of that list **within the resolved tier only**; an unknown,
++  disabled, wrong-tier, or cooling id falls through to enable-list order, and
++  absence preserves that order byte-for-byte. The **family**-heterogeneity rules
++  still win for reviewers and critics; a model whose session fails to start or stalls
+   goes on **cooldown** (the rate-limit backoff, generalized per-model,
+   `AGENT_COOLDOWN_SECONDS`) and is retried; when no enabled model of the
+   preferred tier is available the loop walks the **next tier up — never a weaker
+diff --git a/project-trajectory/scripts/agent-resume.template.cmd b/project-trajectory/scripts/agent-resume.template.cmd
+index 58c7c97b4468855f8d4cba1727e811ca147f9622..b119f689bee1579340896c5e314425888a00a31b
+--- a/project-trajectory/scripts/agent-resume.template.cmd
++++ b/project-trajectory/scripts/agent-resume.template.cmd
+@@ -26,6 +26,10 @@
+ REM   set "AGENT_MODEL_MAP=PLAN=<strong-model>,BUILD=<cheap-model>"
+ set "AGENT_MODEL="
+ set "AGENT_MODEL_MAP="
++REM Optional per-phase preference WITHIN the resolved routing tier, e.g.:
++REM   set "AGENT_PREFER_MAP=BUILD=OPENAI-SOL"
++REM Unknown/cooling ids fall through to docs/agents-enabled order.
++set "AGENT_PREFER_MAP="
+ REM Optional per-phase COMMAND template map (cross-provider routing; pairs
+ REM with the docs/review-policy reviewer dial — cross-provider dual review
+ REM is the recommended review-policy 2 config), e.g.:
+diff --git a/project-trajectory/scripts/agent-resume.template.sh b/project-trajectory/scripts/agent-resume.template.sh
+index 15be4375041acc853bd44c8dcb2c5468ffe549eb..d3abb8e31b0983c75e8b7c07c5577a7d76184c77
+--- a/project-trajectory/scripts/agent-resume.template.sh
++++ b/project-trajectory/scripts/agent-resume.template.sh
+@@ -25,6 +25,10 @@
+ #   AGENT_MODEL_MAP="PLAN=<strong-model>,BUILD=<cheap-model>"
+ AGENT_MODEL=""
+ AGENT_MODEL_MAP=""
++# Optional per-phase preference WITHIN the resolved routing tier, e.g.:
++#   AGENT_PREFER_MAP="BUILD=OPENAI-SOL"
++# Unknown/cooling ids fall through to docs/agents-enabled order.
++AGENT_PREFER_MAP=""
+ # Optional per-phase COMMAND template map (cross-provider routing; pairs with
+ # the docs/review-policy reviewer dial — cross-provider dual review is the
+ # recommended review-policy 2 config), e.g.:
+@@ -42,7 +46,7 @@
+   echo "sessions; see docs/process-options.md 'Unattended operation'." >&2
+   exit 1
+ fi
+-export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
++export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
+ PY="$(command -v python3 || command -v python)" || {
+   echo "agent-resume.sh: python3 not found." >&2; exit 1;
+ }
+diff --git a/project-trajectory/scripts/agent_loop.py b/project-trajectory/scripts/agent_loop.py
+index da21461accd7200fcba01288221469381c396e22..cbe40463e823508e107fb5a358d2b3e85b550762
+--- a/project-trajectory/scripts/agent_loop.py
++++ b/project-trajectory/scripts/agent_loop.py
+@@ -1675,6 +1675,14 @@
+         "env var)",
+     )
+     ap.add_argument(
++        "--prefer-map",
++        default=os.environ.get("AGENT_PREFER_MAP", ""),
++        help='per-phase within-tier preference map "BUILD=OPENAI-SOL"; the '
++        "preferred id is tried before docs/agents-enabled order without changing "
++        "tier, and unknown/cooling ids fall through (default: AGENT_PREFER_MAP "
++        "env var)",
++    )
++    ap.add_argument(
+         "--prompt",
+         default=DEFAULT_PROMPT,
+         help="resume prompt passed to each session (default: the kit's "
+@@ -1739,6 +1747,7 @@
+         cmd_map = parse_model_map(args.cmd_map)  # same "KEY=value" syntax
+         prompt_map = parse_model_map(args.prompt_map)  # phase -> prompt-template FILE
+         tier_map = parse_model_map(args.tier_map)  # phase -> tier
++        prefer_map = parse_model_map(args.prefer_map)  # phase -> registry id
+     except ValueError as exc:
+         print("agent_loop: {}".format(exc), file=sys.stderr)
+         return EXIT_PREFLIGHT
+@@ -1822,6 +1831,11 @@
+                         ph, tier, "|".join(agent_route.TIER_ORDER)
+                     )
+                 )
++        for ph, mid in sorted(prefer_map.items()):
++            if not ph or not mid or not agent_route.ID_RE.match(mid):
++                failures.append(
++                    "prefer-map [{}]: {!r} is not a valid agent id".format(ph, mid)
++                )
+     elif reg_errors:
+         # A malformed registry in a repo NOT using routing is only a warning —
+         # the layer is off, so it changes nothing (never-breaking).
+@@ -2225,7 +2239,14 @@
+                 if last_impl_family:
+                     exclude.add(last_impl_family)
+             route_id, reason = agent_route.select(
+-                enabled, registry, tier, now, cooldowns, exclude, prefer_different
++                enabled,
++                registry,
++                tier,
++                now,
++                cooldowns,
++                exclude,
++                prefer_different,
++                [prefer_map[phase]] if phase in prefer_map else (),
+             )
+             # Log the routing decision BEFORE launch (the no-silent-swap rule).
+             print("route [{}]: {}".format(phase or "—", reason))
+diff --git a/project-trajectory/scripts/agent_route.py b/project-trajectory/scripts/agent_route.py
+index d72474c8e0d51b812fc890549cd8c0d4d413dd91..95a7e18682c78d6b43bd7d7c198a30daba24af10
+--- a/project-trajectory/scripts/agent_route.py
++++ b/project-trajectory/scripts/agent_route.py
+@@ -428,6 +428,7 @@
+     cooldowns=None,
+     exclude_families=(),
+     prefer_different=False,
++    preferred_ids=(),
+ ):
+     """Pick a model id from the enabled pool, or None. Returns (id, reason) — the
+     reason is the line the coordinator LOGS before launch (no silent swap).
+@@ -435,7 +436,9 @@
+     Rules, in order:
+       - Only enabled ids that exist in the registry and are not cooling down.
+       - Walk from `tier` UP to strong; never select a weaker tier than asked.
+-      - Within a tier the enable-list order is the preference order.
++      - Within a tier, `preferred_ids` are tried first, then enable-list order.
++        Unknown, disabled, wrong-tier, or cooling preferred ids simply fall
++        through; a preference can never change the requested tier.
+       - When prefer_different, prefer an id whose FAMILY (who trained it — never
+         the route it is reached by) is not in exclude_families; if none
+         qualifies, fall back to any available one (degraded availability is
+@@ -462,6 +465,8 @@
+         ]
+         if not avail:
+             continue
++        preferred = [mid for mid in (preferred_ids or ()) if mid in avail]
++        avail = preferred + [mid for mid in avail if mid not in preferred]
+         bumped = " (tier bumped up from {})".format(tier) if ti != start else ""
+         if prefer_different:
+             different = [m for m in avail if registry[m].family not in exclude]
+diff --git a/project-trajectory/skills/byte-budget-guard/SKILL.md b/project-trajectory/skills/byte-budget-guard/SKILL.md
+index 82fa0fb34995cd17ad1f78fb445a5497b901222c..be2d54f43ec9778527d4c69a1e77577dd5e777b8
+--- a/project-trajectory/skills/byte-budget-guard/SKILL.md
++++ b/project-trajectory/skills/byte-budget-guard/SKILL.md
+@@ -23,7 +23,7 @@
+ |---|---|---|
+ | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
+ | `project-trajectory/PROCESS.md` | **watched** (baseline **59,827** as of 2026-07-13/WI-101; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
+-| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **137,541** as of 2026-07-14/WI-151; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
++| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **137,877** as of 2026-07-15/WI-161; growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+ 
+ `ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
+ push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
+diff --git a/tests/test_agent_loop_review.py b/tests/test_agent_loop_review.py
+index 7552c652876f25c5123cd1aa11f6d6ece4fe4d95..ff6622a584132b8ed36d1b6017a66fb5d813be34
+--- a/tests/test_agent_loop_review.py
++++ b/tests/test_agent_loop_review.py
+@@ -195,6 +195,24 @@
+     assert list((repo / "docs" / "reviews").glob("*-REVIEW-A.md"))
+ 
+ 
++def test_prefer_map_routes_build_then_reviewer_heterogeneity_wins(managed_repo):
++    repo, ctl, cmd = managed_repo
++    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
++    (ctl / "done_after").write_text("2", encoding="utf-8")
++    proc = _loop(repo, cmd, "--prefer-map", "BUILD=PROVB-REV-1")
++    assert proc.returncode == 0, proc.stdout + proc.stderr
++    models = _models(ctl)
++    assert models[0] == "revb"  # phase preference beats enable-list order
++    assert "builda" in models[1:]  # reviewer differs from the PROVB implementer
++
++
++def test_invalid_prefer_map_id_fails_preflight(managed_repo):
++    repo, ctl, cmd = managed_repo
++    proc = _loop(repo, cmd, "--prefer-map", "BUILD=bad id")
++    assert proc.returncode == 2, proc.stdout + proc.stderr
++    assert "prefer-map [BUILD]" in proc.stderr
++
++
+ def test_review_policy_2_schedules_two_providers(managed_repo):
+     repo, ctl, cmd = managed_repo
+     (repo / "docs" / "review-policy").write_text("2\n", encoding="utf-8")
+diff --git a/tests/test_agent_route.py b/tests/test_agent_route.py
+index 0506d8d601c0a03af721d20780dab3fbacd189d3..976513900726d0b8c59694d9c1c49e2fd9102c06
+--- a/tests/test_agent_route.py
++++ b/tests/test_agent_route.py
+@@ -87,6 +87,46 @@
+     assert "OPENAI-GPT-5.2" in reason
+ 
+ 
++def test_select_phase_preference_is_within_tier_and_cooling_falls_through(tmp_path):
++    reg, _ = _registry(tmp_path)
++    enabled = ["OPENAI-GPT-5.2", "ANTHROPIC-OPUS-4.8", "ANTHROPIC-HAIKU-4"]
++    chosen, _ = route.select(
++        enabled, reg, "strong", preferred_ids=["ANTHROPIC-OPUS-4.8"]
++    )
++    assert chosen == "ANTHROPIC-OPUS-4.8"
++
++    cooldowns = {"ANTHROPIC-OPUS-4.8": 200.0}
++    fallback, _ = route.select(
++        enabled,
++        reg,
++        "strong",
++        now=100.0,
++        cooldowns=cooldowns,
++        preferred_ids=["ANTHROPIC-OPUS-4.8"],
++    )
++    assert fallback == "OPENAI-GPT-5.2"
++
++    # A wrong-tier preference never pulls selection down from the requested tier.
++    same_tier, _ = route.select(
++        enabled, reg, "strong", preferred_ids=["ANTHROPIC-HAIKU-4"]
++    )
++    assert same_tier == "OPENAI-GPT-5.2"
++
++
++def test_select_reviewer_heterogeneity_wins_over_phase_preference(tmp_path):
++    reg, _ = _registry(tmp_path)
++    chosen, reason = route.select(
++        ["ANTHROPIC-OPUS-4.8", "OPENAI-GPT-5.2"],
++        reg,
++        "strong",
++        exclude_families=["ANTHROPIC"],
++        prefer_different=True,
++        preferred_ids=["ANTHROPIC-OPUS-4.8"],
++    )
++    assert chosen == "OPENAI-GPT-5.2"
++    assert "DEGRADED" not in reason
++
++
+ def test_select_prefers_a_different_provider_but_degrades(tmp_path):
+     reg, _ = _registry(tmp_path)
+     # Two strong models, both same provider as the implementer -> degraded, legal.
+
+tokens used
+138,028
+WI-161 is complete and committed as `75cb46c`.
+
+- Added `AGENT_PREFER_MAP` / `--prefer-map` with within-tier-only selection.
+- Cooling, unknown, disabled, or wrong-tier preferences fall through safely.
+- Reviewer and critic family heterogeneity still takes precedence.
+- Restored Fable-first planning while BUILD prefers `OPENAI-SOL`.
+- Updated launchers, templates, process documentation, tests, architecture map, dashboard, registry, status, and log.
+- `docs/next-wi` → `WI-163`; `docs/run-state` remains `RUNNING`.
+- No push performed.
+
+Real verification:
+
+```text
+Focused: 55 passed in 11.66s
+Full: 744 passed, 34 skipped in 76.77s
+Smoke: 619 passed, 2 skipped in 63.88s
+check_docs: OK - 88 docs, 386 links, 0 broken
+check_trajectory --strict: clean
+Commit hook: all checks passed
+```
+
+Working tree is clean; branch is 16 commits ahead of origin.

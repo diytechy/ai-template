@@ -7,31 +7,165 @@ scaffold in a temp dir and run the actual commands.
 """
 
 import importlib.util
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
-KIT = Path(__file__).resolve().parent.parent / "project-trajectory"
+ROOT = Path(__file__).resolve().parent.parent
+KIT = ROOT / "project-trajectory"
 SCRIPTS = KIT / "scripts"
+
+# Hermeticity: a coordinator-launched session (agent-resume.* -> agent_loop.py ->
+# the agent CLI running this suite as the commit bar) inherits the launcher's
+# AGENT_* routing contract (AGENT_CMD, AGENT_MODEL_MAP, AGENT_TIER_MAP, ...).
+# The agent_loop tests build their own scaffolds and env, but an *ambient*
+# AGENT_TIER_MAP (e.g. BUILD=strong) re-routes their subprocess loops and fails
+# 8 of them — so the unattended layer could never produce a green commit bar
+# (WI-118, found live 2026-07-12). Scrub the whole namespace at import, before
+# any test copies os.environ; tests that need these vars set them explicitly.
+for _k in [k for k in os.environ if k.startswith("AGENT_")]:
+    del os.environ[_k]
+
+
+# --- WI-122: the meta commit-bar smoke tier -----------------------------------
+# The per-commit bar runs the fast SMOKE tier (docs/stack.ini [tiers]
+# smoke = -m smoke); the FULL suite runs at slice/phase close and in CI
+# (PROCESS_OPTIONS.md phased-delivery cadence). Tiering here is OPT-OUT so the smoke
+# set stays generously sized and "never a false green": every collected test is
+# `smoke` UNLESS its module is one of the heavy end-to-end integration modules
+# below — full hook / gate / scaffold-bootstrap runs that the commit hook
+# re-exercises live and the close/CI gate re-runs wholesale, so per commit they
+# are redundant. A NEW test is therefore in the commit bar by default; a test
+# leaves it only by being named here. `smoke` and `slow` PARTITION the suite
+# (every test gets exactly one) — test_smoke_tier.py guards the invariant and
+# that each name below is a real test module.
+SLOW_MODULES = frozenset(
+    {
+        "test_pre_push_hook",  # full pre-push hook end-to-end
+        "test_pre_commit_hook",  # full pre-commit hook end-to-end
+        "test_bootstrap",  # full scaffold bootstraps
+        "test_onboard_devsetup",  # dev-setup.sh on a bootstrapped scaffold
+        "test_profile",  # scaffold-profile byte-compare
+        "test_stack_profile",  # scaffold-profile byte-compare
+        "test_check_perf",  # perf gate step on a scaffold
+        "test_check_flows",  # design-flow gate step on a scaffold
+        "test_meta_repo_hook",  # meta pre-commit hook integration
+        # The v4 parallel-dispatch end-to-end modules (WI-186): each spawns real
+        # dispatcher + worker subprocesses driving live git worktrees/reservations
+        # — the same heavy-integration class as the hook/scaffold runs above, so
+        # the commit bar drops them and the full suite + CI exercise them.
+        "test_agent_loop_dispatch",  # dispatcher fan-out end-to-end
+        "test_agent_loop_dualplan",  # the dual-plan round end-to-end (WI-199)
+        "test_agent_loop_train",  # traincar continuation / fork / join
+        "test_agent_loop_integrate",  # atomic integrator end-to-end
+        "test_agent_loop_recovery",  # fault-injected crash matrix
+        "test_agent_loop_migration",  # telemetry + downstream migration
+    }
+)
+
+
+def smoke_tier_for(module_stem):
+    """The tier a test module belongs to: 'slow' for the heavy end-to-end
+    modules in SLOW_MODULES, else 'smoke'. Total by construction — one test
+    maps to exactly one tier, so nothing lands outside both (the invariant the
+    smoke commit bar leans on)."""
+    return "slow" if module_stem in SLOW_MODULES else "smoke"
+
+
+def pytest_collection_modifyitems(config, items):
+    for item in items:
+        stem = Path(item.nodeid.split("::", 1)[0]).stem
+        item.add_marker(smoke_tier_for(stem))
 
 
 def load_script(name):
-    """Import a kit script as a module (scripts/ is intentionally not a package)."""
+    """Import a kit script as a module (scripts/ is intentionally not a package).
+
+    scripts/ is put on sys.path first so a script that imports a sibling — e.g.
+    gen_trajectory's sanctioned `import check_trajectory` — resolves in-process
+    too. Run as a subprocess the sibling resolves via sys.path[0], but
+    importlib.exec_module does not add scripts/ itself, so the next author writing
+    an in-process test of a sibling-importing script would otherwise hit a bare
+    ImportError (THREAD_52_REVIEW.md F5)."""
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
     spec = importlib.util.spec_from_file_location(name, SCRIPTS / (name + ".py"))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
 
 
+def _active_cov_datafile():
+    """The measuring session's coverage datafile, or None when unmeasured.
+
+    pytest-cov < 7 exported it as COV_CORE_DATAFILE; 7.0 removed the whole
+    COV_CORE_* env contract, so fall back to asking the in-process coverage
+    object pytest-cov drives (Coverage.current()) for its configured path.
+    Keying on the env var alone silently unwired every child under pytest-cov 7
+    and the coverage floor read a fraction of reality."""
+    datafile = os.environ.get("COV_CORE_DATAFILE")
+    if datafile:
+        return datafile
+    try:
+        import coverage
+    except ImportError:  # plain pytest without pytest-cov: unmeasured run
+        return None
+    cov = coverage.Coverage.current()
+    if cov is None:
+        return None
+    datafile = getattr(cov.config, "data_file", None)
+    # Children run in temp cwds, so a rootdir-relative path must be anchored.
+    return str(Path(datafile).resolve()) if datafile else None
+
+
+def augment_env(env):
+    """Add subprocess-coverage wiring to `env` (a dict) when pytest-cov is
+    measuring the parent (see `_active_cov_datafile`); a no-op otherwise.
+
+    Most of the suite runs the kit scripts as subprocesses, which coverage does
+    not see unless each child starts it (IMPROVEMENT_PLAN.md Thread 47 phase 6).
+    Shared by run_py AND any test that builds its own subprocess env
+    (test_check_privacy.lint_env, test_pre_push_hook.run_hook), so coverage is
+    measured *uniformly* regardless of which helper a test uses — routing only
+    run_py children left the privacy suite invisible and its module reading a
+    misleadingly-low %. Points the child at `.coveragerc` +
+    `tests/_cov/sitecustomize.py` (which calls `coverage.process_startup()`) and
+    shares pytest-cov's datafile so the parallel data lands in one place for the
+    session-end combine; `.coveragerc`'s [paths] remaps the temp-scaffold script
+    copies back to the source tree. NB: `tests/_cov` is prepended to PYTHONPATH,
+    so it would shadow any environment-provided `sitecustomize` during a measured
+    run — harmless here (none exists; gated on an active pytest-cov)."""
+    datafile = _active_cov_datafile()
+    if not datafile:
+        return env
+    env = dict(env)
+    env["COVERAGE_PROCESS_START"] = str(ROOT / ".coveragerc")
+    env["COVERAGE_FILE"] = datafile
+    covdir = str(ROOT / "tests" / "_cov")
+    env["PYTHONPATH"] = covdir + os.pathsep + env.get("PYTHONPATH", "")
+    return env
+
+
 def run_py(args, cwd):
-    """Run `python <args>` in cwd, capturing output."""
+    """Run `python <args>` in cwd, capturing output.
+
+    stdin is closed (DEVNULL) so a script that *would* prompt on a TTY (e.g.
+    bootstrap's agent-selection question) runs non-interactively and takes its
+    default instead of blocking — the CI-safe path the tests must exercise.
+    """
+    # encoding="utf-8" (not text=True): the kit scripts emit UTF-8 via
+    # _utf8_console, and a bare text=True decodes captured output with the
+    # console codepage on Windows, mojibaking em-dashes into the goldens (WI-192).
     return subprocess.run(
         [sys.executable] + [str(a) for a in args],
         cwd=str(cwd),
         capture_output=True,
-        text=True,
+        encoding="utf-8",
+        stdin=subprocess.DEVNULL,
+        env=augment_env(dict(os.environ)),
     )
 
 
@@ -44,7 +178,7 @@ def scaffold(tmp_path):
 
 
 # --- A minimal but complete downstream project -------------------------------
-# One pure function, one traced UN->SR->LLR->TC chain, one marked smoke test.
+# One pure function, one traced SN->SR->LLR->TC chain, one marked smoke test.
 # Used by the harness tests; written ruff-format-clean on purpose.
 
 DEMO_SRC = '''"""Demo pure core for the kit self-test. Pure — no I/O."""
@@ -74,23 +208,23 @@ def test_add_sr001():
     assert add(1, 2) == 3
 '''
 
-USER_NEEDS = """# User Needs (UN-###)
+STAKEHOLDER_NEEDS = """# Stakeholder Needs (SN-###)
 
-| UN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
+| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
 |---|---|---|---|---|
-| UN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
+| SN-001 | Add two numbers. | Demo. | M | add(1,2) gives 3. |
 """
 
-SRS = """SR-ID,Title,UN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,UN-001,"The system shall add two numbers.","Realizes UN-001.","add(1,2) == 3",,M,Test,Verified
+SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
 """
 
 LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
 LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented
 """
 
-TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
+TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Verified
 """
 
 
@@ -101,10 +235,40 @@ def make_minimal_project(root):
     (root / "tests" / "conftest.py").write_text(DEMO_TEST_CONFTEST, encoding="utf-8")
     (root / "tests" / "test_demo.py").write_text(DEMO_TEST, encoding="utf-8")
     req = root / "docs" / "requirements"
-    (req / "user-needs.md").write_text(USER_NEEDS, encoding="utf-8")
+    (req / "stakeholder-needs.md").write_text(STAKEHOLDER_NEEDS, encoding="utf-8")
     (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")
     (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
     (root / "docs" / "test" / "test-cases.csv").write_text(TCS, encoding="utf-8")
+    # A G2-complete project replaces the template's placeholder Runtime-flows
+    # citations (SR-000/LLR-000) with its real ids, so the harness's
+    # check_flows --no-placeholders step is satisfied.
+    arch = root / "docs" / "architecture.md"
+    arch.write_text(
+        arch.read_text(encoding="utf-8")
+        .replace("SR-000", "SR-001")
+        .replace("LLR-000", "LLR-001"),
+        encoding="utf-8",
+    )
+    # A G1-complete project's README cites its real need (the opt-out
+    # need-coverage gate: every Must/Should SN is cited), replacing the -000 stub.
+    readme = root / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8").replace(
+            "- **_(capability)_** — _(one line: what a user can do)_ (SN-000)",
+            "- **Addition** — add two numbers (SN-001)",
+        ),
+        encoding="utf-8",
+    )
     proc = run_py(["scripts/gen_arch_map.py"], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # Same "start from truth" for the OKF bundle: with real registry rows the
+    # on-by-default export exists and is fresh (its hook/G3 --check passes).
+    proc = run_py(["scripts/gen_okf.py"], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # The derived gate (docs/specs/derived-gate-model.md): this is a full G3 chain,
+    # so docs/gate is regenerated from the artifact states — the scaffold shipped
+    # the fresh-repo G1, and ratifying artifacts up to a G3-complete spine is what
+    # advances the derived gate. Keeps the derived-gate freshness step green.
+    proc = run_py(["scripts/derive_gate.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     return root

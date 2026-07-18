@@ -1,0 +1,20 @@
+{
+    "cSpell.words": [
+        "browsability"
+    ],
+    // Steer VS Code at the pinned ./.venv (scripts/dev-setup --install builds it
+    // from requirements-dev.txt) so Run/Debug and Test Explorer use the pinned
+    // toolchain — NOT a global python that may carry a racing pre-5.0 pytest-cov
+    // (WI-175 / WI-105). The extension auto-discovers ./.venv on every OS and
+    // resolves bin/ vs Scripts/ per platform; this pins it as the default and
+    // wires pytest as the test runner. NB: this only governs paths VS Code
+    // launches — the agent shell and git hooks are handled by the hook's own
+    // venv-preference (project-trajectory/hooks/pre-commit).
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
+    "python.terminal.activateEnvironment": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        "tests"
+    ]
+}

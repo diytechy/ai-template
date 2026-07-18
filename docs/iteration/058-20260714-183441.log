@@ -1,0 +1,436 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 058
+# date: 2026-07-14 18:36
+# phase: REVIEW-A
+# wi: WI-146
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 79
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1725
+# exit-code: 0
+# ---
+[0m
+> build · gpt-5.6-terra
+[0m
+I’ll independently inspect the review scope and current diff, run the required validators, then record only evidence-based findings in the requested review file.
+[0m✗ [0mRead docs/process.md failed
+[91m[1mError: [0mFile not found: C:\Projects\ai-template\docs\process.md
+[0m✱ [0mGlob "docs/requirements/**/*"[90m in . · 6 matches[0m
+[0m✱ [0mGlob "docs/specs/**/*"[90m in . · 17 matches[0m
+[0m→ [0mRead CLAUDE.md
+[0m→ [0mRead AGENTS.md
+[0m
+[0m$ [0mgit status --short; git log --oneline -12; git diff --stat; git diff; git diff HEAD~1..HEAD
+...output truncated...
+
+Full output saved to: C:\Users\Peter\.local\share\opencode\tool-output\tool_f62fbbc20001s8R5TnY4pBVhqe
+
++{"type":"rate_limit_event","rate_limit_info":{"status":"allowed","resetsAt":1784088000,"rateLimitType":"five_hour","overageStatus":"rejected","overageDisabledReason":"org_level_disabled","isUsingOverage":false},"uuid":"95f64368-5447-45b8-9b41-76ca0914abaf","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2nmbnfywFkqrH9uk7PE","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01C7cyfiC1t7VXFmJsHFn1Zy","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\next-wi"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":3250,"cache_creation_input_tokens":6631,"cache_read_input_tokens":12298,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":6631},"output_tokens":7,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"ea949bc8-50b0-4320-a517-c80358a90e75","request_id":"req_011Cd2nmaLriFxCT8w4xPEo2"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01C7cyfiC1t7VXFmJsHFn1Zy","type":"tool_result","content":"1\t# Next WI (process-options.md \"Unattended operation\") — the WI id the driver\n2\t# expects the coordinator to pick up next, in the docs/run-phase idiom (comment\n3\t# lines + one value on the last line). The managed BUILD branch reads it and, if\n4\t# that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it\n5\t# as the session's STARTING tier in place of the phase default (WI-126). The\n6\t# value may be a `;`-joined ordered DEV-SLICE BATCH of independent off-spine WIs\n7\t# — one session, one review round, strongest-member pin (WI-133); an\n8\t# absent/empty file, an unknown id, or an empty BuildTier = the phase default.\n9\t# The DRIVER maintains this alongside docs/status.md Next action.\n10\t# NOTE: WI-144 (the v3 campaign closer) is `active` but PAUSED — its SR-047\n11\t# critique loop has EXHAUSTED the AGENT_CRITIQUE_MAX=3 budget still\n12\t# CHANGES-REQUESTED (042/048/052; log.md 2026-07-14). Under single-ratify the\n13\t# budget failure_action pauses that WI + surfaces the block for the phase-v3\n14\t# g2-close ratification sitting (OI-12) but KEEPS the loop RUNNING on non-dependent\n15\t# work — so next-wi moves OFF WI-144 to the next actionable non-dependent unit\n16\t# (WI-144 resumes for its final build round after the sitting rules OI-12).\n17\t# 052-CRITIQUE disposition (OI-12): BUILDABLE rubric-meeting [MAJOR A4] queued\n18\t# .detail .badge 2.56:1 · [MINOR A4] focus ring 2.05:1 · [MAJOR T4] .blab overflow\n19\t# · U4/U3/U1 polish; OWNER-GATED (recurring) U5 palette taxonomy · [MAJOR T2]\n20\t# Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN\n21\t# first so one final build round mechanizes contrast instead of another hand pass.\n22\t#\n23\t# NEXT: WI-110 — a standalone, already-ratified owner directive (log.md 2026-07-14:\n24\t# opus BUILD effort → xhigh, the one-cell Env change + before/after s/turn telemetry\n25\t# via WI-124, plus the OpenAI reasoning_effort answer). Predecessors ~WI-109;~WI-145\n26\t# done; it is NOT a campaign kickoff, so it sidesteps the campaign-sequencing the\n27\t# owner does at the sitting — the cleanest non-dependent unit to keep the loop moving.\n28\t# (The owner-intake WI-146+ and research-knowledge WI-152+ campaigns wait for the\n29\t# sitting to sequence them; do not auto-start a campaign.)\n30\tWI-110\n31\t"}]},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"59f80dfb-002c-4072-aa95-9c8baf606f4e","timestamp":"2026-07-14T23:07:21.098Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\next-wi","content":"# Next WI (process-options.md \"Unattended operation\") — the WI id the driver\n# expects the coordinator to pick up next, in the docs/run-phase idiom (comment\n# lines + one value on the last line). The managed BUILD branch reads it and, if\n# that WI's row in docs/requirements/work-items.csv carries a BuildTier, uses it\n# as the session's STARTING tier in place of the phase default (WI-126). The\n# value may be a `;`-joined ordered DEV-SLICE BATCH of independent off-spine WIs\n# — one session, one review round, strongest-member pin (WI-133); an\n# absent/empty file, an unknown id, or an empty BuildTier = the phase default.\n# The DRIVER maintains this alongside docs/status.md Next action.\n# NOTE: WI-144 (the v3 campaign closer) is `active` but PAUSED — its SR-047\n# critique loop has EXHAUSTED the AGENT_CRITIQUE_MAX=3 budget still\n# CHANGES-REQUESTED (042/048/052; log.md 2026-07-14). Under single-ratify the\n# budget failure_action pauses that WI + surfaces the block for the phase-v3\n# g2-close ratification sitting (OI-12) but KEEPS the loop RUNNING on non-dependent\n# work — so next-wi moves OFF WI-144 to the next actionable non-dependent unit\n# (WI-144 resumes for its final build round after the sitting rules OI-12).\n# 052-CRITIQUE disposition (OI-12): BUILDABLE rubric-meeting [MAJOR A4] queued\n# .detail .badge 2.56:1 · [MINOR A4] focus ring 2.05:1 · [MAJOR T4] .blab overflow\n# · U4/U3/U1 polish; OWNER-GATED (recurring) U5 palette taxonomy · [MAJOR T2]\n# Knowledge-tab density · 3 TC-HARDEN. Recommend the sitting ratify the TC-HARDEN\n# first so one final build round mechanizes contrast instead of another hand pass.\n#\n# NEXT: WI-110 — a standalone, already-ratified owner directive (log.md 2026-07-14:\n# opus BUILD effort → xhigh, the one-cell Env change + before/after s/turn telemetry\n# via WI-124, plus the OpenAI reasoning_effort answer). Predecessors ~WI-109;~WI-145\n# done; it is NOT a campaign kickoff, so it sidesteps the campaign-sequencing the\n# owner does at the sitting — the cleanest non-dependent unit to keep the loop moving.\n# (The owner-intake WI-146+ and research-knowledge WI-152+ campaigns wait for the\n# sitting to sequence them; do not auto-start a campaign.)\nWI-110\n","numLines":31,"startLine":1,"totalLines":31}}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2nmbnfywFkqrH9uk7PE","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01NZ9Q7uM9DEKAK4hMEu2ToQ","name":"Read","input":{"file_path":"C:\\Projects\\ai-template\\docs\\run-state"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":3250,"cache_creation_input_tokens":6631,"cache_read_input_tokens":12298,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":6631},"output_tokens":7,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"63593db8-02cf-439b-b03b-fcc18167d909","request_id":"req_011Cd2nmaLriFxCT8w4xPEo2"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01NZ9Q7uM9DEKAK4hMEu2ToQ","type":"tool_result","content":"1\t# Unattended-run state (read by project-trajectory/scripts/agent_loop.py via\n2\t# the root agent-resume.* launchers). RUNNING while work remains; a driver\n3\t# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may\n4\t# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).\n5\tRUNNING\n6\t"}]},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"57569451-de6e-4917-a7d2-12e924a1d226","timestamp":"2026-07-14T23:07:21.177Z","tool_use_result":{"type":"text","file":{"filePath":"C:\\Projects\\ai-template\\docs\\run-state","content":"# Unattended-run state (read by project-trajectory/scripts/agent_loop.py via\n# the root agent-resume.* launchers). RUNNING while work remains; a driver\n# writes DONE / BLOCKED / NEEDS-HUMAN to end a walk-away run. NEEDS-HUMAN may\n# carry one `ask:` line naming the act — the stop banner headlines it (WI-127).\nRUNNING\n","numLines":6,"startLine":1,"totalLines":6}}}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2nmtm8pcfMfiC7UsLqm","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"Er0CCokBCA8YAipAHu7iy7K7MC3NVWocRoA1oDZWrHp2XwFr2XAzwJzMzhvohk4uMKfPuTBsMTpz/4RsZ9DfoqqxsQ8/5C1Hd4X67DIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDPHLPhuqS121IV2cthoMY9mc4FpdsjtP+qn0IjCrxN44PajbJpRKDV0b06yLE+6m2RPYGEAgqYIRVY8o2LpOkqsrLlisVykysp3tkNQqYZmtIKccaCB+mNlinpe0BVVjzWiNDVZFDpqgyIjWY+VgTLBuHtPMom3647w4MGptzNVoQdhlR8gWP/xAgWx5qfV4QYw6YwXPMNq1IwEaCMqo9T847I3c9PH3kQR51HjYajQYAQ=="}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":8648,"cache_read_input_tokens":18929,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":8648},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"6cea2b30-595c-4e7b-8e1f-0b38b3c25876","request_id":"req_011Cd2nmsTztVwzB96y7gSch"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2nmtm8pcfMfiC7UsLqm","type":"message","role":"assistant","content":[{"type":"text","text":"The next action is **WI-110**. Let me read its registry row and the relevant specs."}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":8648,"cache_read_input_tokens":18929,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":8648},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4
++[... byte cap hit — full stream in out/run-logs/ ...]
++eboard\n08a08a6 telemetry: session 050 REVIEW-A NO-COMMIT\n00a7c56 telemetry: session 049 BUILD COMMITTED\n873b13e WI-144: record build round 2 + track 046-REVIEW-A (status/next-wi/OI-12/log)\n4322aef WI-144: dashboard UI-quality build round 2 — A1/T1/U3 + 046 flat-DAG glyph\n=== dashboard fresh? ===\ngen_trajectory: already up to date -> PROJECT_STATE.html","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false}}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"208c8e22-7740-42ee-989d-57571e9b8995","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":150,"estimated_tokens_delta":100,"uuid":"2f9c7e33-5f17-4fcf-bd5e-d7a1df1f647d","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":180,"estimated_tokens_delta":30,"uuid":"e3a29c38-3d3b-47e6-a22d-ba3aace6d444","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pm5HrA6T8Ef9btz7Jn","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EsoFCokBCA8YAipAwXhmY0ayRBzz+0bZFzzmUZO16LQxPZvwQR+AHQl72i89H+x/EWMliRcFMyYVuCjGUtxgSsPACU4i+5I4H0J1rzIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDEKe5neJ9uBmJIii+RoMKlUKP6Mv1L2JDEAGIjBjucI2dDx0MdVPKRBuE18jfnErDLL2QGHJ4iDurb9XBtjDumKKngzsNi6icDtfgR0q7QOlGydzG6o8dkrbJ0P40QVghyI4om3FTJGBa5a/WLgljPGSFAhhCQobVIOeHSCyM8d4N8mZE7tcOuCCuJLYKbLWUeS7B7DVKmcwLsr1lcUQbAOteMAamPCPPqGXignOr7DjLLiCJm+X4UIPz6VABK4KWGR7ngNisX/hj4aMzfrz8xOnMDtZwB4dcV7fEPMZT+yK30pJ+2eRk3lsrUDIqhBA1D83TI9JW4HaEwn8V+8m+eBXs/tY0QjWHHGmp4SzvM7LGJZbMX/EjFw46yyEdhorbkwSVI0fnFSBzUer1+J8eXZ+afWMlC3NbUjE7CIxIZ3/29TJkLeD7CO8xYsE8yuF04mmrMY93uY7KBVO7xso/ePmyG28b9RTdR3HzxAgigIitTSQIWFs/QYnMZfmjp5t1BVKp6Db536nhLT6KZJ+lynWTf4yO7dntxROqvuHurr532njScdz4KU1fsASdbb8EQ/uZGSaBKGbk+QNxJTxgHIyLFP15bTeDzIFxeEXbSVZGZkq7FdcC5zDvl7zFF1M3gSfFJuszkJdYsTunnGG3rsqw1FLSqapNpHbBZSUFFP5g2Y94j5AasjyBbULS5yM1VsHN+GgnXkIdGMyQPOoberJNLxvcNC7RWzNh9zTVDBamfUG/+KiW+pK7jLFGAE="}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":1111,"cache_read_input_tokens":136996,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":1111},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"b4d1ca47-3c82-49fd-8ce0-5b04db38d98f","request_id":"req_011Cd2pm3p46jjmL59YVPZnK"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pm5HrA6T8Ef9btz7Jn","type":"message","role":"assistant","content":[{"type":"text","text":"Commit style is `WI-NNN: <summary>`. I'm on `derived-gate-model` (not main), push-policy is human (won't push). Staging all changes including the tracked review artifact:"}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":1111,"cache_read_input_tokens":136996,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":1111},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"5601cc83-8633-4e3d-b56b-40b4e8db22d8","request_id":"req_011Cd2pm3p46jjmL59YVPZnK"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pm5HrA6T8Ef9btz7Jn","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01PepEcifY9wuyLWR9WmYmHk","name":"Bash","input":{"command":"git add -A && git status --short"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":1111,"cache_read_input_tokens":136996,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":1111},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"503366ca-c568-439e-92e5-3c38fb3530b9","request_id":"req_011Cd2pm3p46jjmL59YVPZnK"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01PepEcifY9wuyLWR9WmYmHk","type":"tool_result","content":"warning: in the working copy of 'docs/gate', CRLF will be replaced by LF the next time Git touches it\nM  PROJECT_STATE.html\nM  docs/agents.csv\nM  docs/gate\nM  docs/log.md\nM  docs/next-wi\nM  docs/requirements/work-items.csv\nA  docs/reviews/054-REVIEW-A.md\nM  docs/specs/WI-110.md\nM  docs/status.md","is_error":false}]},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"4a8afd4f-fb3c-4324-baab-7534fc01b410","timestamp":"2026-07-14T23:33:32.282Z","tool_use_result":{"stdout":"warning: in the working copy of 'docs/gate', CRLF will be replaced by LF the next time Git touches it\nM  PROJECT_STATE.html\nM  docs/agents.csv\nM  docs/gate\nM  docs/log.md\nM  docs/next-wi\nM  docs/requirements/work-items.csv\nA  docs/reviews/054-REVIEW-A.md\nM  docs/specs/WI-110.md\nM  docs/status.md","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false}}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"be42f2c4-a4cc-4882-8b32-8fa2bf109aa9","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":100,"estimated_tokens_delta":50,"uuid":"15e0d162-cff3-4b52-a1a7-bf653b343b66","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":219,"estimated_tokens_delta":119,"uuid":"981c55d6-5baf-4f86-bc22-4d3648bec352","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pmicRQhveQFPXACgwU","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EuUGCokBCA8YAipACsH5s2NpqvBqYHT9GFXQLOPwgqYMD4cVVYz0TqIxugUwFE1i/huREQhHqNRI7fckyLP4DE6Jbcw9HZ+O8knVWjIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDDENQblFQHXraoWauhoMLk8YWMTBJb02Pg2VIjBoF4d3UXsygIjoyp9rh9ztaMUupr5wWHHA5wSxCTQikPYTelehL0l9H58vHFfj4K0qiAUWuMNgm3Fqk2NRPIqfdjRNUSi0ryB28+QlR9FndYIm0iULlr105S7LUNujqlr4Z2lC1YjIDgaMptOhs7d7dGqkvewGdzsKYxgyRxQzFasnGLWwgFhsWsqbjNqyrMz7qxQbrR2nC/T4O+xRCriR4kXHErDdyIJL6zWsIabl+QaOYsSaD9Lcav8Ah5Okv72kdPgjX6q1B6ixdsR0y1L6kRn3y82ux7HJYJwJvADxycMciPuF+Gn+c8YQk9Z3WpUv0eJGot6JtayhglvKTkb6ao0aPFwDcIjcQO0u0PEfFia/8kKhukLAslwmferMvHLRWRfmIIx26MbclKAQcQPjmXvD0YUaeI6HcCje0iOxHJcksuAz0+BP+56+Bp7U19XpEDmq4EhLuiEcSwKFndE4FfjUJeRX01Ar7hokdaUwg5oD5rENb5ob12bHb1yb0w6F7+VpA/WLYovjIiKGnK+A8yITD5OXcenN6kETIPGto5XL8YeuWD8OPC39d78Zm2OODm7+krYs0H7p2r3gQPg5QPlyZ9U7CS2byQWATAgRuTjraQ9hv6LS2jZ4qg0Sr2btGQjpGqhlYOIXvEv+XeGvNK4MY94ktgLniTC0pdF0f+bMSxEbSnJVvOJ4nf1uFubfyC1QTN3boIj5zG5HMPx5QTzhXfOGFHtIymWHL13RvpuvFnFU0oSYdA99e084FPNSzLGUgbHjtaHWWN/a/71xEUeVKZYmKVlMhwQiwMEiYXLkfaEINX1it7WFcW3dJsFVVMSMCPTHB+N9GJLMpJUYp7ImtZwx3ZlM2nP8LYMh69kLciDQqUXFDu9SQBAJWr52nf97EW7UlzuoaT5SPAOCkAHu1jzGdJwg+MMYAQ=="}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":451,"cache_read_input_tokens":138107,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":451},"output_tokens":5,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"c7b2538c-8f53-4d8c-9c5e-a655211bad61","request_id":"req_011Cd2pmhMXDFzYny2E152E1"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pmicRQhveQFPXACgwU","type":"message","role":"assistant","content":[{"type":"text","text":"`docs/gate` shows as modified — let me confirm that's a legitimate re-derivation and not just line-ending churn:"}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":451,"cache_read_input_tokens":138107,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":451},"output_tokens":5,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"d4e69651-4c51-4602-8450-df58f261e8eb","request_id":"req_011Cd2pmhMXDFzYny2E152E1"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pmicRQhveQFPXACgwU","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01Qbmmsms91KgJkxW6ev3fBB","name":"Bash","input":{"command":"git diff --cached docs/gate | cat"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":451,"cache_read_input_tokens":138107,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":451},"output_tokens":5,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"aaa212f0-cd86-4462-850d-068982e570a4","request_id":"req_011Cd2pmhMXDFzYny2E152E1"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01Qbmmsms91KgJkxW6ev3fBB","type":"tool_result","content":"diff --git a/docs/gate b/docs/gate\nindex b321448..64f36d5 100644\n--- a/docs/gate\n+++ b/docs/gate\n@@ -9,5 +9,5 @@\n # read the first non-comment line below, exactly as before.\n #\n # basis: SN=24 SR=56 LLR=57 TC=57 drafts=0 computed=G2 per-phase=(default)=G3;v2=G3;v3=G2\n-# computed 2026-07-14 (as-of 1d20f69)\n+# computed 2026-07-14 (as-of 985f205)\n G2","is_error":false}]},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"c2b560e4-9e85-44cc-bac4-1128db2b87ed","timestamp":"2026-07-14T23:33:39.735Z","tool_use_result":{"stdout":"diff --git a/docs/gate b/docs/gate\nindex b321448..64f36d5 100644\n--- a/docs/gate\n+++ b/docs/gate\n@@ -9,5 +9,5 @@\n # read the first non-comment line below, exactly as before.\n #\n # basis: SN=24 SR=56 LLR=57 TC=57 drafts=0 computed=G2 per-phase=(default)=G3;v2=G3;v3=G2\n-# computed 2026-07-14 (as-of 1d20f69)\n+# computed 2026-07-14 (as-of 985f205)\n G2","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false}}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"2910c369-19c3-4342-b67a-8a3b60fa0bd2","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":137,"estimated_tokens_delta":87,"uuid":"8f1e4373-e2a3-4208-9472-f47862aa1ead","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pnHrBWxw1PwKC2WqqK","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EpsECokBCA8YAipABCRiQyvD1CcGcBIW00l1BtGqWTSM6afyqqqpvUWY1kOs/W1nv9r90dmEND6VzwHnrnRJqE33G2N3mzhTk8U75jIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDEIlJfCD94A7ieQu1RoMmH5cZP3hOegTI0rGIjDWHNAacKNfkR98C26G8p/C1vc0kWGJxYpz1gIQhCiYh66n1zlHPNUVVghOkByX4K0qvgIEPw+1oMTjdRCz+vH2ALiqqOM8aKPjVqcSEvCv7ioy3enH+26STxCq9OZgDtJ0t+qQfuBzkQsk02I4FBa85isda3HLvcGbhXiMYEoFhvJUmboIJoO2bsAsRbDyZdMfmSYTvfAVCXETrjsK1STYQMDUdlVThD2ii0Tgg4Uq7vlPwBtvcbFoQEO4y3wUvvYi8vbq39j+B27NE/vQ9OBLFP+fWMJJPvEEJaJB8oFnl6lA0FZg7vn1FE8AWDcZA09Mri2vmWBVRcFJDgA5iVm8Jg/ji4oEXBKSDmbgKvMT3/66xjNVLUO/cSxPKC/AEAdBpzPT6TFvzVpfji+GZQfxmvEUUQ7UuIo1THBE3ZCu9m+16xqIhB8+VSksMGIMOhDpX8sD03FPC9zOri80am90dSHGzMBjUxmkZ2YONqTh4k4YAQ=="}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":556,"cache_read_input_tokens":138558,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":556},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"14be9d41-f6f8-476e-ada9-7eb93e3f996b","request_id":"req_011Cd2pnFCgi5QPjbSS7mc2H"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pnHrBWxw1PwKC2WqqK","type":"message","role":"assistant","content":[{"type":"text","text":"Only the `as-of` provenance hash changed (basis and G2 unchanged) — a legitimate re-derivation. Committing:"}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":556,"cache_read_input_tokens":138558,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":556},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"de36c4d5-d3fc-40f0-add3-9f85b27d8157","request_id":"req_011Cd2pnFCgi5QPjbSS7mc2H"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pnHrBWxw1PwKC2WqqK","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_01RKE837tgwGSbDHsvv21Wj8","name":"Bash","input":{"command":"git commit -q -F - <<'EOF'\nWI-110: opus BUILD effort -> xhigh (static pin); OpenAI --variant answered\n\nOwner directive (2026-07-14 intake item 2): dial the BUILD-tier ANTHROPIC-OPUS\nreasoning effort up to xhigh. docs/agents.csv Env high->xhigh (one cell;\nFABLE/SONNET stay high); parse_env merges it at launch, WI-124 telemetry effort\nfield reads it back so every OPUS BUILD row logs effort=xhigh. Default settled:\nlive claude 2.1.201 ambient effort resolves to high (WI-109 holds), so xhigh is\na genuine dial-up. Before/after ARMED not fabricated: before baseline opus\nreviews 15.5/11.6 s/turn (WI-124 log); after captured on the next OPUS session.\nOpenAI answered (opencode 1.17.18): reasoning effort is `opencode run --variant\n<level>` - a CLI flag -> CmdTemplate, not an Env cell (corrects the intake\ndraft's config-file guess); left unwired (no s/turn telemetry parity). Per-phase\neffort map + computed selection stay deferred. Spec rewritten deferred->executed.\n\nNo spine/test change (config only; tests use synthetic registries). Handoff:\nrun-state RUNNING, next-wi WI-146 - WI-110 was the last standalone buffer, so\nkeep_nondependent advances the loop through the actionable owner-intake backlog\n(WI-146..151) while WI-144 stays paused and the g2-close sitting is DUE in\nparallel (rule OI-12, sequence campaigns). Reconciled untracked 054-REVIEW-A:\nfindings 1/2/4 addressed (spec status, sitting re-ratification wording, status.md\n120-line budget), the U5 requirement-change [MAJOR] left @owner for the sitting.\n\nGates: smoke 593 passed; full suite 747 passed; check.py --gate G2 PASS.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ngit log --oneline -1 | cat"},"caller":{"type":"direct"}}],"stop_reason":null,"stop_sequence":null,"stop_details":null,"usage":{"input_tokens":2,"cache_creation_input_tokens":556,"cache_read_input_tokens":138558,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":556},"output_tokens":2,"service_tier":"standard","inference_geo":"not_available"},"diagnostics":null,"context_management":null},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"31f8c18b-93ce-4464-9013-308c633cefb6","request_id":"req_011Cd2pnFCgi5QPjbSS7mc2H"}
++{"type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01RKE837tgwGSbDHsvv21Wj8","type":"tool_result","content":"=== derived-gate : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\derive_gate.py --check ===\r\nderive_gate: docs/gate up to date (G2).\r\n  PASS  derived-gate     0.1s\r\n\r\n=== skills-sync : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_skills_index.py --check-agents ===\r\ngen_skills_index: OK - 10 per-agent skill copy(ies) match source.\r\n  PASS  skills-sync      0.1s\r\n\r\n=== trajectory : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\check_trajectory.py ===\r\ncheck_trajectory: clean (158 work item(s), 132 done (84%), graph acyclic).\r\n  PASS  trajectory       0.1s\r\n\r\n=== registry-integrity : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\trace.py --strict-integrity ===\r\nTraceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\\test\\report.md\r\n  PASS  registry-integrity 0.2s\r\n\r\n=== okf : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_okf.py --check ===\r\ngen_okf: OKF bundle up to date (257 file(s)).\r\n  PASS  okf              0.2s\r\n\r\n=== trajectory-map : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_trajectory.py --check ===\r\nproject-state dashboard up to date.\r\n  PASS  trajectory-map   0.3s\r\n\r\n=== arch-map : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===\r\ncode map up to date.\r\n  PASS  arch-map         0.4s\r\ncheck_privacy: privacy check off (docs/privacy-check) — author not checked.\r\ncheck_privacy: clean (staged diff; secrets floor).\r\n\r\n=== format : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe -m ruff format --check project-trajectory/scripts tests ===\r\n72 files already formatted\n  PASS  format           0.1s\r\n33a575e WI-110: opus BUILD effort -> xhigh (static pin); OpenAI --variant answered","is_error":false}]},"parent_tool_use_id":null,"session_id":"354e3f52-8439-4c41-88df-560f6f904d53","uuid":"dfd2dec7-7d7a-4611-9fd8-9ae24c486eca","timestamp":"2026-07-14T23:33:59.577Z","tool_use_result":{"stdout":"=== derived-gate : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\derive_gate.py --check ===\r\nderive_gate: docs/gate up to date (G2).\r\n  PASS  derived-gate     0.1s\r\n\r\n=== skills-sync : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_skills_index.py --check-agents ===\r\ngen_skills_index: OK - 10 per-agent skill copy(ies) match source.\r\n  PASS  skills-sync      0.1s\r\n\r\n=== trajectory : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\check_trajectory.py ===\r\ncheck_trajectory: clean (158 work item(s), 132 done (84%), graph acyclic).\r\n  PASS  trajectory       0.1s\r\n\r\n=== registry-integrity : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\trace.py --strict-integrity ===\r\nTraceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\\test\\report.md\r\n  PASS  registry-integrity 0.2s\r\n\r\n=== okf : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_okf.py --check ===\r\ngen_okf: OKF bundle up to date (257 file(s)).\r\n  PASS  okf              0.2s\r\n\r\n=== trajectory-map : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_trajectory.py --check ===\r\nproject-state dashboard up to date.\r\n  PASS  trajectory-map   0.3s\r\n\r\n=== arch-map : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe C:\\Projects\\ai-template\\project-trajectory\\scripts\\gen_arch_map.py --check --strict-parse --src project-trajectory/scripts --doc docs/architecture.md ===\r\ncode map up to date.\r\n  PASS  arch-map         0.4s\r\ncheck_privacy: privacy check off (docs/privacy-check) — author not checked.\r\ncheck_privacy: clean (staged diff; secrets floor).\r\n\r\n=== format : C:\\Projects\\ai-template\\.venv\\Scripts\\python.exe -m ruff format --check project-trajectory/scripts tests ===\r\n72 files already formatted\n  PASS  format           0.1s\r\n33a575e WI-110: opus BUILD effort -> xhigh (static pin); OpenAI --variant answered","stderr":"","interrupted":false,"isImage":false,"noOutputExpected":false}}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":50,"estimated_tokens_delta":50,"uuid":"733a2e8d-a447-4b25-8366-443f64a101d2","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"system","subtype":"thinking_tokens","estimated_tokens":132,"estimated_tokens_delta":82,"uuid":"cdcb3edf-39e3-4c99-b9cc-be97ca8804f4","session_id":"354e3f52-8439-4c41-88df-560f6f904d53"}
++{"type":"assistant","message":{"model":"claude-opus-4-8","id":"msg_011Cd2pokYZhTSZJ4q6BZASz","type":"message","role":"assistant","content":[{"type":"thinking","thinking":"","signature":"EooECokBCA8YAipAbdFUNc18vJUtxBxgIzdTTCD3vXRz7Jg1MA9FQKPdrgDUoAfns1JU0KoxCH7tq9F8/uUzGJ8Ulpj3skazFm/vEDIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQ5Y2UxMWYwZS0wMTIxLTRhMGEtOTA1MS02MzNlZTJiZWQxYmESDBraJNoFMUDZoClCyxoMW14mkde+nebv3q/RIjAO+pA5CK7QJvLT0Rd1KedRJJakESyNFfOtDOoO3e5JvNnkbSxhOC7t6FwjEEzfSbkqrQIbSNH0tZ0Y0hhcKbv2FxesCAOvxzb3zcCInlDzUDU2CDQS4oKN6hc45WGAX3pWoCYmmBckibzqOyNwA5iVct8fGjm66PkIQw2P8TBoswKBpb2GlFl6xyEP5dUrja1o4YUPRbJsXSpbCsKTWNUt+sZmXjsNNEYuVj4hmavyHmK9VHEg92hxWJSFcROpFBG1k+oF
+[... byte cap hit — full stream in out/run-logs/ ...]
+rt=xhigh + its s/turn/Ctx/turn) - this WI arms the sensor, does not fabricate an after it did not run. (4) OpenAI answered: opencode 1.17.18 exposes reasoning effort as `opencode run --variant <low|medium|high|max|minimal>` (a CLI flag → CmdTemplate, NOT an Env cell - corrects the intake draft's config-file guess); left UNWIRED - no s/turn telemetry parity to measure an OpenAI dial-up, so it's a follow-up gated on parity not this directive. Per-phase effort map (#2) + computed selection (#3) stay deferred (spec un-defer triggers unchanged). No spine change (config only, WI-075/107/109 precedent); no test change (tests use synthetic registries; test_agent_loop asserts the effort key present regardless of value). PROCESS_OPTIONS untouched (the general Per-phase-effort paragraph already frames the knob; the pin lives in agents.csv Notes + spec). Spec: docs/specs/WI-110.md.",docs/specs/WI-110.md,,
+ WI-111,dev-setup --install delta-awareness - nothing-to-do fast path,scripts,,WI-109,done,"Owner-asked 2026-07-12 (wants to test dev-setup from their machine with no unnecessary installs): audit + fix. Audit: --check was already report-only (exit 0, zero mutations) and the agent CLIs are hint-only rows (never auto-installed under any mode); but a consented --install unconditionally ran `pip install --upgrade pip` + the 4-tool pip line and prompted even with a complete ./.venv - exactly the unnecessary-install class the owner ruled out. Fix: both twins (scripts/dev-setup.{sh,ps1}) gain a delta-aware fast path - when ./.venv already imports ruff+pytest+pytest_cov+xdist, report 'nothing to install' and stop BEFORE the prompt and the pip self-upgrade (the hooksPath floor wiring still runs: local idempotent git config, not an install; ps1 reuses HasModule, which already probes the venv interpreter). Verified LIVE on this machine (complete venv): report + floor no-op + fast-path line, no prompt, no pip, exit 0. Missing-tool path unchanged (prompt; pip no-ops already-satisfied packages). Textual fast-path assertion on both twins added to test_onboard_devsetup (executing --install in a test would prompt/mutate). (WI-112 later reshaped the fast path from exit-0 to skip-section so the agent-CLI offers still run.)",,,
+ WI-112,dev-setup agent-CLI consented installs + missing-CLI emphasis; model-access verification,scripts,,WI-111;WI-109,done,"Owner-directed 2026-07-12 (verify agent-resume can access each defined model; see the opencode errors; make dev-setup offer the CLIs per-user-choice). VERIFICATION: (a) ANTHROPIC models smoked LIVE via the VSCode-bundled binary (~/.vscode/extensions/anthropic.claude-code-2.1.200.../native-binary/claude - the only claude on this machine; NOT on any shell PATH): claude-fable-5 / opus / sonnet / haiku all exit 0 and returned the asked-for reply on the owner's real auth (opus response confirmed claude-opus-4-8; probes cost ~$0.64 total). (b) OPENAI rows demonstrated FAILING through the REAL path - `sh agent-resume.sh` preflight exits 2 listing every missing-CLI row WITH its WI-109 Notes hint (all 6 rows in the sandbox; only the 3 opencode rows once claude is installed), zero writes; the mid-run surface (CLI vanishing post-preflight) shown via run_session -> 'coordinator: session error: [Errno 2] ... opencode'. Live OPENAI smoke blocked until opencode install + auth (exact per-row commands in the log). DEV-SETUP: --install now OFFERS each agent CLI individually (offer_cli/Offer-Cli in both twins: [y/N] per CLI -> npm install -g @anthropic-ai/claude-code / opencode-ai -> post-install sign-in hint; npm-absent = honest [skip]; reads guarded so non-interactive declines instead of dying); the WI-111 venv fast path reshaped exit->skip-section so offers always run; --check and post-offer both EMPHASIZE the consequence (owner-directed): with an enabled row's CLI missing agent-resume.* cannot boot the walk-away loop (preflight refuses naming gap+hint) - skipping is fine with your own tools / an IDE extension (trim docs/agents-enabled accordingly). Demoed live: --check note + --install decline path (venv fast-path, both offers declined, NOTE block, exit 0, zero mutations). Tests: textual per-CLI-offer + npm-package + emphasis assertions on both twins (test_onboard_devsetup, 15 passed). Meta tooling only - no kit-shipped file, no spine change. OPEN with the owner: the ANTHROPIC-FABLE row (token verified live, not yet registered), strong-tier lead order, and opencode-vs-codex routing for the OPENAI rows.",,,
+ WI-113,Tier rename (weak->quick) + Claude re-lineup (Fable/Opus/Sonnet) + full model re-verification,unattended,SR-045,WI-109;WI-112,done,"Owner-ruled 2026-07-12: Fable=strong / Opus=medium / Sonnet=quick, and the tier vocabulary renamed strong/medium/QUICK (was weak). KIT (never-breaking): agent_route.TIER_ORDER=(quick,medium,strong) + new normalize_tier() - legacy `weak` reads as `quick` (the Provider->Family precedent) - applied at load_registry, select(), agent_loop.phase_tier and the tier-map preflight; --tier-map help + module docstrings + guardrails prose updated; agents.template.csv example row weak->quick + vocab sentence; PROCESS_OPTIONS guardrails line. META: docs/agents.csv re-lineup (ANTHROPIC-FABLE claude-fable-5/5/strong ADDED and leads; OPUS->medium; SONNET->quick; HAIKU row dropped per the ruled lineup; SOL/TERRA/LUNA strong/medium/quick), agents-enabled reordered (FABLE,SOL,OPUS,TERRA,SONNET,LUNA), launcher twins' fallback maps re-pointed (AGENT_MODEL=claude-fable-5; PLAN/BUILD/DESIGN-CHECK/CRITIQUE=claude-fable-5, REVIEW-A/B=opus), guardrails-policy comment haiku->sonnet/quick. RE-VERIFICATION (both CLIs now installed+authed: claude 2.1.207 on PATH, opencode OpenAI oauth): mechanical - 6/6 rows parse, 6/6 enabled resolve, preflight exe checks ALL PASS, routing PLAN/BUILD->FABLE, REVIEW-A->TERRA (cross-family), REVIEW-B->OPUS (degraded-legal), CRITIQUE->SOL, banner '6 enabled of 6'; LIVE through the loop's own build_argv+parse_env+run_session from a scratchpad cwd - fable(8.0s)/opus(2.2s)/sonnet(2.8s) with CLAUDE_CODE_EFFORT_LEVEL=high merged + sol(2.9s)/terra(2.4s) ALL replied the asked-for 'OK' exit 0; gpt-5.6-luna HANGS today (id valid - present in `opencode models`; 2 attempts 240s/60s, zero output; provider/plan-side, not config) - runtime impact bounded: TIMEOUT->cooldown->re-route, quick tier still routes SONNET; retry later or owner-rule gpt-5.6-luna-fast as an alternate row. Tests: test_weak_is_a_legacy_alias_for_quick (TIER_ORDER, normalize, legacy registry row loads as quick, select('weak') works, phase_tier normalizes); legacy-weak rows in existing tests kept deliberately as alias proofs; 91 routing/loop tests green. No spine text carries the tier vocab (grep-verified) - no re-attestation impact.",docs/log.md,,
+diff --git a/docs/specs/WI-110.md b/docs/specs/WI-110.md
+index a9517e9..e5c8d7f 100644
+--- a/docs/specs/WI-110.md
++++ b/docs/specs/WI-110.md
+@@ -1,42 +1,72 @@
+-# WI-110 — Effort-level selection for agent sessions (deferred)
++# WI-110 — Effort-level selection for agent sessions
+ 
+-**Status: deferred** (filed 2026-07-12 at the WI-109 sitting, owner-directed:
+-"perhaps computing this could be a part of a future update and kept as a
+-deferred work item — add scripts or methods to select the proper effort level
+-when applying a claude-level agent").
++**Status: EXECUTED 2026-07-14** (the static-pin half). Filed deferred
++2026-07-12 at the WI-109 sitting; **re-queued 2026-07-14** by owner directive
++(intake item 2, [owner-intake-2026-07-14.md](owner-intake-2026-07-14.md)):
++"Opus implementation should be set to extra high." The deferral's "wait for
++evidence" is superseded by the explicit ruling for the OPUS static pin; the
++per-phase effort map and computed selection **remain deferred** (see below).
+ 
+-## What stands today (the static pin, WI-109)
++## What shipped (WI-110, this session)
+ 
+-The ANTHROPIC rows in `docs/agents.csv` pin `CLAUDE_CODE_EFFORT_LEVEL=high`
+-via their `Env` cells — the owner's "high or very high as a good balance",
+-implemented as the documented-safe half (`high` is also the Opus 4.8 default,
+-so the pin declares it against default drift). Verified facts at filing time
+-(claude CLI): `--effort low|medium|high|max` exists, session-scoped, works
+-with `-p`; the env var additionally accepts `xhigh` on Opus 4.8/4.7. The env
+-route was chosen over the flag because an unread env var is a no-op on older
+-CLIs while an unknown flag fails the session.
++1. **OPUS → `xhigh`.** The `ANTHROPIC-OPUS` row in
++   [`docs/agents.csv`](../agents.csv) pins `CLAUDE_CODE_EFFORT_LEVEL=xhigh`
++   (was `high`) via its `Env` cell — one cell. The env route (not the `--effort`
++   flag) was already chosen at WI-109 because an unread env var is a no-op on
++   older CLIs while an unknown flag fails the session; `xhigh` composes the same
++   way. FABLE/SONNET stay `high`. The value reaches the session because
++   `agent_route.parse_env` merges the `Env` cell over the launch environment,
++   and the WI-124 telemetry (`agent_loop`) reads `CLAUDE_CODE_EFFORT_LEVEL` back
++   into the log header's `effort` field — so every OPUS BUILD row now records
++   `effort=xhigh`.
+ 
+-## The deferred work
++2. **The default question, resolved.** WI-109 recorded `high` as the Opus 4.8
++   default; the owner-intake draft called `xhigh` the default — a contradiction
++   this WI had to settle. Live check (claude CLI 2.1.201, this repo's driver
++   env): with no explicit pin the ambient `CLAUDE_CODE_EFFORT_LEVEL` resolves to
++   **`high`**, so `xhigh` is a genuine dial-up above the default, not a no-op.
++   `xhigh` is a valid live level (the owner's global `~/.claude/settings.json`
++   already carries `"effortLevel": "xhigh"`; the ladder is
++   `low/medium/high/xhigh/max`, `xhigh` between `high` and `max`).
++
++3. **Before/after evidence (WI-124 s/turn telemetry).** *Before* baseline (OPUS
++   at `high`, from the WI-124 log): opus iteration reviews **15.5 / 11.6 s/turn**
++   at ~high-context volumes. *After* is captured automatically going forward —
++   the next OPUS BUILD/review session logs `effort=xhigh` with its own `s/turn`
++   and `Ctx/turn`, so the delta is read from `iteration_index.md`, not guessed.
++   This WI arms the measurement; it does not fabricate an "after" number it did
++   not run. (A dedicated gate-bearing `xhigh` vs `high` A/B is available if the
++   telemetry shows the pace delta is worth a controlled session.)
++
++4. **OpenAI effort — answered.** Yes, OpenAI exposes reasoning effort. Live
++   check (opencode 1.17.18): `opencode run --variant <level>` — "model variant
++   (provider-specific reasoning effort, e.g., high, max, minimal)". So it is a
++   **CLI flag** (correcting the intake draft's "config-file-only, needs an
++   `opencode.json`" guess), which would go in the OPENAI rows' `CmdTemplate`
++   (`--variant …`), **not** an `Env` cell. Left **unwired** this WI: the review
++   legs are gate-bearing and "route hard work up" would favor a dial-up, but the
++   WI-124 s/turn telemetry is claude-JSON-specific, so an OpenAI effort change
++   can't be measured before/after the way the OPUS one can. Wiring it is a
++   follow-up gated on opencode telemetry parity, not this owner directive.
++
++## Still deferred (un-defer triggers unchanged)
++
++The owner ratified the **static OPUS pin only**. These stay future work:
+ 
+-1. **Verify `xhigh` live** (the "very high" half): one gate-bearing session at
+-   `xhigh` vs `high` — wall-time, cost, gate outcome — before any dial-up; a
+-   failed experiment costs one session, a blind pin costs every session.
+ 2. **Per-phase effort map** — an `AGENT_EFFORT_MAP`/`--effort-map` sibling of
+-   `AGENT_TIER_MAP` (the PROCESS_OPTIONS "Per-phase effort" paragraph, WI-049,
+-   already frames effort as a sibling routing knob and records the two
+-   evidenced cautions: *low effort fabricates → route hard work up*; only
+-   thin, replaceable effort wiring bites). Natural shape: effort as a
+-   per-phase declared value merged into the row Env at launch, so it composes
+-   with the pair-row model without a schema change.
+-3. **Computed selection (speculative — needs evidence first):** derive effort
+-   from session signals (gate-bearing vs docs-only WI, spec size, retry/escalation
+-   state — e.g. a lose-shift retry runs `xhigh`). Do not build until the
+-   iteration logs show phase-effort variance that a static map can't serve;
+-   that evidence threshold is the un-defer trigger.
+-
+-## Un-defer when
+-
+-- The xhigh experiment is worth a sitting (owner call), or
++   `AGENT_TIER_MAP` (PROCESS_OPTIONS "Per-phase effort", WI-049). Natural shape:
++   effort as a per-phase declared value merged into the row `Env` at launch, so
++   it composes with the pair-row model without a schema change. Un-defer when
++   iteration logs show phase-effort variance a single static pin can't serve.
++
++3. **Computed selection (speculative)** — derive effort from session signals
++   (gate-bearing vs docs-only WI, spec size, retry/escalation state — e.g. a
++   lose-shift retry runs `xhigh`). Do not build until the logs show variance a
++   static map can't serve.
++
++## Un-defer when (for #2/#3)
++
+ - iteration logs show sessions failing in ways plausibly effort-bound
+   (fabrication at low reasoning depth, stalls on hard refactors), or
+-- a second provider exposes a comparable knob worth unifying behind one map.
++- a second provider's knob (opencode `--variant`) is worth unifying behind one
++  map with telemetry parity to measure it.
+diff --git a/docs/status.md b/docs/status.md
+index ff77ae7..a78c97f 100644
+--- a/docs/status.md
++++ b/docs/status.md
+@@ -43,18 +43,17 @@ home elsewhere — don't restate it here:
+ 
+ - **Open items** _(one bullet per item; `OI-N` ids are stable and never
+   renumbered):_
+-  - **The phase-v3 g2-close ratification sitting is now DUE** (a *batched* human
+-    touch, not a loop stop). WI-144 (the campaign-closing slice) has **exhausted
+-    its critique budget** (`AGENT_CRITIQUE_MAX=3`: 042/048/052 all
+-    CHANGES-REQUESTED on SR-052/053/054), so under `single-ratify`'s budget
+-    `failure_action` the slice **pauses** and the block surfaces for the batched
+-    ratification — but `keep_nondependent` keeps the loop **RUNNING** on
+-    non-dependent work (next: **WI-110**). The sitting must (a) ratify the v3 g2
+-    batch, (b) rule the **OI-12** critique disposition — authorize the residual
+-    buildable A4/T4 accessibility fixes **and** the 3 TC-HARDEN change-intake +
+-    the U5 palette taxonomy — and (c) sequence the queued campaigns (owner-intake
+-    WI-146+, research-knowledge WI-152+). WI-144 resumes for its final build round
+-    once the sitting rules OI-12.
++  - **The phase-v3 g2-close ratification sitting is DUE** — a batched human touch
++    *parallel* to the loop, not a stop: `keep_nondependent` keeps run-state
++    RUNNING on the non-dependent owner-intake WIs, and a NEEDS-HUMAN park while
++    those queued WIs are actionable is a stale end-state `trajectory --strict`
++    rejects. WI-144 is `active` but **paused** — its critique budget is exhausted
++    (`AGENT_CRITIQUE_MAX=3`; 042/048/052 CHANGES-REQUESTED on SR-052/053/054). The
++    sitting rules **OI-12** (the critique disposition: buildable A4/T4 fixes + the
++    owner-gated 3 TC-HARDEN / U5 palette taxonomy) and sequences the queued
++    campaigns (owner-intake vs research-knowledge); WI-144 then resumes its final
++    build round. (The `[v3]-[g2]` *design* batch was already ratified 2026-07-14
++    ([log.md](log.md)); this is the g2-close, not a re-ratification.)
+   - **Needs \<human>** _(ratification history — including the 2026-07-14 sitting
+     that ratified the `[v3]-[g2]` batch and the research-knowledge spec — lives
+     in [log.md](log.md) Decisions; under `single-ratify` the loop does **not**
+@@ -73,32 +72,30 @@ home elsewhere — don't restate it here:
+       SR-052/053/054 rubrics; rec: accept — six rubric-meeting fixes are WI-144
+       build work; the **U5** anchor + phase-hue de-collision + 3 TC-HARDEN are
+       owner-gated (ratify at phase-g2 close). Depth in [open-items.md](open-items.md).
+-- **Queued (v3 dev slices, owner intake 2026-07-13** —
+-  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ **live**,
+-  running G2→G3 in series. The SR-051-rev interface-wired descend-a-layer render,
+-  the Process-tab intake + human-decision loop panels (SR-055), and the SR-056
+-  decomposition render polish (with OI-10 folded) all **shipped** (log.md
+-  2026-07-14; phase v2 at G3). Remaining:
+-  **WI-144** (dashboard UI-quality pass + the SR-052/053/054 Critique rows — the
+-  campaign-closing slice that arms SR-047's critique loop and runs the full gate
+-  bar at close)._
++- **Queued (v3 dev slice, owner intake 2026-07-13** —
++  [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md)):_ the
++  earlier SR-051-rev / SR-055 / SR-056 slices **shipped** ([log.md](log.md)
++  2026-07-14; phase v2 at G3). Remaining: **WI-144** (dashboard UI-quality pass +
++  the SR-052/053/054 Critique rows — arms SR-047's critique loop, runs the full
++  gate bar at close)._
+ - **Queued (research-knowledge campaign, OI-9 §8** —
+   [specs/research-knowledge.md](specs/research-knowledge.md)):_ filed at the
+   2026-07-14 ratification — **WI-152** (knowledge home) · **WI-153** (trace.py
+   ref integrity + knowledge⇒component coupling) · **WI-154** (process text) ·
+   **WI-155** (dogfood packs + the seed prompt→image research WI, `BuildTier=
+   strong`) · **WI-156** (kit-provisioned pack library) · **WI-157** (skills
+-  domains filter); **WI-158** deferred (OKF pack export). Sequence after the v3
+-  slices unless the owner reorders `docs/next-wi`._
++  domains filter); **WI-158** deferred (OKF pack export). The owner sequences
++  this campaign at the g2-close sitting; do not auto-start it._
+ - **Queued (owner intake 2026-07-14** — triage + answers:
+   [specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)):_
+   **WI-146** (ratification tree view + brief lint) · **WI-147** (graceful
+   pause) · **WI-148** (weekday blackout window) · **WI-149** (lowest-gate-first
+   advisory) · **WI-150** (planner-assigned BuildTier) · **WI-151** (throughline
+-  pointer) · **WI-110** re-queued (owner directive: opus BUILD effort → xhigh,
+-  verified via the iteration-index s/turn telemetry). Their sitting-gate
+-  predecessor is now satisfied (the sitting closed); sequence after the v3
+-  slices unless the owner reorders `docs/next-wi`._
++  pointer). Their sitting-gate predecessor is satisfied (the 2026-07-14 sitting
++  closed), so these are the loop's **actionable non-dependent backlog** — the
++  loop works them in id order (the standalone opus→xhigh directive already
++  shipped 2026-07-14, see [log.md](log.md)) unless the owner reorders
++  `docs/next-wi` at the pending g2-close sitting._
+ - **Deferred backlog** _(first-class `deferred` rows; each carries its reason in
+   the registry — read it there, not here):_ **WI-060 · WI-061 · WI-062 ·
+   WI-063 · WI-064 · WI-065 · WI-080 · WI-081 · WI-082 · WI-108** in
+@@ -106,18 +103,11 @@ home elsewhere — don't restate it here:
+   the `main-decomposition` campaign (**WI-080** → **WI-081**), sequenced *behind*
+   the owner sitting (highest-risk, test-seams-first, behavior-preserving).
+ - **External follow-up** _(not this repo's work):_ guardrails content enrichment
+-  is owner-ruled to live in `TheColliny/FableClaudeMDForOpus`, pulled downstream
+-  via the vendoring layer — nothing to build here.
+-- **Next action:** **WI-110** ([next-wi](next-wi)) — a standalone, already-ratified
+-  owner directive (opus BUILD effort → `xhigh`; the one-cell `Env` change +
+-  before/after `s/turn` telemetry). It is the next non-dependent unit the loop
+-  works while **WI-144 is paused** (its critique budget is exhausted; disposition in
+-  **OI-12**, [open-items.md](open-items.md)) awaiting the batched phase-v3 g2-close
+-  ratification sitting. WI-144 is `active` in the registry (no `paused` enum — the
+-  pause is recorded above + in [next-wi](next-wi)); it resumes for its final build
+-  round once the sitting rules OI-12, then the full gate bar and the spine rejoins
+-  G3. Round-by-round build/critique evidence lives in [log.md](log.md) and OI-12,
+-  not here. [run-state](run-state) is **RUNNING**.
++  is owner-ruled to live in `TheColliny/FableClaudeMDForOpus` (vendored downstream).
++- **Next action:** **WI-146** ([next-wi](next-wi)) — run-state **RUNNING**. The
++  loop works the actionable owner-intake backlog (WI-146…151, id order) while
++  WI-144 is paused and the g2-close sitting is DUE in parallel (Open items above).
++  Shipped work + round-by-round evidence → [log.md](log.md) / OI-12, not here.
+ 
+ ## Scope
+[0m
+The target commit is documentation/configuration-only and does not alter SN/SR/LLR/TC rows. I’m checking its state transitions against the declared unattended policies and running the harnesses from the resulting tree.
+[0m→ [0mRead docs/gate-policy
+[0m→ [0mRead docs/gate-policy.md
+[0m→ [0mRead docs/status.md
+[0m→ [0mRead docs/agents.csv
+[0m→ [0mRead docs/specs/owner-intake-2026-07-14.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --strict-integrity
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md
+[0m
+[0m$ [0mgit show --format= --name-only 33a575e; git diff --check 985f205..33a575e; git diff --numstat 985f205..33a575e
+PROJECT_STATE.html
+docs/agents.csv
+docs/gate
+docs/log.md
+docs/next-wi
+docs/requirements/work-items.csv
+docs/reviews/054-REVIEW-A.md
+docs/specs/WI-110.md
+docs/status.md
+6	6	PROJECT_STATE.html
+2	2	docs/agents.csv
+1	1	docs/gate
+91	0	docs/log.md
+17	8	docs/next-wi
+1	1	docs/requirements/work-items.csv
+5	0	docs/reviews/054-REVIEW-A.md
+64	34	docs/specs/WI-110.md
+29	39	docs/status.md
+[0m
+[0m$ [0mpython project-trajectory/scripts/check.py --gate G2 --jobs 0
+=== design-flows : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_flows.py --no-placeholders ===
+check_flows: OK - 3 flow diagram(s), 25 requirement id(s) cited, all known.
+  PASS  design-flows     0.1s
+
+=== derived-gate : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\derive_gate.py --check ===
+derive_gate: docs/gate up to date (G2).
+  PASS  derived-gate     0.1s
+
+=== trajectory : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_trajectory.py --strict ===
+check_trajectory: clean (158 work item(s), 132 done (84%), graph acyclic).
+  PASS  trajectory       0.1s
+
+=== traceability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\trace.py --strict --no-placeholders --html ===
+Traceability: SN=24 SR=56 LLR=57 TC=57 orphans=0 integrity=0 placeholders=0 components=5 component-findings=0 interfaces=52 interface-findings=0. Report -> docs\test\report.md + docs\test\report.html
+  PASS  traceability     0.2s
+
+=== privacy : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+  PASS  privacy          0.6s
+
+=== doc-navigability : C:\Python38\python.exe C:\Projects\ai-template\project-trajectory\scripts\check_docs.py --ignore docs/test/report.md --stale ===
+check_docs: WARN - orphan doc (no path from an entry root): docs/iteration_index.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/repo-review-2026-07-12b.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/003-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/006-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/008-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/010-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/012-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/014-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/017-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/019-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/023-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/025-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/027-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/029-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/031-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/034-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/036-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/038-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/040-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/044-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/046-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/050-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/054-REVIEW-A.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/reviews/056-CRITIQUE.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/WI-107.md
+check_docs: WARN - orphan doc (no path from an entry root): docs/specs/derived-gate-model.md
+check_docs: hint - possibly stale: README.md:34 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:35 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:37 links project-trajectory/scripts/check_docs.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:41 links project-trajectory/scripts/bootstrap.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:50 links project-trajectory/scripts/agent_loop.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:137 links project-trajectory/scripts/trace.py (changed after the doc)
+check_docs: hint - possibly stale: README.md:154 links project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: README.md:267 links project-trajectory/scripts/check.py (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:7 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/open-items.md:51 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:50 links requirements/work-items.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:145 links ../project-trajectory/scripts/agent_loop.py#L1112 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:169 links ../project-trajectory/scripts/trace.py#L891 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:170 links ../project-trajectory/scripts/trace.py#L2-L213 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:202 links ../project-trajectory/scripts/check.py#L225 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:204 links ../project-trajectory/scripts/agent_loop.py#L1383 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:205 links ../tests/conftest.py#L30 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:230 links ../project-trajectory/scripts/derive_gate.py#L78 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:231 links ../project-trajectory/scripts/trace.py#L1024 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:250 links ../project-trajectory/scripts/check.py#L133 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:252 links ../project-trajectory/scripts/check.py#L606 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:266 links ../project-trajectory/scripts/trace.py#L250 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:267 links ../project-trajectory/scripts/derive_gate.py#L110 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:269 links ../project-trajectory/scripts/trace.py#L1163 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:270 links ../project-trajectory/scripts/derive_gate.py#L141 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:283 links ../project-trajectory/scripts/gen_trajectory.py#L275 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:316 links ../.github/workflows/test.yml#L39 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:317 links ../tests/conftest.py#L42-L46 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:334 links ../project-trajectory/hooks/pre-commit#L84 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:337 links ../project-trajectory/hooks/pre-commit#L134 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:348 links ../project-trajectory/scripts/trace.py#L1352 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:350 links ../project-trajectory/scripts/trace.py#L679 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:366 links ../tests/conftest.py#L62 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:367 links ../.coveragerc (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:392 links ../tests/conftest.py#L42 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:419 links ../project-trajectory/scripts/trace.py#L389 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:426 links ../project-trajectory/scripts/agent_loop.py#L559 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:430 links ../project-trajectory/scripts/trace.py#L449 (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:440 links ../project-trajectory/registries/work-items.template.csv (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:458 links ../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/repo-review-2026-07-12b.md:459 links ../agent-resume.sh (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:45 links ../../agent-resume.cmd (changed after the doc)
+check_docs: hint - possibly stale: docs/specs/WI-107.md:46 links ../../agent-resume.sh (changed after the doc)
+check_docs: OK - 78 doc(s), 362 intra-repo link(s), 0 broken (26 orphan warning(s)).
+  PASS  doc-navigability 14.1s
+
+========================================================
+Check summary (gate G2, tier all):
+  PASS  derived-gate     0.1s
+  PASS  traceability     0.2s
+  PASS  privacy          0.6s
+  PASS  doc-navigability 14.1s
+  PASS  design-flows     0.1s
+  PASS  trajectory       0.1s
+========================================================
+RESULT: PASS
+[0m
+The independent gate run passed: `check.py --gate G2 --jobs 0` reported `RESULT: PASS`; `trace.py --strict-integrity` reported zero orphans and integrity findings. The WI’s completion claim still conflicts with its owner-intake acceptance scope: it records only a baseline and defers the required real xhigh BUILD measurement.
+[0m% [0mPatch 1 file
+[0m
+[0m# [0mTodos
+[✓] Inspect target commit and governing requirement surfaces
+[✓] Run check and trace independently
+[✓] Write requested independent review artifact
+[0m
+Review recorded in `docs/reviews/058-REVIEW-A.md`.
+
+Verdict: `CHANGES-REQUESTED` with one MAJOR finding. Independent `check.py --gate G2 --jobs 0` and `trace.py --strict-integrity` both passed.

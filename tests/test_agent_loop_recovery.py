@@ -1,0 +1,361 @@
+"""Crash safety + git-as-authority recovery — the fault-injected crash matrix
+(WI-185, SR-064/LLR-065/TC-065; docs/specs/parallel-wi-dispatch.md §11/§16).
+
+Each matrix test crashes a REAL dispatcher run (AGENT_FAULT_POINT hard-kills
+the process with os._exit at the named lifecycle boundary — no cleanup, no
+atexit), then relaunches WITHOUT the fault and asserts the §16 invariants:
+
+  - restart reconstructs exactly one owner (never a re-reserve of a held WI,
+    never a double-run);
+  - no WI is falsely done, and no unintegrated commit or dirty tree is
+    deleted;
+  - llm/integration is atomically either ENTIRELY before or ENTIRELY after an
+    integration — a crash on either side of the CAS recovers to exactly one
+    integration of the train;
+  - the development ref/worktree is always in one of the three recoverable
+    publication states (fully unpublished / fully synchronized / in-between
+    with a valid intent), and recovery finishes the publish idempotently;
+  - deleting ALL of out/dispatch/ before the restart changes nothing — Git is
+    the authority, the journal is cache;
+  - unprovable ownership (a train claiming a WI outside its reservation)
+    quarantines that train only, while disjoint proven work proceeds.
+"""
+
+import csv
+import os
+import subprocess
+import sys
+
+import pytest
+from conftest import SCRIPTS, load_script
+
+agent_loop = load_script("agent_loop")
+
+pytestmark = pytest.mark.skipif(
+    not __import__("shutil").which("git"), reason="needs git on PATH"
+)
+
+HEADER = [
+    "WI-ID",
+    "Title",
+    "Workstream",
+    "SR-Refs",
+    "Predecessors",
+    "Status",
+    "Deliverable",
+    "SpecRef",
+    "BuildTier",
+    "SafetyClass",
+]
+
+
+def _git(repo, *args):
+    p = subprocess.run(
+        ["git", "-C", str(repo)] + list(args),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    assert p.returncode == 0, p.stdout + p.stderr
+    return p.stdout.strip()
+
+
+def _wi_row(wid, preds="", safety="ordinary", status="queued"):
+    return [
+        wid,
+        "Work " + wid,
+        "ws",
+        "SR-064",
+        preds,
+        status,
+        "shipped" if status == "done" else "",
+        "docs/specs/thing.md",
+        "medium",
+        safety,
+    ]
+
+
+def _make_repo(tmp_path, rows):
+    repo = tmp_path / "repo"
+    (repo / "docs" / "requirements").mkdir(parents=True)
+    with open(
+        str(repo / "docs" / "requirements" / "work-items.csv"),
+        "w",
+        encoding="utf-8",
+        newline="",
+    ) as fh:
+        w = csv.writer(fh)
+        w.writerow(HEADER)
+        w.writerows(rows)
+    (repo / "AGENTS.md").write_text("# agents\n", encoding="utf-8")
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
+    (repo / "docs" / "gate-policy").write_text("autonomous\n", encoding="utf-8")
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "loop@example.com")
+    _git(repo, "config", "user.name", "Loop Test")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    return repo
+
+
+FAKE = r"""
+import argparse, pathlib, re, subprocess, sys
+ap = argparse.ArgumentParser()
+ap.add_argument("--control", required=True)
+ap.add_argument("--model", default="")
+ap.add_argument("-p", "--prompt", default="")
+args, _ = ap.parse_known_args()
+ctl = pathlib.Path(args.control)
+with open(str(ctl / "sessions.txt"), "a", encoding="utf-8") as fh:
+    fh.write("s\n")
+wi = re.search(r"- WI: (WI-\d+)", args.prompt).group(1)
+train = re.search(r"- Train: (\S+) \(branch", args.prompt).group(1)
+base = re.search(r"integration base ([0-9a-f]+)\)", args.prompt).group(1)
+pathlib.Path("work-" + wi + ".txt").write_text("work", encoding="utf-8")
+subprocess.run(["git", "add", "-A"], check=True)
+msg = "build " + wi + "\n\nWI: " + wi + "\nTrain: " + train + "\nBase: " + base + "\n"
+subprocess.run(["git", "commit", "-q", "-m", msg], check=True)
+sys.exit(0)
+"""
+
+
+def _setup(tmp_path, rows):
+    repo = _make_repo(tmp_path, rows)
+    ctl = tmp_path / "ctl"
+    ctl.mkdir()
+    fake = tmp_path / "fake.py"
+    fake.write_text(FAKE, encoding="utf-8")
+    template = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
+        sys.executable, fake, ctl
+    )
+    return repo, ctl, template
+
+
+def _dispatch(repo, template, fault=None):
+    env = {k: v for k, v in os.environ.items() if not k.startswith("AGENT_")}
+    if fault:
+        env["AGENT_FAULT_POINT"] = fault
+    return subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPTS / "agent_loop.py"),
+            "--root",
+            str(repo),
+            "--agent-cmd",
+            template,
+            "--pause",
+            "0",
+            "--poll-seconds",
+            "0.2",
+            "--model",
+            "test",
+            "--jobs",
+            "2",
+        ],
+        cwd=str(repo),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        env=env,
+    )
+
+
+def _reservations(repo):
+    out = _git(repo, "for-each-ref", "--format=%(refname)", "refs/llm/reservations")
+    return {ln.rsplit("/", 1)[1] for ln in out.splitlines() if ln.strip()}
+
+
+def _done_rows(repo, ref="HEAD"):
+    show = _git(repo, "show", ref + ":docs/requirements/work-items.csv")
+    return [
+        ln.split(",", 1)[0]
+        for ln in show.splitlines()
+        if ",done," in ln and ln.startswith("WI-")
+    ]
+
+
+def _integrations_for(repo, ref="HEAD"):
+    log = _git(repo, "log", "--format=%s", ref)
+    return [ln for ln in log.splitlines() if ln.startswith("integrate: train")]
+
+
+def _crash_then_recover(tmp_path, fault, wipe_journal=False):
+    """Run the matrix step: crash at `fault`, optionally wipe out/dispatch/,
+    relaunch clean, and return (repo, ctl, crash_proc, recover_proc)."""
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    crash = _dispatch(repo, template, fault=fault)
+    assert crash.returncode == agent_loop.FAULT_EXIT, (
+        "the fault must hard-kill the run: " + crash.stdout + crash.stderr
+    )
+    if wipe_journal:
+        import shutil
+
+        shutil.rmtree(str(repo / "out" / "dispatch"), ignore_errors=True)
+    recover = _dispatch(repo, template)
+    assert recover.returncode == agent_loop.EXIT_DONE, recover.stdout + recover.stderr
+    return repo, ctl, crash, recover
+
+
+# --- the crash matrix -------------------------------------------------------------
+
+
+def test_crash_during_reservation_transaction(tmp_path):
+    # Before the atomic transaction lands: no refs, no branch — only an
+    # unreachable metadata object. Recovery is a clean re-derive.
+    repo, ctl, crash, recover = _crash_then_recover(tmp_path, "reserve-pre-txn")
+    assert _done_rows(repo) == ["WI-201"]
+    assert _reservations(repo) == set()
+    assert len(_integrations_for(repo)) == 1, "exactly one integration"
+
+
+def test_crash_after_reservation_before_first_commit(tmp_path):
+    # The §16 point: every constituent reservation reconstructs from
+    # refs/llm/reservations/* INCLUDING before its first WI commit — the
+    # relaunch resumes the same train, never double-reserving.
+    repo, ctl, crash, recover = _crash_then_recover(tmp_path, "reserve-post-txn")
+    assert _done_rows(repo) == ["WI-201"]
+    assert _reservations(repo) == set()
+    events = (repo / "out" / "dispatch" / "events.jsonl").read_text("utf-8")
+    assert '"state": "resume"' in events, "recovery resumes the reserved train"
+    assert '"reserve"' not in events.replace('"reserve-failed"', ""), (
+        "a held reservation is never re-reserved"
+    )
+    assert len(_integrations_for(repo)) == 1
+
+
+def test_crash_immediately_before_integration_cas(tmp_path):
+    # The staging commit exists but the CAS never ran: llm/integration is
+    # ENTIRELY BEFORE the integration; recovery recomposes and lands it once.
+    repo, ctl, crash, recover = _crash_then_recover(tmp_path, "pre-integration-cas")
+    assert _done_rows(repo) == ["WI-201"]
+    assert len(_integrations_for(repo)) == 1, "recomposition must not double-integrate"
+    assert _reservations(repo) == set()
+
+
+def test_crash_immediately_after_integration_cas(tmp_path):
+    # The CAS advanced but reservations were never released and nothing
+    # published: llm/integration is ENTIRELY AFTER. Recovery restores
+    # `integrated` from the registry ON the ref (never a second integration),
+    # finishes the release, and publishes idempotently.
+    repo, ctl, crash, recover = _crash_then_recover(tmp_path, "post-integration-cas")
+    assert _done_rows(repo) == ["WI-201"]
+    assert len(_integrations_for(repo)) == 1, "never re-integrated"
+    assert _reservations(repo) == set()
+    events = (repo / "out" / "dispatch" / "events.jsonl").read_text("utf-8")
+    assert '"state": "integrated"' in events, "restored, not re-run"
+    # The worker ran in the FIRST process only — one session total.
+    assert (ctl / "sessions.txt").read_text("utf-8").count("s") == 1, (
+        "the WI was double-run"
+    )
+
+
+def test_crash_after_intent_before_dev_cas(tmp_path):
+    # The intent ref exists, the dev ref never moved: fully unpublished with a
+    # valid intent — recovery reuses the identical intent and publishes.
+    repo, ctl, crash, recover = _crash_then_recover(tmp_path, "post-intent")
+    assert _done_rows(repo) == ["WI-201"]
+    code = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repo),
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "refs/llm/publish-intent",
+        ],
+        capture_output=True,
+    ).returncode
+    assert code != 0, "exactly one intent lifecycle — deleted after the sync"
+    assert _git(repo, "rev-parse", "HEAD") == _git(
+        repo, "rev-parse", "refs/heads/llm/integration"
+    )
+
+
+def test_crash_between_dev_cas_and_sync(tmp_path):
+    # The dev ref moved to the target but the worktree still sits at the old
+    # hash: the in-between state, provable ONLY through the intent. Recovery
+    # syncs idempotently — never classifying the stale checkout as user dirt.
+    repo, ctl, crash, recover = _crash_then_recover(tmp_path, "post-dev-cas")
+    assert _done_rows(repo) == ["WI-201"]
+    assert _git(repo, "rev-parse", "HEAD") == _git(
+        repo, "rev-parse", "refs/heads/llm/integration"
+    )
+    status = _git(repo, "status", "--porcelain")
+    tracked = [ln for ln in status.splitlines() if ln and not ln.startswith("??")]
+    assert not tracked, "the sync completed cleanly"
+    code = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repo),
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "refs/llm/publish-intent",
+        ],
+        capture_output=True,
+    ).returncode
+    assert code != 0
+
+
+def test_out_dispatch_deletion_does_not_prevent_reconstruction(tmp_path):
+    # The §16 capstone: the journal is cache — wipe ALL of out/dispatch/
+    # after the crash and recovery still reconstructs from Git alone.
+    repo, ctl, crash, recover = _crash_then_recover(
+        tmp_path, "post-integration-cas", wipe_journal=True
+    )
+    assert _done_rows(repo) == ["WI-201"]
+    assert len(_integrations_for(repo)) == 1
+    assert _reservations(repo) == set()
+    assert (ctl / "sessions.txt").read_text("utf-8").count("s") == 1
+
+
+def test_unprovable_ownership_quarantines_only_that_train(tmp_path):
+    # A train branch carrying a WI trailer OUTSIDE its reservation set is
+    # unprovable ownership: that train quarantines (nothing deleted), while
+    # the disjoint classified WI builds and integrates normally.
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201"), _wi_row("WI-202")])
+    head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
+    assert agent_loop.reserve_traincar(repo, "t-rogue", ["WI-202"], head) is None
+    wt = tmp_path / "wt"
+    _git(repo, "worktree", "add", str(wt), "llm/train/t-rogue")
+    (wt / "rogue.txt").write_text("rogue", encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(
+        wt,
+        "commit",
+        "-q",
+        "-m",
+        # Claims WI-201, which t-rogue does NOT hold.
+        "build WI-201\n\nWI: WI-201\nTrain: t-rogue\nBase: {}\n".format(head),
+    )
+    proc = _dispatch(repo, template)
+    # The rogue train needs attention (quarantine) => EXIT_STALL, but the
+    # disjoint WI-201 still built and integrated through its OWN train.
+    assert proc.returncode == agent_loop.EXIT_STALL, proc.stdout + proc.stderr
+    events = (repo / "out" / "dispatch" / "events.jsonl").read_text("utf-8")
+    assert "claims-unreserved-wi:WI-201" in events
+    assert "WI-201" in _done_rows(repo, "refs/heads/llm/integration")
+    # Nothing was deleted: the rogue branch, its commit, and its reservation
+    # survive for a human to rule on (conservative cleanup).
+    assert _git(repo, "rev-parse", "--verify", "refs/heads/llm/train/t-rogue")
+    assert _reservations(repo) == {"WI-202"}
+    rows = _done_rows(repo, "refs/heads/llm/integration")
+    assert "WI-202" not in rows, "a quarantined claim is never falsely done"
+
+
+def test_fault_points_exist_for_every_matrix_boundary(tmp_path):
+    # The matrix's own coverage guard: every boundary named by TC-065 has a
+    # wired fault point (a renamed constant would silently skip a test).
+    src = (SCRIPTS / "agent_loop.py").read_text(encoding="utf-8")
+    for point in (
+        "reserve-pre-txn",
+        "reserve-post-txn",
+        "pre-integration-cas",
+        "post-integration-cas",
+        "post-intent",
+        "post-dev-cas",
+    ):
+        assert '_fault("{}")'.format(point) in src, point

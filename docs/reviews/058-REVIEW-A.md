@@ -1,0 +1,2 @@
+- [MAJOR] docs/specs/WI-110.md:32 -> WI-110 is marked done after only recording the high-effort baseline and explicitly deferring the xhigh result, but the owner directive requires before/after WI-124 telemetry on real BUILD sessions -> return WI-110 to open (or split out the static-pin change) and run/record an xhigh OPUS BUILD's s/turn and Ctx/turn before closing the experiment -> @owner
+VERDICT: CHANGES-REQUESTED findings=1

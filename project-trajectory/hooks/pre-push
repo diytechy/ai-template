@@ -1,0 +1,223 @@
+#!/bin/sh
+# Pre-push hook — the privacy-review backstop for privacy-checked repos.
+#
+# Publication is where a privacy leak becomes harmful and effectively
+# unrecallable (mirrors, caches), so an privacy-checked repo gets one last look at
+# the FULL outgoing history — diffs *and* commit messages of every commit in
+# the range, so a leak added in one commit and removed in a later one is still
+# caught (it ships in history even though the final tree is clean).
+#
+# This hook is an OPTIONAL BACKSTOP, stated honestly: hooks are per-clone and
+# tool-circumventable, so the *primary* home of the LLM privacy review is the
+# iteration-branch sync ritual's scrub step (process-options.md "Agent
+# iteration branch & sync"). This backstop still catches direct-to-dev-branch
+# edits in clones that ran setup. `git push --no-verify` remains git's own
+# escape hatch for a human — by design, we do not pretend otherwise.
+#
+# Two layers per outgoing ref:
+#   1. Deterministic lint: scripts/check_privacy.py --range over the outgoing
+#      range (patterned paths/usernames/emails/keys; findings block).
+#   2. LLM subagent review via the REVIEW_CMD slot (the AGENT_CMD family):
+#      REVIEW_CMD (env var, or `git config privacy.reviewcmd` per clone) is a
+#      command invoked as `$REVIEW_CMD <dump-file>`, where the dump holds a
+#      tight brief + `git log -p` of the outgoing range. Contract: hunt PII /
+#      identity / private data; append the verdict to docs/log.md per
+#      process.md §5 extended with `Model:` + `Role: PRIVACY-REVIEW`; print
+#      APPROVE (and exit 0) or BLOCK + findings (nonzero). The hook requires
+#      exit 0 AND an APPROVE (with no BLOCK) in the output, so an agent CLI
+#      that exits 0 while reporting BLOCK still blocks.
+#
+# When the policy demands review but no reviewer is wired, the push FAILS
+# CLOSED (Q12 ruling): a missing tool is never a pass at the one boundary that
+# matters. A privacy-check-off repo skips the review (the secrets floor still
+# guards its outgoing range): zero cost otherwise.
+# Declared opt-down (WI-1.30, refining Q12): a repo adopted with the intent to
+# wire the reviewer later may track `warn-unwired` in docs/privacy-review (one
+# word, same parse as every declared-policy file) — then an UNWIRED reviewer
+# warns and the push proceeds on the deterministic layer alone. A recorded,
+# reviewable decision, never a silent default: absent file or any other value
+# = require (fail closed). It only softens the unwired case — deterministic
+# findings still block, a wired reviewer's BLOCK still blocks, and a missing
+# Python still fails closed (then the deterministic layer can't run either).
+#
+# Enable:  git config core.hooksPath .githooks   (setup.sh / setup.ps1 do this)
+# Disable: git config --unset core.hooksPath
+set -e
+
+# Authoritative repo root (works when this shipped hook is DELEGATED from a
+# wrapper elsewhere), with the .githooks/../ fallback — same as pre-commit.
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+
+# Locate the kit scripts dir honoring KIT_SCRIPTS_DIR (env / delegating wrapper)
+# before the default scripts/ | Scripts/ — the harness-elsewhere layout
+# (WI-1.42) that pre-commit already supports; pre-push/commit-msg must too, or a
+# privacy-checked repo with that layout fails its push closed for the wrong
+# reason (REVIEW_GRIND_FULL C4). Echoes the found dir, or empty.
+find_scripts_dir() {
+  if [ -n "${KIT_SCRIPTS_DIR:-}" ]; then
+    case "$KIT_SCRIPTS_DIR" in
+      /*) [ -d "$KIT_SCRIPTS_DIR" ] && { printf '%s' "$KIT_SCRIPTS_DIR"; return; } ;;
+      *)  [ -d "$REPO_ROOT/$KIT_SCRIPTS_DIR" ] && { printf '%s' "$REPO_ROOT/$KIT_SCRIPTS_DIR"; return; } ;;
+    esac
+  fi
+  for sd in scripts Scripts; do
+    if [ -d "$REPO_ROOT/$sd" ]; then printf '%s' "$REPO_ROOT/$sd"; return; fi
+  done
+}
+
+# Privacy gate — same parse as pre-commit / commit-msg. Off / absent = not a
+# privacy-checked repo (the secrets-floor-only branch below still guards it).
+PRIVACY_FILE="$REPO_ROOT/docs/privacy-check"
+privacy=""
+if [ -f "$PRIVACY_FILE" ]; then
+  privacy=$(grep -v '^[[:space:]]*#' "$PRIVACY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+fi
+if [ "$privacy" != "true" ]; then
+  # Privacy check off: the identity review below does not apply. But the
+  # always-on SECRETS FLOOR (docs/secrets-scan; default on — Thread 44) still guards the
+  # outgoing history against key/token shapes, the security net every repo
+  # gets. Tooling-gated and never fail-closed here: a missing interpreter skips
+  # (the pre-commit floor already scanned each commit), it must not block an
+  # unconcerned repo's push; `docs/secrets-scan: off` disables it in-script.
+  PY=""
+  for cand in python3 python; do
+    if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+      PY="$cand"; break
+    fi
+  done
+  SCRIPTS_DIR=$(find_scripts_dir)
+  if [ -z "$PY" ] || [ -z "$SCRIPTS_DIR" ]; then exit 0; fi
+  zero=0000000000000000000000000000000000000000
+  status=0
+  while read -r local_ref local_sha remote_ref remote_sha; do
+    remote_sha=$(printf '%s' "$remote_sha" | tr -d '\r')
+    [ -z "$local_sha" ] && continue
+    [ "$local_sha" = "$zero" ] && continue
+    if [ "$remote_sha" = "$zero" ]; then
+      range="$local_sha"
+    else
+      range="$remote_sha..$local_sha"
+    fi
+    if ! "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --range "$range"; then
+      echo "pre-push: secrets floor found key/token shapes in the outgoing" >&2
+      echo "  range $local_ref ($range). Rewrite LOCAL history before it" >&2
+      echo "  publishes, or set docs/secrets-scan to 'off' for a deliberate" >&2
+      echo "  fixture (process-options.md \"Commit identity & privacy\")." >&2
+      status=1
+    fi
+  done
+  exit $status
+fi
+
+# Interpreter + scripts dir discovery (same probes as pre-commit; see there).
+PY=""
+for cand in python3 python; do
+  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+    PY="$cand"; break
+  fi
+done
+SCRIPTS_DIR=$(find_scripts_dir)
+if [ -z "$PY" ] || [ -z "$SCRIPTS_DIR" ]; then
+  echo "pre-push: docs/privacy-check is enabled but Python 3 or scripts/ cannot" >&2
+  echo "  be found, so the privacy review cannot run." >&2
+  echo "  FAILING CLOSED — a missing tool is never a pass at the push boundary." >&2
+  exit 1
+fi
+
+# The reviewer slot: env REVIEW_CMD wins; else per-clone git config.
+reviewer="${REVIEW_CMD:-}"
+if [ -z "$reviewer" ]; then
+  reviewer=$(git config --get privacy.reviewcmd || true)
+fi
+
+# Declared unwired-reviewer posture (docs/privacy-review, header comment):
+# exactly `warn-unwired` opts the unwired case down to warn-and-proceed; any
+# other value — including a typo — reads as require, the stricter direction.
+review_policy=""
+REVIEW_POLICY_FILE="$REPO_ROOT/docs/privacy-review"
+if [ -f "$REVIEW_POLICY_FILE" ]; then
+  review_policy=$(grep -v '^[[:space:]]*#' "$REVIEW_POLICY_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+fi
+
+# stdin: one line per ref being pushed: <local ref> <local sha> <remote ref> <remote sha>
+zero=0000000000000000000000000000000000000000
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # git sends LF-terminated lines; tolerate a stray CR from odd transports —
+  # it lands on the last field and would corrupt the rev range.
+  remote_sha=$(printf '%s' "$remote_sha" | tr -d '\r')
+  [ -z "$local_sha" ] && continue
+  [ "$local_sha" = "$zero" ] && continue    # deleting a remote ref: nothing outgoing
+  if [ "$remote_sha" = "$zero" ]; then
+    range="$local_sha"                      # new remote branch: all of it is outgoing
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  # Layer 1 — deterministic lint over the outgoing history (diffs + messages).
+  if ! "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --range "$range"; then
+    echo "pre-push: privacy lint found patterned leaks in the outgoing range" >&2
+    echo "  $local_ref ($range). Rewrite LOCAL history before it publishes —" >&2
+    echo "  see process-options.md \"Commit identity & privacy\" (remediation)." >&2
+    status=1
+    continue
+  fi
+
+  # Layer 2 — LLM subagent review over the same range. Unwired: fail closed,
+  # unless the repo tracked the warn-unwired opt-down (header comment).
+  if [ -z "$reviewer" ]; then
+    if [ "$review_policy" = "warn-unwired" ]; then
+      echo "pre-push: WARNING — privacy-check is enabled but no LLM privacy" >&2
+      echo "  reviewer is wired; docs/privacy-review declares 'warn-unwired', so" >&2
+      echo "  only the deterministic lint guarded $local_ref ($range)." >&2
+      echo "  Wire one:  export REVIEW_CMD='<agent cmd>'   (or per clone:" >&2
+      echo "             git config privacy.reviewcmd '<agent cmd>')" >&2
+      continue
+    fi
+    echo "pre-push: docs/privacy-check is enabled, which" >&2
+    echo "  requires a privacy review of the outgoing history, but no reviewer" >&2
+    echo "  is wired. FAILING CLOSED (a missing reviewer is never a pass)." >&2
+    echo "  Wire one:  export REVIEW_CMD='<agent cmd>'   (or per clone:" >&2
+    echo "             git config privacy.reviewcmd '<agent cmd>')" >&2
+    echo "  It is invoked as: \$REVIEW_CMD <dump-file>; print APPROVE or BLOCK." >&2
+    echo "  Not set up yet, deliberately? Track the recorded opt-down instead:" >&2
+    echo "    echo warn-unwired > docs/privacy-review   (deterministic lint" >&2
+    echo "  still blocks findings; a wired reviewer's BLOCK still blocks)." >&2
+    status=1
+    continue
+  fi
+
+  dump=$(mktemp "${TMPDIR:-/tmp}/privacy-review.XXXXXX") || { status=1; continue; }
+  {
+    echo "PRIVACY REVIEW REQUEST (pre-push; process-options.md 'Commit identity & privacy')"
+    echo "This repo's privacy gate (docs/privacy-check) is: enabled"
+    echo "Below is the FULL outgoing history for $local_ref ($range): every commit's"
+    echo "message and diff. Hunt for personally identifiable or private information:"
+    echo "real names, machine-local paths/usernames/hostnames, off-policy emails,"
+    echo "credentials, bio details — in messages AND diffs (a leak removed by a later"
+    echo "commit still ships in history). Append your verdict to docs/log.md per"
+    echo "process.md section 5 with 'Model: <model id>' and 'Role: PRIVACY-REVIEW', then"
+    echo "print exactly APPROVE, or BLOCK followed by file/commit findings."
+    echo "----------------------------------------------------------------------"
+    git -C "$REPO_ROOT" log --no-color -p "$range" --
+  } > "$dump"
+
+  # Word-splitting of $reviewer is intended: it is a command template.
+  # shellcheck disable=SC2086
+  if out=$($reviewer "$dump" 2>&1); then rc=0; else rc=$?; fi
+  printf '%s\n' "$out"
+  case "$out" in
+    *BLOCK*) rc=1 ;;                        # an agent CLI may exit 0 while blocking
+    *APPROVE*) ;;
+    *) echo "pre-push: reviewer produced no APPROVE verdict — failing closed." >&2
+       rc=1 ;;
+  esac
+  if [ "$rc" -ne 0 ]; then
+    echo "pre-push: privacy review BLOCKED $local_ref ($range); dump kept at $dump" >&2
+    status=1
+  else
+    rm -f "$dump"
+  fi
+done
+
+exit $status
