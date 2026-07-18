@@ -1,0 +1,33 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-07-18 16:44
+# train: p0-g3-WI-226-65f9
+# base: 808f95da957c
+# phase: BUILD
+# wi: WI-226
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: 19ca07c..01dcd30
+# tokens: 
+# cost-usd: 
+# wall-secs: 925
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2643
+# exit-code: 0
+# ---
+WI-226 is complete and committed at `01dcd30`.
+
+- `dispatch_run` complexity reduced from 84 to 40.
+- Pure decision tests split into a dedicated no-effects module.
+- Full suite: 1,084 passed, 34 skipped.
+- G3 gate: PASS, 91.22% coverage.
+- Smoke: 891 passed, 2 skipped.
+- Required WI/Train/Base trailers verified at `HEAD`.
+- Worktree clean; coordination truth untouched.
