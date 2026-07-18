@@ -202,3 +202,10 @@ project-trajectory/scripts/check.py == project-trajectory/scripts/gen_arch_map.p
 project-trajectory/scripts/check.py == project-trajectory/scripts/gen_cases.py
 project-trajectory/scripts/check.py == project-trajectory/scripts/gen_okf.py
 project-trajectory/scripts/check.py == project-trajectory/scripts/gen_release_checklist.py
+# WI-215: the dual-plan fix shifted agent_loop line numbers, surfacing these
+# agent_loop==plan_* representative pairs for the pre-existing shared subprocess/
+# argparse boilerplate (the file-PAIR granularity limitation noted above).
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/plan_briefs.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/plan_coverage.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/plan_coverage_step.py
+project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/plan_round.py

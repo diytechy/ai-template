@@ -1147,7 +1147,21 @@ def _dp_routes(root, tier):
     registry, _errors = agent_route.load_registry(root / "docs" / "agents.csv")
     if not enabled or not registry:
         return None, None, "routing-off: one template drives every hat (degraded)"
-    pool = agent_route.resolve_enabled(enabled, registry)
+    # resolve_enabled returns (ids, errors) — unpack it, or planner_pair iterates
+    # the whole tuple as the pool and crashes (TypeError: unhashable list) before
+    # any session launches. This routing-ON dual-plan path was never exercised
+    # (the kit's own DP-001 ran routing-off), so the defect stayed latent until it
+    # surfaced downstream in gilbert. Unresolvable ids PAGE loudly, never a silent
+    # skip (the main dispatcher path unpacks correctly; only these helpers did not).
+    pool, resolve_errors = agent_route.resolve_enabled(enabled, registry)
+    if resolve_errors:
+        return (
+            None,
+            registry,
+            "routing: unresolvable agents-enabled id(s): {}".format(
+                "; ".join(resolve_errors)
+            ),
+        )
     pair = agent_route.planner_pair(pool, registry, tier)
     if pair.sessions[0] is None:
         return None, registry, "routing: no routable model ({})".format(pair.detail)
@@ -1170,7 +1184,21 @@ def _dp_session(template, model, prompt, root, timeout, env_cell=""):
         env.update(agent_route.parse_env(env_cell))
     argv = build_argv(template, model, prompt)
     code, output, timed_out = run_session(argv, root, timeout, env=env)
-    return (code == 0 and not timed_out), output
+    ok = code == 0 and not timed_out
+    # A --output-format json/stream-json template (what the real agents.csv rows
+    # use) captures the whole event transcript, but the round's consumers need the
+    # SESSION RESULT TEXT: plan_coverage's line-oriented parser finds zero rows in
+    # a one-line JSON transcript, and the {{PLAN}}/{{CRITIQUE}} brief slots must
+    # carry artifacts, not conversations (a raw transcript leaks thinking + model
+    # names into the redacted briefs). Reduce to the result event's text when one
+    # parses; a plain-text template yields no JSON and passes through unchanged.
+    # Latent kit defect surfaced downstream in gilbert (the kit's own DP-001 ran a
+    # plain-text template, so it never fired).
+    if ok:
+        data = parse_json_result(output)
+        if data.get("type") == "result":
+            output = str(data.get("result") or output)
+    return ok, output
 
 
 def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None):
@@ -1285,7 +1313,9 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                         if mm.model == m:
                             failed.family = mm.family
                             break
-                    pool = agent_route.resolve_enabled(
+                    # resolve_enabled returns (ids, errors) — unpack (the same
+                    # latent tuple bug fixed in _dp_routes).
+                    pool, _pool_errors = agent_route.resolve_enabled(
                         agent_route.load_enabled(root / "docs" / "agents-enabled"),
                         _registry,
                     )

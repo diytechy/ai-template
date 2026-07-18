@@ -9120,3 +9120,47 @@ dupes, derived-gate, traceability, privacy, doc-navigability, perf-budgets,
 design-flows, trajectory, arch-map, trajectory-map, status-map, okf,
 skills-sync); `check_docs` 0 broken links; `trace.py --strict` SN=25 SR=66
 LLR=76 TC=76, 0 findings.
+
+## 2026-07-17 — WI-215: fix two latent routing-ON dual-plan defects (found downstream in gilbert)
+
+**What & why.** gilbert (a downstream adopter) vendored the dual-plan artifacts
+from kit@42a30bc and, the first time it ran the round with real routing + the
+`--output-format stream-json` templates, hit two defects the kit's own DP-001
+never triggered (it ran a plain-text, routing-off fake CLI). gilbert flagged both
+as **latent at kit@42a30bc + HEAD** for the next resync; confirmed present here.
+
+**The two bugs (both under LLR-076 / SR-066).**
+1. `_dp_routes` and the mid-round planner fallback in `run_dual_plan_round`
+   passed `agent_route.resolve_enabled`'s `(ids, errors)` TUPLE straight into
+   `planner_pair` / `planner_fallback`, whose `select()` iterated it as the pool
+   and crashed (`TypeError: unhashable list`) **before any session launched** —
+   the routing-ON dual-plan path had never worked. The main dispatcher callsite
+   already unpacked correctly; only these two helpers did not. Fixed: unpack both;
+   an unresolvable enable-list id now PAGEs (`routing: unresolvable ...`) instead
+   of crashing or silently skipping.
+2. `_dp_session` returned the RAW json/stream-json event transcript, not the
+   session result text. `plan_coverage`'s line-oriented parser finds 0/garbage
+   rows in a one-line JSON transcript, and the `{{PLAN}}`/`{{CRITIQUE}}` brief
+   slots must carry artifacts-not-conversations (a raw transcript leaks thinking
+   + model names into the redacted briefs). Fixed: reduce to the result event's
+   text via `parse_json_result` when one parses; a plain-text template passes
+   through byte-identical.
+
+**Tests.** `tests/test_dual_plan_routing.py` — 6 unit regressions closing the gap
+TC-076 left (its fixture ran plain-text + routing-off): `_dp_routes` resolves a
+valid pool without crashing / PAGEs on an unresolvable id / degrades routing-off;
+`_dp_session` reduces a stream-json result to text / passes plain text through /
+leaves a failed session raw. **Proven non-vacuous** — with the fix stashed, the 3
+fix-dependent tests fail (the tuple crash, the missing PAGE, the un-reduced
+transcript). Attached to TC-076 Evidence.
+
+**No new spine.** `_dp_routes`/`_dp_session` are already under LLR-076/SR-066 —
+this is a defect fix. Filed as **WI-215** (213/214 reserved for the parallel
+guardrails branch, to avoid a merge collision). Ported from gilbert `92acd07` +
+`4a9faf5`. `docs/dupes-allow` gained 4 `agent_loop == plan_*` pairs the line-shift
+surfaced (sanctioned boilerplate; the census's file-PAIR limitation).
+
+**Verified:** `check.py --gate G3 --jobs 0` green — tests+coverage PASS (271.7 s,
+coverage floor 85% held); dupes + okf regenerated and re-verified; all 16 steps
+PASS. `trace.py --strict` SN=25 SR=66 LLR=76 TC=76, 0 orphans. Branch
+`dualplan-routing-fix` off `main`, not pushed.
