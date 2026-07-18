@@ -38,11 +38,26 @@ as the `RUN_CMD` this replaced — the user edits their own file), and a capabil
 is deliberately a full shell command (pipes, `&&`, redirects), so it is handed to
 the shell verbatim rather than split into argv.
 
+**Trailing arguments** the launchers forward (`run_menu.py <name> arg…`, the old
+`exec $RUN_CMD "$@"`) are treated as **data values, not shell text** (the WI-227
+ruling): the recipe is trusted, an evaluator's `"$@"` is a value. Each is
+appended to the recipe *quoted for the platform shell* (`_quote_extra`) so a
+value with spaces, quotes, or an `&`/`|` reaches the program as one literal
+argument rather than splitting or executing. POSIX uses `shlex.quote` (total).
+Two Windows-only limits are documented rather than fought (this is an ordinary
+convenience layer, not the dispatcher): cmd.exe still expands a `%VAR%` in a
+value (a single `cmd /c` line cannot suppress it), and a literal double quote
+combined with a separator in one value can re-expose that separator (the
+cmd.exe-vs-MSVCRT quote-state disagreement). The recipe lines themselves stay
+trusted shell text.
+
 Contracts: IF-048, IF-049 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
 
 import argparse
 import configparser
+import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -105,13 +120,51 @@ NO_CAPABILITIES = (
 )
 
 
+def _win_quote(arg):
+    """Quote one trailing DATA argument for a cmd.exe command line (Windows,
+    shell=True). Always wrapped in double quotes so cmd.exe treats separators and
+    redirects (`&` `|` `<` `>` `(` `)` `^`) inside as literal text, with the
+    MSVCRT backslash/quote escaping the target program's argv parser expects:
+    each run of backslashes preceding a `"` is doubled and the `"` escaped, and a
+    trailing run before the closing quote is doubled too. `%VAR%` expansion and a
+    quote-plus-separator value are the documented residual limits (module
+    docstring)."""
+    out = ['"']
+    backslashes = 0
+    for ch in arg:
+        if ch == "\\":
+            backslashes += 1
+            out.append(ch)
+            continue
+        if ch == '"':
+            out.append("\\" * backslashes)  # double the run already emitted
+            out.append('\\"')
+        else:
+            out.append(ch)
+        backslashes = 0
+    out.append("\\" * backslashes)  # double a trailing run before the close quote
+    out.append('"')
+    return "".join(out)
+
+
+def _quote_extra(extra):
+    """Quote trailing DATA arguments so the shell line receives each as exactly
+    one literal token — the WI-227 data-argument contract (module docstring
+    'Trailing arguments'). POSIX uses shlex.quote (total); Windows uses the
+    cmd.exe/MSVCRT quoting above."""
+    quote = _win_quote if os.name == "nt" else shlex.quote
+    return " ".join(quote(a) for a in extra)
+
+
 def launch(command, extra):
     """Run a capability's shell line, returning its exit code (passthrough).
 
-    `extra` (trailing args the launcher forwarded) is appended to the command
-    line, mirroring the old `exec $RUN_CMD "$@"` passthrough. shell=True is
-    intentional — see the module docstring."""
-    full = command if not extra else command + " " + " ".join(extra)
+    The declared command is the trusted shell recipe; `extra` (trailing args the
+    launcher forwarded, the old `exec $RUN_CMD "$@"`) are DATA values, each quoted
+    per-platform (`_quote_extra`) so the shell can't re-split a value on
+    whitespace or a metacharacter. shell=True is intentional for the recipe — see
+    the module docstring."""
+    full = command if not extra else command + " " + _quote_extra(extra)
     print("Running: {}".format(full), flush=True)
     return subprocess.run(full, shell=True).returncode
 
