@@ -552,6 +552,56 @@ def test_dual_plan_regen_failure_salvages_round_evidence(tmp_path, monkeypatch):
     assert salvaged.read_text(encoding="utf-8") == "SELECT A"
 
 
+def test_dual_plan_validator_failure_is_fail_closed_with_salvage(tmp_path, monkeypatch):
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    (repo / "docs" / "requirements" / "system-requirements.csv").write_text(
+        "SR-ID\nSR-063\n", encoding="utf-8"
+    )
+    (repo / "PROJECT_STATE.html").write_text("existing view", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "enable trajectory view")
+    head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
+
+    def invalid_round(worktree, wid, row, template, model, timeout, prompt_map):
+        round_dir = worktree / "docs" / "plans" / "DP-003-wi-201"
+        round_dir.mkdir(parents=True)
+        (round_dir / "verdict.md").write_text("SELECT invalid", encoding="utf-8")
+        with (worktree / "docs" / "requirements" / "work-items.csv").open(
+            "a", encoding="utf-8", newline=""
+        ) as fh:
+            csv.writer(fh).writerow(_wi_row("WI-202", preds="WI-999"))
+        return "SELECTED", "invalid child predecessor"
+
+    monkeypatch.setattr(agent_loop.agent_dispatch, "run_dual_plan_round", invalid_round)
+    state, detail = agent_loop.dual_plan_disposition(
+        repo,
+        agent_loop._Journal(repo),
+        "t-invalid",
+        "WI-201",
+        {},
+        "unused",
+        "unused",
+        1,
+        {},
+    )
+    assert state == "error"
+    assert "disposition regen failed (gen_trajectory.py):" in detail
+    assert "predecessor 'WI-999' is not a work item" in detail
+    assert "round evidence salvaged to" in detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == head
+    salvaged = (
+        repo
+        / "out"
+        / "dispatch"
+        / "salvage"
+        / "t-invalid"
+        / "DP-003-wi-201"
+        / "verdict.md"
+    )
+    assert salvaged.read_text(encoding="utf-8") == "SELECT invalid"
+
+
 def test_cas_stale_dual_plan_salvages_committed_round_evidence(tmp_path, monkeypatch):
     repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
     head = _git(repo, "rev-parse", "HEAD")

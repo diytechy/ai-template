@@ -1129,6 +1129,9 @@ def dual_plan_disposition(
         return outcome, detail
     regen_ok, regen_detail = _regenerate_disposition_artifacts(wt)
     if not regen_ok:
+        # Ratified WI-223 posture: selected rows and their generated views are
+        # one atomic disposition. Preserve the round and surface validation;
+        # never make a known-invalid registry authoritative.
         return "error", _reset_failed_disposition(root, wt, tid, old_head, regen_detail)
     git(wt, "add", "-A")
     msg = "dual-plan {}: {} (train {})\n\nDual-Plan-WI: {}\nTrain: {}\n".format(

@@ -9417,3 +9417,26 @@ salvage. Focused dispatcher/round modules **31 passed**; full suite
 **1,071 passed / 3 skipped** (1:51). Byte-budget guard: budgeted docs untouched
 (`AGENTS.template.md` 9,978 · `PROCESS.md` 60,169 · `PROCESS_OPTIONS.md`
 156,059 — delta 0 each). On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 — WI-223: ratify fail-closed SELECT disposition
+
+The ruling is fail-closed. A dual-plan SELECT's filed child rows and present
+OKF/dashboard views are one atomic disposition: if a generator rejects the new
+registry, the integration ref does not move. The dispatcher surfaces the
+generator and validator tail, follows the existing quarantine/error path, and
+salvages the completed `DP-*` evidence for diagnosis. Softening only the
+dispatcher call would be dishonest in a hook-enabled downstream repo—the
+shipped freshness hook would still reject the commit—while bypassing it would
+make a known-invalid registry authoritative. The ruling now lives in
+`docs/specs/WI-223.md`, the dual-plan section of `PROCESS_OPTIONS.md`, and
+LLR-064's behavioral detail.
+
+The regression drives a real SELECT that files a child with dangling
+predecessor `WI-999`; the real trajectory generator rejects it, the returned
+detail retains the validator message, the integration ref remains unchanged,
+and the round verdict survives under `out/dispatch/salvage/<train>/`. The full
+integrator module passed **18 tests** before close. Byte-budget guard:
+`AGENTS.template.md` **9,978 → 9,978** and `PROCESS.md` **60,169 → 60,169**
+(untouched); `PROCESS_OPTIONS.md` **156,059 → 156,661** (**+602 bytes**) for the
+canonical downstream failure contract, with the neutral skill and both tracked
+agent copies re-stamped. Full-suite close evidence follows WI-224.

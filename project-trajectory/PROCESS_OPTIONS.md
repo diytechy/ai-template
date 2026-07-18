@@ -1060,6 +1060,15 @@ declared at filing, never by flag; the worker path refuses a dual row as a
 direct BUILD, fail-closed). The manual protocol above remains the fallback —
 and the stronger-isolation option (empty-cwd sessions).
 
+**SELECT disposition fails closed on registry validation.** The filed child
+rows and their generated OKF/dashboard views are one atomic transaction. If a
+present generator rejects the new registry, the integration ref does not move:
+the dispatcher returns the generator/validator tail, quarantines the WI through
+the normal error path, and salvages `docs/plans/DP-*` evidence to
+`out/dispatch/salvage/<train>/`. Committing evidence with stale views is not a
+portable fallback — the shipped freshness hook would reject it — and bypassing
+the hook would make a known-invalid registry authoritative.
+
 ## Tier-conditional guardrails
 
 *Referenced from the "Unattended operation" layer above.* **Applies when** an
