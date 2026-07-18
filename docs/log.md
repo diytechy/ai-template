@@ -9466,3 +9466,28 @@ integrity/schema/status findings, or placeholders; strict trajectory was clean
 at 222 WIs / 209 done / acyclic. Format, lint, duplicate-code, privacy, docs,
 design-flow, architecture, skills sync, and all generated-artifact freshness
 checks passed. On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 — WI-225: the no-new-complexity ratchet (+ review-18 consumption)
+
+The owner took three of review-18's four remaining engineering items
+(M-05 stays deliberately unfiled): H-02 split into **WI-225** (this ratchet)
+and **WI-226** (the strong-tier decision/effect decomposition, absorbing
+L-04's test split), M-06 filed as **WI-227**, M-07 as **WI-228**. The review
+doc gained §6 recording the consumption and the census drift — 50 at target,
+51 after its own M-01 remediation, **52** after WI-222/224 added
+`_salvage_round_evidence` (16) — and the WI-219 row was touched in the same
+commit to re-affirm M-04 against the amended doc.
+
+`tests/test_complexity_ratchet.py` pins the per-function C901 census of
+`project-trajectory/scripts` to a committed 52-entry baseline (threshold 10
+pinned in the invocation, skip-guarded on ruff). Growth fails demanding
+simplification — a deliberate bump is a reviewed baseline edit with a logged
+reason; improvement fails until the entry is re-stamped downward in the same
+commit, so the ratchet only tightens by default. Both failure directions were
+forced live (baseline 84→83 and 84→85 on `dispatch_run`) and reverted; the
+test is in the smoke tier by default.
+
+**Verified.** Ratchet green at baseline; full suite **1,075 passed /
+3 skipped**. Byte-budget guard: budgeted docs untouched (`AGENTS.template.md`
+9,978 · `PROCESS.md` 60,169 · `PROCESS_OPTIONS.md` 156,661 — delta 0 each).
+On `dualplan-routing-fix`, not pushed.

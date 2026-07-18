@@ -1,0 +1,164 @@
+"""The no-new-complexity ratchet — WI-225 (repo-review-2026-07-18 H-02, slice A).
+
+The per-function C901 census of the kit scripts must EXACTLY match the
+committed baseline below (measured 2026-07-18; the census had grown
+50 -> 51 -> 52 across well-reviewed remediation passes because nothing
+failed on it).
+
+When this test fails:
+
+- A function grew past its baseline, or a new over-limit function appeared:
+  the fix is SIMPLIFICATION, not a baseline bump. A deliberate bump is a
+  reviewed baseline edit whose reason lands in the WI/session log — never a
+  drive-by.
+- A function improved below its baseline (or was renamed/removed): re-stamp
+  its entry downward — or delete it — in the same commit, so the ratchet
+  only ever tightens by default.
+
+The decomposition workstream paying this debt down is WI-226.
+"""
+
+import os
+import re
+import subprocess
+import sys
+
+import pytest
+from conftest import SCRIPTS
+
+pytestmark = pytest.mark.skipif(
+    __import__("importlib").util.find_spec("ruff") is None,
+    reason="needs ruff (dev dependency)",
+)
+
+# Pinned explicitly so the ratchet cannot drift with ruff's defaults.
+MAX_COMPLEXITY = 10
+
+BASELINE = {
+    ("agent_common.py", "preflight"): 17,
+    ("agent_dispatch.py", "_salvage_round_evidence"): 16,
+    ("agent_dispatch.py", "dispatch_run"): 84,
+    ("agent_dispatch.py", "integrate_train"): 16,
+    ("agent_dispatch.py", "pack_traincars"): 18,
+    ("agent_dispatch.py", "publish_integration"): 17,
+    ("agent_loop.py", "critique_brief"): 11,
+    ("agent_loop.py", "main"): 24,
+    ("agent_loop.py", "map_preflight"): 19,
+    ("agent_loop.py", "route_intent"): 13,
+    ("agent_loop.py", "route_session"): 11,
+    ("agent_loop.py", "run_iteration"): 23,
+    ("agent_loop.py", "session_bookkeeping"): 29,
+    ("agent_route.py", "load_registry"): 16,
+    ("agent_session.py", "run_session"): 13,
+    ("bootstrap.py", "main"): 41,
+    ("bootstrap.py", "strip_markers"): 14,
+    ("check.py", "extra_steps"): 11,
+    ("check.py", "main"): 16,
+    ("check_doc_refs.py", "findings_for"): 12,
+    ("check_docs.py", "check_links"): 13,
+    ("check_docs.py", "git_commit_lookup"): 12,
+    ("check_flows.py", "main"): 12,
+    ("check_privacy.py", "main"): 11,
+    ("check_privacy.py", "scan_diff_text"): 14,
+    ("check_privacy.py", "scan_line"): 13,
+    ("check_trajectory.py", "critique_ratchet_findings"): 11,
+    ("check_trajectory.py", "cross_component_findings"): 12,
+    ("check_trajectory.py", "interface_findings"): 23,
+    ("check_trajectory.py", "main"): 21,
+    ("check_trajectory.py", "staged_findings"): 12,
+    ("gen_arch_map.py", "build_dependency_diagram"): 14,
+    ("gen_arch_map.py", "main"): 17,
+    ("gen_cases.py", "all_pairs"): 13,
+    ("gen_cases.py", "main"): 12,
+    ("gen_okf.py", "_doc_title_and_summary"): 13,
+    ("gen_okf.py", "emit"): 29,
+    ("gen_okf.py", "main"): 13,
+    ("gen_release_checklist.py", "main"): 20,
+    ("gen_trajectory.py", "_okf_nodes"): 15,
+    ("gen_trajectory.py", "arch_icicle"): 20,
+    ("gen_trajectory.py", "sw_containment"): 28,
+    ("gen_trajectory.py", "when_view"): 15,
+    ("plan_coverage.py", "check_plan"): 17,
+    ("plan_coverage.py", "main"): 12,
+    ("plan_round.py", "record"): 29,
+    ("plan_runner.py", "dispatch"): 16,
+    ("plan_runner.py", "run_dual_plan_round"): 29,
+    ("trace.py", "analyze"): 50,
+    ("trace.py", "mermaid_graph"): 17,
+    ("trace.py", "ratify_lines"): 28,
+    ("trace.py", "render_report"): 17,
+}
+
+_C901 = re.compile(
+    r"^(?P<path>.+?):\d+:\d+: C901 `(?P<name>.+?)` is too complex "
+    r"\((?P<complexity>\d+) > \d+\)"
+)
+
+
+def _census():
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "ruff",
+            "check",
+            "--select",
+            "C901",
+            "--config",
+            "lint.mccabe.max-complexity={}".format(MAX_COMPLEXITY),
+            "--output-format",
+            "concise",
+            "--no-cache",
+            str(SCRIPTS),
+        ],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    # 0 = no findings, 1 = findings; anything else is a broken invocation.
+    assert proc.returncode in (0, 1), proc.stdout + proc.stderr
+    census = {}
+    for line in proc.stdout.splitlines():
+        match = _C901.match(line.strip())
+        if not match:
+            continue
+        rel = os.path.relpath(match.group("path"), str(SCRIPTS)).replace("\\", "/")
+        key = (rel, match.group("name"))
+        census[key] = max(census.get(key, 0), int(match.group("complexity")))
+    return census
+
+
+def test_c901_census_exactly_matches_the_committed_baseline():
+    census = _census()
+    grew = {
+        key: (BASELINE.get(key), value)
+        for key, value in census.items()
+        if value > BASELINE.get(key, 0)
+    }
+    improved = {
+        key: (value, census.get(key))
+        for key, value in BASELINE.items()
+        if census.get(key, 0) < value
+    }
+    message = []
+    if grew:
+        message.append(
+            "complexity grew — simplify these (a deliberate bump is a reviewed "
+            "baseline edit, reason in the log): "
+            + "; ".join(
+                "{}:{} baseline {} -> now {}".format(f, n, b or "absent", v)
+                for (f, n), (b, v) in sorted(grew.items())
+            )
+        )
+    if improved:
+        message.append(
+            "complexity improved below baseline — re-stamp these entries "
+            "downward (or delete them) in this same commit: "
+            + "; ".join(
+                "{}:{} baseline {} -> now {}".format(
+                    f, n, b, v if v else "under {}".format(MAX_COMPLEXITY + 1)
+                )
+                for (f, n), (b, v) in sorted(improved.items())
+            )
+        )
+    assert not message, "\n".join(message)
