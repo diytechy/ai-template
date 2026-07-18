@@ -151,3 +151,48 @@ def test_shell_quoting_sanity(tmp_path):
         "a b",
         "c",
     ]
+
+
+# WI-227: trailing args are DATA values, quoted per-platform so the shell
+# delivers each whole (module docstring "Trailing arguments"). These run through
+# the real platform shell (shell=True), so CI covers both cmd.exe and POSIX sh.
+# Pre-fix (a bare `" ".join(extra)`) none of these reach the program intact — a
+# space splits the value and a metacharacter executes or errors. The `"`-plus-
+# separator rows are the review-18 regression: MSVCRT quoting alone left a `"` to
+# end cmd.exe's quoted region early and re-expose the following `&`/`|`; the
+# caret-escaping pass (_win_quote phase 2) keeps them literal on cmd.exe, and
+# shlex.quote already did on POSIX.
+@pytest.mark.parametrize(
+    "arg",
+    [
+        "a b",  # a space must not split into two argv tokens
+        "a&b",  # cmd.exe / sh command separator, kept literal
+        "a|b",  # a pipe, kept literal
+        "x && y",  # separators with surrounding spaces, one token
+        'a"b',  # a literal double quote survives to the program
+        'a"&b',  # a quote AND a separator together (cmd.exe quote-state gap)
+        'a"|b',  # same, with a pipe
+        'a"&b|c',  # a quote combined with BOTH separators in one value
+        'a b"&c',  # quote+separator preceded by a space (both traps at once)
+    ],
+)
+def test_trailing_data_arg_reaches_program_as_one_literal_token(repo, arg):
+    proc = _run(["serve", arg], repo)
+    assert proc.returncode == 0, proc.stderr
+    args = (repo / "args.txt").read_text(encoding="utf-8").splitlines()
+    assert args == ["served", arg]
+
+
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="POSIX shlex.quote neutralizes shell expansion totally; cmd.exe %VAR% "
+    "expansion is a documented Windows-only limit (run_menu module docstring)",
+)
+def test_trailing_arg_shell_expansion_is_neutralized_on_posix(repo):
+    # The data-vs-fragment proof: a value that looks like shell expansion is
+    # passed literally, never evaluated. Pre-fix each of these would expand or
+    # run a subshell instead of reaching the program.
+    proc = _run(["serve", "$HOME", "`id`", "$(echo hi)"], repo)
+    assert proc.returncode == 0, proc.stderr
+    args = (repo / "args.txt").read_text(encoding="utf-8").splitlines()
+    assert args == ["served", "$HOME", "`id`", "$(echo hi)"]

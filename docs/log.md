@@ -9495,3 +9495,7 @@ On `dualplan-routing-fix`, not pushed.
 ## 2026-07-18 17:06 — integrated train p0-g3-WI-226-65f9 (WI-226)
 
 Head 6a7b090 composed onto 808f95d by the serialized integrator; 1 verdict(s) verified on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-226 -> done.
+
+## 2026-07-18 17:58 — integrated train 1-g3-WI-227-cec3 (WI-227)
+
+Head c416510 composed onto d1f5f5a by the serialized integrator; 1 verdict(s) verified on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-227 -> done.
