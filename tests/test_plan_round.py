@@ -14,6 +14,11 @@ from conftest import SCRIPTS, load_script, run_py
 pr = load_script("plan_round")
 
 
+def test_default_budget_covers_repairs_and_relaunch_headroom():
+    assert pr.DEFAULT_ROUND_BUDGET == 14
+    assert pr.new_round("t")["budget"] == 14
+
+
 def drive_to_critique(state, verdicts=("CHANGES-REQUESTED", "CHANGES-REQUESTED")):
     pr.record(state, pr.STEP_PLAN, plan="A", ok=True)
     pr.record(state, pr.STEP_PLAN, plan="B", ok=True)

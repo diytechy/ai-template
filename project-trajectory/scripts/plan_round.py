@@ -60,9 +60,9 @@ VERDICT_CHANGES = "CHANGES-REQUESTED"
 
 PLAN_KEYS = ("A", "B")
 
-# Happy path costs 8 sessions (2 plan + 2 critique + 2 revise + 2 arbiter);
-# the default leaves headroom for the two legal repair bounces.
-DEFAULT_ROUND_BUDGET = 10
+# Happy path spends 8 sessions; two legal repairs plus fallback/relaunch
+# headroom must still fit without weakening any per-step cap.
+DEFAULT_ROUND_BUDGET = 14
 
 # `page_action()` — the documented `docs/gate-policy` failure semantics
 # (process-options.md "Unattended operation", failure-semantics bullet). The

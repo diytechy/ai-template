@@ -9367,3 +9367,26 @@ SELECT disposition commit passing the shipped freshness hook. The focused
 dispatcher/dual-plan matrix passed **51 tests**; the per-commit smoke and docs
 bars are recorded by the commit. Full-suite/G3 close evidence follows with the
 paired WI-221 sitting.
+
+## 2026-07-18 — WI-221: dual-plan budget headroom
+
+Raised `plan_round.DEFAULT_ROUND_BUDGET` from 10 to the field-proven 14. The
+comment now prices the 8-session happy path, two legal repairs, and
+fallback/relaunch headroom explicitly. Per-repo `AGENT_DUALPLAN_BUDGET`
+overrides and budget-exhaustion PAGE semantics are unchanged. A unit regression
+pins both the constant and `new_round()` propagation; the existing cap tests
+remain unchanged and green. `PROCESS_OPTIONS.md` does not restate the number,
+so no process-doc synchronization was needed.
+
+**Verified.** Focused dispatcher/dual-plan matrix **51 passed**; round-state
+unit module **16 passed**; full suite **1,039 passed / 34 skipped**. The complete
+G3 harness passed **16/16**, including 1,039 passed / 34 skipped with **91.03%**
+coverage, strict traceability SN=25 SR=66 LLR=76 TC=76 with zero orphans and
+zero findings, strict trajectory 219 WIs / 206 done / acyclic, format, lint,
+duplicate-code, privacy, docs, design-flow, and every generated-artifact
+freshness check. Pytest emitted the environment's known temporary-directory
+cleanup `PermissionError` at interpreter exit, but both pytest and the G3
+harness exited 0. Byte-budget guard after the sitting: budgeted docs remained
+unchanged at `AGENTS.template.md` **9,978 bytes**, `PROCESS.md` **60,169 bytes**,
+and `PROCESS_OPTIONS.md` **156,059 bytes** (delta 0 for each). On
+`dualplan-routing-fix`, not pushed.
