@@ -1,0 +1,39 @@
+# docs/orphans-allow — the meta-repo's EXPECTED live-orphan census (WI-228).
+#
+# Read by project-trajectory/scripts/check_docs.py. A "live orphan" is a doc no
+# navigation path reaches from an entry root. Most of ours are RETAINED EVIDENCE
+# — round reviews, closed-WI specs, dual-plan artifacts, generated indexes — that
+# must stay on disk yet is not a navigation node: "unlinked-from-navigation" is
+# the wrong frame for it. Each non-comment line is a shell glob (fnmatch, repo-
+# relative POSIX; `*` spans separators, so `docs/reviews/*` covers the whole
+# subtree). A matched orphan is EXPECTED — dropped from the per-doc warnings, an
+# aggregate `note` in their place, and never a finding (even under
+# --strict-orphans). An orphan matching NOTHING here is GENUINE: it warns (fails
+# under --strict-orphans), the newly-introduced-orphan RATCHET — link/index it,
+# or, if it is a new evidence class, add its glob here with a reason.
+#
+# WHY a census, not deletion-or-mass-indexing (repo-review-2026-07-18 M-07):
+# deleting would destroy history; indexing everything would bloat navigation
+# (status.md / README stay lean). This bounds the noise so a genuinely
+# undiscoverable new doc no longer hides in 60-odd steady warnings — the same
+# silent-growth mode docs/dupes-allow bounds for duplication and the C901
+# ratchet (WI-225) bounds for complexity. A GENUINE straggler is linked instead
+# of listed: docs/specs/parallel-dispatch-design-notes.md is reached from its
+# companion plan, so it is navigable and absent below.
+
+# review evidence — the per-round Reviewer/Critique/Grounding artifacts and the
+# top-level whole-repo reviews; kept as the audit trail, referenced from log.md.
+docs/reviews/*
+docs/repo-review-*.md
+
+# work-item specs — the per-WI SpecRef files (open and closed). Registry-
+# referenced (docs/requirements/work-items.csv), not doc-graph navigation nodes.
+docs/specs/WI-*.md
+
+# dual-plan decomposition rounds — one directory per round plus the plans/ index;
+# the verdict is summarized in log.md and selected rows are filed as real WIs.
+docs/plans/*
+
+# generated iteration-log index — freshness owned by its generator, not
+# hand-navigated (the same "never lint generated output" stance as docs/okf/).
+docs/iteration_index.md

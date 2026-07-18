@@ -847,3 +847,146 @@ def test_oi_coherence_retires_under_generated_marker(scaffold):
     )
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
     assert "Open items after ## Scope" in proc.stdout
+
+
+# --- expected-live-orphan taxonomy + the no-new-orphan ratchet (WI-228) --------
+# repo-review-2026-07-18 M-07: docs/orphans-allow declares expected live-orphan
+# CLASSES (retained evidence). A classified orphan stops warning individually and
+# never fails; only a *newly introduced* orphan outside every class still trips
+# the warning / --strict-orphans failure — the ratchet, baselining history.
+
+
+def _write_orphans_allow(scaffold, text):
+    (scaffold / "docs" / "orphans-allow").write_text(text, encoding="utf-8")
+
+
+def test_declared_class_suppresses_expected_orphan(scaffold):
+    # A doc matching a docs/orphans-allow glob is an EXPECTED live-orphan: it is
+    # dropped from the per-doc warnings (an aggregate `note` replaces them) and is
+    # never named individually — the noise reduction M-07 asks for.
+    (scaffold / "docs" / "reviews").mkdir(parents=True, exist_ok=True)
+    (scaffold / "docs" / "reviews" / "003-REVIEW-A.md").write_text(
+        "# Review\n\nRetained round evidence.\n", encoding="utf-8"
+    )
+    _write_orphans_allow(scaffold, "# reviews\ndocs/reviews/*\n")
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # classified: never named in an individual orphan line (default or strict)...
+    assert "docs/reviews/003-REVIEW-A.md" not in proc.stdout
+    # ... and folded into the aggregate note instead.
+    assert "expected live-orphan(s) matched docs/orphans-allow" in proc.stdout
+
+
+def test_orphan_outside_declared_classes_is_the_ratchet(scaffold):
+    # THE RATCHET: an orphan matching no declared class is GENUINE — it warns by
+    # default and fails under --strict-orphans exactly as before. A class for
+    # OTHER paths does not grandfather a newly introduced undiscoverable doc.
+    _write_orphans_allow(scaffold, "docs/reviews/*\n")
+    (scaffold / "docs" / "new-note.md").write_text(
+        "# New\n\nNobody links here.\n", encoding="utf-8"
+    )
+    warn = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert warn.returncode == 0, warn.stdout + warn.stderr
+    assert (
+        "WARN - orphan doc (no path from an entry root): docs/new-note.md"
+        in warn.stdout
+    )
+    strict = run_py(
+        [
+            "scripts/check_docs.py",
+            "--ignore",
+            "docs/test/report.md",
+            "--strict-orphans",
+        ],
+        cwd=scaffold,
+    )
+    assert strict.returncode == 1
+    assert (
+        "FAIL - orphan doc (no path from an entry root): docs/new-note.md"
+        in strict.stdout
+    )
+
+
+def test_expected_orphan_never_fails_even_under_strict(tmp_path):
+    # "Baseline the residue, never fail history": an EXPECTED live-orphan is
+    # exempt from failure even under --strict-orphans (a genuine orphan is not).
+    # A bare docs tree (no root README) keeps the vision/inventory checks quiet,
+    # so the ONLY orphan here is the classified review — strict stays green.
+    docs = tmp_path / "docs"
+    (docs / "reviews").mkdir(parents=True)
+    (docs / "reviews" / "003-REVIEW-A.md").write_text("# R\n", encoding="utf-8")
+    (docs / "orphans-allow").write_text("docs/reviews/*\n", encoding="utf-8")
+    proc = run_py(
+        [SCRIPTS / "check_docs.py", "--root", tmp_path, "--strict-orphans"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "orphan doc" not in proc.stdout  # neither WARN nor FAIL for it
+    assert "expected live-orphan(s) matched docs/orphans-allow" in proc.stdout
+
+
+def test_absent_orphans_allow_is_todays_behavior(scaffold):
+    # Downstream unchanged: with no docs/orphans-allow there is no class
+    # suppression — a lonely doc warns individually and the `note` never appears
+    # (the kit must not surprise an existing repo).
+    (scaffold / "docs" / "lonely.md").write_text("# Lonely\n", encoding="utf-8")
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (
+        "WARN - orphan doc (no path from an entry root): docs/lonely.md" in proc.stdout
+    )
+    assert "expected live-orphan" not in proc.stdout
+
+
+def test_declared_class_still_link_checks_the_doc(scaffold):
+    # Non-goal untouched (no change to broken-link semantics): classifying a doc
+    # as an expected orphan silences only the orphan noise — a broken link inside
+    # it still fails the run.
+    (scaffold / "docs" / "reviews").mkdir(parents=True, exist_ok=True)
+    (scaffold / "docs" / "reviews" / "003-REVIEW-A.md").write_text(
+        "# R\n\nSee [gone](nowhere-review.md).\n", encoding="utf-8"
+    )
+    _write_orphans_allow(scaffold, "docs/reviews/*\n")
+    proc = run_py(
+        ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
+    )
+    assert proc.returncode == 1
+    assert "broken link -> nowhere-review.md" in proc.stdout
+
+
+def test_load_orphan_classes_reads_declared_file(tmp_path):
+    # The declared-file idiom (like docs/status-lint): `#` comments and blanks
+    # dropped, one glob per remaining line; absent file => [] (unchanged default).
+    check = load_script("check_docs")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "orphans-allow").write_text(
+        "# a comment\n\ndocs/reviews/*\n  docs/specs/WI-*.md  \n", encoding="utf-8"
+    )
+    assert check.load_orphan_classes(tmp_path, "docs") == [
+        "docs/reviews/*",
+        "docs/specs/WI-*.md",
+    ]
+    assert check.load_orphan_classes(tmp_path / "nope", "docs") == []
+
+
+def test_partition_orphans_splits_on_declared_globs():
+    # `*` spans separators (fnmatch), so docs/reviews/* covers the subtree; an
+    # unmatched path stays genuine; no patterns => everything genuine (unchanged).
+    check = load_script("check_docs")
+    orphans = [
+        "docs/reviews/003-REVIEW-A.md",
+        "docs/specs/WI-175.md",
+        "docs/new-note.md",
+    ]
+    genuine, expected = check.partition_orphans(
+        orphans, ["docs/reviews/*", "docs/specs/WI-*.md"]
+    )
+    assert genuine == ["docs/new-note.md"]
+    assert expected == ["docs/reviews/003-REVIEW-A.md", "docs/specs/WI-175.md"]
+    assert check.partition_orphans(orphans, []) == (orphans, [])
