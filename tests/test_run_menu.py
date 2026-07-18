@@ -157,7 +157,11 @@ def test_shell_quoting_sanity(tmp_path):
 # delivers each whole (module docstring "Trailing arguments"). These run through
 # the real platform shell (shell=True), so CI covers both cmd.exe and POSIX sh.
 # Pre-fix (a bare `" ".join(extra)`) none of these reach the program intact — a
-# space splits the value and a metacharacter executes or errors.
+# space splits the value and a metacharacter executes or errors. The `"`-plus-
+# separator rows are the review-18 regression: MSVCRT quoting alone left a `"` to
+# end cmd.exe's quoted region early and re-expose the following `&`/`|`; the
+# caret-escaping pass (_win_quote phase 2) keeps them literal on cmd.exe, and
+# shlex.quote already did on POSIX.
 @pytest.mark.parametrize(
     "arg",
     [
@@ -166,6 +170,10 @@ def test_shell_quoting_sanity(tmp_path):
         "a|b",  # a pipe, kept literal
         "x && y",  # separators with surrounding spaces, one token
         'a"b',  # a literal double quote survives to the program
+        'a"&b',  # a quote AND a separator together (cmd.exe quote-state gap)
+        'a"|b',  # same, with a pipe
+        'a"&b|c',  # a quote combined with BOTH separators in one value
+        'a b"&c',  # quote+separator preceded by a space (both traps at once)
     ],
 )
 def test_trailing_data_arg_reaches_program_as_one_literal_token(repo, arg):

@@ -44,12 +44,14 @@ ruling): the recipe is trusted, an evaluator's `"$@"` is a value. Each is
 appended to the recipe *quoted for the platform shell* (`_quote_extra`) so a
 value with spaces, quotes, or an `&`/`|` reaches the program as one literal
 argument rather than splitting or executing. POSIX uses `shlex.quote` (total).
-Two Windows-only limits are documented rather than fought (this is an ordinary
-convenience layer, not the dispatcher): cmd.exe still expands a `%VAR%` in a
-value (a single `cmd /c` line cannot suppress it), and a literal double quote
-combined with a separator in one value can re-expose that separator (the
-cmd.exe-vs-MSVCRT quote-state disagreement). The recipe lines themselves stay
-trusted shell text.
+Windows is total for shell syntax too: `_win_quote` MSVCRT-quotes each value and
+then caret-escapes every cmd.exe metacharacter (`_CMD_META`), so a separator can
+never be re-parsed as a command operator — even combined with a literal `"`. One
+Windows-only limit is documented rather than fought (this is an ordinary
+convenience layer, not the dispatcher): cmd.exe still expands a `%VAR%` (and a
+`!VAR!` under delayed expansion) in a value, because it does that pass before
+caret processing and a single `cmd /c` line cannot suppress it. The recipe lines
+themselves stay trusted shell text.
 
 Contracts: IF-048, IF-049 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
@@ -120,31 +122,53 @@ NO_CAPABILITIES = (
 )
 
 
+# cmd.exe's own shell operators plus the double quote. After the MSVCRT argv
+# quoting in _win_quote, every one of these in the result is caret-escaped so
+# cmd.exe passes the token through literally instead of re-parsing an embedded
+# separator as a command operator (the WI-227 data contract). `%` is deliberately
+# absent: cmd.exe expands `%VAR%` in an earlier pass, before caret processing, so
+# it can't be suppressed on a single `cmd /c` line — the one documented limit.
+_CMD_META = frozenset('()^"<>&|')
+
+
 def _win_quote(arg):
     """Quote one trailing DATA argument for a cmd.exe command line (Windows,
-    shell=True). Always wrapped in double quotes so cmd.exe treats separators and
-    redirects (`&` `|` `<` `>` `(` `)` `^`) inside as literal text, with the
-    MSVCRT backslash/quote escaping the target program's argv parser expects:
-    each run of backslashes preceding a `"` is doubled and the `"` escaped, and a
-    trailing run before the closing quote is doubled too. `%VAR%` expansion and a
-    quote-plus-separator value are the documented residual limits (module
-    docstring)."""
-    out = ['"']
+    shell=True) so it reaches the program as exactly one literal token that
+    cmd.exe never re-parses as shell syntax. Two phases:
+
+    1. MSVCRT argv quoting — wrap in double quotes and escape for the target
+       program's own argv parser: each run of backslashes preceding a `"` is
+       doubled and the quote backslash-escaped, and a trailing run before the
+       closing quote is doubled too.
+    2. cmd.exe caret escaping — prefix `^` to every cmd.exe metacharacter in the
+       phase-1 result, *including the double quotes phase 1 added*. cmd.exe then
+       treats each as a non-toggling literal, so a separator (`&` `|` `<` `>` `(`
+       `)` `^`) inside the value stays literal even when the value also contains
+       a `"`. This closes the cmd.exe-vs-MSVCRT quote-state gap where a `"` used
+       to end cmd.exe's quoted region early and re-expose a following `&`/`|` to
+       the shell.
+
+    Residual limit (documented, not fought — this is an ordinary convenience
+    layer): a `%VAR%` (and a `!VAR!` under delayed expansion) in a value is still
+    expanded, because cmd.exe does that pass before caret processing and a single
+    `cmd /c` line cannot suppress it. POSIX (`shlex.quote`) has no such limit."""
+    msvcrt = ['"']
     backslashes = 0
     for ch in arg:
         if ch == "\\":
             backslashes += 1
-            out.append(ch)
+            msvcrt.append(ch)
             continue
         if ch == '"':
-            out.append("\\" * backslashes)  # double the run already emitted
-            out.append('\\"')
+            msvcrt.append("\\" * backslashes)  # double the run already emitted
+            msvcrt.append('\\"')
         else:
-            out.append(ch)
+            msvcrt.append(ch)
         backslashes = 0
-    out.append("\\" * backslashes)  # double a trailing run before the close quote
-    out.append('"')
-    return "".join(out)
+    msvcrt.append("\\" * backslashes)  # double a trailing run before the close quote
+    msvcrt.append('"')
+    quoted = "".join(msvcrt)
+    return "".join(("^" + ch) if ch in _CMD_META else ch for ch in quoted)
 
 
 def _quote_extra(extra):
