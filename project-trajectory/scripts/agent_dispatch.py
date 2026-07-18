@@ -1578,6 +1578,430 @@ def telemetry_summary(journal):
     return summary
 
 
+def _head_reconcile_decision(ihead, dhead, integration_is_ancestor, dev_is_ancestor):
+    """Choose the launch-time ref action from an already-observed relation."""
+    if ihead and dhead and ihead != dhead:
+        if integration_is_ancestor and not dev_is_ancestor:
+            return "fast-forward"
+        if not integration_is_ancestor and not dev_is_ancestor:
+            return "needs-human"
+    return "publish"
+
+
+def _train_evidence_decision(wis, built, blocked):
+    """Classify proven branch evidence without reading refs or the registry."""
+    foreign = (set(built) | set(blocked)) - set(wis)
+    if foreign:
+        return "quarantined", tuple(sorted(foreign))
+    if blocked:
+        return "blocked", ()
+    if set(wis) <= set(built):
+        return "ready-to-integrate", ()
+    return "resume", ()
+
+
+def _dispatch_allowed(paused, blacked_out, needs_human_ask):
+    return paused is None and not blacked_out and not needs_human_ask
+
+
+def _retry_due(state, now, retry_at):
+    return state == "resume" or (state == "waiting" and now >= retry_at)
+
+
+def _worker_exit_decision(code, spine, gate_policy):
+    """Return the lane state, event, and human action for a worker exit."""
+    if code == EXIT_DONE:
+        ask = "ratify" if spine and gate_policy != "autonomous" else ""
+        return "ready-to-integrate", "worker-done", ask
+    if code == EXIT_BLOCKED:
+        return "blocked", "worker-blocked", "release-unstarted"
+    if code == EXIT_TRAIN_END:
+        return "train-end", "worker-train-end", "release-unstarted"
+    if code == EXIT_WAITING:
+        return "waiting", "worker-waiting", "retry"
+    if code == EXIT_NEEDS_HUMAN:
+        return "needs-human", "worker-needs-human", "page"
+    return "quarantined", "worker-quarantined", ""
+
+
+def _integration_result_decision(result, source_state):
+    """Map an integrator result to parked state and rescan/journal actions."""
+    if result == "integrated":
+        state = "integrated" if source_state == "ready-to-integrate" else "blocked-done"
+        return state, True, False
+    if result == "recompose":
+        return source_state, True, False
+    state = result if result != "error" else "quarantined"
+    return state, False, True
+
+
+def _idle_decision(paused, needs_human_ask, blacked_out, dispatchable, waiting):
+    """Choose the no-active-lane action; the caller performs any effects."""
+    if paused is not None:
+        return "paused"
+    if needs_human_ask:
+        return "needs-human"
+    if blacked_out and dispatchable:
+        return "blackout-wait"
+    if waiting and not dispatchable:
+        return "waiting"
+    if not dispatchable and not waiting:
+        return "drained"
+    return "poll"
+
+
+def _terminal_decision(attention, queued_left, unpublished, current_head, blocked_rows):
+    """Choose generated run-state, banner text, and exit code."""
+    if attention:
+        return (
+            "RUNNING",
+            "trains need attention (re-review / rework / quarantine)",
+            EXIT_STALL,
+        )
+    if queued_left:
+        return "RUNNING", "build-out wave complete", EXIT_DONE
+    if unpublished and unpublished != current_head:
+        return "RUNNING", "integration complete; publication deferred", EXIT_DONE
+    if blocked_rows:
+        return "BLOCKED", "run-state=BLOCKED", EXIT_BLOCKED
+    return "DONE", "run-state=DONE", EXIT_DONE
+
+
+def _reservation_trains(root, journal):
+    """Read reservation metadata and group its proven claims by train."""
+    trains = {}
+    quarantined_wis = set()
+    for wid, sha in sorted(list_reservations(root).items()):
+        meta = reservation_meta(root, sha)
+        if meta is None:
+            journal.event("quarantine", wi=wid, reason="unreadable-reservation")
+            quarantined_wis.add(wid)
+            continue
+        trains.setdefault(meta["train"], {"wis": [], "base": meta["base"]})
+        trains[meta["train"]]["wis"].append(wid)
+    return trains, quarantined_wis
+
+
+def _reconcile_reserved_train(root, journal, tid, train, parked, quarantined_wis):
+    """Apply effects for one durable train after pure evidence classification."""
+    wis = train["wis"]
+    base = train["base"]
+    int_rows = registry_rows_at(root, INTEGRATION_REF) or []
+    int_status = {
+        (row.get("WI-ID") or "").strip(): (row.get("Status") or "").strip().lower()
+        for row in int_rows
+    }
+    if wis and all(int_status.get(wid) == "done" for wid in wis):
+        err = release_reservations(root, wis)
+        if err:
+            journal.event("release-failed", train=tid, reason=err[:200])
+        parked[tid] = {"state": "integrated", "wis": wis, "base": base}
+        journal.event("reconcile", train=tid, state="integrated")
+        return
+    code, _ = git(root, "rev-parse", "--verify", "--quiet", TRAIN_BRANCH_HEADS + tid)
+    if code != 0:
+        journal.event("quarantine", train=tid, reason="reservation-without-branch")
+        quarantined_wis.update(wis)
+        return
+    built, blocked = train_branch_evidence(root, tid, base)
+    state, foreign = _train_evidence_decision(wis, built, blocked)
+    if foreign:
+        journal.event(
+            "quarantine",
+            train=tid,
+            reason="claims-unreserved-wi:" + ";".join(foreign),
+        )
+        quarantined_wis.update(wis)
+        parked[tid] = {"state": state, "wis": wis, "base": base}
+        return
+    parked[tid] = {"state": state, "wis": wis, "base": base}
+    journal.event("reconcile", train=tid, state=state)
+
+
+def _reconcile_owned_trains(root, journal):
+    parked = {}
+    trains, quarantined_wis = _reservation_trains(root, journal)
+    for tid, train in sorted(trains.items()):
+        _reconcile_reserved_train(root, journal, tid, train, parked, quarantined_wis)
+    return parked, quarantined_wis
+
+
+def _spawn_worker(args, root, journal, active, parked, tid, wis, base, spine):
+    wt, err = lease_worktree(root, tid)
+    if err:
+        journal.event("quarantine", train=tid, reason=err)
+        parked[tid] = {"state": "quarantined", "wis": wis}
+        return False
+    argv = [
+        sys.executable,
+        str(_ENGINE),
+        "--worktree",
+        str(wt),
+        "--wi",
+        ";".join(wis),
+        "--train",
+        tid,
+        "--base",
+        base,
+        "--max-iterations",
+        str(args.worker_iterations),
+        "--pause",
+        str(args.pause),
+        "--no-session-echo",
+    ]
+    if args.agent_cmd is not None:
+        argv += ["--agent-cmd", args.agent_cmd]
+    if args.model:
+        argv += ["--model", args.model]
+    if args.session_timeout:
+        argv += ["--session-timeout", str(args.session_timeout)]
+    logdir = journal.dir / "logs"
+    out_fh = None
+    try:
+        logdir.mkdir(parents=True, exist_ok=True)
+        out_fh = (logdir / (tid + ".out")).open("ab")
+    except OSError:
+        pass
+    proc = subprocess.Popen(
+        argv,
+        cwd=str(wt),
+        stdout=out_fh if out_fh is not None else subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
+    )
+    active[tid] = {
+        "proc": proc,
+        "wis": wis,
+        "base": base,
+        "worktree": str(wt),
+        "spine": spine,
+        "log_fh": out_fh,
+    }
+    journal.event(
+        "worker-start", train=tid, wis=";".join(wis), pid=proc.pid, spine=spine
+    )
+    journal.train(tid, {"wis": wis, "base": base, "state": "building"})
+    return True
+
+
+def _close_worker_log(info):
+    log_fh = info.get("log_fh")
+    if log_fh is None:
+        return
+    try:
+        log_fh.close()
+    except OSError:
+        pass
+
+
+def _release_unstarted(root, journal, tid, info):
+    built, blocked = train_branch_evidence(root, tid, info["base"])
+    unstarted = [wid for wid in info["wis"] if wid not in built and wid not in blocked]
+    err = release_reservations(root, unstarted)
+    if err:
+        journal.event("release-failed", train=tid, reason=err[:200])
+    elif unstarted:
+        journal.event("release-unstarted", train=tid, wis=";".join(unstarted))
+    return [wid for wid in info["wis"] if wid not in unstarted]
+
+
+def _worker_event_fields(state, code):
+    if state == "ready-to-integrate":
+        return {"state": state}
+    if state == "waiting":
+        return {"retry_s": TRAIN_RETRY_SECONDS}
+    if state == "quarantined":
+        return {"exit": code}
+    return {}
+
+
+def _handle_worker_exit(
+    root, journal, active, parked, retry_at, tid, code, gate_policy
+):
+    info = active.pop(tid)
+    _close_worker_log(info)
+    state, event, action = _worker_exit_decision(code, info["spine"], gate_policy)
+    wis = info["wis"]
+    if action == "release-unstarted":
+        wis = _release_unstarted(root, journal, tid, info)
+    if action == "retry":
+        retry_at[tid] = time.time() + TRAIN_RETRY_SECONDS
+    parked[tid] = {"state": state, "wis": wis, "base": info["base"]}
+    journal.event(event, train=tid, **_worker_event_fields(state, code))
+    if state == "ready-to-integrate":
+        journal.train(tid, {"wis": wis, "base": info["base"], "state": state})
+    if action == "ratify":
+        journal.event("gate-ratification-exit", train=tid)
+        return "spine/gate train {} is built and needs ratification (docs/gate-policy: {})".format(
+            tid, gate_policy
+        )
+    if action == "page":
+        return "worker train {} paged (no routable model / escalation) — see {}".format(
+            tid, journal.dir / "logs" / (tid + ".out")
+        )
+    return ""
+
+
+def _resume_reconciled(args, root, journal, active, parked, retry_at, jobs):
+    spine_active = any(lane["spine"] for lane in active.values())
+    for tid, lane in sorted(parked.items()):
+        if len(active) >= jobs or spine_active:
+            break
+        if _retry_due(lane.get("state"), time.time(), retry_at.get(tid, 0)):
+            del parked[tid]
+            _spawn_worker(
+                args,
+                root,
+                journal,
+                active,
+                parked,
+                tid,
+                lane["wis"],
+                lane["base"],
+                spine=False,
+            )
+
+
+def _frontier_snapshot(root, quarantined_wis):
+    reg_rows = registry_rows_at(root, INTEGRATION_REF)
+    if reg_rows is None:
+        reg_rows = schedule.load_rows(root / "docs" / "requirements" / "work-items.csv")
+    wi_rows = {}
+    for row in reg_rows:
+        wid = (row.get("WI-ID") or "").strip()
+        if WI_TOKEN_RE.match(wid) and wid not in wi_rows:
+            wi_rows[wid] = row
+    wis = schedule.load_wis(reg_rows)
+    reserved = set(list_reservations(root)) | quarantined_wis
+    records = schedule.evaluate(wis, reserved)
+    cars = pack_traincars(records, {wi["id"]: wi for wi in wis})
+    return wi_rows, cars
+
+
+def _integrate_parked(root, docs, journal, parked, required_verdicts, needs_human):
+    integrated_any = False
+    for tid in sorted(parked):
+        if needs_human:
+            break
+        source_state = parked[tid]["state"]
+        if source_state not in ("ready-to-integrate", "blocked"):
+            continue
+        lane = parked[tid]
+        base = lane.get("base")
+        if not base:
+            meta = reservation_meta(
+                root, list_reservations(root).get(lane["wis"][0], "")
+            )
+            base = (meta or {}).get("base", "")
+        if source_state == "ready-to-integrate":
+            result, detail = integrate_train(
+                root, docs, journal, tid, lane["wis"], base, required_verdicts
+            )
+        else:
+            result, detail = blocked_disposition(
+                root, docs, journal, tid, lane["wis"], base
+            )
+        next_state, ref_moved, should_journal = _integration_result_decision(
+            result, source_state
+        )
+        if result != "recompose":
+            parked[tid] = {"state": next_state, "wis": lane["wis"]}
+        integrated_any = integrated_any or ref_moved
+        if should_journal:
+            journal.event(
+                "integration-parked", train=tid, state=result, detail=detail[:200]
+            )
+    return integrated_any
+
+
+def _apply_idle_action(action, root, docs, parked, needs_human_ask):
+    if action == "paused":
+        stop_banner(
+            docs / "status.md",
+            "paused (docs/pause present)",
+            "no new reservations; delete docs/pause and relaunch to "
+            "resume ({} in-flight train(s) already wrapped safely).".format(
+                len(parked)
+            ),
+        )
+        return EXIT_PAUSED
+    if action == "needs-human":
+        _write_runstate(docs, "NEEDS-HUMAN", needs_human_ask)
+        stop_banner(docs / "status.md", "NEEDS-HUMAN", needs_human_ask)
+        return EXIT_NEEDS_HUMAN
+    if action == "blackout-wait":
+        wake = blackout_wake(
+            read_declared(docs / "blackout", ""), datetime.datetime.utcnow()
+        )
+        time.sleep(min(wake or 60, 60))
+        return "continue"
+    if action == "waiting":
+        _write_runstate(docs, "RUNNING")
+        stop_banner(
+            docs / "status.md",
+            "WAITING on rate limits",
+            "every dispatchable train is rate-limited; relaunch later.",
+        )
+        return EXIT_WAITING
+    if action == "drained":
+        return "break"
+    return None
+
+
+def _finish_dispatch(root, docs, journal, parked):
+    telemetry_summary(journal)
+    integrated = [
+        tid
+        for tid, lane in parked.items()
+        if lane["state"] in ("integrated", "blocked-done")
+    ]
+    attention_states = {
+        "quarantined",
+        "needs-human",
+        "needs-re-review",
+        "rework",
+        "dual-paged",
+    }
+    attention = [
+        tid
+        for tid, lane in parked.items()
+        if lane["state"] in attention_states
+        or (lane["state"] == "train-end" and lane["wis"])
+    ]
+    blocked_done = [
+        tid for tid, lane in parked.items() if lane["state"] == "blocked-done"
+    ]
+    reg_rows = registry_rows_at(root, INTEGRATION_REF) or schedule.load_rows(
+        root / "docs" / "requirements" / "work-items.csv"
+    )
+    wis = schedule.load_wis(reg_rows)
+    reserved = set(list_reservations(root))
+    queued_count = sum(
+        1 for wi in wis if wi["status"] == "queued" and wi["id"] not in reserved
+    )
+    queued_left = bool(queued_count)
+    blocked_rows = any(wi["status"] == "blocked" for wi in wis)
+    summary = (
+        "trains: {} integrated ({} blocked-disposition), {} needing attention "
+        "(re-review/rework/quarantine/partial); {} unreserved queued WI(s) remain"
+    ).format(len(integrated), len(blocked_done), len(attention), queued_count)
+    unpublished = ""
+    current_head = ""
+    if not attention and not queued_left:
+        unpublished = integration_head(root)
+        if unpublished:
+            current_head = head_sha_full(root)
+    run_state, banner, exit_code = _terminal_decision(
+        attention, queued_left, unpublished, current_head, blocked_rows
+    )
+    _write_runstate(docs, run_state)
+    detail = summary
+    if banner == "integration complete; publication deferred":
+        detail += " — clean the checkout and relaunch to publish."
+    stop_banner(docs / "status.md", banner, detail)
+    return exit_code
+
+
 def dispatch_run(args, root):
     """The dispatcher/integrator loop (SR-061): reconcile -> gate -> build-out.
 
@@ -1686,29 +2110,29 @@ def dispatch_run(args, root):
     # discarded by a mistaken publish:
     ihead = integration_head(root)
     dhead = head_sha_full(root)
-    dev_strictly_ahead = False
+    int_is_anc = False
+    dev_is_anc = False
     if ihead and dhead and ihead != dhead:
         int_is_anc = git(root, "merge-base", "--is-ancestor", ihead, dhead)[0] == 0
         dev_is_anc = git(root, "merge-base", "--is-ancestor", dhead, ihead)[0] == 0
-        if int_is_anc and not dev_is_anc:
-            dev_strictly_ahead = True
-        elif not int_is_anc and not dev_is_anc:
-            ask = (
-                "integration head {} and development head {} have diverged; "
-                "preserve both histories, then merge/rebase development onto "
-                "integration or explicitly restore the intended ref"
-            ).format(ihead, dhead)
-            journal.event(
-                "integration-diverged",
-                integration_head=ihead,
-                development_head=dhead,
-                ask=ask,
-            )
-            _write_runstate(docs, "NEEDS-HUMAN", ask)
-            stop_banner(Path(docs) / "status.md", "NEEDS-HUMAN", ask)
-            print("dispatch: NEEDS-HUMAN — {}".format(ask), file=sys.stderr)
-            return EXIT_NEEDS_HUMAN
-    if dev_strictly_ahead:
+    head_action = _head_reconcile_decision(ihead, dhead, int_is_anc, dev_is_anc)
+    if head_action == "needs-human":
+        ask = (
+            "integration head {} and development head {} have diverged; "
+            "preserve both histories, then merge/rebase development onto "
+            "integration or explicitly restore the intended ref"
+        ).format(ihead, dhead)
+        journal.event(
+            "integration-diverged",
+            integration_head=ihead,
+            development_head=dhead,
+            ask=ask,
+        )
+        _write_runstate(docs, "NEEDS-HUMAN", ask)
+        stop_banner(Path(docs) / "status.md", "NEEDS-HUMAN", ask)
+        print("dispatch: NEEDS-HUMAN — {}".format(ask), file=sys.stderr)
+        return EXIT_NEEDS_HUMAN
+    if head_action == "fast-forward":
         # Dev is strictly AHEAD of integration: a human added WIs on the
         # development branch. Fast-forward the ref to absorb that new work
         # (never over unpublished integration commits — the divergent case
@@ -1729,215 +2153,9 @@ def dispatch_run(args, root):
     # Group durable reservation claims into trains; resume the incomplete,
     # park the built (ready-to-integrate, Slice F), quarantine the unreadable.
     active = {}  # train_id -> {proc, wis, base, worktree, spine}
-    parked = {}  # train_id -> {"state": ..., "wis": [...]}
+    parked, quarantined_wis = _reconcile_owned_trains(root, journal)
     retry_at = {}  # train_id -> epoch when a WAITING train may retry
-    quarantined_wis = set()
-    claims = list_reservations(root)
-    trains = {}
-    for wid, sha in sorted(claims.items()):
-        meta = reservation_meta(root, sha)
-        if meta is None:
-            journal.event("quarantine", wi=wid, reason="unreadable-reservation")
-            quarantined_wis.add(wid)
-            continue
-        trains.setdefault(meta["train"], {"wis": [], "base": meta["base"]})
-        trains[meta["train"]]["wis"].append(wid)
-    for tid, t in sorted(trains.items()):
-        # Already-integrated restore FIRST (spec §11 table): the durable
-        # disposition advanced before a crash could release the reservations —
-        # every WI is done on the integration ref, so restore `integrated` and
-        # finish the pending release; never re-integrate. Checked before the
-        # branch guard because a dual-plan train (WI-209) has no train branch
-        # at all: its round composes straight onto the integration ref, so a
-        # crash between CAS and release must reconcile here, not quarantine.
-        int_rows0 = registry_rows_at(root, INTEGRATION_REF) or []
-        int_status0 = {
-            (r.get("WI-ID") or "").strip(): (r.get("Status") or "").strip().lower()
-            for r in int_rows0
-        }
-        if t["wis"] and all(int_status0.get(w) == "done" for w in t["wis"]):
-            err = release_reservations(root, t["wis"])
-            if err:
-                journal.event("release-failed", train=tid, reason=err[:200])
-            parked[tid] = {"state": "integrated", "wis": t["wis"], "base": t["base"]}
-            journal.event("reconcile", train=tid, state="integrated")
-            continue
-        code, _ = git(
-            root, "rev-parse", "--verify", "--quiet", TRAIN_BRANCH_HEADS + tid
-        )
-        if code != 0:
-            journal.event("quarantine", train=tid, reason="reservation-without-branch")
-            quarantined_wis.update(t["wis"])
-            continue
-        # Read evidence off the branch (works without a worktree).
-        built, blocked = train_branch_evidence(root, tid, t["base"])
-        # Ownership cross-check (spec §6/§11): a train branch claiming a WI
-        # outside its own reservation set is unprovable ownership — quarantine
-        # THIS train (fail closed) and let disjoint proven work continue.
-        foreign = (built | set(blocked)) - set(t["wis"])
-        if foreign:
-            journal.event(
-                "quarantine",
-                train=tid,
-                reason="claims-unreserved-wi:" + ";".join(sorted(foreign)),
-            )
-            quarantined_wis.update(t["wis"])
-            parked[tid] = {"state": "quarantined", "wis": t["wis"], "base": t["base"]}
-            continue
-        if blocked:
-            parked[tid] = {"state": "blocked", "wis": t["wis"], "base": t["base"]}
-            journal.event("reconcile", train=tid, state="blocked")
-        elif set(t["wis"]) <= built:
-            parked[tid] = {
-                "state": "ready-to-integrate",
-                "wis": t["wis"],
-                "base": t["base"],
-            }
-            journal.event("reconcile", train=tid, state="ready-to-integrate")
-        else:
-            # Incomplete: resume with a fresh worker (its dirty-tree note is
-            # the reconcile-first prompt, spec §11).
-            parked[tid] = {"state": "resume", "wis": t["wis"], "base": t["base"]}
-            journal.event("reconcile", train=tid, state="resume")
-
-    def spawn_worker(tid, wis, base, spine):
-        wt, err = lease_worktree(root, tid)
-        if err:
-            journal.event("quarantine", train=tid, reason=err)
-            parked[tid] = {"state": "quarantined", "wis": wis}
-            return False
-        argv = [
-            sys.executable,
-            str(_ENGINE),  # the sibling agent_loop.py engine (WI-218 hazard 1)
-            "--worktree",
-            str(wt),
-            "--wi",
-            ";".join(wis),
-            "--train",
-            tid,
-            "--base",
-            base,
-            "--max-iterations",
-            str(args.worker_iterations),
-            "--pause",
-            str(args.pause),
-            "--no-session-echo",
-        ]
-        if args.agent_cmd is not None:
-            argv += ["--agent-cmd", args.agent_cmd]
-        if args.model:
-            argv += ["--model", args.model]
-        if args.session_timeout:
-            argv += ["--session-timeout", str(args.session_timeout)]
-        logdir = journal.dir / "logs"
-        out_fh = None
-        try:
-            logdir.mkdir(parents=True, exist_ok=True)
-            out_fh = (logdir / (tid + ".out")).open("ab")
-        except OSError:
-            pass
-        proc = subprocess.Popen(
-            argv,
-            cwd=str(wt),
-            stdout=out_fh if out_fh is not None else subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.DEVNULL,
-        )
-        active[tid] = {
-            "proc": proc,
-            "wis": wis,
-            "base": base,
-            "worktree": str(wt),
-            "spine": spine,
-            "log_fh": out_fh,
-        }
-        journal.event(
-            "worker-start", train=tid, wis=";".join(wis), pid=proc.pid, spine=spine
-        )
-        journal.train(tid, {"wis": wis, "base": base, "state": "building"})
-        return True
-
     needs_human_ask = ""
-
-    def handle_exit(tid, code):
-        nonlocal needs_human_ask
-        info = active.pop(tid)
-        if info.get("log_fh") is not None:
-            try:
-                info["log_fh"].close()
-            except OSError:
-                pass
-        if code == EXIT_DONE:
-            parked[tid] = {
-                "state": "ready-to-integrate",
-                "wis": info["wis"],
-                "base": info["base"],
-            }
-            journal.event("worker-done", train=tid, state="ready-to-integrate")
-            journal.train(
-                tid,
-                {
-                    "wis": info["wis"],
-                    "base": info["base"],
-                    "state": "ready-to-integrate",
-                },
-            )
-            if info["spine"] and gate_policy != "autonomous":
-                # Gate/spine work built: under attended/single-ratify the run
-                # EXITS FOR RATIFICATION (spec §4.2) — a human closes the gate
-                # before build-out continues; `autonomous` continues on the
-                # independent-reviewer verdict.
-                needs_human_ask = (
-                    "spine/gate train {} is built and needs ratification "
-                    "(docs/gate-policy: {})".format(tid, gate_policy)
-                )
-                journal.event("gate-ratification-exit", train=tid)
-        elif code in (EXIT_BLOCKED, EXIT_TRAIN_END):
-            # A blocked constituent or a refused continuation ends the train
-            # early (SR-062): built + blocked constituents KEEP their
-            # reservations (evidence for the Slice-F integrator; nothing
-            # double-runs), while every UNSTARTED constituent is released in
-            # one transaction and the next rescan recomputes the traincar DAG.
-            built, blocked_set = train_branch_evidence(root, tid, info["base"])
-            unstarted = [
-                w for w in info["wis"] if w not in built and w not in blocked_set
-            ]
-            err = release_reservations(root, unstarted)
-            if err:
-                journal.event("release-failed", train=tid, reason=err[:200])
-            elif unstarted:
-                journal.event("release-unstarted", train=tid, wis=";".join(unstarted))
-            state = "blocked" if code == EXIT_BLOCKED else "train-end"
-            parked[tid] = {
-                "state": state,
-                "wis": [w for w in info["wis"] if w not in unstarted],
-                "base": info["base"],
-            }
-            journal.event(
-                "worker-blocked" if code == EXIT_BLOCKED else "worker-train-end",
-                train=tid,
-            )
-        elif code == EXIT_WAITING:
-            retry_at[tid] = time.time() + TRAIN_RETRY_SECONDS
-            parked[tid] = {"state": "waiting", "wis": info["wis"], "base": info["base"]}
-            journal.event("worker-waiting", train=tid, retry_s=TRAIN_RETRY_SECONDS)
-        elif code == EXIT_NEEDS_HUMAN:
-            parked[tid] = {
-                "state": "needs-human",
-                "wis": info["wis"],
-                "base": info["base"],
-            }
-            needs_human_ask = "worker train {} paged (no routable model / escalation) — see {}".format(
-                tid, journal.dir / "logs" / (tid + ".out")
-            )
-            journal.event("worker-needs-human", train=tid)
-        else:
-            parked[tid] = {
-                "state": "quarantined",
-                "wis": info["wis"],
-                "base": info["base"],
-            }
-            journal.event("worker-quarantined", train=tid, exit=code)
 
     # --- stages 2+3: gate-first, then build-out with dynamic refill ----------
     # The lowest-gate-first order (schedule.py) puts spine/gate work at the
@@ -1955,39 +2173,17 @@ def dispatch_run(args, root):
                 read_declared(docs / "blackout", ""), datetime.datetime.utcnow()
             )
         )
-        may_dispatch = paused is None and not blacked_out and not needs_human_ask
+        may_dispatch = _dispatch_allowed(paused, blacked_out, needs_human_ask)
 
-        spine_active = any(a["spine"] for a in active.values())
         if may_dispatch:
             # Resume reconciled trains first (they already hold reservations).
-            for tid, p in sorted(parked.items()):
-                if len(active) >= jobs or spine_active:
-                    break
-                if p.get("state") == "resume" or (
-                    p.get("state") == "waiting" and time.time() >= retry_at.get(tid, 0)
-                ):
-                    del parked[tid]
-                    spawn_worker(tid, p["wis"], p["base"], spine=False)
+            _resume_reconciled(args, root, journal, active, parked, retry_at, jobs)
 
         # Scan the frontier every pass (cheap, and the end-state test below
         # needs it even while paused/blacked out). Once the integration ref
         # exists it is the authoritative integrated disposition (spec §11) —
         # the development checkout is only its published projection.
-        reg_rows = registry_rows_at(root, INTEGRATION_REF)
-        if reg_rows is None:
-            reg_rows = schedule.load_rows(
-                root / "docs" / "requirements" / "work-items.csv"
-            )
-        wi_rows = {}
-        for r in reg_rows:
-            wid = (r.get("WI-ID") or "").strip()
-            if WI_TOKEN_RE.match(wid) and wid not in wi_rows:
-                wi_rows[wid] = r
-        wis = schedule.load_wis(reg_rows)
-        reserved = set(list_reservations(root)) | quarantined_wis
-        records = schedule.evaluate(wis, reserved)
-        wis_by_id = {w["id"]: w for w in wis}
-        cars = pack_traincars(records, wis_by_id)
+        wi_rows, cars = _frontier_snapshot(root, quarantined_wis)
 
         if may_dispatch:
             spine_active = any(a["spine"] for a in active.values())
@@ -2097,7 +2293,17 @@ def dispatch_run(args, root):
                             "base": base,
                         }
                     continue
-                spawn_worker(tid, car["wis"], base, spine=is_spine)
+                _spawn_worker(
+                    args,
+                    root,
+                    journal,
+                    active,
+                    parked,
+                    tid,
+                    car["wis"],
+                    base,
+                    spine=is_spine,
+                )
                 if is_spine:
                     break
 
@@ -2106,51 +2312,14 @@ def dispatch_run(args, root):
         # a time; a worker-reported blocker takes the smaller disposition
         # transaction. Each success is followed by a publication attempt and
         # triggers a fresh rescan (the frontier may have grown).
-        integrated_any = False
-        for tid in sorted(parked):
-            if needs_human_ask:
-                break  # a pending human act gates integration too (§4.2)
-            state_p = parked[tid]["state"]
-            if state_p not in ("ready-to-integrate", "blocked"):
-                continue
-            base_t = parked[tid].get("base") or (
-                reservation_meta(
-                    root, list_reservations(root).get(parked[tid]["wis"][0], "")
-                )
-                or {}
-            ).get("base", "")
-            if state_p == "ready-to-integrate":
-                result, detail = integrate_train(
-                    root,
-                    docs,
-                    journal,
-                    tid,
-                    parked[tid]["wis"],
-                    base_t,
-                    required_verdicts,
-                )
-            else:
-                result, detail = blocked_disposition(
-                    root, docs, journal, tid, parked[tid]["wis"], base_t
-                )
-            if result == "integrated":
-                parked[tid] = {
-                    "state": "integrated"
-                    if state_p == "ready-to-integrate"
-                    else "blocked-done",
-                    "wis": parked[tid]["wis"],
-                }
-                integrated_any = True
-            elif result == "recompose":
-                integrated_any = True  # ref moved: rescan and retry this train
-            else:
-                parked[tid] = {
-                    "state": result if result != "error" else "quarantined",
-                    "wis": parked[tid]["wis"],
-                }
-                journal.event(
-                    "integration-parked", train=tid, state=result, detail=detail[:200]
-                )
+        integrated_any = _integrate_parked(
+            root,
+            docs,
+            journal,
+            parked,
+            required_verdicts,
+            needs_human_ask,
+        )
         if integrated_any:
             state_pub, detail_pub = publish_integration(root, journal, dev_branch)
             if state_pub == "deferred":
@@ -2182,39 +2351,18 @@ def dispatch_run(args, root):
             waiting = [t for t, p in parked.items() if p["state"] == "waiting"]
             resumable = [t for t, p in parked.items() if p["state"] == "resume"]
             dispatchable = bool(cars) or bool(resumable)
-            if paused is not None:
-                stop_banner(
-                    docs / "status.md",
-                    "paused (docs/pause present)",
-                    "no new reservations; delete docs/pause and relaunch to "
-                    "resume ({} in-flight train(s) already wrapped safely).".format(
-                        len(parked)
-                    ),
-                )
-                return EXIT_PAUSED
-            if needs_human_ask:
-                _write_runstate(docs, "NEEDS-HUMAN", needs_human_ask)
-                stop_banner(docs / "status.md", "NEEDS-HUMAN", needs_human_ask)
-                return EXIT_NEEDS_HUMAN
-            if blacked_out and dispatchable:
-                # Inside the window with work available: wait it out — a
-                # single walk-away launch survives the blackout (spec §12).
-                wake = blackout_wake(
-                    read_declared(docs / "blackout", ""),
-                    datetime.datetime.utcnow(),
-                )
-                time.sleep(min(wake or 60, 60))
+            idle_action = _idle_decision(
+                paused, needs_human_ask, blacked_out, dispatchable, waiting
+            )
+            idle_result = _apply_idle_action(
+                idle_action, root, docs, parked, needs_human_ask
+            )
+            if idle_result == "continue":
                 continue
-            if waiting and not dispatchable:
-                _write_runstate(docs, "RUNNING")
-                stop_banner(
-                    docs / "status.md",
-                    "WAITING on rate limits",
-                    "every dispatchable train is rate-limited; relaunch later.",
-                )
-                return EXIT_WAITING
-            if not dispatchable and not waiting:
+            if idle_result == "break":
                 break  # frontier + lanes drained — evaluate the end state
+            if idle_result is not None:
+                return idle_result
 
         # Poll workers; every exit is a rescan trigger (dynamic refill).
         exited = [
@@ -2223,70 +2371,19 @@ def dispatch_run(args, root):
             if a["proc"].poll() is not None
         ]
         for tid, code in exited:
-            handle_exit(tid, code)
+            ask = _handle_worker_exit(
+                root,
+                journal,
+                active,
+                parked,
+                retry_at,
+                tid,
+                code,
+                gate_policy,
+            )
+            needs_human_ask = ask or needs_human_ask
         if not exited:
             time.sleep(args.poll_seconds)
 
     # --- end state (spec §10: run-state is a generated dispatcher outcome) ---
-    telemetry_summary(journal)  # the §13 rollup for the completed run
-    integrated = [
-        t for t, p in parked.items() if p["state"] in ("integrated", "blocked-done")
-    ]
-    attention = [
-        t
-        for t, p in parked.items()
-        if p["state"]
-        in ("quarantined", "needs-human", "needs-re-review", "rework", "dual-paged")
-        or (p["state"] == "train-end" and p["wis"])
-    ]
-    blocked_done = [t for t, p in parked.items() if p["state"] == "blocked-done"]
-    # The integrated disposition — not the possibly-stale dev checkout — is
-    # what DONE/BLOCKED are judged from.
-    reg_rows = registry_rows_at(root, INTEGRATION_REF) or schedule.load_rows(
-        root / "docs" / "requirements" / "work-items.csv"
-    )
-    wis = schedule.load_wis(reg_rows)
-    reserved = set(list_reservations(root))
-    queued_left = any(w["status"] == "queued" and w["id"] not in reserved for w in wis)
-    blocked_rows = any(w["status"] == "blocked" for w in wis)
-    summary = (
-        "trains: {} integrated ({} blocked-disposition), {} needing attention "
-        "(re-review/rework/quarantine/partial); {} unreserved queued WI(s) "
-        "remain".format(
-            len(integrated),
-            len(blocked_done),
-            len(attention),
-            sum(1 for w in wis if w["status"] == "queued" and w["id"] not in reserved),
-        )
-    )
-    if attention:
-        _write_runstate(docs, "RUNNING")
-        stop_banner(
-            docs / "status.md",
-            "trains need attention (re-review / rework / quarantine)",
-            summary,
-        )
-        return EXIT_STALL
-    if queued_left:
-        _write_runstate(docs, "RUNNING")
-        stop_banner(docs / "status.md", "build-out wave complete", summary)
-        return EXIT_DONE
-    unpublished = integration_head(root)
-    if unpublished and unpublished != head_sha_full(root):
-        # Everything integrated but the development projection lags (deferred
-        # publication — usually a dirty checkout): RUNNING, not DONE; the next
-        # launch resumes the publish idempotently.
-        _write_runstate(docs, "RUNNING")
-        stop_banner(
-            docs / "status.md",
-            "integration complete; publication deferred",
-            summary + " — clean the checkout and relaunch to publish.",
-        )
-        return EXIT_DONE
-    if blocked_rows:
-        _write_runstate(docs, "BLOCKED")
-        stop_banner(docs / "status.md", "run-state=BLOCKED", summary)
-        return EXIT_BLOCKED
-    _write_runstate(docs, "DONE")
-    stop_banner(docs / "status.md", "run-state=DONE", summary)
-    return EXIT_DONE
+    return _finish_dispatch(root, docs, journal, parked)

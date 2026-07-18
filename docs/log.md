@@ -9491,3 +9491,7 @@ test is in the smoke tier by default.
 3 skipped**. Byte-budget guard: budgeted docs untouched (`AGENTS.template.md`
 9,978 · `PROCESS.md` 60,169 · `PROCESS_OPTIONS.md` 156,661 — delta 0 each).
 On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 17:06 — integrated train p0-g3-WI-226-65f9 (WI-226)
+
+Head 6a7b090 composed onto 808f95d by the serialized integrator; 1 verdict(s) verified on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-226 -> done.
