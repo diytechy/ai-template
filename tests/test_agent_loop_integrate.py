@@ -645,6 +645,32 @@ def test_cas_stale_dual_plan_salvages_committed_round_evidence(tmp_path, monkeyp
     assert salvaged.read_text(encoding="utf-8") == "SELECT B"
 
 
+@pytest.mark.parametrize("committed", [False, True], ids=["porcelain", "diff"])
+def test_salvage_handles_git_quoted_non_ascii_round_path(tmp_path, committed):
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    old_head = _git(repo, "rev-parse", "HEAD")
+    round_name = "DP-004-caf\u00e9"
+    try:
+        round_dir = repo / "docs" / "plans" / round_name
+        round_dir.mkdir(parents=True)
+        (round_dir / "verdict.md").write_text("SELECT unicode", encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        pytest.skip("filesystem cannot represent non-ASCII round paths: {}".format(exc))
+    _git(repo, "config", "core.quotepath", "true")
+    if committed:
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-q", "-m", "unicode round")
+
+    salvage = agent_loop.agent_dispatch._salvage_round_evidence(
+        repo, repo, "t-unicode", old_head if committed else None
+    )
+    expected = (
+        repo / "out" / "dispatch" / "salvage" / "t-unicode" / round_name / "verdict.md"
+    )
+    assert salvage.endswith("t-unicode")
+    assert expected.read_text(encoding="utf-8") == "SELECT unicode"
+
+
 def test_select_disposition_passes_the_kit_freshness_hook(tmp_path, monkeypatch):
     repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
     req = repo / "docs" / "requirements"

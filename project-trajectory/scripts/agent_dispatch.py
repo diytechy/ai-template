@@ -819,13 +819,13 @@ def _salvage_round_evidence(root, worktree, tid, old_head=None):
     """Best-effort copy of DP-* evidence before a hard reset: uncommitted
     changes via porcelain (the only scan that sees untracked files) plus,
     when the reset target is known, tracked changes already committed past
-    it — those files are still on disk because salvage runs pre-reset."""
+    it — those files are still on disk because salvage runs pre-reset. Both
+    scans use NUL-delimited output so Git never C-quotes non-ASCII/special
+    path bytes; malformed records simply contribute no round name."""
     round_names = set()
 
     def note(rel):
-        rel = rel.strip().replace("\\", "/")
-        if " -> " in rel:
-            rel = rel.rsplit(" -> ", 1)[1]
+        rel = rel.replace("\\", "/")
         parts = rel.split("/")
         if len(parts) >= 3 and parts[:2] == ["docs", "plans"]:
             if parts[2].startswith("DP-"):
@@ -834,19 +834,39 @@ def _salvage_round_evidence(root, worktree, tid, old_head=None):
     code, out = git(
         worktree,
         "status",
-        "--porcelain",
+        "--porcelain=v1",
+        "-z",
         "--untracked-files=all",
         "--",
         "docs/plans",
     )
     if code == 0:
-        for line in out.splitlines():
-            note(line[3:])
+        records = out.split("\0")
+        index = 0
+        while index < len(records):
+            record = records[index]
+            index += 1
+            if len(record) < 4 or record[2] != " ":
+                continue
+            status = record[:2]
+            note(record[3:])
+            # Porcelain -z records a rename/copy destination first, followed
+            # by its source as a second NUL record (there is no `->` marker).
+            if "R" in status or "C" in status:
+                index += 1
     if old_head:
-        code, out = git(worktree, "diff", "--name-only", old_head, "--", "docs/plans")
+        code, out = git(
+            worktree,
+            "diff",
+            "--name-only",
+            "-z",
+            old_head,
+            "--",
+            "docs/plans",
+        )
         if code == 0:
-            for line in out.splitlines():
-                note(line)
+            for rel in out.split("\0"):
+                note(rel)
     if not round_names:
         return ""
     destination = Path(root) / DISPATCH_DIR / "salvage" / tid

@@ -9440,3 +9440,29 @@ integrator module passed **18 tests** before close. Byte-budget guard:
 (untouched); `PROCESS_OPTIONS.md` **156,059 → 156,661** (**+602 bytes**) for the
 canonical downstream failure contract, with the neutral skill and both tracked
 agent copies re-stamped. Full-suite close evidence follows WI-224.
+
+## 2026-07-18 — WI-224: quote-safe round-evidence salvage
+
+The WI-222 review found no new blocker: its reset-target diff and stale-CAS
+regression correctly cover committed evidence. WI-224 closes the one declared
+residual. `_salvage_round_evidence` now requests `--porcelain=v1 -z` and
+`--name-only -z`; NUL records preserve exact non-ASCII/special path bytes and
+remove the brittle `" -> "` rename heuristic. Rename/copy status records take
+the destination field and skip the following source field. A failed or malformed
+scan still contributes no candidate and never masks the disposition error.
+
+With `core.quotepath=true`, the new regression creates
+`docs/plans/DP-004-café/` and proves its verdict is copied through both discovery
+routes: untracked porcelain and a clean committed diff past the reset target.
+The focused five-case WI-222/223/224 salvage set and the full **18-test**
+integrator module pass. Budgeted docs are unchanged from WI-223's re-stamped
+post-edit sizes (`AGENTS.template.md` 9,978 · `PROCESS.md` 60,169 ·
+`PROCESS_OPTIONS.md` 156,661).
+
+**Verified at close.** Full suite **1,043 passed / 34 skipped**. The complete G3
+harness passed **16/16** with the same 1,043/34 total and **91.06% coverage**;
+strict traceability remained SN=25 SR=66 LLR=76 TC=76 with zero orphans,
+integrity/schema/status findings, or placeholders; strict trajectory was clean
+at 222 WIs / 209 done / acyclic. Format, lint, duplicate-code, privacy, docs,
+design-flow, architecture, skills sync, and all generated-artifact freshness
+checks passed. On `dualplan-routing-fix`, not pushed.
