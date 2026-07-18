@@ -9202,3 +9202,37 @@ Attached to TC-026 Evidence; LLR-026 amended (+`build_argv`/`run_session`).
 **Verified:** `check.py --gate G3 --jobs 0` **PASS 16/16** (tests+coverage 290.7 s,
 coverage floor 85% held); `trace.py --strict` SN=25 SR=66 LLR=76 TC=76, 0 orphans.
 On `dualplan-routing-fix` (stacked on WI-215), not pushed.
+
+## 2026-07-17 — WI-217: close two more gilbert-found OpenAI-path gaps (claude stdin + codex --output-last-message)
+
+**What & why.** gilbert kept running real dual-plan rounds and hit two gaps my
+WI-215/216 left open — neither a replication:
+
+1. **Gap 1 (gilbert 4e9b705) — claude also hits the argv cap.** WI-216 routed
+   only codex via stdin; I kept claude on argv, assuming the ~32 KB CreateProcess
+   headroom sufficed. gilbert proved the round's later briefs blow past it — a
+   repair ~35 K, a critic ~70 K (it embeds the rival plan) — so the CLAUDE
+   session also died at launch and read as "ANTHROPIC nonresponsive" (the argv
+   cap, not a rate limit). Fix: dropped `{prompt}` from ALL claude rows
+   (`agents.csv` + `agents.template.csv`), so every claude session delivers its
+   prompt via stdin. Verified live: a prompt piped to `claude -p` returned PONG.
+2. **Gap 2 (gilbert 9add15b) — codex output-capture, new.** codex echoes its
+   banner + the whole prompt into stdout, so `plan_coverage.parse_plan` read the
+   brief's echoed example table instead of Sol's real plan. WI-215's
+   `parse_json_result` (claude stream-json) doesn't catch a codex transcript.
+   Fix: `run_session` injects codex's own `-o/--output-last-message <file>` for
+   EVERY codex session and reads that file back as the deterministic result
+   (`_codex_lastmsg_setup`/`_codex_lastmsg_read`). Verified the flag exists.
+
+**Scope (owner ruling): both broad** — all claude sessions via stdin (not just
+dual-plan), all codex sessions get the last-message file (not just dual-plan).
+
+**Tests.** `tests/test_session_stdin.py` +5: the codex helpers (setup appends +
+creates the file, case-insensitive, ignores non-codex; read returns + deletes),
+and a fake-codex integration test — a launcher that echoes GARBAGE to stdout but
+writes CLEAN to `--output-last-message`, proving `run_session` returns the file,
+not the transcript. LLR-026 amended; no new SR (robustness under SR-026/SN-016).
+
+**Verified:** `check.py --gate G3 --jobs 0` **PASS 16/16** (tests+coverage
+283.3 s, coverage floor held); `trace --strict` SN=25 SR=66 LLR=76 TC=76, 0
+orphans. On `dualplan-routing-fix` (stacked on WI-215/216), not pushed.

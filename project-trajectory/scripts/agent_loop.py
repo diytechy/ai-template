@@ -155,6 +155,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -2451,6 +2452,34 @@ class LiveStatus:
             self.active = False
 
 
+def _codex_lastmsg_setup(argv):
+    """If argv launches codex, append its `--output-last-message` temp file and
+    return (augmented_argv, path); otherwise (argv, None). codex echoes its banner
+    + the whole prompt into stdout, so that file — its own final-message contract —
+    is the deterministic session result (WI-217, gilbert 9add15b)."""
+    if not (argv and os.path.basename(argv[0]).lower().startswith("codex")):
+        return argv, None
+    fd, path = tempfile.mkstemp(prefix="codex-lastmsg-", suffix=".txt")
+    os.close(fd)
+    return argv + ["--output-last-message", path], path
+
+
+def _codex_lastmsg_read(path):
+    """Read then delete the codex last-message file (`path` None for a non-codex
+    session -> None). Best-effort: a missing/unreadable file reads as empty."""
+    if path is None:
+        return None
+    try:
+        text = Path(path).read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        text = ""
+    try:
+        os.unlink(path)
+    except OSError:
+        pass
+    return text
+
+
 def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
     """One fresh headless driver session. Returns (exit_code, output,
     timed_out). stdin is closed so a CLI that would wait on it can't hang —
@@ -2479,6 +2508,11 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
         resolved = shutil.which(argv[0], path=(env or os.environ).get("PATH"))
         if resolved and not resolved.lower().endswith(".ps1"):
             argv = [resolved] + argv[1:]
+
+    # codex echoes its banner + the WHOLE prompt into stdout, so its own
+    # --output-last-message file is the deterministic result (WI-217).
+    argv, codex_lastmsg = _codex_lastmsg_setup(argv)
+
     try:
         proc = subprocess.Popen(
             argv,
@@ -2492,6 +2526,7 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
             env=env,
         )
     except OSError as exc:
+        _codex_lastmsg_read(codex_lastmsg)  # cleanup the (unused) last-message file
         return -1, "coordinator: session error: {}".format(exc), False
     # A reader thread pumps the pipe so the child can never block on a full
     # buffer while the main thread waits — the same shape subprocess.run uses
@@ -2533,6 +2568,9 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
         proc.kill()
         proc.wait()
         pump.join(5)
+        _codex_lastmsg_read(
+            codex_lastmsg
+        )  # cleanup; a timed-out session has no usable result
         return (
             -1,
             "".join(lines)
@@ -2540,7 +2578,11 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
             True,
         )
     pump.join(5)
-    return proc.returncode, "".join(lines), False
+    output = "".join(lines)
+    last = _codex_lastmsg_read(codex_lastmsg)
+    if last and proc.returncode == 0:
+        output = last  # codex: the deterministic last message, not the transcript
+    return proc.returncode, output, False
 
 
 def stop_banner(status_path, label, detail=""):
