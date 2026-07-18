@@ -130,7 +130,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `guardrails_core(root)` | The always-on core to prepend to a quick-tier session's prompt, or None. |  |
 | `guardrails_inert(policy, models)` | True when a *guarding* policy (not off / bare all) would guard none of the |  |
 | `split_cmd(template)` | Split a command template into tokens, quote-aware but with backslash |  |
-| `build_argv(template, model, prompt)` | Substitute {model}/{prompt} per token (never through a shell, so the |  |
+| `build_argv(template, model, prompt)` | Build the session argv from a CmdTemplate and decide how the prompt is |  |
 | `parse_map(spec)` | Parse a KEY=value phase map — shared by --model-map/--cmd-map/--prompt-map/ |  |
 | `phase_tier(phase, tier_map)` | The routing tier for a phase: the declared --tier-map / AGENT_TIER_MAP |  |
 | `reviewer_prompt(prompt_templates, phase, verdict_path)` | The redacted reviewer prompt for a review phase: the per-phase prompt-map |  |
@@ -171,7 +171,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055
 | `echo_session_line(line)` | Scrolling live echo (WI-125): print each compact summary of one output |  |
 | `LiveStatus (class)` | One in-place console status line for a workstream (WI-136). Opt-in |  |
 | `  methods` | event · finish |  |
-| `run_session(argv, root, timeout, env, on_line)` | One fresh headless driver session. Returns (exit_code, output, |  |
+| `run_session(argv, root, timeout, env, on_line, stdin_input)` | One fresh headless driver session. Returns (exit_code, output, | SN-016 |
 | `stop_banner(status_path, label, detail)` |  |  |
 | `list_reservations(root)` | {WI-ID: reservation-commit-sha} from refs/llm/reservations/* — the |  |
 | `reservation_meta(root, sha)` | The metadata JSON a reservation commit carries ({train, wis, base}), or |  |

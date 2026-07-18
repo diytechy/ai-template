@@ -9164,3 +9164,41 @@ surfaced (sanctioned boilerplate; the census's file-PAIR limitation).
 coverage floor 85% held); dupes + okf regenerated and re-verified; all 16 steps
 PASS. `trace.py --strict` SN=25 SR=66 LLR=76 TC=76, 0 orphans. Branch
 `dualplan-routing-fix` off `main`, not pushed.
+
+## 2026-07-17 — WI-216: deliver session prompts via stdin (the Windows codex.CMD 8191-char cmd.exe cap)
+
+**What & why.** Follow-on to WI-215 (gilbert's OpenAI-path review): gilbert also
+found that `codex` on Windows resolves to the npm `codex.CMD` batch shim, whose
+cmd.exe host caps the command line at **8191 chars** — a brief-sized prompt-in-argv
+dies at launch ("The command line is too long"), while short auth probes pass, so
+it looked healthy while every real Sol session died and the WI-196 fallback
+silently degraded the pair to same-family. It worked on macOS (a node script, no
+cmd.exe). gilbert's own fix was a machine-local absolute `codex.exe` path; the
+owner chose the **robust code fix** instead.
+
+**The fix (SR-026/LLR-026, no new SR).**
+- `build_argv` now returns `(argv, stdin_input)`: a `{prompt}` placeholder rides
+  the command line (claude, unchanged); a template with **no** `{prompt}` routes
+  the prompt to the child's **STDIN** (argv = flags only). `codex exec` reads its
+  PROMPT from stdin when omitted (its own `--help`).
+- `run_session(..., stdin_input=None)` writes the fixed prompt from a **daemon
+  thread** then closes stdin — threaded so a non-draining child can't block
+  `proc.wait`'s timeout, and after the stdout pump starts so a large prompt can't
+  deadlock; the SN-016 no-wedge invariant holds (fixed prompt + EOF, never an
+  interactive read).
+- All 6 `build_argv` callsites updated: the two real launches (`_dp_session`, the
+  worker session) thread `stdin_input` through; the interactive path pipes via
+  `subprocess.run(input=...)`; the 3 dummy-prompt probes unpack.
+- **Adopted:** this repo's `OPENAI-SOL/TERRA/LUNA` rows and
+  `agents.template.csv`'s codex example drop `{prompt}` (→ stdin); claude keeps
+  `{prompt}`. The CmdTemplate prompt-delivery contract is documented in both
+  files' headers.
+
+**Tests.** `tests/test_session_stdin.py` (5): build_argv routing (argv vs stdin),
+stdin delivery through a fake echo-stdin CLI, the DEVNULL EOF-not-hang path, and a
+**20,044-char** prompt through stdin untruncated (gilbert's proven failing size).
+Attached to TC-026 Evidence; LLR-026 amended (+`build_argv`/`run_session`).
+
+**Verified:** `check.py --gate G3 --jobs 0` **PASS 16/16** (tests+coverage 290.7 s,
+coverage floor 85% held); `trace.py --strict` SN=25 SR=66 LLR=76 TC=76, 0 orphans.
+On `dualplan-routing-fix` (stacked on WI-215), not pushed.

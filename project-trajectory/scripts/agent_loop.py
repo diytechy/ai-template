@@ -847,18 +847,28 @@ def split_cmd(template):
 
 
 def build_argv(template, model, prompt):
-    """Substitute {model}/{prompt} per token (never through a shell, so the
-    multi-line prompt needs no quoting); append the prompt when the template
-    carries no {prompt} placeholder."""
+    """Build the session argv from a CmdTemplate and decide how the prompt is
+    delivered. Returns `(argv, stdin_input)`:
+
+    - A template that carries a `{prompt}` placeholder gets it substituted into
+      argv, and `stdin_input` is None — the prompt rides the command line (the
+      historical behavior; `claude -p {prompt}`).
+    - A template with NO `{prompt}` placeholder delivers the prompt on STDIN
+      instead: `stdin_input = prompt`, and argv carries only the flags. This keeps
+      the command line short — a Windows npm `.CMD` shim runs under cmd.exe, whose
+      **8191-char** command-line cap silently kills a brief-sized prompt-in-argv
+      (the failure gilbert hit on `codex`) — while the CLI reads the prompt from
+      stdin (`codex exec` with no PROMPT arg reads stdin; run_session pipes it).
+
+    Substitution is per-token and never through a shell, so a multi-line prompt
+    needs no quoting."""
     argv = []
     saw_prompt = False
     for tok in split_cmd(template):
         if "{prompt}" in tok:
             saw_prompt = True
         argv.append(tok.replace("{model}", model).replace("{prompt}", prompt))
-    if not saw_prompt:
-        argv.append(prompt)
-    return argv
+    return (argv, None) if saw_prompt else (argv, prompt)
 
 
 # (status_size_warning retired with the serial driver, WI-210: no session
@@ -1182,8 +1192,10 @@ def _dp_session(template, model, prompt, root, timeout, env_cell=""):
 
         env = dict(os.environ)
         env.update(agent_route.parse_env(env_cell))
-    argv = build_argv(template, model, prompt)
-    code, output, timed_out = run_session(argv, root, timeout, env=env)
+    argv, stdin_input = build_argv(template, model, prompt)
+    code, output, timed_out = run_session(
+        argv, root, timeout, env=env, stdin_input=stdin_input
+    )
     ok = code == 0 and not timed_out
     # A --output-format json/stream-json template (what the real agents.csv rows
     # use) captures the whole event transcript, but the round's consumers need the
@@ -2222,7 +2234,7 @@ def preflight(root, template, args):
         )
         return failures  # nothing else is checkable without a command
     try:
-        argv = build_argv(template, "model", "prompt")
+        argv, _ = build_argv(template, "model", "prompt")
     except ValueError as exc:
         failures.append("cannot parse AGENT_CMD: {}".format(exc))
         return failures
@@ -2439,9 +2451,15 @@ class LiveStatus:
             self.active = False
 
 
-def run_session(argv, root, timeout, env=None, on_line=None):
+def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
     """One fresh headless driver session. Returns (exit_code, output,
-    timed_out). stdin is closed so a CLI that would wait on it can't hang.
+    timed_out). stdin is closed so a CLI that would wait on it can't hang —
+    UNLESS `stdin_input` is given, in which case that fixed text is written to the
+    child's stdin which is then closed: the child reads its prompt and sees EOF,
+    so the no-wedge invariant (SN-016) still holds — there is never an interactive
+    read. This is how a CmdTemplate with no `{prompt}` placeholder delivers the
+    prompt (build_argv), keeping the command line short enough for the Windows
+    cmd.exe 8191-char cap on `.CMD`-shim CLIs.
 
     `env` is the merged environment for a pair row that declares one (the
     registry `Env` column, already merged over os.environ by the caller); None
@@ -2465,7 +2483,7 @@ def run_session(argv, root, timeout, env=None, on_line=None):
         proc = subprocess.Popen(
             argv,
             cwd=str(root),
-            stdin=subprocess.DEVNULL,
+            stdin=(subprocess.PIPE if stdin_input is not None else subprocess.DEVNULL),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -2489,6 +2507,26 @@ def run_session(argv, root, timeout, env=None, on_line=None):
 
     pump = threading.Thread(target=_pump, daemon=True)
     pump.start()
+
+    # Deliver the prompt on stdin from a DAEMON thread, then close so the child
+    # sees EOF. Threaded (not inline) so a large prompt to a child that never
+    # drains stdin cannot block the main thread before proc.wait's timeout — the
+    # timeout still fires and kills the child, so the no-wedge invariant (SN-016)
+    # holds. The stdout pump is already draining, so the reverse deadlock (child
+    # writing before it finishes reading) can't happen either.
+    def _feed():
+        try:
+            proc.stdin.write(stdin_input)
+        except (OSError, ValueError):
+            pass  # child exited early; its status is captured by wait() below
+        finally:
+            try:
+                proc.stdin.close()
+            except (OSError, ValueError):
+                pass
+
+    if stdin_input is not None:
+        threading.Thread(target=_feed, daemon=True).start()
     try:
         proc.wait(timeout=timeout or None)
     except subprocess.TimeoutExpired:
@@ -4788,7 +4826,7 @@ def map_preflight(
     # review session mid-run (the preflight contract).
     for ph, tmpl in sorted(cmd_map.items()):
         try:
-            argv = build_argv(tmpl, "model", "prompt")
+            argv, _ = build_argv(tmpl, "model", "prompt")
             exe = argv[0]
             if not (shutil.which(exe) or Path(exe).exists()):
                 failures.append(
@@ -4824,7 +4862,7 @@ def map_preflight(
         for mid in enabled:
             m = registry[mid]  # resolve_enabled guarantees the id is in the registry
             try:
-                exe = build_argv(m.cmd_template, "model", "prompt")[0]
+                exe = build_argv(m.cmd_template, "model", "prompt")[0][0]
                 if not (shutil.which(exe) or Path(exe).exists()):
                     # The row's Notes is the declared install/sign-in hint —
                     # surface it at the earliest failure point (WI-109).
@@ -4966,7 +5004,7 @@ def run_interactive(
             phase or "—", model or "—"
         )
     )
-    argv = build_argv(
+    argv, stdin_input = build_argv(
         itemplate,
         model,
         compose_session_prompt(
@@ -4978,7 +5016,9 @@ def run_interactive(
             warned_no_core,
         )[0],
     )
-    proc = subprocess.run(argv, cwd=str(root))
+    # input=None inherits the terminal (interactive templates keep {prompt});
+    # a no-{prompt} template pipes its prompt in, then the CLI proceeds.
+    proc = subprocess.run(argv, cwd=str(root), input=stdin_input)
     return proc.returncode
 
 
@@ -5688,7 +5728,7 @@ def run_iteration(ctx, i):
             current_wi,
         )
     )
-    argv = build_argv(tmpl, model, prompt)
+    argv, stdin_input = build_argv(tmpl, model, prompt)
     # The coordinator's own clock, so a duration exists even when the
     # session dies before emitting JSON (spawn failure, timeout, crash).
     wall_start = time.time()
@@ -5705,6 +5745,7 @@ def run_iteration(ctx, i):
         args.session_timeout,
         env=session_env,
         on_line=on_line,
+        stdin_input=stdin_input,
     )
     if live is not None:
         live.finish()
