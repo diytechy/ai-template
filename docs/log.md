@@ -9236,3 +9236,67 @@ not the transcript. LLR-026 amended; no new SR (robustness under SR-026/SN-016).
 **Verified:** `check.py --gate G3 --jobs 0` **PASS 16/16** (tests+coverage
 283.3 s, coverage floor held); `trace --strict` SN=25 SR=66 LLR=76 TC=76, 0
 orphans. On `dualplan-routing-fix` (stacked on WI-215/216), not pushed.
+
+## 2026-07-18 — WI-218: split agent_loop.py into modules behind the declared seams (verbatim-move)
+
+**What & why.** The third review sitting (repo-review-2026-07-17c.md) found the
+6,336-line coordinator monolith was deferred by three reviews to a decomposition
+campaign that was never filed — and that the last four real defects (WI-215's
+tuple bug, the review's H1/M4) were all seam mismatches *between* subsystems
+sharing one namespace. WI-218 made the deferral real and executed it: a
+**physical file split, verbatim-move only, no compaction** (the WI-080/081
+discipline — code moves unchanged; only imports, module docstrings, and the two
+spec'd hazard edits are new), each slice green under the existing ~130-test e2e
+net before commit.
+
+**Result.** `agent_loop.py` **6,336 → 2,863** lines (the entry point: CLI/main,
+prompts, guardrails, critique layer, RoutingState, route_session/
+session_bookkeeping/run_iteration, run_interactive), plus four siblings:
+
+- `agent_session.py` (346) — build_argv/run_session/codex capture/console
+  renderers. IF-041 re-homed; **IF-064** minted (its Provides seam).
+- `agent_common.py` (927) — exit codes, git wrappers, declared reads +
+  blackout, the kernel lock (held descriptor lives ONLY here — one lock
+  namespace per process), worker-assignment readers, parse_map, preflight,
+  session-log family, run-state write. IF-037 re-homed; **IF-065** minted.
+- `plan_runner.py` (460) — wi_plan_mode/_dp_routes/_dp_session/
+  run_dual_plan_round. IF-058/IF-061 counterparts re-homed; **IF-066** minted.
+- `agent_dispatch.py` (2,125) — reservations/traincars/journal, the CAS-only
+  integrator, migration gate, telemetry, dispatch_run. IF-055 re-homed;
+  **IF-067** minted.
+
+agent_loop binds every historically exposed name, so the public surface (tests,
+downstream imports, monkeypatch targets, launchers) is unchanged; mutable lock
+internals are deliberately NOT re-bound. Total 6,721 lines (+385 — seams cost
+docstrings/imports; the spec predicted growth, compaction was explicitly out of
+scope).
+
+**Deviations from spec (all recorded in the slice commits).** (1) spawn_worker's
+engine path became the explicit `_ENGINE` sibling — `Path(__file__)` would have
+named agent_dispatch (spec hazard 1). (2) The WI-068 critique banner stayed with
+the critique layer instead of riding `_SPLIT_RE` into common (comment-only
+relocation). (3) Spine/IF re-homes were done per-slice rather than batched in
+slice E, keeping every intermediate commit warn-clean. (4) Tests re-targeted
+where they patch moved internals: `plan_runner.run_session` (the namespace
+_dp_session resolves), `agent_loop.agent_common._take_os_lock` (the canonical
+imported instance — load_script mints fresh copies), and the fault-point source
+grep now reads agent_dispatch.py. (5) IF ids 062/063 skipped (minted on the
+guardrails-fable-method branch; anti-collision, the WI-213/215 precedent).
+
+**Registry/docs sync.** LLR-026..030/060/062/064/065/066/076 Modules+CodeSymbols
+re-homed to the new files; bootstrap MAPPING + docstring inventory, the kit
+README per-script table (4 new rows), and test_bootstrap's scaffold list carry
+the new modules; docs/dupes-allow census refreshed per its MAINTENANCE rule (60
+stale re-keyed lines deleted, 31 relocated-representative pairs added — the
+split re-keyed the F5 groups' representative to agent_common and relocated the
+old intra-agent_loop duplication; no new copy-paste). Byte deltas: budgeted
+docs untouched this sitting (AGENTS.template.md 9,978; PROCESS.md 60,169;
+PROCESS_OPTIONS.md 156,059 — the -17c review's flagged +523 stands).
+
+**Verified.** Full suite **1,061 passed / 3 skipped**; coverage **90.96%**
+(floor 85). `check.py --jobs 0` full G3 gate **PASS 16/16** after the census
+refresh (first run FAIL only at `dupes` — the predicted re-attribution).
+`trace.py --strict` SN=25 SR=66 LLR=76 TC=76, 0 orphans, **65 seams**, 0
+findings; `check_trajectory --strict` clean (216 WIs, 204 done, acyclic), no
+interface/containment warns. On `dualplan-routing-fix` (stacked on the
+review-17c pair), not pushed.

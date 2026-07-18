@@ -56,7 +56,9 @@ What it creates in the destination:
     scripts/run_menu.py                        (capability-menu reader the run.* launchers delegate to)
     run.{cmd,sh,command}                       <- run.template.*  (root product launchers)
     agent-resume.{cmd,sh,command}              <- agent-resume.template.*  (root agent launchers)
-    scripts/agent_loop.py                      (unattended coordinator engine)
+    scripts/agent_loop.py                      (unattended coordinator engine; entry point)
+    scripts/agent_session.py, agent_common.py, plan_runner.py, agent_dispatch.py
+                                               (the WI-218 split: session launch / shared primitives / dual-plan runner / dispatcher+integrator)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     .githooks/commit-msg                       <- hooks/commit-msg  (commit-message privacy scan)
     .githooks/pre-push                         <- hooks/pre-push  (privacy-review backstop)
@@ -1210,6 +1212,13 @@ MAPPING = [
     # when --agents chose an agent); deletable like run.* — see the module
     # docstring and process-options.md "Unattended operation".
     ("scripts/agent_loop.py", "scripts/agent_loop.py"),
+    # The WI-218 split of the coordinator engine: the headless session layer,
+    # the shared primitives, the dual-plan runner, and the parallel
+    # dispatcher/integrator agent_loop.py imports as siblings.
+    ("scripts/agent_session.py", "scripts/agent_session.py"),
+    ("scripts/agent_common.py", "scripts/agent_common.py"),
+    ("scripts/plan_runner.py", "scripts/plan_runner.py"),
+    ("scripts/agent_dispatch.py", "scripts/agent_dispatch.py"),
     ("scripts/agent-resume.template.cmd", "agent-resume.cmd"),
     ("scripts/agent-resume.template.sh", "agent-resume.sh"),
     ("scripts/agent-resume.template.command", "agent-resume.command"),
