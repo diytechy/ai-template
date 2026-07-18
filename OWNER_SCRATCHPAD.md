@@ -276,4 +276,16 @@ For the recent hybrid work item constructor that uses multiple agents to build o
 
 Does the reseach methods that are included here correctly spin up lower tier agents? Or is it at least encouraged?
 
+IMPORTANT: WI-190 is NOT complete, it is outfitted.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a gate is running adversarial reviews, is it an independent agent wearing different "hats"?  If so, would there be benifit in the reviewer also being from a different provider than the model that drafted the SN/SR/LRs?
+
 Finally verify there is nothing here missing that would make all these template updates incompatible or struggle when I push it to upstream repositories, specifically gilbert (repository folder "core") which is quite complex.  My main concern is if the modules there will create any changes with some of the template's new capabilities.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Consider integrating the latest think like fable for mid and low teir models to adopt when processing, this is simlar to another appproach that was already used in this template to pull in an external package to augment the environment of a non-strong-tier llm agent model.
+
+Make sure for strong models the planner is strong (where the test cases should also get created), implimenter and reviewers can stay medium.  Which judgement determines if it should be duel planned or not?
