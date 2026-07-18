@@ -225,3 +225,4 @@ WI-225,No-new-complexity ratchet: per-function C901 baseline test (review-18 H-0
 WI-226,Dispatcher decomposition: characterize dispatch_run then separate pure decisions from effects; L-04 test split trails (review-18 H-02 slice B),scripts,,~WI-225,queued,,docs/specs/WI-226.md,strong,high-risk
 WI-227,Run-menu trailing arguments: rule shell-fragment vs data-args then implement quoted semantics cross-platform (review-18 M-06),scripts,SR-046,,queued,,docs/specs/WI-227.md,medium,ordinary
 WI-228,Live-orphan taxonomy + newly-introduced-orphan ratchet in check_docs (review-18 M-07),quality,SR-012,,queued,,docs/specs/WI-228.md,medium,ordinary
+WI-229,Spine migration: split the non-atomic mini-spec SRs with supersession + evidence preservation; stage-2 owner-attestation hard stop (review-18 M-05),requirements,,,queued,,docs/specs/WI-229.md,strong,high-risk
