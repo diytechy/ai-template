@@ -37,6 +37,19 @@ WI_HEADER_LINE = (
 )
 
 
+def test_wi_header_matches_the_shipped_template():
+    """Pin the three hand-maintained copies of the registry header — the shipped
+    template (the product contract adopters copy), `plan_artifacts.WI_HEADER`
+    (what a fresh registry gets), and this file's fixture — to one truth, so the
+    next schema column cannot drift them apart silently (the 2026-07-17 H1
+    failure mode; 2026-07-17b review M1)."""
+    template = SCRIPTS.parent / "registries" / "work-items.template.csv"
+    with template.open(encoding="utf-8-sig", newline="") as fh:
+        header = next(csv.reader(fh))
+    assert header == pa.WI_HEADER
+    assert WI_HEADER_LINE == ",".join(header) + "\n"
+
+
 def _wi_csv(root):
     return root / "docs" / "requirements" / "work-items.csv"
 

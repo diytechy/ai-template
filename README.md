@@ -136,7 +136,7 @@ graph LR
 | [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.md) | `SN-###` | Why the project exists — one need per row, in the stakeholder's words. The root every other row must trace back to. |
 | [`system-requirements`](project-trajectory/registries/system-requirements.template.csv) | `SR-###` | One testable *shall*-statement per row, with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
 | [`low-level-requirements`](project-trajectory/registries/low-level-requirements.template.csv) | `LLR-###` | The design decomposition — pins an SR onto real code (`Module` + `CodeSymbol`). Adds detail; never paraphrases its parent. |
-| [`test-cases`](project-trajectory/registries/test-cases.template.csv) | `TC-###` | Verifies SR/LLR ids, classified by `Method` (Test / Demonstration / Inspection / Attest) and `Tier`; written failing-first at G2. |
+| [`test-cases`](project-trajectory/registries/test-cases.template.csv) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at G2. |
 
 [`trace.py`](project-trajectory/scripts/trace.py) joins the four tiers into the
 traceability matrix (`docs/test/report.md`; `--html` adds a collapsible map) and
@@ -294,13 +294,13 @@ a fresh scaffold gets, which way each option toggles, and how this repo is set:
 | Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
 |---|---|---|---|
 | `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `G1`) | never hand-edited; advances by *ratifying* artifacts | `G3` (derived) |
-| `gate-policy` | `attended` | opt-in levels `single-ratify` / `autonomous` (each scaffolds a deviation register) | **`single-ratify`** + [register](docs/gate-policy.md) |
+| `gate-policy` | `attended` | opt-in levels `single-ratify` / `autonomous` (each scaffolds a deviation register) | **`autonomous`** + [register](docs/gate-policy.md) |
 | `push-policy` | `human` | opt-in `agent-iteration` / `agent` | `human` |
 | `review-policy` | `1` | reviewer dial `0`–`2` | `1` |
 | `privacy-check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
 | `secrets-scan` | on (no file) | **opt-out** `off` | on |
 | `okf-export` | on (no file) | **opt-out** `off` | on (`docs/okf/` committed) |
-| `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — 51 declared seams |
+| `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — 61 declared seams |
 | `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
 | `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 6 pair rows / 2 families (tiers `strong/medium/quick`; fable plans, opus builds + reviews) |
 | `guardrails-policy` | off (no file) | **opt-in** model-substring allowlist / `all except …` | `off` (no vendored core — reason in the file) |

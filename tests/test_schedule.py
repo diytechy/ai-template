@@ -121,6 +121,32 @@ def test_disjoint_exclusive_keys_do_not_serialize():
     assert ready_ids(wis) == ["WI-001", "WI-002"]
 
 
+def test_unclassified_wi_never_holds_an_exclusive_key():
+    # WI-001 is unclassified (fails closed, never schedulable). It must not claim
+    # the contested key: the key serializes CONCURRENT execution, and a
+    # quarantined WI is not executing — letting it hold the key would starve the
+    # classified WI-002 forever (2026-07-17b review H1).
+    wis = sched.load_wis(
+        [row("WI-001", safety="", exclusive="db"), row("WI-002", exclusive="db")]
+    )
+    assert ready_ids(wis) == ["WI-002"]
+    d = disposition(wis, "WI-001")
+    assert d["disposition"] == "excluded"
+    assert any("unclassified" in c for c in d["reasons"])
+
+
+def test_reserved_wi_keeps_its_exclusive_key_even_unclassified():
+    # A reserved WI is a live train: it owns its keys outright, whatever its row
+    # now classifies as — a mid-flight SafetyClass edit must not hand its mutex
+    # to a rival.
+    wis = sched.load_wis(
+        [row("WI-001", safety="", exclusive="db"), row("WI-002", exclusive="db")]
+    )
+    d = disposition(wis, "WI-002", reserved={"WI-001"})
+    assert d["disposition"] == "excluded"
+    assert any("exclusive-conflict:db@WI-001" in c for c in d["reasons"])
+
+
 # --- excluded dispositions carry reason codes --------------------------------
 def test_blocked_deferred_reserved_excluded_with_reason_codes():
     wis = sched.load_wis(

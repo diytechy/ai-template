@@ -321,4 +321,19 @@ from matching the rest of the kit's fail-closed-but-live discipline.
 
 ## 5. Final verification after the fix pass
 
-Recorded after fixes: see the closing section appended below.
+Real output, run after every fix in §0's "completed" table landed:
+
+- Full suite: **1,043 passed, 3 skipped in 104.14 s** (`pytest -q -n auto`) —
+  the three new regression tests (unclassified key-holder, reserved key-holder,
+  template-header pin) included.
+- Full G3 gate (`check.py --jobs 0`): **PASS, all 16 steps** — format, lint,
+  tests+coverage (**90.76%**, 85% floor), dupes, derived-gate, traceability,
+  privacy, doc-navigability (**0 broken links**, 49 orphan warnings — the M5
+  baseline carried in §0), perf-budgets, design-flows, trajectory
+  (**212 WIs / 200 done, graph acyclic**, `--strict` clean after the row move),
+  arch-map, trajectory-map, status-map, okf, skills-sync.
+- The starvation reproduction from §2, re-run on the fixed scheduler: the
+  classified WI is now `ready`; the unclassified WI stays `excluded` with its
+  fail-closed reason codes; a *reserved* unclassified WI still owns its keys.
+- `PROJECT_STATE.html` and the status snapshot were regenerated after the
+  registry row move; the registry file's LF convention was preserved.

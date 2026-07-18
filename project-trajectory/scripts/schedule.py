@@ -343,14 +343,19 @@ def _exclusive_conflicts(wis, status, reserved):
     """`{exclusive-key: winning WI id}` — among the WIs that would otherwise be
     ready and share a non-empty `Exclusive` key, the deterministically-first one
     (by id) wins the key; the rest are exclusive-conflicting. A key held by a
-    reserved/active WI is owned by it."""
+    reserved/active WI is owned by it (a live train keeps its keys whatever its
+    row now classifies as)."""
     holders = {}
     # A reserved WI owns each of its keys outright.
     for w in wis:
         if w["id"] in reserved:
             for k in w["exclusive"]:
                 holders.setdefault(k, w["id"])
-    # Otherwise the first ready WI (lowest id) claims each contested key.
+    # Otherwise the first ready WI (lowest id) claims each contested key. Only a
+    # schedulable candidate may claim: an unclassified WI fails closed and can
+    # never run, so letting it hold a mutex key would starve classified work the
+    # key exists to serialize, not to freeze (the key guards CONCURRENT
+    # execution; a quarantined WI is not executing).
     candidates = sorted(
         (
             w
@@ -358,6 +363,7 @@ def _exclusive_conflicts(wis, status, reserved):
             if w["status"] == "queued"
             and w["id"] not in reserved
             and hard_preds_satisfied(w, status)
+            and is_schedulable_class(classify(w)[0])
         ),
         key=lambda w: w["id"],
     )
