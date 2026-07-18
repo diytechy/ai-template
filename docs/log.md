@@ -9390,3 +9390,30 @@ harness exited 0. Byte-budget guard after the sitting: budgeted docs remained
 unchanged at `AGENTS.template.md` **9,978 bytes**, `PROCESS.md` **60,169 bytes**,
 and `PROCESS_OPTIONS.md` **156,059 bytes** (delta 0 for each). On
 `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 — WI-222: salvage committed round evidence (+ WI-223/224 filed)
+
+A deep review of WI-220 (`6a9d729`) confirmed its salvage helper could not
+protect the one error path where the round evidence is already committed:
+`dual_plan_disposition`'s stale CAS fires after the disposition commit, so
+porcelain is clean, `_salvage_round_evidence` copies nothing, and the
+`reset --hard` discards the committed DP-* round (reflog-only recovery).
+`_salvage_round_evidence` now takes the reset target `_reset_failed_disposition`
+already holds and additionally scans `git diff --name-only <target> --
+docs/plans` — the files are still on disk pre-reset, so the copy mechanics are
+unchanged and the porcelain scan still covers untracked files. Every error
+reset benefits; no call-site changes; best-effort contract intact. The review's
+two judgment findings are filed, not fixed inline: WI-223 (disposition regen
+couples a completed dual-plan round's survival to `gen_trajectory` validator
+strictness — needs an explicit ruling) and WI-224 (the salvage scans are blind
+to git-quoted non-ASCII DP-* paths). LLR-064's Detail now states the
+salvaged-evidence contract as "differing from the reset target (uncommitted or
+already committed past it)".
+
+**Verified.** The new regression drives a real SELECT whose integration ref an
+external actor moves mid-round and asserts the committed round survives under
+`out/dispatch/salvage/<train>/` — it failed pre-fix at exactly the missing
+salvage. Focused dispatcher/round modules **31 passed**; full suite
+**1,071 passed / 3 skipped** (1:51). Byte-budget guard: budgeted docs untouched
+(`AGENTS.template.md` 9,978 · `PROCESS.md` 60,169 · `PROCESS_OPTIONS.md`
+156,059 — delta 0 each). On `dualplan-routing-fix`, not pushed.

@@ -815,8 +815,22 @@ def _regenerate_disposition_artifacts(worktree):
     return True, ""
 
 
-def _salvage_round_evidence(root, worktree, tid):
-    """Best-effort copy of uncommitted DP-* evidence before a hard reset."""
+def _salvage_round_evidence(root, worktree, tid, old_head=None):
+    """Best-effort copy of DP-* evidence before a hard reset: uncommitted
+    changes via porcelain (the only scan that sees untracked files) plus,
+    when the reset target is known, tracked changes already committed past
+    it — those files are still on disk because salvage runs pre-reset."""
+    round_names = set()
+
+    def note(rel):
+        rel = rel.strip().replace("\\", "/")
+        if " -> " in rel:
+            rel = rel.rsplit(" -> ", 1)[1]
+        parts = rel.split("/")
+        if len(parts) >= 3 and parts[:2] == ["docs", "plans"]:
+            if parts[2].startswith("DP-"):
+                round_names.add(parts[2])
+
     code, out = git(
         worktree,
         "status",
@@ -825,17 +839,14 @@ def _salvage_round_evidence(root, worktree, tid):
         "--",
         "docs/plans",
     )
-    if code != 0:
-        return ""
-    round_names = set()
-    for line in out.splitlines():
-        rel = line[3:].strip().replace("\\", "/")
-        if " -> " in rel:
-            rel = rel.rsplit(" -> ", 1)[1]
-        parts = rel.split("/")
-        if len(parts) >= 3 and parts[:2] == ["docs", "plans"]:
-            if parts[2].startswith("DP-"):
-                round_names.add(parts[2])
+    if code == 0:
+        for line in out.splitlines():
+            note(line[3:])
+    if old_head:
+        code, out = git(worktree, "diff", "--name-only", old_head, "--", "docs/plans")
+        if code == 0:
+            for line in out.splitlines():
+                note(line)
     if not round_names:
         return ""
     destination = Path(root) / DISPATCH_DIR / "salvage" / tid
@@ -855,7 +866,7 @@ def _salvage_round_evidence(root, worktree, tid):
 
 def _reset_failed_disposition(root, worktree, tid, old_head, detail, merge=False):
     """Preserve round evidence, clean staging, and retain the original error."""
-    salvage = _salvage_round_evidence(root, worktree, tid)
+    salvage = _salvage_round_evidence(root, worktree, tid, old_head)
     if merge:
         git(worktree, "merge", "--abort")
     git(worktree, "reset", "--hard", old_head)

@@ -552,6 +552,49 @@ def test_dual_plan_regen_failure_salvages_round_evidence(tmp_path, monkeypatch):
     assert salvaged.read_text(encoding="utf-8") == "SELECT A"
 
 
+def test_cas_stale_dual_plan_salvages_committed_round_evidence(tmp_path, monkeypatch):
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
+
+    def fake_round(worktree, wid, row, template, model, timeout, prompt_map):
+        round_dir = worktree / "docs" / "plans" / "DP-002-wi-201"
+        round_dir.mkdir(parents=True)
+        (round_dir / "verdict.md").write_text("SELECT B", encoding="utf-8")
+        # An EXTERNAL actor moves the integration ref mid-round: a dangling
+        # sibling commit stales the disposition's CAS after its commit lands,
+        # so the evidence is committed and porcelain is clean at reset time.
+        tree = _git(repo, "rev-parse", "HEAD^{tree}")
+        moved = _git(repo, "commit-tree", tree, "-p", "HEAD", "-m", "external")
+        _git(repo, "update-ref", "refs/heads/llm/integration", moved)
+        return "SELECTED", "plan B"
+
+    monkeypatch.setattr(agent_loop.agent_dispatch, "run_dual_plan_round", fake_round)
+    monkeypatch.setattr(
+        agent_loop.agent_dispatch,
+        "_regenerate_disposition_artifacts",
+        lambda worktree: (True, ""),
+    )
+    state, detail = agent_loop.dual_plan_disposition(
+        repo,
+        agent_loop._Journal(repo),
+        "t-cas",
+        "WI-201",
+        {},
+        "unused",
+        "unused",
+        1,
+        {},
+    )
+    assert state == "error"
+    assert "integration ref moved externally" in detail
+    assert "round evidence salvaged to" in detail
+    salvaged = (
+        repo / "out" / "dispatch" / "salvage" / "t-cas" / "DP-002-wi-201" / "verdict.md"
+    )
+    assert salvaged.read_text(encoding="utf-8") == "SELECT B"
+
+
 def test_select_disposition_passes_the_kit_freshness_hook(tmp_path, monkeypatch):
     repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
     req = repo / "docs" / "requirements"
