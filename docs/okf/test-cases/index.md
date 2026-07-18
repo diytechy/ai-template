@@ -15,7 +15,7 @@ resource: "generated"
 | [TC-002](TC-002.md) | Run the registry-checks suite; duplicate/malformed ids and mis-columned rows fail --stric… |
 | [TC-003](TC-003.md) | Run the registry-checks suite; leftover -000 rows, empty/out-of-vocab fields, and (once t… |
 | [TC-004](TC-004.md) | Run the acceptance-criteria advisory suite; an unpinned comparative warns without changin… |
-| [TC-005](TC-005.md) | Run the off-spine registry suites; back-link findings fire and -000 rows are ignored. |
+| [TC-005](TC-005.md) | Run the off-spine registry suites; PB and current REPO/legacy MOD back-link findings fire… |
 | [TC-006](TC-006.md) | Run the check-harness suite; gate steps run and a missing required tool fails with SKIP(m… |
 | [TC-007](TC-007.md) | Run the stack-profile suite; commands and tiers/coverage/arch-map resolve from stack.ini. |
 | [TC-008](TC-008.md) | Run the stack-profile suite; malformed/non-integer/missing-binary profiles fail loudly. |

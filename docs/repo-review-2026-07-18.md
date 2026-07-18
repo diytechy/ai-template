@@ -10,8 +10,23 @@ than line-by-line as hand-authored prose.
 
 ## 0. Unfixed items and why
 
-_To be completed after the confident-fix pass. This section is intentionally
-reserved at the top so deferred work and its reason cannot be buried._
+The first report snapshot was committed as `a93a021`; the table below records
+what remains after the subsequent confident-fix pass.
+
+| Finding | Still unfixed because | Required next move |
+|---|---|---|
+| **H-02 — orchestration complexity** | A safe decomposition changes the highest-risk state machines and compatibility surface. Extracting helpers without a state model would merely move complexity around. | File and execute a dedicated high-risk architecture WI: characterize transitions, add a no-new-C901 ratchet, then separate pure decisions from Git/session/integration effects. |
+| **H-03 — no license** | OI-4/WI-097 correctly blocks on the owner's public/private and licensing intent; choosing legal terms is not an engineering default. | Owner decision, then add the selected license/notices and README terms. |
+| **M-04 — 390 px dashboard clipping** | The defect is certain, but fit-to-width versus an explicit scroll affordance is a UX choice requiring a rendered iteration. The render-critique skill forbids redesigning inline during critique. | **WI-219 filed queued** with SR-052/SR-054 links; fix in the generator and rerun all 36 screenshots. |
+| **M-05 — non-atomic requirements** | Splitting ratified SRs changes the traceability spine, evidence links, and attestation history. A mechanical prose split would be dishonest. | Planned spine migration with supersession/evidence preservation. |
+| **M-06 — run-menu shell arguments** | The intended compatibility contract is ambiguous, and POSIX-shell versus `cmd.exe` quoting makes an unreviewed patch unsafe. | Decide shell-fragment versus data-argument semantics, then implement explicit argv/placeholder behavior with cross-platform tests. |
+| **M-07 — 48 live orphan warnings** | Most warnings are retained reviews/spec evidence. Deleting or globally ignoring them would hide useful history; indexing all of them would bloat navigation. | Define evidence-document taxonomy/indexes and ratchet only newly introduced live orphans. |
+| **L-03 — Git identity inconsistency** | Correcting old authors requires disruptive history rewriting; privacy checking is intentionally off. | Standardize future Git identity; rewrite history only as an explicit release decision. |
+| **L-04 — large test modules** | Splitting tests before production boundaries stabilize would increase fixture/patch duplication. | Split alongside the H-02 production decomposition by behavior boundary. |
+
+Confident fixes completed in this pass: H-01, M-01, M-02, M-03, L-01, and
+L-02. The mobile issue was converted into WI-219 rather than silently left as
+prose-only debt.
 
 ## 1. Executive summary
 
@@ -104,6 +119,10 @@ version comment for update tooling and human readability. Add a lightweight
 test that prevents the scaffolded reference workflow from regressing to tags.
 See [GitHub's secure-use guidance](https://docs.github.com/en/actions/reference/security/secure-use).
 
+**Disposition:** fixed. Meta and downstream-reference workflows now declare
+`contents: read`, use verified full SHAs for checkout 6.0.2, setup-python 6.2.0,
+and upload-artifact 7.0.1, and a scaffold test guards both properties.
+
 #### H-02 — Core orchestration complexity is beyond maintainable review scale
 
 **Location:** `project-trajectory/scripts/agent_dispatch.py:1428`, plus
@@ -191,6 +210,11 @@ and the `None` result for untracked files. Add unit tests for tracked,
 untracked, nested, and platform-normalized paths and record an empirical before/
 after measurement.
 
+**Disposition:** fixed. One newest-first `git log --name-only` traversal now
+populates the lookup map; tests pin one-process behavior and tracked/untracked/
+out-of-root semantics. The repository check fell from 150.1 seconds to **2.6
+seconds** on the same Windows checkout.
+
 #### M-02 — Authoritative coordinator documentation still describes deleted behavior
 
 **Location:** `project-trajectory/scripts/agent_loop.py:1-10,32-48` and
@@ -221,6 +245,10 @@ roles (dispatcher, worker, one-shot interactive session) and update IF-015 to
 state the actual CLI/locking/preflight contract. Regenerate architecture views
 and keep the behavioral code unchanged.
 
+**Disposition:** fixed. The module opening and operative bullet list now state
+dispatcher/assigned-worker/interactive behavior, and IF-015 records the current
+WI-registry/Git-backed dispatcher, worker flags, preflight, and lock contract.
+
 #### M-03 — Off-spine integrity requirements omit registries the implementation enforces
 
 **Location:** `docs/requirements/system-requirements.csv:3,6` (SR-002/SR-005),
@@ -247,6 +275,10 @@ LLR-005 as PB/REPO (with legacy MOD compatibility)/PART/ASSET. Clarify TC-005's
 method without changing IDs or verification state, then regenerate all derived
 views and run strict traceability.
 
+**Disposition:** fixed. SR-002 now enumerates all integrity-checked IDs;
+SR-005/LLR-005/TC-005 distinguish current REPO from legacy MOD compatibility.
+Strict traceability and generated-view freshness remain clean.
+
 #### M-04 — The dashboard clips rightmost content at the supported 390 px view
 
 **Location:** rendered `PROJECT_STATE.html`, reproducible in
@@ -268,6 +300,9 @@ presentation defect, not merely an aesthetic preference.
 render-critique protocol. Explore an explicit scroll cue/fade, a compact mobile
 layout, or a fit-to-width overview with detail-on-interaction. Verify the entire
 36-shot width/theme/tab matrix after the change.
+
+**Disposition:** deferred as **WI-219**. The defect and acceptance direction are
+recorded; implementation awaits the dedicated rendered UX iteration.
 
 #### M-05 — Several system requirements have become non-atomic mini-specifications
 
@@ -351,6 +386,9 @@ truth look optional.
 **Suggested improvement:** update the value to 65 or remove the exact count from
 hand-authored prose where it adds little value.
 
+**Disposition:** fixed by removing the volatile hand-authored count; the
+generated status remains the exact-count surface.
+
 #### L-02 — “Pinned” dev dependencies are compatible ranges, not reproducible locks
 
 **Location:** `requirements-dev.txt`
@@ -369,6 +407,10 @@ byte-reproducible lock and cannot guarantee identical machinery across dates.
 **Suggested improvement:** rename the policy “major/minor constrained” and state
 the accepted drift, or generate a hash-locked CI requirements file while keeping
 human-maintained input constraints separately.
+
+**Disposition:** fixed in documentation. The file and workflow comments now call
+the policy constrained compatible-release ranges and explicitly say it is not a
+byte-reproducible lock; dependency behavior is unchanged.
 
 #### L-03 — Git author identity is inconsistent
 
@@ -472,3 +514,20 @@ rendered views), not solely to satisfy a line-count target.
   390 px clipping reproduced.
 - `npm audit`: zero known vulnerabilities in the dashboard screenshot helper.
 
+### Remediation closeout
+
+- Full suite after fixes: **1,033 passed, 34 skipped**.
+- Final full derived G3 gate: **PASS 16/16**; tests+coverage **1,033 passed,
+  34 skipped, 90.98%**.
+- Strict trajectory: 217 WIs, 204 done, acyclic; WI-219 is the one newly queued
+  rendered-dashboard follow-up.
+- Strict traceability: unchanged 25/66/76/76 spine, 65 interfaces, five
+  components, zero integrity/orphan/component/interface findings.
+- Documentation navigability: zero broken links, the baseline 48 retained-live-
+  evidence orphan warnings, **2.5 seconds** in the final G3 run (150.1 seconds
+  before batching).
+- One earlier G3 attempt had a single scaffold test's `derive_gate.py` subprocess
+  return 1 with no output while 1,032 peers passed. The same test passed
+  immediately in isolation; the complete G3 rerun then passed all 1,033 tests.
+  This is recorded as a Windows temp/resource transient, not concealed as a
+  first-try green run.

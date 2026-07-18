@@ -303,7 +303,7 @@ a fresh scaffold gets, which way each option toggles, and how this repo is set:
 | `privacy-check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
 | `secrets-scan` | on (no file) | **opt-out** `off` | on |
 | `okf-export` | on (no file) | **opt-out** `off` | on (`docs/okf/` committed) |
-| `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — 61 declared seams |
+| `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — declared seams checked |
 | `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
 | `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 6 pair rows / 2 families (tiers `strong/medium/quick`; fable plans, opus builds + reviews) |
 | `guardrails-policy` | off (no file) | **opt-in** model-substring allowlist / `all except …` | `off` (no vendored core — reason in the file) |

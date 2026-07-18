@@ -2,7 +2,14 @@
 
 import re
 
-from conftest import KIT, SCRIPTS, load_script, run_py
+from conftest import KIT, ROOT, SCRIPTS, load_script, run_py
+
+
+_ACTION_PINS = {
+    "actions/checkout": "de0fac2e4500dabe0009e67214ff5f5447ce83dd",  # v6.0.2
+    "actions/setup-python": "a309ff8b426b58ec0e2a45f0f869d46889d02405",  # v6.2.0
+    "actions/upload-artifact": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",  # v7.0.1
+}
 
 
 def test_scaffold_contains_expected_files(scaffold):
@@ -81,6 +88,22 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/agent_dispatch.py",
     ]:
         assert (scaffold / rel).exists(), "missing from scaffold: " + rel
+
+
+def test_workflows_pin_actions_and_reduce_token_permissions(scaffold):
+    """Meta CI and the downstream reference use immutable, least-privilege Actions."""
+    workflows = [
+        ROOT / ".github" / "workflows" / "test.yml",
+        ROOT / ".github" / "workflows" / "canary.yml",
+        scaffold / ".github" / "workflows" / "check.yml",
+    ]
+    for workflow in workflows:
+        text = workflow.read_text(encoding="utf-8")
+        assert "permissions:\n  contents: read" in text, workflow
+        assert not re.search(r"uses: actions/[^@\s]+@v\d+", text), workflow
+        for action, sha in _ACTION_PINS.items():
+            if action in text:
+                assert "{}@{}".format(action, sha) in text, workflow
 
 
 def test_agents_guide_is_canonical_and_stubs_point_at_it(scaffold):

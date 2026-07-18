@@ -9300,3 +9300,44 @@ refresh (first run FAIL only at `dupes` — the predicted re-attribution).
 findings; `check_trajectory --strict` clean (216 WIs, 204 done, acyclic), no
 interface/containment warns. On `dualplan-routing-fix` (stacked on the
 review-17c pair), not pushed.
+
+## 2026-07-18 — Review-18: deep repository review + confident remediation
+
+**Review snapshot.** Per the owner request, the repository-wide review was
+written first and committed alone as `a93a021` before any remediation. Scope
+covered source, architecture, requirements/test evidence, docs, security,
+performance, dependencies/configuration, CI, Git history, legal posture, and the
+rendered dashboard; logs/archive/iteration records were excluded. The baseline
+full G3 gate passed 16/16 (1,030 passed / 34 skipped on Python 3.8, 90.98%
+coverage). The report is `docs/repo-review-2026-07-18.md`.
+
+**Confident fixes.** GitHub Actions in both meta workflows and the downstream
+reference now have explicit `contents: read` permissions and immutable verified
+SHAs (checkout 6.0.2, setup-python 6.2.0, upload-artifact 7.0.1); a scaffold test
+guards the contract. `check_docs --stale` replaced its one-`git log`-per-path
+design with one newest-first name-only history traversal, preserving tracked/
+untracked/out-of-root semantics and adding a one-process regression test; the
+G3 step fell from 150.1 s to 2.5 s. The current dispatcher/worker/interactive
+agent-loop contract replaced retired serial-resume prose in the module opening
+and IF-015. SR-002 now enumerates every integrity-checked registry id, and
+SR-005/LLR-005/TC-005 distinguish current REPO from legacy MOD compatibility.
+The README dropped its volatile hand-authored seam count, and dev-dependency
+comments now accurately call compatible-release ranges constrained rather than
+locked. Derived architecture/OKF/dashboard/trace outputs were regenerated.
+
+**Deferred honestly.** The report's top table records why the coordinator
+complexity campaign, license/OI-4, ratified-requirement decomposition, run-menu
+shell-argument contract, evidence-orphan policy, Git identity history, and test
+module split were not safe drive-by changes. The 390 px dashboard clipping found
+through the required 36-shot render matrix was filed separately as queued
+**WI-219** under SR-052/SR-054, per the render-critique protocol.
+
+**Verified.** Full suite **1,033 passed / 34 skipped**. Final `check.py --gate
+G3 --jobs 0` **PASS 16/16**, 90.98% coverage; strict trajectory clean (217 WIs,
+204 done, acyclic); strict traceability unchanged at SN=25/SR=66/LLR=76/TC=76,
+65 seams, five components, zero findings; doc check zero broken / baseline 48
+warn-only retained-evidence orphans / 2.5 s. One prior G3 attempt had one
+`derive_gate.py` scaffold subprocess return 1 with no output while 1,032 peers
+passed; that test passed immediately in isolation and the complete rerun passed
+all 1,033, recorded here rather than hidden. On `dualplan-routing-fix`, not
+pushed.

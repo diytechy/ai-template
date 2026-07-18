@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Unattended coordinator: loop fresh agent driver sessions until done.
+"""Unattended agent entry point: dispatcher, assigned worker, or interactive session.
 
 Implements the walk-away protocol (process-options.md "Unattended operation
-(walk-away runs)"): loop fresh headless driver sessions — repo text is the
-only memory; each resumes from docs/status.md — until docs/run-state reaches
-an end state, a stall guard trips (consecutive sessions without a commit), or
-the iteration budget ceiling hits. Ported from a field-proven PowerShell
-coordinator (NotHomeWrecker trigger.ps1), which this one implementation for
-every platform supersedes. Stdlib only, Python 3.8+.
+(walk-away runs)"). A plain invocation runs the parallel dispatcher: it derives
+the ready WI frontier, reserves traincars in Git, launches explicit worker
+assignments, and integrates their committed evidence. ``--wi``/``--train`` runs
+one dispatcher-assigned worker; ``--interactive`` runs one attached hands-on
+session. The retired serial resume loop and its status/run-state input ladder are
+not CLI modes. Ported from a field-proven PowerShell coordinator (NotHomeWrecker
+trigger.ps1), which this one cross-platform implementation supersedes. Stdlib
+only, Python 3.8+.
 
 The agent invocation is a command template — the AGENT_CMD slot in the root
 agent-resume.{cmd,sh} launchers (or --agent-cmd / the AGENT_CMD env var).
@@ -22,7 +24,7 @@ consents by filling the slot, declaring the gate policy (docs/gate-policy),
 and running this; git + CI remain the enforcement floor. The banner restates
 this every run.
 
-Per session the coordinator:
+During worker/review sessions and dispatcher coordination this module:
   - picks the model per the in-process phase: --model-map
     "PHASE=model,PHASE=model" (or AGENT_MODEL_MAP), falling back to --model /
     AGENT_MODEL — and the COMMAND template the same way: --cmd-map /
@@ -38,17 +40,15 @@ Per session the coordinator:
     head+tail copy to the tracked docs/iteration/NNN-<stamp>.log, then
     regenerates docs/iteration_index.md from the log metadata (generated,
     never hand-edited);
-  - reads docs/run-state: DONE / BLOCKED / NEEDS-HUMAN exit the loop, each
-    printing the pending asks from docs/status.md Current State;
   - honors docs/pause: a graceful-pause request (the file present) stops the
-    loop at the next session boundary — the in-flight session finishes and
-    commits normally, never a mid-session kill; deleting the file resumes;
+    dispatcher at the next session boundary — the in-flight assignment finishes
+    and commits normally, never a mid-session kill; deleting the file resumes;
   - honors docs/blackout: a declared `HH:MM-HH:MM` UTC weekday window inside
     which no new session starts — the in-flight one wraps normally, then the
     loop waits the window out and resumes automatically (a single launch
     survives the blackout). Absent/empty/malformed or start==end = disabled;
     the scaffold ships a 12:00–19:00 default;
-  - counts a no-commit session toward the stall guard (git HEAD unmoved) —
+  - counts a no-commit worker session toward the stall guard (git HEAD unmoved) —
     except limit-hit sessions (below), which never count as a stall. A session
     that errored *before it could work* (the CLI reported is_error, or it could
     not be launched) — and is not a rate limit — is logged as ERROR rather than

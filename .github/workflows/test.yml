@@ -8,6 +8,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     strategy:
@@ -25,14 +28,14 @@ jobs:
             python: "3.8"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python }}
 
       # The kit scripts themselves are stdlib-only; these tools are what the
-      # harness tests drive — PINNED in requirements-dev.txt (WI-104), the same
+      # harness tests drive — CONSTRAINED in requirements-dev.txt (WI-104), the same
       # file scripts/dev-setup installs, so every machine runs one machinery and
       # a tool major can't turn the suite red unannounced (canary.yml floats
       # latest on a schedule to catch that early). pytest-xdist runs the suite in
@@ -53,11 +56,11 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.x"
-      # Same PINNED toolchain as the test job (requirements-dev.txt, WI-104) so
+      # Same CONSTRAINED toolchain as the test job (requirements-dev.txt, WI-104) so
       # the gate a contributor runs locally and the gate CI runs are the same
       # machinery. pytest-xdist is required here because the gate runs
       # docs/stack.ini's declared test command, which is `pytest -q -n auto`

@@ -1,21 +1,23 @@
-# Pinned dev toolchain for the meta-repo's OWN verification chain (WI-104 / the
+# Constrained dev toolchain for the meta-repo's OWN verification chain (WI-104 / the
 # 2026-07-12b review's M6). The kit scripts under project-trajectory/ stay
 # stdlib-only — a downstream repo runs them with no pip installs; nothing here
 # ships downstream. These four tools are only what THIS repo's self-tests + gate
 # drive, and CI (.github/workflows/test.yml) and scripts/dev-setup.{sh,ps1,command}
 # both install from this file so every machine runs the same machinery.
 #
-# WHY PIN: unpinned, the next ruff format-rule change turns the `format` gate red,
-# or a coverage-tool major silently reweights the floor (the pytest-cov 7 contract
+# WHY CONSTRAIN: floating latest can let the next ruff format-rule change turn the
+# `format` gate red or a coverage-tool major silently reweight the floor (the
+# pytest-cov 7 contract
 # break tests/conftest.py already had to absorb) — a gate that lies for reasons
-# unrelated to any commit. The pins are compatible-release (~=), so patch/minor
-# fixes still flow but the next MAJOR can't drift in unannounced. A floating-latest
+# unrelated to any commit. These are compatible-release ranges (~=), so accepted
+# patch/minor fixes still flow; this is intentionally not a byte-reproducible
+# lock. The next MAJOR cannot drift in unannounced. A floating-latest
 # canary job (.github/workflows/canary.yml) runs the suite unpinned on a schedule
 # to catch that upcoming breakage WITHOUT gating merges.
 #
 # pytest-cov needs a Python-gated split: 6.0 dropped Python 3.8, so the kit's 3.8
 # floor caps at 5.x while 3.9+ gets the 7.x path conftest.py targets. This is the
-# one irreducible per-Python difference — no pin makes 3.8 run pytest-cov 7 — and
+# one irreducible per-Python difference — no constraint makes 3.8 run pytest-cov 7 — and
 # it is exactly why the coverage plumbing must be robust across both (WI-105).
 ruff~=0.15.0
 pytest~=8.3

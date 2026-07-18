@@ -654,6 +654,68 @@ def test_git_commit_lookup_none_outside_work_tree(tmp_path):
     assert check.git_commit_lookup(tmp_path) is None
 
 
+def test_git_commit_lookup_batches_tracked_paths_and_skips_untracked(tmp_path):
+    check = load_script("check_docs")
+    import subprocess
+
+    repo = tmp_path
+    subprocess.run(["git", "-C", str(repo), "init", "-q"], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "config", "user.email", "t@example.com"],
+        check=True,
+    )
+    subprocess.run(["git", "-C", str(repo), "config", "user.name", "T"], check=True)
+    tracked = repo / "nested" / "Thing.txt"
+    tracked.parent.mkdir()
+    tracked.write_text("tracked\n", encoding="utf-8")
+    unicode_path = repo / "nested" / "naïve.txt"
+    unicode_path.write_text("unicode path\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "nested"], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "commit", "-q", "-m", "tracked"], check=True
+    )
+    untracked = repo / "untracked.txt"
+    untracked.write_text("not committed\n", encoding="utf-8")
+
+    lookup = check.git_commit_lookup(repo)
+    assert lookup is not None
+    assert isinstance(lookup(tracked), int)
+    assert lookup("nested/Thing.txt") == lookup(tracked)
+    assert lookup(unicode_path) == lookup(tracked)
+    assert lookup(untracked) is None
+    assert lookup(repo.parent / "outside.txt") is None
+
+
+def test_git_commit_lookup_runs_one_history_process(tmp_path, monkeypatch):
+    check = load_script("check_docs")
+    calls = []
+
+    class Result:
+        returncode = 0
+        stdout = "\x1e200\n\none.md\ntwo.py\n\x1e100\n\none.md\n"
+
+    def fake_run(argv, **_kwargs):
+        calls.append(argv)
+        return Result()
+
+    monkeypatch.setattr(check.shutil, "which", lambda _name: "git")
+    monkeypatch.setattr(check.subprocess, "run", fake_run)
+    lookup = check.git_commit_lookup(tmp_path)
+
+    assert lookup(tmp_path / "one.md") == 200
+    assert lookup(tmp_path / "two.py") == 200
+    assert lookup(tmp_path / "missing.txt") is None
+    assert len(calls) == 1
+    log_index = calls[0].index("log")
+    assert calls[0][1:3] == ["-c", "core.quotePath=false"]
+    assert calls[0][log_index:] == [
+        "log",
+        "--format=%x1e%ct",
+        "--name-only",
+        "--no-renames",
+    ]
+
+
 # --- status-surface structure (S-1..S-3; warn-only) ---------------------------
 
 

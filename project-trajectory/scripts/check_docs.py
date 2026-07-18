@@ -80,6 +80,7 @@ Contracts: IF-002, IF-030 — the interface seams this module declares (process.
 """
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -486,35 +487,64 @@ def check_inventory(docs, root, docs_dir):
 
 
 def git_commit_lookup(root):
-    """Return a memoized path->last-commit-epoch lookup, or None when git is
-    unavailable or `root` isn't inside a git work tree (so --stale degrades to a
-    clean skip rather than failing)."""
+    """Return a path->last-commit-epoch lookup populated by one Git traversal.
+
+    A per-path ``git log -1 -- <path>`` loop made the per-commit doc check launch
+    hundreds of processes on a mature repository (150 seconds on Windows). Git
+    already emits history newest-first, so one name-only traversal plus
+    ``setdefault`` produces the same last-change map. Return ``None`` when Git is
+    unavailable or ``root`` is not a work tree, preserving the clean --stale
+    skip. Untracked and out-of-root paths resolve to ``None``.
+    """
     if not shutil.which("git"):
         return None
-    probe = subprocess.run(
-        ["git", "-C", str(root), "rev-parse", "--is-inside-work-tree"],
+    root = Path(root).resolve()
+    history = subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.quotePath=false",
+            "-C",
+            str(root),
+            "log",
+            "--format=%x1e%ct",
+            "--name-only",
+            "--no-renames",
+        ],
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
     )
-    if probe.returncode != 0 or probe.stdout.strip() != "true":
+    if history.returncode != 0:
         return None
+
+    def path_key(value):
+        """Normalize separators and case exactly as the host filesystem does."""
+        return os.path.normcase(str(value).replace("\\", "/")).replace("\\", "/")
+
     cache = {}
+    for block in history.stdout.split("\x1e"):
+        lines = block.splitlines()
+        if not lines:
+            continue
+        stamp = lines[0].strip()
+        if not stamp.isdigit():
+            continue
+        epoch = int(stamp)
+        for name in lines[1:]:
+            if name:
+                cache.setdefault(path_key(name), epoch)
 
     def lookup(path):
-        if path in cache:
-            return cache[path]
-        out = subprocess.run(
-            ["git", "-C", str(root), "log", "-1", "--format=%ct", "--", str(path)],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-        val = int(out.stdout.strip()) if out.stdout.strip().isdigit() else None
-        cache[path] = val
-        return val
+        candidate = Path(path)
+        if not candidate.is_absolute():
+            candidate = root / candidate
+        try:
+            relative = candidate.resolve().relative_to(root)
+        except (OSError, ValueError):
+            return None
+        return cache.get(path_key(relative.as_posix()))
 
     return lookup
 

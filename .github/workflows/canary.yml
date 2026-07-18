@@ -1,23 +1,26 @@
-# Floating-latest canary (WI-104). The test + gate workflows install the PINNED
+# Floating-latest canary (WI-104). The test + gate workflows install the CONSTRAINED
 # requirements-dev.txt so a tool major can't turn them red unannounced — but that
-# same pin hides *upcoming* breakage (the next ruff format-rule change, the next
+# same ranges hide *upcoming* breakage (the next ruff format-rule change, the next
 # pytest-cov contract shift). This job runs the self-tests + ruff against UNPINNED
 # latest on a schedule (and on demand), NON-gating — nothing here blocks a merge,
 # so an incoming break surfaces as a heads-up to bump the pin, not a surprise red
 # on some contributor's PR. This is the early-warning the unpinned CI used to give
-# for free, kept alive after pinning.
+# for free, kept alive after constraining the gating toolchain.
 name: canary-latest
 on:
   schedule:
     - cron: "0 6 * * 1" # Mondays 06:00 UTC — weekly is plenty for a heads-up.
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   latest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.x"
       # Deliberately UNPINNED — the whole point is to see what `latest` resolves
