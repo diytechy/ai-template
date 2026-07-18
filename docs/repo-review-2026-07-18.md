@@ -15,14 +15,14 @@ what remains after the subsequent confident-fix pass.
 
 | Finding | Still unfixed because | Required next move |
 |---|---|---|
-| **H-02 — orchestration complexity** | A safe decomposition changes the highest-risk state machines and compatibility surface. Extracting helpers without a state model would merely move complexity around. | File and execute a dedicated high-risk architecture WI: characterize transitions, add a no-new-C901 ratchet, then separate pure decisions from Git/session/integration effects. |
+| **H-02 — orchestration complexity** | A safe decomposition changes the highest-risk state machines and compatibility surface. Extracting helpers without a state model would merely move complexity around. | File and execute a dedicated high-risk architecture WI: characterize transitions, add a no-new-C901 ratchet, then separate pure decisions from Git/session/integration effects. *(§6: WI-225 + WI-226 filed.)* |
 | **H-03 — no license** | OI-4/WI-097 correctly blocks on the owner's public/private and licensing intent; choosing legal terms is not an engineering default. | Owner decision, then add the selected license/notices and README terms. |
 | **M-04 — 390 px dashboard clipping** | The defect is certain, but fit-to-width versus an explicit scroll affordance is a UX choice requiring a rendered iteration. The render-critique skill forbids redesigning inline during critique. | **WI-219 filed queued** with SR-052/SR-054 links; fix in the generator and rerun all 36 screenshots. |
 | **M-05 — non-atomic requirements** | Splitting ratified SRs changes the traceability spine, evidence links, and attestation history. A mechanical prose split would be dishonest. | Planned spine migration with supersession/evidence preservation. |
-| **M-06 — run-menu shell arguments** | The intended compatibility contract is ambiguous, and POSIX-shell versus `cmd.exe` quoting makes an unreviewed patch unsafe. | Decide shell-fragment versus data-argument semantics, then implement explicit argv/placeholder behavior with cross-platform tests. |
-| **M-07 — 48 live orphan warnings** | Most warnings are retained reviews/spec evidence. Deleting or globally ignoring them would hide useful history; indexing all of them would bloat navigation. | Define evidence-document taxonomy/indexes and ratchet only newly introduced live orphans. |
+| **M-06 — run-menu shell arguments** | The intended compatibility contract is ambiguous, and POSIX-shell versus `cmd.exe` quoting makes an unreviewed patch unsafe. | Decide shell-fragment versus data-argument semantics, then implement explicit argv/placeholder behavior with cross-platform tests. *(§6: WI-227 filed.)* |
+| **M-07 — 48 live orphan warnings** | Most warnings are retained reviews/spec evidence. Deleting or globally ignoring them would hide useful history; indexing all of them would bloat navigation. | Define evidence-document taxonomy/indexes and ratchet only newly introduced live orphans. *(§6: WI-228 filed.)* |
 | **L-03 — Git identity inconsistency** | Correcting old authors requires disruptive history rewriting; privacy checking is intentionally off. | Standardize future Git identity; rewrite history only as an explicit release decision. |
-| **L-04 — large test modules** | Splitting tests before production boundaries stabilize would increase fixture/patch duplication. | Split alongside the H-02 production decomposition by behavior boundary. |
+| **L-04 — large test modules** | Splitting tests before production boundaries stabilize would increase fixture/patch duplication. | Split alongside the H-02 production decomposition by behavior boundary. *(§6: folded into WI-226.)* |
 
 Confident fixes completed in this pass: H-01, M-01, M-02, M-03, L-01, and
 L-02. The mobile issue was converted into WI-219 rather than silently left as
@@ -600,3 +600,32 @@ were filed after this report and are *adjacent to but distinct from* H-02:
 they harden the dispatcher's correctness, not its decomposition. H-02's
 required next move — the characterization + ratchet + effect-separation WI —
 **remains unfiled** and is still the largest open maintainability item.
+
+## 6. Consumption update (2026-07-18, at `6fd80d5`)
+
+Post-report commits and dispositions since §5, recorded so the table in §0
+stays truthful without rewriting it:
+
+- **Landed since §5:** WI-220/221 (the gilbert-crosscheck filings §5 already
+  names) plus WI-222/223/224 — a deep review of WI-220 confirmed a salvage
+  gap on the committed-evidence CAS-stale path (fixed, WI-222), ratified the
+  fail-closed SELECT disposition semantics (WI-223), and hardened the salvage
+  scans to NUL-delimited output (WI-224). All five remain *adjacent to but
+  distinct from* H-02: correctness, not decomposition.
+- **H-02's evidence strengthened again, as predicted.** The census this
+  report measured at 50 (51 after its own M-01 remediation, §5 correction 3)
+  is now **52**: WI-222/224 added `_salvage_round_evidence` (complexity 16),
+  and `agent_dispatch.py` is now **2,292** lines (was 2,125). Two more
+  well-reviewed remediation passes grew the census because nothing fails on
+  it — the ratchet argument no longer needs a hypothetical.
+- **Items consumed into WIs this sitting:** H-02 → **WI-225** (the
+  no-new-C901 ratchet, slice A) + **WI-226** (characterize + separate
+  decisions from effects, slice B, strong/high-risk); L-04 folds into WI-226
+  as its trailing test split. M-06 → **WI-227** (rule the trailing-argument
+  contract, then implement it quoted, cross-platform). M-07 → **WI-228**
+  (live-orphan taxonomy + newly-introduced-orphan ratchet in check_docs).
+- **Still open, unconsumed:** M-05 (spine migration — deliberately deferred;
+  a sitting of its own), H-03/OI-4 and L-03 (owner decisions, unchanged).
+- The WI-219 registry row was touched in this same commit to re-affirm M-04
+  against the amended doc (the §5/§6 additions are cross-references; M-04's
+  content is unchanged), clearing the trajectory staleness warning.
