@@ -1,0 +1,2125 @@
+#!/usr/bin/env python3
+"""The parallel dispatcher + serialized integrator, extracted VERBATIM from
+agent_loop.py (WI-218 slice D — a file split, not a rewrite; behaviors, spec
+citations, and WI history unchanged).
+
+`dispatch_run` is the WI-182 engine (SR-061; docs/specs/parallel-wi-dispatch.md
+§4/§6/§11/§12): reconcile owned trains -> gate -> build-out. It derives the
+ready frontier through `schedule`, packs traincars, atomically reserves each
+selected traincar's constituent WIs (refs/llm/reservations/*), leases a linked
+worktree per train, and runs worker processes — re-launching the sibling
+`agent_loop.py` engine per assignment — in parallel up to the ceiling. The
+serialized integrator (WI-184, SR-063) composes ready trains onto
+refs/heads/llm/integration by CAS only, runs the combined bar on the composed
+tree, and publishes the development branch through the durable publish-intent
+protocol. Migration gating (SR-065), the blocked/dual-plan dispositions, the
+out/dispatch journal/telemetry, and the recovery reconcile all live here.
+
+Stdlib only, Python 3.8+, Windows/POSIX.
+
+Contracts: IF-055, IF-067 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+"""
+
+import atexit
+import csv
+import datetime
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+# Sibling scripts (the WI-218 split + the S8 routing half). The guard covers an
+# in-process import (a test) whose sys.path doesn't yet carry scripts/ — the
+# same sanctioned-sibling-import idiom agent_loop uses.
+try:
+    import agent_route
+    import schedule
+    from agent_common import (
+        EXIT_BLOCKED,
+        EXIT_DONE,
+        EXIT_NEEDS_HUMAN,
+        EXIT_PAUSED,
+        EXIT_PREFLIGHT,
+        EXIT_STALL,
+        EXIT_TRAIN_END,
+        EXIT_WAITING,
+        TRAIN_BRANCH_PREFIX,
+        WI_TOKEN_RE,
+        _read_csv_rows,
+        _refs,
+        _write_runstate,
+        acquire_lock,
+        blackout_wake,
+        git,
+        head_sha_full,
+        parse_map,
+        pause_reason,
+        preflight,
+        read_declared,
+        regenerate_index,
+        release_lock,
+        stop_banner,
+    )
+    from plan_runner import PLAN_MODE_DUAL, run_dual_plan_round, wi_plan_mode
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import agent_route
+    import schedule
+    from agent_common import (
+        EXIT_BLOCKED,
+        EXIT_DONE,
+        EXIT_NEEDS_HUMAN,
+        EXIT_PAUSED,
+        EXIT_PREFLIGHT,
+        EXIT_STALL,
+        EXIT_TRAIN_END,
+        EXIT_WAITING,
+        TRAIN_BRANCH_PREFIX,
+        WI_TOKEN_RE,
+        _read_csv_rows,
+        _refs,
+        _write_runstate,
+        acquire_lock,
+        blackout_wake,
+        git,
+        head_sha_full,
+        parse_map,
+        pause_reason,
+        preflight,
+        read_declared,
+        regenerate_index,
+        release_lock,
+        stop_banner,
+    )
+    from plan_runner import PLAN_MODE_DUAL, run_dual_plan_round, wi_plan_mode
+
+# The worker ENGINE this dispatcher re-launches per assignment (spawn_worker).
+# A worker is an agent_loop.py process; before the WI-218 split this was
+# `Path(__file__)` — dispatch_run lived in that file — so the sibling entry
+# point is now named explicitly (spec WI-218 "relocation hazard 1").
+_ENGINE = Path(__file__).resolve().parent / "agent_loop.py"
+# =============================================================================
+# WI-182: the parallel dispatcher (SR-061; spec §4/§6/§11/§12)
+# =============================================================================
+# `--jobs N|auto` (or the AGENT_JOBS env the launchers wire at migration)
+# switches agent_loop from the legacy resume loop to the DISPATCHER: derive the
+# ready frontier from the WI registry via schedule.py, pack it into traincars,
+# reserve each selected traincar's constituent WIs atomically in Git, lease a
+# linked worktree per train, and run Slice-C workers in parallel up to the
+# ceiling — rescanning for dynamic refill on every worker exit. Reservations
+# and train branches are the DURABLE state (out/dispatch/ is a rebuildable
+# journal/cache, spec §11); a built train parks ready-to-integrate with its
+# reservations held until the integrator (Slice F) advances the durable
+# disposition, so nothing is double-run even across dispatcher restarts.
+
+RESERVATION_NS = "refs/llm/reservations/"
+
+
+DISPATCH_DIR = "out/dispatch"
+
+
+# A worker that rate-limited (exit 5) is retried after this cooldown.
+TRAIN_RETRY_SECONDS = 300
+
+
+# WI-185 (SR-064): the fault-injection hook the crash matrix drives. Setting
+# AGENT_FAULT_POINT=<point> hard-kills the dispatcher (os._exit, no cleanup,
+# no atexit — a real crash) the first time execution reaches that named
+# lifecycle boundary. Production runs never set it; recovery must reconstruct
+# from Git alone afterwards.
+FAULT_EXIT = 86
+
+
+def _fault(point):
+    if os.environ.get("AGENT_FAULT_POINT", "") == point:
+        print("FAULT-INJECTED: {}".format(point), flush=True)
+        os._exit(FAULT_EXIT)
+
+
+def list_reservations(root):
+    """{WI-ID: reservation-commit-sha} from refs/llm/reservations/* — the
+    durable claims. Empty on error (a broken git surfaces elsewhere)."""
+    code, out = git(
+        root,
+        "for-each-ref",
+        "--format=%(refname)%09%(objectname)",
+        RESERVATION_NS.rstrip("/"),
+    )
+    claims = {}
+    if code != 0:
+        return claims
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if len(parts) == 2 and parts[0].startswith(RESERVATION_NS):
+            wid = parts[0][len(RESERVATION_NS) :]
+            if WI_TOKEN_RE.match(wid):
+                claims[wid] = parts[1]
+    return claims
+
+
+def reservation_meta(root, sha):
+    """The metadata JSON a reservation commit carries ({train, wis, base}), or
+    None when unreadable/malformed — the caller quarantines that claim."""
+    code, out = git(root, "log", "-1", "--format=%B", sha)
+    if code != 0:
+        return None
+    try:
+        meta = json.loads(out)
+    except ValueError:
+        return None
+    if not isinstance(meta, dict) or not meta.get("train") or not meta.get("wis"):
+        return None
+    return meta
+
+
+def reserve_traincar(root, train_id, wis, base):
+    """Atomically claim a traincar: ONE off-history metadata commit
+    (`git commit-tree` — base tree + base parent, message = the {train, wis,
+    base} JSON) and ONE `git update-ref --stdin` transaction creating the
+    train branch and every constituent reservation ref with zero-old-value
+    checks. If ANY WI is already reserved (or the branch exists) the whole
+    transaction fails and nothing is created (SR-061 all-or-none). Returns
+    None on success, else the failure text."""
+    code, tree = git(root, "rev-parse", base + "^{tree}")
+    if code != 0:
+        return "cannot resolve base tree for {}: {}".format(base, tree)
+    meta = json.dumps(
+        {"train": train_id, "wis": list(wis), "base": base}, sort_keys=True
+    )
+    proc = subprocess.run(
+        ["git", "-C", str(root), "commit-tree", tree, "-p", base, "-m", meta],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    if proc.returncode != 0:
+        return "commit-tree failed: {}".format(proc.stderr.strip())
+    commit = proc.stdout.strip()
+    _fault("reserve-pre-txn")
+    # `create` = an atomic zero-old-value check: the fixed ref name is the
+    # uniqueness claim for that WI, and one stdin transaction makes the branch
+    # + every constituent ref all-or-none (spec §6).
+    lines = ["start", "create {} {}".format(TRAIN_BRANCH_HEADS + train_id, base)]
+    for wid in wis:
+        lines.append("create {}{} {}".format(RESERVATION_NS, wid, commit))
+    lines += ["prepare", "commit"]
+    # Bytes, not text mode: Windows text mode would rewrite \n as \r\n and
+    # git update-ref --stdin would read "start\r" as an unknown command.
+    proc = subprocess.run(
+        ["git", "-C", str(root), "update-ref", "--stdin"],
+        input=("\n".join(lines) + "\n").encode("utf-8"),
+        capture_output=True,
+    )
+    if proc.returncode != 0:
+        return "reservation transaction failed (already claimed?): {}".format(
+            proc.stderr.decode("utf-8", "replace").strip()[:300]
+        )
+    _fault("reserve-post-txn")
+    return None
+
+
+TRAIN_BRANCH_HEADS = "refs/heads/" + TRAIN_BRANCH_PREFIX
+
+
+def release_reservations(root, wis):
+    """Transactionally delete the reservation refs of `wis` (one update-ref
+    --stdin transaction — the release-on-early-end rule, SR-062). Returns None
+    on success, else the failure text. A no-op on an empty list."""
+    wis = [w for w in wis if WI_TOKEN_RE.match(w)]
+    if not wis:
+        return None
+    lines = ["start"]
+    for wid in wis:
+        lines.append("delete {}{}".format(RESERVATION_NS, wid))
+    lines += ["prepare", "commit"]
+    proc = subprocess.run(
+        ["git", "-C", str(root), "update-ref", "--stdin"],
+        input=("\n".join(lines) + "\n").encode("utf-8"),
+        capture_output=True,
+    )
+    if proc.returncode != 0:
+        return "release transaction failed: {}".format(
+            proc.stderr.decode("utf-8", "replace").strip()[:300]
+        )
+    return None
+
+
+def train_branch_evidence(root, train_id, base):
+    """(built, blocked) trailer evidence read off the train BRANCH (not a
+    worktree) — usable from the primary checkout for reconcile, the early-end
+    release decision, and the blocked-disposition transaction. `built` is a
+    set; `blocked` maps WI id -> its committed BlockRef ('' when omitted)."""
+    code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + train_id)
+    built, blocked = set(), {}
+    if code != 0:
+        return built, blocked
+    fmt = (
+        "T%x09%(trailers:key=WI,valueonly,separator=;)%x09"
+        "%(trailers:key=Blocked-WI,valueonly,separator=;)%x09"
+        "%(trailers:key=BlockRef,valueonly,separator=;)"
+    )
+    code, out = git(root, "log", "--format=" + fmt, base + ".." + tip.strip())
+    if code != 0:
+        return built, blocked
+    for line in out.splitlines():
+        parts = (line.split("\t")[1:] + ["", "", ""])[:3]
+        built.update(
+            x.strip() for x in parts[0].split(";") if WI_TOKEN_RE.match(x.strip())
+        )
+        refs = [t.strip() for t in parts[2].split(";")]
+        for j, tok in enumerate(t.strip() for t in parts[1].split(";")):
+            if WI_TOKEN_RE.match(tok) and tok not in blocked:
+                blocked[tok] = refs[j] if j < len(refs) else ""
+    return built, blocked
+
+
+def worktree_root(root):
+    """Where train worktrees live: a sibling directory of the repo
+    (`../<repo>-trains/<train-id>`) — outside the repo so a linked worktree
+    never nests inside the primary checkout or the disposable out/."""
+    root = Path(root).resolve()
+    return root.parent / (root.name + "-trains")
+
+
+def existing_worktrees(root):
+    """{branch: worktree-path} parsed from `git worktree list --porcelain`."""
+    code, out = git(root, "worktree", "list", "--porcelain")
+    trees = {}
+    if code != 0:
+        return trees
+    path = None
+    for line in out.splitlines():
+        if line.startswith("worktree "):
+            path = line[len("worktree ") :].strip()
+        elif line.startswith("branch ") and path:
+            trees[line[len("branch ") :].strip()] = path
+    return trees
+
+
+def lease_worktree(root, train_id):
+    """The linked worktree for a train — reuse the one already checked out on
+    its branch (recovery), else `git worktree add`. Returns (path, err)."""
+    branch_ref = TRAIN_BRANCH_HEADS + train_id
+    trees = existing_worktrees(root)
+    if branch_ref in trees:
+        return Path(trees[branch_ref]), None
+    wt = worktree_root(root) / train_id
+    wt.parent.mkdir(parents=True, exist_ok=True)
+    code, out = git(root, "worktree", "add", str(wt), TRAIN_BRANCH_PREFIX + train_id)
+    if code != 0:
+        return None, "worktree add failed for {}: {}".format(train_id, out[:300])
+    return wt, None
+
+
+def train_phase_gate(root, wi_rows, wid):
+    """The `{phase}-{gate}` train-id prefix (spec §6): the WI's first SR's
+    delivery Phase (or `p0`) + the derived gate cache (or `g0`)."""
+    phase = ""
+    srs = _refs((wi_rows.get(wid) or {}).get("SR-Refs", ""))
+    if srs:
+        for r in _read_csv_rows(
+            Path(root) / "docs" / "requirements" / "system-requirements.csv"
+        ):
+            if (r.get("SR-ID") or "").strip() == srs[0]:
+                phase = (r.get("Phase") or "").strip()
+                break
+    gate = read_declared(Path(root) / "docs" / "gate", "").strip().lower() or "g0"
+    phase = re.sub(r"[^A-Za-z0-9._-]", "", phase) or "p0"
+    return "{}-{}".format(phase, gate)
+
+
+def pack_traincars(records, wis_by_id, cap=4):
+    """Pack the evaluated schedule records into dispatchable traincars —
+    resource-constrained list scheduling with conservative clustering (spec
+    §7): every ready WI starts its own traincar in the deterministic order;
+    an ORDINARY ready WI then absorbs its unary hard-successor chain (each
+    successor `ordinary`-classified, all its other hard preds already done,
+    single hard successor edge) up to the cap. Protected/single-wi classes
+    never join a multi-WI traincar. **Spine packs with spine, never with
+    anything else** (WI-204, the SR-058 amendment; owner ruling 2026-07-17
+    "drafted together, reviewed together, attested together"): every READY
+    spine-serial WI — mutually independent by construction, a ready WI's
+    hard preds are all done — clusters into ONE spine-only traincar, which
+    then absorbs queued spine-serial WIs whose every hard pred is done or
+    already aboard (hard-edge order holds: a member boards only after its
+    aboard-preds), chunked at the cap; the whole-project drain and the
+    one-active-spine-train dispatch invariants are the caller's and are
+    unchanged. Returns a list of {wis, sched_class} dicts in dispatch
+    order (spine cars first — they rank first in `records` anyway)."""
+    by_id = {r["id"]: r for r in records}
+    # children[x] = hard successors of x among tracked WIs
+    children = {}
+    for w in wis_by_id.values():
+        for p in w["preds"]:
+            children.setdefault(p, []).append(w["id"])
+    consumed = set()
+    cars = []
+
+    # --- the spine-only batch (WI-204) -----------------------------------
+    # Seed: every ready spine-serial WI, in deterministic record order.
+    aboard = []
+    aboard_set = set()
+    for r in records:
+        if (
+            r["disposition"] == "ready"
+            and r["sched_class"] == schedule.SCHED_SPINE_SERIAL
+        ):
+            aboard.append(r["id"])
+            aboard_set.add(r["id"])
+    # Closure: absorb queued spine-serial WIs unlocked by the batch (every
+    # hard pred done or aboard). A fixed-point sweep in record order keeps
+    # the append topological — a member is appended only after its aboard
+    # predecessors, so the worker builds the train in dependency order.
+    changed = bool(aboard)
+    while changed:
+        changed = False
+        for r in records:
+            if (
+                r["id"] in aboard_set
+                or r["sched_class"] != schedule.SCHED_SPINE_SERIAL
+                or r["disposition"] not in ("ready", "waiting")
+            ):
+                continue
+            wi = wis_by_id.get(r["id"])
+            if wi is None or wi["status"] != "queued":
+                continue
+            if all(
+                (wis_by_id.get(p) or {}).get("status") == "done" or p in aboard_set
+                for p in wi["preds"]
+            ):
+                aboard.append(r["id"])
+                aboard_set.add(r["id"])
+                changed = True
+    # The safety cap still applies (spec §7): overflow forms the next spine
+    # car(s); a later chunk whose preds ride an earlier one is simply not
+    # dispatched until that one integrates (spine serializes whole-project,
+    # and each rescan re-derives the cars fresh).
+    for i in range(0, len(aboard), cap):
+        cars.append(
+            {"wis": aboard[i : i + cap], "sched_class": schedule.SCHED_SPINE_SERIAL}
+        )
+    consumed |= aboard_set
+
+    for r in records:
+        if r["disposition"] != "ready" or r["id"] in consumed:
+            continue
+        car = [r["id"]]
+        consumed.add(r["id"])
+        if r["sched_class"] == schedule.SCHED_ORDINARY:
+            cur = r["id"]
+            while len(car) < cap:
+                succs = children.get(cur, [])
+                if len(succs) != 1:
+                    break
+                nxt = succs[0]
+                nrec = by_id.get(nxt)
+                nwi = wis_by_id.get(nxt)
+                if (
+                    nrec is None
+                    or nwi is None
+                    or nxt in consumed
+                    or nrec["sched_class"] != schedule.SCHED_ORDINARY
+                    or nrec["disposition"] not in ("waiting", "ready")
+                    or nwi["status"] != "queued"
+                ):
+                    break
+                # Every OTHER hard pred of the successor must already be done
+                # (accepted-on-train covers only `cur`, which rides this car).
+                others = [p for p in nwi["preds"] if p != cur]
+                if any(
+                    (wis_by_id.get(p) or {}).get("status") != "done" for p in others
+                ):
+                    break
+                # The successor must itself have a single-successor shape to
+                # keep the chain unary (a fork ends the train, spec §7).
+                car.append(nxt)
+                consumed.add(nxt)
+                cur = nxt
+        cars.append({"wis": car, "sched_class": r["sched_class"]})
+    return cars
+
+
+class _Journal:
+    """The out/dispatch/ runtime journal — a CACHE, never authority (§11).
+    Events append before the corresponding external action where possible;
+    the manifest is rewritten atomically (temp file + os.replace).
+
+    WI-185: every event is stamped with this dispatcher process's `run` id so
+    telemetry aggregates by `(run, train, WI, session)` — a parallel session
+    number from one worker can never collide with another's across runs
+    (SR-065). The id is `<utc-stamp>-<pid>-<rand>`, unique per launch."""
+
+    def __init__(self, root, run_id=None):
+        self.dir = Path(root) / DISPATCH_DIR
+        self.run_id = run_id or "{}-{}-{:04x}".format(
+            time.strftime("%Y%m%dT%H%M%S"),
+            os.getpid(),
+            int.from_bytes(os.urandom(2), "big"),
+        )
+        try:
+            self.dir.mkdir(parents=True, exist_ok=True)
+            (self.dir / "trains").mkdir(exist_ok=True)
+        except OSError:
+            pass
+
+    def event(self, event, **fields):
+        rec = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "run": self.run_id,
+            "event": event,
+        }
+        rec.update(fields)
+        try:
+            with (self.dir / "events.jsonl").open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(rec, sort_keys=True) + "\n")
+        except OSError:
+            pass
+        detail = " ".join(
+            "{}={}".format(k, v) for k, v in sorted(fields.items()) if v != ""
+        )
+        print("dispatch: {}{}".format(event, " " + detail if detail else ""))
+
+    def manifest(self, data):
+        try:
+            tmp = self.dir / "manifest.json.tmp"
+            tmp.write_text(json.dumps(data, indent=2, sort_keys=True), "utf-8")
+            os.replace(str(tmp), str(self.dir / "manifest.json"))
+        except OSError:
+            pass
+
+    def train(self, train_id, data):
+        try:
+            tmp = self.dir / "trains" / (train_id + ".json.tmp")
+            tmp.write_text(json.dumps(data, indent=2, sort_keys=True), "utf-8")
+            os.replace(str(tmp), str(self.dir / "trains" / (train_id + ".json")))
+        except OSError:
+            pass
+
+
+# -----------------------------------------------------------------------------
+# WI-184: the atomic serialized integrator (SR-063; spec §9)
+# -----------------------------------------------------------------------------
+# One logical writer against refs/heads/llm/integration. The ref is advanced
+# ONLY by compare-and-swap and is never checked out in the user's primary
+# worktree: each ready train composes on a temporary staging branch
+# llm/integrate/<train-id> in its own worktree, and the development branch is
+# a published PROJECTION of the integration ref — synchronized through the
+# durable refs/llm/publish-intent protocol, never half-applied.
+
+INTEGRATION_REF = "refs/heads/llm/integration"
+
+
+INTEGRATE_BRANCH_PREFIX = "llm/integrate/"
+
+
+PUBLISH_INTENT_REF = "refs/llm/publish-intent"
+
+
+STATUS_GENERATED_MARKER = "GENERATED by scripts/agent_loop.py integrator"
+
+
+def integration_head(root):
+    """The integration ref's commit, or None when the ref does not exist."""
+    code, out = git(root, "rev-parse", "--verify", "--quiet", INTEGRATION_REF)
+    return out.strip() if code == 0 and out.strip() else None
+
+
+def cas_ref(root, ref, new, old):
+    """Compare-and-swap `ref` from exactly `old` to `new` (one update-ref
+    transaction). `old` = None asserts creation. Returns True on success; a
+    False is HARMLESS — the caller recomposes from the ref's new value."""
+    if old:
+        line = "update {} {} {}".format(ref, new, old)
+    else:
+        line = "create {} {}".format(ref, new)
+    proc = subprocess.run(
+        ["git", "-C", str(root), "update-ref", "--stdin"],
+        input=("start\n{}\nprepare\ncommit\n".format(line)).encode("utf-8"),
+        capture_output=True,
+    )
+    return proc.returncode == 0
+
+
+def ensure_integration_ref(root, journal):
+    """Create refs/heads/llm/integration from the selected development branch
+    on a GENUINE cold start only (spec §11 rule 2): if the ref is absent while
+    dispatcher-owned evidence exists (train/integrate branches, reservations,
+    a publish intent), something deleted it — fail closed rather than silently
+    blessing the development branch. Returns (head, err)."""
+    head = integration_head(root)
+    if head:
+        return head, None
+    code, out = git(
+        root,
+        "for-each-ref",
+        "--format=%(refname)",
+        "refs/heads/llm/train",
+        "refs/heads/llm/integrate",
+        RESERVATION_NS.rstrip("/"),
+        PUBLISH_INTENT_REF,
+    )
+    evidence = [ln for ln in out.splitlines() if ln.strip()] if code == 0 else []
+    if evidence:
+        return None, (
+            "refs/heads/llm/integration is absent but dispatcher-owned "
+            "evidence exists ({} ref(s)) — a deleted/corrupt integration ref "
+            "is reconstructed or fails closed (spec §11), never re-seeded "
+            "from the development branch.".format(len(evidence))
+        )
+    dev = head_sha_full(root)
+    if not dev or not cas_ref(root, INTEGRATION_REF, dev, None):
+        return None, "cannot initialize the integration ref from HEAD"
+    journal.event("integration-ref-init", head=dev[:12])
+    return dev, None
+
+
+def registry_rows_at(root, ref):
+    """The WI registry rows as read from `ref` (the integrated disposition),
+    falling back to the checkout when unreadable. The integration ref — not
+    the development checkout — is the scheduling authority once it exists."""
+    proc = subprocess.run(
+        ["git", "-C", str(root), "show", ref + ":docs/requirements/work-items.csv"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdin=subprocess.DEVNULL,
+    )
+    if proc.returncode != 0:
+        return None
+    import io
+
+    return list(csv.DictReader(io.StringIO(proc.stdout)))
+
+
+def reviewed_train_head(root, tid, base):
+    """The exact code HEAD a train's review must name: the LAST commit in
+    base..tip carrying a WI trailer (verdict/telemetry commits come after)."""
+    fmt = "%H%x09%(trailers:key=WI,valueonly,separator=;)"
+    code, out = git(
+        root, "log", "--format=" + fmt, base + ".." + TRAIN_BRANCH_PREFIX + tid
+    )
+    if code != 0:
+        return None
+    for line in out.splitlines():  # newest first
+        parts = line.split("\t")
+        if len(parts) == 2 and any(
+            WI_TOKEN_RE.match(x.strip()) for x in parts[1].split(";")
+        ):
+            return parts[0]
+    return None
+
+
+def train_verdicts(root, tid, reviewed_sha):
+    """[(phase, verdict)] parsed from the verdict files committed on the train
+    branch that NAME the exact reviewed commit (reviews/<train>/NNN-<PHASE>-
+    <sha7>.md). A verdict naming an older head does not count (spec §8)."""
+    tip = TRAIN_BRANCH_PREFIX + tid
+    prefix = "docs/reviews/{}/".format(tid)
+    code, out = git(root, "ls-tree", "-r", "--name-only", tip, prefix)
+    results = []
+    if code != 0 or not reviewed_sha:
+        return results
+    want = reviewed_sha[:7]
+    for name in out.splitlines():
+        m = re.match(r".*/(\d+)-(REVIEW-[AB]|CRITIQUE)-([0-9a-f]+)\.md$", name.strip())
+        if not m or m.group(3) != want:
+            continue
+        code2, text = git(root, "show", "{}:{}".format(tip, name.strip()))
+        if code2 != 0:
+            continue
+        verdict = ""
+        for line in text.splitlines():
+            vm = re.match(r"\s*VERDICT:\s*(APPROVE|CHANGES-REQUESTED)", line)
+            if vm:
+                verdict = vm.group(1)
+        results.append((m.group(2), verdict))
+    return results
+
+
+def _staging_worktree(root, tid, base):
+    """A staging branch llm/integrate/<tid> at `base` checked out in its own
+    worktree. Reuses an existing branch/worktree (recovery). Returns
+    (worktree_path, err)."""
+    branch = INTEGRATE_BRANCH_PREFIX + tid
+    trees = existing_worktrees(root)
+    ref = "refs/heads/" + branch
+    if ref in trees:
+        return Path(trees[ref]), None
+    code, _ = git(root, "rev-parse", "--verify", "--quiet", ref)
+    wt = worktree_root(root) / ("integrate-" + tid)
+    wt.parent.mkdir(parents=True, exist_ok=True)
+    if code == 0:
+        code2, out = git(root, "worktree", "add", str(wt), branch)
+    else:
+        code2, out = git(root, "worktree", "add", "-b", branch, str(wt), base)
+    if code2 != 0:
+        return None, "staging worktree failed for {}: {}".format(tid, out[:300])
+    return wt, None
+
+
+def _rewrite_wi_rows(path, updates):
+    """Surgically rewrite specific WI rows (Status/Deliverable/BlockRef) in a
+    work-items.csv, touching ONLY the named rows so the integrator never
+    reflows an adopter's registry. Returns the list of updated ids."""
+    with open(str(path), newline="", encoding="utf-8-sig") as fh:
+        rows = list(csv.reader(fh))
+    if not rows:
+        return []
+    header = rows[0]
+    idx = {h: i for i, h in enumerate(header)}
+    done = []
+    for r in rows[1:]:
+        if not r or r[0] not in updates:
+            continue
+        for col, val in updates[r[0]].items():
+            if col in idx:
+                while len(r) <= idx[col]:
+                    r.append("")
+                r[idx[col]] = val
+        done.append(r[0])
+    with open(str(path), "w", newline="", encoding="utf-8") as fh:
+        csv.writer(fh, lineterminator="\n").writerows(rows)
+    return done
+
+
+def synth_deliverable(root, tid, wid, base):
+    """The integrator's Deliverable text for a WI it marks done: the train,
+    the exact commit, and the worker's own commit subject — derived facts,
+    never invented prose."""
+    fmt = "%H%x09%s%x09%(trailers:key=WI,valueonly,separator=;)"
+    code, out = git(
+        root, "log", "--format=" + fmt, base + ".." + TRAIN_BRANCH_PREFIX + tid
+    )
+    subject, sha = "", ""
+    if code == 0:
+        for line in out.splitlines():
+            parts = line.split("\t")
+            if len(parts) == 3 and wid in [x.strip() for x in parts[2].split(";")]:
+                sha, subject = parts[0][:7], parts[1]
+                break
+    return "Integrated from train {} @ {}: {}".format(tid, sha or "?", subject or wid)
+
+
+def generate_status(docs, root, last_train=""):
+    """The integrator-generated root status snapshot (SR-059's generation
+    half; spec §10): derived gate/bar pointers, queue counts, pending human
+    items, the last integrated train — links, never copies. Written ONLY when
+    docs/status.md is absent or already generated (a hand-authored status is
+    the un-migrated state and is left alone until the migration flips it)."""
+    path = docs / "status.md"
+    try:
+        if path.exists() and STATUS_GENERATED_MARKER not in path.read_text(
+            encoding="utf-8", errors="replace"
+        ):
+            return False
+    except OSError:
+        return False
+    rows = registry_rows_at(root, INTEGRATION_REF) or []
+    counts = {"queued": 0, "deferred": 0, "blocked": 0, "done": 0}
+    for r in rows:
+        st = (r.get("Status") or "").strip().lower()
+        if st in counts:
+            counts[st] += 1
+    gate = read_declared(docs / "gate", "(none)")
+    reserved = sorted(list_reservations(root))
+    lines = [
+        "<!-- " + STATUS_GENERATED_MARKER + " — do not hand-edit -->",
+        "# Status (generated)",
+        "",
+        "- **Derived gate:** {} ([docs/gate](gate); the harness is the bar)".format(
+            gate
+        ),
+        "- **Work items:** {queued} queued · {deferred} deferred · "
+        "{blocked} blocked · {done} done — the registry "
+        "[work-items.csv](requirements/work-items.csv) is the source; the "
+        "dashboard is generated from it.".format(**counts),
+        "- **Reserved (in flight):** {}".format(", ".join(reserved) or "none"),
+        "- **Last integrated train:** {}".format(last_train or "none this run"),
+        "- **Needs <human>:** see [open-items.md](open-items.md) if present.",
+        "",
+        "_Regenerated by the integrator on the integration branch after every"
+        " successful integration — never written on a worker branch._",
+    ]
+    try:
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    except OSError:
+        return False
+    return True
+
+
+def _run_combined_bar(worktree, root):
+    """The combined commit bar on the composed tree: the declared stack test
+    command (docs/stack.ini [stack] test). Returns (ok, detail); no declared
+    command reports ('skipped', True) — a stackless fixture, not a pass."""
+    import configparser
+
+    ini = Path(worktree) / "docs" / "stack.ini"
+    if not ini.exists():
+        return True, "skipped (no docs/stack.ini)"
+    cp = configparser.ConfigParser()
+    try:
+        cp.read(str(ini), encoding="utf-8")
+        cmd = (cp.get("stack", "test", fallback="") or "").strip()
+    except configparser.Error as exc:
+        return False, "stack.ini unreadable: {}".format(exc)
+    if not cmd:
+        return True, "skipped (no declared test command)"
+    try:
+        argv = shlex.split(cmd)
+    except ValueError as exc:
+        return False, "cannot parse test command: {}".format(exc)
+    proc = subprocess.run(
+        argv,
+        cwd=str(worktree),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
+    return proc.returncode == 0, ("pass" if proc.returncode == 0 else tail)
+
+
+def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
+    """Compose one ready train into the integration ref (spec §9 steps 1-11).
+    Returns (state, detail): 'integrated', 'needs-re-review' (a textual
+    conflict — any resolution needs a focused re-review before this train can
+    land), 'rework' (verdict missing/stale or the combined bar failed), or
+    'error'. The integration ref moves ONLY via the final CAS."""
+    old_head = integration_head(root)
+    if old_head is None:
+        return "error", "integration ref vanished"
+    code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + tid)
+    if code != 0:
+        return "error", "train branch missing"
+    tip = tip.strip()
+
+    # Step 2: verify reservation scope + the exact-head review verdicts.
+    claims = list_reservations(root)
+    for wid in wis:
+        meta = reservation_meta(root, claims.get(wid, ""))
+        if not meta or meta.get("train") != tid:
+            return "error", "reservation for {} does not name train {}".format(wid, tid)
+    reviewed = reviewed_train_head(root, tid, base)
+    if required_verdicts:
+        verdicts = train_verdicts(root, tid, reviewed)
+        approvals = {ph for ph, v in verdicts if v == "APPROVE"}
+        if len(approvals) < required_verdicts:
+            return "rework", (
+                "review verdicts naming {}: {} approval(s) of {} required".format(
+                    (reviewed or "?")[:7], len(approvals), required_verdicts
+                )
+            )
+
+    # Step 1+3+4: compose on the staging branch from the CURRENT integration
+    # HEAD. A clean 3-way merge takes the fast path (no re-review); ANY
+    # textual conflict aborts composition and demands a focused re-review.
+    wt, err = _staging_worktree(root, tid, old_head)
+    if err:
+        return "error", err
+    code, _ = git(wt, "reset", "--hard", old_head)
+    if code != 0:
+        return "error", "cannot reset staging to the integration HEAD"
+    code, out = git(wt, "merge", "--no-ff", "--no-commit", tip)
+    if code != 0:
+        git(wt, "merge", "--abort")
+        journal.event("integration-conflict", train=tid, detail=out[:200])
+        return "needs-re-review", "textual conflict against the integrated tree"
+
+    # Steps 6-8: durable disposition + evidence + regenerated artifacts,
+    # composed INTO the same integration commit.
+    reg = Path(wt) / "docs" / "requirements" / "work-items.csv"
+    updates = {
+        wid: {
+            "Status": "done",
+            "Deliverable": synth_deliverable(root, tid, wid, base),
+        }
+        for wid in wis
+    }
+    updated = _rewrite_wi_rows(reg, updates) if reg.exists() else []
+    stamp = time.strftime("%Y-%m-%d %H:%M")
+    log_path = Path(wt) / "docs" / "log.md"
+    try:
+        with log_path.open("a", encoding="utf-8") as fh:
+            fh.write(
+                "\n## {} — integrated train {} ({})\n\n"
+                "Head {} composed onto {} by the serialized integrator; "
+                "{} verdict(s) verified on the exact reviewed head; combined "
+                "bar ran on the composed tree (result below). WI row(s) {} "
+                "-> done.\n".format(
+                    stamp,
+                    tid,
+                    ";".join(wis),
+                    tip[:7],
+                    old_head[:7],
+                    required_verdicts,
+                    ";".join(updated) or "(none present)",
+                )
+            )
+    except OSError:
+        pass
+    regenerate_index(Path(wt) / "docs")
+    generate_status(Path(wt) / "docs", root, last_train=tid)
+
+    # Step 9: the combined bar always runs — even after a clean apply.
+    ok, bar_detail = _run_combined_bar(wt, root)
+    journal.event("integration-bar", train=tid, result=bar_detail[:120])
+    if not ok:
+        git(wt, "merge", "--abort")  # tolerate failure; then hard-clean below
+        git(wt, "reset", "--hard", old_head)
+        return "rework", "combined bar failed: {}".format(bar_detail[:300])
+
+    # Step 10: ONE integration commit carrying the trailers.
+    git(wt, "add", "-A")
+    trailers = "".join("Integrated-WI: {}\n".format(w) for w in wis)
+    msg = "integrate: train {} ({})\n\n{}Train-Head: {}\nTrain: {}\n".format(
+        tid, ";".join(wis), trailers, tip, tid
+    )
+    code, out = git(wt, "commit", "-q", "-m", msg)
+    if code != 0:
+        git(wt, "reset", "--hard", old_head)
+        return "error", "integration commit failed: {}".format(out[:200])
+    code, new_head = git(wt, "rev-parse", "HEAD")
+    new_head = new_head.strip()
+    _fault("pre-integration-cas")
+
+    # Step 11: advance the integration ref by CAS. A stale expected-old is
+    # HARMLESS — the train re-enters composition from the new HEAD.
+    if not cas_ref(root, INTEGRATION_REF, new_head, old_head):
+        journal.event("integration-cas-stale", train=tid)
+        git(wt, "reset", "--hard", old_head)
+        return "recompose", "integration ref moved; recomposing"
+    _fault("post-integration-cas")
+    journal.event("integrated", train=tid, wis=";".join(wis), head=new_head[:12])
+    # Reservation refs release transactionally ONLY after the durable
+    # disposition advanced (spec §6).
+    err = release_reservations(root, wis)
+    if err:
+        journal.event("release-failed", train=tid, reason=err[:200])
+    return "integrated", new_head
+
+
+def blocked_disposition(root, docs, journal, tid, wis, base):
+    """The smaller serialized blocked-disposition transaction (spec §9): from
+    the current integration HEAD change ONLY the blocked WI's row
+    (Status=blocked + BlockRef), append the log evidence, commit with
+    Blocked-WI/BlockRef/Train trailers, CAS — and only then release the
+    blocked WI's reservation (unstarted ones were already released at the
+    early end). Built constituents keep theirs (their partial-train re-review
+    path hardens in Slice G). Returns (state, detail)."""
+    old_head = integration_head(root)
+    if old_head is None:
+        return "error", "integration ref vanished"
+    built, blocked_map = train_branch_evidence(root, tid, base)
+    hit = {w: blocked_map[w] for w in wis if w in blocked_map}
+    if not hit:
+        return "error", "no Blocked-WI trailer evidence on train " + tid
+    wt, err = _staging_worktree(root, tid, old_head)
+    if err:
+        return "error", err
+    code, _ = git(wt, "reset", "--hard", old_head)
+    if code != 0:
+        return "error", "cannot reset staging to the integration HEAD"
+    reg = Path(wt) / "docs" / "requirements" / "work-items.csv"
+    updates = {
+        wid: {"Status": "blocked", "BlockRef": ref or "(uncommitted — a finding)"}
+        for wid, ref in hit.items()
+    }
+    updated = _rewrite_wi_rows(reg, updates) if reg.exists() else []
+    try:
+        with (Path(wt) / "docs" / "log.md").open("a", encoding="utf-8") as fh:
+            fh.write(
+                "\n## {} — blocked disposition: {} (train {})\n\n"
+                "Worker-reported blocker with committed evidence at {}; "
+                "BlockRef: {}.\n".format(
+                    time.strftime("%Y-%m-%d %H:%M"),
+                    ";".join(sorted(hit)),
+                    tid,
+                    base[:7],
+                    "; ".join(v or "(none)" for v in hit.values()),
+                )
+            )
+    except OSError:
+        pass
+    generate_status(Path(wt) / "docs", root, last_train="")
+    git(wt, "add", "-A")
+    trailers = "".join("Blocked-WI: {}\n".format(w) for w in sorted(hit))
+    trailers += "".join("BlockRef: {}\n".format(v or "(none)") for v in hit.values())
+    msg = "blocked: {} (train {})\n\n{}Train: {}\n".format(
+        ";".join(sorted(hit)), tid, trailers, tid
+    )
+    code, out = git(wt, "commit", "-q", "-m", msg)
+    if code != 0:
+        git(wt, "reset", "--hard", old_head)
+        return "error", "disposition commit failed: {} (rows: {})".format(
+            out[:200], ";".join(updated)
+        )
+    code, new_head = git(wt, "rev-parse", "HEAD")
+    if not cas_ref(root, INTEGRATION_REF, new_head.strip(), old_head):
+        git(wt, "reset", "--hard", old_head)
+        return "recompose", "integration ref moved; recomposing"
+    journal.event("blocked-disposition", train=tid, wis=";".join(sorted(hit)))
+    err = release_reservations(root, sorted(hit))
+    if err:
+        journal.event("release-failed", train=tid, reason=err[:200])
+    return "integrated", new_head.strip()
+
+
+def dual_plan_disposition(
+    root, journal, tid, wid, row, template, model, timeout, prompt_map
+):
+    """Auto-dispatch one PlanMode=dual frontier WI as a dual-plan round
+    (WI-209, the SR-066 auto-dispatch AC): the round — the WI-199 engine,
+    reused as-is — runs in a staging worktree reset to the current integration
+    HEAD, so its artifact writes (docs/plans/DP-*, the filed child rows, the
+    log summary) compose into ONE serialized disposition commit exactly like
+    blocked_disposition (the smaller docs-only transaction — no product code
+    changes, so the combined bar belongs to the children's own trains, not
+    here). On SELECT the parent row closes done (its deliverable IS the
+    selected decomposition; the filed children hang off it as hard
+    predecessors, so an open parent would park the subtree and a queued one
+    would re-run the round). On PAGE the artifacts still commit (the honest
+    evidence the serial --dual-plan entry leaves in its checkout) and the
+    parent row is untouched. Returns (outcome, detail): 'SELECTED', 'PAGE',
+    or 'error'. The caller owns reservations and the gate-policy mapping."""
+    old_head = integration_head(root)
+    if old_head is None:
+        return "error", "integration ref vanished"
+    wt, err = _staging_worktree(root, tid, old_head)
+    if err:
+        return "error", err
+    code, _ = git(wt, "reset", "--hard", old_head)
+    if code != 0:
+        return "error", "cannot reset staging to the integration HEAD"
+    outcome, detail = run_dual_plan_round(
+        Path(wt), wid, row, template, model, timeout, prompt_map
+    )
+    if outcome == "SELECTED":
+        reg = Path(wt) / "docs" / "requirements" / "work-items.csv"
+        if reg.exists():
+            _rewrite_wi_rows(
+                reg,
+                {
+                    wid: {
+                        "Status": "done",
+                        "Deliverable": "dual-plan round (train {}): {}".format(
+                            tid, detail
+                        ),
+                    }
+                },
+            )
+        generate_status(Path(wt) / "docs", root, last_train=tid)
+    code, porcelain = git(wt, "status", "--porcelain")
+    if code == 0 and not porcelain.strip():
+        # A pre-artifact PAGE (missing goal brief/rubric) writes nothing.
+        return outcome, detail
+    git(wt, "add", "-A")
+    msg = "dual-plan {}: {} (train {})\n\nDual-Plan-WI: {}\nTrain: {}\n".format(
+        "select" if outcome == "SELECTED" else "page", wid, tid, wid, tid
+    )
+    code, out = git(wt, "commit", "-q", "-m", msg)
+    if code != 0:
+        git(wt, "reset", "--hard", old_head)
+        return "error", "dual-plan disposition commit failed: {}".format(out[:200])
+    code, new_head = git(wt, "rev-parse", "HEAD")
+    if not cas_ref(root, INTEGRATION_REF, new_head.strip(), old_head):
+        # The dispatcher loop is single-threaded, so a stale CAS means an
+        # EXTERNAL actor moved the ref mid-round — surface, never overwrite.
+        git(wt, "reset", "--hard", old_head)
+        return "error", "integration ref moved externally during the round"
+    journal.event(
+        "dual-plan-" + ("selected" if outcome == "SELECTED" else "paged"),
+        train=tid,
+        wi=wid,
+        detail=detail[:200],
+    )
+    return outcome, detail
+
+
+def _intent_meta(root):
+    """(sha, meta) of the current publish intent, or (None, None). Unreadable
+    metadata returns (sha, None) — recovery evidence, never overwritten
+    silently."""
+    code, sha = git(root, "rev-parse", "--verify", "--quiet", PUBLISH_INTENT_REF)
+    if code != 0 or not sha.strip():
+        return None, None
+    return sha.strip(), reservation_meta(root, sha.strip())
+
+
+def publish_integration(root, journal, dev_branch):
+    """Publish the integration HEAD to the development branch (spec §9): only
+    when the primary worktree is CLEAN; guarded by the durable publish-intent
+    ref written before the dev-ref CAS and deleted only after the verified
+    fast-forward/reset sync. Returns (state, detail) where state is
+    'published', 'deferred', 'noop', or 'error'."""
+    target = integration_head(root)
+    if not target:
+        return "noop", "no integration ref"
+    dev_ref = "refs/heads/" + dev_branch
+    code, dev_head = git(root, "rev-parse", "--verify", "--quiet", dev_ref)
+    if code != 0:
+        return "error", "development ref {} unreadable".format(dev_ref)
+    dev_head = dev_head.strip()
+    intent_sha, intent = _intent_meta(root)
+
+    if dev_head == target:
+        # Published already (this or a prior attempt): confirm the worktree
+        # sync, then drop any completed intent.
+        code, porcelain = git(root, "status", "--porcelain")
+        tracked_dirty = [
+            ln for ln in porcelain.splitlines() if ln and not ln.startswith("??")
+        ]
+        if tracked_dirty:
+            code2, diff_old = (
+                git(root, "diff", "--quiet", intent["old"])
+                if (intent and intent.get("old"))
+                else (1, "")
+            )
+            if intent and intent.get("old") and code2 == 0:
+                # The §11 stale-checkout case: index/worktree still exactly at
+                # the intent's expected old hash — mechanically stale, not
+                # user dirt. Finish the idempotent sync.
+                git(root, "reset", "--hard", target)
+            else:
+                return "deferred", (
+                    "development ref already at the target but the worktree "
+                    "diverges — left untouched and reported, never reset"
+                )
+        if intent_sha:
+            git(root, "update-ref", "-d", PUBLISH_INTENT_REF, intent_sha)
+            journal.event("publish-intent-cleared", target=target[:12])
+        return "noop", "development branch already at the integration head"
+
+    # Dirty-at-outset: defer, report, never stash/reset (spec §9).
+    code, porcelain = git(root, "status", "--porcelain")
+    tracked_dirty = [
+        ln for ln in porcelain.splitlines() if ln and not ln.startswith("??")
+    ]
+    if tracked_dirty:
+        journal.event("publish-deferred", reason="dirty-worktree")
+        return "deferred", (
+            "primary worktree carries {} uncommitted tracked path(s) — "
+            "publication deferred, checkout untouched".format(len(tracked_dirty))
+        )
+
+    # The durable intent: {target, old, ref}. Reuse only an EXACT match; a
+    # differing intent is replaced by an expected-old-object CAS (a failed
+    # prior attempt retained as evidence until this recomposition).
+    meta = {
+        "train": "publish",
+        "wis": ["publish"],
+        "base": target,
+        "target": target,
+        "old": dev_head,
+        "ref": dev_ref,
+    }
+    if intent and (
+        intent.get("target") == target
+        and intent.get("old") == dev_head
+        and intent.get("ref") == dev_ref
+    ):
+        new_intent = intent_sha  # identical — reuse
+    else:
+        code, tree = git(root, "rev-parse", target + "^{tree}")
+        if code != 0:
+            return "error", "cannot resolve the target tree"
+        proc = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "commit-tree",
+                tree.strip(),
+                "-p",
+                target,
+                "-m",
+                json.dumps(meta, sort_keys=True),
+            ],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+        if proc.returncode != 0:
+            return "error", "intent commit failed"
+        new_intent = proc.stdout.strip()
+        if intent_sha:
+            ok = cas_ref(root, PUBLISH_INTENT_REF, new_intent, intent_sha)
+        else:
+            ok = cas_ref(root, PUBLISH_INTENT_REF, new_intent, None)
+        if not ok:
+            return "deferred", "publish intent raced; retrying next pass"
+        journal.event("publish-intent", target=target[:12], old=dev_head[:12])
+
+    _fault("post-intent")
+    # Second CAS: the development ref, against the intent's expected old.
+    if not cas_ref(root, dev_ref, target, dev_head):
+        # Moved to a third hash: no publication occurred; the stale intent is
+        # kept as recovery evidence through the next recomposition.
+        journal.event("publish-cas-stale", ref=dev_ref)
+        return "deferred", "development ref moved; recomposing from its new head"
+
+    _fault("post-dev-cas")
+    # Verified sync: a reset fires ONLY with index + tracked tree exactly at
+    # the expected old hash (untracked files untouched); divergence defers.
+    code1, _ = git(root, "diff", "--quiet", dev_head)
+    code2, _ = git(root, "diff", "--cached", "--quiet", dev_head)
+    if code1 != 0 or code2 != 0:
+        journal.event("publish-sync-deferred", reason="worktree-diverged")
+        return "deferred", (
+            "edits landed between the CAS and the sync — the intent ref "
+            "identifies the pre-publication hash; sync deferred, not reset"
+        )
+    code, out = git(root, "reset", "--hard", target)
+    if code != 0:
+        return "error", "sync reset failed: {}".format(out[:200])
+    git(root, "update-ref", "-d", PUBLISH_INTENT_REF, new_intent)
+    journal.event("published", ref=dev_ref, head=target[:12])
+    return "published", target
+
+
+def parse_jobs(value):
+    """The --jobs/AGENT_JOBS value: a positive int, or `auto` (adaptive up to
+    the configured ceiling — AGENT_JOBS_CEILING, default 2). Raises ValueError
+    on anything else."""
+    v = (str(value) or "").strip().lower()
+    if v == "auto":
+        try:
+            ceiling = int(os.environ.get("AGENT_JOBS_CEILING", "2"))
+        except ValueError:
+            ceiling = 2
+        return max(1, ceiling)
+    n = int(v)  # ValueError propagates to the caller's preflight
+    if n < 1:
+        raise ValueError("--jobs must be >= 1, got {}".format(n))
+    return n
+
+
+# -----------------------------------------------------------------------------
+# WI-186 (SR-065/SR-059; spec §13/§14): telemetry, banner, downstream migration
+# -----------------------------------------------------------------------------
+
+PARALLEL_READY_FILE = "parallel-ready"
+
+
+def assess_migration(root):
+    """The two audits that gate the two-worker promotion (spec §14 items 9-10).
+    Returns a dict:
+
+    - `safetyclass_ok` — every OPEN WI (queued/blocked/legacy-active) carries a
+      resolvable, non-`unclassified` SafetyClass (schedule.classify over the
+      declared value). A single unclassified open WI holds the whole repo at
+      `--jobs 1` (an unaudited row cannot be promoted, §14.10).
+    - `soft_edges` — the `(wi, soft-pred)` pairs the optimistic scheduler would
+      treat as safe-to-run-concurrently; each must be human-audited before
+      first parallel enable (§14.9).
+    - `softedge_ok` — True when there are no soft edges, OR `docs/parallel-ready`
+      records the human sign-off (its presence IS the recorded audit).
+    - `legacy_active` / `legacy_tracks` — migration residue to reconcile.
+
+    A FRESH scaffold passes by construction: no soft edges, every drafted WI
+    classified, no legacy rows — so it runs parallel-by-default with no marker
+    (SR-059). A MIGRATED repo holds at 1 until both audits pass."""
+    wis = schedule.load_wis(
+        schedule.load_rows(root / "docs" / "requirements" / "work-items.csv")
+    )
+    open_states = ("queued", "blocked", "active", "ready", "reserved")
+    unclassified = []
+    for w in wis:
+        if w["status"] in open_states:
+            sched_class, _ = schedule.classify(w)
+            if sched_class == schedule.SCHED_UNCLASSIFIED:
+                unclassified.append(w["id"])
+    soft_edges = [(w["id"], s) for w in wis for s in w["soft"]]
+    legacy_active = [w["id"] for w in wis if w["status"] == "active"]
+    tracks_dir = root / "docs" / "tracks"
+    legacy_tracks = (
+        sorted(p.name for p in tracks_dir.iterdir() if p.is_dir())
+        if tracks_dir.is_dir()
+        else []
+    )
+    signed = (root / "docs" / PARALLEL_READY_FILE).exists()
+    return {
+        "safetyclass_ok": not unclassified,
+        "unclassified": unclassified,
+        "soft_edges": soft_edges,
+        "softedge_ok": (not soft_edges) or signed,
+        "signed": signed,
+        "legacy_active": legacy_active,
+        "legacy_tracks": legacy_tracks,
+    }
+
+
+def reconcile_legacy(root, journal, assessment):
+    """Reconcile migration residue within the one compatibility window (§14.3-4):
+    a legacy `active` WI row returns to `queued` with a logged finding (runtime
+    activity is dispatcher state, not a tracked column); `docs/tracks/*` lanes
+    stay readable but are flagged (the new dispatcher never schedules from
+    them). Returns the count of reconciled active rows."""
+    reg = root / "docs" / "requirements" / "work-items.csv"
+    reconciled = []
+    if assessment["legacy_active"] and reg.exists():
+        updates = {w: {"Status": "queued"} for w in assessment["legacy_active"]}
+        reconciled = _rewrite_wi_rows(reg, updates)
+        if reconciled:
+            journal.event(
+                "legacy-active-reconciled",
+                wis=";".join(reconciled),
+                finding="active->queued (runtime activity is dispatcher state)",
+            )
+    if assessment["legacy_tracks"]:
+        journal.event(
+            "legacy-tracks-flagged",
+            tracks=";".join(assessment["legacy_tracks"]),
+            finding="docs/tracks/* readable this window; dispatcher never "
+            "schedules from them (declare Priority/edges instead)",
+        )
+    return len(reconciled)
+
+
+def resolve_ceiling(root, requested, journal):
+    """Apply the migration gate to the requested worker ceiling (SR-065): a
+    repo may run >1 worker only once BOTH audits pass. Returns (ceiling,
+    assessment). A held repo drops to 1 with a reason-coded event; a repo that
+    passes at a ceiling>1 for the first time records the deliberate promotion."""
+    assessment = assess_migration(root)
+    if requested <= 1:
+        return 1, assessment
+    if not assessment["safetyclass_ok"]:
+        journal.event(
+            "migration-hold",
+            requested=requested,
+            reason="unclassified-open-wi:" + ";".join(assessment["unclassified"]),
+        )
+        return 1, assessment
+    if not assessment["softedge_ok"]:
+        journal.event(
+            "migration-hold",
+            requested=requested,
+            reason="soft-edge-audit-unsigned:{}-edge(s); review and create "
+            "docs/parallel-ready".format(len(assessment["soft_edges"])),
+        )
+        return 1, assessment
+    # Both audits pass — record the deliberate two-worker promotion once.
+    if requested > 1:
+        journal.event(
+            "parallel-enabled",
+            ceiling=requested,
+            soft_edges=len(assessment["soft_edges"]),
+        )
+    return requested, assessment
+
+
+def dispatch_banner(jobs, active, parked, cars, journal, integrating=0):
+    """The one-line dispatcher banner (SR-065): active lanes, ready-frontier
+    width, integration-queue depth, and the cost/concurrency ceiling — so
+    parallel spend is visible at a glance."""
+    ready_frontier = sum(len(c["wis"]) for c in cars)
+    queued_to_integrate = sum(
+        1
+        for p in parked.values()
+        if p["state"] in ("ready-to-integrate", "blocked", "train-end")
+    )
+    print(
+        "dispatch banner | lanes {}/{} | frontier {} WI in {} car(s) | "
+        "integration-queue {} | ceiling {}".format(
+            len(active),
+            jobs,
+            ready_frontier,
+            len(cars),
+            queued_to_integrate,
+            jobs,
+        )
+    )
+
+
+def telemetry_summary(journal):
+    """The end-of-run telemetry rollup (spec §13): the required measurements
+    derived from the reason-coded event stream, aggregated by `(run, train,
+    WI, session)`. Written to out/dispatch/telemetry.json and printed — the
+    evidence a downstream adopter tunes capacity from."""
+    events = []
+    try:
+        with (journal.dir / "events.jsonl").open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if line:
+                    try:
+                        events.append(json.loads(line))
+                    except ValueError:
+                        continue
+    except OSError:
+        events = []
+    run = journal.run_id
+    mine = [e for e in events if e.get("run") == run]
+
+    def count(name):
+        return sum(1 for e in mine if e.get("event") == name)
+
+    trains = sorted({e["train"] for e in mine if e.get("train")})
+    summary = {
+        "run": run,
+        # ready-frontier decisions + reservation/worker/integration lifecycle
+        "reservations": count("reserve"),
+        "workers_started": count("worker-start"),
+        "workers_done": count("worker-done"),
+        "integrations": count("integrated"),
+        "blocked_dispositions": count("blocked-disposition"),
+        # overlap / conflict / re-review rates (spec §13 required measurements)
+        "conflicts": count("integration-conflict"),
+        "re_reviews_needed": sum(
+            1
+            for e in mine
+            if e.get("event") == "integration-parked"
+            and e.get("state") == "needs-re-review"
+        ),
+        "rework_parks": sum(
+            1
+            for e in mine
+            if e.get("event") == "integration-parked" and e.get("state") == "rework"
+        ),
+        # train continuation / early-end reasons
+        "train_ends": count("worker-train-end"),
+        "released_unstarted": count("release-unstarted"),
+        # recovery outcomes
+        "reconciles": count("reconcile"),
+        "quarantines": count("quarantine"),
+        "trains": trains,
+        # combined-bar failures after individually-green trains
+        "bar_failures": sum(
+            1
+            for e in mine
+            if e.get("event") == "integration-bar"
+            and e.get("result")
+            not in (
+                "pass",
+                "skipped (no docs/stack.ini)",
+                "skipped (no declared test command)",
+            )
+        ),
+    }
+    try:
+        (journal.dir / "telemetry.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
+        )
+    except OSError:
+        pass
+    print(
+        "dispatch telemetry | {} reservation(s) -> {} integration(s), "
+        "{} conflict(s)/{} re-review(s)/{} rework, {} recovery reconcile(s), "
+        "{} quarantine(s), {} bar-failure(s) after green | trains: {}".format(
+            summary["reservations"],
+            summary["integrations"],
+            summary["conflicts"],
+            summary["re_reviews_needed"],
+            summary["rework_parks"],
+            summary["reconciles"],
+            summary["quarantines"],
+            summary["bar_failures"],
+            ", ".join(trains) or "none",
+        )
+    )
+    return summary
+
+
+def dispatch_run(args, root):
+    """The dispatcher/integrator loop (SR-061): reconcile -> gate -> build-out.
+
+    Returns an exit code. Concurrency is bounded by --jobs; every worker exit,
+    block, or reservation event triggers a rescan (dynamic refill — never a
+    static wave). Spine-class traincars serialize whole-project: one runs with
+    every other lane drained, and nothing else dispatches meanwhile."""
+    docs = root / "docs"
+    journal = _Journal(root)
+    try:
+        jobs = parse_jobs(args.jobs)
+    except ValueError as exc:
+        print("agent_loop: --jobs: {}".format(exc), file=sys.stderr)
+        return EXIT_PREFLIGHT
+    try:
+        # The dual-round hat overrides (WI-209): the same --prompt-map surface
+        # the serial --dual-plan entry honors, parsed once for the whole run.
+        dual_prompt_map = parse_map(args.prompt_map)
+    except ValueError as exc:
+        print("agent_loop: --prompt-map: {}".format(exc), file=sys.stderr)
+        return EXIT_PREFLIGHT
+
+    template = (
+        args.agent_cmd
+        if args.agent_cmd is not None
+        else os.environ.get("AGENT_CMD", "")
+    )
+    failures = preflight(root, template, args)
+    if failures:
+        print("agent_loop: preflight failed —", file=sys.stderr)
+        for f in failures:
+            print("  - " + f, file=sys.stderr)
+        return EXIT_PREFLIGHT
+
+    # One dispatcher per checkout — the same kernel lock the legacy loop takes,
+    # so a legacy coordinator and a dispatcher can never grind one worktree.
+    lock_err = acquire_lock(root / "out" / "agent-loop.lock")
+    if lock_err:
+        print("agent_loop: {}".format(lock_err), file=sys.stderr)
+        return EXIT_PREFLIGHT
+    atexit.register(release_lock, root / "out" / "agent-loop.lock")
+
+    gate_policy = read_declared(docs / "gate-policy", "attended")
+    # The integrator's review requirement: managed routing + the reviewer dial
+    # decide how many exact-head APPROVE verdicts a train needs to integrate.
+    managed = bool(agent_route.load_enabled(docs / "agents-enabled"))
+    try:
+        rp_int = max(0, min(2, int(read_declared(docs / "review-policy", "1"))))
+    except ValueError:
+        rp_int = 1
+    required_verdicts = rp_int if managed else 0
+
+    # The selected development branch — the publication target. A detached
+    # dispatcher checkout has no publishable projection: fail closed.
+    code, dev_branch = git(root, "branch", "--show-current")
+    if code != 0 or not dev_branch.strip():
+        print(
+            "agent_loop: the dispatcher requires a checked-out development "
+            "branch (detached HEAD cannot receive publications).",
+            file=sys.stderr,
+        )
+        return EXIT_PREFLIGHT
+    dev_branch = dev_branch.strip()
+
+    # The downstream-migration gate (SR-065, spec §14): a repo runs >1 worker
+    # only once its soft-edge AND SafetyClass audits pass; until then it holds
+    # at --jobs 1. A fresh scaffold passes by construction. Legacy `active`
+    # rows + docs/tracks/* reconcile within this one compatibility window.
+    requested_jobs = jobs
+    jobs, assessment = resolve_ceiling(root, jobs, journal)
+    reconcile_legacy(root, journal, assessment)
+
+    print("=== parallel dispatcher (scripts/agent_loop.py --jobs {}) ===".format(jobs))
+    if jobs < requested_jobs:
+        hold = (
+            "unclassified open WI(s): " + ";".join(assessment["unclassified"])
+            if not assessment["safetyclass_ok"]
+            else "{} unaudited soft edge(s) — sign off by creating "
+            "docs/parallel-ready".format(len(assessment["soft_edges"]))
+        )
+        print(
+            "MIGRATION HOLD: requested {} worker(s) but held at 1 until the "
+            "migration audits pass ({}). See the downstream-resync skill.".format(
+                requested_jobs, hold
+            )
+        )
+    print(
+        "repo: {} | gate-policy: {} | dev branch: {} | worktrees: {} | run {}".format(
+            root, gate_policy, dev_branch, worktree_root(root), journal.run_id
+        )
+    )
+    print(
+        "CONSENT: workers run headless with the wired permission-bypass "
+        "template; reservations + train branches are durable Git state."
+    )
+
+    # The integration ref is the authoritative integrated disposition (spec
+    # §11); create it only on a genuine cold start, else fail closed.
+    _ihead, err = ensure_integration_ref(root, journal)
+    if err:
+        print("agent_loop: {}".format(err), file=sys.stderr)
+        return EXIT_PREFLIGHT
+    # Reconcile the integration ref against the development branch at launch
+    # (spec §9 "creates or reconciles it from the selected development branch").
+    # Classify the relationship BEFORE acting so a human's new work is never
+    # discarded by a mistaken publish:
+    ihead = integration_head(root)
+    dhead = head_sha_full(root)
+    dev_strictly_ahead = False
+    if ihead and dhead and ihead != dhead:
+        int_is_anc = git(root, "merge-base", "--is-ancestor", ihead, dhead)[0] == 0
+        dev_is_anc = git(root, "merge-base", "--is-ancestor", dhead, ihead)[0] == 0
+        if int_is_anc and not dev_is_anc:
+            dev_strictly_ahead = True
+        elif not int_is_anc and not dev_is_anc:
+            journal.event("integration-diverged", ihead=ihead[:12], dhead=dhead[:12])
+    if dev_strictly_ahead:
+        # Dev is strictly AHEAD of integration: a human added WIs on the
+        # development branch. Fast-forward the ref to absorb that new work
+        # (never over unpublished integration commits — the divergent case
+        # above is logged and left for a human/later rung).
+        if cas_ref(root, INTEGRATION_REF, dhead, ihead):
+            journal.event("integration-fast-forward", head=dhead[:12])
+    else:
+        # Integration ahead-or-equal of dev: resume any interrupted publication
+        # idempotently (this also finishes a crash-stranded worktree sync when
+        # the dev ref already equals the integration head, spec §11).
+        state, detail = publish_integration(root, journal, dev_branch)
+        if state == "published":
+            print(
+                "dispatch: resumed an interrupted publication ({})".format(detail[:12])
+            )
+
+    # --- stage 1: reconcile owned trains to a clean baseline (spec §4.1) -----
+    # Group durable reservation claims into trains; resume the incomplete,
+    # park the built (ready-to-integrate, Slice F), quarantine the unreadable.
+    active = {}  # train_id -> {proc, wis, base, worktree, spine}
+    parked = {}  # train_id -> {"state": ..., "wis": [...]}
+    retry_at = {}  # train_id -> epoch when a WAITING train may retry
+    quarantined_wis = set()
+    claims = list_reservations(root)
+    trains = {}
+    for wid, sha in sorted(claims.items()):
+        meta = reservation_meta(root, sha)
+        if meta is None:
+            journal.event("quarantine", wi=wid, reason="unreadable-reservation")
+            quarantined_wis.add(wid)
+            continue
+        trains.setdefault(meta["train"], {"wis": [], "base": meta["base"]})
+        trains[meta["train"]]["wis"].append(wid)
+    for tid, t in sorted(trains.items()):
+        # Already-integrated restore FIRST (spec §11 table): the durable
+        # disposition advanced before a crash could release the reservations —
+        # every WI is done on the integration ref, so restore `integrated` and
+        # finish the pending release; never re-integrate. Checked before the
+        # branch guard because a dual-plan train (WI-209) has no train branch
+        # at all: its round composes straight onto the integration ref, so a
+        # crash between CAS and release must reconcile here, not quarantine.
+        int_rows0 = registry_rows_at(root, INTEGRATION_REF) or []
+        int_status0 = {
+            (r.get("WI-ID") or "").strip(): (r.get("Status") or "").strip().lower()
+            for r in int_rows0
+        }
+        if t["wis"] and all(int_status0.get(w) == "done" for w in t["wis"]):
+            err = release_reservations(root, t["wis"])
+            if err:
+                journal.event("release-failed", train=tid, reason=err[:200])
+            parked[tid] = {"state": "integrated", "wis": t["wis"], "base": t["base"]}
+            journal.event("reconcile", train=tid, state="integrated")
+            continue
+        code, _ = git(
+            root, "rev-parse", "--verify", "--quiet", TRAIN_BRANCH_HEADS + tid
+        )
+        if code != 0:
+            journal.event("quarantine", train=tid, reason="reservation-without-branch")
+            quarantined_wis.update(t["wis"])
+            continue
+        # Read evidence off the branch (works without a worktree).
+        built, blocked = train_branch_evidence(root, tid, t["base"])
+        # Ownership cross-check (spec §6/§11): a train branch claiming a WI
+        # outside its own reservation set is unprovable ownership — quarantine
+        # THIS train (fail closed) and let disjoint proven work continue.
+        foreign = (built | set(blocked)) - set(t["wis"])
+        if foreign:
+            journal.event(
+                "quarantine",
+                train=tid,
+                reason="claims-unreserved-wi:" + ";".join(sorted(foreign)),
+            )
+            quarantined_wis.update(t["wis"])
+            parked[tid] = {"state": "quarantined", "wis": t["wis"], "base": t["base"]}
+            continue
+        if blocked:
+            parked[tid] = {"state": "blocked", "wis": t["wis"], "base": t["base"]}
+            journal.event("reconcile", train=tid, state="blocked")
+        elif set(t["wis"]) <= built:
+            parked[tid] = {
+                "state": "ready-to-integrate",
+                "wis": t["wis"],
+                "base": t["base"],
+            }
+            journal.event("reconcile", train=tid, state="ready-to-integrate")
+        else:
+            # Incomplete: resume with a fresh worker (its dirty-tree note is
+            # the reconcile-first prompt, spec §11).
+            parked[tid] = {"state": "resume", "wis": t["wis"], "base": t["base"]}
+            journal.event("reconcile", train=tid, state="resume")
+
+    def spawn_worker(tid, wis, base, spine):
+        wt, err = lease_worktree(root, tid)
+        if err:
+            journal.event("quarantine", train=tid, reason=err)
+            parked[tid] = {"state": "quarantined", "wis": wis}
+            return False
+        argv = [
+            sys.executable,
+            str(_ENGINE),  # the sibling agent_loop.py engine (WI-218 hazard 1)
+            "--worktree",
+            str(wt),
+            "--wi",
+            ";".join(wis),
+            "--train",
+            tid,
+            "--base",
+            base,
+            "--max-iterations",
+            str(args.worker_iterations),
+            "--pause",
+            str(args.pause),
+            "--no-session-echo",
+        ]
+        if args.agent_cmd is not None:
+            argv += ["--agent-cmd", args.agent_cmd]
+        if args.model:
+            argv += ["--model", args.model]
+        if args.session_timeout:
+            argv += ["--session-timeout", str(args.session_timeout)]
+        logdir = journal.dir / "logs"
+        out_fh = None
+        try:
+            logdir.mkdir(parents=True, exist_ok=True)
+            out_fh = (logdir / (tid + ".out")).open("ab")
+        except OSError:
+            pass
+        proc = subprocess.Popen(
+            argv,
+            cwd=str(wt),
+            stdout=out_fh if out_fh is not None else subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+        )
+        active[tid] = {
+            "proc": proc,
+            "wis": wis,
+            "base": base,
+            "worktree": str(wt),
+            "spine": spine,
+            "log_fh": out_fh,
+        }
+        journal.event(
+            "worker-start", train=tid, wis=";".join(wis), pid=proc.pid, spine=spine
+        )
+        journal.train(tid, {"wis": wis, "base": base, "state": "building"})
+        return True
+
+    needs_human_ask = ""
+
+    def handle_exit(tid, code):
+        nonlocal needs_human_ask
+        info = active.pop(tid)
+        if info.get("log_fh") is not None:
+            try:
+                info["log_fh"].close()
+            except OSError:
+                pass
+        if code == EXIT_DONE:
+            parked[tid] = {
+                "state": "ready-to-integrate",
+                "wis": info["wis"],
+                "base": info["base"],
+            }
+            journal.event("worker-done", train=tid, state="ready-to-integrate")
+            journal.train(
+                tid,
+                {
+                    "wis": info["wis"],
+                    "base": info["base"],
+                    "state": "ready-to-integrate",
+                },
+            )
+            if info["spine"] and gate_policy != "autonomous":
+                # Gate/spine work built: under attended/single-ratify the run
+                # EXITS FOR RATIFICATION (spec §4.2) — a human closes the gate
+                # before build-out continues; `autonomous` continues on the
+                # independent-reviewer verdict.
+                needs_human_ask = (
+                    "spine/gate train {} is built and needs ratification "
+                    "(docs/gate-policy: {})".format(tid, gate_policy)
+                )
+                journal.event("gate-ratification-exit", train=tid)
+        elif code in (EXIT_BLOCKED, EXIT_TRAIN_END):
+            # A blocked constituent or a refused continuation ends the train
+            # early (SR-062): built + blocked constituents KEEP their
+            # reservations (evidence for the Slice-F integrator; nothing
+            # double-runs), while every UNSTARTED constituent is released in
+            # one transaction and the next rescan recomputes the traincar DAG.
+            built, blocked_set = train_branch_evidence(root, tid, info["base"])
+            unstarted = [
+                w for w in info["wis"] if w not in built and w not in blocked_set
+            ]
+            err = release_reservations(root, unstarted)
+            if err:
+                journal.event("release-failed", train=tid, reason=err[:200])
+            elif unstarted:
+                journal.event("release-unstarted", train=tid, wis=";".join(unstarted))
+            state = "blocked" if code == EXIT_BLOCKED else "train-end"
+            parked[tid] = {
+                "state": state,
+                "wis": [w for w in info["wis"] if w not in unstarted],
+                "base": info["base"],
+            }
+            journal.event(
+                "worker-blocked" if code == EXIT_BLOCKED else "worker-train-end",
+                train=tid,
+            )
+        elif code == EXIT_WAITING:
+            retry_at[tid] = time.time() + TRAIN_RETRY_SECONDS
+            parked[tid] = {"state": "waiting", "wis": info["wis"], "base": info["base"]}
+            journal.event("worker-waiting", train=tid, retry_s=TRAIN_RETRY_SECONDS)
+        elif code == EXIT_NEEDS_HUMAN:
+            parked[tid] = {
+                "state": "needs-human",
+                "wis": info["wis"],
+                "base": info["base"],
+            }
+            needs_human_ask = "worker train {} paged (no routable model / escalation) — see {}".format(
+                tid, journal.dir / "logs" / (tid + ".out")
+            )
+            journal.event("worker-needs-human", train=tid)
+        else:
+            parked[tid] = {
+                "state": "quarantined",
+                "wis": info["wis"],
+                "base": info["base"],
+            }
+            journal.event("worker-quarantined", train=tid, exit=code)
+
+    # --- stages 2+3: gate-first, then build-out with dynamic refill ----------
+    # The lowest-gate-first order (schedule.py) puts spine/gate work at the
+    # frontier head; the dispatcher serializes it whole-project by draining
+    # every other lane before it runs and dispatching nothing beside it.
+    last_banner_sig = None
+    while True:
+        # Pause: stop NEW reservations at this boundary; in-flight workers
+        # finish their safe boundary and stay recoverable (spec §12).
+        # Blackout: start no NEW worker inside the window (spec §12); the
+        # in-flight ones continue (their own session loop honors it too).
+        paused = pause_reason(docs)
+        blacked_out = bool(
+            blackout_wake(
+                read_declared(docs / "blackout", ""), datetime.datetime.utcnow()
+            )
+        )
+        may_dispatch = paused is None and not blacked_out and not needs_human_ask
+
+        spine_active = any(a["spine"] for a in active.values())
+        if may_dispatch:
+            # Resume reconciled trains first (they already hold reservations).
+            for tid, p in sorted(parked.items()):
+                if len(active) >= jobs or spine_active:
+                    break
+                if p.get("state") == "resume" or (
+                    p.get("state") == "waiting" and time.time() >= retry_at.get(tid, 0)
+                ):
+                    del parked[tid]
+                    spawn_worker(tid, p["wis"], p["base"], spine=False)
+
+        # Scan the frontier every pass (cheap, and the end-state test below
+        # needs it even while paused/blacked out). Once the integration ref
+        # exists it is the authoritative integrated disposition (spec §11) —
+        # the development checkout is only its published projection.
+        reg_rows = registry_rows_at(root, INTEGRATION_REF)
+        if reg_rows is None:
+            reg_rows = schedule.load_rows(
+                root / "docs" / "requirements" / "work-items.csv"
+            )
+        wi_rows = {}
+        for r in reg_rows:
+            wid = (r.get("WI-ID") or "").strip()
+            if WI_TOKEN_RE.match(wid) and wid not in wi_rows:
+                wi_rows[wid] = r
+        wis = schedule.load_wis(reg_rows)
+        reserved = set(list_reservations(root)) | quarantined_wis
+        records = schedule.evaluate(wis, reserved)
+        wis_by_id = {w["id"]: w for w in wis}
+        cars = pack_traincars(records, wis_by_id)
+
+        if may_dispatch:
+            spine_active = any(a["spine"] for a in active.values())
+            for car in cars:
+                if len(active) >= jobs or spine_active or needs_human_ask:
+                    break
+                is_spine = car["sched_class"] in (
+                    schedule.SCHED_SPINE_SERIAL,
+                    schedule.SCHED_PROTECTED,
+                )
+                if is_spine and active:
+                    break  # spine serializes whole-project: drain lanes first
+                first = car["wis"][0]
+                tid = "{}-{}-{}".format(
+                    train_phase_gate(root, wi_rows, first),
+                    first,
+                    "%04x" % int.from_bytes(os.urandom(2), "big"),
+                )
+                # New trains compose from the CURRENT integration HEAD (spec
+                # §9) — never from the (possibly stale) development checkout.
+                base = integration_head(root) or head_sha_full(root)
+                err = reserve_traincar(root, tid, car["wis"], base)
+                if err:
+                    journal.event("reserve-failed", train=tid, reason=err[:200])
+                    continue
+                journal.event(
+                    "reserve",
+                    train=tid,
+                    wis=";".join(car["wis"]),
+                    cls=car["sched_class"],
+                    base=base[:12],
+                )
+                row0 = wi_rows.get(first) or {}
+                if len(car["wis"]) == 1 and wi_plan_mode(row0) == PLAN_MODE_DUAL:
+                    # WI-209 (the SR-066 auto-dispatch AC): a dual row's
+                    # traincar — always single-WI, the classifier derives it
+                    # from the PlanMode signal — runs the decomposition round
+                    # in the dispatcher itself instead of spawning a BUILD
+                    # worker (the worker path keeps its fail-closed refusal as
+                    # the backstop). The run is synchronous, so rounds
+                    # naturally serialize: one at a time, never packed.
+                    import plan_round as _plan_round
+
+                    outcome, detail = dual_plan_disposition(
+                        root,
+                        journal,
+                        tid,
+                        first,
+                        row0,
+                        template,
+                        args.model,
+                        args.session_timeout or None,
+                        dual_prompt_map,
+                    )
+                    if outcome == "SELECTED":
+                        err = release_reservations(root, car["wis"])
+                        if err:
+                            journal.event("release-failed", train=tid, reason=err[:200])
+                        parked[tid] = {"state": "integrated", "wis": car["wis"]}
+                        state_pub, detail_pub = publish_integration(
+                            root, journal, dev_branch
+                        )
+                        if state_pub == "deferred":
+                            print(
+                                "dispatch: publication deferred — {}".format(detail_pub)
+                            )
+                        break  # the ref advanced: rescan (children just filed)
+                    if outcome == "error":
+                        journal.event(
+                            "dual-plan-error", train=tid, wi=first, reason=detail[:200]
+                        )
+                        quarantined_wis.add(first)
+                        parked[tid] = {
+                            "state": "quarantined",
+                            "wis": car["wis"],
+                            "base": base,
+                        }
+                        continue
+                    # PAGE: the CLI entry's gate-policy mapping, dispatcher-side
+                    # (plan_round.page_action) — attended stops for the human,
+                    # autonomous routes on without pausing disjoint work (the
+                    # pause-free-under-autonomous invariant).
+                    action = _plan_round.page_action(gate_policy)
+                    journal.event(
+                        "dual-plan-page-action", train=tid, wi=first, action=action
+                    )
+                    if action == "stop-needs-human":
+                        parked[tid] = {
+                            "state": "needs-human",
+                            "wis": car["wis"],
+                            "base": base,
+                        }
+                        needs_human_ask = (
+                            "dual-plan round for {} paged: {} — resolve, then "
+                            "relaunch (or run agent_loop --dual-plan {})".format(
+                                first, detail, first
+                            )
+                        )
+                    else:
+                        err = release_reservations(root, car["wis"])
+                        if err:
+                            journal.event("release-failed", train=tid, reason=err[:200])
+                        quarantined_wis.add(first)
+                        parked[tid] = {
+                            "state": "dual-paged",
+                            "wis": car["wis"],
+                            "base": base,
+                        }
+                    continue
+                spawn_worker(tid, car["wis"], base, spine=is_spine)
+                if is_spine:
+                    break
+
+        # --- the serialized integrator (WI-184, SR-063): one logical writer,
+        # deterministic queue order, CAS-advanced. Ready trains compose one at
+        # a time; a worker-reported blocker takes the smaller disposition
+        # transaction. Each success is followed by a publication attempt and
+        # triggers a fresh rescan (the frontier may have grown).
+        integrated_any = False
+        for tid in sorted(parked):
+            if needs_human_ask:
+                break  # a pending human act gates integration too (§4.2)
+            state_p = parked[tid]["state"]
+            if state_p not in ("ready-to-integrate", "blocked"):
+                continue
+            base_t = parked[tid].get("base") or (
+                reservation_meta(
+                    root, list_reservations(root).get(parked[tid]["wis"][0], "")
+                )
+                or {}
+            ).get("base", "")
+            if state_p == "ready-to-integrate":
+                result, detail = integrate_train(
+                    root,
+                    docs,
+                    journal,
+                    tid,
+                    parked[tid]["wis"],
+                    base_t,
+                    required_verdicts,
+                )
+            else:
+                result, detail = blocked_disposition(
+                    root, docs, journal, tid, parked[tid]["wis"], base_t
+                )
+            if result == "integrated":
+                parked[tid] = {
+                    "state": "integrated"
+                    if state_p == "ready-to-integrate"
+                    else "blocked-done",
+                    "wis": parked[tid]["wis"],
+                }
+                integrated_any = True
+            elif result == "recompose":
+                integrated_any = True  # ref moved: rescan and retry this train
+            else:
+                parked[tid] = {
+                    "state": result if result != "error" else "quarantined",
+                    "wis": parked[tid]["wis"],
+                }
+                journal.event(
+                    "integration-parked", train=tid, state=result, detail=detail[:200]
+                )
+        if integrated_any:
+            state_pub, detail_pub = publish_integration(root, journal, dev_branch)
+            if state_pub == "deferred":
+                print("dispatch: publication deferred — {}".format(detail_pub))
+
+        journal.manifest(
+            {
+                "jobs": jobs,
+                "run": journal.run_id,
+                "active": {t: a["wis"] for t, a in active.items()},
+                "parked": {t: p["state"] for t, p in parked.items()},
+                "updated": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            }
+        )
+        # The banner (SR-065) — only when the picture changed, so the poll loop
+        # does not spam it every cadence tick.
+        banner_sig = (
+            len(active),
+            tuple(sorted(p["state"] for p in parked.values())),
+            sum(len(c["wis"]) for c in cars),
+        )
+        if banner_sig != last_banner_sig:
+            dispatch_banner(jobs, active, parked, cars, journal)
+            last_banner_sig = banner_sig
+        if integrated_any:
+            continue  # the integrated frontier may have unlocked successors
+
+        if not active:
+            waiting = [t for t, p in parked.items() if p["state"] == "waiting"]
+            resumable = [t for t, p in parked.items() if p["state"] == "resume"]
+            dispatchable = bool(cars) or bool(resumable)
+            if paused is not None:
+                stop_banner(
+                    docs / "status.md",
+                    "paused (docs/pause present)",
+                    "no new reservations; delete docs/pause and relaunch to "
+                    "resume ({} in-flight train(s) already wrapped safely).".format(
+                        len(parked)
+                    ),
+                )
+                return EXIT_PAUSED
+            if needs_human_ask:
+                _write_runstate(docs, "NEEDS-HUMAN", needs_human_ask)
+                stop_banner(docs / "status.md", "NEEDS-HUMAN", needs_human_ask)
+                return EXIT_NEEDS_HUMAN
+            if blacked_out and dispatchable:
+                # Inside the window with work available: wait it out — a
+                # single walk-away launch survives the blackout (spec §12).
+                wake = blackout_wake(
+                    read_declared(docs / "blackout", ""),
+                    datetime.datetime.utcnow(),
+                )
+                time.sleep(min(wake or 60, 60))
+                continue
+            if waiting and not dispatchable:
+                _write_runstate(docs, "RUNNING")
+                stop_banner(
+                    docs / "status.md",
+                    "WAITING on rate limits",
+                    "every dispatchable train is rate-limited; relaunch later.",
+                )
+                return EXIT_WAITING
+            if not dispatchable and not waiting:
+                break  # frontier + lanes drained — evaluate the end state
+
+        # Poll workers; every exit is a rescan trigger (dynamic refill).
+        exited = [
+            (t, a["proc"].poll())
+            for t, a in list(active.items())
+            if a["proc"].poll() is not None
+        ]
+        for tid, code in exited:
+            handle_exit(tid, code)
+        if not exited:
+            time.sleep(args.poll_seconds)
+
+    # --- end state (spec §10: run-state is a generated dispatcher outcome) ---
+    telemetry_summary(journal)  # the §13 rollup for the completed run
+    integrated = [
+        t for t, p in parked.items() if p["state"] in ("integrated", "blocked-done")
+    ]
+    attention = [
+        t
+        for t, p in parked.items()
+        if p["state"]
+        in ("quarantined", "needs-human", "needs-re-review", "rework", "dual-paged")
+        or (p["state"] == "train-end" and p["wis"])
+    ]
+    blocked_done = [t for t, p in parked.items() if p["state"] == "blocked-done"]
+    # The integrated disposition — not the possibly-stale dev checkout — is
+    # what DONE/BLOCKED are judged from.
+    reg_rows = registry_rows_at(root, INTEGRATION_REF) or schedule.load_rows(
+        root / "docs" / "requirements" / "work-items.csv"
+    )
+    wis = schedule.load_wis(reg_rows)
+    reserved = set(list_reservations(root))
+    queued_left = any(w["status"] == "queued" and w["id"] not in reserved for w in wis)
+    blocked_rows = any(w["status"] == "blocked" for w in wis)
+    summary = (
+        "trains: {} integrated ({} blocked-disposition), {} needing attention "
+        "(re-review/rework/quarantine/partial); {} unreserved queued WI(s) "
+        "remain".format(
+            len(integrated),
+            len(blocked_done),
+            len(attention),
+            sum(1 for w in wis if w["status"] == "queued" and w["id"] not in reserved),
+        )
+    )
+    if attention:
+        _write_runstate(docs, "RUNNING")
+        stop_banner(
+            docs / "status.md",
+            "trains need attention (re-review / rework / quarantine)",
+            summary,
+        )
+        return EXIT_STALL
+    if queued_left:
+        _write_runstate(docs, "RUNNING")
+        stop_banner(docs / "status.md", "build-out wave complete", summary)
+        return EXIT_DONE
+    unpublished = integration_head(root)
+    if unpublished and unpublished != head_sha_full(root):
+        # Everything integrated but the development projection lags (deferred
+        # publication — usually a dirty checkout): RUNNING, not DONE; the next
+        # launch resumes the publish idempotently.
+        _write_runstate(docs, "RUNNING")
+        stop_banner(
+            docs / "status.md",
+            "integration complete; publication deferred",
+            summary + " — clean the checkout and relaunch to publish.",
+        )
+        return EXIT_DONE
+    if blocked_rows:
+        _write_runstate(docs, "BLOCKED")
+        stop_banner(docs / "status.md", "run-state=BLOCKED", summary)
+        return EXIT_BLOCKED
+    _write_runstate(docs, "DONE")
+    stop_banner(docs / "status.md", "run-state=DONE", summary)
+    return EXIT_DONE

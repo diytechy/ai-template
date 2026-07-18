@@ -348,8 +348,10 @@ def test_unprovable_ownership_quarantines_only_that_train(tmp_path):
 
 def test_fault_points_exist_for_every_matrix_boundary(tmp_path):
     # The matrix's own coverage guard: every boundary named by TC-065 has a
-    # wired fault point (a renamed constant would silently skip a test).
-    src = (SCRIPTS / "agent_loop.py").read_text(encoding="utf-8")
+    # wired fault point (a renamed constant would silently skip a test). The
+    # reservation/integration/publish machinery lives in agent_dispatch.py
+    # since the WI-218 split.
+    src = (SCRIPTS / "agent_dispatch.py").read_text(encoding="utf-8")
     for point in (
         "reserve-pre-txn",
         "reserve-post-txn",
