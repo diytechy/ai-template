@@ -27,6 +27,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -784,6 +785,85 @@ def _run_combined_bar(worktree, root):
     return proc.returncode == 0, ("pass" if proc.returncode == 0 else tail)
 
 
+def _regenerate_disposition_artifacts(worktree):
+    """Regenerate freshness-gated views after a disposition edits registries.
+
+    The generators are kit-owned siblings of this dispatcher even when the
+    checkout is a downstream scaffold. Artifact presence is the opt-in signal:
+    a non-adopter must not depend on either generator.
+    """
+    worktree = Path(worktree)
+    scripts = Path(__file__).resolve().parent
+    generators = []
+    if (worktree / "docs" / "okf").is_dir():
+        generators.append("gen_okf.py")
+    if (worktree / "PROJECT_STATE.html").is_file():
+        generators.append("gen_trajectory.py")
+    for name in generators:
+        proc = subprocess.run(
+            [sys.executable, str(scripts / name), "--root", str(worktree)],
+            cwd=str(worktree),
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+        if proc.returncode != 0:
+            tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
+            return False, "disposition regen failed ({}): {}".format(
+                name, tail or "exit {}".format(proc.returncode)
+            )
+    return True, ""
+
+
+def _salvage_round_evidence(root, worktree, tid):
+    """Best-effort copy of uncommitted DP-* evidence before a hard reset."""
+    code, out = git(
+        worktree,
+        "status",
+        "--porcelain",
+        "--untracked-files=all",
+        "--",
+        "docs/plans",
+    )
+    if code != 0:
+        return ""
+    round_names = set()
+    for line in out.splitlines():
+        rel = line[3:].strip().replace("\\", "/")
+        if " -> " in rel:
+            rel = rel.rsplit(" -> ", 1)[1]
+        parts = rel.split("/")
+        if len(parts) >= 3 and parts[:2] == ["docs", "plans"]:
+            if parts[2].startswith("DP-"):
+                round_names.add(parts[2])
+    if not round_names:
+        return ""
+    destination = Path(root) / DISPATCH_DIR / "salvage" / tid
+    try:
+        destination.mkdir(parents=True, exist_ok=True)
+        for name in sorted(round_names):
+            source = Path(worktree) / "docs" / "plans" / name
+            target = destination / name
+            if source.is_dir():
+                shutil.copytree(str(source), str(target), dirs_exist_ok=True)
+            elif source.is_file():
+                shutil.copy2(str(source), str(target))
+        return str(destination)
+    except OSError:
+        return ""
+
+
+def _reset_failed_disposition(root, worktree, tid, old_head, detail, merge=False):
+    """Preserve round evidence, clean staging, and retain the original error."""
+    salvage = _salvage_round_evidence(root, worktree, tid)
+    if merge:
+        git(worktree, "merge", "--abort")
+    git(worktree, "reset", "--hard", old_head)
+    if salvage:
+        return "{}; round evidence salvaged to {}".format(detail, salvage)
+    return detail
+
+
 def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
     """Compose one ready train into the integration ref (spec §9 steps 1-11).
     Returns (state, detail): 'integrated', 'needs-re-review' (a textual
@@ -864,14 +944,20 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
         pass
     regenerate_index(Path(wt) / "docs")
     generate_status(Path(wt) / "docs", root, last_train=tid)
+    regen_ok, regen_detail = _regenerate_disposition_artifacts(wt)
+    if not regen_ok:
+        return "error", _reset_failed_disposition(
+            root, wt, tid, old_head, regen_detail, merge=True
+        )
 
     # Step 9: the combined bar always runs — even after a clean apply.
     ok, bar_detail = _run_combined_bar(wt, root)
     journal.event("integration-bar", train=tid, result=bar_detail[:120])
     if not ok:
-        git(wt, "merge", "--abort")  # tolerate failure; then hard-clean below
-        git(wt, "reset", "--hard", old_head)
-        return "rework", "combined bar failed: {}".format(bar_detail[:300])
+        detail = "combined bar failed: {}".format(bar_detail[:300])
+        return "rework", _reset_failed_disposition(
+            root, wt, tid, old_head, detail, merge=True
+        )
 
     # Step 10: ONE integration commit carrying the trailers.
     git(wt, "add", "-A")
@@ -881,8 +967,10 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
     )
     code, out = git(wt, "commit", "-q", "-m", msg)
     if code != 0:
-        git(wt, "reset", "--hard", old_head)
-        return "error", "integration commit failed: {}".format(out[:200])
+        detail = "integration commit failed: {}".format(out[:200])
+        return "error", _reset_failed_disposition(
+            root, wt, tid, old_head, detail, merge=True
+        )
     code, new_head = git(wt, "rev-parse", "HEAD")
     new_head = new_head.strip()
     _fault("pre-integration-cas")
@@ -891,8 +979,14 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
     # HARMLESS — the train re-enters composition from the new HEAD.
     if not cas_ref(root, INTEGRATION_REF, new_head, old_head):
         journal.event("integration-cas-stale", train=tid)
-        git(wt, "reset", "--hard", old_head)
-        return "recompose", "integration ref moved; recomposing"
+        detail = _reset_failed_disposition(
+            root,
+            wt,
+            tid,
+            old_head,
+            "integration ref moved; recomposing",
+        )
+        return "recompose", detail
     _fault("post-integration-cas")
     journal.event("integrated", train=tid, wis=";".join(wis), head=new_head[:12])
     # Reservation refs release transactionally ONLY after the durable
@@ -946,6 +1040,9 @@ def blocked_disposition(root, docs, journal, tid, wis, base):
     except OSError:
         pass
     generate_status(Path(wt) / "docs", root, last_train="")
+    regen_ok, regen_detail = _regenerate_disposition_artifacts(wt)
+    if not regen_ok:
+        return "error", _reset_failed_disposition(root, wt, tid, old_head, regen_detail)
     git(wt, "add", "-A")
     trailers = "".join("Blocked-WI: {}\n".format(w) for w in sorted(hit))
     trailers += "".join("BlockRef: {}\n".format(v or "(none)") for v in hit.values())
@@ -954,14 +1051,16 @@ def blocked_disposition(root, docs, journal, tid, wis, base):
     )
     code, out = git(wt, "commit", "-q", "-m", msg)
     if code != 0:
-        git(wt, "reset", "--hard", old_head)
-        return "error", "disposition commit failed: {} (rows: {})".format(
+        detail = "disposition commit failed: {} (rows: {})".format(
             out[:200], ";".join(updated)
         )
+        return "error", _reset_failed_disposition(root, wt, tid, old_head, detail)
     code, new_head = git(wt, "rev-parse", "HEAD")
     if not cas_ref(root, INTEGRATION_REF, new_head.strip(), old_head):
-        git(wt, "reset", "--hard", old_head)
-        return "recompose", "integration ref moved; recomposing"
+        detail = _reset_failed_disposition(
+            root, wt, tid, old_head, "integration ref moved; recomposing"
+        )
+        return "recompose", detail
     journal.event("blocked-disposition", train=tid, wis=";".join(sorted(hit)))
     err = release_reservations(root, sorted(hit))
     if err:
@@ -1017,20 +1116,25 @@ def dual_plan_disposition(
     if code == 0 and not porcelain.strip():
         # A pre-artifact PAGE (missing goal brief/rubric) writes nothing.
         return outcome, detail
+    regen_ok, regen_detail = _regenerate_disposition_artifacts(wt)
+    if not regen_ok:
+        return "error", _reset_failed_disposition(root, wt, tid, old_head, regen_detail)
     git(wt, "add", "-A")
     msg = "dual-plan {}: {} (train {})\n\nDual-Plan-WI: {}\nTrain: {}\n".format(
         "select" if outcome == "SELECTED" else "page", wid, tid, wid, tid
     )
     code, out = git(wt, "commit", "-q", "-m", msg)
     if code != 0:
-        git(wt, "reset", "--hard", old_head)
-        return "error", "dual-plan disposition commit failed: {}".format(out[:200])
+        commit_detail = "dual-plan disposition commit failed: {}".format(out[:200])
+        return "error", _reset_failed_disposition(
+            root, wt, tid, old_head, commit_detail
+        )
     code, new_head = git(wt, "rev-parse", "HEAD")
     if not cas_ref(root, INTEGRATION_REF, new_head.strip(), old_head):
         # The dispatcher loop is single-threaded, so a stale CAS means an
         # EXTERNAL actor moved the ref mid-round — surface, never overwrite.
-        git(wt, "reset", "--hard", old_head)
-        return "error", "integration ref moved externally during the round"
+        cas_detail = "integration ref moved externally during the round"
+        return "error", _reset_failed_disposition(root, wt, tid, old_head, cas_detail)
     journal.event(
         "dual-plan-" + ("selected" if outcome == "SELECTED" else "paged"),
         train=tid,
@@ -1093,6 +1197,21 @@ def publish_integration(root, journal, dev_branch):
             git(root, "update-ref", "-d", PUBLISH_INTENT_REF, intent_sha)
             journal.event("publish-intent-cleared", target=target[:12])
         return "noop", "development branch already at the integration head"
+
+    # Defense in depth: publication is a fast-forward operation. Refuse any
+    # caller that presents a target which does not retain the development
+    # branch's current history.
+    code, _ = git(root, "merge-base", "--is-ancestor", dev_head, target)
+    if code != 0:
+        journal.event(
+            "publish-deferred",
+            reason="non-descendant-target",
+            integration_head=target,
+            development_head=dev_head,
+        )
+        return "deferred", (
+            "integration target {} is not a descendant of development head {}"
+        ).format(target, dev_head)
 
     # Dirty-at-outset: defer, report, never stash/reset (spec §9).
     code, porcelain = git(root, "status", "--porcelain")
@@ -1540,7 +1659,21 @@ def dispatch_run(args, root):
         if int_is_anc and not dev_is_anc:
             dev_strictly_ahead = True
         elif not int_is_anc and not dev_is_anc:
-            journal.event("integration-diverged", ihead=ihead[:12], dhead=dhead[:12])
+            ask = (
+                "integration head {} and development head {} have diverged; "
+                "preserve both histories, then merge/rebase development onto "
+                "integration or explicitly restore the intended ref"
+            ).format(ihead, dhead)
+            journal.event(
+                "integration-diverged",
+                integration_head=ihead,
+                development_head=dhead,
+                ask=ask,
+            )
+            _write_runstate(docs, "NEEDS-HUMAN", ask)
+            stop_banner(Path(docs) / "status.md", "NEEDS-HUMAN", ask)
+            print("dispatch: NEEDS-HUMAN — {}".format(ask), file=sys.stderr)
+            return EXIT_NEEDS_HUMAN
     if dev_strictly_ahead:
         # Dev is strictly AHEAD of integration: a human added WIs on the
         # development branch. Fast-forward the ref to absorb that new work

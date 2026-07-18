@@ -419,6 +419,213 @@ def test_crash_between_dev_cas_and_sync_recovers_idempotently(tmp_path):
     assert code != 0, "the finished intent is deleted"
 
 
+def test_publish_refuses_a_non_descendant_integration_target(tmp_path):
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    base = _git(repo, "rev-parse", "HEAD")
+    branch = _git(repo, "branch", "--show-current")
+
+    (repo / "integration-only.txt").write_text("integration", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "integration side")
+    integration_head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "reset", "--hard", base)
+
+    (repo / "development-only.txt").write_text("development", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "development side")
+    development_head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", integration_head)
+
+    journal = agent_loop._Journal(repo)
+    state, detail = agent_loop.publish_integration(repo, journal, branch)
+    assert state == "deferred"
+    assert integration_head in detail and development_head in detail
+    assert _git(repo, "rev-parse", "refs/heads/" + branch) == development_head
+    event = [e for e in _events(repo) if e["event"] == "publish-deferred"][-1]
+    assert event["reason"] == "non-descendant-target"
+    assert event["integration_head"] == integration_head
+    assert event["development_head"] == development_head
+
+
+def test_relaunch_pages_before_work_when_integration_and_dev_diverge(tmp_path):
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    base = _git(repo, "rev-parse", "HEAD")
+
+    (repo / "integration-only.txt").write_text("integration", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "integration side")
+    integration_head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "reset", "--hard", base)
+
+    dev_commits = []
+    for number in (1, 2):
+        (repo / "dev-{}.txt".format(number)).write_text(
+            "development {}".format(number), encoding="utf-8"
+        )
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-q", "-m", "development {}".format(number))
+        dev_commits.append(_git(repo, "rev-parse", "HEAD"))
+    development_head = dev_commits[-1]
+    _git(repo, "update-ref", "refs/heads/llm/integration", integration_head)
+
+    proc = _dispatch(repo, template)
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert _git(repo, "rev-parse", "HEAD") == development_head
+    for commit in dev_commits:
+        assert _git(repo, "merge-base", "--is-ancestor", commit, "HEAD") == ""
+    assert not list((repo / "out" / "dispatch" / "trains").glob("*.json"))
+
+    run_state = (repo / "docs" / "run-state").read_text(encoding="utf-8")
+    assert run_state.startswith("NEEDS-HUMAN") and "ask:" in run_state
+    assert integration_head in run_state and development_head in run_state
+    event = [e for e in _events(repo) if e["event"] == "integration-diverged"][-1]
+    assert event["integration_head"] == integration_head
+    assert event["development_head"] == development_head
+
+
+def test_disposition_regeneration_is_artifact_gated_and_ordered(tmp_path, monkeypatch):
+    worktree = tmp_path / "wt"
+    (worktree / "docs" / "okf").mkdir(parents=True)
+    (worktree / "PROJECT_STATE.html").write_text("dashboard", encoding="utf-8")
+    calls = []
+
+    def fake_run(argv, **kwargs):
+        calls.append((__import__("pathlib").Path(argv[1]).name, kwargs["cwd"]))
+        return subprocess.CompletedProcess(argv, 0, "", "")
+
+    monkeypatch.setattr(agent_loop.agent_dispatch.subprocess, "run", fake_run)
+    ok, detail = agent_loop.agent_dispatch._regenerate_disposition_artifacts(worktree)
+    assert ok and detail == ""
+    assert [name for name, cwd in calls] == ["gen_okf.py", "gen_trajectory.py"]
+    assert all(cwd == str(worktree) for name, cwd in calls)
+
+    calls[:] = []
+    (worktree / "docs" / "okf").rename(worktree / "docs" / "okf-disabled")
+    (worktree / "PROJECT_STATE.html").unlink()
+    ok, detail = agent_loop.agent_dispatch._regenerate_disposition_artifacts(worktree)
+    assert ok and detail == "" and calls == []
+
+
+def test_dual_plan_regen_failure_salvages_round_evidence(tmp_path, monkeypatch):
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
+
+    def fake_round(worktree, wid, row, template, model, timeout, prompt_map):
+        round_dir = worktree / "docs" / "plans" / "DP-001-wi-201"
+        round_dir.mkdir(parents=True)
+        (round_dir / "verdict.md").write_text("SELECT A", encoding="utf-8")
+        return "SELECTED", "plan A"
+
+    monkeypatch.setattr(agent_loop.agent_dispatch, "run_dual_plan_round", fake_round)
+    monkeypatch.setattr(
+        agent_loop.agent_dispatch,
+        "_regenerate_disposition_artifacts",
+        lambda worktree: (
+            False,
+            "disposition regen failed (gen_okf.py): injected failure",
+        ),
+    )
+    state, detail = agent_loop.dual_plan_disposition(
+        repo,
+        agent_loop._Journal(repo),
+        "t-dual",
+        "WI-201",
+        {},
+        "unused",
+        "unused",
+        1,
+        {},
+    )
+    assert state == "error"
+    assert "disposition regen failed (gen_okf.py): injected failure" in detail
+    assert "round evidence salvaged to" in detail
+    salvaged = (
+        repo
+        / "out"
+        / "dispatch"
+        / "salvage"
+        / "t-dual"
+        / "DP-001-wi-201"
+        / "verdict.md"
+    )
+    assert salvaged.read_text(encoding="utf-8") == "SELECT A"
+
+
+def test_select_disposition_passes_the_kit_freshness_hook(tmp_path, monkeypatch):
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    req = repo / "docs" / "requirements"
+    (req / "stakeholder-needs.md").write_text(
+        "# Stakeholder Needs\n\n"
+        "| SN-ID | Need | Why | Priority | Acceptance intent |\n"
+        "|---|---|---|---|---|\n"
+        "| SN-063 | Safe disposition commits. | Preserve work. | Must | "
+        "Fresh generated views. |\n",
+        encoding="utf-8",
+    )
+    (req / "system-requirements.csv").write_text(
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status\n"
+        "SR-063,Safe disposition,SN-063,The system shall preserve disposition "
+        "work.,Safety.,Generated views are fresh.,,M,Test,Verified\n",
+        encoding="utf-8",
+    )
+    (req / "low-level-requirements.csv").write_text(
+        "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
+        "LLR-063,SR-063,Disposition,src,disposition,Regenerates views.,"
+        "(see TC-063),Verified\n",
+        encoding="utf-8",
+    )
+    (repo / "docs" / "test").mkdir()
+    (repo / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
+        "Evidence,Status\n"
+        "TC-063,SR-063;LLR-063,Integration,commit,Full,,Fresh views,Yes,"
+        "tests/test_agent_loop_integrate.py,Verified\n",
+        encoding="utf-8",
+    )
+    for generator in ("gen_okf.py", "gen_trajectory.py"):
+        proc = run_py([SCRIPTS / generator, "--root", repo], cwd=repo)
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed generated artifacts")
+    head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
+
+    # Enable the shipped hook itself. KIT_SCRIPTS_DIR is its documented
+    # downstream override and points it at this checkout's kit scripts.
+    _git(repo, "config", "core.hooksPath", str(SCRIPTS.parent / "hooks"))
+    monkeypatch.setenv("KIT_SCRIPTS_DIR", str(SCRIPTS))
+
+    def fake_round(worktree, wid, row, template, model, timeout, prompt_map):
+        round_dir = worktree / "docs" / "plans" / "DP-001-wi-201"
+        round_dir.mkdir(parents=True)
+        (round_dir / "verdict.md").write_text("SELECT A", encoding="utf-8")
+        with (worktree / "docs" / "requirements" / "work-items.csv").open(
+            "a", encoding="utf-8", newline=""
+        ) as fh:
+            csv.writer(fh).writerow(_wi_row("WI-202", preds="WI-201"))
+        return "SELECTED", "plan A"
+
+    monkeypatch.setattr(agent_loop.agent_dispatch, "run_dual_plan_round", fake_round)
+    state, detail = agent_loop.dual_plan_disposition(
+        repo,
+        agent_loop._Journal(repo),
+        "t-hook",
+        "WI-201",
+        {},
+        "unused",
+        "unused",
+        1,
+        {},
+    )
+    assert state == "SELECTED", detail
+    staging = repo / "out" / "dispatch" / "worktrees" / "integrate-t-hook"
+    for generator in ("gen_okf.py", "gen_trajectory.py"):
+        proc = run_py([SCRIPTS / generator, "--root", staging, "--check"], cwd=repo)
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 def test_blocked_disposition_changes_only_its_wi(tmp_path):
     repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201"), _wi_row("WI-202")])
     head = _git(repo, "rev-parse", "HEAD")

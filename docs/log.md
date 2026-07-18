@@ -9341,3 +9341,29 @@ warn-only retained-evidence orphans / 2.5 s. One prior G3 attempt had one
 passed; that test passed immediately in isolation and the complete rerun passed
 all 1,033, recorded here rather than hidden. On `dualplan-routing-fix`, not
 pushed.
+
+## 2026-07-18 — WI-220: fail-closed dispatcher dispositions
+
+Launch reconciliation now stops at `NEEDS-HUMAN` when the integration and
+development heads have diverged, records both full hashes plus a concrete
+reconcile ask, and returns before publication or worker launch. As a second
+line of defense, `publish_integration` defers any target that is not a
+descendant of the current development head, so another caller cannot recreate
+the destructive fast-forward/reset bug.
+
+All three registry-editing serialized transactions now run one artifact-gated
+regeneration helper before committing: present `docs/okf/` first, then present
+`PROJECT_STATE.html`, using the generators beside `agent_dispatch.py` so the
+contract is identical in the meta-repo and downstream layout. Failures name the
+generator and output tail. Before any error-path hard reset, uncommitted
+`docs/plans/DP-*` evidence is copied best-effort to
+`out/dispatch/salvage/<train>/`, with the path appended without masking the
+original error.
+
+Regression coverage proves both dev-only commits remain reachable on a
+diverged relaunch, publication independently refuses a non-descendant target,
+artifact opt-in and order, injected regeneration failure salvage, and a real
+SELECT disposition commit passing the shipped freshness hook. The focused
+dispatcher/dual-plan matrix passed **51 tests**; the per-commit smoke and docs
+bars are recorded by the commit. Full-suite/G3 close evidence follows with the
+paired WI-221 sitting.
