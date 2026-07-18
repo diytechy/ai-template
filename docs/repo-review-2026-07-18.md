@@ -36,7 +36,11 @@ reinforcing verification system around the scripts: strict traceability,
 generated-view freshness, architectural seam checks, cross-platform tests,
 coverage enforcement, duplicate detection, privacy checks, and an explicit
 gate model. The baseline G3 run passed all 16 checks with 1,030 tests passing,
-34 skips on Python 3.8, and 90.98% statement coverage. Strict traceability found
+34 skipped, and 90.98% statement coverage. *(Validity re-check, §5: the 34
+skips are a session-PATH artifact — no POSIX `sh` visible, so the
+shell-dependent tests skipped; the canonical environment runs the same
+collection as 1,061 passed / 3 skipped. Same tests, same green.)* Strict
+traceability found
 zero orphans or integrity findings across 25 stakeholder needs, 66 system
 requirements, 76 low-level requirements, 76 test cases, 65 interfaces, and five
 components. No committed secret, dependency vulnerability, obvious unsafe
@@ -46,7 +50,7 @@ was found.
 The blunt assessment is that the repository's verification discipline now
 exceeds the maintainability of the implementation it protects. Fifty functions
 fail Ruff's default cyclomatic-complexity threshold. The nominal coordinator
-split in WI-218 reduced physical concentration but left a 2,000-line dispatch
+split in WI-218 reduced physical concentration but left a 2,125-line dispatch
 module with a 698-line, complexity-84 function and a compatibility-heavy entry
 module. Several registries and module descriptions still state the retired
 serial architecture. The requirements spine is mechanically consistent but
@@ -130,15 +134,21 @@ and upload-artifact 7.0.1, and a scaffold test guards both properties.
 orchestrators.
 
 ```python
-def dispatch_run(args, root, engine_path):
+def dispatch_run(args, root):
     # 698 physical lines; cyclomatic complexity 84
+    # (the worker engine path is the module-level _ENGINE sibling, not a
+    #  parameter — corrected in the §5 validity re-check)
 ```
 
 **Problem:** an explicit Ruff C901 census reports **50** functions over the
-default complexity limit of 10. The worst are `dispatch_run` (84),
-`trace.analyze` (50), `bootstrap.main` (41), and several functions at 28-29.
-Source files reach 2,784 lines (`gen_trajectory.py`), 2,705 (`agent_loop.py`),
-1,982 (`agent_dispatch.py`), 1,828 (`trace.py`), and 1,719 (`bootstrap.py`).
+default complexity limit of 10 at the review target (**51 after this review's
+own M-01 fix** — the batched `git_commit_lookup` itself exceeds the limit,
+which sharpens the ratchet recommendation below; §5). The worst are
+`dispatch_run` (84), `trace.analyze` (50), `bootstrap.main` (41), and several
+functions at 28-29. Source files reach 3,016 lines (`gen_trajectory.py`),
+2,863 (`agent_loop.py`), 2,125 (`agent_dispatch.py`), 2,002 (`trace.py`), and
+1,863 (`bootstrap.py`) by `wc -l` — the counts this repository's registries
+and logs use (this report originally quoted unlabeled non-blank counts; §5).
 WI-218 created sibling modules, but `agent_loop` still re-exports a large public
 surface and `agent_dispatch` now contains the dominant state machine.
 
@@ -507,7 +517,8 @@ rendered views), not solely to satisfy a line-count target.
   zero interface findings, zero component findings.
 - `check_trajectory.py --strict`: 216 WIs, 204 done, acyclic.
 - Full derived G3 gate: **PASS 16/16**.
-- Tests + coverage within the gate: **1,030 passed, 34 skipped, 90.98%**.
+- Tests + coverage within the gate: **1,030 passed, 34 skipped, 90.98%**
+  (skip split is a session-PATH artifact — §5).
 - `check_docs.py --stale`: zero broken links, 48 live orphan warnings;
   doc-navigability step 150.1 seconds.
 - Dashboard: all 36 declared width/theme/tab screenshots generated and sampled;
@@ -531,3 +542,61 @@ rendered views), not solely to satisfy a line-count target.
   immediately in isolation; the complete G3 rerun then passed all 1,033 tests.
   This is recorded as a Windows temp/resource transient, not concealed as a
   first-try green run.
+
+## 5. Validity re-check (2026-07-18, at `ddaa9cd`, third-party sitting)
+
+This report was independently re-verified after the gilbert-crosscheck filings
+(WI-220/WI-221) landed. Every checkable claim was tested against the tree and,
+where external, against the source of record. Corrections were applied inline
+and are marked "§5"; nothing else was altered.
+
+**Confirmed valid.**
+
+- **H-01 disposition:** all three workflows carry `permissions: contents:
+  read` and full-SHA pins with version comments, and the scaffold guard test
+  (`test_workflows_pin_actions_and_reduce_token_permissions`) exists. The
+  three pinned SHAs were verified against GitHub's tag refs and **all match**:
+  `actions/checkout@de0fac2e…` = v6.0.2, `actions/setup-python@a309ff8b…` =
+  v6.2.0, `actions/upload-artifact@043fb46d…` = v7.0.1.
+- **M-01 disposition:** the single-traversal `git_commit_lookup` is in place
+  with its tests; the timing claim reproduces — `check_docs --stale` measured
+  **2.3 s** on this checkout (claimed 2.5–2.6 s, vs 150.1 s before batching).
+- **M-02/M-03/L-01/L-02 dispositions:** the `agent_loop.py` opening and
+  IF-015 now state the dispatcher/worker/interactive contract; SR-002
+  enumerates the full integrity-checked id set (with the legacy-MOD note);
+  the README count and the "pinned" wording changes are in place.
+- **M-04:** WI-219 exists queued as recorded. **M-06** location and behavior
+  confirmed at `run_menu.py:116`. Commit count at target (665) and the
+  698-line / complexity-84 `dispatch_run` measurements confirmed.
+
+**Corrected inline.**
+
+1. The H-02 code snippet showed `def dispatch_run(args, root, engine_path):`
+   — the real signature is `dispatch_run(args, root)`; the worker engine path
+   is the module-level `_ENGINE` sibling constant (WI-218 hazard 1), not a
+   parameter.
+2. The H-02 source-file sizes were unlabeled non-blank counts (~7% under the
+   `wc -l` figures every other record in this repository uses); replaced with
+   `wc -l` values, and §1's "2,000-line dispatch module" adjusted to 2,125.
+3. The C901 census of 50 was correct **at the target**, but this review's own
+   M-01 remediation added a 51st over-limit function (`git_commit_lookup`) —
+   annotated, since it is live evidence for H-02's no-new-complexity-ratchet
+   recommendation: even a remediation pass grows the census when nothing
+   fails on it.
+4. The "34 skips on Python 3.8" attribution: the skips are not
+   Python-version-related. The review session's PATH had no POSIX `sh`, so
+   the ~31 shell-dependent tests (the `"needs a POSIX shell"`/`"no POSIX
+   shell on PATH"` guards) skipped. On the canonical environment (Git Bash
+   present) the identical collection runs **1,064 passed / 3 skipped**
+   (re-run at `ddaa9cd`; the 3 are the POSIX-only lock degrade, the
+   coverage-run-only probe, and the executable-bit check). Same tests, same
+   green — but the split is environmental, and gate evidence should name the
+   shell environment when skips exceed the canonical 3.
+
+**Cross-reference (post-report filings).** WI-220 (dispatcher hardening:
+diverged-dev NEEDS-HUMAN guard, disposition freshness regen, evidence
+salvage — from the gilbert crosscheck) and WI-221 (round-budget default)
+were filed after this report and are *adjacent to but distinct from* H-02:
+they harden the dispatcher's correctness, not its decomposition. H-02's
+required next move — the characterization + ratchet + effect-separation WI —
+**remains unfiled** and is still the largest open maintainability item.
