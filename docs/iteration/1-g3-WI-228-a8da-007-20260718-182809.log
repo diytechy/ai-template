@@ -1,0 +1,31 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 007
+# date: 2026-07-18 18:37
+# train: 1-g3-WI-228-a8da
+# base: 808f95da957c
+# phase: BUILD
+# wi: WI-228
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: c80c136..3d4ac45
+# tokens: 
+# cost-usd: 
+# wall-secs: 562
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 4614
+# exit-code: 0
+# ---
+WI-228 rework completed and committed as `3d4ac45`.
+
+- Regenerated [PROJECT_STATE.html](C:/Projects/ai-template-trains/1-g3-WI-228-a8da/PROJECT_STATE.html), fixing `trajectory-map`.
+- G3 harness: PASS — 1052 passed, 34 skipped, 91.12% coverage.
+- Smoke: 853 passed, 2 skipped.
+- Strict orphan census: 65 classified, zero unexplained.
+- Working tree clean; required WI/Train/Base trailers verified.
