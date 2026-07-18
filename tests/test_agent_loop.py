@@ -1763,12 +1763,16 @@ def test_lock_refuses_on_contention_errno(tmp_path, monkeypatch):
     import errno
 
     agent_loop = load_script("agent_loop")
+    # The lock family lives in agent_common (WI-218 slice C): acquire_lock
+    # resolves _take_os_lock in ITS namespace, so patch the instance
+    # agent_loop actually imported (load_script would mint a fresh copy).
+    agent_common = agent_loop.agent_common
 
     def _held(fd):
         raise OSError(errno.EWOULDBLOCK, "held")
 
     lock = tmp_path / "out" / "agent-loop.lock"
-    monkeypatch.setattr(agent_loop, "_take_os_lock", _held)
+    monkeypatch.setattr(agent_common, "_take_os_lock", _held)
     err = agent_loop.acquire_lock(lock)
     assert err and "refusing to run two" in err
 
@@ -1780,12 +1784,13 @@ def test_lock_degrades_on_unsupported_filesystem(tmp_path, monkeypatch, capsys):
     import errno
 
     agent_loop = load_script("agent_loop")
+    agent_common = agent_loop.agent_common  # the lock family's home (WI-218)
 
     def _unsupported(fd):
         raise OSError(errno.ENOLCK, "no locks available")
 
     lock = tmp_path / "out" / "agent-loop.lock"
-    monkeypatch.setattr(agent_loop, "_take_os_lock", _unsupported)
+    monkeypatch.setattr(agent_common, "_take_os_lock", _unsupported)
     assert agent_loop.acquire_lock(lock) is None  # proceeds, unguarded
     assert "without the one-coordinator" in capsys.readouterr().err.lower()
     agent_loop.release_lock(lock)

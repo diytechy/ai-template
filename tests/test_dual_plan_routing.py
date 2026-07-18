@@ -18,6 +18,9 @@ the kit's tests — this file closes that coverage gap.
 from conftest import load_script
 
 al = load_script("agent_loop")
+# The dual-plan runner lives in plan_runner.py (WI-218 slice C); _dp_session
+# resolves run_session in ITS namespace, so the monkeypatch targets pr, not al.
+pr = load_script("plan_runner")
 
 # Two strong rows in different families so planner_pair can route a real pair.
 REGISTRY_CSV = (
@@ -76,25 +79,25 @@ def test_dp_session_reduces_stream_json_to_result_text(tmp_path, monkeypatch):
         '{"type":"assistant","message":"thinking out loud"}\n'
         '{"type":"result","result":"P1 | the real plan text"}\n'
     )
-    monkeypatch.setattr(al, "run_session", lambda *a, **k: (0, transcript, False))
-    ok, output = al._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
+    monkeypatch.setattr(pr, "run_session", lambda *a, **k: (0, transcript, False))
+    ok, output = pr._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
     assert ok is True
     assert output == "P1 | the real plan text"
 
 
 def test_dp_session_passes_plain_text_through(tmp_path, monkeypatch):
     monkeypatch.setattr(
-        al, "run_session", lambda *a, **k: (0, "P1 | plan\nP2 | plan\n", False)
+        pr, "run_session", lambda *a, **k: (0, "P1 | plan\nP2 | plan\n", False)
     )
-    ok, output = al._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
+    ok, output = pr._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
     assert ok is True
     assert output == "P1 | plan\nP2 | plan\n"
 
 
 def test_dp_session_failed_session_is_not_reduced(tmp_path, monkeypatch):
     # A failed session keeps its raw output (ok False); no result reduction.
-    monkeypatch.setattr(al, "run_session", lambda *a, **k: (1, "boom", False))
-    ok, output = al._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
+    monkeypatch.setattr(pr, "run_session", lambda *a, **k: (1, "boom", False))
+    ok, output = pr._dp_session("tmpl {prompt}", "m", "prompt", tmp_path, 10)
     assert ok is False
     assert output == "boom"
 

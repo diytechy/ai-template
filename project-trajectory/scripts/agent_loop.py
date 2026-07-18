@@ -140,20 +140,18 @@ docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
-Contracts: IF-015, IF-037, IF-055 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv). IF-041 (agent-CLI invocation) moved to agent_session.py with its code (WI-218).
+Contracts: IF-015, IF-055 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv). The WI-218 split re-homed IF-041 (agent-CLI invocation) to agent_session.py and IF-037 (declared-surface reads) to agent_common.py with their code.
 """
 
 import argparse
 import atexit
 import csv
 import datetime
-import errno
 import json
 import os
 import re
 import shlex
 import shutil
-import socket
 import subprocess
 import sys
 import time
@@ -165,20 +163,27 @@ from pathlib import Path
 # doesn't yet carry scripts/ — the same sanctioned-sibling-import idiom
 # gen_trajectory uses.
 try:
+    import agent_common
     import agent_route
     import agent_session
+    import plan_runner
     import schedule
     import score_reviews
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import agent_common
     import agent_route
     import agent_session
+    import plan_runner
     import schedule
     import score_reviews
 
-# The session-launch layer lives in agent_session.py (WI-218 slice B —
-# extracted verbatim). These bindings keep agent_loop's public surface (tests,
-# downstream imports, monkeypatch targets) and its internal callers unchanged.
+# The WI-218 split: the session-launch layer (slice B), the shared coordinator
+# primitives + the dual-plan runner (slice C) live in their own modules. These
+# bindings keep agent_loop's public surface (tests, downstream imports,
+# monkeypatch targets) and its internal callers unchanged. Mutable internals
+# (the lock's held descriptor) are NOT re-bound — they live only in their home
+# module, so there is exactly one lock namespace per process.
 split_cmd = agent_session.split_cmd
 build_argv = agent_session.build_argv
 parse_json_result = agent_session.parse_json_result
@@ -191,35 +196,54 @@ _codex_lastmsg_setup = agent_session._codex_lastmsg_setup
 _codex_lastmsg_read = agent_session._codex_lastmsg_read
 run_session = agent_session.run_session
 
-# Size bounds for the tracked per-session log (the Q13d "size-bounded" cap):
-# the head shows how the session started, the capped tail how it ended — the
-# part that explains the outcome. The raw unbounded stream goes to the
-# gitignored out/run-logs/ for local debugging.
-LOG_HEAD_LINES = 60
-LOG_TAIL_LINES = 400
-LOG_MAX_BYTES = 65536
+EXIT_DONE = agent_common.EXIT_DONE
+EXIT_PREFLIGHT = agent_common.EXIT_PREFLIGHT
+EXIT_BLOCKED = agent_common.EXIT_BLOCKED
+EXIT_STALL = agent_common.EXIT_STALL
+EXIT_WAITING = agent_common.EXIT_WAITING
+EXIT_BUDGET = agent_common.EXIT_BUDGET
+EXIT_NEEDS_HUMAN = agent_common.EXIT_NEEDS_HUMAN
+EXIT_PAUSED = agent_common.EXIT_PAUSED
+EXIT_TRAIN_END = agent_common.EXIT_TRAIN_END
+END_STATES = agent_common.END_STATES
+OWNER_ONLY_PATHS = agent_common.OWNER_ONLY_PATHS
+read_declared = agent_common.read_declared
+pause_reason = agent_common.pause_reason
+parse_blackout = agent_common.parse_blackout
+blackout_wake = agent_common.blackout_wake
+WI_TOKEN_RE = agent_common.WI_TOKEN_RE
+TRAIN_BRANCH_PREFIX = agent_common.TRAIN_BRANCH_PREFIX
+sanitize_train = agent_common.sanitize_train
+parse_wi_list = agent_common.parse_wi_list
+load_wi_registry = agent_common.load_wi_registry
+train_evidence = agent_common.train_evidence
+_clip = agent_common._clip
+_read_csv_rows = agent_common._read_csv_rows
+_refs = agent_common._refs
+git = agent_common.git
+head_sha = agent_common.head_sha
+head_sha_full = agent_common.head_sha_full
+working_tree_dirty = agent_common.working_tree_dirty
+substantive_working_tree_dirty = agent_common.substantive_working_tree_dirty
+current_state_excerpt = agent_common.current_state_excerpt
+stop_banner = agent_common.stop_banner
+_utf8_console = agent_common._utf8_console
+acquire_lock = agent_common.acquire_lock
+release_lock = agent_common.release_lock
+parse_map = agent_common.parse_map
+preflight = agent_common.preflight
+write_session_log = agent_common.write_session_log
+regenerate_index = agent_common.regenerate_index
+next_session_number = agent_common.next_session_number
+commit_telemetry = agent_common.commit_telemetry
+_write_runstate = agent_common._write_runstate
 
-# The end states docs/run-state may carry (one word, tracked like docs/gate;
-# anything else — including the file being absent — reads RUNNING). The file
-# is dispatcher-GENERATED (spec §10; the serial driver that used to read it
-# back is retired, WI-210). NEEDS-HUMAN may carry one `ask: <one-line ask>`
-# line after the state word — the concrete human act the stop banner
-# headlines (WI-127). Every state reader takes only the first declared line,
-# so the extra line is invisible to them.
-END_STATES = ("DONE", "BLOCKED", "NEEDS-HUMAN")
+PLAN_MODE_DUAL = plan_runner.PLAN_MODE_DUAL
+wi_plan_mode = plan_runner.wi_plan_mode
+run_dual_plan_round = plan_runner.run_dual_plan_round
+_dp_routes = plan_runner._dp_routes
+_dp_session = plan_runner._dp_session
 
-EXIT_DONE = 0
-EXIT_PREFLIGHT = 2
-EXIT_BLOCKED = 3
-EXIT_STALL = 4
-EXIT_WAITING = 5
-EXIT_BUDGET = 6
-EXIT_NEEDS_HUMAN = 7
-EXIT_PAUSED = 8
-# A worker whose §7 continuation re-check refuses the next constituent ends
-# its train EARLY (WI-183, SR-062): built/blocked evidence stands, and the
-# dispatcher transactionally releases the unstarted constituents' reservations.
-EXIT_TRAIN_END = 10
 
 # The limit-hit message a throttled headless run returns, e.g. "You've hit
 # your session limit · resets 3:45pm" / "…weekly limit · resets Mon 12:00am".
@@ -241,15 +265,6 @@ RESUME_RECONCILE_NOTE = (
     "is not part of the scoped work, and record which you did in the log."
 )
 
-# The FB3 owner-only path(s): OWNER_SCRATCHPAD.md is free-form owner notes the
-# human edits continuously (check_docs.py drops it from doc discovery the same
-# way — check_docs.SCRATCHPAD). Because it is tracked and perpetually edited, an
-# owner-only-dirty tree is NOT interrupted-session residue: it must not fire the
-# WI-076 resume note or flip the done detection (WI-203). Mirrored, not imported
-# — importing the doc-checker into the coordinator would add a CMP-004→CMP-001
-# edge + an IF seam for one fixed filename; the name is a bootstrap contract
-# (test_bootstrap asserts the scaffold ships it), so the mirror cannot drift.
-OWNER_ONLY_PATHS = ("OWNER_SCRATCHPAD.md",)
 
 # The worker-assignment prompt (WI-181, SR-060). Assembled per session from the
 # WI row + SpecRef + predecessor context + train diff + rework finding — NEVER
@@ -403,197 +418,14 @@ NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {
 }
 
 
-def read_declared(path, default):
-    """Read a one-word declared-policy file (docs/gate, docs/run-state, …):
-    the first non-empty, non-comment line — the same rule the git hooks and
-    check_privacy.py apply — or `default` when absent/empty."""
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return default
-    for ln in lines:
-        ln = ln.strip()
-        if ln and not ln.startswith("#"):
-            return ln
-    return default
-
-
 # (read_ask retired with the serial driver, WI-210: the dispatcher composes
 # its NEEDS-HUMAN banners from the ask it just generated — the `ask:` line in
 # docs/run-state remains the WI-127 contract for humans and launchers.)
 
 
-def pause_reason(lane):
-    """A declared **graceful-pause** request (WI-147): the `docs/pause` file
-    present = pause the loop at the next session boundary. Returns the free-form
-    reason (the file's first non-comment line, `""` when it carries none) or
-    `None` when the file is absent. The file is the whole contract — presence
-    pauses, deleting it resumes — so `run-state` is deliberately left untouched
-    (a resume is one act: delete the file and re-launch). Per-lane like
-    run-state, so a track pauses only its own coordinator."""
-    path = lane / "pause"
-    if not path.is_file():
-        return None
-    return read_declared(path, "")
-
-
-# --- WI-148: weekday blackout window ------------------------------------------
-# A declared `docs/blackout` policy: first non-comment line `HH:MM-HH:MM` (UTC),
-# active Mon–Fri. Inside the window the coordinator starts no new session (the
-# in-flight one already wrapped, the same graceful semantic as docs/pause) — it
-# waits out the window, then resumes automatically, so a single walk-away launch
-# survives the blackout. An absent/empty/malformed file, or `start == end`,
-# disables it (byte-identical to a repo that never had the file — never-breaking);
-# a fresh scaffold ships the 12:00–19:00 default so the owner's "always on"
-# blackout is honored by the scaffold, not a hidden built-in.
-BLACKOUT_RE = re.compile(r"^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$")
-
-
-def parse_blackout(line):
-    """Parse a `HH:MM-HH:MM` blackout line into `(start_min, end_min)` — minutes
-    past UTC midnight — or `None` when absent/empty/malformed (an out-of-range
-    hour or minute is malformed). Deliberately does NOT apply the `start == end`
-    disable rule; the caller (blackout_wake) does, so the parse and the policy
-    stay separately testable."""
-    m = BLACKOUT_RE.match(line or "")
-    if not m:
-        return None
-    sh, sm, eh, em = (int(g) for g in m.groups())
-    if sh > 23 or eh > 23 or sm > 59 or em > 59:
-        return None
-    return (sh * 60 + sm, eh * 60 + em)
-
-
-def blackout_wake(line, now):
-    """Seconds until the current UTC weekday blackout window ends, or `None` when
-    a new session is NOT blacked out at `now` — the file is absent/empty/
-    malformed, the window is disabled (`start == end`), it is the weekend (the
-    window is Mon–Fri only), or `now` falls outside the window. The window is
-    half-open `[start, end)`: a session starting exactly at `end` is already
-    clear (so 12:00–19:00 blocks 12:00 through 18:59 and releases at 19:00). A
-    window whose start is after its end wraps past UTC midnight, honored on its
-    start weekday. `now` is a naive UTC datetime (datetime.utcnow())."""
-    win = parse_blackout(line)
-    if win is None:
-        return None
-    start, end = win
-    if start == end:
-        return None  # the disable form
-    if now.weekday() >= 5:  # Sat/Sun — the window is weekdays only
-        return None
-    minute = now.hour * 60 + now.minute
-    inside = start <= minute < end if start < end else (minute >= start or minute < end)
-    if not inside:
-        return None
-    wake = now.replace(hour=end // 60, minute=end % 60, second=0, microsecond=0)
-    if wake <= now:  # a wrap window's end is tomorrow morning
-        wake += datetime.timedelta(days=1)
-    return int((wake - now).total_seconds())
-
-
 # (--track and its docs/tracks/<name>/ lane plumbing retired outright, WI-210:
 # the dispatcher's explicit --wi/--train worker assignment is the only lane
 # concept; docs/ is the one coordination surface and the integrator owns it.)
-
-
-# --- WI-181: explicit worker assignment (SR-060) --------------------------------
-# A worker is one agent_loop process driving one dispatcher-assigned traincar on
-# one llm/train/<id> branch in one worktree. Its inputs are explicit CLI
-# arguments (never a lane file) and its result is committed evidence read back
-# through git trailers — the durable channel recovery reconstructs from (spec
-# §6/§11).
-
-# The branch namespace a train builds on. The dispatcher (Slice D) creates these.
-TRAIN_BRANCH_PREFIX = "llm/train/"
-
-WI_TOKEN_RE = re.compile(r"^WI-\d+$")
-
-
-def sanitize_train(name):
-    """A train id becomes a branch segment, a log-file prefix, and a reviews/
-    subdirectory, so restrict it to a safe slug (alnum + `.`/`-`/`_`, starts
-    alphanumeric) — `--train` can then never traverse the tree. Returns the
-    name or raises ValueError (preflight surfaces the message)."""
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name or ""):
-        raise ValueError(
-            "train id {!r} must be a slug matching [A-Za-z0-9][A-Za-z0-9._-]* "
-            "(starts alphanumeric; no path separators)".format(name)
-        )
-    return name
-
-
-def parse_wi_list(spec):
-    """The ordered assigned-WI list from a `;`/`,`/whitespace-joined --wi value.
-    Raises ValueError on an empty list, a malformed token, or a duplicate —
-    a broken assignment must fail preflight, never half-run."""
-    out = []
-    for tok in re.split(r"[;,\s]+", (spec or "").strip()):
-        if not tok:
-            continue
-        if not WI_TOKEN_RE.match(tok):
-            raise ValueError(
-                "--wi token {!r} is not a WI-### id (got --wi {!r})".format(tok, spec)
-            )
-        if tok in out:
-            raise ValueError("--wi names {} twice".format(tok))
-        out.append(tok)
-    if not out:
-        raise ValueError("--wi carries no WI-### id (got {!r})".format(spec))
-    return out
-
-
-def load_wi_registry(root):
-    """{WI-ID: raw row dict} from the worktree's tracked WI registry — the
-    checked-out copy on the train branch, so a worker reads the same registry
-    state its base commit fixed. Malformed/duplicate ids are skipped (the
-    validator's finding, not the worker's crash)."""
-    rows = _read_csv_rows(root / "docs" / "requirements" / "work-items.csv")
-    out = {}
-    for r in rows:
-        wid = (r.get("WI-ID") or "").strip()
-        if WI_TOKEN_RE.match(wid) and wid not in out:
-            out[wid] = r
-    return out
-
-
-def train_evidence(root, base):
-    """(built, blocked) read from the train branch's committed trailers in
-    base..HEAD: `built` is the set of WI ids whose final commit carried the
-    `WI:` trailer; `blocked` maps a `Blocked-WI:` id to its `BlockRef:` value
-    (empty string when the commit omitted one). This is the worker's one
-    result channel — recovery reconstructs the same facts from git alone."""
-    # The leading "T" sentinel keeps the first field intact through git()'s
-    # stdout .strip() — a commit whose WI field is empty would otherwise lose
-    # its leading tab and shift every field left.
-    fmt = (
-        "T%x09"
-        "%(trailers:key=WI,valueonly,separator=;)%x09"
-        "%(trailers:key=Blocked-WI,valueonly,separator=;)%x09"
-        "%(trailers:key=BlockRef,valueonly,separator=;)"
-    )
-    code, out = git(root, "log", "--format=" + fmt, "{}..HEAD".format(base))
-    built, blocked = set(), {}
-    if code != 0:
-        return built, blocked
-    for line in out.splitlines():
-        parts = (line.split("\t")[1:] + ["", "", ""])[:3]
-        for tok in parts[0].split(";"):
-            tok = tok.strip()
-            if WI_TOKEN_RE.match(tok):
-                built.add(tok)
-        refs = [t.strip() for t in parts[2].split(";")]
-        for j, tok in enumerate(t.strip() for t in parts[1].split(";")):
-            if WI_TOKEN_RE.match(tok) and tok not in blocked:
-                blocked[tok] = refs[j] if j < len(refs) else ""
-    return built, blocked
-
-
-def _clip(text, limit):
-    """Bound a prompt block: head lines up to `limit`, with an elision marker."""
-    lines = (text or "").splitlines()
-    if len(lines) <= limit:
-        return "\n".join(lines)
-    return "\n".join(lines[:limit] + ["… ({} more lines)".format(len(lines) - limit)])
 
 
 def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
@@ -661,146 +493,6 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
     )
 
 
-# The per-worktree coordinator lock is a kernel ADVISORY lock (fcntl.flock on
-# POSIX, msvcrt.locking on Windows) held on out/agent-loop.lock for this
-# process's lifetime. The OS releases it automatically when the process exits —
-# INCLUDING a crash or SIGKILL — so there is no stale-pid file to reason about
-# and no PID-reuse hazard: the freed lock is simply available to the next run.
-# The pid/host/stamp written into the file are human-readable DIAGNOSTICS only,
-# never the liveness signal. The held descriptor lives in a module global so it
-# (and thus the lock) stays open until release_lock / process exit.
-_LOCK_FD = None
-
-
-def _host():
-    """This machine's name, for the lock file's human-readable diagnostics."""
-    try:
-        return socket.gethostname()
-    except OSError:
-        return ""
-
-
-# On Windows the CRT lock is MANDATORY — it blocks other processes from reading
-# the locked bytes — so we lock a single byte far beyond any real content. The
-# human-readable diagnostics in bytes 0..N stay readable (e.g. git staging this
-# file if a repo forgot to gitignore out/), while two coordinators still contend
-# on the same byte range. POSIX flock is advisory and whole-descriptor, so it
-# needs no offset games.
-_WIN_LOCK_OFFSET = 1 << 40
-
-
-def _take_os_lock(fd):
-    """Take a non-blocking exclusive advisory lock on `fd`, raising OSError when
-    another process already holds it. Platform-split, stdlib only."""
-    if os.name == "nt":
-        import msvcrt
-
-        os.lseek(fd, _WIN_LOCK_OFFSET, os.SEEK_SET)
-        try:
-            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
-        finally:
-            os.lseek(fd, 0, os.SEEK_SET)
-    else:
-        import fcntl
-
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-
-
-# Errnos that mean "this filesystem cannot do advisory locks" (a network / exotic
-# mount — flock returns these) as opposed to "the lock is held" (EWOULDBLOCK /
-# EAGAIN / EACCES). On these we degrade to a warning instead of failing closed;
-# every other error stays a refusal, so an unknown failure never silently drops
-# the guard (fail-safe). Built via getattr so a name absent on a platform is just
-# skipped.
-_UNSUPPORTED_LOCK_ERRNOS = frozenset(
-    getattr(errno, name)
-    for name in ("ENOLCK", "ENOSYS", "EOPNOTSUPP", "ENOTSUP")
-    if hasattr(errno, name)
-)
-
-
-def _read_holder(lock_path):
-    """The holder's diagnostic line (pid host stamp) for an error message, or ''
-    — best-effort; a mandatory Windows lock may block the read, which is fine."""
-    try:
-        return lock_path.read_text(encoding="utf-8").strip().replace("\n", " ")
-    except OSError:
-        return ""
-
-
-def acquire_lock(lock_path):
-    """Take the per-worktree coordinator lock, or return an error string.
-
-    Prevents two coordinators grinding the same checkout — a double-launch or a
-    cron overlap — the one collision the branch guard can't catch (both would
-    sit on the same llm/<track> branch in one worktree). The lock is a kernel
-    advisory lock the OS grants atomically and releases on exit *or crash*, so a
-    dead run never wedges the next one (no pid reasoning, no timer). Cross-host
-    on a shared filesystem is best-effort only: flock over NFS is unreliable, so
-    this guards one checkout on one host — the common and important case. A
-    filesystem that cannot lock at all (ENOLCK/ENOTSUP) degrades to a warning and
-    runs unguarded rather than fail-closed on a legitimate run."""
-    global _LOCK_FD
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
-    flags = os.O_RDWR | os.O_CREAT
-    if hasattr(os, "O_BINARY"):
-        flags |= os.O_BINARY  # keep the diagnostic newlines untranslated on Windows
-    fd = os.open(str(lock_path), flags, 0o644)
-    try:
-        _take_os_lock(fd)
-    except OSError as exc:
-        if os.name != "nt" and exc.errno in _UNSUPPORTED_LOCK_ERRNOS:
-            # This filesystem cannot do advisory locks (a network / exotic mount).
-            # Degrade to a warning and proceed WITHOUT the guard rather than block
-            # a legitimate run: the single-checkout guarantee is only lost on a
-            # mount that never supported it, and the branch guard + git history
-            # still backstop. Keep fd open (diagnostics written below) so the file
-            # still records who is here.
-            print(
-                "agent_loop: WARNING - {} is on a filesystem that does not "
-                "support advisory locks (errno {}); running WITHOUT the "
-                "one-coordinator-per-checkout guard.".format(lock_path, exc.errno),
-                file=sys.stderr,
-            )
-        else:
-            os.close(fd)
-            return (
-                "another coordinator holds {} — refusing to run two in one "
-                "worktree (held by: {}). It clears itself when that run exits; "
-                "wait for it, or delete the file only if you are sure that run "
-                "is gone.".format(lock_path, _read_holder(lock_path) or "unknown")
-            )
-    # We hold the lock: overwrite the diagnostics (a crashed predecessor may have
-    # left its own). Best-effort — the OS lock, not this content, is the guard.
-    try:
-        os.ftruncate(fd, 0)
-        os.write(
-            fd,
-            "{}\n{}\n{}\n".format(
-                os.getpid(), _host(), time.strftime("%Y-%m-%d %H:%M:%S")
-            ).encode("utf-8"),
-        )
-    except OSError:
-        pass
-    _LOCK_FD = fd
-    return None
-
-
-def release_lock(lock_path=None):
-    """Drop the coordinator lock: closing the descriptor releases the OS lock.
-    Idempotent, and a no-op if we never held it; the OS would release on exit
-    regardless (the crash path relies on exactly that). `lock_path` is accepted
-    for the atexit call signature but unused — the held descriptor is the
-    authority, so a reclaimed-then-exited predecessor never disturbs a successor."""
-    global _LOCK_FD
-    if _LOCK_FD is not None:
-        try:
-            os.close(_LOCK_FD)
-        except OSError:
-            pass
-        _LOCK_FD = None
-
-
 # The always-on guardrails core is vendored verbatim as docs/guardrails/core.md
 # (the upstream CLAUDE.md); its BEGIN/END KIT CORE block is what gets injected.
 KIT_CORE_RE = re.compile(
@@ -856,22 +548,6 @@ def guardrails_inert(policy, models):
 # (status_size_warning retired with the serial driver, WI-210: no session
 # inherits status.md as its resume surface any more — status.md is a
 # generated integrator artifact whose size the generator owns.)
-
-
-def parse_map(spec):
-    """Parse a KEY=value phase map — shared by --model-map/--cmd-map/--prompt-map/
-    --tier-map/--prefer-map: "P0=model-a,G3=model-b" -> {"P0": "model-a",
-    "G3": "model-b"}."""
-    mapping = {}
-    for pair in (spec or "").replace(";", ",").split(","):
-        pair = pair.strip()
-        if not pair:
-            continue
-        if "=" not in pair:
-            raise ValueError("--model-map entry without '=': {}".format(pair))
-        phase, _, model = pair.partition("=")
-        mapping[phase.strip()] = model.strip()
-    return mapping
 
 
 def phase_tier(phase, tier_map):
@@ -943,30 +619,15 @@ def compose_session_prompt(
     return base, False
 
 
+# A rubric path token as it appears in a TC's Parameters/Method cell.
+RUBRIC_PATH_RE = re.compile(r"docs/rubrics/[\w./\-]+\.md")
+
+
 # --- the critique loop (WI-068) ------------------------------------------------
 # A `Verification=Critique` requirement's subjective acceptance is adjudicated by a
 # fresh, provider-heterogeneous critic against a written rubric, never the authoring
 # session. All of this is gated on managed mode + a real Critique SR, so a repo with
 # neither pays nothing (never-breaking).
-_SPLIT_RE = re.compile(r"[;,\s]+")
-# A rubric path token as it appears in a TC's Parameters/Method cell.
-RUBRIC_PATH_RE = re.compile(r"docs/rubrics/[\w./\-]+\.md")
-
-
-def _read_csv_rows(path):
-    """CSV rows of `path` as dicts, or [] (absent/unreadable). errors=replace so a
-    stray byte degrades, never crashes (the declared-reader idiom)."""
-    try:
-        text = Path(path).read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return []
-    return list(csv.DictReader(text.splitlines()))
-
-
-def _refs(cell):
-    return [t for t in _SPLIT_RE.split((cell or "").strip()) if t]
-
-
 def load_critique_srs(docs):
     """The SR ids whose Verification is `Critique` (docs/requirements/
     system-requirements.csv). Empty — absent file, or no such row — makes the whole
@@ -1092,420 +753,6 @@ def critique_prompt(prompt_templates, verdict_path, brief):
     and {brief} resolved. Never carries the implementer's self-assessment."""
     base = prompt_templates.get("CRITIQUE", CRITIQUE_PROMPT)
     return base.replace("{verdict}", str(verdict_path)).replace("{brief}", brief)
-
-
-# --- the dual-plan decomposition round (WI-199; DP-001 selected plan P6) -------
-# The coordinator fan-in over the WI-194..WI-198 modules: a queued WI whose
-# registry row declares `PlanMode=dual` is run as a dual-plan round — two
-# planner sessions, the coverage pre-pass, one cross-critique + revision, the
-# position-swapped arbiter pair — never as a direct BUILD (the worker path
-# refuses a dual row, fail-closed). Sessions launch through the existing
-# headless invocation path (build_argv/run_session), so each inherits the S8
-# per-session limits; routing (agent_route.planner_pair/planner_fallback) is
-# used when the enable-list opts it in, else one template drives every hat as
-# the recorded routing-off degraded mode. Frontier AUTO-dispatch under --jobs
-# is wired (WI-209): schedule.classify derives the single-WI-traincar class
-# from the PlanMode signal itself and the dispatcher runs the round as a
-# serialized disposition (dual_plan_disposition) instead of a BUILD worker.
-# Residual honesty: sessions run in the repo cwd like every S8 hat (redaction
-# rides the brief's allowlist construction, plan_briefs); the manual
-# protocol's empty-cwd isolation is stronger.
-PLAN_MODE_COLUMN = "PlanMode"
-PLAN_MODE_DUAL = "dual"
-DUALPLAN_BUDGET_ENV = "AGENT_DUALPLAN_BUDGET"
-PLAN_RUBRIC = "docs/rubrics/plan-decomposition.md"
-
-_CRITIC_VERDICT_RE = re.compile(r"VERDICT:\s*(APPROVE|CHANGES-REQUESTED)")
-_ARBITER_VERDICT_RE = re.compile(r"VERDICT:\s*SELECT\s+([AB])\b(?:\s+ports=(\d+))?")
-_EMPTY_SLOT = "(empty - first round)"
-
-
-def wi_plan_mode(row):
-    """The WI row's declared plan mode: `dual` fires the round; anything else
-    (absent column, empty cell, unknown token) is ordinary BUILD dispatch."""
-    return (row.get(PLAN_MODE_COLUMN) or "").strip().lower()
-
-
-def _dp_routes(root, tier):
-    """The two planner hat routes as `[(label, model, template, env, note)]`.
-    With routing opted in (docs/agents-enabled + agents.csv), the pair comes
-    from agent_route.planner_pair (different families where the pool allows,
-    else the recorded degraded reason); with routing off, both hats ride the
-    ambient template/model — the recorded routing-off degraded mode. Returns
-    (routes, registry, note); registry is None when routing is off."""
-    import agent_route
-
-    enabled = agent_route.load_enabled(root / "docs" / "agents-enabled")
-    registry, _errors = agent_route.load_registry(root / "docs" / "agents.csv")
-    if not enabled or not registry:
-        return None, None, "routing-off: one template drives every hat (degraded)"
-    # resolve_enabled returns (ids, errors) — unpack it, or planner_pair iterates
-    # the whole tuple as the pool and crashes (TypeError: unhashable list) before
-    # any session launches. This routing-ON dual-plan path was never exercised
-    # (the kit's own DP-001 ran routing-off), so the defect stayed latent until it
-    # surfaced downstream in gilbert. Unresolvable ids PAGE loudly, never a silent
-    # skip (the main dispatcher path unpacks correctly; only these helpers did not).
-    # The registry's declared tag-rank override rides along (as main() does) so
-    # version-less token resolution is identical in every engine path.
-    tag_rank = agent_route.load_tag_rank(root / "docs" / "agents.csv")
-    pool, resolve_errors = agent_route.resolve_enabled(enabled, registry, tag_rank)
-    if resolve_errors:
-        return (
-            None,
-            registry,
-            "routing: unresolvable agents-enabled id(s): {}".format(
-                "; ".join(resolve_errors)
-            ),
-        )
-    pair = agent_route.planner_pair(pool, registry, tier)
-    if pair.sessions[0] is None:
-        return None, registry, "routing: no routable model ({})".format(pair.detail)
-    routes = []
-    for label, sess in zip(("A", "B"), pair.sessions):
-        m = registry[sess.model_id]
-        routes.append((label, m.model, m.cmd_template, m.env, sess.model_id))
-    return routes, registry, "{} ({})".format(pair.reason, pair.detail)
-
-
-def _dp_session(template, model, prompt, root, timeout, env_cell=""):
-    """One round session through the existing headless path. Returns
-    (ok, output). A pair row's Env cell is merged over the ambient env
-    (agent_route.parse_env), matching the loop's session launch."""
-    env = None
-    if env_cell:
-        import agent_route
-
-        env = dict(os.environ)
-        env.update(agent_route.parse_env(env_cell))
-    argv, stdin_input = build_argv(template, model, prompt)
-    code, output, timed_out = run_session(
-        argv, root, timeout, env=env, stdin_input=stdin_input
-    )
-    ok = code == 0 and not timed_out
-    # A --output-format json/stream-json template (what the real agents.csv rows
-    # use) captures the whole event transcript, but the round's consumers need the
-    # SESSION RESULT TEXT: plan_coverage's line-oriented parser finds zero rows in
-    # a one-line JSON transcript, and the {{PLAN}}/{{CRITIQUE}} brief slots must
-    # carry artifacts, not conversations (a raw transcript leaks thinking + model
-    # names into the redacted briefs). Reduce to the result event's text when one
-    # parses; a plain-text template yields no JSON and passes through unchanged.
-    # Latent kit defect surfaced downstream in gilbert (the kit's own DP-001 ran a
-    # plain-text template, so it never fired).
-    if ok:
-        data = parse_json_result(output)
-        if data.get("type") == "result":
-            output = str(data.get("result") or output)
-    return ok, output
-
-
-def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None):
-    """Run one dual-plan decomposition round for `wi` unattended and return
-    `(outcome, detail)` — outcome `SELECTED` (verdict recorded, the selected
-    plan's rows filed as queued WIs) or `PAGE` (the round's page reason;
-    the caller maps it onto the `docs/gate-policy` failure semantics via
-    plan_round.page_action). The protocol, its caps, and every safeguard live
-    in the WI-194..WI-198 modules — this runner only drives them through the
-    existing session machinery and writes the artifacts."""
-    import plan_artifacts
-    import plan_briefs
-    import plan_coverage_step
-    import plan_round
-
-    prompt_map = prompt_map or {}
-
-    spec_ref = (row.get("SpecRef") or "").split("#")[0].strip()
-    goal_path = root / spec_ref if spec_ref else None
-    if goal_path is None or not goal_path.exists():
-        return "PAGE", "dual-plan WI {} has no resolvable SpecRef goal brief".format(wi)
-    rubric_path = root / PLAN_RUBRIC
-    if not rubric_path.exists():
-        return "PAGE", "no plan rubric on file ({})".format(PLAN_RUBRIC)
-    goal_text = goal_path.read_text(encoding="utf-8", errors="replace")
-    rubric_text = rubric_path.read_text(encoding="utf-8", errors="replace")
-    surface = plan_briefs.build_surface(root)
-
-    def hat_template(hat):
-        return plan_briefs.strip_dispatcher_block(
-            plan_briefs.load_template(hat, override=prompt_map.get(hat))
-        )
-
-    try:
-        planner_tmpl = hat_template(plan_briefs.HAT_PLANNER)
-        critic_tmpl = hat_template(plan_briefs.HAT_CRITIC)
-        arbiter_tmpl = hat_template(plan_briefs.HAT_ARBITER)
-    except OSError as exc:
-        return "PAGE", "dual-plan hat template unreadable: {}".format(exc)
-
-    routes, _registry, route_note = _dp_routes(root, "strong")
-    if routes is None and _registry is not None:
-        return "PAGE", route_note  # routing opted in but nothing routable
-    if routes is None:
-        routes = [
-            ("A", model, template, "", "ambient"),
-            ("B", model, template, "", "ambient"),
-        ]
-    route_of = {r[0]: r for r in routes}
-    # Cross-critique: each plan is judged by the OTHER hat's route (cross-family
-    # exactly when the pair is). The arbiter rides the ambient template/model —
-    # a shared-family arbiter is the recorded degraded case (position-swap x2 +
-    # anonymized labels are the mitigations, enforced below).
-    critic_route_of = {"A": route_of["B"], "B": route_of["A"]}
-
-    budget = plan_round.DEFAULT_ROUND_BUDGET
-    try:
-        budget = int(os.environ.get(DUALPLAN_BUDGET_ENV, "") or budget)
-    except ValueError:
-        pass
-    slug = wi.lower()
-    round_dir = plan_artifacts.allocate_round_dir(root, slug)
-    plan_artifacts.write_stage(round_dir, "goal.md", goal_text)
-    state = plan_round.new_round(slug, budget=budget)
-
-    plan_text = {}  # true key -> current text
-    plan_path = {}  # true key -> current artifact path
-    critique_text = {}
-    coverage_report = ""  # the clean report (the critic/arbiter brief payload)
-    coverage_fails = ""  # the raw FAIL lines (the mechanical-repair payload)
-    fell_back = False
-    arbiter_notes = []
-
-    def dispatch(step):
-        nonlocal coverage_report, coverage_fails, fell_back
-        nonlocal routes, route_of, critic_route_of
-        kind, plan = step["step"], step.get("plan")
-        if kind == plan_round.STEP_PLAN or kind in (
-            plan_round.STEP_REPAIR,
-            plan_round.STEP_REVISE,
-        ):
-            own = plan_text.get(plan, _EMPTY_SLOT)
-            if kind == plan_round.STEP_PLAN:
-                crit = _EMPTY_SLOT
-            elif kind == plan_round.STEP_REPAIR:
-                crit = (
-                    "MECHANICAL REPAIR ONLY - the coverage pre-pass found:\n"
-                    + coverage_fails
-                )
-            else:
-                crit = critique_text.get(plan, "")
-            prompt = plan_briefs.assemble(
-                plan_briefs.HAT_PLANNER,
-                {
-                    "GOAL_BRIEF": goal_text,
-                    "SR_SURFACE": surface["SR_SURFACE"],
-                    "IF_REGISTRY": surface["IF_REGISTRY"],
-                    "OWN_PLAN": own if kind != plan_round.STEP_PLAN else _EMPTY_SLOT,
-                    "CRITIQUE": crit,
-                },
-                planner_tmpl,
-            )
-            _label, m, tmpl, env_cell, note = route_of[plan]
-            ok, output = _dp_session(tmpl, m, prompt, root, timeout, env_cell)
-            if not ok:
-                if _registry is not None and not fell_back:
-                    # One runtime-nonresponse fallback (WI-196), then page.
-                    import agent_route
-
-                    failed = type("S", (), {"family": ""})()
-                    for sess_id, mm in _registry.items():
-                        if mm.model == m:
-                            failed.family = mm.family
-                            break
-                    # resolve_enabled returns (ids, errors) — unpack (the same
-                    # latent tuple bug fixed in _dp_routes); the tag-rank
-                    # override rides along like every other resolution site.
-                    pool, _pool_errors = agent_route.resolve_enabled(
-                        agent_route.load_enabled(root / "docs" / "agents-enabled"),
-                        _registry,
-                        agent_route.load_tag_rank(root / "docs" / "agents.csv"),
-                    )
-                    pair = agent_route.planner_fallback(
-                        failed, pool, _registry, "strong"
-                    )
-                    if pair.sessions[0] is not None:
-                        fell_back = True
-                        routes = [
-                            (
-                                lbl,
-                                _registry[s.model_id].model,
-                                _registry[s.model_id].cmd_template,
-                                _registry[s.model_id].env,
-                                s.model_id,
-                            )
-                            for lbl, s in zip(("A", "B"), pair.sessions)
-                        ]
-                        route_of.update({r[0]: r for r in routes})
-                        critic_route_of.update({"A": route_of["B"], "B": route_of["A"]})
-                        arbiter_notes.append(
-                            "runtime fallback: {} ({})".format(pair.reason, pair.detail)
-                        )
-                        return dispatch(step)  # relaunch this hat once, rerouted
-                return None, "session failed at {} {}".format(kind, plan or "")
-            suffix = {"PLAN": "", "REPAIR": "-repair", "REVISE": "-rev"}[kind]
-            path = plan_artifacts.write_stage(
-                round_dir, "plan-{}{}.md".format(plan, suffix), output
-            )
-            plan_text[plan], plan_path[plan] = output, path
-            return {"ok": True}, None
-        if kind == plan_round.STEP_COVERAGE:
-            stage = step["stage"]
-            result = plan_coverage_step.run_coverage(
-                goal_path,
-                [plan_path["A"], plan_path["B"]],
-                root,
-                round_dir / "coverage-{}.md".format(stage),
-                {plan_path["A"].name: "A", plan_path["B"].name: "B"}.get,
-            )
-            coverage_report = result["report"]
-            coverage_fails = result.get("stdout") or result["report"]
-            kwargs = plan_coverage_step.to_record_kwargs(result)
-            kwargs["stage"] = stage
-            return kwargs, None
-        if kind == plan_round.STEP_CRITIQUE:
-            prompt = plan_briefs.assemble(
-                plan_briefs.HAT_CRITIC,
-                {
-                    "GOAL_BRIEF": goal_text,
-                    "SR_SURFACE": surface["SR_SURFACE"],
-                    "IF_REGISTRY": surface["IF_REGISTRY"],
-                    "RUBRIC": rubric_text,
-                    "COVERAGE_REPORT": coverage_report,
-                    "PLAN": plan_text[plan],
-                },
-                critic_tmpl,
-            )
-            _label, m, tmpl, env_cell, _note = critic_route_of[plan]
-            ok, output = _dp_session(tmpl, m, prompt, root, timeout, env_cell)
-            if not ok:
-                return None, "session failed at CRITIQUE {}".format(plan)
-            mm = _CRITIC_VERDICT_RE.search(output)
-            if not mm:
-                return None, "unparseable critique verdict for plan {}".format(plan)
-            critique_text[plan] = output
-            plan_artifacts.write_stage(
-                round_dir, "critique-of-{}.md".format(plan), output
-            )
-            return {"verdict": mm.group(1)}, None
-        if kind == plan_round.STEP_ARBITER:
-            run = step["run"]
-            # Position swap x2: run 1 labels the plans as-is, run 2 swaps —
-            # the labels carry no provenance either way (anonymized by
-            # construction: the arbiter sees only "Plan A"/"Plan B").
-            label_to_true = {"A": "A", "B": "B"} if run == "1" else {"A": "B", "B": "A"}
-            prompt = plan_briefs.assemble(
-                plan_briefs.HAT_ARBITER,
-                {
-                    "OWNER_PROMPT": (row.get("Title") or wi).strip(),
-                    "GOAL_BRIEF": goal_text,
-                    "RUBRIC": rubric_text,
-                    "COVERAGE_REPORT": coverage_report,
-                    "PLAN_A": plan_text[label_to_true["A"]],
-                    "PLAN_B": plan_text[label_to_true["B"]],
-                },
-                arbiter_tmpl,
-            )
-            ok, output = _dp_session(template, model, prompt, root, timeout)
-            if not ok:
-                return None, "session failed at ARBITER run {}".format(run)
-            mm = _ARBITER_VERDICT_RE.search(output)
-            if not mm:
-                return None, "unparseable arbiter verdict (run {})".format(run)
-            plan_artifacts.write_stage(
-                round_dir, "verdict-run{}.md".format(run), output
-            )
-            true_key = label_to_true[mm.group(1)]
-            arbiter_notes.append(
-                "run {}: labels A={}/B={} -> SELECT {} = plan {}".format(
-                    run,
-                    label_to_true["A"],
-                    label_to_true["B"],
-                    mm.group(1),
-                    true_key,
-                )
-            )
-            return {
-                "selection": true_key,
-                "ports": int(mm.group(2) or 0),
-            }, None
-        return None, "unknown step {!r}".format(kind)
-
-    while True:
-        steps = plan_round.ready_steps(state)
-        if not steps:
-            break
-        step = steps[0]
-        result, err = dispatch(step)
-        if err:
-            state["page_reason"] = err
-            break
-        disp = plan_round.record(
-            state,
-            step["step"],
-            plan=step.get("plan"),
-            stage=result.pop("stage", step.get("stage")),
-            run=step.get("run"),
-            **result,
-        )
-        if disp != plan_round.DISP_CONTINUE:
-            break
-
-    if state["selected"]:
-        winner = state["selected"]
-        rel_plan = plan_path[winner].relative_to(root).as_posix()
-        mapping = plan_artifacts.file_selected_wis(
-            root,
-            plan_text[winner],
-            rel_plan,
-            (row.get("Workstream") or "unattended").strip() or "unattended",
-            wi,
-        )
-        verdict = (
-            "# {} verdict - dual-plan round for {} (unattended)\n\n"
-            "VERDICT: SELECT plan {} ports={} (both position-swapped runs "
-            "agree)\n\n- route: {}\n- {}\n- filed: {}\n"
-            "- budget: {}/{} sessions\n".format(
-                round_dir.name,
-                wi,
-                winner,
-                state["ports"] or 0,
-                route_note,
-                "\n- ".join(arbiter_notes),
-                ", ".join("{} -> {}".format(k, v) for k, v in sorted(mapping.items()))
-                or "(no rows)",
-                state["spent"],
-                state["budget"],
-            )
-        )
-        plan_artifacts.write_stage(round_dir, "verdict.md", verdict)
-        plan_artifacts.append_log_summary(
-            root,
-            "## dual-plan round {} ({}): SELECT plan {}, ports={}\n\n"
-            "Artifacts: {}/. Filed: {}. Route: {}. Acceptance follows "
-            "docs/gate-policy (the recorded-verdict rules).".format(
-                round_dir.name,
-                wi,
-                winner,
-                state["ports"] or 0,
-                round_dir.relative_to(root).as_posix(),
-                ", ".join(sorted(mapping.values())) or "(none)",
-                route_note,
-            ),
-        )
-        return "SELECTED", "round {}: SELECT plan {} -> {}".format(
-            round_dir.name, winner, ", ".join(sorted(mapping.values())) or "-"
-        )
-
-    reason = state["page_reason"] or "round ended without a selection"
-    plan_artifacts.write_stage(
-        round_dir,
-        "verdict.md",
-        "# {} - PAGE\n\n{}\n\nroute: {}\n{}\n".format(
-            round_dir.name,
-            reason,
-            route_note,
-            "\n".join(arbiter_notes),
-        ),
-    )
-    return "PAGE", reason
 
 
 # --- the serial loop's managed-routing / escalation / critique / stall state ---
@@ -1741,88 +988,6 @@ class RoutingState:
         return "agent-error" if self.errors >= limit else "stall"
 
 
-def git(root, *args):
-    """Run git in the repo; returns (returncode, stdout-stripped)."""
-    proc = subprocess.run(
-        ["git", "-C", str(root)] + list(args),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        stdin=subprocess.DEVNULL,
-    )
-    return proc.returncode, (proc.stdout or "").strip()
-
-
-def head_sha(root):
-    """Short HEAD sha, or None on a zero-commit repo (guarded rev-parse)."""
-    code, out = git(root, "rev-parse", "--short", "HEAD")
-    return out if code == 0 and out else None
-
-
-def working_tree_dirty(root):
-    """The `git status --porcelain` lines — one per uncommitted path (a rename is
-    a single 'R  old -> new' entry, an untracked file a single '?? path' entry),
-    or [] on a clean tree or a non-repo. Read through git() (text,
-    errors=replace) so an odd byte in a path degrades rather than crashes (the
-    sibling encoding-safe idiom). Used once at loop start to surface
-    interrupted-session residue (WI-076)."""
-    code, out = git(root, "status", "--porcelain")
-    if code != 0:
-        return []
-    return [ln for ln in out.splitlines() if ln.strip()]
-
-
-def _porcelain_path(line):
-    """The repo-relative path a `git status --porcelain` line names — the
-    destination side of a rename/copy (`R  old -> new`), surrounding quotes
-    stripped — used to match a dirty line against OWNER_ONLY_PATHS. Splits the
-    XY status token off the front rather than assuming a fixed column width (a
-    leading blank status column may or may not survive to here)."""
-    body = line.strip()
-    if " -> " in body:
-        return body.split(" -> ", 1)[1].strip().strip('"')
-    parts = body.split(None, 1)  # status token, then the path
-    return (parts[1] if len(parts) == 2 else body).strip().strip('"')
-
-
-def substantive_working_tree_dirty(root):
-    """`working_tree_dirty` minus the FB3 owner-only paths (OWNER_ONLY_PATHS) —
-    the view the loop's WI-076 resume note (loop start) and done detection use,
-    so a tree whose ONLY changes are the owner scratchpad (perpetually edited,
-    never the loop's or a worker's deliverable) reads clean and the interrupted-
-    residue signal fires only on genuine residue. The raw primitive stays
-    available for a caller that wants every uncommitted path (WI-203)."""
-    return [
-        ln
-        for ln in working_tree_dirty(root)
-        if _porcelain_path(ln) not in OWNER_ONLY_PATHS
-    ]
-
-
-def current_state_excerpt(status_path, max_lines=40):
-    """The '## Current State' section of a status.md — the root dispatcher's or
-    a track lane's own — the pending asks a stopping coordinator must surface in
-    its exit banner."""
-    try:
-        lines = status_path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return "({} not found — no asks to surface)".format(status_path)
-    section, collecting = [], False
-    for ln in lines:
-        if ln.startswith("## "):
-            if collecting:
-                break
-            collecting = ln.strip().lower().startswith("## current state")
-            continue
-        if collecting:
-            section.append(ln)
-    if not section:
-        return "({} has no '## Current State' section)".format(status_path)
-    section = [ln for ln in section if ln.strip()][:max_lines]
-    return "\n".join(section)
-
-
 def limit_reset_hint(output, data, exit_code):
     """The 'resets <time>' text of a rate-limit message, or None.
 
@@ -1969,366 +1134,6 @@ def worker_exit_banner(worker, end):
     if detail:
         print(detail)
     return code_
-
-
-def bounded_transcript(output):
-    """Head + capped tail of a session transcript (the tracked-log bound)."""
-    lines = output.splitlines()
-    if len(lines) > LOG_HEAD_LINES + LOG_TAIL_LINES:
-        elided = len(lines) - LOG_HEAD_LINES - LOG_TAIL_LINES
-        lines = (
-            lines[:LOG_HEAD_LINES]
-            + [
-                "",
-                "[... {} line(s) elided — full stream in out/run-logs/ ...]".format(
-                    elided
-                ),
-                "",
-            ]
-            + lines[-LOG_TAIL_LINES:]
-        )
-    text = "\n".join(lines)
-    encoded = text.encode("utf-8", "replace")
-    if len(encoded) > LOG_MAX_BYTES:
-        keep = LOG_MAX_BYTES // 2
-        text = (
-            encoded[:keep].decode("utf-8", "ignore")
-            + "\n[... byte cap hit — full stream in out/run-logs/ ...]\n"
-            + encoded[-keep:].decode("utf-8", "ignore")
-        )
-    return text
-
-
-def write_session_log(iter_dir, meta, transcript):
-    """Write the tracked, size-bounded per-session log: a `# key: value`
-    metadata header (what the index is regenerated from) + the transcript."""
-    iter_dir.mkdir(parents=True, exist_ok=True)
-    header = ["# agent-loop session log — written by scripts/agent_loop.py"]
-    for key in (
-        "session",
-        "date",
-        "train",
-        "base",
-        "phase",
-        "wi",
-        "model",
-        "guardrails",
-        "outcome",
-        "commits",
-        "tokens",
-        "cost-usd",
-        "wall-secs",
-        "api-secs",
-        "turns",
-        "ttft-secs",
-        "cache-read",
-        "cache-create",
-        "effort",
-        "fast",
-        "prompt-chars",
-        "exit-code",
-    ):
-        header.append("# {}: {}".format(key, meta.get(key, "")))
-    header.append("# ---")
-    # A worker's log name is prefixed with its train id (WI-181): two parallel
-    # workers' committed session logs must never collide at integration.
-    name = "{}-{}.log".format(meta["session"], meta["stamp"])
-    if meta.get("train"):
-        name = "{}-{}".format(meta["train"], name)
-    path = iter_dir / name
-    path.write_text(
-        "\n".join(header) + "\n" + bounded_transcript(transcript) + "\n",
-        encoding="utf-8",
-    )
-    return path
-
-
-def read_log_meta(path):
-    """Parse the `# key: value` metadata header of one session log."""
-    meta = {}
-    try:
-        with open(str(path), encoding="utf-8", errors="replace") as fh:
-            for _ in range(32):
-                line = fh.readline()
-                if not line or line.startswith("# ---"):
-                    break
-                m = re.match(r"#\s*([\w-]+):\s*(.*)", line)
-                if m:
-                    meta[m.group(1)] = m.group(2).strip()
-    except OSError:
-        pass
-    return meta
-
-
-def per_turn_pace(meta):
-    """API seconds per turn from a log's header meta — the like-for-like speed
-    number across sessions of different lengths (a 100-turn build and a
-    25-turn review compare honestly here, not on wall time). Empty when either
-    field is absent (pre-WI-119 logs, errored sessions)."""
-    try:
-        api, turns = float(meta.get("api-secs", "")), float(meta.get("turns", ""))
-    except ValueError:
-        return ""
-    return "{:.1f}".format(api / turns) if turns else ""
-
-
-def per_turn_context(meta):
-    """Average context carried per turn (cache-read tokens / turns, humanized
-    to k) — the "how much is it re-reading every step" complexity number the
-    per-session totals hide. Empty when the fields are absent."""
-    try:
-        read, turns = float(meta.get("cache-read", "")), float(meta.get("turns", ""))
-    except ValueError:
-        return ""
-    return "{:.0f}k".format(read / turns / 1000.0) if turns else ""
-
-
-def regenerate_index(docs_dir):
-    """Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata
-    headers — generated, never hand-maintained (the kit's standing rule), so
-    it survives manual log pruning and answers "which session did this"."""
-    iter_dir = docs_dir / "iteration"
-    rows = []
-    for log in sorted(iter_dir.glob("*.log")):
-        meta = read_log_meta(log)
-        if not meta.get("session"):
-            continue
-        rows.append(
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} "
-            "| [{}](iteration/{}) |".format(
-                meta.get("session", ""),
-                meta.get("date", ""),
-                meta.get("phase", "") or "—",
-                meta.get("wi", "") or "—",
-                meta.get("model", "") or "—",
-                meta.get("outcome", ""),
-                meta.get("commits", "") or "—",
-                meta.get("tokens", "") or "—",
-                meta.get("cost-usd", "") or "—",
-                meta.get("wall-secs", "") or "—",
-                meta.get("api-secs", "") or "—",
-                meta.get("turns", "") or "—",
-                per_turn_pace(meta) or "—",
-                per_turn_context(meta) or "—",
-                log.name,
-                log.name,
-            )
-        )
-    text = (
-        "# Iteration index\n\n"
-        "_Generated by `scripts/agent_loop.py` from the `docs/iteration/*.log`\n"
-        "metadata headers — regenerated every session, never hand-edited. The\n"
-        "collated human-review record is `log.md`; this index is the quick\n"
-        '"which session did this" pointer (process-options.md "Unattended\n'
-        'operation")._\n\n'
-        "| # | Date | Phase | WI | Model | Outcome | Commits | Tokens | Cost USD "
-        "| Wall s | API s | Turns | s/turn | Ctx/turn | Log |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
-        + "\n".join(rows)
-        + "\n"
-    )
-    (docs_dir / "iteration_index.md").write_text(text, encoding="utf-8")
-
-
-def commit_telemetry(root, session, label, paths):
-    """Commit the coordinator's own bookkeeping in its own `telemetry:` commit,
-    right after it is written — so it never rides the next session's work commit
-    or dangles in the tree (WI-137, the session-021 defect-shape). Stages only
-    the named bookkeeping paths (the iteration log + regenerated index, the
-    review scoreboard); the reviewer's verdict files commit themselves. Honors
-    the hooks and is best-effort: nothing staged, or a hook veto, leaves the
-    files in the tree exactly as before — never fatal, so the fix can only help
-    (a walk-away run that today dangles telemetry keeps working either way)."""
-    rels = []
-    for p in paths:
-        try:
-            rels.append(os.path.relpath(str(p), str(root)))
-        except ValueError:
-            continue  # a path on another drive (Windows) — skip, never crash
-    if not rels:
-        return
-    code, out = git(root, "status", "--porcelain", "--", *rels)
-    if code != 0 or not out.strip():
-        return  # unchanged bookkeeping — no empty commit
-    code, staged = git(root, "diff", "--cached", "--name-only", "--", *rels)
-    pre_staged = set(staged.splitlines()) if code == 0 else set()
-    git(root, "add", "--", *rels)
-    msg = "telemetry: session {} {}".format(session, label)
-    code, out = git(root, "commit", "-q", "-m", msg, "--", *rels)
-    if code != 0:
-        # "Exactly as before" covers the index too: a veto must not leave the
-        # bookkeeping staged for the next session's work commit to swallow.
-        # Unstage only what this add staged; anything already staged stays.
-        fresh = [r for r in rels if r.replace(os.sep, "/") not in pre_staged]
-        if fresh:
-            git(root, "reset", "-q", "--", *fresh)
-        print(
-            "agent_loop: telemetry commit skipped (session {}): {}".format(
-                session, (out or "").strip()[:200] or "hook veto or nothing staged"
-            ),
-            file=sys.stderr,
-        )
-
-
-def next_session_number(iter_dir, train=None):
-    """Next NNN, continuing across coordinator restarts. A worker's numbering
-    is scoped to its train prefix (WI-181) — parallel session numbers cannot
-    collide because the (train, session) pair is the aggregation key."""
-    pattern = re.compile(r"{}-(\d+)-".format(re.escape(train)) if train else r"(\d+)-")
-    highest = 0
-    if iter_dir.is_dir():
-        for log in iter_dir.glob("*.log"):
-            m = pattern.match(log.name)
-            if m:
-                highest = max(highest, int(m.group(1)))
-    return highest + 1
-
-
-def preflight(root, template, args):
-    """Refuse to start iteration 1 on a broken footing. Returns the list of
-    failures (empty = go)."""
-    failures = []
-    if not template.strip():
-        failures.append(
-            "no agent command wired yet: fill the AGENT_CMD slot in "
-            "agent-resume.cmd + agent-resume.sh (or pass --agent-cmd / set "
-            "the AGENT_CMD env var). Example:\n"
-            "    claude -p --model {model} --output-format json "
-            "--dangerously-skip-permissions\n"
-            "  (no {prompt} = the prompt is piped to the CLI's stdin — immune "
-            "to the OS command-line caps; keep {prompt} only for a CLI with "
-            "no stdin prompt path).\n"
-            "  The permission-bypass flag is YOUR consent to unattended "
-            "edits; leave it out to be prompted."
-        )
-        return failures  # nothing else is checkable without a command
-    try:
-        argv, _ = build_argv(template, "model", "prompt")
-    except ValueError as exc:
-        failures.append("cannot parse AGENT_CMD: {}".format(exc))
-        return failures
-    exe = argv[0]
-    if not (shutil.which(exe) or Path(exe).exists()):
-        failures.append(
-            "agent CLI not found: {!r} is not on PATH. Install it (or fix "
-            "AGENT_CMD), then re-run.".format(exe)
-        )
-    code, _ = git(root, "rev-parse", "--git-dir")
-    if code != 0:
-        failures.append(
-            "{} is not a git repository — the loop reads commits as its "
-            "progress signal.".format(root)
-        )
-    else:
-        enabled = (
-            read_declared(root / "docs" / "privacy-check", "false").lower() == "true"
-        )
-        if enabled:
-            # Single-source the exempt allowlist: let check_privacy.py judge the
-            # author email (it self-skips when the gate is off, so this fails
-            # only on a genuinely private author on a privacy-checked repo).
-            proc = subprocess.run(
-                [
-                    sys.executable,
-                    str(Path(__file__).resolve().parent / "check_privacy.py"),
-                    "--root",
-                    str(root),
-                    "--author",
-                ],
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
-            if proc.returncode != 0:
-                failures.append(
-                    "privacy-check author identity violated: an unattended run "
-                    "would commit every session under a private identity. "
-                    + (proc.stderr or proc.stdout or "").strip()
-                )
-    # --- worker assignment preflight (WI-181, SR-060) -----------------------
-    wi_spec = getattr(args, "wi", None)
-    train = getattr(args, "train", None)
-    if bool(wi_spec) != bool(train):
-        failures.append(
-            "--wi and --train come as a pair (the dispatcher's explicit "
-            "assignment); got {}".format(
-                "--wi without --train" if wi_spec else "--train without --wi"
-            )
-        )
-    if (wi_spec or train) and getattr(args, "interactive", False):
-        failures.append(
-            "--wi/--train is an unattended worker assignment; it cannot be "
-            "combined with --interactive."
-        )
-    if wi_spec and train and not failures:
-        try:
-            assigned = parse_wi_list(wi_spec)
-            sanitize_train(train)
-        except ValueError as exc:
-            failures.append(str(exc))
-        else:
-            expected = TRAIN_BRANCH_PREFIX + train
-            code, branch = git(root, "branch", "--show-current")
-            if code != 0 or not branch:
-                # Detached HEAD / unreadable branch: the lane cannot be
-                # confirmed, so a worker must fail CLOSED (the track guard's
-                # rule) — never build a train from an unverifiable checkout.
-                failures.append(
-                    "worker assignment for train {!r} requires branch {!r}, "
-                    "but this worktree's branch could not be determined "
-                    "(detached HEAD, or git older than 2.22).".format(train, expected)
-                )
-            elif branch != expected:
-                failures.append(
-                    "worker assignment for train {!r} must run on its train "
-                    "branch {!r}, but this worktree is on {!r} — the "
-                    "dispatcher creates the branch and leases the worktree "
-                    "(docs/specs/parallel-wi-dispatch.md §6).".format(
-                        train, expected, branch
-                    )
-                )
-            wi_rows = load_wi_registry(root)
-            for wid in assigned:
-                row = wi_rows.get(wid)
-                if row is None:
-                    failures.append(
-                        "assigned {} is not in docs/requirements/"
-                        "work-items.csv on this branch — a worker never "
-                        "builds an untracked WI.".format(wid)
-                    )
-                elif (row.get("Status") or "").strip().lower() == "done":
-                    failures.append(
-                        "assigned {} is already integrated done — a stale "
-                        "assignment; the dispatcher must re-derive the "
-                        "frontier.".format(wid)
-                    )
-    return failures
-
-
-def stop_banner(status_path, label, detail=""):
-    print("\n=== coordinator stopping: {} ===".format(label))
-    if detail:
-        print(detail)
-    print("--- pending state ({} Current State) ---".format(status_path))
-    print(current_state_excerpt(status_path))
-    print(
-        "--- end-of-run evidence: {0} | {1} | {2} ---".format(
-            status_path,
-            status_path.parent / "log.md",
-            status_path.parent / "iteration_index.md",
-        )
-    )
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the OS console codepage is (bootstrap.py's guard):
-    session transcripts echoed into findings can carry any characters."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # =============================================================================
@@ -3416,18 +2221,6 @@ def parse_jobs(value):
     return n
 
 
-def _write_runstate(docs, state, ask=""):
-    """The dispatcher-generated root run-state (spec §10; SR-059's generation
-    half): RUNNING | NEEDS-HUMAN (+ ask) | BLOCKED | DONE. Generated only by
-    the dispatcher/integrator — never by a worker."""
-    try:
-        (docs / "run-state").write_text(
-            state + ("\nask: " + ask if ask else "") + "\n", encoding="utf-8"
-        )
-    except OSError:
-        pass
-
-
 # -----------------------------------------------------------------------------
 # WI-186 (SR-065/SR-059; spec §13/§14): telemetry, banner, downstream migration
 # -----------------------------------------------------------------------------
@@ -4353,12 +3146,6 @@ def dispatch_run(args, root):
     _write_runstate(docs, "DONE")
     stop_banner(docs / "status.md", "run-state=DONE", summary)
     return EXIT_DONE
-
-
-def head_sha_full(root):
-    """Full HEAD sha (reservation bases are exact, never abbreviated)."""
-    code, out = git(root, "rev-parse", "HEAD")
-    return out if code == 0 else ""
 
 
 def parse_args():
