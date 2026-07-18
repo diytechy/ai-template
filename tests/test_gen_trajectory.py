@@ -114,6 +114,36 @@ def test_mobile_responsive_shell(tmp_path):
     assert "overflow:auto" in text  # wide SVGs scroll inside their panel
 
 
+def test_wide_views_carry_horizontal_scroll_affordance(tmp_path):
+    """WI-219 (M-04, SR-052/SR-054): a view wider than the viewport must SIGNAL its
+    off-screen content, not silently clip it at 390 px. Every horizontal-scroll
+    container is a keyboard-focusable, labelled region (SR-052 keyboard/name) and
+    carries a narrow-width scroll cue (SR-054 no truncation-without-affordance); no
+    bare overflow wrapper survives."""
+    make_repo(tmp_path)
+    # architecture.md exercises the module-map table's scroll wrapper too, not just
+    # the icicle / DAG SVG views.
+    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    # the cue is a real element, hidden by default and revealed only at the narrow
+    # breakpoint the layout already collapses at — so no false hint on desktop,
+    # where the native scrollbar is the affordance.
+    assert "↔ Scroll sideways to see the full view" in text
+    assert ".scrollcue { display:none;" in text
+    assert ".scrollcue{ display:block; }" in text  # inside @media (max-width:760px)
+    # the graph views are focusable, named scroll regions (SR-052 A1/A2)
+    assert 'id="ice" class="view" tabindex="0" role="group"' in text
+    assert 'aria-label="Architecture icicle, horizontally scrollable"' in text
+    assert 'id="dag-view" class="view" tabindex="0" role="group"' in text
+    # the module-map table's overflow wrapper is a labelled region too, not a bare
+    # div whose scrollbar auto-hides on mobile.
+    assert '<div class="tablescroll" tabindex="0" role="group"' in text
+    assert 'style="overflow:auto"' not in text  # no un-affordanced scroll wrapper
+    # focus on the region is perceivable (keyboard operability made visible)
+    assert ".view:focus-visible" in text
+
+
 def test_generation_is_deterministic(tmp_path):
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
