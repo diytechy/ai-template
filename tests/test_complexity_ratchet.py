@@ -37,7 +37,7 @@ MAX_COMPLEXITY = 10
 BASELINE = {
     ("agent_common.py", "preflight"): 17,
     ("agent_dispatch.py", "_salvage_round_evidence"): 16,
-    ("agent_dispatch.py", "dispatch_run"): 84,
+    ("agent_dispatch.py", "dispatch_run"): 40,
     ("agent_dispatch.py", "integrate_train"): 16,
     ("agent_dispatch.py", "pack_traincars"): 18,
     ("agent_dispatch.py", "publish_integration"): 17,
