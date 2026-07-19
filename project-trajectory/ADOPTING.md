@@ -308,7 +308,9 @@ table.
   structural choices, and re-stamps `kit-version` + `kit-profile`.
 - **Preserve always (yours, kit only seeds them):** `docs/stack.ini` (your
   declared toolchain — the kit seeds the Python reference once and never
-  re-touches it), every registry CSV and
+  re-touches it; its `[generated]` section — the integrator's auto-resolution
+  allowlist, WI-235 — is likewise project-owned: keep your own artifact rows on
+  re-sync), every registry CSV and
   `stakeholder-needs.md`, `docs/status.md`, `docs/log.md`, `docs/plan.md`
   (your work plan — the kit seeds the block-list skeleton once),
   `docs/iteration/` + `docs/iteration_index.md` (session history),

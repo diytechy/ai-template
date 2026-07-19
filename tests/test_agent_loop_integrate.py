@@ -1328,3 +1328,136 @@ def test_union_preserves_untouched_multiline_cell(tmp_path):
     result = (repo / rel).read_text(encoding="utf-8")
     assert '"multi\nline title"' in result, "the untouched multi-line cell survives"
     assert "WI-2,plain,done" in result and "WI-3,other,done" in result
+
+
+# --- WI-235: the generated-artifact set is DECLARED in docs/stack.ini ------------
+
+_DEFAULT_GENERATED_INI = (
+    "[generated]\n"
+    "PROJECT_STATE.html = trajectory\n"
+    "docs/okf/ = okf\n"
+    "docs/architecture.md = archmap | <!-- BEGIN GENERATED MODULE MAP --> "
+    "| <!-- END GENERATED MODULE MAP -->\n"
+    "docs/status.md = status | <!-- BEGIN GENERATED STATUS --> "
+    "| <!-- END GENERATED STATUS -->\n"
+)
+
+
+def test_generated_artifacts_declaration_governs_the_set(tmp_path):
+    # The declaration reader: absent => the built-in defaults byte-for-byte
+    # (regression 4), a present section is authoritative (extra joins, omitted
+    # drops), a malformed row fails closed with a non-blank reason.
+    wt = tmp_path / "wt"
+    (wt / "docs").mkdir(parents=True)
+    ini = wt / "docs" / "stack.ini"
+
+    ini.write_text("[stack]\ntest = x\n", encoding="utf-8")  # section absent
+    arts, err = agent_dispatch._generated_artifacts(str(wt))
+    assert err is None and arts == agent_dispatch.DEFAULT_GENERATED_ARTIFACTS
+
+    ini.unlink()  # no stack.ini at all is likewise the defaults
+    arts, err = agent_dispatch._generated_artifacts(str(wt))
+    assert err is None and arts == agent_dispatch.DEFAULT_GENERATED_ARTIFACTS
+
+    # A declared EXTRA artifact joins; a partially-generated file keeps its markers.
+    ini.write_text(
+        _DEFAULT_GENERATED_INI + "docs/extra.html = trajectory\n", encoding="utf-8"
+    )
+    arts, err = agent_dispatch._generated_artifacts(str(wt))
+    assert err is None
+    assert ("docs/extra.html", None, "trajectory") in arts
+    assert (
+        "docs/status.md",
+        ("<!-- BEGIN GENERATED STATUS -->", "<!-- END GENERATED STATUS -->"),
+        "status",
+    ) in arts
+
+    # A present section is the WHOLE set: omitting a default drops it.
+    ini.write_text("[generated]\ndocs/okf/ = okf\n", encoding="utf-8")
+    arts, err = agent_dispatch._generated_artifacts(str(wt))
+    assert err is None and arts == (("docs/okf/", None, "okf"),)
+
+    # A malformed row (bad kind, or a marker count that is neither 0 nor 2) fails
+    # closed: an empty set + a non-blank reason.
+    for bad in ("PROJECT_STATE.html = nosuchkind\n", "docs/x.md = status | oneonly\n"):
+        ini.write_text("[generated]\n" + bad, encoding="utf-8")
+        arts, err = agent_dispatch._generated_artifacts(str(wt))
+        assert arts == () and err and err.strip()
+
+
+def _generated_conflict_repo(tmp_path, name, rel_path, stack_ini):
+    """A REAL conflict on `rel_path`: base commits it (plus an optional stack.ini),
+    two branches write different content, HEAD is left on `home` so a merge of
+    `theirs` conflicts. Returns (repo, home)."""
+    repo = _plain_repo(tmp_path, name)
+    (repo / rel_path).parent.mkdir(parents=True, exist_ok=True)
+    (repo / rel_path).write_text("base\n", encoding="utf-8")
+    if stack_ini is not None:
+        (repo / "docs").mkdir(exist_ok=True)
+        (repo / "docs" / "stack.ini").write_text(stack_ini, encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "base")
+    home = _git(repo, "branch", "--show-current")
+    _git(repo, "branch", "theirs")
+    (repo / rel_path).write_text("ours\n", encoding="utf-8")
+    _git(repo, "commit", "-q", "-am", "ours")
+    _git(repo, "checkout", "-q", "theirs")
+    (repo / rel_path).write_text("theirs\n", encoding="utf-8")
+    _git(repo, "commit", "-q", "-am", "theirs")
+    _git(repo, "checkout", "-q", home)
+    return repo
+
+
+def _compose_theirs(repo, tid="t-235"):
+    journal = agent_loop._Journal(repo)
+    theirs = _git(repo, "rev-parse", "theirs")
+    return agent_dispatch._compose_train(str(repo), str(repo), journal, tid, theirs)
+
+
+def test_declared_extra_artifact_composes_where_an_absent_section_parks(
+    tmp_path, monkeypatch
+):
+    # Regression 1: a repo-declared EXTRA generated artifact auto-resolves the
+    # composition conflict it would otherwise park on. Regeneration is stubbed so
+    # the test isolates the declaration wiring from the real generators.
+    captured = {}
+
+    def fake_regen(wt, paths, artifacts):
+        captured["paths"] = list(paths)
+        captured["artifacts"] = artifacts
+        return True, ""
+
+    monkeypatch.setattr(agent_dispatch, "_regenerate_generated", fake_regen)
+
+    ini = _DEFAULT_GENERATED_INI + "docs/extra.html = trajectory\n"
+    repo = _generated_conflict_repo(tmp_path, "extra-declared", "docs/extra.html", ini)
+    assert _compose_theirs(repo) is None, "a declared extra artifact auto-resolves"
+    assert ("docs/extra.html", None, "trajectory") in captured["artifacts"]
+    assert "docs/extra.html" in captured["paths"]
+
+    # The SAME conflict with NO [generated] declaration parks like today.
+    absent = _generated_conflict_repo(tmp_path, "extra-absent", "docs/extra.html", None)
+    detail = _compose_theirs(absent)
+    assert detail and "docs/extra.html" in detail
+
+
+def test_removed_default_generated_artifact_parks_again(tmp_path, monkeypatch):
+    # Regression 2: a present [generated] section is authoritative, so OMITTING a
+    # default (PROJECT_STATE.html) removes it from the auto-resolvable set and a
+    # conflict on it parks.
+    monkeypatch.setattr(
+        agent_dispatch, "_regenerate_generated", lambda w, p, a: (True, "")
+    )
+    ini = "[generated]\ndocs/okf/ = okf\n"  # PROJECT_STATE.html deliberately dropped
+    repo = _generated_conflict_repo(tmp_path, "removed", "PROJECT_STATE.html", ini)
+    detail = _compose_theirs(repo)
+    assert detail and "PROJECT_STATE.html" in detail
+
+
+def test_malformed_generated_section_fails_closed_to_park(tmp_path):
+    # Regression 3: an unparseable [generated] row must NEVER widen resolution —
+    # the integrator fails closed and parks with a non-blank reason naming it.
+    ini = _DEFAULT_GENERATED_INI + "docs/extra.html = status | onlyonemarker\n"
+    repo = _generated_conflict_repo(tmp_path, "malformed", "PROJECT_STATE.html", ini)
+    detail = _compose_theirs(repo)
+    assert detail and "malformed [generated] row" in detail

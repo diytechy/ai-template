@@ -68,6 +68,31 @@ mode = symbols
 # file's summary, when yours isn't one of the defaults (# // --):
 # comment-prefixes = # // --
 
+# --- Generated-artifact set (the integrator's auto-resolution allowlist) ------
+# The parallel-dispatch integrator (scripts/agent_dispatch.py) auto-resolves a
+# composition conflict CONFINED to a generated artifact by REGENERATING it from
+# the cleanly-merged sources instead of parking for a hand-merge — the kit's
+# generated-not-hand-maintained principle applied to the merge. This section
+# DECLARES that set (WI-235): it is the ONE home the integrator reads, so a
+# downstream repo teaches the integrator its own generated artifacts here rather
+# than forking vendored kit code. Each row:
+#   <path> = <kind> [| <BEGIN marker> | <END marker>]
+# `path` is an exact repo-relative path or a "/"-terminated directory prefix.
+# `kind` selects the regenerator: trajectory | okf | status | archmap. OMIT the
+# marker pair for a FULLY generated artifact (any conflict is regenerable); NAME
+# the (BEGIN, END) pair for a PARTIALLY generated file where only the marked
+# region regenerates and a conflict OUTSIDE it must still park (status.md's and
+# architecture.md's hand-authored prose). An ABSENT section => these built-in
+# defaults (byte-identical). A MALFORMED row => the integrator FAILS CLOSED and
+# parks (an unparseable declaration must never widen auto-resolution). The skills
+# index is deliberately absent: its neutral source lives only in the kit repo and
+# its per-agent copies are hand-authored source that must PARK, not regenerate.
+[generated]
+PROJECT_STATE.html = trajectory
+docs/okf/ = okf
+docs/architecture.md = archmap | <!-- BEGIN GENERATED MODULE MAP --> | <!-- END GENERATED MODULE MAP -->
+docs/status.md = status | <!-- BEGIN GENERATED STATUS --> | <!-- END GENERATED STATUS -->
+
 # --- Run capabilities (the launcher menu) ------------------------------------
 # The root run.cmd / run.sh / run.command launchers read this [run] section
 # (via scripts/run_menu.py) and present the major capabilities an evaluator

@@ -9795,3 +9795,55 @@ in all three byte-budget-guard SKILL.md copies); `PROCESS.md` and
 `AGENTS.template.md` untouched. Smoke **912 passed / 3 skipped**; full suite
 **1,151 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
 On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-19 — WI-235: declare the generated-artifact set in stack.ini
+
+**Summary.** The integrator's conflict auto-resolution allowlist (WI-231's
+module-level `GENERATED_ARTIFACTS` tuple) is now **declared, not hardcoded**: a
+`[generated]` section of each repo's own `docs/stack.ini`. A downstream repo with
+its own generated artifacts (or one that relocates a default) teaches the
+integrator here instead of forking vendored kit code — the same species of
+repo-local fact `stack.ini` already holds for the toolchain.
+
+**Deliverables.**
+- `agent_dispatch.py`: `GENERATED_ARTIFACTS` → `DEFAULT_GENERATED_ARTIFACTS` (the
+  built-in fallback) + `_GENERATED_KINDS`, `_parse_generated_row(matcher, value)`,
+  and `_generated_artifacts(wt)`. The reader parses the **integrate worktree's
+  own** `docs/stack.ini` at composition time (`configparser`, `optionxform=str`
+  so `PROJECT_STATE.html` keeps its case, `interpolation=None`) into
+  `(matcher, block, kind)` rows from `<path> = <kind> [| <BEGIN> | <END>]`.
+  **Absent section ⇒ the defaults byte-for-byte; present section is the WHOLE
+  set; a malformed row (bad kind, a marker count that is neither 0 nor 2, or an
+  unreadable stack.ini) ⇒ a non-blank reason.** `_compose_train` loads the
+  declaration and **fails closed to park** on that reason, else threads
+  `artifacts` into `_resolve_composition_conflict` / `_regenerate_generated` /
+  `_generated_entry` (signatures gained the param; no logic moved).
+- `stack.ini.template` + this repo's own `docs/stack.ini` gain the `[generated]`
+  section with the kit defaults (skills index deliberately absent, WI-231 ruling
+  recorded in the comment). `bootstrap.py` copies the template verbatim, so a
+  fresh repo composes identically.
+- `ADOPTING.md` §6 "Preserve always" notes the `[generated]` section is
+  project-owned on re-sync.
+- Regressions in `tests/test_agent_loop_integrate.py`: a declaration-reader unit
+  (absent/no-file ⇒ `DEFAULT_GENERATED_ARTIFACTS`, an extra artifact joins, an
+  omitted default drops, two malformed rows fail closed); a declared extra
+  artifact composes where an absent section parks; a removed default parks again;
+  a malformed section fails closed with "malformed [generated] row". A new
+  `test_bootstrap.py` asserts the scaffold declares the default set. The WI-231
+  end-to-end tests pass **unmodified** — that IS the byte-for-byte regression.
+
+**Deviations from spec:** none. Design choice worth noting: an *unreadable* whole
+`stack.ini` (not just a malformed `[generated]` row) also fails closed to park —
+the safe direction the spec's principle demands ("an unparseable declaration must
+never widen auto-resolution"), and consistent with the combined bar, which
+already rejects an unreadable stack.ini.
+
+**Complexity / byte deltas.** `_resolve_composition_conflict` held at C901 **10**
+(the declaration load lives in `_compose_train`, not inside it), so **no ratchet
+baseline change**; the new helpers are all under the limit. No byte-budgeted doc
+touched (`PROCESS.md` / `PROCESS_OPTIONS.md` / `AGENTS.template.md` untouched).
+
+Smoke **912 passed / 3 skipped**; full suite **1,156 passed / 4 skipped**;
+`check_docs.py --root . --stale` clean (0 broken; the "possibly stale" hints are
+pre-existing line-anchor shifts in other WIs' specs). On `dualplan-routing-fix`,
+not pushed.

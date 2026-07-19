@@ -973,8 +973,14 @@ REGISTRY_REL = "docs/requirements/work-items.csv"
 # project-trajectory/scripts/check.py's arch-map / trajectory-map / status-map /
 # okf steps. A composition conflict CONFINED to these is resolved by REGENERATING
 # from the cleanly-merged sources instead of hand-merging, honoring the kit's
-# generated-not-hand-maintained principle. This module-level tuple is the ONE
-# declared home; keep it in step with those check.py steps.
+# generated-not-hand-maintained principle.
+#
+# The set is DECLARED, not discovered (WI-235): each repo names its generated
+# artifacts in the [generated] section of its own docs/stack.ini, so a downstream
+# repo with its own artifacts (or one that relocates a default) teaches the
+# integrator without forking kit code. The tuple below is the built-in DEFAULT an
+# ABSENT section falls back to — byte-identical legacy behavior — and the value
+# bootstrap.py scaffolds into a fresh repo's stack.ini.
 #
 # Each row: (matcher, block, kind). `matcher` is an exact repo-relative path or a
 # "/"-terminated directory prefix. `block` is None for a FULLY generated artifact
@@ -984,7 +990,7 @@ REGISTRY_REL = "docs/requirements/work-items.csv"
 # `kind` selects the regenerator argv (_generated_regen_argv). The skills index is
 # deliberately absent: its neutral source lives only in the kit repo and its
 # per-agent copies are hand-authored source that must park, not regenerate.
-GENERATED_ARTIFACTS = (
+DEFAULT_GENERATED_ARTIFACTS = (
     ("PROJECT_STATE.html", None, "trajectory"),
     ("docs/okf/", None, "okf"),
     (
@@ -999,11 +1005,65 @@ GENERATED_ARTIFACTS = (
     ),
 )
 
+# The regenerator kinds a [generated] row may name (each maps to a generator argv
+# in _generated_regen_argv); an unknown kind is a malformed row.
+_GENERATED_KINDS = ("trajectory", "okf", "status", "archmap")
 
-def _generated_entry(rel):
-    """The GENERATED_ARTIFACTS row matching a repo-relative path, or None."""
+
+def _parse_generated_row(matcher, value):
+    """Parse one docs/stack.ini [generated] declaration `<path> = <kind>` (a
+    FULLY generated artifact) or `<path> = <kind> | <BEGIN> | <END>` (a PARTIALLY
+    generated file) into a (matcher, block, kind) row. Raises ValueError on any
+    malformed row — the caller FAILS CLOSED and parks, so an unparseable
+    declaration never widens auto-resolution."""
+    matcher = matcher.strip()
+    if not matcher:
+        raise ValueError("blank artifact path")
+    parts = [p.strip() for p in value.split("|")]
+    kind = parts[0]
+    if kind not in _GENERATED_KINDS:
+        raise ValueError("unknown regenerator kind {!r}".format(kind))
+    if len(parts) == 1:
+        block = None
+    elif len(parts) == 3 and parts[1] and parts[2]:
+        block = (parts[1], parts[2])
+    else:
+        raise ValueError(
+            "expected '<path> = <kind>' or '<path> = <kind> | BEGIN | END'"
+        )
+    return (matcher, block, kind)
+
+
+def _generated_artifacts(wt):
+    """The generated-artifact set governing composition auto-resolution, read from
+    the INTEGRATE worktree's OWN docs/stack.ini (the primary worktree may differ
+    mid-merge). Returns (artifacts, error): an ABSENT [generated] section falls
+    back to DEFAULT_GENERATED_ARTIFACTS (byte-identical legacy behavior) with
+    error None; a present-but-MALFORMED section returns ((), <non-blank reason>)
+    so the caller fails closed and parks."""
+    import configparser
+
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.optionxform = str  # artifact paths are case-sensitive (PROJECT_STATE.html)
+    try:
+        cp.read(str(Path(wt) / "docs" / "stack.ini"), encoding="utf-8")
+    except configparser.Error as exc:
+        return (), "docs/stack.ini unreadable: {}".format(exc)
+    if not cp.has_section("generated"):
+        return DEFAULT_GENERATED_ARTIFACTS, None
+    rows = []
+    try:
+        for matcher, value in cp.items("generated"):
+            rows.append(_parse_generated_row(matcher, value))
+    except (configparser.Error, ValueError) as exc:
+        return (), "malformed [generated] row in docs/stack.ini: {}".format(exc)
+    return tuple(rows), None
+
+
+def _generated_entry(rel, artifacts):
+    """The `artifacts` row matching a repo-relative path, or None."""
     rel = rel.replace("\\", "/")
-    for matcher, block, kind in GENERATED_ARTIFACTS:
+    for matcher, block, kind in artifacts:
         if matcher.endswith("/"):
             if rel.startswith(matcher):
                 return (matcher, block, kind)
@@ -1200,13 +1260,13 @@ def _union_registry(wt, rel):
     return True
 
 
-def _regenerate_generated(wt, paths):
+def _regenerate_generated(wt, paths, artifacts):
     """Re-run the sibling generators for the conflicted generated `paths`
     (deduplicated by kind) IN the integrate worktree against its merged tree.
     Returns (ok, detail)."""
     kinds = []
     for rel in paths:
-        entry = _generated_entry(rel)
+        entry = _generated_entry(rel, artifacts)
         if entry and entry[2] not in kinds:
             kinds.append(entry[2])
     for kind in kinds:
@@ -1228,12 +1288,12 @@ def _regenerate_generated(wt, paths):
     return True, ""
 
 
-def _resolve_composition_conflict(wt, root):
+def _resolve_composition_conflict(wt, root, artifacts):
     """Auto-resolve the conflicts the harness OWNS after a conflicted 3-way
-    merge: disjoint WI rows (Slice B) and regenerated artifacts (Slice A). Parks
-    the moment a non-generated path — or a both-sides row / in-prose block edit —
-    conflicts. Leaves the index conflict-free + staged on success. Returns
-    (resolved, regenerated_paths, park_reason)."""
+    merge: disjoint WI rows (Slice B) and regenerated artifacts (Slice A) declared
+    in `artifacts`. Parks the moment a non-generated path — or a both-sides row /
+    in-prose block edit — conflicts. Leaves the index conflict-free + staged on
+    success. Returns (resolved, regenerated_paths, park_reason)."""
     code, out = git(wt, "diff", "--name-only", "--diff-filter=U", "-z")
     if code != 0:
         return False, [], "cannot list conflicted paths"
@@ -1246,13 +1306,13 @@ def _resolve_composition_conflict(wt, root):
             if not _union_registry(wt, rel):
                 return False, [], "registry row conflict in {}".format(rel)
             continue
-        entry = _generated_entry(rel)
+        entry = _generated_entry(rel, artifacts)
         if entry is None:
             return False, [], "conflict in non-generated path {}".format(rel)
         if not _resolve_generated_path(wt, rel, entry):
             return False, [], "generated conflict outside its block: {}".format(rel)
         regenerated.append(rel)
-    ok, detail = _regenerate_generated(wt, regenerated)
+    ok, detail = _regenerate_generated(wt, regenerated, artifacts)
     if not ok:
         return False, [], detail
     return True, regenerated, None
@@ -1266,7 +1326,11 @@ def _compose_train(wt, root, journal, tid, tip):
     code, out = git(wt, "merge", "--no-ff", "--no-commit", tip)
     if code == 0:
         return None
-    resolved, regenerated, park = _resolve_composition_conflict(wt, root)
+    artifacts, decl_error = _generated_artifacts(wt)
+    if decl_error:
+        resolved, regenerated, park = False, [], decl_error
+    else:
+        resolved, regenerated, park = _resolve_composition_conflict(wt, root, artifacts)
     if not resolved:
         git(wt, "merge", "--abort")
         detail = (park or out).strip()[
