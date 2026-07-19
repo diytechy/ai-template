@@ -749,28 +749,74 @@ def _staging_worktree(root, tid, base):
     return wt, None
 
 
+def _wanted_columns(updates):
+    """The de-duplicated, order-preserving list of column names any update
+    writes — the columns the registry must carry for the rewrite to be valid."""
+    cols = []
+    for u in updates.values():
+        for col in u:
+            if col not in cols:
+                cols.append(col)
+    return cols
+
+
+def _load_registry_rows(path, wanted):
+    """Parse a work-items.csv into (rows, line_terminator), reading RAW (newline=""
+    + csv over the exact bytes) so a quoted cell with an embedded newline survives
+    and the file's DOMINANT line ending is detected (a CRLF checkout stays CRLF —
+    the WI-234 splice discipline). Fails LOUDLY (ValueError naming `wanted`) when
+    the registry is unreadable or carries no header, so a blocked disposition
+    never proceeds to commit a row check_trajectory would reject."""
+    try:
+        with open(str(path), newline="", encoding="utf-8-sig") as fh:
+            raw = fh.read()
+    except OSError as exc:
+        raise ValueError(
+            "cannot read {} to record {}: {}".format(path, ", ".join(wanted), exc)
+        )
+    rows = list(csv.reader(io.StringIO(raw)))
+    if not rows or not rows[0]:
+        raise ValueError(
+            "cannot extend {}: no header row to carry {}".format(
+                path, ", ".join(wanted)
+            )
+        )
+    crlf = raw.count("\r\n")
+    term = "\r\n" if crlf and crlf >= (raw.count("\n") - crlf) else "\n"
+    return rows, term
+
+
 def _rewrite_wi_rows(path, updates):
     """Surgically rewrite specific WI rows (Status/Deliverable/BlockRef) in a
-    work-items.csv, touching ONLY the named rows so the integrator never
-    reflows an adopter's registry. Returns the list of updated ids."""
-    with open(str(path), newline="", encoding="utf-8-sig") as fh:
-        rows = list(csv.reader(fh))
-    if not rows:
-        return []
+    work-items.csv, touching ONLY the named rows so the integrator never reflows
+    an adopter's registry. When an update names a column the registry LACKS (e.g.
+    a pre-BlockRef registry receiving a blocked row), the schema is EXTENDED in
+    the same rewrite — the column is appended to the HEADER and the value written
+    on the target row (the WI-229 SupersededBy registry-extension precedent) —
+    rather than silently dropping a field check_trajectory then rejects. Only the
+    header grows: untouched data rows keep their exact width (a ragged legacy row
+    reads the new column as "" — DictReader -> None) and re-serialize byte-for-byte
+    under the file's own line ending. Raises ValueError (naming the column) when
+    the registry cannot be read or has no header. Returns the list of updated ids."""
+    wanted = _wanted_columns(updates)
+    rows, term = _load_registry_rows(path, wanted)
     header = rows[0]
     idx = {h: i for i, h in enumerate(header)}
+    for col in wanted:
+        if col not in idx:  # WI-238: adopt the column rather than drop the field
+            idx[col] = len(header)
+            header.append(col)
     done = []
     for r in rows[1:]:
         if not r or r[0] not in updates:
             continue
         for col, val in updates[r[0]].items():
-            if col in idx:
-                while len(r) <= idx[col]:
-                    r.append("")
-                r[idx[col]] = val
+            while len(r) <= idx[col]:
+                r.append("")
+            r[idx[col]] = val
         done.append(r[0])
     with open(str(path), "w", newline="", encoding="utf-8") as fh:
-        csv.writer(fh, lineterminator="\n").writerows(rows)
+        csv.writer(fh, lineterminator=term).writerows(rows)
     return done
 
 
@@ -1517,6 +1563,26 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
     return "integrated", new_head
 
 
+def _append_blocked_log(wt, hit, tid, base):
+    """Append the blocked-disposition evidence stanza to docs/log.md (best-effort:
+    a missing/locked log never fails the transaction)."""
+    try:
+        with (Path(wt) / "docs" / "log.md").open("a", encoding="utf-8") as fh:
+            fh.write(
+                "\n## {} — blocked disposition: {} (train {})\n\n"
+                "Worker-reported blocker with committed evidence at {}; "
+                "BlockRef: {}.\n".format(
+                    time.strftime("%Y-%m-%d %H:%M"),
+                    ";".join(sorted(hit)),
+                    tid,
+                    base[:7],
+                    "; ".join(v or "(none)" for v in hit.values()),
+                )
+            )
+    except OSError:
+        pass
+
+
 def blocked_disposition(root, docs, journal, tid, wis, base):
     """The smaller serialized blocked-disposition transaction (spec §9): from
     the current integration HEAD change ONLY the blocked WI's row
@@ -1543,22 +1609,11 @@ def blocked_disposition(root, docs, journal, tid, wis, base):
         wid: {"Status": "blocked", "BlockRef": ref or "(uncommitted — a finding)"}
         for wid, ref in hit.items()
     }
-    updated = _rewrite_wi_rows(reg, updates) if reg.exists() else []
     try:
-        with (Path(wt) / "docs" / "log.md").open("a", encoding="utf-8") as fh:
-            fh.write(
-                "\n## {} — blocked disposition: {} (train {})\n\n"
-                "Worker-reported blocker with committed evidence at {}; "
-                "BlockRef: {}.\n".format(
-                    time.strftime("%Y-%m-%d %H:%M"),
-                    ";".join(sorted(hit)),
-                    tid,
-                    base[:7],
-                    "; ".join(v or "(none)" for v in hit.values()),
-                )
-            )
-    except OSError:
-        pass
+        updated = _rewrite_wi_rows(reg, updates) if reg.exists() else []
+    except ValueError as exc:
+        return "error", _reset_failed_disposition(root, wt, tid, old_head, str(exc))
+    _append_blocked_log(wt, hit, tid, base)
     generate_status(Path(wt) / "docs", root, last_train="")
     regen_ok, regen_detail = _regenerate_disposition_artifacts(wt)
     if not regen_ok:

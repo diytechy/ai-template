@@ -10163,3 +10163,54 @@ module; census mirrors `test_fault_points_exist_for_every_matrix_boundary`).
 Complexity ratchet green (helper McCabe well under 10). Commit bar:
 `pytest -m smoke` 951p/3s (exit 0); `check_docs --stale` exit 0. Full suite:
 1199 passed, 4 skipped (exit 0).
+
+## 2026-07-19 — WI-238 DONE: a blocked disposition survives a BlockRef-column-less registry
+
+The second of the three WI-229 blocked-exit defects (after WI-240). Root cause:
+`_rewrite_wi_rows` silently dropped any field whose column the registry did not
+carry, and this repo's `work-items.csv` predates the `BlockRef` column — so
+`blocked_disposition` committed a `Status=blocked` row with an empty `BlockRef`,
+which `check_trajectory`'s `blocked-ref` rule rejects on every launch: an
+unbreakable parked-error loop (field runs `20260719T112312/131512/132453`).
+
+Fix (the WI-229 `SupersededBy` registry-extension precedent, applied to
+`BlockRef`): when an update names a column the header lacks, `_rewrite_wi_rows`
+now ADOPTS it in the same surgical rewrite — appends the column to the header and
+writes the value on the target row — rather than dropping the field. **Only the
+header grows.** Untouched data rows keep their exact width, so a ragged legacy
+row reads the new column as `""` (`DictReader` -> `None`, the tolerance
+`check_trajectory` already documents) and re-serializes byte-for-byte. Byte
+stability is real, not accidental: the registry is read RAW (`newline=""` + csv
+over `io.StringIO` of the exact bytes) so a quoted multi-line `Deliverable`
+survives, and the file's DOMINANT line ending is detected and re-applied (the
+WI-234 splice discipline — a CRLF checkout stays CRLF). When the column CANNOT be
+adopted (an unreadable or headerless registry), `_load_registry_rows` raises a
+`ValueError` NAMING the column; `blocked_disposition` catches it and routes to
+`_reset_failed_disposition` — no commit, worktree reset, the reservation held —
+so the transaction never commits a row validation will reject (and WI-240's
+`_failure_tail` carries the real reason if a commit still fails for another
+cause).
+
+Decomposition to hold the C901 ratchet (both target functions were AT budget):
+extracted `_wanted_columns` + `_load_registry_rows` out of `_rewrite_wi_rows`
+(stayed 7), and `_append_blocked_log` out of `blocked_disposition` (its
+log-append `try/except`+generator freed the room for the new `ValueError`
+branch — census unchanged, no new/bumped baseline entry).
+
+Template surface: `project-trajectory/registries/work-items.template.csv`
+ALREADY carries `BlockRef`, so fresh repos never hit this — no scaffold change,
+and no header-sync asserter (`test_bootstrap`/`EXAMPLE.md`) pins the WI header.
+This repo's live registry gains the column only when a disposition actually needs
+one — the tested extension path — so it is deliberately NOT added preemptively
+here.
+
+Deviations from spec: none. Regressions (7) in `tests/test_agent_loop_integrate.py`
+(5 unit on `_rewrite_wi_rows` — adopt-absent-column, column-present-no-double,
+untouched-rows-byte-identical under CRLF + quoted multi-line `Deliverable`,
+loud-fail-headerless, loud-fail-unreadable — + 2 integration on
+`blocked_disposition`: the columnless field shape end-to-end with a live
+`check_trajectory` green on the committed result, and the headerless-registry
+loud-error-no-commit-reservation-held path). Byte-budgeted files: none touched.
+Complexity ratchet green. Commit bar: `pytest -m smoke -n auto` 951p/3s (exit 0);
+`check_docs --stale` OK 0 broken (exit 0). Full suite: 1206 passed, 4 skipped
+(exit 0).

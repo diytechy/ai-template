@@ -82,7 +82,7 @@ def _wi_row(wid, preds="", safety="ordinary", status="queued"):
     ]
 
 
-def _make_repo(tmp_path, rows, stack_test=None):
+def _make_repo(tmp_path, rows, stack_test=None, header=None):
     repo = tmp_path / "repo"
     (repo / "docs" / "requirements").mkdir(parents=True)
     with open(
@@ -92,7 +92,7 @@ def _make_repo(tmp_path, rows, stack_test=None):
         newline="",
     ) as fh:
         w = csv.writer(fh)
-        w.writerow(HEADER)
+        w.writerow(header or HEADER)
         w.writerows(rows)
     (repo / "AGENTS.md").write_text("# agents\n", encoding="utf-8")
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
@@ -158,8 +158,8 @@ sys.exit(0)
 """
 
 
-def _setup(tmp_path, rows, stack_test=None):
-    repo = _make_repo(tmp_path, rows, stack_test=stack_test)
+def _setup(tmp_path, rows, stack_test=None, header=None):
+    repo = _make_repo(tmp_path, rows, stack_test=stack_test, header=header)
     ctl = tmp_path / "ctl"
     ctl.mkdir()
     fake = tmp_path / "fake.py"
@@ -1046,6 +1046,194 @@ def test_blocked_disposition_changes_only_its_wi(tmp_path):
     log = _git(repo, "log", "-1", "--format=%(trailers)", "refs/heads/llm/integration")
     assert "Blocked-WI: WI-201" in log and "BlockRef: OI-42" in log
     assert _reservations(repo) == set(), "released only after the CAS"
+
+
+# --- WI-238: a blocked disposition survives a registry without a BlockRef column --
+
+LEGACY_HEADER = HEADER[:-1]  # a registry that predates the BlockRef column
+
+
+def _legacy_row(wid, status="queued", deliverable=""):
+    # A 10-field row (no BlockRef cell) — the shape adopted repos carried before
+    # the column existed (the WI-229 field event).
+    return [
+        wid,
+        "Work " + wid,
+        "ws",
+        "SR-063",
+        "",
+        status,
+        deliverable,
+        "docs/specs/thing.md",
+        "medium",
+        "ordinary",
+    ]
+
+
+def test_rewrite_wi_rows_adopts_absent_blockref_column(tmp_path):
+    # An update naming a column the registry LACKS extends the header + writes the
+    # value rather than silently dropping the field (the root defect).
+    reg = tmp_path / "work-items.csv"
+    with reg.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh, lineterminator="\n")
+        w.writerow(LEGACY_HEADER)
+        w.writerow(_legacy_row("WI-201"))
+        w.writerow(_legacy_row("WI-202"))
+    updated = agent_dispatch._rewrite_wi_rows(
+        reg, {"WI-201": {"Status": "blocked", "BlockRef": "OI-42"}}
+    )
+    assert updated == ["WI-201"]
+    text = reg.read_text(encoding="utf-8")
+    dr = csv.DictReader(text.splitlines())
+    assert "BlockRef" in dr.fieldnames  # the header adopted the column
+    rows = list(dr)
+    r201 = next(r for r in rows if r["WI-ID"] == "WI-201")
+    assert r201["Status"] == "blocked" and r201["BlockRef"] == "OI-42"
+    # An untouched legacy row reads the new column as "" (DictReader -> None).
+    r202 = next(r for r in rows if r["WI-ID"] == "WI-202")
+    assert (r202.get("BlockRef") or "") == ""
+    assert text.splitlines()[0].count("BlockRef") == 1  # no duplicate column
+
+
+def test_rewrite_wi_rows_column_present_writes_without_doubling(tmp_path):
+    # With the column already present, behaviour is unchanged: the value is
+    # written and no second column appears.
+    reg = tmp_path / "work-items.csv"
+    with reg.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh, lineterminator="\n")
+        w.writerow(HEADER)  # already carries BlockRef
+        w.writerow(_wi_row("WI-201"))
+    agent_dispatch._rewrite_wi_rows(
+        reg, {"WI-201": {"Status": "blocked", "BlockRef": "OI-3"}}
+    )
+    text = reg.read_text(encoding="utf-8")
+    assert text.splitlines()[0].count("BlockRef") == 1
+    r = next(iter(csv.DictReader(text.splitlines())))
+    assert r["Status"] == "blocked" and r["BlockRef"] == "OI-3"
+
+
+def test_rewrite_wi_rows_leaves_untouched_rows_byte_for_byte(tmp_path):
+    # Untouched rows — including a CRLF registry's quoted, multi-line Deliverable
+    # cell (the WI-231 lesson) — survive the extension verbatim, and the file's
+    # dominant line ending is preserved.
+    reg = tmp_path / "work-items.csv"
+    quoted = (
+        "WI-202,Work WI-202,ws,SR-063,,done,"
+        '"shipped:\r\n- line one\r\n- line two, with comma",'
+        "docs/specs/thing.md,medium,ordinary\r\n"
+    )
+    plain = (
+        "WI-203,Work WI-203,ws,SR-063,,queued,,docs/specs/thing.md,medium,ordinary\r\n"
+    )
+    body = (
+        ",".join(LEGACY_HEADER) + "\r\n"
+        "WI-201,Work WI-201,ws,SR-063,,queued,,docs/specs/thing.md,medium,ordinary\r\n"
+        + quoted
+        + plain
+    )
+    reg.write_bytes(body.encode("utf-8"))
+    agent_dispatch._rewrite_wi_rows(
+        reg, {"WI-201": {"Status": "blocked", "BlockRef": "OI-9"}}
+    )
+    after = reg.read_bytes().decode("utf-8")
+    assert quoted in after, "the quoted multi-line Deliverable row is byte-identical"
+    assert plain in after, "an untouched plain row is byte-identical"
+    assert after.count("\r\n") >= 4, "the dominant CRLF line ending is preserved"
+    assert after.splitlines()[0].endswith(",BlockRef")
+    assert (
+        "WI-201,Work WI-201,ws,SR-063,,blocked,,docs/specs/thing.md,"
+        "medium,ordinary,OI-9\r\n"
+    ) in after
+
+
+def test_rewrite_wi_rows_fails_loud_naming_column_when_headerless(tmp_path):
+    # A malformed (headerless) registry cannot adopt the column: fail loudly
+    # naming it rather than commit a row validation will reject.
+    reg = tmp_path / "work-items.csv"
+    reg.write_text("", encoding="utf-8")
+    with pytest.raises(ValueError) as exc:
+        agent_dispatch._rewrite_wi_rows(
+            reg, {"WI-201": {"Status": "blocked", "BlockRef": "OI-1"}}
+        )
+    assert "BlockRef" in str(exc.value)
+
+
+def test_rewrite_wi_rows_fails_loud_when_unreadable(tmp_path):
+    # An unreadable registry (a directory at the path) fails loudly naming the
+    # column, never a bare OSError traceback.
+    reg = tmp_path / "work-items.csv"
+    reg.mkdir()
+    with pytest.raises(ValueError) as exc:
+        agent_dispatch._rewrite_wi_rows(reg, {"WI-201": {"BlockRef": "OI-1"}})
+    assert "BlockRef" in str(exc.value)
+
+
+def _blocked_field_setup(tmp_path, header, rows):
+    """The WI-229 field shape: a reserved train carrying a Blocked-WI/BlockRef
+    trailer over an integration ref whose registry uses `header`."""
+    repo, ctl, template = _setup(tmp_path, rows, header=header)
+    head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
+    assert agent_loop.reserve_traincar(repo, "t-blk", ["WI-201"], head) is None
+    wt = tmp_path / "wt"
+    _git(repo, "worktree", "add", str(wt), "llm/train/t-blk")
+    (wt / "evidence.txt").write_text("why it is stuck", encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(
+        wt,
+        "commit",
+        "-q",
+        "-m",
+        "blocked WI-201\n\nBlocked-WI: WI-201\nBlockRef: OI-42\n",
+    )
+    return repo, head
+
+
+def test_blocked_disposition_extends_columnless_registry_end_to_end(tmp_path):
+    # The end-to-end field shape: a Blocked-WI trailer + a registry that predates
+    # the BlockRef column. The disposition adopts the column, commits, releases
+    # the reservation, and the committed result passes the SAME validator that
+    # used to reject it forever (the unbreakable parked-error loop).
+    repo, head = _blocked_field_setup(
+        tmp_path, LEGACY_HEADER, [_legacy_row("WI-201"), _legacy_row("WI-202")]
+    )
+    journal = agent_loop._Journal(repo)
+    state, new_head = agent_loop.blocked_disposition(
+        repo, repo / "docs", journal, "t-blk", ["WI-201"], head
+    )
+    assert state == "integrated", new_head
+    show = _git(
+        repo, "show", "refs/heads/llm/integration:docs/requirements/work-items.csv"
+    )
+    assert show.splitlines()[0].endswith("BlockRef"), "the column was adopted"
+    assert "WI-201,Work WI-201,ws,SR-063,,blocked" in show and "OI-42" in show
+    assert "WI-202,Work WI-202,ws,SR-063,,queued" in show
+    verify = tmp_path / "verify"
+    _git(repo, "worktree", "add", "-q", "--detach", str(verify), new_head)
+    ct = run_py([SCRIPTS / "check_trajectory.py"], cwd=verify)
+    assert ct.returncode == 0, ct.stdout + ct.stderr
+    assert _reservations(repo) == set(), "released only after the CAS"
+
+
+def test_blocked_disposition_fails_loud_on_headerless_registry(tmp_path):
+    # When the column cannot be adopted (a malformed, headerless registry at the
+    # integration HEAD), the transaction errors naming the column, commits
+    # nothing, and holds the reservation — never the silent parked loop.
+    repo, head = _blocked_field_setup(tmp_path, LEGACY_HEADER, [_legacy_row("WI-201")])
+    reg = repo / "docs" / "requirements" / "work-items.csv"
+    reg.write_text("", encoding="utf-8")  # malformed: no header row
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "corrupt registry")
+    bad = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", bad)
+    journal = agent_loop._Journal(repo)
+    state, detail = agent_loop.blocked_disposition(
+        repo, repo / "docs", journal, "t-blk", ["WI-201"], bad
+    )
+    assert state == "error"
+    assert "BlockRef" in detail, "the error names the un-adoptable column"
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == bad, "no commit"
+    assert _reservations(repo) == {"WI-201"}, "the reservation is held"
 
 
 # --- WI-231: regenerate generated artifacts / union WI rows on composition -------
