@@ -9,6 +9,12 @@
 # AGENT_PREFER_MAP=BUILD=OPENAI-SOL. The preference applies within BUILD's
 # resolved strong tier only; reviewer/critic heterogeneity still wins.
 # Per tier the ANTHROPIC row leads, with the OPENAI sibling as cross-family draw.
+# WI-236 grammar: an id may carry optional per-phase draw weights after
+# whitespace — `<ID>[ <PHASE>=<int>]...`, PHASE in BUILD|REVIEW|CRITIQUE|
+# DESIGN-CHECK (REVIEW covers both reviewer legs). Unannotated = weight 1
+# everywhere (today's behavior); e.g. `OPENAI-TERRA  REVIEW=4` draws OpenAI ~4x
+# as often as the weight-1 reviewers. See process-options.md "Unattended
+# operation" -> routing for the full rule (0 = fallback-only; malformed = fail).
 ANTHROPIC-FABLE
 OPENAI-SOL
 ANTHROPIC-OPUS

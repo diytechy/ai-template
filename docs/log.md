@@ -9975,3 +9975,44 @@ Reviewer's verified-clean surfaces (terminal-path crash safety, missing-marker
 graceful degrade, RUNNING-with-ask non-render, dev-copy precedence, freshness
 sequencing, bootstrap/template anchor, C901, stdlib) left untouched. Full suite
 after rework: green (totals in the commit). C901 baseline unchanged.
+
+### WI-236 — Weighted reviewer draws in agents-enabled — 2026-07-19
+Owner-selected config shape (annotations in `docs/agents-enabled`): an enabled id
+may carry optional per-phase integer **draw weights** after whitespace —
+`<ID>[ <PHASE>=<int>]...`, `PHASE` ∈ BUILD|REVIEW|CRITIQUE|DESIGN-CHECK, `REVIEW`
+covering both reviewer legs. `agent_route` gained the parse/preflight surface
+(`_parse_enabled_line`/`load_enabled_entries`, `resolved_weights`,
+`phase_weights`) and the selection core: `select()` now takes `weights`+`counter`
+and delegates the in-tier pick to `_pick` (pin → prefer-different filter →
+weighted draw) and `_weighted_rotation`. The rotation is **deterministic**, keyed
+on the durable **per-train session counter** (`agent_common.next_session_number`,
+derived from the iteration-log filenames — no randomness, no new durable store):
+`counter mod (Σ positive weights)` indexes cumulative weight ranges over the
+*legal* remainder, renormalizing implicitly when a model cools (the cooled id is
+simply absent from the candidate list). Wired through `agent_loop` main (parse
+annotations, build the id→{phase:weight} map, malformed-annotation errors join the
+enable-list preflight naming the line) and `route_session` (projects the map onto
+the session's phase, keys on `int(session)`).
+
+**Ruling — zero weight:** `PHASE=0` is legal and **fallback-only** (never drawn
+while a positive-weight candidate is legal, but taken as the sole legal candidate
+so routing never dead-ends); only a negative/non-integer weight is malformed
+(preflight failure). Recorded in the spec's Ruling note and PROCESS_OPTIONS
+routing. **Compatibility:** uniform weights (unannotated file, or an all-equal
+annotation) collapse to the historical line-order first-pick — byte-identical;
+all 15 pre-existing routing tests pass **unmodified**.
+
+Tests: 9 new regressions in `test_agent_route.py` (4:1:1 exact 12-draw sequence;
+cooling renormalize + return; CRITIQUE=9 concentration without starving
+heterogeneity; unannotated + equal-weights identity; malformed-shape preflight
+naming the line; pin-wins-over-weights; zero-weight fallback-only; grammar
+parse/resolve round-trip). C901 ratchet unchanged (new helpers all < 11; `select`
+and `route_session` did not grow). Regenerated `docs/architecture.md`
+(agent_route function list) + `PROJECT_STATE.html`.
+
+Byte deltas: AGENTS.template.md 9978 -> 9978 (untouched); PROCESS.md 60169 ->
+60169 (unchanged); PROCESS_OPTIONS.md 157038 -> 157851 (**+813**: the
+agents-enabled draw-weight grammar sentence in the routing section — a couple of
+sentences; baseline re-stamped in the byte-budget-guard skill, all three copies).
+docs/agents-enabled gained a commented grammar example (kit's dogfooded exemplar).
+Suite: smoke 941p/3s; full **1187 passed, 4 skipped**; check_docs OK.

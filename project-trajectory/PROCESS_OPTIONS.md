@@ -756,7 +756,18 @@ behavior**, so a fresh scaffold pays nothing.
   `AGENT_PREFER_MAP`/`--prefer-map` (for example `BUILD=OPENAI-SOL`) moves one
   enabled id ahead of that list **within the resolved tier only**; an unknown,
   disabled, wrong-tier, or cooling id falls through to enable-list order, and
-  absence preserves that order byte-for-byte. The **family**-heterogeneity rules
+  absence preserves that order byte-for-byte. For *proportional* preference
+  rather than a single pin, an enabled id may carry per-phase **draw weights** —
+  `<ID>[ <PHASE>=<int>]…` after whitespace (e.g. `OPENAI-TERRA  REVIEW=4`;
+  `PHASE` ∈ BUILD|REVIEW|CRITIQUE|DESIGN-CHECK, `REVIEW` covering both reviewer
+  legs; unannotated = weight 1 everywhere, byte-identical to before) — and draws
+  then follow a **deterministic weighted rotation** over the *legal* remainder,
+  keyed on the per-train session counter (no randomness), renormalizing when a
+  model cools. A pin still wins its phase outright; a weight can never force a
+  same-family review, a weaker tier, or a disabled id; `PHASE=0` is
+  fallback-only (drawn only as the sole legal candidate); a malformed annotation
+  fails preflight naming the line (the file is the consent surface). The
+  **family**-heterogeneity rules
   still win for reviewers and critics; a model whose session fails to start or stalls
   goes on **cooldown** (the rate-limit backoff, generalized per-model,
   `AGENT_COOLDOWN_SECONDS`) and is retried; when no enabled model of the

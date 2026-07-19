@@ -258,10 +258,13 @@ Contracts (interfaces): IF-044, IF-045
 | `load_tag_rank(path, env)` | The maturity rank vocabulary for version-less resolution: the |  |
 | `resolve_token(token, registry, tag_rank)` | Resolve one enable-list token to a registry id, or (None, reason). |  |
 | `resolve_enabled(enabled, registry, tag_rank)` | Resolve the ordered enable-list to concrete registry ids, preserving |  |
-| `load_enabled(path)` | The ordered enable-list (docs/agents-enabled): every non-empty, non-# |  |
+| `load_enabled_entries(path)` | Parse docs/agents-enabled into ordered (token, {phase: weight}) entries |  |
+| `load_enabled(path)` | The ordered enable-list ids (docs/agents-enabled): the first field of |  |
+| `resolved_weights(entries, registry, tag_rank)` | Map each resolved registry id to its {phase: weight} from parsed enable-list |  |
+| `phase_weights(weight_map, phase)` | The per-id draw weights for `phase` from the resolved weight map |  |
 | `available(cooldowns, model_id, now)` | True when `model_id` is not cooling down. `cooldowns` maps id -> the epoch |  |
 | `cool(cooldowns, model_id, now, seconds)` | Put `model_id` on cooldown until now+seconds (its limit is probably |  |
-| `select(enabled, registry, tier, now, cooldowns, exclude_families, prefer_different, preferred_ids)` | Pick a model id from the enabled pool, or None. Returns (id, reason) — the |  |
+| `select(enabled, registry, tier, now, cooldowns, exclude_families, prefer_different, preferred_ids, weights, counter)` | Pick a model id from the enabled pool, or None. Returns (id, reason) — the |  |
 | `pool_context(enabled, registry, cooldowns, now)` | The enabled pool, one line per row, for a page-human/failure banner: |  |
 | `load_constants(env)` | The escalation constants: the per-repo-overridable defaults, each read from |  |
 | `escalate(rounds, constants, swapped, at_top_tier, fails_since)` | The fixed win-stay/lose-shift decision after a review round. |  |
