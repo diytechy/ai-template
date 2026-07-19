@@ -235,6 +235,7 @@ preflight = agent_common.preflight
 write_session_log = agent_common.write_session_log
 regenerate_index = agent_common.regenerate_index
 next_session_number = agent_common.next_session_number
+phase_draw_ordinal = agent_common.phase_draw_ordinal
 commit_telemetry = agent_common.commit_telemetry
 _write_runstate = agent_common._write_runstate
 
@@ -1750,8 +1751,10 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             phase, is_review, is_critique, tier_map, pinned_tier
         )
         # Per-phase draw weights (WI-236) drive a deterministic weighted rotation
-        # over the unpinned legal remainder, keyed on the durable per-train
-        # session counter — no randomness, no new durable store.
+        # over the unpinned legal remainder, keyed on the durable PER-PHASE draw
+        # ordinal (prior same-phase sessions on this train) — NOT the global
+        # session counter, which strides across phases and would alias against
+        # the weight sum. No randomness, no new durable store.
         route_id, reason = agent_route.select(
             enabled,
             registry,
@@ -1762,7 +1765,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             prefer_different,
             [prefer_map[phase]] if phase in prefer_map else (),
             agent_route.phase_weights(ctx.weight_map, phase),
-            int(session),
+            phase_draw_ordinal(ctx.iter_dir, worker["train"], phase),
         )
         # Log the routing decision BEFORE launch (the no-silent-swap rule).
         print("route [{}]: {}".format(phase or "—", reason))
@@ -2605,11 +2608,14 @@ def main():
     enabled, resolve_errors = agent_route.resolve_enabled(
         raw_enabled, registry, tag_rank
     )
-    # The malformed-annotation errors join the resolution errors — both surface
-    # as preflight failures under the agents-enabled heading.
-    enable_errors = annot_errors + resolve_errors
-    # id -> {phase: weight}, resolved from the annotations (empty when uniform).
-    weight_map = agent_route.resolved_weights(enabled_entries, registry, tag_rank)
+    # id -> {phase: weight}, resolved from the annotations (empty when uniform);
+    # a conflicting redeclaration of an id is itself a preflight failure.
+    weight_map, weight_errors = agent_route.resolved_weights(
+        enabled_entries, registry, tag_rank
+    )
+    # Malformed annotations + unresolvable tokens + weight conflicts all surface
+    # as preflight failures under the agents-enabled heading (the consent surface).
+    enable_errors = annot_errors + resolve_errors + weight_errors
 
     failures, prompt_templates = map_preflight(
         root,

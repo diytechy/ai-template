@@ -762,10 +762,13 @@ behavior**, so a fresh scaffold pays nothing.
   `PHASE` ∈ BUILD|REVIEW|CRITIQUE|DESIGN-CHECK, `REVIEW` covering both reviewer
   legs; unannotated = weight 1 everywhere, byte-identical to before) — and draws
   then follow a **deterministic weighted rotation** over the *legal* remainder,
-  keyed on the per-train session counter (no randomness), renormalizing when a
-  model cools. A pin still wins its phase outright; a weight can never force a
-  same-family review, a weaker tier, or a disabled id; `PHASE=0` is
-  fallback-only (drawn only as the sole legal candidate); a malformed annotation
+  keyed on the **per-phase draw ordinal** (the count of prior same-phase sessions
+  on the train, read from the durable session logs — NOT the global session
+  counter, which strides across phases and would alias against the weight sum;
+  no randomness), renormalizing when a model cools. A pin still wins its phase
+  outright; a weight can never force a same-family review, a weaker tier, or a
+  disabled id; `PHASE=0` is fallback-only (drawn only as the sole legal
+  candidate); a conflicting redeclaration of an id, or any malformed annotation,
   fails preflight naming the line (the file is the consent surface). The
   **family**-heterogeneity rules
   still win for reviewers and critics; a model whose session fails to start or stalls

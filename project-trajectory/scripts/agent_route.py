@@ -138,6 +138,10 @@ _CONST_ENV = {
 # byte-identically to before (uniform weight == today's line-order tie-break).
 WEIGHT_PHASES = ("BUILD", "REVIEW", "CRITIQUE", "DESIGN-CHECK")
 _WEIGHT_PHASE_ALIAS = {"REVIEW": ("REVIEW-A", "REVIEW-B")}
+# A weight is an unsigned ASCII decimal integer — no sign prefix, no whitespace
+# (`+3`/`-1`/` 3` all fail). Python ints are unbounded, so a very large weight is
+# accepted and simply concentrates the draw (a near-pin; documented).
+_WEIGHT_INT_RE = re.compile(r"[0-9]+\Z")
 
 
 class Model:
@@ -410,33 +414,45 @@ def _parse_enabled_line(line):
     the file is the consent surface (never a silent drop)."""
     fields = line.split()
     token = fields[0]
+    # An annotation-only line (weights with no id in front) is a common slip —
+    # name it precisely rather than failing later as an unresolvable id.
+    if "=" in token:
+        return (
+            token,
+            {},
+            "missing id before annotations (line starts with {!r})".format(token),
+        )
     weights = {}
     for field in fields[1:]:
-        if "=" not in field:
+        raw_phase, sep, raw_val = field.partition("=")
+        if not sep:
             return (
                 token,
                 {},
                 "malformed annotation {!r} (expected PHASE=int)".format(field),
             )
-        raw_phase, _, raw_val = field.partition("=")
-        phase = raw_phase.strip().upper()
-        if phase not in WEIGHT_PHASES:
+        # Strict, case-SENSITIVE match to the documented grammar — the file is a
+        # consent surface, so a lowercase or misspelled phase is a hard error.
+        if raw_phase not in WEIGHT_PHASES:
             return (
                 token,
                 {},
-                "unknown phase {!r} (expected {})".format(
+                "unknown phase {!r} (expected one of {})".format(
                     raw_phase, "|".join(WEIGHT_PHASES)
                 ),
             )
-        try:
-            weight = int(raw_val)
-        except ValueError:
-            return token, {}, "non-integer weight {!r} for {}".format(raw_val, phase)
-        if weight < 0:
-            return token, {}, "negative weight {} for {}".format(weight, phase)
-        for key in _WEIGHT_PHASE_ALIAS.get(phase, (phase,)):
+        if not _WEIGHT_INT_RE.match(raw_val):
+            return (
+                token,
+                {},
+                "weight {!r} for {} is not a non-negative integer".format(
+                    raw_val, raw_phase
+                ),
+            )
+        weight = int(raw_val)
+        for key in _WEIGHT_PHASE_ALIAS.get(raw_phase, (raw_phase,)):
             if key in weights:
-                return token, {}, "duplicate phase {} on one line".format(phase)
+                return token, {}, "duplicate phase {} on one line".format(raw_phase)
             weights[key] = weight
     return token, weights, None
 
@@ -475,17 +491,30 @@ def load_enabled(path):
 
 def resolved_weights(entries, registry, tag_rank=None):
     """Map each resolved registry id to its {phase: weight} from parsed enable-list
-    `entries` [(token, weights)] (WI-236). Preference order wins a duplicate id;
-    an unannotated or unresolvable token contributes nothing. Only ids that carry
-    a declared weight appear — an absent id weighs 1 (uniform) at select time."""
-    out = {}
-    for token, weights in entries:
+    `entries` [(token, weights)] (WI-236). Returns (weight_map, errors). An
+    unannotated or unresolvable token contributes nothing (unresolvable tokens are
+    already reported by resolve_enabled). A CONFLICTING redeclaration of the same
+    id (two lines resolving to one id with different weights) is a preflight error
+    naming the id — the consent surface must not silently keep one; an IDENTICAL
+    redeclaration is a benign dedup. Only ids that carry a declared weight appear
+    — an absent id weighs 1 (uniform) at select time."""
+    out, errors = {}, []
+    for _token, weights in entries:
         if not weights:
             continue
-        rid, _reason = resolve_token(token, registry, tag_rank)
-        if rid is not None and rid not in out:
-            out[rid] = weights
-    return out
+        rid, _reason = resolve_token(_token, registry, tag_rank)
+        if rid is None:
+            continue
+        if rid in out:
+            if out[rid] != weights:
+                errors.append(
+                    "id {} redeclared with conflicting weights ({} vs {})".format(
+                        rid, out[rid], weights
+                    )
+                )
+            continue  # identical redeclaration -> benign dedup
+        out[rid] = weights
+    return out, errors
 
 
 def phase_weights(weight_map, phase):

@@ -774,6 +774,29 @@ def next_session_number(iter_dir, train=None):
     return highest + 1
 
 
+def phase_draw_ordinal(iter_dir, train, phase):
+    """The 0-based draw ordinal for `phase` on `train` (WI-236): how many PRIOR
+    sessions on this train already ran this exact phase, counted from the durable
+    session-log `# phase:` headers. This keys the weighted-rotation draw so each
+    phase advances its OWN rotation — the global per-train session counter strides
+    (a round is BUILD + REVIEW-A + REVIEW-B [+ CRITIQUE]) and would alias against
+    the weight sum, starving weight-1 candidates. Reads existing state only (the
+    logs already record the phase); no new durable store, no randomness. Empty
+    phase / absent dir -> 0 (the first draw)."""
+    if not phase or not iter_dir.is_dir():
+        return 0
+    pattern = (
+        re.compile(r"{}-\d+-".format(re.escape(train)))
+        if train
+        else re.compile(r"\d+-")
+    )
+    count = 0
+    for log in iter_dir.glob("*.log"):
+        if pattern.match(log.name) and read_log_meta(log).get("phase", "") == phase:
+            count += 1
+    return count
+
+
 def preflight(root, template, args):
     """Refuse to start iteration 1 on a broken footing. Returns the list of
     failures (empty = go)."""

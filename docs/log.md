@@ -10016,3 +10016,31 @@ agents-enabled draw-weight grammar sentence in the routing section — a couple 
 sentences; baseline re-stamped in the byte-budget-guard skill, all three copies).
 docs/agents-enabled gained a commented grammar example (kit's dogfooded exemplar).
 Suite: smoke 941p/3s; full **1187 passed, 4 skipped**; check_docs OK.
+
+**Rework (review of e732e45 — VERDICT REWORK, 1 MAJOR + minors):**
+- **MAJOR (keying):** the rotation keyed on the GLOBAL per-train session counter,
+  but a round interleaves phases (BUILD+REVIEW-A+REVIEW-B[+CRITIQUE]), so each
+  phase drew on a strided subset that aliased against the weight sum — the live
+  wiring delivered Terra=12/Kimi=0/Grok=12 for a 4:1:1 REVIEW weight (weight-1
+  candidate starved). Re-keyed on the **per-phase draw ordinal** (count of prior
+  same-phase sessions on the train, from the durable session-log `# phase:`
+  headers — `agent_common.phase_draw_ordinal`; no new store, still deterministic).
+  `route_session` now passes that ordinal as the counter. New coverage
+  `test_weighted_share_over_real_wiring_no_stride_starvation` drives the REAL
+  ordinal-derivation + select across 18 rounds of realistic interleaving and
+  asserts **12/3/3** (Kimi no longer starved); the exact-sequence unit re-keyed to
+  the 0-based ordinal.
+- **MINOR (conflicts):** a duplicate id resolving to conflicting weights now fails
+  preflight naming the id (`resolved_weights` returns errors); an identical
+  redeclaration stays a benign dedup. **MINOR (strict parse):** case-sensitive
+  phases (lowercase rejected), unsigned-decimal weights only (`+3`/`-1` rejected);
+  large weights accepted unbounded (a near-pin) — documented. **NOTE (fix):** an
+  annotation-only line (`REVIEW=4`, no id) now fails with "missing id before
+  annotations" naming the line. Reviewer's verified-clean surfaces (safety
+  invariants, determinism, zero-weight ruling, byte re-stamps, arch-map, C901,
+  additive test diff) left untouched.
+
+Byte deltas (rework): PROCESS_OPTIONS.md 157851 -> 158094 (**+243**: the keying
+description + conflict-redeclaration note; baseline re-stamped to 158,094, total
+WI-236 +1,056 from 157,038). AGENTS.template.md / PROCESS.md unchanged.
+Regenerated architecture.md (agent_common phase_draw_ordinal) + PROJECT_STATE.html.
