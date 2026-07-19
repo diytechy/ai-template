@@ -47,43 +47,66 @@ resource: "generated"
 | [TC-034](TC-034.md) | Run the stdlib-only suite; an AST scan asserts every kit script's top-level imports resol… |
 | [TC-035](TC-035.md) | Analyze the CI matrix result across Linux/Windows/macOS x Python 3.8/latest. |
 | [TC-036](TC-036.md) | Inspect a re-sync done per ADOPTING.md section 6 against the docs/kit-version diff — kit-… |
-| [TC-037](TC-037.md) | Run the trajectory-validator suite; a well-formed registry passes, and a malformed WI id,… |
-| [TC-038](TC-038.md) | Run the dashboard suite; the generated root HTML is one offline file (no external hosts/C… |
+| [TC-037](TC-037.md) | Run WI id, predecessor, cycle, placeholder, absent-registry, and opt-out validation cases. |
+| [TC-038](TC-038.md) | Generate the core offline dashboard and inspect completeness, spine hierarchy, and roadma… |
 | [TC-039](TC-039.md) | Run the check-dupes suite; a seeded copy-pasted helper fails naming both file:line locati… |
 | [TC-040](TC-040.md) | Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the… |
 | [TC-041](TC-041.md) | Run the doc-refs suite; a dangling path warns then gates under --strict, non-path backtic… |
 | [TC-042](TC-042.md) | Run the gen-okf suite; typed linked concepts generate, Process Guide concepts emit for pr… |
 | [TC-043](TC-043.md) | Run the subagent-gate suite; a Task/Agent spawn under deny is refused (permissionDecision… |
-| [TC-044](TC-044.md) | Run the interface-connectivity suite: trace.py flags a malformed/duplicate IF id and an e… |
+| [TC-044](TC-044.md) | Run IF id, SR back-link, Component membership, and endpoint-advisory trace cases. |
 | [TC-045](TC-045.md) | Run the skills-sync suite: a hand-edited per-agent copy fails gen_skills_index --check-ag… |
-| [TC-046](TC-046.md) | Run the heterogeneous-scheduling suite: agent_route selection honors enable-list order, t… |
+| [TC-046](TC-046.md) | Run pair-row parsing, resolution, Env, cooldown, family preference/fallback, and tier-sel… |
 | [TC-047](TC-047.md) | Run the run-menu suite: --list prints name<TAB>desc for each declared capability in decla… |
-| [TC-048](TC-048.md) | Run the critique-loop suite: the loop schedules CRITIQUE exactly when a committing build'… |
-| [TC-049](TC-049.md) | Run the top-view suite: an inventory over 10 modules with no containing CMPs warns plain … |
+| [TC-048](TC-048.md) | Run Critique scope detection and redacted rubric/intent/artifact brief cases. |
+| [TC-049](TC-049.md) | Run TOP_VIEW_MAX, containment, nesting, opt-out, and vacuity cases. |
 | [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache; -… |
 | [TC-051](TC-051.md) | Run the dashboard suite; the Process tab renders its three panels from the live registrie… |
-| [TC-052](TC-052.md) | Run the dashboard suite; with fixture registries exceeding the tier thresholds the When/H… |
+| [TC-052](TC-052.md) | Run When-view phase/workstream thresholds, delivery-phase labels, and parent-edge aggrega… |
 | [TC-053](TC-053.md) | A fresh, family-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PR… |
 | [TC-054](TC-054.md) | A fresh, family-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PR… |
 | [TC-055](TC-055.md) | A fresh, family-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PR… |
 | [TC-056](TC-056.md) | Run the dashboard suite; the Process tab renders both loop panels (intake loop A + human-… |
 | [TC-057](TC-057.md) | Run the dashboard suite; the tiered decomposition views render one horizontal parent->chi… |
 | [TC-058](TC-058.md) | Run schedule.py against a fixture registry; the ready frontier, the exclusions with reaso… |
-| [TC-059](TC-059.md) | Drive the pure safety classifier over each SafetyClass + review-policy input including mi… |
+| [TC-059](TC-059.md) | Drive the pure classifier over every declared safety and policy input and compare consume… |
 | [TC-060](TC-060.md) | Exercise the migration on a fixture scaffold: next-wi/run-phase absent, no live surface r… |
 | [TC-061](TC-061.md) | Run two concurrent workers from explicit --wi/--train/worktree assignments; assert no lan… |
 | [TC-062](TC-062.md) | Launch the dispatcher with independent ready WIs; assert up-to-ceiling concurrency in sep… |
 | [TC-063](TC-063.md) | Drive a unary chain, a fork, a join, a cap, and an early end; assert the continuation/sto… |
-| [TC-064](TC-064.md) | Compose overlapping trains through the integrator; assert the combined bar always runs, a… |
-| [TC-065](TC-065.md) | Inject termination at each lifecycle boundary (reservation txn, both CAS points, the publ… |
+| [TC-064](TC-064.md) | Compose trains through the serialized writer with clean/conflict review, red-bar, regener… |
+| [TC-065](TC-065.md) | Exercise recovery evidence enumeration and missing-integration authority cases. |
 | [TC-066](TC-066.md) | Run a parallel session + a downstream-migration fixture; assert reason-coded telemetry ag… |
-| [TC-067](TC-067.md) | Run the cross-CMP suite: an import edge between two components with no covering IF row wa… |
-| [TC-068](TC-068.md) | Run the spec-interface suite: an unarmed spec (no ## Interfaces section) is vacuous; a se… |
-| [TC-069](TC-069.md) | Run plan_coverage.py over a goal brief + rival plan tables: two commensurable plans emit … |
-| [TC-070](TC-070.md) | Drive plan_round with injected fake step results: the happy path selects with the 8-sessi… |
-| [TC-071](TC-071.md) | Assemble each hat brief over a fixture repo whose status.md/log.md carry a sentinel and r… |
-| [TC-072](TC-072.md) | Drive planner_pair/planner_fallback against docs/agents.csv-shaped fixtures: a two-family… |
-| [TC-073](TC-073.md) | Drive plan_coverage_step end-to-end with the real plan_round machine and the real plan_co… |
-| [TC-074](TC-074.md) | Build a fixture repo (work-items.csv with the round's parent WI, a selected plan carrying… |
-| [TC-075](TC-075.md) | Run the status.md forward-only suite: a done id echoed in a hand-edited status.md warns p… |
-| [TC-076](TC-076.md) | Run the real agent_loop --dual-plan over a fixture repo (PlanMode=dual WI, C#-claused goa… |
+| [TC-067](TC-067.md) | Run the cross-component import coverage matrix. |
+| [TC-068](TC-068.md) | Run the armed-spec interface-section matrix. |
+| [TC-069](TC-069.md) | Run rival plan coverage, reference, graph, absent-registry, and malformed-input cases. |
+| [TC-070](TC-070.md) | Drive typed round transitions, budgets, caps, repairs, revisions, swapped arbiters, persi… |
+| [TC-071](TC-071.md) | Assemble every hat brief with sentinel data outside the allowlist and strict template var… |
+| [TC-072](TC-072.md) | Drive planner_pair and planner_fallback across diverse, degraded, cooled, nonresponsive, … |
+| [TC-073](TC-073.md) | Drive the coverage adapter through clean, first-finding repair, repeated finding, malform… |
+| [TC-074](TC-074.md) | Build a fixture round and verify allocation, stable stage writes, selected-WI filing, dep… |
+| [TC-075](TC-075.md) | Run the hand-edited/generated status source-of-truth matrix. |
+| [TC-076](TC-076.md) | Run the full fresh-session dual-plan round including fallback and position-swapped arbitr… |
+| [TC-077](TC-077.md) | Run Deliverable/status coherence and strict open-SpecRef cases. |
+| [TC-078](TC-078.md) | Generate with and without module/component and OKF bundles. |
+| [TC-079](TC-079.md) | Run deterministic, responsive, stale/missing, Git as-of, and no-Git generation cases. |
+| [TC-080](TC-080.md) | Run endpoint/direction, source-sink, Active-citation, Contracts, opt-out, and strict non-… |
+| [TC-081](TC-081.md) | Generate dashboard and architecture views with and without declared seams. |
+| [TC-082](TC-082.md) | Run review-policy 0/1/2, prompt-map, redaction, selection logging, verdict, and unmanaged… |
+| [TC-083](TC-083.md) | Run substance components, corroboration, tripwires, decay, verdict parsing, and CLI cases. |
+| [TC-084](TC-084.md) | Drive swap, tier-up, shared failure, contradiction, tripwire, and gate-policy escalation … |
+| [TC-085](TC-085.md) | Run critique approval, rework, configured-cap exhaustion, and gate-policy disposition cas… |
+| [TC-086](TC-086.md) | Run Critique vocabulary/LLR-completeness and staged closure-ratchet cases. |
+| [TC-087](TC-087.md) | Generate nested/flat How-SW containment and boundary aggregation cases. |
+| [TC-088](TC-088.md) | Run component-to-module How-SW tier and top-width-bound cases. |
+| [TC-089](TC-089.md) | Render seams at hierarchy ports and crossing container boundaries. |
+| [TC-090](TC-090.md) | Exercise pointer/keyboard descent and breadcrumb restoration. |
+| [TC-091](TC-091.md) | Classify missing, unknown, structurally contradictory, critique, checkpoint, and dual-pla… |
+| [TC-092](TC-092.md) | Pack ordinary, protected, forced-single, and spine-serial ready sets across caps and gate… |
+| [TC-093](TC-093.md) | Apply a blocker disposition to one WI in a multi-row registry. |
+| [TC-094](TC-094.md) | Inject publication crashes, stale or non-descendant targets, and clean/disjoint/overlappi… |
+| [TC-095](TC-095.md) | Reconstruct ownership from reservations/trains and inject ambiguity or duplicate claims. |
+| [TC-096](TC-096.md) | Inject termination at every reservation, integration, and publication boundary with out/d… |
+| [TC-097](TC-097.md) | Run direct worker/flag refusal and PlanMode-derived classification/contradiction cases. |
+| [TC-098](TC-098.md) | Run dispatcher SELECT, attended PAGE, autonomous PAGE continuation, regeneration failure,… |
+| [TC-099](TC-099.md) | Inspect the eleven legacy SR rows, their SupersededBy graph, replacement targets, and pos… |

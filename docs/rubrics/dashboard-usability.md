@@ -1,7 +1,7 @@
 # Rubric — Dashboard usability (SR-054)
 
 **Adjudicates:** SR-054 (dashboard usability, `Verification=Critique`).
-**Used by:** the SR-047 critique loop — a fresh, provider-heterogeneous CRITIQUE
+**Used by:** the SR-084 critique dispatch — a fresh, provider-heterogeneous CRITIQUE
 session judges the generated `PROJECT_STATE.html` against the numbered anchors
 below, receiving this rubric + the SN/SR intent + the artifact recipe and **never
 the implementer's self-assessment**. Authored at `[v3]-[g2]` (WI-135) from the
@@ -32,7 +32,7 @@ region). *Bad:* "how the parts connect" requires two tab switches or expanding
 three nested blocks to locate.
 
 **T2 — Default-density legibility.** Views default to a legible density —
-start-collapsed per the SR-051 `>3` rule so a large project is not a wall of
+start-collapsed per the SR-089 `>3` rule so a large project is not a wall of
 nodes on open — while a small project still reads flat. *Bad:* the When view opens
 fully exploded with hundreds of overlapping nodes.
 

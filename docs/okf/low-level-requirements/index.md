@@ -44,46 +44,66 @@ resource: "generated"
 | [LLR-031](LLR-031.md) | Shared declared-line parse |
 | [LLR-032](LLR-032.md) | Onboard/dev-setup templates |
 | [LLR-033](LLR-033.md) | Release checklist generator |
-| [LLR-034](LLR-034.md) | WI-registry validation |
-| [LLR-035](LLR-035.md) | Offline project-state dashboard |
+| [LLR-034](LLR-034.md) | WI dependency-DAG validation |
+| [LLR-035](LLR-035.md) | Offline project-state core |
 | [LLR-036](LLR-036.md) | Duplicate-block detector |
 | [LLR-037](LLR-037.md) | Per-phase cmd map + size tripwire |
 | [LLR-038](LLR-038.md) | Path + sym: reference checker |
 | [LLR-039](LLR-039.md) | OKF bundle emitter |
 | [LLR-040](LLR-040.md) | Subagent spawn gate |
-| [LLR-041](LLR-041.md) | IF-tier integrity in trace.py |
-| [LLR-042](LLR-042.md) | Architecture-connectivity views and coverage warns |
+| [LLR-041](LLR-041.md) | IF-tier integrity |
+| [LLR-042](LLR-042.md) | Architecture-connectivity coverage warns |
 | [LLR-043](LLR-043.md) | Cross-agent skill fan-out drift check |
-| [LLR-044](LLR-044.md) | Model routing + fixed escalation policy |
-| [LLR-045](LLR-045.md) | Loop-side reviewer dispatch + managed routing |
-| [LLR-046](LLR-046.md) | Substance scorer + tripwires + scoreboard |
+| [LLR-044](LLR-044.md) | Agent pair-row routing |
+| [LLR-045](LLR-045.md) | Managed review dispatch |
+| [LLR-046](LLR-046.md) | Review substance scorer |
 | [LLR-047](LLR-047.md) | Run capability menu reader |
-| [LLR-048](LLR-048.md) | Critique loop dispatch + lax-TC ratchet |
-| [LLR-049](LLR-049.md) | How-SW top-view containment rule + render |
+| [LLR-048](LLR-048.md) | Independent critique dispatch |
+| [LLR-049](LLR-049.md) | Bounded software top view |
 | [LLR-050](LLR-050.md) | Derived-gate computation + hybrid cache |
 | [LLR-051](LLR-051.md) | Process reference tab |
-| [LLR-052](LLR-052.md) | Tiered When/How-SW drill-down (interface-wired, descend-a-layer) |
+| [LLR-052](LLR-052.md) | Tiered When roadmap |
 | [LLR-053](LLR-053.md) | Dashboard accessibility rendering |
 | [LLR-054](LLR-054.md) | Dashboard UI-uniformity rendering |
 | [LLR-055](LLR-055.md) | Dashboard usability rendering |
 | [LLR-056](LLR-056.md) | Process tab intake + human-decision loop panels |
 | [LLR-057](LLR-057.md) | Decomposition render polish (columns, arrows, persistent hover) |
 | [LLR-058](LLR-058.md) | WI-DAG frontier + deterministic traincar ordering |
-| [LLR-059](LLR-059.md) | Pure safety classifier + validator cross-check |
+| [LLR-059](LLR-059.md) | Pure safety classifier |
 | [LLR-060](LLR-060.md) | next-wi/run-phase retirement + generated status/run-state |
 | [LLR-061](LLR-061.md) | Explicit WI/train/worktree worker assignment |
 | [LLR-062](LLR-062.md) | Dispatcher + worktree pool + atomic reservations |
 | [LLR-063](LLR-063.md) | Traincar continuation + fork/join + release-on-end |
-| [LLR-064](LLR-064.md) | Atomic integrator + CAS + blocked-disposition + publish |
-| [LLR-065](LLR-065.md) | Git-as-authority crash recovery |
+| [LLR-064](LLR-064.md) | Serialized train composition |
+| [LLR-065](LLR-065.md) | Git evidence enumeration |
 | [LLR-066](LLR-066.md) | Parallel telemetry + downstream migration/audits |
-| [LLR-067](LLR-067.md) | Cross-CMP-edge-without-IF finding |
-| [LLR-068](LLR-068.md) | Spec-interface citation check |
-| [LLR-069](LLR-069.md) | Dual-plan coverage pre-pass |
-| [LLR-070](LLR-070.md) | Dual-plan round state machine |
-| [LLR-071](LLR-071.md) | Redacted dual-plan brief assembler + hat prompt-map keys |
-| [LLR-072](LLR-072.md) | Two-hat planner pair + runtime-nonresponse fallback |
-| [LLR-073](LLR-073.md) | Dual-plan coverage step adapter |
-| [LLR-074](LLR-074.md) | Dual-plan round artifact filer |
-| [LLR-075](LLR-075.md) | status.md forward-only done-id enforcement (mode-aware R-D restoration) |
-| [LLR-076](LLR-076.md) | Coordinator dual-plan round dispatch |
+| [LLR-067](LLR-067.md) | Cross-component import coverage |
+| [LLR-068](LLR-068.md) | Spec interface-section validation |
+| [LLR-069](LLR-069.md) | Rival-plan coverage comparison |
+| [LLR-070](LLR-070.md) | Typed dual-plan round lifecycle |
+| [LLR-071](LLR-071.md) | Allowlist-only dual-plan briefs |
+| [LLR-072](LLR-072.md) | Dual-plan planner pair and fallback |
+| [LLR-073](LLR-073.md) | Coverage-step result adapter |
+| [LLR-074](LLR-074.md) | Dual-plan artifact persistence and filer |
+| [LLR-075](LLR-075.md) | Generated-status source-of-truth guard |
+| [LLR-076](LLR-076.md) | Fresh-session dual-plan runner |
+| [LLR-077](LLR-077.md) | WI row coherence |
+| [LLR-078](LLR-078.md) | Conditional architecture and knowledge views |
+| [LLR-079](LLR-079.md) | Deterministic responsive dashboard freshness |
+| [LLR-080](LLR-080.md) | Declared-interface graph rendering |
+| [LLR-081](LLR-081.md) | Fixed review escalation |
+| [LLR-082](LLR-082.md) | Bounded critique rework |
+| [LLR-083](LLR-083.md) | Critique verification vocabulary |
+| [LLR-084](LLR-084.md) | Critique closure ratchet |
+| [LLR-085](LLR-085.md) | Containerized How-SW rendering |
+| [LLR-086](LLR-086.md) | Tiered How-SW hierarchy |
+| [LLR-087](LLR-087.md) | Hierarchy seam ports |
+| [LLR-088](LLR-088.md) | One-layer hierarchy navigation |
+| [LLR-089](LLR-089.md) | Structural safety cross-check |
+| [LLR-090](LLR-090.md) | Safety-aware traincar packing |
+| [LLR-091](LLR-091.md) | Serialized blocked disposition |
+| [LLR-092](LLR-092.md) | Durable publication intent |
+| [LLR-093](LLR-093.md) | Ownership-state reconstruction |
+| [LLR-094](LLR-094.md) | Lifecycle-boundary recovery |
+| [LLR-095](LLR-095.md) | Dual-plan path isolation |
+| [LLR-096](LLR-096.md) | Serialized dual-plan disposition |

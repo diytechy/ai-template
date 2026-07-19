@@ -9,7 +9,7 @@ ready frontier through `schedule`, packs traincars, atomically reserves each
 selected traincar's constituent WIs (refs/llm/reservations/*), leases a linked
 worktree per train, and runs worker processes — re-launching the sibling
 `agent_loop.py` engine per assignment — in parallel up to the ceiling. The
-serialized integrator (WI-184, SR-063) composes ready trains onto
+serialized integrator (WI-184, SR-096) composes ready trains onto
 refs/heads/llm/integration by CAS only, runs the combined bar on the composed
 tree, and publishes the development branch through the durable publish-intent
 protocol. Migration gating (SR-065), the blocked/dual-plan dispositions, the
@@ -139,7 +139,7 @@ DISPATCH_DIR = "out/dispatch"
 TRAIN_RETRY_SECONDS = 300
 
 
-# WI-185 (SR-064): the fault-injection hook the crash matrix drives. Setting
+# WI-185 (SR-101): the fault-injection hook the crash matrix drives. Setting
 # AGENT_FAULT_POINT=<point> hard-kills the dispatcher (os._exit, no cleanup,
 # no atexit — a real crash) the first time execution reaches that named
 # lifecycle boundary. Production runs never set it; recovery must reconstruct
@@ -425,7 +425,7 @@ def pack_traincars(records, wis_by_id, cap=4):
     successor `ordinary`-classified, all its other hard preds already done,
     single hard successor edge) up to the cap. Protected/single-wi classes
     never join a multi-WI traincar. **Spine packs with spine, never with
-    anything else** (WI-204, the SR-058 amendment; owner ruling 2026-07-17
+    anything else** (WI-204, SR-095; owner ruling 2026-07-17
     "drafted together, reviewed together, attested together"): every READY
     spine-serial WI — mutually independent by construction, a ready WI's
     hard preds are all done — clusters into ONE spine-only traincar, which
@@ -586,7 +586,7 @@ class _Journal:
 
 
 # -----------------------------------------------------------------------------
-# WI-184: the atomic serialized integrator (SR-063; spec §9)
+# WI-184: the atomic serialized integrator (SR-096; spec §9)
 # -----------------------------------------------------------------------------
 # One logical writer against refs/heads/llm/integration. The ref is advanced
 # ONLY by compare-and-swap and is never checked out in the user's primary
@@ -1590,7 +1590,7 @@ def dual_plan_disposition(
     root, journal, tid, wid, row, template, model, timeout, prompt_map
 ):
     """Auto-dispatch one PlanMode=dual frontier WI as a dual-plan round
-    (WI-209, the SR-066 auto-dispatch AC): the round — the WI-199 engine,
+    (WI-209, the SR-108 auto-dispatch AC): the round — the WI-199 engine,
     reused as-is — runs in a staging worktree reset to the current integration
     HEAD, so its artifact writes (docs/plans/DP-*, the filed child rows, the
     log summary) compose into ONE serialized disposition commit exactly like
@@ -2904,7 +2904,7 @@ def dispatch_run(args, root):
                 )
                 row0 = wi_rows.get(first) or {}
                 if len(car["wis"]) == 1 and wi_plan_mode(row0) == PLAN_MODE_DUAL:
-                    # WI-209 (the SR-066 auto-dispatch AC): a dual row's
+                    # WI-209 (the SR-107 auto-dispatch AC): a dual row's
                     # traincar — always single-WI, the classifier derives it
                     # from the PlanMode signal — runs the decomposition round
                     # in the dispatcher itself instead of spawning a BUILD
@@ -2993,7 +2993,7 @@ def dispatch_run(args, root):
                 if is_spine:
                     break
 
-        # --- the serialized integrator (WI-184, SR-063): one logical writer,
+        # --- the serialized integrator (WI-184, SR-096): one logical writer,
         # deterministic queue order, CAS-advanced. Ready trains compose one at
         # a time; a worker-reported blocker takes the smaller disposition
         # transaction. Each success is followed by a publication attempt and

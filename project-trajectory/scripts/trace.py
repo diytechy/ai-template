@@ -407,6 +407,80 @@ def integrity_findings(label, raw_rows):
     return found
 
 
+def _supersession_targets(row, ids):
+    """Return one row's validated targets plus its local findings."""
+    sid = row.get("SR-ID")
+    value = (row.get("SupersededBy") or "").strip()
+    if not sid or not value:
+        return [], []
+    targets = [target.strip() for target in value.split(";")]
+    malformed = any(not target for target in targets) or any(
+        "," in target or any(ch.isspace() for ch in target) for target in targets
+    )
+    if malformed:
+        return [], [f"SR {sid} SupersededBy must be a semicolon-separated SR-id list"]
+    found = []
+    for target in set(targets):
+        if targets.count(target) > 1:
+            found.append(f"SR {sid} SupersededBy repeats {target}")
+        if not ID_PATTERNS["SR"].match(target) or target not in ids:
+            found.append(f"SR {sid} SupersededBy references unknown {target}")
+        elif target == sid:
+            found.append(f"SR {sid} SupersededBy self-links")
+    return targets, found
+
+
+def _supersession_cycle_findings(edges):
+    # Report one deterministic finding per cyclic component. A DFS path is
+    # enough because supersession targets outside the linking subset are leaves.
+    state = {}
+    stack = []
+    reported = set()
+    found = []
+
+    def visit(node):
+        state[node] = 1
+        stack.append(node)
+        for target in edges.get(node, []):
+            if target not in edges:
+                continue
+            if state.get(target, 0) == 0:
+                visit(target)
+            elif state.get(target) == 1:
+                start = stack.index(target)
+                cycle = stack[start:] + [target]
+                key = frozenset(cycle)
+                if key not in reported:
+                    reported.add(key)
+                    found.append("SR SupersededBy cycle: " + " -> ".join(cycle))
+        stack.pop()
+        state[node] = 2
+
+    for sid in sorted(edges):
+        if state.get(sid, 0) == 0:
+            visit(sid)
+    return found
+
+
+def sr_supersession_findings(srs):
+    """Validate the optional SR ``SupersededBy`` extension.
+
+    A populated cell is a semicolon-separated list of other, existing SR ids.
+    Supersession is identity history rather than decomposition, so malformed
+    targets, self-links, and cycles are always-invalid integrity findings.
+    Registries without the optional column remain byte-for-byte compatible.
+    """
+    ids = {r.get("SR-ID") for r in srs if r.get("SR-ID")}
+    edges = {}
+    found = []
+    for row in srs:
+        targets, row_findings = _supersession_targets(row, ids)
+        found.extend(row_findings)
+        if targets:
+            edges[row["SR-ID"]] = targets
+    return found + _supersession_cycle_findings(edges)
+
+
 def triangle_findings(tcs, llrs):
     """SR/LLR citation coherence. A TC may cite an
     SR and an LLR together so one test discharges both the "SR needs a TC" and
@@ -1400,6 +1474,7 @@ def analyze(reg, args):
         for f in structure_findings(p, p.relative_to(docs.parent).as_posix())
     ]
     integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
+    integrity += sr_supersession_findings(srs)
     # SR/LLR citation coherence: a TC that cites an SR and an LLR
     # together must not pair an LLR with an SR it does not decompose. Integrity-
     # class (wrong at any stage), so it joins the --strict-integrity floor.

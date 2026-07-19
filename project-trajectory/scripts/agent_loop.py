@@ -1968,7 +1968,7 @@ def session_bookkeeping(
                 # rework round must not read them as "the implementer touched
                 # a review path" (the false-fire this excludes). A gamed
                 # verdict is still caught upstream: the integrator verifies
-                # verdicts on the exact reviewed head (SR-063).
+                # verdicts on the exact reviewed head (SR-096).
                 own = "docs/reviews/{}/".format(worker["train"])
                 changed = [
                     ln
@@ -2262,7 +2262,7 @@ def run_iteration(ctx, i):
         # dispatcher already fails closed at packing, and an explicit
         # assignment is dispatcher-authorized. Built evidence stands; the
         # dispatcher releases the unstarted reservations (SR-062).
-        # WI-204 (the SR-058 amendment): a spine-serial constituent inside a
+        # WI-204 (SR-095): a spine-serial constituent inside a
         # HOMOGENEOUS spine-only train is the dispatcher-authorized batch —
         # spine packs with spine, never with anything else — so it is not a
         # newly-visible conflict; only a heterogeneous grouping refuses.

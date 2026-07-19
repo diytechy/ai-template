@@ -10105,3 +10105,31 @@ foreign claim in a train's novel commits still quarantines.
 ## 2026-07-19 12:05 — integrated train 4-g3-WI-237-a515 (WI-237)
 
 Head 8e9f595 composed onto 1797913 by the serialized integrator; 1 verdict(s) verified on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-237 -> done.
+
+## 2026-07-19 — WI-229 INTEGRATED (manual re-review merge): the M-05 spine migration lands
+
+The completed stage-3 migration (`f57d28f`, worker gpt-5.6-sol, 55 min) +
+the sanctioned resync (`c2ef3e1`) + the REVIEW-A consumption (`464f522`)
+merged clean into the dev branch after an independent REVIEW-A (opus):
+first verdict REWORK for one systematic MAJOR — 24 re-parented/new LLR
+rows' advisory `(see TC-NNN)` pointers stamped with their own numbers
+instead of their verifying TCs (invisible to every machine check; the
+authoritative TC.Verifies links were correct throughout) — consumed by a
+programmatic repoint from the TC registry's own links; re-verdict APPROVE
+("the ratified ID/evidence map itself is flawless"). Spine now
+**SN=25 SR=108 LLR=96 TC=99**, strict trace zero findings in every
+category, derived gate **G3** throughout (the worker carried all
+replacement rows to Verified inside one session, so the pre-accepted
+G3→G2 dip never surfaced on the integrated tree), replacement SR max
+576 chars vs the 2,000 rule (before-sizes: the census table in
+docs/ratify/WI-229-sr-split.md). Review's ruled-no-change notes: the
+WI-237 SR-064→SR-100 re-affirmation (authorized by scope item 3) and
+residual old-SR prose in non-split rows (protected by the no-prose-
+rewrite non-goal). **Why manual:** the dispatcher's blocked-exit path
+dead-ended on three kit defects — (1) `blocked_disposition` writes a
+BlockRef into a column this registry lacks, so its commit can never pass
+`check_trajectory` here; (2) a `Blocked-WI` trailer classifies the train
+blocked permanently with no completion-supersede once the blocker cures
+(the dupes-census race with the parallel WI-237 train was cured within
+the hour); (3) the journal's `[:200]` detail cap hid the real failing
+check for three runs. All three to be filed as WIs in this sitting.
