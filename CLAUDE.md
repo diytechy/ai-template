@@ -43,6 +43,11 @@ that easier to achieve in a real project — or get out of the way.
 - **Templates must stay copy-ready.** A `*.template.*` file should produce
   something sensible the moment it's copied and filled — example/placeholder rows
   end in `-000` so `trace.py` ignores them.
+- **Don't let this repo drift from the template it ships.** VALUES may diverge
+  between the kit's template and this repo's own instance (owner dials, filled
+  registry rows, enabled sets); STRUCTURE must not (schema headers, launcher
+  command contracts, declared-section shapes) — `tests/test_dogfood_sync.py`
+  enforces it.
 - **Self-test before claiming done.** The per-commit bar is the fast **smoke**
   tier (`python -m pytest -q -n auto -m smoke`, ~47 s); run the **full**
   unfiltered suite (`python -m pytest -q -n auto`, ~66 s) before claiming a

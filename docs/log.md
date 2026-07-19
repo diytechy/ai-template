@@ -10338,3 +10338,87 @@ rides the log link, not a routing-section pointer). Complexity ratchet green (a
 string-constant edit; census unchanged). Commit bar: `pytest -m smoke -n auto`
 952 passed, 3 skipped (exit 0); `check_docs --stale` OK 0 broken (exit 0). Full
 suite: `pytest -n auto` 1212 passed, 4 skipped (exit 0).
+
+## 2026-07-19 — WI-242 DONE: dogfood-sync — adopt the template schema + gate the structural surfaces
+
+Owner question: "do we need to dogfood the template functions so this repo can't
+drift from its own template?" Yes. The kit's product is the template in
+`project-trajectory/`; this repo also *uses* that template on itself, and it had
+drifted structurally from what it ships. The governing rule this WI enforces:
+**VALUES may diverge between template and instance (owner dials, filled rows,
+enabled sets); STRUCTURE must not (schema headers, launcher command contracts,
+declared-section shapes).**
+
+**Part 1 — the one-time registry migration.** Widened the live
+[work-items.csv](requirements/work-items.csv) from its 10-column header to the
+template's full **17 columns, in TEMPLATE ORDER** — the template interleaves the
+5+1 new scheduler columns (CritiqueBudget, CritiqueExhaustion, Priority,
+Exclusive, BlockRef, EstTokens) BETWEEN BuildTier and SafetyClass and appends
+PlanMode, so SafetyClass moves from cell index 9 to 15. Chose **option (a): a
+full-width rewrite of every row** (parse old, remap each existing value under its
+template-ordered column, empty elsewhere) over an append-only order that would
+have matched the column SET but not the ORDER. The WI-238 ragged-row pattern
+(header-only growth) cannot express an interleaved insertion for width-stable
+rows — a 10-cell row's 10th cell would be read as CritiqueBudget — so positional
+correctness required the rewrite. **Field-preservation proof: 240 rows x 10
+original columns, 0 mismatches** (a field-by-field old-vs-new assertion ran
+before the write; a re-parse of the written file confirmed the round-trip). CRLF
+line endings and minimal CSV quoting preserved.
+
+**Behaviour-neutrality** (an empty new cell means exactly what the absent column
+meant): every registry consumer proven identical old-shape vs new-shape —
+`schedule.evaluate`/`simulate` (Priority/Exclusive/EstTokens/SafetyClass
+classification, 240 records), `check_trajectory.ssot_findings` (blocked-row
+BlockRef, R-A/R-E), `agent_loop.critique_control` (CritiqueBudget/Exhaustion),
+`plan_runner.wi_plan_mode` (PlanMode). Each consumer reads via DictReader with an
+`(r.get(col) or "")` guard, so an empty cell and an absent column are the same
+byte. The regression ships as
+`tests/test_dogfood_sync.py::test_schema_widening_is_behavior_neutral`: it builds
+a legacy 10-column shape and the migrated 17-column shape from the SAME live rows
+and asserts identical consumer output.
+
+**Spec deviation (recorded):** the spec's Done-when says rows are "byte-stable
+except the header". That phrasing yields to positional correctness — interleaved
+column insertion cannot be byte-stable for width-stable rows under option (a), so
+every row is **field-preserving, not byte-identical** (the csv round-trip is
+proven field-wise, not byte-wise). Reasoning carried in the WI-242 commit body.
+
+**Part 2 — the dogfood-sync gate** (`tests/test_dogfood_sync.py`, 16 tests, all
+drift checks are pure functions the bite-proofs reuse):
+- **Registries** (census of the 6 live registries with template counterparts):
+  each live header must be an **ordered superset** of its template header. Live-
+  only extensions are legal — the SR registry's `SupersededBy` column (WI-229) is
+  present in live but not the template, and passes; a *missing* template column
+  fails, naming it. Post-migration the live work-items header now equals the
+  template exactly.
+- **Launchers** `agent-resume.{sh,cmd,command}`: the **engine-invocation line**
+  (normalised for the meta-repo self-application — the `project-trajectory/` path
+  prefix is basenamed and the `--root .` pair dropped, both bootstrap-verbatim
+  otherwise) and the **exported `AGENT_*` variable-NAME set** (template subset of
+  live; live's extra `AGENT_TIER_MAP` is a legal addition). Owner DIAL VALUES
+  (AGENT_CMD/AGENT_TIER_MAP/AGENT_JOBS/...) are explicitly free — pinning them
+  was the anti-goal. The `.command` wrapper's contract is that it delegates to
+  `agent-resume.sh`.
+- **stack.ini**: every SECTION the template declares exists in live (keys/values
+  free; live's extra `[step:dupes]` is legal).
+- **dev-setup RULED value/bespoke, not pinned:** unlike the launchers (near-
+  verbatim copies), the live `scripts/dev-setup.{sh,ps1,cmd,command}` are
+  meta-repo rewrites (own install ladder `--install` vs the template's
+  `--baseline/--full/--profile`, 23-310 changed lines per variant) with no shared
+  structural line — pinning them would manufacture false-positive drift. The one
+  assertion made is that they carry no `agent_loop` engine line (the launcher pin
+  correctly does not reach them).
+- **Bite-proofs** (Done-when): each check fails under a temporary scratch
+  mutation — (a) a removed live registry column, (b) a launcher engine-line edit
+  (renamed entry point / dropped argv pass-through), (c) a missing stack.ini
+  section — each naming the drifted surface.
+
+**Part 3 — the rule sentence** placed in [CLAUDE.md](../CLAUDE.md)'s "Principles
+for editing the kit" bullet list (smallest single-source edit; CLAUDE.md is not
+byte-budgeted), pointing at `tests/test_dogfood_sync.py` as the enforcer.
+
+Byte-budgeted files: **none touched**. Complexity ratchet green (dupes G3 PASS —
+no re-keyed census pairs). Commit bar: `pytest -m smoke -n auto` **968 passed, 3
+skipped (exit 0)**; `check_docs --root .` OK 0 broken (exit 0). Full suite:
+`pytest -n auto` **1228 passed, 4 skipped (exit 0)**. Complete G3 harness
+(`check.py --gate G3 --jobs 0`) green after the status/okf/dashboard regen.
