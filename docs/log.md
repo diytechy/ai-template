@@ -280,6 +280,23 @@ why (one bullet each; cite ids)._
   rule. (Unmerged residue elsewhere is *not* OI-3's: `dualplan-routing-fix`
   and `guardrails-fable-method` remain open dev branches with their own
   merge-to-main sittings to be ruled separately.)
+- **2026-07-19 — OI-14 RULED: WI-229 stage-2 ATTEST (owner Peter Johnson).**
+  The owner reviewed the complete frozen stage-1 migration plan
+  (`docs/ratify/WI-229-sr-split.md` on train `p0-g3-WI-229-3999`, page commit
+  `9fed833f35139b69a519b75e978e6232209e2e8d`) and ruled **ATTEST** — the
+  exact census (11 oversized SRs, the live base-sensitive set superseding the
+  filed examples), supersession model (`SupersededBy` column, Inspection link
+  rows, TC-099), frozen split map (SR-067..SR-108 with the complete LLR/TC
+  re-parenting), SN/interface migration, and stage-3 transaction order are
+  approved with no revisions. Terminology note recorded: this act is the
+  stage-2 *ratification* of the plan; the *attestation* proper of the
+  Inspection-verified supersession rows follows at stage-3 close under
+  `--require-verified`. The record also lives on the train itself
+  (`6905138` — the resumed worker reads its own worktree). Alternatives
+  passed over: REVISE (no mapping challenged) · park-as-deferred (moot once
+  ruled). Stage 3 is now dispatchable; the expected honest G3→G2 gate
+  regression mid-migration is pre-accepted as part of the ratified plan.
+  OI-14's section is deleted per the pending-only rule.
 
 ## Audit log
 

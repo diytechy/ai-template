@@ -43,30 +43,6 @@ decisions._
 - **Recommendation (recorded):** rule only after ≥ 2 phases of medium-BUILD
   evidence.
 
-## OI-14 — WI-229 stage-2: attest (or amend/park) the SR-split migration plan
-
-- **One-line:** WI-229's stage-1 plan is frozen and awaiting the owner's
-  stage-2 attestation; until ruled, every dispatcher launch re-quarantines the
-  WI (~7 min burn) and the M-05 spine migration cannot proceed.
-- **Decision:** whether the frozen oversized-SR split plan is ratified for
-  stage-3 execution. The plan doc is **on the quarantined train branch**, not
-  the dev branch — read it with:
-  `git show llm/train/p0-g3-WI-229-3999:docs/ratify/WI-229-sr-split.md`
-  (frozen at `9fed833`; spec: [specs/WI-229.md](specs/WI-229.md), which
-  declares this hard stop — the worker must block, never self-ratify, and
-  `gate-policy: autonomous` does not waive it).
-- **Blast radius:** the traceability spine itself — splitting Verified/attested
-  SR rows re-opens their ratification; every LLR/TC re-parents per the plan's
-  mapping, and supersession links become permanent spine history. A wrong
-  attestation here is the costliest class of error the process guards against.
-- **Options:** attest the plan (unblocks stage 3 on the next launch) ·
-  send it back with amendment notes (worker revises stage 1) · park WI-229
-  (`deferred` with reason) so launches stop burning the quarantine cycle
-  until you have a sitting for it.
-- **Recommendation:** read the frozen plan before anything else; if a ruling
-  isn't imminent, park the row — the quarantine loop costs ~7 min per launch
-  and pages nothing new.
-
 ---
 
 <!-- Generated pending-owner-actions projection (WI-234) — do NOT hand-edit; a
