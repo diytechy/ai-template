@@ -474,8 +474,8 @@ def git(root, *args):
     every success-path caller parses stdout (`rev-parse`, `status --porcelain`,
     trailer reads). But git reports hook rejections and fatal errors on STDERR,
     so on a NONZERO exit the stripped stderr is appended to stdout (newline-joined
-    when both are non-empty); otherwise every `detail=out[:200]` a failed call
-    feeds a park/quarantine reason would be blank (WI-233)."""
+    when both are non-empty); otherwise every failure detail a failed call feeds
+    a park/quarantine reason (via `_failure_tail`) would be blank (WI-233)."""
     proc = subprocess.run(
         ["git", "-C", str(root)] + list(args),
         capture_output=True,
@@ -490,6 +490,43 @@ def git(root, *args):
         if err:
             out = out + "\n" + err if out else err
     return proc.returncode, out
+
+
+# WI-240: the harness/hook banner shape a structured failure prints — a
+# `=== <step> : <cmd> ===` banner per step, then that step's output, then a
+# `  {STATUS}  <step>  <detail>` line (check.py --run-steps / the check summary).
+_FAILTAIL_FAIL_RE = re.compile(r"^\s*FAIL\s")
+_FAILTAIL_BANNER_RE = re.compile(r"^\s*=== ")
+
+
+def _failure_tail(out, budget=600):
+    """The FAILING part of a harness/git output, bounded to `budget` chars.
+
+    Park/quarantine/journal details once kept only the leading 200 chars — the
+    HEAD — so a multi-step hook failure journaled the FIRST (passing) banner and
+    cut the actual error (the WI-229 blocked-disposition loop: three runs of
+    `disposition commit failed: === derived-gate : ...python.exe ...` while the
+    real `check_trajectory: ERROR - blocked-ref ...` / `  FAIL  trajectory` was
+    off the end). This prefers the LAST `  FAIL  <step>` block — that step's
+    `=== <step> :` banner through its FAIL line — else the TAIL of the output;
+    always tail-bounded, so the error survives even when the banner is long."""
+    text = (out or "").rstrip()
+    if not text:
+        return ""
+    lines = text.splitlines()
+    fail_idx = None
+    for i, line in enumerate(lines):
+        if _FAILTAIL_FAIL_RE.match(line):
+            fail_idx = i
+    if fail_idx is None:
+        return text[-budget:].lstrip()
+    start = 0
+    for j in range(fail_idx - 1, -1, -1):
+        if _FAILTAIL_BANNER_RE.match(lines[j]):
+            start = j
+            break
+    block = "\n".join(lines[start : fail_idx + 1])
+    return block[-budget:].lstrip()
 
 
 def head_sha(root):
@@ -754,7 +791,7 @@ def commit_telemetry(root, session, label, paths):
             git(root, "reset", "-q", "--", *fresh)
         print(
             "agent_loop: telemetry commit skipped (session {}): {}".format(
-                session, (out or "").strip()[:200] or "hook veto or nothing staged"
+                session, _failure_tail(out) or "hook veto or nothing staged"
             ),
             file=sys.stderr,
         )

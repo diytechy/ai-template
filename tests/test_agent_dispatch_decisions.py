@@ -5,12 +5,16 @@ session. Effect-level dispatcher and train behavior stays in the corresponding
 agent-loop end-to-end modules.
 """
 
+import re
+
 import pytest
-from conftest import load_script
+from conftest import SCRIPTS, load_script
 
 agent_loop = load_script("agent_loop")
 schedule = load_script("schedule")
 dispatcher = agent_loop.agent_dispatch
+agent_common = load_script("agent_common")
+_failure_tail = agent_common._failure_tail
 
 
 @pytest.mark.parametrize(
@@ -323,3 +327,67 @@ def test_dual_row_never_joins_a_multi_wi_traincar():
     cars = _pack(wis)
     dual_cars = [car for car in cars if "WI-201" in car["wis"]]
     assert dual_cars == [{"wis": ["WI-201"], "sched_class": schedule.SCHED_SINGLE_WI}]
+
+
+# --- WI-240: park/quarantine details carry the FAILING step, not the head -------
+
+# The exact WI-229 field string: a commit-hook `check.py --run-steps` output
+# whose FIRST banner is a PASSING `=== derived-gate : <long python.exe cmd> ===`
+# and whose real failure is a later `trajectory` step. The old `out[:200]` head
+# cut kept the derived-gate banner and dropped the error; the helper must invert
+# that.
+WI229_HOOK_OUT = (
+    "\n=== arch-map : python check.py --run-step arch-map ===\n"
+    "  PASS  arch-map         0.2s\n"
+    "\n=== derived-gate : C:/Users/x/.venv/Scripts/python.exe derive_gate.py "
+    "--check --root . ===\n"
+    "  PASS  derived-gate     0.1s\n"
+    "\n=== trajectory : C:/Users/x/.venv/Scripts/python.exe check_trajectory.py "
+    "--root . ===\n"
+    "check_trajectory: ERROR - blocked-ref WI-229: status=blocked but BlockRef "
+    "is empty\n"
+    "  FAIL  trajectory       exit 1 (0.3s)\n"
+)
+
+
+def test_failure_tail_extracts_failing_step_not_first_banner():
+    tail = _failure_tail(WI229_HOOK_OUT)
+    # Names the failing step and its error line ...
+    assert "  FAIL  trajectory" in tail
+    assert "blocked-ref WI-229: status=blocked but BlockRef is empty" in tail
+    # ... and DROPS the earlier passing banner that the [:200] head kept.
+    assert "derived-gate" not in tail
+    assert "arch-map" not in tail
+    assert len(tail) <= 600
+
+
+def test_failure_tail_single_line_passes_through():
+    line = "fatal: nothing to commit, working tree clean"
+    assert _failure_tail(line) == line
+
+
+def test_failure_tail_no_fail_marker_is_bounded_tail_not_head():
+    body = "FIRSTLINE\n" + "\n".join("row %d" % i for i in range(300))
+    tail = _failure_tail(body, budget=40)
+    assert "FIRSTLINE" not in tail  # never the head
+    assert "row 299" in tail  # the tail survives
+    assert len(tail) <= 40
+    # Empty / None degrade to "", never crash a journal call.
+    assert _failure_tail("") == ""
+    assert _failure_tail(None) == ""
+
+
+def test_every_dispatcher_family_detail_routes_through_failure_tail():
+    """Census (mirrors test_fault_points_exist_for_every_matrix_boundary): no
+    park/quarantine/journal detail in the dispatcher family may head-slice a
+    harness/git output. Every `[:200]` on a failure detail is gone; the lone
+    survivor is a SUCCESS event's path-LIST bound (integration-regenerated),
+    which is not a failure tail."""
+    disp = (SCRIPTS / "agent_dispatch.py").read_text(encoding="utf-8")
+    common = (SCRIPTS / "agent_common.py").read_text(encoding="utf-8")
+    surviving = re.findall(r"[\w.\"')\]]*\[:200\]", disp)
+    assert len(surviving) == 1 and all("regenerated" in s for s in surviving), surviving
+    assert "[:200]" not in common, "agent_common failure details must tail, not head"
+    # And the helper is actually wired in at the failure sites, not just present.
+    assert disp.count("_failure_tail(") >= 12
+    assert "_failure_tail(out)" in common or "_failure_tail" in common

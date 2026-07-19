@@ -10133,3 +10133,33 @@ blocked permanently with no completion-supersede once the blocker cures
 (the dupes-census race with the parallel WI-237 train was cured within
 the hour); (3) the journal's `[:200]` detail cap hid the real failing
 check for three runs. All three to be filed as WIs in this sitting.
+
+## 2026-07-19 — WI-240 DONE: park/quarantine details carry the failing step
+
+The third of the three WI-229 blocked-exit defects (the journal's `[:200]`
+detail cap that hid the real failing check for three runs). Added
+`agent_common._failure_tail(out, budget=600)`: it prefers the LAST
+`  FAIL  <step>` block of a structured harness/hook output — that step's
+`=== <step> : <cmd> ===` banner through its FAIL line — else the bounded
+TAIL of the output (never the head), always tail-bounded so the error
+survives even a long leading command banner. Routed **17** dispatcher-family
+park/quarantine/journal detail sites off the `out[:200]`/`err[:200]`/
+`detail[:200]` head slices onto the helper (1 in agent_common — the
+telemetry-veto detail; 16 in agent_dispatch — every integration/blocked/
+dual-plan commit-fail, release/reserve-fail, integration-conflict/parked,
+pending-regen, and dual-plan-error detail), plus the sibling `bar_detail[:300]`
+combined-bar detail (same bug class, judged in-scope). **Left alone (ruled):**
+the `";".join(regenerated)[:200]` bound on the integration-regenerated SUCCESS
+event (a path LIST, not a failure tail) and `agent_loop` L493's
+`deliverable[:200]` (a WI deliverable-cell display truncation, unrelated). The
+helper is idempotent on its own output and preserves a composed prefix/suffix
+on re-application (a prefixed first line hides the `=== ` banner, so the whole
+string tail-bounds instead of re-extracting) — so the capture-site and
+journal-site both routing through it does not drop the salvage pointer.
+Deviations from spec: none (spec suggested a helper name + ~600 budget, both
+adopted). Byte-budgeted files: none touched. Regressions (4) +
+grep-census added to `tests/test_agent_dispatch_decisions.py` (the value-only
+module; census mirrors `test_fault_points_exist_for_every_matrix_boundary`).
+Complexity ratchet green (helper McCabe well under 10). Commit bar:
+`pytest -m smoke` 951p/3s (exit 0); `check_docs --stale` exit 0. Full suite:
+1199 passed, 4 skipped (exit 0).

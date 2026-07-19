@@ -51,6 +51,7 @@ try:
         EXIT_WAITING,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
+        _failure_tail,
         _read_csv_rows,
         _refs,
         _write_runstate,
@@ -82,6 +83,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         EXIT_WAITING,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
+        _failure_tail,
         _read_csv_rows,
         _refs,
         _write_runstate,
@@ -1365,9 +1367,9 @@ def _compose_train(wt, root, journal, tid, tip):
         resolved, regenerated, park = _resolve_composition_conflict(wt, root, artifacts)
     if not resolved:
         git(wt, "merge", "--abort")
-        detail = (park or out).strip()[
-            :200
-        ] or "textual conflict against the integrated tree"
+        detail = (
+            _failure_tail(park or out) or "textual conflict against the integrated tree"
+        )
         journal.event("integration-conflict", train=tid, detail=detail)
         # Return the SPECIFIC reason (it names the conflicted path) so the park
         # state, the durable conflict record, and the NEEDS-HUMAN ask all name it.
@@ -1472,7 +1474,7 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
     ok, bar_detail = _run_combined_bar(wt, root)
     journal.event("integration-bar", train=tid, result=bar_detail[:120])
     if not ok:
-        detail = "combined bar failed: {}".format(bar_detail[:300])
+        detail = "combined bar failed: {}".format(_failure_tail(bar_detail))
         return "rework", _reset_failed_disposition(
             root, wt, tid, old_head, detail, merge=True
         )
@@ -1485,7 +1487,7 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
     )
     code, out = git(wt, "commit", "-q", "-m", msg)
     if code != 0:
-        detail = "integration commit failed: {}".format(out[:200])
+        detail = "integration commit failed: {}".format(_failure_tail(out))
         return "error", _reset_failed_disposition(
             root, wt, tid, old_head, detail, merge=True
         )
@@ -1511,7 +1513,7 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
     # disposition advanced (spec §6).
     err = release_reservations(root, wis)
     if err:
-        journal.event("release-failed", train=tid, reason=err[:200])
+        journal.event("release-failed", train=tid, reason=_failure_tail(err))
     return "integrated", new_head
 
 
@@ -1570,7 +1572,7 @@ def blocked_disposition(root, docs, journal, tid, wis, base):
     code, out = git(wt, "commit", "-q", "-m", msg)
     if code != 0:
         detail = "disposition commit failed: {} (rows: {})".format(
-            out[:200], ";".join(updated)
+            _failure_tail(out), ";".join(updated)
         )
         return "error", _reset_failed_disposition(root, wt, tid, old_head, detail)
     code, new_head = git(wt, "rev-parse", "HEAD")
@@ -1582,7 +1584,7 @@ def blocked_disposition(root, docs, journal, tid, wis, base):
     journal.event("blocked-disposition", train=tid, wis=";".join(sorted(hit)))
     err = release_reservations(root, sorted(hit))
     if err:
-        journal.event("release-failed", train=tid, reason=err[:200])
+        journal.event("release-failed", train=tid, reason=_failure_tail(err))
     return "integrated", new_head.strip()
 
 
@@ -1646,7 +1648,9 @@ def dual_plan_disposition(
     )
     code, out = git(wt, "commit", "-q", "-m", msg)
     if code != 0:
-        commit_detail = "dual-plan disposition commit failed: {}".format(out[:200])
+        commit_detail = "dual-plan disposition commit failed: {}".format(
+            _failure_tail(out)
+        )
         return "error", _reset_failed_disposition(
             root, wt, tid, old_head, commit_detail
         )
@@ -1660,7 +1664,7 @@ def dual_plan_disposition(
         "dual-plan-" + ("selected" if outcome == "SELECTED" else "paged"),
         train=tid,
         wi=wid,
-        detail=detail[:200],
+        detail=_failure_tail(detail),
     )
     return outcome, detail
 
@@ -2289,7 +2293,7 @@ def _reconcile_reserved_train(root, journal, tid, train, parked, quarantined_wis
     if wis and all(int_status.get(wid) == "done" for wid in wis):
         err = release_reservations(root, wis)
         if err:
-            journal.event("release-failed", train=tid, reason=err[:200])
+            journal.event("release-failed", train=tid, reason=_failure_tail(err))
         clear_conflict(root, tid)  # WI-232: this train landed; drop any record
         parked[tid] = {"state": "integrated", "wis": wis, "base": base}
         journal.event("reconcile", train=tid, state="integrated")
@@ -2395,7 +2399,7 @@ def _release_unstarted(root, journal, tid, info):
     unstarted = [wid for wid in info["wis"] if wid not in built and wid not in blocked]
     err = release_reservations(root, unstarted)
     if err:
-        journal.event("release-failed", train=tid, reason=err[:200])
+        journal.event("release-failed", train=tid, reason=_failure_tail(err))
     elif unstarted:
         journal.event("release-unstarted", train=tid, wis=";".join(unstarted))
     return [wid for wid in info["wis"] if wid not in unstarted]
@@ -2484,7 +2488,9 @@ def _integrate_one_ready(root, docs, journal, tid, wis, base, required_verdicts)
     rec = read_conflict(root, tid)
     if rec is not None and _conflict_inputs_match(root, tid, rec):
         detail = rec.get("paths") or "textual conflict against the integrated tree"
-        journal.event("integration-conflict-held", train=tid, detail=detail[:200])
+        journal.event(
+            "integration-conflict-held", train=tid, detail=_failure_tail(detail)
+        )
         return "needs-re-review", detail
     result, detail = integrate_train(
         root, docs, journal, tid, wis, base, required_verdicts
@@ -2525,7 +2531,10 @@ def _integrate_parked(root, docs, journal, parked, required_verdicts, needs_huma
         integrated_any = integrated_any or ref_moved
         if should_journal:
             journal.event(
-                "integration-parked", train=tid, state=result, detail=detail[:200]
+                "integration-parked",
+                train=tid,
+                state=result,
+                detail=_failure_tail(detail),
             )
     return integrated_any
 
@@ -2613,7 +2622,7 @@ def _regenerate_pending(root, journal):
         journal.event("pending-regen-failed", reason="timeout after 120s")
         return
     except OSError as exc:
-        journal.event("pending-regen-failed", reason=str(exc)[:200])
+        journal.event("pending-regen-failed", reason=_failure_tail(str(exc)))
         return
     if proc.returncode != 0:
         tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-200:]
@@ -2893,7 +2902,9 @@ def dispatch_run(args, root):
                 base = integration_head(root) or head_sha_full(root)
                 err = reserve_traincar(root, tid, car["wis"], base)
                 if err:
-                    journal.event("reserve-failed", train=tid, reason=err[:200])
+                    journal.event(
+                        "reserve-failed", train=tid, reason=_failure_tail(err)
+                    )
                     continue
                 journal.event(
                     "reserve",
@@ -2927,7 +2938,9 @@ def dispatch_run(args, root):
                     if outcome == "SELECTED":
                         err = release_reservations(root, car["wis"])
                         if err:
-                            journal.event("release-failed", train=tid, reason=err[:200])
+                            journal.event(
+                                "release-failed", train=tid, reason=_failure_tail(err)
+                            )
                         parked[tid] = {"state": "integrated", "wis": car["wis"]}
                         state_pub, detail_pub = publish_integration(
                             root, journal, dev_branch
@@ -2939,7 +2952,10 @@ def dispatch_run(args, root):
                         break  # the ref advanced: rescan (children just filed)
                     if outcome == "error":
                         journal.event(
-                            "dual-plan-error", train=tid, wi=first, reason=detail[:200]
+                            "dual-plan-error",
+                            train=tid,
+                            wi=first,
+                            reason=_failure_tail(detail),
                         )
                         quarantined_wis.add(first)
                         parked[tid] = {
@@ -2971,7 +2987,9 @@ def dispatch_run(args, root):
                     else:
                         err = release_reservations(root, car["wis"])
                         if err:
-                            journal.event("release-failed", train=tid, reason=err[:200])
+                            journal.event(
+                                "release-failed", train=tid, reason=_failure_tail(err)
+                            )
                         quarantined_wis.add(first)
                         parked[tid] = {
                             "state": "dual-paged",
