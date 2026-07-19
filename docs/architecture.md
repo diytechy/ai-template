@@ -359,6 +359,9 @@ Contracts (interfaces): IF-002, IF-030
 | `entry_roots(root, docs, docs_dir, extra)` | Reachability roots: top-level *.md, an optional docs/index.md Map-of- |  |
 | `reachable(roots, graph)` | Docs reachable from any entry root by following doc->doc links. |  |
 | `find_orphans(docs, graph, roots, root)` | Scanned docs with no path from an entry root (entry roots excepted). |  |
+| `load_orphan_classes(root, docs_dir)` | The docs/<docs>/orphans-allow glob patterns (declared-file idiom, like |  |
+| `partition_orphans(orphans, patterns)` | Split orphan relpaths into (genuine, expected). |  |
+| `report_orphans(genuine, expected, strict, docs_dir)` | Print the orphan findings: each genuine orphan individually (WARN, or FAIL |  |
 | `check_vision(docs, root)` | The root README must state the vision exactly once (process.md §4 G1). |  |
 | `check_inventory(docs, root, docs_dir)` | The root README honors the traceability spine (process.md §4 G1). |  |
 | `git_commit_lookup(root)` | Return a path->last-commit-epoch lookup populated by one Git traversal. |  |

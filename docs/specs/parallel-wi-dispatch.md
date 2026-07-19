@@ -11,6 +11,11 @@ every dependency-ready work item that can safely make progress, without a human
 curating `docs/next-wi` or predefining parallel tracks. Development and review
 fan out; mutation of the integration branch remains serialized and gated.
 
+The questions that shaped this contract, each pointing at the section that
+settles it, are logged in the companion
+[resolved design notes](parallel-dispatch-design-notes.md) (non-normative — where
+a note and this plan disagree, the plan wins).
+
 ---
 
 ## 1. Decisions fixed by this plan
