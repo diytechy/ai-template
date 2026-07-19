@@ -10082,3 +10082,7 @@ attestation record, and the merged spec. **WI-237 filed** (SR-064, medium /
 high-risk): the claims scan must ignore integration-reachable commits so an
 owner content-sync into a reserved train is not a quarantine trap; a genuine
 foreign claim in a train's novel commits still quarantines.
+
+## 2026-07-19 12:05 — integrated train 4-g3-WI-237-a515 (WI-237)
+
+Head 8e9f595 composed onto 1797913 by the serialized integrator; 1 verdict(s) verified on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-237 -> done.

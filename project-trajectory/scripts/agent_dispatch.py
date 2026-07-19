@@ -323,7 +323,17 @@ def train_branch_evidence(root, train_id, base):
     """(built, blocked) trailer evidence read off the train BRANCH (not a
     worktree) — usable from the primary checkout for reconcile, the early-end
     release decision, and the blocked-disposition transaction. `built` is a
-    set; `blocked` maps WI id -> its committed BlockRef ('' when omitted)."""
+    set; `blocked` maps WI id -> its committed BlockRef ('' when omitted).
+
+    WI-237: only the train's OWN novel commits can claim a WI, so the scan is
+    bounded `^<integration-head>` — a commit already reachable from the
+    integration ref is integrated history, not a claim this train is making.
+    Without the bound, an owner merging the development branch INTO a reserved
+    train (a content-only sync to preempt stage-3 conflicts) imports the
+    integrated commits' WI trailers, and reconcile reads them as foreign claims
+    and quarantines the train fail-closed (`claims-unreserved-wi`). A genuine
+    foreign claim in a NOVEL (integration-unreachable) commit still surfaces
+    exactly as before."""
     code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + train_id)
     built, blocked = set(), {}
     if code != 0:
@@ -333,7 +343,11 @@ def train_branch_evidence(root, train_id, base):
         "%(trailers:key=Blocked-WI,valueonly,separator=;)%x09"
         "%(trailers:key=BlockRef,valueonly,separator=;)"
     )
-    code, out = git(root, "log", "--format=" + fmt, base + ".." + tip.strip())
+    rev_range = [base + ".." + tip.strip()]
+    ihead = integration_head(root)
+    if ihead:
+        rev_range.append("^" + ihead)
+    code, out = git(root, "log", "--format=" + fmt, *rev_range)
     if code != 0:
         return built, blocked
     for line in out.splitlines():
