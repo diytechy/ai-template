@@ -9628,3 +9628,64 @@ reading as a spurious divergence. Divergence with a PENDING intent still defers.
 **Verified at close.** Smoke tier **912 passed / 3 skipped**; full suite
 **1,141 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
 On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 — WI-231: regenerate generated artifacts / union WI rows on composition conflict
+
+Parallel-run field finding 2 (runs `20260718T153937`/`190911`): composition
+3-way merged **every** path as opaque text, so any textual conflict parked the
+train `needs-re-review`. `PROJECT_STATE.html` is *generated* and nearly every WI
+regenerates it, so two trains reserved off one base conflicted on the dashboard
+almost deterministically — WI-219's park was that file *alone*, and each relaunch
+re-ran the same merge and re-parked. The registry had the same character at row
+grain: WI-228's park was two sides editing *different* WI rows a line-level merge
+misread as a collision.
+
+**Change.** `integrate_train`'s merge step now routes through `_compose_train`. A
+clean apply still takes the fast path; on a conflict `_resolve_composition_conflict`
+classifies every unmerged path and continues composition only when **all** are
+auto-resolvable, parking otherwise (the park/re-review state machine is untouched
+— that is WI-232).
+
+- **Slice A (generated set).** A module-level `GENERATED_ARTIFACTS` tuple is the
+  ONE declared home for the paths a harness `--check` step owns — the same set as
+  `check.py`'s arch-map / trajectory-map / status-map / okf steps: `PROJECT_STATE.html`
+  and `docs/okf/` (fully generated), `docs/architecture.md` and `docs/status.md`
+  (block-generated, carrying a `(BEGIN, END)` marker pair). A fully generated path
+  resolves by taking OURS wholesale; a block file resolves by stripping ONLY
+  in-block conflict hunks (`_resolve_block_conflict`) and **parks if a conflict
+  escapes into the hand-authored prose** — status.md's forward-only intent below
+  the markers is not generated. `_regenerate_generated` then re-runs the sibling
+  generators (extending the WI-220 machinery) IN the integrate worktree against
+  its merged tree; the arch-map `--src` comes from `docs/stack.ini [paths]`.
+- **Slice B (registry union).** A `work-items.csv` conflict resolves by a
+  WI-ID-keyed 3-way row union read from the merge index stages
+  (`_union_registry` → `_merge_wi_rows` → `_ordered_wi_rows`): a row changed on
+  one side takes that side; a **both-sides** edit of the same row parks as a
+  genuine conflict; the header comes from the merged result (parking on a header
+  disagreement) and rows emit in base-then-additions order.
+- **Telemetry.** A distinct `integration-regenerated` event names the
+  auto-resolved paths (vs. `integration-conflict` for genuine parks), and the run
+  summary gains a `regenerated` counter.
+
+**Deliverables.** `project-trajectory/scripts/agent_dispatch.py` (the constant +
+`_generated_entry`/`_declared_src`/`_generated_regen_argv`/`_resolve_block_conflict`/
+`_resolve_generated_path`/`_stage_rows`/`_ordered_wi_rows`/`_merge_wi_rows`/
+`_union_registry`/`_regenerate_generated`/`_resolve_composition_conflict`/
+`_compose_train` helpers; `integrate_train` rewired; the summary counter);
+`tests/test_agent_loop_integrate.py` (four integration regressions — dashboard
+regenerate-without-park, disjoint-row union, same-row park, mixed generated+source
+park — plus two pure-helper units). Spec: [WI-231.md](specs/WI-231.md).
+
+**Deviations.** The skills index is deliberately absent from `GENERATED_ARTIFACTS`:
+its neutral source exists only in the kit repo and the per-agent copies the
+skills-sync gate checks are hand-authored source that must park, not regenerate.
+The dashboard regeneration runs in the integrate worktree, so its project name
+comes from the README H1 (stable across worktrees) — a repo with no README H1
+would bake the worktree basename into the title, but that is pre-existing
+behavior of the clean-integration regeneration, not introduced here.
+
+**Verified at close.** No C901 baseline change (`integrate_train` stays 16; every
+new helper is under 10). Smoke tier **912 passed / 3 skipped**; full suite
+**1,147 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken;
+the shifted spec line-anchor hints are warn-only). On `dualplan-routing-fix`,
+not pushed.

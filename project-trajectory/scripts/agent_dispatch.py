@@ -895,12 +895,302 @@ def _reset_failed_disposition(root, worktree, tid, old_head, detail, merge=False
     return detail
 
 
+# --- WI-231: composition-conflict auto-resolution --------------------------------
+# The registry the row-level union merge (Slice B) keys by WI-ID.
+REGISTRY_REL = "docs/requirements/work-items.csv"
+
+# The generated-artifact set (Slice A): paths a harness `--check` step OWNS — see
+# project-trajectory/scripts/check.py's arch-map / trajectory-map / status-map /
+# okf steps. A composition conflict CONFINED to these is resolved by REGENERATING
+# from the cleanly-merged sources instead of hand-merging, honoring the kit's
+# generated-not-hand-maintained principle. This module-level tuple is the ONE
+# declared home; keep it in step with those check.py steps.
+#
+# Each row: (matcher, block, kind). `matcher` is an exact repo-relative path or a
+# "/"-terminated directory prefix. `block` is None for a FULLY generated artifact
+# (any conflict is regenerable) or a (BEGIN, END) marker pair for a PARTIALLY
+# generated file where ONLY the marked region is generated — a conflict OUTSIDE it
+# must still park (status.md's hand-authored prose; architecture.md's prose).
+# `kind` selects the regenerator argv (_generated_regen_argv). The skills index is
+# deliberately absent: its neutral source lives only in the kit repo and its
+# per-agent copies are hand-authored source that must park, not regenerate.
+GENERATED_ARTIFACTS = (
+    ("PROJECT_STATE.html", None, "trajectory"),
+    ("docs/okf/", None, "okf"),
+    (
+        "docs/architecture.md",
+        ("<!-- BEGIN GENERATED MODULE MAP -->", "<!-- END GENERATED MODULE MAP -->"),
+        "archmap",
+    ),
+    (
+        "docs/status.md",
+        ("<!-- BEGIN GENERATED STATUS -->", "<!-- END GENERATED STATUS -->"),
+        "status",
+    ),
+)
+
+
+def _generated_entry(rel):
+    """The GENERATED_ARTIFACTS row matching a repo-relative path, or None."""
+    rel = rel.replace("\\", "/")
+    for matcher, block, kind in GENERATED_ARTIFACTS:
+        if matcher.endswith("/"):
+            if rel.startswith(matcher):
+                return (matcher, block, kind)
+        elif rel == matcher:
+            return (matcher, block, kind)
+    return None
+
+
+def _declared_src(wt):
+    """The docs/stack.ini [paths] src the arch-map generator scans (default
+    'src'), so regeneration matches the harness `--check` invocation."""
+    import configparser
+
+    cp = configparser.ConfigParser()
+    try:
+        cp.read(str(Path(wt) / "docs" / "stack.ini"), encoding="utf-8")
+        return (cp.get("paths", "src", fallback="src") or "src").strip()
+    except configparser.Error:
+        return "src"
+
+
+def _generated_regen_argv(kind, wt):
+    """The generator argv for a generated-artifact `kind`, run in the integrate
+    worktree against its merged tree (never the primary worktree)."""
+    scripts = Path(__file__).resolve().parent
+    py = sys.executable
+    if kind == "trajectory":
+        return [py, str(scripts / "gen_trajectory.py"), "--root", str(wt)]
+    if kind == "okf":
+        return [py, str(scripts / "gen_okf.py"), "--root", str(wt)]
+    if kind == "status":
+        return [py, str(scripts / "gen_trajectory.py"), "--root", str(wt), "--status"]
+    if kind == "archmap":
+        return [
+            py,
+            str(scripts / "gen_arch_map.py"),
+            "--src",
+            _declared_src(wt),
+            "--doc",
+            "docs/architecture.md",
+        ]
+    return None
+
+
+def _resolve_block_conflict(text, block):
+    """Resolve conflict hunks by taking the OURS side, but ONLY when every hunk
+    lies inside the generated `block` (a (BEGIN, END) marker pair); return None
+    (park) when any conflict touches the hand-authored region. The block is
+    regenerated afterward, so which side wins inside it is moot."""
+    begin, end = block
+    lines = text.split("\n")
+    out = []
+    inside = False
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i]
+        if line.startswith("<<<<<<<"):
+            if not inside:
+                return None
+            i += 1
+            while i < n and not lines[i].startswith("======="):
+                out.append(lines[i])
+                i += 1
+            i += 1  # skip the ======= divider
+            while i < n and not lines[i].startswith(">>>>>>>"):
+                i += 1
+            i += 1  # skip the >>>>>>> closer
+            continue
+        if line == begin:
+            inside = True
+        elif line == end:
+            inside = False
+        out.append(line)
+        i += 1
+    return "\n".join(out)
+
+
+def _resolve_generated_path(wt, rel, entry):
+    """Resolve one conflicted generated path in the merge index. A fully
+    generated artifact takes OURS wholesale (regeneration overwrites it); a
+    block-generated file strips only in-block conflicts. Returns False (park)
+    when the conflict escapes the block. Stages the resolved path."""
+    _, block, _ = entry
+    if block is None:
+        git(wt, "checkout", "--ours", "--", rel)
+        git(wt, "add", "--", rel)
+        return True
+    path = Path(wt) / rel
+    try:
+        resolved = _resolve_block_conflict(
+            path.read_text(encoding="utf-8", errors="replace"), block
+        )
+        if resolved is None:
+            return False
+        path.write_text(resolved, encoding="utf-8")
+    except OSError:
+        return False
+    git(wt, "add", "--", rel)
+    return True
+
+
+def _stage_rows(wt, stage, rel):
+    """(header, data_rows) parsed from a merge index stage (1=base, 2=ours,
+    3=theirs) of `rel`; (None, []) when that stage is absent (add/add)."""
+    code, out = git(wt, "show", ":{}:{}".format(stage, rel))
+    if code != 0:
+        return None, []
+    rows = list(csv.reader(out.splitlines()))
+    if not rows:
+        return [], []
+    header = list(rows[0])
+    if header:
+        header[0] = header[0].lstrip("﻿")
+    return header, rows[1:]
+
+
+def _ordered_wi_rows(merged, sequences):
+    """Merged rows in a deterministic order: base order first, then ours-only,
+    then theirs-only additions — each id emitted once."""
+    order = []
+    seen = set()
+    for seq in sequences:
+        for r in seq:
+            if r and r[0] in merged and r[0] not in seen:
+                seen.add(r[0])
+                order.append(merged[r[0]])
+    return order
+
+
+def _merge_wi_rows(base_rows, ours_rows, theirs_rows):
+    """Row-level WI-ID-keyed 3-way union: a row changed on one side only takes
+    that side; a row changed on BOTH sides (or a modify/delete race) returns None
+    so the train parks as a genuine conflict."""
+    base = {r[0]: r for r in base_rows if r}
+    ours = {r[0]: r for r in ours_rows if r}
+    theirs = {r[0]: r for r in theirs_rows if r}
+    merged = {}
+    for key in set(ours) | set(theirs):
+        b, o, t = base.get(key), ours.get(key), theirs.get(key)
+        if o == t:
+            winner = o
+        elif o == b:  # unchanged on our side -> take theirs
+            winner = t
+        elif t == b:  # unchanged on their side -> take ours
+            winner = o
+        else:  # a genuine both-sides edit of the same row
+            return None
+        if winner is not None:
+            merged[key] = winner
+    return _ordered_wi_rows(merged, (base_rows, ours_rows, theirs_rows))
+
+
+def _union_registry(wt, rel):
+    """Slice B: resolve a work-items.csv conflict by a WI-ID-keyed row union.
+    Returns True (resolved + staged) or False (a genuine row/header conflict —
+    park). Header comes from the merged result (ours, when both sides agree)."""
+    ours_h, ours = _stage_rows(wt, 2, rel)
+    theirs_h, theirs = _stage_rows(wt, 3, rel)
+    _, base = _stage_rows(wt, 1, rel)
+    if ours_h is None or theirs_h is None or ours_h != theirs_h:
+        return False  # add/add or a header edit conflict: park
+    merged = _merge_wi_rows(base, ours, theirs)
+    if merged is None:
+        return False
+    with open(str(Path(wt) / rel), "w", newline="", encoding="utf-8") as fh:
+        writer = csv.writer(fh, lineterminator="\n")
+        writer.writerow(ours_h)
+        writer.writerows(merged)
+    git(wt, "add", "--", rel)
+    return True
+
+
+def _regenerate_generated(wt, paths):
+    """Re-run the sibling generators for the conflicted generated `paths`
+    (deduplicated by kind) IN the integrate worktree against its merged tree.
+    Returns (ok, detail)."""
+    kinds = []
+    for rel in paths:
+        entry = _generated_entry(rel)
+        if entry and entry[2] not in kinds:
+            kinds.append(entry[2])
+    for kind in kinds:
+        argv = _generated_regen_argv(kind, wt)
+        if argv is None:
+            continue
+        proc = subprocess.run(
+            argv,
+            cwd=str(wt),
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+        if proc.returncode != 0:
+            tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
+            return False, "conflict regen failed ({}): {}".format(
+                kind, tail or "exit {}".format(proc.returncode)
+            )
+    return True, ""
+
+
+def _resolve_composition_conflict(wt, root):
+    """Auto-resolve the conflicts the harness OWNS after a conflicted 3-way
+    merge: disjoint WI rows (Slice B) and regenerated artifacts (Slice A). Parks
+    the moment a non-generated path — or a both-sides row / in-prose block edit —
+    conflicts. Leaves the index conflict-free + staged on success. Returns
+    (resolved, regenerated_paths, park_reason)."""
+    code, out = git(wt, "diff", "--name-only", "--diff-filter=U", "-z")
+    if code != 0:
+        return False, [], "cannot list conflicted paths"
+    conflicted = [p.replace("\\", "/") for p in out.split("\0") if p]
+    if not conflicted:
+        return False, [], "merge failed without conflicts"
+    regenerated = []
+    for rel in conflicted:
+        if rel == REGISTRY_REL:
+            if not _union_registry(wt, rel):
+                return False, [], "registry row conflict in {}".format(rel)
+            continue
+        entry = _generated_entry(rel)
+        if entry is None:
+            return False, [], "conflict in non-generated path {}".format(rel)
+        if not _resolve_generated_path(wt, rel, entry):
+            return False, [], "generated conflict outside its block: {}".format(rel)
+        regenerated.append(rel)
+    ok, detail = _regenerate_generated(wt, regenerated)
+    if not ok:
+        return False, [], detail
+    return True, regenerated, None
+
+
+def _compose_train(wt, root, journal, tid, tip):
+    """Merge train `tip` onto the staged integration HEAD (spec §9 steps 1+3+4).
+    A clean 3-way apply, or an auto-resolved generated/registry conflict, returns
+    None to proceed; a genuine textual conflict aborts the merge, journals it, and
+    returns a park detail demanding a focused re-review."""
+    code, out = git(wt, "merge", "--no-ff", "--no-commit", tip)
+    if code == 0:
+        return None
+    resolved, regenerated, park = _resolve_composition_conflict(wt, root)
+    if not resolved:
+        git(wt, "merge", "--abort")
+        journal.event("integration-conflict", train=tid, detail=(park or out)[:200])
+        return "textual conflict against the integrated tree"
+    journal.event(
+        "integration-regenerated", train=tid, paths=";".join(regenerated)[:200]
+    )
+    return None
+
+
 def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
     """Compose one ready train into the integration ref (spec §9 steps 1-11).
-    Returns (state, detail): 'integrated', 'needs-re-review' (a textual
-    conflict — any resolution needs a focused re-review before this train can
-    land), 'rework' (verdict missing/stale or the combined bar failed), or
-    'error'. The integration ref moves ONLY via the final CAS."""
+    Returns (state, detail): 'integrated', 'needs-re-review' (a textual conflict
+    outside the auto-resolvable set — generated artifacts / disjoint WI rows,
+    WI-231 — needing a focused re-review before this train can land), 'rework'
+    (verdict missing/stale or the combined bar failed), or 'error'. The
+    integration ref moves ONLY via the final CAS."""
     old_head = integration_head(root)
     if old_head is None:
         return "error", "integration ref vanished"
@@ -927,19 +1217,19 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
             )
 
     # Step 1+3+4: compose on the staging branch from the CURRENT integration
-    # HEAD. A clean 3-way merge takes the fast path (no re-review); ANY
-    # textual conflict aborts composition and demands a focused re-review.
+    # HEAD. A clean 3-way apply takes the fast path (no re-review); a conflict
+    # confined to generated artifacts (Slice A) or disjoint WI rows (Slice B) is
+    # auto-resolved and composition continues; any OTHER textual conflict aborts
+    # and demands a focused re-review (_compose_train, WI-231).
     wt, err = _staging_worktree(root, tid, old_head)
     if err:
         return "error", err
     code, _ = git(wt, "reset", "--hard", old_head)
     if code != 0:
         return "error", "cannot reset staging to the integration HEAD"
-    code, out = git(wt, "merge", "--no-ff", "--no-commit", tip)
-    if code != 0:
-        git(wt, "merge", "--abort")
-        journal.event("integration-conflict", train=tid, detail=out[:200])
-        return "needs-re-review", "textual conflict against the integrated tree"
+    park = _compose_train(wt, root, journal, tid, tip)
+    if park is not None:
+        return "needs-re-review", park
 
     # Steps 6-8: durable disposition + evidence + regenerated artifacts,
     # composed INTO the same integration commit.
@@ -1629,6 +1919,8 @@ def telemetry_summary(journal):
         "blocked_dispositions": count("blocked-disposition"),
         # overlap / conflict / re-review rates (spec §13 required measurements)
         "conflicts": count("integration-conflict"),
+        # composition conflicts auto-resolved by regeneration/row-union (WI-231)
+        "regenerated": count("integration-regenerated"),
         "re_reviews_needed": sum(
             1
             for e in mine

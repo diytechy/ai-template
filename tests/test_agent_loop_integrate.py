@@ -34,6 +34,7 @@ import pytest
 from conftest import SCRIPTS, load_script, run_py
 
 agent_loop = load_script("agent_loop")
+agent_dispatch = load_script("agent_dispatch")
 
 pytestmark = pytest.mark.skipif(
     not __import__("shutil").which("git"), reason="needs git on PATH"
@@ -111,7 +112,7 @@ def _make_repo(tmp_path, rows, stack_test=None):
 # Fake worker: commits the trailer protocol. `shared` mode also writes a
 # SHARED path with train-specific content (the overlap/conflict fixture).
 FAKE = r"""
-import argparse, pathlib, re, subprocess, sys
+import argparse, csv, pathlib, re, subprocess, sys
 ap = argparse.ArgumentParser()
 ap.add_argument("--control", required=True)
 ap.add_argument("--model", default="")
@@ -122,9 +123,34 @@ wi = re.search(r"- WI: (WI-\d+)", args.prompt).group(1)
 train = re.search(r"- Train: (\S+) \(branch", args.prompt).group(1)
 base = re.search(r"integration base ([0-9a-f]+)\)", args.prompt).group(1)
 mode = (ctl / "mode").read_text().strip() if (ctl / "mode").exists() else ""
+
+
+def _edit_row(target):
+    p = pathlib.Path("docs/requirements/work-items.csv")
+    with p.open(newline="", encoding="utf-8") as fh:
+        rows = list(csv.reader(fh))
+    for r in rows:
+        if r and r[0] == target:
+            r[1] = "edited by " + wi
+    with p.open("w", newline="", encoding="utf-8") as fh:
+        csv.writer(fh, lineterminator="\n").writerows(rows)
+
+
 pathlib.Path("work-" + wi + ".txt").write_text("work", encoding="utf-8")
 if mode == "shared":
     pathlib.Path("shared.txt").write_text("content from " + wi, encoding="utf-8")
+if mode in ("dashboard", "mixed"):
+    # A train-specific dashboard: the generated artifact each WI regenerates,
+    # so two trains off one base conflict on it (WI-231 Slice A).
+    pathlib.Path("PROJECT_STATE.html").write_text(
+        "<html>dashboard from " + wi + "</html>\n", encoding="utf-8"
+    )
+if mode == "mixed":
+    pathlib.Path("shared.txt").write_text("content from " + wi, encoding="utf-8")
+if mode == "regrow":  # each train edits its OWN registry row (disjoint union)
+    _edit_row(wi)
+if mode == "clash":  # every train edits the SAME row (a genuine collision)
+    _edit_row("WI-201")
 subprocess.run(["git", "add", "-A"], check=True)
 msg = "build " + wi + "\n\nWI: " + wi + "\nTrain: " + train + "\nBase: " + base + "\n"
 subprocess.run(["git", "commit", "-q", "-m", msg], check=True)
@@ -936,3 +962,178 @@ def test_blocked_disposition_changes_only_its_wi(tmp_path):
     log = _git(repo, "log", "-1", "--format=%(trailers)", "refs/heads/llm/integration")
     assert "Blocked-WI: WI-201" in log and "BlockRef: OI-42" in log
     assert _reservations(repo) == set(), "released only after the CAS"
+
+
+# --- WI-231: regenerate generated artifacts / union WI rows on composition -------
+
+
+def _seed_dashboard(repo):
+    """Commit a real generated PROJECT_STATE.html so racing trains conflict on it
+    (the field scenario) rather than add/add it."""
+    subprocess.run(
+        [sys.executable, str(SCRIPTS / "gen_trajectory.py"), "--root", str(repo)],
+        check=True,
+        stdin=subprocess.DEVNULL,
+    )
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed dashboard")
+
+
+def _trajectory_fresh(repo):
+    return (
+        subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPTS / "gen_trajectory.py"),
+                "--root",
+                str(repo),
+                "--check",
+            ],
+            capture_output=True,
+        ).returncode
+        == 0
+    )
+
+
+def _no_park(events):
+    return not [
+        e
+        for e in events
+        if e["event"] == "integration-parked" and e["state"] == "needs-re-review"
+    ]
+
+
+def test_two_trains_regenerating_the_dashboard_integrate_without_parking(tmp_path):
+    # Slice A: two trains reserved off one base each regenerate PROJECT_STATE.html;
+    # the second's composition conflict is a GENERATED artifact, so the integrator
+    # regenerates from the merged sources and continues — no re-review park — and
+    # the published dashboard matches its merged sources (`--check` green).
+    repo, ctl, template = _setup(
+        tmp_path,
+        [_wi_row("WI-201"), _wi_row("WI-202")],
+        stack_test='"{}" -c "import sys; sys.exit(0)"'.format(sys.executable),
+    )
+    # A README H1 pins the dashboard's project name independent of the worktree
+    # basename, so a regen in the integrate worktree matches one at the repo root.
+    (repo / "README.md").write_text("# Fixture Project\n", encoding="utf-8")
+    _seed_dashboard(repo)
+    (ctl / "mode").write_text("dashboard", encoding="utf-8")
+    proc = _dispatch(repo, template)
+    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
+
+    events = _events(repo)
+    assert len([e for e in events if e["event"] == "integrated"]) == 2
+    assert _no_park(events), "a generated-only conflict never parks"
+    regenerated = [e for e in events if e["event"] == "integration-regenerated"]
+    assert regenerated, "the dashboard conflict is auto-resolved by regeneration"
+    assert any("PROJECT_STATE.html" in e.get("paths", "") for e in regenerated)
+    assert _trajectory_fresh(repo), "the integrated dashboard matches merged sources"
+    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    assert reg.count(",done,") == 2
+
+
+def test_disjoint_registry_row_edits_union_without_parking(tmp_path):
+    # Slice B: two trains edit DIFFERENT WI rows. A line-level merge misreads the
+    # adjacent-row edits as a collision; the WI-ID-keyed union takes each side's
+    # row and composition continues — both edits survive, both rows land done.
+    repo, ctl, template = _setup(
+        tmp_path,
+        [_wi_row("WI-201"), _wi_row("WI-202")],
+        stack_test='"{}" -c "import sys; sys.exit(0)"'.format(sys.executable),
+    )
+    (ctl / "mode").write_text("regrow", encoding="utf-8")
+    proc = _dispatch(repo, template)
+    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
+
+    events = _events(repo)
+    assert len([e for e in events if e["event"] == "integrated"]) == 2
+    assert _no_park(events), "disjoint rows union rather than park"
+    assert [e for e in events if e["event"] == "integration-regenerated"], (
+        "the union path fired (a line-merge would have parked)"
+    )
+    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    assert "edited by WI-201" in reg and "edited by WI-202" in reg
+    assert reg.count(",done,") == 2
+
+
+def test_same_row_both_sides_edit_still_parks(tmp_path):
+    # Slice B guard: both trains edit the SAME row (WI-201). That is a genuine
+    # both-sides collision the union must NOT auto-resolve — it parks like today.
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201"), _wi_row("WI-202")])
+    (ctl / "mode").write_text("clash", encoding="utf-8")
+    proc = _dispatch(repo, template)
+    assert proc.returncode == agent_loop.EXIT_STALL, proc.stdout + proc.stderr
+
+    events = _events(repo)
+    assert len([e for e in events if e["event"] == "integrated"]) == 1
+    parked = [
+        e
+        for e in events
+        if e["event"] == "integration-parked" and e["state"] == "needs-re-review"
+    ]
+    assert parked, "a both-sides row collision demands a focused re-review"
+    assert len(_reservations(repo)) == 1, "the parked train keeps its claim"
+
+
+def test_mixed_generated_and_source_conflict_parks(tmp_path):
+    # A conflict spanning a generated artifact AND a hand-written source file:
+    # the presence of the non-generated path forces a park — never a silent pick
+    # of the generated side while the source conflict is ignored.
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201"), _wi_row("WI-202")])
+    _seed_dashboard(repo)
+    (ctl / "mode").write_text("mixed", encoding="utf-8")
+    proc = _dispatch(repo, template)
+    assert proc.returncode == agent_loop.EXIT_STALL, proc.stdout + proc.stderr
+
+    events = _events(repo)
+    assert len([e for e in events if e["event"] == "integrated"]) == 1
+    parked = [
+        e
+        for e in events
+        if e["event"] == "integration-parked" and e["state"] == "needs-re-review"
+    ]
+    assert parked, "a source-file conflict alongside a generated one still parks"
+    assert not [e for e in events if e["event"] == "integration-regenerated"], (
+        "a mixed conflict must not silently regenerate"
+    )
+    assert len(_reservations(repo)) == 1, "the parked train keeps its claim"
+
+
+# --- WI-231: pure-helper units ---------------------------------------------------
+
+_STATUS_BLOCK = ("<!-- BEGIN GENERATED STATUS -->", "<!-- END GENERATED STATUS -->")
+
+
+def test_merge_wi_rows_unions_disjoint_and_parks_collisions():
+    base = [["WI-1", "queued"], ["WI-2", "queued"]]
+    ours = [["WI-1", "done"], ["WI-2", "queued"]]
+    theirs = [["WI-1", "queued"], ["WI-2", "done"]]
+    # Disjoint edits union, preserving base order.
+    assert agent_dispatch._merge_wi_rows(base, ours, theirs) == [
+        ["WI-1", "done"],
+        ["WI-2", "done"],
+    ]
+    # A one-sided addition rides through; base order then the new tail.
+    added = agent_dispatch._merge_wi_rows(base, ours, theirs + [["WI-3", "queued"]])
+    assert added[-1] == ["WI-3", "queued"]
+    # The SAME row changed on both sides is a genuine collision -> park.
+    assert (
+        agent_dispatch._merge_wi_rows(
+            [["WI-1", "queued"]], [["WI-1", "a"]], [["WI-1", "b"]]
+        )
+        is None
+    )
+
+
+def test_block_conflict_resolves_in_block_but_parks_in_prose():
+    inside = "prose\n{0}\n<<<<<<< HEAD\nx\n=======\ny\n>>>>>>> B\n{1}\ntail\n".format(
+        *_STATUS_BLOCK
+    )
+    # A conflict confined to the generated block resolves (regeneration then
+    # overwrites the block); the hand-authored prose is preserved verbatim.
+    resolved = agent_dispatch._resolve_block_conflict(inside, _STATUS_BLOCK)
+    assert resolved is not None and "prose" in resolved and "tail" in resolved
+    assert "<<<<<<<" not in resolved
+    # A conflict touching the hand-authored region must still park.
+    outside = "<<<<<<< HEAD\np\n=======\nq\n>>>>>>> B\n"
+    assert agent_dispatch._resolve_block_conflict(outside, _STATUS_BLOCK) is None
