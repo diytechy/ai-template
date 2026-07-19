@@ -47,33 +47,75 @@ resource: "generated"
 | [SR-034](SR-034.md) | Scripts are stdlib-only |
 | [SR-035](SR-035.md) | Stack-agnostic across OSes |
 | [SR-036](SR-036.md) | Deliberate re-sync integration |
-| [SR-037](SR-037.md) | Work-item registry validation |
-| [SR-038](SR-038.md) | Offline project-state view |
+| [SR-037](SR-037.md) | Superseded: Work-item registry validation |
+| [SR-038](SR-038.md) | Superseded: Offline project-state view |
 | [SR-039](SR-039.md) | Duplicate-code lint |
 | [SR-040](SR-040.md) | Per-phase routing and review dial |
 | [SR-041](SR-041.md) | Doc reference validation |
 | [SR-042](SR-042.md) | OKF knowledge-bundle export |
 | [SR-043](SR-043.md) | Subagent spawn gate |
-| [SR-044](SR-044.md) | Declared-interface connectivity |
-| [SR-045](SR-045.md) | Heterogeneous implementer/reviewer scheduling |
+| [SR-044](SR-044.md) | Superseded: Declared-interface connectivity |
+| [SR-045](SR-045.md) | Superseded: Heterogeneous implementer/reviewer scheduling |
 | [SR-046](SR-046.md) | Run capability menu |
-| [SR-047](SR-047.md) | Subjective-quality critique loop |
-| [SR-048](SR-048.md) | How-SW top view bounded and containerized |
+| [SR-047](SR-047.md) | Superseded: Subjective-quality critique loop |
+| [SR-048](SR-048.md) | Superseded: How-SW top view bounded and containerized |
 | [SR-049](SR-049.md) | Derived gate from artifact states |
 | [SR-050](SR-050.md) | Process reference view |
-| [SR-051](SR-051.md) | Tiered drill-down views |
+| [SR-051](SR-051.md) | Superseded: Tiered drill-down views |
 | [SR-052](SR-052.md) | Dashboard accessibility (rubric-adjudicated) |
 | [SR-053](SR-053.md) | Dashboard UI uniformity (rubric-adjudicated) |
 | [SR-054](SR-054.md) | Dashboard usability (rubric-adjudicated) |
 | [SR-055](SR-055.md) | Ingest and human-decision process loops |
 | [SR-056](SR-056.md) | Decomposition render polish |
 | [SR-057](SR-057.md) | WI-DAG frontier scheduling |
-| [SR-058](SR-058.md) | Deterministic safety classification |
+| [SR-058](SR-058.md) | Superseded: Deterministic safety classification |
 | [SR-059](SR-059.md) | Retire next-wi; generated status and run-state |
 | [SR-060](SR-060.md) | Explicit worker assignment mode |
 | [SR-061](SR-061.md) | Parallel-by-default dispatcher |
 | [SR-062](SR-062.md) | Change-train continuation |
-| [SR-063](SR-063.md) | Atomic serialized integration |
-| [SR-064](SR-064.md) | Crash safety and git-as-authority recovery |
+| [SR-063](SR-063.md) | Superseded: Atomic serialized integration |
+| [SR-064](SR-064.md) | Superseded: Crash safety and git-as-authority recovery |
 | [SR-065](SR-065.md) | Parallel-execution telemetry and downstream migration |
-| [SR-066](SR-066.md) | Dual-plan decomposition round |
+| [SR-066](SR-066.md) | Superseded: Dual-plan decomposition round |
+| [SR-067](SR-067.md) | Work-item dependency validation |
+| [SR-068](SR-068.md) | Work-item row coherence |
+| [SR-069](SR-069.md) | Generated status source-of-truth guard |
+| [SR-070](SR-070.md) | Offline project-state core |
+| [SR-071](SR-071.md) | Conditional dashboard architecture and knowledge views |
+| [SR-072](SR-072.md) | Deterministic responsive dashboard freshness |
+| [SR-073](SR-073.md) | Interface-registry integrity |
+| [SR-074](SR-074.md) | Architecture-connectivity coverage advisory |
+| [SR-075](SR-075.md) | Declared-interface rendering |
+| [SR-076](SR-076.md) | Cross-component import coverage |
+| [SR-077](SR-077.md) | Spec interface-section validation |
+| [SR-078](SR-078.md) | Rival-plan coverage comparison |
+| [SR-079](SR-079.md) | Agent pair-row routing |
+| [SR-080](SR-080.md) | Managed review-session scheduling |
+| [SR-081](SR-081.md) | Review substance scoring |
+| [SR-082](SR-082.md) | Fixed review escalation |
+| [SR-083](SR-083.md) | Dual-plan planner-pair selection |
+| [SR-084](SR-084.md) | Independent subjective-quality critique dispatch |
+| [SR-085](SR-085.md) | Bounded critique rework loop |
+| [SR-086](SR-086.md) | Critique verification and closure ratchet |
+| [SR-087](SR-087.md) | Bounded software top view |
+| [SR-088](SR-088.md) | Containerized How-SW rendering |
+| [SR-089](SR-089.md) | Tiered When roadmap view |
+| [SR-090](SR-090.md) | Tiered How-SW hierarchy |
+| [SR-091](SR-091.md) | Interface-wired hierarchy ports |
+| [SR-092](SR-092.md) | One-layer hierarchy navigation |
+| [SR-093](SR-093.md) | Pure safety classification |
+| [SR-094](SR-094.md) | Structural safety cross-check |
+| [SR-095](SR-095.md) | Safety-aware traincar packing |
+| [SR-096](SR-096.md) | Serialized train composition |
+| [SR-097](SR-097.md) | Serialized blocked disposition |
+| [SR-098](SR-098.md) | Durable publication intent |
+| [SR-099](SR-099.md) | Git evidence enumeration |
+| [SR-100](SR-100.md) | Ownership-state reconstruction |
+| [SR-101](SR-101.md) | Lifecycle-boundary recovery |
+| [SR-102](SR-102.md) | Typed dual-plan state machine |
+| [SR-103](SR-103.md) | Allowlist-only dual-plan briefs |
+| [SR-104](SR-104.md) | Dual-plan coverage-step adapter |
+| [SR-105](SR-105.md) | Stable dual-plan artifacts and WI filing |
+| [SR-106](SR-106.md) | Fresh-session dual-plan execution |
+| [SR-107](SR-107.md) | Dual-plan direct-path isolation |
+| [SR-108](SR-108.md) | Serialized dual-plan disposition |

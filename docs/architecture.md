@@ -184,7 +184,7 @@ Contracts (interfaces): IF-055, IF-067
 | `existing_worktrees(root)` | {branch: worktree-path} parsed from `git worktree list --porcelain`. |  |
 | `lease_worktree(root, train_id)` | The linked worktree for a train — reuse the one already checked out on |  |
 | `train_phase_gate(root, wi_rows, wid)` | The `{phase}-{gate}` train-id prefix (spec §6): the WI's first SR's |  |
-| `pack_traincars(records, wis_by_id, cap)` | Pack the evaluated schedule records into dispatchable traincars — | SR-058 |
+| `pack_traincars(records, wis_by_id, cap)` | Pack the evaluated schedule records into dispatchable traincars — | SR-095 |
 | `integration_head(root)` | The integration ref's commit, or None when the ref does not exist. |  |
 | `cas_ref(root, ref, new, old)` | Compare-and-swap `ref` from exactly `old` to `new` (one update-ref |  |
 | `ensure_integration_ref(root, journal)` | Create refs/heads/llm/integration from the selected development branch |  |
@@ -195,7 +195,7 @@ Contracts (interfaces): IF-055, IF-067
 | `generate_status(docs, root, last_train)` | The integrator-generated root status snapshot (SR-059's generation | SR-059 |
 | `integrate_train(root, docs, journal, tid, wis, base, required_verdicts)` | Compose one ready train into the integration ref (spec §9 steps 1-11). |  |
 | `blocked_disposition(root, docs, journal, tid, wis, base)` | The smaller serialized blocked-disposition transaction (spec §9): from |  |
-| `dual_plan_disposition(root, journal, tid, wid, row, template, model, timeout, prompt_map)` | Auto-dispatch one PlanMode=dual frontier WI as a dual-plan round | SR-066 |
+| `dual_plan_disposition(root, journal, tid, wid, row, template, model, timeout, prompt_map)` | Auto-dispatch one PlanMode=dual frontier WI as a dual-plan round | SR-108 |
 | `publish_integration(root, journal, dev_branch)` | Publish the integration HEAD to the development branch (spec §9): when no |  |
 | `parse_jobs(value)` | The --jobs/AGENT_JOBS value: a positive int, or `auto` (adaptive up to |  |
 | `assess_migration(root)` | The two audits that gate the two-worker promotion (spec §14 items 9-10). | SR-059 |
@@ -614,9 +614,9 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056
 | `project_name(root)` | The project's display name — the README's first H1, else the folder name. |  |
 | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
 | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
-| `sw_containment(root, mods)` | The containerized How-SW top view (WI-073) as a Simulink-style drill (SR-051 | SR-051 |
+| `sw_containment(root, mods)` | The containerized How-SW top view as a Simulink-style drill (SR-090..SR-092, | SR-090, SR-092 |
 | `esc(s)` |  |  |
-| `when_view(root, wis)` | The When roadmap as a Simulink-style, count-thresholded drill-down (SR-051 | SR-051 |
+| `when_view(root, wis)` | The When roadmap as a Simulink-style drill-down (SR-089/SR-091/SR-092, | SR-089, SR-091, SR-092 |
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
@@ -722,7 +722,7 @@ Contracts (interfaces): IF-053, IF-054
 |---|---|---|
 | `load_rows(path)` |  |  |
 | `load_wis(rows)` | Parse work-item rows into a list of scheduler WI dicts (skips the inert |  |
-| `classify(wi, *, structural)` | `(scheduling_class, [reason_codes])` for one WI — a pure function. | SR-058, SR-066 |
+| `classify(wi, *, structural)` | `(scheduling_class, [reason_codes])` for one WI — a pure function. | SR-093, SR-094, SR-107 |
 | `is_schedulable_class(sched_class)` | Only a positively-classified WI is eligible; unclassified fails closed. |  |
 | `hard_preds_satisfied(wi, status)` | Every hard predecessor is integrated `done`. An unknown predecessor id |  |
 | `downstream_counts(wis)` | `{id: transitive hard-descendant count}` — how many distinct WIs depend on |  |
@@ -788,6 +788,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Verified` |  |
 | `id_key(label)` |  |  |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
+| `sr_supersession_findings(srs)` | Validate the optional SR ``SupersededBy`` extension. |  |
 | `triangle_findings(tcs, llrs)` | SR/LLR citation coherence. A TC may cite an | LLR-1, SR-1, SR-2 |
 | `interface_findings(ifs, sr_ids, module_ids)` | The IF-### seam tier's back-link checks (process.md §8), closing the gap |  |
 | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |

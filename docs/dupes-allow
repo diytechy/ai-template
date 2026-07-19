@@ -127,6 +127,13 @@ project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_arch_m
 project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_cases.py
 project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_okf.py
 project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_release_checklist.py
+# WI-234: gen_trajectory.py gained _ref_meta — a read-only mirror of
+# agent_dispatch.reservation_meta / read_conflict (it reads reservation/conflict
+# ref-commit metadata to project pending owner actions). The mirror is deliberate
+# and self-documented in code; the pair went uncensused at WI-234's close because
+# dupes is G3-only and the branch is unpushed (OI-3), so CI never ran the gate —
+# the same "surfaced later" phenomenon as the WI-146/WI-188/WI-193 rows above.
+project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/gen_trajectory.py
 
 # --- Intra-file duplication — GRANDFATHERED debris, not sanctioned -----------
 # Genuine intra-file copy-paste in the monolithic scripts. NOT F5 (F5 is a
