@@ -2289,9 +2289,15 @@ and their metadata commits, the train/staging branches and their trailers, the
 integration ref's registry, and the publish intent. The reconcile stage
 restores an **already-integrated** train (all WIs `done` on the integration
 ref) and finishes its pending reservation release rather than re-integrating;
-a train branch claiming a WI **outside its reservation set** is unprovable
+a train branch whose **novel** commits (those in `base..tip` not reachable from
+the integration ref) claim a WI **outside its reservation set** is unprovable
 ownership and quarantines (nothing deleted), while disjoint proven work
-proceeds. A crash at any lifecycle boundary — either side of the reservation
+proceeds. The claim is read only from that novel range, so an owner **merging
+the development branch into a reserved train** — the sanctioned content-only
+sync that preempts stage-3 conflicts — imports integrated history, not claims:
+the merged-in WI trailers are already reachable from the integration ref and
+are ignored (a genuine foreign claim in a novel commit still quarantines).
+A crash at any lifecycle boundary — either side of the reservation
 transaction, either side of the integration CAS, after the intent write, or
 between the development CAS and the worktree sync — recovers without
 double-assignment, false completion, lost commits, or an unclassifiable

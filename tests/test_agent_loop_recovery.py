@@ -346,6 +346,120 @@ def test_unprovable_ownership_quarantines_only_that_train(tmp_path):
     assert "WI-202" not in rows, "a quarantined claim is never falsely done"
 
 
+def _reserve(repo, tid, wis, base):
+    assert agent_loop.reserve_traincar(repo, tid, wis, base) is None
+
+
+def _integration_commit(iwt, wid, base):
+    # A commit on llm/integration carrying WI-<wid>'s trailer — integrated dev
+    # history, the shape an owner sync imports into a reserved train.
+    (iwt / (wid + ".txt")).write_text("dev", encoding="utf-8")
+    _git(iwt, "add", "-A")
+    _git(
+        iwt,
+        "commit",
+        "-q",
+        "-m",
+        "integrate {0}\n\nWI: {0}\nTrain: dev\nBase: {1}\n".format(wid, base),
+    )
+
+
+def _owner_synced_train(tmp_path, repo):
+    # The WI-237 field shape: llm/integration carries two integrated dev
+    # commits (WI-808/WI-809); a train reserves WI-201 with a base PREDATING
+    # them, commits its own novel WI-201 work, then the owner merges the
+    # integrated dev history in as a content-only sync. Returns (base, ihead,
+    # train worktree).
+    base = _git(repo, "rev-parse", "HEAD")  # the reservation base predates the merge
+    iwt = tmp_path / "iwt"
+    _git(repo, "worktree", "add", "-b", "llm/integration", str(iwt), base)
+    for wid in ("WI-808", "WI-809"):
+        _integration_commit(iwt, wid, base)
+    ihead = _git(repo, "rev-parse", "refs/heads/llm/integration")
+    _reserve(repo, "t-sync", ["WI-201"], base)
+    twt = tmp_path / "twt"
+    _git(repo, "worktree", "add", str(twt), "llm/train/t-sync")
+    (twt / "wi201.txt").write_text("own work", encoding="utf-8")
+    _git(twt, "add", "-A")
+    _git(
+        twt,
+        "commit",
+        "-q",
+        "-m",
+        "build WI-201\n\nWI: WI-201\nTrain: t-sync\nBase: {}\n".format(base),
+    )
+    _git(twt, "merge", "--no-edit", "-m", "owner sync: dev into t-sync", ihead)
+    return base, ihead, twt
+
+
+def test_owner_dev_merge_into_reserved_train_is_not_a_foreign_claim(tmp_path):
+    # WI-237, the WI-229 field shape. Merging the development branch INTO a
+    # reserved train (a content-only sync to preempt stage-3 conflicts) imports
+    # the integrated commits' WI trailers. Those commits are reachable from
+    # llm/integration — integrated history, NOT claims this train is making —
+    # so reconcile must park the train for integration, never quarantine it.
+    repo = _make_repo(
+        tmp_path,
+        [
+            _wi_row("WI-201"),
+            _wi_row("WI-808", status="done"),
+            _wi_row("WI-809", status="done"),
+        ],
+    )
+    base, _ihead, _twt = _owner_synced_train(tmp_path, repo)
+
+    # The scan is bounded ^<integration-head>: only the train's OWN novel work.
+    built, blocked = agent_loop.train_branch_evidence(repo, "t-sync", base)
+    assert built == {"WI-201"}, built
+    assert blocked == {}
+
+    dispatcher = agent_loop.agent_dispatch
+    journal = dispatcher._Journal(repo)
+    parked, quarantined = dispatcher._reconcile_owned_trains(repo, journal)
+    assert "WI-201" not in quarantined, "a content sync must not quarantine"
+    assert parked["t-sync"]["state"] == "ready-to-integrate"
+    events = (repo / "out" / "dispatch" / "events.jsonl").read_text("utf-8")
+    assert "claims-unreserved-wi" not in events
+
+
+def test_novel_foreign_claim_after_owner_sync_still_quarantines(tmp_path):
+    # WI-237 boundary: the exclusion is precise. Integration-reachable imports
+    # are ignored, but a genuine foreign claim in a NOVEL (unintegrated) commit
+    # still quarantines with the same reason, naming ONLY the novel WI — never
+    # the merged-in dev WIs.
+    repo = _make_repo(
+        tmp_path,
+        [
+            _wi_row("WI-201"),
+            _wi_row("WI-808", status="done"),
+            _wi_row("WI-809", status="done"),
+        ],
+    )
+    base, _ihead, twt = _owner_synced_train(tmp_path, repo)
+    # A novel commit claiming WI-999, which t-sync does NOT hold.
+    (twt / "rogue.txt").write_text("rogue", encoding="utf-8")
+    _git(twt, "add", "-A")
+    _git(
+        twt,
+        "commit",
+        "-q",
+        "-m",
+        "build WI-999\n\nWI: WI-999\nTrain: t-sync\nBase: {}\n".format(base),
+    )
+
+    built, _blocked = agent_loop.train_branch_evidence(repo, "t-sync", base)
+    assert built == {"WI-201", "WI-999"}, built
+
+    dispatcher = agent_loop.agent_dispatch
+    journal = dispatcher._Journal(repo)
+    parked, quarantined = dispatcher._reconcile_owned_trains(repo, journal)
+    assert parked["t-sync"]["state"] == "quarantined"
+    assert "WI-201" in quarantined, "the reserved WI's ambiguous train quarantines"
+    events = (repo / "out" / "dispatch" / "events.jsonl").read_text("utf-8")
+    assert "claims-unreserved-wi:WI-999" in events
+    assert "WI-808" not in events and "WI-809" not in events
+
+
 def test_fault_points_exist_for_every_matrix_boundary(tmp_path):
     # The matrix's own coverage guard: every boundary named by TC-065 has a
     # wired fault point (a renamed constant would silently skip a test). The
