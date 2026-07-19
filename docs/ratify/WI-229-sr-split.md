@@ -1,6 +1,6 @@
 # WI-229 oversized-SR migration and ratification
 
-**State:** AWAITING OWNER ATTESTATION — stage 3 must not begin.
+**State:** ATTESTED 2026-07-19 — stage 3 may proceed (record below).
 
 This is the stage-1 migration plan required by
 [`docs/specs/WI-229.md`](../specs/WI-229.md). It freezes the split IDs, the
@@ -226,3 +226,17 @@ Required attestation record: named owner, date, decision, and the commit hash of
 this page. Until that record exists, WI-229 is blocked at stage 2. Autonomous
 gate policy does not waive this stop, and no build session may write the new SR,
 LLR, or TC rows.
+
+## Attestation record
+
+- **Owner:** Peter Johnson
+- **Date:** 2026-07-19
+- **Decision:** **ATTEST** — this exact plan (census, supersession model,
+  frozen split and evidence map, SN/interface migration, stage-3 transaction
+  order) is approved for stage 3 with no revisions. Ruled by the owner in a
+  live session after reviewing the full page ("Sufficient, ATTEST"); the
+  transcription is recorded in the development branch's `docs/log.md`
+  Decisions (2026-07-19 entry).
+- **Page commit:** `9fed833f35139b69a519b75e978e6232209e2e8d`
+  (`WI-229: freeze the oversized-SR migration plan`); the page content is
+  unchanged between that commit and this record.
