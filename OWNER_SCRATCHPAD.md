@@ -318,4 +318,84 @@ If there is attestation work or other work, even from parallel branches, it shou
 
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Do we need to do anything to stress adversarial reviews?  Or to follow a specific review template?  Can you show me what is there currently?
+Do we need to do anything to stress adversarial reviews?  Or to follow a specific review template?  Can you show me what is there currently?  This may be related to structured prompts as well when running agent-resume, if you refer to this reddit post, how does it compare to the prose that is currently being used to activate planners, implimenters, and reviewers ==>
+
+    Most prompt “improvers” seem to do the same thing:
+
+    Take a two-line request and turn it into a 500-word operating manual full of roles, headings, micro-steps, “think step by step,” “be thorough,” and twenty negative instructions.
+
+    That approach makes less sense after reading Anthropic’s model-specific prompting guides.
+
+    Fable 5 often benefits from less prescription, not more. Anthropic explicitly warns that prompts and skills written for earlier models can be too prescriptive and may degrade output quality.
+
+    Opus 4.8 has a different failure mode: it follows instructions very literally, so implied scope can become a bug.
+
+    The same generic “improvement” can therefore help one model and hurt another.
+
+    I built prompt-polish around that problem.
+
+    It is a free, open-source Claude/agent skill that rewrites rough prompts using the official prompting guide for the specific target model rather than applying one universal prompt-engineering template.
+
+    Install:
+
+    npx skills add mfarzanansari/prompt-polish
+
+    Repo:
+
+    https://github.com/mfarzanansari/prompt-polish
+
+    Example invocation:
+
+    prompt-polish/FABLE 5/review my API code and fix whatever is broken
+
+    A simplified example of the output:
+
+    Review [API scope] for defects that could cause incorrect behavior or failures, and fix the issues you can verify.
+
+    Do not add features, refactor surrounding code, or introduce abstractions beyond what each fix requires. Run [relevant existing checks] after the changes. Report what changed, which checks passed, and anything you could not verify.
+
+    Done means the verified defects are fixed and [relevant existing checks] pass.
+
+    Fill in: [API scope], [relevant existing checks]
+
+    The important part is not that it made the prompt longer. It added only the information that materially changes the model’s behavior and left unknown information as placeholders rather than inventing it.
+
+    Internally, the skill:
+
+    Routes the request to the correct model guide.
+
+    Classifies it as an ask, build, agent, review, design, or pipeline task.
+
+    Detects missing intent, deliverables, completion conditions, and instruction noise.
+
+    Chooses the smallest useful rewrite tier.
+
+    Runs a hard gate before returning the prompt.
+
+    The hard gate rejects:
+
+    - Task drift
+    - Invented facts, files, tools, deadlines, or requirements
+    - Unnecessary prompt inflation
+    - Chain-of-thought extraction instructions
+    - Boilerplate that the target model already handles by default
+
+    The output is just the copy-ready prompt. It does not give you a lecture about every edit unless you ask.
+
+    Current support:
+
+    - Claude Fable 5
+    - Claude Opus 4.8
+    - Opus 4.7 routes to the 4.8 guidance
+
+    Unsupported models are declined rather than receiving fake “model-specific” advice.
+
+    It is MIT licensed and currently at v1.0.2.
+
+    I want to test it against prompts that are genuinely difficult to polish without changing the task.
+
+    Reply with a rough prompt and either Fable 5 or Opus 4.8. I’ll run it through the current version and report honestly where the skill helps, over-compresses, inflates, or drifts.
+
+Do we need to make sure we dogfood the templates functions to prevent this repo from getting out of sync with it's own template?
+
+I need help with the generator of PROJECT_STATE.html.  Most of the tabs of PROJECT_STATE.html have some deficiencies.  "When" and "How" tab content do  not have arrow heads, and the lines overlap / crisscross haphazardously.  In the process tab, the working loops should show two intersecting hoops, the current UI is just two circles around various blocks without clear flow or where that flow intersects with the AI terminal / resume script where the user would interact with / launch content.  Please clean up this generator for more professional looking flow diagrams that are human ledgible.  Install dependencies if needed
