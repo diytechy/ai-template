@@ -10122,7 +10122,7 @@ category, derived gate **G3** throughout (the worker carried all
 replacement rows to Verified inside one session, so the pre-accepted
 G3→G2 dip never surfaced on the integrated tree), replacement SR max
 576 chars vs the 2,000 rule (before-sizes: the census table in
-docs/ratify/WI-229-sr-split.md). Review's ruled-no-change notes: the
+[docs/ratify/WI-229-sr-split.md](ratify/WI-229-sr-split.md)). Review's ruled-no-change notes: the
 WI-237 SR-064→SR-100 re-affirmation (authorized by scope item 3) and
 residual old-SR prose in non-split rows (protected by the no-prose-
 rewrite non-goal). **Why manual:** the dispatcher's blocked-exit path
