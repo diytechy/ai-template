@@ -1,0 +1,35 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 004
+# date: 2026-07-18 16:13
+# train: p0-g3-WI-229-3999
+# base: 808f95da957c
+# phase: BUILD
+# wi: WI-229
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: NO-COMMIT
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 243
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2248
+# exit-code: 0
+# ---
+WI-229 remains blocked at the mandatory owner-attestation boundary.
+
+- Plan: [WI-229-sr-split.md](C:/Projects/ai-template-trains/p0-g3-WI-229-3999/docs/ratify/WI-229-sr-split.md)
+- Evidence commit: `9fed833f35139b69a519b75e978e6232209e2e8d`
+- Required: named owner, date, `ATTEST`/`REVISE`, and plan commit hash.
+- Commit contains the required `Blocked-WI`, `BlockRef`, `Train`, and `Base` trailers.
+- Strict integrity: zero orphans/findings.
+- Documentation check: zero broken links.
+- Existing recorded harness: smoke 845 passed/2 skipped; full 1044 passed/34 skipped.
+- Current smoke retry timed out under concurrent G3-harness contention.
+- Worktree clean; stage 3 was not started and no redundant commit was created.

@@ -1,0 +1,37 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 001
+# date: 2026-07-18 15:59
+# train: p0-g3-WI-229-3999
+# base: 808f95da957c
+# phase: BUILD
+# wi: WI-229
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: 808f95d..9fed833
+# tokens: 
+# cost-usd: 
+# wall-secs: 1187
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 1657
+# exit-code: 0
+# ---
+WI-229 stage 1 committed as `9fed833f35139b69a519b75e978e6232209e2e8d`.
+
+Blocked at the required owner-attestation boundary: [migration plan](/C:/Projects/ai-template-trains/p0-g3-WI-229-3999/docs/ratify/WI-229-sr-split.md).
+
+Checks:
+
+- Smoke: 845 passed, 2 skipped
+- Full suite: 1044 passed, 34 skipped
+- Strict G3 trace: zero findings
+- Docs: 0 broken links
+- Worktree clean
+
+The commit carries `Blocked-WI`, `BlockRef`, `Train`, and `Base` trailers. No coordination truth, spine rows, or generated artifacts were edited.
