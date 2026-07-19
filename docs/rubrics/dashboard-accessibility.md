@@ -1,7 +1,7 @@
 # Rubric — Dashboard accessibility (SR-052)
 
 **Adjudicates:** SR-052 (dashboard accessibility, `Verification=Critique`).
-**Used by:** the SR-047 critique loop — a fresh, provider-heterogeneous CRITIQUE
+**Used by:** the SR-084 critique dispatch — a fresh, provider-heterogeneous CRITIQUE
 session judges the generated `PROJECT_STATE.html` against the numbered anchors
 below, receiving this rubric + the SN/SR intent + the artifact recipe and **never
 the implementer's self-assessment**. Authored at `[v3]-[g2]` (WI-135) from the

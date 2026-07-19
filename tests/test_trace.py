@@ -788,6 +788,94 @@ def test_duplicate_of_malformed_id_reports_duplicated():
     assert dup == ["SR id SR-001 is duplicated"], dup
 
 
+# --- WI-229: optional SR supersession links ---------------------------------
+
+
+def test_sr_supersession_integrity_predicate():
+    trace = load_script("trace")
+
+    rows = [
+        {"SR-ID": "SR-001", "SupersededBy": "SR-002;SR-003"},
+        {"SR-ID": "SR-002", "SupersededBy": ""},
+        {"SR-ID": "SR-003", "SupersededBy": ""},
+    ]
+    assert trace.sr_supersession_findings(rows) == []
+    # The extension is optional: an adopted registry without the column stays
+    # compatible, while every populated-cell failure joins the integrity floor.
+    assert trace.sr_supersession_findings([{"SR-ID": "SR-001"}]) == []
+    bad = trace.sr_supersession_findings(
+        [
+            {"SR-ID": "SR-001", "SupersededBy": "SR-002,SR-003"},
+            {"SR-ID": "SR-002", "SupersededBy": "SR-004"},
+            {"SR-ID": "SR-003", "SupersededBy": "SR-003"},
+        ]
+    )
+    assert any("semicolon-separated" in finding for finding in bad)
+    assert any("unknown SR-004" in finding for finding in bad)
+    assert any("self-links" in finding for finding in bad)
+    assert any("cycle" in finding for finding in bad)
+    cycle = trace.sr_supersession_findings(
+        [
+            {"SR-ID": "SR-001", "SupersededBy": "SR-002"},
+            {"SR-ID": "SR-002", "SupersededBy": "SR-001"},
+        ]
+    )
+    assert cycle == ["SR SupersededBy cycle: SR-001 -> SR-002 -> SR-001"]
+
+
+def test_sr_supersession_failures_are_strict_integrity_findings(scaffold):
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    rows = srs.read_text(encoding="utf-8").splitlines()
+    rows[0] += ",SupersededBy"
+    rows[1] += ",SR-999"
+    srs.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "SR SR-001 SupersededBy references unknown SR-999" in report
+
+
+def test_meta_supersession_rows_preserve_the_ratified_evidence_map():
+    import csv
+
+    trace = load_script("trace")
+    root = KIT.parent
+    with (root / "docs/requirements/system-requirements.csv").open(
+        newline="", encoding="utf-8-sig"
+    ) as stream:
+        srs = list(csv.DictReader(stream))
+    with (root / "docs/requirements/low-level-requirements.csv").open(
+        newline="", encoding="utf-8-sig"
+    ) as stream:
+        llrs = list(csv.DictReader(stream))
+    with (root / "docs/test/test-cases.csv").open(
+        newline="", encoding="utf-8-sig"
+    ) as stream:
+        tcs = list(csv.DictReader(stream))
+
+    expected = {
+        "SR-037": "SR-067;SR-068;SR-069",
+        "SR-038": "SR-070;SR-071;SR-072",
+        "SR-044": "SR-073;SR-074;SR-075;SR-076;SR-077;SR-078",
+        "SR-045": "SR-079;SR-080;SR-081;SR-082;SR-083",
+        "SR-047": "SR-084;SR-085;SR-086",
+        "SR-048": "SR-087;SR-088",
+        "SR-051": "SR-089;SR-090;SR-091;SR-092",
+        "SR-058": "SR-093;SR-094;SR-095",
+        "SR-063": "SR-096;SR-097;SR-098",
+        "SR-064": "SR-099;SR-100;SR-101",
+        "SR-066": "SR-102;SR-103;SR-104;SR-105;SR-106;SR-107;SR-108",
+    }
+    linked = {row["SR-ID"]: row.get("SupersededBy", "") for row in srs}
+    assert {sid: linked[sid] for sid in expected} == expected
+    assert not trace.sr_supersession_findings(srs)
+    old = set(expected)
+    assert not any(old.intersection(trace.refs(row.get("SR-Refs"))) for row in llrs)
+    tc99 = next(row for row in tcs if row["TC-ID"] == "TC-099")
+    assert set(trace.refs(tc99["Verifies"])) == old
+
+
 # --- WI-129: LLR/TC status-coherence warn (registry lint) ---------------------
 # An LLR reading below Verified while every TC that cites it is Verified is a
 # readout drift, not a coverage hole (LLR status is non-gating under the

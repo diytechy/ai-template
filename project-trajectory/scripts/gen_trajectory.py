@@ -803,7 +803,7 @@ SW_CMPTREE_STYLE = "<style>#sw .cmptree{margin-top:.4rem;}</style>"
 
 
 def sw_containment(root, mods):
-    """The containerized How-SW top view (WI-073) as a Simulink-style drill (SR-051
+    """The containerized How-SW top view as a Simulink-style drill (SR-090..SR-092,
     rev, WI-141), or None when no `CMP-###` component contains an arch-map module
     (the caller then keeps today's flat panel, byte-identical). Returns
     `(tab, panel)`.
@@ -1122,7 +1122,7 @@ PHASE_ACCENTS = (
     "#831843", "#9d174d", "#7f1d1d", "#713f12",
 )  # fmt: skip
 
-# --- SR-051 rev (WI-141): the Simulink-style drill renderer --------------------
+# --- SR-089..SR-092 (WI-141): the Simulink-style drill renderer ---------------
 #
 # Shared by the tiered When roadmap and the containerized How-SW view: a tier is a
 # diagram of BLOCKS (SVG rectangles) each with an input port (left-middle) and an
@@ -1459,7 +1459,7 @@ def _wi_phases(root, wis):
 
 
 def when_view(root, wis):
-    """The When roadmap as a Simulink-style, count-thresholded drill-down (SR-051
+    """The When roadmap as a Simulink-style drill-down (SR-089/SR-091/SR-092,
     rev, WI-141): phase ⊃ workstream ⊃ work-item block LAYERS, each tier
     a diagram of blocks whose input/output ports are wired by the aggregated
     cross-tier dependency edges (the deduped union of the child edges). A container
@@ -1520,7 +1520,7 @@ def when_view(root, wis):
             "cls": st,
             # OI-10 fix: surface the delivery Phase in the leaf block's hover title
             # too, so it stays visible when the phase tier is flat (≤3 phases) but a
-            # workstream tier drills in (SR-051 "surfaces each work item Phase").
+            # workstream tier drills in (SR-089 "expose delivery phase").
             "title": "{} — {} ({}) · {}".format(w["id"], t, st, phase_of[w["id"]]),
         }
 

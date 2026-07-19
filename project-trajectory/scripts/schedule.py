@@ -3,7 +3,7 @@
 
 Stack-agnostic, standard-library only (Python 3.8+, Windows/POSIX). This is the
 scheduler contract of the parallel-WI-dispatch work (Slice A;
-docs/specs/parallel-wi-dispatch.md SR-057/SR-058). It is a **pure, side-effect-free
+docs/specs/parallel-wi-dispatch.md SR-057/SR-093..SR-095). It is a **pure, side-effect-free
 library + CLI** shared by validation, the dashboard, the dispatcher, and tests —
 it never mutates the registry, spawns a worker, or touches git. Readiness is
 DERIVED from the tracked WI registry (`docs/requirements/work-items.csv`) plus any
@@ -18,13 +18,13 @@ Two contracts live here:
     `(gate class, Priority desc, transitive downstream-dependent count desc,
     remaining hard-path length desc, WI id)`.
 
-  * **Deterministic safety classification (SR-058).** One pure classifier maps a
+  * **Deterministic safety classification (SR-093/SR-094).** One pure classifier maps a
     WI's declared `SafetyClass` (`ordinary|spine|gate|attestation|protected|
     high-risk`) plus review/critique policy and structural evidence to a
     scheduling class + reason codes. `spine|gate|attestation` serialize
     whole-project; `protected` serializes whole-project; `high-risk`, a critique
     requirement, an integration checkpoint, or a registry `PlanMode=dual` signal
-    (SR-066 — derived from the signal itself, never a second hand-set cell; a
+    (SR-107 — derived from the signal itself, never a second hand-set cell; a
     contradicting declared SafetyClass quarantines) force a single-WI traincar; only
     classified `ordinary` work packs optimistically; anything missing, unknown, or
     contradicting its structural evidence returns `unclassified`, which **fails
@@ -58,7 +58,7 @@ from pathlib import Path
 WI_ID_RE = re.compile(r"^WI-\d+$")
 REGISTRY = "docs/requirements/work-items.csv"
 
-# --- safety classification vocabulary (SR-058; spec §4 "Deterministic safety
+# --- safety classification vocabulary (SR-093/SR-094; spec §4 "Deterministic safety
 # classification"). The DECLARED values a WI may carry in its SafetyClass cell. ---
 SAFETY_CLASSES = ("ordinary", "spine", "gate", "attestation", "protected", "high-risk")
 
@@ -150,7 +150,7 @@ def load_wis(rows):
     return wis
 
 
-# --- deterministic safety classification (SR-058) -----------------------------
+# --- deterministic safety classification (SR-093/SR-094) ----------------------
 def classify(wi, *, structural=None):
     """`(scheduling_class, [reason_codes])` for one WI — a pure function.
 
@@ -160,7 +160,7 @@ def classify(wi, *, structural=None):
     supplied by the validator). Ordered rules:
 
       0. PlanMode=dual -> single-WI traincar, DERIVED from the signal itself
-         (SR-066/WI-201: never a second hand-set cell; a declared SafetyClass
+         (SR-107/WI-201: never a second hand-set cell; a declared SafetyClass
          other than empty or high-risk contradicts and quarantines unclassified)
       1. spine/gate/attestation  -> serial whole-project (never a multi-WI traincar)
       2. protected               -> serial whole-project
@@ -178,7 +178,7 @@ def classify(wi, *, structural=None):
     checkpoint = bool(wi.get("checkpoint"))
 
     # PlanMode=dual derives the single-WI-traincar class FROM THE SIGNAL ITSELF
-    # (SR-066, the WI-201 ruling): a dual-plan round is never packed with other
+    # (SR-107, the WI-201 ruling): a dual-plan round is never packed with other
     # WIs and never needs a second hand-set SafetyClass cell (single-source). A
     # declared SafetyClass that contradicts the derivation (anything whose own
     # scheduling class is not single-wi) quarantines as unclassified — the same
