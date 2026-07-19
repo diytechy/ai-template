@@ -756,7 +756,21 @@ behavior**, so a fresh scaffold pays nothing.
   `AGENT_PREFER_MAP`/`--prefer-map` (for example `BUILD=OPENAI-SOL`) moves one
   enabled id ahead of that list **within the resolved tier only**; an unknown,
   disabled, wrong-tier, or cooling id falls through to enable-list order, and
-  absence preserves that order byte-for-byte. The **family**-heterogeneity rules
+  absence preserves that order byte-for-byte. For *proportional* preference
+  rather than a single pin, an enabled id may carry per-phase **draw weights** —
+  `<ID>[ <PHASE>=<int>]…` after whitespace (e.g. `OPENAI-TERRA  REVIEW=4`;
+  `PHASE` ∈ BUILD|REVIEW|CRITIQUE|DESIGN-CHECK, `REVIEW` covering both reviewer
+  legs; unannotated = weight 1 everywhere, byte-identical to before) — and draws
+  then follow a **deterministic weighted rotation** over the *legal* remainder,
+  keyed on the **per-phase draw ordinal** (the count of prior same-phase sessions
+  on the train, read from the durable session logs — NOT the global session
+  counter, which strides across phases and would alias against the weight sum;
+  no randomness), renormalizing when a model cools. A pin still wins its phase
+  outright; a weight can never force a same-family review, a weaker tier, or a
+  disabled id; `PHASE=0` is fallback-only (drawn only as the sole legal
+  candidate); a conflicting redeclaration of an id, or any malformed annotation,
+  fails preflight naming the line (the file is the consent surface). The
+  **family**-heterogeneity rules
   still win for reviewers and critics; a model whose session fails to start or stalls
   goes on **cooldown** (the rate-limit backoff, generalized per-model,
   `AGENT_COOLDOWN_SECONDS`) and is retried; when no enabled model of the
@@ -2245,7 +2259,12 @@ worktree from the *current* integration HEAD: reservation scope and the
 **exact-head review verdicts** are verified first (a verdict naming an older
 commit does not count); a clean 3-way apply takes the fast path with **no
 re-review**, while *any* textual conflict parks the train for a **focused
-re-review** — never a silent one-side pick; the WI rows go `done` with derived
+re-review** — never a silent one-side pick. A **source** conflict is human work
+(WI-232): the integrator records its merge inputs (train tip + integration head)
+and conflicted path(s) under a durable `refs/llm/conflict/<train>` ref, pages
+`NEEDS-HUMAN` with a WI-127 `ask:` naming them, and skips the identical merge on
+any relaunch whose inputs are unchanged — retrying once only when an input moves.
+On the fast path the WI rows go `done` with derived
 Deliverables, the log gains the integration evidence, the status snapshot and
 iteration index regenerate on the composed tree, and the **combined bar always
 runs** (a red bar blocks integration with the ref untouched). One integration

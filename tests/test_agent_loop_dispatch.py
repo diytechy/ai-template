@@ -438,31 +438,3 @@ def test_bad_jobs_value_is_preflight_failure(tmp_path):
     repo, ctl, fake = _setup(tmp_path, [_wi_row("WI-201")])
     proc = _dispatch(repo, fake, ctl, jobs="zero")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
-
-
-def test_dual_row_never_joins_a_multi_wi_traincar():
-    # WI-209 (SR-066): a PlanMode=dual row classifies single-wi FROM the
-    # signal, so the packer gives it a car of its own — an ordinary unary
-    # successor chain that would ride an ordinary root never boards it.
-    sched = load_script("schedule")
-    rows = []
-    for wid, preds, planmode, safety in (
-        ("WI-201", "", "dual", ""),
-        ("WI-202", "WI-201", "", "ordinary"),
-        ("WI-203", "WI-202", "", "ordinary"),
-    ):
-        rows.append(
-            {
-                "WI-ID": wid,
-                "Title": wid,
-                "Status": "queued",
-                "Predecessors": preds,
-                "SafetyClass": safety,
-                "PlanMode": planmode,
-            }
-        )
-    wis = sched.load_wis(rows)
-    records = sched.evaluate(wis)
-    cars = agent_loop.pack_traincars(records, {w["id"]: w for w in wis})
-    dual_cars = [c for c in cars if "WI-201" in c["wis"]]
-    assert dual_cars == [{"wis": ["WI-201"], "sched_class": sched.SCHED_SINGLE_WI}]

@@ -62,6 +62,11 @@ project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check
 # WI-132: check_docs gained the docs/status-lint declared-policy reader (F5).
 project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
 project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
+# WI-228: check_docs gained a SECOND declared-policy reader (load_orphan_classes,
+# for docs/orphans-allow), so the open-and-skip-comments loop now duplicates the
+# WI-132 status-lint reader INTRA-file — the same sanctioned F5 declared-reader
+# class, censused not hoisted (each reader stays a standalone small helper).
+project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_docs.py
 project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
 project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/derive_gate.py
 project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py

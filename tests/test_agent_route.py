@@ -626,3 +626,393 @@ def test_weak_is_a_legacy_alias_for_quick(tmp_path):
 
     agent_loop = load_script("agent_loop")
     assert agent_loop.phase_tier("BUILD", {"BUILD": "weak"}) == "quick"
+
+
+# --- per-phase draw weights in docs/agents-enabled (WI-236) ---------------- #
+# A four-family strong-tier pool: OpenAI + Moonshot(Kimi) + xAI(Grok) reviewers
+# and an Anthropic implementer. Weights are declared per phase in agents-enabled
+# and drive a DETERMINISTIC weighted rotation keyed on the per-PHASE draw ordinal
+# (0-based; the count of prior same-phase sessions on the train) — never
+# randomness, and byte-identical to before when unannotated. select()'s `counter`
+# IS that ordinal; the realistic-wiring test below proves the live derivation.
+WEIGHT_CSV = """Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes
+OPENAI-TERRA,OPENAI,terra,1,strong,codex exec,,openai reviewer
+MOONSHOT-KIMI,MOONSHOT,kimi,1,strong,opencode run,,kimi judge
+XAI-GROK,XAI,grok,1,strong,opencode run,,grok reviewer
+ANTHROPIC-FABLE,ANTHROPIC,claude-fable-5,5,strong,claude -p --model {model},,implementer
+"""
+
+
+def _weight_registry(tmp_path):
+    p = tmp_path / "agents.csv"
+    p.write_text(WEIGHT_CSV, encoding="utf-8")
+    reg, errors = route.load_registry(p)
+    assert errors == []
+    return reg
+
+
+def _write(tmp_path, text):
+    p = tmp_path / "agents-enabled"
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def test_weighted_rotation_4to1to1_exact_sequence(tmp_path):
+    # Required regression 1: a 4:1:1 REVIEW weighting yields exactly this
+    # deterministic rotation over 12 draws with full availability — the SEQUENCE,
+    # not just the counts. `counter` is the 0-based per-phase draw ordinal.
+    reg = _weight_registry(tmp_path)
+    enabled = ["OPENAI-TERRA", "MOONSHOT-KIMI", "XAI-GROK"]
+    weights = {"OPENAI-TERRA": 4, "MOONSHOT-KIMI": 1, "XAI-GROK": 1}
+    seq = [
+        route.select(enabled, reg, "strong", weights=weights, counter=n)[0]
+        for n in range(0, 12)
+    ]
+    T, K, G = "OPENAI-TERRA", "MOONSHOT-KIMI", "XAI-GROK"
+    assert seq == [T, T, T, T, K, G, T, T, T, T, K, G]
+    # The share holds: 8:2:2 over 12 == 4:1:1.
+    assert (seq.count(T), seq.count(K), seq.count(G)) == (8, 2, 2)
+
+
+def test_weighted_share_renormalizes_over_available_then_returns(tmp_path):
+    # Required regression 2: a cooling model's share renormalizes over the
+    # available remainder (4:1:1 -> 4:1 over TERRA:GROK) and the model returns
+    # to the draw once its cooldown lapses — the SAME counter now lands it.
+    reg = _weight_registry(tmp_path)
+    enabled = ["OPENAI-TERRA", "MOONSHOT-KIMI", "XAI-GROK"]
+    weights = {"OPENAI-TERRA": 4, "MOONSHOT-KIMI": 1, "XAI-GROK": 1}
+    cooldowns = {}
+    route.cool(cooldowns, "MOONSHOT-KIMI", now=100.0, seconds=60)
+    cooling = [
+        route.select(
+            enabled,
+            reg,
+            "strong",
+            now=100.0,
+            cooldowns=cooldowns,
+            weights=weights,
+            counter=n,
+        )[0]
+        for n in range(1, 11)
+    ]
+    assert "MOONSHOT-KIMI" not in cooling  # held out while cooling
+    assert "OPENAI-TERRA" in cooling and "XAI-GROK" in cooling  # remainder shares
+    # counter 4 lands GROK under the renormalized 4:1, but the very same counter
+    # lands the cooled model once it is back (now past the 60s cooldown).
+    assert (
+        route.select(
+            enabled,
+            reg,
+            "strong",
+            now=100.0,
+            cooldowns=cooldowns,
+            weights=weights,
+            counter=4,
+        )[0]
+        == "XAI-GROK"
+    )
+    assert (
+        route.select(
+            enabled,
+            reg,
+            "strong",
+            now=200.0,
+            cooldowns=cooldowns,
+            weights=weights,
+            counter=4,
+        )[0]
+        == "MOONSHOT-KIMI"
+    )
+
+
+def test_high_critique_weight_concentrates_without_starving_heterogeneity(tmp_path):
+    # Required regression 3: CRITIQUE=9 concentrates the judge draws on Kimi, but
+    # cannot starve heterogeneity — the same-family implementer (Anthropic) is
+    # NEVER drawn even with an absurd weight, and the other cross-family reviewer
+    # still earns its 1/10 share.
+    reg = _weight_registry(tmp_path)
+    enabled = ["MOONSHOT-KIMI", "OPENAI-TERRA", "ANTHROPIC-FABLE"]
+    # An absurd weight on the implementer's own family proves weights can never
+    # force a same-family review — the exclude wins first.
+    weights = {"MOONSHOT-KIMI": 9, "OPENAI-TERRA": 1, "ANTHROPIC-FABLE": 99}
+    picks = [
+        route.select(
+            enabled,
+            reg,
+            "strong",
+            exclude_families=["ANTHROPIC"],
+            prefer_different=True,
+            weights=weights,
+            counter=n,
+        )[0]
+        for n in range(1, 21)
+    ]
+    assert "ANTHROPIC-FABLE" not in picks  # heterogeneity is never starved
+    assert picks.count("MOONSHOT-KIMI") == 18  # 9/10 of the draws
+    assert picks.count("OPENAI-TERRA") == 2  # the cross-family reviewer keeps 1/10
+
+
+def test_unannotated_and_equal_weights_are_byte_identical_to_today(tmp_path):
+    # Required regression 4: an unannotated file (no weights) selects exactly as
+    # before — the first enabled id every draw, whatever the counter. An
+    # explicitly all-equal annotation is the same: uniform weights == line-order
+    # tie-break, no rotation (the byte-identical guarantee).
+    reg = _weight_registry(tmp_path)
+    enabled = ["OPENAI-TERRA", "MOONSHOT-KIMI", "XAI-GROK"]
+    for counter in range(0, 6):
+        assert (
+            route.select(enabled, reg, "strong", counter=counter)[0] == "OPENAI-TERRA"
+        )
+        equal = {"OPENAI-TERRA": 2, "MOONSHOT-KIMI": 2, "XAI-GROK": 2}
+        assert (
+            route.select(enabled, reg, "strong", weights=equal, counter=counter)[0]
+            == "OPENAI-TERRA"
+        )
+
+
+def test_malformed_annotation_fails_preflight_naming_the_line(tmp_path):
+    # Required regression 5: every malformed annotation shape is a hard error
+    # naming the line (the consent surface is never silently ignored). Parsing is
+    # STRICT — case-sensitive phases, unsigned decimal weights only. Shapes:
+    # unknown phase, lowercase phase, non-integer, negative, sign-prefixed,
+    # duplicate phase, missing '=', and an annotation with no id in front.
+    p = tmp_path / "agents-enabled"
+    p.write_text(
+        "OPENAI-TERRA  REVIEW=4\n"  # a well-formed line resolves clean
+        "MOONSHOT-KIMI  BOGUS=2\n"  # unknown phase
+        "XAI-GROK  review=1\n"  # lowercase phase (strict: rejected)
+        "OPENAI-LUNA  REVIEW=two\n"  # non-integer
+        "OPENAI-NOVA  CRITIQUE=-1\n"  # negative (sign-prefixed)
+        "OPENAI-VEGA  REVIEW=+3\n"  # explicit + sign (strict: rejected)
+        "ANTHROPIC-FABLE  REVIEW=1 REVIEW=2\n"  # duplicate phase on one line
+        "GOOGLE-GEM  REVIEW\n"  # missing '='
+        "REVIEW=4\n",  # annotation with no id in front
+        encoding="utf-8",
+    )
+    entries, errors = route.load_enabled_entries(p)
+    # Every first-field token is still captured (presence turns routing on).
+    assert [tok for tok, _w in entries] == [
+        "OPENAI-TERRA",
+        "MOONSHOT-KIMI",
+        "XAI-GROK",
+        "OPENAI-LUNA",
+        "OPENAI-NOVA",
+        "OPENAI-VEGA",
+        "ANTHROPIC-FABLE",
+        "GOOGLE-GEM",
+        "REVIEW=4",
+    ]
+    joined = "\n".join(errors)
+    assert "BOGUS" in joined and "unknown phase" in joined
+    assert "unknown phase 'review'" in joined  # lowercase is NOT normalized
+    assert "weight 'two' for REVIEW is not a non-negative integer" in joined
+    assert "weight '-1' for CRITIQUE is not a non-negative integer" in joined
+    assert "weight '+3' for REVIEW is not a non-negative integer" in joined
+    assert "duplicate phase REVIEW" in joined
+    assert "expected PHASE=int" in joined  # the missing '=' shape
+    assert "missing id before annotations" in joined  # the no-id shape
+    # Each error names its offending line verbatim (repr of the stripped line).
+    assert "'MOONSHOT-KIMI  BOGUS=2'" in joined
+    # The clean line contributed no error.
+    assert not any(e.startswith("'OPENAI-TERRA") for e in errors)
+
+
+def test_prefer_map_pin_wins_its_phase_over_weights(tmp_path):
+    # Required regression 6: an AGENT_PREFER_MAP pin still wins its phase outright
+    # with weights present — the weighted rotation governs only the UNPINNED
+    # remainder. Weights favour Kimi 9:1, but the Terra pin takes every draw.
+    reg = _weight_registry(tmp_path)
+    enabled = ["OPENAI-TERRA", "MOONSHOT-KIMI"]
+    weights = {"MOONSHOT-KIMI": 9, "OPENAI-TERRA": 1}
+    for counter in range(0, 8):
+        pinned = route.select(
+            enabled,
+            reg,
+            "strong",
+            preferred_ids=["OPENAI-TERRA"],
+            weights=weights,
+            counter=counter,
+        )[0]
+        assert pinned == "OPENAI-TERRA"
+    # Without the pin, the 9:1 weight makes Kimi the dominant draw (contrast).
+    unpinned = [
+        route.select(enabled, reg, "strong", weights=weights, counter=n)[0]
+        for n in range(1, 11)
+    ]
+    assert unpinned.count("MOONSHOT-KIMI") == 9 and unpinned.count("OPENAI-TERRA") == 1
+
+
+def test_zero_weight_is_fallback_only(tmp_path):
+    # Required regression 7: the ruled zero-weight behavior — PHASE=0 means
+    # "never drawn for the phase unless it is the sole legal candidate" (routing
+    # never dead-ends). Terra=0 is skipped while Kimi is available, but taken when
+    # Kimi cools; all-zero falls back to line order.
+    reg = _weight_registry(tmp_path)
+    enabled = ["OPENAI-TERRA", "MOONSHOT-KIMI"]
+    weights = {"OPENAI-TERRA": 0, "MOONSHOT-KIMI": 1}
+    fallback_only = [
+        route.select(enabled, reg, "strong", weights=weights, counter=n)[0]
+        for n in range(0, 6)
+    ]
+    assert fallback_only == ["MOONSHOT-KIMI"] * 6  # the 0-weight id is held out
+    # Sole legal candidate: cool Kimi, and the 0-weight Terra is taken (never a
+    # dead-end).
+    cooldowns = {}
+    route.cool(cooldowns, "MOONSHOT-KIMI", now=0.0, seconds=300)
+    lone = route.select(
+        enabled,
+        reg,
+        "strong",
+        now=10.0,
+        cooldowns=cooldowns,
+        weights=weights,
+        counter=3,
+    )[0]
+    assert lone == "OPENAI-TERRA"
+    # All fallback-only -> line order decides (never a dead-end).
+    all_zero = {"OPENAI-TERRA": 0, "MOONSHOT-KIMI": 0}
+    assert (
+        route.select(enabled, reg, "strong", weights=all_zero, counter=5)[0]
+        == "OPENAI-TERRA"
+    )
+
+
+def test_enabled_annotations_parse_and_resolve_to_ids(tmp_path):
+    # The grammar end-to-end: a well-formed annotated file parses to (token,
+    # weights) entries, `load_enabled` strips the annotations to bare ids (so the
+    # legacy consumers are unaffected), and `resolved_weights` carries the weights
+    # onto the resolved registry ids. REVIEW expands to both reviewer legs.
+    p = tmp_path / "agents-enabled"
+    p.write_text(
+        "# a comment\n"
+        "OPENAI-TERRA        REVIEW=4\n"
+        "MOONSHOT-KIMI       REVIEW=1  CRITIQUE=9\n"
+        "XAI-GROK\n",  # unannotated == weight 1 everywhere
+        encoding="utf-8",
+    )
+    entries, errors = route.load_enabled_entries(p)
+    assert errors == []
+    assert route.load_enabled(p) == ["OPENAI-TERRA", "MOONSHOT-KIMI", "XAI-GROK"]
+    reg = _weight_registry(tmp_path)
+    wmap, werrors = route.resolved_weights(entries, reg, route.DEFAULT_TAG_RANK)
+    assert werrors == []
+    # REVIEW expanded to both legs; the unannotated id contributes nothing (== 1).
+    assert wmap == {
+        "OPENAI-TERRA": {"REVIEW-A": 4, "REVIEW-B": 4},
+        "MOONSHOT-KIMI": {"REVIEW-A": 1, "REVIEW-B": 1, "CRITIQUE": 9},
+    }
+    # phase_weights projects the map onto a concrete phase (BUILD covers '').
+    assert route.phase_weights(wmap, "REVIEW-A") == {
+        "OPENAI-TERRA": 4,
+        "MOONSHOT-KIMI": 1,
+    }
+    assert route.phase_weights(wmap, "CRITIQUE") == {"MOONSHOT-KIMI": 9}
+    assert route.phase_weights(wmap, "BUILD") == {}
+    assert route.phase_weights(wmap, "") == {}
+
+
+def test_conflicting_id_redeclaration_fails_but_identical_dedups(tmp_path):
+    # MINOR 2: two enable-list lines resolving to the SAME id with DIFFERENT
+    # weights is a preflight error naming the id (the consent surface must not
+    # silently keep one); an IDENTICAL redeclaration is a benign dedup.
+    reg = _weight_registry(tmp_path)
+    conflict, _e = route.load_enabled_entries(
+        _write(tmp_path, "OPENAI-TERRA  REVIEW=4\nOPENAI-TERRA  REVIEW=1\n")
+    )
+    wmap, werrors = route.resolved_weights(conflict, reg, route.DEFAULT_TAG_RANK)
+    assert any("OPENAI-TERRA" in e and "conflicting weights" in e for e in werrors)
+    # A version-less alias resolving to the same id conflicts too (id, not token).
+    reg2 = _pair_registry(tmp_path)[0]
+    alias, _e2 = route.load_enabled_entries(
+        _write(tmp_path, "ANTHROPIC-OPUS-4.9  REVIEW=4\nANTHROPIC-OPUS  REVIEW=1\n")
+    )
+    _wm, aerrors = route.resolved_weights(alias, reg2, route.DEFAULT_TAG_RANK)
+    assert any("ANTHROPIC-OPUS-4.9" in e and "conflicting" in e for e in aerrors)
+    # Identical redeclaration: no error, one entry kept.
+    same, _e3 = route.load_enabled_entries(
+        _write(tmp_path, "OPENAI-TERRA  REVIEW=4\nOPENAI-TERRA  REVIEW=4\n")
+    )
+    wmap2, werrors2 = route.resolved_weights(same, reg, route.DEFAULT_TAG_RANK)
+    assert werrors2 == []
+    assert wmap2 == {"OPENAI-TERRA": {"REVIEW-A": 4, "REVIEW-B": 4}}
+
+
+def test_large_weight_is_accepted_unbounded(tmp_path):
+    # MINOR 3 ruling: Python ints are unbounded, so a very large weight is
+    # accepted (not capped) and simply concentrates the draw — a near-pin.
+    entries, errors = route.load_enabled_entries(
+        _write(tmp_path, "OPENAI-TERRA  REVIEW=100000000000\nXAI-GROK  REVIEW=1\n")
+    )
+    assert errors == []
+    reg = _weight_registry(tmp_path)
+    wmap, werrors = route.resolved_weights(entries, reg, route.DEFAULT_TAG_RANK)
+    assert werrors == []
+    assert wmap["OPENAI-TERRA"]["REVIEW-A"] == 100000000000
+    # The huge-weight id dominates but the weight-1 id still surfaces at its turn.
+    weights = route.phase_weights(wmap, "REVIEW-A")
+    enabled = ["OPENAI-TERRA", "XAI-GROK"]
+    assert route.select(enabled, reg, "strong", weights=weights, counter=0)[0] == (
+        "OPENAI-TERRA"
+    )
+    got_grok = route.select(
+        enabled, reg, "strong", weights=weights, counter=100000000000
+    )[0]
+    assert got_grok == "XAI-GROK"  # its slot, exactly once per cycle
+
+
+def test_weighted_share_over_real_wiring_no_stride_starvation(tmp_path):
+    # Required NEW coverage (the MAJOR fix): drive the REAL per-phase ordinal
+    # derivation + select across simulated rounds with realistic interleaving
+    # (BUILD + REVIEW-A + REVIEW-B per round), keying each draw on the durable
+    # session-log state rather than a hand-fed counter. The OLD global-session
+    # counter aliased at stride 3 against the weight sum 6 and delivered 12/0/12
+    # (Kimi starved); the per-phase ordinal delivers exactly 4:1:1.
+    common = load_script("agent_common")
+    reg = _weight_registry(tmp_path)
+    iter_dir = tmp_path / "iteration"
+    iter_dir.mkdir()
+    train = "T1"
+    enabled = ["OPENAI-TERRA", "MOONSHOT-KIMI", "XAI-GROK"]
+    weights_by_phase = {
+        "REVIEW-A": {"OPENAI-TERRA": 4, "MOONSHOT-KIMI": 1, "XAI-GROK": 1},
+        "REVIEW-B": {"OPENAI-TERRA": 4, "MOONSHOT-KIMI": 1, "XAI-GROK": 1},
+    }
+    session_no = 0
+    review_a_picks = []
+
+    def _write_log(phase, model):
+        nonlocal session_no
+        session_no += 1
+        common.write_session_log(
+            iter_dir,
+            {
+                "session": "{:03d}".format(session_no),
+                "stamp": "20260719-{:06d}".format(session_no),
+                "train": train,
+                "phase": phase,
+            },
+            "transcript",
+        )
+
+    # 18 rounds; each round strides the global session counter by 3 (BUILD,
+    # REVIEW-A, REVIEW-B), the exact interleaving that aliased the old keying.
+    for _round in range(18):
+        _write_log("BUILD", "ANTHROPIC-FABLE")
+        for phase in ("REVIEW-A", "REVIEW-B"):
+            # The counter comes from the DURABLE logs, not a hand-fed integer.
+            ordinal = common.phase_draw_ordinal(iter_dir, train, phase)
+            chosen, _reason = route.select(
+                enabled,
+                reg,
+                "strong",
+                weights=weights_by_phase[phase],
+                counter=ordinal,
+            )
+            if phase == "REVIEW-A":
+                review_a_picks.append(chosen)
+            _write_log(phase, chosen)
+
+    # 18 REVIEW-A draws under 4:1:1 -> exactly 12/3/3, and NO weight-1 candidate
+    # is starved by the stride (the bug delivered Kimi=0).
+    counts = {m: review_a_picks.count(m) for m in enabled}
+    assert counts == {"OPENAI-TERRA": 12, "MOONSHOT-KIMI": 3, "XAI-GROK": 3}

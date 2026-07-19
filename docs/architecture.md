@@ -147,7 +147,7 @@ Contracts (interfaces): IF-037, IF-065
 | `acquire_lock(lock_path)` | Take the per-worktree coordinator lock, or return an error string. |  |
 | `release_lock(lock_path)` | Drop the coordinator lock: closing the descriptor releases the OS lock. |  |
 | `parse_map(spec)` | Parse a KEY=value phase map — shared by --model-map/--cmd-map/--prompt-map/ |  |
-| `git(root, *args)` | Run git in the repo; returns (returncode, stdout-stripped). |  |
+| `git(root, *args)` | Run git in the repo; returns (returncode, text). |  |
 | `head_sha(root)` | Short HEAD sha, or None on a zero-commit repo (guarded rev-parse). |  |
 | `working_tree_dirty(root)` | The `git status --porcelain` lines — one per uncommitted path (a rename is |  |
 | `substantive_working_tree_dirty(root)` | `working_tree_dirty` minus the FB3 owner-only paths (OWNER_ONLY_PATHS) — |  |
@@ -160,6 +160,7 @@ Contracts (interfaces): IF-037, IF-065
 | `regenerate_index(docs_dir)` | Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata |  |
 | `commit_telemetry(root, session, label, paths)` | Commit the coordinator's own bookkeeping in its own `telemetry:` commit, |  |
 | `next_session_number(iter_dir, train)` | Next NNN, continuing across coordinator restarts. A worker's numbering |  |
+| `phase_draw_ordinal(iter_dir, train, phase)` | The 0-based draw ordinal for `phase` on `train` (WI-236): how many PRIOR |  |
 | `preflight(root, template, args)` | Refuse to start iteration 1 on a broken footing. Returns the list of |  |
 | `stop_banner(status_path, label, detail)` |  |  |
 | `head_sha_full(root)` | Full HEAD sha (reservation bases are exact, never abbreviated). |  |
@@ -175,6 +176,9 @@ Contracts (interfaces): IF-055, IF-067
 | `reservation_meta(root, sha)` | The metadata JSON a reservation commit carries ({train, wis, base}), or |  |
 | `reserve_traincar(root, train_id, wis, base)` | Atomically claim a traincar: ONE off-history metadata commit | SR-061 |
 | `release_reservations(root, wis)` | Transactionally delete the reservation refs of `wis` (one update-ref | SR-062 |
+| `record_conflict(root, tid, tip, ihead, paths)` | Durably record a needs-re-review conflict's merge inputs (train `tip` + |  |
+| `read_conflict(root, tid)` | The recorded conflict metadata for a train ({train, tip, ihead, paths}), |  |
+| `clear_conflict(root, tid)` | Delete a train's conflict record — it integrated or moved past the |  |
 | `train_branch_evidence(root, train_id, base)` | (built, blocked) trailer evidence read off the train BRANCH (not a |  |
 | `worktree_root(root)` | Where train worktrees live: a sibling directory of the repo |  |
 | `existing_worktrees(root)` | {branch: worktree-path} parsed from `git worktree list --porcelain`. |  |
@@ -192,7 +196,7 @@ Contracts (interfaces): IF-055, IF-067
 | `integrate_train(root, docs, journal, tid, wis, base, required_verdicts)` | Compose one ready train into the integration ref (spec §9 steps 1-11). |  |
 | `blocked_disposition(root, docs, journal, tid, wis, base)` | The smaller serialized blocked-disposition transaction (spec §9): from |  |
 | `dual_plan_disposition(root, journal, tid, wid, row, template, model, timeout, prompt_map)` | Auto-dispatch one PlanMode=dual frontier WI as a dual-plan round | SR-066 |
-| `publish_integration(root, journal, dev_branch)` | Publish the integration HEAD to the development branch (spec §9): only |  |
+| `publish_integration(root, journal, dev_branch)` | Publish the integration HEAD to the development branch (spec §9): when no |  |
 | `parse_jobs(value)` | The --jobs/AGENT_JOBS value: a positive int, or `auto` (adaptive up to |  |
 | `assess_migration(root)` | The two audits that gate the two-worker promotion (spec §14 items 9-10). | SR-059 |
 | `reconcile_legacy(root, journal, assessment)` | Reconcile migration residue within the one compatibility window (§14.3-4): |  |
@@ -255,10 +259,13 @@ Contracts (interfaces): IF-044, IF-045
 | `load_tag_rank(path, env)` | The maturity rank vocabulary for version-less resolution: the |  |
 | `resolve_token(token, registry, tag_rank)` | Resolve one enable-list token to a registry id, or (None, reason). |  |
 | `resolve_enabled(enabled, registry, tag_rank)` | Resolve the ordered enable-list to concrete registry ids, preserving |  |
-| `load_enabled(path)` | The ordered enable-list (docs/agents-enabled): every non-empty, non-# |  |
+| `load_enabled_entries(path)` | Parse docs/agents-enabled into ordered (token, {phase: weight}) entries |  |
+| `load_enabled(path)` | The ordered enable-list ids (docs/agents-enabled): the first field of |  |
+| `resolved_weights(entries, registry, tag_rank)` | Map each resolved registry id to its {phase: weight} from parsed enable-list |  |
+| `phase_weights(weight_map, phase)` | The per-id draw weights for `phase` from the resolved weight map |  |
 | `available(cooldowns, model_id, now)` | True when `model_id` is not cooling down. `cooldowns` maps id -> the epoch |  |
 | `cool(cooldowns, model_id, now, seconds)` | Put `model_id` on cooldown until now+seconds (its limit is probably |  |
-| `select(enabled, registry, tier, now, cooldowns, exclude_families, prefer_different, preferred_ids)` | Pick a model id from the enabled pool, or None. Returns (id, reason) — the |  |
+| `select(enabled, registry, tier, now, cooldowns, exclude_families, prefer_different, preferred_ids, weights, counter)` | Pick a model id from the enabled pool, or None. Returns (id, reason) — the |  |
 | `pool_context(enabled, registry, cooldowns, now)` | The enabled pool, one line per row, for a page-human/failure banner: |  |
 | `load_constants(env)` | The escalation constants: the per-repo-overridable defaults, each read from |  |
 | `escalate(rounds, constants, swapped, at_top_tier, fails_since)` | The fixed win-stay/lose-shift decision after a review round. |  |
@@ -359,6 +366,9 @@ Contracts (interfaces): IF-002, IF-030
 | `entry_roots(root, docs, docs_dir, extra)` | Reachability roots: top-level *.md, an optional docs/index.md Map-of- |  |
 | `reachable(roots, graph)` | Docs reachable from any entry root by following doc->doc links. |  |
 | `find_orphans(docs, graph, roots, root)` | Scanned docs with no path from an entry root (entry roots excepted). |  |
+| `load_orphan_classes(root, docs_dir)` | The docs/<docs>/orphans-allow glob patterns (declared-file idiom, like |  |
+| `partition_orphans(orphans, patterns)` | Split orphan relpaths into (genuine, expected). |  |
+| `report_orphans(genuine, expected, strict, docs_dir)` | Print the orphan findings: each genuine orphan individually (WARN, or FAIL |  |
 | `check_vision(docs, root)` | The root README must state the vision exactly once (process.md §4 G1). |  |
 | `check_inventory(docs, root, docs_dir)` | The root README honors the traceability spine (process.md §4 G1). |  |
 | `git_commit_lookup(root)` | Return a path->last-commit-epoch lookup populated by one Git traversal. |  |
@@ -612,6 +622,8 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
 | `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
 | `build_html(root, wis)` |  |  |
+| `pending_block(root)` | The GENERATED PENDING block CONTENT (between the markers) for |  |
+| `run_pending(root, check)` | `--status` companion: splice the durable pending-owner projection into |  |
 | `status_block(root)` | The GENERATED STATUS block CONTENT (between the markers) for docs/status.md: |  |
 | `run_status(root, check)` | `--status` mode: splice the derived snapshot into docs/status.md (or, with |  |
 | `main()` |  |  |

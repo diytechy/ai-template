@@ -25,6 +25,15 @@ finding classes:
     docs (interfaces, stakeholder-needs) until the project links them, so the
     floor is warn, not fail. Docs under `docs/archive/` (frozen history) are
     exempt — orphanhood is noise there, though their links are still validated.
+    A repo may also declare *expected* live-orphan classes in
+    `docs/orphans-allow` (one glob per line): retained evidence — reviews,
+    closed-WI specs, dual-plan round artifacts — that stays on disk but is not a
+    navigation node stops warning individually (an aggregate `note` replaces the
+    per-doc noise) and never fails, even under `--strict-orphans`. Only a
+    *newly introduced* orphan outside every declared class still warns (or fails
+    under `--strict-orphans`) — the no-new-orphan ratchet, baselining history
+    without freezing it. Absent file => today's behavior unchanged, so the kit
+    never surprises an existing repo.
   - **the vision tag** (process.md §4 G1's mechanizable half): the root README
     must carry the singleton `PROJECT-VISION:` tag exactly once — zero (the
     canonical vision statement is missing) or several (a re-authored variant;
@@ -80,6 +89,7 @@ Contracts: IF-002, IF-030 — the interface seams this module declares (process.
 """
 
 import argparse
+import fnmatch
 import os
 import re
 import shutil
@@ -365,6 +375,73 @@ def find_orphans(docs, graph, roots, root):
         if d not in roots and d not in reached and not _in_archive(rel(d, root))
     ]
     return sorted(orphans)
+
+
+# docs/<docs>/orphans-allow — the declared expected-live-orphan CENSUS (WI-228).
+# A live orphan (a doc no navigation path reaches) is usually RETAINED EVIDENCE —
+# reviews, closed-WI specs, dual-plan round artifacts — that should stay on disk
+# but is not a navigation node; drowning genuinely-undiscoverable new docs in
+# that steady noise is the failure mode (repo-review-2026-07-18 M-07), the same
+# silent-growth mode WI-225 ratchets for complexity. Each non-comment line is a
+# shell glob (fnmatch, repo-relative POSIX; `*` spans separators, so
+# `docs/reviews/*` classifies the whole subtree). Matched => EXPECTED: dropped
+# from the per-doc warnings and never failed, even under --strict-orphans
+# (history is baselined, never failed). Unmatched => GENUINE: warns (or fails
+# under --strict-orphans) exactly as before — the newly-introduced-orphan
+# ratchet. Absent file / no patterns => today's behavior unchanged.
+ORPHAN_ALLOW = "orphans-allow"
+
+
+def load_orphan_classes(root, docs_dir):
+    """The docs/<docs>/orphans-allow glob patterns (declared-file idiom, like
+    docs/status-lint): `#` comment lines and blanks dropped, one glob per
+    remaining line. [] when the file is absent — default = today's behavior, no
+    class suppression (the kit must not surprise an existing repo)."""
+    p = root / docs_dir / ORPHAN_ALLOW
+    if not p.exists():
+        return []
+    patterns = []
+    for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            patterns.append(line)
+    return patterns
+
+
+def partition_orphans(orphans, patterns):
+    """Split orphan relpaths into (genuine, expected).
+
+    expected = matches a declared class glob — an expected live-orphan (retained
+    evidence: stays live, never fails). genuine = matches none — warns, or fails
+    under --strict-orphans (the newly-introduced-orphan ratchet). fnmatchcase
+    keeps the match case-sensitive and OS-independent (relpaths are POSIX)."""
+    genuine, expected = [], []
+    for o in orphans:
+        bucket = (
+            expected if any(fnmatch.fnmatchcase(o, g) for g in patterns) else genuine
+        )
+        bucket.append(o)
+    return genuine, expected
+
+
+def report_orphans(genuine, expected, strict, docs_dir):
+    """Print the orphan findings: each genuine orphan individually (WARN, or FAIL
+    under --strict-orphans), then one aggregate `note` for the expected
+    live-orphans matched by docs/<docs>/orphans-allow (never a finding). The
+    caller gates on `genuine` alone, so expected orphans never touch the exit
+    code."""
+    for o in genuine:
+        print(
+            "check_docs: {} - orphan doc (no path from an entry root): {}".format(
+                "FAIL" if strict else "WARN", o
+            )
+        )
+    if expected:
+        print(
+            "check_docs: note - {} expected live-orphan(s) matched {}/{} "
+            "(retained evidence / closed-WI specs / round artifacts; not a "
+            "finding)".format(len(expected), docs_dir, ORPHAN_ALLOW)
+        )
 
 
 def _root_readme(docs, root):
@@ -756,6 +833,9 @@ def main():
     broken, graph = check_links(parsed, docs, root)
     roots = entry_roots(root, docs, args.docs, args.entry)
     orphans = find_orphans(docs, graph, roots, root)
+    genuine_orphans, expected_orphans = partition_orphans(
+        orphans, load_orphan_classes(root, args.docs)
+    )
     vision_fails, vision_warns = check_vision(docs, root)
     inv_fails, inv_warns = check_inventory(docs, root, args.docs)
 
@@ -765,12 +845,7 @@ def main():
                 src, lineno, dest, reason
             )
         )
-    for o in orphans:
-        print(
-            "check_docs: {} - orphan doc (no path from an entry root): {}".format(
-                "FAIL" if args.strict_orphans else "WARN", o
-            )
-        )
+    report_orphans(genuine_orphans, expected_orphans, args.strict_orphans, args.docs)
     for msg in vision_fails + inv_fails:
         print("check_docs: FAIL - " + msg)
     # Warn-only by design (never the exit code): the status-surface structure.
@@ -793,7 +868,9 @@ def main():
                 )
 
     readme_fails = vision_fails + inv_fails
-    failed = broken or readme_fails or (args.strict_orphans and orphans)
+    # Only GENUINE orphans (outside every declared class) gate: expected
+    # live-orphans are baselined history and never touch the exit code.
+    failed = broken or readme_fails or (args.strict_orphans and genuine_orphans)
     n_links = sum(
         1
         for info in parsed.values()
@@ -804,7 +881,7 @@ def main():
         print(
             "check_docs: FAIL - {} broken link(s), {} orphan(s), "
             "{} README finding(s) across {} doc(s).".format(
-                len(broken), len(orphans), len(readme_fails), len(docs)
+                len(broken), len(genuine_orphans), len(readme_fails), len(docs)
             )
         )
         sys.exit(1)
@@ -812,7 +889,9 @@ def main():
         "check_docs: OK - {} doc(s), {} intra-repo link(s), 0 broken{}.".format(
             len(docs),
             n_links,
-            " ({} orphan warning(s))".format(len(orphans)) if orphans else "",
+            " ({} orphan warning(s))".format(len(genuine_orphans))
+            if genuine_orphans
+            else "",
         )
     )
 

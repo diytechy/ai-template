@@ -23,6 +23,7 @@ Contracts: IF-055, IF-067 — the interface seams this module declares (process.
 import atexit
 import csv
 import datetime
+import io
 import json
 import os
 import re
@@ -118,6 +119,17 @@ _ENGINE = Path(__file__).resolve().parent / "agent_loop.py"
 # disposition, so nothing is double-run even across dispatcher restarts.
 
 RESERVATION_NS = "refs/llm/reservations/"
+
+
+# WI-232: a needs-re-review source conflict is HUMAN work (option (b)) — the
+# dispatcher cannot resolve it, so it records the conflict's merge inputs (the
+# train tip + the integration head it composed against) and the conflicted paths
+# under this durable ref namespace. A relaunch whose inputs are UNCHANGED skips
+# re-attempting the identical 3-way merge (the idempotence guard) and pages the
+# human; inputs that changed (a new integration head or an amended train) retry
+# once. Git-durable like the reservation/train refs — the out/dispatch/ journal
+# is a cache, never authority (§11).
+CONFLICT_NS = "refs/llm/conflict/"
 
 
 DISPATCH_DIR = "out/dispatch"
@@ -247,6 +259,64 @@ def release_reservations(root, wis):
             proc.stderr.decode("utf-8", "replace").strip()[:300]
         )
     return None
+
+
+def record_conflict(root, tid, tip, ihead, paths):
+    """Durably record a needs-re-review conflict's merge inputs (train `tip` +
+    the `ihead` it composed against) and conflicted `paths` under
+    refs/llm/conflict/<tid> (WI-232). One off-history metadata commit
+    (`commit-tree`, message = the JSON), mirroring reserve_traincar; the ref is
+    force-set so a retry-with-new-inputs overwrites the prior record. Best-effort
+    (a broken git surfaces elsewhere)."""
+    meta = json.dumps(
+        {"train": tid, "tip": tip, "ihead": ihead or "", "paths": paths},
+        sort_keys=True,
+    )
+    code, tree = git(root, "rev-parse", tip + "^{tree}")
+    if code != 0:
+        return
+    proc = subprocess.run(
+        ["git", "-C", str(root), "commit-tree", tree.strip(), "-p", tip, "-m", meta],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    if proc.returncode == 0:
+        git(root, "update-ref", CONFLICT_NS + tid, proc.stdout.strip())
+
+
+def read_conflict(root, tid):
+    """The recorded conflict metadata for a train ({train, tip, ihead, paths}),
+    or None when the ref is absent/unreadable/malformed."""
+    code, sha = git(root, "rev-parse", "--verify", "--quiet", CONFLICT_NS + tid)
+    if code != 0 or not sha.strip():
+        return None
+    code, out = git(root, "log", "-1", "--format=%B", sha.strip())
+    if code != 0:
+        return None
+    try:
+        meta = json.loads(out)
+    except ValueError:
+        return None
+    return meta if isinstance(meta, dict) else None
+
+
+def clear_conflict(root, tid):
+    """Delete a train's conflict record — it integrated or moved past the
+    conflict. A no-op when the ref is absent."""
+    git(root, "update-ref", "-d", CONFLICT_NS + tid)
+
+
+def _conflict_inputs_match(root, tid, rec):
+    """True when the CURRENT merge inputs (train tip + integration head) equal
+    those recorded in `rec` — the idempotence guard: an unchanged input pair
+    means re-running the identical merge would re-park byte-identically."""
+    code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + tid)
+    if code != 0:
+        return False
+    return rec.get("tip") == tip.strip() and rec.get("ihead") == (
+        integration_head(root) or ""
+    )
 
 
 def train_branch_evidence(root, train_id, base):
@@ -895,12 +965,412 @@ def _reset_failed_disposition(root, worktree, tid, old_head, detail, merge=False
     return detail
 
 
+# --- WI-231: composition-conflict auto-resolution --------------------------------
+# The registry the row-level union merge (Slice B) keys by WI-ID.
+REGISTRY_REL = "docs/requirements/work-items.csv"
+
+# The generated-artifact set (Slice A): paths a harness `--check` step OWNS — see
+# project-trajectory/scripts/check.py's arch-map / trajectory-map / status-map /
+# okf steps. A composition conflict CONFINED to these is resolved by REGENERATING
+# from the cleanly-merged sources instead of hand-merging, honoring the kit's
+# generated-not-hand-maintained principle.
+#
+# The set is DECLARED, not discovered (WI-235): each repo names its generated
+# artifacts in the [generated] section of its own docs/stack.ini, so a downstream
+# repo with its own artifacts (or one that relocates a default) teaches the
+# integrator without forking kit code. The tuple below is the built-in DEFAULT an
+# ABSENT section falls back to — byte-identical legacy behavior — and the value
+# bootstrap.py scaffolds into a fresh repo's stack.ini.
+#
+# Each row: (matcher, block, kind). `matcher` is an exact repo-relative path or a
+# "/"-terminated directory prefix. `block` is None for a FULLY generated artifact
+# (any conflict is regenerable) or a (BEGIN, END) marker pair for a PARTIALLY
+# generated file where ONLY the marked region is generated — a conflict OUTSIDE it
+# must still park (status.md's hand-authored prose; architecture.md's prose).
+# `kind` selects the regenerator argv (_generated_regen_argv). The skills index is
+# deliberately absent: its neutral source lives only in the kit repo and its
+# per-agent copies are hand-authored source that must park, not regenerate.
+DEFAULT_GENERATED_ARTIFACTS = (
+    ("PROJECT_STATE.html", None, "trajectory"),
+    ("docs/okf/", None, "okf"),
+    (
+        "docs/architecture.md",
+        ("<!-- BEGIN GENERATED MODULE MAP -->", "<!-- END GENERATED MODULE MAP -->"),
+        "archmap",
+    ),
+    (
+        "docs/status.md",
+        ("<!-- BEGIN GENERATED STATUS -->", "<!-- END GENERATED STATUS -->"),
+        "status",
+    ),
+)
+
+# The regenerator kinds a [generated] row may name (each maps to a generator argv
+# in _generated_regen_argv); an unknown kind is a malformed row.
+_GENERATED_KINDS = ("trajectory", "okf", "status", "archmap")
+
+
+def _parse_generated_row(matcher, value):
+    """Parse one docs/stack.ini [generated] declaration `<path> = <kind>` (a
+    FULLY generated artifact) or `<path> = <kind> | <BEGIN> | <END>` (a PARTIALLY
+    generated file) into a (matcher, block, kind) row. Raises ValueError on any
+    malformed row — the caller FAILS CLOSED and parks, so an unparseable
+    declaration never widens auto-resolution."""
+    matcher = matcher.strip()
+    if not matcher:
+        raise ValueError("blank artifact path")
+    parts = [p.strip() for p in value.split("|")]
+    kind = parts[0]
+    if kind not in _GENERATED_KINDS:
+        raise ValueError("unknown regenerator kind {!r}".format(kind))
+    if len(parts) == 1:
+        block = None
+    elif len(parts) == 3 and parts[1] and parts[2]:
+        if parts[1] == parts[2]:
+            # Equal BEGIN/END markers make _resolve_block_conflict's `inside`
+            # latch True and never reset (the `elif stripped == end` is dead),
+            # so a conflict in hand-authored prose BELOW the block would resolve
+            # take-ours and silently drop the other side. Fail closed to park.
+            raise ValueError("BEGIN and END markers must differ")
+        block = (parts[1], parts[2])
+    else:
+        raise ValueError(
+            "expected '<path> = <kind>' or '<path> = <kind> | BEGIN | END'"
+        )
+    return (matcher, block, kind)
+
+
+def _generated_artifacts(wt):
+    """The generated-artifact set governing composition auto-resolution, read from
+    the INTEGRATE worktree's OWN docs/stack.ini (the primary worktree may differ
+    mid-merge). Returns (artifacts, error): an ABSENT stack.ini or a stack.ini
+    with no [generated] section falls back to DEFAULT_GENERATED_ARTIFACTS
+    (byte-identical legacy behavior) with error None; a MALFORMED section, or a
+    stack.ini present-but-unreadable (I/O error, non-UTF-8 bytes, or a parse
+    error), returns ((), <non-blank reason>) so the caller FAILS CLOSED and parks.
+    The read/decode happens INSIDE the guard: an escaping exception would strand
+    the merge (its --abort never runs) and crash the unattended loop."""
+    import configparser
+
+    ini = Path(wt) / "docs" / "stack.ini"
+    try:
+        text = ini.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        # No declaration at all is legitimate — fall back to the defaults. (An
+        # existing-but-unreadable file is OSError below, NOT this, so it parks.)
+        return DEFAULT_GENERATED_ARTIFACTS, None
+    except (OSError, UnicodeDecodeError) as exc:
+        return (), "docs/stack.ini unreadable: {}".format(exc)
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.optionxform = str  # artifact paths are case-sensitive (PROJECT_STATE.html)
+    try:
+        cp.read_string(text)
+    except configparser.Error as exc:
+        return (), "docs/stack.ini unreadable: {}".format(exc)
+    if not cp.has_section("generated"):
+        return DEFAULT_GENERATED_ARTIFACTS, None
+    rows = []
+    try:
+        for matcher, value in cp.items("generated"):
+            rows.append(_parse_generated_row(matcher, value))
+    except (configparser.Error, ValueError) as exc:
+        return (), "malformed [generated] row in docs/stack.ini: {}".format(exc)
+    return tuple(rows), None
+
+
+def _generated_entry(rel, artifacts):
+    """The `artifacts` row matching a repo-relative path, or None."""
+    rel = rel.replace("\\", "/")
+    for matcher, block, kind in artifacts:
+        if matcher.endswith("/"):
+            if rel.startswith(matcher):
+                return (matcher, block, kind)
+        elif rel == matcher:
+            return (matcher, block, kind)
+    return None
+
+
+def _declared_src(wt):
+    """The docs/stack.ini [paths] src the arch-map generator scans (default
+    'src'), so regeneration matches the harness `--check` invocation."""
+    import configparser
+
+    cp = configparser.ConfigParser()
+    try:
+        cp.read(str(Path(wt) / "docs" / "stack.ini"), encoding="utf-8")
+        return (cp.get("paths", "src", fallback="src") or "src").strip()
+    except configparser.Error:
+        return "src"
+
+
+def _generated_regen_argv(kind, wt):
+    """The generator argv for a generated-artifact `kind`, run in the integrate
+    worktree against its merged tree (never the primary worktree)."""
+    scripts = Path(__file__).resolve().parent
+    py = sys.executable
+    if kind == "trajectory":
+        return [py, str(scripts / "gen_trajectory.py"), "--root", str(wt)]
+    if kind == "okf":
+        return [py, str(scripts / "gen_okf.py"), "--root", str(wt)]
+    if kind == "status":
+        return [py, str(scripts / "gen_trajectory.py"), "--root", str(wt), "--status"]
+    if kind == "archmap":
+        return [
+            py,
+            str(scripts / "gen_arch_map.py"),
+            "--src",
+            _declared_src(wt),
+            "--doc",
+            "docs/architecture.md",
+        ]
+    return None
+
+
+def _resolve_block_conflict(text, block):
+    """Resolve conflict hunks by taking the OURS side, but ONLY when every hunk
+    lies WHOLLY inside the generated `block` (a (BEGIN, END) marker pair); return
+    None (park) when a conflict touches the hand-authored region. A hunk that
+    STARTS in-block but whose either side re-includes a BEGIN/END marker line has
+    straddled the block edge and swallowed hand-authored prose — regeneration
+    cannot stand in for that, so it parks too. Markers are compared LF-clean so an
+    autocrlf (CRLF) checkout still latches `inside` (WI-231 rework). The block is
+    regenerated afterward, so which side wins inside it is moot."""
+    begin, end = block
+    markers = (begin, end)
+    lines = text.split("\n")
+    out = []
+    inside = False
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i]
+        if line.startswith("<<<<<<<"):
+            if not inside:
+                return None
+            ours = []
+            i += 1
+            while i < n and not lines[i].startswith("======="):
+                ours.append(lines[i])
+                i += 1
+            i += 1  # skip the ======= divider
+            theirs = []
+            while i < n and not lines[i].startswith(">>>>>>>"):
+                theirs.append(lines[i])
+                i += 1
+            i += 1  # skip the >>>>>>> closer
+            if any(ln.rstrip("\r") in markers for ln in ours + theirs):
+                return None  # a straddling hunk: park rather than drop prose
+            out.extend(ours)
+            continue
+        stripped = line.rstrip("\r")
+        if stripped == begin:
+            inside = True
+        elif stripped == end:
+            inside = False
+        out.append(line)
+        i += 1
+    return "\n".join(out)
+
+
+def _resolve_generated_path(wt, rel, entry):
+    """Resolve one conflicted generated path in the merge index. A fully
+    generated artifact takes OURS wholesale (regeneration overwrites it); a
+    block-generated file strips only in-block conflicts. Returns False (park)
+    when the conflict escapes the block. Stages the resolved path."""
+    _, block, _ = entry
+    if block is None:
+        git(wt, "checkout", "--ours", "--", rel)
+        git(wt, "add", "--", rel)
+        return True
+    path = Path(wt) / rel
+    try:
+        resolved = _resolve_block_conflict(
+            path.read_text(encoding="utf-8", errors="replace"), block
+        )
+        if resolved is None:
+            return False
+        path.write_text(resolved, encoding="utf-8")
+    except OSError:
+        return False
+    git(wt, "add", "--", rel)
+    return True
+
+
+def _stage_rows(wt, stage, rel):
+    """(header, data_rows) parsed from a merge index stage (1=base, 2=ours,
+    3=theirs) of `rel`; (None, []) when that stage is absent (add/add). The blob
+    is read RAW — un-stripped, via cat-file rather than git() (which strips), and
+    parsed straight through the csv module — so a quoted cell with an embedded
+    newline survives instead of being collapsed and corrupting an untouched
+    neighbor row on re-serialization (WI-231 rework)."""
+    proc = subprocess.run(
+        ["git", "-C", str(wt), "cat-file", "-p", ":{}:{}".format(stage, rel)],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdin=subprocess.DEVNULL,
+    )
+    if proc.returncode != 0:
+        return None, []
+    rows = list(csv.reader(io.StringIO(proc.stdout)))
+    if not rows:
+        return [], []
+    header = list(rows[0])
+    if header:
+        header[0] = header[0].lstrip("﻿")
+    return header, rows[1:]
+
+
+def _ordered_wi_rows(merged, sequences):
+    """Merged rows in a deterministic order: base order first, then ours-only,
+    then theirs-only additions — each id emitted once."""
+    order = []
+    seen = set()
+    for seq in sequences:
+        for r in seq:
+            if r and r[0] in merged and r[0] not in seen:
+                seen.add(r[0])
+                order.append(merged[r[0]])
+    return order
+
+
+def _merge_wi_rows(base_rows, ours_rows, theirs_rows):
+    """Row-level WI-ID-keyed 3-way union: a row changed on one side only takes
+    that side; a row changed on BOTH sides (or a modify/delete race) returns None
+    so the train parks as a genuine conflict."""
+    base = {r[0]: r for r in base_rows if r}
+    ours = {r[0]: r for r in ours_rows if r}
+    theirs = {r[0]: r for r in theirs_rows if r}
+    merged = {}
+    for key in set(ours) | set(theirs):
+        b, o, t = base.get(key), ours.get(key), theirs.get(key)
+        if o == t:
+            winner = o
+        elif o == b:  # unchanged on our side -> take theirs
+            winner = t
+        elif t == b:  # unchanged on their side -> take ours
+            winner = o
+        else:  # a genuine both-sides edit of the same row
+            return None
+        if winner is not None:
+            merged[key] = winner
+    return _ordered_wi_rows(merged, (base_rows, ours_rows, theirs_rows))
+
+
+def _union_registry(wt, rel):
+    """Slice B: resolve a work-items.csv conflict by a WI-ID-keyed row union.
+    Returns True (resolved + staged) or False (a genuine row/header conflict —
+    park). Header comes from the merged result (ours, when both sides agree)."""
+    ours_h, ours = _stage_rows(wt, 2, rel)
+    theirs_h, theirs = _stage_rows(wt, 3, rel)
+    _, base = _stage_rows(wt, 1, rel)
+    if ours_h is None or theirs_h is None or ours_h != theirs_h:
+        return False  # add/add or a header edit conflict: park
+    merged = _merge_wi_rows(base, ours, theirs)
+    if merged is None:
+        return False
+    with open(str(Path(wt) / rel), "w", newline="", encoding="utf-8") as fh:
+        writer = csv.writer(fh, lineterminator="\n")
+        writer.writerow(ours_h)
+        writer.writerows(merged)
+    git(wt, "add", "--", rel)
+    return True
+
+
+def _regenerate_generated(wt, paths, artifacts):
+    """Re-run the sibling generators for the conflicted generated `paths`
+    (deduplicated by kind) IN the integrate worktree against its merged tree.
+    Returns (ok, detail)."""
+    kinds = []
+    for rel in paths:
+        entry = _generated_entry(rel, artifacts)
+        if entry and entry[2] not in kinds:
+            kinds.append(entry[2])
+    for kind in kinds:
+        argv = _generated_regen_argv(kind, wt)
+        if argv is None:
+            continue
+        proc = subprocess.run(
+            argv,
+            cwd=str(wt),
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+        if proc.returncode != 0:
+            tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
+            return False, "conflict regen failed ({}): {}".format(
+                kind, tail or "exit {}".format(proc.returncode)
+            )
+    return True, ""
+
+
+def _resolve_composition_conflict(wt, root, artifacts):
+    """Auto-resolve the conflicts the harness OWNS after a conflicted 3-way
+    merge: disjoint WI rows (Slice B) and regenerated artifacts (Slice A) declared
+    in `artifacts`. Parks the moment a non-generated path — or a both-sides row /
+    in-prose block edit — conflicts. Leaves the index conflict-free + staged on
+    success. Returns (resolved, regenerated_paths, park_reason)."""
+    code, out = git(wt, "diff", "--name-only", "--diff-filter=U", "-z")
+    if code != 0:
+        return False, [], "cannot list conflicted paths"
+    conflicted = [p.replace("\\", "/") for p in out.split("\0") if p]
+    if not conflicted:
+        return False, [], "merge failed without conflicts"
+    regenerated = []
+    for rel in conflicted:
+        if rel == REGISTRY_REL:
+            if not _union_registry(wt, rel):
+                return False, [], "registry row conflict in {}".format(rel)
+            continue
+        entry = _generated_entry(rel, artifacts)
+        if entry is None:
+            return False, [], "conflict in non-generated path {}".format(rel)
+        if not _resolve_generated_path(wt, rel, entry):
+            return False, [], "generated conflict outside its block: {}".format(rel)
+        regenerated.append(rel)
+    ok, detail = _regenerate_generated(wt, regenerated, artifacts)
+    if not ok:
+        return False, [], detail
+    return True, regenerated, None
+
+
+def _compose_train(wt, root, journal, tid, tip):
+    """Merge train `tip` onto the staged integration HEAD (spec §9 steps 1+3+4).
+    A clean 3-way apply, or an auto-resolved generated/registry conflict, returns
+    None to proceed; a genuine textual conflict aborts the merge, journals it, and
+    returns a park detail demanding a focused re-review."""
+    code, out = git(wt, "merge", "--no-ff", "--no-commit", tip)
+    if code == 0:
+        return None
+    artifacts, decl_error = _generated_artifacts(wt)
+    if decl_error:
+        resolved, regenerated, park = False, [], decl_error
+    else:
+        resolved, regenerated, park = _resolve_composition_conflict(wt, root, artifacts)
+    if not resolved:
+        git(wt, "merge", "--abort")
+        detail = (park or out).strip()[
+            :200
+        ] or "textual conflict against the integrated tree"
+        journal.event("integration-conflict", train=tid, detail=detail)
+        # Return the SPECIFIC reason (it names the conflicted path) so the park
+        # state, the durable conflict record, and the NEEDS-HUMAN ask all name it.
+        return detail
+    journal.event(
+        "integration-regenerated", train=tid, paths=";".join(regenerated)[:200]
+    )
+    return None
+
+
 def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
     """Compose one ready train into the integration ref (spec §9 steps 1-11).
-    Returns (state, detail): 'integrated', 'needs-re-review' (a textual
-    conflict — any resolution needs a focused re-review before this train can
-    land), 'rework' (verdict missing/stale or the combined bar failed), or
-    'error'. The integration ref moves ONLY via the final CAS."""
+    Returns (state, detail): 'integrated', 'needs-re-review' (a textual conflict
+    outside the auto-resolvable set — generated artifacts / disjoint WI rows,
+    WI-231 — needing a focused re-review before this train can land), 'rework'
+    (verdict missing/stale or the combined bar failed), or 'error'. The
+    integration ref moves ONLY via the final CAS."""
     old_head = integration_head(root)
     if old_head is None:
         return "error", "integration ref vanished"
@@ -927,19 +1397,22 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
             )
 
     # Step 1+3+4: compose on the staging branch from the CURRENT integration
-    # HEAD. A clean 3-way merge takes the fast path (no re-review); ANY
-    # textual conflict aborts composition and demands a focused re-review.
+    # HEAD. A clean 3-way apply takes the fast path (no re-review); a conflict
+    # confined to generated artifacts (Slice A) or disjoint WI rows (Slice B) is
+    # auto-resolved and composition continues; any OTHER textual conflict aborts
+    # and demands a focused re-review (_compose_train, WI-231).
     wt, err = _staging_worktree(root, tid, old_head)
     if err:
         return "error", err
     code, _ = git(wt, "reset", "--hard", old_head)
     if code != 0:
         return "error", "cannot reset staging to the integration HEAD"
-    code, out = git(wt, "merge", "--no-ff", "--no-commit", tip)
-    if code != 0:
-        git(wt, "merge", "--abort")
-        journal.event("integration-conflict", train=tid, detail=out[:200])
-        return "needs-re-review", "textual conflict against the integrated tree"
+    park = _compose_train(wt, root, journal, tid, tip)
+    if park is not None:
+        # Durably record the merge inputs so a relaunch with UNCHANGED inputs
+        # skips this identical merge instead of re-parking silently (WI-232).
+        record_conflict(root, tid, tip, old_head, park)
+        return "needs-re-review", park
 
     # Steps 6-8: durable disposition + evidence + regenerated artifacts,
     # composed INTO the same integration commit.
@@ -1188,12 +1661,111 @@ def _intent_meta(root):
     return sha.strip(), reservation_meta(root, sha.strip())
 
 
+def _publish_diff_paths(root, base, target):
+    """Tracked paths the publication advances: `git diff --name-only` between
+    `base` and `target`, NUL-delimited so Git never C-quotes special path
+    bytes (as WI-224's salvage scans do) and `--no-renames` so BOTH sides of a
+    rename are listed — the disjointness test must never miss a touched path.
+    None when git cannot be read."""
+    code, out = git(root, "diff", "--name-only", "-z", "--no-renames", base, target)
+    if code != 0:
+        return None
+    return {p for p in out.split("\0") if p}
+
+
+def _worktree_dirt(root, base):
+    """Tracked paths whose worktree OR index differs from `base` — the user
+    dirt measured against the pre-publication baseline. Untracked files never
+    count (the never-stash contract); `git diff` ignores them. NUL-delimited,
+    rename-split as above. None when git cannot be read."""
+    dirt = set()
+    for scan in (("diff",), ("diff", "--cached")):
+        code, out = git(root, *scan, "--name-only", "-z", "--no-renames", base)
+        if code != 0:
+            return None
+        dirt.update(p for p in out.split("\0") if p)
+    return dirt
+
+
+def _untracked_paths(root):
+    """Untracked, non-ignored working-tree paths (`ls-files --others
+    --exclude-standard -z`). Ignored files are excluded to match git's own
+    checkout machinery, which overwrites those without complaint. None when
+    git cannot be read."""
+    code, out = git(root, "ls-files", "--others", "--exclude-standard", "-z")
+    if code != 0:
+        return None
+    return {p for p in out.split("\0") if p}
+
+
+def _publish_dirt(root, base, target):
+    """Classify the primary worktree for a publication that advances `base` to
+    `target` (spec §9 disjointness rule):
+
+    - `clean` — no tracked dirt vs `base`: the mechanically-stale / at-baseline
+      case, finished by the exact-hash `reset --hard`;
+    - `disjoint` — tracked dirt exists but no dirty path is in the
+      `base..target` diff: the edits ride the sync forward untouched;
+    - `intersect` — a dirty path is also published, OR an untracked file sits at
+      a path the publication would materialize: defer, never reset/stash;
+    - `error` — git could not be read.
+
+    An untracked file at a published path would be clobbered by `reset --hard`
+    (and is refused by `read-tree`); classifying it here defers BEFORE the
+    dev-ref CAS so the file is never lost and the dev ref never moves. No
+    path-name allowlist: disjointness derives what a hardcoded list (the owner
+    scratchpad, the generated run-state) would only approximate."""
+    diff = _publish_diff_paths(root, base, target)
+    if diff is None:
+        return "error"
+    untracked = _untracked_paths(root)
+    if untracked is None:
+        return "error"
+    if untracked & diff:
+        return "intersect"
+    dirt = _worktree_dirt(root, base)
+    if dirt is None:
+        return "error"
+    if not dirt:
+        return "clean"
+    return "intersect" if (dirt & diff) else "disjoint"
+
+
+def _carry_dirt_forward(root, base, target):
+    """Advance the worktree/index from `base` to descendant `target` with git's
+    own two-way merge (`read-tree -m -u`): it updates the published paths and
+    keeps uncommitted edits to every OTHER path byte-for-byte. Git REFUSES
+    (nonzero) rather than clobber a locally-modified published path — the
+    backstop that upholds the never-reset-user-edits contract even if a caller
+    misjudged disjointness. True on a completed sync; a refusal defers."""
+    code, _ = git(root, "read-tree", "-m", "-u", base, target)
+    return code == 0
+
+
+def _sync_worktree(root, base, target):
+    """Bring the primary worktree from `base` to `target` under the disjointness
+    rule (spec §9/§11): 'clean' (exactly at `base`) → the exact-hash
+    `reset --hard`; disjoint dirt → carry it forward across git's own merge;
+    intersecting dirt, a refused carry, or an unreadable tree leaves the
+    checkout untouched. Returns 'synced', 'deferred', or 'error'."""
+    disp = _publish_dirt(root, base, target)
+    if disp == "error":
+        return "error"
+    if disp == "clean":
+        code, _ = git(root, "reset", "--hard", target)
+        return "synced" if code == 0 else "error"
+    if disp == "disjoint" and _carry_dirt_forward(root, base, target):
+        return "synced"
+    return "deferred"
+
+
 def publish_integration(root, journal, dev_branch):
-    """Publish the integration HEAD to the development branch (spec §9): only
-    when the primary worktree is CLEAN; guarded by the durable publish-intent
-    ref written before the dev-ref CAS and deleted only after the verified
-    fast-forward/reset sync. Returns (state, detail) where state is
-    'published', 'deferred', 'noop', or 'error'."""
+    """Publish the integration HEAD to the development branch (spec §9): when no
+    uncommitted edit intersects the publish diff (disjoint dirt rides the sync
+    forward untouched); guarded by the durable publish-intent ref written before
+    the dev-ref CAS and deleted only after the verified sync. Returns
+    (state, detail) where state is 'published', 'deferred', 'noop', or
+    'error'."""
     target = integration_head(root)
     if not target:
         return "noop", "no integration ref"
@@ -1205,28 +1777,33 @@ def publish_integration(root, journal, dev_branch):
     intent_sha, intent = _intent_meta(root)
 
     if dev_head == target:
-        # Published already (this or a prior attempt): confirm the worktree
-        # sync, then drop any completed intent.
+        # Published already (this or a prior attempt). A dirty checkout with a
+        # PENDING intent is the crash-window recovery: sync against the intent's
+        # expected old hash. Without a pending intent there is no sync to
+        # finish, so publication is simply complete — any (disjoint) worktree
+        # dirt is its owner's, left alone (the post-publish idempotent replay).
         code, porcelain = git(root, "status", "--porcelain")
         tracked_dirty = [
             ln for ln in porcelain.splitlines() if ln and not ln.startswith("??")
         ]
-        if tracked_dirty:
-            code2, diff_old = (
-                git(root, "diff", "--quiet", intent["old"])
-                if (intent and intent.get("old"))
-                else (1, "")
+        if tracked_dirty and intent_sha:
+            diverges = (
+                "development ref already at the target but the worktree "
+                "diverges — left untouched and reported, never reset"
             )
-            if intent and intent.get("old") and code2 == 0:
-                # The §11 stale-checkout case: index/worktree still exactly at
-                # the intent's expected old hash — mechanically stale, not
-                # user dirt. Finish the idempotent sync.
-                git(root, "reset", "--hard", target)
-            else:
-                return "deferred", (
-                    "development ref already at the target but the worktree "
-                    "diverges — left untouched and reported, never reset"
-                )
+            base = intent.get("old") if intent else None
+            if not base:
+                # Unreadable/absent intent metadata: keep the ref as recovery
+                # evidence, never sync against an unknown baseline.
+                return "deferred", diverges
+            # A mechanically stale checkout (still exactly at old) resets to
+            # target; disjoint dirt is carried across; intersecting dirt or a
+            # refused carry leaves the checkout untouched.
+            outcome = _sync_worktree(root, base, target)
+            if outcome == "error":
+                return "error", "cannot inspect the primary worktree for publication"
+            if outcome == "deferred":
+                return "deferred", diverges
         if intent_sha:
             git(root, "update-ref", "-d", PUBLISH_INTENT_REF, intent_sha)
             journal.event("publish-intent-cleared", target=target[:12])
@@ -1247,16 +1824,17 @@ def publish_integration(root, journal, dev_branch):
             "integration target {} is not a descendant of development head {}"
         ).format(target, dev_head)
 
-    # Dirty-at-outset: defer, report, never stash/reset (spec §9).
-    code, porcelain = git(root, "status", "--porcelain")
-    tracked_dirty = [
-        ln for ln in porcelain.splitlines() if ln and not ln.startswith("??")
-    ]
-    if tracked_dirty:
+    # Dirty-at-outset disjointness (spec §9): dirt that intersects the publish
+    # diff defers (never stash/reset); dirt disjoint from it rides the sync
+    # forward untouched, so publication proceeds. No path-name allowlist.
+    disp = _publish_dirt(root, dev_head, target)
+    if disp == "error":
+        return "error", "cannot inspect the primary worktree for publication"
+    if disp == "intersect":
         journal.event("publish-deferred", reason="dirty-worktree")
         return "deferred", (
-            "primary worktree carries {} uncommitted tracked path(s) — "
-            "publication deferred, checkout untouched".format(len(tracked_dirty))
+            "primary worktree carries uncommitted edits to a path the "
+            "publication would advance — deferred, checkout untouched"
         )
 
     # The durable intent: {target, old, ref}. Reuse only an EXACT match; a
@@ -1316,19 +1894,20 @@ def publish_integration(root, journal, dev_branch):
         return "deferred", "development ref moved; recomposing from its new head"
 
     _fault("post-dev-cas")
-    # Verified sync: a reset fires ONLY with index + tracked tree exactly at
-    # the expected old hash (untracked files untouched); divergence defers.
-    code1, _ = git(root, "diff", "--quiet", dev_head)
-    code2, _ = git(root, "diff", "--cached", "--quiet", dev_head)
-    if code1 != 0 or code2 != 0:
+    # Verified sync (spec §9/§11). Clean at the expected old hash → the exact
+    # `reset --hard`. Dirt disjoint from the publish diff (already vetted at
+    # outset) rides git's own two-way merge across the sync. Any intersection or
+    # a post-CAS divergence defers: the intent ref still names the
+    # pre-publication hash for the next pass.
+    outcome = _sync_worktree(root, dev_head, target)
+    if outcome == "error":
+        return "error", "sync failed: could not reach the target tree"
+    if outcome == "deferred":
         journal.event("publish-sync-deferred", reason="worktree-diverged")
         return "deferred", (
             "edits landed between the CAS and the sync — the intent ref "
             "identifies the pre-publication hash; sync deferred, not reset"
         )
-    code, out = git(root, "reset", "--hard", target)
-    if code != 0:
-        return "error", "sync reset failed: {}".format(out[:200])
     git(root, "update-ref", "-d", PUBLISH_INTENT_REF, new_intent)
     journal.event("published", ref=dev_ref, head=target[:12])
     return "published", target
@@ -1523,6 +2102,8 @@ def telemetry_summary(journal):
         "blocked_dispositions": count("blocked-disposition"),
         # overlap / conflict / re-review rates (spec §13 required measurements)
         "conflicts": count("integration-conflict"),
+        # composition conflicts auto-resolved by regeneration/row-union (WI-231)
+        "regenerated": count("integration-regenerated"),
         "re_reviews_needed": sum(
             1
             for e in mine
@@ -1576,6 +2157,520 @@ def telemetry_summary(journal):
         )
     )
     return summary
+
+
+def _head_reconcile_decision(ihead, dhead, integration_is_ancestor, dev_is_ancestor):
+    """Choose the launch-time ref action from an already-observed relation."""
+    if ihead and dhead and ihead != dhead:
+        if integration_is_ancestor and not dev_is_ancestor:
+            return "fast-forward"
+        if not integration_is_ancestor and not dev_is_ancestor:
+            return "needs-human"
+    return "publish"
+
+
+def _train_evidence_decision(wis, built, blocked):
+    """Classify proven branch evidence without reading refs or the registry."""
+    foreign = (set(built) | set(blocked)) - set(wis)
+    if foreign:
+        return "quarantined", tuple(sorted(foreign))
+    if blocked:
+        return "blocked", ()
+    if set(wis) <= set(built):
+        return "ready-to-integrate", ()
+    return "resume", ()
+
+
+def _dispatch_allowed(paused, blacked_out, needs_human_ask):
+    return paused is None and not blacked_out and not needs_human_ask
+
+
+def _retry_due(state, now, retry_at):
+    return state == "resume" or (state == "waiting" and now >= retry_at)
+
+
+def _worker_exit_decision(code, spine, gate_policy):
+    """Return the lane state, event, and human action for a worker exit."""
+    if code == EXIT_DONE:
+        ask = "ratify" if spine and gate_policy != "autonomous" else ""
+        return "ready-to-integrate", "worker-done", ask
+    if code == EXIT_BLOCKED:
+        return "blocked", "worker-blocked", "release-unstarted"
+    if code == EXIT_TRAIN_END:
+        return "train-end", "worker-train-end", "release-unstarted"
+    if code == EXIT_WAITING:
+        return "waiting", "worker-waiting", "retry"
+    if code == EXIT_NEEDS_HUMAN:
+        return "needs-human", "worker-needs-human", "page"
+    return "quarantined", "worker-quarantined", ""
+
+
+def _integration_result_decision(result, source_state):
+    """Map an integrator result to parked state and rescan/journal actions."""
+    if result == "integrated":
+        state = "integrated" if source_state == "ready-to-integrate" else "blocked-done"
+        return state, True, False
+    if result == "recompose":
+        return source_state, True, False
+    state = result if result != "error" else "quarantined"
+    return state, False, True
+
+
+def _idle_decision(paused, needs_human_ask, blacked_out, dispatchable, waiting):
+    """Choose the no-active-lane action; the caller performs any effects."""
+    if paused is not None:
+        return "paused"
+    if needs_human_ask:
+        return "needs-human"
+    if blacked_out and dispatchable:
+        return "blackout-wait"
+    if waiting and not dispatchable:
+        return "waiting"
+    if not dispatchable and not waiting:
+        return "drained"
+    return "poll"
+
+
+def _terminal_decision(attention, queued_left, unpublished, current_head, blocked_rows):
+    """Choose generated run-state, banner text, and exit code."""
+    if attention:
+        return (
+            "RUNNING",
+            "trains need attention (re-review / rework / quarantine)",
+            EXIT_STALL,
+        )
+    if queued_left:
+        return "RUNNING", "build-out wave complete", EXIT_DONE
+    if unpublished and unpublished != current_head:
+        return "RUNNING", "integration complete; publication deferred", EXIT_DONE
+    if blocked_rows:
+        return "BLOCKED", "run-state=BLOCKED", EXIT_BLOCKED
+    return "DONE", "run-state=DONE", EXIT_DONE
+
+
+def _reservation_trains(root, journal):
+    """Read reservation metadata and group its proven claims by train."""
+    trains = {}
+    quarantined_wis = set()
+    for wid, sha in sorted(list_reservations(root).items()):
+        meta = reservation_meta(root, sha)
+        if meta is None:
+            journal.event("quarantine", wi=wid, reason="unreadable-reservation")
+            quarantined_wis.add(wid)
+            continue
+        trains.setdefault(meta["train"], {"wis": [], "base": meta["base"]})
+        trains[meta["train"]]["wis"].append(wid)
+    return trains, quarantined_wis
+
+
+def _reconcile_reserved_train(root, journal, tid, train, parked, quarantined_wis):
+    """Apply effects for one durable train after pure evidence classification."""
+    wis = train["wis"]
+    base = train["base"]
+    int_rows = registry_rows_at(root, INTEGRATION_REF) or []
+    int_status = {
+        (row.get("WI-ID") or "").strip(): (row.get("Status") or "").strip().lower()
+        for row in int_rows
+    }
+    if wis and all(int_status.get(wid) == "done" for wid in wis):
+        err = release_reservations(root, wis)
+        if err:
+            journal.event("release-failed", train=tid, reason=err[:200])
+        clear_conflict(root, tid)  # WI-232: this train landed; drop any record
+        parked[tid] = {"state": "integrated", "wis": wis, "base": base}
+        journal.event("reconcile", train=tid, state="integrated")
+        return
+    code, _ = git(root, "rev-parse", "--verify", "--quiet", TRAIN_BRANCH_HEADS + tid)
+    if code != 0:
+        journal.event("quarantine", train=tid, reason="reservation-without-branch")
+        quarantined_wis.update(wis)
+        return
+    built, blocked = train_branch_evidence(root, tid, base)
+    state, foreign = _train_evidence_decision(wis, built, blocked)
+    if foreign:
+        journal.event(
+            "quarantine",
+            train=tid,
+            reason="claims-unreserved-wi:" + ";".join(foreign),
+        )
+        quarantined_wis.update(wis)
+        parked[tid] = {"state": state, "wis": wis, "base": base}
+        return
+    parked[tid] = {"state": state, "wis": wis, "base": base}
+    journal.event("reconcile", train=tid, state=state)
+
+
+def _reconcile_owned_trains(root, journal):
+    parked = {}
+    trains, quarantined_wis = _reservation_trains(root, journal)
+    for tid, train in sorted(trains.items()):
+        _reconcile_reserved_train(root, journal, tid, train, parked, quarantined_wis)
+    return parked, quarantined_wis
+
+
+def _spawn_worker(args, root, journal, active, parked, tid, wis, base, spine):
+    wt, err = lease_worktree(root, tid)
+    if err:
+        journal.event("quarantine", train=tid, reason=err)
+        parked[tid] = {"state": "quarantined", "wis": wis}
+        return False
+    argv = [
+        sys.executable,
+        str(_ENGINE),
+        "--worktree",
+        str(wt),
+        "--wi",
+        ";".join(wis),
+        "--train",
+        tid,
+        "--base",
+        base,
+        "--max-iterations",
+        str(args.worker_iterations),
+        "--pause",
+        str(args.pause),
+        "--no-session-echo",
+    ]
+    if args.agent_cmd is not None:
+        argv += ["--agent-cmd", args.agent_cmd]
+    if args.model:
+        argv += ["--model", args.model]
+    if args.session_timeout:
+        argv += ["--session-timeout", str(args.session_timeout)]
+    logdir = journal.dir / "logs"
+    out_fh = None
+    try:
+        logdir.mkdir(parents=True, exist_ok=True)
+        out_fh = (logdir / (tid + ".out")).open("ab")
+    except OSError:
+        pass
+    proc = subprocess.Popen(
+        argv,
+        cwd=str(wt),
+        stdout=out_fh if out_fh is not None else subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
+    )
+    active[tid] = {
+        "proc": proc,
+        "wis": wis,
+        "base": base,
+        "worktree": str(wt),
+        "spine": spine,
+        "log_fh": out_fh,
+    }
+    journal.event(
+        "worker-start", train=tid, wis=";".join(wis), pid=proc.pid, spine=spine
+    )
+    journal.train(tid, {"wis": wis, "base": base, "state": "building"})
+    return True
+
+
+def _close_worker_log(info):
+    log_fh = info.get("log_fh")
+    if log_fh is None:
+        return
+    try:
+        log_fh.close()
+    except OSError:
+        pass
+
+
+def _release_unstarted(root, journal, tid, info):
+    built, blocked = train_branch_evidence(root, tid, info["base"])
+    unstarted = [wid for wid in info["wis"] if wid not in built and wid not in blocked]
+    err = release_reservations(root, unstarted)
+    if err:
+        journal.event("release-failed", train=tid, reason=err[:200])
+    elif unstarted:
+        journal.event("release-unstarted", train=tid, wis=";".join(unstarted))
+    return [wid for wid in info["wis"] if wid not in unstarted]
+
+
+def _worker_event_fields(state, code):
+    if state == "ready-to-integrate":
+        return {"state": state}
+    if state == "waiting":
+        return {"retry_s": TRAIN_RETRY_SECONDS}
+    if state == "quarantined":
+        return {"exit": code}
+    return {}
+
+
+def _handle_worker_exit(
+    root, journal, active, parked, retry_at, tid, code, gate_policy
+):
+    info = active.pop(tid)
+    _close_worker_log(info)
+    state, event, action = _worker_exit_decision(code, info["spine"], gate_policy)
+    wis = info["wis"]
+    if action == "release-unstarted":
+        wis = _release_unstarted(root, journal, tid, info)
+    if action == "retry":
+        retry_at[tid] = time.time() + TRAIN_RETRY_SECONDS
+    parked[tid] = {"state": state, "wis": wis, "base": info["base"]}
+    journal.event(event, train=tid, **_worker_event_fields(state, code))
+    if state == "ready-to-integrate":
+        journal.train(tid, {"wis": wis, "base": info["base"], "state": state})
+    if action == "ratify":
+        journal.event("gate-ratification-exit", train=tid)
+        return "spine/gate train {} is built and needs ratification (docs/gate-policy: {})".format(
+            tid, gate_policy
+        )
+    if action == "page":
+        return "worker train {} paged (no routable model / escalation) — see {}".format(
+            tid, journal.dir / "logs" / (tid + ".out")
+        )
+    return ""
+
+
+def _resume_reconciled(args, root, journal, active, parked, retry_at, jobs):
+    spine_active = any(lane["spine"] for lane in active.values())
+    for tid, lane in sorted(parked.items()):
+        if len(active) >= jobs or spine_active:
+            break
+        if _retry_due(lane.get("state"), time.time(), retry_at.get(tid, 0)):
+            del parked[tid]
+            _spawn_worker(
+                args,
+                root,
+                journal,
+                active,
+                parked,
+                tid,
+                lane["wis"],
+                lane["base"],
+                spine=False,
+            )
+
+
+def _frontier_snapshot(root, quarantined_wis):
+    reg_rows = registry_rows_at(root, INTEGRATION_REF)
+    if reg_rows is None:
+        reg_rows = schedule.load_rows(root / "docs" / "requirements" / "work-items.csv")
+    wi_rows = {}
+    for row in reg_rows:
+        wid = (row.get("WI-ID") or "").strip()
+        if WI_TOKEN_RE.match(wid) and wid not in wi_rows:
+            wi_rows[wid] = row
+    wis = schedule.load_wis(reg_rows)
+    reserved = set(list_reservations(root)) | quarantined_wis
+    records = schedule.evaluate(wis, reserved)
+    cars = pack_traincars(records, {wi["id"]: wi for wi in wis})
+    return wi_rows, cars
+
+
+def _integrate_one_ready(root, docs, journal, tid, wis, base, required_verdicts):
+    """Integrate a ready train under the WI-232 conflict-idempotence guard: a
+    train whose merge inputs are UNCHANGED since a recorded needs-re-review
+    conflict is NOT re-merged — it stays parked for the human (the identical
+    3-way merge would only re-park). Inputs that changed (a new integration head
+    or an amended train) retry the merge once, and any non-conflict outcome
+    clears the record. Returns (result, detail) like integrate_train."""
+    rec = read_conflict(root, tid)
+    if rec is not None and _conflict_inputs_match(root, tid, rec):
+        detail = rec.get("paths") or "textual conflict against the integrated tree"
+        journal.event("integration-conflict-held", train=tid, detail=detail[:200])
+        return "needs-re-review", detail
+    result, detail = integrate_train(
+        root, docs, journal, tid, wis, base, required_verdicts
+    )
+    if result not in ("needs-re-review", "recompose"):
+        clear_conflict(root, tid)
+    return result, detail
+
+
+def _integrate_parked(root, docs, journal, parked, required_verdicts, needs_human):
+    integrated_any = False
+    for tid in sorted(parked):
+        if needs_human:
+            break
+        source_state = parked[tid]["state"]
+        if source_state not in ("ready-to-integrate", "blocked"):
+            continue
+        lane = parked[tid]
+        base = lane.get("base")
+        if not base:
+            meta = reservation_meta(
+                root, list_reservations(root).get(lane["wis"][0], "")
+            )
+            base = (meta or {}).get("base", "")
+        if source_state == "ready-to-integrate":
+            result, detail = _integrate_one_ready(
+                root, docs, journal, tid, lane["wis"], base, required_verdicts
+            )
+        else:
+            result, detail = blocked_disposition(
+                root, docs, journal, tid, lane["wis"], base
+            )
+        next_state, ref_moved, should_journal = _integration_result_decision(
+            result, source_state
+        )
+        if result != "recompose":
+            parked[tid] = {"state": next_state, "wis": lane["wis"]}
+        integrated_any = integrated_any or ref_moved
+        if should_journal:
+            journal.event(
+                "integration-parked", train=tid, state=result, detail=detail[:200]
+            )
+    return integrated_any
+
+
+def _apply_idle_action(action, root, docs, journal, parked, needs_human_ask):
+    if action == "paused":
+        stop_banner(
+            docs / "status.md",
+            "paused (docs/pause present)",
+            "no new reservations; delete docs/pause and relaunch to "
+            "resume ({} in-flight train(s) already wrapped safely).".format(
+                len(parked)
+            ),
+        )
+        return EXIT_PAUSED
+    if action == "needs-human":
+        _write_runstate(docs, "NEEDS-HUMAN", needs_human_ask)
+        _regenerate_pending(root, journal)
+        stop_banner(docs / "status.md", "NEEDS-HUMAN", needs_human_ask)
+        return EXIT_NEEDS_HUMAN
+    if action == "blackout-wait":
+        wake = blackout_wake(
+            read_declared(docs / "blackout", ""), datetime.datetime.utcnow()
+        )
+        time.sleep(min(wake or 60, 60))
+        return "continue"
+    if action == "waiting":
+        _write_runstate(docs, "RUNNING")
+        stop_banner(
+            docs / "status.md",
+            "WAITING on rate limits",
+            "every dispatchable train is rate-limited; relaunch later.",
+        )
+        return EXIT_WAITING
+    if action == "drained":
+        return "break"
+    return None
+
+
+def _needs_review_ask(root, parked):
+    """The WI-127 ask for trains parked on a source-conflict re-review (WI-232,
+    option (b)): name each train and its conflicted path(s), read from the
+    durable conflict record. Empty when no train is parked needs-re-review —
+    those conflicts are genuine human merges the dispatcher must not retry."""
+    trains = sorted(
+        tid for tid, lane in parked.items() if lane["state"] == "needs-re-review"
+    )
+    if not trains:
+        return ""
+    parts = []
+    for tid in trains:
+        rec = read_conflict(root, tid)
+        paths = (rec or {}).get(
+            "paths"
+        ) or "textual conflict against the integrated tree"
+        parts.append("{} ({})".format(tid, paths))
+    return (
+        "re-review needed — resolve the source conflict by hand (merge/rebase "
+        "the train), then relaunch: " + "; ".join(parts)
+    )
+
+
+def _regenerate_pending(root, journal):
+    """Best-effort refresh of the docs/open-items.md pending-owner-actions
+    projection (WI-234) at a terminal decision — called AFTER run-state is
+    written so a NEEDS-HUMAN ask is captured into the owner's review surface. The
+    projection is a pure view of durable state (blocked rows, refs/llm/conflict
+    records, quarantined trains, the run-state ask), so regenerating here cannot
+    lose data. A generator failure must NEVER crash the terminal path: it is
+    journaled and the harness `status-map` freshness gate catches the staleness on
+    the next run. Runs `gen_trajectory.py --status` on the primary checkout;
+    vacuous when open-items.md (or its marker block) is absent (a non-adopter)."""
+    if not (Path(root) / "docs" / "open-items.md").is_file():
+        return
+    gen = Path(__file__).resolve().parent / "gen_trajectory.py"
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(gen), "--root", str(root), "--status"],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        journal.event("pending-regen-failed", reason="timeout after 120s")
+        return
+    except OSError as exc:
+        journal.event("pending-regen-failed", reason=str(exc)[:200])
+        return
+    if proc.returncode != 0:
+        tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-200:]
+        journal.event(
+            "pending-regen-failed",
+            reason=tail or "exit {}".format(proc.returncode),
+        )
+
+
+def _finish_dispatch(root, docs, journal, parked):
+    telemetry_summary(journal)
+    # WI-232: a train parked on a real source conflict is HUMAN work — page
+    # NEEDS-HUMAN with an ask naming the train(s) and path(s) instead of the
+    # silent RUNNING/STALL that let an operator relaunch expecting progress.
+    review_ask = _needs_review_ask(root, parked)
+    if review_ask:
+        _write_runstate(docs, "NEEDS-HUMAN", review_ask)
+        _regenerate_pending(root, journal)
+        stop_banner(docs / "status.md", "NEEDS-HUMAN", review_ask)
+        return EXIT_NEEDS_HUMAN
+    integrated = [
+        tid
+        for tid, lane in parked.items()
+        if lane["state"] in ("integrated", "blocked-done")
+    ]
+    attention_states = {
+        "quarantined",
+        "needs-human",
+        "needs-re-review",
+        "rework",
+        "dual-paged",
+    }
+    attention = [
+        tid
+        for tid, lane in parked.items()
+        if lane["state"] in attention_states
+        or (lane["state"] == "train-end" and lane["wis"])
+    ]
+    blocked_done = [
+        tid for tid, lane in parked.items() if lane["state"] == "blocked-done"
+    ]
+    reg_rows = registry_rows_at(root, INTEGRATION_REF) or schedule.load_rows(
+        root / "docs" / "requirements" / "work-items.csv"
+    )
+    wis = schedule.load_wis(reg_rows)
+    reserved = set(list_reservations(root))
+    queued_count = sum(
+        1 for wi in wis if wi["status"] == "queued" and wi["id"] not in reserved
+    )
+    queued_left = bool(queued_count)
+    blocked_rows = any(wi["status"] == "blocked" for wi in wis)
+    summary = (
+        "trains: {} integrated ({} blocked-disposition), {} needing attention "
+        "(re-review/rework/quarantine/partial); {} unreserved queued WI(s) remain"
+    ).format(len(integrated), len(blocked_done), len(attention), queued_count)
+    unpublished = ""
+    current_head = ""
+    if not attention and not queued_left:
+        unpublished = integration_head(root)
+        if unpublished:
+            current_head = head_sha_full(root)
+    run_state, banner, exit_code = _terminal_decision(
+        attention, queued_left, unpublished, current_head, blocked_rows
+    )
+    _write_runstate(docs, run_state)
+    _regenerate_pending(root, journal)
+    detail = summary
+    if banner == "integration complete; publication deferred":
+        detail += " — clean the checkout and relaunch to publish."
+    stop_banner(docs / "status.md", banner, detail)
+    return exit_code
 
 
 def dispatch_run(args, root):
@@ -1686,29 +2781,30 @@ def dispatch_run(args, root):
     # discarded by a mistaken publish:
     ihead = integration_head(root)
     dhead = head_sha_full(root)
-    dev_strictly_ahead = False
+    int_is_anc = False
+    dev_is_anc = False
     if ihead and dhead and ihead != dhead:
         int_is_anc = git(root, "merge-base", "--is-ancestor", ihead, dhead)[0] == 0
         dev_is_anc = git(root, "merge-base", "--is-ancestor", dhead, ihead)[0] == 0
-        if int_is_anc and not dev_is_anc:
-            dev_strictly_ahead = True
-        elif not int_is_anc and not dev_is_anc:
-            ask = (
-                "integration head {} and development head {} have diverged; "
-                "preserve both histories, then merge/rebase development onto "
-                "integration or explicitly restore the intended ref"
-            ).format(ihead, dhead)
-            journal.event(
-                "integration-diverged",
-                integration_head=ihead,
-                development_head=dhead,
-                ask=ask,
-            )
-            _write_runstate(docs, "NEEDS-HUMAN", ask)
-            stop_banner(Path(docs) / "status.md", "NEEDS-HUMAN", ask)
-            print("dispatch: NEEDS-HUMAN — {}".format(ask), file=sys.stderr)
-            return EXIT_NEEDS_HUMAN
-    if dev_strictly_ahead:
+    head_action = _head_reconcile_decision(ihead, dhead, int_is_anc, dev_is_anc)
+    if head_action == "needs-human":
+        ask = (
+            "integration head {} and development head {} have diverged; "
+            "preserve both histories, then merge/rebase development onto "
+            "integration or explicitly restore the intended ref"
+        ).format(ihead, dhead)
+        journal.event(
+            "integration-diverged",
+            integration_head=ihead,
+            development_head=dhead,
+            ask=ask,
+        )
+        _write_runstate(docs, "NEEDS-HUMAN", ask)
+        _regenerate_pending(root, journal)
+        stop_banner(Path(docs) / "status.md", "NEEDS-HUMAN", ask)
+        print("dispatch: NEEDS-HUMAN — {}".format(ask), file=sys.stderr)
+        return EXIT_NEEDS_HUMAN
+    if head_action == "fast-forward":
         # Dev is strictly AHEAD of integration: a human added WIs on the
         # development branch. Fast-forward the ref to absorb that new work
         # (never over unpublished integration commits — the divergent case
@@ -1729,215 +2825,9 @@ def dispatch_run(args, root):
     # Group durable reservation claims into trains; resume the incomplete,
     # park the built (ready-to-integrate, Slice F), quarantine the unreadable.
     active = {}  # train_id -> {proc, wis, base, worktree, spine}
-    parked = {}  # train_id -> {"state": ..., "wis": [...]}
+    parked, quarantined_wis = _reconcile_owned_trains(root, journal)
     retry_at = {}  # train_id -> epoch when a WAITING train may retry
-    quarantined_wis = set()
-    claims = list_reservations(root)
-    trains = {}
-    for wid, sha in sorted(claims.items()):
-        meta = reservation_meta(root, sha)
-        if meta is None:
-            journal.event("quarantine", wi=wid, reason="unreadable-reservation")
-            quarantined_wis.add(wid)
-            continue
-        trains.setdefault(meta["train"], {"wis": [], "base": meta["base"]})
-        trains[meta["train"]]["wis"].append(wid)
-    for tid, t in sorted(trains.items()):
-        # Already-integrated restore FIRST (spec §11 table): the durable
-        # disposition advanced before a crash could release the reservations —
-        # every WI is done on the integration ref, so restore `integrated` and
-        # finish the pending release; never re-integrate. Checked before the
-        # branch guard because a dual-plan train (WI-209) has no train branch
-        # at all: its round composes straight onto the integration ref, so a
-        # crash between CAS and release must reconcile here, not quarantine.
-        int_rows0 = registry_rows_at(root, INTEGRATION_REF) or []
-        int_status0 = {
-            (r.get("WI-ID") or "").strip(): (r.get("Status") or "").strip().lower()
-            for r in int_rows0
-        }
-        if t["wis"] and all(int_status0.get(w) == "done" for w in t["wis"]):
-            err = release_reservations(root, t["wis"])
-            if err:
-                journal.event("release-failed", train=tid, reason=err[:200])
-            parked[tid] = {"state": "integrated", "wis": t["wis"], "base": t["base"]}
-            journal.event("reconcile", train=tid, state="integrated")
-            continue
-        code, _ = git(
-            root, "rev-parse", "--verify", "--quiet", TRAIN_BRANCH_HEADS + tid
-        )
-        if code != 0:
-            journal.event("quarantine", train=tid, reason="reservation-without-branch")
-            quarantined_wis.update(t["wis"])
-            continue
-        # Read evidence off the branch (works without a worktree).
-        built, blocked = train_branch_evidence(root, tid, t["base"])
-        # Ownership cross-check (spec §6/§11): a train branch claiming a WI
-        # outside its own reservation set is unprovable ownership — quarantine
-        # THIS train (fail closed) and let disjoint proven work continue.
-        foreign = (built | set(blocked)) - set(t["wis"])
-        if foreign:
-            journal.event(
-                "quarantine",
-                train=tid,
-                reason="claims-unreserved-wi:" + ";".join(sorted(foreign)),
-            )
-            quarantined_wis.update(t["wis"])
-            parked[tid] = {"state": "quarantined", "wis": t["wis"], "base": t["base"]}
-            continue
-        if blocked:
-            parked[tid] = {"state": "blocked", "wis": t["wis"], "base": t["base"]}
-            journal.event("reconcile", train=tid, state="blocked")
-        elif set(t["wis"]) <= built:
-            parked[tid] = {
-                "state": "ready-to-integrate",
-                "wis": t["wis"],
-                "base": t["base"],
-            }
-            journal.event("reconcile", train=tid, state="ready-to-integrate")
-        else:
-            # Incomplete: resume with a fresh worker (its dirty-tree note is
-            # the reconcile-first prompt, spec §11).
-            parked[tid] = {"state": "resume", "wis": t["wis"], "base": t["base"]}
-            journal.event("reconcile", train=tid, state="resume")
-
-    def spawn_worker(tid, wis, base, spine):
-        wt, err = lease_worktree(root, tid)
-        if err:
-            journal.event("quarantine", train=tid, reason=err)
-            parked[tid] = {"state": "quarantined", "wis": wis}
-            return False
-        argv = [
-            sys.executable,
-            str(_ENGINE),  # the sibling agent_loop.py engine (WI-218 hazard 1)
-            "--worktree",
-            str(wt),
-            "--wi",
-            ";".join(wis),
-            "--train",
-            tid,
-            "--base",
-            base,
-            "--max-iterations",
-            str(args.worker_iterations),
-            "--pause",
-            str(args.pause),
-            "--no-session-echo",
-        ]
-        if args.agent_cmd is not None:
-            argv += ["--agent-cmd", args.agent_cmd]
-        if args.model:
-            argv += ["--model", args.model]
-        if args.session_timeout:
-            argv += ["--session-timeout", str(args.session_timeout)]
-        logdir = journal.dir / "logs"
-        out_fh = None
-        try:
-            logdir.mkdir(parents=True, exist_ok=True)
-            out_fh = (logdir / (tid + ".out")).open("ab")
-        except OSError:
-            pass
-        proc = subprocess.Popen(
-            argv,
-            cwd=str(wt),
-            stdout=out_fh if out_fh is not None else subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.DEVNULL,
-        )
-        active[tid] = {
-            "proc": proc,
-            "wis": wis,
-            "base": base,
-            "worktree": str(wt),
-            "spine": spine,
-            "log_fh": out_fh,
-        }
-        journal.event(
-            "worker-start", train=tid, wis=";".join(wis), pid=proc.pid, spine=spine
-        )
-        journal.train(tid, {"wis": wis, "base": base, "state": "building"})
-        return True
-
     needs_human_ask = ""
-
-    def handle_exit(tid, code):
-        nonlocal needs_human_ask
-        info = active.pop(tid)
-        if info.get("log_fh") is not None:
-            try:
-                info["log_fh"].close()
-            except OSError:
-                pass
-        if code == EXIT_DONE:
-            parked[tid] = {
-                "state": "ready-to-integrate",
-                "wis": info["wis"],
-                "base": info["base"],
-            }
-            journal.event("worker-done", train=tid, state="ready-to-integrate")
-            journal.train(
-                tid,
-                {
-                    "wis": info["wis"],
-                    "base": info["base"],
-                    "state": "ready-to-integrate",
-                },
-            )
-            if info["spine"] and gate_policy != "autonomous":
-                # Gate/spine work built: under attended/single-ratify the run
-                # EXITS FOR RATIFICATION (spec §4.2) — a human closes the gate
-                # before build-out continues; `autonomous` continues on the
-                # independent-reviewer verdict.
-                needs_human_ask = (
-                    "spine/gate train {} is built and needs ratification "
-                    "(docs/gate-policy: {})".format(tid, gate_policy)
-                )
-                journal.event("gate-ratification-exit", train=tid)
-        elif code in (EXIT_BLOCKED, EXIT_TRAIN_END):
-            # A blocked constituent or a refused continuation ends the train
-            # early (SR-062): built + blocked constituents KEEP their
-            # reservations (evidence for the Slice-F integrator; nothing
-            # double-runs), while every UNSTARTED constituent is released in
-            # one transaction and the next rescan recomputes the traincar DAG.
-            built, blocked_set = train_branch_evidence(root, tid, info["base"])
-            unstarted = [
-                w for w in info["wis"] if w not in built and w not in blocked_set
-            ]
-            err = release_reservations(root, unstarted)
-            if err:
-                journal.event("release-failed", train=tid, reason=err[:200])
-            elif unstarted:
-                journal.event("release-unstarted", train=tid, wis=";".join(unstarted))
-            state = "blocked" if code == EXIT_BLOCKED else "train-end"
-            parked[tid] = {
-                "state": state,
-                "wis": [w for w in info["wis"] if w not in unstarted],
-                "base": info["base"],
-            }
-            journal.event(
-                "worker-blocked" if code == EXIT_BLOCKED else "worker-train-end",
-                train=tid,
-            )
-        elif code == EXIT_WAITING:
-            retry_at[tid] = time.time() + TRAIN_RETRY_SECONDS
-            parked[tid] = {"state": "waiting", "wis": info["wis"], "base": info["base"]}
-            journal.event("worker-waiting", train=tid, retry_s=TRAIN_RETRY_SECONDS)
-        elif code == EXIT_NEEDS_HUMAN:
-            parked[tid] = {
-                "state": "needs-human",
-                "wis": info["wis"],
-                "base": info["base"],
-            }
-            needs_human_ask = "worker train {} paged (no routable model / escalation) — see {}".format(
-                tid, journal.dir / "logs" / (tid + ".out")
-            )
-            journal.event("worker-needs-human", train=tid)
-        else:
-            parked[tid] = {
-                "state": "quarantined",
-                "wis": info["wis"],
-                "base": info["base"],
-            }
-            journal.event("worker-quarantined", train=tid, exit=code)
 
     # --- stages 2+3: gate-first, then build-out with dynamic refill ----------
     # The lowest-gate-first order (schedule.py) puts spine/gate work at the
@@ -1955,39 +2845,17 @@ def dispatch_run(args, root):
                 read_declared(docs / "blackout", ""), datetime.datetime.utcnow()
             )
         )
-        may_dispatch = paused is None and not blacked_out and not needs_human_ask
+        may_dispatch = _dispatch_allowed(paused, blacked_out, needs_human_ask)
 
-        spine_active = any(a["spine"] for a in active.values())
         if may_dispatch:
             # Resume reconciled trains first (they already hold reservations).
-            for tid, p in sorted(parked.items()):
-                if len(active) >= jobs or spine_active:
-                    break
-                if p.get("state") == "resume" or (
-                    p.get("state") == "waiting" and time.time() >= retry_at.get(tid, 0)
-                ):
-                    del parked[tid]
-                    spawn_worker(tid, p["wis"], p["base"], spine=False)
+            _resume_reconciled(args, root, journal, active, parked, retry_at, jobs)
 
         # Scan the frontier every pass (cheap, and the end-state test below
         # needs it even while paused/blacked out). Once the integration ref
         # exists it is the authoritative integrated disposition (spec §11) —
         # the development checkout is only its published projection.
-        reg_rows = registry_rows_at(root, INTEGRATION_REF)
-        if reg_rows is None:
-            reg_rows = schedule.load_rows(
-                root / "docs" / "requirements" / "work-items.csv"
-            )
-        wi_rows = {}
-        for r in reg_rows:
-            wid = (r.get("WI-ID") or "").strip()
-            if WI_TOKEN_RE.match(wid) and wid not in wi_rows:
-                wi_rows[wid] = r
-        wis = schedule.load_wis(reg_rows)
-        reserved = set(list_reservations(root)) | quarantined_wis
-        records = schedule.evaluate(wis, reserved)
-        wis_by_id = {w["id"]: w for w in wis}
-        cars = pack_traincars(records, wis_by_id)
+        wi_rows, cars = _frontier_snapshot(root, quarantined_wis)
 
         if may_dispatch:
             spine_active = any(a["spine"] for a in active.values())
@@ -2097,7 +2965,17 @@ def dispatch_run(args, root):
                             "base": base,
                         }
                     continue
-                spawn_worker(tid, car["wis"], base, spine=is_spine)
+                _spawn_worker(
+                    args,
+                    root,
+                    journal,
+                    active,
+                    parked,
+                    tid,
+                    car["wis"],
+                    base,
+                    spine=is_spine,
+                )
                 if is_spine:
                     break
 
@@ -2106,51 +2984,14 @@ def dispatch_run(args, root):
         # a time; a worker-reported blocker takes the smaller disposition
         # transaction. Each success is followed by a publication attempt and
         # triggers a fresh rescan (the frontier may have grown).
-        integrated_any = False
-        for tid in sorted(parked):
-            if needs_human_ask:
-                break  # a pending human act gates integration too (§4.2)
-            state_p = parked[tid]["state"]
-            if state_p not in ("ready-to-integrate", "blocked"):
-                continue
-            base_t = parked[tid].get("base") or (
-                reservation_meta(
-                    root, list_reservations(root).get(parked[tid]["wis"][0], "")
-                )
-                or {}
-            ).get("base", "")
-            if state_p == "ready-to-integrate":
-                result, detail = integrate_train(
-                    root,
-                    docs,
-                    journal,
-                    tid,
-                    parked[tid]["wis"],
-                    base_t,
-                    required_verdicts,
-                )
-            else:
-                result, detail = blocked_disposition(
-                    root, docs, journal, tid, parked[tid]["wis"], base_t
-                )
-            if result == "integrated":
-                parked[tid] = {
-                    "state": "integrated"
-                    if state_p == "ready-to-integrate"
-                    else "blocked-done",
-                    "wis": parked[tid]["wis"],
-                }
-                integrated_any = True
-            elif result == "recompose":
-                integrated_any = True  # ref moved: rescan and retry this train
-            else:
-                parked[tid] = {
-                    "state": result if result != "error" else "quarantined",
-                    "wis": parked[tid]["wis"],
-                }
-                journal.event(
-                    "integration-parked", train=tid, state=result, detail=detail[:200]
-                )
+        integrated_any = _integrate_parked(
+            root,
+            docs,
+            journal,
+            parked,
+            required_verdicts,
+            needs_human_ask,
+        )
         if integrated_any:
             state_pub, detail_pub = publish_integration(root, journal, dev_branch)
             if state_pub == "deferred":
@@ -2182,39 +3023,18 @@ def dispatch_run(args, root):
             waiting = [t for t, p in parked.items() if p["state"] == "waiting"]
             resumable = [t for t, p in parked.items() if p["state"] == "resume"]
             dispatchable = bool(cars) or bool(resumable)
-            if paused is not None:
-                stop_banner(
-                    docs / "status.md",
-                    "paused (docs/pause present)",
-                    "no new reservations; delete docs/pause and relaunch to "
-                    "resume ({} in-flight train(s) already wrapped safely).".format(
-                        len(parked)
-                    ),
-                )
-                return EXIT_PAUSED
-            if needs_human_ask:
-                _write_runstate(docs, "NEEDS-HUMAN", needs_human_ask)
-                stop_banner(docs / "status.md", "NEEDS-HUMAN", needs_human_ask)
-                return EXIT_NEEDS_HUMAN
-            if blacked_out and dispatchable:
-                # Inside the window with work available: wait it out — a
-                # single walk-away launch survives the blackout (spec §12).
-                wake = blackout_wake(
-                    read_declared(docs / "blackout", ""),
-                    datetime.datetime.utcnow(),
-                )
-                time.sleep(min(wake or 60, 60))
+            idle_action = _idle_decision(
+                paused, needs_human_ask, blacked_out, dispatchable, waiting
+            )
+            idle_result = _apply_idle_action(
+                idle_action, root, docs, journal, parked, needs_human_ask
+            )
+            if idle_result == "continue":
                 continue
-            if waiting and not dispatchable:
-                _write_runstate(docs, "RUNNING")
-                stop_banner(
-                    docs / "status.md",
-                    "WAITING on rate limits",
-                    "every dispatchable train is rate-limited; relaunch later.",
-                )
-                return EXIT_WAITING
-            if not dispatchable and not waiting:
+            if idle_result == "break":
                 break  # frontier + lanes drained — evaluate the end state
+            if idle_result is not None:
+                return idle_result
 
         # Poll workers; every exit is a rescan trigger (dynamic refill).
         exited = [
@@ -2223,70 +3043,19 @@ def dispatch_run(args, root):
             if a["proc"].poll() is not None
         ]
         for tid, code in exited:
-            handle_exit(tid, code)
+            ask = _handle_worker_exit(
+                root,
+                journal,
+                active,
+                parked,
+                retry_at,
+                tid,
+                code,
+                gate_policy,
+            )
+            needs_human_ask = ask or needs_human_ask
         if not exited:
             time.sleep(args.poll_seconds)
 
     # --- end state (spec §10: run-state is a generated dispatcher outcome) ---
-    telemetry_summary(journal)  # the §13 rollup for the completed run
-    integrated = [
-        t for t, p in parked.items() if p["state"] in ("integrated", "blocked-done")
-    ]
-    attention = [
-        t
-        for t, p in parked.items()
-        if p["state"]
-        in ("quarantined", "needs-human", "needs-re-review", "rework", "dual-paged")
-        or (p["state"] == "train-end" and p["wis"])
-    ]
-    blocked_done = [t for t, p in parked.items() if p["state"] == "blocked-done"]
-    # The integrated disposition — not the possibly-stale dev checkout — is
-    # what DONE/BLOCKED are judged from.
-    reg_rows = registry_rows_at(root, INTEGRATION_REF) or schedule.load_rows(
-        root / "docs" / "requirements" / "work-items.csv"
-    )
-    wis = schedule.load_wis(reg_rows)
-    reserved = set(list_reservations(root))
-    queued_left = any(w["status"] == "queued" and w["id"] not in reserved for w in wis)
-    blocked_rows = any(w["status"] == "blocked" for w in wis)
-    summary = (
-        "trains: {} integrated ({} blocked-disposition), {} needing attention "
-        "(re-review/rework/quarantine/partial); {} unreserved queued WI(s) "
-        "remain".format(
-            len(integrated),
-            len(blocked_done),
-            len(attention),
-            sum(1 for w in wis if w["status"] == "queued" and w["id"] not in reserved),
-        )
-    )
-    if attention:
-        _write_runstate(docs, "RUNNING")
-        stop_banner(
-            docs / "status.md",
-            "trains need attention (re-review / rework / quarantine)",
-            summary,
-        )
-        return EXIT_STALL
-    if queued_left:
-        _write_runstate(docs, "RUNNING")
-        stop_banner(docs / "status.md", "build-out wave complete", summary)
-        return EXIT_DONE
-    unpublished = integration_head(root)
-    if unpublished and unpublished != head_sha_full(root):
-        # Everything integrated but the development projection lags (deferred
-        # publication — usually a dirty checkout): RUNNING, not DONE; the next
-        # launch resumes the publish idempotently.
-        _write_runstate(docs, "RUNNING")
-        stop_banner(
-            docs / "status.md",
-            "integration complete; publication deferred",
-            summary + " — clean the checkout and relaunch to publish.",
-        )
-        return EXIT_DONE
-    if blocked_rows:
-        _write_runstate(docs, "BLOCKED")
-        stop_banner(docs / "status.md", "run-state=BLOCKED", summary)
-        return EXIT_BLOCKED
-    _write_runstate(docs, "DONE")
-    stop_banner(docs / "status.md", "run-state=DONE", summary)
-    return EXIT_DONE
+    return _finish_dispatch(root, docs, journal, parked)

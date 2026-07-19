@@ -129,6 +129,20 @@ _CONST_ENV = {
     "page_top_tier_fails": "AGENT_ROUTE_PAGE_TOP_TIER_FAILS",
 }
 
+# Per-phase draw-weight grammar (WI-236): an agents-enabled id may carry optional
+# `<PHASE>=<int>` annotations after whitespace. These are the phases a weight may
+# name; `REVIEW` is the umbrella that expands to both reviewer legs. A weight of 0
+# means "fallback-only" (never drawn for the phase unless it is the sole legal
+# candidate); a negative or non-integer weight is a malformed line (preflight
+# fails). Unannotated ids weigh 1 everywhere, so an unannotated file selects
+# byte-identically to before (uniform weight == today's line-order tie-break).
+WEIGHT_PHASES = ("BUILD", "REVIEW", "CRITIQUE", "DESIGN-CHECK")
+_WEIGHT_PHASE_ALIAS = {"REVIEW": ("REVIEW-A", "REVIEW-B")}
+# A weight is an unsigned ASCII decimal integer — no sign prefix, no whitespace
+# (`+3`/`-1`/` 3` all fail). Python ints are unbounded, so a very large weight is
+# accepted and simply concentrates the draw (a near-pin; documented).
+_WEIGHT_INT_RE = re.compile(r"[0-9]+\Z")
+
 
 class Model:
     """One registry row = one (model x route) pair. The id is opaque (a join
@@ -390,21 +404,125 @@ def resolve_enabled(enabled, registry, tag_rank=None):
     return resolved, errors
 
 
-def load_enabled(path):
-    """The ordered enable-list (docs/agents-enabled): every non-empty, non-#
-    line, in preference order. Absent/empty -> [] (routing off). This is the
-    consent surface — its presence is what turns managed routing on."""
+def _parse_enabled_line(line):
+    """Split one non-comment agents-enabled line into (token, {phase: weight},
+    error). `token` is the first whitespace field (the id, resolved elsewhere);
+    the rest are optional `<PHASE>=<int>` draw-weight annotations (WI-236). The
+    weight dict is keyed by CONCRETE phase (the `REVIEW` umbrella expands to
+    REVIEW-A/REVIEW-B). `error` is None on success, else a human string naming
+    the malformed field — the caller surfaces it as a preflight failure, since
+    the file is the consent surface (never a silent drop)."""
+    fields = line.split()
+    token = fields[0]
+    # An annotation-only line (weights with no id in front) is a common slip —
+    # name it precisely rather than failing later as an unresolvable id.
+    if "=" in token:
+        return (
+            token,
+            {},
+            "missing id before annotations (line starts with {!r})".format(token),
+        )
+    weights = {}
+    for field in fields[1:]:
+        raw_phase, sep, raw_val = field.partition("=")
+        if not sep:
+            return (
+                token,
+                {},
+                "malformed annotation {!r} (expected PHASE=int)".format(field),
+            )
+        # Strict, case-SENSITIVE match to the documented grammar — the file is a
+        # consent surface, so a lowercase or misspelled phase is a hard error.
+        if raw_phase not in WEIGHT_PHASES:
+            return (
+                token,
+                {},
+                "unknown phase {!r} (expected one of {})".format(
+                    raw_phase, "|".join(WEIGHT_PHASES)
+                ),
+            )
+        if not _WEIGHT_INT_RE.match(raw_val):
+            return (
+                token,
+                {},
+                "weight {!r} for {} is not a non-negative integer".format(
+                    raw_val, raw_phase
+                ),
+            )
+        weight = int(raw_val)
+        for key in _WEIGHT_PHASE_ALIAS.get(raw_phase, (raw_phase,)):
+            if key in weights:
+                return token, {}, "duplicate phase {} on one line".format(raw_phase)
+            weights[key] = weight
+    return token, weights, None
+
+
+def load_enabled_entries(path):
+    """Parse docs/agents-enabled into ordered (token, {phase: weight}) entries
+    plus a list of malformed-annotation errors, each naming the offending line
+    (WI-236). Absent/empty file -> ([], []). This is the annotation-aware read;
+    `load_enabled` wraps it for callers that only need the ids."""
     path = Path(path)
     try:
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
     except OSError:
-        return []
-    out = []
+        return [], []
+    entries, errors = [], []
     for ln in lines:
-        ln = ln.strip()
-        if ln and not ln.startswith("#"):
-            out.append(ln)
-    return out
+        stripped = ln.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        token, weights, err = _parse_enabled_line(stripped)
+        entries.append((token, weights))
+        if err:
+            errors.append("{!r}: {}".format(stripped, err))
+    return entries, errors
+
+
+def load_enabled(path):
+    """The ordered enable-list ids (docs/agents-enabled): the first field of
+    every non-empty, non-# line, in preference order. Absent/empty -> [] (routing
+    off). This is the consent surface — its presence is what turns managed routing
+    on; per-phase draw-weight annotations (WI-236) are stripped here and read via
+    `load_enabled_entries`."""
+    entries, _errors = load_enabled_entries(path)
+    return [token for token, _weights in entries]
+
+
+def resolved_weights(entries, registry, tag_rank=None):
+    """Map each resolved registry id to its {phase: weight} from parsed enable-list
+    `entries` [(token, weights)] (WI-236). Returns (weight_map, errors). An
+    unannotated or unresolvable token contributes nothing (unresolvable tokens are
+    already reported by resolve_enabled). A CONFLICTING redeclaration of the same
+    id (two lines resolving to one id with different weights) is a preflight error
+    naming the id — the consent surface must not silently keep one; an IDENTICAL
+    redeclaration is a benign dedup. Only ids that carry a declared weight appear
+    — an absent id weighs 1 (uniform) at select time."""
+    out, errors = {}, []
+    for _token, weights in entries:
+        if not weights:
+            continue
+        rid, _reason = resolve_token(_token, registry, tag_rank)
+        if rid is None:
+            continue
+        if rid in out:
+            if out[rid] != weights:
+                errors.append(
+                    "id {} redeclared with conflicting weights ({} vs {})".format(
+                        rid, out[rid], weights
+                    )
+                )
+            continue  # identical redeclaration -> benign dedup
+        out[rid] = weights
+    return out, errors
+
+
+def phase_weights(weight_map, phase):
+    """The per-id draw weights for `phase` from the resolved weight map
+    ({id: {phase: int}}), keyed by concrete phase. Absent -> {} (uniform, i.e.
+    today's line-order tie-break). BUILD covers the legacy/interactive '' phase."""
+    key = "BUILD" if phase in ("BUILD", "") else phase
+    return {rid: wm[key] for rid, wm in (weight_map or {}).items() if key in wm}
 
 
 def available(cooldowns, model_id, now):
@@ -420,6 +538,69 @@ def cool(cooldowns, model_id, now, seconds):
     cooldowns[model_id] = now + max(0, seconds)
 
 
+def _weighted_rotation(candidates, weights, counter):
+    """Deterministic weighted pick from an ORDERED legal candidate list (WI-236).
+
+    `weights` maps id -> a non-negative draw weight for THIS phase (absent == 1);
+    `counter` is the durable per-train session counter (never randomness). The
+    pick is a stateless weighted rotation: `counter mod (sum of positive weights)`
+    indexes the cumulative weight ranges, so over N draws each id lands its share
+    and the sequence is exactly reproducible from history.
+
+      - Zero weight is FALLBACK-ONLY: an id weighing 0 is held out of the draw
+        while any positive-weight candidate exists, but is taken when it is the
+        sole legal candidate (routing never dead-ends on a 0).
+      - Uniform positive weights (the unannotated file, or an all-equal
+        annotation) collapse to the first candidate — line order is the tie-break
+        among equal weights, byte-identical to before weights existed.
+      - Renormalization is implicit: a cooled model is simply absent from
+        `candidates`, so the remaining shares recompute over the survivors.
+    """
+    if not candidates:
+        return None
+    weights = weights or {}
+    positives = [
+        (cid, weights.get(cid, 1)) for cid in candidates if weights.get(cid, 1) > 0
+    ]
+    if not positives:
+        return candidates[0]  # every legal candidate is fallback-only: order decides
+    pos_weights = [w for _cid, w in positives]
+    if len(set(pos_weights)) == 1:
+        return positives[0][0]  # uniform weights -> line-order tie-break (today)
+    slot = counter % sum(pos_weights)
+    accumulated = 0
+    for cid, weight in positives:
+        accumulated += weight
+        if slot < accumulated:
+            return cid
+    return positives[-1][0]
+
+
+def _pick(avail, registry, exclude, prefer_different, preferred_ids, weights, counter):
+    """From the same-tier available ids (in enable-list order), apply the
+    AGENT_PREFER_MAP pin, the prefer-different heterogeneity filter, and the
+    weighted rotation. Returns (chosen_id, note_suffix) — a pin wins its phase
+    outright over weights; weights govern the unpinned remainder. `note_suffix`
+    carries the DEGRADED banner when only same-family models remain."""
+    pool = avail
+    suffix = ""
+    if prefer_different:
+        different = [mid for mid in avail if registry[mid].family not in exclude]
+        if different:
+            pool = different
+        else:
+            # Degraded: only same-family models are available. Legal — fresh
+            # context is the invariant, family diversity is best-effort.
+            suffix = (
+                " — DEGRADED: no different-family model available, same-family "
+                "review (weaker corroboration)"
+            )
+    pin = next((mid for mid in (preferred_ids or ()) if mid in pool), None)
+    if pin is not None:
+        return pin, suffix  # the pin wins its phase outright, over any weight
+    return _weighted_rotation(pool, weights, counter), suffix
+
+
 def select(
     enabled,
     registry,
@@ -429,6 +610,8 @@ def select(
     exclude_families=(),
     prefer_different=False,
     preferred_ids=(),
+    weights=None,
+    counter=0,
 ):
     """Pick a model id from the enabled pool, or None. Returns (id, reason) — the
     reason is the line the coordinator LOGS before launch (no silent swap).
@@ -436,15 +619,18 @@ def select(
     Rules, in order:
       - Only enabled ids that exist in the registry and are not cooling down.
       - Walk from `tier` UP to strong; never select a weaker tier than asked.
-      - Within a tier, `preferred_ids` are tried first, then enable-list order.
-        Unknown, disabled, wrong-tier, or cooling preferred ids simply fall
-        through; a preference can never change the requested tier.
+      - A `preferred_ids` pin (AGENT_PREFER_MAP) wins its phase outright when it
+        is legal; unknown, disabled, wrong-tier, cooling, or heterogeneity-barred
+        pins simply fall through (a preference never changes the requested tier).
       - When prefer_different, prefer an id whose FAMILY (who trained it — never
         the route it is reached by) is not in exclude_families; if none
         qualifies, fall back to any available one (degraded availability is
         legal — same-family review is allowed, it just earns a weaker
         corroboration signal). A router-fronted row shares its native sibling's
         Family, so it is NOT diverse from it.
+      - Among the unpinned legal remainder, `weights`/`counter` drive a
+        deterministic weighted rotation (WI-236); absent weights == uniform ==
+        the historical line-order pick, byte-identical to before.
     """
     cooldowns = cooldowns or {}
     exclude = set(exclude_families or ())
@@ -465,24 +651,11 @@ def select(
         ]
         if not avail:
             continue
-        preferred = [mid for mid in (preferred_ids or ()) if mid in avail]
-        avail = preferred + [mid for mid in avail if mid not in preferred]
         bumped = " (tier bumped up from {})".format(tier) if ti != start else ""
-        if prefer_different:
-            different = [m for m in avail if registry[m].family not in exclude]
-            if different:
-                return different[0], "selected {} [{}]{}".format(
-                    different[0], this_tier, bumped
-                )
-            # Degraded: only same-family models are available. Legal — fresh
-            # context is the invariant, family diversity is best-effort.
-            return avail[0], (
-                "selected {} [{}]{} — DEGRADED: no different-family model "
-                "available, same-family review (weaker corroboration)".format(
-                    avail[0], this_tier, bumped
-                )
-            )
-        return avail[0], "selected {} [{}]{}".format(avail[0], this_tier, bumped)
+        chosen, suffix = _pick(
+            avail, registry, exclude, prefer_different, preferred_ids, weights, counter
+        )
+        return chosen, "selected {} [{}]{}{}".format(chosen, this_tier, bumped, suffix)
     return None, (
         "no enabled model available at tier {} or stronger (all cooled down or "
         "none enabled) — page/wait rather than select a weaker tier".format(tier)

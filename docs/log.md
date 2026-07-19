@@ -268,6 +268,35 @@ why (one bullet each; cite ids)._
   stable **OI-3** id, narrowed in [open-items.md](open-items.md); rec:
   integrate at the next stable cut (post-WI-209). Per the pending-only rule
   the executed half moves here and out of the brief.
+- **2026-07-18 — OI-3 RULED AND CLOSED (owner): integrate `derived-gate-model`
+  into `main` — "yes, if not already done."** Git-verified already done at read
+  time: `main` sits at `3abeb63` (*Merge branch 'derived-gate-model'*), in sync
+  with `origin/main`, and `derived-gate-model` (`239e78c`) is an ancestor of
+  `main` — the integration the brief contemplated happened at the recommended
+  stable cut. No further git action taken (nothing to integrate; pushes stay
+  `push-policy: human`). Alternatives passed over: re-pointing tooling to keep
+  `derived-gate-model` as de-facto mainline — moot once merged. The OI-3
+  section is deleted from [open-items.md](open-items.md) per the pending-only
+  rule. (Unmerged residue elsewhere is *not* OI-3's: `dualplan-routing-fix`
+  and `guardrails-fable-method` remain open dev branches with their own
+  merge-to-main sittings to be ruled separately.)
+- **2026-07-19 — OI-14 RULED: WI-229 stage-2 ATTEST (owner Peter Johnson).**
+  The owner reviewed the complete frozen stage-1 migration plan
+  (`docs/ratify/WI-229-sr-split.md` on train `p0-g3-WI-229-3999`, page commit
+  `9fed833f35139b69a519b75e978e6232209e2e8d`) and ruled **ATTEST** — the
+  exact census (11 oversized SRs, the live base-sensitive set superseding the
+  filed examples), supersession model (`SupersededBy` column, Inspection link
+  rows, TC-099), frozen split map (SR-067..SR-108 with the complete LLR/TC
+  re-parenting), SN/interface migration, and stage-3 transaction order are
+  approved with no revisions. Terminology note recorded: this act is the
+  stage-2 *ratification* of the plan; the *attestation* proper of the
+  Inspection-verified supersession rows follows at stage-3 close under
+  `--require-verified`. The record also lives on the train itself
+  (`6905138` — the resumed worker reads its own worktree). Alternatives
+  passed over: REVISE (no mapping challenged) · park-as-deferred (moot once
+  ruled). Stage 3 is now dispatchable; the expected honest G3→G2 gate
+  regression mid-migration is pre-accepted as part of the ratified plan.
+  OI-14's section is deleted per the pending-only rule.
 
 ## Audit log
 
@@ -9491,3 +9520,544 @@ test is in the smoke tier by default.
 3 skipped**. Byte-budget guard: budgeted docs untouched (`AGENTS.template.md`
 9,978 · `PROCESS.md` 60,169 · `PROCESS_OPTIONS.md` 156,661 — delta 0 each).
 On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 17:06 — integrated train p0-g3-WI-226-65f9 (WI-226)
+
+Head 6a7b090 composed onto 808f95d by the serialized integrator; 1 verdict(s) verified on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-226 -> done.
+
+## 2026-07-18 17:58 — integrated train 1-g3-WI-227-cec3 (WI-227)
+
+Head c416510 composed onto d1f5f5a by the serialized integrator; 1 verdict(s) verified on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-227 -> done.
+
+## 2026-07-18 — WI-233: git() surfaces stderr on failure
+
+Field finding 4 (downstream gilbert parallel runs, 2026-07-18): the shared
+`agent_common.git()` wrapper returned `(returncode, stdout-stripped)` only, but
+git reports hook rejections and stderr-only fatals on **stderr** — so every
+`detail=out[:200]` park/quarantine reason built from a failed call was blank
+after the colon. Gilbert's WI-006 train parked twice as
+`integration-parked detail="integration commit failed: "` because the pre-commit
+floor rejected the integration commit and its whole report went to stderr;
+diagnosing it required replaying the merge by hand in the staging worktree.
+
+`git()` now appends git's stripped stderr to the returned text on a NONZERO exit
+(newline-joined when both streams are non-empty). The **success path is
+byte-identical** to before — stdout-stripped alone — so the `rev-parse` /
+`status --porcelain` / trailer parsers all read unchanged output and no caller
+was touched (no structured triple, deliberately). Every failed-`git()` detail
+now carries the real cause: the integration-commit reason, merge-conflict
+journaling, reservation CAS failures.
+
+Three regressions in `tests/test_agent_loop.py` prove it against real repos: a
+pre-commit hook rejection surfaces its failing check in the text (a cross-platform
+`#!/bin/sh` hook git runs via its bundled sh on Windows); a stderr-only fatal
+(`rev-parse --verify` on a missing ref) returns non-empty text; a successful
+commit whose hook warns on stderr returns the stdout summary alone, no stderr
+bleed. The existing suite stays green — no failure-path caller parses `git()`
+output structurally.
+
+**Verified at close.** Smoke tier **912 passed / 3 skipped**; full suite
+**1,136 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
+No spec deviation on the code+tests. Note: WI-233 was not present in status.md's
+hand-authored "Next action" frontier listing (which names WI-229..232), so no
+removal there was needed. On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 — WI-230: publish under disjoint dirt
+
+Parallel-run field finding 1 (run `20260718T153937`): `publish_integration`
+ended in `git reset --hard <target>` gated on a fully clean primary worktree, so
+it deferred publication on **any** tracked dirty path — including files the
+publish diff never touches. Two are dirty in normal operation: the owner-only
+`OWNER_SCRATCHPAD.md` (workers never touch it, so it can never intersect a
+publish diff) and the dispatcher's own end-of-run `docs/run-state` rewrite
+(self-inflicted dirt). WI-227's integration sat unpublished on `llm/integration`
+behind a dirty scratchpad; the only clean recovery was restore + stash + relaunch
++ pop, and committing the scratchpad to clear the tree lands in WI-220's diverged
+NEEDS-HUMAN stop. The guard blocked the exact workflow the scratchpad exists for.
+
+The blanket defer is replaced with a **disjointness rule**: intersect the tracked
+worktree/index dirt with the `dev_head..target` publish diff. Empty intersection
+⇒ proceed, syncing the checkout via git's own two-way merge
+(`read-tree -m -u <base> <target>`) which advances the published paths and
+carries every other uncommitted edit forward byte-for-byte — git **refuses**
+(nonzero) rather than clobber a locally-modified published path, the backstop
+that upholds the never-reset/never-stash contract. Non-empty ⇒ defer exactly as
+before. The same rule governs the two §11 recovery branches (the already-at-target
+crash window and the post-CAS verified sync); the exact-old `reset --hard` stays
+for the mechanically-stale case. No path-name allowlist — disjointness derives
+what a hardcoded list (scratchpad, run-state) would only approximate. The dirt is
+measured NUL-delimited with `--no-renames` (as WI-224's salvage scans do) so Git
+never C-quotes special path bytes and both sides of a rename are counted. The
+publish-intent CAS protocol is unchanged; idempotent replay after a crash between
+the dev-ref CAS and the sync is preserved (a subsequent pass with the disjoint
+edit still dirty and the intent already deleted is a clean noop, not a spurious
+divergence defer).
+
+Four regressions in `tests/test_agent_loop_integrate.py`: a disjoint dirty file
+publishes and survives byte-for-byte (full-dispatch, rewriting the old
+defer-then-relaunch test whose premise WI-230 inverts); intersecting dirt defers
+with the checkout and dev ref untouched; the §11 crash replay carries disjoint
+dirt across the finished sync; the `docs/run-state` rewrite alone no longer
+strands publication. The heavy lifting sits in four sub-10 helpers
+(`_publish_diff_paths`, `_worktree_dirt`, `_publish_dirt`, `_sync_worktree` /
+`_carry_dirt_forward`); `publish_integration`'s C901 census bumps a **reviewed
+17→20** (the intersection gate plus the two recovery-branch outcomes) — restamped
+in `tests/test_complexity_ratchet.py` with the reason, WI-226's decomposition
+absorbs it.
+
+Deliberately left alone: `docs/specs/parallel-wi-dispatch.md` §9's "only when the
+worktree is clean" prose and the §11 recovery table now describe an incomplete
+SSOT; the WI-230 spec is the authoritative amendment and its scope is code+tests
+only. Flagged for a follow-up doc pass rather than edited inline (out of scope).
+
+**Verified at close.** Smoke tier **912 passed / 3 skipped**; full suite
+**1,140 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
+On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 — WI-230: consume review findings (untracked-collision + §9 amendment)
+
+Independent review of b978b4f returned **APPROVE** with three findings.
+
+**MAJOR — a live data-loss bug, not just a missing test.** The reviewer flagged
+the top data-loss class: the publish diff ADDS a path where the owner holds an
+UNTRACKED file of distinct content. Driving the real `publish_integration` at
+b978b4f showed it **published and clobbered** the file (state `published`, dev
+ref moved, owner content lost) — because a worktree whose only hazard is an
+untracked collision carries no *tracked* dirt, so it classified `clean` and the
+sync ran `git reset --hard`, which overwrites untracked collisions (`read-tree`
+refuses them, but `read-tree` only runs on the disjoint-dirt path). The fix folds
+untracked-collision detection into `_publish_dirt`: `git ls-files --others
+--exclude-standard -z` (ignored files excluded, matching git's own checkout
+machinery) intersected with the publish diff → classify `intersect`. This defers
+at the **outset gate, before the dev-ref CAS**, so the dev ref never moves and
+the file survives byte-for-byte; `read-tree`'s own refusal remains the sync-time
+backstop. New regression `test_publish_defers_on_untracked_collision_with_an_added_path`
+locks defer + survive + dev-ref-unmoved so a future swap of `read-tree` for a
+forced sync variant fails loudly. `_publish_dirt` stays under the C901 limit; the
+`publish_integration` baseline (20) is unchanged.
+
+**MINOR — §9 SSOT amendment.** `docs/specs/parallel-wi-dispatch.md` §9 (the
+follow-up the prior entry flagged as deliberately deferred) is now amended: it
+states the disjointness rule (publication proceeds when tracked dirt is disjoint
+from the publish diff, carried forward by the clobber-refusing `read-tree -m -u`
+sync; intersecting dirt or an untracked collision defers; the exact-old-hash
+`reset --hard` remains the mechanically-stale path) and references
+[WI-230.md](specs/WI-230.md) as the amending spec.
+
+**NOTE — ruling recorded.** The reviewer observed that the already-at-target,
+dirty, no-pending-intent branch changed from `deferred "diverges"` to `noop`
+(vs. pre-WI-230). This is **accepted as deliberate and more correct**: with no
+pending publish-intent there is no sync to finish, so publication IS complete —
+`dev_head == target` — and any (necessarily disjoint) worktree dirt is the
+owner's, left untouched. The pre-WI-230 `deferred` only ever arose from user dirt
+applied after a completed publish, where deferral of a no-op publication was
+harmless; the new `noop` also keeps the disjoint-dirt idempotent replay from
+reading as a spurious divergence. Divergence with a PENDING intent still defers.
+
+**Verified at close.** Smoke tier **912 passed / 3 skipped**; full suite
+**1,141 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
+On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 — WI-231: regenerate generated artifacts / union WI rows on composition conflict
+
+Parallel-run field finding 2 (runs `20260718T153937`/`190911`): composition
+3-way merged **every** path as opaque text, so any textual conflict parked the
+train `needs-re-review`. `PROJECT_STATE.html` is *generated* and nearly every WI
+regenerates it, so two trains reserved off one base conflicted on the dashboard
+almost deterministically — WI-219's park was that file *alone*, and each relaunch
+re-ran the same merge and re-parked. The registry had the same character at row
+grain: WI-228's park was two sides editing *different* WI rows a line-level merge
+misread as a collision.
+
+**Change.** `integrate_train`'s merge step now routes through `_compose_train`. A
+clean apply still takes the fast path; on a conflict `_resolve_composition_conflict`
+classifies every unmerged path and continues composition only when **all** are
+auto-resolvable, parking otherwise (the park/re-review state machine is untouched
+— that is WI-232).
+
+- **Slice A (generated set).** A module-level `GENERATED_ARTIFACTS` tuple is the
+  ONE declared home for the paths a harness `--check` step owns — the same set as
+  `check.py`'s arch-map / trajectory-map / status-map / okf steps: `PROJECT_STATE.html`
+  and `docs/okf/` (fully generated), `docs/architecture.md` and `docs/status.md`
+  (block-generated, carrying a `(BEGIN, END)` marker pair). A fully generated path
+  resolves by taking OURS wholesale; a block file resolves by stripping ONLY
+  in-block conflict hunks (`_resolve_block_conflict`) and **parks if a conflict
+  escapes into the hand-authored prose** — status.md's forward-only intent below
+  the markers is not generated. `_regenerate_generated` then re-runs the sibling
+  generators (extending the WI-220 machinery) IN the integrate worktree against
+  its merged tree; the arch-map `--src` comes from `docs/stack.ini [paths]`.
+- **Slice B (registry union).** A `work-items.csv` conflict resolves by a
+  WI-ID-keyed 3-way row union read from the merge index stages
+  (`_union_registry` → `_merge_wi_rows` → `_ordered_wi_rows`): a row changed on
+  one side takes that side; a **both-sides** edit of the same row parks as a
+  genuine conflict; the header comes from the merged result (parking on a header
+  disagreement) and rows emit in base-then-additions order.
+- **Telemetry.** A distinct `integration-regenerated` event names the
+  auto-resolved paths (vs. `integration-conflict` for genuine parks), and the run
+  summary gains a `regenerated` counter.
+
+**Deliverables.** `project-trajectory/scripts/agent_dispatch.py` (the constant +
+`_generated_entry`/`_declared_src`/`_generated_regen_argv`/`_resolve_block_conflict`/
+`_resolve_generated_path`/`_stage_rows`/`_ordered_wi_rows`/`_merge_wi_rows`/
+`_union_registry`/`_regenerate_generated`/`_resolve_composition_conflict`/
+`_compose_train` helpers; `integrate_train` rewired; the summary counter);
+`tests/test_agent_loop_integrate.py` (four integration regressions — dashboard
+regenerate-without-park, disjoint-row union, same-row park, mixed generated+source
+park — plus two pure-helper units). Spec: [WI-231.md](specs/WI-231.md).
+
+**Deviations.** The skills index is deliberately absent from `GENERATED_ARTIFACTS`:
+its neutral source exists only in the kit repo and the per-agent copies the
+skills-sync gate checks are hand-authored source that must park, not regenerate.
+The dashboard regeneration runs in the integrate worktree, so its project name
+comes from the README H1 (stable across worktrees) — a repo with no README H1
+would bake the worktree basename into the title, but that is pre-existing
+behavior of the clean-integration regeneration, not introduced here.
+
+**Verified at close.** No C901 baseline change (`integrate_train` stays 16; every
+new helper is under 10). Smoke tier **912 passed / 3 skipped**; full suite
+**1,147 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken;
+the shifted spec line-anchor hints are warn-only). On `dualplan-routing-fix`,
+not pushed.
+
+**REWORK (independent review of 73ca4c2 — VERDICT: REWORK).** Three defects
+reproduced (reviewer scratch `drive.py`/`drive2.py`/`drive3.py`) and fixed in one
+follow-up commit:
+
+- **MAJOR — marker-straddling hunk silently dropped prose.** `_resolve_block_conflict`
+  guarded only where a hunk STARTS. Git *naturally* produces (drive3) a single
+  hunk that begins in-block but each side re-includes the END marker and the
+  adjacent prose line (both sides edit the block's last generated line AND the
+  following prose line, leaving END as the only common anchor). Taking OURS
+  wholesale discarded the other side's hand-authored prose, violating the park
+  invariant. Fix: collect BOTH sides of each hunk and park (return None) when
+  either side's content contains a BEGIN/END marker line — a straddle regeneration
+  cannot stand in for.
+- **MAJOR — untouched multi-line registry row silently rewritten.** `_stage_rows`
+  read the index blob through `git()` (which strips) then `splitlines()` before
+  `csv.reader`, collapsing a quoted cell's embedded newline; because
+  `_union_registry` re-serializes the whole file, an untouched neighbor row was
+  rewritten on the integration ref. Fix: read the blob RAW via `git cat-file -p`
+  (direct subprocess, un-stripped, `git()` contract unchanged) and parse straight
+  through `csv.reader(io.StringIO(...))`, preserving embedded-newline cells.
+- **MINOR — CRLF checkouts false-parked.** The marker `==` compare against
+  LF-clean constants never latched `inside` on an autocrlf tree, so every in-block
+  conflict parked, defeating Slice A for status.md/architecture.md on Windows —
+  a declared platform. Fix: compare markers `rstrip("\r")`-clean (content bytes
+  left intact, so the round-trip is unchanged).
+
+Regressions added: a real git-produced straddling-hunk park, a row union that
+preserves an untouched quoted multi-line cell byte-for-byte, and a CRLF in-block
+resolve. The reviewer confirmed the rest sound (regeneration tree plumbing,
+mixed-conflict park, journal fidelity, row delete/modify park, skills-index
+exclusion) — left untouched. No C901 baseline change; the module gains a stdlib
+`io` import. Smoke **912 passed / 3 skipped**; full suite **1,150 passed /
+4 skipped**; `check_docs.py --root . --stale` clean. On `dualplan-routing-fix`,
+not pushed.
+
+## 2026-07-18 — WI-232: make needs-re-review actionable
+
+Field finding 3 (2026-07-18 parallel run): a train parked `needs-re-review` on
+a textual conflict was only an attention state — nothing dispatched a re-review,
+and each relaunch reconciled it `ready-to-integrate`, retried the **identical**
+3-way merge, re-parked byte-identically, and stopped `RUNNING`/STALL while
+burning every other resumable lane. The stop banner never said human resolution
+was required, so an operator reasonably relaunched expecting progress; the
+2026-07-18 wrap-up was ultimately a manual merge outside the dispatcher.
+
+**Ruling — adopted option (b)** (rule it human work and say so). Post-WI-231 the
+generated/registry majority of parks auto-resolve, so a surviving `needs-re-review`
+is a genuine both-sides *source* edit — not dispatcher-resolvable. Option (a)'s
+re-review lane would spawn an agent to redo a human merge with no better
+information; it stays deferred until parks prove frequent after WI-231, per the
+spec. Ruling recorded in `docs/specs/WI-232.md` (Ruling section) and the
+canonical `PROCESS_OPTIONS.md` atomic-integrator paragraph.
+
+Two mechanisms in `agent_dispatch.py`:
+
+- **Terminal NEEDS-HUMAN.** `_finish_dispatch` short-circuits to run-state
+  `NEEDS-HUMAN` (before the old attention→RUNNING/STALL path) whenever the run
+  drains with any train parked `needs-re-review`, with a WI-127 `ask:` naming
+  each train and its conflicted path(s) (`_needs_review_ask`). The page lands at
+  the **terminal** decision, after other lanes drain — a source conflict never
+  halts still-resumable disjoint work, it only decides the end-state.
+- **Idempotence guard (conflict inputs durable in Git).** The conflict's merge
+  inputs (train tip + integration head) and paths are recorded under
+  `refs/llm/conflict/<train>` — an off-history `commit-tree` metadata commit
+  mirroring the reservation-ref pattern (§11: `out/dispatch/` is a cache, never
+  authority; durable train state lives in Git). `integrate_train` writes it on
+  the `needs-re-review` return; `_integrate_one_ready` reads it before
+  re-attempting and, when the current inputs still equal the recorded pair,
+  **skips the identical merge** (journals `integration-conflict-held`, no second
+  `integration-conflict`), staying parked. When an input moves — a new
+  integration head or amended train tip — it retries once and overwrites/clears
+  the record on the outcome; a landed train's record is cleared (reconcile +
+  `_integrate_one_ready`).
+
+**Deviations:** none from option (b). The only shift from the literal spec
+sketch is the terminal (not mid-loop) page, which is strictly better for the
+cited symptom (burning other lanes). Three new helpers (`record_conflict`,
+`read_conflict`, `clear_conflict`) + `_conflict_inputs_match`, `_needs_review_ask`,
+`_integrate_one_ready` — all under the C901 limit; **no baseline change**
+(`integrate_train` stays 16). `_compose_train` now returns the specific
+path-naming reason (was a generic string) so the ask, record, and park detail
+all name the path.
+
+Regressions in `tests/test_agent_loop_integrate.py`: the existing source-conflict
+test now asserts NEEDS-HUMAN + an `ask:` naming the train and `shared.txt`; a new
+park→relaunch(unchanged, no second `integration-conflict`, same ask)→move-head→
+relaunch(retries once) test; the both-sides-row-collision and mixed-conflict
+parks re-asserted to NEEDS-HUMAN. Byte deltas: `PROCESS_OPTIONS.md`
+**156,661 → 157,038 (+377)** (source-conflict paging + guard; baseline re-stamped
+in all three byte-budget-guard SKILL.md copies); `PROCESS.md` and
+`AGENTS.template.md` untouched. Smoke **912 passed / 3 skipped**; full suite
+**1,151 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
+On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-19 — WI-235: declare the generated-artifact set in stack.ini
+
+**Summary.** The integrator's conflict auto-resolution allowlist (WI-231's
+module-level `GENERATED_ARTIFACTS` tuple) is now **declared, not hardcoded**: a
+`[generated]` section of each repo's own `docs/stack.ini`. A downstream repo with
+its own generated artifacts (or one that relocates a default) teaches the
+integrator here instead of forking vendored kit code — the same species of
+repo-local fact `stack.ini` already holds for the toolchain.
+
+**Deliverables.**
+- `agent_dispatch.py`: `GENERATED_ARTIFACTS` → `DEFAULT_GENERATED_ARTIFACTS` (the
+  built-in fallback) + `_GENERATED_KINDS`, `_parse_generated_row(matcher, value)`,
+  and `_generated_artifacts(wt)`. The reader parses the **integrate worktree's
+  own** `docs/stack.ini` at composition time (`configparser`, `optionxform=str`
+  so `PROJECT_STATE.html` keeps its case, `interpolation=None`) into
+  `(matcher, block, kind)` rows from `<path> = <kind> [| <BEGIN> | <END>]`.
+  **Absent section ⇒ the defaults byte-for-byte; present section is the WHOLE
+  set; a malformed row (bad kind, a marker count that is neither 0 nor 2, or an
+  unreadable stack.ini) ⇒ a non-blank reason.** `_compose_train` loads the
+  declaration and **fails closed to park** on that reason, else threads
+  `artifacts` into `_resolve_composition_conflict` / `_regenerate_generated` /
+  `_generated_entry` (signatures gained the param; no logic moved).
+- `stack.ini.template` + this repo's own `docs/stack.ini` gain the `[generated]`
+  section with the kit defaults (skills index deliberately absent, WI-231 ruling
+  recorded in the comment). `bootstrap.py` copies the template verbatim, so a
+  fresh repo composes identically.
+- `ADOPTING.md` §6 "Preserve always" notes the `[generated]` section is
+  project-owned on re-sync.
+- Regressions in `tests/test_agent_loop_integrate.py`: a declaration-reader unit
+  (absent/no-file ⇒ `DEFAULT_GENERATED_ARTIFACTS`, an extra artifact joins, an
+  omitted default drops, two malformed rows fail closed); a declared extra
+  artifact composes where an absent section parks; a removed default parks again;
+  a malformed section fails closed with "malformed [generated] row". A new
+  `test_bootstrap.py` asserts the scaffold declares the default set. The WI-231
+  end-to-end tests pass **unmodified** — that IS the byte-for-byte regression.
+
+**Deviations from spec:** none. Design choice worth noting: an *unreadable* whole
+`stack.ini` (not just a malformed `[generated]` row) also fails closed to park —
+the safe direction the spec's principle demands ("an unparseable declaration must
+never widen auto-resolution"), and consistent with the combined bar, which
+already rejects an unreadable stack.ini.
+
+**Complexity / byte deltas.** `_resolve_composition_conflict` held at C901 **10**
+(the declaration load lives in `_compose_train`, not inside it), so **no ratchet
+baseline change**; the new helpers are all under the limit. No byte-budgeted doc
+touched (`PROCESS.md` / `PROCESS_OPTIONS.md` / `AGENTS.template.md` untouched).
+
+Smoke **912 passed / 3 skipped**; full suite **1,156 passed / 4 skipped**;
+`check_docs.py --root . --stale` clean (0 broken; the "possibly stale" hints are
+pre-existing line-anchor shifts in other WIs' specs). On `dualplan-routing-fix`,
+not pushed.
+
+### 2026-07-19 — WI-235 rework (independent review of d3be9e4: VERDICT REWORK, 2 MAJOR + 1 MINOR)
+
+Both MAJOR findings were reproduced by driving the real shipped paths; fixed in
+one rework commit, tests-and-fix together.
+
+- **MAJOR 1 — degenerate marker pair.** `_parse_generated_row` accepted
+  `path = kind | MARK | MARK`. With BEGIN == END, `_resolve_block_conflict`'s
+  `elif stripped == end` is dead, so `inside` latches True at the first marker and
+  never resets — a conflict in hand-authored prose *below* the block resolved
+  take-ours (silent prose loss) where distinct markers correctly park. Fix: reject
+  `parts[1] == parts[2]` as malformed ("BEGIN and END markers must differ") so it
+  fails closed to park.
+- **MAJOR 2 — unreadable stack.ini.** `_generated_artifacts` caught only
+  `configparser.Error`, leaving two escapes: (a) a non-UTF-8 stack.ini raised
+  `UnicodeDecodeError` through the real `_compose_train`, so the `git merge
+  --abort` never ran and the worktree was left UU-conflicted, crashing the
+  unattended loop; (b) an existing-but-unreadable stack.ini (directory-in-place /
+  permission denied) — `configparser.read()` silently skips unreadable files, so
+  it fell OPEN to the defaults with `err=None`, widening resolution. Fix: read via
+  `Path.read_text` INSIDE the guard, distinguishing `FileNotFoundError` (absent ⇒
+  defaults, legitimate) from `(OSError, UnicodeDecodeError)` (present-but-unreadable
+  ⇒ park), then `cp.read_string` for the parse error. The read/decode now sits
+  inside the guarded region, so `_compose_train` parks and its `--abort` runs.
+- **MINOR 3 — pinned, not changed.** A bare `[generated]` section ⇒ `arts == ()`
+  and `err is None` (empty set is a legitimate declaration of "no generated
+  artifacts"; every generated conflict parks). One assertion added.
+
+Regressions added (additive; existing WI-235 + WI-231 tests unchanged): the
+declaration-reader unit gained the equal-marker malformed case, the bare-section
+`err is None` pin, and a directory-in-place unreadable case (parks, not defaults);
+`test_degenerate_marker_pair_fails_closed_to_park` and
+`test_non_utf8_stack_ini_parks_without_stranding_the_merge` drive the real
+`_compose_train` (the latter asserts no unmerged paths remain after the abort).
+No C901 baseline change (`_generated_artifacts` and `_parse_generated_row` stay
+under the limit). Reviewer's verified-clean surfaces left untouched.
+
+## 2026-07-19 — WI-234: project pending owner actions into the open-items surface
+
+**Summary.** WI-229's stage-2 attestation stop was invisible from the owner's
+one review surface — the ask lived only in the spec, the quarantine exit code,
+and a plan doc stranded on a train branch; the OI-14 brief was filed by hand a
+day late. Same class for every parallel-branch hard stop (source conflicts,
+quarantines, `blocked` rows). Mechanized: `gen_trajectory.py --status` now
+projects every **durable** pending-owner action into a generated block in
+`docs/open-items.md`, one line + pointer each, below the hand-authored briefs.
+
+**Deliverables.**
+- `gen_trajectory.py`: a second marker block, `<!-- BEGIN GENERATED PENDING -->`
+  at the END of `docs/open-items.md`. `pending_block(root)` projects from
+  **durable state ONLY** (never the `out/dispatch` journal, §11): **(a)** `blocked`
+  WI rows carrying a BlockRef (`_blocked_pending`) — with the
+  `git show <train>:<path>` read path when the ratification doc lives only on a
+  train branch, resolved by `_train_carrying_path` scanning `refs/heads/llm/train/*`
+  (the WI-229 shape); **(b)** `refs/llm/conflict/*` records (WI-232) naming train +
+  conflicted paths (`_conflict_pending`); **(c)** quarantined trains re-derived from
+  `refs/llm/reservations/*` — unreadable metadata or a missing train branch, the
+  reconcile conditions, **not the journal** (`_quarantine_pending`); **(d)** the
+  `docs/run-state` `ask:` line when NEEDS-HUMAN (`_runstate_pending`). Deterministic
+  (sorted refs, no clocks); `_git`/`_ref_meta` shell git read-only (the `_asof`
+  idiom, no dispatcher import). `run_pending` mirrors `run_status`/`_splice_status`;
+  `--status` runs both, so the existing harness **status-map** step
+  (`--status --check`) freshness-gates the pending block too — a stale projection
+  fails the G3 gate. Hand-authored content above the marker is byte-untouched.
+- `agent_dispatch.py`: `_regenerate_pending(root, journal)` runs
+  `gen_trajectory --status` **best-effort** after every terminal `_write_runstate`
+  (`_finish_dispatch` review-ask + normal terminal; the diverged-head NEEDS-HUMAN;
+  the idle needs-human, which gained a `journal` param). A generator error is
+  journaled as `pending-regen-failed` and the terminal path **never crashes** —
+  the freshness gate catches staleness at the next run.
+- `OPEN_ITEMS.template.md` gains the block (empty placeholder); `bootstrap.py`
+  inserts the stack OI-3 brief **above** the marker (`OI_PENDING_ANCHOR`) so a
+  scaffold keeps hand-authored briefs above the generated region.
+- This repo's own `docs/open-items.md` gains the block (renders empty: no blocked
+  rows, no conflict refs, all reservations readable with branches, run-state
+  RUNNING — verified byte-fresh under `--status --check`).
+
+**Tests.** `tests/test_gen_trajectory_pending.py` — 12 regressions over real temp
+git repos: the four sources each project one correct line; resolving each (row
+unblocked / record cleared / train retired) drops it; a well-formed reserved train
+with a branch is **not** flagged; NEEDS-HUMAN projects, RUNNING does not; `--check`
+trips on a hand-staled block; the hand-authored region stays byte-untouched;
+vacuous without the marker pair; the dispatcher terminal regen updates the block
+and no-ops as a non-adopter. Smoke 924p/3s; check_docs `--stale` clean (warn-tier
+line-drift hints only); full suite green. C901 baseline unchanged; stdlib-only.
+
+### 2026-07-19 — WI-234 rework (independent review of c6e1601: VERDICT REWORK, 1 CRITICAL + 6 minors)
+
+- **CRITICAL — the projection rendered "None" while WI-229's stage-2 attestation
+  was genuinely pending on THIS repo.** Root cause: WI-229's row is `queued` (not
+  `blocked`) on every branch, and the quarantine heuristic (unreadable metadata /
+  missing branch) excluded the **present-but-stranded** shape. Durable signal
+  without a new store: the frozen-plan commit `9fed833` on the reserved train
+  carries `Blocked-WI: WI-229` + `BlockRef: docs/ratify/WI-229-sr-split.md#…`, and
+  the ratify doc opens `State: AWAITING OWNER ATTESTATION`. **Note:** git's own
+  trailer parser drops that trailer — the commit separates its trailer lines with
+  blank lines, so git keeps only the last paragraph (`Base:`); `train_branch_evidence`'s
+  `%(trailers:…)` read would miss it too. New source **(a′)** `_stranded_pending`:
+  for each persistent reservation whose train branch is present, `_train_blocked_trailers`
+  scans the train's raw `%B` bodies (`base..tip`) by line-regex for `Blocked-WI:`
+  naming a reserved WI whose registry row is still open (queued/active/blocked);
+  `_attestation_pointer` resolves the read path (BlockRef path the train carries →
+  a `docs/ratify/*` path the trailer commit touched → the commit itself). Deduped
+  against source (a) on the WI id. **Live acceptance:** `gen_trajectory --status`
+  on this repo now projects
+  `- **WI-229** — awaiting owner attestation/ratification on train `p0-g3-WI-229-3999`: `git show llm/train/p0-g3-WI-229-3999:docs/ratify/WI-229-sr-split.md`; attest, amend, or park the row.`
+  Regression: stranded-shape end-to-end + resolve-drop (trailer WI flipped `done` ⇒
+  line drops) + the not-double-listed-when-also-blocked pin.
+- **MINOR 2** — an unreadable/malformed `refs/llm/conflict/*` record now projects
+  `- **Unreadable conflict record** — inspect <ref>` instead of being silently
+  skipped (matches the reservations' fail-loud posture). Regression added.
+- **MINOR 3** — `_splice_pending` now matches markers only as **exact full lines**,
+  so a hand-authored brief quoting the marker on an indented/fenced line no longer
+  makes the splice `SystemExit` and redden the gate. Pinned by a quoted-marker test.
+- **MINOR 4** — an inverted pair (END before BEGIN) now **fails closed** with a
+  named error and no silent rewrite (was: silently duplicated content). Test added,
+  plus a duplicated-marker-line fail-closed test.
+- **MINOR 5** — the splice **preserves the file's dominant line ending** (reads and
+  writes with `newline=""`), so a CRLF/autocrlf checkout round-trips byte-for-byte
+  and the hand region stays byte-untouched. CRLF regression pins it.
+- **NOTE 6** — `_regenerate_pending`'s subprocess gained `timeout=120`; a wedged git
+  journals `pending-regen-failed` (timeout) instead of hanging the terminal decision.
+- **NOTE 7** — added the unreadable-reservation-metadata quarantine regression.
+
+Reviewer's verified-clean surfaces (terminal-path crash safety, missing-marker
+graceful degrade, RUNNING-with-ask non-render, dev-copy precedence, freshness
+sequencing, bootstrap/template anchor, C901, stdlib) left untouched. Full suite
+after rework: green (totals in the commit). C901 baseline unchanged.
+
+### WI-236 — Weighted reviewer draws in agents-enabled — 2026-07-19
+Owner-selected config shape (annotations in `docs/agents-enabled`): an enabled id
+may carry optional per-phase integer **draw weights** after whitespace —
+`<ID>[ <PHASE>=<int>]...`, `PHASE` ∈ BUILD|REVIEW|CRITIQUE|DESIGN-CHECK, `REVIEW`
+covering both reviewer legs. `agent_route` gained the parse/preflight surface
+(`_parse_enabled_line`/`load_enabled_entries`, `resolved_weights`,
+`phase_weights`) and the selection core: `select()` now takes `weights`+`counter`
+and delegates the in-tier pick to `_pick` (pin → prefer-different filter →
+weighted draw) and `_weighted_rotation`. The rotation is **deterministic**, keyed
+on the durable **per-train session counter** (`agent_common.next_session_number`,
+derived from the iteration-log filenames — no randomness, no new durable store):
+`counter mod (Σ positive weights)` indexes cumulative weight ranges over the
+*legal* remainder, renormalizing implicitly when a model cools (the cooled id is
+simply absent from the candidate list). Wired through `agent_loop` main (parse
+annotations, build the id→{phase:weight} map, malformed-annotation errors join the
+enable-list preflight naming the line) and `route_session` (projects the map onto
+the session's phase, keys on `int(session)`).
+
+**Ruling — zero weight:** `PHASE=0` is legal and **fallback-only** (never drawn
+while a positive-weight candidate is legal, but taken as the sole legal candidate
+so routing never dead-ends); only a negative/non-integer weight is malformed
+(preflight failure). Recorded in the spec's Ruling note and PROCESS_OPTIONS
+routing. **Compatibility:** uniform weights (unannotated file, or an all-equal
+annotation) collapse to the historical line-order first-pick — byte-identical;
+all 15 pre-existing routing tests pass **unmodified**.
+
+Tests: 9 new regressions in `test_agent_route.py` (4:1:1 exact 12-draw sequence;
+cooling renormalize + return; CRITIQUE=9 concentration without starving
+heterogeneity; unannotated + equal-weights identity; malformed-shape preflight
+naming the line; pin-wins-over-weights; zero-weight fallback-only; grammar
+parse/resolve round-trip). C901 ratchet unchanged (new helpers all < 11; `select`
+and `route_session` did not grow). Regenerated `docs/architecture.md`
+(agent_route function list) + `PROJECT_STATE.html`.
+
+Byte deltas: AGENTS.template.md 9978 -> 9978 (untouched); PROCESS.md 60169 ->
+60169 (unchanged); PROCESS_OPTIONS.md 157038 -> 157851 (**+813**: the
+agents-enabled draw-weight grammar sentence in the routing section — a couple of
+sentences; baseline re-stamped in the byte-budget-guard skill, all three copies).
+docs/agents-enabled gained a commented grammar example (kit's dogfooded exemplar).
+Suite: smoke 941p/3s; full **1187 passed, 4 skipped**; check_docs OK.
+
+**Rework (review of e732e45 — VERDICT REWORK, 1 MAJOR + minors):**
+- **MAJOR (keying):** the rotation keyed on the GLOBAL per-train session counter,
+  but a round interleaves phases (BUILD+REVIEW-A+REVIEW-B[+CRITIQUE]), so each
+  phase drew on a strided subset that aliased against the weight sum — the live
+  wiring delivered Terra=12/Kimi=0/Grok=12 for a 4:1:1 REVIEW weight (weight-1
+  candidate starved). Re-keyed on the **per-phase draw ordinal** (count of prior
+  same-phase sessions on the train, from the durable session-log `# phase:`
+  headers — `agent_common.phase_draw_ordinal`; no new store, still deterministic).
+  `route_session` now passes that ordinal as the counter. New coverage
+  `test_weighted_share_over_real_wiring_no_stride_starvation` drives the REAL
+  ordinal-derivation + select across 18 rounds of realistic interleaving and
+  asserts **12/3/3** (Kimi no longer starved); the exact-sequence unit re-keyed to
+  the 0-based ordinal.
+- **MINOR (conflicts):** a duplicate id resolving to conflicting weights now fails
+  preflight naming the id (`resolved_weights` returns errors); an identical
+  redeclaration stays a benign dedup. **MINOR (strict parse):** case-sensitive
+  phases (lowercase rejected), unsigned-decimal weights only (`+3`/`-1` rejected);
+  large weights accepted unbounded (a near-pin) — documented. **NOTE (fix):** an
+  annotation-only line (`REVIEW=4`, no id) now fails with "missing id before
+  annotations" naming the line. Reviewer's verified-clean surfaces (safety
+  invariants, determinism, zero-weight ruling, byte re-stamps, arch-map, C901,
+  additive test diff) left untouched.
+
+Byte deltas (rework): PROCESS_OPTIONS.md 157851 -> 158094 (**+243**: the keying
+description + conflict-redeclaration note; baseline re-stamped to 158,094, total
+WI-236 +1,056 from 157,038). AGENTS.template.md / PROCESS.md unchanged.
+Regenerated architecture.md (agent_common phase_draw_ordinal) + PROJECT_STATE.html.

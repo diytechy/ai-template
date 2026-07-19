@@ -235,6 +235,7 @@ preflight = agent_common.preflight
 write_session_log = agent_common.write_session_log
 regenerate_index = agent_common.regenerate_index
 next_session_number = agent_common.next_session_number
+phase_draw_ordinal = agent_common.phase_draw_ordinal
 commit_telemetry = agent_common.commit_telemetry
 _write_runstate = agent_common._write_runstate
 
@@ -1749,6 +1750,11 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         tier, exclude, prefer_different = st.route_intent(
             phase, is_review, is_critique, tier_map, pinned_tier
         )
+        # Per-phase draw weights (WI-236) drive a deterministic weighted rotation
+        # over the unpinned legal remainder, keyed on the durable PER-PHASE draw
+        # ordinal (prior same-phase sessions on this train) — NOT the global
+        # session counter, which strides across phases and would alias against
+        # the weight sum. No randomness, no new durable store.
         route_id, reason = agent_route.select(
             enabled,
             registry,
@@ -1758,6 +1764,8 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             exclude,
             prefer_different,
             [prefer_map[phase]] if phase in prefer_map else (),
+            agent_route.phase_weights(ctx.weight_map, phase),
+            phase_draw_ordinal(ctx.iter_dir, worker["train"], phase),
         )
         # Log the routing decision BEFORE launch (the no-silent-swap rule).
         print("route [{}]: {}".format(phase or "—", reason))
@@ -2584,16 +2592,30 @@ def main():
     # AGENT_CMD/AGENT_MODEL behavior, so a fresh scaffold pays nothing (no silent
     # model swap — consent = the enabled set + the declared rules).
     registry, reg_errors = agent_route.load_registry(docs / "agents.csv")
-    raw_enabled = agent_route.load_enabled(docs / "agents-enabled")
+    # Parse the enable-list WITH its optional per-phase draw-weight annotations
+    # (WI-236); a malformed annotation is a preflight failure naming the line
+    # (the file is the consent surface — never silently ignored).
+    enabled_entries, annot_errors = agent_route.load_enabled_entries(
+        docs / "agents-enabled"
+    )
+    raw_enabled = [token for token, _weights in enabled_entries]
     # The enable-list's PRESENCE (not its resolvability) turns managed routing on
     # — an unresolvable token must fail preflight, not silently fall to legacy.
     managed = bool(raw_enabled)
     # Version-less tokens resolve to concrete pair-row ids (exact-id, else newest
     # in the Family-Model line); unresolvable tokens become preflight failures.
     tag_rank = agent_route.load_tag_rank(docs / "agents.csv")
-    enabled, enable_errors = agent_route.resolve_enabled(
+    enabled, resolve_errors = agent_route.resolve_enabled(
         raw_enabled, registry, tag_rank
     )
+    # id -> {phase: weight}, resolved from the annotations (empty when uniform);
+    # a conflicting redeclaration of an id is itself a preflight failure.
+    weight_map, weight_errors = agent_route.resolved_weights(
+        enabled_entries, registry, tag_rank
+    )
+    # Malformed annotations + unresolvable tokens + weight conflicts all surface
+    # as preflight failures under the agents-enabled heading (the consent surface).
+    enable_errors = annot_errors + resolve_errors + weight_errors
 
     failures, prompt_templates = map_preflight(
         root,
@@ -2829,6 +2851,7 @@ def main():
     ctx.prompt_templates = prompt_templates
     ctx.tier_map = tier_map
     ctx.prefer_map = prefer_map
+    ctx.weight_map = weight_map
     ctx.gate_policy = gate_policy
     ctx.guardrails_policy = guardrails_policy
     ctx.warned_no_core = warned_no_core

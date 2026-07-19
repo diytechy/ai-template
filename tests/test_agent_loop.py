@@ -863,6 +863,74 @@ def test_working_tree_dirty_counts_renames_and_untracked(tmp_path):
     assert len(lines) == 2, lines  # the rename is ONE entry (+ b.txt), not three
 
 
+def _git_repo(tmp_path):
+    # A one-config git repo for the agent_common.git() wrapper tests (WI-233).
+    repo = tmp_path / "r"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "a@b.com")
+    _git(repo, "config", "user.name", "A")
+    return repo
+
+
+def test_git_appends_stderr_on_hook_rejection(tmp_path):
+    # WI-233: a commit the pre-commit hook rejects (its whole report goes to
+    # stderr) must return the hook's failing check in the text — not the blank
+    # detail every `detail=out[:200]` park reason carried before. The hook is a
+    # #!/bin/sh script git runs cross-platform (via its bundled sh on Windows).
+    ac = load_script("agent_common")
+    repo = _git_repo(tmp_path)
+    hooks = tmp_path / "hooks"
+    hooks.mkdir()
+    _git(repo, "config", "core.hooksPath", str(hooks))
+    hook = hooks / "pre-commit"
+    hook.write_text(
+        "#!/bin/sh\necho 'SECRETS FLOOR: rejected' 1>&2\nexit 1\n", encoding="utf-8"
+    )
+    os.chmod(str(hook), 0o755)
+    (repo / "a.txt").write_text("hi\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    code, out = ac.git(repo, "commit", "-q", "-m", "should be rejected")
+    assert code != 0
+    assert "SECRETS FLOOR: rejected" in out  # the reason, not "" after the colon
+
+
+def test_git_returns_text_on_stderr_only_fatal(tmp_path):
+    # WI-233: a fatal that writes stderr only (rev-parse --verify on a missing
+    # ref) must return non-empty text — the failure detail is no longer blank.
+    ac = load_script("agent_common")
+    repo = _git_repo(tmp_path)
+    (repo / "a.txt").write_text("hi\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    code, out = ac.git(repo, "rev-parse", "--verify", "refs/heads/nope")
+    assert code != 0
+    assert out.strip()  # git's fatal message survives, not ""
+
+
+def test_git_success_returns_stdout_only_unchanged(tmp_path):
+    # WI-233: a SUCCESSFUL call that also chatters on stderr (a warning) returns
+    # stdout alone, byte-identical to today — no stderr bleed on the success path.
+    # A pre-commit hook warns on stderr yet exits 0, so the commit succeeds; the
+    # returned text must be the commit's stdout summary, never the warning.
+    ac = load_script("agent_common")
+    repo = _git_repo(tmp_path)
+    hooks = tmp_path / "hooks"
+    hooks.mkdir()
+    _git(repo, "config", "core.hooksPath", str(hooks))
+    hook = hooks / "pre-commit"
+    hook.write_text(
+        "#!/bin/sh\necho 'WARN: noisy hook chatter' 1>&2\nexit 0\n", encoding="utf-8"
+    )
+    os.chmod(str(hook), 0o755)
+    (repo / "a.txt").write_text("hi\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    code, out = ac.git(repo, "commit", "-m", "seed with a warning")
+    assert code == 0
+    assert "WARN" not in out  # stderr is NOT appended on the success path
+    assert "seed with a warning" in out  # stdout summary preserved, unchanged
+
+
 def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
     # WI-203: OWNER_SCRATCHPAD.md is perpetually owner-edited, so the loop's
     # dirty-tree signal drops it — the raw primitive still counts it, but the

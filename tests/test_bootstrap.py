@@ -90,6 +90,22 @@ def test_scaffold_contains_expected_files(scaffold):
         assert (scaffold / rel).exists(), "missing from scaffold: " + rel
 
 
+def test_scaffold_stack_ini_declares_generated_artifact_set(scaffold):
+    # WI-235: the integrator's auto-resolution allowlist is scaffolded with the
+    # kit defaults, so a fresh repo composes identically without forking kit code.
+    ini = (scaffold / "docs" / "stack.ini").read_text(encoding="utf-8")
+    assert "\n[generated]" in ini, "a fresh scaffold declares the generated set"
+    for row in (
+        "PROJECT_STATE.html = trajectory",
+        "docs/okf/ = okf",
+        "docs/architecture.md = archmap | <!-- BEGIN GENERATED MODULE MAP --> "
+        "| <!-- END GENERATED MODULE MAP -->",
+        "docs/status.md = status | <!-- BEGIN GENERATED STATUS --> "
+        "| <!-- END GENERATED STATUS -->",
+    ):
+        assert row in ini, "scaffolded [generated] must carry the default: " + row
+
+
 def test_workflows_pin_actions_and_reduce_token_permissions(scaffold):
     """Meta CI and the downstream reference use immutable, least-privilege Actions."""
     workflows = [

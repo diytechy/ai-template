@@ -468,7 +468,14 @@ def _refs(cell):
 
 
 def git(root, *args):
-    """Run git in the repo; returns (returncode, stdout-stripped)."""
+    """Run git in the repo; returns (returncode, text).
+
+    On success `text` is stdout-stripped and byte-identical to the raw call —
+    every success-path caller parses stdout (`rev-parse`, `status --porcelain`,
+    trailer reads). But git reports hook rejections and fatal errors on STDERR,
+    so on a NONZERO exit the stripped stderr is appended to stdout (newline-joined
+    when both are non-empty); otherwise every `detail=out[:200]` a failed call
+    feeds a park/quarantine reason would be blank (WI-233)."""
     proc = subprocess.run(
         ["git", "-C", str(root)] + list(args),
         capture_output=True,
@@ -477,7 +484,12 @@ def git(root, *args):
         errors="replace",
         stdin=subprocess.DEVNULL,
     )
-    return proc.returncode, (proc.stdout or "").strip()
+    out = (proc.stdout or "").strip()
+    if proc.returncode != 0:
+        err = (proc.stderr or "").strip()
+        if err:
+            out = out + "\n" + err if out else err
+    return proc.returncode, out
 
 
 def head_sha(root):
@@ -760,6 +772,29 @@ def next_session_number(iter_dir, train=None):
             if m:
                 highest = max(highest, int(m.group(1)))
     return highest + 1
+
+
+def phase_draw_ordinal(iter_dir, train, phase):
+    """The 0-based draw ordinal for `phase` on `train` (WI-236): how many PRIOR
+    sessions on this train already ran this exact phase, counted from the durable
+    session-log `# phase:` headers. This keys the weighted-rotation draw so each
+    phase advances its OWN rotation — the global per-train session counter strides
+    (a round is BUILD + REVIEW-A + REVIEW-B [+ CRITIQUE]) and would alias against
+    the weight sum, starving weight-1 candidates. Reads existing state only (the
+    logs already record the phase); no new durable store, no randomness. Empty
+    phase / absent dir -> 0 (the first draw)."""
+    if not phase or not iter_dir.is_dir():
+        return 0
+    pattern = (
+        re.compile(r"{}-\d+-".format(re.escape(train)))
+        if train
+        else re.compile(r"\d+-")
+    )
+    count = 0
+    for log in iter_dir.glob("*.log"):
+        if pattern.match(log.name) and read_log_meta(log).get("phase", "") == phase:
+            count += 1
+    return count
 
 
 def preflight(root, template, args):

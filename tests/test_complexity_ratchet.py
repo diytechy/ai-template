@@ -37,10 +37,14 @@ MAX_COMPLEXITY = 10
 BASELINE = {
     ("agent_common.py", "preflight"): 17,
     ("agent_dispatch.py", "_salvage_round_evidence"): 16,
-    ("agent_dispatch.py", "dispatch_run"): 84,
+    ("agent_dispatch.py", "dispatch_run"): 40,
     ("agent_dispatch.py", "integrate_train"): 16,
     ("agent_dispatch.py", "pack_traincars"): 18,
-    ("agent_dispatch.py", "publish_integration"): 17,
+    # WI-230 reviewed bump 17 -> 20: the publish-under-disjoint-dirt rule adds
+    # the dirty-vs-diff intersection gate plus the two recovery-branch sync
+    # outcomes (the heavy lifting lives in the sub-10 helpers _publish_dirt /
+    # _sync_worktree). WI-226's dispatcher decomposition absorbs this debt.
+    ("agent_dispatch.py", "publish_integration"): 20,
     ("agent_loop.py", "critique_brief"): 11,
     ("agent_loop.py", "main"): 24,
     ("agent_loop.py", "map_preflight"): 19,

@@ -11,6 +11,11 @@ every dependency-ready work item that can safely make progress, without a human
 curating `docs/next-wi` or predefining parallel tracks. Development and review
 fan out; mutation of the integration branch remains serialized and gated.
 
+The questions that shaped this contract, each pointing at the section that
+settles it, are logged in the companion
+[resolved design notes](parallel-dispatch-design-notes.md) (non-normative — where
+a note and this plan disagree, the plan wins).
+
 ---
 
 ## 1. Decisions fixed by this plan
@@ -528,20 +533,29 @@ and checks it out only in its dedicated integration worktree. The user's primary
 worktree remains on that selected development branch — never on
 `llm/integration` — while workers and the ordinary checkout never mutate the
 integration ref. After a successful integration CAS, the dispatcher publishes
-the integration HEAD only when the primary development worktree is clean. Because
+the integration HEAD when no uncommitted edit in the primary development worktree
+intersects the publish diff — **[WI-230](WI-230.md)** amends the earlier
+clean-worktree-only rule: tracked dirt disjoint from the `old..target` diff is
+carried forward by the sync, while dirt (or an untracked file at a path the
+publication would add) that intersects it still defers. Because
 the development-ref CAS and the worktree sync are two steps, the publish is made
 crash-identifiable by a **durable publication-intent ref** rather than the
 disposable `out/dispatch/` journal: before the CAS the dispatcher writes
 `refs/llm/publish-intent` pointing at a metadata object that records the
 integration target hash, the **expected old development hash**, and the selected
 development ref. It then advances the development ref with a second CAS against
-that expected old hash, synchronizes the clean worktree's index and files to the
-target using fast-forward/reset semantics (never a merge), and deletes the intent
-ref **only after** the sync succeeds. This bounds the reset: a reset fires only
-when **both** the index tree and the tracked worktree are exactly at the intent's
-expected old hash (untracked files are left untouched, and a checkout obstruction
-defers synchronization rather than deleting anything); any divergence means edits
-landed in the CAS-to-sync window, so publication is deferred and the checkout is
+that expected old hash, synchronizes the worktree's index and files to the target,
+and deletes the intent ref **only after** the sync succeeds. The sync mechanism is
+bounded (never a merge of unrelated history): the **exact-hash `reset --hard`**
+fires only when the index tree and tracked worktree are exactly at the intent's
+expected old hash (the mechanically-stale case); otherwise git's own
+clobber-refusing two-way merge (`read-tree -m -u`) advances the published paths
+while carrying disjoint uncommitted edits forward byte-for-byte. Either way the
+sync only ever touches published paths, untracked files are left untouched, and a
+checkout obstruction — an intersecting edit, or an untracked file at a published
+path — defers synchronization rather than deleting or overwriting anything; any
+divergence on a published path means edits landed in the CAS-to-sync window, so
+publication is deferred and the checkout is
 left untouched and reported, never reset — the intent ref, not a guessed ancestor,
 is what tells recovery which hash was pre-publication even when several integration
 commits have accumulated while publication was deferred. If
@@ -556,9 +570,11 @@ with the new attempt's metadata. An existing intent is reused only when all thre
 fields — target, expected old hash, and development ref — match exactly; a
 differing intent is never silently overwritten. If the development ref
 is instead already at the target, a prior attempt's publication succeeded, so the
-intent is deleted once the worktree sync is confirmed. If the worktree is
-dirty at the outset, publication is deferred and the checkout is left untouched
-and reported, never reset/stashed automatically. A manual update to
+intent is deleted once the worktree sync is confirmed. If uncommitted edits at
+the outset intersect the publish diff (or an untracked file sits at a path the
+publication would add), publication is deferred and the checkout is left untouched
+and reported, never reset/stashed automatically; disjoint dirt does not defer
+(**[WI-230](WI-230.md)**). A manual update to
 `llm/integration` itself is likewise detected by its CAS and forces recomposition.
 
 ### Blocked-disposition integration

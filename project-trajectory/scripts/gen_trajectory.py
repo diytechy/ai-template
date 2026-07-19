@@ -49,9 +49,11 @@ Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check] [--st
              registry is invalid or the committed HTML is stale.
   --status   splice the derived-facts snapshot (spine + derived gate + open-items
              one-liners) into docs/status.md's `<!-- BEGIN GENERATED STATUS -->`
-             block (WI-202); with --check, byte-compare for freshness — the
+             block (WI-202) AND the durable pending-owner-actions projection into
+             docs/open-items.md's `<!-- BEGIN GENERATED PENDING -->` block
+             (WI-234); with --check, byte-compare BOTH for freshness — the
              successor invariant to the WI-200 forward-only token guard. Vacuous
-             (exit 0) when status.md is absent or has no marker pair.
+             (exit 0) per file when it is absent or has no marker pair.
 An absent or placeholder-only registry renders nothing and passes vacuously (the
 opt-out layer stays free for a repo that never adopts it).
 Exit codes: 0 clean / vacuous / opted-out, 1 invalid registry or stale HTML.
@@ -113,6 +115,34 @@ STATUS_END = "<!-- END GENERATED STATUS -->"
 # derive_gate.py's cached `# basis:` line in docs/gate — the fresh, freshness-
 # guarded derivation the status snapshot PROJECTS (never recomputes).
 _GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
+
+# --- the docs/open-items.md GENERATED PENDING projection (WI-234) ---------------
+# `--status` also splices a second GENERATED block — at the END of
+# docs/open-items.md, below the hand-authored OI briefs (which regeneration
+# leaves byte-untouched) — projecting every DURABLE pending-owner action so the
+# owner's one review surface never misses a parallel-branch hard stop again. A
+# pure projection of durable state ONLY; the out/dispatch journal is a
+# rebuildable cache (§11) and is never read here:
+#   (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification page)
+#       — with the `git show <train>:<path>` read path when the doc lives only
+#       on a train branch and not the dev tree (the WI-229 shape);
+#   (b) source-conflict records under refs/llm/conflict/* (WI-232): train + paths;
+#   (c) quarantined trains — a reservation ref whose metadata is unreadable or
+#       whose train branch is missing (the agent_dispatch reconcile quarantine
+#       conditions, re-derived from the DURABLE refs, never the journal);
+#   (d) the run-state `ask:` line when docs/run-state reads NEEDS-HUMAN.
+# One line per pending action with a pointer (never a brief — the depth stays in
+# the hand-authored briefs). Its `--check` is the same byte-compare freshness
+# gate as the status snapshot, so the harness `status-map` step already catches a
+# stale projection. Deterministic (sorted refs, no clocks), so `--check` is
+# byte-stable. Opt-in: an open-items.md without the marker pair is left untouched.
+OPEN_ITEMS_MD = "docs/open-items.md"
+PENDING_BEGIN = "<!-- BEGIN GENERATED PENDING -->"
+PENDING_END = "<!-- END GENERATED PENDING -->"
+_RESERVATION_NS = "refs/llm/reservations/"
+_CONFLICT_NS = "refs/llm/conflict/"
+_TRAIN_BRANCH_PREFIX = "llm/train/"
+_WI_REF_RE = re.compile(r"^WI-\d+$")
 
 # Workstream render order + display labels (the mutable grouping category on a
 # work item; legacy `Track` header still read); unknown ones fall through in
@@ -1028,7 +1058,10 @@ def sw_containment(root, mods):
         + "\n"
         + summary_line
         + '<div class="layout">\n'
-        + '<div class="view"><div class="cmptree">'
+        + SCROLL_CUE
+        + '<div class="view" '
+        + _hscroll("Architecture drill, horizontally scrollable")
+        + '><div class="cmptree">'
         + _render_drill("sw", root_id, "Architecture", layers)
         + "</div></div>\n"
         + '<aside id="sw-detail" class="detail"><p class="hint">Click a component or '
@@ -1047,6 +1080,22 @@ def sw_containment(root, mods):
 # --- shared When-view rendering helpers ---------------------------------------
 def esc(s):
     return html.escape(str(s), quote=True)
+
+
+# WI-219 (M-04): every horizontal-scroll container gets an explicit, accessible
+# affordance so a view wider than the viewport SIGNALS its off-screen content
+# instead of silently clipping at 390 px — a narrow-width visual cue (paired with
+# the `.scrollcue` media rule) plus focusable/labelled-region attributes (SR-052
+# keyboard reachability + accessible name, SR-054 no truncation-without-affordance).
+SCROLL_CUE = (
+    '<p class="scrollcue" aria-hidden="true">↔ Scroll sideways to see the full view</p>'
+)
+
+
+def _hscroll(label):
+    """Attributes making a horizontal-scroll container a keyboard-focusable, named
+    region — pair with `SCROLL_CUE` and the `.view`/`.tablescroll` CSS (WI-219)."""
+    return 'tabindex="0" role="group" aria-label="{}"'.format(esc(label))
 
 
 def _wi_st(w):
@@ -1620,6 +1669,16 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
           border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow);
           padding:.6rem; }
   .view svg { display:block; font-family:inherit; }
+  /* WI-219 (M-04): a view wider than the viewport must SIGNAL its off-screen
+     content, never silently clip it at 390 px. Each horizontal-scroll region is a
+     keyboard-focusable, labelled region (SR-052 A1/A2) with a visible focus ring,
+     and carries a narrow-width scroll cue (SR-054 T4) so nothing reads as
+     truncated-without-affordance. */
+  .tablescroll { overflow:auto; }
+  .view:focus-visible, .tablescroll:focus-visible {
+     outline:2px solid var(--accent); outline-offset:2px; }
+  .scrollcue { display:none; margin:.1rem 0 .5rem; color:var(--muted);
+     font-size:var(--small); font-weight:600; }
   #ice .cell rect { stroke:rgba(255,255,255,.35); stroke-width:.5; cursor:pointer;
         transition:opacity .1s ease; }
   #ice .cell text { fill:#fff; font-size:var(--nlabel); pointer-events:none; }
@@ -1652,7 +1711,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .detail .meta { color:var(--muted); font-size:var(--small); margin-top:.6rem;
         border-top:1px solid var(--border); padding-top:.55rem; }
   @media (max-width:760px){ .layout{ grid-template-columns:1fr; }
-        .detail{ max-height:none; } }
+        .detail{ max-height:none; } .scrollcue{ display:block; } }
   .legend { display:flex; flex-wrap:wrap; gap:1rem; margin-top:.9rem;
             font-size:var(--small); color:var(--muted); }
   .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px;
@@ -1712,7 +1771,9 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       <strong>Hover</strong> to highlight a block and its children; <strong>click</strong>
       to read its full text. A view — the registries are the source of truth.</p>
       <div class="layout">
-        <div id="ice" class="view">$arch_svg</div>
+        $scroll_cue
+        <div id="ice" class="view" tabindex="0" role="group"
+             aria-label="Architecture icicle, horizontally scrollable">$arch_svg</div>
         <aside id="arch-detail" class="detail"><p class="hint">Hover to highlight a subtree;
           click a block to read its full text — requirement, acceptance, status.</p></aside>
       </div>
@@ -1735,7 +1796,9 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       <strong>click</strong> for its detail. Plain SVG — no libraries, fully
       offline.</p>
       <div class="layout">
-        <div id="dag-view" class="view">$dag_svg</div>
+        $scroll_cue
+        <div id="dag-view" class="view" tabindex="0" role="group"
+             aria-label="Work-item trajectory graph, horizontally scrollable">$dag_svg</div>
         <aside id="dag-detail" class="detail"><p class="hint">Click a work item to read its
           detail — workstream, status, the SRs it delivers, its predecessors.</p></aside>
       </div>
@@ -1953,7 +2016,10 @@ def _sw_panel(mods, graph=None):
             "(producer&nbsp;→&nbsp;consumer) labeled by id; module, file "
             "(shared-contract hub) and external-actor nodes are styled distinctly. "
             'A module with no seam is a "connectivity undeclared" gap.</p>\n'
-            '<div class="view">{}</div>\n'.format(graph)
+            + SCROLL_CUE
+            + '<div class="view" {}>{}</div>\n'.format(
+                _hscroll("Interface-seam graph, horizontally scrollable"), graph
+            )
         )
     panel = (
         '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
@@ -1961,7 +2027,11 @@ def _sw_panel(mods, graph=None):
         + '<p class="cap">The module map from <code>docs/architecture.md</code> — a '
         "view of the generated code map (its <code>--check</code> keeps it honest "
         "against the AST), unified here so one artifact answers What, How and "
-        'When.</p>\n<div style="overflow:auto"><table class="swmap"><thead><tr>'
+        "When.</p>\n"
+        + SCROLL_CUE
+        + '<div class="tablescroll" '
+        + _hscroll("Module map table, horizontally scrollable")
+        + '><table class="swmap"><thead><tr>'
         "<th>Module</th><th>Public</th><th>Summary · symbols</th></tr></thead>"
         "<tbody>{}</tbody></table></div>\n</section>".format("".join(rows))
     )
@@ -1985,7 +2055,10 @@ def _cmp_panel(rows):
         '<p class="cap">The <code>CMP-###</code> component registry (membership derives '
         "from <code>Component</code> tags on the primitives; the graph view is "
         "deferred-on-need — this table is the honest current rendering).</p>\n"
-        '<div style="overflow:auto"><table class="swmap"><thead><tr>'
+        + SCROLL_CUE
+        + '<div class="tablescroll" '
+        + _hscroll("Component registry table, horizontally scrollable")
+        + '><table class="swmap"><thead><tr>'
         "<th>CMP</th><th>Name</th><th>Category</th><th>State</th><th>PartOf</th>"
         "</tr></thead><tbody>{}</tbody></table></div>\n</section>".format("".join(body))
     )
@@ -2285,7 +2358,12 @@ def _know_panel(svg, details):
         "<strong>click</strong> to read its description and open the full concept "
         "file. A view — the registries are the source of truth.</p>\n" + style + "\n"
         '<div class="layout">\n'
-        '<div id="knowgraph" class="view">' + svg + "</div>\n"
+        + SCROLL_CUE
+        + '<div id="knowgraph" class="view" '
+        + _hscroll("OKF concept graph, horizontally scrollable")
+        + ">"
+        + svg
+        + "</div>\n"
         '<aside id="know-detail" class="detail"><p class="hint">Hover a concept to '
         "highlight its neighbourhood; click to read its description and open the "
         "full concept file in <code>docs/okf/</code>.</p></aside>\n"
@@ -2696,6 +2774,7 @@ def build_html(root, wis):
         arch_desc=j(arch_desc),
         dag_svg=dag_view,
         wi_details=j(wi_details),
+        scroll_cue=SCROLL_CUE,
     )
 
 
@@ -2817,6 +2896,426 @@ def _open_item_oneliners(root):
             one = _first_sentence(reco) if reco else ""
         out.append((oid, _clean_oneliner(one)))
     return sorted(out, key=lambda t: int(t[0].split("-")[1]))
+
+
+# --- the docs/open-items.md pending-owner-actions projection (WI-234) -----------
+
+
+def _git(root, *args):
+    """`(returncode, stdout)` for a READ-ONLY git command, `(1, "")` on any
+    failure — the `_asof` idiom (gen_trajectory shells git via stdlib rather than
+    importing the dispatcher, which would drag the whole engine into a renderer).
+    Every pending source degrades to empty off-git, so a non-repo pays nothing."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+        )
+    except OSError:
+        return 1, ""
+    return proc.returncode, proc.stdout
+
+
+def _ref_meta(root, ref):
+    """The JSON metadata a reservation/conflict ref's commit message carries
+    (a dict), or None when the ref is absent/unreadable/malformed. Mirrors
+    agent_dispatch.reservation_meta / read_conflict, read-only."""
+    code, sha = _git(root, "rev-parse", "--verify", "--quiet", ref)
+    if code != 0 or not sha.strip():
+        return None
+    code, body = _git(root, "log", "-1", "--format=%B", sha.strip())
+    if code != 0:
+        return None
+    try:
+        meta = json.loads(body)
+    except ValueError:
+        return None
+    return meta if isinstance(meta, dict) else None
+
+
+def _train_carrying_path(root, relpath):
+    """The first train branch (`llm/train/*`, id-sorted) whose tree contains
+    `relpath`, or '' — the read path for an attestation doc frozen on a train and
+    absent from the dev tree (the WI-229 shape: `git show <train>:<path>`)."""
+    code, out = _git(
+        root,
+        "for-each-ref",
+        "--format=%(refname)",
+        "refs/heads/" + _TRAIN_BRANCH_PREFIX,
+    )
+    if code != 0:
+        return ""
+    heads = "refs/heads/"
+    branches = sorted(
+        ln.strip()[len(heads) :]
+        for ln in out.splitlines()
+        if ln.strip().startswith(heads + _TRAIN_BRANCH_PREFIX)
+    )
+    for br in branches:
+        code, _ = _git(root, "cat-file", "-e", "{}:{}".format(br, relpath))
+        if code == 0:
+            return br
+    return ""
+
+
+def _blocked_pending(root):
+    """Source (a): `(lines, ids)` — one line per `blocked` WI row carrying a
+    BlockRef, and the set of WI ids covered (so the stranded-train source below
+    never double-lists one). The pointer is the BlockRef path; when a path-shaped
+    ref is absent from the dev tree but a train branch carries it, the
+    `git show <train>:<path>` read path is used instead."""
+    wis, _ = ct.load_wis(ct.read_rows(root / ct.WI_CSV))
+    lines, ids = [], set()
+    for w in sorted(wis, key=lambda w: w["id"]):
+        if w["status"] != "blocked" or not w["blockref"]:
+            continue
+        ref = w["blockref"]
+        pointer = "`{}`".format(ref)
+        path = ref.split("#", 1)[0]
+        pathish = "/" in path or "." in path
+        if pathish and not (root / path).exists():
+            train = _train_carrying_path(root, path)
+            if train:
+                pointer = "`git show {}:{}`".format(train, path)
+        lines.append(
+            "- **{}** blocked — attest/ratify {}, then unblock the registry "
+            "row.".format(w["id"], pointer)
+        )
+        ids.add(w["id"])
+    return lines, ids
+
+
+def _scan_reservations(root):
+    """`(trains, unreadable)` re-derived from the DURABLE refs/llm/reservations/*
+    (never the out/dispatch journal): `trains` maps `train_id ->
+    {"wis": [...], "base": <sha>}` from readable metadata; `unreadable` is the
+    list of WI ids whose reservation metadata is missing/malformed. Mirrors
+    agent_dispatch._reservation_trains read-only."""
+    code, out = _git(
+        root, "for-each-ref", "--format=%(refname)", _RESERVATION_NS.rstrip("/")
+    )
+    trains, unreadable = {}, []
+    if code != 0:
+        return trains, unreadable
+    for ln in out.splitlines():
+        refname = ln.strip()
+        if not refname.startswith(_RESERVATION_NS):
+            continue
+        wid = refname[len(_RESERVATION_NS) :]
+        if not _WI_REF_RE.match(wid):
+            continue
+        meta = _ref_meta(root, refname)
+        if not meta or not meta.get("train") or not meta.get("wis"):
+            unreadable.append(wid)
+            continue
+        entry = trains.setdefault(
+            meta["train"], {"wis": [], "base": (meta.get("base") or "").strip()}
+        )
+        entry["wis"].append(wid)
+    return trains, unreadable
+
+
+def _train_tip(root, tid):
+    """The train branch tip sha, or '' when the branch is absent."""
+    code, tip = _git(
+        root,
+        "rev-parse",
+        "--verify",
+        "--quiet",
+        "refs/heads/" + _TRAIN_BRANCH_PREFIX + tid,
+    )
+    return tip.strip() if code == 0 else ""
+
+
+def _train_blocked_trailers(root, base, tip):
+    """`[(wi, blockref, commit_sha)]` for every `Blocked-WI:` trailer in the
+    commit bodies of `base..tip` (id-order per commit, newest first). Git's own
+    trailer parser is deliberately NOT used: the frozen-plan commit separates its
+    trailer lines with blank lines, which git treats as separate paragraphs and
+    drops all but the last — so a line-regex over the raw `%B` body is the
+    durable read (WI-229's `9fed833` shape)."""
+    rng = (base + ".." + tip) if base else tip
+    code, out = _git(root, "log", rng, "--format=%x1e%H%n%B")
+    if code != 0:
+        return []
+    found = []
+    for rec in out.split("\x1e"):
+        if not rec.strip("\n"):
+            continue
+        sha, _, body = rec.strip("\n").partition("\n")
+        wi, blockref = "", ""
+        for bl in body.splitlines():
+            m = re.match(r"(?i)^\s*Blocked-WI:\s*(WI-\d+)\s*$", bl)
+            if m:
+                wi = m.group(1)
+            m = re.match(r"(?i)^\s*BlockRef:\s*(\S+)\s*$", bl)
+            if m:
+                blockref = m.group(1)
+        if wi:
+            found.append((wi, blockref, sha.strip()))
+    return found
+
+
+def _attestation_pointer(root, tid, blockref, sha):
+    """The train read path to the blocking ratify doc for a stranded WI: the
+    BlockRef path (its `#anchor` stripped) when the train carries it, else the
+    first `docs/ratify/*` path the trailer commit touched, else the trailer
+    commit itself — all reachable with `git show <train>[:<path>]`."""
+    branch = _TRAIN_BRANCH_PREFIX + tid
+    if blockref:
+        path = blockref.split("#", 1)[0]
+        if path and _git(root, "cat-file", "-e", "{}:{}".format(branch, path))[0] == 0:
+            return "`git show {}:{}`".format(branch, path)
+    code, out = _git(root, "show", "--name-only", "--format=", sha)
+    if code == 0:
+        ratify = sorted(
+            p.strip() for p in out.splitlines() if p.strip().startswith("docs/ratify/")
+        )
+        if ratify:
+            return "`git show {}:{}`".format(branch, ratify[0])
+    return "the frozen plan at commit `{}` (`git show {}`)".format(sha[:12], sha[:12])
+
+
+def _stranded_pending(root, already):
+    """Source (a′): reserved WIs stranded on a PRESENT train awaiting owner
+    attestation — the WI-229 shape the registry doesn't mark `blocked` (its row
+    stays queued while the plan freezes on the train). For each persistent
+    reservation whose train branch exists, the train's commit bodies are scanned
+    for a `Blocked-WI:` trailer naming a reserved WI whose registry row is still
+    OPEN (queued/active/blocked); that projects an attestation line with the
+    train read path to the blocking ratify doc. `already` = the WI ids source (a)
+    covered, skipped so no WI double-lists."""
+    reg = {w["id"]: w["status"] for w in ct.load_wis(ct.read_rows(root / ct.WI_CSV))[0]}
+    open_states = {"queued", "active", "blocked"}
+    trains, _ = _scan_reservations(root)
+    lines, seen = [], set()
+    for tid in sorted(trains):
+        reserved = set(trains[tid]["wis"])
+        tip = _train_tip(root, tid)
+        if not tip:
+            continue
+        for wi, blockref, sha in _train_blocked_trailers(
+            root, trains[tid]["base"], tip
+        ):
+            if wi not in reserved or wi in already or wi in seen:
+                continue
+            if reg.get(wi) not in open_states:
+                continue
+            seen.add(wi)
+            lines.append(
+                "- **{}** — awaiting owner attestation/ratification on train `{}`: "
+                "{}; attest, amend, or park the row.".format(
+                    wi, tid, _attestation_pointer(root, tid, blockref, sha)
+                )
+            )
+    return lines
+
+
+def _conflict_pending(root):
+    """Source (b): one line per durable source-conflict record under
+    refs/llm/conflict/* (WI-232), naming the train and its conflicted paths — a
+    genuine human merge the dispatcher must not retry. An unreadable/malformed
+    record is surfaced too (not silently skipped), matching the reservations'
+    fail-loud posture."""
+    code, out = _git(
+        root, "for-each-ref", "--format=%(refname)", _CONFLICT_NS.rstrip("/")
+    )
+    if code != 0:
+        return []
+    tids = sorted(
+        ln.strip()[len(_CONFLICT_NS) :]
+        for ln in out.splitlines()
+        if ln.strip().startswith(_CONFLICT_NS)
+    )
+    lines = []
+    for tid in tids:
+        meta = _ref_meta(root, _CONFLICT_NS + tid)
+        if not meta:
+            lines.append(
+                "- **Unreadable conflict record** — inspect `{}{}`.".format(
+                    _CONFLICT_NS, tid
+                )
+            )
+            continue
+        paths = meta.get("paths") or "textual conflict against the integrated tree"
+        train = meta.get("train") or tid
+        lines.append(
+            "- **Source conflict** — train `{}` conflicts on {}; resolve by hand "
+            "(merge/rebase the train), then relaunch.".format(train, paths)
+        )
+    return lines
+
+
+def _quarantine_pending(root):
+    """Source (c): one line per quarantined train, re-derived from the DURABLE
+    reservation refs (never the out/dispatch journal): a reservation whose
+    metadata is unreadable, or whose train branch is missing — the reconcile
+    quarantine conditions (agent_dispatch._reservation_trains /
+    _reconcile_reserved_train). id-sorted for determinism."""
+    trains, unreadable = _scan_reservations(root)
+    lines = [
+        "- **Quarantined reservation** `{0}` — unreadable reservation metadata; "
+        "inspect `{1}{0}`.".format(wid, _RESERVATION_NS)
+        for wid in sorted(unreadable)
+    ]
+    for tid in sorted(trains):
+        if not _train_tip(root, tid):
+            lines.append(
+                "- **Quarantined train** `{}` — reservation without a train branch "
+                "({}); inspect the reservation refs.".format(
+                    tid, ", ".join(sorted(trains[tid]["wis"]))
+                )
+            )
+    return lines
+
+
+def _runstate_pending(root):
+    """Source (d): the run-state `ask:` line when docs/run-state reads
+    NEEDS-HUMAN (the first non-comment line, `read_declared`'s rule). Empty for
+    RUNNING/BLOCKED/DONE or an absent file."""
+    p = root / "docs" / "run-state"
+    if not p.is_file():
+        return []
+    state, ask = "", ""
+    for ln in p.read_text(encoding="utf-8", errors="replace").splitlines():
+        s = ln.strip()
+        if not s or s.startswith("#"):
+            continue
+        if not state:
+            state = s
+        elif s.lower().startswith("ask:") and not ask:
+            ask = s[len("ask:") :].strip()
+    if state != "NEEDS-HUMAN":
+        return []
+    tail = " — {}".format(ask) if ask else ""
+    return [
+        "- **Run-state NEEDS-HUMAN**{} — see the stop banner / "
+        "[status.md](status.md).".format(tail)
+    ]
+
+
+def pending_block(root):
+    """The GENERATED PENDING block CONTENT (between the markers) for
+    docs/open-items.md: one line per DURABLE pending-owner action (blocked rows
+    with a BlockRef, refs/llm/conflict records, quarantined trains, the
+    NEEDS-HUMAN run-state ask). Derived from durable state ONLY (never the
+    journal cache), deterministic (sorted, no clocks) so `--status --check` is
+    byte-stable, exactly like the status snapshot."""
+    lead = (
+        "_Pending owner actions — a generated projection of durable state "
+        "(blocked rows, stranded attestations, source conflicts, quarantines, the "
+        "NEEDS-HUMAN run-state ask); regenerated by `python "
+        "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
+        "The briefs above are hand-authored and untouched by regeneration._"
+    )
+    blocked_lines, blocked_ids = _blocked_pending(root)
+    items = (
+        blocked_lines
+        + _stranded_pending(root, blocked_ids)
+        + _conflict_pending(root)
+        + _quarantine_pending(root)
+        + _runstate_pending(root)
+    )
+    body = "\n".join(items) if items else "_None — no durable owner action is pending._"
+    return lead + "\n\n" + body
+
+
+def _splice_pending(doc_text, content):
+    """Replace the text between the PENDING markers with `content`; returns
+    `(new_text, present)`. Markers are matched only as EXACT FULL LINES, so a
+    hand-authored brief quoting the marker string on an indented or fenced line
+    is ignored — regeneration never chokes on it. `present` is False when the
+    pair is absent (the opt-in / graceful-degrade posture — a lone marker or
+    neither → left untouched, `--status --check` passes vacuously). Anomalies
+    fail CLOSED with a named error, never a silent rewrite: a duplicated marker
+    line, or an inverted pair (END before BEGIN). The file's dominant line-ending
+    style is preserved (a CRLF checkout stays CRLF), so the byte-untouched
+    guarantee holds on autocrlf."""
+    crlf = doc_text.count("\r\n")
+    nl = "\r\n" if crlf and crlf >= (doc_text.count("\n") - crlf) else "\n"
+    lines = doc_text.splitlines()
+    begins = [i for i, ln in enumerate(lines) if ln == PENDING_BEGIN]
+    ends = [i for i, ln in enumerate(lines) if ln == PENDING_END]
+    if not begins or not ends:
+        return doc_text, False
+    if len(begins) > 1 or len(ends) > 1:
+        raise SystemExit(
+            "{}: duplicated PENDING marker line ({} begin / {} end); keep exactly "
+            "one {} / {} pair".format(
+                OPEN_ITEMS_MD, len(begins), len(ends), PENDING_BEGIN, PENDING_END
+            )
+        )
+    begin, end = begins[0], ends[0]
+    if end < begin:
+        raise SystemExit(
+            "{}: PENDING markers are inverted ({} appears before {}); refusing to "
+            "splice".format(OPEN_ITEMS_MD, PENDING_END, PENDING_BEGIN)
+        )
+    new_lines = lines[: begin + 1] + content.splitlines() + lines[end:]
+    result = nl.join(new_lines)
+    if doc_text.endswith(("\n", "\r")):
+        result += nl
+    return result, True
+
+
+def run_pending(root, check):
+    """`--status` companion: splice the durable pending-owner projection into
+    docs/open-items.md's PENDING block (or, with `check`, byte-compare and fail on
+    drift). Vacuous — exit 0 — when open-items.md is absent or has no marker pair
+    (the opt-in posture, so a repo that never adopts the surface pays nothing)."""
+    path = root / OPEN_ITEMS_MD
+    if not path.exists():
+        if not check:
+            print(
+                "gen_trajectory: no {} — nothing to project (vacuous).".format(
+                    OPEN_ITEMS_MD
+                )
+            )
+        return 0
+    # newline="" preserves the file's own line endings on read, so a CRLF
+    # checkout round-trips byte-for-byte through the splice (the hand region stays
+    # untouched) rather than being normalized to LF.
+    with path.open("r", encoding="utf-8", newline="") as fh:
+        current = fh.read()
+    updated, present = _splice_pending(current, pending_block(root))
+    if not present:
+        if not check:
+            print(
+                "gen_trajectory: {} has no GENERATED PENDING markers — vacuous "
+                "(add the {} / {} pair to opt in).".format(
+                    OPEN_ITEMS_MD, PENDING_BEGIN, PENDING_END
+                )
+            )
+        return 0
+    if check:
+        if updated != current:
+            print(
+                "pending owner-actions projection STALE in {}: run `python "
+                "scripts/gen_trajectory.py --status`".format(OPEN_ITEMS_MD),
+                file=sys.stderr,
+            )
+            return 1
+        print("pending owner-actions projection up to date.")
+        return 0
+    if updated == current:
+        print(
+            "gen_trajectory: {} pending projection already up to date.".format(
+                OPEN_ITEMS_MD
+            )
+        )
+    else:
+        # newline="" writes the spliced text verbatim — _splice_pending already
+        # embedded the file's own line endings, so translation must stay off.
+        with path.open("w", encoding="utf-8", newline="") as fh:
+            fh.write(updated)
+        print(
+            "gen_trajectory: pending projection regenerated -> {}".format(OPEN_ITEMS_MD)
+        )
+    return 0
 
 
 def status_block(root):
@@ -2955,15 +3454,22 @@ def main():
         "--status",
         action="store_true",
         help="splice the derived-facts snapshot (spine + derived gate + "
-        "open-items one-liners) into docs/status.md instead of rendering the "
-        "dashboard; with --check, byte-compare for freshness (the WI-200 "
-        "forward-only guard's successor). Vacuous without the marker pair.",
+        "open-items one-liners) into docs/status.md AND the durable "
+        "pending-owner-actions projection into docs/open-items.md instead of "
+        "rendering the dashboard; with --check, byte-compare both for freshness "
+        "(the WI-200 forward-only guard's successor). Vacuous without the "
+        "marker pair.",
     )
     args = ap.parse_args()
     root = Path(args.root).resolve()
 
     if args.status:
-        return run_status(root, args.check)
+        # Both marker-block projections ride `--status` so the harness
+        # `status-map` step's `--status --check` freshness-gates BOTH the
+        # status snapshot and the pending-owner-actions projection (WI-234).
+        rc = run_status(root, args.check)
+        rc_pending = run_pending(root, args.check)
+        return rc or rc_pending
 
     if not ct.read_trajectory_enabled(root):
         print("gen_trajectory: off (docs/trajectory-check) — nothing to render.")

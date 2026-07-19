@@ -946,6 +946,12 @@ STACK_IN_FLIGHT = (
 # The Needs-<human> OI-3 carries its decision brief in docs/open-items.md
 # (check_docs S-3: every owner ask has its brief); the In-flight OI-4..6 are
 # driver work and need none.
+# The scaffolded open-items.md ends with the generated pending-owner-actions
+# block (WI-234), separated from the hand-authored briefs by a `---` + lead-in
+# comment; a stack brief is inserted ABOVE that separator so it never lands
+# below the marker. Kept byte-exact with OPEN_ITEMS.template.md's tail.
+OI_PENDING_ANCHOR = "---\n\n<!-- Generated pending-owner-actions projection"
+
 STACK_OI3_BRIEF = (
     "\n## OI-3 — Decide: the {stack} toolchain commands\n\n"
     "- **Decision:** the format / lint / test commands for the {stack} stack "
@@ -999,14 +1005,22 @@ def append_stack_checklist(dest, stack, dry_run):
         1,
     )
     status.write_text(text, encoding="utf-8")
-    # OI-3 is a Needs-<human> ask, so it owes a brief (check_docs S-3).
+    # OI-3 is a Needs-<human> ask, so it owes a brief (check_docs S-3). Insert it
+    # ABOVE the generated pending-owner-actions block (WI-234) so hand-authored
+    # briefs stay above the marker, never below it.
     open_items = dest / "docs" / "open-items.md"
     if open_items.exists():
-        open_items.write_text(
-            open_items.read_text(encoding="utf-8")
-            + STACK_OI3_BRIEF.format(stack=stack),
-            encoding="utf-8",
-        )
+        oi_text = open_items.read_text(encoding="utf-8")
+        brief = STACK_OI3_BRIEF.format(stack=stack)
+        if OI_PENDING_ANCHOR in oi_text:
+            oi_text = oi_text.replace(
+                OI_PENDING_ANCHOR,
+                brief.strip("\n") + "\n\n" + OI_PENDING_ANCHOR,
+                1,
+            )
+        else:
+            oi_text = oi_text + brief
+        open_items.write_text(oi_text, encoding="utf-8")
     return True
 
 

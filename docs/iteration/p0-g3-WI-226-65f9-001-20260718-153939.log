@@ -1,0 +1,38 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 001
+# date: 2026-07-18 16:28
+# train: p0-g3-WI-226-65f9
+# base: 808f95da957c
+# phase: BUILD
+# wi: WI-226
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: 808f95d..6725527
+# tokens: 
+# cost-usd: 
+# wall-secs: 2958
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2035
+# exit-code: 0
+# ---
+WI-226 completed and committed in three stages:
+
+- `c4a1aa4` — characterized dispatcher state machine and effects.
+- `ad5913d` — separated pure decisions from effects; `dispatch_run` C901 reduced **84 → 40** with no new over-limit functions.
+- `6725527` — split 46 decision/packing cases into [test_agent_dispatch_decisions.py](C:/Projects/ai-template-trains/p0-g3-WI-226-65f9/tests/test_agent_dispatch_decisions.py).
+
+Final validation:
+
+- Full suite: `1084 passed, 34 skipped`
+- G3 gate: PASS
+- Coverage: 91.23%
+- Required WI/Train/Base trailers verified
+- Worktree clean
+- Root coordination/generated artifacts untouched
