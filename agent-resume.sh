@@ -36,17 +36,18 @@ AGENT_MODEL="claude-fable-5"
 AGENT_MODEL_MAP="PLAN=claude-fable-5,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=claude-fable-5,CRITIQUE=claude-fable-5"
 # Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
 # Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE strong,
-# BUILD / REVIEW-A / REVIEW-B medium). BUILD=strong per the owner directive
-# 2026-07-14b (WI-160): builds prefer Codex Sol — strong tier + OPENAI-SOL first
-# in docs/agents-enabled — superseding FOR NOW the WI-121 medium relax (which
-# had undone the original strong pin after 78% wall time in strong BUILDs;
-# that history stands if this directive is reverted). Keep agent-resume.cmd in
-# sync. tier-up-never-down unchanged.
-AGENT_TIER_MAP="BUILD=strong"
+# BUILD / REVIEW-A / REVIEW-B medium; a worker still pins BUILD up to its WI
+# row's BuildTier). EMPTY per the owner directive 2026-07-19: builds are
+# Anthropic-led per tier again — Fable takes strong-row BUILDs, Opus takes
+# medium — retiring the WI-160 Sol pin (2026-07-14b, which had superseded the
+# WI-121 medium relax; both stand in history if this is reverted). Keep
+# agent-resume.cmd in sync. tier-up-never-down unchanged.
+AGENT_TIER_MAP=""
 # Optional within-tier preference per phase. Unknown, disabled, wrong-tier, or
 # cooling ids fall through to docs/agents-enabled order; this never changes the
-# resolved tier. Keep agent-resume.cmd in sync.
-AGENT_PREFER_MAP="BUILD=OPENAI-SOL"
+# resolved tier. Empty since 2026-07-19: docs/agents-enabled order already leads
+# each tier with the ANTHROPIC row. Keep agent-resume.cmd in sync.
+AGENT_PREFER_MAP=""
 # Optional per-phase COMMAND template map (cross-provider routing; pairs
 # with the docs/review-policy reviewer dial), e.g.:
 #   AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt} --model {model}"

@@ -37,16 +37,18 @@ set "AGENT_MODEL=claude-fable-5"
 set "AGENT_MODEL_MAP=PLAN=claude-fable-5,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=claude-fable-5,CRITIQUE=claude-fable-5"
 REM Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
 REM Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE
-REM strong, BUILD / REVIEW-A / REVIEW-B medium). BUILD=strong per the owner
-REM directive 2026-07-14b (WI-160): builds prefer Codex Sol - strong tier +
-REM OPENAI-SOL first in docs/agents-enabled - superseding FOR NOW the WI-121
-REM medium relax (that history stands if this directive is reverted). Keep
-REM agent-resume.sh in sync. tier-up-never-down unchanged.
-set "AGENT_TIER_MAP=BUILD=strong"
+REM strong, BUILD / REVIEW-A / REVIEW-B medium; a worker still pins BUILD up
+REM to its WI row's BuildTier). EMPTY per the owner directive 2026-07-19:
+REM builds are Anthropic-led per tier again - Fable takes strong-row BUILDs,
+REM Opus takes medium - retiring the WI-160 Sol pin (2026-07-14b; that
+REM directive stands in history if this one is reverted). Keep agent-resume.sh
+REM in sync. tier-up-never-down unchanged.
+set "AGENT_TIER_MAP="
 REM Optional within-tier preference per phase. Unknown, disabled, wrong-tier,
 REM or cooling ids fall through to docs/agents-enabled order; this never changes
-REM the resolved tier. Keep agent-resume.sh in sync.
-set "AGENT_PREFER_MAP=BUILD=OPENAI-SOL"
+REM the resolved tier. Empty since 2026-07-19: docs/agents-enabled order already
+REM leads each tier with the ANTHROPIC row. Keep agent-resume.sh in sync.
+set "AGENT_PREFER_MAP="
 REM Optional per-phase COMMAND template map (cross-provider routing; pairs
 REM with the docs/review-policy reviewer dial), e.g.:
 REM   set "AGENT_CMD_MAP=REVIEW-B=gemini -p {prompt} --model {model}"

@@ -297,6 +297,25 @@ why (one bullet each; cite ids)._
   ruled). Stage 3 is now dispatchable; the expected honest G3→G2 gate
   regression mid-migration is pre-accepted as part of the ratified plan.
   OI-14's section is deleted per the pending-only rule.
+- **2026-07-19 — OWNER DIRECTIVE: BUILD preference returns to Anthropic-led
+  per tier (Fable strong / Opus medium).** The launchers' `AGENT_TIER_MAP`
+  (`BUILD=strong`) and `AGENT_PREFER_MAP` (`BUILD=OPENAI-SOL`) are emptied,
+  so the built-in phase defaults + the `docs/agents-enabled` order decide:
+  strong-row BUILDs draw ANTHROPIC-FABLE, medium BUILDs draw ANTHROPIC-OPUS,
+  the OPENAI siblings stay the cross-family draws. Retires the WI-160
+  Sol-builder pin (2026-07-14b; the WI-121 history beneath it also stands if
+  reverted). Motive: owner preference + OpenAI quota pressure (Sol builds at
+  risk of mid-session quota death; cooldown+reselect covers it, but the
+  preferred path should not start there). **Same sitting — the OpenCode
+  pathway was tested end-to-end short of auth** (CLI 1.17.18 already
+  installed): STDIN prompt delivery VERIFIED by differential probe (the
+  WI-216/217 contract holds), `--auto` confirmed as the global headless flag
+  (`--dangerously-skip-permissions` does not exist on this build), the model
+  catalog proved auth-gated, and opencode's existing OpenAI oauth credential
+  errored as invalidated. The OPENCODE-KIMI/GROK rows stay
+  **definition-only**: the sole remaining enablement gate is the owner's
+  `opencode auth login` for Moonshot/xAI (or OpenRouter) keys — agents.csv
+  Notes carry the updated state.
 
 ## Audit log
 
