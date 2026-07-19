@@ -549,6 +549,37 @@ def test_crash_replay_carries_disjoint_dirt_forward(tmp_path):
     ) == "notes base\nWIP survives\n"
 
 
+def test_publish_defers_on_untracked_collision_with_an_added_path(tmp_path):
+    # WI-230 review (MAJOR, top data-loss class): the publish diff ADDS a path
+    # where the owner holds an UNTRACKED file of distinct content. Publication
+    # must defer — the collision is caught at the gate so the dev ref never
+    # moves, and git's read-tree refuses to clobber it at the sync — so the file
+    # survives byte-for-byte. Locks the behavior against a future swap of
+    # read-tree for a forced (clobbering) sync variant.
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    branch = _git(repo, "branch", "--show-current")
+    old = _git(repo, "rev-parse", "HEAD")
+    (repo / "added.txt").write_text("PUBLISHED content of the added file\n", "utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "integration adds a file")
+    target = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", target)
+    _git(repo, "reset", "--hard", old)  # dev back at old; added.txt leaves the tree
+    owner = "OWNER untracked content — must not be lost\n"
+    (repo / "added.txt").write_text(owner, "utf-8")  # untracked, distinct content
+
+    journal = agent_loop._Journal(repo)
+    state, detail = agent_loop.publish_integration(repo, journal, branch)
+    assert state == "deferred", detail
+    assert _git(repo, "rev-parse", "refs/heads/" + branch) == old, (
+        "dev ref must not move"
+    )
+    assert (repo / "added.txt").read_text("utf-8") == owner, (
+        "the untracked file survives byte-for-byte"
+    )
+    assert _intent_absent(repo), "a gate deferral writes no intent"
+
+
 def test_publish_refuses_a_non_descendant_integration_target(tmp_path):
     repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
     base = _git(repo, "rev-parse", "HEAD")

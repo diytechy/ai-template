@@ -9584,3 +9584,47 @@ only. Flagged for a follow-up doc pass rather than edited inline (out of scope).
 **Verified at close.** Smoke tier **912 passed / 3 skipped**; full suite
 **1,140 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
 On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 — WI-230: consume review findings (untracked-collision + §9 amendment)
+
+Independent review of b978b4f returned **APPROVE** with three findings.
+
+**MAJOR — a live data-loss bug, not just a missing test.** The reviewer flagged
+the top data-loss class: the publish diff ADDS a path where the owner holds an
+UNTRACKED file of distinct content. Driving the real `publish_integration` at
+b978b4f showed it **published and clobbered** the file (state `published`, dev
+ref moved, owner content lost) — because a worktree whose only hazard is an
+untracked collision carries no *tracked* dirt, so it classified `clean` and the
+sync ran `git reset --hard`, which overwrites untracked collisions (`read-tree`
+refuses them, but `read-tree` only runs on the disjoint-dirt path). The fix folds
+untracked-collision detection into `_publish_dirt`: `git ls-files --others
+--exclude-standard -z` (ignored files excluded, matching git's own checkout
+machinery) intersected with the publish diff → classify `intersect`. This defers
+at the **outset gate, before the dev-ref CAS**, so the dev ref never moves and
+the file survives byte-for-byte; `read-tree`'s own refusal remains the sync-time
+backstop. New regression `test_publish_defers_on_untracked_collision_with_an_added_path`
+locks defer + survive + dev-ref-unmoved so a future swap of `read-tree` for a
+forced sync variant fails loudly. `_publish_dirt` stays under the C901 limit; the
+`publish_integration` baseline (20) is unchanged.
+
+**MINOR — §9 SSOT amendment.** `docs/specs/parallel-wi-dispatch.md` §9 (the
+follow-up the prior entry flagged as deliberately deferred) is now amended: it
+states the disjointness rule (publication proceeds when tracked dirt is disjoint
+from the publish diff, carried forward by the clobber-refusing `read-tree -m -u`
+sync; intersecting dirt or an untracked collision defers; the exact-old-hash
+`reset --hard` remains the mechanically-stale path) and references
+[WI-230.md](specs/WI-230.md) as the amending spec.
+
+**NOTE — ruling recorded.** The reviewer observed that the already-at-target,
+dirty, no-pending-intent branch changed from `deferred "diverges"` to `noop`
+(vs. pre-WI-230). This is **accepted as deliberate and more correct**: with no
+pending publish-intent there is no sync to finish, so publication IS complete —
+`dev_head == target` — and any (necessarily disjoint) worktree dirt is the
+owner's, left untouched. The pre-WI-230 `deferred` only ever arose from user dirt
+applied after a completed publish, where deferral of a no-op publication was
+harmless; the new `noop` also keeps the disjoint-dirt idempotent replay from
+reading as a spurious divergence. Divergence with a PENDING intent still defers.
+
+**Verified at close.** Smoke tier **912 passed / 3 skipped**; full suite
+**1,141 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
+On `dualplan-routing-fix`, not pushed.

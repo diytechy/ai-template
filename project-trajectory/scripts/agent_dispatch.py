@@ -1214,27 +1214,47 @@ def _worktree_dirt(root, base):
     return dirt
 
 
+def _untracked_paths(root):
+    """Untracked, non-ignored working-tree paths (`ls-files --others
+    --exclude-standard -z`). Ignored files are excluded to match git's own
+    checkout machinery, which overwrites those without complaint. None when
+    git cannot be read."""
+    code, out = git(root, "ls-files", "--others", "--exclude-standard", "-z")
+    if code != 0:
+        return None
+    return {p for p in out.split("\0") if p}
+
+
 def _publish_dirt(root, base, target):
     """Classify the primary worktree for a publication that advances `base` to
     `target` (spec §9 disjointness rule):
 
     - `clean` — no tracked dirt vs `base`: the mechanically-stale / at-baseline
       case, finished by the exact-hash `reset --hard`;
-    - `disjoint` — dirt exists but no dirty path is in the `base..target` diff:
-      the edits ride the sync forward untouched;
-    - `intersect` — a dirty path is also published: defer, never reset/stash;
+    - `disjoint` — tracked dirt exists but no dirty path is in the
+      `base..target` diff: the edits ride the sync forward untouched;
+    - `intersect` — a dirty path is also published, OR an untracked file sits at
+      a path the publication would materialize: defer, never reset/stash;
     - `error` — git could not be read.
 
-    No path-name allowlist: disjointness derives what a hardcoded list (the
-    owner scratchpad, the generated run-state) would only approximate."""
+    An untracked file at a published path would be clobbered by `reset --hard`
+    (and is refused by `read-tree`); classifying it here defers BEFORE the
+    dev-ref CAS so the file is never lost and the dev ref never moves. No
+    path-name allowlist: disjointness derives what a hardcoded list (the owner
+    scratchpad, the generated run-state) would only approximate."""
+    diff = _publish_diff_paths(root, base, target)
+    if diff is None:
+        return "error"
+    untracked = _untracked_paths(root)
+    if untracked is None:
+        return "error"
+    if untracked & diff:
+        return "intersect"
     dirt = _worktree_dirt(root, base)
     if dirt is None:
         return "error"
     if not dirt:
         return "clean"
-    diff = _publish_diff_paths(root, base, target)
-    if diff is None:
-        return "error"
     return "intersect" if (dirt & diff) else "disjoint"
 
 
