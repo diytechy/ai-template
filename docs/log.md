@@ -9847,3 +9847,39 @@ Smoke **912 passed / 3 skipped**; full suite **1,156 passed / 4 skipped**;
 `check_docs.py --root . --stale` clean (0 broken; the "possibly stale" hints are
 pre-existing line-anchor shifts in other WIs' specs). On `dualplan-routing-fix`,
 not pushed.
+
+### 2026-07-19 — WI-235 rework (independent review of d3be9e4: VERDICT REWORK, 2 MAJOR + 1 MINOR)
+
+Both MAJOR findings were reproduced by driving the real shipped paths; fixed in
+one rework commit, tests-and-fix together.
+
+- **MAJOR 1 — degenerate marker pair.** `_parse_generated_row` accepted
+  `path = kind | MARK | MARK`. With BEGIN == END, `_resolve_block_conflict`'s
+  `elif stripped == end` is dead, so `inside` latches True at the first marker and
+  never resets — a conflict in hand-authored prose *below* the block resolved
+  take-ours (silent prose loss) where distinct markers correctly park. Fix: reject
+  `parts[1] == parts[2]` as malformed ("BEGIN and END markers must differ") so it
+  fails closed to park.
+- **MAJOR 2 — unreadable stack.ini.** `_generated_artifacts` caught only
+  `configparser.Error`, leaving two escapes: (a) a non-UTF-8 stack.ini raised
+  `UnicodeDecodeError` through the real `_compose_train`, so the `git merge
+  --abort` never ran and the worktree was left UU-conflicted, crashing the
+  unattended loop; (b) an existing-but-unreadable stack.ini (directory-in-place /
+  permission denied) — `configparser.read()` silently skips unreadable files, so
+  it fell OPEN to the defaults with `err=None`, widening resolution. Fix: read via
+  `Path.read_text` INSIDE the guard, distinguishing `FileNotFoundError` (absent ⇒
+  defaults, legitimate) from `(OSError, UnicodeDecodeError)` (present-but-unreadable
+  ⇒ park), then `cp.read_string` for the parse error. The read/decode now sits
+  inside the guarded region, so `_compose_train` parks and its `--abort` runs.
+- **MINOR 3 — pinned, not changed.** A bare `[generated]` section ⇒ `arts == ()`
+  and `err is None` (empty set is a legitimate declaration of "no generated
+  artifacts"; every generated conflict parks). One assertion added.
+
+Regressions added (additive; existing WI-235 + WI-231 tests unchanged): the
+declaration-reader unit gained the equal-marker malformed case, the bare-section
+`err is None` pin, and a directory-in-place unreadable case (parks, not defaults);
+`test_degenerate_marker_pair_fails_closed_to_park` and
+`test_non_utf8_stack_ini_parks_without_stranding_the_merge` drive the real
+`_compose_train` (the latter asserts no unmerged paths remain after the abort).
+No C901 baseline change (`_generated_artifacts` and `_parse_generated_row` stay
+under the limit). Reviewer's verified-clean surfaces left untouched.

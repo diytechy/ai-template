@@ -1026,6 +1026,12 @@ def _parse_generated_row(matcher, value):
     if len(parts) == 1:
         block = None
     elif len(parts) == 3 and parts[1] and parts[2]:
+        if parts[1] == parts[2]:
+            # Equal BEGIN/END markers make _resolve_block_conflict's `inside`
+            # latch True and never reset (the `elif stripped == end` is dead),
+            # so a conflict in hand-authored prose BELOW the block would resolve
+            # take-ours and silently drop the other side. Fail closed to park.
+            raise ValueError("BEGIN and END markers must differ")
         block = (parts[1], parts[2])
     else:
         raise ValueError(
@@ -1037,16 +1043,28 @@ def _parse_generated_row(matcher, value):
 def _generated_artifacts(wt):
     """The generated-artifact set governing composition auto-resolution, read from
     the INTEGRATE worktree's OWN docs/stack.ini (the primary worktree may differ
-    mid-merge). Returns (artifacts, error): an ABSENT [generated] section falls
-    back to DEFAULT_GENERATED_ARTIFACTS (byte-identical legacy behavior) with
-    error None; a present-but-MALFORMED section returns ((), <non-blank reason>)
-    so the caller fails closed and parks."""
+    mid-merge). Returns (artifacts, error): an ABSENT stack.ini or a stack.ini
+    with no [generated] section falls back to DEFAULT_GENERATED_ARTIFACTS
+    (byte-identical legacy behavior) with error None; a MALFORMED section, or a
+    stack.ini present-but-unreadable (I/O error, non-UTF-8 bytes, or a parse
+    error), returns ((), <non-blank reason>) so the caller FAILS CLOSED and parks.
+    The read/decode happens INSIDE the guard: an escaping exception would strand
+    the merge (its --abort never runs) and crash the unattended loop."""
     import configparser
 
+    ini = Path(wt) / "docs" / "stack.ini"
+    try:
+        text = ini.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        # No declaration at all is legitimate — fall back to the defaults. (An
+        # existing-but-unreadable file is OSError below, NOT this, so it parks.)
+        return DEFAULT_GENERATED_ARTIFACTS, None
+    except (OSError, UnicodeDecodeError) as exc:
+        return (), "docs/stack.ini unreadable: {}".format(exc)
     cp = configparser.ConfigParser(interpolation=None)
     cp.optionxform = str  # artifact paths are case-sensitive (PROJECT_STATE.html)
     try:
-        cp.read(str(Path(wt) / "docs" / "stack.ini"), encoding="utf-8")
+        cp.read_string(text)
     except configparser.Error as exc:
         return (), "docs/stack.ini unreadable: {}".format(exc)
     if not cp.has_section("generated"):

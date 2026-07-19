@@ -1377,22 +1377,47 @@ def test_generated_artifacts_declaration_governs_the_set(tmp_path):
     arts, err = agent_dispatch._generated_artifacts(str(wt))
     assert err is None and arts == (("docs/okf/", None, "okf"),)
 
-    # A malformed row (bad kind, or a marker count that is neither 0 nor 2) fails
-    # closed: an empty set + a non-blank reason.
-    for bad in ("PROJECT_STATE.html = nosuchkind\n", "docs/x.md = status | oneonly\n"):
+    # A BARE section is a legitimate declaration of "no generated artifacts" — an
+    # empty set (every generated conflict parks), NOT an error (rework MINOR).
+    ini.write_text("[generated]\n", encoding="utf-8")
+    arts, err = agent_dispatch._generated_artifacts(str(wt))
+    assert arts == () and err is None
+
+    # A malformed row fails closed: an empty set + a non-blank reason. Covers a
+    # bad kind, a marker count that is neither 0 nor 2, and a DEGENERATE pair whose
+    # BEGIN == END (rework MAJOR 1: equal markers would make the block latch open).
+    for bad in (
+        "PROJECT_STATE.html = nosuchkind\n",
+        "docs/x.md = status | oneonly\n",
+        "docs/x.md = status | SAME | SAME\n",
+    ):
         ini.write_text("[generated]\n" + bad, encoding="utf-8")
         arts, err = agent_dispatch._generated_artifacts(str(wt))
         assert arts == () and err and err.strip()
 
+    # A stack.ini that EXISTS but is unreadable (a directory in its place, or a
+    # permission-denied file) must PARK, not fall open to the defaults (rework
+    # MAJOR 2b: configparser.read silently skips unreadable files).
+    ini.unlink()
+    ini.mkdir()  # docs/stack.ini is now a directory
+    arts, err = agent_dispatch._generated_artifacts(str(wt))
+    assert arts == () and err and err.strip(), (
+        "unreadable stack.ini parks, not defaults"
+    )
 
-def _generated_conflict_repo(tmp_path, name, rel_path, stack_ini):
-    """A REAL conflict on `rel_path`: base commits it (plus an optional stack.ini),
-    two branches write different content, HEAD is left on `home` so a merge of
-    `theirs` conflicts. Returns (repo, home)."""
+
+def _generated_conflict_repo(tmp_path, name, rel_path, stack_ini, stack_bytes=None):
+    """A REAL conflict on `rel_path`: base commits it (plus an optional stack.ini,
+    written as UTF-8 text OR raw `stack_bytes`), two branches write different
+    content, HEAD is left on `home` so a merge of `theirs` conflicts. Returns the
+    repo path."""
     repo = _plain_repo(tmp_path, name)
     (repo / rel_path).parent.mkdir(parents=True, exist_ok=True)
     (repo / rel_path).write_text("base\n", encoding="utf-8")
-    if stack_ini is not None:
+    if stack_bytes is not None:
+        (repo / "docs").mkdir(exist_ok=True)
+        (repo / "docs" / "stack.ini").write_bytes(stack_bytes)
+    elif stack_ini is not None:
         (repo / "docs").mkdir(exist_ok=True)
         (repo / "docs" / "stack.ini").write_text(stack_ini, encoding="utf-8")
     _git(repo, "add", "-A")
@@ -1461,3 +1486,29 @@ def test_malformed_generated_section_fails_closed_to_park(tmp_path):
     repo = _generated_conflict_repo(tmp_path, "malformed", "PROJECT_STATE.html", ini)
     detail = _compose_theirs(repo)
     assert detail and "malformed [generated] row" in detail
+
+
+def test_degenerate_marker_pair_fails_closed_to_park(tmp_path):
+    # Rework MAJOR 1: a row whose BEGIN == END would make _resolve_block_conflict's
+    # `inside` latch open (the `elif stripped == end` is dead), so a conflict in
+    # prose below the block would resolve take-ours and silently drop prose. The
+    # declaration must be rejected as malformed so _compose_train parks.
+    ini = _DEFAULT_GENERATED_INI + "docs/extra.md = status | SAME | SAME\n"
+    repo = _generated_conflict_repo(tmp_path, "degenerate", "PROJECT_STATE.html", ini)
+    detail = _compose_theirs(repo)
+    assert detail and "malformed [generated] row" in detail
+
+
+def test_non_utf8_stack_ini_parks_without_stranding_the_merge(tmp_path):
+    # Rework MAJOR 2a: a non-UTF-8 stack.ini (a Windows-1252 smart-quote byte)
+    # must fail closed to park, and _compose_train's `git merge --abort` must still
+    # run — an escaping UnicodeDecodeError would leave the worktree UU-conflicted
+    # and crash the unattended loop.
+    bad = b"[generated]\nPROJECT_STATE.html = trajectory \x93smart\x94\n"
+    repo = _generated_conflict_repo(
+        tmp_path, "cp1252", "PROJECT_STATE.html", None, stack_bytes=bad
+    )
+    detail = _compose_theirs(repo)
+    assert detail and "unreadable" in detail, "a non-UTF-8 stack.ini parks (no crash)"
+    unmerged = _git(repo, "diff", "--name-only", "--diff-filter=U")
+    assert unmerged == "", "the merge --abort ran: the worktree is conflict-free"
