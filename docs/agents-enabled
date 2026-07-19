@@ -18,7 +18,9 @@
 # operation" -> routing for the full rule (0 = fallback-only; malformed = fail).
 ANTHROPIC-FABLE
 OPENAI-SOL
+OPENCODE-KIMI
 ANTHROPIC-OPUS
 OPENAI-TERRA
+OPENCODE-GROK
 ANTHROPIC-SONNET
 OPENAI-LUNA
