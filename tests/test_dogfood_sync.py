@@ -193,7 +193,12 @@ def test_dev_setup_carries_no_engine_line_to_pin():
     # agent_loop engine, so the engine-line pin correctly does not apply. This
     # records that ruling executably (if a future dev-setup grew an engine line,
     # this flips and forces a deliberate decision about pinning it).
-    for name in ("scripts/dev-setup.sh", "scripts/dev-setup.ps1"):
+    for name in (
+        "scripts/dev-setup.sh",
+        "scripts/dev-setup.ps1",
+        "scripts/dev-setup.cmd",
+        "scripts/dev-setup.command",
+    ):
         text = (ROOT / name).read_text(encoding="utf-8")
         assert _engine_line(text) is None, name
 
