@@ -10061,3 +10061,24 @@ Byte deltas (rework): PROCESS_OPTIONS.md 157851 -> 158094 (**+243**: the keying
 description + conflict-redeclaration note; baseline re-stamped to 158,094, total
 WI-236 +1,056 from 157,038). AGENTS.template.md / PROCESS.md unchanged.
 Regenerated architecture.md (agent_common phase_draw_ordinal) + PROJECT_STATE.html.
+
+## 2026-07-19 — WI-229 pre-merge quarantine: cause, recovery, WI-237 filed
+
+The first stage-3 launch (run `20260719T105727`) fast-forwarded integration to
+`7315c3f` and retired the manually merged WI-219/WI-228 trains as integrated,
+then **quarantined train `p0-g3-WI-229-3999`** with
+`claims-unreserved-wi:WI-219;WI-226;WI-227;WI-228`: the owner-directed
+pre-merge of the dev branch into the train (86aebd4, done to preempt the
+known stage-3 spec/log integration conflicts) imported integrated commits
+whose subjects the ownership scan read as foreign WI claims — the SR-064
+fail-closed suspicion working as built, on a shape it should learn to
+exempt. **Recovery (owner-directed state surgery, loss-free by proof):** the
+train tip was verified fully contained in the dev head
+(`git merge-base --is-ancestor` true, 0 unique commits — stage 3 had not
+started), so the worktree, train branch, and `refs/llm/reservations/WI-229`
+were removed; WI-229 is queued unreserved and the next launch reserves it
+fresh from `7315c3f`, which already carries the ratified plan, the stage-2
+attestation record, and the merged spec. **WI-237 filed** (SR-064, medium /
+high-risk): the claims scan must ignore integration-reachable commits so an
+owner content-sync into a reserved train is not a quarantine trap; a genuine
+foreign claim in a train's novel commits still quarantines.
