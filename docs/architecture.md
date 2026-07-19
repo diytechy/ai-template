@@ -147,7 +147,7 @@ Contracts (interfaces): IF-037, IF-065
 | `acquire_lock(lock_path)` | Take the per-worktree coordinator lock, or return an error string. |  |
 | `release_lock(lock_path)` | Drop the coordinator lock: closing the descriptor releases the OS lock. |  |
 | `parse_map(spec)` | Parse a KEY=value phase map — shared by --model-map/--cmd-map/--prompt-map/ |  |
-| `git(root, *args)` | Run git in the repo; returns (returncode, stdout-stripped). |  |
+| `git(root, *args)` | Run git in the repo; returns (returncode, text). |  |
 | `head_sha(root)` | Short HEAD sha, or None on a zero-commit repo (guarded rev-parse). |  |
 | `working_tree_dirty(root)` | The `git status --porcelain` lines — one per uncommitted path (a rename is |  |
 | `substantive_working_tree_dirty(root)` | `working_tree_dirty` minus the FB3 owner-only paths (OWNER_ONLY_PATHS) — |  |

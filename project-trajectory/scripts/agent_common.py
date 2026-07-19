@@ -468,7 +468,14 @@ def _refs(cell):
 
 
 def git(root, *args):
-    """Run git in the repo; returns (returncode, stdout-stripped)."""
+    """Run git in the repo; returns (returncode, text).
+
+    On success `text` is stdout-stripped and byte-identical to the raw call —
+    every success-path caller parses stdout (`rev-parse`, `status --porcelain`,
+    trailer reads). But git reports hook rejections and fatal errors on STDERR,
+    so on a NONZERO exit the stripped stderr is appended to stdout (newline-joined
+    when both are non-empty); otherwise every `detail=out[:200]` a failed call
+    feeds a park/quarantine reason would be blank (WI-233)."""
     proc = subprocess.run(
         ["git", "-C", str(root)] + list(args),
         capture_output=True,
@@ -477,7 +484,12 @@ def git(root, *args):
         errors="replace",
         stdin=subprocess.DEVNULL,
     )
-    return proc.returncode, (proc.stdout or "").strip()
+    out = (proc.stdout or "").strip()
+    if proc.returncode != 0:
+        err = (proc.stderr or "").strip()
+        if err:
+            out = out + "\n" + err if out else err
+    return proc.returncode, out
 
 
 def head_sha(root):

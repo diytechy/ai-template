@@ -9499,3 +9499,36 @@ Head 6a7b090 composed onto 808f95d by the serialized integrator; 1 verdict(s) ve
 ## 2026-07-18 17:58 — integrated train 1-g3-WI-227-cec3 (WI-227)
 
 Head c416510 composed onto d1f5f5a by the serialized integrator; 1 verdict(s) verified on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-227 -> done.
+
+## 2026-07-18 — WI-233: git() surfaces stderr on failure
+
+Field finding 4 (downstream gilbert parallel runs, 2026-07-18): the shared
+`agent_common.git()` wrapper returned `(returncode, stdout-stripped)` only, but
+git reports hook rejections and stderr-only fatals on **stderr** — so every
+`detail=out[:200]` park/quarantine reason built from a failed call was blank
+after the colon. Gilbert's WI-006 train parked twice as
+`integration-parked detail="integration commit failed: "` because the pre-commit
+floor rejected the integration commit and its whole report went to stderr;
+diagnosing it required replaying the merge by hand in the staging worktree.
+
+`git()` now appends git's stripped stderr to the returned text on a NONZERO exit
+(newline-joined when both streams are non-empty). The **success path is
+byte-identical** to before — stdout-stripped alone — so the `rev-parse` /
+`status --porcelain` / trailer parsers all read unchanged output and no caller
+was touched (no structured triple, deliberately). Every failed-`git()` detail
+now carries the real cause: the integration-commit reason, merge-conflict
+journaling, reservation CAS failures.
+
+Three regressions in `tests/test_agent_loop.py` prove it against real repos: a
+pre-commit hook rejection surfaces its failing check in the text (a cross-platform
+`#!/bin/sh` hook git runs via its bundled sh on Windows); a stderr-only fatal
+(`rev-parse --verify` on a missing ref) returns non-empty text; a successful
+commit whose hook warns on stderr returns the stdout summary alone, no stderr
+bleed. The existing suite stays green — no failure-path caller parses `git()`
+output structurally.
+
+**Verified at close.** Smoke tier **912 passed / 3 skipped**; full suite
+**1,136 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
+No spec deviation on the code+tests. Note: WI-233 was not present in status.md's
+hand-authored "Next action" frontier listing (which names WI-229..232), so no
+removal there was needed. On `dualplan-routing-fix`, not pushed.
