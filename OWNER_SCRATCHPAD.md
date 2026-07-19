@@ -311,4 +311,11 @@ Verify / fix the project_state.html, this should have already landed (WI-231) bu
 Verify incorperation of new merge method for parallel builds (should already be a WI by the time this hits.)
 
 5.
-Verify fix already in gilbert (itself waiting)
+iS THERE ANYTHING THAT WOULD HAVE PREVENTED THE complexity of the software (mainly thinking of the main funcitons) from growing?  Should the complexity check surface as an error instead of a warning?
+
+6.
+If there is attestation work or other work, even from parallel branches, it should all be piped into the open items at the root project for central review, just as all others are.
+
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Do we need to do anything to stress adversarial reviews?  Or to follow a specific review template?  Can you show me what is there currently?
