@@ -1028,7 +1028,10 @@ def sw_containment(root, mods):
         + "\n"
         + summary_line
         + '<div class="layout">\n'
-        + '<div class="view"><div class="cmptree">'
+        + SCROLL_CUE
+        + '<div class="view" '
+        + _hscroll("Architecture drill, horizontally scrollable")
+        + '><div class="cmptree">'
         + _render_drill("sw", root_id, "Architecture", layers)
         + "</div></div>\n"
         + '<aside id="sw-detail" class="detail"><p class="hint">Click a component or '
@@ -1047,6 +1050,22 @@ def sw_containment(root, mods):
 # --- shared When-view rendering helpers ---------------------------------------
 def esc(s):
     return html.escape(str(s), quote=True)
+
+
+# WI-219 (M-04): every horizontal-scroll container gets an explicit, accessible
+# affordance so a view wider than the viewport SIGNALS its off-screen content
+# instead of silently clipping at 390 px — a narrow-width visual cue (paired with
+# the `.scrollcue` media rule) plus focusable/labelled-region attributes (SR-052
+# keyboard reachability + accessible name, SR-054 no truncation-without-affordance).
+SCROLL_CUE = (
+    '<p class="scrollcue" aria-hidden="true">↔ Scroll sideways to see the full view</p>'
+)
+
+
+def _hscroll(label):
+    """Attributes making a horizontal-scroll container a keyboard-focusable, named
+    region — pair with `SCROLL_CUE` and the `.view`/`.tablescroll` CSS (WI-219)."""
+    return 'tabindex="0" role="group" aria-label="{}"'.format(esc(label))
 
 
 def _wi_st(w):
@@ -1620,6 +1639,16 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
           border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow);
           padding:.6rem; }
   .view svg { display:block; font-family:inherit; }
+  /* WI-219 (M-04): a view wider than the viewport must SIGNAL its off-screen
+     content, never silently clip it at 390 px. Each horizontal-scroll region is a
+     keyboard-focusable, labelled region (SR-052 A1/A2) with a visible focus ring,
+     and carries a narrow-width scroll cue (SR-054 T4) so nothing reads as
+     truncated-without-affordance. */
+  .tablescroll { overflow:auto; }
+  .view:focus-visible, .tablescroll:focus-visible {
+     outline:2px solid var(--accent); outline-offset:2px; }
+  .scrollcue { display:none; margin:.1rem 0 .5rem; color:var(--muted);
+     font-size:var(--small); font-weight:600; }
   #ice .cell rect { stroke:rgba(255,255,255,.35); stroke-width:.5; cursor:pointer;
         transition:opacity .1s ease; }
   #ice .cell text { fill:#fff; font-size:var(--nlabel); pointer-events:none; }
@@ -1652,7 +1681,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .detail .meta { color:var(--muted); font-size:var(--small); margin-top:.6rem;
         border-top:1px solid var(--border); padding-top:.55rem; }
   @media (max-width:760px){ .layout{ grid-template-columns:1fr; }
-        .detail{ max-height:none; } }
+        .detail{ max-height:none; } .scrollcue{ display:block; } }
   .legend { display:flex; flex-wrap:wrap; gap:1rem; margin-top:.9rem;
             font-size:var(--small); color:var(--muted); }
   .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px;
@@ -1712,7 +1741,9 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       <strong>Hover</strong> to highlight a block and its children; <strong>click</strong>
       to read its full text. A view — the registries are the source of truth.</p>
       <div class="layout">
-        <div id="ice" class="view">$arch_svg</div>
+        $scroll_cue
+        <div id="ice" class="view" tabindex="0" role="group"
+             aria-label="Architecture icicle, horizontally scrollable">$arch_svg</div>
         <aside id="arch-detail" class="detail"><p class="hint">Hover to highlight a subtree;
           click a block to read its full text — requirement, acceptance, status.</p></aside>
       </div>
@@ -1735,7 +1766,9 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       <strong>click</strong> for its detail. Plain SVG — no libraries, fully
       offline.</p>
       <div class="layout">
-        <div id="dag-view" class="view">$dag_svg</div>
+        $scroll_cue
+        <div id="dag-view" class="view" tabindex="0" role="group"
+             aria-label="Work-item trajectory graph, horizontally scrollable">$dag_svg</div>
         <aside id="dag-detail" class="detail"><p class="hint">Click a work item to read its
           detail — workstream, status, the SRs it delivers, its predecessors.</p></aside>
       </div>
@@ -1953,7 +1986,10 @@ def _sw_panel(mods, graph=None):
             "(producer&nbsp;→&nbsp;consumer) labeled by id; module, file "
             "(shared-contract hub) and external-actor nodes are styled distinctly. "
             'A module with no seam is a "connectivity undeclared" gap.</p>\n'
-            '<div class="view">{}</div>\n'.format(graph)
+            + SCROLL_CUE
+            + '<div class="view" {}>{}</div>\n'.format(
+                _hscroll("Interface-seam graph, horizontally scrollable"), graph
+            )
         )
     panel = (
         '<section id="sw" class="panel">\n<h2>Software architecture (How)</h2>\n'
@@ -1961,7 +1997,11 @@ def _sw_panel(mods, graph=None):
         + '<p class="cap">The module map from <code>docs/architecture.md</code> — a '
         "view of the generated code map (its <code>--check</code> keeps it honest "
         "against the AST), unified here so one artifact answers What, How and "
-        'When.</p>\n<div style="overflow:auto"><table class="swmap"><thead><tr>'
+        "When.</p>\n"
+        + SCROLL_CUE
+        + '<div class="tablescroll" '
+        + _hscroll("Module map table, horizontally scrollable")
+        + '><table class="swmap"><thead><tr>'
         "<th>Module</th><th>Public</th><th>Summary · symbols</th></tr></thead>"
         "<tbody>{}</tbody></table></div>\n</section>".format("".join(rows))
     )
@@ -1985,7 +2025,10 @@ def _cmp_panel(rows):
         '<p class="cap">The <code>CMP-###</code> component registry (membership derives '
         "from <code>Component</code> tags on the primitives; the graph view is "
         "deferred-on-need — this table is the honest current rendering).</p>\n"
-        '<div style="overflow:auto"><table class="swmap"><thead><tr>'
+        + SCROLL_CUE
+        + '<div class="tablescroll" '
+        + _hscroll("Component registry table, horizontally scrollable")
+        + '><table class="swmap"><thead><tr>'
         "<th>CMP</th><th>Name</th><th>Category</th><th>State</th><th>PartOf</th>"
         "</tr></thead><tbody>{}</tbody></table></div>\n</section>".format("".join(body))
     )
@@ -2285,7 +2328,12 @@ def _know_panel(svg, details):
         "<strong>click</strong> to read its description and open the full concept "
         "file. A view — the registries are the source of truth.</p>\n" + style + "\n"
         '<div class="layout">\n'
-        '<div id="knowgraph" class="view">' + svg + "</div>\n"
+        + SCROLL_CUE
+        + '<div id="knowgraph" class="view" '
+        + _hscroll("OKF concept graph, horizontally scrollable")
+        + ">"
+        + svg
+        + "</div>\n"
         '<aside id="know-detail" class="detail"><p class="hint">Hover a concept to '
         "highlight its neighbourhood; click to read its description and open the "
         "full concept file in <code>docs/okf/</code>.</p></aside>\n"
@@ -2696,6 +2744,7 @@ def build_html(root, wis):
         arch_desc=j(arch_desc),
         dag_svg=dag_view,
         wi_details=j(wi_details),
+        scroll_cue=SCROLL_CUE,
     )
 
 
