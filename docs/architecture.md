@@ -618,6 +618,8 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
 | `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
 | `build_html(root, wis)` |  |  |
+| `pending_block(root)` | The GENERATED PENDING block CONTENT (between the markers) for |  |
+| `run_pending(root, check)` | `--status` companion: splice the durable pending-owner projection into |  |
 | `status_block(root)` | The GENERATED STATUS block CONTENT (between the markers) for docs/status.md: |  |
 | `run_status(root, check)` | `--status` mode: splice the derived snapshot into docs/status.md (or, with |  |
 | `main()` |  |  |

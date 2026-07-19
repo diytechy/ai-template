@@ -49,9 +49,11 @@ Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check] [--st
              registry is invalid or the committed HTML is stale.
   --status   splice the derived-facts snapshot (spine + derived gate + open-items
              one-liners) into docs/status.md's `<!-- BEGIN GENERATED STATUS -->`
-             block (WI-202); with --check, byte-compare for freshness — the
+             block (WI-202) AND the durable pending-owner-actions projection into
+             docs/open-items.md's `<!-- BEGIN GENERATED PENDING -->` block
+             (WI-234); with --check, byte-compare BOTH for freshness — the
              successor invariant to the WI-200 forward-only token guard. Vacuous
-             (exit 0) when status.md is absent or has no marker pair.
+             (exit 0) per file when it is absent or has no marker pair.
 An absent or placeholder-only registry renders nothing and passes vacuously (the
 opt-out layer stays free for a repo that never adopts it).
 Exit codes: 0 clean / vacuous / opted-out, 1 invalid registry or stale HTML.
@@ -113,6 +115,34 @@ STATUS_END = "<!-- END GENERATED STATUS -->"
 # derive_gate.py's cached `# basis:` line in docs/gate — the fresh, freshness-
 # guarded derivation the status snapshot PROJECTS (never recomputes).
 _GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
+
+# --- the docs/open-items.md GENERATED PENDING projection (WI-234) ---------------
+# `--status` also splices a second GENERATED block — at the END of
+# docs/open-items.md, below the hand-authored OI briefs (which regeneration
+# leaves byte-untouched) — projecting every DURABLE pending-owner action so the
+# owner's one review surface never misses a parallel-branch hard stop again. A
+# pure projection of durable state ONLY; the out/dispatch journal is a
+# rebuildable cache (§11) and is never read here:
+#   (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification page)
+#       — with the `git show <train>:<path>` read path when the doc lives only
+#       on a train branch and not the dev tree (the WI-229 shape);
+#   (b) source-conflict records under refs/llm/conflict/* (WI-232): train + paths;
+#   (c) quarantined trains — a reservation ref whose metadata is unreadable or
+#       whose train branch is missing (the agent_dispatch reconcile quarantine
+#       conditions, re-derived from the DURABLE refs, never the journal);
+#   (d) the run-state `ask:` line when docs/run-state reads NEEDS-HUMAN.
+# One line per pending action with a pointer (never a brief — the depth stays in
+# the hand-authored briefs). Its `--check` is the same byte-compare freshness
+# gate as the status snapshot, so the harness `status-map` step already catches a
+# stale projection. Deterministic (sorted refs, no clocks), so `--check` is
+# byte-stable. Opt-in: an open-items.md without the marker pair is left untouched.
+OPEN_ITEMS_MD = "docs/open-items.md"
+PENDING_BEGIN = "<!-- BEGIN GENERATED PENDING -->"
+PENDING_END = "<!-- END GENERATED PENDING -->"
+_RESERVATION_NS = "refs/llm/reservations/"
+_CONFLICT_NS = "refs/llm/conflict/"
+_TRAIN_BRANCH_PREFIX = "llm/train/"
+_WI_REF_RE = re.compile(r"^WI-\d+$")
 
 # Workstream render order + display labels (the mutable grouping category on a
 # work item; legacy `Track` header still read); unknown ones fall through in
@@ -2868,6 +2898,290 @@ def _open_item_oneliners(root):
     return sorted(out, key=lambda t: int(t[0].split("-")[1]))
 
 
+# --- the docs/open-items.md pending-owner-actions projection (WI-234) -----------
+
+
+def _git(root, *args):
+    """`(returncode, stdout)` for a READ-ONLY git command, `(1, "")` on any
+    failure — the `_asof` idiom (gen_trajectory shells git via stdlib rather than
+    importing the dispatcher, which would drag the whole engine into a renderer).
+    Every pending source degrades to empty off-git, so a non-repo pays nothing."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+        )
+    except OSError:
+        return 1, ""
+    return proc.returncode, proc.stdout
+
+
+def _ref_meta(root, ref):
+    """The JSON metadata a reservation/conflict ref's commit message carries
+    (a dict), or None when the ref is absent/unreadable/malformed. Mirrors
+    agent_dispatch.reservation_meta / read_conflict, read-only."""
+    code, sha = _git(root, "rev-parse", "--verify", "--quiet", ref)
+    if code != 0 or not sha.strip():
+        return None
+    code, body = _git(root, "log", "-1", "--format=%B", sha.strip())
+    if code != 0:
+        return None
+    try:
+        meta = json.loads(body)
+    except ValueError:
+        return None
+    return meta if isinstance(meta, dict) else None
+
+
+def _train_carrying_path(root, relpath):
+    """The first train branch (`llm/train/*`, id-sorted) whose tree contains
+    `relpath`, or '' — the read path for an attestation doc frozen on a train and
+    absent from the dev tree (the WI-229 shape: `git show <train>:<path>`)."""
+    code, out = _git(
+        root,
+        "for-each-ref",
+        "--format=%(refname)",
+        "refs/heads/" + _TRAIN_BRANCH_PREFIX,
+    )
+    if code != 0:
+        return ""
+    heads = "refs/heads/"
+    branches = sorted(
+        ln.strip()[len(heads) :]
+        for ln in out.splitlines()
+        if ln.strip().startswith(heads + _TRAIN_BRANCH_PREFIX)
+    )
+    for br in branches:
+        code, _ = _git(root, "cat-file", "-e", "{}:{}".format(br, relpath))
+        if code == 0:
+            return br
+    return ""
+
+
+def _blocked_pending(root):
+    """Source (a): one line per `blocked` WI row carrying a BlockRef. The pointer
+    is the BlockRef path; when a path-shaped ref is absent from the dev tree but a
+    train branch carries it, the `git show <train>:<path>` read path is used
+    instead (the doc frozen on the quarantined train)."""
+    wis, _ = ct.load_wis(ct.read_rows(root / ct.WI_CSV))
+    lines = []
+    for w in sorted(wis, key=lambda w: w["id"]):
+        if w["status"] != "blocked" or not w["blockref"]:
+            continue
+        ref = w["blockref"]
+        pointer = "`{}`".format(ref)
+        pathish = "/" in ref or "." in ref
+        if pathish and not (root / ref).exists():
+            train = _train_carrying_path(root, ref)
+            if train:
+                pointer = "`git show {}:{}`".format(train, ref)
+        lines.append(
+            "- **{}** blocked — attest/ratify {}, then unblock the registry "
+            "row.".format(w["id"], pointer)
+        )
+    return lines
+
+
+def _conflict_pending(root):
+    """Source (b): one line per durable source-conflict record under
+    refs/llm/conflict/* (WI-232), naming the train and its conflicted paths — a
+    genuine human merge the dispatcher must not retry."""
+    code, out = _git(
+        root, "for-each-ref", "--format=%(refname)", _CONFLICT_NS.rstrip("/")
+    )
+    if code != 0:
+        return []
+    tids = sorted(
+        ln.strip()[len(_CONFLICT_NS) :]
+        for ln in out.splitlines()
+        if ln.strip().startswith(_CONFLICT_NS)
+    )
+    lines = []
+    for tid in tids:
+        meta = _ref_meta(root, _CONFLICT_NS + tid)
+        if not meta:
+            continue
+        paths = meta.get("paths") or "textual conflict against the integrated tree"
+        train = meta.get("train") or tid
+        lines.append(
+            "- **Source conflict** — train `{}` conflicts on {}; resolve by hand "
+            "(merge/rebase the train), then relaunch.".format(train, paths)
+        )
+    return lines
+
+
+def _quarantine_pending(root):
+    """Source (c): one line per quarantined train, re-derived from the DURABLE
+    reservation refs (never the out/dispatch journal): a reservation whose
+    metadata is unreadable, or whose train branch is missing — the reconcile
+    quarantine conditions (agent_dispatch._reservation_trains /
+    _reconcile_reserved_train). id-sorted for determinism."""
+    code, out = _git(
+        root,
+        "for-each-ref",
+        "--format=%(refname)",
+        _RESERVATION_NS.rstrip("/"),
+    )
+    if code != 0:
+        return []
+    trains = {}  # train_id -> [WI-ID, …] from readable metadata
+    unreadable = []
+    for ln in out.splitlines():
+        refname = ln.strip()
+        if not refname.startswith(_RESERVATION_NS):
+            continue
+        wid = refname[len(_RESERVATION_NS) :]
+        if not _WI_REF_RE.match(wid):
+            continue
+        meta = _ref_meta(root, refname)
+        if not meta or not meta.get("train") or not meta.get("wis"):
+            unreadable.append(wid)
+            continue
+        trains.setdefault(meta["train"], []).append(wid)
+    lines = [
+        "- **Quarantined reservation** `{0}` — unreadable reservation metadata; "
+        "inspect `{1}{0}`.".format(wid, _RESERVATION_NS)
+        for wid in sorted(unreadable)
+    ]
+    for tid in sorted(trains):
+        code, _ = _git(
+            root,
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            "refs/heads/" + _TRAIN_BRANCH_PREFIX + tid,
+        )
+        if code != 0:
+            lines.append(
+                "- **Quarantined train** `{}` — reservation without a train branch "
+                "({}); inspect the reservation refs.".format(
+                    tid, ", ".join(sorted(trains[tid]))
+                )
+            )
+    return lines
+
+
+def _runstate_pending(root):
+    """Source (d): the run-state `ask:` line when docs/run-state reads
+    NEEDS-HUMAN (the first non-comment line, `read_declared`'s rule). Empty for
+    RUNNING/BLOCKED/DONE or an absent file."""
+    p = root / "docs" / "run-state"
+    if not p.is_file():
+        return []
+    state, ask = "", ""
+    for ln in p.read_text(encoding="utf-8", errors="replace").splitlines():
+        s = ln.strip()
+        if not s or s.startswith("#"):
+            continue
+        if not state:
+            state = s
+        elif s.lower().startswith("ask:") and not ask:
+            ask = s[len("ask:") :].strip()
+    if state != "NEEDS-HUMAN":
+        return []
+    tail = " — {}".format(ask) if ask else ""
+    return [
+        "- **Run-state NEEDS-HUMAN**{} — see the stop banner / "
+        "[status.md](status.md).".format(tail)
+    ]
+
+
+def pending_block(root):
+    """The GENERATED PENDING block CONTENT (between the markers) for
+    docs/open-items.md: one line per DURABLE pending-owner action (blocked rows
+    with a BlockRef, refs/llm/conflict records, quarantined trains, the
+    NEEDS-HUMAN run-state ask). Derived from durable state ONLY (never the
+    journal cache), deterministic (sorted, no clocks) so `--status --check` is
+    byte-stable, exactly like the status snapshot."""
+    lead = (
+        "_Pending owner actions — a generated projection of durable state "
+        "(blocked rows, source conflicts, quarantines, the NEEDS-HUMAN run-state "
+        "ask); regenerated by `python "
+        "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
+        "The briefs above are hand-authored and untouched by regeneration._"
+    )
+    items = (
+        _blocked_pending(root)
+        + _conflict_pending(root)
+        + _quarantine_pending(root)
+        + _runstate_pending(root)
+    )
+    body = "\n".join(items) if items else "_None — no durable owner action is pending._"
+    return lead + "\n\n" + body
+
+
+def _splice_pending(doc_text, content):
+    """Replace the text between the PENDING markers with `content`; returns
+    `(new_text, present)`, `present` False when the pair is absent (the opt-in
+    posture — a `--status --check` passes vacuously). A duplicated marker is
+    refused, the `_splice_status` rule."""
+    if PENDING_BEGIN not in doc_text or PENDING_END not in doc_text:
+        return doc_text, False
+    if doc_text.count(PENDING_BEGIN) > 1 or doc_text.count(PENDING_END) > 1:
+        raise SystemExit(
+            "{}: duplicated PENDING marker; keep exactly one {} / {} pair".format(
+                OPEN_ITEMS_MD, PENDING_BEGIN, PENDING_END
+            )
+        )
+    pre = doc_text.split(PENDING_BEGIN)[0]
+    post = doc_text.split(PENDING_END)[1]
+    return "{}{}\n{}\n{}{}".format(pre, PENDING_BEGIN, content, PENDING_END, post), True
+
+
+def run_pending(root, check):
+    """`--status` companion: splice the durable pending-owner projection into
+    docs/open-items.md's PENDING block (or, with `check`, byte-compare and fail on
+    drift). Vacuous — exit 0 — when open-items.md is absent or has no marker pair
+    (the opt-in posture, so a repo that never adopts the surface pays nothing)."""
+    path = root / OPEN_ITEMS_MD
+    if not path.exists():
+        if not check:
+            print(
+                "gen_trajectory: no {} — nothing to project (vacuous).".format(
+                    OPEN_ITEMS_MD
+                )
+            )
+        return 0
+    current = path.read_text(encoding="utf-8")
+    updated, present = _splice_pending(current, pending_block(root))
+    if not present:
+        if not check:
+            print(
+                "gen_trajectory: {} has no GENERATED PENDING markers — vacuous "
+                "(add the {} / {} pair to opt in).".format(
+                    OPEN_ITEMS_MD, PENDING_BEGIN, PENDING_END
+                )
+            )
+        return 0
+    if check:
+        if updated != current:
+            print(
+                "pending owner-actions projection STALE in {}: run `python "
+                "scripts/gen_trajectory.py --status`".format(OPEN_ITEMS_MD),
+                file=sys.stderr,
+            )
+            return 1
+        print("pending owner-actions projection up to date.")
+        return 0
+    if updated == current:
+        print(
+            "gen_trajectory: {} pending projection already up to date.".format(
+                OPEN_ITEMS_MD
+            )
+        )
+    else:
+        with path.open("w", encoding="utf-8", newline="\n") as fh:
+            fh.write(updated)
+        print(
+            "gen_trajectory: pending projection regenerated -> {}".format(OPEN_ITEMS_MD)
+        )
+    return 0
+
+
 def status_block(root):
     """The GENERATED STATUS block CONTENT (between the markers) for docs/status.md:
     the derived gate + spine snapshot (projected from `docs/gate`, the freshness-
@@ -3004,15 +3318,22 @@ def main():
         "--status",
         action="store_true",
         help="splice the derived-facts snapshot (spine + derived gate + "
-        "open-items one-liners) into docs/status.md instead of rendering the "
-        "dashboard; with --check, byte-compare for freshness (the WI-200 "
-        "forward-only guard's successor). Vacuous without the marker pair.",
+        "open-items one-liners) into docs/status.md AND the durable "
+        "pending-owner-actions projection into docs/open-items.md instead of "
+        "rendering the dashboard; with --check, byte-compare both for freshness "
+        "(the WI-200 forward-only guard's successor). Vacuous without the "
+        "marker pair.",
     )
     args = ap.parse_args()
     root = Path(args.root).resolve()
 
     if args.status:
-        return run_status(root, args.check)
+        # Both marker-block projections ride `--status` so the harness
+        # `status-map` step's `--status --check` freshness-gates BOTH the
+        # status snapshot and the pending-owner-actions projection (WI-234).
+        rc = run_status(root, args.check)
+        rc_pending = run_pending(root, args.check)
+        return rc or rc_pending
 
     if not ct.read_trajectory_enabled(root):
         print("gen_trajectory: off (docs/trajectory-check) — nothing to render.")

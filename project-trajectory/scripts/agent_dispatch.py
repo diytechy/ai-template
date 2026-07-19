@@ -2516,7 +2516,7 @@ def _integrate_parked(root, docs, journal, parked, required_verdicts, needs_huma
     return integrated_any
 
 
-def _apply_idle_action(action, root, docs, parked, needs_human_ask):
+def _apply_idle_action(action, root, docs, journal, parked, needs_human_ask):
     if action == "paused":
         stop_banner(
             docs / "status.md",
@@ -2529,6 +2529,7 @@ def _apply_idle_action(action, root, docs, parked, needs_human_ask):
         return EXIT_PAUSED
     if action == "needs-human":
         _write_runstate(docs, "NEEDS-HUMAN", needs_human_ask)
+        _regenerate_pending(root, journal)
         stop_banner(docs / "status.md", "NEEDS-HUMAN", needs_human_ask)
         return EXIT_NEEDS_HUMAN
     if action == "blackout-wait":
@@ -2573,6 +2574,37 @@ def _needs_review_ask(root, parked):
     )
 
 
+def _regenerate_pending(root, journal):
+    """Best-effort refresh of the docs/open-items.md pending-owner-actions
+    projection (WI-234) at a terminal decision — called AFTER run-state is
+    written so a NEEDS-HUMAN ask is captured into the owner's review surface. The
+    projection is a pure view of durable state (blocked rows, refs/llm/conflict
+    records, quarantined trains, the run-state ask), so regenerating here cannot
+    lose data. A generator failure must NEVER crash the terminal path: it is
+    journaled and the harness `status-map` freshness gate catches the staleness on
+    the next run. Runs `gen_trajectory.py --status` on the primary checkout;
+    vacuous when open-items.md (or its marker block) is absent (a non-adopter)."""
+    if not (Path(root) / "docs" / "open-items.md").is_file():
+        return
+    gen = Path(__file__).resolve().parent / "gen_trajectory.py"
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(gen), "--root", str(root), "--status"],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+    except OSError as exc:
+        journal.event("pending-regen-failed", reason=str(exc)[:200])
+        return
+    if proc.returncode != 0:
+        tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-200:]
+        journal.event(
+            "pending-regen-failed",
+            reason=tail or "exit {}".format(proc.returncode),
+        )
+
+
 def _finish_dispatch(root, docs, journal, parked):
     telemetry_summary(journal)
     # WI-232: a train parked on a real source conflict is HUMAN work — page
@@ -2581,6 +2613,7 @@ def _finish_dispatch(root, docs, journal, parked):
     review_ask = _needs_review_ask(root, parked)
     if review_ask:
         _write_runstate(docs, "NEEDS-HUMAN", review_ask)
+        _regenerate_pending(root, journal)
         stop_banner(docs / "status.md", "NEEDS-HUMAN", review_ask)
         return EXIT_NEEDS_HUMAN
     integrated = [
@@ -2628,6 +2661,7 @@ def _finish_dispatch(root, docs, journal, parked):
         attention, queued_left, unpublished, current_head, blocked_rows
     )
     _write_runstate(docs, run_state)
+    _regenerate_pending(root, journal)
     detail = summary
     if banner == "integration complete; publication deferred":
         detail += " — clean the checkout and relaunch to publish."
@@ -2762,6 +2796,7 @@ def dispatch_run(args, root):
             ask=ask,
         )
         _write_runstate(docs, "NEEDS-HUMAN", ask)
+        _regenerate_pending(root, journal)
         stop_banner(Path(docs) / "status.md", "NEEDS-HUMAN", ask)
         print("dispatch: NEEDS-HUMAN — {}".format(ask), file=sys.stderr)
         return EXIT_NEEDS_HUMAN
@@ -2988,7 +3023,7 @@ def dispatch_run(args, root):
                 paused, needs_human_ask, blacked_out, dispatchable, waiting
             )
             idle_result = _apply_idle_action(
-                idle_action, root, docs, parked, needs_human_ask
+                idle_action, root, docs, journal, parked, needs_human_ask
             )
             if idle_result == "continue":
                 continue

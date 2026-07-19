@@ -9883,3 +9883,52 @@ declaration-reader unit gained the equal-marker malformed case, the bare-section
 `_compose_train` (the latter asserts no unmerged paths remain after the abort).
 No C901 baseline change (`_generated_artifacts` and `_parse_generated_row` stay
 under the limit). Reviewer's verified-clean surfaces left untouched.
+
+## 2026-07-19 — WI-234: project pending owner actions into the open-items surface
+
+**Summary.** WI-229's stage-2 attestation stop was invisible from the owner's
+one review surface — the ask lived only in the spec, the quarantine exit code,
+and a plan doc stranded on a train branch; the OI-14 brief was filed by hand a
+day late. Same class for every parallel-branch hard stop (source conflicts,
+quarantines, `blocked` rows). Mechanized: `gen_trajectory.py --status` now
+projects every **durable** pending-owner action into a generated block in
+`docs/open-items.md`, one line + pointer each, below the hand-authored briefs.
+
+**Deliverables.**
+- `gen_trajectory.py`: a second marker block, `<!-- BEGIN GENERATED PENDING -->`
+  at the END of `docs/open-items.md`. `pending_block(root)` projects from
+  **durable state ONLY** (never the `out/dispatch` journal, §11): **(a)** `blocked`
+  WI rows carrying a BlockRef (`_blocked_pending`) — with the
+  `git show <train>:<path>` read path when the ratification doc lives only on a
+  train branch, resolved by `_train_carrying_path` scanning `refs/heads/llm/train/*`
+  (the WI-229 shape); **(b)** `refs/llm/conflict/*` records (WI-232) naming train +
+  conflicted paths (`_conflict_pending`); **(c)** quarantined trains re-derived from
+  `refs/llm/reservations/*` — unreadable metadata or a missing train branch, the
+  reconcile conditions, **not the journal** (`_quarantine_pending`); **(d)** the
+  `docs/run-state` `ask:` line when NEEDS-HUMAN (`_runstate_pending`). Deterministic
+  (sorted refs, no clocks); `_git`/`_ref_meta` shell git read-only (the `_asof`
+  idiom, no dispatcher import). `run_pending` mirrors `run_status`/`_splice_status`;
+  `--status` runs both, so the existing harness **status-map** step
+  (`--status --check`) freshness-gates the pending block too — a stale projection
+  fails the G3 gate. Hand-authored content above the marker is byte-untouched.
+- `agent_dispatch.py`: `_regenerate_pending(root, journal)` runs
+  `gen_trajectory --status` **best-effort** after every terminal `_write_runstate`
+  (`_finish_dispatch` review-ask + normal terminal; the diverged-head NEEDS-HUMAN;
+  the idle needs-human, which gained a `journal` param). A generator error is
+  journaled as `pending-regen-failed` and the terminal path **never crashes** —
+  the freshness gate catches staleness at the next run.
+- `OPEN_ITEMS.template.md` gains the block (empty placeholder); `bootstrap.py`
+  inserts the stack OI-3 brief **above** the marker (`OI_PENDING_ANCHOR`) so a
+  scaffold keeps hand-authored briefs above the generated region.
+- This repo's own `docs/open-items.md` gains the block (renders empty: no blocked
+  rows, no conflict refs, all reservations readable with branches, run-state
+  RUNNING — verified byte-fresh under `--status --check`).
+
+**Tests.** `tests/test_gen_trajectory_pending.py` — 12 regressions over real temp
+git repos: the four sources each project one correct line; resolving each (row
+unblocked / record cleared / train retired) drops it; a well-formed reserved train
+with a branch is **not** flagged; NEEDS-HUMAN projects, RUNNING does not; `--check`
+trips on a hand-staled block; the hand-authored region stays byte-untouched;
+vacuous without the marker pair; the dispatcher terminal regen updates the block
+and no-ops as a non-adopter. Smoke 924p/3s; check_docs `--stale` clean (warn-tier
+line-drift hints only); full suite green. C901 baseline unchanged; stdlib-only.
