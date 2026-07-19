@@ -10214,3 +10214,85 @@ loud-error-no-commit-reservation-held path). Byte-budgeted files: none touched.
 Complexity ratchet green. Commit bar: `pytest -m smoke -n auto` 951p/3s (exit 0);
 `check_docs --stale` OK 0 broken (exit 0). Full suite: 1206 passed, 4 skipped
 (exit 0).
+
+## 2026-07-19 — WI-239 DONE: a cured blocker is survivable (completion supersedes a Blocked-WI trailer)
+
+The third and last of the WI-229 blocked-exit defects (after WI-240 + WI-238).
+Root cause: classification gave any `Blocked-WI` trailer ABSOLUTE, permanent
+precedence — a train that blocked honestly on a base defect could never retract
+it even after the defect was cured, so the machine's only path was the blocked
+disposition (release the reservation, redo the finished work from scratch). The
+WI-229 migration was completed, blocked on the dupes-census race that the
+parallel WI-237 train fixed within the hour, and then dead-ended — integrated
+only by a manual re-review merge.
+
+Fix, two disjoint mechanisms:
+
+**Latest trailer wins (the supersede).** Both evidence readers now fold their
+trailer log through the shared `agent_common.latest_trailer_evidence`
+(`TRAILER_EVIDENCE_FMT`): `git log` emits newest-first, so the FIRST commit that
+names a WI in EITHER trailer fixes its verdict and the `built`/`blocked` buckets
+are DISJOINT per WI. A newer `WI:` completion supersedes an older `Blocked-WI:`
+(a cured blocker), and a newer block supersedes an older completion (the block is
+newer truth); within one commit a completion wins. This replaced the two
+independent accumulate-all loops in `train_evidence` (worker side) and
+`train_branch_evidence` (dispatcher side) — the worker-side docstring already
+PROMISED "final commit carried the `WI:` trailer" but the code did not enforce
+it, so this also closes that latent contract gap. The worker's own
+`worker_endstate` short-circuit consequently reports DONE (not BLOCKED) once a
+resumed worker commits the superseding completion.
+
+**Resume-once (the reserved train gets a chance).** When reconcile classifies a
+reserved train blocked, it no longer short-circuits straight to the disposition:
+`_blocked_recovery_state` gives the worker ONE resume per integration-head
+advance. It records the integration head observed at each blocked-exit under a
+durable `refs/llm/blocked/<train>` ref (the WI-232 conflict-ref pattern —
+`record/read/clear_blocked`, off-history metadata commit, journal is cache) and
+resumes iff the head has ADVANCED since (a first sighting also resumes); an
+UNCHANGED head keeps the blocked classification and dispositions as before. The
+idempotence key is the integration HEAD, not the train tip: a worker's re-block
+moves only the tip, so a genuinely-stuck train (head unchanged) converges to the
+disposition — never an infinite resume loop. The record is cleared on integrate
+(a cure superseded — `_integrate_one_ready` + the reconcile integrated branch)
+and on disposition (the chance is spent). The existing parked-state machinery
+carries it: a blocked train classified `resume` is re-dispatched by
+`_resume_reconciled` exactly like any resumable lane.
+
+**Worker side (minimal, what the supersede needs).** A resumed worker on a
+still-blocked train would otherwise short-circuit to EXIT_BLOCKED on its OWN
+committed block BEFORE running a session (the pre-session `worker_endstate`
+check), so it could never produce the curing completion. `worker_endstate` gains
+`allow_block_exit` (default True, behavior-preserving); the pre-session check on
+the FIRST iteration passes `allow_block_exit=(i > 1)`, so a resumed worker gets
+its one session to attempt the cure. A block still standing after the session is
+honored by the post-session check (unchanged) — bounded to one extra session per
+resume, no loop. No other worker behavior changed.
+
+C901 ratchet held by extracting the four ref helpers +
+`_blocked_recovery_state` (reconcile gained one `if state == "blocked"` branch;
+no new/bumped baseline entry). Spec: `docs/specs/parallel-wi-dispatch.md` §9
+"Blocked-disposition integration" gained one paragraph documenting
+block→cure→supersede→integrate (the smallest single-source amendment, the WI-230
+§9 precedent). Templates: no scaffold change (the ref namespaces and evidence
+readers are the kit's own scripts).
+
+Deviations from spec: (1) the resume-once guard lives in the RECONCILE path
+(`_reconcile_reserved_train`) as the spec directs — the in-run worker-exit-blocked
+path is unchanged (it dispositions in-run, preserving the single-run
+`test_blocked_constituent_releases_unstarted_and_keeps_built` regression); the
+cross-run/recovered reserved-blocked train is where a cured base is observed and
+resumed. (2) The idempotence key is the integration head alone (not "head OR
+tip" as the spec sketched) — keying on the tip too would loop, since a worker's
+re-block moves the tip; the field cure shape is exactly an advanced head.
+
+5 regressions in `tests/test_agent_loop_recovery.py`: block-then-complete
+integrates without a disposition; complete-then-block still blocks; the
+trailer-ordering direction (both orders, latest wins — the off-by-one guard);
+resume-once idempotence (first sighting resumes + records; unchanged head
+dispositions; advanced head resumes once more; converges); and the WI-229 field
+shape end-to-end (blocked train + advanced integration head → a resumed real
+worker session commits `WI:`, supersedes, integrates — no disposition, the
+block's evidence file rides into the integration, the spent record cleared).
+Byte-budgeted files: none touched. Complexity ratchet green. Commit bar:
+`pytest -m smoke -n auto` 951p/3s (exit 0); `check_docs --stale` OK 0 broken
+(exit 0). Full suite: `pytest -n auto` 1211 passed, 4 skipped (exit 0).

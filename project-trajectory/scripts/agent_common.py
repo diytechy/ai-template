@@ -254,36 +254,56 @@ def load_wi_registry(root):
     return out
 
 
-def train_evidence(root, base):
-    """(built, blocked) read from the train branch's committed trailers in
-    base..HEAD: `built` is the set of WI ids whose final commit carried the
-    `WI:` trailer; `blocked` maps a `Blocked-WI:` id to its `BlockRef:` value
-    (empty string when the commit omitted one). This is the worker's one
-    result channel — recovery reconstructs the same facts from git alone."""
-    # The leading "T" sentinel keeps the first field intact through git()'s
-    # stdout .strip() — a commit whose WI field is empty would otherwise lose
-    # its leading tab and shift every field left.
-    fmt = (
-        "T%x09"
-        "%(trailers:key=WI,valueonly,separator=;)%x09"
-        "%(trailers:key=Blocked-WI,valueonly,separator=;)%x09"
-        "%(trailers:key=BlockRef,valueonly,separator=;)"
-    )
-    code, out = git(root, "log", "--format=" + fmt, "{}..HEAD".format(base))
-    built, blocked = set(), {}
-    if code != 0:
-        return built, blocked
-    for line in out.splitlines():
+# The trailer-evidence log format (shared by the worker- and dispatcher-side
+# readers). The leading "T" sentinel keeps the first field intact through
+# git()'s stdout .strip() — a commit whose WI field is empty would otherwise
+# lose its leading tab and shift every field left.
+TRAILER_EVIDENCE_FMT = (
+    "T%x09"
+    "%(trailers:key=WI,valueonly,separator=;)%x09"
+    "%(trailers:key=Blocked-WI,valueonly,separator=;)%x09"
+    "%(trailers:key=BlockRef,valueonly,separator=;)"
+)
+
+
+def latest_trailer_evidence(log_out):
+    """Fold a newest-first trailer log (TRAILER_EVIDENCE_FMT) into
+    (built:set, blocked:map) where each WI is claimed by its LATEST trailer
+    ONLY — the two buckets are disjoint. A newer `WI:` completion supersedes an
+    older `Blocked-WI:` for the same id (a CURED blocker), and a newer
+    `Blocked-WI:` supersedes an older `WI:` (the block is newer truth). `git
+    log` emits newest-first, so the FIRST commit that names a WI (in either
+    trailer) fixes its verdict; within one commit a completion wins. `blocked`
+    maps a still-blocked WI to its committed BlockRef ('' when omitted)."""
+    built, blocked, seen = set(), {}, set()
+    for line in log_out.splitlines():
         parts = (line.split("\t")[1:] + ["", "", ""])[:3]
-        for tok in parts[0].split(";"):
-            tok = tok.strip()
-            if WI_TOKEN_RE.match(tok):
+        for tok in (x.strip() for x in parts[0].split(";")):
+            if WI_TOKEN_RE.match(tok) and tok not in seen:
+                seen.add(tok)
                 built.add(tok)
         refs = [t.strip() for t in parts[2].split(";")]
         for j, tok in enumerate(t.strip() for t in parts[1].split(";")):
-            if WI_TOKEN_RE.match(tok) and tok not in blocked:
+            if WI_TOKEN_RE.match(tok) and tok not in seen:
+                seen.add(tok)
                 blocked[tok] = refs[j] if j < len(refs) else ""
     return built, blocked
+
+
+def train_evidence(root, base):
+    """(built, blocked) read from the train branch's committed trailers in
+    base..HEAD: `built` is the set of WI ids whose LATEST trailer is the `WI:`
+    completion; `blocked` maps a still-blocked `Blocked-WI:` id to its
+    `BlockRef:` value (empty string when the commit omitted one). Per WI the
+    newest trailer wins, so a resumed worker whose gate now passes supersedes
+    its own earlier block by committing `WI:` (WI-239). This is the worker's
+    one result channel — recovery reconstructs the same facts from git alone."""
+    code, out = git(
+        root, "log", "--format=" + TRAILER_EVIDENCE_FMT, "{}..HEAD".format(base)
+    )
+    if code != 0:
+        return set(), {}
+    return latest_trailer_evidence(out)
 
 
 def _clip(text, limit):

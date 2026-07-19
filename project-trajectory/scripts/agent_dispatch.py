@@ -49,6 +49,7 @@ try:
         EXIT_STALL,
         EXIT_TRAIN_END,
         EXIT_WAITING,
+        TRAILER_EVIDENCE_FMT,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
         _failure_tail,
@@ -59,6 +60,7 @@ try:
         blackout_wake,
         git,
         head_sha_full,
+        latest_trailer_evidence,
         parse_map,
         pause_reason,
         preflight,
@@ -81,6 +83,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         EXIT_STALL,
         EXIT_TRAIN_END,
         EXIT_WAITING,
+        TRAILER_EVIDENCE_FMT,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
         _failure_tail,
@@ -91,6 +94,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         blackout_wake,
         git,
         head_sha_full,
+        latest_trailer_evidence,
         parse_map,
         pause_reason,
         preflight,
@@ -132,6 +136,16 @@ RESERVATION_NS = "refs/llm/reservations/"
 # once. Git-durable like the reservation/train refs — the out/dispatch/ journal
 # is a cache, never authority (§11).
 CONFLICT_NS = "refs/llm/conflict/"
+
+# WI-239: a blocker can be CURED after a train blocks (a parallel train fixes
+# the base defect and the integration head advances). Reconcile records the
+# integration head observed at a blocked-exit under this durable ref namespace
+# and, on a later reconcile, gives the reserved worker ONE resume when the head
+# has advanced since — rather than short-circuiting straight to the disposition.
+# The worker's own re-block moves the train tip but never the head, so a
+# genuinely-stuck train converges to the disposition instead of looping. Same
+# ref-record shape as CONFLICT_NS; the out/dispatch/ journal is cache (§11).
+BLOCKED_NS = "refs/llm/blocked/"
 
 
 DISPATCH_DIR = "out/dispatch"
@@ -309,6 +323,72 @@ def clear_conflict(root, tid):
     git(root, "update-ref", "-d", CONFLICT_NS + tid)
 
 
+def record_blocked(root, tid, ihead):
+    """Durably record the integration head observed when a reserved train was
+    last classified blocked, under refs/llm/blocked/<tid> (WI-239). One
+    off-history metadata commit like record_conflict — anchored on the train
+    tip's tree/parent — force-set so a later blocked-exit overwrites the prior
+    head. Best-effort (a broken git surfaces elsewhere)."""
+    code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + tid)
+    if code != 0:
+        return
+    tip = tip.strip()
+    code, tree = git(root, "rev-parse", tip + "^{tree}")
+    if code != 0:
+        return
+    meta = json.dumps({"train": tid, "ihead": ihead or ""}, sort_keys=True)
+    proc = subprocess.run(
+        ["git", "-C", str(root), "commit-tree", tree.strip(), "-p", tip, "-m", meta],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    if proc.returncode == 0:
+        git(root, "update-ref", BLOCKED_NS + tid, proc.stdout.strip())
+
+
+def read_blocked(root, tid):
+    """The recorded blocked-exit metadata for a train ({train, ihead}), or None
+    when the ref is absent/unreadable/malformed."""
+    code, sha = git(root, "rev-parse", "--verify", "--quiet", BLOCKED_NS + tid)
+    if code != 0 or not sha.strip():
+        return None
+    code, out = git(root, "log", "-1", "--format=%B", sha.strip())
+    if code != 0:
+        return None
+    try:
+        meta = json.loads(out)
+    except ValueError:
+        return None
+    return meta if isinstance(meta, dict) else None
+
+
+def clear_blocked(root, tid):
+    """Delete a train's blocked-exit record — it integrated (a cure superseded
+    the block) or dispositioned. A no-op when the ref is absent."""
+    git(root, "update-ref", "-d", BLOCKED_NS + tid)
+
+
+def _blocked_recovery_state(root, tid):
+    """Choose 'resume' vs terminal 'blocked' for a reserved train that
+    classifies blocked at reconcile (WI-239). A blocker can be cured after the
+    fact — a parallel train fixes the base defect and the integration head
+    advances — so give the worker ONE resume per such change rather than
+    short-circuiting to the disposition. Idempotence keys on the integration
+    head recorded at the last blocked-exit: unchanged since then means nothing
+    could have cured the blocker, so disposition (as today); a first sighting or
+    an ADVANCED head resumes the worker once, re-recording the current head.
+    The worker's re-block moves only the train tip (never the head), so a
+    genuinely-stuck train converges to the disposition — never an infinite
+    resume loop."""
+    cur_ihead = integration_head(root) or ""
+    rec = read_blocked(root, tid)
+    if rec is not None and rec.get("ihead") == cur_ihead:
+        return "blocked"
+    record_blocked(root, tid, cur_ihead)
+    return "resume"
+
+
 def _conflict_inputs_match(root, tid, rec):
     """True when the CURRENT merge inputs (train tip + integration head) equal
     those recorded in `rec` — the idempotence guard: an unchanged input pair
@@ -324,8 +404,12 @@ def _conflict_inputs_match(root, tid, rec):
 def train_branch_evidence(root, train_id, base):
     """(built, blocked) trailer evidence read off the train BRANCH (not a
     worktree) — usable from the primary checkout for reconcile, the early-end
-    release decision, and the blocked-disposition transaction. `built` is a
-    set; `blocked` maps WI id -> its committed BlockRef ('' when omitted).
+    release decision, and the blocked-disposition transaction. Per WI the
+    LATEST trailer wins (WI-239): `built` holds WIs whose newest trailer is the
+    `WI:` completion, `blocked` maps a still-blocked WI id -> its committed
+    BlockRef ('' when omitted). A newer completion supersedes an older
+    `Blocked-WI:` — a blocker CURED after the block (the base defect a parallel
+    train fixed) no longer classifies the train blocked.
 
     WI-237: only the train's OWN novel commits can claim a WI, so the scan is
     bounded `^<integration-head>` — a commit already reachable from the
@@ -337,31 +421,16 @@ def train_branch_evidence(root, train_id, base):
     foreign claim in a NOVEL (integration-unreachable) commit still surfaces
     exactly as before."""
     code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + train_id)
-    built, blocked = set(), {}
     if code != 0:
-        return built, blocked
-    fmt = (
-        "T%x09%(trailers:key=WI,valueonly,separator=;)%x09"
-        "%(trailers:key=Blocked-WI,valueonly,separator=;)%x09"
-        "%(trailers:key=BlockRef,valueonly,separator=;)"
-    )
+        return set(), {}
     rev_range = [base + ".." + tip.strip()]
     ihead = integration_head(root)
     if ihead:
         rev_range.append("^" + ihead)
-    code, out = git(root, "log", "--format=" + fmt, *rev_range)
+    code, out = git(root, "log", "--format=" + TRAILER_EVIDENCE_FMT, *rev_range)
     if code != 0:
-        return built, blocked
-    for line in out.splitlines():
-        parts = (line.split("\t")[1:] + ["", "", ""])[:3]
-        built.update(
-            x.strip() for x in parts[0].split(";") if WI_TOKEN_RE.match(x.strip())
-        )
-        refs = [t.strip() for t in parts[2].split(";")]
-        for j, tok in enumerate(t.strip() for t in parts[1].split(";")):
-            if WI_TOKEN_RE.match(tok) and tok not in blocked:
-                blocked[tok] = refs[j] if j < len(refs) else ""
-    return built, blocked
+        return set(), {}
+    return latest_trailer_evidence(out)
 
 
 def worktree_root(root):
@@ -1637,6 +1706,7 @@ def blocked_disposition(root, docs, journal, tid, wis, base):
         )
         return "recompose", detail
     journal.event("blocked-disposition", train=tid, wis=";".join(sorted(hit)))
+    clear_blocked(root, tid)  # WI-239: the resume chance is spent — drop the record
     err = release_reservations(root, sorted(hit))
     if err:
         journal.event("release-failed", train=tid, reason=_failure_tail(err))
@@ -2350,6 +2420,7 @@ def _reconcile_reserved_train(root, journal, tid, train, parked, quarantined_wis
         if err:
             journal.event("release-failed", train=tid, reason=_failure_tail(err))
         clear_conflict(root, tid)  # WI-232: this train landed; drop any record
+        clear_blocked(root, tid)  # WI-239: a cure superseded the block; drop it
         parked[tid] = {"state": "integrated", "wis": wis, "base": base}
         journal.event("reconcile", train=tid, state="integrated")
         return
@@ -2369,6 +2440,14 @@ def _reconcile_reserved_train(root, journal, tid, train, parked, quarantined_wis
         quarantined_wis.update(wis)
         parked[tid] = {"state": state, "wis": wis, "base": base}
         return
+    if state == "blocked":
+        # WI-239: a cured blocker must be survivable. Give the reserved worker
+        # ONE resume when the integration head has advanced since the recorded
+        # blocked-exit (the base defect a parallel train may have fixed) rather
+        # than short-circuiting to the disposition; an unchanged head keeps the
+        # blocked classification (disposition, as today). A completion committed
+        # by the resumed worker supersedes the block at the next reconcile.
+        state = _blocked_recovery_state(root, tid)
     parked[tid] = {"state": state, "wis": wis, "base": base}
     journal.event("reconcile", train=tid, state=state)
 
@@ -2552,6 +2631,8 @@ def _integrate_one_ready(root, docs, journal, tid, wis, base, required_verdicts)
     )
     if result not in ("needs-re-review", "recompose"):
         clear_conflict(root, tid)
+    if result == "integrated":
+        clear_blocked(root, tid)  # WI-239: a cure superseded the block; drop it
     return result, detail
 
 

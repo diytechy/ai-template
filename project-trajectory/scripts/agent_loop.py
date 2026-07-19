@@ -1131,16 +1131,26 @@ def classify_outcome(reset_hint, timed_out, state, committed, data, exit_code):
     return outcome, errored
 
 
-def worker_endstate(root, worker, review_open, managed, rp_int):
+def worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit=True):
     """(exit_code, label, detail) when the assignment reached an end state,
     else None — judged ONLY from committed evidence + in-process queues:
     EXIT_BLOCKED when a Blocked-WI trailer names an assigned WI (the
     integrator turns it into the durable disposition, Slice F); EXIT_DONE
     when every assigned WI carries its WI trailer, the tree is clean, and
-    no review/critique/rework is pending. A worker never reads run-state."""
+    no review/critique/rework is pending. A worker never reads run-state.
+
+    Per WI the LATEST trailer wins (train_evidence, WI-239): a resumed worker
+    that re-runs green and commits `WI:` supersedes its own earlier
+    `Blocked-WI:`, so this reports DONE, not BLOCKED. `allow_block_exit=False`
+    (the resumed worker's FIRST session, before it has run) declines to
+    short-circuit on a PRE-EXISTING block so the worker gets its one chance to
+    cure it; a block that still stands is honored by the post-session check
+    (default True) or the next iteration."""
     built, blocked_map = train_evidence(root, worker["base"])
     hit = [w for w in worker["assigned"] if w in blocked_map]
     if hit:
+        if not allow_block_exit:
+            return None
         return (
             EXIT_BLOCKED,
             "BLOCKED",
@@ -2235,6 +2245,11 @@ def run_iteration(ctx, i):
     # Worker end-state check BEFORE spending a session: a resumed worker
     # whose evidence is already complete (or blocked) exits immediately —
     # recovery reconstructs the same verdict from git alone (spec §11).
+    # WI-239: a resumed worker's FIRST session (i == 1) is NOT short-circuited
+    # by a pre-existing Blocked-WI trailer — the dispatcher only re-dispatches a
+    # blocked train when the base may have been cured, so the worker gets its one
+    # chance to supersede the block with a completion; a block still standing
+    # after the session exits BLOCKED (the post-session check honors it).
     current_wi = None
     if worker:
         end = worker_endstate(
@@ -2243,6 +2258,7 @@ def run_iteration(ctx, i):
             bool(st.review_queue or st.critique_queue),
             managed,
             rp_int,
+            allow_block_exit=(i > 1),
         )
         if end:
             return worker_exit_banner(worker, end)

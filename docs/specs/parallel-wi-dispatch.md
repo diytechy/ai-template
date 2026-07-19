@@ -592,6 +592,25 @@ the blocked WI retain reservations and proceed through their required review;
 dependent descendants cannot integrate. A CAS race recomposes this disposition
 transaction exactly as it does a successful integration.
 
+**A cured blocker is survivable (block → cure → supersede → integrate).** A
+`Blocked-WI` trailer is not permanent: classification reads a train's novel
+commits newest-first and the LATEST trailer per WI wins, so a later `WI:`
+completion supersedes an earlier `Blocked-WI:` (a blocker cured after the block)
+and an earlier completion followed by a later block still classifies blocked (the
+block is newer truth). When a blocker is cured out-of-band — a parallel train
+fixes the base defect and the integration head advances — reconcile gives the
+reserved worker ONE resume rather than short-circuiting to the disposition: it
+records the integration head observed at each blocked-exit under
+`refs/llm/blocked/<train>` and, on a later reconcile, resumes the worker iff that
+head has ADVANCED since (a first sighting also resumes). The resumed worker
+re-runs its session and, if its gate now passes, commits `WI:` — superseding its
+own block — and the train integrates normally. The idempotence key is the
+integration head, not the train tip: a worker's re-block moves the tip but never
+the head, so a genuinely-stuck train (unchanged head) converges to the
+disposition, never an infinite resume loop. The dispatcher never auto-clears a
+block itself — only a worker session's superseding completion or the owner
+retracts one.
+
 Cleanup is conservative. Integrated, clean train worktrees/branches may be
 retained for diagnostics or removed later. The dispatcher never deletes an
 unintegrated commit or dirty worktree automatically.

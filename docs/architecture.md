@@ -143,6 +143,7 @@ Contracts (interfaces): IF-037, IF-065
 | `sanitize_train(name)` | A train id becomes a branch segment, a log-file prefix, and a reviews/ |  |
 | `parse_wi_list(spec)` | The ordered assigned-WI list from a `;`/`,`/whitespace-joined --wi value. |  |
 | `load_wi_registry(root)` | {WI-ID: raw row dict} from the worktree's tracked WI registry — the |  |
+| `latest_trailer_evidence(log_out)` | Fold a newest-first trailer log (TRAILER_EVIDENCE_FMT) into |  |
 | `train_evidence(root, base)` | (built, blocked) read from the train branch's committed trailers in |  |
 | `acquire_lock(lock_path)` | Take the per-worktree coordinator lock, or return an error string. |  |
 | `release_lock(lock_path)` | Drop the coordinator lock: closing the descriptor releases the OS lock. |  |
@@ -179,6 +180,9 @@ Contracts (interfaces): IF-055, IF-067
 | `record_conflict(root, tid, tip, ihead, paths)` | Durably record a needs-re-review conflict's merge inputs (train `tip` + |  |
 | `read_conflict(root, tid)` | The recorded conflict metadata for a train ({train, tip, ihead, paths}), |  |
 | `clear_conflict(root, tid)` | Delete a train's conflict record — it integrated or moved past the |  |
+| `record_blocked(root, tid, ihead)` | Durably record the integration head observed when a reserved train was |  |
+| `read_blocked(root, tid)` | The recorded blocked-exit metadata for a train ({train, ihead}), or None |  |
+| `clear_blocked(root, tid)` | Delete a train's blocked-exit record — it integrated (a cure superseded |  |
 | `train_branch_evidence(root, train_id, base)` | (built, blocked) trailer evidence read off the train BRANCH (not a |  |
 | `worktree_root(root)` | Where train worktrees live: a sibling directory of the repo |  |
 | `existing_worktrees(root)` | {branch: worktree-path} parsed from `git worktree list --porcelain`. |  |
@@ -232,7 +236,7 @@ Contracts (interfaces): IF-015, IF-037, IF-041, IF-055, IF-064, IF-067
 | `limit_reset_hint(output, data, exit_code)` | The 'resets <time>' text of a rate-limit message, or None. |  |
 | `seconds_until_reset(hint, now)` | Best-effort seconds until a reset hint like '3:45pm', '10am', |  |
 | `classify_outcome(reset_hint, timed_out, state, committed, data, exit_code)` | The outcome ladder for one session — a rate limit wins as WAITING, a |  |
-| `worker_endstate(root, worker, review_open, managed, rp_int)` | (exit_code, label, detail) when the assignment reached an end state, |  |
+| `worker_endstate(root, worker, review_open, managed, rp_int, allow_block_exit)` | (exit_code, label, detail) when the assignment reached an end state, |  |
 | `worker_exit_banner(worker, end)` | Print the worker's end banner (never a status.md excerpt — a worker |  |
 | `parse_args()` | The whole CLI surface — one home for every flag + its default. |  |
 | `map_preflight(root, template, args, cmd_map, prompt_map, tier_map, prefer_map, managed, registry, enabled, reg_errors, enable_errors)` | Assemble every up-front launchability failure (default template, |  |
