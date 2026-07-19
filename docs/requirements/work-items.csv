@@ -229,3 +229,4 @@ WI-229,Spine migration: split the non-atomic mini-spec SRs with supersession + e
 WI-230,Publish under disjoint dirt: publication proceeds when dirty tracked paths are disjoint from the publish diff (2026-07-18 field finding 1),unattended,SR-063,~WI-220,queued,,docs/specs/WI-230.md,strong,high-risk
 WI-231,Integrator regenerates generated artifacts on conflict + WI-keyed registry union merge (2026-07-18 field finding 2),unattended,SR-063,~WI-226,queued,,docs/specs/WI-231.md,strong,high-risk
 WI-232,Make needs-re-review actionable: dispatch the focused re-review or page NEEDS-HUMAN with the named conflict (2026-07-18 field finding 3),unattended,SR-063,~WI-231,queued,,docs/specs/WI-232.md,medium,high-risk
+WI-233,Dispatcher git() drops stderr - hook and porcelain failures park with blank error details (2026-07-18 field finding 4 - downstream gilbert),unattended,SR-063,~WI-232,queued,,docs/specs/WI-233.md,medium,high-risk
