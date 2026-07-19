@@ -9932,3 +9932,46 @@ trips on a hand-staled block; the hand-authored region stays byte-untouched;
 vacuous without the marker pair; the dispatcher terminal regen updates the block
 and no-ops as a non-adopter. Smoke 924p/3s; check_docs `--stale` clean (warn-tier
 line-drift hints only); full suite green. C901 baseline unchanged; stdlib-only.
+
+### 2026-07-19 — WI-234 rework (independent review of c6e1601: VERDICT REWORK, 1 CRITICAL + 6 minors)
+
+- **CRITICAL — the projection rendered "None" while WI-229's stage-2 attestation
+  was genuinely pending on THIS repo.** Root cause: WI-229's row is `queued` (not
+  `blocked`) on every branch, and the quarantine heuristic (unreadable metadata /
+  missing branch) excluded the **present-but-stranded** shape. Durable signal
+  without a new store: the frozen-plan commit `9fed833` on the reserved train
+  carries `Blocked-WI: WI-229` + `BlockRef: docs/ratify/WI-229-sr-split.md#…`, and
+  the ratify doc opens `State: AWAITING OWNER ATTESTATION`. **Note:** git's own
+  trailer parser drops that trailer — the commit separates its trailer lines with
+  blank lines, so git keeps only the last paragraph (`Base:`); `train_branch_evidence`'s
+  `%(trailers:…)` read would miss it too. New source **(a′)** `_stranded_pending`:
+  for each persistent reservation whose train branch is present, `_train_blocked_trailers`
+  scans the train's raw `%B` bodies (`base..tip`) by line-regex for `Blocked-WI:`
+  naming a reserved WI whose registry row is still open (queued/active/blocked);
+  `_attestation_pointer` resolves the read path (BlockRef path the train carries →
+  a `docs/ratify/*` path the trailer commit touched → the commit itself). Deduped
+  against source (a) on the WI id. **Live acceptance:** `gen_trajectory --status`
+  on this repo now projects
+  `- **WI-229** — awaiting owner attestation/ratification on train `p0-g3-WI-229-3999`: `git show llm/train/p0-g3-WI-229-3999:docs/ratify/WI-229-sr-split.md`; attest, amend, or park the row.`
+  Regression: stranded-shape end-to-end + resolve-drop (trailer WI flipped `done` ⇒
+  line drops) + the not-double-listed-when-also-blocked pin.
+- **MINOR 2** — an unreadable/malformed `refs/llm/conflict/*` record now projects
+  `- **Unreadable conflict record** — inspect <ref>` instead of being silently
+  skipped (matches the reservations' fail-loud posture). Regression added.
+- **MINOR 3** — `_splice_pending` now matches markers only as **exact full lines**,
+  so a hand-authored brief quoting the marker on an indented/fenced line no longer
+  makes the splice `SystemExit` and redden the gate. Pinned by a quoted-marker test.
+- **MINOR 4** — an inverted pair (END before BEGIN) now **fails closed** with a
+  named error and no silent rewrite (was: silently duplicated content). Test added,
+  plus a duplicated-marker-line fail-closed test.
+- **MINOR 5** — the splice **preserves the file's dominant line ending** (reads and
+  writes with `newline=""`), so a CRLF/autocrlf checkout round-trips byte-for-byte
+  and the hand region stays byte-untouched. CRLF regression pins it.
+- **NOTE 6** — `_regenerate_pending`'s subprocess gained `timeout=120`; a wedged git
+  journals `pending-regen-failed` (timeout) instead of hanging the terminal decision.
+- **NOTE 7** — added the unreadable-reservation-metadata quarantine regression.
+
+Reviewer's verified-clean surfaces (terminal-path crash safety, missing-marker
+graceful degrade, RUNNING-with-ask non-render, dev-copy precedence, freshness
+sequencing, bootstrap/template anchor, C901, stdlib) left untouched. Full suite
+after rework: green (totals in the commit). C901 baseline unchanged.

@@ -19,7 +19,7 @@ markers stay byte-untouched.
 
 import subprocess
 
-from conftest import SCRIPTS, load_script, run_py
+from conftest import ROOT, SCRIPTS, load_script, run_py
 
 _dispatch = load_script("agent_loop").agent_dispatch
 
@@ -307,6 +307,201 @@ def test_dispatcher_regenerate_pending_is_vacuous_without_surface(tmp_path):
     journal = _Journal()
     _dispatch._regenerate_pending(tmp_path, journal)
     assert journal.events == []
+
+
+# --- (a′) the stranded-train attestation shape (WI-229; the review CRITICAL) ---
+
+
+def _freeze_on_train(repo, wi, train, base_sha):
+    """Freeze a ratify doc on a fresh train branch with a blank-line-separated
+    `Blocked-WI:` trailer block — the exact WI-229 `9fed833` shape git's own
+    trailer parser drops (so the line-regex read is what surfaces it). Leaves the
+    checkout back on the default branch."""
+    default = _git(repo, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    _git(repo, "checkout", "-q", "-b", "llm/train/" + train)
+    (repo / "docs" / "ratify").mkdir(exist_ok=True)
+    (repo / "docs" / "ratify" / (wi + ".md")).write_text(
+        "**State:** AWAITING OWNER ATTESTATION\n", encoding="utf-8"
+    )
+    _git(repo, "add", "-A")
+    body = (
+        "{0}: freeze the migration plan\n\n"
+        "Blocked-WI: {0}\n\n"
+        "BlockRef: docs/ratify/{0}.md#owner-attestation-hard-stop\n\n"
+        "Train: {1}\n\nBase: {2}\n"
+    ).format(wi, train, base_sha)
+    _git(repo, "commit", "-q", "-m", body)
+    _git(repo, "checkout", "-q", default)
+
+
+def test_stranded_train_attestation_projects_with_read_path(tmp_path):
+    # A reserved WI whose row is still QUEUED (never marked blocked) but whose
+    # train carries a Blocked-WI trailer + a frozen ratify doc must project one
+    # attestation line with the `git show <train>:<path>` read path. This is the
+    # WI-229 shape the review's CRITICAL flagged.
+    _init(
+        tmp_path,
+        "WI-001,Seed,scripts,,,done,seeded,,,,\n"
+        "WI-080,Migrate,requirements,,,queued,,,,high-risk,\n",
+    )
+    base = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
+    train = "p0-g3-WI-080-abcd"
+    _freeze_on_train(tmp_path, "WI-080", train, base)
+    _commit_tree_ref(
+        tmp_path,
+        "refs/llm/reservations/WI-080",
+        '{{"train": "{}", "wis": ["WI-080"], "base": "{}"}}'.format(train, base),
+    )
+    assert _gen(tmp_path).returncode == 0
+    body = _block(tmp_path)
+    assert "WI-080" in body
+    assert "awaiting owner attestation" in body.lower()
+    assert "git show llm/train/{}:docs/ratify/WI-080.md".format(train) in body
+
+    # Resolve: the trailer WI's registry row flips to done -> the line drops.
+    wi = tmp_path / "docs" / "requirements" / "work-items.csv"
+    wi.write_text(
+        wi.read_text(encoding="utf-8").replace(
+            "WI-080,Migrate,requirements,,,queued,,,,high-risk,",
+            "WI-080,Migrate,requirements,,,done,migrated,,,,",
+        ),
+        encoding="utf-8",
+    )
+    assert _gen(tmp_path).returncode == 0
+    assert "WI-080" not in _block(tmp_path)
+
+
+def test_stranded_not_double_listed_when_row_is_also_blocked(tmp_path):
+    # A WI whose row IS blocked-with-BlockRef and whose train also carries the
+    # trailer projects exactly once (source (a) wins; (a′) dedupes on the id).
+    _init(
+        tmp_path,
+        "WI-001,Seed,scripts,,,done,seeded,,,,\n"
+        "WI-081,Migrate,requirements,,,blocked,,,,high-risk,docs/ratify/WI-081.md\n",
+    )
+    base = _git(tmp_path, "rev-parse", "HEAD").stdout.strip()
+    train = "p0-g3-WI-081-abcd"
+    _freeze_on_train(tmp_path, "WI-081", train, base)
+    _commit_tree_ref(
+        tmp_path,
+        "refs/llm/reservations/WI-081",
+        '{{"train": "{}", "wis": ["WI-081"], "base": "{}"}}'.format(train, base),
+    )
+    assert _gen(tmp_path).returncode == 0
+    # Exactly one listing line for the id (the `- **WI-081**` bullet prefix); the
+    # id also recurs inside that line's train/path pointer, so count the prefix.
+    assert _block(tmp_path).count("**WI-081**") == 1
+
+
+# --- (b) unreadable conflict record -------------------------------------------
+
+
+def test_unreadable_conflict_record_is_surfaced(tmp_path):
+    _init(tmp_path)
+    # A conflict ref pointing at a commit whose message is NOT JSON.
+    _commit_tree_ref(tmp_path, "refs/llm/conflict/p0-g3-WI-090-bad", "not json at all")
+    assert _gen(tmp_path).returncode == 0
+    body = _block(tmp_path)
+    assert "Unreadable conflict record" in body
+    assert "p0-g3-WI-090-bad" in body
+
+
+# --- (c) unreadable-reservation-metadata quarantine ---------------------------
+
+
+def test_unreadable_reservation_metadata_projects_quarantine(tmp_path):
+    _init(tmp_path)
+    _commit_tree_ref(tmp_path, "refs/llm/reservations/WI-095", "totally not json")
+    assert _gen(tmp_path).returncode == 0
+    body = _block(tmp_path)
+    assert "Quarantined reservation" in body
+    assert "WI-095" in body
+
+
+# --- splice hardening: quoted markers, inversion, CRLF -------------------------
+
+
+def test_indented_quoted_marker_does_not_break_regeneration(tmp_path):
+    # A hand-authored brief that QUOTES the marker string on an indented line
+    # must not make the splice choke — markers match only as exact full lines.
+    (tmp_path / "docs" / "requirements").mkdir(parents=True)
+    (tmp_path / "docs" / "requirements" / "work-items.csv").write_text(
+        WI_HEADER + "WI-001,Seed,scripts,,,done,seeded,,,,\n", encoding="utf-8"
+    )
+    quoted = OPEN_ITEMS.replace(
+        "- **Recommendation:** do it soon.\n",
+        "- **Recommendation:** do it soon.\n"
+        "- Example fence, indented:\n\n"
+        "      " + BEGIN + "\n      " + END + "\n\n",
+    )
+    (tmp_path / "docs" / "open-items.md").write_text(quoted, encoding="utf-8")
+    proc = _gen(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # The splice targets the column-0 markers only: the generated content lands
+    # (checked against the whole file, since the indented quote is a second, inert
+    # marker-looking pair), and the indented quote survives byte-for-byte.
+    full = (tmp_path / "docs" / "open-items.md").read_text(encoding="utf-8")
+    assert "no durable owner action is pending" in full
+    assert "      " + BEGIN in full
+    assert _gen(tmp_path, "--check").returncode == 0
+
+
+def test_inverted_markers_fail_closed(tmp_path):
+    (tmp_path / "docs" / "requirements").mkdir(parents=True)
+    (tmp_path / "docs" / "requirements" / "work-items.csv").write_text(
+        WI_HEADER + "WI-001,Seed,scripts,,,done,seeded,,,,\n", encoding="utf-8"
+    )
+    inverted = HAND + "\n" + END + "\ncontent\n" + BEGIN + "\n"
+    (tmp_path / "docs" / "open-items.md").write_text(inverted, encoding="utf-8")
+    proc = _gen(tmp_path)
+    assert proc.returncode != 0
+    assert "inverted" in (proc.stdout + proc.stderr).lower()
+    # No silent rewrite: the file is byte-identical.
+    assert (tmp_path / "docs" / "open-items.md").read_text(encoding="utf-8") == inverted
+
+
+def test_duplicated_marker_line_fails_closed(tmp_path):
+    (tmp_path / "docs" / "requirements").mkdir(parents=True)
+    (tmp_path / "docs" / "requirements" / "work-items.csv").write_text(
+        WI_HEADER + "WI-001,Seed,scripts,,,done,seeded,,,,\n", encoding="utf-8"
+    )
+    dup = OPEN_ITEMS + "\n" + BEGIN + "\nx\n" + END + "\n"
+    (tmp_path / "docs" / "open-items.md").write_text(dup, encoding="utf-8")
+    proc = _gen(tmp_path)
+    assert proc.returncode != 0
+    assert "duplicated" in (proc.stdout + proc.stderr).lower()
+
+
+def test_crlf_file_keeps_crlf_and_hand_region_byte_untouched(tmp_path):
+    # A CRLF checkout must round-trip: regeneration preserves \r\n and leaves the
+    # hand-authored region byte-identical (byte-untouched on autocrlf).
+    _init(tmp_path)
+    (tmp_path / "docs" / "run-state").write_text(
+        "NEEDS-HUMAN\nask: rule it\n", encoding="utf-8"
+    )
+    oi = tmp_path / "docs" / "open-items.md"
+    crlf_bytes = OPEN_ITEMS.replace("\n", "\r\n").encode("utf-8")
+    oi.write_bytes(crlf_bytes)
+    hand_above = crlf_bytes.split(BEGIN.encode(), 1)[0]
+    assert _gen(tmp_path).returncode == 0
+    after = oi.read_bytes()
+    assert b"\r\n" in after and b"\n" not in after.replace(b"\r\n", b"")
+    assert after.split(BEGIN.encode(), 1)[0] == hand_above
+    assert _gen(tmp_path, "--check").returncode == 0  # byte-fresh after regen
+
+
+def test_template_placeholder_matches_empty_projection(tmp_path):
+    # The shipped template's placeholder block MUST equal the empty projection,
+    # else a fresh scaffold trips STALE on its first status-map gate (regression:
+    # the rework changed the lead text and the template lagged).
+    gen = load_script("gen_trajectory")
+    (tmp_path / "docs").mkdir()
+    empty = gen.pending_block(tmp_path)
+    template = (ROOT / "project-trajectory" / "OPEN_ITEMS.template.md").read_text(
+        encoding="utf-8"
+    )
+    block = template.split(BEGIN, 1)[1].split(END, 1)[0].strip("\n")
+    assert block == empty
 
 
 def test_absent_marker_pair_is_vacuous(tmp_path):

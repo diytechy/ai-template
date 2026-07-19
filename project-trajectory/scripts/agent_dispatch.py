@@ -2593,7 +2593,11 @@ def _regenerate_pending(root, journal):
             capture_output=True,
             text=True,
             stdin=subprocess.DEVNULL,
+            timeout=120,
         )
+    except subprocess.TimeoutExpired:
+        journal.event("pending-regen-failed", reason="timeout after 120s")
+        return
     except OSError as exc:
         journal.event("pending-regen-failed", reason=str(exc)[:200])
         return

@@ -2963,33 +2963,164 @@ def _train_carrying_path(root, relpath):
 
 
 def _blocked_pending(root):
-    """Source (a): one line per `blocked` WI row carrying a BlockRef. The pointer
-    is the BlockRef path; when a path-shaped ref is absent from the dev tree but a
-    train branch carries it, the `git show <train>:<path>` read path is used
-    instead (the doc frozen on the quarantined train)."""
+    """Source (a): `(lines, ids)` — one line per `blocked` WI row carrying a
+    BlockRef, and the set of WI ids covered (so the stranded-train source below
+    never double-lists one). The pointer is the BlockRef path; when a path-shaped
+    ref is absent from the dev tree but a train branch carries it, the
+    `git show <train>:<path>` read path is used instead."""
     wis, _ = ct.load_wis(ct.read_rows(root / ct.WI_CSV))
-    lines = []
+    lines, ids = [], set()
     for w in sorted(wis, key=lambda w: w["id"]):
         if w["status"] != "blocked" or not w["blockref"]:
             continue
         ref = w["blockref"]
         pointer = "`{}`".format(ref)
-        pathish = "/" in ref or "." in ref
-        if pathish and not (root / ref).exists():
-            train = _train_carrying_path(root, ref)
+        path = ref.split("#", 1)[0]
+        pathish = "/" in path or "." in path
+        if pathish and not (root / path).exists():
+            train = _train_carrying_path(root, path)
             if train:
-                pointer = "`git show {}:{}`".format(train, ref)
+                pointer = "`git show {}:{}`".format(train, path)
         lines.append(
             "- **{}** blocked — attest/ratify {}, then unblock the registry "
             "row.".format(w["id"], pointer)
         )
+        ids.add(w["id"])
+    return lines, ids
+
+
+def _scan_reservations(root):
+    """`(trains, unreadable)` re-derived from the DURABLE refs/llm/reservations/*
+    (never the out/dispatch journal): `trains` maps `train_id ->
+    {"wis": [...], "base": <sha>}` from readable metadata; `unreadable` is the
+    list of WI ids whose reservation metadata is missing/malformed. Mirrors
+    agent_dispatch._reservation_trains read-only."""
+    code, out = _git(
+        root, "for-each-ref", "--format=%(refname)", _RESERVATION_NS.rstrip("/")
+    )
+    trains, unreadable = {}, []
+    if code != 0:
+        return trains, unreadable
+    for ln in out.splitlines():
+        refname = ln.strip()
+        if not refname.startswith(_RESERVATION_NS):
+            continue
+        wid = refname[len(_RESERVATION_NS) :]
+        if not _WI_REF_RE.match(wid):
+            continue
+        meta = _ref_meta(root, refname)
+        if not meta or not meta.get("train") or not meta.get("wis"):
+            unreadable.append(wid)
+            continue
+        entry = trains.setdefault(
+            meta["train"], {"wis": [], "base": (meta.get("base") or "").strip()}
+        )
+        entry["wis"].append(wid)
+    return trains, unreadable
+
+
+def _train_tip(root, tid):
+    """The train branch tip sha, or '' when the branch is absent."""
+    code, tip = _git(
+        root,
+        "rev-parse",
+        "--verify",
+        "--quiet",
+        "refs/heads/" + _TRAIN_BRANCH_PREFIX + tid,
+    )
+    return tip.strip() if code == 0 else ""
+
+
+def _train_blocked_trailers(root, base, tip):
+    """`[(wi, blockref, commit_sha)]` for every `Blocked-WI:` trailer in the
+    commit bodies of `base..tip` (id-order per commit, newest first). Git's own
+    trailer parser is deliberately NOT used: the frozen-plan commit separates its
+    trailer lines with blank lines, which git treats as separate paragraphs and
+    drops all but the last — so a line-regex over the raw `%B` body is the
+    durable read (WI-229's `9fed833` shape)."""
+    rng = (base + ".." + tip) if base else tip
+    code, out = _git(root, "log", rng, "--format=%x1e%H%n%B")
+    if code != 0:
+        return []
+    found = []
+    for rec in out.split("\x1e"):
+        if not rec.strip("\n"):
+            continue
+        sha, _, body = rec.strip("\n").partition("\n")
+        wi, blockref = "", ""
+        for bl in body.splitlines():
+            m = re.match(r"(?i)^\s*Blocked-WI:\s*(WI-\d+)\s*$", bl)
+            if m:
+                wi = m.group(1)
+            m = re.match(r"(?i)^\s*BlockRef:\s*(\S+)\s*$", bl)
+            if m:
+                blockref = m.group(1)
+        if wi:
+            found.append((wi, blockref, sha.strip()))
+    return found
+
+
+def _attestation_pointer(root, tid, blockref, sha):
+    """The train read path to the blocking ratify doc for a stranded WI: the
+    BlockRef path (its `#anchor` stripped) when the train carries it, else the
+    first `docs/ratify/*` path the trailer commit touched, else the trailer
+    commit itself — all reachable with `git show <train>[:<path>]`."""
+    branch = _TRAIN_BRANCH_PREFIX + tid
+    if blockref:
+        path = blockref.split("#", 1)[0]
+        if path and _git(root, "cat-file", "-e", "{}:{}".format(branch, path))[0] == 0:
+            return "`git show {}:{}`".format(branch, path)
+    code, out = _git(root, "show", "--name-only", "--format=", sha)
+    if code == 0:
+        ratify = sorted(
+            p.strip() for p in out.splitlines() if p.strip().startswith("docs/ratify/")
+        )
+        if ratify:
+            return "`git show {}:{}`".format(branch, ratify[0])
+    return "the frozen plan at commit `{}` (`git show {}`)".format(sha[:12], sha[:12])
+
+
+def _stranded_pending(root, already):
+    """Source (a′): reserved WIs stranded on a PRESENT train awaiting owner
+    attestation — the WI-229 shape the registry doesn't mark `blocked` (its row
+    stays queued while the plan freezes on the train). For each persistent
+    reservation whose train branch exists, the train's commit bodies are scanned
+    for a `Blocked-WI:` trailer naming a reserved WI whose registry row is still
+    OPEN (queued/active/blocked); that projects an attestation line with the
+    train read path to the blocking ratify doc. `already` = the WI ids source (a)
+    covered, skipped so no WI double-lists."""
+    reg = {w["id"]: w["status"] for w in ct.load_wis(ct.read_rows(root / ct.WI_CSV))[0]}
+    open_states = {"queued", "active", "blocked"}
+    trains, _ = _scan_reservations(root)
+    lines, seen = [], set()
+    for tid in sorted(trains):
+        reserved = set(trains[tid]["wis"])
+        tip = _train_tip(root, tid)
+        if not tip:
+            continue
+        for wi, blockref, sha in _train_blocked_trailers(
+            root, trains[tid]["base"], tip
+        ):
+            if wi not in reserved or wi in already or wi in seen:
+                continue
+            if reg.get(wi) not in open_states:
+                continue
+            seen.add(wi)
+            lines.append(
+                "- **{}** — awaiting owner attestation/ratification on train `{}`: "
+                "{}; attest, amend, or park the row.".format(
+                    wi, tid, _attestation_pointer(root, tid, blockref, sha)
+                )
+            )
     return lines
 
 
 def _conflict_pending(root):
     """Source (b): one line per durable source-conflict record under
     refs/llm/conflict/* (WI-232), naming the train and its conflicted paths — a
-    genuine human merge the dispatcher must not retry."""
+    genuine human merge the dispatcher must not retry. An unreadable/malformed
+    record is surfaced too (not silently skipped), matching the reservations'
+    fail-loud posture."""
     code, out = _git(
         root, "for-each-ref", "--format=%(refname)", _CONFLICT_NS.rstrip("/")
     )
@@ -3004,6 +3135,11 @@ def _conflict_pending(root):
     for tid in tids:
         meta = _ref_meta(root, _CONFLICT_NS + tid)
         if not meta:
+            lines.append(
+                "- **Unreadable conflict record** — inspect `{}{}`.".format(
+                    _CONFLICT_NS, tid
+                )
+            )
             continue
         paths = meta.get("paths") or "textual conflict against the integrated tree"
         train = meta.get("train") or tid
@@ -3020,46 +3156,18 @@ def _quarantine_pending(root):
     metadata is unreadable, or whose train branch is missing — the reconcile
     quarantine conditions (agent_dispatch._reservation_trains /
     _reconcile_reserved_train). id-sorted for determinism."""
-    code, out = _git(
-        root,
-        "for-each-ref",
-        "--format=%(refname)",
-        _RESERVATION_NS.rstrip("/"),
-    )
-    if code != 0:
-        return []
-    trains = {}  # train_id -> [WI-ID, …] from readable metadata
-    unreadable = []
-    for ln in out.splitlines():
-        refname = ln.strip()
-        if not refname.startswith(_RESERVATION_NS):
-            continue
-        wid = refname[len(_RESERVATION_NS) :]
-        if not _WI_REF_RE.match(wid):
-            continue
-        meta = _ref_meta(root, refname)
-        if not meta or not meta.get("train") or not meta.get("wis"):
-            unreadable.append(wid)
-            continue
-        trains.setdefault(meta["train"], []).append(wid)
+    trains, unreadable = _scan_reservations(root)
     lines = [
         "- **Quarantined reservation** `{0}` — unreadable reservation metadata; "
         "inspect `{1}{0}`.".format(wid, _RESERVATION_NS)
         for wid in sorted(unreadable)
     ]
     for tid in sorted(trains):
-        code, _ = _git(
-            root,
-            "rev-parse",
-            "--verify",
-            "--quiet",
-            "refs/heads/" + _TRAIN_BRANCH_PREFIX + tid,
-        )
-        if code != 0:
+        if not _train_tip(root, tid):
             lines.append(
                 "- **Quarantined train** `{}` — reservation without a train branch "
                 "({}); inspect the reservation refs.".format(
-                    tid, ", ".join(sorted(trains[tid]))
+                    tid, ", ".join(sorted(trains[tid]["wis"]))
                 )
             )
     return lines
@@ -3099,13 +3207,15 @@ def pending_block(root):
     byte-stable, exactly like the status snapshot."""
     lead = (
         "_Pending owner actions — a generated projection of durable state "
-        "(blocked rows, source conflicts, quarantines, the NEEDS-HUMAN run-state "
-        "ask); regenerated by `python "
+        "(blocked rows, stranded attestations, source conflicts, quarantines, the "
+        "NEEDS-HUMAN run-state ask); regenerated by `python "
         "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
         "The briefs above are hand-authored and untouched by regeneration._"
     )
+    blocked_lines, blocked_ids = _blocked_pending(root)
     items = (
-        _blocked_pending(root)
+        blocked_lines
+        + _stranded_pending(root, blocked_ids)
         + _conflict_pending(root)
         + _quarantine_pending(root)
         + _runstate_pending(root)
@@ -3116,20 +3226,40 @@ def pending_block(root):
 
 def _splice_pending(doc_text, content):
     """Replace the text between the PENDING markers with `content`; returns
-    `(new_text, present)`, `present` False when the pair is absent (the opt-in
-    posture — a `--status --check` passes vacuously). A duplicated marker is
-    refused, the `_splice_status` rule."""
-    if PENDING_BEGIN not in doc_text or PENDING_END not in doc_text:
+    `(new_text, present)`. Markers are matched only as EXACT FULL LINES, so a
+    hand-authored brief quoting the marker string on an indented or fenced line
+    is ignored — regeneration never chokes on it. `present` is False when the
+    pair is absent (the opt-in / graceful-degrade posture — a lone marker or
+    neither → left untouched, `--status --check` passes vacuously). Anomalies
+    fail CLOSED with a named error, never a silent rewrite: a duplicated marker
+    line, or an inverted pair (END before BEGIN). The file's dominant line-ending
+    style is preserved (a CRLF checkout stays CRLF), so the byte-untouched
+    guarantee holds on autocrlf."""
+    crlf = doc_text.count("\r\n")
+    nl = "\r\n" if crlf and crlf >= (doc_text.count("\n") - crlf) else "\n"
+    lines = doc_text.splitlines()
+    begins = [i for i, ln in enumerate(lines) if ln == PENDING_BEGIN]
+    ends = [i for i, ln in enumerate(lines) if ln == PENDING_END]
+    if not begins or not ends:
         return doc_text, False
-    if doc_text.count(PENDING_BEGIN) > 1 or doc_text.count(PENDING_END) > 1:
+    if len(begins) > 1 or len(ends) > 1:
         raise SystemExit(
-            "{}: duplicated PENDING marker; keep exactly one {} / {} pair".format(
-                OPEN_ITEMS_MD, PENDING_BEGIN, PENDING_END
+            "{}: duplicated PENDING marker line ({} begin / {} end); keep exactly "
+            "one {} / {} pair".format(
+                OPEN_ITEMS_MD, len(begins), len(ends), PENDING_BEGIN, PENDING_END
             )
         )
-    pre = doc_text.split(PENDING_BEGIN)[0]
-    post = doc_text.split(PENDING_END)[1]
-    return "{}{}\n{}\n{}{}".format(pre, PENDING_BEGIN, content, PENDING_END, post), True
+    begin, end = begins[0], ends[0]
+    if end < begin:
+        raise SystemExit(
+            "{}: PENDING markers are inverted ({} appears before {}); refusing to "
+            "splice".format(OPEN_ITEMS_MD, PENDING_END, PENDING_BEGIN)
+        )
+    new_lines = lines[: begin + 1] + content.splitlines() + lines[end:]
+    result = nl.join(new_lines)
+    if doc_text.endswith(("\n", "\r")):
+        result += nl
+    return result, True
 
 
 def run_pending(root, check):
@@ -3146,7 +3276,11 @@ def run_pending(root, check):
                 )
             )
         return 0
-    current = path.read_text(encoding="utf-8")
+    # newline="" preserves the file's own line endings on read, so a CRLF
+    # checkout round-trips byte-for-byte through the splice (the hand region stays
+    # untouched) rather than being normalized to LF.
+    with path.open("r", encoding="utf-8", newline="") as fh:
+        current = fh.read()
     updated, present = _splice_pending(current, pending_block(root))
     if not present:
         if not check:
@@ -3174,7 +3308,9 @@ def run_pending(root, check):
             )
         )
     else:
-        with path.open("w", encoding="utf-8", newline="\n") as fh:
+        # newline="" writes the spliced text verbatim — _splice_pending already
+        # embedded the file's own line endings, so translation must stay off.
+        with path.open("w", encoding="utf-8", newline="") as fh:
             fh.write(updated)
         print(
             "gen_trajectory: pending projection regenerated -> {}".format(OPEN_ITEMS_MD)
