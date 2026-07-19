@@ -406,6 +406,39 @@ def test_reviewer_prompt_carries_requirement_consistency_sweep(managed_repo):
     assert "status.md prose that contradicts a declared policy" in rev_block
 
 
+def test_reviewer_prompt_carries_adversarial_clauses(managed_repo):
+    # WI-241: the embedded reviewer prompt gained three field-proven adversarial
+    # clauses (drive the real shipped paths, severity-ordered failure classes,
+    # verdict discipline). Assert each rides the DEPLOYED prompt by a fragment
+    # match (not full-text equality — no brittleness), and that the pre-existing
+    # redaction sentence + verdict machine line survived byte-for-byte.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("2", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
+    rev_block = prompts.split("=== revb ===\n", 1)[1].split("\n=== ", 1)[0]
+    # Clause 1 — drive the real shipped code paths.
+    assert "REAL shipped code paths" in rev_block
+    assert "primitive probes" in rev_block
+    # Clause 2 — name and hunt the worst failure classes first, severity-ordered.
+    assert "worst failure classes THIS change admits" in rev_block
+    assert "severity-ordered" in rev_block
+    # Clause 3 — verdict discipline: tried-and-failed, Done-when coverage, and
+    # regression tests that fail on the pre-fix behavior.
+    assert "tried to break it" in rev_block
+    assert "UNCOVERED" in rev_block
+    assert "fails on the pre-fix behavior" in rev_block
+    # The load-bearing bones are byte-unchanged: the redaction sentence and the
+    # verdict machine line ride the deployed prompt exactly.
+    assert (
+        "a leaked self-assessment collapses review finding-rates several-fold"
+        in rev_block
+    )
+    assert "VERDICT: APPROVE|CHANGES-REQUESTED findings=N" in rev_block
+
+
 def test_prompt_map_slots_a_custom_reviewer_template(managed_repo):
     repo, ctl, cmd = managed_repo
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")

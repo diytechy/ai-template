@@ -10296,3 +10296,45 @@ block's evidence file rides into the integration, the spent record cleared).
 Byte-budgeted files: none touched. Complexity ratchet green. Commit bar:
 `pytest -m smoke -n auto` 951p/3s (exit 0); `check_docs --stale` OK 0 broken
 (exit 0). Full suite: `pytest -n auto` 1211 passed, 4 skipped (exit 0).
+
+## 2026-07-19 — WI-241 DONE: three field-proven adversarial clauses harden the reviewer prompt
+
+The 2026-07-18/19 review loop was a dataset — 7 of 11 builds shipped defects
+review caught, nearly every catch tracing to three behaviors the hand-written
+briefs carried and the embedded `REVIEWER_PROMPT` lacked. Amended the prompt
+([agent_loop.py](../project-trajectory/scripts/agent_loop.py)) with three
+surgical behavioral clauses, inserted at one point (after the run-the-harness
+sentence, before the parallel-review sentence) so the load-bearing bones —
+independence, the self-assessment redaction sentence, and the
+`VERDICT: APPROVE|CHANGES-REQUESTED findings=N` machine line — stay
+**byte-unchanged**: (1) **drive the diff's REAL shipped code paths** — construct
+the scenario and run the actual function/flow; primitive probes and plausibility
+reading are supporting evidence, never the verdict's basis (the WI-230 data-loss
+miss); (2) **name the worst failure classes THIS change admits** (silent wrong
+content, fail-open, data loss) and hunt those first, severity-ordered (the
+WI-231 marker-straddle / CSV-newline catches); (3) **verdict discipline** — an
+APPROVE means you tried to break it and failed, each Done-when item maps to a
+covering test or is UNCOVERED, and a regression test for a fixed defect must fail
+on the pre-fix behavior (the WI-234/WI-236 passes-its-tests-fails-its-requirement
+class). Prompt bytes **2096 -> 2695 (+599)**, three sentences, no restructuring.
+
+The fuller brief is the new one-page rubric
+[rubrics/code-review-adversarial.md](rubrics/code-review-adversarial.md)
+(house style, anchors R1–R5: subject framing, drive-the-real-paths, severity-
+ordered failure classes, the Done-when coverage map, and the
+REWORK -> consume -> re-verdict protocol — re-drive the original break scenarios
+against the fixed code, probe the new seams the fix introduces, confirm new tests
+fail pre-fix). Reachable via this live log entry (README -> log.md -> rubric, the
+same path `registry-contradiction-audit.md` uses); a closed-WI spec is an
+allowed-orphan, so the WI-241 spec's link does not count as a root (the WI-229
+ratify-page lesson).
+
+Tests: `test_reviewer_prompt_carries_adversarial_clauses` in
+`tests/test_agent_loop_review.py` drives the loop and asserts the three clauses
+by fragment match (not full-text brittleness) plus byte-presence of the
+unchanged redaction sentence and verdict machine line on the DEPLOYED prompt.
+Byte-budgeted files: **none touched** (PROCESS_OPTIONS.md unchanged — reachability
+rides the log link, not a routing-section pointer). Complexity ratchet green (a
+string-constant edit; census unchanged). Commit bar: `pytest -m smoke -n auto`
+952 passed, 3 skipped (exit 0); `check_docs --stale` OK 0 broken (exit 0). Full
+suite: `pytest -n auto` 1212 passed, 4 skipped (exit 0).
