@@ -1137,3 +1137,105 @@ def test_block_conflict_resolves_in_block_but_parks_in_prose():
     # A conflict touching the hand-authored region must still park.
     outside = "<<<<<<< HEAD\np\n=======\nq\n>>>>>>> B\n"
     assert agent_dispatch._resolve_block_conflict(outside, _STATUS_BLOCK) is None
+
+
+def test_block_conflict_resolves_under_crlf():
+    # WI-231 rework defect 3: on an autocrlf checkout the markers arrive with a
+    # trailing \r; the block must still latch and an in-block conflict resolve —
+    # not false-park, which would defeat Slice A for status.md/architecture.md.
+    begin, end = _STATUS_BLOCK
+    crlf = (
+        "prose\r\n{0}\r\n<<<<<<< HEAD\r\nx\r\n=======\r\ny\r\n>>>>>>> B\r\n"
+        "{1}\r\ntail\r\n".format(begin, end)
+    )
+    resolved = agent_dispatch._resolve_block_conflict(crlf, _STATUS_BLOCK)
+    assert resolved is not None, "a CRLF in-block conflict must resolve like LF"
+    assert "prose" in resolved and "tail" in resolved and "<<<<<<<" not in resolved
+
+
+def _plain_repo(tmp_path, name):
+    repo = tmp_path / name
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "t@t.t")
+    _git(repo, "config", "user.name", "t")
+    return repo
+
+
+def _conflict_merge(repo):
+    subprocess.run(
+        ["git", "-C", str(repo), "merge", "--no-ff", "--no-commit", "theirs"],
+        capture_output=True,
+        stdin=subprocess.DEVNULL,
+    )
+
+
+def test_marker_straddling_hunk_parks(tmp_path):
+    # WI-231 rework defect 1: a REAL git-produced hunk that starts in-block but
+    # swallows the END marker + adjacent prose on both sides (each side edits the
+    # last generated line AND the following prose line) must PARK — taking OURS
+    # would silently drop the other side's hand-authored prose.
+    repo = _plain_repo(tmp_path, "straddle")
+    begin, end = _STATUS_BLOCK
+
+    def status(genb, prose):
+        return "\n".join([begin, "genA", genb, end, prose, "tail", ""])
+
+    (repo / "status.md").write_text(status("genB", "prose"), encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "base")
+    home = _git(repo, "branch", "--show-current")
+    _git(repo, "branch", "theirs")
+    (repo / "status.md").write_text(status("genB-OURS", "prose-OURS"), encoding="utf-8")
+    _git(repo, "commit", "-q", "-am", "ours")
+    _git(repo, "checkout", "-q", "theirs")
+    (repo / "status.md").write_text(
+        status("genB-THEIRS", "prose-THEIRS"), encoding="utf-8"
+    )
+    _git(repo, "commit", "-q", "-am", "theirs")
+    _git(repo, "checkout", "-q", home)
+    _conflict_merge(repo)
+
+    conflicted = (repo / "status.md").read_text(encoding="utf-8")
+    assert "<<<<<<<" in conflicted, "the fixture must produce a real conflict"
+    assert agent_dispatch._resolve_block_conflict(conflicted, _STATUS_BLOCK) is None, (
+        "a marker-straddling hunk parks rather than dropping the other side's prose"
+    )
+
+
+def test_union_preserves_untouched_multiline_cell(tmp_path):
+    # WI-231 rework defect 2: a base row with a quoted, embedded-newline Title
+    # that NEITHER side touches must survive the row union byte-for-byte — the
+    # strip/splitlines round-trip previously collapsed it and silently rewrote the
+    # untouched neighbor on the integration ref.
+    repo = _plain_repo(tmp_path, "multiline")
+    rel = "docs/requirements/work-items.csv"
+    (repo / "docs" / "requirements").mkdir(parents=True)
+
+    def reg(s2, s3):
+        return (
+            'WI-ID,Title,Status\nWI-1,"multi\nline title",queued\n'
+            "WI-2,plain,{}\nWI-3,other,{}\n".format(s2, s3)
+        )
+
+    def write_reg(s2, s3):  # newline="" keeps the embedded \n verbatim (3.8-safe)
+        with open(str(repo / rel), "w", encoding="utf-8", newline="") as fh:
+            fh.write(reg(s2, s3))
+
+    write_reg("queued", "queued")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "base")
+    home = _git(repo, "branch", "--show-current")
+    _git(repo, "branch", "theirs")
+    write_reg("done", "queued")
+    _git(repo, "commit", "-q", "-am", "ours edits WI-2")
+    _git(repo, "checkout", "-q", "theirs")
+    write_reg("queued", "done")
+    _git(repo, "commit", "-q", "-am", "theirs edits WI-3")
+    _git(repo, "checkout", "-q", home)
+    _conflict_merge(repo)
+
+    assert agent_dispatch._union_registry(str(repo), rel), "disjoint rows union"
+    result = (repo / rel).read_text(encoding="utf-8")
+    assert '"multi\nline title"' in result, "the untouched multi-line cell survives"
+    assert "WI-2,plain,done" in result and "WI-3,other,done" in result

@@ -23,6 +23,7 @@ Contracts: IF-055, IF-067 — the interface seams this module declares (process.
 import atexit
 import csv
 import datetime
+import io
 import json
 import os
 import re
@@ -980,10 +981,15 @@ def _generated_regen_argv(kind, wt):
 
 def _resolve_block_conflict(text, block):
     """Resolve conflict hunks by taking the OURS side, but ONLY when every hunk
-    lies inside the generated `block` (a (BEGIN, END) marker pair); return None
-    (park) when any conflict touches the hand-authored region. The block is
+    lies WHOLLY inside the generated `block` (a (BEGIN, END) marker pair); return
+    None (park) when a conflict touches the hand-authored region. A hunk that
+    STARTS in-block but whose either side re-includes a BEGIN/END marker line has
+    straddled the block edge and swallowed hand-authored prose — regeneration
+    cannot stand in for that, so it parks too. Markers are compared LF-clean so an
+    autocrlf (CRLF) checkout still latches `inside` (WI-231 rework). The block is
     regenerated afterward, so which side wins inside it is moot."""
     begin, end = block
+    markers = (begin, end)
     lines = text.split("\n")
     out = []
     inside = False
@@ -994,18 +1000,25 @@ def _resolve_block_conflict(text, block):
         if line.startswith("<<<<<<<"):
             if not inside:
                 return None
+            ours = []
             i += 1
             while i < n and not lines[i].startswith("======="):
-                out.append(lines[i])
+                ours.append(lines[i])
                 i += 1
             i += 1  # skip the ======= divider
+            theirs = []
             while i < n and not lines[i].startswith(">>>>>>>"):
+                theirs.append(lines[i])
                 i += 1
             i += 1  # skip the >>>>>>> closer
+            if any(ln.rstrip("\r") in markers for ln in ours + theirs):
+                return None  # a straddling hunk: park rather than drop prose
+            out.extend(ours)
             continue
-        if line == begin:
+        stripped = line.rstrip("\r")
+        if stripped == begin:
             inside = True
-        elif line == end:
+        elif stripped == end:
             inside = False
         out.append(line)
         i += 1
@@ -1038,11 +1051,22 @@ def _resolve_generated_path(wt, rel, entry):
 
 def _stage_rows(wt, stage, rel):
     """(header, data_rows) parsed from a merge index stage (1=base, 2=ours,
-    3=theirs) of `rel`; (None, []) when that stage is absent (add/add)."""
-    code, out = git(wt, "show", ":{}:{}".format(stage, rel))
-    if code != 0:
+    3=theirs) of `rel`; (None, []) when that stage is absent (add/add). The blob
+    is read RAW — un-stripped, via cat-file rather than git() (which strips), and
+    parsed straight through the csv module — so a quoted cell with an embedded
+    newline survives instead of being collapsed and corrupting an untouched
+    neighbor row on re-serialization (WI-231 rework)."""
+    proc = subprocess.run(
+        ["git", "-C", str(wt), "cat-file", "-p", ":{}:{}".format(stage, rel)],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdin=subprocess.DEVNULL,
+    )
+    if proc.returncode != 0:
         return None, []
-    rows = list(csv.reader(out.splitlines()))
+    rows = list(csv.reader(io.StringIO(proc.stdout)))
     if not rows:
         return [], []
     header = list(rows[0])

@@ -9689,3 +9689,38 @@ new helper is under 10). Smoke tier **912 passed / 3 skipped**; full suite
 **1,147 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken;
 the shifted spec line-anchor hints are warn-only). On `dualplan-routing-fix`,
 not pushed.
+
+**REWORK (independent review of 73ca4c2 — VERDICT: REWORK).** Three defects
+reproduced (reviewer scratch `drive.py`/`drive2.py`/`drive3.py`) and fixed in one
+follow-up commit:
+
+- **MAJOR — marker-straddling hunk silently dropped prose.** `_resolve_block_conflict`
+  guarded only where a hunk STARTS. Git *naturally* produces (drive3) a single
+  hunk that begins in-block but each side re-includes the END marker and the
+  adjacent prose line (both sides edit the block's last generated line AND the
+  following prose line, leaving END as the only common anchor). Taking OURS
+  wholesale discarded the other side's hand-authored prose, violating the park
+  invariant. Fix: collect BOTH sides of each hunk and park (return None) when
+  either side's content contains a BEGIN/END marker line — a straddle regeneration
+  cannot stand in for.
+- **MAJOR — untouched multi-line registry row silently rewritten.** `_stage_rows`
+  read the index blob through `git()` (which strips) then `splitlines()` before
+  `csv.reader`, collapsing a quoted cell's embedded newline; because
+  `_union_registry` re-serializes the whole file, an untouched neighbor row was
+  rewritten on the integration ref. Fix: read the blob RAW via `git cat-file -p`
+  (direct subprocess, un-stripped, `git()` contract unchanged) and parse straight
+  through `csv.reader(io.StringIO(...))`, preserving embedded-newline cells.
+- **MINOR — CRLF checkouts false-parked.** The marker `==` compare against
+  LF-clean constants never latched `inside` on an autocrlf tree, so every in-block
+  conflict parked, defeating Slice A for status.md/architecture.md on Windows —
+  a declared platform. Fix: compare markers `rstrip("\r")`-clean (content bytes
+  left intact, so the round-trip is unchanged).
+
+Regressions added: a real git-produced straddling-hunk park, a row union that
+preserves an untouched quoted multi-line cell byte-for-byte, and a CRLF in-block
+resolve. The reviewer confirmed the rest sound (regeneration tree plumbing,
+mixed-conflict park, journal fidelity, row delete/modify park, skills-index
+exclusion) — left untouched. No C901 baseline change; the module gains a stdlib
+`io` import. Smoke **912 passed / 3 skipped**; full suite **1,150 passed /
+4 skipped**; `check_docs.py --root . --stale` clean. On `dualplan-routing-fix`,
+not pushed.
