@@ -199,4 +199,12 @@ project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedul
 project-trajectory/scripts/agent_common.py == project-trajectory/scripts/score_reviews.py
 project-trajectory/scripts/agent_common.py == project-trajectory/scripts/trace.py
 project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+# WI-239: latest_trailer_evidence's two per-commit token folds (the `WI:`
+# completion set and the `Blocked-WI:`->BlockRef map) share the ~30-token
+# scan/guard shape but differ on purpose — the blocked loop index-pairs refs,
+# the built loop collects a set, and the within-commit completion-wins rule
+# depends on their ORDER. Censused, not merged: a forced fold would obscure
+# the asymmetry the supersede semantics rest on (surfaced at the batch G3
+# close — dupes is G3-only, the commit bar is the smoke tier).
+project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_common.py
 project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
