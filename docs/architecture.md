@@ -175,6 +175,9 @@ Contracts (interfaces): IF-055, IF-067
 | `reservation_meta(root, sha)` | The metadata JSON a reservation commit carries ({train, wis, base}), or |  |
 | `reserve_traincar(root, train_id, wis, base)` | Atomically claim a traincar: ONE off-history metadata commit | SR-061 |
 | `release_reservations(root, wis)` | Transactionally delete the reservation refs of `wis` (one update-ref | SR-062 |
+| `record_conflict(root, tid, tip, ihead, paths)` | Durably record a needs-re-review conflict's merge inputs (train `tip` + |  |
+| `read_conflict(root, tid)` | The recorded conflict metadata for a train ({train, tip, ihead, paths}), |  |
+| `clear_conflict(root, tid)` | Delete a train's conflict record — it integrated or moved past the |  |
 | `train_branch_evidence(root, train_id, base)` | (built, blocked) trailer evidence read off the train BRANCH (not a |  |
 | `worktree_root(root)` | Where train worktrees live: a sibling directory of the repo |  |
 | `existing_worktrees(root)` | {branch: worktree-path} parsed from `git worktree list --porcelain`. |  |

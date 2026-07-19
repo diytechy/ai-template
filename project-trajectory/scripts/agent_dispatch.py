@@ -121,6 +121,17 @@ _ENGINE = Path(__file__).resolve().parent / "agent_loop.py"
 RESERVATION_NS = "refs/llm/reservations/"
 
 
+# WI-232: a needs-re-review source conflict is HUMAN work (option (b)) — the
+# dispatcher cannot resolve it, so it records the conflict's merge inputs (the
+# train tip + the integration head it composed against) and the conflicted paths
+# under this durable ref namespace. A relaunch whose inputs are UNCHANGED skips
+# re-attempting the identical 3-way merge (the idempotence guard) and pages the
+# human; inputs that changed (a new integration head or an amended train) retry
+# once. Git-durable like the reservation/train refs — the out/dispatch/ journal
+# is a cache, never authority (§11).
+CONFLICT_NS = "refs/llm/conflict/"
+
+
 DISPATCH_DIR = "out/dispatch"
 
 
@@ -248,6 +259,64 @@ def release_reservations(root, wis):
             proc.stderr.decode("utf-8", "replace").strip()[:300]
         )
     return None
+
+
+def record_conflict(root, tid, tip, ihead, paths):
+    """Durably record a needs-re-review conflict's merge inputs (train `tip` +
+    the `ihead` it composed against) and conflicted `paths` under
+    refs/llm/conflict/<tid> (WI-232). One off-history metadata commit
+    (`commit-tree`, message = the JSON), mirroring reserve_traincar; the ref is
+    force-set so a retry-with-new-inputs overwrites the prior record. Best-effort
+    (a broken git surfaces elsewhere)."""
+    meta = json.dumps(
+        {"train": tid, "tip": tip, "ihead": ihead or "", "paths": paths},
+        sort_keys=True,
+    )
+    code, tree = git(root, "rev-parse", tip + "^{tree}")
+    if code != 0:
+        return
+    proc = subprocess.run(
+        ["git", "-C", str(root), "commit-tree", tree.strip(), "-p", tip, "-m", meta],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    if proc.returncode == 0:
+        git(root, "update-ref", CONFLICT_NS + tid, proc.stdout.strip())
+
+
+def read_conflict(root, tid):
+    """The recorded conflict metadata for a train ({train, tip, ihead, paths}),
+    or None when the ref is absent/unreadable/malformed."""
+    code, sha = git(root, "rev-parse", "--verify", "--quiet", CONFLICT_NS + tid)
+    if code != 0 or not sha.strip():
+        return None
+    code, out = git(root, "log", "-1", "--format=%B", sha.strip())
+    if code != 0:
+        return None
+    try:
+        meta = json.loads(out)
+    except ValueError:
+        return None
+    return meta if isinstance(meta, dict) else None
+
+
+def clear_conflict(root, tid):
+    """Delete a train's conflict record — it integrated or moved past the
+    conflict. A no-op when the ref is absent."""
+    git(root, "update-ref", "-d", CONFLICT_NS + tid)
+
+
+def _conflict_inputs_match(root, tid, rec):
+    """True when the CURRENT merge inputs (train tip + integration head) equal
+    those recorded in `rec` — the idempotence guard: an unchanged input pair
+    means re-running the identical merge would re-park byte-identically."""
+    code, tip = git(root, "rev-parse", TRAIN_BRANCH_PREFIX + tid)
+    if code != 0:
+        return False
+    return rec.get("tip") == tip.strip() and rec.get("ihead") == (
+        integration_head(root) or ""
+    )
 
 
 def train_branch_evidence(root, train_id, base):
@@ -1200,8 +1269,13 @@ def _compose_train(wt, root, journal, tid, tip):
     resolved, regenerated, park = _resolve_composition_conflict(wt, root)
     if not resolved:
         git(wt, "merge", "--abort")
-        journal.event("integration-conflict", train=tid, detail=(park or out)[:200])
-        return "textual conflict against the integrated tree"
+        detail = (park or out).strip()[
+            :200
+        ] or "textual conflict against the integrated tree"
+        journal.event("integration-conflict", train=tid, detail=detail)
+        # Return the SPECIFIC reason (it names the conflicted path) so the park
+        # state, the durable conflict record, and the NEEDS-HUMAN ask all name it.
+        return detail
     journal.event(
         "integration-regenerated", train=tid, paths=";".join(regenerated)[:200]
     )
@@ -1253,6 +1327,9 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
         return "error", "cannot reset staging to the integration HEAD"
     park = _compose_train(wt, root, journal, tid, tip)
     if park is not None:
+        # Durably record the merge inputs so a relaunch with UNCHANGED inputs
+        # skips this identical merge instead of re-parking silently (WI-232).
+        record_conflict(root, tid, tip, old_head, park)
         return "needs-re-review", park
 
     # Steps 6-8: durable disposition + evidence + regenerated artifacts,
@@ -2117,6 +2194,7 @@ def _reconcile_reserved_train(root, journal, tid, train, parked, quarantined_wis
         err = release_reservations(root, wis)
         if err:
             journal.event("release-failed", train=tid, reason=err[:200])
+        clear_conflict(root, tid)  # WI-232: this train landed; drop any record
         parked[tid] = {"state": "integrated", "wis": wis, "base": base}
         journal.event("reconcile", train=tid, state="integrated")
         return
@@ -2300,6 +2378,26 @@ def _frontier_snapshot(root, quarantined_wis):
     return wi_rows, cars
 
 
+def _integrate_one_ready(root, docs, journal, tid, wis, base, required_verdicts):
+    """Integrate a ready train under the WI-232 conflict-idempotence guard: a
+    train whose merge inputs are UNCHANGED since a recorded needs-re-review
+    conflict is NOT re-merged — it stays parked for the human (the identical
+    3-way merge would only re-park). Inputs that changed (a new integration head
+    or an amended train) retry the merge once, and any non-conflict outcome
+    clears the record. Returns (result, detail) like integrate_train."""
+    rec = read_conflict(root, tid)
+    if rec is not None and _conflict_inputs_match(root, tid, rec):
+        detail = rec.get("paths") or "textual conflict against the integrated tree"
+        journal.event("integration-conflict-held", train=tid, detail=detail[:200])
+        return "needs-re-review", detail
+    result, detail = integrate_train(
+        root, docs, journal, tid, wis, base, required_verdicts
+    )
+    if result not in ("needs-re-review", "recompose"):
+        clear_conflict(root, tid)
+    return result, detail
+
+
 def _integrate_parked(root, docs, journal, parked, required_verdicts, needs_human):
     integrated_any = False
     for tid in sorted(parked):
@@ -2316,7 +2414,7 @@ def _integrate_parked(root, docs, journal, parked, required_verdicts, needs_huma
             )
             base = (meta or {}).get("base", "")
         if source_state == "ready-to-integrate":
-            result, detail = integrate_train(
+            result, detail = _integrate_one_ready(
                 root, docs, journal, tid, lane["wis"], base, required_verdicts
             )
         else:
@@ -2370,8 +2468,39 @@ def _apply_idle_action(action, root, docs, parked, needs_human_ask):
     return None
 
 
+def _needs_review_ask(root, parked):
+    """The WI-127 ask for trains parked on a source-conflict re-review (WI-232,
+    option (b)): name each train and its conflicted path(s), read from the
+    durable conflict record. Empty when no train is parked needs-re-review —
+    those conflicts are genuine human merges the dispatcher must not retry."""
+    trains = sorted(
+        tid for tid, lane in parked.items() if lane["state"] == "needs-re-review"
+    )
+    if not trains:
+        return ""
+    parts = []
+    for tid in trains:
+        rec = read_conflict(root, tid)
+        paths = (rec or {}).get(
+            "paths"
+        ) or "textual conflict against the integrated tree"
+        parts.append("{} ({})".format(tid, paths))
+    return (
+        "re-review needed — resolve the source conflict by hand (merge/rebase "
+        "the train), then relaunch: " + "; ".join(parts)
+    )
+
+
 def _finish_dispatch(root, docs, journal, parked):
     telemetry_summary(journal)
+    # WI-232: a train parked on a real source conflict is HUMAN work — page
+    # NEEDS-HUMAN with an ask naming the train(s) and path(s) instead of the
+    # silent RUNNING/STALL that let an operator relaunch expecting progress.
+    review_ask = _needs_review_ask(root, parked)
+    if review_ask:
+        _write_runstate(docs, "NEEDS-HUMAN", review_ask)
+        stop_banner(docs / "status.md", "NEEDS-HUMAN", review_ask)
+        return EXIT_NEEDS_HUMAN
     integrated = [
         tid
         for tid, lane in parked.items()

@@ -2245,7 +2245,12 @@ worktree from the *current* integration HEAD: reservation scope and the
 **exact-head review verdicts** are verified first (a verdict naming an older
 commit does not count); a clean 3-way apply takes the fast path with **no
 re-review**, while *any* textual conflict parks the train for a **focused
-re-review** — never a silent one-side pick; the WI rows go `done` with derived
+re-review** — never a silent one-side pick. A **source** conflict is human work
+(WI-232): the integrator records its merge inputs (train tip + integration head)
+and conflicted path(s) under a durable `refs/llm/conflict/<train>` ref, pages
+`NEEDS-HUMAN` with a WI-127 `ask:` naming them, and skips the identical merge on
+any relaunch whose inputs are unchanged — retrying once only when an input moves.
+On the fast path the WI rows go `done` with derived
 Deliverables, the log gains the integration evidence, the status snapshot and
 iteration index regenerate on the composed tree, and the **combined bar always
 runs** (a red bar blocks integration with the ref untouched). One integration

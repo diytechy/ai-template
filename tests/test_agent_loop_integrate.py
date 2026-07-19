@@ -258,13 +258,15 @@ def test_red_combined_bar_blocks_integration_and_cas(tmp_path):
 
 
 def test_conflict_forces_focused_re_review_clean_apply_does_not(tmp_path):
-    # Two trains write DIFFERENT content to the SAME path: the first composes
-    # cleanly (no re-review), the second hits a textual conflict and parks
-    # needs-re-review — its WIs never done, its reservations held.
+    # Two trains write DIFFERENT content to the SAME source path: the first
+    # composes cleanly (no re-review), the second hits a textual conflict and
+    # parks needs-re-review — its WIs never done, its reservations held. WI-232:
+    # a real source conflict now PAGES NEEDS-HUMAN with an ask naming the train
+    # and the conflicted path (the WI-127 contract), not a silent RUNNING/STALL.
     repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201"), _wi_row("WI-202")])
     (ctl / "mode").write_text("shared", encoding="utf-8")
     proc = _dispatch(repo, template)
-    assert proc.returncode == agent_loop.EXIT_STALL, proc.stdout + proc.stderr
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
 
     events = _events(repo)
     integrated = [e for e in events if e["event"] == "integrated"]
@@ -280,6 +282,88 @@ def test_conflict_forces_focused_re_review_clean_apply_does_not(tmp_path):
     reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
     assert reg.count(",done,") == 1, "only the cleanly-applied WI is done"
     assert len(_reservations(repo)) == 1, "the conflicted train keeps its claim"
+    # The run-state pages the human with a one-line ask naming the train + path.
+    run_state = (repo / "docs" / "run-state").read_text(encoding="utf-8")
+    assert run_state.startswith("NEEDS-HUMAN")
+    ask = [ln for ln in run_state.splitlines() if ln.startswith("ask:")]
+    assert ask, "a source-conflict park owes a WI-127 ask line"
+    assert "shared.txt" in ask[0], "the ask must name the conflicted path"
+    train_tid = next(iter(_reservations_by_train(repo)))
+    assert train_tid in ask[0], "the ask must name the parked train"
+
+
+def _reservations_by_train(repo):
+    # {train-id: [WI-ID,...]} from the reservation commits' metadata.
+    trains = {}
+    out = _git(
+        repo,
+        "for-each-ref",
+        "--format=%(refname) %(objectname)",
+        "refs/llm/reservations",
+    )
+    for ln in out.splitlines():
+        if not ln.strip():
+            continue
+        ref, sha = ln.split()
+        wid = ref.rsplit("/", 1)[1]
+        meta = json.loads(_git(repo, "log", "-1", "--format=%B", sha))
+        trains.setdefault(meta["train"], []).append(wid)
+    return trains
+
+
+def _conflict_count(repo):
+    return sum(1 for e in _events(repo) if e["event"] == "integration-conflict")
+
+
+def test_needs_re_review_relaunch_is_idempotent_until_inputs_change(tmp_path):
+    # WI-232 regressions 2 + 3. A parked source conflict must not re-run the
+    # identical merge every launch (the silent re-park that burned resumable
+    # lanes) — the merge inputs (train tip + integration head) are recorded
+    # durably and a relaunch with UNCHANGED inputs skips the merge, still paging
+    # NEEDS-HUMAN with the same ask. Only when an input changes does it retry.
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201"), _wi_row("WI-202")])
+    (ctl / "mode").write_text("shared", encoding="utf-8")
+
+    # Launch 1: train A integrates, train B parks needs-re-review (1 conflict).
+    proc = _dispatch(repo, template)
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert _conflict_count(repo) == 1
+    ask1 = [
+        ln
+        for ln in (repo / "docs" / "run-state").read_text("utf-8").splitlines()
+        if ln.startswith("ask:")
+    ][0]
+    conflict_refs = _git(
+        repo, "for-each-ref", "--format=%(refname)", "refs/llm/conflict"
+    ).splitlines()
+    assert conflict_refs, "the conflict's merge inputs are recorded durably in git"
+
+    # Launch 2: UNCHANGED inputs. The guard skips the merge — no SECOND
+    # integration-conflict event — yet still pages NEEDS-HUMAN with the same ask.
+    proc = _dispatch(repo, template)
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert _conflict_count(repo) == 1, "an unchanged relaunch must NOT re-merge"
+    assert any(e["event"] == "integration-conflict-held" for e in _events(repo)), (
+        "the idempotence guard fires on the unchanged relaunch"
+    )
+    ask2 = [
+        ln
+        for ln in (repo / "docs" / "run-state").read_text("utf-8").splitlines()
+        if ln.startswith("ask:")
+    ][0]
+    assert ask2 == ask1, "the paged ask is stable across an unchanged relaunch"
+
+    # Move the integration head (another train integrating, in effect): an empty
+    # commit on top of it changes train B's merge inputs, so the next relaunch
+    # RETRIES the merge exactly once — a second integration-conflict appears.
+    ihead = _git(repo, "rev-parse", "refs/heads/llm/integration")
+    tree = _git(repo, "rev-parse", ihead + "^{tree}")
+    moved = _git(repo, "commit-tree", tree, "-p", ihead, "-m", "another train")
+    _git(repo, "update-ref", "refs/heads/llm/integration", moved)
+
+    proc = _dispatch(repo, template)
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
+    assert _conflict_count(repo) == 2, "a changed-input relaunch retries the merge once"
 
 
 # --- CAS + fail-closed unit surfaces ----------------------------------------------
@@ -1062,7 +1146,9 @@ def test_same_row_both_sides_edit_still_parks(tmp_path):
     repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201"), _wi_row("WI-202")])
     (ctl / "mode").write_text("clash", encoding="utf-8")
     proc = _dispatch(repo, template)
-    assert proc.returncode == agent_loop.EXIT_STALL, proc.stdout + proc.stderr
+    # A source conflict (a both-sides registry-row collision) is human work, so
+    # the drained run pages NEEDS-HUMAN (WI-232), not the old silent STALL.
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
 
     events = _events(repo)
     assert len([e for e in events if e["event"] == "integrated"]) == 1
@@ -1073,6 +1159,7 @@ def test_same_row_both_sides_edit_still_parks(tmp_path):
     ]
     assert parked, "a both-sides row collision demands a focused re-review"
     assert len(_reservations(repo)) == 1, "the parked train keeps its claim"
+    assert (repo / "docs" / "run-state").read_text("utf-8").startswith("NEEDS-HUMAN")
 
 
 def test_mixed_generated_and_source_conflict_parks(tmp_path):
@@ -1083,7 +1170,9 @@ def test_mixed_generated_and_source_conflict_parks(tmp_path):
     _seed_dashboard(repo)
     (ctl / "mode").write_text("mixed", encoding="utf-8")
     proc = _dispatch(repo, template)
-    assert proc.returncode == agent_loop.EXIT_STALL, proc.stdout + proc.stderr
+    # The non-generated side makes this a source conflict: it pages NEEDS-HUMAN
+    # (WI-232) rather than the old silent STALL.
+    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
 
     events = _events(repo)
     assert len([e for e in events if e["event"] == "integrated"]) == 1

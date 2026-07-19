@@ -9724,3 +9724,62 @@ exclusion) — left untouched. No C901 baseline change; the module gains a stdli
 `io` import. Smoke **912 passed / 3 skipped**; full suite **1,150 passed /
 4 skipped**; `check_docs.py --root . --stale` clean. On `dualplan-routing-fix`,
 not pushed.
+
+## 2026-07-18 — WI-232: make needs-re-review actionable
+
+Field finding 3 (2026-07-18 parallel run): a train parked `needs-re-review` on
+a textual conflict was only an attention state — nothing dispatched a re-review,
+and each relaunch reconciled it `ready-to-integrate`, retried the **identical**
+3-way merge, re-parked byte-identically, and stopped `RUNNING`/STALL while
+burning every other resumable lane. The stop banner never said human resolution
+was required, so an operator reasonably relaunched expecting progress; the
+2026-07-18 wrap-up was ultimately a manual merge outside the dispatcher.
+
+**Ruling — adopted option (b)** (rule it human work and say so). Post-WI-231 the
+generated/registry majority of parks auto-resolve, so a surviving `needs-re-review`
+is a genuine both-sides *source* edit — not dispatcher-resolvable. Option (a)'s
+re-review lane would spawn an agent to redo a human merge with no better
+information; it stays deferred until parks prove frequent after WI-231, per the
+spec. Ruling recorded in `docs/specs/WI-232.md` (Ruling section) and the
+canonical `PROCESS_OPTIONS.md` atomic-integrator paragraph.
+
+Two mechanisms in `agent_dispatch.py`:
+
+- **Terminal NEEDS-HUMAN.** `_finish_dispatch` short-circuits to run-state
+  `NEEDS-HUMAN` (before the old attention→RUNNING/STALL path) whenever the run
+  drains with any train parked `needs-re-review`, with a WI-127 `ask:` naming
+  each train and its conflicted path(s) (`_needs_review_ask`). The page lands at
+  the **terminal** decision, after other lanes drain — a source conflict never
+  halts still-resumable disjoint work, it only decides the end-state.
+- **Idempotence guard (conflict inputs durable in Git).** The conflict's merge
+  inputs (train tip + integration head) and paths are recorded under
+  `refs/llm/conflict/<train>` — an off-history `commit-tree` metadata commit
+  mirroring the reservation-ref pattern (§11: `out/dispatch/` is a cache, never
+  authority; durable train state lives in Git). `integrate_train` writes it on
+  the `needs-re-review` return; `_integrate_one_ready` reads it before
+  re-attempting and, when the current inputs still equal the recorded pair,
+  **skips the identical merge** (journals `integration-conflict-held`, no second
+  `integration-conflict`), staying parked. When an input moves — a new
+  integration head or amended train tip — it retries once and overwrites/clears
+  the record on the outcome; a landed train's record is cleared (reconcile +
+  `_integrate_one_ready`).
+
+**Deviations:** none from option (b). The only shift from the literal spec
+sketch is the terminal (not mid-loop) page, which is strictly better for the
+cited symptom (burning other lanes). Three new helpers (`record_conflict`,
+`read_conflict`, `clear_conflict`) + `_conflict_inputs_match`, `_needs_review_ask`,
+`_integrate_one_ready` — all under the C901 limit; **no baseline change**
+(`integrate_train` stays 16). `_compose_train` now returns the specific
+path-naming reason (was a generic string) so the ask, record, and park detail
+all name the path.
+
+Regressions in `tests/test_agent_loop_integrate.py`: the existing source-conflict
+test now asserts NEEDS-HUMAN + an `ask:` naming the train and `shared.txt`; a new
+park→relaunch(unchanged, no second `integration-conflict`, same ask)→move-head→
+relaunch(retries once) test; the both-sides-row-collision and mixed-conflict
+parks re-asserted to NEEDS-HUMAN. Byte deltas: `PROCESS_OPTIONS.md`
+**156,661 → 157,038 (+377)** (source-conflict paging + guard; baseline re-stamped
+in all three byte-budget-guard SKILL.md copies); `PROCESS.md` and
+`AGENTS.template.md` untouched. Smoke **912 passed / 3 skipped**; full suite
+**1,151 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
+On `dualplan-routing-fix`, not pushed.
