@@ -288,4 +288,27 @@ Finally verify there is nothing here missing that would make all these template 
 
 Consider integrating the latest think like fable for mid and low teir models to adopt when processing, this is simlar to another appproach that was already used in this template to pull in an external package to augment the environment of a non-strong-tier llm agent model.
 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+4 items of query / verification:
+
+1.
 Make sure for strong models the planner is strong (where the test cases should also get created), implimenter and reviewers can stay medium.  Which judgement determines if it should be duel planned or not?
+
+2.
+Can I add a 3rd model to act another reviewer?  How can I setup the configurations such that there are more degrees of preference?  In my case, I'd like to configure it as:
+Primary planner: Claude
+Primary builder: Claude
+Reviewers: OpenAI and Kimi (OpenCode Go) and Grok (OpenCode Go)
+
+Maybe prefer OpenAI for every 2 of every 3 reviews?  Or just reserve kimi or grok for judging?
+
+3.
+Verify / fix the project_state.html, this should have already landed (WI-231) but how does the integrator know which artifacts are generated?  How does it discover this?
+
+4.
+Verify incorperation of new merge method for parallel builds (should already be a WI by the time this hits.)
+
+5.
+Verify fix already in gilbert (itself waiting)

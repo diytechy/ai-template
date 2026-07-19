@@ -268,6 +268,18 @@ why (one bullet each; cite ids)._
   stable **OI-3** id, narrowed in [open-items.md](open-items.md); rec:
   integrate at the next stable cut (post-WI-209). Per the pending-only rule
   the executed half moves here and out of the brief.
+- **2026-07-18 — OI-3 RULED AND CLOSED (owner): integrate `derived-gate-model`
+  into `main` — "yes, if not already done."** Git-verified already done at read
+  time: `main` sits at `3abeb63` (*Merge branch 'derived-gate-model'*), in sync
+  with `origin/main`, and `derived-gate-model` (`239e78c`) is an ancestor of
+  `main` — the integration the brief contemplated happened at the recommended
+  stable cut. No further git action taken (nothing to integrate; pushes stay
+  `push-policy: human`). Alternatives passed over: re-pointing tooling to keep
+  `derived-gate-model` as de-facto mainline — moot once merged. The OI-3
+  section is deleted from [open-items.md](open-items.md) per the pending-only
+  rule. (Unmerged residue elsewhere is *not* OI-3's: `dualplan-routing-fix`
+  and `guardrails-fable-method` remain open dev branches with their own
+  merge-to-main sittings to be ruled separately.)
 
 ## Audit log
 

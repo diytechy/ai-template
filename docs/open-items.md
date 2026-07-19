@@ -16,30 +16,6 @@ decisions._
 
 ---
 
-## OI-3 — `main` integration decision
-
-- **One-line:** the routine push is done (owner, 2026-07-17 — branch in sync);
-  the remaining question is whether/when to integrate `derived-gate-model`
-  into `main`, a deliberate sitting of its own.
-- **Decision:** whether/when to integrate `derived-gate-model` into `main`
-  (the push half of the original brief was executed by the owner 2026-07-17 —
-  log Decisions; this section keeps the stable id, narrowed to the residue).
-- **Git-checked facts (2026-07-17; re-verify at read time — an open-item claim
-  about git state must come from git, not memory):**
-  - `derived-gate-model` tracks `origin/derived-gate-model`, **in sync** at
-    the WI-207 close — verify: `git fetch --prune && git branch -vv`;
-  - `main` is several hundred commits behind this branch
-    (`git rev-list --count main..derived-gate-model`) — the whole
-    derived-gate/self-adoption era lives only on this branch.
-- **Blast radius:** whatever consumes `main` (fresh clones, any default-branch
-  automation) sees a kit hundreds of commits stale until integrated; the
-  integration itself is a large fast-forward-or-merge best done at a
-  deliberate cut point (e.g. after the M1/M2 migration lands).
-- **Options:** integrate at the next stable cut (post-WI-209) · integrate now ·
-  keep `derived-gate-model` the de-facto mainline and re-point tooling.
-- **Recommendation:** integrate at the next stable cut — after WI-208/WI-209
-  land and bake briefly, merge to `main` in one reviewed sitting.
-
 ## OI-4 — WI-097: LICENSE decision
 
 - **One-line:** rule WI-097 (LICENSE + public/private intent) — no rec; needs
@@ -66,3 +42,27 @@ decisions._
   evidence.
 - **Recommendation (recorded):** rule only after ≥ 2 phases of medium-BUILD
   evidence.
+
+## OI-14 — WI-229 stage-2: attest (or amend/park) the SR-split migration plan
+
+- **One-line:** WI-229's stage-1 plan is frozen and awaiting the owner's
+  stage-2 attestation; until ruled, every dispatcher launch re-quarantines the
+  WI (~7 min burn) and the M-05 spine migration cannot proceed.
+- **Decision:** whether the frozen oversized-SR split plan is ratified for
+  stage-3 execution. The plan doc is **on the quarantined train branch**, not
+  the dev branch — read it with:
+  `git show llm/train/p0-g3-WI-229-3999:docs/ratify/WI-229-sr-split.md`
+  (frozen at `9fed833`; spec: [specs/WI-229.md](specs/WI-229.md), which
+  declares this hard stop — the worker must block, never self-ratify, and
+  `gate-policy: autonomous` does not waive it).
+- **Blast radius:** the traceability spine itself — splitting Verified/attested
+  SR rows re-opens their ratification; every LLR/TC re-parents per the plan's
+  mapping, and supersession links become permanent spine history. A wrong
+  attestation here is the costliest class of error the process guards against.
+- **Options:** attest the plan (unblocks stage 3 on the next launch) ·
+  send it back with amendment notes (worker revises stage 1) · park WI-229
+  (`deferred` with reason) so launches stop burning the quarantine cycle
+  until you have a sitting for it.
+- **Recommendation:** read the frozen plan before anything else; if a ruling
+  isn't imminent, park the row — the quarantine loop costs ~7 min per launch
+  and pages nothing new.
