@@ -1188,12 +1188,91 @@ def _intent_meta(root):
     return sha.strip(), reservation_meta(root, sha.strip())
 
 
+def _publish_diff_paths(root, base, target):
+    """Tracked paths the publication advances: `git diff --name-only` between
+    `base` and `target`, NUL-delimited so Git never C-quotes special path
+    bytes (as WI-224's salvage scans do) and `--no-renames` so BOTH sides of a
+    rename are listed — the disjointness test must never miss a touched path.
+    None when git cannot be read."""
+    code, out = git(root, "diff", "--name-only", "-z", "--no-renames", base, target)
+    if code != 0:
+        return None
+    return {p for p in out.split("\0") if p}
+
+
+def _worktree_dirt(root, base):
+    """Tracked paths whose worktree OR index differs from `base` — the user
+    dirt measured against the pre-publication baseline. Untracked files never
+    count (the never-stash contract); `git diff` ignores them. NUL-delimited,
+    rename-split as above. None when git cannot be read."""
+    dirt = set()
+    for scan in (("diff",), ("diff", "--cached")):
+        code, out = git(root, *scan, "--name-only", "-z", "--no-renames", base)
+        if code != 0:
+            return None
+        dirt.update(p for p in out.split("\0") if p)
+    return dirt
+
+
+def _publish_dirt(root, base, target):
+    """Classify the primary worktree for a publication that advances `base` to
+    `target` (spec §9 disjointness rule):
+
+    - `clean` — no tracked dirt vs `base`: the mechanically-stale / at-baseline
+      case, finished by the exact-hash `reset --hard`;
+    - `disjoint` — dirt exists but no dirty path is in the `base..target` diff:
+      the edits ride the sync forward untouched;
+    - `intersect` — a dirty path is also published: defer, never reset/stash;
+    - `error` — git could not be read.
+
+    No path-name allowlist: disjointness derives what a hardcoded list (the
+    owner scratchpad, the generated run-state) would only approximate."""
+    dirt = _worktree_dirt(root, base)
+    if dirt is None:
+        return "error"
+    if not dirt:
+        return "clean"
+    diff = _publish_diff_paths(root, base, target)
+    if diff is None:
+        return "error"
+    return "intersect" if (dirt & diff) else "disjoint"
+
+
+def _carry_dirt_forward(root, base, target):
+    """Advance the worktree/index from `base` to descendant `target` with git's
+    own two-way merge (`read-tree -m -u`): it updates the published paths and
+    keeps uncommitted edits to every OTHER path byte-for-byte. Git REFUSES
+    (nonzero) rather than clobber a locally-modified published path — the
+    backstop that upholds the never-reset-user-edits contract even if a caller
+    misjudged disjointness. True on a completed sync; a refusal defers."""
+    code, _ = git(root, "read-tree", "-m", "-u", base, target)
+    return code == 0
+
+
+def _sync_worktree(root, base, target):
+    """Bring the primary worktree from `base` to `target` under the disjointness
+    rule (spec §9/§11): 'clean' (exactly at `base`) → the exact-hash
+    `reset --hard`; disjoint dirt → carry it forward across git's own merge;
+    intersecting dirt, a refused carry, or an unreadable tree leaves the
+    checkout untouched. Returns 'synced', 'deferred', or 'error'."""
+    disp = _publish_dirt(root, base, target)
+    if disp == "error":
+        return "error"
+    if disp == "clean":
+        code, _ = git(root, "reset", "--hard", target)
+        return "synced" if code == 0 else "error"
+    if disp == "disjoint" and _carry_dirt_forward(root, base, target):
+        return "synced"
+    return "deferred"
+
+
 def publish_integration(root, journal, dev_branch):
-    """Publish the integration HEAD to the development branch (spec §9): only
-    when the primary worktree is CLEAN; guarded by the durable publish-intent
-    ref written before the dev-ref CAS and deleted only after the verified
-    fast-forward/reset sync. Returns (state, detail) where state is
-    'published', 'deferred', 'noop', or 'error'."""
+    """Publish the integration HEAD to the development branch (spec §9): when no
+    uncommitted edit intersects the publish diff (disjoint dirt rides the sync
+    forward untouched); guarded by the durable publish-intent ref written before
+    the dev-ref CAS and deleted only after the verified sync. Returns
+    (state, detail) where state is 'published', 'deferred', 'noop', or
+    'error'."""
     target = integration_head(root)
     if not target:
         return "noop", "no integration ref"
@@ -1205,28 +1284,33 @@ def publish_integration(root, journal, dev_branch):
     intent_sha, intent = _intent_meta(root)
 
     if dev_head == target:
-        # Published already (this or a prior attempt): confirm the worktree
-        # sync, then drop any completed intent.
+        # Published already (this or a prior attempt). A dirty checkout with a
+        # PENDING intent is the crash-window recovery: sync against the intent's
+        # expected old hash. Without a pending intent there is no sync to
+        # finish, so publication is simply complete — any (disjoint) worktree
+        # dirt is its owner's, left alone (the post-publish idempotent replay).
         code, porcelain = git(root, "status", "--porcelain")
         tracked_dirty = [
             ln for ln in porcelain.splitlines() if ln and not ln.startswith("??")
         ]
-        if tracked_dirty:
-            code2, diff_old = (
-                git(root, "diff", "--quiet", intent["old"])
-                if (intent and intent.get("old"))
-                else (1, "")
+        if tracked_dirty and intent_sha:
+            diverges = (
+                "development ref already at the target but the worktree "
+                "diverges — left untouched and reported, never reset"
             )
-            if intent and intent.get("old") and code2 == 0:
-                # The §11 stale-checkout case: index/worktree still exactly at
-                # the intent's expected old hash — mechanically stale, not
-                # user dirt. Finish the idempotent sync.
-                git(root, "reset", "--hard", target)
-            else:
-                return "deferred", (
-                    "development ref already at the target but the worktree "
-                    "diverges — left untouched and reported, never reset"
-                )
+            base = intent.get("old") if intent else None
+            if not base:
+                # Unreadable/absent intent metadata: keep the ref as recovery
+                # evidence, never sync against an unknown baseline.
+                return "deferred", diverges
+            # A mechanically stale checkout (still exactly at old) resets to
+            # target; disjoint dirt is carried across; intersecting dirt or a
+            # refused carry leaves the checkout untouched.
+            outcome = _sync_worktree(root, base, target)
+            if outcome == "error":
+                return "error", "cannot inspect the primary worktree for publication"
+            if outcome == "deferred":
+                return "deferred", diverges
         if intent_sha:
             git(root, "update-ref", "-d", PUBLISH_INTENT_REF, intent_sha)
             journal.event("publish-intent-cleared", target=target[:12])
@@ -1247,16 +1331,17 @@ def publish_integration(root, journal, dev_branch):
             "integration target {} is not a descendant of development head {}"
         ).format(target, dev_head)
 
-    # Dirty-at-outset: defer, report, never stash/reset (spec §9).
-    code, porcelain = git(root, "status", "--porcelain")
-    tracked_dirty = [
-        ln for ln in porcelain.splitlines() if ln and not ln.startswith("??")
-    ]
-    if tracked_dirty:
+    # Dirty-at-outset disjointness (spec §9): dirt that intersects the publish
+    # diff defers (never stash/reset); dirt disjoint from it rides the sync
+    # forward untouched, so publication proceeds. No path-name allowlist.
+    disp = _publish_dirt(root, dev_head, target)
+    if disp == "error":
+        return "error", "cannot inspect the primary worktree for publication"
+    if disp == "intersect":
         journal.event("publish-deferred", reason="dirty-worktree")
         return "deferred", (
-            "primary worktree carries {} uncommitted tracked path(s) — "
-            "publication deferred, checkout untouched".format(len(tracked_dirty))
+            "primary worktree carries uncommitted edits to a path the "
+            "publication would advance — deferred, checkout untouched"
         )
 
     # The durable intent: {target, old, ref}. Reuse only an EXACT match; a
@@ -1316,19 +1401,20 @@ def publish_integration(root, journal, dev_branch):
         return "deferred", "development ref moved; recomposing from its new head"
 
     _fault("post-dev-cas")
-    # Verified sync: a reset fires ONLY with index + tracked tree exactly at
-    # the expected old hash (untracked files untouched); divergence defers.
-    code1, _ = git(root, "diff", "--quiet", dev_head)
-    code2, _ = git(root, "diff", "--cached", "--quiet", dev_head)
-    if code1 != 0 or code2 != 0:
+    # Verified sync (spec §9/§11). Clean at the expected old hash → the exact
+    # `reset --hard`. Dirt disjoint from the publish diff (already vetted at
+    # outset) rides git's own two-way merge across the sync. Any intersection or
+    # a post-CAS divergence defers: the intent ref still names the
+    # pre-publication hash for the next pass.
+    outcome = _sync_worktree(root, dev_head, target)
+    if outcome == "error":
+        return "error", "sync failed: could not reach the target tree"
+    if outcome == "deferred":
         journal.event("publish-sync-deferred", reason="worktree-diverged")
         return "deferred", (
             "edits landed between the CAS and the sync — the intent ref "
             "identifies the pre-publication hash; sync deferred, not reset"
         )
-    code, out = git(root, "reset", "--hard", target)
-    if code != 0:
-        return "error", "sync reset failed: {}".format(out[:200])
     git(root, "update-ref", "-d", PUBLISH_INTENT_REF, new_intent)
     journal.event("published", ref=dev_ref, head=target[:12])
     return "published", target

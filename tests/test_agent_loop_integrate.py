@@ -15,10 +15,12 @@ The load-bearing guarantees:
     trailers) through the same CAS discipline;
   - review verdicts are verified against the EXACT reviewed head — a train
     whose verdict names an older commit does not integrate;
-  - publication to the development branch: deferred (untouched, reported) on
-    a dirty worktree; resumed idempotently on relaunch; guarded by the
-    durable publish-intent ref so a crash between the dev-ref CAS and the
-    worktree sync finishes idempotently instead of reading as user dirt;
+  - publication to the development branch: proceeds when the worktree dirt is
+    disjoint from the publish diff (the edits ride the sync forward unchanged),
+    deferred (untouched, reported) only when dirt intersects it (WI-230);
+    guarded by the durable publish-intent ref so a crash between the dev-ref
+    CAS and the worktree sync finishes idempotently instead of reading as user
+    dirt;
   - an absent integration ref with dispatcher-owned evidence fails closed
     (never silently re-seeded from the development branch).
 """
@@ -325,31 +327,24 @@ def test_stale_review_verdict_does_not_integrate(tmp_path):
 # --- publication + the intent protocol --------------------------------------------
 
 
-def test_dirty_dev_worktree_defers_publication_then_relaunch_publishes(tmp_path):
+def test_disjoint_dirty_worktree_publishes_and_preserves_the_edit(tmp_path):
+    # WI-230: a tracked edit the publish diff never touches (an owner-scratchpad
+    # analogue) no longer strands publication — it rides the sync forward
+    # byte-for-byte while the development ref lands on the integration target.
     repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
-    # Tracked dirt in the primary worktree (untracked files never count).
-    (repo / "AGENTS.md").write_text("# agents (edited, uncommitted)\n", "utf-8")
+    dirty = "# agents (edited, uncommitted)\n"
+    (repo / "AGENTS.md").write_text(dirty, "utf-8")  # disjoint from the diff
     dev_before = _git(repo, "rev-parse", "HEAD")
     proc = _dispatch(repo, template)
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
 
-    # Integration advanced; publication deferred; checkout untouched.
+    # Integration advanced AND publication landed; the disjoint edit survives.
     integ = _git(repo, "rev-parse", "refs/heads/llm/integration")
     assert integ != dev_before
-    assert _git(repo, "rev-parse", "HEAD") == dev_before
-    assert (repo / "AGENTS.md").read_text("utf-8").startswith("# agents (edited"), (
-        "a dirty checkout is never reset or stashed"
+    assert _git(repo, "rev-parse", "HEAD") == integ, "publication is no longer stranded"
+    assert (repo / "AGENTS.md").read_text("utf-8") == dirty, (
+        "a disjoint dirty checkout is carried forward unchanged, never reset"
     )
-    assert any(e["event"] == "publish-deferred" for e in _events(repo))
-    # run-state stays RUNNING: the published projection lags the authority.
-    assert (repo / "docs" / "run-state").read_text().startswith("RUNNING")
-
-    # Clean the dirt and relaunch: recovery resumes the publication
-    # idempotently (spec §11 "llm/integration ahead of the development ref").
-    _git(repo, "checkout", "--", "AGENTS.md")
-    proc = _dispatch(repo, template)
-    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    assert _git(repo, "rev-parse", "HEAD") == integ
     code = subprocess.run(
         [
             "git",
@@ -417,6 +412,141 @@ def test_crash_between_dev_cas_and_sync_recovers_idempotently(tmp_path):
         capture_output=True,
     ).returncode
     assert code != 0, "the finished intent is deleted"
+
+
+# --- WI-230: publish under disjoint dirt -----------------------------------------
+
+
+def _intent_absent(repo):
+    return (
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo),
+                "rev-parse",
+                "--verify",
+                "--quiet",
+                "refs/llm/publish-intent",
+            ],
+            capture_output=True,
+        ).returncode
+        != 0
+    )
+
+
+def _publish_fixture(tmp_path):
+    """A repo whose integration ref sits one commit ahead of the development
+    branch. The publish diff touches ONLY `published.txt`; `docs/notes.md` and
+    `docs/run-state` are tracked bystanders the diff never touches. The dev
+    checkout is reset back to `old`. Returns (repo, branch, old, target)."""
+    repo, ctl, template = _setup(tmp_path, [_wi_row("WI-201")])
+    (repo / "published.txt").write_text("base\n", encoding="utf-8")
+    (repo / "docs" / "notes.md").write_text("notes base\n", encoding="utf-8")
+    (repo / "docs" / "run-state").write_text("RUNNING base\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "tracked baseline")
+    branch = _git(repo, "branch", "--show-current")
+    old = _git(repo, "rev-parse", "HEAD")
+    (repo / "published.txt").write_text("base\nadvanced\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "integration content")
+    target = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", target)
+    _git(repo, "reset", "--hard", old)
+    return repo, branch, old, target
+
+
+def test_publish_carries_disjoint_dirt_forward(tmp_path):
+    # Regression 1: a dirty tracked file disjoint from the publish diff no
+    # longer defers — publication lands and the edit survives byte-for-byte.
+    repo, branch, old, target = _publish_fixture(tmp_path)
+    (repo / "docs" / "notes.md").write_text("notes base\nWIP edit\n", "utf-8")
+
+    journal = agent_loop._Journal(repo)
+    state, detail = agent_loop.publish_integration(repo, journal, branch)
+    assert state == "published", detail
+    assert _git(repo, "rev-parse", "refs/heads/" + branch) == target
+    assert (repo / "published.txt").read_text("utf-8") == "base\nadvanced\n"
+    assert (repo / "docs" / "notes.md").read_text("utf-8") == "notes base\nWIP edit\n"
+    assert _intent_absent(repo), "a completed publication deletes its intent"
+
+
+def test_publish_defers_when_dirt_intersects_the_diff(tmp_path):
+    # Regression 2: dirt on a path the publication would advance still defers,
+    # leaving the checkout and the development ref untouched (never reset/stash).
+    repo, branch, old, target = _publish_fixture(tmp_path)
+    (repo / "published.txt").write_text("base\nLOCAL conflict\n", "utf-8")
+
+    journal = agent_loop._Journal(repo)
+    state, detail = agent_loop.publish_integration(repo, journal, branch)
+    assert state == "deferred", detail
+    assert _git(repo, "rev-parse", "refs/heads/" + branch) == old, "dev ref untouched"
+    assert (repo / "published.txt").read_text("utf-8") == "base\nLOCAL conflict\n"
+    assert _intent_absent(repo), "an intersecting defer writes no intent"
+    assert any(
+        e["event"] == "publish-deferred" and e.get("reason") == "dirty-worktree"
+        for e in _events(repo)
+    )
+
+
+def test_run_state_rewrite_alone_no_longer_strands_publication(tmp_path):
+    # Regression 4: the dispatcher's own end-of-run run-state rewrite (dirt on
+    # docs/run-state, disjoint from the diff) can no longer strand publication.
+    repo, branch, old, target = _publish_fixture(tmp_path)
+    (repo / "docs" / "run-state").write_text("DONE new\n", "utf-8")
+
+    journal = agent_loop._Journal(repo)
+    state, detail = agent_loop.publish_integration(repo, journal, branch)
+    assert state == "published", detail
+    assert _git(repo, "rev-parse", "refs/heads/" + branch) == target
+    assert (repo / "docs" / "run-state").read_text("utf-8") == "DONE new\n"
+
+
+def test_crash_replay_carries_disjoint_dirt_forward(tmp_path):
+    # Regression 3: the §11 replay (intent present, crash between the dev-ref
+    # CAS and the sync) with a disjoint uncommitted edit present must finish the
+    # sync AND preserve the edit — never read the mechanically stale checkout,
+    # nor the disjoint dirt, as a blocking divergence.
+    repo, branch, old, target = _publish_fixture(tmp_path)
+    # Reconstruct the crash-window state: dev ref already CAS'd to target while
+    # the worktree/index still sit at old, the intent written, plus disjoint dirt.
+    _git(repo, "update-ref", "refs/heads/" + branch, target)
+    (repo / "docs" / "notes.md").write_text("notes base\nWIP survives\n", "utf-8")
+    tree = _git(repo, "rev-parse", target + "^{tree}")
+    meta = json.dumps(
+        {
+            "train": "publish",
+            "wis": ["publish"],
+            "base": target,
+            "target": target,
+            "old": old,
+            "ref": "refs/heads/" + branch,
+        },
+        sort_keys=True,
+    )
+    intent = _git(repo, "commit-tree", tree, "-p", target, "-m", meta)
+    _git(repo, "update-ref", "refs/llm/publish-intent", intent)
+
+    journal = agent_loop._Journal(repo)
+    state, detail = agent_loop.publish_integration(repo, journal, branch)
+    assert state in ("noop", "published"), detail
+    assert _git(repo, "rev-parse", "HEAD") == target
+    assert (repo / "published.txt").read_text("utf-8") == "base\nadvanced\n", (
+        "the interrupted sync completed"
+    )
+    assert (repo / "docs" / "notes.md").read_text(
+        "utf-8"
+    ) == "notes base\nWIP survives\n"
+    assert _intent_absent(repo), "the finished intent is deleted"
+
+    # Idempotent replay: a second pass with the edit still dirty is a clean noop
+    # (no pending intent), never a spurious divergence defer.
+    state2, _ = agent_loop.publish_integration(repo, journal, branch)
+    assert state2 == "noop"
+    assert (repo / "docs" / "notes.md").read_text(
+        "utf-8"
+    ) == "notes base\nWIP survives\n"
 
 
 def test_publish_refuses_a_non_descendant_integration_target(tmp_path):

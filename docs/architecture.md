@@ -192,7 +192,7 @@ Contracts (interfaces): IF-055, IF-067
 | `integrate_train(root, docs, journal, tid, wis, base, required_verdicts)` | Compose one ready train into the integration ref (spec §9 steps 1-11). |  |
 | `blocked_disposition(root, docs, journal, tid, wis, base)` | The smaller serialized blocked-disposition transaction (spec §9): from |  |
 | `dual_plan_disposition(root, journal, tid, wid, row, template, model, timeout, prompt_map)` | Auto-dispatch one PlanMode=dual frontier WI as a dual-plan round | SR-066 |
-| `publish_integration(root, journal, dev_branch)` | Publish the integration HEAD to the development branch (spec §9): only |  |
+| `publish_integration(root, journal, dev_branch)` | Publish the integration HEAD to the development branch (spec §9): when no |  |
 | `parse_jobs(value)` | The --jobs/AGENT_JOBS value: a positive int, or `auto` (adaptive up to |  |
 | `assess_migration(root)` | The two audits that gate the two-worker promotion (spec §14 items 9-10). | SR-059 |
 | `reconcile_legacy(root, journal, assessment)` | Reconcile migration residue within the one compatibility window (§14.3-4): |  |

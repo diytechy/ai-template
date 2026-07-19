@@ -9532,3 +9532,55 @@ output structurally.
 No spec deviation on the code+tests. Note: WI-233 was not present in status.md's
 hand-authored "Next action" frontier listing (which names WI-229..232), so no
 removal there was needed. On `dualplan-routing-fix`, not pushed.
+
+## 2026-07-18 — WI-230: publish under disjoint dirt
+
+Parallel-run field finding 1 (run `20260718T153937`): `publish_integration`
+ended in `git reset --hard <target>` gated on a fully clean primary worktree, so
+it deferred publication on **any** tracked dirty path — including files the
+publish diff never touches. Two are dirty in normal operation: the owner-only
+`OWNER_SCRATCHPAD.md` (workers never touch it, so it can never intersect a
+publish diff) and the dispatcher's own end-of-run `docs/run-state` rewrite
+(self-inflicted dirt). WI-227's integration sat unpublished on `llm/integration`
+behind a dirty scratchpad; the only clean recovery was restore + stash + relaunch
++ pop, and committing the scratchpad to clear the tree lands in WI-220's diverged
+NEEDS-HUMAN stop. The guard blocked the exact workflow the scratchpad exists for.
+
+The blanket defer is replaced with a **disjointness rule**: intersect the tracked
+worktree/index dirt with the `dev_head..target` publish diff. Empty intersection
+⇒ proceed, syncing the checkout via git's own two-way merge
+(`read-tree -m -u <base> <target>`) which advances the published paths and
+carries every other uncommitted edit forward byte-for-byte — git **refuses**
+(nonzero) rather than clobber a locally-modified published path, the backstop
+that upholds the never-reset/never-stash contract. Non-empty ⇒ defer exactly as
+before. The same rule governs the two §11 recovery branches (the already-at-target
+crash window and the post-CAS verified sync); the exact-old `reset --hard` stays
+for the mechanically-stale case. No path-name allowlist — disjointness derives
+what a hardcoded list (scratchpad, run-state) would only approximate. The dirt is
+measured NUL-delimited with `--no-renames` (as WI-224's salvage scans do) so Git
+never C-quotes special path bytes and both sides of a rename are counted. The
+publish-intent CAS protocol is unchanged; idempotent replay after a crash between
+the dev-ref CAS and the sync is preserved (a subsequent pass with the disjoint
+edit still dirty and the intent already deleted is a clean noop, not a spurious
+divergence defer).
+
+Four regressions in `tests/test_agent_loop_integrate.py`: a disjoint dirty file
+publishes and survives byte-for-byte (full-dispatch, rewriting the old
+defer-then-relaunch test whose premise WI-230 inverts); intersecting dirt defers
+with the checkout and dev ref untouched; the §11 crash replay carries disjoint
+dirt across the finished sync; the `docs/run-state` rewrite alone no longer
+strands publication. The heavy lifting sits in four sub-10 helpers
+(`_publish_diff_paths`, `_worktree_dirt`, `_publish_dirt`, `_sync_worktree` /
+`_carry_dirt_forward`); `publish_integration`'s C901 census bumps a **reviewed
+17→20** (the intersection gate plus the two recovery-branch outcomes) — restamped
+in `tests/test_complexity_ratchet.py` with the reason, WI-226's decomposition
+absorbs it.
+
+Deliberately left alone: `docs/specs/parallel-wi-dispatch.md` §9's "only when the
+worktree is clean" prose and the §11 recovery table now describe an incomplete
+SSOT; the WI-230 spec is the authoritative amendment and its scope is code+tests
+only. Flagged for a follow-up doc pass rather than edited inline (out of scope).
+
+**Verified at close.** Smoke tier **912 passed / 3 skipped**; full suite
+**1,140 passed / 4 skipped**; `check_docs.py --root . --stale` clean (0 broken).
+On `dualplan-routing-fix`, not pushed.
