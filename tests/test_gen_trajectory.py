@@ -998,6 +998,57 @@ def test_decomposition_one_arrow_per_containment_edge(tmp_path):
     assert phase_layer.count('class="cedge"') == containers  # one arrow each, no more
 
 
+def test_drill_wire_arrowheads_resolve_within_their_own_layer(tmp_path):
+    # Render ruling (Chromium): a wire's marker must be defined in the SAME svg —
+    # every hidden drill layer ships its own <defs>, and a bare id="drillarrow"
+    # resolves to the FIRST copy in document order, which sits in a display:none
+    # layer whose marker content Chromium never renders (visible wires lost their
+    # arrowheads). Marker ids are namespaced per layer.
+    tiered_repo(tmp_path, TIER_UNION_WIS)
+    assert gen(tmp_path).returncode == 0
+    view = html_of(tmp_path)
+    assert 'id="drillarrow"' not in view  # no un-namespaced marker survives
+    layers = re.findall(
+        r'<div class="layer" data-layer="(when-\d+)"[^>]*>(.*?)</div>', view, re.S
+    )
+    assert layers
+    for lid, svg in layers:
+        if 'class="wire"' not in svg:
+            continue
+        assert 'id="drillarrow-{}"'.format(lid) in svg, lid  # defined here
+        for ref in re.findall(r'marker-end="url\(#(drillarrow-[^)]+)\)"', svg):
+            assert ref == "drillarrow-{}".format(lid), (lid, ref)  # same-layer
+
+
+def test_drill_backward_wire_routes_around_the_blocks():
+    # A mutual (cyclic) dependency makes one wire BACKWARD (its target ranked
+    # left of its source). It must route orthogonally around the bottom of the
+    # diagram — never a Bézier sweep back across the blocks — and still land on
+    # the target's input port with its arrowhead.
+    gt = load_script("gen_trajectory")
+    blocks = [{"key": k, "label": k, "sub": "s"} for k in ("A", "B")]
+    edges = [("A", "B", "f"), ("B", "A", "back")]
+    svg = gt._drill_layer_svg(blocks, edges, "t-0")
+    wires = re.findall(r'<path class="wire" d="([^"]+)"', svg)
+    assert len(wires) == 2
+    back = [d for d in wires if " L" in d]
+    fwd = [d for d in wires if " C" in d]
+    assert len(back) == 1 and len(fwd) == 1  # one routed bus, one S-curve
+    # the bus path is orthogonal with rounded corners, and dips BELOW the blocks
+    assert " Q" in back[0]
+    ys = [float(v) for v in re.findall(r"[\d.]+,([\d.]+)", back[0])]
+    block_bottoms = [
+        float(y) + float(h)
+        for y, h in re.findall(
+            r'<rect x="[\d.]+" y="([\d.]+)" width="\d+" height="(\d+)"', svg
+        )
+    ]
+    assert max(ys) > max(block_bottoms)  # the bus lane runs under every block
+    # and it still terminates on the target's input port (left-middle of A)
+    in_ports = re.findall(r'<circle class="port in" cx="([\d.]+)" cy="([\d.]+)"', svg)
+    assert any(back[0].endswith("L{},{}".format(cx, cy)) for cx, cy in in_ports)
+
+
 def test_tier_column_honors_declared_width_bound(tmp_path):
     # The tier column is a declared value (MAX_TIER_COL), not an adjective: every
     # block honours it, and a content-light layer renders NARROWER than the bound
@@ -1280,7 +1331,7 @@ def test_process_tab_renders_intake_and_decision_loops(tmp_path):
     b_start = loops.index("B · Human-decision loop")
     assert loops.index("gate-ratification table") > b_start
     # Both loops are explicitly closed cycles, not straight rows with a return label.
-    assert loops.count('class="pflow loop"') == 2
+    assert loops.count('<ellipse class="looptrack"') == 2  # two hoop tracks
     assert loops.count('data-cycle="closed"') == 2
     assert 'class="loop loop-a"' in loops
     assert 'class="loop loop-b"' in loops
@@ -1290,35 +1341,50 @@ def test_process_tab_renders_intake_and_decision_loops(tmp_path):
 
 
 def test_process_loops_share_one_llm_agent_entry(tmp_path):
-    # The LLM_Agent entry node is rendered exactly once and lives in the shared
-    # `.entry` node (above both loops), not duplicated per loop.
+    # The LLM_Agent entry node is rendered exactly once — the single junction
+    # chip both hoops intersect at — not duplicated per loop.
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     loops = _loops_div(html_of(tmp_path))
-    assert loops.count("<b>LLM_Agent</b>") == 1
-    # the entry node precedes both loop panels (a shared head, not per-loop)
-    entry_at = loops.index('<div class="entry"')
-    assert entry_at < loops.index("A · Intake loop")
-    assert entry_at < loops.index("B · Human-decision loop")
+    assert loops.count(">LLM_Agent<") == 1
+    assert loops.count('class="entry"') == 1  # one junction chip
+    # the junction is the agent-resume terminal a session launches from
+    assert "agent-resume terminal" in loops
 
 
 def test_process_loop_layout_is_a_shared_circular_junction(tmp_path):
-    # WI-165: the CSS draws two closed racetracks that meet at the one shared
-    # LLM_Agent junction; loop stages occupy both the outbound and return sides.
+    # WI-165 rev (render ruling): the two loops are real HOOPS that INTERSECT at
+    # the one shared LLM_Agent junction — two ellipses tangent at the junction
+    # chip's centre — with arrowheads ON the tracks marking the flow direction.
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
-    text = html_of(tmp_path)
-    assert "#process .loops{display:grid" in text
-    assert "grid-row:1/3" in text
-    assert "border-radius:999px" in text
-    # Only the two wrapper divs own racetrack borders and return arrowheads;
-    # the nested ol.loop elements must not create duplicate tracks/arrows.
-    assert "#process div.loop{" in text
-    assert "#process div.loop::after" in text
-    assert "#process .loop{" not in text
-    assert "#process .loop::after" not in text
-    assert "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}" in text
-    assert "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}" in text
+    loops = _loops_div(html_of(tmp_path))
+    # two ellipse hoop tracks (exactly — the stage chips are not hoops)
+    tracks = re.findall(
+        r'<ellipse class="looptrack" cx="([\d.]+)" cy="([\d.]+)" rx="([\d.]+)" ry="([\d.]+)"',
+        loops,
+    )
+    assert len(tracks) == 2
+    # the hoops are tangent at one shared junction point: loop A's bottom and
+    # loop B's top meet at the same (x, y) — where the entry chip sits.
+    (ax, acy, _, ary), (bx, bcy, _, bry) = [
+        (float(cx), float(cy), float(rx), float(ry)) for cx, cy, rx, ry in tracks
+    ]
+    assert ax == bx
+    assert acy + ary == bcy - bry  # tangent: A's bottom == B's top
+    jy = acy + ary
+    # flow arrowheads ride ON the tracks (enough to read direction around a lap)
+    assert loops.count('class="flowarrow"') >= 8
+    # one junction chip, centred on the tangency, rendered once
+    entry = re.search(
+        r'<g class="entry"><rect x="([\d.]+)" y="([\d.]+)" width="(\d+)" height="(\d+)"',
+        loops,
+    )
+    assert entry, "the shared entry chip renders"
+    ex, ey, ew, eh = (float(v) for v in entry.groups())
+    assert ex + ew / 2 == ax and ey + eh / 2 == jy  # centred on the tangency
+    # the hoops are closed cycles
+    assert loops.count('data-cycle="closed"') == 2
 
 
 def test_process_loop_stage_links_resolve():
@@ -1339,6 +1405,9 @@ def test_process_loop_stage_links_resolve():
         "docs/log.md",
     ):
         assert 'href="{}"'.format(home) in loops, home
+    # the shared junction links the agent-resume terminal it intersects at (the
+    # launchers every scaffolded repo carries)
+    assert 'href="agent-resume.sh"' in loops
 
 
 def test_process_loops_byte_identical_without_data(tmp_path):

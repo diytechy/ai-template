@@ -64,6 +64,7 @@ Contracts: IF-011, IF-024, IF-052, IF-056 — the interface seams this module de
 import argparse
 import html
 import json
+import math
 import re
 import string
 import subprocess
@@ -579,32 +580,80 @@ def _dag_layout(wis):
     )
 
 
+# Backward-wire bus routing (see `_wire_d`): one lane per backward wire, below
+# the block area, lanes assigned in sorted edge order.
+BUS_STUB = 14  # horizontal lead out of the out-port / into the in-port
+BUS_STEP = 9  # vertical pitch between bus lanes
+BUS_R = 7  # bus corner radius (< half the stub and the smallest lane rise)
+
+
+def _wire_d(x1, y1, x2, y2, lane):
+    """The path data for one wire from an out-port (x1,y1) to an in-port (x2,y2).
+    Forward (target right of source): a horizontal S-curve. Backward (a
+    mutual/cyclic or soft advisory edge — the target ranked left of the source):
+    an orthogonal bus route that drops to `lane` (below the block area) and
+    re-enters the in-port from the left, so it never sweeps back across the
+    blocks."""
+    if x2 > x1:
+        dx = max((x2 - x1) * 0.4, 14)
+        return "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
+            x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2
+        )
+    xr, xl = x1 + BUS_STUB, x2 - BUS_STUB  # drop x / rise x
+    return (
+        "M{x1:.1f},{y1:.1f} L{a:.1f},{y1:.1f} Q{xr:.1f},{y1:.1f} {xr:.1f},{b:.1f} "
+        "L{xr:.1f},{c:.1f} Q{xr:.1f},{lane:.1f} {a:.1f},{lane:.1f} "
+        "L{e:.1f},{lane:.1f} Q{xl:.1f},{lane:.1f} {xl:.1f},{c:.1f} "
+        "L{xl:.1f},{f:.1f} Q{xl:.1f},{y2:.1f} {e:.1f},{y2:.1f} L{x2:.1f},{y2:.1f}"
+    ).format(
+        x1=x1,
+        y1=y1,
+        a=xr - BUS_R,
+        b=y1 + BUS_R,
+        c=lane - BUS_R,
+        e=xl + BUS_R,
+        f=y2 + BUS_R,
+        xr=xr,
+        xl=xl,
+        lane=lane,
+        x2=x2,
+        y2=y2,
+    )
+
+
 def dag_svg(wis):
     """The work-item DAG as one plain SVG string + a details dict for the panel."""
     ids = {w["id"] for w in wis}
     pos, width, height = _dag_layout(wis)
 
     # Edges first (drawn under the nodes). A hard predecessor sits in a lower
-    # rank, so hard edges run left->right; a horizontal control offset softens
-    # them. Soft (advisory) edges render dashed and may run backwards — they
-    # never constrained the ranking.
-    edges = []
+    # rank, so hard edges run left->right. Soft (advisory) edges render dashed
+    # and may run BACKWARD — they never constrained the ranking — so a backward
+    # soft edge routes as an orthogonal bus around the bottom of the diagram
+    # (one lane each), never a sweep back across the nodes.
+    spans = []  # (src, tgt, cls), registry order
     for w in wis:
-        for p, cls in [(p, "edge") for p in w["preds"]] + [
-            (p, "edge soft") for p in w["soft"]
-        ]:
-            if p not in ids:
-                continue
-            x1, y1 = pos[p][0] + DAG_COL_W, pos[p][1] + DAG_ROW_H / 2
-            x2, y2 = pos[w["id"]][0], pos[w["id"]][1] + DAG_ROW_H / 2
-            dx = max((x2 - x1) * 0.4, 12)
-            edges.append(
-                '<path class="{}" data-src="{}" data-tgt="{}" '
-                'd="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
-                'marker-end="url(#arrow)"></path>'.format(
-                    cls, esc(p), esc(w["id"]), x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2
-                )
+        for p in w["preds"]:
+            if p in ids:
+                spans.append((p, w["id"], "edge"))
+        for p in w["soft"]:
+            if p in ids:
+                spans.append((p, w["id"], "edge soft"))
+    back = sorted({(a, b) for a, b, _c in spans if pos[b][0] <= pos[a][0]})
+    lane0 = height - DAG_PAD + 6
+    lane_of = {pair: lane0 + i * BUS_STEP for i, pair in enumerate(back)}
+    if back:
+        height = lane0 + (len(back) - 1) * BUS_STEP + 8
+    edges = []
+    for a, b, cls in spans:
+        x1, y1 = pos[a][0] + DAG_COL_W, pos[a][1] + DAG_ROW_H / 2
+        x2, y2 = pos[b][0], pos[b][1] + DAG_ROW_H / 2
+        edges.append(
+            '<path class="{}" data-src="{}" data-tgt="{}" d="{}" '
+            'marker-end="url(#arrow)"></path>'.format(
+                cls, esc(a), esc(b), _wire_d(x1, y1, x2, y2, lane_of.get((a, b), lane0))
             )
+        )
 
     nodes, details = [], {}
     for w in wis:
@@ -978,7 +1027,7 @@ def sw_containment(root, mods):
         blocks = [cmp_block(c, emit_cmp_layer(c)) for c in child_cmps]
         blocks += [mod_block(m) for m in dmods]
         blocks += [ext_block(k, d, kind) for k, (d, kind) in sorted(externals.items())]
-        layers.append((lid, _drill_layer_svg(blocks, edges)))
+        layers.append((lid, _drill_layer_svg(blocks, edges, lid)))
         return lid
 
     # Root layer: top-level component blocks + uncontained module blocks, wired by
@@ -997,7 +1046,7 @@ def sw_containment(root, mods):
     root_blocks = [cmp_block(r, emit_cmp_layer(r)) for r in view["top_roots"]]
     root_blocks += [mod_block(n) for n in view["uncontained"]]
     root_blocks += [ext_block(k, d, kind) for k, (d, kind) in sorted(root_ext.items())]
-    layers.append((root_id, _drill_layer_svg(root_blocks, root_edges)))
+    layers.append((root_id, _drill_layer_svg(root_blocks, root_edges, root_id)))
 
     tab = '<button data-tab="sw">How (SW architecture)</button>'
     summary_line = (
@@ -1256,13 +1305,26 @@ DRILL_SCRIPT = (
 )
 
 
-def _drill_layer_svg(blocks, edges):
+def _drill_layer_svg(blocks, edges, uid):
     """One drill layer as a plain SVG block diagram. Each block is a rectangle with
     an input port (left-middle) and an output port (right-middle); each aggregated
     `edges` entry (src_key, tgt_key, title) is a wire from the source block's OUTPUT
     port to the target block's INPUT port (Simulink-style). Blocks lay out left->
     right by the shared layered pipeline over the edge set, so a producer sits left
-    of its consumer and crossings are reduced. Byte-deterministic."""
+    of its consumer and crossings are reduced. Byte-deterministic.
+
+    `uid` namespaces the layer's marker ids (`url(#drillarrow-<uid>)`): every
+    hidden layer ships its own <defs>, and a bare `id="drillarrow"` resolves to the
+    FIRST copy in document order — which sits inside a `display:none` layer whose
+    marker content Chromium then never renders, so visible wires lost their
+    arrowheads. A per-layer id keeps each wire's marker in its own (visible) SVG.
+
+    Wire routing: a forward wire (target column right of the source) is a
+    horizontal S-curve; a BACKWARD wire (a mutual/cyclic dependency — the target
+    ranked left of the source) routes as an orthogonal bus AROUND the bottom of
+    the diagram — one lane per backward wire, lanes assigned in sorted edge
+    order — so it never sweeps back across the blocks. The SVG grows downward
+    to make room for the lanes."""
     keys = [b["key"] for b in blocks]
     by_key = {b["key"]: b for b in blocks}
     order = {k: i for i, k in enumerate(sorted(keys))}
@@ -1283,7 +1345,18 @@ def _drill_layer_svg(blocks, edges):
         lambda k: (order[k], k),
         geom,
     )
-    _cw, _cg, row_h, _rg, _pad = geom
+    _cw, _cg, row_h, _rg, pad = geom
+
+    # Backward wires get one bus lane each, below the block area, in sorted order.
+    back = sorted(
+        (a, b)
+        for a, b, _t in edges
+        if a in pos and b in pos and a != b and pos[b][0] <= pos[a][0]
+    )
+    lane0 = height - pad + 6
+    lane_of = {pair: lane0 + i * BUS_STEP for i, pair in enumerate(back)}
+    if back:
+        height = lane0 + (len(back) - 1) * BUS_STEP + 8
 
     wires = []
     for a, b, title in sorted(edges):
@@ -1291,19 +1364,10 @@ def _drill_layer_svg(blocks, edges):
             continue
         x1, y1 = pos[a][0] + col_w, pos[a][1] + row_h / 2
         x2, y2 = pos[b][0], pos[b][1] + row_h / 2
-        dx = max((x2 - x1) * 0.4, 14)
+        d = _wire_d(x1, y1, x2, y2, lane_of.get((a, b), lane0))
         wires.append(
-            '<path class="wire" d="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} '
-            '{:.1f},{:.1f}" marker-end="url(#drillarrow)">{}</path>'.format(
-                x1,
-                y1,
-                x1 + dx,
-                y1,
-                x2 - dx,
-                y2,
-                x2,
-                y2,
-                "<title>{}</title>".format(esc(title)) if title else "",
+            '<path class="wire" d="{}" marker-end="url(#drillarrow-{})">{}</path>'.format(
+                d, esc(uid), "<title>{}</title>".format(esc(title)) if title else ""
             )
         )
 
@@ -1352,8 +1416,8 @@ def _drill_layer_svg(blocks, edges):
             ax = x + col_w - CEDGE_LEN - 6
             cedge = (
                 '<path class="cedge" d="M{:.1f},{:.1f} h{}" '
-                'marker-end="url(#cedgearrow)"><title>contains → descend</title>'
-                "</path>".format(ax, y + 9, CEDGE_LEN)
+                'marker-end="url(#cedgearrow-{})"><title>contains → descend</title>'
+                "</path>".format(ax, y + 9, CEDGE_LEN, esc(uid))
             )
         else:
             # A1 (dashboard-accessibility): a leaf block is interactive too — the
@@ -1391,13 +1455,13 @@ def _drill_layer_svg(blocks, edges):
         )
 
     defs = (
-        '<defs><marker id="drillarrow" viewBox="0 0 10 10" refX="9" refY="5" '
+        '<defs><marker id="drillarrow-{u}" viewBox="0 0 10 10" refX="9" refY="5" '
         'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
         '<path d="M0,0 L10,5 L0,10 z" class="warrow"></path></marker>'
-        '<marker id="cedgearrow" viewBox="0 0 10 10" refX="9" refY="5" '
+        '<marker id="cedgearrow-{u}" viewBox="0 0 10 10" refX="9" refY="5" '
         'markerWidth="6" markerHeight="6" orient="auto">'
         '<path d="M0,0 L10,5 L0,10 z" class="cedgehead"></path></marker></defs>'
-    )
+    ).format(u=esc(uid))
     return (
         '<svg viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
         'preserveAspectRatio="xMinYMin meet" role="img" class="drillsvg">'
@@ -1529,7 +1593,7 @@ def when_view(root, wis):
         lid = new_id()
         blocks = [wi_block(w) for w in sorted(members, key=lambda w: w["id"])]
         edges = agg_edges(members, {w["id"]: w["id"] for w in members})
-        layers.append((lid, _drill_layer_svg(blocks, edges)))
+        layers.append((lid, _drill_layer_svg(blocks, edges, lid)))
         return lid
 
     def build(subset, remaining):
@@ -1561,7 +1625,7 @@ def when_view(root, wis):
                     blk.update(fill="var(--surface)", stroke="var(--muted)")
                 blocks.append(blk)
             edges = agg_edges(subset, {w["id"]: keyfn(w) for w in subset})
-            layers.append((lid, _drill_layer_svg(blocks, edges)))
+            layers.append((lid, _drill_layer_svg(blocks, edges, lid)))
             return lid
         # No tier crosses its threshold here -> the bottom-tier work-item layer.
         return wi_layer(subset)
@@ -2413,64 +2477,160 @@ def _process_doc(root, scaffolded, master):
     return scaffolded
 
 
+def _loop_note_lines(note, width=34):
+    """Word-wrap a stage note into at most two chip lines (the longest notes in
+    the two loops fit; an over-long future note folds its remainder into line
+    two rather than dropping words)."""
+    words, lines, cur = note.split(), [], ""
+    for w in words:
+        t = (cur + " " + w).strip()
+        if len(t) <= width or not cur:
+            cur = t
+        else:
+            lines.append(cur)
+            cur = w
+    lines.append(cur)
+    return lines[:2] if len(lines) <= 2 else [lines[0], " ".join(lines[1:])]
+
+
+def _loop_arc(cx, cy, rx, ry, deg):
+    rad = math.radians(deg)
+    return cx + rx * math.cos(rad), cy + ry * math.sin(rad)
+
+
+def _loop_flow_arrow(cx, cy, rx, ry, deg, fwd):
+    """A track arrowhead at angle `deg`, rotated onto the flow tangent
+    (increasing-angle flow when `fwd`, decreasing otherwise)."""
+    rad = math.radians(deg)
+    tx, ty = (-rx * math.sin(rad), ry * math.cos(rad)) if fwd else (
+        rx * math.sin(rad),
+        -ry * math.cos(rad),
+    )
+    x, y = _loop_arc(cx, cy, rx, ry, deg)
+    return (
+        '<path class="flowarrow" d="M-4.5,-5 L7,0 L-4.5,5 z" '
+        'transform="translate({:.1f},{:.1f}) rotate({:.1f})"></path>'.format(
+            x, y, math.degrees(math.atan2(ty, tx))
+        )
+    )
+
+
+def _loop_chip(cx, cy, w, h, cls, title, lines, href=None):
+    """One stage/junction chip: a rounded rect + centred text lines, linked when
+    its canonical home exists. Byte-deterministic (fixed geometry)."""
+    x, y = cx - w / 2, cy - h / 2
+    ty = cy - 6 * len(lines)  # first baseline: centre the whole text block
+    tspans = ['<tspan x="{:.1f}" class="{}-t">{}</tspan>'.format(cx, cls, esc(title))]
+    tspans += [
+        '<tspan x="{:.1f}" dy="12" class="{}-n">{}</tspan>'.format(cx, cls, esc(ln))
+        for ln in lines
+    ]
+    text = '<text x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text>'.format(
+        cx, ty, "".join(tspans)
+    )
+    rect = '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="9"></rect>'.format(
+        x, y, w, h
+    )
+    if href:
+        return '<a href="{}"><g class="{}">{}{}</g></a>'.format(
+            esc(href), cls, rect, text
+        )
+    return '<g class="{}">{}{}</g>'.format(cls, rect, text)
+
+
 def _loop_panel(root):
-    """The two circular working loops (SR-055) as one self-contained
-    `<div class="loops">` block: the intake loop (A) and the human-decision
-    loop (B), sharing a single LLM_Agent entry node rendered once. Each stage
-    links to its canonical home *when that home exists in this repo*, so every
-    emitted href resolves (a repo missing the file renders the stage as plain
-    text — still deterministic; the tab itself is gated on docs/gate upstream).
+    """The two circular working loops (SR-055) as one self-contained SVG: two
+    hoops that INTERSECT at the one shared junction — the LLM_Agent entry node,
+    the agent-resume terminal the human/agent launches a session from. Each hoop
+    is an ellipse tangent to the other at the junction chip (so both flows
+    visibly pass through the terminal), with arrowheads ON the track marking the
+    flow direction and the stages as linked chips along the arc. Each stage links
+    to its canonical home *when that home exists in this repo*, so every emitted
+    href resolves (a repo missing the file renders the stage as plain text —
+    still deterministic; the tab itself is gated on docs/gate upstream).
     No clocks, no repo counts: the loop structure is the method's, not the
     repo's data, so it renders byte-identically regardless of the registries."""
 
-    def canon(rel, label):
-        if (root / rel).exists():
-            return '<a href="{}">{}</a>'.format(esc(rel), esc(label))
-        return esc(label)
+    def canon(rel):
+        return rel if (root / rel).exists() else None
 
     wi_csv = "docs/requirements/work-items.csv"
+    # (title, note, canonical home) in flow order around each hoop.
     intake_loop = [
-        ("Intake", canon("docs/status.md", "owner/agent hands work in")),
-        ("Triage → WIs", canon(wi_csv, "scoped work items with spec detail")),
-        ("Resume loop", canon(wi_csv, "the scheduler derives the ready frontier")),
-        ("Build / review", canon("docs/log.md", "BUILD then REVIEW-A/B")),
-        ("Merge", canon("docs/log.md", "verdicts merged; the loop repeats")),
+        ("Intake", "owner/agent hands work in", "docs/status.md"),
+        ("Triage → WIs", "scoped work items with spec detail", wi_csv),
+        ("Resume loop", "the scheduler derives the ready frontier", wi_csv),
+        ("Build / review", "BUILD then REVIEW-A/B", "docs/log.md"),
+        ("Merge", "verdicts merged; the loop repeats", "docs/log.md"),
     ]
     decide_loop = [
-        (
-            "Open items",
-            canon("docs/open-items.md", "populated incl. the gate-ratification table"),
-        ),
-        ("Human review", canon("docs/open-items.md", "the owner reviews and rules")),
-        ("Decisions record", canon("docs/log.md", "the ruling appends to the log")),
-        (
-            "Merge",
-            canon("docs/log.md", "the item leaves the surface; the loop repeats"),
-        ),
+        ("Open items", "populated incl. the gate-ratification table", "docs/open-items.md"),
+        ("Human review", "the owner reviews and rules", "docs/open-items.md"),
+        ("Decisions record", "the ruling appends to the log", "docs/log.md"),
+        ("Merge", "the item leaves the surface; the loop repeats", "docs/log.md"),
     ]
 
-    def loop_ol(loop_id, name, stages):
-        lis = "".join(
-            '<li class="stg" data-node="{}"><b>{}</b>'
-            '<span class="n">{}</span></li>'.format(index, esc(title), note)
-            for index, (title, note) in enumerate(stages, 1)
-        )
-        return (
-            '<div class="loop loop-{}" data-cycle="closed">'
-            '<b class="loopname">{}</b><ol class="pflow loop">{}</ol></div>'.format(
-                esc(loop_id), esc(name), lis
-            )
-        )
+    # Geometry: two ellipses tangent at the junction point J=(470,320) — loop A
+    # above (bottom at J), loop B below (top at J) — so the hoops intersect AT
+    # the shared terminal node, which is drawn last (on top of the tangency).
+    CX, JY, RX, RY = 470, 320, 310, 145
+    ACY, BCY = JY - RY, JY + RY  # loop centres
 
-    return (
-        '<div class="loops">'
-        '<div class="entry">'
-        "<b>LLM_Agent</b>"
-        "<span>the shared entry point — both loops start here</span></div>"
-        + loop_ol("a", "A · Intake loop", intake_loop)
-        + loop_ol("b", "B · Human-decision loop", decide_loop)
-        + "</div>"
+    # Loop A flows with increasing angle (bottom -> up the left -> right across
+    # the top -> down to the junction); loop B mirrors with decreasing angle.
+    A_DEGS = [150, 210, 270, 330, 30]
+    B_DEGS = [210, 150, 30, -30]
+    A_ARROWS = [120, 180, 240, 300, 0, 60]
+    B_ARROWS = [240, 180, 120, 60, 0, -60]
+
+    parts = [
+        '<svg viewBox="0 0 940 640" width="940" '
+        'preserveAspectRatio="xMinYMin meet" role="img" class="loopsvg">'
+        "<title>The two circular working loops — intake (A) and human-decision "
+        "(B) — intersecting at the shared LLM_Agent agent-resume terminal.</title>"
+    ]
+    parts.append(
+        '<g class="loop loop-a" data-cycle="closed">'
+        '<ellipse class="looptrack" cx="{}" cy="{}" rx="{}" ry="{}"></ellipse>'
+        '<text class="loopname" x="{}" y="{}" text-anchor="middle">A · Intake loop</text>'
+        "</g>".format(CX, ACY, RX, RY, CX, ACY - 3)
     )
+    parts.append(
+        '<g class="loop loop-b" data-cycle="closed">'
+        '<ellipse class="looptrack" cx="{}" cy="{}" rx="{}" ry="{}"></ellipse>'
+        '<text class="loopname" x="{}" y="{}" text-anchor="middle">B · Human-decision loop</text>'
+        "</g>".format(CX, BCY, RX, RY, CX, BCY + 4)
+    )
+    for deg in A_ARROWS:
+        parts.append(_loop_flow_arrow(CX, ACY, RX, RY, deg, True))
+    for deg in B_ARROWS:
+        parts.append(_loop_flow_arrow(CX, BCY, RX, RY, deg, False))
+    for (title, note, home), deg in zip(intake_loop, A_DEGS):
+        sx, sy = _loop_arc(CX, ACY, RX, RY, deg)
+        parts.append(
+            _loop_chip(sx, sy, 176, 54, "stg", title, _loop_note_lines(note), canon(home))
+        )
+    for (title, note, home), deg in zip(decide_loop, B_DEGS):
+        sx, sy = _loop_arc(CX, BCY, RX, RY, deg)
+        parts.append(
+            _loop_chip(sx, sy, 176, 54, "stg", title, _loop_note_lines(note), canon(home))
+        )
+    # The shared junction, rendered once, on top of the tangency: both loops
+    # start at the agent-resume terminal (the launchers every repo scaffolds).
+    parts.append(
+        _loop_chip(
+            CX,
+            JY,
+            240,
+            88,
+            "entry",
+            "LLM_Agent",
+            ["the shared entry point — both loops", "start at the agent-resume terminal"],
+            canon("agent-resume.sh"),
+        )
+    )
+    parts.append("</svg>")
+    return '<div class="loops">' + "".join(parts) + "</div>"
 
 
 def process_panel(root, wis, stats):
@@ -2588,47 +2748,29 @@ def process_panel(root, wis, stats):
         "#process ul.esc{font-size:.9rem;color:var(--muted);margin:.4rem 0 0;"
         "padding-left:1.2rem;}"
         "#process ul.esc b{color:var(--text);}"
-        # Panel 4 — the two circular working loops, sharing one LLM_Agent entry.
-        "#process .loops{display:grid;grid-template-columns:minmax(7.5rem,auto) 1fr;"
-        "grid-template-rows:1fr 1fr;gap:.8rem 0;align-items:stretch;"
-        "margin:.7rem 0;isolation:isolate;}"
-        "#process .entry{grid-column:1;grid-row:1/3;align-self:center;z-index:3;"
-        "background:var(--surface);"
-        "border:2px solid var(--accent);border-radius:10px;"
-        "padding:.45rem .8rem;box-shadow:var(--shadow);max-width:9.5rem;}"
-        "#process .entry b{display:block;font-size:.88rem;color:var(--accent);}"
-        "#process .entry span{font-size:.72rem;color:var(--muted);}"
-        "#process div.loop{grid-column:2;position:relative;border:2px solid var(--accent);"
-        "border-left-width:3px;border-radius:999px;padding:1.45rem 2rem 1.2rem 3rem;"
-        "margin-left:-1rem;min-height:10.5rem;}"
-        "#process .loop-a{grid-row:1;}#process .loop-b{grid-row:2;}"
-        '#process div.loop::after{content:"";position:absolute;left:-.45rem;top:50%;'
-        "width:.72rem;height:.72rem;border-top:3px solid var(--accent);"
-        "border-right:3px solid var(--accent);transform:translateY(-50%) rotate(-135deg);"
-        "background:var(--bg);}"
-        "#process .loop .loopname{position:absolute;left:3rem;top:.3rem;"
-        "font-size:.82rem;font-weight:700;color:var(--accent);}"
-        "#process ol.pflow.loop{display:grid;grid-template-columns:repeat(3,minmax(7rem,1fr));"
-        "grid-template-rows:repeat(2,auto);gap:.65rem 1rem;margin:0;align-items:center;}"
-        "#process .pflow.loop li{max-width:none;margin-left:0;}"
-        "#process .pflow.loop li+li::before{display:none;}"
-        "#process .pflow.loop li:nth-child(1){grid-column:1;grid-row:1;}"
-        "#process .pflow.loop li:nth-child(2){grid-column:2;grid-row:1;}"
-        "#process .pflow.loop li:nth-child(3){grid-column:3;grid-row:1;}"
-        "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}"
-        "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}"
-        "#process .loop-b .pflow.loop li:nth-child(2){grid-column:3;}"
-        "#process .loop-b .pflow.loop li:nth-child(3){grid-column:3;grid-row:2;}"
-        "#process .loop-b .pflow.loop li:nth-child(4){grid-column:1;grid-row:2;}"
-        "#process .pflow.loop a{color:inherit;}"
-        "@media(max-width:760px){#process .loops{grid-template-columns:1fr;"
-        "grid-template-rows:auto;}#process .entry{grid-column:1;grid-row:1;"
-        "justify-self:center;max-width:none;}#process div.loop{grid-column:1;"
-        "margin:-.65rem 0 0;padding:2.2rem 1rem 1rem;border-radius:28px;}"
-        "#process .loop-a{grid-row:2}#process .loop-b{grid-row:3}"
-        "#process ol.pflow.loop{grid-template-columns:1fr;}"
-        "#process .pflow.loop li:nth-child(n){grid-column:1;grid-row:auto;}"
-        "#process div.loop::after{left:50%;top:-.4rem;transform:translateX(-50%) rotate(-45deg);}}"
+        # Panel 4 — the two circular working loops, intersecting at the one
+        # shared LLM_Agent junction (the agent-resume terminal). The SVG is
+        # fixed-geometry (940x640) and scrolls inside the .view region on narrow
+        # viewports (the WI-219 idiom), so no media-query re-layout is needed.
+        "#process .loops{margin:.7rem 0;}"
+        "#process .loops svg.loopsvg{display:block;font-family:inherit;}"
+        "#process .loops .looptrack{fill:none;stroke:var(--accent);stroke-width:2;}"
+        "#process .loops .flowarrow{fill:var(--accent);}"
+        "#process .loops .loopname{font-size:13px;font-weight:700;fill:var(--accent);"
+        "letter-spacing:.02em;}"
+        "#process .loops .stg rect{fill:var(--surface);stroke:var(--border);"
+        "stroke-width:1;}"
+        "#process .loops .stg-t{font-size:11px;font-weight:700;fill:var(--text);}"
+        "#process .loops .stg-n{font-size:9px;fill:var(--muted);}"
+        "#process .loops a:hover .stg rect{stroke:var(--accent);stroke-width:2;}"
+        "#process .loops a:focus-visible{outline:none;}"
+        "#process .loops a:focus-visible .stg rect,#process .loops a:focus-visible "
+        ".entry rect{stroke:var(--accent);stroke-width:2.5;}"
+        "#process .loops .entry rect{fill:var(--surface);stroke:var(--accent);"
+        "stroke-width:2;}"
+        "#process .loops .entry-t{font-size:12.5px;font-weight:700;fill:var(--accent);}"
+        "#process .loops .entry-n{font-size:9px;fill:var(--muted);}"
+        "#process .loops a:hover .entry rect{stroke-width:2.5;}"
         "</style>"
     )
     panel = (
@@ -2683,10 +2825,18 @@ def process_panel(root, wis, stats):
         "<h3>4 · The working loops</h3>\n"
         '<p class="cap">Two circular flows close the method — how work '
         "<strong>enters</strong> (A) and how the human <strong>decides</strong> "
-        "(B) — both entered by the same agent. Each stage links to its canonical "
+        "(B). The hoops <strong>intersect at the shared LLM_Agent junction</strong> "
+        "— the agent-resume terminal a session launches from — and the track "
+        "arrowheads mark each flow's direction. Each stage links to its canonical "
         "home (<code>status.md</code>, <code>work-items.csv</code>, "
         "<code>open-items.md</code>, <code>log.md</code>); the loop structure is "
-        "the method's, not this repo's data.</p>\n" + loops_html + "\n"
+        "the method's, not this repo's data.</p>\n"
+        + SCROLL_CUE
+        + '<div class="view" '
+        + _hscroll("The two circular working loops, horizontally scrollable")
+        + ">"
+        + loops_html
+        + "</div>\n"
         "</section>"
     )
     return '<button data-tab="process">Process</button>', panel
