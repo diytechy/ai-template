@@ -10589,3 +10589,41 @@ isn't unit-pinned (the `<=3` logic is transparent, adjacent 2/4 covered). This
 closes the **load-bearing 075-CRITIQUE finding** — the owner's original "hard to
 read" complaint. WI-246/247/248 (the 3 minor render nits) remain queued; the
 WI-243 gate-strength ruling remains the owner's.
+
+## 2026-07-20 — WI-243 DONE: perceptual re-fire FAIL-CLOSED (owner ruling)
+
+Owner ruled **fail-closed** (after verifying — the OWNER_SCRATCHPAD Q&A — that the
+downstream blast radius is near-zero). `critique_staleness_findings` now routes
+through `main()`'s strict-promotable findings loop (the `run-state` precedent) as a
+tiered finding: **WARN at the commit bar, ERROR under `--strict`** — and `check.py`
+adds `--strict` at **G2/G3** (deliberately not the pre-commit floor). So a plain
+commit stays warn-first (fast WIP) but a **stale render surface cannot reach a
+green G2/G3 gate** — the agent-proof forcing function (a warn gets passed by an
+autonomous agent; a gate fail does not). `main()` gains no branch (C901 21 held,
+ruff-confirmed). Build `f26efbf` (+ arch-map regen for the changed public docstring
+summary).
+
+**Independent opus REVIEW-A: APPROVE findings=1.** The reviewer drove every case
+from throwaway git repos: fail-closed under `--strict` (exit 1) / warn at commit
+(exit 0) confirmed; `check.py --list` shows `--strict` at G2/G3 and none at
+`gate=all`/G1; no false-red (evidence-newer / non-Critique / off-git / no-evidence
+all silent even under `--strict`); this repo `--strict` exit 0 (076 fresh — no G3
+regression); the regression test provably FAILS on the pre-fix code (drove
+`f26efbf^` → exit 0); downstream vacuity re-confirmed (no shipped non-`-000`
+Critique row). The prior REVIEW-A MAJOR is genuinely resolved. The 1 MINOR —
+**accepted, not consumed** — is a PRE-EXISTING fail-open boundary: `main()`'s
+no-work-items early-return sits before the findings loop, so a degenerate no-WI
+repo with a Critique SR + stale render would escape even `--strict`; it's shared by
+ALL trajectory findings (not perceptual-specific), doesn't affect this repo (246
+WIs), and fixing only perceptual would be inconsistent — a future consideration for
+the whole checker if the no-WI-repo edge ever matters.
+
+**WI-243 CLOSED.** Full suite 1235p/4s; `check_trajectory --strict` exit 0 @ G3.
+**The dashboard-quality workstream (WI-243/244/245/159) is complete** — the owner's
+"reviewer hats run yet quality slips" concern is answered end-to-end: the
+perceptual critique is re-armed and now *gates* (fail-closed), the frozen critique
++ the deferred fix that let the Knowledge tab rot are both resolved, and the
+skills-index (WI-245) + rubric enrichment (WI-244) raise the bar the critic judges
+against. Remaining: WI-246/247/248 (queued minor nits — building any changes the
+render surface and will require a fresh critique before G3 re-greens, the
+fail-closed gate now doing its job) + the merge-to-main sitting.
