@@ -1460,18 +1460,15 @@ def _load_critique_srs(root):
 
 
 def _latest_critique_verdict(root):
-    """`(verdict, findings)` of the highest-numbered `docs/reviews/*-CRITIQUE.md`,
-    or `(None, 0)`. The verdict file is not WI-tagged, so 'latest overall' is the
-    honest proxy for 'the in-scope critique' (a recorded gap — the loop critiques
-    one scope at a time, so the newest verdict is the live one in practice)."""
-    d = root / REVIEWS_DIR
-    if not d.is_dir():
-        return None, 0
-    files = sorted(d.glob("*-CRITIQUE.md"))
-    if not files:
+    """`(verdict, findings)` of the latest CRITIQUE file (`_latest_critique_file`,
+    the shared selection rule), or `(None, 0)`. The verdict file is not WI-tagged,
+    so 'latest overall' is the honest proxy for 'the in-scope critique' (a recorded
+    gap — the loop critiques one scope at a time, so the newest verdict is live)."""
+    f = _latest_critique_file(root)
+    if f is None:
         return None, 0
     try:
-        text = files[-1].read_text(encoding="utf-8", errors="replace")
+        text = f.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return None, 0
     m = CRITIQUE_VERDICT_RE.search(text)
@@ -1548,7 +1545,13 @@ def _render_surface_paths(root):
     """Repo-relative render-surface paths that EXIST under `root`: the co-located
     dashboard generator `gen_trajectory.py` and the render recipe if the repo
     carries one. A downstream without the meta-only recipe pays nothing for it;
-    an unlocatable generator yields no path (the check then stays silent)."""
+    an unlocatable generator yields no path (the check then stays silent).
+
+    Accepted warn-first boundary: layout-affecting values the generator IMPORTS
+    from sibling modules (e.g. a display constant defined in this checker) are NOT
+    watched — folding them in would fire the warn on every unrelated edit to those
+    modules. The surface is the generator + recipe themselves; a render change that
+    lands only in an imported constant is a known, tolerated miss."""
     out = []
     gen = Path(__file__).resolve().with_name("gen_trajectory.py")
     try:
@@ -1570,7 +1573,13 @@ def _render_surface_paths(root):
 
 
 def _latest_critique_file(root):
-    """The highest-numbered `docs/reviews/*-CRITIQUE.md` path, or None."""
+    """The highest-NUMBERED `docs/reviews/*-CRITIQUE.md` path, or None — the single
+    selection rule shared by `_latest_critique_verdict` and the WI-243 staleness
+    check. Selection is by filename number, the monotonic-numbering convention the
+    critique loop assumes (a fresh critique takes the next number, so the newest
+    file is the live one). If that convention is broken — a fresh critique filed
+    under a LOWER number — this returns the wrong file, the same recorded proxy the
+    verdict reader has always carried."""
     d = root / REVIEWS_DIR
     if not d.is_dir():
         return None
@@ -1593,7 +1602,11 @@ def critique_staleness_findings(root):
     warn-tier-checker stance the sibling staleness/critique ratchets take). Silent
     off-git and vacuous when the repo declares no perceptual SR, carries no
     CRITIQUE evidence, or exposes no locatable render surface. Bounded cost: one
-    `git log -1` for the evidence plus one per render-surface path (≤ 2 here)."""
+    `git log -1` for the evidence plus one per render-surface path (≤ 2 here). By
+    construction (git-time, not a render diff) it fires on ANY commit touching a
+    render-surface path — a data-only or comment-only edit to the generator warns
+    even with zero visual change — the false-positive-over-false-negative trade the
+    sibling `backlog_staleness` also makes."""
     critique_srs = _load_critique_srs(root)
     if not critique_srs:
         return []
