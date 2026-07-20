@@ -10524,3 +10524,25 @@ referenced sources (Source/Role/Format/License/Reference-for) + 4 recorded skips
 under a mine-don't-install governance (prompt-injection surface; license =
 copy-vs-link; discount star counts), linked from the kit README Contents + the
 skills README plug-in-contract section.
+
+## 2026-07-20 — 075-CRITIQUE: rendered-pixel critique of the current dashboard (WI-243 baseline re-date)
+
+Owner-directed ("run the critique first, then decide the gate strength"): ran the
+WI-189 render-critique loop (`shoot.mjs` → 36 PNGs at commit `3c3a968`) and judged
+the rendered **pixels** against the T1-T7 rubric — the first perceptual look since
+the frozen 2026-07-15 markup baseline. **VERDICT: CHANGES-REQUESTED findings=5**
+([075-CRITIQUE.md](reviews/075-CRITIQUE.md)). The complaint is **confirmed**, and
+its cause runs deeper than the frozen critique: the **Knowledge (OKF) tab opens
+fully exploded** — 100s of nodes under an edge hairball (T2) with clipped TC-column
+labels (T4) — the primary hard-to-read tab — and **its fix was already filed as
+WI-159 but sat DEFERRED**. So quality slipped on *two* counts: the perceptual
+critique froze AND the known density fix was parked and forgotten. Minor nits
+(How-SW component-label truncation; When phase-accent low hue separation;
+What-icicle 390px overflow) were recorded in WI-189's deliverable but never filed
+as rows. Cleared honestly: the other tabs start-collapsed and read cleanly, mobile
+graphs scroll with an affordance, dark contrast holds, and the 390px sticky-header
+overlap is the known `fullPage` capture artifact. This verdict **re-dates the
+perceptual evidence** (now newer than the render surface), clearing the WI-243
+staleness warn — the dashboard has now been judged against its current render.
+Queued for the owner: the WI-243 gate-strength ruling (warn vs fail-closed, now
+with data), un-deferring WI-159, and whether to file the three minor nits.
