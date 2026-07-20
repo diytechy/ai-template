@@ -882,6 +882,7 @@ def sw_containment(root, mods):
             "descend": child,
             "crumb": cid,
             "title": "{} — {} module(s)".format(cmp_label(cid), n),
+            "wrap": True,  # WI-246: wrap the `CMP-### — Name` label onto id/name lines
         }
 
     def mod_block(norm):
@@ -1117,16 +1118,23 @@ def _wi_st(w):
 
 # A stable, sorted-order palette for the per-phase accent (grouping-primary
 # encoding). Deterministic: the i-th sorted phase label takes the i-th color.
-# Eight categorical hues spread around the wheel (was eight near-identical
-# maroon/plum steps — WI-247, 075-CRITIQUE T5: adjacent phases were
-# indistinguishable). Each is dark enough to carry WHITE block text (all >= 4.99:1
-# WCAG, the block-label use) and the set clears the `dataviz` skill's categorical
-# validator on a white surface (chroma floor, adjacent CVD deltaE 20.9, normal-vision
-# 21.7 — `validate_palette.js`). Ordered so consecutive sorted phases sit far apart
-# in hue; coherent with the icicle lanes (indigo #4338ca = SN, emerald #047857 = TC).
+# Eight categorical hues, distinct hue-to-hue (was eight near-identical maroon/plum
+# steps — WI-247, 075-CRITIQUE T5: adjacent phases were indistinguishable). Each is
+# dark enough to carry WHITE block text (all >= 5.9:1 WCAG) and the set clears the
+# `dataviz` skill's categorical validator on a white surface — chroma floor, adjacent
+# CVD deltaE 9.6 (>= 8 target), normal-vision 18.8 (>= 15) — `validate_palette.js`,
+# ordered so consecutive sorted phases sit far apart in hue.
+#   These must NOT collide with the OTHER colour vocabularies on the When/DAG page
+# (REVIEW-A MAJOR): every value is byte-distinct from STATUS_FILL (done #047857,
+# active #b45309, queued #94a3b8 — the status legend on the same tab) and from
+# TIER_FILL (#4338ca/#0e7490/#64748b/#047857), and each sits >= 11 deltaE from the
+# three same-tab status hues, so a phase block never reads as a status. Excluding the
+# emerald/orange/slate status families leaves the cool + magenta + one-red arc — hence
+# the cool lean; distinct hues are preferred over same-hue lightness shades (the very
+# jitter WI-247 removes), which caps CVD below the old maroon-free 20+.
 PHASE_ACCENTS = (
-    "#0369a1", "#4d7c0f", "#a21caf", "#b45309",
-    "#4338ca", "#be123c", "#7e22ce", "#047857",
+    "#0369a1", "#6d28d9", "#991b1b", "#1d4ed8",
+    "#be123c", "#4f46e5", "#be185d", "#7e22ce",
 )  # fmt: skip
 
 # --- SR-089..SR-092 (WI-141): the Simulink-style drill renderer ---------------
@@ -1265,17 +1273,19 @@ DRILL_SCRIPT = (
 
 def _drill_block_label(b, col_w, cx, cy):
     """The centred `<text>` for one drill block. A plain label renders as the bold
-    label line over its sub-label. An `ID — Name` label (the CMP component blocks,
-    "CMP-004 — Unattended loop & floor") WRAPS onto an id line over a name line —
-    the `arch_icicle` id/name idiom (WI-246/075-CRITIQUE T4) — so the full component
-    name reads at default zoom instead of truncating to "CMP-004 — Unattended…"; the
-    sub-label (module count) drops to a third line. The name line uses the smaller
-    sub font, so its budget (and the right-sized column) fit the longest declared name."""
+    label line over its sub-label. A block flagged `wrap` with an `ID — Name` label
+    (the CMP component blocks, "CMP-004 — Unattended loop & floor") WRAPS onto an id
+    line over a name line — the `arch_icicle` id/name idiom (WI-246/075-CRITIQUE T4) —
+    so the full component name reads at default zoom instead of truncating to
+    "CMP-004 — Unattended…"; the sub-label (module count) drops to a third line. The
+    name line uses the smaller sub font, so its budget (and the right-sized column)
+    fit the longest declared name. The explicit `wrap` flag (not a `" — "` string
+    sniff) keeps an incidental em-dash in some other block's name from wrapping."""
     fill = b.get("textfill", "var(--text)")
     head = '<text x="{:.1f}" y="{:.1f}" text-anchor="middle" fill="{}">'.format(
         cx, cy, fill
     )
-    if " — " in b["label"]:
+    if b.get("wrap") and " — " in b["label"]:
         idpart, namepart = b["label"].split(" — ", 1)
         nbudget = max(1, (col_w - TIER_COL_PAD) // _BSUB_CH)
         if len(namepart) > nbudget:
