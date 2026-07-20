@@ -10422,3 +10422,70 @@ no re-keyed census pairs). Commit bar: `pytest -m smoke -n auto` **968 passed, 3
 skipped (exit 0)**; `check_docs --root .` OK 0 broken (exit 0). Full suite:
 `pytest -n auto` **1228 passed, 4 skipped (exit 0)**. Complete G3 harness
 (`check.py --gate G3 --jobs 0`) green after the status/okf/dashboard regen.
+
+## 2026-07-20 — WI-243/244/245 FILED: dashboard-quality review workstream (perceptual-critique re-fire + rubric enrichment + external-skills index)
+
+**Origin.** Owner's 2026-07-20 concern: reviewer "hats" run at gates yet output
+quality still slips — concretely, the generated `PROJECT_STATE.html` ships
+multiple hard-to-read tabs a UI reviewer should have flagged. Paired with a
+directive to evaluate ~12 third-party skill/plugin sources (four opus agents,
+grouped UI/UX · meta-process · business-domain · marketing/dev-docs) for a
+possible downstream reference index.
+
+**Root-cause finding (no build — diagnosis + filing only).** The machinery to
+catch this already exists and is well-designed: SR-054 (dashboard usability,
+`Verification=Critique`), its [dashboard-usability rubric](rubrics/dashboard-usability.md)
+whose anchors T1 (findability within one tab switch) and T4 (label legibility —
+"no clipped or overlapping text") name the exact defect, and the
+`render-dashboard-critique` skill + `scripts/dashboard-shots/shoot.mjs` that
+render the dashboard to pixels. It didn't fire because **the three perceptual
+requirements — SR-052 / SR-053 / SR-054 — are all coasting on a single human
+critique from 2026-07-15** ([074-CRITIQUE.md](reviews/074-CRITIQUE.md): "APPROVE…
+sufficient for now… may need iteration"). A `Verification=Critique` TC that goes
+`Verified` once never re-fires; ordinary REVIEW-A/B sessions judge the diff,
+never rendered pixels; and TC-055 does not yet name the render recipe as its
+artifact. Structural bug, bigger than the dashboard: a one-shot perceptual stamp
+is not a standing gate.
+
+**Filed (all `queued`):**
+- **WI-243** (quality, strong, high-risk) — re-arm the perceptual critique: wire
+  `shoot.mjs`'s PNG matrix into the SR-052/053/054 critique TCs so the critic
+  judges pixels; re-open those TCs on any render-surface diff
+  (`gen_trajectory.py` / emitted template / `shoot.mjs`); require a render-based
+  critique before a render-surface change reaches a green gate. Related to OI-7
+  (review cadence) but **not blocked by it** — OI-7 governs *code* review
+  cadence; this governs *perceptual-critique* re-fire. [WI-243 spec](specs/WI-243.md).
+- **WI-244** (quality, medium, ordinary) — distill Leonxlnx/taste-skill (MIT)
+  mandatory legibility pre-flight (both-themes contrast floor, theme-lock,
+  viewport-fit / no-clip) into stack-neutral anchors on the dashboard-usability
+  rubric; WCAG contrast linked to the SR-052 rubric, not restated; pinned-commit
+  attribution. [WI-244 spec](specs/WI-244.md).
+- **WI-245** (docs, medium, ordinary) — add `project-trajectory/EXTERNAL_SKILLS.md`,
+  a non-scaffolded curated reference index (pointers-to-mine, not vendored) of
+  third-party skill sources with license/trust/applicability columns + recorded
+  SKIPs, populated from the opus evaluation. [WI-245 spec](specs/WI-245.md).
+
+**Skills evaluation verdicts** (durable capture; detail in the WI-245 spec).
+REFERENCE — taste-skill (MIT), ui-ux-pro-max (MIT), obra/superpowers (MIT — mine
+verification-before-completion + the code-review severity model + subagent
+two-stage review), knowledge-work-plugins Legal (Apache-2.0 — domain
+reviewer-hat exemplar), coreyhaines31/marketingskills (MIT),
+charlie947/social-media-skills (MIT, niche), upstash/context7 (MIT client /
+closed backend — opt-in, data-egress caveat), anthropics/skills (Apache-2.0
+split — cite once as the SKILL.md format provenance). SKIP —
+Jakubantalik/transitions.dev (no license + paywalled), rebelytics/one-skill-to-rule-them-all
+(CC BY / tangential), knowledge-work-plugins Finance (thin) + Small-Business
+(off-topic). Cross-cutting: mine-don't-install (all ship installer / live-`--llm`
+tooling that violates the no-install stance, and each is a prompt-injection
+surface); license is copy-vs-link; discount the star counts (2026
+skills-virality wave).
+
+**No behavior change.** Deliverables: 3 specs + 3 `queued` registry rows
+(appended via `csv.writer`, CRLF + minimal quoting preserved, field-parse
+verified 17 cols) + `PROJECT_STATE.html` regen (WI-DAG). Byte-budgeted files:
+**none touched**. Commit bar: `pytest -m smoke -n auto` **968 passed, 3 skipped
+(exit 0)**; `check_docs --root . --stale` **0 broken, 192 docs / 600 links**
+(the sole orphan `docs/test/report.md` is pre-existing; the stale-anchor hints
+are pre-existing `agent_dispatch.py` line drift on other specs). Builds deferred
+to owner sequencing; **do not launch a build loop** without the owner's go —
+WI-243 is strong / high-risk and touches the Critique TC spine.
