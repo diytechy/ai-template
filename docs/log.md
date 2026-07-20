@@ -10565,3 +10565,27 @@ below-warn `--stale` line-anchor **hints** ("never a finding" — 45 in historic
 `code.py#Lnn`). Nothing of substance slipping now; the line-anchor hints are a mild
 doc-rot worth a later cleanup (or symbol-anchors). The [enforcement-audit](enforcement-audit.md)
 is the standing rule→enforcer→gap ledger. WI-243 gate-strength ruling stays open.
+
+## 2026-07-20 — WI-159 DONE: Knowledge (OKF) tab opens start-collapsed (the hard-to-read tab fixed)
+
+Built by an opus agent (`729e867`); independent opus REVIEW-A **APPROVE findings=4
+(all MINOR / non-blocking)**; pixel-verified in both themes by the builder, the
+reviewer, **and** me — the before/after is a dense ~200-node hairball with clipped
+TC labels → 6 legible OKF type-blocks (IF(65) / **SN(25)→SR(108)→LLR(96)→TC(99)** /
+PG(3), descend to concepts). `gen_trajectory.know_view` reuses the When/How-SW
+drill mechanism (single-sourced, `check_dupes` clean) above the SR-089 `>3`-type
+threshold; ≤3 types stays flat. Terse OKF-type codes (matching the stat tiles) keep
+the root layer inside its container so nothing clips; full names ride the legend /
+tooltip / breadcrumb / detail aside. WI-070 byte-identity + `--check` determinism
+held; **all 396 concepts reachable in descend** (reviewer-verified, 0 dropped);
+2 density-rule tests added. Full suite 1235p/4s, gate G3. **REVIEW-A MINOR
+dispositions** (recorded, not consumed — non-blocking on an APPROVE): #1 the flat
+SVG is still built+discarded in the collapsed path (a low-priority efficiency
+cleanup — refactor risk not worth it at 396-node scale; revisit if the bundle
+grows); #2 the descend `aria-label` is terse ("Descend into SN" — WCAG
+label-in-name holds, matches the accepted How-SW idiom); #3 a title-count test
+relaxed to a spot-check (escaping still asserted); #4 the exact 3-type boundary
+isn't unit-pinned (the `<=3` logic is transparent, adjacent 2/4 covered). This
+closes the **load-bearing 075-CRITIQUE finding** — the owner's original "hard to
+read" complaint. WI-246/247/248 (the 3 minor render nits) remain queued; the
+WI-243 gate-strength ruling remains the owner's.
