@@ -153,6 +153,10 @@ explicit `--domain` choice; `--domain any` keeps them out. The generated
 itself is a future tool that plugs in here — the convention is what makes it
 possible now.
 
+A **curated, evaluated starting list** of real external sources — each with its
+license, format, and trust caveats spelled out, under a *mine-don't-install*
+posture — lives in [`EXTERNAL_SKILLS.md`](../EXTERNAL_SKILLS.md).
+
 ## Shipped skills
 
 | Skill | Scope | Purpose |

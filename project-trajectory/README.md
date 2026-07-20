@@ -91,6 +91,7 @@ audits.
 | `EXAMPLE.md` | A fully worked SN→SR→LLR→TC chain to copy the pattern from (incl. a multi-module §9 and a multi-repo §10 sketch). |
 | `MULTI_REPO.md` | **Design doc** for the rare multi-repo rung: how the spine extends across separate repos under a coordinator (SR-tier delegation, interface catalog, assemblies-as-config, mechanical gate aggregation). A design — the heavy cross-repo tooling is deferred. Reference doc (like `EXAMPLE.md`); not scaffolded. |
 | `ADOPTING.md` | **Retrofit guide** for dropping the kit into an *existing* repo (code, history, CI, non-Python stacks): resolving bootstrap collisions, rewiring product steps, porting-or-explicitly-dropping the Python-reference generators (never a vacuous pass), and backfilling requirements from the boundary outward. Reference doc; not scaffolded. |
+| `EXTERNAL_SKILLS.md` | **Curated reference index** of third-party skill/plugin sources an adopter might mine for domain expertise or workflow accelerators the kit doesn't ship — each with its license, format, and trust caveats under a *mine-don't-install* posture. Complements `skills/README.md`'s plug-in contract. Reference doc (like `EXAMPLE.md`); not scaffolded. |
 
 ## How to use
 
