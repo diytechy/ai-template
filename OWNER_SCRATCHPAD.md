@@ -401,5 +401,38 @@ Do we need to make sure we dogfood the templates functions to prevent this repo 
 I need help with the generator of PROJECT_STATE.html.  Most of the tabs of PROJECT_STATE.html have some deficiencies.  "When" and "How" tab content do  not have arrow heads, and the lines overlap / crisscross haphazardously.  In the process tab, the working loops should show two intersecting hoops, the current UI is just two circles around various blocks without clear flow or where that flow intersects with the AI terminal / resume script where the user would interact with / launch content.  Please clean up this generator for more professional looking flow diagrams that are human ledgible.  Install dependencies if needed
 
 ~~~~~~~~~~~~~~~~
-
 My main remaining concern is that the reviewer "hats" are getting applied at gates, but sometimes I still see output quality below where I would expect.  For instance, the html output still has multiple tabs that are hard to read, things a UI reviewer should have caught and flagged. Perhaps it's because the test cases were made earlier, but I'm wondering what can be done to ensure better quality moving forward.
+
+It makes me think there are numerous skills and addons that could be referred to (both claude specific and for other vendor models) which could be indexed here as a reference to pull if relevent to down-stream users, for instance, the following (please spawn opus agents as needed to evaluate):
+
+https://github.com/rebelytics/one-skill-to-rule-them-all 
+
+https://claude.com/plugins/legal
+
+https://claude.com/plugins/small-business
+
+https://claude.com/plugins/finance
+
+https://github.com/charlie947/social-media-skills
+
+https://github.com/coreyhaines31/marketingskills
+
+https://github.com/Jakubantalik/transitions.dev
+
+https://github.com/Leonxlnx/taste-skill
+
+https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+
+https://github.com/anthropics/skills
+
+https://github.com/upstash/context7
+
+https://github.com/obra/superpowers
+
+https://github.com/rebelytics/one-skill-to-rule-them-all
+
+~~~~~
+
+Now, how can I ensure future critiques do not fail in this same way?  There could be many cases here, critiques / design iteration potentially needs to be rerun when the design is touched in a way it would be impacted, or do you htink the just-implimented work items covers these cases?
+
+Unrelated, which test cases are actually carried through to a downstream user of the template?  Ideally only ones to validate the structure and relationships of the regiesteries themselves, omitting the test cases that are validating the various runner scripts that would have already have been tested here and need not be duplicated into downstream users.
