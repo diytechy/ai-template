@@ -444,19 +444,20 @@ def with_bundle(root):
 
 def test_knowledge_tab_renders_from_bundle(tmp_path):
     # C4: with a committed docs/okf/ bundle the dashboard gains the Knowledge tab
-    # — typed concept nodes, directed spine edges, each concept's DESCRIPTION
-    # embedded and a link-OUT to its docs/okf/<tier>/<id>.md full body (the
-    # middle-path embedding, ruling #15).
+    # — typed concepts, each concept's DESCRIPTION embedded and a link-OUT to its
+    # docs/okf/<tier>/<id>.md full body (the middle-path embedding, ruling #15).
     with_bundle(tmp_path)
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert 'data-tab="know"' in text and 'id="know"' in text
-    # typed nodes + the type legend (fill keyed by OKF type)
-    assert 'class="knode"' in text and "knowarrow" in text
+    # WI-159: the make_repo bundle spans SN/SR/LLR/TC = 4 types (> 3), so the tab
+    # opens START-COLLAPSED as the shared type-tiered drill (one block per OKF
+    # type, each a descend container), NOT the flat exploded concept graph.
+    assert 'class="drill"' in text and 'data-tier="okf-type"' in text
+    assert 'class="knode"' not in text  # the wall-of-nodes flat graph is gone
     assert "System Requirement" in text and "Stakeholder Need" in text
-    # a directed spine edge exists (SN-001 -> SR-001 both present as nodes)
-    assert 'data-id="SN-001"' in text and 'data-id="SR-001"' in text
-    assert "kedge" in text
+    # the concept nodes live in the descend layers, keyed for the detail aside
+    assert 'data-node="SN-001"' in text and 'data-node="SR-001"' in text
     # the description is embedded in the detail data...
     assert "Shall add." in text
     # ...and the link-out points at a file that actually exists beside the HTML.
@@ -519,7 +520,7 @@ def test_malformed_okf_concept_is_skipped_with_warn(tmp_path):
     assert "skipping malformed OKF concept" in proc.stderr
     text = html_of(tmp_path)
     assert 'data-tab="know"' in text  # still renders
-    assert 'data-id="SR-002"' in text  # the surviving concept is still a node
+    assert 'data-node="SR-002"' in text  # the surviving concept is still a node
 
 
 def test_meta_okf_bundle_renders_the_knowledge_graph():
@@ -534,6 +535,72 @@ def test_meta_okf_bundle_renders_the_knowledge_graph():
     assert "knowarrow" in svg
     for cid in ("SN-001", "SR-038", "TC-038"):
         assert (ROOT / details[cid]["href"]).exists()
+
+
+# --- WI-159: the Knowledge graph obeys the SR-089 `>3` start-collapsed rule ------
+# The T2 density fix: a bundle spanning > 3 OKF types opens COLLAPSED as the shared
+# When/How-SW type-tiered drill (one block per type, descend into its concepts); a
+# bundle of <= 3 types stays the flat concept graph (the tiering is earned by scale).
+
+
+def _know_section(text):
+    """The whole Knowledge <section> (all drill layers, incl. the hidden ones)."""
+    return text.split('id="know"', 1)[1].split("</section>", 1)[0]
+
+
+def _flat_bundle(root):
+    """make_repo + a hand-written <= 3-type OKF bundle (SN + SR only), so the
+    Knowledge graph stays below the `>3` type threshold and renders flat."""
+    make_repo(root)
+    okf = root / "docs" / "okf"
+    for tier, cid, ctype in (
+        ("stakeholder-needs", "SN-001", "Stakeholder Need"),
+        ("system-requirements", "SR-001", "System Requirement"),
+        ("system-requirements", "SR-002", "System Requirement"),
+    ):
+        d = okf / tier
+        d.mkdir(parents=True, exist_ok=True)
+        (d / (cid + ".md")).write_text(
+            '---\ntype: "{}"\ntitle: "{} title"\ndescription: "desc {}"\n'
+            "---\n# {}\n".format(ctype, cid, cid, cid),
+            encoding="utf-8",
+        )
+    return root
+
+
+def test_knowledge_graph_collapses_above_type_threshold(tmp_path):
+    # > 3 OKF types (the make_repo bundle spans SN/SR/LLR/TC) -> the Knowledge tab
+    # opens as the shared type-tiered drill, reusing the When/How collapse
+    # mechanism (`class="drill"`, one descend container per OKF type), NOT the flat
+    # exploded concept graph. The WI-070 richness (descriptions + link-outs) and
+    # the `>3`-earned collapse both hold.
+    gt = load_script("gen_trajectory")
+    with_bundle(tmp_path)
+    assert gt.know_view(tmp_path) is not None  # collapse earned by > 3 types
+    assert gen(tmp_path).returncode == 0
+    know = _know_section(html_of(tmp_path))
+    assert 'class="drill"' in know  # the shared drill mechanism, single-sourced
+    assert 'class="knode"' not in know  # not the flat wall-of-nodes
+    # the root layer is one descend container per OKF type (SN/SR/LLR/TC = 4)
+    assert know.count('data-tier="okf-type" data-descend=') == 4
+    # concepts live in the descend layers, wired (data-node) to the detail aside
+    assert 'data-node="SR-001"' in know
+    assert "Shall add." in know  # description survives the collapse
+    assert "docs/okf/system-requirements/SR-001.md" in know  # link-out survives
+
+
+def test_knowledge_graph_stays_flat_at_or_below_type_threshold(tmp_path):
+    # <= 3 OKF types -> know_view returns None and the flat concept graph renders
+    # (byte-identical path), exactly as when_view keeps the flat DAG below its
+    # thresholds. The tiering is earned by scale, so a small bundle stays legible flat.
+    gt = load_script("gen_trajectory")
+    _flat_bundle(tmp_path)
+    assert gt.know_view(tmp_path) is None  # <= 3 types -> no collapse
+    assert gen(tmp_path).returncode == 0
+    know = _know_section(html_of(tmp_path))
+    assert 'class="knode"' in know  # the flat concept graph
+    assert 'data-id="SR-001"' in know  # flat nodes carry data-id
+    assert 'data-tier="okf-type"' not in know  # no type-tiered collapse
 
 
 # --- review 019: the WI-102 per-node <title> tooltip contract, pinned -----------
@@ -587,9 +654,12 @@ def test_svg_nodes_carry_escaped_title_tooltips(tmp_path):
     assert "<title>src/m (module)</title>" in sw
     assert "<title>pip &amp; git (external)</title>" in sw
 
-    # know_graph: every concept node carries a <title> = id — title (type).
-    know = _view_svg(text, 'id="know"')
-    assert know.count("<title>") == know.count('class="knode"') > 0
+    # Knowledge tab (collapsed drill, WI-159): every concept block carries a
+    # <title> = id — title (type); the markup-hostile SR title is escaped. The
+    # concept blocks live in the hidden descend layers, so scan the whole section
+    # (not just the first svg, which is the type-summary root layer).
+    know = text.split('id="know"', 1)[1].split("</section>", 1)[0]
+    assert know.count('class="block') > 0  # concept/type blocks rendered
     assert (
         "<title>SR-001 — Core add &amp; &lt;check&gt; (System Requirement)</title>"
         in know

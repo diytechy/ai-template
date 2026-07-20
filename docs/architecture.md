@@ -625,6 +625,7 @@ Contracts (interfaces): IF-011, IF-024, IF-052, IF-056
 | `sw_modules(root)` | [(module, summary, [public symbols])] parsed from architecture.md's |  |
 | `cmp_rows(root)` | Real CMP-### component rows (the optional physical/component layer). |  |
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
+| `know_view(root)` | The OKF concept graph as a START-COLLAPSED, type-tiered Simulink-style drill | SR-089 |
 | `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no | SR-055 |
 | `build_html(root, wis)` |  |  |
 | `pending_block(root)` | The GENERATED PENDING block CONTENT (between the markers) for |  |

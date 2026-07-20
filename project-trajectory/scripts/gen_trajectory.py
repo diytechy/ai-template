@@ -2101,6 +2101,19 @@ OKF_TYPE_FILL = {
     "Process Guide": "#b45309",
 }
 
+# The dashboard's native tier code per OKF type (the same SN/SR/LLR/TC vocabulary
+# the stat tiles use). WI-159 labels each collapsed type block with its terse code
+# so the SN->SR->LLR->TC summary reads legibly AND fits its container without a
+# right-edge clip; the full type name rides the sub-tooltip, breadcrumb and legend.
+OKF_TYPE_CODE = {
+    "Stakeholder Need": "SN",
+    "System Requirement": "SR",
+    "Low-Level Requirement": "LLR",
+    "Test Case": "TC",
+    "Interface": "IF",
+    "Process Guide": "PG",
+}
+
 KN_COL_W = 150
 KN_COL_GAP = 60
 KN_ROW_H = 30
@@ -2277,20 +2290,161 @@ def know_graph(root):
     return svg, details
 
 
-def _know_panel(svg, details):
+def _okf_concept_blocks(cids, nodes):
+    """The leaf concept blocks for one OKF type's descend layer (WI-159): one block
+    per concept, `data-node`=id (wired to the aside by the panel), fill-keyed by
+    type. A type's members carry no intra-layer edge (spine edges cross types), so
+    the layer is a plain column."""
+    blocks = []
+    for cid in cids:
+        info = nodes[cid]
+        kt = (info.get("title") or "").strip()
+        tip = cid + (" — " + kt if kt else "") + " ({})".format(info["type"])
+        blocks.append(
+            {
+                "key": cid,
+                "label": cid,
+                "sub": kt if len(kt) <= 20 else kt[:19] + "…",
+                "fill": OKF_TYPE_FILL.get(info["type"], "#64748b"),
+                "textfill": "#fff",
+                "stroke": "rgba(15,23,42,.15)",
+                "tier": "concept",
+                "title": tip,
+            }
+        )
+    return blocks
+
+
+def _okf_type_edges(edges, type_of):
+    """The concept spine edges aggregated to one wire per crossing OKF-type pair
+    (WI-159, the When-view boundary idiom): the deduped union count per ordered
+    (src-type, tgt-type) pair. Deterministic (sorted)."""
+    agg = {}
+    for s, d in edges:
+        ts, td = type_of[s], type_of[d]
+        if ts != td:
+            agg.setdefault((ts, td), set()).add((s, d))
+    return [
+        (a, b, "{} spine link(s)".format(len(e))) for (a, b), e in sorted(agg.items())
+    ]
+
+
+def _okf_root_blocks(ordered_types, groups, type_layer):
+    """The root-layer type blocks + their aside detail records (WI-159): one descend
+    container per OKF type, fill-keyed, labelled with its concept count."""
+    type_details, root_blocks = {}, []
+    for t in ordered_types:
+        n = len(groups[t])
+        fill = OKF_TYPE_FILL.get(t, "#64748b")
+        type_details[t] = {
+            "type": "OKF type",
+            "title": "",
+            "description": "{} {} concept(s) — double-click (or focus and press "
+            "Enter) to descend into them.".format(n, t),
+            "href": "",
+            "resource": "",
+            "fill": fill,
+        }
+        root_blocks.append(
+            {
+                "key": t,
+                # The terse tier code keeps the collapsed row narrow enough to fit
+                # its container (no right-edge clip); the full type name stays in
+                # the sub-tooltip, the breadcrumb crumb and the legend.
+                "label": OKF_TYPE_CODE.get(t, t),
+                "sub": "{} concept(s)".format(n),
+                "fill": fill,
+                "textfill": "#fff",
+                "stroke": "rgba(15,23,42,.15)",
+                "tier": "okf-type",
+                "descend": type_layer[t],
+                "crumb": t,
+                "title": "{} — {} concept(s)".format(t, n),
+            }
+        )
+    return root_blocks, type_details
+
+
+def know_view(root):
+    """The OKF concept graph as a START-COLLAPSED, type-tiered Simulink-style drill
+    (WI-159, the SR-089 `>3` density rule), or None when the bundle spans <= 3 OKF
+    types — the caller then keeps the flat concept graph (`know_graph`), byte-
+    identical for a small bundle.
+
+    The single-sourced fix for the T2 "opens fully exploded" defect: instead of
+    100s of concept nodes under an edge hairball, the default view is one BLOCK per
+    OKF `type` wired by the aggregated cross-type spine edges (SN -> SR -> LLR ->
+    TC), and each type block DESCENDS (double-click / Enter, breadcrumb to return)
+    into a layer of its concept blocks — the exact When/How-SW drill mechanism
+    (`_okf_nodes` -> `_drill_layer_svg` / `_render_drill` / DRILL_STYLE /
+    DRILL_SCRIPT), no new idiom. A collapsed default is a handful of blocks, so it
+    is never wider than its container (the T4 clip resolves too). Each concept block
+    carries `data-node`=id, wired to the #know-detail aside by the panel.
+
+    Returns `(drill_body, type_details)` — the rendered drill (breadcrumb + layers +
+    controller) and the per-type detail records the aside shows for a type block.
+    Deterministic (sorted inputs, no clocks) so `--check` stays stable."""
+    nodes, edges = _okf_nodes(root)
+    if not nodes:
+        return None
+    type_of = {cid: nodes[cid]["type"] for cid in nodes}
+    groups = {}
+    for cid in sorted(nodes):  # sorted -> each group's members are id-ordered
+        groups.setdefault(type_of[cid], []).append(cid)
+    # The `>3` rule (SR-089): the tiering is EARNED by scale — a bundle spanning
+    # <= 3 types stays the flat concept graph, exactly as the When roadmap keeps the
+    # flat DAG at <= 3 phases AND <= 3 workstreams.
+    if len(groups) <= 3:
+        return None
+    # Order the type blocks by the tier precedence of their concepts so the spine
+    # reads SN -> SR -> LLR -> TC left to right (off-spine kinds fall after).
+    ordered_types = sorted(
+        groups,
+        key=lambda t: (
+            min(OKF_TIER_ORDER.get(nodes[c]["tier"], 99) for c in groups[t]),
+            t,
+        ),
+    )
+    counter = [0]
+    layers = []  # (layer_id, svg), in deterministic order
+
+    def new_id():
+        counter[0] += 1
+        return "know-{}".format(counter[0] - 1)
+
+    type_layer = {}
+    for t in ordered_types:
+        lid = new_id()
+        layers.append(
+            (lid, _drill_layer_svg(_okf_concept_blocks(groups[t], nodes), []))
+        )
+        type_layer[t] = lid
+    root_blocks, type_details = _okf_root_blocks(ordered_types, groups, type_layer)
+    root_id = new_id()
+    layers.append(
+        (root_id, _drill_layer_svg(root_blocks, _okf_type_edges(edges, type_of)))
+    )
+    return _render_drill("know", root_id, "Concepts", layers), type_details
+
+
+def _know_panel(root, svg, details):
     """The Knowledge tab + panel — a fully self-contained block (its style, the
     embedded detail data, and the interaction JS all live inside the panel), so
     when there is no bundle and the panel is not appended the artifact is
-    byte-identical to before this view existed (the vacuity guarantee)."""
+    byte-identical to before this view existed (the vacuity guarantee).
+
+    Above the SR-089 `>3` type threshold the panel renders the START-COLLAPSED
+    type-tiered drill (`know_view`, WI-159 — the T2 density fix); at or below it,
+    the flat concept graph (`know_graph`) below."""
     tab = '<button data-tab="know">Knowledge (OKF)</button>'
-    # </ -> <\/ so a stray "</script>" inside description text can't close the tag
-    # (the build_html j() guard, applied locally because this data is embedded in
-    # the panel's own inline script rather than the shared one).
-    dj = json.dumps(details, ensure_ascii=False).replace("</", "<\\/")
     legend = "".join(
         '<span><i style="background:{}"></i>{}</span>'.format(c, html.escape(t))
         for t, c in OKF_TYPE_FILL.items()
     )
+    # Emitted in BOTH modes: the flat `.knode`/`.kedge` rules stay the single
+    # declared source of the shared node-label scale + muted edge token (harmless
+    # when collapsed renders `.block`s instead), and `#know-detail .body` styles the
+    # aside in either shape.
     style = (
         "<style>"
         "#knowgraph .knode rect{stroke:rgba(15,23,42,.15);stroke-width:1;"
@@ -2306,6 +2460,89 @@ def _know_panel(svg, details):
         "#know-detail .body{overflow-wrap:anywhere;}"
         "</style>"
     )
+
+    # WI-159: the start-collapsed drill (single-sourced from the When/How mechanism)
+    # when the bundle spans > 3 OKF types; else fall through to the flat graph.
+    kv = know_view(root)
+    if kv:
+        drill_body, type_details = kv
+        # The aside data merges the concept details with the per-type summaries the
+        # root type blocks show. sort_keys -> byte-deterministic (cf. sw_containment).
+        merged = dict(details)
+        merged.update(type_details)
+        dj = json.dumps(merged, ensure_ascii=False, sort_keys=True).replace(
+            "</", "<\\/"
+        )
+        # Wire every block (type + concept) to the #know-detail aside — the same
+        # click/focus-for-detail idiom the How-SW drill uses; the drill controller
+        # (DRILL_SCRIPT, via _render_drill) already owns descend/breadcrumb.
+        detail_script = (
+            "<script>(function(){\n"
+            "  const D = " + dj + ";\n"
+            "  const know = document.getElementById('know'); if(!know) return;\n"
+            "  const box = document.getElementById('know-detail'); if(!box) return;\n"
+            "  const esc = s => { const d=document.createElement('div');"
+            " d.textContent = s==null?'':s; return d.innerHTML; };\n"
+            "  function show(id){\n"
+            "    const d = D[id];\n"
+            "    if(!d){ box.innerHTML = '<p class=\"hint\">No detail.</p>'; return; }\n"
+            '    let h = \'<span class="badge" style="background:\''
+            "+(d.fill||'#64748b')+'\">'+esc(d.type)+'</span>'\n"
+            "      + '<h3>'+esc(id)+(d.title?' — '+esc(d.title):'')+'</h3>'\n"
+            "      + '<p class=\"body\">'+esc(d.description)+'</p>';\n"
+            '    if(d.href) h += \'<p class="meta">Full concept: <a href="\''
+            "+esc(d.href)+'\">'+esc(d.href)+'</a>'"
+            "+(d.resource?'<br>Source: '+esc(d.resource):'')+'</p>';\n"
+            "    box.innerHTML = h;\n"
+            "  }\n"
+            "  for(const b of know.querySelectorAll('.block[data-node]')){\n"
+            "    const id=b.getAttribute('data-node');\n"
+            "    b.addEventListener('click', () => show(id));\n"
+            "    b.addEventListener('focus', () => show(id)); }\n"
+            "})();</script>"
+        )
+        cap = (
+            '<p class="cap">The committed <code>docs/okf/</code> knowledge bundle as a '
+            "typed concept graph — the dashboard is the bundle's first real "
+            "<strong>consumer</strong>. It opens <strong>collapsed</strong>: one block "
+            "per OKF <code>type</code> wired by the aggregated <code>SN→SR→LLR→TC</code> "
+            "spine links. <strong>Double-click</strong> a type — or focus it and press "
+            "Enter — to <strong>descend</strong> into its concepts; the "
+            "<strong>breadcrumb</strong> returns. <strong>Click</strong> a concept to "
+            "read its description and open the full file. A view — the registries are "
+            "the source of truth.</p>\n"
+        )
+        panel = (
+            '<section id="know" class="panel">\n'
+            "<h2>Knowledge graph (OKF concepts)</h2>\n"
+            + cap
+            + DRILL_STYLE
+            + style
+            + "\n"
+            '<div class="layout">\n'
+            + SCROLL_CUE
+            + '<div id="knowgraph" class="view" '
+            + _hscroll("OKF concept graph, horizontally scrollable")
+            + ">"
+            + drill_body
+            + "</div>\n"
+            '<aside id="know-detail" class="detail"><p class="hint">Double-click a type '
+            "block (or focus it and press Enter) to descend into its concepts; click a "
+            "concept to read its description and open the full concept file in "
+            "<code>docs/okf/</code>.</p></aside>\n"
+            "</div>\n"
+            '<div class="legend">'
+            + legend
+            + "</div>\n"
+            + detail_script
+            + "\n</section>"
+        )
+        return tab, panel
+
+    # </ -> <\/ so a stray "</script>" inside description text can't close the tag
+    # (the build_html j() guard, applied locally because this data is embedded in
+    # the panel's own inline script rather than the shared one).
+    dj = json.dumps(details, ensure_ascii=False).replace("</", "<\\/")
     script = (
         "<script>(function(){\n"
         "  const D = " + dj + ";\n"
@@ -2738,7 +2975,9 @@ def build_html(root, wis):
         extra_panels.append(panel)
     know = know_graph(root)  # the OKF bundle's first real consumer (WI-070)
     if know:
-        tab, panel = _know_panel(*know)
+        # WI-159: _know_panel starts collapsed (the type-tiered drill) above the
+        # SR-089 `>3` type threshold, else renders the flat concept graph.
+        tab, panel = _know_panel(root, *know)
         extra_tabs.append(tab)
         extra_panels.append(panel)
     proc = process_panel(root, wis, stats)  # the method reference view (WI-085)
