@@ -493,7 +493,7 @@ Contracts (interfaces): IF-009, IF-023
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an `## OI-N` decision brief whose decision |  |
 | `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |
-| `critique_staleness_findings(root)` | The perceptual re-fire warn (WI-243; warn-first, git-time staleness like |  |
+| `critique_staleness_findings(root)` | The perceptual re-fire finding (WI-243; git-time staleness like |  |
 | `main()` |  |  |
 
 ### `scripts/check_vendored`

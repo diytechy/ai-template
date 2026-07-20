@@ -1588,25 +1588,28 @@ def _latest_critique_file(root):
 
 
 def critique_staleness_findings(root):
-    """The perceptual re-fire warn (WI-243; warn-first, git-time staleness like
+    """The perceptual re-fire finding (WI-243; git-time staleness like
     `backlog_staleness_findings`). A `Verification=Critique` SR is judged by a
     human/critic look recorded in `docs/reviews/*-CRITIQUE.md`, and that verdict
     never re-fires on its own — so once the dashboard *render surface* changes,
     the Verified stamp is judging an older render. When a render-surface path (the
     co-located `gen_trajectory.py`, plus the render recipe if present) last
-    changed STRICTLY AFTER the latest CRITIQUE evidence, warn that the perceptual
+    changed STRICTLY AFTER the latest CRITIQUE evidence, flag that the perceptual
     gate is stale and the dashboard critique should be re-run against the current
-    render. Returns warning strings ([] when not applicable).
+    render. Returns finding strings ([] when not applicable).
 
-    WARN-ONLY: never joins the exit code, not even under `--strict` (the WI-129
-    warn-tier-checker stance the sibling staleness/critique ratchets take). Silent
-    off-git and vacuous when the repo declares no perceptual SR, carries no
-    CRITIQUE evidence, or exposes no locatable render surface. Bounded cost: one
-    `git log -1` for the evidence plus one per render-surface path (≤ 2 here). By
-    construction (git-time, not a render diff) it fires on ANY commit touching a
-    render-surface path — a data-only or comment-only edit to the generator warns
-    even with zero visual change — the false-positive-over-false-negative trade the
-    sibling `backlog_staleness` also makes."""
+    TIERED severity (set by the caller): WARN at the commit bar, ERROR under
+    `--strict` (the G3 gate) — fail-closed per the owner's 2026-07-20 ruling, a
+    stale render surface cannot reach a green gate; main() routes it through the
+    strict-promotable findings loop (the same tier as `run-state`). Silent off-git
+    and vacuous when the repo declares no perceptual SR (so a downstream repo
+    without a `Verification=Critique` SR — none ship — pays nothing at either
+    tier), carries no CRITIQUE evidence, or exposes no locatable render surface.
+    Bounded cost: one `git log -1` for the evidence plus one per render-surface
+    path (≤ 2 here). By construction (git-time, not a render diff) it fires on ANY
+    commit touching a render-surface path — a data-only or comment-only edit to the
+    generator flags even with zero visual change — the false-positive-over-
+    false-negative trade the sibling `backlog_staleness` also makes."""
     critique_srs = _load_critique_srs(root)
     if not critique_srs:
         return []
@@ -1628,10 +1631,10 @@ def critique_staleness_findings(root):
     if not newer:
         return []
     return [
-        "perceptual gate stale: {} (Verification=Critique) last judged by {} but "
-        "the dashboard render surface changed after it ({}) — re-run the dashboard "
-        "critique against the current render (the shoot.mjs matrix) and record a "
-        "fresh docs/reviews/*-CRITIQUE.md".format(
+        "{} (Verification=Critique) last judged by {} but the dashboard render "
+        "surface changed after it ({}) — re-run the dashboard critique against the "
+        "current render (the shoot.mjs matrix) and record a fresh "
+        "docs/reviews/*-CRITIQUE.md".format(
             ";".join(sorted(critique_srs)), ev_rel, ";".join(newer)
         )
     ]
@@ -1740,20 +1743,24 @@ def main():
     # was amended AFTER the WI row was last touched is re-flagged for a driven
     # re-validation. WARN-ONLY: it never joins the exit code, not even under
     # --strict (the WI-129 warn-tier-checker stance); silent off-git.
-    # Perceptual re-fire (WI-243) rides the same warn-only emission: a
-    # Verification=Critique SR whose latest CRITIQUE evidence predates a
-    # dashboard render-surface change is judging an older render — re-run the
-    # critique. Both are git-time staleness warns that never join the exit code
-    # (even under --strict) and stay silent off-git.
-    for msg in backlog_staleness_findings(root, wis) + critique_staleness_findings(
-        root
-    ):
+    for msg in backlog_staleness_findings(root, wis):
         print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
     # The SSOT coherence layer: R-A is always an error; R-E, the
     # run-state currency check, and the unknown-status lint are WARN unless
     # --strict promotes them.
     findings = ssot_findings(wis, root)
     findings.extend(("run-state", False, msg) for msg in run_state_findings(wis, root))
+    # Perceptual re-fire (WI-243) — a Verification=Critique SR whose latest CRITIQUE
+    # evidence predates a dashboard render-surface change is judging an older render.
+    # WARN at the commit bar; **fail-closed under --strict** (the G3 gate) per the
+    # owner's 2026-07-20 ruling — a stale render surface cannot reach a green gate.
+    # hard=False rides the same warn-plain / error-under-strict tier as run-state,
+    # so main() gains no branch. Vacuous when no perceptual SR / evidence / render
+    # surface (a downstream repo without a Verification=Critique SR — none ship —
+    # pays nothing), silent off-git, and opt-out via docs/trajectory-check.
+    findings.extend(
+        ("perceptual-stale", False, msg) for msg in critique_staleness_findings(root)
+    )
     for rule, hard, msg in findings:
         line = "{} {}".format(rule, msg)
         if hard or args.strict:

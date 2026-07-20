@@ -1692,13 +1692,13 @@ def _init_critique_staleness_repo(
     return run_git
 
 
-def test_critique_staleness_warns_when_render_surface_newer(tmp_path):
-    # The dashboard render surface changed after the latest CRITIQUE evidence ->
-    # the perceptual Verified stamp is stale -> warn (re-run the critique).
+def test_critique_staleness_warns_at_commit_bar_when_render_surface_newer(tmp_path):
+    # The render surface changed after the latest CRITIQUE -> the perceptual stamp
+    # is stale. At the commit bar (non-strict) it is a WARN, not an error (exit 0).
     _init_critique_staleness_repo(tmp_path)
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "perceptual gate stale: SR-050" in proc.stderr
+    assert "perceptual-stale SR-050" in proc.stderr
     assert "scripts/gen_trajectory.py" in proc.stderr
 
 
@@ -1708,7 +1708,7 @@ def test_critique_staleness_quiet_when_evidence_is_newer(tmp_path):
     _init_critique_staleness_repo(tmp_path, ev_at=2000, render_at=1000)
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "perceptual gate stale" not in proc.stderr
+    assert "perceptual-stale" not in proc.stderr
 
 
 def test_critique_staleness_off_git_is_silent(tmp_path):
@@ -1724,7 +1724,7 @@ def test_critique_staleness_off_git_is_silent(tmp_path):
     (tmp_path / "scripts" / "gen_trajectory.py").write_text("# gen\n", encoding="utf-8")
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "perceptual gate stale" not in proc.stderr
+    assert "perceptual-stale" not in proc.stderr
 
 
 def test_critique_staleness_vacuous_without_a_critique_sr(tmp_path):
@@ -1745,12 +1745,13 @@ def test_critique_staleness_vacuous_without_a_critique_sr(tmp_path):
     run_git("commit", "-m", "render", at=2000)
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "perceptual gate stale" not in proc.stderr
+    assert "perceptual-stale" not in proc.stderr
 
 
-def test_critique_staleness_never_errors_under_strict(tmp_path):
-    # Warn-only even under --strict (exit 0 with the finding present).
+def test_critique_staleness_fails_closed_under_strict(tmp_path):
+    # FAIL-CLOSED (WI-243, owner 2026-07-20): under --strict (the G3 gate) a stale
+    # render surface is an ERROR (exit 1), not just a warn — it cannot reach green.
     _init_critique_staleness_repo(tmp_path)
     proc = run_traj(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "perceptual gate stale: SR-050" in proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "ERROR - perceptual-stale SR-050" in proc.stderr
