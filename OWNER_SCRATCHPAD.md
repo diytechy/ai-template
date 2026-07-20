@@ -399,3 +399,7 @@ Do we need to do anything to stress adversarial reviews?  Or to follow a specifi
 Do we need to make sure we dogfood the templates functions to prevent this repo from getting out of sync with it's own template?
 
 I need help with the generator of PROJECT_STATE.html.  Most of the tabs of PROJECT_STATE.html have some deficiencies.  "When" and "How" tab content do  not have arrow heads, and the lines overlap / crisscross haphazardously.  In the process tab, the working loops should show two intersecting hoops, the current UI is just two circles around various blocks without clear flow or where that flow intersects with the AI terminal / resume script where the user would interact with / launch content.  Please clean up this generator for more professional looking flow diagrams that are human ledgible.  Install dependencies if needed
+
+~~~~~~~~~~~~~~~~
+
+My main remaining concern is that the reviewer "hats" are getting applied at gates, but sometimes I still see output quality below where I would expect.  For instance, the html output still has multiple tabs that are hard to read, things a UI reviewer should have caught and flagged. Perhaps it's because the test cases were made earlier, but I'm wondering what can be done to ensure better quality moving forward.
