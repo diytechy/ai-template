@@ -10489,3 +10489,19 @@ verified 17 cols) + `PROJECT_STATE.html` regen (WI-DAG). Byte-budgeted files:
 are pre-existing `agent_dispatch.py` line drift on other specs). Builds deferred
 to owner sequencing; **do not launch a build loop** without the owner's go —
 WI-243 is strong / high-risk and touches the Critique TC spine.
+
+## 2026-07-20 — WI-244 DONE: taste-skill legibility distillation into the dashboard-usability rubric
+
+Built (`d41023e`) + REVIEW-A opus **APPROVE findings=0** (independent reviewer: it
+WebFetched the pinned taste-skill source and verified every anchor traces to a real
+mandatory pre-flight item, the MIT © match, the fragment-free A4 cross-link,
+stack-neutrality, and no-WCAG-duplication — tried to break each and each held).
+Deliverable: anchors **T5** (both-themes interactive-control contrast, WCAG numbers
+linked to the accessibility rubric's A4, not restated), **T6** (theme-lock — no
+mid-view inversion), **T7** (viewport-fit / no-clip at the declared widths incl.
+390px) on [dashboard-usability.md](rubrics/dashboard-usability.md), verdict-header
+range T1-T4 → T1-T7, and a pinned-commit (`98565e6`) MIT attribution footer.
+Tailwind class names + aesthetic dogma stripped per spec. **No new test** (the
+rubric is critic-adjudicated prose; the cross-link is already gated by check_docs)
+— the reviewer ruled that legitimate. check_docs 0 broken. Enriches the bar the
+WI-243 re-armed critic judges against.
