@@ -10546,3 +10546,22 @@ perceptual evidence** (now newer than the render surface), clearing the WI-243
 staleness warn — the dashboard has now been judged against its current render.
 Queued for the owner: the WI-243 gate-strength ruling (warn vs fail-closed, now
 with data), un-deferring WI-159, and whether to file the three minor nits.
+
+## 2026-07-20 — WI-159 un-deferred + WI-246/247/248 filed (075-CRITIQUE dispositions)
+
+Owner directed building the actual Knowledge-tab density fix. **WI-159**
+un-deferred (deferred→queued; SR-053→**SR-054** for the T2 usability anchor;
+BuildTier medium; spec [WI-159.md](specs/WI-159.md)) — apply the DAG/How-SW
+**start-collapsed `>3`** pattern to the Knowledge graph rather than invent a new
+one. The three minor nits 075 surfaced (recorded in WI-189 but never filed as
+rows) are now filed queued (SpecRef = 075-CRITIQUE): **WI-246** (How-SW
+component-label truncation, T4), **WI-247** (When phase-accent hue separation,
+T5/uniformity), **WI-248** (What-icicle 390px overflow, T7). Registry 243→246 WIs;
+check_trajectory clean. **Advisory-warn audit** (owner's question — "how much is
+slipping through?"): current sweep = check_trajectory **0** warns; check_docs **0**
+broken links, **1** orphan warn (the known generated `docs/test/report.md`), **106**
+below-warn `--stale` line-anchor **hints** ("never a finding" — 45 in historical
+`repo-review-*`, 27 in the generated iteration index, 19 in specs citing moved
+`code.py#Lnn`). Nothing of substance slipping now; the line-anchor hints are a mild
+doc-rot worth a later cleanup (or symbol-anchors). The [enforcement-audit](enforcement-audit.md)
+is the standing rule→enforcer→gap ledger. WI-243 gate-strength ruling stays open.
