@@ -1657,3 +1657,100 @@ def test_backlog_staleness_never_errors_under_strict(tmp_path):
     assert "WI-001: cites SR-001 amended after the WI row was last touched" in (
         proc.stderr
     )
+
+
+# --- WI-243: the perceptual re-fire warn (git-time staleness, warn-first) -------
+
+
+def _init_critique_staleness_repo(
+    tmp_path, ev_at=1000, render_at=2000, verdict="APPROVE findings=0"
+):
+    """A git repo with a Verification=Critique SR-050, a CRITIQUE evidence file
+    committed at `ev_at`, a done WI-050 (so the full check reaches the perceptual
+    warn, past the no-work-items early return), and a render-surface file
+    `scripts/gen_trajectory.py` committed at `render_at`. `render_at > ev_at` is
+    the staleness precondition. The checker locates the generator via its
+    `scripts/gen_trajectory.py` fallback (its `__file__`-co-located primary path
+    is the real repo tree, not under tmp_path)."""
+    run_git = _staleness_git(tmp_path)
+    _write_sr_row(tmp_path, CRITIQUE_SR_ROW)
+    reviews = tmp_path / "docs" / "reviews"
+    reviews.mkdir(parents=True, exist_ok=True)
+    (reviews / "001-CRITIQUE.md").write_text(
+        "VERDICT: " + verdict + "\n", encoding="utf-8"
+    )
+    write_wis_sr(tmp_path, "WI-050,Render,scripts,SR-050,,done,shipped,\n")
+    run_git("add", "-A")
+    run_git("commit", "-m", "init", at=ev_at)
+    scripts = tmp_path / "scripts"
+    scripts.mkdir(parents=True, exist_ok=True)
+    (scripts / "gen_trajectory.py").write_text(
+        "# dashboard generator\n", encoding="utf-8"
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "touch render surface", at=render_at)
+    return run_git
+
+
+def test_critique_staleness_warns_when_render_surface_newer(tmp_path):
+    # The dashboard render surface changed after the latest CRITIQUE evidence ->
+    # the perceptual Verified stamp is stale -> warn (re-run the critique).
+    _init_critique_staleness_repo(tmp_path)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "perceptual gate stale: SR-050" in proc.stderr
+    assert "scripts/gen_trajectory.py" in proc.stderr
+
+
+def test_critique_staleness_quiet_when_evidence_is_newer(tmp_path):
+    # A fresh critique (evidence committed AFTER the render change) re-dates the
+    # evidence and clears the warn.
+    _init_critique_staleness_repo(tmp_path, ev_at=2000, render_at=1000)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "perceptual gate stale" not in proc.stderr
+
+
+def test_critique_staleness_off_git_is_silent(tmp_path):
+    # No git repo -> no commit-time basis -> no warn, no crash (best-effort).
+    _write_sr_row(tmp_path, CRITIQUE_SR_ROW)
+    reviews = tmp_path / "docs" / "reviews"
+    reviews.mkdir(parents=True, exist_ok=True)
+    (reviews / "001-CRITIQUE.md").write_text(
+        "VERDICT: APPROVE findings=0\n", encoding="utf-8"
+    )
+    write_wis_sr(tmp_path, "WI-050,Render,scripts,SR-050,,done,shipped,\n")
+    (tmp_path / "scripts").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "scripts" / "gen_trajectory.py").write_text("# gen\n", encoding="utf-8")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "perceptual gate stale" not in proc.stderr
+
+
+def test_critique_staleness_vacuous_without_a_critique_sr(tmp_path):
+    # A non-Critique SR pays nothing, even with a newer render surface.
+    run_git = _staleness_git(tmp_path)
+    _write_sr_row(tmp_path, SR_ROW_V1)  # Verification=Test
+    reviews = tmp_path / "docs" / "reviews"
+    reviews.mkdir(parents=True, exist_ok=True)
+    (reviews / "001-CRITIQUE.md").write_text(
+        "VERDICT: APPROVE findings=0\n", encoding="utf-8"
+    )
+    write_wis_sr(tmp_path, "WI-001,Feature,scripts,SR-001,,done,shipped,\n")
+    run_git("add", "-A")
+    run_git("commit", "-m", "init", at=1000)
+    (tmp_path / "scripts").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "scripts" / "gen_trajectory.py").write_text("# gen\n", encoding="utf-8")
+    run_git("add", "-A")
+    run_git("commit", "-m", "render", at=2000)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "perceptual gate stale" not in proc.stderr
+
+
+def test_critique_staleness_never_errors_under_strict(tmp_path):
+    # Warn-only even under --strict (exit 0 with the finding present).
+    _init_critique_staleness_repo(tmp_path)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "perceptual gate stale: SR-050" in proc.stderr

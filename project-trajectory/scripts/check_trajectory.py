@@ -1535,6 +1535,95 @@ def critique_ratchet_findings(root):
     ]
 
 
+# The render surface a perceptual (Verification=Critique) SR is judged against —
+# WI-243. The dashboard GENERATOR (`gen_trajectory.py`, located beside this
+# checker so the path resolves under `--root` in this repo and a downstream
+# scaffold alike) plus the optional meta-only render recipe. A change to either
+# after the latest CRITIQUE means the Verified perceptual stamp judged an older
+# render, so the critique should re-fire.
+_RENDER_RECIPE_REL = "scripts/dashboard-shots/shoot.mjs"
+
+
+def _render_surface_paths(root):
+    """Repo-relative render-surface paths that EXIST under `root`: the co-located
+    dashboard generator `gen_trajectory.py` and the render recipe if the repo
+    carries one. A downstream without the meta-only recipe pays nothing for it;
+    an unlocatable generator yields no path (the check then stays silent)."""
+    out = []
+    gen = Path(__file__).resolve().with_name("gen_trajectory.py")
+    try:
+        rel = gen.relative_to(root)
+        if gen.is_file():
+            out.append(rel.as_posix())
+    except ValueError:
+        # the checker is not under root (unusual) — try the kit's two homes.
+        for cand in (
+            "project-trajectory/scripts/gen_trajectory.py",
+            "scripts/gen_trajectory.py",
+        ):
+            if (root / cand).is_file():
+                out.append(cand)
+                break
+    if (root / _RENDER_RECIPE_REL).is_file():
+        out.append(_RENDER_RECIPE_REL)
+    return out
+
+
+def _latest_critique_file(root):
+    """The highest-numbered `docs/reviews/*-CRITIQUE.md` path, or None."""
+    d = root / REVIEWS_DIR
+    if not d.is_dir():
+        return None
+    files = sorted(d.glob("*-CRITIQUE.md"))
+    return files[-1] if files else None
+
+
+def critique_staleness_findings(root):
+    """The perceptual re-fire warn (WI-243; warn-first, git-time staleness like
+    `backlog_staleness_findings`). A `Verification=Critique` SR is judged by a
+    human/critic look recorded in `docs/reviews/*-CRITIQUE.md`, and that verdict
+    never re-fires on its own — so once the dashboard *render surface* changes,
+    the Verified stamp is judging an older render. When a render-surface path (the
+    co-located `gen_trajectory.py`, plus the render recipe if present) last
+    changed STRICTLY AFTER the latest CRITIQUE evidence, warn that the perceptual
+    gate is stale and the dashboard critique should be re-run against the current
+    render. Returns warning strings ([] when not applicable).
+
+    WARN-ONLY: never joins the exit code, not even under `--strict` (the WI-129
+    warn-tier-checker stance the sibling staleness/critique ratchets take). Silent
+    off-git and vacuous when the repo declares no perceptual SR, carries no
+    CRITIQUE evidence, or exposes no locatable render surface. Bounded cost: one
+    `git log -1` for the evidence plus one per render-surface path (≤ 2 here)."""
+    critique_srs = _load_critique_srs(root)
+    if not critique_srs:
+        return []
+    evidence = _latest_critique_file(root)
+    if evidence is None:
+        return []
+    try:
+        ev_rel = evidence.relative_to(root).as_posix()
+    except ValueError:
+        ev_rel = REVIEWS_DIR + "/" + evidence.name
+    ev_time = _path_commit_time(root, ev_rel)
+    if ev_time is None:
+        return []  # uncommitted / off-git evidence — no basis, silent
+    newer = [
+        rel
+        for rel in _render_surface_paths(root)
+        if (_path_commit_time(root, rel) or 0) > ev_time
+    ]
+    if not newer:
+        return []
+    return [
+        "perceptual gate stale: {} (Verification=Critique) last judged by {} but "
+        "the dashboard render surface changed after it ({}) — re-run the dashboard "
+        "critique against the current render (the shoot.mjs matrix) and record a "
+        "fresh docs/reviews/*-CRITIQUE.md".format(
+            ";".join(sorted(critique_srs)), ev_rel, ";".join(newer)
+        )
+    ]
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -1638,7 +1727,14 @@ def main():
     # was amended AFTER the WI row was last touched is re-flagged for a driven
     # re-validation. WARN-ONLY: it never joins the exit code, not even under
     # --strict (the WI-129 warn-tier-checker stance); silent off-git.
-    for msg in backlog_staleness_findings(root, wis):
+    # Perceptual re-fire (WI-243) rides the same warn-only emission: a
+    # Verification=Critique SR whose latest CRITIQUE evidence predates a
+    # dashboard render-surface change is judging an older render — re-run the
+    # critique. Both are git-time staleness warns that never join the exit code
+    # (even under --strict) and stay silent off-git.
+    for msg in backlog_staleness_findings(root, wis) + critique_staleness_findings(
+        root
+    ):
         print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
     # The SSOT coherence layer: R-A is always an error; R-E, the
     # run-state currency check, and the unknown-status lint are WARN unless
