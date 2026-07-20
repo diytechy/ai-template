@@ -10505,3 +10505,22 @@ Tailwind class names + aesthetic dogma stripped per spec. **No new test** (the
 rubric is critic-adjudicated prose; the cross-link is already gated by check_docs)
 — the reviewer ruled that legitimate. check_docs 0 broken. Enriches the bar the
 WI-243 re-armed critic judges against.
+
+## 2026-07-20 — WI-245 DONE: EXTERNAL_SKILLS.md curated third-party-skill reference index
+
+Built (`d02a586`) + REVIEW-A opus **APPROVE findings=0**. The independent reviewer
+verified **all 12** license/trust claims against primary sources: transitions.dev
+genuinely carries no license (all-rights-reserved → link-only, correctly SKIPPED);
+taste-skill / ui-ux-pro-max / superpowers / marketingskills / social-media-skills
+all MIT; knowledge-work-plugins Apache-2.0 (the Legal GREEN/YELLOW/RED reviewer-hat
+claim confirmed in `triage-nda/SKILL.md`, not overstated); context7 MIT-client /
+closed-backend; anthropics/skills Apache-2.0 with the four doc skills carrying a
+proprietary `LICENSE.txt` ("all rights reserved… may not reproduce/distribute") —
+so the "source-available, not open-source; do not redistribute" caveat is exactly
+right. No this-repo leakage in the shipped doc; the three intra-`project-trajectory/`
+links resolve (that tree is not check_docs-policed); smoke 973 passed / 3 skipped.
+Deliverable: [`EXTERNAL_SKILLS.md`](../project-trajectory/EXTERNAL_SKILLS.md) — 8
+referenced sources (Source/Role/Format/License/Reference-for) + 4 recorded skips,
+under a mine-don't-install governance (prompt-injection surface; license =
+copy-vs-link; discount star counts), linked from the kit README Contents + the
+skills README plug-in-contract section.
