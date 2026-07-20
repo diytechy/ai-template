@@ -1117,9 +1117,16 @@ def _wi_st(w):
 
 # A stable, sorted-order palette for the per-phase accent (grouping-primary
 # encoding). Deterministic: the i-th sorted phase label takes the i-th color.
+# Eight categorical hues spread around the wheel (was eight near-identical
+# maroon/plum steps — WI-247, 075-CRITIQUE T5: adjacent phases were
+# indistinguishable). Each is dark enough to carry WHITE block text (all >= 4.99:1
+# WCAG, the block-label use) and the set clears the `dataviz` skill's categorical
+# validator on a white surface (chroma floor, adjacent CVD deltaE 20.9, normal-vision
+# 21.7 — `validate_palette.js`). Ordered so consecutive sorted phases sit far apart
+# in hue; coherent with the icicle lanes (indigo #4338ca = SN, emerald #047857 = TC).
 PHASE_ACCENTS = (
-    "#9f1239", "#881337", "#701a75", "#86198f",
-    "#831843", "#9d174d", "#7f1d1d", "#713f12",
+    "#0369a1", "#4d7c0f", "#a21caf", "#b45309",
+    "#4338ca", "#be123c", "#7e22ce", "#047857",
 )  # fmt: skip
 
 # --- SR-089..SR-092 (WI-141): the Simulink-style drill renderer ---------------
@@ -1256,6 +1263,44 @@ DRILL_SCRIPT = (
 )
 
 
+def _drill_block_label(b, col_w, cx, cy):
+    """The centred `<text>` for one drill block. A plain label renders as the bold
+    label line over its sub-label. An `ID — Name` label (the CMP component blocks,
+    "CMP-004 — Unattended loop & floor") WRAPS onto an id line over a name line —
+    the `arch_icicle` id/name idiom (WI-246/075-CRITIQUE T4) — so the full component
+    name reads at default zoom instead of truncating to "CMP-004 — Unattended…"; the
+    sub-label (module count) drops to a third line. The name line uses the smaller
+    sub font, so its budget (and the right-sized column) fit the longest declared name."""
+    fill = b.get("textfill", "var(--text)")
+    head = '<text x="{:.1f}" y="{:.1f}" text-anchor="middle" fill="{}">'.format(
+        cx, cy, fill
+    )
+    if " — " in b["label"]:
+        idpart, namepart = b["label"].split(" — ", 1)
+        nbudget = max(1, (col_w - TIER_COL_PAD) // _BSUB_CH)
+        if len(namepart) > nbudget:
+            namepart = namepart[: nbudget - 1] + "…"
+        return (
+            head
+            + '<tspan x="{:.1f}" dy="-11" class="blab">{}</tspan>'
+            '<tspan x="{:.1f}" dy="11" class="bsub">{}</tspan>'
+            '<tspan x="{:.1f}" dy="11" class="bsub">{}</tspan></text>'.format(
+                cx, esc(idpart), cx, esc(namepart), cx, esc(b["sub"])
+            )
+        )
+    max_label = max(1, (col_w - TIER_COL_PAD) // _BLAB_CH)
+    main_label = b["label"]
+    if len(main_label) > max_label:
+        main_label = main_label[: max_label - 1] + "…"
+    return (
+        head
+        + '<tspan x="{:.1f}" dy="-2" class="blab">{}</tspan>'
+        '<tspan x="{:.1f}" dy="13" class="bsub">{}</tspan></text>'.format(
+            cx, esc(main_label), cx, esc(b["sub"])
+        )
+    )
+
+
 def _drill_layer_svg(blocks, edges):
     """One drill layer as a plain SVG block diagram. Each block is a rectangle with
     an input port (left-middle) and an output port (right-middle); each aggregated
@@ -1311,23 +1356,8 @@ def _drill_layer_svg(blocks, edges):
     for b in blocks:
         x, y = pos[b["key"]]
         cy = y + row_h / 2
-        max_label = max(1, (col_w - TIER_COL_PAD) // _BLAB_CH)
-        main_label = b["label"]
-        if len(main_label) > max_label:
-            main_label = main_label[: max_label - 1] + "…"
-        label = (
-            '<text x="{:.1f}" y="{:.1f}" text-anchor="middle" fill="{}">'
-            '<tspan x="{:.1f}" dy="-2" class="blab">{}</tspan>'
-            '<tspan x="{:.1f}" dy="13" class="bsub">{}</tspan></text>'.format(
-                x + col_w / 2,
-                cy,
-                b.get("textfill", "var(--text)"),
-                x + col_w / 2,
-                esc(main_label),
-                x + col_w / 2,
-                esc(b["sub"]),
-            )
-        )
+        cx = x + col_w / 2
+        label = _drill_block_label(b, col_w, cx, cy)
         ports = (
             '<circle class="port in" cx="{:.1f}" cy="{:.1f}" r="{}"></circle>'
             '<circle class="port out" cx="{:.1f}" cy="{:.1f}" r="{}"></circle>'.format(
