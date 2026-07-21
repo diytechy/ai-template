@@ -10716,3 +10716,17 @@ neighbors, not the absent exemplar). Also exposed a template contradiction:
 linking it as the permanent shape reference and the kit's inert-`-000`
 convention. WI-251's spec now includes the dogfood step (copy both files, fix
 the banner template-side first, `test_dogfood_sync.py` gates the copies).
+
+**Addendum 2 (same sitting) — full-MAPPING self-adoption audit, folded into
+WI-251.** All 91 bootstrap MAPPING targets diffed against this repo: 57 absent,
+most correctly (in-place kit scripts, documented non-goals, absent=disabled
+semantics, test.yml's gate job ≡ check.yml). Two more genuine gaps folded into
+WI-251's dogfood step: `docs/rubrics/README.md`+`rubric-000.md` (7 real rubrics,
+no convention doc/exemplar — the specs pattern again) and `.githooks/commit-msg`
+(the always-on message-secrets floor; only pre-commit is installed). `pre-push`
+ruled OUT (privacy-checked-repo backstop; privacy-check is off here). WI-251
+also gains the standing invariant: `test_dogfood_sync.py` walks
+`bootstrap.MAPPING` against a declared-omissions list so scaffold drift can't
+silently recur. `docs/plan.md` ruled superseded-here (trajectory layer +
+parallel dispatch); its kit-wide fate is a separate design question (owner
+reviewing).
