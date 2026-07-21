@@ -33,6 +33,7 @@ records where each one bites.
 | Write the test first (failing-first TC) | Reviewer | G2 review (ordering can't be mechanized; the TC's existence is checked, its *timing* is judged) |
 | Gates close only on the declared authority | Harness + Prose | `check.py --gate` runs the bar; the human attestation in `docs/log.md` is Prose |
 | Specs act on declared `IF-###` seams (cite resolvable IFs; Proposed carries a rationale) | Harness + Reviewer | `check_trajectory` spec-interface check (warn / ERROR `--strict`, vacuous-until-armed); near-dup honesty is Reviewer (finding 4) |
+| Spec-lifecycle close side: done WI clears `SpecRef`; a live spec has an open citer (archive at close) | Harness + Reviewer | `check_trajectory` R-F (WI-251; warn / ERROR `--strict`) mechanizes the pointers; whether durable spec content was **absorbed** into a spine/architecture home before archiving is Reviewer-tier (the honest gap — the sweep's per-spec dispositions live in `log.md`) |
 
 ## Working-agreement rules (AGENTS.template.md)
 

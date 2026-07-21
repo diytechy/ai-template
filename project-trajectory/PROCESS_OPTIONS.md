@@ -1475,8 +1475,8 @@ uniqueness — integrity, like `trace.py`.
 used to compete — both carried work descriptions, and they drifted. The model
 makes the registry authoritative: **the WI `Deliverable` is backward-only** (what
 shipped) and the forward bridge is a per-WI **`SpecRef`** that lives while the WI
-is open and clears at close. `check_trajectory.py` mechanizes two rules over the
-registry (warn-first at the commit floor; `--strict` gates R-E at G2+):
+is open and clears at close. `check_trajectory.py` mechanizes three rules over the
+registry (warn-first at the commit floor; `--strict` gates R-E/R-F at G2+):
 
 - **R-A** — a WI's `Deliverable` is non-empty **iff** `Status = done`; an open WI
   (queued/active/deferred/blocked) has an **empty** Deliverable. A **hard error at every
@@ -1485,8 +1485,14 @@ registry (warn-first at the commit floor; `--strict` gates R-E at G2+):
 - **R-E** — every **open** WI has a non-empty **`SpecRef`** resolving to an
   in-repo target (`docs/specs/WI-###.md` or a `doc#anchor`; the path part must
   exist). Deeper anchor/path validation rides `check_doc_refs.py`'s path tier.
+- **R-F** (WI-251) — the close side R-E leaves unstated: a **done** WI's
+  `SpecRef` is **empty**, and every live `docs/specs/` file (scaffold
+  README/`-000` exemplars excluded) is cited by ≥1 **open** WI — otherwise it
+  belongs in `docs/archive/specs/`. Prose-only close ritual is skipped by
+  autonomous agents; whether durable spec content was absorbed *before*
+  archiving stays a reviewer-tier judgment (the honest gap).
 
-A placeholder-only/absent registry stays vacuous for both.
+A placeholder-only/absent registry stays vacuous for all three.
 
 **Generated status (the integrator-owned snapshot; WI-180).** `status.md` is not
 an agent resume surface authored session-to-session. Under parallel dispatch it
@@ -1530,7 +1536,8 @@ close** to `docs/archive/specs/` with the close date appended and the WI it was
 attributed to noted (git keeps the history; the `Deliverable` + `log.md` carry the
 summary). Every spec ships a **Done-when checklist**, so a half-complete WI's
 frontier is its **first unticked box**, not prose discipline (ticks are transient
-working state). A shared effort doc archives when its **last** open WI closes.
+working state). A shared effort doc archives when its **last** open WI closes;
+R-F (above) mechanizes both close-side halves.
 
 **Specs act on declared interface boundaries (WI-191).** A spec whose WIs act
 across a module boundary carries an **`## Interfaces` section** citing each seam

@@ -47,7 +47,12 @@ verifies the citations resolve and that a Proposed citation carries a rationale
 `docs/archive/specs/` with the **close date appended** to the filename and the
 **WI id it was attributed to** noted inside — future context, and no live plan
 file can re-grow onto the working surface. A shared effort doc archives (date-
-stamped, WI-attributed) when its **last** open WI closes.
+stamped, WI-attributed) when its **last** open WI closes. This close half is
+**mechanized as rule R-F** (WI-251): `check_trajectory.py` flags a done WI
+whose `SpecRef` is still set and a live spec here that no open WI cites —
+WARN at the commit bar, ERROR under `--strict` (G2+). Verify durable content
+reached its spine/architecture home *before* archiving; that judgment is the
+reviewer's, not the checker's.
 
 ## What a spec is not
 
