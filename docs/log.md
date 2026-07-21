@@ -10686,3 +10686,22 @@ surface.
 075-CRITIQUE.md has a resolved disposition, end to end through an opus
 build+review+rework+re-critique loop. Remaining: OI-4/OI-7 (owner surfaces),
 the deferred backlog, and the merge-to-main sitting for `dualplan-routing-fix`.
+
+## 2026-07-20 — WI-251 filed (spec-lifecycle close-side enforcement); NO spine change
+
+Owner-directed (scratchpad review, ruled this sitting). The spec-of-record
+lifecycle is enforced on the open side only (R-E); the close half —
+"Deliverable filled, `SpecRef` cleared, spec archived" — is prose, and has been
+skipped since the 2026-07-13 campaign closes: **137 done WIs still carry a
+`SpecRef`**, ~60 of 67 `docs/specs/` files belong to closed WIs. Owner
+constraint recorded in the spec: archiving must not orphan knowledge — each
+spec's durable content gets a **living home** (spine / architecture.md /
+interfaces.csv) *before* the file archives; the WI-000 "spine reflects it" box,
+verified retroactively. **WI-251** (queued, strong, high-risk, SR-068,
+[specs/WI-251.md](specs/WI-251.md)): (1) absorb-verify sweep, reviewer-tier per
+spec, then archive + clear; (2) mechanical **R-F** in `check_trajectory` (done
+WI ⇒ empty SpecRef; live spec ⇒ ≥1 open citing WI) routed through the
+strict-promotable loop — WARN at the commit bar, ERROR under `--strict` at
+G2/G3 (the WI-243 fail-closed precedent; downstream migration flagged in the
+spec, opt-out `docs/trajectory-check`). Filing only — registry row + spec +
+status pointer; no code, no spine change.
