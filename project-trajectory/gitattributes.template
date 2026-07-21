@@ -20,6 +20,6 @@
 *.cmd text eol=crlf
 *.bat text eol=crlf
 
-# Generated composites are committed for availability, not change control
-# (Thread 48): suppress their diffs from review and code stats.
+# Generated composites are committed for availability, not change control:
+# suppress their diffs from review and code stats.
 docs/okf/** linguist-generated=true -diff

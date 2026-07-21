@@ -5,6 +5,7 @@ reviewer, so no test touches a real CLI. Absent files keep the legacy behavior
 (covered byte-for-byte by test_agent_loop.py)."""
 
 import csv
+import json
 import subprocess
 import sys
 
@@ -702,3 +703,29 @@ def test_managed_error_session_cools_and_reroutes(managed_repo):
     assert "PROVA-BUILD-1 session outcome=ERROR" in proc.stdout
     assert "cooled" in proc.stdout and "re-routing" in proc.stdout
     assert _models(ctl) == ["builda", "revb"]
+
+
+def test_review_unparseable_verdict_cools_and_reroutes_same_phase(managed_repo):
+    # Repo-review 2026-07-21 H-1: a verdict FILE whose machine line doesn't
+    # parse (a routine LLM garble — wrong keyword, no colon) is neither an
+    # approval nor a burnable round. Fail closed exactly like a missing file:
+    # cool the reviewer and re-route the SAME phase; the round then completes
+    # via the other reviewer's parseable verdict.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("2", encoding="utf-8")
+    bodies = json.loads((ctl / "bodies.json").read_text(encoding="utf-8"))
+    bodies["revb"] = (
+        "- [MAJOR] work.txt:1 -> a real finding -> fix it -> @owner\n"
+        "Approved, ship it! (no machine line)\n"
+    )
+    (ctl / "bodies.json").write_text(json.dumps(bodies), encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "verdict file has no parseable VERDICT line" in proc.stdout
+    assert "re-routing" in proc.stdout
+    reviews = _routes(proc.stdout, "REVIEW-A")
+    assert len(reviews) >= 2  # the SAME phase re-dispatched, not consumed
+    # The round completed via the re-routed reviewer's real verdict.
+    assert "revc" in _models(ctl)
+    assert list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*.md"))

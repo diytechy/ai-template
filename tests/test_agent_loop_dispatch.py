@@ -438,3 +438,28 @@ def test_bad_jobs_value_is_preflight_failure(tmp_path):
     repo, ctl, fake = _setup(tmp_path, [_wi_row("WI-201")])
     proc = _dispatch(repo, fake, ctl, jobs="zero")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
+
+
+def test_lease_worktree_survives_a_hand_deleted_worktree(tmp_path):
+    # Repo-review 2026-07-21 M-32: `git worktree list` keeps naming a directory
+    # deleted by hand until a prune, so leasing the ghost handed Popen a
+    # nonexistent cwd — an uncaught crash with reservations held, repeated on
+    # every relaunch. The lease must prune the stale registration and re-add.
+    import shutil as _shutil
+
+    ad = agent_loop.agent_dispatch
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "loop@example.com")
+    _git(repo, "config", "user.name", "Loop Test")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    _git(repo, "branch", ad.TRAIN_BRANCH_PREFIX + "t9")
+    wt1, err = ad.lease_worktree(repo, "t9")
+    assert err is None and wt1.is_dir()
+    _shutil.rmtree(wt1)
+    wt2, err2 = ad.lease_worktree(repo, "t9")
+    assert err2 is None, err2
+    assert wt2 is not None and wt2.is_dir()  # pruned + freshly re-added

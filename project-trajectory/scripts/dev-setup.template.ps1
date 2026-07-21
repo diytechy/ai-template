@@ -63,6 +63,16 @@ if ($Profile -and -not $Roles.Contains($Profile)) {
 $selected = if ($Profile) { @($Profile) } else { @($Roles.Keys) }
 
 function Have($cmd) { [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
+# Python needs more than Have: on Windows, Get-Command resolves the Microsoft
+# Store app-execution alias for `python`, which sits on PATH but exits nonzero
+# when Python isn't actually installed — so probe by *running* the candidate
+# (the shipped hooks/pre-commit pattern; try/catch keeps stderr noise from
+# terminating under ErrorActionPreference=Stop on Windows PowerShell 5.1).
+function HavePython($cand) {
+    if (-not (Get-Command $cand -ErrorAction SilentlyContinue)) { return $false }
+    try { & $cand -c "import sys" 2>$null | Out-Null } catch { return $false }
+    return ($LASTEXITCODE -eq 0)
+}
 # Interactive only with a real console and outside CI, so -Full never blocks
 # an automated run on a prompt.
 function Interactive { [Environment]::UserInteractive -and -not $env:CI }
@@ -97,7 +107,7 @@ Write-Host "Developer workstation (process.md §7). Product deps are scripts/set
 Write-Host ""
 
 # --- Detect + report ---------------------------------------------------------
-$runtime = (Have "py") -or (Have "python") -or (Have "python3")
+$runtime = (HavePython "py") -or (HavePython "python") -or (HavePython "python3")
 Report "runtime (python)" $runtime "install a Python 3.8+ runtime"
 Report "git" (Have "git") "install git (needed to make reviewable changes)"
 Report "offline Markdown+Mermaid renderer" (RendererPresent) `

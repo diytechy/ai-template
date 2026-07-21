@@ -16,4 +16,4 @@ more reliable than RL reward-shaping for a first working behavior.
 3. Evaluate in sim, then a supervised hardware trial; iterate on failure cases (add targeted demos).
 4. **Done when:** policy succeeds ≥ target rate on held-out starts, in sim and on hardware, with the number reported.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §B3. **Example:** the LeRobot record/train commands there.
+**Knowledge:** the `docs/knowledge/simulation-robot-learning.md` pack (ships only when scaffolded with `--domain hardware`). **Example:** the LeRobot record/train commands there.

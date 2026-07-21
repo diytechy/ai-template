@@ -11,6 +11,12 @@ on:
 permissions:
   contents: read
 
+# One live run per ref: stacked pushes cancel the superseded run instead of
+# queueing five redundant matrix cells behind it (M-27).
+concurrency:
+  group: "test-${{ github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
@@ -27,6 +33,9 @@ jobs:
           - os: macos-latest
             python: "3.8"
     runs-on: ${{ matrix.os }}
+    # The suite spawns coordinator loops/pollers with real timeouts; a wedged
+    # run must never burn GitHub's 360-minute default per matrix cell (M-27).
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -55,6 +64,7 @@ jobs:
   # is a code-quality bar (coverage, lint, trace), not an OS-dependent one.
   gate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0

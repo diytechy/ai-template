@@ -16,4 +16,4 @@ makes everything downstream silently wrong — this is the #1 perception bug, so
 3. Process (PCL/Open3D) and publish results in a named, documented frame.
 4. **Done when:** TF tree verified (paste it), output visualized in RViz in the right frame, latency measured.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §B1.
+**Knowledge:** the `docs/knowledge/perception.md` pack (ships only when scaffolded with `--domain hardware`).

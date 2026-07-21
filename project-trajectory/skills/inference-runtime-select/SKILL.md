@@ -16,4 +16,4 @@ scope: kit
 3. Plan first-load weight caching (Cache API/OPFS on web).
 4. **Done when:** a chosen-runtime + model + memory-budget line is recorded, and a smoke inference runs on the target device.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §A3.
+**Knowledge:** the `docs/knowledge/model-inference.md` pack (ships only when scaffolded with `--domain web`).

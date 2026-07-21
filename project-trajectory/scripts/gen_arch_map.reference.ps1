@@ -322,7 +322,11 @@ foreach ($target in $Doc) {
 
     if ($Check) {
         if ($updated -ne $doc) {
-            Write-Error "Generated regions are stale in $target. Run: pwsh -File scripts/gen_arch_map.ps1"
+            # Stderr directly, not Write-Error: under $ErrorActionPreference =
+            # 'Stop' Write-Error terminates at the FIRST stale doc, so the
+            # accumulate-across-docs report + the final `exit 1` would never
+            # run (the dev-setup.template.ps1 Unknown-Profile pattern).
+            [Console]::Error.WriteLine("Generated regions are stale in $target. Run: pwsh -File scripts/gen_arch_map.ps1")
             $stale = $true
         } else {
             Write-Host "[OK]  Generated regions current in $target"

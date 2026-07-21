@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-REM Stage-0 onboarder (Windows) — the first rung of the onboarding ladder
+REM Stage-0 onboarder (Windows) - the first rung of the onboarding ladder
 REM (process.md section 7):
 REM
 REM     Stage 0  ->  dev-setup  ->  setup  ->  check
@@ -8,13 +8,13 @@ REM     (this)       workstation     deps       gates
 REM
 REM Takes someone from a bare machine to an editable, viewable checkout: it
 REM ensures git, shows a folder picker, clones over HTTPS, then hands off to
-REM dev-setup.ps1. You do NOT need to know git to use it — an AI agent can drive
+REM dev-setup.ps1. You do NOT need to know git to use it - an AI agent can drive
 REM git for you afterward (see the end banner).
 REM
 REM The .cmd extension makes this double-clickable in Explorer. Read it first
 REM (it is meant to be read). It installs nothing without asking and never pipes
 REM code from the internet into a shell. Windows SmartScreen may warn about an
-REM unsigned script — that is expected for a file you downloaded and read.
+REM unsigned script - that is expected for a file you downloaded and read.
 REM
 REM Linux contributors: use onboard.sh.  macOS: use onboard.command.
 
@@ -38,7 +38,7 @@ echo It installs nothing without asking first.
 echo ------------------------------------------------------------------
 set /p "reply=Continue? [y/N] "
 if /i not "!reply!"=="y" (
-  echo Cancelled — nothing was changed.
+  echo Cancelled - nothing was changed.
   goto :end
 )
 
@@ -77,11 +77,11 @@ for /f "usebackq delims=" %%N in (`powershell -NoProfile -Command "[System.IO.Pa
 set "DEST=!DEST_PARENT!\!NAME!"
 
 REM 4. Clone over HTTPS. (Private repo or pushing later: authenticate with the
-REM    host CLI — e.g. `gh auth login` — not hand-rolled SSH keys.)
+REM    host CLI - e.g. `gh auth login` - not hand-rolled SSH keys.)
 echo.
 echo Cloning into: !DEST!
 if exist "!DEST!" (
-  echo That folder already exists — using it as-is (skipping clone).
+  echo That folder already exists - using it as-is (skipping clone).
 ) else (
   git clone "%REPO_URL%" "!DEST!"
 )

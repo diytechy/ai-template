@@ -373,3 +373,49 @@ def test_absent_enable_list_no_critique(critique_repo):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "scheduling CRITIQUE round" not in proc.stdout
     assert not (repo / "docs" / "reviews").exists()
+
+
+# The stock FAKE reads one shared verdict.txt; this variant keys the scripted
+# verdict per model so two critics can disagree within one run.
+FAKE_PER_MODEL = FAKE.replace(
+    '(ctl / "verdict.txt")', '(ctl / ("verdict-" + args.model + ".txt"))'
+)
+
+GARBLED = (
+    "- [MAJOR] art.txt -> B1 seam artifact at the join -> reseat the mesh -> @owner\n"
+    "Approved, looks great! (no machine line)\n"
+)
+
+
+def test_critique_unparseable_verdict_not_treated_as_approved(critique_repo, tmp_path):
+    # Repo-review 2026-07-21 H-1 (the WI-243 "fail closed" lesson one layer
+    # down): a critique verdict FILE with no parseable `VERDICT:` machine line
+    # was previously treated as APPROVED — scope reset, queue cleared. It must
+    # fail closed like a missing file: cool + re-critique; a second enabled
+    # critic then closes the round with a real APPROVE.
+    repo, ctl, cmd = critique_repo
+    (tmp_path / "fake.py").write_text(FAKE_PER_MODEL, encoding="utf-8")
+    (ctl / "verdict-critb.txt").write_text(GARBLED, encoding="utf-8")
+    (ctl / "verdict-critc.txt").write_text(APPROVE, encoding="utf-8")
+    rows = [
+        ["Id", "Provider", "Model", "Version", "Tier", "CmdTemplate", "Notes"],
+        ["PROVA-BUILD-1", "PROVA", "builda", "1", "medium", cmd, ""],
+        ["PROVB-CRIT-1", "PROVB", "critb", "1", "strong", cmd, ""],
+        ["PROVC-CRIT-2", "PROVC", "critc", "1", "strong", cmd, ""],
+    ]
+    with open(
+        str(repo / "docs" / "agents.csv"), "w", encoding="utf-8", newline=""
+    ) as fh:
+        csv.writer(fh).writerows(rows)
+    (repo / "docs" / "agents-enabled").write_text(
+        "PROVA-BUILD-1\nPROVB-CRIT-1\nPROVC-CRIT-2\n", encoding="utf-8"
+    )
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "verdict file has no parseable VERDICT line" in proc.stdout
+    assert "re-critiquing" in proc.stdout
+    # The garble was NOT approved: the round closed via the second critic.
+    assert "critique [PROVC-CRIT-2]: verdict=APPROVE" in proc.stdout
+    models = _models(ctl)
+    assert "critb" in models and "critc" in models

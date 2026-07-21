@@ -119,7 +119,11 @@ _MATURITY_TOKENS = ("preview", "beta", "exp", "ga")
 # own os.environ); a bad value falls back to the default rather than crashing a
 # walk-away run.
 DEFAULT_CONSTANTS = {
-    "margin": 2,  # win-stay/lose-shift: swap the primary feedback source only on >= this
+    # win-stay/lose-shift: swap the primary feedback source only on >= this.
+    # Substance scores are means of [0,1] components, so a round's margin is
+    # bounded by 1.0 — the old integer default of 2 was unreachable and made
+    # the whole win-stay half arithmetic fiction (repo-review 2026-07-21 M-34).
+    "margin": 0.15,
     "swap_after": 2,  # consecutive failed review gates before the implementer family swaps
     "page_top_tier_fails": 2,  # top-tier failed gates before paging the human (shared-failure regime)
 }
@@ -182,6 +186,12 @@ def _utf8_console():
             s.reconfigure(encoding="utf-8")
         except (AttributeError, ValueError):
             pass
+
+
+# The safe shape for a Model cell: letters/digits plus . _ : - / (router ids
+# like `org/model` and `us.anthropic....` stay legal). Anything else — quotes,
+# spaces, %, &, | … — is refused at load (see the check in load_registry).
+MODEL_SLUG_RE = re.compile(r"^[A-Za-z0-9._:/\-]+$")
 
 
 def load_registry(path):
@@ -253,6 +263,20 @@ def load_registry(path):
                 "{}: id {!r} has tier {!r}; expected one of {}".format(
                     path.name, mid, tier, "|".join(TIER_ORDER)
                 )
+            )
+            continue
+        model_cell = cell(row, "Model")
+        if model_cell and not MODEL_SLUG_RE.match(model_cell):
+            # The Model cell rides `{model}` substitution into a session
+            # argv; on Windows a `.cmd`-shim CLI re-parses that line under
+            # cmd.exe, where an embedded quote re-arms `&`/`|` as live
+            # operators (the BatBadBut class). A tracked CSV must not be a
+            # command-injection vector: refuse the row loudly (a preflight
+            # failure under managed routing) — repo-review 2026-07-21 H-4.
+            errors.append(
+                "{}: id {!r} Model {!r} has characters outside "
+                "[A-Za-z0-9._:/-]; refusing (shell-unsafe in a .cmd-shim "
+                "argv)".format(path.name, mid, model_cell)
             )
             continue
         tmpl = cell(row, "CmdTemplate")
@@ -685,8 +709,10 @@ def pool_context(enabled, registry, cooldowns=None, now=0.0):
 
 def load_constants(env=None):
     """The escalation constants: the per-repo-overridable defaults, each read from
-    its env var when set to a valid non-negative int, else the default (a bad
-    value never crashes the run)."""
+    its env var when set to a valid non-negative number — `margin` parses as a
+    float (substance margins live in [0, 1]; the old int()-only parse made 0
+    and the impossible 1 the only reachable overrides, M-34), the counters as
+    ints — else the default (a bad value never crashes the run)."""
     env = os.environ if env is None else env
     out = dict(DEFAULT_CONSTANTS)
     for key, var in _CONST_ENV.items():
@@ -694,7 +720,7 @@ def load_constants(env=None):
         if raw is None:
             continue
         try:
-            val = int(raw)
+            val = float(raw) if key == "margin" else int(raw)
         except (TypeError, ValueError):
             continue
         if val >= 0:

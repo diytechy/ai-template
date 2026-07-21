@@ -73,7 +73,7 @@ mode = symbols
 # composition conflict CONFINED to a generated artifact by REGENERATING it from
 # the cleanly-merged sources instead of parking for a hand-merge — the kit's
 # generated-not-hand-maintained principle applied to the merge. This section
-# DECLARES that set (WI-235): it is the ONE home the integrator reads, so a
+# DECLARES that set: it is the ONE home the integrator reads, so a
 # downstream repo teaches the integrator its own generated artifacts here rather
 # than forking vendored kit code. Each row:
 #   <path> = <kind> [| <BEGIN marker> | <END marker>]

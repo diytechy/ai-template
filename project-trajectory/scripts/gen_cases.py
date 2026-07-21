@@ -243,12 +243,20 @@ def main():
         for c in cases:
             print(param_str(c))
     elif args.format == "csv":
-        # TC rows ready to paste (fill TC-ID / Verifies / Expected).
-        print("TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status")
+        # TC rows ready to paste (fill TC-ID / Verifies / Expected / Evidence).
+        # Header matches registries/test-cases.template.csv exactly — a pasted
+        # row must parse to the registry's column count (trace.py structure
+        # check) and Automated=Yes needs a non-empty Evidence cell at
+        # --strict-schema, hence the fill-me hint.
+        print(
+            "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
+            "Evidence,Status,Phase"
+        )
         for c in cases:
             print(
                 'TC-xxx,{},Unit,{} combination,{},"{}",'
-                '"Satisfies {} AcceptanceCriteria",Yes,Draft'.format(
+                '"Satisfies {} AcceptanceCriteria",Yes,(fill: evidence ref),'
+                "Draft,".format(
                     args.id or "SR-xxx",
                     strategy,
                     args.tier,

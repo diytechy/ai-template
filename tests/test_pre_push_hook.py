@@ -319,6 +319,34 @@ def test_deleting_a_remote_ref_is_not_outgoing_content(repo):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+def test_multi_ref_push_scans_every_ref(repo, tmp_path):
+    # L-14: the reviewer and the lint run INSIDE the hook's while-read over its
+    # own stdin (the ref lines); without the < /dev/null guards a stdin-reading
+    # child ate the remaining lines, so ref 2 of a two-branch push was never
+    # scanned. The reviewer here deliberately slurps stdin after approving
+    # ref 1; the second ref carries a leak the deterministic lint must still
+    # catch — a pre-guard hook exits 0 and ships it.
+    root, base, head = repo
+    set_privacy(root)
+    leaky = commit_file(
+        root, "leak.txt", "creds at C:\\Users\\bobsmith\\secrets\n", "add data"
+    )
+    ran = tmp_path / "reviewer-ran.txt"
+    slurp = make_reviewer(
+        tmp_path,
+        "slurp.sh",
+        'echo ran >> "{}"\ncat >/dev/null\necho APPROVE\n'.format(_posix(ran)),
+    )
+    two_refs = push_line(
+        head, base
+    ) + "refs/heads/feature {} refs/heads/feature {}\n".format(leaky, head)
+    proc = run_hook(root, two_refs, review_cmd=slurp)
+    assert ran.exists(), "the stdin-slurping reviewer must have run for ref 1"
+    assert proc.returncode != 0, "ref 2's leak must still block the push"
+    assert "privacy lint found" in proc.stderr
+    assert "refs/heads/feature" in proc.stderr, "the finding must name ref 2"
+
+
 def test_bootstrap_copies_pre_push_hook(scaffold):
     hook = scaffold / HOOK
     assert hook.exists(), "bootstrap must copy the pre-push hook to .githooks/"

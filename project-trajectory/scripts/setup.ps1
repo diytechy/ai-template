@@ -5,10 +5,17 @@ $ErrorActionPreference = "Stop"
 # Push/Pop so running the script doesn't leave the caller's shell cd'd here.
 Push-Location (Join-Path $PSScriptRoot "..")
 try {
-    # Find a Python launcher.
+    # Find a Python launcher. Probe by *running* each candidate, not just
+    # finding it: on Windows, Get-Command resolves the Microsoft Store
+    # app-execution alias for `python`, which sits on PATH but exits nonzero
+    # when Python isn't actually installed — the same run-probe the shipped
+    # hooks/pre-commit uses (try/catch keeps a noisy stderr from terminating
+    # under ErrorActionPreference=Stop on Windows PowerShell 5.1).
     $py = $null
     foreach ($cand in @("py", "python", "python3")) {
-        if (Get-Command $cand -ErrorAction SilentlyContinue) { $py = $cand; break }
+        if (-not (Get-Command $cand -ErrorAction SilentlyContinue)) { continue }
+        try { & $cand -c "import sys" 2>$null | Out-Null } catch { continue }
+        if ($LASTEXITCODE -eq 0) { $py = $cand; break }
     }
     if (-not $py) { Write-Error "Python 3 not found on PATH."; exit 1 }
     Write-Host "Using $(& $py --version)"

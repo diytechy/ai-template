@@ -1,7 +1,7 @@
 ---
 domains: [hardware]
 researched: 2026-07-09
-source: ClaudeGuardChecks/skill-knowledge-library
+source: curated from a private research library
 ---
 # Kinematics
 
@@ -11,7 +11,7 @@ Curated research pack imported from the staged skill/knowledge library. Verify v
 - **[Modern Robotics (Lynch & Park)](http://modernrobotics.org)** — *the* modern textbook; free
   preprint + **[video lectures](https://modernrobotics.northwestern.edu/nu-gm-book-resource/)** +
   **[code library `NxRLab/ModernRobotics`](https://github.com/NxRLab/ModernRobotics)** (Python/MATLAB).
-  Learn the **screw-theory / Product-of-Exponentials** formulation — twists, wrenches, and the space/body Jacobian. This is the vocabulary gilbert's kinematics should be written in.
+  Learn the **screw-theory / Product-of-Exponentials** formulation — twists, wrenches, and the space/body Jacobian. This is the vocabulary a robotics pilot's kinematics should be written in.
 - **[Pinocchio](https://stack-of-tasks.github.io/pinocchio/)** — fast rigid-body dynamics + kinematics
   (FK, Jacobians, RNEA) in C++/Python; the backbone of modern optimization-based control.
 - **IK solvers:** **[Pink](https://github.com/stephane-caron/pink)** (differential IK on Pinocchio),
@@ -33,8 +33,8 @@ Curated research pack imported from the staged skill/knowledge library. Verify v
 
 ```xml
 <!-- URDF: bind joints to hardware so one description drives sim and real. -->
-<ros2_control name="GilbertArm" type="system">
-  <hardware><plugin>gilbert_hardware/GilbertSystem</plugin></hardware>
+<ros2_control name="ExampleArm" type="system">
+  <hardware><plugin>example_hardware/ExampleSystem</plugin></hardware>
   <joint name="shoulder_pan">
     <command_interface name="position"/>
     <state_interface name="position"/>

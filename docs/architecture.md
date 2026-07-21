@@ -154,6 +154,7 @@ Contracts (interfaces): IF-037, IF-065
 | `substantive_working_tree_dirty(root)` | `working_tree_dirty` minus the FB3 owner-only paths (OWNER_ONLY_PATHS) — |  |
 | `current_state_excerpt(status_path, max_lines)` | The '## Current State' section of a status.md — the root dispatcher's or |  |
 | `bounded_transcript(output)` | Head + capped tail of a session transcript (the tracked-log bound). |  |
+| `redact_secrets(text)` | Best-effort redaction of well-known credential shapes, applied before a |  |
 | `write_session_log(iter_dir, meta, transcript)` | Write the tracked, size-bounded per-session log: a `# key: value` |  |
 | `read_log_meta(path)` | Parse the `# key: value` metadata header of one session log. |  |
 | `per_turn_pace(meta)` | API seconds per turn from a log's header meta — the like-for-like speed |  |
@@ -409,7 +410,7 @@ Contracts (interfaces): IF-004, IF-031
 | Public item | Summary | Implements |
 |---|---|---|
 | `load_budgets(path)` | Real PB rows from the registry (the -000 example row is ignored, like |  |
-| `load_metrics(path)` | Read a {PB-ID: number} JSON map. A value may also be {"value": number}. |  |
+| `load_metrics(path, malformed)` | Read a {PB-ID: number} JSON map. A value may also be {"value": number}. |  |
 | `to_number(s)` |  |  |
 | `parse_tolerance(s)` | ('pct', 0.10) for "10%", ('abs', 5.0) for "5", or None when blank. |  |
 | `direction_of(row)` |  |  |
@@ -417,7 +418,7 @@ Contracts (interfaces): IF-004, IF-031
 | `absolute_breach(measured, budget, direction)` | True when `measured` is worse than `budget` (None budget = no abs check). |  |
 | `regression_limit(baseline, tol, direction)` | The worst value still tolerated relative to `baseline`, or None when a |  |
 | `regression_breach(measured, limit, direction)` |  |  |
-| `evaluate(budgets, metrics, baselines, run_tier)` | Compare each in-tier budget row against its measured value. Returns a list |  |
+| `evaluate(budgets, metrics, baselines, run_tier, malformed)` | Compare each in-tier budget row against its measured value. Returns a list |  |
 | `fmt(n)` |  |  |
 | `delta_str(measured, baseline)` |  |  |
 | `reason(res)` |  |  |
@@ -774,7 +775,7 @@ Contracts (interfaces): IF-020, IF-038
 | `read_declared(path)` | First non-comment, non-blank line lowercased, or "" — the same |  |
 | `decide(tool_name, policy, override)` | Pure decision core for one tool call. | LLR-040, SR-043 |
 | `emit(decision, reason)` | Map a decision to PreToolUse stdout + an exit code, returning the code. |  |
-| `log_decision(root, tool_name, decision, reason)` | Append one tab-separated decision to docs/subagent-gate.log (best-effort; |  |
+| `log_decision(root, tool_name, decision, reason)` | Append one tab-separated decision to out/subagent-gate.log (best-effort; |  |
 | `main(argv)` | Read the PreToolUse payload on stdin, decide, emit, log. Fails OPEN on any | LLR-040, SR-043 |
 
 ### `scripts/trace`
@@ -794,6 +795,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
 | `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Verified` |  |
 | `id_key(label)` |  |  |
+| `id_sort_key(rid)` | Numeric-then-lexical sort key for a registry id, so SR-9 orders before | SR-10, SR-9 |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
 | `sr_supersession_findings(srs)` | Validate the optional SR ``SupersededBy`` extension. |  |
 | `triangle_findings(tcs, llrs)` | SR/LLR citation coherence. A TC may cite an | LLR-1, SR-1, SR-2 |
@@ -801,6 +803,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `placeholder_findings(label, raw_rows)` | Leftover template example rows (ids ending '-000') in one registry. |  |
 | `scan_sn_placeholders(sn_md)` | Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists). |  |
 | `sn_draft_ids(text)` | The set of Draft SN ids in stakeholder-needs.md `text` (section-as-state): |  |
+| `sn_integrity_findings(sn_text)` | Duplicate-id protection for the SN tier — the one tier stored as prose, |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
 | `phase_ratified_findings(real)` | The ratified-phase completeness rule (process.md §4 "Phased delivery"): once |  |
 | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |

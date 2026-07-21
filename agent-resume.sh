@@ -51,20 +51,30 @@ AGENT_PREFER_MAP=""
 # Optional per-phase COMMAND template map (cross-provider routing; pairs
 # with the docs/review-policy reviewer dial), e.g.:
 #   AGENT_CMD_MAP="REVIEW-B=gemini -p {prompt} --model {model}"
-# Empty here: single-provider (every docs/agents.csv row is Family=ANTHROPIC), so
-# every phase uses AGENT_CMD; add a row + entry when a cross-provider CLI exists.
+# Empty here: under managed routing each enabled row's own CmdTemplate drives
+# its launch (docs/agents.csv spans THREE families — ANTHROPIC/claude,
+# OPENAI/codex, OPENCODE/opencode-go — all listed in docs/agents-enabled), so
+# this per-phase override map has nothing to add; AGENT_CMD stays the
+# legacy-path fallback. (Header corrected 2026-07-21 — it wrongly claimed
+# single-provider since WI-160.)
 AGENT_CMD_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):
 AGENT_CMD_INTERACTIVE="claude --model {model} {prompt}"
 # This repo has completed the dispatcher migration audits in docs/parallel-ready,
 # so normal launches use the two-worker dispatcher. Pass --jobs 1 for a serial
 # dispatcher run; an absent slot also boots the dispatcher (WI-210 — the
-# legacy serial driver is retired), defaulting to 2 held at 1 until audited.
-AGENT_JOBS="2"
+# legacy serial driver is retired). An inherited AGENT_JOBS wins over this
+# default, so agent-resume.command's slot is live again (its export was
+# silently overwritten here before — repo-review 2026-07-21 L-22).
+AGENT_JOBS="${AGENT_JOBS:-2}"
 # (The meta-repo resume prompt slot is retired with the serial driver,
 # WI-210: a plain launch is the dispatcher, and worker sessions build
 # their explicit assignments — the repo rules live in CLAUDE.md and the
 # session-protocol skill, which every session already reads.)
+# Per-session wall-clock bound (seconds) so one hung CLI cannot wedge a lane
+# forever — the walk-away guarantee (repo-review 2026-07-21 M-18). Blank to
+# disable (engine default 0 = no timeout). Keep agent-resume.cmd in sync.
+AGENT_SESSION_TIMEOUT="${AGENT_SESSION_TIMEOUT:-7200}"
 # ------------------------------------------------------------------------------
 
 cd "$(dirname "$0")" || exit 1
@@ -82,4 +92,7 @@ PY="$(command -v python3 || command -v python)" || {
 # --root . : in this repo the engine lives under project-trajectory/scripts/,
 # so its script-relative default would resolve to the kit dir, not the repo.
 # Explicit flags come first so anything you pass on the command line wins.
+if [ -n "$AGENT_SESSION_TIMEOUT" ]; then
+  set -- --session-timeout "$AGENT_SESSION_TIMEOUT" "$@"
+fi
 exec "$PY" project-trajectory/scripts/agent_loop.py --root . "$@"

@@ -358,11 +358,14 @@ def test_blackout_present_but_inactive_does_not_block(loop_repo):
     # session runs and the loop reaches DONE (proves the loop reads the file and
     # only waits when actually inside the window).
     repo, ctl, template = loop_repo
-    now = datetime.datetime.utcnow()
-    # A 1-minute window two minutes ahead — never active at loop start, whatever
-    # the wall clock or weekday (an inactive window is a no-op regardless).
-    start = (now + datetime.timedelta(minutes=2)).strftime("%H:%M")
-    end = (now + datetime.timedelta(minutes=3)).strftime("%H:%M")
+    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+    # A 1-minute window THIRTY minutes ahead — never active at loop start,
+    # whatever the wall clock or weekday. (Thirty, not two: on a saturated CI
+    # box a >2-minute stall between computing the window and the loop's check
+    # would put "now" INSIDE the window and wedge the run — repo-review
+    # 2026-07-21 L-17.)
+    start = (now + datetime.timedelta(minutes=30)).strftime("%H:%M")
+    end = (now + datetime.timedelta(minutes=31)).strftime("%H:%M")
     (repo / "docs" / "blackout").write_text(
         "{}-{}\n".format(start, end), encoding="utf-8"
     )
@@ -1862,3 +1865,41 @@ def test_lock_degrades_on_unsupported_filesystem(tmp_path, monkeypatch, capsys):
     assert agent_loop.acquire_lock(lock) is None  # proceeds, unguarded
     assert "without the one-coordinator" in capsys.readouterr().err.lower()
     agent_loop.release_lock(lock)
+
+
+# --- repo-review 2026-07-21 regressions ---------------------------------------
+
+
+def test_read_csv_rows_tolerates_a_bom(tmp_path):
+    # M-23: an Excel-written BOM renamed the first header key to '﻿WI-ID',
+    # so load_wi_registry returned {} while schedule.load_rows (utf-8-sig)
+    # parsed fine — the dispatcher and the worker held two different views of
+    # one registry, and a BOM'd system-requirements.csv silently vacated the
+    # critique gate. The reader must strip the BOM and keep quoted multi-line
+    # cells parseable.
+    ac = load_script("agent_common")
+    p = tmp_path / "work-items.csv"
+    p.write_bytes(b'\xef\xbb\xbfWI-ID,Title,Status\nWI-001,"two\nline title",active\n')
+    rows = ac._read_csv_rows(p)
+    assert rows and rows[0].get("WI-ID") == "WI-001"  # not '﻿WI-ID'
+    assert rows[0]["Title"] == "two\nline title"  # quoted newline survives
+
+
+def test_session_log_redacts_credential_shapes(tmp_path):
+    # M-19: session transcripts are committed to tracked history; well-known
+    # credential shapes must not land there verbatim (a CLI auth error echoing
+    # a key was permanent history with only push-policy in the way).
+    ac = load_script("agent_common")
+    transcript = (
+        "auth failed: invalid x-api-key sk-ant-api03-{}\n"
+        "also: Bearer {} and AKIA{} here\n"
+        "normal line stays intact\n"
+    ).format("A" * 30, "B" * 30, "BCDEFGHIJKLMNOPQ")
+    meta = {"session": "007", "stamp": "test"}
+    path = ac.write_session_log(tmp_path, meta, transcript)
+    text = path.read_text(encoding="utf-8")
+    assert "[REDACTED]" in text
+    assert "sk-ant-api03" not in text
+    assert "AKIA" + "BCDEFGHIJKLMNOPQ" not in text  # split so the floor stays clean
+    assert "normal line stays intact" in text
+    assert "# redacted: 3 credential-shaped token(s)" in text

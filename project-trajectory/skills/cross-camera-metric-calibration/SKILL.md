@@ -24,5 +24,3 @@ PnP that is right only up-to-scale, and detector labels that alias across views.
    and "teddy bear"). Save the overlay as evidence.
 5. **Done when:** feature reprojection ~1 px, cross-projected items land on their counterparts
    (~10 px), and the invalidation rules are written into the resume surface.
-
-**Knowledge:** FIELD-KNOWLEDGE-GILBERT.md §G2.

@@ -250,42 +250,65 @@ def _hard_children(wis):
 
 def downstream_counts(wis):
     """`{id: transitive hard-descendant count}` — how many distinct WIs depend on
-    this one through hard edges (the unblocking-value signal in the order key)."""
+    this one through hard edges (the unblocking-value signal in the order key).
+    Explicit-stack DFS: a recursive walk hit Python's ~1000-frame limit on a
+    long hard chain, crashing the scheduler on exactly the mature registries
+    it exists for (repo-review 2026-07-21 L-23)."""
     children = _hard_children(wis)
     out = {}
-
-    def reach(wid, seen):
-        for c in children[wid]:
-            if c not in seen:
-                seen.add(c)
-                reach(c, seen)
-        return seen
-
     for wid in children:
-        out[wid] = len(reach(wid, set()))
+        seen = set()
+        stack = [wid]
+        while stack:
+            for c in children[stack.pop()]:
+                if c not in seen:
+                    seen.add(c)
+                    stack.append(c)
+        out[wid] = len(seen)
     return out
 
 
 def hard_path_lengths(wis):
     """`{id: remaining hard-path length}` — the longest chain of hard descendants
-    from this WI to a terminal (critical-path signal). Iterative memoized DFS."""
+    from this WI to a terminal (critical-path signal). Iterative memoized DFS —
+    genuinely iterative now (an explicit frame stack): the previous version
+    recursed per edge despite this docstring, so a hard chain deeper than
+    Python's ~1000-frame limit crashed the scheduler (repo-review 2026-07-21
+    L-23). A node already on the current path (a cycle — the validator's
+    error) contributes 1 + 0, exactly as before."""
     children = _hard_children(wis)
     memo = {}
 
-    def depth(wid, stack):
-        if wid in memo:
-            return memo[wid]
-        if wid in stack:  # a cycle — the validator's error; bound it at 0 here
-            return 0
-        stack.add(wid)
-        best = 0
-        for c in children[wid]:
-            best = max(best, 1 + depth(c, stack))
-        stack.discard(wid)
-        memo[wid] = best
-        return best
+    def depth(root_wid):
+        if root_wid in memo:
+            return memo[root_wid]
+        stack = [(root_wid, iter(children[root_wid]))]
+        on_path = {root_wid}
+        best = {root_wid: 0}
+        while stack:
+            wid, it = stack[-1]
+            pushed = False
+            for c in it:
+                if c in memo:
+                    best[wid] = max(best[wid], 1 + memo[c])
+                elif c in on_path:  # cycle: bound the back-edge at 1 + 0
+                    best[wid] = max(best[wid], 1)
+                else:
+                    stack.append((c, iter(children[c])))
+                    on_path.add(c)
+                    best[c] = 0
+                    pushed = True
+                    break
+            if not pushed:
+                stack.pop()
+                on_path.discard(wid)
+                memo[wid] = best[wid]
+                if stack:
+                    parent = stack[-1][0]
+                    best[parent] = max(best[parent], 1 + memo[wid])
+        return memo[root_wid]
 
-    return {wid: depth(wid, set()) for wid in children}
+    return {wid: depth(wid) for wid in children}
 
 
 def order_key(wi, sched_class, downstream, hardpath):

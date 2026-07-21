@@ -275,3 +275,20 @@ def test_derived_phase_none_when_unphased(scaffold):
     # unaffected, exactly like the all-blank --strict-schema case.
     make_minimal_project(scaffold)
     assert _derive(scaffold)["phase"] is None
+
+
+def test_per_phase_resolves_tc_citing_only_its_llr(scaffold):
+    # Repo-review 2026-07-21 M-6: a Draft TC citing only its LLR (a legal shape
+    # the orphan rules accept) dropped the repo's raw min while the per-phase
+    # view stayed green — the phase-drop detector then pointed at nothing. TC
+    # refs now resolve through the LLR->SR map, so the phase bucket sees it.
+    make_minimal_project(scaffold)
+    _write(
+        scaffold,
+        srs=_sr("SR-001", status="Implemented"),
+        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC-001),Implemented\n',
+        tcs='TC-001,LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests,Draft\n',
+    )
+    result = _derive(scaffold)
+    assert result["raw"] == GATE.G0
+    assert result["per_phase"]["(default)"] == "G0"  # was G1/G2 before the fix

@@ -69,7 +69,7 @@ genuinely cannot apply.
 
 ## Draft needs (unratified)
 
-Needs still being drafted (derived-gate model §4a). A row here is **Draft** (G0):
+Needs still being drafted (the derived-gate model — process.md §4). A row here is **Draft** (G0):
 `trace.py` exempts it from the "every SN needs an SR" rule, so it can sit in the
 live registry before its `SR` decomposition exists. **Ratify** a need by moving
 its row up into *Core needs* / *Edge-case expectations* in a reviewed commit — do

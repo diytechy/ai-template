@@ -130,7 +130,10 @@ def _existing_wi_nums(csv_path):
     nums = set()
     if not csv_path.exists():
         return nums
-    with csv_path.open(encoding="utf-8", newline="") as fh:
+    # utf-8-sig: a BOM'd registry (Excel) renamed the first header key, so ZERO
+    # existing ids were found and fresh children minted from WI-001 straight
+    # into collisions (repo-review 2026-07-21 M-33).
+    with csv_path.open(encoding="utf-8-sig", newline="") as fh:
         for r in csv.DictReader(fh):
             m = WI_ID_RE.match((r.get("WI-ID") or "").strip())
             if m:
@@ -142,7 +145,10 @@ def _registry_header(csv_path):
     """Return an existing registry's declared column order or the modern
     template header for an absent/empty registry."""
     if csv_path.exists() and csv_path.stat().st_size:
-        with csv_path.open(encoding="utf-8", newline="") as fh:
+        # utf-8-sig: with a BOM the first header name became "﻿WI-ID" and
+        # DictWriter(extrasaction="ignore") silently DROPPED every row's real
+        # "WI-ID" value — appended rows carried empty id cells (M-33).
+        with csv_path.open(encoding="utf-8-sig", newline="") as fh:
             header = next(csv.reader(fh), [])
         if header:
             return header
@@ -227,6 +233,18 @@ def file_selected_wis(
     if not rows:
         return {}
 
+    # The filer is the last writer before the serialized integration commit, so
+    # it fails closed on damaged input instead of trusting the coverage pass
+    # upstream (which the manual --dual-plan flow can bypass) — repo-review
+    # 2026-07-21 L-29. The caller has a PAGE channel for the ValueError.
+    ids = [r["id"] for r in rows]
+    dupes = sorted({i for i in ids if ids.count(i) > 1})
+    if dupes:
+        raise ValueError(
+            "selected plan repeats Plan-WI id(s) {} — duplicate plan-local ids "
+            "would mint one real WI id for two rows".format(", ".join(dupes))
+        )
+
     existing = _existing_wi_nums(csv_path)
     start = (max(existing) + 1) if existing else 1
     mapping = {r["id"]: "WI-{:03d}".format(start + i) for i, r in enumerate(rows)}
@@ -234,6 +252,14 @@ def file_selected_wis(
     out_rows = []
     for r in rows:
         preds = [mapping.get(tok, tok) for tok in _split_tokens(r["predecessors"])]
+        unknown = [
+            t for t in preds if t not in mapping.values() and not WI_ID_RE.match(t)
+        ]
+        if unknown:
+            raise ValueError(
+                "plan row {} names predecessor token(s) {} that are neither "
+                "plan-local ids nor WI-### shaped".format(r["id"], ", ".join(unknown))
+            )
         if predecessor_wi and predecessor_wi not in preds:
             preds.append(predecessor_wi)
         out_rows.append(

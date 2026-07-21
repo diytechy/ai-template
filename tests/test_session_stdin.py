@@ -166,3 +166,29 @@ def test_run_interactive_pipes_prompt_via_stdin(tmp_path):
         warned_no_core=[],
     )
     assert code == 0  # the child read the piped prompt and saw EOF
+
+
+def test_kill_tree_targets_the_whole_process_tree(monkeypatch):
+    # Repo-review 2026-07-21 H-2: a timeout/interrupt must kill the session's
+    # whole tree, not just the direct child (a .cmd shim's real work lives in a
+    # grandchild). Unit-pin the platform branch: Windows walks the tree via
+    # taskkill /T; POSIX signals the process group.
+    ases = load_script("agent_session")
+    fake = types.SimpleNamespace(pid=4242, killed=[])
+    fake.kill = lambda: fake.killed.append(True)
+    calls = []
+    if os.name == "nt":
+        monkeypatch.setattr(
+            ases.subprocess, "run", lambda argv, **kw: calls.append(argv)
+        )
+        ases._kill_tree(fake)
+        assert calls and calls[0][:4] == ["taskkill", "/F", "/T", "/PID"]
+        assert calls[0][4] == "4242"
+        assert fake.killed  # the direct-child backstop still fires
+    else:
+        monkeypatch.setattr(ases.os, "getpgid", lambda pid: 999)
+        monkeypatch.setattr(
+            ases.os, "killpg", lambda pgid, sig: calls.append((pgid, sig))
+        )
+        ases._kill_tree(fake)
+        assert calls == [(999, ases.signal.SIGKILL)]

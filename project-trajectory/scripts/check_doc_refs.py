@@ -128,7 +128,9 @@ def load_symbol_oracle(arch_path):
     if not arch_path.exists():
         return {}
     oracle, current = {}, None
-    for line in arch_path.read_text(encoding="utf-8").splitlines():
+    for line in arch_path.read_text(
+        encoding="utf-8-sig", errors="replace"
+    ).splitlines():
         m = MOD_HEAD.match(line)
         if m:
             current = m.group(1).replace("\\", "/").split("/")[-1]
@@ -144,7 +146,9 @@ def findings_for(doc, root, oracle):
     out = []
     rel = doc.relative_to(root).as_posix()
     in_generated = False
-    for n, line in enumerate(doc.read_text(encoding="utf-8").splitlines(), 1):
+    for n, line in enumerate(
+        doc.read_text(encoding="utf-8-sig", errors="replace").splitlines(), 1
+    ):
         # Generated marker blocks (the module map, flow diagrams) are not
         # hand-authored prose — their freshness is the generator's --check
         # contract, and their tokens (module names like `src/demo`) are not

@@ -1054,7 +1054,11 @@ def limit_reset_hint(output, data, exit_code):
             return None
         m = LIMIT_RE.search(str(data.get("result", ""))) or LIMIT_RE.search(output)
     elif exit_code != 0:
-        m = LIMIT_RE.search(output)
+        # Plain-text templates: scan only the transcript TAIL (the CLI's own
+        # error surface). A full-transcript scan misread echoed prompt/spec
+        # sentences like "the token limit resets at 9:00" as a throttle and
+        # slept a failed session until then (repo-review 2026-07-21 L-21).
+        m = LIMIT_RE.search("\n".join(output.splitlines()[-15:]))
     else:
         return None
     return m.group(1).strip().rstrip(".") if m else None
@@ -1830,12 +1834,22 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
                 session, phase, reviewed_sha[:7]
             )
             verdict_path.parent.mkdir(parents=True, exist_ok=True)
+            # The path is fully predictable (next session number + the
+            # implementer's own HEAD sha), so an UNCOMMITTED file planted here
+            # before the reviewer runs would be counted as the verdict whenever
+            # the review session errors. The reviewer writes the only file that
+            # counts (repo-review 2026-07-21 M-22; committed plants stay
+            # defeated by the sha-in-name design).
+            if verdict_path.exists():
+                verdict_path.unlink()
             body = reviewer_prompt(prompt_templates, phase, verdict_path)
         elif is_critique:
             verdict_path = reviews_dir / "{}-CRITIQUE-{}.md".format(
                 session, reviewed_sha[:7]
             )
             verdict_path.parent.mkdir(parents=True, exist_ok=True)
+            if verdict_path.exists():  # same pre-plant guard as the review path
+                verdict_path.unlink()
             brief = critique_brief(root, docs, st.critique_scope)
             body = critique_prompt(prompt_templates, verdict_path, brief)
         else:
@@ -1943,7 +1957,18 @@ def session_bookkeeping(
                 Path(verdict_path).read_text(encoding="utf-8", errors="replace"),
                 model=route_family,
             )
-            st.record_review_verdict(phase, v, route_family, route_id)
+            if v.verdict is None:
+                # A verdict file with no parseable `VERDICT:` machine line
+                # (a routine LLM garble) is neither an approval nor a burnable
+                # round: fail closed exactly like a missing file — cool and
+                # re-route the same phase (repo-review 2026-07-21 H-1).
+                st.cool(route_id, now)
+                print(
+                    "route: {} review [{}] verdict file has no parseable "
+                    "VERDICT line; cooled, re-routing".format(route_id, phase)
+                )
+            else:
+                st.record_review_verdict(phase, v, route_family, route_id)
         else:
             # No verdict file (errored, stalled, or the session simply did not
             # write one): cool the model and re-route the same review phase.
@@ -2089,6 +2114,19 @@ def session_bookkeeping(
                     verdict_path,
                 )
             )
+            if not merged:
+                # A verdict file with no parseable `VERDICT:` machine line is
+                # NOT an approval: fail closed exactly like a missing file
+                # (cool + re-critique). Previously the "" fell through to
+                # record_critique_verdict's else branch — scope reset, queue
+                # cleared, silently approved (repo-review 2026-07-21 H-1; the
+                # WI-243 "fail closed" lesson one layer down).
+                st.cool(route_id, now)
+                print(
+                    "critique: {} verdict file has no parseable VERDICT line; "
+                    "cooled, re-critiquing".format(route_id)
+                )
+                return None
             # record_critique_verdict resets critique_rounds on the page path,
             # so capture the exhausted count for the (byte-identical) budget
             # print BEFORE the call — the printed value is the post-increment
@@ -2679,12 +2717,41 @@ def main():
     # Surface a stale/typo'd policy token before the run: if it names a substring
     # that matches none of the models this run could use, the guard is inert.
     possible_models = {m for m in [args.model, *model_map.values()] if m}
+    if managed:
+        # Under managed routing sessions run the ENABLED registry rows' models,
+        # not the env maps — compute the inert check against what will actually
+        # run, or the warning is spurious/silent in exactly the managed mode it
+        # matters for (repo-review 2026-07-21 L-20).
+        possible_models |= {
+            (registry[mid].model or mid) for mid in enabled if mid in registry
+        }
     if guardrails_inert(guardrails_policy, possible_models):
         print(
             "agent_loop: WARNING - guardrails-policy {!r} would guard none of "
             "the configured models ({}); the guard is inert — fix the token or "
             'the model map (process-options.md "Tier-conditional guardrails").'.format(
                 guardrails_policy, ", ".join(sorted(possible_models)) or "none"
+            ),
+            file=sys.stderr,
+        )
+    # A malformed declared policy must not silently disable itself — blackout
+    # and review-policy are consent surfaces like agents-enabled (repo-review
+    # 2026-07-21 M-20). Behavior is unchanged for compat (blackout off /
+    # review-policy lenient-parse); the SILENCE was the defect.
+    blackout_line = read_declared(docs / "blackout", "")
+    if blackout_line and parse_blackout(blackout_line) is None:
+        print(
+            "agent_loop: WARNING - docs/blackout {!r} is malformed (expected "
+            "HH:MM-HH:MM); the blackout window is DISABLED this run.".format(
+                blackout_line
+            ),
+            file=sys.stderr,
+        )
+    if (review_policy or "").strip() not in ("0", "1", "2"):
+        print(
+            "agent_loop: WARNING - docs/review-policy {!r} is not 0|1|2; "
+            "parsed leniently (unparseable -> 1, out-of-range clamped).".format(
+                review_policy
             ),
             file=sys.stderr,
         )

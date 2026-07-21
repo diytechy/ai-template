@@ -24,5 +24,3 @@ non-deterministic authoring order, then a directory glob folding stray test arti
    freeze code (e.g. suppress a lint) just to keep bytes stable — truth outranks hash stability.
 5. **Done when:** an independent party can reconstruct the pinned hash bit-exact from the manifest +
    the log alone (our gate reviewer did exactly this before approving).
-
-**Knowledge:** FIELD-KNOWLEDGE-NOTHOMEWRECKER.md §F2.

@@ -38,7 +38,17 @@ BASELINE = {
     ("agent_common.py", "preflight"): 17,
     ("agent_dispatch.py", "_salvage_round_evidence"): 16,
     ("agent_dispatch.py", "dispatch_run"): 40,
-    ("agent_dispatch.py", "integrate_train"): 16,
+    # Repo-review 2026-07-21 reviewed bumps (each +1..+3, all fail-closed
+    # guards from that review's fix pass — reasons at the marked call sites):
+    # dual_plan_disposition/integrate_train gained the M-28 ValueError
+    # disposition guards; agent_loop main the M-20 malformed-policy warnings;
+    # route_session the M-22 verdict-pre-plant unlinks; session_bookkeeping
+    # the H-1 unparseable-verdict fail-closed branches; load_registry the H-4
+    # Model-slug refusal; run_session the H-2 interrupt kill-tree handler;
+    # sync_agent_skills the M-14 orphan-deletion sweep; run_dual_plan_round
+    # the L-29 unfileable-plan PAGE guard.
+    ("agent_dispatch.py", "dual_plan_disposition"): 11,
+    ("agent_dispatch.py", "integrate_train"): 17,
     ("agent_dispatch.py", "pack_traincars"): 18,
     # WI-230 reviewed bump 17 -> 20: the publish-under-disjoint-dirt rule adds
     # the dirty-vs-diff intersection gate plus the two recovery-branch sync
@@ -46,15 +56,16 @@ BASELINE = {
     # _sync_worktree). WI-226's dispatcher decomposition absorbs this debt.
     ("agent_dispatch.py", "publish_integration"): 20,
     ("agent_loop.py", "critique_brief"): 11,
-    ("agent_loop.py", "main"): 24,
+    ("agent_loop.py", "main"): 27,
     ("agent_loop.py", "map_preflight"): 19,
     ("agent_loop.py", "route_intent"): 13,
-    ("agent_loop.py", "route_session"): 11,
+    ("agent_loop.py", "route_session"): 13,
     ("agent_loop.py", "run_iteration"): 23,
-    ("agent_loop.py", "session_bookkeeping"): 29,
-    ("agent_route.py", "load_registry"): 16,
-    ("agent_session.py", "run_session"): 13,
+    ("agent_loop.py", "session_bookkeeping"): 31,
+    ("agent_route.py", "load_registry"): 17,
+    ("agent_session.py", "run_session"): 14,
     ("bootstrap.py", "main"): 41,
+    ("bootstrap.py", "sync_agent_skills"): 13,
     ("bootstrap.py", "strip_markers"): 14,
     ("check.py", "extra_steps"): 11,
     ("check.py", "main"): 16,
@@ -86,10 +97,12 @@ BASELINE = {
     ("plan_coverage.py", "main"): 12,
     ("plan_round.py", "record"): 29,
     ("plan_runner.py", "dispatch"): 16,
-    ("plan_runner.py", "run_dual_plan_round"): 29,
+    ("plan_runner.py", "run_dual_plan_round"): 30,
     ("trace.py", "analyze"): 50,
     ("trace.py", "mermaid_graph"): 17,
-    ("trace.py", "ratify_lines"): 28,
+    # 28 -> 27: the L-3 ratify bucketing removed a nested scan (re-stamped
+    # downward per the ratchet's improvement rule).
+    ("trace.py", "ratify_lines"): 27,
     ("trace.py", "render_report"): 17,
 }
 

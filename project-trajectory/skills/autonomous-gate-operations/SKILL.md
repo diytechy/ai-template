@@ -26,5 +26,3 @@ defects precisely because the reviewer re-ran everything instead of reading the 
    explicit terminal state ("no pending agent action — do not reopen gates").
 6. **Done when:** an independent reviewer can APPROVE from executions and the written trail alone,
    with zero claims they had to take on faith.
-
-**Knowledge:** FIELD-KNOWLEDGE-NOTHOMEWRECKER.md §F4 (+ §F1/§F2 for the loop and evidence rules).

@@ -212,7 +212,8 @@ This scaffolds:
 
 Then:
 
-1. Fill the **PROJECT BRIEF** in the new repo's `AGENTS.md` and `docs/status.md`.
+1. Fill the new repo's `AGENTS.md` **"Project" section** and `docs/status.md`
+   **Scope** — both seeded from `KICKOFF_PROMPT.md`'s PROJECT BRIEF.
 2. Install the harness tooling for your stack (Python reference: `ruff pytest
    pytest-cov`). Commands are declared once in `docs/stack.ini` — a
    non-Python stack edits that one file.
@@ -305,7 +306,7 @@ a fresh scaffold gets, which way each option toggles, and how this repo is set:
 | `okf-export` | on (no file) | **opt-out** `off` | on (`docs/okf/` committed) |
 | `interfaces-check` | on, warn-first (no file) | **opt-out** `off` | on — declared seams checked |
 | `components-check` | on, warn-first (no file) | **opt-out** `off` | on — 5 components |
-| `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 6 pair rows / 2 families (tiers `strong/medium/quick`; fable plans, opus builds + reviews) |
+| `agents.csv` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 8 pair rows / 3 families (ANTHROPIC / OPENAI / OPENCODE; tiers `strong/medium/quick`; Anthropic-led per tier — Fable strong, Opus medium) |
 | `guardrails-policy` | off (no file) | **opt-in** model-substring allowlist / `all except …` | `off` (no vendored core — reason in the file) |
 | `subagent-gate` | off (no file) | **opt-in** `ask` / `deny` (Claude hook example) | off |
 | `[step:dupes]` + `dupes-allow` | not wired | **opt-in** `stack.ini` step | not wired (deferred) |

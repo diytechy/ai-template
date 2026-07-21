@@ -43,7 +43,7 @@ gates, and the ID scheme. The short version needed every session:
   G3 code gets written — within the traceability spine, not instead of it.
 - **Gates G1→G2→G3→(G-Release)→G-Final close per the declared gate authority**
   (`docs/gate-policy`; default: pause for human approval). Never self-advance
-  a gate; log it in `docs/status.md`.
+  a gate; log it in `docs/log.md`.
 - **The check harness is the bar:** `python scripts/check.py` runs format,
   lint, tests, coverage, traceability, flow checks, and map freshness at the
   repo's active gate (`docs/gate`); `--tier smoke` is the fast subset. Never report a result you didn't run —

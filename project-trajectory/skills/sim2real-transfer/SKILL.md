@@ -16,4 +16,4 @@ policies silently; randomize what you can't identify, identify what you can.
 3. Validate across engines (dual-sim) before hardware.
 4. **Done when:** the policy holds up in a held-out randomized sim *and* a supervised real-robot trial, with the gap quantified.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §B3.
+**Knowledge:** the `docs/knowledge/simulation-robot-learning.md` pack (ships only when scaffolded with `--domain hardware`).

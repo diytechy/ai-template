@@ -63,9 +63,9 @@ resource: "generated"
 | [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache; -… |
 | [TC-051](TC-051.md) | Run the dashboard suite; the Process tab renders its three panels from the live registrie… |
 | [TC-052](TC-052.md) | Run When-view phase/workstream thresholds, delivery-phase labels, and parent-edge aggrega… |
-| [TC-053](TC-053.md) | A fresh, family-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PR… |
-| [TC-054](TC-054.md) | A fresh, family-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PR… |
-| [TC-055](TC-055.md) | A fresh, family-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PR… |
+| [TC-053](TC-053.md) | A fresh, family-heterogeneous CRITIQUE session (SR-084/SR-085 loop) adjudicates the gener… |
+| [TC-054](TC-054.md) | A fresh, family-heterogeneous CRITIQUE session (SR-084/SR-085 loop) adjudicates the gener… |
+| [TC-055](TC-055.md) | A fresh, family-heterogeneous CRITIQUE session (SR-084/SR-085 loop) adjudicates the gener… |
 | [TC-056](TC-056.md) | Run the dashboard suite; the Process tab renders both working loops (intake loop A + huma… |
 | [TC-057](TC-057.md) | Run the dashboard suite; the tiered decomposition views render one horizontal parent->chi… |
 | [TC-058](TC-058.md) | Run schedule.py against a fixture registry; the ready frontier, the exclusions with reaso… |

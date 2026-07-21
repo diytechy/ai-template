@@ -16,4 +16,4 @@ frame/axis errors here are the top root cause of sim-to-real divergence.
 3. Validate: `check_urdf`, visualize in RViz, confirm the TF tree and joint motion match reality.
 4. **Done when:** URDF parses, RViz shows correct geometry/axes, and the same file loads in sim and on hardware.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §B2. **Example:** the `ros2_control` URDF snippet there.
+**Knowledge:** the `docs/knowledge/kinematics.md` pack (ships only when scaffolded with `--domain hardware`). **Example:** the `ros2_control` URDF snippet there.

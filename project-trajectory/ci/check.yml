@@ -17,6 +17,12 @@ on:
 permissions:
   contents: read
 
+# One live run per ref: stacked pushes cancel the superseded run instead of
+# queueing redundant ones behind it.
+concurrency:
+  group: "check-${{ github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   check:
     # Platforms: keep this list in sync with docs/status.md "Supported platforms".
@@ -33,6 +39,9 @@ jobs:
           # - macos-latest      # Apple Silicon (arm64); note: no CPython 3.8 build
           # - windows-latest
     runs-on: ${{ matrix.os }}
+    # Cap a wedged run well under GitHub's 360-minute default; raise it if your
+    # release tier legitimately runs longer.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 

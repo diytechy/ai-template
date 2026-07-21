@@ -1,10 +1,11 @@
 """gen_cases.py: the spec grammar, the pairwise cover, and — critically — that
 every dimensional spec shown in the kit's own docs actually parses."""
 
+import csv
 import itertools
 import re
 
-from conftest import KIT, load_script
+from conftest import KIT, SCRIPTS, load_script, run_py
 
 gen_cases = load_script("gen_cases")
 
@@ -67,3 +68,36 @@ def test_range_interior_points_are_not_boundaries():
     ((_name, values, flags),) = dims
     assert values == ["1", "100", "50"]
     assert flags == [True, True, False]
+
+
+def test_csv_format_matches_shipped_registry_header(tmp_path):
+    # Repo-review 2026-07-21 M-2: the "ready to paste" rows drifted to 9
+    # columns when the registry grew Evidence/Phase — pasted raw they tripped
+    # trace.py's own structure check. Pin the emitted header to the template's
+    # and every row to its column count (the dogfood-sync idea, applied here).
+    template_header = (
+        (KIT / "registries" / "test-cases.template.csv")
+        .read_text(encoding="utf-8")
+        .splitlines()[0]
+    )
+    proc = run_py(
+        [
+            SCRIPTS / "gen_cases.py",
+            "--spec",
+            "a=bool; b=set{x,y}",
+            "--format",
+            "csv",
+            "--id",
+            "SR-001",
+        ],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    lines = proc.stdout.splitlines()
+    assert template_header in lines, proc.stdout
+    data = lines[lines.index(template_header) + 1 :]
+    rows = [r for r in csv.reader(data) if any(cell.strip() for cell in r)]
+    assert rows, proc.stdout
+    expected = len(template_header.split(","))
+    for row in rows:
+        assert len(row) == expected, row

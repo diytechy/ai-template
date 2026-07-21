@@ -16,4 +16,4 @@ constrained decoding to a schema is ~100% valid vs 95–99% for plain function-c
 3. Add a validate-then-retry layer for the residual failures.
 4. **Done when:** a malformed-output test can't get past the boundary (schema rejects it), demonstrated with a pasted failing-then-passing run.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §A3. **Example:** the Outlines snippet there.
+**Knowledge:** the `docs/knowledge/model-inference.md` pack (ships only when scaffolded with `--domain web`). **Example:** the Outlines snippet there.

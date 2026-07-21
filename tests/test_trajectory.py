@@ -583,13 +583,44 @@ def test_open_ids_in_status_are_not_a_finding(tmp_path):
 
 
 def test_generated_marker_stands_the_rule_down(tmp_path):
-    # A status.md carrying the kit's generated-block marker is an integrator
-    # snapshot that cannot accrete prose — the token rule yields (freshness is its
-    # unimplemented successor), so a done id in it does NOT flag, even --strict.
+    # A done id INSIDE a generated block does not flag: the block is spliced by
+    # gen_trajectory --status and its freshness is the status-map byte-compare
+    # step's job, so the token rule yields there (and only there — see the
+    # sibling test below).
     write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
     write_status(
         tmp_path,
         GENERATED_MARKER + "\n- WI-001 (from the registry snapshot)\n"
+        "<!-- END GENERATED TRAJECTORY SNAPSHOT -->\n",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert FORWARD_ONLY not in proc.stderr
+
+
+def test_generated_marker_exempts_only_the_block(tmp_path):
+    # Repo-review 2026-07-21 H-5: the marker used to stand the rule down for
+    # the WHOLE file, leaving the hand-authored remainder of a hybrid
+    # status.md (the WI-234 splice shape) enforced by nothing — exactly where
+    # done-ids accrete (and did, on this repo's own status.md). The block
+    # stays exempt; the remainder stays policed.
+    write_wis_sr(tmp_path, "WI-001,Shipped,scripts,,,done,shipped it,\n")
+    write_status(
+        tmp_path,
+        "## Standing floors just armed\n- WI-001 landed the thing.\n\n"
+        + GENERATED_MARKER
+        + "\n- WI-001 (from the registry snapshot)\n"
+        "<!-- END GENERATED TRAJECTORY SNAPSHOT -->\n",
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert FORWARD_ONLY in strict.stderr and "WI-001" in strict.stderr
+    # And a hybrid file whose hand region is clean stays clean.
+    write_status(
+        tmp_path,
+        "## Next action\n- await the owner.\n\n"
+        + GENERATED_MARKER
+        + "\n- WI-001 (from the registry snapshot)\n"
         "<!-- END GENERATED TRAJECTORY SNAPSHOT -->\n",
     )
     proc = run_traj(tmp_path, "--strict")

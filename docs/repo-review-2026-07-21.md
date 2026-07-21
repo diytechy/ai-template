@@ -23,12 +23,74 @@ fresh.
 
 ## 1. Unfixed items and why
 
-_Filled after the fix pass (this section is updated last; findings below are
-as-found on `0b928ff`)._
+_Filled after the fix pass. Findings below are as-found on `0b928ff`; the fix
+pass landed in the follow-up commit on this branch. Post-fix ground truth:
+full suite **1291 passed / 4 skipped in 332.6 s**, smoke tier **1019 passed /
+3 skipped in 239.7 s** (24-core box, quiet), `ruff` clean, `trace.py` 0
+findings, derived gate G3 fresh, skills copies byte-identical, byte budgets
+re-stamped (PROCESS.md 60,420 / PROCESS_OPTIONS.md 160,655 /
+AGENTS.template.md 9,975 ≤ 10,000)._
 
-**Fixed in this pass:** _(to be filled)_
+**Fixed in this pass** (each with regression tests where behavior changed):
+H-1 (both verdict parse-miss paths fail closed), H-2 (process-tree kill +
+interrupt handler), H-4 (Model-cell slug refusal at registry load — the
+unattended-path injection vector), H-5 (accreted bullet deleted; the
+forward-only guard re-armed scoped to the hand region; docstring +
+enforcement-audit row honest), H-6/H-7 (entry docs + PROCESS_OPTIONS
+contradictions), H-8 (all 21 dead knowledge citations rewired/deleted;
+INDEX + copies regenerated), H-11 (INTERFACES.template vocab/columns/example);
+M-1, M-2, M-3, M-4 (core readers), M-6, M-14, M-15, M-16, M-17 (7 new
+release-checklist tests), M-18 (timeout wired in all launcher slots), M-19
+(transcript redaction), M-20, M-21, M-22, M-23, M-24 (timings re-stamped here,
+in CLAUDE.md, stack.ini, and the session-protocol skill), M-27, M-28, M-30,
+M-32, M-33, M-34 (arithmetic half), M-35 (9-row supersession sweep + OKF/
+dashboard regenerated), M-36, M-37 (launcher headers + README routing row),
+M-38, M-39, M-40, M-41, M-42; L-2, L-3, L-4, L-5, L-11..L-18, L-20..L-23,
+L-25, L-26 (dialect aligned), L-27, L-28, L-29, L-31 (plus the same unquoted-
+comma defect found and fixed in this repo's own `docs/agents.csv`), L-35,
+L-37..L-43; L-1 partial (the false uniformity comment now states the real
+per-script contract). The C901 ratchet BASELINE was re-stamped for nine
+deliberate +1..+3 bumps (each a fail-closed guard above, reasons inline) and
+one improvement (ratify_lines 28→27).
 
-**Deferred, with reasons:** _(to be filled)_
+**Deferred, with reasons:**
+
+- **H-3 (spine-class persistence)** — changes reservation-metadata semantics
+  and integration gating; needs its own reviewed WI with recovery tests, not a
+  drive-by (recommendation 2 stands).
+- **H-9 (gen_trajectory decomposition)** and every render-surface fix —
+  **M-8, M-9, M-11, M-13, L-6, L-7, L-10** — edits to `gen_trajectory.py`
+  re-redden the WI-243 perceptual gate and this repo's own protocol files such
+  work forward as render WIs with a bundled fresh critique (WI-257/258 are
+  already queued; these belong with them). **M-12 and L-8/L-9**
+  (check_trajectory's untracked-critique fail-open, rebase window, lexicographic
+  critique pick) are checker-side kin deferred to the same WI so the gate
+  family changes together, with tests.
+- **H-10 (LICENSE)** — owner decision, correctly parked as OI-4/WI-097.
+- **M-5 (two G3-SR definitions)** — a spec call between trace and derive_gate;
+  decide in the derived-gate model, then pin in test_rule_sync.
+- **M-7 (trace.py internal decomposition), M-25 (test-scaffold consolidation),
+  M-26 (per-module LOC ratchet)** — refactor-sized; schedule as WIs.
+- **M-29 (integrator verdict-gate semantics), M-31 (draw-weight scope),
+  M-34's `next_primary` consumer, L-28's remaining design question (score
+  gaming, M-* F9)** — design calls on review/routing policy; the mechanical
+  halves are done, the policy halves need the owner's ruling.
+- **M-10 (status-map machine-local refs)** — a design decision about what a
+  byte-compared artifact may derive from.
+- **L-19 (3.8 coverage CI leg)** — adds a CI matrix cell (cost); owner call,
+  or record the gap in the enforcement audit.
+- **L-24 (worktree pruning), L-30 (dual-plan prompts delivery), L-36
+  (iteration-index sort), L-44 (run-state end-state), L-45 (`utcnow`
+  deprecation sweep — delicate against the naive-UTC blackout contract)** —
+  WI-sized follow-ups.
+- **L-32 (blackout shipped active; privacy default), L-33 (IF-057
+  ratification), L-34 (archive-anchored WI specs), git author-identity
+  standardization** — owner decisions.
+- **One deliberate WARN left standing:** `check_trajectory` now reports
+  "WI-257 cites SR-052 amended after the WI row was last touched" — the
+  amendment gate reacting to the M-35 citation sweep. The change is
+  citation-only; WI-257's builder should glance and re-affirm the row, which
+  is exactly what the gate is for.
 
 ---
 

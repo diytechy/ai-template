@@ -113,12 +113,20 @@ def run_coverage(goal, plan_paths, root, out_path, plan_key_of):
         argv,
         capture_output=True,
         encoding="utf-8",
+        errors="replace",
         stdin=subprocess.DEVNULL,
     )
     exit_code = proc.returncode
     findings = exit_code == 1
     malformed = exit_code == 2
-    report = out_path.read_text(encoding="utf-8") if out_path.exists() else proc.stdout
+    # A malformed run (exit 2) writes no fresh report — a leftover out_path
+    # from an earlier stage must not masquerade as this run's (repo-review
+    # 2026-07-21 L-28).
+    report = (
+        out_path.read_text(encoding="utf-8")
+        if out_path.exists() and not malformed
+        else proc.stdout
+    )
     implicated = _implicated_plans(proc.stdout, plan_key_of) if findings else []
     return {
         "exit": exit_code,

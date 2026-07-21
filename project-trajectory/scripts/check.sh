@@ -5,10 +5,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-if [ -x .venv/bin/python ]; then
-  PY=.venv/bin/python
-else
-  PY=""
+# Probe both venv layouts (hooks/pre-commit pattern): bin/ is POSIX, Scripts/
+# is what a Windows-created venv has — Git Bash users would otherwise silently
+# skip their venv and run the ambient PATH python.
+PY=""
+for venvpy in .venv/bin/python .venv/Scripts/python.exe; do
+  if [ -x "$venvpy" ]; then PY="$venvpy"; break; fi
+done
+if [ -z "$PY" ]; then
   for cand in python3 python; do
     if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
   done

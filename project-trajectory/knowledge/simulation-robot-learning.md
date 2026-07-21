@@ -1,7 +1,7 @@
 ---
 domains: [hardware]
 researched: 2026-07-09
-source: ClaudeGuardChecks/skill-knowledge-library
+source: curated from a private research library
 ---
 # Simulation & robot learning
 
@@ -35,7 +35,7 @@ Curated research pack imported from the staged skill/knowledge library. Verify v
 
 ```xml
 <!-- MuJoCo MJCF: a one-joint arm segment with a position actuator. -->
-<mujoco model="gilbert_arm">
+<mujoco model="example_arm">
   <worldbody>
     <body name="link1" pos="0 0 0.1">
       <joint name="j1" type="hinge" axis="0 0 1" range="-3.14 3.14"/>
@@ -48,8 +48,8 @@ Curated research pack imported from the staged skill/knowledge library. Verify v
 
 ```bash
 # LeRobot: record teleop demos, then train an imitation policy on them.
-python -m lerobot.record  --robot.type=so101_follower --dataset.repo_id=me/gilbert_pick --dataset.num_episodes=50
-python -m lerobot.scripts.train --policy.type=act --dataset.repo_id=me/gilbert_pick
+python -m lerobot.record  --robot.type=so101_follower --dataset.repo_id=me/example_pick --dataset.num_episodes=50
+python -m lerobot.scripts.train --policy.type=act --dataset.repo_id=me/example_pick
 ```
 
 ### Gotchas

@@ -178,6 +178,70 @@ def test_drifted_copy_fails_and_sync_restores(tmp_path):
     assert good.returncode == 0, good.stdout + good.stderr
 
 
+def test_sync_deletes_dest_files_absent_from_source(tmp_path):
+    # M-14: within the kit-owned <agent>/skills/<name>/ subtree, --sync must
+    # also DELETE a copy file with no source counterpart — --check-agents goes
+    # red on the stray ("file set differs") and prescribes --sync, so --sync
+    # has to be able to fix it. Production commands over the real kit source;
+    # a stray file plus a stray nested subdir (which must be pruned once
+    # emptied).
+    name = "gate-advance"
+    claude = tmp_path / ".claude" / "skills" / name
+    claude.mkdir(parents=True)
+    (claude / "SKILL.md").write_bytes((SOURCE / name / "SKILL.md").read_bytes())
+    (claude / "dropped.md").write_text("no source counterpart\n", encoding="utf-8")
+    (claude / "sub").mkdir()
+    (claude / "sub" / "stray.txt").write_text("gone from source\n", encoding="utf-8")
+
+    bad = run_py(
+        [GEN, "--check-agents", "--source", SOURCE, "--root", tmp_path], cwd=tmp_path
+    )
+    assert bad.returncode != 0, "a stray copy file must fail --check-agents"
+    assert "file set differs" in (bad.stdout + bad.stderr)
+
+    fix = run_py([BOOT, "--dest", tmp_path, "--sync"], cwd=tmp_path)
+    assert fix.returncode == 0, fix.stdout + fix.stderr
+    assert not (claude / "dropped.md").exists(), "--sync must delete the stray file"
+    assert not (claude / "sub").exists(), "--sync must prune the emptied subdir"
+    assert (claude / "SKILL.md").exists(), "the sourced files must survive"
+
+    good = run_py(
+        [GEN, "--check-agents", "--source", SOURCE, "--root", tmp_path], cwd=tmp_path
+    )
+    assert good.returncode == 0, good.stdout + good.stderr
+
+
+def test_sync_deletes_after_source_file_removed(tmp_path, monkeypatch):
+    # The literal deleted-source sequence, in-process over a synthetic kit
+    # (bootstrap's KIT is monkeypatched): materialize a two-file skill, delete
+    # one SOURCE file, re-sync — the dest copy of the deleted file must go,
+    # and the surviving file must stay byte-identical.
+    boot = load_script("bootstrap")
+    kit = tmp_path / "kit"
+    src = kit / "skills" / "alpha"
+    src.mkdir(parents=True)
+    (src / "SKILL.md").write_bytes(b"---\nname: alpha\nscope: kit\n---\nbody\n")
+    (src / "extra.md").write_bytes(b"extra\n")
+    monkeypatch.setattr(boot, "KIT", kit)
+
+    dest = tmp_path / "repo"
+    copy = dest / ".claude" / "skills" / "alpha"
+    copy.mkdir(parents=True)
+    boot.sync_agent_skills(dest, dry_run=False)
+    assert (copy / "extra.md").read_bytes() == b"extra\n"
+
+    (src / "extra.md").unlink()  # the kit skill drops a file
+    refreshed = boot.sync_agent_skills(dest, dry_run=False)
+    assert ".claude/skills/alpha/extra.md" in refreshed
+    assert not (copy / "extra.md").exists(), "re-sync must delete the dest copy"
+    assert (copy / "SKILL.md").read_bytes() == (src / "SKILL.md").read_bytes()
+    # And dry-run only reports, never deletes.
+    (copy / "ghost.md").write_bytes(b"ghost\n")
+    reported = boot.sync_agent_skills(dest, dry_run=True)
+    assert ".claude/skills/alpha/ghost.md" in reported
+    assert (copy / "ghost.md").exists()
+
+
 # --- .agents/ as a first-class bootstrap target: --agents codex --------------
 
 

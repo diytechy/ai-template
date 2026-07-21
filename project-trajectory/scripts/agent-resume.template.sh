@@ -43,9 +43,15 @@ AGENT_CMD_INTERACTIVE=""
 # ships parallel-by-default at two workers. The dispatcher still HOLDS at one
 # worker until this repo's soft-edge + SafetyClass audits pass (a fresh
 # scaffold passes by construction); a repo migrating in from the legacy loop
-# sets AGENT_JOBS=1 here until it signs off (the downstream-resync skill). Set
-# empty to keep the legacy single-session resume loop.
-AGENT_JOBS="2"
+# sets AGENT_JOBS=1 here until it signs off (the downstream-resync skill).
+# An inherited AGENT_JOBS wins over this default; an absent/empty value still
+# boots the dispatcher at its own default (the legacy serial resume driver is
+# retired).
+AGENT_JOBS="${AGENT_JOBS:-2}"
+# Per-session wall-clock bound (seconds) so one hung CLI cannot wedge a lane
+# forever — the walk-away guarantee. Blank to disable (engine default 0 = no
+# timeout). Keep agent-resume.cmd in sync.
+AGENT_SESSION_TIMEOUT="${AGENT_SESSION_TIMEOUT:-7200}"
 # ------------------------------------------------------------------------------
 
 cd "$(dirname "$0")" || exit 1
@@ -60,4 +66,7 @@ export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGEN
 PY="$(command -v python3 || command -v python)" || {
   echo "agent-resume.sh: python3 not found." >&2; exit 1;
 }
+if [ -n "$AGENT_SESSION_TIMEOUT" ]; then
+  set -- --session-timeout "$AGENT_SESSION_TIMEOUT" "$@"
+fi
 exec "$PY" scripts/agent_loop.py "$@"

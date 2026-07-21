@@ -16,4 +16,4 @@ stage-local; an explicit pass structure lets the agent reason about one stage in
 3. Feature-detect WebGPU; provide a WebGL fallback or a clear unsupported state.
 4. **Done when:** it renders at target FPS on the reference device (state the number + device), and each pass is separately toggleable for debugging.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §A2. **Example:** the WebGPU frame-loop skeleton there.
+**Knowledge:** the `docs/knowledge/web-rendering.md` pack (ships only when scaffolded with `--domain web`). **Example:** the WebGPU frame-loop skeleton there.

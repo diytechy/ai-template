@@ -197,7 +197,11 @@ def load_profile(path=PROFILE_FILE):
         return None
     cp = configparser.ConfigParser(interpolation=None)
     try:
-        cp.read_string(path.read_text(encoding="utf-8"), source=str(path))
+        # utf-8-sig + replace: a Notepad BOM must not surface as a confusing
+        # configparser "malformed" error, and a stray byte degrades (C8).
+        cp.read_string(
+            path.read_text(encoding="utf-8-sig", errors="replace"), source=str(path)
+        )
     except configparser.Error as exc:
         sys.exit("check: {} is malformed: {}".format(path, exc))
     return cp

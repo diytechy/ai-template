@@ -515,7 +515,9 @@ def main(argv=None):
         fam = labels[i] if i < len(labels) else None
         verdicts.append(parse_verdict(text, model=fam))
 
-    providers = labels if labels else [None, None]
+    # Pad to the verdict count: two --verdict with one --family used to
+    # IndexError on providers[1 - i] (repo-review 2026-07-21 L-27).
+    providers = (list(labels) + [None] * len(verdicts))[: max(len(verdicts), 2)]
     subs = {}
     for i, v in enumerate(verdicts):
         peer = verdicts[1 - i] if len(verdicts) > 1 else None
@@ -546,6 +548,9 @@ def main(argv=None):
     )
 
     if args.record:
+        # Unlabeled verdicts tally under synthetic "?N" keys; recording those
+        # pollutes the durable scoreboard with placeholder families (L-27).
+        subs = {k: v for k, v in subs.items() if not str(k).startswith("?")}
         margin = 0.0
         primary = None
         if len(subs) == 2:

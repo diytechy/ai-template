@@ -7,7 +7,7 @@ phases: [dev]
 tags: [rendering, gaussian-splatting, 3dgs, gltf, neural-rendering]
 scope: kit
 ---
-**When to use.** Rendering real captured spaces (a likely NotHomeWrecker need). *Why:* splats are
+**When to use.** Rendering real captured spaces (a likely need for a spatial-capture project). *Why:* splats are
 point data with different perf and lighting rules than meshes; naïve integration tanks FPS.
 
 **Procedure.**
@@ -16,4 +16,4 @@ point data with different perf and lighting rules than meshes; naïve integratio
 3. Handle splat-vs-mesh depth/blend order if mixing with lit geometry.
 4. **Done when:** target scene holds target FPS with correct depth ordering; export/author path is glTF-compatible.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §A2 (3DGS paper, Babylon/three.js splat docs, KHR extension).
+**Knowledge:** the `docs/knowledge/web-rendering.md` pack (3DGS paper, Babylon/three.js splat docs, KHR extension; ships only when scaffolded with `--domain web`).

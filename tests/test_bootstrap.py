@@ -116,7 +116,16 @@ def test_workflows_pin_actions_and_reduce_token_permissions(scaffold):
     for workflow in workflows:
         text = workflow.read_text(encoding="utf-8")
         assert "permissions:\n  contents: read" in text, workflow
-        assert not re.search(r"uses: actions/[^@\s]+@v\d+", text), workflow
+        # EVERY `uses:` ref must be pinned to a full 40-hex commit SHA — a bare
+        # `@vN`, `@main`, or an unknown unpinned action all fail (a deleted
+        # action can no longer silently vacate its check).
+        refs = re.findall(r"^\s*-?\s*uses:\s*(\S+)", text, flags=re.MULTILINE)
+        assert refs, "no uses: refs found in {}".format(workflow)
+        for ref in refs:
+            action, sep, pin = ref.partition("@")
+            assert sep and re.fullmatch(r"[0-9a-f]{40}", pin), (
+                "action ref not pinned to a 40-hex SHA: {} in {}".format(ref, workflow)
+            )
         for action, sha in _ACTION_PINS.items():
             if action in text:
                 assert "{}@{}".format(action, sha) in text, workflow
@@ -446,6 +455,24 @@ def test_default_scaffold_leaves_agent_resume_unseeded(scaffold):
     # launchers are discoverable but inert.
     sh = (scaffold / "agent-resume.sh").read_text(encoding="utf-8")
     assert 'AGENT_CMD=""' in sh
+
+
+def test_scaffold_text_writes_are_lf_on_every_platform(tmp_path):
+    # M-15: bootstrap routes every scaffold TEXT write through _write_text_lf,
+    # so a Windows bootstrap cannot emit CRLF scaffolds — above all the seeded
+    # agent-resume.sh, whose CRLF shebang breaks `#!/bin/sh` (the exact trap
+    # the scaffolded .gitattributes documents). One seeded launcher + one
+    # generated/rewritten .md, asserted at the byte level.
+    dest = tmp_path / "repo"
+    proc = run_py(
+        [SCRIPTS / "bootstrap.py", "--dest", dest, "--agents", "claude"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert b"\r" not in (dest / "agent-resume.sh").read_bytes()
+    # status.md is both marker-generated (.md branch) and appended to by
+    # record_agent_choice — CRLF from either write site would land here.
+    assert b"\r" not in (dest / "docs" / "status.md").read_bytes()
 
 
 def test_dry_run_writes_nothing(tmp_path):

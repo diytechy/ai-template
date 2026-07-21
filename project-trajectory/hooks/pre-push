@@ -98,7 +98,10 @@ if [ "$privacy" != "true" ]; then
     else
       range="$remote_sha..$local_sha"
     fi
-    if ! "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --range "$range"; then
+    # < /dev/null: this runs inside the while-read over the hook's OWN stdin
+    # (the ref lines); a child that reads stdin would eat the remaining refs
+    # and silently skip scanning them on a multi-ref push (L-14).
+    if ! "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --range "$range" < /dev/null; then
       echo "pre-push: secrets floor found key/token shapes in the outgoing" >&2
       echo "  range $local_ref ($range). Rewrite LOCAL history before it" >&2
       echo "  publishes, or set docs/secrets-scan to 'off' for a deliberate" >&2
@@ -155,7 +158,9 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   fi
 
   # Layer 1 — deterministic lint over the outgoing history (diffs + messages).
-  if ! "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --range "$range"; then
+  # < /dev/null: inside the while-read over the hook's own stdin, a
+  # stdin-reading child would eat the remaining ref lines (L-14).
+  if ! "$PY" "$SCRIPTS_DIR/check_privacy.py" --root "$REPO_ROOT" --range "$range" < /dev/null; then
     echo "pre-push: privacy lint found patterned leaks in the outgoing range" >&2
     echo "  $local_ref ($range). Rewrite LOCAL history before it publishes —" >&2
     echo "  see process-options.md \"Commit identity & privacy\" (remediation)." >&2
@@ -203,8 +208,10 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   } > "$dump"
 
   # Word-splitting of $reviewer is intended: it is a command template.
+  # < /dev/null: an agent CLI that reads stdin would otherwise consume the
+  # remaining ref lines of a multi-ref push from the hook's stdin (L-14).
   # shellcheck disable=SC2086
-  if out=$($reviewer "$dump" 2>&1); then rc=0; else rc=$?; fi
+  if out=$($reviewer "$dump" < /dev/null 2>&1); then rc=0; else rc=$?; fi
   printf '%s\n' "$out"
   case "$out" in
     *BLOCK*) rc=1 ;;                        # an agent CLI may exit 0 while blocking

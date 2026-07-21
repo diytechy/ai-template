@@ -1782,18 +1782,31 @@ def test_status_legacy_gate_without_basis_falls_back_to_counts(tmp_path):
     assert "SN=1 SR=2 LLR=3 TC=4" in block
 
 
-def test_status_forward_only_guard_stands_down_under_marker(tmp_path):
-    # The WI-200 handoff: check_trajectory's forward-only token rule stands down
-    # once status.md carries the generated marker (the freshness step is the
-    # successor). A `done` WI id in the marked status.md must NOT be an error even
-    # under --strict. Uses an all-done registry so no other --strict rule fires
-    # (R-A wants a Deliverable iff done; R-E wants a SpecRef on OPEN rows only).
+def test_status_forward_only_guard_is_scoped_to_the_generated_block(tmp_path):
+    # The WI-200 handoff, re-scoped by repo-review 2026-07-21 H-5: the marker
+    # exempts ONLY the spliced block (its freshness is the status-map step's
+    # job); the hand-authored remainder of a hybrid status.md stays policed —
+    # the old whole-file stand-down left it enforced by nothing, and this
+    # repo's own status.md promptly accreted done-WI prose. Uses an all-done
+    # registry so no other --strict rule fires (R-A wants a Deliverable iff
+    # done; R-E wants a SpecRef on OPEN rows only).
     coherent = (
         "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
         "WI-002,Harness,scripts,SR-001,WI-001,done,harness green\n"
     )
     make_repo(tmp_path, coherent)
     (tmp_path / "docs" / "gate").write_text(GATE_FILE, encoding="utf-8")
+    # 1) A clean hand region beside the generated block: --strict is clean
+    # (whatever done ids the BLOCK itself carries are the splice's business).
+    (tmp_path / "docs" / "status.md").write_text(STATUS_MARKED, encoding="utf-8")
+    assert gen(tmp_path, "--status").returncode == 0
+    marked = run_py(
+        [SCRIPTS / "check_trajectory.py", "--root", tmp_path, "--strict"], cwd=tmp_path
+    )
+    assert marked.returncode == 0, marked.stdout + marked.stderr
+    assert "forward-only" not in (marked.stdout + marked.stderr)
+    # 2) A done id accreting in the HAND region of the same marked file: a
+    # finding, ERROR under --strict (this was silently clean before H-5).
     (tmp_path / "docs" / "status.md").write_text(
         STATUS_MARKED.replace(
             "hand-authored intent stays here.",
@@ -1802,13 +1815,12 @@ def test_status_forward_only_guard_stands_down_under_marker(tmp_path):
         encoding="utf-8",
     )
     assert gen(tmp_path, "--status").returncode == 0
-    # the marker is present -> the token rule stands down; --strict is clean
-    marked = run_py(
+    hand = run_py(
         [SCRIPTS / "check_trajectory.py", "--root", tmp_path, "--strict"], cwd=tmp_path
     )
-    assert marked.returncode == 0, marked.stdout + marked.stderr
-    assert "forward-only" not in (marked.stdout + marked.stderr)
-    # and prove the guard bites without the marker (removing it re-arms the rule)
+    assert hand.returncode == 1, hand.stdout + hand.stderr
+    assert "forward-only" in hand.stderr and "WI-001" in hand.stderr
+    # 3) Markers stripped entirely: the rule polices the whole file (unchanged).
     stripped = (
         status_text(tmp_path)
         .replace("<!-- BEGIN GENERATED STATUS -->", "")

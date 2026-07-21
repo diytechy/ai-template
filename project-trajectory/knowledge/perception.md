@@ -1,7 +1,7 @@
 ---
 domains: [hardware]
 researched: 2026-07-09
-source: ClaudeGuardChecks/skill-knowledge-library
+source: curated from a private research library
 ---
 # Perception
 

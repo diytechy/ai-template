@@ -1,7 +1,7 @@
 ---
 domains: [web]
 researched: 2026-07-09
-source: ClaudeGuardChecks/skill-knowledge-library
+source: curated from a private research library
 ---
 # Model inference
 
@@ -58,8 +58,8 @@ console.log((await gen("One-line summary:", { max_new_tokens: 64 }))[0].generate
 
 ### Gotchas
 - WebGPU inference can't use the NPU yet (WebLLM/Transformers.js use the GPU); native runtimes can.
-- Quantization below Q4 degrades sharply and *fabricates* (a documented failure — see gilbert B/effort
-  parallels); don't drop precision to fit a too-big model, pick a smaller model.
+- Quantization below Q4 degrades sharply and *fabricates* (a documented failure —
+  seen first-hand in a robotics pilot); don't drop precision to fit a too-big model, pick a smaller model.
 - First browser load downloads hundreds of MB of weights — cache aggressively (Cache API / OPFS).
 
 ---

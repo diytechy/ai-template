@@ -1,7 +1,7 @@
 ---
 domains: [web]
 researched: 2026-07-09
-source: ClaudeGuardChecks/skill-knowledge-library
+source: curated from a private research library
 ---
 # UI & design systems
 
@@ -25,8 +25,8 @@ Curated research pack imported from the staged skill/knowledge library. Verify v
    Take behavior + a11y from a headless primitive, style it with tokens. This is the single biggest
    quality lever for an LLM agent building UI: it can't forget focus-trapping if it never wrote it.
 2. **Design tokens as the single source of truth.** Put color/space/radii/type in one `tokens`
-   file with provenance, and *derive* component styles. (Craft's `tokens.yaml` in the checkout is a
-   good worked example of provenance-stamped tokens.) Changing "primary" in one place must cascade.
+   file with provenance, and *derive* component styles. (A design-system project's
+   provenance-stamped `tokens.yaml` is a good worked example.) Changing "primary" in one place must cascade.
 3. **Accessibility acceptance checklist** (make it a test, not a vibe): keyboard-operable with no
    mouse; visible focus ring; `aria-*` matches the APG pattern; color contrast ≥ 4.5:1 body / 3:1
    large; respects `prefers-reduced-motion` and `prefers-color-scheme`. Automate with axe-core.

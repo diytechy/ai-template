@@ -26,5 +26,3 @@ images); a single APPROVE is a coin flip near the bar.
 5. **Done when:** the recorder (not you) prints converged, the noise-floor caveat is disclosed to the
    human owner, and every probe that guarded a fixed defect class is pinned so it can't silently
    regress.
-
-**Knowledge:** FIELD-KNOWLEDGE-NOTHOMEWRECKER.md §F1.

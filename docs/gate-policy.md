@@ -21,8 +21,9 @@ self-applied (adopted via **WI-107**, `docs/specs/WI-107.md`). Under
 `autonomous`, every gate **except G-Final** closes on an **independent
 fresh-context LLM reviewer's recorded verdict** — no human batch sitting. This
 is config-layer only: **no spine change**, so the flip does **not** move the
-derived gate (`docs/gate` is always whatever `derive_gate.py` computes; it reads
-**G2** today while phase v3 is open). The level governs only WHO ratifies a gate,
+derived gate (`docs/gate` is always whatever `derive_gate.py` computes — the
+level never moves the derived value; read `docs/gate` for the current level
+rather than this register). The level governs only WHO ratifies a gate,
 not what the gate computes. _(The flip's reviewed commit is the owner's
 in-chat directive + this register update, 2026-07-15.)_
 

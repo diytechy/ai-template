@@ -531,8 +531,9 @@ table.
   **holds at `--jobs 1` until two audits pass** — a SafetyClass audit (every
   open WI classified) and a soft-edge audit (signed via `docs/parallel-ready`).
   A fresh scaffold passes both by construction. **The upgrade recipe** (the
-  **downstream-resync skill** walks it): re-sync the kit, run your own §14
-  audits, flip (`AGENT_JOBS=2` in the launchers), then drop any local reliance
+  **downstream-resync skill** walks it): re-sync the kit, run your own
+  migration audits (the SafetyClass + soft-edge audits above), flip
+  (`AGENT_JOBS=2` in the launchers), then drop any local reliance
   on the retired legacy surfaces — the resume-from-`status.md` prompt, a
   hand-set `docs/run-state`, `docs/rework-wi`, `--track`/`docs/tracks/*`
   lanes, and `docs/next-wi`/`docs/run-phase` (the WI DAG + `Priority` are the

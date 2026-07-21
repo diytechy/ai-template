@@ -277,6 +277,72 @@ def test_hook_skips_clearly_when_no_working_python3(scaffold):
     assert "not found" in proc.stderr.lower(), proc.stderr
 
 
+def _shadow_python(scaffold):
+    """A PATH prefix dir whose python3/python fakes exit nonzero (the Store-
+    alias shape the hooks probe for) — sh/git/coreutils stay available."""
+    fakebin = scaffold / "fakebin"
+    fakebin.mkdir()
+    for name in ("python3", "python"):
+        cand = fakebin / name
+        cand.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        cand.chmod(0o755)
+    return dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ.get("PATH", ""))
+
+
+def test_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
+    # M-42: the Python-less exit-0 skip must never silently drop a DECLARED
+    # privacy policy — with docs/privacy-check `true` (parsed in pure sh, the
+    # pre-push pattern) and no working python, the hook REFUSES the skip. The
+    # privacy-off scaffold default keeps the free skip (previous test).
+    sh = shutil.which("sh")
+    if not sh or not shutil.which("git"):
+        import pytest
+
+        pytest.skip("needs a POSIX shell and git on PATH")
+    make_minimal_project(scaffold)
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    env = _shadow_python(scaffold)
+    proc = subprocess.run(
+        [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True, env=env
+    )
+    assert proc.returncode != 0, "privacy-true + no python must FAIL CLOSED"
+    assert "refusing to skip" in proc.stderr.lower(), proc.stderr
+
+
+def test_commit_msg_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
+    # M-42, commit-msg twin: the message scan of a privacy-checked repo must
+    # fail closed rather than skip when no working python is found.
+    sh = shutil.which("sh")
+    if not sh or not shutil.which("git"):
+        import pytest
+
+        pytest.skip("needs a POSIX shell and git on PATH")
+    make_minimal_project(scaffold)
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    (scaffold / "MSG.txt").write_text("an innocent message\n", encoding="utf-8")
+    env = _shadow_python(scaffold)
+
+    def run_msg_hook():
+        return subprocess.run(
+            [sh, ".githooks/commit-msg", "MSG.txt"],
+            cwd=str(scaffold),
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+
+    # Privacy off (scaffold default): the skip stays free.
+    ok = run_msg_hook()
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    assert "not found" in ok.stderr.lower(), ok.stderr
+    # Privacy declared true: fail closed with the named reason.
+    (scaffold / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+    blocked = run_msg_hook()
+    assert blocked.returncode != 0, "privacy-true + no python must FAIL CLOSED"
+    assert "refusing to skip" in blocked.stderr.lower(), blocked.stderr
+
+
 def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):
     # Thread 44: the pre-commit hook now runs the always-on secrets floor for
     # every repo, so a staged credential is blocked before the commit exists —

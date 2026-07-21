@@ -49,12 +49,15 @@ const LANDING = "arch";
 const SCALE = 2; // retina — legible text for an agent reading the PNG back
 
 function pythonExe() {
-  const cands =
+  // Prefer the repo venv, which is a concrete path we can (and must) existence-
+  // check; a bare PATH name can't be existsSync-vetted (it resolves at spawn),
+  // so it is the final fallback, per platform.
+  const venv =
     process.platform === "win32"
-      ? [join(REPO, ".venv", "Scripts", "python.exe"), "python"]
-      : [join(REPO, ".venv", "bin", "python"), "python3", "python"];
-  for (const c of cands) if (c.includes("venv") ? existsSync(c) : true) return c;
-  return "python3";
+      ? join(REPO, ".venv", "Scripts", "python.exe")
+      : join(REPO, ".venv", "bin", "python");
+  if (existsSync(venv)) return venv;
+  return process.platform === "win32" ? "python" : "python3";
 }
 
 function regenerateDashboard() {

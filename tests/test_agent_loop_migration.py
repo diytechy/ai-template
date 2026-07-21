@@ -321,12 +321,18 @@ def test_fresh_scaffold_ships_no_next_wi_or_run_phase_and_parallel_default(tmp_p
     # No retired coordination pointers anywhere in the scaffold.
     assert not (dest / "docs" / "next-wi").exists()
     assert not (dest / "docs" / "run-phase").exists()
-    # The launcher ships parallel-by-default (AGENT_JOBS=2).
+    # The launcher ships parallel-by-default (AGENT_JOBS defaulting to 2 —
+    # inherit-honoring since repo-review 2026-07-21 L-22, so a wrapper's
+    # exported value wins) and a default per-session timeout (M-18).
     sh = (dest / "agent-resume.sh").read_text("utf-8")
-    assert 'AGENT_JOBS="2"' in sh
+    assert 'AGENT_JOBS="${AGENT_JOBS:-2}"' in sh
     assert "export" in sh and "AGENT_JOBS" in sh.split("export", 1)[1]
+    assert 'AGENT_SESSION_TIMEOUT="${AGENT_SESSION_TIMEOUT:-7200}"' in sh
     cmd = (dest / "agent-resume.cmd").read_text("utf-8")
-    assert 'set "AGENT_JOBS=2"' in cmd
+    assert 'if not defined AGENT_JOBS set "AGENT_JOBS=2"' in cmd
+    assert (
+        'if not defined AGENT_SESSION_TIMEOUT set "AGENT_SESSION_TIMEOUT=7200"' in cmd
+    )
 
 
 def test_generated_status_is_marker_gated(tmp_path):

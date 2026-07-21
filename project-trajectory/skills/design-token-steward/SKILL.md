@@ -16,4 +16,4 @@ tokens keep "primary" meaning one thing everywhere and make dark/light + rebrand
 3. Confirm light **and** dark render; confirm nothing else regressed that consumed the old value.
 4. **Done when:** no raw color/space literal in the component diff, and the token resolves in both themes.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §A1 (W3C Design Tokens format, Radix Colors).
+**Knowledge:** the `docs/knowledge/ui-design-systems.md` pack (W3C Design Tokens format, Radix Colors; ships only when scaffolded with `--domain web`).

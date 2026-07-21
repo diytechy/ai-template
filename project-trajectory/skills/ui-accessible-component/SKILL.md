@@ -16,4 +16,4 @@ are where a11y bugs (focus loss, no keyboard, wrong roles) hide, and an agent re
 3. Style only via design tokens (see `design-token-steward`) — no hard-coded colors/spacing.
 4. **Done when:** keyboard-only operable, visible focus, `aria-*` matches the APG pattern, contrast ≥ 4.5:1, `prefers-reduced-motion`/`prefers-color-scheme` respected — verified by an axe-core run pasted into the result, not asserted.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §A1. **Example:** the Base UI dialog snippet there.
+**Knowledge:** the `docs/knowledge/ui-design-systems.md` pack (ships only when scaffolded with `--domain web`). **Example:** the Base UI dialog snippet there.

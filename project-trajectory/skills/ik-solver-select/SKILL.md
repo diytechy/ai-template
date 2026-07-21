@@ -16,4 +16,4 @@ solution; differential vs global is the key fork, and singularity handling is no
 3. Respect joint limits as constraints, not afterthoughts.
 4. **Done when:** the EE reaches targets within tolerance without limit violations or singularity blow-ups (test trajectory logged).
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §B2. **Example:** the Pink differential-IK snippet there.
+**Knowledge:** the `docs/knowledge/kinematics.md` pack (ships only when scaffolded with `--domain hardware`). **Example:** the Pink differential-IK snippet there.

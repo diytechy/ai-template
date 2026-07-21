@@ -25,6 +25,3 @@ plausible-but-wrong theories until a single ray cast named the true object.
    can introduce (per-channel sharpening ⇒ chromatic fringing; fix: luminance-only).
 5. **Done when:** the fixed still is rendered and inspected (not asserted), and a mechanical probe or
    test now guards the defect class.
-
-**Knowledge:** FIELD-KNOWLEDGE-NOTHOMEWRECKER.md §F3 (incl. USD-importer flattening, stamp-based
-matching, exposure targeting, de-tiling and albedo-grunge recipes).

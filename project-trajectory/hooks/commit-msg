@@ -21,6 +21,17 @@ set -e
 # the .githooks/../ fallback — same as pre-commit.
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
+# Fail-closed guard for the skips below (M-42, same as pre-commit): a repo that
+# declared docs/privacy-check `true` must never have its message scan skipped
+# silently — parse the policy in pure sh (the pre-push pattern) and refuse.
+# The trade, recorded: a privacy-checked repo cannot commit without a working
+# Python 3 + findable scripts dir; a non-privacy repo keeps the free skip.
+privacy_declared_true() {
+  [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
+  p=$(grep -v '^[[:space:]]*#' "$REPO_ROOT/docs/privacy-check" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+  [ "$p" = "true" ]
+}
+
 # Find a Python 3 interpreter (same probe as pre-commit: run it, don't just find
 # it — Windows' Store alias resolves on PATH but exits nonzero). No Python =
 # skip, consistent with pre-commit's process-check posture.
@@ -31,6 +42,11 @@ for cand in python3 python; do
   fi
 done
 if [ -z "$PY" ]; then
+  if privacy_declared_true; then
+    echo "commit-msg: docs/privacy-check is true but Python 3 is unavailable —" >&2
+    echo "  the message scan cannot run, so refusing to skip it. FAILING CLOSED." >&2
+    exit 1
+  fi
   echo "commit-msg: Python 3 not found on PATH; skipping message scan." >&2
   exit 0
 fi
@@ -55,6 +71,12 @@ if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
   done
 fi
 if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
+  if privacy_declared_true; then
+    echo "commit-msg: docs/privacy-check is true but the kit scripts dir cannot" >&2
+    echo "  be found (KIT_SCRIPTS_DIR or scripts/), so the message scan cannot" >&2
+    echo "  run — refusing to skip it. FAILING CLOSED." >&2
+    exit 1
+  fi
   echo "commit-msg: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/) under $REPO_ROOT; skipping message scan." >&2
   exit 0
 fi

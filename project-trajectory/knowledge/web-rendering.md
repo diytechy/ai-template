@@ -1,7 +1,7 @@
 ---
 domains: [web]
 researched: 2026-07-09
-source: ClaudeGuardChecks/skill-knowledge-library
+source: curated from a private research library
 ---
 # Web rendering
 
@@ -12,7 +12,7 @@ Curated research pack imported from the staged skill/knowledge library. Verify v
 - **[WebGPU Fundamentals](https://webgpufundamentals.org/)** and **[WebGPU Unleashed (free book)](https://shi-yan.github.io/webgpuunleashed/)** — the two best from-scratch teaching resources (pipelines, bind groups, compute shaders, 2D→3D).
 - **[awesome-webgpu](https://github.com/mikbry/awesome-webgpu)** — curated ecosystem index (engines, tools, tutorials).
 - **[three.js](https://threejs.org/docs/)** / **[Babylon.js](https://doc.babylonjs.com/)** — the two mature scene-graph engines if you don't want to write raw WebGPU. Both now render on WebGPU.
-- **3D Gaussian Splatting** (if NotHomeWrecker captures/renders real spaces): the
+- **3D Gaussian Splatting** (for a spatial-capture project rendering real spaces): the
   **[original 3DGS paper (Kerbl et al., SIGGRAPH 2023)](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)**,
   **[GaussianSplats3D (three.js)](https://github.com/mkkellogg/GaussianSplats3D)**, and
   **[Babylon's Gaussian Splatting docs](https://doc.babylonjs.com/features/featuresDeepDive/mesh/gaussianSplatting/)**.

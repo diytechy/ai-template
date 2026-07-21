@@ -71,6 +71,26 @@ def test_dp_routes_off_when_no_enable_list(tmp_path):
     assert routes is None and registry is None and "routing-off" in note
 
 
+def test_dp_routes_pages_when_enable_list_present_but_registry_broken(tmp_path):
+    # Repo-review 2026-07-21 M-30: the enable-list is the consent surface —
+    # with it PRESENT, a headerless/missing agents.csv must PAGE (the BUILD
+    # workers' preflight posture), never silently drop both hats onto the
+    # ambient template. The non-None registry return is the PAGE trigger.
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "agents-enabled").write_text("A-STRONG\n", encoding="utf-8")
+    (docs / "agents.csv").write_text("not,a,registry\nheader\n", encoding="utf-8")
+    routes, registry, note = al._dp_routes(tmp_path, "strong")
+    assert routes is None
+    assert registry is not None  # the caller PAGEs on this shape
+    assert "agents.csv unreadable/malformed" in note
+    # Missing file entirely: same loud outcome.
+    (docs / "agents.csv").unlink()
+    routes2, registry2, note2 = al._dp_routes(tmp_path, "strong")
+    assert routes2 is None and registry2 is not None
+    assert "agents.csv unreadable/malformed" in note2
+
+
 # --- Bug 2: _dp_session reduces a json/stream-json transcript to result text ---
 
 

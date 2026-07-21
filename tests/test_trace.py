@@ -1158,3 +1158,73 @@ def test_ratified_blank_phase_fails_strict_schema(scaffold):
     assert proc.returncode == 1, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "ratified but its Phase" in report and "TC-001" in report
+
+
+# --- repo-review 2026-07-21 regressions ---------------------------------------
+
+
+def test_require_verified_strips_padded_verification_cell(scaffold):
+    # M-1: a padded '"Test "' cell passed --strict-schema (the enum check
+    # strips) yet was silently skipped by the G3 --require-verified criterion —
+    # a Verification=Test SR that is not Verified produced zero findings.
+    make_minimal_project(scaffold)
+    csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    csv_path.write_text(
+        csv_path.read_text(encoding="utf-8").replace(
+            ",M,Test,Verified", ',M,"Test ",Implemented'
+        ),
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "G3 requires Verified" in proc.stdout
+
+
+def test_strict_failure_prints_findings_to_console(scaffold):
+    # M-3: the gitignored report must not be the only place failing rows
+    # appear — a --strict failure names the rows on stdout (check.py's "print
+    # the real output" bar), capped per class.
+    make_minimal_project(scaffold)
+    csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    text = csv_path.read_text(encoding="utf-8")
+    row = next(ln for ln in text.splitlines() if ln.startswith("SR-001,"))
+    csv_path.write_text(
+        text + row.replace("SR-001", "SR-009", 1) + "\n", encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "FINDING (orphan): SR SR-009" in proc.stdout
+
+
+def test_sn_integrity_flags_duplicate_and_double_state_ids():
+    # L-4: the SN tier (prose registry) gets the duplicate-id protection every
+    # CSV tier already has — repeated table rows, and an id under both a draft
+    # and a non-draft heading (simultaneously exempt and ratified).
+    trace = load_script("trace")
+    text = (
+        "# Needs\n"
+        "|SN-001| a | b | c |\n"
+        "|SN-001| again | b | c |\n"
+        "## Draft candidates\n"
+        "|SN-002| c | d | e |\n"
+        "## Ratified\n"
+        "|SN-002| c2 | d | e |\n"
+        "|SN-000| placeholder | x | y |\n"
+    )
+    found = trace.sn_integrity_findings(text)
+    assert any("SN-001 is duplicated" in f for f in found), found
+    assert any(
+        "SN-002 appears under both a draft and a non-draft heading" in f for f in found
+    ), found
+    assert not any("SN-000" in f for f in found)  # -000 placeholders exempt
+    assert trace.sn_integrity_findings("# Needs\n|SN-001| a |\n") == []
+
+
+def test_integrity_flags_content_row_with_blank_id():
+    # L-5: a row whose id cell alone was deleted must be an integrity finding —
+    # previously it silently vanished from every join and passed the floor.
+    trace = load_script("trace")
+    found = trace.integrity_findings("SR", [{"SR-ID": "", "Title": "lost row"}])
+    assert any("non-empty cells but no SR-ID" in f for f in found), found
+    # Fully blank rows stay a non-finding (a trailing newline is not damage).
+    assert trace.integrity_findings("SR", [{"SR-ID": "", "Title": " "}]) == []

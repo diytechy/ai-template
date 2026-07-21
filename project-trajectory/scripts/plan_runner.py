@@ -88,9 +88,23 @@ def _dp_routes(root, tier):
     import agent_route
 
     enabled = agent_route.load_enabled(root / "docs" / "agents-enabled")
-    registry, _errors = agent_route.load_registry(root / "docs" / "agents.csv")
-    if not enabled or not registry:
+    registry, reg_errors = agent_route.load_registry(root / "docs" / "agents.csv")
+    if not enabled:
         return None, None, "routing-off: one template drives every hat (degraded)"
+    if not registry or reg_errors:
+        # The enable-list is the consent surface: with it PRESENT, a missing/
+        # headerless/all-malformed agents.csv must PAGE loudly (the posture
+        # map_preflight already takes for BUILD workers), never silently drop
+        # both hats onto the ambient template — and a partially-malformed
+        # registry must not silently shrink the pool either (repo-review
+        # 2026-07-21 M-30). The non-None registry return is what makes the
+        # caller PAGE (routing was opted in).
+        return (
+            None,
+            registry,
+            "routing: agents.csv unreadable/malformed with agents-enabled "
+            "present: {}".format("; ".join(reg_errors) or "no parseable rows"),
+        )
     # resolve_enabled returns (ids, errors) — unpack it, or planner_pair iterates
     # the whole tuple as the pool and crashes (TypeError: unhashable list) before
     # any session launches. This routing-ON dual-plan path was never exercised
@@ -233,9 +247,16 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
             if kind == plan_round.STEP_PLAN:
                 crit = _EMPTY_SLOT
             elif kind == plan_round.STEP_REPAIR:
-                crit = (
-                    "MECHANICAL REPAIR ONLY - the coverage pre-pass found:\n"
-                    + coverage_fails
+                # Narrow further to THIS plan's own FAIL lines (the line names
+                # the plan file); the rival's failures are not this hat's
+                # business either (L-28).
+                own_fails = "\n".join(
+                    ln
+                    for ln in coverage_fails.splitlines()
+                    if plan_path[plan].name in ln
+                )
+                crit = "MECHANICAL REPAIR ONLY - the coverage pre-pass found:\n" + (
+                    own_fails or coverage_fails
                 )
             else:
                 crit = critique_text.get(plan, "")
@@ -308,7 +329,17 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                 {plan_path["A"].name: "A", plan_path["B"].name: "B"}.get,
             )
             coverage_report = result["report"]
-            coverage_fails = result.get("stdout") or result["report"]
+            # FAIL lines only: the checker's full stdout also prints both
+            # plans' covered/uncovered sets and the pairwise "only A / only B"
+            # diff — handing that to a planner inside the "mechanical repair"
+            # prompt leaks the rival plan's coverage at the cheapest gaming
+            # point (repo-review 2026-07-21 L-28; independence is the design).
+            raw_out = result.get("stdout") or result["report"] or ""
+            coverage_fails = "\n".join(
+                ln
+                for ln in raw_out.splitlines()
+                if ln.startswith("plan_coverage: FAIL")
+            )
             kwargs = plan_coverage_step.to_record_kwargs(result)
             kwargs["stage"] = stage
             return kwargs, None
@@ -403,13 +434,18 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
     if state["selected"]:
         winner = state["selected"]
         rel_plan = plan_path[winner].relative_to(root).as_posix()
-        mapping = plan_artifacts.file_selected_wis(
-            root,
-            plan_text[winner],
-            rel_plan,
-            (row.get("Workstream") or "unattended").strip() or "unattended",
-            wi,
-        )
+        try:
+            mapping = plan_artifacts.file_selected_wis(
+                root,
+                plan_text[winner],
+                rel_plan,
+                (row.get("Workstream") or "unattended").strip() or "unattended",
+                wi,
+            )
+        except ValueError as exc:
+            # The filer fails closed on damaged plan tables (L-29); a PAGE is
+            # the round's honest outcome, never an uncaught crash.
+            return "PAGE", "selected plan not fileable: {}".format(exc)
         verdict = (
             "# {} verdict - dual-plan round for {} (unattended)\n\n"
             "VERDICT: SELECT plan {} ports={} (both position-swapped runs "

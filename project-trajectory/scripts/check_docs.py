@@ -210,7 +210,7 @@ def blank_fenced(text):
 
 def parse_doc(path):
     """Parse one Markdown file into its outbound links and its anchor set."""
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
     links = []  # (lineno, dest)
     anchors = set()  # slugs/ids this doc exposes as #fragments
     seen = {}  # slug -> count, for GitHub's -1/-2 disambiguation
@@ -465,7 +465,7 @@ def check_vision(docs, root):
     readme = _root_readme(docs, root)
     if readme is None:
         return [], ["no root README.md - {} tag check skipped".format(VISION_TOKEN)]
-    lines = blank_fenced(readme.read_text(encoding="utf-8"))
+    lines = blank_fenced(readme.read_text(encoding="utf-8-sig", errors="replace"))
     n = sum(INLINE_CODE_RE.sub("", line).count(VISION_TOKEN) for line in lines)
     src = rel(readme, root)
     if n == 0:
@@ -490,7 +490,7 @@ def _registry_needs(path):
     A registry with no Priority column yields an empty floor (existence still
     checked) rather than a spurious finding.
     """
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
     all_ids = {s for s in SN_ID_RE.findall(text) if not _is_sn_example(s)}
     must_should = set()
     prio_col = None
@@ -537,7 +537,7 @@ def check_inventory(docs, root, docs_dir):
     readme = _root_readme(docs, root)
     if readme is None:
         return [], []  # the vision check already reports a missing README
-    text = readme.read_text(encoding="utf-8")
+    text = readme.read_text(encoding="utf-8-sig", errors="replace")
     if SN_INVENTORY_OFF_RE.search(text):
         return [], []  # explicit opt-out
     registry = (root / docs_dir / "requirements" / "stakeholder-needs.md").resolve()
@@ -794,7 +794,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default=".", help="repo root (default: .)")
     ap.add_argument(
-        "--docs", default="docs", help="docs subdirectory to scan (default: docs)"
+        "--docs",
+        default="docs",
+        help="docs subdirectory NAME joined under --root (an absolute path also "
+        "works; note trace.py/check_perf.py treat --docs as a standalone path)",
     )
     ap.add_argument(
         "--entry",

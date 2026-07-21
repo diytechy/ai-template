@@ -28,6 +28,17 @@ $ErrorActionPreference = "Stop"
 Push-Location (Split-Path $PSScriptRoot -Parent)
 try {
     function Have($cmd) { [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
+    # Python needs more than Have: on Windows, Get-Command resolves the
+    # Microsoft Store app-execution alias for `python`, which sits on PATH but
+    # exits nonzero when Python isn't actually installed — so probe by
+    # *running* the candidate (the shipped hooks/pre-commit pattern; try/catch
+    # keeps stderr noise from terminating under ErrorActionPreference=Stop on
+    # Windows PowerShell 5.1). Mirrors dev-setup.template.ps1.
+    function HavePython($cand) {
+        if (-not (Get-Command $cand -ErrorAction SilentlyContinue)) { return $false }
+        try { & $cand -c "import sys" 2>$null | Out-Null } catch { return $false }
+        return ($LASTEXITCODE -eq 0)
+    }
     function Report($label, $present, $hint) {
         if ($present) { Write-Host "  [ok]      $label" }
         else { Write-Host "  [missing] $label  — $hint" }
@@ -37,7 +48,7 @@ try {
     # harness will actually import; fall back to the ambient interpreter.
     $py = $null
     if (Test-Path ".venv\Scripts\python.exe") { $py = ".venv\Scripts\python.exe" }
-    else { foreach ($cand in @("py", "python", "python3")) { if (Have $cand) { $py = $cand; break } } }
+    else { foreach ($cand in @("py", "python", "python3")) { if (HavePython $cand) { $py = $cand; break } } }
     function HasModule($mod) {
         if (-not $py) { return $false }
         & $py -c "import importlib.util,sys; sys.exit(0 if importlib.util.find_spec('$mod') else 1)" 2>$null
@@ -61,6 +72,13 @@ try {
         "npm install -g @openai/codex; then: codex login"
     Report "offline Mermaid renderer" ((Have "code") -or (Have "mmdc") -or (Have "npx")) `
         "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
+    # Optional, dev-only (WI-189): the dashboard render-critique loop. NOT
+    # installed by -Install and NOT shipped downstream (the kit's
+    # install-nothing posture governs project-trajectory/scripts, never this
+    # meta tool). See scripts/dashboard-shots/README.md + the
+    # render-dashboard-critique skill. (Same report line as dev-setup.sh.)
+    Report "dashboard shots (optional, meta-only)" (Test-Path "scripts/dashboard-shots/node_modules/playwright") `
+        "cd scripts/dashboard-shots && npm ci && npx playwright install chromium (pinned; dev-only)"
     $hooksPath = (git config --get core.hooksPath 2>$null)
     Report "pre-commit floor (core.hooksPath)" ($hooksPath -eq ".githooks") `
         "run -Install, or: git config core.hooksPath .githooks"

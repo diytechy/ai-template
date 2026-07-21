@@ -16,4 +16,4 @@ and ROS integration; the wrong pick wastes weeks and misleads sim-to-real.
 3. For high stakes, plan dual-sim validation (train Isaac Lab → re-score MuJoCo MJX).
 4. **Done when:** the robot loads and a scripted motion runs in-sim matching the real kinematics.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §B3. **Example:** the MJCF snippet there.
+**Knowledge:** the `docs/knowledge/simulation-robot-learning.md` pack (ships only when scaffolded with `--domain hardware`). **Example:** the MJCF snippet there.

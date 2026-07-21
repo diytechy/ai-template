@@ -96,7 +96,7 @@ def _utf8_console():
 def load_csv(path):
     if not path.exists():
         return []
-    with path.open(newline="", encoding="utf-8-sig") as f:
+    with path.open(newline="", encoding="utf-8-sig", errors="replace") as f:
         return list(csv.DictReader(f))
 
 
@@ -202,7 +202,7 @@ def compute(docs):
     sn_md = docs / "requirements" / "stakeholder-needs.md"
     sn_ids, sn_draft = set(), set()
     if sn_md.exists():
-        text = sn_md.read_text(encoding="utf-8")
+        text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
         sn_ids = {u for u in re.findall(r"\bSN-\d+\b", text) if not is_example(u)}
         sn_draft = sn_draft_ids(text)
 
@@ -266,13 +266,21 @@ def _per_phase(srs, sr_g, llrs, tcs):
     detector (WI-093) can see a phase fall below its closed `[phase]-[g*]` level.
     The `[phase]-[g*]` archetype + the drop warning live in check_trajectory."""
     llr_by_sr = {}
+    llr_srs = {}
     for r in llrs:
         for s in refs(r.get("SR-Refs")):
             llr_by_sr.setdefault(s, []).append(maturity_gate(r))
+            llr_srs.setdefault(r.get("LLR-ID") or "", []).append(s)
+    # A TC that cites only its LLR (a legal shape the orphan rules accept) must
+    # still land in its SR's phase bucket, or a Draft TC in that shape drops the
+    # repo's raw min while every per-phase entry stays green — the phase-drop
+    # detector then points at nothing. Resolve LLR refs to their SR(s); direct
+    # SR refs pass through.
     tc_by_ref = {}
     for r in tcs:
-        for s in refs(r.get("Verifies")):
-            tc_by_ref.setdefault(s, []).append(maturity_gate(r))
+        for ref in refs(r.get("Verifies")):
+            for s in llr_srs.get(ref, [ref]):
+                tc_by_ref.setdefault(s, []).append(maturity_gate(r))
 
     phases = {}
     for r in srs:

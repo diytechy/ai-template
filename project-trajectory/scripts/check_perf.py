@@ -85,9 +85,13 @@ def load_budgets(path):
     return [r for r in rows if r.get("PB-ID") and not r["PB-ID"].endswith("-000")]
 
 
-def load_metrics(path):
+def load_metrics(path, malformed=None):
     """Read a {PB-ID: number} JSON map. A value may also be {"value": number}.
-    Returns None when the file is absent (the 'not measured this run' signal)."""
+    Returns None when the file is absent (the 'not measured this run' signal).
+    Non-numeric entries are dropped from the returned map; when a `malformed`
+    dict is passed, each dropped PB-ID -> raw value is recorded there so the
+    caller can distinguish 'not measured' from 'measured but unusable' — a
+    hard-gated budget must not quietly stop measuring (M-41)."""
     if not path.exists():
         return None
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -96,7 +100,9 @@ def load_metrics(path):
         if isinstance(v, dict):
             v = v.get("value")
         if isinstance(v, bool) or not isinstance(v, (int, float)):
-            continue  # ignore non-numeric / malformed entries
+            if malformed is not None:
+                malformed[k] = v  # present but not a usable number
+            continue
         out[k] = float(v)
     return out
 
@@ -153,9 +159,13 @@ def regression_breach(measured, limit, direction):
     return measured > limit if direction == "lower-better" else measured < limit
 
 
-def evaluate(budgets, metrics, baselines, run_tier):
+def evaluate(budgets, metrics, baselines, run_tier, malformed=None):
     """Compare each in-tier budget row against its measured value. Returns a list
-    of per-row result dicts (status in OK / WARN / FAIL / SKIP)."""
+    of per-row result dicts (status in OK / WARN / FAIL / SKIP). `malformed` is
+    the optional {PB-ID: raw value} map of present-but-non-numeric metric
+    entries (see load_metrics): such a row is a FAIL when Gate=fail (WARN when
+    Gate=warn) — never a silent SKIP (M-41). Only a metric truly absent this
+    run skips."""
     results = []
     for row in budgets:
         pid = row["PB-ID"]
@@ -181,6 +191,11 @@ def evaluate(budgets, metrics, baselines, run_tier):
             "abs_breach": False,
             "reg_breach": False,
         }
+        if measured is None and malformed and pid in malformed:
+            res["malformed"] = malformed[pid]
+            res["status"] = "FAIL" if gate == "fail" else "WARN"
+            results.append(res)
+            continue
         if measured is None:
             res["status"] = "SKIP"
             results.append(res)
@@ -214,6 +229,11 @@ def delta_str(measured, baseline):
 
 def reason(res):
     bits = []
+    if "malformed" in res:
+        bits.append(
+            "metrics file has a non-numeric value {!r} for this row "
+            "(fix the product measurement step)".format(res["malformed"])
+        )
     if res["abs_breach"]:
         worse = "exceeds" if res["direction"] == "lower-better" else "below"
         bits.append(f"{worse} budget {fmt(res['budget'])}{res['unit']}")
@@ -308,7 +328,8 @@ def main():
     baseline_path = args.baseline or docs / "test" / "perf-baseline.json"
     report_path = args.report or docs / "test" / "perf-report.md"
 
-    metrics = load_metrics(Path(metrics_path))
+    malformed = {}
+    metrics = load_metrics(Path(metrics_path), malformed)
 
     if args.update_baseline:
         if not metrics:
@@ -336,7 +357,7 @@ def main():
         return
 
     baselines = load_metrics(Path(baseline_path))
-    results = evaluate(budgets, metrics, baselines, args.tier)
+    results = evaluate(budgets, metrics, baselines, args.tier, malformed)
 
     report = Path(report_path)
     report.parent.mkdir(parents=True, exist_ok=True)
@@ -345,6 +366,13 @@ def main():
     for r in results:
         if r["status"] in ("FAIL", "WARN"):
             print(f"check_perf: {r['status']} - {r['pid']} {r['metric']}: {reason(r)}")
+        elif r["status"] == "SKIP" and r["gate"] == "fail":
+            # A hard-gated budget with no measurement this run stays a SKIP
+            # (absent-metric semantics unchanged), but never a silent one.
+            print(
+                f"check_perf: WARN - {r['pid']} {r['metric']}: Gate=fail but no "
+                "measurement this run - budget not checked (SKIP)"
+            )
     fails = [r for r in results if r["status"] == "FAIL"]
     warns = [r for r in results if r["status"] == "WARN"]
     skips = [r for r in results if r["status"] == "SKIP"]

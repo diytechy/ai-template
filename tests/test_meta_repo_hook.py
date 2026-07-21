@@ -32,3 +32,13 @@ def test_meta_hook_delegates_to_the_shipped_hook():
 def test_shipped_hook_honors_the_kit_scripts_dir_override():
     # The delegation only works if the shipped hook actually reads the override.
     assert "KIT_SCRIPTS_DIR" in SHIPPED.read_text(encoding="utf-8")
+
+
+def test_meta_hook_age_guards_the_coverage_sweep():
+    # L-15: the WI-254 residue sweep must not race a LIVE parallel coverage
+    # run mid-write (the in-use-file WinError-32 class WI-104 closed) — only
+    # stale files are swept, via find -mmin, never an unconditional rm over
+    # every .coverage* at the root.
+    text = META.read_text(encoding="utf-8")
+    assert "-mmin +60" in text, "the sweep must be age-guarded"
+    assert 'rm -f "$ROOT"/.coverage' not in text, "unconditional sweep is back"

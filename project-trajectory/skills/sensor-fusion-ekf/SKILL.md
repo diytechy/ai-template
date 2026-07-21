@@ -16,4 +16,4 @@ scope: kit
 3. Tune process/measurement covariance from real logs (system ID), not guesses.
 4. **Done when:** fused odom is continuous and drift-bounded over a test trajectory (plot pasted).
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §B1. **Example:** the `ekf.yaml` there.
+**Knowledge:** the `docs/knowledge/perception.md` pack (ships only when scaffolded with `--domain hardware`). **Example:** the `ekf.yaml` there.

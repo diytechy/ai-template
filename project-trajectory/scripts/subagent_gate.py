@@ -19,7 +19,7 @@ deliberately-supervised run.
 
 **Fail open with a paper trail:** any error (unreadable payload, missing repo)
 allows the call and logs the reason, because a broken gate must never wedge the
-tools. Every decision appends to `docs/subagent-gate.log`.
+tools. Every decision appends to `out/subagent-gate.log` (gitignored cache).
 
 Materialized per-agent by `bootstrap.py --agents claude` (wired as a PreToolUse
 hook in `.claude/settings.json.example`); the agent-neutral floor stays git+CI.
@@ -109,12 +109,16 @@ def emit(decision, reason):
 
 
 def log_decision(root, tool_name, decision, reason):
-    """Append one tab-separated decision to docs/subagent-gate.log (best-effort;
-    the paper trail must never block a call, so an OSError is swallowed)."""
+    """Append one tab-separated decision to out/subagent-gate.log (best-effort;
+    the paper trail must never block a call, so an OSError is swallowed).
+    out/ is the kit's gitignored cache home: writing under tracked docs/ made
+    every spawn decision substantive working-tree dirt — blocking worker DONE
+    ("a dirty tree is not done") and eventually committing the log as junk
+    (repo-review 2026-07-21 M-21)."""
     try:
-        with open(
-            Path(root) / "docs" / LOG_NAME, "a", encoding="utf-8", newline="\n"
-        ) as handle:
+        out_dir = Path(root) / "out"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        with open(out_dir / LOG_NAME, "a", encoding="utf-8", newline="\n") as handle:
             handle.write("{}\t{}\t{}\n".format(tool_name, decision, reason))
     except OSError:
         pass

@@ -94,7 +94,7 @@ def _utf8_console():
 def load_csv(path):
     if not path.exists():
         return []
-    with path.open(newline="", encoding="utf-8-sig") as f:
+    with path.open(newline="", encoding="utf-8-sig", errors="replace") as f:
         return list(csv.DictReader(f))
 
 
@@ -167,7 +167,7 @@ def structure_findings(path, display=None):
         return []
     name = display or path.name
     out = []
-    with path.open(newline="", encoding="utf-8-sig") as f:
+    with path.open(newline="", encoding="utf-8-sig", errors="replace") as f:
         reader = csv.reader(f)
         header = next(reader, None)
         if header is None:
@@ -386,6 +386,14 @@ def id_key(label):
     return label + "-ID"
 
 
+def id_sort_key(rid):
+    """Numeric-then-lexical sort key for a registry id, so SR-9 orders before
+    SR-10: ids are `<TIER>-<digits>` with no zero-padding contract, so a plain
+    string sort mis-orders once a tier crosses a digit width."""
+    m = re.search(r"\d+", rid or "")
+    return (0, int(m.group()), rid) if m else (1, 0, rid or "")
+
+
 def integrity_findings(label, raw_rows):
     """Duplicated or malformed ids in one registry (example '-000' rows skipped —
     those are the placeholder check's job, never an integrity error)."""
@@ -393,7 +401,14 @@ def integrity_findings(label, raw_rows):
     found, seen = [], set()
     for r in raw_rows:
         rid = r.get(key)
-        if not rid or is_example(rid):
+        if not rid or not rid.strip():
+            # A row with content but a blank id is a live requirement that just
+            # vanished from every join (a one-cell edit slip) — integrity-class,
+            # wrong at any stage. Fully blank rows stay a non-finding.
+            if any((v or "").strip() for k, v in r.items() if k != key):
+                found.append(f"{label} row with non-empty cells but no {key}")
+            continue
+        if is_example(rid):
             continue
         # Duplication is checked FIRST so a repeated id reports "duplicated" even
         # when it is also malformed — otherwise a malformed id seen twice
@@ -591,7 +606,7 @@ def scan_sn_placeholders(sn_md):
     """Sorted unique '-000' SN ids still present in stakeholder-needs.md (if it exists)."""
     if not sn_md.exists():
         return []
-    text = sn_md.read_text(encoding="utf-8")
+    text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
     return sorted({u for u in re.findall(r"\bSN-\d+\b", text) if is_example(u)})
 
 
@@ -621,6 +636,37 @@ def sn_draft_ids(text):
                 if not is_example(u):
                     draft.add(u)
     return draft
+
+
+def sn_integrity_findings(sn_text):
+    """Duplicate-id protection for the SN tier — the one tier stored as prose,
+    and until now the one tier without it (every CSV tier gets
+    integrity_findings). Two shapes are wrong at any stage: an SN id on more
+    than one `|SN-###|` table row (a copy-pasted row; _sn_prose last-wins
+    silently otherwise), and an id under BOTH a draft and a non-draft heading
+    (simultaneously exempt from the child rules and ratified — sn_draft_ids
+    marks it draft, silently exempting a ratified need)."""
+    row_counts = {}
+    draft_rows, ratified_rows = set(), set()
+    in_draft = False
+    for line in sn_text.splitlines():
+        m = _HEADING_RE.match(line)
+        if m:
+            in_draft = "draft" in m.group(1).lower()
+            continue
+        rm = re.match(r"\|\s*(SN-\d+)\s*\|", line)
+        if not rm or is_example(rm.group(1)):
+            continue
+        rid = rm.group(1)
+        row_counts[rid] = row_counts.get(rid, 0) + 1
+        (draft_rows if in_draft else ratified_rows).add(rid)
+    out = []
+    for rid in sorted(row_counts, key=id_sort_key):
+        if row_counts[rid] > 1:
+            out.append(f"SN id {rid} is duplicated ({row_counts[rid]} table rows)")
+    for rid in sorted(draft_rows & ratified_rows, key=id_sort_key):
+        out.append(f"SN id {rid} appears under both a draft and a non-draft heading")
+    return out
 
 
 def schema_findings(label, rows):
@@ -882,6 +928,11 @@ def ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
     then nests each SR's LLRs and TCs with their prose. Deterministic, stdlib-only."""
     sn_meta = sn_meta or {}
     in_scope = _scope_srs(scope, srs)
+    # Bucketed joins (WI-081's _bucket_by_ref), not per-parent refs() rescans —
+    # a phase-scoped ratify over a large registry was the one path still doing
+    # the quadratic O(SR×LLR + LLR×TC) scans the report path already dropped.
+    llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
+    tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
 
     def tc_block(t):
         auto = " · Automated" if _cell(t, "Automated").lower() in ("yes", "y") else ""
@@ -909,9 +960,8 @@ def ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
             out.append("_({})_".format(" · ".join(meta)))
         if _cell(lr, "Detail"):
             out.append(_cell(lr, "Detail"))
-        for t in tcs:
-            if lr["LLR-ID"] in refs(t.get("Verifies")):
-                out += tc_block(t)
+        for t in tcs_by_ref.get(lr["LLR-ID"], []):
+            out += tc_block(t)
         return out
 
     def sr_block(s):
@@ -937,16 +987,15 @@ def ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
         )
         if rubrics:
             out.append("**Rubrics.** {}".format("; ".join(rubrics)))
-        own_llrs = [lr for lr in llrs if sid in refs(lr.get("SR-Refs"))]
+        own_llrs = llrs_by_sr.get(sid, [])
         own_ids = {lr["LLR-ID"] for lr in own_llrs}
         for lr in own_llrs:
             out += llr_block(lr)
         # TCs verifying the SR directly (not via one of its LLRs).
-        for t in tcs:
-            v = set(refs(t.get("Verifies")))
-            if sid in v and not v & own_ids:
+        for t in tcs_by_ref.get(sid, []):
+            if not set(refs(t.get("Verifies"))) & own_ids:
                 out += tc_block(t)
-        if not own_llrs and not any(sid in refs(t.get("Verifies")) for t in tcs):
+        if not own_llrs and not tcs_by_ref.get(sid):
             out.append("_(no LLR/TC yet)_")
         return out
 
@@ -964,11 +1013,11 @@ def ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
         return lines
     # Group under the SR's primary (first) SN ref; SRs with no SN ref group last.
     by_sn = {}
-    for s in sorted(in_scope, key=lambda r: id_key(r["SR-ID"])):
+    for s in sorted(in_scope, key=lambda r: id_sort_key(r["SR-ID"])):
         sn_refs = [x for x in refs(s.get("SN-Refs")) if x in sn_ids]
         key = sn_refs[0] if sn_refs else None
         by_sn.setdefault(key, []).append(s)
-    ordered = [k for k in sorted(k for k in by_sn if k)] + (
+    ordered = sorted((k for k in by_sn if k), key=id_sort_key) + (
         [None] if None in by_sn else []
     )
     for sn in ordered:
@@ -1191,14 +1240,19 @@ def load_registries(docs):
     sn_ids = set()
     sn_draft = set()
     sn_meta = {}
+    sn_integrity = []
     sn_md = docs / "requirements" / "stakeholder-needs.md"
     if sn_md.exists():
-        sn_text = sn_md.read_text(encoding="utf-8")
+        # utf-8-sig + replace: a BOM must not glue to line 1 (defeating the
+        # heading regexes) and one stray cp1252 byte must degrade, not crash
+        # the gate chain (the C8 convention, applied to content reads too).
+        sn_text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
         sn_ids = {u for u in re.findall(r"\bSN-\d+\b", sn_text) if not is_example(u)}
         # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
         # are unratified (G0) and exempt from the "SN with no SR" child rule below.
         sn_draft = sn_draft_ids(sn_text)
         sn_meta = _sn_prose(sn_text)
+        sn_integrity = sn_integrity_findings(sn_text)
     reg = Registries()
     reg.raw_srs, reg.raw_llrs, reg.raw_tcs = raw_srs, raw_llrs, raw_tcs
     reg.raw_pbs, reg.raw_repos, reg.raw_mods = raw_pbs, raw_repos, raw_mods
@@ -1208,6 +1262,7 @@ def load_registries(docs):
     reg.mods, reg.parts, reg.assets = mods, parts, assets
     reg.cmps, reg.ifs = cmps, ifs
     reg.sn_ids, reg.sn_draft, reg.sn_meta, reg.sn_md = sn_ids, sn_draft, sn_meta, sn_md
+    reg.sn_integrity = sn_integrity
     reg.docs = docs
     return reg
 
@@ -1428,16 +1483,19 @@ def analyze(reg, args):
     mechanized_verified = [
         r["SR-ID"]
         for r in srs
-        if is_verified(r) and r.get("Verification", "") not in ATTESTED_METHODS
+        if is_verified(r)
+        and (r.get("Verification") or "").strip() not in ATTESTED_METHODS
     ]
     attested_verified = [
         r["SR-ID"]
         for r in srs
-        if is_verified(r) and r.get("Verification", "") in ATTESTED_METHODS
+        if is_verified(r) and (r.get("Verification") or "").strip() in ATTESTED_METHODS
     ]
     if args.require_verified:
         for r in srs:
-            if r.get("Verification", "") != "Test":
+            # Stripped like llr_exempt/schema read the same cell (review 017's
+            # bug class): a padded "Test " must not silently skip the G3 bar.
+            if (r.get("Verification") or "").strip() != "Test":
                 continue
             # A Draft SR is pre-ratification (below G1, derived-gate §3): it makes
             # no Verified claim yet, so the G3 criterion does not apply. Surfaced
@@ -1474,6 +1532,9 @@ def analyze(reg, args):
         for f in structure_findings(p, p.relative_to(docs.parent).as_posix())
     ]
     integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
+    # The SN tier's duplicate protection (prose registry — see
+    # sn_integrity_findings): integrity-class like a duplicated CSV id.
+    integrity += getattr(reg, "sn_integrity", [])
     integrity += sr_supersession_findings(srs)
     # SR/LLR citation coherence: a TC that cites an SR and an LLR
     # together must not pair an LLR with an SR it does not decompose. Integrity-
@@ -1892,6 +1953,32 @@ def render_console(reg, findings, args, out, html_out):
         print(f"WARNING (advisory): {a}")
     for a in llr_status_advis:
         print(f"WARNING (advisory): {a}")
+    # Gating findings print here too, not only as counts: the report file is
+    # gitignored, and the harness bar is "print the real output — never
+    # summarize a failure away" (check.py). Mirrors exit_code()'s composition;
+    # capped per class, the report holds the full lists.
+    cap = 10
+    if args.strict:
+        failing = [
+            ("orphan", orphans),
+            ("integrity", integrity),
+            ("status", status_findings),
+            ("placeholder", placeholders),
+            ("schema", schema),
+            ("budget", budget_findings),
+            ("delegation", module_findings),
+            ("component", component_findings),
+            ("interface", interface_backlink_findings),
+        ]
+    elif args.strict_integrity:
+        failing = [("integrity", integrity)]
+    else:
+        failing = []
+    for label, items in failing:
+        for f in items[:cap]:
+            print(f"FINDING ({label}): {f}")
+        if len(items) > cap:
+            print(f"... +{len(items) - cap} more {label} finding(s) in the report")
     print(
         f"Traceability: SN={len(sn_ids)} SR={len(srs)} LLR={len(llrs)} "
         f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"
@@ -2016,15 +2103,18 @@ def main():
         help="with --ratify, write the view to FILE (parent dirs created) instead "
         "of stdout, so a brief can link a stable path",
     )
-    # --root/--docs are the uniform path flags across trace.py, check_docs.py,
-    # and check_perf.py: --docs is the docs dir; --root (default ".") is its
-    # parent, so a repo whose docs live elsewhere passes one --root. An explicit
-    # --docs wins; otherwise it is <root>/docs.
+    # --root/--docs path flags: here and in check_perf.py an explicit --docs is
+    # a PATH used as-is (--root ignored); check_docs.py instead treats --docs as
+    # a name joined under --root (absolute paths still win via pathlib join).
+    # The three agree for the default and for absolute --docs; they differ for a
+    # relative explicit --docs — state it rather than claim a uniformity that
+    # isn't there (repo-review 2026-07-21 L-1; full unification is a
+    # coordinated change across check_flows/gen_release_checklist too).
     ap.add_argument("--root", default=".", help="repo root (default: .)")
     ap.add_argument(
         "--docs",
         default=None,
-        help="docs directory (default: <root>/docs)",
+        help="docs directory path, used as-is (default: <root>/docs)",
     )
     args = ap.parse_args()
     docs = Path(args.docs) if args.docs else Path(args.root) / "docs"

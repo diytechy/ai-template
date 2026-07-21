@@ -462,7 +462,14 @@ def lease_worktree(root, train_id):
     branch_ref = TRAIN_BRANCH_HEADS + train_id
     trees = existing_worktrees(root)
     if branch_ref in trees:
-        return Path(trees[branch_ref]), None
+        leased = Path(trees[branch_ref])
+        if leased.is_dir():
+            return leased, None
+        # `git worktree list` keeps naming a directory deleted by hand until a
+        # prune; leasing the ghost crashed the spawn (Popen cwd gone) and every
+        # relaunch reconciled into the same crash (repo-review 2026-07-21
+        # M-32). Prune the stale registration and fall through to a fresh add.
+        git(root, "worktree", "prune")
     wt = worktree_root(root) / train_id
     wt.parent.mkdir(parents=True, exist_ok=True)
     code, out = git(root, "worktree", "add", str(wt), TRAIN_BRANCH_PREFIX + train_id)
@@ -790,9 +797,16 @@ def train_verdicts(root, tid, reviewed_sha):
             continue
         verdict = ""
         for line in text.splitlines():
-            vm = re.match(r"\s*VERDICT:\s*(APPROVE|CHANGES-REQUESTED)", line)
+            # Case-insensitive + normalized, matching score_reviews.VERDICT_RE
+            # (last match wins there too): the integrator must not read a
+            # lowercase CHANGES-REQUESTED as "no verdict" while the in-train
+            # loop honors it — one grammar kit-wide (repo-review 2026-07-21
+            # L-26; full extraction to one shared parser is filed forward).
+            vm = re.match(
+                r"\s*VERDICT:\s*(APPROVE|CHANGES-REQUESTED)\b", line, re.IGNORECASE
+            )
             if vm:
-                verdict = vm.group(1)
+                verdict = vm.group(1).upper()
         results.append((m.group(2), verdict))
     return results
 
@@ -980,6 +994,11 @@ def _run_combined_bar(worktree, root):
         cwd=str(worktree),
         capture_output=True,
         text=True,
+        # utf-8 + replace like the kit's own git() wrapper: a downstream test
+        # suite emitting one locale-undecodable byte must mojibake, not crash
+        # the integrator mid-composition (repo-review 2026-07-21 L-25).
+        encoding="utf-8",
+        errors="replace",
         stdin=subprocess.DEVNULL,
     )
     tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
@@ -1006,6 +1025,8 @@ def _regenerate_disposition_artifacts(worktree):
             cwd=str(worktree),
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
         )
         if proc.returncode != 0:
@@ -1427,6 +1448,8 @@ def _regenerate_generated(wt, paths, artifacts):
             cwd=str(wt),
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
         )
         if proc.returncode != 0:
@@ -1555,7 +1578,16 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
         }
         for wid in wis
     }
-    updated = _rewrite_wi_rows(reg, updates) if reg.exists() else []
+    try:
+        updated = _rewrite_wi_rows(reg, updates) if reg.exists() else []
+    except ValueError as exc:
+        # WI-238 wrapped the blocked path; this path crashed the whole
+        # dispatcher on the same loud ValueError AFTER the --no-commit merge —
+        # stranding the staging worktree with reservations held and crash-
+        # looping every relaunch (repo-review 2026-07-21 M-28). Same idiom.
+        return "error", _reset_failed_disposition(
+            root, wt, tid, old_head, str(exc), merge=True
+        )
     stamp = time.strftime("%Y-%m-%d %H:%M")
     log_path = Path(wt) / "docs" / "log.md"
     try:
@@ -1745,17 +1777,25 @@ def dual_plan_disposition(
     if outcome == "SELECTED":
         reg = Path(wt) / "docs" / "requirements" / "work-items.csv"
         if reg.exists():
-            _rewrite_wi_rows(
-                reg,
-                {
-                    wid: {
-                        "Status": "done",
-                        "Deliverable": "dual-plan round (train {}): {}".format(
-                            tid, detail
-                        ),
-                    }
-                },
-            )
+            try:
+                _rewrite_wi_rows(
+                    reg,
+                    {
+                        wid: {
+                            "Status": "done",
+                            "Deliverable": "dual-plan round (train {}): {}".format(
+                                tid, detail
+                            ),
+                        }
+                    },
+                )
+            except ValueError as exc:
+                # Same M-28 guard as the blocked/integrate paths: a headerless
+                # registry must surface as an error disposition, never an
+                # uncaught dispatcher crash with the staging worktree stranded.
+                return "error", _reset_failed_disposition(
+                    root, wt, tid, old_head, str(exc)
+                )
         generate_status(Path(wt) / "docs", root, last_train=tid)
     code, porcelain = git(wt, "status", "--porcelain")
     if code == 0 and not porcelain.strip():
@@ -2496,13 +2536,24 @@ def _spawn_worker(args, root, journal, active, parked, tid, wis, base, spine):
         out_fh = (logdir / (tid + ".out")).open("ab")
     except OSError:
         pass
-    proc = subprocess.Popen(
-        argv,
-        cwd=str(wt),
-        stdout=out_fh if out_fh is not None else subprocess.DEVNULL,
-        stderr=subprocess.STDOUT,
-        stdin=subprocess.DEVNULL,
-    )
+    try:
+        proc = subprocess.Popen(
+            argv,
+            cwd=str(wt),
+            stdout=out_fh if out_fh is not None else subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+        )
+    except OSError as exc:
+        # A vanished worktree / unspawnable engine must quarantine the train
+        # (the lease-failure shape), never crash the dispatcher with
+        # reservations held (repo-review 2026-07-21 M-32).
+        if out_fh is not None:
+            out_fh.close()
+        reason = "worker spawn failed: {}".format(exc)
+        journal.event("quarantine", train=tid, reason=reason)
+        parked[tid] = {"state": "quarantined", "wis": wis}
+        return False
     active[tid] = {
         "proc": proc,
         "wis": wis,
@@ -2751,6 +2802,8 @@ def _regenerate_pending(root, journal):
             [sys.executable, str(gen), "--root", str(root), "--status"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             stdin=subprocess.DEVNULL,
             timeout=120,
         )

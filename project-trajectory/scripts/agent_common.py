@@ -474,13 +474,19 @@ _SPLIT_RE = re.compile(r"[;,\s]+")
 
 
 def _read_csv_rows(path):
-    """CSV rows of `path` as dicts, or [] (absent/unreadable). errors=replace so a
-    stray byte degrades, never crashes (the declared-reader idiom)."""
+    """CSV rows of `path` as dicts, or [] (absent/unreadable). utf-8-sig so an
+    Excel-written BOM can't rename the first header key (a BOM'd
+    work-items.csv split the dispatcher's and the worker's view of the same
+    registry, and a BOM'd system-requirements.csv silently vacated the
+    critique gate — repo-review 2026-07-21 M-23); errors=replace so a stray
+    byte degrades, never crashes (the declared-reader idiom). A real file
+    handle (newline="") also keeps quoted multi-line cells parseable, unlike
+    the old splitlines() feed."""
     try:
-        text = Path(path).read_text(encoding="utf-8", errors="replace")
+        with Path(path).open(newline="", encoding="utf-8-sig", errors="replace") as fh:
+            return list(csv.DictReader(fh))
     except OSError:
         return []
-    return list(csv.DictReader(text.splitlines()))
 
 
 def _refs(cell):
@@ -646,9 +652,35 @@ def bounded_transcript(output):
     return text
 
 
+_SECRET_RES = (
+    re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
+    re.compile(r"ghp_[A-Za-z0-9]{20,}"),
+    re.compile(r"github_pat_[A-Za-z0-9_]{20,}"),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._\-]{25,}"),
+    re.compile(r"xox[baprs]-[A-Za-z0-9-]{10,}"),
+)
+
+
+def redact_secrets(text):
+    """Best-effort redaction of well-known credential shapes, applied before a
+    transcript is committed to tracked history (docs/iteration/*.log): a CLI
+    auth error echoing a key otherwise lands in permanent history with only
+    push-policy between it and publication (repo-review 2026-07-21 M-19).
+    Deliberately imperfect — unknown token shapes pass through, and the raw
+    unredacted stream stays in gitignored out/run-logs/ for debugging."""
+    hits = 0
+    for rx in _SECRET_RES:
+        text, n = rx.subn("[REDACTED]", text)
+        hits += n
+    return text, hits
+
+
 def write_session_log(iter_dir, meta, transcript):
     """Write the tracked, size-bounded per-session log: a `# key: value`
-    metadata header (what the index is regenerated from) + the transcript."""
+    metadata header (what the index is regenerated from) + the transcript
+    (credential shapes redacted — see redact_secrets)."""
+    transcript, redacted = redact_secrets(transcript)
     iter_dir.mkdir(parents=True, exist_ok=True)
     header = ["# agent-loop session log — written by scripts/agent_loop.py"]
     for key in (
@@ -676,6 +708,8 @@ def write_session_log(iter_dir, meta, transcript):
         "exit-code",
     ):
         header.append("# {}: {}".format(key, meta.get(key, "")))
+    if redacted:
+        header.append("# redacted: {} credential-shaped token(s)".format(redacted))
     header.append("# ---")
     # A worker's log name is prefixed with its train id (WI-181): two parallel
     # workers' committed session logs must never collide at integration.

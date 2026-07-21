@@ -1184,12 +1184,14 @@ def status_forward_only_findings(root, wis):
     published tree.
 
     **Mode-aware (WI-180's direction preserved, not reversed):** when status.md
-    carries the kit's generated-block marker (`<!-- BEGIN GENERATED ... -->`, the
-    `gen_arch_map`/`gen_trajectory` idiom) the file is an integrator-generated
-    snapshot that cannot accrete prose, so the token rule stands down. Its
-    successor there is a **freshness** check (regenerate in memory + byte-compare,
-    the `--check` idiom) — SPECIFIED here as the retirement's promise but **not
-    implemented**, because no status.md generator exists yet.
+    carries the kit's generated-block marker (`<!-- BEGIN GENERATED ... -->`,
+    spliced by `gen_trajectory.py --status`, WI-234) the rule stands down ONLY
+    inside the marked block — its freshness is the `status-map` byte-compare
+    step's job. The hand-authored remainder is exactly where done-ids accrete,
+    so the token rule keeps policing it: a whole-file stand-down left the
+    forward-only discipline enforced by nothing on a hybrid file (repo-review
+    2026-07-21 H-5; the pre-WI-234 "no status.md generator exists yet" wording
+    this docstring carried was stale).
 
     Only ids whose registry Status is `done` flag; open (queued/active/deferred/
     blocked) ids and unknown ids do not (an unknown id is R-E-adjacent). Vacuous
@@ -1201,8 +1203,17 @@ def status_forward_only_findings(root, wis):
         return []
     text = path.read_text(encoding="utf-8", errors="replace")
     if _STATUS_GENERATED_RE.search(text):
-        # Generated snapshot: the freshness check is the successor (unimplemented).
-        return []
+        # Hybrid file: exempt the generated block(s) only (see the docstring);
+        # the hand-authored remainder stays policed.
+        kept, skipping = [], False
+        for line in text.splitlines():
+            if "<!-- BEGIN GENERATED" in line:
+                skipping = True
+            if not skipping:
+                kept.append(line)
+            if "<!-- END GENERATED" in line:
+                skipping = False
+        text = "\n".join(kept)
     done_ids = {w["id"] for w in wis if w["status"] == "done"}
     if not done_ids:
         return []

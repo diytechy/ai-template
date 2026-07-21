@@ -112,6 +112,42 @@ def test_tier_scopes_which_budgets_gate(scaffold):
     assert at_release.returncode == 1, at_release.stdout + at_release.stderr
 
 
+def test_malformed_metric_value_fails_hard_gated_row(scaffold):
+    # M-41: a metrics file PRESENT with a non-numeric value on a Gate=fail row
+    # is a FAIL naming the row and the malformed value — a hard gate must not
+    # quietly stop measuring. (A metric truly absent from the file stays SKIP;
+    # a wholly absent metrics file stays the loud whole-run SKIP above.)
+    write_budgets(scaffold, pb_row("PB-001", 500, gate="fail", tier="Full"))
+    write_metrics(scaffold, {"PB-001": "480ms"})
+    proc = run_py(["scripts/check_perf.py", "--tier", "full"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "FAIL" in proc.stdout and "PB-001" in proc.stdout
+    assert "480ms" in proc.stdout, "the malformed value must be named"
+    assert "non-numeric" in perf_report(scaffold)
+
+
+def test_malformed_metric_value_warns_when_gate_warn(scaffold):
+    # Gate=warn keeps its warn-only contract for the same malformation.
+    write_budgets(scaffold, pb_row("PB-001", 500, gate="warn", tier="Full"))
+    write_metrics(scaffold, {"PB-001": {"value": "oops"}})
+    proc = run_py(["scripts/check_perf.py", "--tier", "full"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARN" in proc.stdout and "PB-001" in proc.stdout
+    assert "oops" in proc.stdout
+
+
+def test_gated_skip_prints_per_row_warn_line(scaffold):
+    # A Gate=fail row with NO measurement this run stays a SKIP (exit 0 —
+    # absent-metric semantics unchanged) but is announced per-row instead of
+    # being folded silently into the summary count.
+    write_budgets(scaffold, pb_row("PB-001", 500, gate="fail", tier="Full"))
+    write_metrics(scaffold, {"PB-999": 1})
+    proc = run_py(["scripts/check_perf.py", "--tier", "full"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARN" in proc.stdout and "PB-001" in proc.stdout
+    assert "no measurement" in proc.stdout and "SKIP" in proc.stdout
+
+
 def test_update_baseline_writes_file(scaffold):
     write_budgets(scaffold, pb_row("PB-001", 500))
     write_metrics(scaffold, {"PB-001": 488, "PB-002": 12})
@@ -195,6 +231,45 @@ def test_evaluate_covers_absolute_regression_tier_and_skip():
     assert results["PB-2"]["status"] == "WARN"  # higher-better breach, gate warn
     assert "PB-3" not in results  # release row not in scope at full
     assert results["PB-4"]["status"] == "SKIP"  # no metric
+
+
+def test_evaluate_malformed_present_value_is_never_a_silent_skip():
+    # M-41 unit view: present-but-non-numeric (the `malformed` map from
+    # load_metrics) gates by the row's Gate; truly absent still SKIPs.
+    check = load_script("check_perf")
+    row = {
+        "PB-ID": "PB-1",
+        "Budget": "500",
+        "Unit": "MiB",
+        "Tolerance": "10%",
+        "Direction": "lower-better",
+        "Tier": "Full",
+        "Gate": "fail",
+    }
+    bad = {"PB-1": "480ms"}
+    assert check.evaluate([row], {}, {}, "full", malformed=bad)[0]["status"] == "FAIL"
+    warn_row = dict(row, Gate="warn")
+    assert (
+        check.evaluate([warn_row], {}, {}, "full", malformed=bad)[0]["status"] == "WARN"
+    )
+    assert check.evaluate([row], {}, {}, "full", malformed={})[0]["status"] == "SKIP"
+
+
+def test_load_metrics_records_malformed_entries(tmp_path):
+    check = load_script("check_perf")
+    path = tmp_path / "perf-metrics.json"
+    path.write_text(
+        json.dumps({"PB-1": 480, "PB-2": "480ms", "PB-3": {"value": None}}),
+        encoding="utf-8",
+    )
+    malformed = {}
+    out = check.load_metrics(path, malformed)
+    assert out == {"PB-1": 480.0}
+    assert malformed == {"PB-2": "480ms", "PB-3": None}
+    # Absent file: still the None sentinel, malformed untouched.
+    malformed = {}
+    assert check.load_metrics(tmp_path / "nope.json", malformed) is None
+    assert malformed == {}
 
 
 def test_regression_uses_direction_and_tolerance():

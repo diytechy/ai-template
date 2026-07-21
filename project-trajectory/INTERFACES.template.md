@@ -3,9 +3,10 @@
 <!-- kit-only -->
 Copied into a new repo as `docs/interfaces.md` by `scripts/bootstrap.py`.
 <!-- /kit-only -->
-Owned by the **System Engineer** hat. Use this **only** when a project provides
-or consumes a contract shared with another project/repo — skip it for a
-standalone deliverable.
+Owned by the **System Engineer** hat. Use this when a project provides or
+consumes a contract shared with another project/repo, or — intra-repo — when
+module-to-module seams are worth declaring (process.md §8); a single-module
+standalone deliverable skips it.
 
 It keeps interlinked projects honest without heavy multi-repo machinery: each
 shared contract gets one stable id, one home, and a link back into the same
@@ -31,13 +32,15 @@ namespace, parallel to SN/SR/LLR/TC).
 |---|---|
 | `IF-ID` | Stable id for this interface. |
 | `Direction` | `Provides` (we expose it) or `Consumes` (we depend on it). |
-| `ThisProject` | This repo/project name. |
-| `Counterpart` | The other project/repo on the far side of the contract. |
+| `ThisProject` | This repo/project name (or, intra-repo, the module on this side of the seam). |
+| `Counterpart` | The other project/repo — or, intra-repo, another module, a file path, or an external actor — on the far side of the contract. |
 | `Contract` | One testable line naming the surface (REST route, CLI, file schema, event, library symbol) + a link to its spec. |
 | `SR-Refs` | The system requirement(s) here that realize or rely on it — ties the interface into the local spine. |
 | `Version` | Contract version the other side codes against (e.g. `v1`, a semver, a schema hash). |
 | `Stability` | `Experimental` · `Stable` · `Deprecated`. Sets the change-notice bar. |
-| `Status` | `Draft` · `Agreed` · `Implemented` · `Verified`. |
+| `Status` | Open vocabulary (`Draft` \| `Proposed` \| `Active` \| `Stable` \| `Deprecated`): a seam a spec-of-record cites before a second consumer pins it is `Proposed` — cheap to revise. |
+| `Component` | Optional `CMP-###` membership tag for the component layer; empty when unused. |
+| `Notes` | Free-form. The `source`/`sink` honesty valve lives here (silences the missing-direction coverage warn for `ThisProject` — see the registry's `-000` row). |
 
 ## Rules (keep links from rotting)
 
@@ -61,9 +64,9 @@ namespace, parallel to SN/SR/LLR/TC).
 ## Worked snippet
 
 ```csv
-IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status,Component
-IF-001,Provides,billing-api,reporting-etl,"GET /v1/invoices returns the documented JSON schema (see docs/openapi.yaml#/Invoice).",SR-014,v1,Stable,Verified
-IF-002,Consumes,reporting-etl,billing-api,"Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json).",SR-031,v1,Stable,Verified
+IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Stability,Status,Component,Notes
+IF-001,Provides,billing-api,reporting-etl,"GET /v1/invoices returns the documented JSON schema (see docs/openapi.yaml#/Invoice).",SR-014,v1,Stable,Active,,
+IF-002,Consumes,reporting-etl,billing-api,"Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json).",SR-031,v1,Stable,Active,,
 ```
 
 Read together: `billing-api` publishes `IF-001` (with a contract test on the

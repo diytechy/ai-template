@@ -26,5 +26,3 @@ comparison silently degenerates into copying.
 5. **Done when:** the bar is met on the *discriminative* (novel-view) form of the metric, the
    residual breakdown says where the next rung would attack, and any saturated/untested layer is
    named in the write-up.
-
-**Knowledge:** FIELD-KNOWLEDGE-GILBERT.md §G3 (+ §G2 for the stereo substrate).

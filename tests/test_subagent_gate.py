@@ -81,7 +81,7 @@ def test_hook_denies_and_exits_2(tmp_path):
     out = json.loads(proc.stdout)
     assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
     # the paper trail recorded the decision
-    log = (tmp_path / "docs" / "subagent-gate.log").read_text(encoding="utf-8")
+    log = (tmp_path / "out" / "subagent-gate.log").read_text(encoding="utf-8")
     assert "Task\tdeny" in log
 
 
@@ -123,7 +123,7 @@ def test_hook_fails_open_on_malformed_payload(tmp_path):
         env={**_env_with_root(tmp_path)},
     )
     assert proc.returncode == 0
-    log = (tmp_path / "docs" / "subagent-gate.log").read_text(encoding="utf-8")
+    log = (tmp_path / "out" / "subagent-gate.log").read_text(encoding="utf-8")
     assert "failing open" in log
 
 

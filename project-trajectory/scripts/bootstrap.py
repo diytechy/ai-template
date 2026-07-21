@@ -263,6 +263,20 @@ from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
 
+
+def _write_text_lf(path, text):
+    """Write scaffold text with LF endings on every platform.
+
+    `Path.write_text` translates "\\n" to os.linesep, so a Windows bootstrap
+    would emit CRLF scaffolds — including the seeded `agent-resume.sh`, whose
+    CRLF shebang breaks `#!/bin/sh` (the exact trap gitattributes.template
+    documents). Same explicit-newline pattern the other generators use
+    (gen_arch_map/gen_okf); 3.8-safe. Every scaffold/policy TEXT write routes
+    through here; the `.py` copy branch stays write_bytes (byte-for-byte)."""
+    with path.open("w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+
+
 # --- Agent selection & the skills layer (WI-1.9) -----------------------------
 # At repo setup the user most likely already has an agent configured, so the
 # scaffold can materialize that agent's stub, its optional hook config, and the
@@ -462,18 +476,16 @@ def materialize_knowledge_packs(dest, domain, dry_run, force):
     if indexed and index.is_file() and not dry_run:
         text = index.read_text(encoding="utf-8")
         rows = []
-        for label, topic, pack_domain in indexed:
+        for label, topic, _pack_domain in indexed:
             marker = "[{}]({}.md)".format(label, label)
             if marker not in text:
-                rows.append(
-                    "| [{}]({}.md) | {} | domain: `{}` | 2026-07-09 |".format(
-                        label, label, topic, pack_domain
-                    )
-                )
+                # Cells follow the index header `| Label | Topic | Components |
+                # Last reviewed |` (knowledge/README.template.md): the kit knows
+                # no Components mapping and stamps no date (deterministic — the
+                # adopter fills both when they first review the pack).
+                rows.append("| [{}]({}.md) | {} | — | — |".format(label, label, topic))
         if rows:
-            index.write_text(
-                text.rstrip() + "\n" + "\n".join(rows) + "\n", encoding="utf-8"
-            )
+            _write_text_lf(index, text.rstrip() + "\n" + "\n".join(rows) + "\n")
     return created
 
 
@@ -490,7 +502,12 @@ def sync_agent_skills(dest, dry_run):
     `--agents`' job), and only the skills that dir already carries. A file
     outside `<agent>/skills/<name>/` is never read or written, so a project's own
     settings/hook files are safe. Byte-exact (read/write bytes — CRLF must not
-    false-refresh). Returns the list of refreshed dest-relative file paths."""
+    false-refresh). Within a synced `<agent>/skills/<name>/` subtree — which is
+    kit-owned by contract — a dest file with no source counterpart is DELETED
+    (and emptied subdirs removed): when a kit skill drops a file, the
+    `--check-agents` floor goes red on the stray and prescribes `--sync`, so
+    `--sync` must actually be able to fix it (M-14). Returns the list of
+    refreshed/removed dest-relative file paths."""
     source = KIT / "skills"
     refreshed = []
     if not source.is_dir():
@@ -503,8 +520,10 @@ def sync_agent_skills(dest, dry_run):
             src_skill = source / name_dir.name
             if not (src_skill / "SKILL.md").exists():
                 continue  # a copy with no source (orphan) — the drift check flags it
+            src_rels = set()
             for src_file in sorted(f for f in src_skill.rglob("*") if f.is_file()):
                 rel = src_file.relative_to(src_skill)
+                src_rels.add(rel)
                 dst_file = name_dir / rel
                 data = src_file.read_bytes()
                 if dst_file.exists() and dst_file.read_bytes() == data:
@@ -515,6 +534,26 @@ def sync_agent_skills(dest, dry_run):
                 if not dry_run:
                     dst_file.parent.mkdir(parents=True, exist_ok=True)
                     dst_file.write_bytes(data)
+            # Deleted-source drift: files under this dest skill dir with no
+            # source counterpart (see docstring). Deepest-first so emptied
+            # subdirs can be pruned after their files go.
+            for dst_file in sorted(
+                (f for f in name_dir.rglob("*") if f.is_file()),
+                key=lambda p: len(p.parts),
+                reverse=True,
+            ):
+                rel = dst_file.relative_to(name_dir)
+                if rel in src_rels:
+                    continue
+                refreshed.append(
+                    (Path(spec["skills_dir"]) / name_dir.name / rel).as_posix()
+                )
+                if not dry_run:
+                    dst_file.unlink()
+                    parent = dst_file.parent
+                    while parent != name_dir and not any(parent.iterdir()):
+                        parent.rmdir()
+                        parent = parent.parent
     return refreshed
 
 
@@ -566,7 +605,10 @@ def seed_agent_resume(dest, agents, created, dry_run):
             ("AGENT_CMD_INTERACTIVE", seed["interactive"]),
         ):
             text = text.replace(empty.format(var), fmt.format(var, value), 1)
-        path.write_text(text, encoding="utf-8")
+        # LF for both files: agent-resume.sh MUST stay LF (CRLF breaks its
+        # shebang); the .cmd tolerates LF (no labels/goto) and the scaffolded
+        # .gitattributes re-normalizes it to CRLF at the first commit.
+        _write_text_lf(path, text)
         seeded = True
     return seeded
 
@@ -596,7 +638,7 @@ def record_agent_choice(dest, choice, skills, dry_run):
             marker, datetime.date.today().isoformat(), choice, names
         )
     )
-    status.write_text(text + note, encoding="utf-8")
+    _write_text_lf(status, text + note)
     return True
 
 
@@ -723,14 +765,15 @@ def apply_gate_policy(dest, level, dry_run):
     ]
     policy = dest / "docs" / "gate-policy"
     policy.parent.mkdir(parents=True, exist_ok=True)
-    policy.write_text("\n".join(header + [level]) + "\n", encoding="utf-8")
+    _write_text_lf(policy, "\n".join(header + [level]) + "\n")
     register = dest / "docs" / "gate-policy.md"
     written = ["docs/gate-policy"]
     if not register.exists():
         rows = "\n".join(
             "| {} | {} | {} |".format(*row) for row in GATE_POLICY_DEVIATIONS[level]
         )
-        register.write_text(
+        _write_text_lf(
+            register,
             "# Gate-authority deviation register — `{level}`\n\n"
             "**Status:** DRAFT — ratify with the owner, then keep in version "
             "control.\n"
@@ -745,7 +788,6 @@ def apply_gate_policy(dest, level, dry_run):
             "|---|---|---|\n"
             "{rows}\n\n"
             "{fixed}".format(level=level, rows=rows, fixed=GATE_POLICY_FIXED_POINTS),
-            encoding="utf-8",
         )
         written.append("docs/gate-policy.md")
     return written
@@ -772,7 +814,7 @@ def apply_push_policy(dest, policy, dry_run):
     ]
     target = dest / "docs" / "push-policy"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("\n".join(header + [policy]) + "\n", encoding="utf-8")
+    _write_text_lf(target, "\n".join(header + [policy]) + "\n")
 
 
 def apply_privacy_check(dest, value, dry_run):
@@ -790,7 +832,7 @@ def apply_privacy_check(dest, value, dry_run):
     ]
     target = dest / "docs" / "privacy-check"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("\n".join(header + [value]) + "\n", encoding="utf-8")
+    _write_text_lf(target, "\n".join(header + [value]) + "\n")
 
 
 # (The opt-in parallel-tracks layer is retired outright, WI-210: the
@@ -920,7 +962,7 @@ def write_kit_profile(dest, stack, omit, dry_run):
         return
     target = dest / "docs" / "kit-profile"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(body, encoding="utf-8")
+    _write_text_lf(target, body)
 
 
 # The harness-rewiring checklist appended to a non-Python scaffold's status.md
@@ -978,7 +1020,7 @@ def seed_arch_map_mode(dest, stack, created, dry_run):
     text = ini.read_text(encoding="utf-8")
     if "mode = symbols" not in text:
         return False
-    ini.write_text(text.replace("mode = symbols", "mode = files", 1), encoding="utf-8")
+    _write_text_lf(ini, text.replace("mode = symbols", "mode = files", 1))
     return True
 
 
@@ -1004,7 +1046,7 @@ def append_stack_checklist(dest, stack, dry_run):
         STACK_IN_FLIGHT.format(stack=stack) + flight_anchor,
         1,
     )
-    status.write_text(text, encoding="utf-8")
+    _write_text_lf(status, text)
     # OI-3 is a Needs-<human> ask, so it owes a brief (check_docs S-3). Insert it
     # ABOVE the generated pending-owner-actions block (WI-234) so hand-authored
     # briefs stay above the marker, never below it.
@@ -1020,7 +1062,7 @@ def append_stack_checklist(dest, stack, dry_run):
             )
         else:
             oi_text = oi_text + brief
-        open_items.write_text(oi_text, encoding="utf-8")
+        _write_text_lf(open_items, oi_text)
     return True
 
 
@@ -1371,7 +1413,7 @@ def apply_template_rewrites(dst_rel, dst):
             text = text.replace(old, new, 1)
             applied += 1
     if applied:
-        dst.write_text(text, encoding="utf-8")
+        _write_text_lf(dst, text)
     return applied
 
 
@@ -1486,7 +1528,7 @@ def write_kit_version(dest, dry_run):
     if dry_run:
         return label, dirty, False
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(body, encoding="utf-8")
+    _write_text_lf(target, body)
     return label, dirty, True
 
 
@@ -1721,9 +1763,8 @@ def main():
         if dst.suffix == ".md":
             # Markdown templates are GENERATED, not copied: drop kit-only
             # regions, keep or stub profile regions per the resolved profile.
-            dst.write_text(
-                strip_markers(src.read_text(encoding="utf-8"), omit, src_rel),
-                encoding="utf-8",
+            _write_text_lf(
+                dst, strip_markers(src.read_text(encoding="utf-8"), omit, src_rel)
             )
         elif dst.suffix == ".py":
             # Kit scripts copy verbatim EXCEPT for the archive-anchor provenance
@@ -1743,9 +1784,7 @@ def main():
         # the rest from the project brief).
         if dst_rel == "README.md":
             text = dst.read_text(encoding="utf-8")
-            dst.write_text(
-                text.replace("{{PROJECT_NAME}}", dest.name), encoding="utf-8"
-            )
+            _write_text_lf(dst, text.replace("{{PROJECT_NAME}}", dest.name))
         # Keep the .sh/.command launchers and the git hook executable on POSIX
         # (the hook has no extension; git and Finder only run these if the
         # executable bit is set — .command is macOS's double-clickable shell).
@@ -1761,7 +1800,7 @@ def main():
             created.append("{}/.gitkeep".format(d))
         else:
             keep.parent.mkdir(parents=True, exist_ok=True)
-            keep.write_text("", encoding="utf-8")
+            _write_text_lf(keep, "")
             created.append("{}/.gitkeep".format(d))
 
     # A non-Python stack's remaining hand-edits become visible Open-items

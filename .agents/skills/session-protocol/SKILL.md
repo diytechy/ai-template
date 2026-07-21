@@ -55,8 +55,10 @@ python project-trajectory/scripts/check_docs.py --root . --stale
 ```
 
 Both must pass before **each** commit — this is the **commit bar**. `-m smoke`
-is the fast per-commit tier (WI-122: ~47 s / 531 cases vs ~66 s / 684 for the
-full suite, both `-n auto` — the declared stack.ini command, WI-075). Tiering
+is the fast per-commit tier (measured 2026-07-21 on a 24-core box: ~4 min /
+1019 cases vs ~5.5 min / 1291 for the full suite, both `-n auto` — the
+declared stack.ini command, WI-075; snapshots, not contracts — re-measure
+locally, and re-stamp here when the suite grows). Tiering
 is opt-out: smoke drops only the heavy end-to-end modules
 (`tests/conftest.py` `SLOW_MODULES` — full hook/gate/scaffold runs the commit
 hook and the gate re-exercise anyway), so a **new test is in the bar by

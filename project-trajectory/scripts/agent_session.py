@@ -29,6 +29,7 @@ import json
 import os
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -91,6 +92,40 @@ def parse_json_result(output):
         if data.get("type") == "result":
             return data
     return dicts[0] if dicts else {}
+
+
+def _kill_tree(proc):
+    """Kill the session's whole process tree, not just the direct child: a
+    `.cmd`-shim CLI's real work happens in a grandchild (cmd.exe -> node), and
+    a survivor keeps editing the worktree the coordinator is about to hand to
+    the next session (repo-review 2026-07-21 H-2). POSIX: the child leads its
+    own session (start_new_session at Popen), so SIGKILL its process group;
+    fall back to proc.kill() if the group is already gone. Windows: taskkill
+    /T walks the tree (ships with the OS); proc.kill() remains the backstop
+    either way. Best-effort by design — the caller's wait() reaps the direct
+    child regardless."""
+    if os.name == "nt":
+        try:
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+            )
+        except OSError:
+            pass
+        try:
+            proc.kill()
+        except OSError:
+            pass
+    else:
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except (OSError, ProcessLookupError):
+            try:
+                proc.kill()
+            except OSError:
+                pass
 
 
 def summarize_session_line(line):
@@ -285,6 +320,12 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
             encoding="utf-8",
             errors="replace",
             env=env,
+            # POSIX: lead a new session/process group so a timeout or interrupt
+            # can kill the WHOLE tree (killpg below) — CLI-spawned tool
+            # subprocesses otherwise survive proc.kill() and keep editing the
+            # worktree the coordinator hands to the next session (repo-review
+            # 2026-07-21 H-2). Windows: taskkill /T walks the tree instead.
+            start_new_session=(os.name != "nt"),
         )
     except OSError as exc:
         _codex_lastmsg_read(codex_lastmsg)  # cleanup the (unused) last-message file
@@ -326,7 +367,7 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
     try:
         proc.wait(timeout=timeout or None)
     except subprocess.TimeoutExpired:
-        proc.kill()
+        _kill_tree(proc)
         proc.wait()
         pump.join(5)
         _codex_lastmsg_read(
@@ -338,6 +379,13 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
             + "\ncoordinator: session timed out after {}s".format(timeout),
             True,
         )
+    except (KeyboardInterrupt, SystemExit):
+        # An interrupted coordinator must not leave a live agent tree editing
+        # the worktree (start_new_session detaches the child from the terminal
+        # group, so Ctrl+C no longer reaches it implicitly — kill explicitly).
+        _kill_tree(proc)
+        proc.wait()
+        raise
     pump.join(5)
     output = "".join(lines)
     last = _codex_lastmsg_read(codex_lastmsg)

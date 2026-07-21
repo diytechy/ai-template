@@ -33,6 +33,20 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # Python-less machine no longer enforces it — deliberate, since that pin moved to
 # the user's own git config and what remains is a privacy check like the rest.
 
+# Fail-closed guard for the skips below (M-42): a declared privacy policy must
+# never be skipped silently. The skip-when-tooling-is-missing posture is right
+# for the PROCESS checks (a Python-less box still commits), but it would also
+# skip the secrets/privacy scans — so when docs/privacy-check reads `true`,
+# parse it in pure sh (the pre-push hook's pattern) and REFUSE the skip. The
+# trade, recorded: a privacy-checked repo cannot commit without a working
+# Python 3; that is the same stance pre-push already takes at the boundary
+# that matters most, moved up to where the leak would first land in history.
+privacy_declared_true() {
+  [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
+  p=$(grep -v '^[[:space:]]*#' "$REPO_ROOT/docs/privacy-check" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
+  [ "$p" = "true" ]
+}
+
 # Find a Python 3 interpreter. Prefer the project venv (setup.sh creates ./.venv
 # with the toolchain), so tool-backed steps like format actually RUN instead of
 # SKIP-on-missing-tool; fall back to a PATH python. Probe by *running* the
@@ -51,6 +65,12 @@ if [ -z "$PY" ]; then
   done
 fi
 if [ -z "$PY" ]; then
+  if privacy_declared_true; then
+    echo "pre-commit: docs/privacy-check is true but Python 3 is unavailable —" >&2
+    echo "  the secrets/privacy scans cannot run, so refusing to skip them." >&2
+    echo "  FAILING CLOSED: install Python 3 (or run setup.sh) to commit." >&2
+    exit 1
+  fi
   echo "pre-commit: Python 3 not found on PATH; skipping process checks." >&2
   exit 0
 fi
@@ -77,6 +97,12 @@ if [ -z "$SCRIPTS_DIR" ]; then
   done
 fi
 if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
+  if privacy_declared_true; then
+    echo "pre-commit: docs/privacy-check is true but the kit scripts dir cannot" >&2
+    echo "  be found (KIT_SCRIPTS_DIR or scripts/), so the secrets/privacy scans" >&2
+    echo "  cannot run — refusing to skip them. FAILING CLOSED." >&2
+    exit 1
+  fi
   echo "pre-commit: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/) under $REPO_ROOT; skipping process checks." >&2
   exit 0
 fi

@@ -64,6 +64,16 @@ def test_onboarder_carries_end_banner_agent_handoff_and_clone_url(scaffold):
         assert "EDIT FOR YOUR PROJECT" in text, rel + " missing the EDIT marker"
 
 
+def test_windows_cmd_launchers_are_ascii_only(scaffold):
+    # L-13, same rule dev-setup.cmd states: cmd.exe decodes batch text by the
+    # console codepage (cp437/cp850), so any non-ASCII byte — the em-dashes the
+    # onboarder's consent banners used to carry — renders as mojibake. Covers
+    # the scaffolded copies (byte-identical to the shipped templates).
+    for rel in ("scripts/onboard.cmd", "run.cmd"):
+        raw = (scaffold / rel).read_bytes()
+        assert all(b < 128 for b in raw), rel + " must stay ASCII-only"
+
+
 def test_devsetup_has_edit_block_tiers_and_profiles(scaffold):
     for rel in DEVSETUP:
         text = (scaffold / rel).read_text(encoding="utf-8")

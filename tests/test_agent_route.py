@@ -183,16 +183,33 @@ def test_select_none_when_all_cooled(tmp_path):
 def test_escalate_continue_and_win_stay():
     c = route.DEFAULT_CONSTANTS
     # A clean approve with a wide margin: win-stay names next round's primary.
+    # 0.4 is a value the substance pipeline can actually produce (margins are
+    # bounded by 1.0) — the old fixture's margin=3 was impossible, which is
+    # exactly how the unreachable threshold survived (repo-review M-34).
+    assert c["margin"] <= 1.0, "the default margin must be producible"
     rounds = [
-        {"verdict": "APPROVE", "tier": "strong", "margin": 3, "primary": "OPENAI"}
+        {"verdict": "APPROVE", "tier": "strong", "margin": 0.4, "primary": "OPENAI"}
     ]
     d = route.escalate(rounds, c)
     assert d["action"] == "continue" and d["next_primary"] == "OPENAI"
     # A margin below the bar does not move the primary.
     rounds2 = [
-        {"verdict": "APPROVE", "tier": "strong", "margin": 1, "primary": "OPENAI"}
+        {"verdict": "APPROVE", "tier": "strong", "margin": 0.05, "primary": "OPENAI"}
     ]
     assert route.escalate(rounds2, c)["next_primary"] is None
+
+
+def test_load_constants_parses_margin_as_float(monkeypatch):
+    # M-34: the env override must accept the fractional values the pipeline
+    # produces (int()-only parsing silently ignored "0.3").
+    env = {"AGENT_ROUTE_MARGIN": "0.3", "AGENT_ROUTE_SWAP_AFTER": "3"}
+    c = route.load_constants(env)
+    assert c["margin"] == 0.3
+    assert c["swap_after"] == 3
+    assert (
+        route.load_constants({"AGENT_ROUTE_MARGIN": "bogus"})["margin"]
+        == (route.DEFAULT_CONSTANTS["margin"])
+    )
 
 
 def test_escalate_swap_then_tier_up_then_page():
@@ -1016,3 +1033,29 @@ def test_weighted_share_over_real_wiring_no_stride_starvation(tmp_path):
     # is starved by the stride (the bug delivered Kimi=0).
     counts = {m: review_a_picks.count(m) for m in enabled}
     assert counts == {"OPENAI-TERRA": 12, "MOONSHOT-KIMI": 3, "XAI-GROK": 3}
+
+
+def test_load_registry_refuses_shell_unsafe_model_cell(tmp_path):
+    # Repo-review 2026-07-21 H-4: the Model cell rides {model} substitution
+    # into a session argv; on Windows a .cmd-shim CLI re-parses that line under
+    # cmd.exe (the BatBadBut class), so a tracked CSV cell with quote/&/| must
+    # be refused at load (a preflight failure under managed routing), never
+    # silently launched.
+    import csv as _csv
+
+    ar = load_script("agent_route")
+    path = tmp_path / "agents.csv"
+    rows = [
+        ["Id", "Family", "Model", "Version", "Tier", "CmdTemplate", "Env", "Notes"],
+        ["GOOD-1", "FAM", "claude-x-5", "1", "strong", "cli -m {model}", "", ""],
+        ["GOOD-2", "FAM", "org/model:v1.2", "1", "medium", "cli -m {model}", "", ""],
+        ["EVIL-1", "FAM", 'x" & calc & "', "1", "strong", "cli -m {model}", "", ""],
+        ["EVIL-2", "FAM", "m %PATH% n", "1", "quick", "cli -m {model}", "", ""],
+    ]
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        _csv.writer(fh).writerows(rows)
+    models, errors = ar.load_registry(path)
+    assert set(models) == {"GOOD-1", "GOOD-2"}  # slug-shaped cells load fine
+    assert len(errors) == 2
+    assert all("shell-unsafe" in e for e in errors)
+    assert any("EVIL-1" in e for e in errors) and any("EVIL-2" in e for e in errors)

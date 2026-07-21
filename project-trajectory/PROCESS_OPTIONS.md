@@ -5,7 +5,9 @@ every project reads. This file expands the **opt-in layers** that doc summarizes
 each with an **applies-when** so a small project can tell at a glance whether it
 needs the layer at all. Nothing here is required for the minimum profile (a
 standalone one-module project — see the core doc's header); skip any section whose
-applies-when doesn't match your scope.
+applies-when doesn't match your scope. Links are authored for the scaffolded
+home (`docs/process-options.md` beside `docs/process.md`); at the kit's own
+location some relative links don't resolve.
 
 Section headings mirror the core-doc sections that point here.
 
@@ -36,8 +38,8 @@ required for the minimum profile). Rows are in document order; each maps to the
 | §8 purchased parts | the product incorporates purchased/external parts it buys rather than builds | a parts registry (`PB`/`PART`) |
 | Binary assets | the project ships unavoidably-binary deliverables (art, audio, video) | an assets registry (provenance / license / hash) |
 | Intra-repo interfaces & the architecture graph | more than one module, and you want the arch view to show how they connect | an `IF-###` seam registry + the `architecture.md` graph |
-| Component layer | you want a durable home for set-grained knowledge & lifecycle (a subsystem, an assembly) | a `CMP` component registry |
 | Research track & knowledge packs | findings must outlive their research session, or a spec rests on a load-bearing unknown | `WI` research rows + `docs/knowledge/` packs |
+| Component layer | you want a durable home for set-grained knowledge & lifecycle (a subsystem, an assembly) | a `CMP` component registry |
 | §9 NFR checklist | deciding which non-functional concerns a project must consider at G1 | an NFR checklist |
 | §9 perf comparator | you have captured `PB-###` budgets you want tracked over time | a perf comparator over `PB` rows |
 | §10 several modules, one repo | a repo grows distinct sub-systems that still build and release as one (scale rung 2) | a module map |
@@ -313,8 +315,8 @@ the set when the scope needs them.
 non-default `docs/gate-policy` — i.e. wants gates accepted by something other
 than a per-gate human pause. The default **`attended`** level needs none of
 this section — it is exactly the §4/§5 flow. Generalized
-from a field adoption's ratified deviation register (the NotHomeWrecker
-prototype), which remains this layer's worked reference.
+from a field adoption's ratified deviation register (a spatial-capture
+pilot), which remains this layer's worked reference.
 
 **Selection.** The level is chosen **before the kit is ported** — by the
 owner, with an agent recommendation from the project brief
@@ -515,7 +517,7 @@ where it stops: fully walk-away under `autonomous` (or `single-ratify` after
 its ratification point), while an `attended` repo's run grinds the in-gate
 work and stops *at* each human act with the ask stated, rather than being
 refused or, worse, inferring its way past. Generalized from a field adoption's
-proven coordinator (the NotHomeWrecker `trigger.ps1`), which
+proven coordinator (a spatial-capture pilot's `trigger.ps1`), which
 `scripts/agent_loop.py` supersedes — the protocol here is agent-neutral repo
 text, so a downstream can build its own coordinator against it.
 
@@ -551,8 +553,10 @@ control input — was retired):
   the stop banner headlines. **A wrong DONE is a false green** (§4); a worker
   never writes the file — its exit code and committed trailers are its whole
   result channel.
-- **The resume-from-`status.md` prompt is retired** with the path:
-  `status.md` is a generated snapshot for humans, never a session's input.
+- **The resume-from-`status.md` prompt is retired** with the path: the
+  generated `status.md` block (`gen_trajectory.py --status`) is a snapshot for
+  humans, never a session's input — the hand-authored remainder stays the
+  human resume surface.
 
 **Optional `docs/pause`** (presence = pause requested; content = a free-form
 reason): a **graceful** walk-away stop honored at the *next session boundary* —
@@ -581,7 +585,8 @@ model tier (§6 tiering, mapped per phase) from the phase it is driving. This wa
 a tracked `docs/run-phase` file; it is **retired** (WI-180) — a repo-global phase
 pointer does not survive the move to parallel dispatch, where a build-out lane
 routes from its own activity and a `{phase}-{gate}` branch name (the
-parallel-dispatch plan, §10). The phase
+parallel-dispatch design note in the kit's meta-repo — not shipped
+downstream). The phase
 is now in-process runtime state (review/critique queues + the `BUILD` default);
 phase names stay free-form, the named convention below `PLAN`/`BUILD`.
 
@@ -665,8 +670,8 @@ phases just work — falling back to the single `AGENT_CMD`. (A template that
 itself needs `,`/`;` routes through a thin dispatcher wrapper instead.) In
 managed mode the loop **schedules the review round** automatically after a
 committing build (the reviewer dial sets how many); the loop surfaces the dial
-in its banner but never enforces it — the harness pass is the entry ticket,
-the recorded verdict is the value. A reviewer is **independent** (no shared
+in its banner and never blocks on it — the harness pass is the entry ticket,
+and the **recorded verdict, not a block, is the enforcement**. A reviewer is **independent** (no shared
 transcript with the implementer; input = the diff + the WI + the TCs), treats
 the implementation report as a set of **claims** and re-runs the checks it
 asserts rather than trusting them (believe nothing unobserved), and
@@ -685,8 +690,9 @@ with evidence living in `log.md` and the iteration logs.
 **Heterogeneous scheduling — model routing, reviewer dispatch, and the
 escalation policy (`docs/agents.csv` + `docs/agents-enabled`; WI-059).** The
 reviewer dial above is *surfaced* by default; when a repo opts into managed
-routing the loop *enforces* it — a committing build schedules the reviewer
-round(s) before the next build. This is the S8 layer, and it stays stdlib,
+routing the loop *schedules* what it names — a committing build schedules the
+reviewer round(s) before the next build (the recorded verdict, not a block, is
+the enforcement). This is the S8 layer, and it stays stdlib,
 consent-explicit (no silent model swap), and never-breaking: **absent the
 enable-list, the loop keeps exactly today's single `AGENT_CMD`/`AGENT_MODEL`
 behavior**, so a fresh scaffold pays nothing.
@@ -795,7 +801,8 @@ behavior**, so a fresh scaffold pays nothing.
   `work-items.csv` (`strong|medium|quick`, legacy `weak` reads as `quick`;
   empty/absent = the phase default) names a WI's *starting* build tier. The
   dispatcher reads it **directly from the reserved WI's row** (the
-  parallel-dispatch plan, §10); the
+  parallel-dispatch design note in the kit's meta-repo — not shipped
+  downstream); the
   hand-curated `docs/next-wi` pointer that once carried it is **retired** (WI-180,
   with its `;`-batch and gate-first advisories). It **composes with
   tier-up-never-down**: the column sets where a build *starts*; a contested review
@@ -1437,7 +1444,7 @@ contract lives in the kit's `skills/README.md`; the shape:
 *Builds on PROCESS.md §7 (the harness contract + the offline-render
 principle).* **Applies when** a project wants to track **how** its work executes —
 cross-track order, which deliverable gates which, %-complete — as a
-machine-readable registry, and/or a generated dashboard over it. Uniquely in this
+machine-readable registry, and/or a generated dashboard over it. In this
 file the layer is **opt-out, not opt-in**: it is on by default but **vacuous**, so
 a repo that never adds a work item pays nothing (see the opt-out below).
 
@@ -1513,10 +1520,14 @@ carries only: the derived gate/bar pointers; queued/deferred/blocked counts + a
 link to the WI dashboard; pending `Needs <human>` items linked to
 `open-items.md`; the last integrated train + integration-queue summary; and
 project scope/constraints whose canonical homes are linked, not copied. The
-former **R-B/R-C/R-D** rules — every open WI repeated as a token in `status.md` —
+former **R-B/R-C** rules — every open WI repeated as a token in `status.md` —
 are **retired** (WI-180): a generated snapshot needs no registry copy to
 cross-check, and the generator + its freshness `--check` land with the
-dispatcher/integrator (the parallel-dispatch plan, §10, Slices D/F).
+dispatcher/integrator (the parallel-dispatch design note in the kit's
+meta-repo — not shipped downstream). **R-D's done-id half is restored,
+forward-only (WI-200):** a `done` WI id lingering in `status.md` is a finding
+again — warn at commit, ERROR under `--strict` at G2+ — except inside a
+generated snapshot block, which cannot accrete prose.
 
 **The owner decision surface (`docs/open-items.md`) + the status-surface
 lint.** The Needs-\<human> bullets in `status.md` stay **one-liners** (id +
@@ -2265,7 +2276,8 @@ in-flight workers finish; a blackout window starts no new worker;
 root `run-state` becomes a **generated dispatcher outcome**. `--jobs 1` is the
 explicit serial mode. **A plain launch is the dispatcher** (WI-210 — one
 engine, one selection path): absent `--jobs`/`AGENT_JOBS` resolves to the
-two-worker default, held at 1 until the migration audits pass (§14); the
+two-worker default, held at 1 until the migration audits pass ("Downstream
+migration" below); the
 legacy serial resume driver is retired.
 
 **The atomic integrator.** Integration has **one logical writer** against a
@@ -2346,9 +2358,10 @@ a repo migrating from the legacy loop holds at one worker until it signs off,
 and the flip is a **recorded** promotion. Legacy `active` WI rows reconcile to
 `queued` with a logged finding (runtime activity is dispatcher state, not a
 tracked column), and `docs/tracks/*` stays readable for one compatibility window
-while the dispatcher never schedules from it. A repo that never opts in
-(`--jobs`/`AGENT_JOBS` unset) keeps the legacy single-session resume loop,
-byte-for-byte unchanged.
+while the dispatcher never schedules from it. A repo that never sets
+`--jobs`/`AGENT_JOBS` still runs the dispatcher — a plain launch resolves to
+the audited two-worker default (held at 1 until the audits above pass); the
+legacy single-session resume loop is retired (WI-210).
 
 **Throughput caution.** Under `attended` gate authority, every track's human asks
 converge on **one** ratifier; parallel tracks multiply the `NEEDS-HUMAN` queue. The

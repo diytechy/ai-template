@@ -22,8 +22,8 @@ here. Check before you edit and again before you commit.
 | File | Budget | Enforced by |
 |---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
-| `project-trajectory/PROCESS.md` | **watched** (baseline **60,169** as of 2026-07-16/WI-188; keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
-| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **159,787** as of 2026-07-20/WI-252 (+738: the plan/build-cadence x trajectory-layer mutual-exclusion applies-when + reciprocal supersedes sentence); growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+| `project-trajectory/PROCESS.md` | **watched** (baseline **60,420** as of 2026-07-21/repo-review fix pass (+251: M-39 gate-method bullets, the L-40 coverage-threshold home, the L-38 link-location note); keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
+| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **160,655** as of 2026-07-21/repo-review fix pass (+868: the H-7 contradiction rewrites, the M-38 R-D restoration note, honest attribution for the unshipped parallel-dispatch note, the L-38 link-location note); growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
 
 `ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
 push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
@@ -58,9 +58,9 @@ growth is flagged too, not free.
 ## Report shape (paste into the WI/session note)
 
 ```
-Byte deltas: AGENTS.template.md 9976 -> 9976 (untouched, 24 B headroom preserved);
-PROCESS.md 56230 -> 56230 (unchanged);
-PROCESS_OPTIONS.md 134965 -> 134965 (unchanged).
+Byte deltas: AGENTS.template.md <before> -> <after> (state the headroom left under 10,000);
+PROCESS.md <before> -> <after> (unchanged, or delta + reason);
+PROCESS_OPTIONS.md <before> -> <after> (unchanged, or delta + reason).
 ```
 
 If a budgeted file grew, say by how much and where the paid-for tightening (or the

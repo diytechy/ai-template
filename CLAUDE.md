@@ -49,8 +49,8 @@ that easier to achieve in a real project — or get out of the way.
   command contracts, declared-section shapes) — `tests/test_dogfood_sync.py`
   enforces it.
 - **Self-test before claiming done.** The per-commit bar is the fast **smoke**
-  tier (`python -m pytest -q -n auto -m smoke`, ~47 s); run the **full**
-  unfiltered suite (`python -m pytest -q -n auto`, ~66 s) before claiming a
+  tier (`python -m pytest -q -n auto -m smoke`, ~4 min); run the **full**
+  unfiltered suite (`python -m pytest -q -n auto`, ~5.5 min) before claiming a
   WI/slice done, at phase close, and after a broad script change — it
   bootstraps a temp scaffold and exercises every script end-to-end. Paste the
   real output; never report a green you didn't produce. (Commit bar vs gate bar,

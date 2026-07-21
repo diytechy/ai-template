@@ -8,7 +8,9 @@ omitted section keeps its heading plus a one-line stub.
 Canonical method for a gated, requirement-traced project. It is
 **stack-agnostic** — wire the harness commands to your project's
 language/tooling. Other docs reference this file by section rather than
-restating it.
+restating it. Links are authored for the scaffolded home (`docs/process.md`
+beside `docs/process-options.md`); at the kit's own location some relative
+links don't resolve.
 
 **Read this file top to bottom for the load-bearing core** (§1–§7): roles, ids,
 the §3 discipline, the gates, the verdict protocol, the harness contract. The
@@ -305,7 +307,7 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   SR links ≥1 SN with measurable acceptance criteria; usability/doc needs +
   constraints + non-goals captured. Sign-offs: Stakeholder, UX, System Engineer.
 - **G2 — Decomposition & test coverage.** Every SR → ≥1 LLR (or
-  Analysis/Inspection); every SR and LLR → ≥1 TC; traceability **0 orphans** and
+  Analysis/Inspection/Attest); every SR and LLR → ≥1 TC; traceability **0 orphans** and
   ids unique/well-formed; **no `-000` placeholder rows or flow citations remain**
   (`trace.py`/`check_flows.py --no-placeholders`); **every SR with variable
   inputs has its dimensions enumerated (`Permutations`) and a stated combination
@@ -325,7 +327,7 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   `Verification`/`Tier` in vocabulary — `trace.py --strict-schema`); every
   **in-scope** test-verifiable SR **Verified** (phase-scoped — see "Phased
   delivery" below); every other SR explicitly **Demonstration / Manual /
-  Inspection**; each in-scope SR's implementing symbol is **substantive, not a
+  Inspection / Analysis / Attest / Critique**; each in-scope SR's implementing symbol is **substantive, not a
   stub** (Inspection — see "No-stub / substance review" below). Sign-offs: System
   Engineer, Test Engineer.
 - **G-Release — Release readiness** *(per release; skip for a one-off
@@ -406,7 +408,8 @@ rule, and the config-straddles-Provision↔Startup guidance are in
 [`process-options.md`](process-options.md#lifecycle-phase).
 
 **Constants:** `MAX_ROUNDS = 4` per gate (then escalate to the human);
-`COVERAGE_THRESHOLD = 80%` line coverage (adjust by agreement; record here).
+`COVERAGE_THRESHOLD = 80%` line coverage (adjust by agreement; record it in
+`docs/stack.ini` `[coverage]` — §7's declared home).
 
 **Verification methods:** the classic four — `Test` · `Demonstration` ·
 `Inspection` · `Analysis` (`TDIA`, per MIL-STD-961E / ISO/IEC/IEEE 29148 / INCOSE

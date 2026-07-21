@@ -16,4 +16,4 @@ foundation models remove the label→train→deploy loop; you swap the noun in t
 3. Lift the chosen mask to 3D via the depth image + camera intrinsics; cluster to a grasp target.
 4. **Done when:** the named object is localized in 3D within tolerance on a test scene; run heavy models off-board.
 
-**Knowledge:** KNOWLEDGE-LIBRARY.md §B1. **Example:** the Grounded-SAM-2 snippet there.
+**Knowledge:** the `docs/knowledge/perception.md` pack (ships only when scaffolded with `--domain hardware`). **Example:** the Grounded-SAM-2 snippet there.

@@ -24,5 +24,3 @@ unreproducible number is the failure mode.
    bench errands as copy-pasteable blocks with consequences stated.
 6. **Done when:** a fresh clone can run the headless set and reproduce the cited numbers, and a cold
    session can resume from the surface without re-surveying the repo.
-
-**Knowledge:** FIELD-KNOWLEDGE-GILBERT.md §G1 + §G4.
