@@ -10861,3 +10861,51 @@ PROCESS_OPTIONS.md untouched).
 docs/specs/ back to boilerplate + deferred-WI specs only (WI-253 archived
 dated; R-F green); WI-255/256 queued with review/critique SpecRefs per the
 WI-246 precedent.
+
+## 2026-07-21 — WI-255/256 DONE (traincar): edge-router hardening + desktop clip affordances (080-CRITIQUE APPROVE f=0; 111-REVIEW-A APPROVE f=2); WI-257/258 filed; NO spine change
+
+Both render-surface follow-ups built as one traincar (one build session, one
+fresh critique, one adversarial review — the single WI-243 re-fire/clear cycle
+they were filed to share). **WI-255** (3e0fc24): `_detour_d` now re-verifies
+the FULL routed polyline (stubs + bends + lane) against obstacles —
+`_clear_lane_y` generalized to `_lane_candidates`, nearest-midline-first,
+first fully-clear lane wins, deterministic least-obstructed fallback; the
+110-REVIEW-A stub-corridor fail-open now detours (reconstructed pre-fix code =
+through-box → the bite-proof reds on revert). Detoured `sw_graph` labels ride
+the routed lane midpoint (26/65 real swedges driven; straight labels
+byte-identical). Meta render byte-identical except the as-of stamp
+(cross-commit diff = 1 line, reviewer-verified). **WI-256** (cd444aa):
+overflow-driven scroll cues (`.cued` from `scrollWidth > clientWidth+1`,
+re-synced on resize/tab/descend; no-JS fallback kept; no WI-219 clone) — the
+What-icicle TC lane and the wide drill layers are now announced at 1280/1680
+in both themes; wire terminals snap to port-circle centers with fan
+separation preserved (unfanned wires byte-identical; through-box scan 0
+across all 5 panels — detours-off still detects 536, the snap tightened the
+exclusion).
+
+**Verdicts:** [111-REVIEW-A](reviews/111-REVIEW-A.md) (opus, adversarial,
+driven): **APPROVE findings=2, both MINOR, both filed as WI-257** (render-
+surface remedies again — the outboard-stub span residual, 13/3000 synthetic /
+0 on every real panel, and the dense-overlap perf regression with no live
+impact on the tiered geometry the emitters actually produce).
+[080-CRITIQUE](reviews/080-CRITIQUE.md) (fresh session, pixels only):
+**APPROVE findings=0 — T1–T8 all PASS**, both WI surfaces confirmed delivered
+(cues render exactly where cards overflow — including a correct no-cue on the
+fitting How-SW view; every wire endpoint an exact port coordinate in 6×
+crops); perceptual evidence re-dated past cd444aa, WI-243 gate green.
+**WI-257 filed** (queued, medium): lane-route backward edges — 080's
+strongest letter-passing finding (wires hiding under their own endpoint boxes
+read as sprouting from box edges) — plus the two 111 MINORs. **WI-258 filed**
+(queued, quick): clip-edge marker + focus-outline-vs-active-accent check.
+
+**Deviations from spec:** none. The clip itself persists by design — the WI
+asked for reachable/discoverable, delivered as cue + native scroll, not a
+reflow of the fixed-width SVG (recorded honestly in the build; the critique
+judged it PASS and filed the edge-marker polish as WI-258's subject).
+
+**Byte deltas:** none on budgeted files.
+
+**Verified:** smoke green at each of the 3 commits (995 passed, 3 skipped at
+the last); full suite + `check.py --gate G3 --jobs 0` at this close — result
+in the close commit. WI-255/256 SpecRefs cleared (review-doc SpecRefs, no
+docs/specs/ file to archive; R-F green).
