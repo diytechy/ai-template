@@ -12,6 +12,8 @@ home elsewhere — don't restate it here:
 - **The WI registry (every backlog + deferred item, with its reason):**
   [work-items.csv](requirements/work-items.csv) — the dashboard is the root
   [`PROJECT_STATE.html`](../PROJECT_STATE.html).
+- **Spec-of-record + rubric conventions:** [specs/README.md](specs/README.md) ·
+  [rubrics/README.md](rubrics/README.md) (dogfooded scaffold boilerplate).
 - **Design history:** [archive/](archive/README.md).
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) (this repo has

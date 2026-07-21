@@ -1,0 +1,16 @@
+#!/bin/sh
+# Commit-msg floor for THIS repo (the ai-template meta-repo) — a thin WRAPPER,
+# not a copy, the .githooks/pre-commit idiom (WI-1.42): the kit's harness lives
+# under project-trajectory/scripts/ (this repo's scripts/ holds only dev-setup),
+# so point the shipped hook there via KIT_SCRIPTS_DIR and delegate. The floor
+# logic lives once in project-trajectory/hooks/commit-msg — nothing here to
+# drift. Installed by WI-251 (the verbatim-copy first attempt failed exactly as
+# the wrapper comment predicts: the shipped hook defaults to the scripts/
+# layout bootstrap scaffolds).
+#
+# Enable:  git config core.hooksPath .githooks
+# Disable: git config --unset core.hooksPath
+KIT_SCRIPTS_DIR=project-trajectory/scripts
+export KIT_SCRIPTS_DIR
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || ROOT=$(cd "$(dirname "$0")/.." && pwd)
+exec sh "$ROOT/project-trajectory/hooks/commit-msg" "$@"
