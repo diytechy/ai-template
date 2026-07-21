@@ -1905,6 +1905,45 @@ def test_route_edges_reroutes_a_backward_seam():
     assert not _polyline_crosses(_sample_path_d(d), rects["B"])
 
 
+def test_route_edges_stub_corridor_box_not_through_box():
+    # 110-REVIEW-A MINOR (WI-255): a box overlapping ONLY a port-stub corridor
+    # (within 18px of a port) was dropped from the lane search, so a direct cubic
+    # that hit it was silently kept — a fail-open through-box. `S` sits in A's
+    # output-stub corridor (x 104..118, x1=100); the straight legacy cubic cuts it,
+    # so the router MUST re-verify the full routed polyline and detour around it.
+    gt = load_script("gen_trajectory")
+    rects = {
+        "A": (0.0, 100.0, 100.0, 40.0),
+        "S": (104.0, 120.0, 14.0, 70.0),
+        "C": (400.0, 180.0, 100.0, 40.0),
+    }
+    edge = ("A->C", 100.0, 120.0, 400.0, 200.0, "A", "C")
+    # the scenario is real: the direct cubic the router first tries cuts `S`.
+    xe, dx = 400.0 - 2, max((400.0 - 100.0) * 0.4, 12)
+    direct = gt._cubic_points(
+        (100.0, 120.0), (100.0 + dx, 120.0), (xe - dx, 200.0), (xe, 200.0)
+    )
+    assert _polyline_crosses(direct, rects["S"])  # a through-box if kept
+    d = gt._route_edges([edge], rects, 12, 2)["A->C"]
+    assert "L" in d  # detoured, not the silent through-box cubic
+    assert not _polyline_crosses(_sample_path_d(d), rects["S"])  # clears the box
+
+
+def test_routed_label_rides_a_detoured_edge():
+    # 110-REVIEW-A MINOR (WI-255): a detoured swedge's label used to anchor to the
+    # straight-chord midpoint and float off its wire. It must ride the routed lane;
+    # a clear (direct-cubic) edge keeps the chord-midpoint fallback byte-for-byte.
+    gt = load_script("gen_trajectory")
+    detour = (
+        "M100.0,120.0 C109.0,120.0 109.0,112.9 118.0,112.9 "
+        "L380.0,112.9 C389.0,112.9 389.0,200.0 398.0,200.0"
+    )
+    lx, ly = gt._routed_label_xy(detour, 999.0, 888.0)
+    assert (lx, ly) == (249.0, 112.9)  # lane midpoint ((118+380)/2, 112.9)
+    straight = "M100.0,120.0 C112.0,120.0 386.0,200.0 398.0,200.0"
+    assert gt._routed_label_xy(straight, 999.0, 888.0) == (999.0, 888.0)
+
+
 def _wire_through_box_violations(markup):
     """Every (wire d, blocking rect) pair where a wire's sampled polyline crosses a
     node box that is not its own source/target — the T8 through-box invariant. Each

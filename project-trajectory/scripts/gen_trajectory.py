@@ -819,10 +819,11 @@ def sw_graph(root, mods):
         x1, y1 = pos[s][0] + SW_COL_W, pos[s][1] + SW_ROW_H / 2 + out_off[e]
         x2, y2 = pos[d][0], pos[d][1] + SW_ROW_H / 2 + in_off[e]
         mx, my = (x1 + (x2 - 2)) / 2, (y1 + y2) / 2
+        lx, ly = _routed_label_xy(routes[e], mx, my)
         edge_svg.append(
             '<path class="swedge" d="{}" marker-end="url(#swarrow)"></path>'
             '<text class="swlab" x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text>'
-            "".format(routes[e], mx, my - 2, esc(iid))
+            "".format(routes[e], lx, ly - 2, esc(iid))
         )
     node_svg = []
     for k in node_ids:
@@ -1485,11 +1486,13 @@ def _polyline_hits(pts, rects):
     return False
 
 
-def _clear_lane_y(y_pref, blocked, lo, hi):
-    """A y within [lo, hi] not inside any (top, bottom) band in `blocked`,
-    as close as possible to y_pref. Bands are pre-inflated by the clearance, so
-    a position just past a band edge already carries the margin. Returns None
-    only when the whole span is blocked (caller then keeps the direct cubic)."""
+def _lane_candidates(y_pref, blocked, lo, hi):
+    """Clear-of-band y positions within [lo, hi], nearest y_pref FIRST. Bands are
+    pre-inflated by the clearance, so a value just past a band edge already carries
+    the margin. The head is exactly the former `_clear_lane_y` pick (a stable sort
+    keeps the first candidate on distance ties), so a wire that already had a clear
+    lane keeps it byte-for-byte; the tail lets `_detour_d` fall through to the next
+    lane when the nearest one still grazes a stub-corridor box."""
     merged = []
     for t, b in sorted(blocked):
         if merged and t <= merged[-1][1]:
@@ -1500,37 +1503,26 @@ def _clear_lane_y(y_pref, blocked, lo, hi):
     for t, b in merged:
         cands.append(t - 0.1)
         cands.append(b + 0.1)
-    best = None
-    for c in cands:
-        if c < lo or c > hi:
-            continue
-        if any(t <= c <= b for t, b in merged):
-            continue
-        d = abs(c - y_pref)
-        if best is None or d < best[0]:
-            best = (d, c)
-    return best[1] if best else None
+    valid = [
+        c for c in cands if lo <= c <= hi and not any(t <= c <= b for t, b in merged)
+    ]
+    return sorted(valid, key=lambda c: abs(c - y_pref))
 
 
-def _detour_d(x1, y1, xe, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB):
-    """A path 'd' that leaves the source port (x1,y1) rightward, runs a clear
-    horizontal lane over/under the blocking `obstacles`, and enters the target
-    port at (xe,y2) on a short horizontal stub. `obstacles` are (x,y,w,h) rects
-    with the wire's own endpoints already removed. Returns None when no clear
-    lane exists across the lane span (the intermediate columns), leaving the
-    caller on the direct cubic. The stubs live in the inter-column corridors,
-    which the layered layout keeps empty, so only the lane span is tested."""
-    xa, xb = x1 + stub, xe - stub
-    lox, hix = min(xa, xb), max(xa, xb)
-    inrange = [r for r in obstacles if r[0] < hix and r[0] + r[2] > lox]
-    if not inrange:
-        return None
-    blocked = [(r[1] - clearance, r[1] + r[3] + clearance) for r in inrange]
-    lo = min(r[1] for r in inrange) - 40.0
-    hi = max(r[1] + r[3] for r in inrange) + 40.0
-    lane = _clear_lane_y((y1 + y2) / 2.0, blocked, lo, hi)
-    if lane is None:
-        return None
+def _detour_points(x1, y1, xa, xb, xe, y2, lane):
+    """The routed polyline a viewer's eye follows: source-port bend up to the lane,
+    the straight lane segment, then the bend down into the target port. Samples the
+    SAME two cubics `_detour_str` formats, so the hit-test and the emitted `d`
+    describe one curve (the lane segment is the (xa,lane)->(xb,lane) hop between)."""
+    mx1, mx2 = (x1 + xa) / 2.0, (xb + xe) / 2.0
+    pts = _cubic_points((x1, y1), (mx1, y1), (mx1, lane), (xa, lane))
+    pts += _cubic_points((xb, lane), (mx2, lane), (mx2, y2), (xe, y2))
+    return pts
+
+
+def _detour_str(x1, y1, xa, xb, xe, y2, lane):
+    """The detour `d` (two cubics + a straight lane hop) — byte-identical to the
+    former inline format so an already-clear detour regenerates unchanged."""
     mx1, mx2 = (x1 + xa) / 2.0, (xb + xe) / 2.0
     return (
         "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f} "
@@ -1553,6 +1545,63 @@ def _detour_d(x1, y1, xe, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB)
             y2,
         )  # fmt: skip
     )
+
+
+def _detour_d(x1, y1, xe, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB):
+    """A path 'd' that leaves the source port (x1,y1) rightward, runs a clear
+    horizontal lane over/under the blocking `obstacles`, and enters the target
+    port at (xe,y2) on a short horizontal stub. `obstacles` are (x,y,w,h) rects
+    with the wire's own endpoints already removed.
+
+    WI-255: the FULL routed polyline (both stubs, the two bends, and the lane) is
+    re-verified clear of EVERY obstacle overlapping the routed x-span — a box
+    sitting only in a port-stub corridor (formerly dropped from the lane search,
+    letting the caller silently keep a through-box direct cubic) is now caught.
+    Lanes are tried nearest the endpoint midline first, so an already-clear detour
+    regenerates byte-for-byte; the first lane whose full polyline clears wins. When
+    no lane is fully clear, the least-obstructed deterministic path is returned
+    (never a silent through-box when a clear route exists, and always terminating —
+    the candidate set is finite). Returns None only when no obstacle sits in the
+    routed span at all (caller keeps the direct cubic)."""
+    xa, xb = x1 + stub, xe - stub
+    fox, fxh = min(x1, xe), max(x1, xe)
+    full = [r for r in obstacles if r[0] < fxh and r[0] + r[2] > fox]
+    if not full:
+        return None
+    lox, hix = min(xa, xb), max(xa, xb)
+    lane_span = [r for r in full if r[0] < hix and r[0] + r[2] > lox]
+    y_pref = (y1 + y2) / 2.0
+    best = None  # (hit_count, d): the least-bad deterministic fallback
+    # First pass over just the lane-span boxes reproduces the legacy lane (byte
+    # stable); the second folds in the stub-corridor boxes to find a clear route.
+    for src in (lane_span, full):
+        if not src:
+            continue
+        blocked = [(r[1] - clearance, r[1] + r[3] + clearance) for r in src]
+        lo = min(r[1] for r in src) - 40.0
+        hi = max(r[1] + r[3] for r in src) + 40.0
+        for lane in _lane_candidates(y_pref, blocked, lo, hi):
+            pts = _detour_points(x1, y1, xa, xb, xe, y2, lane)
+            hits = sum(1 for r in full if _polyline_hits(pts, (r,)))
+            if hits == 0:
+                return _detour_str(x1, y1, xa, xb, xe, y2, lane)
+            if best is None or hits < best[0]:
+                best = (hits, _detour_str(x1, y1, xa, xb, xe, y2, lane))
+    return best[1] if best else None
+
+
+def _routed_label_xy(d, fx, fy):
+    """Where an edge label should sit so it rides its wire. A DETOURED path carries
+    a straight lane segment ("... xa,lane L xb,lane ..."); anchor to that lane's
+    midpoint (WI-255 — the label formerly stuck to the straight-chord midpoint and
+    floated off a re-routed wire). A clear (direct-cubic) path has no 'L' and keeps
+    the caller's straight-chord fallback (fx, fy), so its label is byte-identical."""
+    if " L" not in d:
+        return fx, fy
+    before, after = d.split(" L", 1)
+    ax, ay = before.rsplit(" ", 1)[1].split(",")
+    bx = after.split(" ", 1)[0].split(",")[0]
+    return (float(ax) + float(bx)) / 2.0, float(ay)
 
 
 def _route_edges(edges, rects_by_id, min_dx, end_trim):
