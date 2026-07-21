@@ -10627,3 +10627,62 @@ skills-index (WI-245) + rubric enrichment (WI-244) raise the bar the critic judg
 against. Remaining: WI-246/247/248 (queued minor nits — building any changes the
 render surface and will require a fresh critique before G3 re-greens, the
 fail-closed gate now doing its job) + the merge-to-main sitting.
+
+## 2026-07-20 — WI-246/247/248 DONE: the 3 queued dashboard nits closed (traincar build + independent opus review + re-critique)
+
+Per `PROCESS_OPTIONS.md` "Traincar batching" (independent off-spine WIs cluster
+into one branch, one Build pass, one review round), built all three 075-CRITIQUE
+minor nits as one commit (`dd170fc`, opus builder): **WI-246** (How/SW component
+labels truncating, e.g. "CMP-004 — Unattended…") fixed by wrapping `ID — Name`
+onto an id line over a name line in the containerized drill view (a new
+`_drill_block_label` helper, reusing the `arch_icicle` id/name idiom — the
+finding had pointed at the flat `sw_graph` fallback, but the actual render path
+is `_drill_layer_svg`). **WI-247** (When/DAG phase-accent palette — 8
+near-identical maroon/plum hexes) replaced with a hue-wheel-spread palette
+validated via the `dataviz` skill's `validate_palette.js`. **WI-248** (What-icicle
+390px overflow) needed no code change — rendering the arch tab at 390px showed
+the WI-219 `_hscroll`/`SCROLL_CUE` idiom already working; the finding had simply
+never been independently re-verified since WI-189.
+
+**Independent opus REVIEW-A: CHANGES-REQUESTED findings=2** on the first build.
+WI-246 and WI-248 verified correct. **MAJOR** on WI-247: the new palette reused
+`#b45309`/`#047857` byte-identical to `STATUS_FILL`'s active/done and
+`TIER_FILL`'s tc — a uniformity (U5) regression, since both color vocabularies
+render on the same When/DAG panel (an orange "phase 2" block and an emerald
+"unphased" block sitting beside a status legend using the identical
+orange/emerald). **MINOR**: `_drill_block_label`'s wrap dispatch string-sniffed
+`" — " in label` instead of an explicit flag. Independently confirmed the
+collision against the source (`STATUS_FILL`/`TIER_FILL` dicts) before routing
+back to the same builder for rework.
+
+**Rework (`d3a3e04`):** gathered the full `STATUS_FILL ∪ TIER_FILL` exclusion set
+first, then rebuilt `PHASE_ACCENTS` so every value is byte-distinct from all six
+excluded colors and ≥ 11 ΔE (normal vision) from the three same-tab status hues;
+re-validated ALL-PASS (chroma floor, adjacent CVD ΔE 9.6, normal-vision 18.8,
+white-text contrast ≥ 5.9:1 on every value) — a deliberate trade-off recorded in
+the code comment (excluding the green/orange/grey status families costs some
+CVD headroom vs. a same-hue-shade alternative, but distinct hues over lightness
+jitter is the whole point of WI-247). Also fixed the MINOR (`wrap` is now an
+explicit block flag set by `cmp_block`, not string-sniffed).
+
+**077-CRITIQUE ([077-CRITIQUE.md](reviews/077-CRITIQUE.md)):** re-shot the PNG
+matrix on `d3a3e04` and independently confirmed all three in the rendered
+pixels — full CMP names in both themes (WI-246), 8 mutually-distinct phase
+blocks/swatches with no collision against the status legend in either theme
+(WI-247), and the 390px scroll cue + clipped-but-reachable icicle columns
+(WI-248). One non-blocking observation recorded (not filed as a WI): "1+2" and
+"unphased" sit closer in hue than the other pairs, though both are distinct from
+everything else and never render adjacent. **VERDICT: APPROVE findings=0.** This
+re-dates the perceptual evidence past the render change, clearing the WI-243
+staleness warn `check_trajectory` raised the moment `d3a3e04` touched the render
+surface.
+
+**Verified:** full suite **1238 passed, 1 skipped** @ 90.92% coverage;
+`check.py --gate G3 --jobs 0` **RESULT: PASS (16/16)** — including `trajectory`
+(the WI-243 fail-closed staleness step) green against the fresh 077-CRITIQUE.
+
+**The dashboard-quality workstream is now fully closed**
+(WI-243/244/245/159/246/247/248) — every finding from the original
+075-CRITIQUE.md has a resolved disposition, end to end through an opus
+build+review+rework+re-critique loop. Remaining: OI-4/OI-7 (owner surfaces),
+the deferred backlog, and the merge-to-main sitting for `dualplan-routing-fix`.
