@@ -439,4 +439,4 @@ Unrelated, which test cases are actually carried through to a downstream user of
 
 ~~~~~~~~~~~~~~~~
 
-Specs are getting stored as WI labels, instead of getting integrated with the module they go with.  This will likely cause specs to rot over time.  Wasn't this addressed earlier in some form?
+Specs are getting stored as WI labels, instead of getting integrated with the module they go with.  This will likely cause specs to rot over time.  Wasn't this addressed earlier in some form?  I thought work item specs were to get absorved into their respective work item when complete to keep all relevent content in a single location.
