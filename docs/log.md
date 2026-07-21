@@ -10698,7 +10698,7 @@ constraint recorded in the spec: archiving must not orphan knowledge — each
 spec's durable content gets a **living home** (spine / architecture.md /
 interfaces.csv) *before* the file archives; the WI-000 "spine reflects it" box,
 verified retroactively. **WI-251** (queued, strong, high-risk, SR-068,
-[specs/WI-251.md](specs/WI-251.md)): (1) absorb-verify sweep, reviewer-tier per
+[specs/WI-251.md](archive/specs/WI-251.2026-07-20.md)): (1) absorb-verify sweep, reviewer-tier per
 spec, then archive + clear; (2) mechanical **R-F** in `check_trajectory` (done
 WI ⇒ empty SpecRef; live spec ⇒ ≥1 open citing WI) routed through the
 strict-promotable loop — WARN at the commit bar, ERROR under `--strict` at
@@ -10771,3 +10771,46 @@ glob (retained evidence, reached from log entries). `check_docs`: 202 docs,
 **0 broken**; `check_trajectory`: **R-F clean** — the only remaining `--strict`
 error is the pre-existing perceptual-stale re-fire (WI-249/250 changed the
 render surface after 077-CRITIQUE), cleared by the fresh critique at close.
+
+## 2026-07-20 — WI-251/252/254 CLOSED (109-REVIEW-A APPROVE); WI-253 filed + 078-CRITIQUE; SPINE +SR-109/LLR-097/TC-100
+
+The spec-lifecycle close-side session, end to end in one sitting (11 build
+commits bb361fa..e6184cb + this close). **WI-251** shipped R-F (fail-closed at
+G2/G3), the 61-spec absorb-verify sweep (61/61 ABSORBED; dispositions above),
+the scaffold-boilerplate dogfood (specs+rubrics README/-000, the WI-000
+delete-banner template fix, the commit-msg delegating wrapper), and the
+bootstrap.MAPPING/SCAFFOLD_OMISSIONS standing invariant. **WI-252** made the
+plan/build cadence and the trajectory layer mutually exclusive (demote not
+delete). **WI-254** armed the wrapper-hook .coverage sweep (owner directive;
+proven live). **WI-253 filed** (edge routing) with rubric anchor **T8** as the
+owner-directed critique acceptance; **078-CRITIQUE** re-judged the current
+render: T1–T7 PASS, T8 FAIL → `VERDICT: CHANGES-REQUESTED findings=1`,
+disposition WI-253 — and re-dated the perceptual evidence, clearing the
+WI-249/250 staleness re-fire.
+
+**Independent review:** [109-REVIEW-A](reviews/109-REVIEW-A.md) (opus,
+adversarial, verified by driving the shipped paths): **APPROVE findings=2, both
+MINOR, both consumed this close** — (1) the four dogfooded boilerplate copies
+are now byte-identity-pinned in `test_dogfood_sync` (existence-gating alone
+missed the structure intent); (2) status.md rewritten forward-only, 131 → 86
+lines (under the 120 budget; the accreted dashboard-workstream narrative moved
+here, its live home).
+
+**Deviations from spec:** none of substance; the commit-msg install shape
+changed from verbatim copy to delegating wrapper after the copy failed live
+(recorded in the build commit — the shipped hook assumes the scaffolded
+scripts/ layout).
+
+**Byte deltas (session total):** PROCESS_OPTIONS.md 158557 → 159787 (+492
+R-F prose, +738 WI-252 mutual exclusion; both flagged, baseline re-stamped
+twice in all 3 byte-budget-guard copies); PLAN.template.md 1811 → 2333;
+specs/README.template.md 3037 → 3392; AGENTS.template.md / PROCESS.md
+untouched.
+
+**Verified:** full suite **1242 passed, 4 skipped** (0:04:51);
+`check_trajectory --strict` exit 0 (R-F clean post-sweep; perceptual-stale
+cleared by 078); `check_docs` 206 docs, 0 broken; spine SN=25 **SR=109
+LLR=97 TC=100**, `trace.py --strict` zero orphans; `check.py --gate G3
+--jobs 0` at close — result in the close commit. docs/specs/ now holds only
+scaffold boilerplate + the 5 deferred-WI specs + WI-253 — the state R-F
+holds.

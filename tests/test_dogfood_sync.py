@@ -395,3 +395,25 @@ def test_bite_scaffold_walk_catches_an_undeclared_absence():
         and d not in without
     ]
     assert "docs/plan.md" in missing
+
+
+# --- dogfooded scaffold boilerplate: byte-identical to its template ------------
+# 109-REVIEW-A MINOR: the MAPPING walk gates EXISTENCE; these four copies also
+# carry the "STRUCTURE must not drift" intent, and — placeholder-free verbatim
+# copies — their strongest cheap pin is byte identity (the gen_skills_index
+# per-agent-copy idiom). A deliberate divergence would demote the entry to the
+# header-superset treatment above, with the reason recorded here.
+BOILERPLATE_COPIES = {
+    "docs/specs/README.md": "project-trajectory/specs/README.template.md",
+    "docs/specs/WI-000.md": "project-trajectory/specs/WI-000.template.md",
+    "docs/rubrics/README.md": "project-trajectory/rubrics/README.template.md",
+    "docs/rubrics/rubric-000.md": "project-trajectory/rubrics/rubric-000.template.md",
+}
+
+
+@pytest.mark.parametrize("live_rel,tmpl_rel", sorted(BOILERPLATE_COPIES.items()))
+def test_dogfooded_boilerplate_matches_template(live_rel, tmpl_rel):
+    assert (ROOT / live_rel).read_bytes() == (ROOT / tmpl_rel).read_bytes(), (
+        "{} drifted from {} — re-copy it (or demote this entry with a recorded "
+        "reason)".format(live_rel, tmpl_rel)
+    )
