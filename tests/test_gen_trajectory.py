@@ -1975,3 +1975,24 @@ def test_meta_knowledge_and_when_wires_avoid_unrelated_boxes():
     when = gt.when_view(ROOT, wis)
     assert when is not None
     assert _wire_through_box_violations(when) == []
+
+
+def test_fallback_dag_and_sw_graph_wires_avoid_unrelated_boxes():
+    # 110-REVIEW-A MINOR: the meta panels render the tiered/containerized views,
+    # so the flat fallbacks `dag_svg` / `sw_graph` (a small registry's roadmap, a
+    # seam-less repo's How-SW) never enter the meta scans above — a routing
+    # regression in either integration would ship unseen. Drive both over the
+    # real registry and hold them to the same T8 through-box invariant; the
+    # wire-presence floors keep the scan honest (an emitter rename or a dropped
+    # `<svg>` wrapper would otherwise pass vacuously).
+    ct = load_script("check_trajectory")
+    gt = load_script("gen_trajectory")
+    wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
+    assert not integrity
+    dag, _details = gt.dag_svg(wis)
+    assert dag.lstrip().startswith("<svg") and dag.count('<path class="edge') > 100
+    assert _wire_through_box_violations(dag) == []
+    sw = gt.sw_graph(ROOT, gt.sw_modules(ROOT))
+    assert sw is not None
+    assert sw.lstrip().startswith("<svg") and sw.count('<path class="swedge"') > 10
+    assert _wire_through_box_violations(sw) == []
