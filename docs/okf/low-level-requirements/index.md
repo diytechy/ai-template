@@ -107,3 +107,4 @@ resource: "generated"
 | [LLR-094](LLR-094.md) | Lifecycle-boundary recovery |
 | [LLR-095](LLR-095.md) | Dual-plan path isolation |
 | [LLR-096](LLR-096.md) | Serialized dual-plan disposition |
+| [LLR-097](LLR-097.md) | Spec-lifecycle close-side findings |

@@ -404,6 +404,57 @@ def test_specref_with_anchor_resolves(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+def test_rf_done_wi_with_specref_warns_plain_fails_strict(tmp_path):
+    # R-F (WI-251): close clears the SpecRef — a done row still carrying one is
+    # the close-side incoherence R-E's open half never saw. Warn plain, ERROR
+    # under --strict. The spec file itself is also flagged (no open citer).
+    write_spec(tmp_path, "docs/specs/WI-001.md")
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,done,shipped it,docs/specs/WI-001.md\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "R-F WI-001" in plain.stderr and "still set" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "R-F WI-001" in strict.stderr
+
+
+def test_rf_orphan_live_spec_warns_plain_fails_strict(tmp_path):
+    # R-F: a live docs/specs file no open WI cites belongs in the archive — the
+    # residue rot the sweep clears must not silently re-grow.
+    write_spec(tmp_path, "docs/specs/WI-009.md")
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,done,shipped it,\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "docs/specs/WI-009.md" in plain.stderr and "no open WI" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+
+
+def test_rf_shared_doc_lives_while_any_open_citer_remains(tmp_path):
+    # R-F negative: a shared effort doc archives only at its LAST open citer's
+    # close — a deferred WI is open, so the doc (cited via #anchor) stays live
+    # even though a done sibling once shipped from it (SpecRef duly cleared).
+    write_spec(tmp_path, "docs/specs/effort.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Done half,scripts,,,done,shipped it,\n"
+        "WI-002,Parked half,scripts,,,deferred,,docs/specs/effort.md#s2\n",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_rf_scaffold_boilerplate_excluded(tmp_path):
+    # R-F negative: the scaffolded README + -000 exemplar are permanent (the
+    # WI-251 banner fix) and never read as archivable residue — a fresh scaffold
+    # stays vacuously green.
+    write_spec(tmp_path, "docs/specs/README.md")
+    write_spec(tmp_path, "docs/specs/WI-000.md")
+    write_wis_sr(tmp_path, "WI-001,A,scripts,,,done,shipped it,\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 def test_compliant_registry_and_status_passes_strict(tmp_path):
     # The whole model, coherent: a done row with a Deliverable and no SpecRef, an
     # open row with an empty Deliverable + resolvable SpecRef -> --strict is fully

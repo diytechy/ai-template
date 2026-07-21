@@ -119,3 +119,4 @@ resource: "generated"
 | [SR-106](SR-106.md) | Fresh-session dual-plan execution |
 | [SR-107](SR-107.md) | Dual-plan direct-path isolation |
 | [SR-108](SR-108.md) | Serialized dual-plan disposition |
+| [SR-109](SR-109.md) | Spec-lifecycle close-side coherence |

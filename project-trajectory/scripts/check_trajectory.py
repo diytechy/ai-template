@@ -35,7 +35,11 @@ rules:
     wrong.
   - **R-E** — every open WI carries a non-empty `SpecRef` resolving to an in-repo
     target (`path` or `path#anchor`; the path part must exist).
-R-E is **WARN by default, ERROR under `--strict`** (wired at G2+). R-B/R-C —
+  - **R-F** (WI-251) — the close side R-E leaves unstated: a **done** WI's
+    `SpecRef` is **empty**, and every live `docs/specs/` file (scaffold
+    README/`-000` boilerplate excluded) is cited by at least one *open* WI —
+    otherwise it belongs in `docs/archive/specs/` (the specs README lifecycle).
+R-E and R-F are **WARN by default, ERROR under `--strict`** (wired at G2+). R-B/R-C —
 every *open* WI repeated as a token in `status.md` — stay **retired** (WI-180):
 status becomes an integrator-generated snapshot, so open-id currency is enforced
 by generated freshness, not by copying the registry back into prose. **R-D is
@@ -1103,6 +1107,58 @@ def ssot_findings(wis, root):
     return out
 
 
+def spec_lifecycle_findings(root, wis):
+    """The spec-lifecycle close-side rule **R-F** (WI-251) — the mechanical half
+    of the close ritual R-E's open half leaves unstated: *Deliverable filled,
+    `SpecRef` cleared, spec archived* (the `docs/specs/` README lifecycle). The
+    one-sided enforcement is how this repo accreted 137 done rows with live
+    SpecRefs before the rule existed. Two findings, both message-only (the
+    caller tags `R-F` and owns the warn-plain / error-under-`--strict`
+    promotion, the `run-state` tier — so a rotting spec surface cannot reach a
+    green G2/G3 gate while a plain commit stays warn-first):
+
+      - a **done** WI whose `SpecRef` is still set — close clears it (the
+        Deliverable + log carry the backward record);
+      - a **live** `docs/specs/` file cited by no *open* WI — archive it to
+        `docs/archive/specs/` (close date appended, WI ids noted) or point an
+        open WI at it. A shared effort doc therefore archives only when its
+        last open citer closes; `deferred`/`blocked` are open, so their specs
+        stay. The scaffold boilerplate (README, any `-000` exemplar) is
+        excluded by the `spec_interface_findings` idiom.
+
+    Vacuous on a fresh scaffold (no done-with-SpecRef rows; only excluded
+    boilerplate in `docs/specs/`). Whether the archived spec's durable content
+    actually landed in a spine/architecture home first is the recorded
+    Reviewer-tier gap (enforcement-audit.md)."""
+    out = []
+    open_cited = set()
+    for w in wis:
+        spec = w["specref"]
+        if not spec:
+            continue
+        if w["status"] in OPEN_STATUSES:
+            open_cited.add(spec.split("#", 1)[0].strip())
+        elif w["status"] == "done":
+            out.append(
+                "{}: status=done but SpecRef {!r} is still set (close clears "
+                "the SpecRef and archives the spec to docs/archive/specs/ — "
+                "the {}/README.md lifecycle)".format(w["id"], spec, SPECS_DIR)
+            )
+    specs = root / SPECS_DIR
+    if specs.is_dir():
+        for path in sorted(specs.glob("*.md")):
+            if path.name.lower() == "readme.md" or path.stem.endswith("-000"):
+                continue
+            rel = "{}/{}".format(SPECS_DIR, path.name)
+            if rel not in open_cited:
+                out.append(
+                    "{}: live spec cited by no open WI (archive it to "
+                    "docs/archive/specs/ with the close date appended and the "
+                    "WI ids noted, or point an open WI's SpecRef at it)".format(rel)
+                )
+    return out
+
+
 # --- status.md forward-only enforcement (WI-200; restores WI-180-retired R-D) --
 # A word-bounded `WI-###` id token, so a `done` id embedded in status.md prose
 # (a "CLOSED (WI-142)" narrative, a bullet) is found wherever it appears.
@@ -1651,7 +1707,8 @@ def main():
     ap.add_argument(
         "--strict",
         action="store_true",
-        help="promote the registry coherence rule R-E (open-WI SpecRef resolves) "
+        help="promote the registry coherence rules R-E (open-WI SpecRef resolves) "
+        "and R-F (done WI clears SpecRef; a live spec has an open citer) "
         "from WARN to ERROR (wired at gate G2+; R-A always fails regardless)",
     )
     ap.add_argument(
@@ -1761,6 +1818,11 @@ def main():
     findings.extend(
         ("perceptual-stale", False, msg) for msg in critique_staleness_findings(root)
     )
+    # Spec-lifecycle close side (WI-251, rule R-F) — done WI with a live SpecRef,
+    # or a live docs/specs file no open WI cites. Same warn-plain / error-under-
+    # --strict tier (no new branch in main); the R-E open-half's closing
+    # counterpart.
+    findings.extend(("R-F", False, msg) for msg in spec_lifecycle_findings(root, wis))
     for rule, hard, msg in findings:
         line = "{} {}".format(rule, msg)
         if hard or args.strict:
