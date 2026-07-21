@@ -10705,3 +10705,14 @@ strict-promotable loop — WARN at the commit bar, ERROR under `--strict` at
 G2/G3 (the WI-243 fail-closed precedent; downstream migration flagged in the
 spec, opt-out `docs/trajectory-check`). Filing only — registry row + spec +
 status pointer; no code, no spine change.
+
+**Addendum (same sitting):** owner asked the impact of the missing
+`docs/specs/README.md` — investigated: bootstrap ships README+WI-000 into every
+downstream `docs/specs/` (MAPPING, WI-053), but this repo's dir predates WI-053
+and was never backfilled; measurably causal for the drift (57/58 live specs
+kept the Done-when shape, **0** carry the close-ritual boxes — agents copied
+neighbors, not the absent exemplar). Also exposed a template contradiction:
+`WI-000.template.md`'s "delete on first real entry" banner vs the README
+linking it as the permanent shape reference and the kit's inert-`-000`
+convention. WI-251's spec now includes the dogfood step (copy both files, fix
+the banner template-side first, `test_dogfood_sync.py` gates the copies).
