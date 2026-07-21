@@ -8,7 +8,7 @@ the implementer's self-assessment**. Authored at `[v3]-[g2]` (WI-135) from the
 SR-054 / SN-024 / SN-023 intent, not from the possibly-lax TC.
 
 The verdict is `VERDICT: APPROVE|CHANGES-REQUESTED findings=N` with each finding
-citing an anchor id (`T1`…`T7`). APPROVE requires every anchor satisfied. Judge as
+citing an anchor id (`T1`…`T8`). APPROVE requires every anchor satisfied. Judge as
 a **first-time reviewer** opening the dashboard cold.
 
 ## The core reading tasks (the concrete "one tab switch" list)
@@ -70,6 +70,17 @@ above-the-fold view; narrow content reflows rather than forcing a sideways
 scroll. (T4 governs the legibility of an individual label; T7 governs whole-layout
 fit.) *Bad:* at 390px the nav bar or a graph spills past the right edge and needs
 horizontal scrolling to read.
+
+**T8 — Edge routing legibility (owner acceptance, 2026-07-20 / WI-253).** In
+every wired diagram (When DAG, How-SW graph, Knowledge graph, the drill views,
+the Process hoops), a reader can follow any edge from source to target: **no
+edge passes through an unrelated node box**, and edge crossings are minimized —
+where a crossing is unavoidable it happens in open space, not under a label or
+port cluster. *Bad:* a dependency wire cuts straight through an intermediate
+WI's box so it reads as connected to it; three edges cross inside a port fan
+and the sources become unattributable. (Known open finding: WI-253 tracks the
+current crossing/through-box gap — a critique may cite it as filed, but T8
+still blocks APPROVE until the render passes.)
 
 ## Notes for the critic
 
