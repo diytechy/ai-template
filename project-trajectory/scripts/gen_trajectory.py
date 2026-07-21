@@ -64,6 +64,7 @@ Contracts: IF-011, IF-024, IF-052, IF-056 — the interface seams this module de
 import argparse
 import html
 import json
+import math
 import re
 import string
 import subprocess
@@ -468,6 +469,34 @@ STATUS_FILL = {"done": "#047857", "active": "#b45309", "queued": "#94a3b8"}
 # drill work-item block's label (and named in its hover title / detail).
 STATUS_GLYPH = {"done": "✓", "active": "●", "queued": "○"}
 
+# WI-249 render-legibility fix (render-dashboard-critique found every wire's
+# arrowhead invisible: some used a near-white fill (`var(--border)`, a light
+# panel-hairline token never meant to carry a filled shape), the rest fixed a
+# `strokeWidth`-scaled size so a 1.5px wire drew a triangle a couple of px
+# across). One shared marker builder for every directed-edge graph on the
+# dashboard (the WI DAG, the How-SW seam graph, the OKF concept graph, every
+# `_drill_layer_svg` wire) — `userSpaceOnUse` sizing so the triangle stays a
+# fixed, legible size regardless of the wire's stroke-width, and the path
+# always takes a CSS class (never an inline fill) so it follows the same
+# `--muted`/`--accent` theme tokens as its wire in both light and dark.
+ARROW_SIZE = 9  # px, userSpaceOnUse — independent of any wire's stroke-width
+
+
+def _arrow_markers(*specs):
+    """`<defs>` wrapping one `<marker>` per spec: `(marker_id, css_class)`, or
+    `(marker_id, css_class, size)` to override the default `ARROW_SIZE` (the
+    `cedgearrow` containment marker renders a touch smaller)."""
+    markers = "".join(
+        '<marker id="{}" viewBox="0 0 10 10" refX="8" refY="5" '
+        'markerWidth="{sz}" markerHeight="{sz}" markerUnits="userSpaceOnUse" '
+        'orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" '
+        'class="{}"></path></marker>'.format(
+            esc(spec[0]), esc(spec[1]), sz=spec[2] if len(spec) > 2 else ARROW_SIZE
+        )
+        for spec in specs
+    )
+    return "<defs>{}</defs>".format(markers)
+
 
 def _dag_ranks(wis, pred_map):
     """Longest-path layering: a node's rank is one past its deepest predecessor
@@ -587,24 +616,39 @@ def dag_svg(wis):
     # Edges first (drawn under the nodes). A hard predecessor sits in a lower
     # rank, so hard edges run left->right; a horizontal control offset softens
     # them. Soft (advisory) edges render dashed and may run backwards — they
-    # never constrained the ranking.
+    # never constrained the ranking. A hub node's several edges fan out across
+    # its side rather than bundling on the exact same pixel (`_port_fan`, the
+    # same knot-avoidance the drill-layer wires use).
+    wi_edges = [
+        (p, w["id"], cls)
+        for w in wis
+        for p, cls in [(p, "edge") for p in w["preds"]]
+        + [(p, "edge soft") for p in w["soft"]]
+        if p in ids
+    ]
+    out_groups, in_groups = {}, {}
+    for e in wi_edges:
+        out_groups.setdefault(e[0], []).append(e)
+        in_groups.setdefault(e[1], []).append(e)
+    out_off = _port_fan(out_groups, lambda e: e[1], pos, DAG_ROW_H)
+    in_off = _port_fan(in_groups, lambda e: e[0], pos, DAG_ROW_H)
+
     edges = []
-    for w in wis:
-        for p, cls in [(p, "edge") for p in w["preds"]] + [
-            (p, "edge soft") for p in w["soft"]
-        ]:
-            if p not in ids:
-                continue
-            x1, y1 = pos[p][0] + DAG_COL_W, pos[p][1] + DAG_ROW_H / 2
-            x2, y2 = pos[w["id"]][0], pos[w["id"]][1] + DAG_ROW_H / 2
-            dx = max((x2 - x1) * 0.4, 12)
-            edges.append(
-                '<path class="{}" data-src="{}" data-tgt="{}" '
-                'd="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
-                'marker-end="url(#arrow)"></path>'.format(
-                    cls, esc(p), esc(w["id"]), x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2
-                )
+    for e in wi_edges:
+        p, wid, cls = e
+        x1 = pos[p][0] + DAG_COL_W
+        y1 = pos[p][1] + DAG_ROW_H / 2 + out_off[e]
+        x2 = pos[wid][0]
+        y2 = pos[wid][1] + DAG_ROW_H / 2 + in_off[e]
+        dx = max((x2 - x1) * 0.4, 12)
+        x2p = x2 - 2  # clears the rect edge instead of overlapping it
+        edges.append(
+            '<path class="{}" data-src="{}" data-tgt="{}" '
+            'd="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
+            'marker-end="url(#arrow)"></path>'.format(
+                cls, esc(p), esc(wid), x1, y1, x1 + dx, y1, x2p - dx, y2, x2p, y2
             )
+        )
 
     nodes, details = [], {}
     for w in wis:
@@ -655,11 +699,7 @@ def dag_svg(wis):
             ),
         }
 
-    defs = (
-        '<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" '
-        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-        '<path d="M0,0 L10,5 L0,10 z" class="arrowhead"></path></marker></defs>'
-    )
+    defs = _arrow_markers(("arrow", "arrowhead"))
     svg = (
         '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
         'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}</svg>'.format(
@@ -733,20 +773,26 @@ def sw_graph(root, mods):
         (SW_COL_W, SW_COL_GAP, SW_ROW_H, SW_ROW_GAP, SW_PAD),
     )
 
+    out_groups, in_groups = {}, {}
+    for e in edges:
+        out_groups.setdefault(e[0], []).append(e)
+        in_groups.setdefault(e[1], []).append(e)
+    out_off = _port_fan(out_groups, lambda e: e[1], pos, SW_ROW_H)
+    in_off = _port_fan(in_groups, lambda e: e[0], pos, SW_ROW_H)
+
     edge_svg = []
-    for s, d, iid in sorted(edges):
-        x1, y1 = pos[s][0] + SW_COL_W, pos[s][1] + SW_ROW_H / 2
-        x2, y2 = pos[d][0], pos[d][1] + SW_ROW_H / 2
+    for e in sorted(edges):
+        s, d, iid = e
+        x1, y1 = pos[s][0] + SW_COL_W, pos[s][1] + SW_ROW_H / 2 + out_off[e]
+        x2, y2 = pos[d][0], pos[d][1] + SW_ROW_H / 2 + in_off[e]
         dx = max((x2 - x1) * 0.4, 12)
-        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+        x2p = x2 - 2
+        mx, my = (x1 + x2p) / 2, (y1 + y2) / 2
         edge_svg.append(
-            '<path d="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
-            'fill="none" stroke="#94a3b8" stroke-width="1.3" '
-            'marker-end="url(#swarrow)"></path>'
-            '<text x="{:.1f}" y="{:.1f}" text-anchor="middle" fill="#64748b" '
-            'font-size="9">{}</text>'.format(
-                x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2, mx, my - 2, esc(iid)
-            )
+            '<path class="swedge" d="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} '
+            '{:.1f},{:.1f}" marker-end="url(#swarrow)"></path>'
+            '<text class="swlab" x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text>'
+            "".format(x1, y1, x1 + dx, y1, x2p - dx, y2, x2p, y2, mx, my - 2, esc(iid))
         )
     node_svg = []
     for k in node_ids:
@@ -772,15 +818,16 @@ def sw_graph(root, mods):
                 esc(short),
             )  # fmt: skip
         )
-    defs = (
-        '<defs><marker id="swarrow" viewBox="0 0 10 10" refX="9" refY="5" '
-        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-        '<path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"></path></marker></defs>'
+    defs = _arrow_markers(("swarrow", "swarrow-head"))
+    style = (
+        "<style>#sw .swedge{fill:none;stroke:var(--muted);stroke-width:1.4;}"
+        "#sw .swarrow-head{fill:var(--muted);}"
+        "#sw .swlab{fill:var(--muted);font-size:9px;}</style>"
     )
     return (
         '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
-        'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}</svg>'.format(
-            width, height, width, defs, "".join(edge_svg), "".join(node_svg)
+        'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}{}</svg>'.format(
+            width, height, width, defs, style, "".join(edge_svg), "".join(node_svg)
         )
     )
 
@@ -1311,24 +1358,59 @@ def _drill_block_label(b, col_w, cx, cy):
     )
 
 
+def _port_fan(groups, other_of, pos, row_h):
+    """Per-port vertical fan-out offsets (keyed by edge tuple) so several wires
+    sharing one port spread across a small band instead of converging on the
+    exact same pixel — the "knot" a plain center-to-center wire draws when 3+
+    edges share a port. Offsets are ordered by the OTHER endpoint's row (so a
+    wire to a higher block leaves/lands higher), which also keeps neighbouring
+    wires from needlessly crossing each other right at the port. A single-edge
+    port gets offset 0 (byte-identical to the former center-only routing)."""
+    offsets = {}
+    for items in groups.values():
+        n = len(items)
+        if n <= 1:
+            for e in items:
+                offsets[e] = 0.0
+            continue
+        items_sorted = sorted(items, key=lambda e: (pos[other_of(e)][1], e))
+        span = min(row_h * 0.6, (n - 1) * 6.0)
+        step = span / (n - 1)
+        start = -span / 2
+        for i, e in enumerate(items_sorted):
+            offsets[e] = start + i * step
+    return offsets
+
+
 def _drill_layer_svg(blocks, edges):
     """One drill layer as a plain SVG block diagram. Each block is a rectangle with
     an input port (left-middle) and an output port (right-middle); each aggregated
     `edges` entry (src_key, tgt_key, title) is a wire from the source block's OUTPUT
     port to the target block's INPUT port (Simulink-style). Blocks lay out left->
     right by the shared layered pipeline over the edge set, so a producer sits left
-    of its consumer and crossings are reduced. Byte-deterministic."""
+    of its consumer and crossings are reduced. Byte-deterministic.
+
+    Two render-legibility fixes (both formerly silent since a screenshot, not the
+    raw markup, is what shows them — see the render-dashboard-critique skill):
+    (1) a wire's endpoint is pulled back by PORT_R so its `marker-end` arrowhead
+    lands just outside the port ring instead of dead center — the ring is drawn
+    AFTER wires (so it layers on top) and, at the former center-to-center length,
+    fully swallowed the arrowhead every time; (2) `_port_fan` spreads multiple
+    wires sharing one port across a small vertical band instead of bundling them
+    onto the exact same pixel, so a fan-in/fan-out reads as distinct strands."""
     keys = [b["key"] for b in blocks]
     by_key = {b["key"]: b for b in blocks}
     order = {k: i for i, k in enumerate(sorted(keys))}
     pred_map = {k: [] for k in keys}
     succ_map = {k: [] for k in keys}
     seen = set()
-    for a, b, _t in edges:
+    wire_edges = []
+    for a, b, t in edges:
         if a in by_key and b in by_key and a != b and (a, b) not in seen:
             seen.add((a, b))
             pred_map[b].append(a)
             succ_map[a].append(b)
+            wire_edges.append((a, b, t))
     col_w = _tier_col_width(blocks)  # SR-056: right-sized, ≤ MAX_TIER_COL
     geom = (col_w,) + DRILL_GEOM[1:]
     pos, width, height = _layered_layout(
@@ -1340,13 +1422,26 @@ def _drill_layer_svg(blocks, edges):
     )
     _cw, _cg, row_h, _rg, _pad = geom
 
+    out_groups, in_groups = {}, {}
+    for e in wire_edges:
+        out_groups.setdefault(e[0], []).append(e)
+        in_groups.setdefault(e[1], []).append(e)
+    out_off = _port_fan(out_groups, lambda e: e[1], pos, row_h)
+    in_off = _port_fan(in_groups, lambda e: e[0], pos, row_h)
+
     wires = []
-    for a, b, title in sorted(edges):
-        if a not in pos or b not in pos or a == b:
-            continue
-        x1, y1 = pos[a][0] + col_w, pos[a][1] + row_h / 2
-        x2, y2 = pos[b][0], pos[b][1] + row_h / 2
+    for e in sorted(wire_edges):
+        a, b, title = e
+        oy, iy = out_off[e], in_off[e]
+        x1, y1 = pos[a][0] + col_w, pos[a][1] + row_h / 2 + oy
+        x2, y2 = pos[b][0], pos[b][1] + row_h / 2 + iy
         dx = max((x2 - x1) * 0.4, 14)
+        # The start stays on the output port (no arrowhead there, so it reads as
+        # attached); the END is pulled PORT_R + 2 px short of the input-port
+        # center so its `marker-end` arrowhead draws in the clear gap just
+        # outside the ring rather than underneath it (the node's port circle is
+        # painted after the wires, so an un-trimmed arrowhead was fully hidden).
+        x2p = x2 - PORT_R - 2
         wires.append(
             '<path class="wire" d="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} '
             '{:.1f},{:.1f}" marker-end="url(#drillarrow)">{}</path>'.format(
@@ -1354,9 +1449,9 @@ def _drill_layer_svg(blocks, edges):
                 y1,
                 x1 + dx,
                 y1,
-                x2 - dx,
+                x2p - dx,
                 y2,
-                x2,
+                x2p,
                 y2,
                 "<title>{}</title>".format(esc(title)) if title else "",
             )
@@ -1430,14 +1525,7 @@ def _drill_layer_svg(blocks, edges):
             )
         )
 
-    defs = (
-        '<defs><marker id="drillarrow" viewBox="0 0 10 10" refX="9" refY="5" '
-        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-        '<path d="M0,0 L10,5 L0,10 z" class="warrow"></path></marker>'
-        '<marker id="cedgearrow" viewBox="0 0 10 10" refX="9" refY="5" '
-        'markerWidth="6" markerHeight="6" orient="auto">'
-        '<path d="M0,0 L10,5 L0,10 z" class="cedgehead"></path></marker></defs>'
-    )
+    defs = _arrow_markers(("drillarrow", "warrow"), ("cedgearrow", "cedgehead", 8))
     return (
         '<svg viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
         'preserveAspectRatio="xMinYMin meet" role="img" class="drillsvg">'
@@ -1734,10 +1822,10 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   #dag .wi .sub { font-size:var(--nsub); }
   #dag .wi.queued text { fill:#0f172a; }
   #dag .wi.hl rect { stroke:#f59e0b; stroke-width:2.5; }
-  #dag .edge { fill:none; stroke:var(--border); stroke-width:1.4; }
-  #dag .edge.soft { stroke-dasharray:5 4; opacity:.75; }
-  #dag .edge.hl { stroke:#f59e0b; stroke-width:2; }
-  #dag .arrowhead { fill:var(--border); }
+  #dag .edge { fill:none; stroke:var(--muted); stroke-width:1.4; opacity:.85; }
+  #dag .edge.soft { stroke-dasharray:5 4; opacity:.65; }
+  #dag .edge.hl { stroke:#f59e0b; stroke-width:2; opacity:1; }
+  #dag .arrowhead { fill:var(--muted); }
   .detail { background:var(--surface); border:1px solid var(--border);
         border-radius:12px; padding:1rem 1.1rem; box-shadow:var(--shadow);
         overflow-y:auto; max-height:640px; }
@@ -2270,16 +2358,25 @@ def know_graph(root):
         (KN_COL_W, KN_COL_GAP, KN_ROW_H, KN_ROW_GAP, KN_PAD),
     )
 
+    out_groups, in_groups = {}, {}
+    for e in edges:
+        out_groups.setdefault(e[0], []).append(e)
+        in_groups.setdefault(e[1], []).append(e)
+    out_off = _port_fan(out_groups, lambda e: e[1], pos, KN_ROW_H)
+    in_off = _port_fan(in_groups, lambda e: e[0], pos, KN_ROW_H)
+
     edge_svg = []
-    for s, d in edges:
-        x1, y1 = pos[s][0] + KN_COL_W, pos[s][1] + KN_ROW_H / 2
-        x2, y2 = pos[d][0], pos[d][1] + KN_ROW_H / 2
+    for e in edges:
+        s, d = e
+        x1, y1 = pos[s][0] + KN_COL_W, pos[s][1] + KN_ROW_H / 2 + out_off[e]
+        x2, y2 = pos[d][0], pos[d][1] + KN_ROW_H / 2 + in_off[e]
         dx = max((x2 - x1) * 0.4, 12)
+        x2p = x2 - 2
         edge_svg.append(
             '<path class="kedge" data-src="{}" data-tgt="{}" '
             'd="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
             'marker-end="url(#knowarrow)"></path>'.format(
-                esc(s), esc(d), x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2
+                esc(s), esc(d), x1, y1, x1 + dx, y1, x2p - dx, y2, x2p, y2
             )
         )
     node_svg, details = [], {}
@@ -2316,11 +2413,7 @@ def know_graph(root):
             "href": info["href"],
             "fill": fill,
         }
-    defs = (
-        '<defs><marker id="knowarrow" viewBox="0 0 10 10" refX="9" refY="5" '
-        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-        '<path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"></path></marker></defs>'
-    )
+    defs = _arrow_markers(("knowarrow", "knowarrow-head"))
     svg = (
         '<svg viewBox="0 0 {:.0f} {:.0f}" width="{:.0f}" '
         'preserveAspectRatio="xMinYMin meet" role="img">{}{}{}</svg>'.format(
@@ -2497,6 +2590,7 @@ def _know_panel(root, svg, details):
         # diverged from `.wire` in light mode) at the same 1.5 width.
         "#knowgraph .kedge{fill:none;stroke:var(--muted);stroke-width:1.5;}"
         "#knowgraph .kedge.hl{stroke:#f59e0b;stroke-width:2;}"
+        "#knowgraph .knowarrow-head{fill:var(--muted);}"
         "#know-detail .body{overflow-wrap:anywhere;}"
         "</style>"
     )
@@ -2690,64 +2784,220 @@ def _process_doc(root, scaffolded, master):
     return scaffolded
 
 
-def _loop_panel(root):
-    """The two circular working loops (SR-055) as one self-contained
-    `<div class="loops">` block: the intake loop (A) and the human-decision
-    loop (B), sharing a single LLM_Agent entry node rendered once. Each stage
-    links to its canonical home *when that home exists in this repo*, so every
-    emitted href resolves (a repo missing the file renders the stage as plain
-    text — still deterministic; the tab itself is gated on docs/gate upstream).
-    No clocks, no repo counts: the loop structure is the method's, not the
-    repo's data, so it renders byte-identically regardless of the registries."""
+# --- the two intersecting working-loop hoops (SR-055) ---------------------------
+#
+# WI-250 render redesign. The former render laid the two loops out as CSS-grid
+# "racetracks" — pill borders drawn around a grid of stage cards. A render
+# critique (the render-dashboard-critique skill) judged the actual pixels: the
+# flow direction was invisible (a border is not a directed cycle) and the "both
+# loops start here" junction read as a box off to the side, not as the point
+# where the two hoops meet. This render draws the honest picture SR-055 asks
+# for: two directed hoops (a real cycle of stage cards wired by curved,
+# arrow-headed edges) that overlap at one shared LLM_Agent hub in the middle —
+# the AI-terminal / resume-script entry both loops pass through. Fully server-
+# computed (fixed trig, `.1f` rounding, sorted/no-clock) so the `--check`
+# freshness byte-compare stays stable and a data-less repo renders identically.
 
-    def canon(rel, label):
-        if (root / rel).exists():
-            return '<a href="{}">{}</a>'.format(esc(rel), esc(label))
-        return esc(label)
+LOOP_GEOM = {
+    "cy": 320.0,  # shared vertical center of both hoops
+    "r": 210.0,  # hoop radius
+    "ax": 280.0,  # loop-A (intake) hoop center x
+    "bx": 560.0,  # loop-B (human-decision) hoop center x — overlaps A (dist 280<2r)
+    "gap": 120.0,  # angular window (deg) reserved hub-side; no stage sits in it
+    "cardw": 136.0,  # stage-card width
+    "cardh": 48.0,  # stage-card height
+    "hubw": 138.0,  # LLM_Agent hub width
+    "hubh": 60.0,  # LLM_Agent hub height
+    "bow": 30.0,  # how far a loop edge bows outward from the hoop center
+    "labely": 30.0,  # hoop-name label baseline (top margin, clear of top cards)
+    "width": 840.0,  # viewBox width
+    "height": 620.0,  # viewBox height
+    "notemax": 30,  # note char budget before it truncates to fit the card
+}
+
+
+def _loop_node_xy(cx, cy, r, deg):
+    """Circle point at `deg` (math angle: 0°=right, 90°=up), SVG y-down."""
+    rad = math.radians(deg)
+    return cx + r * math.cos(rad), cy - r * math.sin(rad)
+
+
+def _loop_stage_angles(jdeg, spin, n, gap):
+    """The `n` stage angles around a hoop: evenly spread over the (360−gap)° arc
+    the hub gap leaves open, walking from the hub in `spin` (±1) direction, so the
+    listed order reads as the flow around the ring and the two stages nearest the
+    hub sit gap/2 clear of it (no crowding at the shared lens)."""
+    seg = (360.0 - gap) / n
+    return [jdeg + spin * (gap / 2.0 + (k + 0.5) * seg) for k in range(n)]
+
+
+def _loop_svg(hub_xy, loops):
+    """One SVG drawing the working loops as intersecting hoops. `loops` is a list
+    of (loop_id, name, hoop_center_x, junction_deg, spin, stages); each stage is
+    (title, note, href_or_None). Stages sit around their hoop (the junction angle
+    reserved for the shared hub), wired hub→s1→…→sn→hub by curved arrows that bow
+    outward so the sequence traces the hoop; `spin` ±1 picks the rotation sense.
+    The hub is drawn last, on top, at `hub_xy`."""
+    g = LOOP_GEOM
+    cy, r = g["cy"], g["r"]
+    hx, hy = hub_xy
+
+    edge_layer, card_layer, region_layer = [], [], []
+    for loop_id, name, cx, jdeg, spin, stages in loops:
+        angles = _loop_stage_angles(jdeg, spin, len(stages), g["gap"])
+        pts = [_loop_node_xy(cx, cy, r, a) for a in angles]
+
+        # A faint filled hoop-region disc behind each loop makes the two
+        # overlapping rings — and their shared lens — legible at a glance. Each
+        # hoop is a closed cycle (hub→…→hub), marked `data-cycle="closed"`. The
+        # loop name rides the top margin above its hoop, clear of every card, and
+        # is emitted here (before the cards) so a stage's loop membership is
+        # readable in source order too.
+        region_layer.append(
+            '<circle class="hoop hoop-{}" data-cycle="closed" '
+            'cx="{:.1f}" cy="{:.1f}" r="{:.1f}"/>'
+            '<text class="hooplab" x="{:.1f}" y="{:.1f}" text-anchor="middle">'
+            "{}</text>".format(esc(loop_id), cx, cy, r, cx, g["labely"], esc(name))
+        )
+
+        # The directed cycle: hub → stage1 → … → stageN → hub. Each edge bows
+        # outward from the hoop center so the strand of arrows traces the ring.
+        chain = [(hx, hy)] + pts + [(hx, hy)]
+        for i in range(len(chain) - 1):
+            x1, y1 = chain[i]
+            x2, y2 = chain[i + 1]
+            mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+            ox, oy = mx - cx, my - cy  # outward normal from hoop center
+            olen = math.hypot(ox, oy) or 1.0
+            cxp, cyp = mx + ox / olen * g["bow"], my + oy / olen * g["bow"]
+            # Trim both ends so the arrow starts/lands just outside the cards.
+            x1t, y1t = _shorten(x1, y1, cxp, cyp, 28.0)
+            x2t, y2t = _shorten(x2, y2, cxp, cyp, 32.0)
+            edge_layer.append(
+                '<path class="floop" d="M{:.1f},{:.1f} Q{:.1f},{:.1f} {:.1f},{:.1f}" '
+                'marker-end="url(#floparrow)"/>'.format(x1t, y1t, cxp, cyp, x2t, y2t)
+            )
+
+        for i, ((title, note, href), (px, py)) in enumerate(zip(stages, pts), 1):
+            card_layer.append(_loop_card(loop_id, i, title, note, href, px, py))
+
+    hub = (
+        '<g class="hub"><rect x="{:.1f}" y="{:.1f}" width="{:.1f}" height="{:.1f}" '
+        'rx="12"/><text x="{:.1f}" y="{:.1f}" text-anchor="middle">'
+        '<tspan class="hubname" x="{:.1f}" dy="-5">LLM_Agent</tspan>'
+        '<tspan class="hubsub" x="{:.1f}" dy="16">shared entry · both loops</tspan>'
+        '<tspan class="hubsub" x="{:.1f}" dy="12">start here</tspan></text></g>'.format(
+            hx - g["hubw"] / 2,
+            hy - g["hubh"] / 2,
+            g["hubw"],
+            g["hubh"],
+            hx,
+            hy,
+            hx,
+            hx,
+            hx,
+        )
+    )
+    defs = _arrow_markers(("floparrow", "floparrow-head"))
+    return (
+        '<svg class="loopsvg" viewBox="0 0 {:.0f} {:.0f}" '
+        'preserveAspectRatio="xMidYMid meet" role="img" '
+        'aria-label="The two working loops drawn as intersecting hoops sharing '
+        'one central entry hub">{}{}{}{}{}</svg>'.format(
+            g["width"],
+            g["height"],
+            defs,
+            "".join(region_layer),
+            "".join(edge_layer),
+            "".join(card_layer),
+            hub,
+        )
+    )
+
+
+def _shorten(x, y, tx, ty, dist):
+    """Point `dist` px from (x,y) toward (tx,ty) — trims an edge off a card."""
+    dx, dy = tx - x, ty - y
+    d = math.hypot(dx, dy) or 1.0
+    f = min(dist / d, 1.0)
+    return x + dx * f, y + dy * f
+
+
+def _loop_card(loop_id, idx, title, note, href, px, py):
+    """One stage card centered at (px, py): a rounded rect with a bold title and a
+    (fit-truncated) note, wrapped in an `<a>` when a canonical home exists. The
+    full note always rides a `<title>` so truncation never loses information."""
+    g = LOOP_GEOM
+    w, h = g["cardw"], g["cardh"]
+    x, y = px - w / 2, py - h / 2
+    shown = note if len(note) <= g["notemax"] else note[: g["notemax"] - 1] + "…"
+    body = (
+        "<title>{}</title>"
+        '<rect x="{:.1f}" y="{:.1f}" width="{:.1f}" height="{:.1f}" rx="9"/>'
+        '<text x="{:.1f}" y="{:.1f}" text-anchor="middle">'
+        '<tspan class="stgt" x="{:.1f}" dy="-2">{}</tspan>'
+        '<tspan class="stgn" x="{:.1f}" dy="14">{}</tspan></text>'.format(
+            esc(title + " — " + note),
+            x,
+            y,
+            w,
+            h,
+            px,
+            py,
+            px,
+            esc(title),
+            px,
+            esc(shown),
+        )
+    )
+    attrs = 'class="stg" data-node="{}-{}"'.format(esc(loop_id), idx)
+    if href:
+        return '<a href="{}" {}>{}</a>'.format(esc(href), attrs, body)
+    return "<g {}>{}</g>".format(attrs, body)
+
+
+def _loop_panel(root):
+    """The two intersecting working-loop hoops (SR-055) as one self-contained
+    `<div class="loops">` block: the intake loop (A) and the human-decision
+    loop (B), drawn as two directed hoops that overlap at a single shared
+    LLM_Agent hub rendered once. Each stage links to its canonical home *when
+    that home exists in this repo*, so every emitted href resolves (a repo
+    missing the file renders the stage as a plain card — still deterministic;
+    the tab itself is gated on docs/gate upstream). No clocks, no repo counts:
+    the loop structure is the method's, not the repo's data, so it renders
+    byte-identically regardless of the registries."""
+
+    def home(rel):
+        return rel if (root / rel).exists() else None
 
     wi_csv = "docs/requirements/work-items.csv"
     intake_loop = [
-        ("Intake", canon("docs/status.md", "owner/agent hands work in")),
-        ("Triage → WIs", canon(wi_csv, "scoped work items with spec detail")),
-        ("Resume loop", canon(wi_csv, "the scheduler derives the ready frontier")),
-        ("Build / review", canon("docs/log.md", "BUILD then REVIEW-A/B")),
-        ("Merge", canon("docs/log.md", "verdicts merged; the loop repeats")),
+        ("Intake", "owner/agent hands work in", home("docs/status.md")),
+        ("Triage → WIs", "scoped work items with spec detail", home(wi_csv)),
+        ("Resume loop", "scheduler derives the ready frontier", home(wi_csv)),
+        ("Build / review", "BUILD then REVIEW-A/B", home("docs/log.md")),
+        ("Merge", "verdicts merged; the loop repeats", home("docs/log.md")),
     ]
     decide_loop = [
-        (
-            "Open items",
-            canon("docs/open-items.md", "populated incl. the gate-ratification table"),
-        ),
-        ("Human review", canon("docs/open-items.md", "the owner reviews and rules")),
-        ("Decisions record", canon("docs/log.md", "the ruling appends to the log")),
-        (
-            "Merge",
-            canon("docs/log.md", "the item leaves the surface; the loop repeats"),
-        ),
+        ("Open items", "incl. the gate-ratification table", home("docs/open-items.md")),
+        ("Human review", "the owner reviews and rules", home("docs/open-items.md")),
+        ("Decisions record", "the ruling appends to the log", home("docs/log.md")),
+        ("Merge", "the item leaves the surface; repeats", home("docs/log.md")),
     ]
 
-    def loop_ol(loop_id, name, stages):
-        lis = "".join(
-            '<li class="stg" data-node="{}"><b>{}</b>'
-            '<span class="n">{}</span></li>'.format(index, esc(title), note)
-            for index, (title, note) in enumerate(stages, 1)
-        )
-        return (
-            '<div class="loop loop-{}" data-cycle="closed">'
-            '<b class="loopname">{}</b><ol class="pflow loop">{}</ol></div>'.format(
-                esc(loop_id), esc(name), lis
-            )
-        )
-
-    return (
-        '<div class="loops">'
-        '<div class="entry">'
-        "<b>LLM_Agent</b>"
-        "<span>the shared entry point — both loops start here</span></div>"
-        + loop_ol("a", "A · Intake loop", intake_loop)
-        + loop_ol("b", "B · Human-decision loop", decide_loop)
-        + "</div>"
+    g = LOOP_GEOM
+    hub_xy = ((g["ax"] + g["bx"]) / 2, g["cy"])
+    svg = _loop_svg(
+        hub_xy,
+        [
+            # loop A hub-gap faces right (toward the hub); it spins CCW.
+            ("a", "A · Intake loop", g["ax"], 0.0, +1, intake_loop),
+            # loop B hub-gap faces left (toward the hub); it spins CW so the two
+            # hoops mirror around the shared junction.
+            ("b", "B · Human-decision loop", g["bx"], 180.0, -1, decide_loop),
+        ],
     )
+    return '<div class="loops">{}</div>'.format(svg)
 
 
 def process_panel(root, wis, stats):
@@ -2865,47 +3115,33 @@ def process_panel(root, wis, stats):
         "#process ul.esc{font-size:.9rem;color:var(--muted);margin:.4rem 0 0;"
         "padding-left:1.2rem;}"
         "#process ul.esc b{color:var(--text);}"
-        # Panel 4 — the two circular working loops, sharing one LLM_Agent entry.
-        "#process .loops{display:grid;grid-template-columns:minmax(7.5rem,auto) 1fr;"
-        "grid-template-rows:1fr 1fr;gap:.8rem 0;align-items:stretch;"
-        "margin:.7rem 0;isolation:isolate;}"
-        "#process .entry{grid-column:1;grid-row:1/3;align-self:center;z-index:3;"
-        "background:var(--surface);"
-        "border:2px solid var(--accent);border-radius:10px;"
-        "padding:.45rem .8rem;box-shadow:var(--shadow);max-width:9.5rem;}"
-        "#process .entry b{display:block;font-size:.88rem;color:var(--accent);}"
-        "#process .entry span{font-size:.72rem;color:var(--muted);}"
-        "#process div.loop{grid-column:2;position:relative;border:2px solid var(--accent);"
-        "border-left-width:3px;border-radius:999px;padding:1.45rem 2rem 1.2rem 3rem;"
-        "margin-left:-1rem;min-height:10.5rem;}"
-        "#process .loop-a{grid-row:1;}#process .loop-b{grid-row:2;}"
-        '#process div.loop::after{content:"";position:absolute;left:-.45rem;top:50%;'
-        "width:.72rem;height:.72rem;border-top:3px solid var(--accent);"
-        "border-right:3px solid var(--accent);transform:translateY(-50%) rotate(-135deg);"
-        "background:var(--bg);}"
-        "#process .loop .loopname{position:absolute;left:3rem;top:.3rem;"
-        "font-size:.82rem;font-weight:700;color:var(--accent);}"
-        "#process ol.pflow.loop{display:grid;grid-template-columns:repeat(3,minmax(7rem,1fr));"
-        "grid-template-rows:repeat(2,auto);gap:.65rem 1rem;margin:0;align-items:center;}"
-        "#process .pflow.loop li{max-width:none;margin-left:0;}"
-        "#process .pflow.loop li+li::before{display:none;}"
-        "#process .pflow.loop li:nth-child(1){grid-column:1;grid-row:1;}"
-        "#process .pflow.loop li:nth-child(2){grid-column:2;grid-row:1;}"
-        "#process .pflow.loop li:nth-child(3){grid-column:3;grid-row:1;}"
-        "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}"
-        "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}"
-        "#process .loop-b .pflow.loop li:nth-child(2){grid-column:3;}"
-        "#process .loop-b .pflow.loop li:nth-child(3){grid-column:3;grid-row:2;}"
-        "#process .loop-b .pflow.loop li:nth-child(4){grid-column:1;grid-row:2;}"
-        "#process .pflow.loop a{color:inherit;}"
-        "@media(max-width:760px){#process .loops{grid-template-columns:1fr;"
-        "grid-template-rows:auto;}#process .entry{grid-column:1;grid-row:1;"
-        "justify-self:center;max-width:none;}#process div.loop{grid-column:1;"
-        "margin:-.65rem 0 0;padding:2.2rem 1rem 1rem;border-radius:28px;}"
-        "#process .loop-a{grid-row:2}#process .loop-b{grid-row:3}"
-        "#process ol.pflow.loop{grid-template-columns:1fr;}"
-        "#process .pflow.loop li:nth-child(n){grid-column:1;grid-row:auto;}"
-        "#process div.loop::after{left:50%;top:-.4rem;transform:translateX(-50%) rotate(-45deg);}}"
+        # Panel 4 — the two intersecting working-loop hoops sharing one LLM_Agent
+        # hub. Drawn as a single self-contained SVG (`.loopsvg`); the two `.hoop`
+        # discs overlap so their shared lens is where the hub sits, `.floop`
+        # edges carry the directional arrows, and the `.hub` card renders last on
+        # top. Scales down with the panel; no grid tracks / pseudo-element arrows.
+        "#process .loops{margin:.7rem 0;}"
+        "#process .loopsvg{display:block;width:100%;height:auto;max-width:720px;"
+        "margin:0 auto;font-family:inherit;}"
+        "#process .hoop{fill:var(--accent);opacity:.05;stroke:var(--accent);"
+        "stroke-opacity:.35;stroke-width:1.5;}"
+        "#process .hooplab{fill:var(--accent);font-size:13px;font-weight:700;"
+        "letter-spacing:.01em;}"
+        "#process .floop{fill:none;stroke:var(--muted);stroke-width:1.8;"
+        "opacity:.9;}"
+        "#process .floparrow-head{fill:var(--muted);}"
+        "#process a.stg{cursor:pointer;}"
+        "#process .stg rect{fill:var(--surface);stroke:var(--border);"
+        "stroke-width:1.2;filter:drop-shadow(0 1px 2px rgba(15,23,42,.12));}"
+        "#process a.stg:hover rect,#process a.stg:focus rect{stroke:var(--accent);"
+        "stroke-width:2;}"
+        "#process .stg:focus{outline:none;}"
+        "#process .stgt{fill:var(--text);font-size:12px;font-weight:700;}"
+        "#process .stgn{fill:var(--muted);font-size:9.5px;}"
+        "#process .hub rect{fill:var(--accent);stroke:var(--accent);"
+        "filter:drop-shadow(0 2px 5px rgba(15,23,42,.28));}"
+        "#process .hubname{fill:#fff;font-size:13px;font-weight:800;}"
+        "#process .hubsub{fill:#fff;fill-opacity:.85;font-size:8.5px;}"
         "</style>"
     )
     panel = (

@@ -66,7 +66,7 @@ resource: "generated"
 | [TC-053](TC-053.md) | A fresh, family-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PR… |
 | [TC-054](TC-054.md) | A fresh, family-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PR… |
 | [TC-055](TC-055.md) | A fresh, family-heterogeneous CRITIQUE session (SR-047 loop) adjudicates the generated PR… |
-| [TC-056](TC-056.md) | Run the dashboard suite; the Process tab renders both loop panels (intake loop A + human-… |
+| [TC-056](TC-056.md) | Run the dashboard suite; the Process tab renders both working loops (intake loop A + huma… |
 | [TC-057](TC-057.md) | Run the dashboard suite; the tiered decomposition views render one horizontal parent->chi… |
 | [TC-058](TC-058.md) | Run schedule.py against a fixture registry; the ready frontier, the exclusions with reaso… |
 | [TC-059](TC-059.md) | Drive the pure classifier over every declared safety and policy input and compare consume… |

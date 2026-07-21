@@ -39,6 +39,16 @@ def stdlib_top_level_names():
             names.add(entry[:-3])
         elif os.path.isdir(path) and os.path.exists(os.path.join(path, "__init__.py")):
             names.add(entry)
+    # On 3.8/3.9 (no sys.stdlib_module_names) many stdlib modules are C
+    # extensions living in lib-dynload, not `.py` files under libdir and not
+    # always in sys.builtin_module_names (e.g. `math`, `cmath`, `_ssl` are
+    # dynamically loaded on macOS/Linux). Scan that sibling dir so the kit may
+    # import any genuine stdlib module — the whole point of the rule.
+    dynload = os.path.join(libdir, "lib-dynload")
+    if os.path.isdir(dynload):
+        for entry in os.listdir(dynload):
+            if entry.endswith((".so", ".pyd", ".dll")):
+                names.add(entry.split(".", 1)[0])
     names |= {
         "fcntl",
         "msvcrt",

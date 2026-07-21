@@ -1024,9 +1024,15 @@ def test_when_view_seams_wire_to_block_ports(tmp_path):
     assert out_ports and in_ports  # both port kinds render
     wires = re.findall(r'<path class="wire" d="M([\d.]+),[\d.]+ C.* ([\d.]+),', root)
     assert wires  # at least one wire
+    # The start attaches on the OUT port; the arrow-bearing END lands PORT_R + 2
+    # px short of the IN-port center so its arrowhead clears the port ring
+    # (WI-249 render fix) — still "at" the port, just outside its circle.
+    gt = load_script("gen_trajectory")
+    end_gap = gt.PORT_R + 2
+    in_ends = {round(cx - end_gap, 1) for cx in in_ports}
     for x1, x2 in wires:  # every wire leaves an OUT port and enters an IN port
         assert round(float(x1), 1) in out_ports
-        assert round(float(x2), 1) in in_ports
+        assert round(float(x2), 1) in in_ends
 
 
 def test_when_view_double_click_descends_a_layer(tmp_path):
@@ -1331,64 +1337,70 @@ def _loops_div(text):
 def test_process_tab_renders_intake_and_decision_loops(tmp_path):
     # SR-055: the Process tab renders both circular loops as linked flow panels,
     # each with its ordered stages, and the gate-ratification stage lives in
-    # loop B (the human-decision loop).
+    # loop B (the human-decision loop). WI-250: the render is a single SVG
+    # drawing the loops as intersecting hoops, so the assertions target the SVG
+    # structure (hoop discs, arrow-wired stage cards) rather than a CSS grid.
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert "The working loops" in text
     loops = _loops_div(text)
-    # both loop panels present and named
+    # one self-contained SVG with both named hoops
+    assert 'class="loopsvg"' in loops
     assert "A · Intake loop" in loops and "B · Human-decision loop" in loops
-    # loop A's ordered stage titles
+    # loop A's ordered stage titles (each a card's bold <tspan> label)
     for stg in ("Intake", "Triage → WIs", "Resume loop", "Build / review", "Merge"):
         assert ">" + stg + "<" in loops, stg
     # loop B's ordered stage titles, incl. the gate-ratification stage
     for stg in ("Open items", "Human review", "Decisions record"):
         assert ">" + stg + "<" in loops, stg
     assert "gate-ratification table" in loops
-    # the gate-ratification stage sits in loop B, after the loop-B heading
+    # the gate-ratification stage sits in loop B: its card carries a loop-B node
+    # key, and it appears after the loop-B label emitted with that hoop.
     b_start = loops.index("B · Human-decision loop")
     assert loops.index("gate-ratification table") > b_start
-    # Both loops are explicitly closed cycles, not straight rows with a return label.
-    assert loops.count('class="pflow loop"') == 2
+    assert 'data-node="b-1"' in loops  # Open items — loop B, stage 1
+    # Both hoops are explicitly closed cycles (hub → … → hub), not open rows.
     assert loops.count('data-cycle="closed"') == 2
-    assert 'class="loop loop-a"' in loops
-    assert 'class="loop loop-b"' in loops
+    assert 'class="hoop hoop-a"' in loops
+    assert 'class="hoop hoop-b"' in loops
     # still fully offline
     low = text.lower()
     assert "http://" not in low and "https://" not in low
 
 
 def test_process_loops_share_one_llm_agent_entry(tmp_path):
-    # The LLM_Agent entry node is rendered exactly once and lives in the shared
-    # `.entry` node (above both loops), not duplicated per loop.
+    # The LLM_Agent entry hub is rendered exactly once as the shared central
+    # junction of both hoops (not duplicated per loop).
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     loops = _loops_div(html_of(tmp_path))
-    assert loops.count("<b>LLM_Agent</b>") == 1
-    # the entry node precedes both loop panels (a shared head, not per-loop)
-    entry_at = loops.index('<div class="entry"')
-    assert entry_at < loops.index("A · Intake loop")
-    assert entry_at < loops.index("B · Human-decision loop")
+    assert loops.count(">LLM_Agent<") == 1
+    assert loops.count('class="hub"') == 1
+    # both hoops are present around that one hub
+    assert 'class="hoop hoop-a"' in loops and 'class="hoop hoop-b"' in loops
 
 
 def test_process_loop_layout_is_a_shared_circular_junction(tmp_path):
-    # WI-165: the CSS draws two closed racetracks that meet at the one shared
-    # LLM_Agent junction; loop stages occupy both the outbound and return sides.
+    # WI-250: the render draws two overlapping hoop discs whose directed edges
+    # (one arrowhead each) trace each loop and converge on the single shared hub.
     with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    assert "#process .loops{display:grid" in text
-    assert "grid-row:1/3" in text
-    assert "border-radius:999px" in text
-    # Only the two wrapper divs own racetrack borders and return arrowheads;
-    # the nested ol.loop elements must not create duplicate tracks/arrows.
-    assert "#process div.loop{" in text
-    assert "#process div.loop::after" in text
-    assert "#process .loop{" not in text
-    assert "#process .loop::after" not in text
-    assert "#process .pflow.loop li:nth-child(4){grid-column:3;grid-row:2;}" in text
-    assert "#process .pflow.loop li:nth-child(5){grid-column:1;grid-row:2;}" in text
+    loops = _loops_div(text)
+    # two hoop discs, each a closed cycle, sharing one hub
+    assert loops.count('class="hoop hoop-') == 2
+    assert loops.count('data-cycle="closed"') == 2
+    assert loops.count('class="hub"') == 1
+    # every loop edge is directional: hub→s1→…→sn→hub is (n+1) arrows per loop,
+    # 6 for the 5-stage intake loop + 5 for the 4-stage decision loop = 11.
+    assert loops.count('marker-end="url(#floparrow)"') == 11
+    # the SVG-loop CSS replaced the old grid racetrack entirely.
+    assert "#process .loopsvg{" in text
+    assert "#process .hoop{" in text
+    assert "#process .loops{display:grid" not in text
+    assert "#process div.loop{" not in text
+    assert "#process .pflow.loop" not in text
 
 
 def test_process_loop_stage_links_resolve():
