@@ -2,7 +2,8 @@
 
 **Trigger:** the WI-243 perceptual re-fire — the render surface changed at
 commit `30ed4c9` (WI-253, dashboard edge routing, delivering SR-052/SR-053;
-spec [WI-253](../specs/WI-253.md)). 078-CRITIQUE ruled CHANGES-REQUESTED on
+spec [WI-253](../archive/specs/WI-253.2026-07-21.md), archived at the close
+this critique gated). 078-CRITIQUE ruled CHANGES-REQUESTED on
 **T8** (When-DAG corridor crossings; the How-SW X at CMP-001's port cluster).
 This fresh session re-judges the full `T1…T8` anchor set
 ([dashboard-usability.md](../rubrics/dashboard-usability.md)) and re-dates the

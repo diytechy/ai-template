@@ -43,7 +43,9 @@ full + fold). Judged shots read directly: `1280px-light-dag-full`,
   - *How-SW (1280 dark):* CMP-002's and CMP-003's wires to CMP-001 cross in
     an X immediately left of CMP-001's port cluster; CMP-002's lower wire
     passes tight against CMP-003's box corner and reads as touching it.
-  Disposition: **already filed as [WI-253](../specs/WI-253.md)** (queued,
+  Disposition: **already filed as
+  [WI-253](../archive/specs/WI-253.2026-07-21.md)** (queued at judgment,
+  since closed;
   SR-052;SR-053) — obstacle-aware deterministic detours + crossing
   reduction. Per the T8 anchor text, the filed WI is citable but does not
   lift the anchor: APPROVE stays blocked until the render passes.

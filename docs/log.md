@@ -10814,3 +10814,50 @@ LLR=97 TC=100**, `trace.py --strict` zero orphans; `check.py --gate G3
 --jobs 0` at close — result in the close commit. docs/specs/ now holds only
 scaffold boilerplate + the 5 deferred-WI specs + WI-253 — the state R-F
 holds.
+
+## 2026-07-21 — WI-253 DONE: dashboard edge routing (T8 PASS — 079-CRITIQUE APPROVE f=0; 110-REVIEW-A APPROVE f=3); WI-255/256 filed; NO spine change
+
+The T8 build-and-critique session, dispatched per tier (opus build, opus
+adversarial review, independent fresh critique — three separate sessions, no
+self-assessment crossing between them). **WI-253** shipped the obstacle-aware
+wire router `_route_edges`, single-sourced across all four layered emitters
+(`dag_svg`, `sw_graph`, `know_graph`, `_drill_layer_svg`): an unblocked wire
+keeps its legacy cubic byte-for-byte (downstream renders unchanged); a blocked
+wire detours through the clear horizontal lane nearest its endpoint midline,
+entering ports on short stubs in the inter-column corridor. Deterministic
+throughout (Liang–Barsky hit test + cubic sampling + nearest-free-band search;
+driven over 200 dict-order shuffles → 1 distinct output), stdlib-only, new
+helpers C901 ≤ 10, `--check` byte-stable. Mechanized T8 net: the meta-panel
+through-box scans plus (REVIEW-A MINOR, consumed 5ebc3b0) the fallback
+`dag_svg`/`sw_graph` scan with non-vacuity floors — revert-proofed by the
+reviewer: forcing the legacy path yields 532 violations, routed 0. Build
+30ed4c9 (opus).
+
+**Verdicts:** [110-REVIEW-A](reviews/110-REVIEW-A.md) (opus, adversarial,
+driven): **APPROVE findings=3, all MINOR** — (1) `_detour_d` port-stub-corridor
+fail-open and (3) detoured `sw_graph` label anchoring are render-surface
+remedies, **filed as WI-255** rather than consumed (consuming them
+post-critique would re-fire the WI-243 git-time staleness gate for a
+byte-identical meta render; the WI builds with its own bundled critique — the
+designed steady state); (2) the fallback-emitter scan gap, **consumed**.
+[079-CRITIQUE](reviews/079-CRITIQUE.md) (fresh session, judged pixels only):
+**APPROVE findings=0 — T1–T8 all PASS**, T8 verified in magnified wire-hotspot
+crops both themes (the 078 When-corridor crossings and How-SW CMP-001 port-
+cluster X gone); perceptual evidence re-dated past 30ed4c9, WI-243 gate green.
+**WI-256 filed** from the critique's letter-passing observations (desktop
+What-icicle clip with no scroll affordance, drill-layer card-edge clips at
+1280, two corner-terminating When wires).
+
+**Deviations from spec:** the spec's optional per-layer sub-lane staggering was
+not needed (distinct wires land in distinct free bands by endpoint midline) and
+was omitted — recorded in the build commit; a couple of long lane wires run
+near-parallel in open space, within T8's letter.
+
+**Byte deltas:** none on budgeted files (AGENTS.template.md / PROCESS.md /
+PROCESS_OPTIONS.md untouched).
+
+**Verified:** smoke **992 passed, 3 skipped** at each commit; full suite +
+`check.py --gate G3 --jobs 0` at this close — result in the close commit.
+docs/specs/ back to boilerplate + deferred-WI specs only (WI-253 archived
+dated; R-F green); WI-255/256 queued with review/critique SpecRefs per the
+WI-246 precedent.
