@@ -1,5 +1,10 @@
 # Work Plan — Session Blocks
 
+> **Skip (or delete) this file if the trajectory / work-items layer is
+> enabled** — a WI row + its spec-of-record supersede it (WI-252;
+> process-options.md "Trajectory / work-items layer"). It serves the
+> zero-tooling rung: no registries, attended sessions, pure markdown.
+
 The **sequenced block list** the plan/build cadence runs on (see
 [process-options.md](process-options.md) "Unattended operation" → *Plan/build
 cadence*): a **PLAN** session (strong tier) writes or repairs this list; each

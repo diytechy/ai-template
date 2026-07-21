@@ -585,7 +585,14 @@ parallel-dispatch plan, §10). The phase
 is now in-process runtime state (review/critique queues + the `BUILD` default);
 phase names stay free-form, the named convention below `PLAN`/`BUILD`.
 
-**Plan/build cadence (the bounce).** The §6 tiering doctrine — *strong model
+**Plan/build cadence (the bounce).** *Applies when the trajectory /
+work-items layer is **not** enabled* — enabling `work-items.csv` + `SpecRef`
+**supersedes `docs/plan.md`**: a WI row + its spec-of-record carry the same
+content mechanized (`Predecessors` = the sequencing, `BuildTier` = the tier
+hint, the spec's Done-when = the observable done-when, R-E gates the hand-off
+exists), so running both would keep two "what's next and how" surfaces
+(WI-252; delete or never scaffold `docs/plan.md` in that case). On the
+zero-tooling rung the cadence stands: the §6 tiering doctrine — *strong model
 plans, cheaper model executes, safe because of the gates*. A **PLAN** session
 (strong tier) writes or repairs **`docs/plan.md`**: sequenced blocks, each one
 coherent deliverable + its tests with an observable done-when, a size class, and
@@ -1453,6 +1460,9 @@ independent tracks meet, which task is in flight, how far along the whole is. A
 
 A WI is the machine-readable *how* beneath an SR's *what*. Plans and discussion
 retain the *why*; the registry complements rather than replaces that narrative.
+Enabling this layer **supersedes the plan/build cadence's `docs/plan.md`**
+("Unattended operation" → *Plan/build cadence*; WI-252): the WI DAG + specs
+*are* the plan — one "what's next and how" surface, never two.
 
 **Registry.** `docs/requirements/work-items.csv`, columns
 `WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef`.
