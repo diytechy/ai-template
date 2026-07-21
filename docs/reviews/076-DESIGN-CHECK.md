@@ -28,7 +28,7 @@ The tripwire fired true to its letter — the build diff did touch a
 review-policy path — but the edit was not gaming; it was the *scoped work*:
 
 1. **The owner ordered that exact edit.** WI-161's spec-of-record
-   ([owner-intake-2026-07-14b.md#phase-preference](../specs/owner-intake-2026-07-14b.md))
+   ([owner-intake-2026-07-14b.md#phase-preference](../archive/specs/owner-intake-2026-07-14b.2026-07-20.md))
    directs restoring `docs/agents-enabled` to Fable-first while the launchers'
    `AGENT_PREFER_MAP=BUILD=OPENAI-SOL` keeps Sol builds — the enable-list edit
    is a Done-when, not a smuggled referee change.

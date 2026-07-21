@@ -72,7 +72,7 @@ sitting:
   `docs/agents-enabled` + `docs/run-phase` + `docs/guardrails-policy`, and move
   `docs/gate-policy` from `attended` to **`single-ratify`** (one human
   attestation per phase batch) with its deviation register, each in a reviewed
-  commit. Spec: [specs/WI-107.md](specs/WI-107.md). `status.md`'s Next action
+  commit. Spec: [specs/WI-107.md](archive/specs/WI-107.2026-07-20.md). `status.md`'s Next action
   now brings WI-107 in first, soft-edged after WI-106 (both edit the launcher
   twins).
 

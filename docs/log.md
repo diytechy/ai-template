@@ -89,7 +89,7 @@ why (one bullet each; cite ids)._
   `CmdTemplate`, **not** an `Env` cell (corrects the intake draft's config-file
   guess); left unwired (no s/turn telemetry parity to measure it). Per-phase effort
   map + computed selection stay deferred. No spine/test change (config; tests use
-  synthetic registries). Spec [WI-110.md](specs/WI-110.md) rewritten to executed.
+  synthetic registries). Spec [WI-110.md](archive/specs/WI-110.2026-07-20.md) rewritten to executed.
 - **2026-07-14 — Research-knowledge spec REVISED pre-ratification (owner
   intake, OI-9 feedback):** §3b research = strong-tier coordinator delegating
   to quick/medium gatherer subagents (supersedes the draft's medium default);
@@ -246,7 +246,7 @@ why (one bullet each; cite ids)._
   attestation-singleton narrowing (splits one drafted-and-reviewed body into
   extra serial trains for no added safety — the whole-project drain and
   one-active-spine-train invariants already isolate the batch). Recorded in
-  [specs/WI-204.md](specs/WI-204.md) scope item 1; SR-058's amended text
+  [specs/WI-204.md](archive/specs/WI-204.2026-07-20.md) scope item 1; SR-058's amended text
   carries it at the WI-204 build.
 - **2026-07-17 — RULING: change-scoped contradiction sweep is the deliberate
   continuous coverage model (owner-confirmed).** The per-diff reviewer
@@ -260,7 +260,7 @@ why (one bullet each; cite ids)._
   rubric-anchored, reviewer-class, findings route as WIs). Alternative passed
   over: a standing all-vs-all sweep per commit (quadratic review cost for a
   net the change-scoped sweep already provides incrementally). Pointer:
-  [specs/WI-206.md](specs/WI-206.md).
+  [specs/WI-206.md](archive/specs/WI-206.2026-07-20.md).
 - **2026-07-17 — OI-3 push half EXECUTED (owner).** The owner pushed
   `derived-gate-model`; git-verified in sync with `origin/derived-gate-model`
   at the WI-207 close (`f41f866`) — the ~18-commit durability risk is closed.
@@ -2850,7 +2850,7 @@ figure; the true pre-campaign baseline was **58,853**, unchanged until this WI.)
 `AGENTS.template.md` **untouched** (9,978).
 
 **Deviation caught + fixed.** The PROCESS_OPTIONS "Derived gate model" section
-first linked `[derived-gate-model.md](specs/derived-gate-model.md)` — but the
+first linked `[derived-gate-model.md](archive/specs/derived-gate-model.2026-07-20.md)` — but the
 design spec is a **meta-only** artifact, not shipped downstream, so the scaffolded
 `docs/process-options.md` link broke doc-navigability (32 scaffold/profile tests
 red). The meta's own `check_docs` does **not** scan `project-trajectory/*.md`, so
@@ -3044,7 +3044,7 @@ touched).** Owner-directed, the sitting after the WI-107 enablement: require
 `claude` + `opencode` as dev tools, register the GPT-5.6 family through
 opencode, prompt for sign-in when models fail, pin claude effort high, and file
 the effort-selection mechanization as deferred future work (this WI's spec of
-record: [specs/WI-109.md](specs/WI-109.md)). Owner's parallel
+record: [specs/WI-109.md](archive/specs/WI-109.2026-07-20.md)). Owner's parallel
 question answered in-session: the root `docs/run-phase` is only the single-lane
 surface — parallel workstreams each get `docs/tracks/<name>/run-phase` (+
 run-state/status/log/iteration) on their own `llm/<name>` branch/worktree, so
@@ -3089,7 +3089,7 @@ names in kit code; hints are registry data. PROCESS_OPTIONS routing bullet
 existing selection-logging claim (the WI-084 precedent).
 
 **WI-110 filed (deferred, `~WI-109`).** Effort-level selection
-([specs/WI-110.md](specs/WI-110.md)): the `xhigh` ("very high") live experiment
+([specs/WI-110.md](archive/specs/WI-110.2026-07-20.md)): the `xhigh` ("very high") live experiment
 before any dial-up, a per-phase `AGENT_EFFORT_MAP` sibling of the tier map
 (the WI-049 "Per-phase effort" framing + its fabrication caution), and
 evidence-gated computed selection. The static `high` pin stands meanwhile.
@@ -3550,7 +3550,7 @@ the box: bare `opencode` resolves via `shutil.which` (PATHEXT finds the npm
 `.cmd` shim; preflight passes) but not via CreateProcess (spawn fails); the
 `which`-resolved path runs fine (`1.17.18`). Consequence is silent
 review-diversity loss (cross-family REVIEW-A never runs), ~10 s/round in
-time. Diagnosis + verified fix sketch: [specs/WI-120.md](specs/WI-120.md);
+time. Diagnosis + verified fix sketch: [specs/WI-120.md](archive/specs/WI-120.2026-07-20.md);
 status.md unattended-layer bullet carries the caveat.
 
 **Deviations from spec:** none (owner-directed scope; no prior spec).
@@ -3580,7 +3580,7 @@ fix by construction: it reproduces sessions 002/005's exact failure). Live:
 (`opencode run --model openai/gpt-5.6-terra …`) → **exit 0, model replied
 "OK"** — the argv that produced `[WinError 2]` hours earlier. The full
 OPENAI-written REVIEW-A verdict is the next unattended run's to produce
-(spec done-when, [specs/WI-120.md](specs/WI-120.md)); the WI-112 live-verify
+(spec done-when, [specs/WI-120.md](archive/specs/WI-120.2026-07-20.md)); the WI-112 live-verify
 discrepancy (terra "replied through run_session" earlier that day) stays
 recorded in the spec as unexplained residue.
 
@@ -3612,7 +3612,7 @@ no spine change.
 **Two owner questions filed as first-class queued WIs (decision records, not
 rulings):**
 
-- **WI-122** ([specs/WI-122.md](specs/WI-122.md)) — drop the per-commit full
+- **WI-122** ([specs/WI-122.md](archive/specs/WI-122.2026-07-20.md)) — drop the per-commit full
   suite: **was not in the backlog**. The mechanism exists (`stack.ini`
   `[tiers] smoke`, `check.py --tier smoke`, the WI-071 ruling that rejected
   test-impact selection in favor of the declared tier) but the meta suite has
@@ -3786,7 +3786,7 @@ BUILD sessions plan inline in one context. The genuinely new half is
 declared `docs/next-wi` (never-breaking; composes with tier-up-never-down).
 Recommendation: adopt the pin, fold the plan flag into SpecRef semantics (a
 filled spec = plan-ready) rather than duplicating the signal. Decision record:
-[specs/WI-126.md](specs/WI-126.md); queued in the status.md owner queue.
+[specs/WI-126.md](archive/specs/WI-126.2026-07-20.md); queued in the status.md owner queue.
 Filing only — no engine change. Commit bar (smoke, first live use):
 `pytest -q -n auto -m smoke` → `531 passed, 2 skipped in 38.53s`;
 `check_docs --stale` → `OK - 46 doc(s), 266 intra-repo link(s), 0 broken`.
@@ -4390,7 +4390,7 @@ sequenced behind the owner sitting**.
 
 ## 2026-07-13 — WI-115: status-currency hardening
 
-Delivered [WI-115](specs/WI-115.md): `check_trajectory.py` now warns when
+Delivered [WI-115](archive/specs/WI-115.2026-07-20.md): `check_trajectory.py` now warns when
 `NEEDS-HUMAN` or `BLOCKED` would park a queued WI whose hard predecessors are
 done, and promotes the finding under `--strict`. Absent `docs/run-state` and
 `DONE` with no actionable queue remain vacuous. Added fire/vacuous/strict tests,
@@ -4463,7 +4463,7 @@ date. No push (`push-policy: human`).
 ## 2026-07-13 — WI-129 filed: LLR/TC status-coherence warn (queued)
 
 Owner-filed at the ratification-review sitting: queued **WI-129**
-([specs/WI-129.md](specs/WI-129.md)) — a warn-tier `trace.py` lint that fires
+([specs/WI-129.md](archive/specs/WI-129.2026-07-20.md)) — a warn-tier `trace.py` lint that fires
 when an LLR reads below `Verified` while every citing TC is `Verified` (the
 readout drift the v2 slices left and the prior WI corrected by hand). Design
 ruled in the spec: warn, never gate (mirrors the derived-gate stance that LLR
@@ -4674,7 +4674,7 @@ Investigation first (recorded in-session): the constraint was **convention,
 not mechanics** — the loop already reviews a committing session's whole commit
 range, and pre-dev already batches via the `[phase]-[g*]` archetype
 (WI-116/117); only the dev slices lacked a batch form. Spec:
-[specs/WI-133.md](specs/WI-133.md). **Deliberately NOT the review dial** — WI-123/OI-7
+[specs/WI-133.md](archive/specs/WI-133.2026-07-20.md). **Deliberately NOT the review dial** — WI-123/OI-7
 stays a separate owner ruling.
 
 **Deliverables.** `docs/next-wi` may carry a `;`-joined **ordered batch** of
@@ -4704,7 +4704,7 @@ gate stays G3. No push (`push-policy: human`).
 ## 2026-07-13 — Owner intake: six items triaged, deduped, filed (WI-134…138)
 
 **Owner-handed batch** with an explicit no-duplicate instruction; full triage
-in [specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md).
+in [specs/owner-intake-2026-07-13.md](archive/specs/owner-intake-2026-07-13.2026-07-20.md).
 **Dedupe findings:** the drill-down hierarchy already shipped (WI-087/SR-051
 done); the graph-data extensions stay deferred **WI-064** (soft edge from the
 new render work); the critique "hat" mechanism (item 4) **already exists
@@ -4827,7 +4827,7 @@ tests landed; `check_docs --stale` exit 0 each time); arch-map regenerated
 ## 2026-07-14 — WI-134 [v3]-[g1]: dashboard-ux requirement structuring (phase v3 opens; the SR-051 rev)
 
 **Phase v3 (`dashboard-ux`) opened in the LIVE spine** per the owner intake
-2026-07-13 ([specs/owner-intake-2026-07-13.md](specs/owner-intake-2026-07-13.md#v3-dashboard-ux))
+2026-07-13 ([specs/owner-intake-2026-07-13.md](archive/specs/owner-intake-2026-07-13.2026-07-20.md#v3-dashboard-ux))
 — the second live use of the derived-gate phase flow (the v2/WI-116 precedent),
 and the first **reopen**: the owner-sanctioned SR-051 rev rode the g1 batch per
 the model's §8 backward-movement flow.
@@ -5169,7 +5169,7 @@ OI-9); `docs/next-wi` pre-pointed at **WI-141** for the resume. Not pushed
 
 **Scope.** Owner-handed batch of eight items, triaged against the open
 registry per the change-intake flow; spec-of-record
-[specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md) (dedupe
+[specs/owner-intake-2026-07-14.md](archive/specs/owner-intake-2026-07-14.2026-07-20.md) (dedupe
 table + per-item answers + Done-whens). Item 1 was feedback on the **pending**
 OI-8/OI-9 briefs and was folded into those surfaces rather than filed as new
 work — the sitting stays pending and now covers the revised material.
@@ -6231,7 +6231,7 @@ unblocks WI-144; the build itself is WI-144's autonomous resume.
   is the whole contract; the pause signal is exit-8 + the banner). Documented in
   three places so a `run-state`-only reader isn't misled: the **WI-147 spec**
   parenthetical corrected
-  ([specs/owner-intake-2026-07-14.md](specs/owner-intake-2026-07-14.md)
+  ([specs/owner-intake-2026-07-14.md](archive/specs/owner-intake-2026-07-14.2026-07-20.md)
   #pause-blackout), a **`docs/run-state` comment caveat** added, and
   PROCESS_OPTIONS "Unattended operation" already stated "run-state is left
   untouched." No code/test change.
@@ -6270,7 +6270,7 @@ open and block nothing. Not pushed (`push-policy: human`).
 ## 2026-07-14 — SESSION: owner intake b (4 items) — triage + answers, WI-160 executed, WI-161…165 filed; NO spine change
 
 **The owner's second 2026-07-14 batch** ("possible duplicates" — dedupe first),
-triaged into [specs/owner-intake-2026-07-14b.md](specs/owner-intake-2026-07-14b.md)
+triaged into [specs/owner-intake-2026-07-14b.md](archive/specs/owner-intake-2026-07-14b.2026-07-20.md)
 (the dedupe table + per-item answers + Done-whens). One side-effect question was
 put to the owner mid-intake and ruled ("flip now + knob WI" — the Decisions
 entry above).
@@ -7126,7 +7126,7 @@ parked. Not pushed (`docs/push-policy: human`).
 ## 2026-07-15 — Parallel-dispatch campaign filed (phase `v4` opened; Draft SN/SR/LLR/TC + WI-177…186)
 
 **What.** Ratified the parallel-by-default dispatcher design
-([specs/parallel-wi-dispatch.md](specs/parallel-wi-dispatch.md)) and filed the
+([specs/parallel-wi-dispatch.md](archive/specs/parallel-wi-dispatch.2026-07-20.md)) and filed the
 implementation campaign per §15, at the owner's direction: **mint Draft
 SN/SR/LLR/TC + file the WIs only** (the loop builds; no dispatcher code ships in
 this session). Minted the `v4` spine as **Draft** — **SN-025** (a plain
@@ -7150,7 +7150,7 @@ SR-064 git-as-authority recovery (G); SR-065 telemetry + downstream migration (H
 **Gate impact (intended, owner-okayed).** The Draft `v4` phase sits at G0, so the
 min-aggregated runnable derived gate drops **G3 → G1** (basis
 `computed=G0 per-phase=(default)=G3;v2=G3;v3=G3;v4=G0`) — the honest derived-gate
-signal that new scope entered ([derived-gate-model.md](specs/derived-gate-model.md)
+signal that new scope entered ([derived-gate-model.md](archive/specs/derived-gate-model.2026-07-20.md)
 §3); it re-ratifies to G3 as the loop builds and verifies each slice. Regenerated
 `docs/gate`, `PROJECT_STATE.html`, and `docs/okf` (28 new concepts + SN-006/008/
 010/012/016/017 backlink updates). `docs/status.md` updated: gate/bar lines, a
@@ -7740,7 +7740,7 @@ crash recovery, telemetry, and gated downstream migration. Not pushed
 **Session (owner-directed, attended).** The owner asked whether the deferred
 `main-decomposition` campaign (WI-080 → WI-081) really needs the strong tier,
 and to prepare the implementation breakdown. Delivered
-[docs/specs/main-decomposition.md](specs/main-decomposition.md) — the detailed
+[docs/specs/main-decomposition.md](archive/specs/main-decomposition.2026-07-20.md) — the detailed
 slice plan (WI-080: five slices A–E, golden-net-first, extracting the
 session-construction closures, a `RoutingState`/`EscalationState` object with
 pure transitions, outcome/worker-endstate classification, and a
@@ -7769,7 +7769,7 @@ byte-budgeted file touched.
 
 **Session (owner-directed: "grind through WI-080, spin up opus level agents
 where appropriate").** The first half of the `main-decomposition` campaign
-([spec](specs/main-decomposition.md)) executed as five slices, each a logical
+([spec](archive/specs/main-decomposition.2026-07-20.md)) executed as five slices, each a logical
 commit behind the smoke + check_docs bar. Division of labor per the
 strong-plans/medium-builds dial: the coordinator (strong tier) did the deep
 read, the state inventory, every seam/API design, and every diff review; four
@@ -7833,7 +7833,7 @@ close runs `check.py --gate G3`.
 
 **Session (owner-directed: "grind through WI-081 to completion").** The second
 and final half of the `main-decomposition` campaign
-([spec](specs/main-decomposition.md) §4), run at `medium` tier (the design was
+([spec](archive/specs/main-decomposition.2026-07-20.md) §4), run at `medium` tier (the design was
 fixed by the spec; the strong-tier work was the plan). trace.py's `main()` went
 from ~790 lines to **114 orchestration-only lines**, under a **byte-identical
 golden-master net**. Coordinator (now on Opus) did the golden net, the docstring
@@ -8406,7 +8406,7 @@ this log verbatim. ~5.9 KB → ~4.5 KB and, more to the point, zero
 backward-looking paragraphs.
 
 **Intake:** **WI-200** filed (queued, `scripts`, medium, ≺ the retirement WI;
-[specs/WI-200.md](specs/WI-200.md)): restore the done-id rule **mode-aware**
+[specs/WI-200.md](archive/specs/WI-200.2026-07-20.md)): restore the done-id rule **mode-aware**
 — hand-edited status: WARN plain / ERROR `--strict`; generated-marker status:
 yields to a regenerate-and-byte-compare freshness check — so the WI-180
 rationale is fulfilled rather than reversed, robust under parallel dispatch
@@ -8516,7 +8516,7 @@ rubric PAGEs honestly.
 like every S8 hat (redaction rides the brief's allowlist construction; the
 manual protocol's empty-cwd isolation is stronger), and frontier
 auto-dispatch under `--jobs` awaits the structuring WI's SafetyClass ruling.
-**WI-201** (queued, `unattended`, ≺WI-199; [specs/WI-201.md](specs/WI-201.md))
+**WI-201** (queued, `unattended`, ≺WI-199; [specs/WI-201.md](archive/specs/WI-201.2026-07-20.md))
 also re-homes the provisional SR-061 rows and ratifies IF-058…IF-061 out of
 `Proposed` — the WI-176→WI-177 pattern the WI-190 spec declared.
 
@@ -8646,7 +8646,7 @@ reuse the ONE sanctioned sibling import (`check_trajectory`) rather than mint a
 second.
 
 **The per-OI projection contract** (pinned in
-[specs/open-items-surface.md](specs/open-items-surface.md)): an explicit
+[specs/open-items-surface.md](archive/specs/open-items-surface.2026-07-20.md)): an explicit
 `- **One-line:**` field lifted verbatim (soft-wrapped continuation lines joined),
 else the first sentence of the `- **Recommendation…:**` line; Markdown links
 collapse to text. **Volatile per-item facts stay in the brief** — OI-3's live
@@ -8707,7 +8707,7 @@ to the record, three findings surfaced:
    "never join a multi-WI traincar" forces *mid-run* spine arrivals into N
    sequential single-WI trains, contradicting the batch intent. **WI-204**
    (queued, `unattended`, **strong** — it amends SR-058's text;
-   [specs/WI-204.md](specs/WI-204.md)): spine-serial WIs pack together into
+   [specs/WI-204.md](archive/specs/WI-204.2026-07-20.md)): spine-serial WIs pack together into
    ONE spine-only serial traincar, never with any other class; whole-project
    drain + one-active-spine-train invariants unchanged. Ordering intent
    recorded in the spec: WI-204 lands **first**, then the migration WIs name
@@ -8734,14 +8734,14 @@ answered from the code/spec record, three actions taken:
    owner's pin:** the spine-batch ratification under `autonomous` must be
    test-proven pause-free.
 2. **Backlog re-evaluation gap → WI-205 filed** (queued, `scripts`, medium;
-   [specs/WI-205.md](specs/WI-205.md)): the continuous checks on open WIs are
+   [specs/WI-205.md](archive/specs/WI-205.2026-07-20.md)): the continuous checks on open WIs are
    referential only (SR-Refs/R-E resolve) — nothing re-evaluates an open WI
    whose cited SR text was amended after filing. WI-205 = warn-tier
    check_trajectory finding on the WI↔spine join (`check_docs --stale` idiom,
    git-blame row timestamps, silent off-git, deferred exempt); no SR (WI-129
    precedent), promotion-to-gating drafts it.
 3. **Contradiction-coverage model ruled + WI-206 filed** (queued, `docs`,
-   medium; [specs/WI-206.md](specs/WI-206.md)): the change-scoped
+   medium; [specs/WI-206.md](archive/specs/WI-206.2026-07-20.md)): the change-scoped
    sweep-on-entry is the recorded continuous model (Decisions bullet above);
    its old-vs-old / interpretation-drift blind spot gets the occasion-driven
    whole-registry audit — rubric + PROCESS_OPTIONS occasion (phase close +
@@ -8754,7 +8754,7 @@ ruling + the pause-free pin); dashboard + status snapshot regenerated;
 
 ## 2026-07-17 — WI-205: backlog-staleness warn (opus agent build, root-integrated)
 
-**Session type:** build (`scripts`, medium; spec [specs/WI-205.md](specs/WI-205.md)).
+**Session type:** build (`scripts`, medium; spec [specs/WI-205.md](archive/specs/WI-205.2026-07-20.md)).
 **Division of labor:** built by a parallel opus agent (the WI-194…198 pattern),
 reviewed + integrated by the root session. **No spine change** (a warn-tier
 checker feature, the WI-129 precedent — no SR minted; promotion-to-gating
@@ -8786,7 +8786,7 @@ closes it — the warn clears when the row flips `done`.
 ## 2026-07-17 — WI-204: the spine-only traincar (spine packs with spine, never with anything else)
 
 **Session type:** build (`unattended`, **strong** — the SR-058 amendment;
-spec [specs/WI-204.md](specs/WI-204.md), root session build per the
+spec [specs/WI-204.md](archive/specs/WI-204.2026-07-20.md), root session build per the
 strong-tier convention). **Spine change:** SR-058 Requirement + AC + Rationale
 amended in place (Status stays Verified; the amendment rode this reviewed
 commit with its TC extended in the same change — the validation chain moved
@@ -8831,7 +8831,7 @@ re-validated and closes with this flip.
 ## 2026-07-17 — WI-206: whole-registry contradiction audit shipped + FIRST REAL AUDIT run (5 findings → WI-207)
 
 **Session type:** build + audit (`docs`, medium; spec
-[specs/WI-206.md](specs/WI-206.md)). **Division of labor:** rubric built by a
+[specs/WI-206.md](archive/specs/WI-206.2026-07-20.md)). **Division of labor:** rubric built by a
 parallel opus agent; PROCESS_OPTIONS splice serialized through the root (the
 byte-budgeted file takes one writer); the audit itself executed by a **third,
 independent fresh-context opus session** (never the builder — the S8 posture),
@@ -8930,7 +8930,7 @@ session needs nothing from this conversation:
   history), the soft-edge audit with promote-or-confirm dispositions,
   `docs/parallel-ready`, `AGENT_JOBS=2` in all three launchers (`--jobs 1`
   the escape), and one proven boot to the dispatcher banner with zero
-  unclassified rows. [specs/WI-208.md](specs/WI-208.md).
+  unclassified rows. [specs/WI-208.md](archive/specs/WI-208.2026-07-20.md).
 - **WI-209 — M2, dual-plan auto-dispatch + quiet-park auto-page** (queued,
   `unattended`, strong; ≺ WI-208): the WI-201 ruling wired —
   `classify()` derives single-WI-traincar from `PlanMode=dual` itself; the
@@ -8938,14 +8938,14 @@ session needs nothing from this conversation:
   the serial driver pages naming `--dual-plan` when only dual rows are
   actionable; SR-066's deferral clauses drop with the TC moved in the same
   commit. Closes the quiet-park hole on both paths.
-  [specs/WI-209.md](specs/WI-209.md).
+  [specs/WI-209.md](archive/specs/WI-209.2026-07-20.md).
 - **WI-210 — M3, legacy-path retirement** (**deferred**, `unattended`,
   strong; ≺ WI-208;WI-209): absent-`--jobs` resolves to the dispatcher, the
   serial driver + `--track` plumbing retire (SR-029/030 through a reviewed
   spine amendment), judgment duties re-homed once, the per-path guard
   inventory single-pathed. **Un-defer trigger declared:** ≥ 3 real multi-WI
   dispatcher runs on this repo with no incident the serial path would have
-  avoided, then an owner un-defer. [specs/WI-210.md](specs/WI-210.md).
+  avoided, then an owner un-defer. [specs/WI-210.md](archive/specs/WI-210.2026-07-20.md).
 
 **Also this entry:** OI-3's push half executed (Decisions above); the brief
 narrowed to the `main`-integration residue with its One-line updated (the
@@ -8958,7 +8958,7 @@ one; `push-policy: human`).
 ## 2026-07-17 — WI-208: migration audits signed; dispatcher is the live launcher default
 
 **Session type:** build (`unattended`, strong; spec
-[specs/WI-208.md](specs/WI-208.md)). **No spine change:** this populated the
+[specs/WI-208.md](archive/specs/WI-208.2026-07-20.md)). **No spine change:** this populated the
 already-shipped scheduler schema and launcher slot; classifier/dispatcher code
 was intentionally untouched.
 
@@ -9012,7 +9012,7 @@ assessment was run through its JSON format and independently counted 15 open /
 ## 2026-07-17 — WI-209: dual-plan auto-dispatch + the quiet-park auto-page
 
 **Session type:** build (`unattended`, strong; spec
-[specs/WI-209.md](specs/WI-209.md)). **Spine change (SR-066 amendment,
+[specs/WI-209.md](archive/specs/WI-209.2026-07-20.md)). **Spine change (SR-066 amendment,
 ratified in the same reviewed commit):** the "deferred to the --jobs
 dual-dispatch WI" clauses are gone from Requirement + Rationale; the AC gains
 the auto-dispatch acceptance; LLR-076 and TC-076 moved with it
@@ -9070,7 +9070,7 @@ Full suite + check_docs at the commit below.
 ## 2026-07-17 — WI-210: legacy-path retirement — one engine, one selection path
 
 **Session type:** build (`unattended`, strong; spec
-[specs/WI-210.md](specs/WI-210.md)). **Un-defer record:** the row's declared
+[specs/WI-210.md](archive/specs/WI-210.2026-07-20.md)). **Un-defer record:** the row's declared
 bake trigger (≥ 3 real multi-WI dispatcher runs, then an owner un-defer) was
 **superseded by the owner's explicit grind directive** (this sitting,
 2026-07-17) — recorded as a deviation, not silently absorbed. **The build-time
@@ -9661,7 +9661,7 @@ states the disjointness rule (publication proceeds when tracked dirt is disjoint
 from the publish diff, carried forward by the clobber-refusing `read-tree -m -u`
 sync; intersecting dirt or an untracked collision defers; the exact-old-hash
 `reset --hard` remains the mechanically-stale path) and references
-[WI-230.md](specs/WI-230.md) as the amending spec.
+[WI-230.md](archive/specs/WI-230.2026-07-20.md) as the amending spec.
 
 **NOTE — ruling recorded.** The reviewer observed that the already-at-target,
 dirty, no-pending-intent branch changed from `deferred "diverges"` to `noop`
@@ -9722,7 +9722,7 @@ auto-resolvable, parking otherwise (the park/re-review state machine is untouche
 `_compose_train` helpers; `integrate_train` rewired; the summary counter);
 `tests/test_agent_loop_integrate.py` (four integration regressions — dashboard
 regenerate-without-park, disjoint-row union, same-row park, mixed generated+source
-park — plus two pure-helper units). Spec: [WI-231.md](specs/WI-231.md).
+park — plus two pure-helper units). Spec: [WI-231.md](archive/specs/WI-231.2026-07-20.md).
 
 **Deviations.** The skills index is deliberately absent from `GENERATED_ARTIFACTS`:
 its neutral source exists only in the kit repo and the per-agent copies the
@@ -10454,16 +10454,16 @@ is not a standing gate.
   (`gen_trajectory.py` / emitted template / `shoot.mjs`); require a render-based
   critique before a render-surface change reaches a green gate. Related to OI-7
   (review cadence) but **not blocked by it** — OI-7 governs *code* review
-  cadence; this governs *perceptual-critique* re-fire. [WI-243 spec](specs/WI-243.md).
+  cadence; this governs *perceptual-critique* re-fire. [WI-243 spec](archive/specs/WI-243.2026-07-20.md).
 - **WI-244** (quality, medium, ordinary) — distill Leonxlnx/taste-skill (MIT)
   mandatory legibility pre-flight (both-themes contrast floor, theme-lock,
   viewport-fit / no-clip) into stack-neutral anchors on the dashboard-usability
   rubric; WCAG contrast linked to the SR-052 rubric, not restated; pinned-commit
-  attribution. [WI-244 spec](specs/WI-244.md).
+  attribution. [WI-244 spec](archive/specs/WI-244.2026-07-20.md).
 - **WI-245** (docs, medium, ordinary) — add `project-trajectory/EXTERNAL_SKILLS.md`,
   a non-scaffolded curated reference index (pointers-to-mine, not vendored) of
   third-party skill sources with license/trust/applicability columns + recorded
-  SKIPs, populated from the opus evaluation. [WI-245 spec](specs/WI-245.md).
+  SKIPs, populated from the opus evaluation. [WI-245 spec](archive/specs/WI-245.2026-07-20.md).
 
 **Skills evaluation verdicts** (durable capture; detail in the WI-245 spec).
 REFERENCE — taste-skill (MIT), ui-ux-pro-max (MIT), obra/superpowers (MIT — mine
@@ -10551,7 +10551,7 @@ with data), un-deferring WI-159, and whether to file the three minor nits.
 
 Owner directed building the actual Knowledge-tab density fix. **WI-159**
 un-deferred (deferred→queued; SR-053→**SR-054** for the T2 usability anchor;
-BuildTier medium; spec [WI-159.md](specs/WI-159.md)) — apply the DAG/How-SW
+BuildTier medium; spec [WI-159.md](archive/specs/WI-159.2026-07-20.md)) — apply the DAG/How-SW
 **start-collapsed `>3`** pattern to the Knowledge graph rather than invent a new
 one. The three minor nits 075 surfaced (recorded in WI-189 but never filed as
 rows) are now filed queued (SpecRef = 075-CRITIQUE): **WI-246** (How-SW
@@ -10730,3 +10730,44 @@ also gains the standing invariant: `test_dogfood_sync.py` walks
 silently recur. `docs/plan.md` ruled superseded-here (trajectory layer +
 parallel dispatch); its kit-wide fate is a separate design question (owner
 reviewing).
+
+## 2026-07-20 — WI-251d: the absorb-verify sweep (61 specs archived, 137 SpecRefs cleared); NO spine change
+
+The mechanical half of WI-251 applied to the backlog. Four independent
+read-only verifier agents each took ~15 of the 61 archivable specs (a live
+`docs/specs/` file whose every citing WI is closed) and checked the durable
+content — design decisions, contracts, requirements, non-obvious rationale —
+against the permanent homes (SR/LLR/TC registries, `architecture.md`,
+`interfaces.csv`, the PROCESS masters, code + tests, the WI `Deliverable`
+column). **Verdict: 61/61 ABSORBED, zero GAPs — no top-ups needed.** The
+Deliverable column proved consistently rich enough to carry the close record;
+the design-notes-shaped docs (`parallel-dispatch-design-notes`,
+`parallel-wi-dispatch`, `derived-gate-model`) were explicitly re-checked for
+living architecture truth and found fully encoded in the SR-057…SR-101
+parallel-dispatch workstream + `architecture.md` + PROCESS_OPTIONS.
+
+**Dispositions (file → primary home confirmed):** WI-107/109/110/115/120/122/
+126/129/133/159/175/189/190/191/192 → Deliverable + the named SR/LLR/TC rows,
+PROCESS_OPTIONS layers (routing, per-phase effort, dual-plan, spec-of-record),
+skills (render-dashboard-critique), and tests; WI-193/200/201/202/203/204/205/
+206/208/209/210/218/220/221/222 → registry rows (SR-037/058/066 splits,
+IF-058…067), `dupes-allow`, rubric docs, `open-items-surface` contract, code
+constants + regression tests; WI-223…238 → PROCESS_OPTIONS dispatcher/dual-plan/
+crash-safety sections, SR-046/059/061/063/066/097/100, `test_complexity_ratchet`
+/`test_agent_dispatch_decisions`/`test_run_menu`, `docs/ratify/WI-229-sr-split.md`;
+WI-239…245 → SR-096/100 family, `REVIEWER_PROMPT` + `code-review-adversarial`
+rubric, `test_dogfood_sync`, `critique_staleness_findings` + TC-053/054/055,
+`dashboard-usability` rubric T5-T7, `EXTERNAL_SKILLS.md`; the six effort docs
+(derived-gate-model, main-decomposition, open-items-surface, the three
+owner-intakes) → the shipped mechanisms + filed WI rows; the two dispatch
+design docs → the "Parallel dispatch" SR workstream + architecture module map.
+
+**Mechanics:** each file moved to `docs/archive/specs/<stem>.2026-07-20.md`
+with the ARCHIVED banner (WI-attributed, absorb-verify noted); relative links
+inside the 61 re-resolved for the new depth (29 files touched) and the 8
+inbound docs (README, log.md, reviews) re-pointed; every done row's SpecRef
+cleared (137). `docs/orphans-allow` gains the `docs/archive/specs/*` census
+glob (retained evidence, reached from log entries). `check_docs`: 202 docs,
+**0 broken**; `check_trajectory`: **R-F clean** — the only remaining `--strict`
+error is the pre-existing perceptual-stale re-fire (WI-249/250 changed the
+render surface after 077-CRITIQUE), cleared by the fresh critique at close.

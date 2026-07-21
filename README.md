@@ -53,7 +53,7 @@ any repo and wire the harness to that repo's tooling (SN-003).
     resume — and the dispatcher *generates* `docs/run-state` as the run's
     outcome.
   - **Parallel-by-default execution** *(delivered — phase `v4` at G3;
-    [`parallel-wi-dispatch.md`](docs/specs/parallel-wi-dispatch.md))*: a plain
+    [`parallel-wi-dispatch.md`](docs/archive/specs/parallel-wi-dispatch.2026-07-20.md))*: a plain
     launch **is** the dispatcher: it fans out every dependency-ready work item
     across bounded worker lanes, while mutation of the integration branch
     stays serialized and gated (SN-025).

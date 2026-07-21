@@ -7,7 +7,7 @@ the one-line form of each; the DAG rows live in
 [work-items.csv](requirements/work-items.csv). **A section lives here only
 while the decision is pending** — the ruling appends to [log.md](log.md)'s
 Decisions log and the section is deleted. (Format:
-[specs/open-items-surface.md](specs/open-items-surface.md).)
+[specs/open-items-surface.md](archive/specs/open-items-surface.2026-07-20.md).)
 
 _Ruled items are recorded in [log.md](log.md)'s Decisions log (and the sitting's
 GATE audit entry) and their sections deleted per the pending-only rule above — so

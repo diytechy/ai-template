@@ -30,6 +30,10 @@ docs/repo-review-*.md
 # referenced (docs/requirements/work-items.csv), not doc-graph navigation nodes.
 docs/specs/WI-*.md
 
+# archived closed-WI specs — the WI-251 sweep's steady state: retained evidence,
+# date-stamped + WI-attributed, reached from log.md entries not navigation.
+docs/archive/specs/*
+
 # dual-plan decomposition rounds — one directory per round plus the plans/ index;
 # the verdict is summarized in log.md and selected rows are filed as real WIs.
 docs/plans/*
