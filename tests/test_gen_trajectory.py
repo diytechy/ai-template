@@ -126,12 +126,18 @@ def test_wide_views_carry_horizontal_scroll_affordance(tmp_path):
     (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    # the cue is a real element, hidden by default and revealed only at the narrow
-    # breakpoint the layout already collapses at — so no false hint on desktop,
-    # where the native scrollbar is the affordance.
+    # the cue is a real element, hidden by default, with the narrow breakpoint kept
+    # as the no-JS fallback; WI-256 additionally reveals it whenever a container
+    # ACTUALLY overflows (any width) so the fixed-width icicle / a wide drill layer
+    # that clips at 1280/1680 signals its off-screen content, not just at 390.
     assert "↔ Scroll sideways to see the full view" in text
     assert ".scrollcue { display:none;" in text
     assert ".scrollcue{ display:block; }" in text  # inside @media (max-width:760px)
+    assert ".scrollcue.cued { display:block; }" in text  # WI-256 overflow-driven cue
+    # the JS toggles `.cued` from real overflow (scrollWidth vs clientWidth), and a
+    # drill descend re-syncs the new layer via the exposed hook.
+    assert "scrollWidth" in text and "clientWidth" in text
+    assert "window.__syncCues" in text
     # the graph views are focusable, named scroll regions (SR-052 A1/A2)
     assert 'id="ice" class="view" tabindex="0" role="group"' in text
     assert 'aria-label="Architecture icicle, horizontally scrollable"' in text
@@ -1942,6 +1948,32 @@ def test_routed_label_rides_a_detoured_edge():
     assert (lx, ly) == (249.0, 112.9)  # lane midpoint ((118+380)/2, 112.9)
     straight = "M100.0,120.0 C112.0,120.0 386.0,200.0 398.0,200.0"
     assert gt._routed_label_xy(straight, 999.0, 888.0) == (999.0, 888.0)
+
+
+def test_route_edges_terminals_snap_to_port_circle():
+    # 079-CRITIQUE (WI-256): a fanned wire (its passed port y offset from the block
+    # mid-height for strand separation) used to TERMINATE at cy+offset, so a steep
+    # strand landed on a block corner, not its port circle. Terminals now snap to
+    # the rect center; the fan offset lives in the control point (the wire still
+    # bows). Holds for both the direct cubic and the detour.
+    gt = load_script("gen_trajectory")
+    direct = gt._route_edges(
+        [("A->C", 100.0, 108.0, 200.0, 132.0, "A", "C")],
+        {"A": (0.0, 100.0, 100.0, 40.0), "C": (200.0, 100.0, 100.0, 40.0)},
+        12,
+        2,
+    )["A->C"]
+    dn = [float(t) for t in re.findall(r"-?[\d.]+", direct)]
+    assert dn[1] == 120.0 and dn[-1] == 120.0  # terminals on the port centers
+    assert 108.0 in dn and 132.0 in dn  # the fan offset survives in the controls
+    detour = gt._route_edges(
+        [("A->C", 100.0, 108.0, 400.0, 132.0, "A", "C")],
+        {k: (i * 200.0, 100.0, 100.0, 40.0) for i, k in enumerate("ABC")},
+        12,
+        2,
+    )["A->C"]
+    tn = [float(t) for t in re.findall(r"-?[\d.]+", detour)]
+    assert "L" in detour and tn[1] == 120.0 and tn[-1] == 120.0
 
 
 def _wire_through_box_violations(markup):

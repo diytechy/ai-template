@@ -1324,7 +1324,9 @@ DRILL_SCRIPT = (
     "crumbsEl.appendChild(b);"
     "if(i<trail.length-1){const s=document.createElement('span');s.className='sep';"
     "s.textContent=' \\u203a ';crumbsEl.appendChild(s);}"
-    "});}"
+    # WI-256: a descend/crumb-nav swaps the visible layer, changing the outer
+    # `.view` scrollWidth — refresh the overflow scroll cue for the new layer.
+    "});if(window.__syncCues)window.__syncCues();}"
     "function descend(el){"
     "const id=el.getAttribute('data-descend');if(!id||!byId[id])return;"
     "if(trail.some(function(t){return t.id===id;}))return;"
@@ -1509,26 +1511,29 @@ def _lane_candidates(y_pref, blocked, lo, hi):
     return sorted(valid, key=lambda c: abs(c - y_pref))
 
 
-def _detour_points(x1, y1, xa, xb, xe, y2, lane):
+def _detour_points(x1, sy, y1, xa, xb, xe, ty, y2, lane):
     """The routed polyline a viewer's eye follows: source-port bend up to the lane,
     the straight lane segment, then the bend down into the target port. Samples the
     SAME two cubics `_detour_str` formats, so the hit-test and the emitted `d`
-    describe one curve (the lane segment is the (xa,lane)->(xb,lane) hop between)."""
+    describe one curve (the lane segment is the (xa,lane)->(xb,lane) hop between).
+    `sy`/`ty` are the PORT-CENTER terminals (WI-256), `y1`/`y2` the fanned control
+    heights — the wire lands on its port circle but still bows to its fan strand."""
     mx1, mx2 = (x1 + xa) / 2.0, (xb + xe) / 2.0
-    pts = _cubic_points((x1, y1), (mx1, y1), (mx1, lane), (xa, lane))
-    pts += _cubic_points((xb, lane), (mx2, lane), (mx2, y2), (xe, y2))
+    pts = _cubic_points((x1, sy), (mx1, y1), (mx1, lane), (xa, lane))
+    pts += _cubic_points((xb, lane), (mx2, lane), (mx2, y2), (xe, ty))
     return pts
 
 
-def _detour_str(x1, y1, xa, xb, xe, y2, lane):
-    """The detour `d` (two cubics + a straight lane hop) — byte-identical to the
-    former inline format so an already-clear detour regenerates unchanged."""
+def _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane):
+    """The detour `d` (two cubics + a straight lane hop). Terminals `sy`/`ty` sit on
+    the port centers; the first/last control uses the fanned `y1`/`y2`. Byte-
+    identical to the former inline format when a wire is unfanned (sy==y1, ty==y2)."""
     mx1, mx2 = (x1 + xa) / 2.0, (xb + xe) / 2.0
     return (
         "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f} "
         "L{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
             x1,
-            y1,
+            sy,
             mx1,
             y1,
             mx1,
@@ -1542,16 +1547,20 @@ def _detour_str(x1, y1, xa, xb, xe, y2, lane):
             mx2,
             y2,
             xe,
-            y2,
+            ty,
         )  # fmt: skip
     )
 
 
-def _detour_d(x1, y1, xe, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB):
-    """A path 'd' that leaves the source port (x1,y1) rightward, runs a clear
-    horizontal lane over/under the blocking `obstacles`, and enters the target
-    port at (xe,y2) on a short horizontal stub. `obstacles` are (x,y,w,h) rects
-    with the wire's own endpoints already removed.
+def _detour_d(
+    x1, sy, y1, xe, ty, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB
+):
+    """A path 'd' that leaves the source port (x1, port-center sy) rightward, runs a
+    clear horizontal lane over/under the blocking `obstacles`, and enters the target
+    port (xe, port-center ty) on a short horizontal stub. `y1`/`y2` are the fanned
+    control heights (WI-256: the terminal lands on the port circle, the bend keeps
+    the fan strand). `obstacles` are (x,y,w,h) rects with the wire's own endpoints
+    already removed.
 
     WI-255: the FULL routed polyline (both stubs, the two bends, and the lane) is
     re-verified clear of EVERY obstacle overlapping the routed x-span — a box
@@ -1581,12 +1590,12 @@ def _detour_d(x1, y1, xe, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB)
         lo = min(r[1] for r in src) - 40.0
         hi = max(r[1] + r[3] for r in src) + 40.0
         for lane in _lane_candidates(y_pref, blocked, lo, hi):
-            pts = _detour_points(x1, y1, xa, xb, xe, y2, lane)
+            pts = _detour_points(x1, sy, y1, xa, xb, xe, ty, y2, lane)
             hits = sum(1 for r in full if _polyline_hits(pts, (r,)))
             if hits == 0:
-                return _detour_str(x1, y1, xa, xb, xe, y2, lane)
+                return _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane)
             if best is None or hits < best[0]:
-                best = (hits, _detour_str(x1, y1, xa, xb, xe, y2, lane))
+                best = (hits, _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane))
     return best[1] if best else None
 
 
@@ -1611,25 +1620,33 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
     the target port. `rects_by_id` maps a node id to its (x,y,w,h) box. Returns
     {key: d}. A wire whose direct cubic clears every non-endpoint box keeps the
     exact legacy `d` (byte-identical); a blocked wire detours (`_detour_d`).
+
+    WI-256: the wire's TERMINALS snap to the port centers (rect mid-height) while
+    its first/last control keeps the fanned `y1`/`y2`, so a steep fanned wire lands
+    ON its port circle instead of a block corner, yet still bows to its strand. An
+    unfanned wire (its passed y already the port center) is byte-identical.
     Deterministic — inputs are sorted, no dict-iteration order escapes."""
     ordered = sorted(rects_by_id.items())
     out = {}
     for key, x1, y1, x2, y2, src, tgt in sorted(edges, key=lambda e: e[0]):
         xe = x2 - end_trim
         dx = max((x2 - x1) * 0.4, min_dx)
+        rs, rt = rects_by_id.get(src), rects_by_id.get(tgt)
+        sy = rs[1] + rs[3] / 2 if rs else y1  # source port center (terminal)
+        ty = rt[1] + rt[3] / 2 if rt else y2  # target port center (terminal)
         obstacles = [v for k, v in ordered if k != src and k != tgt]
         infl = [
             (r[0] - _WIRE_HIT_MARGIN, r[1] - _WIRE_HIT_MARGIN,
              r[2] + 2 * _WIRE_HIT_MARGIN, r[3] + 2 * _WIRE_HIT_MARGIN)
             for r in obstacles
         ]  # fmt: skip
-        direct = _cubic_points((x1, y1), (x1 + dx, y1), (xe - dx, y2), (xe, y2))
+        direct = _cubic_points((x1, sy), (x1 + dx, y1), (xe - dx, y2), (xe, ty))
         d = None
         if _polyline_hits(direct, infl):
-            d = _detour_d(x1, y1, xe, y2, obstacles)
+            d = _detour_d(x1, sy, y1, xe, ty, y2, obstacles)
         if d is None:
             d = "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
-                x1, y1, x1 + dx, y1, xe - dx, y2, xe, y2
+                x1, sy, x1 + dx, y1, xe - dx, y2, xe, ty
             )
         out[key] = d
     return out
@@ -2066,7 +2083,15 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .view:focus-visible, .tablescroll:focus-visible {
      outline:2px solid var(--accent); outline-offset:2px; }
   .scrollcue { display:none; margin:.1rem 0 .5rem; color:var(--muted);
-     font-size:var(--small); font-weight:600; }
+     font-size:var(--small); font-weight:600; grid-column:1 / -1; }
+  /* WI-256: the cue is driven by ACTUAL overflow (JS toggles `.cued` when a
+     container's scrollWidth exceeds its clientWidth), so a view that clips at a
+     DESKTOP width — the fixed-width icicle, a wide drill layer — signals its
+     off-screen content instead of the former narrow-only media cue. `grid-column`
+     keeps the revealed cue on its own full-width row so it never displaces the
+     view out of the `.layout` grid's 1fr column. The `max-width:760px` rule below
+     stays as the no-JS fallback. */
+  .scrollcue.cued { display:block; }
   #ice .cell rect { stroke:rgba(255,255,255,.35); stroke-width:.5; cursor:pointer;
         transition:opacity .1s ease; }
   #ice .cell text { fill:#fff; font-size:var(--nlabel); pointer-events:none; }
@@ -2284,10 +2309,32 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       b.addEventListener('click',show); b.addEventListener('focus',show);
     }
 
+    // WI-256: show a scroll cue whenever a container ACTUALLY overflows (any
+    // width), not just below the 760px media breakpoint. Each `.view`/`.tablescroll`
+    // toggles its preceding `.scrollcue` sibling. Recomputed on resize, on tab
+    // switch (a hidden panel measures 0), and — via `window.__syncCues` — when a
+    // drill descends into a wider layer. A ResizeObserver covers display:none->block.
+    const scrollBoxes = [...document.querySelectorAll('.view, .tablescroll')];
+    function syncScrollCues(){
+      for(const el of scrollBoxes){
+        let cue = el.previousElementSibling;
+        while(cue && !cue.classList.contains('scrollcue')) cue = cue.previousElementSibling;
+        if(cue) cue.classList.toggle('cued', el.scrollWidth > el.clientWidth + 1);
+      }
+    }
+    window.__syncCues = syncScrollCues;
+    if(window.ResizeObserver){
+      const ro = new ResizeObserver(syncScrollCues);
+      for(const el of scrollBoxes) ro.observe(el);
+    }
+    window.addEventListener('resize', syncScrollCues);
+    syncScrollCues();
+
     for (const b of document.querySelectorAll('nav.tabs button'))
       b.onclick = () => {
         for (const x of document.querySelectorAll('nav.tabs button')) x.classList.toggle('active', x===b);
         for (const p of document.querySelectorAll('.panel')) p.classList.toggle('active', p.id===b.dataset.tab);
+        syncScrollCues();
       };
   </script>
 </body></html>
