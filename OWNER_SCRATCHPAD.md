@@ -442,3 +442,11 @@ Unrelated, which test cases are actually carried through to a downstream user of
 Specs are getting stored as WI labels, instead of getting integrated with the module they go with.  This will likely cause specs to rot over time.  Wasn't this addressed earlier in some form?  I thought work item specs were to get absorved into their respective work item when complete to keep all relevent content in a single location.
 
 Related to the fix to ensure specs are properly archived for WIs and consumed into their relevent holders, that must be a core kit component, not something to opt in / opt out of.  It is critical the flow of information is in the appropriate location to help prevent rot and ensure relevent information is always discoverable for other LLM agents, can you confirm this is the case?
+
+~~~~~~~~~~~~~~~~
+
+Related to WI-254, you indicated "the shipped kit hook is untouched, so downstream sees no change.", I assume because the .coverage files are getting created by the test cases specific to this repo?  Just want to confirm.
+
+Is WI-253 the only open work item?  Grind through WI-253
+
+Finally, should we remove completed work items from the work-items table?  
