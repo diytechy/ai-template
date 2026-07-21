@@ -314,3 +314,84 @@ def test_live_work_items_header_matches_template_exactly():
     live = _header(ROOT / "docs/requirements/work-items.csv")
     tmpl = _header(TEMPLATE_DIR / "work-items.template.csv")
     assert live == tmpl
+
+
+# --- scaffold coverage: every bootstrap MAPPING destination exists here or is a
+# declared omission (WI-251). The specs-README postmortem: docs/specs/ predated
+# WI-053's spec-of-record machinery, the two boilerplate files were never
+# backfilled, and 0/58 live specs carried the close-ritual boxes the absent
+# exemplar stated — a one-time audit is not an invariant, so this walk is.
+
+# dest -> one-line reason, owner-triaged 2026-07-20 (WI-251). An entry whose
+# destination MATERIALIZES must be removed (asserted below) — the list can only
+# shrink, never silently mask a backfill.
+SCAFFOLD_OMISSIONS = {
+    "GEMINI.md": "no Gemini agent in use; OpenCode/KIMI/GROK read AGENTS.md natively",
+    "docs/process.md": "the master PROCESS.md lives in project-trajectory/ (status.md non-goal)",
+    "docs/process-options.md": "the master PROCESS_OPTIONS.md lives in project-trajectory/ (status.md non-goal)",
+    "docs/blackout": "absent = disabled, byte-identical, by the template's own spec",
+    "docs/plan.md": "superseded by the trajectory layer + parallel dispatch (WI-252 mutual exclusion)",
+    "docs/interfaces.md": "cross-project contract index; skip for a standalone deliverable (its own header)",
+    "docs/requirements/performance-budgets.csv": "process.md §9 perf layer not enabled (opt-in, off-spine)",
+    "docs/requirements/procurement.csv": "a meta-repo purchases no parts (opt-in, off-spine)",
+    "docs/requirements/assets.csv": "a meta-repo ships no binary assets (opt-in, off-spine)",
+    "run.cmd": "no product to launch (status.md non-goal; the launchers here are agent-resume.*)",
+    "run.sh": "no product to launch (status.md non-goal)",
+    "run.command": "no product to launch (status.md non-goal)",
+    ".githooks/pre-push": "privacy-checked-repo backstop; docs/privacy-check declares off (owner-ruled out, WI-251)",
+    ".github/workflows/check.yml": "test.yml's gate job runs the same check.py at the derived gate",
+}
+
+
+def _mapping_unaccounted():
+    """MAPPING destinations neither present, nor kit-served in place, nor
+    declared. A dest under scripts/ whose source ships in project-trajectory/
+    is the meta-repo's in-place equivalent (CLAUDE.md repo map: the kit runs
+    its own scripts from project-trajectory/scripts/, never copies them onto
+    itself — that copy would be the drift this module exists to prevent)."""
+    bootstrap = load_script("bootstrap")
+    out = []
+    for src, dst in bootstrap.MAPPING:
+        if (ROOT / dst).exists():
+            continue
+        if dst.startswith("scripts/") and (ROOT / "project-trajectory" / src).exists():
+            continue
+        if dst in SCAFFOLD_OMISSIONS:
+            continue
+        out.append(dst)
+    return out
+
+
+def test_scaffold_mapping_covered_or_declared():
+    missing = _mapping_unaccounted()
+    assert not missing, (
+        "bootstrap MAPPING destination(s) neither present, kit-served in place, "
+        "nor declared in SCAFFOLD_OMISSIONS (dogfood the file or rule it out "
+        "with a reason): {}".format(", ".join(missing))
+    )
+
+
+def test_scaffold_omissions_list_is_current():
+    # The honesty half: a declared omission whose destination now EXISTS is a
+    # stale entry — remove it, so the list documents only real absences.
+    stale = [d for d in SCAFFOLD_OMISSIONS if (ROOT / d).exists()]
+    assert not stale, "SCAFFOLD_OMISSIONS entries now materialized: {}".format(
+        ", ".join(stale)
+    )
+
+
+def test_bite_scaffold_walk_catches_an_undeclared_absence():
+    # Bite-proof: drop a declared omission and the walk must flag its dest.
+    bootstrap = load_script("bootstrap")
+    dests = {d for _, d in bootstrap.MAPPING}
+    assert "docs/plan.md" in dests  # the walk actually covers the probe entry
+    without = dict(SCAFFOLD_OMISSIONS)
+    del without["docs/plan.md"]
+    missing = [
+        d
+        for _, d in bootstrap.MAPPING
+        if not (ROOT / d).exists()
+        and not (d.startswith("scripts/"))
+        and d not in without
+    ]
+    assert "docs/plan.md" in missing
