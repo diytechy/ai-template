@@ -633,20 +633,35 @@ def dag_svg(wis):
     out_off = _port_fan(out_groups, lambda e: e[1], pos, DAG_ROW_H)
     in_off = _port_fan(in_groups, lambda e: e[0], pos, DAG_ROW_H)
 
+    # A cross-rank edge that would cut an unrelated WI box detours around it
+    # (`_route_edges`, WI-253); a clear edge keeps its bowed cubic byte-for-byte.
+    rects = {
+        w["id"]: (pos[w["id"]][0], pos[w["id"]][1], DAG_COL_W, DAG_ROW_H) for w in wis
+    }
+    routes = _route_edges(
+        [
+            (
+                e,
+                pos[e[0]][0] + DAG_COL_W,
+                pos[e[0]][1] + DAG_ROW_H / 2 + out_off[e],
+                pos[e[1]][0],
+                pos[e[1]][1] + DAG_ROW_H / 2 + in_off[e],
+                e[0],
+                e[1],
+            )
+            for e in wi_edges
+        ],  # fmt: skip
+        rects,
+        12,
+        2,
+    )
     edges = []
     for e in wi_edges:
         p, wid, cls = e
-        x1 = pos[p][0] + DAG_COL_W
-        y1 = pos[p][1] + DAG_ROW_H / 2 + out_off[e]
-        x2 = pos[wid][0]
-        y2 = pos[wid][1] + DAG_ROW_H / 2 + in_off[e]
-        dx = max((x2 - x1) * 0.4, 12)
-        x2p = x2 - 2  # clears the rect edge instead of overlapping it
         edges.append(
             '<path class="{}" data-src="{}" data-tgt="{}" '
-            'd="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
-            'marker-end="url(#arrow)"></path>'.format(
-                cls, esc(p), esc(wid), x1, y1, x1 + dx, y1, x2p - dx, y2, x2p, y2
+            'd="{}" marker-end="url(#arrow)"></path>'.format(
+                cls, esc(p), esc(wid), routes[e]
             )
         )
 
@@ -780,19 +795,34 @@ def sw_graph(root, mods):
     out_off = _port_fan(out_groups, lambda e: e[1], pos, SW_ROW_H)
     in_off = _port_fan(in_groups, lambda e: e[0], pos, SW_ROW_H)
 
+    rects = {k: (pos[k][0], pos[k][1], SW_COL_W, SW_ROW_H) for k in node_ids}
+    routes = _route_edges(
+        [
+            (
+                e,
+                pos[e[0]][0] + SW_COL_W,
+                pos[e[0]][1] + SW_ROW_H / 2 + out_off[e],
+                pos[e[1]][0],
+                pos[e[1]][1] + SW_ROW_H / 2 + in_off[e],
+                e[0],
+                e[1],
+            )
+            for e in edges
+        ],  # fmt: skip
+        rects,
+        12,
+        2,
+    )
     edge_svg = []
     for e in sorted(edges):
         s, d, iid = e
         x1, y1 = pos[s][0] + SW_COL_W, pos[s][1] + SW_ROW_H / 2 + out_off[e]
         x2, y2 = pos[d][0], pos[d][1] + SW_ROW_H / 2 + in_off[e]
-        dx = max((x2 - x1) * 0.4, 12)
-        x2p = x2 - 2
-        mx, my = (x1 + x2p) / 2, (y1 + y2) / 2
+        mx, my = (x1 + (x2 - 2)) / 2, (y1 + y2) / 2
         edge_svg.append(
-            '<path class="swedge" d="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} '
-            '{:.1f},{:.1f}" marker-end="url(#swarrow)"></path>'
+            '<path class="swedge" d="{}" marker-end="url(#swarrow)"></path>'
             '<text class="swlab" x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text>'
-            "".format(x1, y1, x1 + dx, y1, x2p - dx, y2, x2p, y2, mx, my - 2, esc(iid))
+            "".format(routes[e], mx, my - 2, esc(iid))
         )
     node_svg = []
     for k in node_ids:
@@ -1382,6 +1412,180 @@ def _port_fan(groups, other_of, pos, row_h):
     return offsets
 
 
+# --- WI-253: obstacle-aware wire routing, single-sourced across every emitter ----
+#
+# Every layered view (the WI DAG, the How-SW seam/containment graph, the OKF
+# knowledge graph, the drill layers) draws its wires as a horizontal-tangent
+# cubic from a source OUTPUT port to a target INPUT port. A wire spanning more
+# than one column — or any backward (right→left) seam — used to run straight
+# through the intermediate node boxes and cross other wires under the port fans
+# (T8 in dashboard-usability.md). These helpers detect a wire that would cut an
+# unrelated box and re-route it through a clear horizontal LANE over/under the
+# blocking band, entering each port on a short horizontal stub (crossings then
+# happen in open space, never under a label or port cluster). A wire whose
+# direct cubic is already clear keeps the legacy path byte-for-byte, so the many
+# short in-column wires (and every downstream render) are unchanged.
+# Deterministic: pure geometry, sorted inputs, no clocks, no dict-order use.
+
+_WIRE_HIT_MARGIN = 3.0  # a box is "hit" only when the cubic comes within this
+_WIRE_CLEAR = 7.0  # a detour lane sits this far outside the blocking band
+_WIRE_STUB = 18.0  # the horizontal run a detour keeps at each port before lifting
+
+
+def _cubic_points(p0, p1, p2, p3, n=24):
+    """Sample a cubic Bézier into n+1 points (deterministic polyline)."""
+    pts = []
+    for i in range(n + 1):
+        t = i / n
+        u = 1.0 - t
+        a, b, c, d = u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t
+        pts.append(
+            (
+                a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0],
+                a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1],
+            )
+        )
+    return pts
+
+
+def _seg_hits_rect(x1, y1, x2, y2, rect):
+    """True when the segment (x1,y1)->(x2,y2) crosses the axis-aligned rect
+    (rx, ry, rw, rh). Liang–Barsky parametric clip — deterministic, no float
+    surprises past the formatted 0.1px grid."""
+    rx, ry, rw, rh = rect
+    dx, dy = x2 - x1, y2 - y1
+    p = (-dx, dx, -dy, dy)
+    q = (x1 - rx, rx + rw - x1, y1 - ry, ry + rh - y1)
+    t0, t1 = 0.0, 1.0
+    for pi, qi in zip(p, q):
+        if pi == 0:
+            if qi < 0:
+                return False
+        else:
+            r = qi / pi
+            if pi < 0:
+                if r > t1:
+                    return False
+                t0 = max(t0, r)
+            else:
+                if r < t0:
+                    return False
+                t1 = min(t1, r)
+    return t0 <= t1
+
+
+def _polyline_hits(pts, rects):
+    """True when any segment of the polyline `pts` crosses any rect in `rects`."""
+    for i in range(len(pts) - 1):
+        x1, y1 = pts[i]
+        x2, y2 = pts[i + 1]
+        for r in rects:
+            if _seg_hits_rect(x1, y1, x2, y2, r):
+                return True
+    return False
+
+
+def _clear_lane_y(y_pref, blocked, lo, hi):
+    """A y within [lo, hi] not inside any (top, bottom) band in `blocked`,
+    as close as possible to y_pref. Bands are pre-inflated by the clearance, so
+    a position just past a band edge already carries the margin. Returns None
+    only when the whole span is blocked (caller then keeps the direct cubic)."""
+    merged = []
+    for t, b in sorted(blocked):
+        if merged and t <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], b))
+        else:
+            merged.append([t, b])
+    cands = [y_pref]
+    for t, b in merged:
+        cands.append(t - 0.1)
+        cands.append(b + 0.1)
+    best = None
+    for c in cands:
+        if c < lo or c > hi:
+            continue
+        if any(t <= c <= b for t, b in merged):
+            continue
+        d = abs(c - y_pref)
+        if best is None or d < best[0]:
+            best = (d, c)
+    return best[1] if best else None
+
+
+def _detour_d(x1, y1, xe, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB):
+    """A path 'd' that leaves the source port (x1,y1) rightward, runs a clear
+    horizontal lane over/under the blocking `obstacles`, and enters the target
+    port at (xe,y2) on a short horizontal stub. `obstacles` are (x,y,w,h) rects
+    with the wire's own endpoints already removed. Returns None when no clear
+    lane exists across the lane span (the intermediate columns), leaving the
+    caller on the direct cubic. The stubs live in the inter-column corridors,
+    which the layered layout keeps empty, so only the lane span is tested."""
+    xa, xb = x1 + stub, xe - stub
+    lox, hix = min(xa, xb), max(xa, xb)
+    inrange = [r for r in obstacles if r[0] < hix and r[0] + r[2] > lox]
+    if not inrange:
+        return None
+    blocked = [(r[1] - clearance, r[1] + r[3] + clearance) for r in inrange]
+    lo = min(r[1] for r in inrange) - 40.0
+    hi = max(r[1] + r[3] for r in inrange) + 40.0
+    lane = _clear_lane_y((y1 + y2) / 2.0, blocked, lo, hi)
+    if lane is None:
+        return None
+    mx1, mx2 = (x1 + xa) / 2.0, (xb + xe) / 2.0
+    return (
+        "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f} "
+        "L{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
+            x1,
+            y1,
+            mx1,
+            y1,
+            mx1,
+            lane,
+            xa,
+            lane,
+            xb,
+            lane,
+            mx2,
+            lane,
+            mx2,
+            y2,
+            xe,
+            y2,
+        )  # fmt: skip
+    )
+
+
+def _route_edges(edges, rects_by_id, min_dx, end_trim):
+    """The one wire router every layered emitter calls. `edges` is a list of
+    (key, x1, y1, x2, y2, src_id, tgt_id): x1,y1 the source OUTPUT port, x2 the
+    target block's LEFT edge (untrimmed — the legacy dx is measured from it), y2
+    the target port. `rects_by_id` maps a node id to its (x,y,w,h) box. Returns
+    {key: d}. A wire whose direct cubic clears every non-endpoint box keeps the
+    exact legacy `d` (byte-identical); a blocked wire detours (`_detour_d`).
+    Deterministic — inputs are sorted, no dict-iteration order escapes."""
+    ordered = sorted(rects_by_id.items())
+    out = {}
+    for key, x1, y1, x2, y2, src, tgt in sorted(edges, key=lambda e: e[0]):
+        xe = x2 - end_trim
+        dx = max((x2 - x1) * 0.4, min_dx)
+        obstacles = [v for k, v in ordered if k != src and k != tgt]
+        infl = [
+            (r[0] - _WIRE_HIT_MARGIN, r[1] - _WIRE_HIT_MARGIN,
+             r[2] + 2 * _WIRE_HIT_MARGIN, r[3] + 2 * _WIRE_HIT_MARGIN)
+            for r in obstacles
+        ]  # fmt: skip
+        direct = _cubic_points((x1, y1), (x1 + dx, y1), (xe - dx, y2), (xe, y2))
+        d = None
+        if _polyline_hits(direct, infl):
+            d = _detour_d(x1, y1, xe, y2, obstacles)
+        if d is None:
+            d = "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
+                x1, y1, x1 + dx, y1, xe - dx, y2, xe, y2
+            )
+        out[key] = d
+    return out
+
+
 def _drill_layer_svg(blocks, edges):
     """One drill layer as a plain SVG block diagram. Each block is a rectangle with
     an input port (left-middle) and an output port (right-middle); each aggregated
@@ -1429,30 +1633,37 @@ def _drill_layer_svg(blocks, edges):
     out_off = _port_fan(out_groups, lambda e: e[1], pos, row_h)
     in_off = _port_fan(in_groups, lambda e: e[0], pos, row_h)
 
+    # The start stays on the output port (no arrowhead there, so it reads as
+    # attached); the END is pulled PORT_R + 2 px short of the input-port center
+    # so its `marker-end` arrowhead draws in the clear gap just outside the ring
+    # (WI-249). A wire that would cut an unrelated block detours (`_route_edges`,
+    # WI-253) through a clear lane instead of straight through the box.
+    rects = {
+        b["key"]: (pos[b["key"]][0], pos[b["key"]][1], col_w, row_h) for b in blocks
+    }
+    routes = _route_edges(
+        [
+            (
+                e,
+                pos[e[0]][0] + col_w,
+                pos[e[0]][1] + row_h / 2 + out_off[e],
+                pos[e[1]][0],
+                pos[e[1]][1] + row_h / 2 + in_off[e],
+                e[0],
+                e[1],
+            )
+            for e in wire_edges
+        ],  # fmt: skip
+        rects,
+        14,
+        PORT_R + 2,
+    )
     wires = []
     for e in sorted(wire_edges):
-        a, b, title = e
-        oy, iy = out_off[e], in_off[e]
-        x1, y1 = pos[a][0] + col_w, pos[a][1] + row_h / 2 + oy
-        x2, y2 = pos[b][0], pos[b][1] + row_h / 2 + iy
-        dx = max((x2 - x1) * 0.4, 14)
-        # The start stays on the output port (no arrowhead there, so it reads as
-        # attached); the END is pulled PORT_R + 2 px short of the input-port
-        # center so its `marker-end` arrowhead draws in the clear gap just
-        # outside the ring rather than underneath it (the node's port circle is
-        # painted after the wires, so an un-trimmed arrowhead was fully hidden).
-        x2p = x2 - PORT_R - 2
+        title = e[2]
         wires.append(
-            '<path class="wire" d="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} '
-            '{:.1f},{:.1f}" marker-end="url(#drillarrow)">{}</path>'.format(
-                x1,
-                y1,
-                x1 + dx,
-                y1,
-                x2p - dx,
-                y2,
-                x2p,
-                y2,
+            '<path class="wire" d="{}" marker-end="url(#drillarrow)">{}</path>'.format(
+                routes[e],
                 "<title>{}</title>".format(esc(title)) if title else "",
             )
         )
@@ -2365,18 +2576,31 @@ def know_graph(root):
     out_off = _port_fan(out_groups, lambda e: e[1], pos, KN_ROW_H)
     in_off = _port_fan(in_groups, lambda e: e[0], pos, KN_ROW_H)
 
+    rects = {k: (pos[k][0], pos[k][1], KN_COL_W, KN_ROW_H) for k in node_ids}
+    routes = _route_edges(
+        [
+            (
+                e,
+                pos[e[0]][0] + KN_COL_W,
+                pos[e[0]][1] + KN_ROW_H / 2 + out_off[e],
+                pos[e[1]][0],
+                pos[e[1]][1] + KN_ROW_H / 2 + in_off[e],
+                e[0],
+                e[1],
+            )
+            for e in edges
+        ],  # fmt: skip
+        rects,
+        12,
+        2,
+    )
     edge_svg = []
     for e in edges:
         s, d = e
-        x1, y1 = pos[s][0] + KN_COL_W, pos[s][1] + KN_ROW_H / 2 + out_off[e]
-        x2, y2 = pos[d][0], pos[d][1] + KN_ROW_H / 2 + in_off[e]
-        dx = max((x2 - x1) * 0.4, 12)
-        x2p = x2 - 2
         edge_svg.append(
             '<path class="kedge" data-src="{}" data-tgt="{}" '
-            'd="M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}" '
-            'marker-end="url(#knowarrow)"></path>'.format(
-                esc(s), esc(d), x1, y1, x1 + dx, y1, x2p - dx, y2, x2p, y2
+            'd="{}" marker-end="url(#knowarrow)"></path>'.format(
+                esc(s), esc(d), routes[e]
             )
         )
     node_svg, details = [], {}

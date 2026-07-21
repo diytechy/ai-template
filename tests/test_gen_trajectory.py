@@ -1813,3 +1813,165 @@ def test_status_forward_only_guard_stands_down_under_marker(tmp_path):
         [SCRIPTS / "check_trajectory.py", "--root", tmp_path, "--strict"], cwd=tmp_path
     )
     assert rearmed.returncode == 1 and "forward-only" in rearmed.stderr
+
+
+# --- WI-253: obstacle-aware wire routing (T8 — edge routing legibility) ----------
+# The layered emitters route a wire that would cut an unrelated node box around it
+# (a clear horizontal lane), so no edge reads as connected to a box it merely
+# crosses, and crossings fall in open space rather than under labels / port fans.
+
+
+def _sample_path_d(d, n=48):
+    """A path `d` of M / L / C commands -> a polyline (the same cubic sampling the
+    router's own hit-test uses), so a test can assert what a viewer's eye follows."""
+    toks = re.findall(r"[MLC]|-?[\d.]+", d)
+    pts, i, cur = [], 0, None
+    while i < len(toks):
+        c = toks[i]
+        i += 1
+        if c in "ML":
+            cur = (float(toks[i]), float(toks[i + 1]))
+            i += 2
+            pts.append(cur)
+        elif c == "C":
+            p1 = (float(toks[i]), float(toks[i + 1]))
+            p2 = (float(toks[i + 2]), float(toks[i + 3]))
+            e = (float(toks[i + 4]), float(toks[i + 5]))
+            i += 6
+            gt = load_script("gen_trajectory")
+            pts.extend(gt._cubic_points(cur, p1, p2, e, n)[1:])
+            cur = e
+    return pts
+
+
+def _polyline_crosses(pts, rect):
+    gt = load_script("gen_trajectory")
+    return any(
+        gt._seg_hits_rect(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], rect)
+        for i in range(len(pts) - 1)
+    )
+
+
+def test_route_edges_detours_around_a_blocking_box():
+    # A → C spans three columns with B centred between them; the straight wire at
+    # B's row would cut B's box. The router must re-route around it (a lane detour),
+    # and the routed path must clear B by the sampled polyline a viewer follows.
+    gt = load_script("gen_trajectory")
+    rects = {
+        "A": (0.0, 100.0, 100.0, 40.0),
+        "B": (200.0, 100.0, 100.0, 40.0),
+        "C": (400.0, 100.0, 100.0, 40.0),
+    }
+    edges = [("A->C", 100.0, 120.0, 400.0, 120.0, "A", "C")]
+    routes = gt._route_edges(edges, rects, 12, 2)
+    d = routes["A->C"]
+    assert "L" in d  # a detour, not the straight legacy cubic
+    assert not _polyline_crosses(_sample_path_d(d), rects["B"])  # clears the box
+
+
+def test_route_edges_leaves_a_clear_wire_byte_identical():
+    # A → B is adjacent with nothing between: the router keeps the exact legacy
+    # cubic (byte-for-byte), so the many clean in-column wires — and every
+    # downstream render — are unchanged by the WI-253 routing.
+    gt = load_script("gen_trajectory")
+    rects = {"A": (0.0, 100.0, 100.0, 40.0), "B": (200.0, 100.0, 100.0, 40.0)}
+    routes = gt._route_edges(
+        [("A->B", 100.0, 120.0, 200.0, 120.0, "A", "B")], rects, 12, 2
+    )
+    dx = max((200.0 - 100.0) * 0.4, 12)
+    xe = 200.0 - 2
+    legacy = "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
+        100.0, 120.0, 100.0 + dx, 120.0, xe - dx, 120.0, xe, 120.0
+    )
+    assert routes["A->B"] == legacy
+    assert "L" not in routes["A->B"]
+
+
+def test_route_edges_reroutes_a_backward_seam():
+    # A consumer→producer (right→left) seam used to sweep the whole width straight
+    # through every box; the router lanes it around instead. C (right) → A (left)
+    # past the intermediate B must clear B.
+    gt = load_script("gen_trajectory")
+    rects = {
+        "A": (0.0, 100.0, 100.0, 40.0),
+        "B": (200.0, 100.0, 100.0, 40.0),
+        "C": (400.0, 100.0, 100.0, 40.0),
+    }
+    routes = gt._route_edges(
+        [("C->A", 500.0, 120.0, 0.0, 120.0, "C", "A")], rects, 12, 2
+    )
+    d = routes["C->A"]
+    assert "L" in d
+    assert not _polyline_crosses(_sample_path_d(d), rects["B"])
+
+
+def _wire_through_box_violations(markup):
+    """Every (wire d, blocking rect) pair where a wire's sampled polyline crosses a
+    node box that is not its own source/target — the T8 through-box invariant. Each
+    `<svg>` is a self-contained drill layer with its OWN coordinate system, so wires
+    are only ever tested against boxes in the SAME svg (a panel concatenates many)."""
+    num = r"(-?[\d.]+)"
+    bad = []
+    for svg in re.findall(r"<svg\b.*?</svg>", markup, re.S):
+        rects = [
+            (float(a), float(b), float(c), float(e))
+            for a, b, c, e in re.findall(
+                r'<rect x="'
+                + num
+                + r'" y="'
+                + num
+                + r'" width="'
+                + num
+                + r'" height="'
+                + num
+                + r'"',
+                svg,
+            )
+            if float(c) > 20 and float(e) > 20
+        ]
+        wires = re.findall(
+            r'<path class="(?:wire|swedge|kedge|edge(?: soft)?)"[^>]*?d="([^"]+)"', svg
+        )
+        for d in wires:
+            pts = _sample_path_d(d)
+            if len(pts) < 2:
+                continue
+            start, end = pts[0], pts[-1]
+            for r in rects:
+                rx, ry, rw, rh = r
+                on_src = (
+                    abs(start[0] - (rx + rw)) < 2 and ry - 3 <= start[1] <= ry + rh + 3
+                )
+                on_tgt = abs(end[0] - rx) < 10 and ry - 3 <= end[1] <= ry + rh + 3
+                if on_src or on_tgt:
+                    continue
+                if _polyline_crosses(pts, r):
+                    bad.append((d, r))
+    return bad
+
+
+def test_meta_containerized_sw_wires_avoid_unrelated_boxes():
+    # Over the real meta repo the How-SW top view carries backward CMP seams — the
+    # exact case 078-CRITIQUE flagged (CMP-001 → CMP-002/004 sweeping through boxes).
+    # No wire in that panel may cross a component box it is not wired to.
+    gt = load_script("gen_trajectory")
+    cont = gt.sw_containment(ROOT, gt.sw_modules(ROOT))
+    assert cont is not None
+    _tab, panel = cont
+    assert _wire_through_box_violations(panel) == []
+
+
+def test_meta_knowledge_and_when_wires_avoid_unrelated_boxes():
+    # The Knowledge concept graph and the tiered When roadmap over the real meta
+    # repo: every wired diagram obeys the T8 through-box invariant.
+    ct = load_script("check_trajectory")
+    gt = load_script("gen_trajectory")
+    kg = gt.know_graph(ROOT)
+    assert kg is not None
+    svg, _details = kg
+    assert _wire_through_box_violations(svg) == []
+    wis, integrity = ct.load_wis(ct.read_rows(ROOT / ct.WI_CSV))
+    assert not integrity
+    when = gt.when_view(ROOT, wis)
+    assert when is not None
+    assert _wire_through_box_violations(when) == []
