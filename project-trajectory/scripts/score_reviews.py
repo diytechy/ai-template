@@ -372,6 +372,38 @@ def merge_verdict(verdicts):
     return merged, contradiction
 
 
+def latest_phase_verdicts(entries):
+    """The deterministic latest-file-per-phase rule the integrator gate reads —
+    extending merge_verdict's any-dissent-blocks discipline (SR-096) from one
+    parallel round to the reroll dimension. `entries` is [(phase, ordinal,
+    verdict), ...] parsed from the verdict files at ONE reviewed head; the
+    highest ordinal is a phase's LATEST word, so "latest" is well-defined even
+    when a phase was re-run at the same commit. Returns ({phase: latest_verdict},
+    {flipped phases}). Rules: a flipped phase is one whose latest APPROVE
+    overwrites an earlier same-head CHANGES-REQUESTED — a reroll-until-green the
+    gate must escalate rather than silently honor (repo-review 2026-07-21 L-28
+    kin). The reverse (APPROVE then a later CHANGES-REQUESTED) is a plain latest
+    dissent, not a flip — the last word still blocks. And the last word governs
+    even when it is UNPARSEABLE: a higher-ordinal blank/mangled verdict file
+    leaves the phase with NO latest verdict (omitted from the map) rather than
+    falling back to an older parseable APPROVE — a mangled meant-to-dissent
+    re-review must page, not silently clear (WI-260 review fix 2)."""
+    by_phase = {}
+    for phase, ordinal, verdict in entries:
+        by_phase.setdefault(phase, []).append((ordinal, verdict))
+    latest, flipped = {}, set()
+    for phase, seq in by_phase.items():
+        seq.sort()  # by ordinal ascending; the highest ordinal is the last word
+        top = seq[-1][1]
+        if not top:
+            continue  # ambiguous last word -> no clear latest verdict for the phase
+        latest[phase] = top
+        earlier = [v for _o, v in seq[:-1]]
+        if top == "APPROVE" and "CHANGES-REQUESTED" in earlier:
+            flipped.add(phase)
+    return latest, flipped
+
+
 # --------------------------------------------------------------------------- #
 # The scoreboard — one small decayed-tally text file.
 # --------------------------------------------------------------------------- #

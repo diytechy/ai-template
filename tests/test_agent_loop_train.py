@@ -384,3 +384,39 @@ def test_join_starts_from_the_combined_integration_head(tmp_path):
     assert join_reserve["base"] == last_parent_head
     assert _reservations(repo) == set()
     assert (repo / "docs" / "run-state").read_text().startswith("DONE")
+
+
+def test_render_surface_spans_the_whole_traincar_scope(tmp_path):
+    # WI-260 design 1, applied to the one-review-scope rule (WI-183): a traincar
+    # is ONE scope, so it is render-surface when ANY constituent WI delivers a
+    # Critique-verified SR — the integrator's required set adds CRITIQUE for the
+    # whole car even when only the second WI touches the render surface. A car of
+    # purely non-render WIs never acquires it (no deadlock on an unscheduled
+    # CRITIQUE).
+    dispatcher = agent_loop.agent_dispatch
+    repo = _make_repo(
+        tmp_path,
+        [_wi_row("WI-201"), _wi_row("WI-202")],  # both default to SR-062 (Test)
+    )
+    # WI-202 alone now delivers a Critique-verified SR-050.
+    render_row = _wi_row("WI-202")
+    render_row[3] = "SR-050"
+    _write_registry(repo, [_wi_row("WI-201"), render_row])
+    (repo / "docs" / "requirements" / "system-requirements.csv").write_text(
+        "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+        "Permutations,Priority,Verification,Status\n"
+        "SR-050,Render,SN-001,req,rat,ac,,S,Critique,Verified\n",
+        encoding="utf-8",
+    )
+    docs = repo / "docs"
+    assert dispatcher._train_is_render_surface(docs, ["WI-201", "WI-202"]) is True
+    assert (
+        dispatcher._required_phases(docs, ["WI-201", "WI-202"], (True, 2))
+        == {"REVIEW-A", "REVIEW-B", "CRITIQUE"}
+    )
+    # The same car without the render constituent stays a scripts car.
+    assert dispatcher._train_is_render_surface(docs, ["WI-201"]) is False
+    assert dispatcher._required_phases(docs, ["WI-201"], (True, 2)) == {
+        "REVIEW-A",
+        "REVIEW-B",
+    }

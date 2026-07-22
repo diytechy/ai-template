@@ -76,6 +76,7 @@ graph LR
     m_scripts_agent_dispatch --> m_scripts_plan_round
     m_scripts_agent_dispatch --> m_scripts_plan_runner
     m_scripts_agent_dispatch --> m_scripts_schedule
+    m_scripts_agent_dispatch --> m_scripts_score_reviews
     m_scripts_agent_loop --> m_scripts_agent_common
     m_scripts_agent_loop --> m_scripts_agent_dispatch
     m_scripts_agent_loop --> m_scripts_agent_route
@@ -169,7 +170,7 @@ Contracts (interfaces): IF-037, IF-065
 
 ### `scripts/agent_dispatch`
 _The parallel dispatcher + serialized integrator, extracted VERBATIM from_
-Imports (internal): `agent_common`, `agent_route`, `plan_round`, `plan_runner`, `schedule`
+Imports (internal): `agent_common`, `agent_route`, `plan_round`, `plan_runner`, `schedule`, `score_reviews`
 Contracts (interfaces): IF-055, IF-067
 
 | Public item | Summary | Implements |
@@ -195,10 +196,10 @@ Contracts (interfaces): IF-055, IF-067
 | `ensure_integration_ref(root, journal)` | Create refs/heads/llm/integration from the selected development branch |  |
 | `registry_rows_at(root, ref)` | The WI registry rows as read from `ref` (the integrated disposition), |  |
 | `reviewed_train_head(root, tid, base)` | The exact code HEAD a train's review must name: the LAST commit in |  |
-| `train_verdicts(root, tid, reviewed_sha)` | [(phase, verdict)] parsed from the verdict files committed on the train |  |
+| `train_verdicts(root, tid, reviewed_sha)` | [(phase, ordinal, verdict)] parsed from the verdict files committed on the |  |
 | `synth_deliverable(root, tid, wid, base)` | The integrator's Deliverable text for a WI it marks done: the train, |  |
 | `generate_status(docs, root, last_train)` | The integrator-generated root status snapshot (SR-059's generation | SR-059 |
-| `integrate_train(root, docs, journal, tid, wis, base, required_verdicts)` | Compose one ready train into the integration ref (spec §9 steps 1-11). |  |
+| `integrate_train(root, docs, journal, tid, wis, base, review_ctx)` | Compose one ready train into the integration ref (spec §9 steps 1-11). |  |
 | `blocked_disposition(root, docs, journal, tid, wis, base)` | The smaller serialized blocked-disposition transaction (spec §9): from |  |
 | `dual_plan_disposition(root, journal, tid, wid, row, template, model, timeout, prompt_map)` | Auto-dispatch one PlanMode=dual frontier WI as a dual-plan round | SR-108 |
 | `publish_integration(root, journal, dev_branch)` | Publish the integration HEAD to the development branch (spec §9): when no |  |
@@ -761,6 +762,7 @@ Contracts (interfaces): IF-046, IF-047
 | `tripwire_mass_rejection(rejected, total, threshold)` | A prior round's findings were mostly rejected/unaddressed (> threshold) — |  |
 | `fired_tripwires(verdicts, changed_paths, rejected, total_prior)` | Every tripwire that fired over a round's verdict list, as a name list. |  |
 | `merge_verdict(verdicts)` | Mechanical merge, no debate: CHANGES-REQUESTED if any reviewer requests |  |
+| `latest_phase_verdicts(entries)` | The deterministic latest-file-per-phase rule the integrator gate reads — | SR-096 |
 | `read_scoreboard(path)` | Parse the scoreboard: ({provider: (substance, rounds)}, [round dict, ...]). |  |
 | `write_scoreboard(path, providers, rounds)` | Write the scoreboard deterministically (LF, providers sorted). |  |
 | `record_round(path, round_info, provider_substance)` | Append a round to the scoreboard and decay the provider tallies. |  |

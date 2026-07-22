@@ -391,3 +391,60 @@ def test_every_dispatcher_family_detail_routes_through_failure_tail():
     # And the helper is actually wired in at the failure sites, not just present.
     assert disp.count("_failure_tail(") >= 12
     assert "_failure_tail(out)" in common or "_failure_tail" in common
+
+
+# --- WI-260: the verdict-gate required-phase classifier (design 1 + 3) --------
+
+
+def _write_docs(tmp_path, srrefs="SR-063", critique=False):
+    docs = tmp_path / "docs"
+    (docs / "requirements").mkdir(parents=True)
+    (docs / "requirements" / "work-items.csv").write_text(
+        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
+        "SpecRef,BuildTier,SafetyClass\n"
+        "WI-201,Work,ws,{},,queued,,,medium,ordinary\n".format(srrefs),
+        encoding="utf-8",
+    )
+    if critique:
+        (docs / "requirements" / "system-requirements.csv").write_text(
+            "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+            "Permutations,Priority,Verification,Status\n"
+            "SR-050,Render,SN-001,req,rat,ac,,S,Critique,Verified\n",
+            encoding="utf-8",
+        )
+    return docs
+
+
+@pytest.mark.parametrize(
+    "managed,rp_int,render,expected",
+    [
+        (False, 2, True, set()),  # unmanaged routing schedules nothing
+        (True, 0, False, set()),  # dial-0 scripts: no verdict phase
+        (True, 1, False, {"REVIEW-A"}),  # the dial counts REVIEWERS only
+        (True, 2, False, {"REVIEW-A", "REVIEW-B"}),
+        (True, 0, True, {"CRITIQUE"}),  # dial-0 render: critique alone gates
+        (True, 1, True, {"REVIEW-A", "CRITIQUE"}),  # critique is orthogonal
+        (True, 2, True, {"REVIEW-A", "REVIEW-B", "CRITIQUE"}),
+    ],
+)
+def test_required_phases_classifier(tmp_path, managed, rp_int, render, expected):
+    # The gate's required set is a pure function of the SAME dials the scheduler
+    # reads (design 1: they cannot disagree) — REVIEW-A/B by the reviewer dial,
+    # CRITIQUE orthogonally on a render-surface train (design 3).
+    docs = _write_docs(
+        tmp_path, srrefs="SR-050" if render else "SR-063", critique=render
+    )
+    got = dispatcher._required_phases(docs, ["WI-201"], (managed, rp_int))
+    assert got == expected
+
+
+def test_render_surface_is_delivering_a_critique_sr_not_merely_touching_one(tmp_path):
+    # render-surface == the train DELIVERS a Critique-verified SR; a WI whose
+    # SR-Refs name only a non-critique SR is not render-surface.
+    render_docs = _write_docs(tmp_path / "a", srrefs="SR-050", critique=True)
+    scripts_docs = _write_docs(tmp_path / "b", srrefs="SR-063", critique=True)
+    assert dispatcher._train_is_render_surface(render_docs, ["WI-201"]) is True
+    assert dispatcher._train_is_render_surface(scripts_docs, ["WI-201"]) is False
+    # No critique SR anywhere -> the classifier is vacuous (non-adopter pays 0).
+    plain = _write_docs(tmp_path / "c", srrefs="SR-050", critique=False)
+    assert dispatcher._train_is_render_surface(plain, ["WI-201"]) is False

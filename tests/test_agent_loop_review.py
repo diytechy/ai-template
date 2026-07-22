@@ -10,7 +10,9 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, run_py
+from conftest import SCRIPTS, load_script, run_py
+
+agent_loop = load_script("agent_loop")
 
 # The fake agent: records the model + prompt it was handed, then acts by ROLE —
 # a reviewer (the prompt names a verdict path) writes its scripted verdict and
@@ -729,3 +731,27 @@ def test_review_unparseable_verdict_cools_and_reroutes_same_phase(managed_repo):
     # The round completed via the re-routed reviewer's real verdict.
     assert "revc" in _models(ctl)
     assert list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*.md"))
+
+
+@pytest.mark.parametrize("rp_int", [0, 1, 2])
+def test_scheduler_and_gate_agree_on_reviewer_phases(tmp_path, rp_int):
+    # WI-260 design 1: the integrator's required REVIEWER phases must equal the
+    # set the loop's scheduler actually queues at the same dial — one rule, so a
+    # scripts train never deadlocks on a phase that was never scheduled and can
+    # never integrate skipping one that was. The dial counts REVIEWERS only, so a
+    # non-render train's required set is exactly the scheduled review round.
+    dispatcher = agent_loop.agent_dispatch
+    docs = tmp_path / "docs"
+    (docs / "requirements").mkdir(parents=True)
+    (docs / "requirements" / "work-items.csv").write_text(
+        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
+        "SpecRef,BuildTier,SafetyClass\n"
+        "WI-201,Work,ws,SR-063,,queued,,,medium,ordinary\n",
+        encoding="utf-8",
+    )
+    st = agent_loop.RoutingState(rp_int, 0, set(), 0, None)
+    # The caller guards the queue with `schedule_review = rp_int >= 1` (S8), so a
+    # dial-0 train schedules no review round at all.
+    scheduled = set(st.schedule_review_round()) if rp_int >= 1 else set()
+    required = dispatcher._required_phases(docs, ["WI-201"], (True, rp_int))
+    assert scheduled == required

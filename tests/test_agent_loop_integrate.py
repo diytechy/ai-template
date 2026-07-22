@@ -428,10 +428,241 @@ def test_stale_review_verdict_does_not_integrate(tmp_path):
         "t-stale",
         ["WI-201"],
         head,
-        required_verdicts=1,
+        review_ctx=(True, 1),
     )
-    assert state == "rework" and "0 approval(s)" in detail
+    # WI-260: the only verdict names a BOGUS (older) head, so REVIEW-A filed NO
+    # verdict at the reviewed head — a wedged reviewer pages rather than a silent
+    # stall, and the integration ref never moves.
+    assert state == "needs-human" and "filed no verdict" in detail
     assert _git(repo, "rev-parse", "refs/heads/llm/integration") == head
+
+
+# --- WI-260: the per-phase latest-APPROVE unanimity gate (M-29) --------------------
+
+_SR_CRITIQUE_HDR = (
+    "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
+    "Permutations,Priority,Verification,Status\n"
+)
+_SR_CRITIQUE_ROW = (
+    'SR-050,Render,SN-001,"looks real","subj","rubric",,S,Critique,Verified\n'
+)
+
+
+def _wi_row_srrefs(wid, srrefs):
+    row = _wi_row(wid)
+    row[3] = srrefs  # the SR-Refs column
+    return row
+
+
+def _setup_gate(tmp_path, srrefs="SR-063", render=False):
+    """A one-WI train built on its branch with the integration ref seeded — the
+    stage right before the verdict gate. Returns (repo, worktree, base_head).
+    render=True adds a Critique-verified SR-050 the WI delivers, so the train
+    classifies render-surface (CRITIQUE required)."""
+    repo = _make_repo(tmp_path, [_wi_row_srrefs("WI-201", srrefs)])
+    if render:
+        (repo / "docs" / "requirements" / "system-requirements.csv").write_text(
+            _SR_CRITIQUE_HDR + _SR_CRITIQUE_ROW, encoding="utf-8"
+        )
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-q", "-m", "add critique SR")
+    head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
+    assert agent_loop.reserve_traincar(repo, "t1", ["WI-201"], head) is None
+    wt = tmp_path / "wt"
+    _git(repo, "worktree", "add", str(wt), "llm/train/t1")
+    (wt / "work.txt").write_text("w", encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(
+        wt,
+        "commit",
+        "-q",
+        "-m",
+        "build WI-201\n\nWI: WI-201\nTrain: t1\nBase: {}\n".format(head),
+    )
+    return repo, wt, head
+
+
+def _plant_verdicts(wt, reviewed, files):
+    """Plant reviews/t1/NNN-PHASE-<reviewed7>.md for each (ordinal, phase,
+    verdict) and commit them WITHOUT a WI trailer, so the reviewed head stays the
+    build commit while the verdict files sit at the train tip. A verdict outside
+    {APPROVE, CHANGES-REQUESTED} plants an UNPARSEABLE file (no machine line)."""
+    vdir = wt / "docs" / "reviews" / "t1"
+    vdir.mkdir(parents=True, exist_ok=True)
+    for ordinal, phase, verdict in files:
+        name = "{:03d}-{}-{}.md".format(ordinal, phase, reviewed[:7])
+        if verdict in ("APPROVE", "CHANGES-REQUESTED"):
+            body = "VERDICT: {} findings=0\n".format(verdict)
+        else:
+            body = "- a finding here but the machine line got mangled\n"
+        (vdir / name).write_text(body, encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "-q", "-m", "review verdicts")
+
+
+def _integrate(repo, base, review_ctx):
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    return reviewed, agent_dispatch.integrate_train(
+        repo,
+        repo / "docs",
+        agent_loop._Journal(repo),
+        "t1",
+        ["WI-201"],
+        base,
+        review_ctx,
+    )
+
+
+def test_gate_extra_critique_approve_never_covers_a_missing_reviewer(tmp_path):
+    # dial-2, NON-render train. REVIEW-A + a stray CRITIQUE approve, REVIEW-B
+    # never filed. The pre-change count gate saw 2 approvals (critique counted
+    # toward the dial) >= 2 and INTEGRATED; the unanimity gate requires REVIEW-B
+    # by NAME, so an extra approval never substitutes -> pages, ref frozen.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _plant_verdicts(wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "CRITIQUE", "APPROVE")])
+    _, (state, detail) = _integrate(repo, base, (True, 2))
+    assert state == "needs-human" and "REVIEW-B" in detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == base
+
+
+def test_gate_same_head_reviewer_dissent_blocks_rework(tmp_path):
+    # dial-2. REVIEW-A approve, REVIEW-B CHANGES-REQUESTED at the exact head. The
+    # count gate ignored the same-head dissent (it tallied only approvals); the
+    # unanimity gate honors the last word -> rework, ref frozen.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _plant_verdicts(
+        wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "REVIEW-B", "CHANGES-REQUESTED")]
+    )
+    _, (state, detail) = _integrate(repo, base, (True, 2))
+    assert state == "rework" and "REVIEW-B" in detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == base
+
+
+def test_gate_scripts_train_integrates_without_a_critique(tmp_path):
+    # A NON-render dial-2 train: REVIEW-A + REVIEW-B approve and NO critique is
+    # scheduled or present. It must integrate — never deadlock waiting for an
+    # unscheduled CRITIQUE (design 1, the scripts-train direction).
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _plant_verdicts(wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "REVIEW-B", "APPROVE")])
+    _, (state, detail) = _integrate(repo, base, (True, 2))
+    assert state == "integrated", detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") != base
+
+
+def test_gate_render_train_cannot_integrate_critique_less(tmp_path):
+    # A render-surface dial-2 train with BOTH reviewers approving but NO CRITIQUE
+    # filed. The count gate (required_verdicts=2) integrated on the two reviewer
+    # approvals; the unanimity gate adds the orthogonal CRITIQUE requirement
+    # (WI-243) -> pages, ref frozen (the render-train direction of design 1).
+    repo, wt, base = _setup_gate(tmp_path, srrefs="SR-050", render=True)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _plant_verdicts(wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "REVIEW-B", "APPROVE")])
+    _, (state, detail) = _integrate(repo, base, (True, 2))
+    assert state == "needs-human" and "CRITIQUE" in detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == base
+
+
+def test_gate_dial0_render_train_gates_on_critique_alone(tmp_path):
+    # design 3: a dial-0 RENDER train schedules no reviewer but DOES schedule
+    # CRITIQUE. With no critique filed the count gate (required_verdicts=0)
+    # skipped the check entirely and integrated critique-less; the unanimity gate
+    # requires CRITIQUE -> pages.
+    repo, wt, base = _setup_gate(tmp_path, srrefs="SR-050", render=True)
+    _, (state, detail) = _integrate(repo, base, (True, 0))
+    assert state == "needs-human" and "CRITIQUE" in detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == base
+    # ...and a CRITIQUE APPROVE alone clears it.
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _plant_verdicts(wt, reviewed, [(1, "CRITIQUE", "APPROVE")])
+    _, (state2, detail2) = _integrate(repo, base, (True, 0))
+    assert state2 == "integrated", detail2
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") != base
+
+
+def test_gate_dial0_non_render_train_integrates_on_the_bar_alone(tmp_path):
+    # design 3: a dial-0 NON-render train schedules no verdict phase at all, so
+    # the gate requires nothing and integrates on the combined bar alone
+    # (unchanged from the old required_verdicts=0 path).
+    repo, wt, base = _setup_gate(tmp_path)
+    _, (state, detail) = _integrate(repo, base, (True, 0))
+    assert state == "integrated", detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") != base
+
+
+def test_gate_same_head_flip_escalates_not_silently_wins(tmp_path):
+    # design 2: REVIEW-A files CHANGES-REQUESTED at ord 1 then APPROVE at ord 2 —
+    # SAME head (code unchanged). A reroll-until-green must NOT clear the gate: it
+    # escalates needs-human and journals loudly. The count gate saw the APPROVE
+    # file and integrated.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _plant_verdicts(
+        wt, reviewed, [(1, "REVIEW-A", "CHANGES-REQUESTED"), (2, "REVIEW-A", "APPROVE")]
+    )
+    _, (state, detail) = _integrate(repo, base, (True, 1))
+    assert state == "needs-human" and "flip" in detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == base
+    events = [e for e in _events(repo) if e.get("event") == "verdict-escalation"]
+    assert events, "the escalation must be journaled loudly"
+
+
+def test_gate_reverse_flip_is_honored_dissent(tmp_path):
+    # design 2 (reverse): APPROVE at ord 1 then CHANGES-REQUESTED at ord 2 — the
+    # later dissent IS the last word and blocks -> rework (never a flip). The
+    # count gate would have counted the ord-1 APPROVE file and integrated.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _plant_verdicts(
+        wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (2, "REVIEW-A", "CHANGES-REQUESTED")]
+    )
+    _, (state, detail) = _integrate(repo, base, (True, 1))
+    assert state == "rework" and "REVIEW-A" in detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == base
+
+
+def test_gate_ambiguous_latest_verdict_pages_not_clears(tmp_path):
+    # review fix 2: REVIEW-A APPROVE@ord1 then an UNPARSEABLE re-review@ord2 at
+    # the same reviewed head. The mangled later file is the last word: the gate
+    # must NOT fall back to the older APPROVE and clear — it reads the phase as
+    # having no latest verdict and pages needs-human. BITES the drop-and-keep-
+    # APPROVE behavior (which integrated on the ord-1 APPROVE).
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _plant_verdicts(
+        wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (2, "REVIEW-A", "MANGLED")]
+    )
+    _, (state, detail) = _integrate(repo, base, (True, 1))
+    assert state == "needs-human" and "REVIEW-A" in detail
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == base
+
+
+@pytest.mark.parametrize(
+    "srrefs,render_expected", [("SR-050", True), ("SR-063", False)]
+)
+def test_scheduler_and_gate_agree_on_critique_phase(tmp_path, srrefs, render_expected):
+    # WI-260 review fix 1 (design 1, CRITIQUE half): the gate's render-surface
+    # decision must equal the scheduler's CRITIQUE trigger over the SAME
+    # commit-subject WI scope — driven, both directions. A Critique SR is present
+    # in BOTH cases; only whether the train's scope WI DELIVERS it differs.
+    repo, wt, base = _setup_gate(tmp_path, srrefs=srrefs, render=True)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    docs = repo / "docs"
+    rng = base + ".." + reviewed
+    # Gate side: the classifier over commit-subject scope WIs.
+    scope_wis = agent_dispatch._train_scope_wis(repo, "t1", base, reviewed)
+    gate_render = agent_dispatch._train_is_render_surface(docs, scope_wis)
+    # Scheduler side: the exact functions agent_loop fires CRITIQUE from.
+    sched_render = bool(
+        agent_loop.build_scope_srs(repo, docs, rng) & agent_loop.load_critique_srs(docs)
+    )
+    assert gate_render == sched_render == render_expected
+    # And the required set reflects it (CRITIQUE present iff render).
+    required = agent_dispatch._required_phases(docs, scope_wis, (True, 1))
+    assert ("CRITIQUE" in required) is render_expected
 
 
 # --- publication + the intent protocol --------------------------------------------

@@ -40,6 +40,7 @@ from pathlib import Path
 try:
     import agent_route
     import schedule
+    import score_reviews
     from agent_common import (
         EXIT_BLOCKED,
         EXIT_DONE,
@@ -74,6 +75,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import agent_route
     import schedule
+    import score_reviews
     from agent_common import (
         EXIT_BLOCKED,
         EXIT_DONE,
@@ -778,9 +780,13 @@ def reviewed_train_head(root, tid, base):
 
 
 def train_verdicts(root, tid, reviewed_sha):
-    """[(phase, verdict)] parsed from the verdict files committed on the train
-    branch that NAME the exact reviewed commit (reviews/<train>/NNN-<PHASE>-
-    <sha7>.md). A verdict naming an older head does not count (spec §8)."""
+    """[(phase, ordinal, verdict)] parsed from the verdict files committed on the
+    train branch that NAME the exact reviewed commit (reviews/<train>/NNN-<PHASE>-
+    <sha7>.md). A verdict naming an older head does not count (spec §8). The NNN
+    ordinal is carried so score_reviews.latest_phase_verdicts can pick the LATEST
+    file per phase deterministically (highest ordinal wins) — the reviewed head
+    is fixed, so every returned triple shares one sha7 and a per-phase reroll is
+    just a higher ordinal at the same head (WI-260)."""
     tip = TRAIN_BRANCH_PREFIX + tid
     prefix = "docs/reviews/{}/".format(tid)
     code, out = git(root, "ls-tree", "-r", "--name-only", tip, prefix)
@@ -807,8 +813,127 @@ def train_verdicts(root, tid, reviewed_sha):
             )
             if vm:
                 verdict = vm.group(1).upper()
-        results.append((m.group(2), verdict))
+        results.append((m.group(2), int(m.group(1)), verdict))
     return results
+
+
+def _critique_srs(docs):
+    """The SR ids whose Verification is `Critique` (the integrator's independent
+    read of the same rule agent_loop.load_critique_srs uses). Empty — absent
+    file, or no such row — makes the render-surface classifier vacuous, so a
+    non-critique repo is never asked for a CRITIQUE verdict (WI-260 design 3:
+    CRITIQUE is orthogonal to the reviewer dial and required only when present
+    AND in scope)."""
+    out = set()
+    for r in _read_csv_rows(Path(docs) / "requirements" / "system-requirements.csv"):
+        sid = (r.get("SR-ID") or "").strip()
+        if (
+            sid
+            and not sid.endswith("-000")
+            and (r.get("Verification") or "").strip() == "Critique"
+        ):
+            out.add(sid)
+    return out
+
+
+def _train_scope_wis(root, tid, base, reviewed):
+    r"""The WI ids the scheduler's CRITIQUE trigger reads — derived from the SAME
+    source it uses (agent_loop.build_scope_wis): the WI-\d+ tokens in the commit
+    SUBJECTS of the train range base..reviewed, NOT the reservation list. Reading
+    one source keeps the render-surface half of the gate from diverging from the
+    scheduler (WI-260 design 1, CRITIQUE half); an unreadable range yields the
+    empty set (no render surface -> the reviewer half still governs)."""
+    if not (base and reviewed):
+        return set()
+    code, subjects = git(root, "log", "--format=%s", base + ".." + reviewed)
+    if code != 0:
+        return set()
+    return set(re.findall(r"WI-\d+", subjects))
+
+
+def _train_is_render_surface(docs, scope_wis):
+    """True when the train's SCOPE WIs DELIVER a Critique-verified SR — a faithful
+    replay of the scheduler's CRITIQUE trigger (agent_loop build_scope_srs &
+    critique_srs) over the same commit-subject WI set the caller derives with
+    _train_scope_wis, so gate and scheduler cannot disagree on CRITIQUE (WI-260
+    design 1): a scripts train never waits for an unscheduled CRITIQUE, a render
+    train cannot integrate critique-less (the WI-243 protocol). Vacuous — hence
+    fail-safe to no-CRITIQUE — when no Critique SR is declared."""
+    critique = _critique_srs(docs)
+    if not critique:
+        return False
+    delivered = set()
+    for r in _read_csv_rows(Path(docs) / "requirements" / "work-items.csv"):
+        if (r.get("WI-ID") or "").strip() in set(scope_wis):
+            delivered.update(_refs(r.get("SR-Refs")))
+    return bool(delivered & critique)
+
+
+def _required_phases(docs, scope_wis, review_ctx):
+    """The verdict phases the dispatcher SCHEDULED for this train — the gate's
+    required set (WI-260, M-29). `review_ctx` is (managed, rp_int); `scope_wis` is
+    the train's commit-subject WI set (from _train_scope_wis). The reviewer dial
+    counts REVIEWER phases only: REVIEW-A at dial>=1, REVIEW-B at dial>=2
+    (design 3). CRITIQUE is orthogonal to the dial — required on every
+    render-surface train at ANY dial (so a dial-0 render train gates on CRITIQUE
+    alone). Unmanaged routing schedules nothing, so it requires nothing and
+    integrates on the combined bar alone (unchanged from the old
+    required_verdicts=0)."""
+    managed, rp_int = review_ctx
+    if not managed:
+        return set()
+    required = set()
+    if rp_int >= 1:
+        required.add("REVIEW-A")
+    if rp_int >= 2:
+        required.add("REVIEW-B")
+    if _train_is_render_surface(docs, scope_wis):
+        required.add("CRITIQUE")
+    return required
+
+
+def _verdict_gate_result(root, journal, tid, reviewed, required):
+    """The per-phase latest-APPROVE unanimity gate (WI-260, M-29): EVERY required
+    phase must have APPROVE as its LATEST verdict at the reviewed head; an extra
+    approval never substitutes for a missing or dissenting phase. Returns
+    (state, detail) to BLOCK, or None to clear. The blocks are distinct
+    (design 2 + the liveness split): a same-head CHANGES-REQUESTED->APPROVE flip
+    escalates 'needs-human' (a reroll-until-green must not silently win); a
+    phase whose latest word is CHANGES-REQUESTED is honest dissent -> 'rework';
+    a required phase that filed NO verdict at the head is a wedged/never-run
+    reviewer -> 'needs-human' (its in-worker reroute budget already spent, so the
+    integrator pages rather than looping the builder silently). Both escalations
+    are journaled loudly."""
+    latest, flipped = score_reviews.latest_phase_verdicts(
+        train_verdicts(root, tid, reviewed)
+    )
+    head = (reviewed or "?")[:7]
+    flip_hit = sorted(flipped & required)
+    if flip_hit:
+        detail = (
+            "same-head CHANGES-REQUESTED->APPROVE flip on {} at {} — a reroll "
+            "until green must not clear the verdict gate".format(
+                ",".join(flip_hit), head
+            )
+        )
+        journal.event("verdict-escalation", train=tid, detail=_failure_tail(detail))
+        return "needs-human", detail
+    dissent = sorted(p for p in required if latest.get(p) == "CHANGES-REQUESTED")
+    if dissent:
+        return "rework", "review phase(s) {} requested changes at {}".format(
+            ",".join(dissent), head
+        )
+    missing = sorted(p for p in required if p not in latest)
+    if missing:
+        detail = (
+            "required review phase(s) {} filed no verdict at {} — a wedged "
+            "reviewer pages rather than stalling silently".format(
+                ",".join(missing), head
+            )
+        )
+        journal.event("verdict-escalation", train=tid, detail=_failure_tail(detail))
+        return "needs-human", detail
+    return None
 
 
 def _staging_worktree(root, tid, base):
@@ -1518,13 +1643,16 @@ def _compose_train(wt, root, journal, tid, tip):
     return None
 
 
-def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
+def integrate_train(root, docs, journal, tid, wis, base, review_ctx):
     """Compose one ready train into the integration ref (spec §9 steps 1-11).
-    Returns (state, detail): 'integrated', 'needs-re-review' (a textual conflict
-    outside the auto-resolvable set — generated artifacts / disjoint WI rows,
-    WI-231 — needing a focused re-review before this train can land), 'rework'
-    (verdict missing/stale or the combined bar failed), or 'error'. The
-    integration ref moves ONLY via the final CAS."""
+    `review_ctx` is (managed, rp_int) — the reviewer dial the gate resolves into
+    the required-phase set. Returns (state, detail): 'integrated', 'needs-re-
+    review' (a textual conflict outside the auto-resolvable set — generated
+    artifacts / disjoint WI rows, WI-231 — needing a focused re-review before
+    this train can land), 'rework' (a required phase dissented at the head or the
+    combined bar failed), 'needs-human' (WI-260: a same-head reroll-until-green
+    flip, or a required phase with no verdict — a wedged reviewer that must page,
+    not stall), or 'error'. The integration ref moves ONLY via the final CAS."""
     old_head = integration_head(root)
     if old_head is None:
         return "error", "integration ref vanished"
@@ -1540,15 +1668,19 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
         if not meta or meta.get("train") != tid:
             return "error", "reservation for {} does not name train {}".format(wid, tid)
     reviewed = reviewed_train_head(root, tid, base)
-    if required_verdicts:
-        verdicts = train_verdicts(root, tid, reviewed)
-        approvals = {ph for ph, v in verdicts if v == "APPROVE"}
-        if len(approvals) < required_verdicts:
-            return "rework", (
-                "review verdicts naming {}: {} approval(s) of {} required".format(
-                    (reviewed or "?")[:7], len(approvals), required_verdicts
-                )
-            )
+    # Step 2b: the per-phase latest-APPROVE unanimity gate (WI-260, M-29). The
+    # required set is exactly the phases the dispatcher SCHEDULED for this train
+    # (design 1: gate and scheduler read one rule — the CRITIQUE half over the
+    # SAME commit-subject WI scope the scheduler triggers on), and EVERY one must
+    # carry APPROVE as its latest verdict at the reviewed head. A same-head reroll
+    # flip or an unfiled required phase escalates 'needs-human' (journaled loudly
+    # so a wedged reviewer pages rather than looping the builder silently).
+    scope_wis = _train_scope_wis(root, tid, base, reviewed)
+    required = _required_phases(docs, scope_wis, review_ctx)
+    if required:
+        gate = _verdict_gate_result(root, journal, tid, reviewed, required)
+        if gate is not None:
+            return gate
 
     # Step 1+3+4: compose on the staging branch from the CURRENT integration
     # HEAD. A clean 3-way apply takes the fast path (no re-review); a conflict
@@ -1595,15 +1727,15 @@ def integrate_train(root, docs, journal, tid, wis, base, required_verdicts):
             fh.write(
                 "\n## {} — integrated train {} ({})\n\n"
                 "Head {} composed onto {} by the serialized integrator; "
-                "{} verdict(s) verified on the exact reviewed head; combined "
-                "bar ran on the composed tree (result below). WI row(s) {} "
-                "-> done.\n".format(
+                "{} required review phase(s) verified APPROVE on the exact "
+                "reviewed head; combined bar ran on the composed tree (result "
+                "below). WI row(s) {} -> done.\n".format(
                     stamp,
                     tid,
                     ";".join(wis),
                     tip[:7],
                     old_head[:7],
-                    required_verdicts,
+                    len(required),
                     ";".join(updated) or "(none present)",
                 )
             )
@@ -2663,7 +2795,7 @@ def _frontier_snapshot(root, quarantined_wis):
     return wi_rows, cars
 
 
-def _integrate_one_ready(root, docs, journal, tid, wis, base, required_verdicts):
+def _integrate_one_ready(root, docs, journal, tid, wis, base, review_ctx):
     """Integrate a ready train under the WI-232 conflict-idempotence guard: a
     train whose merge inputs are UNCHANGED since a recorded needs-re-review
     conflict is NOT re-merged — it stays parked for the human (the identical
@@ -2678,7 +2810,7 @@ def _integrate_one_ready(root, docs, journal, tid, wis, base, required_verdicts)
         )
         return "needs-re-review", detail
     result, detail = integrate_train(
-        root, docs, journal, tid, wis, base, required_verdicts
+        root, docs, journal, tid, wis, base, review_ctx
     )
     if result not in ("needs-re-review", "recompose"):
         clear_conflict(root, tid)
@@ -2687,7 +2819,7 @@ def _integrate_one_ready(root, docs, journal, tid, wis, base, required_verdicts)
     return result, detail
 
 
-def _integrate_parked(root, docs, journal, parked, required_verdicts, needs_human):
+def _integrate_parked(root, docs, journal, parked, review_ctx, needs_human):
     integrated_any = False
     for tid in sorted(parked):
         if needs_human:
@@ -2704,7 +2836,7 @@ def _integrate_parked(root, docs, journal, parked, required_verdicts, needs_huma
             base = (meta or {}).get("base", "")
         if source_state == "ready-to-integrate":
             result, detail = _integrate_one_ready(
-                root, docs, journal, tid, lane["wis"], base, required_verdicts
+                root, docs, journal, tid, lane["wis"], base, review_ctx
             )
         else:
             result, detail = blocked_disposition(
@@ -2714,7 +2846,9 @@ def _integrate_parked(root, docs, journal, parked, required_verdicts, needs_huma
             result, source_state
         )
         if result != "recompose":
-            parked[tid] = {"state": next_state, "wis": lane["wis"]}
+            # WI-260: carry the verdict-gate detail on a 'needs-human' lane so
+            # _finish_dispatch can page the owner naming the train + reason.
+            parked[tid] = {"state": next_state, "wis": lane["wis"], "detail": detail}
         integrated_any = integrated_any or ref_moved
         if should_journal:
             journal.event(
@@ -2784,6 +2918,26 @@ def _needs_review_ask(root, parked):
     )
 
 
+def _verdict_page_ask(parked):
+    """WI-260 liveness page: name every train the integrator escalated on the
+    verdict gate — a same-head reroll-until-green flip, or a required review
+    phase that never filed a verdict (a wedged reviewer). Both are durably
+    re-detected from the committed review files on each relaunch, so paging here
+    (rather than looping the builder in a silent RUNNING/STALL) is the terminal
+    word after the worker's in-loop reviewer-reroute budget is already spent.
+    Empty when no train is parked 'needs-human'."""
+    trains = sorted(
+        tid for tid, lane in parked.items() if lane.get("state") == "needs-human"
+    )
+    if not trains:
+        return ""
+    parts = [
+        "{} ({})".format(tid, parked[tid].get("detail") or "verdict-gate escalation")
+        for tid in trains
+    ]
+    return "verdict gate needs a human — " + "; ".join(parts)
+
+
 def _regenerate_pending(root, journal):
     """Best-effort refresh of the docs/open-items.md pending-owner-actions
     projection (WI-234) at a terminal decision — called AFTER run-state is
@@ -2831,6 +2985,14 @@ def _finish_dispatch(root, docs, journal, parked):
         _write_runstate(docs, "NEEDS-HUMAN", review_ask)
         _regenerate_pending(root, journal)
         stop_banner(docs / "status.md", "NEEDS-HUMAN", review_ask)
+        return EXIT_NEEDS_HUMAN
+    # WI-260: a verdict-gate escalation (reroll flip / wedged reviewer) pages
+    # hard rather than looping in the RUNNING/STALL attention set below.
+    verdict_ask = _verdict_page_ask(parked)
+    if verdict_ask:
+        _write_runstate(docs, "NEEDS-HUMAN", verdict_ask)
+        _regenerate_pending(root, journal)
+        stop_banner(docs / "status.md", "NEEDS-HUMAN", verdict_ask)
         return EXIT_NEEDS_HUMAN
     integrated = [
         tid
@@ -2928,14 +3090,17 @@ def dispatch_run(args, root):
     atexit.register(release_lock, root / "out" / "agent-loop.lock")
 
     gate_policy = read_declared(docs / "gate-policy", "attended")
-    # The integrator's review requirement: managed routing + the reviewer dial
-    # decide how many exact-head APPROVE verdicts a train needs to integrate.
+    # The integrator's review requirement (WI-260): managed routing + the reviewer
+    # dial resolve into the per-phase unanimity gate's required set. The dial
+    # counts REVIEWER phases only (0/1/2 -> none / REVIEW-A / REVIEW-A+REVIEW-B);
+    # CRITIQUE is orthogonal, added per-train when it is render-surface. Unmanaged
+    # routing requires nothing (integrates on the combined bar alone).
     managed = bool(agent_route.load_enabled(docs / "agents-enabled"))
     try:
         rp_int = max(0, min(2, int(read_declared(docs / "review-policy", "1"))))
     except ValueError:
         rp_int = 1
-    required_verdicts = rp_int if managed else 0
+    review_ctx = (managed, rp_int if managed else 0)
 
     # The selected development branch — the publication target. A detached
     # dispatcher checkout has no publishable projection: fail closed.
@@ -3210,7 +3375,7 @@ def dispatch_run(args, root):
             docs,
             journal,
             parked,
-            required_verdicts,
+            review_ctx,
             needs_human_ask,
         )
         if integrated_any:

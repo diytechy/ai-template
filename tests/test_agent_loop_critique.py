@@ -10,7 +10,9 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, run_py
+from conftest import SCRIPTS, load_script, run_py
+
+agent_loop = load_script("agent_loop")
 
 # The fake agent: a critic (prompt names a verdict path) writes its scripted
 # verdict + commits; a builder commits `WI-050: ...` progress (so build_scope_srs
@@ -419,3 +421,21 @@ def test_critique_unparseable_verdict_not_treated_as_approved(critique_repo, tmp
     assert "critique [PROVC-CRIT-2]: verdict=APPROVE" in proc.stdout
     models = _models(ctl)
     assert "critb" in models and "critc" in models
+
+
+@pytest.mark.parametrize("rp_int", [0, 1, 2])
+def test_critique_requirement_is_orthogonal_to_the_reviewer_dial(critique_repo, rp_int):
+    # WI-260 design 3: CRITIQUE is NOT counted by the reviewer dial — it is
+    # required on every render-surface train at ANY dial (the same rule that lets
+    # the scheduler fire a CRITIQUE round independent of review-policy, WI-068).
+    # The critique_repo's WI-050 delivers the Critique-verified SR-050.
+    repo, _ctl, _cmd = critique_repo
+    dispatcher = agent_loop.agent_dispatch
+    required = dispatcher._required_phases(repo / "docs", ["WI-050"], (True, rp_int))
+    assert "CRITIQUE" in required
+    # ...and it is the ONLY phase at dial 0 (critique alone gates a render train).
+    if rp_int == 0:
+        assert required == {"CRITIQUE"}
+    # A non-render train (no delivered Critique SR) never acquires CRITIQUE.
+    scripts = dispatcher._required_phases(repo / "docs", ["WI-999"], (True, rp_int))
+    assert "CRITIQUE" not in scripts

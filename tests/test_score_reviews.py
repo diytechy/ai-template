@@ -168,6 +168,53 @@ def test_merge_verdict_mechanical_no_debate():
     assert merged2 == "CHANGES-REQUESTED" and contra2 is True  # they disagreed
 
 
+def test_latest_phase_verdicts_highest_ordinal_is_the_last_word():
+    # WI-260: "latest" is the highest NNN ordinal at the reviewed head — so a
+    # phase re-run is well-defined, and an earlier CHANGES-REQUESTED overwritten
+    # by a later same-head APPROVE is flagged a reroll-until-green FLIP.
+    latest, flipped = score.latest_phase_verdicts(
+        [
+            ("REVIEW-A", 1, "CHANGES-REQUESTED"),
+            ("REVIEW-A", 2, "APPROVE"),
+            ("REVIEW-B", 1, "APPROVE"),
+        ]
+    )
+    assert latest == {"REVIEW-A": "APPROVE", "REVIEW-B": "APPROVE"}
+    assert flipped == {"REVIEW-A"}  # the reroll-until-green must not silently win
+
+
+def test_latest_phase_verdicts_reverse_is_plain_dissent_not_a_flip():
+    # APPROVE then a LATER CHANGES-REQUESTED: the last word still dissents (it is
+    # honored, blocks), and is NOT a flip (only CR->APPROVE is the gaming shape).
+    latest, flipped = score.latest_phase_verdicts(
+        [("REVIEW-A", 1, "APPROVE"), ("REVIEW-A", 2, "CHANGES-REQUESTED")]
+    )
+    assert latest == {"REVIEW-A": "CHANGES-REQUESTED"}
+    assert flipped == set()
+
+
+def test_latest_phase_verdicts_ambiguous_latest_does_not_fall_back():
+    # WI-260 review fix 2: a HIGHER-ordinal unparseable/blank file is the last
+    # word — it must NOT fall back to an earlier parseable APPROVE (a mangled
+    # meant-to-dissent re-review must not silently clear). The phase reads as
+    # having NO latest verdict -> the gate pages. BITES the old drop-and-keep rule
+    # that kept the ord-1 APPROVE.
+    latest, flipped = score.latest_phase_verdicts(
+        [("REVIEW-A", 1, "APPROVE"), ("REVIEW-A", 2, "")]
+    )
+    assert latest == {}
+    assert flipped == set()
+
+
+def test_latest_phase_verdicts_is_per_phase():
+    # Phases are independent; a real latest verdict per phase is retained.
+    latest, flipped = score.latest_phase_verdicts(
+        [("REVIEW-A", 1, "APPROVE"), ("CRITIQUE", 5, "CHANGES-REQUESTED")]
+    )
+    assert latest == {"REVIEW-A": "APPROVE", "CRITIQUE": "CHANGES-REQUESTED"}
+    assert flipped == set()
+
+
 def test_fired_tripwires_aggregates():
     va = score.parse_verdict(VERDICT_A)
     bad = score.parse_verdict(
