@@ -11287,7 +11287,7 @@ deliberate owner decision (push-policy: human) — nothing was pushed.**
 ## 2026-07-22 — WI-268: the `--dual-plan` flag path honors `autonomous` (pause-free STALL); SR-108 widened
 
 **Session type:** build (`unattended`, strong; spec
-[specs/WI-268.md](specs/WI-268.md)). Filed from the `dualplan-routing-fix`
+[specs/WI-268.md](archive/specs/WI-268.2026-07-22.md)). Filed from the `dualplan-routing-fix`
 investigation (owner question: "the last run paused for human input despite
 `gate-policy: autonomous`").
 
@@ -11338,9 +11338,12 @@ one commit).
 **Byte deltas on budgeted files:** none (AGENTS.template.md / PROCESS.md /
 PROCESS_OPTIONS.md untouched).
 
-**Status:** WI-268 **`active`** — implementation + spine landed; an independent
-fresh-context **adversarial review** is owed before close (owner-requested; the
-`review-policy: 1` leg). **Residual filed:** a real design-check tiebreaker for
+**Status:** WI-268 **`done`** — closed on [113-REVIEW-A](reviews/113-REVIEW-A.md)
+**APPROVE f=0** (the reviewer drove the regression-bite, fail-open,
+run-state-clobber, and exit-code-contract hunts — all survived) and confirmed
+`check.py --gate G3` **RESULT: PASS**. Spec archived to
+[archive/specs/WI-268.2026-07-22.md](archive/specs/WI-268.2026-07-22.md); the WI
+row's SpecRef is cleared (R-F). **Residual filed:** a real design-check tiebreaker for
 autonomous dual-plan disagreement (both entries + PROCESS_OPTIONS "Failure
 semantics") — deferred; the pause-free attention end state is the honest behavior
 until it lands. Merge-to-`main` stays owner (push-policy: human) — nothing pushed.
