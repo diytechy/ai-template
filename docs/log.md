@@ -11092,3 +11092,41 @@ SpecRefs cleared (both → repo-review-2026-07-21.md; R-F green). Downstream not
 for WI-266: adopters who seeded `docs/open-items.md` from the old template get
 one STALE nudge — `gen_trajectory.py --status` regenerates the labeled block
 (hand-authored briefs untouched); to be folded into ADOPTING/resync at close.
+
+## 2026-07-22 — WI-261 DONE (wave 4 — build + adversarial review): prominent blackout pause banner + countdown heartbeat; NO spine change
+
+The L-32 clarity WI (the docs/blackout window was ruled INTENDED — both shipped
+defaults stay; this only sharpens intent + terminal feedback, NO behavior
+change). Built solo off the wave-3 close `d882df0`, gated by an independent opus
+adversarial review before cherry-pick.
+
+**Deliverable** (`agent_common.py` + `agent_loop.py`, commit 70055e3): the
+single one-line blackout-pause `print` is replaced by a prominent multi-line
+BANNER naming the policy file (`docs/blackout`), the `HH:MM-HH:MM` UTC window,
+the weekday-only (Mon–Fri) scope, and the resume time — plus a periodic
+COUNTDOWN heartbeat (`BLACKOUT_HEARTBEAT_SEC=300`) so a walk-away launch is
+visibly WAITING, not hung. Implemented as three pure/injectable helpers
+(`blackout_banner`, `blackout_countdown_line`, `blackout_wait`, `emit`/`sleep`
+injected) so the text is a testable pure function and no real multi-second sleep
+enters the test path; `agent_loop`'s blackout branch now calls
+`blackout_wait(emit=print, sleep=time.sleep)`, total sleep exactly `wake`. The
+weekday-only intent is stated plainly in the `agent_loop` module docstring (an
+unbudgeted `.py` file — no byte-budgeted doc touched). The window semantics
+(`blackout_wake`/`parse_blackout`) are untouched.
+
+**Verdict (adversarial opus REVIEW-A, driven): APPROVE f=0** — the reviewer drove
+`sum(sleeps) == wake` across 84 wake×interval combos (no drift), confirmed the
+weekend / empty / malformed / disabled / half-open skips are all preserved,
+found no edge-`wake` crash or spin (0 / negative / sub-interval / multi-hour),
+verified the countdown emits `steps−1` ticks with none at zero, and confirmed
+the three tests genuinely bite (they vanish with the helpers on revert).
+
+**Deviations from spec:** none. No byte-budgeted file touched (verified
+`AGENTS.template.md` / `PROCESS.md` / `PROCESS_OPTIONS.md` unchanged).
+
+**Byte deltas:** none on budgeted files.
+
+**Verified:** integrated smoke on the cherry-picked tree **1063 passed, 2
+skipped** (0 failed); ruff format/check clean; PROJECT_STATE.html + arch-map +
+status snapshot regenerated (`--check` green on all). SpecRef cleared (WI-261 →
+repo-review-2026-07-21.md; R-F green).
