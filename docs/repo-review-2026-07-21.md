@@ -68,23 +68,33 @@ one improvement (ratify_lines 28→27).
   family changes together, with tests.
 - **H-10 (LICENSE)** — owner decision, correctly parked as OI-4/WI-097.
 - **M-5 (two G3-SR definitions)** — a spec call between trace and derive_gate;
-  decide in the derived-gate model, then pin in test_rule_sync.
+  decide in the derived-gate model, then pin in test_rule_sync. **Ruled
+  2026-07-21: Option A (widen trace's criterion) — filed as WI-259.**
 - **M-7 (trace.py internal decomposition), M-25 (test-scaffold consolidation),
   M-26 (per-module LOC ratchet)** — refactor-sized; schedule as WIs.
-- **M-29 (integrator verdict-gate semantics), M-31 (draw-weight scope),
-  M-34's `next_primary` consumer, L-28's remaining design question (score
-  gaming, M-* F9)** — design calls on review/routing policy; the mechanical
+- **M-29 (integrator verdict-gate semantics — ruled 2026-07-21, all present
+  or required verdict phases must approve; now WI-260), M-31 (draw-weight
+  scope — ruled cross-train 2026-07-21, now WI-263),
+  M-34's `next_primary` consumer (ruled wire-it 2026-07-21, now WI-264),
+  L-28's remaining design question (score
+  gaming, M-* F9 — ruled filter 2026-07-21, now WI-265)** — design calls on
+  review/routing policy; the mechanical
   halves are done, the policy halves need the owner's ruling.
 - **M-10 (status-map machine-local refs)** — a design decision about what a
-  byte-compared artifact may derive from.
+  byte-compared artifact may derive from. **Ruled exclude+label 2026-07-21:
+  now WI-266.**
 - **L-19 (3.8 coverage CI leg)** — adds a CI matrix cell (cost); owner call,
-  or record the gap in the enforcement audit.
+  or record the gap in the enforcement audit. **Superseded 2026-07-21: floor
+  bumps to 3.11 kit-wide — now WI-262.**
 - **L-24 (worktree pruning), L-30 (dual-plan prompts delivery), L-36
   (iteration-index sort), L-44 (run-state end-state), L-45 (`utcnow`
   deprecation sweep — delicate against the naive-UTC blackout contract)** —
   WI-sized follow-ups.
-- **L-32 (blackout shipped active; privacy default), L-33 (IF-057
-  ratification), L-34 (archive-anchored WI specs), git author-identity
+- **L-32 (blackout shipped active; privacy default — ruled intended
+  2026-07-21, clarity + pause-banner follow-up filed as WI-261), L-33 (IF-057
+  ratification — ruled ratify 2026-07-21, Proposed → Stable), L-34
+  (archive-anchored WI specs — ruled retired-status 2026-07-21, now WI-267),
+  git author-identity
   standardization** — owner decisions.
 - **One deliberate WARN left standing:** `check_trajectory` now reports
   "WI-257 cites SR-052 amended after the WI row was last touched" — the
@@ -434,7 +444,9 @@ tier.
   smaller policy pairs but not this one.
 - **Fix:** **spec call** — decide in the derived-gate model doc (widen trace's
   criterion or narrow sr_gate's), then pin the pair in `test_rule_sync`.
-  Deferred to owner/WI; not a drive-by.
+  Deferred to owner/WI; not a drive-by. **Owner ruled Option A 2026-07-21
+  (widen `--require-verified` to every ratified SR, any Verification method,
+  matching `sr_gate`; downstream-migration flag noted): now WI-259.**
 
 #### M-6 · `derive_gate._per_phase` drops LLR/TC rows that don't cite an SR id directly
 - **Location:** `derive_gate.py:273-282`
@@ -483,7 +495,9 @@ tier.
   a freshness gate that isn't a pure function of the committed tree.
 - **Fix:** **design decision** — exclude ref-derived lines from the compare,
   degrade to WARN when the namespace is absent, or document the gate as
-  dispatch-machine-authoritative. Deferred.
+  dispatch-machine-authoritative. Deferred. **Ruled 2026-07-21: exclude
+  everywhere + label the section machine-local/advisory in the generated
+  output: now WI-266.**
 
 #### M-11 · `_splice_status` lacks its sibling's hardening: CRLF whole-file churn; inverted markers corrupt silently
 - **Location:** `gen_trajectory.py:4213-4229`, `:4240-4267`
@@ -679,7 +693,15 @@ tier.
   (SR-096).
 - **Fix:** **design call** — count only REVIEW-[AB] phases toward the dial and
   define a deterministic latest-file-per-phase rule for CHANGES-REQUESTED;
-  needs its own reviewed WI + tests.
+  needs its own reviewed WI + tests. **Owner ruled 2026-07-21: unanimity —
+  every verdict phase present or required at the exact head (REVIEW-A,
+  REVIEW-B, and CRITIQUE on render-surface trains) must APPROVE as its latest
+  word; any dissent or missing required phase blocks, and no phase substitutes
+  for another: now WI-260 — which also pins the three design calls the ruling
+  implies (required-phase = dispatcher-scheduled, same-head CR→APPROVE flips
+  escalate rather than silently win, and the review-policy dial is redefined
+  as the count of reviewer phases scheduled — critique orthogonal, required on
+  render trains at any dial) plus the wedged-reviewer liveness page.**
 
 #### M-30 · Dual-plan routing silently degrades to the ambient template when agents.csv is missing/malformed but the enable-list exists
 - **Location:** `plan_runner.py:90-93`
@@ -701,6 +723,8 @@ tier.
   reset.
 - **Fix:** **design call** — cross-train ordinal (drop the train prefix) or
   document weights as within-train only; two-train share test either way.
+  **Ruled 2026-07-21: cross-train — each train draws its own reviewers and the
+  long-run average converges to the declared weights: now WI-263.**
 
 #### M-32 · Stale (manually deleted) train worktree crashes the dispatcher in a relaunch loop
 - **Location:** `agent_dispatch.py:463-465`, `:2499-2505`
@@ -728,7 +752,8 @@ tier.
   a value the pipeline cannot produce.
 - **Fix:** float default (e.g. 0.15) + `float()` env parse + a
   reachable-margin test now; wiring-or-deleting `next_primary` is a design
-  call for a WI.
+  call for a WI. **Ruled 2026-07-21: wire it — win-stay/lose-shift executes
+  for real: now WI-264.**
 
 #### M-35 · WI-229's attested migration left ~10 active spine rows citing superseded SR ids as live authorities
 - **Location:** `docs/requirements/system-requirements.csv` (SR-026, SR-042,
@@ -883,7 +908,9 @@ Compact format — location · problem → fix.
   subprocess-coverage wiring guard skips in all 5 matrix cells (coverage runs
   only in the gate job), so the pytest-cov 5.x/Python 3.8 leg is
   CI-unverified → one cheap 3.8 coverage cell, or record the gap in
-  enforcement-audit.
+  enforcement-audit. **Superseded 2026-07-21: owner ruled the Python floor
+  bumps 3.8 → 3.11 kit-wide, dissolving the pytest-cov split and this gap
+  with it (migration-flagged): now WI-262.**
 - **L-20** `agent_loop.py:2680-2690` · guardrails-inert warning computed from
   env maps, not the registry rows that actually run under managed routing →
   build the model set from enabled registry rows.
@@ -915,7 +942,9 @@ Compact format — location · problem → fix.
   "mechanical repair" prompt hands each planner the full coverage report incl.
   the rival's coverage diff (weakens two-planner independence at the cheapest
   gaming point); an exit-2 rerun can serve a stale report file → filter to
-  the implicated plan's FAIL lines; ignore `out_path` on exit 2.
+  the implicated plan's FAIL lines; ignore `out_path` on exit 2. **Design
+  half ruled 2026-07-21: filter — the rival's diff never enters a planner's
+  context: now WI-265.**
 - **L-29** `plan_artifacts.py:232-252` · duplicate plan-local ids collapse to
   one minted id written twice; unknown predecessor tokens pass through
   verbatim → reject both (the caller has a PAGE channel).
@@ -931,13 +960,20 @@ Compact format — location · problem → fix.
   fail-open shipped default (privacy off — documented, defensible) and a
   blackout that ships *active* 12:00-19:00 UTC (a fresh adopter gets sessions
   silently deferred with the reason buried in a dotfile) → owner call;
-  consider shipping blackout disabled.
+  consider shipping blackout disabled. **Ruled intended 2026-07-21: both
+  defaults stay (privacy off as the documented exception; the weekday blackout
+  active); the fix is clarity — unmissable weekday-only/agent-resume wording
+  plus a prominent terminal banner + countdown when a session pauses for
+  blackout: now WI-261.**
 - **L-33** `docs/requirements/interfaces.csv` IF-057 · still
   Proposed/Experimental though shipped and consumed since WI-190/199 (its
   WI-201 siblings were ratified) → ratify or record why not (owner).
+  **Ruled 2026-07-21: ratified — IF-057 Proposed → Stable in this changeset.**
 - **L-34** `docs/requirements/work-items.csv` WI-060/061/062/063/082 · live
   backlog rows whose only spec anchors are archive/log material the repo
-  declares non-working → owner triage (re-spec or retire).
+  declares non-working → owner triage (re-spec or retire). **Ruled
+  2026-07-21: add a terminal `retired` status (consumer audit first);
+  per-row triage at build time: now WI-267.**
 - **L-35** `docs/requirements/low-level-requirements.csv` LLR-050 · TestRefs
   reads `(see TC)` with no id (siblings say `(see TC-050)`) → fix the cell.
 - **L-36** `docs/iteration_index.md:110-146` · lane-prefixed log names broke
@@ -1051,9 +1087,13 @@ Compact format — location · problem → fix.
    loop-scaffold helper consolidation (M-25), BOM/verdict-parse-miss/spine-
    recovery regression tests, and CI timeouts (M-27).
 8. **Owner decisions to rule** (parked, correctly, in open-items): the
-   license (H-10 / OI-4), the G3-SR definition split (M-5), the integrator
-   verdict-gate semantics (M-29), draw-weight scope (M-31), blackout shipped
-   default (L-32), IF-057 ratification (L-33), archive-anchored WI specs
+   license (H-10 / OI-4), the G3-SR definition split (M-5 — ruled Option A
+   2026-07-21, now WI-259), the integrator
+   verdict-gate semantics (M-29 — ruled "all verdict phases approve,
+   critique included" 2026-07-21, now WI-260), draw-weight scope (M-31),
+   blackout shipped
+   default (L-32 — ruled intended 2026-07-21, now WI-261), IF-057
+   ratification (L-33), archive-anchored WI specs
    (L-34), and git author-identity standardization going forward.
 9. **Keep doing what works**: the meta-test discipline, scar-tissue comments
    with WI provenance, allowlist censuses, and the review→WI→done loop are
