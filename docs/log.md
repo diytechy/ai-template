@@ -10909,3 +10909,71 @@ judged it PASS and filed the edge-marker polish as WI-258's subject).
 the last); full suite + `check.py --gate G3 --jobs 0` at this close — result
 in the close commit. WI-255/256 SpecRefs cleared (review-doc SpecRefs, no
 docs/specs/ file to archive; R-F green).
+
+## 2026-07-21 — WI-257/259/260/265 DONE (wave 1 — parallel build + per-WI adversarial review): edge-router round 3, G3-SR unification, verdict-gate unanimity, repair-round independence; NO spine change
+
+Four WIs from the repo-review-2026-07-21 backlog, built in **parallel** (isolated
+worktrees off `1cc2863`, disjoint file sets), each gated by an independent opus
+**adversarial review** (rubric `code-review-adversarial.md`, R1–R5, driven not
+assessed) before cherry-pick integration onto `dualplan-routing-fix`.
+
+**Deliverables.**
+- **WI-257** (`gen_trajectory.py` router, commit 8da820f): backward edges
+  (`xe≤x1`) now lane-route instead of keeping a direct cubic that hid under their
+  own endpoint boxes (080-CRITIQUE #1 — When 1→unphased / unphased→2·3·4, How-SW
+  CMP-001→CMP-004); `_detour_d` obstacle span widened to the stub-extended reach
+  (111-REVIEW-A MINOR 1 outboard-stub fail-open closed; docstring scoped to
+  "within the searched lanes"); candidate lanes capped (`_MAX_LANES=24`) +
+  first-clear short-circuit + second-pass skip (MINOR 2 dense-overlap perf). T8=0
+  through-box on all 5 real panels, byte-stable (12 backward wires changed, 0
+  forward), 3 biting tests.
+- **WI-259** (`trace.py`, commit a686bcc): `--require-verified` widened to
+  method-blind — Verified required for every ratified in-phase SR of any method,
+  matching `derive_gate.sr_gate` (M-5); verification-basis report refined
+  binary→**3-way** (Test=mechanized / Demonstration·Manual·Analysis·Inspection·
+  Critique=demonstrated-observed / Attest=attested); parity pinned in
+  `test_rule_sync` (now drives the loop). Real registry stays G3 (mechanized=92,
+  demonstrated=17, attested=0). `derive_gate.py` unchanged (already the target).
+- **WI-260** (`score_reviews.py` + `agent_dispatch.py`, commit 15015bd):
+  integrator gate rebuilt from a count of approving phases to **per-phase
+  latest-APPROVE unanimity** (M-29). `latest_phase_verdicts` = deterministic
+  highest-NNN file at the reviewed sha7; required-phase classifier single-sourced
+  with the scheduler over commit-subject scope (reviewers by dial 0/1/2, CRITIQUE
+  orthogonal / render-required); same-head CR→APPROVE flip and unparseable-latest
+  escalate NEEDS-HUMAN; liveness dissented→rework vs never-filed→page. arch-map
+  regenerated.
+- **WI-265** (`plan_runner.py`, commit 351d3f7): mechanical-repair prompt filtered
+  to the implicated plan's own FAIL lines via `_repair_critique` (empty own-fails
+  → generic instruction, never the rival coverage diff); full `coverage_report`
+  reaches only critic/arbiter hats (L-28 independence).
+
+**Verdicts (adversarial opus REVIEW-A per WI, driven — reports held in the
+orchestration record, not filed as `docs/reviews/*.md`):** WI-257 **APPROVE f=2**
+(both downstream-robustness MINOR, 0 live — the `_MAX_LANES` cap can drop a
+beyond-24 clear lane; a band-edge residual — owner notes, the authorized MINOR-2
+trade-off). WI-259 **APPROVE f=2** (both MINOR, **applied**: parity test now
+drives the loop; unspecified-method prose). WI-260 **APPROVE f=2** (both MINOR,
+fail-safe, **applied**: CRITIQUE classifier single-sourced with the scheduler;
+unparseable-latest pages). WI-265 **APPROVE f=1** (MINOR pre-existing/unreachable
+substring match, deferred).
+
+**Deviations from spec:** WI-257 softened `_detour_d`'s docstring absolute (the
+outboard-stub subclass is closed; a narrower band-edge residual remains, 0 live)
+— the WI authorized "or soften the docstring." Bookkeeping (row-flip / log /
+status / dashboard regen) was done by the orchestrator, not the per-WI worktree
+builds, to keep the shared registries off the parallel path; the four code
+commits are per-WI, this registry update is the batch close.
+
+**Byte deltas:** none on budgeted files (`AGENTS.template.md` / `PROCESS.md`
+untouched).
+
+**Verified:** each WI smoke-green in isolation; **integrated smoke on the
+cherry-picked tree = 1047 passed, 2 skipped**; ruff clean, C901 unworsened;
+PROJECT_STATE.html + arch-map + status snapshot regenerated (`--check` green on
+all three). SpecRefs cleared (WI-257 → 111-REVIEW-A; WI-259/260/265 →
+repo-review-2026-07-21.md; R-F green). Downstream-migration notes (259
+`--require-verified` widening; 260 review-policy dial + verdict-gate unanimity
+contract) pending consolidation into ADOPTING / downstream-resync at task close.
+Follow-ups filed to the orchestration record: WI-259 `gate-advance` skill prose
+still says "attested-vs-mechanized" (now 3-way); WI-257 `_sample_path_d`
+per-`C`-command `load_script` re-exec slows the meta-scan smoke tests.
