@@ -11240,3 +11240,46 @@ regenerated (`--check` green). SpecRef cleared (WI-267 →
 repo-review-2026-07-21.md; R-F green). A pre-existing docstring nit surfaced (the
 `check_trajectory` module docstring says "two rules" then lists three) — filed as
 a follow-up, not fixed inline.
+
+## 2026-07-22 — repo-review-2026-07-21 backlog CLOSED (11 WIs) + green G3 gate
+
+The eleven-item repo-review-2026-07-21 backlog is fully built, independently
+adversarially reviewed, integrated, and closed (per-WI deliverables + REVIEW-A
+verdicts in the entries above). Method: each WI was built in an isolated worktree
+off the running branch, gated by a fresh opus **adversarial review** that drove
+the real shipped code paths (not plausibility), then cherry-picked in — the
+orchestrator owning the registry/log/status/dashboard bookkeeping so the shared
+surfaces stayed off the parallel path. Review outcomes: WI-258/261/264 APPROVE
+f=0; WI-257/259/260/263/265/266 APPROVE with MINOR findings (the substantive ones
+applied before integration, the rest recorded as owner notes); WI-262/267
+CHANGES-REQUESTED → the real gaps fixed (WI-262 the un-swept `session-protocol`
+skill floor; WI-267 the missed `agent_common.preflight` retired-status consumer) →
+re-verified → integrated.
+
+**Render re-fire:** [112-CRITIQUE](reviews/112-CRITIQUE.md) (fresh perceptual
+session, pixels) **APPROVE f=0 — T1–T8 all PASS**: the WI-257 backward-edge lane
+routing, the WI-258 clip-edge mask + indigo focus ring, and the WI-267 retired
+bucket are delivered in both themes; the three 080-tracked items are resolved;
+T8 holds (no wire through an unrelated box). The WI-243 perceptual staleness
+re-fire clears.
+
+**Gate:** `check.py --gate G3 --jobs 0` = **RESULT: PASS** — all 16 steps green
+(full suite **1365 passed, 1 skipped**; coverage **91.52%** ≥ 85; derived gate
+**G3**; `--strict` trajectory incl. the fail-closed perceptual-stale check;
+`--require-verified`; lint; dupes; status-map; arch-map; skills-sync). One G3-only
+regression was caught and fixed at the gate: WI-260's `_critique_srs` copy in
+`agent_dispatch.py` tripped `check_dupes` against `check_trajectory` (the commit
+bar's smoke tier does not run dupes) — rewritten as a comprehension (behavior
+preserved), restoring the baseline's zero-duplicate state.
+
+**Owner follow-ups filed (not built — reserved or out of this backlog's scope):**
+(1) a requirements-change WI to bump the Python-floor **requirement spine**
+(SN-011 / SR-034 / SR-035 + `architecture.md` overview + SR-035's CI-matrix
+narrative) to match the kit's new 3.11 floor; (2) the per-row triage of the five
+archive-anchored deferred rows WI-060/061/062/063/082 (re-spec vs the now-available
+`retired` disposition); (3) minor robustness/polish notes from the reviews (the
+`_MAX_LANES` cap trade-off; the `_repair_critique` substring nit; the `retired`
+`⊗` legend glyph; the drill focus-restore keyboard nit; the `gate-advance` skill
+prose still saying "attested-vs-mechanized"; the `check_trajectory` "two rules"
+docstring count). **Merge-to-`main` for `dualplan-routing-fix` remains a
+deliberate owner decision (push-policy: human) — nothing was pushed.**
