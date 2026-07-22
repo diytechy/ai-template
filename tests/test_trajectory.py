@@ -455,6 +455,107 @@ def test_rf_scaffold_boilerplate_excluded(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+# --- WI-267: the terminal `retired` status ------------------------------------
+# `retired` is a WON'T-BUILD row that stays in the registry forever with its
+# reason in `Deliverable` and an empty `SpecRef` — terminal like `done`, NOT an
+# overload of it. It is a valid status (no unknown-status lint), counted
+# separately, and validated by R-A (Deliverable = the reason) + R-F (SpecRef
+# cleared). A live WI hard-depending on a retired one surfaces (dead-dep).
+
+
+def test_retired_status_is_first_class(tmp_path):
+    # A well-formed retired row: filled Deliverable (the reason), empty SpecRef.
+    # Valid under --strict with no unknown-status lint and no R-A/R-E/R-F finding.
+    write_wis_sr(tmp_path, "WI-001,Dropped,scripts,,,retired,superseded by WI-050,\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "unknown status" not in proc.stderr
+    assert "R-A" not in proc.stderr and "R-F" not in proc.stderr
+
+
+def test_retired_is_counted_separately_not_as_done(tmp_path):
+    # The clean-summary counts retired apart from done: 1 done + 1 retired over
+    # 2 rows is "1 done (50%)" plus a distinct "1 retired" note (never 2 done).
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Shipped,scripts,,,done,shipped it,\n"
+        "WI-002,Dropped,scripts,,,retired,not worth it,\n",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "1 done (50%)" in proc.stdout
+    assert "1 retired" in proc.stdout
+
+
+def test_retired_wi_with_empty_deliverable_fails_ra(tmp_path):
+    # R-A: a retired row must record WHY it will not be built — an empty
+    # Deliverable is the same hard error as an empty one on a done row.
+    write_wis_sr(tmp_path, "WI-001,Dropped,scripts,,,retired,,\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "R-A" in proc.stderr and "Deliverable is empty" in proc.stderr
+
+
+def test_retired_wi_with_specref_fails_rf(tmp_path):
+    # R-F: retirement is terminal — the SpecRef is cleared. A retired row still
+    # carrying one is flagged like a done row (warn plain, ERROR under --strict).
+    write_spec(tmp_path, "docs/specs/WI-001.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Dropped,scripts,,,retired,superseded,docs/specs/WI-001.md\n",
+    )
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "R-F WI-001" in plain.stderr and "still set" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "R-F WI-001" in strict.stderr
+
+
+def test_open_wi_depending_on_retired_pred_is_flagged(tmp_path):
+    # Decision 3 (dead-dep): a live WI whose hard predecessor is retired can
+    # never become ready — surfaced (warn plain, ERROR under --strict) so the
+    # owner re-homes or retires it, rather than waiting forever.
+    write_spec(tmp_path, "docs/specs/WI-002.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Dropped,scripts,,,retired,superseded,\n"
+        "WI-002,Live,scripts,,WI-001,queued,,docs/specs/WI-002.md\n",
+    )
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "dead-dep WI-002" in plain.stderr and "retired WI(s) WI-001" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "dead-dep WI-002" in strict.stderr
+
+
+def test_done_predecessor_of_open_wi_is_not_a_dead_dep(tmp_path):
+    # Decision 3 control: a `done` predecessor is a LIVE, satisfied edge — never
+    # flagged dead. Only a `retired` predecessor triggers the finding.
+    write_spec(tmp_path, "docs/specs/WI-002.md")
+    write_wis_sr(
+        tmp_path,
+        "WI-001,Shipped,scripts,,,done,shipped it,\n"
+        "WI-002,Live,scripts,,WI-001,queued,,docs/specs/WI-002.md\n",
+    )
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "dead-dep" not in proc.stderr
+
+
+def test_retired_id_in_status_md_is_not_forward_only_finding(tmp_path):
+    # Confirmed-no-change: the forward-only rule (WI-200) flags only `done` ids
+    # (completed work whose record moved to log.md). A retired row's reason lives
+    # permanently in the registry, so — like a deferred id — a retired id may be
+    # referenced in status.md prose without tripping the rule.
+    write_wis_sr(tmp_path, "WI-001,Dropped,scripts,,,retired,superseded,\n")
+    write_status(tmp_path, "## Note\n- WI-001 retired: superseded, see the log.\n")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "forward-only" not in proc.stderr
+
+
 def test_compliant_registry_and_status_passes_strict(tmp_path):
     # The whole model, coherent: a done row with a Deliverable and no SpecRef, an
     # open row with an empty Deliverable + resolvable SpecRef -> --strict is fully

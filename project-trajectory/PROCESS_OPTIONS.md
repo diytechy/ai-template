@@ -1463,7 +1463,8 @@ independent tracks meet, which task is in flight, how far along the whole is. A
   ranking, and the acyclicity rule); a `~`-prefixed id (`~WI-013`) is a **soft**
   edge (advisory ordering — must resolve, never blocks, dashed in the render);
 - it moves through a **lifecycle**: `queued → active → done`; `deferred` parks
-  intentionally postponed work and `blocked` parks work on a named `BlockRef`.
+  intentionally postponed work, `blocked` parks work on a named `BlockRef`, and
+  `retired` is a **terminal** won't-build row (its reason in `Deliverable`).
 
 A WI is the machine-readable *how* beneath an SR's *what*. Plans and discussion
 retain the *why*; the registry complements rather than replaces that narrative.
@@ -1475,9 +1476,10 @@ Enabling this layer **supersedes the plan/build cadence's `docs/plan.md`**
 `WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef`.
 Off-spine and optional like `procurement.csv` / `assets.csv`: `trace.py` does not
 read `WI-` ids — the trajectory tooling owns them. `Status ∈
-{queued,active,done,deferred,blocked}`; `deferred` is queued-but-not-next, while
-`blocked` requires the optional `BlockRef` column to name what must clear. An
-unknown status lints. `SR-Refs` / `Predecessors` are `;`-joined id lists; the
+{queued,active,done,deferred,blocked,retired}`; `deferred` is queued-but-not-next,
+`blocked` requires the optional `BlockRef` column to name what must clear, and
+`retired` (WI-267) is terminal — a deliberate won't-build, counted separately from
+`done`, never scheduled, its reason in `Deliverable`. An unknown status lints. `SR-Refs` / `Predecessors` are `;`-joined id lists; the
 `-000` example row is inert. A legacy CSV without `SpecRef` reads it as empty.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
@@ -1495,17 +1497,19 @@ shipped) and the forward bridge is a per-WI **`SpecRef`** that lives while the W
 is open and clears at close. `check_trajectory.py` mechanizes three rules over the
 registry (warn-first at the commit floor; `--strict` gates R-E/R-F at G2+):
 
-- **R-A** — a WI's `Deliverable` is non-empty **iff** `Status = done`; an open WI
-  (queued/active/deferred/blocked) has an **empty** Deliverable. A **hard error at every
-  run** (no flag): a commit is the agent handoff point, so an incoherent WI state
-  launches the next session into the wrong item. This is the pre-commit floor.
+- **R-A** — a WI's `Deliverable` is non-empty **iff** its `Status` is **terminal**
+  (`done` or `retired`); an open WI (queued/active/deferred/blocked) has an
+  **empty** Deliverable (`done` records what shipped, `retired` why it never will).
+  A **hard error at every run** (no flag): a commit is the agent handoff point, so
+  an incoherent WI state launches the next session into the wrong item. This is
+  the pre-commit floor.
 - **R-E** — every **open** WI has a non-empty **`SpecRef`** resolving to an
   in-repo target (`docs/specs/WI-###.md` or a `doc#anchor`; the path part must
   exist). Deeper anchor/path validation rides `check_doc_refs.py`'s path tier.
-- **R-F** (WI-251) — the close side R-E leaves unstated: a **done** WI's
-  `SpecRef` is **empty**, and every live `docs/specs/` file (scaffold
-  README/`-000` exemplars excluded) is cited by ≥1 **open** WI — otherwise it
-  belongs in `docs/archive/specs/`. Prose-only close ritual is skipped by
+- **R-F** (WI-251; WI-267) — the close side R-E leaves unstated: a **terminal**
+  (`done`/`retired`) WI's `SpecRef` is **empty**, and every live `docs/specs/`
+  file (scaffold README/`-000` exemplars excluded) is cited by ≥1 **open** WI —
+  otherwise it belongs in `docs/archive/specs/`. Prose-only close ritual is skipped by
   autonomous agents; whether durable spec content was absorbed *before*
   archiving stays a reviewer-tier judgment (the honest gap).
 

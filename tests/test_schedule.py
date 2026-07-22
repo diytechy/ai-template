@@ -72,6 +72,50 @@ def test_dangling_hard_pred_fails_closed():
     assert disposition(wis, "WI-002")["disposition"] == "waiting"
 
 
+# --- WI-267: `retired` is a terminal WON'T-BUILD status ------------------------
+# Terminal like `done` (never ready, never scheduled) but — unlike `done` — a
+# retired predecessor does NOT satisfy a successor's hard dependency (design-
+# decision 3), so a live WI hard-blocked on a retired one surfaces rather than
+# proceeding on a will-never-happen dependency.
+
+
+def test_retired_wi_is_terminal_never_ready():
+    wis = sched.load_wis([row("WI-001", status="retired")])
+    assert ready_ids(wis) == []
+    d = disposition(wis, "WI-001")
+    assert d["disposition"] == "retired"
+    assert d["reasons"] == ["retired:terminal-wont-build"]
+
+
+def test_retired_predecessor_does_not_satisfy_a_hard_dependency():
+    # Decision 3 (the DEAD-edge direction): a retired predecessor never
+    # integrates, so the live successor can never become ready — it stays
+    # `waiting`, and the retired dead edge is surfaced as its own reason code.
+    wis = sched.load_wis(
+        [row("WI-001", status="retired"), row("WI-002", preds="WI-001")]
+    )
+    assert ready_ids(wis) == []  # NOT satisfied the way a `done` pred would be
+    d = disposition(wis, "WI-002")
+    assert d["disposition"] == "waiting"
+    assert "waiting:hard-pred-retired:WI-001" in d["reasons"]
+
+
+def test_done_predecessor_still_satisfies_a_hard_dependency():
+    # Decision 3 (the LIVE-edge direction, the control): a `done` pred DOES
+    # satisfy — retirement is the only terminal state that leaves the edge dead.
+    wis = sched.load_wis([row("WI-001", status="done"), row("WI-002", preds="WI-001")])
+    assert ready_ids(wis) == ["WI-002"]
+
+
+def test_retired_wi_is_never_scheduled_in_simulate():
+    wis = sched.load_wis(
+        [row("WI-001", status="retired"), row("WI-002"), row("WI-003")]
+    )
+    scheduled = [wid for rnd in sched.simulate(wis, 4) for wid in rnd]
+    assert "WI-001" not in scheduled
+    assert set(scheduled) == {"WI-002", "WI-003"}
+
+
 def test_priority_outranks_downstream_within_a_gate_class():
     # WI-050: higher Priority but zero downstream. WI-010: default Priority but two
     # downstream dependents. Priority must win within one gate class.

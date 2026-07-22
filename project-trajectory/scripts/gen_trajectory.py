@@ -486,11 +486,22 @@ DAG_COL_GAP = 60  # horizontal gap between dependency ranks
 DAG_ROW_H = 46  # node height
 DAG_ROW_GAP = 22  # vertical gap between nodes in a rank
 DAG_PAD = 18
-STATUS_FILL = {"done": "#047857", "active": "#b45309", "queued": "#94a3b8"}
+# WI-267: `retired` is a TERMINAL WON'T-BUILD status with its OWN dashboard bucket
+# — a muted stone hue byte-distinct from every other fill (done/active/queued and
+# the drill tiers), never folded into done's green. deferred/blocked are not keyed
+# here (they clamp to the queued fill in `_wi_st`); retired is, so a dead-end row
+# reads as visibly terminal, not merely parked.
+STATUS_FILL = {
+    "done": "#047857",
+    "active": "#b45309",
+    "queued": "#94a3b8",
+    "retired": "#78716c",
+}
 # A3 (no-info-by-color-alone): a redundant, shape-distinct status glyph paired with
 # every status fill — the meaning survives without colour perception. Prefixed to a
-# drill work-item block's label (and named in its hover title / detail).
-STATUS_GLYPH = {"done": "✓", "active": "●", "queued": "○"}
+# drill work-item block's label (and named in its hover title / detail). `retired`
+# gets the circled-times ⊗ (a struck-out terminal), distinct from ✓/●/○.
+STATUS_GLYPH = {"done": "✓", "active": "●", "queued": "○", "retired": "⊗"}
 
 # WI-249 render-legibility fix (render-dashboard-critique found every wire's
 # arrowhead invisible: some used a near-white fill (`var(--border)`, a light
@@ -2062,7 +2073,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     color-scheme: light dark;
     --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --text:#0f172a;
     --muted:#64748b; --accent:#4f46e5;
-    --done:#047857; --active:#b45309; --queued:#94a3b8;
+    --done:#047857; --active:#b45309; --queued:#94a3b8; --retired:#78716c;
     /* U1: one shared node-label / sub-label type scale across every SVG emitter
        (icicle, drill, knowledge) — no per-emitter font-size overrides. */
     --nlabel:10px; --nsub:8.5px; --small:.85rem; --xsmall:.8rem;
@@ -2222,7 +2233,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <div class="card">
           <div class="label">Execution</div>
           <div class="big">$wi_pct%</div>
-          <div class="sub">$wi_done of $wi_total work items done · $wi_active active</div>
+          <div class="sub">$wi_done of $wi_total work items done · $wi_active active$wi_retired_clause</div>
           $wi_active_line
           <div class="meter exe"><span style="width:$wi_pct%"></span></div>
         </div>
@@ -2287,6 +2298,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <span><i style="background:var(--done)"></i>done</span>
         <span><i style="background:var(--active)"></i>active — you are here</span>
         <span><i style="background:var(--queued)"></i>queued</span>
+        <span><i style="background:var(--retired)"></i>retired — won't build (terminal)</span>
       </div>
     </section>
 
@@ -2311,7 +2323,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         + (d.meta?'<p class="meta">'+esc(d.meta)+'</p>':'');
     }
     const tierColor = { sn:'#4338ca', sr:'#0e7490', llr:'#64748b', tc:'#047857' };
-    const statusColor = { done:'#047857', active:'#b45309', queued:'#94a3b8' };
+    const statusColor = { done:'#047857', active:'#b45309', queued:'#94a3b8', retired:'#78716c' };
 
     // Icicle: hover highlights a block + its descendants; click shows detail.
     const ice = document.getElementById('ice');
@@ -3602,6 +3614,12 @@ def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
     active = sum(1 for w in wis if w["status"] == "active")
+    # WI-267: `retired` (terminal WON'T-BUILD) rows get their OWN count, never
+    # folded into done. Surfaced on the execution hero only when present, so the
+    # common no-retired dashboard sub-line is unchanged. The execution % stays
+    # done/total — retired work was deliberately abandoned, not completed.
+    retired = sum(1 for w in wis if w["status"] == "retired")
+    wi_retired_clause = " · {} retired".format(retired) if retired else ""
     # T1 (dashboard-usability): name the in-flight work on the landing hero so
     # "find the next work" costs zero tab switches — the When drill buries the
     # active leaf several descents deep. Empty (no markup) when nothing is active.
@@ -3676,6 +3694,7 @@ def build_html(root, wis):
         wi_done=done,
         wi_total=total,
         wi_active=active,
+        wi_retired_clause=wi_retired_clause,
         wi_active_line=wi_active_line,
         arch_svg=arch,
         arch_details=j(arch_details),

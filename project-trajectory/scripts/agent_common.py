@@ -283,6 +283,12 @@ TRAIN_BRANCH_PREFIX = "llm/train/"
 
 WI_TOKEN_RE = re.compile(r"^WI-\d+$")
 
+# The terminal work-item Statuses — no further build is owed (WI-267). Mirrors
+# check_trajectory.TERMINAL_STATUSES, kept inline here rather than imported: the
+# F5 self-contained-script rule keeps agent_common stdlib-only (it never pulls a
+# sibling engine). A worker must never build a WI in either state.
+TERMINAL_STATUSES = ("done", "retired")
+
 
 def sanitize_train(name):
     """A train id becomes a branch segment, a log-file prefix, and a reviews/
@@ -1158,11 +1164,17 @@ def preflight(root, template, args):
                         "work-items.csv on this branch — a worker never "
                         "builds an untracked WI.".format(wid)
                     )
-                elif (row.get("Status") or "").strip().lower() == "done":
+                elif (row.get("Status") or "").strip().lower() in TERMINAL_STATUSES:
+                    # WI-267: a WI RETIRED mid-assignment is terminal too — a
+                    # worker must never build a WON'T-BUILD row. The scheduler
+                    # never freshly dispatches a retired WI, but an owner can
+                    # retire one already leased to a worker; this closes that
+                    # narrow mid-flight race the done-only check missed.
+                    status = (row.get("Status") or "").strip().lower()
                     failures.append(
-                        "assigned {} is already integrated done — a stale "
-                        "assignment; the dispatcher must re-derive the "
-                        "frontier.".format(wid)
+                        "assigned {} is already {} — a terminal status "
+                        "(done/retired); a stale assignment, so the dispatcher "
+                        "must re-derive the frontier.".format(wid, status)
                     )
     return failures
 

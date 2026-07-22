@@ -1061,11 +1061,17 @@ def generate_status(docs, root, last_train=""):
     except OSError:
         return False
     rows = registry_rows_at(root, INTEGRATION_REF) or []
-    counts = {"queued": 0, "deferred": 0, "blocked": 0, "done": 0}
+    counts = {"queued": 0, "deferred": 0, "blocked": 0, "done": 0, "retired": 0}
     for r in rows:
         st = (r.get("Status") or "").strip().lower()
         if st in counts:
             counts[st] += 1
+    # WI-267: `retired` (terminal WON'T-BUILD) rows are counted SEPARATELY, never
+    # folded into `done`; surfaced only when present so the common no-retired
+    # snapshot line stays byte-identical.
+    retired_clause = (
+        " · {retired} retired".format(**counts) if counts["retired"] else ""
+    )
     gate = read_declared(docs / "gate", "(none)")
     reserved = sorted(list_reservations(root))
     lines = [
@@ -1076,9 +1082,11 @@ def generate_status(docs, root, last_train=""):
             gate
         ),
         "- **Work items:** {queued} queued · {deferred} deferred · "
-        "{blocked} blocked · {done} done — the registry "
+        "{blocked} blocked · {done} done{retired_clause} — the registry "
         "[work-items.csv](requirements/work-items.csv) is the source; the "
-        "dashboard is generated from it.".format(**counts),
+        "dashboard is generated from it.".format(
+            retired_clause=retired_clause, **counts
+        ),
         "- **Reserved (in flight):** {}".format(", ".join(reserved) or "none"),
         "- **Last integrated train:** {}".format(last_train or "none this run"),
         "- **Needs <human>:** see [open-items.md](open-items.md) if present.",

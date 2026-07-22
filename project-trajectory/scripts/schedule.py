@@ -13,7 +13,7 @@ Two contracts live here:
 
   * **Frontier + deterministic order (SR-057).** A queued WI is *ready* when every
     hard predecessor is integrated `done` (soft `~` edges never block). The ready
-    set excludes `blocked`/`deferred`/reserved WIs and any WI the safety
+    set excludes `blocked`/`deferred`/`retired`/reserved WIs and any WI the safety
     classifier deems ineligible, then orders the survivors by
     `(gate class, Priority desc, transitive downstream-dependent count desc,
     remaining hard-path length desc, WI id)`.
@@ -81,9 +81,15 @@ _GATE_RANK = {
 }
 
 # Tracked Status vocabulary (spec §3.1). Anything other than `done` is not-ready;
-# `blocked`/`deferred`/reserved carry their own disposition (never silently
-# scheduled) — the same fail-closed spirit.
+# `blocked`/`deferred`/`retired`/reserved carry their own disposition (never
+# silently scheduled) — the same fail-closed spirit. `retired` (WI-267) is a
+# TERMINAL won't-build row: like `done` it is never in the ready frontier, but
+# UNLIKE `done` a retired predecessor does NOT satisfy a successor's hard
+# dependency (a retired WI never integrates, so a live WI hard-blocked on one can
+# never run — it stays `waiting`, surfacing to the owner, rather than proceeding
+# on a will-never-happen dependency; WI-267 design-decision 3).
 _DONE = "done"
+_RETIRED = "retired"
 
 
 def _utf8_console():
@@ -231,8 +237,9 @@ def _status(wis):
 
 def hard_preds_satisfied(wi, status):
     """Every hard predecessor is integrated `done`. An unknown predecessor id
-    (dangling edge — the validator's error) counts as NOT satisfied, so the
-    scheduler fails closed rather than scheduling on a broken graph."""
+    (dangling edge — the validator's error) OR a `retired` predecessor (WI-267:
+    terminal, will never integrate) counts as NOT satisfied, so the scheduler
+    fails closed rather than scheduling on a broken or dead-ended graph."""
     return all(status.get(p) == _DONE for p in wi["preds"])
 
 
@@ -396,15 +403,39 @@ def _exclusive_conflicts(wis, status, reserved):
     return holders
 
 
+# Terminal statuses map straight to a not-in-the-frontier disposition + its own
+# reason code (WI-267): `retired` is as final as `done` — never ready, never
+# packed — but keeps a distinct code so the dead-end is legible in --explain.
+_TERMINAL_DISPOSITION = {
+    _DONE: ("done", "done:integrated"),
+    _RETIRED: ("retired", "retired:terminal-wont-build"),
+}
+
+
+def _waiting_reasons(wi, status):
+    """Reason codes for a WI held `waiting` on unmet hard predecessors. WI-267
+    design-decision 3: a retired predecessor is a DEAD hard edge — it will never
+    integrate `done`, so the WI can never become ready. It is surfaced as its own
+    reason code (the WI still just waits, never silently satisfied) so the owner
+    sees the will-never-happen dependency."""
+    unmet = [p for p in wi["preds"] if status.get(p) != _DONE]
+    dead = [p for p in unmet if status.get(p) == _RETIRED]
+    reasons = ["waiting:hard-preds-not-done:%s" % ",".join(unmet)]
+    if dead:
+        reasons.insert(0, "waiting:hard-pred-retired:%s" % ",".join(dead))
+    return reasons
+
+
 def _disposition(wi, status, reserved, sched_class, class_reasons, exclusive_ready):
     """`(disposition, [reason_codes])` for one WI: ready | waiting | reserved |
-    blocked | deferred | done | excluded. The reason list is the disposition's own
+    blocked | deferred | done | retired | excluded. The reason list is its own
     codes; the classifier's reason is carried only where classification decides the
     outcome (`ready` shows why eligible, `unclassified` shows the fail-closed
     cause) — never as noise on a blocked/deferred/reserved/waiting item."""
     st = wi["status"]
-    if st == _DONE:
-        return "done", ["done:integrated"]
+    if st in _TERMINAL_DISPOSITION:
+        disposition, code = _TERMINAL_DISPOSITION[st]
+        return disposition, [code]
     if st == "blocked":
         return "blocked", ["excluded:blocked:%s" % (wi["blockref"] or "no-blockref")]
     if st == "deferred":
@@ -412,8 +443,7 @@ def _disposition(wi, status, reserved, sched_class, class_reasons, exclusive_rea
     if wi["id"] in reserved:
         return "reserved", ["reserved:claimed-by-live-train"]
     if not hard_preds_satisfied(wi, status):
-        unmet = [p for p in wi["preds"] if status.get(p) != _DONE]
-        return "waiting", ["waiting:hard-preds-not-done:%s" % ",".join(unmet)]
+        return "waiting", _waiting_reasons(wi, status)
     if not is_schedulable_class(sched_class):
         return "excluded", list(class_reasons) + ["excluded:unclassified-fail-closed"]
     # Exclusive-key conflict: another WI owns a key this one needs.

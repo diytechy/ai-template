@@ -102,6 +102,32 @@ def test_generates_self_contained_dashboard(tmp_path):
     assert "stroke-dasharray" in text
 
 
+# WI-267: a `retired` (terminal WON'T-BUILD) WI gets its OWN dashboard bucket —
+# a stone fill byte-distinct from done's green, the ⊗ glyph, a legend entry, and
+# a separate count that is never folded into `done`.
+RETIRED_WIS = GOOD_WIS + "WI-005,Abandoned idea,scripts,,,retired,superseded\n"
+
+
+def test_retired_wi_renders_its_own_bucket(tmp_path):
+    gt = load_script("gen_trajectory")
+    # the retired fill is byte-distinct from every other status fill (not a
+    # rename of done's green) — the render-legibility invariant.
+    assert gt.STATUS_FILL["retired"] == "#78716c"
+    assert len(set(gt.STATUS_FILL.values())) == len(gt.STATUS_FILL)
+    make_repo(tmp_path, wis_body=RETIRED_WIS)
+    assert gen(tmp_path).returncode == 0, "gen failed"
+    text = html_of(tmp_path)
+    # its own fill colour + the ⊗ glyph
+    assert "#78716c" in text
+    assert "⊗" in text
+    # a legend entry naming the terminal state
+    assert "retired — won't build" in text
+    # counted SEPARATELY on the execution hero (never folded into done): 1 of 5
+    # done -> 20%, plus a distinct "1 retired" clause.
+    assert "20%" in text
+    assert "1 retired" in text
+
+
 def test_mobile_responsive_shell(tmp_path):
     """SR-038: the dashboard is usable on mobile viewports — the responsive
     shell markers must be present in the generated HTML (viewport meta,

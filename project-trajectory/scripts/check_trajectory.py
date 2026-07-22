@@ -28,17 +28,20 @@ work-items layer"). The WI `Deliverable` is **backward-only** (what shipped) and
 the per-WI `SpecRef` is the forward bridge that lives while the WI is open and
 clears at close. Cross-reading `work-items.csv` and its SpecRefs mechanizes two
 rules:
-  - **R-A** — a WI's `Deliverable` is non-empty **iff** `Status = done`. An open
-    (queued/active/deferred) WI with a filled Deliverable, or a `done` WI with an
-    empty one, is a hard **ERROR at every run** (no flag needed): a commit is the
-    agent handoff point, so an incoherent WI state launches the next session
-    wrong.
+  - **R-A** — a WI's `Deliverable` is non-empty **iff** its `Status` is
+    **terminal** (`done` or `retired`; WI-267). An open (queued/active/deferred)
+    WI with a filled Deliverable, or a terminal WI with an empty one, is a hard
+    **ERROR at every run** (no flag needed): a commit is the agent handoff point,
+    so an incoherent WI state launches the next session wrong. (`done` records
+    what shipped; `retired` records why it never will.)
   - **R-E** — every open WI carries a non-empty `SpecRef` resolving to an in-repo
-    target (`path` or `path#anchor`; the path part must exist).
-  - **R-F** (WI-251) — the close side R-E leaves unstated: a **done** WI's
-    `SpecRef` is **empty**, and every live `docs/specs/` file (scaffold
-    README/`-000` boilerplate excluded) is cited by at least one *open* WI —
-    otherwise it belongs in `docs/archive/specs/` (the specs README lifecycle).
+    target (`path` or `path#anchor`; the path part must exist). A terminal WI is
+    exempt (its SpecRef is cleared — R-F).
+  - **R-F** (WI-251; WI-267) — the close side R-E leaves unstated: a **terminal**
+    (`done`/`retired`) WI's `SpecRef` is **empty**, and every live `docs/specs/`
+    file (scaffold README/`-000` boilerplate excluded) is cited by at least one
+    *open* WI — otherwise it belongs in `docs/archive/specs/` (the specs README
+    lifecycle).
 R-E and R-F are **WARN by default, ERROR under `--strict`** (wired at G2+). R-B/R-C —
 every *open* WI repeated as a token in `status.md` — stay **retired** (WI-180):
 status becomes an integrator-generated snapshot, so open-id currency is enforced
@@ -153,16 +156,24 @@ WI_ID_RE = re.compile(r"^WI-\d+$")
 
 # The work-item lifecycle vocabulary (S1). `deferred` is a first-class,
 # queued-but-not-next state carrying a recorded reason; `blocked` is parked on a
-# named external dependency. An unknown status is a lint (warn-first). "Open" =
-# anything not yet `done`.
+# named external dependency. `retired` (WI-267) is a TERMINAL won't-build row that
+# stays in the registry forever with its reason in the `Deliverable` column — a
+# deliberate dead-end, NOT an overload of `done` (a `done` WI shipped something; a
+# `retired` WI deliberately never will). An unknown status is a lint (warn-first).
+# "Open" = anything still in flight (not one of the two TERMINAL states).
 OPEN_STATUSES = ("queued", "active", "deferred", "blocked")
-KNOWN_STATUSES = ("queued", "active", "done", "deferred", "blocked")
+# The terminal states: no further build/trace work is owed. Both require a filled
+# `Deliverable` (the shipped record for `done`; the retirement reason for
+# `retired`) and both must clear their `SpecRef` (R-A + R-F below). `retired` is
+# deliberately NOT in OPEN_STATUSES / BACKLOG_STALE_STATUSES / the ready frontier.
+TERMINAL_STATUSES = ("done", "retired")
+KNOWN_STATUSES = ("queued", "active", "done", "deferred", "blocked", "retired")
 
 # Backlog-staleness (WI-205) applies to genuinely-in-flight WIs: the open set
 # minus `deferred` (a deferred WI re-enters via an owner un-defer, itself the
 # driven look, so it is EXEMPT), plus `blocked` (a WI parked on an external
 # dependency is still live work whose cited requirements can drift under it).
-# `done` needs no re-validation.
+# `done`/`retired` are terminal and need no re-validation.
 BACKLOG_STALE_STATUSES = ("queued", "active", "blocked")
 
 
@@ -1047,7 +1058,7 @@ def ssot_findings(wis, root):
                     "status-vocab",
                     False,
                     "{}: unknown status {!r} (expected queued|active|done|"
-                    "deferred|blocked)".format(w["id"], st),
+                    "deferred|blocked|retired)".format(w["id"], st),
                 )
             )
         if st == "blocked" and not w["blockref"]:
@@ -1059,17 +1070,27 @@ def ssot_findings(wis, root):
                     "external dependency or decision that must clear)".format(w["id"]),
                 )
             )
-        # R-A: Deliverable non-empty IFF done.
-        if st == "done" and not w["deliverable"]:
+        # R-A: Deliverable non-empty IFF the WI is TERMINAL. A `done` WI's
+        # Deliverable records what shipped; a `retired` WI's records the reason it
+        # will never be built (WI-267) — either way the terminal row carries its
+        # permanent backward record, and an open row's Deliverable is filled only
+        # at close.
+        if st in TERMINAL_STATUSES and not w["deliverable"]:
+            reason = (
+                "records what shipped"
+                if st == "done"
+                else "records the reason it will not be built"
+            )
             out.append(
                 (
                     "R-A",
                     True,
-                    "{}: status=done but the Deliverable is empty (a done WI "
-                    "records what shipped)".format(w["id"]),
+                    "{}: status={} but the Deliverable is empty (a {} WI {})".format(
+                        w["id"], st, st, reason
+                    ),
                 )
             )
-        elif st != "done" and w["deliverable"]:
+        elif st not in TERMINAL_STATUSES and w["deliverable"]:
             out.append(
                 (
                     "R-A",
@@ -1117,14 +1138,16 @@ def spec_lifecycle_findings(root, wis):
     promotion, the `run-state` tier — so a rotting spec surface cannot reach a
     green G2/G3 gate while a plain commit stays warn-first):
 
-      - a **done** WI whose `SpecRef` is still set — close clears it (the
-        Deliverable + log carry the backward record);
+      - a **terminal** WI (`done` or `retired`, WI-267) whose `SpecRef` is still
+        set — the terminal transition clears it (the Deliverable + log carry the
+        backward record; a `retired` row's reason lives in its Deliverable);
       - a **live** `docs/specs/` file cited by no *open* WI — archive it to
         `docs/archive/specs/` (close date appended, WI ids noted) or point an
         open WI at it. A shared effort doc therefore archives only when its
         last open citer closes; `deferred`/`blocked` are open, so their specs
-        stay. The scaffold boilerplate (README, any `-000` exemplar) is
-        excluded by the `spec_interface_findings` idiom.
+        stay, but `retired` is terminal, so a retired WI keeps no live spec. The
+        scaffold boilerplate (README, any `-000` exemplar) is excluded by the
+        `spec_interface_findings` idiom.
 
     Vacuous on a fresh scaffold (no done-with-SpecRef rows; only excluded
     boilerplate in `docs/specs/`). Whether the archived spec's durable content
@@ -1138,11 +1161,13 @@ def spec_lifecycle_findings(root, wis):
             continue
         if w["status"] in OPEN_STATUSES:
             open_cited.add(spec.split("#", 1)[0].strip())
-        elif w["status"] == "done":
+        elif w["status"] in TERMINAL_STATUSES:
             out.append(
-                "{}: status=done but SpecRef {!r} is still set (close clears "
+                "{}: status={} but SpecRef {!r} is still set (a terminal WI clears "
                 "the SpecRef and archives the spec to docs/archive/specs/ — "
-                "the {}/README.md lifecycle)".format(w["id"], spec, SPECS_DIR)
+                "the {}/README.md lifecycle)".format(
+                    w["id"], w["status"], spec, SPECS_DIR
+                )
             )
     specs = root / SPECS_DIR
     if specs.is_dir():
@@ -1224,6 +1249,37 @@ def status_forward_only_findings(root, wis):
         "make status.md a generated snapshot)".format(wid, STATUS_MD)
         for wid in present
     ]
+
+
+def dead_dependency_findings(wis):
+    """Surface a live WI that hard-depends on a `retired` predecessor (WI-267).
+
+    A `retired` WI is a terminal WON'T-BUILD row — it will never integrate
+    `done`, so an open successor whose hard edge points at it can NEVER become
+    ready. The conservative decision (WI-267 design-decision 3) is to SURFACE
+    the dead edge rather than let a retired predecessor silently "satisfy" the
+    dependency the way `done` does: the owner must re-home the successor's edge
+    or retire it too. The scheduler already refuses to schedule such a WI
+    (schedule.hard_preds_satisfied requires `done`, not merely terminal); this
+    makes the same dead edge visible in the validator. WARN plain, ERROR under
+    `--strict`. Soft (`~`) edges are advisory and never gate readiness, so they
+    are exempt. Vacuous until a registry actually retires a still-depended-on WI.
+    """
+    by_id = {w["id"]: w for w in wis}
+    out = []
+    for w in wis:
+        if w["status"] not in OPEN_STATUSES:
+            continue
+        dead = sorted(
+            p for p in w["preds"] if by_id.get(p, {}).get("status") == "retired"
+        )
+        if dead:
+            out.append(
+                "{}: open WI hard-depends on retired WI(s) {} — a retired "
+                "predecessor is terminal and never satisfies a hard dependency; "
+                "re-home the edge or retire this WI too".format(w["id"], ";".join(dead))
+            )
+    return out
 
 
 def run_state_findings(wis, root):
@@ -1818,6 +1874,10 @@ def main():
     # --strict promotes them.
     findings = ssot_findings(wis, root)
     findings.extend(("run-state", False, msg) for msg in run_state_findings(wis, root))
+    # Dead dependency (WI-267): an open WI hard-depends on a retired (terminal
+    # WON'T-BUILD) predecessor it can never see satisfied. WARN plain, ERROR under
+    # --strict — same warn-tier as R-E/run-state (no new branch in main).
+    findings.extend(("dead-dep", False, msg) for msg in dead_dependency_findings(wis))
     # Perceptual re-fire (WI-243) — a Verification=Critique SR whose latest CRITIQUE
     # evidence predates a dashboard render-surface change is judging an older render.
     # WARN at the commit bar; **fail-closed under --strict** (the G3 gate) per the
@@ -1850,9 +1910,14 @@ def main():
         return 1
 
     done = sum(1 for w in wis if w["status"] == "done")
+    # WI-267: `retired` (terminal WON'T-BUILD) rows are counted SEPARATELY, never
+    # folded into `done`; surfaced only when present so the line stays unchanged
+    # for the common no-retired registry.
+    retired = sum(1 for w in wis if w["status"] == "retired")
+    retired_note = ", {} retired".format(retired) if retired else ""
     print(
-        "check_trajectory: clean ({} work item(s), {} done ({}%), graph "
-        "acyclic).".format(len(wis), done, round(100 * done / len(wis)))
+        "check_trajectory: clean ({} work item(s), {} done ({}%){}, graph "
+        "acyclic).".format(len(wis), done, round(100 * done / len(wis)), retired_note)
     )
     return 0
 

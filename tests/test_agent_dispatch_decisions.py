@@ -216,10 +216,10 @@ def test_terminal_decision(attention, queued, unpublished, current, blocked, exp
     )
 
 
-def _wi(wid, safety="ordinary", preds=()):
+def _wi(wid, safety="ordinary", preds=(), status="queued"):
     return {
         "id": wid,
-        "status": "queued",
+        "status": status,
         "preds": list(preds),
         "soft": [],
         "srs": [],
@@ -285,6 +285,70 @@ def test_spine_batch_chunks_at_the_cap():
         ["WI-214"],
     ]
     assert all(car["sched_class"] == schedule.SCHED_SPINE_SERIAL for car in cars)
+
+
+def test_retired_wi_is_never_packed_into_a_traincar():
+    # WI-267: a `retired` (terminal WON'T-BUILD) row is never selected by the
+    # dispatcher — its schedule disposition is `retired`, not `ready`, so
+    # pack_traincars skips it while its live neighbours pack normally.
+    cars = _pack(
+        [
+            _wi("WI-201"),
+            _wi("WI-202", status="retired"),
+            _wi("WI-203"),
+        ]
+    )
+    packed = [wid for car in cars for wid in car["wis"]]
+    assert "WI-202" not in packed
+    assert set(packed) == {"WI-201", "WI-203"}
+
+
+def test_live_successor_of_retired_pred_is_never_packed():
+    # WI-267 decision 3: a retired predecessor does not satisfy the hard edge, so
+    # the live successor stays `waiting` and is never dispatched onto a car.
+    cars = _pack(
+        [
+            _wi("WI-201", status="retired"),
+            _wi("WI-202", preds=["WI-201"]),
+        ]
+    )
+    packed = [wid for car in cars for wid in car["wis"]]
+    assert packed == []
+
+
+def test_generate_status_counts_retired_separately(tmp_path, monkeypatch):
+    # WI-267: the integrator status snapshot counts `retired` apart from `done`
+    # and surfaces `· N retired` ONLY when >=1 retired row is present (the
+    # zero-retired line stays byte-identical to the pre-retired snapshot). git
+    # reads are monkeypatched, so this stays a value-level test (no repo/process).
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    status = docs / "status.md"
+    marker = "<!-- {} -->\n".format(dispatcher.STATUS_GENERATED_MARKER)
+    monkeypatch.setattr(dispatcher, "list_reservations", lambda root: set())
+
+    def rows(with_retired):
+        out = [
+            {"WI-ID": "WI-001", "Status": "queued"},
+            {"WI-ID": "WI-002", "Status": "done"},
+        ]
+        if with_retired:
+            out.append({"WI-ID": "WI-003", "Status": "retired"})
+        return out
+
+    # zero retired -> no `retired` token anywhere in the snapshot line
+    status.write_text(marker, encoding="utf-8")
+    monkeypatch.setattr(dispatcher, "registry_rows_at", lambda root, ref: rows(False))
+    assert dispatcher.generate_status(docs, tmp_path) is True
+    assert "retired" not in status.read_text(encoding="utf-8")
+
+    # one retired -> a distinct `1 retired` clause, and `done` stays 1 (not folded)
+    status.write_text(marker, encoding="utf-8")
+    monkeypatch.setattr(dispatcher, "registry_rows_at", lambda root, ref: rows(True))
+    assert dispatcher.generate_status(docs, tmp_path) is True
+    text = status.read_text(encoding="utf-8")
+    assert "1 retired" in text
+    assert "1 done" in text
 
 
 def test_spine_batch_never_packs_other_classes():
