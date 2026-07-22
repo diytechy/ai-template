@@ -824,16 +824,15 @@ def _critique_srs(docs):
     non-critique repo is never asked for a CRITIQUE verdict (WI-260 design 3:
     CRITIQUE is orthogonal to the reviewer dial and required only when present
     AND in scope)."""
-    out = set()
-    for r in _read_csv_rows(Path(docs) / "requirements" / "system-requirements.csv"):
-        sid = (r.get("SR-ID") or "").strip()
-        if (
-            sid
-            and not sid.endswith("-000")
-            and (r.get("Verification") or "").strip() == "Critique"
-        ):
-            out.add(sid)
-    return out
+    rows = _read_csv_rows(Path(docs) / "requirements" / "system-requirements.csv")
+    return {
+        sid
+        for r in rows
+        for sid in [(r.get("SR-ID") or "").strip()]
+        if sid
+        and not sid.endswith("-000")
+        and (r.get("Verification") or "").strip() == "Critique"
+    }
 
 
 def _train_scope_wis(root, tid, base, reviewed):
