@@ -11180,3 +11180,63 @@ skipped** (0 failed); full suite **1348 passed** on 3.9.6 with coverage 91.51%
 (`tests+coverage` gate green); ruff format/check clean; skill-sync S7 12/12;
 PROJECT_STATE.html + arch-map + status snapshot regenerated (`--check` green).
 SpecRef cleared (WI-262 → repo-review-2026-07-21.md; R-F green).
+
+## 2026-07-22 — WI-267 DONE (wave 6 — solo build + adversarial review): the terminal `retired` work-item Status + full consumer audit; NO spine change
+
+The last repo-review-2026-07-21 backlog item (L-34): add a sixth, terminal
+work-item `Status` — **`retired`**, a won't-build row that stays in the registry
+forever with its reason in `Deliverable`, deliberately NOT an overload of `done`.
+Vocabulary is now `queued | active | done | deferred | blocked | retired`.
+
+**Deliverable** (commit baed915 — 12 files): a new `TERMINAL_STATUSES =
+("done","retired")` in `check_trajectory.py` (mirrored inline in `schedule.py`
+and `agent_common.py` to keep each foundational script self-contained).
+**Four design decisions, resolved in the build:** (1) *terminal, not open* —
+`retired` joins `KNOWN_STATUSES` but not `OPEN_STATUSES`/`BACKLOG_STALE_STATUSES`
+or the schedule ready-frontier; (2) *R-A/R-F* — a well-formed retired row has a
+non-empty `Deliverable` (the reason, enforced by R-A) and an **empty** `SpecRef`
+(enforced by R-F on terminal rows); R-E stays open-only (retired exempt); (3)
+*DAG* — a retired predecessor does **not** satisfy a hard dependency the way
+`done` does; a live successor stays `waiting` and is surfaced by a new
+`dead_dependency_findings` (`dead-dep`; warn plain, ERROR `--strict`) rather than
+running on a will-never-happen edge; (4) *counts/dashboard* — a separate bucket
+(stone `#78716c` fill, `⊗` glyph, legend, `--retired` CSS var, hero clause),
+counted separately, never folded into `done`. **Consumer audit** across
+`check_trajectory`, `schedule`, `agent_dispatch`, `gen_trajectory`, plus the
+`agent_common.preflight` worker guard the review surfaced; `derive_gate` and
+`agent_loop` confirmed genuinely unaffected (they never branch on work-item
+Status). Templates/vocab: `work-items.template.csv` + `PROCESS_OPTIONS.md`.
+
+**Verdict (adversarial opus REVIEW-A, driven): APPROVE f=2 → both fixed →
+integrated.** The reviewer built retired-row fixtures and drove the real
+`schedule`/`check_trajectory`/`agent_dispatch`/`gen_trajectory` across every
+worst class — missed-consumer grep, dependency fail-open (retired-pred vs
+done-pred, both directions), R-A/R-E/R-F, dashboard 0-and-N (byte-stable),
+counts-reconcile, forward-only (retired treated like `deferred`, not `done` —
+judged defensible), and a 12/14 bite check. It caught one **missed consumer**
+(MAJOR-by-class, narrow race): `agent_common.preflight`'s worker stale-assignment
+guard checked `== "done"` only, so a WI retired mid-assignment would still be
+built — **fixed** (broadened to `TERMINAL_STATUSES`, new biting test); plus a
+missing `generate_status` retired-count test — **added**.
+
+**Deviations from spec:** the **owner-reserved triage** — the five archive-anchored
+deferred rows WI-060/061/062/063/082 (re-spec vs retire) — was left to the owner:
+those rows **remain `deferred`, untouched** (their per-row disposition is a
+project-intent call the ruling reserved for WI build time). The vocabulary +
+audit are fully built and tested; the triage is filed as an owed owner call.
+
+**Byte deltas:** `PROCESS_OPTIONS.md` **160,655 → 161,007 (+352)** — the lifecycle
+sentence, the `Status ∈ {…,retired}` set + its meaning, and the R-A/R-F
+terminal-row rule text (a flagged, correctness-required growth); the
+byte-budget-guard watched baseline was **re-stamped** across the neutral source +
+both materialized agent copies (skill-sync S7 12/12). `AGENTS.template.md` (9,975)
+and `PROCESS.md` (60,420) unchanged.
+
+**Verified:** integrated smoke on the cherry-picked tree (see the wave-6 gate
+below); full suite + `check.py --gate G3` at task close; ruff format/check clean;
+`check_trajectory` on the live 265-WI registry byte-identical findings HEAD~1↔HEAD
+(0 retired rows ⇒ vacuous); PROJECT_STATE.html + arch-map + status snapshot
+regenerated (`--check` green). SpecRef cleared (WI-267 →
+repo-review-2026-07-21.md; R-F green). A pre-existing docstring nit surfaced (the
+`check_trajectory` module docstring says "two rules" then lists three) — filed as
+a follow-up, not fixed inline.

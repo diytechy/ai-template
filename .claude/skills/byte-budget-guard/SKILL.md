@@ -23,7 +23,7 @@ here. Check before you edit and again before you commit.
 |---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000 bytes** (≥2k headroom under Gemini's ~12k cap) | `tests/test_bootstrap.py::test_agents_template_stays_within_size_budget` |
 | `project-trajectory/PROCESS.md` | **watched** (baseline **60,420** as of 2026-07-21/repo-review fix pass (+251: M-39 gate-method bullets, the L-40 coverage-threshold home, the L-38 link-location note); keep flat — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report |
-| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **160,655** as of 2026-07-21/repo-review fix pass (+868: the H-7 contradiction rewrites, the M-38 R-D restoration note, honest attribution for the unshipped parallel-dispatch note, the L-38 link-location note); growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
+| `project-trajectory/PROCESS_OPTIONS.md` | **watched** (baseline **161,007** as of 2026-07-22/WI-267 (+352: the terminal `retired` work-item Status — the lifecycle sentence, the `Status ∈ {…,retired}` set + its one-line meaning, and the R-A/R-F terminal-row rule text); growth is allowed but must be *flagged* with a delta + reason — re-stamp this number, every tracked skill copy, when a flagged growth lands) | convention + the WI log's byte-delta report + the doc's own *Applies-when index* note |
 
 `ADOPTING.md` and `EXAMPLE.md` are the unbudgeted **expansion homes**:
 push detail there instead of growing `PROCESS.md` / `AGENTS.template.md`.
