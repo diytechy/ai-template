@@ -521,7 +521,9 @@ def test_gate_extra_critique_approve_never_covers_a_missing_reviewer(tmp_path):
     # by NAME, so an extra approval never substitutes -> pages, ref frozen.
     repo, wt, base = _setup_gate(tmp_path)
     reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
-    _plant_verdicts(wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "CRITIQUE", "APPROVE")])
+    _plant_verdicts(
+        wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "CRITIQUE", "APPROVE")]
+    )
     _, (state, detail) = _integrate(repo, base, (True, 2))
     assert state == "needs-human" and "REVIEW-B" in detail
     assert _git(repo, "rev-parse", "refs/heads/llm/integration") == base
@@ -547,7 +549,9 @@ def test_gate_scripts_train_integrates_without_a_critique(tmp_path):
     # unscheduled CRITIQUE (design 1, the scripts-train direction).
     repo, wt, base = _setup_gate(tmp_path)
     reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
-    _plant_verdicts(wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "REVIEW-B", "APPROVE")])
+    _plant_verdicts(
+        wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "REVIEW-B", "APPROVE")]
+    )
     _, (state, detail) = _integrate(repo, base, (True, 2))
     assert state == "integrated", detail
     assert _git(repo, "rev-parse", "refs/heads/llm/integration") != base
@@ -560,7 +564,9 @@ def test_gate_render_train_cannot_integrate_critique_less(tmp_path):
     # (WI-243) -> pages, ref frozen (the render-train direction of design 1).
     repo, wt, base = _setup_gate(tmp_path, srrefs="SR-050", render=True)
     reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
-    _plant_verdicts(wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "REVIEW-B", "APPROVE")])
+    _plant_verdicts(
+        wt, reviewed, [(1, "REVIEW-A", "APPROVE"), (1, "REVIEW-B", "APPROVE")]
+    )
     _, (state, detail) = _integrate(repo, base, (True, 2))
     assert state == "needs-human" and "CRITIQUE" in detail
     assert _git(repo, "rev-parse", "refs/heads/llm/integration") == base

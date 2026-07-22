@@ -2809,9 +2809,7 @@ def _integrate_one_ready(root, docs, journal, tid, wis, base, review_ctx):
             "integration-conflict-held", train=tid, detail=_failure_tail(detail)
         )
         return "needs-re-review", detail
-    result, detail = integrate_train(
-        root, docs, journal, tid, wis, base, review_ctx
-    )
+    result, detail = integrate_train(root, docs, journal, tid, wis, base, review_ctx)
     if result not in ("needs-re-review", "recompose"):
         clear_conflict(root, tid)
     if result == "integrated":

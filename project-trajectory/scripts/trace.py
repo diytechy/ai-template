@@ -1705,8 +1705,7 @@ def render_report(reg, findings, args, forest):
             f"| Orphans | {len(orphans)} |",
             f"| Integrity findings | {len(integrity)} |",
             f"| Verified SRs — mechanized (Test) | {len(mechanized_verified)} |",
-            f"| Verified SRs — demonstrated/observed | "
-            f"{len(demonstrated_verified)} |",
+            f"| Verified SRs — demonstrated/observed | {len(demonstrated_verified)} |",
             f"| Verified SRs — attested (human, §4) | {len(attested_verified)} |",
         ]
         + (

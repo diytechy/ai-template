@@ -176,9 +176,7 @@ def _repair_critique(coverage_fails, plan_name):
     `coverage_fails`, which carries the rival's lines. The full coverage report
     (per-plan sets + the pairwise diff) rides only the CRITIQUE/ARBITER briefs,
     whose templates alone declare a {{COVERAGE_REPORT}} slot."""
-    own_fails = "\n".join(
-        ln for ln in coverage_fails.splitlines() if plan_name in ln
-    )
+    own_fails = "\n".join(ln for ln in coverage_fails.splitlines() if plan_name in ln)
     body = own_fails or (
         "(no coverage FAIL line names your plan) — repair only your own failing "
         "clauses; do not add coverage the pre-pass did not flag."

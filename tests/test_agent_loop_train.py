@@ -410,10 +410,11 @@ def test_render_surface_spans_the_whole_traincar_scope(tmp_path):
     )
     docs = repo / "docs"
     assert dispatcher._train_is_render_surface(docs, ["WI-201", "WI-202"]) is True
-    assert (
-        dispatcher._required_phases(docs, ["WI-201", "WI-202"], (True, 2))
-        == {"REVIEW-A", "REVIEW-B", "CRITIQUE"}
-    )
+    assert dispatcher._required_phases(docs, ["WI-201", "WI-202"], (True, 2)) == {
+        "REVIEW-A",
+        "REVIEW-B",
+        "CRITIQUE",
+    }
     # The same car without the render constituent stays a scripts car.
     assert dispatcher._train_is_render_surface(docs, ["WI-201"]) is False
     assert dispatcher._required_phases(docs, ["WI-201"], (True, 2)) == {

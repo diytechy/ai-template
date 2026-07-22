@@ -2063,14 +2063,18 @@ def test_detour_bounds_the_candidate_set_and_second_pass(monkeypatch):
     # enough in y to block every one). The router must evaluate exactly ONE capped
     # pass — _MAX_LANES trials — not the 1000 the two uncapped passes would have.
     calls[0] = 0
-    monkeypatch.setattr(gt, "_lane_candidates", lambda *a, **k: [float(i) for i in range(500)])
+    monkeypatch.setattr(
+        gt, "_lane_candidates", lambda *a, **k: [float(i) for i in range(500)]
+    )
     dense = {
         "S": (0.0, 300.0, 100.0, 40.0),
         "T": (500.0, 300.0, 100.0, 40.0),
         "B": (250.0, 0.0, 100.0, 520.0),  # spans y[0,520] -> no lane in 0..499 clears
     }
     gt._route_edges([("S->T", 100.0, 320.0, 500.0, 320.0, "S", "T")], dense, 12, 2)
-    assert calls[0] == gt._MAX_LANES  # capped to one pass; the redundant second pass is skipped
+    assert (
+        calls[0] == gt._MAX_LANES
+    )  # capped to one pass; the redundant second pass is skipped
 
 
 def _wire_through_box_violations(markup):
