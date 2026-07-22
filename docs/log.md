@@ -11035,3 +11035,60 @@ green on all three). SpecRefs cleared (WI-258 → 080-CRITIQUE; WI-263 →
 repo-review-2026-07-21.md; R-F green). The render surface changed again (WI-258)
 — a fresh consolidated perceptual critique is owed before the next green G3 and
 is scheduled at task close (with WI-257's router change).
+
+## 2026-07-22 — WI-264/266 DONE (wave 3 — parallel build + per-WI adversarial review): win-stay next_primary routing, status-map freshness-gate purity; NO spine change
+
+Two more repo-review-2026-07-21 backlog WIs, built in parallel (worktrees off the
+wave-2 close `fd5916b`, disjoint file sets), each gated by an independent opus
+adversarial review before cherry-pick.
+
+**Deliverables.**
+- **WI-264** (`agent_route.py` + `agent_loop.py`, commit fc0f447): the win-stay
+  `next_primary` output of `escalate` — previously computed but DORMANT (M-34) —
+  is now consumed in the live review draw. `apply_decision` stores it;
+  `route_session` resolves it via a new `agent_route.winstay_preferred_ids()` and
+  places it FIRST in `select()`'s `preferred_ids`. Precedence: on a WIN
+  (margin ≥ threshold) the winner is pinned ahead of the WI-263 weighted baseline
+  (`select`'s pin-wins-over-weights); on a LOSS/None it resolves to `()` and the
+  weighted draw is untouched (lose-shift). Two-layer FAIL-OPEN (the 2026-07-21
+  author-identity liveness lesson): an invalid / disabled / off-tier / non-string
+  `next_primary` degrades to the ordinary weighted draw and can never wedge a
+  session. Gated to review draws.
+- **WI-266** (`gen_trajectory.py` + `OPEN_ITEMS.template.md`, commit 1282f52):
+  the status-map freshness gate (`--status --check` on `docs/open-items.md`) is
+  now a PURE function of the committed tree (M-10). `pending_block` is split into
+  a committed-tree-pure gated region (blocked WI rows + run-state ask) and a
+  machine-local advisory region (the `refs/llm/*`-derived source conflicts,
+  reservations, quarantines, stranded-train attestations that don't transport
+  with clone/push), separated by an always-present labeled boundary. A single
+  `_mask_machine_local()` — anchored WITHIN `PENDING_BEGIN..PENDING_END` — drops
+  the machine-local lines from the byte-compare on every machine, and both the
+  pre-commit gate and the post-integration re-run call it (no split-brain).
+
+**Verdicts (adversarial opus REVIEW-A per WI, driven):** WI-264 **APPROVE f=0**
+(drove 14+ invalid `next_primary` values — None/blank/unknown/disabled/cooling/
+off-tier/non-string — every one degraded to the weighted draw with no wedge,
+raise, or empty pool; STAY overrides a weight-8 opponent, SHIFT is byte-identical
+to the baseline, the pin clears each round, scope is review-only, WI-263
+convergence unaffected; bite-proven on the live path). WI-266 **APPROVE f=1** —
+the reviewer drove a false-boundary gate fail-open (a stray label line above the
+markers could drop the pure region from the compare); **fixed** by anchoring the
+label search inside the markers, with a new biting test, before integration.
+
+**Deviations from spec:** WI-266 committed with `--no-verify` (its generator
+change stales `docs/open-items.md`, orchestrator-regenerated at close) —
+independently re-verified benign (3 files, no generated docs, `--status --check`
+rc 0 after regen). WI-266 also updated the shipped `OPEN_ITEMS.template.md`
+placeholder (one file beyond its stated scope) — a test-enforced consequence
+(`test_template_placeholder_matches_empty_projection` pins it to the generator's
+empty projection), not scope creep. Bookkeeping orchestrator-owned as before.
+
+**Byte deltas:** none on budgeted files.
+
+**Verified:** integrated smoke on the cherry-picked tree **1060 passed, 2
+skipped** (0 failed); ruff format/check clean repo-wide; PROJECT_STATE.html +
+open-items.md + status snapshot + arch-map regenerated (`--check` green on all).
+SpecRefs cleared (both → repo-review-2026-07-21.md; R-F green). Downstream note
+for WI-266: adopters who seeded `docs/open-items.md` from the old template get
+one STALE nudge — `gen_trajectory.py --status` regenerates the labeled block
+(hand-authored briefs untouched); to be folded into ADOPTING/resync at close.
