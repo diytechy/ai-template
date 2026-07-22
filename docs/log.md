@@ -11283,3 +11283,64 @@ archive-anchored deferred rows WI-060/061/062/063/082 (re-spec vs the now-availa
 prose still saying "attested-vs-mechanized"; the `check_trajectory` "two rules"
 docstring count). **Merge-to-`main` for `dualplan-routing-fix` remains a
 deliberate owner decision (push-policy: human) — nothing was pushed.**
+
+## 2026-07-22 — WI-268: the `--dual-plan` flag path honors `autonomous` (pause-free STALL); SR-108 widened
+
+**Session type:** build (`unattended`, strong; spec
+[specs/WI-268.md](specs/WI-268.md)). Filed from the `dualplan-routing-fix`
+investigation (owner question: "the last run paused for human input despite
+`gate-policy: autonomous`").
+
+**The gap.** `gate-policy: autonomous` is honored by the **dispatcher** dual-plan
+PAGE path (SR-108 / LLR-096 / TC-098 → `agent_dispatch.dual_plan_disposition`):
+a position-unstable round journals, quarantines, and routes on to disjoint work,
+reaching the pause-free attention end state (`_terminal_decision` → run-state
+`RUNNING` + `EXIT_STALL`). The single-shot `agent_loop --dual-plan <WI>` early
+path (`agent_loop.main`, WI-199) did **not**: it printed
+`gate-policy autonomous -> design-check-session` and then returned
+`EXIT_NEEDS_HUMAN` **unconditionally** (writing the NEEDS-HUMAN run-state only
+under `attended`). So a round reached through the flag hard-gated a human even
+under autonomous, while the same round through the dispatcher did not — the
+source of the observed "paused despite autonomous" surprise. Root cause on the
+spine: SR-108 scoped the PAGE→gate-policy mapping to "**the dispatcher**," so no
+active requirement covered the flag path.
+
+**What shipped.**
+- **Code** (`agent_loop.main`, the `--dual-plan` PAGE branch): branch on
+  `plan_round.page_action(gate_policy)`. `stop-needs-human` (attended) keeps the
+  NEEDS-HUMAN run-state + stop banner + `EXIT_NEEDS_HUMAN`; any other action
+  (autonomous / single-ratify) writes run-state `RUNNING` + an attention banner
+  and returns `EXIT_STALL` — the dispatcher's attention-only end state. No
+  design-check session is spawned (neither entry does; the non-`stop-needs-human`
+  `page_action` strings are intent labels — recorded as a Residual).
+- **Spine amendment (widen, not mint; re-verified in this reviewed change):**
+  SR-108 Requirement + AC generalized to cover **both** dual-plan PAGE
+  dispositions; LLR-096 `Module`/`CodeSymbol`/`Detail` widened to add
+  `agent_loop.py` / `main` (the LLR-095 multi-site precedent); TC-098
+  `Expected` + `Evidence` extended with the flag-path attended/autonomous split.
+  Spine counts unchanged (SN=25 SR=109 LLR=97 TC=100, 0 orphans, 0 integrity).
+
+**Tests.** New regression
+`tests/test_agent_loop_dualplan.py::test_arbiter_disagreement_autonomous_stalls_not_pages`
+(proves EXIT_STALL + RUNNING, never NEEDS-HUMAN, under autonomous); the attended
+flag test (`test_arbiter_disagreement_pages`) and the dispatcher pause-free
+invariant (`test_dispatcher_dual_page_autonomous_continues_pause_free`) stay
+green. `main()` cyclomatic unchanged (no new branch — a relocated return).
+
+**Gate.** Full suite **1366 passed, 1 skipped** (coverage **91.53%** ≥ 85);
+`check.py --gate G3` all steps green (OKF + dashboard regenerated for the spine
+edit — order matters: regenerate the dashboard **after** the OKF). `trace.py
+--strict` + `check_trajectory --strict` clean (the lone WARN is the WI-205
+same-session SR-amend staleness note, which clears once WI-268 and SR-108 land in
+one commit).
+
+**Deviations from spec:** none scope-expanding.
+**Byte deltas on budgeted files:** none (AGENTS.template.md / PROCESS.md /
+PROCESS_OPTIONS.md untouched).
+
+**Status:** WI-268 **`active`** — implementation + spine landed; an independent
+fresh-context **adversarial review** is owed before close (owner-requested; the
+`review-policy: 1` leg). **Residual filed:** a real design-check tiebreaker for
+autonomous dual-plan disagreement (both entries + PROCESS_OPTIONS "Failure
+semantics") — deferred; the pause-free attention end state is the honest behavior
+until it lands. Merge-to-`main` stays owner (push-policy: human) — nothing pushed.

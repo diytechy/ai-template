@@ -241,6 +241,27 @@ def test_arbiter_disagreement_pages(tmp_path):
     )
 
 
+def test_arbiter_disagreement_autonomous_stalls_not_pages(tmp_path):
+    # The same position-unstable PAGE under gate-policy autonomous must NOT
+    # hard-gate a human: the single-shot flag reaches the dispatcher's
+    # pause-free end state — EXIT_STALL, run-state RUNNING (attention), never
+    # NEEDS-HUMAN. (The dispatcher half is test_dispatcher_dual_page_autonomous_
+    # continues_pause_free; this covers the --dual-plan flag early path.)
+    root, fake = make_fixture(tmp_path)
+    (root / "docs" / "gate-policy").write_text("autonomous\n", encoding="utf-8")
+    fake.write_text(
+        FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
+        encoding="utf-8",
+    )
+    proc = run_dualplan(root, fake)
+    assert proc.returncode == 4, proc.stdout + proc.stderr  # EXIT_STALL: attention
+    assert "position-unstable" in proc.stderr
+    assert "design-check-session" in proc.stderr  # the autonomous page action
+    state = (root / "docs" / "run-state").read_text(encoding="utf-8")
+    assert state.startswith("RUNNING"), state
+    assert "NEEDS-HUMAN" not in state
+
+
 def test_missing_rubric_pages_honestly(tmp_path):
     root, fake = make_fixture(tmp_path)
     (root / "docs" / "rubrics" / "plan-decomposition.md").unlink()

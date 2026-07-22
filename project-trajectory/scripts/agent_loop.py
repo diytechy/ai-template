@@ -2867,7 +2867,23 @@ def main():
         if action == "stop-needs-human":
             _write_runstate(docs, "NEEDS-HUMAN", "dual-plan round: " + detail)
             stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
-        return EXIT_NEEDS_HUMAN
+            return EXIT_NEEDS_HUMAN
+        # autonomous / single-ratify: honor the pause-free invariant (WI-204,
+        # WI-209). A single-shot round has no sibling work to route onto the way
+        # the dispatcher does, so it lands on the same end state the dispatcher's
+        # dual-paged route-on reaches for an attention-only frontier: run-state
+        # RUNNING + EXIT_STALL (agent_dispatch._terminal_decision), never a
+        # NEEDS-HUMAN gate. The PAGE evidence is on disk under docs/plans/DP-*;
+        # relaunching re-runs the round. (page_action's non-stop-needs-human
+        # strings are intent labels; the realized behavior matches the
+        # dispatcher's page-action else arm.)
+        _write_runstate(docs, "RUNNING")
+        stop_banner(
+            docs / "status.md",
+            "dual-plan round paged — attention (autonomous: no human gate)",
+            detail,
+        )
+        return EXIT_STALL
 
     print_run_banner(
         root,
