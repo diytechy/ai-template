@@ -1283,10 +1283,15 @@ DRILL_STYLE = (
     ".drill .block[data-descend]{cursor:pointer;}"
     ".drill .block[data-descend] rect{stroke-width:1.5;}"
     ".drill .block:focus{outline:none;}"
-    ".drill .block:focus rect{stroke:#b45309;stroke-width:2.5;}"
+    # 080-CRITIQUE #5 (WI-258): the focus/highlight ring paints the --accent hue, NOT
+    # the status-orange #b45309 it used to — that value is byte-identical to --active
+    # ("active — you are here"), so a focused-but-not-active block misread as active.
+    # --accent is the dashboard's focus language (cf. `.view:focus-visible`) and a
+    # clearly different hue from active in BOTH themes; stroke-width 2.5 keeps it visible.
+    ".drill .block:focus rect{stroke:var(--accent);stroke-width:2.5;}"
     # SR-056: the hover/focus highlight persists on the last-hovered block until
     # another takes it (the shared .hl idiom — cf. the icicle/DAG/knowledge views).
-    ".drill .block.hl rect{stroke:#b45309;stroke-width:2.5;}"
+    ".drill .block.hl rect{stroke:var(--accent);stroke-width:2.5;}"
     ".drill .block .blab{font-size:var(--nlabel);font-weight:700;}"
     ".drill .block .bsub{font-size:var(--nsub);}"
     ".drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;}"
@@ -2122,6 +2127,16 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
      view out of the `.layout` grid's 1fr column. The `max-width:760px` rule below
      stays as the no-JS fallback. */
   .scrollcue.cued { display:block; }
+  /* WI-258 (080-CRITIQUE #3): the `.scrollcue` caption sits ABOVE the card, so the
+     point of truncation itself stayed unmarked — a clipped column header was
+     invisible until the reader scrolled. When a container ACTUALLY overflows to the
+     right, the JS toggles `.clipr` from the SAME scrollWidth>clientWidth measure that
+     drives `.cued` (and clears it once scrolled to the end), fading the card's right
+     (clip) edge so the cut is discoverable where it happens. Alpha-only mask keeps it
+     theme-agnostic (light + dark) and obscures nothing once the end is reached. */
+  .view.clipr, .tablescroll.clipr {
+     -webkit-mask-image: linear-gradient(to left, transparent, #000 2.2rem);
+             mask-image: linear-gradient(to left, transparent, #000 2.2rem); }
   #ice .cell rect { stroke:rgba(255,255,255,.35); stroke-width:.5; cursor:pointer;
         transition:opacity .1s ease; }
   #ice .cell text { fill:#fff; font-size:var(--nlabel); pointer-events:none; }
@@ -2347,9 +2362,13 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     const scrollBoxes = [...document.querySelectorAll('.view, .tablescroll')];
     function syncScrollCues(){
       for(const el of scrollBoxes){
+        const over = el.scrollWidth > el.clientWidth + 1;
         let cue = el.previousElementSibling;
         while(cue && !cue.classList.contains('scrollcue')) cue = cue.previousElementSibling;
-        if(cue) cue.classList.toggle('cued', el.scrollWidth > el.clientWidth + 1);
+        if(cue) cue.classList.toggle('cued', over);
+        // WI-258: fade the right (clip) edge while content is cut there — same
+        // actual-overflow signal as `.cued`, cleared once scrolled to the end.
+        el.classList.toggle('clipr', over && el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
       }
     }
     window.__syncCues = syncScrollCues;
@@ -2358,6 +2377,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
       for(const el of scrollBoxes) ro.observe(el);
     }
     window.addEventListener('resize', syncScrollCues);
+    for(const el of scrollBoxes) el.addEventListener('scroll', syncScrollCues);
     syncScrollCues();
 
     for (const b of document.querySelectorAll('nav.tabs button'))

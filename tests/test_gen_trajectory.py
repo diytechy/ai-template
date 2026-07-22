@@ -150,6 +150,71 @@ def test_wide_views_carry_horizontal_scroll_affordance(tmp_path):
     assert ".view:focus-visible" in text
 
 
+def test_clip_edge_marker_is_gated_on_actual_overflow(tmp_path):
+    """080-CRITIQUE #3 (WI-258): the scroll cue is a caption ABOVE the card, so the
+    clip edge itself went unmarked — a clipped header stayed invisible until the
+    reader scrolled. A `.clipr` right-edge fade now marks the point of cut, driven by
+    the SAME actual-overflow measure as `.cued` (scrollWidth vs clientWidth) and
+    cleared at the right end — present for an overflowing card, absent for a fitting
+    one, and never unconditional on the card itself."""
+    make_repo(tmp_path)
+    # exercise the table scroller (.tablescroll) too, not just the SVG cards
+    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    # the edge marker is a right-edge fade gated on the `.clipr` class, on both the
+    # SVG cards and the table scrollers
+    assert ".view.clipr" in text and ".tablescroll.clipr" in text
+    assert "mask-image: linear-gradient(to left" in text
+    # it is CONDITIONAL — the base card rule never masks, so a fitting card shows none
+    base_view = re.search(r"\.view \{[^}]*\}", text).group(0)
+    assert "mask-image" not in base_view
+    # the class is toggled from the SAME actual-overflow signal `.cued` uses, so it is
+    # present only when the card overflows (and cleared once scrolled to the end)
+    m = re.search(r"classList\.toggle\('clipr',([^;]+);", text)
+    assert m, "no .clipr toggle emitted"
+    assert "scrollWidth" in m.group(1) and "clientWidth" in m.group(1)
+    # the fade tracks scroll position so it clears at the true right end, not forever
+    assert "addEventListener('scroll'" in text
+
+
+def test_drill_focus_ring_is_distinct_from_the_active_accent(tmp_path):
+    """080-CRITIQUE #5 (WI-258): the drill keyboard-focus ring used #b45309 — byte-
+    identical to the `active — you are here` status accent (--active) — so a focused-
+    but-not-active block misread as active. The focus + persistent-highlight ring must
+    paint a colour clearly distinct from the active accent in BOTH themes."""
+    gt = load_script("gen_trajectory")
+    active = gt.STATUS_FILL[
+        "active"
+    ]  # #b45309 — the value --active / the legend paints
+    assert active == "#b45309"
+    # the drill focus + last-highlight strokes no longer paint the active hue
+    strokes = re.findall(
+        r"\.drill \.block(?::focus rect|\.hl rect)\{stroke:([^;]+);", gt.DRILL_STYLE
+    )
+    assert len(strokes) == 2, strokes
+    for stroke in strokes:
+        assert stroke != active, stroke
+        assert stroke == "var(--accent)", stroke
+    # resolve --accent (light :root + dark media) and --active from the emitted CSS,
+    # and confirm the focus hue is clearly distinct from active in BOTH themes
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    css = html_of(tmp_path)
+    active_tok = re.search(r"--active:(#[0-9a-f]{6})", css).group(1)
+    accents = re.findall(r"--accent:(#[0-9a-f]{6})", css)
+    assert active_tok == active
+    assert len(accents) == 2, accents  # one per theme: light :root + dark media
+    for accent in accents:
+        assert accent != active_tok
+        # a different hue, not a near-shade of the same orange (sum of channel deltas)
+        d = sum(
+            abs(int(accent[i : i + 2], 16) - int(active_tok[i : i + 2], 16))
+            for i in (1, 3, 5)
+        )
+        assert d > 150, (accent, active_tok, d)
+
+
 def test_generation_is_deterministic(tmp_path):
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
