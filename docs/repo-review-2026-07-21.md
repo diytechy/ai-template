@@ -95,7 +95,14 @@ one improvement (ratify_lines 28→27).
   ratification — ruled ratify 2026-07-21, Proposed → Stable), L-34
   (archive-anchored WI specs — ruled retired-status 2026-07-21, now WI-267),
   git author-identity
-  standardization** — owner decisions.
+  standardization** — owner decisions. **Author-identity resolved 2026-07-21:
+  canonical identity `diytechy <78943505+diytechy@users.noreply.github.com>`
+  set repo-local; NO enforcement added. A blocking preflight identity check
+  was considered and REJECTED — it would have failed all ~24 prior
+  agent-resume commits (author `/ <outlook>`, a valid-email/malformed-name
+  identity git accepted), converting green unattended commits into human
+  pages. The kit never sets identity (loop `git commit` inherits ambient
+  config/env); consistency now rides the repo-local config, fail-open.**
 - **One deliberate WARN left standing:** `check_trajectory` now reports
   "WI-257 cites SR-052 amended after the WI row was last touched" — the
   amendment gate reacting to the M-35 citation sweep. The change is
