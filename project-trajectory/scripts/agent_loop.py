@@ -43,11 +43,13 @@ During worker/review sessions and dispatcher coordination this module:
   - honors docs/pause: a graceful-pause request (the file present) stops the
     dispatcher at the next session boundary — the in-flight assignment finishes
     and commits normally, never a mid-session kill; deleting the file resumes;
-  - honors docs/blackout: a declared `HH:MM-HH:MM` UTC weekday window inside
-    which no new session starts — the in-flight one wraps normally, then the
-    loop waits the window out and resumes automatically (a single launch
-    survives the blackout). Absent/empty/malformed or start==end = disabled;
-    the scaffold ships a 12:00–19:00 default;
+  - honors docs/blackout: a declared `HH:MM-HH:MM` UTC WEEKDAY-ONLY window
+    (Mon–Fri; weekends are never blacked out, by blackout_wake's contract)
+    inside which no new session starts — the in-flight one wraps normally, then
+    the agent-resume -> agent_loop path waits the window out and resumes
+    automatically (a single launch survives the blackout), printing a banner and
+    a periodic countdown so the wait reads as deliberate, not hung. Absent/empty/
+    malformed or start==end = disabled; the scaffold ships a 12:00–19:00 default;
   - counts a no-commit worker session toward the stall guard (git HEAD unmoved) —
     except limit-hit sessions (below), which never count as a stall. A session
     that errored *before it could work* (the CLI reported is_error, or it could
@@ -211,6 +213,7 @@ read_declared = agent_common.read_declared
 pause_reason = agent_common.pause_reason
 parse_blackout = agent_common.parse_blackout
 blackout_wake = agent_common.blackout_wake
+blackout_wait = agent_common.blackout_wait
 WI_TOKEN_RE = agent_common.WI_TOKEN_RE
 TRAIN_BRANCH_PREFIX = agent_common.TRAIN_BRANCH_PREFIX
 sanitize_train = agent_common.sanitize_train
@@ -2302,18 +2305,14 @@ def run_iteration(ctx, i):
     # (we sleep inline, never `continue`), so a single walk-away launch
     # survives the blackout and resumes automatically. Absent/disabled file
     # => a no-op (byte-identical to today).
-    wake = blackout_wake(
-        read_declared(lane / "blackout", ""), datetime.datetime.utcnow()
-    )
+    blackout_line = read_declared(lane / "blackout", "")
+    wake = blackout_wake(blackout_line, datetime.datetime.utcnow())
     if wake:
         resume_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=wake)
-        print(
-            "agent_loop: inside the docs/blackout window — starting no new "
-            "session until {} UTC (~{}s); waiting.".format(
-                resume_at.strftime("%H:%M"), wake
-            )
-        )
-        time.sleep(wake)
+        # WI-261: a prominent banner + a periodic countdown heartbeat (vs the old
+        # one-liner) so a walk-away launch reads as deliberately WAITING, not
+        # hung. Same wait semantics — total sleep is exactly `wake` seconds.
+        blackout_wait(wake, blackout_line, resume_at, emit=print, sleep=time.sleep)
     # (The WI-209 serial dual-plan quiet-park guard retired with the serial
     # driver, WI-210: the dispatcher auto-runs a dual row's round, so the
     # page-instead-of-idle duty has no second path left to cover.)

@@ -193,6 +193,83 @@ def blackout_wake(line, now):
     return int((wake - now).total_seconds())
 
 
+# --- WI-261: blackout pause feedback (banner + countdown heartbeat) --------------
+# The window SEMANTICS live in blackout_wake above; these render the WAIT so a
+# walk-away launch reads as deliberately paused, not hung. All three are pure /
+# injectable so the terminal feedback is testable without a real multi-second
+# sleep. The scaffold's default cadence between countdown heartbeats (seconds).
+BLACKOUT_HEARTBEAT_SEC = 300
+
+
+def _fmt_hms(seconds):
+    """Whole seconds as a compact `Hh Mm Ss`, dropping leading zero units but
+    always keeping seconds: 25200 -> '7h 0m 0s', 90 -> '1m 30s', 45 -> '45s'."""
+    seconds = int(seconds)
+    hours, rem = divmod(seconds, 3600)
+    minutes, secs = divmod(rem, 60)
+    if hours:
+        return "{}h {}m {}s".format(hours, minutes, secs)
+    if minutes:
+        return "{}m {}s".format(minutes, secs)
+    return "{}s".format(secs)
+
+
+def blackout_banner(window, resume_at, wake_seconds, policy_file="docs/blackout"):
+    """The multi-line terminal banner shown when the coordinator holds a NEW
+    session for the declared blackout window (WI-261). Pure: names the policy
+    file, the raw `HH:MM-HH:MM` UTC `window`, its weekday-only scope, the resume
+    time (`resume_at`, a naive UTC datetime), and how long the wait is
+    (`wake_seconds`), so an unattended launch reads as deliberately WAITING, not
+    hung. Returns the banner as one string (no trailing newline)."""
+    bar = "=" * 70
+    return "\n".join(
+        [
+            bar,
+            "agent_loop: BLACKOUT — holding; no new session starts yet.",
+            "  policy file : {}".format(policy_file),
+            "  window      : {} UTC  (weekday-only, Mon–Fri; weekends run)".format(
+                (window or "").strip()
+            ),
+            "  resuming at : {} UTC  (in ~{})".format(
+                resume_at.strftime("%H:%M"), _fmt_hms(wake_seconds)
+            ),
+            "  honored by  : the agent-resume -> agent_loop path (waits in place)",
+            "The loop is WAITING, not hung; it resumes automatically.",
+            bar,
+        ]
+    )
+
+
+def blackout_countdown_line(remaining_seconds, resume_at):
+    """One countdown-heartbeat line emitted every BLACKOUT_HEARTBEAT_SEC while
+    waiting out a blackout, so an unattended launch visibly ticks down rather
+    than looking hung (WI-261). Pure: names the remaining wait and the UTC resume
+    time (`resume_at`, a naive UTC datetime)."""
+    return "agent_loop: blackout — ~{} remaining, resuming {} UTC.".format(
+        _fmt_hms(remaining_seconds), resume_at.strftime("%H:%M")
+    )
+
+
+def blackout_wait(
+    wake_seconds, window, resume_at, emit, sleep, interval=BLACKOUT_HEARTBEAT_SEC
+):
+    """Emit the blackout banner, then wait `wake_seconds` in `interval`-second
+    steps, emitting a countdown heartbeat after each step (never a redundant one
+    at zero, where the loop resumes). `emit(line)` prints a line and
+    `sleep(secs)` waits — both injected so the feedback is deterministic under
+    test with a captured `emit` and a no-op `sleep` (no real multi-second delay).
+    The WAIT itself is unchanged: the total time slept is exactly `wake_seconds`
+    (an interval <= 0 degenerates to a single full-length sleep, never a spin)."""
+    emit(blackout_banner(window, resume_at, wake_seconds))
+    remaining = int(wake_seconds)
+    while remaining > 0:
+        step = interval if 0 < interval < remaining else remaining
+        sleep(step)
+        remaining -= step
+        if remaining > 0:
+            emit(blackout_countdown_line(remaining, resume_at))
+
+
 # --- WI-181: explicit worker assignment (SR-060) --------------------------------
 # A worker is one agent_loop process driving one dispatcher-assigned traincar on
 # one llm/train/<id> branch in one worktree. Its inputs are explicit CLI

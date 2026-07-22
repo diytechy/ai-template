@@ -376,6 +376,69 @@ def test_blackout_present_but_inactive_does_not_block(loop_repo):
     assert _invocations(ctl) == 1
 
 
+# --- WI-261: blackout pause feedback (banner + countdown heartbeat) -----------
+
+
+def test_blackout_banner_names_policy_window_weekday_and_resume():
+    # WI-261: the pause banner must be self-explanatory — a walk-away launch can
+    # read it and know WHY it is waiting, that the scope is weekday-only, and WHEN
+    # it resumes. Bites on a revert to the old one-liner (which named neither the
+    # policy file nor the weekday-only scope, and had no humanized wait length).
+    ac = load_script("agent_common")
+    resume_at = datetime.datetime(2026, 7, 13, 19, 0)  # a Monday, 19:00 UTC
+    banner = ac.blackout_banner("12:00-19:00", resume_at, 7 * 3600)
+    assert "docs/blackout" in banner  # the policy file is named
+    assert "12:00-19:00" in banner  # the actual window is shown
+    assert "weekday" in banner.lower()  # weekday-only scope stated plainly
+    assert "19:00 UTC" in banner  # the resume time
+    assert "7h 0m 0s" in banner  # the wait length, humanized
+    assert "agent-resume -> agent_loop" in banner  # the path that honors it
+    assert banner.count("\n") >= 4  # a multi-line banner, not a one-liner
+
+
+def test_blackout_wait_emits_countdown_heartbeat_at_interval():
+    # WI-261: while waiting out the window the loop must tick down at the injected
+    # interval so an unattended launch is visibly WAITING, not hung. Deterministic
+    # — a captured emit and a no-op sleep, NO real multi-second delay. Bites if
+    # the heartbeat is dropped (the old code slept silently after one print).
+    ac = load_script("agent_common")
+    resume_at = datetime.datetime(2026, 7, 13, 19, 0)
+    lines, slept = [], []
+    ac.blackout_wait(
+        180,
+        "12:00-19:00",
+        resume_at,
+        emit=lines.append,
+        sleep=slept.append,
+        interval=60,
+    )
+    # The wait is unchanged: exactly `wake` slept, in interval-sized steps.
+    assert slept == [60, 60, 60]
+    assert sum(slept) == 180
+    # First emit is the banner; then one countdown per completed step EXCEPT the
+    # last (the loop resumes there, no redundant tick): 180->120->60->0 => 2 ticks.
+    assert lines[0] == ac.blackout_banner("12:00-19:00", resume_at, 180)
+    countdowns = [ln for ln in lines if "remaining" in ln]
+    assert len(countdowns) == 2
+    assert "~2m 0s remaining" in countdowns[0]
+    assert "~1m 0s remaining" in countdowns[1]
+    assert all("resuming 19:00 UTC" in ln for ln in countdowns)
+
+
+def test_blackout_wait_short_window_slept_exactly_once():
+    # A window shorter than one heartbeat interval sleeps once for the whole wait
+    # and emits no countdown (the banner already stated the resume time). Guards
+    # the interval>remaining branch and confirms no spin on a sub-interval wait.
+    ac = load_script("agent_common")
+    resume_at = datetime.datetime(2026, 7, 13, 12, 1)
+    lines, slept = [], []
+    ac.blackout_wait(
+        30, "12:00-12:01", resume_at, emit=lines.append, sleep=slept.append
+    )
+    assert slept == [30]
+    assert [ln for ln in lines if "remaining" in ln] == []  # no heartbeat needed
+
+
 def test_cmd_map_broken_entry_fails_preflight(loop_repo):
     # A broken REVIEW-B entry must fail before iteration 1 (the preflight
     # contract), not at the first review session mid-run.

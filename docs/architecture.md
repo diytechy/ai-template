@@ -141,6 +141,9 @@ Contracts (interfaces): IF-037, IF-065
 | `pause_reason(lane)` | A declared **graceful-pause** request (WI-147): the `docs/pause` file |  |
 | `parse_blackout(line)` | Parse a `HH:MM-HH:MM` blackout line into `(start_min, end_min)` — minutes |  |
 | `blackout_wake(line, now)` | Seconds until the current UTC weekday blackout window ends, or `None` when |  |
+| `blackout_banner(window, resume_at, wake_seconds, policy_file)` | The multi-line terminal banner shown when the coordinator holds a NEW |  |
+| `blackout_countdown_line(remaining_seconds, resume_at)` | One countdown-heartbeat line emitted every BLACKOUT_HEARTBEAT_SEC while |  |
+| `blackout_wait(wake_seconds, window, resume_at, emit, sleep, interval)` | Emit the blackout banner, then wait `wake_seconds` in `interval`-second |  |
 | `sanitize_train(name)` | A train id becomes a branch segment, a log-file prefix, and a reviews/ |  |
 | `parse_wi_list(spec)` | The ordered assigned-WI list from a `;`/`,`/whitespace-joined --wi value. |  |
 | `load_wi_registry(root)` | {WI-ID: raw row dict} from the worktree's tracked WI registry — the |  |
