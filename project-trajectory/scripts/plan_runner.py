@@ -164,6 +164,28 @@ def _dp_session(template, model, prompt, root, timeout, env_cell=""):
     return ok, output
 
 
+def _repair_critique(coverage_fails, plan_name):
+    """The mechanical-repair CRITIQUE payload for ONE plan: ONLY the coverage
+    FAIL lines that name this plan's own file (each line is
+    `plan_coverage: FAIL - <planfile>: ...`). The RIVAL plan's fail lines must
+    NEVER enter this hat's context — anchoring a planner on the other plan's
+    coverage biases the build toward convergence, defeating two-planner
+    independence at the cheapest gaming point (repo-review 2026-07-21 L-28 /
+    WI-265). When this plan owns no fail line the payload is a generic
+    repair-your-own-clauses instruction — NEVER a fallback to the full
+    `coverage_fails`, which carries the rival's lines. The full coverage report
+    (per-plan sets + the pairwise diff) rides only the CRITIQUE/ARBITER briefs,
+    whose templates alone declare a {{COVERAGE_REPORT}} slot."""
+    own_fails = "\n".join(
+        ln for ln in coverage_fails.splitlines() if plan_name in ln
+    )
+    body = own_fails or (
+        "(no coverage FAIL line names your plan) — repair only your own failing "
+        "clauses; do not add coverage the pre-pass did not flag."
+    )
+    return "MECHANICAL REPAIR ONLY - the coverage pre-pass found:\n" + body
+
+
 def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None):
     """Run one dual-plan decomposition round for `wi` unattended and return
     `(outcome, detail)` — outcome `SELECTED` (verdict recorded, the selected
@@ -247,17 +269,11 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
             if kind == plan_round.STEP_PLAN:
                 crit = _EMPTY_SLOT
             elif kind == plan_round.STEP_REPAIR:
-                # Narrow further to THIS plan's own FAIL lines (the line names
-                # the plan file); the rival's failures are not this hat's
-                # business either (L-28).
-                own_fails = "\n".join(
-                    ln
-                    for ln in coverage_fails.splitlines()
-                    if plan_path[plan].name in ln
-                )
-                crit = "MECHANICAL REPAIR ONLY - the coverage pre-pass found:\n" + (
-                    own_fails or coverage_fails
-                )
+                # ONLY this plan's own FAIL lines (the line names the plan
+                # file); the rival's failures are never this hat's business,
+                # and an empty own-fail set must NOT fall back to the full
+                # coverage_fails — that leaked the rival's lines (L-28 / WI-265).
+                crit = _repair_critique(coverage_fails, plan_path[plan].name)
             else:
                 crit = critique_text.get(plan, "")
             prompt = plan_briefs.assemble(

@@ -21,6 +21,7 @@ al = load_script("agent_loop")
 # The dual-plan runner lives in plan_runner.py (WI-218 slice C); _dp_session
 # resolves run_session in ITS namespace, so the monkeypatch targets pr, not al.
 pr = load_script("plan_runner")
+pb = load_script("plan_briefs")
 
 # Two strong rows in different families so planner_pair can route a real pair.
 REGISTRY_CSV = (
@@ -149,3 +150,71 @@ def test_dp_routes_honors_registry_tag_rank_override(tmp_path):
     assert routes is not None, note
     ids = {r[4] for r in routes}
     assert "A-BETA" in ids and "A-GA" not in ids
+
+
+# --- L-28 / WI-265: the mechanical-repair prompt never carries the rival's -----
+# coverage. `coverage_fails` holds BOTH plans' `plan_coverage: FAIL - <file>:`
+# lines; the repair critique for a plan must be filtered to that plan's OWN file
+# lines. When a plan owns no fail line, the payload must NOT fall back to the
+# full report (which contains the rival's lines) — the pre-change
+# `own_fails or coverage_fails` fallback was that residual leak.
+
+# Only plan-B fails; plan-A owns no FAIL line.
+_COVERAGE_FAILS_B_ONLY = (
+    "plan_coverage: FAIL - plan-B.md: clause C9 cited but not declared in the goal\n"
+    "plan_coverage: FAIL - plan-B.md: Q2 cites undeclared interface IF-999"
+)
+
+
+def test_repair_critique_for_a_omits_rivals_fail_lines():
+    # THE regression: A owns no fail line, so its repair critique must carry a
+    # generic own-clauses instruction and NONE of plan-B's coverage. Against the
+    # old `own_fails or coverage_fails` fallback, B's lines leaked in verbatim.
+    crit = pr._repair_critique(_COVERAGE_FAILS_B_ONLY, "plan-A.md")
+    assert "plan-B.md" not in crit
+    assert "C9" not in crit and "IF-999" not in crit
+    assert "MECHANICAL REPAIR ONLY" in crit  # still a valid repair payload
+
+
+def test_repair_critique_keeps_only_the_owning_plans_lines():
+    # With both plans failing, each hat sees ONLY its own file's lines.
+    both = (
+        "plan_coverage: FAIL - plan-A.md: C1 cited but not delivered\n"
+        + _COVERAGE_FAILS_B_ONLY
+    )
+    crit_a = pr._repair_critique(both, "plan-A.md")
+    assert "plan-A.md" in crit_a and "C1" in crit_a
+    assert "plan-B.md" not in crit_a and "C9" not in crit_a
+
+
+def test_repair_prompt_for_a_contains_no_plan_b_content():
+    # End-to-end through the real planner template: the assembled A repair
+    # prompt (CRITIQUE slot = the filtered payload) contains no plan-B lines,
+    # and the planner template declares no COVERAGE_REPORT slot at all.
+    crit = pr._repair_critique(_COVERAGE_FAILS_B_ONLY, "plan-A.md")
+    planner_tmpl = pb.strip_dispatcher_block(pb.load_template(pb.HAT_PLANNER))
+    prompt = pb.assemble(
+        pb.HAT_PLANNER,
+        {
+            "GOAL_BRIEF": "C1: do the thing.",
+            "SR_SURFACE": "- SR-001 — one",
+            "IF_REGISTRY": "| IF-ID |\n|---|",
+            "OWN_PLAN": "| P1 | ... |",
+            "CRITIQUE": crit,
+        },
+        planner_tmpl,
+    )
+    assert "plan-B.md" not in prompt
+    assert "C9" not in prompt and "IF-999" not in prompt
+
+
+def test_full_coverage_report_reaches_only_critic_and_arbiter_hats():
+    # The full report (per-plan sets + the pairwise "only plan-B.md: ..." diff)
+    # is a legitimate CRITIQUE/ARBITER input, but the planner template must not
+    # even offer a slot for it — so a repair prompt can never carry it (L-28).
+    planner_slots = pb._placeholders(pb.load_template(pb.HAT_PLANNER))
+    critic_slots = pb._placeholders(pb.load_template(pb.HAT_CRITIC))
+    arbiter_slots = pb._placeholders(pb.load_template(pb.HAT_ARBITER))
+    assert "COVERAGE_REPORT" not in planner_slots
+    assert "COVERAGE_REPORT" in critic_slots
+    assert "COVERAGE_REPORT" in arbiter_slots
