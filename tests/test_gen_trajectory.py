@@ -1988,6 +1988,91 @@ def test_route_edges_terminals_snap_to_port_circle():
     assert "L" in detour and tn[1] == 120.0 and tn[-1] == 120.0
 
 
+def test_route_edges_lane_routes_a_backward_edge_with_only_endpoint_obstacles():
+    # 080-CRITIQUE follow-up #1 (WI-257): a BACKWARD edge (target input port at or
+    # left of the source output port) whose ONLY obstacles are its own endpoint
+    # boxes used to keep the direct cubic — which doubles back and dives UNDER both
+    # boxes, so the wire reads as sprouting from a box edge and is untraceable
+    # end-to-end (When 1→unphased / unphased→2..4, How-SW CMP-001→CMP-004). It is
+    # now lane-routed around a visible detour lane. A (source, top) and B (target,
+    # below) are stacked in one column with NOTHING between them.
+    gt = load_script("gen_trajectory")
+    rects = {"A": (0.0, 100.0, 120.0, 40.0), "B": (0.0, 200.0, 120.0, 40.0)}
+    edge = ("A->B", 120.0, 120.0, 0.0, 220.0, "A", "B")  # out-port right, in-port left
+    d = gt._route_edges([edge], rects, 12, 2)["A->B"]
+    assert " L" in d  # lane-routed, not the kept-direct cubic (bites on revert)
+    # the kept-direct cubic (pre-WI-257) dived through the TARGET box body...
+    xe, dx = 0.0 - 2, max((0.0 - 120.0) * 0.4, 12)
+    direct = gt._cubic_points(
+        (120.0, 120.0), (120.0 + dx, 120.0), (xe - dx, 220.0), (xe, 220.0)
+    )
+    assert _polyline_crosses(direct, rects["B"])  # the "dives beneath" defect
+    # ...the lane-routed wire clears it, so the wire is traceable end-to-end.
+    assert not _polyline_crosses(_sample_path_d(d), rects["B"])
+    dn = [float(t) for t in re.findall(r"-?[\d.]+", d)]
+    assert dn[1] == 120.0 and dn[-1] == 220.0  # terminals still snap to port centers
+
+
+def test_detour_hit_tests_the_outboard_stub_zone():
+    # 111-REVIEW-A MINOR 1 (WI-257): _detour_d re-verified obstacles only over
+    # [min(x1,xe), max(x1,xe)], but the detour's stubs reach xa=x1+stub / xb=xe-stub
+    # — up to 18px OUTSIDE that span. A box sitting only in an outboard stub zone was
+    # never hit-tested, so the router returned a grazing detour (the residual
+    # fail-open, trial-679 class). Backward seam D(right, x1=500) → C(left, xe=160):
+    # the left stub reaches xb=142, and box E overlaps [142,150] (the outboard stub
+    # zone) while sitting LEFT of the old span [160,500]; F forces a real lane detour.
+    gt = load_script("gen_trajectory")
+    x1, sy, y1, xe, ty, y2 = 500.0, 145.0, 145.0, 160.0, 165.0, 165.0
+    stub = 18.0
+    f_box = (300.0, 130.0, 100.0, 50.0)  # inside the main span -> forces a detour
+    e_box = (100.0, 125.0, 50.0, 40.0)  # x-span [100,150]
+    assert e_box[0] + e_box[2] <= min(x1, xe)  # E is OUTSIDE the old [min,max] span
+    assert e_box[0] + e_box[2] > xe - stub  # ...but overlaps the left outboard stub
+    d = gt._detour_d(x1, sy, y1, xe, ty, y2, [f_box, e_box])
+    assert " L" in d
+    pts = _sample_path_d(d)
+    assert not _polyline_crosses(pts, e_box)  # now hit-tested and routed around
+    assert not _polyline_crosses(pts, f_box)
+
+
+def test_detour_bounds_the_candidate_set_and_second_pass(monkeypatch):
+    # 111-REVIEW-A MINOR 2 (WI-257): the two-pass × per-candidate full re-verify made
+    # _route_edges 30-50x slower on DENSE overlap. The clear-check now short-circuits
+    # (the first fully-clear lane wins) and the candidate set is capped at _MAX_LANES
+    # per pass, with the redundant second pass skipped when it would re-scan the same
+    # obstacle set (lane_span == full).
+    gt = load_script("gen_trajectory")
+    calls = [0]
+    real_points = gt._detour_points
+
+    def counting(*a, **k):
+        calls[0] += 1
+        return real_points(*a, **k)
+
+    monkeypatch.setattr(gt, "_detour_points", counting)
+    # short-circuit: one blocking box, the nearest lane clears at once -> the router
+    # returns after a single trial rather than sweeping every candidate.
+    rects = {
+        "A": (0.0, 100.0, 100.0, 40.0),
+        "B": (200.0, 100.0, 100.0, 40.0),
+        "C": (400.0, 100.0, 100.0, 40.0),
+    }
+    gt._route_edges([("A->C", 100.0, 120.0, 400.0, 120.0, "A", "C")], rects, 12, 2)
+    assert calls[0] <= 2  # first clear lane wins; no exhaustive sweep
+    # cap + second-pass skip: feed 500 candidate lanes that NEVER clear (a box tall
+    # enough in y to block every one). The router must evaluate exactly ONE capped
+    # pass — _MAX_LANES trials — not the 1000 the two uncapped passes would have.
+    calls[0] = 0
+    monkeypatch.setattr(gt, "_lane_candidates", lambda *a, **k: [float(i) for i in range(500)])
+    dense = {
+        "S": (0.0, 300.0, 100.0, 40.0),
+        "T": (500.0, 300.0, 100.0, 40.0),
+        "B": (250.0, 0.0, 100.0, 520.0),  # spans y[0,520] -> no lane in 0..499 clears
+    }
+    gt._route_edges([("S->T", 100.0, 320.0, 500.0, 320.0, "S", "T")], dense, 12, 2)
+    assert calls[0] == gt._MAX_LANES  # capped to one pass; the redundant second pass is skipped
+
+
 def _wire_through_box_violations(markup):
     """Every (wire d, blocking rect) pair where a wire's sampled polyline crosses a
     node box that is not its own source/target — the T8 through-box invariant. Each

@@ -1433,6 +1433,7 @@ def _port_fan(groups, other_of, pos, row_h):
 _WIRE_HIT_MARGIN = 3.0  # a box is "hit" only when the cubic comes within this
 _WIRE_CLEAR = 7.0  # a detour lane sits this far outside the blocking band
 _WIRE_STUB = 18.0  # the horizontal run a detour keeps at each port before lifting
+_MAX_LANES = 24  # WI-257: candidate lanes tried per pass (bounds dense-overlap cost)
 
 
 def _cubic_points(p0, p1, p2, p3, n=24):
@@ -1569,11 +1570,20 @@ def _detour_d(
     Lanes are tried nearest the endpoint midline first, so an already-clear detour
     regenerates byte-for-byte; the first lane whose full polyline clears wins. When
     no lane is fully clear, the least-obstructed deterministic path is returned
-    (never a silent through-box when a clear route exists, and always terminating —
-    the candidate set is finite). Returns None only when no obstacle sits in the
-    routed span at all (caller keeps the direct cubic)."""
+    (never a silent through-box when a clear route exists within the searched
+    lanes, and always terminating — the candidate set is finite). Returns None only
+    when no obstacle sits in the routed span at all (caller keeps the direct cubic).
+
+    WI-257 MINOR 1: the stubs reach xa = x1+stub / xb = xe-stub — up to `stub` px
+    OUTSIDE [x1, xe] — so the obstacle span and the hit accounting cover the
+    stub-EXTENDED range; a box sitting only in an outboard-stub zone is now
+    hit-tested (formerly a residual fail-open). WI-257 MINOR 2: the candidate set
+    is capped and the clear-check short-circuits at the first hit, so DENSE-overlap
+    geometry stays bounded — a clear lane is returned the moment one is found, and
+    the O(obstacles) per-box hit count runs only to rank the pathological
+    no-clear-lane fallback."""
     xa, xb = x1 + stub, xe - stub
-    fox, fxh = min(x1, xe), max(x1, xe)
+    fox, fxh = min(x1, xe, xa, xb), max(x1, xe, xa, xb)
     full = [r for r in obstacles if r[0] < fxh and r[0] + r[2] > fox]
     if not full:
         return None
@@ -1582,20 +1592,23 @@ def _detour_d(
     y_pref = (y1 + y2) / 2.0
     best = None  # (hit_count, d): the least-bad deterministic fallback
     # First pass over just the lane-span boxes reproduces the legacy lane (byte
-    # stable); the second folds in the stub-corridor boxes to find a clear route.
+    # stable); the second folds in the stub-corridor boxes to find a clear route
+    # (skipped when the two sets are identical — a redundant re-scan).
     for src in (lane_span, full):
         if not src:
             continue
         blocked = [(r[1] - clearance, r[1] + r[3] + clearance) for r in src]
         lo = min(r[1] for r in src) - 40.0
         hi = max(r[1] + r[3] for r in src) + 40.0
-        for lane in _lane_candidates(y_pref, blocked, lo, hi):
+        for lane in _lane_candidates(y_pref, blocked, lo, hi)[:_MAX_LANES]:
             pts = _detour_points(x1, sy, y1, xa, xb, xe, ty, y2, lane)
-            hits = sum(1 for r in full if _polyline_hits(pts, (r,)))
-            if hits == 0:
+            if not _polyline_hits(pts, full):  # early-exit: first clear lane wins
                 return _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane)
+            hits = sum(1 for r in full if _polyline_hits(pts, (r,)))
             if best is None or hits < best[0]:
                 best = (hits, _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane))
+        if lane_span == full:
+            break  # the second pass would re-scan the identical obstacle set
     return best[1] if best else None
 
 
@@ -1625,7 +1638,17 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
     its first/last control keeps the fanned `y1`/`y2`, so a steep fanned wire lands
     ON its port circle instead of a block corner, yet still bows to its strand. An
     unfanned wire (its passed y already the port center) is byte-identical.
-    Deterministic — inputs are sorted, no dict-iteration order escapes."""
+
+    WI-257: a BACKWARD edge (target input port at or left of the source output port,
+    xe <= x1) is lane-routed rather than kept as a direct cubic. Its direct cubic
+    doubles back and dives UNDER its own endpoint boxes (its only obstacles), so it
+    reads as sprouting from a box edge and is untraceable end-to-end (080-CRITIQUE).
+    Routing it around a visible lane requires its own endpoint boxes in the obstacle
+    set — the source box trimmed a hair off its port edge so the wire's legitimate
+    start-on-port isn't miscounted as a through-box (its body still constrains the
+    lane). Forward edges are untouched (xe > x1), so every clean wire stays
+    byte-identical. Deterministic — inputs are sorted, no dict-iteration order
+    escapes."""
     ordered = sorted(rects_by_id.items())
     out = {}
     for key, x1, y1, x2, y2, src, tgt in sorted(edges, key=lambda e: e[0]):
@@ -1641,9 +1664,16 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim):
             for r in obstacles
         ]  # fmt: skip
         direct = _cubic_points((x1, sy), (x1 + dx, y1), (xe - dx, y2), (xe, ty))
+        backward = xe <= x1
         d = None
-        if _polyline_hits(direct, infl):
-            d = _detour_d(x1, sy, y1, xe, ty, y2, obstacles)
+        if _polyline_hits(direct, infl) or backward:
+            span = list(obstacles)
+            if backward:  # route the lane around its own endpoint boxes too
+                if rs:
+                    span.append((rs[0], rs[1], rs[2] - 0.1, rs[3]))  # trim port edge
+                if rt:
+                    span.append(rt)
+            d = _detour_d(x1, sy, y1, xe, ty, y2, span)
         if d is None:
             d = "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
                 x1, sy, x1 + dx, y1, xe - dx, y2, xe, ty
