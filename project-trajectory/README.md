@@ -108,7 +108,7 @@ audits.
    path. Adopting into an **existing** repo — code, CI, a non-Python stack?
    See `ADOPTING.md`.)*
    If `python` is absent or Python 2, use `python3` (Linux/macOS) or `py`
-   (Windows); the kit needs Python 3.8+.
+   (Windows); the kit needs Python 3.11+.
    *Setting up for an agent? Add `--agents claude|gemini|codex|both` to also
    materialize that agent's skills (run interactively without the flag and it
    asks; the default `none` keeps the agent-neutral scaffold — `skills/README.md`).*

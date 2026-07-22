@@ -18,7 +18,7 @@ returns its output:
   - `summarize_session_line`/`echo_session_line`/`LiveStatus` (+ the TTY/VT
     probes) — the console rendering of a streaming session (WI-125/WI-136).
 
-Stdlib only, Python 3.8+, Windows/POSIX. agent_loop.py (the coordinator) and
+Stdlib only, Python 3.11+, Windows/POSIX. agent_loop.py (the coordinator) and
 plan_runner.py (the dual-plan round) drive sessions exclusively through this
 module; agent_loop re-exports these names so its public surface is unchanged.
 

@@ -108,7 +108,7 @@ Write-Host ""
 
 # --- Detect + report ---------------------------------------------------------
 $runtime = (HavePython "py") -or (HavePython "python") -or (HavePython "python3")
-Report "runtime (python)" $runtime "install a Python 3.8+ runtime"
+Report "runtime (python)" $runtime "install a Python 3.11+ runtime"
 Report "git" (Have "git") "install git (needed to make reviewable changes)"
 Report "offline Markdown+Mermaid renderer" (RendererPresent) `
     "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"

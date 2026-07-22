@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The substance scorer — score a review verdict block by how USEFUL it is, not
 how long it is (process-options.md "Unattended operation" -> the routing/
-escalation subsection). Stdlib only, Python 3.8+.
+escalation subsection). Stdlib only, Python 3.11+.
 
 Review-substance-as-a-routing-signal has no published precedent, so this stays
 deliberately conservative and, above all, **advisory**: the declared

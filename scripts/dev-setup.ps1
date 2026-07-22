@@ -3,7 +3,7 @@
 #
 # The kit ships project-trajectory/scripts/dev-setup.template.{sh,ps1} with EMPTY
 # install slots for downstream repos to fill. This is that template *filled in*
-# for the meta-repo's own stack, so the kit provisions itself: Python 3.8+, ruff
+# for the meta-repo's own stack, so the kit provisions itself: Python 3.11+, ruff
 # (format), pytest + pytest-cov (the self-test suite and the harness's coverage
 # step), pytest-xdist (`-n auto` parallel execution — the declared test command,
 # WI-075), an offline Mermaid renderer for the generated diagrams, and the two
@@ -57,7 +57,7 @@ try {
 
     Write-Host "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
     Write-Host ""
-    Report "runtime (python)" ([bool]$py) "install Python 3.8+"
+    Report "runtime (python)" ([bool]$py) "install Python 3.11+"
     Report "git" (Have "git") "install git"
     Report "ruff (format/lint)" (HasModule "ruff") "pip install ruff (or run -Install)"
     Report "pytest (self-tests)" (HasModule "pytest") "pip install pytest (or run -Install)"

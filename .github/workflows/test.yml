@@ -1,7 +1,7 @@
 # Self-tests for the kit: every script is exercised against a real temp
 # scaffold, so a green run means the documented quick-start actually works —
 # on all three desktop OS families (Linux, Windows, macOS) and on the oldest
-# Python the kit claims (3.8).
+# Python the kit claims (3.11).
 name: kit-tests
 on:
   push:
@@ -23,15 +23,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: ["3.8", "3.x"]
+        python: ["3.11", "3.x"]
         exclude:
-          # macos-latest is arm64, which has no CPython 3.8 build. The 3.8 floor
-          # is a language/stdlib guarantee (platform-agnostic, already covered on
-          # Linux + Windows); macOS's job is the OS-specific behavior (fcntl.flock,
-          # paths, git worktrees), which doesn't vary by Python version — so macOS
-          # runs on current Python only.
+          # The 3.11 floor is a language/stdlib guarantee (platform-agnostic,
+          # already covered on Linux + Windows); macOS's job is the OS-specific
+          # behavior (fcntl.flock, paths, git worktrees), which doesn't vary by
+          # Python version — so macOS runs on current Python only. (3.11 has
+          # arm64 macOS builds, so this exclusion is now a coverage call, not a
+          # runner-availability workaround.)
           - os: macos-latest
-            python: "3.8"
+            python: "3.11"
     runs-on: ${{ matrix.os }}
     # The suite spawns coordinator loops/pollers with real timeouts; a wedged
     # run must never burn GitHub's 360-minute default per matrix cell (M-27).

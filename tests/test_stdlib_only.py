@@ -3,7 +3,7 @@
 Mechanizes what was an Inspection ("confirmed by inspecting imports") into a
 Test: AST-scan every kit script's imports and assert no top-level module
 resolves to a third party. A downstream repo must be able to run the kit's own
-checks on a clean Python 3.8+ with no `pip install`, so a stray third-party
+checks on a clean Python 3.11+ with no `pip install`, so a stray third-party
 import is a real regression, not a style nit.
 
 Enforcement-audit note (docs/enforcement-audit.md): this is the EVAL/test-class
@@ -22,7 +22,8 @@ def stdlib_top_level_names():
     """The set of top-level module names that ship with this Python.
 
     On 3.10+ `sys.stdlib_module_names` is authoritative and platform-independent.
-    On 3.8/3.9 (the kit's floor) it does not exist, so derive it: the C builtins
+    On 3.8/3.9 (below the 3.11 floor, but still runnable) it does not exist, so
+    derive it: the C builtins
     (`sys.builtin_module_names`) plus a scan of the standard-library directory
     (`os.__file__`'s dir — never `site-packages`), plus a small allowlist of
     platform-gated stdlib modules a cross-platform scan cannot see (e.g. `fcntl`

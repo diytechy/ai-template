@@ -3,7 +3,7 @@
 selected plan P2 / WI-195; the protocol is process-options.md "Dual-plan
 decomposition").
 
-Stack-agnostic, standard-library only (Python 3.8+, Windows/POSIX). This is the
+Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX). This is the
 brief-assembly half of the dual-plan round: it turns an ALLOWLIST-ONLY input set
 into the planner/critic/arbiter prompts the coordinator sends to fresh sessions.
 Redaction is BY CONSTRUCTION, not by review — the module can read exactly two

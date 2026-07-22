@@ -105,7 +105,7 @@ only as the fallback when no `docs/stack.ini` exists — prefer the profile.)
 - **Process steps** (traceability, design-flows, doc-navigability,
   perf-budgets) — keep as-is. They are stdlib Python and read only the
   registries and docs, so they work identically for a Java, Kotlin, or Rust
-  repo. The kit needs a Python 3.8+ interpreter on the machine for these even
+  repo. The kit needs a Python 3.11+ interpreter on the machine for these even
   when the product isn't Python; that is the only requirement.
 
 ## 3. Non-Python stacks: the two generators (don't fake the guarantee)
@@ -567,6 +567,23 @@ table.
   `bootstrap.py --dest . --sync` (force-overwrites only the `<agent>/skills/…`
   subtrees; the `skills-sync` gate flags a drifted copy — S7). Skills are opt-in
   accelerators, never a gate (process-options.md "Skills layer").
+- **Python floor 3.8 → 3.11 (2026-07, WI-262).** The kit's stdlib-only scripts
+  now declare a **Python 3.11+** floor (was 3.8). Why 3.11 and not 3.9/3.10:
+  those are EOL or nearly so (3.10's security EOL is Oct 2026), while 3.11 is
+  supported to Oct 2027 and enables the queued `trace.py` refactor — `dataclass`
+  `slots=True`, finer "did-you-mean" tracebacks, and the interpreter speedup. The
+  `pytest-cov` Python-gated split dissolves with it: the old
+  `5.x`-on-3.8 / `7.x`-on-3.9+ marker in `requirements-dev.txt` collapses to a
+  single `pytest-cov~=7.0`, and `conftest.py` keeps only the 7.x coverage-wiring
+  path (the pre-7 `COV_CORE_DATAFILE` fallback is gone). **Downstream impact:** on
+  a re-sync onto a repo whose contributors or CI still run 3.8–3.10, provision
+  3.11+ first, then overwrite `requirements-dev.txt`, bump the `check.yml` /
+  `test.yml` matrix cells from 3.8 to 3.11 (the macOS-arm64 3.8 exclusion was a
+  runner-availability workaround — 3.11 has arm64 builds, so drop it or keep it
+  as a deliberate coverage call), and update the `dev-setup.*` "install Python
+  3.x+" hints. The scripts stay de-facto runnable on 3.9 for now (no 3.11-only
+  syntax has landed yet), so the bump is a promise you enforce in CI immediately,
+  not a same-day code break.
 
 ### Repos whose `AGENTS.md` already means something else
 

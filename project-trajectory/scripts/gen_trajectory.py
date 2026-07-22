@@ -4395,9 +4395,9 @@ def run_status(root, check):
             "gen_trajectory: {} status snapshot already up to date.".format(STATUS_MD)
         )
     else:
-        # newline="\n" via open() (write_text(newline=) is 3.10+, floor 3.8): LF
-        # on every OS so the generated block stays byte-stable regardless of a
-        # downstream .gitattributes rule.
+        # newline="\n" via open() (write_text(newline=) is 3.10+; scripts stay
+        # 3.9-runnable, floor 3.11): LF on every OS so the generated block stays
+        # byte-stable regardless of a downstream .gitattributes rule.
         with path.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(updated)
         print("gen_trajectory: status snapshot regenerated -> {}".format(STATUS_MD))
@@ -4479,9 +4479,9 @@ def main():
         print("gen_trajectory: already up to date -> {}".format(OUT_HTML))
     else:
         out.parent.mkdir(parents=True, exist_ok=True)
-        # newline="\n" via open() (write_text(newline=) is 3.10+, floor is 3.8):
-        # LF on every OS, so byte-stability doesn't rest on a downstream
-        # .gitattributes eol=lf rule surviving.
+        # newline="\n" via open() (write_text(newline=) is 3.10+; scripts stay
+        # 3.9-runnable, floor 3.11): LF on every OS, so byte-stability doesn't rest
+        # on a downstream .gitattributes eol=lf rule surviving.
         with out.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(generated)
         print("gen_trajectory: wrote {}".format(OUT_HTML))

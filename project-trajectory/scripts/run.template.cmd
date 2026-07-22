@@ -23,7 +23,7 @@ if not errorlevel 1 (
   set "PY=python"
 ) else (
   py -3 -c "" >nul 2>nul
-  if errorlevel 1 echo Python 3 was not found - checked python and py -3. Install Python 3.8+ first.
+  if errorlevel 1 echo Python 3 was not found - checked python and py -3. Install Python 3.11+ first.
 )
 %PY% scripts\run_menu.py %*
 set "EXITCODE=%ERRORLEVEL%"

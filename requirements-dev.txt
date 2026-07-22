@@ -15,12 +15,11 @@
 # canary job (.github/workflows/canary.yml) runs the suite unpinned on a schedule
 # to catch that upcoming breakage WITHOUT gating merges.
 #
-# pytest-cov needs a Python-gated split: 6.0 dropped Python 3.8, so the kit's 3.8
-# floor caps at 5.x while 3.9+ gets the 7.x path conftest.py targets. This is the
-# one irreducible per-Python difference — no constraint makes 3.8 run pytest-cov 7 — and
-# it is exactly why the coverage plumbing must be robust across both (WI-105).
+# pytest-cov is pinned at 7.x for everyone: the kit's 3.11 floor (WI-262) sits well
+# above the 3.9 that pytest-cov 7 requires (6.0 dropped Python 3.8), so the old
+# Python-gated split — 5.x on the 3.8 floor, 7.x on 3.9+ — dissolves; conftest.py
+# now targets the single 7.x plumbing (was the dual-major path of WI-105).
 ruff~=0.15.0
 pytest~=8.3
 pytest-xdist~=3.6
-pytest-cov~=7.0; python_version >= "3.9"
-pytest-cov~=5.0; python_version < "3.9"
+pytest-cov~=7.0

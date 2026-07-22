@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate the human release checklist from the registries.
 
-Stack-agnostic kit, stdlib-only (Python 3.8+). Most of the harness is machine-
+Stack-agnostic kit, stdlib-only (Python 3.11+). Most of the harness is machine-
 checkable, but a release still needs a human to *exercise the real product* —
 the Demonstration / Manual / Inspection items that no automated test can honestly
 cover (G-Final in process.md). This script collects exactly those, back-linked to

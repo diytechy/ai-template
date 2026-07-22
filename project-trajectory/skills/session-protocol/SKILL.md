@@ -41,7 +41,7 @@ kit's design history — the old thread specs and the WI-1.x log — is archived
 - **Byte budgets** on `AGENTS.template.md` (10,000) and `PROCESS.md` — see the
   `byte-budget-guard` skill. Push expansion to `PROCESS_OPTIONS.md` /
   `ADOPTING.md` / `EXAMPLE.md`.
-- **Stdlib-only, cross-platform** kit scripts (Python 3.8+, Windows + POSIX).
+- **Stdlib-only, cross-platform** kit scripts (Python 3.11+, Windows + POSIX).
 - **Single source of truth:** state a fact once and link to it; don't paraphrase
   a rule into five files.
 

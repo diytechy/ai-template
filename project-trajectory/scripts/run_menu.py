@@ -31,7 +31,7 @@ print the same "no run capability wired yet" guidance and exit 1 on an absent or
 empty `[run]` section, exactly as the pre-menu launchers did — a pure library
 simply deletes the `run.*` launchers.
 
-Stdlib-only, Python 3.8+, Windows + POSIX (the same portability contract as the
+Stdlib-only, Python 3.11+, Windows + POSIX (the same portability contract as the
 rest of the kit). The command is run with `shell=True`: the value is the user's
 own declared shell line from their own `docs/stack.ini` (the same trust boundary
 as the `RUN_CMD` this replaced — the user edits their own file), and a capability

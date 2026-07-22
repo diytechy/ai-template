@@ -1732,7 +1732,7 @@ def test_union_preserves_untouched_multiline_cell(tmp_path):
             "WI-2,plain,{}\nWI-3,other,{}\n".format(s2, s3)
         )
 
-    def write_reg(s2, s3):  # newline="" keeps the embedded \n verbatim (3.8-safe)
+    def write_reg(s2, s3):  # newline="" keeps the embedded \n verbatim (floor-safe)
         with open(str(repo / rel), "w", encoding="utf-8", newline="") as fh:
             fh.write(reg(s2, s3))
 

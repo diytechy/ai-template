@@ -148,7 +148,7 @@ say
 
 # --- Detect + report (every tier does this first) ----------------------------
 if real python3 || real python; then RUNTIME=1; else RUNTIME=0; fi
-report "runtime (python3)"          "$RUNTIME"                        "install a Python 3.8+ runtime (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
+report "runtime (python3)"          "$RUNTIME"                        "install a Python 3.11+ runtime (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
 report "git"                        "$(real git && echo 1 || echo 0)" "install git — needed to make reviewable changes (macOS: xcode-select --install)"
 report "offline Markdown+Mermaid renderer" \
        "$(renderer_present && echo 1 || echo 0)" \

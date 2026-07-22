@@ -36,7 +36,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # - macos-latest      # Apple Silicon (arm64); note: no CPython 3.8 build
+          # - macos-latest      # Apple Silicon (arm64)
           # - windows-latest
     runs-on: ${{ matrix.os }}
     # Cap a wedged run well under GitHub's 360-minute default; raise it if your

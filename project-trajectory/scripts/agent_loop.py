@@ -9,7 +9,7 @@ one dispatcher-assigned worker; ``--interactive`` runs one attached hands-on
 session. The retired serial resume loop and its status/run-state input ladder are
 not CLI modes. Ported from a field-proven PowerShell coordinator (NotHomeWrecker
 trigger.ps1), which this one cross-platform implementation supersedes. Stdlib
-only, Python 3.8+.
+only, Python 3.11+.
 
 The agent invocation is a command template — the AGENT_CMD slot in the root
 agent-resume.{cmd,sh} launchers (or --agent-cmd / the AGENT_CMD env var).

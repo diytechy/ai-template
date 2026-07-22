@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate test-case combinations from a requirement's input dimensions.
 
-Stack-agnostic kit, stdlib-only (Python 3.8+). A requirement is rarely satisfied
+Stack-agnostic kit, stdlib-only (Python 3.11+). A requirement is rarely satisfied
 by one happy-path test: each variable input is a *dimension*, and defects hide at
 the **boundaries** of each dimension and in the **interactions** between them.
 Enumerating the full Cartesian product exercises every interaction but explodes

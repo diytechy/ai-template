@@ -4,7 +4,7 @@
 #
 # The kit ships project-trajectory/scripts/dev-setup.template.{sh,ps1} with EMPTY
 # install slots for downstream repos to fill. This is that template *filled in*
-# for the meta-repo's own stack, so the kit provisions itself: Python 3.8+, ruff
+# for the meta-repo's own stack, so the kit provisions itself: Python 3.11+, ruff
 # (format), pytest + pytest-cov (the self-test suite and the harness's coverage
 # step), pytest-xdist (`-n auto` parallel execution — the declared test command,
 # WI-075), an offline Mermaid renderer for the generated diagrams, and the two
@@ -76,7 +76,7 @@ if [ -x .venv/bin/python ]; then PY=.venv/bin/python
 elif real python3; then PY=python3; elif real python; then PY=python; else PY=""; fi
 echo "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
 echo
-report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "install Python 3.8+ (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
+report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "install Python 3.11+ (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
 report "git"               "$(real git && echo 1 || echo 0)" "install git (macOS: xcode-select --install)"
 report "ruff (format/lint)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("ruff") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install ruff (or run --install)"
 report "pytest (self-tests)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("pytest") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest (or run --install)"

@@ -15,7 +15,7 @@ tree, and publishes the development branch through the durable publish-intent
 protocol. Migration gating (SR-065), the blocked/dual-plan dispositions, the
 out/dispatch journal/telemetry, and the recovery reconcile all live here.
 
-Stdlib only, Python 3.8+, Windows/POSIX.
+Stdlib only, Python 3.11+, Windows/POSIX.
 
 Contracts: IF-055, IF-067 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """

@@ -771,9 +771,9 @@ def main():
                     file=sys.stderr,
                 )
         elif updated != current:
-            # newline="\n" via open() (write_text(newline=) is 3.10+, floor is
-            # 3.8): LF on every OS so the generated block stays byte-stable
-            # regardless of a downstream .gitattributes rule.
+            # newline="\n" via open() (write_text(newline=) is 3.10+; scripts stay
+            # 3.9-runnable, floor 3.11): LF on every OS so the generated block stays
+            # byte-stable regardless of a downstream .gitattributes rule.
             with doc.open("w", encoding="utf-8", newline="\n") as fh:
                 fh.write(updated)
             print("code map regenerated -> {}".format(doc))

@@ -34,7 +34,7 @@ that easier to achieve in a real project — or get out of the way.
   [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
 - **Keep scripts stdlib-only and cross-platform.** The kit's own scripts
   (`trace.py`, `check.py`, `gen_arch_map.py`, `bootstrap.py`) must run on a clean
-  Python 3.8+ with no pip installs, on Windows and POSIX. Tools a *downstream*
+  Python 3.11+ with no pip installs, on Windows and POSIX. Tools a *downstream*
   project needs (ruff, pytest) are theirs to install; the kit must not require
   them to run its own checks.
 - **Stack-agnostic core, Python-first reference.** The process and ID scheme are
@@ -91,7 +91,7 @@ that easier to achieve in a real project — or get out of the way.
   non-Python) repo; a reference doc like `EXAMPLE.md`, not scaffolded.
 - `tests/` — the kit's own pytest suite (meta-repo dev tooling; the stdlib-only
   rule applies to the kit scripts, not to testing them). CI:
-  `.github/workflows/test.yml` runs it on Linux + Windows (Python 3.8 + latest)
+  `.github/workflows/test.yml` runs it on Linux + Windows (Python 3.11 + latest)
   and macOS (latest).
 - [`docs/status.md`](docs/status.md) + `docs/{gate-policy,push-policy,privacy-check,run-state}`
   + root `agent-resume.{cmd,sh,command}` — the kit's **unattended layer

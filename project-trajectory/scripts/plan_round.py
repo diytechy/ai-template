@@ -3,7 +3,7 @@
 coordinator drives (DP-001 selected plan P1 / WI-194; the protocol it models is
 process-options.md "Dual-plan decomposition").
 
-Stack-agnostic, standard-library only (Python 3.8+, Windows/POSIX). Like
+Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX). Like
 `schedule.py` (the IF-053 shape this module deliberately mirrors), it never
 launches a session, touches git, or writes a file — the coordinator
 (`agent_loop`) asks *what is ready*, runs the sessions, and records the

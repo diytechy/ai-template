@@ -736,7 +736,7 @@ Promote decisions, constraints, and gotchas into `status.md` or the registries;
 durable research findings use optional knowledge packs (`process-options.md`,
 "Research track & knowledge packs"). The kit requires no memory tooling.
 
-Ready reference scripts ship with this template (Python 3.8+, stdlib only — no
+Ready reference scripts ship with the template (Python 3.11+, stdlib only — no
 pip needed to run them):
 
 - `scripts/check.py` — the harness itself. Gate-scoped (`--gate G1|G2|G3|all`,

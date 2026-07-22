@@ -26,7 +26,7 @@ any repo and wire the harness to that repo's tooling (SN-003).
   silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
   generated matrix that must report **zero orphans** before each gate (SN-002).
-- **Runnable scripts** — stdlib-only Python 3.8+, no pip needed for the kit
+- **Runnable scripts** — stdlib-only Python 3.11+, no pip needed for the kit
   itself (SN-011). Cross-platform `setup`/`check` launchers (`.sh` + `.ps1`)
   ship for Linux/macOS and Windows. The **authoritative per-script table**
   (one home, one row per script) is the kit README:
@@ -194,7 +194,7 @@ python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --dry-run
 python project-trajectory/scripts/bootstrap.py --dest /path/to/repo --agents claude
 ```
 
-> **Which `python`?** Needs 3.8+. If `python` is missing or points at Python 2,
+> **Which `python`?** Needs 3.11+. If `python` is missing or points at Python 2,
 > use `python3` (Linux/macOS) or the `py` launcher (Windows). On a fresh macOS,
 > the first `python3` may prompt to install the Command Line Tools — accept it
 > (or run `xcode-select --install`), which also provides `git`.

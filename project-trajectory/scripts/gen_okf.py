@@ -573,7 +573,7 @@ def main():
         if current.get(rel) != content:
             p.parent.mkdir(parents=True, exist_ok=True)
             # open(newline=...) rather than write_text(newline=...): the latter
-            # is Python 3.10+, the kit floor is 3.8.
+            # is Python 3.10+; the scripts stay 3.9-runnable (declared floor 3.11).
             with p.open("w", encoding="utf-8", newline="\n") as fh:
                 fh.write(content)
             wrote += 1

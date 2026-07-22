@@ -4,7 +4,7 @@ its exit/report contract into the round state machine's typed step outcome
 (DP-001 selected plan P4 / WI-197; the protocol is process-options.md "Dual-plan
 decomposition").
 
-Stack-agnostic, standard-library only (Python 3.8+, Windows/POSIX). This is the
+Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX). This is the
 thin seam between two shipped, unchanged pieces:
 
   * `plan_coverage.py` (IF-057, WI-190) — the mechanical commensurability

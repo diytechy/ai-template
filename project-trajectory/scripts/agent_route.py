@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Model routing for the unattended coordinator — the enable-list + availability
 selector and the fixed escalation policy (process-options.md "Unattended
-operation" -> the routing/escalation subsection). Stdlib only, Python 3.8+.
+operation" -> the routing/escalation subsection). Stdlib only, Python 3.11+.
 
 This is the declared, legible half of heterogeneous implementer/reviewer
 scheduling. It is **config, not a catalog**, and its registry is the

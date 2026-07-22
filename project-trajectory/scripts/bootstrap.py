@@ -271,7 +271,7 @@ def _write_text_lf(path, text):
     would emit CRLF scaffolds — including the seeded `agent-resume.sh`, whose
     CRLF shebang breaks `#!/bin/sh` (the exact trap gitattributes.template
     documents). Same explicit-newline pattern the other generators use
-    (gen_arch_map/gen_okf); 3.8-safe. Every scaffold/policy TEXT write routes
+    (gen_arch_map/gen_okf); stays 3.9-runnable. Every scaffold/policy TEXT write routes
     through here; the `.py` copy branch stays write_bytes (byte-for-byte)."""
     with path.open("w", encoding="utf-8", newline="\n") as f:
         f.write(text)

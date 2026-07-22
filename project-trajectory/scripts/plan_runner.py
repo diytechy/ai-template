@@ -17,7 +17,7 @@ drives them through the session machinery and writes the artifacts.
 agent_loop re-exports `wi_plan_mode`/`PLAN_MODE_DUAL`/`run_dual_plan_round`
 (and the `_dp_*` helpers) so its public surface is unchanged.
 
-Stdlib only, Python 3.8+, Windows/POSIX.
+Stdlib only, Python 3.11+, Windows/POSIX.
 
 Contracts: IF-066 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """

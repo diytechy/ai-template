@@ -20,7 +20,7 @@ integrator (agent_dispatch) both stand on this layer:
     the telemetry commit) + the generated run-state write.
 
 agent_loop re-exports the names it historically exposed, so its public
-surface is unchanged. Stdlib only, Python 3.8+, Windows/POSIX.
+surface is unchanged. Stdlib only, Python 3.11+, Windows/POSIX.
 
 Contracts: IF-037, IF-065 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """

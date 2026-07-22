@@ -101,14 +101,11 @@ def load_script(name):
 def _active_cov_datafile():
     """The measuring session's coverage datafile, or None when unmeasured.
 
-    pytest-cov < 7 exported it as COV_CORE_DATAFILE; 7.0 removed the whole
-    COV_CORE_* env contract, so fall back to asking the in-process coverage
-    object pytest-cov drives (Coverage.current()) for its configured path.
-    Keying on the env var alone silently unwired every child under pytest-cov 7
-    and the coverage floor read a fraction of reality."""
-    datafile = os.environ.get("COV_CORE_DATAFILE")
-    if datafile:
-        return datafile
+    pytest-cov 7 removed the COV_CORE_* env contract (there is no
+    COV_CORE_DATAFILE anymore), so ask the in-process coverage object pytest-cov
+    drives (Coverage.current()) for its configured path. The kit pins pytest-cov
+    7.x for all supported Pythons (requirements-dev.txt / WI-262), so this is the
+    single measuring path — the pre-7 env-var fallback (WI-105) is gone."""
     try:
         import coverage
     except ImportError:  # plain pytest without pytest-cov: unmeasured run

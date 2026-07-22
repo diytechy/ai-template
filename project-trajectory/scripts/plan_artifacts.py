@@ -3,7 +3,7 @@
 (DP-001 selected plan P5 / WI-198; the protocol it serves is
 process-options.md "Dual-plan decomposition").
 
-Stack-agnostic, standard-library only (Python 3.8+, Windows/POSIX). Where
+Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX). Where
 `plan_round.py` (IF-058) is the pure lifecycle and `plan_coverage.py` (IF-057)
 is the read-side coverage pre-pass, this module is the round's **effects**: it
 allocates the round's `docs/plans/DP-NNN-<slug>/` directory, writes each stage

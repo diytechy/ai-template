@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate the skills applicability index from the SKILL.md frontmatter.
 
-Stack-agnostic kit, stdlib-only (Python 3.8+). The kit's `skills/` folder holds
+Stack-agnostic kit, stdlib-only (Python 3.11+). The kit's `skills/` folder holds
 agent-neutral skill definitions (one dir per skill, each with a `SKILL.md` whose
 YAML-ish frontmatter carries the agent-facing `name`/`description` and this kit's
 applicability metadata: `stacks`, `domains`, `phases`, `tags`, `scope`). This
