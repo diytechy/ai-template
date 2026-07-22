@@ -1070,6 +1070,10 @@ Compact format — location · problem → fix.
    validation, M-18 (session timeout wiring), M-20 (policy malformation
    warnings), M-22 (verdict-path unlink), M-23/M-33 (BOM readers). These are
    mechanical, stdlib, and directly protect the walk-away guarantee.
+   **[Reconciled 2026-07-21: this recommendation is the pre-fix plan — ALL
+   eight of its items (H-1, H-2, H-4, M-18, M-20, M-22, M-23, M-33) were
+   applied in the fix pass and appear in "Fixed in this pass" above. Nothing
+   here remains open; the list is retained as the original record.]**
 2. **File H-3 (spine-class persistence) as its own reviewed WI** — it changes
    reservation metadata semantics and integration gating; it needs recovery
    tests, not a drive-by fix.
