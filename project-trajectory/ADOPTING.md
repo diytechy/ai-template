@@ -584,6 +584,58 @@ table.
   3.x+" hints. The scripts stay de-facto runnable on 3.9 for now (no 3.11-only
   syntax has landed yet), so the bump is a promise you enforce in CI immediately,
   not a same-day code break.
+- **`--require-verified` widened to method-blind (2026-07, WI-259).** The G3
+  traceability floor `trace.py --require-verified` now demands `Status=Verified`
+  for **every** ratified, in-phase SR regardless of its `Verification` method
+  (was `Verification=Test` only), matching `derive_gate.sr_gate` — which already
+  blocked G3 for any unverified decomposed SR. **Downstream impact:** a repo
+  passing `--require-verified` today with a non-Test SR (Demonstration / Manual /
+  Analysis / Inspection / Attest / Critique) still below `Verified` will now
+  fail — it was never actually at the derived gate, only reporting so. To resync:
+  set those SRs to `Verified` once acceptance is met (attach the TC evidence /
+  recorded attestation), or mark them `Draft` if not yet ratified. The
+  verification-basis report is now three-way (mechanized / demonstrated-observed /
+  attested); no registry schema change.
+- **Integrator verdict-gate unanimity + review-policy dial redefinition (2026-07,
+  WI-260).** The parallel-dispatch integrator no longer clears on a *count* of
+  approving phases: **every scheduled verdict phase's latest verdict at the
+  reviewed head must be APPROVE** (REVIEW-A, REVIEW-B, and CRITIQUE on a
+  render-surface train). The `review-policy` dial now counts **reviewer** phases
+  scheduled (0/1/2); CRITIQUE is orthogonal — required on every render-surface
+  train regardless of dial. A same-head CHANGES-REQUESTED→APPROVE flip escalates
+  NEEDS-HUMAN rather than silently winning; a never-filed required phase pages
+  instead of stalling. **Downstream impact:** if your repo runs the unattended
+  parallel dispatcher, a train that previously integrated on an extra approval
+  covering a missing phase will now block — ensure each scheduled phase actually
+  files its verdict. No registry schema change.
+- **Status-map freshness gate made machine-pure (2026-07, WI-266).** The
+  `docs/open-items.md` PENDING block is split into a committed-tree-pure gated
+  region (blocked WI rows + the run-state ask) and a **machine-local advisory**
+  region (the `refs/llm/*`-derived source conflicts, reservations, quarantines,
+  and stranded-train notes that don't transport with clone/push), separated by a
+  labeled boundary; only the pure region is byte-compared by `--status --check`.
+  **Downstream impact:** an adopter who seeded `docs/open-items.md` from the old
+  template gets one STALE nudge on the next `status-map` gate — run
+  `gen_trajectory.py --status` to regenerate the labeled block (your hand-authored
+  `## OI-N` briefs above the markers stay byte-untouched). Overwrite the kit-owned
+  `OPEN_ITEMS.template.md` on resync.
+- **The terminal `retired` work-item Status (2026-07, WI-267).** The work-item
+  lifecycle gains a sixth `Status`, **`retired`** — a terminal WON'T-BUILD row
+  that stays in the registry forever with its reason in the `Deliverable` column
+  (never a `done` overload). Never breaking, vacuous until used: no schema/header
+  change, and a registry with no retired rows behaves exactly as before. After
+  resync, `check_trajectory.py` accepts `retired` (the unknown-status lint no
+  longer fires) and validates it as terminal — **R-A** requires a non-empty
+  `Deliverable` (the reason) and **R-F** requires an **empty** `SpecRef`;
+  `schedule.py`/`agent_dispatch.py` never schedule it or count it as open;
+  `gen_trajectory.py` renders it in its own dashboard bucket (a separate count,
+  never folded into `done`). One behavior to know: **a retired predecessor does
+  NOT satisfy a successor's hard dependency** the way `done` does — a live WI
+  hard-blocked on a retired one stays `waiting` and is surfaced (a `dead-dep`
+  finding; warn plain, ERROR under `--strict`), so re-home that edge or retire the
+  successor too. Resync the kit-owned set together (`check_trajectory.py`,
+  `schedule.py`, `agent_dispatch.py`, `gen_trajectory.py`) so the validator,
+  scheduler, and dashboard agree.
 
 ### Repos whose `AGENTS.md` already means something else
 
