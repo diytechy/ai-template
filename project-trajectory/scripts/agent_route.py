@@ -686,6 +686,35 @@ def select(
     )
 
 
+def winstay_preferred_ids(next_primary, enabled, registry, cooldowns=None, now=0.0):
+    """Resolve a win-stay `next_primary` (the reviewer FAMILY `escalate` returns
+    when the last round's margin cleared the bar) into the enabled model ids of
+    that family, for use as `select()`'s `preferred_ids` — this is how the
+    documented win-stay policy actually biases the next draw (WI-264, M-34).
+
+    Fail-open by contract (the 2026-07-21 author-identity lesson — dormant policy
+    is being wired into the LIVE routing path, so it must never wedge a session):
+    a None/blank `next_primary`, or a family with no enabled + registered +
+    currently-available (non-cooling) member, yields () — the caller then draws
+    the ordinary WI-263 weighted baseline, unchanged. A returned id still only
+    PINS if `select()` also finds it in the tier-filtered pool, so an off-tier
+    win-stay family degrades there too (a preference never changes the tier).
+    Enable-list order is preserved, so a multi-model family pins its top row."""
+    if not next_primary:
+        return ()
+    fam = str(next_primary).strip()
+    if not fam:
+        return ()
+    cooldowns = cooldowns or {}
+    return tuple(
+        mid
+        for mid in enabled
+        if mid in registry
+        and registry[mid].family == fam
+        and available(cooldowns, mid, now)
+    )
+
+
 def pool_context(enabled, registry, cooldowns=None, now=0.0):
     """The enabled pool, one line per row, for a page-human/failure banner:
     id, tier + Family, cooling-vs-available state, and the row's `Notes` cell.

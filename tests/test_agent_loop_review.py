@@ -755,3 +755,129 @@ def test_scheduler_and_gate_agree_on_reviewer_phases(tmp_path, rp_int):
     scheduled = set(st.schedule_review_round()) if rp_int >= 1 else set()
     required = dispatcher._required_phases(docs, ["WI-201"], (True, rp_int))
     assert scheduled == required
+
+
+# --- WI-264: win-stay routes live through the managed draw (M-34) ------------ #
+# A rich REVIEW-A body outscores a sparse REVIEW-B, so the round's escalation
+# names REVIEW-A's family as next_primary (win). The WI-263 weighted baseline
+# would rotate the NEXT REVIEW-A draw to the other provider; the wiring must
+# instead keep it on the winning family (win-STAY), OVERRIDING the weighted
+# baseline. Proves the policy executes end-to-end through agent_loop's real
+# draw/escalation path, not just the pure helpers.
+# REVIEW-A's body anchors to work.txt:1 (the real line the fake writes) with a
+# concrete, actionable fix -> higher substance; REVIEW-B's cites a non-existent
+# line -> unanchored, lower substance. So the round's higher-substance family is
+# REVIEW-A's (the win-stay primary). Both CHANGES-REQUESTED (forces a rework +
+# a SECOND review round) and lexically distinct (no near-duplicate tripwire).
+WINSTAY_ANCHORED = (  # REVIEW-A body: well-anchored -> the round's primary family
+    "- [MAJOR] work.txt:1 -> the progress line is rewritten in place, so a "
+    "crash between builds loses the prior step's marker -> append the step "
+    "index instead of overwriting, and fsync before returning -> @owner\n"
+    "VERDICT: CHANGES-REQUESTED findings=1\n"
+)
+WINSTAY_UNANCHORED = (  # REVIEW-B body: cites a line that does not exist (sparse)
+    "- [MINOR] work.txt:42 -> a distant comment somewhere reads awkwardly to a "
+    "reviewer skimming quickly -> consider softening the tone later -> @owner\n"
+    "VERDICT: CHANGES-REQUESTED findings=1\n"
+)
+
+
+def _winstay_repo(tmp_path):
+    """A managed repo with THREE distinct-family reviewers + a weighted enable
+    list whose REVIEW rotation sends REVIEW-A to PROVB then PROVD across rounds —
+    so win-stay keeping PROVB is observably different from the baseline."""
+    repo = tmp_path / "repo"
+    (repo / "docs" / "requirements").mkdir(parents=True)
+    (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
+    (repo / "docs" / "run-phase").write_text("BUILD\n", encoding="utf-8")
+    (repo / "docs" / "review-policy").write_text("2\n", encoding="utf-8")
+    (repo / "docs" / "requirements" / "work-items.csv").write_text(
+        "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,"
+        "SpecRef,BuildTier,SafetyClass\n"
+        "WI-201,Scoped work for WI-201,ws,,,queued,,,medium,ordinary\n",
+        encoding="utf-8",
+    )
+    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "loop@example.com")
+    _git(repo, "config", "user.name", "Loop Test")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "initial")
+    _git(repo, "checkout", "-q", "-b", "llm/train/t1")
+
+    ctl = tmp_path / "control"
+    ctl.mkdir()
+    fake = tmp_path / "fake.py"
+    fake.write_text(FAKE, encoding="utf-8")
+    cmd = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
+        sys.executable, fake, ctl
+    )
+    rows = [
+        ["Id", "Family", "Model", "Version", "Tier", "CmdTemplate", "Env", "Notes"],
+        ["PROVA-BUILD-1", "PROVA", "builda", "1", "medium", cmd, "", ""],
+        ["PROVB-REV-1", "PROVB", "revb", "1", "medium", cmd, "", ""],
+        ["PROVC-REV-1", "PROVC", "revc", "1", "medium", cmd, "", ""],
+        ["PROVD-REV-1", "PROVD", "revd", "1", "medium", cmd, "", ""],
+    ]
+    with open(
+        str(repo / "docs" / "agents.csv"), "w", encoding="utf-8", newline=""
+    ) as fh:
+        csv.writer(fh).writerows(rows)
+    # REVIEW weights: PROVB:PROVD = 1:2 rotates the REVIEW-A draw PROVB (ordinal 0)
+    # then PROVD (ordinal 1); PROVC held out (0 = fallback-only).
+    (repo / "docs" / "agents-enabled").write_text(
+        "# preference order + per-phase draw weights\n"
+        "PROVA-BUILD-1\n"
+        "PROVB-REV-1 REVIEW=1\n"
+        "PROVC-REV-1 REVIEW=0\n"
+        "PROVD-REV-1 REVIEW=2\n",
+        encoding="utf-8",
+    )
+    (ctl / "bodies.json").write_text(
+        json.dumps(
+            {
+                "revb": WINSTAY_ANCHORED,  # REVIEW-A: the higher-substance primary
+                "revd": WINSTAY_UNANCHORED,  # REVIEW-B: lower substance
+                "revc": WINSTAY_UNANCHORED,
+                "_default": WINSTAY_UNANCHORED,
+            }
+        ),
+        encoding="utf-8",
+    )
+    # done_after=1: each build immediately signals DONE -> a review round; a
+    # CHANGES-REQUESTED round reworks and DONEs again -> a SECOND review round,
+    # which is where win-stay biases the REVIEW-A draw.
+    (ctl / "done_after").write_text("1", encoding="utf-8")
+    return repo, ctl, cmd
+
+
+def test_winstay_biases_the_next_review_draw_over_the_weighted_baseline(
+    tmp_path, monkeypatch
+):
+    # A low-but-producible margin threshold (bounded by 1.0; the pipeline emits
+    # fractional margins — the impossible margin:3 of the old fixture is exactly
+    # what left this policy dead, M-34). The anchored REVIEW-A body clears it.
+    monkeypatch.setenv("AGENT_ROUTE_MARGIN", "0.05")
+    repo, ctl, cmd = _winstay_repo(tmp_path)
+    proc = _loop(repo, cmd, "--max-iterations", "12")
+    out = proc.stdout + proc.stderr
+    review_a = _routes(out, "REVIEW-A")
+    assert len(review_a) >= 3, out  # rounds 1 (baseline), 2 (win-stay), 3 (shift)
+    # Round 1 escalation recorded a WIN naming PROVB as next round's feedback.
+    assert "PROVB leads next round's feedback" in out, out
+    # Round-1 REVIEW-A drew PROVB as the weighted baseline's first pick (ordinal 0).
+    assert "PROVB-REV-1" in review_a[0], review_a
+    # Round-2 REVIEW-A: the weighted baseline (ordinal 1) would rotate to PROVD,
+    # but win-stay OVERRIDES it back to the winning family PROVB. This is the
+    # live-wiring bite: revert the draw/apply_decision wiring and this draw falls
+    # back to PROVD (the ordinary weighted baseline).
+    assert "PROVB-REV-1" in review_a[1], (
+        "win-stay must keep round-2 REVIEW-A on the winner PROVB, "
+        "not the weighted-baseline PROVD: {}".format(review_a)
+    )
+    # Round-3 REVIEW-A: the two-round CHANGES-REQUESTED streak swapped the
+    # implementer (escalate returned next_primary=None), so win-stay is cleared
+    # and the draw SHIFTS to the weighted baseline (ordinal 2 -> PROVD) — proving
+    # the baseline genuinely rotates and round 2's PROVB was the override, not a
+    # baseline that always picks PROVB.
+    assert "PROVD-REV-1" in review_a[2], review_a

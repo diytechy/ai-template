@@ -849,6 +849,12 @@ class RoutingState:
         self.at_top_tier = False  # the implementer tier has been raised to the top
         self.impl_tier_override = None  # escalation raised the BUILD tier
         self.impl_exclude = set()  # families to avoid for the next BUILD
+        # WI-264: the win-stay directive from the last escalation — a reviewer
+        # FAMILY to prefer as the next review round's primary feedback source
+        # when the last round's margin cleared the bar, else None (lose-shift ->
+        # the ordinary weighted draw). apply_decision refreshes it every round;
+        # the review draw validates it against the live pool (fail-open).
+        self.next_primary = None
         # --- critique-loop state (WI-068; vacuous when no Critique SR exists) ---
         self.critique_queue = []  # ["CRITIQUE"] when a critique round is scheduled
         self.critique_scope = set()  # the in-scope Critique SR ids for this loop
@@ -948,9 +954,16 @@ class RoutingState:
             self.page_fails_since,
         )
 
-    def apply_decision(self, action, merged):
+    def apply_decision(self, action, merged, next_primary=None):
         """The STATE consequences of an escalation decision only — no I/O. The
-        caller keeps the prints / failure_action / banners / run-state writes."""
+        caller keeps the prints / failure_action / banners / run-state writes.
+
+        `next_primary` (WI-264) is the win-stay directive from the SAME decision:
+        the reviewer family to prefer next review round on a win, else None. It is
+        stored raw here and validated against the live pool at draw time
+        (fail-open), and refreshed every round — a win sets the family, a
+        loss/page/swap/tier-up returns None and clears it (lose-shift)."""
+        self.next_primary = next_primary
         if action == "page-human":
             # Re-arm the shared-failure tally so already-paged strong-tier fails
             # can't re-page every subsequent round — only NEW fails accumulate.
@@ -1780,6 +1793,25 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # every freshly minted train, so the weights were inert across trains) —
         # NOT the global session counter, which strides across phases and would
         # alias against the weight sum. No randomness, no new durable store.
+        # WI-264 (win-stay/lose-shift, live): on a win the last escalation left
+        # st.next_primary set to the winning reviewer FAMILY — prefer that family
+        # as THIS review round's primary feedback source, OVERRIDING the WI-263
+        # weighted baseline for the draw. A loss/page/swap left it None -> () ->
+        # the weighted baseline stands (lose-shift). Gated to review draws because
+        # next_primary is defined as the feedback source, not the implementer.
+        # Fail-open: an unknown/disabled/cooling family also resolves to () and
+        # never wedges the session (and select() drops any off-tier pin).
+        winstay_pref = (
+            agent_route.winstay_preferred_ids(
+                st.next_primary, enabled, registry, st.cooldowns, now
+            )
+            if is_review
+            else ()
+        )
+        phase_pin = [prefer_map[phase]] if phase in prefer_map else ()
+        # Win-stay first -> it takes precedence over the static phase pin; both
+        # only pin an id that survives the tier/heterogeneity pool filter.
+        preferred_ids = list(winstay_pref) + list(phase_pin)
         route_id, reason = agent_route.select(
             enabled,
             registry,
@@ -1788,7 +1820,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             st.cooldowns,
             exclude,
             prefer_different,
-            [prefer_map[phase]] if phase in prefer_map else (),
+            preferred_ids,
             agent_route.phase_weights(ctx.weight_map, phase),
             phase_draw_ordinal(ctx.draw_iter_dirs, phase),
         )
@@ -2084,7 +2116,7 @@ def session_bookkeeping(
             # keeps only the page path's I/O (failure_action / banner /
             # run-state). apply_decision first is safe — failure_action does
             # not read page_fails_since.
-            st.apply_decision(decision["action"], merged)
+            st.apply_decision(decision["action"], merged, decision.get("next_primary"))
             if decision["action"] == "page-human":
                 fa = agent_route.failure_action(gate_policy)
                 print("route/failure ({}): {}".format(fa["mode"], fa["note"]))

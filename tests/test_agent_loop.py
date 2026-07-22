@@ -1464,6 +1464,85 @@ def test_routingstate_apply_decision_page_rearms_fail_tally():
     assert st.critique_queue == ["CRITIQUE"]
 
 
+def test_routingstate_apply_decision_stores_and_clears_next_primary():
+    # WI-264 (M-34): apply_decision must CONSUME the escalation's next_primary so
+    # the win-stay directive reaches the draw — the wiring gap the finding named.
+    # A win stores the winning reviewer family; the next decision refreshes it,
+    # and a loss/page/swap (next_primary None) clears it (lose-shift).
+    st = _rs()
+    assert st.next_primary is None  # nothing decided yet
+    st.apply_decision("continue", "APPROVE", "OPENAI")
+    assert st.next_primary == "OPENAI"  # win-stay: remembered for the next draw
+    st.apply_decision("continue", "APPROVE", "GOOGLE")
+    assert st.next_primary == "GOOGLE"  # refreshed every round
+    st.apply_decision("swap-implementer", "CHANGES-REQUESTED")  # None by default
+    assert st.next_primary is None  # lose-shift: cleared, weighted baseline stands
+
+
+def test_winstay_policy_executes_end_to_end_in_process(tmp_path):
+    # WI-264: the whole seam the loop wires, exercised in-process with the REAL
+    # functions in the loop's exact order — escalate -> apply_decision ->
+    # winstay_preferred_ids -> the review draw's composed preferred_ids -> select.
+    # Proves the documented win-stay/lose-shift POLICY executes (not prose-only).
+    route = load_script("agent_route")
+    reg_csv = (
+        "Id,Family,Model,Version,Tier,CmdTemplate,Env,Notes\n"
+        "PROVA-BUILD,PROVA,builda,1,medium,cli {prompt},,impl\n"
+        "PROVB-REV,PROVB,revb,1,medium,cli {prompt},,\n"
+        "PROVC-REV,PROVC,revc,1,medium,cli {prompt},,\n"
+        "PROVD-REV,PROVD,revd,1,medium,cli {prompt},,\n"
+    )
+    (tmp_path / "agents.csv").write_text(reg_csv, encoding="utf-8")
+    reg, errs = route.load_registry(tmp_path / "agents.csv")
+    assert errs == []
+    enabled = ["PROVA-BUILD", "PROVB-REV", "PROVC-REV", "PROVD-REV"]
+    # The WI-263 weighted baseline for the REVIEW draw rotates PROVB:PROVD 1:2
+    # (unequal shares -> a real rotation: counter 0 -> PROVB, counter 1 -> PROVD),
+    # PROVC held out (0 = fallback-only).
+    weights = {"PROVB-REV": 1, "PROVD-REV": 2, "PROVC-REV": 0}
+
+    def draw(st, counter):
+        # The loop's exact review-draw composition (agent_loop.py): win-stay
+        # preferred_ids FIRST (override), then the phase pin (none here); both
+        # over the different-family pool (REVIEW excludes the PROVA implementer).
+        winstay = route.winstay_preferred_ids(st.next_primary, enabled, reg)
+        chosen, _ = route.select(
+            enabled,
+            reg,
+            "medium",
+            exclude_families=["PROVA"],
+            prefer_different=True,
+            preferred_ids=list(winstay),
+            weights=weights,
+            counter=counter,
+        )
+        return chosen
+
+    st = _rs()
+    # SHIFT baseline first: with nothing decided, the weighted rotation governs
+    # (counter 0 -> PROVB, counter 1 -> PROVD).
+    assert draw(st, 0) == "PROVB-REV" and draw(st, 1) == "PROVD-REV"
+    # A WIN whose primary is PROVB (producible margin 0.3 >= the 0.15 default).
+    decision = route.escalate(
+        [{"verdict": "APPROVE", "tier": "medium", "margin": 0.3, "primary": "PROVB"}],
+        route.DEFAULT_CONSTANTS,
+    )
+    st.apply_decision(decision["action"], "APPROVE", decision.get("next_primary"))
+    assert st.next_primary == "PROVB"
+    # STAY: the very draw the baseline would send to PROVD (counter 1) now stays
+    # on the winner PROVB — win-stay OVERRODE the weighted baseline.
+    assert draw(st, 1) == "PROVB-REV"
+    # SHIFT: a sub-threshold next round clears the directive; the draw returns to
+    # the weighted baseline (counter 1 -> PROVD), never wedging.
+    loss = route.escalate(
+        [{"verdict": "APPROVE", "tier": "medium", "margin": 0.05, "primary": "PROVB"}],
+        route.DEFAULT_CONSTANTS,
+    )
+    st.apply_decision(loss["action"], "APPROVE", loss.get("next_primary"))
+    assert st.next_primary is None
+    assert draw(st, 1) == "PROVD-REV"
+
+
 def test_routingstate_record_critique_verdict_rework():
     st = _rs()
     st.critique_limit = 3

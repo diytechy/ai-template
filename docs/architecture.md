@@ -274,6 +274,7 @@ Contracts (interfaces): IF-044, IF-045
 | `available(cooldowns, model_id, now)` | True when `model_id` is not cooling down. `cooldowns` maps id -> the epoch |  |
 | `cool(cooldowns, model_id, now, seconds)` | Put `model_id` on cooldown until now+seconds (its limit is probably |  |
 | `select(enabled, registry, tier, now, cooldowns, exclude_families, prefer_different, preferred_ids, weights, counter)` | Pick a model id from the enabled pool, or None. Returns (id, reason) — the |  |
+| `winstay_preferred_ids(next_primary, enabled, registry, cooldowns, now)` | Resolve a win-stay `next_primary` (the reviewer FAMILY `escalate` returns |  |
 | `pool_context(enabled, registry, cooldowns, now)` | The enabled pool, one line per row, for a page-human/failure banner: |  |
 | `load_constants(env)` | The escalation constants: the per-repo-overridable defaults, each read from |  |
 | `escalate(rounds, constants, swapped, at_top_tier, fails_since)` | The fixed win-stay/lose-shift decision after a review round. |  |

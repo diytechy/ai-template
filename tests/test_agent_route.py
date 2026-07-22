@@ -1148,3 +1148,107 @@ def test_load_registry_refuses_shell_unsafe_model_cell(tmp_path):
     assert len(errors) == 2
     assert all("shell-unsafe" in e for e in errors)
     assert any("EVIL-1" in e for e in errors) and any("EVIL-2" in e for e in errors)
+
+
+# --- WI-264: win-stay `next_primary` wired into the live draw (M-34) --------- #
+# `escalate` returns a reviewer FAMILY to prefer next round on a win (margin >=
+# threshold), else None (lose-shift). `winstay_preferred_ids` resolves that
+# family to the enabled model ids used as select()'s preferred_ids — the seam
+# that makes the policy execute instead of staying prose-only. Fail-open by
+# contract: an unusable next_primary yields () and the ordinary weighted draw
+# (WI-263) stands, so the dormant policy can never wedge a live session.
+def test_winstay_preferred_ids_resolves_family_and_fail_opens(tmp_path):
+    reg = _weight_registry(tmp_path)
+    enabled = ["OPENAI-TERRA", "MOONSHOT-KIMI", "XAI-GROK", "ANTHROPIC-FABLE"]
+    # A win names a family -> its enabled, registered, available ids (enable
+    # order), ready to pin the next draw.
+    assert route.winstay_preferred_ids("MOONSHOT", enabled, reg) == ("MOONSHOT-KIMI",)
+    # Fail-open cases every one degrades to () (draw the weighted baseline):
+    assert route.winstay_preferred_ids(None, enabled, reg) == ()  # lose-shift
+    assert route.winstay_preferred_ids("   ", enabled, reg) == ()  # blank
+    assert route.winstay_preferred_ids("NOPE", enabled, reg) == ()  # unknown family
+    # Disabled/absent provider: the family is real but not in THIS enable list.
+    assert route.winstay_preferred_ids("XAI", ["MOONSHOT-KIMI"], reg) == ()
+    # Cooling-only member: no currently-available id of the family -> drop it.
+    cd = {}
+    route.cool(cd, "MOONSHOT-KIMI", now=0.0, seconds=300)
+    assert route.winstay_preferred_ids("MOONSHOT", enabled, reg, cd, 10.0) == ()
+
+
+def test_winstay_override_beats_the_weighted_baseline_but_shift_does_not(tmp_path):
+    # The precedence WI-264 must make explicit: a SET next_primary (win-STAY)
+    # OVERRIDES the WI-263 weighted baseline; an UNSET one (lose-SHIFT) leaves the
+    # weighted draw untouched. The baseline weights favour TERRA 8:1:1, so the
+    # contrast is unambiguous.
+    reg = _weight_registry(tmp_path)
+    enabled = ["OPENAI-TERRA", "MOONSHOT-KIMI", "XAI-GROK"]
+    weights = {"OPENAI-TERRA": 8, "MOONSHOT-KIMI": 1, "XAI-GROK": 1}
+    c = route.DEFAULT_CONSTANTS
+    # WIN: a two-reviewer round with a producible margin (>= the float default,
+    # never the impossible margin:3 of the old fixture, M-34) -> MOONSHOT leads.
+    win = route.escalate(
+        [
+            {
+                "verdict": "APPROVE",
+                "tier": "strong",
+                "margin": 0.4,
+                "primary": "MOONSHOT",
+            }
+        ],
+        c,
+    )
+    assert win["action"] == "continue" and win["next_primary"] == "MOONSHOT"
+    pref = route.winstay_preferred_ids(win["next_primary"], enabled, reg)
+    stay = [
+        route.select(
+            enabled, reg, "strong", preferred_ids=list(pref), weights=weights, counter=n
+        )[0]
+        for n in range(10)
+    ]
+    assert set(stay) == {"MOONSHOT-KIMI"}  # win-stay pins EVERY draw over 8:1:1
+    # SHIFT: a sub-threshold margin -> next_primary None -> () -> the weighted
+    # baseline governs (TERRA dominates, and the draw is NOT pinned to one id).
+    shift = route.escalate(
+        [
+            {
+                "verdict": "APPROVE",
+                "tier": "strong",
+                "margin": 0.05,
+                "primary": "MOONSHOT",
+            }
+        ],
+        c,
+    )
+    assert shift["next_primary"] is None
+    pref2 = route.winstay_preferred_ids(shift["next_primary"], enabled, reg)
+    assert pref2 == ()
+    draw = [
+        route.select(
+            enabled,
+            reg,
+            "strong",
+            preferred_ids=list(pref2),
+            weights=weights,
+            counter=n,
+        )[0]
+        for n in range(1, 11)
+    ]
+    assert draw.count("OPENAI-TERRA") >= 7  # weighted baseline, not win-stay
+    assert "MOONSHOT-KIMI" not in draw or draw.count("MOONSHOT-KIMI") <= 1
+
+
+def test_winstay_invalid_next_primary_degrades_to_the_weighted_draw(tmp_path):
+    # FAIL-OPEN through the whole seam: a bogus/disabled win-stay family resolves
+    # to () and select() then draws the ordinary weighted rotation rather than
+    # halting or dead-ending (the 2026-07-21 author-identity liveness lesson).
+    reg = _weight_registry(tmp_path)
+    enabled = ["OPENAI-TERRA", "MOONSHOT-KIMI", "XAI-GROK"]
+    weights = {"OPENAI-TERRA": 4, "MOONSHOT-KIMI": 1, "XAI-GROK": 1}
+    for bogus in ("GHOST-FAMILY", None, "MOONSHOT"):  # last: disabled below
+        pool = ["OPENAI-TERRA", "XAI-GROK"] if bogus == "MOONSHOT" else enabled
+        pref = route.winstay_preferred_ids(bogus, pool, reg)
+        assert pref == ()
+        chosen, reason = route.select(
+            pool, reg, "strong", preferred_ids=list(pref), weights=weights, counter=0
+        )
+        assert chosen in pool and "selected" in reason  # a real draw, no wedge
