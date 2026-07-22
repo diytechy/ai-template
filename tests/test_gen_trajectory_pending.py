@@ -269,6 +269,114 @@ def test_check_fails_on_a_hand_staled_block(tmp_path):
     assert "STALE" in stale.stderr
 
 
+# --- M-10 / WI-266: the freshness gate is a PURE function of the committed tree -
+
+
+def test_check_ignores_machine_local_ref_drift(tmp_path):
+    # M-10/WI-266: refs/llm/* don't transport with clone/push, so a committed
+    # open-items.md generated on the dispatch machine carries machine-local
+    # advisory lines (conflicts / reservations / quarantines) that a second clone
+    # (CI, another machine) cannot reproduce. The --status --check freshness gate
+    # must NOT read STALE on that difference alone — only the committed-tree-pure
+    # region is gated. (Pre-change, the whole-block byte-compare fails here.)
+    _init(tmp_path)
+    # Generate WITH a source-conflict ref present — the dispatch machine.
+    _commit_tree_ref(
+        tmp_path,
+        "refs/llm/conflict/p0-g3-WI-060-c0de",
+        '{"train": "p0-g3-WI-060-c0de", "tip": "x", "ihead": "y", "paths": "src/a.py"}',
+    )
+    assert _gen(tmp_path).returncode == 0
+    assert "Source conflict" in _block(tmp_path)  # advisory line generated
+    assert _gen(tmp_path, "--check").returncode == 0  # fresh on this machine
+    # Simulate a second clone: the machine-local ref is GONE, but the committed
+    # file still carries the advisory line. Regeneration now omits it — yet the
+    # gate must still pass, because that line is excluded from the byte-compare.
+    _git(tmp_path, "update-ref", "-d", "refs/llm/conflict/p0-g3-WI-060-c0de")
+    assert "Source conflict" in _block(tmp_path)  # committed line untouched
+    check = _gen(tmp_path, "--check")
+    assert check.returncode == 0, check.stdout + check.stderr
+
+
+def test_check_fails_on_pure_drift_even_with_machine_local_advisory(tmp_path):
+    # The gate still bites the committed-tree-pure region: a hand-edited blocked
+    # row (source (a), pure) fails --check even while a machine-local advisory
+    # line is present in the same block.
+    _init(
+        tmp_path,
+        "WI-001,Seed,scripts,,,done,seeded,,,,\n"
+        "WI-051,Split,requirements,,,blocked,,,,high-risk,docs/ratify/WI-051.md\n",
+    )
+    (tmp_path / "docs" / "ratify").mkdir()
+    (tmp_path / "docs" / "ratify" / "WI-051.md").write_text("plan\n", encoding="utf-8")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "plan")
+    _commit_tree_ref(
+        tmp_path,
+        "refs/llm/conflict/p0-g3-WI-060-c0de",
+        '{"train": "p0-g3-WI-060-c0de", "paths": "src/a.py"}',
+    )
+    assert _gen(tmp_path).returncode == 0
+    assert "Source conflict" in _block(tmp_path)  # advisory present
+    assert _gen(tmp_path, "--check").returncode == 0
+    # Hand-edit the PURE blocked-row line -> must go STALE.
+    oi = tmp_path / "docs" / "open-items.md"
+    text = oi.read_text(encoding="utf-8")
+    staled = text.replace("attest/ratify", "attest/ratify NOW — HAND EDIT")
+    assert staled != text
+    oi.write_text(staled, encoding="utf-8")
+    stale = _gen(tmp_path, "--check")
+    assert stale.returncode == 1
+    assert "STALE" in stale.stderr
+
+
+def test_check_fails_when_the_machine_local_label_drifts(tmp_path):
+    # The advisory LABEL is committed-tree-pure (a constant string sitting at the
+    # mask boundary, inclusive): hand-editing it must fail --check, so the
+    # exclusion stays VISIBLE and cannot be silently deleted or reworded.
+    _init(tmp_path)
+    assert _gen(tmp_path).returncode == 0
+    assert _gen(tmp_path, "--check").returncode == 0
+    oi = tmp_path / "docs" / "open-items.md"
+    text = oi.read_text(encoding="utf-8")
+    assert "Machine-local advisory" in text  # the label is present + gated
+    staled = text.replace(
+        "Machine-local advisory", "Machine-local advisory (HAND EDIT)"
+    )
+    assert staled != text
+    oi.write_text(staled, encoding="utf-8")
+    stale = _gen(tmp_path, "--check")
+    assert stale.returncode == 1
+    assert "STALE" in stale.stderr
+
+
+def test_stray_label_above_the_block_cannot_disable_the_pure_gate(tmp_path):
+    # A hand-authored line byte-identical to PENDING_LOCAL_LABEL, planted ABOVE
+    # the BEGIN marker, must NOT become the mask boundary — else it would split
+    # the compare early, drop the ENTIRE committed-tree-pure region, and let a
+    # genuine pure-line drift slip through as fresh (a silent gate disable). The
+    # mask boundary is anchored WITHIN PENDING_BEGIN..PENDING_END. (Pre-fix
+    # whole-document scan: rc 0; anchored: rc 1.)
+    label = load_script("gen_trajectory").PENDING_LOCAL_LABEL
+    _init(tmp_path)
+    assert _gen(tmp_path).returncode == 0
+    assert _gen(tmp_path, "--check").returncode == 0
+    oi = tmp_path / "docs" / "open-items.md"
+    text = oi.read_text(encoding="utf-8")
+    # (1) plant the stray label in the hand region above the block (identical in
+    #     current and updated, so not itself a drift), and (2) drift a PURE line.
+    poisoned = text.replace(BEGIN, label + "\n\n" + BEGIN, 1).replace(
+        "None — no durable owner action is pending",
+        "None — no durable owner action is pending. PURE DRIFT",
+    )
+    assert poisoned != text
+    assert label in poisoned.split(BEGIN, 1)[0]  # stray label sits ABOVE BEGIN
+    oi.write_text(poisoned, encoding="utf-8")
+    stale = _gen(tmp_path, "--check")
+    assert stale.returncode == 1, stale.stdout + stale.stderr
+    assert "STALE" in stale.stderr
+
+
 def test_hand_authored_region_is_byte_untouched(tmp_path):
     _init(tmp_path)
     # Introduce a real pending action so regeneration rewrites the block.
