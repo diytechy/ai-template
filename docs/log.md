@@ -11130,3 +11130,53 @@ the three tests genuinely bite (they vanish with the helpers on revert).
 skipped** (0 failed); ruff format/check clean; PROJECT_STATE.html + arch-map +
 status snapshot regenerated (`--check` green on all). SpecRef cleared (WI-261 →
 repo-review-2026-07-21.md; R-F green).
+
+## 2026-07-22 — WI-262 DONE (wave 5 — solo build + adversarial review): kit-wide Python floor 3.8 → 3.11; NO spine change
+
+The L-19-superseding owner ruling: bump the kit's declared Python floor one step,
+3.8 → 3.11. A **prose + config** sweep — no shipped-script logic changed, and the
+scripts stay de-facto runnable on 3.9 (no 3.11-only syntax has landed yet), so
+the bump is a promise CI enforces, not a same-day code break.
+
+**Deliverable** (commit 8cd569a — 40 files): `requirements-dev.txt` collapses the
+Python-gated `pytest-cov` split to a single `pytest-cov~=7.0`; `conftest.py` sheds
+the pre-7 `COV_CORE_DATAFILE` coverage-wiring branch (keeps the 7.x
+`Coverage.current()` path — the WI-105 dual-major plumbing collapses to one);
+the CI matrix (`test.yml`, `check.yml` comment) moves 3.8→3.11; `stack.ini`, ~16
+kit-script docstrings, `CLAUDE.md`, both READMEs, `PROCESS.md`, the
+`dev-setup.*`/`run.template.cmd` hint strings, and the `session-protocol` skill's
+floor line all bump to 3.11; `ADOPTING.md` gains a migration recipe. `PROCESS.md`
+was kept **byte-neutral** (a +1 char offset by a −1 word trim) so no
+byte-budget-guard baseline re-stamp was needed.
+
+**Verdict (adversarial opus REVIEW-A, driven): CHANGES-REQUESTED f=3 → fixed →
+integrated.** The reviewer validated the behavioral core (coverage stays 91–92%
+on the 3.9.6 interpreter under pytest-cov 7.1.0 — the conftest change did not
+break subprocess-coverage wiring; the full suite stays green, proving no
+3.11-only syntax; no history/frozen file was rewritten; byte budgets intact) but
+caught **one incomplete-sweep miss** (MAJOR): the `session-protocol` `SKILL.md`
+floor line (source + its two materialized `.claude`/`.agents` copies) was left at
+"Python 3.8+" — masked by an over-broad "skills DO-NOT-TOUCH" builder
+instruction. Fixed: the source line bumped and the copies re-materialized
+(`bootstrap.py --sync`; skill-sync gate S7 = 12/12 match); a stale `(3.8-safe)`
+test comment reworded (MINOR). One MINOR was **deliberately deferred**: SR-035's
+verification narrative still describes the old 3.8 CI matrix, but that CSV is a
+frozen requirement-spine row — reconciling it belongs to a follow-up
+requirements-change WI, not this config sweep.
+
+**Deviations from spec:** the **requirement spine** (SN-011 / SR-034 / SR-035 /
+`architecture.md` overview) was intentionally **left at 3.8** — those are frozen
+registries whose "runs on Python 3.8+" lower-bound claim stays literally true
+(scripts remain 3.9-runnable), and bumping a requirement is a requirements-change
+WI, not a config sweep. Recorded as an owed follow-up: a WI to bump
+SN-011 + SR-034 + SR-035 (incl. its CI-matrix narrative) + the `architecture.md`
+overview together and regenerate.
+
+**Byte deltas:** `PROCESS.md` net-zero (60,420, the watched baseline);
+`AGENTS.template.md` untouched (9,975).
+
+**Verified:** integrated smoke on the cherry-picked tree **1063 passed, 2
+skipped** (0 failed); full suite **1348 passed** on 3.9.6 with coverage 91.51%
+(`tests+coverage` gate green); ruff format/check clean; skill-sync S7 12/12;
+PROJECT_STATE.html + arch-map + status snapshot regenerated (`--check` green).
+SpecRef cleared (WI-262 → repo-review-2026-07-21.md; R-F green).
