@@ -10977,3 +10977,61 @@ contract) pending consolidation into ADOPTING / downstream-resync at task close.
 Follow-ups filed to the orchestration record: WI-259 `gate-advance` skill prose
 still says "attested-vs-mechanized" (now 3-way); WI-257 `_sample_path_d`
 per-`C`-command `load_script` re-exec slows the meta-scan smoke tests.
+
+## 2026-07-22 — WI-258/263 DONE (wave 2 — parallel build + per-WI adversarial review): dashboard cue/focus polish, cross-train draw weights; NO spine change
+
+Two more repo-review-2026-07-21 backlog WIs, built in parallel (worktrees off the
+wave-1 close `985cfc4`, disjoint file sets), each gated by an independent opus
+adversarial review before cherry-pick.
+
+**Deliverables.**
+- **WI-258** (`gen_trajectory.py`, commit a7914e6): 080-CRITIQUE cue/focus polish.
+  The clip edge is now MARKED — a right-edge `mask-image` fade on `.view.clipr /
+  .tablescroll.clipr`, toggled from the SAME `scrollWidth>clientWidth` overflow
+  measure that drives the WI-256 `.cued` cue and cleared at scroll-end (a `scroll`
+  listener keeps it live), so a fitting card shows neither cue nor fade. The drill
+  keyboard-focus / persist-highlight ring is recolored from `#b45309` (which was
+  byte-identical to the active "you are here" accent `--active`, the misread bug)
+  to `var(--accent)` — `#4f46e5` light / `#818cf8` dark, a clearly different hue
+  in both themes.
+- **WI-263** (`agent_common.py` + `agent_loop.py`, commit 2749dfe): cross-train
+  draw weights (M-31). `phase_draw_ordinal(iter_dirs, phase)` now counts
+  same-phase sessions across the DURABLE primary-worktree committed
+  `docs/iteration` aggregate (`primary_worktree_root` + `draw_iter_dirs`) unioned
+  with the worker-local dir, de-duped by filename — so the declared provider
+  weights converge ACROSS trains (not only within one multi-round train), and a
+  fresh train worktree is no longer a silent draw-ordinal 0 (the trap the WI
+  flagged). arch-map regenerated for the new public helpers.
+
+**Verdicts (adversarial opus REVIEW-A per WI, driven):** WI-258 **APPROVE f=0**
+(clip-gating is a strict subset of the `.cued` signal and clears at scroll-end —
+no permanent obscure; focus ring Δ334 light / Δ347 dark from active, distinct in
+both themes; dupes-clean, C901 unworsened, both tests bite). WI-263 **APPROVE
+f=1** (a docstring-accuracy MINOR only — the union code is correct; the reviewer
+drove fresh-worktree=2/local=0, `primary_worktree_root` across
+detached/spaces/non-repo, de-dup, and a 6-train convergence to 12/3/3 for 4:1:1;
+the docstring rationale was reworded to name the concurrent-integration +
+first-ever-train cases, no code change).
+
+**A wave-1 regression caught and fixed mid-wave (commit bd49e56):** the wave-1
+close had named the just-done WI ids in `status.md`'s hand-authored Next-action,
+tripping the forward-only rule (`check_trajectory.status_forward_only_findings`
+— WARN at the plain-commit bar, so it passed the hook, but a hard failure in
+`test_forward_only_unit_over_the_real_meta_repo` and an ERROR under `--strict`).
+WI-263's smoke surfaced it; `status.md` now names only still-queued WIs, the
+closed record living here.
+
+**Deviations from spec:** none. WI-258 committed with `--no-verify` (the render
+change stales `PROJECT_STATE.html`, which the orchestrator regenerates at close)
+— independently re-verified benign (2 files, no HTML, byte-stable `--check`
+twice, ruff clean). Bookkeeping/regeneration orchestrator-owned as in wave 1.
+
+**Byte deltas:** none on budgeted files.
+
+**Verified:** integrated smoke on the cherry-picked tree **1050 passed, 2
+skipped** (0 failed — the forward-only fix cleared it); ruff format/check clean
+repo-wide; PROJECT_STATE.html + arch-map + status snapshot regenerated (`--check`
+green on all three). SpecRefs cleared (WI-258 → 080-CRITIQUE; WI-263 →
+repo-review-2026-07-21.md; R-F green). The render surface changed again (WI-258)
+— a fresh consolidated perceptual critique is owed before the next green G3 and
+is scheduled at task close (with WI-257's router change).
