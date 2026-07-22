@@ -206,20 +206,23 @@ def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
 
 def test_attest_verified_accepted_and_surfaced_distinctly(scaffold):
     # Under --require-verified (G3), an Attest SR marked Verified passes, and the
-    # report surfaces it under "attested vs mechanized" so the trust footprint is
-    # auditable.
+    # report surfaces it in the three-way verification-basis split (WI-259) so the
+    # trust footprint is auditable: SR-001 is mechanized (Test), SR-002 attested.
     make_attest_project(scaffold)
     proc = run_py(
         ["scripts/trace.py", "--strict", "--require-verified", "--strict-schema"],
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "verified-mechanized=1" in proc.stdout
+    assert "verified-demonstrated=0" in proc.stdout
     assert "verified-attested=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "Verification basis (attested vs mechanized)" in report
+    assert "Verification basis (mechanized / demonstrated / attested)" in report
     assert "Attested (Attest): 1 — SR-002" in report
     assert "Verified SRs — attested (human, §4) | 1 |" in report
-    assert "Verified SRs — mechanized | 1 |" in report
+    assert "Verified SRs — mechanized (Test) | 1 |" in report
+    assert "Verified SRs — demonstrated/observed | 0 |" in report
 
 
 def test_attest_is_in_verification_vocabulary(scaffold):
@@ -229,6 +232,66 @@ def test_attest_is_in_verification_vocabulary(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "SR-002 has Verification=" not in report  # no enum-violation finding
+
+
+# --- WI-259: --require-verified is method-blind; the split has a third bucket ---
+
+# A non-Test, non-Attest SR (Analysis here — representative of the
+# Demonstration/Manual/Analysis/Inspection/Critique family): its Verified state
+# rests on a human observing an outcome, not a runnable check. Analysis is
+# LLR-exempt so it decomposes to a TC alone. SR-001 stays the mechanized (Test)
+# control.
+DEMO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
+SR-002,Analyzed property,SN-001,"The system shall hold an analyzed property.","Judged by analysis, no runnable check.","An analyst records the property holds.",,H,Analysis,Verified
+"""
+
+DEMO_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
+TC-001,SR-001;LLR-001,Unit,call add and assert the sum,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_demo.py::test_add_sr001,Verified
+TC-002,SR-002,System,analyze the property against the model,Release,"analyst=A. Rivera; analyzed-on=2026-07-21","Recorded analysis pass for SR-002",No,,Verified
+"""
+
+
+def make_demo_project(scaffold):
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "system-requirements.csv").write_text(DEMO_SRS, encoding="utf-8")
+    (scaffold / "docs" / "test" / "test-cases.csv").write_text(
+        DEMO_TCS, encoding="utf-8"
+    )
+
+
+def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
+    # M-5/WI-259: a non-Test, non-Attest Verified SR is reported in its own
+    # "demonstrated/observed" bucket (never folded into mechanized), listed by id
+    # so the audit sees it.
+    make_demo_project(scaffold)
+    proc = run_py(
+        ["scripts/trace.py", "--strict", "--require-verified", "--strict-schema"],
+        cwd=scaffold,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "verified-mechanized=1" in proc.stdout
+    assert "verified-demonstrated=1" in proc.stdout
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "Verified SRs — mechanized (Test) | 1 |" in report
+    assert "Verified SRs — demonstrated/observed | 1 |" in report
+    # Listed by id under demonstrated/observed — not miscounted as mechanized.
+    assert "Demonstrated/observed" in report and "SR-002" in report
+
+    # The headline widening (M-5): regress SR-002 to Implemented. sr_gate already
+    # caps it at G2, but the OLD --require-verified (Verification=Test only)
+    # silently PASSED it. The widened bar now flags it, naming the real method.
+    csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    csv_path.write_text(
+        DEMO_SRS.replace(",H,Analysis,Verified", ",H,Analysis,Implemented"),
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "status-findings=1" in proc.stdout
+    assert "Verification=Analysis but Status=Implemented" in proc.stdout
+    assert "G3 requires Verified" in proc.stdout
 
 
 # --- WI-068: the Critique verification value ----------------------------------
@@ -1164,9 +1227,11 @@ def test_ratified_blank_phase_fails_strict_schema(scaffold):
 
 
 def test_require_verified_strips_padded_verification_cell(scaffold):
-    # M-1: a padded '"Test "' cell passed --strict-schema (the enum check
-    # strips) yet was silently skipped by the G3 --require-verified criterion —
-    # a Verification=Test SR that is not Verified produced zero findings.
+    # M-1: a padded '"Test "' cell must not create a false PASS. The original bug
+    # was that --require-verified matched Verification == "Test" unstripped, so a
+    # padded cell was silently skipped. WI-259 widened the bar to every ratified
+    # SR of any method, so a padded cell can no longer skip it on the method axis
+    # either — a not-Verified ratified SR is flagged regardless of its method cell.
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(

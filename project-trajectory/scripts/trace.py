@@ -377,9 +377,16 @@ def llr_status_advisories(llrs, tcs):
 
 # Verification methods whose "Verified" state rests on a recorded human judgment,
 # not a runnable check (process.md §4 "Attest"). --require-verified accepts these
-# as legitimately Verified but the report surfaces them distinctly ("attested vs
-# mechanized"), so an audit can always see how much of the project rests on trust.
+# as legitimately Verified but the report surfaces them distinctly (the
+# verification-basis split), so an audit can always see how much rests on trust.
 ATTESTED_METHODS = {"Attest"}
+# The one method whose "Verified" rests on a runnable, re-executable check
+# (process.md §4 "Test"). Everything that is neither Test nor an ATTESTED_METHOD
+# (Demonstration/Manual/Analysis/Inspection/Critique) rests on a human observing
+# an outcome — repeatable, but not a runnable check — and is reported as its own
+# "demonstrated/observed" category, so the audit never over-counts what rests on
+# runnable checks (WI-259: the split is three-way, not attested-vs-everything-else).
+MECHANIZED_METHODS = {"Test"}
 
 
 def id_key(label):
@@ -1476,30 +1483,43 @@ def analyze(reg, args):
 
     status_findings = []
     phase_deferred = []
-    # Attested-vs-mechanized audit surface (process.md §4 "Attest"): of the SRs
-    # the project reports as Verified, how many rest on a runnable check vs a
-    # recorded human judgment (Attest)? Independent of --require-verified so the
-    # trust footprint is always visible in the report.
-    mechanized_verified = [
-        r["SR-ID"]
-        for r in srs
-        if is_verified(r)
-        and (r.get("Verification") or "").strip() not in ATTESTED_METHODS
-    ]
-    attested_verified = [
-        r["SR-ID"]
-        for r in srs
-        if is_verified(r) and (r.get("Verification") or "").strip() in ATTESTED_METHODS
-    ]
+    # Verification-basis audit surface (process.md §4): of the SRs the project
+    # reports Verified, how was each reached? Three kinds, most-to-least runnable —
+    # Test rests on a runnable check (mechanized); Demonstration/Manual/Analysis/
+    # Inspection/Critique rest on a human observing an outcome (demonstrated/
+    # observed — repeatable, but not a runnable check); Attest rests on a named
+    # human's recorded judgment (attested — trust-based). Split three ways, not
+    # binary (WI-259): once non-Test methods are gate-required, folding them into
+    # "mechanized" would overstate how much rests on runnable checks. Independent
+    # of --require-verified so the footprint is always visible. The cell is
+    # stripped once per row (M-1) before every classification. A blank or
+    # unrecognized method falls to the demonstrated/observed else-bucket — the
+    # conservative default, so an unknown method is never counted as a runnable
+    # check (--strict-schema separately flags an out-of-vocabulary method).
+    mechanized_verified, demonstrated_verified, attested_verified = [], [], []
+    for r in srs:
+        if not is_verified(r):
+            continue
+        method = (r.get("Verification") or "").strip()
+        if method in MECHANIZED_METHODS:
+            mechanized_verified.append(r["SR-ID"])
+        elif method in ATTESTED_METHODS:
+            attested_verified.append(r["SR-ID"])
+        else:
+            demonstrated_verified.append(r["SR-ID"])
     if args.require_verified:
         for r in srs:
-            # Stripped like llr_exempt/schema read the same cell (review 017's
-            # bug class): a padded "Test " must not silently skip the G3 bar.
-            if (r.get("Verification") or "").strip() != "Test":
-                continue
-            # A Draft SR is pre-ratification (below G1, derived-gate §3): it makes
-            # no Verified claim yet, so the G3 criterion does not apply. Surfaced
-            # in the draft count so the exemption stays auditable.
+            # The G3 status bar applies to every ratified SR regardless of
+            # Verification method — matching derive_gate.sr_gate, which already
+            # demands is_verified for any decomposed SR before G3 with no
+            # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
+            # Analysis/Inspection SR left Implemented can never derive G3 yet used
+            # to pass this Test-only check — the two scripts disagreeing about the
+            # gate is the false-green the kit exists to prevent). A Draft SR is
+            # pre-ratification (below G1, derived-gate §3): it makes no Verified
+            # claim yet, so the bar stands down — surfaced in the draft count so
+            # the exemption stays auditable. Pinned equivalent to sr_gate's
+            # is_verified-for-decomposed rule by test_rule_sync.
             if is_draft(r):
                 continue
             if not in_phase(r):
@@ -1510,11 +1530,13 @@ def analyze(reg, args):
                 continue
             if not is_verified(r):
                 val = (r.get("Status") or "").strip()
+                method = (r.get("Verification") or "").strip() or "(blank)"
                 status_findings.append(
-                    f"SR {r['SR-ID']} is Verification=Test but Status="
-                    f"{val or '(blank)'} (G3 requires Verified — the magic Status "
-                    "values are matched case-insensitively, so this is a real "
-                    "mismatch, not a casing near-miss)"
+                    f"SR {r['SR-ID']} is Verification={method} but Status="
+                    f"{val or '(blank)'} (G3 requires Verified for every ratified "
+                    "SR regardless of method — the magic Status values are matched "
+                    "case-insensitively, so this is a real mismatch, not a casing "
+                    "near-miss)"
                 )
 
     raw = {"SR": raw_srs, "LLR": raw_llrs, "TC": raw_tcs}
@@ -1627,6 +1649,7 @@ def analyze(reg, args):
     findings.phase_deferred = phase_deferred
     findings.phases = phases
     findings.mechanized_verified = mechanized_verified
+    findings.demonstrated_verified = demonstrated_verified
     findings.attested_verified = attested_verified
     findings.draft_srs = draft_srs
     findings.draft_llrs = draft_llrs
@@ -1659,6 +1682,7 @@ def render_report(reg, findings, args, forest):
     phase_deferred = findings.phase_deferred
     phases = findings.phases
     mechanized_verified = findings.mechanized_verified
+    demonstrated_verified = findings.demonstrated_verified
     attested_verified = findings.attested_verified
     draft_srs = findings.draft_srs
     draft_llrs = findings.draft_llrs
@@ -1680,7 +1704,9 @@ def render_report(reg, findings, args, forest):
             f"| Test cases (TC) | {len(tcs)} |",
             f"| Orphans | {len(orphans)} |",
             f"| Integrity findings | {len(integrity)} |",
-            f"| Verified SRs — mechanized | {len(mechanized_verified)} |",
+            f"| Verified SRs — mechanized (Test) | {len(mechanized_verified)} |",
+            f"| Verified SRs — demonstrated/observed | "
+            f"{len(demonstrated_verified)} |",
             f"| Verified SRs — attested (human, §4) | {len(attested_verified)} |",
         ]
         + (
@@ -1793,17 +1819,29 @@ def render_report(reg, findings, args, forest):
         if not llr_status_advis
         else [f"- {f}" for f in llr_status_advis]
     )
-    # Attested-vs-mechanized surface (process.md §4 "Attest"): make the project's
-    # trust footprint auditable — how much of what is "Verified" rests on a named
-    # human's recorded judgment rather than a runnable check.
-    lines += ["", "## Verification basis (attested vs mechanized)", ""]
+    # Verification-basis surface (process.md §4): make the project's trust
+    # footprint auditable — of what is "Verified", how much rests on a runnable
+    # check (Test), on a human observing an outcome (Demonstration/Manual/Analysis/
+    # Inspection/Critique), or on a named human's recorded judgment (Attest)? Split
+    # three ways (WI-259) so non-Test Verified claims are never folded into
+    # "mechanized"; the demonstrated and attested ids are listed so an audit can
+    # see exactly which rows rest on something other than a runnable check.
+    lines += ["", "## Verification basis (mechanized / demonstrated / attested)", ""]
     lines += [
-        "_Of the SRs reported `Verified`: `Attest` rows rest on a named human's "
-        "recorded judgment (trust-based — the box can be checked without the work "
-        "having happened, process.md §4); all others rest on a runnable check._",
+        "_Of the SRs reported `Verified`: `Test` rows rest on a runnable, "
+        "re-executable check (mechanized); `Demonstration`/`Manual`/`Analysis`/"
+        "`Inspection`/`Critique` rows rest on a human observing an outcome "
+        "(demonstrated/observed — repeatable, but not a runnable check); `Attest` "
+        "rows rest on a named human's recorded judgment (trust-based — the box can "
+        "be checked without the work having happened, process.md §4). Only the "
+        "first is a runnable check. A row whose method is blank or unrecognized is "
+        "counted as demonstrated/observed, never as mechanized (the conservative "
+        "default — it does not rest on a runnable check unless proven so)._",
         "",
-        f"- Mechanized (Test/Demonstration/Manual/Analysis/Inspection): "
-        f"{len(mechanized_verified)}",
+        f"- Mechanized (Test): {len(mechanized_verified)}",
+        "- Demonstrated/observed (Demonstration/Manual/Analysis/Inspection/"
+        f"Critique, or unspecified): {len(demonstrated_verified)}"
+        + (f" — {', '.join(demonstrated_verified)}" if demonstrated_verified else ""),
         f"- Attested (Attest): {len(attested_verified)}"
         + (f" — {', '.join(attested_verified)}" if attested_verified else ""),
     ]
@@ -1909,7 +1947,7 @@ def render_report(reg, findings, args, forest):
         scope = f" — phase scope: {args.phase}" if phases else ""
         lines += ["", f"## Status findings (--require-verified{scope})", ""]
         lines += (
-            ["None. Every in-scope Verification=Test SR is Verified."]
+            ["None. Every in-scope ratified SR is Verified (any method)."]
             if not status_findings
             else [f"- {s}" for s in status_findings]
         )
@@ -1932,6 +1970,7 @@ def render_console(reg, findings, args, out, html_out):
     knowledge_advisories = findings.knowledge_advisories
     llr_status_advis = findings.llr_status_advis
     mechanized_verified = findings.mechanized_verified
+    demonstrated_verified = findings.demonstrated_verified
     attested_verified = findings.attested_verified
     status_findings = findings.status_findings
     n_draft = findings.n_draft
@@ -1984,8 +2023,9 @@ def render_console(reg, findings, args, out, html_out):
         f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"
         + (
             f" verified-mechanized={len(mechanized_verified)}"
+            f" verified-demonstrated={len(demonstrated_verified)}"
             f" verified-attested={len(attested_verified)}"
-            if attested_verified
+            if (demonstrated_verified or attested_verified)
             else ""
         )
         + (f" status-findings={len(status_findings)}" if args.require_verified else "")

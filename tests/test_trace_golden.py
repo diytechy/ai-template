@@ -21,8 +21,9 @@ GOLDEN = os.path.join(os.path.dirname(__file__), "golden")
 # --- An off-spine-rich, orphan-free spine ------------------------------------
 # Exercises every report section the minimal chain does not: the PB/REPO/PART/
 # ASSET/CMP/IF back-link renders, the knowledge-pack + AC advisories, the draft
-# artifacts section (a Draft SR + a section-as-state Draft SN), the attested-vs-
-# mechanized split (an Attest SR), and the per-Area counts.
+# artifacts section (a Draft SR + a section-as-state Draft SN), the three-way
+# verification-basis split (an Attest SR — mechanized/demonstrated/attested,
+# WI-259), and the per-Area counts.
 
 RICH_SN = """# Stakeholder Needs (SN-###)
 

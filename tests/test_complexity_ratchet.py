@@ -98,7 +98,12 @@ BASELINE = {
     ("plan_round.py", "record"): 29,
     ("plan_runner.py", "dispatch"): 16,
     ("plan_runner.py", "run_dual_plan_round"): 30,
-    ("trace.py", "analyze"): 50,
+    # WI-259 reviewed bump 50 -> 53: the verification-basis split went binary ->
+    # three-way (mechanized/demonstrated/attested, a new elif branch) and
+    # --require-verified was widened to every ratified SR of any method, naming
+    # the real method in the finding. The debt still belongs to WI-226's
+    # trace.py decomposition; the added branches are the honest audit surface.
+    ("trace.py", "analyze"): 53,
     ("trace.py", "mermaid_graph"): 17,
     # 28 -> 27: the L-3 ratify bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).
