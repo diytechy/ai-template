@@ -865,27 +865,107 @@ def next_session_number(iter_dir, train=None):
     return highest + 1
 
 
-def phase_draw_ordinal(iter_dir, train, phase):
-    """The 0-based draw ordinal for `phase` on `train` (WI-236): how many PRIOR
-    sessions on this train already ran this exact phase, counted from the durable
-    session-log `# phase:` headers. This keys the weighted-rotation draw so each
-    phase advances its OWN rotation — the global per-train session counter strides
-    (a round is BUILD + REVIEW-A + REVIEW-B [+ CRITIQUE]) and would alias against
-    the weight sum, starving weight-1 candidates. Reads existing state only (the
-    logs already record the phase); no new durable store, no randomness. Empty
-    phase / absent dir -> 0 (the first draw)."""
-    if not phase or not iter_dir.is_dir():
+def _iter_dir_list(iter_dirs):
+    """Normalize the phase_draw_ordinal argument to a list of Paths — a single
+    Path/str (the attended single-dir case) or an already-assembled iterable
+    (the cross-train `draw_iter_dirs` list)."""
+    if isinstance(iter_dirs, (str, Path)):
+        return [Path(iter_dirs)]
+    return [Path(d) for d in iter_dirs]
+
+
+def phase_draw_ordinal(iter_dirs, phase):
+    """The 0-based CROSS-TRAIN draw ordinal for `phase` (WI-263, repo-review
+    M-31): how many PRIOR sessions — across EVERY train, not just this one —
+    already ran this exact phase, counted from the durable session-log
+    `# phase:` headers and de-duplicated by log filename across `iter_dirs`.
+    This keys the weighted-rotation draw so each phase advances its OWN rotation
+    (the global per-train session counter strides — a round is BUILD + REVIEW-A +
+    REVIEW-B [+ CRITIQUE] — and would alias against the weight sum, starving
+    weight-1 candidates) AND so the long-run provider frequency converges to the
+    declared weights ACROSS trains (advertised weight 4 drawn ~4x as often — true
+    across trains, not only within one multi-round train). WI-236 counted only
+    THIS train's prefix, so a freshly minted train drew slot 0 deterministically
+    and the weights were inert across trains (M-31); the caller now passes the
+    durable aggregate — the PRIMARY worktree's committed docs/iteration plus this
+    worker's own in-flight logs (see `draw_iter_dirs`). Reads existing state only
+    (the logs already record the phase); no new durable store, no randomness.
+    Empty phase / absent dirs -> 0 (the first draw)."""
+    if not phase:
         return 0
-    pattern = (
-        re.compile(r"{}-\d+-".format(re.escape(train)))
-        if train
-        else re.compile(r"\d+-")
-    )
+    seen = set()
     count = 0
-    for log in iter_dir.glob("*.log"):
-        if pattern.match(log.name) and read_log_meta(log).get("phase", "") == phase:
-            count += 1
+    for iter_dir in _iter_dir_list(iter_dirs):
+        if not iter_dir.is_dir():
+            continue
+        for log in iter_dir.glob("*.log"):
+            # De-dup by filename: the same committed log can appear in both the
+            # primary aggregate and the local worktree (a train branched from the
+            # development checkout carries its history); a session's log name is
+            # unique ((train, session, stamp)), so first sighting counts it once.
+            if log.name in seen:
+                continue
+            seen.add(log.name)
+            if read_log_meta(log).get("phase", "") == phase:
+                count += 1
     return count
+
+
+def primary_worktree_root(root):
+    """The MAIN (primary) worktree of `root`'s repo — the FIRST entry of
+    `git worktree list --porcelain`, which git always lists ahead of the linked
+    worktrees (WI-263). A dispatched worker runs agent_loop inside a linked TRAIN
+    worktree; this is how it reaches the durable cross-train iteration aggregate
+    that lives on the primary checkout. Returns a Path, or None when git can't
+    answer (not a repo, git missing) — the caller then falls back to its local
+    dir, so a draw never crashes."""
+    code, out = git(root, "worktree", "list", "--porcelain")
+    if code != 0:
+        return None
+    for line in out.splitlines():
+        if line.startswith("worktree "):
+            path = line[len("worktree ") :].strip()
+            return Path(path) if path else None
+    return None
+
+
+def draw_iter_dirs(root, local_iter_dir):
+    """The iteration directories `phase_draw_ordinal` must union for a cross-train
+    draw (WI-263, repo-review M-31). The old draw filtered same-phase logs by this
+    train's own filename PREFIX, so the ordinal counted only the current train and
+    reset every train — the declared weights never materialized across trains. A
+    train branches from `integration_head`, so its LOCAL `docs/iteration` (in the
+    linked worktree) already carries prior INTEGRATED trains' logs; dropping the
+    prefix filter counts those. But the local dir is frozen at the branch base, so
+    it MISSES a sibling train that integrates mid-flight (past this base), and the
+    first-ever trains have no prior logs at all. The DURABLE cross-train aggregate
+    that closes both gaps is the PRIMARY worktree's committed `docs/iteration` —
+    the development checkout every INTEGRATED train's logs land on disk in
+    (materialized by `publish_integration` -> `_sync_worktree`). Return that
+    primary dir FIRST (its committed history is the authority for the filename
+    de-dup) plus the local dir, whose not-yet-integrated in-flight logs keep the
+    WITHIN-train rotation advancing between integrations. When the primary IS this
+    root (an attended single-repo run, no linked worktree) the two coincide and
+    only the one dir is returned."""
+    local = Path(local_iter_dir)
+    primary = primary_worktree_root(root)
+    if primary is None:
+        return [local]
+    shared = primary / "docs" / "iteration"
+    if _same_dir(shared, local):
+        return [local]
+    return [shared, local]
+
+
+def _same_dir(a, b):
+    """Whether two paths name the same directory, tolerant of symlinks and a
+    not-yet-created dir (macOS /tmp -> /private/tmp; a fresh worktree). A wrong
+    answer is only a lost optimization — `phase_draw_ordinal` de-dups by filename
+    regardless — so any error just answers "different"."""
+    try:
+        return a.resolve() == b.resolve()
+    except OSError:
+        return a == b
 
 
 def preflight(root, template, args):

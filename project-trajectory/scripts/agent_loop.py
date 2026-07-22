@@ -236,6 +236,7 @@ write_session_log = agent_common.write_session_log
 regenerate_index = agent_common.regenerate_index
 next_session_number = agent_common.next_session_number
 phase_draw_ordinal = agent_common.phase_draw_ordinal
+draw_iter_dirs = agent_common.draw_iter_dirs
 commit_telemetry = agent_common.commit_telemetry
 _write_runstate = agent_common._write_runstate
 
@@ -1774,9 +1775,11 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         )
         # Per-phase draw weights (WI-236) drive a deterministic weighted rotation
         # over the unpinned legal remainder, keyed on the durable PER-PHASE draw
-        # ordinal (prior same-phase sessions on this train) — NOT the global
-        # session counter, which strides across phases and would alias against
-        # the weight sum. No randomness, no new durable store.
+        # ordinal — prior same-phase sessions counted ACROSS trains from the
+        # durable aggregate (WI-263, M-31: a per-train count reset to slot 0 on
+        # every freshly minted train, so the weights were inert across trains) —
+        # NOT the global session counter, which strides across phases and would
+        # alias against the weight sum. No randomness, no new durable store.
         route_id, reason = agent_route.select(
             enabled,
             registry,
@@ -1787,7 +1790,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             prefer_different,
             [prefer_map[phase]] if phase in prefer_map else (),
             agent_route.phase_weights(ctx.weight_map, phase),
-            phase_draw_ordinal(ctx.iter_dir, worker["train"], phase),
+            phase_draw_ordinal(ctx.draw_iter_dirs, phase),
         )
         # Log the routing decision BEFORE launch (the no-silent-swap rule).
         print("route [{}]: {}".format(phase or "—", reason))
@@ -2949,6 +2952,13 @@ def main():
     ctx.start_dirty = start_dirty
     ctx.raw_dir = raw_dir
     ctx.iter_dir = iter_dir
+    # The weighted-rotation DRAW reads the durable CROSS-train aggregate (the
+    # primary worktree's committed docs/iteration) unioned with this worker's
+    # local in-flight logs — NOT the train-local iter_dir alone, whose freshly
+    # minted history would reset every train's draw to slot 0 (WI-263, M-31).
+    # The primary-worktree path is stable for the run, so resolve it once here;
+    # the dirs are re-globbed per draw as sibling trains integrate.
+    ctx.draw_iter_dirs = draw_iter_dirs(root, iter_dir)
     ctx.tag = tag
     ctx.use_live = use_live
     ctx.reviews_dir = reviews_dir

@@ -163,7 +163,9 @@ Contracts (interfaces): IF-037, IF-065
 | `regenerate_index(docs_dir)` | Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata |  |
 | `commit_telemetry(root, session, label, paths)` | Commit the coordinator's own bookkeeping in its own `telemetry:` commit, |  |
 | `next_session_number(iter_dir, train)` | Next NNN, continuing across coordinator restarts. A worker's numbering |  |
-| `phase_draw_ordinal(iter_dir, train, phase)` | The 0-based draw ordinal for `phase` on `train` (WI-236): how many PRIOR |  |
+| `phase_draw_ordinal(iter_dirs, phase)` | The 0-based CROSS-TRAIN draw ordinal for `phase` (WI-263, repo-review |  |
+| `primary_worktree_root(root)` | The MAIN (primary) worktree of `root`'s repo — the FIRST entry of |  |
+| `draw_iter_dirs(root, local_iter_dir)` | The iteration directories `phase_draw_ordinal` must union for a cross-train |  |
 | `preflight(root, template, args)` | Refuse to start iteration 1 on a broken footing. Returns the list of |  |
 | `stop_banner(status_path, label, detail)` |  |  |
 | `head_sha_full(root)` | Full HEAD sha (reservation bases are exact, never abbreviated). |  |

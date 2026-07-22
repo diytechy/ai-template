@@ -1017,7 +1017,9 @@ def test_weighted_share_over_real_wiring_no_stride_starvation(tmp_path):
         _write_log("BUILD", "ANTHROPIC-FABLE")
         for phase in ("REVIEW-A", "REVIEW-B"):
             # The counter comes from the DURABLE logs, not a hand-fed integer.
-            ordinal = common.phase_draw_ordinal(iter_dir, train, phase)
+            # (WI-263: the ordinal is now cross-train; a single train's dir counts
+            # all its own same-phase logs, so this within-train share is unchanged.)
+            ordinal = common.phase_draw_ordinal(iter_dir, phase)
             chosen, _reason = route.select(
                 enabled,
                 reg,
@@ -1033,6 +1035,93 @@ def test_weighted_share_over_real_wiring_no_stride_starvation(tmp_path):
     # is starved by the stride (the bug delivered Kimi=0).
     counts = {m: review_a_picks.count(m) for m in enabled}
     assert counts == {"OPENAI-TERRA": 12, "MOONSHOT-KIMI": 3, "XAI-GROK": 3}
+
+
+def test_phase_draw_ordinal_counts_across_trains_from_primary_aggregate(tmp_path):
+    # WI-263 (repo-review M-31): the per-phase draw ordinal must count PRIOR
+    # same-phase sessions ACROSS trains, reading the DURABLE aggregate on the
+    # primary worktree — so a freshly minted train's first draw is NOT
+    # deterministically slot 0 and the weighted rotation converges to the
+    # declared weights across trains. This models the REAL cross-worktree state
+    # (a primary repo + a genuine linked train worktree), NOT one dir with mixed
+    # prefixes: the sibling logs live only in the primary checkout, exactly where
+    # integrated trains land them, and are absent from the fresh worktree.
+    import subprocess
+    from pathlib import Path
+
+    common = load_script("agent_common")
+
+    def _git(repo, *args):
+        p = subprocess.run(
+            ["git", "-C", str(repo)] + list(args),
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+        assert p.returncode == 0, p.stdout + p.stderr
+        return p.stdout.strip()
+
+    main = tmp_path / "repo"
+    (main / "docs").mkdir(parents=True)
+    (main / "README.md").write_text("seed\n", encoding="utf-8")
+    _git(main, "init", "-q")
+    _git(main, "config", "user.email", "loop@example.com")
+    _git(main, "config", "user.name", "Loop Test")
+    _git(main, "add", "-A")
+    _git(main, "commit", "-q", "-m", "seed")
+
+    # A freshly minted TRAIN worktree, branched at the seed commit — BEFORE the
+    # sibling trains' logs land on the primary (the "integrated after this train
+    # branched" case: its local docs/iteration has no sibling logs at all).
+    wt = tmp_path / "train-T9"
+    _git(main, "worktree", "add", "-q", "-b", "llm/train/T9", str(wt), "HEAD")
+
+    # Two REVIEW-A session logs from TWO DIFFERENT trains, committed to the
+    # PRIMARY checkout — the durable cross-train aggregate the live draw reads.
+    main_iter = main / "docs" / "iteration"
+    for train, sess in (("T1", 1), ("T2", 2)):
+        common.write_session_log(
+            main_iter,
+            {
+                "session": "{:03d}".format(sess),
+                "stamp": "20260721-{:06d}".format(sess),
+                "train": train,
+                "phase": "REVIEW-A",
+            },
+            "transcript",
+        )
+    _git(main, "add", "-A")
+    _git(main, "commit", "-q", "-m", "sibling-train logs")
+
+    local_iter = Path(wt) / "docs" / "iteration"
+
+    # BITE: the pre-change behavior read only the train-local iter_dir; a fresh
+    # worktree has NO sibling logs there, so a local-only count is 0 — the silent
+    # no-op. (Its dir may not even exist yet.)
+    assert common.phase_draw_ordinal(local_iter, "REVIEW-A") == 0
+
+    # The FIX: draw_iter_dirs discovers the primary worktree and unions its
+    # committed docs/iteration in, so the ordinal counts BOTH trains' sessions.
+    dirs = common.draw_iter_dirs(str(wt), local_iter)
+    assert common.phase_draw_ordinal(dirs, "REVIEW-A") == 2
+
+    # And the local dir still advances the WITHIN-train rotation: this train's
+    # own next REVIEW-A log adds to the cross-train total (unioned, de-duped by
+    # name — the primary's two plus this one = 3), so successive same-train draws
+    # keep stepping the weighted cycle instead of re-drawing the same slot.
+    common.write_session_log(
+        local_iter,
+        {
+            "session": "001",
+            "stamp": "20260721-000009",
+            "train": "T9",
+            "phase": "REVIEW-A",
+        },
+        "transcript",
+    )
+    assert common.phase_draw_ordinal(dirs, "REVIEW-A") == 3
+    # A different phase is unaffected by REVIEW-A history (independent rotations).
+    assert common.phase_draw_ordinal(dirs, "REVIEW-B") == 0
 
 
 def test_load_registry_refuses_shell_unsafe_model_cell(tmp_path):
