@@ -25,6 +25,10 @@ ap.add_argument("--control", required=True)
 ap.add_argument("--model", default="")
 ap.add_argument("-p", "--prompt", default="")
 args, extra = ap.parse_known_args()
+if not args.prompt:
+    # No {prompt} on the command line -> the WI-216 stdin path delivered it
+    # instead (run_session writes it then closes stdin, so this never hangs).
+    args.prompt = sys.stdin.read()
 ctl = pathlib.Path(args.control)
 inv = ctl / "invocations.txt"
 count = len(inv.read_text().splitlines()) if inv.exists() else 0
@@ -1062,7 +1066,11 @@ def test_cmd_shim_cli_spawns_on_windows(loop_repo, tmp_path):
             "--root",
             str(repo),
             "--agent-cmd",
-            'fakecli --control "{}" --model {{model}} -p {{prompt}}'.format(ctl),
+            # No {prompt} placeholder: the H-4 guard (272a6e8) refuses
+            # prompt-in-argv through a Windows batch shim, so the prompt rides
+            # stdin instead (WI-216) — the shim still spawns via the
+            # which-resolved CreateProcess path (WI-120's concern).
+            'fakecli --control "{}" --model {{model}}'.format(ctl),
             "--pause",
             "0",
             "--model",

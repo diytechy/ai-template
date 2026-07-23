@@ -201,7 +201,13 @@ def test_run_session_codex_reads_last_message_not_transcript(tmp_path):
         )
         launcher.chmod(0o755)
 
-    code, output, timed_out = al.run_session([str(launcher)], tmp_path, 30)
+    # Deliver the prompt via stdin (WI-216), matching the real codex CmdTemplate
+    # (no {prompt} placeholder) — the transport the H-4 guard (272a6e8) requires
+    # for a Windows batch shim launcher; the impl above never reads stdin, so
+    # this only proves the launch clears the guard and the capture still works.
+    code, output, timed_out = al.run_session(
+        [str(launcher)], tmp_path, 30, stdin_input="the prompt"
+    )
     assert code == 0 and not timed_out, output
     assert output == "CLEAN-165-char-result-table"  # not the GARBAGE transcript
     assert "GARBAGE" not in output
