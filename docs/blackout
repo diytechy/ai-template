@@ -1,5 +1,0 @@
-11:00-17:00
-# 06:00-12:00 America/Chicago (CDT, UTC-5) - owner directive 2026-07-23.
-# NOTE the window is fixed UTC: under winter CST (UTC-6) this same line reads
-# 05:00-11:00 local; re-dial to 12:00-18:00 if the 6am-noon local intent holds.
-# Weekdays only by contract (blackout_wake); delete this file to disable.
