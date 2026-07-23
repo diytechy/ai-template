@@ -32,6 +32,11 @@ def _sh():
     return shutil.which("sh")
 
 
+def _pwsh():
+    # PowerShell Core (pwsh) is cross-platform; Windows also ships powershell 5.1.
+    return shutil.which("pwsh") or shutil.which("powershell")
+
+
 def test_bootstrap_scaffolds_the_ladder_helpers(scaffold):
     for rel in ONBOARD + DEVSETUP:
         assert (scaffold / rel).exists(), "missing from scaffold: " + rel
@@ -422,6 +427,53 @@ def test_meta_devsetup_recreate_declines_stay_fail_closed(tmp_path):
     )
     assert proc2.returncode == 1, proc2.stdout + proc2.stderr
     assert (root / ".venv").is_dir()
+
+
+def test_meta_devsetup_ps1_broken_venv_offers_recreate(tmp_path):
+    # WI-274a regression (002-REVIEW-A MAJOR): a .venv DIRECTORY with no runnable
+    # interpreter — an empty leftover dir, or a venv whose base CPython was
+    # uninstalled — must be DETECTED and routed through the consented recreate,
+    # NOT silently accepted by the ordinary create prompt and then crashed at pip
+    # (the reviewer's live repro exited at the ~228 `& $python -m pip` line,
+    # leaving the broken venv in place). The bug was that $venvExists keyed off
+    # .venv\Scripts\python.exe alone; the fix detects the .venv DIR independently.
+    # Windows-only + behavioral: the .ps1 is the Windows twin, so this runs on the
+    # Windows CI leg and skips elsewhere (the .sh twin gates on `[ -d .venv ]`,
+    # already covered by test_meta_devsetup_recreate_declines_stay_fail_closed).
+    import pytest
+
+    if os.name != "nt":
+        pytest.skip("dev-setup.ps1 is the Windows twin; behavioral run needs Windows")
+    ps = _pwsh()
+    if not ps:
+        pytest.skip("no PowerShell on PATH")
+    root = tmp_path / "repo"
+    (root / "scripts").mkdir(parents=True)
+    shutil.copy(REPO_ROOT / "scripts/dev-setup.ps1", root / "scripts/dev-setup.ps1")
+    (root / ".venv").mkdir()  # a broken/incomplete venv: no Scripts\python.exe
+    proc = subprocess.run(
+        [
+            ps,
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/dev-setup.ps1",
+            "-Install",
+        ],
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,  # non-interactive -> Read-Host declines gracefully
+    )
+    # The report NAMES the broken venv (pre-fix: silent — no [stale] line, exit 0)...
+    assert "[stale]" in proc.stdout and "unusable" in proc.stdout, proc.stdout
+    # ...and -Install routes it through the recreate offer, staying FAIL-CLOSED on
+    # the non-interactive decline: exit 1, environment preserved (pre-fix it took
+    # the ordinary create path and either skipped-silently or crashed at pip).
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "recreate declined" in proc.stderr, proc.stderr
+    assert (root / ".venv").is_dir(), "a declined recreate must preserve the venv"
 
 
 def test_meta_repo_dogfoods_dev_setup():

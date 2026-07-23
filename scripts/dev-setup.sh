@@ -97,8 +97,11 @@ report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "install Python
 # the .venv shadowing their PATH is the sub-floor culprit.
 if [ -d .venv ] && { [ ! -x .venv/bin/python ] || ! python_311 .venv/bin/python; }; then
   vv=$(.venv/bin/python -c 'import sys;sys.stdout.write(".".join(map(str,sys.version_info[:3])))' 2>/dev/null || true)
-  [ -n "$vv" ] || vv="sub-3.11 (its base interpreter no longer runs)"
-  echo "  [stale]   .venv is Python $vv — below the 3.11 floor; rerun --install to recreate it"
+  if [ -n "$vv" ]; then
+    echo "  [stale]   .venv is Python $vv — below the 3.11 floor; rerun --install to recreate it"
+  else
+    echo "  [stale]   .venv is unusable (no working 3.11+ interpreter) — rerun --install to recreate it"
+  fi
 fi
 report "git"               "$(real git && echo 1 || echo 0)" "install git (macOS: xcode-select --install)"
 report "ruff (format/lint)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("ruff") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install ruff (or run --install)"
@@ -170,9 +173,12 @@ fi
 RECREATE=0
 if [ -d .venv ] && { [ ! -x .venv/bin/python ] || ! python_311 .venv/bin/python; }; then
   vv=$(.venv/bin/python -c 'import sys;sys.stdout.write(".".join(map(str,sys.version_info[:3])))' 2>/dev/null || true)
-  [ -n "$vv" ] || vv="sub-3.11"
   dv=$("$PY" -c 'import sys;sys.stdout.write(".".join(map(str,sys.version_info[:3])))' 2>/dev/null || echo "3.11+")
-  printf 'Existing ./.venv is Python %s — below the 3.11 floor. Recreate it with %s (Python %s)? [y/N] ' "$vv" "$PY" "$dv"
+  if [ -n "$vv" ]; then
+    printf 'Existing ./.venv is Python %s — below the 3.11 floor. Recreate it with %s (Python %s)? [y/N] ' "$vv" "$PY" "$dv"
+  else
+    printf 'Existing ./.venv is unusable (no working interpreter). Recreate it with %s (Python %s)? [y/N] ' "$PY" "$dv"
+  fi
   read -r ans || ans=""
   case "$ans" in
     [Yy]*)
@@ -181,7 +187,7 @@ if [ -d .venv ] && { [ ! -x .venv/bin/python ] || ! python_311 .venv/bin/python;
       RECREATE=1
       ;;
     *)
-      echo "Existing ./.venv uses Python below 3.11; recreate declined — move or remove that environment, then rerun --install." >&2
+      echo "Existing ./.venv is below the 3.11 floor or has no working interpreter; recreate declined — move or remove that environment, then rerun --install." >&2
       exit 1
       ;;
   esac

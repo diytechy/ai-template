@@ -49,6 +49,10 @@ REM sets AGENT_JOBS=1 here until it signs off (the downstream-resync skill).
 REM An inherited AGENT_JOBS wins over this default; an absent/empty value
 REM still boots the dispatcher at its own default (the legacy serial resume
 REM driver is retired).
+REM Single-home option (IF-068): to avoid editing jobs/model/model-map in each
+REM of the three launchers, declare them once in docs\stack.ini [agent-loop] and
+REM blank these slots - agent_loop resolves CLI flag ^> AGENT_* env ^> that file
+REM ^> default. Opt-in: a fresh scaffold keeps the dials in the launcher.
 if not defined AGENT_JOBS set "AGENT_JOBS=2"
 REM Per-session wall-clock bound (seconds) so one hung CLI cannot wedge a
 REM lane forever - the walk-away guarantee. Blank the slot to disable

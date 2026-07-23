@@ -65,8 +65,17 @@ try {
     $py = $null
     $pyArgs = @()
     $venvPython = ".venv\Scripts\python.exe"
-    $venvExists = Test-Path $venvPython
-    $venvSupported = $venvExists -and (HavePython $venvPython)
+    # WI-274a (002-REVIEW-A): detect the .venv DIRECTORY independently of its
+    # interpreter. A broken/incomplete .venv — base CPython uninstalled, or an
+    # empty leftover dir — has no runnable Scripts\python.exe, so keying "a venv
+    # exists" off the interpreter alone let such a venv slip PAST the
+    # consented-recreate branch; -Install then accepted the ordinary create
+    # prompt, skipped `venv` (the dir was already there), and died invoking the
+    # nonexistent interpreter (line ~228). $venvDirExists routes broken AND
+    # sub-floor venvs through the same recreate offer (parity with dev-setup.sh's
+    # `[ -d .venv ]` gate).
+    $venvDirExists = Test-Path ".venv" -PathType Container
+    $venvSupported = (Test-Path $venvPython) -and (HavePython $venvPython)
     if ($venvSupported) { $py = $venvPython }
     else {
         # WI-274c: after the bare candidates, try version-pinned `py -3.13/-3.12/
@@ -95,14 +104,17 @@ try {
     Write-Host "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
     Write-Host ""
     Report "runtime (python)" ([bool]$py) "install Python 3.11+"
-    # WI-274b: name a stale .venv explicitly. The report above prefers the venv
-    # when it is supported, else silently describes the ambient interpreter — so
-    # without this a contributor sees only "[missing] runtime" and never learns
-    # the .venv that shadows their PATH is the sub-floor culprit.
-    if ($venvExists -and -not $venvSupported) {
+    # WI-274b: name a stale/broken .venv explicitly. The report above prefers the
+    # venv when it is supported, else silently describes the ambient interpreter —
+    # so without this a contributor sees only "[missing] runtime" and never learns
+    # the .venv that shadows their PATH is the sub-floor (or broken) culprit.
+    if ($venvDirExists -and -not $venvSupported) {
         $staleVer = PyVersion $venvPython
-        if (-not $staleVer) { $staleVer = "sub-3.11 (its base interpreter no longer runs)" }
-        Write-Host ("  [stale]   .venv is Python {0} — below the 3.11 floor; rerun -Install to recreate it" -f $staleVer)
+        if ($staleVer) {
+            Write-Host ("  [stale]   .venv is Python {0} — below the 3.11 floor; rerun -Install to recreate it" -f $staleVer)
+        } else {
+            Write-Host "  [stale]   .venv is unusable (no working 3.11+ interpreter) — rerun -Install to recreate it"
+        }
     }
     Report "git" (Have "git") "install git"
     Report "ruff (format/lint)" (HasModule "ruff") "pip install ruff (or run -Install)"
@@ -173,24 +185,30 @@ try {
         Write-Error "Python 3.11+ not found on PATH; install a supported interpreter first."
         exit 1
     }
-    # WI-274a: a sub-3.11 .venv gets a CONSENTED recreate at the floor, not the
-    # old fail-closed "move or remove" dead end. $py/$pyArgs already hold the
-    # discovered 3.11+ interpreter (venv unsupported -> the discovery else-branch
-    # ran). Decline keeps today's fail-closed exit; a non-interactive Read-Host
-    # returns empty -> declines gracefully, so unattended -Install stays safe.
+    # WI-274a: a sub-3.11 OR broken .venv gets a CONSENTED recreate at the floor,
+    # not the old fail-closed "move or remove" dead end. $py/$pyArgs already hold
+    # the discovered 3.11+ interpreter (venv unsupported -> the discovery
+    # else-branch ran). Decline keeps today's fail-closed exit; a non-interactive
+    # Read-Host returns empty -> declines gracefully, so unattended -Install stays
+    # safe. Gated on $venvDirExists (not the interpreter), so an empty/broken
+    # .venv dir is offered the recreate instead of crashing the create step below.
     $recreated = $false
-    if ($venvExists -and -not $venvSupported) {
+    if ($venvDirExists -and -not $venvSupported) {
         $staleVer = PyVersion $venvPython
-        if (-not $staleVer) { $staleVer = "sub-3.11" }
         $discVer = PyVersion $py $pyArgs
         $discShown = ($py + $(if ($pyArgs) { " " + ($pyArgs -join " ") } else { "" })).Trim()
-        $ans = Read-Host ("Existing .\.venv is Python {0} — below the 3.11 floor. Recreate it with {1} (Python {2})? [y/N]" -f $staleVer, $discShown, $discVer)
+        if ($staleVer) {
+            $prompt = "Existing .\.venv is Python {0} — below the 3.11 floor. Recreate it with {1} (Python {2})? [y/N]" -f $staleVer, $discShown, $discVer
+        } else {
+            $prompt = "Existing .\.venv is unusable (no working interpreter). Recreate it with {0} (Python {1})? [y/N]" -f $discShown, $discVer
+        }
+        $ans = Read-Host $prompt
         if ($ans -match '^[Yy]') {
             Remove-Item -Recurse -Force ".venv"
             Write-Host "Removed the stale .\.venv."
             $recreated = $true
         } else {
-            Write-Error "Existing .\.venv uses Python below 3.11; recreate declined — move or remove that environment, then rerun -Install."
+            Write-Error "Existing .\.venv is below the 3.11 floor or has no working interpreter; recreate declined — move or remove that environment, then rerun -Install."
             exit 1
         }
     }
