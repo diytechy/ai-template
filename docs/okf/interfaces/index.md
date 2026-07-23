@@ -77,3 +77,5 @@ resource: "generated"
 | [IF-066](IF-066.md) |  |
 | [IF-067](IF-067.md) |  |
 | [IF-068](IF-068.md) |  |
+| [IF-069](IF-069.md) |  |
+| [IF-070](IF-070.md) |  |

@@ -43,6 +43,7 @@ graph LR
     m_scripts_agent_session["scripts/agent_session — One headless agent session: argv/stdin construc…"]
     m_scripts_bootstrap["scripts/bootstrap — Scaffold a new project from this trajectory kit."]
     m_scripts_check["scripts/check — The check harness — one command that runs every…"]
+    m_scripts_check_coverage["scripts/check_coverage — Per-module coverage floors: stop the global flo…"]
     m_scripts_check_doc_refs["scripts/check_doc_refs — Doc reference validation — prose that names dea…"]
     m_scripts_check_docs["scripts/check_docs — Doc navigability & staleness check: keep the ha…"]
     m_scripts_check_dupes["scripts/check_dupes — Duplicate-code lint — copy-paste blocks violate…"]
@@ -96,6 +97,7 @@ graph LR
     m_scripts_agent_dispatch -. IF-067 .-> m_scripts_agent_loop
     m_scripts_agent_route -. IF-044 .-> m_scripts_agent_loop
     m_scripts_agent_session -. IF-064 .-> m_scripts_agent_loop
+    m_scripts_check_coverage -. IF-069 .-> m_scripts_check
     m_scripts_check_doc_refs -. IF-008 .-> m_scripts_check
     m_scripts_check_docs -. IF-002 .-> m_scripts_check
     m_scripts_check_dupes -. IF-007 .-> m_scripts_check
@@ -344,11 +346,24 @@ Contracts (interfaces): IF-013, IF-022, IF-040
 |---|---|---|
 | `load_profile(path)` | Parse the declared product toolchain (docs/stack.ini) if present, else |  |
 | `extra_steps(profile, subs)` | Project-declared additional gate steps, from `docs/stack.ini` |  |
+| `extra_step_lanes(profile)` | `{step-name: lane}` for `[step:<name>]` sections declaring `lane = <other>` |  |
 | `steps(coverage, tier, gate, phase, profile)` |  |  |
 | `resolve_gate(explicit)` | The gate to run: an explicit --gate wins; else the docs/gate file (the |  |
 | `run_step(name, requires, cmd, lenient)` | Run one step, streaming its output live (the sequential path). |  |
 | `run_step_captured(name, requires, cmd, lenient)` | run_step with the child's output captured instead of streamed — the |  |
-| `run_plan(plan, lenient, jobs)` | Execute the plan's steps; returns [(name, status, detail)] in plan order. |  |
+| `run_plan(plan, lenient, jobs, lane_map)` | Execute the plan's steps; returns [(name, status, detail)] in plan order. |  |
+| `main()` |  |  |
+
+### `scripts/check_coverage`
+_Per-module coverage floors: stop the global floor hiding weak high-risk modules._
+Contracts (interfaces): IF-069, IF-070
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `load_floors(path)` | Parse the floors census into `[(module, floor, lineno)]`. Each non-comment |  |
+| `load_report(path)` | The coverage.py JSON report as `{normalized-file-path: percent_covered}`, |  |
+| `module_percent(percents, module)` | The measured percent for `module` (a normalized repo-relative path), or |  |
+| `evaluate(floors, percents)` | `[(module, floor, measured_or_None, status)]` for each declared floor, |  |
 | `main()` |  |  |
 
 ### `scripts/check_doc_refs`

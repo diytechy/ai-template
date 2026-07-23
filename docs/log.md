@@ -11656,3 +11656,7 @@ spec note. Nothing pushed (push-policy human).
 ## 2026-07-23 02:41 — integrated train 1-g3-WI-275-dfea (WI-275)
 
 Head f9319f0 composed onto a4191b2 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-275 -> done.
+
+## 2026-07-23 17:41 — integrated train p0-g3-WI-279-b5fa (WI-279)
+
+Head 7c0efc4 composed onto 747f152 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-279 -> done.

@@ -5,6 +5,7 @@ __pycache__/
 .pytest_cache/
 .coverage
 .coverage.*
+coverage.json
 .ruff_cache/
 
 # Generated reports (downstream repos generate these into docs/test/)

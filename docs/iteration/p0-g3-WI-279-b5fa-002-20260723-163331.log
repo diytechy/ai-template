@@ -1,0 +1,30 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-07-23 16:43
+# train: p0-g3-WI-279-b5fa
+# base: 747f1529c206
+# phase: REVIEW-A
+# wi: WI-279
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: 055534f..67b90ed
+# tokens: 
+# cost-usd: 
+# wall-secs: 603
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2767
+# exit-code: 0
+# ---
+Review recorded and committed: [002-REVIEW-A-1127e2b.md](C:\Projects\ai-template-trains\p0-g3-WI-279-b5fa\docs\reviews\p0-g3-WI-279-b5fa\002-REVIEW-A-1127e2b.md)
+
+Verdict: `CHANGES-REQUESTED findings=2`  
+Commit: `67b90ed review: record WI-279 verdict`
+
+Observed: strict trace passed; focused coverage tests passed; real smoke G3 run exposed stale-report false green (and separately failed on existing WI-275 status issues).

@@ -1,0 +1,5 @@
+### REVIEW-A — 1127e2b
+
+- [MAJOR] docs/stack.ini:80 -> the G3 smoke plan does not produce `coverage.json`, but this step reads any pre-existing ignored file and therefore reports a stale full-tier measurement as a current PASS instead of the SR-110-required SKIP; observed `check.py --gate G3 --tier smoke --jobs 0` passed all three floors from the 15:32 full report after its no-coverage smoke test -> make the report run-scoped or remove it before tests, and skip the comparator when the selected tier does not generate coverage; add a full-then-smoke harness regression -> @owner
+- [MAJOR] project-trajectory/scripts/check_coverage.py:113 -> non-finite coverage values are accepted, so Python's permissive JSON parser turns `percent_covered: NaN` into a silent green (`OK nan >= 72.0`, exit 0) rather than a corrupt-report failure; this defeats the new honest-gate floor when its input is damaged -> reject non-finite and out-of-range report percentages with a nonzero error, and cover NaN/Infinity in TC-101's automated evidence -> @owner
+VERDICT: CHANGES-REQUESTED findings=2

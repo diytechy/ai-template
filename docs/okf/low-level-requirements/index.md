@@ -108,3 +108,4 @@ resource: "generated"
 | [LLR-095](LLR-095.md) | Dual-plan path isolation |
 | [LLR-096](LLR-096.md) | Serialized dual-plan disposition |
 | [LLR-097](LLR-097.md) | Spec-lifecycle close-side findings |
+| [LLR-098](LLR-098.md) | Per-module coverage-floor comparator |

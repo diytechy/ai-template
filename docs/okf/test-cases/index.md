@@ -111,3 +111,4 @@ resource: "generated"
 | [TC-098](TC-098.md) | Run dispatcher SELECT, attended PAGE, autonomous PAGE continuation, regeneration failure,… |
 | [TC-099](TC-099.md) | Inspect the eleven legacy SR rows, their SupersededBy graph, replacement targets, and pos… |
 | [TC-100](TC-100.md) | Run check_trajectory over registries with a done+SpecRef row, an uncited live spec, a def… |
+| [TC-101](TC-101.md) | Run the check_coverage suite; a module below its floor exits 1 naming it, a declared modu… |
