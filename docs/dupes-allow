@@ -80,6 +80,14 @@ project-trajectory/scripts/check_perf.py == project-trajectory/scripts/gen_relea
 project-trajectory/scripts/check_perf.py == project-trajectory/scripts/trace.py
 project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/gen_trajectory.py
+# WI-279: check_coverage.py (per-module coverage floors) is a new standalone F5
+# comparator — it carries the _utf8_console emitter (== agent_common), the
+# argparse/main + sys.exit scaffolding (== bootstrap), and the absent-file-is-None
+# JSON loader mirroring check_perf.load_metrics (== check_perf), each duplicated
+# so the script ships copy-able, not hoisted into a shared module.
+project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_coverage.py
+project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_coverage.py
+project-trajectory/scripts/check_coverage.py == project-trajectory/scripts/check_perf.py
 project-trajectory/scripts/check_stubs.py == project-trajectory/scripts/gen_arch_map.py
 project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/derive_gate.py
 project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py

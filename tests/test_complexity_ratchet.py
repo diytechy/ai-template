@@ -68,7 +68,9 @@ BASELINE = {
     ("bootstrap.py", "main"): 41,
     ("bootstrap.py", "sync_agent_skills"): 13,
     ("bootstrap.py", "strip_markers"): 14,
-    ("check.py", "extra_steps"): 11,
+    # extra_steps dropped under the limit (WI-279 lifted its [step:] section
+    # scan into the shared _step_sections helper) — entry deleted per the
+    # ratchet's improvement rule (re-stamp/delete downward in the same commit).
     ("check.py", "main"): 16,
     ("check_doc_refs.py", "findings_for"): 12,
     ("check_docs.py", "check_links"): 13,

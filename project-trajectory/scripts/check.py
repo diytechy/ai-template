@@ -261,6 +261,18 @@ def _requires(argv):
     return tuple(dict.fromkeys(reqs))
 
 
+def _step_sections(profile):
+    """Yield `(section, name)` for each `[step:<name>]` in the profile (name
+    stripped, possibly empty — the caller validates). A None profile yields
+    nothing. The single place the step-section scan lives, shared by extra_steps
+    and extra_step_lanes so neither restates the loop prologue."""
+    if profile is None:
+        return
+    for section in profile.sections():
+        if section.startswith("step:"):
+            yield section, section[len("step:") :].strip()
+
+
 def extra_steps(profile, subs):
     """Project-declared additional gate steps, from `docs/stack.ini`
     `[step:<name>]` sections — the home for product-specific gates (dup-code,
@@ -273,19 +285,19 @@ def extra_steps(profile, subs):
         command = {py} scripts/check_dupes.py {src}   # required
         gates   = G2 G3                                # optional, default G3
         layer   = product                             # optional, default product
+        lane    = tests+coverage                       # optional (see below)
 
     `{py}/{src}/{tests}/{coverage}` expand as in every other command, and the
     required-import set is auto-derived from the argv (a `{py} -m <mod>` step
     declares <mod>; any other executable's absence is caught by run_step's PATH
-    guard) — the author declares nothing extra. Malformed entries fail LOUDLY,
+    guard) — the author declares nothing extra. An optional `lane = <step>`
+    serializes this step into another step's lane so `--jobs>1` runs it AFTER,
+    not concurrently — for a step that CONSUMES another's output (e.g. a
+    coverage-floor check reading the tests+coverage JSON); `lane` is parsed by
+    extra_step_lanes() and validated in main(). Malformed entries fail LOUDLY,
     never silently dropped, like every other profile error."""
-    if profile is None:
-        return []
     out = []
-    for section in profile.sections():
-        if not section.startswith("step:"):
-            continue
-        name = section[len("step:") :].strip()
+    for section, name in _step_sections(profile):
         if not name:
             sys.exit("check: docs/stack.ini has a [step:] section with an empty name")
         if name in BUILTIN_STEP_NAMES:
@@ -319,6 +331,44 @@ def extra_steps(profile, subs):
             )
         out.append((name, _requires(cmd), cmd, gates, layer))
     return out
+
+
+def extra_step_lanes(profile):
+    """`{step-name: lane}` for `[step:<name>]` sections declaring `lane = <other>`
+    — the parallel-run serialization hint for a step that CONSUMES another step's
+    output. Under `--jobs>1` every step runs in its own lane (concurrently)
+    unless mapped here; a step reading the tests+coverage JSON report (the
+    per-module coverage floor) must not race its producer, so it declares
+    `lane = tests+coverage` and the runner puts it in that lane, executed AFTER
+    it in plan order. Absent = own lane (the default). The lane is validated
+    against the real plan in main(), so a typo fails loudly instead of silently
+    re-racing the step."""
+    out = {}
+    for section, name in _step_sections(profile):
+        lane = profile.get(section, "lane", fallback="").strip()
+        if name and lane:
+            out[name] = lane
+    return out
+
+
+def _resolve_lane_map(profile, coverage, tier, phase):
+    """The parallel-run lane map: the built-in write-write lanes plus each
+    `[step:]` `lane = <producer>` declaration (extra_step_lanes). A declared lane
+    must name a REAL step (resolved at gate "all" so a lane onto another gate's
+    step still maps), so a typo fails LOUDLY here instead of silently re-racing
+    the step under --jobs>1 (a false green)."""
+    lane_map = dict(_SHARED_OUTPUT_LANES)
+    declared = extra_step_lanes(profile)
+    if declared:
+        all_names = {s[0] for s in steps(coverage, tier, "all", phase, profile)}
+        for step_name, lane in declared.items():
+            if lane not in all_names:
+                sys.exit(
+                    "check: docs/stack.ini [step:{}] lane = {!r} names no known "
+                    "step to serialize after".format(step_name, lane)
+                )
+            lane_map[step_name] = lane
+    return lane_map
 
 
 # Each step: name, the third-party module(s) it needs (importable by THIS
@@ -763,27 +813,37 @@ def run_step_captured(name, requires, cmd, lenient):
     return "FAIL", "exit {} ({:.1f}s)".format(proc.returncode, secs), out
 
 
-# Steps that rewrite the same generated artifact must never run concurrently:
-# BOTH trace.py invocations — registry-integrity's --strict-integrity floor and
-# the full traceability join — rewrite docs/test/report.md on every run, so a
-# parallel plan chains them in one lane. Every other step is read-only (the
-# --check freshness gates, the lints, privacy) or writes a distinct target
-# (tests+coverage: the coverage data files), so it parallelizes freely.
+# Steps that must not run concurrently share a *lane* (run serially, in plan
+# order). Two reasons a step joins another's lane:
+#   - WRITE-WRITE: BOTH trace.py invocations — registry-integrity's
+#     --strict-integrity floor and the full traceability join — rewrite
+#     docs/test/report.md every run, so they chain in one "trace-report" lane.
+#   - READ-AFTER-WRITE: a project step that CONSUMES another's output declares
+#     `lane = <producer>` in its [step:] section (extra_step_lanes) — e.g. the
+#     per-module coverage floor reading the tests+coverage JSON must run after
+#     it, not race it. Those declarations are merged onto this base map in main().
+# Every other step is read-only (the --check freshness gates, the lints,
+# privacy) or writes a distinct target, so it parallelizes freely.
 _SHARED_OUTPUT_LANES = {
     "registry-integrity": "trace-report",
     "traceability": "trace-report",
 }
 
 
-def run_plan(plan, lenient, jobs):
+def run_plan(plan, lenient, jobs, lane_map=None):
     """Execute the plan's steps; returns [(name, status, detail)] in plan order.
 
     jobs == 1 streams each step's output live, one at a time — byte-identical
     to the historical behavior, and the default. jobs > 1 runs the steps
-    concurrently in *lanes* (see _SHARED_OUTPUT_LANES), capturing each step's
-    output and printing it whole under a lock when the step finishes, so
-    output never interleaves; the summary and exit semantics are unchanged
-    (never a false green — an unexpected runner exception propagates)."""
+    concurrently in *lanes* (see _SHARED_OUTPUT_LANES and a step's declared
+    `lane =`), capturing each step's output and printing it whole under a lock
+    when the step finishes, so output never interleaves; the summary and exit
+    semantics are unchanged (never a false green — an unexpected runner
+    exception propagates). `lane_map` (name -> lane) defaults to the built-in
+    write-write map; main() passes it merged with the profile's `lane =`
+    declarations."""
+    if lane_map is None:
+        lane_map = _SHARED_OUTPUT_LANES
     if jobs <= 1 or len(plan) <= 1:
         return [
             (name, *run_step(name, requires, cmd, lenient))
@@ -794,9 +854,7 @@ def run_plan(plan, lenient, jobs):
 
     lanes = {}
     for idx, step in enumerate(plan):
-        lanes.setdefault(_SHARED_OUTPUT_LANES.get(step[0], step[0]), []).append(
-            (idx, step)
-        )
+        lanes.setdefault(lane_map.get(step[0], step[0]), []).append((idx, step))
     lock = threading.Lock()
     results = {}
 
@@ -911,6 +969,11 @@ def main():
                     "check: docs/stack.ini [coverage] threshold must be an integer"
                 )
 
+    # Parallel-run lane map: built-in write-write lanes + each [step:] `lane =`
+    # declaration, validated (a typo fails loudly, never silently re-races a step
+    # under --jobs>1). Factored out to keep main() under its complexity baseline.
+    lane_map = _resolve_lane_map(profile, coverage, args.tier, args.phase)
+
     # Run one named step and exit (the hook's format delegation). Search the
     # unfiltered plan so a gate-scoped step (format is G3-only) is still found,
     # and be lenient about a missing tool so a not-yet-set-up repo can commit —
@@ -942,7 +1005,10 @@ def main():
             sys.exit("check: no step named {}".format(", ".join(map(repr, unknown))))
         jobs = args.jobs if args.jobs is not None else 0
         results = run_plan(
-            [by_name[n] for n in names], lenient=True, jobs=jobs or len(names)
+            [by_name[n] for n in names],
+            lenient=True,
+            jobs=jobs or len(names),
+            lane_map=lane_map,
         )
         sys.exit(1 if any(status == "FAIL" for _n, status, _d in results) else 0)
 
@@ -969,7 +1035,7 @@ def main():
     jobs = args.jobs if args.jobs is not None else 1
     if jobs == 0:
         jobs = len(plan)
-    results = run_plan(plan, args.lenient, jobs)
+    results = run_plan(plan, args.lenient, jobs, lane_map)
 
     print("\n" + "=" * 56)
     print("Check summary (gate {}, tier {}):".format(gate, args.tier))

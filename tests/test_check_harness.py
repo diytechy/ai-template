@@ -312,6 +312,59 @@ def test_jobs_parallel_plan_matches_sequential(scaffold):
     assert "RESULT: FAIL" in bad.stdout
 
 
+# --- WI-279: a [step:] may declare `lane =` to serialize a data-dependent step
+# (the per-module coverage floor reads the tests+coverage JSON) after its
+# producer under --jobs>1, instead of racing it and finding no output yet.
+def test_extra_step_lanes_reads_declared_lane():
+    import configparser
+
+    check = load_script("check")
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.read_string(
+        "[step:module-coverage]\ncommand = {py} x.py\nlane = tests+coverage\n\n"
+        "[step:dupes]\ncommand = {py} y.py\n"  # no lane -> own lane, omitted
+    )
+    assert check.extra_step_lanes(cp) == {"module-coverage": "tests+coverage"}
+
+
+def test_declared_lane_serializes_a_dependent_step_under_jobs(tmp_path):
+    import sys
+
+    check = load_script("check")
+    order = tmp_path / "order.txt"
+
+    def step(name, token, sleep):
+        code = (
+            "import time,pathlib;time.sleep({s});"
+            "p=pathlib.Path('{f}');"
+            "p.write_text((p.read_text() if p.exists() else '')+'{t}')"
+        ).format(s=sleep, f=order.as_posix(), t=token)
+        return (name, (), [sys.executable, "-c", code], {"G3"}, "product")
+
+    # The producer sleeps; an un-laned consumer would win the race under jobs=2.
+    # Sharing the producer's lane forces the consumer to run AFTER it, in plan
+    # order, so the file reads "PC" deterministically (the coverage-floor case).
+    plan = [step("producer", "P", 0.4), step("consumer", "C", 0.0)]
+    check.run_plan(plan, lenient=False, jobs=2, lane_map={"consumer": "producer"})
+    assert order.read_text() == "PC"
+
+
+def test_bad_lane_fails_loudly(scaffold):
+    # A [step:] whose `lane` names no real step must fail LOUDLY at plan time,
+    # never silently re-race the step (a false green under --jobs>1).
+    make_minimal_project(scaffold)
+    stack = scaffold / "docs" / "stack.ini"
+    stack.write_text(
+        stack.read_text(encoding="utf-8")
+        + "\n[step:floors]\ncommand = {py} scripts/check_coverage.py\n"
+        + "lane = no-such-step\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/check.py", "--gate", "G3", "--list"], cwd=scaffold)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "names no known step" in proc.stdout + proc.stderr
+
+
 def test_default_gate_comes_from_gate_file(scaffold):
     # check.py without --gate reads the committed docs/gate (bootstrap writes
     # G1), so CI enforces the bar the project is actually at — a fresh scaffold
