@@ -1,0 +1,4 @@
+- [MAJOR] docs/status.md:38 -> the authoritative per-commit bar still promises `~3.3 min`, contradicting WI-281's declared 60-second budget and explicit Done-when surface -> regenerate/update the status snapshot to state the <=60 s bar as part of integration -> @owner
+- [MAJOR] docs/requirements/work-items.csv:280 -> WI-281 remains `queued` with an empty Deliverable and live `docs/specs/WI-281.md` SpecRef, leaving its final Done-when completion/archival condition unmet -> integrate the deliverable, set the row done, clear SpecRef, and archive the closed spec -> @owner
+- [MINOR] tests/test_smoke_budget.py:11 -> the module documentation says the CI wall-clock check is "warns-first per lane", but the reviewed workflow invokes `--mode enforce` -> describe the local warn default and CI enforcement consistently -> @owner
+VERDICT: CHANGES-REQUESTED findings=3
