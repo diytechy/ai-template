@@ -11374,10 +11374,35 @@ pushed.
 requirements-change WI the repo-review-2026-07-21 close flagged: WI-262 bumped the
 kit's actual floor 3.8 → 3.11 (scripts, the `test.yml` matrix, `requirements-dev`,
 ADOPTING.md) but **froze the requirement CSVs**, so SN-011 / SR-034 / SR-035 +
-`architecture.md` + `status.md` + TC-035 still claim 3.8. [WI-270](specs/WI-270.md)
+`architecture.md` + `status.md` + TC-035 still claim 3.8. [WI-270](archive/specs/WI-270.2026-07-22.md)
 (queued, strong, `spine`, `~WI-262`) reconciles the spine text and **rewrites
 SR-035's AC narrative** — the macOS+3.8-exclusion story ("arm64 has no CPython
 3.8") is obsolete now that `test.yml` already runs macOS on 3.11. No code/CI change
 (that shipped in WI-262); text + re-attestation only, the derived gate stays G3.
 Spine unchanged at filing (SN=25 SR=109 LLR=97 TC=100); 268 WIs, 256 done.
 Merge-to-`main` stays owner (push-policy: human) — nothing pushed.
+
+## 2026-07-22 — WI-270 DONE: Python-floor requirement spine reconciled to 3.11
+
+**Session type:** build (`docs`, strong; spine re-attestation). Built + closed the
+requirements-change WI filed above. The spine + current-state docs moved 3.8 → 3.11
+to match the floor already shipped: **SN-011 · SR-034 · SR-035 · TC-035** +
+[architecture.md](architecture.md) + [status.md](status.md) Scope + the WI-064
+build-note. **SR-035's AC narrative rewritten** to match `test.yml`'s actual matrix
+— `{ubuntu,windows,macos} × {3.11, 3.x}` with **macOS+3.11 excluded** as a
+redundant-coverage call (M-27), *not* the retired arm64-availability story (3.11
+has arm64 macOS builds). SR-034 (version-agnostic AST-scan AC) and SR-035 (verified
+by TC-035 → `test.yml`, green) stay **Verified**; spine counts unchanged (SN=25
+SR=109 LLR=97 TC=100), derived gate **G3**.
+
+**Text + re-attestation only — no code / CI / template / byte-budgeted file
+touched.** Gate: `check.py --gate G3` **RESULT: PASS** (16/16; full suite **1368
+passed, 1 skipped**, coverage **91.53%**). **Adversarial
+[114-REVIEW-A](reviews/114-REVIEW-A.md) APPROVE f=1** — the reviewer independently
+re-ran the full gate, drove SR-034's test, grepped for missed live-3.8 claims
+(none), and confirmed SR-035's shipped AC matches `test.yml` exactly. Its one
+**MINOR** (inverted prose "macOS pinned to the floor cell" in the spec) was fixed
+before the spec was archived to
+[archive/specs/WI-270.2026-07-22.md](archive/specs/WI-270.2026-07-22.md); the
+shipped AC was already correct. Merge-to-`main` stays owner (push-policy: human) —
+nothing pushed.
