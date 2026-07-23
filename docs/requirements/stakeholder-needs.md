@@ -53,3 +53,20 @@ tests that already exist (noted).
 | SN-020 | Runtime | The agent CLI / model errors before doing work (retired model, expired auth) | The session is logged `ERROR` and an all-`ERROR` stall is reported as an **unavailable agent**, not a work stall. *(tests/test_agent_loop.py — error region)* |
 | SN-021 | Runtime | A generated artifact (arch map, trace view) drifts from its source | Its `--check` fails at the gate — a stale generated doc is a red, not a silent rot (SN-010). |
 | SN-022 | Runtime | A committed example row / placeholder is left in a registry at a gate | `--no-placeholders` flags a leftover `-000` row from G2 on; a fresh scaffold stays green until it claims a gate. |
+
+## Non-goals
+
+Explicit scope boundaries — what the kit deliberately does **not** do, recorded
+so a later contributor treats them as decisions, not oversights (G1 requires
+non-goals to be captured; [PROCESS.md](../../project-trajectory/PROCESS.md) §4).
+
+- **NG-1 · Internationalization / localization.** The kit's display strings,
+  CLI output, policy tokens, status vocabulary, registry headers, and parsers
+  are English-only by design. The product is a developer-process kit whose
+  audience and machine vocabulary are English; externalizing strings would add
+  cost with no stakeholder need behind it (recorded from the
+  [repo-review-2026-07-22](../repo-review-2026-07-22.md) L-4 finding). If
+  localization ever becomes a requirement, first separate the **display**
+  strings from the stable **machine** tokens — policy names, status values,
+  registry column headers — before translating anything: those tokens are
+  contracts, not prose, and must not move with a locale.

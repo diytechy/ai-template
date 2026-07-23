@@ -11426,6 +11426,106 @@ moment's investigation, the lesser evil vs missing a real paper-close; un-defer 
 the false-positive noise erodes the signal. No spine change; 269 WIs, 257 done, 12
 deferred. Nothing pushed.
 
+## 2026-07-22 — repo-review-2026-07-22 deferred tail: register + two growth sensors
+
+**Session type:** review-tail remediation (owner-directed — "implement all
+recommendations" from an adversarial re-read of
+[repo-review-2026-07-22.md](repo-review-2026-07-22.md)). The re-read's finding:
+the deep review parked **H-2 / M-4 / M-5 / M-7 / L-1 / L-2 / L-4** in that
+report's §1 prose *only*, while M-2 / M-3 / H-3 became registry rows
+(WI-272 / WI-273 / WI-097). Since dated reviews archive and this repo's own
+review corpus **excludes `docs/archive/**`**, a deferral tracked only in a dated
+report evaporates on the next pass — the registry is the durable tracker. This
+session closes that gap and lands the two cheap sensors that pass today.
+
+**Registered the untracked deferrals** (all `deferred`, each anchored to its
+review finding): **WI-279** (M-4 — per-module coverage floors for the
+security/process boundaries), **WI-280** (H-2 — bounded core decomposition:
+typed session/train/route state, pure decisions isolated from Git/subprocess
+effects, a modular `gen_trajectory.py`), **WI-276** (M-5 — fingerprinted
+duplicate exemptions), **WI-277** (L-1 — split the test monoliths behind
+WI-280's seams), **WI-278** (M-7 — branch integration & CI-on-branch, the
+mechanical half of the owner ruling). Added **OI-8** (branch integration &
+CI-on-branch) referencing WI-278, format-matching OI-4/OI-7. M-4's *values* are
+cheap but its *mechanism* is not: `check.py` enforces coverage only as one
+global `--cov-fail-under`, so per-module gating is a real shipped-script feature
+(WI-279), not a `stack.ini` tweak — half-building an enforcement mechanism is
+exactly what the review warns against, so it is filed, not jammed in. L-3
+(historical Git rewrite) was correctly left alone by the review and stays so.
+
+**Built the two growth sensors** (both pass now, both in the smoke bar by
+default): `tests/test_module_size_ratchet.py` — the file-scale sibling of the
+complexity ratchet — freezes the six coordinators over 1,500 lines at their
+current counts (`gen_trajectory.py` 4511, `agent_dispatch.py` 3452,
+`agent_loop.py` 3034, `trace.py` 2206, `check_trajectory.py` 1926,
+`bootstrap.py` 1916) so they cannot grow while WI-280 is deferred (re-stamp
+DOWNWARD as decomposition lands; a bump is a reviewed baseline edit).
+`tests/test_dashboard_size_budget.py` — a coarse runaway sensor on
+`PROJECT_STATE.html` at a 1,400,000-byte ceiling (measured 1,155,350 after the
+new rows; the review had caught it drifting 1,145,810 → 1,148,348 unnoticed).
+
+**Recorded English-only as an explicit non-goal** (L-4): new **NG-1** in
+[stakeholder-needs.md](requirements/stakeholder-needs.md) — display strings,
+CLI/policy/status/header tokens, and parsers are English-only by design; if
+localization is ever required, separate display strings from the stable machine
+tokens first. This is the SSOT home G1 already names for non-goals; no SN row,
+so no spine change.
+
+**Housekeeping:** brought the hand-authored `status.md` "Deferred backlog" list
+current (it was stale — missing WI-272/WI-273 as well) and updated "Next
+action"; regenerated `PROJECT_STATE.html` and the status/open-items generated
+blocks (freshness gates green).
+
+**No spine change** (SN=25 SR=109 LLR=97 TC=100, derived gate **G3**); no
+byte-budgeted file touched (`AGENTS.template.md` / `PROCESS.md` /
+`PROCESS_OPTIONS.md` untouched); **276 WIs, 257 done, 19 deferred**. Commit bar:
+smoke **1086 passed, 2 skipped in 174.41 s** (`-n auto`, +2 = the new sensors);
+`check_docs --stale` **OK, 0 broken**. Full suite **1376 passed, 2 skipped in
+233.86 s**. Merge-to-`main`
+stays owner (push-policy: human) — nothing pushed.
+
+## 2026-07-22 — backlog triage: queue the review-tail frontier, retire WI-082
+
+**Session type:** backlog triage (owner-directed — "follow your recommendation").
+Acting on the queue-vs-clear triage of the 19 deferred rows.
+
+**Queued (ready frontier, build order):** **WI-279** (per-module coverage floors
+— highest value: guards the H-1 boundary `agent_session.py` at 74% and
+`subagent_gate.py` at 40%), **WI-272** (dashboard status fidelity), **WI-273**
+(dashboard ARIA tabs, soft-gated behind WI-272), **WI-276** (fingerprinted
+duplicate exemptions). Each was `deferred → queued`; all four name a resolvable
+SpecRef (the review-doc anchor) so R-E passes, and WI-272/273's cited SRs
+(SR-038/052/053) exist so backlog-staleness re-validation is clean. WI-272/273
+are `Verification=Critique` render work — a passing test is not sufficient; each
+needs a fresh family-heterogeneous render critique (the `render-dashboard-critique`
+skill) before it closes.
+
+**Retired:** **WI-082** (decompose `bootstrap.py main()`) — superseded by WI-280
+(bounded core decomposition), which now owns `bootstrap.py main()` as a concrete
+first slice (WI-280's text updated to say so). Per the terminal-state ritual
+(R-F): Status `retired`, Deliverable filled with the reason, **SpecRef cleared**
+(the review anchor lived in `docs/archive/`, so no live `docs/specs/` file to
+archive). This is the `retired` disposition `status.md` had flagged as available
+for the archive-anchored rows.
+
+**Kept deferred** (unchanged): WI-060/061/062/063 (parked features / archive
+rows still wanting per-row re-spec), WI-065 (condition-gated on an `Active`
+seam), WI-097 (OI-4, owner), WI-108, WI-123 (OI-7, waits on evidence by its own
+rec), WI-158, WI-187, WI-271, WI-280 (`strong` H-2 design program — deliberately
+not queued), WI-277 (hard-gated behind WI-280), WI-278 (OI-8, owner).
+
+`status.md` gains a **Queued (ready frontier)** bullet and a **Retired** line;
+"Next action" now points at WI-279 and the three owner calls (OI-4 LICENSE,
+OI-8 integration, merge-to-`main`). Regenerated `PROJECT_STATE.html`
+(1,155,545 B, under the 1.4 MB budget); status/open-items generated blocks
+unchanged (they project spine/gate/open-items, not the WI frontier).
+
+**No spine change** (SN=25 SR=109 LLR=97 TC=100, derived gate **G3** — the gate
+derives from artifact states, not WI states, so queuing/retiring does not move
+it); no byte-budgeted file touched; **276 WIs, 257 done, 1 retired, 14 deferred,
+4 queued**. `check_trajectory` clean (acyclic); `trace --strict` 0 orphans;
+`check_docs` 0 broken. Merge-to-`main` stays owner — nothing pushed.
+
 ## 2026-07-23 — WI-274 filed (queued): dev-setup stale-venv recovery + single-home coordinator dials
 
 **Session type:** intake (owner-directed investigation; no build). Two parts, one
@@ -11491,3 +11591,26 @@ the optional cells cleared, which is the actual guarantee ("an *empty* new cell
 also confirmed the strong-tier effort dial: ANTHROPIC-OPUS-STRONG already
 carries `CLAUDE_CODE_EFFORT_LEVEL=xhigh` (the WI-110 value; no change needed).
 No spine change; 273 WIs, 257 done. Nothing pushed (push-policy human).
+
+## 2026-07-23 — branch merge: origin review-tail merged in; WI id collision renumbered
+
+**Session type:** merge (owner-directed). Local `dualplan-routing-fix` and
+`origin/dualplan-routing-fix` diverged from `272a6e8`: origin carried the two
+2026-07-22 review-tail sessions (`f651d36` register deferred tail + growth
+sensors, `9388ba2` queue frontier + retire WI-082) while local carried the
+2026-07-22/23 dial + WI-274/WI-275 filings (`e6cc328`..`43b210d`). Both sides
+had allocated **WI-274/WI-275** to different work: local to the dev-setup /
+shim-fixture filings (ids baked into committed `docs/specs/WI-27{4,5}.md`,
+IF-068, and commit messages), origin to the review-tail M-4/H-2 rows (ids in
+registry/prose only). **Resolution: origin's rows renumbered WI-274→WI-279
+(per-module coverage floors) and WI-275→WI-280 (bounded core decomposition)**,
+with every origin-side reference updated (`work-items.csv` incl. WI-277's
+`~WI-280` dep and WI-280's ratchet cross-ref, the two 2026-07-22 log entries
+above, `status.md` frontier/deferred/retired lines,
+`tests/test_module_size_ratchet.py`, `tests/test_dashboard_size_budget.py`).
+WI-272/WI-273 take origin's `deferred→queued` flip (local never edited them).
+`status.md` "Next action" merged forward-only: WI-275 (Priority 1) → WI-274 →
+the review-tail frontier (WI-279 → WI-272 → WI-273 → WI-276); WI-082 stays
+retired (superseded by WI-280). `PROJECT_STATE.html` regenerated, not
+hand-merged. No spine change; **278 WIs, 257 done, 1 retired, 14 deferred**.
+Nothing pushed (no SSH auth in the merging session; push stays owner).
