@@ -57,21 +57,25 @@ ALLOWLIST = "docs/dupes-allow"
 
 # Length of the hex block fingerprint recorded in the census (WI-276). 12 hex =
 # 48 bits: collision-free at the hundreds-of-blocks scale a real census reaches,
-# short enough to stay readable on a census line. A fingerprint keys the FIRST
-# window's normalized (kind, text) token signature plus the block's token extent
-# — line-number-free (survives the files growing) but content- and length-
-# sensitive, so new/extended copy-paste between an already-listed pair changes
-# the fingerprint and is no longer exempt.
+# short enough to stay readable on a census line. A fingerprint keys the block's
+# COMPLETE normalized (kind, text) token signature — every token in the merged
+# block, not merely its first window — line-number-free (survives the files
+# growing) but fully content-sensitive, so new or edited copy-paste between an
+# already-listed pair changes the fingerprint and is no longer exempt.
 _FP_LEN = 12
 _FP_RE = re.compile(r"^[0-9a-f]{%d}$" % _FP_LEN)
 
 
-def fingerprint(window, length):
-    """Stable 12-hex fingerprint of a duplicated block: its first-window token
-    signature plus its token extent. Deterministic across runs and OSes (a hash
-    of a repr of ints and str), and independent of line numbers, whitespace, and
-    comments (those never enter the signature)."""
-    payload = repr((tuple(window), length)).encode("utf-8")
+def fingerprint(block):
+    """Stable 12-hex fingerprint of a duplicated block's COMPLETE normalized
+    token signature — every (kind, text) token in the merged block, not merely
+    its first --min-tokens window. A first-window-plus-extent hash collided
+    whenever two blocks shared their opening window and total token count but
+    diverged after it, silently exempting the changed copy from the census
+    (WI-276 rework); hashing the whole sequence closes that hole. Deterministic
+    across runs and OSes (a hash of a repr of str pairs) and independent of line
+    numbers, whitespace, and comments (those never enter the signature)."""
+    payload = repr(tuple(block)).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()[:_FP_LEN]
 
 
@@ -132,14 +136,16 @@ def find_duplicates(files, min_tokens):
     Returns a sorted list of ((file_a, line_a), (file_b, line_b), token_len, fp)
     with overlapping windows of the same duplicate merged, so one lifted
     helper reports once, not once per sliding-window offset. `fp` is the block's
-    fingerprint() (line-number-free content+length hash), used to key census
-    exemptions to a specific block, not the whole file pair (WI-276).
+    fingerprint() (line-number-free hash of its COMPLETE token signature), used
+    to key census exemptions to a specific block, not the whole file pair, and
+    to catch edits anywhere in the block, not just its prefix or extent (WI-276).
     """
     seen = {}  # window -> (file, line) of first occurrence
     # (file_a, file_b) -> {line_a - line_b offset -> [(line_a, line_b, window)]}:
     # windows from one duplicated block share their line offset, so grouping
-    # by offset merges the sliding-window hits into a single finding. The window
-    # rides along so the merged block can be fingerprinted from its first window.
+    # by offset merges the sliding-window hits into a single finding. Each window
+    # rides along so _merged_signature can reconstruct the block's full token
+    # sequence for the fingerprint (not just its first window).
     pairs = {}
     for path in files:
         toks = significant_tokens(path)
@@ -164,13 +170,27 @@ def find_duplicates(files, min_tokens):
             # group into contiguous runs where the window start-lines are
             # adjacent (a gap > 1 line is a second block).
             for run in _contiguous_runs(sorted(hits, key=lambda h: (h[0], h[1]))):
-                line_a, line_b, window = run[0]
+                line_a, line_b, _first_window = run[0]
                 # Window count approximates extent: N overlapping windows span
                 # roughly min_tokens + N - 1 tokens.
                 length = min_tokens + len(run) - 1
-                fp = fingerprint(window, length)
+                fp = fingerprint(_merged_signature(run))
                 findings.append(((file_a, line_a), (file_b, line_b), length, fp))
     return sorted(findings)
+
+
+def _merged_signature(run):
+    """The full (kind, text) token signature of a merged duplicated block,
+    reconstructed from its overlapping windows: the first window in full, then
+    the single new trailing token each subsequent step-1 window contributes.
+    find_duplicates appends a pair's windows in the scanned file's token order
+    and the (line_a, line_b) sort is stable, so `run` is in token order and this
+    yields the block's exact token sequence (length min_tokens + len(run) - 1).
+    Fingerprinting THIS — every token, not just run[0]'s window — makes the
+    census key change on any interior or trailing edit, not only a prefix or
+    extent edit (WI-276)."""
+    first_window = run[0][2]
+    return tuple(first_window) + tuple(hit[2][-1] for hit in run[1:])
 
 
 def _contiguous_runs(hits):

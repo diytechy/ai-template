@@ -48,6 +48,22 @@ HELPER2 = """def merge_maps(base, extra):
     return out
 """
 
+# A helper long enough (~70 significant tokens) that its distinctive FINAL token
+# lands well PAST the 30-token window. HELPER_LONG_EDITED changes only that final
+# token, keeping the block's first window AND total token extent identical — the
+# exact shape a first-window-plus-length fingerprint waves through (WI-276 rework).
+HELPER_LONG = """def summarize(rows, label):
+    total = 0
+    count = 0
+    for row in rows:
+        total = total + row.value
+        count = count + 1
+    average = total / count
+    return {"label": label, "sum": total, "n": count, "avg": average, "tag": "orig"}
+"""
+
+HELPER_LONG_EDITED = HELPER_LONG.replace('"orig"', '"diff"')
+
 _FP_LINE = re.compile(r"^[0-9a-f]{12}  src/a\.py == src/b\.py$")
 
 
@@ -198,6 +214,30 @@ def test_new_copypaste_in_listed_pair_now_fails(tmp_path):
     # Only the NEW block is reported; the recorded one is not re-flagged.
     assert proc.stderr.count("duplicate block") == 1
     assert "merge_maps" not in proc.stderr  # location, not source, is printed
+    assert "sanction with census line:" in proc.stderr
+
+
+def test_post_window_token_change_defeats_stale_fingerprint(tmp_path):
+    # WI-276 rework: the block fingerprint hashes the COMPLETE merged token
+    # sequence, not just its first --min-tokens window plus extent. Census a long
+    # block, then change ONE token AFTER that first window in both files while
+    # keeping the extent (token count) identical. A first-window+length hash
+    # would reuse the recorded fingerprint and stay exempt (exit 0); hashing the
+    # whole block must instead re-flag the edited copy (exit 1).
+    write_src(
+        tmp_path, {"a.py": UNIQUE_A + HELPER_LONG, "b.py": UNIQUE_B + HELPER_LONG}
+    )
+    write_census(tmp_path, emit(tmp_path)[0] + "\n")
+    assert dupes(tmp_path).returncode == 0  # the recorded block is exempt
+
+    write_src(
+        tmp_path,
+        {"a.py": UNIQUE_A + HELPER_LONG_EDITED, "b.py": UNIQUE_B + HELPER_LONG_EDITED},
+    )
+    proc = dupes(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "duplicate block" in proc.stderr
+    # The edited block now needs its own deliberate census line.
     assert "sanction with census line:" in proc.stderr
 
 

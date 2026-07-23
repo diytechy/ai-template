@@ -394,7 +394,7 @@ Contracts (interfaces): IF-007, IF-027
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `fingerprint(window, length)` | Stable 12-hex fingerprint of a duplicated block: its first-window token |  |
+| `fingerprint(block)` | Stable 12-hex fingerprint of a duplicated block's COMPLETE normalized |  |
 | `significant_tokens(path)` | (kind, text, line) for each significant token in the file, or None when |  |
 | `find_duplicates(files, min_tokens)` | Duplicated blocks across the given files. |  |
 | `read_allowlist(path)` | Parse the census into (fingerprint_or_None, pair) entries, one per |  |
