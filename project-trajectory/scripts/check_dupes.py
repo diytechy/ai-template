@@ -181,9 +181,9 @@ def _merged_signature(run):
     """The full (kind, text) token signature of a merged duplicated block,
     reconstructed from its overlapping windows: the first window in full, then
     the single new trailing token each subsequent step-1 window contributes.
-    find_duplicates appends a pair's windows in the scanned file's token order
-    and the (line_a, line_b) sort is stable, so `run` is in token order and this
-    yields the block's exact token sequence (length min_tokens + len(run) - 1).
+    find_duplicates sorts a pair's windows by (first_offset, token_offset), so
+    `run` is in token order and this yields the block's exact token sequence
+    (length min_tokens + len(run) - 1).
     Fingerprinting THIS — every token, not just run[0]'s window — makes the
     census key change on any interior or trailing edit, not only a prefix or
     extent edit (WI-276)."""
