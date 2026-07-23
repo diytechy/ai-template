@@ -21,7 +21,7 @@ resource: "generated"
 | [SN-008](SN-008.md) | Gates are honest — a green never hides a skipped check, a stub, or an unmet criterion. |
 | [SN-009](SN-009.md) | A committed secret or private identity is caught before it publishes, in every repo, with… |
 | [SN-010](SN-010.md) | Documentation stays navigable and honest — links resolve, the vision is declared once, an… |
-| [SN-011](SN-011.md) | The kit's scripts run on a clean Python 3.8+ with no pip installs, on Windows and POSIX (… |
+| [SN-011](SN-011.md) | The kit's scripts run on a clean Python 3.11+ with no pip installs, on Windows and POSIX … |
 | [SN-012](SN-012.md) | The process is right-sized, not ceremony for its own sake — small changes stay cheap, and… |
 | [SN-013](SN-013.md) | Provision |
 | [SN-014](SN-014.md) | Provision |

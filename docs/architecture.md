@@ -12,7 +12,7 @@ adopters. The requirement spine it renders lives in
 ## Shape of the product
 
 - **Checkers / generators** (`project-trajectory/scripts/*.py`) — stdlib-only,
-  Python 3.8+, cross-platform (SR-034/SR-035). Each is invoked as a subprocess
+  Python 3.11+, cross-platform (SR-034/SR-035). Each is invoked as a subprocess
   by the check harness (`check.py`) and by the test suite, so the "product" is a
   set of independently runnable commands, not a linked application.
 - **Enforcement floor** (`project-trajectory/hooks/*`) — the pre-commit /
