@@ -155,7 +155,7 @@
     <section class="hero">
       <h1>Vision</h1>
       <p class="vision">A reusable starting point for building maintainable, requirement-traced projects with AI agents and humans working from the same playbook. The goal: code and analytics that stay readable and correct over the long run, built test-first with explicit approval gates so you can trust what ships.</p>
-      <p class="asof">state as of commit a4191b2 · 2026-07-23</p>
+      <p class="asof">state as of commit 747f152 · 2026-07-23</p>
 
       <div class="cards">
         <div class="card">
@@ -183,15 +183,15 @@
       </div>
     </section>
 
-    <nav class="tabs">
-      <button class="active" data-tab="arch">What (SR breakdown)</button>
-      <button data-tab="dag">When (roadmap DAG)</button>
-      <button data-tab="sw">How (SW architecture)</button>
-      <button data-tab="know">Knowledge (OKF)</button>
-      <button data-tab="process">Process</button>
+    <nav class="tabs" role="tablist" aria-label="Dashboard views">
+      <button class="active" role="tab" id="tab-arch" data-tab="arch" aria-controls="arch" aria-selected="true" tabindex="0">What (SR breakdown)</button>
+      <button role="tab" id="tab-dag" data-tab="dag" aria-controls="dag" aria-selected="false" tabindex="-1">When (roadmap DAG)</button>
+      <button role="tab" id="tab-sw" data-tab="sw" aria-controls="sw" aria-selected="false" tabindex="-1">How (SW architecture)</button>
+      <button role="tab" id="tab-know" data-tab="know" aria-controls="know" aria-selected="false" tabindex="-1">Knowledge (OKF)</button>
+      <button role="tab" id="tab-process" data-tab="process" aria-controls="process" aria-selected="false" tabindex="-1">Process</button>
     </nav>
 
-    <section id="arch" class="panel active">
+    <section id="arch" class="panel active" role="tabpanel" aria-labelledby="tab-arch">
       <h2>Architecture decomposition</h2>
       <p class="cap">The <code>SN→SR→LLR→TC</code> spine as an <strong>icicle</strong>:
       block height is leaf-proportional — a TC is one unit, an LLR spans the sum of
@@ -213,7 +213,7 @@
       </div>
     </section>
 
-    <section id="dag" class="panel">
+    <section id="dag" class="panel" role="tabpanel" aria-labelledby="tab-dag" hidden>
       <h2>Work-item trajectory</h2>
       <p class="cap">The dependency DAG from <code>docs/requirements/work-items.csv</code>,
       laid out left→right by <strong>dependency rank</strong> (a work item sits one
@@ -238,7 +238,7 @@
       </div>
     </section>
 
-    <section id="sw" class="panel">
+    <section id="sw" class="panel" role="tabpanel" aria-labelledby="tab-sw" hidden>
 <h2>Software architecture (How)</h2>
 <style>#dag span.ph,#sw span.ph{display:inline-block;width:.55rem;height:.55rem;border-radius:2px;vertical-align:-1px;margin-right:.4rem;}#dag .phaselegend,#sw .phaselegend{margin:.3rem 0 .6rem;}.drill nav.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:.1rem;margin:.1rem 0 .6rem;font-size:.85rem;}.drill nav.crumbs .crumb{appearance:none;background:none;border:none;cursor:pointer;font:inherit;color:var(--accent);padding:.15rem .35rem;border-radius:6px;}.drill nav.crumbs .crumb[aria-current]{color:var(--text);font-weight:600;cursor:default;}.drill nav.crumbs .sep{color:var(--muted);}.drill .layer[hidden]{display:none;}.drill svg.drillsvg{display:block;font-family:inherit;}.drill .block[data-descend]{cursor:pointer;}.drill .block[data-descend] rect{stroke-width:1.5;}.drill .block:focus{outline:none;}.drill .block:focus rect{stroke:var(--accent);stroke-width:2.5;}.drill .block.hl rect{stroke:var(--accent);stroke-width:2.5;}.drill .block .blab{font-size:var(--nlabel);font-weight:700;}.drill .block .bsub{font-size:var(--nsub);}.drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;}.drill .port.in{stroke:var(--accent);}.drill .wire{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.85;}.drill .warrow{fill:var(--muted);}.drill .cedge{fill:none;stroke:var(--accent);stroke-width:1.5;}.drill .cedgehead{fill:var(--accent);}</style><style>#sw .cmptree{margin-top:.4rem;}</style>
 <p class="cap"><strong>Top view: 5 item(s)</strong> — 5 top-level component(s) + 0 uncontained module(s); bounded at 10 (process-options.md "Component layer"). Software items are <strong>containerized</strong>; <strong>double-click</strong> a component — or focus it and press Enter — to <strong>descend</strong> into its members and internal seams, and the breadcrumb returns.</p><div class="layout">
@@ -265,7 +265,7 @@
 })();</script>
 </section>
 
-    <section id="know" class="panel">
+    <section id="know" class="panel" role="tabpanel" aria-labelledby="tab-know" hidden>
 <h2>Knowledge graph (OKF concepts)</h2>
 <p class="cap">The committed <code>docs/okf/</code> knowledge bundle as a typed concept graph — the dashboard is the bundle's first real <strong>consumer</strong>. It opens <strong>collapsed</strong>: one block per OKF <code>type</code> wired by the aggregated <code>SN→SR→LLR→TC</code> spine links. <strong>Double-click</strong> a type — or focus it and press Enter — to <strong>descend</strong> into its concepts; the <strong>breadcrumb</strong> returns. <strong>Click</strong> a concept to read its description and open the full file. A view — the registries are the source of truth.</p>
 <style>#dag span.ph,#sw span.ph{display:inline-block;width:.55rem;height:.55rem;border-radius:2px;vertical-align:-1px;margin-right:.4rem;}#dag .phaselegend,#sw .phaselegend{margin:.3rem 0 .6rem;}.drill nav.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:.1rem;margin:.1rem 0 .6rem;font-size:.85rem;}.drill nav.crumbs .crumb{appearance:none;background:none;border:none;cursor:pointer;font:inherit;color:var(--accent);padding:.15rem .35rem;border-radius:6px;}.drill nav.crumbs .crumb[aria-current]{color:var(--text);font-weight:600;cursor:default;}.drill nav.crumbs .sep{color:var(--muted);}.drill .layer[hidden]{display:none;}.drill svg.drillsvg{display:block;font-family:inherit;}.drill .block[data-descend]{cursor:pointer;}.drill .block[data-descend] rect{stroke-width:1.5;}.drill .block:focus{outline:none;}.drill .block:focus rect{stroke:var(--accent);stroke-width:2.5;}.drill .block.hl rect{stroke:var(--accent);stroke-width:2.5;}.drill .block .blab{font-size:var(--nlabel);font-weight:700;}.drill .block .bsub{font-size:var(--nsub);}.drill .port{fill:var(--surface);stroke:var(--muted);stroke-width:1.2;}.drill .port.in{stroke:var(--accent);}.drill .wire{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:.85;}.drill .warrow{fill:var(--muted);}.drill .cedge{fill:none;stroke:var(--accent);stroke-width:1.5;}.drill .cedgehead{fill:var(--accent);}</style><style>#knowgraph .knode rect{stroke:rgba(15,23,42,.15);stroke-width:1;cursor:pointer;transition:opacity .1s ease;}#knowgraph .knode text{fill:#fff;font-size:var(--nlabel);pointer-events:none;}#knowgraph .knode.dim,#knowgraph .kedge.dim{opacity:.15;}#knowgraph .knode.hl rect{stroke:#f59e0b;stroke-width:2.5;}#knowgraph .kedge{fill:none;stroke:var(--muted);stroke-width:1.5;}#knowgraph .kedge.hl{stroke:#f59e0b;stroke-width:2;}#knowgraph .knowarrow-head{fill:var(--muted);}#know-detail .body{overflow-wrap:anywhere;}</style>
@@ -295,7 +295,7 @@
 })();</script>
 </section>
 
-    <section id="process" class="panel">
+    <section id="process" class="panel" role="tabpanel" aria-labelledby="tab-process" hidden>
 <h2>How this project is built</h2>
 <p class="cap">The method reference — the other tabs show project <em>state</em>; this one shows the <strong>process</strong> the state moves through. Data-derived where a canonical source exists (<code>docs/gate</code>, the spine registries, <code>work-items.csv</code>). A view — the process docs are the source of truth.</p>
 <style>#process h3{font-size:.95rem;margin:1.5rem 0 .25rem;letter-spacing:-.01em;}#process .gnow{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem .9rem;box-shadow:var(--shadow);display:inline-block;margin:.2rem 0 .4rem;}#process .gnow b{color:var(--accent);}#process ol.pflow{list-style:none;display:flex;flex-wrap:wrap;gap:.55rem;padding:0;margin:.5rem 0;align-items:stretch;}#process .pflow li{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .7rem .55rem;box-shadow:var(--shadow);max-width:200px;}#process .pflow li+li{margin-left:1rem;}#process .pflow li+li::before{content:"→";position:absolute;left:-.95rem;top:50%;transform:translateY(-50%);color:var(--muted);}#process .pflow li.now{border:2px solid var(--accent);padding:calc(.5rem - 1px) calc(.7rem - 1px) calc(.55rem - 1px);}#process .pflow li.opt{border-style:dashed;}#process .pflow b{display:block;font-size:.85rem;}#process .pflow .g{display:block;font-size:.7rem;font-weight:700;letter-spacing:.04em;color:var(--accent);}#process .pflow .n{display:block;font-size:.75rem;color:var(--muted);}#process ul.esc{font-size:.9rem;color:var(--muted);margin:.4rem 0 0;padding-left:1.2rem;}#process ul.esc b{color:var(--text);}#process .loops{margin:.7rem 0;}#process .loopsvg{display:block;width:100%;height:auto;max-width:720px;margin:0 auto;font-family:inherit;}#process .hoop{fill:var(--accent);opacity:.05;stroke:var(--accent);stroke-opacity:.35;stroke-width:1.5;}#process .hooplab{fill:var(--accent);font-size:13px;font-weight:700;letter-spacing:.01em;}#process .floop{fill:none;stroke:var(--muted);stroke-width:1.8;opacity:.9;}#process .floparrow-head{fill:var(--muted);}#process a.stg{cursor:pointer;}#process .stg rect{fill:var(--surface);stroke:var(--border);stroke-width:1.2;filter:drop-shadow(0 1px 2px rgba(15,23,42,.12));}#process a.stg:hover rect,#process a.stg:focus rect{stroke:var(--accent);stroke-width:2;}#process .stg:focus{outline:none;}#process .stgt{fill:var(--text);font-size:12px;font-weight:700;}#process .stgn{fill:var(--muted);font-size:9.5px;}#process .hub rect{fill:var(--accent);stroke:var(--accent);filter:drop-shadow(0 2px 5px rgba(15,23,42,.28));}#process .hubname{fill:#fff;font-size:13px;font-weight:800;}#process .hubsub{fill:#fff;fill-opacity:.85;font-size:8.5px;}</style>
@@ -429,11 +429,46 @@
     for(const el of scrollBoxes) el.addEventListener('scroll', syncScrollCues);
     syncScrollCues();
 
-    for (const b of document.querySelectorAll('nav.tabs button'))
-      b.onclick = () => {
-        for (const x of document.querySelectorAll('nav.tabs button')) x.classList.toggle('active', x===b);
-        for (const p of document.querySelectorAll('.panel')) p.classList.toggle('active', p.id===b.dataset.tab);
+    // WI-273 (SR-052): the view switcher is a WAI-ARIA tablist, not a row of
+    // styled buttons. selectTab keeps the three bits of state assistive tech
+    // reads in sync — which tab is aria-selected, panel visibility (the .active
+    // display class AND the hidden attribute), and the roving tabindex (only the
+    // selected tab is in the tab sequence) — plus the visual .active class and
+    // the overflow scroll cues. Keyboard: Left/Right and Up/Down move focus and
+    // activate the tab; Home/End jump to the first/last; Enter/Space fall through
+    // to the native <button> click. Automatic activation (arrow selects at once)
+    // is safe because every panel is already in the DOM.
+    const tablist = document.querySelector('nav.tabs');
+    if(tablist){
+      const tabs = [...tablist.querySelectorAll('[role=tab]')];
+      const selectTab = (tab, moveFocus) => {
+        for(const t of tabs){
+          const on = t===tab;
+          t.classList.toggle('active', on);
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          t.tabIndex = on ? 0 : -1;
+          const panel = document.getElementById(t.dataset.tab);
+          if(panel){ panel.classList.toggle('active', on); panel.hidden = !on; }
+        }
+        if(moveFocus) tab.focus();
         syncScrollCues();
       };
+      tablist.addEventListener('click', e => {
+        const tab = e.target.closest('[role=tab]');
+        if(tab) selectTab(tab, false);
+      });
+      tablist.addEventListener('keydown', e => {
+        const i = tabs.indexOf(e.target);
+        if(i < 0) return;
+        let j;
+        if(e.key==='ArrowRight' || e.key==='ArrowDown') j = (i+1) % tabs.length;
+        else if(e.key==='ArrowLeft' || e.key==='ArrowUp') j = (i-1+tabs.length) % tabs.length;
+        else if(e.key==='Home') j = 0;
+        else if(e.key==='End') j = tabs.length-1;
+        else return;
+        e.preventDefault();
+        selectTab(tabs[j], true);
+      });
+    }
   </script>
 </body></html>

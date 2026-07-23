@@ -35,10 +35,15 @@ from conftest import SCRIPTS
 THRESHOLD = 1500
 
 # Measured 2026-07-22 (len(text.splitlines()); files end with a newline, so this
-# equals `wc -l`). These six are the review's H-2 modules, unchanged since the
-# as-found `6a752b4`. Re-stamp DOWNWARD as WI-280 decomposes them.
+# equals `wc -l`). These six are the review's H-2 modules. Re-stamp DOWNWARD as
+# WI-280 decomposes them; an UPWARD re-stamp is the reviewed-baseline-edit escape
+# hatch (see the module docstring) and must name its WI right here.
 BASELINE = {
-    "gen_trajectory.py": 4511,
+    # +62 for WI-273 (SR-052, review M-3): the dashboard tabs became a real
+    # WAI-ARIA tablist (role/aria-selected/aria-controls + tabpanel wiring, a
+    # roving tabindex, and an arrow/Home/End keyboard controller). That fix lives
+    # unavoidably in this module's HTML_TEMPLATE and its tab-emit helpers.
+    "gen_trajectory.py": 4573,
     "agent_dispatch.py": 3452,
     "agent_loop.py": 3034,
     "trace.py": 2206,
