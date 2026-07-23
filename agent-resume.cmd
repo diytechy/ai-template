@@ -31,10 +31,10 @@ REM model stays strong - an unknown phase routes UP, never down). With managed
 REM routing ON (docs/agents-enabled present) the docs/agents.csv registry +
 REM AGENT_TIER_MAP below drive selection; these env maps are the declared
 REM FALLBACK (an absent enable-list = this legacy path). Values kept coherent
-REM with the owner dial 2026-07-12 evening (WI-121): strong (fable) plans,
-REM medium (opus) builds + reviews.
-set "AGENT_MODEL=claude-fable-5"
-set "AGENT_MODEL_MAP=PLAN=claude-fable-5,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=claude-fable-5,CRITIQUE=claude-fable-5"
+REM with the owner dial 2026-07-22: Opus at BOTH strong and medium (the owner
+REM has no Fable access) - opus plans/design-checks/critiques + builds + reviews.
+set "AGENT_MODEL=opus"
+set "AGENT_MODEL_MAP=PLAN=opus,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=opus,CRITIQUE=opus"
 REM Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
 REM Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE
 REM strong, BUILD / REVIEW-A / REVIEW-B medium; a worker still pins BUILD up
@@ -62,10 +62,12 @@ set "AGENT_CMD_MAP="
 REM Optional hands-on template for --interactive (defaults to AGENT_CMD):
 set "AGENT_CMD_INTERACTIVE=claude --model {model} {prompt}"
 REM This repo has completed the dispatcher migration audits in
-REM docs/parallel-ready, so normal launches use the two-worker dispatcher.
-REM Pass --jobs 1 for a serial dispatcher run; an absent slot also boots the
-REM dispatcher (WI-210 - the legacy serial driver is retired).
-if not defined AGENT_JOBS set "AGENT_JOBS=2"
+REM docs/parallel-ready, so the dispatcher CAN run two workers. Owner directive
+REM 2026-07-22: default to SERIAL (--jobs 1) so agent-resume makes changes in
+REM series, one worker at a time. Raise this (or pass --jobs N) to parallelize
+REM again; an absent slot still boots the dispatcher (WI-210 - the legacy serial
+REM driver is retired).
+if not defined AGENT_JOBS set "AGENT_JOBS=1"
 REM (The meta-repo resume prompt slot is retired with the serial driver,
 REM WI-210: a plain launch is the dispatcher, and worker sessions build
 REM their explicit assignments - the repo rules live in CLAUDE.md and the

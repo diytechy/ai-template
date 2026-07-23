@@ -32,8 +32,10 @@ AGENT_CMD="claude -p --model {model} --output-format stream-json --verbose --dan
 # (an absent enable-list = this legacy path). Values kept coherent with the
 # owner dial 2026-07-12 evening (WI-121): strong (fable) plans, medium (opus)
 # builds + reviews.
-AGENT_MODEL="claude-fable-5"
-AGENT_MODEL_MAP="PLAN=claude-fable-5,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=claude-fable-5,CRITIQUE=claude-fable-5"
+# Owner dial 2026-07-22: Opus at BOTH strong and medium (the owner has no Fable
+# access) — opus plans/design-checks/critiques + builds + reviews.
+AGENT_MODEL="opus"
+AGENT_MODEL_MAP="PLAN=opus,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=opus,CRITIQUE=opus"
 # Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
 # Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE strong,
 # BUILD / REVIEW-A / REVIEW-B medium; a worker still pins BUILD up to its WI
@@ -61,12 +63,13 @@ AGENT_CMD_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):
 AGENT_CMD_INTERACTIVE="claude --model {model} {prompt}"
 # This repo has completed the dispatcher migration audits in docs/parallel-ready,
-# so normal launches use the two-worker dispatcher. Pass --jobs 1 for a serial
-# dispatcher run; an absent slot also boots the dispatcher (WI-210 — the
-# legacy serial driver is retired). An inherited AGENT_JOBS wins over this
-# default, so agent-resume.command's slot is live again (its export was
-# silently overwritten here before — repo-review 2026-07-21 L-22).
-AGENT_JOBS="${AGENT_JOBS:-2}"
+# so the dispatcher CAN run two workers. Owner directive 2026-07-22: default to
+# SERIAL (--jobs 1) so agent-resume makes changes in series, one worker at a
+# time. Raise this (or pass --jobs N) to parallelize again; an absent slot still
+# boots the dispatcher (WI-210 — the legacy serial driver is retired). An
+# inherited AGENT_JOBS wins over this default, so agent-resume.command's slot is
+# live (its export was silently overwritten here before — repo-review 2026-07-21 L-22).
+AGENT_JOBS="${AGENT_JOBS:-1}"
 # (The meta-repo resume prompt slot is retired with the serial driver,
 # WI-210: a plain launch is the dispatcher, and worker sessions build
 # their explicit assignments — the repo rules live in CLAUDE.md and the

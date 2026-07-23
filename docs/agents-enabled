@@ -7,8 +7,12 @@
 # coordinator logs every selection before launch (no silent model swaps).
 # Owner directive 2026-07-19: BUILDs are Anthropic-led per tier again — the
 # launchers' AGENT_TIER_MAP/AGENT_PREFER_MAP are EMPTY, so this list's order
-# decides: Fable takes strong-row BUILDs, Opus takes medium (retiring the
-# WI-160/WI-161 Sol pin; reviewer/critic heterogeneity still wins).
+# decides. Owner directive 2026-07-22: Opus takes BOTH strong and medium — the
+# owner has no Fable access, so ANTHROPIC-FABLE is dropped from this list and
+# ANTHROPIC-OPUS-STRONG (opus @ strong, docs/agents.csv) leads the strong tier,
+# with ANTHROPIC-OPUS still leading medium (retiring the WI-160/WI-161 Sol pin;
+# reviewer/critic heterogeneity still wins). Re-add ANTHROPIC-FABLE here to
+# restore Fable at strong when access returns.
 # Per tier the ANTHROPIC row leads, with the OPENAI sibling as cross-family draw.
 # WI-236 grammar: an id may carry optional per-phase draw weights after
 # whitespace — `<ID>[ <PHASE>=<int>]...`, PHASE in BUILD|REVIEW|CRITIQUE|
@@ -16,7 +20,7 @@
 # everywhere (today's behavior); e.g. `OPENAI-TERRA  REVIEW=4` draws OpenAI ~4x
 # as often as the weight-1 reviewers. See process-options.md "Unattended
 # operation" -> routing for the full rule (0 = fallback-only; malformed = fail).
-ANTHROPIC-FABLE
+ANTHROPIC-OPUS-STRONG
 OPENAI-SOL
 OPENCODE-KIMI
 ANTHROPIC-OPUS
