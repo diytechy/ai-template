@@ -42,7 +42,7 @@ What it creates in the destination:
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.csv                   <- registries/test-cases.template.csv
     scripts/trace.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, check_dupes.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
+    scripts/check_stubs.py, check_dupes.py, check_coverage.py, check_doc_refs.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_okf.py
     scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
                                                (the dual-plan round set, process-options.md "Dual-plan decomposition")
@@ -1202,6 +1202,7 @@ MAPPING = [
     ("scripts/check_perf.py", "scripts/check_perf.py"),
     ("scripts/check_stubs.py", "scripts/check_stubs.py"),
     ("scripts/check_dupes.py", "scripts/check_dupes.py"),
+    ("scripts/check_coverage.py", "scripts/check_coverage.py"),
     ("scripts/check_privacy.py", "scripts/check_privacy.py"),
     ("scripts/check_vendored.py", "scripts/check_vendored.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),

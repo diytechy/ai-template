@@ -11656,3 +11656,36 @@ spec note. Nothing pushed (push-policy human).
 ## 2026-07-23 02:41 — integrated train 1-g3-WI-275-dfea (WI-275)
 
 Head f9319f0 composed onto a4191b2 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-275 -> done.
+
+## 2026-07-23 17:41 — integrated train p0-g3-WI-279-b5fa (WI-279)
+
+Head 7c0efc4 composed onto 747f152 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-279 -> done.
+
+## 2026-07-23 (evening) — reconcile: merge llm/integration into dualplan-routing-fix
+
+**Recovery, owner-authorized.** The agent-resume run `20260723T0202` drained and
+exited (run-state left stale RUNNING — a drain-with-parked-lanes gap to note).
+It integrated **WI-275** and **WI-279** (both done) onto `llm/integration`, but
+`publish-deferred: non-descendant-target` correctly refused to fast-forward the
+dev branch because three owner/babysit commits (blackout declare+revert; the
+WI-282/283 filing) had landed on `dualplan-routing-fix` mid-run — the two refs
+forked at 747f152. This merge reconciles them (history-preserving per OI-8):
+`git merge --no-ff llm/integration` into the dev branch, conflicts only in
+PROJECT_STATE.html (regenerated), work-items.csv (auto-unioned: 275/279 done +
+the 282/283 rows), and status.md (auto-merged, then the now-done WI-279 pruned
+from the forward-only prose + a grind-outcome note added). Rollback tag
+`rollback/pre-reconcile-2570d91`. Derived artifacts regenerated
+(spine SN=25 SR=110 LLR=98 TC=101, 68 seams); `llm/integration` fast-forwarded
+to the merge so the next boot reconcile is clean.
+
+**Grind outcome (this run):** integrated WI-275 (Windows shim fixtures) + WI-279
+(per-module coverage floors). Parked: WI-281 + WI-274 `rework`; WI-272 + WI-273
++ WI-276 `quarantined`. Four defects filed from the babysit — WI-282 (missing
+`WI:` trailer skipped an APPROVED head to a CHANGES-REQUESTED one, parking
+WI-281), WI-283 (`blocked_disposition` fails its own status-map floor, wedging
+WI-273 at state=error and never reaching the SR-084 critique), plus two
+candidates recorded: WI-284 (the forward-only cascade — an integrated done WI
+left named in status.md reddens every later train's DONE gate; it inherited-red
+WI-276) and the WI-279 **integration-bar skip** (`no declared test command` — the
+composed-tree bar did not run at integrate time, so WI-279 landed un-gated; the
+full bar was run by hand at this reconcile to close that gap). Nothing pushed.

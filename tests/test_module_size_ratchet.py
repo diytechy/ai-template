@@ -43,7 +43,11 @@ BASELINE = {
     "agent_loop.py": 3034,
     "trace.py": 2206,
     "check_trajectory.py": 1926,
-    "bootstrap.py": 1916,
+    # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
+    # scripts/check_coverage.py kit gate so it ships downstream — a required
+    # one-line registration, not monolith growth (the reviewed-bump escape the
+    # ratchet documents; not a drive-by). Re-stamp downward with WI-280.
+    "bootstrap.py": 1917,
 }
 
 

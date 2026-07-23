@@ -1,0 +1,40 @@
+# docs/coverage-floors — per-module line-coverage floors (WI-279).
+#
+# Read by project-trajectory/scripts/check_coverage.py (wired as docs/stack.ini
+# [step:module-coverage]). Each non-comment line is
+#   <repo-relative module path>  <min line-coverage percent>
+# `#` comments (whole-line or trailing) and blank lines are ignored, so each
+# floor can carry a why-note (the docs/dupes-allow census idiom).
+#
+# WHY (repo-review 2026-07-22 M-4): the global [coverage] threshold (85) is ONE
+# aggregate number, so heavily-tested generators subsidize thin coverage in the
+# security/process boundaries below — the ~91% headline overstates confidence
+# there. These per-module minimums are a REGRESSION SENSOR for exactly those
+# modules; the global --cov-fail-under stays the backstop, not the only measure.
+# Floors sit a few points below the honest measured baseline (jitter +
+# cross-platform headroom — CI enforces on Linux/Windows/macOS, and the number is
+# measured on one; the same stance as the global floor's ~6-point margin), so a
+# real regression trips the gate while normal variation does not.
+#
+# MEASURED 2026-07-23 on the pinned toolchain (requirements-dev.txt), full tier:
+#   agent_session.py 81.0%   subagent_gate.py 39.7%   plan_runner.py 79.6%
+# RAISE a floor only alongside the focused behavioral tests that earn it, in the
+# same commit — never a drive-by bump (the ratchet-only-tightens discipline the
+# complexity/size ratchets already keep).
+
+# The Windows batch-shim command-injection boundary (repo-review H-1) — a
+# security control (still ~81% even after the H-1 regressions). EXTRA headroom
+# here: this module has platform-divergent RUNTIME branches (os.name == "nt"
+# PATHEXT/shim resolution covered only on Windows; the POSIX branches only on
+# Linux/macOS), so its per-file percent legitimately shifts across the CI matrix
+# in a way the branch-free modules below do not — the floor sits well under the
+# Windows baseline so a real regression trips it without false-redding Linux/mac.
+project-trajectory/scripts/agent_session.py   72
+
+# The subagent policy gate — itself a safety control, and the weakest module the
+# review named (~40%). This floor stops further erosion until a focused test
+# campaign earns a higher one.
+project-trajectory/scripts/subagent_gate.py   34
+
+# The dual-plan planning adapter — a process-launch / planning boundary, ~80%.
+project-trajectory/scripts/plan_runner.py   75
