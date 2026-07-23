@@ -56,7 +56,7 @@ python project-trajectory/scripts/check_docs.py --root . --stale
 
 Both must pass before **each** commit — this is the **commit bar**. `-m smoke`
 is the fast per-commit tier, re-tiered to a **budget** by WI-281: it must run
-**≤ 60 s** wall (measured 2026-07-23 on a 24-core box: ~7 s / 360 tests vs
+**≤ 60 s** wall (measured 2026-07-23 on a 24-core box: ~7 s / 349 tests vs
 ~4.2 min / ~1380 for the full suite, both `-n auto`) so it stays a real smoke
 test — "is it basically alive?", not a re-run of most of the suite. Tiering is
 opt-out: smoke drops the **subprocess/scaffold-heavy** modules

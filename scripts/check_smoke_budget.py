@@ -5,11 +5,13 @@ The per-commit smoke tier (docs/stack.ini [tiers] smoke) must run within the
 seconds budget declared in docs/stack.ini [smoke-budget] — a smoke test answers
 "is it basically alive?", not "re-run most of the full suite". WI-281 split the
 budget in two: the ALWAYS-ON deterministic membership ratchet
-(tests/test_smoke_budget.py) is the machine-independent enforced floor; THIS is
-the noisy wall-clock half. Wall time depends on the machine and the `-n auto`
-worker count, so the seconds budget is PER LANE and this check WARNS by default
-(the repo's warn-first stance for noisy runtime metrics — the perf budgets'
-Gate=warn); a lane where timing is stable can pick `--mode enforce`.
+(tests/test_smoke_budget.py) is the machine-independent floor; THIS is the
+wall-clock half. It defaults to `--mode warn` for LOCAL convenience (a breach
+prints a WARNING, exit 0). CI runs it with `--mode enforce` (exit 1 on breach):
+the re-tiered tier is startup-dominated, not core-bound — measured ~7.5 s at 24
+cores, ~8.1 s at 4, ~10.5 s at 2 (WI-281 rework, 2026-07-23, 3.11.9) — so the
+60 s budget keeps ~5x headroom on any real runner and a breach means the tier
+stopped being a smoke test (a heavy module slipped back in), not runner noise.
 
 Usage:
   # time a fresh smoke run and compare (local convenience, or a CI lane):

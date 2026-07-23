@@ -112,6 +112,19 @@ SLOW_MODULES = frozenset(
         "test_gate_policy",  # gate-policy on scaffolds
         "test_run_menu",  # run-menu subprocesses
         "test_agent_loop_env",  # agent_loop env-routing subprocesses
+        # WI-281 rework (review A, finding 1): the run_session subprocess/shim
+        # transport module. It drives real CLI subprocesses through run_session
+        # (including Windows .cmd/.bat shim launchers), and it HOSTS the known
+        # Windows batch-shim reds that are WI-275's open subject — one of which
+        # (test_run_session_codex_reads_last_message_not_transcript) still fails
+        # on a Windows checkout and would red the per-commit bar there. It runs at
+        # slice/phase close + CI (where the full suite exposes those reds for
+        # WI-275 to fix); holding it out of the commit bar keeps that bar green on
+        # every supported OS until WI-275 lands. No test deleted or weakened — the
+        # module is re-tiered whole (module-granular, like every entry here), so
+        # its healthy in-process units still run at close + CI. The reviewer named
+        # this the in-scope alternative to landing WI-275's fix from this WI.
+        "test_session_stdin",  # run_session subprocess/shim transport (WI-275 reds)
     }
 )
 
