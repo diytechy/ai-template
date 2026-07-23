@@ -11614,3 +11614,26 @@ the review-tail frontier (WI-279 → WI-272 → WI-273 → WI-276); WI-082 stays
 retired (superseded by WI-280). `PROJECT_STATE.html` regenerated, not
 hand-merged. No spine change; **278 WIs, 257 done, 1 retired, 14 deferred**.
 Nothing pushed (no SSH auth in the merging session; push stays owner).
+
+## 2026-07-23 — WI-281 filed (queued): smoke tier true to its name (≤ 60 s bar + its own budget item)
+
+**Session type:** intake (owner directive: "a smoke test is supposed to be just
+that"). Investigated why the per-commit smoke bar costs minutes: the WI-122
+tiering is opt-OUT (`tests/conftest.py::SLOW_MODULES`, 15 heavy modules named),
+so smoke collects **1088/1378 tests — 79% of the suite** — measured 6:12/6:51/
+8:01 wall at `-n auto` on the dev box (3.11.9 venv) against status.md's
+declared ~3.3 min. [WI-281](specs/WI-281.md) (queued, `quality`, medium):
+**(a)** measure per-module durations, **(b)** re-tier to a ≤ 60 s bar —
+preferred: keep the opt-out partition (new tests still default into the bar)
+and move whole modules to `slow` by measured rank at the subprocess/scaffold
+boundary; recorded fallback: the opt-IN `@smoke` posture the kit itself ships
+in `project-trajectory/pytest.ini`, **(c)** the owner's "own budget item":
+a declared seconds value + a deterministic smoke-MEMBERSHIP ratchet that bites
+(the `test_module_size_ratchet`/`test_dashboard_size_budget` idiom — wall-clock
+asserts are machine-flaky, so the always-on sensor budgets membership and CI
+checks the seconds), **(d)** update the declared surfaces (status.md bar text,
+pytest.ini header, conftest WI-122 block, session-protocol §3). Hard edges: no
+test deleted, `smoke`+`slow` stay a total partition (`test_smoke_tier.py`),
+full suite untouched. Queued at default priority behind WI-275 (P1)/WI-274 and
+the review tail; the owner can re-front it via `Priority`. No spine change;
+274 WIs. Nothing pushed (push-policy human).
