@@ -8,9 +8,9 @@ because a wall-clock assert is machine-/core-count-dependent and flaky:
   * this DETERMINISTIC ratchet budgets what does not vary by machine — smoke-tier
     MEMBERSHIP (the collected-count) — and BITES when the tier grows back toward
     the full suite (the regression this exists to catch);
-  * the noisy wall-clock check lives in CI (scripts/check_smoke_budget.py) and
-    warns-first per lane — the repo's stance for runtime metrics (the perf
-    budgets' Gate=warn default), not a hard assert here.
+  * the noisy wall-clock check lives in scripts/check_smoke_budget.py: its local
+    default is report-only `--mode warn`, while CI deliberately invokes
+    `--mode enforce` to fail a budget breach. It is not a hard assert here.
 
 This is a growth SENSOR with headroom (the test_dashboard_size_budget idiom), not
 an exact freeze: new in-process unit tests SHOULD accrue into the bar (that is
