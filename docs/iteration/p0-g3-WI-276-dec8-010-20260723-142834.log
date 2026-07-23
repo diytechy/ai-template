@@ -1,0 +1,32 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 010
+# date: 2026-07-23 14:47
+# train: p0-g3-WI-276-dec8
+# base: 747f1529c206
+# phase: BUILD
+# wi: WI-276
+# model: gpt-5.6-sol
+# guardrails: 
+# outcome: COMMITTED
+# commits: 0a02a3c..e5f4057
+# tokens: 
+# cost-usd: 
+# wall-secs: 1109
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 6924
+# exit-code: 0
+# ---
+Completed WI-276 rework in commit `e5f4057`.
+
+- Regenerated LLR-036, TC-039, and `PROJECT_STATE.html`.
+- Corrected `_merged_signature`’s stale sort-order docstring.
+- Freshness, Ruff, trace, docs, duplicate gate, and 15 targeted tests pass.
+- Smoke: 1092 passed, 3 skipped, 1 pre-existing WI-275/status failure.
+- Full: 1346 passed, 39 skipped, same sole failure.
+- Left protected `docs/status.md` and dispatcher telemetry untouched.
