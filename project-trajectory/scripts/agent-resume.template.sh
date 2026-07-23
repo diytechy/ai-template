@@ -49,9 +49,12 @@ AGENT_CMD_INTERACTIVE=""
 # boots the dispatcher at its own default (the legacy serial resume driver is
 # retired).
 # Single-home option (IF-068): to avoid editing jobs/model/model-map in each of
-# the three launchers, declare them once in docs/stack.ini [agent-loop] and blank
-# these slots — agent_loop resolves CLI flag > AGENT_* env > that file > default.
-# Opt-in: a fresh scaffold keeps the dials in the launcher by default.
+# the three launchers, declare them once in docs/stack.ini [agent-loop]. Keep
+# AGENT_MODEL / AGENT_MODEL_MAP blank; for jobs, replace the next line with
+# `unset AGENT_JOBS` AND remove AGENT_JOBS from the export line below. That exact
+# POSIX edit leaves no launcher env override, so agent_loop resolves CLI flag >
+# AGENT_* env > that file > default. Opt-in: a fresh scaffold keeps its dials in
+# the launcher by default.
 AGENT_JOBS="${AGENT_JOBS:-2}"
 # Per-session wall-clock bound (seconds) so one hung CLI cannot wedge a lane
 # forever — the walk-away guarantee. Blank to disable (engine default 0 = no

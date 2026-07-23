@@ -102,13 +102,21 @@ docs/status.md = status | <!-- BEGIN GENERATED STATUS --> | <!-- END GENERATED S
 # falls through — so this section is OPTIONAL and ships COMMENTED OUT: by default a
 # fresh scaffold keeps its dials in the launchers (agent-resume.*, where a
 # double-clicking user sees them next to the consent banner), and an absent
-# [agent-loop] behaves exactly as before. Uncomment this section AND blank the
-# matching launcher slots to move to the single home — the migration the kit's own
-# meta-repo took for its frequently-turned dials; a fresh adopter usually needn't:
+# [agent-loop] behaves exactly as before. To opt in, uncomment this section,
+# leave AGENT_MODEL / AGENT_MODEL_MAP blank, and make the exact jobs edit beside
+# the launcher slots: POSIX replaces `AGENT_JOBS="${AGENT_JOBS:-2}"` with
+# `unset AGENT_JOBS` and removes it from the export line; Windows replaces
+# `if not defined AGENT_JOBS set "AGENT_JOBS=2"` with `set "AGENT_JOBS="`.
+# Those edits leave AGENT_JOBS absent, so this file wins. That is the migration
+# the kit's own meta-repo took for its frequently-turned dials; a fresh adopter
+# usually needn't:
 # [agent-loop]
-# jobs = 2                 # dispatcher worker ceiling (int, 1 = serial, or auto)
-# model = <strong-model>   # fallback {model} when managed routing is off (AGENT_MODEL)
-# model-map = PLAN=<strong-model>,BUILD=<cheap-model>   # per-phase fallback (AGENT_MODEL_MAP)
+# jobs = 2
+# dispatcher worker ceiling: an int (1 = serial) or auto.
+# model = <strong-model>
+# fallback {model} when managed routing is off (AGENT_MODEL).
+# model-map = PLAN=<strong-model>,BUILD=<cheap-model>
+# per-phase fallback (AGENT_MODEL_MAP).
 
 # --- Run capabilities (the launcher menu) ------------------------------------
 # The root run.cmd / run.sh / run.command launchers read this [run] section

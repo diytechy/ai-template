@@ -457,6 +457,51 @@ def test_default_scaffold_leaves_agent_resume_unseeded(scaffold):
     assert 'AGENT_CMD=""' in sh
 
 
+def test_scaffolded_launcher_single_home_migration_lets_config_jobs_win(
+    scaffold, monkeypatch
+):
+    # WI-274 / IF-068: the opt-in instructions must mechanically remove the
+    # template's fresh-scaffold jobs=2 default. Merely "blanking" that slot used
+    # to re-apply 2 through `${AGENT_JOBS:-2}`, silently beating [agent-loop].
+    sh_path = scaffold / "agent-resume.sh"
+    cmd_path = scaffold / "agent-resume.cmd"
+    sh = sh_path.read_text(encoding="utf-8")
+    cmd = cmd_path.read_text(encoding="utf-8")
+
+    # Apply the exact documented migration to the real scaffolded launchers.
+    # POSIX must both clear an inherited value and stop re-exporting it; CMD's
+    # `set "NAME="` deletes the inherited variable in that process.
+    migrated_sh = sh.replace(
+        'AGENT_JOBS="${AGENT_JOBS:-2}"', "unset AGENT_JOBS"
+    ).replace(" AGENT_JOBS\nPY=", "\nPY=")
+    migrated_cmd = cmd.replace(
+        'if not defined AGENT_JOBS set "AGENT_JOBS=2"', 'set "AGENT_JOBS="'
+    )
+    assert "unset AGENT_JOBS" in migrated_sh
+    assert 'AGENT_JOBS="${AGENT_JOBS:-2}"' not in migrated_sh
+    assert "export AGENT_CMD" in migrated_sh and "AGENT_JOBS\nPY=" not in migrated_sh
+    assert 'set "AGENT_JOBS="' in migrated_cmd
+    assert 'if not defined AGENT_JOBS set "AGENT_JOBS=2"' not in migrated_cmd
+
+    # Materialize the commented single-home example at jobs=1. With the
+    # launcher edit leaving AGENT_JOBS absent, the real resolver must select
+    # this declared value rather than the scaffold's former default of 2.
+    stack = scaffold / "docs" / "stack.ini"
+    stack.write_text(
+        stack.read_text(encoding="utf-8").replace(
+            "# [agent-loop]\n# jobs = 2", "[agent-loop]\njobs = 1"
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("AGENT_JOBS", raising=False)
+    al = load_script("agent_loop")
+
+    class Args:
+        model = model_map = jobs = None
+
+    assert al.resolve_coordinator_dials(Args(), scaffold / "docs")[2] == "1"
+
+
 def test_scaffold_text_writes_are_lf_on_every_platform(tmp_path):
     # M-15: bootstrap routes every scaffold TEXT write through _write_text_lf,
     # so a Windows bootstrap cannot emit CRLF scaffolds — above all the seeded
