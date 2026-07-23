@@ -40,7 +40,13 @@ THRESHOLD = 1500
 BASELINE = {
     "gen_trajectory.py": 4511,
     "agent_dispatch.py": 3452,
-    "agent_loop.py": 3034,
+    # WI-274 reviewed bump 3034 -> 3042: part B wires the single-home coordinator
+    # dial read (IF-068) into main(). The BULK of the new code — read_agent_loop_
+    # config + resolve_coordinator_dials — lives in agent_common.py (1291, still
+    # under THRESHOLD), the ratchet's intended escape hatch; the residual +8 here
+    # is the irreducible re-export bindings + argparse help + the one-line main()
+    # call. Re-stamp downward under WI-280's decomposition.
+    "agent_loop.py": 3042,
     "trace.py": 2206,
     "check_trajectory.py": 1926,
     "bootstrap.py": 1916,

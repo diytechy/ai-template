@@ -316,6 +316,114 @@ def test_meta_devsetup_warns_on_racing_ambient_pytest_cov():
         assert "[warn]" in text, name + " ambient warning must be a warn, not a failure"
 
 
+# --- WI-274 Part A: stale-.venv recovery (meta-repo dev-setup only) -------------
+# Both twins gain (a) a CONSENTED recreate of a sub-3.11 .venv, (b) an explicit
+# [stale] --check report, and (c) version-pinned interpreter discovery so a stale
+# venv on PATH can't hide an installed 3.11+. Downstream disposition (recorded in
+# the WI close): meta-repo dev-setup ONLY — the kit-shipped setup.{ps1,sh} keep
+# their fail-closed "move or remove" (a pre-existing .venv is far rarer at
+# scaffold time). The behavioral checks run the .sh on POSIX; the .ps1 half is
+# asserted textually (no PowerShell on POSIX CI, the WI-111/112 idiom).
+
+# The per-script version-pinned candidate the discovery appends after the bare
+# ones (WI-274c): `py -3.12` on Windows, `python3.12` on POSIX.
+_PINNED = {"scripts/dev-setup.ps1": "-3.12", "scripts/dev-setup.sh": "python3.12"}
+
+
+def test_meta_devsetup_offers_stale_venv_recreate_and_pinned_discovery():
+    # WI-274 A(a)/(b)/(c), asserted textually on both meta twins: the recreate
+    # offer, the [stale] report, the decline-stays-fail-closed message, and the
+    # pinned interpreter candidates.
+    for name in DEVSETUP:
+        text = (REPO_ROOT / name).read_text(encoding="utf-8")
+        assert "Recreate it with" in text, name + " missing the WI-274a recreate offer"
+        assert "below the 3.11 floor" in text, name + " missing the floor language"
+        assert "  [stale]" in text, name + " missing the WI-274b stale .venv report"
+        assert "recreate declined" in text, (
+            name + " decline path must stay fail-closed (recreate declined)"
+        )
+        assert _PINNED[name] in text, (
+            name + " missing the WI-274c pinned candidate " + _PINNED[name]
+        )
+
+
+def _fake_stale_venv(root):
+    """A fake sub-3.11 ./.venv under `root`: its python answers the floor probe
+    as below-floor (exit 1) and prints 3.8.10 for the version query — exactly
+    what dev-setup's two `-c` probes ask."""
+    venvbin = root / ".venv" / "bin"
+    venvbin.mkdir(parents=True)
+    py = venvbin / "python"
+    py.write_text(
+        "#!/bin/sh\n"
+        'case "$*" in\n'
+        "  *SystemExit*) exit 1 ;;\n"  # the floor probe -> pretend sub-3.11
+        "  *version_info*) printf '3.8.10'; exit 0 ;;\n"  # the version query
+        "esac\nexit 0\n",
+        encoding="utf-8",
+    )
+    py.chmod(0o755)
+
+
+def _meta_devsetup_sh_scratch(tmp_path):
+    """A scratch tree with the META dev-setup.sh + a fake stale ./.venv. Returns
+    the scratch root, or skips when there is no POSIX shell / not on POSIX."""
+    sh = _sh()
+    if not sh or os.name != "posix":
+        import pytest
+
+        pytest.skip("needs a POSIX shell + exec bit")
+    root = tmp_path / "repo"
+    (root / "scripts").mkdir(parents=True)
+    shutil.copy(REPO_ROOT / "scripts/dev-setup.sh", root / "scripts/dev-setup.sh")
+    _fake_stale_venv(root)
+    return sh, root
+
+
+def test_meta_devsetup_check_names_the_stale_venv(tmp_path):
+    # WI-274 A(b), behavioral: --check on a sub-3.11 .venv emits the [stale] line
+    # naming the version, instead of silently describing the ambient interpreter.
+    sh, root = _meta_devsetup_sh_scratch(tmp_path)
+    proc = subprocess.run(
+        [sh, "scripts/dev-setup.sh", "--check"],
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "[stale]   .venv is Python 3.8.10" in proc.stdout, proc.stdout
+
+
+def test_meta_devsetup_recreate_declines_stay_fail_closed(tmp_path):
+    # WI-274 A(a), behavioral: --install on a sub-3.11 .venv OFFERS a recreate;
+    # declining (interactive 'n' AND a closed stdin) keeps the fail-closed exit 1
+    # and preserves the environment — the consent-first posture is unchanged.
+    sh, root = _meta_devsetup_sh_scratch(tmp_path)
+    # Interactive decline.
+    proc = subprocess.run(
+        [sh, "scripts/dev-setup.sh", "--install"],
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        input="n\n",
+    )
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "Recreate it with" in proc.stdout, proc.stdout
+    assert "recreate declined" in proc.stderr, proc.stderr
+    assert (root / ".venv").is_dir(), "a declined recreate must preserve the venv"
+    # A non-interactive run (stdin closed) declines gracefully, never proceeds.
+    proc2 = subprocess.run(
+        [sh, "scripts/dev-setup.sh", "--install"],
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    assert proc2.returncode == 1, proc2.stdout + proc2.stderr
+    assert (root / ".venv").is_dir()
+
+
 def test_meta_repo_dogfoods_dev_setup():
     # Part D: the kit provisions itself with a concrete dev-setup in scripts/
     # (the same layout it scaffolds downstream), an instantiation of the

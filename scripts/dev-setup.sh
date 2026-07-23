@@ -77,14 +77,29 @@ offer_cli() { # <cmd> <npm package> <post-install sign-in hint>  (--install help
 
 # Prefer the project venv --install creates, so the report reflects what the
 # harness will actually import; fall back to the ambient interpreter.
+# WI-274c: after the bare candidates, try version-pinned python3.13/3.12/3.11.
+# A stale sub-3.11 .venv active on PATH otherwise shadows every bare python3,
+# hiding an installed 3.11+ from the recreate offer (the 2026-07-23 repro).
+# Each candidate is still floor-checked by python_311.
 if [ -x .venv/bin/python ] && python_311 .venv/bin/python; then PY=.venv/bin/python
-elif python_311 python3; then PY=python3
-elif python_311 python; then PY=python
-else PY=""
+else
+  PY=""
+  for cand in python3 python python3.13 python3.12 python3.11; do
+    if python_311 "$cand"; then PY="$cand"; break; fi
+  done
 fi
 echo "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
 echo
 report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "install Python 3.11+ (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
+# WI-274b: name a stale .venv explicitly. The report above prefers ./.venv when
+# supported, else silently describes the ambient interpreter it fell back to —
+# so without this a contributor sees only "[missing] runtime" and never learns
+# the .venv shadowing their PATH is the sub-floor culprit.
+if [ -d .venv ] && { [ ! -x .venv/bin/python ] || ! python_311 .venv/bin/python; }; then
+  vv=$(.venv/bin/python -c 'import sys;sys.stdout.write(".".join(map(str,sys.version_info[:3])))' 2>/dev/null || true)
+  [ -n "$vv" ] || vv="sub-3.11 (its base interpreter no longer runs)"
+  echo "  [stale]   .venv is Python $vv — below the 3.11 floor; rerun --install to recreate it"
+fi
 report "git"               "$(real git && echo 1 || echo 0)" "install git (macOS: xcode-select --install)"
 report "ruff (format/lint)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("ruff") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install ruff (or run --install)"
 report "pytest (self-tests)" "$([ -n "$PY" ] && "$PY" -c 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("pytest") else 1)' 2>/dev/null && echo 1 || echo 0)" "pip install pytest (or run --install)"
@@ -147,11 +162,29 @@ fi
   echo "Python 3.11+ not found on PATH; install a supported interpreter first." >&2
   exit 1
 }
-if [ -d .venv ]; then
-  if [ ! -x .venv/bin/python ] || ! python_311 .venv/bin/python; then
-    echo "Existing ./.venv is incomplete or uses Python below 3.11; move or remove that environment, then rerun --install." >&2
-    exit 1
-  fi
+# WI-274a: a sub-3.11 (or broken) ./.venv gets a CONSENTED recreate at the
+# floor, not the old fail-closed "move or remove" dead end. $PY is the discovered
+# 3.11+ interpreter (guaranteed non-empty by the check above). Decline keeps
+# today's fail-closed exit; a non-interactive `read` returns empty -> declines
+# gracefully (the offer_cli pattern), so an unattended --install stays safe.
+RECREATE=0
+if [ -d .venv ] && { [ ! -x .venv/bin/python ] || ! python_311 .venv/bin/python; }; then
+  vv=$(.venv/bin/python -c 'import sys;sys.stdout.write(".".join(map(str,sys.version_info[:3])))' 2>/dev/null || true)
+  [ -n "$vv" ] || vv="sub-3.11"
+  dv=$("$PY" -c 'import sys;sys.stdout.write(".".join(map(str,sys.version_info[:3])))' 2>/dev/null || echo "3.11+")
+  printf 'Existing ./.venv is Python %s — below the 3.11 floor. Recreate it with %s (Python %s)? [y/N] ' "$vv" "$PY" "$dv"
+  read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      rm -rf .venv
+      echo "Removed the stale ./.venv."
+      RECREATE=1
+      ;;
+    *)
+      echo "Existing ./.venv uses Python below 3.11; recreate declined — move or remove that environment, then rerun --install." >&2
+      exit 1
+      ;;
+  esac
 fi
 
 # Wire the agent-neutral pre-commit floor (the process-floor rung setup.sh wires
@@ -170,9 +203,15 @@ fi
 if [ -x .venv/bin/python ] && .venv/bin/python -c 'import importlib.util,sys; sys.exit(0 if sys.version_info >= (3,11) and all(importlib.util.find_spec(m) for m in ("ruff","pytest","pytest_cov","xdist")) else 1)' 2>/dev/null; then
   echo "All dev tools already present in ./.venv — nothing to install."
 else
-  echo
-  printf 'Create ./.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N] '
-  read -r ans || ans=""
+  if [ "$RECREATE" = "1" ]; then
+    # Consent was already given at the recreate prompt above — go straight to
+    # the fresh create+install, no second [y/N].
+    ans="y"
+  else
+    echo
+    printf 'Create ./.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N] '
+    read -r ans || ans=""
+  fi
   case "$ans" in
     [Yy]*)
       [ -d .venv ] || "$PY" -m venv .venv

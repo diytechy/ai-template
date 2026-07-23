@@ -125,6 +125,74 @@ def read_declared(path, default):
     return default
 
 
+# The coordinator dials that live once in docs/stack.ini [agent-loop] instead of
+# being duplicated across the agent-resume.{cmd,sh,command} launchers (IF-068,
+# WI-274 part B). Each maps a stack.ini key to the AGENT_* env slot it now backs.
+AGENT_LOOP_DIALS = ("jobs", "model", "model-map")
+
+
+def read_agent_loop_config(docs):
+    """The declared coordinator dials — the ``[agent-loop]`` section of
+    ``docs/stack.ini`` (IF-068, WI-274). Returns a dict of the present dial keys
+    (``jobs`` / ``model`` / ``model-map``) with surrounding whitespace stripped;
+    an empty value, absent key/section/file, or an unreadable/malformed stack.ini
+    all yield ``{}`` for that key (fail-soft — the AGENT_* env slots and the
+    built-in defaults still apply, so a repo without the section behaves exactly
+    as before, never-breaking).
+
+    This is the DECLARED-FILE tier of the coordinator-dial precedence
+    ``CLI flag > AGENT_* env > declared file > built-in default`` that
+    ``agent_loop.main`` applies (so a one-dial owner change edits ONE file, not
+    the same value in three launchers)."""
+    import configparser
+
+    cp = configparser.ConfigParser(interpolation=None)
+    try:
+        # An absent file -> cp.read returns [] (no exception); a present but
+        # malformed/non-UTF-8 file degrades to {} rather than crashing the loop.
+        if not cp.read(str(Path(docs) / "stack.ini"), encoding="utf-8"):
+            return {}
+    except (configparser.Error, OSError, ValueError, UnicodeDecodeError):
+        return {}
+    if not cp.has_section("agent-loop"):
+        return {}
+    out = {}
+    for key in AGENT_LOOP_DIALS:
+        if cp.has_option("agent-loop", key):
+            val = cp.get("agent-loop", key).strip()
+            if val:
+                out[key] = val
+    return out
+
+
+def resolve_coordinator_dials(args, docs):
+    """``(model, model_map, jobs_opt)`` for the coordinator, each resolved by the
+    IF-068 precedence ``CLI flag > AGENT_* env > declared file > built-in
+    default`` (WI-274 part B). ``args.model``/``args.model_map``/``args.jobs`` are
+    ``None`` when their flag was not passed; an empty env or declared value falls
+    through (the launchers' "empty slot = default" convention, so the env path
+    keeps working unchanged). ``jobs_opt`` is ``None`` when nothing set it — the
+    caller then applies the §6 two-worker default. Kept OUT of ``agent_loop.main``
+    so that hot function's complexity does not grow (the ratchet's escape hatch)."""
+    dials = read_agent_loop_config(docs)
+    model = (
+        args.model
+        if args.model is not None
+        else (os.environ.get("AGENT_MODEL") or dials.get("model", ""))
+    )
+    model_map = (
+        args.model_map
+        if args.model_map is not None
+        else (os.environ.get("AGENT_MODEL_MAP") or dials.get("model-map", ""))
+    )
+    jobs_opt = (
+        args.jobs
+        if args.jobs is not None
+        else (os.environ.get("AGENT_JOBS", "").strip() or dials.get("jobs", "") or None)
+    )
+    return model, model_map, jobs_opt
+
+
 def pause_reason(lane):
     """A declared **graceful-pause** request (WI-147): the `docs/pause` file
     present = pause the loop at the next session boundary. Returns the free-form

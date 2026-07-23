@@ -34,13 +34,24 @@ try {
     # *running* the candidate (the shipped hooks/pre-commit pattern; try/catch
     # keeps stderr noise from terminating under ErrorActionPreference=Stop on
     # Windows PowerShell 5.1). Mirrors dev-setup.template.ps1.
-    function HavePython($cand) {
-        if (-not (Get-Command $cand -ErrorAction SilentlyContinue)) { return $false }
+    function HavePython([string]$exe, [string[]]$exeArgs = @()) {
+        if (-not (Get-Command $exe -ErrorAction SilentlyContinue)) { return $false }
         try {
-            & $cand -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" `
+            & $exe @exeArgs -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" `
                 2>$null | Out-Null
         } catch { return $false }
         return ($LASTEXITCODE -eq 0)
+    }
+    # The dotted version an interpreter reports (e.g. "3.8.10"), or "" when it
+    # cannot run — used to NAME a stale .venv (WI-274b) and the recreate
+    # interpreter. A broken venv (base CPython uninstalled) yields "".
+    function PyVersion([string]$exe, [string[]]$exeArgs = @()) {
+        if (-not (Get-Command $exe -ErrorAction SilentlyContinue)) { return "" }
+        try {
+            $v = & $exe @exeArgs -c "import sys; sys.stdout.write('.'.join(map(str, sys.version_info[:3])))" 2>$null
+        } catch { return "" }
+        if ($LASTEXITCODE -eq 0) { return ("$v").Trim() }
+        return ""
     }
     function Report($label, $present, $hint) {
         if ($present) { Write-Host "  [ok]      $label" }
@@ -48,21 +59,51 @@ try {
     }
 
     # Prefer the project venv -Install creates, so the report reflects what the
-    # harness will actually import; fall back to the ambient interpreter.
+    # harness will actually import; fall back to the ambient interpreter. $py +
+    # $pyArgs together are the invocation, so a version-pinned `py -3.12` keeps
+    # its selector arg apart for correct splatting (& $py @pyArgs ...).
     $py = $null
+    $pyArgs = @()
     $venvPython = ".venv\Scripts\python.exe"
-    $venvSupported = (Test-Path $venvPython) -and (HavePython $venvPython)
+    $venvExists = Test-Path $venvPython
+    $venvSupported = $venvExists -and (HavePython $venvPython)
     if ($venvSupported) { $py = $venvPython }
-    else { foreach ($cand in @("py", "python", "python3")) { if (HavePython $cand) { $py = $cand; break } } }
+    else {
+        # WI-274c: after the bare candidates, try version-pinned `py -3.13/-3.12/
+        # -3.11`. A stale sub-3.11 .venv active on PATH (VS Code auto-activation)
+        # otherwise shadows every bare `python`/`py`, hiding an installed 3.11+
+        # from the recreate offer below (the 2026-07-23 repro). Each is still
+        # floor-checked by HavePython.
+        $candidates = @(
+            @("py"), @("python"), @("python3"),
+            @("py", "-3.13"), @("py", "-3.12"), @("py", "-3.11")
+        )
+        foreach ($cand in $candidates) {
+            if (HavePython @cand) {
+                $py = $cand[0]
+                $pyArgs = @($cand | Select-Object -Skip 1)
+                break
+            }
+        }
+    }
     function HasModule($mod) {
         if (-not $py) { return $false }
-        & $py -c "import importlib.util,sys; sys.exit(0 if importlib.util.find_spec('$mod') else 1)" 2>$null
+        & $py @pyArgs -c "import importlib.util,sys; sys.exit(0 if importlib.util.find_spec('$mod') else 1)" 2>$null
         return ($LASTEXITCODE -eq 0)
     }
 
     Write-Host "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
     Write-Host ""
     Report "runtime (python)" ([bool]$py) "install Python 3.11+"
+    # WI-274b: name a stale .venv explicitly. The report above prefers the venv
+    # when it is supported, else silently describes the ambient interpreter — so
+    # without this a contributor sees only "[missing] runtime" and never learns
+    # the .venv that shadows their PATH is the sub-floor culprit.
+    if ($venvExists -and -not $venvSupported) {
+        $staleVer = PyVersion $venvPython
+        if (-not $staleVer) { $staleVer = "sub-3.11 (its base interpreter no longer runs)" }
+        Write-Host ("  [stale]   .venv is Python {0} — below the 3.11 floor; rerun -Install to recreate it" -f $staleVer)
+    }
     Report "git" (Have "git") "install git"
     Report "ruff (format/lint)" (HasModule "ruff") "pip install ruff (or run -Install)"
     Report "pytest (self-tests)" (HasModule "pytest") "pip install pytest (or run -Install)"
@@ -132,9 +173,26 @@ try {
         Write-Error "Python 3.11+ not found on PATH; install a supported interpreter first."
         exit 1
     }
-    if ((Test-Path ".venv") -and -not $venvSupported) {
-        Write-Error "Existing .\.venv uses Python below 3.11; move or remove that environment, then rerun -Install."
-        exit 1
+    # WI-274a: a sub-3.11 .venv gets a CONSENTED recreate at the floor, not the
+    # old fail-closed "move or remove" dead end. $py/$pyArgs already hold the
+    # discovered 3.11+ interpreter (venv unsupported -> the discovery else-branch
+    # ran). Decline keeps today's fail-closed exit; a non-interactive Read-Host
+    # returns empty -> declines gracefully, so unattended -Install stays safe.
+    $recreated = $false
+    if ($venvExists -and -not $venvSupported) {
+        $staleVer = PyVersion $venvPython
+        if (-not $staleVer) { $staleVer = "sub-3.11" }
+        $discVer = PyVersion $py $pyArgs
+        $discShown = ($py + $(if ($pyArgs) { " " + ($pyArgs -join " ") } else { "" })).Trim()
+        $ans = Read-Host ("Existing .\.venv is Python {0} — below the 3.11 floor. Recreate it with {1} (Python {2})? [y/N]" -f $staleVer, $discShown, $discVer)
+        if ($ans -match '^[Yy]') {
+            Remove-Item -Recurse -Force ".venv"
+            Write-Host "Removed the stale .\.venv."
+            $recreated = $true
+        } else {
+            Write-Error "Existing .\.venv uses Python below 3.11; recreate declined — move or remove that environment, then rerun -Install."
+            exit 1
+        }
     }
 
     # Wire the agent-neutral pre-commit floor (setup.ps1 wires it downstream; this
@@ -156,10 +214,16 @@ try {
             -and (HasModule "pytest_cov") -and (HasModule "xdist")) {
         Write-Host "All dev tools already present in .\.venv — nothing to install."
     } else {
-        Write-Host ""
-        $ans = Read-Host "Create .\.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N]"
+        if ($recreated) {
+            # Consent was already given at the recreate prompt above — go
+            # straight to the fresh create+install, no second [y/N].
+            $ans = "y"
+        } else {
+            Write-Host ""
+            $ans = Read-Host "Create .\.venv and install ruff + pytest + pytest-cov + pytest-xdist into it? [y/N]"
+        }
         if ($ans -match '^[Yy]') {
-            if (-not (Test-Path ".venv")) { & $py -m venv .venv }
+            if (-not (Test-Path ".venv")) { & $py @pyArgs -m venv .venv }
             $python = Join-Path ".venv" "Scripts\python.exe"
             & $python -m pip install --upgrade pip
             # Pinned toolchain (requirements-dev.txt, WI-104) — same versions CI runs.

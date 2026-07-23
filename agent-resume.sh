@@ -25,17 +25,15 @@
 # the coordinator console shows live progress instead of 30 silent minutes;
 # the final result event carries the same telemetry the json format did.
 AGENT_CMD="claude -p --model {model} --output-format stream-json --verbose --dangerously-skip-permissions"
-# Default model tier + per-phase map keyed on the in-process phase (the default
-# model stays strong — an unknown phase routes UP, never down). With managed
-# routing ON (docs/agents-enabled present) the docs/agents.csv registry +
-# AGENT_TIER_MAP below drive selection; these env maps are the declared FALLBACK
-# (an absent enable-list = this legacy path). Values kept coherent with the
-# owner dial 2026-07-12 evening (WI-121): strong (fable) plans, medium (opus)
-# builds + reviews.
-# Owner dial 2026-07-22: Opus at BOTH strong and medium (the owner has no Fable
-# access) — opus plans/design-checks/critiques + builds + reviews.
-AGENT_MODEL="opus"
-AGENT_MODEL_MAP="PLAN=opus,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=opus,CRITIQUE=opus"
+# Default model tier + per-phase fallback map (used when managed routing is off).
+# WI-274: the VALUES now live ONCE in docs/stack.ini [agent-loop] (model /
+# model-map) — agent_loop reads them there, so a dial change edits one file, not
+# this value in three launchers. These slots stay as the env-override tier
+# (precedence: CLI flag > this env slot > docs/stack.ini > built-in default);
+# leaving them empty lets the declared home win. Owner dial 2026-07-22 (Opus at
+# both strong and medium) lives in stack.ini now.
+AGENT_MODEL=""
+AGENT_MODEL_MAP=""
 # Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
 # Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE strong,
 # BUILD / REVIEW-A / REVIEW-B medium; a worker still pins BUILD up to its WI
@@ -62,14 +60,14 @@ AGENT_PREFER_MAP=""
 AGENT_CMD_MAP=""
 # Optional hands-on template for --interactive (defaults to AGENT_CMD):
 AGENT_CMD_INTERACTIVE="claude --model {model} {prompt}"
-# This repo has completed the dispatcher migration audits in docs/parallel-ready,
-# so the dispatcher CAN run two workers. Owner directive 2026-07-22: default to
-# SERIAL (--jobs 1) so agent-resume makes changes in series, one worker at a
-# time. Raise this (or pass --jobs N) to parallelize again; an absent slot still
-# boots the dispatcher (WI-210 — the legacy serial driver is retired). An
-# inherited AGENT_JOBS wins over this default, so agent-resume.command's slot is
-# live (its export was silently overwritten here before — repo-review 2026-07-21 L-22).
-AGENT_JOBS="${AGENT_JOBS:-1}"
+# Worker ceiling (dispatcher). WI-274: the VALUE now lives in docs/stack.ini
+# [agent-loop] jobs (currently 1 = serial, the owner dial 2026-07-22). This slot
+# stays the env-override tier — an inherited AGENT_JOBS still wins over the
+# declared file (precedence: CLI --jobs > this env slot > docs/stack.ini >
+# built-in default); left empty here so the declared home is the one place a
+# dial change lands. An absent value still boots the dispatcher (WI-210 — the
+# legacy serial driver is retired).
+AGENT_JOBS="${AGENT_JOBS:-}"
 # (The meta-repo resume prompt slot is retired with the serial driver,
 # WI-210: a plain launch is the dispatcher, and worker sessions build
 # their explicit assignments — the repo rules live in CLAUDE.md and the

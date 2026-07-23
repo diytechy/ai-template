@@ -142,7 +142,7 @@ docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
-Contracts: IF-015 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv). The WI-218 split re-homed IF-041 (agent-CLI invocation) to agent_session.py, IF-037 (declared-surface reads) to agent_common.py, and IF-055 (the schedule seam) to agent_dispatch.py with their code; the split-out layers provide back over IF-064..IF-067.
+Contracts: IF-015, IF-068 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv). IF-068 (WI-274 part B) is the coordinator-dial read: main() resolves jobs/model/model-map from docs/stack.ini [agent-loop] (via agent_common.read_agent_loop_config) with precedence CLI flag > AGENT_* env > declared file > built-in default. The WI-218 split re-homed IF-041 (agent-CLI invocation) to agent_session.py, IF-037 (declared-surface reads) to agent_common.py, and IF-055 (the schedule seam) to agent_dispatch.py with their code; the split-out layers provide back over IF-064..IF-067.
 """
 
 import argparse
@@ -210,6 +210,8 @@ EXIT_TRAIN_END = agent_common.EXIT_TRAIN_END
 END_STATES = agent_common.END_STATES
 OWNER_ONLY_PATHS = agent_common.OWNER_ONLY_PATHS
 read_declared = agent_common.read_declared
+read_agent_loop_config = agent_common.read_agent_loop_config
+resolve_coordinator_dials = agent_common.resolve_coordinator_dials
 pause_reason = agent_common.pause_reason
 parse_blackout = agent_common.parse_blackout
 blackout_wake = agent_common.blackout_wake
@@ -1331,14 +1333,16 @@ def parse_args():
     )
     ap.add_argument(
         "--model",
-        default=os.environ.get("AGENT_MODEL", ""),
-        help="default model tier for {model} (default: AGENT_MODEL env var)",
+        default=None,
+        help="default model tier for {model}; precedence CLI flag > AGENT_MODEL "
+        "env > docs/stack.ini [agent-loop] model > '' (IF-068, resolved in main)",
     )
     ap.add_argument(
         "--model-map",
-        default=os.environ.get("AGENT_MODEL_MAP", ""),
+        default=None,
         help='per-phase tier map "P0=strong-model,G3=strong-model" matched '
-        "against the in-process phase (default: AGENT_MODEL_MAP env var)",
+        "against the in-process phase; precedence CLI flag > AGENT_MODEL_MAP env "
+        "> docs/stack.ini [agent-loop] model-map > '' (IF-068, resolved in main)",
     )
     ap.add_argument(
         "--cmd-map",
@@ -2653,17 +2657,21 @@ def main():
         root = Path(args.root).resolve()
     docs = root / "docs"
 
+    # The coordinator dials, resolved ONCE from the single declared home
+    # (docs/stack.ini [agent-loop], IF-068 / WI-274 part B) so they need not be
+    # duplicated across the three agent-resume launchers — precedence CLI flag >
+    # AGENT_* env > declared file > built-in default. model/model_map are
+    # consumed by BOTH the dispatcher (it routes and hands each worker --model)
+    # and the worker/interactive paths, so resolve them here, before the
+    # dispatcher branch below. jobs_opt is None when nothing set it.
+    args.model, args.model_map, jobs_opt = resolve_coordinator_dials(args, docs)
+
     # One engine, one selection path (WI-210, spec §1.2): a plain launch IS
-    # the dispatcher — absent --jobs/AGENT_JOBS resolves to the §6 default of
-    # two workers (held at 1 until the §14 migration audits pass, SR-065), and
-    # --jobs 1 is the explicit serial-dispatcher escape. A worker assignment,
-    # interactive sitting, or --dual-plan round always wins — those are
-    # explicit per-process roles the dispatcher itself launches or replaces.
-    jobs_opt = (
-        args.jobs
-        if args.jobs is not None
-        else (os.environ.get("AGENT_JOBS", "").strip() or None)
-    )
+    # the dispatcher — absent --jobs/AGENT_JOBS/[agent-loop] jobs resolves to the
+    # §6 default of two workers (held at 1 until the §14 migration audits pass,
+    # SR-065), and --jobs 1 is the explicit serial-dispatcher escape. A worker
+    # assignment, interactive sitting, or --dual-plan round always wins — those
+    # are explicit per-process roles the dispatcher itself launches or replaces.
     if not (args.wi or args.train or args.interactive or args.dual_plan):
         args.jobs = jobs_opt if jobs_opt is not None else "2"
         return dispatch_run(args, root)

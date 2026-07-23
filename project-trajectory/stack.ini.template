@@ -93,6 +93,20 @@ docs/okf/ = okf
 docs/architecture.md = archmap | <!-- BEGIN GENERATED MODULE MAP --> | <!-- END GENERATED MODULE MAP -->
 docs/status.md = status | <!-- BEGIN GENERATED STATUS --> | <!-- END GENERATED STATUS -->
 
+# --- Unattended coordinator dials (IF-068) -----------------------------------
+# The unattended coordinator (scripts/agent_loop.py) reads its dials here so a
+# one-dial change edits ONE file instead of the same value in each of the three
+# agent-resume.{cmd,sh,command} launchers. agent_loop resolves each dial with the
+# precedence: a CLI flag (--jobs/--model/--model-map) > the AGENT_* env slot the
+# launcher exports > this section > the built-in default. A blank/absent key
+# falls through — so this section is OPTIONAL (an absent [agent-loop] behaves
+# exactly as before; the launcher env slots keep working). Uncomment to declare
+# the dials here rather than in the launchers:
+# [agent-loop]
+# jobs = 2                 # dispatcher worker ceiling (int, 1 = serial, or auto)
+# model = <strong-model>   # fallback {model} when managed routing is off (AGENT_MODEL)
+# model-map = PLAN=<strong-model>,BUILD=<cheap-model>   # per-phase fallback (AGENT_MODEL_MAP)
+
 # --- Run capabilities (the launcher menu) ------------------------------------
 # The root run.cmd / run.sh / run.command launchers read this [run] section
 # (via scripts/run_menu.py) and present the major capabilities an evaluator
