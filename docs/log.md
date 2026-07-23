@@ -11637,3 +11637,18 @@ test deleted, `smoke`+`slow` stay a total partition (`test_smoke_tier.py`),
 full suite untouched. Queued at default priority behind WI-275 (P1)/WI-274 and
 the review tail; the owner can re-front it via `Priority`. No spine change;
 274 WIs. Nothing pushed (push-policy human).
+
+## 2026-07-23 — owner ruling: grind order WI-275 → WI-281 → id-order
+
+The owner ruled the agent-resume grind order ahead of launching the serial
+loop: **WI-275 first** (the Windows test fixes — heals the two reds so every
+later session's bar can go green), **WI-281 second** (the ≤ 60 s smoke re-tier
+— re-fronted from default priority via `Priority=1`, the id tie-break placing
+it behind WI-275; everything after pays a fast bar), **no preference beyond
+that** — the rest run in scheduler id-order (WI-272 → WI-273 → WI-274 →
+WI-276 → WI-279). Scheduler verified post-edit: ready frontier reads exactly
+that. Preflight surfaces checked for the walk-away run: claude/codex/opencode
+CLIs all present, run-state RUNNING, gate-policy autonomous, dashboard-shots
+playwright installed (the WI-272/273 render critiques need it). One registry
+cell changed (WI-281 `Priority` blank → 1) + the status.md order prose + the
+spec note. Nothing pushed (push-policy human).
