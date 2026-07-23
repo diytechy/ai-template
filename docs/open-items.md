@@ -81,5 +81,5 @@ _None — no durable owner action is pending._
 
 _Machine-local advisory — source conflicts, reservations, quarantines, and stranded-train attestations re-derived from `refs/llm/*` as of the dispatch machine at generation time. These refs do not transport with clone/push, so this section is regenerated every dispatch loop and is NOT part of the `--status --check` freshness gate (M-10/WI-266); a second clone (CI, another machine) may show it empty._
 
-_None currently observed on this machine._
+- **WI-273** — awaiting owner attestation/ratification on train `3-g3-WI-273-b45e`: the frozen plan at commit `f4c635760019` (`git show f4c635760019`); attest, amend, or park the row.
 <!-- END GENERATED PENDING -->
