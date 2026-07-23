@@ -7,9 +7,15 @@ repetition is recorded in docs/dupes-allow, not fought. Adapted from the proven
 gilbert implementation; these tests pin the kit-facing contract: red on a seeded
 copy-paste (both locations named), green on clean source, threshold tunable,
 allowlist honored.
+
+WI-276 adds fingerprinted, count-aware census entries: an exemption keys a block
+by its token fingerprint plus file pair, so NEW copy-paste inside an already
+listed pair is no longer waved through; --emit-census regenerates the lines.
 """
 
-from conftest import SCRIPTS, run_py
+import re
+
+from conftest import SCRIPTS, load_script, run_py
 
 # A helper long enough (~40 significant tokens) that copy-pasting it across two
 # files trips the default 30-token window.
@@ -31,6 +37,19 @@ UNIQUE_B = """def digits_only(items):
     return [i for i in items if str(i).isdigit()]
 """
 
+# A SECOND lifted helper, distinct from HELPER (different first window → different
+# fingerprint), used to seed genuinely new copy-paste between an already-listed
+# pair.
+HELPER2 = """def merge_maps(base, extra):
+    out = dict(base)
+    for key, value in extra.items():
+        if key not in out:
+            out[key] = value
+    return out
+"""
+
+_FP_LINE = re.compile(r"^[0-9a-f]{12}  src/a\.py == src/b\.py$")
+
 
 def write_src(root, files):
     src = root / "src"
@@ -42,6 +61,19 @@ def write_src(root, files):
 
 def dupes(root, *args):
     return run_py([SCRIPTS / "check_dupes.py", *args], cwd=root)
+
+
+def emit(root, *args):
+    """`--emit-census` stdout lines (each '<fp>  a == b'), sanctionable verbatim."""
+    proc = dupes(root, "--emit-census", *args)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return proc.stdout.strip().splitlines()
+
+
+def write_census(root, text):
+    docs = root / "docs"
+    docs.mkdir(exist_ok=True)
+    (docs / "dupes-allow").write_text(text, encoding="utf-8")
 
 
 def test_clean_source_passes(tmp_path):
@@ -122,3 +154,95 @@ def test_repetition_inside_one_block_does_not_self_report(tmp_path):
     write_src(tmp_path, {"a.py": UNIQUE_A + HELPER})
     proc = dupes(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_emit_census_prints_fingerprint_lines_that_round_trip(tmp_path):
+    # WI-276: --emit-census prints one '<fp>  a == b' line per block, and pasting
+    # them into the census turns the gate green — the regeneration workflow.
+    write_src(tmp_path, {"a.py": UNIQUE_A + HELPER, "b.py": UNIQUE_B + HELPER})
+    lines = emit(tmp_path)
+    assert lines and all(_FP_LINE.match(ln) for ln in lines), lines
+    write_census(tmp_path, "\n".join(lines) + "\n")
+    proc = dupes(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_fingerprint_scoped_allow_suppresses_that_block(tmp_path):
+    # A fingerprinted census line suppresses exactly its block. It also names
+    # the pair, so the finding's error prints a paste-ready sanction line.
+    write_src(tmp_path, {"a.py": UNIQUE_A + HELPER, "b.py": UNIQUE_B + HELPER})
+    unallowed = dupes(tmp_path)
+    assert unallowed.returncode == 1
+    assert "sanction with census line:" in unallowed.stderr
+    write_census(tmp_path, emit(tmp_path)[0] + "\n")
+    assert dupes(tmp_path).returncode == 0
+
+
+def test_new_copypaste_in_listed_pair_now_fails(tmp_path):
+    # The core WI-276 behavior: with one block recorded by fingerprint, a NEW,
+    # distinct copy-paste between the SAME already-listed pair must fail — it is
+    # no longer waved through, while the recorded block stays suppressed.
+    write_src(tmp_path, {"a.py": UNIQUE_A + HELPER, "b.py": UNIQUE_B + HELPER})
+    write_census(tmp_path, emit(tmp_path)[0] + "\n")
+    assert dupes(tmp_path).returncode == 0
+
+    write_src(
+        tmp_path,
+        {
+            "a.py": UNIQUE_A + HELPER + HELPER2,
+            "b.py": UNIQUE_B + HELPER + HELPER2,
+        },
+    )
+    proc = dupes(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    # Only the NEW block is reported; the recorded one is not re-flagged.
+    assert proc.stderr.count("duplicate block") == 1
+    assert "merge_maps" not in proc.stderr  # location, not source, is printed
+    assert "sanction with census line:" in proc.stderr
+
+
+def test_bare_pair_line_still_coarsely_allows_the_whole_pair(tmp_path):
+    # Backward compatibility: a legacy bare 'a == b' line (no fingerprint) keeps
+    # exempting every block in the pair, so a repo that adopted the old census
+    # form does not break on upgrade.
+    write_src(
+        tmp_path,
+        {
+            "a.py": UNIQUE_A + HELPER + HELPER2,
+            "b.py": UNIQUE_B + HELPER + HELPER2,
+        },
+    )
+    assert dupes(tmp_path).returncode == 1
+    write_census(tmp_path, "src/a.py == src/b.py\n")
+    assert dupes(tmp_path).returncode == 0
+
+
+def test_signature_keys_on_stable_token_names_not_version_ids(tmp_path):
+    # Regression (WI-276): token-type INTEGERS shift across Python releases (OP
+    # is 54 on 3.11, 55 on 3.12), so a fingerprint hashing them would make a
+    # census generated on one interpreter fail on another — the gate job may run
+    # a newer Python than a developer. The signature keys on the stable tok_name
+    # string instead; guard that significant_tokens yields names, not ints.
+    cd = load_script("check_dupes")
+    src = tmp_path / "m.py"
+    src.write_text("x = 1 + 2\n", encoding="utf-8")
+    kinds = [kind for kind, _text, _line in cd.significant_tokens(str(src))]
+    assert kinds and all(isinstance(k, str) for k in kinds), kinds
+    assert "OP" in kinds and "NAME" in kinds  # stable names, not 54/1
+
+
+def test_unallowed_is_count_aware_and_fingerprint_scoped():
+    # Unit-level: two blocks that collide on one fingerprint+pair (the real
+    # census carries such repeats) must each be sanctioned. One census line
+    # covers one copy, so the second still fails; two lines cover both. A block
+    # of a different fingerprint in the same pair is never covered by the entry.
+    cd = load_script("check_dupes")
+    f1 = (("src/a.py", 10), ("src/b.py", 20), 40, "abc123abc123")
+    f2 = (("src/a.py", 10), ("src/b.py", 90), 40, "abc123abc123")  # same fp+pair
+    one = [("abc123abc123", "src/a.py == src/b.py")]
+    assert len(cd.unallowed([f1, f2], one)) == 1  # only one copy sanctioned
+    assert cd.unallowed([f1, f2], one * 2) == []  # both copies sanctioned
+    other = (("src/a.py", 10), ("src/b.py", 30), 40, "ffffffffffff")
+    assert len(cd.unallowed([other], one)) == 1  # different fp: not covered
+    # A legacy bare-pair entry covers any block in the pair and is not consumed.
+    assert cd.unallowed([f1, f2, other], [(None, "src/a.py == src/b.py")]) == []
