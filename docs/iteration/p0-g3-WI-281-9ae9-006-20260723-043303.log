@@ -1,0 +1,35 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 006
+# date: 2026-07-23 04:44
+# train: p0-g3-WI-281-9ae9
+# base: a4191b27a196
+# phase: BUILD
+# wi: WI-281
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: c81daab..45637d2
+# tokens: 
+# cost-usd: 
+# wall-secs: 668
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 4506
+# exit-code: 0
+# ---
+Committed `45637d2` — aligns the smoke-budget documentation with local warn vs CI enforce behavior.
+
+Verified:
+
+- Smoke: `349 passed in 6.57s`
+- Enforced wall-clock: `7.2s / 60s`
+- Docs check: passed (existing warnings only)
+- Commit hook checks: passed
+- Working tree clean
+
+The status snapshot and WI registry/spec archival remain for the integrator, per the dispatcher’s explicit protected-file rule. Full suite on this Windows worker still has pre-existing full-tier failures/hang behavior outside this documentation fix.
