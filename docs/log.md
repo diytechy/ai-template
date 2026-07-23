@@ -11347,3 +11347,23 @@ row's SpecRef is cleared (R-F). **Residual filed:** a real design-check tiebreak
 autonomous dual-plan disagreement (both entries + PROCESS_OPTIONS "Failure
 semantics") — deferred; the pause-free attention end state is the honest behavior
 until it lands. Merge-to-`main` stays owner (push-policy: human) — nothing pushed.
+
+## 2026-07-22 — WI-269: brace the dual-plan PAGE single-ratify mapping with tests
+
+**Session type:** build (`unattended`, quick; test-only follow-up). Closes the
+[113-REVIEW-A](reviews/113-REVIEW-A.md) non-blocking note from WI-268:
+`single-ratify` rode the pause-free else-arm by parity with `autonomous` but had
+no dedicated **integration** test at either dual-plan PAGE entry (only the
+`page_action("single-ratify")` unit mapping was covered — `test_plan_round`,
+TC-070). Added two regressions —
+`test_arbiter_disagreement_single_ratify_stalls_not_pages` (the `--dual-plan`
+flag) and `test_dispatcher_dual_page_single_ratify_continues_pause_free` (the
+dispatcher) — proving single-ratify reaches `EXIT_STALL` + run-state `RUNNING`
+(journaled action `surface-block-continue-others`), never NEEDS-HUMAN. Both cited
+in TC-098.
+
+**Test-only:** no code or spine-requirement change (SR-108/LLR-096 already cover
+single-ratify). Dual-plan module **27 passed**; smoke **1079 passed, 2 skipped**;
+`trace.py`/`check_trajectory` `--strict` clean (SN=25 SR=109 LLR=97 TC=100;
+267 WIs, 256 done). Merge-to-`main` stays owner (push-policy: human) — nothing
+pushed.

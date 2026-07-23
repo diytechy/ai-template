@@ -262,6 +262,26 @@ def test_arbiter_disagreement_autonomous_stalls_not_pages(tmp_path):
     assert "NEEDS-HUMAN" not in state
 
 
+def test_arbiter_disagreement_single_ratify_stalls_not_pages(tmp_path):
+    # single-ratify rides the SAME pause-free else-arm as autonomous (both are
+    # non-stop-needs-human page actions), so the flag path must reach EXIT_STALL
+    # + run-state RUNNING, never NEEDS-HUMAN. Braces SR-108's "autonomous/
+    # single-ratify" clause at the --dual-plan entry (113-REVIEW-A follow-up).
+    root, fake = make_fixture(tmp_path)
+    (root / "docs" / "gate-policy").write_text("single-ratify\n", encoding="utf-8")
+    fake.write_text(
+        FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
+        encoding="utf-8",
+    )
+    proc = run_dualplan(root, fake)
+    assert proc.returncode == 4, proc.stdout + proc.stderr  # EXIT_STALL: attention
+    assert "position-unstable" in proc.stderr
+    assert "surface-block-continue-others" in proc.stderr  # the single-ratify action
+    state = (root / "docs" / "run-state").read_text(encoding="utf-8")
+    assert state.startswith("RUNNING"), state
+    assert "NEEDS-HUMAN" not in state
+
+
 def test_missing_rubric_pages_honestly(tmp_path):
     root, fake = make_fixture(tmp_path)
     (root / "docs" / "rubrics" / "plan-decomposition.md").unlink()
@@ -399,6 +419,23 @@ def test_dispatcher_dual_page_autonomous_continues_pause_free(tmp_path):
     assert _reservations(root) == set()
     actions = [e for e in _events(root) if e["event"] == "dual-plan-page-action"]
     assert actions and actions[0]["action"] == "design-check-session"
+
+
+def test_dispatcher_dual_page_single_ratify_continues_pause_free(tmp_path):
+    # single-ratify PAGEs pause-free exactly like autonomous (the shared
+    # non-stop-needs-human else-arm): journaled + quarantined, EXIT_STALL,
+    # run-state RUNNING. Braces SR-108's single-ratify clause at the dispatcher.
+    root, fake = _dispatch_fixture(
+        tmp_path,
+        FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
+    )
+    proc = _run_jobs(root, fake, gate_policy="single-ratify")
+    assert proc.returncode == 4, proc.stdout + proc.stderr  # EXIT_STALL: attention
+    state = (root / "docs" / "run-state").read_text(encoding="utf-8")
+    assert state.startswith("RUNNING"), state
+    assert _reservations(root) == set()
+    actions = [e for e in _events(root) if e["event"] == "dual-plan-page-action"]
+    assert actions and actions[0]["action"] == "surface-block-continue-others"
 
 
 # (The serial-driver quiet-park auto-page and its dual_only_frontier_ask
