@@ -11460,3 +11460,34 @@ default: `agent-resume.*`, `docs/agents-enabled`, `docs/agents.csv`) was left in
 place — owner's work, not this session's scope; part B builds after it lands. No
 spine change; no budgeted file touched; 272 WIs, 257 done. Nothing committed or
 pushed (owner-delegated).
+
+## 2026-07-23 — venv recreated on 3.11.9; dial + WI-274 filing committed; WI-275 filed (queued, Priority 1)
+
+**Session type:** owner-attended config + intake. **Environment recovered:** `.venv`
+recreated on **Python 3.11.9** (`py -3.11 -m venv`; pinned `requirements-dev.txt`:
+pytest 8.4.2 / pytest-cov 7.1.0 / pytest-xdist 3.8.0 / ruff 0.15.22) — the
+"next session's first act" from the WI-274 filing entry, done. Full suite on it:
+**1369 passed / 5 skipped / 2 failed** — both reds Windows-only and PRE-EXISTING
+(identical on a clean tree; green on POSIX). **Committed** (owner directive):
+`e6cc328` the owner's 2026-07-22 dial turn as its own commit (ANTHROPIC-OPUS-STRONG
+opus@strong effort xhigh; Fable catalog-only — owner has no Fable access;
+`AGENT_JOBS` default 2→1 serial in all three launchers; legacy fallback maps
+de-Fabled), then `3f71141` the WI-274 filing (the pre-commit floor caught the
+filing's unregenerated OKF bundle — IF-068 page — and a stale dashboard; both
+regenerated into the commit). **WI-275 filed** (owner directive, front of queue):
+the two Windows reds are the H-4 prompt-transport refusal (`272a6e8`,
+`agent_session._validate_prompt_transport`) correctly rejecting prompt-in-argv
+batch-shim launches that the two fixtures still perform — a test-layer fix
+([spec](specs/WI-275.md): route fixtures through the stdin path; WI-120 spawn +
+WI-217 capture assertions survive verbatim; product untouched). Filed separate
+from WI-274 (different concern + files) and **Priority 1 — the column's first
+use** — because the unpushed branch would turn CI's Windows legs red on push:
+a merge-path blocker for `dualplan-routing-fix`. The Priority first-use tripped
+`test_schema_widening_is_behavior_neutral` (the WI-242 one-time regression
+compared the legacy 10-col shape against the live wide rows verbatim — sound
+only while every optional cell was empty); amended to compare both shapes with
+the optional cells cleared, which is the actual guarantee ("an *empty* new cell
+== the absent column") — positional-reader corruption still fails it. Owner
+also confirmed the strong-tier effort dial: ANTHROPIC-OPUS-STRONG already
+carries `CLAUDE_CODE_EFFORT_LEVEL=xhigh` (the WI-110 value; no change needed).
+No spine change; 273 WIs, 257 done. Nothing pushed (push-policy human).

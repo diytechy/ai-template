@@ -295,14 +295,24 @@ def test_schema_widening_is_behavior_neutral(tmp_path):
     legacy 10-column shape and the migrated 17-column shape from the SAME live
     rows and assert identical consumer output. Directly proves the WI-242
     migration is behaviour-neutral, and would catch any consumer that started
-    reading a new column positionally."""
+    reading a new column positionally.
+
+    The optional cells are CLEARED in both shapes before comparing: that is
+    the guarantee under test (an *empty* new cell), and a live row may now
+    legitimately use one — WI-275's ``Priority=1`` (2026-07-23) was the
+    column's first use, and a deliberate priority is *supposed* to change the
+    schedule. A consumer reading a new column positionally still corrupts the
+    core ten and fails here regardless of cell content."""
     live_text = (ROOT / "docs/requirements/work-items.csv").read_text(encoding="utf-8")
-    wide_rows = list(csv.DictReader(io.StringIO(live_text)))
+    reader = csv.DictReader(io.StringIO(live_text))
+    wide_header = list(reader.fieldnames)
+    optional = [c for c in wide_header if c not in _OLD_HEADER]
+    rows = [{**r, **{c: "" for c in optional}} for r in reader]
 
     legacy_root = tmp_path / "legacy"
     wide_root = tmp_path / "wide"
-    _write_registry(legacy_root, _render(wide_rows, _OLD_HEADER))
-    _write_registry(wide_root, live_text)
+    _write_registry(legacy_root, _render(rows, _OLD_HEADER))
+    _write_registry(wide_root, _render(rows, wide_header))
 
     assert _consumer_signature(legacy_root) == _consumer_signature(wide_root)
 
