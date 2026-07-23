@@ -57,6 +57,28 @@ jobs:
       - name: Run kit self-tests
         run: python -m pytest -q -n auto
 
+  # WI-281: the smoke commit bar's wall-clock budget. The DETERMINISTIC membership
+  # ratchet (tests/test_smoke_budget.py) is the enforced, machine-independent floor
+  # and already runs in the test job above; THIS job times the actual `-m smoke`
+  # wall against docs/stack.ini [smoke-budget] seconds so drift is visible in CI.
+  # It runs in WARN mode on ONE lane: GitHub-hosted runners have far fewer cores
+  # than the 24-core dev box the 60 s target was set on, so a hard time-assert
+  # would be flaky — the repo's warn-first stance for noisy runtime metrics (the
+  # perf budgets' Gate=warn). A lane with stable timing can switch to
+  # `--mode enforce`. This is a timing signal, not a portability check.
+  smoke-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.x"
+      - name: Install test tooling
+        run: python -m pip install -r requirements-dev.txt
+      - name: Time the smoke tier against its budget (warn)
+        run: python scripts/check_smoke_budget.py --mode warn
+
   # The kit self-adopts its own gated process (IMPROVEMENT_PLAN.md Thread 47): this
   # job runs the kit's OWN check.py at the gate docs/gate declares — the same bar a
   # contributor runs locally, so CI enforces format · lint · tests+coverage ·

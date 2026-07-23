@@ -30,20 +30,35 @@ for _k in [k for k in os.environ if k.startswith("AGENT_")]:
     del os.environ[_k]
 
 
-# --- WI-122: the meta commit-bar smoke tier -----------------------------------
+# --- WI-122 + WI-281: the meta commit-bar smoke tier --------------------------
 # The per-commit bar runs the fast SMOKE tier (docs/stack.ini [tiers]
 # smoke = -m smoke); the FULL suite runs at slice/phase close and in CI
-# (PROCESS_OPTIONS.md phased-delivery cadence). Tiering here is OPT-OUT so the smoke
-# set stays generously sized and "never a false green": every collected test is
-# `smoke` UNLESS its module is one of the heavy end-to-end integration modules
-# below — full hook / gate / scaffold-bootstrap runs that the commit hook
-# re-exercises live and the close/CI gate re-runs wholesale, so per commit they
-# are redundant. A NEW test is therefore in the commit bar by default; a test
-# leaves it only by being named here. `smoke` and `slow` PARTITION the suite
-# (every test gets exactly one) — test_smoke_tier.py guards the invariant and
-# that each name below is a real test module.
+# (PROCESS_OPTIONS.md phased-delivery cadence). Tiering is OPT-OUT: every
+# collected test is `smoke` UNLESS its module is listed below, so a NEW test is
+# in the commit bar by default ("never a false green" by omission) and a test
+# leaves the bar only by being named here. `smoke` and `slow` PARTITION the
+# suite (every test gets exactly one) — test_smoke_tier.py guards the invariant
+# and that each name below is a real test module.
+#
+# WI-281 re-tiered this set to a BUDGET. A smoke test answers "is it basically
+# alive?", so the commit bar must run <= 60 s wall at -n auto (owner directive
+# 2026-07-23). At 1378 tests the WI-122 opt-out default had inverted its own
+# purpose: 1088/1378 (79%) ran per commit at ~6 min wall (measured 351 s), so
+# the "smoke" bar re-ran most of the full suite every commit. The line below is
+# the MECHANICAL boundary the measured module-wall ranking drew (recorded in
+# docs/specs/WI-281.md): a module whose cost is dominated by driving the heavy
+# scripts (gen_trajectory / trace / check* / agent_loop) or bootstrapping a
+# scaffold through conftest.run_py as SUBPROCESSES runs at close + CI, not per
+# commit; the in-process unit modules stay in the bar. Nothing is deleted or
+# weakened — everything cut still runs at slice/phase close + CI. The runtime is
+# its OWN budget item now (declared seconds + a deterministic membership ratchet
+# that bites if this set shrinks the bar back toward the full suite) — see
+# docs/stack.ini [smoke-budget] and tests/test_smoke_budget.py.
 SLOW_MODULES = frozenset(
     {
+        # WI-122: heavy end-to-end integration — full hook / gate /
+        # scaffold-bootstrap runs the commit hook re-exercises live and the
+        # close/CI gate re-runs wholesale, so per commit they are redundant.
         "test_pre_push_hook",  # full pre-push hook end-to-end
         "test_pre_commit_hook",  # full pre-commit hook end-to-end
         "test_bootstrap",  # full scaffold bootstraps
@@ -63,6 +78,40 @@ SLOW_MODULES = frozenset(
         "test_agent_loop_integrate",  # atomic integrator end-to-end
         "test_agent_loop_recovery",  # fault-injected crash matrix
         "test_agent_loop_migration",  # telemetry + downstream migration
+        # WI-281: subprocess/scaffold-heavy modules moved to slow to hold the
+        # <= 60 s commit-bar budget. Each is dominated by run_py subprocesses
+        # (running gen_trajectory / trace / check* / agent_loop) or the scaffold
+        # fixture's full bootstrap — the same heavy class as above, just not
+        # "end-to-end" in name. Ordered by measured module-wall cost (the
+        # ranking is the close deliverable in docs/specs/WI-281.md). All still
+        # run at slice/phase close + CI.
+        "test_gen_trajectory",  # gen_trajectory.py subprocesses (the #1 cost)
+        "test_agent_loop_review",  # review-tail subprocess rounds
+        "test_agent_loop",  # agent_loop.py subprocess loops
+        "test_trace",  # trace.py subprocess runs
+        "test_check_docs",  # check_docs on bootstrapped scaffolds
+        "test_registry_checks",  # registry gates on scaffolds
+        "test_check_privacy",  # privacy lint on scaffolds
+        "test_agent_loop_critique",  # critique-round subprocesses
+        "test_check_harness",  # check.py harness on scaffolds
+        "test_trajectory",  # trajectory registry on scaffolds
+        "test_components_registry",  # components gate on scaffolds
+        "test_derive_gate",  # derive_gate on scaffolds
+        "test_gen_okf",  # gen_okf on scaffolds
+        "test_gen_trajectory_pending",  # pending-state gen_trajectory subprocesses
+        "test_modules_registry",  # modules gate on scaffolds
+        "test_agent_loop_worker",  # worker-leg subprocesses
+        "test_ac_advisory",  # AC-advisory on scaffolds
+        "test_check_stubs",  # stub gate on scaffolds
+        "test_perf_budgets",  # perf-budget gen/compare on scaffolds
+        "test_procurement",  # procurement gate on scaffolds
+        "test_gen_release_checklist",  # release-checklist gen on scaffolds
+        "test_assets",  # assets gate on scaffolds
+        "test_gen_arch_map",  # gen_arch_map on scaffolds
+        "test_trace_golden",  # trace.py golden subprocess runs
+        "test_gate_policy",  # gate-policy on scaffolds
+        "test_run_menu",  # run-menu subprocesses
+        "test_agent_loop_env",  # agent_loop env-routing subprocesses
     }
 )
 
