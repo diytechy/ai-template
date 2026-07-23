@@ -11367,3 +11367,17 @@ single-ratify). Dual-plan module **27 passed**; smoke **1079 passed, 2 skipped**
 `trace.py`/`check_trajectory` `--strict` clean (SN=25 SR=109 LLR=97 TC=100;
 267 WIs, 256 done). Merge-to-`main` stays owner (push-policy: human) — nothing
 pushed.
+
+## 2026-07-22 — WI-270 filed (queued): reconcile the Python-floor spine to 3.11
+
+**Session type:** intake (owner-directed follow-up; no build). Filed the
+requirements-change WI the repo-review-2026-07-21 close flagged: WI-262 bumped the
+kit's actual floor 3.8 → 3.11 (scripts, the `test.yml` matrix, `requirements-dev`,
+ADOPTING.md) but **froze the requirement CSVs**, so SN-011 / SR-034 / SR-035 +
+`architecture.md` + `status.md` + TC-035 still claim 3.8. [WI-270](specs/WI-270.md)
+(queued, strong, `spine`, `~WI-262`) reconciles the spine text and **rewrites
+SR-035's AC narrative** — the macOS+3.8-exclusion story ("arm64 has no CPython
+3.8") is obsolete now that `test.yml` already runs macOS on 3.11. No code/CI change
+(that shipped in WI-262); text + re-attestation only, the derived gate stays G3.
+Spine unchanged at filing (SN=25 SR=109 LLR=97 TC=100); 268 WIs, 256 done.
+Merge-to-`main` stays owner (push-policy: human) — nothing pushed.
