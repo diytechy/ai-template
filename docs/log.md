@@ -11483,3 +11483,45 @@ smoke **1086 passed, 2 skipped in 174.41 s** (`-n auto`, +2 = the new sensors);
 `check_docs --stale` **OK, 0 broken**. Full suite **1376 passed, 2 skipped in
 233.86 s**. Merge-to-`main`
 stays owner (push-policy: human) — nothing pushed.
+
+## 2026-07-22 — backlog triage: queue the review-tail frontier, retire WI-082
+
+**Session type:** backlog triage (owner-directed — "follow your recommendation").
+Acting on the queue-vs-clear triage of the 19 deferred rows.
+
+**Queued (ready frontier, build order):** **WI-274** (per-module coverage floors
+— highest value: guards the H-1 boundary `agent_session.py` at 74% and
+`subagent_gate.py` at 40%), **WI-272** (dashboard status fidelity), **WI-273**
+(dashboard ARIA tabs, soft-gated behind WI-272), **WI-276** (fingerprinted
+duplicate exemptions). Each was `deferred → queued`; all four name a resolvable
+SpecRef (the review-doc anchor) so R-E passes, and WI-272/273's cited SRs
+(SR-038/052/053) exist so backlog-staleness re-validation is clean. WI-272/273
+are `Verification=Critique` render work — a passing test is not sufficient; each
+needs a fresh family-heterogeneous render critique (the `render-dashboard-critique`
+skill) before it closes.
+
+**Retired:** **WI-082** (decompose `bootstrap.py main()`) — superseded by WI-275
+(bounded core decomposition), which now owns `bootstrap.py main()` as a concrete
+first slice (WI-275's text updated to say so). Per the terminal-state ritual
+(R-F): Status `retired`, Deliverable filled with the reason, **SpecRef cleared**
+(the review anchor lived in `docs/archive/`, so no live `docs/specs/` file to
+archive). This is the `retired` disposition `status.md` had flagged as available
+for the archive-anchored rows.
+
+**Kept deferred** (unchanged): WI-060/061/062/063 (parked features / archive
+rows still wanting per-row re-spec), WI-065 (condition-gated on an `Active`
+seam), WI-097 (OI-4, owner), WI-108, WI-123 (OI-7, waits on evidence by its own
+rec), WI-158, WI-187, WI-271, WI-275 (`strong` H-2 design program — deliberately
+not queued), WI-277 (hard-gated behind WI-275), WI-278 (OI-8, owner).
+
+`status.md` gains a **Queued (ready frontier)** bullet and a **Retired** line;
+"Next action" now points at WI-274 and the three owner calls (OI-4 LICENSE,
+OI-8 integration, merge-to-`main`). Regenerated `PROJECT_STATE.html`
+(1,155,545 B, under the 1.4 MB budget); status/open-items generated blocks
+unchanged (they project spine/gate/open-items, not the WI frontier).
+
+**No spine change** (SN=25 SR=109 LLR=97 TC=100, derived gate **G3** — the gate
+derives from artifact states, not WI states, so queuing/retiring does not move
+it); no byte-budgeted file touched; **276 WIs, 257 done, 1 retired, 14 deferred,
+4 queued**. `check_trajectory` clean (acyclic); `trace --strict` 0 orphans;
+`check_docs` 0 broken. Merge-to-`main` stays owner — nothing pushed.
