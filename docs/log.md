@@ -11425,3 +11425,38 @@ call): the warn is non-gating and still earns its keep — an over-trigger costs
 moment's investigation, the lesser evil vs missing a real paper-close; un-defer when
 the false-positive noise erodes the signal. No spine change; 269 WIs, 257 done, 12
 deferred. Nothing pushed.
+
+## 2026-07-23 — WI-274 filed (queued): dev-setup stale-venv recovery + single-home coordinator dials
+
+**Session type:** intake (owner-directed investigation; no build). Two parts, one
+WI (owner call). **Part A** — investigated whether dev-setup can bring an existing
+`.venv` to the 3.11 floor: it cannot. Verified live on the dev box (`.venv` =
+3.8.10, Python 3.12 installed and listed by `py -0p`): `-Install`/`--install`
+fail closed with *"move or remove"* (no consented recreate offered); `-Check`
+never names the stale venv (silently reports the ambient interpreter instead);
+and the candidate list (`py`/`python`/`python3`) is shadowed when the stale venv
+is active/first on PATH, so `-Install` claims *"Python 3.11+ not found"* with
+3.12 installed. SR-032's green-setup AC is unmet in that state; the kit-shipped
+`setup.{ps1,sh}` share the fail-closed pattern (downstream decision deferred to
+the WI). **Part B** — the owner asked why `AGENT_JOBS`/`AGENT_MODEL` live in all
+three `agent-resume.*` launchers (the 2026-07-22 dial edit touched the same two
+values in three files): not inherent — filed **IF-068 (Proposed)**: `agent_loop`
+reads a declared config section (CLI > env > file > default; IF-049/IF-038
+precedents), launchers shrink to plumbing. [WI-274](specs/WI-274.md) (queued,
+`scripts`, medium, `~WI-270`, SR-032;SR-026).
+
+**Environment event mid-session:** the owner uninstalled the base CPython 3.8 and
+installed **3.11.9**, orphaning `.venv` (its base is gone) — the in-flight smoke
+run's `143 failed / 48 errors` is that breakage, not signal, and the owner
+directed testing be delegated to the next session. **Commit bar NOT met here**
+(no runnable pytest toolchain: the venv is baseless and 3.11 is bare); what did
+run green on 3.11.9: `check_trajectory` **clean** (272 WIs, acyclic; expected
+WARN — Proposed IF-068 has no Contracts: line yet) and `check_docs` **OK**
+(658 links, 0 broken); `gen_trajectory` + `--status` regenerated (66 seams).
+**Next session's first act: recreate `.venv` on 3.11 (the WI-274 part-A walk,
+done manually this once), run the commit bar, and commit this filing.** The
+owner's uncommitted 2026-07-22 launcher dial change (Fable→Opus strong + serial
+default: `agent-resume.*`, `docs/agents-enabled`, `docs/agents.csv`) was left in
+place — owner's work, not this session's scope; part B builds after it lands. No
+spine change; no budgeted file touched; 272 WIs, 257 done. Nothing committed or
+pushed (owner-delegated).
