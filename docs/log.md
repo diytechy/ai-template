@@ -11406,3 +11406,22 @@ before the spec was archived to
 [archive/specs/WI-270.2026-07-22.md](archive/specs/WI-270.2026-07-22.md); the
 shipped AC was already correct. Merge-to-`main` stays owner (push-policy: human) —
 nothing pushed.
+
+## 2026-07-22 — WI-271 filed (deferred): footprint-aware `staged_findings`
+
+**Session type:** intake (owner-directed; no build). Filed from the WI-270 close.
+The `check_trajectory.staged_findings` no-validation-delta warn is a `git diff
+--cached` (staged-commit) heuristic that **false-positives on the build → review →
+close workflow** for re-attestation follow-ups: the chain change (TC/tests) lands in
+the *impl* commit while the WI is `active`, but the *close* commit — which trips the
+follow-up detection on `active → done` — is bookkeeping-only, so its staged diff
+shows no chain file. WI-270 hit this (TC-035 changed in `a9e2b45`; the warn fired on
+the docs-only close `74de359`); WI-268 did not (SR-108 had no prior *done* deliverer,
+so it wasn't a follow-up). [WI-271](specs/WI-271.md) (deferred, `scripts`, medium,
+`~WI-270`) specs the **footprint-aware** fix — test the chain across the WI's build
+range, not just the staged commit — with the fail-safes preserved (stdlib-only,
+git-absent no-op, genuine one-commit paper-closes still warn). **Deferred** (owner
+call): the warn is non-gating and still earns its keep — an over-trigger costs a
+moment's investigation, the lesser evil vs missing a real paper-close; un-defer when
+the false-positive noise erodes the signal. No spine change; 269 WIs, 257 done, 12
+deferred. Nothing pushed.
