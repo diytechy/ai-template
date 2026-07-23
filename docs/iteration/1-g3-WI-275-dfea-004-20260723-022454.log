@@ -1,0 +1,27 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 004
+# date: 2026-07-23 02:41
+# train: 1-g3-WI-275-dfea
+# base: a4191b27a196
+# phase: REVIEW-A
+# wi: WI-275
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: c06243a..7aa7f89
+# tokens: 
+# cost-usd: 
+# wall-secs: 1003
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2765
+# exit-code: 0
+# ---
+Approved and committed the recorded verdict: `7aa7f89 review: record WI-275 verdict`.
+
+Focused Windows regression tests pass; both fail on the parent commit as expected.
