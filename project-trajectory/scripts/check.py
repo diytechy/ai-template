@@ -163,6 +163,17 @@ TIERS = {
 # cheap gate for the wrong reason.
 COVERAGE_TIERS = ("full", "release", "all")
 
+# The conventional coverage.py JSON report: `--cov-report=json` writes
+# `coverage.json` at the cwd and check_coverage.py reads it there by default.
+# It is gitignored and SURVIVES BETWEEN RUNS, so main() clears a stale copy
+# before any plan that runs the tests+coverage step (run-scoping the report —
+# repo-review 2026-07-22 REVIEW-A). Without this, a smoke-tier run (which emits
+# no JSON) would leave the previous full-tier file on disk for a
+# [step:module-coverage] consumer to grade as a current PASS instead of the
+# correct SKIP; a covered tier rewrites it fresh, so this only ever removes a
+# report the current run did not produce.
+COVERAGE_JSON = Path("coverage.json")
+
 # The built-in plan's own step names. A project-declared `[step:<name>]` in
 # docs/stack.ini may not shadow one — that would silently append a second step
 # under a kit name, not replace the kit step. Keep in sync with steps() below.
@@ -236,7 +247,7 @@ def _split_template(template):
 
 def _expand(template, subs):
     """Split a command TEMPLATE into argv, THEN substitute {py}/{src}/{tests}/
-    {coverage} per token. Splitting first keeps a Windows interpreter path
+    {coverage}/{tier} per token. Splitting first keeps a Windows interpreter path
     (spaces, backslashes) intact — substituting into the raw string and then
     splitting would mangle it."""
     argv = []
@@ -287,8 +298,8 @@ def extra_steps(profile, subs):
         layer   = product                             # optional, default product
         lane    = tests+coverage                       # optional (see below)
 
-    `{py}/{src}/{tests}/{coverage}` expand as in every other command, and the
-    required-import set is auto-derived from the argv (a `{py} -m <mod>` step
+    `{py}/{src}/{tests}/{coverage}/{tier}` expand as in every other command, and
+    the required-import set is auto-derived from the argv (a `{py} -m <mod>` step
     declares <mod>; any other executable's absence is caught by run_step's PATH
     guard) — the author declares nothing extra. An optional `lane = <step>`
     serializes this step into another step's lane so `--jobs>1` runs it AFTER,
@@ -391,7 +402,16 @@ def steps(coverage, tier, gate, phase=None, profile=None):
     # passing. EDIT the commands in docs/stack.ini, not here.
     src = _pget(profile, "paths", "src", SRC)
     tests = _pget(profile, "paths", "tests", TESTS)
-    subs = {"py": sys.executable, "src": src, "tests": tests, "coverage": str(coverage)}
+    # {tier} exposes the run's selected tier to any declared step command, so a
+    # tier-sensitive [step:] (the per-module coverage floor, which SKIPs when the
+    # tier measures no coverage) reads it without check.py special-casing it.
+    subs = {
+        "py": sys.executable,
+        "src": src,
+        "tests": tests,
+        "coverage": str(coverage),
+        "tier": tier,
+    }
     fmt_cmd = _expand(
         _pget(profile, "product", "format", BUILTIN_PRODUCT["format"]), subs
     )
@@ -876,6 +896,27 @@ def run_plan(plan, lenient, jobs, lane_map=None):
     return [results[i] for i in sorted(results)]
 
 
+def _clear_stale_coverage_report(plan):
+    """Run-scope the coverage report: if this plan runs the tests+coverage step,
+    the coverage.json it may (re)write is THIS run's output, so clear a stale copy
+    first (COVERAGE_JSON). At a covered tier tests+coverage rewrites it fresh; at
+    the smoke tier (no --cov-report=json) it stays absent, so a
+    [step:module-coverage] consumer correctly SKIPs instead of grading a stale
+    full-tier measurement (repo-review 2026-07-22 REVIEW-A). A locked/undeletable
+    stale report is a LOUD failure — it must not silently survive into a consumer
+    as a false green (the fail-closed stance)."""
+    if not any(s[0] == "tests+coverage" for s in plan):
+        return
+    try:
+        COVERAGE_JSON.unlink(missing_ok=True)
+    except OSError as exc:
+        sys.exit(
+            "check: could not clear stale coverage report {}: {}".format(
+                COVERAGE_JSON, exc
+            )
+        )
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -1031,6 +1072,10 @@ def main():
     if not plan:
         print("No checks defined for gate {}.".format(gate))
         return
+
+    # Run-scope the coverage report before the plan (see the helper): a stale,
+    # gitignored coverage.json must never be graded as this run's output.
+    _clear_stale_coverage_report(plan)
 
     jobs = args.jobs if args.jobs is not None else 1
     if jobs == 0:

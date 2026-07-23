@@ -24,17 +24,29 @@ Inputs (a missing one degrades safely, never a false failure):
     --floors  docs/coverage-floors   one `<repo-relative module> <min percent>`
               per line — the docs/dupes-allow census idiom: `#` comments and
               blank lines are ignored, so each floor can carry a why-note.
+    --tier / --skip-tiers            the test tier check.py selected this run and
+              the tiers that do NOT measure coverage (e.g. `smoke`). When --tier
+              names a skip-tier, the comparator SKIPs WITHOUT reading the report,
+              so a stale coverage.json left by a prior covered run cannot be
+              graded as a current pass (repo-review 2026-07-22 REVIEW-A). check.py
+              also run-scopes the report (clears a stale copy before the plan), so
+              the report is absent at the smoke tier regardless — this is the
+              belt-and-suspenders second defense, and gives an honest tier-named
+              SKIP even where the file lingers.
 
 Exit code is nonzero when any declared module is below its floor, OR is absent
 from the report (a declared floor whose module vanished from measurement must
-FAIL — never quietly pass), OR the floors file is malformed (a broken
-declaration is loud, the same fail-closed stance check.py takes on a bad
-profile). Exit 0 when every floor holds, when no floors are declared, or when
-the report is absent (an unmeasured run).
+FAIL — never quietly pass), OR the floors file is malformed, OR the report is
+corrupt — malformed JSON or a per-file percent that is not a finite 0..100 (a
+broken declaration or damaged input is loud, the same fail-closed stance check.py
+takes on a bad profile). Exit 0 when every floor holds, when no floors are
+declared, when the report is absent (an unmeasured run), or when the selected
+tier does not measure coverage (--tier in --skip-tiers).
 
 Usage:
     python scripts/check_coverage.py [--report coverage.json]
                                      [--floors docs/coverage-floors]
+                                     [--tier TIER] [--skip-tiers t1,t2]
 
 Wired via `docs/stack.ini` as a `[step:module-coverage]` gate step, so it runs
 AFTER `tests+coverage` produces the JSON (check.py's plan orders extra steps
@@ -46,6 +58,7 @@ Contracts: IF-069, IF-070 — the interface seams this module declares (process.
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -102,16 +115,34 @@ def load_report(path):
     """The coverage.py JSON report as `{normalized-file-path: percent_covered}`,
     or None when the file is absent (the 'not measured this run' signal, like
     check_perf's absent metrics). Paths are normalized to forward slashes so a
-    Windows-separated report key matches a repo-relative floor. Malformed JSON
-    raises (a corrupt report is loud, not a silent pass)."""
+    Windows-separated report key matches a repo-relative floor.
+
+    A corrupt report is a LOUD failure, never a silent pass: malformed JSON
+    raises (json.JSONDecodeError is a ValueError), and a per-file
+    `percent_covered` that is PRESENT but not a finite number in 0..100 also
+    raises. That last guard is load-bearing — Python's json parser accepts the
+    non-standard `NaN`/`Infinity` literals, and a NaN would otherwise pass the
+    float check, store, and grade as a false green (`NaN < floor` is False, so a
+    damaged report reads `OK`). A file entry with NO percent is skipped (it
+    becomes MISSING -> FAIL for any module that declares a floor on it)."""
     if not path.exists():
         return None
     data = json.loads(path.read_text(encoding="utf-8"))
     out = {}
     for key, info in data.get("files", {}).items():
         pct = info.get("summary", {}).get("percent_covered")
-        if isinstance(pct, bool) or not isinstance(pct, (int, float)):
+        if pct is None:
             continue
+        if isinstance(pct, bool) or not isinstance(pct, (int, float)):
+            raise ValueError(
+                "coverage report {}: file {!r} has non-numeric "
+                "percent_covered {!r}".format(path, key, pct)
+            )
+        if not math.isfinite(pct) or not 0.0 <= pct <= 100.0:
+            raise ValueError(
+                "coverage report {}: file {!r} has a non-finite or out-of-range "
+                "percent_covered {!r} (expected a finite 0..100)".format(path, key, pct)
+            )
         out[key.replace("\\", "/")] = float(pct)
     return out
 
@@ -162,6 +193,19 @@ def main():
         default="docs/coverage-floors",
         help="per-module floor census (default: docs/coverage-floors)",
     )
+    ap.add_argument(
+        "--tier",
+        default=None,
+        help="the test tier check.py selected this run (default: none); with "
+        "--skip-tiers, SKIP when this tier does not measure coverage",
+    )
+    ap.add_argument(
+        "--skip-tiers",
+        default="",
+        help="comma/space list of tiers that do NOT measure coverage (e.g. "
+        "smoke); when --tier names one, SKIP without reading the report so a "
+        "stale coverage.json from a prior covered run can't be graded",
+    )
     args = ap.parse_args()
 
     try:
@@ -178,7 +222,24 @@ def main():
         )
         return
 
-    percents = load_report(Path(args.report))
+    # A tier that does not measure coverage (e.g. smoke, where the global
+    # --cov-fail-under floor is likewise skipped) SKIPs without reading the
+    # report — so a stale coverage.json a prior covered run left on disk can
+    # never be graded as a current pass (repo-review 2026-07-22 REVIEW-A).
+    skip_tiers = set(args.skip_tiers.replace(",", " ").split())
+    if args.tier and args.tier in skip_tiers:
+        print(
+            "check_coverage: SKIP - {} floor(s) declared but the {!r} tier does "
+            "not measure coverage (the global --cov-fail-under floor is likewise "
+            "skipped here)".format(len(floors), args.tier)
+        )
+        return
+
+    try:
+        percents = load_report(Path(args.report))
+    except ValueError as exc:
+        print("check_coverage: FAIL - {}".format(exc))
+        sys.exit(1)
     if percents is None:
         print(
             "check_coverage: SKIP - {} floor(s) declared but no coverage report "

@@ -14,6 +14,8 @@
 #                 stack names its own tool (npx, go, cargo, pwsh) instead.
 #   {src} {tests} the [paths] values below.
 #   {coverage}    the resolved coverage threshold (see [coverage]).
+#   {tier}        the test tier this run selected (smoke|full|release|all) — for
+#                 a tier-sensitive [step:] such as the per-module coverage floor.
 # A command that runs `{py} -m <module>` auto-declares <module> as a required
 # import, so a missing tool is reported SKIP(missing) and fails the gate rather
 # than silently passing. Any other executable's absence on PATH is the same
@@ -136,11 +138,14 @@ docs/status.md = status | <!-- BEGIN GENERATED STATUS --> | <!-- END GENERATED S
 # subsidize a thin high-risk one. Add `--cov-report=json` to [coverage] args so
 # pytest-cov writes coverage.json, list `<module> <min percent>` lines in
 # docs/coverage-floors (# comments allowed), and enable the step. The global
-# --cov-fail-under stays the backstop; at the smoke tier (no coverage) it SKIPs.
+# --cov-fail-under stays the backstop. `--tier {tier} --skip-tiers smoke` makes
+# the smoke tier (which measures no coverage) SKIP without reading the report,
+# and check.py run-scopes coverage.json (clears a stale copy before the plan), so
+# a prior full-tier report is never graded as a current pass at the smoke tier.
 # The `lane` line serializes it AFTER tests+coverage (it reads that step's JSON)
 # so it doesn't race under `check.py --jobs>1`; drop it if you run sequentially.
 # [step:module-coverage]
-# command = {py} scripts/check_coverage.py
+# command = {py} scripts/check_coverage.py --tier {tier} --skip-tiers smoke
 # lane = tests+coverage
 #
 # TS/JS adopters: if you run SOURCES directly (Node native type-stripping, no

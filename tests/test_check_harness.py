@@ -365,6 +365,62 @@ def test_bad_lane_fails_loudly(scaffold):
     assert "names no known step" in proc.stdout + proc.stderr
 
 
+def test_tier_substitution_available_to_declared_steps():
+    # {tier} exposes the run's tier to any [step:] command (the tier-sensitive
+    # per-module coverage floor reads it) — it expands like {py}/{src}/... .
+    import configparser
+
+    check = load_script("check")
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.read_string("[step:cov]\ncommand = {py} c.py --tier {tier}\n")
+    for tier in ("smoke", "full"):
+        plan = check.steps(80, tier, "G3", None, cp)
+        cov = next(s for s in plan if s[0] == "cov")
+        assert "--tier" in cov[2] and tier in cov[2], (tier, cov[2])
+
+
+def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
+    # REVIEW-A regression: the module-coverage floor must NOT grade a stale
+    # full-tier coverage.json as a current PASS after a no-coverage smoke run.
+    # check.py run-scopes the report (clears it before the plan) and the step is
+    # told smoke measures no coverage, so smoke SKIPs and the file is gone.
+    make_minimal_project(scaffold)
+    stack = scaffold / "docs" / "stack.ini"
+    text = stack.read_text(encoding="utf-8").replace(
+        "--cov-report=term-missing",
+        "--cov-report=term-missing --cov-report=json",
+    )
+    text += (
+        "\n[step:module-coverage]\n"
+        "command = {py} scripts/check_coverage.py --tier {tier} --skip-tiers smoke\n"
+        "gates = G3\nlayer = product\nlane = tests+coverage\n"
+    )
+    stack.write_text(text, encoding="utf-8")
+    (scaffold / "docs" / "coverage-floors").write_text(
+        "src/demo.py 50\n", encoding="utf-8"
+    )
+
+    # Full tier: coverage.json is produced and the floor is graded and holds.
+    full = run_py(
+        ["scripts/check.py", "--gate", "G3", "--tier", "full", "--jobs", "0"],
+        cwd=scaffold,
+    )
+    assert full.returncode == 0, full.stdout + full.stderr
+    assert (scaffold / "coverage.json").exists()
+    assert "module floor(s) hold" in full.stdout
+
+    # Smoke tier: the stale full report is cleared before the (no-coverage) run,
+    # the step SKIPs instead of grading it, and the run stays honest-green.
+    smoke = run_py(
+        ["scripts/check.py", "--gate", "G3", "--tier", "smoke", "--jobs", "0"],
+        cwd=scaffold,
+    )
+    assert smoke.returncode == 0, smoke.stdout + smoke.stderr
+    assert "module floor(s) hold" not in smoke.stdout  # not graded
+    assert "check_coverage: SKIP" in smoke.stdout  # the tier-skip fired
+    assert not (scaffold / "coverage.json").exists()  # run-scoped away
+
+
 def test_default_gate_comes_from_gate_file(scaffold):
     # check.py without --gate reads the committed docs/gate (bootstrap writes
     # G1), so CI enforces the bar the project is actually at — a fresh scaffold

@@ -78,6 +78,30 @@ def test_load_report_absent_is_none_and_parses_percent(tmp_path):
     assert percents[MOD] == 74.3 and percents[GATE] == 40.0
 
 
+def test_load_report_rejects_non_finite_and_out_of_range(tmp_path):
+    # A corrupt report must be a LOUD failure, never a silent green. Python's
+    # json parser accepts the non-standard NaN/Infinity literals, and a NaN would
+    # otherwise pass the float check and grade as OK (`NaN < floor` is False) —
+    # the exact false-green the honest gate exists to prevent (REVIEW-A).
+    import pytest
+
+    for bad in (float("nan"), float("inf"), float("-inf"), 150.0, -5.0):
+        r = _report(tmp_path / "c.json", {MOD: bad})
+        with pytest.raises(ValueError):
+            check.load_report(r)
+    # a non-numeric percent is likewise corrupt (and loud), not silently dropped
+    r = _report(tmp_path / "s.json", {})
+    r.write_text(
+        json.dumps({"files": {MOD: {"summary": {"percent_covered": "??"}}}}),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError):
+        check.load_report(r)
+    # a finite in-range percent still parses cleanly
+    ok = _report(tmp_path / "ok.json", {MOD: 74.3})
+    assert check.load_report(ok)[MOD] == 74.3
+
+
 def test_module_percent_matches_exact_suffix_and_backslash(tmp_path):
     # exact relative key, an absolute POSIX key (suffix match), and a
     # Windows-separator key all resolve to the same repo-relative module.
@@ -160,6 +184,50 @@ def test_cli_fails_loudly_on_malformed_floors(tmp_path):
     proc = _run(tmp_path, report=tmp_path / "missing.json", floors=floors)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "not a number" in proc.stdout
+
+
+def test_cli_fails_loudly_on_corrupt_report_percent(tmp_path):
+    # A damaged report (a NaN percent, which Python's json accepts) must FAIL
+    # loudly, not grade as a silent green — the honest floor is defeated when its
+    # input is corrupt (REVIEW-A). json.dumps emits the bare `NaN` literal.
+    report = _report(tmp_path / "c.json", {MOD: float("nan")})
+    floors = _floors(tmp_path / "f", MOD + " 72\n")
+    proc = _run(tmp_path, report, floors)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "percent_covered" in proc.stdout
+
+
+def _run_tier(tmp_path, report, floors, tier, skip):
+    return run_py(
+        [
+            SCRIPTS / "check_coverage.py",
+            "--report",
+            str(report),
+            "--floors",
+            str(floors),
+            "--tier",
+            tier,
+            "--skip-tiers",
+            skip,
+        ],
+        cwd=tmp_path,
+    )
+
+
+def test_cli_skips_when_tier_does_not_measure_coverage(tmp_path):
+    # The smoke-after-full case (REVIEW-A): a stale report that WOULD breach must
+    # not be graded at a tier that measures no coverage. --skip-tiers names it, so
+    # the comparator SKIPs WITHOUT reading the report — but at a covered tier the
+    # same report is read and the breach fails.
+    report = _report(tmp_path / "c.json", {MOD: 10.0})  # far below the floor
+    floors = _floors(tmp_path / "f", MOD + " 72\n")
+    skipped = _run_tier(tmp_path, report, floors, tier="smoke", skip="smoke")
+    assert skipped.returncode == 0, skipped.stdout + skipped.stderr
+    assert "SKIP" in skipped.stdout
+    assert "breached" not in skipped.stdout  # never read/graded
+    graded = _run_tier(tmp_path, report, floors, tier="full", skip="smoke")
+    assert graded.returncode == 1, graded.stdout + graded.stderr
+    assert "breached" in graded.stdout
 
 
 # --- harness wiring -----------------------------------------------------------
