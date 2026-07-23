@@ -241,6 +241,38 @@ def test_post_window_token_change_defeats_stale_fingerprint(tmp_path):
     assert "sanction with census line:" in proc.stderr
 
 
+def test_same_line_separate_blocks_do_not_share_stale_census_fingerprint(tmp_path):
+    # Review regression (WI-276): two distinct 30+-token expressions can live
+    # on one line and therefore share a line offset. Their sliding windows are
+    # not adjacent in token space, so they must remain two blocks. Census both,
+    # then edit an early interior token of only the second expression in both
+    # files. A line-adjacent merge loses that token from its reconstructed
+    # signature and incorrectly lets the stale census pass.
+    first = " + ".join("first{}".format(i) for i in range(36))
+    second = " + ".join("second{}".format(i) for i in range(36))
+    body_a = "left = {}; divider_a = 1; right = {}\n".format(first, second)
+    body_b = "left = {}; divider_b = 1; right = {}\n".format(first, second)
+    write_src(tmp_path, {"a.py": body_a, "b.py": body_b})
+    lines = emit(tmp_path)
+    assert len(lines) == 2, lines
+    write_census(tmp_path, "\n".join(lines) + "\n")
+    assert dupes(tmp_path).returncode == 0
+
+    # This is inside the second block's first 30-token window, where the old
+    # cross-expression merge never placed it in the reconstructed signature.
+    write_src(
+        tmp_path,
+        {
+            "a.py": body_a.replace("second10", "edited10"),
+            "b.py": body_b.replace("second10", "edited10"),
+        },
+    )
+    proc = dupes(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert proc.stderr.count("duplicate block") == 1
+    assert "sanction with census line:" in proc.stderr
+
+
 def test_bare_pair_line_still_coarsely_allows_the_whole_pair(tmp_path):
     # Backward compatibility: a legacy bare 'a == b' line (no fingerprint) keeps
     # exempting every block in the pair, so a repo that adopted the old census

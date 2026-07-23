@@ -43,115 +43,163 @@
 # When a decomposition removes a block below, delete its line so the census does
 # not rot into permanent cover.
 
-# --- F5 sanctioned cross-file small-helper duplication -----------------------
-# The _utf8_console emitter, the one-line declared-policy readers, the
-# refs()/_split_refs traceability parsers, and the __main__/argparse/exit
-# scaffolding — each duplicated so its script stays standalone (F5).
+# --- Current F5 helper exemptions and grandfathered intra-file debris --------
+#
+# WI-276 rework baseline: regenerated after merge detection began carrying
+# token-window offsets and splitting only genuinely step-1-overlapping runs.
+# The entries immediately following this note are the current authoritative
+# census.
+81ac54182bfb  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_runner.py
+d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+c5e35c61e3a6  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_common.py
+daf99714501b  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
+533066636324  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_dispatch.py
+0e8a5f4a0f99  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_loop.py
+0e8a5f4a0f99  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_loop.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_route.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/bootstrap.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_doc_refs.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_docs.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_dupes.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_flows.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_perf.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_stubs.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_vendored.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/derive_gate.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_arch_map.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_cases.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_okf.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_release_checklist.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_skills_index.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_briefs.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_coverage.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_coverage_step.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_round.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/run_menu.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
+ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/score_reviews.py
+b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/trace.py
+a586f1ab06cb  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+aa9e9ae651e2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+aa9e9ae651e2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+5c87733175e3  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+ffa194248f7b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+6a1951447b34  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+f4b75f24b488  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+68aa5b42cee7  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+332bdb287be6  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/gen_trajectory.py
+a21f84485bb7  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+3f3695502d27  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+4187cd1d8427  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+3f3695502d27  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+241bbbbf4bec  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
+67d6e1244939  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
+94647bfec394  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+da4c54fb0af0  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+da4c54fb0af0  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+7e9ba115e3e0  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+19ff0fabd2cc  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+79edd9e2eba7  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+45d688d3978b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+5ba1c2915c22  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+5ba1c2915c22  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+4aafd502371e  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+4aafd502371e  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+d647f160d4ca  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+c250d59a13b2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+05bd0eaa4e97  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+e47234cf5925  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+5db9c000fa5c  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+9fbc857a332b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+0bd14cd9c689  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
+fe585fa411e9  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
+c6b71579a078  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
+ab9c2785757c  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
 fd8bed87fb54  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/check_trajectory.py
-# WI-195..WI-198 (the opus-built dual-plan round set): the same F5 class —
-# _utf8_console, the optional-CSV loader, argparse/main scaffolding, and the
-# Plan-WI table parser deliberately duplicated from plan_coverage per F5
-# (plan_artifacts == plan_coverage, ~126 tokens — directed, not a leak); the
-# agent_route intra-file pair is the PlannerSession/PlannerPair class
-# scaffolding (two small __slots__/__init__/__repr__ blocks).
+c8f5fddac0ef  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+a5b7a7b890c2  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+606bb9bf6b06  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+08e04d3ff9c1  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
+96d2f74fe714  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
 021fec5dccbd  project-trajectory/scripts/agent_route.py == project-trajectory/scripts/agent_route.py
-14e71bf4c19b  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/plan_briefs.py
-469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_artifacts.py
-c54131b73567  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
-f3ea6bf955e3  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
-9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_artifacts.py
-d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
-451248328e57  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
-b8267af090fa  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_coverage_step.py
-4544b3af48fd  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_coverage_step.py
-e2124845f78a  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_round.py
-4544b3af48fd  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_round.py
-e2124845f78a  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
-4544b3af48fd  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
-d632d88ab0b7  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
-fad038ae4ed4  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
-386d4419858c  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
-288c88cdad6f  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
-2a3ae413b478  project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
-# WI-194: plan_round.py carries the same F5 helpers (_utf8_console + its
-# docstring, class/def scaffolding) as agent_route/schedule — censused.
-# WI-190: plan_coverage.py carries the same F5 helpers (_utf8_console, the
-# module import/docstring boilerplate, the optional-CSV column loader, the
-# argparse/exit scaffolding) as its siblings — censused, not hoisted.
-469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_coverage.py
-ef5d0d36a499  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
-f6bfe71150a8  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
-8d13513dd3b5  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
-aa845026a358  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
-9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_coverage.py
-c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
 3864c24be1f4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
+82419571a936  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
 c1ad5fc6394f  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_skills_index.py
+7046137adff6  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
+c6270a4626d4  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_perf.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_stubs.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_trajectory.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/derive_gate.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_arch_map.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_cases.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_okf.py
+74572e51bafc  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_release_checklist.py
 9a4da4b891bb  project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajectory.py
 1808868da03d  project-trajectory/scripts/check.py == project-trajectory/scripts/check_trajectory.py
-# (WI-276) dropped stale census pair (0 blocks now): project-trajectory/scripts/check.py == project-trajectory/scripts/run_menu.py
-# WI-276: check_dupes.py itself gained the fingerprint machinery (fingerprint(),
-# read_allowlist/unallowed, the --emit-census argparse arg), so its F5 argparse/
-# _utf8_console boilerplate shared with check_doc_refs re-fingerprinted and grew
-# by one block — the self-scan re-attribution, not new hand-copied code.
 f45f17946835  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
-e84968ce6b54  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
-2cd009d6be1a  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
+20dd14337bde  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
+20dd14337bde  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
+44fc409f063d  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_stubs.py
+44fc409f063d  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
+44fc409f063d  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
 d986eafa1e11  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_dupes.py
-b4e9f449093c  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_stubs.py
-2cd009d6be1a  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_stubs.py
 da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_stubs.py
-# WI-132: check_docs gained the docs/status-lint declared-policy reader (F5).
-4a3b752e412f  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
-4a3b752e412f  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
-# WI-228: check_docs gained a SECOND declared-policy reader (load_orphan_classes,
-# for docs/orphans-allow), so the open-and-skip-comments loop now duplicates the
-# WI-132 status-lint reader INTRA-file — the same sanctioned F5 declared-reader
-# class, censused not hoisted (each reader stays a standalone small helper).
-70e7e2e30301  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_docs.py
+da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
+da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
+da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
 5d9524986749  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/check_trajectory.py
 5d9524986749  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/derive_gate.py
-e84968ce6b54  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
-2cd009d6be1a  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
-da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_cases.py
-b4e9f449093c  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
-2cd009d6be1a  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
-da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
 f9a751e72b81  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_okf.py
-b4e9f449093c  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
-2cd009d6be1a  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
-da3bd5e9dd3e  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_release_checklist.py
+14e71bf4c19b  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/plan_briefs.py
+14e71bf4c19b  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/schedule.py
 7146728c91d1  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/gen_trajectory.py
-7af530b03f91  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_vendored.py
-1ce6cf227e4e  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_vendored.py
+70e7e2e30301  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_docs.py
+4a3b752e412f  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_privacy.py
+4a3b752e412f  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_trajectory.py
 5203288b8c2d  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/gen_release_checklist.py
+469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_artifacts.py
+469f0dd6e7c9  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/plan_coverage.py
+2e8985c8fcb3  project-trajectory/scripts/check_docs.py == project-trajectory/scripts/check_vendored.py
+3b4335f77810  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
+aa845026a358  project-trajectory/scripts/check_flows.py == project-trajectory/scripts/plan_coverage.py
+84e2717e93b1  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/gen_release_checklist.py
 0e8403279f2d  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/derive_gate.py
 96547fd3a5ae  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/derive_gate.py
-84e2717e93b1  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/gen_release_checklist.py
 93d508e214f3  project-trajectory/scripts/check_perf.py == project-trajectory/scripts/trace.py
 2bc803394d18  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
-0200a785dcc1  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
+3f945b5c8930  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 eff0eac572a0  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/gen_trajectory.py
+c16d14a4efc4  project-trajectory/scripts/check_privacy.py == project-trajectory/scripts/check_trajectory.py
 f3c532f40a67  project-trajectory/scripts/check_stubs.py == project-trajectory/scripts/gen_arch_map.py
-01b45f40febb  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/derive_gate.py
-a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
-276a458797c4  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 6109a071d2d7  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_okf.py
+d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
+f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
+a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
+a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
+276a458797c4  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_arch_map.py
 75b2bcbfcc04  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 a2fa21743919  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+b759dba980a3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 8e99e263cf71  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+01b45f40febb  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/derive_gate.py
+f3fed4010802  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
+f67449fb3a0d  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
+feb3b65493fe  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
 a35fa2429659  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 59ca47b1f04b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-a96fdbede5b0  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/trace.py
-65bbcbe73153  project-trajectory/scripts/check_vendored.py == project-trajectory/scripts/score_reviews.py
-d5a5515b4086  project-trajectory/scripts/check_vendored.py == project-trajectory/scripts/score_reviews.py
+558577071d47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
+744b556ca01e  project-trajectory/scripts/check_vendored.py == project-trajectory/scripts/score_reviews.py
+e7f0db69c9ff  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 c7533358d6c4  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
 bea18e2ff5f7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/gen_release_checklist.py
-e7f0db69c9ff  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
-b61befdd8b23  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
-8da65b90189b  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
+4ab04e2f06b7  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 0126ca75219c  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 9de6491460d5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 5a474f5d87b5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
@@ -161,94 +209,21 @@ e756d21c8ca6  project-trajectory/scripts/derive_gate.py == project-trajectory/sc
 1f37852f250b  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 6cc84e6e5a77  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
 9997eb98dd01  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/trace.py
-ab8c98b58504  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/trace.py
-152e0e8ec31f  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/trace.py
+c7d2e27779d5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/schedule.py
+06d9919e27f2  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/trace.py
+c54131b73567  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
+f3ea6bf955e3  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/plan_briefs.py
+3b8e5c6a5e38  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/gen_arch_map.py
 8c11d9f9d54a  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
 6050c334ce2f  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
-9205a1d4996b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
-fb06318154af  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
-# WI-146: trace.py's --ratify view gained the SN-meta parser mirroring
-# gen_okf.sn_rows / gen_trajectory._sn_rows (F5, "change all three together");
-# the pair was surfaced (uncensused) at the WI-144 G3 close — dupes is G3-only.
 d576d8a2a2d6  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
 a55d35181e85  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/trace.py
-# WI-193: WI-188 added an identical in_phase() SR-phase-filter helper to BOTH
-# gen_release_checklist.py and trace.py (each independently filters SRs by the
-# derived Phase column; ~31 tokens, F5 small-helper duplication, deliberately not
-# hoisted into a shared module). The pair went uncensused at WI-188's close —
-# dupes is G3-only and the branch is unpushed (OI-3), so CI never ran the gate.
-b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py
-# WI-186 (v4 close): schedule.py (Slice A) is a standalone F5 script carrying the
-# _utf8_console emitter, the _split_refs/refs parser, load_wis (mirroring
-# check_trajectory), and the argparse/__main__ scaffolding. It first meets the
-# G3-only dupes gate at the v4 close (dormant at G2 the whole effort), so its F5
-# pairs are censused now; entering the corpus also re-attributed the
-# representative _utf8_console pair from agent_route to several unlisted files.
-14e71bf4c19b  project-trajectory/scripts/check_doc_refs.py == project-trajectory/scripts/schedule.py
-d47d5975c21b  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
-f800f0c60265  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/schedule.py
-c7d2e27779d5  project-trajectory/scripts/derive_gate.py == project-trajectory/scripts/schedule.py
-# WI-080/WI-081 (main-decomposition close): decomposing agent_loop.py:main()
-# (parse_args extracted) and trace.py:main() shifted the token positions
-# check_dupes keys on, re-attributing three sanctioned duplicate groups to new
-# representative pairs — the F5 _utf8_console emitter from agent_route to eight
-# more files, the argparse/main() boilerplate to bootstrap, and the WI-146
-# SN-parser mirror ("change all three together") to the trace<->gen_trajectory
-# pair. Same phenomenon as the WI-186 re-attribution above: new census rows for
-# duplication that already existed, not new copy-paste.
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check.py
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_doc_refs.py
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_perf.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_perf.py
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_stubs.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/check_stubs.py
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/derive_gate.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/derive_gate.py
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_arch_map.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_arch_map.py
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_cases.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_cases.py
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_okf.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_okf.py
-285fc910acac  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_release_checklist.py
-77a485ee3f5e  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/gen_release_checklist.py
-# WI-234: gen_trajectory.py gained _ref_meta — a read-only mirror of
-# agent_dispatch.reservation_meta / read_conflict (it reads reservation/conflict
-# ref-commit metadata to project pending owner actions). The mirror is deliberate
-# and self-documented in code; the pair went uncensused at WI-234's close because
-# dupes is G3-only and the branch is unpushed (OI-3), so CI never ran the gate —
-# the same "surfaced later" phenomenon as the WI-146/WI-188/WI-193 rows above.
-332bdb287be6  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/gen_trajectory.py
-
-# --- Intra-file duplication — GRANDFATHERED debris, not sanctioned -----------
-# Genuine intra-file copy-paste in the monolithic scripts. NOT F5 (F5 is a
-# cross-script standalone-copy rule). Recorded, not blessed: the decomposition
-# effort removes them — delete each line as its blocks are extracted. WI-080
-# (agent_loop) and WI-081 (trace) decomposed each script's main() and REDUCED
-# this debris, but both still carry other intra-file duplicated blocks (shared
-# helper patterns), so their self-dup lines stay live below until those blocks
-# are extracted too. gen_trajectory / gen_arch_map / gen_okf / check_trajectory
-# intra-file dupes remain follow-on targets.
-c8f5fddac0ef  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-a5b7a7b890c2  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-b8b532ba9de4  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-606bb9bf6b06  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-08e04d3ff9c1  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-96d2f74fe714  project-trajectory/scripts/agent_loop.py == project-trajectory/scripts/agent_loop.py
-# WI-186: bootstrap.py's two agent-launcher seed helpers share a ~40-token
-# read-replace-write block (surfaced at the v4 G3 close, dupes being G3-only) —
-# grandfathered debris, a follow-on decomposition target like the others.
-82419571a936  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
-7046137adff6  project-trajectory/scripts/bootstrap.py == project-trajectory/scripts/bootstrap.py
-b759dba980a3  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-f3fed4010802  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-f67449fb3a0d  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-feb3b65493fe  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-558577071d47  project-trajectory/scripts/check_trajectory.py == project-trajectory/scripts/check_trajectory.py
-3b8e5c6a5e38  project-trajectory/scripts/gen_arch_map.py == project-trajectory/scripts/gen_arch_map.py
+9205a1d4996b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
 9d770b2d948b  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_okf.py
+fb06318154af  project-trajectory/scripts/gen_okf.py == project-trajectory/scripts/gen_trajectory.py
+9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_artifacts.py
+9483675e297d  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/plan_coverage.py
+b0b9cc04d152  project-trajectory/scripts/gen_release_checklist.py == project-trajectory/scripts/trace.py
 30e7a736008d  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 fe21429656b1  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 29c06640159e  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
@@ -264,96 +239,16 @@ e7ebc7f29c86  project-trajectory/scripts/gen_trajectory.py == project-trajectory
 b240d68b0686  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 76cdecd0d810  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 aaa30617a30f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-3267fb34d85a  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
-618f8ff3bbb1  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+b860b104d408  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 bfd6e67c304f  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
 e5d5ce58f56b  project-trajectory/scripts/gen_trajectory.py == project-trajectory/scripts/gen_trajectory.py
+d2ff16e89265  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
+451248328e57  project-trajectory/scripts/plan_artifacts.py == project-trajectory/scripts/plan_coverage.py
+a986f553a391  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_coverage_step.py
+6b98b4c1e7c5  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/plan_round.py
+6b98b4c1e7c5  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
+d82b3ded7c24  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
+0f99fcaa1f96  project-trajectory/scripts/plan_briefs.py == project-trajectory/scripts/schedule.py
+2a3ae413b478  project-trajectory/scripts/plan_coverage.py == project-trajectory/scripts/plan_coverage_step.py
 21b0fbb40f6c  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
 7c1e98fa864e  project-trajectory/scripts/trace.py == project-trajectory/scripts/trace.py
-# WI-210: the serial-driver excision removed agent_loop.py's copy of the shared
-# argparse-main boilerplate, so the SAME grandfathered F5 block re-anchored its
-# duplicate group onto check.py — these pairs are that census entry re-homed,
-# not new duplication.
-# WI-215: the dual-plan fix shifted agent_loop line numbers, surfacing these
-# agent_loop==plan_* representative pairs for the pre-existing shared subprocess/
-# argparse boilerplate (the file-PAIR granularity limitation noted above).
-
-# --- WI-218 census refresh (2026-07-18): the agent_loop.py file split ------
-# The split re-keyed the sanctioned groups' REPRESENTATIVE pairs (agent_common
-# now sorts first, so the F5 _utf8_console / declared-reader / argparse groups
-# key off it), relocated the old intra-agent_loop duplication into
-# common<->loop / intra-dispatch pairs, and added the sibling-import guard
-# idiom shared by the split modules. 60 stale re-keyed line(s) deleted per the
-# MAINTENANCE note; no NEW copy-paste was introduced (verbatim moves only).
-533066636324  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_dispatch.py
-0e8a5f4a0f99  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_loop.py
-0e8a5f4a0f99  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_loop.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_route.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/bootstrap.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_doc_refs.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_docs.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_dupes.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_flows.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_perf.py
-daf99714501b  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_privacy.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_stubs.py
-d298066d8071  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_trajectory.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/check_vendored.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/derive_gate.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_arch_map.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_cases.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_okf.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_release_checklist.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/gen_skills_index.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_briefs.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_coverage.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_coverage_step.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_round.py
-81ac54182bfb  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/plan_runner.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/run_menu.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/schedule.py
-ae679b73acd2  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/score_reviews.py
-b87ed5851f33  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/trace.py
-a586f1ab06cb  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-aa9e9ae651e2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-aa9e9ae651e2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-5c87733175e3  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-ffa194248f7b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-6a1951447b34  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-0770f9a19fee  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-a21f84485bb7  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-3f3695502d27  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-4187cd1d8427  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-3f3695502d27  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-94647bfec394  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-da4c54fb0af0  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-da4c54fb0af0  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-1faf317fef11  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-79edd9e2eba7  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-5ba1c2915c22  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-5ba1c2915c22  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-4aafd502371e  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-4aafd502371e  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-d647f160d4ca  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-c250d59a13b2  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-05bd0eaa4e97  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-e47234cf5925  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-5db9c000fa5c  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-9fbc857a332b  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-c6b71579a078  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-ab9c2785757c  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_dispatch.py
-# WI-239: latest_trailer_evidence's two per-commit token folds (the `WI:`
-# completion set and the `Blocked-WI:`->BlockRef map) share the ~30-token
-# scan/guard shape but differ on purpose — the blocked loop index-pairs refs,
-# the built loop collects a set, and the within-commit completion-wins rule
-# depends on their ORDER. Censused, not merged: a forced fold would obscure
-# the asymmetry the supersede semantics rest on (surfaced at the batch G3
-# close — dupes is G3-only, the commit bar is the smoke tier).
-c5e35c61e3a6  project-trajectory/scripts/agent_common.py == project-trajectory/scripts/agent_common.py
-241bbbbf4bec  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
-67d6e1244939  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
-0bd14cd9c689  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py
-fe585fa411e9  project-trajectory/scripts/agent_dispatch.py == project-trajectory/scripts/agent_loop.py

@@ -124,10 +124,10 @@ def significant_tokens(path):
 
 
 def _windows(tokens, min_tokens):
-    """Hashable min_tokens-wide windows keyed to their starting line."""
+    """Hashable min_tokens-wide windows with their source line and token offset."""
     signature = [(kind, text) for kind, text, _line in tokens]
     for i in range(len(signature) - min_tokens + 1):
-        yield tuple(signature[i : i + min_tokens]), tokens[i][2]
+        yield tuple(signature[i : i + min_tokens]), tokens[i][2], i
 
 
 def find_duplicates(files, min_tokens):
@@ -140,37 +140,35 @@ def find_duplicates(files, min_tokens):
     to key census exemptions to a specific block, not the whole file pair, and
     to catch edits anywhere in the block, not just its prefix or extent (WI-276).
     """
-    seen = {}  # window -> (file, line) of first occurrence
-    # (file_a, file_b) -> {line_a - line_b offset -> [(line_a, line_b, window)]}:
-    # windows from one duplicated block share their line offset, so grouping
-    # by offset merges the sliding-window hits into a single finding. Each window
-    # rides along so _merged_signature can reconstruct the block's full token
-    # sequence for the fingerprint (not just its first window).
+    seen = {}  # window -> (file, line, token offset) of first occurrence
+    # (file_a, file_b) -> {line_a - line_b -> hits}: preserve the established
+    # line-offset grouping for the census. Each hit also carries its token
+    # offsets: line offsets find candidate regions, but only step-1 token
+    # offsets prove that two sliding windows are one overlapping block.
     pairs = {}
     for path in files:
         toks = significant_tokens(path)
         if toks is None:
             continue  # un-tokenizable file — warned, skipped (A1)
-        for window, line in _windows(toks, min_tokens):
+        for window, line, token_offset in _windows(toks, min_tokens):
             if window in seen:
-                first_file, first_line = seen[window]
-                if (first_file, first_line) == (path, line):
+                first_file, first_line, first_offset = seen[window]
+                if (first_file, first_offset) == (path, token_offset):
                     continue  # a repeated window inside one physical block
                 key = (first_file, path)
                 pairs.setdefault(key, {}).setdefault(first_line - line, []).append(
-                    (first_line, line, window)
+                    (first_line, line, first_offset, token_offset, window)
                 )
             else:
-                seen[window] = (path, line)
+                seen[window] = (path, line, token_offset)
     findings = []
     for (file_a, file_b), by_offset in pairs.items():
         for hits in by_offset.values():
-            # Two *distinct* duplicated regions that share a line offset must
-            # report separately, not merge into one inflated finding: split the
-            # group into contiguous runs where the window start-lines are
-            # adjacent (a gap > 1 line is a second block).
-            for run in _contiguous_runs(sorted(hits, key=lambda h: (h[0], h[1]))):
-                line_a, line_b, _first_window = run[0]
+            # Split a line-offset group into genuinely overlapping step-1 token
+            # runs. This keeps two separate expressions on the same line from
+            # sharing a merged signature/census fingerprint.
+            for run in _contiguous_runs(sorted(hits, key=lambda h: (h[2], h[3]))):
+                line_a, line_b, _offset_a, _offset_b, _first_window = run[0]
                 # Window count approximates extent: N overlapping windows span
                 # roughly min_tokens + N - 1 tokens.
                 length = min_tokens + len(run) - 1
@@ -189,17 +187,20 @@ def _merged_signature(run):
     Fingerprinting THIS — every token, not just run[0]'s window — makes the
     census key change on any interior or trailing edit, not only a prefix or
     extent edit (WI-276)."""
-    first_window = run[0][2]
-    return tuple(first_window) + tuple(hit[2][-1] for hit in run[1:])
+    first_window = run[0][4]
+    return tuple(first_window) + tuple(hit[4][-1] for hit in run[1:])
 
 
 def _contiguous_runs(hits):
-    """Split hits (sorted (line_a, line_b, window) tuples of one offset group)
-    where the line_a values jump by more than 1 — the boundary between two
-    separate duplicated blocks that happen to share a line offset."""
+    """Split one token-offset group at every non-overlapping window boundary.
+
+    `hits` holds (line_a, line_b, token_a, token_b, window) tuples sorted by
+    token offsets. Consecutive sliding windows overlap only when BOTH starts
+    advance exactly one token; line adjacency is neither required nor enough.
+    """
     run = []
     for pair in hits:
-        if run and pair[0] - run[-1][0] > 1:
+        if run and (pair[2] != run[-1][2] + 1 or pair[3] != run[-1][3] + 1):
             yield run
             run = []
         run.append(pair)
