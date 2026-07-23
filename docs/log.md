@@ -11652,3 +11652,7 @@ CLIs all present, run-state RUNNING, gate-policy autonomous, dashboard-shots
 playwright installed (the WI-272/273 render critiques need it). One registry
 cell changed (WI-281 `Priority` blank → 1) + the status.md order prose + the
 spec note. Nothing pushed (push-policy human).
+
+## 2026-07-23 02:41 — integrated train 1-g3-WI-275-dfea (WI-275)
+
+Head f9319f0 composed onto a4191b2 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-275 -> done.
