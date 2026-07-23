@@ -7,8 +7,9 @@ that turns a CmdTemplate + model + prompt into one running CLI session and
 returns its output:
 
   - `split_cmd`/`build_argv` — template -> argv, deciding prompt delivery:
-    a `{prompt}` placeholder rides the command line; NO `{prompt}` routes the
-    prompt to the child's STDIN (WI-216), immune to the OS command-line caps.
+    a `{prompt}` placeholder rides the command line except through a Windows
+    batch shim (refused because cmd.exe reparses it); NO `{prompt}` routes the
+    prompt to the child's STDIN (WI-216), immune to caps and batch-shell parsing.
   - `run_session` — one fresh headless driver session (stdin closed or fed +
     closed — never an interactive wait, SN-016), with a reader thread so the
     child can't block on a full pipe, a per-session timeout, and codex
@@ -48,6 +49,47 @@ def split_cmd(template):
     return list(lex)
 
 
+def _windows_batch_executable(executable, env=None, platform=None):
+    """Return the resolved Windows batch path for ``executable``, else ``""``.
+
+    Windows may route ``.cmd``/``.bat`` files through ``cmd.exe`` even when
+    ``subprocess`` is called with ``shell=False``. Keep that platform exception
+    in one helper so preflight and the final launch boundary make the same
+    decision. ``platform`` is injectable for cross-platform tests.
+    """
+    if (os.name if platform is None else platform) != "nt" or not executable:
+        return ""
+    if executable.lower().endswith((".cmd", ".bat")):
+        return executable
+    search_env = os.environ if env is None else env
+    resolved = shutil.which(executable, path=search_env.get("PATH"))
+    if resolved and resolved.lower().endswith((".cmd", ".bat")):
+        return resolved
+    return ""
+
+
+def _batch_prompt_error(argv, stdin_input, env=None, platform=None):
+    """Explain an unsafe prompt-in-argv Windows batch launch, or return ``""``."""
+    if stdin_input is not None or not argv:
+        return ""
+    batch = _windows_batch_executable(argv[0], env=env, platform=platform)
+    if not batch:
+        return ""
+    return (
+        "unsafe prompt delivery refused: {!r} is a Windows batch shim, so "
+        "cmd.exe can reparse a {{prompt}} argument even with shell=False; omit "
+        "{{prompt}} and use the CLI's stdin prompt path, or configure a native "
+        "executable"
+    ).format(batch)
+
+
+def _validate_prompt_transport(argv, stdin_input, env=None, platform=None):
+    """Raise ``ValueError`` when prompt-in-argv would cross a batch shell."""
+    error = _batch_prompt_error(argv, stdin_input, env=env, platform=platform)
+    if error:
+        raise ValueError(error)
+
+
 def build_argv(template, model, prompt):
     """Build the session argv from a CmdTemplate and decide how the prompt is
     delivered. Returns `(argv, stdin_input)`:
@@ -62,15 +104,19 @@ def build_argv(template, model, prompt):
       (the failure gilbert hit on `codex`) — while the CLI reads the prompt from
       stdin (`codex exec` with no PROMPT arg reads stdin; run_session pipes it).
 
-    Substitution is per-token and never through a shell, so a multi-line prompt
-    needs no quoting."""
+    Substitution is per-token. On Windows a batch shim is the OS exception:
+    ``.cmd``/``.bat`` arguments can be reparsed by ``cmd.exe`` even with
+    ``shell=False``, so prompt-in-argv is refused for those executables; use
+    stdin prompt delivery or a native executable instead."""
     argv = []
     saw_prompt = False
     for tok in split_cmd(template):
         if "{prompt}" in tok:
             saw_prompt = True
         argv.append(tok.replace("{model}", model).replace("{prompt}", prompt))
-    return (argv, None) if saw_prompt else (argv, prompt)
+    stdin_input = None if saw_prompt else prompt
+    _validate_prompt_transport(argv, stdin_input)
+    return argv, stdin_input
 
 
 def parse_json_result(output):
@@ -310,6 +356,7 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
     argv, codex_lastmsg = _codex_lastmsg_setup(argv)
 
     try:
+        _validate_prompt_transport(argv, stdin_input, env=env)
         proc = subprocess.Popen(
             argv,
             cwd=str(root),
@@ -327,7 +374,7 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
             # 2026-07-21 H-2). Windows: taskkill /T walks the tree instead.
             start_new_session=(os.name != "nt"),
         )
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         _codex_lastmsg_read(codex_lastmsg)  # cleanup the (unused) last-message file
         return -1, "coordinator: session error: {}".format(exc), False
     # A reader thread pumps the pipe so the child can never block on a full

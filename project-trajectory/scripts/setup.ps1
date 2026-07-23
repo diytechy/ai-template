@@ -5,19 +5,26 @@ $ErrorActionPreference = "Stop"
 # Push/Pop so running the script doesn't leave the caller's shell cd'd here.
 Push-Location (Join-Path $PSScriptRoot "..")
 try {
-    # Find a Python launcher. Probe by *running* each candidate, not just
+    # Find a supported Python launcher. Probe by *running* each candidate, not just
     # finding it: on Windows, Get-Command resolves the Microsoft Store
     # app-execution alias for `python`, which sits on PATH but exits nonzero
     # when Python isn't actually installed — the same run-probe the shipped
     # hooks/pre-commit uses (try/catch keeps a noisy stderr from terminating
     # under ErrorActionPreference=Stop on Windows PowerShell 5.1).
+    function HavePython311($cand) {
+        if (-not (Get-Command $cand -ErrorAction SilentlyContinue)) { return $false }
+        try {
+            & $cand -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" `
+                2>$null | Out-Null
+        }
+        catch { return $false }
+        return ($LASTEXITCODE -eq 0)
+    }
     $py = $null
     foreach ($cand in @("py", "python", "python3")) {
-        if (-not (Get-Command $cand -ErrorAction SilentlyContinue)) { continue }
-        try { & $cand -c "import sys" 2>$null | Out-Null } catch { continue }
-        if ($LASTEXITCODE -eq 0) { $py = $cand; break }
+        if (HavePython311 $cand) { $py = $cand; break }
     }
-    if (-not $py) { Write-Error "Python 3 not found on PATH."; exit 1 }
+    if (-not $py) { Write-Error "Python 3.11+ not found on PATH."; exit 1 }
     Write-Host "Using $(& $py --version)"
 
     # Create a local virtualenv so installs don't touch the system Python.
@@ -26,6 +33,10 @@ try {
         & $py -m venv .venv
     }
     $python = Join-Path ".venv" "Scripts\python.exe"
+    if (-not (HavePython311 $python)) {
+        Write-Error "Existing .\.venv does not use Python 3.11+; move or remove it, then rerun setup."
+        exit 1
+    }
 
     & $python -m pip install --upgrade pip
     # --- Edit below for your stack --------------------------------------------

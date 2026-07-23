@@ -1063,8 +1063,9 @@ def preflight(root, template, args):
             "    claude -p --model {model} --output-format json "
             "--dangerously-skip-permissions\n"
             "  (no {prompt} = the prompt is piped to the CLI's stdin — immune "
-            "to the OS command-line caps; keep {prompt} only for a CLI with "
-            "no stdin prompt path).\n"
+            "to OS command-line caps and Windows batch-shim shell re-parsing; "
+            "a .cmd/.bat shim with {prompt} is refused, so use stdin or a "
+            "native executable).\n"
             "  The permission-bypass flag is YOUR consent to unattended "
             "edits; leave it out to be prompted."
         )

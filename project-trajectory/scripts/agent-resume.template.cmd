@@ -17,8 +17,9 @@ REM --- EDIT FOR YOUR PROJECT --------------------------------------------------
 REM The agent command template; {model} and {prompt} are substituted per
 REM session. NO {prompt} = the prompt is piped to the CLI's STDIN - immune to
 REM the OS command-line caps (Windows: 8191 chars under cmd.exe .CMD shims,
-REM ~32767 via CreateProcess); keep {prompt} only for a CLI with no stdin
-REM prompt path. Example:
+REM ~32767 via CreateProcess). A Windows .cmd/.bat shim with {prompt} is refused
+REM because cmd.exe can reparse prompt metacharacters even with shell=False; use
+REM stdin or a native executable. Example:
 REM   set "AGENT_CMD=claude -p --model {model} --output-format json --dangerously-skip-permissions"
 REM Keep agent-resume.sh's slots in sync - it is the POSIX twin;
 REM agent-resume.command delegates to it.

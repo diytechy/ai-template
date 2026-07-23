@@ -15,7 +15,8 @@ When this test fails:
   its entry downward — or delete it — in the same commit, so the ratchet
   only ever tightens by default.
 
-The decomposition workstream paying this debt down is WI-226.
+WI-226 completed the first dispatcher split; the remaining baseline is active
+architectural debt and any further decomposition needs its own scoped WI.
 """
 
 import os
@@ -53,7 +54,7 @@ BASELINE = {
     # WI-230 reviewed bump 17 -> 20: the publish-under-disjoint-dirt rule adds
     # the dirty-vs-diff intersection gate plus the two recovery-branch sync
     # outcomes (the heavy lifting lives in the sub-10 helpers _publish_dirt /
-    # _sync_worktree). WI-226's dispatcher decomposition absorbs this debt.
+    # _sync_worktree). This remains follow-up dispatcher-decomposition debt.
     ("agent_dispatch.py", "publish_integration"): 20,
     ("agent_loop.py", "critique_brief"): 11,
     ("agent_loop.py", "main"): 27,
@@ -101,8 +102,8 @@ BASELINE = {
     # WI-259 reviewed bump 50 -> 53: the verification-basis split went binary ->
     # three-way (mechanized/demonstrated/attested, a new elif branch) and
     # --require-verified was widened to every ratified SR of any method, naming
-    # the real method in the finding. The debt still belongs to WI-226's
-    # trace.py decomposition; the added branches are the honest audit surface.
+    # the real method in the finding. Trace decomposition remains a follow-up;
+    # the added branches are the honest audit surface.
     ("trace.py", "analyze"): 53,
     ("trace.py", "mermaid_graph"): 17,
     # 28 -> 27: the L-3 ratify bucketing removed a nested scan (re-stamped

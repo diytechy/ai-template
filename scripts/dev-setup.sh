@@ -45,6 +45,11 @@ real() {
   [ "$(command -v "$1")" = "/usr/bin/$1" ] || return 0
   xcode-select -p >/dev/null 2>&1
 }
+python_311() {
+  real "$1" &&
+    "$1" -c 'import sys; raise SystemExit(sys.version_info < (3, 11))' \
+      >/dev/null 2>&1
+}
 report() { # <label> <present:0/1> <hint>
   if [ "$2" -eq 1 ]; then echo "  [ok]      $1"; else echo "  [missing] $1  — $3"; fi
 }
@@ -72,8 +77,11 @@ offer_cli() { # <cmd> <npm package> <post-install sign-in hint>  (--install help
 
 # Prefer the project venv --install creates, so the report reflects what the
 # harness will actually import; fall back to the ambient interpreter.
-if [ -x .venv/bin/python ]; then PY=.venv/bin/python
-elif real python3; then PY=python3; elif real python; then PY=python; else PY=""; fi
+if [ -x .venv/bin/python ] && python_311 .venv/bin/python; then PY=.venv/bin/python
+elif python_311 python3; then PY=python3
+elif python_311 python; then PY=python
+else PY=""
+fi
 echo "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
 echo
 report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "install Python 3.11+ (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
@@ -135,7 +143,16 @@ if [ "$MODE" = "check" ]; then
 fi
 
 # --- --install: consent-first venv + dev tools -------------------------------
-[ -n "$PY" ] || { echo "Python 3 not found on PATH; install it first." >&2; exit 1; }
+[ -n "$PY" ] || {
+  echo "Python 3.11+ not found on PATH; install a supported interpreter first." >&2
+  exit 1
+}
+if [ -d .venv ]; then
+  if [ ! -x .venv/bin/python ] || ! python_311 .venv/bin/python; then
+    echo "Existing ./.venv is incomplete or uses Python below 3.11; move or remove that environment, then rerun --install." >&2
+    exit 1
+  fi
+fi
 
 # Wire the agent-neutral pre-commit floor (the process-floor rung setup.sh wires
 # downstream; this meta-repo folds it into dev-setup — IMPROVEMENT_PLAN WI-1.42).
@@ -150,7 +167,7 @@ fi
 # this whole section — no prompt AND no unconditional `pip install --upgrade
 # pip`. (The floor wiring above still ran: local git config, idempotent, not
 # an install.) The agent-CLI offers below still run either way (WI-112).
-if [ -x .venv/bin/python ] && .venv/bin/python -c 'import importlib.util,sys; sys.exit(0 if all(importlib.util.find_spec(m) for m in ("ruff","pytest","pytest_cov","xdist")) else 1)' 2>/dev/null; then
+if [ -x .venv/bin/python ] && .venv/bin/python -c 'import importlib.util,sys; sys.exit(0 if sys.version_info >= (3,11) and all(importlib.util.find_spec(m) for m in ("ruff","pytest","pytest_cov","xdist")) else 1)' 2>/dev/null; then
   echo "All dev tools already present in ./.venv — nothing to install."
 else
   echo

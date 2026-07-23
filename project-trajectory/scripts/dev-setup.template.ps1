@@ -70,7 +70,10 @@ function Have($cmd) { [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
 # terminating under ErrorActionPreference=Stop on Windows PowerShell 5.1).
 function HavePython($cand) {
     if (-not (Get-Command $cand -ErrorAction SilentlyContinue)) { return $false }
-    try { & $cand -c "import sys" 2>$null | Out-Null } catch { return $false }
+    try {
+        & $cand -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" `
+            2>$null | Out-Null
+    } catch { return $false }
     return ($LASTEXITCODE -eq 0)
 }
 # Interactive only with a real console and outside CI, so -Full never blocks

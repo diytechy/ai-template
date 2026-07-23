@@ -84,6 +84,11 @@ real() {
   [ "$(command -v "$1")" = "/usr/bin/$1" ] || return 0
   xcode-select -p >/dev/null 2>&1
 }
+python_311() {
+  real "$1" &&
+    "$1" -c 'import sys; raise SystemExit(sys.version_info < (3, 11))' \
+      >/dev/null 2>&1
+}
 say()  { printf '%s\n' "$*"; }
 # Indirect lookup of a per-role variable (<role>_CMDS / <role>_INSTALL); the
 # `:-` default keeps `set -u` happy when a slot is left unset.
@@ -147,7 +152,7 @@ say "Developer workstation (process.md §7). Product deps are scripts/setup.sh."
 say
 
 # --- Detect + report (every tier does this first) ----------------------------
-if real python3 || real python; then RUNTIME=1; else RUNTIME=0; fi
+if python_311 python3 || python_311 python; then RUNTIME=1; else RUNTIME=0; fi
 report "runtime (python3)"          "$RUNTIME"                        "install a Python 3.11+ runtime (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
 report "git"                        "$(real git && echo 1 || echo 0)" "install git — needed to make reviewable changes (macOS: xcode-select --install)"
 report "offline Markdown+Mermaid renderer" \

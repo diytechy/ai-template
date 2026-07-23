@@ -17,8 +17,9 @@
 # The agent command template; {model} and {prompt} are substituted per
 # session. NO {prompt} = the prompt is piped to the CLI's STDIN — immune to
 # the OS command-line caps (Windows: 8191 chars under cmd.exe .CMD shims,
-# ~32767 via CreateProcess); keep {prompt} only for a CLI with no stdin
-# prompt path. Example:
+# ~32767 via CreateProcess). A Windows .cmd/.bat shim with {prompt} is refused
+# because cmd.exe can reparse prompt metacharacters even with shell=False; use
+# stdin or a native executable. Example:
 #   AGENT_CMD="claude -p --model {model} --output-format json --dangerously-skip-permissions"
 # Keep agent-resume.cmd's slots in sync — it is the Windows twin.
 AGENT_CMD=""

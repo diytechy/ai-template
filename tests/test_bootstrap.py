@@ -552,6 +552,19 @@ def test_setup_scripts_advise_on_privacy_not_pin_identity():
         assert "git config --global" not in text, name + " must stay repo-local"
 
 
+def test_setup_scripts_enforce_the_python_311_floor():
+    # The declared runtime floor must govern the scripts that create/reuse the
+    # project venv, not merely documentation and CI.
+    for name in ("setup.sh", "setup.ps1"):
+        text = (KIT / "scripts" / name).read_text(encoding="utf-8")
+        assert "sys.version_info >= (3, 11)" in text, (
+            name + " does not enforce the Python 3.11 floor"
+        )
+        assert "Existing ./.venv" in text or "Existing .\\.venv" in text, (
+            name + " does not refuse an unsupported existing venv"
+        )
+
+
 # --- Agent selection & the skills layer (WI-1.9) -----------------------------
 
 

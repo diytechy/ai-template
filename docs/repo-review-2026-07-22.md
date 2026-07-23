@@ -41,12 +41,87 @@ Ground truth at review time:
 
 ## 1. Unfixed items and why
 
-_To be filled after the remediation pass. Findings below describe the
-repository as found at `6a752b4`._
+The as-found report was committed before remediation as `4db2ba3`. The
+findings below intentionally continue to describe the repository at `6a752b4`;
+this section records what changed afterward and what remains.
 
-**Fixed in this pass:** _(to be filled)_
+### Fixed in this pass
 
-**Deferred, with reasons:** _(to be filled)_
+- **H-1 — fixed.** `agent_session.py` now rejects prompt-in-argv when the
+  executable is, or resolves under the launch environment to, a Windows
+  `.cmd`/`.bat` shim. The guard runs during template construction and again at
+  the final process boundary. Stdin delivery remains allowed. Explicit-shim,
+  environment-resolved-shim, and safe-stdin regressions were added, and the
+  launcher/template/interface documentation no longer makes the false
+  “never through a shell” claim.
+- **M-1 — fixed in repository code and templates.** Both developer-workstation
+  scripts and both one-shot project setup scripts now require Python 3.11+.
+  Install modes refuse an existing older `.venv` instead of mutating it.
+  POSIX behavior and the PowerShell contract have regression coverage. The
+  existing local `.venv` is Python 3.9.6 and was deliberately not destroyed;
+  it remains a workstation cleanup item, not a committed repository defect.
+- **M-6 — fixed.** The live status/stack/session guidance now reports the
+  measured ~3.3-minute smoke and ~4.2-minute full-suite bars, gives the exact
+  documentation command, contains a genuinely forward-looking next action,
+  documents all six WI states, and no longer describes completed WI-226 as the
+  current owner of the complexity debt.
+- **Dashboard defects were registered, not silently buried.** WI-272 records
+  M-2 (status fidelity) and WI-273 records M-3 (semantic tabs), both as
+  `deferred` rows with live report anchors.
+- **Derived artifacts were regenerated.** The IF-041/IF-064 OKF pages and
+  `PROJECT_STATE.html` now match the edited registries.
+- **Budget-watched prose remained within its limits.** Before/after byte counts
+  were: `AGENTS.template.md` 9,975 → 9,975; `PROCESS.md` 60,420 → 60,420;
+  `PROCESS_OPTIONS.md` 161,007 → 160,980 (−27). No baseline restamp was needed.
+
+### Deferred, with reasons
+
+- **H-2 — core decomposition:** not safe as an opportunistic review cleanup.
+  The long coordinators combine state transitions and external effects; a
+  confident split requires dedicated WIs, behavioral characterization, typed
+  state boundaries, and new size/complexity baselines. Moving the same long
+  functions into more files would be cosmetic.
+- **H-3 — license:** owner decision OI-4/WI-097. Choosing MIT, Apache-2.0,
+  proprietary, or another grant changes legal rights and cannot be inferred by
+  an engineering agent.
+- **M-2 / WI-272 and M-3 / WI-273 — dashboard status fidelity and semantic
+  tabs:** both are well-specified, but this repository requires a fresh,
+  independent, family-heterogeneous render critique after dashboard changes.
+  No independent reviewer was authorized/available in this session, so
+  changing the render would knowingly violate the repository's own acceptance
+  process.
+- **M-4 — module coverage floors:** the weakest modules are identified, but
+  choosing per-module thresholds without a focused coverage campaign would
+  either bless weak current values or create arbitrary red gates.
+- **M-5 — duplicate census redesign:** fingerprint/count baselines require a
+  checker-format migration and careful treatment of the intentional standalone
+  script duplication. A quick allowlist rewrite risks both false confidence and
+  noisy false positives.
+- **M-7 — branch integration and CI trigger policy:** opening/merging a PR and
+  changing which remote branches consume CI are owner/repository-governance
+  decisions. Rewriting the published 845-commit history would be destructive
+  and is explicitly not recommended.
+- **L-1 / L-2 — test and dashboard modularization:** should follow H-2's stable
+  production seams; fragmenting tests or templates first would duplicate
+  fixtures and move complexity without reducing it.
+- **L-3 — historical Git metadata:** a history rewrite would be destructive and
+  disproportionate. The current commit convention is already materially
+  better.
+- **L-4 — internationalization:** English-only behavior fits the currently
+  stated product. Externalizing strings should start only if the owner adopts
+  localization as a requirement/non-goal decision.
+
+**Closeout validation:** pre-final-test smoke **1,082 passed, 2 skipped in
+200.24 s** and full suite **1,372 passed, 2 skipped in 247.47 s**; G3 harness
+**PASS** across all 16 configured steps, including **91.52% coverage** with its
+instrumented run at **1,373 passed, 1 skipped in 429.42 s**. Two pure detector
+regressions were then added; the final suite recorded **1,374 passed, 2 skipped
+in 249.72 s**. Ruff format/lint, `compileall`,
+strict trace/trajectory, generated-artifact freshness, privacy, duplicate
+detection, skills sync, and documentation navigability all passed. The G3 run
+used the existing unsupported local Python 3.9.6 environment noted above; the
+repository's CI matrix remains the independent Python 3.11+/cross-platform
+verification surface.
 
 ---
 
@@ -198,8 +273,9 @@ None found.
 
 - **Location:** `scripts/dev-setup.sh:73-84`,
   `scripts/dev-setup.ps1:37-60`,
-  `project-trajectory/scripts/dev-setup.template.sh:149-151`, and the
-  PowerShell template equivalent.
+  `project-trajectory/scripts/dev-setup.template.sh:149-151`,
+  `project-trajectory/scripts/setup.sh:9-27`, and the PowerShell template
+  equivalents.
 - **Relevant code:**
 
   ```sh
@@ -219,9 +295,10 @@ None found.
   hiding 3.11-only failures until CI. The setup command explicitly promises to
   provision the supported environment and currently does not.
 - **Suggested improvement:** Probe `sys.version_info >= (3, 11)` for every
-  venv/ambient candidate, report older interpreters as missing/unsupported,
-  refuse `--install` through an old interpreter, and regression-test both
-  sides of the boundary in the shell and PowerShell templates.
+  venv/ambient candidate in developer setup and project setup, report older
+  interpreters as missing/unsupported, refuse install through an old
+  interpreter, and regression-test both sides of the boundary in the shell
+  and PowerShell templates.
 
 #### M-2 · The dashboard silently rewrites `deferred` and `blocked` work items as `queued`
 

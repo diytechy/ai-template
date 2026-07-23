@@ -17,9 +17,9 @@
 # --- EDIT FOR YOUR PROJECT ----------------------------------------------------
 # The agent command template; {model} and {prompt} are substituted per
 # session. NO {prompt} = the prompt is piped to the CLI's STDIN (WI-216) —
-# immune to the OS command-line caps (a brief-sized prompt-in-argv dies at the
-# Windows 8191/32767-char limits); keep {prompt} only for a CLI with no stdin
-# prompt path.
+# immune to OS command-line caps and Windows batch-shell re-parsing. A .cmd/.bat
+# shim with {prompt} is refused even with shell=False; use stdin or a native
+# executable.
 # Keep agent-resume.cmd's slots in sync — it is the Windows twin.
 # stream-json + --verbose (WI-125): the CLI emits an event line per turn, so
 # the coordinator console shows live progress instead of 30 silent minutes;

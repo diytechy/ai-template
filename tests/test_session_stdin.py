@@ -1,17 +1,19 @@
 """Prompt-delivery path (WI-216, SR-026/LLR-026).
 
 A CmdTemplate with a `{prompt}` placeholder rides the command line (`claude -p
-{prompt}`); a template WITHOUT `{prompt}` delivers the prompt on STDIN, so the
-command line stays short — a Windows npm `.CMD` shim runs under cmd.exe whose
-8191-char cap silently kills a brief-sized prompt-in-argv (the failure gilbert hit
-on `codex`, whose PROMPT is read from stdin when omitted). Against SN-016 (an
-unattended run never wedges on stdin): the fixed prompt is written then stdin is
-closed, so the child reads it and sees EOF — never an interactive wait.
+{prompt}`) except through a Windows `.cmd`/`.bat` shim, which is refused because
+cmd.exe can reparse prompt metacharacters even with `shell=False`; a template
+WITHOUT `{prompt}` delivers the prompt on STDIN, so the command line stays short
+and avoids that shell boundary. Against SN-016 (an unattended run never wedges
+on stdin): the fixed prompt is written then stdin is closed, so the child reads
+it and sees EOF — never an interactive wait.
 """
 
 import os
 import sys
 import types
+
+import pytest
 
 from conftest import load_script
 
@@ -41,6 +43,78 @@ def test_build_argv_no_placeholder_routes_to_stdin():
     )
     assert "THE-PROMPT" not in " ".join(argv)  # never on the command line
     assert stdin_input == "THE-PROMPT"
+
+
+def test_windows_batch_detector_catches_explicit_shim():
+    detect = al.agent_session._windows_batch_executable
+    path = r"C:\tools\agent.CMD"
+    assert detect(path, platform="nt") == path
+    assert detect(path, platform="posix") == ""
+    assert detect(r"C:\tools\agent.exe", platform="nt") == ""
+
+
+def test_windows_batch_detector_uses_launch_environment_path(monkeypatch):
+    seen = {}
+
+    def fake_which(executable, path=None):
+        seen["call"] = executable, path
+        return r"C:\selected-tools\agent.bat"
+
+    monkeypatch.setattr(al.agent_session.shutil, "which", fake_which)
+    resolved = al.agent_session._windows_batch_executable(
+        "agent",
+        env={"PATH": r"C:\selected-tools"},
+        platform="nt",
+    )
+    assert resolved == r"C:\selected-tools\agent.bat"
+    assert seen["call"] == ("agent", r"C:\selected-tools")
+
+
+def test_build_argv_refuses_prompt_placeholder_for_windows_batch_shim(monkeypatch):
+    monkeypatch.setattr(
+        al.agent_session,
+        "_windows_batch_executable",
+        lambda executable, env=None, platform=None: r"C:\tools\gemini.cmd",
+    )
+    with pytest.raises(ValueError, match=r"batch shim.*cmd\.exe"):
+        al.build_argv("gemini -p {prompt}", "m5", "repo text & whoami")
+
+
+def test_run_session_refuses_env_resolved_batch_before_spawn(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        al.agent_session,
+        "_windows_batch_executable",
+        lambda executable, env=None, platform=None: r"C:\env-tools\agent.bat",
+    )
+    code, output, timed_out = al.run_session(
+        ["agent", "-p", "repo text & whoami"],
+        tmp_path,
+        30,
+        env={"PATH": r"C:\env-tools"},
+    )
+    assert code == -1 and not timed_out
+    assert "unsafe prompt delivery refused" in output
+    assert "stdin prompt path" in output
+
+
+def test_windows_batch_shim_is_allowed_when_prompt_uses_stdin(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        al.agent_session,
+        "_windows_batch_executable",
+        lambda executable, env=None, platform=None: r"C:\tools\agent.cmd",
+    )
+    # The safety guard must not reject the supported transport. Use a missing
+    # executable so the platform-independent test stops at the ordinary spawn
+    # sentinel after proving it passed the batch-prompt guard.
+    code, output, timed_out = al.run_session(
+        ["definitely-missing-agent-cli"],
+        tmp_path,
+        30,
+        stdin_input="prompt-via-stdin",
+    )
+    assert code == -1 and not timed_out
+    assert "unsafe prompt delivery refused" not in output
+    assert "session error" in output
 
 
 def test_run_session_delivers_stdin_input(tmp_path):

@@ -5,22 +5,29 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# Find a Python 3 interpreter. Probe by running it, not just finding it: on
+# Find a supported Python interpreter. Probe by running it, not just finding it: on
 # Windows (Git Bash), `python3` can resolve to the Microsoft Store alias, which
 # exists on PATH but doesn't run.
+python_311() {
+  "$1" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' \
+    >/dev/null 2>&1
+}
 PY=""
 for cand in python3 python; do
-  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
+  if command -v "$cand" >/dev/null 2>&1 && python_311 "$cand"; then
     PY="$cand"; break
   fi
 done
-[ -n "$PY" ] || { echo "ERROR: Python 3 not found on PATH." >&2; exit 1; }
+[ -n "$PY" ] || { echo "ERROR: Python 3.11+ not found on PATH." >&2; exit 1; }
 echo "Using $($PY --version)"
 
 # Create/activate a local virtualenv so installs don't touch the system Python.
 if [ ! -d .venv ]; then
   echo "Creating .venv ..."
   "$PY" -m venv .venv
+elif [ ! -x .venv/bin/python ] || ! python_311 .venv/bin/python; then
+  echo "ERROR: Existing ./.venv does not use Python 3.11+; move or remove it, then rerun setup." >&2
+  exit 1
 fi
 # shellcheck disable=SC1091
 . .venv/bin/activate

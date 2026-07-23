@@ -158,6 +158,41 @@ def test_devsetup_check_runs_and_reports(scaffold):
     assert "component(s) missing" in proc.stdout  # the report ran
 
 
+def test_devsetup_runtime_probe_enforces_python_311(scaffold, tmp_path):
+    # The declared floor must be executable, not just a label. Put fake
+    # python/python3 candidates first on PATH so the result is independent of
+    # the interpreter installed on the test host.
+    sh = _sh()
+    if not sh or os.name != "posix":
+        import pytest
+
+        pytest.skip("needs a POSIX shell")
+    fakebin = tmp_path / "fakebin"
+    fakebin.mkdir()
+    for name in ("python", "python3"):
+        fake = fakebin / name
+        fake.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        fake.chmod(0o755)
+    env = os.environ.copy()
+    env["PATH"] = str(fakebin) + os.pathsep + env.get("PATH", "")
+    proc = subprocess.run(
+        [sh, "scripts/dev-setup.sh", "--check"],
+        cwd=str(scaffold),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        env=env,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    runtime_line = next(
+        line for line in proc.stdout.splitlines() if "runtime (python3)" in line
+    )
+    assert "[missing]" in runtime_line
+    for rel in DEVSETUP:
+        text = (scaffold / rel).read_text(encoding="utf-8")
+        assert "sys.version_info" in text, rel + " does not enforce the 3.11 floor"
+
+
 def test_onboarder_sh_is_syntactically_valid(scaffold):
     # `sh -n` parses without executing — catches a broken onboarder before a
     # contributor ever runs it. (The .command/.cmd variants are per-OS manual.)

@@ -17,9 +17,9 @@ REM by keeping the slot filled, declaring docs/gate-policy, and running this.
 REM --- EDIT FOR YOUR PROJECT ---------------------------------------------------
 REM The agent command template; {model} and {prompt} are substituted per
 REM session. NO {prompt} = the prompt is piped to the CLI's STDIN (WI-216) -
-REM immune to the OS command-line caps (a brief-sized prompt-in-argv dies at
-REM the Windows 8191/32767-char limits); keep {prompt} only for a CLI with no
-REM stdin prompt path.
+REM immune to OS command-line caps and Windows batch-shell re-parsing. A .cmd/.bat
+REM shim with {prompt} is refused even with shell=False; use stdin or a native
+REM executable.
 REM Keep agent-resume.sh's slots in sync - it is the POSIX twin;
 REM agent-resume.command delegates to it.
 REM stream-json + --verbose (WI-125): the CLI emits an event line per turn, so

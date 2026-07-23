@@ -36,7 +36,10 @@ try {
     # Windows PowerShell 5.1). Mirrors dev-setup.template.ps1.
     function HavePython($cand) {
         if (-not (Get-Command $cand -ErrorAction SilentlyContinue)) { return $false }
-        try { & $cand -c "import sys" 2>$null | Out-Null } catch { return $false }
+        try {
+            & $cand -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" `
+                2>$null | Out-Null
+        } catch { return $false }
         return ($LASTEXITCODE -eq 0)
     }
     function Report($label, $present, $hint) {
@@ -47,7 +50,9 @@ try {
     # Prefer the project venv -Install creates, so the report reflects what the
     # harness will actually import; fall back to the ambient interpreter.
     $py = $null
-    if (Test-Path ".venv\Scripts\python.exe") { $py = ".venv\Scripts\python.exe" }
+    $venvPython = ".venv\Scripts\python.exe"
+    $venvSupported = (Test-Path $venvPython) -and (HavePython $venvPython)
+    if ($venvSupported) { $py = $venvPython }
     else { foreach ($cand in @("py", "python", "python3")) { if (HavePython $cand) { $py = $cand; break } } }
     function HasModule($mod) {
         if (-not $py) { return $false }
@@ -123,7 +128,14 @@ try {
     }
 
     # --- -Install: consent-first venv + dev tools ----------------------------
-    if (-not $py) { Write-Error "Python 3 not found on PATH; install it first."; exit 1 }
+    if (-not $py) {
+        Write-Error "Python 3.11+ not found on PATH; install a supported interpreter first."
+        exit 1
+    }
+    if ((Test-Path ".venv") -and -not $venvSupported) {
+        Write-Error "Existing .\.venv uses Python below 3.11; move or remove that environment, then rerun -Install."
+        exit 1
+    }
 
     # Wire the agent-neutral pre-commit floor (setup.ps1 wires it downstream; this
     # meta-repo folds it into dev-setup — IMPROVEMENT_PLAN WI-1.42). Independent of
@@ -140,7 +152,7 @@ try {
     # ($py already prefers the venv interpreter when .venv exists, so HasModule
     # probes the right environment.) The agent-CLI offers below still run
     # either way (WI-112).
-    if ((Test-Path ".venv") -and (HasModule "ruff") -and (HasModule "pytest") `
+    if ($venvSupported -and (HasModule "ruff") -and (HasModule "pytest") `
             -and (HasModule "pytest_cov") -and (HasModule "xdist")) {
         Write-Host "All dev tools already present in .\.venv — nothing to install."
     } else {
