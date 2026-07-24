@@ -11885,3 +11885,75 @@ SR-refs, title, blockref) over an edge-case fixture (−000 skip, malformed id,
 duplicate id, hard+soft preds, the six statuses). The census header now
 documents the guard. Closes the one real two-parser risk (silent drift) without
 a shared module.
+
+## 2026-07-24 — perceptual gate GREEN: three fresh non-Anthropic critiques (115/116/117)
+
+The `trajectory` step's last remaining error — the fail-closed
+`perceptual-stale SR-052;SR-053;SR-054` (WI-243) — is **cleared**, and
+`check.py` now reports **RESULT: PASS** with every step green at G3 (first fully
+green gate this branch; `tests+coverage` 796.8s).
+
+**Why it needed a dispatch, not a session.** The staleness rule wants perceptual
+evidence that post-dates the render surface: `gen_trajectory.py` last changed at
+`ffc4b0c` (WI-290), after `112-CRITIQUE` (`122ad01`). Fresh evidence means a
+CRITIQUE, and SR-052/053/054 + SR-084 + SN-024 require that critic be
+family-heterogeneous and never the authoring family — so Claude cannot self-issue
+it. It was instead **dispatched by hand** to non-Anthropic critics through the
+OpenCode-Go gateway (the SR-084 §"manual gateway dispatch" path), each judging in
+an isolated sandbox holding only the artifact, the 36-shot matrix, the rubric, and
+the recipe — no repo, no train branches, no prior verdict. Briefs were built to
+SR-084's contract: rubric + SN/SR intent + artifact recipe, and **no build
+transcript and no self-assessment**.
+
+- **115** usability (SR-054) — OPENCODE-KIMI — **APPROVE f=0**. Verified T8
+  geometrically: parsed all 43 embedded SVGs incl. hidden drill layers, sampled
+  every wire path, 0 through-box hits.
+- **116** accessibility (SR-052) — OPENCODE-GROK — **CHANGES-REQUESTED f=1**.
+- **117** uniformity (SR-053) — OPENCODE-KIMI — **CHANGES-REQUESTED f=7**.
+
+Filed **worst-verdict-last on purpose**: `_latest_critique_file` picks the
+highest-numbered file and `_latest_critique_verdict` reads its verdict, a proxy
+that assumes one live critique at a time. A batch breaks that assumption, so 117
+(f=7) is the file the critique-loop ratchet reads — a sibling APPROVE must not
+mask open findings. 117 records the rule.
+
+**Every checkable claim was independently re-verified** before recording; all held.
+Two are worth keeping:
+
+- **A4 (116, MAJOR) is a real, new defect.** `.hub rect{fill:var(--accent)}` +
+  `.hubname{fill:#fff;font-size:13px}`; dark `--accent:#818cf8` ⇒ **#fff on
+  #818cf8 = 2.98:1**, under the 4.5:1 AA floor for normal text (light theme is
+  6.29:1, fine). Dark-theme-only, which is why it survived earlier passes.
+- **U5 (117) root cause found beyond the critique.** The `1+2 #6d28d9` vs
+  `unphased #7e22ce` collision the critic measured at ΔE 7.4 reproduces exactly —
+  and the reason it slipped WI-247's validated palette is a **metric gap, not a
+  regression**: min **pairwise** ΔE across the 8 phase accents is **7.4**, while
+  min **adjacent** ΔE is **75.6**. `validate_palette.js` certified an adjacency
+  property; the legend renders all 8 swatches at once, where pairwise governs.
+  Two more pairs (`2`v`3` 14.7, `1+2`v`3` 14.8) also sit under the ≥15
+  normal-vision target the palette comment itself claims.
+
+**The structural finding — both render trains are blocked the same way.** The
+critique judges the WHOLE document and "APPROVE requires every anchor satisfied",
+while the WI-243 gate refuses a render-surface train without a CRITIQUE **APPROVE**
+at its reviewed head (`agent_dispatch._verdict_gate_result`). So a train shipping a
+narrow render improvement cannot close while ANY unrelated anchor fails:
+
+- **WI-272** (approved, 15 iterations) is blocked by **U5**, which it does not
+  touch — exactly what its own APPROVE'd disposition
+  (`010-BUILD-DISPOSITION-c67e85b`) predicted: *"a re-critique before the
+  successor's integrated palette fix would necessarily fail U5."* 117 is the
+  independent non-Anthropic confirmation that the blocker is real.
+- **WI-273** is blocked by **A4**, which it also does not touch. Its ARIA tablist
+  work (`912356b`) is genuine, but 116 passed **A1 and A2 without it** — native
+  `<button>`s already satisfy those anchors as worded. And its lone
+  CHANGES-REQUESTED finding (`003-REVIEW-A-912356b`) was never a code defect: it
+  reads *"no fresh, family-heterogeneous rubric critique."*
+
+So the perceptual debt is paid down first, or no render WI closes. The 8 findings
+are **recorded, not fixed** — no generator change in this commit, which is what
+keeps this evidence valid against the current render. Filing them as WIs is the
+next owner call.
+
+Commit `bfd298e`. `PROJECT_STATE.html` carries only the regenerated as-of stamp
+(`ffc4b0c` → `86b7ad2`) so the committed artifact is the one the critics judged.
