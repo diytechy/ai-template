@@ -139,7 +139,83 @@ def pause_reason(lane):
     return read_declared(path, "")
 
 
-def _declared_test_command(ini):
+# --- WI-286: the harness interpreter (shared root .venv, floor-checked) --------
+# A dispatcher train worktree has no .venv of its own, so a bare `python`/`pytest`
+# run there resolves whatever is ambient on PATH (run 20260723T0202 inherited
+# Python 3.8, below the floor): a below-floor idiom then passes locally and only
+# fails in CI, and the pinned dev tools (requirements-dev.txt) may be absent. The
+# fix is to run the harness under the repo's OWN .venv — the pinned ≥3.11
+# toolchain — shared into each worktree by absolute path (the dispatcher points a
+# worker's PATH at it and sets the integrator bar's {py} to it), plus a preflight
+# so a below-floor interpreter is caught before it can produce a false green.
+
+# The kit's Python floor (WI-262/WI-270; the setup scripts enforce the same
+# `sys.version_info >= (3, 11)`). An adopter deliberately targeting an older
+# product runtime lowers this alongside setup.{sh,ps1}'s own check.
+MIN_PYTHON = (3, 11)
+
+
+def venv_python(root):
+    """Absolute path (a Path) to the repo's own .venv interpreter, or None when
+    absent. Probes both layouts the kit's launchers do (check.sh, the pre-commit
+    hook): POSIX `.venv/bin/python` and a Windows-created `.venv/Scripts/
+    python.exe`, so a venv created on either OS is found from either (WI-286)."""
+    root = Path(root)
+    for rel in ("bin/python", "Scripts/python.exe"):
+        cand = root / ".venv" / rel
+        if cand.is_file():
+            return cand
+    return None
+
+
+def harness_python(root):
+    """The interpreter the test harness (pytest + the pinned dev tools) should run
+    under for a worktree session: the repo's own .venv when present (shared by
+    absolute path — one pinned ≥3.11 toolchain, no per-train install). Returns a
+    str path — the integrator's combined bar substitutes it for {py} so the bar
+    runs under the floor-satisfying interpreter even when the dispatcher was itself
+    launched on ambient Python (WI-286).
+
+    The ambient `sys.executable` fallback is a DEFENSIVE default only: the
+    dispatcher gates on `_harness_floor_failures` at preflight, which now FAILS
+    CLOSED when the root .venv is absent (REVIEW-A) — so on the dispatcher's real
+    path a .venv always exists here and the fallback is never the one that runs the
+    bar. It stays for a stray caller (a stdlib-only resolver must return SOMETHING)
+    but is not a licence to run the harness on an unpinned ambient interpreter."""
+    py = venv_python(root)
+    return str(py) if py else sys.executable
+
+
+def interpreter_version(exe):
+    """(major, minor) of the interpreter at `exe`, or None when it cannot be run.
+    `exe` None or equal to this process's own sys.executable reads sys.version_info
+    directly (no subprocess); any other path is probed by RUNNING it, so a stale
+    .venv reports its real version rather than this process's (WI-286)."""
+    if exe is None or str(exe) == sys.executable:
+        return sys.version_info[:2]
+    try:
+        proc = subprocess.run(
+            [
+                str(exe),
+                "-c",
+                "import sys;print(sys.version_info[0],sys.version_info[1])",
+            ],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+    except OSError:
+        return None
+    if proc.returncode != 0:
+        return None
+    parts = proc.stdout.split()
+    try:
+        return (int(parts[0]), int(parts[1]))
+    except (ValueError, IndexError):
+        return None
+
+
+def _declared_test_command(ini, py=None):
     """The repo's declared test command as a tokenized argv, read from a
     docs/stack.ini path — the stack-schema home the parallel-dispatch
     integrator's combined bar reads (agent_dispatch._run_combined_bar) so it runs
@@ -152,8 +228,9 @@ def _declared_test_command(ini):
     stackless profile → the caller legitimately skips); otherwise the argv —
     possibly [] for a declared-but-empty command, which the caller treats as a
     misconfiguration, not a skip (WI-285: a declared-but-unread key must not
-    silently pass). Raises ValueError on an unreadable profile. {py} is this
-    interpreter — the integrator's own floor-satisfying one (WI-286)."""
+    silently pass). Raises ValueError on an unreadable profile. `{py}` is `py`
+    when given (the integrator points it at the repo's floor-satisfying .venv —
+    WI-286), else this process's own interpreter."""
     import configparser
 
     cp = configparser.ConfigParser(interpolation=None)
@@ -163,7 +240,7 @@ def _declared_test_command(ini):
         raise ValueError(str(exc)) from exc
     if cp.has_section("product") and cp.has_option("product", "test"):
         subs = {
-            "py": sys.executable,
+            "py": py or sys.executable,
             "src": cp.get("paths", "src", fallback="src"),
             "tests": cp.get("paths", "tests", fallback="tests"),
         }

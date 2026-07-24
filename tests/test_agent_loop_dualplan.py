@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 
-from conftest import SCRIPTS, augment_env, run_py
+from conftest import SCRIPTS, augment_env, run_py, seed_venv
 
 AGENT_LOOP = SCRIPTS / "agent_loop.py"
 
@@ -95,7 +95,8 @@ def make_fixture(tmp_path, plan_mode="dual"):
     )
     # The dispatcher journal writes out/ at the repo root; keeping it ignored
     # keeps the primary worktree clean so publication is never deferred.
-    (root / ".gitignore").write_text("out/\n", encoding="utf-8")
+    (root / ".gitignore").write_text("out/\n.venv/\n", encoding="utf-8")
+    seed_venv(root)  # WI-286: the dispatcher preflight requires a ≥3.11 root .venv
     fake = root / "fake_agent.py"
     fake.write_text(FAKE_CLI, encoding="utf-8")
     # git init: agent_loop's preflight/lock path expects a repo-ish tree; the

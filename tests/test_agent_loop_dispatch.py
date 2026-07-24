@@ -21,11 +21,12 @@ the same fake agent the worker suite uses. The load-bearing guarantees:
 
 import csv
 import json
+import os
 import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, run_py
+from conftest import SCRIPTS, load_script, run_py, seed_venv
 
 agent_loop = load_script("agent_loop")
 
@@ -86,7 +87,8 @@ def _make_repo(tmp_path, rows):
         w.writerow(HEADER)
         w.writerows(rows)
     (repo / "AGENTS.md").write_text("# agents\n", encoding="utf-8")
-    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
+    (repo / ".gitignore").write_text("out/\n.venv/\n", encoding="utf-8")
+    seed_venv(repo)  # WI-286: the dispatcher preflight requires a ≥3.11 root .venv
     # The fixtures grind autonomously; the attended ratification exit has its
     # own dedicated test below.
     (repo / "docs" / "gate-policy").write_text("autonomous\n", encoding="utf-8")
@@ -438,6 +440,47 @@ def test_bad_jobs_value_is_preflight_failure(tmp_path):
     repo, ctl, fake = _setup(tmp_path, [_wi_row("WI-201")])
     proc = _dispatch(repo, fake, ctl, jobs="zero")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
+
+
+def test_dispatcher_refuses_a_below_floor_harness_interpreter(tmp_path):
+    # WI-286: a repo whose ./.venv interpreter cannot report a ≥3.11 version is
+    # refused at preflight, before any worker is spawned or the integrator bar
+    # runs — a below-floor run must never silently produce a green. A garbage file
+    # named python(.exe) fails to execute on both OSes (WinError 193 / a
+    # non-executable file), so interpreter_version returns None -> fail closed.
+    import shutil
+
+    repo, ctl, fake = _setup(tmp_path, [_wi_row("WI-201")])
+    # Replace the fixture's real seeded .venv (seed_venv) with a garbage one. Wipe
+    # it first: venv.create makes bin/python a SYMLINK to the base interpreter on
+    # POSIX, so writing THROUGH it would truncate the system python — rmtree, then
+    # plant a plain non-executable file.
+    shutil.rmtree(repo / ".venv")
+    if os.name == "nt":
+        vpy = repo / ".venv" / "Scripts" / "python.exe"
+    else:
+        vpy = repo / ".venv" / "bin" / "python"
+    vpy.parent.mkdir(parents=True)
+    vpy.write_text("not a real interpreter\n", encoding="utf-8")
+    proc = _dispatch(repo, fake, ctl)
+    assert proc.returncode == agent_loop.EXIT_PREFLIGHT, proc.stdout + proc.stderr
+    assert "could not be run" in (proc.stdout + proc.stderr)
+
+
+def test_dispatcher_refuses_a_venvless_root(tmp_path):
+    # REVIEW-A MAJOR, end-to-end: a root with NO ./.venv is refused at preflight
+    # even though the ambient interpreter (this test's own) is >= the floor. The
+    # old check fell through to ambient and produced a green worker run; the harness
+    # must run under the repo's OWN pinned .venv, never ambient (whose pinned dev
+    # tools may be absent). Wipe the fixture's seeded venv to reproduce the exact
+    # venv-less worktree that run 20260723T0202 hit.
+    import shutil
+
+    repo, ctl, fake = _setup(tmp_path, [_wi_row("WI-201")])
+    shutil.rmtree(repo / ".venv")
+    proc = _dispatch(repo, fake, ctl)
+    assert proc.returncode == agent_loop.EXIT_PREFLIGHT, proc.stdout + proc.stderr
+    assert "no runnable ./.venv" in (proc.stdout + proc.stderr)
 
 
 def test_lease_worktree_survives_a_hand_deleted_worktree(tmp_path):

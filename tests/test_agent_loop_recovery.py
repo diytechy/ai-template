@@ -27,7 +27,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script
+from conftest import SCRIPTS, load_script, seed_venv
 
 agent_loop = load_script("agent_loop")
 
@@ -88,7 +88,8 @@ def _make_repo(tmp_path, rows):
         w.writerow(HEADER)
         w.writerows(rows)
     (repo / "AGENTS.md").write_text("# agents\n", encoding="utf-8")
-    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
+    (repo / ".gitignore").write_text("out/\n.venv/\n", encoding="utf-8")
+    seed_venv(repo)  # WI-286: the dispatcher preflight requires a ≥3.11 root .venv
     (repo / "docs" / "gate-policy").write_text("autonomous\n", encoding="utf-8")
     _git(repo, "init")
     _git(repo, "config", "user.email", "loop@example.com")
