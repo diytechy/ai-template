@@ -11872,3 +11872,16 @@ between `schedule.py` (CMP-004, the decision engine) and `check_trajectory.py`
 `d47d5975c21b`/`f800f0c60265`), kept apart deliberately (schedule stays a pure
 runtime library; IF-053 fixes the arrow) — extract a shared lower-level
 `wi_registry.load()` both depend on downward.
+
+**WI-291 done (drift guard, not extraction):** driving WI-291 surfaced that
+its "extract a shared loader" premise conflicts with the owner's 2026-07-12 F5
+ruling (a shared `_kitcommon.py` was rejected so each script ships independently
+copy-able) — and `schedule.py` is deliberately stdlib-only + self-contained, so
+extraction would break that for a ~85-token parsing skeleton. Owner chose the
+drift-guard path instead: keep both parsers, add `tests/test_wi_loader_sync.py`
+(3 cases) locking `schedule.load_wis` and `check_trajectory.load_wis` to
+identical SHARED decisions (WI id set, hard/soft predecessor split, status,
+SR-refs, title, blockref) over an edge-case fixture (−000 skip, malformed id,
+duplicate id, hard+soft preds, the six statuses). The census header now
+documents the guard. Closes the one real two-parser risk (silent drift) without
+a shared module.

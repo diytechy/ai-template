@@ -28,6 +28,15 @@
 # pair, the file-PAIR-granularity hole WI-078 documented and WI-276 closed
 # (repo-review-2026-07-22.md M-5).
 #
+# DRIFT GUARD (WI-291): the WI-registry parser duplicated between schedule.py
+# (CMP-004, the pure decision engine) and check_trajectory.py (CMP-001, the
+# validator) is kept apart ON PURPOSE — schedule stays stdlib-only + self-
+# contained (IF-053 fixes the arrow: the validator consumes the scheduler, never
+# the reverse), so a shared wi_registry.py was NOT extracted (this ruling). The
+# one real risk of two parsers — DRIFT — is closed without a shared module by
+# tests/test_wi_loader_sync.py, which locks both load_wis to identical shared
+# decisions (WI id set, hard/soft predecessor split, status, SR-refs, title).
+#
 # RESIDUAL (honest): the fingerprint is a 48-bit (12-hex) hash of the block's
 # COMPLETE token signature, so two DIFFERENT blocks could in principle collide on
 # it — a birthday-bound accident, astronomically unlikely at the hundreds-of-
