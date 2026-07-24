@@ -26,6 +26,7 @@ records where each one bites.
 | `status.md` stays forward-only (no closed-WI id accretes) | Harness | `check_trajectory` done-id rule (warn / ERROR `--strict`; WI-200 restored the WI-180-retired R-D, mode-aware — the generated splice block alone is exempt, its freshness being the `status-map` step's job; the hand-authored remainder stays policed, 2026-07-21) |
 | Kit scripts are stdlib-only | Test | `tests/test_stdlib_only.py` (TC-034) |
 | No secret committed or pushed | Harness | `check_privacy.py` floor + `hooks/pre-commit`, `hooks/pre-push` |
+| Train-build commit carries a parseable `WI:` trailer (the integrator's reviewed-head key) | Harness | `hooks/commit-msg` pure-sh floor on `llm/train/*` (WI-282, was Prose in the worker prompt); `agent_dispatch.warn_reviewed_head_slip` is the loud reviewed-head-mismatch backstop |
 | Runtime flows diagrammed and current | Harness | `check_flows.py` (G2/G3) |
 | No stub/placeholder at G3 | Harness | `check_stubs.py` (G3) |
 | Docs stay navigable (links resolve; vision tag present) | Harness | `check_docs.py --stale` |

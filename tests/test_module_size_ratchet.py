@@ -52,7 +52,12 @@ BASELINE = {
     # (_wi_specrefs + _archive_closed_specs + the SpecRef='' clear) so a terminal
     # WI clears its SpecRef and archives its spec — no more stranded R-F debt.
     # New behaviour, reviewed bump (log 2026-07-23). Re-stamp downward with WI-280.
-    "agent_dispatch.py": 3533,
+    # +55 (3533 -> 3588), WI-282: the reviewed-head trailer-slip diagnostic
+    # (_substantive_tip + warn_reviewed_head_slip + its integrate_train call) —
+    # the loud integration backstop for a build commit that slipped its `WI:`
+    # trailer. Belongs beside reviewed_train_head (shared range/trailer logic);
+    # new behaviour, reviewed bump (WI-282 spec). Re-stamp downward with WI-280.
+    "agent_dispatch.py": 3588,
     "agent_loop.py": 3034,
     "trace.py": 2206,
     "check_trajectory.py": 1926,

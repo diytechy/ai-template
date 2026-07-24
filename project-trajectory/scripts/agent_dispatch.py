@@ -50,6 +50,7 @@ try:
         EXIT_STALL,
         EXIT_TRAIN_END,
         EXIT_WAITING,
+        SANCTIONED_TRAIN_SUBJECT_PREFIXES,
         TRAILER_EVIDENCE_FMT,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
@@ -85,6 +86,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         EXIT_STALL,
         EXIT_TRAIN_END,
         EXIT_WAITING,
+        SANCTIONED_TRAIN_SUBJECT_PREFIXES,
         TRAILER_EVIDENCE_FMT,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
@@ -777,6 +779,53 @@ def reviewed_train_head(root, tid, base):
         ):
             return parts[0]
     return None
+
+
+def _substantive_tip(root, tid, base):
+    """The newest commit in base..tip that the commit-msg WI-trailer floor
+    (check_wi_trailer.py) would REQUIRE a `WI:` trailer from — i.e. a build
+    commit, not one of the coordinator/bookkeeping shapes (the sanctioned
+    subject prefixes) nor a blocked disposition (a `Blocked-WI:` trailer). Used
+    only by the reviewed-head mismatch diagnostic below (WI-282); returns None
+    if the range is unreadable or holds no build commit."""
+    # US (\x1f) field-separates so a subject with a tab can't split wrong.
+    fmt = "%H%x1f%s%x1f%(trailers:key=Blocked-WI,valueonly,separator=;)"
+    code, out = git(
+        root, "log", "--format=" + fmt, base + ".." + TRAIN_BRANCH_PREFIX + tid
+    )
+    if code != 0:
+        return None
+    for line in out.splitlines():  # newest first
+        parts = line.split("\x1f")
+        if len(parts) < 2:
+            continue
+        sha, subject = parts[0], parts[1]
+        blocked = parts[2] if len(parts) > 2 else ""
+        if blocked.strip() or any(
+            subject.lstrip().startswith(p) for p in SANCTIONED_TRAIN_SUBJECT_PREFIXES
+        ):
+            continue  # a sanctioned shape — not the build tip the floor governs
+        return sha
+    return None
+
+
+def warn_reviewed_head_slip(root, journal, tid, base, reviewed):
+    """Loud integration diagnostic (WI-282, the secondary half): when the
+    reviewed head (newest commit WITH a `WI:` trailer) is NOT the newest
+    substantive build commit, a build commit slipped its trailer — so the
+    integrator is about to grade an older head's verdict while a newer, unnamed
+    commit rides the train. The commit-msg floor should have refused it, but a
+    train built before the floor (or past `--no-verify`) still reaches here;
+    surface it by name so it reads as a slipped trailer, not honest dissent.
+    Diagnostic only — it never changes the gate outcome."""
+    tip = _substantive_tip(root, tid, base)
+    if tip and reviewed and tip != reviewed:
+        journal.event(
+            "reviewed-head-trailer-slip",
+            train=tid,
+            reviewed=reviewed[:12],
+            build_tip=tip[:12],
+        )
 
 
 def train_verdicts(root, tid, reviewed_sha):
@@ -1736,6 +1785,12 @@ def integrate_train(root, docs, journal, tid, wis, base, review_ctx):
         if not meta or meta.get("train") != tid:
             return "error", "reservation for {} does not name train {}".format(wid, tid)
     reviewed = reviewed_train_head(root, tid, base)
+    # WI-282 diagnostic: if a build commit slipped its `WI:` trailer, `reviewed`
+    # resolved to an OLDER head than the substantive tip — journal it loudly so
+    # the mismatch reads as a slipped trailer, not honest dissent (never changes
+    # the gate outcome; the commit-msg floor is the prevention, this the visible
+    # backstop for a train that predates it or bypassed it).
+    warn_reviewed_head_slip(root, journal, tid, base, reviewed)
     # Step 2b: the per-phase latest-APPROVE unanimity gate (WI-260, M-29). The
     # required set is exactly the phases the dispatcher SCHEDULED for this train
     # (design 1: gate and scheduler read one rule — the CRITIQUE half over the

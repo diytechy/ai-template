@@ -21,6 +21,61 @@ set -e
 # the .githooks/../ fallback — same as pre-commit.
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
+# WI-282: the train-build commit-message floor — pure sh, run FIRST so it holds
+# even on a Python-less box (unlike the message scan below). On an llm/train/*
+# branch a substantive build commit must carry a parseable `WI: WI-<n>` trailer:
+# the exact property agent_dispatch.reviewed_train_head reads to resolve a train's
+# reviewed head. A malformed block (e.g. a blank line interposed in the trailer
+# paragraph) makes git DROP the trailer, so the integrator SKIPS the commit and
+# can grade a stale verdict, parking an approved train as rework — a one-line slip
+# that cost a full build+review cycle (live failure 2026-07-23, train
+# p0-g3-WI-281-9ae9). `git interpret-trailers --parse` shares git's trailer parser
+# with that %(trailers) read, so this refuses exactly what the integrator would
+# later fail to resolve. Vacuous off a train branch; the sanctioned coordinator
+# commits (integrate:/telemetry:/review:/blocked: subject prefix) and a blocked
+# disposition (a Blocked-WI: trailer) stay legal. The prefix set mirrors
+# agent_common.SANCTIONED_TRAIN_SUBJECT_PREFIXES (kept in step by
+# tests/test_commit_msg_wi_trailer.py).
+wi_branch=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short HEAD 2>/dev/null || true)
+case "$wi_branch" in
+  llm/train/*)
+    wi_subject=$(sed -n '1p' "$1")
+    case "$wi_subject" in
+      integrate:*|telemetry:*|review:*|blocked:*) : ;;  # sanctioned coordinator commit
+      *)
+        wi_trailers=$(git -C "$REPO_ROOT" interpret-trailers --parse "$1" 2>/dev/null || true)
+        if printf '%s\n' "$wi_trailers" | grep -qiE '^Blocked-WI:[[:space:]]'; then
+          : # a blocked disposition carries Blocked-WI, not WI
+        elif printf '%s\n' "$wi_trailers" | grep -qE '^[Ww][Ii]:[[:space:]]*WI-[0-9]+[[:space:]]*$'; then
+          : # a well-formed build commit
+        else
+          echo "commit-msg: this build commit on train branch '$wi_branch' carries" >&2
+          echo "  no parseable 'WI: WI-<n>' trailer. The integrator resolves a train's" >&2
+          echo "  reviewed head as the newest commit whose git-parsed trailers include" >&2
+          echo "  WI: (agent_dispatch.reviewed_train_head); a commit without it is" >&2
+          echo "  SKIPPED, so a stale verdict can park an approved train as rework" >&2
+          echo "  (WI-282; live failure 2026-07-23 on train p0-g3-WI-281-9ae9)." >&2
+          echo "" >&2
+          echo "  Fix: end the message with a trailer block whose LAST paragraph is" >&2
+          echo "  trailers ONLY - no blank line inside it (a blank line there breaks" >&2
+          echo "  git's trailer parsing; that is the exact slip this floor catches):" >&2
+          echo "" >&2
+          echo "      <subject line>" >&2
+          echo "" >&2
+          echo "      WI: WI-<n>" >&2
+          echo "      Train: <train-id>" >&2
+          echo "      Base: <base-sha>" >&2
+          echo "" >&2
+          echo "  A sanctioned dispatcher commit is exempt instead: use an" >&2
+          echo "  integrate:/telemetry:/review:/blocked: subject prefix, or a" >&2
+          echo "  Blocked-WI: trailer for a blocked disposition." >&2
+          exit 1
+        fi
+        ;;
+    esac
+    ;;
+esac
+
 # Fail-closed guard for the skips below (M-42, same as pre-commit): a repo that
 # declared docs/privacy-check `true` must never have its message scan skipped
 # silently — parse the policy in pure sh (the pre-push pattern) and refuse.

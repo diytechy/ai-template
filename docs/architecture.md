@@ -204,6 +204,7 @@ Contracts (interfaces): IF-055, IF-067
 | `ensure_integration_ref(root, journal)` | Create refs/heads/llm/integration from the selected development branch |  |
 | `registry_rows_at(root, ref)` | The WI registry rows as read from `ref` (the integrated disposition), |  |
 | `reviewed_train_head(root, tid, base)` | The exact code HEAD a train's review must name: the LAST commit in |  |
+| `warn_reviewed_head_slip(root, journal, tid, base, reviewed)` | Loud integration diagnostic (WI-282, the secondary half): when the |  |
 | `train_verdicts(root, tid, reviewed_sha)` | [(phase, ordinal, verdict)] parsed from the verdict files committed on the |  |
 | `synth_deliverable(root, tid, wid, base)` | The integrator's Deliverable text for a WI it marks done: the train, |  |
 | `generate_status(docs, root, last_train)` | The integrator-generated root status snapshot (SR-059's generation | SR-059 |

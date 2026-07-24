@@ -283,6 +283,18 @@ TRAIN_BRANCH_PREFIX = "llm/train/"
 
 WI_TOKEN_RE = re.compile(r"^WI-\d+$")
 
+# The coordinator/bookkeeping commit subjects that legitimately carry NO `WI:`
+# trailer on a train branch — the integrator writes these itself around the
+# worker's build commits. The commit-msg WI-trailer floor (hooks/commit-msg,
+# WI-282) exempts these subject prefixes in pure sh, and reviewed_train_head's
+# mismatch diagnostic (warn_reviewed_head_slip) treats them as non-substantive
+# when locating the build tip — so the floor and the diagnostic can never
+# disagree on what a sanctioned shape is (the hook mirrors this tuple, kept in
+# step by tests/test_commit_msg_wi_trailer.py). A blocked disposition is exempt
+# too, but by its `Blocked-WI:` trailer rather than a subject prefix (a worker's
+# block evidence has a free-form subject).
+SANCTIONED_TRAIN_SUBJECT_PREFIXES = ("integrate:", "telemetry:", "review:", "blocked:")
+
 # The terminal work-item Statuses — no further build is owed (WI-267). Mirrors
 # check_trajectory.TERMINAL_STATUSES, kept inline here rather than imported: the
 # F5 self-contained-script rule keeps agent_common stdlib-only (it never pulls a

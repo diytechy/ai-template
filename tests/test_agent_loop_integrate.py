@@ -672,6 +672,55 @@ def test_scheduler_and_gate_agree_on_critique_phase(tmp_path, srrefs, render_exp
     assert ("CRITIQUE" in required) is render_expected
 
 
+# --- WI-282: the reviewed-head trailer-slip diagnostic ----------------------------
+
+
+def _commit_no_trailer(wt, subject, filename="more.txt"):
+    (wt / filename).write_text(subject, encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "-q", "-m", subject)
+    return _git(wt, "rev-parse", "HEAD")
+
+
+def test_reviewed_head_trailer_slip_is_journaled(tmp_path):
+    # WI-282 secondary: a newer build commit that SLIPPED its WI trailer leaves
+    # the substantive tip AHEAD of the reviewed head (newest-WITH-a-WI-trailer),
+    # so reviewed_train_head would grade an OLDER commit's verdict while an
+    # unnamed commit rides the train. The integrator journals the mismatch by
+    # name so it reads as a slipped trailer, not honest dissent.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(
+        repo, "t1", base
+    )  # the WI-trailer build
+    tip = _commit_no_trailer(wt, "WI-201: more work (trailer slipped)")
+    assert tip != reviewed, "the slipped commit is a newer, distinct head"
+    assert agent_dispatch._substantive_tip(repo, "t1", base) == tip
+    journal = agent_loop._Journal(repo)
+    agent_dispatch.warn_reviewed_head_slip(repo, journal, "t1", base, reviewed)
+    slips = [e for e in _events(repo) if e.get("event") == "reviewed-head-trailer-slip"]
+    assert slips, "the slipped trailer must be journaled loudly"
+    assert slips[0]["reviewed"] == reviewed[:12]
+    assert slips[0]["build_tip"] == tip[:12]
+
+
+def test_no_slip_when_only_sanctioned_commits_ride_the_tip(tmp_path):
+    # The negative: telemetry:/blocked: commits on top of the WI-trailer build are
+    # NOT substantive (subject prefix / Blocked-WI trailer), so the build tip is
+    # still the reviewed head — no diagnostic, so the common honest case is quiet.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _commit_no_trailer(wt, "telemetry: session 001 review scoreboard", "sb.txt")
+    # A blocked disposition rides via its Blocked-WI trailer, free-form subject.
+    (wt / "blk.txt").write_text("evidence", encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "-q", "-m", "partial\n\nBlocked-WI: WI-201\nBlockRef: OI-4\n")
+    assert agent_dispatch._substantive_tip(repo, "t1", base) == reviewed
+    journal = agent_loop._Journal(repo)
+    agent_dispatch.warn_reviewed_head_slip(repo, journal, "t1", base, reviewed)
+    slips = [e for e in _events(repo) if e.get("event") == "reviewed-head-trailer-slip"]
+    assert not slips, "sanctioned coordinator commits on top are not a slip"
+
+
 # --- publication + the intent protocol --------------------------------------------
 
 
