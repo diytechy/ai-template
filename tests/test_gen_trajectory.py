@@ -1609,11 +1609,65 @@ def test_every_multifill_panel_emits_a_palette_bijection_legend(tmp_path):
 
 def test_a4_no_sub_label_opacity_discount(tmp_path):
     # A4: the emitted CSS must not discount sub-label text opacity (which dropped
-    # the effective contrast below the floor). No `.sub`/`.bsub { ... opacity }`.
-    with_bundle(tmp_path)
+    # the effective contrast below the floor). No `.sub`/`.bsub`/`.hubsub`
+    # `{ ... opacity }` — `.hubsub` joined the rule in WI-293, where a surviving
+    # `fill-opacity:.85` put the dark-theme hub sub-label at 2.57:1.
+    # Fixture is with_gate, not with_bundle: `.hubsub` only exists once the
+    # Process tab renders, so under with_bundle this guard was vacuous for it.
+    with_gate(tmp_path, "G2")
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
-    assert re.search(r"\.(?:sub|bsub)\s*\{[^}]*opacity", css) is None
+    assert ".hubsub{" in css, "Process tab did not render — guard would be vacuous"
+    assert re.search(r"\.(?:sub|bsub|hubsub)\s*\{[^}]*opacity", css) is None
+
+
+def _css_var(css, name, dark=False):
+    """The value of custom property `name` as declared for the light (`:root`) or
+    dark (`prefers-color-scheme: dark`) theme in the emitted stylesheet. Dark
+    falls back to the light declaration, which is what the cascade does when the
+    dark block does not override the token."""
+    if dark:
+        block = css.split("prefers-color-scheme: dark", 1)[1].split("}", 1)[0]
+        hit = re.search(re.escape(name) + r":\s*(#[0-9a-fA-F]{3,8})", block)
+        if hit:
+            return hit.group(1)
+    root = css.split(":root", 1)[1]
+    return re.search(re.escape(name) + r":\s*(#[0-9a-fA-F]{3,8})", root).group(1)
+
+
+def test_a4_theme_token_fills_behind_white_text_meet_the_floor(tmp_path):
+    """TC-HARDEN (WI-293): a fill declared as a THEME TOKEN must clear the floor
+    in BOTH themes, not just the one it was designed in.
+
+    The sibling A4 tests check palette CONSTANTS (STATUS_FILL, PHASE_ACCENTS, …),
+    so a `fill:var(--token)` whose value differs per theme was invisible to them —
+    which is exactly how the Process hub shipped white-on-#818cf8 at 2.98:1 in
+    dark while measuring 6.29:1 in light. Any token used as a fill behind white
+    text is checked against both declarations here.
+    """
+    with_gate(tmp_path, "G2")  # the Process tab's render condition
+    assert gen(tmp_path).returncode == 0
+    css = html_of(tmp_path)
+    # every custom property used as a fill under a white-text selector
+    white_text_fill_tokens = {"--hub"}
+    assert "fill:var(--hub)" in css, "hub fill token missing from emitted CSS"
+    for token in sorted(white_text_fill_tokens):
+        for dark in (False, True):
+            value = _css_var(css, token, dark=dark)
+            ratio = _wcag("#ffffff", value)
+            assert ratio >= 4.5, (token, "dark" if dark else "light", value, ratio)
+
+
+def test_a4_hub_fill_is_not_the_page_accent(tmp_path):
+    """WI-293 regression guard: --accent is tuned as INK on the page background
+    and lightens in dark theme, so re-pointing the hub fill at it silently
+    reintroduces the 2.98:1 defect. The hub keeps its own token."""
+    with_gate(tmp_path, "G2")  # the Process tab's render condition
+    assert gen(tmp_path).returncode == 0
+    css = html_of(tmp_path)
+    hub_rule = re.search(r"#process \.hub rect\{([^}]*)\}", css)
+    assert hub_rule, "hub rect rule missing"
+    assert "var(--accent)" not in hub_rule.group(1), hub_rule.group(1)
 
 
 def test_a3_status_glyph_pairs_every_status_fill(tmp_path):

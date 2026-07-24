@@ -43,7 +43,12 @@ BASELINE = {
     # cascade structurally impossible (a `done` WI can't linger in status.md).
     # New behaviour, not monolith drift (the reviewed-bump escape the ratchet
     # documents; reason in docs/log.md 2026-07-23). Re-stamp downward with WI-280.
-    "gen_trajectory.py": 4587,
+    # +11 (4587 -> 4598), WI-293: the A4 dark-theme hub-contrast fix — a
+    # theme-invariant `--hub` token (white-on-fill was 2.98:1 in dark via
+    # --accent) plus the rationale comment that keeps a successor palette change
+    # off it. Nearly all of the bump is that comment; the code delta is 3 lines.
+    # Reviewed bump, reason in docs/log.md 2026-07-24. Re-stamp down with WI-280.
+    "gen_trajectory.py": 4598,
     # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition

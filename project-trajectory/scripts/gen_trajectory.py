@@ -2090,6 +2090,14 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
     color-scheme: light dark;
     --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --text:#0f172a;
     --muted:#64748b; --accent:#4f46e5;
+    /* A4 (WI-293): the Process hub carries WHITE text on its own fill, so its
+       fill is a THEME-INVARIANT token, not --accent. --accent is tuned for
+       readability *as ink* on the page background and lightens to #818cf8 in
+       dark, which as a *fill* behind white text measures 2.98:1 — under the
+       4.5:1 AA floor. Declared here and deliberately NOT overridden in the dark
+       block: #fff on #4f46e5 is 6.29:1 in both themes. Keep any successor
+       palette change (WI-292) off this token unless it re-checks white-on-fill. */
+    --hub:#4f46e5;
     --done:#047857; --active:#b45309; --queued:#94a3b8; --retired:#78716c;
     /* U1: one shared node-label / sub-label type scale across every SVG emitter
        (icicle, drill, knowledge) — no per-emitter font-size overrides. */
@@ -3560,10 +3568,13 @@ def process_panel(root, wis, stats):
         "#process .stg:focus{outline:none;}"
         "#process .stgt{fill:var(--text);font-size:12px;font-weight:700;}"
         "#process .stgn{fill:var(--muted);font-size:9.5px;}"
-        "#process .hub rect{fill:var(--accent);stroke:var(--accent);"
+        "#process .hub rect{fill:var(--hub);stroke:var(--hub);"
         "filter:drop-shadow(0 2px 5px rgba(15,23,42,.28));}"
         "#process .hubname{fill:#fff;font-size:13px;font-weight:800;}"
-        "#process .hubsub{fill:#fff;fill-opacity:.85;font-size:8.5px;}"
+        # A4 (WI-293): no fill-opacity discount on hub sub-labels — the same rule
+        # `.sub`/`.bsub` already follow. At .85 the effective ink dropped to
+        # 2.57:1 in dark theme; at full opacity on --hub it is 6.29:1.
+        "#process .hubsub{fill:#fff;font-size:8.5px;}"
         "</style>"
     )
     panel = (

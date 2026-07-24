@@ -11957,3 +11957,46 @@ next owner call.
 
 Commit `bfd298e`. `PROJECT_STATE.html` carries only the regenerated as-of stamp
 (`ffc4b0c` → `86b7ad2`) so the committed artifact is the one the critics judged.
+
+## 2026-07-24 — WI-293 DONE: the dark-theme hub contrast defect (116-CRITIQUE A4)
+
+Owner-directed follow-up to the critique round ("file all five, then fix A4 and
+land WI-273"). WI-292..296 were filed from the eight findings (`ab376c8`), split
+by what each **blocks** rather than by which critic raised it — which is what
+surfaced the asymmetry now driving the plan: SR-052's rubric left **WI-273 held
+by A4 alone** (A1/A2/A3 already passed), while SR-053 leaves WI-272 needing
+WI-292 + WI-294 + WI-295 together.
+
+**The fix.** The Process hub painted `fill:var(--accent)` under white labels.
+`--accent` is tuned as *ink on the page background* and lightens to `#818cf8` in
+dark theme, so as a *fill behind white text* it measured 2.98:1 against the 4.5:1
+AA floor (and `.hubsub`, at `fill-opacity:.85`, 2.57:1). The hub fill moved to a
+new **theme-invariant `--hub`** token (`#4f46e5`, declared in `:root` and
+deliberately not overridden in the dark block), and `.hubsub` lost its opacity
+discount — the same rule `.sub`/`.bsub` already followed since WI-144. White-on-
+fill is now **6.29:1 in both themes**, verified against the emitted artifact and
+the re-shot `1280px-dark-process-full.png`.
+
+**The validation chain is the real deliverable.** A perceptual fix that lands only
+in the artifact lets the same defect recur, so the gap that let 2.98:1 ship got
+closed too. The existing A4 tests check palette **constants** (`STATUS_FILL`,
+`PHASE_ACCENTS`, …), so a fill declared as a **per-theme `var()`** was structurally
+invisible to them — that is the actual hole, not an oversight about one selector:
+
+- `test_a4_theme_token_fills_behind_white_text_meet_the_floor` (new) resolves each
+  theme token used as a white-text fill in **both** the `:root` and dark
+  declarations and asserts the floor.
+- `test_a4_hub_fill_is_not_the_page_accent` (new) guards the specific regression.
+- `test_a4_no_sub_label_opacity_discount` moved from the `with_bundle` fixture to
+  `with_gate` — **it was vacuous for `.hubsub`**, which only exists once the
+  Process tab renders. It passed happily with the defect reintroduced; it now
+  asserts the tab rendered before checking, so it cannot go quietly vacuous again.
+
+All three were confirmed to **fail against the original code** before being kept
+(a guard that cannot fail is not a guard). Full suite **1474 passed, 7 skipped**
+(371s). Ratchet re-stamped 4587 → 4598, nearly all of it the rationale comment.
+
+**Expected consequence:** touching `gen_trajectory.py` re-reds the perceptual gate
+by construction — 115/116/117 now predate the render surface again. That is the
+standing cost of any render fix, and it clears when the next critique post-dates
+this commit. status.md records the rule so it stops surprising people.
