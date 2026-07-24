@@ -757,6 +757,72 @@ def test_forward_only_unit_over_the_real_meta_repo():
     assert ct.status_forward_only_findings(ROOT, wis) == []
 
 
+# --- WI-284: the forward-only cascade is broken by generation ------------------
+# The forward-looking WI list is GENERATED (the scheduler frontier) inside the
+# STATUS block the forward-only rule exempts, so integrating a WI drops it from
+# status.md on the next `--status` regen — it can never strand a `done` id in the
+# hand-authored region and redden a later train's DONE gate (the bug that burned
+# WI-276's budget). These pin the two halves: the frontier self-prunes, and the
+# hand-authored region is still policed.
+
+
+# A header + rows the scheduler can CLASSIFY (a bare row fails closed as
+# `unclassified` and never reaches the ready frontier): SafetyClass=ordinary is
+# the minimal signal for an ordinary, packable WI.
+_FRONTIER_HEADER = (
+    "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SafetyClass\n"
+)
+
+
+def _write_frontier_wis(root, body):
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "work-items.csv").write_text(_FRONTIER_HEADER + body, encoding="utf-8")
+
+
+def test_wi284_generated_frontier_drops_a_closed_wi(tmp_path):
+    gt = load_script("gen_trajectory")
+    _write_frontier_wis(
+        tmp_path,
+        "WI-001,First thing,scripts,,,queued,,ordinary\n"
+        "WI-002,Second thing,scripts,,,queued,,ordinary\n",
+    )
+    before = "\n".join(gt._frontier_lines(tmp_path))
+    assert "Ready frontier" in before and "WI-001" in before and "WI-002" in before
+    # WI-001 integrates -> done. Regenerating the frontier drops it automatically;
+    # nothing hand-edited, no stranded id.
+    _write_frontier_wis(
+        tmp_path,
+        "WI-001,First thing,scripts,,,done,,ordinary\n"
+        "WI-002,Second thing,scripts,,,queued,,ordinary\n",
+    )
+    after = "\n".join(gt._frontier_lines(tmp_path))
+    assert "WI-001" not in after
+    assert "WI-002" in after
+
+
+def test_wi284_done_id_in_generated_block_is_exempt_but_still_policed_outside(tmp_path):
+    ct = load_script("check_trajectory")
+    write_wis(tmp_path, "WI-001,First,scripts,,,done,\n")
+    wis = ct.load_wis(ct.read_rows(tmp_path / "docs/requirements/work-items.csv"))[0]
+    # Named ONLY inside the generated block (where the frontier lives) -> exempt.
+    write_status(
+        tmp_path,
+        "# S\n\n<!-- BEGIN GENERATED STATUS -->\n"
+        "- **Ready frontier** — **WI-001** first thing\n"
+        "<!-- END GENERATED STATUS -->\n\n- **Next action:** work the frontier.\n",
+    )
+    assert ct.status_forward_only_findings(tmp_path, wis) == []
+    # The same done id stranded in the hand-authored region still flags (the guard
+    # the generated frontier keeps out of, not one it silences).
+    write_status(
+        tmp_path,
+        "# S\n\n<!-- BEGIN GENERATED STATUS -->\n<!-- END GENERATED STATUS -->\n\n"
+        "- **Next action:** finish **WI-001** first.\n",
+    )
+    assert any("WI-001" in f for f in ct.status_forward_only_findings(tmp_path, wis))
+
+
 def test_legacy_csv_without_specref_column_still_parses(tmp_path):
     # A pre-S1 registry (no SpecRef column) reads the missing cell as empty and
     # never crashes: a done-only legacy registry validates clean; an open legacy

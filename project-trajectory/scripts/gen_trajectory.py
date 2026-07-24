@@ -87,6 +87,23 @@ except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import check_trajectory as ct
 
+# schedule.py — the ready-frontier derivation the generated STATUS block projects
+# (WI-284): the forward-looking WI list is GENERATED, not hand-authored, so a
+# `done` WI can never linger there and redden a later train's DONE gate. OPTIONAL:
+# a scaffold that ships gen_trajectory without schedule.py (or a downstream not
+# using the scheduler) simply omits the Ready-frontier block — `_frontier_lines`
+# degrades to empty rather than crashing the whole generator (the kit's
+# "non-adopter pays nothing" posture; a hard import here broke the hook-scaffold
+# tests that copy check_trajectory but not schedule).
+try:
+    import schedule
+except ImportError:
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import schedule
+    except ImportError:
+        schedule = None
+
 # The unified project-state artifact at the repo ROOT (WI-039, the ratified
 # AXES spec): what was docs/trajectory.html, plus the How-SW view and the
 # git-derived as-of stamp. One self-contained file, all diagrams inside.
@@ -4361,7 +4378,66 @@ def status_block(root):
             "each item's blast radius, options, and recommendation live there):_"
         )
         lines.extend("  - **{}** — {}".format(oid, one) for oid, one in ois)
+    lines.extend(_frontier_lines(root))
     return "\n".join(lines)
+
+
+# The forward-looking WI list is DERIVED here (WI-284), not hand-authored: the
+# scheduler's dependency-ready frontier in build order. Because it lives inside
+# the generated block (which check_trajectory.status_forward_only_findings
+# exempts) AND is drawn only from ready — i.e. open, never-`done` — rows, a WI
+# that integrates simply drops out on the next `--status` regen: the integrator
+# runs that regen in _regenerate_disposition_artifacts, so status.md can no
+# longer strand a closed id (the cascade that burned WI-276). Pure/deterministic
+# (registry-derived, no reservations, no clocks), so `--status --check` stays a
+# stable byte-compare. Capped so a long backlog stays one readable line-group.
+_FRONTIER_CAP = 12
+
+
+def _frontier_lines(root):
+    """The `- **Ready frontier**` generated bullet: dependency-ready WIs in
+    scheduler order, id + one-line title. Empty when nothing is ready (a drained
+    or placeholder registry) OR when schedule.py is unavailable (a scaffold that
+    omits it), so the block stays byte-stable and vacuous."""
+    if schedule is None:
+        return []
+    try:
+        rows = schedule.load_rows(root / "docs/requirements/work-items.csv")
+        wis = schedule.load_wis(rows)
+        ready = schedule.frontier(wis)  # reserved=None -> pure registry frontier
+    except (OSError, ValueError):
+        return []
+    if not ready:
+        return []
+    titles = {w["id"]: w.get("title", "") for w in wis}
+    prios = {w["id"]: w.get("priority", 0) for w in wis}
+    shown = ready[:_FRONTIER_CAP]
+    out = [
+        "- **Ready frontier** _(dependency-ready WIs in build order — generated "
+        "from the scheduler; a closed WI drops out automatically, so this list "
+        "is never stale and never names a `done` id):_"
+    ]
+    for r in shown:
+        wid = r["id"]
+        p = prios.get(wid, 0)
+        pri = " `P{}`".format(p) if p else ""
+        title = _clip_title(titles.get(wid, ""))
+        out.append("  - **{}**{} — {}".format(wid, pri, title))
+    if len(ready) > _FRONTIER_CAP:
+        out.append(
+            "  - _(+{} more ready — see the dashboard)_".format(
+                len(ready) - _FRONTIER_CAP
+            )
+        )
+    return out
+
+
+def _clip_title(title, limit=90):
+    """First clause of a WI Title, clipped — the registry titles are long."""
+    head = title.split(" - ")[0].split(" — ")[0].strip()
+    if len(head) > limit:
+        head = head[: limit - 1].rstrip() + "…"
+    return head or "(untitled)"
 
 
 def _splice_status(doc_text, content):

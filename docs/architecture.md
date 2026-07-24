@@ -87,6 +87,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_schedule
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_gen_trajectory --> m_scripts_check_trajectory
+    m_scripts_gen_trajectory --> m_scripts_schedule
     m_scripts_plan_runner --> m_scripts_agent_route
     m_scripts_plan_runner --> m_scripts_agent_session
     m_scripts_plan_runner --> m_scripts_plan_artifacts
@@ -632,7 +633,7 @@ Contracts (interfaces): IF-019, IF-035
 
 ### `scripts/gen_trajectory`
 _Generate the offline project-state dashboard (root `PROJECT_STATE.html`)._
-Imports (internal): `check_trajectory`
+Imports (internal): `check_trajectory`, `schedule`
 Contracts (interfaces): IF-011, IF-024, IF-052, IF-056
 
 | Public item | Summary | Implements |

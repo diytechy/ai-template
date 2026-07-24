@@ -1148,12 +1148,23 @@ def _regenerate_disposition_artifacts(worktree):
     scripts = Path(__file__).resolve().parent
     generators = []
     if (worktree / "docs" / "okf").is_dir():
-        generators.append("gen_okf.py")
+        generators.append(("gen_okf.py", []))
     if (worktree / "PROJECT_STATE.html").is_file():
-        generators.append("gen_trajectory.py")
-    for name in generators:
+        generators.append(("gen_trajectory.py", []))
+    # WI-284/WI-283: the status.md snapshot (derived gate/spine + open-items +
+    # the generated Ready-frontier list) and the open-items.md pending
+    # projection are freshness-gated by the `status-map` step, but a disposition
+    # that flips a WI to done/blocked changes their inputs. Regenerate them here
+    # so the disposition commit passes its own floor (WI-283) AND the just-closed
+    # id drops out of the generated frontier automatically (WI-284 — no stranded
+    # done-id to redden a later train's DONE gate). Opt-in on the marker, like
+    # the two generators above: a status.md/open-items.md without the generated
+    # blocks is left untouched, so a non-adopter regenerates nothing.
+    if (worktree / "docs" / "status.md").is_file():
+        generators.append(("gen_trajectory.py", ["--status"]))
+    for name, extra in generators:
         proc = subprocess.run(
-            [sys.executable, str(scripts / name), "--root", str(worktree)],
+            [sys.executable, str(scripts / name), "--root", str(worktree), *extra],
             cwd=str(worktree),
             capture_output=True,
             text=True,

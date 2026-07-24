@@ -11721,3 +11721,43 @@ distinct):
 
 Spine unchanged; 276 WIs. Repo green (full suite 1394p at the reconcile; the
 new rows are forward-only-clean, check_docs 0 broken). Nothing pushed.
+
+## 2026-07-23 (evening) — WI-284 DONE (hand-applied, owner-directed): forward-only cascade fixed by generation
+
+Applied WI-284 **option (a) cleanly, via GENERATION** rather than the fragile
+prose-scrub the spec floated — the kit's own "generated-not-hand-maintained"
+rule pointed the way, since the hand-authored forward-frontier was dense
+arrow-chains no token-scrub could edit without breaking prose. Changes:
+
+- `gen_trajectory.py --status` now emits a **Ready frontier** block (scheduler
+  `frontier()` in build order, id + title + `P` flag) INSIDE the
+  `<!-- BEGIN GENERATED STATUS -->` markers the forward-only rule already
+  exempts. It is drawn only from ready (open, never-`done`) rows and is
+  pure/deterministic (registry-derived, no reservations/clocks), so `--status
+  --check` stays a stable byte-compare.
+- `agent_dispatch._regenerate_disposition_artifacts` (run by BOTH `integrate_train`
+  and `blocked_disposition`) now also runs `gen_trajectory.py --status`, so a
+  disposition refreshes the snapshot + the pending projection — the just-closed
+  id drops from the frontier automatically (WI-284) AND the disposition commit
+  passes its own `status-map` floor (this also fixes **WI-283's core** — see
+  below).
+- `docs/status.md` forward prose made **id-free for closeable WIs**: the frontier
+  list is the generated block; "Next action"/"Ready frontier" bullets point at it
+  and name only OI-N + deferred rows (never `done`). Convention shift: sessions
+  no longer hand-list upcoming WI ids in status.md — the generated block is the
+  SSOT.
+- Tests: `tests/test_trajectory.py::test_wi284_generated_frontier_drops_a_closed_wi`
+  (frontier self-prunes on close) + `..._done_id_in_generated_block_is_exempt_but_still_policed_outside`
+  (the block is exempt; a stranded id in the hand-authored region still flags).
+
+Self-demonstrated at close: marking WI-284 `done` dropped it from the generated
+frontier with zero hand-editing (and caught one lingering `WI-284` token I'd left
+in a hand-authored bullet — the very failure mode, now fixed). Spec archived to
+`docs/archive/specs/WI-284.2026-07-23.md`; SpecRef cleared.
+
+**WI-283 note:** its core (blocked_disposition failing its own status-map floor)
+is fixed by the shared `_regenerate_disposition_artifacts` change above. WI-283
+stays queued for its own regression test + the explicit "reaches blocked state on
+rescan" done-when; the build session can confirm and close it. Hand-applied
+2026-07-23 per owner directive (outside the autonomous REVIEW-A/gate — reopen if
+independent review is wanted). Full suite green.

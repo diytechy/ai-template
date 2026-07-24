@@ -38,8 +38,17 @@ THRESHOLD = 1500
 # equals `wc -l`). These six are the review's H-2 modules, unchanged since the
 # as-found `6a752b4`. Re-stamp DOWNWARD as WI-280 decomposes them.
 BASELINE = {
-    "gen_trajectory.py": 4511,
-    "agent_dispatch.py": 3452,
+    # +76 (4511 -> 4587), WI-284: the generated Ready-frontier block — the
+    # scheduler-derived forward-looking WI list that makes the forward-only
+    # cascade structurally impossible (a `done` WI can't linger in status.md).
+    # New behaviour, not monolith drift (the reviewed-bump escape the ratchet
+    # documents; reason in docs/log.md 2026-07-23). Re-stamp downward with WI-280.
+    "gen_trajectory.py": 4587,
+    # +11 (3452 -> 3463), WI-284: _regenerate_disposition_artifacts also runs
+    # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
+    # id drops from the generated frontier automatically (and the disposition
+    # passes its own status-map floor — WI-283's core). Reviewed bump, log 2026-07-23.
+    "agent_dispatch.py": 3463,
     "agent_loop.py": 3034,
     "trace.py": 2206,
     "check_trajectory.py": 1926,
