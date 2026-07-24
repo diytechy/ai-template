@@ -813,17 +813,17 @@ def warn_reviewed_head_slip(root, journal, tid, base, reviewed):
     """Loud integration diagnostic (WI-282, the secondary half): when the
     reviewed head (newest commit WITH a `WI:` trailer) is NOT the newest
     substantive build commit, a build commit slipped its trailer — so the
-    integrator is about to grade an older head's verdict while a newer, unnamed
-    commit rides the train. The commit-msg floor should have refused it, but a
-    train built before the floor (or past `--no-verify`) still reaches here;
-    surface it by name so it reads as a slipped trailer, not honest dissent.
-    Diagnostic only — it never changes the gate outcome."""
+    integrator is about to grade an older head's verdict, or NONE at all when the
+    first/only build commit slipped (`reviewed` is then None — the fail-open a
+    `reviewed and ...` guard would miss). Gate only on the substantive tip and
+    journal an explicit "(none)"; the commit-msg floor is the prevention, this the
+    visible backstop. Diagnostic only — it never changes the gate outcome."""
     tip = _substantive_tip(root, tid, base)
-    if tip and reviewed and tip != reviewed:
+    if tip and tip != reviewed:
         journal.event(
             "reviewed-head-trailer-slip",
             train=tid,
-            reviewed=reviewed[:12],
+            reviewed=reviewed[:12] if reviewed else "(none)",
             build_tip=tip[:12],
         )
 
@@ -1786,10 +1786,10 @@ def integrate_train(root, docs, journal, tid, wis, base, review_ctx):
             return "error", "reservation for {} does not name train {}".format(wid, tid)
     reviewed = reviewed_train_head(root, tid, base)
     # WI-282 diagnostic: if a build commit slipped its `WI:` trailer, `reviewed`
-    # resolved to an OLDER head than the substantive tip — journal it loudly so
-    # the mismatch reads as a slipped trailer, not honest dissent (never changes
-    # the gate outcome; the commit-msg floor is the prevention, this the visible
-    # backstop for a train that predates it or bypassed it).
+    # resolved to an OLDER head than the substantive tip (or to NONE when the
+    # first/only build commit slipped) — journal it loudly so the mismatch reads
+    # as a slipped trailer, not honest dissent (never changes the gate outcome;
+    # the commit-msg floor is the prevention, this the visible backstop).
     warn_reviewed_head_slip(root, journal, tid, base, reviewed)
     # Step 2b: the per-phase latest-APPROVE unanimity gate (WI-260, M-29). The
     # required set is exactly the phases the dispatcher SCHEDULED for this train

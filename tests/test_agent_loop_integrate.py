@@ -721,6 +721,31 @@ def test_no_slip_when_only_sanctioned_commits_ride_the_tip(tmp_path):
     assert not slips, "sanctioned coordinator commits on top are not a slip"
 
 
+def test_slip_fires_when_no_build_commit_carries_a_wi_trailer(tmp_path):
+    # WI-282 fail-open regression: a train whose FIRST/ONLY build commit slipped
+    # its WI trailer (a pre-floor or `--no-verify` commit) leaves
+    # reviewed_train_head() with no WI-trailered head to resolve — it returns
+    # None. The substantive tip still exists, so the diagnostic MUST fire with an
+    # explicit missing-reviewed value; the old `reviewed and ...` truthiness guard
+    # stayed silent here (the exact pre-floor path the diagnostic claims to catch).
+    repo = _make_repo(tmp_path, [_wi_row_srrefs("WI-201", "SR-063")])
+    head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
+    assert agent_loop.reserve_traincar(repo, "t1", ["WI-201"], head) is None
+    wt = tmp_path / "wt"
+    _git(repo, "worktree", "add", str(wt), "llm/train/t1")
+    tip = _commit_no_trailer(wt, "WI-201: build (trailer slipped, no WI: trailer)")
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", head)
+    assert reviewed is None, "no commit carries a WI trailer, so none resolves"
+    assert agent_dispatch._substantive_tip(repo, "t1", head) == tip
+    journal = agent_loop._Journal(repo)
+    agent_dispatch.warn_reviewed_head_slip(repo, journal, "t1", head, reviewed)
+    slips = [e for e in _events(repo) if e.get("event") == "reviewed-head-trailer-slip"]
+    assert slips, "a train with NO WI-trailered head must still journal the slip"
+    assert slips[0]["reviewed"] == "(none)"
+    assert slips[0]["build_tip"] == tip[:12]
+
+
 # --- publication + the intent protocol --------------------------------------------
 
 

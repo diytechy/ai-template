@@ -187,3 +187,67 @@ def test_end_to_end_through_the_installed_hook(scaffold):
     assert blocked.returncode != 0 and "WI-282" in blocked.stderr, blocked.stderr
     ok = commit(GOOD)
     assert ok.returncode == 0, ok.stdout + ok.stderr
+
+
+def _rev(repo, ref="HEAD"):
+    return subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", ref],
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def test_end_to_end_through_git_commit_in_a_linked_worktree(tmp_path):
+    # The production shape the floor actually runs in: the dispatcher builds each
+    # train in a LINKED `git worktree add` and hooks fire via the repo's shared
+    # `core.hooksPath` (setup.sh/ps1 set it). The floor keys the branch off
+    # `git rev-parse --show-toplevel` + `symbolic-ref HEAD` under $REPO_ROOT — in a
+    # linked worktree both must resolve to THAT worktree's train branch, not the
+    # primary checkout's. Drive it through real `git commit` (not a direct hook
+    # call) so that contract has a regression guard: malformed aborts the commit,
+    # a valid trailer commits, and a sanctioned coordinator subject commits.
+    _sh_or_skip()  # git commit runs the hook through git's own bundled sh
+    main = tmp_path / "main"
+    main.mkdir()
+    _git(main, "init")
+    _git(main, "config", "user.email", "loop@example.com")
+    _git(main, "config", "user.name", "Loop Test")
+    # A shared hooks path (absolute) applies across every worktree of the repo —
+    # the linked worktree inherits it from the repo config, exactly as production.
+    hooksdir = tmp_path / "hooks"
+    hooksdir.mkdir()
+    dest = hooksdir / "commit-msg"
+    dest.write_text(SHIPPED_HOOK.read_text(encoding="utf-8"), encoding="utf-8")
+    dest.chmod(0o755)
+    _git(main, "config", "core.hooksPath", str(hooksdir))
+    (main / "seed.txt").write_text("seed", encoding="utf-8")
+    _git(main, "add", "-A")
+    _git(main, "commit", "-q", "-m", "seed")  # default branch: floor is vacuous
+    # A REAL linked worktree checked out on the train branch.
+    wt = tmp_path / "train-wt"
+    _git(main, "worktree", "add", "-b", TRAIN, str(wt))
+    assert _rev(wt) == _rev(main), "the worktree starts at the seed commit"
+
+    def commit(message, filename):
+        (wt / filename).write_text("x", encoding="utf-8")
+        subprocess.run(
+            ["git", "-C", str(wt), "add", "-A"], capture_output=True, check=False
+        )
+        return subprocess.run(
+            ["git", "-C", str(wt), "commit", "-m", message],
+            capture_output=True,
+            text=True,
+        )
+
+    # Malformed trailer block: the shared-path hook must abort the real commit in
+    # the linked worktree, and nothing is committed (HEAD stays at the seed).
+    bad = commit(MALFORMED, "a.txt")
+    assert bad.returncode != 0 and "WI-282" in bad.stderr, bad.stderr
+    assert _rev(wt) == _rev(main), "the aborted commit left the worktree HEAD put"
+    # A well-formed build trailer commits.
+    good = commit(GOOD, "a.txt")
+    assert good.returncode == 0, good.stdout + good.stderr
+    assert _rev(wt) != _rev(main), "the valid build commit landed"
+    # A sanctioned coordinator subject (no WI trailer) commits.
+    sanctioned = commit("telemetry: session 001 scoreboard\n\na body\n", "b.txt")
+    assert sanctioned.returncode == 0, sanctioned.stdout + sanctioned.stderr
