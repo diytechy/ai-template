@@ -141,6 +141,8 @@ Contracts (interfaces): IF-037, IF-065
 | Public item | Summary | Implements |
 |---|---|---|
 | `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/run-state, …): |  |
+| `read_agent_loop_config(docs)` | The declared coordinator dials — the ``[agent-loop]`` section of |  |
+| `resolve_coordinator_dials(args, docs)` | ``(model, model_map, jobs_opt)`` for the coordinator, each resolved by the |  |
 | `pause_reason(lane)` | A declared **graceful-pause** request (WI-147): the `docs/pause` file |  |
 | `venv_python(root)` | Absolute path (a Path) to the repo's own .venv interpreter, or None when |  |
 | `harness_python(root)` | The interpreter the test harness (pytest + the pinned dev tools) should run |  |
@@ -225,7 +227,7 @@ Contracts (interfaces): IF-055, IF-067
 ### `scripts/agent_loop`
 _Unattended agent entry point: dispatcher, assigned worker, or interactive session._
 Imports (internal): `agent_common`, `agent_dispatch`, `agent_route`, `agent_session`, `plan_round`, `plan_runner`, `schedule`, `score_reviews`
-Contracts (interfaces): IF-015, IF-037, IF-041, IF-055, IF-064, IF-067
+Contracts (interfaces): IF-015, IF-037, IF-041, IF-055, IF-064, IF-067, IF-068
 
 | Public item | Summary | Implements |
 |---|---|---|

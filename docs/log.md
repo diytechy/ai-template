@@ -11542,7 +11542,7 @@ the WI). **Part B** — the owner asked why `AGENT_JOBS`/`AGENT_MODEL` live in a
 three `agent-resume.*` launchers (the 2026-07-22 dial edit touched the same two
 values in three files): not inherent — filed **IF-068 (Proposed)**: `agent_loop`
 reads a declared config section (CLI > env > file > default; IF-049/IF-038
-precedents), launchers shrink to plumbing. [WI-274](specs/WI-274.md) (queued,
+precedents), launchers shrink to plumbing. [WI-274](archive/specs/WI-274.2026-07-24.md) (queued,
 `scripts`, medium, `~WI-270`, SR-032;SR-026).
 
 **Environment event mid-session:** the owner uninstalled the base CPython 3.8 and
@@ -11804,3 +11804,7 @@ Head fc5879b composed onto 7732e84 by the serialized integrator; 1 required revi
 ## 2026-07-24 10:27 — integrated train p0-g3-WI-281-9ae9 (WI-281)
 
 Head d001358 composed onto 3033b57 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-281 -> done. Spec(s) archived: docs/archive/specs/WI-281.2026-07-24.md.
+
+## 2026-07-24 11:20 — integrated train 1-g3-WI-274-0083 (WI-274)
+
+Head 5770123 composed onto cec49ce by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-274 -> done. Spec(s) archived: docs/archive/specs/WI-274.2026-07-24.md.

@@ -74,7 +74,7 @@ BASELINE = {
     # explicit message replace the old ambient-fallthrough. Reviewed bump. Re-stamp
     # downward with WI-280.
     "agent_dispatch.py": 3627,
-    "agent_loop.py": 3034,
+    "agent_loop.py": 3042,
     "trace.py": 2206,
     "check_trajectory.py": 1926,
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new

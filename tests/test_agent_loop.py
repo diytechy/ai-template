@@ -1413,6 +1413,115 @@ def test_model_placeholder_without_model_fails_preflight(loop_repo):
     assert _invocations(ctl) == 0, "the guard fires before any session launches"
 
 
+# --- WI-274 part B / IF-068: the single-home coordinator dials -----------------
+# agent_loop reads its dials from docs/stack.ini [agent-loop] with the precedence
+# CLI flag > AGENT_* env > declared file > built-in default, so a one-dial change
+# edits ONE file instead of the same value in three agent-resume launchers.
+
+
+def test_read_agent_loop_config_reads_declared_dials(tmp_path):
+    al = load_script("agent_loop")
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    # Absent stack.ini -> {} (fail-soft: the env slots + defaults still apply).
+    assert al.read_agent_loop_config(docs) == {}
+    # A present [agent-loop] section -> the declared dials, stripped; a BLANK
+    # value is dropped (falls through to env/default), an absent key is absent.
+    (docs / "stack.ini").write_text(
+        "[product]\ntest = pytest\n\n"
+        "[agent-loop]\njobs = 1\nmodel =  opus \nmodel-map =\n",
+        encoding="utf-8",
+    )
+    assert al.read_agent_loop_config(docs) == {"jobs": "1", "model": "opus"}
+    # A stack.ini WITHOUT the section -> {} (the section is optional).
+    (docs / "stack.ini").write_text("[product]\ntest = pytest\n", encoding="utf-8")
+    assert al.read_agent_loop_config(docs) == {}
+    # A malformed stack.ini degrades to {} rather than crashing the loop.
+    (docs / "stack.ini").write_text("[unclosed section\njobs = 1\n", encoding="utf-8")
+    assert al.read_agent_loop_config(docs) == {}
+
+
+def test_resolve_coordinator_dials_precedence(tmp_path):
+    al = load_script("agent_loop")
+
+    class Args:  # a stand-in for the argparse namespace (only the dial fields)
+        def __init__(self, model=None, model_map=None, jobs=None):
+            self.model, self.model_map, self.jobs = model, model_map, jobs
+
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "stack.ini").write_text(
+        "[agent-loop]\njobs = 1\nmodel = declared\nmodel-map = PLAN=declared\n",
+        encoding="utf-8",
+    )
+    import os as _os
+
+    for var in ("AGENT_MODEL", "AGENT_MODEL_MAP", "AGENT_JOBS"):
+        _os.environ.pop(var, None)
+    # Nothing on CLI/env -> the declared file supplies every dial.
+    assert al.resolve_coordinator_dials(Args(), docs) == (
+        "declared",
+        "PLAN=declared",
+        "1",
+    )
+    # An env slot beats the declared file; an explicit CLI value beats the env.
+    _os.environ["AGENT_MODEL"] = "envm"
+    _os.environ["AGENT_JOBS"] = "3"
+    try:
+        assert al.resolve_coordinator_dials(Args(), docs)[0] == "envm"
+        assert al.resolve_coordinator_dials(Args(), docs)[2] == "3"
+        assert al.resolve_coordinator_dials(Args(model="clim"), docs)[0] == "clim"
+    finally:
+        for var in ("AGENT_MODEL", "AGENT_JOBS"):
+            _os.environ.pop(var, None)
+    # No declared file + nothing else -> jobs_opt None (caller applies the default).
+    assert al.resolve_coordinator_dials(Args(), tmp_path / "nodocs") == ("", "", None)
+
+
+@pytest.mark.parametrize(
+    "env_model,cli_model,expected",
+    [
+        (None, None, "declared-tier"),  # declared file wins over the built-in default
+        ("env-tier", None, "env-tier"),  # AGENT_MODEL env beats the declared file
+        ("env-tier", "cli-tier", "cli-tier"),  # an explicit --model beats both
+    ],
+)
+def test_model_dial_precedence(loop_repo, monkeypatch, env_model, cli_model, expected):
+    # IF-068 end-to-end through the real worker path (the fake agent records the
+    # {model} it was handed): CLI flag > AGENT_MODEL env > docs/stack.ini
+    # [agent-loop] model > built-in default. A fresh loop_repo per case keeps the
+    # single build clean. `jobs`/`model-map` share the identical ladder in main().
+    repo, ctl, template = loop_repo
+    (repo / "docs" / "stack.ini").write_text(
+        "[agent-loop]\nmodel = declared-tier\n", encoding="utf-8"
+    )
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    monkeypatch.delenv("AGENT_MODEL", raising=False)
+    monkeypatch.delenv("AGENT_MODEL_MAP", raising=False)
+    if env_model is not None:
+        monkeypatch.setenv("AGENT_MODEL", env_model)
+    extra = ["--model", cli_model] if cli_model is not None else []
+    proc = run_py(
+        [
+            SCRIPTS / "agent_loop.py",
+            "--root",
+            repo,
+            "--agent-cmd",
+            template,
+            "--pause",
+            "0",
+            "--wi",
+            "WI-201",
+            "--train",
+            "t1",
+            *extra,
+        ],
+        cwd=repo,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (ctl / "models.txt").read_text(encoding="utf-8").split()[0] == expected
+
+
 # =============================================================================
 # WI-080 Slice C — RoutingState transitions
 # =============================================================================

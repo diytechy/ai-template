@@ -26,15 +26,15 @@ REM stream-json + --verbose (WI-125): the CLI emits an event line per turn, so
 REM the coordinator console shows live progress instead of 30 silent minutes;
 REM the final result event carries the same telemetry the json format did.
 set "AGENT_CMD=claude -p --model {model} --output-format stream-json --verbose --dangerously-skip-permissions"
-REM Default model tier + per-phase map keyed on the in-process phase (the default
-REM model stays strong - an unknown phase routes UP, never down). With managed
-REM routing ON (docs/agents-enabled present) the docs/agents.csv registry +
-REM AGENT_TIER_MAP below drive selection; these env maps are the declared
-REM FALLBACK (an absent enable-list = this legacy path). Values kept coherent
-REM with the owner dial 2026-07-22: Opus at BOTH strong and medium (the owner
-REM has no Fable access) - opus plans/design-checks/critiques + builds + reviews.
-set "AGENT_MODEL=opus"
-set "AGENT_MODEL_MAP=PLAN=opus,BUILD=opus,REVIEW-A=opus,REVIEW-B=opus,DESIGN-CHECK=opus,CRITIQUE=opus"
+REM Default model tier + per-phase fallback map (used when managed routing is
+REM off). WI-274: the VALUES now live ONCE in docs/stack.ini [agent-loop] (model
+REM / model-map) - agent_loop reads them there, so a dial change edits one file,
+REM not this value in three launchers. These slots stay the env-override tier
+REM (precedence: CLI flag ^> this env slot ^> docs/stack.ini ^> built-in
+REM default); left empty so the declared home wins. Owner dial 2026-07-22 (Opus
+REM at both strong and medium) lives in stack.ini now.
+set "AGENT_MODEL="
+set "AGENT_MODEL_MAP="
 REM Per-phase ROUTING tier for the docs/agents.csv router (strong|medium|quick).
 REM Empty = the engine's built-in defaults (PLAN / DESIGN-CHECK / CRITIQUE
 REM strong, BUILD / REVIEW-A / REVIEW-B medium; a worker still pins BUILD up
@@ -61,13 +61,14 @@ REM single-provider since WI-160.)
 set "AGENT_CMD_MAP="
 REM Optional hands-on template for --interactive (defaults to AGENT_CMD):
 set "AGENT_CMD_INTERACTIVE=claude --model {model} {prompt}"
-REM This repo has completed the dispatcher migration audits in
-REM docs/parallel-ready, so the dispatcher CAN run two workers. Owner directive
-REM 2026-07-22: default to SERIAL (--jobs 1) so agent-resume makes changes in
-REM series, one worker at a time. Raise this (or pass --jobs N) to parallelize
-REM again; an absent slot still boots the dispatcher (WI-210 - the legacy serial
-REM driver is retired).
-if not defined AGENT_JOBS set "AGENT_JOBS=1"
+REM Worker ceiling (dispatcher). WI-274: the VALUE now lives in docs/stack.ini
+REM [agent-loop] jobs (currently 1 = serial, the owner dial 2026-07-22). This
+REM slot stays the env-override tier - an inherited AGENT_JOBS still wins over
+REM the declared file (precedence: CLI --jobs ^> this env slot ^> docs/stack.ini
+REM ^> built-in default); left empty so the declared home is the one place a dial
+REM change lands. An absent value still boots the dispatcher (WI-210 - the legacy
+REM serial driver is retired).
+if not defined AGENT_JOBS set "AGENT_JOBS="
 REM (The meta-repo resume prompt slot is retired with the serial driver,
 REM WI-210: a plain launch is the dispatcher, and worker sessions build
 REM their explicit assignments - the repo rules live in CLAUDE.md and the

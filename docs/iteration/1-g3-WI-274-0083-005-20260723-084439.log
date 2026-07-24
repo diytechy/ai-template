@@ -1,0 +1,33 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 005
+# date: 2026-07-23 09:00
+# train: 1-g3-WI-274-0083
+# base: 747f1529c206
+# phase: BUILD
+# wi: WI-274
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: b7cee80..8a4c983
+# tokens: 
+# cost-usd: 
+# wall-secs: 973
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 4873
+# exit-code: 0
+# ---
+Committed the WI-274 review rework: `8a4c983`.
+
+- Documents exact POSIX/Windows migration edits so `[agent-loop] jobs` is not overridden.
+- Adds fresh-scaffold regression proving `jobs = 1` wins after migration.
+- Makes commented config examples runnable when uncommented.
+
+Checks passed: targeted tests (25), ruff lint/format, docs check, commit hook.
+
+Smoke/full suites each hit the pre-existing protected `docs/status.md` WI-275 forward-only failure; no protected coordination files were changed.
