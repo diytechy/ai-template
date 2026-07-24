@@ -1,0 +1,30 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-07-24 06:35
+# train: p0-g3-WI-286-9253
+# base: 7732e8419ebc
+# phase: REVIEW-A
+# wi: WI-286
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: c346d5f..8e3bafb
+# tokens: 
+# cost-usd: 
+# wall-secs: 260
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2767
+# exit-code: 0
+# ---
+Verdict recorded: **CHANGES-REQUESTED (1 MAJOR)**.
+
+- Review: [002-REVIEW-A-b988c18.md](C:\Projects\ai-template-trains\p0-g3-WI-286-9253\docs\reviews\p0-g3-WI-286-9253\002-REVIEW-A-b988c18.md)
+- Commit: `8e3bafb review: record WI-286 independent verdict`
+
+Evidence: 11 targeted tests passed; the new combined-bar regression fails on the pre-fix commit as expected. An actual Python 3.11 dispatch with no `.venv` still completed `DONE`, demonstrating the reported fail-open.
