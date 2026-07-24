@@ -12000,3 +12000,51 @@ All three were confirmed to **fail against the original code** before being kept
 by construction — 115/116/117 now predate the render surface again. That is the
 standing cost of any render fix, and it clears when the next critique post-dates
 this commit. status.md records the rule so it stops surprising people.
+
+## 2026-07-24 — WI-273 composed and verified, NOT integrated (gateway outage)
+
+The second half of the owner's "fix A4, then land WI-273" ran as far as the
+external critic gateway allowed, and stopped honestly short of integration.
+
+**Composed and verified.** Train `3-g3-WI-273-b45e` merged onto the WI-293
+baseline on branch `stage/WI-273` (`9b85f03`, a staging worktree — deliberately
+NOT on `dualplan-routing-fix`). Two conflicts, both the known mechanical classes,
+resolved as the integrator's auto-resolvers would: the generated
+`PROJECT_STATE.html` regenerated from the composed tree, and the module-size
+ratchet re-stamped to the ACTUAL composed count 4660 (the train had stamped
+4511→4573 off its own base while HEAD sat at 4598 — the re-stamp-off-own-base
+conflict WI-289 tracks; both rationale chains kept rather than picking a side).
+`gen_trajectory.py` and `tests/test_gen_trajectory.py` auto-merged clean: WI-273
+works the tab emitters and HTML_TEMPLATE, WI-293 the palette tokens and process
+CSS. Composed artifact carries both — 5 `role="tab"` + 5 `role="tabpanel"`, the
+tablist, the arrow-key controller, and `--hub`. **Full suite green: 1479 passed,
+7 skipped** (416s).
+
+**Blocked on an external dependency.** Integration needs two non-Anthropic
+verdicts — a fresh REVIEW-A (the train's last one is CHANGES-REQUESTED at a stale
+head, and its head has never been reviewed) and the SR-052 CRITIQUE that WI-273's
+own `BlockRef` names. Both were dispatched; **both hung**, producing no verdict
+after ~85 minutes. A lean retry hung at the 32-byte banner, and a one-token
+`PONG` probe — the same probe that succeeded at the start of this session —
+now times out. The OpenCode-Go gateway is down or rate-limited. This is the
+documented "sometimes did not respond" failure mode `docs/agents.csv` records for
+the pre-WI-160 opencode path, now seen on the Go gateway.
+
+Nothing was faked to route around it. A Claude-authored verdict would violate
+SR-084/SN-024 on both counts (self-assessment on the code it just composed, and
+family homogeneity), so the honest state is: composed, green, unintegrated.
+
+**The gate is RED again, correctly.** `check_trajectory --strict` reports
+`perceptual-stale SR-052;SR-053;SR-054` because WI-293 changed
+`gen_trajectory.py` after 115/116/117. That is the fail-closed gate doing its job
+— the render moved and no critic has judged it since — not a regression to paper
+over. It clears with ONE fresh critique when the gateway returns. Reverting a real
+WCAG fix to restore a green checker would be exactly the "shipped it because
+nothing judged it" failure SN-024 exists to prevent.
+
+**Resumption kit** in the gitignored `out/wi-273-handoff/`: the REVIEW-A brief
+(built to `docs/rubrics/code-review-adversarial.md` R1–R5), the 407-line change
+patch, the prior verdict for the R5 re-drive, and the three critique briefs
+(including a lean 9-shot accessibility variant). Worktrees `stage-WI-273` and
+`review-WI-273` are left in place with Playwright junctioned in. Re-dispatch when
+`opencode run -m opencode-go/kimi-k3` answers a PONG probe again.
