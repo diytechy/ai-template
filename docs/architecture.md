@@ -142,6 +142,9 @@ Contracts (interfaces): IF-037, IF-065
 |---|---|---|
 | `read_declared(path, default)` | Read a one-word declared-policy file (docs/gate, docs/run-state, …): |  |
 | `pause_reason(lane)` | A declared **graceful-pause** request (WI-147): the `docs/pause` file |  |
+| `venv_python(root)` | Absolute path (a Path) to the repo's own .venv interpreter, or None when |  |
+| `harness_python(root)` | The interpreter the test harness (pytest + the pinned dev tools) should run |  |
+| `interpreter_version(exe)` | (major, minor) of the interpreter at `exe`, or None when it cannot be run. |  |
 | `parse_blackout(line)` | Parse a `HH:MM-HH:MM` blackout line into `(start_min, end_min)` — minutes |  |
 | `blackout_wake(line, now)` | Seconds until the current UTC weekday blackout window ends, or `None` when |  |
 | `blackout_banner(window, resume_at, wake_seconds, policy_file)` | The multi-line terminal banner shown when the coordinator holds a NEW |  |

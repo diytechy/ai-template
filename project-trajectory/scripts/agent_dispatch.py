@@ -49,6 +49,7 @@ try:
         EXIT_STALL,
         EXIT_TRAIN_END,
         EXIT_WAITING,
+        MIN_PYTHON,
         TRAILER_EVIDENCE_FMT,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
@@ -60,7 +61,9 @@ try:
         acquire_lock,
         blackout_wake,
         git,
+        harness_python,
         head_sha_full,
+        interpreter_version,
         latest_trailer_evidence,
         parse_map,
         pause_reason,
@@ -69,6 +72,7 @@ try:
         regenerate_index,
         release_lock,
         stop_banner,
+        venv_python,
     )
     from plan_runner import PLAN_MODE_DUAL, run_dual_plan_round, wi_plan_mode
 except ImportError:  # pragma: no cover - in-process fallback
@@ -85,6 +89,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         EXIT_STALL,
         EXIT_TRAIN_END,
         EXIT_WAITING,
+        MIN_PYTHON,
         TRAILER_EVIDENCE_FMT,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
@@ -96,7 +101,9 @@ except ImportError:  # pragma: no cover - in-process fallback
         acquire_lock,
         blackout_wake,
         git,
+        harness_python,
         head_sha_full,
+        interpreter_version,
         latest_trailer_evidence,
         parse_map,
         pause_reason,
@@ -105,6 +112,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         regenerate_index,
         release_lock,
         stop_banner,
+        venv_python,
     )
     from plan_runner import PLAN_MODE_DUAL, run_dual_plan_round, wi_plan_mode
 
@@ -442,6 +450,63 @@ def worktree_root(root):
     never nests inside the primary checkout or the disposable out/."""
     root = Path(root).resolve()
     return root.parent / (root.name + "-trains")
+
+
+def _harness_floor_failures(root):
+    """WI-286: a singleton list with a floor message when the interpreter the
+    harness would run under is below MIN_PYTHON, else []. A train worktree has no
+    .venv, so a bare `python`/`pytest` there resolves ambient PATH (run
+    20260723T0202 inherited 3.8) — a below-floor idiom then passes locally and
+    only fails in CI, and the pinned dev tools may be absent. The dispatcher runs
+    the harness under the repo's own .venv (shared into each worktree by absolute
+    path) and preflights it HERE, before any worker is spawned or the integrator
+    bar runs; a .venv that cannot be run to report a version fails closed too.
+    Returned as a LIST so dispatch_run folds it into the existing preflight
+    failures with `+` — no new branch, so the complexity ratchet is unmoved."""
+    py = venv_python(root)
+    ver = interpreter_version(py) if py else interpreter_version(None)
+    floor = "{}.{}".format(*MIN_PYTHON)
+    if py is not None and ver is None:
+        return [
+            "the ./.venv interpreter ({}) could not be run to check its version "
+            "— recreate it (scripts/dev-setup --install; WI-274/WI-286).".format(py)
+        ]
+    if ver < MIN_PYTHON:
+        where = (
+            "the repo ./.venv is Python {}.{}".format(*ver)
+            if py is not None
+            else "no ./.venv found; the harness would run under ambient Python "
+            "{}.{}".format(*ver)
+        )
+        return [
+            "{} — below the {} floor. The harness (tests + pinned dev tools) must "
+            "run under a floor-satisfying interpreter, or a below-floor idiom "
+            "passes locally and only fails in CI. Run scripts/dev-setup --install "
+            "to (re)create ./.venv at Python {}+ (WI-274/WI-286).".format(
+                where, floor, floor
+            )
+        ]
+    return []
+
+
+def _activate_root_venv(root):
+    """Point THIS dispatcher process's PATH at the repo's own .venv bin dir (and
+    set VIRTUAL_ENV / drop PYTHONHOME) so every child it spawns — worker agent
+    sessions, the pre-commit floor on a worker or staging commit, `./scripts/
+    check.sh`'s PATH fallback — resolves the shared pinned ≥3.11 toolchain instead
+    of the ambient PATH interpreter (WI-286). One activation, inherited by all
+    children; idempotent, and a no-op when the root has no .venv (a repo that
+    never had one is unaffected). Sharing the ROOT .venv by absolute path is the
+    lean the spec records — one pinned toolchain, zero per-train install."""
+    py = venv_python(root)
+    if py is None:
+        return
+    bindir = str(py.parent)
+    cur = os.environ.get("PATH", "")
+    if cur.split(os.pathsep)[:1] != [bindir]:
+        os.environ["PATH"] = bindir + (os.pathsep + cur if cur else "")
+    os.environ["VIRTUAL_ENV"] = str(Path(root).resolve() / ".venv")
+    os.environ.pop("PYTHONHOME", None)
 
 
 def existing_worktrees(root):
@@ -1158,12 +1223,15 @@ def _run_combined_bar(worktree, root):
     lacks (it declares `[product] test`), so every integration journalled
     "skipped (no declared test command)" and fail-OPENed — the composed-tree bar
     never ran. Now only a profile declaring NEITHER key skips; a
-    declared-but-unread/empty key no longer silently passes."""
+    declared-but-unread/empty key no longer silently passes. WI-286: `{py}` is
+    the repo's floor-satisfying .venv (harness_python) — an absolute path — so the
+    bar runs the pinned ≥3.11 toolchain even when the dispatcher was itself
+    launched on ambient Python, rather than re-importing the ambient-3.8 risk."""
     ini = Path(worktree) / "docs" / "stack.ini"
     if not ini.exists():
         return True, "skipped (no docs/stack.ini)"
     try:
-        argv = _declared_test_command(ini)
+        argv = _declared_test_command(ini, harness_python(root))
     except ValueError as exc:  # malformed/unreadable profile: park, don't skip
         return False, "stack.ini unreadable: {}".format(exc)
     if argv is None:  # neither [product] test nor [stack] test: stackless fixture
@@ -3165,12 +3233,20 @@ def dispatch_run(args, root):
         if args.agent_cmd is not None
         else os.environ.get("AGENT_CMD", "")
     )
-    failures = preflight(root, template, args)
+    # WI-286: the harness-interpreter floor rides the same preflight gate (folded
+    # in with `+` so no new branch touches dispatch_run's complexity baseline) —
+    # a below-floor .venv/ambient interpreter refuses here, before any worker is
+    # spawned or the integrator bar runs, so it can never silently produce a green.
+    failures = preflight(root, template, args) + _harness_floor_failures(root)
     if failures:
         print("agent_loop: preflight failed —", file=sys.stderr)
         for f in failures:
             print("  - " + f, file=sys.stderr)
         return EXIT_PREFLIGHT
+    # Point the dispatcher — and every child it spawns (worker agent sessions, the
+    # pre-commit floor, the integrator's staging commits, ./scripts/check.sh) — at
+    # the repo's floor-satisfying .venv now the preflight has confirmed it (WI-286).
+    _activate_root_venv(root)
 
     # One dispatcher per checkout — the same kernel lock the legacy loop takes,
     # so a legacy coordinator and a dispatcher can never grind one worktree.

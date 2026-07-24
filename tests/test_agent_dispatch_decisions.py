@@ -5,7 +5,9 @@ session. Effect-level dispatcher and train behavior stays in the corresponding
 agent-loop end-to-end modules.
 """
 
+import os
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -587,3 +589,112 @@ def test_status_map_regen_opts_in_on_either_generated_file():
     )
     assert set(status_entry[3]) == {"docs/status.md", "docs/open-items.md"}
     assert status_entry[3] is dispatcher._STATUS_MAP_MARKERS  # the ONE home
+
+
+# --- WI-286: worktree sessions run the pinned ≥3.11 .venv, not ambient PATH ----
+# A dispatcher train worktree has no .venv of its own, so a bare python/pytest
+# there resolves whatever is ambient (run 20260723T0202 inherited 3.8, below the
+# 3.11 floor). The dispatcher resolves the repo's own .venv (shared by absolute
+# path), runs the harness under it, and preflights the floor so a below-floor
+# interpreter never silently produces a green.
+
+
+def _stub_venv(root):
+    """Create root/.venv with a stub interpreter at the OS-native layout (bin/ on
+    POSIX, Scripts/ on Windows). A stub FILE is enough for the path-resolution and
+    activation tests, which never run it. Returns the interpreter path."""
+    if os.name == "nt":
+        d = root / ".venv" / "Scripts"
+        exe = d / "python.exe"
+    else:
+        d = root / ".venv" / "bin"
+        exe = d / "python"
+    d.mkdir(parents=True)
+    exe.write_text("stub interpreter\n", encoding="utf-8")
+    return exe
+
+
+def test_venv_python_finds_native_layout_else_none(tmp_path):
+    assert agent_common.venv_python(tmp_path) is None  # no .venv
+    exe = _stub_venv(tmp_path)
+    assert agent_common.venv_python(tmp_path) == exe
+
+
+def test_harness_python_prefers_venv_else_sys_executable(tmp_path):
+    # No .venv -> this process's own interpreter is the fallback.
+    assert agent_common.harness_python(tmp_path) == sys.executable
+    exe = _stub_venv(tmp_path)
+    assert agent_common.harness_python(tmp_path) == str(exe)
+
+
+def test_interpreter_version_reads_self_and_fails_soft_on_a_broken_exe(tmp_path):
+    # None and this process's own executable short-circuit to sys.version_info
+    # (no subprocess); a garbage/non-runnable path returns None, not a crash.
+    assert agent_common.interpreter_version(None) == sys.version_info[:2]
+    assert agent_common.interpreter_version(sys.executable) == sys.version_info[:2]
+    garbage = _stub_venv(tmp_path)  # a text file named python(.exe) cannot run
+    assert agent_common.interpreter_version(garbage) is None
+
+
+def test_harness_floor_clears_at_or_above_floor(tmp_path):
+    # The tests themselves run on a floor-satisfying interpreter, so a repo with
+    # no .venv (harness falls to this process) clears the floor -> [].
+    assert dispatcher._harness_floor_failures(tmp_path) == []
+
+
+def test_harness_floor_refuses_a_below_floor_venv(tmp_path, monkeypatch):
+    monkeypatch.setattr(dispatcher, "venv_python", lambda root: tmp_path / "py")
+    monkeypatch.setattr(dispatcher, "interpreter_version", lambda exe: (3, 8))
+    fails = dispatcher._harness_floor_failures(tmp_path)
+    assert len(fails) == 1
+    assert ".venv is Python 3.8" in fails[0] and "below the 3.11 floor" in fails[0]
+
+
+def test_harness_floor_refuses_below_floor_ambient_when_no_venv(tmp_path, monkeypatch):
+    monkeypatch.setattr(dispatcher, "venv_python", lambda root: None)
+    monkeypatch.setattr(dispatcher, "interpreter_version", lambda exe: (3, 8))
+    fails = dispatcher._harness_floor_failures(tmp_path)
+    assert len(fails) == 1
+    assert "no ./.venv found" in fails[0] and "ambient Python 3.8" in fails[0]
+
+
+def test_harness_floor_fails_closed_on_an_unrunnable_venv(tmp_path, monkeypatch):
+    # A .venv present but its interpreter cannot report a version -> fail closed
+    # (never treat an unverifiable interpreter as floor-satisfying).
+    monkeypatch.setattr(dispatcher, "venv_python", lambda root: tmp_path / "py")
+    monkeypatch.setattr(dispatcher, "interpreter_version", lambda exe: None)
+    fails = dispatcher._harness_floor_failures(tmp_path)
+    assert len(fails) == 1 and "could not be run" in fails[0]
+
+
+def test_activate_root_venv_points_children_at_the_pinned_toolchain(
+    tmp_path, monkeypatch
+):
+    exe = _stub_venv(tmp_path)
+    bindir = str(exe.parent)
+    monkeypatch.setattr(os, "environ", {"PATH": "/pre-existing"})
+    dispatcher._activate_root_venv(tmp_path)
+    assert os.environ["PATH"].split(os.pathsep)[0] == bindir
+    assert os.environ["PATH"].endswith("/pre-existing")
+    assert os.environ["VIRTUAL_ENV"] == str((tmp_path / ".venv").resolve())
+    # Idempotent — a second activation does not double-prepend.
+    dispatcher._activate_root_venv(tmp_path)
+    assert os.environ["PATH"].split(os.pathsep).count(bindir) == 1
+
+
+def test_activate_root_venv_is_a_noop_without_a_venv(tmp_path, monkeypatch):
+    monkeypatch.setattr(os, "environ", {"PATH": "/unchanged"})
+    dispatcher._activate_root_venv(tmp_path)  # no .venv here
+    assert os.environ == {"PATH": "/unchanged"}
+
+
+def test_declared_test_command_substitutes_the_given_py(tmp_path):
+    ini = tmp_path / "stack.ini"
+    ini.write_text("[product]\ntest = {py} -m pytest\n", encoding="utf-8")
+    assert agent_common._declared_test_command(ini, "/opt/venv/python") == [
+        "/opt/venv/python",
+        "-m",
+        "pytest",
+    ]
+    # Default (no py) stays this interpreter — the WI-285 contract is unchanged.
+    assert agent_common._declared_test_command(ini)[0] == sys.executable

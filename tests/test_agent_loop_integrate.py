@@ -432,6 +432,33 @@ def test_declared_test_command_resolution(tmp_path):
     assert agent_dispatch._declared_test_command(ini) == []
 
 
+def test_combined_bar_runs_under_the_root_venv_interpreter(tmp_path, monkeypatch):
+    # WI-286: {py} for the composed-tree bar is the repo's OWN .venv (an absolute
+    # path resolved by harness_python), not this process's interpreter — so the
+    # bar runs the pinned ≥3.11 toolchain even when the dispatcher was itself
+    # launched on ambient Python (the ambient-3.8 risk WI-285's {py}=sys.executable
+    # would otherwise re-import).
+    root = tmp_path / "root"
+    if __import__("os").name == "nt":
+        vpy = root / ".venv" / "Scripts" / "python.exe"
+    else:
+        vpy = root / ".venv" / "bin" / "python"
+    vpy.parent.mkdir(parents=True)
+    vpy.write_text("stub interpreter\n", encoding="utf-8")  # only resolved, never run
+    wt = _bar_worktree(tmp_path, "[product]\ntest = {py} -c pass\n")
+
+    captured = {}
+
+    def spy(ini, py=None):
+        captured["py"] = py
+        return [sys.executable, "-c", ""]  # a harmless real command so the bar passes
+
+    monkeypatch.setattr(agent_dispatch, "_declared_test_command", spy)
+    ok, detail = agent_dispatch._run_combined_bar(str(wt), str(root))
+    assert ok and detail == "pass", detail
+    assert captured["py"] == str(vpy)  # the root .venv, via harness_python(root)
+
+
 def test_conflict_forces_focused_re_review_clean_apply_does_not(tmp_path):
     # Two trains write DIFFERENT content to the SAME source path: the first
     # composes cleanly (no re-review), the second hits a textual conflict and

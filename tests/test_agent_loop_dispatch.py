@@ -21,6 +21,7 @@ the same fake agent the worker suite uses. The load-bearing guarantees:
 
 import csv
 import json
+import os
 import subprocess
 import sys
 
@@ -438,6 +439,24 @@ def test_bad_jobs_value_is_preflight_failure(tmp_path):
     repo, ctl, fake = _setup(tmp_path, [_wi_row("WI-201")])
     proc = _dispatch(repo, fake, ctl, jobs="zero")
     assert proc.returncode == agent_loop.EXIT_PREFLIGHT
+
+
+def test_dispatcher_refuses_a_below_floor_harness_interpreter(tmp_path):
+    # WI-286: a repo whose ./.venv interpreter cannot report a ≥3.11 version is
+    # refused at preflight, before any worker is spawned or the integrator bar
+    # runs — a below-floor run must never silently produce a green. A garbage file
+    # named python(.exe) fails to execute on both OSes (WinError 193 / a
+    # non-executable file), so interpreter_version returns None -> fail closed.
+    repo, ctl, fake = _setup(tmp_path, [_wi_row("WI-201")])
+    if os.name == "nt":
+        vpy = repo / ".venv" / "Scripts" / "python.exe"
+    else:
+        vpy = repo / ".venv" / "bin" / "python"
+    vpy.parent.mkdir(parents=True)
+    vpy.write_text("not a real interpreter\n", encoding="utf-8")
+    proc = _dispatch(repo, fake, ctl)
+    assert proc.returncode == agent_loop.EXIT_PREFLIGHT, proc.stdout + proc.stderr
+    assert "could not be run" in (proc.stdout + proc.stderr)
 
 
 def test_lease_worktree_survives_a_hand_deleted_worktree(tmp_path):

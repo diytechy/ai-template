@@ -61,7 +61,13 @@ BASELINE = {
     # bar the integrator reworks (SR-008), not a FileNotFoundError that crashes the
     # walk-away dispatcher after the worker is ready. Reviewed bump. Re-stamp
     # downward with WI-280.
-    "agent_dispatch.py": 3538,
+    # +76 (3538 -> 3614), WI-286: the worktree harness-interpreter fix —
+    # _harness_floor_failures (preflight the ≥3.11 floor before any worker/bar
+    # runs) + _activate_root_venv (point the dispatcher and every child at the
+    # repo's shared .venv by absolute path) + _run_combined_bar's {py}=venv, so a
+    # venv-less train worktree stops resolving ambient 3.8. New behaviour, reviewed
+    # bump (reason here + in docs/log.md at integrate). Re-stamp downward with WI-280.
+    "agent_dispatch.py": 3614,
     "agent_loop.py": 3034,
     "trace.py": 2206,
     "check_trajectory.py": 1926,
