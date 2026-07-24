@@ -11578,7 +11578,7 @@ regenerated into the commit). **WI-275 filed** (owner directive, front of queue)
 the two Windows reds are the H-4 prompt-transport refusal (`272a6e8`,
 `agent_session._validate_prompt_transport`) correctly rejecting prompt-in-argv
 batch-shim launches that the two fixtures still perform — a test-layer fix
-([spec](specs/WI-275.md): route fixtures through the stdin path; WI-120 spawn +
+([spec](archive/specs/WI-275.2026-07-23.md): route fixtures through the stdin path; WI-120 spawn +
 WI-217 capture assertions survive verbatim; product untouched). Filed separate
 from WI-274 (different concern + files) and **Priority 1 — the column's first
 use** — because the unpushed branch would turn CI's Windows legs red on push:
