@@ -52,7 +52,11 @@ BASELINE = {
     # (_wi_specrefs + _archive_closed_specs + the SpecRef='' clear) so a terminal
     # WI clears its SpecRef and archives its spec — no more stranded R-F debt.
     # New behaviour, reviewed bump (log 2026-07-23). Re-stamp downward with WI-280.
-    "agent_dispatch.py": 3533,
+    # -1 (3533 -> 3532), WI-285: _run_combined_bar delegates stack.ini
+    # test-command resolution to agent_common._declared_test_command (logic moved
+    # OUT to that CMP-004 shared-primitives module — no CMP-004→CMP-001 check
+    # import) and drops the now-unused `import shlex` — a tightening re-stamp.
+    "agent_dispatch.py": 3532,
     "agent_loop.py": 3034,
     "trace.py": 2206,
     "check_trajectory.py": 1926,
