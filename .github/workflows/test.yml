@@ -57,6 +57,32 @@ jobs:
       - name: Run kit self-tests
         run: python -m pytest -q -n auto
 
+  # WI-281: the smoke commit bar's wall-clock budget. The DETERMINISTIC membership
+  # ratchet (tests/test_smoke_budget.py) is the machine-independent floor and
+  # already runs in the test job above; THIS job times the actual `-m smoke` wall
+  # against docs/stack.ini [smoke-budget] seconds and ENFORCES it (exit 1 on
+  # breach) so a budget regression cannot ship silently.
+  # Enforce is safe here — not the flaky assert an untiered bar would be — because
+  # the re-tiered smoke tier is startup-dominated, not core-bound: measured
+  # 2026-07-23 (rework, 3.11.9) it runs ~7.5 s at 24 cores, ~8.1 s at 4, ~10.5 s
+  # at 2, so the 60 s budget keeps ~5x headroom on a GitHub-hosted runner (more
+  # cores than 2). A breach here means the tier genuinely stopped being a smoke test
+  # (a heavy subprocess/scaffold module slipped back in — which the deterministic
+  # membership ratchet also catches), not runner noise. One lane: this is a timing
+  # signal, not a portability check.
+  smoke-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.x"
+      - name: Install test tooling
+        run: python -m pip install -r requirements-dev.txt
+      - name: Time the smoke tier against its budget (enforce)
+        run: python scripts/check_smoke_budget.py --mode enforce
+
   # The kit self-adopts its own gated process (IMPROVEMENT_PLAN.md Thread 47): this
   # job runs the kit's OWN check.py at the gate docs/gate declares — the same bar a
   # contributor runs locally, so CI enforces format · lint · tests+coverage ·

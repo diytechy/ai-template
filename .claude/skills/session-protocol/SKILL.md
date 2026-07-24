@@ -55,15 +55,19 @@ python project-trajectory/scripts/check_docs.py --root . --stale
 ```
 
 Both must pass before **each** commit — this is the **commit bar**. `-m smoke`
-is the fast per-commit tier (measured 2026-07-22 on a 24-core box: ~3.3 min /
-1084 cases vs ~4.2 min / 1374 for the full suite, both `-n auto` — the
-declared stack.ini command, WI-075; snapshots, not contracts — re-measure
-locally, and re-stamp here when the suite grows). Tiering
-is opt-out: smoke drops only the heavy end-to-end modules
-(`tests/conftest.py` `SLOW_MODULES` — full hook/gate/scaffold runs the commit
-hook and the gate re-exercise anyway), so a **new test is in the bar by
-default**. Run the **full** unfiltered suite (`pytest -q -n auto`) before
-claiming a slice/phase done, at close, and after a broad script change. The
+is the fast per-commit tier, re-tiered to a **budget** by WI-281: it must run
+**≤ 60 s** wall (measured 2026-07-23 on a 24-core box: ~7 s / 349 tests vs
+~4.2 min / ~1380 for the full suite, both `-n auto`) so it stays a real smoke
+test — "is it basically alive?", not a re-run of most of the suite. Tiering is
+opt-out: smoke drops the **subprocess/scaffold-heavy** modules
+(`tests/conftest.py` `SLOW_MODULES` — the hook/gate/scaffold/heavy-script runs
+the commit hook and the gate re-exercise anyway), so a **new (in-process) test
+is in the bar by default**. The runtime is its own budget item — declared
+seconds + a deterministic membership ratchet — in `docs/stack.ini`
+`[smoke-budget]` + `tests/test_smoke_budget.py` (it bites if the tier grows back
+toward the full suite; re-stamp deliberately, reason in the log). Run the
+**full** unfiltered suite (`pytest -q -n auto`) before claiming a slice/phase
+done, at close, and after a broad script change. The
 full `check.py --gate <gate>` is the **gate bar** (unfiltered suite + coverage):
 it belongs to gate advancement, phase close, and CI, not to each
 mid-phase slice; `--jobs 0` runs its independent steps concurrently. A per-WI

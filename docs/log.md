@@ -11622,7 +11622,7 @@ that"). Investigated why the per-commit smoke bar costs minutes: the WI-122
 tiering is opt-OUT (`tests/conftest.py::SLOW_MODULES`, 15 heavy modules named),
 so smoke collects **1088/1378 tests — 79% of the suite** — measured 6:12/6:51/
 8:01 wall at `-n auto` on the dev box (3.11.9 venv) against status.md's
-declared ~3.3 min. [WI-281](specs/WI-281.md) (queued, `quality`, medium):
+declared ~3.3 min. [WI-281](archive/specs/WI-281.2026-07-24.md) (queued, `quality`, medium):
 **(a)** measure per-module durations, **(b)** re-tier to a ≤ 60 s bar —
 preferred: keep the opt-out partition (new tests still default into the bar)
 and move whole modules to `slow` by measured rank at the subprocess/scaffold
@@ -11800,3 +11800,7 @@ Head ffdfe76 composed onto bd2a21b by the serialized integrator; 1 required revi
 ## 2026-07-24 07:27 — integrated train p0-g3-WI-286-9253 (WI-286)
 
 Head fc5879b composed onto 7732e84 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-286 -> done. Spec(s) archived: docs/archive/specs/WI-286.2026-07-24.md.
+
+## 2026-07-24 10:27 — integrated train p0-g3-WI-281-9ae9 (WI-281)
+
+Head d001358 composed onto 3033b57 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-281 -> done. Spec(s) archived: docs/archive/specs/WI-281.2026-07-24.md.
