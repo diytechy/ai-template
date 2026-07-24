@@ -1045,6 +1045,56 @@ def synth_deliverable(root, tid, wid, base):
     return "Integrated from train {} @ {}: {}".format(tid, sha or "?", subject or wid)
 
 
+def _wi_specrefs(reg_path, wids):
+    """{wid: SpecRef} for `wids` read from a work-items.csv — captured BEFORE the
+    done-flip clears them, so the close-ritual (WI-287) knows which spec to
+    archive. A missing file/column yields {} and the ritual is a no-op."""
+    out = {}
+    try:
+        with Path(reg_path).open(encoding="utf-8-sig", newline="") as fh:
+            for row in csv.DictReader(fh):
+                wid = (row.get("WI-ID") or "").strip()
+                if wid in wids:
+                    out[wid] = (row.get("SpecRef") or "").strip()
+    except OSError:
+        return {}
+    return out
+
+
+def _archive_closed_specs(wt, specrefs, stamp):
+    """Run the docs/specs/README.md close-ritual for each just-`done` WI (WI-287):
+    a live `docs/specs/<file>.md` SpecRef is moved to
+    `docs/archive/specs/<stem>.<stamp>.md`. The done-flip already cleared the
+    SpecRef cell; this archives the file so a terminal WI never leaves a live spec
+    cited by no open WI (the R-F finding the autonomous loop used to strand).
+
+    A SpecRef that is empty, a non-`docs/specs/` path (e.g. a repo-review anchor),
+    or an already-absent file is skipped — the ritual only ever archives a real
+    live spec. `git mv` inside the staging worktree so the caller's `git add -A`
+    stages it; a plain rename is the fallback for an as-yet-untracked file.
+    Returns the moved [(src, dest)] for the integration log. Pure of clocks —
+    `stamp` (YYYY-MM-DD) is supplied by the caller."""
+    moved = []
+    archive_rel = Path("docs") / "archive" / "specs"
+    for wid, ref in sorted(specrefs.items()):
+        path_part = (ref or "").split("#", 1)[0].strip()
+        if not (path_part.startswith("docs/specs/") and path_part.endswith(".md")):
+            continue
+        src = Path(wt) / path_part
+        if not src.is_file():
+            continue
+        (Path(wt) / archive_rel).mkdir(parents=True, exist_ok=True)
+        dest_rel = archive_rel / "{}.{}.md".format(src.stem, stamp)
+        code, _ = git(wt, "mv", path_part, str(dest_rel).replace("\\", "/"))
+        if code != 0:
+            try:
+                src.replace(Path(wt) / dest_rel)
+            except OSError:
+                continue
+        moved.append((path_part, str(dest_rel).replace("\\", "/")))
+    return moved
+
+
 def generate_status(docs, root, last_train=""):
     """The integrator-generated root status snapshot (SR-059's generation
     half; spec §10): derived gate/bar pointers, queue counts, pending human
@@ -1721,10 +1771,17 @@ def integrate_train(root, docs, journal, tid, wis, base, review_ctx):
     # Steps 6-8: durable disposition + evidence + regenerated artifacts,
     # composed INTO the same integration commit.
     reg = Path(wt) / "docs" / "requirements" / "work-items.csv"
+    # WI-287: capture SpecRefs BEFORE the done-flip clears them, so the
+    # close-ritual below can archive each terminal WI's live spec. Clearing the
+    # SpecRef cell + archiving the file is the docs/specs/README.md lifecycle the
+    # R-F rule enforces — the autonomous loop used to leave both undone (a
+    # stranded live spec + a done row still citing it).
+    closing_specrefs = _wi_specrefs(reg, set(wis))
     updates = {
         wid: {
             "Status": "done",
             "Deliverable": synth_deliverable(root, tid, wid, base),
+            "SpecRef": "",  # a terminal WI clears its SpecRef (WI-287)
         }
         for wid in wis
     }
@@ -1739,6 +1796,12 @@ def integrate_train(root, docs, journal, tid, wis, base, review_ctx):
             root, wt, tid, old_head, str(exc), merge=True
         )
     stamp = time.strftime("%Y-%m-%d %H:%M")
+    # WI-287: the file half of the close-ritual — archive each terminal WI's live
+    # spec to docs/archive/specs/<stem>.<date>.md (its SpecRef cell was cleared
+    # above). No-op for a WI whose SpecRef was empty or a non-spec anchor.
+    archived_specs = _archive_closed_specs(
+        wt, closing_specrefs, time.strftime("%Y-%m-%d")
+    )
     log_path = Path(wt) / "docs" / "log.md"
     try:
         with log_path.open("a", encoding="utf-8") as fh:
@@ -1747,7 +1810,7 @@ def integrate_train(root, docs, journal, tid, wis, base, review_ctx):
                 "Head {} composed onto {} by the serialized integrator; "
                 "{} required review phase(s) verified APPROVE on the exact "
                 "reviewed head; combined bar ran on the composed tree (result "
-                "below). WI row(s) {} -> done.\n".format(
+                "below). WI row(s) {} -> done.{}\n".format(
                     stamp,
                     tid,
                     ";".join(wis),
@@ -1755,6 +1818,13 @@ def integrate_train(root, docs, journal, tid, wis, base, review_ctx):
                     old_head[:7],
                     len(required),
                     ";".join(updated) or "(none present)",
+                    (
+                        " Spec(s) archived: {}.".format(
+                            "; ".join(dest for _src, dest in archived_specs)
+                        )
+                        if archived_specs
+                        else ""
+                    ),
                 )
             )
     except OSError:

@@ -1937,3 +1937,73 @@ def test_non_utf8_stack_ini_parks_without_stranding_the_merge(tmp_path):
     assert detail and "unreadable" in detail, "a non-UTF-8 stack.ini parks (no crash)"
     unmerged = _git(repo, "diff", "--name-only", "--diff-filter=U")
     assert unmerged == "", "the merge --abort ran: the worktree is conflict-free"
+
+
+# --- WI-287: the integrator's spec close-ritual at done-flip --------------------
+def test_wi287_archive_closed_specs_moves_live_spec_and_skips_the_rest(tmp_path):
+    """A `docs/specs/<file>.md` SpecRef is git-mv'd to docs/archive/specs/
+    <stem>.<date>.md; an empty SpecRef, a non-docs/specs anchor, and an
+    already-absent file are all skipped (the ritual only archives a real live
+    spec). Mirrors the WI-275 (spec file) vs WI-279 (repo-review anchor) live case."""
+    repo = tmp_path / "repo"
+    (repo / "docs" / "specs").mkdir(parents=True)
+    (repo / "docs" / "requirements").mkdir(parents=True)
+    (repo / "docs" / "specs" / "WI-900.md").write_text("# spec\n", encoding="utf-8")
+    with open(
+        str(repo / "docs" / "requirements" / "work-items.csv"),
+        "w",
+        encoding="utf-8",
+        newline="",
+    ) as fh:
+        w = csv.writer(fh)
+        w.writerow(HEADER)
+        w.writerow(_wi_row("WI-900", status="done"))  # SpecRef docs/specs/thing.md
+        w.writerow(_wi_row("WI-901", status="done"))
+        w.writerow(_wi_row("WI-902", status="done"))
+    # Point each SpecRef deliberately: a real spec file, a review anchor, empty.
+    reg = repo / "docs" / "requirements" / "work-items.csv"
+    rows = list(csv.reader(reg.open(newline="", encoding="utf-8")))
+    si = HEADER.index("SpecRef")
+    for r in rows[1:]:
+        if r[0] == "WI-900":
+            r[si] = "docs/specs/WI-900.md"
+        elif r[0] == "WI-901":
+            r[si] = "docs/repo-review-2026-07-22.md#m-4-some-anchor"
+        elif r[0] == "WI-902":
+            r[si] = ""
+    with reg.open("w", newline="", encoding="utf-8") as fh:
+        csv.writer(fh, lineterminator="\n").writerows(rows)
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "loop@example.com")
+    _git(repo, "config", "user.name", "Loop Test")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+
+    specrefs = agent_dispatch._wi_specrefs(reg, {"WI-900", "WI-901", "WI-902"})
+    assert specrefs["WI-900"] == "docs/specs/WI-900.md"
+    assert specrefs["WI-901"].startswith("docs/repo-review")
+    assert specrefs["WI-902"] == ""
+
+    moved = agent_dispatch._archive_closed_specs(repo, specrefs, "2026-07-23")
+    # Only the real live spec moved; the anchor + the empty ref are no-ops.
+    assert moved == [
+        ("docs/specs/WI-900.md", "docs/archive/specs/WI-900.2026-07-23.md")
+    ]
+    assert not (repo / "docs" / "specs" / "WI-900.md").exists()
+    assert (repo / "docs" / "archive" / "specs" / "WI-900.2026-07-23.md").is_file()
+
+
+def test_wi287_done_flip_update_clears_specref(tmp_path):
+    """The done-flip update dict carries SpecRef='' so a terminal WI clears its
+    SpecRef in the same surgical rewrite (the cell half of the ritual)."""
+    reg = tmp_path / "work-items.csv"
+    with reg.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(HEADER)
+        w.writerow(_wi_row("WI-900", status="queued"))  # SpecRef docs/specs/thing.md
+    agent_dispatch._rewrite_wi_rows(
+        reg, {"WI-900": {"Status": "done", "Deliverable": "d", "SpecRef": ""}}
+    )
+    row = next(r for r in csv.DictReader(reg.open(newline="", encoding="utf-8")))
+    assert row["Status"] == "done"
+    assert row["SpecRef"] == ""

@@ -11761,3 +11761,26 @@ stays queued for its own regression test + the explicit "reaches blocked state o
 rescan" done-when; the build session can confirm and close it. Hand-applied
 2026-07-23 per owner directive (outside the autonomous REVIEW-A/gate — reopen if
 independent review is wanted). Full suite green.
+
+## 2026-07-23 (evening) — WI-287 DONE (hand-applied): integrator runs the spec close-ritual
+
+Root-caused from the WI-275/279 cleanup: the autonomous integrator closed WIs
+(Status=done) but never cleared their SpecRef or archived the spec — the
+docs/specs/README.md lifecycle the R-F rule enforces — so every closed WI
+stranded two R-F findings. Fixed in `agent_dispatch.integrate_train`'s done-flip:
+
+- `_wi_specrefs` captures each closing WI's SpecRef BEFORE the rewrite.
+- the done-flip update now carries `SpecRef=""` (cleared in the same surgical
+  `_rewrite_wi_rows`).
+- `_archive_closed_specs` git-mv's a live `docs/specs/<file>.md` to
+  `docs/archive/specs/<stem>.<date>.md` (skips empty / non-`docs/specs` anchors
+  like WI-279's repo-review ref / already-absent files); the integration log
+  records `Spec(s) archived: <dest>`.
+
+`blocked_disposition` is correctly untouched (a blocked WI is not terminal — its
+spec stays live). Tests: tests/test_agent_loop_integrate.py WI-287 pair (live
+spec archived + anchor/empty skipped; the SpecRef cell cleared). Module-size
+ratchet bumped +70 (reviewed). Known boundary (recorded in the spec): archiving
+can stale an inbound link (a log.md entry) — the integrator bar doesn't run
+check_docs yet (WI-285), so this fixes the SpecRef+archive half, not inbound
+links. Spec archived; hand-applied per owner directive, outside REVIEW-A.

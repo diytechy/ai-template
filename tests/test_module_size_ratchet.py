@@ -48,7 +48,11 @@ BASELINE = {
     # `gen_trajectory.py --status` at integrate/blocked-disposition so a closed
     # id drops from the generated frontier automatically (and the disposition
     # passes its own status-map floor — WI-283's core). Reviewed bump, log 2026-07-23.
-    "agent_dispatch.py": 3463,
+    # +70 (3463 -> 3533), WI-287: the integrator's spec close-ritual at done-flip
+    # (_wi_specrefs + _archive_closed_specs + the SpecRef='' clear) so a terminal
+    # WI clears its SpecRef and archives its spec — no more stranded R-F debt.
+    # New behaviour, reviewed bump (log 2026-07-23). Re-stamp downward with WI-280.
+    "agent_dispatch.py": 3533,
     "agent_loop.py": 3034,
     "trace.py": 2206,
     "check_trajectory.py": 1926,
