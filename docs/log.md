@@ -11784,3 +11784,7 @@ ratchet bumped +70 (reviewed). Known boundary (recorded in the spec): archiving
 can stale an inbound link (a log.md entry) — the integrator bar doesn't run
 check_docs yet (WI-285), so this fixes the SpecRef+archive half, not inbound
 links. Spec archived; hand-applied per owner directive, outside REVIEW-A.
+
+## 2026-07-23 23:58 — blocked disposition: WI-273 (train 3-g3-WI-273-b45e)
+
+Worker-reported blocker with committed evidence at 747f152; BlockRef: SR-084 family-heterogeneous CRITIQUE dispatch — SR-052 (Verification=Critique) requires a non-Anthropic critic against docs/rubrics/dashboard-accessibility.md.
