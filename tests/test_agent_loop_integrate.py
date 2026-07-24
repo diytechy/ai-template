@@ -285,6 +285,38 @@ def test_red_combined_bar_blocks_integration_and_cas(tmp_path):
     assert ",done," not in reg, "a red bar must never produce a done row"
 
 
+def test_missing_binary_combined_bar_parks_not_crashes(tmp_path):
+    # SR-008 end-to-end: a declared [product] test whose executable does not
+    # exist must PARK the train for rework — the same outcome as a red bar — and
+    # never crash the dispatcher. Before the OSError guard, subprocess.run raised
+    # FileNotFoundError out of integrate_train and the whole walk-away loop
+    # exited 1 AFTER the worker was ready, so nothing parked and the operator got
+    # a stack trace instead of a rework.
+    repo, ctl, template = _setup(
+        tmp_path,
+        [_wi_row("WI-201")],
+        product_test="llm-nonexistent-binary-xyzzy --run",
+    )
+    before = _git(repo, "rev-parse", "HEAD")
+    proc = _dispatch(repo, template)
+    # Parks for rework, exactly like a red bar: nothing integrates, refs frozen,
+    # reservation held — and the dispatcher exits its normal stall code, never a
+    # crash traceback.
+    assert proc.returncode == agent_loop.EXIT_STALL, proc.stdout + proc.stderr
+    assert "Traceback" not in (proc.stdout + proc.stderr)
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == before
+    assert _git(repo, "rev-parse", "HEAD") == before
+    assert _reservations(repo) == {"WI-201"}
+    events = _events(repo)
+    assert any(
+        e["event"] == "integration-parked" and e["state"] == "rework" for e in events
+    )
+    bars = [e for e in events if e["event"] == "integration-bar"]
+    assert bars and all("not runnable" in b["result"] for b in bars), bars
+    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    assert ",done," not in reg, "a missing-binary bar must never produce a done row"
+
+
 # --- WI-285: the combined bar reads the schema the repo actually declares --------
 # The integrator used to read docs/stack.ini `[stack] test`, a key the kit's own
 # profile (and every check.py-shaped one) does not have — it declares the harness
@@ -360,6 +392,18 @@ def test_combined_bar_unreadable_profile_parks(tmp_path):
     wt = _bar_worktree(tmp_path, "not a section header\n")
     ok, detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
     assert not ok and "unreadable" in detail
+
+
+def test_combined_bar_missing_binary_fails_closed(tmp_path):
+    # SR-008: a declared [product] test whose executable is absent raises
+    # FileNotFoundError (an OSError) out of subprocess.run. The bar must catch
+    # it and return not-ok — a RED bar the integrator reworks, NOT an uncaught
+    # crash that exits the whole walk-away dispatcher after the worker is ready.
+    wt = _bar_worktree(
+        tmp_path, "[product]\ntest = llm-nonexistent-binary-xyzzy --run\n"
+    )
+    ok, detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
+    assert not ok and "not runnable" in detail
 
 
 def test_declared_test_command_resolution(tmp_path):

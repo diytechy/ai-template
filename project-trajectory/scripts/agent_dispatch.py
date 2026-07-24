@@ -1170,18 +1170,24 @@ def _run_combined_bar(worktree, root):
         return True, "skipped (no declared test command)"
     if not argv:  # declared but empty: fail closed, don't run subprocess([])
         return False, "declared test command is empty"
-    proc = subprocess.run(
-        argv,
-        cwd=str(worktree),
-        capture_output=True,
-        text=True,
-        # utf-8 + replace like the kit's own git() wrapper: a downstream test
-        # suite emitting one locale-undecodable byte must mojibake, not crash
-        # the integrator mid-composition (repo-review 2026-07-21 L-25).
-        encoding="utf-8",
-        errors="replace",
-        stdin=subprocess.DEVNULL,
-    )
+    try:
+        proc = subprocess.run(
+            argv,
+            cwd=str(worktree),
+            capture_output=True,
+            text=True,
+            # utf-8 + replace like the kit's own git() wrapper: a downstream test
+            # suite emitting one locale-undecodable byte must mojibake, not crash
+            # the integrator mid-composition (repo-review 2026-07-21 L-25).
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+        )
+    except OSError as exc:
+        # SR-008: a declared bar whose binary is absent/unrunnable is a RED bar
+        # the integrator reworks — not a FileNotFoundError that crashes the whole
+        # walk-away dispatcher (exit 1) after the worker is ready. Fail closed.
+        return False, "test command not runnable: {}".format(exc)
     tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
     return proc.returncode == 0, ("pass" if proc.returncode == 0 else tail)
 
