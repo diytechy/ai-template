@@ -82,5 +82,4 @@ _Pending owner actions — a generated projection of durable, committed-tree sta
 _Machine-local advisory — source conflicts, reservations, quarantines, and stranded-train attestations re-derived from `refs/llm/*` as of the dispatch machine at generation time. These refs do not transport with clone/push, so this section is regenerated every dispatch loop and is NOT part of the `--status --check` freshness gate (M-10/WI-266); a second clone (CI, another machine) may show it empty._
 
 - **WI-272** — awaiting owner attestation/ratification on train `1-g3-WI-272-230f`: the frozen plan at commit `e5bb2a735f7e` (`git show e5bb2a735f7e`); attest, amend, or park the row.
-- **Source conflict** — train `p0-g3-WI-282-eb40` conflicts on conflict in non-generated path tests/test_module_size_ratchet.py; resolve by hand (merge/rebase the train), then relaunch.
 <!-- END GENERATED PENDING -->

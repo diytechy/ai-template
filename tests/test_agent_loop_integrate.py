@@ -874,6 +874,98 @@ def test_scheduler_and_gate_agree_on_critique_phase(tmp_path, srrefs, render_exp
     assert ("CRITIQUE" in required) is render_expected
 
 
+# --- WI-282: the reviewed-head trailer-slip diagnostic ----------------------------
+
+
+def _commit_no_trailer(wt, subject, filename="more.txt"):
+    (wt / filename).write_text(subject, encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "-q", "-m", subject)
+    return _git(wt, "rev-parse", "HEAD")
+
+
+def test_reviewed_head_trailer_slip_is_journaled(tmp_path):
+    # WI-282 secondary: a newer build commit that SLIPPED its WI trailer leaves
+    # the substantive tip AHEAD of the reviewed head (newest-WITH-a-WI-trailer),
+    # so reviewed_train_head would grade an OLDER commit's verdict while an
+    # unnamed commit rides the train. The integrator journals the mismatch by
+    # name so it reads as a slipped trailer, not honest dissent.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(
+        repo, "t1", base
+    )  # the WI-trailer build
+    tip = _commit_no_trailer(wt, "WI-201: more work (trailer slipped)")
+    assert tip != reviewed, "the slipped commit is a newer, distinct head"
+    assert agent_dispatch._substantive_tip(repo, "t1", base) == tip
+    journal = agent_loop._Journal(repo)
+    agent_dispatch.warn_reviewed_head_slip(repo, journal, "t1", base, reviewed)
+    slips = [e for e in _events(repo) if e.get("event") == "reviewed-head-trailer-slip"]
+    assert slips, "the slipped trailer must be journaled loudly"
+    assert slips[0]["reviewed"] == reviewed[:12]
+    assert slips[0]["build_tip"] == tip[:12]
+
+
+def test_no_slip_when_only_sanctioned_commits_ride_the_tip(tmp_path):
+    # The negative: telemetry:/blocked: commits on top of the WI-trailer build are
+    # NOT substantive (subject prefix / Blocked-WI trailer), so the build tip is
+    # still the reviewed head — no diagnostic, so the common honest case is quiet.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    _commit_no_trailer(wt, "telemetry: session 001 review scoreboard", "sb.txt")
+    # A blocked disposition rides via its Blocked-WI trailer, free-form subject.
+    (wt / "blk.txt").write_text("evidence", encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "-q", "-m", "partial\n\nBlocked-WI: WI-201\nBlockRef: OI-4\n")
+    assert agent_dispatch._substantive_tip(repo, "t1", base) == reviewed
+    journal = agent_loop._Journal(repo)
+    agent_dispatch.warn_reviewed_head_slip(repo, journal, "t1", base, reviewed)
+    slips = [e for e in _events(repo) if e.get("event") == "reviewed-head-trailer-slip"]
+    assert not slips, "sanctioned coordinator commits on top are not a slip"
+
+
+def test_invalid_blocked_wi_evidence_cannot_hide_a_newer_build_commit(tmp_path):
+    # Regression for WI-282 REVIEW-A: malformed `Blocked-WI` evidence from a
+    # pre-floor or --no-verify commit is not a sanctioned blocked disposition.
+    # The integration diagnostic must identify it as the substantive build tip.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    (wt / "invalid-block.txt").write_text("evidence", encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "-q", "-m", "partial\n\nBlocked-WI: not-a-wi\nBlockRef: OI-4\n")
+    tip = _git(wt, "rev-parse", "HEAD")
+    assert agent_dispatch._substantive_tip(repo, "t1", base) == tip
+    journal = agent_loop._Journal(repo)
+    agent_dispatch.warn_reviewed_head_slip(repo, journal, "t1", base, reviewed)
+    slips = [e for e in _events(repo) if e.get("event") == "reviewed-head-trailer-slip"]
+    assert slips and slips[0]["build_tip"] == tip[:12]
+    assert slips[0]["reviewed"] == reviewed[:12]
+
+
+def test_slip_fires_when_no_build_commit_carries_a_wi_trailer(tmp_path):
+    # WI-282 fail-open regression: a train whose FIRST/ONLY build commit slipped
+    # its WI trailer (a pre-floor or `--no-verify` commit) leaves
+    # reviewed_train_head() with no WI-trailered head to resolve — it returns
+    # None. The substantive tip still exists, so the diagnostic MUST fire with an
+    # explicit missing-reviewed value; the old `reviewed and ...` truthiness guard
+    # stayed silent here (the exact pre-floor path the diagnostic claims to catch).
+    repo = _make_repo(tmp_path, [_wi_row_srrefs("WI-201", "SR-063")])
+    head = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/heads/llm/integration", head)
+    assert agent_loop.reserve_traincar(repo, "t1", ["WI-201"], head) is None
+    wt = tmp_path / "wt"
+    _git(repo, "worktree", "add", str(wt), "llm/train/t1")
+    tip = _commit_no_trailer(wt, "WI-201: build (trailer slipped, no WI: trailer)")
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", head)
+    assert reviewed is None, "no commit carries a WI trailer, so none resolves"
+    assert agent_dispatch._substantive_tip(repo, "t1", head) == tip
+    journal = agent_loop._Journal(repo)
+    agent_dispatch.warn_reviewed_head_slip(repo, journal, "t1", head, reviewed)
+    slips = [e for e in _events(repo) if e.get("event") == "reviewed-head-trailer-slip"]
+    assert slips, "a train with NO WI-trailered head must still journal the slip"
+    assert slips[0]["reviewed"] == "(none)"
+    assert slips[0]["build_tip"] == tip[:12]
+
+
 # --- publication + the intent protocol --------------------------------------------
 
 

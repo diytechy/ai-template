@@ -11812,3 +11812,7 @@ Head 5770123 composed onto cec49ce by the serialized integrator; 1 required revi
 ## 2026-07-24 11:34 — integrated train p0-g3-WI-276-dec8 (WI-276)
 
 Head 5d29e33 composed onto 1950e72 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-276 -> done.
+
+## 2026-07-24 11:51 — integrated train p0-g3-WI-282-eb40 (WI-282)
+
+Head d5108fb composed onto ec2ff8d by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-282 -> done. Spec(s) archived: docs/archive/specs/WI-282.2026-07-24.md.

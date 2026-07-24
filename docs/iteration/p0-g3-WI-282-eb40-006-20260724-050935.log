@@ -1,0 +1,31 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 006
+# date: 2026-07-24 05:35
+# train: p0-g3-WI-282-eb40
+# base: bd2a21be06a9
+# phase: BUILD
+# wi: WI-282
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: 9f9ad2b..dd5c65f
+# tokens: 
+# cost-usd: 
+# wall-secs: 1551
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 4667
+# exit-code: 0
+# ---
+Completed WI-282 rework in commit `dd5c65f`.
+
+- Invalid `Blocked-WI:` values now fail the commit hook.
+- Diagnostic treats malformed blocked evidence as substantive and journals the slip.
+- Linked-worktree test now runs via real `git commit` on Windows.
+- Smoke: 1113 passed, 16 skipped.
+- Full suite: 1376 passed, 52 skipped.

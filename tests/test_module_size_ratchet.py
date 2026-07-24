@@ -73,7 +73,7 @@ BASELINE = {
     # lack the pinned requirements-dev tools (a false green). The extra branch +
     # explicit message replace the old ambient-fallthrough. Reviewed bump. Re-stamp
     # downward with WI-280.
-    "agent_dispatch.py": 3627,
+    "agent_dispatch.py": 3682,
     "agent_loop.py": 3042,
     "trace.py": 2206,
     "check_trajectory.py": 1926,
