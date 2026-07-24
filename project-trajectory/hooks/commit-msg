@@ -33,7 +33,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # with that %(trailers) read, so this refuses exactly what the integrator would
 # later fail to resolve. Vacuous off a train branch; the sanctioned coordinator
 # commits (integrate:/telemetry:/review:/blocked: subject prefix) and a blocked
-# disposition (a Blocked-WI: trailer) stay legal. The prefix set mirrors
+# disposition (a parseable `Blocked-WI: WI-<n>` trailer) stay legal. The prefix set mirrors
 # agent_common.SANCTIONED_TRAIN_SUBJECT_PREFIXES (kept in step by
 # tests/test_commit_msg_wi_trailer.py).
 wi_branch=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short HEAD 2>/dev/null || true)
@@ -44,8 +44,17 @@ case "$wi_branch" in
       integrate:*|telemetry:*|review:*|blocked:*) : ;;  # sanctioned coordinator commit
       *)
         wi_trailers=$(git -C "$REPO_ROOT" interpret-trailers --parse "$1" 2>/dev/null || true)
-        if printf '%s\n' "$wi_trailers" | grep -qiE '^Blocked-WI:[[:space:]]'; then
-          : # a blocked disposition carries Blocked-WI, not WI
+        # This WI token grammar is identical to agent_common.WI_TOKEN_RE
+        # (`^WI-\d+$`): invalid block evidence remains substantive, so the
+        # reviewed-head diagnostic exposes it instead of hiding a newer build.
+        blocked_trailers=$(printf '%s\n' "$wi_trailers" | grep -iE '^Blocked-WI:' || true)
+        if [ -n "$blocked_trailers" ] && printf '%s\n' "$blocked_trailers" | grep -qvE '^[Bb]locked-[Ww][Ii]:[[:space:]]*WI-[0-9]+[[:space:]]*$'; then
+          echo "commit-msg: every blocked disposition trailer must be" >&2
+          echo "  'Blocked-WI: WI-<n>'; malformed block evidence is a build commit" >&2
+          echo "  and therefore needs a valid WI: WI-<n> trailer instead." >&2
+          exit 1
+        elif [ -n "$blocked_trailers" ]; then
+          : # every blocked disposition carries a parseable Blocked-WI, not WI
         elif printf '%s\n' "$wi_trailers" | grep -qE '^[Ww][Ii]:[[:space:]]*WI-[0-9]+[[:space:]]*$'; then
           : # a well-formed build commit
         else
@@ -68,7 +77,7 @@ case "$wi_branch" in
           echo "" >&2
           echo "  A sanctioned dispatcher commit is exempt instead: use an" >&2
           echo "  integrate:/telemetry:/review:/blocked: subject prefix, or a" >&2
-          echo "  Blocked-WI: trailer for a blocked disposition." >&2
+          echo "  Blocked-WI: WI-<n> trailer for a blocked disposition." >&2
           exit 1
         fi
         ;;

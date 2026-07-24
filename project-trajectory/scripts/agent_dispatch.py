@@ -782,29 +782,29 @@ def reviewed_train_head(root, tid, base):
 
 
 def _substantive_tip(root, tid, base):
-    """The newest commit in base..tip that the commit-msg WI-trailer floor
-    (check_wi_trailer.py) would REQUIRE a `WI:` trailer from — i.e. a build
-    commit, not one of the coordinator/bookkeeping shapes (the sanctioned
-    subject prefixes) nor a blocked disposition (a `Blocked-WI:` trailer). Used
-    only by the reviewed-head mismatch diagnostic below (WI-282); returns None
-    if the range is unreadable or holds no build commit."""
-    # US (\x1f) field-separates so a subject with a tab can't split wrong.
+    """Newest build commit the WI-trailer floor requires, excluding sanctioned prefixes
+    and parseable `Blocked-WI` dispositions; None for no build/unreadable range."""
     fmt = "%H%x1f%s%x1f%(trailers:key=Blocked-WI,valueonly,separator=;)"
     code, out = git(
         root, "log", "--format=" + fmt, base + ".." + TRAIN_BRANCH_PREFIX + tid
     )
     if code != 0:
         return None
-    for line in out.splitlines():  # newest first
+    for line in out.splitlines():
         parts = line.split("\x1f")
         if len(parts) < 2:
             continue
         sha, subject = parts[0], parts[1]
         blocked = parts[2] if len(parts) > 2 else ""
-        if blocked.strip() or any(
-            subject.lstrip().startswith(p) for p in SANCTIONED_TRAIN_SUBJECT_PREFIXES
+        if (
+            blocked.strip()
+            and all(WI_TOKEN_RE.match(x.strip()) for x in blocked.split(";"))
+            or any(
+                subject.lstrip().startswith(p)
+                for p in SANCTIONED_TRAIN_SUBJECT_PREFIXES
+            )
         ):
-            continue  # a sanctioned shape — not the build tip the floor governs
+            continue
         return sha
     return None
 

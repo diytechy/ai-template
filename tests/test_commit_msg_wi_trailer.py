@@ -13,8 +13,8 @@ one-line slip at commit time.
 The floor is pure sh (it runs BEFORE the hook's Python/scripts discovery), so it
 holds even on a Python-less box. The sanctioned integrate:/telemetry:/review:/
 blocked: coordinator commits (subject prefix) and a blocked disposition
-(Blocked-WI: trailer) stay legal. The hook runs via git's bundled sh on every
-platform; where sh is absent the end-to-end tests skip.
+(Blocked-WI: WI-<n> trailer) stay legal. The hook runs via git's bundled sh on
+every platform; direct-hook tests skip where no shell is available.
 """
 
 import os
@@ -124,6 +124,13 @@ def test_blocked_wi_trailer_passes_with_a_free_form_subject(train_repo):
     assert r.returncode == 0, r.stdout + r.stderr
 
 
+def test_invalid_blocked_wi_trailer_is_refused(train_repo):
+    # `Blocked-WI` is exempt only with the same parseable WI-<n> token used by
+    # the dispatcher. A typo must not hide a substantive build commit.
+    r = _hook(train_repo, "partial evidence\n\nBlocked-WI: not-a-wi\nBlockRef: OI-4\n")
+    assert r.returncode != 0 and "Blocked-WI: WI-<n>" in r.stderr, r.stderr
+
+
 def test_off_train_branch_is_vacuous(train_repo):
     # The floor applies only on llm/train/*; a malformed message elsewhere passes.
     _git(train_repo, "checkout", "-q", "-b", "feature/x")
@@ -206,7 +213,6 @@ def test_end_to_end_through_git_commit_in_a_linked_worktree(tmp_path):
     # primary checkout's. Drive it through real `git commit` (not a direct hook
     # call) so that contract has a regression guard: malformed aborts the commit,
     # a valid trailer commits, and a sanctioned coordinator subject commits.
-    _sh_or_skip()  # git commit runs the hook through git's own bundled sh
     main = tmp_path / "main"
     main.mkdir()
     _git(main, "init")

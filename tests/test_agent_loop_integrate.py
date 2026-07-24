@@ -721,6 +721,24 @@ def test_no_slip_when_only_sanctioned_commits_ride_the_tip(tmp_path):
     assert not slips, "sanctioned coordinator commits on top are not a slip"
 
 
+def test_invalid_blocked_wi_evidence_cannot_hide_a_newer_build_commit(tmp_path):
+    # Regression for WI-282 REVIEW-A: malformed `Blocked-WI` evidence from a
+    # pre-floor or --no-verify commit is not a sanctioned blocked disposition.
+    # The integration diagnostic must identify it as the substantive build tip.
+    repo, wt, base = _setup_gate(tmp_path)
+    reviewed = agent_dispatch.reviewed_train_head(repo, "t1", base)
+    (wt / "invalid-block.txt").write_text("evidence", encoding="utf-8")
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "-q", "-m", "partial\n\nBlocked-WI: not-a-wi\nBlockRef: OI-4\n")
+    tip = _git(wt, "rev-parse", "HEAD")
+    assert agent_dispatch._substantive_tip(repo, "t1", base) == tip
+    journal = agent_loop._Journal(repo)
+    agent_dispatch.warn_reviewed_head_slip(repo, journal, "t1", base, reviewed)
+    slips = [e for e in _events(repo) if e.get("event") == "reviewed-head-trailer-slip"]
+    assert slips and slips[0]["build_tip"] == tip[:12]
+    assert slips[0]["reviewed"] == reviewed[:12]
+
+
 def test_slip_fires_when_no_build_commit_carries_a_wi_trailer(tmp_path):
     # WI-282 fail-open regression: a train whose FIRST/ONLY build commit slipped
     # its WI trailer (a pre-floor or `--no-verify` commit) leaves
