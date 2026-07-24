@@ -1,0 +1,3 @@
+- [MAJOR] project-trajectory/scripts/check_dupes.py:74 -> `fingerprint()` hashes only the first `--min-tokens` window plus the merged length, so a changed duplicate block with the same initial 30 significant tokens and total extent reuses the old census fingerprint and is silently exempt; independently reproduced by censusing two 46-token blocks, changing only their final string token in both files, and observing `check_dupes` exit 0 -> hash the complete normalized merged block token sequence (not merely its first window) and add a CLI regression that changes a post-window token while retaining the extent and requires exit 1 -> @owner
+
+VERDICT: CHANGES-REQUESTED findings=1
