@@ -166,6 +166,29 @@ def run_py(args, cwd):
     )
 
 
+def seed_venv(repo):
+    """Give an end-to-end dispatch fixture a real, floor-satisfying `./.venv` so
+    the parallel dispatcher's WI-286 harness-floor preflight
+    (`agent_dispatch._harness_floor_failures`) passes.
+
+    That gate FAILS CLOSED when the root `.venv` is absent (REVIEW-A): a venv-less
+    repo must never fall back to the ambient interpreter, whose pinned dev tools
+    may be missing even at a satisfying version (a false green). So every fixture
+    that drives the dispatcher (`agent_loop.py --jobs`) end-to-end needs one.
+    Built with `venv.create(with_pip=False)` — a genuine ≥3.11 interpreter (this
+    process's own base), created in ~0.3 s with no network/pip cost. It is
+    deliberately tool-less: the fixtures stand in the real pytest bar with a fake
+    worker, so only the interpreter VERSION the preflight probes must be real (a
+    tool-less child's coverage `sitecustomize` import failure is a non-fatal stderr
+    warning, so the version probe and the trivial `{py} -c` bar still return 0).
+    Callers gitignore `.venv` (a local, per-checkout toolchain, never committed —
+    a leased worktree shares the primary's by absolute path, the WI-286 design), so
+    it stays out of `git add` and the porcelain the dispatcher/integrator read."""
+    import venv
+
+    venv.create(str(Path(repo) / ".venv"), with_pip=False)
+
+
 @pytest.fixture
 def scaffold(tmp_path):
     """A fresh repo bootstrapped from the kit (the documented quick-start)."""

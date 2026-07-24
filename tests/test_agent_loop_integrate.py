@@ -32,7 +32,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import SCRIPTS, load_script, run_py
+from conftest import SCRIPTS, load_script, run_py, seed_venv
 
 agent_loop = load_script("agent_loop")
 agent_dispatch = load_script("agent_dispatch")
@@ -96,7 +96,8 @@ def _make_repo(tmp_path, rows, stack_test=None, header=None, product_test=None):
         w.writerow(header or HEADER)
         w.writerows(rows)
     (repo / "AGENTS.md").write_text("# agents\n", encoding="utf-8")
-    (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
+    (repo / ".gitignore").write_text("out/\n.venv/\n", encoding="utf-8")
+    seed_venv(repo)  # WI-286: the dispatcher preflight requires a ≥3.11 root .venv
     (repo / "docs" / "gate-policy").write_text("autonomous\n", encoding="utf-8")
     # The combined bar reads the declared test command: legacy `[stack] test`
     # (raw) OR the kit schema `[product] test` (with {py}/{src}/{tests}

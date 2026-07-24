@@ -621,7 +621,9 @@ def test_venv_python_finds_native_layout_else_none(tmp_path):
 
 
 def test_harness_python_prefers_venv_else_sys_executable(tmp_path):
-    # No .venv -> this process's own interpreter is the fallback.
+    # No .venv -> this process's own interpreter is the DEFENSIVE fallback (the
+    # dispatcher preflight refuses a venv-less root before the bar ever calls this
+    # — REVIEW-A; the resolver itself still returns something).
     assert agent_common.harness_python(tmp_path) == sys.executable
     exe = _stub_venv(tmp_path)
     assert agent_common.harness_python(tmp_path) == str(exe)
@@ -636,9 +638,12 @@ def test_interpreter_version_reads_self_and_fails_soft_on_a_broken_exe(tmp_path)
     assert agent_common.interpreter_version(garbage) is None
 
 
-def test_harness_floor_clears_at_or_above_floor(tmp_path):
-    # The tests themselves run on a floor-satisfying interpreter, so a repo with
-    # no .venv (harness falls to this process) clears the floor -> [].
+def test_harness_floor_clears_with_a_floor_satisfying_venv(tmp_path, monkeypatch):
+    # A root whose OWN .venv interpreter reports >= the floor clears preflight.
+    monkeypatch.setattr(dispatcher, "venv_python", lambda root: tmp_path / "py")
+    monkeypatch.setattr(
+        dispatcher, "interpreter_version", lambda exe: dispatcher.MIN_PYTHON
+    )
     assert dispatcher._harness_floor_failures(tmp_path) == []
 
 
@@ -650,12 +655,24 @@ def test_harness_floor_refuses_a_below_floor_venv(tmp_path, monkeypatch):
     assert ".venv is Python 3.8" in fails[0] and "below the 3.11 floor" in fails[0]
 
 
-def test_harness_floor_refuses_below_floor_ambient_when_no_venv(tmp_path, monkeypatch):
+def test_harness_floor_refuses_a_missing_venv(tmp_path, monkeypatch):
+    # REVIEW-A MAJOR: a missing (or incomplete-layout) root .venv fails CLOSED —
+    # the harness must not fall back to the ambient interpreter, whose pinned dev
+    # tools may be absent even at a satisfying version (a false green).
     monkeypatch.setattr(dispatcher, "venv_python", lambda root: None)
-    monkeypatch.setattr(dispatcher, "interpreter_version", lambda exe: (3, 8))
     fails = dispatcher._harness_floor_failures(tmp_path)
     assert len(fails) == 1
-    assert "no ./.venv found" in fails[0] and "ambient Python 3.8" in fails[0]
+    assert "no runnable ./.venv" in fails[0] and "false green" in fails[0]
+
+
+def test_harness_floor_refuses_no_venv_even_when_ambient_is_at_floor(tmp_path):
+    # The exact hole REVIEW-A named: NO ./.venv but the ambient interpreter (this
+    # very test process) is >= the floor. The old check PASSED here (harness fell
+    # through to ambient sys.executable); it must now FAIL closed and never consult
+    # the ambient version. No monkeypatch of venv_python/interpreter_version — the
+    # REAL resolver sees no .venv under tmp_path and refuses before ambient is read.
+    fails = dispatcher._harness_floor_failures(tmp_path)
+    assert len(fails) == 1 and "no runnable ./.venv" in fails[0]
 
 
 def test_harness_floor_fails_closed_on_an_unrunnable_venv(tmp_path, monkeypatch):

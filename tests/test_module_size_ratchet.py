@@ -67,7 +67,13 @@ BASELINE = {
     # repo's shared .venv by absolute path) + _run_combined_bar's {py}=venv, so a
     # venv-less train worktree stops resolving ambient 3.8. New behaviour, reviewed
     # bump (reason here + in docs/log.md at integrate). Re-stamp downward with WI-280.
-    "agent_dispatch.py": 3614,
+    # +13 (3614 -> 3627), WI-286 rework (REVIEW-A MAJOR): _harness_floor_failures
+    # now FAILS CLOSED on a missing/incomplete root .venv instead of falling back to
+    # the ambient interpreter — an ambient Python can clear the version floor yet
+    # lack the pinned requirements-dev tools (a false green). The extra branch +
+    # explicit message replace the old ambient-fallthrough. Reviewed bump. Re-stamp
+    # downward with WI-280.
+    "agent_dispatch.py": 3627,
     "agent_loop.py": 3034,
     "trace.py": 2206,
     "check_trajectory.py": 1926,

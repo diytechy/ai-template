@@ -454,37 +454,50 @@ def worktree_root(root):
 
 def _harness_floor_failures(root):
     """WI-286: a singleton list with a floor message when the interpreter the
-    harness would run under is below MIN_PYTHON, else []. A train worktree has no
-    .venv, so a bare `python`/`pytest` there resolves ambient PATH (run
-    20260723T0202 inherited 3.8) — a below-floor idiom then passes locally and
-    only fails in CI, and the pinned dev tools may be absent. The dispatcher runs
-    the harness under the repo's own .venv (shared into each worktree by absolute
-    path) and preflights it HERE, before any worker is spawned or the integrator
-    bar runs; a .venv that cannot be run to report a version fails closed too.
+    harness would run under is not a floor-satisfying, PINNED root .venv, else [].
+    A train worktree has no .venv, so a bare `python`/`pytest` there resolves
+    ambient PATH (run 20260723T0202 inherited 3.8) — a below-floor idiom then
+    passes locally and only fails in CI, and the pinned dev tools may be absent.
+    The dispatcher runs the harness under the repo's own .venv (shared into each
+    worktree by absolute path) and preflights it HERE, before any worker is spawned
+    or the integrator bar runs. It FAILS CLOSED on three shapes:
+
+    - **no runnable root .venv at all** — absent, or a present-but-incomplete/
+      corrupt layout (`venv_python` finds no interpreter). This must NOT fall back
+      to the ambient interpreter (REVIEW-A MAJOR): an ambient Python can clear the
+      version floor yet lack the pinned requirements-dev.txt tools (pytest-cov/
+      xdist the bar assumes), so a green worker run there is a FALSE green. The
+      whole point of the fix is a shared, PINNED toolchain — accept only the .venv;
+    - a .venv whose interpreter cannot be run to report a version;
+    - a below-floor .venv (< MIN_PYTHON).
+
     Returned as a LIST so dispatch_run folds it into the existing preflight
     failures with `+` — no new branch, so the complexity ratchet is unmoved."""
-    py = venv_python(root)
-    ver = interpreter_version(py) if py else interpreter_version(None)
     floor = "{}.{}".format(*MIN_PYTHON)
-    if py is not None and ver is None:
+    py = venv_python(root)
+    if py is None:
+        return [
+            "no runnable ./.venv interpreter found under {} (absent, or an "
+            "incomplete/corrupt .venv layout) — the harness (tests + the pinned "
+            "dev tools from requirements-dev.txt) must run under the repo's OWN "
+            "Python {}+ .venv, shared into each worktree by absolute path, NOT the "
+            "ambient interpreter, which may clear the version floor yet lack the "
+            "pinned tools and produce a false green. Run scripts/dev-setup "
+            "--install to create ./.venv (WI-274/WI-286).".format(root, floor)
+        ]
+    ver = interpreter_version(py)
+    if ver is None:
         return [
             "the ./.venv interpreter ({}) could not be run to check its version "
             "— recreate it (scripts/dev-setup --install; WI-274/WI-286).".format(py)
         ]
     if ver < MIN_PYTHON:
-        where = (
-            "the repo ./.venv is Python {}.{}".format(*ver)
-            if py is not None
-            else "no ./.venv found; the harness would run under ambient Python "
-            "{}.{}".format(*ver)
-        )
         return [
-            "{} — below the {} floor. The harness (tests + pinned dev tools) must "
-            "run under a floor-satisfying interpreter, or a below-floor idiom "
-            "passes locally and only fails in CI. Run scripts/dev-setup --install "
-            "to (re)create ./.venv at Python {}+ (WI-274/WI-286).".format(
-                where, floor, floor
-            )
+            "the repo ./.venv is Python {}.{} — below the {} floor. The harness "
+            "(tests + pinned dev tools) must run under a floor-satisfying "
+            "interpreter, or a below-floor idiom passes locally and only fails in "
+            "CI. Run scripts/dev-setup --install to (re)create ./.venv at Python "
+            "{}+ (WI-274/WI-286).".format(ver[0], ver[1], floor, floor)
         ]
     return []
 
@@ -3234,9 +3247,9 @@ def dispatch_run(args, root):
         else os.environ.get("AGENT_CMD", "")
     )
     # WI-286: the harness-interpreter floor rides the same preflight gate (folded
-    # in with `+` so no new branch touches dispatch_run's complexity baseline) —
-    # a below-floor .venv/ambient interpreter refuses here, before any worker is
-    # spawned or the integrator bar runs, so it can never silently produce a green.
+    # in with `+` so no new branch touches dispatch_run's complexity baseline) — a
+    # missing/incomplete or below-floor root .venv refuses here (fail-closed, never
+    # a fall-back to ambient — REVIEW-A), before any worker/bar runs, so no green.
     failures = preflight(root, template, args) + _harness_floor_failures(root)
     if failures:
         print("agent_loop: preflight failed —", file=sys.stderr)

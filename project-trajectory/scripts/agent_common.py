@@ -171,10 +171,17 @@ def venv_python(root):
 def harness_python(root):
     """The interpreter the test harness (pytest + the pinned dev tools) should run
     under for a worktree session: the repo's own .venv when present (shared by
-    absolute path — one pinned ≥3.11 toolchain, no per-train install), else this
-    process's own interpreter. Returns a str path — the integrator's combined bar
-    substitutes it for {py} so the bar runs under the floor-satisfying interpreter
-    even when the dispatcher was itself launched on ambient Python (WI-286)."""
+    absolute path — one pinned ≥3.11 toolchain, no per-train install). Returns a
+    str path — the integrator's combined bar substitutes it for {py} so the bar
+    runs under the floor-satisfying interpreter even when the dispatcher was itself
+    launched on ambient Python (WI-286).
+
+    The ambient `sys.executable` fallback is a DEFENSIVE default only: the
+    dispatcher gates on `_harness_floor_failures` at preflight, which now FAILS
+    CLOSED when the root .venv is absent (REVIEW-A) — so on the dispatcher's real
+    path a .venv always exists here and the fallback is never the one that runs the
+    bar. It stays for a stray caller (a stdlib-only resolver must return SOMETHING)
+    but is not a licence to run the harness on an unpinned ambient interpreter."""
     py = venv_python(root)
     return str(py) if py else sys.executable
 
