@@ -6,13 +6,15 @@ agent-loop end-to-end modules.
 """
 
 import re
+from pathlib import Path
 
 import pytest
-from conftest import SCRIPTS, load_script
+from conftest import ROOT, SCRIPTS, load_script
 
 agent_loop = load_script("agent_loop")
 schedule = load_script("schedule")
 dispatcher = agent_loop.agent_dispatch
+check = load_script("check")
 agent_common = load_script("agent_common")
 _failure_tail = agent_common._failure_tail
 
@@ -512,3 +514,76 @@ def test_render_surface_is_delivering_a_critique_sr_not_merely_touching_one(tmp_
     # No critique SR anywhere -> the classifier is vacuous (non-adopter pays 0).
     plain = _write_docs(tmp_path / "c", srrefs="SR-050", critique=False)
     assert dispatcher._train_is_render_surface(plain, ["WI-201"]) is False
+
+
+# --- WI-283: the disposition regen list is single-homed with the floor ----------
+# A blocked/done disposition commits in a staging worktree and faces the SAME
+# pre-commit floor the harness runs. These pin `_DISPOSITION_REGEN` to that floor
+# so the transaction and the floor cannot disagree on WHAT to regenerate or WITH
+# WHICH FLAGS — the divergence that failed train 3-g3-WI-273-b45e's disposition
+# deterministically on 2026-07-23.
+
+
+def _floor_run_steps():
+    """The step names the pre-commit floor runs (project-trajectory/hooks/pre-commit
+    delegates to `check.py --run-steps <csv>`) — the surface a disposition commit
+    faces."""
+    hook = (ROOT / "project-trajectory" / "hooks" / "pre-commit").read_text(
+        encoding="utf-8"
+    )
+    m = re.search(r"--run-steps\s+([\w,-]+)", hook)
+    assert m, "pre-commit hook no longer invokes check.py --run-steps"
+    return m.group(1).split(",")
+
+
+def test_disposition_regen_tracks_floor():
+    # Every entry in the disposition regen family names a real floor step and
+    # regenerates with the SAME generator + flags that step freshness-checks (the
+    # floor command minus its trailing --check). So a disposition commit can never
+    # stale an artifact the floor then rejects, and the two homes cannot drift to
+    # different flags (the WI-260 "read one rule" precedent, disposition vs floor).
+    floor_steps = _floor_run_steps()
+    plan = check.steps(coverage="cov", tier="full", gate="all")
+    cmd_by_step = {name: cmd for name, _req, cmd, _gates, _layer in plan}
+    for step, gen, flags, _markers in dispatcher._DISPOSITION_REGEN:
+        assert step in floor_steps, "{} is not a pre-commit floor step".format(step)
+        floor_cmd = cmd_by_step[step]
+        # floor: [python, <path>/<gen>, *flags, "--check"]; the regen drops --check.
+        assert Path(floor_cmd[1]).name == gen
+        assert list(floor_cmd[2:]) == [*flags, "--check"]
+
+
+def test_disposition_regen_is_the_floor_freshness_subset():
+    # Tripwire: the disposition regenerates exactly the floor's disposition-
+    # STALEABLE generated artifacts. arch-map (the code map), derived-gate, and
+    # skills-sync are floor-checked too, but a disposition edits none of their
+    # inputs, so they are deliberately excluded. Asserting the whole floor list
+    # forces a NEW gate to be classified here rather than silently reintroducing
+    # the deterministic-commit-failure.
+    assert _floor_run_steps() == [
+        "arch-map",
+        "okf",
+        "trajectory-map",
+        "status-map",
+        "trajectory",
+        "registry-integrity",
+        "derived-gate",
+        "skills-sync",
+    ]
+    regen_steps = [step for step, *_ in dispatcher._DISPOSITION_REGEN]
+    assert regen_steps == ["okf", "trajectory-map", "status-map"]
+
+
+def test_status_map_regen_opts_in_on_either_generated_file():
+    # The status-map floor step splices TWO files from one `--status` run and is
+    # vacuous only when BOTH are absent — so the disposition must opt in on
+    # EITHER, not on status.md alone. Keying it on status.md matched the floor
+    # only incidentally (generate_status synthesizes status.md before every
+    # disposition regen); pinning the opt-in to the SAME marker pair the floor
+    # gates makes the regen correct independent of that side-effect — the "cannot
+    # disagree again" the single-home buys.
+    status_entry = next(
+        e for e in dispatcher._DISPOSITION_REGEN if e[0] == "status-map"
+    )
+    assert set(status_entry[3]) == {"docs/status.md", "docs/open-items.md"}
+    assert status_entry[3] is dispatcher._STATUS_MAP_MARKERS  # the ONE home

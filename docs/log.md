@@ -11788,3 +11788,7 @@ links. Spec archived; hand-applied per owner directive, outside REVIEW-A.
 ## 2026-07-23 23:58 — blocked disposition: WI-273 (train 3-g3-WI-273-b45e)
 
 Worker-reported blocker with committed evidence at 747f152; BlockRef: SR-084 family-heterogeneous CRITIQUE dispatch — SR-052 (Verification=Critique) requires a non-Anthropic critic against docs/rubrics/dashboard-accessibility.md.
+
+## 2026-07-24 01:16 — integrated train p0-g3-WI-283-87ef (WI-283)
+
+Head cc1eb3d composed onto 40e73c8 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-283 -> done. Spec(s) archived: docs/archive/specs/WI-283.2026-07-24.md.

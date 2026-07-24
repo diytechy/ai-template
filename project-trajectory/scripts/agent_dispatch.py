@@ -1187,34 +1187,34 @@ def _run_combined_bar(worktree, root):
     return proc.returncode == 0, ("pass" if proc.returncode == 0 else tail)
 
 
-def _regenerate_disposition_artifacts(worktree):
-    """Regenerate freshness-gated views after a disposition edits registries.
+# WI-283: the disposition regen family, single-homed with the pre-commit floor,
+# which checks each artifact as `<gen> [flags] --check`. A disposition stales
+# these, so this runs `<gen> [flags]` in the staging worktree BEFORE the commit —
+# so the commit passes its own floor (WI-283) and a closed id self-prunes the
+# frontier (WI-284). One home for regen + check (WI-260 "read one rule") so they
+# cannot drift; a SUBSET (arch-map/derived-gate/skills-sync are checked but no
+# disposition edits their inputs). tests/test_agent_dispatch_decisions.py pins the
+# contract, incl. the status-map opt-in on EITHER of its two floor-gated files.
+#   (floor_step, generator, flags, opt_in_markers) — opt in per marker `.exists()`.
+_STATUS_MAP_MARKERS = ("docs/status.md", "docs/open-items.md")
+_DISPOSITION_REGEN = (
+    ("okf", "gen_okf.py", (), ("docs/okf",)),
+    ("trajectory-map", "gen_trajectory.py", (), ("PROJECT_STATE.html",)),
+    ("status-map", "gen_trajectory.py", ("--status",), _STATUS_MAP_MARKERS),
+)
 
-    The generators are kit-owned siblings of this dispatcher even when the
-    checkout is a downstream scaffold. Artifact presence is the opt-in signal:
-    a non-adopter must not depend on either generator.
-    """
+
+def _regenerate_disposition_artifacts(worktree):
+    """Regenerate the freshness-gated views a disposition stales, in the staging
+    worktree before its commit, so it passes the same pre-commit floor (see
+    `_DISPOSITION_REGEN`). Opt in by artifact presence; okf feeds the dashboard."""
     worktree = Path(worktree)
     scripts = Path(__file__).resolve().parent
-    generators = []
-    if (worktree / "docs" / "okf").is_dir():
-        generators.append(("gen_okf.py", []))
-    if (worktree / "PROJECT_STATE.html").is_file():
-        generators.append(("gen_trajectory.py", []))
-    # WI-284/WI-283: the status.md snapshot (derived gate/spine + open-items +
-    # the generated Ready-frontier list) and the open-items.md pending
-    # projection are freshness-gated by the `status-map` step, but a disposition
-    # that flips a WI to done/blocked changes their inputs. Regenerate them here
-    # so the disposition commit passes its own floor (WI-283) AND the just-closed
-    # id drops out of the generated frontier automatically (WI-284 — no stranded
-    # done-id to redden a later train's DONE gate). Opt-in on the marker, like
-    # the two generators above: a status.md/open-items.md without the generated
-    # blocks is left untouched, so a non-adopter regenerates nothing.
-    if (worktree / "docs" / "status.md").is_file():
-        generators.append(("gen_trajectory.py", ["--status"]))
-    for name, extra in generators:
+    for _step, name, flags, markers in _DISPOSITION_REGEN:
+        if not any((worktree / m).exists() for m in markers):
+            continue
         proc = subprocess.run(
-            [sys.executable, str(scripts / name), "--root", str(worktree), *extra],
+            [sys.executable, str(scripts / name), "--root", str(worktree), *flags],
             cwd=str(worktree),
             capture_output=True,
             text=True,
