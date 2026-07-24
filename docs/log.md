@@ -11859,3 +11859,16 @@ its head. Its reservation stays held.
 now tracked): the WI-290 `gen_trajectory→schedule` seam, and the perceptual-stale
 SR-052/053/054 critique that WI-273 owns (needs the `render-dashboard-critique`
 matrix re-run). The `dupes` census was refreshed against the final tree here.
+
+**Follow-up (owner-directed, same day):** WI-290 resolved via **Option B** —
+declared `IF-071` (gen_trajectory Consumes schedule, the frontier DECISION seam
+`IF-053` already named for "the dashboard") and reworded `IF-056` to name it the
+DERIVATION-loader seam, distinct from the frontier seam. `check_trajectory
+--strict` no longer flags the `gen_trajectory→schedule` edge; the only remaining
+trajectory-gate error is the perceptual-stale SR-052/053/054 (WI-273, needs the
+non-Anthropic critique). Filed **WI-291**: the WI-registry loader is duplicated
+between `schedule.py` (CMP-004, the decision engine) and `check_trajectory.py`
+(CMP-001, the validator) — near-identical `load_wis` (2 census blocks
+`d47d5975c21b`/`f800f0c60265`), kept apart deliberately (schedule stays a pure
+runtime library; IF-053 fixes the arrow) — extract a shared lower-level
+`wi_registry.load()` both depend on downward.
