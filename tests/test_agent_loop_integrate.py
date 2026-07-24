@@ -83,7 +83,7 @@ def _wi_row(wid, preds="", safety="ordinary", status="queued"):
     ]
 
 
-def _make_repo(tmp_path, rows, stack_test=None, header=None):
+def _make_repo(tmp_path, rows, stack_test=None, header=None, product_test=None):
     repo = tmp_path / "repo"
     (repo / "docs" / "requirements").mkdir(parents=True)
     with open(
@@ -98,9 +98,16 @@ def _make_repo(tmp_path, rows, stack_test=None, header=None):
     (repo / "AGENTS.md").write_text("# agents\n", encoding="utf-8")
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     (repo / "docs" / "gate-policy").write_text("autonomous\n", encoding="utf-8")
+    # The combined bar reads the declared test command: legacy `[stack] test`
+    # (raw) OR the kit schema `[product] test` (with {py}/{src}/{tests}
+    # substitution — WI-285). A fixture declares at most one.
     if stack_test:
         (repo / "docs" / "stack.ini").write_text(
             "[stack]\ntest = {}\n".format(stack_test), encoding="utf-8"
+        )
+    elif product_test:
+        (repo / "docs" / "stack.ini").write_text(
+            "[product]\ntest = {}\n".format(product_test), encoding="utf-8"
         )
     _git(repo, "init")
     _git(repo, "config", "user.email", "loop@example.com")
@@ -159,8 +166,10 @@ sys.exit(0)
 """
 
 
-def _setup(tmp_path, rows, stack_test=None, header=None):
-    repo = _make_repo(tmp_path, rows, stack_test=stack_test, header=header)
+def _setup(tmp_path, rows, stack_test=None, header=None, product_test=None):
+    repo = _make_repo(
+        tmp_path, rows, stack_test=stack_test, header=header, product_test=product_test
+    )
     ctl = tmp_path / "ctl"
     ctl.mkdir()
     fake = tmp_path / "fake.py"
@@ -236,6 +245,25 @@ def test_serial_composition_with_trailers_and_bar(tmp_path):
     assert _reservations(repo) == set()
 
 
+def test_product_schema_bar_runs_on_real_integration(tmp_path):
+    # WI-285 done-when: a real integration whose repo declares its harness under
+    # the kit schema `[product] test` journals a RUN result ("pass"), not the old
+    # fail-open "skipped (no declared test command)". {py} expands to the
+    # integrator's interpreter (check._expand), the same substitution check.py
+    # makes for the per-commit floor.
+    repo, ctl, template = _setup(
+        tmp_path,
+        [_wi_row("WI-201")],
+        product_test='{py} -c "import sys; sys.exit(0)"',
+    )
+    proc = _dispatch(repo, template)
+    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
+    bars = [e for e in _events(repo) if e["event"] == "integration-bar"]
+    assert bars, "the integrator must journal a combined-bar result"
+    assert all(b["result"] == "pass" for b in bars), bars
+    assert all("skipped" not in b["result"] for b in bars), bars
+
+
 def test_red_combined_bar_blocks_integration_and_cas(tmp_path):
     repo, ctl, template = _setup(
         tmp_path,
@@ -256,6 +284,152 @@ def test_red_combined_bar_blocks_integration_and_cas(tmp_path):
     )
     reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
     assert ",done," not in reg, "a red bar must never produce a done row"
+
+
+def test_missing_binary_combined_bar_parks_not_crashes(tmp_path):
+    # SR-008 end-to-end: a declared [product] test whose executable does not
+    # exist must PARK the train for rework — the same outcome as a red bar — and
+    # never crash the dispatcher. Before the OSError guard, subprocess.run raised
+    # FileNotFoundError out of integrate_train and the whole walk-away loop
+    # exited 1 AFTER the worker was ready, so nothing parked and the operator got
+    # a stack trace instead of a rework.
+    repo, ctl, template = _setup(
+        tmp_path,
+        [_wi_row("WI-201")],
+        product_test="llm-nonexistent-binary-xyzzy --run",
+    )
+    before = _git(repo, "rev-parse", "HEAD")
+    proc = _dispatch(repo, template)
+    # Parks for rework, exactly like a red bar: nothing integrates, refs frozen,
+    # reservation held — and the dispatcher exits its normal stall code, never a
+    # crash traceback.
+    assert proc.returncode == agent_loop.EXIT_STALL, proc.stdout + proc.stderr
+    assert "Traceback" not in (proc.stdout + proc.stderr)
+    assert _git(repo, "rev-parse", "refs/heads/llm/integration") == before
+    assert _git(repo, "rev-parse", "HEAD") == before
+    assert _reservations(repo) == {"WI-201"}
+    events = _events(repo)
+    assert any(
+        e["event"] == "integration-parked" and e["state"] == "rework" for e in events
+    )
+    bars = [e for e in events if e["event"] == "integration-bar"]
+    assert bars and all("not runnable" in b["result"] for b in bars), bars
+    reg = (repo / "docs" / "requirements" / "work-items.csv").read_text("utf-8")
+    assert ",done," not in reg, "a missing-binary bar must never produce a done row"
+
+
+# --- WI-285: the combined bar reads the schema the repo actually declares --------
+# The integrator used to read docs/stack.ini `[stack] test`, a key the kit's own
+# profile (and every check.py-shaped one) does not have — it declares the harness
+# under `[product] test`. So the composed-tree bar journalled "skipped (no
+# declared test command)" and fail-OPENed on every integration.
+
+
+def _bar_worktree(tmp_path, ini_text):
+    """A minimal composed-tree stand-in: a docs/ dir under a worktree, with a
+    docs/stack.ini of `ini_text` (None writes none), for exercising
+    _run_combined_bar directly."""
+    wt = tmp_path / "wt"
+    (wt / "docs").mkdir(parents=True)
+    if ini_text is not None:
+        (wt / "docs" / "stack.ini").write_text(ini_text, encoding="utf-8")
+    return wt
+
+
+def test_combined_bar_runs_product_schema_not_skips(tmp_path):
+    # The kit declares its harness under [product] test = {py} -m pytest, NOT
+    # [stack] test. The bar must READ that key (with {py} substitution) and RUN
+    # it — the schema mismatch that silently skipped every integration.
+    wt = _bar_worktree(
+        tmp_path, '[product]\ntest = {py} -c "import sys; sys.exit(0)"\n'
+    )
+    ok, detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
+    assert ok and detail == "pass", detail
+
+
+def test_combined_bar_product_red_parks(tmp_path):
+    # A composed tree that fails its declared [product] bar reports not-ok, so
+    # the integrator parks the train instead of integrating.
+    wt = _bar_worktree(
+        tmp_path, '[product]\ntest = {py} -c "import sys; sys.exit(3)"\n'
+    )
+    ok, _detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
+    assert not ok
+
+
+def test_combined_bar_legacy_stack_key_still_runs(tmp_path):
+    # The legacy [stack] test key stays honored as a fallback, so a profile that
+    # used it does not silently stop running.
+    wt = _bar_worktree(
+        tmp_path,
+        '[stack]\ntest = "{}" -c "import sys; sys.exit(0)"\n'.format(sys.executable),
+    )
+    ok, detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
+    assert ok and detail == "pass", detail
+
+
+def test_combined_bar_skips_only_when_no_command_declared(tmp_path):
+    # The honest skip: no stack.ini, or a stack.ini declaring NEITHER test key,
+    # is a genuinely stackless fixture (skip=pass).
+    wt = _bar_worktree(tmp_path, None)
+    ok, detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
+    assert ok and detail.startswith("skipped")
+    wt2 = _bar_worktree(tmp_path / "b", "[paths]\nsrc = src\ntests = tests\n")
+    ok2, detail2 = agent_dispatch._run_combined_bar(str(wt2), str(wt2))
+    assert ok2 and detail2 == "skipped (no declared test command)"
+
+
+def test_combined_bar_declared_but_empty_fails_closed(tmp_path):
+    # A declared-but-EMPTY command is a misconfiguration, not a stackless skip —
+    # fail closed rather than silently pass (the WI-285 fail-open lesson).
+    wt = _bar_worktree(tmp_path, "[product]\ntest =\n")
+    ok, _detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
+    assert not ok
+
+
+def test_combined_bar_unreadable_profile_parks(tmp_path):
+    # A malformed stack.ini raises ValueError from the resolver; the bar PARKS
+    # (fail closed), never skips — a stackless fixture has no stack.ini at all.
+    wt = _bar_worktree(tmp_path, "not a section header\n")
+    ok, detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
+    assert not ok and "unreadable" in detail
+
+
+def test_combined_bar_missing_binary_fails_closed(tmp_path):
+    # SR-008: a declared [product] test whose executable is absent raises
+    # FileNotFoundError (an OSError) out of subprocess.run. The bar must catch
+    # it and return not-ok — a RED bar the integrator reworks, NOT an uncaught
+    # crash that exits the whole walk-away dispatcher after the worker is ready.
+    wt = _bar_worktree(
+        tmp_path, "[product]\ntest = llm-nonexistent-binary-xyzzy --run\n"
+    )
+    ok, detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
+    assert not ok and "not runnable" in detail
+
+
+def test_declared_test_command_resolution(tmp_path):
+    # The shared resolver directly: [product] expands {py}/{src}/{tests} exactly
+    # as check.py fills them; [stack] is tokenized RAW (quotes group as one
+    # token); NEITHER key -> None (stackless) while a present-but-EMPTY command
+    # -> [] (declared) so the caller fail-closes rather than skipping.
+    ini = tmp_path / "stack.ini"
+    ini.write_text(
+        "[paths]\nsrc = lib\ntests = t\n[product]\ntest = {py} -m pytest {src} {tests}\n",
+        encoding="utf-8",
+    )
+    assert agent_dispatch._declared_test_command(ini) == [
+        sys.executable,
+        "-m",
+        "pytest",
+        "lib",
+        "t",
+    ]
+    ini.write_text('[stack]\ntest = mytool --run "a b"\n', encoding="utf-8")
+    assert agent_dispatch._declared_test_command(ini) == ["mytool", "--run", "a b"]
+    ini.write_text("[paths]\nsrc = s\n", encoding="utf-8")
+    assert agent_dispatch._declared_test_command(ini) is None
+    ini.write_text("[product]\ntest =\n", encoding="utf-8")
+    assert agent_dispatch._declared_test_command(ini) == []
 
 
 def test_conflict_forces_focused_re_review_clean_apply_does_not(tmp_path):

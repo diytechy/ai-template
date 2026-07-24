@@ -27,7 +27,6 @@ import io
 import json
 import os
 import re
-import shlex
 import shutil
 import subprocess
 import sys
@@ -53,6 +52,7 @@ try:
         TRAILER_EVIDENCE_FMT,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
+        _declared_test_command,
         _failure_tail,
         _read_csv_rows,
         _refs,
@@ -88,6 +88,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         TRAILER_EVIDENCE_FMT,
         TRAIN_BRANCH_PREFIX,
         WI_TOKEN_RE,
+        _declared_test_command,
         _failure_tail,
         _read_csv_rows,
         _refs,
@@ -1151,38 +1152,42 @@ def generate_status(docs, root, last_train=""):
 
 
 def _run_combined_bar(worktree, root):
-    """The combined commit bar on the composed tree: the declared stack test
-    command (docs/stack.ini [stack] test). Returns (ok, detail); no declared
-    command reports ('skipped', True) — a stackless fixture, not a pass."""
-    import configparser
-
+    """The combined commit bar on the composed tree: the repo's OWN declared
+    test command, resolved by _declared_test_command (the stack schema check.py
+    reads). WI-285: this read only `[stack] test`, a key the kit's stack.ini
+    lacks (it declares `[product] test`), so every integration journalled
+    "skipped (no declared test command)" and fail-OPENed — the composed-tree bar
+    never ran. Now only a profile declaring NEITHER key skips; a
+    declared-but-unread/empty key no longer silently passes."""
     ini = Path(worktree) / "docs" / "stack.ini"
     if not ini.exists():
         return True, "skipped (no docs/stack.ini)"
-    cp = configparser.ConfigParser()
     try:
-        cp.read(str(ini), encoding="utf-8")
-        cmd = (cp.get("stack", "test", fallback="") or "").strip()
-    except configparser.Error as exc:
+        argv = _declared_test_command(ini)
+    except ValueError as exc:  # malformed/unreadable profile: park, don't skip
         return False, "stack.ini unreadable: {}".format(exc)
-    if not cmd:
+    if argv is None:  # neither [product] test nor [stack] test: stackless fixture
         return True, "skipped (no declared test command)"
+    if not argv:  # declared but empty: fail closed, don't run subprocess([])
+        return False, "declared test command is empty"
     try:
-        argv = shlex.split(cmd)
-    except ValueError as exc:
-        return False, "cannot parse test command: {}".format(exc)
-    proc = subprocess.run(
-        argv,
-        cwd=str(worktree),
-        capture_output=True,
-        text=True,
-        # utf-8 + replace like the kit's own git() wrapper: a downstream test
-        # suite emitting one locale-undecodable byte must mojibake, not crash
-        # the integrator mid-composition (repo-review 2026-07-21 L-25).
-        encoding="utf-8",
-        errors="replace",
-        stdin=subprocess.DEVNULL,
-    )
+        proc = subprocess.run(
+            argv,
+            cwd=str(worktree),
+            capture_output=True,
+            text=True,
+            # utf-8 + replace like the kit's own git() wrapper: a downstream test
+            # suite emitting one locale-undecodable byte must mojibake, not crash
+            # the integrator mid-composition (repo-review 2026-07-21 L-25).
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+        )
+    except OSError as exc:
+        # SR-008: a declared bar whose binary is absent/unrunnable is a RED bar
+        # the integrator reworks — not a FileNotFoundError that crashes the whole
+        # walk-away dispatcher (exit 1) after the worker is ready. Fail closed.
+        return False, "test command not runnable: {}".format(exc)
     tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
     return proc.returncode == 0, ("pass" if proc.returncode == 0 else tail)
 

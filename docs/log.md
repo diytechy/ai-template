@@ -11792,3 +11792,7 @@ Worker-reported blocker with committed evidence at 747f152; BlockRef: SR-084 fam
 ## 2026-07-24 01:16 — integrated train p0-g3-WI-283-87ef (WI-283)
 
 Head cc1eb3d composed onto 40e73c8 by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-283 -> done. Spec(s) archived: docs/archive/specs/WI-283.2026-07-24.md.
+
+## 2026-07-24 03:13 — integrated train p0-g3-WI-285-76a8 (WI-285)
+
+Head ffdfe76 composed onto bd2a21b by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-285 -> done. Spec(s) archived: docs/archive/specs/WI-285.2026-07-24.md.

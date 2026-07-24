@@ -42,10 +42,10 @@ from pathlib import Path
 # import (a test) whose sys.path doesn't yet carry scripts/ — the same
 # sanctioned-sibling-import idiom agent_loop uses.
 try:
-    from agent_session import build_argv
+    from agent_session import build_argv, split_cmd
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from agent_session import build_argv
+    from agent_session import build_argv, split_cmd
 # Size bounds for the tracked per-session log (the Q13d "size-bounded" cap):
 # the head shows how the session started, the capped tail how it ended — the
 # part that explains the outcome. The raw unbounded stream goes to the
@@ -137,6 +137,45 @@ def pause_reason(lane):
     if not path.is_file():
         return None
     return read_declared(path, "")
+
+
+def _declared_test_command(ini):
+    """The repo's declared test command as a tokenized argv, read from a
+    docs/stack.ini path — the stack-schema home the parallel-dispatch
+    integrator's combined bar reads (agent_dispatch._run_combined_bar) so it runs
+    the bar the repo actually declares. Mirrors check.py's stack schema rather
+    than importing it — the OWNER_ONLY_PATHS precedent above: a CMP-004→CMP-001
+    import for one small read would owe an IF seam; the tests pin it against
+    drift. The kit schema is `[product] test` (with {py}/{src}/{tests} the same
+    placeholders check.py fills), with the legacy raw `[stack] test` as a
+    fallback. Returns None only when NEITHER key is present (a genuinely
+    stackless profile → the caller legitimately skips); otherwise the argv —
+    possibly [] for a declared-but-empty command, which the caller treats as a
+    misconfiguration, not a skip (WI-285: a declared-but-unread key must not
+    silently pass). Raises ValueError on an unreadable profile. {py} is this
+    interpreter — the integrator's own floor-satisfying one (WI-286)."""
+    import configparser
+
+    cp = configparser.ConfigParser(interpolation=None)
+    try:
+        cp.read_string(Path(ini).read_text(encoding="utf-8-sig", errors="replace"))
+    except (configparser.Error, OSError) as exc:
+        raise ValueError(str(exc)) from exc
+    if cp.has_section("product") and cp.has_option("product", "test"):
+        subs = {
+            "py": sys.executable,
+            "src": cp.get("paths", "src", fallback="src"),
+            "tests": cp.get("paths", "tests", fallback="tests"),
+        }
+        argv = []
+        for tok in split_cmd(cp.get("product", "test")):
+            for key, val in subs.items():
+                tok = tok.replace("{" + key + "}", val)
+            argv.append(tok)
+        return argv
+    if cp.has_section("stack") and cp.has_option("stack", "test"):
+        return split_cmd(cp.get("stack", "test"))  # legacy raw: no substitution
+    return None
 
 
 # --- WI-148: weekday blackout window ------------------------------------------
