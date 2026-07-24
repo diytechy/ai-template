@@ -11689,3 +11689,35 @@ left named in status.md reddens every later train's DONE gate; it inherited-red
 WI-276) and the WI-279 **integration-bar skip** (`no declared test command` — the
 composed-tree bar did not run at integrate time, so WI-279 landed un-gated; the
 full bar was run by hand at this reconcile to close that gap). Nothing pushed.
+
+## 2026-07-23 (evening) — WI-284/285/286 filed (queued): three run-babysit defects
+
+Filed from the run `20260723T0202` babysit + reconcile, after the owner
+disambiguated the forward-only cascade from the environment concern (they are
+distinct):
+
+- **WI-284** (`scripts`, `Priority 1`): stop the forward-only cascade.
+  `integrate_train`'s done-flip calls `generate_status`, which rewrites only the
+  `BEGIN GENERATED STATUS` marker block — the hand-authored forward-only prose is
+  left naming the just-`done` id, so the smoke-tier forward-only test reddens
+  every subsequent train's DONE gate (this inherited-red burned WI-276's budget).
+  Fix: scrub the done id at integrate (a) and/or move the check off the smoke bar
+  to the gate tier (b, the cheap bleeding-stopper). NOT an environment issue.
+- **WI-285** (`scripts`, `Priority 1`): the integrator's composed-tree bar never
+  runs. `_run_combined_bar` reads `[stack] test`; the kit declares its harness
+  under `[product] test = {py} -m pytest -q -n auto` — a schema mismatch — so
+  every integration (WI-275/279 + all historical) journaled `skipped (no declared
+  test command)` and fail-opened. Integration-time gate verification has been
+  silently OFF for the meta-repo; the reconcile ran the full suite by hand to
+  close WI-279's gap. Fix: run the declared bar (check.py/`[product]` with `{py}`
+  substitution); stop the declared-but-unread-key silent pass.
+- **WI-286** (`scripts`, `~WI-274`): worker/integrator worktrees resolve the
+  ambient interpreter (this run: Python 3.8, below the 3.11 floor) — no `.venv` in
+  a worktree, pinned dev tools maybe absent. This IS the "correct Python for
+  branches" concern (distinct from WI-284). Fix: point worktree sessions at a
+  ≥ 3.11 pinned interpreter (share the root `.venv` by absolute path) + preflight
+  the floor. Sibling of WI-274; compounds WI-285 (the integrator bar needs a
+  floor-satisfying interpreter to mean anything).
+
+Spine unchanged; 276 WIs. Repo green (full suite 1394p at the reconcile; the
+new rows are forward-only-clean, check_docs 0 broken). Nothing pushed.
