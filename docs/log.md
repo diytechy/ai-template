@@ -11816,3 +11816,46 @@ Head 5d29e33 composed onto 1950e72 by the serialized integrator; 1 required revi
 ## 2026-07-24 11:51 — integrated train p0-g3-WI-282-eb40 (WI-282)
 
 Head d5108fb composed onto ec2ff8d by the serialized integrator; 1 required review phase(s) verified APPROVE on the exact reviewed head; combined bar ran on the composed tree (result below). WI row(s) WI-282 -> done. Spec(s) archived: docs/archive/specs/WI-282.2026-07-24.md.
+
+## 2026-07-24 — hand-integration: 4 approved trains landed + integrator findings
+
+Attended session (owner-directed, dispatcher stopped) resuming from
+`out/HANDOFF-2026-07-24.md`. Five approved-but-stuck trains were held not by
+incomplete work but by integration-time MECHANICS (the `WI:` trailer / reviewed-
+head resolution WI-282 fixes). I drove the **real** `integrate_train` and
+supplied the correct reviewed head (the fact the missing trailer denied
+`reviewed_train_head`), so the integrator produced its own byte-identical
+disposition — done-flip, spec archival, artifact regen, and the full combined
+bar (`pytest -q -n auto`) per commit. Four landed onto `3033b57`, published
+(fast-forward) to `dualplan-routing-fix`; nothing pushed.
+
+- WI-281 → `cec49ce` · WI-274 → `1950e72` · WI-276 → `ec2ff8d` · WI-282 → `108d537`.
+  Each reservation released; every combined bar green (~1434 tests).
+
+Four mechanical conflict classes were auto-resolved (each = accept the merged
+state each train's REVIEW-A already approved): the module-size **ratchet**
+baselines re-stamped to actual merged line counts (`agent_loop 3034→3042`,
+`agent_dispatch 3627→3682`); the fingerprinted **dupes census** regenerated via
+`check_dupes.py --emit-census`; a both-add **import-block** conflict in
+`agent_dispatch.py` union-resolved (WI-286 `MIN_PYTHON` + WI-282
+`SANCTIONED_TRAIN_SUBJECT_PREFIXES`); and inbound **log links** to a just-archived
+spec redirected to the archive path.
+
+**Findings filed:** WI-288 (integrator spec-archival must be link-aware — a
+train linking its own live spec strands a broken link at archival; live on
+WI-281, WI-274 identical), WI-289 (compose auto-resolution should own the
+per-train re-stamped ratchet + dupes-census data files, which parked
+WI-274/276/282), WI-290 (WI-284 gave `gen_trajectory` an undeclared SECOND
+cross-CMP sibling import to `schedule`, contradicting IF-056's "one sanctioned
+sibling"; reds the `--strict` trajectory gate — pre-existing at `3033b57`).
+
+**Not integrated: WI-272** — it delivers SR-053 (a `Verification=Critique` SR) so
+it is a render surface; its only CRITIQUE names an older head, so the fail-closed
+perceptual gate (WI-243) correctly refuses it until a FRESH render critique at
+its head. Its reservation stays held.
+
+**Gate at `108d537`:** the full suite + `check.py` pass at G3 EXCEPT the
+`trajectory` step, red on two PRE-EXISTING items (both present at `3033b57`, both
+now tracked): the WI-290 `gen_trajectory→schedule` seam, and the perceptual-stale
+SR-052/053/054 critique that WI-273 owns (needs the `render-dashboard-critique`
+matrix re-run). The `dupes` census was refreshed against the final tree here.
