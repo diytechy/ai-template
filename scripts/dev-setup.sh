@@ -74,6 +74,39 @@ offer_cli() { # <cmd> <npm package> <post-install sign-in hint>  (--install help
     *) echo "  Skipped $1 — fine if you use your own tools or an IDE extension." ;;
   esac
 }
+offer_python() { # (WI-302) one consented offer of a 3.11+ RUNTIME — and only
+  # through a provisioner the developer ALREADY installed. Returns 1 when none
+  # is present, so the caller falls through to the printed hint.
+  #
+  # The `offer_cli` pattern above, held to a stricter line on purpose. That one
+  # requires npm to exist and never bootstraps it; the same rule matters more
+  # here, because a language runtime is not a leaf tool — a wrong one shadows the
+  # system interpreter and breaks things well outside this repo. And this script
+  # SHIPS (dev-setup.template.sh): curl|sh-ing a third-party installer from a
+  # setup script would push a supply-chain surface onto every adopting repo that
+  # never chose it. Borrow trust the developer already extended; never manufacture
+  # it on their behalf.
+  if have uv; then pname="uv"; pcmd="uv python install 3.13"
+  elif have pyenv; then pname="pyenv"; pcmd="pyenv install -s 3.13"
+  elif have brew; then pname="Homebrew"; pcmd="brew install python@3.13"
+  else return 1
+  fi
+  printf 'No Python 3.11+ found, but %s is installed. Run `%s` now? [y/N] ' \
+    "$pname" "$pcmd"
+  read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      # Unquoted on purpose: $pcmd is a multi-word command to be word-split.
+      if $pcmd; then
+        echo "  [ok] $pname finished — re-checking for a floor-satisfying interpreter."
+      else
+        echo "  [warn] $pname could not install it — install Python 3.11+ your own way." >&2
+      fi
+      ;;
+    *) echo "  Skipped — install Python 3.11+ your own way, then rerun --install." ;;
+  esac
+  return 0
+}
 
 # Prefer the project venv --install creates, so the report reflects what the
 # harness will actually import; fall back to the ambient interpreter.
@@ -81,16 +114,37 @@ offer_cli() { # <cmd> <npm package> <post-install sign-in hint>  (--install help
 # A stale sub-3.11 .venv active on PATH otherwise shadows every bare python3,
 # hiding an installed 3.11+ from the recreate offer (the 2026-07-23 repro).
 # Each candidate is still floor-checked by python_311.
-if [ -x .venv/bin/python ] && python_311 .venv/bin/python; then PY=.venv/bin/python
-else
+discover_py() { # sets PY to a floor-satisfying interpreter, or "" (WI-302: a
+  # function so --install can RE-run discovery after a consented provisioner
+  # install, instead of telling the user to start over.)
+  if [ -x .venv/bin/python ] && python_311 .venv/bin/python; then
+    PY=.venv/bin/python
+    return 0
+  fi
   PY=""
   for cand in python3 python python3.13 python3.12 python3.11; do
-    if python_311 "$cand"; then PY="$cand"; break; fi
+    if python_311 "$cand"; then PY="$cand"; return 0; fi
   done
-fi
+  return 1
+}
+discover_py || true
+# WI-302: a remedy must be able to SATISFY the floor it is quoted against. The
+# old hint sent macOS users to `xcode-select --install` / dev-setup.command, but
+# the Command Line Tools ship Python 3.9 on current macOS — BELOW this very
+# line's floor — so following it landed back here unchanged, with no exit from
+# the loop. CLT is still what makes /usr/bin/{python3,git} real (see `real()`);
+# it simply is not a source of 3.11+. Name provisioners that actually are.
+case "$(uname 2>/dev/null || echo unknown)" in
+  Darwin)
+    PY_HINT="install Python 3.11+ — e.g. 'uv python install 3.13', 'brew install python@3.13', or the python.org macOS installer. NOT xcode-select / Command Line Tools: those ship Python 3.9, below this floor."
+    ;;
+  *)
+    PY_HINT="install Python 3.11+ — e.g. 'uv python install 3.13', your distro's python3.13 package, or the python.org installer"
+    ;;
+esac
 echo "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
 echo
-report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "install Python 3.11+ (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
+report "runtime (python3)" "$([ -n "$PY" ] && echo 1 || echo 0)" "$PY_HINT"
 # WI-274b: name a stale .venv explicitly. The report above prefers ./.venv when
 # supported, else silently describes the ambient interpreter it fell back to —
 # so without this a contributor sees only "[missing] runtime" and never learns
@@ -161,8 +215,17 @@ if [ "$MODE" = "check" ]; then
 fi
 
 # --- --install: consent-first venv + dev tools -------------------------------
+if [ -z "$PY" ]; then
+  # WI-302: before the fail-closed exit, offer the runtime through a provisioner
+  # already on this machine, then RE-discover — so a developer who has uv/pyenv/
+  # brew is one consented [y/N] from a working environment instead of a dead end.
+  offer_python || true
+  discover_py || true
+fi
 [ -n "$PY" ] || {
   echo "Python 3.11+ not found on PATH; install a supported interpreter first." >&2
+  echo "  $PY_HINT" >&2
+  echo "  (a managed interpreter may need a new shell, or its bin dir on PATH)" >&2
   exit 1
 }
 # WI-274a: a sub-3.11 (or broken) ./.venv gets a CONSENTED recreate at the

@@ -545,3 +545,102 @@ def test_meta_repo_dogfoods_dev_setup():
         assert "cannot boot the unattended" in text, (
             name + " missing the --check-mode warning"
         )
+
+
+# --- WI-302: the runtime rung — a remedy must be able to satisfy the floor -----
+# dev-setup DETECTS an interpreter, it never installs one (it pip-installs the dev
+# tools INTO ./.venv, which needs a Python to already exist). That is fine, but it
+# makes the printed hint the whole user experience when the floor is unmet — and the
+# old hint named `xcode-select --install`, whose Command Line Tools ship Python 3.9
+# on current macOS, BELOW the floor the same line enforces. Following it landed the
+# reader back at an unchanged report with no exit from the loop.
+
+_DEVSETUP_SH = (
+    "scripts/dev-setup.sh",
+    "project-trajectory/scripts/dev-setup.template.sh",
+)
+_ALL_SETUP = _DEVSETUP_SH + (
+    "scripts/dev-setup.ps1",
+    "scripts/dev-setup.cmd",
+    "scripts/dev-setup.command",
+    "project-trajectory/scripts/dev-setup.template.ps1",
+    "project-trajectory/scripts/dev-setup.template.cmd",
+    "project-trajectory/scripts/dev-setup.template.command",
+)
+
+
+def _hint_line(text):
+    """The runtime report's hint — the line that tells a blocked reader what to do."""
+    for line in text.splitlines():
+        if "runtime (python" in line and "report" in line.lower():
+            return line
+        if "PY_HINT=" in line and "3.11" in line:
+            return line
+    return ""
+
+
+def test_runtime_hint_names_a_provisioner_that_can_meet_the_floor():
+    for rel in _DEVSETUP_SH:
+        text = (REPO_ROOT / rel).read_text(encoding="utf-8")
+        assert "PY_HINT" in text, rel + " has no platform-aware runtime hint"
+        # names something that actually ships 3.11+
+        assert "uv python install" in text, rel + " names no usable provisioner"
+        assert "python.org" in text, rel + " does not offer the signed-installer route"
+        # and explicitly warns off the remedy that CANNOT meet the floor
+        assert "below this floor" in text, (
+            rel + " must say why Command Line Tools is not a 3.11+ source"
+        )
+
+
+def test_runtime_hint_does_not_send_a_blocked_reader_to_command_line_tools():
+    # xcode-select may still appear for git and in `real()` — CLT genuinely makes
+    # /usr/bin/{python3,git} real. What must not happen is quoting it as the way to
+    # get a 3.11+ PYTHON, in the same breath as the floor.
+    for rel in _DEVSETUP_SH:
+        text = (REPO_ROOT / rel).read_text(encoding="utf-8")
+        for line in text.splitlines():
+            if "3.11+" in line and "xcode-select" in line:
+                assert "NOT xcode-select" in line, (
+                    rel + ": quotes CLT as a 3.11+ remedy: " + line.strip()
+                )
+
+
+def test_runtime_offer_is_gated_on_an_already_installed_provisioner():
+    # The offer_cli pattern, held to a stricter line: offer a RUNTIME only through a
+    # provisioner the developer already installed, and fall through to the printed
+    # hint when none is present. A language runtime is not a leaf tool — a wrong one
+    # shadows the system interpreter well outside this repo.
+    text = (REPO_ROOT / "scripts/dev-setup.sh").read_text(encoding="utf-8")
+    assert "offer_python()" in text
+    for provisioner in ("have uv", "have pyenv", "have brew"):
+        assert provisioner in text, "offer_python must gate on " + provisioner
+    body = text.split("offer_python()", 1)[1].split("\n}", 1)[0]
+    assert "return 1" in body, "offer_python must decline when no provisioner exists"
+    assert "discover_py" in text, "an accepted offer must re-discover, not dead-end"
+
+
+def test_no_setup_script_pipes_a_remote_script_into_a_shell():
+    # The security invariant behind the WI-302 design, pinned executably because it
+    # is a decision that a future 'helpful' edit would silently undo. These scripts
+    # SHIP (dev-setup.template.*), so curl|sh here would push a supply-chain surface
+    # onto every adopting repo that never chose it. Borrow trust a developer already
+    # extended (an installed uv/pyenv/brew); never manufacture it on their behalf.
+    bad = re.compile(
+        r"(curl|wget|iwr|Invoke-WebRequest)[^\n|]*\|\s*(sudo\s+)?(sh|bash|zsh|iex|Invoke-Expression)",
+        re.I,
+    )
+    # Scan EXECUTABLE lines only. The rule is about what the script runs, not what
+    # it explains — the comment above `offer_python` names the anti-pattern in order
+    # to forbid it, and must not be read as committing it.
+    comment = re.compile(r"^\s*(#|REM\b|::)", re.I)
+    for rel in _ALL_SETUP:
+        p = REPO_ROOT / rel
+        if not p.is_file():
+            continue
+        for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+            if comment.match(line):
+                continue
+            hit = bad.search(line)
+            assert not hit, "{}:{}: pipes a downloaded script into a shell: {}".format(
+                rel, n, hit.group(0)
+            )

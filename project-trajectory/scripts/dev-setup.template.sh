@@ -153,7 +153,16 @@ say
 
 # --- Detect + report (every tier does this first) ----------------------------
 if python_311 python3 || python_311 python; then RUNTIME=1; else RUNTIME=0; fi
-report "runtime (python3)"          "$RUNTIME"                        "install a Python 3.11+ runtime (fresh macOS: double-click scripts/dev-setup.command, or xcode-select --install)"
+# A remedy must be able to SATISFY the floor it is quoted against. This line used
+# to send macOS users to `xcode-select --install`, but the Command Line Tools ship
+# Python 3.9 — below this floor — so following it landed back here unchanged, with
+# no way out of the loop. CLT is still what makes /usr/bin/{python3,git} real (see
+# `real()` above); it is simply not a source of 3.11+.
+case "$(uname 2>/dev/null || echo unknown)" in
+  Darwin) PY_HINT="install a Python 3.11+ runtime — e.g. 'uv python install 3.13', 'brew install python@3.13', or the python.org macOS installer. NOT xcode-select / Command Line Tools: those ship Python 3.9, below this floor." ;;
+  *)      PY_HINT="install a Python 3.11+ runtime — e.g. 'uv python install 3.13', your distro's python3.13 package, or the python.org installer" ;;
+esac
+report "runtime (python3)"          "$RUNTIME"                        "$PY_HINT"
 report "git"                        "$(real git && echo 1 || echo 0)" "install git — needed to make reviewable changes (macOS: xcode-select --install)"
 report "offline Markdown+Mermaid renderer" \
        "$(renderer_present && echo 1 || echo 0)" \

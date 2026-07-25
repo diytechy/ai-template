@@ -103,7 +103,7 @@ try {
 
     Write-Host "dev-setup (ai-template meta-repo). Run tests with: python -m pytest -q"
     Write-Host ""
-    Report "runtime (python)" ([bool]$py) "install Python 3.11+"
+    Report "runtime (python)" ([bool]$py) "install Python 3.11+ - e.g. winget install Python.Python.3.13, uv python install 3.13, or the python.org Windows installer"
     # WI-274b: name a stale/broken .venv explicitly. The report above prefers the
     # venv when it is supported, else silently describes the ambient interpreter —
     # so without this a contributor sees only "[missing] runtime" and never learns
