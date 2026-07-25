@@ -86,8 +86,14 @@ decisions._
   touched — A4-hub, then A2 and A4-boundaries — each fix exposing the next, while
   an adversarial REVIEW-A drove its code through every worst-class hunt and found
   nothing. Its code is ready; the gate's shape is what holds it.
-- **Blast radius:** **7 of the 9 queued WIs** are render rows sitting behind this
-  (WI-272/292/294/295/296/297/299) plus blocked WI-273. Also downstream: the
+- **Blast radius:** **6 of the 9 queued WIs** cite a `Verification=Critique` SR
+  and so sit behind this (WI-272/292/294/295/297/299), plus blocked WI-273 — seven
+  rows. Note the asymmetry: the *train* gate is **SR-based**
+  (`_train_is_render_surface` = delivered SRs ∩ Critique SRs) while the
+  `perceptual-stale` check is **path-based** (`gen_trajectory.py`, `shoot.mjs`), so
+  **WI-296** edits the render surface yet cites no Critique SR — it can integrate
+  on REVIEW-A alone, but landing it still re-reds the gate for the repo. Whether
+  that escape hatch is intended is part of this decision. Also downstream: the
   critique-loop contract ships in
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) *"Critique
   verification"*, so whatever is ruled here is inherited by adopting repos.

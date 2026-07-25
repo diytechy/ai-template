@@ -12194,3 +12194,29 @@ block in `open-items.md` regenerated clean.
 2 retired, 9 queued, 1 blocked, 15 deferred. `merge-to-main` was **not** an
 untracked item — it is WI-278/OI-8, which owns the branch-integration decision;
 earlier session summaries listed it loosely as though it were separate.
+
+## 2026-07-24 (close) — correction: 6 queued rows are critique-gated, not 7
+
+Counting the open rows against the gate's actual rule caught an error in the OI-9
+brief filed minutes earlier. It said "7 of the 9 queued WIs are render rows sitting
+behind this", listing **WI-296** among them. WI-296 carries **no `SR-Refs`**, and
+the train gate tests `delivered SRs ∩ Verification=Critique SRs`
+(`agent_dispatch._train_is_render_surface`) — so WI-296 is **not** critique-gated
+and can integrate on REVIEW-A alone. Correct count: **6 queued** (WI-272/292/294/
+295/297/299) **+ blocked WI-273 = 7** critique-gated rows.
+
+**The asymmetry the miscount exposed is worth more than the fix.** The *train* gate
+is **SR-based**, but `critique_staleness_findings` is **path-based**
+(`gen_trajectory.py`, `shoot.mjs`). A WI can therefore edit the render surface
+without owing a CRITIQUE verdict, yet still re-red the perceptual gate for the repo
+when it lands. WI-296 is exactly that case: cheap to integrate, leaves a bill.
+Whether that escape hatch is intended is now part of the OI-9 decision rather than
+an accident nobody had noticed.
+
+Practical effect: **three queued rows can proceed today** independent of the OI-9
+ruling — WI-288, WI-289 (integrator, no SR-Refs) and WI-296 (render-surface but
+not critique-gated). Corrected in `open-items.md` OI-9, the WI-300 row, and
+`status.md`.
+
+**Open-row census by gating:** 25 open rows — **7 critique-gated** (6 queued +
+1 blocked), **18 non-critique** (3 queued + 15 deferred).
