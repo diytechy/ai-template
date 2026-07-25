@@ -31,19 +31,36 @@ not execute at all. That is fixed. Everything green before that date was green o
 > `Verification=Critique`, and `gen_trajectory.py` changed after `118-CRITIQUE`, so
 > those verdicts judge an older render.
 
-**The checker is right and this is fail-closed by owner ruling (2026-07-20).** It
-clears exactly two ways:
+**The checker is right and this is fail-closed by owner ruling (2026-07-20) — but that
+ruling is about staleness, not about who may run the critique.** SR-084's own text and
+its router (`project-trajectory/scripts/agent_route.py:50-53,608-653`) make
+family-heterogeneity a **preference, not a mandate**: a reviewer/critic *prefers* a
+different family from the implementer, but "degraded availability is legal — fresh
+context is the invariant," and same-family runs are accepted with a `DEGRADED` banner
+and a weaker corroboration weight, never a hard refusal. Nothing in
+`check_trajectory.py`/`agent_dispatch.py` inspects which model or family produced a
+`docs/reviews/*-CRITIQUE.md` verdict — the staleness check is purely git-time-based.
+**Earlier wording in this file (and in WI-273's `BlockRef`) hardened that preference
+into an absolute "Claude/Opus can never satisfy SR-084," which overstates the actual
+design** — corroboration is why a genuinely different family is worth reaching for
+first, but it is not the fail-closed thing here; staleness is. It clears two ways:
 
-1. **Run a fresh family-heterogeneous CRITIQUE.** Requires a **non-Anthropic** critic
-   (SR-084/SR-085). Claude/Opus *cannot* satisfy this — an Anthropic-family review is
-   engineering review only and must never be recorded as a CRITIQUE verdict. As of
-   writing the owner has no non-Claude model access, so this route is closed.
+1. **Run a fresh CRITIQUE.** A genuinely different (non-Anthropic) provider is still
+   the preferred, stronger-corroboration path per SR-084/SR-085 and worth reaching for
+   when access allows. Absent that, a **fresh, non-authoring-session Claude/Opus
+   critique is a legal degraded substitute** — SN-024's actual invariant is "never the
+   authoring session," not "never the same family" — so record it as `DEGRADED` (per
+   the router's own convention) rather than either refusing it or silently claiming
+   full heterogeneity.
 2. **Finish WI-300's option (f) mechanization** until SR-052 and SR-053 carry no
    perceptual residue and flip to `Verification=Test`. They then leave
    `_load_critique_srs` and stop demanding a critique at all.
 
-**Route 2 is the only one that does not depend on access you may not have.** That is
-the practical case for prioritising WI-300.
+**Route 2 retires the perceptual residue instead of leaning on a corroboration
+workaround, so it is still the sturdier long-term fix** and the practical case for
+prioritising WI-300 — but route 1 is not actually closed the way earlier notes here
+claimed; don't treat "no non-Claude access" as a dead end without at least trying a
+fresh same-family critique and recording it honestly as degraded.
 
 ⚠️ **Never revert a real fix, or sanction a check, to make this green.**
 
@@ -181,8 +198,11 @@ parked.
 - **The runtime pin in `scripts/dev-setup.command` must be re-stamped** when the kit
   moves Python (currently 3.13.14). Nothing reminds you; the re-stamp command is in
   the file.
-- **Opus/Claude cannot satisfy CRITIQUE.** Anthropic-family review is engineering
-  review only (SR-084/SR-085).
+- **Opus/Claude CAN satisfy CRITIQUE as a degraded, same-family substitute** — a
+  fresh, non-authoring session, recorded `DEGRADED` per the router's convention.
+  A genuinely different (non-Anthropic) family is still *preferred* (SR-084/SR-085)
+  for its stronger corroboration weight; don't skip reaching for one when available,
+  and don't record a degraded run as if it were full heterogeneity.
 
 ## 7. Suggested order
 
