@@ -12106,3 +12106,55 @@ amber ring 2.49/2.22/2.55 on SR/LLR/TC). Filed **WI-299**.
    rubric is ambiguous, they scatter. That contrast is the useful signal.
 
 Registry 297 WIs. Gate clean at `8895ba1`.
+
+## 2026-07-24 (late) — Decisions: the A2 / A4-boundary splits, ruled by verification
+
+Two critic disagreements were blocking every render train. Both were resolved by
+**checking the artifact**, not by dispatching a third opinion — which turned out to
+be the cheaper and more decisive move, because both critics were partly wrong.
+
+**A4 boundaries — RETIRED as not-a-defect.** `OPENAI-SOL` reported `--border`
+supplying sub-3:1 boundaries for "focusable `.view` regions, detail cards, and
+linked Process-stage rectangles". The artifact says otherwise: `--border` appears
+in exactly **four** rules — `nav.tabs`, `#process .gnow`, `#process .pflow li`,
+`#process .stg rect` — and **`.view` carries no border rule at all** (its only
+styling is `.view svg{display:block}`). The one genuine *control* among the four
+is the Process stage rectangle inside `<a class="stg">`, and those carry **visible
+text labels** ("Intake", "Triage → WIs", "Resume loop"), which is exactly WCAG
+1.4.11's stated exception — a component identifiable by its text label needs no
+3:1 boundary — and they already switch to `--accent` at stroke-width 2 on
+hover/focus. So `OPENCODE-GROK`, which dismissed this under 1.4.11 in
+[116](reviews/116-CRITIQUE.md), read it correctly and SOL over-claimed. The row is
+**retired rather than deleted**, so the over-claim and its refutation stay
+traceable: that is evidence about critique reliability, not dead weight.
+
+**A2 — RE-SCOPED, because both critics were arguing about the symptom.** They
+disputed whether the 41-of-43 unnamed `<svg role="img">` containers violate "every
+meaningful graphic carries an accessible name". Checking the artifact surfaced
+something neither of them named:
+
+> **42 of the 43 `role="img"` containers hold focusable descendants — 1,146 of the
+> document's 1,150 `tabindex="0"` elements sit inside a `role="img"` subtree.**
+
+ARIA specifies `role="img"` as **children-presentational**: the subtree is expected
+to be pruned from the accessibility tree. That breaks *both* positions. GROK's
+defence — the per-node `<title>`s cover A2 — rests on titles that may never be
+reachable. SOL's fix — name the containers — would yield a correctly-named *image*
+whose 1,146 interactive children are still pruned. The defect is not a missing
+name; it is the role. **WI-297** now carries that, with the fix being to drop
+`role="img"` where an SVG has focusable descendants (or use `role="group"`, the
+pattern the `.view` wrappers already use correctly), and a recorded caveat that AT
+implementations vary in pruning strictness, so it is an authoring-conformance
+defect to correct rather than a proven end-user failure.
+
+**Method note worth keeping.** Three critique rounds produced one finding all
+critics converged on (the focus ring, **WI-299** — found 3× at 3 severities), one
+they split on where the *cause* was invisible to all of them (A2), and one that was
+simply wrong (A4 boundaries). Convergence tracked truth; divergence tracked rubric
+ambiguity; and in both divergent cases, ten minutes of reading the artifact beat
+another dispatch. Prefer verification over a tie-breaker critic.
+
+**Still open and genuinely the owner's:** the gate-shape question. WI-273 has been
+blocked by three anchors it never touched, each fix exposing the next. Under a
+whole-document rubric with an all-anchors bar and a fail-closed gate, a narrow
+render fix cannot close on its own merits. That is a design decision, not a defect.
