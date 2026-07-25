@@ -836,7 +836,12 @@ def _run_captured(argv, cwd=None, **extra):
     Seven call sites repeated these five kwargs verbatim, which is what the G3
     `dupes` step flagged. Stating the contract once means a future site cannot
     half-adopt it — dropping `errors="replace"` alone would reintroduce the L-25
-    crash on exactly the rare input nobody tests with."""
+    crash on exactly the rare input nobody tests with.
+
+    `extra` is for additions only. Re-passing a fixed kwarg raises `TypeError`
+    (loud, immediate). `check=True` would NOT raise here but must never be passed:
+    it converts the dispatcher's fail-closed `(ok, reason)` contract into a raised
+    `CalledProcessError` mid-run."""
     return subprocess.run(
         argv,
         cwd=str(cwd) if cwd is not None else None,
@@ -1413,7 +1418,16 @@ def _run_combined_bar(worktree, root):
         # the integrator reworks — not a FileNotFoundError that crashes the whole
         # walk-away dispatcher (exit 1) after the worker is ready. Fail closed.
         return False, "test command not runnable: {}".format(exc)
-    tail = _failure_tail((proc.stdout or "") + (proc.stderr or ""), 400)
+    # A RAW bounded tail here, deliberately — NOT `_failure_tail` (WI-304 rework).
+    # This is the one site that runs the DOWNSTREAM repo's declared command
+    # (ADOPTING.md tells adopters to put `npm test` / `gradle check` / `cargo
+    # clippy` here), so its output grammar is unknown to us. `_failure_tail`
+    # returns the block ENDING at the last `FAIL` line, which is right for
+    # check.py — where FAIL is a trailing summary — and wrong wherever FAIL is a
+    # HEADER with the diagnostic after it: jest's `FAIL src/sum.test.js` truncates
+    # to just the filename, and `go test` returns a *passing* test's block. Use
+    # `_failure_tail` only where the kit owns the output grammar.
+    tail = ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
     return proc.returncode == 0, ("pass" if proc.returncode == 0 else tail)
 
 
@@ -1441,11 +1455,18 @@ def _regen_failure(proc, label, what, budget=400):
     continues its loop. The disposition and conflict regen walks reported this
     identically — the second block the G3 `dupes` step flagged.
 
-    `_failure_tail` (not a raw `[-budget:]` slice) is deliberate: it prefers the
-    LAST `  FAIL  <step>` block, because blind tail-truncation is exactly what hid
-    the real error behind a leading passing banner in the WI-229 blocked-
-    disposition loop. It degrades to the same tail bound when there is no FAIL
-    block, so routing every site through it is a strict improvement."""
+    `_failure_tail` (not a raw `[-budget:]` slice) is safe HERE, and only here,
+    because the regen family runs the kit's OWN gen scripts — whose output is a
+    Python traceback carrying no `FAIL` line, so the helper takes its plain
+    tail-bound path — and because a check.py-shaped failure is exactly the case it
+    was written for (WI-229: blind truncation hid the real error behind a leading
+    PASSING banner).
+
+    It is NOT a general improvement, and must not be adopted by reflex. It returns
+    the block ENDING at the last `FAIL` line, so wherever `FAIL` is a HEADER with
+    the diagnostic after it — jest, `go test` — it discards the actual error. See
+    `_run_combined_bar`, which keeps a raw bounded tail for that reason. Rule of
+    thumb: `_failure_tail` only where the kit owns the output grammar."""
     if proc.returncode == 0:
         return None
     tail = _failure_tail((proc.stdout or "") + (proc.stderr or ""), budget)

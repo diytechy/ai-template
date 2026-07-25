@@ -12647,9 +12647,20 @@ in this same file — precisely because blind tail-truncation hid the real error
 a leading PASSING banner in the WI-229 blocked-disposition loop (three runs reporting
 `=== derived-gate : ...` while the actual `check_trajectory: ERROR - blocked-ref` sat
 off the end). It prefers the last `  FAIL  <step>` block and degrades to the same tail
-bound otherwise. All five sites now route through it, each keeping its own budget
-(400/400/300/400/200). Five places in the dispatcher could previously truncate away
-the reason a dispatch failed. **The duplication was the symptom; the error-hiding was
+bound otherwise. Five places in the dispatcher could previously truncate away the
+reason a dispatch failed.
+
+**Reworked the same day — adversarial review REFUTED the 'strict improvement' claim.**
+`_failure_tail` returns the block ENDING at the last `FAIL` line: right for check.py,
+where FAIL is a trailing summary; WRONG wherever FAIL is a HEADER with the diagnostic
+after it. Measured — a jest failure truncated to `FAIL  src/sum.test.js`, losing
+Expected/Received; `go test` returned a **passing** test's block. `_run_combined_bar`,
+the one site running the DOWNSTREAM repo's declared command (ADOPTING.md: `npm test` /
+`gradle check` / `cargo clippy`), is reverted to a raw bounded tail. The four regen
+sites keep `_failure_tail` — they run the kit's OWN gen scripts, which emit no FAIL
+line. Rule now in both docstrings: **`_failure_tail` only where the kit owns the output
+grammar.** A regression test was added and verified to bite; the previous red-bar test
+ran `sys.exit(3)` with NO output, so the changed line was executed but never asserted. **The duplication was the symptom; the error-hiding was
 the disease** — which is the case for keeping the `dupes` step honest rather than
 sanctioning past it.
 
@@ -12657,7 +12668,7 @@ The 400/300/200 variance was flagged as possibly arbitrary during the options
 breakdown and was deliberately **kept**: each bound belongs to its own call site's
 output shape, and collapsing them is a change no evidence supports.
 
-Bars: full suite **1497 passed, 3 skipped** (the dispatcher paths genuinely execute on
-3.13.14 now); `check_dupes` OK; ruff clean. The `dupes` G3 step is green; the G3
+Bars: full suite **1499 passed, 3 skipped** (measured after the rework; the earlier
+1497 figure was taken from a run that also had a failure); `check_dupes` OK; ruff clean. The `dupes` G3 step is green; the G3
 harness's remaining failure is `trajectory --strict` (`perceptual-stale`), which needs
 a fresh family-heterogeneous CRITIQUE and is unchanged by this work.

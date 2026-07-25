@@ -131,7 +131,14 @@ BASELINE = {
     # docstrings cost less than the repetition they replaced, and the five raw
     # `[-N:]` tail slices now route through `_failure_tail`. Re-stamp down with
     # WI-280.
-    "agent_dispatch.py": 3885,
+    # +21 (3885 -> 3906), WI-304 rework after adversarial review. The bump is
+    # entirely COMMENT: why `_run_combined_bar` keeps a raw bounded tail (it runs
+    # the DOWNSTREAM repo's declared command, whose grammar we do not own, and
+    # `_failure_tail` truncates jest/go failures to their FAIL header), why
+    # `_failure_tail` is safe only in the regen family, and the `**extra` caveat.
+    # That prose is load-bearing: this exact mistake was just made and shipped, so
+    # the note is what stops the next author re-applying it. Reviewed bump.
+    "agent_dispatch.py": 3906,
     "agent_loop.py": 3042,
     "trace.py": 2206,
     "check_trajectory.py": 1926,

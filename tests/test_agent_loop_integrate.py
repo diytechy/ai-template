@@ -358,6 +358,36 @@ def test_combined_bar_product_red_parks(tmp_path):
     assert not ok
 
 
+def test_combined_bar_red_detail_keeps_the_diagnostic_not_just_the_fail_header(
+    tmp_path,
+):
+    # WI-304 rework, from adversarial review. This bar runs the DOWNSTREAM repo's
+    # declared command, so its output grammar is unknown. `_failure_tail` returns
+    # the block ENDING at the last `FAIL` line — correct for check.py, where FAIL
+    # is a trailing summary; wrong for jest/go, where FAIL is a HEADER and the
+    # diagnostic follows it. Routing this site through it truncated a jest failure
+    # to the filename alone, and returned a PASSING test's block for `go test`.
+    #
+    # The operator reading a parked unattended train gets only this string, so the
+    # reason must survive. Jest-shaped: a FAIL header, the assertion AFTER it.
+    script = (
+        "import sys;"
+        "print(' FAIL  src/sum.test.js');"
+        "print('  * adds 1 + 2');"
+        "print('    Expected: 3');"
+        "print('    Received: 4');"
+        "print('Test Suites: 1 failed, 1 total');"
+        "sys.exit(1)"
+    )
+    wt = _bar_worktree(tmp_path, '[product]\ntest = {py} -c "' + script + '"\n')
+    ok, detail = agent_dispatch._run_combined_bar(str(wt), str(wt))
+    assert not ok
+    assert "Expected: 3" in detail, (
+        "the failure reason was truncated to the FAIL header: " + repr(detail)
+    )
+    assert "Received: 4" in detail, repr(detail)
+
+
 def test_combined_bar_legacy_stack_key_still_runs(tmp_path):
     # The legacy [stack] test key stays honored as a fallback, so a profile that
     # used it does not silently stop running.
